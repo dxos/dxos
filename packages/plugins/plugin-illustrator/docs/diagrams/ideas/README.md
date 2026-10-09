@@ -18,7 +18,7 @@ What each rule changed in the first drafts:
 | `echo`            | `state-owned-once`                                          | Each store's owner is named on its edge: `AutomergeHost` owns doc chunks, `IndexEngine` the index, `FeedStore` the blocks.                         |
 | `echo`            | `public-surface-only`                                       | Client-to-host edges land only on `DataService` and `QueryService`, the RPC seams.                                                                 |
 | `compute`         | `bounded-live-state`                                        | Added the dispatcher's capped run log (`MAX_TRACKED_INVOCATIONS`), the one bounded collection on the path.                                         |
-| `compute`         | `no-pointless-indirection`                                  | Dropped `TriggerMonitor`, which only merges two atoms, and the dispatcher's reach through `ProcessManager.operationHandlerSet`.                     |
+| `compute`         | `no-pointless-indirection`                                  | Dropped `TriggerManager`, which only merges two atoms, and the dispatcher's reach through `ProcessManager.operationHandlerSet`.                     |
 | `client-services` | `one-mechanism-per-concern`                                 | Proxies talk to one `ServicesProvider`; the two transports hang off it instead of each proxy wiring both.                                          |
 | `client-services` | `no-pointless-indirection`                                  | Dropped the `devices` and `network` services, which only forward to their managers.                                                                |
 | `process`         | `bounded-live-state`                                        | The live table's owner is labelled `owns, no cap`: `ProcessManager.#handles` has no limit and keeps finished handles until shutdown.               |
@@ -43,9 +43,7 @@ to 0.47 and leaves the other rules unchanged; the edge stays because the cycle i
 
 Findings the diagrams surface but do not fix, each a candidate issue:
 
-- `ProcessManager.#handles` and `ProcessOperationInvoker`'s `fiberCache` grow for the whole session
-  (`bounded-live-state` 0.24).
-- `ProcessManager` and `ProcessOperationInvoker` depend on each other (`dependency-direction` 0.15–0.19).
+- `ProcessManager.#handles` grows for the whole session (`bounded-live-state` 0.24).
 - Local and EDGE process managers are parallel services merged only by their callers
   (`one-mechanism-per-concern` 0.24).
 - `echo-client` imports `QueryPlanner` and filters from `@dxos/echo-host`, so the query engine runs on both tiers.
@@ -119,3 +117,53 @@ What the rounds showed:
 - **Jev can't see what the text view doesn't state.** Crossings became readable once `View.rows` listed them. A label running out of its box stayed invisible: Sonnet's readable-labels went 0.08 → 0.85 when round 6 shortened the names, and Jev's stayed at 0.43–0.45. The renderer now wraps box labels to the box width, which is what `Diagnostics` already assumed.
 - **On the aesthetic rules Jev tracks Sonnet only moderately:** r 0.45, mean difference 0.16, over rounds 4–6 of both diagrams.
 - **Some low scores are the code, not the drawing.** Labelling the uncapped live-handle table and fiber cache honestly moves `bounded-live-state` down under both graders.
+
+## Showing Clef the image
+
+Cloudflare's [Clef](https://blog.cloudflare.com/clef-decision-models/) speaks the same System One wire as
+Jev but also reads images. That means the judge can see the rendered PNG instead of a text drawing of it.
+`eval-layout-views` now names each grader as `judge:view`. It lays every diagram out under each layering
+(`down`, `up`, `free`), which gives 30 drawings from the 7 corpus diagrams and the 3 above. The reference
+is Sonnet grading each PNG, as before. The new third measure asks each grader to pick the layering it
+would ship (the highest mean aesthetic score). It reports how often that pick matches the reference's,
+how often the grader orders a pair of layerings the same way, and regret: how much lower the reference
+rates the grader's pick than its own favourite.
+
+| Grader                  | Layout accuracy | Crossings | Flow | Aesthetics (abs. diff., r) | Same pick | Pairs | Regret |
+| ----------------------- | --------------- | --------- | ---- | -------------------------- | --------- | ----- | ------ |
+| Sonnet, from the image  | 97%             | 100%      | 73%  | —                          | —         | —     | —      |
+| layout objective        | —               | —         | —    | —                          | 60%       | 70%   | 0.042  |
+| `jev:ascii+rows`        | 95%             | 100%      | 83%  | 0.17, 0.61                 | 40%       | 67%   | 0.021  |
+| `clef:ascii+rows`       | 76%             | 87%       | 53%  | 0.22, 0.60                 | 50%       | 57%   | 0.031  |
+| `clef:image`            | 91%             | 87%       | 60%  | 0.22, 0.60                 | 50%       | 67%   | 0.023  |
+| `clef:image+rows`       | 96%             | 100%      | 80%  | 0.21, 0.63                 | 50%       | 67%   | 0.023  |
+| `clef-flash:image`      | 83%             | 30%       | 63%  | 0.19, 0.31                 | 70%       | 87%   | 0.016  |
+
+- **The image replaces the ASCII drawing, not the `rows` reading.** Clef on the PNG alone reads layout at
+  91% and is exact on left-of and the top-left box (100%, 97%), which Jev never found from text (83%).
+  It misses some crossings (87%) and arrow direction (60%), which is what `rows` states outright. With
+  both it matches the reference: 96%, crossings 100%. On the text drawing Clef is worse than Jev (76%),
+  so the gain comes from the image, not the model.
+- **The image sees what the text drawing hides.** Agreement with the reference rises on the rules about
+  how the page looks: `readableLabels` from r 0.38 to 0.52, `compact` from −0.06 to 0.36–0.41, and
+  `groupsAligned` from 0.13 to 0.26. It falls on `alignedGrid` (0.49 to −0.04, mean difference 0.44):
+  Clef rates the grid against the reference in both directions. Across all aesthetic rules
+  agreement is the same as Jev's (r 0.60–0.63 against 0.61). The architecture rules don't move, as
+  before.
+- **Picking layouts: Clef Flash on the image did best, and every judge beat the objective on regret.**
+  The engine's objective picks the reference's favourite 60% of the time but costs the most when it
+  misses (regret 0.042). Jev and Clef halve that cost. Clef Flash picks the reference's favourite 7 of
+  10 times and orders 87% of pairs as the reference does. That is 10 diagrams, so a gap of 3 picks
+  is within noise. Even so, Flash is the cheapest grader ($0.09 per million input tokens), and a
+  diagram costs about 1.2k input tokens with the image.
+
+So for judging a drawing, send Clef the image plus `rows`. To choose between layouts, Clef Flash on
+the image is the cheapest grader and agrees with the reference most often, and it is worth a larger
+corpus before the engine depends on it. To run it (Clef needs `CLOUDFLARE_ACCOUNT_ID` and
+`CLOUDFLARE_API_TOKEN`):
+
+```bash
+moon run plugin-illustrator:eval-layout-views -- --questions /abs/questions.json <diagrams…>
+moon run plugin-illustrator:eval-layout-views -- --reference /abs/answers.json \
+  --graders jev:ascii+rows,clef:image,clef:image+rows,clef-flash:image <diagrams…>
+```

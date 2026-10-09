@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import { useCallback, useMemo } from 'react';
 
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type MenuItem, createLineSeparator, createMenuAction } from '@dxos/react-ui-menu';
@@ -22,8 +22,8 @@ import { TasksCapabilities } from '#types';
  * `PluginManager`, so the list would stop working in a story).
  */
 export const useTaskActions = (): ((task: Task.Task) => MenuItem[]) => {
-  const invoker = useOperationInvoker();
-  const actions = useCapabilities(TasksCapabilities.TaskAction);
+  const invoker = Hooks.useOperationInvoker();
+  const actions = Hooks.useCapabilities(TasksCapabilities.TaskAction);
   const unavailable = useAtomValue(
     useMemo(
       () => Atom.make((get) => actions.map((action) => action.unavailable && get(action.unavailable))),

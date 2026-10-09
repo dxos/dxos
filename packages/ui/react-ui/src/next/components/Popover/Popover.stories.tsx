@@ -14,7 +14,13 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { type Size } from '../../sizes.ts';
 import { GEOMETRY, byTestId, expectAnchoredBelow, expectArrow, expectPopupSize } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Button, Field, Group, Input, Popover, Typography, useVirtualAnchor } from '../index.ts';
+import { Button } from '../Button/Button.tsx';
+import * as Field from '../Field/Field.tsx';
+import { Group } from '../Group/Group.tsx';
+import { Input } from '../Input/Input.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import * as VirtualAnchor from '../VirtualAnchor/VirtualAnchor.ts';
+import * as Popover from './Popover.tsx';
 
 type SharePopoverProps = {
   /** Overrides the size the popover inherits from its trigger's row. */
@@ -68,7 +74,7 @@ const NotesPopover = ({ size }: SizeArgs) => {
           </Popover.Header>
           <Popover.Body data-testid={`notes-${size}-body`}>
             {NOTES.map((note, index) => (
-              <Typography key={index}>{note}</Typography>
+              <Typography.Text key={index}>{note}</Typography.Text>
             ))}
           </Popover.Body>
           <Group justify='end'>
@@ -92,12 +98,16 @@ const AnchoredPopover = ({ size }: SizeArgs) => {
       <Button onClick={() => setOpen(true)} data-testid={`anchored-${size}-trigger`}>
         Open at anchor
       </Button>
-      <Typography asChild>
+      <Typography.Text asChild>
         <span ref={anchor} data-testid={`anchor-${size}`}>
           Anchor
         </span>
-      </Typography>
-      <Popover.Root open={open} onOpenChange={({ open }) => setOpen(open)} positioning={useVirtualAnchor(anchor)}>
+      </Typography.Text>
+      <Popover.Root
+        open={open}
+        onOpenChange={({ open }) => setOpen(open)}
+        positioning={VirtualAnchor.useVirtualAnchor(anchor)}
+      >
         <Popover.Content data-testid={`anchored-${size}`}>
           <Popover.Description>Anchored to a span.</Popover.Description>
         </Popover.Content>

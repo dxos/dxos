@@ -9,11 +9,15 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { select } from 'd3';
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type SelectionMode, SelectionModel } from '@dxos/graph';
 import type * as GraphModel from '@dxos/graph/GraphModel';
-import { Button, Card, Popover, Toolbar, virtualAnchor } from '@dxos/react-ui';
+import * as SelectionModel from '@dxos/graph/SelectionModel';
 import { JsonHighlighter, Syntax } from '@dxos/react-ui-syntax-highlighter';
+import * as Button from '@dxos/react-ui/Button';
+import * as Card from '@dxos/react-ui/Card';
+import * as Popover from '@dxos/react-ui/Popover';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 import { getHashStyles, mx } from '@dxos/ui-theme';
 
 import { Pulsar } from '../../fx/index.ts';
@@ -60,7 +64,7 @@ type StoryArgs = GraphProps & {
   grid?: boolean | SVGGridProps;
   inspect?: boolean;
   graph: () => GraphModel.AnyData;
-  selectionMode?: SelectionMode;
+  selectionMode?: SelectionModel.SelectionMode;
   projectorType?: ProjectorType;
   projectorOptions?:
     | GraphForceProjectorOptions
@@ -84,7 +88,7 @@ const DefaultStory = ({
   const registry = useContext(RegistryContext);
 
   // Models.
-  const selection = useMemo(() => new SelectionModel({ mode: selectionMode }), [selectionMode]);
+  const selection = useMemo(() => new SelectionModel.SelectionModel({ mode: selectionMode }), [selectionMode]);
   const [model, setModel] = useState<GraphModel.GraphModel | undefined>(() => {
     const graph = _graph?.();
     return graph ? new TestGraphModel({ registry, graph }) : undefined;
@@ -189,7 +193,7 @@ const DefaultStory = ({
     });
   }, []);
 
-  const active = useMemo(() => new SelectionModel(), []);
+  const active = useMemo(() => new SelectionModel.SelectionModel(), []);
   const handlePing = useCallback(() => {
     for (const id of active.getSelectedIds()) {
       const node = graphRef.current?.findNode(id);
@@ -213,7 +217,7 @@ const DefaultStory = ({
     <Popover.Root
       open={!!popover}
       onOpenChange={({ open: state }) => !state && setPopover(undefined)}
-      positioning={virtualAnchor(popoverAnchorRef)}
+      positioning={VirtualAnchor.virtualAnchor(popoverAnchorRef)}
       autoFocus={false}
     >
       <div className={mx('dx-fill grid divide-x divide-separator', debug && 'grid-cols-[1fr_30rem]')}>
@@ -292,7 +296,7 @@ const Debug = ({
   onPing,
 }: {
   model?: GraphModel.GraphModel;
-  selection: SelectionModel;
+  selection: SelectionModel.SelectionModel;
   projector: ProjectorType;
   onToggleProjector: () => void;
   onRefresh: () => void;
@@ -315,14 +319,14 @@ const Debug = ({
   return (
     <div className='flex flex-col overflow-hidden'>
       <Toolbar.Root>
-        <Button onClick={onToggleProjector} label='Projector' icon='ph--graph--regular' iconOnly />
-        <Button onClick={onRefresh} label='Refresh' icon='ph--arrow-clockwise--regular' iconOnly />
-        <Button onClick={onRepaint} label='Repaint' icon='ph--paint-roller--regular' iconOnly />
-        <Button onClick={onRegenerate} label='Regenerate' icon='ph--arrows-clockwise--regular' iconOnly />
-        <Button onClick={onClear} label='Clear' icon='ph--trash--regular' iconOnly />
-        <Button onClick={onAdd} label='Add' icon='ph--plus--regular' iconOnly />
-        <Button onClick={onDelete} label='Delete' icon='ph--x--regular' iconOnly />
-        <Button onClick={onPing} label='Delete' icon='ph--crosshair-simple--regular' iconOnly />
+        <Button.Root onClick={onToggleProjector} label='Projector' icon='ph--graph--regular' iconOnly />
+        <Button.Root onClick={onRefresh} label='Refresh' icon='ph--arrow-clockwise--regular' iconOnly />
+        <Button.Root onClick={onRepaint} label='Repaint' icon='ph--paint-roller--regular' iconOnly />
+        <Button.Root onClick={onRegenerate} label='Regenerate' icon='ph--arrows-clockwise--regular' iconOnly />
+        <Button.Root onClick={onClear} label='Clear' icon='ph--trash--regular' iconOnly />
+        <Button.Root onClick={onAdd} label='Add' icon='ph--plus--regular' iconOnly />
+        <Button.Root onClick={onDelete} label='Delete' icon='ph--x--regular' iconOnly />
+        <Button.Root onClick={onPing} label='Delete' icon='ph--crosshair-simple--regular' iconOnly />
       </Toolbar.Root>
       <Syntax.Root data={data}>
         <Syntax.Content>

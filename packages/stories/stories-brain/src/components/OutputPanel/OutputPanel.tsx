@@ -2,10 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { Fragment, type ReactNode, useMemo, useState } from 'react';
+import React, { type ReactNode, useMemo, useState } from 'react';
 
 import { type RDF } from '@dxos/pipeline-rdf';
-import { Button, Empty, Panel, ScrollArea, type ThemedClassName, Toolbar } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Status from '@dxos/react-ui/Status';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import * as Util from '@dxos/react-ui/Util';
 
 import { type EchoObjectItem, EchoObjectsList } from '../EchoObjectsList/index.ts';
 import { FactPanel } from '../FactPanel/index.ts';
@@ -16,7 +21,7 @@ export type StatItem = { label: string; value: string | number };
 /** A pipeline-specific output view (e.g. email messages, threads, transcript) shown as its own tab. */
 export type OutputDetail = { id: string; label: string; content: ReactNode };
 
-export type OutputPanelProps = ThemedClassName<{
+export type OutputPanelProps = Util.ThemedClassName<{
   facts: RDF.Fact[];
   objects: EchoObjectItem[];
   /** Common per-pipeline metrics (Stats tab). */
@@ -40,40 +45,54 @@ export const OutputPanel = ({ classNames, facts, objects, stats = [], details = 
     <Panel.Root classNames={classNames}>
       <Panel.Header>
         <Toolbar.Root>
-          <Button variant={active === 'facts' ? 'primary' : 'ghost'} onClick={() => setTab('facts')}>
+          <Button.Root variant={active === 'facts' ? 'primary' : 'ghost'} onClick={() => setTab('facts')}>
             Facts
-          </Button>
-          <Button variant={active === 'objects' ? 'primary' : 'ghost'} onClick={() => setTab('objects')}>
+          </Button.Root>
+          <Button.Root variant={active === 'objects' ? 'primary' : 'ghost'} onClick={() => setTab('objects')}>
             Objects
-          </Button>
-          <Button variant={active === 'stats' ? 'primary' : 'ghost'} onClick={() => setTab('stats')}>
+          </Button.Root>
+          <Button.Root variant={active === 'stats' ? 'primary' : 'ghost'} onClick={() => setTab('stats')}>
             Stats
-          </Button>
+          </Button.Root>
           {details.map((detail) => (
-            <Button
+            <Button.Root
               key={detail.id}
               variant={active === detail.id ? 'primary' : 'ghost'}
               onClick={() => setTab(detail.id)}
             >
               {detail.label}
-            </Button>
+            </Button.Root>
           ))}
         </Toolbar.Root>
       </Panel.Header>
-      <Panel.Body>
-        {active === 'facts' && <FactPanel facts={facts} classNames='h-full' />}
-        {active === 'objects' && <EchoObjectsList objects={objects} classNames='h-full' />}
-        {active === 'stats' && <StatsView stats={stats} />}
-        {details.map((detail) => (active === detail.id ? <Fragment key={detail.id}>{detail.content}</Fragment> : null))}
-      </Panel.Body>
+      {/* Each view takes the body's row: slotted (`asChild`) where it has no height of its own, and as a child
+          where it fills its parent already (a `Panel.Root`). */}
+      {active === 'facts' && (
+        <Panel.Body asChild>
+          <FactPanel facts={facts} />
+        </Panel.Body>
+      )}
+      {active === 'objects' && (
+        <Panel.Body>
+          <EchoObjectsList objects={objects} />
+        </Panel.Body>
+      )}
+      {active === 'stats' && (
+        <Panel.Body asChild>
+          <StatsView stats={stats} />
+        </Panel.Body>
+      )}
+      {details.map((detail) =>
+        active === detail.id ? <Panel.Body key={detail.id}>{detail.content}</Panel.Body> : null,
+      )}
     </Panel.Root>
   );
 };
 
-const StatsView = ({ stats }: { stats: StatItem[] }) => (
-  <ScrollArea.Root classNames='h-full'>
+const StatsView = Util.composable<HTMLDivElement, { stats: StatItem[] }>(({ stats, ...props }, forwardedRef) => (
+  <ScrollArea.Root {...Util.composableProps(props)} ref={forwardedRef}>
     <ScrollArea.Viewport classNames='flex flex-col gap-1 py-1'>
-      {stats.length === 0 && <Empty>No stats.</Empty>}
+      {stats.length === 0 && <Status.Empty>No stats.</Status.Empty>}
       {stats.map((stat) => (
         <div key={stat.label} className='flex items-center justify-between gap-2 border-b border-separator-subtle py-1'>
           <span className='text-sm text-fg-muted truncate'>{stat.label}</span>
@@ -82,4 +101,6 @@ const StatsView = ({ stats }: { stats: StatItem[] }) => (
       ))}
     </ScrollArea.Viewport>
   </ScrollArea.Root>
-);
+));
+
+StatsView.displayName = 'StatsView';

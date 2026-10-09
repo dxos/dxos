@@ -10,18 +10,19 @@ import { type Delegation, type DelegationStrategy } from '@dxos/agent-runtime';
 import { AiContext } from '@dxos/assistant';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
-import { ProcessManager } from '@dxos/compute-runtime';
+import { OperationProcess } from '@dxos/compute-runtime';
 import * as Instructions from '@dxos/compute/Instructions';
+import * as Process from '@dxos/compute/Process';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { EID, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Message, Task } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { ToolkitError } from '../errors.ts';
-import { RunInstructions } from '../operations/index.ts';
-import { DelegationSkill } from '../skills/index.ts';
+import * as DelegationSkill from '../skills/delegation/DelegationSkill.ts';
+import * as AgentOperation from '../types/AgentOperation.ts';
 
 /**
  * Normalizes an LLM-reported artifact reference (bare entity id or full ECHO URI) to a
@@ -202,14 +203,13 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
         delegations.push({
           id: task.id,
           spawn: Effect.gen(function* () {
-            const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
             // The task ↔ process mapping lives runtime-side (the supervisor's activeIds keyed by
             // task id) — nothing is stamped on the durable task.
-            const fiber = yield* invoker.invokeFiber(RunInstructions, {
+            const handle = yield* Process.spawn(OperationProcess.make(AgentOperation.RunInstructions), {
               instructions: Ref.make(instructions),
               input: {},
             });
-            return fiber.pid;
+            return handle.pid;
           }),
         });
       }

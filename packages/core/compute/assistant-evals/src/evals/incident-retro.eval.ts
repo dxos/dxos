@@ -8,11 +8,11 @@ import { evalite } from 'evalite';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
-import { PlanningSkill } from '@dxos/assistant-toolkit';
+import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Project from '@dxos/compute/Project';
 import { Collection, Database, Feed, Obj, Ref } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as IncidentSpace from '@dxos/plugin-debug/IncidentSpace';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';

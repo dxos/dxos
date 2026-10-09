@@ -5,9 +5,13 @@
 import React, { type ReactNode } from 'react';
 
 import { type Space } from '@dxos/react-client/echo';
-import { Button, Select, Switch, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as Select from '@dxos/react-ui/Select';
+import * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
 import { Settings } from '#types';
@@ -38,7 +42,7 @@ export const SpaceSettings = ({
   eligibleDefaultSpaces = spaces,
   onDefaultSpaceChange,
 }: SpaceSettingsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   return (
     <Form.Root variant='settings'>
@@ -46,7 +50,7 @@ export const SpaceSettings = ({
         <Form.Content>
           <Form.FieldSet label={t('plugin.name')} actions={scope}>
             <Form.Field label={t('settings.show-hidden.label')} description={t('settings.show-hidden.description')}>
-              <Switch
+              <Input.Switch
                 disabled={!onSettingsChange}
                 checked={settings?.showHidden}
                 onCheckedChange={({ checked }) => onSettingsChange?.((s) => ({ ...s, showHidden: !!checked }))}
@@ -61,7 +65,7 @@ export const SpaceSettings = ({
                 disabled={!onDefaultSpaceChange}
                 items={(eligibleDefaultSpaces ?? []).map((space) => ({
                   value: space.id,
-                  label: toLocalizedString(getSpaceDisplayName(space), t),
+                  label: Theme.toLocalizedString(getSpaceDisplayName(space), t),
                 }))}
               >
                 <Select.Trigger placeholder={t('settings.default-space.placeholder')} />
@@ -69,7 +73,7 @@ export const SpaceSettings = ({
                   {eligibleDefaultSpaces?.map((space) => (
                     <Select.Item
                       key={space.id}
-                      item={{ value: space.id, label: toLocalizedString(getSpaceDisplayName(space), t) }}
+                      item={{ value: space.id, label: Theme.toLocalizedString(getSpaceDisplayName(space), t) }}
                     />
                   ))}
                 </Select.Content>
@@ -83,7 +87,7 @@ export const SpaceSettings = ({
               <Listbox.Root
                 items={(spaces ?? []).map((space) => ({
                   value: space.id,
-                  label: toLocalizedString(getSpaceDisplayName(space), t),
+                  label: Theme.toLocalizedString(getSpaceDisplayName(space), t),
                 }))}
               >
                 <Listbox.Content aria-label={t('settings.space-list.label')} classNames='w-full gap-trim-sm'>
@@ -91,9 +95,9 @@ export const SpaceSettings = ({
                     <Listbox.Item key={space.id} id={space.id} classNames='w-full gap-2 items-center'>
                       {/* TODO(burdon): Should auto center and truncate; NOTE truncate doesn't work with flex grow. */}
                       <Listbox.ItemText classNames='min-h-0!'>
-                        {toLocalizedString(getSpaceDisplayName(space), t)}
+                        {Theme.toLocalizedString(getSpaceDisplayName(space), t)}
                       </Listbox.ItemText>
-                      <Button
+                      <Button.Root
                         icon='ph--faders--regular'
                         iconOnly
                         label={t('settings.open-settings.label')}

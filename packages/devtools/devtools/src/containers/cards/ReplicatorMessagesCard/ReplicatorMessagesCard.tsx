@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { Grid, Tooltip } from '@dxos/react-ui';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
 
 import { STAT_CARD_HUES, StatCard } from '../../../components/index.ts';
 import { type DatabaseInfo } from '../../../hooks/index.ts';
@@ -17,7 +18,7 @@ export type ReplicatorMessagesCardProps = {
 type MessageRow = { type: string; sent: number; received: number; size?: number };
 
 /** Type takes the slack; fixed size, received and sent tracks make the rows a table. */
-const ROW_TRACKS = ['1fr', '4rem', '3.5rem', '3.5rem'];
+const ROW_TRACKS = ['fill', '4rem', '3.5rem', '3.5rem'] as const;
 
 export const ReplicatorMessagesCard = ({ database }: ReplicatorMessagesCardProps) => {
   const replicator = database?.dataStats?.replicator;
@@ -38,24 +39,24 @@ export const ReplicatorMessagesCard = ({ database }: ReplicatorMessagesCardProps
       {rows.length === 0 && <StatCard.Row span label='No messages.' />}
       {rows.length > 0 && (
         <StatCard.Row>
-          <Grid cols={ROW_TRACKS} gap='sm' classNames='text-end text-fg-muted'>
+          <Layout.Grid grow cols={ROW_TRACKS} gap='sm' classNames='text-end text-fg-muted'>
             <span className='text-start'>type</span>
             <span>KB</span>
             <span>↓</span>
             <span>↑</span>
-          </Grid>
+          </Layout.Grid>
         </StatCard.Row>
       )}
       {rows.map((row) => (
         <StatCard.Row key={row.type}>
-          <Grid cols={ROW_TRACKS} gap='sm' classNames='font-mono tabular-nums text-end'>
+          <Layout.Grid grow cols={ROW_TRACKS} gap='sm' classNames='font-mono tabular-nums text-end'>
             <Tooltip.Trigger asChild content={row.type}>
               <span className='truncate text-start'>{row.type}</span>
             </Tooltip.Trigger>
             <span className='text-fg-muted'>{row.size !== undefined ? Unit.KB(row.size) : '–'}</span>
             <span>{row.received.toLocaleString()}</span>
             <span>{row.sent.toLocaleString()}</span>
-          </Grid>
+          </Layout.Grid>
         </StatCard.Row>
       ))}
     </StatCard.Root>

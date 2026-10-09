@@ -5,18 +5,21 @@
 import React from 'react';
 
 import { type HotkeyCommand, useActiveHotkeys } from '@dxos/react-focus';
-import { Button, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Theme from '@dxos/react-ui/Theme';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { Key } from './Key.tsx';
 
 const Shortcut = ({ binding }: { binding: HotkeyCommand }) => {
-  const { t } = useTranslation(osTranslations);
+  const { t } = Hooks.useTranslation(osTranslations);
   return (
-    <div className='flex items-center gap-2 whitespace-nowrap'>
+    <Layout.Flex align='center' gap='sm' classNames='whitespace-nowrap'>
       <Key binding={binding.hotkey} />
-      <span className='text-sm'>{toLocalizedString(binding.label ?? binding.hotkey, t)}</span>
-    </div>
+      <span className='text-sm'>{Theme.toLocalizedString(binding.label ?? binding.hotkey, t)}</span>
+    </Layout.Flex>
   );
 };
 
@@ -27,12 +30,12 @@ export const ShortcutsHints = ({ onClose }: { onClose?: () => void }) => {
   const hints = bindings.filter((binding) => defaults.includes(binding.hotkey));
 
   return (
-    <div className='flex overflow-hidden px-2 gap-4'>
+    <Layout.Flex gap='lg' classNames='overflow-hidden px-2'>
       {hints.map((binding) => (
         <Shortcut key={binding.id} binding={binding} />
       ))}
       {onClose && (
-        <Button
+        <Button.Root
           icon='ph--x--regular'
           iconSize='md'
           label='Close'
@@ -43,6 +46,6 @@ export const ShortcutsHints = ({ onClose }: { onClose?: () => void }) => {
           onClick={onClose}
         />
       )}
-    </div>
+    </Layout.Flex>
   );
 };

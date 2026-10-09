@@ -6,9 +6,9 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
-import { ABOUT_DIALOG } from '@dxos/plugin-support';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as SupportSurface from '@dxos/plugin-support/SupportSurface';
 
 import { AboutDialog, AuthorizingDeviceDialog, NativeRedirectDialog } from '../components/index.ts';
 import { AUTHORIZING_DEVICE_DIALOG, NATIVE_REDIRECT_DIALOG, WELCOME_SCREEN } from '../constants.ts';
@@ -35,7 +35,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'aboutDialog',
-        filter: AppSurface.component(AppSurface.Dialog, ABOUT_DIALOG),
+        filter: AppSurface.component(AppSurface.Dialog, SupportSurface.ABOUT_DIALOG),
         component: AboutDialog,
       }),
     ]),

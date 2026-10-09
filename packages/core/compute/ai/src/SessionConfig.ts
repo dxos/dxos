@@ -25,6 +25,12 @@ export const SessionConfig = Schema.Struct({
 
   /** HALO device key (hex) of the device that runs an external harness; only that device drives it. */
   host: Schema.optional(Schema.String),
+
+  /**
+   * Key of the durable process definition that runs the session's agent, as a plugin contributed it.
+   * Unset runs the assistant's own agent process.
+   */
+  process: Schema.optional(Schema.String),
 });
 
 export interface SessionConfig extends Schema.Schema.Type<typeof SessionConfig> {}

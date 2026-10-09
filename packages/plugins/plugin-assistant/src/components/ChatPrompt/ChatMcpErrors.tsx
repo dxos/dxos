@@ -5,28 +5,30 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback } from 'react';
 
-import { Banner, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import type * as Util from '@dxos/react-ui/Util';
 
 import { meta } from '#meta';
 
-import { type AiChatProcessor } from '../../processor/index.ts';
+import { type ChatModel } from '../../chat-model/index.ts';
 
-export type ChatMcpErrorsProps = ThemedClassName<{
-  processor: AiChatProcessor;
+export type ChatMcpErrorsProps = Util.ThemedClassName<{
+  chatModel: ChatModel;
 }>;
 
 /**
  * Inline banner that lists MCP servers that failed to connect during the most recent request.
  * The chat itself keeps working without these servers — this just lets the user see what was dropped.
  */
-export const ChatMcpErrors = ({ classNames, processor }: ChatMcpErrorsProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const errors = useAtomValue(processor.mcpErrors);
+export const ChatMcpErrors = ({ classNames, chatModel }: ChatMcpErrorsProps) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const errors = useAtomValue(chatModel.mcpErrors);
 
   const handleDismiss = useCallback(() => {
-    processor.dismissMcpErrors();
-  }, [processor]);
+    chatModel.dismissMcpErrors();
+  }, [chatModel]);
 
   if (errors.length === 0) {
     return null;

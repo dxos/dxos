@@ -5,15 +5,15 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 import { TimeoutError } from '@dxos/async';
-import { StatusBar } from '@dxos/plugin-status-bar/components';
+import * as StatusBar from '@dxos/plugin-status-bar/StatusBar';
 import { ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
-import { Button } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
 
 const styles = {
-  success: 'text-sky-300 dark:text-green-700',
-  warning: 'text-orange-300 dark:text-orange-600',
-  error: 'text-red-300 dark:text-red-600',
+  success: 'text-success-text',
+  warning: 'text-warning-text',
+  error: 'text-error-text',
 };
 
 // TODO(burdon): Move out of debug plugin.
@@ -89,7 +89,7 @@ const ErrorIndicator = () => {
   if (errorRef.current) {
     return (
       <StatusBar.Item>
-        <Button
+        <Button.Root
           variant='ghost'
           icon='ph--warning-circle--duotone'
           iconOnly
@@ -102,7 +102,7 @@ const ErrorIndicator = () => {
   } else {
     return (
       <StatusBar.Item>
-        <Button variant='ghost' icon='ph--check--regular' iconOnly label='No errors.' />
+        <Button.Root variant='ghost' icon='ph--check--regular' iconOnly label='No errors.' />
       </StatusBar.Item>
     );
   }
@@ -121,13 +121,13 @@ const SwarmIndicator = () => {
   if (state === 0) {
     return (
       <StatusBar.Item>
-        <Button variant='ghost' icon='ph--lightning--regular' iconOnly label='Connected to swarm.' />
+        <Button.Root variant='ghost' icon='ph--lightning--regular' iconOnly label='Connected to swarm.' />
       </StatusBar.Item>
     );
   } else {
     return (
       <StatusBar.Item>
-        <Button
+        <Button.Root
           variant='ghost'
           icon='ph--lightning-slash--regular'
           iconOnly
@@ -168,7 +168,7 @@ const SavingIndicator = () => {
     case 2:
       return (
         <StatusBar.Item>
-          <Button
+          <Button.Root
             variant='ghost'
             icon='ph--circle--duotone'
             iconOnly
@@ -180,14 +180,20 @@ const SavingIndicator = () => {
     case 1:
       return (
         <StatusBar.Item>
-          <Button variant='ghost' icon='ph--circle--duotone' iconOnly label='Saving...' classNames={styles.success} />
+          <Button.Root
+            variant='ghost'
+            icon='ph--circle--duotone'
+            iconOnly
+            label='Saving...'
+            classNames={styles.success}
+          />
         </StatusBar.Item>
       );
     case 0:
     default:
       return (
         <StatusBar.Item>
-          <Button variant='ghost' icon='ph--circle--duotone' iconOnly label='Modified indicator.' />
+          <Button.Root variant='ghost' icon='ph--circle--duotone' iconOnly label='Modified indicator.' />
         </StatusBar.Item>
       );
   }

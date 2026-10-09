@@ -137,6 +137,9 @@ export const FOCUS_PACKAGES = 8;
 /** The weight a card keeps when its package is not the focus: low enough to rank below, never zero. */
 export const FOCUS_FLOOR = 0.4;
 
+/** The kinds that become drawable, in order, when the relevant ones leave the kept nodes unconnected. */
+export const FLOOR_KINDS: readonly Graph.EdgeKind[] = ['implDependsOn', 'imports'];
+
 /**
  * `hybrid` blends System One's probability with the baseline normalised to the candidate set: the
  * model separates relevant from irrelevant poorly on its own (most cards land at 0.6–0.8), while the
@@ -157,6 +160,21 @@ export type Usage = {
   usd: number;
 };
 
+/**
+ * Replaces score-rank pruning with the caller's own selection: `score` turns each card's relevance
+ * (System One's probability, else the baseline) into its final score, and `keep` picks the drawn set
+ * from those scores and the edges of relevant kinds. Relations, relays and grouping stay zoom's.
+ */
+export type Selector = {
+  readonly name: string;
+  readonly score: (cards: readonly Graph.NodeCard[], relevance: readonly number[]) => number[];
+  readonly keep: (
+    nodes: readonly { readonly iri: string; readonly score: number }[],
+    edges: readonly Graph.Edge[],
+    options: { readonly threshold: number; readonly budget: number },
+  ) => Set<string>;
+};
+
 export type ZoomOptions = {
   readonly prompt: string;
   readonly candidates: Graph.Candidates;
@@ -166,6 +184,7 @@ export type ZoomOptions = {
   readonly threshold: number;
   readonly budget: number;
   readonly concurrency?: number;
+  readonly select?: Selector;
 };
 
 export type ZoomResult = {
@@ -221,6 +240,29 @@ const decide = <I extends Schema.Constraint, D extends Record<string, Decision.A
   );
 };
 
+/**
+ * System One's probability that each card belongs in the diagram answering `prompt`, through the
+ * cache; `undefined` where a call failed, so an outage never reads as "irrelevant".
+ */
+export const relevance = (
+  prompt: string,
+  cards: readonly Graph.NodeCard[],
+  context: { readonly model: string; readonly cache: Cache.Api; readonly usage: Usage },
+  concurrency = 16,
+): Effect.Effect<(number | undefined)[], never, DecisionModel.DecisionModel> =>
+  Effect.forEach(
+    cards,
+    (card) =>
+      decide(
+        NodeRelevance,
+        { prompt, node: judgedCard(card) },
+        (answers) => answers.matters.probability,
+        asProbability,
+        context,
+      ),
+    { concurrency },
+  );
+
 const asProbability = (value: unknown): number | undefined =>
   typeof value === 'number' && value >= 0 && value <= 1 ? value : undefined;
 
@@ -256,6 +298,7 @@ export const zoom = ({
   threshold,
   budget,
   concurrency = 16,
+  select,
 }: ZoomOptions): Effect.Effect<ZoomResult, never, DecisionModel.DecisionModel> =>
   Effect.gen(function* () {
     const usage: Usage = { calls: 0, cached: 0, inputTokens: 0, usd: 0 };
@@ -268,25 +311,18 @@ export const zoom = ({
     const modelScores =
       scorer === 'baseline'
         ? baseline
-        : yield* Effect.forEach(
-            candidates.nodes,
-            (card) =>
-              decide(
-                NodeRelevance,
-                { prompt, node: judgedCard(card) },
-                (answers) => answers.matters.probability,
-                asProbability,
-                context,
-              ).pipe(Effect.map((probability) => probability ?? baselineScore(query, card, maxDegree))),
-            { concurrency },
+        : (yield* relevance(prompt, candidates.nodes, context, concurrency)).map(
+            (probability, index) => probability ?? baseline[index],
           );
     const maxBaseline = Math.max(Number.EPSILON, ...baseline);
     const blended =
-      scorer === 'hybrid'
-        ? modelScores.map(
-            (score, index) => HYBRID_WEIGHT * score + (1 - HYBRID_WEIGHT) * (baseline[index] / maxBaseline),
-          )
-        : modelScores;
+      select !== undefined
+        ? select.score(candidates.nodes, modelScores)
+        : scorer === 'hybrid'
+          ? modelScores.map(
+              (score, index) => HYBRID_WEIGHT * score + (1 - HYBRID_WEIGHT) * (baseline[index] / maxBaseline),
+            )
+          : modelScores;
 
     // Rank packages by their three best cards, so one strong file does not outweigh a coherent package.
     const byPackage = new Map<string, number[]>();
@@ -360,17 +396,34 @@ export const zoom = ({
     );
 
     const relevantKinds = new Set(kinds.filter((kind) => (relationScores[kind] ?? 0) >= 0.5));
-    // A question whose relation kinds all fall below 0.5 still needs arrows; imports are the floor.
-    if (relevantKinds.size === 0) {
-      relevantKinds.add('imports');
-      // Downstream edge filters read the scores, not this set, so the floor has to show in them too.
-      relationScores.imports = Math.max(relationScores.imports ?? 0, 0.5);
-    }
     const scoredNodes = candidates.nodes.map((card, index) => ({ ...card, score: nodeScores[index] }));
+    // A diagram whose relevant kinds leave the kept nodes unconnected says nothing about how they fit,
+    // so the dependency kinds become the floor. The kept set depends on scores alone, so it is known here.
+    const likely = select
+      ? select.keep(scoredNodes, candidates.edges, { threshold, budget })
+      : Graph.prune(scoredNodes, [], { threshold, budget }).kept;
+    const connecting = () =>
+      candidates.edges.filter((edge) => relevantKinds.has(edge.kind) && likely.has(edge.from) && likely.has(edge.to))
+        .length;
+    for (const kind of FLOOR_KINDS) {
+      if (connecting() >= likely.size / 2) {
+        break;
+      }
+      if (kinds.includes(kind) && !relevantKinds.has(kind)) {
+        relevantKinds.add(kind);
+        // Downstream edge filters read the scores, not this set, so the floor has to show in them too.
+        relationScores[kind] = Math.max(relationScores[kind] ?? 0, 0.5);
+      }
+    }
     const { kept, edges: keptEdges } = Graph.prune(scoredNodes, candidates.edges, {
       threshold,
       budget,
       kinds: relevantKinds,
+      keep: select?.keep(
+        scoredNodes,
+        candidates.edges.filter((edge) => relevantKinds.has(edge.kind)),
+        { threshold, budget },
+      ),
     });
 
     const survivors = scoredNodes.filter((node) => kept.has(node.iri));
@@ -402,7 +455,7 @@ export const zoom = ({
       scored: {
         prompt,
         explorer: candidates.explorer,
-        scorer,
+        scorer: select ? `${select.name}/${scorer}` : scorer,
         grouping,
         relations: relationScores,
         nodes: scoredNodes.map((node) => ({ ...node, kept: kept.has(node.iri) })),

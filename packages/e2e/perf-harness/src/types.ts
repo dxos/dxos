@@ -379,6 +379,33 @@ export type ResponsivenessMetrics = {
   stillFrameCount?: number;
 };
 
+/** One mark on a latency path, as milliseconds since the path's start. */
+export type LatencyStep = {
+  name: string;
+  kind: TargetKind;
+  ms: number;
+};
+
+/**
+ * Prompt-to-model latency over the stage, joined from every realm's work marks on their absolute time.
+ *
+ * Two quantities because a chat turn has two kinds of input: the user's prompt, and — on every later
+ * turn of an agent loop — the previous response, whose tool calls must run before the next request.
+ * Both are the time the app spends between having its input and asking the model.
+ */
+export type RequestLatency = {
+  /** `chat.submit` → the first agent `ai.request` after it, one per submit. */
+  submitToRequestMs: number[];
+  /** An agent `ai.response` → the next agent `ai.request`, one per later turn. */
+  turnToRequestMs: number[];
+  /** The first submit's path: every mark between it and its request. NDJSON only. */
+  submitPath: LatencyStep[];
+  /** Each mark's median offset into the later turns, where it occurred in at least half of them. NDJSON only. */
+  turnPath: LatencyStep[];
+  /** Realms that published marks; `0` means nothing was instrumented. */
+  realms: number;
+};
+
 /** One stage of one flow, in one mode — the unit both the NDJSON row and the PostHog event carry. */
 export type StageRow = {
   flow: string;
@@ -449,6 +476,13 @@ export type StageRow = {
   react?: ReactCounters;
   /** The app's data-layer counters: automerge, ECHO, SQLite statements. */
   data?: DataCounters;
+  /**
+   * Submit (the keydown) to the first frame showing the submitted prompt in the thread, read by the
+   * flow's in-page probe. Absent unless the flow measured it in this stage.
+   */
+  submitToQueuedVisibleMs?: number;
+  /** Prompt-to-model latency. Absent when the stage made no model request. */
+  latency?: RequestLatency;
   responsiveness: ResponsivenessMetrics;
 
   comparability: Comparability;

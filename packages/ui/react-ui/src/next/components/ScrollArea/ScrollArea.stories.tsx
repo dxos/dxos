@@ -13,8 +13,13 @@ import { random } from '@dxos/random';
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { byTestId, expectScoped, realHover } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Block, Container, Icon, Input, ScrollArea, Tag, Typography } from '../index.ts';
-import { type ScrollAreaRootProps } from './ScrollArea.tsx';
+import { Block } from '../Block/Block.tsx';
+import { Container } from '../Container/Container.tsx';
+import * as Icon from '../Icon/Icon.tsx';
+import { Input } from '../Input/Input.tsx';
+import * as Tag from '../Tag/Tag.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import * as ScrollArea from './ScrollArea.tsx';
 
 random.seed(123);
 
@@ -23,18 +28,18 @@ const PARAGRAPHS = Array.from({ length: 12 }, () => random.lorem.paragraph());
 const Header = ({ testId, children }: { testId: string; children: string }) => (
   <Container gutter='rail' layout='row' data-testid={testId}>
     <Block rail='start' data-testid={`${testId}-rail-start`}>
-      <Icon icon='ph--list--regular' />
+      <Icon.Icon icon='ph--list--regular' />
     </Block>
     <div className='truncate' data-testid={`${testId}-content`}>
       {children}
     </div>
     <Block rail='end' data-testid={`${testId}-rail-end`}>
-      <Icon icon='ph--dots-three-vertical--regular' />
+      <Icon.Icon icon='ph--dots-three-vertical--regular' />
     </Block>
   </Container>
 );
 
-type PaneProps = Pick<ScrollAreaRootProps, 'mode' | 'width' | 'native'> & { prefix: string };
+type PaneProps = Pick<ScrollArea.RootProps, 'mode' | 'width' | 'native'> & { prefix: string };
 
 /** A header over a scroll pane whose rows share its rails; `prefix` keeps test ids unique. */
 const Pane = ({ prefix, mode, width, native }: PaneProps) => (
@@ -45,17 +50,17 @@ const Pane = ({ prefix, mode, width, native }: PaneProps) => (
         <Container gutter='rail' data-testid={`${prefix}-viewport`}>
           <Container layout='row'>
             <Block rail='start' data-testid={`${prefix}-row-rail-start`}>
-              <Icon icon='ph--user--regular' />
+              <Icon.Icon icon='ph--user--regular' />
             </Block>
             <Input aria-label='Name' />
             <Block rail='end' data-testid={`${prefix}-row-rail-end`}>
-              <Icon icon='ph--x--regular' />
+              <Icon.Icon icon='ph--x--regular' />
             </Block>
           </Container>
           {PARAGRAPHS.map((paragraph, index) => (
-            <Typography key={index} data-testid={index === 0 ? `${prefix}-paragraph` : undefined}>
+            <Typography.Text key={index} data-testid={index === 0 ? `${prefix}-paragraph` : undefined}>
               {paragraph}
-            </Typography>
+            </Typography.Text>
           ))}
         </Container>
       </ScrollArea.Viewport>
@@ -63,11 +68,11 @@ const Pane = ({ prefix, mode, width, native }: PaneProps) => (
   </div>
 );
 
-type StoryArgs = SizeArgs & Pick<ScrollAreaRootProps, 'mode' | 'width'>;
+type StoryArgs = SizeArgs & Pick<ScrollArea.RootProps, 'mode' | 'width'>;
 
 const TAGS = Array.from({ length: 16 }, (_, index) => `Tag ${index + 1}`);
 
-type StripProps = Pick<ScrollAreaRootProps, 'autoHide' | 'snap' | 'scrollbars'> & { prefix: string };
+type StripProps = Pick<ScrollArea.RootProps, 'autoHide' | 'snap' | 'scrollbars'> & { prefix: string };
 
 /** A horizontal strip of Tags wider than its pane. */
 const Strip = ({ prefix, ...props }: StripProps) => (
@@ -75,9 +80,9 @@ const Strip = ({ prefix, ...props }: StripProps) => (
     <ScrollArea.Viewport data-testid={`${prefix}-viewport`}>
       <div className='flex w-max gap-2 py-2'>
         {TAGS.map((tag) => (
-          <Tag key={tag} hue='sky' classNames='snap-start'>
+          <Tag.Tag key={tag} hue='sky' classNames='snap-start'>
             {tag}
-          </Tag>
+          </Tag.Tag>
         ))}
       </div>
     </ScrollArea.Viewport>
@@ -94,7 +99,7 @@ const DefaultStory = ({ size, mode, width }: StoryArgs) => (
       <Pane prefix={`overlay-${size}`} mode={mode} width={width} />
       <Pane prefix={`native-${size}`} native />
     </div>
-    <Strip prefix={`strip-${size}`} snap autoHide />
+    <Strip prefix={`strip-${size}`} snap />
     <Strip prefix={`bare-${size}`} scrollbars={false} />
   </>
 );
@@ -168,6 +173,10 @@ export const Test: Story = {
     await expect(stripViewport.scrollWidth).toBeGreaterThan(stripViewport.clientWidth);
     await expect(getComputedStyle(stripViewport).overflowY).toBe('hidden');
     await expect(getComputedStyle(stripViewport).scrollSnapType).toBe('x mandatory');
+    // Contained only along its own axis, so a vertical swipe over the strip scrolls whatever encloses it.
+    await expect(getComputedStyle(stripViewport).overscrollBehaviorX).toBe('contain');
+    await expect(getComputedStyle(stripViewport).overscrollBehaviorY).toBe('auto');
+    await expect(getComputedStyle(viewport).overscrollBehaviorY).toBe('contain');
     const stripThumb = await waitFor(() => {
       const element = strip.querySelector<HTMLElement>(':scope > .absolute');
       if (!element) {

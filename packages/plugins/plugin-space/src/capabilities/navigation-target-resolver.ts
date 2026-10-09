@@ -7,13 +7,12 @@ import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import * as AppCaps from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { Database, Entity, Obj, Ref, Type, View } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import * as SettingsPath from '@dxos/plugin-settings/SettingsPath';
 import { ViewAnnotation, getTypeURIFromQuery } from '@dxos/schema';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { meta } from '#meta';
 
@@ -22,7 +21,7 @@ import { resolveCollectionObjectPath, resolveTypeSectionPath } from '../util/ind
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
-    const resolver: AppCaps.NavigationTargetResolver = (query) =>
+    const resolver: AppCapabilities.NavigationTargetResolver = (query) =>
       Effect.gen(function* () {
         if (!query?.uri) {
           return [

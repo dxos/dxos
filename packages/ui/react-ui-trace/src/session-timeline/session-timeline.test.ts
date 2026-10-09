@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import { describe, test } from 'vitest';
 
+import { makeTestProcess } from '@dxos/compute-runtime/testing';
 import * as Process from '@dxos/compute/Process';
 import { TestTraceService } from '@dxos/compute/testing';
 import * as Trace from '@dxos/compute/Trace';
@@ -889,6 +890,52 @@ describe('buildSessionTimeline', () => {
     expect(timeline.lanes.find((lane) => lane.id === `task:${child.id}`)?.parentId).toBe(`task:${parent.id}`);
   });
 
+  test("a parent task's lane begins no later than its sub-tasks', even when they are not on one checklist", ({
+    expect,
+  }) => {
+    const parent = Task.make({ title: 'Parent', status: 'started' });
+    const child = Task.make({ [Obj.Parent]: parent, title: 'Child', status: 'done' });
+    const grandchild = Task.make({ [Obj.Parent]: child, title: 'Grandchild', status: 'done' });
+    // The parent is not on the checklist, so it is drawn from its edit history alone, unnested.
+    const chat = makeChat('Run', [child, grandchild]);
+    const timeline = buildSessionTimeline({
+      traceMessages: [],
+      sessions: [chat.session],
+      tasks: [parent, child, grandchild],
+      taskStatusChanges: new Map([
+        [parent.id, [{ timestamp: 3_000, status: 'started', previousStatus: 'todo' }]],
+        [
+          child.id,
+          [
+            { timestamp: 2_000, status: 'started', previousStatus: 'todo' },
+            { timestamp: 4_000, status: 'done', previousStatus: 'started' },
+          ],
+        ],
+        [
+          grandchild.id,
+          [
+            { timestamp: 1_000, status: 'started', previousStatus: 'todo' },
+            { timestamp: 2_500, status: 'done', previousStatus: 'started' },
+          ],
+        ],
+      ]),
+    });
+
+    const laneOf = (task: Task.Task) => timeline.lanes.find((lane) => lane.taskId === task.id);
+    expect(laneOf(parent)?.parentId).toBeUndefined();
+    expect(laneOf(parent)?.start).toBe(1_000);
+    expect(laneOf(child)?.start).toBe(1_000);
+    expect(laneOf(grandchild)?.start).toBe(1_000);
+    // It carries every descendant's start and finish beside its own move, so its first node is where the work began.
+    const nodesOf = (task: Task.Task) =>
+      timeline.markers
+        .filter((marker) => marker.laneId === laneOf(task)?.id)
+        .map(({ timestamp }) => timestamp)
+        .sort((left, right) => left - right);
+    expect(nodesOf(parent)).toEqual([1_000, 2_000, 2_500, 3_000, 4_000]);
+    expect(nodesOf(child)).toEqual([1_000, 2_000, 2_500, 4_000]);
+  });
+
   it.effect(
     'draws a status move once when both the trace and the edit history record it',
     Effect.fnUntraced(function* ({ expect }) {
@@ -1104,24 +1151,25 @@ describe('readTaskStatusChanges', () => {
   );
 });
 
-const agentProcess = (pid: string, chat: TestChat, state: Process.State): Process.Info => ({
-  pid: Process.ID.make(pid),
-  parentPid: null,
-  key: 'agent',
-  params: {
-    name: null,
-    annotations: Annotation.buildDictionary((dictionary) => {
-      Annotation.setDictionary(dictionary, Process.HarnessHostAnnotation, true);
-      Annotation.setDictionary(dictionary, Process.TargetAnnotation, URI.make(chat.session.uri));
-    }),
-  },
-  environment: {},
-  state,
-  error: null,
-  startedAt: 0,
-  completedAt: Option.none(),
-  metrics: { wallTime: 0, inputCount: 0, outputCount: 0 },
-});
+const agentProcess = (pid: string, chat: TestChat, state: Process.State): Process.Process =>
+  makeTestProcess({
+    pid: Process.ID.make(pid),
+    parentPid: null,
+    key: 'agent',
+    params: {
+      name: null,
+      annotations: Annotation.buildDictionary((dictionary) => {
+        Annotation.setDictionary(dictionary, Process.HarnessHostAnnotation, true);
+        Annotation.setDictionary(dictionary, Process.TargetAnnotation, URI.make(chat.session.uri));
+      }),
+    },
+    environment: {},
+    state,
+    error: null,
+    startedAt: 0,
+    completedAt: Option.none(),
+    metrics: { wallTime: 0, inputCount: 0, outputCount: 0 },
+  });
 
 /** A chat reduced to what the builder joins on, with the feed ref its trace meta would carry. */
 type TestChat = { id: string; feed: Ref.Ref<Feed.Feed>; session: Session };

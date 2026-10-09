@@ -365,6 +365,28 @@ serving more calls than it holds reports a percentile over the stage's TAIL; `rp
 `rpcSamples` in the trended columns is what says so. A realm that published no counters at all is
 absent from the array entirely, which `rpcRealms` counts.
 
+### `latency` — prompt to model request
+
+How long the app holds a chat turn's input before asking the model, joined from every realm's
+work marks (`markWork` in `@dxos/util`): User Timing marks named `dxos:<name>`, which also show on the
+DevTools Timings track. The harness reads each realm's marks with `performance.getEntriesByType` and
+places them at `performance.timeOrigin + startTime`, so a mark taken in a worker compares with one
+taken in the tab, which `startTime` alone does not allow. `chat.submit` is taken by the chat UI;
+`ai.request` and `ai.response` by `@dxos/ai` around every model call, for the scripted model and
+HTTP providers alike. The calls offering a toolkit are the agent's turns.
+
+| Field               | Trended as                         | Meaning                                                                                       |
+| ------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------- |
+| `submitToRequestMs` | `submitToRequest{P50,Max,Count}Ms` | A user submit to the first agent request it caused.                                           |
+| `turnToRequestMs`   | `turnToRequest{P50,Max,Count}Ms`   | The end of one agent response to the next request: tool calls, their writes, context rebuild. |
+| `submitPath`        | NDJSON only                        | Every mark between the first submit and its request, in ms since the submit.                  |
+| `turnPath`          | NDJSON only                        | Each mark's median offset into the later turns.                                               |
+| `realms`            | `markRealms`                       | Realms that wrote any work mark; `0` means nothing was instrumented.                          |
+
+The paths are how a regression is attributed: the marks name the hops from the UI handler through
+the agent process waking, history and context assembly, to the request. The row is absent from a
+stage that made no model request.
+
 ### `stillFrameMaxMs`, `stillFrameCount` — `diagnose` only
 
 Inter-frame gaps from `Page.screencastFrame` timestamps: `stillFrameMaxMs` is the longest interval
@@ -507,6 +529,31 @@ middleware. It has no byte counts: page↔worker messages are structured-cloned 
 serialization step to measure, and walking every payload to estimate one would cost more than the
 call. `network.byEndpoint` groups requests, bytes and socket frames by host and first path segment.
 
+### Scoring them
+
+`src/score/stages.ts` scores a counter per stage as `<counter> > <stage>` (`reactRenders >
+assistant-turns`), the shape `wall > <stage>` has, so the heatmap splits the stage and the counter
+from the id without knowing about counters. They roll up into a `work` group (`busy work` for the
+chat flow's busy space), so a work regression moves the suite score as one group rather than being
+diluted into the timings.
+
+- `DEFAULT_WORK_METRICS` — what the nightly rows already carry: React commits, renders and wasted
+  renders; `recalcStyleCount` and `layoutCount`; SQLite statements by kind and rows changed;
+  Automerge saves (all kinds summed) and bytes; ECHO index passes, query runs and recomputes. Scored
+  in each flow's own suite.
+- `COSTED_WORK_METRICS` — the trace and coverage counts. The nightly runs them in jobs of their own
+  (`perf-counters`, `chat-counters`) with `DX_PERF_COUNTERS=trace,calls,react`, scores only them as
+  the `composer-work` and `chat-work` suites, and publishes none of that pass's stage rows: no
+  `ci.perf-stage` tile pins `ciCounters`, so a row inflated 7–29% would read there as a regression.
+
+Budgets are opt-in per stage: a counter with no budget is not measured, rather than warned about,
+since a zero or a network-paced stage (`seed`, `await-replication`) has no budget on purpose.
+`score-perf.ts calibrate --run <dir> --run <dir> …` proposes them from several nights' artifacts
+(`proposeWorkBudgets`): the target is the median of each night's median; the limit three spreads
+above it, at least 5% and one count, where the spread is the larger of the night-to-night CV and the
+per-iteration CV over √n. A counter noisier than 5% per iteration is left out — it is not counting
+deterministic work.
+
 ## Instrument cost, measured
 
 One sample per configuration of the same flow, whole-flow wall time:
@@ -556,8 +603,8 @@ flag), so these are each costed counter's own increment.
 So the default is `react` alone: a few percent, the same order as the profiler. `trace` costs
 past that in CPU — `devtools.timeline` records an event per script entry in every realm — and
 `calls` far past it, since precise coverage keeps every function's invocation counter live; both
-run on request (`DX_PERF_COUNTERS=trace,react` for a counting run) rather than inside the
-trended one.
+run on request (`DX_PERF_COUNTERS=trace,react` for a counting run) and in the nightly's separate
+counters-on jobs, never inside the trended one.
 
 Across the same three iterations, the counts held where the stage is user-driven: on
 `assistant-turns`, `scroll-*`, `open-*` and `reopen-project` the coefficient of variation of

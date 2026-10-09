@@ -879,12 +879,17 @@ const handlers = {
     }
     const timelineFile = path.join(options.out, 'timeline.json');
     writeFileSync(timelineFile, JSON.stringify({ started, steps: timeline }, null, 2));
-    const recorded = await recorder?.stop();
-    // Before the session closes: the polled tap drains once more and stops its timer.
-    await logTap?.close();
-    await context?.close();
-    await browser?.close();
-    await native?.close();
+    let recorded;
+    try {
+      recorded = await recorder?.stop();
+    } finally {
+      // Also when the encode fails: the app, browser and log tap must not outlive the session.
+      // Before the session closes: the polled tap drains once more and stops its timer.
+      await logTap?.close();
+      await context?.close();
+      await browser?.close();
+      await native?.close();
+    }
     // `recorded.file` already carries the output directory; only the fallback's bare name needs it.
     const fallback = recorded ? undefined : readdirSync(options.out).find((entry) => entry.endsWith('.webm'));
     const video = recorded ? path.resolve(recorded.file) : fallback && path.resolve(options.out, fallback);
@@ -893,6 +898,8 @@ const handlers = {
       size: `${viewport.width * scale}x${viewport.height * scale}`,
       timeline: timelineFile,
       steps: timeline.length,
+      // The recorder kept writing, but what it wrote after this point is not the app.
+      ...(recorded?.lost ? { lost: recorded.lost } : {}),
     };
   },
 };
@@ -941,10 +948,12 @@ const server = createServer((request, response) => {
 
     try {
       const result = await handler(command);
+      // Serialized before the header goes out, so a result that cannot be stringified reaches the catch below.
+      const body = JSON.stringify({ ok: true, ...result });
       response.writeHead(200, { 'content-type': 'application/json' });
       // Shutdown runs from the write callback: exiting as soon as `end` returns can cut the response
       // off before it flushes, and that response carries the video path.
-      response.end(JSON.stringify({ ok: true, ...result }), () => {
+      response.end(body, () => {
         if (command.op === 'stop' && !manual) {
           // Exit from inside `close`, and drop keep-alive sockets so it can actually complete: dropping
           // the exit entirely leaves the process alive on an idle client socket, and exiting before the

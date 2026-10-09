@@ -42,7 +42,7 @@ export class SceneManager {
     return Math.max(...boxes.map(({ x, width }) => x + width));
   }
 
-  /** The debug bar's zoom readout, as whole percent; the navigation bar carries the path and depth. */
+  /** The debug bar's zoom readout, as whole percent; the navigation bar carries the path. */
   async zoom(): Promise<number> {
     const readout = await this.page.getByTestId('canvas-debug').textContent();
     const percent = readout?.match(/(\d+)%/);
@@ -56,7 +56,7 @@ export class SceneManager {
   selectedNodes(): Promise<string[]> {
     return this.page.evaluate(() =>
       Array.from(document.querySelectorAll<HTMLElement>('[data-node-id]'))
-        .filter((element) => element.className.includes('border-primary-500 '))
+        .filter((element) => element.className.includes('border-focus '))
         .map((element) => element.dataset.nodeId ?? ''),
     );
   }

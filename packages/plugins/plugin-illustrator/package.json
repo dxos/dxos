@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-illustrator",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "description": "Headless diagramming plugin for DXOS Composer (unifies canvas renderers like tldraw and excalidraw).",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,7 +10,7 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#capabilities": {
@@ -84,22 +84,6 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./model": {
-      "source": "./src/model/index.ts",
-      "types": "./dist/types/src/model/index.d.ts",
-      "import": "./dist/lib/model.mjs"
-    },
-    "./skills": {
-      "source": "./src/skills/index.ts",
-      "types": "./dist/types/src/skills/index.d.ts",
-      "import": "./dist/lib/skills.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
-    },
-    "./package.json": "./package.json",
     "./Drawing": {
       "source": "./src/types/Drawing.ts",
       "types": "./dist/types/src/types/Drawing.d.ts",
@@ -109,6 +93,11 @@
       "source": "./src/types/DrawingOperation.ts",
       "types": "./dist/types/src/types/DrawingOperation.d.ts",
       "import": "./dist/lib/DrawingOperation.mjs"
+    },
+    "./DrawingSkill": {
+      "source": "./src/skills/DrawingSkill.ts",
+      "types": "./dist/types/src/skills/DrawingSkill.d.ts",
+      "import": "./dist/lib/DrawingSkill.mjs"
     },
     "./IllustratorCapabilities": {
       "source": "./src/types/IllustratorCapabilities.ts",
@@ -126,19 +115,35 @@
       "import": "./dist/lib/IllustratorEvents.mjs"
     },
     "./IllustratorModel": {
-      "source": "./src/model/index.ts",
-      "types": "./dist/types/src/model/index.d.ts",
-      "import": "./dist/lib/model.mjs"
+      "source": "./src/IllustratorModel.ts",
+      "types": "./dist/types/src/IllustratorModel.d.ts",
+      "import": "./dist/lib/ns/IllustratorModel.mjs"
+    },
+    "./IllustratorOperationHandlerSet": {
+      "source": "./src/IllustratorOperationHandlerSet.ts",
+      "types": "./dist/types/src/IllustratorOperationHandlerSet.d.ts",
+      "import": "./dist/lib/ns/IllustratorOperationHandlerSet.mjs"
     },
     "./IllustratorPlugin": {
       "source": "./src/IllustratorPlugin.ts",
       "types": "./dist/types/src/IllustratorPlugin.d.ts",
       "import": "./dist/lib/IllustratorPlugin.mjs"
     },
+    "./SceneSvg": {
+      "source": "./src/SceneSvg.ts",
+      "types": "./dist/types/src/SceneSvg.d.ts",
+      "import": "./dist/lib/ns/SceneSvg.mjs"
+    },
     "./LegacySketch": {
       "source": "./src/types/LegacySketch.ts",
       "types": "./dist/types/src/types/LegacySketch.d.ts",
       "import": "./dist/lib/LegacySketch.mjs"
+    },
+    "./package.json": "./package.json",
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -198,6 +203,7 @@
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@playwright/test": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

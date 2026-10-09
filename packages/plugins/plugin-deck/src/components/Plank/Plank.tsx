@@ -11,20 +11,19 @@ import React, {
   useMemo,
 } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
+import * as Surface from '@dxos/app-framework/Surface';
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import { AppSurface, AttentionSigil, type AttentionSigilAction } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as AttentionSigil from '@dxos/app-toolkit/AttentionSigil';
 import { useComposedRefs } from '@dxos/react-hooks';
-import {
-  Breadcrumb,
-  Icon,
-  Popover,
-  type ThemedClassName,
-  toLocalizedString,
-  useMainLandmark,
-  useTranslation,
-} from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
+import * as Breadcrumb from '@dxos/react-ui/Breadcrumb';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Main from '@dxos/react-ui/Main';
+import * as Popover from '@dxos/react-ui/Popover';
+import * as Theme from '@dxos/react-ui/Theme';
+import type * as Util from '@dxos/react-ui/Util';
 
 import { meta } from '#meta';
 
@@ -49,13 +48,13 @@ type SurfaceProps = ComponentProps<typeof Surface.Surface>;
  */
 export type PlankSubject = Pick<AppGraphNode.Node, 'id'> & Partial<Pick<AppGraphNode.Node, 'properties' | 'data'>>;
 
-export type PlankProps = ThemedClassName<{
+export type PlankProps = Util.ThemedClassName<{
   node: PlankSubject;
   /** Attendable id; defaults to the node id. */
   attendableId?: string;
   /** Grouped sigil menu actions; when present the sigil opens a menu, otherwise it is a plain button. */
-  actions?: AttentionSigilAction[][];
-  onAction?: (action: AttentionSigilAction) => void;
+  actions?: AttentionSigil.Action[][];
+  onAction?: (action: AttentionSigil.Action) => void;
   /** Navigation-history trail rendered before the title (flat mode); clicking one goes back to it. */
   breadcrumbs?: { id: string; label: string }[];
   onSelectBreadcrumb?: (id: string) => void;
@@ -110,14 +109,14 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
     },
     forwardedRef,
   ) => {
-    const { t } = useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(meta.profile.key);
     const attentionAttrs = useAttentionAttributes(attendableId);
     // Each plank is a focus area of the shell; its companion follows it.
-    const landmark = useMainLandmark(1, onKeyDown);
+    const landmark = Main.useMainLandmark(1, onKeyDown);
     const ref = useComposedRefs<HTMLDivElement>(forwardedRef, landmark.ref);
     const icon = node.properties?.icon ?? 'ph--circle-dashed--regular';
     // A bare string is taken verbatim by `toLocalizedString`; only the tuple form is looked up.
-    const label = toLocalizedString(
+    const label = Theme.toLocalizedString(
       node.properties?.label ?? (pending ? (['pending.heading', { ns: meta.profile.key }] as const) : ''),
       t,
     );
@@ -142,7 +141,7 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
           <Pane.Toolbar>
             <ActionRoot>
               {actions && actions.length > 0 ? (
-                <AttentionSigil
+                <AttentionSigil.Root
                   icon={icon}
                   related={related}
                   attendableId={attendableId}
@@ -151,7 +150,7 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
                   triggerLabel={label}
                 >
                   {sigilFooter}
-                </AttentionSigil>
+                </AttentionSigil.Root>
               ) : (
                 <Pane.Sigil
                   attendableId={attendableId}
@@ -159,7 +158,7 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
                   style={pending ? pendingStyle : undefined}
                 >
                   <span className='sr-only'>{label}</span>
-                  <Icon icon={icon} />
+                  <Icon.Icon icon={icon} />
                 </Pane.Sigil>
               )}
             </ActionRoot>
@@ -169,30 +168,32 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
               // attention-aware Pane.Title, sized to its content so it keeps a stable width.
               // `ps-1`, matching `Pane.Title`'s own `px-1`: the two branches below render at the same
               // origin, so the leading label must not shift as a trail appears or disappears.
-              <Breadcrumb.Root aria-label={t('breadcrumbs.label')} classNames='ps-1'>
+              <Breadcrumb.Root aria-label={t('breadcrumbs.label')} classNames='ps-1 grow'>
                 <Breadcrumb.List classNames='gap-1'>
                   {breadcrumbs.map((crumb) => (
                     <Fragment key={crumb.id}>
-                      <Breadcrumb.Item asChild>
-                        <button
-                          type='button'
-                          className='shrink-0 whitespace-nowrap text-fg-muted hover:text-fg'
-                          onClick={() => onSelectBreadcrumb?.(crumb.id)}
-                        >
-                          {crumb.label}
-                        </button>
+                      <Breadcrumb.Item>
+                        <Breadcrumb.Link asChild>
+                          <button type='button' onClick={() => onSelectBreadcrumb?.(crumb.id)}>
+                            {crumb.label}
+                          </button>
+                        </Breadcrumb.Link>
                       </Breadcrumb.Item>
                       <Breadcrumb.Separator />
                     </Fragment>
                   ))}
                   <Breadcrumb.Item>
-                    <Pane.Title
-                      attendableId={attendableId}
-                      related={related}
-                      classNames={[pending && 'text-fg-muted', 'w-auto grow-0']}
-                    >
-                      {label}
-                    </Pane.Title>
+                    {/* The crumb's own inset and weight rather than the title's, so a crumb keeps its size and place
+                        as it becomes (or stops being) the current page. */}
+                    <Breadcrumb.Current asChild>
+                      <Pane.Title
+                        attendableId={attendableId}
+                        related={related}
+                        classNames={[pending && 'text-fg-muted', 'w-auto grow-0 px-(--dx-control-inset) font-normal']}
+                      >
+                        {label}
+                      </Pane.Title>
+                    </Breadcrumb.Current>
                   </Breadcrumb.Item>
                 </Breadcrumb.List>
               </Breadcrumb.Root>

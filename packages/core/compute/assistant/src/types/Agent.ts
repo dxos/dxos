@@ -7,10 +7,11 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
+import type * as AgentService from '@dxos/compute/AgentService';
 import * as Instructions from '@dxos/compute/Instructions';
-import type * as Skill from '@dxos/compute/Skill';
-import { Annotation, Database, DXN, type Error as EchoError, Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as Skill from '@dxos/compute/Skill';
+import { Annotation, Database, DXN, type Error as EchoError, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { IdentityDid } from '@dxos/keys';
 
 import type * as Harness from '../session/Harness.ts';
@@ -43,9 +44,15 @@ export class Agent extends Type.makeObject<Agent>(DXN.make('org.dxos.type.agent'
      * HALO identity DID takes once agents get first-class identities. Optional because nothing
      * populates it yet.
      */
-    did: Schema.optional(IdentityDid).annotate({
+    did: Schema.optional(
+      // Annotated inside `optional`: the form reads the title from the value schema, not the wrapper.
+      IdentityDid.annotate({
+        title: 'DID',
+        description: "The agent's identity DID; attributes content the agent authors.",
+      }),
+    ).annotate({
       title: 'DID',
-      description: "The agent's identity DID; attributes content the agent authors.",
+      description: "The agent's DID.",
     }),
 
     /**
@@ -62,6 +69,7 @@ export class Agent extends Type.makeObject<Agent>(DXN.make('org.dxos.type.agent'
      */
     instructions: Ref.Ref(Instructions.Instructions).pipe(
       Annotation.SetParent.set(),
+      Annotation.FormInlineAnnotation.set(true),
       Schema.annotate({ title: 'Instructions' }),
     ),
   }).pipe(
@@ -97,11 +105,17 @@ export const loadInstructions = (
  */
 export const loadChat = (agent: Agent): Effect.Effect<Chat.Chat | undefined, never, Database.Service> =>
   Effect.gen(function* () {
-    const children = yield* Database.query(Query.select(Filter.id(agent.id)).children()).run;
-    return children
-      .filter(Obj.instanceOf(Chat.Chat))
-      .sort((left, right) => left.id.localeCompare(right.id))
-      .at(-1);
+    // A child-of filter rather than a `.children()` traversal: EDGE's query planner has no hierarchy
+    // traversal, so an agent hosted there could not resolve its chat.
+    const chats = yield* Database.query(Filter.and(Filter.type(Chat.Chat), Filter.childOf(agent))).run;
+    return (
+      chats
+        // Chats bridged from an external conversation (a Discord thread) carry its foreign key; they are
+        // the agent's too, but never its own primary chat.
+        .filter((chat) => Obj.getMeta(chat).keys.length === 0)
+        .sort((left, right) => left.id.localeCompare(right.id))
+        .at(-1)
+    );
   }).pipe(Effect.orDie);
 
 /**
@@ -114,6 +128,20 @@ export const loadForChat = (chat: Chat.Chat): Effect.Effect<Agent | undefined> =
     return parent && Obj.instanceOf(Agent, parent) ? parent : undefined;
   });
 
+/**
+ * Where a chat's turns run: as its `remote` flag says, else on EDGE for an agent's chat, since its chats share
+ * the agent's one brain, which only EDGE holds. An explicit `remote: false` keeps an agent's chats local, for
+ * a runtime with no EDGE to reach (a story or test), where every chat shares the client's brain instead.
+ */
+export const chatLocation = (chat: Chat.Chat): AgentService.AgentLocation =>
+  (chat.remote ?? isAgentChat(chat)) ? 'edge' : 'local';
+
+/** Whether the chat runs as an agent (the agent parents it); synchronous, like {@link loadForChat}. */
+export const isAgentChat = (chat: Chat.Chat): boolean => {
+  const parent = Obj.getParent(chat);
+  return parent !== undefined && Obj.instanceOf(Agent, parent);
+};
+
 export type MakeProps = Omit<Obj.MakeProps<typeof Agent>, 'instructions'> & {
   instructions: string;
   skills?: Ref.Ref<Skill.Skill>[];
@@ -124,13 +152,14 @@ export type MakeProps = Omit<Obj.MakeProps<typeof Agent>, 'instructions'> & {
  * Creates a fully initialized Agent with its first chat and context bindings.
  *
  * @param props - Agent properties including spec, skills, and context objects.
- * @param skill - The skill to use for the agent context.
+ * @param skill - The skill to use for the agent context: a skill object is cloned into the space, a ref
+ *   (e.g. a registry URI) is bound as-is so the agent follows the compiled skill until customized.
  * @returns An Effect that yields the initialized Agent.
  */
 export const makeInitialized = (
   props: MakeProps,
   // TODO(burdon): Reconcile with props.skills.
-  skill: Skill.Skill,
+  skill: Skill.Skill | Ref.Ref<Skill.Skill>,
 ): Effect.Effect<Agent, never, Database.Service> =>
   Effect.gen(function* () {
     const { skills: propsSkills, contextObjects, ...agentProps } = props;
@@ -142,12 +171,14 @@ export const makeInitialized = (
     // Persist any inline (transient) skills so their refs are resolvable from feed bindings later.
     // Refs created with Ref.make(obj) carry an inline target, but when stored in ECHO and read back
     // by a new AiSession, the target is lost and must be found in the DB via tryLoad().
+    // `peek` rather than `target`: a registry-URI ref has no inline target and no resolver yet.
     const persistedPropsSkills = yield* Effect.all(
-      (propsSkills ?? []).map((ref) =>
-        ref.target !== undefined
-          ? Database.add(ref.target).pipe(Effect.map((persisted) => Ref.make(persisted)))
-          : Effect.succeed(ref),
-      ),
+      (propsSkills ?? []).map((ref) => {
+        const target = ref.peek();
+        return target !== undefined
+          ? Database.add(target).pipe(Effect.map((persisted) => Ref.make(persisted)))
+          : Effect.succeed(ref);
+      }),
     );
 
     // The typed Instructions is the agent's preset payload: text plus skill set.
@@ -168,8 +199,7 @@ export const makeInitialized = (
     const feed = yield* Database.add(Feed.make());
     const runtime = yield* Effect.context<Database.Service>();
     const contextBinder = yield* EffectEx.acquireReleaseResource(() => new AiContextRuntime.Binder({ feed, runtime }));
-    // TODO(dmaretskyi): Skill registry.
-    const agentSkill = yield* Database.add(Obj.clone(skill, { deep: 'all' }));
+    const agentSkill = Ref.isRef(skill) ? skill : Ref.make(yield* Database.add(Obj.clone(skill, { deep: 'all' })));
 
     const chat = yield* Database.add(
       Chat.make({
@@ -182,7 +212,7 @@ export const makeInitialized = (
     Chat.linkCompanion({ chat, subject: agent });
     yield* Effect.promise(() =>
       contextBinder.bind({
-        skills: [Ref.make(agentSkill), ...persistedPropsSkills],
+        skills: [agentSkill, ...persistedPropsSkills],
         objects: [Ref.make(agent), Ref.make(chat), ...(contextObjects ?? [])],
       }),
     );
@@ -213,7 +243,7 @@ export const resetChatHistory = (agent: Agent): Effect.Effect<void, EchoError.En
           runtime,
         }),
     );
-    const skills = existingContextBinder.getSkills().map((skill) => Ref.make(skill));
+    const skills = existingContextBinder.getSkills().map(Skill.makeRef);
     const objects = existingContextBinder
       .getObjects()
       .filter((object) => !Obj.instanceOf(Chat.Chat, object))

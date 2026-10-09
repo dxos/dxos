@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-doctor",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "private": true,
   "description": "Self-introspection skill: query the browser tab's own logs.",
   "homepage": "https://dxos.org",
@@ -11,7 +11,7 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#capabilities": {
@@ -75,17 +75,6 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./diagnostics": {
-      "source": "./src/diagnostics/index.ts",
-      "types": "./dist/types/src/diagnostics/index.d.ts",
-      "import": "./dist/lib/diagnostics.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
-    },
-    "./package.json": "./package.json",
     "./DoctorCapabilities": {
       "source": "./src/types/DoctorCapabilities.ts",
       "types": "./dist/types/src/types/DoctorCapabilities.d.ts",
@@ -105,6 +94,12 @@
       "source": "./src/DoctorPlugin.ts",
       "types": "./dist/types/src/DoctorPlugin.d.ts",
       "import": "./dist/lib/DoctorPlugin.mjs"
+    },
+    "./package.json": "./package.json",
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

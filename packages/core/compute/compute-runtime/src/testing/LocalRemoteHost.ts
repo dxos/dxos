@@ -10,6 +10,7 @@ import type * as Rpc from 'effect/rpc/Rpc';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
+import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 
 import type * as ProcessManager from '../ProcessManager.ts';
@@ -36,7 +37,7 @@ export interface Host extends RemoteProcessManager.Control {
 export interface Options {
   readonly manager: ProcessManager.Manager;
   /** Processes this host hosts, resolved by `Process.key` — a definition cannot cross the wire. */
-  readonly definitions: readonly Process.Process<any, any, any, any>[];
+  readonly definitions: readonly Operation.Durable<any, any, any, any>[];
 }
 
 /**
@@ -48,7 +49,7 @@ export interface Options {
  */
 export const makeHost = (options: Options): Effect.Effect<Host> =>
   Effect.gen(function* () {
-    const handles = new Map<Process.ID, ProcessManager.Handle.Any>();
+    const handles = new Map<Process.ID, Process.Any>();
     const events = new Map<Process.ID, RemoteProcessManager.Event[]>();
     const inputCounts = new Map<Process.ID, number>();
     const applied: { pid: Process.ID; input: unknown }[] = [];
@@ -58,9 +59,9 @@ export const makeHost = (options: Options): Effect.Effect<Host> =>
 
     const definitionFor = (key: string) => options.definitions.find((definition) => definition.key === key);
 
-    const snapshot = (handle: ProcessManager.Handle.Any): RemoteProcessManager.Snapshot => ({
+    const snapshot = (handle: Process.Any): RemoteProcessManager.Snapshot => ({
       pid: handle.pid,
-      parentPid: handle.parentId,
+      parentPid: handle.parentPid,
       key: handle.key,
       params: handle.params,
       environment: handle.environment,
@@ -78,7 +79,7 @@ export const makeHost = (options: Options): Effect.Effect<Host> =>
       },
     });
 
-    const handleFor = (pid: Process.ID): Effect.Effect<ProcessManager.Handle.Any> => {
+    const handleFor = (pid: Process.ID): Effect.Effect<Process.Any> => {
       const handle = handles.get(pid);
       return handle ? Effect.succeed(handle) : Effect.die(`no such process on host: ${pid}`);
     };

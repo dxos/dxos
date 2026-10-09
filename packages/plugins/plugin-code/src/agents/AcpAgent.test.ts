@@ -77,17 +77,30 @@ const summarize = (block: ContentBlock.Any): string => {
   }
 };
 
-const findRequest = (feed: Feed.Feed) =>
+/** The first message in the feed that matches, as soon as it lands: a live query, so nothing polls. */
+const awaitMessage = (feed: Feed.Feed, matches: (message: Message.Message) => boolean) =>
   Effect.gen(function* () {
-    while (true) {
-      const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
-      const message = messages.find((message) => message.blocks.some((block) => block._tag === 'request'));
-      if (message) {
-        return message;
-      }
-      yield* Effect.sleep('10 millis');
-    }
+    const query = yield* Feed.query(feed, Filter.type(Message.Message));
+    return yield* Effect.callback<Message.Message>((resume) => {
+      const unsubscribe = query.subscribe(
+        (result) => {
+          const found = result.results.find(matches);
+          if (found) {
+            resume(Effect.succeed(found));
+          }
+        },
+        { fire: true },
+      );
+      return Effect.sync(unsubscribe);
+    });
   });
+
+/** A turn records its prompt once the agent's session is open. */
+const promptRecorded = (feed: Feed.Feed, text: string) =>
+  awaitMessage(feed, (message) => message.sender.role === 'user' && Message.extractText(message) === text);
+
+const findRequest = (feed: Feed.Feed) =>
+  awaitMessage(feed, (message) => message.blocks.some((block) => block._tag === 'request'));
 
 describe('AcpAgent', () => {
   const written: Written[] = [];
@@ -162,7 +175,7 @@ describe('AcpAgent', () => {
     Effect.gen(function* () {
       const { feed, chat, sessions, options } = yield* setup();
       const turn = yield* AcpAgent.runTurn(options, { chat, feed }, { prompt: 'slow' }).pipe(Effect.forkChild);
-      yield* Effect.sleep('50 millis');
+      yield* promptRecorded(feed, 'slow');
       yield* Fiber.interrupt(turn);
       expect(sessions.has(chat.id)).toBe(true);
 

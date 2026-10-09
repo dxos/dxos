@@ -6,11 +6,16 @@ import React, { forwardRef, useId, useMemo, useState } from 'react';
 
 import { type Database, Filter, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Banner, Card, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
 import { type DndContainerHandler } from '@dxos/react-ui-dnd';
 import { ObjectForm } from '@dxos/react-ui-form';
 import { Mosaic } from '@dxos/react-ui-mosaic';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Card from '@dxos/react-ui/Card';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -26,7 +31,7 @@ export type ObjectCardStackProps = {
  */
 export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
   ({ objectId, db, type }, forwardedRef) => {
-    const { t } = useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(meta.profile.key);
 
     const queriedObjects = useQuery(db, Filter.type(Type.getURI(type)));
     const selectedRows = useSelection(objectId, 'multi');
@@ -46,34 +51,34 @@ export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
         <Panel.Header>
           <Toolbar.Root />
         </Panel.Header>
-        <Panel.Body>
-          {selectedObjects.length === 0 ? (
-            <Banner.Root>
-              <Banner.Title>{t('row-details-no-selection.label')}</Banner.Title>
-            </Banner.Root>
-          ) : (
-            <Mosaic.Container asChild orientation='vertical' autoScroll={viewport} eventHandler={eventHandler}>
-              <ScrollArea.Root orientation='vertical'>
-                <ScrollArea.Viewport ref={setViewport}>
+        <Mosaic.Container asChild orientation='vertical' autoScroll={viewport} eventHandler={eventHandler}>
+          <Panel.Body asChild>
+            <ScrollArea.Root orientation='vertical'>
+              {/* The gutter is the viewport's own, so the banner sits where the first card would. */}
+              <ScrollArea.Viewport classNames='p-2' ref={setViewport}>
+                {selectedObjects.length === 0 ? (
+                  <Banner.Root inset={false}>
+                    <Banner.Title>{t('row-details-no-selection.label')}</Banner.Title>
+                  </Banner.Root>
+                ) : (
                   <Mosaic.Stack
-                    classNames='py-trim-md gap-trim-md'
+                    classNames='gap-2'
                     draggable={false}
                     items={selectedObjects}
                     getId={(obj) => obj.id}
                     Tile={({ ...props }) => (
                       <Mosaic.Tile {...props}>
-                        {/* A grid card, so the form's rows (which inherit their parent's tracks) take its content track. */}
-                        <Card.Root grid>
+                        <Card.Root>
                           <ObjectForm object={props.data} type={type} />
                         </Card.Root>
                       </Mosaic.Tile>
                     )}
                   />
-                </ScrollArea.Viewport>
-              </ScrollArea.Root>
-            </Mosaic.Container>
-          )}
-        </Panel.Body>
+                )}
+              </ScrollArea.Viewport>
+            </ScrollArea.Root>
+          </Panel.Body>
+        </Mosaic.Container>
       </Panel.Root>
     );
   },

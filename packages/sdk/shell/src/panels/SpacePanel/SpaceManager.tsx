@@ -15,7 +15,8 @@ import {
   Invitation_Type,
   InvitationEncoder,
 } from '@dxos/react-client/invitations';
-import { ScrollArea, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { mx } from '@dxos/ui-theme';
 
 import {
@@ -53,7 +54,7 @@ export type SpaceManagerProps = SpaceManagerImplProps & {};
 
 export const SpaceManager = (props: SpaceManagerProps) => {
   const { space, target } = props;
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const config = useConfig();
 
   const invitations = useSpaceInvitations(space?.key);
@@ -116,7 +117,7 @@ export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
     SpaceMemberList: SpaceMemberListComponent = SpaceMemberList,
     InvitationList: InvitationListComponent = InvitationList,
   } = props;
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
 
   const inviteActions =
     propsInviteActions ??

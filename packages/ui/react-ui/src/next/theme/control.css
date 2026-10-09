@@ -58,12 +58,14 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+  /* Clamped text wraps even where a container (a card row) keeps its content to one line. */
   .dx-typography[data-lines] {
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: var(--dx-lines);
     min-width: 0;
     overflow: hidden;
+    white-space: normal;
   }
   .dx-typography[data-tone='muted'] {
     color: var(--color-fg-muted);
@@ -179,14 +181,16 @@
     min-width: 0;
   }
   /* A multi-line frame: `--dx-rows` lines tall at least, growing with its content; the first line and the adornments
-     sit where a single-line control's do, like a Textarea's. */
+     sit where a single-line control's do, like a Textarea's. The content stretches (through any `display: contents`
+     wrapper, which a child selector would miss) so a scrolling editor's scroller ends at the frame's foot. */
   .dx-control-frame[data-rows] {
     height: auto;
     min-height: calc(var(--dx-rows) * var(--dx-line-height) + var(--dx-control-size) - var(--dx-line-height));
-    align-items: start;
+    align-items: stretch;
     padding-block: calc((var(--dx-control-size) - var(--dx-line-height)) / 2);
   }
   .dx-control-frame[data-rows] > .dx-input-adornment {
+    align-self: start;
     height: var(--dx-line-height);
   }
   /* `:has()` cannot nest, so focus deeper in the content (an editor's own element) is a descendant selector instead. */
@@ -362,6 +366,10 @@
     margin: var(--dx-control-inset);
     padding-inline: 0;
   }
+  /* In a Block the cell is the Block's (it centres its child), so the button's own inset would be counted twice. */
+  .dx-block > .dx-button[data-square] {
+    margin: 0;
+  }
   /* Raw DOM (an editor widget, a table cell's HTML) positions its own box, so its square button has no block-cell inset. */
   .dx-button.dx-button-square {
     width: var(--dx-control-size);
@@ -394,8 +402,14 @@
     flex-direction: column;
     min-width: 0;
   }
+  /* A control's own `center` would centre it across a stacked field; it starts under its label instead. */
   .dx-field > .dx-control {
+    align-self: start;
     margin-block: var(--dx-control-inset);
+  }
+  /* An icon-only Button's inset centres it in a block; in a field it starts at the label's edge as an Input does. */
+  .dx-field > .dx-button[data-square] {
+    margin-inline: 0;
   }
 
   /*
@@ -442,6 +456,10 @@
     justify-self: end;
     max-width: 100%;
   }
+  /* A scrolling block (a log, a list) has no width of its own to keep, so it fills the row under the title. */
+  .dx-field[data-layout='row'] > .dx-scroll-root {
+    justify-self: stretch;
+  }
   /* The space under the title is the header's own, so the description and control below it still share a top. */
   .dx-field[data-layout='row'] > .dx-field-header {
     margin-block-end: var(--spacing-trim-sm);
@@ -465,7 +483,7 @@
       grid-column: content-start / control;
       margin-block-end: 0;
     }
-    .dx-field[data-layout='row'] > :is(.dx-field-header, .dx-field-error) {
+    .dx-field[data-layout='row'] > :is(.dx-field-header, .dx-field-error, .dx-scroll-root) {
       grid-column: content;
     }
     .dx-field[data-layout='row'] > .dx-field-error {
@@ -507,9 +525,11 @@
   /* The required mark trails the label text in the error colour; hidden from the name, since `aria-required` says it. */
   /*
    * A field's label reads a step below its value, in ui-theme's subdued text; a Checkbox or Switch's own label is the
-   * control's text, not a field label, so it keeps the base colour.
+   * control's text, not a field label, so it keeps the base colour. A Select's root takes no box, so its label counts as
+   * the field's.
    */
-  :is(.dx-field, .dx-field-header) > :is(.dx-label, .dx-typography) {
+  :is(.dx-field, .dx-field-header) > :is(.dx-label, .dx-typography),
+  .dx-field > .dx-select > .dx-label {
     color: var(--color-fg-subtle);
   }
   /* The required mark is the current Form's: a warning-coloured `*` a small gap after the label at every size. */
@@ -746,30 +766,30 @@
     white-space: nowrap;
   }
   /*
-   * `fit='options'`: the value's cell (with the chosen icon's) also holds every option's icon and label, hidden and
+   * `fixed`: the value's cell (with the chosen icon's) also holds every option's icon and label, hidden and
    * zero-height, so the trigger is as wide as the widest of them whichever is chosen.
    */
-  .dx-select-trigger[data-fit='options'] {
+  .dx-select-trigger[data-fixed] {
     display: inline-grid;
     grid-template-columns: auto minmax(0, 1fr) auto;
     column-gap: 0;
     width: auto;
     justify-self: start;
   }
-  .dx-field > .dx-select > .dx-select-trigger[data-fit='options'] {
+  .dx-field > .dx-select > .dx-select-trigger[data-fixed] {
     align-self: start;
   }
-  .dx-select-trigger[data-fit='options'] > * {
+  .dx-select-trigger[data-fixed] > * {
     grid-row: 1;
   }
-  .dx-select-trigger[data-fit='options'] > .dx-icon {
+  .dx-select-trigger[data-fixed] > .dx-icon {
     grid-column: 1;
     margin-inline-end: var(--dx-gap-size);
   }
-  .dx-select-trigger[data-fit='options'] > [data-part='value-text'] {
+  .dx-select-trigger[data-fixed] > [data-part='value-text'] {
     grid-column: 2;
   }
-  .dx-select-trigger[data-fit='options'] > [data-part='indicator'] {
+  .dx-select-trigger[data-fixed] > [data-part='indicator'] {
     grid-column: 3;
     margin-inline-start: var(--dx-control-inset);
   }
@@ -836,8 +856,9 @@
   .dx-scroll-root.dx-popup:has(> .dx-scroll-viewport[hidden]) {
     display: none;
   }
+  /* Inset equally on every side, so a highlighted item reads as a row inside the popup rather than a band across it. */
   .dx-popup > .dx-scroll-viewport {
-    padding-block: var(--dx-control-inset);
+    padding: var(--dx-control-inset);
     scroll-padding-block: var(--dx-control-inset);
     border-radius: inherit;
   }
@@ -852,6 +873,25 @@
   .dx-popup:is(:focus-visible, :has(> .dx-scroll-viewport:focus-visible)) {
     --dx-arrow-border: var(--dx-focus-ring-color);
     --dx-arrow-border-width: var(--dx-focus-ring-width);
+  }
+  /*
+   * The ring is inset, so it crosses the arrow's base: the arrow rises above it, clipped to its outer half plus the
+   * ring's band, so its fill opens the ring under the base without covering an item's highlight further in.
+   */
+  .dx-popup:is(:focus-visible, :has(> .dx-scroll-viewport:focus-visible)) > .dx-arrow {
+    z-index: 1;
+  }
+  .dx-popup:has(> [data-placement^='bottom']) > .dx-arrow {
+    clip-path: inset(0 0 calc(50% - var(--dx-focus-ring-width)) 0);
+  }
+  .dx-popup:has(> [data-placement^='top']) > .dx-arrow {
+    clip-path: inset(calc(50% - var(--dx-focus-ring-width)) 0 0 0);
+  }
+  .dx-popup:has(> [data-placement^='right']) > .dx-arrow {
+    clip-path: inset(0 calc(50% - var(--dx-focus-ring-width)) 0 0);
+  }
+  .dx-popup:has(> [data-placement^='left']) > .dx-arrow {
+    clip-path: inset(0 0 0 calc(50% - var(--dx-focus-ring-width)));
   }
   /* A small caption naming the Menu or Select group that follows. */
   .dx-popup-group-label {
@@ -873,6 +913,7 @@
   }
   .dx-select-item[data-highlighted] {
     background: var(--color-hover-surface);
+    border-radius: var(--radius-xs, 0.125rem);
   }
   .dx-select-item[data-disabled] {
     opacity: 0.5;
@@ -938,7 +979,7 @@
     min-width: 0;
   }
   /* A row's cross axis is vertical, so the start alignment a Field column needs would pin it to the toolbar's top. */
-  .dx-toolbar > .dx-checkbox {
+  .dx-toolbar > :is(.dx-checkbox, .dx-switch) {
     align-self: center;
   }
   .dx-toolbar {

@@ -7,9 +7,11 @@ import React from 'react';
 
 import { type CallMetadata, log } from '@dxos/log';
 import { random } from '@dxos/random';
-import { Button, Panel, Toolbar } from '@dxos/react-ui';
 import { ViewStateProvider } from '@dxos/react-ui-attention';
+import * as Button from '@dxos/react-ui/Button';
+import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { translations } from '#translations';
 
@@ -42,12 +44,12 @@ const DefaultStory = () => (
         <Panel.Header>
           <Toolbar.Root>
             {FILES.map((file) => (
-              <Button key={file} onClick={() => emit(file, 'info')}>
+              <Button.Root key={file} onClick={() => emit(file, 'info')}>
                 {file.split('/').pop()}
-              </Button>
+              </Button.Root>
             ))}
-            <Button onClick={() => emit(FILES[1], 'warn')}>Warn (beta)</Button>
-            <Button onClick={() => emit(FILES[1], 'error')}>Error (beta)</Button>
+            <Button.Root onClick={() => emit(FILES[1], 'warn')}>Warn (beta)</Button.Root>
+            <Button.Root onClick={() => emit(FILES[1], 'error')}>Error (beta)</Button.Root>
           </Toolbar.Root>
         </Panel.Header>
         <Panel.Body asChild>

@@ -22,7 +22,8 @@ import {
   sizeRow,
 } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Group, SystemButton } from '../index.ts';
+import { Group } from '../Group/Group.tsx';
+import * as SystemButton from './SystemButton.tsx';
 
 type PresetProps = { 'iconOnly': boolean; 'data-testid': string };
 

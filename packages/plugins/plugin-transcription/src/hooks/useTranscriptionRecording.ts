@@ -5,10 +5,10 @@
 import * as Effect from 'effect/Effect';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { EdgeServiceName } from '@dxos/config';
 import { Database, Feed, Obj } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { useIdentity } from '@dxos/halo-react';
 import { log } from '@dxos/log';
 import { useEdgeServiceEndpoint } from '@dxos/react-client';
@@ -33,8 +33,8 @@ export const useTranscriptionRecording = (transcript: Transcript.Transcript): Tr
   const feed = transcript.feed.target;
 
   const [recording, setRecording] = useState(false);
-  const { invokePromise } = useOperationInvoker();
-  const settings = useAtomCapability(TranscriptionCapabilities.Settings);
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const settings = Hooks.useAtomCapability(TranscriptionCapabilities.Settings);
   const endpoint = useEdgeServiceEndpoint(EdgeServiceName.Transcription);
   // Gate the mic on the endpoint: `useAudioTrack` calls `getUserMedia` as soon as its flag is
   // true, so without this the permission prompt and recording indicator appear before `open()`

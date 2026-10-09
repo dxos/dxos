@@ -8,11 +8,11 @@ import * as KeyValueStore from 'effect/persistence/KeyValueStore';
 import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 
 import { OpaqueToolkit } from '@dxos/ai';
-import { processStorageLayer } from '@dxos/app-framework';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { ClientService } from '@dxos/client';
@@ -24,7 +24,7 @@ import {
   RemoteTraceMonitor,
   RemoteTriggerManager,
   TriggerDispatcher,
-  TriggerMonitor,
+  TriggerManager,
   TriggerStateStore,
 } from '@dxos/compute-runtime';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
@@ -234,7 +234,7 @@ const RemoteOperationInvokerSpec = LayerSpec.make(
 
 /**
  * Space-scoped remote (EDGE) trigger manager, consumed by the aggregate
- * {@link TriggerMonitor}. Uses the EDGE implementation whenever an edge service
+ * {@link TriggerManager}. Uses the EDGE implementation whenever an edge service
  * is configured (a trigger is routed here by its own `remote` flag, so the
  * manager should exist wherever edge is reachable), otherwise a no-op.
  */
@@ -281,7 +281,7 @@ const RemoteProcessManagerSpec = LayerSpec.make(
         const kvStore = yield* KeyValueStore.KeyValueStore;
         return EdgeProcessManager.fromClient(client, { kvStore, onConnected: onNetworkOnline });
       }),
-    ).pipe(Layer.provide(processStorageLayer)),
+    ).pipe(Layer.provide(ProcessManagerPlugin.storageLayer)),
 );
 
 /**
@@ -329,17 +329,17 @@ const TriggerDispatcherSpec = LayerSpec.make(
 );
 
 /**
- * Aggregate {@link Trigger.TriggerMonitorService} over the local
+ * Aggregate {@link Trigger.ManagerService} over the local
  * {@link TriggerDispatcher} and the remote {@link RemoteTriggerManager.Service}.
  * Provides a unified view of trigger state across local and edge environments.
  */
-const TriggerMonitorSpec = LayerSpec.make(
+const TriggerManagerSpec = LayerSpec.make(
   {
     affinity: 'space',
     requires: [TriggerDispatcher, Database.Service, AtomRegistry.AtomRegistry, RemoteTriggerManager.Service],
-    provides: [Trigger.TriggerMonitorService],
+    provides: [Trigger.ManagerService],
   },
-  () => TriggerMonitor.layer,
+  () => TriggerManager.layer,
 );
 
 export default Capability.makeModule(() =>
@@ -353,7 +353,7 @@ export default Capability.makeModule(() =>
       FeedTraceSinkSpec,
       TriggerDispatcherSpec,
       RemoteTriggerManagerSpec,
-      TriggerMonitorSpec,
+      TriggerManagerSpec,
       RemoteOperationInvokerSpec,
       RemoteTraceMonitorSpec,
       RemoteProcessManagerSpec,

@@ -9,13 +9,15 @@ import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
-import { useFieldsetDisabled } from '../Fieldset/index.ts';
-import { useToolbarItem } from '../Toolbar/index.ts';
+import * as Fieldset from '../Fieldset/Fieldset.tsx';
+import { useToolbarItem } from '../Toolbar/toolbar-context.ts';
 
 export type SwitchProps = ThemedClassName<Omit<SwitchPrimitive.RootProps, 'children'>> & {
   /** Visible label beside the track; without one pass `aria-label`. */
   'label'?: ReactNode;
   'aria-label'?: string;
+  /** Neither on nor off (e.g. several edited objects disagree): the track is dimmed until it is set. */
+  'indeterminate'?: boolean;
 };
 
 /**
@@ -23,13 +25,14 @@ export type SwitchProps = ThemedClassName<Omit<SwitchPrimitive.RootProps, 'child
  * input joins the roving focus.
  */
 export const Switch = forwardRef<HTMLLabelElement, SwitchProps>(
-  ({ classNames, label, 'aria-label': ariaLabel, disabled: disabledProp, ...props }, forwardedRef) => {
-    const disabled = useFieldsetDisabled(disabledProp);
+  ({ classNames, label, 'aria-label': ariaLabel, indeterminate, disabled: disabledProp, ...props }, forwardedRef) => {
+    const disabled = Fieldset.useFieldsetDisabled(disabledProp);
     const toolbarItem = useToolbarItem(disabled);
     return (
       <SwitchPrimitive.Root
         {...props}
         disabled={disabled || toolbarItem?.disabled}
+        data-indeterminate={indeterminate ? '' : undefined}
         className={mx(recipes.switch(), classNames)}
         ref={forwardedRef}
       >

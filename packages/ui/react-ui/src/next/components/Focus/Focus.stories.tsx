@@ -11,9 +11,13 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Button, Focus, type FocusGroupProps, Group, Typography, useFocus } from '../index.ts';
+import { Button } from '../Button/Button.tsx';
+import { Group } from '../Group/Group.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import * as Focus from './Focus.tsx';
+import { useFocus } from './FocusContext.ts';
 
-type StoryArgs = SizeArgs & Pick<FocusGroupProps, 'orientation' | 'border'>;
+type StoryArgs = SizeArgs & Pick<Focus.GroupProps, 'orientation' | 'border'>;
 
 const ITEMS = ['Inbox', 'Drafts', 'Sent', 'Archive'];
 
@@ -52,7 +56,7 @@ const DefaultStory = ({ orientation, border }: StoryArgs) => {
         ))}
         <Reporter />
       </Focus.Group>
-      <Typography data-testid='current'>Current: {current ?? 'none'}</Typography>
+      <Typography.Text data-testid='current'>Current: {current ?? 'none'}</Typography.Text>
     </>
   );
 };

@@ -4,7 +4,7 @@
 
 import { type Dispatch, type RefObject, type SetStateAction, createContext } from 'react';
 
-import { type SelectionModel } from '@dxos/graph';
+import type * as SelectionModel from '@dxos/graph/SelectionModel';
 import { type Dimension } from '@dxos/react-ui-canvas';
 
 import { type ActionHandler } from '../actions/index.ts';
@@ -53,7 +53,7 @@ export type EditorContextType<S extends CanvasBoard.Shape = CanvasBoard.Shape> =
   graph: CanvasGraphModel<S>;
   graphMonitor?: GraphMonitor<S>;
   clipboard: CanvasGraphModel;
-  selection: SelectionModel;
+  selection: SelectionModel.SelectionModel;
 
   ready: boolean;
   dragMonitor: DragMonitor;

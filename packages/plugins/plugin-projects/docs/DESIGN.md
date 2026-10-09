@@ -432,7 +432,7 @@ resolve it structurally:
 
 | Site                    | Feed from        | Chat in hand                                                                                     |
 | ----------------------- | ---------------- | ------------------------------------------------------------------------------------------------ |
-| `useChatProcessor`      | `chat.feed`      | yes                                                                                              |
+| `useChatModel`          | `chat.feed`      | yes                                                                                              |
 | `run-instructions`      | `chat.feed`      | yes (routines pass their own `system` text, so this path is unaffected)                          |
 | agent skill `agent.ts`  | `chatFeed`       | yes                                                                                              |
 | cli `chat/processor.ts` | chat             | yes                                                                                              |

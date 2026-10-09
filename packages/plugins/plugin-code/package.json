@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-code",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "private": true,
   "description": "Composer plugin for AI-assisted plugin development",
   "homepage": "https://dxos.org",
@@ -11,7 +11,7 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#capabilities": {
@@ -81,6 +81,11 @@
       "import": "./dist/lib/translations.mjs"
     },
     "./package.json": "./package.json",
+    "./AcpAgent": {
+      "source": "./src/agents/AcpAgent.ts",
+      "types": "./dist/types/src/agents/AcpAgent.d.ts",
+      "import": "./dist/lib/AcpAgent.mjs"
+    },
     "./CodeAgent": {
       "source": "./src/agents/CodeAgent.ts",
       "types": "./dist/types/src/agents/CodeAgent.d.ts",
@@ -90,6 +95,11 @@
       "source": "./src/agents/EdgeAgent.ts",
       "types": "./dist/types/src/agents/EdgeAgent.d.ts",
       "import": "./dist/lib/EdgeAgent.mjs"
+    },
+    "./ComposerMcp": {
+      "source": "./src/agents/ComposerMcp.ts",
+      "types": "./dist/types/src/agents/ComposerMcp.d.ts",
+      "import": "./dist/lib/ComposerMcp.mjs"
     },
     "./CodeCapabilities": {
       "source": "./src/types/CodeCapabilities.ts",

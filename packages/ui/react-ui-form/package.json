@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-form",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "description": "Data components.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,6 +10,7 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#translations": {
@@ -58,9 +59,9 @@
     "@dxos/lit-ui": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
-    "@dxos/react-ui-components": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
+    "@dxos/react-ui-query": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/ui": "workspace:*",
     "@dxos/ui-editor": "workspace:*",

@@ -5,7 +5,10 @@
 import React, { type MouseEvent, useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Block, Card, Focus, SystemButton } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
+import * as Focus from '@dxos/react-ui/Focus';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 import { mx } from '@dxos/ui-theme';
 
 import { useMagazinePostData } from '#atoms';
@@ -49,11 +52,11 @@ export const MagazineTile = ({ post, magazine, current, onToggleStar, onOpen }: 
           <Card.Poster alt={snapshot.title ?? 'Article'} src={imageUrl} fit='cover' classNames='rounded-t-xs' />
         )}
         <Card.Header>
-          <Block>
+          <Layout.Block>
             <SystemButton.Star variant='ghost' iconOnly iconSize='md' pressed={starred} onClick={handleToggleStar} />
-          </Block>
+          </Layout.Block>
           {snapshot.title ? <Card.Title lines={2}>{snapshot.title}</Card.Title> : <div />}
-          <Block rail='end' />
+          <Layout.Block rail='end' />
         </Card.Header>
         <Card.Body>
           {snippet && (
@@ -64,10 +67,15 @@ export const MagazineTile = ({ post, magazine, current, onToggleStar, onOpen }: 
             </Card.Row>
           )}
           <Card.Row>
-            <div className='grid grid-cols-[minmax(0,1fr)_auto] items-center gap-trim-sm py-trim-xs text-sm text-fg-muted overflow-hidden'>
+            <Layout.Grid
+              cols={['fill', 'auto']}
+              gap='sm'
+              align='center'
+              classNames='py-trim-xs text-sm text-fg-muted overflow-hidden'
+            >
               <span className='truncate'>{feedName ?? ''}</span>
               <span className='text-end shrink-0'>{formatPublished(snapshot) ?? ''}</span>
-            </div>
+            </Layout.Grid>
           </Card.Row>
         </Card.Body>
       </Card.Root>

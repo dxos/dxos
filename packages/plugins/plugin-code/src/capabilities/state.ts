@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { createKvsStore } from '@dxos/effect';
+import * as KvsStore from '@dxos/effect/KvsStore';
 
 import { meta } from '#meta';
 import { CodeCapabilities, State } from '#types';
@@ -13,7 +13,7 @@ import { CodeCapabilities, State } from '#types';
 export default Capability.makeModule(() =>
   Effect.sync(() => {
     // Its own key: the settings atom stores under the plugin's key.
-    const stateAtom = createKvsStore({
+    const stateAtom = KvsStore.make({
       key: `${meta.profile.key}.state`,
       schema: State.State,
       defaultValue: () => ({}),

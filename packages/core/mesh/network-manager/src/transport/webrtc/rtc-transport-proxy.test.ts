@@ -9,7 +9,7 @@ import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 import { describe, expect, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { RTCService } from '@dxos/protocols/rpc';
 import { type DuplexStream } from '@dxos/teleport';
 

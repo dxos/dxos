@@ -12,14 +12,20 @@ import React, {
   useState,
 } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as AttentionSigil from '@dxos/app-toolkit/AttentionSigil';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import { AppSurface, AttentionSigilButton } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { Icon, Menu, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { type DndContainerHandler } from '@dxos/react-ui-dnd';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Menu from '@dxos/react-ui/Menu';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import type * as Util from '@dxos/react-ui/Util';
 
 import { meta } from '#meta';
 
@@ -112,7 +118,7 @@ StackRoot.displayName = 'Stack.Root';
 // Content
 //
 
-type StackContentProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
+type StackContentProps = Util.ThemedClassName<ComponentPropsWithoutRef<'div'>>;
 
 const StackContent = forwardRef<HTMLDivElement, StackContentProps>(({ children, ...props }, forwardedRef) => {
   const { eventHandler, viewport } = useStackContext('Stack.Content');
@@ -131,7 +137,7 @@ StackContent.displayName = 'Stack.Content';
 // Viewport
 //
 
-type StackViewportProps = ThemedClassName<PropsWithChildren>;
+type StackViewportProps = Util.ThemedClassName<PropsWithChildren>;
 
 const StackViewport = forwardRef<HTMLDivElement, StackViewportProps>(
   ({ classNames, children }, forwardedRef: ForwardedRef<HTMLDivElement>) => {
@@ -185,7 +191,7 @@ const DragHandleGlyph = () => (
 
 const StackSection = ({ data, ...tileProps }: StackSectionProps) => {
   const { id, object } = data;
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { attendableId: parentAttendableId, collapsed, onAdd, onMoveUp, onMoveDown, onCollapse, onDelete } = useStack();
   const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
   const attendableId = GraphPath.getCollectionObjectPath(parentAttendableId, object.id);
@@ -196,13 +202,13 @@ const StackSection = ({ data, ...tileProps }: StackSectionProps) => {
   const title = Obj.getLabel(object, { fallback: 'typename' }) ?? t('untitled-section.title');
 
   const rail = (
-    <div className='grid grid-rows-[min-content_1fr]'>
+    <Layout.Grid rows={['min', 'fill']}>
       <div className='p-1 dx-toolbar-surface'>
         <Menu.Root open={optionsMenuOpen} onOpenChange={({ open }) => setOptionsMenuOpen(open)}>
           <Menu.Trigger asChild>
-            <AttentionSigilButton size='md' attendableId={attendableId}>
-              <Icon icon={icon} classNames='transition-opacity' />
-            </AttentionSigilButton>
+            <AttentionSigil.Button size='md' attendableId={attendableId}>
+              <Icon.Icon icon={icon} classNames='transition-opacity' />
+            </AttentionSigil.Button>
           </Menu.Trigger>
           <Menu.Content>
             {isCollapsed ? (
@@ -261,7 +267,7 @@ const StackSection = ({ data, ...tileProps }: StackSectionProps) => {
           <DragHandleGlyph />
         </Mosaic.DragHandle>
       </div>
-    </div>
+    </Layout.Grid>
   );
 
   return (
@@ -271,14 +277,16 @@ const StackSection = ({ data, ...tileProps }: StackSectionProps) => {
       classNames='grid grid-cols-[var(--dx-rail-action)_1fr] dx-attention-surface border border-separator-subtle'
     >
       <div className='border-e border-separator-subtle'>
-        <div className='sticky top-0 flex flex-col items-center'>{rail}</div>
+        <Layout.Flex column align='center' classNames='sticky top-0'>
+          {rail}
+        </Layout.Flex>
       </div>
       <div {...attentionAttrs} className='min-w-0'>
         <span className='sr-only'>{title}</span>
         {isCollapsed ? (
-          <div className='h-(--dx-toolbar-size) flex p-1'>
+          <Layout.Flex classNames='h-(--dx-toolbar-size) p-1'>
             <h2 className='flex items-center font-medium'>{title}</h2>
-          </div>
+          </Layout.Flex>
         ) : (
           <Surface.Surface type={AppSurface.Section} data={surfaceData} limit={1} />
         )}

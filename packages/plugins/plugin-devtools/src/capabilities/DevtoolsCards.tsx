@@ -6,8 +6,9 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import {
   EdgeCard,
   IndexerCard,
@@ -130,7 +131,7 @@ export const IndexerCardSurface = () => {
 /** The slowest queries; the header button shows every query on the devtools Queries page. */
 export const QueriesCardSurface = () => {
   const { queries } = useQueryMetrics();
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const handleOpen = useCallback(
     () => void invokePromise(DebugOperation.OpenPage, { nodeId: Devtools.getNodePath(Devtools.Echo.Queries) }),
     [invokePromise],

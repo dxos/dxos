@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 // Ark has no breadcrumb, so this follows the WAI-ARIA breadcrumb pattern with native elements: a labelled `<nav>`
 // landmark around an ordered list, the last item marked `aria-current='page'`.
 
@@ -12,7 +14,7 @@ import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
-import { Icon } from '../Icon/index.ts';
+import * as Icon from '../Icon/Icon.tsx';
 
 //
 // Root
@@ -135,27 +137,26 @@ const BreadcrumbSeparator = forwardRef<HTMLLIElement, BreadcrumbSeparatorProps>(
       className={mx(recipes.breadcrumbSeparator(), classNames)}
       ref={forwardedRef}
     >
-      <Icon icon={icon} />
+      <Icon.Icon icon={icon} />
     </li>
   ),
 );
 
 BreadcrumbSeparator.displayName = 'Breadcrumb.Separator';
-
-export const Breadcrumb = {
-  Root: BreadcrumbRoot,
-  List: BreadcrumbList,
-  Item: BreadcrumbItem,
-  Link: BreadcrumbLink,
-  Current: BreadcrumbCurrent,
-  Separator: BreadcrumbSeparator,
+export type {
+  BreadcrumbCurrentProps as CurrentProps,
+  BreadcrumbItemProps as ItemProps,
+  BreadcrumbLinkProps as LinkProps,
+  BreadcrumbListProps as ListProps,
+  BreadcrumbRootProps as RootProps,
+  BreadcrumbSeparatorProps as SeparatorProps,
 };
 
-export type {
-  BreadcrumbCurrentProps,
-  BreadcrumbItemProps,
-  BreadcrumbLinkProps,
-  BreadcrumbListProps,
-  BreadcrumbRootProps,
-  BreadcrumbSeparatorProps,
+export {
+  BreadcrumbCurrent as Current,
+  BreadcrumbItem as Item,
+  BreadcrumbLink as Link,
+  BreadcrumbList as List,
+  BreadcrumbRoot as Root,
+  BreadcrumbSeparator as Separator,
 };

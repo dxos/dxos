@@ -11,6 +11,7 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
+import { translations as queryTranslations } from '@dxos/react-ui-query/translations';
 import { translations as shellTranslations } from '@dxos/shell/translations';
 
 import { meta } from '#meta';
@@ -142,6 +143,7 @@ export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mapp
 export const Translations = AppCapability.translations([
   ...translations,
   ...componentsTranslations,
+  ...queryTranslations,
   ...formTranslations,
   ...shellTranslations,
 ]);

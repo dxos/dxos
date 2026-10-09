@@ -4,12 +4,13 @@
 
 import React, { useCallback } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface, ObjectCard as ObjectCardPrimitive, useAppGraph } from '@dxos/app-toolkit/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
+import * as ToolkitObjectCard from '@dxos/app-toolkit/ObjectCard';
 import { Obj, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import { Card, Field, Flex, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { Masonry } from '@dxos/react-ui-masonry';
 import {
   type ActionExecutor,
@@ -20,7 +21,12 @@ import {
   isToolbarAction,
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
-import { mx } from '@dxos/ui-theme';
+import * as Card from '@dxos/react-ui/Card';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 
 import { ObjectCard, RelatedTypeFilter } from '#components';
 import { useRelatedObjects, useRelatedTypeFilter } from '#hooks';
@@ -28,7 +34,7 @@ import { meta } from '#meta';
 import { SpaceSurface } from '#types';
 
 export const RecordArticle = ({ role, subject, attendableId }: AppSurface.ObjectArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { actions, onAction } = useMenuActions(attendableId);
   useObject(subject);
   // Obj.getType fails for database-registered (dynamic) schemas due to DXN mismatch;
@@ -58,27 +64,25 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
       <Panel.Body asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport classNames='p-4 space-y-4'>
-            <ObjectCardPrimitive.Root>
-              <ObjectCardPrimitive.Header subject={subject} icon={icon} />
+            <ToolkitObjectCard.Root>
+              <ToolkitObjectCard.Header subject={subject} icon={icon} />
               <Card.Body>
                 <Surface.Surface type={AppSurface.CardContent} data={{ subject }} limit={1} />
               </Card.Body>
-            </ObjectCardPrimitive.Root>
+            </ToolkitObjectCard.Root>
 
             {/* TODO(burdon): Only show label if surface exists? */}
             {/* TODO(burdon): Remove this section — move the related actions into the object menu. */}
-            <Flex column gap='form'>
+            <Layout.Flex column gap='form'>
               <Field.Root>
                 <Field.Label>{t('related-actions.label')}</Field.Label>
               </Field.Root>
               <Surface.Surface type={SpaceSurface.Prompts} data={{ subject, attendableId: subject.id }} limit={1} />
-            </Flex>
+            </Layout.Flex>
 
             {/* Gated on the unfiltered set so hiding every type does not remove the filter itself. */}
             {relatedObjects.length > 0 && (
-              <div
-                className={mx('dx-expand flex flex-col gap-form-gap', singleColumn ? 'dx-card-max-width' : 'w-full')}
-              >
+              <Layout.Flex column gap='form' classNames={['dx-expand', singleColumn ? 'dx-card-max-width' : 'w-full']}>
                 <Field.Root>
                   <Field.Label>{t('related-objects.label')}</Field.Label>
                 </Field.Root>
@@ -94,7 +98,7 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
                     <Masonry.Viewport items={related} />
                   </Masonry.Content>
                 </Masonry.Root>
-              </div>
+              </Layout.Flex>
             )}
           </ScrollArea.Viewport>
         </ScrollArea.Root>
@@ -118,8 +122,8 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
 const useMenuActions = (
   attendableId?: string,
 ): { actions: ReturnType<typeof useMenuBuilder>; onAction: ActionExecutor } => {
-  const { graph } = useAppGraph();
-  const runAction = useActionRunner();
+  const { graph } = ToolkitHooks.useAppGraph();
+  const runAction = GraphHooks.useActionRunner();
 
   const menuActions = useMenuBuilder(
     (get): ActionGraphProps =>

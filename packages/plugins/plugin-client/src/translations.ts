@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Resource } from '@dxos/react-ui';
+import type * as Theme from '@dxos/react-ui/Theme';
 import { translations as shellTranslations } from '@dxos/shell/translations';
 
 import { meta } from '#meta';
@@ -27,12 +27,6 @@ const pluginTranslations = [
         'contacts.label': 'Contacts',
         'contacts.description': 'People you share at least one space with.',
         'contacts-search.placeholder': 'Search contacts…',
-        'space-invitations.label': 'Space invitations',
-        'space-invitations.description': 'Spaces your contacts have added you to. Join to open one on this device.',
-        'space-invitation-toast.title': 'You’ve been added to a space',
-        'space-invitation-toast.description': 'A contact invited you to join a space.',
-        'join-space-invitation.label': 'Join',
-        'dismiss-space-invitation.label': 'Dismiss',
         'contact-picker-add.label': 'Add member',
         'contact-picker-empty.message':
           'You have no contacts yet — people appear here once you share a space with them.',
@@ -101,12 +95,11 @@ const pluginTranslations = [
         'generate-invitation.description_other': 'You have {{count}} invitations left to generate.',
         'available-invitations.title': 'Available invitations',
         'redeemed-invitations.title': 'Redeemed invitations',
-        'logout.description': 'Log out and erase all data on this device.',
+        'logout.description':
+          'Logging out erases all data on this device. Anything that has not synced to another device or to the cloud will be lost.',
         'join-new-identity.description': 'Erase this device and join an existing identity with a QR code or URL.',
         'recover-identity.description': 'Erase this device and log in with a passkey or recovery code.',
-        'logout-section.title': 'Log out',
-        'logout-section.description':
-          'Logging out erases all data on this device. Anything that has not synced to another device or to the cloud will be lost.',
+        'logout-section.title': 'Danger Zone',
         'identity-test-section.title': 'Testing',
         'identity-test-section.description':
           'Enabled for testing. These switch this device to a different identity, erasing all data on it first.',
@@ -185,6 +178,6 @@ const pluginTranslations = [
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];
 
-export const translations: Resource[] = [...pluginTranslations, ...shellTranslations];
+export const translations: Theme.Resource[] = [...pluginTranslations, ...shellTranslations];

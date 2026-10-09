@@ -2,16 +2,24 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { useOperation } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Obj, Ref } from '@dxos/echo';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { generateName } from '@dxos/display-name';
+import { Obj, Ref, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useMembers } from '@dxos/halo-react';
-import { Button, Container, Panel, ScrollArea, Toolbar, Typography, useTranslation } from '@dxos/react-ui';
+import { Form, useFormContext, useSubmitOnEnter } from '@dxos/react-ui-form';
 import { ActionMenu } from '@dxos/react-ui-menu';
-import { TaskEditor, TaskHistory, TaskMnemonic, TaskProperties, TaskQuestion, TaskTags } from '@dxos/react-ui-task';
+import { TaskHistory, TaskProperties, TaskQuestion, TaskTags } from '@dxos/react-ui-task';
+import * as Button from '@dxos/react-ui/Button';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import * as Typography from '@dxos/react-ui/Typography';
 import { Task } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -30,28 +38,48 @@ export type TaskArticleProps = AppSurface.ObjectArticleProps<Task.Task>;
  * questions, the history and the artifacts, each starting at the same edge with its glyphs in the
  * gutter beside it (see `react-ui-task/docs/DETAIL-LAYOUT.md`).
  *
- * The fields are `TaskEditor` — the same title field and markdown description the list's strip
- * edits, without the strip's create case or its selection, which a pane with a subject has no use
- * for. Edits go through {@link TaskOperation.UpdateTask} rather than writing fields directly, so the
- * article shares the history-writing path with the list and with agents.
+ * The title and description are a form over the task's own schema. Edits go through
+ * {@link TaskOperation.UpdateTask} rather than writing fields directly, so the article shares the
+ * history-writing path with the list and with agents; a field commits when focus leaves it (or on Enter),
+ * so a rename is one history entry rather than one per keystroke.
  *
  * A file dropped or pasted anywhere over the pane is stored and attached (`Task.attachments`), when
  * a plugin that can store files is present.
  */
 export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attendableId }: TaskArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const spaceId = Obj.getDatabase(task)?.spaceId;
   const descriptionExtensions = useMarkdownExtensions(task);
 
-  const handleUpdate = useOperation(
+  const handleUpdate = Hooks.useOperation(
     TaskOperation.UpdateTask,
     (task: Task.Task, props: Task.Edit) => ({ task: Ref.make(task), ...props }),
     { spaceId },
   );
   const { onFiles: handleAttach, pending: pendingAttachments } = useAttachFiles(task);
 
+  // The task as plain values for the form; the article's other parts read the live task.
+  const [snapshot] = useObject(task);
+  const handleSave = useCallback(
+    (values: Task.Task) => {
+      const patch: Task.Edit = {};
+      const title = values.title?.trim() ?? '';
+      // An emptied title is not a rename: the task keeps the one it has.
+      if (title.length > 0 && title !== task.title) {
+        patch.title = title;
+      }
+      if ((values.description ?? '') !== (task.description ?? '')) {
+        patch.description = values.description;
+      }
+      if (Object.keys(patch).length > 0) {
+        handleUpdate(task, patch);
+      }
+    },
+    [task, handleUpdate],
+  );
+
   // Record-only: an agent that asked over the MCP reads the answer back off the task.
-  const handleQuestionAnswer = useOperation(
+  const handleQuestionAnswer = Hooks.useOperation(
     TaskOperation.AnswerQuestion,
     (task: Task.Task, question: string, answer: string) => ({ task: Ref.make(task), question, answer }),
     { spaceId },
@@ -63,7 +91,18 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
   // Everyone in the space, the owner included, as assignees the picker can offer by identity.
   const spaceMembers = useMembers(Obj.getDatabase(task)?.spaceId);
   const members = useMemo(
-    () => spaceMembers.flatMap((member) => (member.did ? [{ did: member.did, name: member.displayName }] : [])),
+    () =>
+      spaceMembers.flatMap((member) =>
+        member.did
+          ? [
+              {
+                did: member.did,
+                // A member with no profile name gets the generated one the rest of the app shows for it.
+                name: member.displayName ?? (member.identityKey ? generateName(member.identityKey) : undefined),
+              },
+            ]
+          : [],
+      ),
     [spaceMembers],
   );
 
@@ -87,24 +126,29 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
               {/* One column for the whole pane, so the gutter has a single owner: the fields, the
                 section headings and the cards all start at the content track, and only a glyph
                 hangs outside it. */}
-              <Container gutter='md' gap='lg' classNames='py-2'>
+              <Layout.Container gutter='md' gap='lg' classNames='py-2'>
                 {/* The task's own fields, not the list's strip: the pane has a subject, so it
                   needs neither the create case nor the selection the strip reads. */}
-                <TaskEditor
-                  task={task}
-                  onUpdate={handleUpdate}
-                  showDescription
-                  descriptionExtensions={descriptionExtensions}
-                  classNames='dx-document'
-                />
+                {/* Keyed by task, so a new subject replaces the text held rather than carrying the previous one's across. */}
+                <Form.Root
+                  key={task.id}
+                  schema={Type.getSchema(Task.Task)}
+                  // The whole task, so the schema's other required fields validate; only the fields shown can change.
+                  values={snapshot}
+                  markdownExtensions={descriptionExtensions}
+                  testId='tasksPlugin.fields'
+                  autoSave
+                  onSave={handleSave}
+                >
+                  <TaskFields untitled={!task.title} />
+                </Form.Root>
 
                 {/* What the task carries, in a flow rather than the row's one scrolling line: the
                   pane has the width to wrap them, and a chip that wraps is a chip the reader can
                   see without dragging the row sideways. */}
-                <div className='flex flex-wrap items-center gap-1' data-testid='tasksPlugin.tags'>
-                  <TaskMnemonic task={task} />
+                <Layout.Flex wrap align='center' gap='xs' data-testid='tasksPlugin.tags'>
                   <TaskTags task={task} />
-                </div>
+                </Layout.Flex>
 
                 {/* The task's own fields, under what it says: they are properties of the task, so
                   they read after the description rather than as chrome above it — and with the
@@ -115,11 +159,12 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
                   standing "Questions" label over nothing says the pane expects them, when what a
                   task with none has is nothing to answer. */}
                 {openQuestions.length > 0 && (
-                  <Container asChild gutter='inherit' gap='md'>
+                  <Layout.Container asChild gutter='inherit' gap='md'>
                     <section data-testid='tasksPlugin.questions'>
-                      <Typography asChild tone='subtle'>
+                      {/* Set as the form's field labels are, so the article's section headings read as one with them. */}
+                      <Typography.Text asChild tone='subtle' classNames='dx-label py-0'>
                         <h2>{t('task-questions.label')}</h2>
-                      </Typography>
+                      </Typography.Text>
                       {openQuestions.map((thread) => (
                         <TaskQuestion
                           key={thread.question.id}
@@ -128,7 +173,7 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
                         />
                       ))}
                     </section>
-                  </Container>
+                  </Layout.Container>
                 )}
 
                 <TaskAttachments
@@ -139,7 +184,7 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
                 />
                 {history && history.length > 0 && <TaskHistory entries={history} />}
                 <TaskArtifacts task={task} />
-              </Container>
+              </Layout.Container>
             </TaskAttachmentDropZone>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
@@ -155,7 +200,7 @@ TaskArticle.displayName = 'TaskArticle';
  * row's trailing gutter, where the pane's whole subject is the task and they are its actions.
  */
 const TaskActions = ({ task }: { task: Task.Task }) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const contributed = useTaskActions();
   const actions = useMemo(() => contributed(task), [contributed, task]);
 
@@ -165,7 +210,7 @@ const TaskActions = ({ task }: { task: Task.Task }) => {
 
   return (
     <ActionMenu deferUntilOpen actions={actions}>
-      <Button
+      <Button.Root
         variant='ghost'
         iconOnly
         icon='ph--dots-three-vertical--regular'
@@ -175,3 +220,31 @@ const TaskActions = ({ task }: { task: Task.Task }) => {
     </ActionMenu>
   );
 };
+
+/** The form fields the article edits; the rest of the task is shown by its own parts below. */
+const FIELDS = new Set(['title', 'description']);
+
+/**
+ * The task's title and description. Enter in the title commits it, as blur does; an untitled task is one just
+ * added (a sub-task from a row's menu), so its title takes focus.
+ */
+const TaskFields = ({ untitled }: { untitled: boolean }) => {
+  const { form } = useFormContext(TaskFields.displayName);
+  const contentRef = useRef<HTMLDivElement>(null);
+  useSubmitOnEnter(contentRef, () => form.canSave && form.onSave());
+  useEffect(() => {
+    if (untitled) {
+      contentRef.current?.querySelector('input')?.focus();
+    }
+    // Once per mount: the form is keyed by task, and clearing a title while typing must not re-focus it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <Form.Content ref={contentRef}>
+      <Form.Fields filter={(fields) => fields.filter(({ name }) => FIELDS.has(String(name)))} />
+    </Form.Content>
+  );
+};
+
+TaskFields.displayName = 'TaskArticle.Fields';

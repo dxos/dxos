@@ -5,9 +5,12 @@
 import React, { useCallback, useSyncExternalStore } from 'react';
 
 import { type DebugPortController, getDebugPortController } from '@dxos/react-client/devtools';
-import { Field, Flex, Switch, SystemButton, useTranslation } from '@dxos/react-ui';
 import { Logger, type LogRow } from '@dxos/react-ui-debug';
 import { Form } from '@dxos/react-ui-form';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { meta } from '#meta';
 
@@ -35,7 +38,7 @@ export type DebugPortSettingsProps = {
  * flipped, the session id is regenerated on every activation, and nothing survives a reload.
  */
 export const DebugPortSettings = ({ controller = getDebugPortController(), disabled }: DebugPortSettingsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const subscribe = useCallback((listener: () => void) => controller.subscribe(listener), [controller]);
   const getStatus = useCallback(() => controller.getStatus(), [controller]);
   const status = useSyncExternalStore(subscribe, getStatus);
@@ -53,20 +56,20 @@ export const DebugPortSettings = ({ controller = getDebugPortController(), disab
       description={t('settings.debug-port.section.description')}
     >
       <Form.Field standalone label={t('settings.debug-port.label')} description={t('settings.debug-port.description')}>
-        <Flex gap='md' align='center'>
+        <Layout.Flex gap='md' align='center'>
           {status.running && (
             <span className='text-sm text-fg-muted'>
               {t('settings.debug-port.running.label')} <span className='font-mono'>{status.origin}</span>
             </span>
           )}
           <Field.Root>
-            <Switch
+            <Input.Switch
               checked={status.running}
               disabled={disabled}
               onCheckedChange={({ checked }) => handleToggle(checked)}
             />
           </Field.Root>
-        </Flex>
+        </Layout.Flex>
       </Form.Field>
 
       {status.running && (
@@ -76,21 +79,20 @@ export const DebugPortSettings = ({ controller = getDebugPortController(), disab
             label={t('settings.debug-port.session.label')}
             description={t('settings.debug-port.session.description')}
           >
-            <Flex gap='sm' align='center'>
-              <span className='grow truncate font-mono text-sm'>{status.session}</span>
-              <SystemButton.Clipboard
-                iconOnly
-                label={t('settings.debug-port.copy-session.label')}
-                value={status.session ?? ''}
-              />
-            </Flex>
+            <Input.Root
+              value={status.session ?? ''}
+              disabled
+              variant='mono'
+              copyable
+              aria-label={t('settings.debug-port.session.label')}
+            />
           </Form.Field>
 
           <Form.Field standalone label={t('settings.debug-port.log.label')}>
-            {/* Only the rows: a settings card has no room for the panel's toolbar, levels or filter. */}
+            {/* Only the rows: a settings card has no room for the panel's toolbar, levels or filter, so nothing to check rows for. */}
             <Logger.Root rowFilter={isDebugPortRow}>
               <Logger.Content classNames='max-h-[16lh]'>
-                <Logger.List />
+                <Logger.List checkable={false} />
               </Logger.Content>
             </Logger.Root>
           </Form.Field>

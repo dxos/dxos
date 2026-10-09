@@ -5,11 +5,11 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { useThemeMode } from '@dxos/react-ui';
 import { ViewState, useManager, useSelection, useSelectionActions } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { OrderedList } from '@dxos/react-ui-list';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
   EditorSelectionStateSchema,
@@ -91,7 +91,7 @@ const ITEMS: StoryItem[] = [
 type ItemEditorProps = { item: StoryItem; editorStore: EditorStateStore };
 
 const ItemEditor = ({ item, editorStore }: ItemEditorProps) => {
-  const themeMode = useThemeMode();
+  const themeMode = Hooks.useThemeMode();
 
   const { parentRef } = useTextEditor(
     () => ({

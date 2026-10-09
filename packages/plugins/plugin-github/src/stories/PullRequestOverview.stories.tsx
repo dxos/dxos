@@ -7,9 +7,9 @@ import React from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { PreviewEvents } from '@dxos/plugin-preview';
-import { corePlugins } from '@dxos/plugin-testing';
-import { Panel } from '@dxos/react-ui';
+import * as PreviewEvents from '@dxos/plugin-preview/PreviewEvents';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
+import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { GitHubPlugin } from '#plugin';
@@ -32,7 +32,7 @@ const meta = {
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
-      plugins: [...corePlugins(), GitHubPlugin(), FixtureLinkSourcePlugin()],
+      plugins: [...CorePlugins.make(), GitHubPlugin(), FixtureLinkSourcePlugin()],
       setupEvents: [PreviewEvents.Start],
     }),
   ],
@@ -83,7 +83,7 @@ export const FailingChecks: Story = {
       ...PULL_REQUEST_13348_RUNS.slice(2),
       { ...PULL_REQUEST_13348_RUNS[0], name: 'Check / test (shard=6)', outcome: 'failure', conclusion: 'failure' },
       { ...PULL_REQUEST_13348_RUNS[1], name: 'Check / e2e (shard=7)', outcome: 'failure', conclusion: 'timed_out' },
-      { name: 'Check / storybook', outcome: 'pending' },
+      { name: 'Check / storybook', outcome: 'pending', startedAt: new Date(Date.now() - 252_000).toISOString() },
     ],
   },
   play: async ({ canvasElement }) => {
@@ -92,6 +92,7 @@ export const FailingChecks: Story = {
     await expect(first).toHaveAttribute('data-outcome', 'failure');
     await expect(second).toHaveAttribute('data-outcome', 'failure');
     await expect(third).toHaveAttribute('data-outcome', 'pending');
+    await expect(third).toHaveTextContent(/Running · \d+m \d+s/);
   },
 };
 

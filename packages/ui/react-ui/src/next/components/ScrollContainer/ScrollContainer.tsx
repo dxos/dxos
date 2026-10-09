@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import React, {
   type PropsWithChildren,
   type RefObject,
@@ -19,10 +21,10 @@ import { useComposedRefs } from '@dxos/react-hooks';
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
-import { composableProps, slottable } from '../../../util/index.ts';
+import { composableProps, slottable } from '../../../util/slots.ts';
 import { recipes } from '../../recipes.ts';
-import { Button } from '../Button/index.ts';
-import { ScrollArea, type ScrollAreaRootProps } from '../ScrollArea/index.ts';
+import { Button } from '../Button/Button.tsx';
+import * as ScrollArea from '../ScrollArea/ScrollArea.tsx';
 import { ScrollContainerProvider, type ScrollController, useScrollContainerContext } from './ScrollContainerContext.ts';
 
 // Within a pixel: at fractional zoom the three measures round differently, so exact equality never holds at the end.
@@ -49,6 +51,7 @@ const ScrollContainerRoot = forwardRef<ScrollController, ScrollContainerRootProp
     const viewportRef = useRef<HTMLElement | null>(null);
     const [pinned, setPinned] = useState(pin);
     const [overflow, setOverflow] = useState(false);
+    const [overflowEnd, setOverflowEnd] = useState(false);
 
     const controller = useMemo<ScrollController>(
       () => ({
@@ -79,9 +82,11 @@ const ScrollContainerRoot = forwardRef<ScrollController, ScrollContainerRootProp
         controller={controller}
         pinned={pinned}
         overflow={overflow}
+        overflowEnd={overflowEnd}
         setViewport={setViewport}
         setPinned={setPinned}
         setOverflow={setOverflow}
+        setOverflowEnd={setOverflowEnd}
       >
         {children}
       </ScrollContainerProvider>
@@ -95,7 +100,7 @@ ScrollContainerRoot.displayName = 'ScrollContainer.Root';
 // Content
 //
 
-type ScrollContainerContentProps = Pick<ScrollAreaRootProps, 'size' | 'mode' | 'width' | 'native'>;
+type ScrollContainerContentProps = Pick<ScrollArea.RootProps, 'size' | 'mode' | 'width' | 'native'>;
 
 /** The frame: a `ScrollArea.Root` that also positions the Fade and the ScrollDownButton over the viewport. */
 const ScrollContainerContent = slottable<HTMLDivElement, ScrollContainerContentProps>(
@@ -119,7 +124,8 @@ const ScrollContainerViewport = slottable<HTMLDivElement, ScrollContainerViewpor
   ({ children, asChild, ...props }, forwardedRef) => {
     const viewportRef = useRef<HTMLDivElement>(null);
     const ref = useComposedRefs(forwardedRef, viewportRef);
-    const { setViewport, setPinned, setOverflow } = useScrollContainerContext('ScrollContainer.Viewport');
+    const { setViewport, setPinned, setOverflow, setOverflowEnd } =
+      useScrollContainerContext('ScrollContainer.Viewport');
 
     useEffect(() => {
       const viewport = viewportRef.current;
@@ -128,13 +134,23 @@ const ScrollContainerViewport = slottable<HTMLDivElement, ScrollContainerViewpor
       }
 
       setViewport(viewport);
+      const measure = () => {
+        setOverflow(viewport.scrollTop > 0);
+        setOverflowEnd(!isBottom(viewport));
+      };
+      measure();
+
+      // Content added below changes what is hidden at the end without any scroll event.
+      const mutationObserver = new MutationObserver(measure);
+      mutationObserver.observe(viewport, { childList: true });
       return combine(
         // Only a user's wheel decides pinning: a programmatic scroll to the end must not unpin midway.
         addEventListener(viewport, 'wheel', () => setPinned(isBottom(viewport))),
-        addEventListener(viewport, 'scroll', () => setOverflow(viewport.scrollTop > 0)),
+        addEventListener(viewport, 'scroll', measure),
+        () => mutationObserver.disconnect(),
         () => setViewport(null),
       );
-    }, [setViewport, setPinned, setOverflow]);
+    }, [setViewport, setPinned, setOverflow, setOverflowEnd]);
 
     return (
       <>
@@ -185,17 +201,22 @@ const ScrollContainerPinEffect = ({ viewportRef }: { viewportRef: RefObject<HTML
 // Fade
 //
 
-type ScrollContainerFadeProps = ThemedClassName<{}>;
+type ScrollContainerFadeProps = ThemedClassName<{
+  /** The edge the gradient covers. */
+  edge?: 'top' | 'bottom';
+}>;
 
-/** A gradient from the surface over the top edge, shown once content has scrolled under it. */
-const ScrollContainerFade = ({ classNames }: ScrollContainerFadeProps) => {
-  const { overflow } = useScrollContainerContext('ScrollContainer.Fade');
+/** A gradient from the surface over an edge, shown while content is hidden past it. */
+const ScrollContainerFade = ({ classNames, edge = 'top' }: ScrollContainerFadeProps) => {
+  const { overflow, overflowEnd } = useScrollContainerContext('ScrollContainer.Fade');
+  const visible = edge === 'top' ? overflow : overflowEnd;
   return (
     <div
       aria-hidden
       data-scope='scroll-container'
       data-part='fade'
-      data-state={overflow ? 'visible' : 'hidden'}
+      data-edge={edge}
+      data-state={visible ? 'visible' : 'hidden'}
       className={mx(recipes.scrollContainerFade(), classNames)}
     />
   );
@@ -238,19 +259,19 @@ const ScrollContainerScrollDownButton = ({
 };
 
 ScrollContainerScrollDownButton.displayName = 'ScrollContainer.ScrollDownButton';
-
-export const ScrollContainer = {
-  Root: ScrollContainerRoot,
-  Content: ScrollContainerContent,
-  Viewport: ScrollContainerViewport,
-  Fade: ScrollContainerFade,
-  ScrollDownButton: ScrollContainerScrollDownButton,
-};
-
 export type {
-  ScrollContainerContentProps,
-  ScrollContainerFadeProps,
-  ScrollContainerRootProps,
-  ScrollContainerScrollDownButtonProps,
-  ScrollContainerViewportProps,
+  ScrollContainerContentProps as ContentProps,
+  ScrollContainerFadeProps as FadeProps,
+  ScrollContainerRootProps as RootProps,
+  ScrollContainerScrollDownButtonProps as ScrollDownButtonProps,
+  ScrollContainerViewportProps as ViewportProps,
 };
+
+export {
+  ScrollContainerContent as Content,
+  ScrollContainerFade as Fade,
+  ScrollContainerRoot as Root,
+  ScrollContainerScrollDownButton as ScrollDownButton,
+  ScrollContainerViewport as Viewport,
+};
+export { type ScrollController } from './ScrollContainerContext.ts';

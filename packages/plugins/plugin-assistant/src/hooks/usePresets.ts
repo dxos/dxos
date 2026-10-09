@@ -6,13 +6,13 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Model, Provider } from '@dxos/ai';
-import { useOptionalCapability } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as Chat from '@dxos/assistant/Chat';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN } from '@dxos/keys';
-import { useTranslation } from '@dxos/react-ui';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 import { Assistant, AssistantCapabilities, AssistantPreset, Ollama } from '#types';
@@ -24,7 +24,7 @@ import {
   presetsForProvider,
   providerForModel,
   resolveProvider,
-} from '../processor/index.ts';
+} from '../chat-model/index.ts';
 
 export type UsePresets = {
   preset: AiServicePreset | undefined;
@@ -36,15 +36,15 @@ export type UsePresets = {
  * has not selected one shows the configured per-provider model.
  */
 export const usePresets = (settings: Assistant.Settings, chat?: Chat.Chat): UsePresets => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   // Subscribed rather than read: the picker has to follow a selection made on another mount of the
-  // same chat, and the stamp the processor writes before the first request.
+  // same chat, and the stamp the chat model writes before the first request.
   const [session] = useObject(chat, 'session');
   const chatModel = session?.model;
 
   // The Ollama manager is the bundled sidecar (desktop only); its presence signals that the
   // `built-in` provider (rather than an external Ollama server) is available.
-  const ollamaManager = useOptionalCapability(AssistantCapabilities.OllamaManager);
+  const ollamaManager = Hooks.useOptionalCapability(AssistantCapabilities.OllamaManager);
 
   const provider = resolveProvider(settings.modelProvider, !!ollamaManager);
   const defaultModel = settings.modelDefaults?.[defaultsKeyForProvider(provider)];

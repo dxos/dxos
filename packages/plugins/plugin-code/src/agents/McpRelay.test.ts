@@ -54,8 +54,6 @@ describe('McpRelay', () => {
   test('a closed server is no longer reachable', async ({ expect }) => {
     await relay.serve('srv', async () => Response.json({}), MCP_TOKEN);
     await relay.close('srv');
-    // The unregister frame travels like a request; let it land.
-    await new Promise((resolve) => setTimeout(resolve, 50));
     expect((await post('srv')).status).toBe(404);
   });
 });

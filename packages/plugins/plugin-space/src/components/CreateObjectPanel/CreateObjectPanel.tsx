@@ -4,14 +4,19 @@
 
 import type * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 
 import { type Database, Obj, type Type } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { type Space } from '@dxos/react-client/echo';
-import { Button, Flex, Icon, toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
 import { Form, ObjectForm, omitId, useFormContext, useSubmitOnEnter } from '@dxos/react-ui-form';
 import { Picker } from '@dxos/react-ui-list';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Theme from '@dxos/react-ui/Theme';
 import { getStyles } from '@dxos/ui-theme';
 import { type MaybePromise } from '@dxos/util';
 
@@ -61,6 +66,11 @@ export type CreateObjectPanelProps = {
   onCreateObject?: (params: { metadata: Metadata; data?: Record<string, any> }) => MaybePromise<void>;
   /** Abandons the create; the draft form offers a Cancel button only when this is supplied. */
   onCancel?: () => void;
+  /**
+   * Where the draft form's Cancel and Create go, e.g. a dialog's footer; inline under the fields when absent. A portal
+   * rather than a lifted form, since only the schema-form step of the panel has actions.
+   */
+  actionsContainer?: HTMLElement | null;
 };
 
 export const CreateObjectPanel = ({
@@ -78,8 +88,9 @@ export const CreateObjectPanel = ({
   onTypenameChange,
   onCreateObject,
   onCancel,
+  actionsContainer,
 }: CreateObjectPanelProps) => {
-  const initialFormValues = useDefaultValue(initialFormValuesProp, () => ({}));
+  const initialFormValues = Hooks.useDefaultValue(initialFormValuesProp, () => ({}));
   const metadata = typename && resolve?.(typename);
 
   const sortedOptions = useMemo(() => [...options].sort((a, b) => a.label.localeCompare(b.label)), [options]);
@@ -169,7 +180,7 @@ export const CreateObjectPanel = ({
         testId='create-object-form'
       >
         <Form.Viewport>
-          <CreateObjectFormContent onCancel={onCancel} />
+          <CreateObjectFormContent onCancel={onCancel} actionsContainer={actionsContainer} />
         </Form.Viewport>
       </Form.Root>
     );
@@ -180,11 +191,11 @@ export const CreateObjectPanel = ({
 
 CreateObjectPanel.displayName = 'CreateObjectPanel';
 
-type CreateObjectFormContentProps = Pick<CreateObjectPanelProps, 'onCancel'>;
+type CreateObjectFormContentProps = Pick<CreateObjectPanelProps, 'onCancel' | 'actionsContainer'>;
 
 /** The draft form's body: its fields, then Cancel and Create; Enter in a single-line field creates. */
-const CreateObjectFormContent = ({ onCancel }: CreateObjectFormContentProps) => {
-  const { t } = useTranslation(meta.profile.key);
+const CreateObjectFormContent = ({ onCancel, actionsContainer }: CreateObjectFormContentProps) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const {
     form: { canSave, onSave },
   } = useFormContext(CreateObjectFormContent.displayName);
@@ -196,19 +207,29 @@ const CreateObjectFormContent = ({ onCancel }: CreateObjectFormContentProps) => 
   }, [canSave, onSave]);
   useSubmitOnEnter(contentRef, handleSubmit);
 
+  const actions = (
+    <>
+      {onCancel && (
+        <Button.Root onClick={onCancel} data-testid='cancel-button'>
+          {t('object-form-cancel.label')}
+        </Button.Root>
+      )}
+      <Button.Root variant='primary' disabled={!canSave} onClick={handleSubmit} data-testid='save-button'>
+        {t('object-form-confirm.label')}
+      </Button.Root>
+    </>
+  );
+
   return (
     <Form.Content ref={contentRef}>
       <Form.Fields />
-      <Flex gap='sm' justify='end' classNames='pt-form-padding'>
-        {onCancel && (
-          <Button onClick={onCancel} data-testid='cancel-button'>
-            {t('object-form-cancel.label')}
-          </Button>
-        )}
-        <Button variant='primary' disabled={!canSave} onClick={handleSubmit} data-testid='save-button'>
-          {t('object-form-confirm.label')}
-        </Button>
-      </Flex>
+      {actionsContainer ? (
+        createPortal(actions, actionsContainer)
+      ) : (
+        <Layout.Flex gap='sm' justify='end' classNames='pt-form-padding'>
+          {actions}
+        </Layout.Flex>
+      )}
     </Form.Content>
   );
 };
@@ -220,7 +241,7 @@ type SelectTypeProps = Pick<CreateObjectPanelProps, 'options'> & {
 };
 
 const SelectType = ({ options, onChange }: SelectTypeProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   const { results, handleSearch } = useSearchListResults({
     items: options,
@@ -248,19 +269,19 @@ const SelectType = ({ options, onChange }: SelectTypeProps) => {
             // Keyed by typename, since the label is localized and, for database types, user-authored.
             data-testid={`create-object-form.type.${option.id}`}
           >
-            <Icon
+            <Icon.Icon
               icon={option.icon ?? 'ph--circle-dashed--regular'}
               size='xl'
               classNames={getIconHueStyles(option.iconHue)}
             />
-            <div className='flex flex-col min-w-0 grow gap-0.5'>
+            <Layout.Flex column classNames='min-w-0 grow gap-0.5'>
               <span className='truncate'>{option.label}</span>
               {(option.plugin || option.description) && (
                 <span className='truncate text-fg-muted text-xs'>
                   {option.plugin ? t('plugin-subtitle.label', { plugin: option.plugin }) : option.description}
                 </span>
               )}
-            </div>
+            </Layout.Flex>
           </Picker.Item>
         ))}
       </SearchList.Viewport>
@@ -273,13 +294,13 @@ type SelectSpaceProps = Pick<CreateObjectPanelProps, 'spaces'> & {
 };
 
 const SelectSpace = ({ spaces, onChange }: SelectSpaceProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   const sortedSpaces = useMemo(
     () =>
       [...spaces].sort((a, b) => {
-        const labelA = toLocalizedString(getSpaceDisplayName(a), t);
-        const labelB = toLocalizedString(getSpaceDisplayName(b), t);
+        const labelA = Theme.toLocalizedString(getSpaceDisplayName(a), t);
+        const labelB = Theme.toLocalizedString(getSpaceDisplayName(b), t);
         return labelA.localeCompare(labelB);
       }),
     [spaces, t],
@@ -287,7 +308,7 @@ const SelectSpace = ({ spaces, onChange }: SelectSpaceProps) => {
 
   const { results, handleSearch } = useSearchListResults({
     items: sortedSpaces,
-    extract: (space) => toLocalizedString(getSpaceDisplayName(space), t),
+    extract: (space) => Theme.toLocalizedString(getSpaceDisplayName(space), t),
   });
 
   // TODO(burdon): Change to Masonry.
@@ -305,7 +326,7 @@ const SelectSpace = ({ spaces, onChange }: SelectSpaceProps) => {
           <SearchList.Item
             key={space.id}
             value={space.id}
-            label={toLocalizedString(getSpaceDisplayName(space), t)}
+            label={Theme.toLocalizedString(getSpaceDisplayName(space), t)}
             onSelect={() => onChange?.(space.db)}
           />
         ))}

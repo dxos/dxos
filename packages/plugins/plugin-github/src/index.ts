@@ -3,5 +3,5 @@
 //
 
 export * as GitHubPlugin from './GitHubPlugin.ts';
-export * from '#meta';
 export * from '#types';
+export * as Extensions from './Extensions.ts';

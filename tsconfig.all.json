@@ -52,6 +52,9 @@
       "path": "packages/core/echo/blob/tsconfig.json"
     },
     {
+      "path": "packages/core/compute/brain/tsconfig.json"
+    },
+    {
       "path": "packages/ui/brand/tsconfig.json"
     },
     {
@@ -119,6 +122,9 @@
     },
     {
       "path": "packages/common/crypto/tsconfig.json"
+    },
+    {
+      "path": "packages/common/datalog/tsconfig.json"
     },
     {
       "path": "packages/common/debug/tsconfig.json"
@@ -361,6 +367,9 @@
       "path": "packages/core/compute/pipeline-transcription/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-agent/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-assistant/tsconfig.json"
     },
     {
@@ -535,6 +544,9 @@
       "path": "packages/plugins/plugin-mermaid/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-messenger/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-mobile/tsconfig.json"
     },
     {
@@ -682,6 +694,9 @@
       "path": "packages/plugins/plugin-typesafe/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-uml/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-video/tsconfig.json"
     },
     {
@@ -805,6 +820,9 @@
       "path": "packages/ui/react-ui-grid/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-html/tsconfig.json"
+    },
+    {
       "path": "packages/ui/react-ui-introspect/tsconfig.json"
     },
     {
@@ -827,6 +845,9 @@
     },
     {
       "path": "packages/ui/react-ui-pickers/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-query/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-rdf/tsconfig.json"
@@ -887,6 +908,9 @@
     },
     {
       "path": "packages/stories/stories-brain/tsconfig.json"
+    },
+    {
+      "path": "packages/stories/stories-compute/tsconfig.json"
     },
     {
       "path": "packages/stories/stories-inbox/tsconfig.json"

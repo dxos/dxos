@@ -17,7 +17,7 @@ import { type Space } from '@dxos/client/echo';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Entity, Feed, Filter, Obj, Ref } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Message } from '@dxos/types';
@@ -33,7 +33,7 @@ export type ChatProcessorOptions = {
   registry?: Registry.AtomRegistry;
 };
 
-// TODO(burdon): Factor out common guts from AiChatProcessor.
+// TODO(burdon): Factor out common guts from ChatModel.
 export class ChatProcessor {
   private readonly _runtime: Context.Context<AiChatServices>;
   private readonly _toolkit: OpaqueToolkit.OpaqueToolkit;

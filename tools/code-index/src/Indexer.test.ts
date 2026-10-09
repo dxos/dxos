@@ -11,7 +11,7 @@ import { promisify } from 'node:util';
 import { parseSync } from 'oxc-parser';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import * as Crawler from './Crawler.ts';
 import * as Indexer from './Indexer.ts';
@@ -180,8 +180,8 @@ describe('Indexer', () => {
     const result = await index();
     // b no longer imports c, so the conclusion drawn from that edge is gone with it.
     expect(result).toMatchObject({ indexed: 1, derived: 1 });
-    // The native backend maintains the derived graphs from this pass's changes rather than recomputing.
-    expect(result.reasoners.every((outcome) => outcome.incremental)).toBe(Store.defaultBackend() === 'native');
+    // The derived graphs are maintained from this pass's changes rather than recomputed.
+    expect(result.reasoners.every((outcome) => outcome.incremental)).toBe(true);
 
     const reachable = await withStore((store) =>
       store.select(`
@@ -226,6 +226,52 @@ describe('Indexer', () => {
     expect(await index({ reasoners: [{ ...REASONER, rules }] })).toMatchObject({ indexed: 0, reasoned: true });
     expect(await index({ reasoners: [{ ...REASONER, rules }] })).toMatchObject({ indexed: 0, reasoned: false });
   }, 60_000);
+  test('a touch that leaves the content alone records the mtime without reindexing or reasoning', async () => {
+    // Settle the conclusions the previous test computed with another rule set.
+    await index();
+    const later = new Date(Date.now() + 60_000);
+    await utimes(join(root, 'src', 'b.ts'), later, later);
+
+    const result = await index();
+    expect(result).toMatchObject({ indexed: 0, touched: 1, unchanged: 2, reasoned: false });
+    const mtime = Math.floor(later.getTime() / 1000) * 1000;
+    const [record, facts] = await withStore((store) =>
+      Effect.all([store.getFile('src/b.ts'), store.match(Ontology.fileIri('src/b.ts'), Ontology.mtime)]),
+    );
+    expect(record?.mtime).toBeGreaterThanOrEqual(mtime);
+    expect(facts.map((quad) => Number(quad.object.value))).toEqual([record?.mtime]);
+
+    expect(await index()).toMatchObject({ indexed: 0, touched: 0, unchanged: 3 });
+    // An edit is still an edit, whatever mtime it lands at.
+    await writeFile(join(root, 'src', 'b.ts'), 'export const b = 2;\n');
+    await utimes(join(root, 'src', 'b.ts'), later, new Date(later.getTime() + 1000));
+    expect(await index()).toMatchObject({ indexed: 1, touched: 0 });
+  }, 60_000);
+
+  test('the reporter hears each phase in order as the pass completes it', async () => {
+    const indexReporting = async (options?: Partial<Indexer.Options>) => {
+      const heard: Indexer.Progress[] = [];
+      const result = await index({ ...options, onProgress: (progress) => Effect.sync(() => heard.push(progress)) });
+      return { result, heard, phases: heard.map((progress) => progress.phase) };
+    };
+
+    await writeFile(join(root, 'src', 'a.ts'), 'export const a = 3;\n');
+    const edited = await indexReporting();
+    expect(edited.phases).toEqual(['scan', 'parse', 'commit', 'reasoner', 'reason', 'summary']);
+    expect(edited.heard).toContainEqual({ phase: 'parse', ms: expect.any(Number), files: 1 });
+    expect(edited.heard).toContainEqual({ phase: 'reasoner', outcome: edited.result.reasoners[0] });
+
+    const idle = await indexReporting();
+    expect(idle.phases).toEqual(['scan', 'parse', 'commit', 'reason-skipped', 'summary']);
+    expect(idle.heard).toContainEqual({ phase: 'parse', ms: 0, files: 0 });
+
+    const later = new Date(Date.now() + 120_000);
+    await utimes(join(root, 'src', 'a.ts'), later, later);
+    const touched = await indexReporting({ summarize: false });
+    expect(touched.result).toMatchObject({ indexed: 0, touched: 1 });
+    expect(touched.phases).toEqual(['scan', 'parse', 'commit', 'reason-skipped']);
+  }, 60_000);
+
   test('every snippet the index holds is valid TypeScript', async () => {
     const snippets = await withStore((store) => store.match(undefined, Ontology.snippet));
     expect(snippets.length).toBeGreaterThan(0);

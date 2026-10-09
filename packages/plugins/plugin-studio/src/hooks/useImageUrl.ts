@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 import { useEffect, useState } from 'react';
 
 import { Blob, Database, Obj } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { type File } from '@dxos/types';
 
 /**

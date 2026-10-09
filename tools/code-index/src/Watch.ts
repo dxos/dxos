@@ -8,8 +8,10 @@ import * as Cause from 'effect/Cause';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Queue from 'effect/Queue';
+import * as Schema from 'effect/Schema';
 import type * as Scope from 'effect/Scope';
 import { type FSWatcher, existsSync, statSync, watch } from 'node:fs';
+import { availableParallelism } from 'node:os';
 import { dirname, join } from 'node:path';
 
 import * as Indexer from './Indexer.ts';
@@ -18,7 +20,8 @@ import * as Store from './Store.ts';
 
 /**
  * Keeps the index current while `serve` runs. The server holds the store open, and RocksDB admits
- * one process, so a separate `code-index index` cannot refresh it in the meantime.
+ * one process, so a separate `code-index index` cannot refresh it in the meantime. `serve` runs this
+ * on its own thread (`IndexThread.ts`).
  */
 
 /** How long a burst of changes (a save, a branch switch) settles before the pass that covers it. */
@@ -27,10 +30,52 @@ export const DEFAULT_DEBOUNCE_MS = 300;
 /** Directories whose churn is never a source change; the store itself lives in `node_modules`. */
 const IGNORED = ['node_modules', '.git', 'dist', 'target', '.moon'];
 
+/**
+ * What the watcher reports: a pass starting, each phase of it, a pass that finished, and one that
+ * failed (or a watch that could not be renewed). A schema, since `IndexThread` posts these between
+ * threads.
+ */
+export const Event = Schema.Union([
+  /** Carries the reasoner count so a reader can tell how many phases the pass has before it ends. */
+  Schema.TaggedStruct('Started', { reasoners: Schema.Number }),
+  Schema.TaggedStruct('Progress', { progress: Indexer.Progress }),
+  Schema.TaggedStruct('Passed', {
+    indexed: Schema.Number,
+    removed: Schema.Number,
+    derived: Schema.Number,
+    reasoned: Schema.Boolean,
+    totalMs: Schema.Number,
+  }),
+  Schema.TaggedStruct('Failed', { message: Schema.String }),
+]);
+
+export type Event = typeof Event.Type;
+
+/** The console lines `serve` has always written: a pass that changed something, and every failure. */
+export const log = (event: Event): Effect.Effect<void> => {
+  switch (event._tag) {
+    case 'Started':
+    case 'Progress':
+      return Effect.void;
+    case 'Passed':
+      return event.indexed + event.removed > 0 || event.reasoned
+        ? Console.log(
+            `code-index · ${event.indexed} indexed, ${event.removed} removed` +
+              (event.reasoned ? `, ${event.derived} derived` : '') +
+              ` in ${(event.totalMs / 1000).toFixed(1)}s`,
+          )
+        : Effect.void;
+    case 'Failed':
+      return Console.error(`code-index · ${event.message}`);
+  }
+};
+
 export type Options = {
   readonly root: string;
   readonly reasoners: readonly Reasoner.Reasoner[];
   readonly debounceMs?: number;
+  /** Told about every phase and pass; defaults to {@link log}. */
+  readonly onEvent?: (event: Event) => Effect.Effect<void>;
 };
 
 /** Whether a changed path, relative to the root, could be a source file the indexer reads. */
@@ -58,6 +103,7 @@ export const directories = (paths: readonly string[]): Set<string> => {
 export const run = (options: Options): Effect.Effect<never, never, Store.Store | Scope.Scope> =>
   Effect.gen(function* () {
     const store = yield* Store.Store;
+    const report = options.onEvent ?? log;
     // One pending signal is enough: a pass reads every file's mtime, not the events.
     const changes = yield* Queue.dropping<void>(1);
     const watchers = new Map<string, FSWatcher>();
@@ -111,7 +157,7 @@ export const run = (options: Options): Effect.Effect<never, never, Store.Store |
       const before = watchers.size;
       const failed = [...wanted].filter((dir) => !add(dir)).length;
       if (failed > 0) {
-        yield* Console.error(`code-index · ${failed} directories could not be watched`);
+        yield* report({ _tag: 'Failed', message: `${failed} directories could not be watched` });
       }
       // A file written between the pass's crawl and a new watch raised no event; one more pass sees it.
       if (watchers.size > before) {
@@ -119,20 +165,33 @@ export const run = (options: Options): Effect.Effect<never, never, Store.Store |
       }
     });
 
-    const pass = Indexer.run({ root: options.root, reasoners: options.reasoners }).pipe(
+    const pass = Effect.andThen(
+      report({ _tag: 'Started', reasoners: options.reasoners.length }),
+      Indexer.run({
+        root: options.root,
+        reasoners: options.reasoners,
+        summarize: false,
+        // One core stays free for the server's thread, which otherwise queues behind the parsers for CPU.
+        workers: Math.max(1, Math.min(availableParallelism() - 1, 8)),
+        onProgress: (progress) => report({ _tag: 'Progress', progress }),
+      }),
+    ).pipe(
       Effect.scoped,
       Effect.flatMap((result) =>
-        result.indexed + result.removed > 0 || result.reasoned
-          ? Console.log(
-              `code-index · ${result.indexed} indexed, ${result.removed} removed` +
-                (result.reasoned ? `, ${result.derived} derived` : '') +
-                ` in ${(result.timings.totalMs / 1000).toFixed(1)}s`,
-            )
-          : Effect.void,
+        report({
+          _tag: 'Passed',
+          indexed: result.indexed,
+          removed: result.removed,
+          derived: result.derived,
+          reasoned: result.reasoned,
+          totalMs: result.timings.totalMs,
+        }),
       ),
-      Effect.catchCause((cause) => Console.error(`code-index · reindex failed\n${Cause.pretty(cause)}`)),
+      Effect.catchCause((cause) => report({ _tag: 'Failed', message: `reindex failed\n${Cause.pretty(cause)}` })),
       Effect.andThen(
-        rewatch.pipe(Effect.catchCause((cause) => Console.error(`code-index · watch failed\n${Cause.pretty(cause)}`))),
+        rewatch.pipe(
+          Effect.catchCause((cause) => report({ _tag: 'Failed', message: `watch failed\n${Cause.pretty(cause)}` })),
+        ),
       ),
     );
 

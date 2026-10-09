@@ -8,6 +8,7 @@
 import { IMMUTABLE_CACHE_CONTROL, isFileRequest, isHashedAssetPath } from '../util/assets.ts';
 import { FEEDBACK_LOGS_PATH, LOG_STORE_MAX_BYTES } from '../util/constants.ts';
 import { corsHeaders, isAllowedOrigin, nativeOrigins } from '../util/cors.ts';
+import { injectLinkPreview, readLinkTitle } from '../util/link-preview.ts';
 
 type Env = {
   ASSETS: Fetcher;
@@ -26,8 +27,14 @@ type Env = {
 const OTEL_MAX_BODY_SIZE = 800 * 1024 * 1024; // 800MB.
 const FEEDBACK_LOGS_MAX_BODY_SIZE = LOG_STORE_MAX_BYTES;
 
+/** Bucket prefix per upload `kind`: user-filed debug logs, or agent trajectories flagged as struggles. */
+const FEEDBACK_UPLOAD_PREFIXES = new Map([
+  ['logs', 'logs'],
+  ['trajectory', 'trajectories'],
+]);
+
 /**
- * Handle /api/feedback-logs — upload NDJSON debug logs to R2.
+ * Handle /api/feedback-logs — upload NDJSON debug logs (or, with `?kind=trajectory`, agent trajectories) to R2.
  *
  * Current clients send gzipped NDJSON (`Content-Type: application/gzip`), stored as `.ndjson.gz`; plain
  * NDJSON is still accepted because native builds already in the field upload it uncompressed.
@@ -80,7 +87,9 @@ const handleFeedbackLogs = async (request: Request, env: Env): Promise<Response>
   const gzipped = request.headers.get('content-type')?.split(';')[0].trim() === 'application/gzip';
   const date = new Date().toISOString().slice(0, 10);
   const id = crypto.randomUUID();
-  const key = `logs/${date}/${id}.${gzipped ? 'ndjson.gz' : 'ndjson'}`;
+  // An unknown kind falls back to `logs/` rather than letting the client choose an arbitrary prefix.
+  const prefix = FEEDBACK_UPLOAD_PREFIXES.get(new URL(request.url).searchParams.get('kind') ?? 'logs') ?? 'logs';
+  const key = `${prefix}/${date}/${id}.${gzipped ? 'ndjson.gz' : 'ndjson'}`;
 
   try {
     // Hand R2 the request body itself: `arrayBuffer()` would hold the whole dump in the isolate,
@@ -350,7 +359,30 @@ const serveAsset = async (request: Request, env: Env): Promise<Response> => {
     );
   }
 
-  return env.ASSETS.fetch(new Request(new URL('/', url), request));
+  const page = await env.ASSETS.fetch(new Request(new URL('/', url), request));
+  return withLinkPreview(request, page, url);
+};
+
+/**
+ * Name a client-side route's `index.html` after the `title` its URL carries, so a link pasted into a
+ * messenger previews as the object it opens rather than as the bare app. Anything else passes through.
+ */
+const withLinkPreview = async (request: Request, page: Response, url: URL): Promise<Response> => {
+  const title = readLinkTitle(url);
+  if (
+    !title ||
+    request.method !== 'GET' ||
+    page.status !== 200 ||
+    !page.headers.get('Content-Type')?.includes('text/html')
+  ) {
+    return page;
+  }
+
+  const headers = new Headers(page.headers);
+  // The body changes, so the asset's length and validator no longer describe it.
+  headers.delete('Content-Length');
+  headers.delete('ETag');
+  return new Response(injectLinkPreview(await page.text(), title), { status: page.status, headers });
 };
 
 const OTEL_PREFIX = '/api/otel';

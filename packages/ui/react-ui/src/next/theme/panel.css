@@ -4,6 +4,11 @@
  */
 
 @layer dx-components {
+  /* A pane hosted by a popup (a form in a popover) is part of the popup's surface, not a base-level plank inside it. */
+  .dx-popup .dx-panel[data-surface='base'] {
+    --surface-bg: var(--dx-surface-popup);
+  }
+
   /* Header and footer rows size to their content, so a missing or empty one takes no space. */
   .dx-panel {
     display: grid;
@@ -13,7 +18,9 @@
     height: 100%;
     min-width: 0;
     min-height: 0;
-    overflow: hidden;
+    /* `clip`, not `hidden`: a hidden box can still be scrolled by focus or scrollIntoView, which shifts the body under
+       the header and leaves a gap below it; only the body scrolls. */
+    overflow: clip;
     font-size: var(--dx-font-size);
     line-height: var(--dx-line-height);
     container-type: inline-size;
@@ -26,11 +33,16 @@
     flex-direction: column;
     min-width: 0;
   }
+  /* A header that is the toolbar (`Panel.Header asChild`) keeps the toolbar's row, or its centring acts across it. */
+  .dx-panel-header.dx-toolbar {
+    flex-direction: row;
+  }
   /*
    * An article's toolbar is the app's toolbar height (ui-theme `--dx-toolbar-size`), its controls centred in it; a panel
    * given its own size keeps that size's block-tall header.
    */
-  .dx-panel:not([data-size]) > .dx-panel-header .dx-toolbar {
+  .dx-panel:not([data-size]) > .dx-panel-header .dx-toolbar,
+  .dx-panel:not([data-size]) > .dx-panel-header.dx-toolbar {
     min-height: var(--dx-toolbar-size, 2.5rem);
   }
 

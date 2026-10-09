@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { Editable as EditablePrimitive, useEditableContext } from '@ark-ui/react/editable';
 import React, { type ComponentPropsWithRef, type PropsWithChildren, forwardRef, useEffect, useRef } from 'react';
 
@@ -10,7 +12,7 @@ import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
-import { Icon } from '../Icon/index.ts';
+import * as Icon from '../Icon/Icon.tsx';
 import { type EditableActivationBinding, type UseEditableOptions, useEditable } from './useEditable.ts';
 
 const EDITABLE_NAME = 'Editable.Root';
@@ -21,11 +23,14 @@ const EDITABLE_INPUT_NAME = 'Editable.Input';
 // parts read does not expose.
 const [EditableActivationProvider, useEditableActivation] = createContext<EditableActivationBinding>(EDITABLE_NAME);
 
+// A controlled field's submit never reaches the machine's commit callback, so Save commits through the hook.
+const [EditableCommitProvider, useEditableCommit] = createContext<{ commit: () => void }>(EDITABLE_NAME);
+
 //
 // Root
 //
 
-export type EditableRootProps = ThemedClassName<
+type EditableRootProps = ThemedClassName<
   PropsWithChildren<UseEditableOptions & Omit<ComponentPropsWithRef<'div'>, keyof UseEditableOptions | 'children'>>
 >;
 
@@ -48,7 +53,7 @@ const EditableRoot = forwardRef<HTMLDivElement, EditableRootProps>(
     },
     forwardedRef,
   ) => {
-    const { api, activationProps } = useEditable({
+    const { api, activationProps, commit } = useEditable({
       value,
       defaultValue,
       onValueChange,
@@ -67,7 +72,9 @@ const EditableRoot = forwardRef<HTMLDivElement, EditableRootProps>(
         className={mx(recipes.editable(), classNames)}
         ref={forwardedRef}
       >
-        <EditableActivationProvider {...activationProps}>{children}</EditableActivationProvider>
+        <EditableActivationProvider {...activationProps}>
+          <EditableCommitProvider commit={commit}>{children}</EditableCommitProvider>
+        </EditableActivationProvider>
       </EditablePrimitive.RootProvider>
     );
   },
@@ -79,11 +86,11 @@ EditableRoot.displayName = EDITABLE_NAME;
 // Preview
 //
 
-export type EditablePreviewProps = ThemedClassName<Omit<ComponentPropsWithRef<'span'>, 'children'>>;
+type EditablePreviewProps = ThemedClassName<Omit<ComponentPropsWithRef<'span'>, 'children'>>;
 
 /** The static text and the activation affordance; hidden by the machine while editing. */
 const EditablePreview = forwardRef<HTMLSpanElement, EditablePreviewProps>(({ classNames, ...props }, forwardedRef) => {
-  const { valueText } = useEditableContext();
+  const { valueText, edit } = useEditableContext();
   const { role, onKeyDown } = useEditableActivation(EDITABLE_PREVIEW_NAME);
 
   return (
@@ -99,7 +106,18 @@ const EditablePreview = forwardRef<HTMLSpanElement, EditablePreviewProps>(({ cla
       ref={forwardedRef}
     >
       <span className={recipes.editablePreviewText()}>{valueText}</span>
-      <Icon icon='ph--pencil-simple--regular' classNames={recipes.editablePreviewIcon()} />
+      {/* The pencil is a door of its own: one click opens the field whatever gesture the preview takes (a double-click
+          in a list, where a single click selects the row). */}
+      <Icon.Icon
+        icon='ph--pencil-simple--regular'
+        classNames={recipes.editablePreviewIcon()}
+        data-testid='editable.edit'
+        // A disabled field hides the pencil (`editable.css`), so it takes no click.
+        onClick={(event) => {
+          event.stopPropagation();
+          edit();
+        }}
+      />
     </EditablePrimitive.Preview>
   );
 });
@@ -110,13 +128,12 @@ EditablePreview.displayName = EDITABLE_PREVIEW_NAME;
 // Input
 //
 
-export type EditableInputProps = ThemedClassName<
-  Omit<ComponentPropsWithRef<'input'>, 'value' | 'onChange' | 'placeholder'>
->;
+type EditableInputProps = ThemedClassName<Omit<ComponentPropsWithRef<'input'>, 'value' | 'onChange' | 'placeholder'>>;
 
-/** The field shown while editing; focused with the caret at the end. */
+/** The field shown while editing, focused with the caret at the end, with a save button at its end. */
 const EditableInput = forwardRef<HTMLInputElement, EditableInputProps>(({ classNames, ...props }, forwardedRef) => {
   const { editing } = useEditableContext();
+  const { commit } = useEditableCommit(EDITABLE_INPUT_NAME);
   const localRef = useRef<HTMLInputElement | null>(null);
 
   // The machine focuses the input but leaves the caret where the browser puts it, which from the keyboard is the start.
@@ -130,31 +147,40 @@ const EditableInput = forwardRef<HTMLInputElement, EditableInputProps>(({ classN
   }, [editing]);
 
   return (
-    <EditablePrimitive.Input
-      {...props}
-      className={mx(recipes.editableInput(), classNames)}
-      ref={(element) => {
-        localRef.current = element;
-        // Typed `unknown`: `ForwardedRef`'s callback is declared void, but React 19 may return a cleanup.
-        const cleanup: unknown = typeof forwardedRef === 'function' ? forwardedRef(element) : undefined;
-        if (forwardedRef && typeof forwardedRef !== 'function') {
-          forwardedRef.current = element;
-        }
-        return () => {
-          localRef.current = null;
-          if (typeof cleanup === 'function') {
-            cleanup();
+    <>
+      <EditablePrimitive.Input
+        {...props}
+        className={mx(recipes.editableInput(), classNames)}
+        ref={(element) => {
+          localRef.current = element;
+          // Typed `unknown`: `ForwardedRef`'s callback is declared void, but React 19 may return a cleanup.
+          const cleanup: unknown = typeof forwardedRef === 'function' ? forwardedRef(element) : undefined;
+          if (forwardedRef && typeof forwardedRef !== 'function') {
+            forwardedRef.current = element;
           }
-        };
-      }}
-    />
+          return () => {
+            localRef.current = null;
+            if (typeof cleanup === 'function') {
+              cleanup();
+            }
+          };
+        }}
+      />
+      {/* Saves the edit, at the input's end in the same cell; the machine hides it while not editing. */}
+      <EditablePrimitive.SubmitTrigger
+        className={recipes.editableSubmit()}
+        aria-label='Save'
+        data-testid='editable.save'
+        onClick={() => commit()}
+      >
+        <Icon.Icon icon='ph--check--bold' />
+      </EditablePrimitive.SubmitTrigger>
+    </>
   );
 });
 
 EditableInput.displayName = EDITABLE_INPUT_NAME;
 
-export const Editable = {
-  Root: EditableRoot,
-  Preview: EditablePreview,
-  Input: EditableInput,
-};
+export { EditableInput as Input, EditablePreview as Preview, EditableRoot as Root };
+export type { EditableInputProps as InputProps, EditablePreviewProps as PreviewProps, EditableRootProps as RootProps };
+export * from './useEditable.ts';

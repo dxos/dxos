@@ -5,21 +5,22 @@
 import { ark } from '@ark-ui/react/factory';
 import React, { type ComponentPropsWithRef, type PropsWithChildren, type ReactNode, forwardRef } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import * as Layout from '@dxos/react-ui/Layout';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 //
 // Item
 //
 
-type StatusBarItemProps = ThemedClassName<PropsWithChildren>;
+type StatusBarItemProps = Util.ThemedClassName<PropsWithChildren>;
 
 const StatusBarItem = forwardRef<HTMLDivElement, StatusBarItemProps>(
   ({ classNames, children, ...props }, forwardedRef) => {
     return (
-      <div {...props} role='status' className={mx('grid place-items-center', classNames)} ref={forwardedRef}>
+      <Layout.Grid {...props} role='status' center classNames={classNames} ref={forwardedRef}>
         {children}
-      </div>
+      </Layout.Grid>
     );
   },
 );
@@ -28,7 +29,7 @@ const StatusBarItem = forwardRef<HTMLDivElement, StatusBarItemProps>(
 // Text
 //
 
-type StatusBarTextProps = ThemedClassName<{ children: ReactNode }>;
+type StatusBarTextProps = Util.ThemedClassName<{ children: ReactNode }>;
 
 const StatusBarText = forwardRef<HTMLSpanElement, StatusBarTextProps>(({ classNames, children }, forwardedRef) => (
   <span className={mx(classNames)} ref={forwardedRef}>
@@ -40,7 +41,7 @@ const StatusBarText = forwardRef<HTMLSpanElement, StatusBarTextProps>(({ classNa
 // Button
 //
 
-type StatusBarButtonProps = ThemedClassName<ComponentPropsWithRef<'button'> & { asChild?: boolean }>;
+type StatusBarButtonProps = Util.ThemedClassName<ComponentPropsWithRef<'button'> & { asChild?: boolean }>;
 
 /**
  * @deprecated
@@ -72,24 +73,24 @@ const StatusBarButton = forwardRef<HTMLButtonElement, StatusBarButtonProps>(
 // Content
 //
 
-type StartContentProps = ThemedClassName<PropsWithChildren<{}>>;
+type StartContentProps = Util.ThemedClassName<PropsWithChildren<{}>>;
 
 const StartContent = forwardRef<HTMLDivElement, StartContentProps>(({ classNames, children }, forwardedRef) => (
-  <div className={mx('flex-grow flex items-center space-x-2', classNames)} ref={forwardedRef}>
+  <Layout.Flex align='center' classNames={['flex-grow space-x-2', classNames]} ref={forwardedRef}>
     {children}
-  </div>
+  </Layout.Flex>
 ));
 
 //
 // EndContent
 //
 
-type EndContentProps = ThemedClassName<PropsWithChildren<{}>>;
+type EndContentProps = Util.ThemedClassName<PropsWithChildren<{}>>;
 
 const EndContent = forwardRef<HTMLDivElement, EndContentProps>(({ classNames, children }, forwardedRef) => (
-  <div className={mx('flex-grow flex items-center justify-end', classNames)} ref={forwardedRef}>
+  <Layout.Flex align='center' justify='end' classNames={['flex-grow', classNames]} ref={forwardedRef}>
     {children}
-  </div>
+  </Layout.Flex>
 ));
 
 //

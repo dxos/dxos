@@ -10,7 +10,8 @@ import {
   type QueryEdgeStatusResponse,
   type EdgeStatus as SocketStatus,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { Flex, SystemButton, Tooltip } from '@dxos/react-ui';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 
 import { STAT_CARD_HUES, StatCard } from '../../../components/index.ts';
 import { Unit } from '../util.tsx';
@@ -102,7 +103,7 @@ const HealthRows = ({ rows }: { rows: HealthRow[] }) => (
 
 /** Tooltip body for a space row: its name where known, then each red flag and any fetch error. */
 const SpaceDetail = ({ row }: { row: SpaceRow }) => (
-  <Flex column gap='xs' classNames='max-w-64 text-xs'>
+  <Layout.Flex column gap='xs' classNames='max-w-64 text-xs'>
     <span>{row.name ?? 'Unknown space'}</span>
     {row.flags.map((flag) => (
       <span key={flag} className='text-error-text'>
@@ -110,32 +111,24 @@ const SpaceDetail = ({ row }: { row: SpaceRow }) => (
       </span>
     ))}
     {row.fetchError && <span className='text-error-text'>fetch: {row.fetchError}</span>}
-  </Flex>
+  </Layout.Flex>
 );
 
 /** One row per space: a copyable id chip (as the Sync card) and the count of EDGE's red flags for it. */
 const SpaceRows = ({ rows }: { rows: SpaceRow[] }) => (
   <>
     {rows.map((row) => (
+      // A label row like the others: the button's `label` is only its accessible name, so on its own the row showed a bare icon.
       <StatCard.Row
         key={row.spaceId}
         icon={row.ok ? undefined : 'ph--warning--regular'}
         iconClassNames={row.ok ? 'text-success-text' : 'text-error-text'}
-      >
-        <Tooltip.Trigger asChild content={<SpaceDetail row={row} />}>
-          <SystemButton.Clipboard
-            size='sm'
-            variant='ghost'
-            compact
-            classNames='font-mono'
-            label={row.spaceId.slice(0, 8)}
-            onCopy={() => row.spaceId}
-          />
-        </Tooltip.Trigger>
-        {row.flags.length > 0 && (
-          <span className='shrink-0 font-mono tabular-nums text-error-text'>{row.flags.length}</span>
-        )}
-      </StatCard.Row>
+        label={<span className='font-mono'>{row.name ?? row.spaceId.slice(0, 8)}</span>}
+        tooltip={<SpaceDetail row={row} />}
+        value={row.flags.length > 0 ? row.flags.length : undefined}
+        warning={row.flags.length > 0}
+        action={<SystemButton.Clipboard iconOnly label={row.spaceId} onCopy={() => row.spaceId} />}
+      />
     ))}
   </>
 );

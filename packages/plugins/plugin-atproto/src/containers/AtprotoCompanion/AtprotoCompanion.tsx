@@ -5,16 +5,21 @@
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useCapability } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Connection } from '@dxos/link';
 import { useObject, useQuery } from '@dxos/react-client/echo';
-import { Banner, Button, Container, Flex, Panel, ScrollArea, Tag, useTranslation } from '@dxos/react-ui';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Button from '@dxos/react-ui/Button';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Tag from '@dxos/react-ui/Tag';
 import { type PublishFieldNote } from '@dxos/schema';
-import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 import { AtprotoCapabilities, AtprotoPublication } from '#types';
@@ -55,8 +60,8 @@ const INDENT_REM = 1;
  * unpublish toolbar against the space's atproto connection.
  */
 export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompanionProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const makeRepoLayer = useCapability(AtprotoCapabilities.RepoLayer);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const makeRepoLayer = Hooks.useCapability(AtprotoCapabilities.RepoLayer);
   const db = Obj.getDatabase(subject);
   // Subscribe to the object so edits recompute status and field values (read from this snapshot).
   const [live] = useObject(subject);
@@ -208,7 +213,7 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
       <Panel.Body asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport>
-            <Flex column gap='md' classNames='p-3'>
+            <Layout.Flex column gap='md' classNames='p-3'>
               {/* Publish status — the status icon overrides the Message's default valence icon. A
                   neutral "checking" state shows until the first async derivation resolves. */}
               <Banner.Root
@@ -240,14 +245,14 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
                 <Banner.Root valence='warning'>
                   <Banner.Body>{t('confirm-publish.message')}</Banner.Body>
                   <Banner.Body asChild>
-                    <Flex gap='sm' classNames='pt-2'>
-                      <Button variant='primary' disabled={busy} onClick={handlePublish}>
+                    <Layout.Flex gap='sm' classNames='pt-2'>
+                      <Button.Root variant='primary' disabled={busy} onClick={handlePublish}>
                         {t('confirm-publish.label')}
-                      </Button>
-                      <Button disabled={busy} onClick={() => setConfirming(false)}>
+                      </Button.Root>
+                      <Button.Root disabled={busy} onClick={() => setConfirming(false)}>
                         {t('cancel.label')}
-                      </Button>
-                    </Flex>
+                      </Button.Root>
+                    </Layout.Flex>
                   </Banner.Body>
                 </Banner.Root>
               )}
@@ -255,7 +260,7 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
               {/* Public projection: what the network sees, as a treegrid. Each leaf is tagged Published (we
                   publish it), Mirrored (the network sees it via a linked upstream record), or Private;
                   fields whose local value diverges from the mirrored record are flagged Diverged (not pushed). */}
-              <Container gap='sm' gutter='none'>
+              <Layout.Container gap='sm' gutter='none'>
                 <h2 className='text-xs uppercase tracking-wide text-fg-muted'>{t('network-view.label')}</h2>
                 {mirroredUnresolved && (
                   <Banner.Root valence='warning'>
@@ -264,11 +269,7 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
                 )}
                 {/* A read-only field listing: three columns, no disclosure and nothing focusable, so it
                     is a table rather than the `treegrid` this used to claim. Depth is visual indent only. */}
-                <div
-                  role='table'
-                  className='grid gap-x-3'
-                  style={{ gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr) min-content' }}
-                >
+                <Layout.Grid role='table' cols={['fill', 'fill', 'min']} classNames='gap-x-3'>
                   {fields.map((field) => {
                     const published = field.visibility === 'publish';
                     const mirrored = field.visibility === 'mirror';
@@ -287,46 +288,45 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
                           typeof publishedValues?.[field.path] === 'string' &&
                           publishedValues[field.path] !== value));
                     return (
-                      <div
+                      <Layout.Grid
                         key={field.path}
                         role='row'
-                        className={mx(
-                          'grid grid-cols-subgrid col-span-full items-center py-0.5',
-                          field.group ? 'font-medium' : 'font-normal',
-                        )}
+                        cols='subgrid'
+                        align='center'
+                        classNames={['py-0.5', field.group ? 'font-medium' : 'font-normal']}
                       >
-                        <div
+                        <Layout.Flex
                           role='rowheader'
-                          className='flex items-center'
+                          align='center'
                           style={field.depth > 0 ? { paddingInlineStart: `${field.depth * INDENT_REM}rem` } : undefined}
                         >
                           <span className={`truncate text-sm ${field.group || visible ? '' : 'text-fg-muted'}`}>
                             {field.name}
                           </span>
-                        </div>
+                        </Layout.Flex>
                         <div role='cell' className='truncate text-sm text-fg-muted'>
                           {value}
                         </div>
-                        <div role='cell' className='flex shrink-0 items-center justify-end gap-1'>
+                        <Layout.Flex role='cell' align='center' justify='end' gap='xs' classNames='shrink-0'>
                           {!field.group && (
                             <>
-                              {diverged && <Tag hue='warning'>{t('diverged-field.label')}</Tag>}
-                              <Tag hue={published ? 'success' : mirrored ? 'info' : 'neutral'}>
+                              {diverged && <Tag.Tag hue='warning'>{t('diverged-field.label')}</Tag.Tag>}
+                              <Tag.Tag hue={published ? 'success' : mirrored ? 'info' : 'neutral'}>
                                 {published
                                   ? t('published-field.label')
                                   : mirrored
                                     ? t('mirrored-field.label')
                                     : t('private-field.label')}
-                              </Tag>
+                              </Tag.Tag>
                             </>
                           )}
-                        </div>
-                      </div>
+                        </Layout.Flex>
+                      </Layout.Grid>
                     );
                   })}
-                </div>
-              </Container>
-            </Flex>
+                </Layout.Grid>
+              </Layout.Container>
+            </Layout.Flex>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Panel.Body>

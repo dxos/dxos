@@ -7,7 +7,6 @@ import * as Atom from 'effect/reactivity/Atom';
 import React, { memo, useMemo } from 'react';
 
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import { type ThemedClassName } from '@dxos/react-ui';
 import {
   type ActionGraphProps,
   ActionToolbar,
@@ -15,6 +14,7 @@ import {
   MenuBuilder,
   useMenuActions,
 } from '@dxos/react-ui-menu';
+import type * as Util from '@dxos/react-ui/Util';
 import { type EditorViewMode } from '@dxos/ui-editor/types';
 
 import { addBlocks } from './blocks.ts';
@@ -52,7 +52,7 @@ export type EditorToolbarActionGraphProps = {
   customActions?: Atom.Atom<ActionGraphProps>;
 };
 
-export type EditorToolbarProps = ThemedClassName<
+export type EditorToolbarProps = Util.ThemedClassName<
   {
     role?: string;
     attendableId?: string;

@@ -17,6 +17,7 @@ import {
   type Camera,
   type ElementId,
   type Endpoint,
+  type LayerId,
   type LinkId,
   type LinkType,
   type NodeId,
@@ -40,9 +41,11 @@ export type Drag =
   | { kind: 'marquee'; from: Point; to: Point; mode: 'replace' | 'add' | 'subtract' }
   /**
    * Moving the selection; `anchor` is the pressed node's top-left, which is what snaps to the grid,
-   * and `delta` the resulting scene-space offset applied transiently to every selected node.
+   * and `delta` the resulting scene-space offset applied transiently to every selected node. With
+   * `copy` (⌘ held) the originals stay and copies land at `delta` instead. `raw` is the pointer's own offset, which
+   * the nodes follow while the drag is in flight; `delta` is where they land.
    */
-  | { kind: 'move'; ids: NodeId[]; origin: Point; anchor: Point; delta: Point }
+  | { kind: 'move'; ids: NodeId[]; origin: Point; anchor: Point; delta: Point; raw?: Point; copy?: boolean }
   /** Resizing one node by a handle; `bounds` is the transient result. */
   | { kind: 'resize'; id: NodeId; handle: Handle; start: Bounds; bounds: Bounds }
   /**
@@ -60,6 +63,13 @@ export type Drag =
   /** Re-attaching one end of a link; `fixed` is the other end's resolved port for the rubber band. */
   | { kind: 'end'; id: LinkId; end: 'source' | 'target'; fixed: Point; fixedSide: Side; to: Point; target?: Endpoint };
 
+/**
+ * Whether a move has left where it was pressed: until it does, a press on a selected node is a click, and the
+ * selection keeps its outline and handles rather than flickering off and on.
+ */
+export const isMoving = (drag: Drag | undefined): boolean =>
+  drag?.kind === 'move' && drag.raw !== undefined && (drag.raw.x !== 0 || drag.raw.y !== 0);
+
 export type HistoryEntry = { path: SceneId[]; camera: Camera };
 
 export type ControlPointRef = { link: LinkId; index: number };
@@ -72,6 +82,10 @@ export type SceneViewAtoms = {
   path: Atom.Writable<SceneId[]>;
   selection: Atom.Writable<ReadonlySet<ElementId>>;
   hover: Atom.Writable<NodeId | undefined>;
+  /** The link under the pointer, which shows its end handles as a selected one does. */
+  linkHover: Atom.Writable<LinkId | undefined>;
+  /** The layer new shapes and links go on; unset (or a layer the scene does not have), the top one. */
+  layer: Atom.Writable<LayerId | undefined>;
   /** The selected control point of a selected spline, if any. */
   point: Atom.Writable<ControlPointRef | undefined>;
   tool: Atom.Writable<Tool>;
@@ -79,6 +93,10 @@ export type SceneViewAtoms = {
   linkType: Atom.Writable<LinkType>;
   /** Grid shown and moves/resizes snapped to it. */
   snap: Atom.Writable<boolean>;
+  /** Guides shown: on a lattice, its cells. */
+  guides: Atom.Writable<boolean>;
+  /** On a lattice scene, snap lands on the lattice's cells rather than the basic grid. */
+  lattice: Atom.Writable<boolean>;
   drag: Atom.Writable<Drag | undefined>;
   history: Atom.Writable<{ entries: HistoryEntry[]; index: number }>;
   /** Projection snapshots for undo and redo (`undo.ts`). */
@@ -99,10 +117,14 @@ export const createSceneViewAtoms = (root: SceneId): SceneViewAtoms => ({
   path: Atom.keepAlive(Atom.make<SceneId[]>([root])),
   selection: Atom.keepAlive(Atom.make<ReadonlySet<ElementId>>(new Set<ElementId>())),
   hover: Atom.keepAlive(Atom.make<NodeId | undefined>(undefined)),
+  linkHover: Atom.keepAlive(Atom.make<LinkId | undefined>(undefined)),
+  layer: Atom.keepAlive(Atom.make<LayerId | undefined>(undefined)),
   point: Atom.keepAlive(Atom.make<ControlPointRef | undefined>(undefined)),
   tool: Atom.keepAlive(Atom.make<Tool>({ kind: 'select' })),
   linkType: Atom.keepAlive(Atom.make<LinkType>('curve')),
   snap: Atom.keepAlive(Atom.make<boolean>(true)),
+  guides: Atom.keepAlive(Atom.make<boolean>(true)),
+  lattice: Atom.keepAlive(Atom.make<boolean>(true)),
   drag: Atom.keepAlive(Atom.make<Drag | undefined>(undefined)),
   history: Atom.keepAlive(Atom.make<{ entries: HistoryEntry[]; index: number }>({ entries: [], index: -1 })),
   undo: Atom.keepAlive(Atom.make<UndoState>(emptyUndo())),

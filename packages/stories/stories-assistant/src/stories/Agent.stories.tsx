@@ -8,9 +8,9 @@ import React from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { Client } from '@dxos/agent-claude/client';
-import * as ChatSchema from '@dxos/assistant/Chat';
+import * as Chat from '@dxos/assistant/Chat';
 import { Database, Feed, Filter } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { type Space } from '@dxos/react-client/echo';
 import { ContentBlock, Message } from '@dxos/types';
 import { concat } from '@dxos/util';
@@ -71,10 +71,10 @@ const waitForSpace = async (key: string, timeout = 30_000): Promise<Space> => {
 };
 
 /** Waits for the chat the story plugin creates asynchronously on SpacesAvailable. */
-const waitForChat = async (space: Space, timeout = 30_000): Promise<ChatSchema.Chat> => {
+const waitForChat = async (space: Space, timeout = 30_000): Promise<Chat.Chat> => {
   const deadline = Date.now() + timeout;
   while (Date.now() < deadline) {
-    const [chat] = await space.db.query(Filter.type(ChatSchema.Chat)).run();
+    const [chat] = await space.db.query(Filter.type(Chat.Chat)).run();
     if (chat) {
       return chat;
     }
@@ -250,7 +250,7 @@ export const WithClaudeAgent: Story = {
     const space = await waitForSpace('withClaudeAgent');
     await waitForChat(space);
 
-    // Submitted through the assistant's own chat input: the processor requests a session from
+    // Submitted through the assistant's own chat input: the chat model requests a session from
     // AgentService, whose process runs the turn on the contributed Claude producer, which appends
     // the projected messages to the feed the thread renders.
     await submitPrompt(canvasElement, `Read agent-fixture.md and state the MAGIC_TOKEN. Do not run any other tools.`);

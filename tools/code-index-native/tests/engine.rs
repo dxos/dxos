@@ -7,7 +7,7 @@ use std::path::PathBuf;
 
 use code_index_native::facts::Dict;
 use code_index_native::rules;
-use code_index_native::store::{NativeStore, Stratum};
+use code_index_native::store::{DERIVED_PREFIX, DocumentWrite, NativeStore, Stratum};
 use oxigraph::model::{GraphName, NamedNode, Quad};
 
 /// The IRIs a rule file names, as the N3 parser resolves its prefixes.
@@ -160,18 +160,11 @@ fn canonical_names_follow_the_namespace_barrel() {
         .collect();
     store.reason_all(&strata).unwrap();
     let graph = &strata[0].graph;
-    assert_eq!(
-        derived(&store, graph),
-        vec![
-            format!("<{}> <{DEUS}canonicalName> \"iri\"", symbol(module, "iri")),
-            format!(
-                "<{}> <{DEUS}canonicalName> \"helper\"",
-                symbol("src/plain.ts", "helper")
-            ),
-        ]
-    );
+    // A name equal to the declared one is not restated.
+    assert_eq!(derived(&store, graph), Vec::<String>::new());
 
-    // The barrel arrives: the bare name is retracted (negation flips) and the qualified one concluded.
+    // The barrel arrives: the qualified name is concluded (the negation flips); the barrel's own
+    // name is its declared one.
     store
         .insert_quads(&nquads(
             "urn:graph:b",
@@ -189,27 +182,16 @@ fn canonical_names_follow_the_namespace_barrel() {
     assert!(outcomes[0].incremental);
     assert_eq!(
         derived(&store, graph),
-        vec![
-            format!(
-                "<{}> <{DEUS}canonicalName> \"Ontology.iri\"",
-                symbol(module, "iri")
-            ),
-            format!(
-                "<{}> <{DEUS}canonicalName> \"Ontology\"",
-                symbol(barrel, "Ontology")
-            ),
-            format!(
-                "<{}> <{DEUS}canonicalName> \"helper\"",
-                symbol("src/plain.ts", "helper")
-            ),
-        ]
+        vec![format!(
+            "<{}> <{DEUS}canonicalName> \"Ontology.iri\"",
+            symbol(module, "iri")
+        )]
     );
 
     // And leaves again.
     store.drop_graphs(&["urn:graph:b".into()]).unwrap();
     store.reason_all(&strata).unwrap();
-    assert_eq!(derived(&store, graph).len(), 2);
-    assert!(derived(&store, graph)[0].ends_with("\"iri\""));
+    assert_eq!(derived(&store, graph), Vec::<String>::new());
 }
 
 #[test]
@@ -330,11 +312,10 @@ fn kept_premises_match_recomputation() {
     assert!(dir.path().join("1").join("premises.bin").exists());
 }
 
-fn maintenance_matches_recomputation(open: impl Fn(u64) -> NativeStore) {
-    let strata = shipped();
-    // Every IRI the rules name (prefixed or not) as the parser resolves it, plus the classes the
-    // rules conclude, so random premises hit the rules' constants.
-    let constants: Vec<String> = strata
+/// Every IRI the rules name (prefixed or not) as the parser resolves it, plus the classes the rules
+/// conclude, so random premises hit the rules' constants.
+fn constants(strata: &[Stratum]) -> Vec<String> {
+    strata
         .iter()
         .flat_map(|stratum| named_nodes(&stratum.rules))
         .filter(|iri| iri.starts_with("https://dxos.org/deus/"))
@@ -352,7 +333,12 @@ fn maintenance_matches_recomputation(open: impl Fn(u64) -> NativeStore) {
             .iter()
             .map(|name| format!("{DEUS}{name}")),
         )
-        .collect();
+        .collect()
+}
+
+fn maintenance_matches_recomputation(open: impl Fn(u64) -> NativeStore) {
+    let strata = shipped();
+    let constants = constants(&strata);
     let graphs: Vec<String> = (0..4).map(|index| format!("urn:graph:{index}")).collect();
 
     for seed in 1..=40u64 {
@@ -416,6 +402,185 @@ fn maintenance_matches_recomputation(open: impl Fn(u64) -> NativeStore) {
                 );
             }
         }
+    }
+}
+
+/// The running quad count against a full scan, after every kind of write: a write path that forgets
+/// to report its change shows up here as a drift.
+#[test]
+fn the_quad_count_tracks_every_write() {
+    let strata = shipped();
+    let constants = constants(&strata);
+    let graphs: Vec<String> = (0..4).map(|index| format!("urn:graph:{index}")).collect();
+    let dir = tempfile::tempdir().unwrap();
+    for seed in 1..=8u64 {
+        let mut rng = Rng(seed.wrapping_mul(0x9e37_79b9_7f4a_7c15));
+        let store = if seed % 2 == 0 {
+            NativeStore::in_memory(100_000).unwrap()
+        } else {
+            NativeStore::open(dir.path().join(seed.to_string())).unwrap()
+        };
+        let check = |step: &str| {
+            assert_eq!(
+                store.quad_count().unwrap(),
+                store.scanned_quad_count().unwrap(),
+                "seed {seed}: the count drifted after {step}"
+            );
+        };
+        check("open");
+        let random = |rng: &mut Rng, count: usize| -> Vec<Quad> {
+            (0..count)
+                .map(|_| random_quad(rng, &constants, &graphs))
+                .collect()
+        };
+
+        let initial = random(&mut rng, 120);
+        store
+            .insert_quads(&NativeStore::to_nquads(&initial).unwrap())
+            .unwrap();
+        check("insert");
+        // Repeated quads, and quads already present, must not count twice.
+        store
+            .insert_quads(
+                &NativeStore::to_nquads(&[initial.clone(), random(&mut rng, 10)].concat()).unwrap(),
+            )
+            .unwrap();
+        check("insert with duplicates");
+        store.reason_all(&strata).unwrap();
+        check("reason_all (full)");
+
+        let triples: String = random(&mut rng, 30)
+            .iter()
+            .map(|quad| format!("{} {} {} .\n", quad.subject, quad.predicate, quad.object))
+            .collect();
+        store
+            .put_documents(&[
+                DocumentWrite {
+                    graph: "urn:graph:doc-a".into(),
+                    drop: vec![graphs[0].clone()],
+                    triples: triples.clone(),
+                },
+                DocumentWrite {
+                    graph: "urn:graph:doc-b".into(),
+                    drop: Vec::new(),
+                    triples,
+                },
+            ])
+            .unwrap();
+        check("put_documents");
+        store
+            .put_document_nquads(
+                "urn:graph:doc-a",
+                &[graphs[1].clone()],
+                &NativeStore::to_nquads(&random(&mut rng, 12)).unwrap(),
+            )
+            .unwrap();
+        check("put_document_nquads");
+        // A swap journals once a signature exists, so this one runs the journalled path.
+        store.drop_graphs(&[graphs[2].clone()]).unwrap();
+        check("drop_graphs");
+
+        let existing = store.match_quads(None, None, None, None).unwrap();
+        let removed: Vec<Quad> = (0..20).map(|_| rng.pick(&existing).clone()).collect();
+        let mut removed_and_absent = removed.clone();
+        removed_and_absent.extend(random(&mut rng, 5));
+        store
+            .remove_quads(&NativeStore::to_nquads(&removed_and_absent).unwrap())
+            .unwrap();
+        check("remove (base and derived, some absent)");
+        store.reason_all(&strata).unwrap();
+        check("reason_all (incremental)");
+
+        let derived_graph = format!("{DERIVED_PREFIX}scratch");
+        let derived_quads: Vec<Quad> = random(&mut rng, 6)
+            .into_iter()
+            .map(|quad| {
+                Quad::new(
+                    quad.subject,
+                    quad.predicate,
+                    quad.object,
+                    NamedNode::new_unchecked(derived_graph.as_str()),
+                )
+            })
+            .collect();
+        store
+            .insert_quads(
+                &NativeStore::to_nquads(&[derived_quads.clone(), derived_quads.clone()].concat())
+                    .unwrap(),
+            )
+            .unwrap();
+        check("insert into a derived graph");
+        store
+            .remove_quads(&NativeStore::to_nquads(&derived_quads[..3]).unwrap())
+            .unwrap();
+        check("remove from a derived graph");
+        store
+            .reason(&strata[0].graph, &strata[0].rules, true)
+            .unwrap();
+        check("reason (materialized)");
+        store.invalidate().unwrap();
+        store.reason_all(&strata).unwrap();
+        check("invalidate + reason_all");
+
+        store.clear().unwrap();
+        check("clear");
+        store
+            .insert_quads(&NativeStore::to_nquads(&random(&mut rng, 10)).unwrap())
+            .unwrap();
+        check("insert after clear");
+    }
+}
+
+/// The binding runs writes and reasoning on separate libuv threads: a write landing while a pass
+/// runs must stay journalled for the next one, or incremental maintenance would miss it.
+#[test]
+fn writes_racing_reasoning_stay_journalled() {
+    let strata = shipped();
+    let constants = constants(&strata);
+    let graphs: Vec<String> = (0..4).map(|index| format!("urn:graph:{index}")).collect();
+    let store = std::sync::Arc::new(NativeStore::in_memory(100_000).unwrap());
+    let mut rng = Rng(7);
+    let initial: Vec<Quad> = (0..120)
+        .map(|_| random_quad(&mut rng, &constants, &graphs))
+        .collect();
+    store
+        .insert_quads(&NativeStore::to_nquads(&initial).unwrap())
+        .unwrap();
+    store.reason_all(&strata).unwrap();
+
+    let writer = {
+        let store = std::sync::Arc::clone(&store);
+        let constants = constants.clone();
+        let graphs = graphs.clone();
+        std::thread::spawn(move || {
+            let mut rng = Rng(11);
+            for _ in 0..60 {
+                let quad = random_quad(&mut rng, &constants, &graphs);
+                store
+                    .insert_quads(&NativeStore::to_nquads(&[quad]).unwrap())
+                    .unwrap();
+            }
+        })
+    };
+    while !writer.is_finished() {
+        store.reason_all(&strata).unwrap();
+    }
+    writer.join().unwrap();
+
+    store.reason_all(&strata).unwrap();
+    let incremental: Vec<Vec<String>> = strata
+        .iter()
+        .map(|stratum| derived(&store, &stratum.graph))
+        .collect();
+    store.invalidate().unwrap();
+    store.reason_all(&strata).unwrap();
+    for (stratum, incremental) in strata.iter().zip(&incremental) {
+        assert_eq!(
+            incremental,
+            &derived(&store, &stratum.graph),
+            "{} diverged",
+            stratum.graph
+        );
     }
 }
 
@@ -602,4 +767,169 @@ fn string_builtins_read_patterns_from_the_data() {
             ),
         ]
     );
+}
+
+const U: &str = "urn:u#";
+
+/// The two synthetic rule files: one using every construct, one reading its output.
+fn constructs() -> Vec<Stratum> {
+    ["a", "b"]
+        .iter()
+        .map(|name| Stratum {
+            graph: format!("{DERIVED}constructs-{name}"),
+            rules: fixture(&format!("constructs-{name}.n3")),
+        })
+        .collect()
+}
+
+fn node(index: usize) -> String {
+    format!("<urn:node:{index}>")
+}
+
+fn edges(graph: &str, edges: &[(String, &str, String)]) -> String {
+    edges
+        .iter()
+        .map(|(s, p, o)| format!("{s} <{U}{p}> {o} <{graph}> .\n"))
+        .collect()
+}
+
+fn fixture(name: &str) -> String {
+    fs::read_to_string(
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("tests/fixtures")
+            .join(name),
+    )
+    .unwrap()
+}
+
+/// A Turtle/N3 fixture's triples, formatted as `derived` formats them.
+fn fixture_triples(name: &str) -> Vec<String> {
+    let mut triples: Vec<String> = oxttl::n3::N3Parser::new()
+        .for_slice(&fixture(name))
+        .map(|quad| {
+            let quad = quad.unwrap();
+            format!("{} {} {}", quad.subject, quad.predicate, quad.object)
+        })
+        .collect();
+    triples.sort();
+    triples
+}
+
+#[test]
+fn constructs_derive_what_eye_derives() {
+    let store = NativeStore::in_memory(1000).unwrap();
+    let data: String = oxttl::n3::N3Parser::new()
+        .for_slice(&fixture("constructs.data.n3"))
+        .map(|quad| {
+            let quad = quad.unwrap();
+            format!(
+                "{} {} {} <urn:graph:a> .\n",
+                quad.subject, quad.predicate, quad.object
+            )
+        })
+        .collect();
+    store.insert_quads(&data).unwrap();
+    let strata = constructs();
+    store.reason_all(&strata).unwrap();
+    assert_eq!(
+        derived(&store, &strata[0].graph),
+        fixture_triples("constructs-a.expected.n3")
+    );
+    // The reading file sees the output only: no backward conclusion, no fact of the first file.
+    assert_eq!(
+        derived(&store, &strata[1].graph),
+        fixture_triples("constructs-b.expected.n3")
+    );
+}
+
+#[test]
+fn constructs_maintain_like_recomputation() {
+    let strata = constructs();
+    let objects: Vec<String> = (0..6)
+        .map(node)
+        .chain(["k1", "k2", "k3"].iter().map(|name| format!("<{U}{name}>")))
+        .collect();
+    let graphs: Vec<String> = (0..3).map(|index| format!("urn:graph:{index}")).collect();
+    let random = |rng: &mut Rng| {
+        let predicate = *rng.pick(&["p", "q"]);
+        let subject = node((rng.next() % 6) as usize);
+        edges(
+            rng.pick(&graphs).as_str(),
+            &[(subject, predicate, rng.pick(&objects).clone())],
+        )
+    };
+    for seed in 1..=60u64 {
+        let mut rng = Rng(seed.wrapping_mul(0x9e37_79b9_7f4a_7c15));
+        let store = NativeStore::in_memory(100_000).unwrap();
+        let initial: String = (0..14).map(|_| random(&mut rng)).collect();
+        store.insert_quads(&initial).unwrap();
+        store.reason_all(&strata).unwrap();
+        for round in 0..6 {
+            let added: String = (0..4).map(|_| random(&mut rng)).collect();
+            store.insert_quads(&added).unwrap();
+            let base: Vec<Quad> = store
+                .match_quads(None, None, None, None)
+                .unwrap()
+                .into_iter()
+                .filter(|quad| !quad.graph_name.to_string().contains("derived"))
+                .collect();
+            if !base.is_empty() {
+                let removed: Vec<Quad> = (0..3).map(|_| rng.pick(&base).clone()).collect();
+                store
+                    .remove_quads(&NativeStore::to_nquads(&removed).unwrap())
+                    .unwrap();
+            }
+            if round % 3 == 2 {
+                store.drop_graphs(&[rng.pick(&graphs).clone()]).unwrap();
+            }
+            store.reason_all(&strata).unwrap();
+            let incremental: Vec<Vec<String>> = strata
+                .iter()
+                .map(|stratum| derived(&store, &stratum.graph))
+                .collect();
+            store.invalidate().unwrap();
+            store.reason_all(&strata).unwrap();
+            for (stratum, incremental) in strata.iter().zip(&incremental) {
+                assert_eq!(
+                    incremental,
+                    &derived(&store, &stratum.graph),
+                    "seed {seed} round {round}: {} diverged",
+                    stratum.graph
+                );
+            }
+        }
+    }
+}
+
+#[test]
+fn shared_open_returns_one_store_per_directory() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("native");
+    let first = NativeStore::open_shared(&path).unwrap();
+    // A second opener on another thread, as `serve`'s indexer worker is, gets the same store rather
+    // than RocksDB's lock error.
+    let second = std::thread::spawn({
+        let path = path.clone();
+        move || NativeStore::open_shared(path).unwrap()
+    })
+    .join()
+    .unwrap();
+    assert!(std::sync::Arc::ptr_eq(&first, &second));
+
+    second
+        .put_documents(&[DocumentWrite {
+            graph: "https://example.com/file/a".into(),
+            drop: Vec::new(),
+            triples: "<https://example.com/a> <https://example.com/p> <https://example.com/b> .\n"
+                .into(),
+        }])
+        .unwrap();
+    assert_eq!(first.quad_count().unwrap(), 1);
+
+    // Once every handle is gone the directory is released, so a fresh open succeeds and sees the data.
+    drop(first);
+    drop(second);
+    let reopened = NativeStore::open_shared(&path).unwrap();
+    assert_eq!(reopened.quad_count().unwrap(), 1);
+    assert!(NativeStore::open(&path).is_err());
 }

@@ -4,12 +4,14 @@
 
 import React from 'react';
 
-import { Icon, type ThemedClassName } from '@dxos/react-ui';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { Word } from '#types';
 
-export type WordListProps = ThemedClassName<{
+export type WordListProps = Util.ThemedClassName<{
   words: Word.Word[];
   /** Highlighted row (e.g. the card currently being drilled). */
   selected?: string;
@@ -31,7 +33,7 @@ export const WordList = ({ words, selected, onSelect, classNames }: WordListProp
   const interactive = Boolean(onSelect);
 
   return (
-    <div role={interactive ? 'listbox' : 'list'} className={mx('flex flex-col divide-y divide-separator', classNames)}>
+    <Layout.Flex column role={interactive ? 'listbox' : 'list'} classNames={['divide-y divide-separator', classNames]}>
       {words.map((word) => (
         <div
           role={interactive ? 'option' : 'listitem'}
@@ -63,7 +65,7 @@ export const WordList = ({ words, selected, onSelect, classNames }: WordListProp
           <ProgressPips word={word} />
         </div>
       ))}
-    </div>
+    </Layout.Flex>
   );
 };
 
@@ -75,7 +77,7 @@ const ProgressPips = ({ word }: { word: Word.Word }) => {
   return (
     <span className='flex items-center gap-1' title={`${box}/${Word.BOX_COUNT}`}>
       {Array.from({ length: Word.BOX_COUNT }, (_, index) => (
-        <Icon
+        <Icon.Icon
           key={index}
           icon={index < box ? 'ph--circle--fill' : 'ph--circle--regular'}
           size='xs'

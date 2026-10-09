@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-thread",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "description": "A set of components to use with threads, including comments and messages.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -47,6 +47,7 @@
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "date-fns": "catalog:"
   },

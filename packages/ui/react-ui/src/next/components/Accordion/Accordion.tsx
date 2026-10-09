@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { Accordion as AccordionPrimitive, useAccordionItemContext } from '@ark-ui/react/accordion';
 import React, { forwardRef } from 'react';
 
@@ -9,7 +11,7 @@ import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
-import { Icon } from '../Icon/index.ts';
+import * as Icon from '../Icon/Icon.tsx';
 
 //
 // Root
@@ -19,16 +21,16 @@ type AccordionRootProps = ThemedClassName<
   Omit<AccordionPrimitive.RootProps, 'onValueChange' | 'multiple'> & {
     /** More than one item open at once (the default). */
     multiple?: boolean;
-    /** Called with the open items' values. */
-    onValueChange?: (value: string[]) => void;
     /** A separator frame around and between the items (the default); `false` leaves only the dividers. */
     border?: boolean;
+    /** Called with the open items' values. */
+    onValueChange?: (value: string[]) => void;
   }
 >;
 
 /** A stack of disclosure items; any number may be open unless `multiple` is false. */
 const AccordionRoot = forwardRef<HTMLDivElement, AccordionRootProps>(
-  ({ classNames, multiple = true, onValueChange, border = true, ...props }, forwardedRef) => (
+  ({ classNames, multiple = true, border = true, onValueChange, ...props }, forwardedRef) => (
     <AccordionPrimitive.Root
       {...props}
       multiple={multiple}
@@ -79,7 +81,7 @@ const AccordionItemTrigger = forwardRef<HTMLButtonElement, AccordionItemTriggerP
       >
         {icon && (
           <span data-scope='accordion' data-part='item-icon' className={recipes.accordionItemIcon()}>
-            <Icon icon={icon} />
+            <Icon.Icon icon={icon} />
           </span>
         )}
         <span data-scope='accordion' data-part='item-text' className={recipes.accordionItemText()}>
@@ -87,7 +89,7 @@ const AccordionItemTrigger = forwardRef<HTMLButtonElement, AccordionItemTriggerP
         </span>
         {!disabled && (
           <AccordionPrimitive.ItemIndicator className={recipes.accordionItemIndicator()}>
-            <Icon icon='ph--caret-right--regular' />
+            <Icon.Icon icon='ph--caret-right--regular' />
           </AccordionPrimitive.ItemIndicator>
         )}
       </AccordionPrimitive.ItemTrigger>
@@ -115,12 +117,16 @@ const AccordionItemContent = forwardRef<HTMLDivElement, AccordionItemContentProp
 );
 
 AccordionItemContent.displayName = 'Accordion.ItemContent';
-
-export const Accordion = {
-  Root: AccordionRoot,
-  Item: AccordionItem,
-  ItemTrigger: AccordionItemTrigger,
-  ItemContent: AccordionItemContent,
+export type {
+  AccordionItemContentProps as ItemContentProps,
+  AccordionItemProps as ItemProps,
+  AccordionItemTriggerProps as ItemTriggerProps,
+  AccordionRootProps as RootProps,
 };
 
-export type { AccordionItemContentProps, AccordionItemProps, AccordionItemTriggerProps, AccordionRootProps };
+export {
+  AccordionItem as Item,
+  AccordionItemContent as ItemContent,
+  AccordionItemTrigger as ItemTrigger,
+  AccordionRoot as Root,
+};

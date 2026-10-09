@@ -4,14 +4,17 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Project from '@dxos/compute/Project';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import * as TaskOperation from '@dxos/plugin-tasks/TaskOperation';
-import { Banner, Dialog, SystemButton, useTranslation } from '@dxos/react-ui';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 import { Task } from '@dxos/types';
 
 import { MoveTaskPanel } from '#components';
@@ -23,8 +26,8 @@ export type MoveTaskDialogProps = {
 
 /** Picks the project a task (with its sub-tasks) moves into, then runs `MoveTaskToSet`. */
 export const MoveTaskDialog = ({ task }: MoveTaskDialogProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const db = Obj.getDatabase(task);
   const [error, setError] = useState<string>();
   const projects = useQuery(db, Filter.type(Project.Project));

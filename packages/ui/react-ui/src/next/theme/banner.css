@@ -4,14 +4,24 @@
 
 @layer dx-components {
   .dx-banner {
-    --dx-banner-surface: var(--color-neutral-surface);
-    --dx-banner-fg: var(--color-neutral-fg);
+    /* A neutral banner is a note in the flow of its host, so it takes the host's surface; valences paint their own. */
+    --dx-banner-surface: transparent;
+    /* The neutral foreground is paired with the neutral surface; on the host's surface it takes the host's text. */
+    --dx-banner-fg: var(--color-fg);
     --dx-valence-bg: var(--color-neutral-bg);
     --dx-valence-bg-hover: var(--color-neutral-bg-hover);
     --dx-valence-text: var(--color-neutral-text);
     border-radius: var(--radius-sm, 0.25rem);
     background: var(--dx-banner-surface);
     color: var(--dx-banner-fg);
+  }
+  /* With no surface of its own, a neutral banner is framed by a border so it still reads as one block. */
+  .dx-banner[data-valence='neutral'] {
+    border: 1px solid var(--color-separator);
+  }
+  /* The title carries the note; its body reads a step quieter, as a description does. */
+  .dx-banner[data-valence='neutral'] .dx-banner-body {
+    color: var(--color-fg-muted);
   }
   .dx-banner[data-inset] {
     margin: var(--dx-gutter-sm, 0.5rem);

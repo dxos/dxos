@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import { type PullRequest } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -41,18 +42,20 @@ export type PullRequestStatusProps = {
 
 /** One line answering where the pull request stands: open or merged, approved or not, CI green or red. */
 export const PullRequestStatus = ({ reference, title, state, review, ci }: PullRequestStatusProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   return (
-    <div
+    <Layout.Flex
+      align='center'
+      gap='sm'
       role='status'
-      className='flex items-center gap-2 px-3 py-1.5 border-b border-separator-subtle text-sm min-w-0'
+      classNames='px-3 py-1.5 border-b border-separator-subtle text-sm min-w-0'
       data-testid='pull-request.status'
     >
       <span className='dx-tag dx-tag-inline shrink-0' data-hue='neutral'>
         {reference}
       </span>
       {title && <span className='truncate grow'>{title}</span>}
-      <div className='flex items-center gap-2 shrink-0 ml-auto'>
+      <Layout.Flex align='center' gap='sm' classNames='shrink-0 ml-auto'>
         {state && (
           <span className='dx-tag dx-tag-inline' data-hue={stateHue[state]} data-testid='pull-request.status.state'>
             {t(`pull-request-state.${state}.label`)}
@@ -75,7 +78,7 @@ export const PullRequestStatus = ({ reference, title, state, review, ci }: PullR
           {ci ? t(`ci-status.${ci.state}.label`) : t('ci-status.unknown.label')}
           {ci && ci.checks.total > 0 && ` ${ci.checks.passed}/${ci.checks.total}`}
         </span>
-      </div>
-    </div>
+      </Layout.Flex>
+    </Layout.Flex>
   );
 };

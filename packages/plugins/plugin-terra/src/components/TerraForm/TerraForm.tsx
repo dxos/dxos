@@ -6,8 +6,10 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 import React, { useCallback } from 'react';
 
-import { Button, Checkbox, Slider } from '@dxos/react-ui';
 import { Form, type FormFieldMap, type FormFieldRendererProps } from '@dxos/react-ui-form';
+import * as Button from '@dxos/react-ui/Button';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { Terra } from '#types';
 
@@ -78,7 +80,7 @@ const createSliderField = (key: SliderKey): FormFieldMap[string] => {
         labelEnd={<span className='text-sm text-fg-muted tabular-nums'>{current.toFixed(spec.decimals)}</span>}
         renderStatic={(value) => <p className='tabular-nums'>{(value ?? spec.min).toFixed(spec.decimals)}</p>}
       >
-        <Slider
+        <Input.Slider
           value={[current]}
           min={spec.min}
           max={spec.max}
@@ -122,7 +124,11 @@ export const TerraForm = ({ config, onChange, onWaterSheen }: TerraFormProps) =>
   return (
     // Semi-transparent floating surface (mirrors plugin-voxel's canvas-overlay HUD chrome) so
     // labels stay legible over the rendered planet regardless of terrain color underneath.
-    <div className='flex flex-col gap-4 p-3 w-72 bg-base-surface/70 backdrop-blur-sm rounded-md shadow-md border border-separator'>
+    <Layout.Flex
+      column
+      gap='lg'
+      classNames='p-3 w-72 bg-base-surface/70 backdrop-blur-sm rounded-md shadow-md border border-separator'
+    >
       <Form.Root<TerraFormValues>
         schema={FORM_SCHEMA}
         values={config}
@@ -136,10 +142,10 @@ export const TerraForm = ({ config, onChange, onWaterSheen }: TerraFormProps) =>
         </Form.Viewport>
       </Form.Root>
 
-      <Button icon='ph--arrow-clockwise--regular' label='Reseed' onClick={handleReseed} />
+      <Button.Root icon='ph--arrow-clockwise--regular' label='Reseed' onClick={handleReseed} />
 
-      <Checkbox onCheckedChange={({ checked }) => handleWaterSheenChange(checked === true)} label='Water sheen' />
-    </div>
+      <Input.Checkbox onCheckedChange={({ checked }) => handleWaterSheenChange(checked === true)} label='Water sheen' />
+    </Layout.Flex>
   );
 };
 

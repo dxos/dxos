@@ -3,6 +3,5 @@
 //
 
 export * from './Canvas/index.ts';
-export * from './CellGrid/index.ts';
 export * from './FPS.tsx';
 export * from './Grid/index.ts';

@@ -9,7 +9,7 @@ import type * as SqlClient from 'effect/sql/SqlClient';
 import * as EffectStream from 'effect/Stream';
 
 import { EchoFeedCodec } from '@dxos/echo-protocol';
-import { RuntimeProvider } from '@dxos/effect';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { FeedStore } from '@dxos/feed';
 import { invariant } from '@dxos/invariant';
 import { EntityId, SpaceId } from '@dxos/keys';

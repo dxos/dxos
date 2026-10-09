@@ -8,7 +8,7 @@ import React, { type CSSProperties, type PropsWithChildren, createContext, useCo
 import { log } from '@dxos/log';
 import { useComposedRefs } from '@dxos/react-hooks';
 
-import { composableProps, slottable } from '../../../util/index.ts';
+import { composableProps, slottable } from '../../../util/slots.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
 
@@ -90,6 +90,8 @@ export type ContainerProps = {
   span?: Span;
   /** `document` caps a template root at the reading width and centres it (the current `dx-document`). */
   width?: 'document';
+  /** A `row` that keeps its columns in a narrow pane rather than stacking its cells (e.g. an X/Y pair). */
+  fixed?: boolean;
   /** Pads the block axis by the gutter too, so content scrolled in a template root starts and ends a gutter inside. */
   padBlock?: boolean;
 };
@@ -110,6 +112,7 @@ export const containerAttributes = ({
   align,
   span,
   width,
+  fixed,
   padBlock,
 }: ContainerProps) => {
   const { style: spanStyle, ...spanAttrs } = spanAttributes(span);
@@ -124,6 +127,7 @@ export const containerAttributes = ({
     'data-gap': gap,
     'data-align': align === 'center' ? undefined : align,
     'data-width': width,
+    'data-fixed': fixed ? '' : undefined,
     'data-pad-block': padBlock ? '' : undefined,
     'data-columns': columns ? '' : undefined,
     style,
@@ -146,6 +150,7 @@ export const Container = slottable<HTMLDivElement, ContainerProps>(
       align,
       span,
       width,
+      fixed,
       padBlock,
       ...props
     },
@@ -179,6 +184,7 @@ export const Container = slottable<HTMLDivElement, ContainerProps>(
       align,
       span,
       width,
+      fixed,
       padBlock,
     });
     return (

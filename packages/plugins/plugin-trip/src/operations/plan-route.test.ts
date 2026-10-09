@@ -11,7 +11,7 @@ import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { Database } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { Booking, Routing, Segment, Trip, TripCapabilities } from '#types';
 

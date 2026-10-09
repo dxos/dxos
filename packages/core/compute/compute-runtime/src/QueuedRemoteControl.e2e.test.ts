@@ -3,6 +3,7 @@
 //
 
 import { describe, it } from '@effect/vitest';
+import * as Deferred from 'effect/Deferred';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
@@ -13,6 +14,7 @@ import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 
+import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Process from '@dxos/compute/Process';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
@@ -115,6 +117,38 @@ describe('queued remote control (e2e against a local host)', () => {
 
           expect((yield* host.applied).map((entry) => entry.input)).toEqual(['one', 'two']);
         }),
+      );
+    }),
+  );
+
+  it.live(
+    'a process with an undelivered input reads as RUNNING, not the IDLE the host last reported',
+    Effect.fn(function* ({ expect }) {
+      // The host answers an input only once the turn it starts has settled (EDGE's process object does),
+      // so a command stays queued for the whole turn; held here to observe that window.
+      const release = yield* Deferred.make<void>();
+      const holdInputs = (control: RemoteProcessManager.Control): RemoteProcessManager.Control => ({
+        ...control,
+        submitInput: (target) => Deferred.await(release).pipe(Effect.andThen(control.submitInput(target))),
+      });
+      yield* withHarness(
+        ({ client }) =>
+          Effect.gen(function* () {
+            const { pid } = yield* client.spawn({ spaceId: SPACE, key: EchoProcess.key });
+            yield* client.drained;
+            expect((yield* client.status({ spaceId: SPACE, pid })).state).toEqual(Process.State.IDLE);
+
+            // A caller waiting for the turn to settle polls `status`: answered IDLE here, it would return
+            // before the input it just submitted had even reached the host.
+            yield* client.submitInput({ spaceId: SPACE, pid, input: 'one' });
+            expect((yield* client.status({ spaceId: SPACE, pid })).state).toEqual(Process.State.RUNNING);
+            expect((yield* client.list({ spaceId: SPACE })).map((info) => info.state)).toEqual([Process.State.RUNNING]);
+
+            yield* Deferred.succeed(release, undefined);
+            yield* client.drained;
+            expect((yield* client.status({ spaceId: SPACE, pid })).state).toEqual(Process.State.IDLE);
+          }),
+        { wrap: holdInputs },
       );
     }),
   );
@@ -329,19 +363,24 @@ const SPACE = SpaceId.random();
 const BACKOFF = { initial: Duration.seconds(30), max: Duration.seconds(30) };
 
 /** Echoes each input back as an output; the only part of a definition the remote path uses. */
-const EchoProcess = Process.make(
-  { key: 'test.queued-echo', input: Schema.String, output: Schema.String, services: [] },
-  (ctx) =>
+const EchoProcess = Operation.makeDurable({
+  key: 'test.queued-echo',
+  input: Schema.String,
+  output: Schema.String,
+  services: [],
+}).pipe(
+  Operation.withDurableHandler((ctx) =>
     Effect.succeed({
       onSpawn: () => Effect.void,
       onInput: (input: string) => Effect.sync(() => ctx.submitOutput(`echo:${input}`)),
       onAlarm: () => Effect.void,
       onChildEvent: () => Effect.void,
     }),
+  ),
 );
 
 const tree = (registry: Registry.AtomRegistry) => {
-  const atom = Atom.make<readonly Process.Info[]>([]);
+  const atom = Atom.make<readonly Process.Process[]>([]);
   registry.mount(atom);
   return atom;
 };
@@ -377,7 +416,11 @@ interface Harness {
  */
 const withHarness = (
   body: (harness: Harness) => Effect.Effect<void, never, Registry.AtomRegistry | Scope.Scope>,
-  options: { backoff?: QueuedRemoteControl.Backoff } = {},
+  options: {
+    backoff?: QueuedRemoteControl.Backoff;
+    /** Interposes on the channel between the client and the host. */
+    wrap?: (control: RemoteProcessManager.Control) => RemoteProcessManager.Control;
+  } = {},
 ) =>
   Effect.gen(function* () {
     const registry = yield* Registry.AtomRegistry;
@@ -402,7 +445,7 @@ const withHarness = (
     const clients = yield* Scope.make();
     const makeClient = (kvStore: KeyValueStore.KeyValueStore) =>
       QueuedRemoteControl.make({
-        control,
+        control: options.wrap?.(control) ?? control,
         kvStore,
         backoff: options.backoff ?? BACKOFF,
       }).pipe(Effect.provideService(Scope.Scope, clients));

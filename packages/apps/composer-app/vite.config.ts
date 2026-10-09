@@ -80,7 +80,19 @@ const extendedIcons = path.join(rootDir, '/packages/ui/ui-icons/assets');
 const dirname = import.meta.dirname;
 
 // Boot-path chunk grouping; `entry` is the page whose static closure defines the boot set.
-const boot = bootChunking({ entry: path.resolve(dirname, 'src/main.tsx') });
+const boot = bootChunking({
+  entry: path.resolve(dirname, 'src/main.tsx'),
+  exclude: new RegExp(
+    [
+      /@zag-js\/(accordion|carousel|floating-panel|hover-card|qr-code|scroll-snap|slider|toc)\//,
+      /@ark-ui\/react\/dist\/components\/(accordion|carousel|floating-panel|hover-card|qr-code|slider|toc)\//,
+      /react-ui\/src\/next\/components\/(Accordion|Carousel|FloatingPanel|HoverCard|QrCode|Slider)\//,
+      /node_modules\/(\.pnpm\/)?uqr[@/]/,
+    ]
+      .map((pattern) => pattern.source)
+      .join('|'),
+  ),
+});
 
 // These packages' `browser`-conditioned entrypoints initialize their wasm with top-level await.
 // Besides its bundle cost, top-level await is what trips WebKit's out-of-order evaluation under
@@ -135,6 +147,29 @@ const slimWasm = (): PluginOption => {
     },
   };
 };
+
+/**
+ * Sources compiled by the Solid JSX transform instead of React's.
+ */
+const SOLID_SOURCES = [
+  '**/solid-ui-geo/**',
+  '**/plugin-map-solid/**',
+  '**/effect-atom-solid/**',
+  '**/web-context-solid/**',
+  '**/echo-solid/**',
+  '**/node_modules/solid-js/**',
+  '**/node_modules/solid-element/**',
+  '**/node_modules/@solid-primitives/**',
+];
+
+/**
+ * Sources plugin-react leaves untouched; regexes, because Rolldown hook filters match string globs
+ * against a cwd-relative id that `**` cannot climb out of.
+ */
+const REACT_EXCLUDE = [
+  /\/node_modules\//,
+  /\/(?:solid-ui-geo|plugin-map-solid|effect-atom-solid|web-context-solid|echo-solid)\//,
+];
 
 /**
  * Transpile targets for oxc (dev) and Rolldown (build).
@@ -379,7 +414,14 @@ export default defineConfig((env) => ({
           ? undefined
           : {
               groups: [
-                { name: 'react', test: /node_modules[\\/]react(-dom)?[\\/]/, priority: 10 },
+                // Only what the page renders with: react-dom's other subpaths (server, static,
+                // profiling, test-utils) reach the graph through the import map's wrappers, and
+                // matching them here pinned ~580 KB that never runs into the eager chunk.
+                {
+                  name: 'react',
+                  test: /node_modules[\\/](?:react[\\/]|react-dom[\\/](?!(?:cjs[\\/]react-dom-)?(?:server|static|profiling|test-utils)))/,
+                  priority: 10,
+                },
                 // Naive maxSize splitting cuts through module cycles and breaks evaluation
                 // order (rolldown#8803); the fix rolldown offers (strictExecutionOrder) costs
                 // ~+1.8MB of inhibited treeshaking. Instead the manifest carries a cycle-safe
@@ -593,20 +635,10 @@ export default defineConfig((env) => ({
 
     // Solid JSX transform for Solid packages.
     // Must be placed before React plugin to process Solid files first.
-    solid({
-      include: [
-        '**/solid-ui-geo/**',
-        '**/plugin-map-solid/**',
-        '**/effect-atom-solid/**',
-        '**/web-context-solid/**',
-        '**/echo-solid/**',
-        '**/node_modules/solid-js/**',
-        '**/node_modules/solid-element/**',
-        '**/node_modules/@solid-primitives/**',
-      ],
-    }),
+    solid({ include: SOLID_SOURCES }),
 
-    react(),
+    // `.jsx`/`.tsx` only: over plain script modules it emits Fast Refresh registrations that throw in the client's workers.
+    react({ include: /\.[jt]sx$/, exclude: REACT_EXCLUDE }),
 
     isBundledDev && reactRefreshPreamble(react.preambleCode),
 

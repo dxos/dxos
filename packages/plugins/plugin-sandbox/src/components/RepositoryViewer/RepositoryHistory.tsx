@@ -4,7 +4,10 @@
 
 import React from 'react';
 
-import { Button, ScrollArea, useTranslation } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -28,7 +31,7 @@ export const RepositoryHistory = ({
   onSelect,
   onLoadMore,
 }: RepositoryHistoryProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   if (commits.length === 0) {
     return <div className='p-4 text-fg-muted'>{t('history-empty.message')}</div>;
   }
@@ -61,11 +64,11 @@ export const RepositoryHistory = ({
           })}
         </ul>
         {hasMore && onLoadMore && (
-          <div className='p-2 grid'>
-            <Button variant='ghost' onClick={onLoadMore}>
+          <Layout.Grid classNames='p-2'>
+            <Button.Root variant='ghost' onClick={onLoadMore}>
               {t('history-more.button')}
-            </Button>
-          </div>
+            </Button.Root>
+          </Layout.Grid>
         )}
       </ScrollArea.Viewport>
     </ScrollArea.Root>

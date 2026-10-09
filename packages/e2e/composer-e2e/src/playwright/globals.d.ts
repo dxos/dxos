@@ -11,10 +11,13 @@
 // keep their own (profiler, long tasks, the boot loader, `dxos.spaces`) in composer-app, so neither
 // package declares a hook it does not use.
 
-// `globalThis.composer` itself is declared by `@dxos/app-framework`; a second `var composer` here
+// Loaded explicitly: augmenting a module outside the program would declare a new ambient module instead.
+import '@dxos/app-framework/Devtools';
+
+// `globalThis.composer` itself is declared by `@dxos/app-framework/Devtools`; a second `var composer` here
 // would collide with it and resolve every member to `{}`. Merge the app-only hooks onto its
 // interface instead.
-declare module '@dxos/app-framework' {
+declare module '@dxos/app-framework/Devtools' {
   interface ComposerDevtools {
     changeStorageVersionInMetadata?: (version: number) => void;
     /** The focused markdown editor, exposed so specs can drive selection the way a user would. */
@@ -41,8 +44,20 @@ declare global {
   /** Set by the suite, not the app: survives only as long as the document it was set on. */
   var e2eDocumentTag: string | undefined;
 
+  /** The HALO identity, narrowed to what the account helpers read. */
+  type DebugIdentity = {
+    did: string;
+    identityKey: { toHex: () => string };
+    profile?: { displayName?: string };
+  };
+
   /** The client/ECHO debug hook, mounted at the end of `client.initialize()`. */
-  var dxos: { spaces?: () => DebugSpace[] } | undefined;
+  var dxos:
+    | {
+        spaces?: () => DebugSpace[];
+        client?: { halo: { identity: { get: () => DebugIdentity | undefined } } };
+      }
+    | undefined;
 
   /**
    * The extension APIs, narrowed to what the extension spec drives from an extension page. Declared

@@ -3,21 +3,23 @@
 //
 
 import * as Schema from 'effect/Schema';
-import React, { type PropsWithChildren, useCallback, useMemo, useRef } from 'react';
+import React, { type PropsWithChildren, type RefObject, useCallback, useMemo, useRef } from 'react';
 
-import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Routine from '@dxos/compute/Routine';
 import * as Trigger from '@dxos/compute/Trigger';
 import { type Database, DXN, Entity, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { SchemaAST } from '@dxos/effect';
-import { ToggleGroup, composable, composableProps, useTranslation } from '@dxos/react-ui';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { Form, type FormFieldMap, type FormUpdateMeta, RefField, useFormValues } from '@dxos/react-ui-form';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
+import * as Util from '@dxos/react-ui/Util';
 
 import { meta } from '#meta';
 
-import { wireTriggers } from '../../util/index.ts';
+import { type ActionStash, switchActionKind, wireTriggers } from '../../util/index.ts';
 import { InstructionsEditor } from '../InstructionsEditor/index.ts';
 import {
   TriggerForm,
@@ -107,13 +109,15 @@ export type RoutineFormProps = {
  * Created with `composable()` so it carries the COMPOSABLE marker and can be the child of
  * `Panel.Content asChild` (forwards ref and merges layout props onto the scroll viewport).
  */
-export const RoutineForm = composable<HTMLDivElement, RoutineFormProps>((props, forwardedRef) => {
+export const RoutineForm = Util.composable<HTMLDivElement, RoutineFormProps>((props, forwardedRef) => {
   const { routine } = props;
   // Subscribe to the routine and its primary trigger so kind changes (from this form or externally)
   // recompute the remount key.
   const [auto] = useObject(routine);
   const trigger = usePrimaryTrigger(routine);
   const [triggerSnapshot] = useObject(trigger);
+  // Held here, above the kind-keyed remount, so switching the action kind and back restores the action.
+  const actionStash = useRef<ActionStash>({});
 
   const formKey = [
     routine.id,
@@ -122,13 +126,16 @@ export const RoutineForm = composable<HTMLDivElement, RoutineFormProps>((props, 
     triggerSnapshot?.spec?.kind ?? 'none',
   ].join(':');
 
-  return <RoutineFormImpl key={formKey} {...props} trigger={trigger} forwardedRef={forwardedRef} />;
+  return (
+    <RoutineFormImpl key={formKey} {...props} trigger={trigger} actionStash={actionStash} forwardedRef={forwardedRef} />
+  );
 });
 
 RoutineForm.displayName = 'RoutineForm';
 
 type RoutineFormImplProps = RoutineFormProps & {
   trigger?: Trigger.Trigger;
+  actionStash: RefObject<ActionStash>;
   forwardedRef: React.Ref<HTMLDivElement>;
 };
 
@@ -139,10 +146,11 @@ const RoutineFormImpl = ({
   readonly = false,
   onSave,
   onCancel,
+  actionStash,
   forwardedRef,
   ...props
 }: RoutineFormImplProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const [auto, updateAuto] = useObject(routine);
   const operations = useOperations(db);
 
@@ -180,11 +188,6 @@ const RoutineFormImpl = ({
     [db, operations],
   );
 
-  // Preserves authored instructions across an instructions→operation→instructions round-trip within
-  // this mount: switching away clears `spec` (orphaning the owned instructions, unreachable on an
-  // unpersisted draft), so the ref is remembered here and reattached on the way back.
-  const stashedInstructions = useRef<Ref.Ref<Instructions.Instructions> | undefined>(undefined);
-
   // Route each change to the part of the graph it edits: the general fields autosave onto the routine, the
   // action rewires `spec` (and its owned instructions), and the trigger writes the primary trigger's spec.
   const handleValuesChanged = useCallback(
@@ -201,11 +204,7 @@ const RoutineFormImpl = ({
             routine.description = values.description;
           });
         } else if (path === 'action.kind') {
-          const next = action?.kind ?? 'runnable';
-          if (next === 'runnable') {
-            stashedInstructions.current = Routine.instructionsRef(auto) ?? stashedInstructions.current;
-          }
-          applyActionKind(routine, next, stashedInstructions.current);
+          switchActionKind(routine, action?.kind ?? 'runnable', actionStash.current);
         } else if (path === 'action.operation') {
           applyActionOperation(routine, action?.operation);
         } else if (path.startsWith('trigger')) {
@@ -213,7 +212,7 @@ const RoutineFormImpl = ({
         }
       }
     },
-    [updateAuto, auto, routine, trigger],
+    [updateAuto, routine, trigger, actionStash],
   );
 
   // Revert the trigger kind selection: clearing the spec changes the remount key, so the form re-seeds
@@ -238,7 +237,7 @@ const RoutineFormImpl = ({
       onCancel={onCancel}
       testId='routine-form'
     >
-      <Form.Viewport scroll {...composableProps(props)} ref={forwardedRef}>
+      <Form.Viewport scroll {...Util.composableProps(props)} ref={forwardedRef}>
         <Form.Content>
           <Form.Fields schema={GeneralForm} />
 
@@ -269,6 +268,7 @@ const Section = ({ title, children }: PropsWithChildren<{ title: string }>) => (
 //
 
 const ACTION_PATH = ['action'];
+const TRIGGER_PATH = ['trigger'];
 
 /**
  * The action section: the kind toggle and operation picker are the `action` field set; the owned
@@ -284,22 +284,31 @@ const ActionSection = ({
   routine: Routine.Routine;
   readonly?: boolean;
 }) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const action = useFormValues<ActionFormInput>('RoutineForm.ActionSection', ACTION_PATH);
+  const trigger = useFormValues<TriggerFormInput>('RoutineForm.ActionSection', TRIGGER_PATH);
   const kind = action?.kind ?? 'runnable';
   const instructions = Routine.instructionsRef(routine)?.target;
+  // An enabled trigger with no action is skipped on every tick, so say so where the action is picked.
+  const unset = kind === 'runnable' && !action?.operation && trigger?.enabled === true;
 
   return (
-    <div className='flex flex-col'>
+    <>
       <Form.Fields path={ACTION_PATH} schema={ActionForm} />
+      {unset && !readonly ? (
+        <Banner.Root valence='warning' data-testid='routine-form.action-unset'>
+          <Banner.Title>{t('action-unset.message')}</Banner.Title>
+        </Banner.Root>
+      ) : null}
       {kind === 'instructions' && instructions ? (
         <InstructionsEditor db={db} instructions={instructions} readonly={readonly} />
       ) : null}
-    </div>
+    </>
   );
 };
 
 const ActionKindToggle = ({ value, onChange }: { value: Routine.Kind; onChange: (kind: Routine.Kind) => void }) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   return (
     // `type='single'` emits `''` when the selected item is clicked again (toggled off); ignore that and any
     // other non-kind value so it can't fall through and overwrite the current action.
@@ -316,35 +325,6 @@ const ActionKindToggle = ({ value, onChange }: { value: Routine.Kind; onChange: 
       <ToggleGroup.Item value='runnable'>{t('action-kind.operation.label')}</ToggleGroup.Item>
     </ToggleGroup.Root>
   );
-};
-
-/**
- * Switch the action kind. Switching to an operation clears the spec (the operation is chosen via the picker);
- * a previously-owned instructions stays parented to the routine (cascade-deleted with it) but is no longer
- * the action. Switching to instructions reattaches `previousInstructions` (the caller's stash from the last
- * switch away, so authored text survives a round-trip) or seeds a fresh owned instructions action (the
- * executing operation is the implicit RunInstructions). `makeRoutine` establishes the owned-instructions
- * wiring when the routine is scaffolded.
- */
-const applyActionKind = (
-  routine: Routine.Routine,
-  next: Routine.Kind,
-  previousInstructions?: Ref.Ref<Instructions.Instructions>,
-): void => {
-  Obj.update(routine, (routine) => {
-    if (next === 'runnable') {
-      routine.spec = undefined;
-    } else if (routine.spec?.kind !== 'instructions') {
-      if (previousInstructions) {
-        routine.spec = { kind: 'instructions', instructions: previousInstructions };
-      } else {
-        const instructions = Instructions.make({});
-        routine.spec = { kind: 'instructions', instructions: Ref.make(instructions) };
-      }
-    }
-  });
-  // Re-wire the owned trigger to dispatch the new action (RunInstructions vs the operation).
-  wireTriggers(routine);
 };
 
 /** Bind the routine's action to an operation (or clear it). */

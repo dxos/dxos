@@ -6,8 +6,9 @@ import React, { useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
-import { Card, useTranslation } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
+import * as Card from '@dxos/react-ui/Card';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { Text } from '@dxos/schema';
 import { compactSlots } from '@dxos/ui-editor';
 
@@ -25,7 +26,7 @@ const SNIPPET_MAX_HEIGHT = '100cqi';
 export type MarkdownCardProps = { subject: Markdown.Document | Text.Text };
 
 export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   // Subscribe to the live content so the snippet + word count track edits (e.g. an agent updating
   // the document); reading `subject.content.target.content` alone is not reactive to the string.
   const [docContent] = useObject(Obj.instanceOf(Markdown.Document, subject) ? subject.content : undefined, 'content');
@@ -48,7 +49,7 @@ export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
               not a colour painted over it, since the card surface differs per host (grid, popover,
               board) and a fade to the wrong surface reads as a grey band across the last line. */}
           {/* The snippet runs across the card's rails as well as its content track: it has no icon or trailing cell. */}
-          <Card.Row classNames='mask-b-from-[calc(100%-8rem)] mask-b-to-100% [&>[data-part=row-main]]:[grid-column:full]'>
+          <Card.Row span='full' classNames='mask-b-from-[calc(100%-8rem)] mask-b-to-100%'>
             {/* Re-seed the readonly snippet when the content changes (the editor takes `initialValue`
                 at mount only). Keyed on the snippet so agent/remote edits are reflected. */}
             <MarkdownEditorProvider key={snippet} id={subject.id} viewMode='readonly' extensions={extensions}>
@@ -57,7 +58,7 @@ export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
                   {/* The editor is the container the snippet's cap is measured against, so it scales with the card; not the
                       Section, whose inline-size containment would stop it being a subgrid of the card's tracks. */}
                   <MarkdownEditor.Content
-                    classNames='bg-transparent dx-container-type-inline-size'
+                    classNames='dx-container-type-inline-size bg-transparent'
                     initialValue={snippet}
                     slots={compactSlots}
                     compact
@@ -69,8 +70,9 @@ export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
         </Card.Section>
       )}
       <Card.Section>
-        <Card.Row>
-          <Card.Text classNames='px-2 text-xs' variant='muted'>
+        {/* Across the rails, as the snippet is, so the count starts at the snippet's text edge rather than indented. */}
+        <Card.Row span='full'>
+          <Card.Text classNames='px-2 text-xs' variant='muted' data-testid='markdown.card.words'>
             {info.words} {t('words.label', { count: info.words })}
           </Card.Text>
         </Card.Row>

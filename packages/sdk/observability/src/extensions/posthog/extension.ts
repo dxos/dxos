@@ -84,9 +84,15 @@ export type NodeOptions = {
 const DEFAULT_FEEDBACK_LOGS_ENDPOINT = '/api/feedback-logs';
 
 /** Upload serialized logs, gzipped, to the feedback-logs endpoint. Returns the R2 key on success. */
-const uploadLogs = async (endpoint: string, ndjson: string): Promise<string | undefined> => {
+const uploadLogs = async (
+  endpoint: string,
+  ndjson: string,
+  kind: ObservabilityExtension.SupportUploadKind = 'logs',
+): Promise<string | undefined> => {
   try {
-    const response = await fetch(endpoint, {
+    // The endpoint may be relative (same-origin) or absolute (native builds), so append rather than parse.
+    const url = kind === 'logs' ? endpoint : `${endpoint}${endpoint.includes('?') ? '&' : '?'}kind=${kind}`;
+    const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/gzip' },
       body: await gzip(ndjson),
@@ -225,6 +231,8 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
             }
             return await uploadLogs(feedbackLogsEndpoint, ndjson);
           },
+          uploadNdjson: async (ndjson, kind) =>
+            ndjson.length === 0 ? undefined : await uploadLogs(feedbackLogsEndpoint, ndjson, kind),
           sessionContext: () => {
             if (!posthog.__loaded) {
               return undefined;

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-projects",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "description": "Projects — interactive, long-running processes with instructions, routines, and artifacts",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,7 +10,7 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#capabilities": {
@@ -74,30 +74,40 @@
       "import": "./dist/lib/index.mjs"
     },
     "./package.json": "./package.json",
-    "./templates": {
-      "source": "./src/templates/index.ts",
-      "types": "./dist/types/src/templates/index.d.ts",
-      "import": "./dist/lib/templates.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
-    },
-    "./testing": {
-      "source": "./src/testing/index.ts",
-      "types": "./dist/types/src/testing/index.d.ts",
-      "import": "./dist/lib/testing.mjs"
-    },
     "./ProjectCapabilities": {
       "source": "./src/types/ProjectCapabilities.ts",
       "types": "./dist/types/src/types/ProjectCapabilities.d.ts",
       "import": "./dist/lib/ProjectCapabilities.mjs"
     },
+    "./ProjectMailboxOperation": {
+      "source": "./src/types/ProjectMailboxOperation.ts",
+      "types": "./dist/types/src/types/ProjectMailboxOperation.d.ts",
+      "import": "./dist/lib/ProjectMailboxOperation.mjs"
+    },
     "./ProjectOperation": {
       "source": "./src/types/ProjectOperation.ts",
       "types": "./dist/types/src/types/ProjectOperation.d.ts",
       "import": "./dist/lib/ProjectOperation.mjs"
+    },
+    "./ProjectOperationHandlerSet": {
+      "source": "./src/operations/ProjectOperationHandlerSet.ts",
+      "types": "./dist/types/src/operations/ProjectOperationHandlerSet.d.ts",
+      "import": "./dist/lib/ProjectOperationHandlerSet.mjs"
+    },
+    "./ProjectsEvents": {
+      "source": "./src/types/ProjectsEvents.ts",
+      "types": "./dist/types/src/types/ProjectsEvents.d.ts",
+      "import": "./dist/lib/ProjectsEvents.mjs"
+    },
+    "./ProjectSkill": {
+      "source": "./src/skills/project/ProjectSkill.ts",
+      "types": "./dist/types/src/skills/project/ProjectSkill.d.ts",
+      "import": "./dist/lib/ProjectSkill.mjs"
+    },
+    "./ProjectsPlugin": {
+      "source": "./src/ProjectsPlugin.ts",
+      "types": "./dist/types/src/ProjectsPlugin.d.ts",
+      "import": "./dist/lib/ProjectsPlugin.mjs"
     },
     "./ProjectView": {
       "source": "./src/types/ProjectView.ts",
@@ -109,30 +119,20 @@
       "types": "./dist/types/src/types/Settings.d.ts",
       "import": "./dist/lib/Settings.mjs"
     },
-    "./ProjectsEvents": {
-      "source": "./src/types/ProjectsEvents.ts",
-      "types": "./dist/types/src/types/ProjectsEvents.d.ts",
-      "import": "./dist/lib/ProjectsEvents.mjs"
+    "./Templates": {
+      "source": "./src/Templates.ts",
+      "types": "./dist/types/src/Templates.d.ts",
+      "import": "./dist/lib/ns/Templates.mjs"
     },
-    "./ProjectsPlugin": {
-      "source": "./src/ProjectsPlugin.ts",
-      "types": "./dist/types/src/ProjectsPlugin.d.ts",
-      "import": "./dist/lib/ProjectsPlugin.mjs"
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "import": "./dist/lib/testing.mjs"
     },
-    "./ProjectOperationHandlerSet": {
-      "source": "./src/operations/ProjectOperationHandlerSet.ts",
-      "types": "./dist/types/src/operations/ProjectOperationHandlerSet.d.ts",
-      "import": "./dist/lib/ProjectOperationHandlerSet.mjs"
-    },
-    "./ProjectSkill": {
-      "source": "./src/skills/project/ProjectSkill.ts",
-      "types": "./dist/types/src/skills/project/ProjectSkill.d.ts",
-      "import": "./dist/lib/ProjectSkill.mjs"
-    },
-    "./ProjectMailboxOperation": {
-      "source": "./src/types/ProjectMailboxOperation.ts",
-      "types": "./dist/types/src/types/ProjectMailboxOperation.d.ts",
-      "import": "./dist/lib/ProjectMailboxOperation.mjs"
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

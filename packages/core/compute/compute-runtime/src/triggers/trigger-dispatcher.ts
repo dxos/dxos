@@ -22,7 +22,6 @@ import * as Semaphore from 'effect/Semaphore';
 import * as Stream from 'effect/Stream';
 import * as Struct from 'effect/Struct';
 
-import { NoHandlerError, RunAgainError } from '@dxos/compute';
 import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import * as Trigger from '@dxos/compute/Trigger';
@@ -39,11 +38,13 @@ import {
   QueryResult,
   Ref,
 } from '@dxos/echo';
-import { EffectEx, SpanAttributes } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import * as SpanAttributes from '@dxos/effect/SpanAttributes';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { EntityId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 
+import * as OperationProcess from '../OperationProcess.ts';
 import * as ProcessManager from '../ProcessManager.ts';
 import { filterReadyFeedItems } from './feed-position.ts';
 import { createInvocationPayload } from './input-builder.ts';
@@ -339,7 +340,7 @@ const DEFAULT_STALE_REFERENCE_RETRY_INTERVAL = Duration.minutes(15);
  */
 const STALE_REFERENCE_ERROR_NAMES: ReadonlySet<string> = new Set([
   EchoError.EntityNotFoundError.name,
-  NoHandlerError.name,
+  Operation.NoHandlerError.name,
 ]);
 
 /** Walks the `cause` chain, since the process boundary wraps the originating error. */
@@ -675,7 +676,7 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
         const inputData = this._prepareInputData(trigger, event);
 
         const manager = yield* ProcessManager.Service;
-        const executable = Process.fromOperation(functionDef, manager.operationHandlerSet);
+        const executable = OperationProcess.make(functionDef);
         // Thread the dispatcher's space through `ProcessManager.spawn` so the
         // spawned process resolves space-affinity services (e.g.
         // `Database.Service`) for the same space the dispatcher is bound to.
@@ -759,7 +760,7 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
    * failure cause propagates intact, surfacing the error as a defect (`Exit.die(RunAgainError)`).
    */
   private _isRunAgainRequest = (result: Exit.Exit<unknown>): boolean =>
-    Exit.isFailure(result) && RunAgainError.is(Cause.squash(result.cause));
+    Exit.isFailure(result) && Process.RunAgainError.is(Cause.squash(result.cause));
 
   invokeScheduledTriggers = ({
     kinds = ['timer', 'feed', 'subscription'],

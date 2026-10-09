@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-tasks",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "description": "Task surface: markdown outlines and durable tasks",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,7 +10,7 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#capabilities": {
@@ -162,6 +162,7 @@
     "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
+    "@dxos/display-name": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
     "@dxos/echo-doc": "workspace:*",
@@ -183,11 +184,11 @@
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-calendar": "workspace:*",
-    "@dxos/react-ui-components": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-markdown": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
+    "@dxos/react-ui-query": "workspace:*",
     "@dxos/react-ui-task": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",

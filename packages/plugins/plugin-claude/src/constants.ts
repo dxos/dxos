@@ -5,6 +5,25 @@
 /** Credential service key under which the Anthropic API key is stored. */
 export const ANTHROPIC_SOURCE = 'anthropic.com';
 
+/**
+ * `AccessToken.source` of a Claude subscription token made by `claude setup-token`. Distinct from
+ * {@link ANTHROPIC_SOURCE} because the token is an OAuth bearer, not an API key: sent as `x-api-key`
+ * it is refused, so nothing that reads the API key may pick it up.
+ */
+export const CLAUDE_CODE_TOKEN_SOURCE = 'claude.ai';
+
+/** Connector id of the Claude subscription token (`Connection.connectorId`). */
+export const CLAUDE_CODE_CONNECTOR_ID = 'claude-code';
+
+/** Prefix of a Claude subscription OAuth token, which the API takes as a bearer rather than as an API key. */
+export const OAUTH_TOKEN_PREFIX = 'sk-ant-oat';
+
+/** Prefix of an Anthropic API key, which belongs in the Anthropic connector rather than this one. */
+export const API_KEY_PREFIX = 'sk-ant-api';
+
+/** The variable Claude Code reads a subscription token from. */
+export const CLAUDE_CODE_OAUTH_TOKEN_ENV = 'CLAUDE_CODE_OAUTH_TOKEN';
+
 export const ANTHROPIC_API_URL = 'https://api.anthropic.com';
 
 export const ANTHROPIC_VERSION = '2023-06-01';

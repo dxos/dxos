@@ -7,7 +7,9 @@
 import React, { type ReactNode, createContext, useContext, useEffect, useMemo, useState } from 'react';
 
 import { DXOSHorizontalType } from '@dxos/brand';
-import { Button, ScrollArea, useTranslation } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -125,7 +127,7 @@ const Root = ({ guildId = DXOS_GUILD_ID, teamMembers, channels, children }: Disc
 };
 
 const Header = () => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { data, unavailable, guildId } = useWidgetContext();
 
   return (
@@ -177,9 +179,9 @@ const Channels = () => {
 };
 
 const STATUS_RING: Record<WidgetMember['status'], string> = {
-  online: 'bg-emerald-500',
-  idle: 'bg-amber-400',
-  dnd: 'bg-rose-500',
+  online: 'bg-success-bg',
+  idle: 'bg-warning-bg',
+  dnd: 'bg-error-bg',
 };
 
 const MemberRow = ({ member }: { member: WidgetMember }) => (
@@ -189,7 +191,7 @@ const MemberRow = ({ member }: { member: WidgetMember }) => (
       <span
         className={mx(
           'absolute -bottom-0.5 -end-0.5 size-2 rounded-full ring-2 ring-base-surface',
-          STATUS_RING[member.status] ?? 'bg-neutral-400',
+          STATUS_RING[member.status] ?? 'bg-neutral-surface',
         )}
       />
     </div>
@@ -236,14 +238,14 @@ const Content = () => {
 };
 
 const StatusBar = () => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { data } = useWidgetContext();
   if (!data?.instant_invite) {
     return null;
   }
 
   return (
-    <Button
+    <Button.Root
       icon='ph--discord-logo--regular'
       label={t('join-discord.button')}
       variant='primary'

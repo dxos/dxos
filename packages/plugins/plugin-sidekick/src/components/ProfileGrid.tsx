@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { meta } from '#meta';
 
@@ -23,14 +24,14 @@ export type ProfileGridProps = {
 };
 
 export const ProfileGrid = ({ profiles, onSelect }: ProfileGridProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   return (
     <Section title={t('profiles.title')}>
       {profiles.length === 0 ? (
         <p className='text-sm text-fg-muted italic'>{t('no-profiles.label')}</p>
       ) : (
-        <div className='grid grid-cols-2 sm:grid-cols-3 gap-2'>
+        <Layout.Grid gap='sm' classNames='grid-cols-2 sm:grid-cols-3'>
           {profiles.map((profile) => (
             <button
               key={profile.id}
@@ -45,7 +46,7 @@ export const ProfileGrid = ({ profiles, onSelect }: ProfileGridProps) => {
               )}
             </button>
           ))}
-        </div>
+        </Layout.Grid>
       )}
     </Section>
   );

@@ -8,9 +8,10 @@ import * as Operation from '@dxos/compute/Operation';
 import { JsonView, Placeholder, Searchbar } from '@dxos/devtools';
 import { Entity, Format, Obj, Type } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
-import { Panel, Toolbar } from '@dxos/react-ui';
 import { DynamicTable, type TableFeatures } from '@dxos/react-ui-table';
-import { mx } from '@dxos/ui-theme';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 type RegistryRow = {
   id: string;
@@ -136,15 +137,15 @@ export const RegistryArticle = ({ role }: { role?: string }) => {
           <Searchbar placeholder='Filter...' onChange={setFilter} />
         </Toolbar.Root>
       </Panel.Header>
-      <Panel.Body>
-        <div className={mx('h-full grid grid-cols-[2fr_1fr] overflow-hidden')}>
-          <div className={mx('flex flex-col dx-grow overflow-hidden')}>
+      <Panel.Body asChild>
+        <Layout.Grid cols={[2, 1]} classNames='overflow-hidden'>
+          <Layout.Flex column classNames='dx-grow overflow-hidden'>
             <DynamicTable properties={properties} rows={rows} features={features} onRowClick={handleRowClicked} />
-          </div>
-          <div className={mx('h-full overflow-auto border-s border-separator text-sm')}>
+          </Layout.Flex>
+          <div className='h-full overflow-auto border-s border-separator text-sm'>
             {detailJson ? <JsonView data={detailJson} /> : <Placeholder label='Details' />}
           </div>
-        </div>
+        </Layout.Grid>
       </Panel.Body>
     </Panel.Root>
   );

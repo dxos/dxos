@@ -8,8 +8,11 @@ import * as Option from 'effect/Option';
 import React, { useCallback, useContext, useMemo, useRef } from 'react';
 
 import * as Process from '@dxos/compute/Process';
-import { Button, Icon, Tooltip, composable, composableProps } from '@dxos/react-ui';
 import { Tree, type TreeNode, type TreeSelectEvent, createStaticTreeModel } from '@dxos/react-ui-list';
+import * as Button from '@dxos/react-ui/Button';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
+import * as Util from '@dxos/react-ui/Util';
 import { Unit } from '@dxos/util';
 
 const DEFAULT_DEPTH = 1;
@@ -22,7 +25,7 @@ const NESTED_ACTIVE_STATES = new Set<Process.State>([
 
 export type ProcessTreeProps = {
   // TODO(burdon): Atom.
-  processes: readonly Process.Info[];
+  processes: readonly Process.Process[];
   /**
    * Maximum nesting depth from the root (1 = top-level processes only).
    *
@@ -35,19 +38,19 @@ export type ProcessTreeProps = {
    *
    * Must be referentially stable — `ProcessTree` is memoized on its props.
    */
-  resolveLabel?: (process: Process.Info) => string | undefined;
+  resolveLabel?: (process: Process.Process) => string | undefined;
   /** Pids drawn as selected; the tree is controlled, so a click reports through `onSelectedChange`. */
   selected?: readonly string[];
   /** The selection after a click: the clicked pid alone, or toggled among the others on a meta-click. */
   onSelectedChange?: (selected: string[]) => void;
-  onProcessTerminate?: (process: Process.Info) => void;
+  onProcessTerminate?: (process: Process.Process) => void;
 };
 
 /** Node of the pruned process forest handed to the tree model. */
 type ProcessNode = {
   id: string;
   /** Absent on the synthetic root, which anchors the top-level processes and is never rendered. */
-  process?: Process.Info;
+  process?: Process.Process;
   children: ProcessNode[];
 };
 
@@ -62,7 +65,7 @@ const NO_SELECTION: readonly string[] = [];
  * model and is re-seeded — a collapse must survive the next tick. Renders through `Tree`.
  */
 export const ProcessTree = React.memo(
-  composable<HTMLDivElement, ProcessTreeProps>(
+  Util.composable<HTMLDivElement, ProcessTreeProps>(
     (
       {
         processes,
@@ -126,7 +129,7 @@ export const ProcessTree = React.memo(
       );
 
       return (
-        <div {...composableProps(props, { classNames: 'flex flex-col min-h-0' })} ref={forwardedRef}>
+        <div {...Util.composableProps(props, { classNames: 'flex flex-col min-h-0' })} ref={forwardedRef}>
           <Tree.Root
             id={ROOT_ID}
             model={model}
@@ -150,7 +153,7 @@ const COLUMNS = 'var(--dx-half-block-size) var(--dx-block-size) minmax(0, 1fr) m
 
 type ProcessRowProps = {
   node: TreeNode<ProcessNode>;
-  onProcessTerminate?: (process: Process.Info) => void;
+  onProcessTerminate?: (process: Process.Process) => void;
 };
 
 /** One process: its status glyph (animated, coloured and tooltipped per state), elapsed time and terminate control. */
@@ -168,7 +171,7 @@ const ProcessRow = ({ node, onProcessTerminate }: ProcessRowProps) => {
       </span>
       <span>
         {process && onProcessTerminate && process.state !== Process.State.TERMINATED && (
-          <Button
+          <Button.Root
             icon='ph--x--regular'
             iconOnly
             size='sm'
@@ -185,9 +188,9 @@ const ProcessRow = ({ node, onProcessTerminate }: ProcessRowProps) => {
   );
 };
 
-const StatusIcon = ({ process }: { process: Process.Info }) => (
+const StatusIcon = ({ process }: { process: Process.Process }) => (
   <Tooltip.Trigger content={process.state.toString()}>
-    <Icon
+    <Icon.Icon
       size='md'
       spin={process.state === Process.State.RUNNING}
       valence={
@@ -211,7 +214,7 @@ const StatusIcon = ({ process }: { process: Process.Info }) => (
   </Tooltip.Trigger>
 );
 
-const sortProcesses = (processes: readonly Process.Info[]): Process.Info[] => {
+const sortProcesses = (processes: readonly Process.Process[]): Process.Process[] => {
   return [
     ...processes.filter((process) => [Process.State.RUNNING, Process.State.HYBERNATING].includes(process.state)),
     ...processes.filter((process) => [Process.State.IDLE].includes(process.state)).slice(0, 3),
@@ -225,7 +228,7 @@ const sortProcesses = (processes: readonly Process.Info[]): Process.Info[] => {
   });
 };
 
-const sortNestedActive = (processes: readonly Process.Info[]): Process.Info[] =>
+const sortNestedActive = (processes: readonly Process.Process[]): Process.Process[] =>
   processes
     .filter((process) => NESTED_ACTIVE_STATES.has(process.state))
     .sort((left, right) => {
@@ -238,10 +241,10 @@ const sortNestedActive = (processes: readonly Process.Info[]): Process.Info[] =>
  * Builds the process forest, pruned to `maxDepth` from each root. Nested levels surface only still-
  * active processes, so a deep tree stays readable while completed work collapses out of view.
  */
-const buildProcessForest = (processes: readonly Process.Info[], maxDepth: number): ProcessNode => {
+const buildProcessForest = (processes: readonly Process.Process[], maxDepth: number): ProcessNode => {
   const pidSet = new Set(processes.map((process) => String(process.pid)));
-  const childrenByParent = new Map<string, Process.Info[]>();
-  const roots: Process.Info[] = [];
+  const childrenByParent = new Map<string, Process.Process[]>();
+  const roots: Process.Process[] = [];
 
   for (const process of processes) {
     const parent = process.parentPid;
@@ -255,7 +258,7 @@ const buildProcessForest = (processes: readonly Process.Info[], maxDepth: number
     childrenByParent.set(key, siblings);
   }
 
-  const visit = (process: Process.Info, level: number): ProcessNode => {
+  const visit = (process: Process.Process, level: number): ProcessNode => {
     const children = level >= maxDepth ? [] : sortNestedActive(childrenByParent.get(String(process.pid)) ?? []);
     return {
       id: String(process.pid),

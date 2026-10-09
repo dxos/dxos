@@ -28,8 +28,9 @@ const INTERMEDIATE = ['-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '10', '
 /**
  * Wraps a running capture (an ffmpeg writing `capture`, whose first frame is at `origin`) as the driver's recorder:
  * `cut` moves the start, and `stop` ends the capture through `finish` and transcodes from the start to `file`.
+ * `lost` answers why the capture's tail is not the app (its frames stopped coming), or nothing when it is.
  */
-const asRecorder = ({ capture, file, size, crf, finish, origin = Date.now() }) => {
+const asRecorder = ({ capture, file, size, crf, finish, lost = () => undefined, origin = Date.now() }) => {
   let started = origin;
 
   const stop = async () => {
@@ -69,7 +70,8 @@ const asRecorder = ({ capture, file, size, crf, finish, origin = Date.now() }) =
       throw new Error(`ffmpeg exited ${code}; the raw capture is kept at ${capture}`);
     }
     rmSync(capture, { force: true });
-    return { file, seconds: stoppedMs / 1000 };
+    const reason = lost();
+    return { file, seconds: stoppedMs / 1000, ...(reason ? { lost: reason } : {}) };
   };
 
   /** Everything before now is dropped on `stop`; the clock the captions use restarts here. */
@@ -183,6 +185,10 @@ export const startSnapshotRecorder = async ({ snapshot, dir, file, size, fps, cr
   let written = 0;
   let stopping = false;
   const stopped = new AbortController();
+  // Consecutive failed snapshots; past `LOST`, the video repeats a stale frame until one succeeds again.
+  const LOST = 20;
+  let failures = 0;
+  let failure;
 
   /** Writes the latest frame as often as the clock says is due, so frame N is always at N / fps seconds. */
   const pump = () => {
@@ -197,15 +203,18 @@ export const startSnapshotRecorder = async ({ snapshot, dir, file, size, fps, cr
   const timer = setInterval(pump, 1000 / fps);
 
   const grab = (async () => {
-    let failures = 0;
     while (!stopping) {
       const begin = Date.now();
       try {
         latest = await snapshot(stopped.signal);
         failures = 0;
       } catch (error) {
-        // A navigation can fail a snapshot or two; a webview that never answers is a recording lost.
-        if (++failures === 20) {
+        // A navigation can fail a snapshot or two; the abort on `stop` is not a failure.
+        if (stopping) {
+          break;
+        }
+        failure = error;
+        if (++failures === LOST) {
           console.error(`snapshots keep failing: ${error.message}`);
         }
       }
@@ -229,5 +238,10 @@ export const startSnapshotRecorder = async ({ snapshot, dir, file, size, fps, cr
     }
   };
 
-  return asRecorder({ capture, file, size, crf, finish, origin });
+  const lost = () =>
+    failures >= LOST
+      ? `the last ${failures} snapshots failed (${failure?.message}); the video ends on a stale frame`
+      : undefined;
+
+  return asRecorder({ capture, file, size, crf, finish, lost, origin });
 };

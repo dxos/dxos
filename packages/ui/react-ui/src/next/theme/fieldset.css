@@ -66,6 +66,10 @@
   .dx-fieldset-legend > .dx-button[data-square] {
     margin-block: 0;
   }
+  /* A legend's controls take the ink of other buttons (and a select's chevron), not the legend's label tone. */
+  .dx-fieldset-legend > .dx-button:not([data-variant='primary']) {
+    color: var(--color-fg);
+  }
   /* A legend given its own size is a heading row: one block tall, in that size's text. */
   .dx-fieldset-legend[data-size] {
     min-height: var(--dx-block-size);

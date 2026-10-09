@@ -2,18 +2,24 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as Atom from 'effect/reactivity/Atom';
 import * as Registry from 'effect/reactivity/AtomRegistry';
+import * as Scope from 'effect/Scope';
+import * as Stream from 'effect/Stream';
 import * as Tracer from 'effect/Tracer';
 
 import {
   LayerStack,
   ProcessManager,
-  ProcessMonitor,
+  ProcessOperationInvoker,
   RemoteProcessManager,
   RemoteTraceMonitor,
+  UnifiedProcessManager,
 } from '@dxos/compute-runtime';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -21,7 +27,7 @@ import * as Process from '@dxos/compute/Process';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Trace from '@dxos/compute/Trace';
 import { Database } from '@dxos/echo';
-import { makeGlobalTracer } from '@dxos/effect';
+import * as OtelTracer from '@dxos/effect/OtelTracer';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 // Explicit import so the emitted `.d.ts` references the package via its public
@@ -87,6 +93,62 @@ export const makeDynamicTraceSink = (
   return { write: (message) => Trace.mergeSinks(resolve()).write(message) };
 };
 
+/**
+ * The application's one {@link Process.ManagerService}, as built by the stack. Every built-in and plugin
+ * consumer sees the same manager, so a host's remote manager (e.g. EDGE) reaches the app's invoker too.
+ */
+const ProcessManagerSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [
+      ProcessManager.ProcessManagerService,
+      RemoteProcessManager.Service,
+      RemoteTraceMonitor.Service,
+      Registry.AtomRegistry,
+    ],
+    provides: [Process.ManagerService],
+  },
+  () => UnifiedProcessManager.layer,
+);
+
+/**
+ * A {@link Process.Manager} that is the stack's {@link Process.ManagerService}, resolved on first use: building it
+ * resolves the host's remote manager, which may need services (the client) that are not ready at activation.
+ * The process tree reads empty until then.
+ */
+export const fromStack = (
+  resolver: ServiceResolver.ServiceResolver,
+  scope: Scope.Scope,
+  registry: Registry.AtomRegistry,
+): Process.Manager => {
+  const resolvedAtom = Atom.make<Process.Manager | undefined>(undefined).pipe(Atom.keepAlive);
+  const manager: Effect.Effect<Process.Manager> = Effect.suspend(() => {
+    const resolved = registry.get(resolvedAtom);
+    return resolved !== undefined
+      ? Effect.succeed(resolved)
+      : resolver.resolve(Process.ManagerService, {}).pipe(
+          Scope.provide(scope),
+          Effect.tap((stackManager) => Effect.sync(() => registry.set(resolvedAtom, stackManager))),
+          // The framework's own spec provides it, so a failure here is a broken stack, not a missing plugin.
+          Effect.orDie,
+        );
+  });
+
+  return {
+    processTree: Effect.flatMap(manager, (stackManager) => stackManager.processTree),
+    processTreeAtom: Atom.make((get) => {
+      const stackManager = get(resolvedAtom);
+      return stackManager === undefined ? [] : get(stackManager.processTreeAtom);
+    }),
+    list: (filter) => Effect.flatMap(manager, (stackManager) => stackManager.list(filter)),
+    subscribeToTraceMessages: (filter) =>
+      Stream.unwrap(Effect.map(manager, (stackManager) => stackManager.subscribeToTraceMessages(filter))),
+    spawn: (definition, options) => Effect.flatMap(manager, (stackManager) => stackManager.spawn(definition, options)),
+    handles: (options) => Effect.flatMap(manager, (stackManager) => stackManager.handles(options)),
+    attach: (pid, options) => Effect.flatMap(manager, (stackManager) => stackManager.attach(pid, options)),
+  };
+};
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilityManager = yield* Capability.Service;
@@ -143,7 +205,32 @@ export default Capability.makeModule(
         ),
     );
 
-    const layerStack = new LayerStack.LayerStack({ layers: [ambientLayerSpec, ...layerSpecs] });
+    // Fallbacks for a host with no remote runtime; a plugin spec providing either tag (e.g. EDGE's) wins.
+    const fallbacks = Effect.runSync(
+      Effect.gen(function* () {
+        const remoteProcessManager = yield* RemoteProcessManager.Service;
+        const remoteTraceMonitor = yield* RemoteTraceMonitor.Service;
+        return Context.make(RemoteProcessManager.Service, remoteProcessManager).pipe(
+          Context.add(RemoteTraceMonitor.Service, remoteTraceMonitor),
+        );
+      }).pipe(
+        Effect.provide(
+          Layer.mergeAll(
+            RemoteProcessManager.layerNoop,
+            // Remote ephemeral trace (DX-1125): the first contributed swarm-backed monitor, else no-op.
+            remoteTraceMonitors.length > 0
+              ? Layer.succeed(RemoteTraceMonitor.Service, remoteTraceMonitors[0])
+              : RemoteTraceMonitor.layerNoop,
+          ),
+        ),
+        Effect.provideService(Registry.AtomRegistry, atomRegistry),
+      ),
+    );
+
+    const layerStack = new LayerStack.LayerStack({
+      layers: [ambientLayerSpec, ProcessManagerSpec, ...layerSpecs],
+      services: fallbacks,
+    });
     const serviceResolver = layerStack.getServiceResolver();
 
     // The stack extends built slices in place, so admitting a late spec costs no live service.
@@ -189,30 +276,28 @@ export default Capability.makeModule(
       Layer.succeed(Trace.TraceSink, mergedTraceSink),
       // Over the OTel global provider, a proxy that no-ops until one is registered, so this is
       // installed whether or not observability exists.
-      Layer.succeed(Tracer.Tracer, makeGlobalTracer('@dxos/app-framework/process-manager')),
+      Layer.succeed(Tracer.Tracer, OtelTracer.makeGlobal('@dxos/app-framework/process-manager')),
     );
 
     const processManagerLayer = ProcessManager.layer({ runtimeName: Trace.CommonRuntimeName.local }).pipe(
       Layer.provide(baseLayer),
     );
-    const operationInvokerLayer = ProcessManager.ProcessOperationInvoker.layer.pipe(
+    // Holds the stack's application slice that the manager resolves from, for the module's lifetime.
+    const stackScope = yield* Scope.make();
+    yield* Effect.addFinalizer(() => Scope.close(stackScope, Exit.void));
+    const unifiedProcessManager = fromStack(serviceResolver, stackScope, atomRegistry);
+    const unifiedProcessManagerLayer = Layer.succeed(Process.ManagerService, unifiedProcessManager);
+    const operationInvokerLayer = ProcessOperationInvoker.layer.pipe(
       // Operations invoked through the app's own invoker are the person's actions, from a menu, dialog or shortcut.
-      Layer.provide(Layer.mergeAll(processManagerLayer, baseLayer, Layer.succeed(Database.Origin, 'user'))),
+      Layer.provide(Layer.mergeAll(unifiedProcessManagerLayer, baseLayer, Layer.succeed(Database.Origin, 'user'))),
     );
 
-    // App-framework has no EDGE runtime, so the remote process view is empty;
-    // the aggregate monitor therefore equals the local process tree.
-    const remoteProcessManagerLayer = RemoteProcessManager.layerNoop.pipe(Layer.provide(baseLayer));
-    // Remote ephemeral trace (DX-1125): use the first contributed swarm-backed monitor, else no-op.
-    const remoteTraceMonitorLayer =
-      remoteTraceMonitors.length > 0
-        ? Layer.succeed(RemoteTraceMonitor.Service, remoteTraceMonitors[0])
-        : RemoteTraceMonitor.layerNoop;
-    const processMonitorLayer = ProcessMonitor.layer.pipe(
-      Layer.provide(Layer.mergeAll(processManagerLayer, remoteProcessManagerLayer, remoteTraceMonitorLayer, baseLayer)),
+    const runtimeLayer = Layer.mergeAll(
+      baseLayer,
+      processManagerLayer,
+      operationInvokerLayer,
+      unifiedProcessManagerLayer,
     );
-
-    const runtimeLayer = Layer.mergeAll(baseLayer, processManagerLayer, operationInvokerLayer, processMonitorLayer);
 
     const managedRuntime = ManagedRuntime.make(runtimeLayer as Layer.Layer<any, any, never>);
 
@@ -230,12 +315,6 @@ export default Capability.makeModule(
       runSync: (effect) => managedRuntime.runSync(effect as Effect.Effect<any, any, any>),
     };
 
-    // Eagerly extract the process monitor. Safe because it does not require a
-    // fresh scope and is a stable reference for the lifetime of the runtime.
-    const processMonitor = managedRuntime.runSync(
-      Effect.flatMap(Process.ProcessMonitorService, Effect.succeed) as Effect.Effect<Process.Monitor, never, never>,
-    );
-
     // Publish the manager into the ambient-layer holder so that
     // `ProcessManager.ProcessManagerService` becomes resolvable through the
     // LayerStack alongside the other framework-supplied services.
@@ -247,13 +326,16 @@ export default Capability.makeModule(
       >,
     );
 
-    // Eagerly extract the operation invoker built by ProcessOperationInvoker.layer.
-    // Pulled via the ProcessOperationInvoker tag so the contributed value carries
-    // the full OperationInvoker interface (`invocations`, `pendingFollowups`,
+    // Resolved in the background rather than on first spawn, so a view that only reads the tree still fills in;
+    // after the holder above, which the stack's manager is built over.
+    managedRuntime.runFork(unifiedProcessManager.processTree);
+
+    // Eagerly extract the operation invoker built by ProcessOperationInvoker.layer, via its own tag so the
+    // contributed value carries the full OperationInvoker interface (`invocations`, `pendingFollowups`,
     // `awaitFollowups`, `_invokeCore`) that HistoryTracker requires.
     const operationInvoker: OperationInvoker.OperationInvoker = managedRuntime.runSync(
-      Effect.flatMap(ProcessManager.ProcessOperationInvoker.Service, Effect.succeed) as unknown as Effect.Effect<
-        OperationInvoker.OperationInvoker,
+      Effect.flatMap(ProcessOperationInvoker.Service, Effect.succeed) as Effect.Effect<
+        ProcessOperationInvoker.ProcessOperationInvoker,
         never,
         never
       >,
@@ -262,7 +344,7 @@ export default Capability.makeModule(
     return [
       Capability.contribute(Capabilities.ProcessManagerRuntime, processManagerRuntime),
       Capability.contribute(Capabilities.ServiceResolver, serviceResolver),
-      Capability.contribute(Capabilities.ProcessMonitor, processMonitor),
+      Capability.contribute(Capabilities.ProcessManager, unifiedProcessManager),
       Capability.contribute(Capabilities.OperationInvoker, operationInvoker),
       Capability.contribute(Capabilities.OperationHandlers, handlerSet),
     ];

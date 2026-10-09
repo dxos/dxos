@@ -18,6 +18,7 @@ import { delimiter, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import * as Crawler from '../Crawler.ts';
+import * as Lock from '../mcp/Lock.ts';
 import * as Store from '../Store.ts';
 import * as Models from '../workspace/Models.ts';
 import * as Workspace from '../workspace/Workspace.ts';
@@ -25,6 +26,7 @@ import * as Cache from './Cache.ts';
 import * as Design from './Design.ts';
 import * as Explore from './Explore.ts';
 import * as LlmExplorer from './LlmExplorer.ts';
+import * as QueryExplorer from './QueryExplorer.ts';
 import * as SystemOne from './SystemOne.ts';
 import type * as Zoom from './Zoom.ts';
 
@@ -75,22 +77,28 @@ export const command = Command.make(
       Flag.withDefault(300),
       Flag.withDescription('Upper bound on explored candidates.'),
     ),
-    explorer: Flag.Literals('explorer', ['bfs', 'llm']).pipe(
-      Flag.withDefault('bfs'),
+    explorer: Flag.Literals('explorer', ['query', 'bfs', 'llm']).pipe(
+      Flag.withDefault('query'),
       Flag.withDescription(
-        'bfs: text-matched seeds and a fixed walk (no model). llm: a workspace-agent turn picks seeds and relations.',
+        'query: a small model runs SPARQL queries, their union is selected (internals hidden, System One + degree, ' +
+          'connected). bfs: the previous default, text-matched seeds, a fixed walk and zoom (no model). llm: a ' +
+          'workspace-agent turn picks seeds for the bfs walk.',
       ),
+    ),
+    maxQueries: Flag.Int('max-queries').pipe(
+      Flag.withDefault(QueryExplorer.DEFAULT_MAX_QUERIES),
+      Flag.withDescription('Queries the query explorer may run.'),
     ),
     scorer: Flag.Literals('scorer', ['hybrid', 'system-one', 'baseline']).pipe(
       Flag.withDescription('Relevance scorer (default: hybrid when TYPESAFE_API_KEY is set, else baseline).'),
       Flag.optional,
     ),
     provider: Flag.String('provider').pipe(
-      Flag.withDescription('LLM explorer provider: ollama | anthropic.'),
+      Flag.withDescription('Explorer model provider: ollama | anthropic (default: Haiku with a key, else Ollama).'),
       Flag.optional,
     ),
     model: Flag.String('model').pipe(
-      Flag.withDescription('LLM explorer model, e.g. claude-haiku-4-5-20251001.'),
+      Flag.withDescription(`Explorer model (default: ${Models.DEFAULT_EXPLORER_MODEL} on Anthropic).`),
       Flag.optional,
     ),
     runs: Flag.Int('runs').pipe(
@@ -99,7 +107,22 @@ export const command = Command.make(
     ),
     noDraw: Flag.Boolean('no-draw').pipe(Flag.withDefault(false), Flag.withDescription('Stop before layout.')),
   },
-  ({ prompt, root, store, out, budget, threshold, maxNodes, explorer, scorer, provider, model, runs, noDraw }) =>
+  ({
+    prompt,
+    root,
+    store,
+    out,
+    budget,
+    threshold,
+    maxNodes,
+    explorer,
+    maxQueries,
+    scorer,
+    provider,
+    model,
+    runs,
+    noDraw,
+  }) =>
     Effect.gen(function* () {
       const repo = yield* Option.match(root, {
         onNone: () => Crawler.gitRoot(),
@@ -116,21 +139,41 @@ export const command = Command.make(
       const decisionModel: Layer.Layer<DecisionModel.DecisionModel, unknown> =
         chosenScorer !== 'baseline' && SystemOne.available() ? SystemOne.layer : SystemOne.refusing;
 
+      const storeLayer = Lock.layer(storeDir, () => Store.layer(storeDir));
+      // An unnamed model is the small explorer: Haiku when a key is set, else the local Ollama default.
+      const explorerModel = Effect.gen(function* () {
+        const chosen = Option.isSome(provider) || Option.isSome(model);
+        const base = yield* Models.select({
+          provider: Option.getOrUndefined(provider) ?? (!chosen && Models.hasAnthropicKey() ? 'anthropic' : undefined),
+          model: Option.getOrUndefined(model),
+        });
+        const settled = yield* Models.ensureAvailable(base, { chosen });
+        return chosen ? settled : Models.explorer(settled);
+      });
+
       const result =
-        explorer === 'llm'
+        explorer === 'query'
           ? yield* Effect.gen(function* () {
-              const selection = yield* Models.select({
-                provider: Option.getOrUndefined(provider),
-                model: Option.getOrUndefined(model),
-              });
-              return yield* Design.run(LlmExplorer.explore({ prompt, maxNodes }), options).pipe(
-                Effect.provide(Layer.merge(Workspace.layer({ storeDir, model: selection }), decisionModel)),
+              const selection = yield* explorerModel;
+              yield* Console.error(`exploring with ${selection.provider}/${selection.model}`);
+              return yield* Design.runSelected({ ...options, maxNodes, maxQueries }).pipe(
+                Effect.provide(Layer.mergeAll(storeLayer, Models.layer(selection), decisionModel)),
               );
             })
-          : yield* Design.run(
-              Effect.flatMap(Store.Store, (api) => Explore.bfs({ prompt, maxNodes })(api)),
-              options,
-            ).pipe(Effect.provide(Layer.merge(Store.layer(storeDir), decisionModel)));
+          : explorer === 'llm'
+            ? yield* Effect.gen(function* () {
+                const selection = yield* Models.select({
+                  provider: Option.getOrUndefined(provider),
+                  model: Option.getOrUndefined(model),
+                });
+                return yield* Design.run(LlmExplorer.explore({ prompt, maxNodes }), options).pipe(
+                  Effect.provide(Layer.merge(Workspace.layer({ storeDir, model: selection }), decisionModel)),
+                );
+              })
+            : yield* Design.run(
+                Effect.flatMap(Store.Store, (api) => Explore.bfs({ prompt, maxNodes })(api)),
+                options,
+              ).pipe(Effect.provide(Layer.merge(storeLayer, decisionModel)));
 
       yield* Design.write(dir, result);
       const kept = result.scored.nodes.filter((node) => node.kept).length;

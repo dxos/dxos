@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "description": "Low-level React components for DXOS, applying a theme to a core group of primitives",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -27,14 +27,254 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./theme.css": {
-      "style": "./src/next/theme/index.css",
-      "default": "./src/next/theme/index.css"
+    "./Accordion": {
+      "source": "./src/next/components/Accordion/Accordion.tsx",
+      "types": "./dist/types/src/next/components/Accordion/Accordion.d.ts",
+      "import": "./dist/lib/Accordion.mjs"
+    },
+    "./AlertDialog": {
+      "source": "./src/next/components/AlertDialog/AlertDialog.tsx",
+      "types": "./dist/types/src/next/components/AlertDialog/AlertDialog.d.ts",
+      "import": "./dist/lib/AlertDialog.mjs"
+    },
+    "./Avatar": {
+      "source": "./src/next/components/Avatar/Avatar.tsx",
+      "types": "./dist/types/src/next/components/Avatar/Avatar.d.ts",
+      "import": "./dist/lib/Avatar.mjs"
+    },
+    "./Banner": {
+      "source": "./src/next/components/Banner/Banner.tsx",
+      "types": "./dist/types/src/next/components/Banner/Banner.d.ts",
+      "import": "./dist/lib/Banner.mjs"
+    },
+    "./Breadcrumb": {
+      "source": "./src/next/components/Breadcrumb/Breadcrumb.tsx",
+      "types": "./dist/types/src/next/components/Breadcrumb/Breadcrumb.d.ts",
+      "import": "./dist/lib/Breadcrumb.mjs"
+    },
+    "./Button": {
+      "source": "./src/next/namespaces/Button.ts",
+      "types": "./dist/types/src/next/namespaces/Button.d.ts",
+      "import": "./dist/lib/Button.mjs"
+    },
+    "./Card": {
+      "source": "./src/next/components/Card/Card.tsx",
+      "types": "./dist/types/src/next/components/Card/Card.d.ts",
+      "import": "./dist/lib/Card.mjs"
+    },
+    "./Carousel": {
+      "source": "./src/next/components/Carousel/Carousel.tsx",
+      "types": "./dist/types/src/next/components/Carousel/Carousel.d.ts",
+      "import": "./dist/lib/Carousel.mjs"
+    },
+    "./Collapsible": {
+      "source": "./src/next/components/Collapsible/Collapsible.tsx",
+      "types": "./dist/types/src/next/components/Collapsible/Collapsible.d.ts",
+      "import": "./dist/lib/Collapsible.mjs"
+    },
+    "./Combobox": {
+      "source": "./src/next/components/Combobox/Combobox.tsx",
+      "types": "./dist/types/src/next/components/Combobox/Combobox.d.ts",
+      "import": "./dist/lib/Combobox.mjs"
+    },
+    "./Dialog": {
+      "source": "./src/next/components/Dialog/Dialog.tsx",
+      "types": "./dist/types/src/next/components/Dialog/Dialog.d.ts",
+      "import": "./dist/lib/Dialog.mjs"
+    },
+    "./DragHandle": {
+      "source": "./src/next/components/DragHandle/DragHandle.tsx",
+      "types": "./dist/types/src/next/components/DragHandle/DragHandle.d.ts",
+      "import": "./dist/lib/DragHandle.mjs"
+    },
+    "./Editable": {
+      "source": "./src/next/components/Editable/Editable.tsx",
+      "types": "./dist/types/src/next/components/Editable/Editable.d.ts",
+      "import": "./dist/lib/Editable.mjs"
+    },
+    "./Field": {
+      "source": "./src/next/components/Field/Field.tsx",
+      "types": "./dist/types/src/next/components/Field/Field.d.ts",
+      "import": "./dist/lib/Field.mjs"
+    },
+    "./Fieldset": {
+      "source": "./src/next/components/Fieldset/Fieldset.tsx",
+      "types": "./dist/types/src/next/components/Fieldset/Fieldset.d.ts",
+      "import": "./dist/lib/Fieldset.mjs"
+    },
+    "./FloatingPanel": {
+      "source": "./src/next/components/FloatingPanel/FloatingPanel.tsx",
+      "types": "./dist/types/src/next/components/FloatingPanel/FloatingPanel.d.ts",
+      "import": "./dist/lib/FloatingPanel.mjs"
+    },
+    "./Focus": {
+      "source": "./src/next/components/Focus/Focus.tsx",
+      "types": "./dist/types/src/next/components/Focus/Focus.d.ts",
+      "import": "./dist/lib/Focus.mjs"
+    },
+    "./Hooks": {
+      "source": "./src/hooks/Hooks.ts",
+      "types": "./dist/types/src/hooks/Hooks.d.ts",
+      "import": "./dist/lib/Hooks.mjs"
+    },
+    "./HoverCard": {
+      "source": "./src/next/components/HoverCard/HoverCard.tsx",
+      "types": "./dist/types/src/next/components/HoverCard/HoverCard.d.ts",
+      "import": "./dist/lib/HoverCard.mjs"
+    },
+    "./Icon": {
+      "source": "./src/next/components/Icon/Icon.tsx",
+      "types": "./dist/types/src/next/components/Icon/Icon.d.ts",
+      "import": "./dist/lib/Icon.mjs"
+    },
+    "./Input": {
+      "source": "./src/next/namespaces/Input.ts",
+      "types": "./dist/types/src/next/namespaces/Input.d.ts",
+      "import": "./dist/lib/Input.mjs"
+    },
+    "./Layout": {
+      "source": "./src/next/namespaces/Layout.ts",
+      "types": "./dist/types/src/next/namespaces/Layout.d.ts",
+      "import": "./dist/lib/Layout.mjs"
+    },
+    "./Listbox": {
+      "source": "./src/next/components/Listbox/Listbox.tsx",
+      "types": "./dist/types/src/next/components/Listbox/Listbox.d.ts",
+      "import": "./dist/lib/Listbox.mjs"
+    },
+    "./Main": {
+      "source": "./src/next/components/Main/Main.tsx",
+      "types": "./dist/types/src/next/components/Main/Main.d.ts",
+      "import": "./dist/lib/Main.mjs"
+    },
+    "./Match": {
+      "source": "./src/flow/Match.tsx",
+      "types": "./dist/types/src/flow/Match.d.ts",
+      "import": "./dist/lib/Match.mjs"
+    },
+    "./Media": {
+      "source": "./src/next/components/Media/Media.ts",
+      "types": "./dist/types/src/next/components/Media/Media.d.ts",
+      "import": "./dist/lib/Media.mjs"
+    },
+    "./Menu": {
+      "source": "./src/next/components/Menu/Menu.tsx",
+      "types": "./dist/types/src/next/components/Menu/Menu.d.ts",
+      "import": "./dist/lib/Menu.mjs"
+    },
+    "./Panel": {
+      "source": "./src/next/components/Panel/Panel.tsx",
+      "types": "./dist/types/src/next/components/Panel/Panel.d.ts",
+      "import": "./dist/lib/Panel.mjs"
+    },
+    "./Popover": {
+      "source": "./src/next/components/Popover/Popover.tsx",
+      "types": "./dist/types/src/next/components/Popover/Popover.d.ts",
+      "import": "./dist/lib/Popover.mjs"
+    },
+    "./QrCode": {
+      "source": "./src/next/components/QrCode/QrCode.tsx",
+      "types": "./dist/types/src/next/components/QrCode/QrCode.d.ts",
+      "import": "./dist/lib/QrCode.mjs"
+    },
+    "./ScrollArea": {
+      "source": "./src/next/components/ScrollArea/ScrollArea.tsx",
+      "types": "./dist/types/src/next/components/ScrollArea/ScrollArea.d.ts",
+      "import": "./dist/lib/ScrollArea.mjs"
+    },
+    "./ScrollContainer": {
+      "source": "./src/next/components/ScrollContainer/ScrollContainer.tsx",
+      "types": "./dist/types/src/next/components/ScrollContainer/ScrollContainer.d.ts",
+      "import": "./dist/lib/ScrollContainer.mjs"
+    },
+    "./Select": {
+      "source": "./src/next/components/Select/Select.tsx",
+      "types": "./dist/types/src/next/components/Select/Select.d.ts",
+      "import": "./dist/lib/Select.mjs"
+    },
+    "./Show": {
+      "source": "./src/flow/Show.tsx",
+      "types": "./dist/types/src/flow/Show.d.ts",
+      "import": "./dist/lib/Show.mjs"
+    },
+    "./Splitter": {
+      "source": "./src/next/components/Splitter/Splitter.tsx",
+      "types": "./dist/types/src/next/components/Splitter/Splitter.d.ts",
+      "import": "./dist/lib/Splitter.mjs"
+    },
+    "./Status": {
+      "source": "./src/next/namespaces/Status.ts",
+      "types": "./dist/types/src/next/namespaces/Status.d.ts",
+      "import": "./dist/lib/Status.mjs"
+    },
+    "./SystemButton": {
+      "source": "./src/next/components/SystemButton/SystemButton.tsx",
+      "types": "./dist/types/src/next/components/SystemButton/SystemButton.d.ts",
+      "import": "./dist/lib/SystemButton.mjs"
+    },
+    "./Tabs": {
+      "source": "./src/next/components/Tabs/Tabs.tsx",
+      "types": "./dist/types/src/next/components/Tabs/Tabs.d.ts",
+      "import": "./dist/lib/Tabs.mjs"
+    },
+    "./Tag": {
+      "source": "./src/next/components/Tag/Tag.tsx",
+      "types": "./dist/types/src/next/components/Tag/Tag.d.ts",
+      "import": "./dist/lib/Tag.mjs"
+    },
+    "./Theme": {
+      "source": "./src/providers/ThemeProvider/Theme.tsx",
+      "types": "./dist/types/src/providers/ThemeProvider/Theme.d.ts",
+      "import": "./dist/lib/Theme.mjs"
+    },
+    "./Toast": {
+      "source": "./src/next/components/Toast/Toast.tsx",
+      "types": "./dist/types/src/next/components/Toast/Toast.d.ts",
+      "import": "./dist/lib/Toast.mjs"
+    },
+    "./ToggleGroup": {
+      "source": "./src/next/components/ToggleGroup/ToggleGroup.tsx",
+      "types": "./dist/types/src/next/components/ToggleGroup/ToggleGroup.d.ts",
+      "import": "./dist/lib/ToggleGroup.mjs"
+    },
+    "./Toolbar": {
+      "source": "./src/next/components/Toolbar/Toolbar.tsx",
+      "types": "./dist/types/src/next/components/Toolbar/Toolbar.d.ts",
+      "import": "./dist/lib/Toolbar.mjs"
+    },
+    "./Tooltip": {
+      "source": "./src/next/components/Tooltip/Tooltip.tsx",
+      "types": "./dist/types/src/next/components/Tooltip/Tooltip.d.ts",
+      "import": "./dist/lib/Tooltip.mjs"
+    },
+    "./Tour": {
+      "source": "./src/next/components/Tour/Tour.tsx",
+      "types": "./dist/types/src/next/components/Tour/Tour.d.ts",
+      "import": "./dist/lib/Tour.mjs"
+    },
+    "./Typography": {
+      "source": "./src/next/components/Typography/Typography.tsx",
+      "types": "./dist/types/src/next/components/Typography/Typography.d.ts",
+      "import": "./dist/lib/Typography.mjs"
+    },
+    "./Util": {
+      "source": "./src/util/Util.ts",
+      "types": "./dist/types/src/util/Util.d.ts",
+      "import": "./dist/lib/Util.mjs"
+    },
+    "./VirtualAnchor": {
+      "source": "./src/next/components/VirtualAnchor/VirtualAnchor.ts",
+      "types": "./dist/types/src/next/components/VirtualAnchor/VirtualAnchor.d.ts",
+      "import": "./dist/lib/VirtualAnchor.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "import": "./dist/lib/testing.mjs"
+    },
+    "./theme.css": {
+      "style": "./src/next/theme/index.css",
+      "default": "./src/next/theme/index.css"
     },
     "./translations": {
       "source": "./src/translations.ts",

@@ -6,8 +6,8 @@
 // components, so a context exported beside one forces a full reload on every edit — and the edit
 // pane, which lives in its own file, needs the same context the list provides.
 
-import { createContext } from '@dxos/react-ui';
 import type { MenuItem } from '@dxos/react-ui-menu';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { type Task } from '@dxos/types';
 
 import { type TaskPlacement } from './hierarchy.ts';
@@ -38,13 +38,16 @@ export type TaskListContextValue = {
   hierarchical: boolean;
   /** Whether the leading gutter is rendered at all — it holds the ordinal or the checkbox. */
   showGutter: boolean;
+  /** Render who holds each task; off collapses the assignee track. */
+  showAssignees: boolean;
+  /** Render each task's mnemonic in the leading column, beside its ordinal. */
+  showMnemonics: boolean;
+  /** Rows and the edit pane run to the host's edges, with no inline inset. */
+  flush: boolean;
   /**
-   * The edit pane's column template, built once from the options so the tree's rows and the pane
-   * lay out on the same named tracks (`gutter`, `status`, `title`, `assignee`, `estimate`, `priority`,
-   * `actions`).
+   * The column template, built once from the options so the tree's rows and the edit pane lay out on the same named
+   * tracks (`gutter`, `status`, `title`, `artifacts`, `assignee`, `estimate`, `priority`, `actions`).
    */
-  gridTemplateColumns: string;
-  /** The same tracks as the tree rows' `columns`, which leave the first track unnamed. */
   columns: string;
   selected?: string;
   /** Ids of the checked rows — the set an action acts on, distinct from the current row. */
@@ -62,4 +65,4 @@ export type TaskListContextValue = {
   onTaskMove?: (task: Task.Task, placement: TaskPlacement) => void;
 };
 
-export const [TaskListProvider, useTaskListContext] = createContext<TaskListContextValue>(TASK_LIST_NAME);
+export const [TaskListProvider, useTaskListContext] = Hooks.createContext<TaskListContextValue>(TASK_LIST_NAME);

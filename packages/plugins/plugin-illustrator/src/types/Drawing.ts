@@ -7,7 +7,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, Collection, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { CardAnnotation } from '@dxos/schema';
 
 /**
@@ -21,7 +20,10 @@ import { CardAnnotation } from '@dxos/schema';
 export class Canvas extends Type.makeObject<Canvas>(DXN.make('org.dxos.type.canvas', '0.1.0'))(
   Schema.Struct({
     schema: Schema.String.pipe(Schema.optional),
+    /** Diagram parts by id. */
     content: Schema.Record(Schema.String, Schema.Any),
+    /** Named looks the parts share, by id; opaque here like `content`, managed by the renderer's store adapter. */
+    styles: Schema.Record(Schema.String, Schema.Any).pipe(Schema.optional),
   }),
 ) {}
 
@@ -47,9 +49,9 @@ export class Drawing extends Type.makeObject<Drawing>(DXN.make('org.dxos.type.dr
     name: Schema.optional(Schema.String),
     canvas: Ref.Ref(Canvas)
       .annotate({ description: 'Reference to the canvas holding the renderer-specific content.' })
-      .pipe(FormInputAnnotation.set(false)),
+      .pipe(Annotation.FormInputAnnotation.set(false)),
   }).pipe(
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--compass-tool--regular', hue: 'indigo' }),
     CardAnnotation.set(true),
     Annotation.UserType.set({ tags: [Collection.ItemTag] }),

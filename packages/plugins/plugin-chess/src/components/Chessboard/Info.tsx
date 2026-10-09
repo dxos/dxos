@@ -5,8 +5,12 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { type JSX, type PropsWithChildren, useEffect, useMemo, useRef } from 'react';
 
-import { Button, Grid, Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type Player, useGameboardContext } from '@dxos/react-ui-gameboard';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -15,7 +19,7 @@ import { type ExtendedChessModel } from './types.ts';
 
 const INFO_NAME = 'Chessboard.Info';
 
-export type InfoProps = ThemedClassName<
+export type InfoProps = Util.ThemedClassName<
   {
     orientation?: Player;
     onOrientationChange?: (orientation: Player) => void;
@@ -24,22 +28,20 @@ export type InfoProps = ThemedClassName<
 >;
 
 export const Info = ({ classNames, orientation = 'white', onOrientationChange, onClose, ...props }: InfoProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { model } = useGameboardContext<ExtendedChessModel>(INFO_NAME);
 
   return (
-    <div
-      className={mx(
-        'grid grid-rows-[min-content_1fr_min-content] w-full min-w-[18rem] p-2 overflow-hidden dx-group-surface rounded-xs',
-        classNames,
-      )}
+    <Layout.Grid
+      rows={['min', 'fill', 'min']}
+      classNames={['w-full min-w-[18rem] p-2 overflow-hidden dx-group-surface rounded-xs', classNames]}
     >
       <PlayerIndicator
         model={model}
         player={orientation === 'white' ? 'black' : 'white'}
         icon={
           onClose && (
-            <Button
+            <Button.Root
               variant='ghost'
               icon='ph--x--regular'
               iconOnly
@@ -58,7 +60,7 @@ export const Info = ({ classNames, orientation = 'white', onOrientationChange, o
         player={orientation}
         icon={
           onOrientationChange && (
-            <Button
+            <Button.Root
               classNames={mx('transition duration-200 ease-linear', orientation === 'white' && 'rotate-180')}
               icon='ph--arrows-clockwise--regular'
               iconOnly
@@ -69,7 +71,7 @@ export const Info = ({ classNames, orientation = 'white', onOrientationChange, o
           )
         }
       />
-    </div>
+    </Layout.Grid>
   );
 };
 
@@ -79,7 +81,7 @@ Info.displayName = INFO_NAME;
 // History
 //
 
-type HistoryProps = ThemedClassName<{
+type HistoryProps = Util.ThemedClassName<{
   model: ExtendedChessModel;
   min?: number;
   max?: number;
@@ -87,7 +89,7 @@ type HistoryProps = ThemedClassName<{
 }>;
 
 const History = ({ classNames, model, min, max, onSelect }: HistoryProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const moveIndex = useAtomValue(model.moveIndex);
   const label = model.game.isGameOver()
     ? model.game.isCheckmate()
@@ -140,12 +142,12 @@ const History = ({ classNames, model, min, max, onSelect }: HistoryProps) => {
       }}
     >
       {moves.map(([a, b], index) => (
-        <Grid key={index} cols={['3rem', '1fr', '1fr', '1rem']} grow={false} gap='sm' classNames='ps-4'>
+        <Layout.Grid key={index} cols={['3rem', 'fill', 'fill', '1rem']} gap='sm' classNames='ps-4'>
           <div className='content-center text-xs text-fg-subtle'>{index + 1}</div>
           {a && (
             <div
               data-index={a.index}
-              className={mx('ps-2 text-sm cursor-pointer', a.index === moveIndex - 1 && 'bg-primary-500')}
+              className={mx('ps-2 text-sm cursor-pointer', a.index === moveIndex - 1 && 'bg-primary-bg')}
               onClick={() => onSelect?.(a.index + 1)}
             >
               {a.move}
@@ -154,13 +156,13 @@ const History = ({ classNames, model, min, max, onSelect }: HistoryProps) => {
           {b && (
             <div
               data-index={b.index}
-              className={mx('ps-2 text-sm cursor-pointer', b.index === moveIndex - 1 && 'bg-primary-500')}
+              className={mx('ps-2 text-sm cursor-pointer', b.index === moveIndex - 1 && 'bg-primary-bg')}
               onClick={() => onSelect?.(b.index + 1)}
             >
               {b.move}
             </div>
           )}
-        </Grid>
+        </Layout.Grid>
       ))}
       {label && <div className='text-center'>{label}</div>}
     </div>
@@ -180,22 +182,21 @@ type PlayerIndicatorProps = PropsWithChildren<{
 const PlayerIndicator = ({ children, model, player, icon }: PlayerIndicatorProps) => {
   const turn = player === (model.game.turn() === 'w' ? 'white' : 'black');
   return (
-    <Grid
-      cols={['var(--dx-rail-item)', '1fr', 'var(--dx-rail-item)']}
-      grow={false}
+    <Layout.Grid
+      cols={['var(--dx-rail-item)', 'fill', 'var(--dx-rail-item)']}
       gap='sm'
       align='center'
       classNames='h-(--dx-rail-size) px-1 overflow-hidden'
     >
       <div className='place-items-center'>
-        <Icon
+        <Icon.Icon
           icon={turn ? 'ph--circle--fill' : 'ph--circle--thin'}
           size='xl'
           classNames={mx(turn && (model.game.isCheckmate() ? 'text-error-text' : 'text-success-text'))}
         />
       </div>
-      <div className='truncate overflow-hidden items-center'>{children}</div>
+      <div className='truncate'>{children}</div>
       {icon}
-    </Grid>
+    </Layout.Grid>
   );
 };

@@ -14,7 +14,7 @@ import { type IncomingMessage, type ServerResponse } from 'node:http';
 import * as Operation from '@dxos/compute/Operation';
 import type * as Skill from '@dxos/compute/Skill';
 import { type Registry } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { SpaceId } from '@dxos/keys';
 import { McpServer } from '@dxos/mcp-server';
 import * as LocalUpload from '@dxos/mcp-server/LocalUpload';
@@ -236,6 +236,11 @@ const RUN_SCRIPT_TOOL = {
   },
 };
 
+/** Marks a `runScript` result, which answers as text rather than as JSON. */
+class ScriptAnswer {
+  constructor(readonly result: McpServer.ScriptResult) {}
+}
+
 type ToolResponse = {
   content: { type: 'text'; text: string }[];
   structuredContent?: Record<string, unknown>;
@@ -289,7 +294,7 @@ const dispatch = async (
           return yield* Effect.fail(McpServer.failure('invalid_request', `${name} takes a code string.`));
         }
         const host = yield* McpServer.host({ skills, spaceIds });
-        return yield* McpServer.runScript(
+        const answer = yield* McpServer.runScript(
           registry,
           host,
           gate,
@@ -302,16 +307,24 @@ const dispatch = async (
           },
           { sandbox: McpServer.inProcessScriptSandbox },
         );
+        return new ScriptAnswer(answer);
       }
       default:
         return yield* Effect.fail(McpServer.failure('invalid_request', `Unknown tool: ${name}`));
     }
   }).pipe(Effect.provide(Layer.succeedContext(context())), Effect.result);
 
+  const start = performance.now();
   const result = await EffectEx.runPromise(program);
   if (result._tag === 'Failure') {
     // A tool failure, not a transport error: the model is meant to read it and correct the call.
     return { content: [{ type: 'text', text: JSON.stringify(result.failure) }], isError: true };
+  }
+  if (result.success instanceof ScriptAnswer) {
+    // Answered as text, as `dx mcp serve --code-mode` answers it, so the eval grades the same surface.
+    const { result: answer } = result.success;
+    const text = McpServer.formatScriptAnswer(answer, performance.now() - start);
+    return { content: [{ type: 'text', text }], isError: answer.error !== undefined };
   }
   const output = result.success as Record<string, unknown>;
   return { content: [{ type: 'text', text: JSON.stringify(output) }], structuredContent: output };

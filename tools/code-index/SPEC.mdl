@@ -9,11 +9,12 @@ SQLite ledger of indexed files and a persistent RDF quad store holding one named
 The graph speaks the DEUS code vocabulary defined in [`design/ONTOLOGY.md`](./design/ONTOLOGY.md) —
 that document is the source of truth, and the indexer emits JSON-LD shaped by it. Queries are
 SPARQL or typed LDkit lenses; derived relations (transitive dependencies, layering rules) are N3
-rules evaluated by the EYE reasoner rather than code.
+rules evaluated by a rule engine rather than code. The quad store and the rule engine are one Rust
+Node-API addon, `tools/code-index-native` ([`design/NATIVE-BACKEND.md`](./design/NATIVE-BACKEND.md)).
 
 Parsing runs off the main thread: a pool of workers, addressed over Effect RPC, parses with `oxc`
 and resolves imports with `oxc-resolver`. Workers never touch a database, so nothing contends on
-SQLite or LevelDB; only the main thread writes.
+SQLite or RocksDB; only the main thread writes.
 
 The CLI is `effect/cli` on Bun. The library is Effect-native and runs on Node as well,
 which is where the test suite exercises it.
@@ -34,10 +35,10 @@ The following extension dialects are used in this document.
 |--------------------|-----------------------------------------|-----|
 | Relational store   | `@effect/sql-sqlite-{bun,node}`         | Effect-native SQL; the driver is chosen from the ambient runtime because neither loads under the other. |
 | Schema             | `@dxos/sql-sqlite` `SqlMigrations` + `effect` `Migrator` | Same numbered-`.sql` migration pattern as the rest of the repo, with its own history table. |
-| Quad store         | `quadstore` over `classic-level`        | A real persistent RDF/JS store with named graphs — deliberately not a triple table hand-rolled on SQLite. |
-| SPARQL             | `quadstore-comunica`                    | Comunica engine bound directly to the quad store, with the default graph as the union of all file graphs. |
+| Quad store         | oxigraph over RocksDB (`tools/code-index-native`) | A real persistent RDF store with named graphs — deliberately not a triple table hand-rolled on SQLite. |
+| SPARQL             | oxigraph                                | Evaluated in the addon off the event loop, with the default graph as the union of all file graphs; cancellable at every quad read. |
 | Typed graph access | `ldkit`                                 | Schema-typed reads over the same engine, so a lens and a raw SPARQL query see one graph. |
-| Reasoning          | `eyereasoner` (EYE, N3)                 | Forward-chaining rules over an N3 serialization of the asserted facts; conclusions land in one replaceable graph. Reachability is left to SPARQL property paths. |
+| Reasoning          | the addon's N3 engine                   | Semi-naive evaluation of the N3 subset `rules/*.n3` uses, maintained incrementally (DRed) from the facts that changed; each rule file's conclusions land in one replaceable graph. Reachability is left to SPARQL property paths. |
 | Parsing            | `oxc-parser`, `oxc-resolver`            | Real module records and real resolution, not regex. |
 | Manifests          | `yaml`, `JSON.parse`                    | `moon.yml` layers and `package.json` identity, entries and workspace deps. |
 | Concurrency        | `effect/rpc` over worker threads | Batches of paths in, N-Triples documents out. |
@@ -51,7 +52,7 @@ containing the working directory, so any command run anywhere inside the repo fi
 ```
 <store>/
   index.sqlite   # file ledger + migration history + key/value meta
-  graph/         # LevelDB directory backing the quad store
+  native/        # the addon's RocksDB stores: oxigraph/ (quads) and journal/ (reasoning state)
 ```
 
 ## Indexing pass
@@ -72,9 +73,8 @@ containing the working directory, so any command run anywhere inside the repo fi
    the result. The phase is skipped only when the ledger records that this exact set of reasoners
    (a signature over their names and rules) already ran over the store's current write generation:
    a pass after `--no-reason`, or after one interrupted before reasoning, catches up even though it
-   indexed nothing. The reasoner is fed only the facts whose predicate the
-   rules name — the narrowing is dropped if a rule leaves a predicate unbound — which on this repo
-   is the difference between a 30s phase and a 4s one.
+   indexed nothing. With the rule set unchanged, each rule file's graph is maintained from the facts
+   that changed since the last pass rather than recomputed.
 
 Each phase is timed and reported (`scan`, `parse`, `commit`, `reason`, `total`); `parse` and `commit`
 are summed across concurrent batches, so they overlap and can exceed the wall-clock total.
@@ -85,13 +85,13 @@ The two databases cannot share a transaction, so the ledger is made the single c
 the graph write is made idempotent:
 
 1. `files.pending_graph` is set to the new graph IRI (`graph:file/<path>#<mtime>`) — the announcement.
-2. The old graph's quads and the new graph's quads are swapped in **one** Quadstore batch.
+2. The old graph's quads and the new graph's quads are swapped in **one** RocksDB transaction.
 3. The row is updated: `graph` becomes the new IRI and `pending_graph` is cleared — the commit.
 
 An indexing pass commits a worker batch at a time: step 1 for every file of the batch in one SQLite
 transaction, the per-file swaps, then step 3 for every file in another. SQLite runs in WAL mode
 with `synchronous=NORMAL`, which survives a process crash at any point; an OS crash can lose the
-last commits, but the quad stores never fsync their own writes, so the graphs were never durable
+last commits, but the quad store never fsyncs its own writes, so the graphs were never durable
 against one either.
 
 A crash before step 3 leaves the previous revision live and the new graph reachable only through
@@ -118,7 +118,7 @@ module Store
 
     # Service
     Store: Context.Service                    # 'code-index/Store'.
-    layer: (dir, backend?, { readOnly? }) => Layer<Store, StoreError>
+    layer: (dir, { readOnly? }) => Layer<Store, StoreError>
                                               # migrates sqlite, opens the quad store, reconciles;
                                               # readOnly opens an existing, current store and writes nothing.
 
@@ -298,11 +298,21 @@ module mcp/Server
     store opened with `{ readOnly: true }`. Tool descriptions carry the namespace prefixes and an
     example each, because a model reads them. `mcp/Lock` names the process holding a locked store.
   api:
-    CodeIndexToolkit: Toolkit                 # query, ask, vocabulary, describe, files, stats.
+    CodeIndexToolkit: Toolkit                 # query, ask, vocabulary, describe, usages, files, stats, design.
     handlers: (Store.Api) => Effect<handlers> # what the toolkit layer is built from (and tests drive).
-    open: (dir, backend?) => Effect<Store.Api, StoreError, Scope>  # read-only; names a lock holder.
-    run: ({ dir, backend?, version }) => Effect<never>             # opens, then serves until stdin closes.
+    open: (dir) => Effect<Store.Api, StoreError, Scope>  # read-only; names a lock holder.
+    run: ({ dir, version }) => Effect<never>             # opens, then serves until stdin closes.
+```
+
+```mdl
+module mcp/Sparql
+  desc: |
+    Preprocessing for model-written SPARQL, shared by the MCP server and the design query explorer:
+    missing prefixes are declared, unknown `deus:` terms are named, and a SELECT is capped at the engine.
+  api:
     boundQuery: (sparql, limit) => string     # caps a SELECT at the engine.
+    withPrefixes: (sparql) => { sparql, injected }
+    unknownTermWarnings: (sparql, known) => string[]
     NAMESPACES: Record<string, string>        # the prefixes of design/ONTOLOGY.md.
 ```
 
@@ -329,12 +339,13 @@ module mcp/Server
 ```mdl
 feat F-1: One directory, two databases
   desc: |
-    A store is initialized from a directory path; `index.sqlite` (migrated) and `graph/` are created
+    A store is initialized from a directory path; `index.sqlite` (migrated) and `native/` are created
     inside it. Both are opened by `Store.layer` and closed when the scope ends.
   req F-1.1: The SQLite schema is created by numbered migrations recorded in `code_index_migrations`.
   req F-1.2: Records and quads written in one process are visible after reopening the store.
   req F-1.3: No module outside `Store` opens a database.
   req F-1.4: A store recorded under another `Ontology.VERSION` is emptied on open, and the next pass reindexes everything.
+  req F-1.5: A store stamped with another backend (the retired `js` one) or with none is emptied by a writer, which rebuilds it, and refused by a reader with a request to run `code-index index`.
 ```
 
 ```mdl
@@ -350,11 +361,15 @@ feat F-2: One graph per file revision
 
 ```mdl
 feat F-3: Incremental by mtime
-  desc: The crawl compares mtimes against the ledger; unchanged files are never read or parsed.
+  desc: |
+    The crawl compares mtimes against the ledger; unchanged files are never read or parsed. A file
+    whose mtime moved is hashed first, and one whose content still matches the ledger's hash only has
+    its mtime recorded.
   req F-3.1: A second pass over an unchanged tree indexes nothing.
-  req F-3.2: Touching one file reindexes exactly that file.
+  req F-3.2: Editing one file reindexes exactly that file.
   req F-3.3: `--force` reindexes everything regardless of mtime.
   req F-3.4: A file deleted from the working tree is removed from both databases.
+  req F-3.5: A touch that leaves the content unchanged reindexes nothing and does not rerun the reasoners.
 ```
 
 ```mdl
@@ -398,6 +413,14 @@ feat F-8: Structure now, meaning later
   req F-8.3: Every stored snippet is valid TypeScript, or absent.
   req F-8.4: IRIs are written as the path or specifier reads (`module:@dxos/compute/Operation#make`);
     only characters an IRI cannot carry, `#`, `?`, `%` and `.`/`..` segments are percent-encoded.
+  req F-8.5: Every call to a resolvable callee that carries a literal or a configuration object, and
+    every call such a call is an argument of, is a `deus:CallSite`, keyed by enclosing symbol, callee
+    as written and ordinal — never by line.
+  req F-8.6: Call-site literals are bounded: 8 positions, 3 object keys deep, 16 array elements,
+    256 characters with no newline, 32 literals per site and 2000 sites per file.
+  req F-8.7: A reference from a top-level statement that declares nothing (`describe(…)`) is a
+    dependency of the file's `top-level` symbol, so `usages` finds a test that uses a declaration
+    only there.
 ```
 
 ```mdl
@@ -408,6 +431,7 @@ feat F-10: Types without a checker
   req F-10.1: Where it answers, it agrees with `tsc` — the agreement harness has no disagreements on its fixtures.
   req F-10.2: A position it cannot type is absent, never approximated; a reference `tsc` might narrow is unknown.
   req F-10.3: The type step costs well under a millisecond per file.
+  req F-10.4: A function or static method typed to return `Layer<…>` is a `deus:EffectLayerFactory`, providing and requiring what its returned layer does.
 ```
 
 ```mdl
@@ -415,36 +439,39 @@ feat F-9: Specs are facts
   desc: A `.mdl` document yields one `SpecBlock` per block — several per fence, `req` nested in `feat` — with its fields as a tree, its body, its line and the identifiers it mentions.
   req F-9.1: Block ids and names come from the header; two blocks sharing a key are disambiguated in order.
   req F-9.2: The parser never fails on a `.mdl` in the repository.
-  req F-9.3: Blocks are classified, linked to code and to each other, and checked against their `ext` schema by rules (`rules/70-specs.n3`, `rules/80-gaps.n3`), on both backends.
+  req F-9.3: Blocks are classified, linked to code and to each other, and checked against their `ext` schema by rules (`rules/70-specs.n3`, `rules/80-gaps.n3`).
 ```
 
 ```mdl
 feat F-6: Derived relations are rules, recomputed with the index
   desc: |
-    Indexing closes with a reasoning phase: the asserted facts are serialized to N3, the rule set is
-    appended, and EYE runs in `derivations` mode so only entailed quads come back. They replace
-    `graph:derived` in one batch.
+    Indexing closes with a reasoning phase: each rule file runs in filename order over the asserted
+    facts and the graphs of the files before it, and its conclusions replace `graph:derived/<file>`
+    in one transaction — maintained from the changed facts when the rule set is unchanged.
   req F-6.1: Reachability is a query, not a rule — `deus:imports+` walks the graph lazily, and the
              closure rule that used to ship (147s per pass, 123k stored quads for identical answers)
              was removed. `rules/50-example.n3` says so in its header; keep derivations small.
   req F-6.2: A conclusion never outlives its premises — retracting an import retracts what it entailed.
-  req F-6.3: Conclusions are never premises: a pass reads the file graphs only.
+  req F-6.3: A JS pass reads the file graphs only. A rule file reads the file graphs, the JS passes' graphs and the derived graphs of the rule files before it, never its own output or a later rule file's graph.
   req F-6.4: A pass skips reasoning, leaving the derived graphs as they are, only when the same reasoners already ran over the facts the store holds now.
-  req F-6.6: Premises are narrowed to the predicates the rules name; an unbound predicate disables the narrowing.
+  req F-6.6: A rule reads only the predicates it names; an unbound predicate reads the whole graph.
   req F-6.5: `--no-reason` skips the phase; the derived graph is then only as fresh as the last pass that ran it.
+  req F-6.8: The `resolve-refs` pass links each reference IRI to the declaration it denotes (`deus:resolvesTo`), through barrels and aliases.
+  req F-6.9: `deus:usesDeprecated` links a symbol to each `deus:deprecated` declaration it depends on, directly or through `deus:resolvesTo`.
 ```
 
 ```mdl
 feat F-11: An MCP server over the index
   desc: |
     `code-index mcp` serves the store to an MCP client over stdio. It opens an existing store
-    read-only and never indexes or writes; six tools cover SPARQL (`query`, `ask`), discovery
-    (`vocabulary`, `describe`) and the ledger (`files`, `stats`).
+    read-only and never indexes or writes; eight tools cover SPARQL (`query`, `ask`), discovery
+    (`vocabulary`, `describe`, `usages`), the ledger (`files`, `stats`) and design questions (`design`).
   req F-11.1: stdout carries only JSON-RPC; every log and banner goes to stderr.
   req F-11.2: Opening skips migration, version reset and reconcile; a missing or stale store fails with a hint.
   req F-11.3: A store another process holds fails at startup, naming that process, rather than hanging.
   req F-11.4: A SELECT is capped at the engine (default 200 rows, at most 2000) and reports truncation.
   req F-11.5: `stats` counts derived graphs with a grouped SPARQL count, never by materialising quads.
+  req F-11.6: `usages` finds every symbol that uses a declaration, through barrels, re-exports, namespaces and bare specifiers, grouped by package.
 
 feat F-12: `serve` keeps the index current
   desc: |
@@ -482,6 +509,11 @@ test T-1: Store
     - a batch interrupted between its swaps is reconciled file by file
     - any write after reasoning marks the conclusions stale, across reopening
     - clear empties both databases
+    - a js store is reset by a writer, which rebuilds it natively
+    - a store without a recorded backend resets on the next write
+    - a reader refuses a js store and touches nothing
+    - a reader refuses a store without a recorded backend
+    - a reader opens a current store
 ```
 
 ```mdl
@@ -523,6 +555,16 @@ test T-3: TypeScript analyzer
     - snippets abbreviate implementation and stay valid TypeScript
     - an anonymous default export is named default
     - a parse failure still yields a file node
+    - call sites carry callee, enclosing symbol, line and flattened literals
+    - nested call sites point at the call they are an argument of
+    - IRIs are keyed by enclosing symbol, callee and ordinal, not line
+    - file-level calls are enclosed by the file
+    - only resolvable callees, and only sites that carry something
+    - curried chains are one site, arguments numbered across the chain
+    - literals are capped in length, count and array size
+    - a file stops at 2000 call sites
+    - a same-file string const is read as its value
+    - a surface carries its id and the plugin that registers its module (src/Reasoner.test.ts)
 ```
 
 ```mdl

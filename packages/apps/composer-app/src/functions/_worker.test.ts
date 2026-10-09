@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import handler from './_worker.ts';
 
-const INDEX_HTML = '<!doctype html><title>Composer</title>';
+const INDEX_HTML = '<!doctype html><html><head><title>Composer</title></head><body></body></html>';
 const ARCHIVED_CHUNK = 'assets/async-OLDHASH0.js';
 
 /** The asset server as the Worker sees it: `index.html` at `/`, and a 404 for everything it misses. */
@@ -60,8 +60,28 @@ describe('asset misses', () => {
   });
 });
 
+describe('link previews', () => {
+  test('a route carrying a title names the page after it', async () => {
+    const response = await get(`/w/space/doc/1?title=${encodeURIComponent('Plan <Q3> & "more"')}`, 'navigate');
+    expect(response.status).toBe(200);
+    const html = await response.text();
+    expect(html).toContain('<title>Plan &lt;Q3&gt; &amp; &quot;more&quot; | Composer</title>');
+    expect(html).toContain('<meta property="og:title" content="Plan &lt;Q3&gt; &amp; &quot;more&quot;" />');
+  });
+
+  test('a crawler without Sec-Fetch-Mode gets the preview too', async () => {
+    const response = await get('/w/space/doc/1?title=Plan');
+    expect(await response.text()).toContain('<meta property="og:title" content="Plan" />');
+  });
+
+  test('a route without a title gets index.html untouched', async () => {
+    const response = await get('/w/space/doc/1?title=%20', 'navigate');
+    expect(await response.text()).toBe(INDEX_HTML);
+  });
+});
+
 describe('feedback logs', () => {
-  const upload = async (body: string, contentType: string) => {
+  const upload = async (body: string, contentType: string, query = '') => {
     const puts: { key: string; contentType?: string }[] = [];
     const bucket = {
       put: async (key: string, _body: ReadableStream, options?: { httpMetadata?: { contentType?: string } }) => {
@@ -69,7 +89,7 @@ describe('feedback logs', () => {
       },
     };
     const response = await fetch(
-      new Request('https://composer.test/api/feedback-logs', {
+      new Request(`https://composer.test/api/feedback-logs${query}`, {
         method: 'POST',
         headers: {
           'Origin': 'https://composer.test',
@@ -98,6 +118,21 @@ describe('feedback logs', () => {
     const { key } = await response.json();
     expect(key).toMatch(/\.ndjson$/);
     expect(puts).toEqual([{ key, contentType: 'application/x-ndjson' }]);
+  });
+
+  test('a trajectory upload is filed under trajectories/', async () => {
+    const { response } = await upload('gz', 'application/gzip', '?kind=trajectory');
+    expect(response.status).toBe(200);
+    const { key } = await response.json();
+    expect(key).toMatch(/^trajectories\/\d{4}-\d{2}-\d{2}\/[\w-]+\.ndjson\.gz$/);
+  });
+
+  test('an unknown kind cannot pick its own prefix', async () => {
+    for (const kind of ['../secrets', 'constructor']) {
+      const { response } = await upload('gz', 'application/gzip', `?kind=${kind}`);
+      const { key } = await response.json();
+      expect(key).toMatch(/^logs\//);
+    }
   });
 });
 

@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 // The zag machine owns the scroll-snap track, the page in view, wrap-around, autoplay (stopped the moment the reader
 // takes over), the indicator keys and the `region`/`slide` roles; Next owns the grid around the track and the media
 // each slide renders.
@@ -16,10 +18,10 @@ import { type ThemedClassName } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
-import { animationsDisabled, useReducedMotion } from '../../../util/index.ts';
+import { animationsDisabled, useReducedMotion } from '../../../util/animation.ts';
 import { recipes } from '../../recipes.ts';
-import { Button } from '../Button/index.ts';
-import { MediaPlayer, type MediaPlayerProps } from '../MediaPlayer/index.ts';
+import { Button } from '../Button/Button.tsx';
+import { MediaPlayer, type MediaPlayerProps } from '../MediaPlayer/MediaPlayer.tsx';
 
 //
 // Root
@@ -285,22 +287,21 @@ const CarouselCaption = forwardRef<HTMLParagraphElement, CarouselCaptionProps>(
 );
 
 CarouselCaption.displayName = 'Carousel.Caption';
-
-export const Carousel = {
-  Root: CarouselRoot,
-  ItemGroup: CarouselItemGroup,
-  Item: CarouselItem,
-  PrevTrigger: CarouselPrevTrigger,
-  NextTrigger: CarouselNextTrigger,
-  IndicatorGroup: CarouselIndicatorGroup,
-  Caption: CarouselCaption,
+export type {
+  CarouselCaptionProps as CaptionProps,
+  CarouselIndicatorGroupProps as IndicatorGroupProps,
+  CarouselItemGroupProps as ItemGroupProps,
+  CarouselItemProps as ItemProps,
+  CarouselRootProps as RootProps,
+  CarouselTriggerProps as TriggerProps,
 };
 
-export type {
-  CarouselCaptionProps,
-  CarouselIndicatorGroupProps,
-  CarouselItemGroupProps,
-  CarouselItemProps,
-  CarouselRootProps,
-  CarouselTriggerProps,
+export {
+  CarouselCaption as Caption,
+  CarouselIndicatorGroup as IndicatorGroup,
+  CarouselItem as Item,
+  CarouselItemGroup as ItemGroup,
+  CarouselNextTrigger as NextTrigger,
+  CarouselPrevTrigger as PrevTrigger,
+  CarouselRoot as Root,
 };

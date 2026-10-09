@@ -12,7 +12,7 @@ import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Feed, Obj, type Query, QueryAST, Ref, Type } from '@dxos/echo';
 import { OptionsAnnotationId } from '@dxos/echo/Format';
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 
 import * as Runnable from '../Runnable.ts';
 import type * as TriggerEvent from './TriggerEvent.ts';
@@ -288,9 +288,9 @@ export interface InvokeOptions {
 }
 
 /**
- * Service for monitoring trigger dispatcher state.
+ * Observes and invokes the triggers registered with the dispatchers (local and edge).
  */
-export interface Monitor {
+export interface Manager {
   /**
    * Triggers actively registered in the dispatcher.
    * Could contain entries for both local and edge triggers, but only the edge ones are actually running.
@@ -308,8 +308,10 @@ export interface Monitor {
 }
 
 /**
- * Service for monitoring trigger executions.
+ * Service providing the {@link Manager}.
  */
-export class TriggerMonitorService extends Context.Service<TriggerMonitorService, Monitor>()(
-  '@dxos/functions/TriggerMonitorService',
+export class ManagerService extends Context.Service<ManagerService, Manager>()(
+  '@dxos/compute/Trigger.ManagerService',
 ) {}
+
+export { TriggerStateNotFoundError } from '../errors.ts';

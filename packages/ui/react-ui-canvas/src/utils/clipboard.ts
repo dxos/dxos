@@ -13,6 +13,7 @@ import {
   type ElementId,
   type Endpoint,
   type Intent,
+  type LayerId,
   type Link,
   type Node,
   type Point,
@@ -20,6 +21,7 @@ import {
   isPointEndpoint,
 } from '../model/types.ts';
 import { unionBounds } from './hit.ts';
+import { between, topZ } from './order.ts';
 import { nodeBounds } from './shapes.ts';
 
 export type Clipboard = {
@@ -59,19 +61,22 @@ export type PasteOptions = {
   /** Z keys for the pasted nodes and links, above the scene. */
   nodeZ: (index: number) => string;
   linkZ: (index: number) => string;
+  /** The layer the pasted elements go on; unset, each keeps its own. */
+  layer?: LayerId;
 };
 
 export type Paste = { intent: Intent; ids: ElementId[] };
 
 /** The batch that recreates the fragment with fresh ids at `offset`, and the ids it will create. */
-export const pasteFragment = ({ clipboard, offset, createId, nodeZ, linkZ }: PasteOptions): Paste => {
+export const pasteFragment = ({ clipboard, offset, createId, nodeZ, linkZ, layer }: PasteOptions): Paste => {
   const idMap = new Map<ElementId, ElementId>();
   const shift = (point: Point): Point => ({ x: point.x + offset.x, y: point.y + offset.y });
+  const onLayer = layer !== undefined ? { layer } : {};
   const nodes: Node[] = clipboard.nodes.map((node, index) => {
     const id = createId(node.type);
     idMap.set(node.id, id);
     // A pasted portal shares the child scene: two portals to one scene are Muse "linked cards" (§4).
-    return { ...node, id, z: nodeZ(index), center: shift(node.center) };
+    return { ...node, ...onLayer, id, z: nodeZ(index), center: shift(node.center) };
   });
   const links: Link[] = clipboard.links.map((link, index) => {
     const id = createId(link.type);
@@ -80,8 +85,8 @@ export const pasteFragment = ({ clipboard, offset, createId, nodeZ, linkZ }: Pas
       isPointEndpoint(end) ? { point: shift(end.point) } : { ...end, node: idMap.get(end.node) ?? end.node };
     const ends = { source: remap(link.source), target: remap(link.target) };
     return link.type === 'spline'
-      ? { ...link, id, z: linkZ(index), ...ends, points: link.points.map(shift) }
-      : { ...link, id, z: linkZ(index), ...ends };
+      ? { ...link, ...onLayer, id, z: linkZ(index), ...ends, points: link.points.map(shift) }
+      : { ...link, ...onLayer, id, z: linkZ(index), ...ends };
   });
   return {
     intent: {
@@ -93,4 +98,29 @@ export const pasteFragment = ({ clipboard, offset, createId, nodeZ, linkZ }: Pas
     },
     ids: [...nodes.map(({ id }) => id), ...links.map(({ id }) => id)],
   };
+};
+
+/**
+ * The batch that copies the selected nodes (and the links between them) `offset` away, above everything
+ * else, and the ids it creates; nothing when the selection holds no node.
+ */
+export const duplicateSelection = (
+  scene: Scene,
+  selection: Iterable<ElementId>,
+  offset: Point,
+  createId: (prefix: string) => string,
+): Paste | undefined => {
+  const clipboard = copySelection(scene, selection);
+  if (!clipboard) {
+    return undefined;
+  }
+  let nodeZ = topZ(Object.values(scene.nodes));
+  let linkZ = topZ(Object.values(scene.links));
+  return pasteFragment({
+    clipboard,
+    offset,
+    createId,
+    nodeZ: () => (nodeZ = between(nodeZ, undefined)),
+    linkZ: () => (linkZ = between(linkZ, undefined)),
+  });
 };

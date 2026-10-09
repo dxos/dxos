@@ -16,6 +16,7 @@ import { extname, relative, resolve } from 'node:path';
 import * as Crawler from './Crawler.ts';
 import * as DesignCli from './design/DesignCli.ts';
 import * as Indexer from './Indexer.ts';
+import * as Lock from './mcp/Lock.ts';
 import * as Ontology from './Ontology.ts';
 import * as Reasoner from './Reasoner.ts';
 import * as Store from './Store.ts';
@@ -48,13 +49,55 @@ const jsonFlag = Flag.Boolean('json').pipe(Flag.withDefault(false), Flag.withDes
 const resolveRoot = (root: Option.Option<string>): Effect.Effect<string, Crawler.CrawlError> =>
   Option.match(root, { onNone: () => Crawler.gitRoot(), onSome: (value) => Effect.succeed(resolve(value)) });
 
-const storeLayer = (root: string, dir: Option.Option<string>) =>
-  Store.layer(Option.match(dir, { onNone: () => Crawler.storeDir(root), onSome: resolve }));
+const storePath = (root: string, dir: Option.Option<string>): string =>
+  Option.match(dir, { onNone: () => Crawler.storeDir(root), onSome: resolve });
+
+const storeLayer = (root: string, dir: Option.Option<string>) => {
+  const path = storePath(root, dir);
+  return Lock.layer(path, () => Store.layer(path));
+};
 
 const emit = (json: boolean, value: unknown, text: () => string): Effect.Effect<void> =>
   Console.log(json ? JSON.stringify(value, null, 2) : text());
 
 const seconds = (ms: number): string => (ms < 1000 ? `${Math.round(ms)}ms` : `${(ms / 1000).toFixed(1)}s`);
+
+const PHASE_WIDTH = 10;
+
+const REASONER_WIDTH = 16;
+
+const plural = (count: number, noun: string): string => `${count} ${noun}${count === 1 ? '' : 's'}`;
+
+const phaseLine = (phase: string, detail: string): string => `${phase.padEnd(PHASE_WIDTH)}${detail}`;
+
+/** One aligned line per completed phase of an indexing pass. */
+const formatProgress = (progress: Indexer.Progress): string => {
+  switch (progress.phase) {
+    case 'scan':
+      return phaseLine(
+        'scan',
+        `${seconds(progress.ms)} (${plural(progress.scanned, 'file')}, ${progress.changed} changed)`,
+      );
+    case 'parse':
+      // Summed across concurrent batches, so on a wide pool it exceeds the wall-clock total.
+      return phaseLine(
+        'parse',
+        progress.files > 0
+          ? `${seconds(progress.ms)} (${plural(progress.files, 'file')}, all workers)`
+          : 'no changed files',
+      );
+    case 'commit':
+      return phaseLine('commit', seconds(progress.ms));
+    case 'reasoner':
+      return `  ${progress.outcome.name.padEnd(REASONER_WIDTH)} ${String(progress.outcome.derived).padStart(8)}  ${seconds(progress.outcome.durationMs)}`;
+    case 'reason':
+      return phaseLine('reason', seconds(progress.ms));
+    case 'reason-skipped':
+      return phaseLine('reason', 'skipped');
+    case 'summary':
+      return phaseLine('summary', seconds(progress.ms));
+  }
+};
 
 const index = Command.make(
   'index',
@@ -83,27 +126,22 @@ const index = Command.make(
       const reasoners = noReason
         ? []
         : yield* extname(rulesPath) === '' ? Reasoner.load(rulesPath) : Reasoner.loadFile(rulesPath);
+      // Under `--json` stdout must stay one parseable document, so progress is not printed.
       const result = yield* Indexer.run({
         root: repo,
         force,
         reasoners,
         workers: Option.getOrUndefined(workers),
+        onProgress: json ? undefined : (progress) => Console.log(formatProgress(progress)),
       }).pipe(Effect.provide(storeLayer(repo, store)));
-      const { timings } = result;
       yield* emit(json, result, () =>
         [
-          `${result.root}: ${result.indexed} indexed, ${result.unchanged} unchanged, ${result.removed} removed` +
+          `${result.root}: ${result.indexed} indexed, ` +
+            (result.touched > 0 ? `${result.touched} touched, ` : '') +
+            `${result.unchanged} unchanged, ${result.removed} removed` +
             (result.skipped.length > 0 ? `, ${result.skipped.length} skipped` : '') +
             (noReason ? '' : `, ${result.derived} derived`),
-          `scan ${seconds(timings.scanMs)} · parse ${seconds(timings.parseMs)} · commit ${seconds(timings.commitMs)}` +
-            ` · reason ${result.reasoned ? seconds(timings.reasonMs) : 'skipped'} · total ${seconds(timings.totalMs)}`,
-          ...(result.reasoners.length > 0
-            ? [
-                result.reasoners
-                  .map((outcome) => `${outcome.name} ${outcome.derived} (${seconds(outcome.durationMs)})`)
-                  .join(' · '),
-              ]
-            : []),
+          phaseLine('total', seconds(result.timings.totalMs)),
         ].join('\n'),
       );
     }),
@@ -337,9 +375,30 @@ const openProject = (requested: Option.Option<string>) =>
     return last ?? (yield* log.createProject());
   });
 
+/**
+ * Resolves the flags to a model and checks a local one is actually running, so a missing Ollama is
+ * reported (or replaced by Anthropic) at startup instead of by every turn.
+ */
+const selectModel = (provider: Option.Option<string>, model: Option.Option<string>, endpoint: Option.Option<string>) =>
+  Effect.flatMap(
+    Models.select({
+      provider: Option.getOrUndefined(provider),
+      model: Option.getOrUndefined(model),
+      endpoint: Option.getOrUndefined(endpoint),
+    }),
+    (selection) =>
+      Models.ensureAvailable(selection, {
+        chosen:
+          Option.isSome(provider) ||
+          Option.isSome(model) ||
+          Option.isSome(endpoint) ||
+          process.env.CODE_INDEX_MODEL !== undefined,
+      }),
+  );
+
 const workspaceLayer = (root: string, store: Option.Option<string>, model: Models.Selection) =>
   Workspace.layer({
-    storeDir: Option.match(store, { onNone: () => Crawler.storeDir(root), onSome: resolve }),
+    storeDir: storePath(root, store),
     model,
   });
 
@@ -360,11 +419,7 @@ const chat = Command.make(
   ({ root, store, project, provider, model, endpoint, prompt }) =>
     Effect.gen(function* () {
       const repo = yield* resolveRoot(root);
-      const selection = yield* Models.select({
-        provider: Option.getOrUndefined(provider),
-        model: Option.getOrUndefined(model),
-        endpoint: Option.getOrUndefined(endpoint),
-      });
+      const selection = yield* selectModel(provider, model, endpoint);
       yield* Effect.gen(function* () {
         const opened = yield* openProject(project);
         yield* Chat.run({ projectId: opened.id, prompt: Option.getOrUndefined(prompt) });
@@ -400,11 +455,7 @@ type ServeFlags = {
 const serveHandler = ({ root, store, provider, model, endpoint, port, host, noWatch }: ServeFlags) =>
   Effect.gen(function* () {
     const repo = yield* resolveRoot(root);
-    const selection = yield* Models.select({
-      provider: Option.getOrUndefined(provider),
-      model: Option.getOrUndefined(model),
-      endpoint: Option.getOrUndefined(endpoint),
-    });
+    const selection = yield* selectModel(provider, model, endpoint);
     // Imported here rather than at the top: `serve` pulls Vite and the whole dev-server
     // machinery in, and none of the other commands should pay for it.
     const Server = yield* Effect.promise(() => import('./workspace/Server.ts'));
@@ -413,7 +464,7 @@ const serveHandler = ({ root, store, provider, model, endpoint, port, host, noWa
       port: Option.getOrUndefined(port),
       host: Option.getOrUndefined(host),
       model: selection,
-      reasoners: noWatch ? undefined : yield* Reasoner.load(DEFAULT_RULES),
+      watch: noWatch ? undefined : { storeDir: storePath(repo, store), rules: DEFAULT_RULES },
     }).pipe(Effect.provide(workspaceLayer(repo, store, selection)));
   });
 
@@ -429,7 +480,7 @@ const mcp = Command.make('mcp', { root: rootFlag, store: storeFlag }, ({ root, s
     // Imported here: only this command needs the MCP server and its protocol schemas.
     const Server = yield* Effect.promise(() => import('./mcp/Server.ts'));
     return yield* Server.run({
-      dir: Option.match(store, { onNone: () => Crawler.storeDir(repo), onSome: resolve }),
+      dir: storePath(repo, store),
       version: VERSION,
     });
   }),

@@ -9,7 +9,7 @@ import * as HttpClient from 'effect/http/HttpClient';
 import * as Layer from 'effect/Layer';
 import { afterEach, beforeEach, describe, it } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 
 import { HttpConfig, withLogging, withRetry, withRetryConfig } from './http-client.ts';

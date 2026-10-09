@@ -4,7 +4,9 @@
 
 import React from 'react';
 
-import { Grid, Panel, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { meta } from '#meta';
 
@@ -62,7 +64,7 @@ export const RepositoryViewer = ({
   onSelectCommit,
   onLoadMoreCommits,
 }: RepositoryViewerProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const empty = !loading && !error && branches.length === 0;
   const isCommit = currentRef !== undefined && !branches.some((branch) => branch.name === currentRef);
 
@@ -92,12 +94,8 @@ export const RepositoryViewer = ({
             onLoadMore={onLoadMoreCommits}
           />
         ) : (
-          <Grid cols={['18rem', '1fr']} classNames='divide-x divide-separator'>
-            <div
-              role='region'
-              aria-label={t('files-pane.label')}
-              className='dx-expand grid content-start overflow-auto'
-            >
+          <Layout.Grid grow cols={['18rem', 'fill']} classNames='divide-x divide-separator'>
+            <Layout.Grid grow role='region' aria-label={t('files-pane.label')} classNames='content-start overflow-auto'>
               <RepositoryFileTree
                 directories={directories}
                 expanded={expanded}
@@ -105,18 +103,20 @@ export const RepositoryViewer = ({
                 onExpandedChange={onExpandedChange}
                 onSelect={onSelectPath}
               />
-            </div>
-            <div
+            </Layout.Grid>
+            <Layout.Grid
+              grow
+              rows={['min', 'fill']}
               role='region'
               aria-label={t('file-pane.label')}
-              className='dx-expand grid grid-rows-[min-content_1fr] overflow-hidden'
+              classNames='overflow-hidden'
             >
               <div className='px-3 py-1 text-sm text-fg-muted border-b border-separator truncate'>
                 {selectedPath ?? t('no-file-selected.message')}
               </div>
               {file ? <RepositoryFileView file={file} /> : <div />}
-            </div>
-          </Grid>
+            </Layout.Grid>
+          </Layout.Grid>
         )}
       </Panel.Body>
     </Panel.Root>
@@ -124,7 +124,7 @@ export const RepositoryViewer = ({
 };
 
 const Message = ({ children, testId }: { children: string; testId: string }) => (
-  <div className='dx-expand grid place-items-center p-4 text-fg-muted text-center' data-testid={testId}>
+  <Layout.Grid grow center classNames='p-4 text-fg-muted text-center' data-testid={testId}>
     {children}
-  </div>
+  </Layout.Grid>
 );

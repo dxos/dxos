@@ -8,7 +8,7 @@ import type * as SqlError from 'effect/sql/SqlError';
 
 import { type Context } from '@dxos/context';
 import { ATTR_META, ATTR_RELATION_SOURCE, ATTR_TYPE } from '@dxos/echo/internal';
-import { SpanAttributes } from '@dxos/effect';
+import * as SpanAttributes from '@dxos/effect/SpanAttributes';
 import type { EntityId, SpaceId, URI } from '@dxos/keys';
 
 import { ConvergenceKeyIntentStore } from './convergence-key-intent-store.ts';

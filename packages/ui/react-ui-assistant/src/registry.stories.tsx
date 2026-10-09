@@ -4,13 +4,16 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { MarkdownBlock, WidgetStateProvider, createWidgetStateStore } from '@dxos/react-ui-feed';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { ContentBlock } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { assistantRegistry } from './registry.tsx';
+import { BACKGROUND_TOOL } from './renderer.ts';
 import { translations } from './translations.ts';
 
 // Shared across stories: the store is the thread's, not an item's — a widget's state has to survive
@@ -30,7 +33,7 @@ type StoryArgs = {
 // Stands in for the query container a thread gets from `Column.Center`, so `cqi` is not the viewport.
 const DefaultStory = ({ content }: StoryArgs) => (
   <WidgetStateProvider store={store}>
-    <div className='dx-container-type-inline-size'>
+    <div className='dx-container-type-inline-size p-4'>
       <MarkdownBlock text={content} registry={assistantRegistry} />
     </div>
   </WidgetStateProvider>
@@ -39,7 +42,7 @@ const DefaultStory = ({ content }: StoryArgs) => (
 const meta = {
   title: 'ui/react-ui-assistant/widgets/Registry',
   component: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'p-4' })],
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',
     translations,
@@ -49,6 +52,56 @@ const meta = {
 export default meta;
 
 type Story = StoryObj<typeof meta>;
+
+/** Every widget in one column, in registry order, so their rows, carets and buttons can be compared. */
+// Resolved at render: the stories it collects are declared below it.
+const allWidgets = () =>
+  [
+    Prompt,
+    SyntheticVariants,
+    Reasoning,
+    Status,
+    Reference,
+    Suggestion,
+    Select,
+    Stats,
+    Toolkit,
+    ToolkitFailed,
+    ToolkitNarrated,
+    ToolkitStatus,
+    ToolkitBackgroundResult,
+    ToolkitBackgroundError,
+    Summary,
+    Request,
+    RequestAnswered,
+    Surface,
+    Json,
+  ]
+    .map((story) => story.args?.content ?? '')
+    .join('\n\n');
+
+export const AllWidgets: Story = {
+  args: { content: '' },
+  render: () => (
+    <ScrollArea.Root classNames='h-full'>
+      <ScrollArea.Viewport>
+        <DefaultStory content={allWidgets()} />
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
+  ),
+};
+
+/** Capped by the container query: a long suggestion truncates rather than widening the editor into a horizontal scroll. */
+export const TestAllWidgetsFit: Story = {
+  ...AllWidgets,
+  play: async ({ canvasElement }) => {
+    await waitFor(() => expect(canvasElement.querySelector('[data-action="submit"]')).not.toBeNull());
+    const scroller = canvasElement.querySelector<HTMLElement>('.cm-scroller');
+    await expect(scroller && scroller.scrollWidth - scroller.clientWidth).toBeLessThanOrEqual(1);
+    const label = canvasElement.querySelector<HTMLElement>('[data-action="submit"] span');
+    await expect(label && label.scrollWidth > label.clientWidth).toBe(true);
+  },
+};
 
 //
 // DOM widgets
@@ -61,7 +114,7 @@ type Story = StoryObj<typeof meta>;
 export const SyntheticTurn: Story = {
   args: {
     content:
-      '<synthetic>Your scheduled alarm fired (it was set for 2026-09-04T06:20:11.153Z).\nPoll the agent session — it flagged a problem with the merge going through while checks were pending.</synthetic>',
+      '<synthetic>Scheduled alarm fired (it was set for 2026-09-04T06:20:11.153Z).\nPoll the agent session — it flagged a problem with the merge going through while checks were pending.</synthetic>',
   },
 };
 
@@ -88,6 +141,56 @@ export const Synthetic: Story = {
       3. [x] Archive old messages.
       </checklist>
       </synthetic>`,
+  },
+};
+
+/**
+ * Synthetic turns beside a tool run: both are one line of prose with the disclosure caret at its
+ * end — a one-liner, a multi-line wake-up, and a long nudge with a checklist.
+ */
+const SYNTHETIC_VARIANTS = trim`
+  <synthetic>Continue.</synthetic>
+
+  <synthetic>Scheduled alarm fired (it was set for 2026-09-04T06:20:11.153Z).
+  Poll the agent session — it flagged a problem with the merge going through while checks were pending.</synthetic>
+
+  <synthetic>
+  Completed the checklist:
+  <checklist>
+  1. [x] Review new messages.
+  2. [x] Respond to new messages.
+  3. [x] Archive old messages.
+  </checklist>
+  </synthetic>
+`;
+
+export const SyntheticVariants: Story = {
+  args: {
+    content: SYNTHETIC_VARIANTS,
+  },
+};
+
+/** Collapsed to its first line with the caret trailing it; the caret opens onto the whole prompt. */
+export const TestSynthetic: Story = {
+  args: {
+    content: SYNTHETIC_VARIANTS,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(() => expect(canvas.getAllByTestId('assistant.synthetic')).toHaveLength(3));
+    const trigger = canvas.getAllByTestId('assistant.synthetic')[1];
+    await expect(trigger).toHaveTextContent('Scheduled alarm fired');
+    await expect(trigger).not.toHaveTextContent('Poll the agent session');
+
+    // The caret is the trigger's last child, at the row's end.
+    const caret = trigger.lastElementChild;
+    await expect(caret?.querySelector('svg')).not.toBeNull();
+    await expect(trigger.getAttribute('aria-expanded')).toBe('false');
+    await userEvent.click(trigger);
+    await waitFor(() => expect(trigger.getAttribute('aria-expanded')).toBe('true'));
+    const body = canvasElement.querySelectorAll<HTMLElement>('[data-synthetic-text]')[1];
+    await waitFor(() => expect(body.getBoundingClientRect().height).toBeGreaterThan(0));
+    await expect(body).toHaveTextContent('Poll the agent session');
   },
 };
 
@@ -339,6 +442,35 @@ export const ToolkitOperations: Story = {
   },
 };
 
+/** A code-mode `eval` call: named after the operation its code invokes, not after the `eval` tool. */
+export const ToolkitCodeModeNamed: Story = {
+  args: {
+    content: toolkit([
+      {
+        ...call('tc-1', 'eval', { code: "await ops.createTask({ title: 'Ship the release notes' })" }),
+        displayName: 'Create task',
+        displayIcon: 'ph--check-square--regular',
+      },
+      result('tc-1', 'eval', { output: 'Created task 01J9…', ok: true }),
+    ]),
+  },
+};
+
+/** A code-mode `eval` call spanning several operations: listed by name, in the order the code calls them. */
+export const ToolkitCodeModeNamedMultiple: Story = {
+  args: {
+    content: toolkit([
+      {
+        ...call('tc-1', 'eval', {
+          code: "const [task] = await query('com.example.type.task');\nawait ops.updateTask({ task, status: 'done' });\nawait ops.createTask({ title: 'Follow up' });",
+        }),
+        displayName: 'Update task, Create task',
+      },
+      result('tc-1', 'eval', { output: 'ok', ok: true }),
+    ]),
+  },
+};
+
 /** Status and reasoning narrate the run from inside its panel; settled, the summary counts. */
 export const ToolkitNarrated: Story = {
   args: {
@@ -380,6 +512,52 @@ export const ToolkitNarrationOnly: Story = {
 export const ToolkitStatus: Story = {
   args: {
     content: toolkit([status('Reading the space')]),
+  },
+};
+
+/** A background tool's result, recovered on a later turn without the call it answers. */
+export const ToolkitBackgroundResult: Story = {
+  args: {
+    content: toolkit([
+      result('9b14bf5b-4723-46f8-976e-1cacad08d854', BACKGROUND_TOOL, {
+        stdout: '0\n',
+        stderr: '',
+        exitCode: 0,
+        success: true,
+      }),
+    ]),
+  },
+};
+
+/** The same background run reported twice shows once, with the latest report. */
+export const TestToolkitBackgroundDuplicate: Story = {
+  args: {
+    content: toolkit([
+      result('pid-1', BACKGROUND_TOOL, { exitCode: 1 }),
+      result('pid-1', BACKGROUND_TOOL, { exitCode: 0 }),
+    ]),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const row = await canvas.findByTestId('assistant.tool-call');
+    await expect(row).toHaveTextContent('Background result');
+    await userEvent.click(row);
+    await waitFor(() => expect(canvasElement.textContent).toContain('"exitCode": 0'));
+    await expect(canvasElement.textContent).not.toContain('"exitCode": 1');
+  },
+};
+
+export const ToolkitBackgroundError: Story = {
+  args: {
+    content: toolkit([
+      {
+        _tag: 'toolResult',
+        toolCallId: '7',
+        name: BACKGROUND_TOOL,
+        error: 'Timed out after 30s',
+        providerExecuted: false,
+      },
+    ]),
   },
 };
 
