@@ -8,7 +8,7 @@ import * as Compiler from '@dxos/brain/Compiler';
 import * as Encoding from '@dxos/brain/Encoding';
 import { type RDF } from '@dxos/pipeline-rdf';
 
-import { FactEntry, Trigger, type TriggerOperation } from '#types';
+import { BrainService, Trigger, type TriggerOperation } from '#types';
 
 /** A stored fact, with the one-line summary the debug view lists it by. */
 export type Fact = {
@@ -116,7 +116,7 @@ export const make = (
       const speaker = fact.attribution.agentLabel ?? (fact.attribution.agent && label(fact.attribution.agent));
       return {
         id: fact.id,
-        text: FactEntry.factText(fact),
+        text: BrainService.factText(fact),
         ...(speaker ? { speaker } : {}),
         saidAt: fact.attribution.generatedAtTime,
         fact,
