@@ -61,8 +61,7 @@ is fixed, it orders by `created` rather than feed position, and only the first l
   because readers query `Filter.type(Message)`.
 - **By annotation:** `QueuedAnnotation`, `InFlightAnnotation`, `ConsumedAnnotation`
   (`SessionStore.ts`) — filtered by the session store and the chat projection.
-- **By feed:** plugin-agent's fact annotation feeds (one `Feed` per source, parented to the agent) and
-  the trace namespace feed.
+- **By feed:** the trace namespace feed.
 
 ### Fields that cannot be reused
 

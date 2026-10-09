@@ -1,5 +1,9 @@
-# Builds the @dxos/introspect symbol cache on every commit to main and uploads
-# it as a GitHub Actions artifact named `dxos-introspect-cache`.
+# Builds the @dxos/introspect symbol cache and uploads it as an artifact named
+# `dxos-introspect-cache`.
+#
+# Dispatch-only: this runs on Depot CI, and `fetch-cache` finds the artifact with
+# `gh run list`, which cannot see Depot runs. Restore the `push` trigger once the
+# consumer can read it.
 #
 # Consumers (developers, the MCP server) can download the artifact and skip the
 # ~80s cold-start ts-morph parse. Cache entries are keyed by per-package git
@@ -14,9 +18,6 @@
 name: Introspect Cache
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 permissions:
@@ -38,7 +39,7 @@ env:
 
 jobs:
   build:
-    runs-on: depot-ubuntu-24.04-8
+    runs-on: depot-ubuntu-24.04-4
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
       credentials:

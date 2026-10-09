@@ -197,8 +197,6 @@ export const applyTriggerValues = (
   // values, so a kind picked afterwards must not silently disable it or strip its EDGE routing.
   const enabled = values.enabled ?? trigger?.enabled ?? false;
   const remote = values.remote ?? trigger?.remote;
-  // The trigger's `function` and `input` (including the instructions binding and any operation-specific
-  // bindings like `{ magazine }`) are wired once by `makeRoutine`, so they are not re-derived here.
   if (trigger) {
     Obj.update(trigger, (trigger) => {
       // The subscription spec's QueryAST is deeply readonly while the live ECHO draft's `spec` is mutable;
@@ -208,6 +206,12 @@ export const applyTriggerValues = (
       trigger.enabled = enabled;
       trigger.remote = remote;
     });
+    // Re-wiring keeps operation-specific bindings (e.g. `{ magazine }`) and repairs a binding an earlier
+    // editor left stale, so switching a failing trigger back on does not just fail again. Gated on `spec`:
+    // with no action yet, wiring would clear the trigger's runnable.
+    if (routine.spec) {
+      wireTriggers(routine);
+    }
   } else {
     const created = Trigger.make({ spec, enabled, remote });
     Obj.update(routine, (routine) => {

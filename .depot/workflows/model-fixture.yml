@@ -4,8 +4,11 @@ name: Model Fixture
 # shifts a prompt is caught before it silently rots the cache. Deliberately a SEPARATE, non-required
 # workflow (not a job in check.yml): it reports on the PR but is not in the required-checks set, so a
 # fixture drift never blocks merge. Fixtures are committed, so replay needs no API key or build step.
+# Draft PRs skip this unless labeled `ci`, and so does an agent's PR opened ready, which
+# `draft-on-open.yml` converts: the same gate as `Check`.
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
 
   push:
     branches:
@@ -30,13 +33,19 @@ concurrency:
 
 jobs:
   model-fixture:
-    runs-on: depot-ubuntu-24.04-8
+    if: >-
+      github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'ci') ||
+      (!github.event.pull_request.draft && (github.event.action != 'opened' ||
+      github.event.pull_request.head.repo.full_name != github.repository ||
+      !(startsWith(github.head_ref, 'claude/') || startsWith(github.head_ref, 'dm/'))))
+    # 4 vCPU: averages 15% of 8 vCPU and peaks at 7 GB.
+    runs-on: depot-ubuntu-24.04-4
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
       credentials:
         username: dxos-bot
         password: ${{ github.token }}
-    timeout-minutes: 20
+    timeout-minutes: 15
     env:
       NODE_VERSION: '24.11.1'
       # Select ONLY the model-fixture-tagged suites (vitest) and un-skip them (the tag is skipped by
