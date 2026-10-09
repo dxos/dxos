@@ -11,6 +11,7 @@ import React, {
   type PropsWithChildren,
   type Ref,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -34,6 +35,12 @@ const REVEAL_SETTLE_MS = 80;
 
 /** Reveal the grid no later than this after mount, so churning content never hides it indefinitely. */
 const REVEAL_DEADLINE_MS = 1200;
+
+/** The element's content-box width, as the resize detector reports it: net of padding and scrollbar. */
+const getContentWidth = (element: HTMLElement): number => {
+  const style = getComputedStyle(element);
+  return element.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+};
 
 //
 // Context
@@ -196,18 +203,27 @@ const MasonryViewportInner = Util.composable<HTMLDivElement, MasonryViewportProp
     const viewportRef = useRef<HTMLDivElement | null>(null);
     // Throttle width changes: each update recomputes the column count and the full tile layout,
     // so coalesce rapid resizes (drag, ScrollArea reflow) into at most one relayout per interval.
-    const { width: contentWidth = 0 } = useResizeDetector({
+    const { width: observedWidth } = useResizeDetector({
       targetRef: viewportRef,
       refreshMode: 'throttle',
       refreshRate: 200,
     });
+    // The detector first reports after the browser has painted a zero-height viewport; reading the content
+    // box before paint lays the grid out in the first frame instead.
+    const [mountWidth, setMountWidth] = useState(0);
+    useLayoutEffect(() => {
+      if (viewportRef.current) {
+        setMountWidth(getContentWidth(viewportRef.current));
+      }
+    }, []);
+    const contentWidth = observedWidth ?? mountWidth;
     const columnCount = useColumnCount(contentWidth, columns, maxColumns, minColumnWidth, maxColumnWidth, gap);
 
     // The grid fills the measured content box; the layout caps columns at
     // `maxColumnWidth` and centres them, so no scrollbar/padding math is duplicated here.
     const gapPx = gap * remInPx;
     const ids = useMemo(() => items.map((item, index) => getId?.(item) ?? String(index)), [items, getId]);
-    const { rects, columnWidth, height, getTileRef, nodes, measured, knownIds } = useMasonryLayout({
+    const { rects, columnWidth, height, getTileRef, nodes, measured, remembered, knownIds } = useMasonryLayout({
       ids,
       columnCount,
       containerWidth: contentWidth,
@@ -224,31 +240,24 @@ const MasonryViewportInner = Util.composable<HTMLDivElement, MasonryViewportProp
     // only settles over the next few reflows. Debounce on `rects` identity — which changes on every
     // relayout — and reveal once it has been stable for a beat, with a hard deadline as a backstop.
     //
-    // None of that applies when every tile's height was already known on the first pass (the height
-    // cache is warm from an earlier mount): the layout is final before paint, so waiting for it to
-    // settle would just be a delay. That is the common case after the first visit.
+    // None of that applies when every tile's height was cached at the first layout (an earlier mount
+    // measured it): the layout is final before paint, so waiting for it to settle would just be a delay.
+    // That is the common case after the first visit.
     const [revealed, setRevealed] = useState(false);
-    const firstPass = useRef(true);
     useEffect(() => {
-      if (revealed) {
+      if (revealed || contentWidth <= 0) {
         return;
       }
-      // Nothing has been laid out until the viewport reports a width, so this does not count as the
-      // first pass — consuming it here would forfeit the fast path on every mount.
-      if (contentWidth <= 0) {
+      if (remembered) {
+        setRevealed(true);
         return;
       }
       if (!measured) {
-        firstPass.current = false;
-        return;
-      }
-      if (firstPass.current) {
-        setRevealed(true);
         return;
       }
       const timer = setTimeout(() => setRevealed(true), REVEAL_SETTLE_MS);
       return () => clearTimeout(timer);
-    }, [revealed, measured, rects, contentWidth]);
+    }, [revealed, measured, remembered, rects, contentWidth]);
     useEffect(() => {
       const deadline = setTimeout(() => setRevealed(true), REVEAL_DEADLINE_MS);
       return () => clearTimeout(deadline);

@@ -53,7 +53,9 @@ export const SpaceHomeDashboard = ({ space, stats = STAT_IDS, onClose }: SpaceHo
     'plugins': plugins,
   };
 
-  if (!space) {
+  // Held until the stats answer (a stored space always has at least its properties object), so the section
+  // neither shows zeros nor renders ahead of Recent and gets pushed down when Recent arrives.
+  if (!space || counts.length === 0) {
     return null;
   }
 
