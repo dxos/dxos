@@ -563,3 +563,42 @@ exchange — so the earlier split, which ended the invitation at `waitUntilReady
 loading to the wrong half. Both phases are now timed inside the replicant, so neither carries the
 RPC round trip nor the cost of spawning the peer; the summary reports space-available separately
 from object catch-up.
+
+## 8. Finding 6, root-caused (2026-10-09)
+
+**What the nightly hit.** Run `dvd4lfjhxc` (preview) failed at checkpoint 701: clients 0, 2 and 3 held
+`s1-d18` one edit behind clients 1 and 4. At 02:14:05 Cloudflare reset a replicator DO ("Internal
+error in Durable Object storage caused object to be reset"). The routers' cached sink stubs then
+threw "Durable Object instance is no longer active", and the clients of identities 0–2 and 4 had
+their sockets closed with `1011`. Client 5's edit (command 687, ~28 s later) was pushed only to the
+connections still subscribed to that document, which were those of clients 1 and 4. The reconnected
+clients re-subscribe only documents they hold resident, and the 30 s eviction had already dropped it.
+
+**Why it never healed.** `@automerge/automerge-subduction` 0.19.0 answers a pull without a commit
+whose parent heads a fragment the puller already holds. The missing commit `3e3fe7…` had parents
+`004655…` (a fragment head) and `229f2e…`, and client 0 held both. Its pulls returned "success, 0
+commits", and its storage still lacked the commit at the end of the run. A round the _holder_ starts
+does send it. Both behaviours are pinned in `echo-host/src/automerge/automerge-subduction.test.ts`.
+The 2026-09 reproductions (§4, finding 6) have the same shape: one commit missing, all of its
+parents present.
+
+**Reproduction.** In dxos/edge's
+`automerge-subduction.node.test.ts › a commit on a fragment head reaches a peer that missed its
+push`, peer2 edits until its head is a fragment boundary, peer1's socket is held off EDGE while
+peer2 commits on top of it, and then peer1 is let back. Without the fix, peer1 never converges.
+
+**Fix (both repos).** The client names documents that stay diverged at the same heads for a poll
+after their own resync in its collection query (`divergedDocumentIds`). EDGE's replicator then
+starts a round toward that client for each one. Old clients and old EDGE ignore the field.
+
+**Validation.**
+
+| check                                            | without fix | with fix               |
+| ------------------------------------------------ | ----------- | ---------------------- |
+| edge stress test: 40 objects, 3 reconnect rounds | fails ~70%  | 10/10                  |
+| deterministic edge test                          | fails       | 3/3                    |
+| dev soak, db-service redeployed twice mid-run    | —           | 800/800, `refused: []` |
+
+**Still open.** The fix belongs upstream in Subduction. Separately, a router whose cached sink stub
+hits a reset DO closes the client socket with `1011` instead of retrying once on a fresh stub.
+That is what turned one DO reset into four full reconnects.

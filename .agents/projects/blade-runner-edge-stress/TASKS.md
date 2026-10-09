@@ -110,9 +110,12 @@ blade-runner harness. Spec + decisions: [DESIGN.md](./DESIGN.md); what was measu
       after the breaking merge). No mechanism catches this automatically today. Out of scope for
       blade-runner to fix; flagging for whoever owns the release/catalog-bump process to judge
       whether it's worth a canary or a faster bump cadence.
-- [ ] **Finding 6** — a document is discovered but never delivered; five reproductions, two of them
-      in CI, one in the edge repo's own `automerge.node.test.ts`. This is what keeps the nightly soak
-      red, and it is a product defect, not a harness one.
+- [x] **Finding 6** — ROOT-CAUSED (RESULTS.md §8). Subduction answers a pull without a commit whose
+      parent heads a fragment the puller already holds; only a round the holder starts sends it. A lost
+      push of such a commit (reconnect, DO reset, unsubscribed document) therefore stranded the peer
+      one edit behind for good. Worked around in both repos: the client names documents still diverged
+      in its collection query (`divergedDocumentIds`) and EDGE syncs each one toward it. Upstream fix
+      still wanted in `@automerge/automerge-subduction` (pinned by `automerge-subduction.test.ts`).
 - [ ] **Finding 5** — `EdgeFeedReplicator`'s async `append` listener leaks an unhandled rejection,
       which is why `partitions` defaults to `false`. Un-defaulting it depends on that fix.
 - [ ] **Invitation latency** — the invitation half quantizes near 60s at 100 objects and is ~19s at
