@@ -59,11 +59,14 @@ export type TaskPropertiesProps = Util.ThemedClassName<{
  */
 export const TaskProperties = ({ task, members = [], onTaskUpdate, classNames }: TaskPropertiesProps) => {
   const { t } = Hooks.useTranslation(translationKey);
-  const [snapshot] = useObject(task);
-  const status = snapshot.status ?? 'todo';
-  const priority = snapshot.priority ?? undefined;
-  const estimate = snapshot.estimate ?? undefined;
-  const assignee = snapshot.assignee ?? undefined;
+  const [storedStatus] = useObject(task, 'status');
+  const [storedPriority] = useObject(task, 'priority');
+  const [storedEstimate] = useObject(task, 'estimate');
+  const [storedAssignee] = useObject(task, 'assignee');
+  const status = storedStatus ?? 'todo';
+  const priority = storedPriority ?? undefined;
+  const estimate = storedEstimate ?? undefined;
+  const assignee = storedAssignee ?? undefined;
 
   // The people the space knows, for the picker. Queried rather than read off refs: a contact's
   // target is not in memory on a cold load, and the picker must offer everyone, not only whoever

@@ -63,16 +63,7 @@ export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: Ta
   // so. A human-started task keeps the static glyph. A boolean atom, so an edit elsewhere on the
   // task does not re-render the glyph.
   const agentWorking = useAtomValue(
-    useMemo(
-      () =>
-        Atom.make((get) =>
-          Task.isAgentWorking({
-            status: get(Obj.atomProperty(task, 'status')),
-            assignee: get(Obj.atomProperty(task, 'assignee')),
-          }),
-        ),
-      [task],
-    ),
+    useMemo(() => Atom.make((get) => Task.isAgentWorking(get(Obj.atom(task)))), [task]),
   );
   const working = active ?? agentWorking;
   const { icon, classNames: iconClassNames } = working
