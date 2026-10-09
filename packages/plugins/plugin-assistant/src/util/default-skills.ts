@@ -14,7 +14,11 @@ import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
 
 import { AssistantSkill, PluginManagerSkill } from '#skills';
 
-export const defaultChatSkills = (contributed: readonly Pick<Skill.Definition, 'key'>[]): Ref.Ref<Skill.Skill>[] =>
+/** Only an extensible host contributes the plugin-manager skill; elsewhere its tools cannot run. */
+export const contributesPluginManager = (contributed: readonly Pick<Skill.Definition, 'key'>[]): boolean =>
+  contributed.some(({ key }) => key === PluginManagerSkill.key);
+
+const defaultChatSkills = (pluginManager: boolean): Ref.Ref<Skill.Skill>[] =>
   [
     AssistantSkill,
     DatabaseSkill,
@@ -22,10 +26,10 @@ export const defaultChatSkills = (contributed: readonly Pick<Skill.Definition, '
     SkillManagerSkill,
     AlarmSkill,
     PlanningSkill,
-    ...(contributed.some(({ key }) => key === PluginManagerSkill.key) ? [PluginManagerSkill] : []),
+    ...(pluginManager ? [PluginManagerSkill] : []),
   ].map(({ key }) => Ref.fromURI(Skill.registryURI(key)));
 
 export const bindChatDefaults = (
   binder: AiContext.Binder,
-  { chat, contributed }: { chat: Chat.Chat; contributed: readonly Pick<Skill.Definition, 'key'>[] },
-): Promise<void> => binder.bind({ skills: defaultChatSkills(contributed), objects: [Ref.make(chat)] });
+  { chat, pluginManager }: { chat: Chat.Chat; pluginManager: boolean },
+): Promise<void> => binder.bind({ skills: defaultChatSkills(pluginManager), objects: [Ref.make(chat)] });

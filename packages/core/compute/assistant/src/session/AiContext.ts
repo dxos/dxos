@@ -14,7 +14,7 @@ import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
 
 import * as Skill from '@dxos/compute/Skill';
-import { Resource } from '@dxos/context';
+import { type Context as DxContext, Resource } from '@dxos/context';
 import { Database, DXN, Feed, Obj, Query, type QueryResult, Ref, Type } from '@dxos/echo';
 import * as AtomEx from '@dxos/effect/AtomEx';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
@@ -108,6 +108,9 @@ export class Binder extends Resource {
 
   #pending?: Binding[];
 
+  /** Bumped by each held write, so only the latest resolution of the held bindings lands. */
+  #heldGeneration = 0;
+
   constructor(options: BinderOptions) {
     super();
     assertArgument(options.feed, 'options.feed', 'Feed is required');
@@ -164,23 +167,24 @@ export class Binder extends Resource {
       this.#pending = [];
       return;
     }
-    await this._follow();
+    await this._follow(this._ctx);
   }
 
   /**
-   * Stores the feed if it is not stored yet, writes the bindings held while it was not, then follows the
-   * feed like any other binder. A no-op for a binder that opened over a stored feed.
+   * Stores the feed if needed and writes the held bindings, which a failed write keeps for a retry; the
+   * binder then follows the feed in the background. A no-op over a feed that was stored at open.
    */
   async flush(): Promise<void> {
-    const pending = this.#pending;
-    if (!pending) {
+    const held = this.#pending;
+    if (!held) {
       return;
     }
-    this.#pending = undefined;
+    const ctx = this._ctx;
+    const count = held.length;
+    const { skills, objects } = this._reduce(held);
     if (!Obj.getDatabase(this._feed)) {
       await RuntimeProvider.runPromise(Effect.succeed(this._runtime))(Database.add(this._feed));
     }
-    const { skills, objects } = this._reduce(pending);
     if (skills.size > 0 || objects.size > 0) {
       await this._append(
         Obj.make(Binding, {
@@ -189,13 +193,20 @@ export class Binder extends Resource {
         }),
       );
     }
-    await this._follow();
+    this.#pending = undefined;
+    for (const binding of held.slice(count)) {
+      await this._append(binding);
+    }
+    void this._follow(ctx).catch((error) => log.catch(error));
   }
 
-  private async _follow(): Promise<void> {
+  private async _follow(ctx: DxContext): Promise<void> {
     const bindingsQuery = await RuntimeProvider.runPromise(Effect.succeed(this._runtime))(
       Feed.query(this._feed, Query.type(Binding)),
     );
+    if (ctx.disposed) {
+      return;
+    }
     this.#bindingsQuery = bindingsQuery;
 
     // Process initial state before returning.
@@ -204,7 +215,7 @@ export class Binder extends Resource {
     await this._updateBindings(initialResults);
 
     // Subscribe to future changes.
-    this._ctx.onDispose(
+    ctx.onDispose(
       bindingsQuery.subscribe(async () => {
         await this._updateBindings(bindingsQuery.results);
       }),
@@ -378,9 +389,31 @@ export class Binder extends Resource {
   private async _write(binding: Binding): Promise<void> {
     if (this.#pending) {
       this.#pending.push(binding);
+      await this._resolveHeld(this.#pending);
       return;
     }
     await this._append(binding);
+  }
+
+  /**
+   * Sets the atoms from the held bindings. Their refs have no feed query to hydrate them, so each is
+   * resolved against the database, which also spans the registry.
+   */
+  private async _resolveHeld(held: Binding[]): Promise<void> {
+    const generation = ++this.#heldGeneration;
+    const { db } = Context.get(this._runtime, Database.Service);
+    const { skills, objects } = this._reduce(held);
+    const hydrate = <T extends Obj.Unknown>(refs: Iterable<Ref.Ref<T>>): Ref.Ref<T>[] =>
+      [...refs].map((ref) => (ref.isAvailable ? ref : db.makeRef<T>(ref.uri)));
+    const [resolvedSkills, resolvedObjects] = await Promise.all([
+      this._resolve(hydrate(skills), this._registry.get(this._skills)),
+      this._resolve(hydrate(objects), this._registry.get(this._objects)),
+    ]);
+    if (generation !== this.#heldGeneration) {
+      return;
+    }
+    this._registry.set(this._skills, resolvedSkills);
+    this._registry.set(this._objects, resolvedObjects);
   }
 
   private async _append(binding: Binding): Promise<void> {

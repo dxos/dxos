@@ -14,7 +14,7 @@ import { Database, Feed, Ref } from '@dxos/echo';
 
 import { AssistantOperation } from '#types';
 
-import { bindChatDefaults } from '../util/default-skills.ts';
+import { bindChatDefaults, contributesPluginManager } from '../util/default-skills.ts';
 
 const handler: Operation.WithHandler<typeof AssistantOperation.CreateChat> = AssistantOperation.CreateChat.pipe(
   Operation.withHandler(
@@ -29,11 +29,11 @@ const handler: Operation.WithHandler<typeof AssistantOperation.CreateChat> = Ass
       const feed = db.add(Feed.make());
       const chat = Chat.make({ name, feed: Ref.make(feed), instructions });
 
-      const contributed = yield* Capability.getAll(AppCapabilities.SkillDefinition);
+      const pluginManager = contributesPluginManager(yield* Capability.getAll(AppCapabilities.SkillDefinition));
 
       const runtime = yield* Effect.context<Database.Service>();
       const binder = new AiContext.Binder({ feed, runtime, registry });
-      yield* Effect.promise(() => binder.use((b: AiContext.Binder) => bindChatDefaults(b, { chat, contributed })));
+      yield* Effect.promise(() => binder.use((b: AiContext.Binder) => bindChatDefaults(b, { chat, pluginManager })));
 
       return { object: chat };
     }),

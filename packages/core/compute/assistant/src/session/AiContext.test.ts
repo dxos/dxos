@@ -111,6 +111,23 @@ describe('AiContext.Binder', () => {
       .pipe(Effect.runPromise);
   });
 
+  test('a binder over an unstored feed resolves a ref bound by URI', async ({ expect }) => {
+    await Effect.gen(function* () {
+      const runtime = yield* Effect.context<Database.Service>();
+      const skill = yield* Database.add(Skill.make({ key: 'org.dxos.skill.local', name: 'Local' }));
+
+      const binder = new AiContext.Binder({ feed: Feed.make(), runtime });
+      yield* Effect.promise(() => binder.open());
+      yield* Effect.promise(() => binder.bind({ skills: [Ref.fromURI(Obj.getURI(skill))] }));
+      const skills = binder.getSkills();
+      yield* Effect.promise(() => binder.close());
+
+      expect(skills.map((bound) => Obj.getURI(bound))).toEqual([Obj.getURI(skill)]);
+    })
+      .pipe(Effect.provide(TestLayer))
+      .pipe(Effect.runPromise);
+  });
+
   // Run between agent turns: a rejected re-read used to fail the whole agent process.
   test('a sync whose query fails keeps the current bindings', async ({ expect }) => {
     await Effect.gen(function* () {

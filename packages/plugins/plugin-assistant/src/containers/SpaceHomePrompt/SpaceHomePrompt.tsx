@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import type * as AtomRegistry from 'effect/reactivity/AtomRegistry';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Hooks from '@dxos/app-framework/Hooks';
@@ -13,8 +13,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AiContext } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import { Event } from '@dxos/async';
-import type * as Skill from '@dxos/compute/Skill';
-import { Database, Feed, Ref } from '@dxos/echo';
+import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import { type Space, useRegistry } from '@dxos/react-client/echo';
@@ -26,7 +25,7 @@ import { meta } from '#meta';
 import { AssistantCapabilities } from '#types';
 
 import { getChatPath } from '../../paths.ts';
-import { bindChatDefaults } from '../../util/default-skills.ts';
+import { bindChatDefaults, contributesPluginManager } from '../../util/default-skills.ts';
 
 type SpaceScopedProps = {
   space?: Space;
@@ -38,7 +37,7 @@ export const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
   const registry = useRegistry();
   const atomRegistry = Hooks.useCapability(Capabilities.AtomRegistry);
   const settings = Hooks.useAtomCapability(AssistantCapabilities.Settings);
-  const skillDefinitions = Hooks.useCapabilities(AppCapabilities.SkillDefinition);
+  const pluginManager = contributesPluginManager(Hooks.useCapabilities(AppCapabilities.SkillDefinition));
 
   const [draftGeneration, setDraftGeneration] = useState(0);
   const draft = useMemo(() => {
@@ -49,11 +48,11 @@ export const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
     return { feed, chat: Chat.make({ feed: Ref.make(feed) }) };
   }, [space, draftGeneration]);
   const chat = draft?.chat;
-  const context = useDraftContext({ db: space?.db, draft, registry: atomRegistry, skillDefinitions });
+  const context = useDraftContext({ db: space?.db, draft, registry: atomRegistry, pluginManager });
   const { preset, ...presetProps } = usePresets(settings, chat);
 
   const startNewDraft = useCallback(() => setDraftGeneration((current) => current + 1), []);
-  const event = useDraftSend({ space, chat, context, onSettled: startNewDraft });
+  const event = useDraftSend({ space, draft, context, onSent: startNewDraft });
 
   if (!space) {
     return null;
@@ -78,30 +77,31 @@ SpaceHomePrompt.displayName = 'SpaceHomePrompt';
 
 type UseDraftSendProps = {
   space?: Space;
-  chat?: Chat.Chat;
+  draft?: { feed: Feed.Feed; chat: Chat.Chat };
   context?: AiContext.Binder;
-  onSettled: () => void;
+  onSent: () => void;
 };
 
-const useDraftSend = ({ space, chat, context, onSettled }: UseDraftSendProps) => {
+/** Stores the draft's chat and bindings, then opens it; a failed send removes what it stored and restores the text. */
+const useDraftSend = ({ space, draft, context, onSent }: UseDraftSendProps) => {
   const { invokePromise } = Hooks.useOperationInvoker();
   const atomRegistry = Hooks.useCapability(Capabilities.AtomRegistry);
   const stateAtom = Hooks.useCapability(AssistantCapabilities.State);
   const event = useMemo(() => new Event<ChatEvent>(), []);
-  const submitting = useRef(false);
   useEffect(() => {
     return event.on((ev) => {
       if (ev.type !== 'submit') {
         return;
       }
       const text = ev.text.trim();
-      if (!space || !chat || !context || text.length === 0 || submitting.current) {
+      if (!space || !draft || !context || text.length === 0) {
         return;
       }
-      submitting.current = true;
 
+      const { feed, chat } = draft;
       space.db.add(chat);
       const chatPath = getChatPath(space.db.spaceId, chat.id);
+      onSent();
       void context
         .flush()
         .then(() => {
@@ -111,13 +111,16 @@ const useDraftSend = ({ space, chat, context, onSettled }: UseDraftSendProps) =>
           }));
           void invokePromise(LayoutOperation.Open, { subject: [chatPath] });
         })
-        .catch((err) => log.catch(err))
-        .finally(() => {
-          submitting.current = false;
-          onSettled();
+        .catch((err) => {
+          log.catch(err);
+          space.db.remove(chat);
+          if (Obj.getDatabase(feed)) {
+            space.db.remove(feed);
+          }
+          event.emit({ type: 'update-prompt', text });
         });
     });
-  }, [event, space, chat, context, atomRegistry, stateAtom, invokePromise, onSettled]);
+  }, [event, space, draft, context, atomRegistry, stateAtom, invokePromise, onSent]);
   return event;
 };
 
@@ -125,10 +128,10 @@ type UseDraftContextProps = {
   db?: Database.Database;
   draft?: { feed: Feed.Feed; chat: Chat.Chat };
   registry: AtomRegistry.AtomRegistry;
-  skillDefinitions: readonly Skill.Definition[];
+  pluginManager: boolean;
 };
 
-const useDraftContext = ({ db, draft, registry, skillDefinitions }: UseDraftContextProps) => {
+const useDraftContext = ({ db, draft, registry, pluginManager }: UseDraftContextProps) => {
   const [context, setContext] = useState<AiContext.Binder>();
   UiHooks.useAsyncEffect(
     async (controller) => {
@@ -140,7 +143,7 @@ const useDraftContext = ({ db, draft, registry, skillDefinitions }: UseDraftCont
       );
       const binder = new AiContext.Binder({ feed: draft.feed, runtime, registry });
       await binder.open();
-      await bindChatDefaults(binder, { chat: draft.chat, contributed: skillDefinitions });
+      await bindChatDefaults(binder, { chat: draft.chat, pluginManager });
       if (controller.signal.aborted) {
         void binder.close();
         return;
@@ -151,7 +154,7 @@ const useDraftContext = ({ db, draft, registry, skillDefinitions }: UseDraftCont
         void binder.close();
       };
     },
-    [db, draft, registry, skillDefinitions],
+    [db, draft, registry, pluginManager],
   );
   return context;
 };
