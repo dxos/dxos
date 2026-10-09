@@ -45,8 +45,14 @@ export type ComputeNodeSpec<S extends ComputeShape> = Pick<
   ports: (shape: S) => readonly Port[];
 };
 
-/** A size in scene px as nominal units, so a new node lands at that px size on a drawing with the default grid. */
-const toNominal = ({ width, height }: Size): Size => ({ width: width / DEFAULT_CELL, height: height / DEFAULT_CELL });
+/**
+ * A size in scene px as nominal units (major cells) to the nearest half cell, so a new node lands close to that px
+ * size and its edges on the grid.
+ */
+const toNominal = ({ width, height }: Size): Size => ({
+  width: Math.round((width / DEFAULT_CELL) * 2) / 2,
+  height: Math.round((height / DEFAULT_CELL) * 2) / 2,
+});
 
 /** A compute shape's node definition. */
 export const defineComputeNode = <S extends ComputeShape>({

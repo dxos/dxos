@@ -21,9 +21,12 @@ export const SurfaceComponent = ({ node: shape }: ComputeNodeViewProps<SurfaceSh
   // TODO(burdon): Subject property?
   return (
     <Box shape={shape}>
-      <Card.Root grid>
-        {value !== null && <Surface.Surface type={AppSurface.CardContent} data={{ subject: value }} limit={1} />}
-      </Card.Root>
+      {/* No card until the input has a value: an empty one is a bare frame with nothing in it. */}
+      {value !== null && (
+        <Card.Root grid>
+          <Surface.Surface type={AppSurface.CardContent} data={{ subject: value }} limit={1} />
+        </Card.Root>
+      )}
     </Box>
   );
 };
