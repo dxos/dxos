@@ -208,26 +208,22 @@ const FeedTraceSinkSpec = LayerSpec.make(
 );
 
 /**
- * Space-scoped remote operation invoker (EDGE). When edge agents are enabled
- * (`runtime.client.edgeFeatures.agents`) operations are invoked without a space
- * binding (the edge routes them); otherwise they are scoped to the space. The
- * config is read inside the factory — at slice-materialisation time, once
- * `ClientService` is available — so the owning module does not need the client
- * at activation time.
+ * Application-scoped remote operation invoker (EDGE): what an `on: 'edge'` invocation runs through, one request to
+ * EDGE's operation host rather than a spawned process. Each call names its space, so one instance serves every
+ * space. Uses EDGE whenever an edge service is configured, otherwise a no-op that refuses the call.
  */
 const RemoteOperationInvokerSpec = LayerSpec.make(
   {
-    affinity: 'space',
+    affinity: 'application',
     requires: [ClientService],
     provides: [RemoteOperationInvoker.Service],
   },
-  (context) =>
+  () =>
     Layer.unwrap(
       Effect.gen(function* () {
-        invariant(context.space, 'space context required for RemoteOperationInvoker');
         const client = yield* ClientService;
-        const edgeAgents = client.config.get('runtime.client.edgeFeatures.agents');
-        return EdgeOperationInvoker.fromClient(client, edgeAgents ? undefined : context.space);
+        const edgeUrl = client.config.values.runtime?.services?.edge?.url;
+        return edgeUrl ? EdgeOperationInvoker.fromClient(client) : RemoteOperationInvoker.layerNoop;
       }),
     ),
 );

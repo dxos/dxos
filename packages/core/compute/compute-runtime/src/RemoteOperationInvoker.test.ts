@@ -13,7 +13,7 @@ import * as RemoteOperationInvoker from './RemoteOperationInvoker.ts';
 describe('RemoteOperationInvoker', () => {
   test('resolves the Service tag from a provided layer', async ({ expect }) => {
     const stub: RemoteOperationInvoker.Invoker = {
-      invoke: <I, O>(_ctx: DxosContext, _deployedId: string, input: I) => Effect.succeed(input as unknown as O),
+      invoke: (_ctx: DxosContext, _deployedId: string, input: unknown) => Effect.succeed(input),
     };
     const program = Effect.gen(function* () {
       const invoker = yield* RemoteOperationInvoker.Service;
