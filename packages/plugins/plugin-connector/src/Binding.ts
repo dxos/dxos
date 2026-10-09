@@ -32,7 +32,6 @@ import { connectionDeckSubject } from './constants.ts';
 import {
   ConnectionAuthExpiredError,
   ConnectionSyncError,
-  SyncRoutineDisabledError,
   SyncRoutineMissingError,
   TargetAccountMismatchError,
   isUnauthorizedError,
@@ -531,7 +530,7 @@ export const runSync = ({
   priority?: string;
 }): Effect.Effect<
   void,
-  ConnectionSyncError | SyncRoutineMissingError | SyncRoutineDisabledError,
+  ConnectionSyncError | SyncRoutineMissingError | Trigger.TriggerDisabledError,
   Database.Service | Operation.Service | Capability.Service
 > =>
   Effect.gen(function* () {
@@ -554,6 +553,8 @@ export const runSync = ({
             ? Effect.sync(() => log.info('sync capped; more on next run', { connectorId: connector.id }))
             : Effect.die(defect),
         ),
+        // A missing sync handler means the sync never started; the connector is the only context a caller can act on.
+        Effect.mapError((cause) => new ConnectionSyncError({ connectorId: connector.id, cause })),
       );
     }
 
@@ -562,20 +563,31 @@ export const runSync = ({
       return yield* Effect.fail(new SyncRoutineMissingError({ connectorId: connector.id }));
     }
 
-    yield* fireTrigger(trigger, priority ? { priority } : undefined).pipe(
-      Effect.provide(triggerMonitorLayer(spaceId)),
-      Effect.catchTag('TriggerDisabledError', () =>
-        Effect.fail(new SyncRoutineDisabledError({ connectorId: connector.id })),
+    yield* fireSyncTrigger({ trigger, connectorId: connector.id, spaceId, priority });
+  });
+
+/**
+ * {@link fireTrigger} through the space's monitor. A monitor that cannot be resolved means the sync never started
+ * ({@link ConnectionSyncError}); a switched-off trigger fails as itself so UI callers can point at its routine.
+ */
+const fireSyncTrigger = ({
+  trigger,
+  connectorId,
+  spaceId,
+  priority,
+}: {
+  trigger: Trigger.Trigger;
+  connectorId: string;
+  spaceId: Key.SpaceId;
+  priority?: string;
+}): Effect.Effect<void, ConnectionSyncError | Trigger.TriggerDisabledError, Capability.Service> =>
+  fireTrigger(trigger, priority ? { priority } : undefined).pipe(
+    Effect.provide(
+      triggerMonitorLayer(spaceId).pipe(
+        Layer.catch((cause) =>
+          Layer.effect(Trigger.ManagerService, Effect.fail(new ConnectionSyncError({ connectorId, cause }))),
+        ),
       ),
-    );
-  }).pipe(
-    // A missing sync handler or an unresolvable trigger monitor both mean the sync never started; the
-    // connector is the only context a caller can act on. A missing or switched-off routine stays
-    // distinct so callers can offer the create-routine form or point at the routine instead.
-    Effect.mapError((cause) =>
-      cause instanceof SyncRoutineMissingError || cause instanceof SyncRoutineDisabledError
-        ? cause
-        : new ConnectionSyncError({ connectorId: connector.id, cause }),
     ),
   );
 
@@ -617,12 +629,12 @@ export const syncOrOfferRoutine = ({
           // for the dialog already — it should not also wait out the first sync.
           Effect.runFork(
             syncCreatedRoutine({ created, connector, spaceId: db.spaceId, priority }).pipe(
-              Effect.catchTag('SyncRoutineDisabledError', () => reportSyncRoutineDisabled(db.spaceId)),
+              Effect.catchTag('TriggerDisabledError', () => reportSyncRoutineDisabled(db.spaceId)),
               Effect.provideService(Operation.Service, invoker),
               Effect.provideService(Capability.Service, capabilities),
               Effect.catch((error) => Effect.sync(() => log.warn('sync after routine created failed', { error }))),
-              // An EDGE force-run that outlives its replication backoff arrives as a defect
-              // (`Effect.orDie`), which the typed catch above would let escape unreported.
+              // A force-run EDGE fails other than as switched off arrives as a defect, which the typed
+              // catch above would let escape unreported.
               Effect.catchDefect((defect) =>
                 Effect.sync(() => log.warn('sync after routine created died', { defect })),
               ),
@@ -631,7 +643,7 @@ export const syncOrOfferRoutine = ({
         }
       }).pipe(Effect.catch((error) => Effect.sync(() => log.warn('offer sync routine failed', { error })))),
     ),
-    Effect.catchTag('SyncRoutineDisabledError', () => reportSyncRoutineDisabled(db.spaceId)),
+    Effect.catchTag('TriggerDisabledError', () => reportSyncRoutineDisabled(db.spaceId)),
     Effect.provide(Database.layer(db)),
   );
 
@@ -655,7 +667,7 @@ const reportSyncRoutineDisabled = (spaceId: Key.SpaceId): Effect.Effect<void, ne
           workspace: GraphPath.getSpacePath(spaceId),
         }),
     });
-  }).pipe(Effect.ignore);
+  }).pipe(Effect.catch((error) => Effect.sync(() => log.warn('sync routine disabled toast failed', { error }))));
 
 /**
  * Runs the sync the user asked for by saving the offered create-routine form — the Sync button's
@@ -665,7 +677,7 @@ const reportSyncRoutineDisabled = (spaceId: Key.SpaceId): Effect.Effect<void, ne
  * write, so {@link findTrigger} called this early reports the Routine as missing — which is what
  * silently dropped this sync. Nothing re-opens the dialog from here either; a save that somehow
  * produced no trigger logs and stops, rather than looping the user back into the form. A routine saved
- * switched off fails with {@link SyncRoutineDisabledError}.
+ * switched off fails with {@link Trigger.TriggerDisabledError}.
  */
 export const syncCreatedRoutine = ({
   created,
@@ -677,7 +689,7 @@ export const syncCreatedRoutine = ({
   connector: ConnectorSpec.ConnectorEntry;
   spaceId: Key.SpaceId;
   priority?: string;
-}): Effect.Effect<void, ConnectionSyncError | SyncRoutineDisabledError, Capability.Service> =>
+}): Effect.Effect<void, ConnectionSyncError | Trigger.TriggerDisabledError, Capability.Service> =>
   Effect.gen(function* () {
     const trigger = Obj.instanceOf(Routine.Routine, created) ? triggerOfRoutine(created) : undefined;
     if (!trigger) {
@@ -685,17 +697,7 @@ export const syncCreatedRoutine = ({
       return;
     }
 
-    yield* fireTrigger(trigger, priority ? { priority } : undefined).pipe(
-      Effect.provide(triggerMonitorLayer(spaceId)),
-      Effect.catchTag('TriggerDisabledError', () =>
-        Effect.fail(new SyncRoutineDisabledError({ connectorId: connector.id })),
-      ),
-      Effect.mapError((cause) =>
-        cause instanceof SyncRoutineDisabledError
-          ? cause
-          : new ConnectionSyncError({ connectorId: connector.id, cause }),
-      ),
-    );
+    yield* fireSyncTrigger({ trigger, connectorId: connector.id, spaceId, priority });
   });
 
 /**

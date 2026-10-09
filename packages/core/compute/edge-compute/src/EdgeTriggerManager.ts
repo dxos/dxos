@@ -35,19 +35,22 @@ const POLL_INTERVAL = Duration.seconds(15);
  * Backoff for a force-run that reaches EDGE before the client's state has caught up there
  * (~31s total across 5 retries): a trigger created client-side is force-run immediately by the UI,
  * so the first attempt can lose the race — against replication of the trigger itself (rejected as
- * not found) or against the identity being associated with an account. Every failure but a 409 is
- * retried rather than a specific code, since EDGE spells these races several ways; a 409 means EDGE
- * has the trigger and refuses to run it, which no wait fixes.
+ * not found) or against the identity being associated with an account. Every failure is retried rather
+ * than a specific code, since EDGE spells these races several ways, except a 409 refusal (EDGE has the
+ * trigger and will not run it). A 409 "Trigger disabled" is still retried: a trigger only reaches here
+ * enabled locally, so EDGE's copy is lagging a re-enable.
  *
  * TODO(dmaretskyi): Remove once the client can await replication of the trigger to EDGE.
  */
 const REPLICATION_BACKOFF = Schedule.exponential(Duration.seconds(1), 2).pipe(Schedule.upTo({ times: 5 }));
 
+/** EDGE's 409 message for a switched-off trigger (`FORCE_RUN_REFUSED.disabled` in compute-service). */
+const TRIGGER_DISABLED_MESSAGE = 'Trigger disabled';
+
 const isRefusal = (error: unknown): error is EdgeCallFailedError =>
   error instanceof EdgeCallFailedError && error.status === 409;
 
-/** EDGE's 409 message for a switched-off trigger (`FORCE_RUN_REFUSED.disabled` in compute-service). */
-const TRIGGER_DISABLED_MESSAGE = 'Trigger disabled';
+const isDisabledRefusal = (error: unknown): boolean => isRefusal(error) && error.message === TRIGGER_DISABLED_MESSAGE;
 
 /**
  * EDGE implementation of {@link RemoteTriggerManager.Service}.
@@ -114,11 +117,14 @@ const make = (
           Effect.tapError((error) =>
             Effect.sync(() => log.warn('edge force-run failed', { triggerId: options.trigger.id, error })),
           ),
-          Effect.retry({ schedule: REPLICATION_BACKOFF, while: (error) => !isRefusal(error) }),
+          Effect.retry({
+            schedule: REPLICATION_BACKOFF,
+            while: (error) => !isRefusal(error) || isDisabledRefusal(error),
+          }),
           Effect.asVoid,
-          // EDGE disables a trigger itself after repeated failures, so it can know before the local copy does.
+          // Still disabled once the backoff is spent: EDGE disabled it itself, ahead of the local copy.
           Effect.catch((error) =>
-            isRefusal(error) && error.message === TRIGGER_DISABLED_MESSAGE
+            isDisabledRefusal(error)
               ? Effect.fail(new Trigger.TriggerDisabledError(options.trigger.id))
               : Effect.die(error),
           ),

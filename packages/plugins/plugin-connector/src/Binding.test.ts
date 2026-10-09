@@ -38,7 +38,7 @@ import { ConnectorSpec } from '#types';
 
 import * as Binding from './Binding.ts';
 import { autoSyncConnection } from './capabilities/connector-coordinator/auto-sync.ts';
-import { ConnectionAuthExpiredError, SyncRoutineDisabledError, TargetAccountMismatchError } from './errors.ts';
+import { ConnectionAuthExpiredError, TargetAccountMismatchError } from './errors.ts';
 /**
  * The binding namespace: pairing an object with the feed a connection syncs into it, the account that
  * gates a resume, the schedule that drives it, and what a disconnect leaves behind.
@@ -316,7 +316,7 @@ describe('Binding.sync', () => {
       EffectEx.runPromise,
     );
 
-    expect(error).toBeInstanceOf(SyncRoutineDisabledError);
+    expect(error).toBeInstanceOf(Trigger.TriggerDisabledError);
     expect(fired).toEqual([]);
   });
 

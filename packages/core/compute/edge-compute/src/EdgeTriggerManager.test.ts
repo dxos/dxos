@@ -77,7 +77,24 @@ describe('EdgeTriggerManager', () => {
     }),
   );
 
-  it.effect('stops at once when edge refuses a disabled trigger', () =>
+  it.effect('retries a disabled refusal while edge catches up with a re-enable', () =>
+    Effect.gen(function* () {
+      const edgeClient = new EdgeHttpClient('https://edge.example.com');
+      vi.spyOn(edgeClient, 'getSpaceTriggers').mockResolvedValue({ isActive: true, triggers: [] });
+      const forceRun = vi
+        .spyOn(edgeClient, 'forceRunCronTrigger')
+        .mockRejectedValueOnce(refusedError('Trigger disabled'))
+        .mockResolvedValue(undefined);
+
+      const fiber = yield* forkInvoke(edgeClient);
+      yield* TestClock.adjust('5 seconds');
+
+      expect(Exit.isSuccess(yield* Effect.exit(Fiber.join(fiber)))).toBe(true);
+      expect(forceRun).toHaveBeenCalledTimes(2);
+    }),
+  );
+
+  it.effect('reports a trigger edge still refuses as disabled once the backoff is spent', () =>
     Effect.gen(function* () {
       const edgeClient = new EdgeHttpClient('https://edge.example.com');
       vi.spyOn(edgeClient, 'getSpaceTriggers').mockResolvedValue({ isActive: true, triggers: [] });
@@ -87,7 +104,7 @@ describe('EdgeTriggerManager', () => {
       yield* TestClock.adjust('120 seconds');
 
       expect(yield* Effect.flip(Fiber.join(fiber))).toBeInstanceOf(Trigger.TriggerDisabledError);
-      expect(forceRun).toHaveBeenCalledTimes(1);
+      expect(forceRun).toHaveBeenCalledTimes(6);
     }),
   );
 
