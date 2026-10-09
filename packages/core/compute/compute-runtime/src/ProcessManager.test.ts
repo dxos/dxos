@@ -1413,6 +1413,20 @@ describe('ProcessOperationInvoker edge dispatch', () => {
   );
 
   it.effect(
+    'refuses an on:edge invocation whose conversation or notify the remote call cannot carry',
+    Effect.fn(function* ({ expect }) {
+      const locations: Array<Process.Location | undefined> = [];
+      const calls: Array<{ deployedId: string; input: unknown; spaceId?: Key.SpaceId }> = [];
+      const invoker = yield* makeRecordingInvoker(locations, makeRemote(calls));
+      const conversation = Key.URI.make('echo://BBBBBBBBBBBBBBBBBBBBBBBBBB/01JTESTCONVERSATION00000000');
+      const exit = yield* invoker.invoke(Double, { value: 1 }, { on: 'edge', spaceId, conversation }).pipe(Effect.exit);
+      expect(Exit.hasDies(exit)).toEqual(true);
+      expect(calls).toEqual([]);
+      expect(locations).toEqual([]);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
     'schedules on:edge invocations through the remote invoker too',
     Effect.fn(function* ({ expect }) {
       const locations: Array<Process.Location | undefined> = [];

@@ -106,7 +106,11 @@ export const make = ({
       }),
     );
 
-  /** The output of `op`, run on EDGE through `remote`; input and output cross the wire in their encoded form. */
+  /**
+   * The output of `op`, run on EDGE through `remote`; input and output cross the wire in their encoded form. The
+   * request carries only the space: a call that needs its `conversation` or `notify` is refused rather than run
+   * without them, and `tracing` (trace grouping only) is not forwarded.
+   */
   const invokeRemote = <I, O>(
     op: Operation.Definition<I, O>,
     input: I,
@@ -114,6 +118,11 @@ export const make = ({
     invoker: Effect.Effect<RemoteOperationInvoker.Invoker>,
   ): Effect.Effect<O> =>
     Effect.gen(function* () {
+      if (options.conversation !== undefined || options.notify !== undefined) {
+        return yield* Effect.die(
+          new Error(`Operation '${op.meta.key}' cannot run on EDGE with a conversation or notify option.`),
+        );
+      }
       const encoded = yield* Schema.encodeEffect(op.input)(input).pipe(Effect.orDie);
       const output = yield* (yield* invoker).invoke(DxosContext.default(), String(op.meta.key), encoded, {
         spaceId: options.spaceId,
