@@ -170,7 +170,8 @@ export const useFormHandler = <T extends AnyProperties>({
       }
 
       let errors: ValidationError[] = validateSchema(schema, values) ?? [];
-      log('validate', { values, errors });
+      // Never log values or error messages: fields may hold secrets (passwords, API keys) and messages can echo them.
+      log('validate', { valid: errors.length === 0, errorPaths: errors.map((error) => error.path) });
       if (errors.length === 0 && onValidate) {
         const validatedValues = values as T;
         errors = onValidate(validatedValues) ?? [];
@@ -303,7 +304,7 @@ export const useFormHandler = <T extends AnyProperties>({
 
   const onValueChange = useCallback<FormHandler<T>['onValueChange']>(
     (path, type, value) => {
-      log('onValueChange', { path, value });
+      log('onValueChange', { path });
 
       const jsonPath = SchemaEx.createJsonPath(path);
       const pathArray = path;
