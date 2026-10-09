@@ -6,7 +6,7 @@
 
 import { next as A } from '@automerge/automerge';
 
-import { Doc, createObject, getObjectCore, isEchoObject } from '@dxos/echo-client';
+import { Doc, createObject, getObjectCore, isEchoObject, loadDocument } from '@dxos/echo-client';
 import { type AnyProperties, isProxy } from '@dxos/echo/internal';
 import { assertArgument } from '@dxos/invariant';
 
@@ -38,6 +38,20 @@ export const createAccessor = <T extends AnyProperties>(
 
   const live: AnyProperties = isEchoObject(obj) ? obj : createObject(obj);
   return getObjectCore(live).getDocAccessor(keyPath);
+};
+
+/**
+ * Like {@link createAccessor}, once the object's document has loaded, so what reads the document itself
+ * (cursors, heads, patch subscriptions) works on an object a lazy query backed by the index's copy.
+ */
+export const loadAccessor = async <T extends AnyProperties>(
+  obj: T,
+  path: KeyPath | Extract<keyof T, string | number>,
+): Promise<Accessor<T>> => {
+  if (isEchoObject(obj)) {
+    await loadDocument(obj);
+  }
+  return createAccessor(obj, path);
 };
 
 /**

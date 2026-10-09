@@ -7,6 +7,7 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout, sleep, waitForCondition } from '@dxos/async';
+import { Context } from '@dxos/context';
 import {
   Aggregate,
   Annotation,
@@ -26,7 +27,7 @@ import {
   Type,
   View,
 } from '@dxos/echo';
-import { DatabaseImpl, type EchoDatabase } from '@dxos/echo-client';
+import { DatabaseImpl, DocumentNotLoadedError, type EchoDatabase, loadDocument } from '@dxos/echo-client';
 import { EchoTestBuilder, type EchoTestPeer, createTmpPath, getObjectCore } from '@dxos/echo-client/testing';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
@@ -4330,20 +4331,22 @@ describe('Query', () => {
   });
 
   /** A database reopened from storage, so the tab holds none of these objects' documents. */
-  const openReloaded = async (
-    populate: (db: EchoDatabase) => Entity.Any[],
-  ): Promise<{ db: DatabaseImpl; ids: string[] }> => {
+  const openReloaded = async (populate: (db: EchoDatabase) => Entity.Any[]) => {
     const reloadBuilder = new EchoTestBuilder();
     onTestFinished(async () => {
       await reloadBuilder.close();
     });
     const { peer, db: initialDb } = await reloadBuilder.createDatabase();
+    invariant(initialDb instanceof DatabaseImpl);
     const ids = populate(initialDb).map((object) => object.id);
     await initialDb.flush({ secondaryIndexes: true });
+    const documentIds = new Map(
+      ids.map((id) => [id, initialDb.getObjectCoreById(id, { load: false })?.docHandle?.documentId]),
+    );
     await peer.reload();
     const db = await peer.openLastDatabase();
     invariant(db instanceof DatabaseImpl);
-    return { db, ids };
+    return { db, ids, peer, documentIds };
   };
 
   const isLoaded = (db: DatabaseImpl, id: string) => db.getObjectCoreById(id, { load: false }) !== undefined;
@@ -4525,6 +4528,67 @@ describe('Query', () => {
       const [result] = await db.query(Query.select(Filter.type(TestSchema.Expando)).options({ lazy: true })).run();
       expect(result).toBe(object);
       expect(hasDocument(db, object.id)).toBe(true);
+    });
+
+    test('a write is visible at once, loads the document, and persists there', async () => {
+      const { db, peer } = await openReloaded((db) => [db.add(createTestObject({ value: 1 }))]);
+      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando)).options({ lazy: true })).run();
+      expect(hasDocument(db, object.id)).toBe(false);
+
+      Obj.update(object, (object) => {
+        object.value = 2;
+      });
+      expect(object.value).toBe(2);
+
+      await db.flush();
+      expect(hasDocument(db, object.id)).toBe(true);
+      expect(db.getObjectById(object.id)).toBe(object);
+      expect(object.value).toBe(2);
+
+      await peer.reload();
+      const reloaded = await peer.openLastDatabase();
+      const [persisted] = await reloaded.query(Query.select(Filter.id(object.id))).run();
+      expect(persisted.value).toBe(2);
+    });
+
+    test('a write replays at the heads its snapshot was read at, merging with later document changes', async () => {
+      const { db, peer, documentIds } = await openReloaded((db) => [
+        db.add(Obj.make(TestSchema.Expando, { tags: ['a'] })),
+      ]);
+      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando)).options({ lazy: true })).run();
+
+      // A change the tab has not seen: another writer puts an element ahead of the one the tab removes.
+      const documentId = documentIds.get(object.id);
+      invariant(documentId);
+      using lease = await peer.host.automergeHost.loadDoc<DatabaseDirectory>(Context.default(), documentId);
+      invariant(lease);
+      lease.change((doc) => {
+        doc.objects![object.id].data.tags.unshift('host');
+      });
+      await peer.host.automergeHost.flush(Context.default());
+
+      // Index 0 is `a` in the snapshot the tab holds, and `host` in the document by now.
+      Obj.update(object, (object) => {
+        object.tags.splice(0, 1);
+      });
+      expect([...object.tags]).toEqual([]);
+
+      await db.flush();
+      expect(hasDocument(db, object.id)).toBe(true);
+      expect([...object.tags]).toEqual(['host']);
+    });
+
+    test('what reads the document waits for it to load; writes do not', async () => {
+      const { db } = await openReloaded((db) => [db.add(createTestObject({ value: 1 }))]);
+      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando)).options({ lazy: true })).run();
+
+      const accessor = getObjectCore(object).getDocAccessor(['value']);
+      expect(() => accessor.handle.doc()).toThrow(DocumentNotLoadedError);
+      expect(() => accessor.handle.changeAt([], () => {})).toThrow(DocumentNotLoadedError);
+
+      await loadDocument(object);
+      expect(hasDocument(db, object.id)).toBe(true);
+      expect(A.getHeads(accessor.handle.doc()).length).toBeGreaterThan(0);
     });
 
     test('a later index row updates the object in place and notifies; an earlier one is ignored', async () => {

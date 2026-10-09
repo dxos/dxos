@@ -57,6 +57,7 @@ export {
   getObjectOnBranch,
   initEchoReactiveObjectRootProxy,
   isEchoObject,
+  loadDocument,
   matchKeys,
   mergeBranch,
   switchBranch,

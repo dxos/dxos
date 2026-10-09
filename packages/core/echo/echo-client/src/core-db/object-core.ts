@@ -32,6 +32,7 @@ import { ComplexMap, defer, getDeep, setDeep, throwUnhandledError } from '@dxos/
 
 import * as Doc from '../automerge/Doc.ts';
 import { type DocHandleProxy } from '../automerge/index.ts';
+import { DocumentNotLoadedError } from '../errors.ts';
 import { docChangeSemaphore } from './doc-semaphore.ts';
 import { type DecodedAutomergePrimaryValue, type GetObjectCoreByIdOptions, TargetKey } from './types.ts';
 
@@ -44,6 +45,8 @@ import { type DecodedAutomergePrimaryValue, type GetObjectCoreByIdOptions, Targe
 export interface IDatabaseBinding {
   readonly spaceId: SpaceId;
   getObjectCoreById(id: string, opts?: GetObjectCoreByIdOptions): ObjectCore | undefined;
+  /** Loads a snapshot-backed core's document and moves the core onto it, replaying its queued writes. */
+  promote(core: ObjectCore): Promise<void>;
 }
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
@@ -117,6 +120,15 @@ export class ObjectCore {
 
   /** Set while the object is backed by the index's copy instead of a document. */
   public snapshot?: ObjectSnapshot = undefined;
+
+  /**
+   * Writes made to a snapshot-backed core, in order, waiting for its document: each is the change
+   * callback a bound write would have run, replayed at the snapshot's heads once the document loads.
+   */
+  #writeQueue: ChangeFn<any>[] = [];
+
+  /** The snapshot with the queued writes applied, so reads see them before the document loads. */
+  #scratch: AutomergeDoc<ObjectSnapshot['root']> | undefined = undefined;
 
   /**
    * Key path at where we are mounted in the `doc` or `docHandle`.
@@ -281,6 +293,7 @@ export class ObjectCore {
     this.docHandle = options.docHandle;
     this.mountPath = options.path;
     this.snapshot = undefined;
+    this.#scratch = undefined;
 
     const doc = this.doc;
     this.doc = undefined;
@@ -308,11 +321,27 @@ export class ObjectCore {
       return this.docHandle.doc();
     }
 
+    if (this.#scratch) {
+      return this.#scratch;
+    }
+
     if (this.snapshot) {
       return this.snapshot.root;
     }
 
     throw new Error('Invalid ObjectCore state');
+  }
+
+  /** Whether writes are queued for this snapshot-backed core's document. */
+  get hasQueuedWrites(): boolean {
+    return this.#writeQueue.length > 0;
+  }
+
+  /** Hands over the queued writes for replay; reads keep seeing them until the core binds. */
+  takeQueuedWrites(): ChangeFn<any>[] {
+    const queue = this.#writeQueue;
+    this.#writeQueue = [];
+    return queue;
   }
 
   /** Backs this unbound core with the index's copy of the object until it binds to its document. */
@@ -353,6 +382,19 @@ export class ObjectCore {
     // Prevent recursive change calls.
     using _ = defer(docChangeSemaphore(this.docHandle ?? this));
 
+    if (!this.doc && !this.docHandle && this.snapshot) {
+      // Accepted now against a scratch copy, so reads see it; the document gets it when it loads.
+      const first = this.#writeQueue.length === 0;
+      const scratch = this.#scratch ?? A.from(this.snapshot.root);
+      this.#scratch = options ? A.change(scratch, options, changeFn) : A.change(scratch, changeFn);
+      this.#writeQueue.push(changeFn);
+      this.notifyUpdate();
+      if (first) {
+        void this.entityManager?.promote(this);
+      }
+      return;
+    }
+
     if (this.doc) {
       if (options) {
         this.doc = A.change(this.doc!, options, changeFn);
@@ -374,6 +416,9 @@ export class ObjectCore {
    * Do not take into account mountPath.
    */
   changeAt(heads: Heads, callback: ChangeFn<any>, options?: ChangeOptions<any>): Heads | undefined {
+    if (!this.doc && !this.docHandle && this.snapshot) {
+      throw new DocumentNotLoadedError({ objectId: this.id });
+    }
     // Prevent recursive change calls.
     using _ = defer(docChangeSemaphore(this.docHandle ?? this));
 
@@ -406,7 +451,12 @@ export class ObjectCore {
     const self = this;
     return {
       handle: {
-        doc: () => this.getDoc(),
+        doc: () => {
+          if (!this.doc && !this.docHandle && this.snapshot) {
+            throw new DocumentNotLoadedError({ objectId: this.id });
+          }
+          return this.getDoc();
+        },
         change: (callback, options) => {
           this.change(callback, options);
         },

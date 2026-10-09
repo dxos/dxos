@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { next as A, type Heads, getHeads } from '@automerge/automerge';
+import { next as A, type ChangeFn, type Heads, getHeads } from '@automerge/automerge';
 import { type AutomergeUrl, type DocumentId } from '@automerge/automerge-repo';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
@@ -37,7 +37,7 @@ import { log } from '@dxos/log';
 import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import type { DataService, QueryService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
-import { ComplexSet, chunkArray, deepMapValues } from '@dxos/util';
+import { ComplexSet, chunkArray, deepMapValues, defer } from '@dxos/util';
 
 import {
   type ChangeEvent,
@@ -49,6 +49,7 @@ import {
 import { DocumentUnavailableError, EchoClientError, RepoClosedError } from '../errors.ts';
 import { type HypergraphImpl } from '../hypergraph.ts';
 import { type BranchStore, forkDump, referencedObjectIds } from './branching.ts';
+import { docChangeSemaphore } from './doc-semaphore.ts';
 import { ObjectCoreRegistry } from './object-core-registry.ts';
 import { type IDatabaseBinding, ObjectCore, type SnapshotState } from './object-core.ts';
 import { shareStructure } from './share-structure.ts';
@@ -512,7 +513,8 @@ export class EntityManager implements IDatabaseBinding {
     }
     const existing = this.getObjectCoreById(id, { load: false });
     if (existing) {
-      if (existing.snapshot && state.version > existing.snapshot.version) {
+      // Queued writes are the user's view until the document they wait for arrives.
+      if (existing.snapshot && !existing.hasQueuedWrites && state.version > existing.snapshot.version) {
         existing.snapshot = {
           root: { objects: { [id]: shareStructure(existing.snapshot.root.objects[id], state.structure) } },
           heads: state.heads,
@@ -535,6 +537,39 @@ export class EntityManager implements IDatabaseBinding {
     });
     this._objects.set(id, core);
     return this._createEntity(core);
+  }
+
+  /**
+   * Snapshot-backed cores whose document is loading because something wrote to them or needs the
+   * document. Held strongly: a collected core would take its queued writes with it.
+   */
+  readonly #pendingPromotions = new Map<string, { core: ObjectCore; bound: Trigger }>();
+
+  /** Writes queued on a snapshot-backed core are not durable until its document loads and takes them. */
+  private async _waitForPendingPromotions(): Promise<void> {
+    const pending = [...this.#pendingPromotions.values()];
+    if (pending.length === 0) {
+      return;
+    }
+    const ids = pending.map(({ core }) => core.id);
+    await asyncTimeout(
+      Promise.all(pending.map(({ bound }) => bound.wait())),
+      PROMOTION_FLUSH_TIMEOUT,
+      new TimeoutError(PROMOTION_FLUSH_TIMEOUT, `documents of objects with queued writes to load: ${ids.join(', ')}`),
+    );
+  }
+
+  promote(core: ObjectCore): Promise<void> {
+    if (!core.snapshot) {
+      return Promise.resolve();
+    }
+    let pending = this.#pendingPromotions.get(core.id);
+    if (!pending) {
+      pending = { core, bound: new Trigger() };
+      this.#pendingPromotions.set(core.id, pending);
+      this._loadObjectDocument(core.id);
+    }
+    return pending.bound.wait();
   }
 
   /** Like {@link getEntityById}, but loads the object's document first. */
@@ -912,6 +947,7 @@ export class EntityManager implements IDatabaseBinding {
   }: Database.FlushOptions = {}): Promise<void> {
     log('flush', { disk, indexes, secondaryIndexes, updates });
     await this._waitForPendingCreations();
+    await this._waitForPendingPromotions();
     if (disk) {
       await this._repoProxy.flush({ disk: true });
     }
@@ -2202,11 +2238,48 @@ export class EntityManager implements IDatabaseBinding {
     }
   }
 
-  /** Moves a snapshot-backed core onto its document, keeping the core and its proxy. */
+  /**
+   * Moves a snapshot-backed core onto its document, keeping the core and its proxy, after replaying the
+   * writes it queued.
+   */
   private _bindSnapshotCore(core: ObjectCore, docHandle: DocHandleProxy<DatabaseDirectory>): void {
+    const writes = core.takeQueuedWrites();
+    if (writes.length > 0 && core.snapshot) {
+      this._replayWrites(core.id, docHandle, core.snapshot.heads, writes);
+    }
     core.bind({ db: this, docHandle, path: ['objects', core.id], assignFromLocalState: false });
     this._markObjectAvailable(core.id);
     this._onObjectBoundToDocument(docHandle, core.id);
+    const pending = this.#pendingPromotions.get(core.id);
+    this.#pendingPromotions.delete(core.id);
+    pending?.bound.wake();
+  }
+
+  /**
+   * Applies writes made against a snapshot to its document at the snapshot's heads, so they merge as
+   * concurrent with whatever the document gained since; at the current heads if those are missing.
+   */
+  private _replayWrites(
+    objectId: string,
+    docHandle: DocHandleProxy<DatabaseDirectory>,
+    heads: Heads,
+    writes: readonly ChangeFn<any>[],
+  ): void {
+    const replay = (doc: DatabaseDirectory) => {
+      for (const write of writes) {
+        write(doc);
+      }
+    };
+    using _ = defer(docChangeSemaphore(docHandle));
+    const doc = docHandle.doc();
+    if (doc && A.getMissingDeps(doc, heads).length === 0) {
+      // Forked and merged rather than `changeAt`, whose result can read stale when the heads differ.
+      const fork = A.change(A.clone(A.view(doc, heads)), replay);
+      docHandle.update((current) => A.merge(current, fork));
+    } else {
+      log.warn('snapshot heads are missing from the loaded document, replaying at its heads', { objectId });
+      docHandle.change(replay);
+    }
   }
 
   private _createObjectInDocument(docHandle: DocHandleProxy<DatabaseDirectory>, objectId: string): ObjectCore {
@@ -2378,3 +2451,6 @@ export class EntityManager implements IDatabaseBinding {
 }
 
 const RPC_TIMEOUT = 20_000;
+
+/** How long a flush waits for the documents of objects with queued writes before it fails. */
+const PROMOTION_FLUSH_TIMEOUT = 20_000;

@@ -4,7 +4,7 @@
 
 export * from './branching.ts';
 export { EchoReactiveHandler, createObject, initEchoReactiveObjectRootProxy } from './echo-handler.ts';
-export { getObjectCore } from './echo-object-utils.ts';
+export { getObjectCore, loadDocument } from './echo-object-utils.ts';
 export { isEchoObject } from './echo-object-utils.ts';
 export * from './edit-history.ts';
 export { type ProxyTarget } from './echo-proxy-target.ts';
