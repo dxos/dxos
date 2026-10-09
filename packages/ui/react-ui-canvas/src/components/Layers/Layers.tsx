@@ -7,6 +7,7 @@ import React, { useMemo, useState } from 'react';
 import { OrderedList } from '@dxos/react-ui-list';
 import * as Button from '@dxos/react-ui/Button';
 import * as Editable from '@dxos/react-ui/Editable';
+import * as Menu from '@dxos/react-ui/Menu';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
@@ -121,24 +122,34 @@ export const LayersPanel = ({
             }
           }}
         />
-        <Button.Root
-          variant='ghost'
-          iconOnly
-          icon='ph--trash--regular'
-          label='Delete layers'
-          disabled={readonly || !onDelete || selected.length === 0 || selected.length >= layers.length}
-          data-testid='layers-delete'
-          onClick={() => onDelete?.(selected)}
-        />
-        <Button.Root
-          variant='ghost'
-          iconOnly
-          icon='ph--arrow-line-down--regular'
-          label='Merge layers'
-          disabled={readonly || !onMerge || selected.length < 2}
-          data-testid='layers-merge'
-          onClick={() => top && onMerge?.(selected, top)}
-        />
+        {/* The rarer, destructive edits wait in a menu at the toolbar's end. */}
+        <Toolbar.Separator variant='gap' />
+        <Menu.Root positioning={{ placement: 'bottom-end', gutter: 4 }}>
+          <Menu.Trigger asChild>
+            <Button.Root
+              variant='ghost'
+              iconOnly
+              icon='ph--dots-three-vertical--regular'
+              label='Layer actions'
+              disabled={readonly}
+              data-testid='layers-menu'
+            />
+          </Menu.Trigger>
+          <Menu.Content>
+            <Menu.Item
+              item={{ value: 'merge', label: 'Merge layers', icon: 'ph--arrow-line-down--regular' }}
+              disabled={!onMerge || selected.length < 2}
+              data-testid='layers-merge'
+              onSelect={() => top && onMerge?.(selected, top)}
+            />
+            <Menu.Item
+              item={{ value: 'delete', label: 'Delete layers', icon: 'ph--trash--regular' }}
+              disabled={!onDelete || selected.length === 0 || selected.length >= layers.length}
+              data-testid='layers-delete'
+              onSelect={() => onDelete?.(selected)}
+            />
+          </Menu.Content>
+        </Menu.Root>
         {onDockedChange && <DockToggle docked={docked} onDockedChange={onDockedChange} />}
       </Toolbar.Root>
       <OrderedList.Root

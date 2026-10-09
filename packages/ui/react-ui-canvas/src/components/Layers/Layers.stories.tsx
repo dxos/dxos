@@ -103,17 +103,24 @@ export const Test: Story = {
     await userEvent.click(canvas.getByTestId('layer-toggle-notes'));
     await expect(canvas.getByTestId('layer-toggle-notes')).toHaveAccessibleName('Hide layer');
 
-    // 5. Merge needs two layers: a Shift-click extends the selection to the next one, and merging keeps the top-most.
-    // Shift rather than Cmd/Ctrl, whose key the listbox picks by platform.
-    await expect(canvas.getByTestId('layers-merge')).toBeDisabled();
+    // 5. Merge, in the toolbar's menu, needs two layers: a Shift-click extends the selection to the next one, and
+    // merging keeps the top-most. Shift rather than Cmd/Ctrl, whose key the listbox picks by platform. The menu is
+    // portalled, so its items are found in the document body.
+    const body = within(canvasElement.ownerDocument.body);
+    await userEvent.click(canvas.getByTestId('layers-menu'));
+    await expect(await body.findByTestId('layers-merge')).toHaveAttribute('data-disabled');
+    await userEvent.keyboard('{Escape}');
     await userEvent.click(canvas.getByTestId('layer-name-diagram'));
     // One session, so the held key is still down for the click.
     const user = userEvent.setup();
     await user.keyboard('{Shift>}');
     await user.click(canvas.getByTestId('layer-name-notes'));
     await user.keyboard('{/Shift}');
-    await waitFor(() => expect(canvas.getByTestId('layers-merge')).toBeEnabled());
-    await userEvent.click(canvas.getByTestId('layers-merge'));
+    await userEvent.click(canvas.getByTestId('layers-menu'));
+    const merge = await body.findByTestId('layers-merge');
+    await waitFor(() => expect(merge).not.toHaveAttribute('data-disabled'));
+    // Picked from the keyboard, as the react-ui Menu stories do: a synthetic click does not select a menu item.
+    await userEvent.keyboard('{Home}{Enter}');
     await waitFor(() => expect(names()).toEqual(['Diagram', 'Background', 'Sketch']));
 
     // 6. The arrows move along the list, and Enter opens the current row's name.
