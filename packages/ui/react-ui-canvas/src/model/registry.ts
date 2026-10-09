@@ -18,12 +18,13 @@ import { type ComponentType } from 'react';
 
 import { type FormFieldMap } from '@dxos/react-ui-form';
 
-import { BoxNodeView, EllipseNodeView, NoteNodeView, PortalNodeView } from '../components/SceneLayer/SceneLayer.tsx';
+import { BoxNodeView, EllipseNodeView, FrameNodeView, NoteNodeView } from '../components/SceneLayer/SceneLayer.tsx';
 import { type PartEditing, type PartField } from '../utils/parts.ts';
 import { NOMINAL_SIZES, createNode } from '../utils/shapes.ts';
 import { type SceneStore } from './store.ts';
 import {
   EllipseNode,
+  FrameNode,
   type LinkType,
   type Node,
   type NodeBase,
@@ -31,7 +32,6 @@ import {
   NoteNode,
   type Point,
   type Port,
-  PortalNode,
   RectNode,
   type Scene,
   type Size,
@@ -81,8 +81,13 @@ export type NodeDef = {
   resizable?: boolean;
   minSize?: Size;
   maxSize?: Size;
-  /** Double-click opens the node (a portal drills in; a text node edits, later). */
+  /** Double-click opens the node (a frame drills in; a text node edits, later). */
   openable?: boolean;
+  /**
+   * The host's own way to open this node, when it has one (a frame showing an object rather than a scene):
+   * opening calls it instead of drilling in, and auto-drill passes the node by.
+   */
+  hostOpen?: (node: Node) => (() => void) | undefined;
   /** The text properties edited in place, in order; the first is the node's main text. */
   parts?: readonly PartField[];
   /** Properties-panel renderers for this type's fields, by path (e.g. a list as lines). */
@@ -148,7 +153,7 @@ const MIN_SIZE: Size = { width: 64, height: 32 };
 
 /**
  * A framed shape with a centred, editable label: resizable, with ports spread along every side. The
- * built-in rectangle and scene are both boxes; a host type can extend it too.
+ * built-in rectangle and frame are both boxes; a host type can extend it too.
  */
 export const boxPrototype: NodeDefSpec = {
   component: BoxNodeView,
@@ -196,15 +201,15 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     resizable: true,
     minSize: MIN_SIZE,
   },
-  scene: {
+  frame: {
     extends: 'box',
-    name: 'Scene',
+    name: 'Frame',
     icon: 'ph--frame-corners--regular',
-    key: 'S',
-    schema: PortalNode,
-    component: PortalNodeView,
-    create: (props) => createNode({ type: 'scene', ...props }),
-    defaultSize: NOMINAL_SIZES.scene,
+    key: 'F',
+    schema: FrameNode,
+    component: FrameNodeView,
+    create: (props) => createNode({ type: 'frame', ...props }),
+    defaultSize: NOMINAL_SIZES.frame,
     minSize: { width: 96, height: 60 },
     openable: true,
   },

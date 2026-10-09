@@ -50,8 +50,8 @@ import {
   type Point,
   type Scene,
   type SceneId,
+  isFrameNode,
   isPointEndpoint,
-  isPortalNode,
 } from '../../model/types.ts';
 import {
   MIN_ZOOM,
@@ -232,6 +232,7 @@ const SceneViewRoot = ({
   const { nameOf, portalTo, bounds, fitTarget, pushHistory, drillIn, drillOut, goHistory } = useSceneNavigation({
     registry,
     atoms,
+    nodeRegistry,
     store,
     scenes,
     scene,
@@ -785,7 +786,7 @@ const SceneViewRoot = ({
   const focus = useMemo(() => {
     let best: { id: ElementId; opacity: number } | undefined;
     for (const node of Object.values(displayScene.nodes)) {
-      if (!isPortalNode(node)) {
+      if (!isFrameNode(node)) {
         continue;
       }
       const bounds = nodeBounds(node);

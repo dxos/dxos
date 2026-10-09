@@ -33,8 +33,8 @@ import {
   type SplineLink,
   type Tool,
   endpointNode,
+  isFrameNode,
   isPointEndpoint,
-  isPortalNode,
 } from '../../model/types.ts';
 import { boundsCenter, panBy, screenToScene } from '../../utils/camera.ts';
 import { duplicateSelection } from '../../utils/clipboard.ts';
@@ -674,7 +674,7 @@ export const usePointerMachine = ({
   /** Adds a new node; a new portal opens onto a fresh scene of its own, whichever path created it. */
   const addNode = useCallback(
     (node: Node) => {
-      if (isPortalNode(node)) {
+      if (isFrameNode(node)) {
         registry.set(store.scenes, {
           ...registry.get(store.scenes),
           [node.scene]: {

@@ -26,8 +26,8 @@ import {
   type NodeId,
   type Scene,
   type StyleMap,
+  isFrameNode,
   isNoteNode,
-  isPortalNode,
   linkMarkers,
   showsContents,
 } from '../../model/types.ts';
@@ -533,17 +533,17 @@ export const NoteNodeView = ({ node, editing }: NodeViewProps) => {
 };
 
 /**
- * A box over a child scene: the centred label, or with `contents` the child drawn inside the frame (a
+ * A frame over a child scene: the centred label, or with `contents` the child drawn inside the frame (a
  * preview, then the live scene as it grows on screen), and a zoom-in control at the top-right.
  */
-export const PortalNodeView = (props: NodeViewProps) => {
+export const FrameNodeView = (props: NodeViewProps) => {
   const { node, store, registry, zoom, depth, liveDepth, opening, editing, onOpen } = props;
-  const child = useAtomValue(store.scene(isPortalNode(node) ? node.scene : ''));
-  const contents = opening || (isPortalNode(node) && showsContents(node));
+  const child = useAtomValue(store.scene(isFrameNode(node) ? node.scene : ''));
+  const contents = opening || (isFrameNode(node) && showsContents(node));
   // Being entered, the portal is already the child scene on the canvas: live.
   const tier = !child ? 'dot' : opening ? 'live' : tierFor(node, zoom, depth, liveDepth);
   const bounds = useMemo(() => (child ? portalFrame(node, contentBounds(child)) : undefined), [node, child]);
-  const title = (isPortalNode(node) ? node.label : undefined) ?? child?.name ?? child?.id ?? '';
+  const title = (isFrameNode(node) ? node.label : undefined) ?? child?.name ?? child?.id ?? '';
   // Too small to show anything inside (or with no child yet), it reads as a closed scene: frame and title.
   if (!contents || tier === 'dot') {
     return (
@@ -599,13 +599,15 @@ export const PortalNodeView = (props: NodeViewProps) => {
   );
 };
 
-/** The zoom-in control at a portal's top-right; it takes the press, so it neither drags nor selects the node. */
-const OpenControl = ({ onOpen }: { onOpen: () => void }) => (
+export type OpenControlProps = { label?: string; onOpen: () => void };
+
+/** The open control at a frame's top-right; it takes the press, so it neither drags nor selects the node. */
+export const OpenControl = ({ label = 'Open scene', onOpen }: OpenControlProps) => (
   <Button.Root
     variant='ghost'
     iconOnly
     icon='ph--arrows-out--regular'
-    label='Open scene'
+    label={label}
     classNames='absolute top-1 right-1'
     data-testid='portal-open'
     onPointerDown={(event) => event.stopPropagation()}

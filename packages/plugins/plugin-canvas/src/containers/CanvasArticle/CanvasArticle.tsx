@@ -6,6 +6,9 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { Entity, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
@@ -15,6 +18,7 @@ import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import {
   type Camera,
   type Element,
+  type Node,
   type SceneId,
   SceneView,
   type SceneViewPropertiesProps,
@@ -22,23 +26,25 @@ import {
   createNodeRegistry,
   defaultNodePrototypes,
   defaultNodeTypes,
+  isFrameNode,
   isLink,
-  isPortalNode,
   useRegistry,
 } from '@dxos/react-ui-canvas/scene';
 import * as Panel from '@dxos/react-ui/Panel';
 
 import {
   type BoundCanvasStore,
-  CanvasSceneNode,
-  UNTITLED_DRAWING,
+  CanvasFrameNode,
   bindCanvasStore,
   canvasRecordOf,
-  drawingUri,
+  isCanvasDrawing,
+  objectRef,
+  objectUri,
   parseLinkedSceneId,
 } from '#model';
-import { Canvas, CanvasCapabilities } from '#types';
+import { CanvasCapabilities } from '#types';
 
+import { CanvasFrameNodeView } from './CanvasFrameNodeView.tsx';
 import { canvasViewAspect } from './view-state.ts';
 
 export type CanvasArticleProps = IllustratorCapabilities.DrawingVariantSurfaceProps;
@@ -50,18 +56,38 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   const settings = useAtomValue(Hooks.useCapability(CanvasCapabilities.Settings));
   // The built-in node types and whatever other plugins contribute (a contribution may replace a built-in).
   const contributed = Hooks.useCapabilities(CanvasCapabilities.NodeType);
+  // A frame showing an object (not a canvas drawing) opens it in the app; the frame's view shows the frame's own
+  // scene until the object loads, so opening drills into that scene until then too.
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const openObject = useCallback(
+    (node: Node) => {
+      const object = objectRef(node)?.target;
+      if (!object || !isFrameNode(node) || parseLinkedSceneId(node.scene) || isCanvasDrawing(object) !== false) {
+        return undefined;
+      }
+      return () => {
+        void invokePromise(LayoutOperation.Open, { subject: [GraphPath.getObjectPathFromObject(object)] });
+      };
+    },
+    [invokePromise],
+  );
   const nodes = useMemo(
     () =>
       createNodeRegistry(
         {
           ...defaultNodeTypes,
-          // The canvas's scene shape may show another drawing (`drawing`), which the store binds alongside.
-          scene: { ...defaultNodeTypes.scene, schema: CanvasSceneNode },
+          // The canvas's frame may show an object (`object`): a canvas drawing the store binds alongside, else a surface.
+          frame: {
+            ...defaultNodeTypes.frame,
+            schema: CanvasFrameNode,
+            component: CanvasFrameNodeView,
+            hostOpen: openObject,
+          },
           ...Object.fromEntries(contributed.map(({ type, spec }) => [type, spec])),
         },
         defaultNodePrototypes,
       ),
-    [contributed],
+    [contributed, openObject],
   );
   // Bound for the canvas's lifetime in this view; a new canvas rebinds.
   const [bound, setBound] = useState<BoundCanvasStore>();
@@ -89,38 +115,44 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   // A shape opens a scene of this drawing, never one bound from a linked drawing.
   const isLocalScene = useCallback((id: SceneId) => !parseLinkedSceneId(id), []);
 
-  // A scene shape links only to another canvas drawing: never to itself, nor to a drawing of another renderer.
+  // A frame may show any object listed in the navtree but this drawing itself.
   const getOptions = useCallback<NonNullable<SceneViewPropertiesProps['getOptions']>>(
     (results) =>
       results
-        .filter((result) => {
-          if (!Obj.instanceOf(Drawing.Drawing, result)) {
-            return false;
-          }
-          const target = result.canvas.target;
-          return target !== canvas && (target === undefined || target.schema === Canvas.SCENE_SCHEMA);
-        })
+        // System objects (space properties, canvases, traces) have no place in the navtree, so none here either.
+        .filter((result) => Obj.isObject(result) && TypeOptions.isUserObject(result))
+        .filter((result) => !(Obj.instanceOf(Drawing.Drawing, result) && result.canvas.target === canvas))
         .map((result) => {
           const id = Entity.getURI(result, { prefer: 'named' });
-          return { id, label: Entity.getLabel(result) ?? UNTITLED_DRAWING };
+          return { id, label: Entity.getLabel(result) ?? id };
         }),
     [canvas],
   );
 
-  // A shape may take a drawing only while its own child scene is empty, so linking never hides what was drawn there.
+  // A frame holds its own scene or an object, never both: it may take an object only while its own child scene is
+  // empty, so linking never hides what was drawn there.
   const overrides = useCallback(
     (elements: readonly Element[]): ReturnType<NonNullable<SceneViewPropertiesProps['overrides']>> => {
       const scenes = bound ? registry.get(bound.store.scenes) : {};
       const locked = elements.some((element) => {
-        if (isLink(element) || !isPortalNode(element) || drawingUri(element) || parseLinkedSceneId(element.scene)) {
+        if (isLink(element) || !isFrameNode(element) || objectUri(element) || parseLinkedSceneId(element.scene)) {
           return false;
         }
         const child = scenes[element.scene];
         return child !== undefined && Object.keys(child.nodes).length > 0;
       });
-      // A shape showing another drawing opens that drawing's root, not a scene of this one.
-      const linked = elements.some((element) => !isLink(element) && drawingUri(element));
-      return { ...(locked ? { drawing: { readonly: true } } : {}), ...(linked ? { scene: { hidden: true } } : {}) };
+      // A frame showing an object opens the object (or a canvas drawing's root), not a scene of this one.
+      const linked = elements.some((element) => !isLink(element) && objectUri(element));
+      // The role applies only to an object shown as a surface, not to a canvas drawing shown as a scene.
+      const surfaced = elements.some((element) => {
+        const object = isLink(element) ? undefined : objectRef(element)?.target;
+        return object !== undefined && isCanvasDrawing(object) === false;
+      });
+      return {
+        ...(locked ? { object: { readonly: true } } : {}),
+        ...(linked ? { scene: { hidden: true } } : {}),
+        ...(surfaced ? {} : { role: { hidden: true } }),
+      };
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [registry, bound],

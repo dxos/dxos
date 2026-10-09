@@ -39,9 +39,9 @@ describe('content', () => {
       'scene:scene:root': { kind: 'scene', id: 'scene:root', name: 'Root' },
       'scene:f': { kind: 'scene', id: 'f' },
       'node:a': { kind: 'node', scene: 'scene:root', node: { id: 'a', type: 'rect', ...box } },
-      'node:f': { kind: 'node', scene: 'scene:root', node: { id: 'f', type: 'scene', scene: 'f', ...box } },
+      'node:f': { kind: 'node', scene: 'scene:root', node: { id: 'f', type: 'frame', scene: 'f', ...box } },
       // A shape in a nested scene that shows the root itself.
-      'node:up': { kind: 'node', scene: 'f', node: { id: 'up', type: 'scene', scene: 'scene:root', ...box } },
+      'node:up': { kind: 'node', scene: 'f', node: { id: 'up', type: 'frame', scene: 'scene:root', ...box } },
       'link:a-f': {
         kind: 'link',
         scene: 'scene:root',

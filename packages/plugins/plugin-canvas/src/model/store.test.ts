@@ -7,10 +7,11 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { TestSchema } from '@dxos/echo/testing';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 
 import { clone, isNodeRecord, nodeKey, readScenes } from './content.ts';
-import { parseLinkedSceneId } from './scene-node.ts';
+import { objectRef, parseLinkedSceneId } from './frame-node.ts';
 import { bindCanvasStore, createCanvas } from './store.ts';
 
 const frame = { center: { x: 0, y: 0 }, size: { width: 256, height: 128 } };
@@ -26,7 +27,7 @@ afterEach(async () => {
 });
 
 describe('bindCanvasStore', () => {
-  test('a linked scene shape opens the other drawing, and edits inside it are written there', async ({ expect }) => {
+  test('a frame on a canvas drawing opens it, and edits inside it are written there', async ({ expect }) => {
     const { db, graph } = await builder.createDatabase();
     graph.registry.add([Drawing.Drawing, Drawing.Canvas]);
     const otherCanvas = db.add(createCanvas());
@@ -38,7 +39,7 @@ describe('bindCanvasStore', () => {
       canvas.content[nodeKey('f')] = {
         kind: 'node',
         scene: 'root',
-        node: { id: 'f', type: 'scene', z: 'a0', ...frame, scene: 'f', drawing: Ref.make(other) },
+        node: { id: 'f', type: 'frame', z: 'a0', ...frame, scene: 'f', object: Ref.make(other) },
       };
     });
     await db.flush();
@@ -51,11 +52,11 @@ describe('bindCanvasStore', () => {
     const linkedId = linkedRoot() ?? '';
 
     const scenes = registry.get(bound.store.scenes);
-    // The shape opens the linked drawing's root, named after that drawing.
+    // The frame opens the linked drawing's root, named after that drawing.
     expect(scenes.root.nodes.f).toMatchObject({ scene: linkedId });
     expect(scenes[linkedId].name).toBe('Other');
 
-    // An edit inside the linked scene lands in the other drawing; this drawing keeps the shape's own child id.
+    // An edit inside the linked scene lands in the other drawing; this drawing keeps the frame's own child id.
     const added = { id: 'n', type: 'rect', z: 'a0', ...frame, label: 'Added' };
     registry.set(bound.store.scenes, {
       ...scenes,
@@ -77,7 +78,7 @@ describe('bindCanvasStore', () => {
       canvas.content[nodeKey('f')] = {
         kind: 'node',
         scene: 'root',
-        node: { id: 'f', type: 'scene', z: 'a0', ...frame, scene: 'f', drawing: Ref.make(self) },
+        node: { id: 'f', type: 'frame', z: 'a0', ...frame, scene: 'f', object: Ref.make(self) },
       };
     });
     await db.flush();
@@ -89,6 +90,36 @@ describe('bindCanvasStore', () => {
     const scenes = registry.get(bound.store.scenes);
     expect(Object.keys(scenes).some((id) => parseLinkedSceneId(id))).toBe(false);
     expect(scenes.root.nodes.f).toMatchObject({ scene: 'f' });
+    bound.dispose();
+  });
+
+  test('a frame on any other object keeps its own child scene and reads the object as a live ref', async ({
+    expect,
+  }) => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([Drawing.Drawing, Drawing.Canvas, TestSchema.Person]);
+    const person = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+    const canvas = db.add(createCanvas());
+    db.add(Drawing.make({ name: 'Main', canvas }));
+    Obj.update(canvas, (canvas) => {
+      canvas.content['scene:f'] = { kind: 'scene', id: 'f' };
+      canvas.content[nodeKey('f')] = {
+        kind: 'node',
+        scene: 'root',
+        node: { id: 'f', type: 'frame', z: 'a0', ...frame, scene: 'f', object: Ref.make(person), role: 'section' },
+      };
+    });
+    await db.flush();
+
+    const registry = Registry.make();
+    const bound = bindCanvasStore(registry, canvas);
+    // Give the load a chance to resolve before checking that nothing was bound.
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    const scenes = registry.get(bound.store.scenes);
+    expect(Object.keys(scenes).some((id) => parseLinkedSceneId(id))).toBe(false);
+    const node = scenes.root.nodes.f;
+    expect(node).toMatchObject({ scene: 'f', role: 'section' });
+    expect(await objectRef(node)?.load()).toBe(person);
     bound.dispose();
   });
 
