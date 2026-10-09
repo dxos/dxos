@@ -4,7 +4,7 @@
 
 import { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { disableNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/disable-native-drag-preview';
-import React, { type RefObject, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { type RefObject, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import * as Button from '@dxos/react-ui/Button';
 import * as Icon from '@dxos/react-ui/Icon';
@@ -177,15 +177,18 @@ const HOVER_OPEN_MS = 500;
 /** How long the tools stay open after the pointer leaves, so it can cross the gap between the rail and the grid. */
 const HOVER_CLOSE_MS = 250;
 
-/** Opens after the pointer rests on the trigger, and closes once it has left both the trigger and the content. */
-const useHoverOpen = (setOpen: (open: boolean) => void) => {
+/**
+ * Opens after the pointer rests on the trigger, and closes once it has left both the trigger and the content. `hovered`
+ * is how it opened, so the content can leave focus where it is.
+ */
+const useHoverOpen = (setOpen: (open: boolean, hovered?: boolean) => void) => {
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => () => clearTimeout(timer.current), []);
   return useMemo(
     () => ({
       enter: () => {
         clearTimeout(timer.current);
-        timer.current = setTimeout(() => setOpen(true), HOVER_OPEN_MS);
+        timer.current = setTimeout(() => setOpen(true, true), HOVER_OPEN_MS);
       },
       keep: () => clearTimeout(timer.current),
       leave: () => {
@@ -209,7 +212,14 @@ type PaletteFlyoutProps = {
  * chevron (or a hover) opening the group's tools beside the rail, as a list or a grid (`layout`).
  */
 const PaletteFlyout = ({ group, tool, layout, onToolChange }: PaletteFlyoutProps) => {
-  const [open, setOpen] = useState(false);
+  const [open, setOpenState] = useState(false);
+  // Opened by a hover, the list takes no focus (a pointer user would see a focus ring on the first row); opened from
+  // the chevron (a click or the keyboard), it does, so arrows move through it.
+  const [hovered, setHovered] = useState(false);
+  const setOpen = useCallback((next: boolean, byHover = false) => {
+    setHovered(next && byHover);
+    setOpenState(next);
+  }, []);
   const hover = useHoverOpen(setOpen);
   const [lastUsed, setLastUsed] = useState<Entry>(group.entries[0]);
   const active = group.entries.find((entry) => sameTool(tool, entry.tool));
@@ -221,7 +231,12 @@ const PaletteFlyout = ({ group, tool, layout, onToolChange }: PaletteFlyoutProps
   }, [active]);
   const shown = active ?? lastUsed;
   return (
-    <Popover.Root open={open} onOpenChange={({ open }) => setOpen(open)} positioning={{ placement: 'right-start' }}>
+    <Popover.Root
+      open={open}
+      autoFocus={!hovered}
+      onOpenChange={({ open }) => setOpen(open)}
+      positioning={{ placement: 'right-start' }}
+    >
       <Popover.Anchor asChild>
         <div
           className='relative'
