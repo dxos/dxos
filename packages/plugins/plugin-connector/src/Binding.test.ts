@@ -38,7 +38,7 @@ import { ConnectorSpec } from '#types';
 
 import * as Binding from './Binding.ts';
 import { autoSyncConnection } from './capabilities/connector-coordinator/auto-sync.ts';
-import { ConnectionAuthExpiredError, TargetAccountMismatchError } from './errors.ts';
+import { ConnectionAuthExpiredError, SyncRoutineDisabledError, TargetAccountMismatchError } from './errors.ts';
 /**
  * The binding namespace: pairing an object with the feed a connection syncs into it, the account that
  * gates a resume, the schedule that drives it, and what a disconnect leaves behind.
@@ -303,6 +303,21 @@ describe('Binding.sync', () => {
 
     expect(fired).toEqual([]);
     expect(toasts).toEqual([`${meta.profile.key}.sync-routine-disabled`]);
+  });
+
+  test('a routine saved switched off fails as disabled instead of running', async ({ expect }) => {
+    const { db } = await setup();
+    const trigger = Trigger.make({ enabled: false, spec: Trigger.specTimer('*/10 * * * *') });
+    const created = Routine.make({ name: 'Sync', triggers: [Ref.make(trigger)] });
+
+    const error = await Binding.syncCreatedRoutine({ created, connector, spaceId: db.spaceId }).pipe(
+      Effect.provideService(Capability.Service, capabilities()),
+      Effect.flip,
+      EffectEx.runPromise,
+    );
+
+    expect(error).toBeInstanceOf(SyncRoutineDisabledError);
+    expect(fired).toEqual([]);
   });
 
   test('does nothing for an object with no binding', async ({ expect }) => {

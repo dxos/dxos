@@ -617,6 +617,7 @@ export const syncOrOfferRoutine = ({
           // for the dialog already — it should not also wait out the first sync.
           Effect.runFork(
             syncCreatedRoutine({ created, connector, spaceId: db.spaceId, priority }).pipe(
+              Effect.catchTag('SyncRoutineDisabledError', () => reportSyncRoutineDisabled(db.spaceId)),
               Effect.provideService(Operation.Service, invoker),
               Effect.provideService(Capability.Service, capabilities),
               Effect.catch((error) => Effect.sync(() => log.warn('sync after routine created failed', { error }))),
@@ -663,7 +664,8 @@ const reportSyncRoutineDisabled = (spaceId: Key.SpaceId): Effect.Effect<void, ne
  * The trigger comes off the created Routine rather than from a lookup: the reverse-ref index lags the
  * write, so {@link findTrigger} called this early reports the Routine as missing — which is what
  * silently dropped this sync. Nothing re-opens the dialog from here either; a save that somehow
- * produced no trigger logs and stops, rather than looping the user back into the form.
+ * produced no trigger logs and stops, rather than looping the user back into the form. A routine saved
+ * switched off fails with {@link SyncRoutineDisabledError}.
  */
 export const syncCreatedRoutine = ({
   created,
@@ -675,7 +677,7 @@ export const syncCreatedRoutine = ({
   connector: ConnectorSpec.ConnectorEntry;
   spaceId: Key.SpaceId;
   priority?: string;
-}): Effect.Effect<void, ConnectionSyncError, Capability.Service> =>
+}): Effect.Effect<void, ConnectionSyncError | SyncRoutineDisabledError, Capability.Service> =>
   Effect.gen(function* () {
     const trigger = Obj.instanceOf(Routine.Routine, created) ? triggerOfRoutine(created) : undefined;
     if (!trigger) {
@@ -685,7 +687,14 @@ export const syncCreatedRoutine = ({
 
     yield* fireTrigger(trigger, priority ? { priority } : undefined).pipe(
       Effect.provide(triggerMonitorLayer(spaceId)),
-      Effect.mapError((cause) => new ConnectionSyncError({ connectorId: connector.id, cause })),
+      Effect.catchTag('TriggerDisabledError', () =>
+        Effect.fail(new SyncRoutineDisabledError({ connectorId: connector.id })),
+      ),
+      Effect.mapError((cause) =>
+        cause instanceof SyncRoutineDisabledError
+          ? cause
+          : new ConnectionSyncError({ connectorId: connector.id, cause }),
+      ),
     );
   });
 
