@@ -31,9 +31,10 @@ type Script = (turnId: string) => EdgeProtocol.Output[];
 class FakeEdge implements EdgeAgent.ProcessControl {
   readonly spawned: RemoteProcessManager.SpawnRequest[] = [];
   readonly inputs: unknown[] = [];
-  readonly credentials: EdgeProtocol.AnthropicCredential[] = [];
-  readonly gitCredentials: EdgeProtocol.GitCredential[] = [];
+  readonly lent: EdgeProtocol.Credentials[] = [];
   readonly answers: { requestId: string; optionId: string | null }[] = [];
+  /** When set, EDGE refuses every lent map with this reason. */
+  refusal: string | undefined;
   readonly #events: RemoteProcessManager.Event[] = [];
 
   constructor(readonly script: Script) {}
@@ -70,14 +71,12 @@ class FakeEdge implements EdgeAgent.ProcessControl {
     RpcTest.makeClient(EdgeProtocol.Control).pipe(
       Effect.provide(
         EdgeProtocol.Control.toLayer({
-          provideAuth: (credential) =>
-            Effect.sync(() => {
-              this.credentials.push(credential);
-            }),
-          provideGitAuth: (credential) =>
-            Effect.sync(() => {
-              this.gitCredentials.push(credential);
-            }),
+          provideCredentials: (credentials) =>
+            this.refusal === undefined
+              ? Effect.sync(() => {
+                  this.lent.push(credentials);
+                })
+              : Effect.fail(new EdgeProtocol.InvalidCredentials({ message: this.refusal })),
           respondPermission: (answer) =>
             Effect.sync(() => {
               this.answers.push(answer);
@@ -89,7 +88,7 @@ class FakeEdge implements EdgeAgent.ProcessControl {
               sessionId: null,
               turnId: null,
               restarts: 0,
-              hasCredential: true,
+              credentials: this.lent.flatMap(({ env }) => Object.keys(env)),
             }),
         }),
       ),
@@ -122,7 +121,7 @@ const text = (turnId: string, value: string): EdgeProtocol.Output => ({
   update: { sessionUpdate: 'agent_message_chunk', content: { type: 'text', text: value } },
 });
 
-const API_KEY: EdgeProtocol.AnthropicCredential = { kind: 'api-key', value: 'sk-ant-test' };
+const ENV = { ANTHROPIC_API_KEY: 'sk-ant-test' };
 
 const setup = Effect.fn(function* (script: Script, mode?: string) {
   const feed = yield* Database.add(Feed.make());
@@ -133,7 +132,7 @@ const setup = Effect.fn(function* (script: Script, mode?: string) {
       id: 'edge',
       label: 'Edge agent',
       icon: 'icon',
-      credential: Effect.succeed(API_KEY),
+      credentials: Effect.succeed(ENV),
       ...(mode !== undefined && { mode: () => mode }),
     },
     control: () => edge,
@@ -205,19 +204,18 @@ describe('EdgeAgent', () => {
         },
       });
       expect(Obj.getKeys(chat, EdgeAgent.processKeySource('edge')).map(({ id }) => id)).toEqual(['process-1']);
-      expect(edge.credentials).toEqual([API_KEY, API_KEY]);
+      expect(edge.lent).toEqual([{ env: ENV }, { env: ENV }]);
     }).pipe(Effect.scoped, Effect.provide(TestLayer)),
   );
 
-  it.live('lends the credential again when the process asks for it', () =>
+  it.live('fails the turn with the reason EDGE refused the credentials, before prompting', () =>
     Effect.gen(function* () {
-      const { feed, chat, edge, options } = yield* setup((turnId) => [
-        { _tag: 'auth-required' },
-        text(turnId, 'done'),
-        { _tag: 'turn-end', turnId, stopReason: 'end_turn' },
-      ]);
-      yield* EdgeAgent.runTurn(options, { chat, feed }, { prompt: 'go' });
-      expect(edge.credentials).toHaveLength(2);
+      const { feed, chat, edge, options } = yield* setup(() => []);
+      edge.refusal = 'ANTHROPIC_API_KEY has an unprintable value';
+      const error = yield* EdgeAgent.runTurn(options, { chat, feed }, { prompt: 'hello' }).pipe(Effect.flip);
+      expect(error).toBeInstanceOf(AgentError);
+      expect(error.message).toContain('ANTHROPIC_API_KEY has an unprintable value');
+      expect(edge.inputs).toEqual([]);
     }).pipe(Effect.scoped, Effect.provide(TestLayer)),
   );
 
@@ -306,10 +304,9 @@ describe('EdgeAgent', () => {
     }).pipe(Effect.scoped, Effect.provide(TestLayer)),
   );
 
-  it.live("checks out the project's repositories in the sandbox, and lends the git credential", () =>
+  it.live("checks out the project's repositories in the sandbox", () =>
     Effect.gen(function* () {
       const { feed, chat, edge, options } = yield* setup((turnId) => [
-        { _tag: 'git-auth-required', host: 'github.com' },
         { _tag: 'turn-end', turnId, stopReason: 'end_turn' },
       ]);
       const dxos = yield* Database.add(Repo.make({ owner: 'dxos', name: 'dxos', defaultBranch: 'main' }));
@@ -319,13 +316,7 @@ describe('EdgeAgent', () => {
         Project.make({ repo: Ref.make(dxos), repositories: [Ref.make(edgeRepo), Ref.make(dxos), Ref.make(fork)] }),
       );
       Obj.setParent(chat, project);
-      const gitCredential: EdgeProtocol.GitCredential = { host: 'github.com', token: 'ghp-test' };
-      const withGit = {
-        ...options,
-        definition: { ...options.definition, gitCredential: Effect.succeed(gitCredential) },
-      };
-
-      yield* EdgeAgent.runTurn(withGit, { chat, feed }, { prompt: 'build it' });
+      yield* EdgeAgent.runTurn(options, { chat, feed }, { prompt: 'build it' });
 
       expect(edge.spawned[0]).toMatchObject({
         annotations: {
@@ -336,12 +327,10 @@ describe('EdgeAgent', () => {
           ],
         },
       });
-      // Lent with the turn, and again when the process reports a host refused it.
-      expect(edge.gitCredentials).toEqual([gitCredential, gitCredential]);
     }).pipe(Effect.scoped, Effect.provide(TestLayer)),
   );
 
-  it.live("lends the space's GitHub token, resolving one EDGE custodies", () =>
+  it.live("lends the space's GitHub token as GITHUB_TOKEN and GH_TOKEN, resolving one EDGE custodies", () =>
     Effect.gen(function* () {
       const resolved: string[] = [];
       const resolver = Layer.succeed(Credential.AccessTokenResolver, {
@@ -350,19 +339,19 @@ describe('EdgeAgent', () => {
           return 'ghs-live';
         },
       });
-      const credential = EdgeAgent.githubCredential.pipe(Effect.provide(resolver));
-      expect(yield* credential).toBeUndefined();
+      const credential = EdgeAgent.githubCredentials.pipe(Effect.provide(resolver));
+      expect(yield* credential).toEqual({});
 
       yield* Database.add(Obj.make(AccessToken.AccessToken, { source: 'anthropic.com', token: 'sk-ant' }));
       const github = yield* Database.add(
         Obj.make(AccessToken.AccessToken, { source: 'github.com', token: MANAGED_ACCESS_TOKEN }),
       );
-      expect(yield* credential).toEqual({ host: 'github.com', token: 'ghs-live' });
+      expect(yield* credential).toEqual({ GITHUB_TOKEN: 'ghs-live', GH_TOKEN: 'ghs-live' });
       expect(resolved).toEqual([github.id]);
 
       // One EDGE cannot resolve leaves the checkout to public repositories rather than failing the turn.
-      const unresolved = EdgeAgent.githubCredential.pipe(Effect.provide(Credential.AccessTokenResolver.notAvailable));
-      expect(yield* unresolved).toBeUndefined();
+      const unresolved = EdgeAgent.githubCredentials.pipe(Effect.provide(Credential.AccessTokenResolver.notAvailable));
+      expect(yield* unresolved).toEqual({});
     }).pipe(Effect.scoped, Effect.provide(TestLayer)),
   );
 

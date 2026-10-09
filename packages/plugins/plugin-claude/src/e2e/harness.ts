@@ -299,7 +299,11 @@ const pick = (block: ContentBlock.Request, decision: Decision) =>
 export const TURN_TIMEOUT = 240_000;
 
 /** Sends `prompt` and waits for the turn it starts to end, returning everything the agent said in it. */
-export const turn = Effect.fnUntraced(function* (session: AgentService.Session, prompt: string) {
+export const turn = Effect.fnUntraced(function* (
+  session: AgentService.Session,
+  prompt: string,
+  timeout: number = TURN_TIMEOUT,
+) {
   const before = yield* messages(session.feed);
   const seen = new Set(before.map((message) => message.id));
   const ended = before.filter(endsTurn).length;
@@ -311,7 +315,7 @@ export const turn = Effect.fnUntraced(function* (session: AgentService.Session, 
       Effect.map((all) => (all.filter(endsTurn).length > ended ? all : undefined)),
     ),
     () => `the turn did not end: ${prompt}\nthe chat ends with:\n${summarize(latest.slice(-5))}`,
-    TURN_TIMEOUT,
+    timeout,
   );
   return after
     .filter((message) => message.sender.role === 'assistant' && !seen.has(message.id))
