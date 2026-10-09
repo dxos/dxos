@@ -33,6 +33,8 @@ class FakeEdge implements EdgeAgent.ProcessControl {
   readonly inputs: unknown[] = [];
   readonly lent: EdgeProtocol.Credentials[] = [];
   readonly answers: { requestId: string; optionId: string | null }[] = [];
+  /** When set, EDGE refuses every lent map with this reason. */
+  refusal: string | undefined;
   readonly #events: RemoteProcessManager.Event[] = [];
 
   constructor(readonly script: Script) {}
@@ -70,9 +72,11 @@ class FakeEdge implements EdgeAgent.ProcessControl {
       Effect.provide(
         EdgeProtocol.Control.toLayer({
           provideCredentials: (credentials) =>
-            Effect.sync(() => {
-              this.lent.push(credentials);
-            }),
+            this.refusal === undefined
+              ? Effect.sync(() => {
+                  this.lent.push(credentials);
+                })
+              : Effect.fail(new EdgeProtocol.InvalidCredentials({ message: this.refusal })),
           respondPermission: (answer) =>
             Effect.sync(() => {
               this.answers.push(answer);
@@ -201,6 +205,17 @@ describe('EdgeAgent', () => {
       });
       expect(Obj.getKeys(chat, EdgeAgent.processKeySource('edge')).map(({ id }) => id)).toEqual(['process-1']);
       expect(edge.lent).toEqual([{ env: ENV }, { env: ENV }]);
+    }).pipe(Effect.scoped, Effect.provide(TestLayer)),
+  );
+
+  it.live('fails the turn with the reason EDGE refused the credentials, before prompting', () =>
+    Effect.gen(function* () {
+      const { feed, chat, edge, options } = yield* setup(() => []);
+      edge.refusal = 'ANTHROPIC_API_KEY has an unprintable value';
+      const error = yield* EdgeAgent.runTurn(options, { chat, feed }, { prompt: 'hello' }).pipe(Effect.flip);
+      expect(error).toBeInstanceOf(AgentError);
+      expect(error.message).toContain('ANTHROPIC_API_KEY has an unprintable value');
+      expect(edge.inputs).toEqual([]);
     }).pipe(Effect.scoped, Effect.provide(TestLayer)),
   );
 

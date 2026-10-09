@@ -168,7 +168,15 @@ export const runTurn = (
     const env = yield* options.definition.credentials.pipe(
       Effect.provide(options.accessTokens ?? Credential.AccessTokenResolver.notAvailable),
     );
-    yield* rpc.provideCredentials({ env }).pipe(Effect.orDie);
+    yield* rpc
+      .provideCredentials({ env })
+      .pipe(
+        Effect.catch((error) =>
+          error._tag === 'InvalidCredentials'
+            ? Effect.fail(new AgentError({ message: `EDGE refused the agent's credentials: ${error.message}` }))
+            : Effect.die(error),
+        ),
+      );
 
     // A turn some client started and never saw end (Composer closed mid-turn) ran on without it. This
     // prompt is that turn redelivered, so it is picked up where it is rather than sent as a new one.
