@@ -415,6 +415,8 @@ export const IconsPlugin = ({
         if (devSpriteDir) {
           fs.rmSync(devSpriteDir, { recursive: true, force: true });
           devSpriteDir = null;
+          // The sprite went with the directory, so a later server must write it again rather than skip as unchanged.
+          lastFingerprint = null;
         }
       },
     },
