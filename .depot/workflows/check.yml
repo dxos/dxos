@@ -320,6 +320,7 @@ jobs:
       github.event.pull_request.head.repo.full_name == github.repository &&
       needs.boot-budget.result != 'skipped' && needs.boot-budget.outputs.status != 'skipped' }}
     runs-on: depot-ubuntu-latest
+    timeout-minutes: 5
     permissions:
       contents: read
       pull-requests: write
@@ -373,7 +374,7 @@ jobs:
       credentials:
         username: dxos-bot
         password: ${{ secrets.GITHUB_TOKEN }}
-    timeout-minutes: 30
+    timeout-minutes: 20
     env:
       DX_DEBUG_LEAKS: '1'
       VITEST_ENV: 'node'
@@ -423,7 +424,7 @@ jobs:
       github.event.pull_request.head.repo.full_name != github.repository ||
       !(startsWith(github.head_ref, 'claude/') || startsWith(github.head_ref, 'dm/'))))) }}
     runs-on: depot-ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
     outputs:
       node: ${{ steps.plan.outputs.node }}
       browser: ${{ steps.plan.outputs.browser }}
@@ -607,7 +608,7 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
     # Headroom over the step's own cap, which fails cleanly with traces attached; hitting this one
     # cancels the job and proves nothing.
-    timeout-minutes: 50
+    timeout-minutes: 30
     env:
       # Scoped per job because at workflow level it would also move the hashes of `test`, `storybook`,
       # `workerd` and `cli`.
@@ -652,7 +653,7 @@ jobs:
             run: rm -rf test-results
 
       - name: Test
-        timeout-minutes: 35
+        timeout-minutes: 25
         uses: trunk-io/analytics-uploader@v1
         env:
           # Forces the e2e tasks to actually run: re-running one commit otherwise replays a cache hit
@@ -701,7 +702,7 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
     # Headroom over the step's own cap, which fails cleanly with traces attached; hitting this one
     # cancels the job and proves nothing.
-    timeout-minutes: 50
+    timeout-minutes: 30
     env:
       # Scoped per job because at workflow level it would also move the hashes of `test`, `storybook`,
       # `workerd` and `cli`.
@@ -757,7 +758,7 @@ jobs:
               echo "targets=$targets" >> "$GITHUB_OUTPUT"
 
       - name: Test
-        timeout-minutes: 35
+        timeout-minutes: 25
         uses: trunk-io/analytics-uploader@v1
         env:
           # Forces the e2e tasks to actually run: re-running one commit otherwise replays a cache hit
@@ -800,7 +801,7 @@ jobs:
       credentials:
         username: dxos-bot
         password: ${{ secrets.GITHUB_TOKEN }}
-    timeout-minutes: 45
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -842,7 +843,7 @@ jobs:
     needs: cli
     if: ${{ !cancelled() && needs.cli.result == 'success' }}
     runs-on: depot-ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
     steps:
       - name: Download packed CLI
         uses: actions/download-artifact@v4
@@ -877,7 +878,7 @@ jobs:
       credentials:
         username: dxos-bot
         password: ${{ secrets.GITHUB_TOKEN }}
-    timeout-minutes: 10
+    timeout-minutes: 5
     steps:
       # This job only runs a repository-local action, so it never needs git auth; leaving the token in
       # `.git/config` would expose it to anything in the checked-out tree.
@@ -918,6 +919,7 @@ jobs:
       (!github.event.pull_request.draft && (github.event.action != 'opened' ||
       !(startsWith(github.head_ref, 'claude/') || startsWith(github.head_ref, 'dm/')))))
     runs-on: depot-ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: read
       pull-requests: write

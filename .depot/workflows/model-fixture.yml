@@ -45,7 +45,7 @@ jobs:
       credentials:
         username: dxos-bot
         password: ${{ github.token }}
-    timeout-minutes: 20
+    timeout-minutes: 15
     env:
       NODE_VERSION: '24.11.1'
       # Select ONLY the model-fixture-tagged suites (vitest) and un-skip them (the tag is skipped by
