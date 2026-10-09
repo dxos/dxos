@@ -163,9 +163,9 @@ export const IconsPlugin = ({
   // no fill defaults to black and disappears against a dark surface, and vector editors drop the
   // attribute on every re-export — patching the source SVG loses that race. Runs here rather than
   // via svg-sprite's `shape.transform` so it also applies to a caller-supplied `config`.
-  const normalizeSpriteFile = () => {
-    const { svg, hardcoded } = normalizeSprite(fs.readFileSync(spritePath, 'utf8'));
-    fs.writeFileSync(spritePath, svg);
+  const normalizeSpriteFile = (path: string) => {
+    const { svg, hardcoded } = normalizeSprite(fs.readFileSync(path, 'utf8'));
+    fs.writeFileSync(path, svg);
     const fresh = hardcoded.filter((id) => !warnedHardcoded.has(id));
     if (fresh.length > 0) {
       fresh.forEach((id) => warnedHardcoded.add(id));
@@ -196,8 +196,14 @@ export const IconsPlugin = ({
     // failed `makeSprite` leaves it unchanged and the next call retries instead of skipping.
     const written = fingerprint;
     const symbols = new Set(resolved.map(({ symbol }) => symbol));
-    await makeSprite({ assetPath, symbolPattern, spritePath, contentPaths, config }, symbols);
-    normalizeSpriteFile();
+    // In dev the sprite is built aside and renamed into place: a request may be reading the served
+    // file, and both `makeSprite` and the normalize pass rewrite their target in place.
+    const target = devSpriteDir ? join(devSpriteDir, 'staging', spriteFile) : spritePath;
+    await makeSprite({ assetPath, symbolPattern, spritePath: target, contentPaths, config }, symbols);
+    normalizeSpriteFile(target);
+    if (target !== spritePath) {
+      fs.renameSync(target, spritePath);
+    }
     lastFingerprint = written;
     watchAssets(resolved.map(({ path }) => path));
     if (verbose) {
@@ -323,22 +329,29 @@ export const IconsPlugin = ({
         // debounced write has flushed, or before the first write at all — which
         // yields blank icons until a hard reload, so a pending write is flushed
         // first and the served sprite reflects every symbol detected so far.
-        const serveSprite: Connect.NextHandleFunction = (_req, res, next) => {
-          if (!fs.existsSync(spritePath)) {
-            return next();
-          }
-          res.setHeader('Content-Type', 'image/svg+xml');
-          // The sprite grows as modules are served; a cached copy would hide icons found since.
-          res.setHeader('Cache-Control', 'no-store');
-          fs.createReadStream(spritePath).pipe(res);
+        // Read whole rather than streamed: a read error then falls through to `next()` instead of
+        // surfacing as an unhandled stream error that would take the dev server down.
+        const serveSprite: Connect.NextHandleFunction = (req, res, next) => {
+          fs.readFile(spritePath, (err, data) => {
+            if (err) {
+              return next();
+            }
+            res.setHeader('Content-Type', 'image/svg+xml');
+            res.setHeader('Content-Length', data.length);
+            // The sprite grows as modules are served; a cached copy would hide icons found since.
+            res.setHeader('Cache-Control', 'no-store');
+            res.end(req.method === 'HEAD' ? undefined : data);
+          });
         };
         server.middlewares.use((req, res, next) => {
           const pathname = (req.url ?? '').split('?')[0];
           if (pathname !== `/${spriteFile}` || (req.method !== 'GET' && req.method !== 'HEAD')) {
             return next();
           }
-          if (writeTimer || !fs.existsSync(spritePath)) {
-            void flushSprite().then(
+          // An in-flight write may be mid-rewrite of the file, so wait for it as well as for a pending one.
+          const pending = writeTimer || !fs.existsSync(spritePath) ? flushSprite() : flushing;
+          if (pending) {
+            void pending.then(
               () => serveSprite(req, res, next),
               () => next(),
             );
