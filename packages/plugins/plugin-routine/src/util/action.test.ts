@@ -34,6 +34,19 @@ describe('switchActionKind', () => {
     expect(trigger.runnable?.uri).toBe(operation.uri);
   });
 
+  test("a round trip through instructions leaves the operation's trigger input as it was", ({ expect }) => {
+    const { routine, trigger } = makeSyncRoutine();
+    Obj.update(trigger, (trigger) => {
+      trigger.input = { priority: '{{event.data.priority}}' };
+    });
+    const stash: ActionStash = {};
+
+    switchActionKind(routine, 'instructions', stash);
+    switchActionKind(routine, 'runnable', stash);
+
+    expect(trigger.input).toEqual({ priority: '{{event.data.priority}}' });
+  });
+
   test('a round trip through an operation restores the authored instructions', ({ expect }) => {
     const instructions = Instructions.make({ name: 'Body', text: 'do something' });
     const trigger = Trigger.make({ spec: Trigger.specTimer('0 9 * * *') });

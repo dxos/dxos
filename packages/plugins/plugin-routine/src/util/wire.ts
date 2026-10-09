@@ -9,12 +9,15 @@ import { Obj, Ref } from '@dxos/echo';
 
 import { runInstructionsRef } from './run-instructions.ts';
 
-/** Strip a stale `instructions` binding from a trigger input. */
+/**
+ * Strip a stale RunInstructions binding (`instructions` and its `input`) from a trigger input; an operation
+ * validates its input strictly, so either key left behind fails every run.
+ */
 const withoutInstructions = (input: Record<string, unknown> | undefined): Record<string, unknown> | undefined => {
   if (!input || !('instructions' in input)) {
     return input;
   }
-  const { instructions: _drop, ...rest } = input;
+  const { instructions: _instructions, input: _input, ...rest } = input;
   return rest;
 };
 
