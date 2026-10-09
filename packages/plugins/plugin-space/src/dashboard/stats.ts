@@ -24,6 +24,10 @@ export const SPACE_STATS_QUERY = Query.select(Filter.everything()).aggregate({
   count: Aggregate.count(),
 });
 
+/** Type URIs with at least one live object, in the form `Type.getURI` returns. */
+export const typeUrisWithObjects = (rows: readonly TypeCount[]): Set<string> =>
+  new Set(rows.flatMap((row) => (row.type !== null && row.count > 0 ? [row.type] : [])));
+
 /** The versionless typename a stored type URI names, or the URI itself when it is not a DXN. */
 export const typenameOf = (type: string): string => {
   const dxn = DXN.tryMake(type);

@@ -24,6 +24,8 @@ export type MaterializeProps = {
   /** Senders allowed to post, keyed by hex identity key; everyone else's messages stay pending. */
   contacts: ReadonlyMap<string, Sender>;
   ack: (ids: readonly string[]) => Promise<void>;
+  /** Fold other devices' containers first; only needed when the container set changed. Default true. */
+  converge?: boolean;
 };
 
 export type MaterializeResult = {
@@ -44,8 +46,11 @@ export const materialize = Effect.fn('InboxMaterializer.materialize')(function* 
   messages,
   contacts,
   ack,
+  converge = true,
 }: MaterializeProps) {
-  yield* Notifications.converge();
+  if (converge) {
+    yield* Notifications.converge();
+  }
   const candidates = messages.filter(
     (message) => message.type === InboxService.INBOX_MESSAGE_TYPE && contacts.has(message.senderIdentityKey.toHex()),
   );
