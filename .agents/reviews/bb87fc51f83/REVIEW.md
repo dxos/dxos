@@ -17,7 +17,7 @@ _14 error(s), 19 warning(s)._
 <!-- `- <id> - unresolved|ignored|resolved - <rule> - <file:line[:col]>` -->
 
 - bb87fc51f83-1 - ignored - no-casts - packages/core/echo/echo-client/src/echo-handler/subscription.test.ts:362
-- bb87fc51f83-2 - ignored - namespace-export-with-internal-hiding - packages/core/echo/echo-react/src/index.ts:1
+- bb87fc51f83-2 - resolved - namespace-export-with-internal-hiding - packages/core/echo/echo-react/src/index.ts:1
 - bb87fc51f83-3 - ignored - no-casts - packages/core/echo/echo/src/Entity.ts:75
 - bb87fc51f83-4 - ignored - no-casts - packages/core/echo/echo/src/internal/Obj/atoms.ts:47
 - bb87fc51f83-5 - ignored - effect-fn-not-hand-wrapped-gen - packages/core/echo/echo/src/internal/Obj/atoms.ts:132
