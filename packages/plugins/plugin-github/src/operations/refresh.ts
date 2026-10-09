@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import type * as HttpClient from 'effect/http/HttpClient';
 
 import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
@@ -30,22 +29,21 @@ const IN_FLIGHT_STATES: readonly PullRequest.State[] = ['open', 'draft'];
  * Uses the anonymous fallback, so a public pull request still refreshes behind a revoked token.
  * Returns the names of the changed fields.
  */
-export const refreshPullRequest = (
+export const refreshPullRequest = Effect.fn('refreshPullRequest')(function* (
   pullRequest: PullRequest.PullRequest,
   token: string,
-): Effect.Effect<string[], never, HttpClient.HttpClient> =>
-  Effect.gen(function* () {
-    const pull = yield* fetchPullRequestWithFallback(pullRequest, token);
-    const changes = pullRequestChanges(pullRequest, pull);
-    const updated = Object.keys(changes);
-    if (updated.length > 0) {
-      Obj.update(pullRequest, (pullRequest) => {
-        Object.assign(pullRequest, changes);
-      });
-    }
+) {
+  const pull = yield* fetchPullRequestWithFallback(pullRequest, token);
+  const changes = pullRequestChanges(pullRequest, pull);
+  const updated = Object.keys(changes);
+  if (updated.length > 0) {
+    Obj.update(pullRequest, (pullRequest) => {
+      Object.assign(pullRequest, changes);
+    });
+  }
 
-    return updated;
-  });
+  return updated;
+});
 
 /** The space's pull requests GitHub may still change. */
 export const queryInFlightPullRequests = () =>
@@ -63,22 +61,21 @@ const isRefreshTrigger = (trigger: Trigger.Trigger): boolean =>
  *
  * The trigger runs on EDGE, so pull requests keep refreshing while no client has the space open.
  */
-export const ensureRefreshTrigger = () =>
-  Effect.gen(function* () {
-    const triggers = yield* Database.query(Filter.type(Trigger.Trigger)).run.pipe(Effect.orDie);
-    const existing = triggers.find(isRefreshTrigger);
-    if (existing) {
-      return existing;
-    }
+export const ensureRefreshTrigger = Effect.fn('ensureRefreshTrigger')(function* () {
+  const triggers = yield* Database.query(Filter.type(Trigger.Trigger)).run.pipe(Effect.orDie);
+  const existing = triggers.find(isRefreshTrigger);
+  if (existing) {
+    return existing;
+  }
 
-    return yield* Database.add(
-      Trigger.make({
-        enabled: true,
-        remote: true,
-        spec: Trigger.specTimer(REFRESH_CRON),
-        // Statically defined in the registry, so referred to by key rather than copied into the space.
-        runnable: Ref.fromURI(GitHubOperation.RefreshPullRequests.meta.key),
-        input: {},
-      }),
-    );
-  });
+  return yield* Database.add(
+    Trigger.make({
+      enabled: true,
+      remote: true,
+      spec: Trigger.specTimer(REFRESH_CRON),
+      // Statically defined in the registry, so referred to by key rather than copied into the space.
+      runnable: Ref.fromURI(GitHubOperation.RefreshPullRequests.meta.key),
+      input: {},
+    }),
+  );
+});
