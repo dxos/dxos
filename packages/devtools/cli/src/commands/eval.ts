@@ -102,7 +102,6 @@ export const evaluateCommand = Command.make(
       operations,
       maxOutput: Option.getOrUndefined(maxOutput),
     }).pipe(Effect.result);
-    yield* Database.flush();
 
     if (json) {
       yield* Console.log(
@@ -115,6 +114,9 @@ export const evaluateCommand = Command.make(
     } else {
       yield* Console.log(Result.isSuccess(result) ? result.success : result.failure);
     }
+
+    // After printing, so a failed flush cannot swallow output the program already produced.
+    yield* Database.flush();
 
     if (Result.isFailure(result)) {
       // The output above already carries the error; failing only sets the exit code.
