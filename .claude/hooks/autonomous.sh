@@ -36,33 +36,50 @@ if [ -n "$session_id" ]; then
   export AUTONOMOUS_SESSION_ID="$session_id"
 fi
 
-# Every user message the transcript holds, oldest first, excluding tool results,
-# harness meta turns, and this turn's own prompt. Used to seed the user log when
-# a run starts partway through a session.
+# Every message the user typed, oldest first, NUL-terminated so a multi-line
+# message stays one entry, excluding this turn's own prompt. Used to seed the
+# user log when a run starts partway through a session. Where the transcript
+# marks turn origins, only `human` turns and prompts typed mid-turn
+# (`queued_command` attachments) count: task notifications, skill bodies and
+# command expansions are user-role turns too, and must not be pinned as a task.
 prior_user_messages() {
   local file=$1 current=$2
   [ -f "$file" ] || return 0
-  jq -rs --arg current "$current" '
-    [ .[]
-      | select(.type == "user" and (.isMeta | not))
-      | .message.content
-      | if type == "string" then .
-        elif type == "array" then ([ .[] | select(.type == "text") | .text ] | join("\n"))
-        else empty end
-      | select(type == "string" and . != "")
-    ]
-    | map(select(. != $current))
+  jq -js --arg current "$current" '
+    def text: if type == "string" then .
+      elif type == "array" then ([ .[] | select(.type == "text") | .text ] | join("\n"))
+      else "" end;
+    (any(.[]; .type == "user" and has("origin"))) as $marked
+    | [ .[]
+        | if .type == "user" and (.isMeta | not)
+            and (($marked | not) or .origin.kind == "human")
+          then .message.content | text
+          elif .type == "attachment" and .attachment.type == "queued_command"
+            and .attachment.commandMode == "prompt"
+          then .attachment.prompt | text
+          else empty end
+        | select(. != "" and . != $current)
+      ]
     | .[-50:]
     | .[]
+    | . + "\u0000"
   ' "$file" 2>/dev/null || printf ''
 }
 
 # The last user instruction that is not this turn's prompt and not a slash
-# command — i.e. what a bare `/autonomous` means to pin.
+# command (typed, or as the transcript records its expansion) — i.e. what a
+# bare `/autonomous` means to pin.
 previous_instruction() {
-  local file=$1 current=$2
+  local file=$1 current=$2 message trimmed last=''
   [ -f "$file" ] || return 0
-  prior_user_messages "$file" "$current" | grep -v '^[[:space:]]*/' | tail -1 || printf ''
+  while IFS= read -r -d '' message; do
+    trimmed=${message#"${message%%[![:space:]]*}"}
+    case "$trimmed" in
+      /* | '<command-message>'* | '<command-name>'*) ;;
+      *) last=$message ;;
+    esac
+  done < <(prior_user_messages "$file" "$current")
+  printf '%s' "$last"
 }
 
 # `/autonomous …`, leading, as a slash command must be. Anchoring to the first
@@ -115,7 +132,7 @@ if [ -n "$sentinel" ]; then
         # the first scoping decision has the same evidence a long-running run
         # would, without re-appending turns already on disk.
         if [ -z "$has_log" ]; then
-          while IFS= read -r message; do
+          while IFS= read -r -d '' message; do
             [ -n "$message" ] || continue
             bash "$script" user add "$message" >/dev/null 2>&1 || true
           done < <(prior_user_messages "$transcript" "$prompt")

@@ -123,6 +123,33 @@ out=$(run "$(payload '/autonomous' "$transcript")")
 check 'bare verb: adopts previous instruction' 'fix the flaky echo test' "$(bash "$script" get)"
 contains 'bare verb: says the task was derived' 'adopted from your previous instruction' "$out"
 
+# Current transcripts mark each turn's origin; harness turns are user-role too.
+marked="$sandbox/marked.jsonl"
+jq -nc '
+  {type: "user", origin: {kind: "human"}, message: {role: "user", content: "first line of the task\nsecond line of the task"}},
+  {type: "attachment", attachment: {type: "queued_command", commandMode: "prompt", prompt: "and keep it per-session"}},
+  {type: "attachment", attachment: {type: "queued_command", commandMode: "task-notification", prompt: "mods reloaded"}},
+  {type: "user", message: {role: "user", content: "Base directory for this skill: /tmp/skill"}},
+  {type: "user", origin: {kind: "task-notification"}, message: {role: "user", content: "<task-notification>\n<status>pending</status>\n</task-notification>"}},
+  {type: "user", origin: {kind: "human"}, message: {role: "user", content: "<command-message>mode</command-message>\n<command-name>/mode</command-name>"}}
+' > "$marked"
+
+reset
+run "$(payload '/autonomous' "$marked")" >/dev/null
+check 'marked transcript: pins the last typed prompt, not a harness turn' 'and keep it per-session' "$(bash "$script" get)"
+user_entries=$(cat "$user_log")
+contains 'marked transcript: a multi-line message is backfilled whole' \
+  "$(printf 'first line of the task\nsecond line of the task')" "$user_entries"
+check 'marked transcript: task notifications are not backfilled' '0' "$(grep -c 'task-notification' "$user_log")"
+check 'marked transcript: skill bodies are not backfilled' '0' "$(grep -c 'Base directory' "$user_log")"
+check 'marked transcript: harness-queued prompts are not backfilled' '0' "$(grep -c 'mods reloaded' "$user_log")"
+
+multiline="$sandbox/multiline.jsonl"
+jq -nc '{type: "user", origin: {kind: "human"}, message: {role: "user", content: "fix the flaky test\nin the echo package /src"}}' > "$multiline"
+reset
+run "$(payload '/autonomous' "$multiline")" >/dev/null
+check 'bare verb: a multi-line instruction is pinned whole' "$(printf 'fix the flaky test\nin the echo package /src')" "$(bash "$script" get)"
+
 reset
 empty="$sandbox/empty.jsonl"
 printf '{"type":"user","message":{"role":"user","content":"/mode terse"}}\n' > "$empty"
