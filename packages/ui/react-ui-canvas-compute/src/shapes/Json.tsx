@@ -5,20 +5,19 @@
 import React from 'react';
 
 import { DEFAULT_INPUT } from '@dxos/conductor';
-import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 
 import { useComputeNodeState } from '../hooks/index.ts';
-import { Box } from './common/index.ts';
+import { Box, type ComputeNodeViewProps } from './common/index.ts';
 import { type JsonShape, type JsonTransformShape } from './json-def.ts';
 
 //
 // Component
 //
 
-export type JsonComponentProps = ShapeComponentProps<JsonShape>;
+export type JsonComponentProps = ComputeNodeViewProps<JsonShape>;
 
-export const JsonComponent = ({ shape, ...props }: JsonComponentProps) => {
+export const JsonComponent = ({ node: shape }: JsonComponentProps) => {
   const { runtime } = useComputeNodeState(shape);
   const input = runtime.inputs[DEFAULT_INPUT];
   const value = input?.type === 'executed' ? input.value : undefined;
@@ -37,8 +36,8 @@ export const JsonComponent = ({ shape, ...props }: JsonComponentProps) => {
   );
 };
 
-export type JsonTransformComponentProps = ShapeComponentProps<JsonTransformShape>;
+export type JsonTransformComponentProps = ComputeNodeViewProps<JsonTransformShape>;
 
-export const JsonTransformComponent = ({ shape, ...props }: JsonTransformComponentProps) => {
+export const JsonTransformComponent = ({ node: shape }: JsonTransformComponentProps) => {
   return <Box shape={shape} />;
 };

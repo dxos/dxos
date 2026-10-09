@@ -4,7 +4,6 @@
 
 import { createSystemPrompt } from '@dxos/assistant';
 import { EID, EntityId, SpaceId } from '@dxos/keys';
-import { CanvasGraphModel, createNote, pointMultiply, pointsToRect, rectToPoints } from '@dxos/react-ui-canvas-editor';
 import { type Point, type Size } from '@dxos/react-ui-canvas/scene';
 
 import {
@@ -33,6 +32,7 @@ import {
   createText,
   createTextToImage,
 } from '../shapes/index.ts';
+import { CanvasGraphModel, type NoteShape } from '../types/index.ts';
 
 //
 // Circuits
@@ -304,12 +304,26 @@ export const createAudioCircuit = () => {
 // Utils
 //
 
-const position = (rect: Point & Partial<Size>, snap = 32): { center: Point; size?: Size } => {
-  const [center, size] = rectToPoints({ width: 0, height: 0, ...rect });
-  const { x, y, width, height } = pointsToRect([pointMultiply(center, snap), pointMultiply(size, snap)]);
+/** A note, sized as the editor's note tool made one. */
+const createNote = ({
+  id,
+  ...rest
+}: Omit<NoteShape, 'type' | 'size'> & Partial<Pick<NoteShape, 'size'>>): NoteShape => ({
+  id,
+  type: 'note',
+  size: { width: 256, height: 128 },
+  ...rest,
+});
+
+/** A rectangle in grid cells scaled to pixels; the size is kept only when both extents are non-zero. */
+const position = (
+  { x, y, width = 0, height = 0 }: Point & Partial<Size>,
+  snap = 32,
+): { center: Point; size?: Size } => {
+  const center = { x: Math.min(x, x + width) * snap, y: Math.min(y, y + height) * snap };
   if (width && height) {
-    return { center: { x, y }, size: width && height ? { width, height } : undefined };
+    return { center, size: { width: Math.abs(width) * snap, height: Math.abs(height) * snap } };
   } else {
-    return { center: { x, y } };
+    return { center };
   }
 };

@@ -6,10 +6,9 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
 import { QueueInput, QueueOutput } from '@dxos/conductor';
-import { type ShapeDef } from '@dxos/react-ui-canvas-editor';
 
-import { createFunctionAnchors } from './common/index.ts';
-import { ComputeShape, type CreateShapeProps, createShape } from './defs.ts';
+import { createFunctionPorts, defineComputeNode } from './common/index.ts';
+import { ComputeShape, type CreateShapeProps, createShape, withZ } from './defs.ts';
 import { FeedComponent } from './Feed.tsx';
 
 // Kept out of `Feed.tsx`: react-refresh only fast-refreshes a module whose
@@ -32,13 +31,15 @@ export const createFeed = (props: CreateFeedProps) =>
     ...props,
   });
 
-export const feedShape: ShapeDef<FeedShape> = {
+export const feedNodeDef = defineComputeNode<FeedShape>({
   // Must match the shape's `type` literal ('queue') so the registry resolves it; the registry is keyed by this.
   type: 'queue',
   name: 'Feed',
   icon: 'ph--queue--regular',
+  group: 'Outputs',
+  schema: withZ(FeedShape),
   component: FeedComponent,
-  createShape: createFeed,
-  getAnchors: (shape) => createFunctionAnchors(shape, QueueInput, QueueOutput),
+  create: createFeed,
+  ports: (shape) => createFunctionPorts(shape.size, QueueInput, QueueOutput),
   resizable: true,
-};
+});

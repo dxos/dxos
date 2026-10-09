@@ -621,7 +621,9 @@ class Slice {
 
     this.#prune(requirements);
     this.#requirements = requirements;
-    this.#services = requirements;
+    // A spec in this slice outranks the same tag from below, as a higher slice's would; leaving it in
+    // would mark the tag built and the spec would never run.
+    this.#services = this.#withoutOwnProvides(requirements);
     this.#materializedLayers = [];
     this.#managedRuntimes = [];
 
@@ -643,9 +645,15 @@ class Slice {
     this.#prune(merged);
     this.#requirements = merged;
     // Existing entries win, so a service already handed out is never swapped underneath its users.
-    this.#services = Context.merge(requirements, this.#services);
+    this.#services = Context.merge(this.#withoutOwnProvides(requirements), this.#services);
 
     return Effect.void;
+  }
+
+  /** `services` without the tags a surviving spec of this slice provides. */
+  #withoutOwnProvides(services: Context.Context<unknown>): Context.Context<unknown> {
+    const own = new Set(this.#provides.map((tag) => tag.key));
+    return Context.makeUnsafe<unknown>(new Map([...services.mapUnsafe].filter(([key]) => !own.has(key))));
   }
 
   #prune(requirements: Context.Context<unknown>): void {

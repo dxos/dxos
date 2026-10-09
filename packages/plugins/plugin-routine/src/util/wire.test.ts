@@ -9,11 +9,11 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Routine from '@dxos/compute/Routine';
 import * as Runnable from '@dxos/compute/Runnable';
 import * as Trigger from '@dxos/compute/Trigger';
-import { Obj, Ref } from '@dxos/echo';
+import { DXN, Obj, Ref } from '@dxos/echo';
 
 import { blank } from '../templates/index.ts';
 import { isRunInstructions, runInstructionsRef } from './run-instructions.ts';
-import { makeRoutine } from './wire.ts';
+import { makeRoutine, wireTriggers } from './wire.ts';
 
 describe('wire', () => {
   test('makeRoutine produces a typed Routine', ({ expect }) => {
@@ -69,6 +69,29 @@ describe('wire', () => {
     });
     makeRoutine({ name: 'R', trigger });
     expect(trigger.runnable?.uri).toBe(preset.uri);
+  });
+
+  test('wiring an operation drops an empty `input` an earlier editor left behind', ({ expect }) => {
+    const trigger = Trigger.make({ input: { input: {}, priority: '{{event.data.priority}}' } });
+    makeRoutine({
+      name: 'R',
+      spec: { kind: 'runnable', runnable: Ref.fromURI(DXN.make('org.example.operation.sync')) },
+      trigger,
+    });
+    expect(trigger.input).toEqual({ priority: '{{event.data.priority}}' });
+  });
+
+  test('re-wiring instructions keeps the input already bound for them', ({ expect }) => {
+    const instructions = Instructions.make({ name: 'Body', text: 'do something' });
+    const trigger = Trigger.make({});
+    const routine = makeRoutine({ name: 'R', instructions, trigger });
+    Obj.update(trigger, (trigger) => {
+      trigger.input = { ...trigger.input, input: { topic: 'news' } };
+    });
+
+    wireTriggers(routine);
+
+    expect(trigger.input?.input).toEqual({ topic: 'news' });
   });
 
   describe('blank template', () => {

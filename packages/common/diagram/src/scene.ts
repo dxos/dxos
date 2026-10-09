@@ -144,7 +144,7 @@ export type Text = Schema.Schema.Type<typeof Text>;
 /** UML-style end markers: the head sits at the target, the tail at the source. */
 export const ArrowHead = Schema.Literals(['arrow', 'triangle', 'crowsfoot', 'none']);
 export type ArrowHead = Schema.Schema.Type<typeof ArrowHead>;
-export const ArrowTail = Schema.Literals(['none', 'circle']);
+export const ArrowTail = Schema.Literals(['none', 'circle', 'arrow']);
 export type ArrowTail = Schema.Schema.Type<typeof ArrowTail>;
 
 /**
@@ -213,7 +213,7 @@ export const Arrow = Schema.Struct({
     description: 'Marker at the target end (default arrow): triangle for inheritance, crowsfoot for has-many.',
   }),
   tail: Schema.optional(ArrowTail).annotate({
-    description: 'Marker at the source end (default none): circle for containment.',
+    description: 'Marker at the source end (default none): circle for containment, arrow for a two-way connector.',
   }),
   relation: Schema.optional(Relation).annotate({
     description:

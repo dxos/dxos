@@ -27,7 +27,7 @@ export const Annotation = {
 export const RepositoryCheckout = Schema.Struct({
   /** Directory name under the agent's working directory: one path segment. */
   name: Schema.String,
-  /** HTTPS clone URL; EDGE proxies it, lending the credential from `provideGitAuth`. */
+  /** HTTPS clone URL; a private one is cloned with the `GITHUB_TOKEN` lent through `provideCredentials`. */
   url: Schema.String,
   /** Branch to check out; the remote's default when absent. */
   branch: Schema.optional(Schema.String),
@@ -57,30 +57,27 @@ export const Output = Schema.Union([
     status: Schema.Literals(['starting', 'ready', 'restarting', 'failed']),
     detail: Schema.optional(Schema.String),
   }),
-  Schema.Struct({ _tag: Schema.Literal('auth-required') }),
-  /** A git host refused a request and no credential is held for it; answer with `provideGitAuth`. */
-  Schema.Struct({ _tag: Schema.Literal('git-auth-required'), host: Schema.String }),
 ]);
 export type Output = Schema.Schema.Type<typeof Output>;
 
-export const AnthropicCredential = Schema.Struct({
-  kind: Schema.Literals(['api-key', 'oauth']),
-  value: Schema.String,
-  expiresAt: Schema.optional(Schema.Number),
-});
-export type AnthropicCredential = Schema.Schema.Type<typeof AnthropicCredential>;
+/**
+ * The environment the agent runs with, as variable name to value: its Claude credential
+ * (`CLAUDE_CODE_OAUTH_TOKEN` or `ANTHROPIC_API_KEY`) and any service tokens (`GITHUB_TOKEN`). Each call
+ * replaces what the process holds.
+ */
+export const Credentials = Schema.Struct({ env: Schema.Record(Schema.String, Schema.String) });
+export type Credentials = Schema.Schema.Type<typeof Credentials>;
 
-export const GitCredential = Schema.Struct({
-  /** The git host the token is for, e.g. `github.com`. */
-  host: Schema.String,
-  token: Schema.String,
-  expiresAt: Schema.optional(Schema.Number),
-});
-export type GitCredential = Schema.Schema.Type<typeof GitCredential>;
+/** EDGE refused the lent map (a malformed or reserved name, or an unprintable value); names the variables, never their values. */
+export class InvalidCredentials extends Schema.TaggedError<InvalidCredentials>('InvalidCredentials')(
+  'InvalidCredentials',
+  {
+    message: Schema.String,
+  },
+) {}
 
 export const Control = RpcGroup.make(
-  Rpc.make('provideAuth', { payload: AnthropicCredential, success: Schema.Void }),
-  Rpc.make('provideGitAuth', { payload: GitCredential, success: Schema.Void }),
+  Rpc.make('provideCredentials', { payload: Credentials, success: Schema.Void, error: InvalidCredentials }),
   Rpc.make('respondPermission', {
     payload: Schema.Struct({ requestId: Schema.String, optionId: Schema.NullOr(Schema.String) }),
     success: Schema.Struct({ answered: Schema.Boolean }),
@@ -91,8 +88,8 @@ export const Control = RpcGroup.make(
       sessionId: Schema.NullOr(Schema.String),
       turnId: Schema.NullOr(Schema.String),
       restarts: Schema.Number,
-      hasCredential: Schema.Boolean,
-      hasGitCredential: Schema.optional(Schema.Boolean),
+      /** The names of the variables held, never their values. */
+      credentials: Schema.Array(Schema.String),
     }),
   }),
 );

@@ -39,8 +39,8 @@ test QA-1: Build a plugin with an agent in the desktop app
   given:
     - an identity exists
     - space: a space is open (the default "My Space" is fine)
-    - Composer is the desktop app, built from a commit of `main` that pkg.pr.new has published (every push to
-      `main` is), or with `DX_PLUGIN_TOOLCHAIN_COMMIT` naming one
+    - Composer is the desktop app, built from a commit of `main` that pkg.pr.new has published (a deployed
+      build's commit is), or with `DX_PLUGIN_TOOLCHAIN_COMMIT` naming one
     - Sandbox is enabled and its Backend is Local, the desktop app's default
     - no plugin named "World Clock" is loaded, and no "World Clock" project or sandbox is left from an earlier
       run (the flow's first setup step restores this)

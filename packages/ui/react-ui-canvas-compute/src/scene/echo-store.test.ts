@@ -5,15 +5,25 @@
 import { describe, test } from 'vitest';
 
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
-import { type CanvasBoard, type Polygon } from '@dxos/react-ui-canvas-editor';
-import { type Link, type Node, type Scene, reduceIntent, sortByZ } from '@dxos/react-ui-canvas/scene';
+import { type Link, type Node, type NodeStyle, type Scene, reduceIntent, sortByZ } from '@dxos/react-ui-canvas/scene';
 
+import { type ComputeShape } from '../shapes/index.ts';
+import { type CanvasBoard } from '../types/index.ts';
 import { applySceneToLayout, sceneFromLayout } from './echo-store.ts';
 
-type Layout = { nodes: Polygon[]; edges: CanvasBoard.Connection[] };
+type Layout = { nodes: ComputeShape[]; edges: CanvasBoard.Connection[] };
 
-const shape = (id: string, x: number, rest: Record<string, unknown> = {}): Polygon =>
-  ({ id, type: 'constant', center: { x, y: 0 }, size: { width: 64, height: 32 }, ...rest }) as Polygon;
+const shape = (
+  id: string,
+  x: number,
+  rest: Partial<ComputeShape> & { style?: NodeStyle } = {},
+): ComputeShape & { style?: NodeStyle } => ({
+  id,
+  type: 'constant',
+  center: { x, y: 0 },
+  size: { width: 64, height: 32 },
+  ...rest,
+});
 
 const edge = (id: string, source: string, target: string, rest: Record<string, unknown> = {}) =>
   ({ id, source, target, ...rest }) as CanvasBoard.Connection;

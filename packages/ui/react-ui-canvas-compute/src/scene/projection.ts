@@ -34,8 +34,7 @@ import {
   syncDelete,
   syncLink,
 } from '../graph/index.ts';
-import { type ComputeShape, createFunctionAnchors, parseAnchorId } from '../shapes/index.ts';
-import { anchorsToPorts } from './ports.ts';
+import { type ComputeShape, createFunctionPorts, parseAnchorId } from '../shapes/index.ts';
 
 /** What the projection needs of the controller: the graph it mirrors into and the runtime's change event. */
 export type ComputeGraphSource = Pick<ComputeGraphController, 'graph' | 'update'>;
@@ -235,7 +234,7 @@ const withRuntimePorts = (controller: ComputeGraphSource, node: Node): Node => {
   }
   const inputSchema = computeNode.inputSchema ? JsonSchema.toEffectSchema(computeNode.inputSchema) : DefaultInput;
   const outputSchema = computeNode.outputSchema ? JsonSchema.toEffectSchema(computeNode.outputSchema) : DefaultOutput;
-  return { ...node, ports: anchorsToPorts(createFunctionAnchors(node, inputSchema, outputSchema), node.size) };
+  return { ...node, ports: createFunctionPorts(node.size, inputSchema, outputSchema) };
 };
 
 const model = (controller: ComputeGraphSource) => controller.graph;
