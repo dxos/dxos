@@ -24,6 +24,7 @@ import { WORK_GROUP, groupOfId } from '../score/stages.ts';
 import { type Arm, buildArm, runFlow, runLogged, serveArm } from './arms.ts';
 import { appendLedger } from './ledger.ts';
 import { type Session, elapsedMinutes, openSession, settle } from './session.ts';
+import { ARMS_FILE, type ArmsRecord, touchedSelfMs } from './summarize.ts';
 import { type Target, TARGETS } from './targets.ts';
 import { HarnessError, git, harnessChanges, harnessHash, machineLoad, workspaceRoot } from './workspace.ts';
 
@@ -82,6 +83,36 @@ const measureRound = async (session: Session, arm: Arm, label: Label, round: num
   } finally {
     await server.stop();
   }
+};
+
+/** A stage timing win larger than the time the changed code took there at base, flagged for a trace. */
+const implausibleWins = (dir: string, targets: ReadonlyArray<MetricComparison>, diff: string): string[] => {
+  const wins = targets.filter(
+    ({ id, verdict }) => verdict === 'improved' && (id.startsWith('wall > ') || id.startsWith('cpu > ')),
+  );
+  if (wins.length === 0) {
+    return [];
+  }
+  const stageOf = (id: string) => id.slice(id.indexOf(' > ') + 3);
+  const touched = touchedSelfMs(
+    dir,
+    new Set(diff.split('\n').filter(Boolean)),
+    new Set(wins.map(({ id }) => stageOf(id))),
+  );
+  return wins.flatMap(({ id, shift }) => {
+    const spent = touched.get(stageOf(id)) ?? 0;
+    if (-shift <= spent * 1.25 + 50) {
+      return [];
+    }
+    // No self time at all means the change works through other code (a prop, a config, a schedule).
+    return spent === 0
+      ? [
+          `indirect: ${id} fell by ${Math.round(-shift)} ms, and the changed files themselves took no time in that stage; \`pnpm perf summarize\` shows which code got cheaper`,
+        ]
+      : [
+          `implausible? ${id} fell by ${Math.round(-shift)} ms, more than the ${Math.round(spent)} ms of self time the changed files took in that stage at base; read a trace before trusting it`,
+        ];
+  });
 };
 
 /** Calibration leaves out counters that swing between runs (some flip between two levels), so a verdict on one is weaker. */
@@ -178,6 +209,10 @@ export const compare = async (options: CompareOptions): Promise<number> => {
     const base = await buildArm({ root, target, ref: options.base, logFile: path.join(dir, 'build.log') });
     progress(`base ${options.base} ${base.commit.slice(0, 9)} ${base.cached ? 'cached' : 'built'}`);
     const aa = base.dir === candidate.dir;
+    writeFileSync(
+      path.join(dir, ARMS_FILE),
+      JSON.stringify({ target: target.name, base: base.dir, candidate: candidate.dir } satisfies ArmsRecord),
+    );
     await settle(session);
 
     // By default the work counters the nightly budgets: calibration kept only those steady run to run.
@@ -237,6 +272,9 @@ export const compare = async (options: CompareOptions): Promise<number> => {
     );
     record(verdict, `${aa ? 'A/A: ' : ''}${summarize(targets)}`, base.commit, candidate.commit, roundCount);
 
+    const implausible = aa
+      ? []
+      : implausibleWins(dir, targets, git(root, ['diff', '--name-only', base.commit, candidate.commit]));
 
     if (options.json) {
       process.stdout.write(JSON.stringify({ verdict, exitCode: EXIT_CODE[verdict], dir, comparisons: targets }) + '\n');
@@ -248,6 +286,7 @@ export const compare = async (options: CompareOptions): Promise<number> => {
         ...reasons.map((reason) => `harness change allowed, so the verdict covers it too: ${reason}`),
         ...renderComparison({ comparisons, isTarget }),
         ...noBudget(targets.map(({ id }) => id).filter((id) => budgets[id] === undefined)),
+        ...implausible,
         `verdict ${verdict} (exit ${EXIT_CODE[verdict]})`,
       ];
       process.stdout.write(lines.join('\n') + '\n');
