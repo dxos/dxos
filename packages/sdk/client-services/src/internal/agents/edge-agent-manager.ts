@@ -28,7 +28,6 @@ import * as IdentityContract from '../../contracts/identity.ts';
 import * as SpacesContract from '../../contracts/spaces.ts';
 import * as Events from '../../Events.ts';
 import { type Identity } from '../../Identity.ts';
-import { type IdentityProvider } from '../identity/index.ts';
 
 const AGENT_STATUS_QUERY_RETRY_INTERVAL = 5000;
 const AGENT_STATUS_QUERY_RETRY_JITTER = 1000;
@@ -43,6 +42,12 @@ export class EdgeAgentManagerService extends EffectContext.Service<EdgeAgentMana
   '@dxos/client-services/EdgeAgentManager',
 ) {}
 
+/** The members of {@link Identity} the manager uses. */
+export type AgentOwner = Pick<
+  Identity,
+  'identityKey' | 'did' | 'haloSpaceId' | 'haloSpaceKey' | 'authorizedDeviceKeys' | 'stateUpdate' | 'admitDevice'
+>;
+
 export class EdgeAgentManager extends Resource {
   public agentStatusChanged = new Event<EdgeAgentStatus>();
 
@@ -55,14 +60,14 @@ export class EdgeAgentManager extends Resource {
 
   constructor(
     private readonly _edgeFeatures: Runtime_Client_EdgeFeatures | undefined,
-    private readonly _edgeHttpClient: EdgeHttpClient | undefined,
-    private readonly _dataSpaceManager: SpacesContract.Manager,
-    private readonly _identityProvider: IdentityProvider,
+    private readonly _edgeHttpClient: Pick<EdgeHttpClient, 'createAgent' | 'getAgentStatus'> | undefined,
+    private readonly _dataSpaceManager: Pick<SpacesContract.Manager, 'spaces' | 'updated'>,
+    private readonly _identityProvider: () => AgentOwner,
   ) {
     super();
   }
 
-  private get identity(): Identity {
+  private get identity(): AgentOwner {
     return this._identityProvider();
   }
 
@@ -80,21 +85,34 @@ export class EdgeAgentManager extends Resource {
     invariant(this._edgeHttpClient);
     invariant(this._edgeFeatures?.agents);
 
+    // Read once: joining another identity from this device replaces the active one in place, which
+    // can land while EDGE is still answering.
+    const identity = this.identity;
     const response = await this._edgeHttpClient.createAgent(ctx, {
-      identityDid: this.identity.did,
-      haloSpaceId: this.identity.haloSpaceId,
-      haloSpaceKey: this.identity.haloSpaceKey.toHex(),
+      identityDid: identity.did,
+      haloSpaceId: identity.haloSpaceId,
+      haloSpaceKey: identity.haloSpaceKey.toHex(),
     });
+
+    // The agent belongs to `identity`; admitted into a successor's HALO it would carry an
+    // AuthorizedDevice its owner never issued, which EDGE refuses on every replay of that HALO.
+    if (!this.#isActive(identity)) {
+      log.info('identity replaced while its agent was created, not admitting it', {
+        identityKey: identity.identityKey,
+        deviceKey: response.deviceKey,
+      });
+      return;
+    }
 
     const deviceKey = PublicKey.fromHex(response.deviceKey);
 
-    if (await this.identity.authorizedDeviceKeys.has(deviceKey)) {
+    if (await identity.authorizedDeviceKeys.has(deviceKey)) {
       log.info('agent was already added to HALO, ignoring response', { response });
       this._updateStatus(EdgeAgentStatus.ACTIVE, deviceKey);
       return;
     }
 
-    await this.identity.admitDevice(
+    await identity.admitDevice(
       create(DeviceAdmissionRequestSchema, {
         deviceKey: fromPublicKey(deviceKey),
         controlFeedKey: fromPublicKey(PublicKey.fromHex(response.feedKey)),
@@ -150,9 +168,14 @@ export class EdgeAgentManager extends Resource {
     invariant(this._edgeHttpClient);
     try {
       log('fetching agent status');
+      const identity = this.identity;
       const { agent } = await this._edgeHttpClient.getAgentStatus(ctx, {
-        ownerIdentityDid: this.identity.did,
+        ownerIdentityDid: identity.did,
       });
+      // A replaced identity's status would stand in for its successor's, which then never asks.
+      if (!this.#isActive(identity)) {
+        return;
+      }
       const wasAgentCreatedDuringQuery = this._agentStatus === EdgeAgentStatus.ACTIVE;
       if (!wasAgentCreatedDuringQuery) {
         const deviceKey = agent.deviceKey ? PublicKey.fromHex(agent.deviceKey) : undefined;
@@ -199,6 +222,15 @@ export class EdgeAgentManager extends Resource {
     if (activePollingEnabled) {
       // Check again to see if active edge polling can be disabled (agent feed is notarized in all the spaces)
       scheduleTask(this._ctx, () => this._ensureAgentIsInSpaces(agentDeviceKey), AGENT_FEED_ADDED_CHECK_INTERVAL_MS);
+    }
+  }
+
+  /** Whether `identity` is still the active one; the provider throws while no identity exists. */
+  #isActive(identity: AgentOwner): boolean {
+    try {
+      return this._identityProvider().identityKey.equals(identity.identityKey);
+    } catch {
+      return false;
     }
   }
 
