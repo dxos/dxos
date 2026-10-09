@@ -20,12 +20,12 @@ import {
   toRoundReadings,
 } from '../compare/verdict.ts';
 import { readFreeze } from '../score/freeze.ts';
-import { WORK_GROUP, groupOfId } from '../score/stages.ts';
+import { type StageEvent, WORK_GROUP, groupOfId } from '../score/stages.ts';
 import { type Arm, buildArm, runFlow, runLogged, serveArm } from './arms.ts';
 import { appendLedger } from './ledger.ts';
 import { type Session, elapsedMinutes, openSession, settle } from './session.ts';
 import { ARMS_FILE, type ArmsRecord, touchedSelfMs } from './summarize.ts';
-import { type Target, readBudgets, resolveTarget } from './targets.ts';
+import { type Conditions, type Target, describeConditions, readBudgets, resolveTarget } from './targets.ts';
 import { HarnessError, git, harnessChanges, harnessHash, machineLoad, workspaceRoot } from './workspace.ts';
 
 export type CompareOptions = {
@@ -50,6 +50,36 @@ export type CompareOptions = {
   allowHarnessChange: boolean;
   /** Environment for the candidate arm only: `scenario check` injects a known slowdown with it. */
   candidateEnv?: Record<string, string>;
+  /** What both arms are measured under: HTTP/2, the service worker, CPU throttling, a last stage. */
+  conditions?: Conditions;
+};
+
+/** The row fields two measurements must share to be compared; every row of one run carries the same values. */
+const COMPARABILITY = [
+  'servingMode',
+  'pluginSet',
+  'profileState',
+  'settleMs',
+  'instruments',
+  'counters',
+  'snapshotStages',
+  'http2',
+  'serviceWorker',
+  'cpuThrottle',
+] as const;
+
+/** Where two arms' rows disagree on what they measured under, as `field base vs candidate`. */
+export const comparabilityDifferences = (
+  base: ReadonlyArray<StageEvent>,
+  candidate: ReadonlyArray<StageEvent>,
+): string[] => {
+  const [left, right] = [base[0]?.properties, candidate[0]?.properties];
+  if (!left || !right) {
+    return [];
+  }
+  return COMPARABILITY.filter((key) => left[key] !== right[key]).map(
+    (key) => `${key} ${String(left[key] ?? '-')} vs ${String(right[key] ?? '-')}`,
+  );
 };
 
 type Label = 'base' | 'candidate';
@@ -69,13 +99,15 @@ const summarize = (targets: ReadonlyArray<MetricComparison>): string => {
   return [...counts].map(([verdict, count]) => `${count} ${verdict}`).join(', ') + ` of ${targets.length} targets`;
 };
 
+type Measured = { readings: RoundReadings; events: StageEvent[] };
+
 const measureRound = async (
   session: Session,
   arm: Arm,
   label: Label,
   round: number,
   env?: Record<string, string>,
-): Promise<RoundReadings> => {
+): Promise<Measured> => {
   const { root, target, ports, dir } = session;
   const server = await serveArm({ root, target, dir: arm.dir, port: ports.http, logFile: path.join(dir, 'serve.log') });
   try {
@@ -90,7 +122,7 @@ const measureRound = async (
     });
     const status = result.exitCode === 0 ? 'ok' : `flow exited ${result.exitCode}, ${result.events.length} rows`;
     session.progress(`round ${round + 1} ${label.padEnd(9)} ${String(result.seconds).padStart(4)}s ${status}`);
-    return toRoundReadings(result.events);
+    return { readings: toRoundReadings(result.events), events: result.events };
   } finally {
     await server.stop();
   }
@@ -196,6 +228,7 @@ export const compareRun = async (options: CompareOptions): Promise<CompareResult
     command: `perf compare --base ${options.base}`,
     target: options.target,
     scenario: options.scenario,
+    conditions: options.conditions,
     ignoreLoad: options.ignoreLoad,
     lockWaitMinutes: options.lockWaitMinutes,
   });
@@ -237,6 +270,7 @@ export const compareRun = async (options: CompareOptions): Promise<CompareResult
       JSON.stringify({
         target: target.name,
         ...(target.scenario ? { scenario: target.scenario } : {}),
+        ...(describeConditions(target.conditions) ? { conditions: target.conditions } : {}),
         base: base.dir,
         candidate: candidate.dir,
       } satisfies ArmsRecord),
@@ -261,14 +295,24 @@ export const compareRun = async (options: CompareOptions): Promise<CompareResult
     const roundStarted = Date.now();
     for (let round = 0; round < options.maxRounds; ++round) {
       const order: Label[] = random() < 0.5 ? ['base', 'candidate'] : ['candidate', 'base'];
+      const events: Partial<Record<Label, StageEvent[]>> = {};
       for (const label of order) {
         session.checkInterrupted();
-        rounds[label][round] = await measureRound(
+        const measured = await measureRound(
           session,
           arms[label],
           label,
           round,
           label === 'candidate' ? options.candidateEnv : undefined,
+        );
+        rounds[label][round] = measured.readings;
+        events[label] = measured.events;
+      }
+      const differences = comparabilityDifferences(events.base ?? [], events.candidate ?? []);
+      if (differences.length > 0) {
+        record('void', `different conditions: ${differences.join(', ')}`, base.commit, candidate.commit, round + 1);
+        throw new HarnessError(
+          `the arms measured under different conditions in round ${round + 1}: ${differences.join(', ')}`,
         );
       }
       comparisons = compareRounds({
@@ -314,6 +358,7 @@ export const compareRun = async (options: CompareOptions): Promise<CompareResult
       ? []
       : implausibleWins(dir, targets, git(root, ['diff', '--name-only', base.commit, candidate.commit]));
 
+    const conditions = describeConditions(target.conditions);
     if (options.json) {
       process.stdout.write(JSON.stringify({ verdict, exitCode: EXIT_CODE[verdict], dir, comparisons: targets }) + '\n');
     } else {
@@ -326,6 +371,7 @@ export const compareRun = async (options: CompareOptions): Promise<CompareResult
             : ''
         }`,
         `base ${options.base} ${base.commit.slice(0, 9)} → HEAD ${candidate.commit.slice(0, 9)}  harness ${session.harness}`,
+        ...(conditions ? [`under ${conditions}`] : []),
         `${roundCount} rounds, ${elapsedMinutes(session)} min, load ${load.toFixed(1)}/${cores}  ${path.relative(root, dir)}`,
         ...reasons.map((reason) => `harness change allowed, so the verdict covers it too: ${reason}`),
         ...renderComparison({ comparisons, isTarget }),

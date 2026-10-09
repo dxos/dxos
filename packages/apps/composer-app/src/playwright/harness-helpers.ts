@@ -11,10 +11,13 @@ import { fileURLToPath } from 'node:url';
 import type * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
 import type * as Capability from '@dxos/app-framework/Capability';
 
+import { PERF_PORT } from './perf/server.ts';
+
 // 127.0.0.1, not localhost: localhost resolves to ::1 first, and Firefox fails ICE outright on a
 // page served over IPv6 loopback. Declared here rather than imported from `@dxos/composer-e2e`,
 // whose `e2e` task depends on this app's bundle — the import would close that into a cycle.
-export const INITIAL_URL = 'http://127.0.0.1:4173';
+// `DX_PERF_PORT` moves it, and the startup and dev configs serve there, so worktrees do not collide.
+export const INITIAL_URL = `http://127.0.0.1:${PERF_PORT ?? 4173}`;
 
 // `__dirname` is not defined in ESM; derive from `import.meta.url`.
 export const here = path.dirname(fileURLToPath(import.meta.url));
@@ -381,10 +384,10 @@ export const collectStartupReport = async (page: Page, scenario: Scenario): Prom
 };
 
 /**
- * Path to the human-readable benchmark ledger committed in the package root.
- * Each harness run appends one row per scenario.
+ * This worktree's benchmark ledger, one row per scenario per harness run. Untracked (under the
+ * workspace's `.perf/`), so a run leaves the tree clean; the committed `BENCHMARKS.md` is history.
  */
-const BENCHMARKS_FILE = path.join(here, '..', '..', 'BENCHMARKS.md');
+const BENCHMARKS_FILE = path.join(here, '..', '..', '..', '..', '..', '.perf', 'startup-benchmarks.md');
 
 const BENCHMARKS_HEADER = [
   '# Composer-app startup benchmarks',
@@ -435,6 +438,7 @@ const formatBenchmarkRow = (report: StartupReport): string => {
 };
 
 export const appendBenchmarkRow = (report: StartupReport): void => {
+  mkdirSync(path.dirname(BENCHMARKS_FILE), { recursive: true });
   if (!existsSync(BENCHMARKS_FILE)) {
     writeFileSync(BENCHMARKS_FILE, BENCHMARKS_HEADER);
   }

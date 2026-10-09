@@ -15,6 +15,8 @@ import {
   statSync,
   writeFileSync,
 } from 'node:fs';
+import { request as httpRequest } from 'node:http';
+import { request as httpsRequest } from 'node:https';
 import net from 'node:net';
 import path from 'node:path';
 import { setTimeout as sleep } from 'node:timers/promises';
@@ -60,7 +62,8 @@ export type Arm = {
   cached: boolean;
 };
 
-const armDir = (root: string, target: Target, key: string) => path.join(perfDir(root), 'arms', `${target.name}-${key}`);
+const armDir = (root: string, target: Target, key: string) =>
+  path.join(perfDir(root), 'arms', [target.name, target.build.variant, key].filter(Boolean).join('-'));
 
 const buildBundle = async (root: string, target: Target, logFile: string): Promise<void> => {
   const index = path.join(root, target.appDir, target.build.outDir, 'index.html');
@@ -170,13 +173,47 @@ export const portListening = (port: number): Promise<boolean> =>
     socket.once('error', () => resolve(false));
   });
 
-const responds = async (port: number): Promise<boolean> => {
-  try {
-    const response = await fetch(`http://localhost:${port}/`);
-    return response.ok;
-  } catch {
-    return false;
+const responds = (port: number, https: boolean): Promise<boolean> =>
+  new Promise((resolve) => {
+    const request = (https ? httpsRequest : httpRequest)(
+      { host: 'localhost', port, path: '/', rejectUnauthorized: false, timeout: 5_000 },
+      (response) => {
+        response.resume();
+        resolve(response.statusCode === 200);
+      },
+    );
+    request.once('error', () => resolve(false));
+    request.once('timeout', () => request.destroy());
+    request.end();
+  });
+
+/**
+ * The key and certificate `vite preview` reads when `HTTPS=true` (composer-app's `vite.config.ts`),
+ * self-signed on first use; the instrumented browser ignores certificate errors under `--http2`.
+ */
+const ensureCertificate = (root: string): void => {
+  if (existsSync(path.join(root, 'key.pem')) && existsSync(path.join(root, 'cert.pem'))) {
+    return;
   }
+  execFileSync(
+    'openssl',
+    [
+      'req',
+      '-x509',
+      '-newkey',
+      'rsa:2048',
+      '-nodes',
+      '-days',
+      '365',
+      '-subj',
+      '/CN=localhost',
+      '-keyout',
+      'key.pem',
+      '-out',
+      'cert.pem',
+    ],
+    { cwd: root, stdio: 'ignore' },
+  );
 };
 
 export type Server = { stop: () => Promise<void> };
@@ -188,12 +225,22 @@ export const serveArm = async ({ root, target, dir, port, logFile }: ServeOption
   if (await portListening(port)) {
     throw new HarnessError(`port ${port} is already in use; \`pnpm perf doctor\` shows who holds it`);
   }
+  const https = Boolean(target.conditions.http2);
+  if (https) {
+    ensureCertificate(root);
+  }
   mkdirSync(path.dirname(logFile), { recursive: true });
   const log = openSync(logFile, 'a');
   const child = spawn(
     'pnpm',
     ['exec', 'vite', 'preview', '--configLoader', 'native', '--port', String(port), '--strictPort', '--outDir', dir],
-    { cwd: path.join(root, target.appDir), detached: true, stdio: ['ignore', log, log] },
+    {
+      cwd: path.join(root, target.appDir),
+      // With `https` set, vite serves preview over HTTP/2.
+      env: https ? { ...process.env, HTTPS: 'true' } : process.env,
+      detached: true,
+      stdio: ['ignore', log, log],
+    },
   );
   const pid = child.pid;
   let exited = false;
@@ -222,7 +269,7 @@ export const serveArm = async ({ root, target, dir, port, logFile }: ServeOption
   };
 
   const deadline = Date.now() + 120_000;
-  while (!(await responds(port))) {
+  while (!(await responds(port, https))) {
     if (exited || Date.now() > deadline) {
       await stop();
       throw new HarnessError(`preview server did not come up on port ${port}; log: ${logFile}`);
@@ -285,5 +332,12 @@ export const runFlow = async ({
   } else {
     mkdirSync(dir, { recursive: true });
   }
-  return { exitCode, seconds, events: readStageEvents(dir, target.flow), dir };
+  const events = readStageEvents(dir, target.flow);
+  const { until } = target.conditions;
+  // A flow that passed ran every stage it reached, so an `until` it never reached was misspelled.
+  if (until && exitCode === 0 && !events.some(({ properties }) => properties.stage === until)) {
+    const ran = [...new Set(events.map(({ properties }) => properties.stage))].join(', ');
+    throw new HarnessError(`--until ${until} names no stage the flow ran (${ran}), so nothing was skipped`);
+  }
+  return { exitCode, seconds, events, dir };
 };
