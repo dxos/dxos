@@ -45,8 +45,6 @@ const handler: Operation.WithHandler<typeof AssistantOperation.GenerateHomeSugge
         const { db } = yield* Database.Service;
         const spaceId = db.spaceId;
 
-        // Inside the refresh floor the recent set cannot change the answer, so skip its query, which
-        // loads every hit's document.
         const cache = yield* Capabilities.getAtomValue(AssistantCapabilities.HomeSuggestionsCache);
         const entry = cache[spaceId];
         const age = entry ? Date.now() - entry.generatedAt : Infinity;

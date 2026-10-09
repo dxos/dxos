@@ -126,7 +126,6 @@ describe('GenerateHomeSuggestions', () => {
     Effect.fnUntraced(
       function* (_) {
         const { db } = yield* Database.Service;
-        // No recent objects at all: answering from the cache means the recent set was never read.
         const stored = ['Refine the proposal', 'Review the schedule', 'Draft a summary'];
         testRegistry.set(testCacheAtom, {
           [db.spaceId]: { generatedAt: Date.now() - HOUR_MS / 2, prompts: stored, fingerprint: 'another set' },
