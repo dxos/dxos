@@ -87,38 +87,33 @@ export const Dock = () => {
   }
   const { sections, closed, setSlot, setClosed } = dock;
   return (
-    <div
-      className='flex flex-col w-80 shrink-0 border-l border-separator bg-base-surface overflow-hidden'
-      data-testid='scene-view-dock'
-      onPointerDown={stop}
-      onPointerMove={stop}
-      onPointerUp={stop}
-      onDoubleClick={stop}
-      onContextMenu={stop}
-      onKeyDown={stop}
-    >
-      {/* Each section is as tall as its panel; one scroll area scrolls them together. */}
-      <ScrollArea.Root classNames='dx-grow'>
-        <ScrollArea.Viewport>
-          <Accordion.Root
-            border={false}
-            value={sections.filter((section) => !closed.has(section.id)).map((section) => section.id)}
-            onValueChange={(open) =>
-              setClosed(new Set(sections.filter((section) => !open.includes(section.id)).map((section) => section.id)))
-            }
-          >
-            {sections.map((section) => (
-              <Accordion.Item key={section.id} value={section.id} data-testid={`dock-section-${section.id}`}>
-                <Accordion.ItemTrigger icon={section.icon}>{section.title}</Accordion.ItemTrigger>
-                <Accordion.ItemContent>
-                  <DockSlot id={section.id} setSlot={setSlot} />
-                </Accordion.ItemContent>
-              </Accordion.Item>
-            ))}
-          </Accordion.Root>
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
-    </div>
+    // The column is the scroll area itself: each section is as tall as its panel, and it scrolls them together.
+    <ScrollArea.Root classNames='w-80 shrink-0 border-l border-separator bg-base-surface' data-testid='scene-view-dock'>
+      <ScrollArea.Viewport>
+        <Accordion.Root
+          border={false}
+          onPointerDown={stop}
+          onPointerMove={stop}
+          onPointerUp={stop}
+          onDoubleClick={stop}
+          onContextMenu={stop}
+          onKeyDown={stop}
+          value={sections.filter((section) => !closed.has(section.id)).map((section) => section.id)}
+          onValueChange={(open) =>
+            setClosed(new Set(sections.filter((section) => !open.includes(section.id)).map((section) => section.id)))
+          }
+        >
+          {sections.map((section) => (
+            <Accordion.Item key={section.id} value={section.id} data-testid={`dock-section-${section.id}`}>
+              <Accordion.ItemTrigger icon={section.icon}>{section.title}</Accordion.ItemTrigger>
+              <Accordion.ItemContent>
+                <DockSlot id={section.id} setSlot={setSlot} />
+              </Accordion.ItemContent>
+            </Accordion.Item>
+          ))}
+        </Accordion.Root>
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
   );
 };
 

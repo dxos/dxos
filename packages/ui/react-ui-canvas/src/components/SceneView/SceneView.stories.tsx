@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
@@ -274,4 +275,30 @@ export const Scenes: Story = {
 
 export const Lattice: Story = {
   args: { depth: 0, liveDepth: 1, fixture: 'lattice' },
+};
+
+/**
+ * The panels dock by default: one accordion section each beside the canvas; a section collapses to its header, and
+ * the toolbar's button floats the panels back over the canvas.
+ */
+export const Docked: Story = {
+  args: { depth: 0, liveDepth: 1, fixture: 'square' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // 1. The dock holds the properties and layers sections, both open.
+    const dock = await canvas.findByTestId('scene-view-dock');
+    await waitFor(() => expect(within(dock).getByTestId('dock-section-layers')).toHaveAttribute('data-state', 'open'));
+    await expect(within(dock).getByTestId('dock-section-properties')).toHaveAttribute('data-state', 'open');
+    // 2. A section's header collapses it.
+    await userEvent.click(
+      within(within(dock).getByTestId('dock-section-properties')).getByRole('button', { name: 'Properties' }),
+    );
+    await waitFor(() =>
+      expect(within(dock).getByTestId('dock-section-properties')).toHaveAttribute('data-state', 'closed'),
+    );
+    // 3. The layers toolbar's button floats the panels: the dock goes and the layers float over the canvas.
+    await userEvent.click(within(within(dock).getByTestId('layers')).getByTestId('panels-dock'));
+    await waitFor(() => expect(canvas.queryByTestId('scene-view-dock')).not.toBeInTheDocument());
+    await expect(canvas.getByTestId('layers')).toBeInTheDocument();
+  },
 };
