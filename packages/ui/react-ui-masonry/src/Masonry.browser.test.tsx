@@ -8,7 +8,7 @@ import { afterEach, describe, test } from 'vitest';
 
 import { Masonry } from './Masonry.tsx';
 
-(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
 const TILE_HEIGHT = 50;
 
@@ -23,9 +23,10 @@ const mount = (cacheKey?: string) => {
   container = document.createElement('div');
   container.style.width = '800px';
   document.body.appendChild(container);
-  root = createRoot(container);
+  const reactRoot = createRoot(container);
+  root = reactRoot;
   act(() =>
-    root!.render(
+    reactRoot.render(
       <Masonry.Root Tile={Tile}>
         <Masonry.Content padding={false} scrollbars={false}>
           <Masonry.Viewport items={items} getId={(item: string) => item} cacheKey={cacheKey} />
@@ -33,7 +34,11 @@ const mount = (cacheKey?: string) => {
       </Masonry.Root>,
     ),
   );
-  return container.querySelector<HTMLElement>('[role="list"]');
+  const grid = container.querySelector<HTMLElement>('[role="list"]');
+  if (!grid) {
+    throw new Error('Masonry rendered no grid in its first commit');
+  }
+  return grid;
 };
 
 const unmount = () => {
@@ -51,18 +56,17 @@ describe('Masonry', () => {
   test('lays out at its measured height in the first commit', ({ expect }) => {
     const grid = mount();
 
-    expect(grid).not.toBeNull();
     // Two columns of 50 px tiles; a guessed tile is 280 px, so a guessed grid would be far taller.
-    expect(grid!.offsetHeight).toBeGreaterThanOrEqual(2 * TILE_HEIGHT);
-    expect(grid!.offsetHeight).toBeLessThan(280);
+    expect(grid.offsetHeight).toBeGreaterThanOrEqual(2 * TILE_HEIGHT);
+    expect(grid.offsetHeight).toBeLessThan(280);
   });
 
   test('reveals at once only when every height was cached by an earlier mount', ({ expect }) => {
     const cold = mount('masonry-reveal');
-    expect(cold!.style.visibility).toBe('hidden');
+    expect(cold.style.visibility).toBe('hidden');
     unmount();
 
     const warm = mount('masonry-reveal');
-    expect(warm!.style.visibility).toBe('visible');
+    expect(warm.style.visibility).toBe('visible');
   });
 });
