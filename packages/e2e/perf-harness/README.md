@@ -170,3 +170,19 @@ Ports are derived from the worktree path and a machine-wide lock (`~/.cache/dxos
 runs one measurement at a time, so worktrees never measure each other. Before the first round,
 compare waits for the load average to fall below the core count, since the build it just ran is
 load the rounds would otherwise measure. Every run appends a row to `.perf/ledger.tsv`.
+
+### Guardrails for an optimization loop
+
+An agent asked to make a number smaller will, sooner or later, make the measurement smaller instead.
+Telling it not to does not work, so the CLI makes it structural:
+
+- `compare` voids its verdict (exit 4) when the harness differs between the two arms: the files
+  listed under `harness` in `src/cli/targets.ts`, budgets and budget scripts included. A harness
+  change is its own PR; `--allow-harness-change` measures anyway and says so in the output.
+- `pnpm perf freeze` pins the harness for a loop. While frozen, the `guard-perf-harness.sh` hook
+  refuses edits to those files, `score-perf.ts calibrate --write` refuses to rewrite budgets, and
+  `compare` voids a verdict measured after the harness moved. `pnpm perf thaw` ends it.
+- `--check '<command>'` must pass before anything is measured, so a change that breaks the app
+  never reaches a timing.
+- A work counter that fell by more than half is listed whatever the targets are: a stage that
+  stopped doing its job wins on every timing.

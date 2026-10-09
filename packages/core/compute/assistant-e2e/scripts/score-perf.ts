@@ -25,6 +25,7 @@ import { parseArgs } from 'node:util';
 import {
   type Budget,
   COSTED_WORK_METRICS,
+  assertNotFrozen,
   calibrateStageRuns,
   parseBudgets,
   replaceWorkBudgets,
@@ -86,6 +87,7 @@ if (command === 'score') {
     ...(work ? { work } : {}),
   });
   if (values.write) {
+    assertNotFrozen(WORKSPACE_ROOT, 'score-perf calibrate --write');
     // An empty proposal means the runs carried none of the counters; writing it would drop every work budget.
     if (Object.keys(proposed).length === 0) {
       throw new Error('calibration proposed no work budgets; refusing to replace the existing ones');
