@@ -5,7 +5,6 @@
 import React from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { useObject } from '@dxos/echo-react';
 import { Avatar, Row } from '@dxos/react-ui-card';
 import * as Card from '@dxos/react-ui/Card';
 import * as Layout from '@dxos/react-ui/Layout';
@@ -14,8 +13,6 @@ import { type Message } from '@dxos/types';
 import { getMessageProps } from '../../util/index.ts';
 
 export const MessageCard = ({ subject: message }: AppSurface.ObjectCardProps<Message.Message>) => {
-  // Subscribed for the re-render alone: the card reads the live message, whose tags change after import.
-  useObject(message);
   const { date, email, from, snippet } = getMessageProps(message, new Date(), { compact: true });
   return (
     <Card.Body>

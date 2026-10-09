@@ -142,5 +142,5 @@ export const isStale = (session: RemoteSession, now: number = Date.now()): boole
   (session.lastCheckedIn === undefined || now - new Date(session.lastCheckedIn).getTime() > STALE_AFTER_MS);
 
 /** Terminal states: a session in one of these is not expected to check in again. */
-export const isTerminal = (session: Pick<RemoteSession, 'state'>): boolean =>
+export const isTerminal = (session: RemoteSession | Obj.Snapshot<RemoteSession>): boolean =>
   session.state === 'finished' || session.state === 'failed';
