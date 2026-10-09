@@ -94,8 +94,8 @@ export const TextBox = forwardRef<TextBoxControl, TextBoxProps>(
               {
                 key: 'Shift-Enter',
                 run: (view) => {
+                  // The new line is an edit like any other, so leaving the field still commits it.
                   view.dispatch(view.state.replaceSelection('\n'));
-                  modified.current = false;
                   return true;
                 },
               },

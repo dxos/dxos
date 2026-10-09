@@ -19,17 +19,14 @@ const FONT_SIZE = { min: 8, max: 80, step: 1 };
 
 /**
  * The text face and size, rendered at `style.fontFamily`: the two side by side in one row (`style.fontSize` is
- * hidden), each change writing the enclosing `style`, as the alignment row does.
+ * hidden). Each writes only its own path, so an edit across a selection leaves each element's other style values.
  */
-export const FontField: FormFieldRenderer = ({ jsonPath, readonly, onBlur }) => {
+export const FontField: FormFieldRenderer = ({ jsonPath, readonly }) => {
   const stylePath = (jsonPath ?? 'style.fontFamily').split('.').slice(0, -1);
-  const styleField = useFormFieldState('FontField', stylePath);
-  const style: NodeStyle = styleField.getValue() ?? {};
-  const update = (values: Partial<NodeStyle>) => {
-    // A pick or a stepper press never blurs, so each change commits itself.
-    styleField.onValueChange(NodeStyle.ast, { ...style, ...values });
-    onBlur();
-  };
+  const familyField = useFormFieldState('FontField', [...stylePath, 'fontFamily']);
+  const sizeField = useFormFieldState('FontField', [...stylePath, 'fontSize']);
+  const family: unknown = familyField.getValue();
+  const size: unknown = sizeField.getValue();
   return (
     <Layout.Container
       layout='row'
@@ -43,12 +40,16 @@ export const FontField: FormFieldRenderer = ({ jsonPath, readonly, onBlur }) => 
       <Form.Field path={jsonPath} label='Font' readonly={readonly}>
         <SelectControl
           items={FAMILIES}
-          value={style.fontFamily ?? 'default'}
+          value={typeof family === 'string' ? family : 'default'}
           readonly={readonly}
           onValueChange={(next) => {
             const fontFamily = FONT_FAMILIES.find((family) => family === next);
-            // The body face is the default, so it is stored as unset.
-            update({ fontFamily: fontFamily === 'default' ? undefined : fontFamily });
+            // The body face is the default, so it is stored as unset; a pick never blurs, so it commits itself.
+            familyField.onValueChange(
+              NodeStyle.fields.fontFamily.ast,
+              fontFamily === 'default' ? undefined : fontFamily,
+            );
+            familyField.onBlur();
           }}
         />
       </Form.Field>
@@ -57,10 +58,12 @@ export const FontField: FormFieldRenderer = ({ jsonPath, readonly, onBlur }) => 
           disabled={!!readonly}
           {...FONT_SIZE}
           formatOptions={{ maximumFractionDigits: 0 }}
-          value={style.fontSize === undefined ? '' : String(style.fontSize)}
+          value={typeof size === 'number' ? String(size) : ''}
           onValueChange={(_, fontSize) => {
             if (!Number.isNaN(fontSize)) {
-              update({ fontSize });
+              // A stepper press never blurs, so each value commits itself.
+              sizeField.onValueChange(NodeStyle.fields.fontSize.ast, fontSize);
+              sizeField.onBlur();
             }
           }}
         />

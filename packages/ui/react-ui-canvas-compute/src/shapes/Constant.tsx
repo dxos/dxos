@@ -77,6 +77,7 @@ export const ConstantComponent = ({ node: shape, title, placeholder }: ConstantC
           ref={inputRef}
           value={JSON.stringify(node.value, null, 2)}
           language={'json'}
+          onEnter={handleEnter}
         />
       )}
       {type === 'boolean' && (
