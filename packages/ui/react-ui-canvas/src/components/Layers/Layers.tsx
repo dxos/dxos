@@ -165,11 +165,9 @@ export const LayersPanel = ({
             <OrderedList.Content
               // Docked, the dock scrolls the panels together, so the list keeps no scroll of its own (it would hold the wheel).
               scroll={!docked}
-              // Its own gutter even without its own scroll, so the block padding below applies either way.
-              gutter='inset'
+              // Rows run edge to edge, with no gutter around them.
+              gutter='none'
               aria-label='Layers'
-              // The gutter frames the rows above and below as well as at the sides.
-              padBlock
               onKeyDown={(event) => {
                 // Enter on the list (as well as selecting the highlighted row) opens that row's name.
                 if (event.key !== 'Enter' || event.target !== event.currentTarget || readonly || !onRename) {
