@@ -33,42 +33,34 @@ type SpaceScopedProps = {
   onClose?: () => void;
 };
 
-/**
- * Recent-objects region for the Home article. Queries the most-recently-modified objects of
- * registered, non-hidden, non-relation, non-collection types and renders them as a Masonry of
- * tiles, with placeholders while they load. Renders nothing (no heading) when the space has no recent
- * objects — the starter-prompt contributor (plugin-assistant) fills the empty state instead.
- */
 export const SpaceHomeRecent = ({ space, onClose }: SpaceScopedProps) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
 
-  const { recent, pending } = useRecentObjects(space);
+  const { recent, placeholderCount } = useRecentObjects(space);
   const items = useMemo<RecentItem[]>(
-    () => (pending > 0 ? Array.makeBy(pending, (index) => `placeholder-${index}`) : recent),
-    [pending, recent],
+    () =>
+      placeholderCount > 0
+        ? Array.makeBy(placeholderCount, (index) => new Placeholder(`placeholder-${index}`))
+        : recent,
+    [placeholderCount, recent],
   );
-  if (recent.length === 0 && pending === 0) {
+  if (recent.length === 0 && placeholderCount === 0) {
     return null;
   }
 
   return (
     <HomeSection.Root>
       <HomeSection.Header title={t('space-home.recent.heading')} onClose={onClose} />
-      {/* One instance across the swap from placeholders to objects, so the measured grid never remounts. */}
       <Masonry.Root Tile={RecentTile}>
         <Masonry.Content padding={false} scrollbars={false}>
-          <Masonry.Viewport items={items} getId={getRecentItemId} cacheKey={space && `${space.id}/recent`} />
+          <Masonry.Viewport items={items} getId={(item) => item.id} cacheKey={space && `${space.id}/recent`} />
         </Masonry.Content>
       </Masonry.Root>
     </HomeSection.Root>
   );
 };
 
-/**
- * The space's most recently modified user objects, and while none has loaded yet, how many the index
- * says are coming (capped at {@link RECENT_LIMIT}).
- */
-const useRecentObjects = (space?: Space): { recent: Obj.Unknown[]; pending: number } => {
+const useRecentObjects = (space?: Space): { recent: Obj.Unknown[]; placeholderCount: number } => {
   const schemas = Hooks.useCapabilities(AppCapabilities.Schema);
   const filter = useMemo(() => recentObjectsFilter(schemas.flat()), [schemas]);
   const query = useMemo(
@@ -78,7 +70,6 @@ const useRecentObjects = (space?: Space): { recent: Obj.Unknown[]; pending: numb
         .limit(RECENT_LIMIT),
     [filter],
   );
-  // Index-only, so it settles before the recent objects' documents load; it sizes the placeholders.
   const countQuery = useMemo(
     () => Query.select(filter ?? Filter.everything()).aggregate({ count: Aggregate.count() }),
     [filter],
@@ -87,10 +78,9 @@ const useRecentObjects = (space?: Space): { recent: Obj.Unknown[]; pending: numb
   const db = filter && space ? space.db : undefined;
   const recent = useQuery(db, query);
   const [total] = useQuery(db, countQuery);
-  return { recent, pending: recent.length === 0 ? Math.min(total?.count ?? 0, RECENT_LIMIT) : 0 };
+  return { recent, placeholderCount: recent.length === 0 ? Math.min(total?.count ?? 0, RECENT_LIMIT) : 0 };
 };
 
-/** Matches registered user types other than collections, each once; undefined when there are none. */
 const recentObjectsFilter = (schemas: readonly unknown[]) => {
   const collectionTypename = Type.getTypename(Collection.Collection);
   const types = Array.dedupeWith(
@@ -103,13 +93,14 @@ const recentObjectsFilter = (schemas: readonly unknown[]) => {
   return types.length > 0 ? Filter.or(...types.map((type) => Filter.type(type))) : undefined;
 };
 
-/** A recent object, or the id of a placeholder held while the objects load. */
-type RecentItem = Obj.Unknown | string;
+class Placeholder {
+  constructor(readonly id: string) {}
+}
 
-const getRecentItemId = (item: RecentItem): string => (typeof item === 'string' ? item : item.id);
+type RecentItem = Obj.Unknown | Placeholder;
 
 const RecentTile = ({ data, index }: { data: RecentItem; index: number }) =>
-  typeof data === 'string' ? <PlaceholderTile /> : <RecentObjectTile data={data} index={index} />;
+  data instanceof Placeholder ? <PlaceholderTile /> : <RecentObjectTile data={data} index={index} />;
 
 RecentTile.displayName = 'RecentTile';
 

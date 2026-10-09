@@ -85,7 +85,6 @@ export const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
     });
   }, [event, space, chat, atomRegistry, stateAtom, invokePromise]);
 
-  // Rendered before the chat model opens; ChatPrompt holds typed text until it does.
   if (!space) {
     return null;
   }

@@ -26,7 +26,6 @@ export const useHomeSuggestions = (space?: Space): readonly string[] | undefined
   const { invokePromise } = Hooks.useOperationInvoker();
   const cache = Hooks.useOptionalAtomCapability(AssistantCapabilities.HomeSuggestionsCache);
   const fallbacks = useMemo(() => FALLBACK_SUGGESTION_KEYS.map((key) => t(key)), [t]);
-  // Keyed by space so an answer for the previous space is never shown on the next one.
   const [settled, setSettled] = useState<{ spaceId: string; prompts: readonly string[] }>();
 
   UiHooks.useAsyncEffect(

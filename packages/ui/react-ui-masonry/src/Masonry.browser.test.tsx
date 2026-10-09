@@ -7,6 +7,7 @@ import { type Root, createRoot } from 'react-dom/client';
 import { afterEach, describe, test } from 'vitest';
 
 import { Masonry } from './Masonry.tsx';
+import { ESTIMATED_TILE_HEIGHT } from './useMasonryLayout.ts';
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
@@ -51,14 +52,11 @@ const unmount = () => {
 afterEach(unmount);
 
 describe('Masonry', () => {
-  // `act` flushes React's commit, layout effects included, but not ResizeObserver callbacks: what is
-  // here when it returns is what the browser paints first.
   test('lays out at its measured height in the first commit', ({ expect }) => {
     const grid = mount();
 
-    // Two columns of 50 px tiles; a guessed tile is 280 px, so a guessed grid would be far taller.
     expect(grid.offsetHeight).toBeGreaterThanOrEqual(2 * TILE_HEIGHT);
-    expect(grid.offsetHeight).toBeLessThan(280);
+    expect(grid.offsetHeight).toBeLessThan(ESTIMATED_TILE_HEIGHT);
   });
 
   test('reveals at once only when every height was cached by an earlier mount', ({ expect }) => {
