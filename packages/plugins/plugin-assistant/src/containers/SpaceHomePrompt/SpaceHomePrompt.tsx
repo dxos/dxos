@@ -13,7 +13,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AiContext } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import { Event } from '@dxos/async';
-import { Database, Feed, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import { type Space, useRegistry } from '@dxos/react-client/echo';
@@ -99,6 +99,7 @@ const useDraftSend = ({ space, draft, context, onSent }: UseDraftSendProps) => {
       }
 
       const { feed, chat } = draft;
+      space.db.add(feed);
       space.db.add(chat);
       const chatPath = getChatPath(space.db.spaceId, chat.id);
       onSent();
@@ -114,9 +115,7 @@ const useDraftSend = ({ space, draft, context, onSent }: UseDraftSendProps) => {
         .catch((err) => {
           log.catch(err);
           space.db.remove(chat);
-          if (Obj.getDatabase(feed)) {
-            space.db.remove(feed);
-          }
+          space.db.remove(feed);
           event.emit({ type: 'update-prompt', text });
         });
     });
@@ -141,7 +140,7 @@ const useDraftContext = ({ db, draft, registry, pluginManager }: UseDraftContext
       const runtime = await EffectEx.runAndForwardErrors(
         Effect.context<Database.Service>().pipe(Effect.provide(Database.layer(db))),
       );
-      const binder = new AiContext.Binder({ feed: draft.feed, runtime, registry });
+      const binder = new AiContext.Binder({ feed: draft.feed, runtime, registry, hold: true });
       await binder.open();
       await bindChatDefaults(binder, { chat: draft.chat, pluginManager });
       if (controller.signal.aborted) {

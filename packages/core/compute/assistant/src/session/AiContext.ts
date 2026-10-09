@@ -14,11 +14,11 @@ import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
 
 import * as Skill from '@dxos/compute/Skill';
-import { type Context as DxContext, Resource } from '@dxos/context';
+import { Resource } from '@dxos/context';
 import { Database, DXN, Feed, Obj, Query, type QueryResult, Ref, Type } from '@dxos/echo';
 import * as AtomEx from '@dxos/effect/AtomEx';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
-import { assertArgument } from '@dxos/invariant';
+import { assertArgument, invariant } from '@dxos/invariant';
 import { EID, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ComplexSet, isNonNullable } from '@dxos/util';
@@ -81,12 +81,12 @@ export type BinderOptions = {
   runtime: Context.Context<Database.Service>;
   /** @effect/atom-react Registry for reactive state management. */
   registry?: AtomRegistry.AtomRegistry;
+  /** Holds bindings in memory until {@link Binder.flush}, so the feed need not be stored yet (a draft conversation). */
+  hold?: boolean;
 };
 
 /**
  * Manages bindings of skills and objects to a conversation.
- *
- * Over a feed not yet stored (a draft conversation), bindings are held in memory until {@link flush}.
  */
 export class Binder extends Resource {
   private readonly _skills = Atom.make<Skill.Skill[]>([]).pipe(Atom.keepAlive);
@@ -94,6 +94,7 @@ export class Binder extends Resource {
   private readonly _registry: AtomRegistry.AtomRegistry;
   private readonly _feed: Feed.Feed;
   private readonly _runtime: Context.Context<Database.Service>;
+  private readonly _hold: boolean;
 
   #bindingsQuery: QueryResult.QueryResult<Binding> | undefined;
 
@@ -118,6 +119,7 @@ export class Binder extends Resource {
     this._feed = options.feed;
     this._runtime = options.runtime;
     this._registry = options.registry ?? AtomEx.makeRegistry();
+    this._hold = options.hold ?? false;
   }
 
   /**
@@ -163,28 +165,25 @@ export class Binder extends Resource {
   }
 
   protected override async _open(): Promise<void> {
-    if (!Obj.getDatabase(this._feed)) {
+    if (this._hold) {
       this.#pending = [];
       return;
     }
-    await this._follow(this._ctx);
+    await this._follow();
   }
 
   /**
-   * Stores the feed if needed and writes the held bindings, which a failed write keeps for a retry; the
-   * binder then follows the feed in the background. A no-op over a feed that was stored at open.
+   * Writes a holding binder's bindings to its feed, which the caller has stored, as one binding. Later
+   * writes go straight to the feed, which the binder does not follow.
    */
   async flush(): Promise<void> {
     const held = this.#pending;
     if (!held) {
       return;
     }
-    const ctx = this._ctx;
-    const count = held.length;
+    invariant(Obj.getDatabase(this._feed), 'The feed must be stored before its bindings are flushed.');
+    this.#pending = undefined;
     const { skills, objects } = this._reduce(held);
-    if (!Obj.getDatabase(this._feed)) {
-      await RuntimeProvider.runPromise(Effect.succeed(this._runtime))(Database.add(this._feed));
-    }
     if (skills.size > 0 || objects.size > 0) {
       await this._append(
         Obj.make(Binding, {
@@ -193,20 +192,12 @@ export class Binder extends Resource {
         }),
       );
     }
-    this.#pending = undefined;
-    for (const binding of held.slice(count)) {
-      await this._append(binding);
-    }
-    void this._follow(ctx).catch((error) => log.catch(error));
   }
 
-  private async _follow(ctx: DxContext): Promise<void> {
+  private async _follow(): Promise<void> {
     const bindingsQuery = await RuntimeProvider.runPromise(Effect.succeed(this._runtime))(
       Feed.query(this._feed, Query.type(Binding)),
     );
-    if (ctx.disposed) {
-      return;
-    }
     this.#bindingsQuery = bindingsQuery;
 
     // Process initial state before returning.
@@ -215,7 +206,7 @@ export class Binder extends Resource {
     await this._updateBindings(initialResults);
 
     // Subscribe to future changes.
-    ctx.onDispose(
+    this._ctx.onDispose(
       bindingsQuery.subscribe(async () => {
         await this._updateBindings(bindingsQuery.results);
       }),
