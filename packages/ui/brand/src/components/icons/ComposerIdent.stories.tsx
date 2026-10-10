@@ -157,7 +157,7 @@ const variants: Record<VariantName, IdentVariant> = {
       easing: 'cubic-bezier(0.25, 1, 0.5, 1)',
     }),
     grow: { rate: 0.1, delay: 0, finishAt: 0.55 },
-    // The inner ring is within ~4° of rest here; with the default 100ms gap the wordmark starts as the C visibly stops.
+    // With the default 100ms gap the wordmark starts with the inner ring ~1° from rest, i.e. as the C visibly stops.
     settledAt: 0.8,
   },
   fade: {
