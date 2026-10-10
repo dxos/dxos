@@ -79,6 +79,32 @@ Per note we store the median f0 and a normalized partial profile. Calibration is
 rejected per strike if clarity < threshold or f0 is > 100 cents from the expected
 equal-temperament pitch. Result: `Calibration { scale, notes: NoteTemplate[] }`.
 
+### Chords (spike, 2026-10-10)
+
+Two layers, of which the first is prototyped:
+
+1. **Simultaneous strikes** — `ChordDecomposer` (`src/audio/chord.ts`) explains a strike's spectrum as a
+   non-negative mix of the calibrated note templates (NNLS by multiplicative updates over a fixed
+   9-column dictionary; templates rendered through the same window as the observation).
+2. **Harmony labels** — chord symbols from the set of notes still ringing, or from a chroma profile
+   matched to chord templates. Not started.
+
+Measured on synthesized D Kurd (templates from single-note "calibration"):
+
+| Scenario                                       | Correct |
+| ---------------------------------------------- | ------- |
+| Single notes (no ghost octave/twelfth partner) | 9/9     |
+| Pairs together, equal loudness                 | 36/36   |
+| Pairs 20 ms apart, second at half loudness     | 36/36   |
+| Pairs together, second at 70% loudness         | 35/36   |
+| Pairs with a very quiet second (¼)             | 33/36   |
+| Triads                                         | 75/84   |
+
+Every miss is an octave or twelfth stack (D3+D4, A3+A4, D3+A4): the upper note lies on the lower
+note's own partials and is found only when it exceeds what the lower note's calibrated profile
+predicts. Synthesized partials are ideal and identical per strike, so real-instrument accuracy must be
+measured on recordings before this is wired into the analyzer.
+
 ## Music model (general)
 
 ```text
