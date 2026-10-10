@@ -25,7 +25,7 @@ import {
 const ROUND_DEADLINE_MS = 30_000;
 const WITHIN_MS = 10_000;
 
-type Doc = { value?: number };
+type Doc = { value?: number; text?: string };
 
 /**
  * A reader connected to `edge` and to `second`, whose link each test shapes.
@@ -293,6 +293,60 @@ describe('Subduction sync with a slow peer', () => {
     refuse = false;
     secondLink = 'off';
     await expect.poll(() => edgePolicy.counters.authorizeFetch - asked, { timeout: WITHIN_MS }).toBeGreaterThan(0);
+  });
+
+  test('a resync requested while a round is running starts another round after it', async ({ expect }) => {
+    // Puts refused while set, as a frame dropped by a congested relay is lost.
+    let dropping = false;
+    const readerPolicy = createCountingPolicy({
+      authorizePut: async () => {
+        if (dropping) {
+          throw new Error('dropped');
+        }
+      },
+    });
+    // No heal retry inside the test: only the resync may bring `edge`'s edit to `reader`.
+    const { reader, edge, connect } = await createReader({
+      policies: { reader: readerPolicy.policy },
+      healInitialDelayMs: 60_000,
+    });
+    await connect(expect);
+    const handle = reader.create<Doc>();
+    handle.change((doc) => {
+      doc.value = 0;
+    });
+    await expect.poll(() => reader.hasPendingSubductionSync(handle.documentId), { timeout: WITHIN_MS }).toBe(false);
+    const copy = await edge.find<Doc>(handle.url);
+    await expect.poll(() => copy.doc()?.value, { timeout: WITHIN_MS }).toBe(0);
+
+    // Hold the next round after its exchange, so it settles as a success that predates `edge`'s edit.
+    const subduction = await reader.subduction;
+    const syncWithPeer = subduction.syncWithPeer.bind(subduction);
+    const { promise: released, resolve: release } = Promise.withResolvers<void>();
+    let held = 0;
+    subduction.syncWithPeer = async (peerId, sedimentreeId, subscribe, timeoutMs) => {
+      const result = await syncWithPeer(peerId, sedimentreeId, subscribe, timeoutMs);
+      held++;
+      await released;
+      return result;
+    };
+    handle.change((doc) => {
+      doc.text = 'local';
+    });
+    await expect.poll(() => held, { timeout: WITHIN_MS }).toBeGreaterThan(0);
+
+    dropping = true;
+    const refusedBefore = readerPolicy.counters.authorizePut;
+    copy.change((doc) => {
+      doc.value = 1;
+    });
+    await expect.poll(() => readerPolicy.counters.authorizePut, { timeout: WITHIN_MS }).toBeGreaterThan(refusedBefore);
+    dropping = false;
+
+    // What the host does on seeing the peer's heads diverge, while the held round is still running.
+    reader.resyncSubduction(handle.documentId);
+    release();
+    await expect.poll(() => handle.doc()?.value, { timeout: WITHIN_MS }).toBe(1);
   });
 
   test('a heal retry asks again when a peer still answering then fails', async ({ expect }) => {
