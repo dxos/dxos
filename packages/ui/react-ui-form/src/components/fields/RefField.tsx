@@ -32,6 +32,7 @@ export const RefField = ({
   presentation,
   getValue,
   onValueChange,
+  onBlur,
   createInitialValuePath,
   createFieldMap,
   createOptionIcon,
@@ -67,10 +68,15 @@ export const RefField = ({
           const created = await create(values);
           if (created) {
             onValueChange(type, Ref.make(created));
+            onBlur();
           }
         })
       }
-      onSelect={(id) => onValueChange(type, id ? Ref.fromURI(URI.make(id)) : undefined)}
+      // A pick is the whole edit, so it commits as a select does; without the blur an auto-saving form never saves it.
+      onSelect={(id) => {
+        onValueChange(type, id ? Ref.fromURI(URI.make(id)) : undefined);
+        onBlur();
+      }}
     />
   );
 };

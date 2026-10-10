@@ -5,10 +5,10 @@
 import { describe, test } from 'vitest';
 
 import { type ContentMap, applyCommands } from '@dxos/diagram';
-import { isEllipseNode, isRectNode } from '@dxos/react-ui-canvas/scene';
+import { DEFAULT_LAYER, isEllipseNode, isRectNode, sortByZ } from '@dxos/react-ui-canvas/scene';
 
 import { ROOT_SCENE_ID, readScenes, rootOf, writeScenes } from './content.ts';
-import { SceneHandler, elementId } from './handler.ts';
+import { BACKDROP_LAYER, SceneHandler, elementId } from './handler.ts';
 
 const face = {
   id: 'face',
@@ -102,5 +102,79 @@ describe('SceneHandler', () => {
     expect(SceneHandler.read(content).unmanaged).toBe(1);
     applyCommands(content, [{ op: 'remove-object', objectId: 'face' }], SceneHandler);
     expect(Object.keys(readScenes(content)[ROOT_SCENE_ID].nodes)).toEqual(['byhand']);
+  });
+
+  test('a laid-out connector binds each end to the box it lands on, past the group around it', ({ expect }) => {
+    const content: ContentMap = {};
+    applyCommands(
+      content,
+      [
+        {
+          op: 'upsert-object',
+          object: {
+            id: 'group',
+            origin: { x: 0, y: 0 },
+            elements: [
+              { kind: 'rect', id: 'frame', x: 0, y: 0, w: 800, h: 400, stroke: 'dashed', fill: 'tint' },
+              { kind: 'text', id: 'label', x: 16, y: 8, text: 'Group', weight: 's' },
+            ],
+          },
+        },
+        {
+          op: 'upsert-object',
+          object: {
+            id: 'a',
+            origin: { x: 32, y: 32 },
+            elements: [{ kind: 'rect', id: 'box', x: 0, y: 0, w: 192, h: 96 }],
+          },
+        },
+        {
+          op: 'upsert-object',
+          object: {
+            id: 'b',
+            origin: { x: 32, y: 256 },
+            elements: [{ kind: 'rect', id: 'box', x: 0, y: 0, w: 192, h: 96 }],
+          },
+        },
+        {
+          op: 'upsert-object',
+          object: {
+            id: 'edges',
+            origin: { x: 0, y: 0 },
+            elements: [
+              { kind: 'arrow', id: 'a-b-0', start: { x: 128, y: 128 }, end: { x: 128, y: 256 } },
+              { kind: 'text', id: 'a-b-0-label', x: 136, y: 180, text: 'calls', weight: 's' },
+            ],
+          },
+        },
+      ],
+      SceneHandler,
+    );
+    const root = readScenes(content)[ROOT_SCENE_ID];
+    const link = root.links[elementId('edges', 'a-b-0')];
+    // The caption is the link's own text, not a shape beside it.
+    expect([link.type, link.source, link.target, link.ends, link.text]).toEqual([
+      'smart',
+      { node: 'a/box' },
+      { node: 'b/box' },
+      { end: 'arrow' },
+      'calls',
+    ]);
+    expect(root.nodes[elementId('edges', 'a-b-0-label')]).toBeUndefined();
+    // The group is a guide (off the lattice) titled at its top-left corner; its title is no shape of its own.
+    const group = root.nodes[elementId('group', 'frame')];
+    expect(isRectNode(group) && [group.label, group.style]).toEqual([
+      'Group',
+      expect.objectContaining({ lineStyle: 'dashed', guide: true, alignHorizontal: 'left', alignVertical: 'top' }),
+    ]);
+    expect(root.nodes[elementId('group', 'label')]).toBeUndefined();
+    // The group is decoration, on a backdrop layer below the boxes and links it groups.
+    expect([group.layer, root.nodes[elementId('a', 'box')].layer, link.layer]).toEqual([
+      BACKDROP_LAYER.id,
+      DEFAULT_LAYER.id,
+      DEFAULT_LAYER.id,
+    ]);
+    const layers = sortByZ(Object.values(root.layers ?? {})).map((layer) => layer.id);
+    expect(layers).toEqual([BACKDROP_LAYER.id, DEFAULT_LAYER.id]);
   });
 });

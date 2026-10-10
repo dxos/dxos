@@ -44,7 +44,8 @@ import {
 } from '#model';
 import { CanvasCapabilities } from '#types';
 
-import { CanvasFrameNodeView, CanvasFrameToolbar } from './CanvasFrameNodeView.tsx';
+import { CanvasDatabaseContext, CanvasFrameNodeView, CanvasFrameToolbar } from './CanvasFrameNodeView.tsx';
+import { canvasViewModeAspect } from './view-mode.ts';
 import { canvasViewAspect } from './view-state.ts';
 
 export type CanvasArticleProps = IllustratorCapabilities.DrawingVariantSurfaceProps;
@@ -59,9 +60,10 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   // A frame showing an object (not a canvas drawing) opens it in the app; the frame's view shows the frame's own
   // scene until the object loads, so opening drills into that scene until then too.
   const { invokePromise } = Hooks.useOperationInvoker();
+  const db = Obj.getDatabase(canvas);
   const openObject = useCallback(
     (node: Node) => {
-      const object = objectRef(node)?.target;
+      const object = objectRef(node, db)?.target;
       if (!object || !isFrameNode(node) || parseLinkedSceneId(node.scene) || isCanvasDrawing(object) !== false) {
         return undefined;
       }
@@ -69,7 +71,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
         void invokePromise(LayoutOperation.Open, { subject: [GraphPath.getObjectPathFromObject(object)] });
       };
     },
-    [invokePromise],
+    [invokePromise, db],
   );
   const nodes = useMemo(
     () =>
@@ -98,7 +100,6 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
     return () => next.dispose();
   }, [registry, canvas]);
 
-  const db = Obj.getDatabase(canvas);
   // The drawing's settings, edited in the properties companion: the lattice picks the projection.
   const [snapshot] = useObject(canvas);
   const record = canvasRecordOf(snapshot.content);
@@ -107,6 +108,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   // Restores where the root scene was last left; read once per binding, since later values are our own writes.
   const contextId = Entity.getURI(canvas);
   const { camera: savedCamera } = useViewState(canvasViewAspect, contextId);
+  const { readonly = false } = useViewState(canvasViewModeAspect, contextId);
   const { update: updateViewState } = useViewStateActions(canvasViewAspect, contextId);
   const handleCameraChange = useCallback(
     (camera: Camera) => updateViewState((state) => ({ ...state, camera })),
@@ -144,11 +146,12 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
       });
       // A frame showing an object opens the object (or a canvas drawing's root), not a scene of this one.
       const linked = elements.some((element) => !isLink(element) && objectUri(element));
-      // The role applies only to an object shown as a surface, not to a canvas drawing shown as a scene.
-      const surfaced = elements.some((element) => {
-        const object = isLink(element) ? undefined : objectRef(element)?.target;
-        return object !== undefined && isCanvasDrawing(object) === false;
-      });
+      // The role applies only to an object shown as a surface, not to a canvas drawing shown as a scene; an object
+      // still loading is offered one, so the field appears as soon as the object is picked.
+      const surfaced = elements.some(
+        (element) =>
+          !isLink(element) && objectUri(element) && isCanvasDrawing(objectRef(element, db)?.target) === false,
+      );
       return {
         ...(locked ? { object: { readonly: true } } : {}),
         ...(linked ? { scene: { hidden: true } } : {}),
@@ -156,7 +159,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
       };
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [registry, bound],
+    [registry, bound, db],
   );
 
   return (
@@ -164,31 +167,34 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
       <Panel.Body>
         {bound && (
           // An unset preference leaves the engine's own default in place.
-          <SceneView.Root
-            key={bound.root}
-            store={bound.store}
-            root={bound.root}
-            nodes={nodes}
-            createProjection={lattice ? createLatticeProjection : undefined}
-            grid={record?.grid}
-            initialCamera={savedCamera}
-            onCameraChange={handleCameraChange}
-            panels={(settings.dockPanels ?? true) ? 'docked' : 'floating'}
-          >
-            <SceneView.Canvas liveDepth={settings.liveDepth} />
-            {/* Unset means shown: settings saved before the default existed hold neither key. */}
-            {(settings.showToolbar ?? true) && (
-              <>
-                <SceneView.Navigation />
-                <SceneView.Actions />
-                <SceneView.Debug />
-              </>
-            )}
-            {(settings.showPalette ?? true) && <SceneView.Palette />}
-            <SceneView.Properties db={db} getOptions={getOptions} overrides={overrides} sceneFilter={isLocalScene} />
-            <SceneView.Layers />
-            <SceneView.About />
-          </SceneView.Root>
+          <CanvasDatabaseContext.Provider value={db}>
+            <SceneView.Root
+              key={bound.root}
+              store={bound.store}
+              root={bound.root}
+              nodes={nodes}
+              createProjection={lattice ? createLatticeProjection : undefined}
+              grid={record?.grid}
+              readonly={readonly}
+              initialCamera={savedCamera}
+              onCameraChange={handleCameraChange}
+              panels={(settings.dockPanels ?? true) ? 'docked' : 'floating'}
+            >
+              <SceneView.Canvas liveDepth={settings.liveDepth} />
+              {/* Unset means shown: settings saved before the default existed hold neither key. */}
+              {(settings.showToolbar ?? true) && (
+                <>
+                  <SceneView.Navigation />
+                  <SceneView.Actions />
+                  <SceneView.Debug />
+                </>
+              )}
+              {(settings.showPalette ?? true) && <SceneView.Palette />}
+              <SceneView.Properties db={db} getOptions={getOptions} overrides={overrides} sceneFilter={isLocalScene} />
+              <SceneView.Layers />
+              <SceneView.About />
+            </SceneView.Root>
+          </CanvasDatabaseContext.Provider>
         )}
       </Panel.Body>
     </Panel.Root>

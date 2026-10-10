@@ -29,4 +29,5 @@ export const CanvasSettings = AppCapability.settings(() => import('./settings.ts
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.tsx'), {
   roles: ['org.dxos.role.objectProperties'],
 });
+export const SpaceTemplates = AppCapability.spaceTemplates(() => import('./space-templates.ts'));
 export const Translations = AppCapability.translations(translations);

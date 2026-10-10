@@ -1,0 +1,32 @@
+diagram @ -128,-64 flow=down box=256x128 grid=384x192
+group repl "Replication" {
+  node Handler "SubductionHandler" ref="edge/packages/services/db-service/src/worker/api-handler/subduction-handler.ts"
+  node Replicator "AutomergeReplicator" ref="edge/packages/services/db-service/src/worker/subduction/subduction-automerge-replicator.ts"
+  node Transport "Transport" ref="edge/packages/services/db-service/src/worker/subduction/subduction-transport.ts"
+  node Storage "SedimentreeStore" ref="edge/packages/services/db-service/src/worker/subduction/do-sedimentree-storage.ts"
+  node Migrations "Migrations" ref="edge/packages/services/db-service/src/worker/subduction/migrations"
+}
+group index "Indexing" {
+  node Indexer "Indexer" ref="edge/packages/services/db-service/src/worker/indexer/indexer.ts"
+  node SubSource "SubductionSource" ref="edge/packages/services/db-service/src/worker/indexer/subduction-data-source.ts"
+  node FeedSource "FeedSource" ref="edge/packages/services/db-service/src/worker/indexer/feed-data-source.ts"
+  node Extract "ObjectExtraction" ref="edge/packages/services/db-service/src/worker/indexer/automerge-object-extraction.ts"
+  node Alarms "AlarmScheduling" ref="edge/packages/services/db-service/src/worker/indexer/alarm-scheduling.ts"
+}
+group platform "Platform" {
+  node Wasm "subduction-wasm" ref="edge/packages/sdk/edge-automerge"
+  node Bindings "DO bindings" ref="edge/packages/services/db-service/src/worker/bindings.ts"
+}
+edge Handler -> Replicator "sync"
+edge Replicator -> Transport "messages"
+edge Replicator -> Storage "fragments"
+edge Replicator -> Migrations
+edge Replicator -> Wasm
+edge Replicator -> Bindings
+edge Indexer -> SubSource
+edge Indexer -> FeedSource
+edge Indexer -> Alarms
+edge Indexer -> Handler "doc reads"
+edge SubSource -> Extract "objects"
+edge SubSource -> Handler
+edge FeedSource -> Bindings
