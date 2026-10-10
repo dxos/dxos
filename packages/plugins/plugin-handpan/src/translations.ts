@@ -24,7 +24,11 @@ export const translations = [
         'percussive.label': 'Tak',
         'clarity.label': 'Clarity',
         'gain.label': 'Gain',
+        'gain.description':
+          'Amplifies the microphone before analysis. Raise it if the meter barely moves while you play; keep loud strikes below the top of the meter.',
         'sensitivity.label': 'Sensitivity',
+        'sensitivity.description':
+          'How sudden a rise in sound counts as a new strike. Raise it if the meter jumps but no strike is logged; lower it if ringing notes log extra strikes.',
         'strike-log.label': 'Strikes heard (newest first)',
         'strike-log-empty.message':
           'No strikes heard yet: if the meter moves but nothing appears here, raise the gain or sensitivity',

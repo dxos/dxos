@@ -14,6 +14,7 @@ import * as Select from '@dxos/react-ui/Select';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
 
 import {
   type AnalyzerFrame,
@@ -453,22 +454,26 @@ export const Tuner = ({
             />
           </Layout.Flex>
           <Layout.Grid cols={2} gap='md' classNames='w-full max-w-md'>
-            <Input.Slider
-              label={`${t('gain.label')} ${gain > 0 ? '+' : ''}${gain} dB`}
-              value={[gain]}
-              min={-12}
-              max={36}
-              step={1}
-              onValueChange={([value]) => handleGainChange(value)}
-            />
-            <Input.Slider
-              label={`${t('sensitivity.label')} ${Math.round(sensitivity * 100)}%`}
-              value={[sensitivity]}
-              min={0}
-              max={1}
-              step={0.05}
-              onValueChange={([value]) => handleSensitivityChange(value)}
-            />
+            <Tooltip.Trigger asChild content={t('gain.description')}>
+              <Input.Slider
+                label={`${t('gain.label')} ${gain > 0 ? '+' : ''}${gain} dB`}
+                value={[gain]}
+                min={-12}
+                max={36}
+                step={1}
+                onValueChange={([value]) => handleGainChange(value)}
+              />
+            </Tooltip.Trigger>
+            <Tooltip.Trigger asChild content={t('sensitivity.description')}>
+              <Input.Slider
+                label={`${t('sensitivity.label')} ${Math.round(sensitivity * 100)}%`}
+                value={[sensitivity]}
+                min={0}
+                max={1}
+                step={0.05}
+                onValueChange={([value]) => handleSensitivityChange(value)}
+              />
+            </Tooltip.Trigger>
           </Layout.Grid>
           <HandpanLayout
             notes={notes}
