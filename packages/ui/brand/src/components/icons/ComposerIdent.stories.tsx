@@ -30,8 +30,8 @@ type IdentVariant = {
   stagger: number;
   /** Start from the symmetric mark, then extend each bottom arm to its true length. */
   grow?: {
-    duration: number;
-    stagger: number;
+    /** Growth speed shared by every arm (viewBox units per ms), so shorter arms finish first. */
+    rate: number;
     /** Pause after the rings land before the arms grow (ms). */
     delay: number;
   };
@@ -64,6 +64,11 @@ const symmetricPaths = composerRingPaths.map(({ d }, index) =>
   SYMMETRIC_ARMS[index].reduce((path, [from, to]) => path.replaceAll(from, to), d),
 );
 
+/** Furthest any bottom-arm vertex travels, in path x units. */
+const growDistances = SYMMETRIC_ARMS.map((pairs) =>
+  Math.max(...pairs.map(([from, to]) => Math.abs(parseFloat(from) - parseFloat(to)))),
+);
+
 const VARIANT_NAMES = ['grow', 'ripple', 'focus', 'sweep', 'spin', 'fade'] as const;
 
 type VariantName = (typeof VARIANT_NAMES)[number];
@@ -80,7 +85,7 @@ const variants: Record<VariantName, IdentVariant> = {
       ],
       easing: 'ease-out',
     }),
-    grow: { duration: 900, stagger: 120, delay: 300 },
+    grow: { rate: 0.05, delay: 300 },
   },
   ripple: {
     label: 'Ripple',
@@ -238,22 +243,27 @@ const ComposerIdent = ({
     let ringsEnd = (count - 1) * stagger + duration;
     if (grow) {
       const growStart = ringsEnd + grow.delay;
+      let growEnd = growStart;
       pathRefs.current.forEach((element, index) => {
         if (element) {
+          // Paths carry different x scales, so convert the travel into viewBox units before timing it.
+          const scaleX = element.transform.baseVal.consolidate()?.matrix.a ?? 1;
+          const growDuration = (growDistances[index] * scaleX) / grow.rate;
+          growEnd = Math.max(growEnd, growStart + growDuration);
           animations.push(
             element.animate(
               [{ d: `path("${symmetricPaths[index]}")` }, { d: `path("${composerRingPaths[index].d}")` }],
               {
-                duration: grow.duration * speed,
-                delay: (growStart + index * grow.stagger) * speed,
-                easing: 'cubic-bezier(0.65, 0, 0.35, 1)',
+                duration: growDuration * speed,
+                delay: growStart * speed,
+                easing: 'linear',
                 fill: 'both',
               },
             ),
           );
         }
       });
-      ringsEnd = growStart + (count - 1) * grow.stagger + grow.duration;
+      ringsEnd = growEnd;
     }
 
     if (wordmarkRef.current) {
