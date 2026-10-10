@@ -18,7 +18,7 @@ import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { meta } from '#meta';
 import { Canvas, CanvasCapabilities } from '#types';
 
-import { canvasViewAspect } from '../containers/CanvasArticle/view-state.ts';
+import { canvasViewModeAspect } from '../containers/CanvasArticle/view-mode.ts';
 
 // Module-level: the graph dedupes action properties by reference, so a tuple rebuilt per evaluation re-emits the node.
 type LabelTuple = [string, { ns: string }];
@@ -49,14 +49,14 @@ export default Capability.makeModule(
         const canvas = drawing.canvas.target;
         const contextId = canvas && Entity.getURI(canvas);
         const readonly =
-          viewState && contextId ? get(viewState.atom(canvasViewAspect, contextId)).readonly === true : false;
+          viewState && contextId ? get(viewState.atom(canvasViewModeAspect, contextId)).readonly === true : false;
         return Effect.succeed([
           AppGraphNode.makeAction({
             id: `${drawing.id}.readonly`,
             data: () =>
               Effect.sync(() => {
                 if (viewState && contextId) {
-                  viewState.update(canvasViewAspect, contextId, (state) => ({ ...state, readonly: !readonly }));
+                  viewState.update(canvasViewModeAspect, contextId, (state) => ({ ...state, readonly: !readonly }));
                 }
               }),
             properties: {

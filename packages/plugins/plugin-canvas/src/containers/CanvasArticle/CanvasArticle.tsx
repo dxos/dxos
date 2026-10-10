@@ -45,6 +45,7 @@ import {
 import { CanvasCapabilities } from '#types';
 
 import { CanvasDatabaseContext, CanvasFrameNodeView, CanvasFrameToolbar } from './CanvasFrameNodeView.tsx';
+import { canvasViewModeAspect } from './view-mode.ts';
 import { canvasViewAspect } from './view-state.ts';
 
 export type CanvasArticleProps = IllustratorCapabilities.DrawingVariantSurfaceProps;
@@ -106,7 +107,8 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
 
   // Restores where the root scene was last left; read once per binding, since later values are our own writes.
   const contextId = Entity.getURI(canvas);
-  const { camera: savedCamera, readonly = false } = useViewState(canvasViewAspect, contextId);
+  const { camera: savedCamera } = useViewState(canvasViewAspect, contextId);
+  const { readonly = false } = useViewState(canvasViewModeAspect, contextId);
   const { update: updateViewState } = useViewStateActions(canvasViewAspect, contextId);
   const handleCameraChange = useCallback(
     (camera: Camera) => updateViewState((state) => ({ ...state, camera })),
