@@ -136,7 +136,12 @@ Notation reuses `plugin-sequencer`'s ECHO types rather than defining its own:
 
 All additions are optional, so existing scores are unaffected. Per-bar time-signature changes are
 not modelled: a new `Sequence` starts a new meter. The handpan scale (instrument tuning) belongs to the
-track (`Track.instrument`, e.g. `handpan:d-kurd`), distinct from the musical key.
+track's `Instrument` (plugin-sequencer, referenced by `Track.instrumentRef`), distinct from the musical
+key. `Instrument` is generic: `family` (e.g. `handpan`), `tuning` (MIDI pitches and root/ding), a
+reference pitch, and `calibration` — each note's recorded strikes (frequency, partials, spectral peaks).
+Calibration therefore syncs with the space instead of living in one browser; `src/notation/instrument.ts`
+maps it to and from the tuner's calibration state, and the `Tuner` binds to it through its
+`calibration` / `onCalibrationChange` props (Phase 2's container passes the ECHO object).
 
 `strikesToNotes` (`src/notation/strikes.ts`) is the bridge for record mode: strike times → quantized
 beats at the score's tempo, chords → notes sharing a start, taks → percussive notes.

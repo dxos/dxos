@@ -80,6 +80,8 @@ component Tuner
     defaultScale?: string            # scale id; later changes switch the tuner
     strikes?: int                    # strikes recorded per note during calibration; default 3
     persist?: boolean                # keep scale, calibration, gain, sensitivity in local storage
+    calibration?: NoteCalibration[]  # an Instrument's stored calibration; overrides local storage
+    onCalibrationChange?(calibration: NoteCalibration[])
     silent?: boolean                 # analyze synthesized strikes without playing them
     chords?: boolean                 # start with chord detection on
   state:
@@ -141,6 +143,8 @@ feat F-2: Calibration
   req F-2.4: Calibrated notes are drawn in the success colour; calibration can be reset or a
     single note redone by selecting its pad.
   req F-2.5: With persist, the scale and calibration survive a reload.
+  req F-2.6: Bound to an instrument (`calibration` / `onCalibrationChange`), calibration is read from
+    and written to `Instrument.calibration` (plugin-sequencer), matched by MIDI pitch.
 ```
 
 ```mdl

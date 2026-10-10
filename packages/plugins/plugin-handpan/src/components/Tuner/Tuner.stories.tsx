@@ -3,13 +3,16 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React, { useState } from 'react';
 
+import type * as Instrument from '@dxos/plugin-sequencer/Instrument';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { SCALES } from '#audio';
 import { translations } from '#translations';
 
-import { Tuner } from './Tuner.tsx';
+import { scaleToTuning, tuningToScale } from '../../notation/index.ts';
+import { Tuner, type TunerProps } from './Tuner.tsx';
 
 const meta = {
   title: 'plugins/plugin-handpan/components/Tuner',
@@ -81,6 +84,40 @@ export const SimulatedLive: Story = {
  * 3. Switch to Live and click pads 3, 1, 5 then Tak; the history ends `3 1 5 T`.
  */
 export const SimulatedSession: Story = {
+  args: {
+    source: 'synth',
+    defaultMode: 'calibrate',
+    strikes: 1,
+    synthDetune: 0,
+  },
+};
+
+/** An instrument's tuning; the story holds its calibration as an ECHO `Instrument` object would. */
+const INSTRUMENT_TUNING: Instrument.Tuning = scaleToTuning(SCALES[0]);
+
+const InstrumentBoundStory = (props: TunerProps) => {
+  const [calibration, setCalibration] = useState<Instrument.NoteCalibration[]>([]);
+  return (
+    <>
+      <Tuner
+        {...props}
+        scales={[tuningToScale(INSTRUMENT_TUNING, 'instrument')]}
+        calibration={calibration}
+        onCalibrationChange={setCalibration}
+      />
+      <pre className='p-2 text-xs text-fg-subtle' data-testid='instrument.calibration'>
+        {calibration.map(({ pitch, strikes }) => `${pitch}×${strikes.length}`).join(' ') || '–'}
+      </pre>
+    </>
+  );
+};
+
+/**
+ * Calibration bound to an instrument (synthesized audio): strikes are reported through
+ * `onCalibrationChange` and listed below as `MIDI pitch × strikes`.
+ */
+export const InstrumentBound: Story = {
+  render: InstrumentBoundStory,
   args: {
     source: 'synth',
     defaultMode: 'calibrate',
