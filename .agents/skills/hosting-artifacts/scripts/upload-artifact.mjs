@@ -14,12 +14,30 @@
 //   upload-artifact.mjs --list [prefix]
 
 import { createHash, createHmac } from 'node:crypto';
+import { existsSync, readFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
-import { basename, extname } from 'node:path';
+import { basename, dirname, extname, join, resolve, sep } from 'node:path';
 
-const ACCOUNT_ID = '950816f3f59b079880a1ae33fb0ec320';
-const BUCKET = 'agent-artifacts';
-const PUBLIC_BASE = 'https://pub-39066a86073446d7b77b1c157b660bb5.r2.dev';
+// Keys from `.secrets/r2.env` when the environment has none; a harness worktree's `.secrets/` starts empty, so
+// the primary checkout's is read too.
+const ROOT = resolve(dirname(new URL(import.meta.url).pathname), '../../../..');
+for (const root of new Set([ROOT, ROOT.split(`${sep}.claude${sep}worktrees${sep}`)[0]])) {
+  const file = join(root, '.secrets', 'r2.env');
+  if (existsSync(file)) {
+    for (const [, name, value] of readFileSync(file, 'utf8').matchAll(/^(R2_[A-Z_]+)=(.*)$/gm)) {
+      process.env[name] ||= value.trim();
+    }
+  }
+}
+
+// `.env.tpl` (resolved by `op inject`) names the same keys with a CLOUDFLARE_ prefix.
+process.env.R2_ACCESS_KEY_ID ||= process.env.CLOUDFLARE_R2_ACCESS_KEY_ID ?? '';
+process.env.R2_SECRET_ACCESS_KEY ||= process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY ?? '';
+
+// Another bucket in the same account (e.g. the Composer media bucket) is chosen with R2_BUCKET / R2_PUBLIC_BASE.
+const ACCOUNT_ID = process.env.R2_ACCOUNT_ID || '950816f3f59b079880a1ae33fb0ec320';
+const BUCKET = process.env.R2_BUCKET || 'agent-artifacts';
+const PUBLIC_BASE = process.env.R2_PUBLIC_BASE || 'https://pub-39066a86073446d7b77b1c157b660bb5.r2.dev';
 const HOST = `${ACCOUNT_ID}.r2.cloudflarestorage.com`;
 const REGION = 'auto';
 
@@ -49,7 +67,7 @@ const sign = ({ method, key, payloadHash, headers, query = '' }) => {
   const accessKeyId = process.env.R2_ACCESS_KEY_ID;
   const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
   if (!accessKeyId || !secretAccessKey) {
-    fail('R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY are not set (source .env, or see the hosting-artifacts skill).');
+    fail('R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY are not set (.secrets/r2.env, or see the hosting-artifacts skill).');
   }
 
   const amzDate = new Date().toISOString().replace(/[:-]|\.\d{3}/g, '');

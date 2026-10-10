@@ -572,12 +572,29 @@ frame, their audio is dropped, and chapters and captions are shifted past the in
 
 `--voiceover steps` on the trimmer narrates each chapter as it starts: every on-camera flow step lands in the
 timeline, spoken as its `narration` field if it has one, else its name. `--voiceover <cues.json>` speaks
-hand-written lines instead; `--voice <name>` picks the voice. One run gives the bookended, narrated demo:
+hand-written lines instead; `--voice <name>` picks the voice. With an intro, the narration opens on "This is
+Composer by DXOS." as the intro starts (`--intro-line <text>` to change it, `--intro-line off` to drop it). One
+run gives the bookended, narrated, uploaded demo:
 
 ```bash
 node .agents/skills/autocue/scripts/trim-static.mjs --in /tmp/demo/session.webm --out demo.webm \
-  --ident composer --voiceover steps --mp4
+  --ident composer --voiceover steps --mp4 --screenshot
 ```
+
+### Upload: on by default
+
+The finished video (the narrated MP4 when there is one) is uploaded to the Composer media bucket as
+`demos/<yyyy-mm-dd>-<name>.<ext>` and served from `https://assets.composer.space` (the bucket's dev URL is
+`https://pub-343732155ecd4a85bba38961213b0515.r2.dev`). `<name>` is the package the flow lives in, e.g.
+`plugin-markdown`, taken from the flow path the driver writes to `timeline.json`; `--name` overrides it and
+`--upload off` skips the upload. The bucket is `composer` (`AUTOCUE_R2_BUCKET` to change it). It uses
+`hosting-artifacts`' `upload-artifact.mjs`, so it needs R2 keys: run the trimmer under
+`op run --env-file .env.tpl -- node …/trim-static.mjs …` so 1Password injects them without printing them, or
+put `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` in `.secrets/r2.env`. The URL it prints has been verified
+through the public domain.
+
+`--screenshot` then adds that URL to the plugin's `dx.config.ts` as a `screenshots` entry, which is what the
+plugin registry shows; review and commit the change with the flow.
 
 Under the hood it calls `voiceover.mjs`, which can also be run on its own:
 

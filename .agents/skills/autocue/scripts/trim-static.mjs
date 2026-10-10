@@ -44,6 +44,9 @@ const parseArgs = () => {
     // chess piece crossing two squares is ~0.7% of the frame, which averages down to noise, and the
     // drags were being trimmed as if they were still.
     'threshold': 0.002,
+    // An absolute floor beside the fraction: one typed character at 2x is ~10 samples, far under 0.2% of the
+    // frame, so without it a typing step reads as stillness and is trimmed away.
+    'min-changed': 6,
     'delta': 12,
     // Constant quality rather than a bitrate: a fixed rate that suits 1280x800 smears a 2x recording,
     // and most of an agent-paced demo is still frames that cost next to nothing at any quality.
@@ -83,7 +86,7 @@ const escapeHtml = (value) =>
 const options = parseArgs();
 if (!options.in || !existsSync(options.in)) {
   console.error(
-    'usage: node trim-static.mjs --in <video> [--out <video>] [--max-static 1.5] [--fps 15] [--mp4] [--ident | --intro <video> --outro <video>] [--voiceover steps|<cues.json>] [--voice <name>]',
+    'usage: node trim-static.mjs --in <video> [--out <video>] [--max-static 1.5] [--fps 15] [--mp4] [--ident | --intro <video> --outro <video>] [--voiceover steps|<cues.json>] [--voice <name>] [--intro-line <text>|off] [--upload off] [--name <name>] [--screenshot]',
   );
   process.exit(1);
 }
@@ -147,14 +150,14 @@ const { width, height, seconds } = await probe(options.in).catch((error) => {
  * Caption times as the driver recorded them, in source frames. `timeline.json` is written by
  * `driver.mjs` on `stop`; without it every pause gets the plain `--max-static` cap.
  */
-const captions = (() => {
+const timeline = (() => {
   const file = options.timeline ?? path.join(path.dirname(options.in), 'timeline.json');
-  if (!existsSync(file)) {
-    return [];
-  }
-  const { steps = [] } = JSON.parse(readFileSync(file, 'utf8'));
-  return steps.map((step) => ({ ...step, frame: Math.round((step.ms / 1000) * options.fps) }));
+  return existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : {};
 })();
+const captions = (timeline.steps ?? []).map((step) => ({
+  ...step,
+  frame: Math.round((step.ms / 1000) * options.fps),
+}));
 const frameBytes = (width * height * 3) / 2; // yuv420p
 const holdFrames = Math.max(1, Math.round(options['max-static'] * options.fps));
 
@@ -174,7 +177,7 @@ const moved = (frame, previous) => {
       changed++;
     }
   }
-  return changed / samples.length > options.threshold;
+  return changed / samples.length > options.threshold || changed >= options['min-changed'];
 };
 
 const decodeArgs = [
@@ -604,22 +607,28 @@ const toMp4 = async () => {
 
 const mp4 = options.mp4 ? await toMp4() : undefined;
 
+/** Spoken as the intro opens; `--intro-line <text>` replaces it and `--intro-line off` drops it. */
+const INTRO_LINE = 'This is Composer by DXOS.';
+
 /**
  * `--voiceover steps` narrates each chapter with its step's `narration` (or name); `--voiceover <cues.json>`
- * takes hand-written lines timed against the final video. Both run `voiceover.mjs` once over every output.
+ * takes hand-written lines timed against the final video. With an intro, the intro line opens either. Both
+ * run `voiceover.mjs` once over every output.
  */
 const voiceover = async () => {
-  const cuesFile =
-    options.voiceover === 'steps' || options.voiceover === true
-      ? `${output.replace(/\.webm$/, '')}.cues.json`
-      : options.voiceover;
-  if (cuesFile !== options.voiceover) {
-    if (!stepCues.length) {
-      console.error('--voiceover steps: the recording has no steps (no timeline.json, or no captions or flow steps)');
-      return undefined;
-    }
-    writeFileSync(cuesFile, JSON.stringify(stepCues, null, 2));
+  const fromSteps = options.voiceover === 'steps' || options.voiceover === true;
+  const cues = fromSteps ? stepCues : JSON.parse(readFileSync(options.voiceover, 'utf8'));
+  if (!cues.length) {
+    console.error('--voiceover steps: the recording has no steps (no timeline.json, or no captions or flow steps)');
+    return undefined;
   }
+  const introLine = typeof options['intro-line'] === 'string' ? options['intro-line'] : INTRO_LINE;
+  const introSeconds = introFrames / options.fps;
+  if (introFrames && options['intro-line'] !== 'off' && !cues.some((cue) => cue.at < introSeconds)) {
+    cues.unshift({ at: 0.3, text: introLine });
+  }
+  const cuesFile = `${output.replace(/\.webm$/, '')}.cues.json`;
+  writeFileSync(cuesFile, JSON.stringify(cues, null, 2));
   const inputs = [annotated?.video ?? output, mp4].filter(Boolean);
   const narrate = spawn(
     process.execPath,
@@ -641,6 +650,89 @@ const voiceover = async () => {
 
 const voiced = options.voiceover ? await voiceover() : undefined;
 
+/**
+ * The Composer media bucket, served from its custom domain: demos land under `demos/<yyyy-mm-dd>-<name>.<ext>`,
+ * named after the package the flow exercises (`plugin-markdown`) unless `--name` says otherwise.
+ */
+const MEDIA = {
+  bucket: process.env.AUTOCUE_R2_BUCKET || 'composer',
+  publicBase: 'https://assets.composer.space',
+  folder: 'demos',
+};
+
+/** The package a flow lives in, from its path (`packages/plugins/plugin-markdown/autocue/…`). */
+const flowPackage = timeline.flow?.match(/packages\/(?:[^/]+\/)*?([^/]+)\/autocue\//);
+
+const uploadName = (() => {
+  if (typeof options.name === 'string') {
+    return options.name;
+  }
+  return flowPackage?.[1];
+})();
+
+/** Uploads the finished video (narrated MP4 first, since it plays everywhere) and returns its public URL. */
+const upload = async () => {
+  const video = [
+    voiced?.outputs?.find((file) => file.endsWith('.mp4')),
+    mp4,
+    voiced?.outputs?.[0],
+    annotated?.video,
+    output,
+  ]
+    .filter(Boolean)
+    .find((file) => existsSync(file));
+  if (!uploadName) {
+    console.error('upload skipped: no --name and the timeline names no flow package');
+    return undefined;
+  }
+  const key = `${MEDIA.folder}/${new Date().toLocaleDateString('en-CA')}-${uploadName}${path.extname(video)}`;
+  const script = path.resolve(
+    path.dirname(new URL(import.meta.url).pathname),
+    '../../hosting-artifacts/scripts/upload-artifact.mjs',
+  );
+  const proc = spawn(process.execPath, [script, video, '--key', key], {
+    env: { ...process.env, R2_BUCKET: MEDIA.bucket, R2_PUBLIC_BASE: MEDIA.publicBase },
+    stdio: ['ignore', 'pipe', 'inherit'],
+  });
+  let text = '';
+  proc.stdout.on('data', (chunk) => (text += chunk));
+  const [code] = await once(proc, 'close');
+  return code === 0 ? text.trim().split('\n').pop() : undefined;
+};
+
+const uploaded = options.upload !== 'off' && options.upload !== false ? await upload() : undefined;
+
+/**
+ * `--screenshot` adds the uploaded video to the flow's plugin as a `screenshots` entry in its `dx.config.ts`,
+ * which is what the plugin registry shows.
+ */
+const addScreenshot = (url) => {
+  const config = flowPackage && path.join(timeline.flow.slice(0, timeline.flow.indexOf('/autocue/')), 'dx.config.ts');
+  if (!config || !existsSync(config)) {
+    console.error(`--screenshot: no dx.config.ts beside the flow (${config ?? 'no flow in the timeline'})`);
+    return undefined;
+  }
+  let source = readFileSync(config, 'utf8');
+  if (source.includes(url)) {
+    return config;
+  }
+  const entry = `{ dark: '${url}' }`;
+  const list = source.match(/screenshots: \[([\s\S]*?)\n?(\s*)\],/);
+  if (list) {
+    const [whole, items] = list;
+    const body = items.trim() ? `${items.replace(/,?\s*$/, '')}, ${entry}` : entry;
+    source = source.replace(whole, `screenshots: [${body}],`);
+  } else {
+    source = source.replace(/(\n(\s*)icon: [^\n]*\n)/, `$1$2screenshots: [${entry}],\n`);
+  }
+  writeFileSync(config, source);
+  // The insertion is not formatted to house style; oxfmt is what CI checks.
+  spawnSync('npx', ['oxfmt', '--write', config], { stdio: 'ignore' });
+  return config;
+};
+
+const screenshot = options.screenshot && uploaded ? addScreenshot(uploaded) : undefined;
+
 const before = seconds ?? read / options.fps;
 const after = kept / options.fps;
 console.log(
@@ -650,6 +742,8 @@ console.log(
       annotated,
       mp4,
       voiced,
+      uploaded,
+      screenshot,
       frames: { read, kept, dropped: read - kept, intro: introFrames, outro: outroFrames },
       seconds: { before: +before.toFixed(1), after: +after.toFixed(1) },
       reduction: `${Math.round((1 - after / before) * 100)}%`,

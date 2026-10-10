@@ -220,6 +220,18 @@ const logFile = options.log === 'off' ? undefined : (options.log ?? path.join(op
 const logTap = logFile
   ? await (native ? startPolledLogTap({ page, file: logFile }) : startLogTap({ context, page, file: logFile }))
   : undefined;
+// A blinking caret is motion the trimmer cannot tell from typing, so a recording holds it steady.
+if (!manual && !native) {
+  await context.addInitScript(() => {
+    const style = () => {
+      const sheet = document.createElement('style');
+      sheet.textContent = '.cm-cursorLayer, .cm-cursor { animation: none !important; }';
+      document.head.append(sheet);
+    };
+    document.head ? style() : document.addEventListener('DOMContentLoaded', style);
+  });
+}
+
 const overlay = createOverlay(page, {
   enabled: options.overlay !== 'off',
   feed: options.pills !== 'off',
@@ -882,7 +894,8 @@ const handlers = {
       return { browser: 'left open; closing the window ends the driver' };
     }
     const timelineFile = path.join(options.out, 'timeline.json');
-    writeFileSync(timelineFile, JSON.stringify({ started, steps: timeline }, null, 2));
+    // The flow file names the package it exercises, which the trimmer uses to name and place the upload.
+    writeFileSync(timelineFile, JSON.stringify({ started, flow: flow.file, steps: timeline }, null, 2));
     let recorded;
     try {
       recorded = await recorder?.stop();

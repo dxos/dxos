@@ -95,6 +95,23 @@ export const steps = [
     },
   },
   {
+    name: 'Add a checklist and tick an item',
+    narration: 'Add a checklist, and tick items off as you go.',
+    run: async ({ demo, page }) => {
+      await typeSlowly(page, '## Tasks\n\n- [ ] Write the docs\n[ ] Record the demo\n\n');
+      const box = `${EDITOR} input[type="checkbox"]`;
+      await page.locator(box).first().waitFor({ state: 'visible', timeout: 10_000 });
+      await demo.click({ selector: `${box} >> nth=0`, label: 'Done' });
+      await page.waitForTimeout(BEAT);
+      // Back to the end of the document, where the next step types.
+      await page.evaluate(() => {
+        const view = globalThis.composer?.editorView;
+        view?.dispatch({ selection: { anchor: view.state.doc.length } });
+        view?.focus();
+      });
+    },
+  },
+  {
     name: 'Link a new page with @',
     narration: 'Type @ to link another page, or create a new one on the spot.',
     run: async ({ demo, page }) => {
@@ -109,7 +126,7 @@ export const steps = [
         label: 'Document',
       });
       await page.locator(`${EDITOR} :text("${LINKED}")`).first().waitFor({ state: 'visible', timeout: 10_000 });
-      await page.waitForTimeout(BEAT * 2);
+      await page.waitForTimeout(BEAT * 4);
     },
   },
 ];
