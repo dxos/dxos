@@ -427,16 +427,39 @@ const LINK_TEXT_PAD = { x: 8, y: 2 };
 const LinkText = ({ path, text }: LinkTextProps) => {
   const ref = useRef<SVGPathElement>(null);
   const textRef = useRef<SVGTextElement>(null);
-  const [at, setAt] = useState<{ x: number; y: number }>();
+  // The full caption, laid out but invisible, so it can be measured however much of it is shown.
+  const measureRef = useRef<SVGTextElement>(null);
+  const [at, setAt] = useState<{ x: number; y: number; room?: number }>();
+  const [shown, setShown] = useState(text);
   const [box, setBox] = useState<{ x: number; y: number; width: number; height: number }>();
   // The route is only known as drawn: its midpoint is measured along the path, not between its ends.
   useLayoutEffect(() => {
     const element = ref.current;
     if (element) {
-      const { x, y } = element.getPointAtLength(element.getTotalLength() / 2);
-      setAt({ x, y });
+      const length = element.getTotalLength();
+      const { x, y } = element.getPointAtLength(length / 2);
+      setAt({ x, y, room: horizontalRun(element, length) });
     }
   }, [path]);
+  // On a horizontal run the caption fits between the run's ends, clear of the arrowheads, so a long one is shortened.
+  useLayoutEffect(() => {
+    const element = measureRef.current;
+    if (!element || !at) {
+      return;
+    }
+    const room = at.room === undefined ? Infinity : at.room - LINK_TEXT_PAD.x * 2 - LINK_TEXT_CLEARANCE * 2;
+    if (text.length === 0 || element.getComputedTextLength() <= room) {
+      setShown(text);
+      return;
+    }
+    // The ellipsis takes about one character's width of what it replaces.
+    const ellipsis = element.getComputedTextLength() / text.length;
+    let count = text.length - 1;
+    while (count > 0 && element.getSubStringLength(0, count) + ellipsis > room) {
+      count--;
+    }
+    setShown(`${text.slice(0, count).trimEnd()}…`);
+  }, [at, text]);
   // The backdrop fits the text as set, so it is measured once the text is placed.
   useLayoutEffect(() => {
     const element = textRef.current;
@@ -449,7 +472,7 @@ const LinkText = ({ path, text }: LinkTextProps) => {
         height: height + LINK_TEXT_PAD.y * 2,
       });
     }
-  }, [at, text]);
+  }, [at, shown]);
   return (
     <>
       <path ref={ref} d={path} className='fill-none stroke-none' />
@@ -466,12 +489,44 @@ const LinkText = ({ path, text }: LinkTextProps) => {
             className='fill-fg-muted text-sm'
             data-link-text
           >
+            {shown !== text && <title>{text}</title>}
+            {shown}
+          </text>
+          <text ref={measureRef} x={at.x} y={at.y} className='text-sm invisible' aria-hidden>
             {text}
           </text>
         </>
       )}
     </>
   );
+};
+
+/** Scene units kept clear at each end of a caption's run, for the arrowhead or bend there. */
+const LINK_TEXT_CLEARANCE = 12;
+
+/** Step, in scene units, when walking a route out from its midpoint. */
+const RUN_STEP = 2;
+
+/**
+ * The length of the straight horizontal run through a path's midpoint, or undefined when the midpoint is on a vertical
+ * run (a caption there is not bounded by the line it sits on).
+ */
+const horizontalRun = (element: SVGPathElement, length: number): number | undefined => {
+  const middle = length / 2;
+  const { y } = element.getPointAtLength(middle);
+  const level = (at: number) => Math.abs(element.getPointAtLength(at).y - y) < 0.5;
+  if (!level(Math.max(0, middle - RUN_STEP)) || !level(Math.min(length, middle + RUN_STEP))) {
+    return undefined;
+  }
+  let start = middle;
+  while (start > 0 && level(Math.max(0, start - RUN_STEP))) {
+    start = Math.max(0, start - RUN_STEP);
+  }
+  let end = middle;
+  while (end < length && level(Math.min(length, end + RUN_STEP))) {
+    end = Math.min(length, end + RUN_STEP);
+  }
+  return end - start;
 };
 
 type NodeFrameProps = Omit<NodeViewProps, 'editing'> & {

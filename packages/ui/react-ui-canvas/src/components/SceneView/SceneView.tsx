@@ -899,7 +899,8 @@ const SceneViewRoot = ({
       drag={drag}
       tool={tool}
       debug={debug}
-      panels={panels}
+      // Read-only, nothing is edited, so the panels float rather than taking room from the canvas.
+      panels={readonly ? 'floating' : panels}
       createFrame={createFrame}
       landing={landing}
       handlers={handlers}
@@ -1447,9 +1448,12 @@ const ABOUT_SECTION: DockSection = { id: 'about', title: 'About', icon: 'ph--inf
 
 export type SceneViewAboutProps = Util.ThemedClassName<{}>;
 
-/** Counts of the scene's objects and the drawing's scenes; a dock section only, since it has no place over the canvas. */
-const SceneViewAbout = ({ classNames }: SceneViewAboutProps) => {
-  const { scene, store, panels } = useSceneViewContext('SceneView.About');
+/**
+ * Counts of the scene's objects and the drawing's scenes: a dock section, or floating over the canvas when read-only,
+ * where it is the only panel left.
+ */
+const SceneViewAbout = ({ classNames = PANEL_CLASSES }: SceneViewAboutProps) => {
+  const { scene, store, panels, readonly } = useSceneViewContext('SceneView.About');
   const scenes = useAtomValue(store.scenes);
   const docked = panels === 'docked';
   const stats = useMemo<AboutStat[]>(
@@ -1461,7 +1465,14 @@ const SceneViewAbout = ({ classNames }: SceneViewAboutProps) => {
     ],
     [scene, scenes],
   );
-  return useDockSection(ABOUT_SECTION, docked, <About classNames={mx('h-auto', classNames)} stats={stats} />);
+  const dockedPanel = useDockSection(ABOUT_SECTION, docked, <About classNames='h-auto' stats={stats} />);
+  if (docked) {
+    return dockedPanel;
+  }
+  // Floating beside an editable view, the properties and layers panels take this corner, so About shows only read-only.
+  return readonly ? (
+    <About classNames={mx('rounded-sm bg-modal-surface border border-separator', classNames)} stats={stats} />
+  ) : null;
 };
 
 SceneViewAbout.displayName = 'SceneView.About';
