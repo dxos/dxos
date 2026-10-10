@@ -141,7 +141,13 @@ export const CreateSpaceDialog = () => {
                         icon: glyph,
                       }))}
                     >
-                      <Listbox.Content classNames='my-2' aria-label={t('create-space-dialog.templates.label')}>
+                      {/* The dialog body scrolls, so the list does not: unscrolled, it inherits the dialog's columns
+                          rather than insetting its rows in a gutter of its own. */}
+                      <Listbox.Content
+                        scroll={false}
+                        classNames='my-2'
+                        aria-label={t('create-space-dialog.templates.label')}
+                      >
                         {templates.map(({ id }) => (
                           <Listbox.Item key={id} id={id} />
                         ))}
