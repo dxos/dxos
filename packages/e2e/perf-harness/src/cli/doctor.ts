@@ -7,7 +7,7 @@ import { existsSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 
 import { readFreeze } from '../score/freeze.ts';
-import { portListening, restorePatchFile } from './arms.ts';
+import { keepArms, portListening, restorePatchFile } from './arms.ts';
 import { readLedger } from './ledger.ts';
 import { LOCK_FILE, lockHolder } from './lock.ts';
 import { TARGETS } from './targets.ts';
@@ -38,6 +38,11 @@ const listener = (port: number): string => {
   } catch {
     return 'in use';
   }
+};
+
+const diskUsage = (dir: string): string => {
+  const kilobytes = Number.parseInt(execFileSync('du', ['-sk', dir], { encoding: 'utf8' }), 10);
+  return kilobytes > 1024 * 1024 ? `${(kilobytes / 1024 / 1024).toFixed(1)} GB` : `${Math.round(kilobytes / 1024)} MB`;
 };
 
 const age = (milliseconds: number): string => {
@@ -123,7 +128,14 @@ export const doctor = async ({ target: name }: { target: string }): Promise<numb
     ),
   );
   const arms = path.join(perfDir(root), 'arms');
-  lines.push(line('arms', existsSync(arms) ? `${readdirSync(arms).length} cached under .perf/arms` : 'none cached'));
+  lines.push(
+    line(
+      'arms',
+      existsSync(arms)
+        ? `${readdirSync(arms).length} cached under .perf/arms, ${diskUsage(arms)}, keeping the ${keepArms()} most recently used`
+        : 'none cached',
+    ),
+  );
   const harness = harnessHash(root, target.harness);
   const frozen = readFreeze(root);
   lines.push(

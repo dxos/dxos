@@ -1,5 +1,8 @@
 # Composer-app startup benchmarks
 
+History, no longer appended: the harness writes each worktree's rows to its untracked
+`.perf/startup-benchmarks.md`, so a run leaves the tree clean.
+
 Auto-recorded by `src/playwright/startup.spec.ts`. One row per scenario per harness run.
 `profilerTotal` = `composer.profiler` (`main:start` → `Startup` activated).
 `navToReady` = wall-clock from `page.goto` until the user-account testid is visible.

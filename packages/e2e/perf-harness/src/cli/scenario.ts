@@ -71,7 +71,10 @@ export const scenarioNew = ({
   return 0;
 };
 
-export type ScenarioCheckOptions = Pick<CompareOptions, 'target' | 'ignoreLoad' | 'lockWaitMinutes' | 'seed'> & {
+export type ScenarioCheckOptions = Pick<
+  CompareOptions,
+  'target' | 'ignoreLoad' | 'lockWaitMinutes' | 'seed' | 'conditions'
+> & {
   scenario: string;
   /** `<stage>:<ms>` to inject for the sensitivity check; defaults to {@link defaultInjection}. */
   inject?: string;
@@ -123,6 +126,7 @@ export const scenarioCheck = async (options: ScenarioCheckOptions): Promise<numb
     lockWaitMinutes: options.lockWaitMinutes,
     checks: [],
     allowHarnessChange: false,
+    conditions: options.conditions,
   };
   const findings: string[] = [];
   let ready = true;

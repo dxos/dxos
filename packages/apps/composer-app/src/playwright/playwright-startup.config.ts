@@ -6,6 +6,8 @@ import { defineConfig } from '@playwright/test';
 
 import { e2ePreset } from '@dxos/test-utils/playwright';
 
+import { PERF_PORT } from './perf/server.ts';
+
 /**
  * Production startup harness config — `vite preview`, same as `playwright.config.ts`, but scoped
  * to `startup.spec.ts`.
@@ -26,8 +28,8 @@ export default defineConfig({
   expect: { timeout: 10_000 },
   workers: 1,
   webServer: {
-    command: 'pnpm vite preview --configLoader native',
-    port: 4173,
+    command: `pnpm vite preview --configLoader native --port ${PERF_PORT ?? 4173} --strictPort`,
+    port: PERF_PORT ?? 4173,
     reuseExistingServer: false,
     timeout: 300_000,
   },

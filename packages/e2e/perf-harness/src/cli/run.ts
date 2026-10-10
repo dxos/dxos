@@ -8,11 +8,11 @@ import path from 'node:path';
 import { formatValue } from '../score/render.ts';
 import { scoreMeasurements } from '../score/score.ts';
 import { STAGE_CPU_GROUP, STAGE_WALL_GROUP, WORK_GROUP, groupOfId, toMeasurements } from '../score/stages.ts';
-import { buildWorkingTree, runFlow, serveArm } from './arms.ts';
+import { buildWorkingTree, keepArms, pruneArms, runFlow, serveArm } from './arms.ts';
 import { appendLedger } from './ledger.ts';
 import { elapsedMinutes, openSession, settle } from './session.ts';
 import { ARMS_FILE, type ArmsRecord } from './summarize.ts';
-import { readBudgets } from './targets.ts';
+import { type Conditions, describeConditions, readBudgets } from './targets.ts';
 import { HarnessError, git } from './workspace.ts';
 
 export type RunOptions = {
@@ -23,6 +23,7 @@ export type RunOptions = {
   lockWaitMinutes: number;
   /** `DX_PERF_SNAPSHOTS` checkpoints (`idle`, a stage id, `end`); every later stage is perturbed. */
   snapshots?: string;
+  conditions?: Conditions;
 };
 
 /**
@@ -36,11 +37,13 @@ export const runCommand = async ({
   ignoreLoad,
   lockWaitMinutes,
   snapshots,
+  conditions,
 }: RunOptions): Promise<number> => {
   const session = await openSession({
     command: 'perf run',
     target: targetName,
     scenario,
+    conditions,
     ignoreLoad,
     lockWaitMinutes,
   });
@@ -49,11 +52,16 @@ export const runCommand = async ({
     progress(`run ${path.relative(root, dir)}`);
     const arm = await buildWorkingTree({ root, target, logFile: path.join(dir, 'build.log') });
     progress(`${arm.ref} ${arm.commit.slice(0, 9)} ${arm.cached ? 'cached' : 'built'}`);
+    const pruned = pruneArms(root, keepArms(), [arm.dir]);
+    if (pruned.length > 0) {
+      progress(`pruned ${pruned.length} least recently used cached bundles`);
+    }
     writeFileSync(
       path.join(dir, ARMS_FILE),
       JSON.stringify({
         target: target.name,
         ...(target.scenario ? { scenario: target.scenario } : {}),
+        ...(describeConditions(target.conditions) ? { conditions: target.conditions } : {}),
         candidate: arm.dir,
       } satisfies ArmsRecord),
     );
@@ -96,8 +104,10 @@ export const runCommand = async ({
     );
     const over = report.metrics.filter(({ status }) => status === 'over');
 
+    const conditions = describeConditions(target.conditions);
     const lines = [
       `perf run ${target.name}${target.scenario ? ` scenario ${target.scenario}` : ''}  ${arm.ref} ${arm.commit.slice(0, 9)}  harness ${session.harness}`,
+      ...(conditions ? [`under ${conditions}`] : []),
       `${iterations} iteration${iterations === 1 ? '' : 's'}, ${elapsedMinutes(session)} min, flow exit ${result.exitCode}  ${path.relative(root, result.dir)}`,
       'stage                 wall        cpu',
       ...stages.map((stage) => {

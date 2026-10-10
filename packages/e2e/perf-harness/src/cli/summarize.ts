@@ -11,11 +11,18 @@ import { readStageEvents } from '../score/run.ts';
 import { type DigestRow, digestRows, groupCosts, topFunctions } from '../summarize/digest.ts';
 import { type FunctionCost, type Resolve, sourceMappedId, unmappedId } from '../summarize/profile.ts';
 import { createFrameResolver } from '../summarize/sourcemap.ts';
-import { type Target, resolveTarget } from './targets.ts';
+import { type Conditions, type Target, resolveTarget } from './targets.ts';
 import { HarnessError, perfDir, workspaceRoot } from './workspace.ts';
 
 /** Written beside a run's results: which bundle each arm served, so its profiles map back to source. */
-export type ArmsRecord = { target: string; scenario?: string; base?: string; candidate: string };
+export type ArmsRecord = {
+  target: string;
+  scenario?: string;
+  /** Set when the run was measured under anything but the defaults. */
+  conditions?: Conditions;
+  base?: string;
+  candidate: string;
+};
 
 export const ARMS_FILE = 'arms.json';
 

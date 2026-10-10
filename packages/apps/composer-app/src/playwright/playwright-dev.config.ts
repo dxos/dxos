@@ -6,12 +6,14 @@ import { defineConfig } from '@playwright/test';
 
 import { e2ePreset } from '@dxos/test-utils/playwright';
 
+import { PERF_PORT } from './perf/server.ts';
+
 /**
  * Dev-server harness config — runs against `vite serve`, not `vite preview`.
  *
- * The webServer command is `pnpm vite --port 4173` (`serve` is vite's default
- * subcommand) so the app-manager's `INITIAL_URL` (also 4173) keeps working
- * without a second URL constant. The `testMatch` constraint scopes this config
+ * The webServer command is `pnpm vite --port <port>` (`serve` is vite's default
+ * subcommand) on `INITIAL_URL`'s port (4173, or `DX_PERF_PORT`), so the harness
+ * needs no second URL constant. The `testMatch` constraint scopes this config
  * to the `dev-*` specs; everything else runs under `playwright.config.ts`.
  *
  * Run with:
@@ -29,8 +31,8 @@ export default defineConfig({
   // Dev pre-bundling + per-file transformation can swing wide on a cold cache.
   timeout: 180_000,
   webServer: {
-    command: 'pnpm vite --port 4173 --configLoader native',
-    port: 4173,
+    command: `pnpm vite --port ${PERF_PORT ?? 4173} --strictPort --configLoader native`,
+    port: PERF_PORT ?? 4173,
     reuseExistingServer: false,
     // Vite pre-bundling on a cold `.vite` cache for composer-app routinely
     // takes ~30 s; `webServer.timeout` is the cap on "wait for `port` to listen".

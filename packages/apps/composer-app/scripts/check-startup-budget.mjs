@@ -21,17 +21,18 @@
  *
  * TODO(startup-latency): gate on `profilerTotal` / `navToReady` / TBT once a fixed (self-hosted or
  * consistently-sized) runner exists; until then they are recorded per run and trended, never
- * failed on. Revisit the thresholds here at the same time — see BENCHMARKS.md for the series.
+ * failed on. Revisit the thresholds here at the same time — see the `startup-benchmarks.md` rows
+ * each worktree records under `.perf/`.
  */
 
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
 /**
- * Median must stay at or under this. Calibrated 2026-08-03 in-container: a healthy median of 291
- * (5 runs: 304, 291, 285, 295, 290) against 306 for the activation regression this branch shipped
- * and reverted (306, 306, 316) — so the line sits between them, with 9 of headroom above healthy
- * and 6 below regressed.
+ * Median must stay at or under this. Healthy medians: 291 in-container on 2026-08-03 (5 runs: 304,
+ * 291, 285, 295, 290) and 285 on a laptop on 2026-10-09 (282, 285, 285, 285, 285). The activation
+ * regression the startup-latency branch shipped and reverted read 306 (306, 306, 316), so the line
+ * sits between healthy and regressed.
  *
  * Deliberately gated on the MEDIAN, not any single run: individual samples span 19 here, wide
  * enough that one run of a healthy commit can exceed this number on its own.
@@ -40,7 +41,7 @@ import path from 'node:path';
  * calibration data — if this flaps on commits that are fine, raise it against the observed spread
  * rather than nudging it each time.
  */
-const MAX_MODULES_AT_READY = 350;
+const MAX_MODULES_AT_READY = 300;
 
 /** Below this the median is not meaningful — one sample decides nothing. */
 const MIN_SAMPLES = 3;
@@ -100,7 +101,7 @@ if (medianCount > MAX_MODULES_AT_READY) {
       'Something that used to activate on demand now activates during startup. Usual causes: a\n' +
       'module maker whose default `activatesOn` was dropped or widened, or a capability newly\n' +
       'required by a boot module (which pulls its provider onto the startup pass).\n' +
-      'Compare the `modules` column across BENCHMARKS.md rows to find where it moved.',
+      'Compare the `modules` column across .perf/startup-benchmarks.md rows to find where it moved.',
   );
   process.exit(1);
 }

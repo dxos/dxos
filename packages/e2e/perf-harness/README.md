@@ -145,8 +145,9 @@ pnpm perf ledger                              # what this worktree measured befo
 ```
 
 `compare` builds both refs in this worktree (patching the clean tree to the base and back; bundles
-are cached under `.perf/arms` by tree hash), then runs rounds: each round measures both arms back
-to back, in a random order, on the same port. Two runs of one commit differ by ~20% per stage
+are cached under `.perf/arms` by tree hash, keeping the six most recently used, or
+`DX_PERF_KEEP_ARMS`), then runs rounds: each round measures both arms back to back, in a random
+order, on the same port. Two runs of one commit differ by ~20% per stage
 (METRICS.md), while arms paired inside a round differ by a few percent, so pairing is what makes a
 per-change verdict possible at all.
 
@@ -170,6 +171,30 @@ Ports are derived from the worktree path and a machine-wide lock (`~/.cache/dxos
 runs one measurement at a time, so worktrees never measure each other. Before the first round,
 compare waits for the load average to fall below the core count, since the build it just ran is
 load the rounds would otherwise measure. Every run appends a row to `.perf/ledger.tsv`.
+
+### Measuring closer to production
+
+By default the bundle is served over HTTP/1.1 with no service worker and an unthrottled CPU, and
+the whole flow runs. Each of these flags changes that for both arms, and every row records it, so
+`compare` voids a verdict whose arms were measured under different conditions:
+
+```bash
+pnpm perf compare --base main --until open-space       # skip the stages after open-space
+pnpm perf compare --base main --http2                   # HTTP/2, as production's CDN serves
+pnpm perf compare --base main --service-worker          # the PWA build, its own cached bundle
+pnpm perf compare --base main --cpu-throttle 4          # the page 4x slower
+```
+
+- `--until` skips every stage after the one named, which shortens an experiment on an early stage.
+  Setup between stages still runs: the projects fixture is built whatever the stage.
+- `--http2` matters for boot. Hundreds of lazy chunks queue behind six HTTP/1.1 connections, so
+  request count reads as boot time locally when production pays little for it. It generates a
+  self-signed `key.pem` and `cert.pem` at the repo root on first use, which `vite preview` reads
+  under `HTTPS=true`.
+- `--service-worker` builds with `DX_PWA=true`; the worker precaches the bundle during the run, as
+  it does on a user's first visit.
+- `--cpu-throttle` sends `Emulation.setCPUThrottlingRate` through the page's session. The factor is
+  not calibrated to a device yet, so pick one and keep it for the whole comparison.
 
 ### Guardrails for an optimization loop
 
