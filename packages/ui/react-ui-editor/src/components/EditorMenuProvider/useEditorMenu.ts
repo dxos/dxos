@@ -5,7 +5,7 @@
 import { type Extension } from '@codemirror/state';
 import { type EditorState } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
-import { type RefObject, useCallback, useMemo, useRef, useState } from 'react';
+import { type RefObject, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { modalStateEffect } from '@dxos/ui-editor';
@@ -86,12 +86,19 @@ export const useEditorMenu = ({
   // Monotonic token identifying the latest menu query; bumped per request and on close.
   const requestRef = useRef(0);
 
+  // The latest `getMenu`, read when the menu opens: it changes whenever the caller's data does, and the extension
+  // built from it would otherwise rebuild the view, blurring the editor mid-keystroke.
+  const getMenuRef = useRef(getMenu);
+  useLayoutEffect(() => {
+    getMenuRef.current = getMenu;
+  }, [getMenu]);
+
   /**
    * Get filtered options.
    */
   const getMenuOptions = useCallback<NonNullable<UseEditorMenuProps['getMenu']>>(
     async ({ text, trigger, ...props }) => {
-      const groups = (await getMenu?.({ text, trigger, ...props })) ?? [];
+      const groups = (await getMenuRef.current?.({ text, trigger, ...props })) ?? [];
       // The "@" menu can use "@@" as syntax for block embeds, so it owns its own query filtering.
       return filter && trigger !== '@'
         ? filterMenuGroups(groups, (item) =>
@@ -99,7 +106,7 @@ export const useEditorMenu = ({
           )
         : groups;
     },
-    [getMenu, filter],
+    [filter],
   );
 
   /**
@@ -224,17 +231,18 @@ export const useEditorMenu = ({
 
   // Array props are compared by CONTENT, not identity: a caller writing `trigger={['#']}` inline
   // hands over a new array every render, and a changed extension destroys and recreates the view —
-  // blurring the editor mid-keystroke.
-  const serializedTrigger = Array.isArray(trigger) ? trigger.join(',') : trigger;
-  const serializedSearchTriggers = searchTriggers?.join(',');
-  const serializedDelimiters = activateOnDelimiters?.join(',');
+  // blurring the editor mid-keystroke. The memo reads them back from the key, so the React Compiler keys it the
+  // same way.
+  const arraysKey = JSON.stringify({ trigger, searchTriggers, activateOnDelimiters });
   const extension = useMemo<Extension>(() => {
+    const arrays: Pick<UseEditorMenuProps, 'trigger' | 'searchTriggers' | 'activateOnDelimiters'> =
+      JSON.parse(arraysKey);
     return popover({
-      trigger,
+      trigger: arrays.trigger,
       triggerKey,
       placeholder,
       activateOnTyping,
-      activateOnDelimiters,
+      activateOnDelimiters: arrays.activateOnDelimiters,
       onClose: ({ view }) => handleOpenChange({ view, open: false }),
       onEnter: ({ view }) => {
         if (currentRef.current) {
@@ -248,21 +256,12 @@ export const useEditorMenu = ({
       onTextChange: async ({ view, pos, text, trigger }) => {
         contextRef.current = { view, pos, text, trigger };
         // The input is remounted per activation, so the query always starts empty.
-        setSearch(!!trigger && !!searchTriggers?.includes(trigger));
+        setSearch(!!trigger && !!arrays.searchTriggers?.includes(trigger));
         setQuery('');
         await updateGroups({ view, pos, text, trigger });
       },
     });
-  }, [
-    handleOpenChange,
-    handleNavigate,
-    updateGroups,
-    serializedTrigger,
-    serializedSearchTriggers,
-    serializedDelimiters,
-    placeholder,
-    activateOnTyping,
-  ]);
+  }, [handleOpenChange, handleNavigate, updateGroups, arraysKey, triggerKey, placeholder, activateOnTyping]);
 
   return {
     groupsRef,
