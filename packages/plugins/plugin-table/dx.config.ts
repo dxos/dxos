@@ -30,7 +30,7 @@ export default Config2.make({
     spec: 'PLUGIN.mdl',
     screenshots: [
       { dark: 'https://media.dxos.network/plugin-details-tables-dark.png' },
-      { dark: 'https://assets.composer.space/demos/2026-10-09-plugin-table.mp4?v=130d0e21' },
+      { dark: 'https://assets.composer.space/demos/2026-10-09-plugin-table.mp4?v=7bd261d8' },
     ],
     tags: ['beta'],
   },
