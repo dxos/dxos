@@ -733,6 +733,12 @@ overrides:
   '@lezer/markdown': 'catalog:'
   '@modelcontextprotocol/sdk': '>=1.26.0'
   '@remix-run/router': '>=1.23.2'
+  '@remotion/elevenlabs>zod': 4.3.6
+  '@remotion/media>zod': 4.3.6
+  '@remotion/openai-whisper>zod': 4.3.6
+  '@remotion/studio>zod': 4.3.6
+  '@remotion/studio-protocol>zod': 4.3.6
+  '@remotion/studio-server>zod': 4.3.6
   '@swc/core': 'catalog:'
   '@types/node': 'catalog:'
   '@types/react': 'catalog:'
