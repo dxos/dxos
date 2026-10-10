@@ -6,7 +6,14 @@ import { sleep } from '@dxos/async';
 import { Context, TRACE_SPAN_ATTRIBUTE, type TraceContextData } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { EDGE_CLIENT_TAG_HEADER, EdgeAuthChallengeError, EdgeCallFailedError, type EdgeFailure } from '@dxos/protocols';
+import {
+  EDGE_CLIENT_TAG_HEADER,
+  EDGE_CLIENT_TOO_OLD,
+  EdgeAuthChallengeError,
+  EdgeCallFailedError,
+  EdgeClientTooOldError,
+  type EdgeFailure,
+} from '@dxos/protocols';
 
 import { authenticateViaChallengeEndpoint, handleAuthChallenge, parseChallengeHeader } from './auth-challenge.ts';
 import { type EdgeIdentity } from './edge-identity.ts';
@@ -193,6 +200,8 @@ export abstract class BaseHttpClient {
 
         if (body?.data?.type === 'auth_challenge' && typeof body?.data?.challenge === 'string') {
           processingError = new EdgeAuthChallengeError(body.data.challenge, body.data);
+        } else if (body?.success === false && body.data?.type === EDGE_CLIENT_TOO_OLD) {
+          processingError = new EdgeClientTooOldError(body, response.status);
         } else if (body?.success === false) {
           processingError = EdgeCallFailedError.fromUnsuccessfulResponse(response, body);
         } else {
@@ -299,6 +308,10 @@ export abstract class BaseHttpClient {
     }
     const prefetch: Promise<void> = this._prefetchAuthHeaderOnce()
       .catch((err) => {
+        // Unauthenticated would only be refused again, and silently; the caller has to see it.
+        if (err instanceof EdgeClientTooOldError) {
+          throw err;
+        }
         log.verbose('auth prefetch failed; proceeding unauthenticated', { err });
       })
       .finally(() => {

@@ -7,11 +7,11 @@ import { base64Decode } from '@bufbuild/protobuf/wire';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { EdgeClientTooOldError } from '@dxos/protocols';
 import { PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { assertClientSupported, clientVersionHeaders } from './client-version.ts';
 import { type EdgeIdentity } from './edge-identity.ts';
-import { ClientTooOldError } from './errors.ts';
 
 /**
  * The VerifiablePresentation challenge/response handshake, shared by the HTTP and WebSocket
@@ -167,7 +167,7 @@ export type AuthChallengeInfo = {
  * console and records a routine auth failure server-side on each client boot.
  *
  * Returns undefined if the endpoint is unreachable or answers in neither known shape; callers fall
- * back to the 401 path, which still works against every server. Throws {@link ClientTooOldError} when EDGE refuses
+ * back to the 401 path, which still works against every server. Throws {@link EdgeClientTooOldError} when EDGE refuses
  * this SDK, which no fallback can get past.
  */
 export const fetchAuthChallengeInfo = async (baseHttpUrl: string | URL): Promise<AuthChallengeInfo | undefined> => {
@@ -190,7 +190,7 @@ export const fetchAuthChallengeInfo = async (baseHttpUrl: string | URL): Promise
     }
     return { challenge, expiresInMs };
   } catch (error) {
-    if (error instanceof ClientTooOldError) {
+    if (error instanceof EdgeClientTooOldError) {
       throw error;
     }
     log.verbose('failed to fetch auth challenge', { error });

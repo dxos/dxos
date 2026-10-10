@@ -5,7 +5,7 @@
 import { create } from '@bufbuild/protobuf';
 import { afterEach, describe, test, vi } from 'vitest';
 
-import { EDGE_CLIENT_TOO_OLD, EDGE_CLIENT_VERSION_HEADER } from '@dxos/protocols';
+import { EDGE_CLIENT_TOO_OLD, EDGE_CLIENT_VERSION_HEADER, EdgeClientTooOldError } from '@dxos/protocols';
 import { type Presentation, PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { version as packageVersion } from '../package.json';
@@ -17,7 +17,6 @@ import {
   readAuthChallenge,
 } from './auth-challenge.ts';
 import { type EdgeIdentity } from './edge-identity.ts';
-import { ClientTooOldError } from './errors.ts';
 
 const CHALLENGE = 'AQAAAZlqjGgAq83vEjRWeJCrze8SNFZ4kA==';
 
@@ -162,7 +161,7 @@ describe('fetchAuthChallenge', () => {
         426,
       ),
     );
-    await expect(fetchAuthChallenge('https://edge.example.com')).rejects.toBeInstanceOf(ClientTooOldError);
+    await expect(fetchAuthChallenge('https://edge.example.com')).rejects.toBeInstanceOf(EdgeClientTooOldError);
   });
 
   test('still works against a server whose /auth only answers 401', async ({ expect }) => {
