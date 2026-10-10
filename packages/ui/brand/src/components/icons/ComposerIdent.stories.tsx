@@ -30,34 +30,46 @@ type IdentVariant = {
   stagger: number;
 };
 
-const VARIANT_NAMES = ['zoom', 'cascade', 'spin', 'drop', 'fade'] as const;
+const VARIANT_NAMES = ['ripple', 'focus', 'sweep', 'spin', 'fade'] as const;
 
 type VariantName = (typeof VARIANT_NAMES)[number];
 
 const variants: Record<VariantName, IdentVariant> = {
-  zoom: {
-    label: 'Zoom',
-    outerFirst: true,
+  ripple: {
+    label: 'Ripple',
     duration: 900,
-    stagger: 180,
+    stagger: 150,
     ring: () => ({
       keyframes: [
-        { opacity: 0, transform: 'scale(8)' },
+        { opacity: 0, transform: 'scale(0)' },
         { opacity: 1, transform: 'scale(1)' },
       ],
-      easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+      easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
     }),
   },
-  cascade: {
-    label: 'Cascade',
-    duration: 800,
+  focus: {
+    label: 'Focus',
+    outerFirst: true,
+    duration: 1100,
+    stagger: 200,
+    ring: () => ({
+      keyframes: [
+        { opacity: 0, filter: 'blur(24px)' },
+        { opacity: 1, filter: 'blur(0px)' },
+      ],
+      easing: 'ease-out',
+    }),
+  },
+  sweep: {
+    label: 'Sweep',
+    duration: 1000,
     stagger: 160,
     ring: () => ({
       keyframes: [
-        { opacity: 0, transform: 'scale(6)' },
-        { opacity: 1, transform: 'scale(1)' },
+        { opacity: 0, transform: 'rotate(-90deg)' },
+        { opacity: 1, transform: 'rotate(0deg)' },
       ],
-      easing: 'cubic-bezier(0.34, 1.4, 0.64, 1)',
+      easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
     }),
   },
   spin: {
@@ -69,18 +81,6 @@ const variants: Record<VariantName, IdentVariant> = {
       keyframes: [
         { opacity: 0, transform: `scale(4) rotate(${index % 2 ? -270 : 270}deg)` },
         { opacity: 1, transform: 'scale(1) rotate(0deg)' },
-      ],
-      easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
-    }),
-  },
-  drop: {
-    label: 'Drop',
-    duration: 900,
-    stagger: 140,
-    ring: () => ({
-      keyframes: [
-        { opacity: 0, transform: 'translateY(-400px)' },
-        { opacity: 1, transform: 'translateY(0)' },
       ],
       easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
     }),
@@ -278,7 +278,7 @@ const meta = {
     wordmarkDelay: { control: { type: 'range', min: 0, max: 2000, step: 50 } },
   },
   args: {
-    variant: 'zoom',
+    variant: 'ripple',
     size: 160,
     speed: 1,
     wordmarkDelay: 100,
@@ -290,13 +290,13 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Zoom: Story = {};
+export const Ripple: Story = {};
 
-export const Cascade: Story = { args: { variant: 'cascade' } };
+export const Focus: Story = { args: { variant: 'focus' } };
 
 export const Spin: Story = { args: { variant: 'spin' } };
 
-export const Drop: Story = { args: { variant: 'drop' } };
+export const Sweep: Story = { args: { variant: 'sweep' } };
 
 export const Fade: Story = { args: { variant: 'fade' } };
 
