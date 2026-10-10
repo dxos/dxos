@@ -235,6 +235,7 @@ describe('Calibration', () => {
     clarity: 0.95,
     velocity: 0.2,
     partials: [0.6, 0.3, 0.1],
+    peaks: [],
     percussive: false,
     precise: true,
   });

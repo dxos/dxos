@@ -4,7 +4,7 @@
 
 import { PitchDetector } from 'pitchy';
 
-import { ChordDecomposer, type ChordTemplate, selectNotes } from './chord.ts';
+import { type ChordTemplate, ChordDecomposer, type SpectralPeak, selectNotes, spectralPeaks } from './chord.ts';
 import { MagnitudeSpectrum } from './fft.ts';
 import { harmonicPitch } from './harmonic.ts';
 import { OnsetDetector, type OnsetDetectorOptions } from './onset.ts';
@@ -75,6 +75,8 @@ export type NoteEvent = {
   precise: boolean;
   /** Notes sounding together in this strike, strongest first; present only when chord templates are set. */
   chord?: Pitch[];
+  /** Peaks of the energy the strike added (the struck note plus whatever rang in sympathy). */
+  peaks: SpectralPeak[];
 };
 
 export type AnalyzerResult = {
@@ -297,27 +299,52 @@ export class Analyzer {
       lobe: 4,
     });
     const event = { time: note.time, clarity: note.clarity, velocity: note.velocity };
-    if (!pitch || pitch.harmonicity < this.#minHarmonicity || residualEnergy < this.#minResidual * afterEnergy) {
-      return { ...event, partials: [], percussive: true, precise: false };
+    const percussive = { ...event, partials: [], peaks: [], percussive: true, precise: false };
+    if (residualEnergy < this.#minResidual * afterEnergy) {
+      return percussive;
     }
 
+    // With note templates, "pitched" means the templates explain the strike: several notes plus their
+    // resonance spread energy too widely for a single pitch's harmonicity to pass.
+    const chord = this.#chordTemplates ? this.#decompose(residual, length) : undefined;
+    const pitched = chord
+      ? chord.fit >= MIN_CHORD_FIT && chord.notes.length > 0
+      : pitch !== undefined && pitch.harmonicity >= this.#minHarmonicity;
+    if (!pitched) {
+      return percussive;
+    }
+
+    const frequency = pitch?.frequency ?? chord?.frequency;
     return {
       ...event,
-      frequency: pitch.frequency,
-      partials: partialProfile(residual, pitch.frequency, binWidth, this.#partialCount),
+      frequency,
+      partials: frequency !== undefined ? partialProfile(residual, frequency, binWidth, this.#partialCount) : [],
+      peaks: spectralPeaks(residual, binWidth),
       percussive: false,
       precise: length >= this.#noteFrameSize,
-      chord: this.#chordTemplates ? this.#decompose(residual, length) : undefined,
+      chord: chord?.notes,
     };
   }
 
-  #decompose(residual: Float32Array, length: number): Pitch[] {
-    let decomposer = this.#chordDecomposers.get(length);
-    if (!decomposer && this.#chordTemplates) {
-      decomposer = new ChordDecomposer(this.#chordTemplates, { sampleRate: this.#sampleRate, frameSize: length });
-      this.#chordDecomposers.set(length, decomposer);
+  #decompose(residual: Float32Array, length: number): { notes: Pitch[]; fit: number; frequency?: number } {
+    const templates = this.#chordTemplates;
+    if (!templates) {
+      return { notes: [], fit: 0 };
     }
-    return decomposer ? selectNotes(decomposer.decompose(residual), { relative: CHORD_RELATIVE }) : [];
+    const decomposer = this.#decomposer(length, templates);
+    const { weights, fit } = decomposer.analyze(residual);
+    const notes = selectNotes(weights, { relative: CHORD_RELATIVE });
+    const strongest = templates.find(({ pitch }) => pitch === notes[0]);
+    return { notes, fit, frequency: strongest?.frequency };
+  }
+
+  #decomposer(frameSize: number, templates: ChordTemplate[]): ChordDecomposer {
+    let decomposer = this.#chordDecomposers.get(frameSize);
+    if (!decomposer) {
+      decomposer = new ChordDecomposer(templates, { sampleRate: this.#sampleRate, frameSize });
+      this.#chordDecomposers.set(frameSize, decomposer);
+    }
+    return decomposer;
   }
 
   #noteSpectrum(length: number): MagnitudeSpectrum {
@@ -346,6 +373,9 @@ export const DEFAULT_SENSITIVITY = 0.7;
 
 /** A note belongs to the chord when its weight is at least this fraction of the strongest. */
 const CHORD_RELATIVE = 0.2;
+
+/** Fraction of a strike's new energy the note templates must explain for it to count as pitched. */
+const MIN_CHORD_FIT = 0.5;
 
 /** Maps sensitivity 0–1 to an onset flux margin of 0.31 (least) … 0.01 (most); 0.7 → 0.1. */
 const sensitivityToDelta = (sensitivity: number): number => 0.01 + 0.3 * (1 - Math.max(0, Math.min(1, sensitivity)));

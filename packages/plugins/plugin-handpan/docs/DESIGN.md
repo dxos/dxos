@@ -105,6 +105,22 @@ note's own partials and is found only when it exceeds what the lower note's cali
 predicts. Synthesized partials are ideal and identical per strike, so real-instrument accuracy must be
 measured on recordings before this is wired into the analyzer.
 
+### Sympathetic resonance
+
+Striking one field makes others ring (a ding strongly drives its octave field). Averaging over time
+does not separate them: a resonance is a steady tone like the struck note. What does:
+
+- **Learned templates** (shipped): calibration records each note's measured spectral peaks, merged
+  over its strikes (`spectralPeaks`, `mergePeaks`), so a note's template includes what it sets ringing
+  and the decomposition attributes that energy to it. With the partner field only 3 dB below the
+  struck note, singles are 9/9 with learned templates (partials-only reports phantom notes) and pairs
+  35/36.
+- **Fit-based pitched gate** (shipped): in chord mode a strike is pitched when the templates explain
+  ≥ 50% of its new energy; a single pitch's harmonicity fails once several notes and their resonance
+  share the spectrum (most pairs were misread as taks).
+- **Attack window** (tried, removed): decomposing the first ~45 ms against resonance-free templates
+  to admit a struck octave/twelfth partner changed no result; the octave pair (D3+D4) remains the limit.
+
 ## Music model (general)
 
 ```text

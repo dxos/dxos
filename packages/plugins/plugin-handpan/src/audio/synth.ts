@@ -65,6 +65,32 @@ export const synthesizeTak = ({
   return output;
 };
 
+export type ResonanceOptions = HandpanToneOptions & {
+  /** Build-up time constant (s): resonance is driven by the soundboard, so it rises slowly. */
+  rise?: number;
+};
+
+/** A field ringing in sympathy: the note's partials with a slow exponential rise instead of a strike. */
+export const synthesizeResonance = (
+  frequency: number,
+  { sampleRate, duration = 1.5, gain = 0.05, rise = 0.08, partials = DEFAULT_PARTIALS }: ResonanceOptions,
+): Float32Array<ArrayBuffer> => {
+  const length = Math.round(duration * sampleRate);
+  const output = new Float32Array(length);
+  const total = partials.reduce((sum, partial) => sum + partial.amplitude, 0);
+  const release = 0.25 * sampleRate;
+  for (let index = 0; index < length; index++) {
+    const time = index / sampleRate;
+    let value = 0;
+    for (const { ratio, amplitude, decay } of partials) {
+      value += amplitude * Math.exp(-time / decay) * Math.sin(2 * Math.PI * frequency * ratio * time);
+    }
+    const envelope = (1 - Math.exp(-time / rise)) * Math.min(1, (length - index) / release);
+    output[index] = gain * envelope * (value / total);
+  }
+  return output;
+};
+
 /** Mixes `source` into `target` starting at `offset` seconds. */
 export const mixInto = (target: Float32Array, source: Float32Array, offset: number, sampleRate: number): void => {
   const start = Math.round(offset * sampleRate);

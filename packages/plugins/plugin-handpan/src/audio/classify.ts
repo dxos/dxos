@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { type SpectralPeak } from './chord.ts';
 import { type Pitch, cents } from './pitch.ts';
 import { type ScaleNote } from './scale.ts';
 
@@ -11,6 +12,8 @@ export type NoteTemplate = {
   frequency: number;
   /** Normalized partial profile; empty for an uncalibrated (nominal) template. */
   partials: number[];
+  /** Measured spectral peaks (see {@link ChordTemplate}); absent for a nominal template. */
+  peaks?: SpectralPeak[];
 };
 
 export type Classification = {

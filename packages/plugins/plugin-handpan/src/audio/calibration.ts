@@ -3,6 +3,7 @@
 //
 
 import { type NoteEvent } from './analyzer.ts';
+import { type SpectralPeak, mergePeaks } from './chord.ts';
 import { type NoteTemplate } from './classify.ts';
 import { type Pitch, cents } from './pitch.ts';
 import { type ScaleNote } from './scale.ts';
@@ -14,7 +15,7 @@ export type CalibrationState = {
   strikes: number;
   /** Index into `notes` of the note being calibrated; `notes.length` when complete. */
   current: number;
-  samples: Record<Pitch, { frequency: number; partials: number[] }[]>;
+  samples: Record<Pitch, { frequency: number; partials: number[]; peaks?: SpectralPeak[] }[]>;
 };
 
 export type StrikeRejection = 'percussive' | 'imprecise' | 'out-of-tune' | 'complete';
@@ -94,7 +95,10 @@ export const addStrike = (
     return { state, rejected: 'out-of-tune', cents: offset };
   }
 
-  const collected = [...(state.samples[target.pitch] ?? []), { frequency, partials: event.partials }];
+  const collected = [
+    ...(state.samples[target.pitch] ?? []),
+    { frequency, partials: event.partials, peaks: event.peaks },
+  ];
   const samples = { ...state.samples, [target.pitch]: collected };
   const current = collected.length >= state.strikes ? nextIncomplete(state, samples) : state.current;
   return { state: { ...state, samples, current }, cents: offset };
@@ -113,7 +117,9 @@ export const getTemplates = (state: CalibrationState): NoteTemplate[] =>
       { length },
       (_, index) => samples.reduce((sum, sample) => sum + (sample.partials[index] ?? 0), 0) / samples.length,
     );
-    return [{ pitch, frequency: frequencies[frequencies.length >> 1], partials }];
+    const strikes = samples.flatMap((sample) => (sample.peaks?.length ? [sample.peaks] : []));
+    const peaks = strikes.length ? mergePeaks(strikes) : undefined;
+    return [{ pitch, frequency: frequencies[frequencies.length >> 1], partials, peaks }];
   });
 
 const nextIncomplete = (state: CalibrationState, samples: CalibrationState['samples']): number => {
