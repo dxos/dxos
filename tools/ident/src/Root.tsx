@@ -1,10 +1,14 @@
+//
+// Copyright 2026 DXOS.org
+//
+
 import React from 'react';
 import { Composition, Folder } from 'remotion';
 
-import { FORMATS, FPS, FormatId, TIMING } from './brand';
-import { PROVOCATIONS } from './provocations';
-import { EndOnly, OpenOnly, Spot10, Spot30 } from './Spots';
-import { Trail } from './Trail';
+import { FormatId, FORMATS, FPS, TIMING } from './brand.ts';
+import { PROVOCATIONS } from './provocations.ts';
+import { EndOnly, OpenOnly, Spot10, Spot30 } from './Spots.tsx';
+import { Trail } from './Trail.tsx';
 
 const s10 = TIMING.spot10.provocation + TIMING.spot10.endCard;
 const s30 = TIMING.spot30.provocation + TIMING.spot30.turn + TIMING.spot30.resolve + TIMING.spot30.endCard;

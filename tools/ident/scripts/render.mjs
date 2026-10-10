@@ -1,3 +1,7 @@
+//
+// Copyright 2026 DXOS.org
+//
+
 import { bundle } from '@remotion/bundler';
 import { getCompositions, renderMedia } from '@remotion/renderer';
 import fs from 'node:fs';
@@ -42,10 +46,18 @@ const comps = await getCompositions(serveUrl, { browserExecutable, chromiumOptio
 
 const selected = comps.filter((c) => {
   const [id, length, format] = c.id.split('-');
-  if (only.id && id !== only.id) return false;
-  if (only.length && length !== only.length) return false;
-  if (only.format && format !== only.format) return false;
-  if (firstRunOnly && !firstRunIds.includes(id)) return false;
+  if (only.id && id !== only.id) {
+    return false;
+  }
+  if (only.length && length !== only.length) {
+    return false;
+  }
+  if (only.format && format !== only.format) {
+    return false;
+  }
+  if (firstRunOnly && !firstRunIds.includes(id)) {
+    return false;
+  }
   return true;
 });
 

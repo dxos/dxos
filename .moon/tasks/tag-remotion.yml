@@ -1,0 +1,21 @@
+$schema: https://moonrepo.dev/schemas/tasks.json
+tasks:
+  studio:
+    command: pnpm exec remotion studio
+    preset: server
+
+  render:
+    command: node scripts/render.mjs
+    inputs:
+      - remotion.config.ts
+      - '@group(sources)'
+      - '@group(scripts)'
+      - '@group(assets)'
+    outputs:
+      - out/**/*
+    options:
+      cache: false
+      runInCI: false
+
+inheritedBy:
+  tags: remotion

@@ -169,6 +169,10 @@ catalog:
   '@rdfjs/types': ^2.0.1
   '@react-three/drei': ^10.7.7
   '@react-three/fiber': ^9.5.0
+  '@remotion/bundler': 4.0.534
+  '@remotion/cli': 4.0.534
+  '@remotion/fonts': 4.0.534
+  '@remotion/renderer': 4.0.534
   '@replit/codemirror-vim': ^6.3.0
   '@replit/codemirror-vscode-keymap': ^6.0.2
   '@rive-app/react-canvas': ^4.14.0
@@ -587,6 +591,7 @@ catalog:
   remark-frontmatter: ^5.0.0
   remark-gfm: ^4.0.1
   remark-parse-frontmatter: ^1.0.3
+  remotion: 4.0.534
   resize-observer-polyfill: ^1.5.1
   reveal.js: ^5.1.0
   rmdir: ~1.2.0

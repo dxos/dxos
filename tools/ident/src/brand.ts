@@ -1,6 +1,10 @@
 // Everything that should look the same in every spot lives here.
 // Change a value once and every rendered video follows.
 
+//
+// Copyright 2026 DXOS.org
+//
+
 export const FPS = 30;
 
 export const COLORS = {

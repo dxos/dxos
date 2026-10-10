@@ -1,10 +1,14 @@
+//
+// Copyright 2026 DXOS.org
+//
+
 import React from 'react';
 import { AbsoluteFill, Sequence, useVideoConfig } from 'remotion';
 
-import { COLORS, DEFAULT_TURN, TIMING } from './brand';
-import { EndCard, OpenTitle, WordBuild } from './components';
-import { loadBrandFont } from './fonts';
-import { PROVOCATIONS } from './provocations';
+import { COLORS, DEFAULT_TURN, TIMING } from './brand.ts';
+import { EndCard, OpenTitle, WordBuild } from './components.tsx';
+import { loadBrandFont } from './fonts.ts';
+import { PROVOCATIONS } from './provocations.ts';
 
 loadBrandFont();
 
@@ -12,7 +16,9 @@ export type SpotProps = { provocationId: string };
 
 const find = (id: string) => {
   const p = PROVOCATIONS.find((x) => x.id === id);
-  if (!p) throw new Error(`Unknown provocation ${id}`);
+  if (!p) {
+    throw new Error(`Unknown provocation ${id}`);
+  }
   return p;
 };
 

@@ -2,6 +2,10 @@
 // Each entry in `lines` appears on its own line, built word by word.
 // Add a spot by adding an entry here; it shows up in Studio and in `npm run render`.
 
+//
+// Copyright 2026 DXOS.org
+//
+
 export type Provocation = {
   id: string;
   pillar: 'Sovereign Intelligence' | 'Private' | 'Decentralized' | 'Open source';

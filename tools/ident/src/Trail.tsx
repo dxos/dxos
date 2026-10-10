@@ -1,10 +1,13 @@
+//
+// Copyright 2026 DXOS.org
+//
+
 import React from 'react';
 import { AbsoluteFill } from 'remotion';
-
 // TODO(burdon): Restore once @dxos/hero is available in this repo.
 // import { DXOSTrail } from '@dxos/hero/trail';
 
-import { COLORS } from './brand';
+import { COLORS } from './brand.ts';
 
 /**
  * The DXOS trail from @dxos/hero (fluid glow orbiting the mark), driven by the composition frame.

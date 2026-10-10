@@ -1,3 +1,7 @@
+//
+// Copyright 2026 DXOS.org
+//
+
 import { Config } from '@remotion/cli/config';
 
 Config.setVideoImageFormat('jpeg');
