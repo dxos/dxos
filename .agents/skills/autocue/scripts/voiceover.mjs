@@ -48,12 +48,22 @@ const apiKey = (() => {
   return match[1].trim();
 })();
 
+/** HeyGen answers 503 when text-to-speech is overloaded and 429 when rate limited; both clear within seconds. */
+const RETRYABLE = new Set([429, 503]);
+
 const heygen = async (method, route, body) => {
-  const response = await fetch(`${API}${route}`, {
-    method,
-    headers: { 'X-Api-Key': apiKey, 'Content-Type': 'application/json' },
-    ...(body && { body: JSON.stringify(body) }),
-  });
+  let response;
+  for (let attempt = 0; attempt < 6; attempt++) {
+    response = await fetch(`${API}${route}`, {
+      method,
+      headers: { 'X-Api-Key': apiKey, 'Content-Type': 'application/json' },
+      ...(body && { body: JSON.stringify(body) }),
+    });
+    if (!RETRYABLE.has(response.status)) {
+      break;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 2_000 * 2 ** attempt));
+  }
   const json = await response.json().catch(() => ({}));
   if (!response.ok || json.error) {
     throw new Error(`${method} ${route} → ${response.status}: ${JSON.stringify(json.error ?? json).slice(0, 400)}`);
@@ -61,12 +71,17 @@ const heygen = async (method, route, body) => {
   return json;
 };
 
-/** The catalog is paged by `next_token`, passed back as `token`; one page holds only twenty voices. */
-const listVoices = async () => {
+/**
+ * The account's own voices first, then the public Starfish catalog; the speech endpoint also takes a private
+ * voice on another engine (ElevenLabs). Pages are chained by `next_token`, passed back as `token`.
+ */
+const listVoices = async () => [...(await listPages('type=private')), ...(await listPages('engine=starfish'))];
+
+const listPages = async (filter) => {
   const voices = [];
   let token;
   do {
-    const page = await heygen('GET', `/v3/voices?engine=starfish${token ? `&token=${encodeURIComponent(token)}` : ''}`);
+    const page = await heygen('GET', `/v3/voices?${filter}${token ? `&token=${encodeURIComponent(token)}` : ''}`);
     voices.push(...page.data);
     token = page.has_more ? page.next_token : undefined;
   } while (token);
@@ -91,16 +106,16 @@ const output = options.out ?? options.in.replace(new RegExp(`${extension}$`), `.
 const work = path.join(path.dirname(output), `${path.basename(output, extension)}.voice`);
 mkdirSync(work, { recursive: true });
 
-// `--voice` is an id or the start of a name ("Rebecca"); without one, the first English voice in the catalog.
+// `--voice` is an id or the start of a name, own voices first; without one, the first English voice listed.
 const voice = await (async () => {
-  if (/^[0-9a-f]{32}$/.test(options.voice ?? '')) {
-    return options.voice;
-  }
   const voices = await listVoices();
   const name = typeof options.voice === 'string' ? options.voice.toLowerCase() : undefined;
-  return voices.find((entry) =>
-    name ? entry.name.toLowerCase().startsWith(name) : /^en|english/i.test(entry.language ?? ''),
-  )?.voice_id;
+  const match = voices.find((entry) =>
+    name
+      ? entry.voice_id === options.voice || entry.name.toLowerCase().startsWith(name)
+      : /^en|english/i.test(entry.language ?? ''),
+  );
+  return match?.voice_id ?? options.voice;
 })();
 if (!voice) {
   console.error('no voice: pass --voice <id|name> (see --voices)');
