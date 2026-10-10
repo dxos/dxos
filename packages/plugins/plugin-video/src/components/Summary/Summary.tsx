@@ -5,8 +5,8 @@
 import React from 'react';
 
 import { type Ref } from '@dxos/echo';
-import { Doc } from '@dxos/echo-doc';
 import { useObject } from '@dxos/echo-react';
+import { useDocAccessor } from '@dxos/react-client/echo';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Util from '@dxos/react-ui/Util';
@@ -43,23 +43,24 @@ export const Summary = Util.composable<HTMLDivElement, SummaryProps>(
     // Subscribe to the ref's target so the editor (re-)initializes once it resolves; a `Ref`'s `.target`
     // loads asynchronously and isn't reactive on its own.
     const [resolved] = useObject(source);
+    const text = useDocAccessor(resolved ? source?.target : undefined, ['content']);
     const { parentRef } = useTextEditor(() => {
       const target = source?.target;
-      if (!resolved || !target) {
+      if (!resolved || !target || !text) {
         return {};
       }
 
       return {
         initialValue: target.content ?? '',
         extensions: [
-          createDataExtensions({ id, text: Doc.createAccessor(target, ['content']) }),
+          createDataExtensions({ id, text }),
           createBasicExtensions({ lineWrapping: true }),
           createThemeExtensions({ themeMode, slots: documentSlots }),
           createMarkdownExtensions(),
           decorateMarkdown(),
         ],
       };
-    }, [themeMode, id, resolved]);
+    }, [themeMode, id, resolved, text]);
 
     return (
       <div

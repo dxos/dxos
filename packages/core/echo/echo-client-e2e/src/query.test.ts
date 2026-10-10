@@ -27,7 +27,13 @@ import {
   Type,
   View,
 } from '@dxos/echo';
-import { DatabaseImpl, DocumentNotLoadedError, type EchoDatabase, loadDocument } from '@dxos/echo-client';
+import {
+  DatabaseImpl,
+  DocumentNotLoadedError,
+  type EchoDatabase,
+  isDocumentLoaded,
+  loadDocument,
+} from '@dxos/echo-client';
 import { EchoTestBuilder, type EchoTestPeer, createTmpPath, getObjectCore } from '@dxos/echo-client/testing';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
@@ -4585,10 +4591,25 @@ describe('Query', () => {
       const accessor = getObjectCore(object).getDocAccessor(['value']);
       expect(() => accessor.handle.doc()).toThrow(DocumentNotLoadedError);
       expect(() => accessor.handle.changeAt([], () => {})).toThrow(DocumentNotLoadedError);
+      expect(isDocumentLoaded(object)).toBe(false);
 
       await loadDocument(object);
+      expect(isDocumentLoaded(object)).toBe(true);
       expect(hasDocument(db, object.id)).toBe(true);
       expect(A.getHeads(accessor.handle.doc()).length).toBeGreaterThan(0);
+    });
+
+    test('history waits for the document; branching loads it first', async () => {
+      const { db } = await openReloaded((db) => [db.add(createTestObject({ value: 1 }))]);
+      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando)).options({ lazy: true })).run();
+      expect(() => Obj.getChanges(object)).toThrow(DocumentNotLoadedError);
+
+      await db.createBranch(object.id, 'draft');
+      expect(isDocumentLoaded(object)).toBe(true);
+      expect(Obj.getChanges(object).length).toBeGreaterThan(0);
+
+      await db.switchBranch(object.id, 'draft');
+      expect(object.value).toBe(1);
     });
 
     test('a later index row updates the object in place and notifies; an earlier one is ignored', async () => {

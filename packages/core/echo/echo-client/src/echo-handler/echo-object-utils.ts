@@ -22,6 +22,11 @@ export const getObjectCore = <T extends AnyProperties>(obj: T): ObjectCore => {
 };
 
 /**
+ * False only for an object backed by the index's copy whose document has not loaded yet.
+ */
+export const isDocumentLoaded = <T extends AnyProperties>(obj: T): boolean => getObjectCore(obj).snapshot === undefined;
+
+/**
  * Loads the document of an object backed by the index's copy, moving the object onto it; resolves at
  * once for an object that already has its document.
  */

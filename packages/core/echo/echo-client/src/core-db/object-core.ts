@@ -312,6 +312,21 @@ export class ObjectCore {
     this.notifyUpdate();
   }
 
+  /**
+   * The object's Automerge document, for what reads it as one (history, heads, cursors). Throws
+   * {@link DocumentNotLoadedError} for a snapshot-backed core, whose {@link getDoc} is the index's copy.
+   */
+  getLoadedDoc(): AutomergeDoc<unknown> {
+    this.#assertDocumentLoaded();
+    return this.getDoc();
+  }
+
+  #assertDocumentLoaded(): void {
+    if (!this.doc && !this.docHandle && this.snapshot) {
+      throw new DocumentNotLoadedError({ objectId: this.id });
+    }
+  }
+
   getDoc(): AutomergeDoc<unknown> {
     if (this.doc) {
       return this.doc;
@@ -416,9 +431,7 @@ export class ObjectCore {
    * Do not take into account mountPath.
    */
   changeAt(heads: Heads, callback: ChangeFn<any>, options?: ChangeOptions<any>): Heads | undefined {
-    if (!this.doc && !this.docHandle && this.snapshot) {
-      throw new DocumentNotLoadedError({ objectId: this.id });
-    }
+    this.#assertDocumentLoaded();
     // Prevent recursive change calls.
     using _ = defer(docChangeSemaphore(this.docHandle ?? this));
 
@@ -451,12 +464,7 @@ export class ObjectCore {
     const self = this;
     return {
       handle: {
-        doc: () => {
-          if (!this.doc && !this.docHandle && this.snapshot) {
-            throw new DocumentNotLoadedError({ objectId: this.id });
-          }
-          return this.getDoc();
-        },
+        doc: () => this.getLoadedDoc(),
         change: (callback, options) => {
           this.change(callback, options);
         },

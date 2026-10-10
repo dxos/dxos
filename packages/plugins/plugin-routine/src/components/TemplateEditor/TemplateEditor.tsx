@@ -6,8 +6,8 @@ import { defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language'
 import React from 'react';
 
 import { type Ref } from '@dxos/echo';
-import { Doc } from '@dxos/echo-doc';
 import { useObject } from '@dxos/echo-react';
+import { useDocAccessor } from '@dxos/react-client/echo';
 import { composeRefs } from '@dxos/react-hooks';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -38,16 +38,17 @@ export const TemplateEditor = Util.composable<HTMLDivElement, TemplateEditorProp
     const { t } = Hooks.useTranslation(meta.profile.key);
     const themeMode = Hooks.useThemeMode();
     const [resolved] = useObject(source);
+    const text = useDocAccessor(resolved ? source?.target : undefined, ['content']);
     const { parentRef } = useTextEditor(() => {
       const target = source?.target;
-      if (!resolved || !target) {
+      if (!resolved || !target || !text) {
         return {};
       }
 
       return {
         initialValue: target.content ?? '',
         extensions: [
-          createDataExtensions({ id, text: Doc.createAccessor(target, ['content']) }),
+          createDataExtensions({ id, text }),
           createBasicExtensions({
             bracketMatching: false,
             lineNumbers,
@@ -64,7 +65,7 @@ export const TemplateEditor = Util.composable<HTMLDivElement, TemplateEditorProp
           syntaxHighlighting(defaultHighlightStyle),
         ].filter(isNonNullable),
       };
-    }, [themeMode, resolved, lineNumbers]);
+    }, [themeMode, resolved, text, lineNumbers]);
 
     return (
       <div

@@ -9,11 +9,10 @@ import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 're
 import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Ref } from '@dxos/echo';
-import { Doc } from '@dxos/echo-doc';
 import { useObject } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
 import { log } from '@dxos/log';
-import { getSpace } from '@dxos/react-client/echo';
+import { getSpace, useDocAccessor } from '@dxos/react-client/echo';
 import { Editor } from '@dxos/react-ui-editor';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
@@ -264,6 +263,7 @@ const FileEditor = ({ file, role }: FileEditorProps) => {
   // Trigger re-render when content ref resolves.
   useObject(file.content);
   const target = file.content.target;
+  const accessor = useDocAccessor(target, ['content']);
 
   const extensions = useMemo(
     () =>
@@ -271,18 +271,18 @@ const FileEditor = ({ file, role }: FileEditorProps) => {
         createBasicExtensions({ lineNumbers: true, lineWrapping: false }),
         createThemeExtensions({ themeMode, slots: documentSlots, monospace: true, syntaxHighlighting: true }),
         languageForPath(file.path),
-        target &&
+        accessor &&
           createDataExtensions({
             id: file.id,
-            text: Doc.createAccessor(target, ['content']),
+            text: accessor,
             messenger: space,
             identity,
           }),
       ].filter(isTruthy),
-    [identity, space, file.id, file.path, target, themeMode],
+    [identity, space, file.id, file.path, accessor, themeMode],
   );
 
-  if (!target) {
+  if (!accessor) {
     return null;
   }
 

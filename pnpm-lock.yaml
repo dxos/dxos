@@ -8721,9 +8721,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-doc':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-doc
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
@@ -9597,9 +9594,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-doc':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-doc
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
@@ -12351,9 +12345,6 @@ importers:
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client
-      '@dxos/echo-doc':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-doc
       '@dxos/echo-query':
         specifier: workspace:*
         version: link:../../core/echo/echo-query
@@ -15400,9 +15391,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-doc':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-doc
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
@@ -18697,9 +18685,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-doc':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-doc
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
@@ -20242,6 +20227,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-doc':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-doc
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../../core/echo/echo-protocol
@@ -20264,6 +20252,9 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
     devDependencies:
+      '@dxos/echo-client':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-client
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -22993,9 +22984,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-doc':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-doc
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
@@ -23014,6 +23002,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../sdk/react-client
       '@dxos/react-hooks':
         specifier: workspace:*
         version: link:../react-primitives/react-hooks
@@ -23048,9 +23039,6 @@ importers:
         specifier: 'catalog:'
         version: 3.6.0
     devDependencies:
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../../sdk/react-client
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui

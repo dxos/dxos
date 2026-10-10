@@ -8,11 +8,10 @@ import React, { useMemo } from 'react';
 import { debounceAndThrottle } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
-import { Doc } from '@dxos/echo-doc';
 import { useResolveRef } from '@dxos/echo-react';
 import { type Identity } from '@dxos/halo';
 import { EID } from '@dxos/keys';
-import { getSpace } from '@dxos/react-client/echo';
+import { getSpace, useDocAccessor } from '@dxos/react-client/echo';
 import { Selection, ViewState } from '@dxos/react-ui-attention/types';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import { Text } from '@dxos/schema';
@@ -102,6 +101,7 @@ export const useExtensions = ({
   const contentRef = Obj.instanceOf(Markdown.Document, object) ? (object as Markdown.Document).content : undefined;
   const loadedContent = useResolveRef(contentRef);
   const target = loadedContent ?? (Obj.instanceOf(Text.Text, object) ? object : undefined);
+  const text = useDocAccessor(target, ['content']);
 
   // TODO(wittjosiah): Autocomplete is not working and this query is causing performance issues.
   // TODO(burdon): Unsubscribe.
@@ -142,18 +142,18 @@ export const useExtensions = ({
     ],
   );
 
-  // The content ref exists but its target has not loaded: the editor has no persistence binding yet.
-  const contentPending = !!contentRef && !target;
+  // The content (its ref target, or its document) has not loaded: the editor has no persistence binding yet.
+  const contentPending = (!!contentRef && !target) || (!!target && !text);
 
   return useMemo<Extension[]>(
     () =>
       [
         // TODO(burdon): Pass this in?
         // NOTE: Data extensions must be first so that automerge is updated before other extensions compute their state.
-        target &&
+        text &&
           createDataExtensions({
             id,
-            text: Doc.createAccessor(target, ['content']),
+            text,
             messenger: space,
             identity,
           }),
@@ -175,7 +175,7 @@ export const useExtensions = ({
         baseExtensions,
         selectionState(editorStateStore),
       ].filter(isTruthy),
-    [identity, space, id, object, target, contentPending, baseExtensions],
+    [identity, space, id, object, text, contentPending, baseExtensions],
   );
 };
 

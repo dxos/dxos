@@ -14,12 +14,11 @@ import * as CollaborationOperation from '@dxos/app-toolkit/CollaborationOperatio
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { toCursorRange } from '@dxos/echo-client';
-import { Doc } from '@dxos/echo-doc';
 import { useQuery, useResolveRef } from '@dxos/echo-react';
 import { useIdentity, useMembers } from '@dxos/halo-react';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownOperation from '@dxos/plugin-markdown/MarkdownOperation';
-import { type Space, getSpace } from '@dxos/react-client/echo';
+import { type Space, getSpace, useDocAccessor } from '@dxos/react-client/echo';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { type MessageMetadata, type ObjectTileComponent } from '@dxos/react-ui-thread';
 import * as Banner from '@dxos/react-ui/Banner';
@@ -389,6 +388,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   // Suggestion review: the document's `kind:'suggestion'` branches overlaid as change-block tiles
   // alongside comment threads. Accept/Reject route through the same durable ops as branch review.
   const mainText = useResolveRef(markdownDoc?.content);
+  const mainAccessor = useDocAccessor(mainText, ['content']);
 
   const routeSuggestion = useCallback(
     async (
@@ -400,13 +400,13 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         (candidate) =>
           candidate.status === 'active' && candidate.kind === 'suggestion' && candidate.creator === group.author,
       )?.key;
-      if (!mainText || !branch) {
+      if (!mainAccessor || !branch) {
         return;
       }
-      const anchor = toCursorRange(Doc.createAccessor(mainText, ['content']), group.from, group.to);
+      const anchor = toCursorRange(mainAccessor, group.from, group.to);
       await invokePromise(operation, { subject, anchor, branch });
     },
-    [markdownDoc, mainText, invokePromise, subject],
+    [markdownDoc, mainAccessor, invokePromise, subject],
   );
   // The current suggestion, by group key — shared with the editor so clicking a change in the document
   // accents its card, and clicking a card reveals the change.
@@ -429,13 +429,13 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   const handleSelectSuggestion = useCallback(
     (group: SuggestionGroup) => {
       setReviewView({ suggestion: { author: group.author, from: group.from, to: group.to } });
-      if (!mainText) {
+      if (!mainAccessor) {
         return;
       }
-      const cursor = toCursorRange(Doc.createAccessor(mainText, ['content']), group.from, group.to);
+      const cursor = toCursorRange(mainAccessor, group.from, group.to);
       void invokePromise(MarkdownOperation.ScrollToAnchor, { subject: attendableId ?? subjectId, cursor });
     },
-    [mainText, invokePromise, attendableId, subjectId, setReviewView],
+    [mainAccessor, invokePromise, attendableId, subjectId, setReviewView],
   );
 
   const handleAcceptSuggestion = useCallback(

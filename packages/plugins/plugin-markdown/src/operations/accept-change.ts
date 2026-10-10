@@ -39,7 +39,7 @@ const handler: Operation.WithHandler<typeof CollaborationOperation.AcceptChange>
           return {};
         }
 
-        const accessor = Doc.createAccessor(content, ['content']);
+        const accessor = yield* Effect.promise(() => Doc.loadAccessor(content, ['content']));
         const range = getRangeFromCursor(accessor, anchor);
         if (!range) {
           return {};

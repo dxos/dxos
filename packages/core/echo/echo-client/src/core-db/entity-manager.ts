@@ -1267,6 +1267,8 @@ export class EntityManager implements IDatabaseBinding {
       : (opts?.fromHeads ?? {});
 
     const members = await this._collectSubtree(rootCore);
+    // Forks read each member's document, so one backed by the index's copy loads (and takes its queued writes) first.
+    await Promise.all(members.map((member) => this.promote(member)));
     // Validate the whole subtree up front, before importing any documents: a member failing the
     // check mid-loop would otherwise leave already-imported branch docs orphaned in the repo. Fork
     // only from main — the source doc is the member's current core doc, so a subtree switched to
@@ -1471,6 +1473,11 @@ export class EntityManager implements IDatabaseBinding {
 
   /** Resolve the object's main (default-branch) document handle. */
   private async _mainDocHandle(objectId: string): Promise<DocHandleProxy<DatabaseDirectory>> {
+    // Merges read and write the main document, which must already hold the core's queued writes.
+    const core = this._objects.get(objectId);
+    if (core) {
+      await this.promote(core);
+    }
     const spaceRoot = this.getSpaceRootDocHandle();
     const url = spaceRoot.doc().links?.[objectId]?.toString();
     if (!url) {
@@ -1536,6 +1543,8 @@ export class EntityManager implements IDatabaseBinding {
     if (!core) {
       return;
     }
+    // Rebinding replaces the core's backing, so queued writes reach the main document first.
+    await this.promote(core);
     const url = name !== 'main' ? registry?.[name]?.members[memberId]?.toString() : undefined;
     let handle: DocHandleProxy<DatabaseDirectory>;
     if (url) {

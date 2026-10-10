@@ -56,6 +56,7 @@ export {
   getObjectCore,
   getObjectOnBranch,
   initEchoReactiveObjectRootProxy,
+  isDocumentLoaded,
   isEchoObject,
   loadDocument,
   matchKeys,

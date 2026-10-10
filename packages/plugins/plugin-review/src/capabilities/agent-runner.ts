@@ -118,7 +118,7 @@ const resolveEditTarget = (thread: Obj.Any, subject: Obj.Any): Effect.Effect<Edi
       return { kind: 'document', text };
     }
     try {
-      const accessor = Doc.createAccessor(text, ['content']);
+      const accessor = yield* Effect.promise(() => Doc.loadAccessor(text, ['content']));
       const range = getRangeFromCursor(accessor, ours.anchor);
       if (!range || range.start === range.end) {
         return { kind: 'document', text };

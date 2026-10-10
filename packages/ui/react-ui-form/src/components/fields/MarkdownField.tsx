@@ -7,7 +7,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useMemo } from 'react';
 
 import { type Database, Obj, Ref } from '@dxos/echo';
-import { Doc } from '@dxos/echo-doc';
+import { useDocAccessor } from '@dxos/react-client/echo';
 import { Editor, useBasicMarkdownExtensions } from '@dxos/react-ui-editor';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -117,9 +117,10 @@ type RefMarkdownEditorProps = {
 const RefMarkdownEditor = ({ reference, placeholder, readonly }: RefMarkdownEditorProps) => {
   const target = useAtomValue(useMemo(() => reference.atom, [reference]));
   const text = Obj.instanceOf(Text.Text, target) ? target : undefined;
+  const accessor = useDocAccessor(text, ['content']);
   const dataExtensions = useMemo(
-    () => (text ? [createDataExtensions({ id: reference.uri, text: Doc.createAccessor(text, ['content']) })] : []),
-    [text, reference],
+    () => (accessor ? [createDataExtensions({ id: reference.uri, text: accessor })] : []),
+    [accessor, reference],
   );
   const { markdownExtensions } = useFormContext('MarkdownField');
   const fieldExtensions = useMemo(
@@ -129,6 +130,9 @@ const RefMarkdownEditor = ({ reference, placeholder, readonly }: RefMarkdownEdit
   const extensions = useBasicMarkdownExtensions({ placeholder, readonly, extensions: fieldExtensions });
   if (!text) {
     return null;
+  }
+  if (!accessor) {
+    return <RefStaticText reference={reference} />;
   }
 
   return (

@@ -5,6 +5,7 @@
 export * from '@dxos/client/echo';
 export * from '@dxos/echo-react';
 
+export * from './useDocAccessor.ts';
 export * from './useMembers.ts';
 export * from './useSpaces.ts';
 export * from './useSpaceInvitations.ts';

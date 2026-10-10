@@ -7,10 +7,10 @@ import React, { useCallback, useMemo } from 'react';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type Database, Obj } from '@dxos/echo';
-import { Doc } from '@dxos/echo-doc';
 import { useResolveRef } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import * as TemplateEditor from '@dxos/plugin-routine/TemplateEditor';
+import { useDocAccessor } from '@dxos/react-client/echo';
 import { Editor, type EditorViewProps } from '@dxos/react-ui-editor';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-query';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -52,9 +52,8 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
   const prompt = useResolveRef(cell.prompt);
   const explorerGraph = useResolveRef(cell.graph);
 
-  const extensions = useMemo(() => {
-    return source ? [createDataExtensions({ id: cell.id, text: Doc.createAccessor(source, ['content']) })] : [];
-  }, [source]);
+  const text = useDocAccessor(source, ['content']);
+  const extensions = useMemo(() => (text ? [createDataExtensions({ id: cell.id, text })] : []), [text]);
 
   const handleQueryChange = useCallback<NonNullable<QueryEditorProps['onChange']>>(
     (value: string) => {
@@ -68,7 +67,7 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
 
   switch (cell.type) {
     case 'markdown':
-      if (!source) {
+      if (!source || !text) {
         return null;
       }
 
@@ -82,7 +81,7 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
       );
 
     case 'script':
-      if (!source) {
+      if (!source || !text) {
         return null;
       }
 
