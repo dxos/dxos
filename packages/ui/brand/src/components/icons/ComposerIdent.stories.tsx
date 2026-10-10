@@ -243,19 +243,23 @@ const ComposerIdent = ({
     let ringsEnd = (count - 1) * stagger + duration;
     if (grow) {
       const growStart = ringsEnd + grow.delay;
-      let growEnd = growStart;
+      // Paths carry different x scales, so convert each arm's travel into viewBox units before timing it.
+      const growDurations = pathRefs.current.map((element, index) => {
+        const scaleX = element?.transform.baseVal.consolidate()?.matrix.a ?? 1;
+        return (growDistances[index] * scaleX) / grow.rate;
+      });
+      const longest = Math.max(...growDurations);
+      // Shorter arms start later at the same rate so every arm closes together.
+      const growEnd = growStart + longest;
       pathRefs.current.forEach((element, index) => {
         if (element) {
-          // Paths carry different x scales, so convert the travel into viewBox units before timing it.
-          const scaleX = element.transform.baseVal.consolidate()?.matrix.a ?? 1;
-          const growDuration = (growDistances[index] * scaleX) / grow.rate;
-          growEnd = Math.max(growEnd, growStart + growDuration);
+          const growDuration = growDurations[index];
           animations.push(
             element.animate(
               [{ d: `path("${symmetricPaths[index]}")` }, { d: `path("${composerRingPaths[index].d}")` }],
               {
                 duration: growDuration * speed,
-                delay: growStart * speed,
+                delay: (growEnd - growDuration) * speed,
                 easing: 'linear',
                 fill: 'both',
               },
