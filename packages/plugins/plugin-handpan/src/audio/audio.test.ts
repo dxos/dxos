@@ -268,9 +268,12 @@ describe('Calibration', () => {
     expect(Calibration.getTemplates(restored)).toEqual(Calibration.getTemplates(state));
   });
 
+  // A ding-only scale: in D Kurd the octave (D4) and twelfth (A4) are themselves notes, which must not fold.
+  const DING = D_KURD.slice(0, 1);
+
   test('folds a strike read at the compound fifth onto the target', ({ expect }) => {
     const { rejected, state } = Calibration.addStrike(
-      Calibration.createCalibration(D_KURD, { strikes: 1 }),
+      Calibration.createCalibration(DING, { strikes: 1 }),
       strike(3 * 147),
     );
     expect(rejected).toBeUndefined();
@@ -279,11 +282,18 @@ describe('Calibration', () => {
 
   test('folds an octave-high strike onto the target', ({ expect }) => {
     const { state, rejected } = Calibration.addStrike(
-      Calibration.createCalibration(D_KURD, { strikes: 1 }),
+      Calibration.createCalibration(DING, { strikes: 1 }),
       strike(2 * 147),
     );
     expect(rejected).toBeUndefined();
     expect(Calibration.getTemplates(state)[0].frequency).toBeCloseTo(147);
+  });
+
+  test('does not fold another scale note onto the target', ({ expect }) => {
+    const calibratingD4 = Calibration.selectNote(Calibration.createCalibration(D_KURD, { strikes: 1 }), 'D4');
+    const { rejected, state } = Calibration.addStrike(calibratingD4, strike(D_KURD[0].frequency));
+    expect(rejected).toBe('out-of-tune');
+    expect(Calibration.getTemplates(state)).toEqual([]);
   });
 
   test('calibrated templates absorb a detuned instrument', ({ expect }) => {

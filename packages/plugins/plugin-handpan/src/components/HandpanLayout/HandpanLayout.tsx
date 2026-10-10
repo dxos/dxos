@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React from 'react';
+import React, { useState } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
@@ -33,6 +33,7 @@ const NOTE_RADIUS = 34;
 export const HandpanLayout = ({ notes, target, active, progress, onSelect, classNames }: HandpanLayoutProps) => {
   const fields = notes.filter((note) => note.index > 0);
   const isActive = (pitch: Pitch) => active?.includes(pitch) ?? false;
+  const [focused, setFocused] = useState<Pitch>();
   const step = (2 * Math.PI) / Math.max(fields.length, 1);
 
   const position = (note: ScaleNote) => {
@@ -68,18 +69,33 @@ export const HandpanLayout = ({ notes, target, active, progress, onSelect, class
             data-calibrated={(progress?.[note.pitch] ?? 0) >= 1 || undefined}
             data-testid={`handpan.note.${note.label}`}
             className={mx('outline-none', onSelect && 'cursor-pointer')}
+            // An SVG `g` draws no useful outline, so keyboard focus rings the pad circle instead.
+            onFocus={(event) => event.currentTarget.matches(':focus-visible') && setFocused(note.pitch)}
+            onBlur={() => setFocused(undefined)}
             onClick={() => onSelect?.(note)}
-            onKeyDown={(event) => (event.key === 'Enter' || event.key === ' ') && onSelect?.(note)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                // Space would otherwise also scroll the enclosing panel.
+                event.preventDefault();
+                onSelect?.(note);
+              }
+            }}
           >
             <circle
               cx={x}
               cy={y}
               r={radius}
-              strokeWidth={note.pitch === target ? 3 : 1.5}
+              strokeWidth={note.pitch === target || note.pitch === focused ? 3 : 1.5}
               className={mx(
                 'transition-colors duration-150',
                 isActive(note.pitch) ? 'fill-accent-bg' : done >= 1 ? 'fill-success-surface/25' : 'fill-card-surface',
-                note.pitch === target ? 'stroke-accent-text' : done >= 1 ? 'stroke-success-text' : 'stroke-separator',
+                note.pitch === focused
+                  ? 'stroke-fg'
+                  : note.pitch === target
+                    ? 'stroke-accent-text'
+                    : done >= 1
+                      ? 'stroke-success-text'
+                      : 'stroke-separator',
               )}
             />
             {done > 0 && (

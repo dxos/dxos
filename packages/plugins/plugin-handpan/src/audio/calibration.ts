@@ -94,6 +94,15 @@ export const addStrike = (
   if (Math.abs(offset) > maxCents) {
     return { state, rejected: 'out-of-tune', cents: offset };
   }
+  // Folding must not turn another note of the scale into the target (a D3 strike while calibrating D4):
+  // its spectrum would contaminate the target's template.
+  const heard = event.frequency;
+  const otherNote = state.notes.some(
+    (note) => note.pitch !== target.pitch && Math.abs(cents(heard, note.frequency)) <= Math.abs(offset),
+  );
+  if (otherNote) {
+    return { state, rejected: 'out-of-tune', cents: cents(heard, target.frequency) };
+  }
 
   const collected = [
     ...(state.samples[target.pitch] ?? []),

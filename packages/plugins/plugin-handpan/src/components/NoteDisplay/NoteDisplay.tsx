@@ -59,7 +59,15 @@ export const NoteDisplay = ({
         </span>
         <span className='text-2xl text-fg-muted pb-1'>{percussive ? '' : (pitch ?? '')}</span>
       </Layout.Grid>
-      <svg viewBox='0 0 200 24' className='w-64' role='meter' aria-label={t('cents.label')} aria-valuenow={cents}>
+      <svg
+        viewBox='0 0 200 24'
+        className='w-64'
+        role='meter'
+        aria-label={t('cents.label')}
+        aria-valuemin={-50}
+        aria-valuemax={50}
+        aria-valuenow={cents !== undefined ? offset : undefined}
+      >
         <line x1={0} y1={12} x2={200} y2={12} strokeWidth={2} className='stroke-separator' />
         {[-50, -25, 0, 25, 50].map((tick) => (
           <line
