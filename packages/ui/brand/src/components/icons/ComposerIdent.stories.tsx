@@ -69,7 +69,7 @@ const growDistances = SYMMETRIC_ARMS.map((pairs) =>
   Math.max(...pairs.map(([from, to]) => Math.abs(parseFloat(from) - parseFloat(to)))),
 );
 
-const VARIANT_NAMES = ['grow', 'ripple', 'focus', 'sweep', 'spin', 'fade'] as const;
+const VARIANT_NAMES = ['grow', 'ripple', 'focus', 'sweep', 'spin', 'turn', 'fade'] as const;
 
 type VariantName = (typeof VARIANT_NAMES)[number];
 
@@ -133,6 +133,20 @@ const variants: Record<VariantName, IdentVariant> = {
       keyframes: [
         { opacity: 0, transform: `scale(4) rotate(${index % 2 ? -270 : 270}deg)` },
         { opacity: 1, transform: 'scale(1) rotate(0deg)' },
+      ],
+      easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+    }),
+    grow: { rate: 0.05, delay: 200 },
+  },
+  turn: {
+    label: 'Turn',
+    outerFirst: true,
+    duration: 1200,
+    stagger: 120,
+    ring: (index) => ({
+      keyframes: [
+        { opacity: 0, transform: `rotate(${index % 2 ? -270 : 270}deg)` },
+        { opacity: 1, transform: 'rotate(0deg)' },
       ],
       easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
     }),
@@ -388,6 +402,8 @@ export const Ripple: Story = { args: { variant: 'ripple' } };
 export const Focus: Story = { args: { variant: 'focus' } };
 
 export const Spin: Story = { args: { variant: 'spin' } };
+
+export const Turn: Story = { args: { variant: 'turn' } };
 
 export const Sweep: Story = { args: { variant: 'sweep' } };
 
