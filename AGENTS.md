@@ -283,7 +283,8 @@ Deeper conventions:
 - ECHO objects, queries, schema, Ref/DXN → `echo` skill.
 - Effect-TS services, layers, and typed domain errors → `effect` skill.
 - React components, theme tokens, and Composer UI primitives → `composer-ui`
-  skill.
+  skill. **Load it before the first edit to any UI `.tsx`** (react-ui packages, plugins,
+  stories) — its opening list is the set of corrections reviewers keep making.
 - Do not use deprecated functions if an alternative is available.
 - Prose a human reads — PR bodies, commit messages, walkthroughs, design docs, review
   comments, long chat replies → `readable-prose` skill. Review is the bottleneck; write for

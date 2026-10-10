@@ -1,12 +1,13 @@
 ---
 name: composer-ui
-description: Use when building or styling plugin UI with Composer's design system — the
-  `@dxos/react-ui*` packages. Covers theme tokens, primitives (Panel/Card/List/Input/Button/Icon),
-  the standard container layout (Panel + ScrollArea), lists/pickers/stacks, schema-driven forms,
-  toolbar/menu wiring, reactivity (useObject), attention/density, translations, storybook setup, and
-  before/after screenshots. The UI adjunct to the composer-plugins skill; consult it whenever you write
-  a container/component, reach for a Tailwind color class, build a toolbar, render a form or list, add a
-  story, or open a PR that changes what the app renders.
+description: Load BEFORE writing or editing any React UI in this repo — any `.tsx` under `packages/ui/**`
+  (including the `react-ui-*` packages themselves), `packages/plugins/**`, `packages/stories/**`,
+  `packages/apps/**` or `packages/devtools/**`, and any `.stories.tsx`. Opens with the UI non-negotiables:
+  scrolling (ScrollArea, never `overflow-auto`), nested scrollers, `dx-*` sizing, Panel
+  Header/Body/Footer (floating panels too), Layout.Container boxes, Listbox keyboard and Editable,
+  story rules (no `play` on Default). Also covers theme tokens, primitives, forms, toolbar/menu wiring,
+  reactivity, translations, storybook setup, and before/after screenshots. The UI adjunct to
+  composer-plugins and composite-components.
 ---
 
 # Composer UI
