@@ -129,3 +129,44 @@ without.
 
 Running beside another worktree: `DX_PERF_PORT` serves the bundle on its own port (locally the
 config reuses whatever already listens on 4173) and `DX_PERF_DEBUG_PORT` moves the CDP port.
+
+## Did a change help? `pnpm perf`
+
+The nightly answers whether main is healthy. `pnpm perf` (`src/cli/`) answers whether one change
+helped, on a laptop shared with other worktrees.
+
+```bash
+pnpm perf doctor                              # ports, load, lock, tree; exit 4 if blocked
+pnpm perf compare --base main --metric 'wall > boot'
+pnpm perf compare --base HEAD                 # A/A: this machine's noise floor
+pnpm perf run -n 3                            # the working tree, scored against the CI budgets
+pnpm perf gate                                # the boot-graph budget CI gates every PR on
+pnpm perf ledger                              # what this worktree measured before
+```
+
+`compare` builds both refs in this worktree (patching the clean tree to the base and back; bundles
+are cached under `.perf/arms` by tree hash), then runs rounds: each round measures both arms back
+to back, in a random order, on the same port. Two runs of one commit differ by ~20% per stage
+(METRICS.md), while arms paired inside a round differ by a few percent, so pairing is what makes a
+per-change verdict possible at all.
+
+For each metric it reports the mean of the per-round differences, its Student-t interval and Cliff's
+delta. A metric has **regressed** or **improved** only when the whole interval clears the threshold
+and the effect is large, **no change** only when the whole interval sits inside the threshold, and
+is **inconclusive** otherwise; three rounds is the least that decides anything. A counter that read
+the same in every round of each arm is deterministic, and its difference needs no interval. The
+exit code carries the verdict: 0 improved, 1 regressed, 2 no change, 3 inconclusive, 4 could not
+measure.
+
+The verdict rests on the target metrics: `--metric` patterns, or by default the work counters the
+nightly budgets, since calibration kept only those that hold steady run to run. Targets share one 5%
+chance of a false call (Bonferroni), so each extra target widens every interval and needs more
+rounds. Name the one to three metrics a change is about. On this repo's A/A runs (both arms the same
+tree), a percentile bootstrap called three of 45 unchanged counters regressions after six rounds;
+the t-interval with the shared budget called none. Every other metric is listed only when it moved,
+as a lead rather than a verdict.
+
+Ports are derived from the worktree path and a machine-wide lock (`~/.cache/dxos-perf/measure.lock`)
+runs one measurement at a time, so worktrees never measure each other. Before the first round,
+compare waits for the load average to fall below the core count, since the build it just ran is
+load the rounds would otherwise measure. Every run appends a row to `.perf/ledger.tsv`.
