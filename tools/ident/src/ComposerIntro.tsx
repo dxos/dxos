@@ -124,6 +124,10 @@ export const ComposerIntro: React.FC = () => {
           fontSize: Math.round(200 * u),
           lineHeight: 1,
           letterSpacing: '0.01em',
+          // Centring the line box leaves Poiret One's x-height below the icon's centre; this lifts the "c"
+          // onto it (measured from a render).
+          position: 'relative',
+          top: '-0.15em',
           color: COLORS.main,
           opacity: nameIn,
           transform: portrait ? `translateY(${(1 - nameIn) * 40 * u}px)` : `translateX(${(1 - nameIn) * -40 * u}px)`,
