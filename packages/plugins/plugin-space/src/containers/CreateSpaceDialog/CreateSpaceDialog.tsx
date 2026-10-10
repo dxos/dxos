@@ -39,7 +39,6 @@ export const CreateSpaceDialog = () => {
   const { invoke } = Hooks.useOperationInvoker();
 
   const inputSurfaceLookup = useInputSurfaceLookup();
-  const [error, setError] = useState<string | undefined>(undefined);
   const manager = PluginManagerProvider.usePluginManager();
   const contributed = Hooks.useCapabilities(AppCapabilities.SpaceTemplate);
   const templates = useMemo(
@@ -73,28 +72,32 @@ export const CreateSpaceDialog = () => {
 
   const handleCreateSpace = useCallback(
     (data: FormValues) => {
-      setError(undefined);
       return Effect.gen(function* () {
+        // The dialog closes at once: a template can take seconds to seed, and the space opens when it is ready.
+        yield* invoke(LayoutOperation.UpdateDialog, { state: false });
         const { space } = yield* invoke(SpaceOperation.Create, data);
         yield* invoke(LayoutOperation.Open, {
           subject: [GraphPath.getSpaceHomePath(space.id)],
           workspace: GraphPath.getSpacePath(space.id),
           navigation: 'immediate',
         });
-        yield* invoke(LayoutOperation.UpdateDialog, { state: false });
       }).pipe(
         // `catchCause`, not `catch`: a defect (any rejected promise the create chain wraps with
-        // `Effect.promise`) is invisible to `catch`, leaving the dialog open with no error shown.
+        // `Effect.promise`) is invisible to `catch`. The dialog has closed, so the failure is a toast.
         Effect.catchCause((cause) =>
-          Effect.sync(() => {
+          Effect.gen(function* () {
             log.catch(Cause.squash(cause));
-            setError(t('create-space-dialog.error.message'));
+            yield* invoke(LayoutOperation.AddToast, {
+              id: `${meta.profile.key}.create-space-failed`,
+              icon: 'ph--warning--regular',
+              title: ['create-space-dialog.error.message', { ns: meta.profile.key }],
+            });
           }),
         ),
         EffectEx.runAndForwardErrors,
       );
     },
-    [invoke, t],
+    [invoke],
   );
 
   return (
@@ -124,7 +127,6 @@ export const CreateSpaceDialog = () => {
             <ScrollArea.Viewport>
               <Form.Content>
                 <Form.Fields layoutName={SpaceSchema.SPACE_FORM_CREATE_LAYOUT} />
-                <Form.ErrorText>{error}</Form.ErrorText>
                 {templates.length > 0 && (
                   <Form.FieldSet
                     aria-labelledby='create-space-templates'
