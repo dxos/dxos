@@ -28,7 +28,7 @@ type IdentVariant = {
   duration: number;
   /** Delay between successive rings (ms). */
   stagger: number;
-  /** Fraction (0-1) of the last ring's animation at which it looks at rest; long easing tails settle before they end. */
+  /** Fraction (0-1) of the last ring's animation after which the wordmark may start; long easing tails look settled before they end. */
   settledAt?: number;
   /** Start from the symmetric mark, then extend each bottom arm to its true length. */
   grow?: {
@@ -157,8 +157,8 @@ const variants: Record<VariantName, IdentVariant> = {
       easing: 'cubic-bezier(0.25, 1, 0.5, 1)',
     }),
     grow: { rate: 0.1, delay: 0, finishAt: 0.55 },
-    // With the default 100ms gap the wordmark starts with the inner ring ~1° from rest, i.e. as the C visibly stops.
-    settledAt: 0.8,
+    // The wordmark fades in during the last of the spin (inner ring ~20° from rest with the default 100ms gap).
+    settledAt: 0.6,
   },
   fade: {
     label: 'Fade',
