@@ -1,0 +1,221 @@
+---
+id: org.dxos.plugin.handpan
+name: HandpanPlugin
+version: 0.1.0
+---
+
+Handpan music notation and real-time note detection for `DXOS` Composer. Phase 1 (this document)
+is the audio-analysis layer and a `Tuner` that calibrates the detector to an instrument and shows
+notes — and chords — as they are played. Notation (Song / Segment / Bar) is Phase 2; see
+`docs/DESIGN.md` for the roadmap and the analysis techniques considered.
+
+## Notes (Phase 2)
+
+- `Song` / `Segment` / `Bar` ECHO schema with inherited key and time signature
+- Notation grid editor and article surface; register with `composer-app`
+- Record mode: strikes and tempo quantized into bars
+
+## Extensions
+
+The following extension dialects are used in this document.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`        |
+| `feat`      | `org.dxos.mdl.feat@1.0`        |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`    |
+| `component` | `org.dxos.mdl.component@1.0`   |
+| `test`      | `org.dxos.mdl.test@1.0`        |
+
+## Types
+
+```mdl
+type Scale
+  desc: A set of playable pitches; the ding is the handpan's central note.
+  fields:
+    id: string
+    name: string               # e.g. "D Kurd"
+    ding?: Pitch               # scientific pitch notation, e.g. "D3"
+    notes: Pitch[]             # tone fields, any order (sorted ascending for notation)
+```
+
+```mdl
+type NoteEvent
+  desc: |
+    A resolved strike: an onset followed by its pitch, measured from a long window after the onset
+    minus an equal window before it, so notes still ringing do not bias it.
+  fields:
+    time: number               # onset, seconds since the analyzer started
+    frequency?: number         # Hz; absent when percussive
+    clarity: number            # 0..1
+    velocity: number           # peak RMS after the onset
+    partials: number[]         # harmonics 1..n, normalized
+    peaks: SpectralPeak[]      # new energy, including fields ringing in sympathy
+    percussive: boolean        # a tak/slap: no pitched note
+    precise: boolean           # full note window available (cents are reliable)
+    chord?: Pitch[]            # notes struck together; only in chord mode
+```
+
+```mdl
+type NoteTemplate
+  desc: A calibrated note — the reference Live mode and chord detection match against.
+  fields:
+    pitch: Pitch
+    frequency: number          # median of the calibration strikes
+    partials: number[]
+    peaks?: SpectralPeak[]     # merged over strikes; attributes resonance to this note
+```
+
+## Components
+
+```mdl
+component Tuner
+  desc: |
+    Calibrates the detector to an instrument and displays notes as they are played. Pure
+    component: owns its audio session; takes no app-framework capabilities.
+  props:
+    source: 'microphone' | 'synth'   # synth: pads strike synthesized tones (no instrument needed)
+    defaultMode?: 'calibrate' | 'live'
+    defaultScale?: string            # scale id; later changes switch the tuner
+    strikes?: int                    # strikes recorded per note during calibration; default 3
+    persist?: boolean                # keep scale, calibration, gain, sensitivity in local storage
+    silent?: boolean                 # analyze synthesized strikes without playing them
+    chords?: boolean                 # start with chord detection on
+  state:
+    mode: 'calibrate' | 'live'
+    calibration: CalibrationState
+    gain: number                     # dB, -12..+36
+    sensitivity: number              # 0..1
+  layout: |
+    [mic] [scale ▾] [tak] [↺] [chords]            [Calibrate|Live]
+                      3  C4
+                 ─────●─────  (±50¢)
+    [ oscilloscope ................. ] ▮ level
+    Gain 0 dB ───●──      Sensitivity 70% ──●──
+                  (handpan: ding + tone fields)
+                  status · strike log · history
+```
+
+```mdl
+component HandpanLayout
+  desc: Top-down pan; ding centre, fields zig-zag ascending from the bottom.
+  props:
+    notes: ScaleNote[]
+    target?: Pitch                   # calibration target (blue outline)
+    active?: Pitch[]                 # sounding now (filled)
+    progress?: Record<Pitch, number> # calibration progress ring; complete = success colour
+  emits:
+    onSelect(note: ScaleNote)
+```
+
+```mdl
+component NoteDisplay
+  desc: Current note (or chord, or Tak) with a ±50 cent meter; dimmed once nothing sounds.
+```
+
+```mdl
+component LevelMeter
+  desc: Input level on a dB scale with the "sounding" threshold marked.
+```
+
+## Features
+
+```mdl
+feat F-1: Note detection
+  req F-1.1: Onsets are detected by spectral flux on a peak-normalized spectrum, independent of
+    input level down to -30 dBFS strikes.
+  req F-1.2: A strike's attack and tone bloom within 100 ms of each other are one strike.
+  req F-1.3: Each strike's pitch is measured from 8192-sample windows either side of the onset; a
+    note struck while others ring is measured within 5 cents.
+  req F-1.4: Strikes without a clear pitch are reported as percussive (tak).
+```
+
+```mdl
+feat F-2: Calibration
+  req F-2.1: The user strikes each note of the scale in turn (ding first); the target advances
+    after the configured number of accepted strikes.
+  req F-2.2: Each strike is logged with its outcome: accepted (with cents), a different note, no
+    clear pitch, or struck too soon after the previous note.
+  req F-2.3: Octave and twelfth readings are folded back onto the target.
+  req F-2.4: Calibrated notes are drawn in the success colour; calibration can be reset or a
+    single note redone by selecting its pad.
+  req F-2.5: With persist, the scale and calibration survive a reload.
+```
+
+```mdl
+feat F-3: Live
+  req F-3.1: The displayed note switches only after several consistent frames and is released
+    after silence; the pad is lit only while the note sounds.
+  req F-3.2: Gain and sensitivity are adjustable while listening, with tooltips.
+  req F-3.3: Input level is shown against the sounding threshold.
+```
+
+```mdl
+feat F-4: Chords
+  req F-4.1: With chords on, a strike is decomposed against the note templates (NNLS); notes
+    struck together are reported as one chord (e.g. "1+3") and all their pads light.
+  req F-4.2: Learned templates attribute sympathetic resonance to the struck note.
+  req F-4.3: Known limit — an octave pair (e.g. D3+D4) is reported as the lower note unless the
+    upper note is about as loud.
+```
+
+## Acceptance
+
+```mdl
+scenario T-1: Overlapping notes are measured precisely
+  given: the nine D Kurd notes struck 0.3 s apart (each still ringing at the next strike)
+  then: nine events, each precise and within 5 cents of its note
+```
+
+```mdl
+scenario T-2: Calibration advances
+  given: a calibration of two notes with two strikes each
+  when: each note is struck twice in tune
+  then: calibration is complete and has templates for both notes
+```
+
+```mdl
+scenario T-3: Resonance is not a chord
+  given: templates calibrated on a pan whose partner fields ring 3 dB below the struck note
+  when: each note is struck alone with that resonance
+  then: each chord contains only the struck note
+```
+
+## QA
+
+Executable tests. Each step carries a human instruction (`do`). The plugin has no app surface yet
+(Phase 2), so the flow runs in storybook; there are no operations to bind.
+
+```mdl
+test QA-1: Calibrate and play in the simulated session
+  desc: |
+    The primary journey with synthesized audio, so it needs no instrument: calibrate every note,
+    then play notes, a tak and a chord in Live mode.
+  actors: human
+  covers: [F-2.1, F-2.4, F-3.1, F-4.1]
+  status: unverified
+  given:
+    - storybook serves this worktree on port 9009
+    - the story plugins/plugin-handpan/components/Tuner › Simulated Session is open with
+      args silent:true (synthesized notes are analyzed without sound)
+  steps:
+    - name: Start
+      do: Click the mic button.
+      expect: the button turns red and the status reads "Play note D (D3)"
+    - name: Calibrate every note
+      do: Click each blue-outlined pad in turn until none is outlined.
+      expect: every pad is drawn in the success colour and the status reads "Calibration complete"
+    - name: Play notes
+      do: Click Live, then pads 3, 1 and 5.
+      expect: the display reads 3, 1, then 5; the matching pad lights while each note sounds
+    - name: Play a tak
+      do: Click Tak.
+      expect: the display reads "Tak" and the history ends "T"
+    - name: Play a chord
+      do: Turn on Chords; strike pads 1 and 3 within 100 ms (a script dispatching two clicks).
+      expect: the display reads "1+3" and pads 1 and 3 light together
+  after:
+    - name: Stop
+      do: Click the mic button.
+      expect: the button is no longer red
+```

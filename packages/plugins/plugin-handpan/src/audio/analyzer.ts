@@ -4,7 +4,7 @@
 
 import { PitchDetector } from 'pitchy';
 
-import { type ChordTemplate, ChordDecomposer, type SpectralPeak, selectNotes, spectralPeaks } from './chord.ts';
+import { ChordDecomposer, type ChordTemplate, type SpectralPeak, selectNotes, spectralPeaks } from './chord.ts';
 import { MagnitudeSpectrum } from './fft.ts';
 import { harmonicPitch } from './harmonic.ts';
 import { OnsetDetector, type OnsetDetectorOptions } from './onset.ts';

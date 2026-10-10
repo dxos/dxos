@@ -737,9 +737,9 @@ overrides:
   '@remotion/elevenlabs>zod': 4.3.6
   '@remotion/media>zod': 4.3.6
   '@remotion/openai-whisper>zod': 4.3.6
+  '@remotion/studio>zod': 4.3.6
   '@remotion/studio-protocol>zod': 4.3.6
   '@remotion/studio-server>zod': 4.3.6
-  '@remotion/studio>zod': 4.3.6
   '@swc/core': 'catalog:'
   '@types/node': 'catalog:'
   '@types/react': 'catalog:'
