@@ -293,7 +293,7 @@ export abstract class BaseHttpClient {
    * device with no HALO chain (mid-invitation), and without this the rejection would surface from
    * `_call` as a failed request — turning a call that used to succeed unauthenticated into an error.
    */
-  private _prefetchAuthHeader(): Promise<void> {
+  protected _prefetchAuthHeader(): Promise<void> {
     if (this._authPrefetch) {
       return this._authPrefetch;
     }
