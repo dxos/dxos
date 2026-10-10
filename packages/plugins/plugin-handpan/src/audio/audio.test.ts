@@ -38,6 +38,17 @@ const perform = (frequencies: (number | 'tak')[], spacing = 0.5, sampleRate = SA
   return signal;
 };
 
+/** Deterministic white noise at the given RMS. */
+const noise = (seconds: number, rms: number): Float32Array => {
+  const signal = new Float32Array(seconds * SAMPLE_RATE);
+  let state = 1;
+  for (let index = 0; index < signal.length; index++) {
+    state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
+    signal[index] = rms * Math.sqrt(3) * (state / 0x80000000 - 1);
+  }
+  return signal;
+};
+
 describe('pitch', () => {
   test('parses and formats scientific pitch', ({ expect }) => {
     expect(parsePitch('A4')).toBe(69);
@@ -131,6 +142,31 @@ describe('Analyzer', () => {
   test('classifies unpitched strikes as percussive', ({ expect }) => {
     const notes = analyze(perform([D_KURD[1].frequency, 'tak', D_KURD[5].frequency]));
     expect(notes.map((note) => note.percussive)).toEqual([false, true, false]);
+  });
+
+  test('detects strikes regardless of input level (distant microphone)', ({ expect }) => {
+    for (const gain of [0.5, 0.1, 0.03]) {
+      const signal = noise(4, 0.0005);
+      D_KURD.slice(0, 5).forEach((note, index) =>
+        mixInto(
+          signal,
+          synthesizeHandpanTone(note.frequency, { sampleRate: SAMPLE_RATE, gain, seed: index + 3 }),
+          0.2 + index * 0.7,
+          SAMPLE_RATE,
+        ),
+      );
+      const notes = analyze(signal);
+      expect(
+        notes.map(
+          (note) =>
+            classifyNote({ frequency: note.frequency ?? 0, partials: [] }, nominalTemplates(D_KURD))?.template.pitch,
+        ),
+      ).toEqual(D_KURD.slice(0, 5).map((note) => note.pitch));
+    }
+  });
+
+  test('ignores steady background noise', ({ expect }) => {
+    expect(analyze(noise(3, 0.01))).toHaveLength(0);
   });
 
   test('ignores silence', ({ expect }) => {

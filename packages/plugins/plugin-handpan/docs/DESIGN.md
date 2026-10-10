@@ -29,7 +29,8 @@ mic / synth ──► AudioWorklet tap (Blob-URL module, 512-sample blocks)
                   │
                   ▼
                Analyzer.push()   frame 2048, hop 512, Hann, 4× zero-padded FFT
-                  ├─► OnsetDetector   spectral flux, adaptive median threshold, refractory window
+                  ├─► OnsetDetector   spectral flux on a peak-normalized spectrum (level-independent),
+                  │                   adaptive median threshold, 100 ms minimum between strikes
                   ├─► MPM (`pitchy`)  per-frame f0 + clarity (live tuning meter)
                   └─► per onset, once 30 ms + 8192 samples have elapsed (~200 ms):
                         residual = max(0, |X_after| − |X_before|)   ← equal long windows either
@@ -65,6 +66,11 @@ mic / synth ──► AudioWorklet tap (Blob-URL module, 512-sample blocks)
   use 8192-sample windows (±11 Hz), measured within 0.5¢ with notes 0.3 s apart. Cost: an event
   arrives ~200 ms after the strike; the live meter (MPM per frame) is immediate.
 - Calibration rejects strikes cut short by the next onset (`imprecise`): too coarse for a reference.
+- Strike detection normalizes the spectrum by a slowly decaying recent peak, so a distant
+  microphone (−30 dBFS strikes) detects like a close one. Absolute thresholds missed every strike
+  below ~−20 dBFS. Strikes at −40 dBFS over a −66 dBFS noise floor are partly missed (known limit).
+- A strike's attack and its tone blooming behind it register as two onsets; onsets within 100 ms
+  of the previous one are ignored, otherwise the attack resolves as a spurious tak.
 
 ### Calibration
 

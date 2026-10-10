@@ -135,7 +135,7 @@ export class Analyzer {
     minClarity = 0.85,
     minHarmonicity = 0.4,
     minResidual = 0.15,
-    silenceRms = 0.003,
+    silenceRms = 0.001,
     pitchDelay = 0.03,
     noteFrameSize = 8192,
     partialCount = 6,
@@ -208,7 +208,9 @@ export class Analyzer {
     const audible = rms >= this.#silenceRms;
 
     this.#spectrum.compute(this.#frame, this.#magnitudes);
-    const { flux, onset } = this.#onsets.process(this.#magnitudes, audible);
+    // Until the first frame is full, the zero-filled window ramping up would read as an onset.
+    const warm = this.#samplesProcessed >= 2 * this.#frameSize;
+    const { flux, onset } = this.#onsets.process(this.#magnitudes, audible && warm);
 
     let frequency: number | undefined;
     let clarity = 0;
