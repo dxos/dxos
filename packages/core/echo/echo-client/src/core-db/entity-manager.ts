@@ -18,10 +18,11 @@ import {
   UpdateScheduler,
   asyncTimeout,
   runInContextAsync,
+  scheduleTask,
 } from '@dxos/async';
 import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import { raise, warnAfterTimeout } from '@dxos/debug';
-import { type Database, type Entity, Ref } from '@dxos/echo';
+import { type Database, type Entity, Filter, Query, Ref, Scope } from '@dxos/echo';
 import {
   type BranchRecord,
   DatabaseDirectory,
@@ -35,6 +36,7 @@ import { assertState, invariant } from '@dxos/invariant';
 import { EID, type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
+import { QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
 import type { DataService, QueryService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 import { ComplexSet, chunkArray, deepMapValues, defer } from '@dxos/util';
@@ -53,6 +55,7 @@ import { docChangeSemaphore } from './doc-semaphore.ts';
 import { ObjectCoreRegistry } from './object-core-registry.ts';
 import { type IDatabaseBinding, ObjectCore, type SnapshotState } from './object-core.ts';
 import { shareStructure } from './share-structure.ts';
+import { getSnapshotState } from './snapshot-state.ts';
 import {
   type AddCoreOptions,
   type AtomicReplaceObjectProps,
@@ -282,6 +285,12 @@ export class EntityManager implements IDatabaseBinding {
 
     await this._repoProxy.open();
     ctx.onDispose(() => this._unsubscribeFromHandles());
+    this.#snapshotWatchScheduled = false;
+    ctx.onDispose(() => {
+      this.#snapshotWatch?.cleanup();
+      this.#snapshotWatch = undefined;
+      this.#snapshotIds.clear();
+    });
     ctx.onDispose(() => {
       for (const request of this._satisfactionRequests.values()) {
         request.abort();
@@ -513,16 +522,7 @@ export class EntityManager implements IDatabaseBinding {
     }
     const existing = this.getObjectCoreById(id, { load: false });
     if (existing) {
-      // Queued writes are the user's view until the document they wait for arrives.
-      if (existing.snapshot && !existing.hasQueuedWrites && state.version > existing.snapshot.version) {
-        existing.snapshot = {
-          root: { objects: { [id]: shareStructure(existing.snapshot.root.objects[id], state.structure) } },
-          heads: state.heads,
-          version: state.version,
-          updatedAt: state.updatedAt,
-        };
-        existing.notifyUpdate();
-      }
+      this.#refreshSnapshot(existing, state);
       return existing.rootProxy ?? this._createEntity(existing);
     }
 
@@ -536,7 +536,103 @@ export class EntityManager implements IDatabaseBinding {
       updatedAt: state.updatedAt,
     });
     this._objects.set(id, core);
+    this.#snapshotIds.add(id);
+    this.#scheduleSnapshotWatch();
     return this._createEntity(core);
+  }
+
+  /** Moves a snapshot-backed core onto a newer index row, unless writes it queued are the user's view. */
+  #refreshSnapshot(core: ObjectCore, state: SnapshotState): void {
+    if (!core.snapshot || core.hasQueuedWrites || state.version <= core.snapshot.version) {
+      return;
+    }
+    core.snapshot = {
+      root: { objects: { [core.id]: shareStructure(core.snapshot.root.objects[core.id], state.structure) } },
+      heads: state.heads,
+      version: state.version,
+      updatedAt: state.updatedAt,
+    };
+    core.notifyUpdate();
+  }
+
+  /**
+   * Ids of the cores backed by the index's copy. One reactive lazy query over them keeps each current
+   * while something holds it, since the query that returned it may since have stopped or filtered it out.
+   */
+  readonly #snapshotIds = new Set<string>();
+  #snapshotWatch: { ids: string; cleanup: CleanupFn } | undefined = undefined;
+  #snapshotWatchScheduled = false;
+
+  #unwatchSnapshot(id: string): void {
+    if (this.#snapshotIds.delete(id)) {
+      this.#scheduleSnapshotWatch();
+    }
+  }
+
+  /** Coalesces the id set's changes into one restart of the watch query. */
+  #scheduleSnapshotWatch(): void {
+    if (this.#snapshotWatchScheduled || !this._ctx || this._ctx.disposed) {
+      return;
+    }
+    this.#snapshotWatchScheduled = true;
+    scheduleTask(
+      this._ctx,
+      () => {
+        this.#snapshotWatchScheduled = false;
+        this.#watchSnapshots();
+      },
+      SNAPSHOT_WATCH_DELAY,
+    );
+  }
+
+  #watchSnapshots(): void {
+    const ids = [...this.#snapshotIds].sort();
+    const key = ids.join(',');
+    if (this.#snapshotWatch?.ids === key) {
+      return;
+    }
+    this.#snapshotWatch?.cleanup();
+    this.#snapshotWatch = undefined;
+    if (ids.length === 0) {
+      return;
+    }
+
+    const query = Query.select(Filter.id(...(ids as EntityId[])))
+      .options({ lazy: true, deleted: 'include' })
+      .from(Scope.space({ id: this._spaceId }));
+    const cleanup = subscribeStream(
+      this._runtime,
+      this._queryService['QueryService.execQuery']({
+        query: JSON.stringify(query.ast),
+        queryId: `snapshot-watch:${this._spaceId}:${++snapshotWatchCount}`,
+        reactivity: QueryReactivity.REACTIVE,
+      }),
+      {
+        onData: (response) => {
+          for (const result of response.results ?? []) {
+            // Rows only refresh cores still held: the watch must not keep an object alive.
+            const core = this._objects.get(result.id);
+            const state = core?.snapshot && getSnapshotState(result);
+            if (core && state) {
+              this.#refreshSnapshot(core, state);
+            }
+          }
+        },
+        onError: (err) => {
+          if (this.#snapshotWatch?.cleanup === cleanup) {
+            this.#snapshotWatch = undefined;
+          }
+          if (err instanceof RpcClosedError) {
+            if (this._ctx) {
+              this._reconnected.once(this._ctx, () => this.#scheduleSnapshotWatch());
+            }
+          } else if (err != null) {
+            log.catch(err);
+          }
+        },
+      },
+    );
+    this.#snapshotWatch = { ids: key, cleanup };
   }
 
   /**
@@ -2108,6 +2204,7 @@ export class EntityManager implements IDatabaseBinding {
    * object mounted in it, and never the space root), since it is the document that holds the payload.
    */
   private _releaseObject(objectId: string, { releaseDocument = false }: ReleaseObjectOptions = {}): void {
+    this.#unwatchSnapshot(objectId);
     // Never dropped while still resolving, because aborting one releases its load ops and cancels
     // the IO a reader is waiting on; it is dropped when it settles instead.
     const request = this._satisfactionRequests.get(objectId as EntityId);
@@ -2257,6 +2354,7 @@ export class EntityManager implements IDatabaseBinding {
       this._replayWrites(core.id, docHandle, core.snapshot.heads, writes);
     }
     core.bind({ db: this, docHandle, path: ['objects', core.id], assignFromLocalState: false });
+    this.#unwatchSnapshot(core.id);
     this._markObjectAvailable(core.id);
     this._onObjectBoundToDocument(docHandle, core.id);
     const pending = this.#pendingPromotions.get(core.id);
@@ -2463,3 +2561,8 @@ const RPC_TIMEOUT = 20_000;
 
 /** How long a flush waits for the documents of objects with queued writes before it fails. */
 const PROMOTION_FLUSH_TIMEOUT = 20_000;
+
+/** Coalesces bursts of index-backed cores appearing or going into one restart of the watch query. */
+const SNAPSHOT_WATCH_DELAY = 100;
+
+let snapshotWatchCount = 0;

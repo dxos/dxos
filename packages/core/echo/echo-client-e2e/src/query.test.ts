@@ -4612,6 +4612,31 @@ describe('Query', () => {
       expect(object.value).toBe(1);
     });
 
+    test('an object held after its query has finished keeps up with the index', async () => {
+      const { db, peer, documentIds } = await openReloaded((db) => [db.add(createTestObject({ value: 1 }))]);
+      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando)).options({ lazy: true })).run();
+
+      const documentId = documentIds.get(object.id);
+      invariant(documentId);
+      using lease = await peer.host.automergeHost.loadDoc<DatabaseDirectory>(Context.default(), documentId);
+      invariant(lease);
+      lease.change((doc) => {
+        doc.objects![object.id].data.value = 2;
+      });
+      await peer.host.automergeHost.flush(Context.default());
+      await db.flush({ secondaryIndexes: true });
+
+      await waitForCondition({ condition: () => object.value === 2, timeout: 5_000 });
+      expect(hasDocument(db, object.id)).toBe(false);
+
+      lease.change((doc) => {
+        doc.objects![object.id].system!.deleted = true;
+      });
+      await peer.host.automergeHost.flush(Context.default());
+      await db.flush({ secondaryIndexes: true });
+      await waitForCondition({ condition: () => Obj.isDeleted(object), timeout: 5_000 });
+    });
+
     test('a later index row updates the object in place and notifies; an earlier one is ignored', async () => {
       const { db } = await openReloaded((db) => [db.add(createTestObject({ value: 1 }))]);
       const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando)).options({ lazy: true })).run();

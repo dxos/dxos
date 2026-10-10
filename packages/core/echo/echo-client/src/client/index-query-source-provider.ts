@@ -2,14 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { next as A } from '@automerge/automerge';
 import * as Array from 'effect/Array';
 import * as EffectContext from 'effect/Context';
 
 import { type CleanupFn, Event, type ReadOnlyEvent, TimeoutError, asyncTimeout, yieldOrContinue } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Entity, Feed, type Hypergraph, Obj, Query } from '@dxos/echo';
-import { QueryAST, decodeEntityStructure } from '@dxos/echo-protocol';
+import { QueryAST } from '@dxos/echo-protocol';
 import {
   ATTR_PARENT,
   ATTR_RELATION_SOURCE,
@@ -25,6 +24,7 @@ import { QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { QueryService } from '@dxos/protocols/rpc';
 import { chunkArray, isNonNullable } from '@dxos/util';
 
+import { getSnapshotState } from '../core-db/snapshot-state.ts';
 import { type FeedHandle } from '../feed/feed-handle.ts';
 import { type QuerySourceProvider, recordObjectDiagnostic } from '../hypergraph.ts';
 import { DatabaseImpl } from '../proxy-db/index.ts';
@@ -717,19 +717,15 @@ export class IndexQuerySource implements QuerySource {
    * loads; undefined when the row carries none (too large, a branch document) or cannot back it.
    */
   private _hydrateFromState(result: QueryService.QueryResult): Entity.Unknown | undefined {
-    if (result.state === undefined || result.heads === undefined || result.version === undefined) {
+    const state = getSnapshotState(result);
+    if (state === undefined) {
       return undefined;
     }
     const database = this._params.graph.getDatabase(SpaceId.make(result.spaceId));
     if (!(database instanceof DatabaseImpl)) {
       return undefined;
     }
-    return database._upsertSnapshot(EntityId.make(result.id), {
-      structure: decodeEntityStructure(result.state, { makeRawString: (value) => new A.RawString(value) }),
-      heads: result.heads,
-      version: result.version,
-      updatedAt: result.updatedAt,
-    });
+    return database._upsertSnapshot(EntityId.make(result.id), state);
   }
 
   private _isSnapshotQuery(): boolean {
