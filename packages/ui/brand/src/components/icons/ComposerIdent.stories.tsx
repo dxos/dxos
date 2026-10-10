@@ -143,18 +143,18 @@ const variants: Record<VariantName, IdentVariant> = {
   turn: {
     label: 'Turn',
     outerFirst: true,
-    duration: 4000,
+    duration: 3000,
     // Every ring stops at the same moment; inner rings turn further so they still move against each other.
     stagger: 0,
     ring: (index) => ({
       keyframes: [
-        { opacity: 0, offset: 0, transform: `rotate(${(index % 2 ? -1 : 1) * (540 - index * 90)}deg)` },
+        { opacity: 0, offset: 0, transform: `rotate(${(index % 2 ? -1 : 1) * (1080 - index * 180)}deg)` },
         { opacity: 1, offset: 0.25 },
         { opacity: 1, offset: 1, transform: 'rotate(0deg)' },
       ],
       easing: 'cubic-bezier(0.25, 1, 0.5, 1)',
     }),
-    grow: { rate: 0.05, delay: 0, finishAt: 0.55 },
+    grow: { rate: 0.08, delay: 0, finishAt: 0.55 },
   },
   fade: {
     label: 'Fade',
