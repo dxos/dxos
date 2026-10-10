@@ -113,6 +113,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
     floating = false,
     grid: snap,
     guides,
+    fit,
   } = useViewState(canvasViewAspect, contextId);
   const { update: updateViewState } = useViewStateActions(canvasViewAspect, contextId);
   const handleCameraChange = useCallback(
@@ -121,7 +122,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   );
   const handleDisplayChange = useCallback(
     // The engine's snap toggle is what draws the grid, so the view state calls it the grid.
-    ({ snap, guides }: SceneDisplay) => updateViewState((state) => ({ ...state, grid: snap, guides })),
+    ({ snap, guides, fit }: SceneDisplay) => updateViewState((state) => ({ ...state, grid: snap, guides, fit })),
     [updateViewState],
   );
 
@@ -188,7 +189,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
               readonly={readonly}
               initialCamera={savedCamera}
               onCameraChange={handleCameraChange}
-              initialDisplay={{ snap, guides }}
+              initialDisplay={{ snap, guides, fit }}
               onDisplayChange={handleDisplayChange}
               panels={floating ? 'floating' : 'docked'}
             >

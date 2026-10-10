@@ -28,7 +28,10 @@ export type ToolbarActions = {
   path: SceneId[];
   nameOf: (id: SceneId) => string;
   onPath: (index: number) => void;
+  /** Frames the scene and keeps it framed (fit mode) until the user pans or zooms. */
   fit: () => void;
+  /** The view is in fit mode. */
+  fitting?: boolean;
   /** Back to true size (100%), about the view's centre. */
   zoomReset: () => void;
   zoomIn: () => void;
@@ -105,7 +108,8 @@ export const CameraToolbar = ({ classNames, actions, children }: CameraToolbarPr
         variant='ghost'
         iconOnly
         icon='ph--arrows-out--regular'
-        label={`Fit (${shortcutFor('fit')})`}
+        label={`Fit (${shortcutFor('fit')}): keep the scene framed until you pan or zoom`}
+        classNames={mx(actions.fitting && 'bg-primary-500/20')}
         data-testid='toolbar-fit'
         onClick={actions.fit}
       />

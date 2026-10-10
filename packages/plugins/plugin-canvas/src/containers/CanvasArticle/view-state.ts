@@ -25,6 +25,8 @@ const CanvasViewStateSchema = Schema.Struct({
   grid: Schema.optional(Schema.Boolean),
   /** The lattice's cells are drawn. */
   guides: Schema.optional(Schema.Boolean),
+  /** The camera keeps the scene framed as the view resizes or opens another scene, until the viewer pans or zooms. */
+  fit: Schema.optional(Schema.Boolean),
 });
 
 export type CanvasViewState = Schema.Schema.Type<typeof CanvasViewStateSchema>;
