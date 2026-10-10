@@ -7,14 +7,15 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
+import { Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { DEFAULT_LATTICE, isFrameNode, nodeBounds, onLattice, quantize } from '@dxos/react-ui-canvas/scene';
 
-import { bindCanvasStore, elementId, parseLinkedSceneId } from '#model';
+import { bindCanvasStore, elementId, isNodeRecord, nodeKey, parseLinkedSceneId } from '#model';
 
-import { composerDiagrams, diagramFiles, edgeDiagrams } from './architecture.ts';
-import { loadDiagramSet } from './diagrams.ts';
+import { architectureDiagrams, composerDiagrams, diagramFiles, edgeDiagrams } from './architecture.ts';
+import { loadDiagramDrawings, loadDiagramSet } from './diagrams.ts';
 
 const DIR = join(import.meta.dirname, '../../docs/diagrams');
 const files = Object.fromEntries(
@@ -69,5 +70,31 @@ describe('loadDiagramSet', () => {
       .map((node) => node.id);
     expect(offLattice).toEqual([]);
     bound.dispose();
+  });
+
+  test('every level of the combined set opens the diagram its boxes name', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([Drawing.Drawing, Drawing.Canvas]);
+    const set = architectureDiagrams(files);
+    const drawings = await loadDiagramDrawings(db, set);
+    await db.flush();
+
+    // Composer's EDGE box opens the EDGE overview, and a detail diagram's box opens a third level.
+    expect(set.drills.composer.Edge).toBe('edge');
+    for (const [parent, drills] of Object.entries(set.drills)) {
+      const content = drawings.get(parent)?.canvas.target?.content ?? {};
+      for (const [box, target] of Object.entries(drills)) {
+        const record = content[nodeKey(elementId(box, 'box'))];
+        const node = isNodeRecord(record) ? record.node : undefined;
+        const object: unknown = node && Reflect.get(node, 'object');
+        const child = drawings.get(target);
+        // A stored reference is local to the space, so the object id is what names the drawing.
+        expect({ parent, box, target: Ref.isRef(object) ? object.uri.split('/').at(-1) : undefined }).toEqual({
+          parent,
+          box,
+          target: child?.id,
+        });
+      }
+    }
   });
 });

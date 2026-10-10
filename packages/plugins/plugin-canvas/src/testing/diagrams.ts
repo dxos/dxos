@@ -32,13 +32,24 @@ export type DiagramSet = {
  * turns every drill-down box into a frame onto the diagram it names; answers the root drawing.
  */
 export const loadDiagramSet = async (db: Database.Database, set: DiagramSet): Promise<Drawing.Drawing> => {
+  const root = (await loadDiagramDrawings(db, set)).get(set.root);
+  if (!root) {
+    throw new Error(`The diagram set has no root diagram: ${set.root}.`);
+  }
+  return root;
+};
+
+/** {@link loadDiagramSet}'s drawings, every one of them, by diagram id. */
+export const loadDiagramDrawings = async (
+  db: Database.Database,
+  set: DiagramSet,
+): Promise<ReadonlyMap<string, Drawing.Drawing>> => {
   const drawings = new Map<string, Drawing.Drawing>();
   for (const [id, svg] of Object.entries(set.files)) {
     const { source } = Schema.decodeUnknownSync(DslSource)(DxSvg.extract(svg));
     const { commands } = await EffectEx.runPromise(Dsl.compile(source.text));
     const canvas = db.add(createCanvas());
     CanvasBuilder.apply(canvas, commands);
-    // On the lattice, links route square along the gutters between the boxes, as the layout drew them.
     // The diagrams are laid out on the canvas lattice (`box`, `grid` and `@` origin match its cells), so turning it on
     // routes links square along the gutters between the boxes.
     Obj.update(canvas, (canvas) => updateCanvasRecord(canvas.content, { lattice: true }));
@@ -69,9 +80,5 @@ export const loadDiagramSet = async (db: Database.Database, set: DiagramSet): Pr
     });
   }
 
-  const root = drawings.get(set.root);
-  if (!root) {
-    throw new Error(`The diagram set has no root diagram: ${set.root}.`);
-  }
-  return root;
+  return drawings;
 };

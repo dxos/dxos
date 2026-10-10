@@ -12,7 +12,7 @@ import { Cell, ModuleContainer, createStoryDecorators } from '@dxos/storybook-te
 import { CanvasPlugin } from '#plugin';
 import { translations } from '#translations';
 
-import { composerDiagrams, diagramFiles, edgeDiagrams } from '../../testing/architecture.ts';
+import { architectureDiagrams, diagramFiles, edgeDiagrams } from '../../testing/architecture.ts';
 import { type DiagramSet, loadDiagramSet } from '../../testing/diagrams.ts';
 
 // The rendered diagrams, each carrying the DSL source it was laid out from (`docs/diagrams`, `render-diagrams`).
@@ -61,10 +61,10 @@ const play =
     }
   };
 
-const composer = composerDiagrams(diagramFiles(files, 'composer'));
+const composer = architectureDiagrams(files);
 const edge = edgeDiagrams(diagramFiles(files, 'edge'));
 
-/** Composer: app layer, SDK and data, and EDGE; the framework, data, plugin and compute boxes open a level each. */
+/** Composer: app layer, SDK and data, and EDGE; the framework, data, plugin, compute and EDGE boxes open a level each. */
 export const Composer: Story = { decorators: withDiagrams(composer), play: play(composer) };
 
 /** EDGE: clients, the gateway and the services; the router, db, compute and hub boxes open a level each. */
