@@ -9072,6 +9072,9 @@ importers:
       '@dxos/plugin-illustrator':
         specifier: workspace:*
         version: link:../plugin-illustrator
+      '@dxos/plugin-markdown':
+        specifier: workspace:*
+        version: link:../plugin-markdown
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
@@ -9100,9 +9103,6 @@ importers:
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
-      '@dxos/plugin-markdown':
-        specifier: workspace:*
-        version: link:../plugin-markdown
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing

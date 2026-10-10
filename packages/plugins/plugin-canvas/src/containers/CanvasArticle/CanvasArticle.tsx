@@ -6,6 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
@@ -19,6 +20,7 @@ import {
   type Camera,
   type Element,
   type Node,
+  type SceneDisplay,
   type SceneId,
   SceneView,
   type SceneViewPropertiesProps,
@@ -45,7 +47,6 @@ import {
 import { CanvasCapabilities } from '#types';
 
 import { CanvasDatabaseContext, CanvasFrameNodeView, CanvasFrameToolbar } from './CanvasFrameNodeView.tsx';
-import { canvasViewModeAspect } from './view-mode.ts';
 import { canvasViewAspect } from './view-state.ts';
 
 export type CanvasArticleProps = IllustratorCapabilities.DrawingVariantSurfaceProps;
@@ -107,11 +108,26 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
 
   // Restores where the root scene was last left; read once per binding, since later values are our own writes.
   const contextId = Entity.getURI(canvas);
-  const { camera: savedCamera } = useViewState(canvasViewAspect, contextId);
-  const { readonly = false } = useViewState(canvasViewModeAspect, contextId);
+  const {
+    camera: savedCamera,
+    readonly: viewReadonly,
+    floating = false,
+    grid: snap,
+    guides,
+    fit,
+  } = useViewState(canvasViewAspect, contextId);
   const { update: updateViewState } = useViewStateActions(canvasViewAspect, contextId);
+  // A section is a drawing shown inside another object (a document's embed), so it is only looked at, never edited,
+  // and shows the drawing alone: no palette and no panels.
+  const section = role === AppSurface.Section.role;
+  const readonly = (viewReadonly ?? record?.readonly ?? false) || section;
   const handleCameraChange = useCallback(
     (camera: Camera) => updateViewState((state) => ({ ...state, camera })),
+    [updateViewState],
+  );
+  const handleDisplayChange = useCallback(
+    // The engine's snap toggle is what draws the grid, so the view state calls it the grid.
+    ({ snap, guides, fit }: SceneDisplay) => updateViewState((state) => ({ ...state, grid: snap, guides, fit })),
     [updateViewState],
   );
 
@@ -163,7 +179,9 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   );
 
   return (
-    <Panel.Root role={role}>
+    // A section takes the document's width and has no height of its own (its panels float, read-only), so its height
+    // follows from the drawing's 3:2 frame.
+    <Panel.Root role={role} classNames={section ? 'w-full aspect-[3/2]' : undefined}>
       <Panel.Body>
         {bound && (
           // An unset preference leaves the engine's own default in place.
@@ -178,7 +196,9 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
               readonly={readonly}
               initialCamera={savedCamera}
               onCameraChange={handleCameraChange}
-              panels={(settings.dockPanels ?? true) ? 'docked' : 'floating'}
+              initialDisplay={{ snap, guides, fit }}
+              onDisplayChange={handleDisplayChange}
+              panels={floating ? 'floating' : 'docked'}
             >
               <SceneView.Canvas liveDepth={settings.liveDepth} />
               {/* Unset means shown: settings saved before the default existed hold neither key. */}
@@ -189,10 +209,19 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
                   <SceneView.Debug />
                 </>
               )}
-              {(settings.showPalette ?? true) && <SceneView.Palette />}
-              <SceneView.Properties db={db} getOptions={getOptions} overrides={overrides} sceneFilter={isLocalScene} />
-              <SceneView.Layers />
-              <SceneView.About />
+              {!section && (
+                <>
+                  {(settings.showPalette ?? true) && <SceneView.Palette />}
+                  <SceneView.Properties
+                    db={db}
+                    getOptions={getOptions}
+                    overrides={overrides}
+                    sceneFilter={isLocalScene}
+                  />
+                  <SceneView.Layers />
+                  <SceneView.About />
+                </>
+              )}
             </SceneView.Root>
           </CanvasDatabaseContext.Provider>
         )}
