@@ -175,7 +175,12 @@ const speak = async (text) => {
     data: { audio_url: url, duration },
   } = await heygen('POST', '/v3/voices/speech', { text, voice_id: voice, speed, language: 'en' });
   const file = path.join(CACHE, `${key}${path.extname(new URL(url).pathname) || '.mp3'}`);
-  writeFileSync(file, Buffer.from(await (await fetch(url)).arrayBuffer()));
+  // Checked before anything is written: a cached error page would be replayed as speech on every later run.
+  const audio = await fetch(url);
+  if (!audio.ok) {
+    throw new Error(`audio download ${url} → ${audio.status}`);
+  }
+  writeFileSync(file, Buffer.from(await audio.arrayBuffer()));
   const entry = { file, duration };
   writeFileSync(meta, JSON.stringify(entry));
   return entry;

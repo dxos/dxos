@@ -764,11 +764,14 @@ test QA-13: Composer showcase film
       do: Open the first space's Home and sweep the pointer down its objects in the navtree.
       expect: the Home page shows Recent and Activity for a populated space
     - name: Switch on two plugins
-      do: In Plugins, filter for Maps and switch it on, then Cloudflare.
+      do: In Plugins, filter for Explorer and switch it on, then Cloudflare.
       expect: both plugins are active
     - name: A table and a board over one type
       do: Create a table "Launch" with no type and add three rows; create a Kanban "Launch board" over the Launch type pivoted on status; drag "Write the announcement" to Done.
       expect: the card sits in Done and the table row's Status reads Done
+    - name: Graph the space
+      do: Create an Explorer "Launch graph" with type Launch.
+      expect: the graph draws the space's objects and their links
     - name: Kai edits from a comment
       do: With Markdown's Comment agent mode set to mention, comment "@kai tighten this paragraph" on a wordy paragraph.
       expect: Kai rewrites the paragraph in place and says so in the thread

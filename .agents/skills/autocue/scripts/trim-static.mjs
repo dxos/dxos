@@ -411,7 +411,13 @@ const minimumFrames = await (async () => {
     console.error('--voiceover: could not synthesize the lines up front; chapters are not held for them');
     return captions.map(() => 0);
   }
-  const { cues } = JSON.parse(text);
+  let cues;
+  try {
+    ({ cues } = JSON.parse(text));
+  } catch {
+    console.error('--voiceover: unreadable line lengths from voiceover.mjs; chapters are not held for them');
+    return captions.map(() => 0);
+  }
   const frames = captions.map(() => 0);
   spoken.forEach(({ index }, position) => {
     frames[index] = Math.ceil((LINE_LEAD + cues[position].duration + LINE_GAP) * options.fps);
