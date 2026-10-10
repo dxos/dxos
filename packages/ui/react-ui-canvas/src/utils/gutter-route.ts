@@ -110,7 +110,18 @@ export const gutterRoute = (
   spec: LatticeSpec,
   from: RouteEnd,
   to: RouteEnd,
-): Point[] | undefined => {
+): Point[] | undefined => gutterRouteWithCost(nodes, spec, from, to)?.points;
+
+/** A gutter route and what it cost the search: `TURN_COST` a bend, plus its length. */
+export type GutterRoute = { points: Point[]; cost: number };
+
+/** {@link gutterRoute} with its cost, so routes between different ports can be compared. */
+export const gutterRouteWithCost = (
+  nodes: readonly Node[],
+  spec: LatticeSpec,
+  from: RouteEnd,
+  to: RouteEnd,
+): GutterRoute | undefined => {
   const [pitchX, pitchY] = [spec.width + spec.gutterX, spec.height + spec.gutterY];
   const start = gutterExit(from, spec);
   const end = gutterExit(to, spec);
@@ -130,7 +141,7 @@ const searchGrid = (
   frames: readonly Bounds[],
   region: Region,
   spec: LatticeSpec,
-): Point[] | undefined => {
+): GutterRoute | undefined => {
   const [pitchX, pitchY] = [spec.width + spec.gutterX, spec.height + spec.gutterY];
   const verticals = gutterLines(region.left, region.right, pitchX);
   const horizontals = gutterLines(region.top, region.bottom, pitchY);
@@ -144,25 +155,29 @@ const searchGrid = (
   // The stub leaves along the side's normal, so the first run continuing that axis is not a bend.
   const axisOf = (end: RouteEnd): Axis => (end.side === 'e' || end.side === 'w' ? 'h' : 'v');
 
-  // Dijkstra over (column, row, arriving axis); the grid is a few dozen lines a side, so a linear scan of
-  // the open set is cheap enough.
+  // Dijkstra over (column, row, arriving axis), the open set a binary heap: a route is searched for each candidate
+  // pair of ports, so each search must be cheap.
   type State = { i: number; j: number; axis: Axis };
   const key = ({ i, j, axis }: State) => `${i},${j},${axis}`;
   const cost = new Map<string, number>();
   const previous = new Map<string, State>();
-  const open: State[] = [];
+  const open = new MinHeap<State>();
   const startState: State = { i: startI, j: startJ, axis: axisOf(from) };
   cost.set(key(startState), 0);
-  open.push(startState);
+  open.push(startState, 0);
   let best: State | undefined;
   let bestCost = Infinity;
-  while (open.length > 0) {
-    open.sort((left, right) => (cost.get(key(left)) ?? Infinity) - (cost.get(key(right)) ?? Infinity));
-    const current = open.shift();
-    if (!current) {
+  while (open.size > 0) {
+    const entry = open.pop();
+    if (!entry) {
       break;
     }
+    const current = entry.value;
     const currentCost = cost.get(key(current)) ?? Infinity;
+    // A state queued again at a lower cost leaves its older entry behind; skip the stale one.
+    if (entry.priority > currentCost) {
+      continue;
+    }
     if (currentCost >= bestCost) {
       break;
     }
@@ -196,7 +211,7 @@ const searchGrid = (
       if (nextCost < (cost.get(key(next)) ?? Infinity)) {
         cost.set(key(next), nextCost);
         previous.set(key(next), current);
-        open.push(next);
+        open.push(next, nextCost);
       }
     }
   }
@@ -208,8 +223,55 @@ const searchGrid = (
   for (let state: State | undefined = best; state; state = previous.get(key(state))) {
     corners.unshift({ x: xs[state.i], y: ys[state.j] });
   }
-  return collapse([from.point, ...corners, to.point]);
+  return { points: collapse([from.point, ...corners, to.point]), cost: bestCost };
 };
+
+/** A binary min-heap of values by priority. */
+class MinHeap<T> {
+  #items: { value: T; priority: number }[] = [];
+
+  get size(): number {
+    return this.#items.length;
+  }
+
+  push(value: T, priority: number): void {
+    const items = this.#items;
+    items.push({ value, priority });
+    for (let index = items.length - 1; index > 0;) {
+      const parent = (index - 1) >> 1;
+      if (items[parent].priority <= items[index].priority) {
+        break;
+      }
+      [items[parent], items[index]] = [items[index], items[parent]];
+      index = parent;
+    }
+  }
+
+  pop(): { value: T; priority: number } | undefined {
+    const items = this.#items;
+    const top = items[0];
+    const last = items.pop();
+    if (items.length > 0 && last) {
+      items[0] = last;
+      for (let index = 0; ;) {
+        const [left, right] = [index * 2 + 1, index * 2 + 2];
+        let smallest = index;
+        if (left < items.length && items[left].priority < items[smallest].priority) {
+          smallest = left;
+        }
+        if (right < items.length && items[right].priority < items[smallest].priority) {
+          smallest = right;
+        }
+        if (smallest === index) {
+          break;
+        }
+        [items[smallest], items[index]] = [items[index], items[smallest]];
+        index = smallest;
+      }
+    }
+    return top;
+  }
+}
 
 /** Drops repeated points and the middle of any three collinear ones, so only the real bends remain. */
 const collapse = (points: Point[]): Point[] => {
