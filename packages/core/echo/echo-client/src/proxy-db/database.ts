@@ -746,7 +746,6 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   }
 
   /**
-   * @internal
    * The object for an index row whose document the tab has not loaded, backed by the row's state; see
    * {@link EntityManager.upsertSnapshot}.
    */
