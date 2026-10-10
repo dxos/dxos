@@ -22,7 +22,7 @@ import {
   architectureDiagrams,
   diagramFiles,
   edgeDiagrams,
-  DIAGRAM_SOURCES as files,
+  DIAGRAM_COMMANDS as files,
   loadDiagramSet,
 } from '../../samples/architecture/index.ts';
 import { canvasViewAspect } from './view-state.ts';

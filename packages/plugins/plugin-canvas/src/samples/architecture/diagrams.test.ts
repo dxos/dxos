@@ -12,9 +12,9 @@ import { DEFAULT_LATTICE, isFrameNode, nodeBounds, onLattice, quantize } from '@
 
 import { bindCanvasStore, elementId, isNodeRecord, nodeKey, parseLinkedSceneId } from '#model';
 
+import { DIAGRAM_COMMANDS as files } from './compiled.ts';
 import { loadDiagramDrawings, loadDiagramSet } from './diagrams.ts';
 import { architectureDiagrams, composerDiagrams, diagramFiles, edgeDiagrams } from './sets.ts';
-import { DIAGRAM_SOURCES as files } from './sources.ts';
 
 let builder: EchoTestBuilder;
 

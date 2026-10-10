@@ -12,10 +12,10 @@ import { Database, Ref } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 
+import { DIAGRAM_COMMANDS } from './compiled.ts';
 import { loadDiagramDrawings } from './diagrams.ts';
 import { makeDocs } from './docs.ts';
 import { architectureDiagrams } from './sets.ts';
-import { DIAGRAM_SOURCES } from './sources.ts';
 
 const phases = {
   diagrams: SampleSpace.phase('diagrams', {
@@ -23,7 +23,7 @@ const phases = {
     run: () =>
       Effect.gen(function* () {
         const { db } = yield* Database.Service;
-        const set = architectureDiagrams(DIAGRAM_SOURCES);
+        const set = architectureDiagrams(DIAGRAM_COMMANDS);
         // The DSL compiler is promise-based at this boundary; a failure is a broken bundled diagram, so a defect.
         const drawings = yield* Effect.promise(() => loadDiagramDrawings(db, set));
         const composer = drawings.get('composer');
