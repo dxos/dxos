@@ -12,6 +12,8 @@ export const translations = [
       [meta.profile.key]: {
         'plugin.name': 'Canvas',
         'variant.label': 'Canvas',
+        'dock-panels.label': 'Dock panels',
+        'float-panels.label': 'Float panels',
       },
     },
   },
