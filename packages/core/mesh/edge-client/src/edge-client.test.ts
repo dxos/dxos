@@ -109,6 +109,27 @@ describe('EdgeClient', () => {
     );
   });
 
+  test('aborting a stream fails a write that is already waiting', async () => {
+    const admitConnection = new Trigger();
+    const { endpoint, cleanup } = await createTestEdgeWsServer(wsServerPort++, { admitConnection });
+    onTestFinished(cleanup);
+
+    const { client } = await openNewClient(endpoint);
+    const sending = new Trigger();
+    const sendAndWait = client.sendAndWait.bind(client);
+    client.sendAndWait = (ctx, message) => {
+      sending.wake();
+      return sendAndWait(ctx, message);
+    };
+    const controller = new AbortController();
+    const writer = client.createStream({ serviceId: 'test-service', signal: controller.signal }).getWriter();
+    const write = writer.write(textMessage('Hello world 1'));
+    // Past the sink's own pre-write abort check, so only the race can fail it.
+    await sending.wait();
+    controller.abort(new Error('aborted'));
+    await expect(write).rejects.toThrow('aborted');
+  });
+
   test('onReconnect trigger', async () => {
     const admitConnection = new Trigger();
     const { endpoint, cleanup, closeConnection } = await createTestEdgeWsServer(wsServerPort++, { admitConnection });

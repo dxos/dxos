@@ -423,7 +423,58 @@ export enum EdgeWebsocketProtocol {
    * Enables message framing and muxing by service-id.
    */
   V1 = 'edge-ws-v1',
+  /**
+   * Adds per-channel credit-based flow control on top of V1 framing.
+   *
+   * Must be negotiated rather than sniffed: a V1 reader tests only `FLAG_SEGMENT_SEQ`, so it decodes
+   * a V2 credit frame as a message body and throws. See docs/design/flow-control/DESIGN.md in
+   * dxos/edge.
+   */
+  V2 = 'edge-ws-v2',
 }
+
+/**
+ * Per-channel credit window in payload bytes, by service.
+ *
+ * A window caps one channel at `window / RTT` however fast either end is, so 4 MiB still allows a replicator channel
+ * 20 MB/s at a 200 ms round trip, more than one replicator Durable Object absorbs. Swarm and signal traffic is
+ * low-volume and latency-sensitive, so a large window would only delay the backpressure signal. Receivers derive
+ * their grant threshold from the smallest window and their overdraft bound from the largest, so shrinking one is a
+ * protocol change.
+ */
+export const EDGE_FLOW_CONTROL_WINDOWS = {
+  replicator: 4 * 1024 * 1024,
+  swarm: 256 * 1024,
+  default: 1024 * 1024,
+} as const;
+
+/**
+ * Messages one channel may have sent but not yet seen consumed.
+ *
+ * The byte windows alone admit tens of thousands of small subduction frames, and the router dispatches every message
+ * downstream on its own (for a replicator, one RPC into its Durable Object), so request count, not bytes, is what
+ * overloads the object. Caps one channel at `64 / RTT` messages per second, ~320/s at 200 ms.
+ */
+export const EDGE_FLOW_CONTROL_MAX_MESSAGES = 64;
+
+/** Credit window for the channel carrying `serviceId`, per {@link EDGE_FLOW_CONTROL_WINDOWS}. */
+export const edgeFlowControlWindow = (serviceId?: string): number => {
+  if (!serviceId) {
+    return EDGE_FLOW_CONTROL_WINDOWS.default;
+  }
+  const [serviceName] = serviceId.split(':');
+  switch (serviceName) {
+    case EdgeService.SUBDUCTION_REPLICATOR:
+    case EdgeService.FEED_REPLICATOR:
+    case EdgeService.QUEUE_REPLICATOR:
+      return EDGE_FLOW_CONTROL_WINDOWS.replicator;
+    case EdgeService.SWARM:
+    case EdgeService.SIGNAL:
+      return EDGE_FLOW_CONTROL_WINDOWS.swarm;
+    default:
+      return EDGE_FLOW_CONTROL_WINDOWS.default;
+  }
+};
 
 /**
  * Prefix of the `Sec-WebSocket-Protocol` entry carrying the client's SDK version (e.g. `dxos-version.0.12.0`).

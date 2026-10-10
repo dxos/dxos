@@ -4,7 +4,7 @@
 
 import WebSocket from 'isomorphic-ws';
 
-import { Mutex, scheduleTask, scheduleTaskInterval } from '@dxos/async';
+import { Mutex, Trigger, scheduleTask, scheduleTaskInterval } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log, logInfo } from '@dxos/log';
@@ -15,7 +15,13 @@ import { type Message, MessageSchema } from '@dxos/protocols/buf/dxos/edge/messe
 import { version } from '../package.json';
 import { protocol } from './defs.ts';
 import { type EdgeIdentity } from './edge-identity.ts';
-import { CLOUDFLARE_MESSAGE_MAX_BYTES, WebSocketClosedError, WebSocketMuxer } from './edge-ws-muxer.ts';
+import {
+  CLOUDFLARE_MESSAGE_MAX_BYTES,
+  type FlowControlConfig,
+  WebSocketClosedError,
+  WebSocketMuxer,
+  createFlowControlConfig,
+} from './edge-ws-muxer.ts';
 import { toUint8Array } from './protocol.ts';
 import { type ReconnectReason, classifyCloseCode, classifySocketError, isOnline } from './reconnect-reason.ts';
 
@@ -43,6 +49,24 @@ const WS_CONNECTING = 0;
  * finishes connecting from growing the queue without limit.
  */
 const MAX_PENDING_MESSAGES = 256;
+
+/**
+ * Flow-control config for a socket, or undefined when the server did not select `edge-ws-v2`.
+ *
+ * An overdraft is only logged here: EDGE is the trusted end, and closing the connection on its account
+ * would cost more than the overrun.
+ */
+const flowControlConfig = (ws: WebSocket): FlowControlConfig | undefined => {
+  if (!ws.protocol?.includes(EdgeWebsocketProtocol.V2)) {
+    return undefined;
+  }
+  return createFlowControlConfig(({ channelId, outstanding, limit }) =>
+    log.warn('edge exceeded its flow-control window', { channelId, outstanding, limit }),
+  );
+};
+
+/** A message submitted before the handshake completed, and the trigger its sender awaits. */
+type PendingMessage = { message: Message; sent: Trigger };
 
 export type EdgeWsConnectionCallbacks = {
   onConnected: () => void;
@@ -93,7 +117,7 @@ export class EdgeWsConnection extends Resource {
    * Messages submitted before the handshake completed. `send()` on a CONNECTING socket throws
    * `InvalidStateError`, and callers holding the connection across a reconnect do exactly that.
    */
-  private _pendingMessages: Message[] = [];
+  private _pendingMessages: PendingMessage[] = [];
 
   constructor(
     private readonly _identity: EdgeIdentity,
@@ -137,23 +161,72 @@ export class EdgeWsConnection extends Resource {
     return this._messagesReceived;
   }
 
+  /**
+   * Payload bytes queued locally because the peer has not extended enough credit.
+   *
+   * Zero on a connection without flow control, where the muxer never holds anything back for credit.
+   */
+  public get pendingSendBytes(): number {
+    return this._wsMuxer?.pendingBytes ?? 0;
+  }
+
+  /** @see WebSocketMuxer.unacknowledgedBytes */
+  public get unacknowledgedBytes(): number {
+    return this._wsMuxer?.unacknowledgedBytes ?? 0;
+  }
+
+  /** Whether this connection negotiated credit-based flow control (`edge-ws-v2`). */
+  public get flowControlEnabled(): boolean {
+    return this._wsMuxer?.flowControlEnabled ?? false;
+  }
+
+  /**
+   * Send, dropping the result.
+   *
+   * Callers that need the send to reflect flow control must use {@link sendAndWait}: this returns as soon as the
+   * message is handed over, which under credit may be long before it reaches the socket.
+   */
   public send(message: Message): void {
+    void this.sendAndWait(message).catch((error) => {
+      // A close mid-send is routine (the close handler reconnects), so it is not reported as an error.
+      if (error instanceof WebSocketClosedError) {
+        log.verbose('message dropped (websocket closed)', { payload: protocol.getPayloadType(message) });
+      } else {
+        log.catch(error);
+      }
+    });
+  }
+
+  /**
+   * Send, resolving once the last chunk has been handed to the socket.
+   *
+   * Under flow control that cannot happen until the peer has extended credit for it, so awaiting this is what turns
+   * backpressure into something a caller can feel. A message submitted while the socket is still connecting waits for
+   * the handshake, and rejects with {@link WebSocketClosedError} if the socket never opens.
+   */
+  public async sendAndWait(message: Message): Promise<void> {
     invariant(this._ws);
-    invariant(this._wsMuxer);
     if (this._ws.readyState === WS_CONNECTING) {
       if (this._pendingMessages.length >= MAX_PENDING_MESSAGES) {
         // Drop the oldest: during a reconnect the freshest signalling state is the useful one.
         const dropped = this._pendingMessages.shift();
         log.warn('pending message dropped (queue full while connecting)', {
-          payload: dropped && protocol.getPayloadType(dropped),
+          payload: dropped && protocol.getPayloadType(dropped.message),
         });
+        dropped?.sent.throw(new WebSocketClosedError(WS_CONNECTING));
       }
-      this._pendingMessages.push(message);
+      const sent = new Trigger();
+      this._pendingMessages.push({ message, sent });
+      await sent.wait();
       return;
+    }
+    // The muxer is built on open, so a socket that closed before opening never had one.
+    if (!this._wsMuxer) {
+      throw new WebSocketClosedError(this._ws.readyState);
     }
     log('sending...', { peerKey: this._identity.peerKey, payload: protocol.getPayloadType(message) });
     this._messagesSent++;
-    if (this._ws?.protocol.includes(EdgeWebsocketProtocol.V0)) {
+    if (this._ws.protocol?.includes(EdgeWebsocketProtocol.V0)) {
       const binary = buf.toBinary(MessageSchema, message);
       if (binary.length > CLOUDFLARE_MESSAGE_MAX_BYTES) {
         log.error('Message dropped because it was too large (>1MB).', {
@@ -169,35 +242,33 @@ export class EdgeWsConnection extends Resource {
       // For muxer, we need to track the size of the message being sent.
       const binary = buf.toBinary(MessageSchema, message);
       this._recordBytes(binary.byteLength, 0);
-      this._wsMuxer.send(message).catch((error) => {
-        // A close mid-send is routine (the close handler reconnects), so it is not reported as an error.
-        if (error instanceof WebSocketClosedError) {
-          log.verbose('message dropped (websocket closed)', { payload: protocol.getPayloadType(message) });
-        } else {
-          log.catch(error);
-        }
-      });
+      await this._wsMuxer.send(message);
     }
   }
 
   protected override async _open(): Promise<void> {
     // Browsers cannot set WebSocket headers, so the SDK version rides in the subprotocol list.
     const baseProtocols = [...Object.values(EdgeWebsocketProtocol), `${EDGE_CLIENT_VERSION_PROTOCOL_PREFIX}${version}`];
-    this._ws = new WebSocket(
+    const ws = new WebSocket(
       this._connectionInfo.url.toString(),
       this._connectionInfo.protocolHeader
         ? [...baseProtocols, this._connectionInfo.protocolHeader]
         : [...baseProtocols],
       this._connectionInfo.headers ? { headers: this._connectionInfo.headers } : undefined,
     );
+    this._ws = ws;
     // Deliver frame data as `ArrayBuffer` rather than `Blob` so bytes are available
     // synchronously; avoids the async `blob.arrayBuffer()` reads that can otherwise
     // complete out of arrival order (see `_receiveChain`).
-    this._ws.binaryType = 'arraybuffer';
-    const muxer = new WebSocketMuxer(this._ws);
-    this._wsMuxer = muxer;
+    ws.binaryType = 'arraybuffer';
+    // Built on open rather than here: flow control is negotiated via the subprotocol, which is not known until the
+    // handshake completes, and messages sent before then wait in `_pendingMessages`. The handlers below close over this
+    // binding rather than reading `this._wsMuxer`, so a late event from this socket cannot act on the next one's muxer.
+    let muxer: WebSocketMuxer | undefined;
 
-    this._ws.onopen = () => {
+    ws.onopen = () => {
+      muxer = new WebSocketMuxer(ws, { flowControl: flowControlConfig(ws) });
+      this._wsMuxer = muxer;
       if (this.isOpen) {
         log('connected');
         this._openTimestamp = Date.now();
@@ -206,20 +277,20 @@ export class EdgeWsConnection extends Resource {
         this._scheduleHeartbeats();
         this._scheduleRateCalculation();
       } else {
-        this._pendingMessages = [];
+        this._dropPendingMessages(ws.readyState);
         log.verbose('connected after becoming inactive', { currentIdentity: this._identity });
       }
     };
-    this._ws.onclose = (event: WebSocket.CloseEvent) => {
+    ws.onclose = (event: WebSocket.CloseEvent) => {
       if (this.isOpen) {
         const reason = classifyCloseCode(event.code, isOnline());
         log.warn('server disconnected', { code: event.code, reason: event.reason, classified: reason });
-        this._pendingMessages = [];
+        this._dropPendingMessages(ws.readyState);
         this._callbacks.onRestartRequired(reason);
-        muxer.destroy();
+        muxer?.destroy();
       }
     };
-    this._ws.onerror = (event: WebSocket.ErrorEvent) => {
+    ws.onerror = (event: WebSocket.ErrorEvent) => {
       if (this.isOpen) {
         log.warn('edge connection socket error', { error: event.error, info: event.message });
         this._callbacks.onRestartRequired(classifySocketError(isOnline()));
@@ -230,7 +301,7 @@ export class EdgeWsConnection extends Resource {
     /**
      * https://developer.mozilla.org/en-US/docs/Web/API/MessageEvent/data
      */
-    this._ws.onmessage = (event: WebSocket.MessageEvent) => {
+    ws.onmessage = (event: WebSocket.MessageEvent) => {
       if (!this.isOpen) {
         log.verbose('message ignored on closed connection', { event: event.type });
         return;
@@ -247,6 +318,10 @@ export class EdgeWsConnection extends Resource {
         return;
       }
 
+      if (!muxer) {
+        log.verbose('message ignored before open', { event: event.type });
+        return;
+      }
       // `_receiveMessage` serializes on `_receiveMutex`; `acquire` enqueues synchronously,
       // so locks are taken in arrival order regardless of async conversion timing.
       void this._receiveMessage(event.data, muxer).catch((err) => log.catch(err));
@@ -257,8 +332,20 @@ export class EdgeWsConnection extends Resource {
   private _flushPendingMessages(): void {
     const pending = this._pendingMessages;
     this._pendingMessages = [];
-    for (const message of pending) {
-      this.send(message);
+    for (const { message, sent } of pending) {
+      this.sendAndWait(message).then(
+        () => sent.wake(),
+        (error) => sent.throw(error),
+      );
+    }
+  }
+
+  /** Fails every message buffered during a handshake that will not complete. */
+  private _dropPendingMessages(readyState: number): void {
+    const pending = this._pendingMessages;
+    this._pendingMessages = [];
+    for (const { sent } of pending) {
+      sent.throw(new WebSocketClosedError(readyState));
     }
   }
 
@@ -275,19 +362,29 @@ export class EdgeWsConnection extends Resource {
 
     this._messagesReceived++;
 
-    const message = this._ws?.protocol?.includes(EdgeWebsocketProtocol.V0)
-      ? buf.fromBinary(MessageSchema, bytes)
-      : muxer.receiveData(bytes);
-
-    if (message) {
+    if (this._ws?.protocol?.includes(EdgeWebsocketProtocol.V0)) {
+      const message = buf.fromBinary(MessageSchema, bytes);
       log('received', { from: message.source, payload: protocol.getPayloadType(message) });
       this._callbacks.onMessage(message);
+      return;
+    }
+
+    const frame = muxer.receiveFrame(bytes);
+    try {
+      if (frame.message) {
+        log('received', { from: frame.message.source, payload: protocol.getPayloadType(frame.message) });
+        this._callbacks.onMessage(frame.message);
+      }
+    } finally {
+      // Credited after dispatch, which for a synchronous listener fan-out is the best signal available; a listener
+      // that throws has still finished with the frame.
+      muxer.consumed(frame);
     }
   }
 
   protected override async _close(): Promise<void> {
     void this._inactivityTimeoutCtx?.dispose().catch(() => {});
-    this._pendingMessages = [];
+    this._dropPendingMessages(this._ws?.readyState ?? WS_CONNECTING);
 
     try {
       this._ws?.close();
