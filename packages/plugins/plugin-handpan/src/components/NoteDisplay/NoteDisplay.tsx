@@ -28,6 +28,8 @@ export const NoteDisplay = ({ label, pitch, frequency, cents, clarity, percussiv
   const { t } = Hooks.useTranslation(meta.profile.key);
   const offset = Math.max(-50, Math.min(50, cents ?? 0));
   const inTune = cents !== undefined && Math.abs(cents) <= 10;
+  // `|| 0` folds -0, which would otherwise render as "-0¢".
+  const rounded = cents !== undefined ? Math.round(cents) || 0 : undefined;
 
   return (
     <Layout.Flex column align='center' gap='sm' classNames={classNames} data-testid='handpan.note-display'>
@@ -61,7 +63,7 @@ export const NoteDisplay = ({ label, pitch, frequency, cents, clarity, percussiv
       </svg>
       <span className='text-sm text-fg-subtle tabular-nums'>
         {frequency !== undefined ? `${frequency.toFixed(1)} Hz` : ' '}
-        {cents !== undefined ? ` · ${cents > 0 ? '+' : ''}${cents.toFixed(0)}¢` : ''}
+        {rounded !== undefined ? ` · ${rounded > 0 ? '+' : ''}${rounded}¢` : ''}
         {clarity !== undefined ? ` · ${t('clarity.label')} ${(clarity * 100).toFixed(0)}%` : ''}
       </span>
     </Layout.Flex>

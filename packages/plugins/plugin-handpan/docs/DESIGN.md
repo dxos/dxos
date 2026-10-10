@@ -31,10 +31,12 @@ mic / synth ──► AudioWorklet tap (Blob-URL module, 512-sample blocks)
                Analyzer.push()   frame 2048, hop 512, Hann, 4× zero-padded FFT
                   ├─► OnsetDetector   spectral flux, adaptive median threshold, refractory window
                   ├─► MPM (`pitchy`)  per-frame f0 + clarity (live tuning meter)
-                  └─► after an onset, for 40–120 ms:
-                        residual = max(0, |X| − |X_pre-onset|)     ← removes notes still ringing
+                  └─► per onset, once 30 ms + 8192 samples have elapsed (~200 ms):
+                        residual = max(0, |X_after| − |X_before|)   ← equal long windows either
+                                                                       side of the onset; removes
+                                                                       notes still ringing
                         harmonic-sum f0 on residual (Σ m(k·f0)/k), harmonicity + energy gates
-                        MPM used for precision when it agrees (`precise`)
+                        a following onset cuts the window short (≥1024) → `precise: false`
                   ▼
                NoteEvent { time, frequency?, clarity, velocity, partials, percussive, precise }
                   ▼
@@ -58,10 +60,11 @@ mic / synth ──► AudioWorklet tap (Blob-URL module, 512-sample blocks)
 - Each tone field is tuned to fundamental, octave and compound fifth (1 : 2 : 3), so a
   naive autocorrelation often reports 2f. MPM plus the calibrated template resolves it.
 - Notes sustain and overlap; we detect the **newest onset**, not a sustained mixture.
-- **Known limit:** a note struck within ~1 semitone of one still ringing (e.g. A3 → Bb3) is
-  identified correctly, but its cents are biased (the two Hann main lobes overlap), so the event
-  is flagged `precise: false` and the UI hides its cents.
-- Slaps/taks are broadband with low clarity → classified as percussive hits, not notes.
+- A 2048-sample frame (~46 ms) cannot separate neighbouring low notes (±43 Hz main lobe vs
+  D4–E4 36 Hz apart): magnitude subtraction and MPM both read 20–30¢ flat. Note events therefore
+  use 8192-sample windows (±11 Hz), measured within 0.5¢ with notes 0.3 s apart. Cost: an event
+  arrives ~200 ms after the strike; the live meter (MPM per frame) is immediate.
+- Calibration rejects strikes cut short by the next onset (`imprecise`): too coarse for a reference.
 
 ### Calibration
 

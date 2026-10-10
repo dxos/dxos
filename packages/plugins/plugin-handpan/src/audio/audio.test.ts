@@ -15,8 +15,8 @@ const SAMPLE_RATE = 48_000;
 const D_KURD = getScaleNotes(SCALES[0]);
 
 /** Runs a buffer through the analyzer in capture-sized blocks. */
-const analyze = (signal: Float32Array): NoteEvent[] => {
-  const analyzer = new Analyzer({ sampleRate: SAMPLE_RATE });
+const analyze = (signal: Float32Array, sampleRate = SAMPLE_RATE): NoteEvent[] => {
+  const analyzer = new Analyzer({ sampleRate });
   const notes: NoteEvent[] = [];
   for (let offset = 0; offset < signal.length; offset += 512) {
     notes.push(...analyzer.push(signal.subarray(offset, offset + 512)).notes);
@@ -26,14 +26,14 @@ const analyze = (signal: Float32Array): NoteEvent[] => {
 };
 
 /** A sequence of strikes, `spacing` seconds apart. */
-const perform = (frequencies: (number | 'tak')[], spacing = 0.5): Float32Array => {
-  const signal = new Float32Array(Math.round((frequencies.length * spacing + 1) * SAMPLE_RATE));
+const perform = (frequencies: (number | 'tak')[], spacing = 0.5, sampleRate = SAMPLE_RATE): Float32Array => {
+  const signal = new Float32Array(Math.round((frequencies.length * spacing + 1) * sampleRate));
   frequencies.forEach((frequency, index) => {
     const strike =
       frequency === 'tak'
-        ? synthesizeTak({ sampleRate: SAMPLE_RATE, seed: index + 3 })
-        : synthesizeHandpanTone(frequency, { sampleRate: SAMPLE_RATE, seed: index + 3 });
-    mixInto(signal, strike, 0.1 + index * spacing, SAMPLE_RATE);
+        ? synthesizeTak({ sampleRate, seed: index + 3 })
+        : synthesizeHandpanTone(frequency, { sampleRate, seed: index + 3 });
+    mixInto(signal, strike, 0.1 + index * spacing, sampleRate);
   });
   return signal;
 };
@@ -72,13 +72,36 @@ describe('Analyzer', () => {
     }
   });
 
-  test('identifies each note while earlier notes still ring', ({ expect }) => {
+  test('measures each note precisely while earlier notes still ring', ({ expect }) => {
+    for (const sampleRate of [44_100, 48_000]) {
+      const notes = analyze(
+        perform(
+          D_KURD.map((note) => note.frequency),
+          0.3,
+          sampleRate,
+        ),
+        sampleRate,
+      );
+      expect(notes).toHaveLength(D_KURD.length);
+      notes.forEach((note, index) => {
+        expect(note.precise).toBe(true);
+        expect(Math.abs(cents(note.frequency!, D_KURD[index].frequency))).toBeLessThan(5);
+      });
+    }
+  });
+
+  test('identifies fast passages cut short by the next onset', ({ expect }) => {
     const templates = nominalTemplates(D_KURD);
-    const notes = analyze(perform(D_KURD.map((note) => note.frequency)));
-    expect(notes).toHaveLength(D_KURD.length);
+    const sequence = [D_KURD[1], D_KURD[2], D_KURD[3], D_KURD[2], D_KURD[1]];
+    const notes = analyze(
+      perform(
+        sequence.map((note) => note.frequency),
+        0.15,
+      ),
+    );
     expect(
       notes.map((note) => classifyNote({ frequency: note.frequency!, partials: [] }, templates)?.template.pitch),
-    ).toEqual(D_KURD.map((note) => note.pitch));
+    ).toEqual(sequence.map((note) => note.pitch));
   });
 
   test('reports onset times close to the strikes', ({ expect }) => {
@@ -158,8 +181,9 @@ describe('Calibration', () => {
     expect(Calibration.getTemplates(state).map((template) => template.pitch)).toEqual(['D3', 'A3']);
   });
 
-  test('rejects percussive and out-of-tune strikes', ({ expect }) => {
+  test('rejects percussive, imprecise and out-of-tune strikes', ({ expect }) => {
     const state = Calibration.createCalibration(D_KURD, { strikes: 1 });
+    expect(Calibration.addStrike(state, { ...strike(147), precise: false }).rejected).toBe('imprecise');
     expect(Calibration.addStrike(state, { ...strike(0), frequency: undefined, percussive: true }).rejected).toBe(
       'percussive',
     );

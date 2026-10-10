@@ -18,20 +18,21 @@ export type AnalyzerOptions = {
   padding?: number;
   minFrequency?: number;
   maxFrequency?: number;
-  /** Minimum MPM clarity (0–1) for a pitch estimate to count. */
+  /** Minimum MPM clarity (0–1) for a frame's pitch to be reported. */
   minClarity?: number;
   /** Minimum fraction of post-onset energy on a candidate's harmonics for a strike to be pitched. */
   minHarmonicity?: number;
-  /** Minimum fraction of the frame's energy that is new since the onset. */
+  /** Minimum fraction of post-onset energy that is new since the onset. */
   minResidual?: number;
-  /** Pitched frames required within the window; fewer means a percussive strike. */
-  minEstimates?: number;
   /** RMS below which the signal is treated as silence. */
   silenceRms?: number;
-  /** Seconds after an onset before pitch estimates are collected (skips the strike transient). */
+  /** Seconds after an onset before the note window starts (skips the strike transient). */
   pitchDelay?: number;
-  /** Seconds over which estimates are collected before a note is resolved. */
-  pitchWindow?: number;
+  /**
+   * Note window (samples, power of two). Long windows separate a new note from neighbours still
+   * ringing (8192 @ 44.1 kHz resolves ~5 Hz); a note is resolved once its window fills.
+   */
+  noteFrameSize?: number;
   /** Number of harmonics in the partial profile. */
   partialCount?: number;
   onset?: OnsetDetectorOptions;
@@ -61,8 +62,8 @@ export type NoteEvent = {
   partials: number[];
   percussive: boolean;
   /**
-   * True when time-domain (MPM) and spectral estimates agree. A note struck while a nearby
-   * pitch (within ~1 semitone) still rings is identified correctly but its cents are biased.
+   * True when the full note window was available. A note cut short by the next onset is still
+   * identified, but with coarser frequency resolution, so its cents are unreliable.
    */
   precise: boolean;
 };
@@ -74,15 +75,20 @@ export type AnalyzerResult = {
 
 type PendingNote = {
   time: number;
+  /** Absolute index of the first sample of the hop that triggered the onset. */
+  onsetSample: number;
   velocity: number;
-  /** Spectrum just before the onset; subtracted so notes still ringing are ignored. */
-  baseline: Float32Array;
-  estimates: { frequency: number; precise: boolean; clarity: number; magnitudes: Float32Array }[];
+  clarity: number;
 };
 
+/** Shortest note window used when the next onset cuts a note short. */
+const MIN_NOTE_FRAME = 1024;
+
 /**
- * Streaming single-note analyzer: buffers samples into overlapping frames and runs
- * onset detection (spectral flux) and pitch detection (McLeod Pitch Method) per hop.
+ * Streaming single-note analyzer. Short overlapping frames drive onset detection (spectral
+ * flux) and a per-frame pitch for live display (McLeod Pitch Method). Each onset is then
+ * resolved from a long window after it, minus an equal window before it, so notes still
+ * ringing do not bias the new note.
  * Pure and synchronous so it runs identically on captured or synthesized audio.
  */
 export class Analyzer {
@@ -94,19 +100,18 @@ export class Analyzer {
   readonly #minClarity: number;
   readonly #minHarmonicity: number;
   readonly #minResidual: number;
-  readonly #minEstimates: number;
   readonly #silenceRms: number;
   readonly #pitchDelay: number;
-  readonly #pitchWindow: number;
+  readonly #noteFrameSize: number;
   readonly #partialCount: number;
 
   readonly #frame: Float32Array;
-  readonly #binWidth: number;
-  readonly #padding: number;
   readonly #magnitudes: Float32Array;
-  readonly #previousMagnitudes: Float32Array;
-  readonly #residual: Float32Array;
   readonly #spectrum: MagnitudeSpectrum;
+  /** Note-window spectra by window length (2× zero-padded). */
+  readonly #noteSpectra = new Map<number, MagnitudeSpectrum>();
+  /** Ring buffer of recent input, long enough for a note window plus the window before it. */
+  readonly #history: Float32Array;
   readonly #onsets: OnsetDetector;
   readonly #pitch: PitchDetector<Float32Array>;
 
@@ -125,10 +130,9 @@ export class Analyzer {
     minClarity = 0.85,
     minHarmonicity = 0.4,
     minResidual = 0.15,
-    minEstimates = 3,
     silenceRms = 0.003,
-    pitchDelay = 0.04,
-    pitchWindow = 0.08,
+    pitchDelay = 0.03,
+    noteFrameSize = 8192,
     partialCount = 6,
     onset,
   }: AnalyzerOptions) {
@@ -140,19 +144,15 @@ export class Analyzer {
     this.#minClarity = minClarity;
     this.#minHarmonicity = minHarmonicity;
     this.#minResidual = minResidual;
-    this.#minEstimates = minEstimates;
     this.#silenceRms = silenceRms;
     this.#pitchDelay = pitchDelay;
-    this.#pitchWindow = pitchWindow;
+    this.#noteFrameSize = noteFrameSize;
     this.#partialCount = partialCount;
 
     this.#frame = new Float32Array(frameSize);
-    this.#padding = padding;
     this.#spectrum = new MagnitudeSpectrum(frameSize, frameSize * padding);
-    this.#binWidth = sampleRate / this.#spectrum.size;
     this.#magnitudes = new Float32Array(this.#spectrum.size / 2);
-    this.#previousMagnitudes = new Float32Array(this.#spectrum.size / 2);
-    this.#residual = new Float32Array(this.#spectrum.size / 2);
+    this.#history = new Float32Array(3 * noteFrameSize + Math.ceil(pitchDelay * sampleRate));
     this.#onsets = new OnsetDetector(onset);
     this.#pitch = PitchDetector.forFloat32Array(frameSize);
     this.#pitch.minVolumeAbsolute = silenceRms;
@@ -172,7 +172,11 @@ export class Analyzer {
     let offset = 0;
     while (buffer.length - offset >= this.#hopSize) {
       this.#frame.copyWithin(0, this.#hopSize);
-      this.#frame.set(buffer.subarray(offset, offset + this.#hopSize), this.#frameSize - this.#hopSize);
+      const hop = buffer.subarray(offset, offset + this.#hopSize);
+      this.#frame.set(hop, this.#frameSize - this.#hopSize);
+      for (let index = 0; index < hop.length; index++) {
+        this.#history[(this.#samplesProcessed + index) % this.#history.length] = hop[index];
+      }
       offset += this.#hopSize;
       this.#samplesProcessed += this.#hopSize;
       this.#processFrame(result);
@@ -182,9 +186,9 @@ export class Analyzer {
     return result;
   }
 
-  /** Resolves any note still collecting estimates (e.g. when capture stops). */
+  /** Resolves any note whose window has not yet filled (e.g. when capture stops). */
   flush(): NoteEvent[] {
-    const note = this.#note && this.#resolve(this.#note);
+    const note = this.#note && this.#resolve(this.#note, this.#samplesProcessed);
     this.#note = undefined;
     return note ? [note] : [];
   }
@@ -194,7 +198,6 @@ export class Analyzer {
     const rms = computeRms(this.#frame);
     const audible = rms >= this.#silenceRms;
 
-    this.#previousMagnitudes.set(this.#magnitudes);
     this.#spectrum.compute(this.#frame, this.#magnitudes);
     const { flux, onset } = this.#onsets.process(this.#magnitudes, audible);
 
@@ -211,75 +214,92 @@ export class Analyzer {
     result.frames.push({ time, rms, flux, onset, frequency, clarity });
 
     if (onset) {
+      const onsetSample = this.#samplesProcessed - this.#hopSize;
       if (this.#note) {
-        result.notes.push(this.#resolve(this.#note));
+        result.notes.push(this.#resolve(this.#note, onsetSample));
       }
-      this.#note = { time, velocity: rms, baseline: this.#previousMagnitudes.slice(), estimates: [] };
+      this.#note = { time, onsetSample, velocity: rms, clarity };
       return;
     }
 
     const note = this.#note;
-    if (!note) {
-      return;
-    }
-
-    note.velocity = Math.max(note.velocity, rms);
-    const elapsed = time - note.time;
-    if (elapsed >= this.#pitchDelay) {
-      const estimate = this.#estimate(note.baseline, frequency);
-      if (estimate) {
-        note.estimates.push({ ...estimate, clarity, magnitudes: this.#residual.slice() });
+    if (note) {
+      note.velocity = Math.max(note.velocity, rms);
+      note.clarity = Math.max(note.clarity, clarity);
+      if (this.#samplesProcessed >= this.#noteStart(note) + this.#noteFrameSize) {
+        result.notes.push(this.#resolve(note, this.#samplesProcessed));
+        this.#note = undefined;
       }
     }
-    if (elapsed >= this.#pitchDelay + this.#pitchWindow) {
-      result.notes.push(this.#resolve(note));
-      this.#note = undefined;
-    }
+  }
+
+  #noteStart(note: PendingNote): number {
+    return note.onsetSample + Math.round(this.#pitchDelay * this.#sampleRate);
   }
 
   /**
-   * Pitch of the energy added since the onset. The harmonic-sum estimate on the residual
-   * decides the note; the MPM estimate (more precise) is used when it agrees.
+   * Resolves a note from the window after its onset (ending no later than `end`), minus the
+   * spectrum of an equal window before the onset: the residual holds only the new note's energy.
    */
-  #estimate(baseline: Float32Array, mpm: number | undefined): { frequency: number; precise: boolean } | undefined {
-    for (let bin = 0; bin < this.#residual.length; bin++) {
-      this.#residual[bin] = Math.max(0, this.#magnitudes[bin] - baseline[bin]);
+  #resolve(note: PendingNote, end: number): NoteEvent {
+    const start = this.#noteStart(note);
+    const available = Math.min(this.#noteFrameSize, end - start);
+    let length = MIN_NOTE_FRAME;
+    while (length * 2 <= available) {
+      length *= 2;
     }
-    const spectral = harmonicPitch(this.#residual, this.#binWidth, {
+
+    const spectrum = this.#noteSpectrum(length);
+    const binWidth = this.#sampleRate / spectrum.size;
+    const after = spectrum.compute(this.#read(start, length), new Float32Array(spectrum.size / 2));
+    const before = spectrum.compute(this.#read(note.onsetSample - length, length), new Float32Array(spectrum.size / 2));
+    let residualEnergy = 0;
+    let afterEnergy = 0;
+    const residual = after.map((value, bin) => {
+      const increase = Math.max(0, value - before[bin]);
+      residualEnergy += increase;
+      afterEnergy += value;
+      return increase;
+    });
+
+    const pitch = harmonicPitch(residual, binWidth, {
       minFrequency: this.#minFrequency,
       maxFrequency: this.#maxFrequency,
-      lobe: 2 * this.#padding,
+      lobe: 4,
     });
-    let residual = 0;
-    let current = 0;
-    for (let bin = 0; bin < this.#residual.length; bin++) {
-      residual += this.#residual[bin];
-      current += this.#magnitudes[bin];
+    const event = { time: note.time, clarity: note.clarity, velocity: note.velocity };
+    if (!pitch || pitch.harmonicity < this.#minHarmonicity || residualEnergy < this.#minResidual * afterEnergy) {
+      return { ...event, partials: [], percussive: true, precise: false };
     }
-    if (!spectral || spectral.harmonicity < this.#minHarmonicity || residual < this.#minResidual * current) {
-      return undefined;
-    }
-    const precise = mpm !== undefined && Math.abs(1200 * Math.log2(mpm / spectral.frequency)) < 60;
-    return { frequency: precise ? mpm : spectral.frequency, precise };
+
+    return {
+      ...event,
+      frequency: pitch.frequency,
+      partials: partialProfile(residual, pitch.frequency, binWidth, this.#partialCount),
+      percussive: false,
+      precise: length >= this.#noteFrameSize,
+    };
   }
 
-  #resolve(note: PendingNote): NoteEvent {
-    if (note.estimates.length < this.#minEstimates) {
-      return { time: note.time, clarity: 0, velocity: note.velocity, partials: [], percussive: true, precise: false };
+  #noteSpectrum(length: number): MagnitudeSpectrum {
+    let spectrum = this.#noteSpectra.get(length);
+    if (!spectrum) {
+      spectrum = new MagnitudeSpectrum(length, length * 2);
+      this.#noteSpectra.set(length, spectrum);
     }
+    return spectrum;
+  }
 
-    const sorted = [...note.estimates].sort((a, b) => a.frequency - b.frequency);
-    const central = sorted[sorted.length >> 1];
-    const clarity = Math.max(...note.estimates.map((estimate) => estimate.clarity));
-    return {
-      time: note.time,
-      frequency: central.frequency,
-      clarity,
-      velocity: note.velocity,
-      partials: partialProfile(central.magnitudes, central.frequency, this.#binWidth, this.#partialCount),
-      percussive: false,
-      precise: note.estimates.filter((estimate) => estimate.precise).length * 2 >= note.estimates.length,
-    };
+  /** Copies `length` samples starting at absolute index `start` (zeros before the stream began). */
+  #read(start: number, length: number): Float32Array {
+    const output = new Float32Array(length);
+    for (let index = 0; index < length; index++) {
+      const sample = start + index;
+      if (sample >= 0 && sample < this.#samplesProcessed) {
+        output[index] = this.#history[sample % this.#history.length];
+      }
+    }
+    return output;
   }
 }
 

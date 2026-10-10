@@ -17,7 +17,7 @@ export type CalibrationState = {
   samples: Record<Pitch, { frequency: number; partials: number[] }[]>;
 };
 
-export type StrikeRejection = 'percussive' | 'out-of-tune' | 'complete';
+export type StrikeRejection = 'percussive' | 'imprecise' | 'out-of-tune' | 'complete';
 
 export type StrikeResult = {
   state: CalibrationState;
@@ -51,8 +51,8 @@ export const selectNote = (state: CalibrationState, pitch: Pitch): CalibrationSt
 };
 
 /**
- * Records a strike for the current target; a strike is accepted only if it is pitched and
- * within `maxCents` of the target's nominal frequency (an octave error is folded back).
+ * Records a strike for the current target; a strike is accepted only if it is pitched, fully
+ * measured, and within `maxCents` of the target's nominal frequency (an octave error is folded back).
  */
 export const addStrike = (
   state: CalibrationState,
@@ -65,6 +65,10 @@ export const addStrike = (
   }
   if (event.percussive || event.frequency === undefined) {
     return { state, rejected: 'percussive' };
+  }
+  // A strike cut short by the next one is measured too coarsely to serve as a reference.
+  if (!event.precise) {
+    return { state, rejected: 'imprecise' };
   }
 
   const frequency = [event.frequency, event.frequency / 2, event.frequency * 2].reduce((best, candidate) =>

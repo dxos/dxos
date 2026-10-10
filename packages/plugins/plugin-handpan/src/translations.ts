@@ -25,6 +25,7 @@ export const translations = [
         'clarity.label': 'Clarity',
         'cents.label': 'Cents',
         'strike-percussive.message': 'no pitch heard, strike again',
+        'strike-imprecise.message': 'let the note ring a little longer',
         'strike-out-of-tune.message': 'that was a different note',
         'strike-complete.message': 'all notes calibrated',
       },
