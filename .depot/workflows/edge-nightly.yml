@@ -74,7 +74,8 @@ jobs:
   # every object in it. Each joiner is timed separately and sequentially — in parallel they would
   # contend for the same connection budget and measure each other.
   join-latency:
-    runs-on: depot-ubuntu-24.04-8
+    # 4 vCPU: both jobs wait on EDGE, averaging under 10% of 8 vCPU and peaking at 6 GB.
+    runs-on: depot-ubuntu-24.04-4
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
       credentials:
@@ -158,7 +159,7 @@ jobs:
   # An hour of randomized commands against a fleet of real peers, asserted against an in-memory
   # model. Independent of `join-latency`: a red soak should not withhold a latency number.
   soak:
-    runs-on: depot-ubuntu-24.04-8
+    runs-on: depot-ubuntu-24.04-4
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
       credentials:

@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import type * as SchemaAST from 'effect/SchemaAST';
 import React from 'react';
 
 import { Form, type FormFieldRenderer, useFormFieldState } from '@dxos/react-ui-form';
@@ -69,16 +70,19 @@ const VERTICAL: readonly IconToggleOption<VerticalAlign>[] = [
 
 /**
  * The text alignment, rendered at `style.alignHorizontal`: the horizontal and vertical toggles side by side in one
- * row (`style.alignVertical` is hidden), each pick writing the enclosing `style`, as the style grid does.
+ * row (`style.alignVertical` is hidden). Each writes only its own path, so an edit across a selection leaves each
+ * element's other style values.
  */
-export const AlignField: FormFieldRenderer = ({ jsonPath, readonly, onBlur }) => {
+export const AlignField: FormFieldRenderer = ({ jsonPath, readonly }) => {
   const stylePath = (jsonPath ?? 'style.alignHorizontal').split('.').slice(0, -1);
-  const styleField = useFormFieldState('AlignField', stylePath);
-  const style: NodeStyle = styleField.getValue() ?? {};
-  const update = (values: Partial<NodeStyle>) => {
-    // A pick is a commit: a toggle never blurs, so it commits itself.
-    styleField.onValueChange(NodeStyle.ast, { ...style, ...values });
-    onBlur();
+  const horizontalField = useFormFieldState('AlignField', [...stylePath, 'alignHorizontal']);
+  const verticalField = useFormFieldState('AlignField', [...stylePath, 'alignVertical']);
+  const horizontal = HORIZONTAL.find((option) => option.value === horizontalField.getValue())?.value;
+  const vertical = VERTICAL.find((option) => option.value === verticalField.getValue())?.value;
+  // A pick is a commit: a toggle never blurs, so it commits itself.
+  const pick = (field: typeof horizontalField, ast: SchemaAST.AST, value: string) => {
+    field.onValueChange(ast, value);
+    field.onBlur();
   };
   return (
     <Layout.Container
@@ -94,18 +98,18 @@ export const AlignField: FormFieldRenderer = ({ jsonPath, readonly, onBlur }) =>
         <IconToggle
           label='Horizontal alignment'
           options={HORIZONTAL}
-          value={style.alignHorizontal}
+          value={horizontal}
           readonly={!!readonly}
-          onValueChange={(alignHorizontal) => update({ alignHorizontal })}
+          onValueChange={(next) => pick(horizontalField, NodeStyle.fields.alignHorizontal.ast, next)}
         />
       </Form.Field>
       <Form.Field path={[...stylePath, 'alignVertical'].join('.')} label='Vertical' readonly={readonly}>
         <IconToggle
           label='Vertical alignment'
           options={VERTICAL}
-          value={style.alignVertical}
+          value={vertical}
           readonly={!!readonly}
-          onValueChange={(alignVertical) => update({ alignVertical })}
+          onValueChange={(next) => pick(verticalField, NodeStyle.fields.alignVertical.ast, next)}
         />
       </Form.Field>
     </Layout.Container>

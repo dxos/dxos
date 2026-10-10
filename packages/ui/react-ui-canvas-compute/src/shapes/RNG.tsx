@@ -5,10 +5,10 @@
 import React, { useEffect, useState } from 'react';
 
 import { DEFAULT_OUTPUT } from '@dxos/conductor';
-import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
 import * as Icon from '@dxos/react-ui/Icon';
 
 import { useComputeNodeState } from '../hooks/index.ts';
+import { type ComputeNodeViewProps } from './common/index.ts';
 import { type RandomShape } from './rng-def.ts';
 
 const icons = [
@@ -23,7 +23,7 @@ const icons = [
 const pickIcon = () => icons[Math.floor(Math.random() * icons.length)];
 
 // TODO(burdon): Optional range.
-export const RandomComponent = ({ shape }: ShapeComponentProps<RandomShape>) => {
+export const RandomComponent = ({ node: shape }: ComputeNodeViewProps<RandomShape>) => {
   const { runtime } = useComputeNodeState(shape);
 
   const [spin, setSpin] = useState(false);

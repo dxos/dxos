@@ -5,6 +5,9 @@
 import { type DatabaseDirectory, EncodedReference, EntityStructure } from '@dxos/echo-protocol';
 import { DXN } from '@dxos/keys';
 
+/** Worker work this long holds every query queued behind it, so it is logged above the worker's log filter. */
+export const SLOW_WORK_MS = 1_000;
+
 /**
  * Assumes properties are at root.
  */

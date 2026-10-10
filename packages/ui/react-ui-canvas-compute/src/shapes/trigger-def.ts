@@ -10,10 +10,9 @@ import * as TriggerEvent from '@dxos/compute/TriggerEvent';
 import { VoidInput } from '@dxos/conductor';
 import { Ref } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
-import { type ShapeDef } from '@dxos/react-ui-canvas-editor';
 
-import { createFunctionAnchors, getHeight } from './common/index.ts';
-import { ComputeShape, type CreateShapeProps, createShape } from './defs.ts';
+import { createFunctionPorts, defineComputeNode, getHeight } from './common/index.ts';
+import { ComputeShape, type CreateShapeProps, createShape, withZ } from './defs.ts';
 import { createTriggerSpec, getOutputSchema } from './trigger-spec.ts';
 import { TriggerComponent } from './Trigger.tsx';
 
@@ -54,12 +53,16 @@ export const createTrigger = (props: CreateTriggerProps): TriggerShape => {
   });
 };
 
-export const triggerShape: ShapeDef<TriggerShape> = {
+export const triggerNodeDef = defineComputeNode<TriggerShape>({
   type: 'trigger',
   name: 'Trigger',
   icon: 'ph--lightning--regular',
+  group: 'Inputs',
+  schema: withZ(TriggerShapeSchema),
   component: TriggerComponent,
-  createShape: createTrigger,
-  getAnchors: (shape) =>
-    createFunctionAnchors(shape, VoidInput, getOutputSchema(shape.functionTrigger?.target?.spec?.kind ?? 'email')),
-};
+  create: createTrigger,
+  // The factory makes an ECHO object, so the default size is stated rather than sampled.
+  defaultSize: { width: 192, height: getHeight(TriggerEvent.EmailEvent) },
+  ports: (shape) =>
+    createFunctionPorts(shape.size, VoidInput, getOutputSchema(shape.functionTrigger?.target?.spec?.kind ?? 'email')),
+});

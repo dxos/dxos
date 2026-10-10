@@ -18,8 +18,9 @@ import type * as Util from '@dxos/react-ui/Util';
 import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 import { mx } from '@dxos/ui-theme';
 
-import { useRegistry, useSceneProjection, useViewport, useWheel } from '../../hooks/index.ts';
-import { type Drag, type SceneViewAtoms, createSceneViewAtoms, isMoving } from '../../model/atoms.ts';
+import { SCENE_OVERLAY_ATTRIBUTE, useRegistry, useSceneProjection, useViewport, useWheel } from '../../hooks/index.ts';
+import { type Drag, type PanelMode, type SceneViewAtoms, createSceneViewAtoms, isMoving } from '../../model/atoms.ts';
+import { keyAction } from '../../model/keys.ts';
 import { nodeDef } from '../../model/node-def.ts';
 import {
   type FreehandProjectionOptions,
@@ -50,8 +51,8 @@ import {
   type Point,
   type Scene,
   type SceneId,
+  isFrameNode,
   isPointEndpoint,
-  isPortalNode,
 } from '../../model/types.ts';
 import {
   MIN_ZOOM,
@@ -81,6 +82,7 @@ import { type PartKey, partText, partValues } from '../../utils/parts.ts';
 import { sceneOptions } from '../../utils/scenes.ts';
 import { createLink, nodeBounds, nominalSize } from '../../utils/shapes.ts';
 import { recordScenes, redo, undo } from '../../utils/undo.ts';
+import { About, type AboutStat } from '../About/About.tsx';
 import { ControlFrame } from '../ControlFrame/ControlFrame.tsx';
 import { GridComponent } from '../Grid/index.ts';
 import { LatticeGrid } from '../LatticeGrid/index.ts';
@@ -89,6 +91,7 @@ import { Palette } from '../Palette/Palette.tsx';
 import { Properties, type PropertiesProps } from '../Properties/Properties.tsx';
 import { type ElementHandlers, MAX_LIVE_DEPTH, SceneLayer } from '../SceneLayer/SceneLayer.tsx';
 import { ActionToolbar, CameraToolbar, NavigationToolbar, type ToolbarActions } from '../Toolbar/Toolbar.tsx';
+import { Dock, DockProvider, type DockSection, useDockSection } from './Dock.tsx';
 import { SceneViewProvider, useSceneViewContext } from './SceneViewContext.ts';
 import { PREVIEW_NODE_ID, createId, isLinkDrawn, usePointerMachine } from './usePointerMachine.ts';
 import { useSceneCamera } from './useSceneCamera.ts';
@@ -110,7 +113,7 @@ const LINK_HOVER_GRACE_MS = 150;
 const SETTLE_MS = 200;
 
 /** Where the properties and layers panels float: the top right, one at a time (properties with a selection). */
-const PANEL_CLASSES = 'absolute top-2 right-2 w-80 max-h-[calc(100%-1rem)]';
+const PANEL_CLASSES = 'absolute top-2 right-2 w-80 h-auto max-h-[calc(100%-1rem)]';
 
 /** The link drawn as a preview during a drag; it never reaches the model. */
 const PREVIEW_LINK_ID = 'preview-link';
@@ -139,6 +142,8 @@ export type SceneViewRootProps = Util.ThemedClassName<{
    * whatever the projection would allow.
    */
   readonly?: boolean;
+  /** Where the properties and layers panels sit: docked in a column beside the canvas, or floating over it. */
+  panels?: PanelMode;
   children?: ReactNode;
 }>;
 
@@ -156,6 +161,7 @@ const SceneViewRoot = ({
   grid = DEFAULT_GRID,
   margin = DEFAULT_MARGIN,
   readonly = false,
+  panels = 'docked',
   children,
 }: SceneViewRootProps) => {
   const registry = useRegistry();
@@ -184,6 +190,13 @@ const SceneViewRoot = ({
   const undoState = useAtomValue(atoms.undo);
   const clipboard = useAtomValue(atoms.clipboard);
   const editing = useAtomValue(atoms.editing);
+  const active = useAtomValue(atoms.active);
+  // A node's content stays live only while the node is the selection; selecting anything else makes it inert again.
+  useEffect(() => {
+    if (active !== undefined && (selection.size !== 1 || !selection.has(active))) {
+      registry.set(atoms.active, undefined);
+    }
+  }, [active, selection, registry, atoms.active]);
   const debug = useAtomValue(atoms.debug);
   const guides = useAtomValue(atoms.guides);
   const latticeOn = useAtomValue(atoms.lattice);
@@ -216,17 +229,24 @@ const SceneViewRoot = ({
   // A restored camera counts as taken over, so the fit leaves it where it was.
   const interactedRef = useRef(initialCamera !== undefined);
 
+  // Read-only, nothing is selected: a selection only exists to be edited.
   const select = useCallback(
     (ids: Iterable<ElementId>) => {
-      registry.set(atoms.selection, new Set(ids));
+      registry.set(atoms.selection, new Set(readonly ? [] : ids));
       registry.set(atoms.point, undefined);
     },
-    [registry, atoms.selection, atoms.point],
+    [registry, atoms.selection, atoms.point, readonly],
   );
+  useEffect(() => {
+    if (readonly) {
+      select([]);
+    }
+  }, [readonly, select]);
 
   const { nameOf, portalTo, bounds, fitTarget, pushHistory, drillIn, drillOut, goHistory } = useSceneNavigation({
     registry,
     atoms,
+    nodeRegistry,
     store,
     scenes,
     scene,
@@ -364,6 +384,13 @@ const SceneViewRoot = ({
     snapMinor,
   });
 
+  // A gesture begun before the view turned read-only is dropped, not committed on release.
+  useEffect(() => {
+    if (readonly) {
+      cancelDrag();
+    }
+  }, [readonly, cancelDrag]);
+
   //
   // Clipboard.
   //
@@ -418,9 +445,13 @@ const SceneViewRoot = ({
     (event) => {
       if (event.target === event.currentTarget) {
         onSceneKey(event);
+      } else if (keyAction(event) === 'cancel' && registry.get(atoms.active) !== undefined) {
+        // Escape out of a node's live content leaves it inert and the node selected, as a click outside would not.
+        registry.set(atoms.active, undefined);
+        rootRef.current?.focus();
       }
     },
-    [onSceneKey],
+    [onSceneKey, registry, atoms.active],
   );
 
   //
@@ -589,8 +620,13 @@ const SceneViewRoot = ({
         return;
       }
       const target = document.elementFromPoint(event.clientX, event.clientY);
-      // A floating panel over the node took the clicks, so the node beneath is not the one meant.
-      if (!(target instanceof Element) || !target.closest('[data-node-id]')) {
+      // A floating panel over the node took the clicks, so the node beneath is not the one meant; content embedded in
+      // the node (an editor) keeps its own double-click (selecting a word).
+      if (
+        !(target instanceof Element) ||
+        !target.closest('[data-node-id]') ||
+        target.closest(`[${SCENE_OVERLAY_ATTRIBUTE}]`)
+      ) {
         return;
       }
       const partElement = target.closest('[data-part]');
@@ -780,7 +816,8 @@ const SceneViewRoot = ({
   const focus = useMemo(() => {
     let best: { id: ElementId; opacity: number } | undefined;
     for (const node of Object.values(displayScene.nodes)) {
-      if (!isPortalNode(node)) {
+      // A frame the host opens itself (one showing an object) is no scene to zoom into, so it keeps its frame.
+      if (!isFrameNode(node) || nodeDef(nodeRegistry, node)?.hostOpen?.(node)) {
         continue;
       }
       const bounds = nodeBounds(node);
@@ -794,7 +831,7 @@ const SceneViewRoot = ({
       }
     }
     return best;
-  }, [displayScene.nodes, camera, viewport]);
+  }, [displayScene.nodes, nodeRegistry, camera, viewport]);
 
   /** One screen pixel in scene units, for chrome that should not grow with the camera. */
   const frameUnit = 1 / Math.max(camera.zoom, MIN_ZOOM);
@@ -806,6 +843,7 @@ const SceneViewRoot = ({
       store={store}
       projection={projection}
       capabilities={capabilities}
+      readonly={readonly}
       nodeRegistry={nodeRegistry}
       linkRegistry={linkRegistry}
       scene={scene}
@@ -827,10 +865,12 @@ const SceneViewRoot = ({
       hover={hover}
       selectedPoint={selectedPoint}
       editing={editing}
+      active={active}
       clipboard={clipboard}
       drag={drag}
       tool={tool}
       debug={debug}
+      panels={panels}
       createFrame={createFrame}
       landing={landing}
       handlers={handlers}
@@ -864,29 +904,36 @@ const SceneViewRoot = ({
       onKeyDown={onKeyDown}
       rootRef={rootRef}
     >
-      <div
-        ref={rootRef}
-        tabIndex={0}
-        className={mx(
-          'relative dx-fill overflow-hidden bg-base-surface outline-none touch-none select-none',
-          tool.kind === 'hand' && 'cursor-grab',
-          tool.kind === 'node' && 'cursor-crosshair',
-          classNames,
-        )}
-        style={{ contain: 'strict' }}
-        data-testid='scene-view'
-        onPointerDown={onBackgroundPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        // A cancelled pointer (a touch the browser took over) abandons the gesture rather than landing it.
-        onPointerCancel={cancelDrag}
-        onPointerLeave={() => updateHover(undefined)}
-        onDoubleClick={onDoubleClick}
-        onContextMenu={onContextMenu}
-        onKeyDown={onKeyDown}
-      >
-        {children}
-      </div>
+      <DockProvider>
+        {/* The canvas beside the dock, which docked panels move into; with none docked, it takes no space.
+            Clipped rather than hidden: a hidden box still scrolls, so focusing content embedded in a node (an editor's
+            caret) would scroll the whole canvas to reveal it, out from under the camera. */}
+        <div className={mx('flex dx-fill overflow-clip', classNames)}>
+          <div
+            ref={rootRef}
+            tabIndex={0}
+            className={mx(
+              'relative grow h-full overflow-clip bg-base-surface outline-none touch-none select-none',
+              tool.kind === 'hand' && 'cursor-grab',
+              tool.kind === 'node' && 'cursor-crosshair',
+            )}
+            style={{ contain: 'strict' }}
+            data-testid='scene-view'
+            onPointerDown={onBackgroundPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={onPointerUp}
+            // A cancelled pointer (a touch the browser took over) abandons the gesture rather than landing it.
+            onPointerCancel={cancelDrag}
+            onPointerLeave={() => updateHover(undefined)}
+            onDoubleClick={onDoubleClick}
+            onContextMenu={onContextMenu}
+            onKeyDown={onKeyDown}
+          >
+            {children}
+          </div>
+          <Dock />
+        </div>
+      </DockProvider>
     </SceneViewProvider>
   );
 };
@@ -911,6 +958,7 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
     atoms,
     store,
     capabilities,
+    readonly,
     projection,
     nodeRegistry,
     displayScene,
@@ -929,6 +977,7 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
     hover,
     selectedPoint,
     editing,
+    active,
     clipboard,
     drag,
     debug,
@@ -961,8 +1010,8 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
     <>
       {/* Only while snapping: the lines are what a gesture lands on, so drawing them when nothing snaps
           states a constraint the canvas is not applying. The minor level goes when its cells get too
-          small to read. */}
-      {snapEnabled && (
+          small to read. Read-only, nothing snaps, so neither grid nor guides are drawn. */}
+      {snapEnabled && !readonly && (
         <GridComponent
           size={grid}
           scale={camera.zoom}
@@ -977,7 +1026,7 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
         style={{ transform: cameraTransform(camera), transformOrigin: '0 0' }}
       >
         {/* A lattice scene shows its cells: the places a shape may land, separated by the gutters. */}
-        {guides && latticeOn && projection.lattice && (
+        {guides && !readonly && latticeOn && projection.lattice && (
           <LatticeGrid spec={projection.lattice} bounds={latticeBounds} unit={frameUnit} />
         )}
         <div className='pointer-events-auto'>
@@ -995,6 +1044,7 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
             opening={opening}
             focus={focus}
             editing={editing}
+            active={active}
             ghost={drag?.kind === 'create' ? PREVIEW_NODE_ID : undefined}
             debug={debug}
             handlers={handlers}
@@ -1003,28 +1053,31 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
             cell={grid * MAJOR_GRID_RATIO}
           />
         </div>
-        <ControlFrame
-          scene={shownScene}
-          registry={nodeRegistry}
-          selection={selection}
-          hover={hover}
-          hoveredLink={drag ? undefined : linkHover}
-          onLinkHover={handlers.onLinkHover}
-          selectedPoint={selectedPoint}
-          zoom={camera.zoom}
-          drag={drag}
-          capabilities={capabilities}
-          createFrame={createFrame}
-          landing={landing}
-          blocked={blocked}
-          lattice={latticeOn ? projection.lattice : undefined}
-          onHandlePointerDown={onHandlePointerDown}
-          onPortPointerDown={onPortPointerDown}
-          onEndPointerDown={onEndPointerDown}
-          onPointPointerDown={onPointPointerDown}
-          onMidpointPointerDown={onMidpointPointerDown}
-          onPointContextMenu={onPointContextMenu}
-        />
+        {/* Read-only, nothing is edited, so no selection frame, handle or port is drawn. */}
+        {!readonly && (
+          <ControlFrame
+            scene={shownScene}
+            registry={nodeRegistry}
+            selection={selection}
+            hover={hover}
+            hoveredLink={drag ? undefined : linkHover}
+            onLinkHover={handlers.onLinkHover}
+            selectedPoint={selectedPoint}
+            zoom={camera.zoom}
+            drag={drag}
+            capabilities={capabilities}
+            createFrame={createFrame}
+            landing={landing}
+            blocked={blocked}
+            lattice={latticeOn ? projection.lattice : undefined}
+            onHandlePointerDown={onHandlePointerDown}
+            onPortPointerDown={onPortPointerDown}
+            onEndPointerDown={onEndPointerDown}
+            onPointPointerDown={onPointPointerDown}
+            onMidpointPointerDown={onMidpointPointerDown}
+            onPointContextMenu={onPointContextMenu}
+          />
+        )}
         {overlay}
       </div>
       {/* Wheel events still bubble to the root through the shield, so a zoom keeps zooming. */}
@@ -1119,7 +1172,11 @@ SceneViewNavigation.displayName = 'SceneView.Navigation';
 
 /** Everything that changes the view or the scene. */
 const SceneViewActions = ({ classNames = 'bottom-2 left-1/2 -translate-x-1/2' }: SceneViewBarProps) => {
-  const { toolbarActions, nodeRegistry, capabilities } = useSceneViewContext('SceneView.Actions');
+  const { toolbarActions, nodeRegistry, capabilities, readonly } = useSceneViewContext('SceneView.Actions');
+  // Every action here edits the scene or how edits snap.
+  if (readonly) {
+    return null;
+  }
   return (
     <div className={mx(barFrame, classNames)}>
       <ActionToolbar actions={toolbarActions} nodes={nodeRegistry} capabilities={capabilities} />
@@ -1148,10 +1205,11 @@ SceneViewDebug.displayName = 'SceneView.Debug';
 //
 
 /** The tool rail: what the next gesture will draw. */
-const SceneViewPalette = ({ classNames = 'absolute top-14 left-2' }: SceneViewBarProps) => {
+const SceneViewPalette = ({ classNames = 'absolute top-14 bottom-14 left-2' }: SceneViewBarProps) => {
   const { tool, nodeRegistry, linkRegistry, capabilities, setTool } = useSceneViewContext('SceneView.Palette');
   return (
-    <div className={mx(classNames)}>
+    // Spans the room the rail may take, so it can fold its groups to fit; the canvas below the rail keeps the pointer.
+    <div className={mx('pointer-events-none', classNames)}>
       <Palette
         tool={tool}
         nodes={nodeRegistry}
@@ -1185,8 +1243,9 @@ const SceneViewProperties = ({
   overrides,
   sceneFilter,
 }: SceneViewPropertiesProps) => {
-  const { projection, atoms, nodeRegistry, capabilities, selection, store, path } =
+  const { projection, atoms, nodeRegistry, capabilities, readonly, selection, store, path, panels } =
     useSceneViewContext('SceneView.Properties');
+  const docked = panels === 'docked' && !readonly;
   const registry = useRegistry();
   const scenes = useAtomValue(store.scenes);
   const options = useMemo(() => sceneOptions(scenes, path, sceneFilter), [scenes, path, sceneFilter]);
@@ -1215,13 +1274,10 @@ const SceneViewProperties = ({
     registry.set(atoms.point, undefined);
   }, [registry, projection, selection, store.scenes, atoms.layer, atoms.selection, atoms.point, atoms.undo, path]);
 
-  if (selection.size === 0) {
-    return null;
-  }
-
-  return (
+  const panel = (
     <Properties
-      classNames={mx('rounded-sm bg-modal-surface border border-separator', classNames)}
+      classNames={docked ? 'h-auto' : mx('rounded-sm bg-modal-surface border border-separator', classNames)}
+      docked={docked}
       projection={projection}
       atoms={atoms}
       nodes={nodeRegistry}
@@ -1235,9 +1291,29 @@ const SceneViewProperties = ({
       readonly={!capabilities.update}
     />
   );
+  // Docked, the panel stays in its section whatever is selected (it says when nothing is); floating, it shows only
+  // with a selection.
+  const dockedPanel = useDockSection(PROPERTIES_SECTION, docked, panel);
+  if (docked || readonly) {
+    return dockedPanel;
+  }
+  return selection.size > 0 ? panel : null;
 };
 
 SceneViewProperties.displayName = 'SceneView.Properties';
+
+//
+// Dock
+//
+
+const PROPERTIES_SECTION: DockSection = {
+  id: 'properties',
+  title: 'Properties',
+  icon: 'ph--sliders-horizontal--regular',
+  order: 0,
+};
+
+const LAYERS_SECTION: DockSection = { id: 'layers', title: 'Layers', icon: 'ph--stack--regular', order: 1 };
 
 //
 // Layers
@@ -1250,7 +1326,15 @@ export type SceneViewLayersProps = Util.ThemedClassName<{}>;
  * (the two take turns). Each edit is one intent, so one undo step.
  */
 const SceneViewLayers = ({ classNames = PANEL_CLASSES }: SceneViewLayersProps) => {
-  const { projection, atoms, capabilities, selection } = useSceneViewContext('SceneView.Layers');
+  const {
+    projection,
+    atoms,
+    capabilities,
+    readonly: viewReadonly,
+    selection,
+    panels,
+  } = useSceneViewContext('SceneView.Layers');
+  const docked = panels === 'docked' && !viewReadonly;
   const registry = useRegistry();
   const scene = useAtomValue(projection.scene);
   const active = useAtomValue(atoms.layer);
@@ -1273,13 +1357,10 @@ const SceneViewLayers = ({ classNames = PANEL_CLASSES }: SceneViewLayersProps) =
     },
     [layers, registry, atoms],
   );
-  if (selection.size > 0) {
-    return null;
-  }
-
-  return (
+  const panel = (
     <LayersPanel
-      classNames={mx('rounded-sm bg-modal-surface border border-separator', classNames)}
+      classNames={docked ? 'h-auto' : mx('rounded-sm bg-modal-surface border border-separator', classNames)}
+      docked={docked}
       layers={layers}
       selected={selected}
       readonly={readonly}
@@ -1319,9 +1400,42 @@ const SceneViewLayers = ({ classNames = PANEL_CLASSES }: SceneViewLayersProps) =
       }}
     />
   );
+  const dockedPanel = useDockSection(LAYERS_SECTION, docked, panel);
+  if (docked || viewReadonly) {
+    return dockedPanel;
+  }
+  // Floating, the layers take the properties panel's place while nothing is selected.
+  return selection.size > 0 ? null : panel;
 };
 
 SceneViewLayers.displayName = 'SceneView.Layers';
+
+//
+// About
+//
+
+const ABOUT_SECTION: DockSection = { id: 'about', title: 'About', icon: 'ph--info--regular', order: 2 };
+
+export type SceneViewAboutProps = Util.ThemedClassName<{}>;
+
+/** Counts of the scene's objects and the drawing's scenes; a dock section only, since it has no place over the canvas. */
+const SceneViewAbout = ({ classNames }: SceneViewAboutProps) => {
+  const { scene, store, panels } = useSceneViewContext('SceneView.About');
+  const scenes = useAtomValue(store.scenes);
+  const docked = panels === 'docked';
+  const stats = useMemo<AboutStat[]>(
+    () => [
+      { id: 'nodes', label: 'Nodes', value: Object.keys(scene.nodes).length },
+      { id: 'links', label: 'Links', value: Object.keys(scene.links).length },
+      { id: 'layers', label: 'Layers', value: Object.keys(scene.layers ?? {}).length },
+      { id: 'scenes', label: 'Scenes', value: Object.keys(scenes).length },
+    ],
+    [scene, scenes],
+  );
+  return useDockSection(ABOUT_SECTION, docked, <About classNames={mx('h-auto', classNames)} stats={stats} />);
+};
+
+SceneViewAbout.displayName = 'SceneView.About';
 
 export const SceneView = {
   Root: SceneViewRoot,
@@ -1332,4 +1446,5 @@ export const SceneView = {
   Palette: SceneViewPalette,
   Properties: SceneViewProperties,
   Layers: SceneViewLayers,
+  About: SceneViewAbout,
 };

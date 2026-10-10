@@ -3,7 +3,7 @@ name: submit-pr
 description: >-
   Create and submit a pull request from the current branch — sync with main,
   format/lint/test, commit all changes, push, monitor the Check workflow, and
-  surface the Composer PR deploy URL. Use when the user asks to open, submit, or
+  surface the Composer PR deploy URL when the PR has one. Use when the user asks to open, submit, or
   raise a PR, including stacking a PR on another open PR (`gh stack`). To land
   an existing PR, use the `land` skill instead.
 ---
@@ -37,7 +37,9 @@ runs in. To land (merge) an existing PR, use the `land` skill.
 7. **Push**, then verify `git status` shows a clean working tree. If anything
    remains, commit it or confirm before proceeding.
 8. **Open the PR as a draft** with `gh pr create --draft`. CI skips draft PRs,
-   so iterate on the draft freely. Title uses `scope: description`. Write the
+   so iterate on the draft freely; a PR opened ready from a `claude/` or `dm/`
+   branch is converted to a draft anyway (`draft-on-open.yml`). Add the `preview` label only when the
+   user asks for a preview deploy: each push to a labeled PR builds one. Title uses `scope: description`. Write the
    description with the `pr-description` skill: pick every template that
    applies (summary and safety always), and link any Linear issue as
    `closes DX-123` or `part of DX-123`. Apply the Safety labels it specifies
@@ -78,9 +80,9 @@ title, `pr-description` templates, Linear link), and `gh pr ready --undo <pr>`
 to make it a draft until step 9. Docs:
 <https://docs.github.com/en/pull-requests/how-tos/stacked-pull-requests>.
 
-## Composer PR deploy URL — always surface
+## Composer PR deploy URL — surface when labeled
 
-The `pr-deploy.yml` workflow posts a sticky `composer-preview` comment with
+For a PR labeled `preview`, the `pr-deploy.yml` workflow posts a sticky `composer-preview` comment with
 a `*.workers.dev` preview-alias URL (a `wrangler versions upload --preview-alias`
 against composer-app's `dev` env). Fetch it and include it verbatim next to the
 PR link in chat summaries AND the final message:

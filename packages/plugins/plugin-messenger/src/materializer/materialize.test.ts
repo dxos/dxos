@@ -205,6 +205,18 @@ describe('materialize', () => {
     await expect.poll(() => visible(otherDevice)).toEqual(expected);
   });
 
+  test('leaves containers alone when told the container set has not changed', async ({ expect }) => {
+    const { db } = await builder.createDatabase({ types: TYPES });
+    await writeOwnContainer(db, [{ id: 'e1', text: 'one' }]);
+    await writeOwnContainer(db, [{ id: 'e2', text: 'two' }]);
+
+    await run(db, { messages: [], contacts, ack: async () => {}, converge: false });
+    expect((await visible(db)).containers).toEqual(2);
+
+    await run(db, { messages: [], contacts, ack: async () => {} });
+    expect((await visible(db)).containers).toEqual(1);
+  });
+
   test('a message written to a container after another device deleted it is still moved, once', async ({ expect }) => {
     const { db } = await builder.createDatabase({ types: TYPES });
     await writeOwnContainer(db, [{ id: 'e1', text: 'one', read: true }]);

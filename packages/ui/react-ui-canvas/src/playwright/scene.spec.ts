@@ -9,7 +9,7 @@ import { setupPage, storybookUrl } from '@dxos/test-utils/playwright';
 import { SceneManager } from './SceneManager.ts';
 
 const PORT = 9006;
-const FREEHAND_URL = storybookUrl('ui-react-ui-canvas-scene-sceneview--freehand', PORT);
+const FREEHAND_URL = storybookUrl('ui-react-ui-canvas-sceneview--freehand', PORT);
 
 // The fixture (`createSceneTree(1)`): rectangle A, ellipse B, text T, rectangle C; links A→B (curve), A→C
 // (line, directed) and B→C (spline). Every edge sits on the major grid.
@@ -262,17 +262,17 @@ test.describe('SceneView', () => {
         return rows[0] < rows[1] && rows[1] < rows[2];
       })
       .toBe(true);
-    // A portal made from the toolbar gets its child scene, so Enter opens it.
+    // A frame made from the toolbar gets its child scene, so Enter opens it.
     await page.getByTestId('toolbar-create').click();
-    await page.getByTestId('create-scene').click();
+    await page.getByTestId('create-frame').click();
     await scene.focus();
     await page.keyboard.press('Enter');
     await expect(page.getByTestId('toolbar-up')).toBeEnabled();
   });
 
-  test('a scene shape opens from its zoom-in control', async () => {
+  test('a frame opens from its zoom-in control', async () => {
     await page.getByTestId('toolbar-create').click();
-    await page.getByTestId('create-scene').click();
+    await page.getByTestId('create-frame').click();
     await page.getByTestId('portal-open').first().click();
     await expect(page.getByTestId('toolbar-up')).toBeEnabled();
   });
@@ -318,10 +318,10 @@ test.describe('SceneView', () => {
     await expect.poll(async () => (await scene.box(scene.node('scene:root/c'))).x).toBeGreaterThan(node.x);
   });
 
-  test('a read-only view selects but draws no handles and applies no edit', async ({ browser }) => {
+  test('a read-only view selects nothing, draws no handles and applies no edit', async ({ browser }) => {
     await close?.();
     ({ page, close } = await setupPage(browser, {
-      url: storybookUrl('ui-react-ui-canvas-scene-sceneview--readonly', PORT),
+      url: storybookUrl('ui-react-ui-canvas-sceneview--readonly', PORT),
       viewportSize: { width: 1400, height: 800 },
     }));
     page.on('pageerror', (error) => errors.push(error.message));
@@ -329,16 +329,15 @@ test.describe('SceneView', () => {
     await scene.ready();
     const before = await scene.nodeCount();
     await scene.clickNode('scene:root/a');
-    expect(await scene.selectedNodes()).toEqual(['scene:root/a']);
+    expect(await scene.selectedNodes()).toEqual([]);
     await expect(page.locator('[data-testid="scene-view"] svg rect[style*="cursor"]')).toHaveCount(0);
     const hovered = await scene.box(scene.node('scene:root/a'));
     await page.mouse.move(hovered.x + hovered.width / 2, hovered.y + hovered.height / 2);
     await expect(page.locator('[data-testid="scene-view"] circle.cursor-crosshair')).toHaveCount(0);
     await page.keyboard.press('Delete');
     expect(await scene.nodeCount()).toBe(before);
-    // Only the select and pan tools remain, and nothing on the toolbar can change the scene.
+    // Only the select and pan tools remain, and the actions bar, which only edits, is gone.
     await expect(page.locator('[data-testid="palette"] button')).toHaveCount(2);
-    await expect(page.getByTestId('toolbar-create')).toBeDisabled();
-    await expect(page.getByTestId('toolbar-delete')).toBeDisabled();
+    await expect(page.getByTestId('canvas-actions')).toHaveCount(0);
   });
 });

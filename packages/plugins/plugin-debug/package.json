@@ -217,7 +217,6 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-canvas-compute": "workspace:*",
-    "@dxos/react-ui-canvas-editor": "workspace:*",
     "@dxos/react-ui-components": "workspace:*",
     "@dxos/react-ui-debug": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",

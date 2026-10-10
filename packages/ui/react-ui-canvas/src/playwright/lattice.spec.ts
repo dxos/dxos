@@ -9,7 +9,7 @@ import { setupPage, storybookUrl } from '@dxos/test-utils/playwright';
 import { SceneManager } from './SceneManager.ts';
 
 const PORT = 9006;
-const LATTICE_URL = storybookUrl('ui-react-ui-canvas-scene-sceneview--lattice', PORT);
+const LATTICE_URL = storybookUrl('ui-react-ui-canvas-sceneview--lattice', PORT);
 
 // The fixture, on the default 256x128 lattice with 128x64 gutters, columns and rows -1..1: A, B, C down
 // column -1; a free cell above D and E in column 0; F spanning all three rows of column 1.

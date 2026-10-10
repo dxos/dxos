@@ -44,6 +44,7 @@ import { type DataService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 import { ComplexSet, bufferToArray, countWork, defaultMap } from '@dxos/util';
 
+import { SLOW_WORK_MS } from '../util.ts';
 import {
   type CollectionState,
   CollectionSynchronizer,
@@ -58,6 +59,7 @@ import { type HandleQueryState, getHandleState, isDocumentLoaded, isLoaded } fro
 import { tryGetSpaceIdFromCollectionId } from './space-collection.ts';
 import { SqliteHeadsStore } from './sqlite-heads-store.ts';
 import { SqliteStorageAdapter, SUBDUCTION_KEY_FAMILIES, SUBDUCTION_PREFIX } from './sqlite-storage-adapter.ts';
+import { repairSelfCheckpointedFragments } from './subduction-migrations/0002_self_checkpointed_fragments.ts';
 import { runMigrations } from './subduction-migrations/index.ts';
 
 export type PeerIdProvider = () => string | undefined;
@@ -617,15 +619,25 @@ export class AutomergeHost extends Resource {
   }
 
   /**
-   * Runs the data migrations in `./subduction-migrations` over the stored Subduction records.
-   * Contained: a failed migration is logged and the host opens on the records as stored, since
-   * every migration is a repair of data the host can already read. Only stored records are
-   * migrated: a peer on `@automerge/automerge` 3.5 re-signs a fragment in the valid shape when it
-   * pushes it, so nothing arriving from an upgraded peer needs a rewrite.
+   * Runs the data migrations in `./subduction-migrations` over the stored Subduction records, then
+   * repairs the self-checkpointed fragments stored since the last open. Contained: a failed
+   * migration is logged and the host opens on the records as stored, since every migration is a
+   * repair of data the host can already read.
+   *
+   * The repair runs on every open, not once: a peer forwards a fragment with the signature it
+   * received it with and clients on `@automerge/automerge` < 3.5 still write the shape, so one
+   * kept as received would be uploaded to the next empty EDGE store and hide the document's head.
    */
   private async _runSubductionMigrations(): Promise<void> {
     try {
-      await runMigrations({ storage: this._storage, subduction: await this._repo.subduction });
+      const subduction = await this._repo.subduction;
+      await runMigrations({ storage: this._storage, subduction });
+      // TODO(mykola): Delete this every-open repair in the next release, once EDGE refuses the SDKs that write the old
+      //   fragment shape (`MIN_CLIENT_SDK_VERSION`) and repairs any that still reach it.
+      const repaired = await repairSelfCheckpointedFragments(subduction, this._storage);
+      if (repaired.rewritten + repaired.skipped + repaired.failed > 0) {
+        log.info('repaired self-checkpointed fragments stored since the last open', repaired);
+      }
     } catch (err) {
       log.error('subduction migrations failed; continuing on the stored records', { err });
     }
@@ -819,6 +831,7 @@ export class AutomergeHost extends Resource {
     if (lease.loaded) {
       return lease;
     }
+    const startedAt = performance.now();
     // Readiness lives on the `DocumentQuery`, not the `DocHandle` — see {@link getHandleState}. The
     // query is read from the repo rather than through the lease, which does not hand it out.
     const progress = this._repo.findWithProgress<T>(lease.documentId);
@@ -874,6 +887,11 @@ export class AutomergeHost extends Resource {
     // to one retry, so an evict/re-fault oscillation cannot re-arm the caller's timeout forever.
     if (getHandleState(this._repo, lease.documentId) !== 'ready' && !opts?.retried) {
       return await this._loadLeasedDoc(ctx, lease, { ...opts, retried: true });
+    }
+    // A network load may legitimately wait on replication; a storage-only one should not.
+    const durationMs = performance.now() - startedAt;
+    if (opts?.fetchFromNetwork === false && durationMs >= SLOW_WORK_MS) {
+      log.warn('slow document load from storage', { documentId: lease.documentId, durationMs });
     }
     return lease;
   }

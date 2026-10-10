@@ -5,10 +5,8 @@
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
-import { type ShapeDef } from '@dxos/react-ui-canvas-editor';
-
-import { createFunctionAnchors } from './common/index.ts';
-import { ComputeShape, type CreateShapeProps, createShape } from './defs.ts';
+import { createFunctionPorts, defineComputeNode } from './common/index.ts';
+import { ComputeShape, type CreateShapeProps, createShape, withZ } from './defs.ts';
 import { GptRealtimeComponent } from './GptRealtime.tsx';
 
 // Kept out of `GptRealtime.tsx`: react-refresh only fast-refreshes a module whose
@@ -27,20 +25,22 @@ export type CreateGptRealtimeProps = CreateShapeProps<GptRealtimeShape>;
 export const createGptRealtime = (props: CreateGptRealtimeProps) =>
   createShape<GptRealtimeShape>({ type: 'gpt-realtime', size: { width: 256, height: 256 }, ...props });
 
-export const gptRealtimeShape: ShapeDef<GptRealtimeShape> = {
+export const gptRealtimeNodeDef = defineComputeNode<GptRealtimeShape>({
   type: 'gpt-realtime',
   name: 'GPT Realtime',
   icon: 'ph--pulse--regular',
+  group: 'Transform',
+  schema: withZ(GptRealtimeShape),
   component: GptRealtimeComponent,
-  createShape: createGptRealtime,
+  create: createGptRealtime,
   // TODO(dmaretskyi): Can we fetch the schema dynamically?
-  getAnchors: (shape) =>
-    createFunctionAnchors(
-      shape,
+  ports: (shape) =>
+    createFunctionPorts(
+      shape.size,
       Schema.Struct({
         audio: Schema.Any,
       }),
       Schema.Struct({}),
     ),
   resizable: true,
-};
+});

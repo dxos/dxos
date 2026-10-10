@@ -5,9 +5,8 @@
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
-import { type ShapeDef, createAnchorMap } from '@dxos/react-ui-canvas-editor';
-
-import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs.ts';
+import { createPorts, defineComputeNode } from './common/index.ts';
+import { ComputeShape, type CreateShapeProps, createAnchorId, createShape, withZ } from './defs.ts';
 import { RandomComponent } from './RNG.tsx';
 
 // Kept out of `RNG.tsx`: react-refresh only fast-refreshes a module whose
@@ -32,11 +31,13 @@ export const createRandom = (props: CreateRandomProps) =>
     ...props,
   });
 
-export const randomShape: ShapeDef<RandomShape> = {
+export const randomNodeDef = defineComputeNode<RandomShape>({
   type: 'rng',
   name: 'Random',
   icon: 'ph--dice-six--regular',
+  group: 'Inputs',
+  schema: withZ(RandomShape),
   component: RandomComponent,
-  createShape: createRandom,
-  getAnchors: (shape) => createAnchorMap(shape, { [createAnchorId('output')]: { x: 1, y: 0 } }),
-};
+  create: createRandom,
+  ports: (shape) => createPorts(shape.size, { [createAnchorId('output')]: { x: 1, y: 0 } }),
+});

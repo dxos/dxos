@@ -20,8 +20,6 @@ catalog:
   '@ai-sdk/react': ^3.0.99
   '@anthropic-ai/claude-agent-sdk': ^0.3.233
   '@anthropic-ai/sdk': ^0.117.1
-  '@antv/graphlib': ^2.0.4
-  '@antv/layout': ^1.2.13
   '@ark-ui/react': ^5.39.1
   '@ark-ui/solid': ^5.30.0
   '@assistant-ui/react': ^0.12.24
@@ -115,7 +113,7 @@ catalog:
   '@fontsource-variable/jetbrains-mono': 5.0.21
   '@fontsource-variable/nunito': 5.2.7
   '@fontsource/k2d': ^5.0.18
-  '@fontsource/poiret-one': ^5.0.20
+  '@fontsource/poiret-one': ^5.2.8
   '@hazae41/symbol-dispose-polyfill': ^1.0.2
   '@huggingface/transformers': ^3.8.1
   '@internationalized/date': ^3.12.3
@@ -171,6 +169,10 @@ catalog:
   '@rdfjs/types': ^2.0.1
   '@react-three/drei': ^10.7.7
   '@react-three/fiber': ^9.5.0
+  '@remotion/bundler': 4.0.534
+  '@remotion/cli': 4.0.534
+  '@remotion/fonts': 4.0.534
+  '@remotion/renderer': 4.0.534
   '@replit/codemirror-vim': ^6.3.0
   '@replit/codemirror-vscode-keymap': ^6.0.2
   '@rive-app/react-canvas': ^4.14.0
@@ -295,7 +297,6 @@ catalog:
   '@uiw/codemirror-theme-vscode': ^4.25.2
   '@valtown/codemirror-continue': ^2.3.1
   '@valtown/codemirror-ts': ^2.3.1
-  # Exact: each minor pins its own `oxc-transform-react` range, and the React Compiler output was verified on this pair.
   '@vitejs/plugin-react': 6.1.1
   '@vitejs/plugin-react-swc': ^4.3.3
   '@vitest/browser': 4.1.10
@@ -589,6 +590,7 @@ catalog:
   remark-frontmatter: ^5.0.0
   remark-gfm: ^4.0.1
   remark-parse-frontmatter: ^1.0.3
+  remotion: 4.0.534
   resize-observer-polyfill: ^1.5.1
   reveal.js: ^5.1.0
   rmdir: ~1.2.0
@@ -627,7 +629,6 @@ catalog:
   tone: ^15.1.22
   topojson-client: ^3.1.0
   topojson-simplify: ^3.0.3
-  transformation-matrix: ^2.16.1
   ts-morph: ^16.0.0
   tsdown: ^0.22.14
   tslib: ^2.8.1
@@ -732,6 +733,12 @@ overrides:
   '@lezer/markdown': 'catalog:'
   '@modelcontextprotocol/sdk': '>=1.26.0'
   '@remix-run/router': '>=1.23.2'
+  '@remotion/elevenlabs>zod': 4.3.6
+  '@remotion/media>zod': 4.3.6
+  '@remotion/openai-whisper>zod': 4.3.6
+  '@remotion/studio>zod': 4.3.6
+  '@remotion/studio-protocol>zod': 4.3.6
+  '@remotion/studio-server>zod': 4.3.6
   '@swc/core': 'catalog:'
   '@types/node': 'catalog:'
   '@types/react': 'catalog:'

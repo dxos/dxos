@@ -4,11 +4,11 @@
 
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Feed, Obj } from '@dxos/echo';
+import { Feed, Obj, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 
-import { SPACE_STATS_QUERY, toSpaceStats } from './stats.ts';
+import { SPACE_STATS_QUERY, toSpaceStats, typeUrisWithObjects } from './stats.ts';
 
 describe('toSpaceStats', () => {
   let builder: EchoTestBuilder;
@@ -30,6 +30,16 @@ describe('toSpaceStats', () => {
 
     const rows = await db.query(SPACE_STATS_QUERY).run();
     expect(toSpaceStats(rows, 7)).toEqual({ objects: 3, feeds: 2, types: 2, plugins: 7 });
+  });
+
+  test('typeUrisWithObjects names each type with objects by its Type.getURI', async ({ expect }) => {
+    const { db } = await builder.createDatabase({ types: [Feed.Feed, TestSchema.Expando] });
+    db.add(Obj.make(TestSchema.Expando, { value: 1 }));
+    await db.flush({ indexes: true });
+
+    const uris = typeUrisWithObjects(await db.query(SPACE_STATS_QUERY).run());
+    expect(uris.has(Type.getURI(TestSchema.Expando))).toBe(true);
+    expect(uris.has(Type.getURI(Feed.Feed))).toBe(false);
   });
 
   test('two schema versions of one type count as one type', ({ expect }) => {

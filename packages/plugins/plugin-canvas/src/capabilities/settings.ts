@@ -17,7 +17,7 @@ export default Capability.makeModule(() =>
       key: meta.profile.key,
       schema: Settings.Settings,
       // The overlays are how a new user finds the engine's tools, so they start shown.
-      defaultValue: () => ({ showToolbar: true, showPalette: true }),
+      defaultValue: () => ({ showToolbar: true, showPalette: true, dockPanels: true }),
     });
 
     return [

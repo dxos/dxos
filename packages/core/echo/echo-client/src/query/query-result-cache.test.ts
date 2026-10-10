@@ -7,6 +7,7 @@ import { runInNewContext } from 'node:vm';
 import { describe, expect, test } from 'vitest';
 
 import { Filter, Query } from '@dxos/echo';
+import { SpaceId } from '@dxos/keys';
 
 import { makeRegistry } from '../registry/index.ts';
 import { QueryResultCache, serializeQueryKey } from './query-result-cache.ts';
@@ -50,6 +51,19 @@ describe('QueryResultCache', () => {
     expect(serializeQueryKey(Query.select(Filter.everything()))).not.toBe(
       serializeQueryKey(Query.select(Filter.nothing())),
     );
+  });
+
+  test('serializeQueryKey ignores debugLabel but keeps other options', () => {
+    const query = Query.select(Filter.everything());
+    expect(serializeQueryKey(query.debugLabel('a'))).toBe(serializeQueryKey(query));
+    expect(serializeQueryKey(query.debugLabel('a'))).toBe(serializeQueryKey(query.debugLabel('b')));
+
+    const scope = { _tag: 'space' as const, spaceId: SpaceId.random() };
+    expect(serializeQueryKey(query.debugLabel('a').from([scope]))).toBe(serializeQueryKey(query.from([scope])));
+
+    const withDeleted = query.options({ deleted: 'include' });
+    expect(serializeQueryKey(withDeleted.debugLabel('a'))).toBe(serializeQueryKey(withDeleted));
+    expect(serializeQueryKey(withDeleted)).not.toBe(serializeQueryKey(query));
   });
 
   // The cache is the mechanism that makes inline `query(...).atom` safe, so it must not become a

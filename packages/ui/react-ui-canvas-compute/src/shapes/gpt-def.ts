@@ -6,10 +6,9 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
 import { GptInput, GptOutput } from '@dxos/conductor';
-import { type ShapeDef } from '@dxos/react-ui-canvas-editor';
 
-import { createFunctionAnchors, getHeight } from './common/index.ts';
-import { ComputeShape, type CreateShapeProps, createShape } from './defs.ts';
+import { createFunctionPorts, defineComputeNode, getHeight } from './common/index.ts';
+import { ComputeShape, type CreateShapeProps, createShape, withZ } from './defs.ts';
 import { GptComponent } from './Gpt.tsx';
 
 // Kept out of `Gpt.tsx`: react-refresh only fast-refreshes a module whose
@@ -32,12 +31,14 @@ export const createGpt = (props: CreateGptProps) =>
     ...props,
   });
 
-export const gptShape: ShapeDef<GptShape> = {
+export const gptNodeDef = defineComputeNode<GptShape>({
   type: 'gpt',
   name: 'GPT',
   icon: 'ph--brain--regular',
+  group: 'Transform',
+  schema: withZ(GptShape),
   component: GptComponent,
-  createShape: createGpt,
-  getAnchors: (shape) => createFunctionAnchors(shape, GptInput, GptOutput),
+  create: createGpt,
+  ports: (shape) => createFunctionPorts(shape.size, GptInput, GptOutput),
   openable: true,
-};
+});

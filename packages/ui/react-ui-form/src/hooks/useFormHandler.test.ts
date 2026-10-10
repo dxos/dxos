@@ -5,7 +5,9 @@
 import { act, renderHook } from '@testing-library/react';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
-import { describe, test } from 'vitest';
+import { describe, onTestFinished, test } from 'vitest';
+
+import { type LogEntry, type LogProcessor, log } from '@dxos/log';
 
 import { useFormHandler } from './useFormHandler.ts';
 
@@ -99,5 +101,29 @@ describe('useFormHandler field overrides', () => {
     expect(result.current.getValue(['city'])).toBe('LA');
     expect(result.current.getStatus(['city']).indeterminate).toBe(false);
     expect(result.current.isValid).toBe(true);
+  });
+});
+
+describe('useFormHandler logging', () => {
+  test('never writes field values to the log', ({ expect }) => {
+    const entries: LogEntry[] = [];
+    const capture: LogProcessor = (_config, entry) => {
+      entries.push(entry);
+    };
+    onTestFinished(log.addProcessor(capture));
+
+    // Stands in for a pasted credential; any field may hold one, so no field's value may be logged.
+    const secret = 'placeholder-secret-0123456789';
+    const { result } = renderHook(() => useFormHandler<Values>({ schema, values: { name: 'Alice', city: 'NYC' } }));
+    act(() => result.current.onValueChange(['city'], stringAst, secret));
+    act(() => result.current.onValueChange(['name'], stringAst, ''));
+    expect(result.current.getValue(['city'])).toBe(secret);
+
+    const messages = entries.map((entry) => entry.message);
+    expect(messages).toContain('onValueChange');
+    expect(messages).toContain('validate');
+    for (const entry of entries) {
+      expect(JSON.stringify({ message: entry.message, context: entry.computedContext })).not.toContain(secret);
+    }
   });
 });

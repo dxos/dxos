@@ -3,16 +3,21 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Stream from 'effect/Stream';
 import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { Context } from '@dxos/context';
+import { Filter, Query } from '@dxos/echo';
 import { type DatabaseDirectory, EntityStructure, SpaceDocVersion } from '@dxos/echo-protocol';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { DXN, EntityId, SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
+import { QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
+import { type QueryService } from '@dxos/protocols/rpc';
 
 import { createTestSqliteRuntime } from '../testing/index.ts';
-import { EchoHost } from './echo-host.ts';
+import { EchoHost, type EchoHostProps } from './echo-host.ts';
 
 describe('EchoHost.updateIndexes', () => {
   test('runs a pass only when something was saved since the last one', async () => {
@@ -80,11 +85,46 @@ describe('EchoHost trace indexing', () => {
   });
 });
 
+describe('EchoHost query service', () => {
+  test('a one-shot query stream ends after its first result', async () => {
+    const { host, spaceId, saveObject } = await setup();
+    await saveObject(EntityId.random());
+    await host.updateIndexes();
+
+    const responses = await EffectEx.runPromise(
+      Stream.runCollect(host.queryService['QueryService.execQuery'](oneShotRequest(spaceId, '1'))),
+    );
+    expect(responses).toHaveLength(1);
+    expect(responses[0].results).toHaveLength(1);
+    expect(host.queryService.activeQueryCount).toBe(0);
+  });
+
+  test('queries registered together share one snapshot-completeness check', async () => {
+    const { host, spaceId } = await setup({ queryExecutor: 'sql' });
+    const check = vi.spyOn(host.indexEngine, 'hasCompleteSnapshots');
+
+    await Promise.all(
+      ['1', '2', '3'].map((queryId) =>
+        EffectEx.runPromise(
+          Stream.runCollect(host.queryService['QueryService.execQuery'](oneShotRequest(spaceId, queryId))),
+        ),
+      ),
+    );
+    expect(check).toHaveBeenCalledTimes(1);
+  });
+});
+
 const TEST_TYPE = DXN.make('com.example.type.test', '0.1.0');
 
-const setup = async () => {
+const oneShotRequest = (spaceId: SpaceId, queryId: string): QueryService.QueryRequest => ({
+  queryId,
+  reactivity: QueryReactivity.ONE_SHOT,
+  query: JSON.stringify(Query.select(Filter.everything()).from([{ _tag: 'space', spaceId }]).ast),
+});
+
+const setup = async (options: Pick<EchoHostProps, 'queryExecutor'> = {}) => {
   const { runtime, dispose } = createTestSqliteRuntime();
-  const host = new EchoHost({ runtime });
+  const host = new EchoHost({ runtime, ...options });
   await host.open(Context.default());
   onTestFinished(async () => {
     await host.close();

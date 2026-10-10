@@ -14,6 +14,7 @@ import { Annotation, DXN, Feed, Obj, type Query, QueryAST, Ref, Type } from '@dx
 import { OptionsAnnotationId } from '@dxos/echo/Format';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
 
+import type { TriggerDisabledError } from '../errors.ts';
 import * as Runnable from '../Runnable.ts';
 import type * as TriggerEvent from './TriggerEvent.ts';
 
@@ -303,8 +304,9 @@ export interface Manager {
    * Invoke a trigger.
    * Available only for direct and timer triggers.
    * Invocation respects the trigger's concurrency limit.
+   * Fails with {@link TriggerDisabledError} for a trigger that is switched off.
    */
-  readonly invokeTrigger: (options: InvokeOptions) => Effect.Effect<void>;
+  readonly invokeTrigger: (options: InvokeOptions) => Effect.Effect<void, TriggerDisabledError>;
 }
 
 /**
@@ -314,4 +316,4 @@ export class ManagerService extends Context.Service<ManagerService, Manager>()(
   '@dxos/compute/Trigger.ManagerService',
 ) {}
 
-export { TriggerStateNotFoundError } from '../errors.ts';
+export { TriggerDisabledError, TriggerStateNotFoundError } from '../errors.ts';

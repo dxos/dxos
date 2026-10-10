@@ -4,11 +4,13 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
+import { type PanelMode } from '../../model/atoms.ts';
 import { createLatticeProjection } from '../../model/projections/lattice.ts';
 import { createMemoryStore } from '../../model/store.ts';
 import { type Box, SceneBuilder } from '../../utils/builder.ts';
@@ -26,9 +28,9 @@ import { SceneView } from './SceneView.tsx';
  * 3. L / K / P pick the line, curve or spline link tool: every port shows; dropping onto empty canvas creates a
  *    rectangle and links to it. A selected spline shows a diamond per control point and a dot per span midpoint:
  *    drag a diamond to move a point, drag a dot to add one there, alt-click a diamond to remove one.
- * 4. R / E / T / S then drag draws a rectangle, ellipse, text or nested scene (the UML class is plugin-uml's);
+ * 4. R / E / T / F then drag draws a rectangle, ellipse, text or frame (the UML class is plugin-uml's);
  *    Delete removes the selection (nodes or links).
- * 5. Double-click a portal (or zoom until it fills the view) drills in; Escape, Up or the breadcrumb drills out.
+ * 5. Double-click a frame (or zoom until it fills the view) drills in; Escape, Up or the breadcrumb drills out.
  * 6. G (or the Grid button) toggles the grid; with it off nothing snaps. The floating panel (top right) edits the
  *    selected element.
  */
@@ -36,7 +38,8 @@ type StoryArgs = {
   depth: number;
   liveDepth: number;
   readonly?: boolean;
-  fixture?: 'elements' | 'model' | 'square' | 'lattice' | 'scenes';
+  fixture?: 'elements' | 'model' | 'square' | 'lattice' | 'scenes' | 'frame';
+  panels?: PanelMode;
 };
 
 type EditorProps = {
@@ -45,13 +48,15 @@ type EditorProps = {
   liveDepth: number;
   readonly?: boolean;
   lattice?: boolean;
+  panels?: PanelMode;
 };
 
-const Editor = ({ store, root, liveDepth, readonly, lattice }: EditorProps) => (
+const Editor = ({ store, root, liveDepth, readonly, lattice, panels }: EditorProps) => (
   <SceneView.Root
     store={store}
     root={root}
     readonly={readonly}
+    panels={panels}
     createProjection={lattice ? createLatticeProjection : undefined}
   >
     <SceneView.Canvas liveDepth={liveDepth} />
@@ -61,6 +66,7 @@ const Editor = ({ store, root, liveDepth, readonly, lattice }: EditorProps) => (
     <SceneView.Palette />
     <SceneView.Properties />
     <SceneView.Layers />
+    <SceneView.About />
   </SceneView.Root>
 );
 
@@ -187,7 +193,28 @@ const createScenesTree = () => {
     .build();
 };
 
-const DefaultStory = ({ depth, liveDepth, readonly, fixture }: StoryArgs) => {
+/** A labelled frame onto a nested scene of two linked shapes, beside a rectangle. */
+const createFrameTree = () => {
+  const root = 'scene:root';
+  const size = { width: 256, height: 128 };
+  const at = (x: number, y = 0) => ({ x: x - size.width / 2, y: y - size.height / 2, ...size });
+  return SceneBuilder.scene(root, [
+    SceneBuilder.rect('a', at(-384)).properties({ label: 'A' }),
+    SceneBuilder.scene('frame', [
+      SceneBuilder.rect('b', at(-192)).properties({ label: 'B' }),
+      SceneBuilder.rect('c', at(192)).properties({ label: 'C' }),
+      SceneBuilder.link('smart', 'b', 'c'),
+    ])
+      .name('Inner')
+      .at({ x: 0, y: -128, width: 512, height: 256 })
+      .properties({ label: 'Frame' }),
+    SceneBuilder.link('smart', 'a', 'frame'),
+  ])
+    .name('root')
+    .build();
+};
+
+const DefaultStory = ({ depth, liveDepth, readonly, fixture, panels }: StoryArgs) => {
   const { store, root } = useMemo(() => {
     // The model fixture is a fixed three levels, so `depth` does not apply to it.
     const tree =
@@ -199,7 +226,9 @@ const DefaultStory = ({ depth, liveDepth, readonly, fixture }: StoryArgs) => {
             ? createLatticeTree()
             : fixture === 'scenes'
               ? createScenesTree()
-              : createSceneTree(depth);
+              : fixture === 'frame'
+                ? createFrameTree()
+                : createSceneTree(depth);
     return { store: createMemoryStore(tree.scenes), root: tree.root };
   }, [depth, fixture]);
 
@@ -212,17 +241,23 @@ const DefaultStory = ({ depth, liveDepth, readonly, fixture }: StoryArgs) => {
       liveDepth={liveDepth}
       readonly={readonly}
       lattice={fixture === 'lattice'}
+      panels={panels}
     />
   );
 };
 
 const meta: Meta<StoryArgs> = {
-  title: 'ui/react-ui-canvas/scene/SceneView',
+  title: 'ui/react-ui-canvas/SceneView',
   render: DefaultStory,
   decorators: [withRegistry, withTheme(), withLayout({ layout: 'fullscreen' })],
   // The properties panel is a react-ui-form form; its strings (e.g. "Mixed") and its controls' come from their bundles.
   parameters: { translations: [...uiTranslations, ...formTranslations] },
   argTypes: {
+    panels: {
+      control: { type: 'inline-radio' },
+      options: ['docked', 'floating'],
+      description: 'Where the properties and layers panels sit',
+    },
     depth: {
       control: { type: 'range', min: 0, max: 5, step: 1 },
       description: 'Levels of nested scenes in the fixture; 0 is an empty scene',
@@ -274,4 +309,50 @@ export const Scenes: Story = {
 
 export const Lattice: Story = {
   args: { depth: 0, liveDepth: 1, fixture: 'lattice' },
+};
+
+/** The panels dock by default: one accordion section each beside the canvas; a section collapses to its header. */
+export const Docked: Story = {
+  args: { depth: 0, liveDepth: 1, fixture: 'square' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // 1. The dock holds the properties and layers sections, both open.
+    const dock = await canvas.findByTestId('scene-view-dock');
+    await waitFor(() => expect(within(dock).getByTestId('dock-section-layers')).toHaveAttribute('data-state', 'open'));
+    await expect(within(dock).getByTestId('dock-section-properties')).toHaveAttribute('data-state', 'open');
+    // 2. A section's header collapses it.
+    await userEvent.click(
+      within(within(dock).getByTestId('dock-section-properties')).getByRole('button', { name: 'Properties' }),
+    );
+    await waitFor(() =>
+      expect(within(dock).getByTestId('dock-section-properties')).toHaveAttribute('data-state', 'closed'),
+    );
+  },
+};
+
+/** Floating panels: no dock, the layers over the canvas until something is selected. */
+export const Floating: Story = {
+  args: { depth: 0, liveDepth: 1, fixture: 'square', panels: 'floating' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByTestId('layers')).toBeInTheDocument();
+    await expect(canvas.queryByTestId('scene-view-dock')).not.toBeInTheDocument();
+    // About lives only in the dock.
+    await expect(canvas.queryByTestId('about')).not.toBeInTheDocument();
+  },
+};
+
+/** A frame onto a nested scene: its open control drills into the child scene, and Up returns. */
+export const Frame: Story = {
+  args: { depth: 0, liveDepth: 1, fixture: 'frame' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // 1. The frame shows its label and an open control; the root has nowhere up to go.
+    await waitFor(() => expect(canvasElement.querySelector('[data-node-id="frame"]')).toHaveTextContent('Frame'));
+    await waitFor(() => expect(canvas.getByTestId('toolbar-up')).toBeDisabled());
+    // 2. Opening the frame drills into its scene.
+    await userEvent.click(await canvas.findByTestId('portal-open'));
+    await waitFor(() => expect(canvas.getByTestId('toolbar-up')).toBeEnabled());
+    await waitFor(() => expect(canvasElement.querySelector('[data-node-id="b"]')).not.toBeNull());
+  },
 };

@@ -5,10 +5,8 @@
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
-import { type ShapeDef } from '@dxos/react-ui-canvas-editor';
-import { createAnchorMap } from '@dxos/react-ui-canvas-editor';
-
-import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs.ts';
+import { createPorts, defineComputeNode } from './common/index.ts';
+import { ComputeShape, type CreateShapeProps, createAnchorId, createShape, withZ } from './defs.ts';
 import { TextToImageComponent } from './TextToImage.tsx';
 
 // Kept out of `TextToImage.tsx`: react-refresh only fast-refreshes a module whose
@@ -27,11 +25,13 @@ export type CreateTextToImageProps = CreateShapeProps<TextToImageShape>;
 export const createTextToImage = (props: CreateTextToImageProps) =>
   createShape<TextToImageShape>({ type: 'text-to-image', size: { width: 128, height: 64 }, ...props });
 
-export const textToImageShape: ShapeDef<TextToImageShape> = {
+export const textToImageNodeDef = defineComputeNode<TextToImageShape>({
   type: 'text-to-image',
   name: 'Image',
   icon: 'ph--image--regular',
+  group: 'Transform',
+  schema: withZ(TextToImageShape),
   component: TextToImageComponent,
-  createShape: createTextToImage,
-  getAnchors: (shape) => createAnchorMap(shape, { [createAnchorId('output')]: { x: 1, y: 0 } }),
-};
+  create: createTextToImage,
+  ports: (shape) => createPorts(shape.size, { [createAnchorId('output')]: { x: 1, y: 0 } }),
+});

@@ -236,8 +236,9 @@ These constraints are easy to break and only observable in the published artifac
 
 ## Preview builds
 
-Every push to `main` publishes the generated packages to [pkg.pr.new](https://pkg.pr.new), so a fix is
-installable without waiting for an npm release. Install the package for your own platform:
+`main` publishes the generated packages to [pkg.pr.new](https://pkg.pr.new) once a day (06:00 UTC), and a
+dispatch of `pkg-pr-new.yml` publishes a branch tip on demand, so a fix is installable without waiting for an
+npm release. Install the package for your own platform:
 
 ```bash
 npm i https://pkg.pr.new/@dxos/cli-linux-x64@<commit-sha>
