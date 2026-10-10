@@ -91,8 +91,8 @@ export const Slider = forwardRef<HTMLDivElement, SliderProps>(
         orientation={orientation}
         aria-label={thumbLabels ?? (ariaLabel !== undefined ? [ariaLabel] : undefined)}
         aria-labelledby={labelledBy}
-        // Centred thumbs need no measurement, so their size can come from CSS; the control's margin keeps them in.
-        thumbAlignment='center'
+        // The machine measures the CSS-sized thumb and keeps it within the track, so the track spans the full width.
+        thumbAlignment='contain'
         className={mx(recipes.slider(), classNames)}
         ref={forwardedRef}
       >
