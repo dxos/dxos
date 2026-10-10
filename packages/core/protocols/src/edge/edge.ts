@@ -431,6 +431,12 @@ export enum EdgeWebsocketProtocol {
  */
 export const EDGE_CLIENT_VERSION_PROTOCOL_PREFIX = 'dxos-version.';
 
+/**
+ * HTTP header carrying the client's SDK version on every EDGE request, the counterpart of
+ * {@link EDGE_CLIENT_VERSION_PROTOCOL_PREFIX}; EDGE refuses a build older than the oldest it serves.
+ */
+export const EDGE_CLIENT_VERSION_HEADER = 'X-DXOS-Version';
+
 // TODO(mykola): Reconcile with type in EDGE repo.
 export type EdgeStatus = {
   problems: string[];

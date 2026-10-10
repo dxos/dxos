@@ -9,6 +9,7 @@ import { log } from '@dxos/log';
 import { EDGE_CLIENT_TAG_HEADER, EdgeAuthChallengeError, EdgeCallFailedError, type EdgeFailure } from '@dxos/protocols';
 
 import { authenticateViaChallengeEndpoint, handleAuthChallenge, parseChallengeHeader } from './auth-challenge.ts';
+import { clientSdkVersionHeaders } from './client-version.ts';
 import { type EdgeIdentity } from './edge-identity.ts';
 import { encodeAuthHeader } from './http-client.ts';
 import { getEdgeUrlWithProtocol } from './utils.ts';
@@ -238,7 +239,7 @@ export abstract class BaseHttpClient {
           await this._prefetchAuthHeader();
         }
 
-        const headers: Record<string, string> = { ...args.headers };
+        const headers: Record<string, string> = { ...clientSdkVersionHeaders(), ...args.headers };
         if (this._authHeader) {
           headers['Authorization'] = this._authHeader;
         } else if (this._apiKey) {
@@ -387,7 +388,7 @@ const createRequest = (
   apiKey?: string,
 ): RequestInit => {
   let requestBody: BodyInit | undefined;
-  const headers: HeadersInit = {};
+  const headers: HeadersInit = clientSdkVersionHeaders();
 
   if (json) {
     requestBody = body === undefined ? undefined : JSON.stringify(body);

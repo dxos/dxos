@@ -55,6 +55,7 @@ import {
 import { createUrl } from '@dxos/util';
 
 import { BaseHttpClient, type BaseHttpClientOptions, type EdgeHttpCallArgs } from './base-http-client.ts';
+import { clientSdkVersionHeaders } from './client-version.ts';
 import { proxyFetchLegacy } from './cors-proxy.ts';
 import { HttpConfig, withLogging, withRetryConfig } from './http-client.ts';
 
@@ -840,13 +841,16 @@ export class EdgeHttpClient extends BaseHttpClient {
     let handledAuth = false;
     while (true) {
       if (!this._authHeader) {
-        const authResponse = await fetch(new URL('/auth', this.baseUrl));
+        const authResponse = await fetch(new URL('/auth', this.baseUrl), { headers: clientSdkVersionHeaders() });
         if (authResponse.status === 401) {
           this._authHeader = await this._handleUnauthorized(authResponse);
         }
       }
 
       const headers = new Headers(request.headers);
+      for (const [name, value] of Object.entries(clientSdkVersionHeaders())) {
+        headers.set(name, value);
+      }
       if (this._authHeader) {
         headers.set('Authorization', this._authHeader);
       }

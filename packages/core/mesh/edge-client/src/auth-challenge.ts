@@ -9,6 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
+import { clientSdkVersionHeaders } from './client-version.ts';
 import { type EdgeIdentity } from './edge-identity.ts';
 
 /**
@@ -169,7 +170,7 @@ export type AuthChallengeInfo = {
  */
 export const fetchAuthChallengeInfo = async (baseHttpUrl: string | URL): Promise<AuthChallengeInfo | undefined> => {
   try {
-    const response = await fetch(new URL('/auth', baseHttpUrl));
+    const response = await fetch(new URL('/auth', baseHttpUrl), { headers: clientSdkVersionHeaders() });
     const challenge = await readAuthChallenge(response);
     if (!challenge) {
       log.verbose('no challenge in /auth response', { status: response.status });

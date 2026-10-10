@@ -6,8 +6,10 @@ import { create } from '@bufbuild/protobuf';
 import { afterEach, describe, it, test, vi } from 'vitest';
 
 import { Context } from '@dxos/context';
+import { EDGE_CLIENT_VERSION_HEADER } from '@dxos/protocols';
 import { type Presentation, PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
+import { version as packageVersion } from '../package.json';
 import { createEphemeralEdgeIdentity } from './auth.ts';
 import { EdgeHttpClient } from './edge-http-client.ts';
 import { type EdgeIdentity } from './edge-identity.ts';
@@ -90,6 +92,46 @@ describe('EdgeHttpClient.request', () => {
     expect(String(targetCall?.[0])).toBe('https://edge.example.com/compute/discord/bots/app-1');
     expect(targetCall?.[1]?.method).toBe('PUT');
     expect(targetCall?.[1]?.body).toBe(JSON.stringify({ spaceId: 'space' }));
+  });
+});
+
+describe('EdgeHttpClient SDK version header', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  /** Answers every call, recording the headers each one sent. */
+  const stubFetch = () => {
+    const sent: Array<{ url: string; headers: Headers }> = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        const url = String(input instanceof URL ? input : input instanceof Request ? input.url : input);
+        sent.push({ url, headers: new Headers(init?.headers) });
+        if (url.endsWith('/auth')) {
+          return new Response(null, { status: 200 });
+        }
+        return new Response(JSON.stringify({ success: true, data: {} }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }),
+    );
+    return sent;
+  };
+
+  // EDGE refuses an outdated client by this header, so a request without it would be refused once EDGE checks HTTP.
+  test('every request, the /auth probe and the AI proxy included, carries the package version', async ({ expect }) => {
+    const sent = stubFetch();
+    const client = new EdgeHttpClient('https://edge.example.com');
+
+    await client.request(Context.default(), '/compute/discord/bots/app-1', { method: 'PUT', body: {} });
+    await client.aiRequest('anthropic', new Request('http://edge/v1/messages', { method: 'POST', body: '{}' }));
+
+    expect(sent.length).toBeGreaterThanOrEqual(3);
+    for (const { headers } of sent) {
+      expect(headers.get(EDGE_CLIENT_VERSION_HEADER)).toBe(packageVersion);
+    }
   });
 });
 
