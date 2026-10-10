@@ -4,7 +4,7 @@
 
 import type * as Instrument from '@dxos/plugin-sequencer/Instrument';
 
-import { Calibration, type Scale, type ScaleNote, formatPitch, getScaleNotes, parsePitch } from '#audio';
+import { A4, Calibration, type Scale, type ScaleNote, formatPitch, getScaleNotes, parsePitch } from '#audio';
 
 /** The handpan scale as an instrument tuning (MIDI pitches; the ding is the root). */
 export const scaleToTuning = (scale: Scale): Instrument.Tuning => ({
@@ -68,5 +68,6 @@ export const fromInstrumentCalibration = (
   return Calibration.restore(notes, samples, options);
 };
 
-/** Scale notes for an instrument's tuning. */
-export const instrumentNotes = (tuning: Instrument.Tuning): ScaleNote[] => getScaleNotes(tuningToScale(tuning));
+/** Scale notes for an instrument's tuning at its concert pitch (`Instrument.reference`, A4 in Hz). */
+export const instrumentNotes = (tuning: Instrument.Tuning, reference = A4): ScaleNote[] =>
+  getScaleNotes(tuningToScale(tuning), reference);

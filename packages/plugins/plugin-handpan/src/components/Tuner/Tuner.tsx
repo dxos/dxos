@@ -18,6 +18,7 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import * as Tooltip from '@dxos/react-ui/Tooltip';
 
 import {
+  A4,
   type AnalyzerFrame,
   Calibration,
   type Classification,
@@ -37,7 +38,7 @@ import {
 import { type AudioSourceKind, useNoteAnalyzer } from '#hooks';
 import { meta } from '#meta';
 
-import { fromInstrumentCalibration, toInstrumentCalibration } from '../../notation/index.ts';
+import { EchoFilter, fromInstrumentCalibration, toInstrumentCalibration } from '../../notation/index.ts';
 import { HandpanLayout } from '../HandpanLayout/index.ts';
 import { LevelMeter } from '../LevelMeter/index.ts';
 import { NoteDisplay } from '../NoteDisplay/index.ts';
@@ -65,6 +66,8 @@ export type TunerProps = {
    */
   calibration?: readonly InstrumentType.NoteCalibration[];
   onCalibrationChange?: (calibration: InstrumentType.NoteCalibration[]) => void;
+  /** Concert pitch: frequency of A4 in Hz (e.g. `Instrument.reference`); defaults to 440. */
+  reference?: number;
   /** Keep the selected scale and each scale's calibration in this browser (local storage) across reloads. */
   persist?: boolean;
   onNote?: (event: NoteEvent, classification?: Classification) => void;
@@ -175,6 +178,7 @@ export const Tuner = ({
   persist = false,
   calibration: storedCalibration,
   onCalibrationChange,
+  reference = A4,
   silent = false,
   chords = false,
   onNote,
@@ -189,7 +193,7 @@ export const Tuner = ({
   const [played, setPlayed] = useState<PlayedNote[]>([]);
 
   const scale = scales.find((candidate) => candidate.id === scaleId) ?? scales[0];
-  const notes = useMemo(() => getScaleNotes(scale), [scale]);
+  const notes = useMemo(() => getScaleNotes(scale, reference), [scale, reference]);
 
   // A ref mirrors the calibration because strikes arrive from the audio callback, outside render.
   const controlled = storedCalibration !== undefined;
@@ -203,15 +207,15 @@ export const Tuner = ({
   const calibrationRef = useRef(calibration);
   const scaleIdRef = useRef(scale.id);
   scaleIdRef.current = scale.id;
-  // What this tuner last reported, so an echo of its own change is not re-applied as an external one.
-  const emittedRef = useRef<string>(undefined);
+  // Reports not yet echoed back, so a late echo is not re-applied over newer local strikes.
+  const echoRef = useRef(new EchoFilter<InstrumentType.NoteCalibration[]>());
   const setCalibration = useCallback(
     (state: Calibration.CalibrationState) => {
       calibrationRef.current = state;
       setCalibrationState(state);
       if (onCalibrationChange) {
         const stored = toInstrumentCalibration(state);
-        emittedRef.current = JSON.stringify(stored);
+        echoRef.current.reported(stored);
         onCalibrationChange(stored);
       } else if (persist) {
         saveSamples(scaleIdRef.current, state.samples);
@@ -220,11 +224,21 @@ export const Tuner = ({
     [persist, onCalibrationChange],
   );
 
-  // Another device or user may update the instrument's calibration.
+  // Another device or user may update the instrument's calibration, or the tuner may be unbound from it.
+  const wasControlledRef = useRef(controlled);
   useEffect(() => {
-    if (storedCalibration && JSON.stringify(storedCalibration) !== emittedRef.current) {
-      emittedRef.current = JSON.stringify(storedCalibration);
-      const state = fromInstrumentCalibration(calibrationRef.current.notes, storedCalibration, { strikes });
+    const wasControlled = wasControlledRef.current;
+    wasControlledRef.current = controlled;
+    let state: Calibration.CalibrationState | undefined;
+    if (storedCalibration) {
+      if (!echoRef.current.isEcho([...storedCalibration])) {
+        state = fromInstrumentCalibration(calibrationRef.current.notes, storedCalibration, { strikes });
+      }
+    } else if (wasControlled) {
+      echoRef.current.reset();
+      state = loadCalibration(calibrationRef.current.notes, scaleIdRef.current);
+    }
+    if (state) {
       calibrationRef.current = state;
       setCalibrationState(state);
     }
@@ -368,7 +382,7 @@ export const Tuner = ({
         saveScaleId(id);
       }
       scaleIdRef.current = id;
-      const nextCalibration = loadCalibration(getScaleNotes(next), id);
+      const nextCalibration = loadCalibration(getScaleNotes(next, reference), id);
       // A stored calibration belongs to the instrument, so switching scale must not overwrite it.
       if (controlled) {
         calibrationRef.current = nextCalibration;

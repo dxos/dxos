@@ -23,6 +23,11 @@ describe('Instrument mapping', () => {
     expect(instrumentNotes(tuning).map(({ pitch }) => pitch)).toEqual(getScaleNotes(D_KURD).map(({ pitch }) => pitch));
   });
 
+  test('notes follow the instrument reference pitch', ({ expect }) => {
+    const [a4] = instrumentNotes({ pitches: [69] }, 432);
+    expect(a4.frequency).toBe(432);
+  });
+
   test('sharps in a tuning are matched by MIDI pitch, not spelling', ({ expect }) => {
     const [amara] = SCALES.filter(({ id }) => id === 'c-amara');
     const notes = getScaleNotes(amara);
