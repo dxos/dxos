@@ -11,8 +11,8 @@ import { raise } from '@dxos/debug';
 import { type Database, Entity, Filter, Query } from '@dxos/echo';
 import { EID, type EntityId } from '@dxos/keys';
 import { Tree, type TreeItemDataProps, type TreeModel, type TreeNode } from '@dxos/react-ui-list';
-import * as Button from '@dxos/react-ui/Button';
-import { mx } from '@dxos/ui-theme';
+import * as Icon from '@dxos/react-ui/Icon';
+import { getStyles, mx } from '@dxos/ui-theme';
 
 export type PropertyTreeProps = {
   /** The value to inspect; serialized through `JSON.stringify`, so an ECHO object shows its `toJSON` shape. */
@@ -46,7 +46,8 @@ export const PropertyTree = ({ value, db, defaultDepth = 2, onNavigate }: Proper
       <Tree.Root
         id='properties'
         model={model.treeModel}
-        columns='var(--dx-half-block-size) var(--dx-block-size) minmax(0, 1fr) min-content'
+        // No icon track: glyphs mark only references, inline beside the target they name.
+        columns='var(--dx-half-block-size) minmax(0, 1fr)'
         onOpenChange={handleOpenChange}
       >
         <Tree.Content>{renderRow}</Tree.Content>
@@ -61,44 +62,64 @@ const renderRow = (node: TreeNode<PropertyNode>) =>
   node.item ? (
     <Tree.Item node={node}>
       <Tree.ItemIndicator />
-      <Tree.ItemIcon />
       <Tree.ItemText>
         <PropertyRow item={node.item} />
       </Tree.ItemText>
-      <PropertyActions item={node.item} />
     </Tree.Item>
   ) : null;
 
-/** Key, then a one-line preview of the value; a reference previews its target's label. */
-const PropertyRow = ({ item }: { item: PropertyNode }) => {
-  const { model } = useContext(PropertyTreeContext) ?? raise(new Error('PropertyTreeContext not found'));
-  const target = useAtomValue(model.target(item.id));
-  return (
-    <span className='flex gap-2 min-w-0 font-mono text-sm'>
-      <span className='shrink-0 text-fg-subtle'>{item.key}</span>
-      <span className={mx('truncate', VALUE_CLASSES[item.kind])}>{preview(item, target)}</span>
-    </span>
-  );
-};
+/** Key, then a one-line preview of the value; a reference shows its target instead. */
+const PropertyRow = ({ item }: { item: PropertyNode }) => (
+  <span className='flex items-center gap-2 min-w-0 font-mono text-sm'>
+    <span className='shrink-0 text-fg-subtle'>{item.key}</span>
+    {item.kind === 'ref' ? (
+      <RefValue item={item} />
+    ) : (
+      <span className={mx('truncate', VALUE_CLASSES[item.kind])}>{preview(item)}</span>
+    )}
+  </span>
+);
 
-const PropertyActions = ({ item }: { item: PropertyNode }) => {
-  const { onNavigate } = useContext(PropertyTreeContext) ?? raise(new Error('PropertyTreeContext not found'));
-  const id = item.kind === 'ref' ? getRefEntityId(item.value) : undefined;
-  if (!id || !onNavigate) {
-    return <span role='none' />;
+/**
+ * The referenced entity as the rest of the app shows it: its own (hued) icon and label, which selects it.
+ * A dangling reference, or one outside this database, falls back to its raw uri.
+ */
+const RefValue = ({ item }: { item: PropertyNode }) => {
+  const { model, onNavigate } = useContext(PropertyTreeContext) ?? raise(new Error('PropertyTreeContext not found'));
+  const target = useAtomValue(model.target(item.id));
+  const id = getRefEntityId(item.value);
+  if (!target) {
+    return (
+      <span className='flex items-center gap-1 min-w-0 text-fg-subtle'>
+        <Icon.Icon icon='ph--link-break--regular' size='sm' classNames='shrink-0' />
+        <span className='truncate'>{isRecord(item.value) ? String(item.value['/']) : ''}</span>
+      </span>
+    );
   }
 
-  return (
-    <Tree.ItemActions>
-      <Button.Root
-        variant='ghost'
-        icon='ph--arrow-square-right--regular'
-        iconOnly
-        label='Select object'
-        data-testid='property-tree.navigate'
-        onClick={() => onNavigate(id)}
+  const content = (
+    <>
+      <Icon.Icon
+        icon={target.icon ?? 'ph--cube--regular'}
+        size='sm'
+        classNames={['shrink-0', target.hue && getStyles(target.hue).text]}
       />
-    </Tree.ItemActions>
+      <span className='truncate'>{target.label}</span>
+    </>
+  );
+
+  return id && onNavigate ? (
+    // A button, so the tree leaves the click to it rather than selecting or toggling the row.
+    <button
+      className='flex items-center gap-1 min-w-0 font-sans text-accent-text hover:underline'
+      title='Select object'
+      data-testid='property-tree.navigate'
+      onClick={() => onNavigate(id)}
+    >
+      {content}
+    </button>
+  ) : (
+    <span className='flex items-center gap-1 min-w-0 font-sans'>{content}</span>
   );
 };
 
@@ -122,7 +143,7 @@ export type PropertyNode = {
 };
 
 /** Resolved reference target, as the row previews it and its children read it. */
-type RefTarget = { label: string; icon?: string; json: JsonValue } | undefined;
+type RefTarget = { label: string; icon?: string; hue?: string; json: JsonValue } | undefined;
 
 const ROOT_ID = 'root';
 
@@ -216,11 +237,9 @@ class PropertyTreeModel {
       const node = get(this.#item(id));
       // Read one level ahead (as `ObjectsTree` does), so a closed reference still draws its toggle.
       const children = get(this.#children(id));
-      const target = get(this.#target(id));
       return {
         id,
         label: node?.key ?? id,
-        icon: target?.icon ?? (node ? ICONS[node.kind] : undefined),
         ...(children.length > 0 && { parentOf: children.map((child) => child.id) }),
       };
     }),
@@ -253,6 +272,7 @@ class PropertyTreeModel {
       return {
         label: Entity.getLabel(snapshot) ?? Entity.getTypename(snapshot) ?? entity.id,
         icon: Entity.getIcon(snapshot)?.icon,
+        hue: Entity.getIcon(snapshot)?.hue,
         json: toJson(entity),
       };
     });
@@ -263,13 +283,6 @@ const NEVER_CURRENT = Atom.make(false);
 
 /** A larger container (e.g. a blob's inline bytes) stays closed by default, so it does not bury its siblings. */
 const MAX_DEFAULT_OPEN_ENTRIES = 20;
-
-/** Only structure gets a glyph; a primitive's value is already its own signal, and an icon per leaf is noise. */
-const ICONS: Partial<Record<PropertyKind, string>> = {
-  object: 'ph--brackets-curly--regular',
-  array: 'ph--brackets-square--regular',
-  ref: 'ph--link--regular',
-};
 
 const VALUE_CLASSES: Record<PropertyKind, string> = {
   object: 'text-fg-subtle',
@@ -343,11 +356,12 @@ const entries = (value: JsonValue | undefined): [string, JsonValue][] => {
   return [];
 };
 
-const preview = (node: PropertyNode, target: RefTarget): string => {
+/** A non-reference value on one line; a reference renders its target instead (see `RefValue`). */
+const preview = (node: PropertyNode): string => {
   const { value } = node;
   switch (node.kind) {
     case 'ref':
-      return target?.label ?? (isRecord(value) ? String(value['/']) : '');
+      return '';
     case 'array':
       return Array.isArray(value) ? `[${value.length}]` : '';
     case 'object':

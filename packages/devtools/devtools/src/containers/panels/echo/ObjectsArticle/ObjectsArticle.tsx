@@ -3,7 +3,7 @@
 //
 
 import { formatDistanceToNow } from 'date-fns';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { type ComponentRef, useCallback, useMemo, useRef, useState } from 'react';
 
 import { type Database, Entity, Filter, Format, Obj, Query, Tag, Type } from '@dxos/echo';
 import { type VersionDiff, checkoutVersion, getEditHistoryWithDiffs } from '@dxos/echo-client';
@@ -58,6 +58,12 @@ export const ObjectsArticle = ({ role, ...props }: ArticleProps & { space?: Spac
 
   const [view, setView] = useState<View>('tree');
   const [text, setText] = useState('');
+  // The editor reads `value` only on mount, so a clear has to be pushed into it.
+  const editorRef = useRef<ComponentRef<typeof QueryEditor>>(null);
+  const handleClear = useCallback(() => {
+    editorRef.current?.setText('');
+    setText('');
+  }, []);
   const filter = useMemo(() => {
     const trimmed = text.trim();
     // A query that does not parse matches nothing, rather than everything.
@@ -106,6 +112,7 @@ export const ObjectsArticle = ({ role, ...props }: ArticleProps & { space?: Spac
             tags={tags}
             value={text}
             onChange={setText}
+            ref={editorRef}
             data-testid='objects.query'
           />
           <Button.Root
@@ -113,7 +120,7 @@ export const ObjectsArticle = ({ role, ...props }: ArticleProps & { space?: Spac
             iconOnly
             disabled={text.trim().length === 0}
             label='Clear query'
-            onClick={() => setText('')}
+            onClick={handleClear}
           />
           <Toolbar.ToggleGroup type='single' value={view} onValueChange={handleViewChange}>
             {VIEWS.map(({ value, icon, label }) => (
