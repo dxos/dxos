@@ -4,7 +4,7 @@
 
 import react from '@vitejs/plugin-react';
 import { execFileSync } from 'node:child_process';
-import { createReadStream, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { createReadStream, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { ResolverFactory } from 'oxc-resolver';
 // import sourcemaps from 'rollup-plugin-sourcemaps';
@@ -170,6 +170,21 @@ const REACT_EXCLUDE = [
   /\/node_modules\//,
   /\/(?:solid-ui-geo|plugin-map-solid|effect-atom-solid|web-context-solid|echo-solid)\//,
 ];
+
+/**
+ * React Compiler options; `sources` covers every workspace root except `react-ui`, whose primitives
+ * ship whole in the boot graph (an import-map shared package) where compiled caches cost ~75 KB
+ * and rarely hit. Scoped here rather than by `exclude` so those primitives keep Fast Refresh.
+ */
+const reactCompilerOptions = {
+  sources: readdirSync(path.join(rootDir, 'packages')).flatMap((group) =>
+    group === 'ui'
+      ? readdirSync(path.join(rootDir, 'packages/ui'))
+          .filter((name) => name !== 'react-ui')
+          .map((name) => `/packages/ui/${name}/`)
+      : [`/packages/${group}/`],
+  ),
+};
 
 /**
  * Transpile targets for oxc (dev) and Rolldown (build).
@@ -637,8 +652,9 @@ export default defineConfig((env) => ({
     // Must be placed before React plugin to process Solid files first.
     solid({ include: SOLID_SOURCES }),
 
-    // `.jsx`/`.tsx` only: over plain script modules it emits Fast Refresh registrations that throw in the client's workers.
-    react({ include: /\.[jt]sx$/, exclude: REACT_EXCLUDE }),
+    // React Compiler via oxc (`oxc-transform-react`) rather than Babel, on `.jsx`/`.tsx` only because
+    // over plain script modules it emits Fast Refresh registrations that throw in the client's workers.
+    react({ compiler: reactCompilerOptions, include: /\.[jt]sx$/, exclude: REACT_EXCLUDE }),
 
     isBundledDev && reactRefreshPreamble(react.preambleCode),
 
