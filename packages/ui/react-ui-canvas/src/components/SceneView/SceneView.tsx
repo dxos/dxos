@@ -118,6 +118,9 @@ const PANEL_CLASSES = 'absolute top-2 right-2 w-80 h-auto max-h-[calc(100%-1rem)
 /** The link drawn as a preview during a drag; it never reaches the model. */
 const PREVIEW_LINK_ID = 'preview-link';
 
+/** The view's display toggles a host may persist: snapping (which draws the grid) and the lattice guides. */
+export type SceneDisplay = { snap: boolean; guides: boolean };
+
 export type SceneViewRootProps = Util.ThemedClassName<{
   store: SceneStore;
   root: SceneId;
@@ -133,6 +136,10 @@ export type SceneViewRootProps = Util.ThemedClassName<{
   initialCamera?: Camera;
   /** Called once the camera settles on the root scene, so a host can persist it. */
   onCameraChange?: (camera: Camera) => void;
+  /** Whether moves snap (and the grid shows) and the lattice guides show, e.g. as last left; both on when unset. */
+  initialDisplay?: Partial<SceneDisplay>;
+  /** Called when the snap or guides toggle changes, so a host can persist it. */
+  onDisplayChange?: (display: SceneDisplay) => void;
   /** Minor grid spacing in scene px; moves snap to it, creation and resizing to the major grid, `MAJOR_GRID_RATIO` times it. */
   grid?: number;
   /** Least gap between the scene's frame and each viewport edge when fitting, in major cells. */
@@ -158,6 +165,8 @@ const SceneViewRoot = ({
   atoms: atomsProp,
   initialCamera,
   onCameraChange,
+  initialDisplay,
+  onDisplayChange,
   grid = DEFAULT_GRID,
   margin = DEFAULT_MARGIN,
   readonly = false,
@@ -199,6 +208,26 @@ const SceneViewRoot = ({
   }, [active, selection, registry, atoms.active]);
   const debug = useAtomValue(atoms.debug);
   const guides = useAtomValue(atoms.guides);
+  // Seeded once per atoms, before the host hears of any change, so restoring the toggles reports nothing back.
+  const reportedRef = useRef<SceneDisplay | undefined>(undefined);
+  useLayoutEffect(() => {
+    if (initialDisplay?.snap !== undefined) {
+      registry.set(atoms.snap, initialDisplay.snap);
+    }
+    if (initialDisplay?.guides !== undefined) {
+      registry.set(atoms.guides, initialDisplay.guides);
+    }
+    reportedRef.current = { snap: registry.get(atoms.snap), guides: registry.get(atoms.guides) };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [atoms]);
+  useEffect(() => {
+    const reported = reportedRef.current;
+    if (!onDisplayChange || !reported || (reported.snap === snapEnabled && reported.guides === guides)) {
+      return;
+    }
+    reportedRef.current = { snap: snapEnabled, guides };
+    onDisplayChange({ snap: snapEnabled, guides });
+  }, [onDisplayChange, snapEnabled, guides]);
   const latticeOn = useAtomValue(atoms.lattice);
   const sceneId = path[path.length - 1];
   const canUndo = !readonly && undoState.key === sceneId && undoState.past.length > 0;

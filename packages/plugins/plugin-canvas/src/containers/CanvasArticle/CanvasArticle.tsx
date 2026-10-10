@@ -19,6 +19,7 @@ import {
   type Camera,
   type Element,
   type Node,
+  type SceneDisplay,
   type SceneId,
   SceneView,
   type SceneViewPropertiesProps,
@@ -45,7 +46,6 @@ import {
 import { CanvasCapabilities } from '#types';
 
 import { CanvasDatabaseContext, CanvasFrameNodeView, CanvasFrameToolbar } from './CanvasFrameNodeView.tsx';
-import { canvasViewModeAspect } from './view-mode.ts';
 import { canvasViewAspect } from './view-state.ts';
 
 export type CanvasArticleProps = IllustratorCapabilities.DrawingVariantSurfaceProps;
@@ -107,11 +107,21 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
 
   // Restores where the root scene was last left; read once per binding, since later values are our own writes.
   const contextId = Entity.getURI(canvas);
-  const { camera: savedCamera } = useViewState(canvasViewAspect, contextId);
-  const { readonly = false } = useViewState(canvasViewModeAspect, contextId);
+  const {
+    camera: savedCamera,
+    readonly = false,
+    floating = false,
+    grid: snap,
+    guides,
+  } = useViewState(canvasViewAspect, contextId);
   const { update: updateViewState } = useViewStateActions(canvasViewAspect, contextId);
   const handleCameraChange = useCallback(
     (camera: Camera) => updateViewState((state) => ({ ...state, camera })),
+    [updateViewState],
+  );
+  const handleDisplayChange = useCallback(
+    // The engine's snap toggle is what draws the grid, so the view state calls it the grid.
+    ({ snap, guides }: SceneDisplay) => updateViewState((state) => ({ ...state, grid: snap, guides })),
     [updateViewState],
   );
 
@@ -178,7 +188,9 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
               readonly={readonly}
               initialCamera={savedCamera}
               onCameraChange={handleCameraChange}
-              panels={(settings.dockPanels ?? true) ? 'docked' : 'floating'}
+              initialDisplay={{ snap, guides }}
+              onDisplayChange={handleDisplayChange}
+              panels={floating ? 'floating' : 'docked'}
             >
               <SceneView.Canvas liveDepth={settings.liveDepth} />
               {/* Unset means shown: settings saved before the default existed hold neither key. */}
