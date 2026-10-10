@@ -1,0 +1,4 @@
+
+# Licensed fonts: keep local, never commit (Sharp Sans is commercially licensed).
+public/fonts/*
+!public/fonts/README.md

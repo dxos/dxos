@@ -1,0 +1,16 @@
+layer: application
+language: typescript
+tags:
+  - typecheck
+  - remotion
+
+tasks:
+  render-first-run:
+    extends: render
+    args: --first-run
+
+  sounds:
+    command: python3 scripts/make-sounds.py
+    options:
+      cache: false
+      runInCI: false
