@@ -17,7 +17,7 @@ import { TestSchema } from '@dxos/schema/testing';
 
 import { DevtoolsContextProvider } from '../hooks/index.ts';
 import { ObjectsTree } from './ObjectsTree.tsx';
-import { ObjectViewer } from './ObjectViewer.tsx';
+import { PropertyTree } from './PropertyTree/index.ts';
 
 random.seed(1);
 
@@ -178,7 +178,7 @@ export const WithDetails: Story = {
       <div className='dx-expand overflow-hidden grid grid-rows-[1fr_1fr]'>
         <ObjectsTree db={space.db} onSelect={setSelectedObject} />
         <div className='border-separator! border-s border-t'>
-          {selectedObject && <ObjectViewer object={selectedObject} id={selectedObject.id} />}
+          {selectedObject && <PropertyTree value={selectedObject} db={space.db} />}
         </div>
       </div>
     );

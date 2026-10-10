@@ -122,6 +122,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-introspect": "workspace:*",
+    "@dxos/react-ui-query": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
     "@dxos/react-ui-terminal": "workspace:*",
     "@dxos/util": "workspace:*"

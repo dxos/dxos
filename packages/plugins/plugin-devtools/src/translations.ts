@@ -3,6 +3,7 @@
 //
 
 import { translations as introspectTranslations } from '@dxos/react-ui-introspect/translations';
+import { translations as queryTranslations } from '@dxos/react-ui-query/translations';
 import { translations as tableTranslations } from '@dxos/react-ui-table/translations';
 import type * as Theme from '@dxos/react-ui/Theme';
 
@@ -12,6 +13,8 @@ export const translations = [
   ...introspectTranslations,
   // The panels' tables (credentials, feeds, …) read their column menus from react-ui-table.
   ...tableTranslations,
+  // The objects panel filters with react-ui-query's editor.
+  ...queryTranslations,
   {
     'en-US': {
       [meta.profile.key]: {
