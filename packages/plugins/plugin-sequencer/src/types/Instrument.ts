@@ -11,7 +11,7 @@ import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 export const SpectralPeak = Schema.Struct({
   frequency: Schema.Number,
   amplitude: Schema.Number,
-});
+}).mapFields(Struct.map(Schema.mutableKey));
 
 export interface SpectralPeak extends Schema.Schema.Type<typeof SpectralPeak> {}
 
@@ -20,9 +20,9 @@ export const Strike = Schema.Struct({
   /** Measured fundamental (Hz). */
   frequency: Schema.Number,
   /** Relative strength of harmonics 1…n. */
-  partials: Schema.Array(Schema.Number),
+  partials: Schema.mutable(Schema.Array(Schema.Number)),
   /** Measured spectrum, including what rang in sympathy. */
-  peaks: Schema.optional(Schema.Array(SpectralPeak)),
+  peaks: Schema.optional(Schema.mutable(Schema.Array(SpectralPeak))),
 }).mapFields(Struct.map(Schema.mutableKey));
 
 export interface Strike extends Schema.Schema.Type<typeof Strike> {}
@@ -64,6 +64,7 @@ export class Instrument extends Type.makeObject<Instrument>(DXN.make('org.dxos.t
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--guitar--regular', hue: 'fuchsia' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 
