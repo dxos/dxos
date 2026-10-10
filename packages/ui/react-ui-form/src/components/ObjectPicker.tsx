@@ -163,6 +163,8 @@ export const ObjectPicker = ({
     <Combobox.Root
       items={items}
       loading={loading}
+      // Pinned to the field's width: object labels (or URIs) can be long enough to widen the popup past the form.
+      positioning={{ sameWidth: true }}
       open={open}
       onOpenChange={handleOpenChange}
       value={value ? [value] : []}

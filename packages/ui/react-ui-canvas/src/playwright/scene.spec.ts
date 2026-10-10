@@ -262,17 +262,17 @@ test.describe('SceneView', () => {
         return rows[0] < rows[1] && rows[1] < rows[2];
       })
       .toBe(true);
-    // A portal made from the toolbar gets its child scene, so Enter opens it.
+    // A frame made from the toolbar gets its child scene, so Enter opens it.
     await page.getByTestId('toolbar-create').click();
-    await page.getByTestId('create-scene').click();
+    await page.getByTestId('create-frame').click();
     await scene.focus();
     await page.keyboard.press('Enter');
     await expect(page.getByTestId('toolbar-up')).toBeEnabled();
   });
 
-  test('a scene shape opens from its zoom-in control', async () => {
+  test('a frame opens from its zoom-in control', async () => {
     await page.getByTestId('toolbar-create').click();
-    await page.getByTestId('create-scene').click();
+    await page.getByTestId('create-frame').click();
     await page.getByTestId('portal-open').first().click();
     await expect(page.getByTestId('toolbar-up')).toBeEnabled();
   });

@@ -13,19 +13,19 @@ import * as Schema from 'effect/Schema';
 import { type ContentMap } from '@dxos/diagram';
 import {
   DEFAULT_LAYER,
+  type FrameNode,
   Layer,
   LINE_STYLES,
   Link,
   type Node,
   NodeBase,
-  type PortalNode,
   type Scene,
   type SceneId,
   type SceneMap,
   StyleClass,
   type StyleMap,
   elementLayer,
-  isPortalNode,
+  isFrameNode,
   sortByZ,
 } from '@dxos/react-ui-canvas/scene';
 
@@ -111,7 +111,7 @@ export const isElementRecord = Schema.is(ElementRecord);
 /** Plain data from a record that may be an ECHO proxy: records must not alias live content. */
 export const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value));
 
-const toRoot = (node: PortalNode): PortalNode => ({ ...node, scene: ROOT_SCENE_ID });
+const toRoot = (node: FrameNode): FrameNode => ({ ...node, scene: ROOT_SCENE_ID });
 
 /** Whether the content was saved with the legacy root scene id, so `migrateContent` would change it. */
 export const hasLegacyRoot = (content: ContentMap): boolean => {
@@ -144,9 +144,9 @@ export const migrateContent = (content: ContentMap): boolean => {
     const record: unknown = value;
     if (isNodeRecord(record)) {
       const node = clone(record.node);
-      const portal = isPortalNode(node) && node.scene === LEGACY_ROOT_SCENE_ID;
+      const portal = isFrameNode(node) && node.scene === LEGACY_ROOT_SCENE_ID;
       if (record.scene === LEGACY_ROOT_SCENE_ID || portal) {
-        const next: Node = isPortalNode(node) && portal ? toRoot(node) : node;
+        const next: Node = isFrameNode(node) && portal ? toRoot(node) : node;
         content[key] = {
           ...clone(record),
           scene: record.scene === LEGACY_ROOT_SCENE_ID ? ROOT_SCENE_ID : record.scene,

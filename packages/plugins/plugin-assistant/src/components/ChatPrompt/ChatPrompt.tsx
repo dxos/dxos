@@ -8,10 +8,11 @@ import * as Option from 'effect/Option';
 import type * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 
+import { type AiContext } from '@dxos/assistant';
 import type * as Chat from '@dxos/assistant/Chat';
 import { type Event } from '@dxos/async';
 import * as Project from '@dxos/compute/Project';
-import { type Database, Obj } from '@dxos/echo';
+import { type Database, Obj, type Registry } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import {
   ChatEditor,
@@ -52,6 +53,13 @@ export type ChatPromptProps = Merge<
     chat?: Chat.Chat;
     /** Undefined while the chat model is still opening: the prompt takes text but holds it until then. */
     chatModel?: ChatModel;
+    /**
+     * Bindings for a draft with no chat model, whose caller handles the submit event: backs the context
+     * controls and lets the prompt send.
+     */
+    context?: AiContext.Binder;
+    /** Skill registry for the context controls when there is no chat model. */
+    registry?: Registry.Registry;
     event: Event<ChatEvent>;
     /** Whether the checklist beside the prompt is shown; the toggle renders only when provided. */
     tasksVisible?: boolean;
@@ -85,6 +93,8 @@ export const ChatPrompt = ({
   db,
   chat,
   chatModel,
+  context: draftContext,
+  registry: draftRegistry,
   event,
   tasksVisible,
   attendableId,
@@ -106,6 +116,8 @@ export const ChatPrompt = ({
   const error = useAtomValue(chatModelState.error).pipe(Option.getOrUndefined);
   const streaming = useAtomValue(chatModelState.streaming);
   const active = useAtomValue(chatModelState.active);
+  const context = chatModel?.context ?? draftContext;
+  const registry = chatModel?.registry ?? draftRegistry;
 
   const editorRef = useRef<ChatEditorController>(null);
   useEffect(() => {
@@ -160,7 +172,7 @@ export const ChatPrompt = ({
 
   // A full queue stops taking prompts: what is typed stays in the editor until the agent takes one up.
   const queueFull = active && queueSize >= maxQueue;
-  const canSend = hasText && chatModel != null && !queueFull;
+  const canSend = hasText && context != null && !queueFull;
 
   const extensions = useMemo(
     () => [keymapExtensions, pendingText(), commandsExtension, emptinessExtension],
@@ -172,13 +184,13 @@ export const ChatPrompt = ({
   // outbox, which queues it while the agent is busy).
   const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
     (text) => {
-      if (!chatModel || queueFull) {
+      if (!context || queueFull) {
         return false;
       }
       event.emit({ type: 'submit', text });
       return true;
     },
-    [event, chatModel, queueFull],
+    [event, context, queueFull],
   );
 
   // Routed through `handleSubmit` so the button and the Enter keybinding share one submit path;
@@ -247,15 +259,15 @@ export const ChatPrompt = ({
                 <ChatOptions
                   db={db}
                   chat={chat}
-                  registry={chatModel?.registry}
-                  context={chatModel?.context}
+                  registry={registry}
+                  context={context}
                   started={started}
                   preset={preset}
                   presets={presets}
                   onPresetChange={onPresetChange}
                 />
                 <Layout.Flex classNames='h-6 grow overflow-x-auto scrollbar-none'>
-                  {chatModel && <ChatReferences db={db} context={chatModel.context} />}
+                  {context && <ChatReferences db={db} context={context} />}
                 </Layout.Flex>
               </>
             }
