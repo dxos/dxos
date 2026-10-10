@@ -13,7 +13,6 @@ import {
   openCompanionPlank,
   resolveCompanionAnchor,
   resolveCompanionPlank,
-  showsCompanion,
 } from './companion-anchor.ts';
 
 describe('getRenderedPlanks', () => {
@@ -135,19 +134,6 @@ describe('the companion flag', () => {
 
   test('an uninitialized deck starts open while flat, matching the single pane it lays out', ({ expect }) => {
     expect(isCompanionOpen(undefined, true, 'a')).toBe(true);
-  });
-
-  test('an uninitialized flat deck shows no pane beside a plank with nothing to put in it', ({ expect }) => {
-    // Switching to a workspace such as the plugin registry seeds a fresh deck whose planks have no companions.
-    expect(showsCompanion(undefined, true, 'a', [])).toBe(false);
-    expect(showsCompanion(undefined, true, 'a', ['a/~comments'])).toBe(true);
-    expect(showsCompanion(undefined, true, 'a', undefined)).toBe(true);
-  });
-
-  test('a pane the reader opened stays open on a plank without companions', ({ expect }) => {
-    expect(showsCompanion(['a'], true, 'b', [])).toBe(true);
-    expect(showsCompanion(['a'], false, 'a', [])).toBe(true);
-    expect(showsCompanion([], true, 'a', ['a/~comments'])).toBe(false);
   });
 
   test('opening still works from an uninitialized deck, and only marks the plank asked for', ({ expect }) => {

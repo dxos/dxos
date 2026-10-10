@@ -39,20 +39,6 @@ export const isCompanionOpen = (
     : !!plankId && companionPlanks.includes(plankId);
 
 /**
- * Whether `plankId`'s companion pane renders. An untouched flat deck's pane is a default rather than the
- * reader's choice, so it shows only beside a plank with companions to fill it; `companions` is undefined
- * while they resolve, which keeps the seam open rather than mounting collapsed and opening a frame later.
- */
-export const showsCompanion = (
-  companionPlanks: readonly string[] | undefined,
-  flatten: boolean | undefined,
-  plankId: string | undefined,
-  companions: readonly unknown[] | undefined,
-): boolean =>
-  isCompanionOpen(companionPlanks, flatten, plankId) &&
-  (companionPlanks !== undefined || companions === undefined || companions.length > 0);
-
-/**
  * Whether the deck shows a companion at all, which is the most a consumer outside the layout can ask:
  * a stacked deck answers per plank. Flat mode's own answer, and what an untouched flag means, live here
  * so {@link isCompanionOpen} and its callers cannot drift apart.

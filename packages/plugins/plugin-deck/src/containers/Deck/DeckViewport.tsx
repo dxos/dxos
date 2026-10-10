@@ -53,7 +53,11 @@ import { DeckOperation, DeckRole } from '#types';
 import { Navigation } from '../../url/index.ts';
 import {
   findAttendedPlank,
-  getRenderedPlanks, layoutAppliesTopbar, showsCompanion, isCompanionShown, } from '../../util/index.ts';
+  getRenderedPlanks,
+  isCompanionOpen,
+  isCompanionShown,
+  layoutAppliesTopbar,
+} from '../../util/index.ts';
 import {
   ToggleComplementarySidebarButton as NaturalToggleComplementarySidebarButton,
   ToggleSidebarButton as NaturalToggleSidebarButton,
@@ -159,7 +163,7 @@ const useDeckCompanion = (id: string | undefined): { open: boolean; companionId:
   const companions = useCompanions(id);
   const selectedVariant = useSelectedCompanionVariant();
   const { companionId } = useSelectedCompanion(companions ?? [], selectedVariant);
-  const open = isCompanionShown(showsCompanion(deck.companionPlanks, flatten, id, companions), companions);
+  const open = isCompanionShown(isCompanionOpen(deck.companionPlanks, flatten, id), companions);
   return { open, companionId: open ? companionId : undefined };
 };
 
