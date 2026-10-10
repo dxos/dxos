@@ -14,15 +14,15 @@
   "type": "module",
   "dependencies": {
     "@fontsource/poiret-one": "catalog:",
-    "@remotion/bundler": "catalog:",
     "@remotion/cli": "catalog:",
     "@remotion/fonts": "catalog:",
-    "@remotion/renderer": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "remotion": "catalog:"
   },
   "devDependencies": {
+    "@remotion/bundler": "catalog:",
+    "@remotion/renderer": "catalog:",
     "@types/react": "catalog:",
     "typescript": "catalog:"
   }
