@@ -1,5 +1,25 @@
 # @dxos/plugin-typefully
 
+## 0.14.0
+
+### Patch Changes
+
+- Updated dependencies [0715304]
+- Updated dependencies [1eed6b1]
+- Updated dependencies [6847fe2]
+- Updated dependencies [1819960]
+- Updated dependencies [eb5d14d]
+- Updated dependencies [5324de6]
+  - @dxos/app-framework@0.14.0
+  - @dxos/echo@0.14.0
+  - @dxos/effect@0.14.0
+  - @dxos/plugin-connector@0.14.0
+  - @dxos/plugin-blogger@0.14.0
+  - @dxos/app-toolkit@0.14.0
+  - @dxos/link@0.14.0
+  - @dxos/edge-client@0.14.0
+  - @dxos/util@0.14.0
+
 ## 0.13.0
 
 ### Patch Changes

@@ -15,6 +15,7 @@ import {
   collides,
   coveredCells,
   occupancy,
+  onLattice,
   quantize,
   resizeCell,
   toCell,
@@ -60,6 +61,9 @@ const blocked = (scene: Scene, spec: LatticeSpec, bounds: Bounds, except: Readon
 export const constrainIntent = (scene: Scene, intent: Intent, spec: LatticeSpec): Intent | undefined => {
   switch (intent.kind) {
     case 'create': {
+      if (!onLattice(intent.node)) {
+        return intent;
+      }
       const bounds = quantize(nodeBounds(intent.node), spec);
       return blocked(scene, spec, bounds, new Set())
         ? undefined
@@ -69,6 +73,9 @@ export const constrainIntent = (scene: Scene, intent: Intent, spec: LatticeSpec)
     case 'resize': {
       // The dragged edge snaps to a cell edge and the opposite edge stays, so a face steps one cell at a time.
       const node = scene.nodes[intent.id];
+      if (node && !onLattice(node)) {
+        return intent;
+      }
       const from = node && nodeBounds(node);
       const bounds = from
         ? cellBounds(resizeCell(toCell(from, spec), from, intent.bounds, spec), spec)
@@ -81,10 +88,15 @@ export const constrainIntent = (scene: Scene, intent: Intent, spec: LatticeSpec)
       const moving = new Set(intent.ids);
       const others = occupancy(Object.values(scene.nodes), spec, moving);
       const taken = new Map<string, ElementId>();
-      const intents: Intent[] = [];
+      // A node off the lattice (a group's backdrop) moves by the drag as is, beside the snapped ones.
+      const free = intent.ids.filter((id) => {
+        const node = scene.nodes[id];
+        return node !== undefined && !node.locked && !onLattice(node);
+      });
+      const intents: Intent[] = free.length > 0 ? [{ kind: 'move', ids: free, delta: intent.delta }] : [];
       for (const id of intent.ids) {
         const node = scene.nodes[id];
-        if (!node || node.locked) {
+        if (!node || node.locked || !onLattice(node)) {
           continue;
         }
         const from = nodeBounds(node);
@@ -103,7 +115,7 @@ export const constrainIntent = (scene: Scene, intent: Intent, spec: LatticeSpec)
 
     case 'update': {
       const node = scene.nodes[intent.id];
-      const bounds = node && updatedBounds(node, intent.values);
+      const bounds = node && onLattice(node) ? updatedBounds(node, intent.values) : undefined;
       if (!node || !bounds) {
         return intent;
       }

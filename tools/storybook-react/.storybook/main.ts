@@ -549,8 +549,12 @@ export const createConfig = ({
             contentPaths: content,
             // Keeps every `PxIcons` entry in the sprite so stories paint without a round trip.
             scanPaths: [resolve(rootDir, 'packages/ui/ui-icons/src/index.ts')],
-            // Only `px` is served: the Phosphor catalog is ~9,000 files, too many to hand to a story.
-            assets: [{ route: '/px-icons', dir: extendedIconsDir }],
+            // Phosphor is served but never copied (~9,000 files): a story module loaded after the
+            // iframe fetched the sprite misses its icons there, and the registry fetches them instead.
+            assets: [
+              { route: '/phosphor', dir: iconsDir, copy: false },
+              { route: '/px-icons', dir: extendedIconsDir },
+            ],
             spriteFile: 'icons.svg',
           }),
 
