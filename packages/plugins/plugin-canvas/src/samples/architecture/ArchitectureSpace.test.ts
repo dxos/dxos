@@ -50,8 +50,14 @@ describe('ArchitectureSpace', () => {
     const [composer, dxos, edge] = ['Composer', 'DXOS', 'EDGE'].map(byName);
     const content = (await composer?.content.load())?.content ?? '';
     const composerDrawing = drawings.find((drawing) => drawing.name === 'Composer');
-    // A paragraph is one line: a line break in the source would render as one in the editor.
     expect(content).toContain(`React UI, on the [DXOS](echo:///${dxos?.id}) SDK`);
+
+    // Every paragraph is one line: a line break inside one renders as a break in the editor.
+    for (const doc of [composer, dxos, edge]) {
+      const text = (await doc?.content.load())?.content ?? '';
+      const broken = text.split(/\n{2,}/).filter((paragraph) => paragraph.trim().includes('\n'));
+      expect(broken).toEqual([]);
+    }
     expect(content).toContain(`[EDGE](echo:///${edge?.id})`);
     expect(content).toContain(`![Composer architecture](echo:///${composerDrawing?.id})`);
   });
