@@ -617,7 +617,8 @@ Under the hood it calls `voiceover.mjs`, which can also be run on its own:
 
 `scripts/voiceover.mjs` narrates a finished video with HeyGen text-to-speech. Write the cues as
 `[{ "at": <seconds>, "text": "…" }]` against the final (trimmed, bookended) video, then run
-`node .agents/skills/autocue/scripts/voiceover.mjs --in demo.webm --cues cues.json [--voice <id|name>]`. The default voice is `Britpop`, a
+`node .agents/skills/autocue/scripts/voiceover.mjs --in demo.webm --cues cues.json`; add `--voice` with a voice
+id or name to pick another. The default voice is `Britpop`, a
 private voice on the DXOS HeyGen account; `--voices` lists the account's own voices and the public Starfish
 catalog. It needs `HEYGEN_API_KEY`, from the environment or `.secrets/heygen.env` / `.secrets/heygen.txt` (in
 the worktree or the primary checkout). A cue that runs into the next one

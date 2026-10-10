@@ -617,9 +617,12 @@ const runFlow = async (command) => {
       }
       // Every on-camera step is a chapter, and its `narration` (or name) the line a voice-over speaks; it is
       // committed only once the step succeeds, so a retried step does not leave a duplicate chapter.
-      const mark = { ms: Date.now() - started, text: step.name, narration: step.narration ?? step.name };
+      const at = Date.now();
+      const mark = { ms: at - started, text: step.name, narration: step.narration ?? step.name };
       await interruptible(step.run({ page, demo }));
       if (!step.setup) {
+        // A boot cut inside the step (its `goto`) moves `started`; the chapter then opens at the cut.
+        mark.ms = Math.max(0, at - started);
         timeline.push(mark);
       }
       results.push({ step: index + 1, name: step.name, ok: true, screenshot: await screenshot(index) });

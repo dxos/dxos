@@ -106,8 +106,14 @@ const ident = (id) => {
           .map((name) => path.join(dir, name))[0]
       : undefined;
   // A clip older than the ident's sources is stale: re-render it rather than bookend with an old animation.
-  const sources = path.join(root, 'src');
-  const newest = Math.max(...readdirSync(sources).map((name) => statSync(path.join(sources, name)).mtimeMs));
+  // Sources and the assets they render with (an installed or replaced font changes the clip too).
+  const newest = Math.max(
+    ...['src', 'public'].flatMap((dir) =>
+      readdirSync(path.join(root, dir), { recursive: true }).map(
+        (name) => statSync(path.join(root, dir, String(name))).mtimeMs,
+      ),
+    ),
+  );
   let file = find();
   if (!file || statSync(file).mtimeMs < newest) {
     console.error(`rendering ${id} ident…`);

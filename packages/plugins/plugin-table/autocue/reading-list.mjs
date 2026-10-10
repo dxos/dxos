@@ -49,6 +49,17 @@ const cellEditorReady = (page) =>
   });
 
 /** The zero-based column index of the header labelled `label`. */
+/** How many of the demo's rows the table already holds, by title. */
+const rowsPresent = async (page) => {
+  let count = 0;
+  for (const [name] of ROWS) {
+    if ((await page.locator(`${GRID} [data-dx-grid-plane="grid"]`).getByText(name, { exact: true }).count()) > 0) {
+      count++;
+    }
+  }
+  return count;
+};
+
 const columnIndex = (page, label) =>
   page.evaluate(
     ({ grid, label }) => {
@@ -129,10 +140,16 @@ export const steps = [
   {
     name: 'Add rows',
     narration: 'Add rows and type straight into the cells. Each row is an object in your space.',
+    done: async ({ page }) => (await rowsPresent(page)) === ROWS.length,
     run: async ({ demo, page }) => {
       const title = await columnIndex(page, 'Title');
       const rating = await columnIndex(page, RATING.label);
+      // Rows go in order, so a retry or replay resumes after the ones already added rather than duplicating them.
+      const present = await rowsPresent(page);
       for (const [row, [name, score]] of ROWS.entries()) {
+        if (row < present) {
+          continue;
+        }
         await demo.click({ selector: `${CELL(0, 0, 'frozenRowsEnd')} >> nth=0`, label: 'Add row' });
         await page.locator(CELL(title, row)).first().waitFor({ state: 'visible', timeout: 10_000 });
         for (const [col, value] of [
