@@ -2,10 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
+import { loadFont } from '@remotion/fonts';
 import React from 'react';
-import { AbsoluteFill, Easing, interpolate, spring, useCurrentFrame, useVideoConfig } from 'remotion';
+import { AbsoluteFill, Easing, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig } from 'remotion';
 
-import { COLORS, FONT_STACK, TIMING } from './brand.ts';
+import { COLORS, TIMING } from './brand.ts';
+
+/** Composer's wordmark face (OFL, committed in public/fonts). */
+const WORDMARK_FAMILY = 'Montserrat';
+void loadFont({ family: WORDMARK_FAMILY, url: staticFile('fonts/Montserrat-Regular.woff2'), weight: '400' });
 
 /**
  * The Composer icon's four arcs (packages/ui/brand/assets/icons/composer-icon.svg), outermost first. Each is
@@ -105,8 +110,8 @@ export const ComposerIntro: React.FC = () => {
       </div>
       <div
         style={{
-          fontFamily: FONT_STACK,
-          fontWeight: 500,
+          fontFamily: `"${WORDMARK_FAMILY}", sans-serif`,
+          fontWeight: 400,
           fontSize: Math.round(150 * u),
           lineHeight: 1,
           letterSpacing: '0.01em',
@@ -115,7 +120,7 @@ export const ComposerIntro: React.FC = () => {
           transform: portrait ? `translateY(${(1 - nameIn) * 40 * u}px)` : `translateX(${(1 - nameIn) * -40 * u}px)`,
         }}
       >
-        Composer
+        composer
       </div>
     </AbsoluteFill>
   );

@@ -564,10 +564,22 @@ sandbox `apt-get update` first: the preinstalled index is stale and the install 
 `--ident` opens the trimmed demo with the DXOS opening title and closes it with the end card, both from
 `tools/ident` (Remotion). They are rendered into `tools/ident/out/` on first use, which needs `pnpm install`
 and the licensed Sharp Sans font in `tools/ident/public/fonts/` (without it they render in a fallback face).
-`--intro <video>` / `--outro <video>` bookend with any other clip. Clips are letterboxed to the recording's
+`--ident composer` opens on the Composer logo instead. `--intro <video>` / `--outro <video>` bookend with any
+other clip. Clips are letterboxed to the recording's
 frame, their audio is dropped, and chapters and captions are shifted past the intro.
 
-### Voice-over: `voiceover.mjs`
+### Voice-over: `--voiceover`
+
+`--voiceover steps` on the trimmer narrates each chapter as it starts: every on-camera flow step lands in the
+timeline, spoken as its `narration` field if it has one, else its name. `--voiceover <cues.json>` speaks
+hand-written lines instead; `--voice <name>` picks the voice. One run gives the bookended, narrated demo:
+
+```bash
+node .agents/skills/autocue/scripts/trim-static.mjs --in /tmp/demo/session.webm --out demo.webm \
+  --ident composer --voiceover steps --mp4
+```
+
+Under the hood it calls `voiceover.mjs`, which can also be run on its own:
 
 `scripts/voiceover.mjs` narrates a finished video with HeyGen text-to-speech. Write the cues as
 `[{ "at": <seconds>, "text": "…" }]` against the final (trimmed, bookended) video, then run

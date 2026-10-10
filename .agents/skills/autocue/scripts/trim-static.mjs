@@ -109,7 +109,8 @@ const ident = (id) => {
   return file;
 };
 if (options.ident) {
-  options.intro ??= ident('OPEN');
+  // `--ident composer` opens on the Composer logo instead of the DXOS title.
+  options.intro ??= ident(typeof options.ident === 'string' ? options.ident.toUpperCase() : 'OPEN');
   options.outro ??= ident('END');
 }
 for (const clip of [options.intro, options.outro]) {
