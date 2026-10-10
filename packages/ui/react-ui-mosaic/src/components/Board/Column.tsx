@@ -277,7 +277,7 @@ const DefaultBoardColumn = forwardRef<HTMLDivElement, DefaultBoardColumnProps>(
         dragHandle={dragHandle}
         ref={forwardedRef}
       >
-        <BoardColumnHeader label={Obj.getLabel(data) ?? data.id} dragHandleRef={setDragHandle} />
+        <BoardColumnHeader label={(column && Obj.getLabel(column)) ?? data.id} dragHandleRef={setDragHandle} />
         <BoardColumnBody data={data} eventHandler={eventHandler} debug={debugHandler} Tile={Tile} />
         <div className='flex flex-col col-span-full'>
           <BoardColumnFooter data={data} />

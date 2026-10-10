@@ -10,7 +10,7 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { Filter, Obj, Type } from '@dxos/echo';
-import { useQuery } from '@dxos/echo-react';
+import { useLabels, useQuery } from '@dxos/echo-react';
 import { type Space } from '@dxos/react-client/echo';
 import { Selection, useSelection, useSelectionActions, useViewStateActions } from '@dxos/react-ui-attention';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -73,18 +73,19 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
   // directory of cards. Sorted here rather than in the query because a label is DERIVED (`Obj.getLabel`
   // resolves a different property per type), so there is no single property to order on. Sorting the
   // INPUT leaves the search below free to rank by match score while a filter is active.
+  const labels = useLabels(objects);
   const ordered = useMemo(
     () =>
       [...objects].sort((a, b) =>
-        (Obj.getLabel(a) ?? '').localeCompare(Obj.getLabel(b) ?? '', undefined, { sensitivity: 'base' }),
+        (labels.get(a) ?? '').localeCompare(labels.get(b) ?? '', undefined, { sensitivity: 'base' }),
       ),
-    [objects],
+    [objects, labels],
   );
 
   // Text filter over the object labels; feeds both the masonry tiles and the table rows.
   const { results, handleSearch } = useSearchListResults<Obj.Unknown>({
     items: ordered,
-    extract: (object) => Obj.getLabel(object) ?? '',
+    extract: (object) => labels.get(object) ?? '',
   });
 
   // Selection is keyed by the type's own URI — the same id the 'selected-objects' companion resolves

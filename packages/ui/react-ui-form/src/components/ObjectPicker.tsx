@@ -49,19 +49,34 @@ type PickerBaseProps = PickerCreateProps & {
  * The popup state shared by the pickers: open, and the query a chosen create row turned into a create form. Choosing
  * the create row also asks the popup to close, so `startCreate` reopens it in the same batch.
  */
-const usePickerState = ({ options, createSchema, onCreate }: PickerBaseProps) => {
-  const [open, setOpen] = useState(false);
+const usePickerState = ({
+  options,
+  createSchema,
+  onCreate,
+  onOpenChange,
+}: PickerBaseProps & { onOpenChange?: (open: boolean) => void }) => {
+  const [open, setOpenState] = useState(false);
+  const setOpen = useCallback(
+    (next: boolean) => {
+      setOpenState(next);
+      onOpenChange?.(next);
+    },
+    [onOpenChange],
+  );
   const [creating, setCreating] = useState<string>();
   const items = useMemo<Combobox.Option[]>(
     () => options.map(({ id, label, description }) => ({ value: id, label, description })),
     [options],
   );
-  const handleOpenChange = useCallback(({ open }: { open: boolean }) => {
-    setOpen(open);
-    if (!open) {
-      setCreating(undefined);
-    }
-  }, []);
+  const handleOpenChange = useCallback(
+    ({ open }: { open: boolean }) => {
+      setOpen(open);
+      if (!open) {
+        setCreating(undefined);
+      }
+    },
+    [setOpen],
+  );
   const startCreate =
     createSchema !== undefined && onCreate !== undefined
       ? (query: string) => {
@@ -106,6 +121,8 @@ export type ObjectPickerProps = PickerBaseProps & {
   trigger?: ReactElement;
   /** Called with the picked id, or `undefined` when the selected option is picked again. */
   onSelect: (id: string | undefined) => void;
+  /** Called as the popup opens and closes, so a caller can build `options` only while it is open. */
+  onOpenChange?: (open: boolean) => void;
 };
 
 /**
@@ -124,12 +141,14 @@ export const ObjectPicker = ({
   createIcon,
   onCreate,
   onSelect,
+  onOpenChange,
   options,
 }: ObjectPickerProps) => {
   const { setOpen, creating, setCreating, items, open, handleOpenChange, startCreate } = usePickerState({
     options,
     createSchema,
     onCreate,
+    onOpenChange,
   });
   const handleSave = useCallback(
     async (values: any) => {
@@ -137,7 +156,7 @@ export const ObjectPicker = ({
       setCreating(undefined);
       setOpen(false);
     },
-    [onCreate],
+    [onCreate, setOpen],
   );
 
   return (

@@ -11,6 +11,7 @@ import { DXN, type URI } from '@dxos/keys';
 
 import type * as Entity from './Entity.ts';
 import { ReferenceAnnotationId } from './internal/Annotation/index.ts';
+import { snapshotEquals } from './internal/common/atom-snapshot.ts';
 import type * as internal from './internal/index.ts';
 import * as refInternal from './internal/Ref/index.ts';
 import type * as JsonSchema from './JsonSchema.ts';
@@ -147,6 +148,14 @@ export const fromURI = (uri: URI.URI): refInternal.Ref<any> => refInternal.Ref.f
  * @performance O(1) per call of the returned predicate (parses the ref URI).
  */
 export const hasEntityId = refInternal.Ref.hasEntityId;
+
+/**
+ * Whether two refs, or two ref arrays element by element, point at the same target: the same URI and the same
+ * inlined target. Every read of a ref property mints a new wrapper, so identity never matches.
+ *
+ * @performance O(n) in the array length; no allocation.
+ */
+export const equals: (a: Ref<any> | readonly Ref<any>[], b: Ref<any> | readonly Ref<any>[]) => boolean = snapshotEquals;
 
 /**
  * Disposition of a deleted target. Defaults to `'exclude'`, matching the query option.

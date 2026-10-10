@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Project from '@dxos/compute/Project';
 import { Filter, Obj, Query } from '@dxos/echo';
-import { useQuery } from '@dxos/echo-react';
+import { useObject, useQuery } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
 import * as Containers from '@dxos/plugin-space/Containers';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -49,14 +49,15 @@ export const ProjectChatsArticle = ({ role, project, attendableId }: ProjectBran
 export const ProjectArtifactsArticle = ({ role, project, attendableId }: ProjectBranchArticleProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const db = Obj.getDatabase(project);
+  const [refs] = useObject(project, 'artifacts');
   const ids = useMemo(
     () =>
-      project.artifacts.flatMap((ref) => {
+      refs.flatMap((ref) => {
         const uri = EID.tryParse(ref.uri);
         const entityId = uri && EID.getEntityId(uri);
         return entityId ? [entityId] : [];
       }),
-    [project.artifacts],
+    [refs],
   );
   const artifacts = useQuery(ids.length > 0 ? db : undefined, Filter.id(...ids));
 

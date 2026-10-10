@@ -12483,9 +12483,6 @@ importers:
       '@dxos/react-ui-search':
         specifier: workspace:*
         version: link:../../ui/react-ui-search
-      '@dxos/react-ui-table':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-table
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
@@ -12757,6 +12754,9 @@ importers:
         specifier: 4.0.0
         version: 4.0.0(patch_hash=3231d93074c153423d744d1ed6acc4a09d0344e58224e8d2f134b809622c47f2)
     devDependencies:
+      '@dxos/echo-client':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-client
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
@@ -12939,6 +12939,9 @@ importers:
       '@dxos/echo-panproto':
         specifier: workspace:*
         version: link:../../core/echo/echo-panproto
+      '@dxos/echo-react':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-react
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -16934,6 +16937,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-react':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-react
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
@@ -16962,9 +16968,6 @@ importers:
         specifier: 4.0.0
         version: 4.0.0(patch_hash=3231d93074c153423d744d1ed6acc4a09d0344e58224e8d2f134b809622c47f2)
     devDependencies:
-      '@dxos/echo-react':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-react
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -24386,6 +24389,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-react':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-react
       '@dxos/react-hooks':
         specifier: workspace:*
         version: link:../react-primitives/react-hooks

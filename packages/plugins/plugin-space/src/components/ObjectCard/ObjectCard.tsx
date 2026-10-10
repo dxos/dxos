@@ -10,7 +10,6 @@ import * as CardSlot from '@dxos/app-toolkit/CardSlot';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as ToolkitObjectCard from '@dxos/app-toolkit/ObjectCard';
 import { Entity, Obj } from '@dxos/echo';
-import { useObject } from '@dxos/echo-react';
 import { ActionMenu, useMenuActions, useMenuItems } from '@dxos/react-ui-menu';
 import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
@@ -40,7 +39,6 @@ export type ObjectCardProps = {
 export const ObjectCard = ({ data: subject, classNames, CardMenu, detailOf }: ObjectCardProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const data = useMemo(() => ({ subject }), [subject]);
-  useObject(Obj.isObject(subject) ? subject : undefined);
 
   // The card menu renders in a portal; resolve the origin plank from the card element instead.
   const [cardRef, pivotId] = ToolkitHooks.useCardPivot();

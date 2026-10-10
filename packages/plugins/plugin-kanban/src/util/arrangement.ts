@@ -100,7 +100,7 @@ export const orderItemsInColumn = <T extends KanbanLayout.BaseKanbanItem>(
   items: T[],
   ids: string[],
   columnValue: string,
-  pivotPath: string | undefined,
+  getColumn: (item: T) => string | undefined,
   validColumnValues: Set<string>,
 ): T[] => {
   const orderMap = new Map(ids.map((id, index) => [id, index]));
@@ -108,7 +108,7 @@ export const orderItemsInColumn = <T extends KanbanLayout.BaseKanbanItem>(
   const newCards: T[] = [];
 
   for (const item of items) {
-    const itemColumn = pivotPath !== undefined ? (item[pivotPath as keyof T] as string | undefined) : undefined;
+    const itemColumn = getColumn(item);
     const isValidColumn = itemColumn != null && validColumnValues.has(itemColumn);
     const belongsInColumn =
       columnValue === KanbanConstants.UNCATEGORIZED_VALUE ? !isValidColumn : itemColumn === columnValue;
@@ -167,6 +167,12 @@ export const computeItemArrangement = <T extends KanbanLayout.BaseKanbanItem = K
 
   return columnEntries.map(({ columnValue, ids }) => ({
     columnValue,
-    cards: orderItemsInColumn(items, ids, columnValue, pivotPath, validColumnValues),
+    cards: orderItemsInColumn(
+      items,
+      ids,
+      columnValue,
+      (item) => (pivotPath !== undefined ? (item[pivotPath as keyof T] as string | undefined) : undefined),
+      validColumnValues,
+    ),
   }));
 };

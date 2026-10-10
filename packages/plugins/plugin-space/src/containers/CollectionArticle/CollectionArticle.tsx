@@ -11,6 +11,7 @@ import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type Collection, Obj } from '@dxos/echo';
+import { useLabel } from '@dxos/echo-react';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchPanel, useSearchListResults } from '@dxos/react-ui-search';
 import * as Card from '@dxos/react-ui/Card';
@@ -65,9 +66,9 @@ const ObjectTile: MosaicStackTileComponent<ObjectItem> = ({ data: item }) => {
   const { invokePromise } = Hooks.useOperationInvoker();
 
   const typename = Obj.getTypename(item.object) ?? '';
+  const objectLabel = useLabel(item.object);
   const label =
-    Obj.getLabel(item.object) ??
-    Theme.toLocalizedString(['object-name.placeholder', { ns: typename, defaultValue: item.id }], t);
+    objectLabel ?? Theme.toLocalizedString(['object-name.placeholder', { ns: typename, defaultValue: item.id }], t);
   const styles = item.iconHue ? getStyles(item.iconHue) : undefined;
 
   const handleClick = useCallback(

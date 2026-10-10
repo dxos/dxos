@@ -130,6 +130,30 @@ describe('useKanbanBoardModel', () => {
     expect(result.current.getItems(colA!).map((i) => i.id)).toEqual([initialItem.id, secondItem.id]);
   });
 
+  test('a card moves column when its pivot changes, and other edits leave the column as is', ({ expect }) => {
+    const item = Obj.make(KanbanTaskSchema, { title: 'Card', status: 'a' });
+    const itemsAtom = Atom.make<KanbanTask[]>(() => [item]);
+    const { result } = renderHook(() => useKanbanBoardModel(kanban, projection, itemsAtom, registry));
+    const column = (value: string) => result.current.getColumns().find((c) => c.columnValue === value)!;
+    const columnA = result.current.items(column('a'));
+    const columnB = result.current.items(column('b'));
+    registry.subscribe(columnA, () => {});
+    registry.subscribe(columnB, () => {});
+    expect(registry.get(columnA).map((i) => i.id)).toEqual([item.id]);
+
+    const before = registry.get(columnA);
+    Obj.update(item, (item) => {
+      item.title = 'Renamed';
+    });
+    expect(registry.get(columnA)).toBe(before);
+
+    Obj.update(item, (item) => {
+      item.status = 'b';
+    });
+    expect(registry.get(columnA)).toEqual([]);
+    expect(registry.get(columnB).map((i) => i.id)).toEqual([item.id]);
+  });
+
   test('columns atom updates when kanban arrangement changes', ({ expect }) => {
     const itemsAtom = Atom.make<KanbanTask[]>(() => []);
     const { result } = renderHook(() => useKanbanBoardModel(kanban, projection, itemsAtom, registry));

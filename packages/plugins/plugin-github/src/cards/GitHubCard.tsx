@@ -5,6 +5,7 @@
 import React from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { useObject } from '@dxos/echo-react';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
@@ -21,6 +22,8 @@ type Subject = Repo.Repo | Issue.Issue | PullRequest.PullRequest;
  */
 type Fields = {
   owner: string;
+  name?: string;
+  repo?: string;
   number?: number;
   state?: PullRequest.State;
   author?: string;
@@ -44,8 +47,9 @@ const stateHue: Record<PullRequest.State, Tag.TagHue> = {
  */
 export const GitHubCard = ({ subject }: AppSurface.ObjectCardProps<Subject>) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const { owner, number, state, author, additions, deletions, defaultBranch, description, url }: Fields = subject;
-  const name = 'name' in subject ? subject.name : subject.repo;
+  const [object] = useObject(subject);
+  const { owner, name, repo, number, state, author, additions, deletions, defaultBranch, description, url }: Fields =
+    object;
 
   return (
     <Card.Body>
@@ -59,7 +63,7 @@ export const GitHubCard = ({ subject }: AppSurface.ObjectCardProps<Subject>) => 
           ) : undefined
         }
       >
-        <Card.Text variant='muted'>{[`${owner}/${name}`, number].filter(Boolean).join('#')}</Card.Text>
+        <Card.Text variant='muted'>{[`${owner}/${name ?? repo}`, number].filter(Boolean).join('#')}</Card.Text>
       </Card.Row>
       {author && (
         <Card.Row icon='ph--user--regular'>

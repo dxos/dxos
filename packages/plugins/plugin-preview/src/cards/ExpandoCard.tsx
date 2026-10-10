@@ -7,6 +7,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { Form } from '@dxos/react-ui-form';
 import * as Card from '@dxos/react-ui/Card';
@@ -32,21 +33,24 @@ const schemaForValue = (value: unknown): Schema.Codec<any, any> | undefined => {
  */
 const isInternalKey = (key: string) => key === 'id' || key.startsWith('~');
 
-export const ExpandoCard = ({ subject, ignorePaths }: AppSurface.ObjectCardProps) => {
-  const schema = useMemo(() => {
-    const ignored = new Set(ignorePaths ?? []);
-    const fields: Record<string, Schema.Codec<any, any>> = {};
-    for (const key of Object.keys(subject)) {
-      if (isInternalKey(key) || ignored.has(key)) {
-        continue;
-      }
-      const fieldSchema = schemaForValue((subject as any)[key]);
-      if (fieldSchema) {
-        fields[key] = fieldSchema;
-      }
+const getInitialSchema = (subject: AppSurface.ObjectCardProps['subject'], ignorePaths?: readonly string[]) => {
+  const ignored = new Set(ignorePaths ?? []);
+  const fields: Record<string, Schema.Codec<any, any>> = {};
+  for (const [key, value] of Object.entries(subject)) {
+    if (isInternalKey(key) || ignored.has(key)) {
+      continue;
     }
-    return Schema.Struct(fields);
-  }, [subject, ignorePaths]);
+    const fieldSchema = schemaForValue(value);
+    if (fieldSchema) {
+      fields[key] = fieldSchema;
+    }
+  }
+  return Schema.Struct(fields);
+};
+
+export const ExpandoCard = ({ subject, ignorePaths }: AppSurface.ObjectCardProps) => {
+  const [snapshot] = useObject(subject);
+  const schema = useMemo(() => getInitialSchema(subject, ignorePaths), [subject, ignorePaths]);
 
   const handleSave = useCallback(
     (values: any, { changed }: { changed: Record<string, boolean> }) => {
@@ -64,7 +68,7 @@ export const ExpandoCard = ({ subject, ignorePaths }: AppSurface.ObjectCardProps
 
   return (
     <Card.Body>
-      <Form.Root schema={schema} values={subject} autoSave onSave={handleSave}>
+      <Form.Root schema={schema} values={snapshot} autoSave onSave={handleSave}>
         <Form.Viewport>
           <Form.Content>
             <Form.Fields />
