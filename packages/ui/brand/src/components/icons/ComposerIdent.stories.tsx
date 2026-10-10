@@ -143,7 +143,7 @@ const variants: Record<VariantName, IdentVariant> = {
   turn: {
     label: 'Turn',
     outerFirst: true,
-    duration: 3000,
+    duration: 2000,
     // Every ring stops at the same moment; inner rings turn further so they still move against each other.
     stagger: 0,
     ring: (index) => ({
@@ -154,7 +154,7 @@ const variants: Record<VariantName, IdentVariant> = {
       ],
       easing: 'cubic-bezier(0.25, 1, 0.5, 1)',
     }),
-    grow: { rate: 0.08, delay: 0, finishAt: 0.55 },
+    grow: { rate: 0.1, delay: 0, finishAt: 0.55 },
   },
   fade: {
     label: 'Fade',
