@@ -13,4 +13,4 @@ In `@dxos/diagram`, a group frame's margin is the same on every side, its title 
 
 In `@dxos/react-ui-form`, picking a reference in `RefField` commits it, so an auto-saving form saves the pick at once rather than on the next field's edit; a canvas frame's object is resolved through the canvas's database, and its role field appears as soon as an object is picked.
 
-A drawing can be read-only: `SceneView.Root`'s `readonly` now also hides the selection frame, ports, the actions bar, the Properties and Layers panels, the grid and the lattice guides, and in `@dxos/plugin-canvas` the canvas record's `readonly` setting is toggled from the drawing's menu (Read only / Edit drawing).
+A drawing can be viewed read-only: `SceneView.Root`'s `readonly` now also prevents selection and hides the selection frame, ports, the actions bar, the Properties and Layers panels, the grid and the lattice guides. In `@dxos/plugin-canvas` read-only is the viewer's own, kept in the canvas's view state and toggled from the drawing's menu (Read only / Edit drawing).

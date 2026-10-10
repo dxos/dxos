@@ -103,11 +103,10 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   const [snapshot] = useObject(canvas);
   const record = canvasRecordOf(snapshot.content);
   const lattice = record?.lattice === true;
-  const readonly = record?.readonly === true;
 
   // Restores where the root scene was last left; read once per binding, since later values are our own writes.
   const contextId = Entity.getURI(canvas);
-  const { camera: savedCamera } = useViewState(canvasViewAspect, contextId);
+  const { camera: savedCamera, readonly = false } = useViewState(canvasViewAspect, contextId);
   const { update: updateViewState } = useViewStateActions(canvasViewAspect, contextId);
   const handleCameraChange = useCallback(
     (camera: Camera) => updateViewState((state) => ({ ...state, camera })),

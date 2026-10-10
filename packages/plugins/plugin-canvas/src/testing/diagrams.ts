@@ -31,28 +31,18 @@ export type DiagramSet = {
  * Adds one canvas drawing per diagram of the set to `db`, each laid out from the DSL source its `.dx.svg` carries, and
  * turns every drill-down box into a frame onto the diagram it names; answers the root drawing.
  */
-export const loadDiagramSet = async (
-  db: Database.Database,
-  set: DiagramSet,
-  options?: LoadDiagramOptions,
-): Promise<Drawing.Drawing> => {
-  const root = (await loadDiagramDrawings(db, set, options)).get(set.root);
+export const loadDiagramSet = async (db: Database.Database, set: DiagramSet): Promise<Drawing.Drawing> => {
+  const root = (await loadDiagramDrawings(db, set)).get(set.root);
   if (!root) {
     throw new Error(`The diagram set has no root diagram: ${set.root}.`);
   }
   return root;
 };
 
-export type LoadDiagramOptions = {
-  /** Every drawing of the set opens read-only. */
-  readonly?: boolean;
-};
-
 /** {@link loadDiagramSet}'s drawings, every one of them, by diagram id. */
 export const loadDiagramDrawings = async (
   db: Database.Database,
   set: DiagramSet,
-  { readonly }: LoadDiagramOptions = {},
 ): Promise<ReadonlyMap<string, Drawing.Drawing>> => {
   const drawings = new Map<string, Drawing.Drawing>();
   for (const [id, svg] of Object.entries(set.files)) {
@@ -62,9 +52,7 @@ export const loadDiagramDrawings = async (
     CanvasBuilder.apply(canvas, commands);
     // The diagrams are laid out on the canvas lattice (`box`, `grid` and `@` origin match its cells), so turning it on
     // routes links square along the gutters between the boxes.
-    Obj.update(canvas, (canvas) =>
-      updateCanvasRecord(canvas.content, { lattice: true, readonly: readonly || undefined }),
-    );
+    Obj.update(canvas, (canvas) => updateCanvasRecord(canvas.content, { lattice: true }));
     drawings.set(id, db.add(Drawing.make({ name: set.names[id] ?? id, canvas })));
   }
 

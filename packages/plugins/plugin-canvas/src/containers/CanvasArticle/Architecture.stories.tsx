@@ -3,9 +3,13 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
+import React, { type PropsWithChildren, useEffect } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
+import * as Hooks from '@dxos/app-framework/Hooks';
+import { Entity } from '@dxos/echo';
+import { type URI } from '@dxos/keys';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import { Cell, ModuleContainer, createStoryDecorators } from '@dxos/storybook-testing';
@@ -15,6 +19,7 @@ import { translations } from '#translations';
 
 import { architectureDiagrams, diagramFiles, edgeDiagrams } from '../../testing/architecture.ts';
 import { type DiagramSet, loadDiagramSet } from '../../testing/diagrams.ts';
+import { canvasViewAspect } from './view-state.ts';
 
 // The rendered diagrams, each carrying the DSL source it was laid out from (`docs/diagrams`, `render-diagrams`).
 const files = import.meta.glob<string>('../../../docs/diagrams/*.dx.svg', {
@@ -24,21 +29,43 @@ const files = import.meta.glob<string>('../../../docs/diagrams/*.dx.svg', {
 });
 
 type StoryArgs = {
-  /** The drawings open read-only: no tool, handle, port or panel edits them. */
+  /** The drawings open read-only: nothing is selected, and no tool, handle, port or panel edits them. */
   readonly: boolean;
+};
+
+type ReadonlyViewProps = PropsWithChildren<{ canvas: Promise<URI.URI>; readonly: boolean }>;
+
+/** Sets the article's read-only view state once the seeded canvas exists; the view state outlives a reload, so both ways. */
+const ReadonlyView = ({ canvas, readonly, children }: ReadonlyViewProps) => {
+  const viewState = Hooks.useCapability(AttentionCapabilities.ViewState);
+  useEffect(() => {
+    // The canvas is seeded during client init, after this wrapper mounts.
+    void canvas.then((contextId) => viewState.update(canvasViewAspect, contextId, (state) => ({ ...state, readonly })));
+  }, [canvas, readonly, viewState]);
+  return <>{children}</>;
 };
 
 // One drawing per diagram of the set; the overview opens as the article and its drill-down boxes open the others.
 const withDiagrams = (set: DiagramSet) =>
-  createStoryDecorators(({ args }) => ({
-    types: [Drawing.Drawing, Drawing.Canvas],
-    plugins: [IllustratorPlugin.make(), CanvasPlugin()],
-    onInit: async ({ space }) => {
-      const root = await loadDiagramSet(space.db, set, { readonly: args.readonly === true });
-      await space.db.flush();
-      return [[Cell.article(root)]];
-    },
-  }));
+  createStoryDecorators(({ args }) => {
+    const canvas = Promise.withResolvers<URI.URI>();
+    return {
+      types: [Drawing.Drawing, Drawing.Canvas],
+      plugins: [IllustratorPlugin.make(), CanvasPlugin()],
+      onInit: async ({ space }) => {
+        const root = await loadDiagramSet(space.db, set);
+        await space.db.flush();
+        const target = await root.canvas.load();
+        canvas.resolve(Entity.getURI(target));
+        return [[Cell.article(root)]];
+      },
+      Wrapper: ({ children }) => (
+        <ReadonlyView canvas={canvas.promise} readonly={args.readonly === true}>
+          {children}
+        </ReadonlyView>
+      ),
+    };
+  });
 
 const meta: Meta<StoryArgs> = {
   title: 'plugins/plugin-canvas/containers/Architecture',

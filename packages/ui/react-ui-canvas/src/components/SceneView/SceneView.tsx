@@ -229,13 +229,19 @@ const SceneViewRoot = ({
   // A restored camera counts as taken over, so the fit leaves it where it was.
   const interactedRef = useRef(initialCamera !== undefined);
 
+  // Read-only, nothing is selected: a selection only exists to be edited.
   const select = useCallback(
     (ids: Iterable<ElementId>) => {
-      registry.set(atoms.selection, new Set(ids));
+      registry.set(atoms.selection, new Set(readonly ? [] : ids));
       registry.set(atoms.point, undefined);
     },
-    [registry, atoms.selection, atoms.point],
+    [registry, atoms.selection, atoms.point, readonly],
   );
+  useEffect(() => {
+    if (readonly) {
+      select([]);
+    }
+  }, [readonly, select]);
 
   const { nameOf, portalTo, bounds, fitTarget, pushHistory, drillIn, drillOut, goHistory } = useSceneNavigation({
     registry,

@@ -9066,6 +9066,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/plugin-attention':
+        specifier: workspace:*
+        version: link:../plugin-attention
       '@dxos/plugin-illustrator':
         specifier: workspace:*
         version: link:../plugin-illustrator
