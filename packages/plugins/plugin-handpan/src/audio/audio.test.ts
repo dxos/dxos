@@ -118,6 +118,16 @@ describe('Analyzer', () => {
     expect(notes).toHaveLength(3);
   });
 
+  test('treats a strike whose tone blooms after the attack as one note', ({ expect }) => {
+    const signal = new Float32Array(SAMPLE_RATE);
+    mixInto(signal, synthesizeTak({ sampleRate: SAMPLE_RATE, gain: 0.3 }), 0.1, SAMPLE_RATE);
+    mixInto(signal, synthesizeHandpanTone(D_KURD[4].frequency, { sampleRate: SAMPLE_RATE }), 0.15, SAMPLE_RATE);
+    const notes = analyze(signal);
+    expect(notes).toHaveLength(1);
+    expect(notes[0].percussive).toBe(false);
+    expect(Math.abs(cents(notes[0].frequency!, D_KURD[4].frequency))).toBeLessThan(5);
+  });
+
   test('classifies unpitched strikes as percussive', ({ expect }) => {
     const notes = analyze(perform([D_KURD[1].frequency, 'tak', D_KURD[5].frequency]));
     expect(notes.map((note) => note.percussive)).toEqual([false, true, false]);
@@ -188,6 +198,13 @@ describe('Calibration', () => {
       'percussive',
     );
     expect(Calibration.addStrike(state, strike(pitchToFrequency('F3'))).rejected).toBe('out-of-tune');
+  });
+
+  test('restores saved samples and resumes at the first incomplete note', ({ expect }) => {
+    const { state } = Calibration.addStrike(Calibration.createCalibration(D_KURD, { strikes: 1 }), strike(147));
+    const restored = Calibration.restore(D_KURD, JSON.parse(JSON.stringify(state.samples)), { strikes: 1 });
+    expect(Calibration.getTarget(restored)?.pitch).toBe('A3');
+    expect(Calibration.getTemplates(restored)).toEqual(Calibration.getTemplates(state));
   });
 
   test('folds an octave-high strike onto the target', ({ expect }) => {

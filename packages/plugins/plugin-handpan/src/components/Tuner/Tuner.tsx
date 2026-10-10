@@ -47,6 +47,8 @@ export type TunerProps = {
   strikes?: number;
   /** Maximum random detuning (cents) of synthesized strikes, to exercise the tuning meter. */
   synthDetune?: number;
+  /** Keep each scale's calibration in this browser (local storage) across reloads. */
+  persist?: boolean;
   onNote?: (event: NoteEvent, classification?: Classification) => void;
 };
 
@@ -57,6 +59,25 @@ type PlayedNote = {
 };
 
 const HISTORY_SIZE = 16;
+
+const storageKey = (scaleId: string) => `${meta.profile.key}.calibration.${scaleId}`;
+
+/** Storage can be unavailable (private windows, blocked site data); calibration then lasts the session. */
+const loadSamples = (scaleId: string): Calibration.CalibrationState['samples'] => {
+  try {
+    return JSON.parse(localStorage.getItem(storageKey(scaleId)) ?? '{}');
+  } catch {
+    return {};
+  }
+};
+
+const saveSamples = (scaleId: string, samples: Calibration.CalibrationState['samples']) => {
+  try {
+    localStorage.setItem(storageKey(scaleId), JSON.stringify(samples));
+  } catch {
+    // Storage unavailable.
+  }
+};
 
 /** Frequency a played note is measured against: its classified template, else its scale pitch. */
 const referenceFrequency = ({ classification, note }: PlayedNote, templates: NoteTemplate[]): number | undefined =>
@@ -75,6 +96,7 @@ export const Tuner = ({
   defaultScale = scales[0]?.id,
   strikes = 3,
   synthDetune = 15,
+  persist = false,
   onNote,
 }: TunerProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
@@ -86,12 +108,24 @@ export const Tuner = ({
   const notes = useMemo(() => getScaleNotes(scale), [scale]);
 
   // A ref mirrors the calibration because strikes arrive from the audio callback, outside render.
-  const [calibration, setCalibrationState] = useState(() => Calibration.createCalibration(notes, { strikes }));
+  const [calibration, setCalibrationState] = useState(() =>
+    persist
+      ? Calibration.restore(notes, loadSamples(scale.id), { strikes })
+      : Calibration.createCalibration(notes, { strikes }),
+  );
   const calibrationRef = useRef(calibration);
-  const setCalibration = useCallback((state: Calibration.CalibrationState) => {
-    calibrationRef.current = state;
-    setCalibrationState(state);
-  }, []);
+  const scaleIdRef = useRef(scale.id);
+  scaleIdRef.current = scale.id;
+  const setCalibration = useCallback(
+    (state: Calibration.CalibrationState) => {
+      calibrationRef.current = state;
+      setCalibrationState(state);
+      if (persist) {
+        saveSamples(scaleIdRef.current, state.samples);
+      }
+    },
+    [persist],
+  );
   const [rejection, setRejection] = useState<Calibration.StrikeRejection>();
 
   const templates = useMemo(() => {
@@ -137,7 +171,12 @@ export const Tuner = ({
     const next = scales.find((candidate) => candidate.id === id);
     if (next) {
       setScaleId(id);
-      setCalibration(Calibration.createCalibration(getScaleNotes(next), { strikes }));
+      scaleIdRef.current = id;
+      setCalibration(
+        persist
+          ? Calibration.restore(getScaleNotes(next), loadSamples(id), { strikes })
+          : Calibration.createCalibration(getScaleNotes(next), { strikes }),
+      );
       setPlayed([]);
     }
   };
@@ -298,7 +337,7 @@ export const Tuner = ({
           <HandpanLayout
             notes={notes}
             target={target?.pitch}
-            active={latest?.note?.pitch}
+            active={display.label ? display.pitch : undefined}
             progress={mode === 'calibrate' ? progress : undefined}
             onSelect={source === 'synth' ? (listening ? handleSelect : undefined) : handleSelect}
           />
@@ -310,12 +349,20 @@ export const Tuner = ({
           >
             {message}
           </span>
-          <Layout.Flex wrap gap='xs' classNames='min-h-6 font-mono text-sm' data-testid='handpan.history'>
-            {[...played].reverse().map(({ event, note }) => (
-              <span key={event.time} className='px-1 rounded-sm bg-group-surface'>
-                {event.percussive ? 'T' : (note?.label ?? '?')}
-              </span>
-            ))}
+          {/* Always rendered so the first strike does not shift the pads. */}
+          <Layout.Flex column align='center' gap='xs' classNames={played.length === 0 ? 'invisible' : undefined}>
+            <span className='text-xs text-fg-subtle'>{t('history.label')}</span>
+            <Layout.Flex wrap gap='xs' classNames='min-h-6 font-mono text-sm' data-testid='handpan.history'>
+              {[...played].reverse().map(({ event, note }) => (
+                <span
+                  key={event.time}
+                  className='px-1 rounded-sm bg-group-surface'
+                  title={event.percussive ? t('percussive.label') : note?.pitch}
+                >
+                  {event.percussive ? 'T' : (note?.label ?? '?')}
+                </span>
+              ))}
+            </Layout.Flex>
           </Layout.Flex>
         </Layout.Flex>
       </Panel.Body>

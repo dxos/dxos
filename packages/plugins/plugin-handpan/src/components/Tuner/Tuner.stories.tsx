@@ -29,6 +29,7 @@ export const Calibrate: Story = {
   args: {
     source: 'microphone',
     defaultMode: 'calibrate',
+    persist: true,
   },
 };
 
@@ -37,6 +38,7 @@ export const Live: Story = {
   args: {
     source: 'microphone',
     defaultMode: 'live',
+    persist: true,
   },
 };
 

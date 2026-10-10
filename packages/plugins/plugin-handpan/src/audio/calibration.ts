@@ -36,6 +36,19 @@ export const createCalibration = (
   samples: {},
 });
 
+/** Rebuilds a calibration from previously recorded samples (e.g. loaded from storage). */
+export const restore = (
+  notes: ScaleNote[],
+  samples: CalibrationState['samples'],
+  { strikes = 3 }: { strikes?: number } = {},
+): CalibrationState => {
+  const known = Object.fromEntries(
+    notes.flatMap(({ pitch }) => (samples[pitch]?.length ? [[pitch, samples[pitch].slice(0, strikes)]] : [])),
+  );
+  const state = { notes, strikes, current: 0, samples: known };
+  return { ...state, current: nextIncomplete(state, known) };
+};
+
 export const getTarget = (state: CalibrationState): ScaleNote | undefined => state.notes[state.current];
 
 export const isComplete = (state: CalibrationState): boolean => state.current >= state.notes.length;

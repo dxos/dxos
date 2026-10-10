@@ -35,7 +35,12 @@ export type AnalyzerOptions = {
   noteFrameSize?: number;
   /** Number of harmonics in the partial profile. */
   partialCount?: number;
-  onset?: OnsetDetectorOptions;
+  /**
+   * Seconds after an onset during which further onsets are ignored: a real strike's attack and
+   * the tone blooming behind it register as two onsets, and the first would resolve as a tak.
+   */
+  minOnsetInterval?: number;
+  onset?: Omit<OnsetDetectorOptions, 'refractoryFrames'>;
 };
 
 /** Per-hop analysis result. */
@@ -134,6 +139,7 @@ export class Analyzer {
     pitchDelay = 0.03,
     noteFrameSize = 8192,
     partialCount = 6,
+    minOnsetInterval = 0.1,
     onset,
   }: AnalyzerOptions) {
     this.#sampleRate = sampleRate;
@@ -153,7 +159,10 @@ export class Analyzer {
     this.#spectrum = new MagnitudeSpectrum(frameSize, frameSize * padding);
     this.#magnitudes = new Float32Array(this.#spectrum.size / 2);
     this.#history = new Float32Array(3 * noteFrameSize + Math.ceil(pitchDelay * sampleRate));
-    this.#onsets = new OnsetDetector(onset);
+    this.#onsets = new OnsetDetector({
+      ...onset,
+      refractoryFrames: Math.ceil((minOnsetInterval * sampleRate) / hopSize),
+    });
     this.#pitch = PitchDetector.forFloat32Array(frameSize);
     this.#pitch.minVolumeAbsolute = silenceRms;
   }
