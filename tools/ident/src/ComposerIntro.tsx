@@ -51,7 +51,7 @@ const ARCS: { fill: string; path: React.ReactNode }[] = [
 /** Seconds between one arc starting and the next. */
 const ARC_STAGGER = 0.12;
 
-/** The Composer mark assembles arc by arc, then the name slides in beside it and holds. */
+/** The Composer mark assembles arc by arc, then the name fades in beside it and holds. */
 export const ComposerIntro: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps, width, height } = useVideoConfig();
@@ -130,7 +130,6 @@ export const ComposerIntro: React.FC = () => {
           top: '-0.15em',
           color: COLORS.main,
           opacity: nameIn,
-          transform: portrait ? `translateY(${(1 - nameIn) * 40 * u}px)` : `translateX(${(1 - nameIn) * -40 * u}px)`,
         }}
       >
         composer
