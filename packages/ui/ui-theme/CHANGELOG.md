@@ -1,5 +1,13 @@
 # @dxos/ui-theme
 
+## 0.14.0
+
+### Patch Changes
+
+- b07f49f: `ThemePlugin` no longer scans the consumer's whole `node_modules` when the package is installed, which could stall a Vite dev server before its first response. Installed copies now scan the app's own sources and the built `@dxos` packages, plus any globs passed as the new `content` option.
+- @dxos/node-std@0.14.0
+  - @dxos/ui-types@0.14.0
+
 ## 0.13.0
 
 ### Patch Changes
