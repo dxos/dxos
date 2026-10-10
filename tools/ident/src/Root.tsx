@@ -6,6 +6,7 @@ import React from 'react';
 import { Composition, Folder } from 'remotion';
 
 import { FormatId, FORMATS, FPS, TIMING } from './brand.ts';
+import { ComposerIntro } from './ComposerIntro.tsx';
 import { PROVOCATIONS } from './provocations.ts';
 import { EndOnly, OpenOnly, Spot10, Spot30 } from './Spots.tsx';
 import { Trail } from './Trail.tsx';
@@ -49,6 +50,19 @@ export const RemotionRoot: React.FC = () => (
           id={`OPEN-${TIMING.open.duration}s-${f}`}
           component={OpenOnly}
           durationInFrames={TIMING.open.duration * FPS}
+          fps={FPS}
+          width={FORMATS[f].width}
+          height={FORMATS[f].height}
+        />
+      ))}
+    </Folder>
+    <Folder name='COMPOSER'>
+      {(Object.keys(FORMATS) as FormatId[]).map((f) => (
+        <Composition
+          key={f}
+          id={`COMPOSER-${TIMING.composer.duration}s-${f}`}
+          component={ComposerIntro}
+          durationInFrames={TIMING.composer.duration * FPS}
           fps={FPS}
           width={FORMATS[f].width}
           height={FORMATS[f].height}

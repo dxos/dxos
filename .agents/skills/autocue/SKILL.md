@@ -571,8 +571,10 @@ frame, their audio is dropped, and chapters and captions are shifted past the in
 
 `scripts/voiceover.mjs` narrates a finished video with HeyGen text-to-speech. Write the cues as
 `[{ "at": <seconds>, "text": "…" }]` against the final (trimmed, bookended) video, then run
-`node voiceover.mjs --in demo.webm --cues cues.json [--voice <id>]`; `--voices` lists the Starfish voices.
-It needs `HEYGEN_API_KEY`, from the environment or `.secrets/heygen.env`. A cue that runs into the next one
+`node voiceover.mjs --in demo.webm --cues cues.json [--voice <id|name>]`. The default voice is `Britpop`, a
+private voice on the DXOS HeyGen account; `--voices` lists the account's own voices and the public Starfish
+catalog. It needs `HEYGEN_API_KEY`, from the environment or `.secrets/heygen.env` / `.secrets/heygen.txt` (in
+the worktree or the primary checkout). A cue that runs into the next one
 is reported, so shorten its text rather than letting the voices overlap.
 
 ### For a phone: `--mp4`

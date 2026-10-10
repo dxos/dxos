@@ -602,6 +602,10 @@ const runFlow = async (command) => {
         await interruptible(overlay.countdown({ wait: command.wait ?? manual }));
         flow.state = 'running';
       }
+      // Every on-camera step is a chapter, and its `narration` (or name) the line a voice-over speaks.
+      if (!step.setup) {
+        timeline.push({ ms: Date.now() - started, text: step.name, narration: step.narration ?? step.name });
+      }
       await interruptible(step.run({ page, demo }));
       results.push({ step: index + 1, name: step.name, ok: true, screenshot: await screenshot(index) });
       flow.next = index + 1;

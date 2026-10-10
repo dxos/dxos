@@ -39,13 +39,22 @@ const apiKey = (() => {
   if (process.env.HEYGEN_API_KEY) {
     return process.env.HEYGEN_API_KEY;
   }
-  const file = path.join(ROOT, '.secrets/heygen.env');
-  const match = existsSync(file) && readFileSync(file, 'utf8').match(/^HEYGEN_API_KEY=(.+)$/m);
-  if (!match) {
-    console.error(`no HEYGEN_API_KEY: set it in the environment or in ${file}`);
-    process.exit(1);
+  // A harness worktree's `.secrets/` starts empty, so the primary checkout's is read too.
+  const primary = ROOT.split(`${path.sep}.claude${path.sep}worktrees${path.sep}`)[0];
+  const files = [...new Set([ROOT, primary])].flatMap((root) =>
+    ['heygen.env', 'heygen.txt'].map((name) => path.join(root, '.secrets', name)),
+  );
+  for (const file of files.filter((candidate) => existsSync(candidate))) {
+    // Either `HEYGEN_API_KEY=<key>` or the bare key.
+    const key = readFileSync(file, 'utf8')
+      .replace(/^HEYGEN_API_KEY=/m, '')
+      .trim();
+    if (key) {
+      return key;
+    }
   }
-  return match[1].trim();
+  console.error(`no HEYGEN_API_KEY: set it in the environment or in one of ${files.join(', ')}`);
+  process.exit(1);
 })();
 
 /** HeyGen answers 503 when text-to-speech is overloaded and 429 when rate limited; both clear within seconds. */
@@ -95,26 +104,35 @@ if (options.voices) {
   process.exit(0);
 }
 
-if (!options.in || !options.cues || !existsSync(options.in) || !existsSync(options.cues)) {
-  console.error('usage: node voiceover.mjs --in <video> --cues <cues.json> [--out <video>] [--voice <id|name>]');
+// `--in a.webm,a.mp4` voices every copy from one set of clips, so the speech is synthesized once.
+const inputs = typeof options.in === 'string' ? options.in.split(',') : [];
+if (!inputs.length || !options.cues || !existsSync(options.cues) || inputs.some((input) => !existsSync(input))) {
+  console.error(
+    'usage: node voiceover.mjs --in <video>[,<video>] --cues <cues.json> [--out <video>] [--voice <id|name>]',
+  );
   process.exit(1);
 }
 
 const cues = JSON.parse(readFileSync(options.cues, 'utf8'));
-const extension = path.extname(options.in);
-const output = options.out ?? options.in.replace(new RegExp(`${extension}$`), `.voiced${extension}`);
-const work = path.join(path.dirname(output), `${path.basename(output, extension)}.voice`);
+const voicedPath = (input) => {
+  const extension = path.extname(input);
+  return input.replace(new RegExp(`${extension}$`), `.voiced${extension}`);
+};
+const outputs = inputs.length === 1 && options.out ? [options.out] : inputs.map(voicedPath);
+const work = `${outputs[0].replace(/\.[^.]+$/, '')}.voice`;
 mkdirSync(work, { recursive: true });
 
-// `--voice` is an id or the start of a name, own voices first; without one, the first English voice listed.
+/** The house narrator: a private voice on the DXOS HeyGen account. */
+const DEFAULT_VOICE = 'Britpop';
+
+// `--voice` is an id or the start of a name, own voices first; an account without the default voice falls
+// back to the first English one listed.
 const voice = await (async () => {
   const voices = await listVoices();
-  const name = typeof options.voice === 'string' ? options.voice.toLowerCase() : undefined;
-  const match = voices.find((entry) =>
-    name
-      ? entry.voice_id === options.voice || entry.name.toLowerCase().startsWith(name)
-      : /^en|english/i.test(entry.language ?? ''),
-  );
+  const wanted = typeof options.voice === 'string' ? options.voice : DEFAULT_VOICE;
+  const match =
+    voices.find((entry) => entry.voice_id === wanted || entry.name.toLowerCase().startsWith(wanted.toLowerCase())) ??
+    (options.voice === undefined ? voices.find((entry) => /^en|english/i.test(entry.language ?? '')) : undefined);
   return match?.voice_id ?? options.voice;
 })();
 if (!voice) {
@@ -147,40 +165,46 @@ const filter =
   clips.map((clip, index) => `[${index + 1}:a]adelay=${Math.round(clip.at * 1000)}:all=1[a${index}]`).join(';') +
   `;${clips.map((_, index) => `[a${index}]`).join('')}amix=inputs=${clips.length}:normalize=0[voice]`;
 
-const mux = spawn(FFMPEG, [
-  '-hide_banner',
-  '-loglevel',
-  'error',
-  '-i',
-  options.in,
-  ...clips.flatMap((clip) => ['-i', clip.file]),
-  '-filter_complex',
-  filter,
-  '-map',
-  '0:v',
-  '-map',
-  '[voice]',
-  // Subtitle and chapter tracks ride along when the container carries them.
-  '-map',
-  '0:s?',
-  '-c:v',
-  'copy',
-  '-c:s',
-  'copy',
-  '-c:a',
-  extension === '.webm' ? 'libopus' : 'aac',
-  '-b:a',
-  '128k',
-  '-y',
-  output,
-]);
-mux.stderr.pipe(process.stderr);
-const [code] = await once(mux, 'close');
-if (code !== 0) {
-  console.error(`ffmpeg mux failed (exit ${code})`);
-  process.exit(1);
+const mux = async (input, output) => {
+  const proc = spawn(FFMPEG, [
+    '-hide_banner',
+    '-loglevel',
+    'error',
+    '-i',
+    input,
+    ...clips.flatMap((clip) => ['-i', clip.file]),
+    '-filter_complex',
+    filter,
+    '-map',
+    '0:v',
+    '-map',
+    '[voice]',
+    // Subtitle and chapter tracks ride along when the container carries them.
+    '-map',
+    '0:s?',
+    '-c:v',
+    'copy',
+    '-c:s',
+    'copy',
+    '-c:a',
+    path.extname(output) === '.webm' ? 'libopus' : 'aac',
+    '-b:a',
+    '128k',
+    '-y',
+    output,
+  ]);
+  proc.stderr.pipe(process.stderr);
+  const [code] = await once(proc, 'close');
+  if (code !== 0) {
+    console.error(`ffmpeg mux of ${input} failed (exit ${code})`);
+    process.exit(1);
+  }
+};
+
+for (const [index, input] of inputs.entries()) {
+  await mux(input, outputs[index]);
 }
 
 console.log(
-  JSON.stringify({ output, voice, cues: clips.map(({ at, text, duration }) => ({ at, duration, text })) }, null, 2),
+  JSON.stringify({ outputs, voice, cues: clips.map(({ at, text, duration }) => ({ at, duration, text })) }, null, 2),
 );

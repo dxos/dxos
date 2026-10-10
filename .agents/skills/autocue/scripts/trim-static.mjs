@@ -21,7 +21,8 @@
  * reads a small moving object — a dragged chess piece — as stillness.
  *
  * `--intro <video>` / `--outro <video>` bookend the trimmed demo with another clip (scaled and letterboxed
- * to the demo's frame); `--ident` uses the DXOS ident from `tools/ident`, rendering it on first use.
+ * to the demo's frame); `--voiceover steps|<cues.json>` narrates the result with HeyGen (`voiceover.mjs`);
+ * `--ident` uses the DXOS ident from `tools/ident`, rendering it on first use.
  *
  * Needs a full ffmpeg — the one bundled with Playwright is a stripped build with no `rawvideo` and no
  * PNG decoder, so frames cannot be fed back into it (`apt-get install ffmpeg`, or set `FFMPEG_PATH`).
@@ -82,7 +83,7 @@ const escapeHtml = (value) =>
 const options = parseArgs();
 if (!options.in || !existsSync(options.in)) {
   console.error(
-    'usage: node trim-static.mjs --in <video> [--out <video>] [--max-static 1.5] [--fps 15] [--mp4] [--ident | --intro <video> --outro <video>]',
+    'usage: node trim-static.mjs --in <video> [--out <video>] [--max-static 1.5] [--fps 15] [--mp4] [--ident | --intro <video> --outro <video>] [--voiceover steps|<cues.json>] [--voice <name>]',
   );
   process.exit(1);
 }
@@ -424,6 +425,9 @@ if (decodeStatus !== 0 || encoderStatus !== 0) {
  * the WebM spec. A caption's source frame may itself have been dropped, so the remap walks forward to
  * the next surviving frame.
  */
+/** One spoken line per chapter, for `--voiceover steps`. */
+let stepCues = [];
+
 const annotate = async () => {
   const at = (sourceFrame) => {
     for (let frame = sourceFrame; frame < read; frame++) {
@@ -444,6 +448,8 @@ const annotate = async () => {
       const next = all[index + 1];
       return !next || next.start - mark.start >= options['min-chapter'];
     });
+  // A beat after the chapter starts, so the line lands on the step rather than on the cut into it.
+  stepCues = marks.map((mark) => ({ at: +(mark.start + 0.3).toFixed(2), text: mark.narration ?? mark.text }));
   if (!marks.length) {
     return undefined;
   }
@@ -597,6 +603,43 @@ const toMp4 = async () => {
 
 const mp4 = options.mp4 ? await toMp4() : undefined;
 
+/**
+ * `--voiceover steps` narrates each chapter with its step's `narration` (or name); `--voiceover <cues.json>`
+ * takes hand-written lines timed against the final video. Both run `voiceover.mjs` once over every output.
+ */
+const voiceover = async () => {
+  const cuesFile =
+    options.voiceover === 'steps' || options.voiceover === true
+      ? `${output.replace(/\.webm$/, '')}.cues.json`
+      : options.voiceover;
+  if (cuesFile !== options.voiceover) {
+    if (!stepCues.length) {
+      console.error('--voiceover steps: the recording has no steps (no timeline.json, or no captions or flow steps)');
+      return undefined;
+    }
+    writeFileSync(cuesFile, JSON.stringify(stepCues, null, 2));
+  }
+  const inputs = [annotated?.video ?? output, mp4].filter(Boolean);
+  const narrate = spawn(
+    process.execPath,
+    [
+      path.join(path.dirname(new URL(import.meta.url).pathname), 'voiceover.mjs'),
+      '--in',
+      inputs.join(','),
+      '--cues',
+      cuesFile,
+      ...(typeof options.voice === 'string' ? ['--voice', options.voice] : []),
+    ],
+    { stdio: ['ignore', 'pipe', 'inherit'] },
+  );
+  let text = '';
+  narrate.stdout.on('data', (chunk) => (text += chunk));
+  const [code] = await once(narrate, 'close');
+  return code === 0 ? JSON.parse(text) : undefined;
+};
+
+const voiced = options.voiceover ? await voiceover() : undefined;
+
 const before = seconds ?? read / options.fps;
 const after = kept / options.fps;
 console.log(
@@ -605,6 +648,7 @@ console.log(
       output,
       annotated,
       mp4,
+      voiced,
       frames: { read, kept, dropped: read - kept, intro: introFrames, outro: outroFrames },
       seconds: { before: +before.toFixed(1), after: +after.toFixed(1) },
       reduction: `${Math.round((1 - after / before) * 100)}%`,
