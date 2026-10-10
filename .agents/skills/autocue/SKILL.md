@@ -604,7 +604,8 @@ The finished video (the narrated MP4 when there is one) is uploaded to the Compo
 `hosting-artifacts`' `upload-artifact.mjs`, so it needs R2 keys. Generate a gitignored `.env` once with
 `op inject -i .env.tpl -o .env` (never commit it): the upload and the HeyGen voice-over both read their keys
 from it, in the worktree or the primary checkout. `.secrets/r2.env` also works. The URL it prints has been verified
-through the public domain.
+through the public domain with a GET, and carries `?v=<md5 prefix>`: `assets.composer.space` caches for four
+hours, so re-uploading the same day's demo under the same key would otherwise keep serving the old video.
 
 `--screenshot` then adds that URL to the plugin's `dx.config.ts` as a `screenshots` entry, which is what the
 plugin registry shows; review and commit the change with the flow.

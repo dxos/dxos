@@ -761,6 +761,15 @@ const addScreenshot = (url) => {
     return config;
   }
   const entry = `{ dark: '${url}' }`;
+  // A re-upload of the same demo replaces its earlier version (the URL differs only in `?v=`).
+  const base = url.split('?')[0];
+  if (source.includes(base)) {
+    writeFileSync(
+      config,
+      source.replace(new RegExp(`${base.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\?v=[0-9a-f]+)?`), url),
+    );
+    return config;
+  }
   const list = source.match(/screenshots: \[([\s\S]*?)\n?(\s*)\],/);
   if (list) {
     const [whole, items] = list;

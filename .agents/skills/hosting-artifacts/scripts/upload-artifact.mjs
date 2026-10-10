@@ -166,10 +166,15 @@ const main = async () => {
 
   await request({ method: 'PUT', key, body, contentType });
 
-  // Verify through the public URL rather than trusting the PUT: a wrong content type or a
-  // truncated body is invisible until a reviewer clicks the link.
-  const url = `${PUBLIC_BASE}/${key}`;
-  const head = await fetch(url, { method: 'HEAD' });
+  const localMd5 = createHash('md5').update(body).digest('hex');
+  // A CDN in front of the bucket (a custom domain caches for hours) keeps serving an overwritten key's old
+  // body, so the URL carries the content's version: each upload gets a URL no edge has cached.
+  const url = `${PUBLIC_BASE}/${key}?v=${localMd5.slice(0, 8)}`;
+
+  // Verify with a GET through the public URL rather than trusting the PUT: a HEAD can answer from a different
+  // cache entry than the body a viewer downloads, and a wrong type or truncated body is invisible until then.
+  const head = await fetch(url, { method: 'GET' });
+  await head.body?.cancel();
   const served = {
     status: head.status,
     type: head.headers.get('content-type'),
@@ -177,7 +182,6 @@ const main = async () => {
     etag: head.headers.get('etag')?.replaceAll('"', ''),
     ranges: head.headers.get('accept-ranges'),
   };
-  const localMd5 = createHash('md5').update(body).digest('hex');
 
   const problems = [
     served.status !== 200 && `public URL returned ${served.status}`,
