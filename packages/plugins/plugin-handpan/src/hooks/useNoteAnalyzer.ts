@@ -10,6 +10,7 @@ import {
   Analyzer,
   type AnalyzerFrame,
   type AnalyzerOptions,
+  type ChordTemplate,
   DEFAULT_SENSITIVITY,
   type NoteEvent,
   openMicrophone,
@@ -35,6 +36,8 @@ export type UseNoteAnalyzerOptions = {
   gain?: number;
   /** Strike sensitivity (0–1). */
   sensitivity?: number;
+  /** Note templates to detect chords against; `undefined` reports single notes only. */
+  chordTemplates?: ChordTemplate[];
 };
 
 export type NoteAnalyzer = {
@@ -70,6 +73,7 @@ export const useNoteAnalyzer = ({
   silent,
   gain = 0,
   sensitivity = DEFAULT_SENSITIVITY,
+  chordTemplates,
 }: UseNoteAnalyzerOptions): NoteAnalyzer => {
   const [status, setStatus] = useState<NoteAnalyzerStatus>('idle');
   const [error, setError] = useState<Error>();
@@ -85,6 +89,8 @@ export const useNoteAnalyzer = ({
   gainRef.current = gain;
   const sensitivityRef = useRef(sensitivity);
   sensitivityRef.current = sensitivity;
+  const chordTemplatesRef = useRef(chordTemplates);
+  chordTemplatesRef.current = chordTemplates;
 
   const stop = useCallback(() => {
     const session = sessionRef.current;
@@ -123,6 +129,7 @@ export const useNoteAnalyzer = ({
     const run = async () => {
       const notes = new Analyzer({ ...analyzer, sampleRate: context.sampleRate });
       notes.setSensitivity(sensitivityRef.current);
+      notes.setChordTemplates(chordTemplatesRef.current);
       session.analyzer = notes;
       let input: AudioNode;
       if (source === 'microphone') {
@@ -214,6 +221,10 @@ export const useNoteAnalyzer = ({
   useEffect(() => {
     sessionRef.current?.analyzer?.setSensitivity(sensitivity);
   }, [sensitivity]);
+
+  useEffect(() => {
+    sessionRef.current?.analyzer?.setChordTemplates(chordTemplates);
+  }, [chordTemplates]);
 
   const play = useCallback<NoteAnalyzer['play']>((strike) => sessionRef.current?.play?.(strike), []);
 

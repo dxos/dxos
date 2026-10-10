@@ -28,6 +28,7 @@ const meta = {
     source: { options: ['microphone', 'synth'], control: { type: 'inline-radio' } },
     persist: { control: 'boolean' },
     silent: { control: 'boolean' },
+    chords: { control: 'boolean' },
   },
   parameters: {
     layout: 'fullscreen',

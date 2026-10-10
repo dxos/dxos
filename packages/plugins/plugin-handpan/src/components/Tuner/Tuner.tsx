@@ -53,6 +53,8 @@ export type TunerProps = {
   strikes?: number;
   /** Maximum random detuning (cents) of synthesized strikes, to exercise the tuning meter. */
   synthDetune?: number;
+  /** Start with chord detection on (Live mode): several notes struck together are reported as one chord. */
+  chords?: boolean;
   /** Analyze synthesized strikes without playing them (e.g. while a microphone is in use nearby). */
   silent?: boolean;
   /** Keep the selected scale and each scale's calibration in this browser (local storage) across reloads. */
@@ -64,7 +66,17 @@ type PlayedNote = {
   event: NoteEvent;
   note?: ScaleNote;
   classification?: Classification;
+  /** Every note of the strike when it was a chord (two or more notes). */
+  chord?: ScaleNote[];
 };
+
+/** Consecutive below-threshold frames (~130 ms) before a held chord is released. */
+const CHORD_RELEASE_FRAMES = 12;
+
+/** Partial profile assumed for notes not yet calibrated (fundamental, octave, twelfth). */
+const DEFAULT_PARTIALS = [0.59, 0.26, 0.15];
+
+const chordLabel = (chord: ScaleNote[]) => chord.map(({ label }) => label).join('+');
 
 const HISTORY_SIZE = 16;
 const STRIKE_LOG_SIZE = 5;
@@ -154,10 +166,12 @@ export const Tuner = ({
   synthDetune = 15,
   persist = false,
   silent = false,
+  chords = false,
   onNote,
 }: TunerProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const [mode, setMode] = useState<TunerMode>(defaultMode);
+  const [chordMode, setChordMode] = useState(chords);
   const [scaleId, setScaleId] = useState(() => {
     const saved = persist ? loadScaleId() : undefined;
     return scales.some((candidate) => candidate.id === saved) ? saved : defaultScale;
@@ -216,6 +230,9 @@ export const Tuner = ({
   // Per-frame estimates arrive outside render; the tracker and level live in refs and are read on
   // the re-render the analyzer's frame update already triggers each animation frame.
   const trackerRef = useRef(new PitchTracker<Pitch>());
+  // The chord of the latest strike, held while the input stays above the sounding threshold: a mix of
+  // notes has no single clear pitch, so the per-frame tracker cannot keep it alive.
+  const chordRef = useRef<{ notes: ScaleNote[]; quietFrames: number }>(undefined);
   const peakRmsRef = useRef(0);
   const thresholdRef = useRef(MIN_LEVEL);
   const liveRef = useRef<{ frequency: number; clarity: number }>(undefined);
@@ -225,6 +242,12 @@ export const Tuner = ({
     // Relative to recent playing, so room noise and a decayed tail do not register as a note.
     thresholdRef.current = Math.max(MIN_LEVEL, peakRmsRef.current * RELATIVE_LEVEL);
     const loud = frame.rms >= thresholdRef.current;
+    if (chordRef.current) {
+      chordRef.current.quietFrames = loud ? 0 : chordRef.current.quietFrames + 1;
+      if (chordRef.current.quietFrames >= CHORD_RELEASE_FRAMES) {
+        chordRef.current = undefined;
+      }
+    }
     const classification =
       loud && frame.frequency !== undefined
         ? classifyNote({ frequency: frame.frequency, partials: [] }, templatesRef.current)
@@ -276,13 +299,28 @@ export const Tuner = ({
       if (classification) {
         trackerRef.current.set({ key: classification.template.pitch, cents: classification.cents });
       }
-      setPlayed((previous) => [{ event, note, classification }, ...previous].slice(0, HISTORY_SIZE));
+      const chordNotes = notes.filter((candidate) => event.chord?.includes(candidate.pitch));
+      const chord = chordNotes && chordNotes.length > 1 ? chordNotes : undefined;
+      chordRef.current = chord && { notes: chord, quietFrames: 0 };
+      setPlayed((previous) => [{ event, note, classification, chord }, ...previous].slice(0, HISTORY_SIZE));
       onNote?.(event, classification);
     },
     [notes, onNote, setCalibration],
   );
 
+  const chordTemplates = useMemo(
+    () =>
+      chordMode && mode === 'live'
+        ? templates.map((template) => ({
+            ...template,
+            partials: template.partials.length ? template.partials : DEFAULT_PARTIALS,
+          }))
+        : undefined,
+    [chordMode, mode, templates],
+  );
+
   const analyzer = useNoteAnalyzer({
+    chordTemplates,
     source,
     onNote: handleNote,
     onFrame: handleFrame,
@@ -347,9 +385,19 @@ export const Tuner = ({
   // Recomputed every render: the tracker advances between renders, driven by the frame updates.
   const tracked = listening ? trackerRef.current.current : undefined;
   const display = (() => {
+    const chord = listening ? chordRef.current?.notes : undefined;
+    if (chord) {
+      return {
+        label: chordLabel(chord),
+        pitch: chord.map(({ pitch }) => pitch).join(' '),
+        active: chord.map(({ pitch }) => pitch),
+        sounding: true,
+      };
+    }
     if (tracked) {
       const note = notes.find((candidate) => candidate.pitch === tracked.key);
       return {
+        active: note ? [note.pitch] : undefined,
         label: note?.label,
         pitch: tracked.key,
         frequency: liveRef.current?.frequency,
@@ -362,7 +410,12 @@ export const Tuner = ({
       return {};
     }
     // Nothing sounding: keep the last strike readable, but dimmed and without lighting its pad.
-    return latest.event.percussive ? { percussive: true } : { label: latest.note?.label, pitch: latest.note?.pitch };
+    if (latest.event.percussive) {
+      return { percussive: true };
+    }
+    return latest.chord
+      ? { label: chordLabel(latest.chord), pitch: latest.chord.map(({ pitch }) => pitch).join(' ') }
+      : { label: latest.note?.label, pitch: latest.note?.pitch };
   })();
 
   const message = (() => {
@@ -423,6 +476,15 @@ export const Tuner = ({
               onClick={handleReset}
             />
           )}
+          {mode === 'live' && (
+            <Button.Toggle
+              icon='ph--stack--regular'
+              label={t('chords.label')}
+              pressed={chordMode}
+              onPressedChange={setChordMode}
+              data-testid='handpan.chords'
+            />
+          )}
           <Toolbar.Separator variant='gap' />
           <Toolbar.ToggleGroup
             type='single'
@@ -478,7 +540,7 @@ export const Tuner = ({
           <HandpanLayout
             notes={notes}
             target={target?.pitch}
-            active={display.sounding && display.label ? display.pitch : undefined}
+            active={display.sounding ? display.active : undefined}
             progress={mode === 'calibrate' ? progress : undefined}
             onSelect={source === 'synth' ? (listening ? handleSelect : undefined) : handleSelect}
           />
@@ -513,13 +575,19 @@ export const Tuner = ({
           <Layout.Flex column align='center' gap='xs' classNames={played.length === 0 ? 'invisible' : undefined}>
             <span className='text-xs text-fg-subtle'>{t('history.label')}</span>
             <Layout.Flex wrap gap='xs' classNames='min-h-6 font-mono text-sm' data-testid='handpan.history'>
-              {[...played].reverse().map(({ event, note }) => (
+              {[...played].reverse().map(({ event, note, chord }) => (
                 <span
                   key={event.time}
                   className='px-1 rounded-sm bg-group-surface'
-                  title={event.percussive ? t('percussive.label') : note?.pitch}
+                  title={
+                    event.percussive
+                      ? t('percussive.label')
+                      : chord
+                        ? chord.map(({ pitch }) => pitch).join(' ')
+                        : note?.pitch
+                  }
                 >
-                  {event.percussive ? 'T' : (note?.label ?? '?')}
+                  {event.percussive ? 'T' : chord ? chordLabel(chord) : (note?.label ?? '?')}
                 </span>
               ))}
             </Layout.Flex>

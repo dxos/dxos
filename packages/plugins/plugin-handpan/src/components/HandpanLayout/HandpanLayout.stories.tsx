@@ -28,11 +28,15 @@ export const Default: Story = {
   args: { notes },
 };
 
+export const Chord: Story = {
+  args: { notes, active: ['A3', 'C4', 'E4'] },
+};
+
 export const Calibrating: Story = {
   args: {
     notes,
     target: 'Bb3',
-    active: 'A3',
+    active: ['A3'],
     progress: { D3: 1, A3: 1, Bb3: 1 / 3 },
   },
 };

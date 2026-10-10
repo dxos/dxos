@@ -140,6 +140,29 @@ describe('Analyzer', () => {
     expect(Math.abs(cents(notes[0].frequency!, D_KURD[4].frequency))).toBeLessThan(5);
   });
 
+  test('reports the notes of a chord when chord templates are set', ({ expect }) => {
+    const templates = D_KURD.map((note) => {
+      const [event] = analyze(perform([note.frequency]));
+      return { pitch: note.pitch, frequency: event.frequency!, partials: event.partials };
+    });
+    const analyzer = new Analyzer({ sampleRate: SAMPLE_RATE });
+    analyzer.setChordTemplates(templates);
+    const signal = new Float32Array(2 * SAMPLE_RATE);
+    mixInto(signal, synthesizeHandpanTone(D_KURD[1].frequency, { sampleRate: SAMPLE_RATE, seed: 5 }), 0.1, SAMPLE_RATE);
+    mixInto(
+      signal,
+      synthesizeHandpanTone(D_KURD[3].frequency, { sampleRate: SAMPLE_RATE, seed: 6 }),
+      0.105,
+      SAMPLE_RATE,
+    );
+    mixInto(signal, synthesizeHandpanTone(D_KURD[5].frequency, { sampleRate: SAMPLE_RATE, seed: 7 }), 1.1, SAMPLE_RATE);
+    const notes = analyzer.push(signal).notes;
+    expect(notes.map((note) => note.chord?.sort())).toEqual([
+      [D_KURD[1].pitch, D_KURD[3].pitch].sort(),
+      [D_KURD[5].pitch],
+    ]);
+  });
+
   test('classifies unpitched strikes as percussive', ({ expect }) => {
     const notes = analyze(perform([D_KURD[1].frequency, 'tak', D_KURD[5].frequency]));
     expect(notes.map((note) => note.percussive)).toEqual([false, true, false]);

@@ -12,8 +12,8 @@ export type HandpanLayoutProps = {
   notes: ScaleNote[];
   /** Note awaiting input (e.g. the calibration target). */
   target?: Pitch;
-  /** Note most recently played. */
-  active?: Pitch;
+  /** Notes sounding now (several for a chord). */
+  active?: Pitch[];
   /** Per-note completion (0–1), drawn as a ring; complete notes are drawn in the success colour. */
   progress?: Record<Pitch, number>;
   onSelect?: (note: ScaleNote) => void;
@@ -32,6 +32,7 @@ const NOTE_RADIUS = 34;
  */
 export const HandpanLayout = ({ notes, target, active, progress, onSelect, classNames }: HandpanLayoutProps) => {
   const fields = notes.filter((note) => note.index > 0);
+  const isActive = (pitch: Pitch) => active?.includes(pitch) ?? false;
   const step = (2 * Math.PI) / Math.max(fields.length, 1);
 
   const position = (note: ScaleNote) => {
@@ -62,7 +63,7 @@ export const HandpanLayout = ({ notes, target, active, progress, onSelect, class
             role='button'
             tabIndex={onSelect ? 0 : -1}
             aria-label={`${note.label} ${note.pitch}`}
-            aria-pressed={note.pitch === active}
+            aria-pressed={isActive(note.pitch)}
             aria-current={note.pitch === target || undefined}
             data-calibrated={(progress?.[note.pitch] ?? 0) >= 1 || undefined}
             data-testid={`handpan.note.${note.label}`}
@@ -77,7 +78,7 @@ export const HandpanLayout = ({ notes, target, active, progress, onSelect, class
               strokeWidth={note.pitch === target ? 3 : 1.5}
               className={mx(
                 'transition-colors duration-150',
-                note.pitch === active ? 'fill-accent-bg' : done >= 1 ? 'fill-success-surface/25' : 'fill-card-surface',
+                isActive(note.pitch) ? 'fill-accent-bg' : done >= 1 ? 'fill-success-surface/25' : 'fill-card-surface',
                 note.pitch === target ? 'stroke-accent-text' : done >= 1 ? 'stroke-success-text' : 'stroke-separator',
               )}
             />
@@ -97,7 +98,7 @@ export const HandpanLayout = ({ notes, target, active, progress, onSelect, class
               x={x}
               y={y - 2}
               textAnchor='middle'
-              className={mx('text-xl font-medium', note.pitch === active ? 'fill-accent-fg' : 'fill-fg')}
+              className={mx('text-xl font-medium', isActive(note.pitch) ? 'fill-accent-fg' : 'fill-fg')}
             >
               {note.label}
             </text>
@@ -105,7 +106,7 @@ export const HandpanLayout = ({ notes, target, active, progress, onSelect, class
               x={x}
               y={y + 16}
               textAnchor='middle'
-              className={mx('text-xs', note.pitch === active ? 'fill-accent-fg' : 'fill-fg-muted')}
+              className={mx('text-xs', isActive(note.pitch) ? 'fill-accent-fg' : 'fill-fg-muted')}
             >
               {note.pitch}
             </text>

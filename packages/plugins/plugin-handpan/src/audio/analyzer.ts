@@ -4,9 +4,11 @@
 
 import { PitchDetector } from 'pitchy';
 
+import { ChordDecomposer, type ChordTemplate, selectNotes } from './chord.ts';
 import { MagnitudeSpectrum } from './fft.ts';
 import { harmonicPitch } from './harmonic.ts';
 import { OnsetDetector, type OnsetDetectorOptions } from './onset.ts';
+import { type Pitch } from './pitch.ts';
 
 export type AnalyzerOptions = {
   sampleRate: number;
@@ -71,6 +73,8 @@ export type NoteEvent = {
    * identified, but with coarser frequency resolution, so its cents are unreliable.
    */
   precise: boolean;
+  /** Notes sounding together in this strike, strongest first; present only when chord templates are set. */
+  chord?: Pitch[];
 };
 
 export type AnalyzerResult = {
@@ -115,6 +119,9 @@ export class Analyzer {
   readonly #spectrum: MagnitudeSpectrum;
   /** Note-window spectra by window length (2× zero-padded). */
   readonly #noteSpectra = new Map<number, MagnitudeSpectrum>();
+  #chordTemplates: ChordTemplate[] | undefined;
+  /** Decomposers by note-window length; rebuilt when the templates change. */
+  readonly #chordDecomposers = new Map<number, ChordDecomposer>();
   /** Ring buffer of recent input, long enough for a note window plus the window before it. */
   readonly #history: Float32Array;
   readonly #onsets: OnsetDetector;
@@ -174,6 +181,12 @@ export class Analyzer {
   /** Strike sensitivity (0–1); the default 0.7 matches the onset margin the analyzer is tuned for. */
   setSensitivity(sensitivity: number): void {
     this.#onsets.setDelta(sensitivityToDelta(sensitivity));
+  }
+
+  /** Enables chord detection against these note templates (`undefined` disables it). */
+  setChordTemplates(templates: ChordTemplate[] | undefined): void {
+    this.#chordTemplates = templates?.length ? templates : undefined;
+    this.#chordDecomposers.clear();
   }
 
   /** Appends samples and returns the frames and notes completed by them. */
@@ -294,7 +307,17 @@ export class Analyzer {
       partials: partialProfile(residual, pitch.frequency, binWidth, this.#partialCount),
       percussive: false,
       precise: length >= this.#noteFrameSize,
+      chord: this.#chordTemplates ? this.#decompose(residual, length) : undefined,
     };
+  }
+
+  #decompose(residual: Float32Array, length: number): Pitch[] {
+    let decomposer = this.#chordDecomposers.get(length);
+    if (!decomposer && this.#chordTemplates) {
+      decomposer = new ChordDecomposer(this.#chordTemplates, { sampleRate: this.#sampleRate, frameSize: length });
+      this.#chordDecomposers.set(length, decomposer);
+    }
+    return decomposer ? selectNotes(decomposer.decompose(residual), { relative: CHORD_RELATIVE }) : [];
   }
 
   #noteSpectrum(length: number): MagnitudeSpectrum {
@@ -320,6 +343,9 @@ export class Analyzer {
 }
 
 export const DEFAULT_SENSITIVITY = 0.7;
+
+/** A note belongs to the chord when its weight is at least this fraction of the strongest. */
+const CHORD_RELATIVE = 0.2;
 
 /** Maps sensitivity 0–1 to an onset flux margin of 0.31 (least) … 0.01 (most); 0.7 → 0.1. */
 const sensitivityToDelta = (sensitivity: number): number => 0.01 + 0.3 * (1 - Math.max(0, Math.min(1, sensitivity)));
