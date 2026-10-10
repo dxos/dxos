@@ -350,7 +350,7 @@ export const SceneHandler: ContentHandler = {
               target: { node: to },
             }),
             ...(ends ? { ends } : {}),
-            ...(element.text || captions.get(element.id) ? { text: element.text ?? captions.get(element.id) } : {}),
+            ...(element.text || captions.get(element.id) ? { text: element.text || captions.get(element.id) } : {}),
             ...(dashed ? { style: { lineStyle: 'dashed' } } : {}),
           };
           records[linkKey(id)] = { kind: 'link', scene, link, dsl: identity(element.id) } satisfies LinkRecord;

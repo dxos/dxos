@@ -384,6 +384,13 @@ const SceneViewRoot = ({
     snapMinor,
   });
 
+  // A gesture begun before the view turned read-only is dropped, not committed on release.
+  useEffect(() => {
+    if (readonly) {
+      cancelDrag();
+    }
+  }, [readonly, cancelDrag]);
+
   //
   // Clipboard.
   //

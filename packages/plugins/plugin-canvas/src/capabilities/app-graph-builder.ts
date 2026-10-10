@@ -56,7 +56,10 @@ export default Capability.makeModule(
             data: () =>
               Effect.sync(() => {
                 if (viewState && contextId) {
-                  viewState.update(canvasViewModeAspect, contextId, (state) => ({ ...state, readonly: !readonly }));
+                  viewState.update(canvasViewModeAspect, contextId, (state) => ({
+                    ...state,
+                    readonly: state.readonly !== true,
+                  }));
                 }
               }),
             properties: {

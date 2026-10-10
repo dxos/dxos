@@ -268,21 +268,20 @@ export const bindCanvasStore = (registry: Registry.AtomRegistry, canvas: Drawing
   const stale = (scenes: SceneMap): boolean => {
     let result = false;
     for (const [id, scene] of Object.entries(scenes)) {
-      if (parseLinkedSceneId(id)) {
-        continue;
-      }
+      // Frames in a linked drawing are checked too: `read` resolves their objects the same way as this drawing's.
+      const owner = parseLinkedSceneId(id)?.uri;
       for (const node of Object.values(scene.nodes)) {
         if (!isFrameNode(node)) {
           continue;
         }
         const uri = objectUri(node);
-        if (!uri) {
-          result ||= parseLinkedSceneId(node.scene) !== undefined;
-          continue;
+        if (uri) {
+          ensure(uri);
         }
-        ensure(uri);
-        const link = linked.get(uri);
-        result ||= link ? node.scene !== linkedSceneId(uri, link.root) : parseLinkedSceneId(node.scene) !== undefined;
+        const link = uri ? linked.get(uri) : undefined;
+        // Without a bound drawing a frame opens its own child scene, which belongs to the frame's own drawing.
+        result ||=
+          uri && link ? node.scene !== linkedSceneId(uri, link.root) : parseLinkedSceneId(node.scene)?.uri !== owner;
       }
     }
     return result;

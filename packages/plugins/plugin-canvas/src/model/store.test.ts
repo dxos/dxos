@@ -111,6 +111,21 @@ describe('bindCanvasStore', () => {
     registry.set(bound.store.scenes, { ...registry.get(bound.store.scenes) });
     const record = middleCanvas.content[nodeKey('g')];
     expect(isNodeRecord(record) && record.node).toMatchObject({ scene: 'g' });
+
+    // Pointing Middle's frame at another drawing through the store opens that drawing once the write settles.
+    const other = db.add(Drawing.make({ name: 'Other', canvas: db.add(createCanvas()) }));
+    const scenes = registry.get(bound.store.scenes);
+    const middleRoot = scenes.root.nodes.f;
+    const middleId = isFrameNode(middleRoot) ? middleRoot.scene : '';
+    const inner = scenes[middleId].nodes.g;
+    registry.set(bound.store.scenes, {
+      ...scenes,
+      [middleId]: {
+        ...scenes[middleId],
+        nodes: { ...scenes[middleId].nodes, g: { ...inner, object: Ref.make(other) } },
+      },
+    });
+    await expect.poll(middleFrame).toBe('Other');
     bound.dispose();
   });
 

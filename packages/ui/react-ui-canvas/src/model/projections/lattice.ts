@@ -91,7 +91,7 @@ export const constrainIntent = (scene: Scene, intent: Intent, spec: LatticeSpec)
       // A node off the lattice (a group's backdrop) moves by the drag as is, beside the snapped ones.
       const free = intent.ids.filter((id) => {
         const node = scene.nodes[id];
-        return node !== undefined && !onLattice(node);
+        return node !== undefined && !node.locked && !onLattice(node);
       });
       const intents: Intent[] = free.length > 0 ? [{ kind: 'move', ids: free, delta: intent.delta }] : [];
       for (const id of intent.ids) {
