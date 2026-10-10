@@ -15,8 +15,9 @@ export default Config2.make({
       Calibrate the detector to your instrument, then see each note as you play it.
     `,
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-handpan',
-    icon: { key: 'ph--waveform--regular', hue: 'teal' },
+    icon: { key: 'ph--record--regular', hue: 'teal' },
     spec: 'PLUGIN.mdl',
     tags: ['labs'],
+    dependsOn: ['org.dxos.plugin.sequencer'],
   },
 });

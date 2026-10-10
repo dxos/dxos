@@ -12,6 +12,7 @@ export default defineConfig({
     audio: 'src/audio/index.ts',
     capabilities: 'src/capabilities/index.ts',
     components: 'src/components/index.ts',
+    containers: 'src/containers/index.ts',
     hooks: 'src/hooks/index.ts',
     meta: 'src/meta.ts',
     translations: 'src/translations.ts',

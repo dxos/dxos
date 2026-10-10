@@ -28,6 +28,15 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/compute/compute"
+    },
+    {
+      "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/echo/echo-react"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
@@ -44,6 +53,9 @@
     },
     {
       "path": "../plugin-sequencer"
+    },
+    {
+      "path": "../plugin-space"
     }
   ]
 }

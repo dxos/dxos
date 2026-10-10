@@ -66,6 +66,10 @@ export type TunerProps = {
    */
   calibration?: readonly InstrumentType.NoteCalibration[];
   onCalibrationChange?: (calibration: InstrumentType.NoteCalibration[]) => void;
+  /** Called when the user picks a different scale (e.g. to update the instrument's tuning). */
+  onScaleChange?: (scale: Scale) => void;
+  /** Surface role, passed to the panel. */
+  role?: string;
   /** Concert pitch: frequency of A4 in Hz (e.g. `Instrument.reference`); defaults to 440. */
   reference?: number;
   /** Keep the selected scale and each scale's calibration in this browser (local storage) across reloads. */
@@ -179,6 +183,8 @@ export const Tuner = ({
   calibration: storedCalibration,
   onCalibrationChange,
   reference = A4,
+  onScaleChange,
+  role,
   silent = false,
   chords = false,
   onNote,
@@ -393,6 +399,7 @@ export const Tuner = ({
     const next = scales.find((candidate) => candidate.id === id);
     if (next) {
       setScaleId(id);
+      onScaleChange?.(next);
       trackerRef.current.reset();
       if (persist) {
         saveScaleId(id);
@@ -498,7 +505,7 @@ export const Tuner = ({
   })();
 
   return (
-    <Panel.Root>
+    <Panel.Root role={role}>
       <Panel.Header>
         <Toolbar.Root>
           <SystemButton.Mic
