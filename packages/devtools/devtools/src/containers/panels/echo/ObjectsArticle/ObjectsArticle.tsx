@@ -66,7 +66,7 @@ export const ObjectsArticle = ({ role, ...props }: ArticleProps & { space?: Spac
 
   // Evaluated in memory rather than by a query, so a match is also found by the tree, which keeps its own query.
   const matches = useMemo(
-    () => (filter ? items.filter((item) => Obj.isObject(item) && matchesFilter(filter, item)) : items),
+    () => (filter ? items.filter((item) => matchesFilter(filter, item)) : items),
     [items, filter],
   );
   const matchingIds = useMemo(
@@ -80,9 +80,19 @@ export const ObjectsArticle = ({ role, ...props }: ArticleProps & { space?: Spac
 
   const [selectedId, setSelectedId] = useState<string>();
   const selected = useMemo(() => items.find((item) => item.id === selectedId), [items, selectedId]);
-  const blob = useMemo(() => (Obj.isObject(selected) ? findBlobRef(selected) : undefined), [selected]);
+  // The version is held here rather than in the inspector, so the blob preview shows the same version it does.
+  const [version, setVersion] = useState<number>();
+  const history = useEditHistory(selected);
+  const displayed = useMemo(() => {
+    const heads = version !== undefined ? history[version]?.heads : undefined;
+    return heads && Obj.isObject(selected) ? checkoutVersion(selected, heads) : selected;
+  }, [selected, history, version]);
+  const blob = useMemo(() => (Obj.isObject(displayed) ? findBlobRef(displayed) : undefined), [displayed]);
 
-  const handleSelect = useCallback((id: string | undefined) => setSelectedId(id), []);
+  const handleSelect = useCallback((id: string | undefined) => {
+    setSelectedId(id);
+    setVersion(undefined);
+  }, []);
   const handleViewChange = useCallback((value: string) => isView(value) && setView(value), []);
 
   return (
@@ -133,7 +143,15 @@ export const ObjectsArticle = ({ role, ...props }: ArticleProps & { space?: Spac
             )}
           </div>
           {selected && db ? (
-            <Inspector key={selected.id} entity={selected} db={db} onSelect={handleSelect} />
+            <Inspector
+              entity={selected}
+              value={displayed}
+              db={db}
+              history={history}
+              version={version}
+              onVersionChange={setVersion}
+              onSelect={handleSelect}
+            />
           ) : (
             <Placeholder label='Select an object' />
           )}
@@ -231,19 +249,17 @@ const ObjectsTable = ({ items, onSelect }: { items: Entity.Unknown[]; onSelect: 
 
 type InspectorProps = {
   entity: Entity.Unknown;
+  /** The entity as shown: live, or checked out at `version`. */
+  value: unknown;
   db: Database.Database;
+  history: VersionDiff[];
+  version?: number;
+  onVersionChange: (version: number | undefined) => void;
   onSelect: (id: EntityId) => void;
 };
 
 /** The selected entity's header, its properties (at the live or a past version), and its edit history. */
-const Inspector = ({ entity, db, onSelect }: InspectorProps) => {
-  const [version, setVersion] = useState<number>();
-  const history = useEditHistory(entity);
-  const value = useMemo(() => {
-    const heads = version !== undefined ? history[version]?.heads : undefined;
-    return heads && Obj.isObject(entity) ? checkoutVersion(entity, heads) : entity;
-  }, [entity, history, version]);
-
+const Inspector = ({ entity, value, db, history, version, onVersionChange, onSelect }: InspectorProps) => {
   const uri = Entity.getURI(entity).toString();
   const icon = Entity.getIcon(entity);
   const deleted = Entity.isDeleted(entity);
@@ -275,7 +291,7 @@ const Inspector = ({ entity, db, onSelect }: InspectorProps) => {
             <Button.Root
               label='Back to live'
               icon='ph--arrow-counter-clockwise--regular'
-              onClick={() => setVersion(undefined)}
+              onClick={() => onVersionChange(undefined)}
             />
           </div>
         )}
@@ -285,12 +301,12 @@ const Inspector = ({ entity, db, onSelect }: InspectorProps) => {
           <PropertyTree value={value} db={db} onNavigate={onSelect} />
         </ScrollArea.Viewport>
       </ScrollArea.Root>
-      <History history={history} version={version} onVersionChange={setVersion} />
+      <History history={history} version={version} onVersionChange={onVersionChange} />
     </div>
   );
 };
 
-const useEditHistory = (entity: Entity.Unknown): VersionDiff[] =>
+const useEditHistory = (entity: Entity.Unknown | undefined): VersionDiff[] =>
   useMemo(() => {
     if (!Obj.isObject(entity)) {
       return [];
