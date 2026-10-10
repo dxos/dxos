@@ -87,6 +87,12 @@ Run it in the background. `--mode manual` changes the driver in five ways:
 - **A local display is required.** The cloud sandbox has none, so this is for a session on the
   user's machine.
 
+**A recording can start from a prepared profile too.** A record-mode driver is a fresh identity unless
+`--profile <dir>` is passed, in which case it records headless from that profile. This is how a demo that
+needs a signed-in account (a synced Gmail mailbox) is recorded: the user connects the account once in a
+manual session on that profile, closes the window, and every later recording starts signed in. Use a
+dedicated directory, not the manual default, so a take never runs on the profile someone is using.
+
 ### Drive it from a flow script
 
 In manual mode, write the QA flow as a script and run it, rather than issuing one op per turn. Each op

@@ -76,9 +76,9 @@ const parseArgs = () => {
     'settle': 5_000,
     'feed': 'top-right',
     'mode': 'record',
-    // Manual mode only: the app's identity, spaces and dismissed first-run UI survive between sessions,
-    // so the user's recording starts in a prepared app instead of onboarding.
-    'profile': path.join(homedir(), '.local/state/dxos/autocue/profile'),
+    // The app's identity, spaces, dismissed first-run UI and signed-in accounts survive between sessions.
+    // Manual mode always uses one (defaulted below); a recording uses one only when `--profile` is passed.
+    'profile': undefined,
     // Emulated `prefers-color-scheme`; `--theme light` for a light recording.
     'theme': 'dark',
     // Per-gesture wait for its target: a wrong selector should fail in seconds, not stall the demo.
@@ -108,6 +108,9 @@ const parseArgs = () => {
   const narrate = options.mode === 'manual' ? 'off' : 'on';
   // The action feed reads as debug chrome in a demo; `--pills on` brings it back.
   options.pills ??= 'off';
+  if (options.mode === 'manual') {
+    options.profile ??= path.join(homedir(), '.local/state/dxos/autocue/profile');
+  }
   options.captions ??= narrate;
   // Milliseconds between flow steps: a person watching live needs a beat to see each one land.
   options.pace ??= options.mode === 'manual' ? 800 : 0;
@@ -193,13 +196,24 @@ if (native) {
   }
 }
 
+const recordContextOptions = {
+  viewport,
+  deviceScaleFactor: scale,
+  colorScheme: options.theme,
+  recordVideo: hires ? undefined : { dir: options.out, size: viewport },
+};
+
 // A persistent context has no separate `Browser`: the context is the browser, and closing it quits.
-const browser = manual || tauri ? undefined : await chromium.launch(launchOptions);
+const persistent = !tauri && options.profile !== undefined;
+const browser = persistent || tauri ? undefined : await chromium.launch(launchOptions);
 const context = tauri
   ? undefined
-  : manual
+  : persistent
     ? await chromium
-        .launchPersistentContext(options.profile, { ...launchOptions, viewport: null, colorScheme: options.theme })
+        .launchPersistentContext(options.profile, {
+          ...launchOptions,
+          ...(manual ? { viewport: null, colorScheme: options.theme } : recordContextOptions),
+        })
         .catch((error) => {
           // Chromium locks a profile to one process; the usual cause is the previous session's window.
           if (/already in use/.test(error.message)) {
@@ -208,12 +222,7 @@ const context = tauri
           }
           throw error;
         })
-    : await browser.newContext({
-        viewport,
-        deviceScaleFactor: scale,
-        colorScheme: options.theme,
-        recordVideo: hires ? undefined : { dir: options.out, size: viewport },
-      });
+    : await browser.newContext(recordContextOptions);
 // A persistent profile opens with a tab already; driving it avoids leaving a stray blank one beside it.
 const page = native ? native.page : (context.pages()[0] ?? (await context.newPage()));
 page.setDefaultTimeout(options['action-timeout']);
