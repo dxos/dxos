@@ -6,6 +6,7 @@ import React, { useEffect, useState } from 'react';
 
 import { ClientProvider, type ClientProviderProps } from '@dxos/react-client';
 import { translations as logPanelTranslations } from '@dxos/react-ui-debug/translations';
+import { translations as queryTranslations } from '@dxos/react-ui-query/translations';
 import * as Status from '@dxos/react-ui/Status';
 import * as Theme from '@dxos/react-ui/Theme';
 import { type ThemeMode } from '@dxos/ui-types';
@@ -34,7 +35,10 @@ export const App = (props: ClientProviderProps) => {
   const themeMode = useThemeWatcher();
 
   return (
-    <Theme.Provider {...{ tx: Theme.defaultTx, themeMode }} resourceExtensions={logPanelTranslations}>
+    <Theme.Provider
+      {...{ tx: Theme.defaultTx, themeMode }}
+      resourceExtensions={[...logPanelTranslations, ...queryTranslations]}
+    >
       <Status.ErrorBoundary name='devtools.app'>
         <ClientProvider {...props}>
           <Devtools />

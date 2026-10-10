@@ -3,6 +3,7 @@
 //
 
 export * from './Bitbar.tsx';
+export * from './BlobPreview/index.ts';
 export * from './BooleanIcon.tsx';
 export * from './ControlledSelector.tsx';
 export * from './JsonView.tsx';
@@ -15,4 +16,6 @@ export * from './Select.tsx';
 export * from './StatCard/index.ts';
 export * from './Tree.tsx';
 export * from './ObjectViewer.tsx';
+export * from './ObjectsGraph.tsx';
 export * from './ObjectsTree.tsx';
+export * from './PropertyTree/index.ts';

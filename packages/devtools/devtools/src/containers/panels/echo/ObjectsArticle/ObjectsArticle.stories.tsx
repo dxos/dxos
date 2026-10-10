@@ -9,13 +9,14 @@ import React, { useState } from 'react';
 
 import * as Operation from '@dxos/compute/Operation';
 import * as Trigger from '@dxos/compute/Trigger';
-import { DXN, type Entity, Obj, Relation, Type } from '@dxos/echo';
+import { Blob, DXN, type Entity, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { random } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
+import { translations as queryTranslations } from '@dxos/react-ui-query/translations';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { TestSchema } from '@dxos/schema/testing';
 
-import { ObjectsTree, ObjectViewer } from '../../../../components/index.ts';
+import { ObjectsTree, PropertyTree } from '../../../../components/index.ts';
 import { DevtoolsContextProvider } from '../../../../hooks/index.ts';
 import { ObjectsArticle } from './ObjectsArticle.tsx';
 
@@ -41,6 +42,13 @@ const ObjectsPanelStory = () => {
   return <ObjectsArticle space={space} />;
 };
 
+const SAMPLE_SVG = [
+  '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="120" viewBox="0 0 200 120">',
+  '<rect width="200" height="120" rx="12" fill="#3b82f6"/>',
+  '<text x="100" y="68" font-size="24" text-anchor="middle" fill="white">blob</text>',
+  '</svg>',
+].join('');
+
 const roles = ['Engineer', 'Designer', 'Manager', 'Director', 'Analyst'];
 
 const meta = {
@@ -60,6 +68,7 @@ const meta = {
         Operation.PersistentOperation,
         Trigger.Trigger,
         WorksAt,
+        Blob.Blob,
       ],
       onCreateSpace: async ({ space }) => {
         const organizations = Array.from({ length: 5 }, () =>
@@ -76,6 +85,7 @@ const meta = {
             Obj.make(TestSchema.Person, {
               name: random.person.fullName(),
               email: random.internet.email(),
+              organization: Ref.make(random.helpers.arrayElement(organizations)),
             }),
           ),
         );
@@ -135,12 +145,24 @@ const meta = {
           );
         });
 
+        // Blobs, to exercise the content preview.
+        const encoder = new TextEncoder();
+        const blobs = [
+          { type: 'image/svg+xml', text: SAMPLE_SVG },
+          { type: 'application/json', text: JSON.stringify({ hello: 'world', items: [1, 2, 3] }, null, 2) },
+        ];
+        blobs.forEach(({ type, text }) => {
+          const bytes = encoder.encode(text);
+          space.db.add(Blob.make({ type, size: bytes.length, data: Blob.inlineData(bytes) }));
+        });
+
         await space.db.flush();
       },
     }),
   ],
   parameters: {
     layout: 'fullscreen',
+    translations: queryTranslations,
   },
 } satisfies Meta;
 
@@ -175,7 +197,7 @@ export const WithDetails: Story = {
       <div className='flex grid grid-rows_[1fr_1fr]'>
         <ObjectsTree db={space.db} onSelect={setSelectedObject} />
         <div className='border-separator! border-s border-t'>
-          {selectedObject && <ObjectViewer object={selectedObject} id={selectedObject.id} />}
+          {selectedObject && <PropertyTree value={selectedObject} db={space.db} />}
         </div>
       </div>
     );

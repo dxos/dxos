@@ -82,6 +82,9 @@
       "path": "../../ui/react-ui-introspect"
     },
     {
+      "path": "../../ui/react-ui-query"
+    },
+    {
       "path": "../../ui/react-ui-table"
     },
     {
