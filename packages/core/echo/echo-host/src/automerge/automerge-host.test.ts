@@ -10,7 +10,7 @@ import {
   generateAutomergeUrl,
   parseAutomergeUrl,
 } from '@automerge/automerge-repo';
-import { describe, expect, onTestFinished, test, vi } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -21,7 +21,7 @@ import { range } from '@dxos/util';
 
 import { createTestSqliteRuntime } from '../testing/index.ts';
 import { TestReplicationNetwork } from '../testing/index.ts';
-import { AutomergeHost, DIVERGED_RESYNC_RETRY_MIN_MS, type RootDocumentSpaceKeyProvider } from './automerge-host.ts';
+import { AutomergeHost, type RootDocumentSpaceKeyProvider } from './automerge-host.ts';
 import { type EchoNetworkAdapter } from './echo-network-adapter.ts';
 import { deriveCollectionIdFromSpaceId } from './space-collection.ts';
 import { waitForEviction } from './subduction-test-utils.ts';
@@ -365,60 +365,6 @@ describe('AutomergeHost', () => {
     expect([...resyncHeads.values()].some((entry) => entry.documentId === documentId)).toBe(true);
     await host.removeDocument(documentId);
     expect([...resyncHeads.values()].some((entry) => entry.documentId === documentId)).toBe(false);
-  });
-
-  // A resync whose round does not converge spends the heal loop, which then gives up; with the head pair unchanged,
-  // nothing else retries, so before the backoff a diverged document waited for a reconnect — minutes, or forever on a
-  // stable connection.
-  test('a diverged document still unconverged is resynced again after a backoff, without a reconnect', async () => {
-    const { runtime, dispose } = createTestSqliteRuntime();
-    onTestFinished(() => dispose());
-    const host = new AutomergeHost({ runtime, useSubduction: true });
-    await host.open();
-    onTestFinished(async () => {
-      vi.restoreAllMocks();
-      if (host.isOpen) {
-        await host.close();
-      }
-    });
-
-    const { documentId } = await host.createDoc<any>({ value: 1 });
-    await host.flush(Context.default());
-    const collectionId = 'test-collection';
-    await host.updateLocalCollectionState(collectionId, [documentId]);
-
-    const resynced: DocumentId[] = [];
-    const resyncDocument = host.resyncDocument.bind(host);
-    host.resyncDocument = (id) => {
-      resynced.push(id);
-      resyncDocument(id);
-    };
-
-    const peerId = 'test-peer' as PeerId;
-    const remoteState = { documents: { [documentId]: ['0'.repeat(64)] } };
-    const synchronizer = (host as any)._collectionSynchronizer;
-    // A clock that keeps running, so the host's own throttles still elapse, moved forward past the backoff.
-    const realNow = Date.now.bind(Date);
-    let skew = 0;
-    vi.spyOn(Date, 'now').mockImplementation(() => realNow() + skew);
-
-    synchronizer.onRemoteStateReceived(collectionId, peerId, remoteState);
-    await expect.poll(() => resynced.length, { timeout: 2_000 }).toEqual(1);
-
-    skew += DIVERGED_RESYNC_RETRY_MIN_MS - 1_000;
-    synchronizer.onRemoteStateReceived(collectionId, peerId, remoteState);
-    await sleep(200);
-    expect(resynced).toHaveLength(1);
-
-    skew += 2_000;
-    synchronizer.onRemoteStateReceived(collectionId, peerId, remoteState);
-    await expect.poll(() => resynced.length, { timeout: 2_000 }).toEqual(2);
-
-    // The wait doubles, so a pair that never converges costs a bounded, shrinking number of rounds.
-    skew += DIVERGED_RESYNC_RETRY_MIN_MS + 1_000;
-    synchronizer.onRemoteStateReceived(collectionId, peerId, remoteState);
-    await sleep(200);
-    expect(resynced).toHaveLength(2);
   });
 
   test('a resident document is different when an overlapping remote head is missing locally', async () => {

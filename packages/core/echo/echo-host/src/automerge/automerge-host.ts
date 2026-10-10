@@ -155,16 +155,6 @@ const NON_CONVERGENCE_WARN_INTERVAL = 30;
 const NON_CONVERGENCE_ERROR_THRESHOLD = 90;
 
 /**
- * Wait before a diverged document whose resync did not converge is resynced again at the same head pair. Above the
- * Subduction heal loop's own backoff cap (60s), so a retry never pins that backoff at zero; doubling per attempt up
- * to {@link DIVERGED_RESYNC_RETRY_MAX_MS}. Without it the only retry was a reconnect: minutes, or never.
- */
-export const DIVERGED_RESYNC_RETRY_MIN_MS = 60_000;
-
-/** Ceiling for {@link DIVERGED_RESYNC_RETRY_MIN_MS}'s doubling. */
-const DIVERGED_RESYNC_RETRY_MAX_MS = 10 * 60_000;
-
-/**
  * Throttle for the repo-wide share-policy kick, as a per-resident-document cost.
  *
  * `Repo.shareConfigChanged()` takes no document argument — it walks every entry and re-probes each
@@ -302,19 +292,18 @@ export class AutomergeHost extends Resource {
    * Heads a diverged document was last re-synced at, keyed by `<collectionId>:<peerId>:<documentId>`.
    *
    * {@link resyncDocument} re-arms the Subduction heal loop, which then retries with its own
-   * backoff — so calling it again on the next diff pass would reset that backoff to zero and pin it
-   * there. That loop gives up after its last attempt, so a pair still diverged is resynced again at
-   * `retryAt`, on a doubling backoff (see {@link DIVERGED_RESYNC_RETRY_MIN_MS}). Keyed by the heads
+   * backoff — so one call per observed head pair is the whole retry budget, and calling it again
+   * on the next diff pass would reset that backoff to zero and pin it there. Keyed by the heads
    * rather than a plain "already tried" flag so that a genuine change on either side (the peer
-   * advanced, or we committed again) re-opens the retry at once. An evicted document spends it on
-   * the load that faults it in.
+   * advanced, or we committed again) re-opens the retry. An evicted document spends it on the load that
+   * faults it in.
    *
    * The map key is only for lookup: collection and peer ids both contain `:`, so no joined string is
    * unambiguous, and cleanup compares the ids stored on each entry instead.
    */
   private _divergedResyncHeads = new Map<
     string,
-    { collectionId: string; peerId: PeerId; documentId: DocumentId; heads: string; attempts: number; retryAt: number }
+    { collectionId: string; peerId: PeerId; documentId: DocumentId; heads: string }
   >();
 
   /** Earliest time the repo-wide share-policy kick may fan out again. See {@link SHARE_POLICY_KICK_MS_PER_DOCUMENT}. */
@@ -1717,8 +1706,7 @@ export class AutomergeHost extends Resource {
         // Both sides' heads: a round already spent against this exact pair cannot do better, but
         // either side advancing means the situation changed and is worth another.
         const heads = `${(localState.documents[documentId] ?? []).join(',')}|${(remoteState.documents[documentId] ?? []).join(',')}`;
-        const previous = this._divergedResyncHeads.get(resyncKey);
-        if (previous?.heads === heads && Date.now() < previous.retryAt) {
+        if (this._divergedResyncHeads.get(resyncKey)?.heads === heads) {
           // Verbose: this fires on every diff pass for docs that are in practice fully synced,
           // so at warn level it floods the console without indicating a real fault.
           log.verbose('diverged document already resynced at these heads', {
@@ -1729,10 +1717,7 @@ export class AutomergeHost extends Resource {
           });
           continue;
         }
-        const attempts = previous?.heads === heads ? previous.attempts + 1 : 0;
-        const retryAt =
-          Date.now() + Math.min(DIVERGED_RESYNC_RETRY_MIN_MS * 2 ** attempts, DIVERGED_RESYNC_RETRY_MAX_MS);
-        this._divergedResyncHeads.set(resyncKey, { collectionId, peerId, documentId, heads, attempts, retryAt });
+        this._divergedResyncHeads.set(resyncKey, { collectionId, peerId, documentId, heads });
         if (isDocumentLoaded(this._repo, documentId)) {
           log('resyncing diverged document', {
             collectionId,
