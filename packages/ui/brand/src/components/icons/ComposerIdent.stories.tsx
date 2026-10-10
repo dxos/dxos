@@ -32,10 +32,10 @@ type IdentVariant = {
   grow?: {
     /** Growth speed shared by every arm (viewBox units per ms), so shorter arms finish first. */
     rate: number;
-    /** Pause after the rings land before the arms grow (ms); ignored when `overlap` is set. */
+    /** Pause after the rings land before the arms grow (ms); ignored when `finishAt` is set. */
     delay: number;
-    /** Grow while the rings settle, so the arms close exactly as the rings come to rest. */
-    overlap?: boolean;
+    /** Grow while the rings are still moving, fully grown at this fraction (0-1) of the last ring's animation. */
+    finishAt?: number;
   };
 };
 
@@ -143,7 +143,7 @@ const variants: Record<VariantName, IdentVariant> = {
   turn: {
     label: 'Turn',
     outerFirst: true,
-    duration: 3200,
+    duration: 4000,
     // Every ring stops at the same moment; inner rings turn further so they still move against each other.
     stagger: 0,
     ring: (index) => ({
@@ -152,9 +152,9 @@ const variants: Record<VariantName, IdentVariant> = {
         { opacity: 1, offset: 0.25 },
         { opacity: 1, offset: 1, transform: 'rotate(0deg)' },
       ],
-      easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+      easing: 'cubic-bezier(0.33, 1, 0.68, 1)',
     }),
-    grow: { rate: 0.05, delay: 0, overlap: true },
+    grow: { rate: 0.05, delay: 0, finishAt: 0.7 },
   },
   fade: {
     label: 'Fade',
@@ -268,7 +268,10 @@ const ComposerIdent = ({
       });
       const longest = Math.max(...growDurations);
       // Shorter arms start later at the same rate so every arm closes together.
-      const growEnd = grow.overlap ? ringsEnd : ringsEnd + grow.delay + longest;
+      const growEnd =
+        grow.finishAt === undefined
+          ? ringsEnd + grow.delay + longest
+          : (count - 1) * stagger + duration * grow.finishAt;
       pathRefs.current.forEach((element, index) => {
         if (element) {
           const growDuration = growDurations[index];
@@ -285,7 +288,7 @@ const ComposerIdent = ({
           );
         }
       });
-      ringsEnd = growEnd;
+      ringsEnd = Math.max(ringsEnd, growEnd);
     }
 
     if (wordmarkRef.current) {
