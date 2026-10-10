@@ -21,12 +21,12 @@ describe('EchoFilter', () => {
     expect(filter.isEcho([9])).toBe(false);
   });
 
-  test('an echo confirms every earlier report', ({ expect }) => {
+  test('echoes delivered out of order are all recognized', ({ expect }) => {
     const filter = new EchoFilter<number[]>();
     filter.reported([1]);
     filter.reported([1, 2]);
     expect(filter.isEcho([1, 2])).toBe(true);
-    // The older report was superseded; seeing it now means someone else wrote it.
-    expect(filter.isEcho([1])).toBe(false);
+    // The older report arriving after the newer one is still this side's stale echo, not an external write.
+    expect(filter.isEcho([1])).toBe(true);
   });
 });

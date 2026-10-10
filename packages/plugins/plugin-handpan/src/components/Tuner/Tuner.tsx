@@ -224,6 +224,22 @@ export const Tuner = ({
     [persist, onCalibrationChange],
   );
 
+  // A new reference pitch moves every note's frequency: re-target the calibration, keeping its strikes.
+  // A different scale also changes `notes`, but its calibration is loaded by the scale change itself.
+  useEffect(() => {
+    const current = calibrationRef.current;
+    const samePitches =
+      current.notes.length === notes.length &&
+      current.notes.every(
+        (note, index) => note.pitch === notes[index].pitch && note.frequency !== notes[index].frequency,
+      );
+    if (samePitches) {
+      const state = Calibration.restore(notes, current.samples, { strikes });
+      calibrationRef.current = state;
+      setCalibrationState(state);
+    }
+  }, [notes, strikes]);
+
   // Another device or user may update the instrument's calibration, or the tuner may be unbound from it.
   const wasControlledRef = useRef(controlled);
   useEffect(() => {
