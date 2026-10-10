@@ -264,14 +264,11 @@ const NEVER_CURRENT = Atom.make(false);
 /** A larger container (e.g. a blob's inline bytes) stays closed by default, so it does not bury its siblings. */
 const MAX_DEFAULT_OPEN_ENTRIES = 20;
 
-const ICONS: Record<PropertyKind, string> = {
+/** Only structure gets a glyph; a primitive's value is already its own signal, and an icon per leaf is noise. */
+const ICONS: Partial<Record<PropertyKind, string>> = {
   object: 'ph--brackets-curly--regular',
   array: 'ph--brackets-square--regular',
   ref: 'ph--link--regular',
-  string: 'ph--text-aa--regular',
-  number: 'ph--hash--regular',
-  boolean: 'ph--toggle-left--regular',
-  null: 'ph--circle-dashed--regular',
 };
 
 const VALUE_CLASSES: Record<PropertyKind, string> = {
