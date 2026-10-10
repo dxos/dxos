@@ -1,7 +1,8 @@
 import React from 'react';
-import { AbsoluteFill, useCurrentFrame, useVideoConfig } from 'remotion';
+import { AbsoluteFill } from 'remotion';
 
-import { DXOSTrail } from '@dxos/hero/trail';
+// TODO(burdon): Restore once @dxos/hero is available in this repo.
+// import { DXOSTrail } from '@dxos/hero/trail';
 
 import { COLORS } from './brand';
 
@@ -10,11 +11,11 @@ import { COLORS } from './brand';
  * Use it as a full-frame layer, e.g. behind the end card or as a standalone ident.
  */
 export const Trail: React.FC = () => {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  // const frame = useCurrentFrame();
+  // const { fps } = useVideoConfig();
   return (
     <AbsoluteFill style={{ backgroundColor: COLORS.ground }}>
-      <DXOSTrail frame={frame} fps={fps} />
+      {/* <DXOSTrail frame={frame} fps={fps} /> */}
     </AbsoluteFill>
   );
 };

@@ -5,7 +5,6 @@
   "description": "Sovereign Intelligence video ads: provocation cards and DXOS end card, rendered with Remotion.",
   "type": "module",
   "dependencies": {
-    "@dxos/hero": "workspace:*",
     "@remotion/bundler": "catalog:",
     "@remotion/cli": "catalog:",
     "@remotion/fonts": "catalog:",
