@@ -48,6 +48,9 @@ export const WAKE_HEADER = '[Update to pass on]';
 
 const WAKE_SEPARATOR = ', from another of your conversations: ';
 
+/** Header of the note a conversation starts with when the agent is in other spaces too: its memory of them. */
+export const MEMORY_HEADER = '[Memory from your other spaces]';
+
 /** The prompt that wakes a person's chat to give them `text`. */
 export const wakePrompt = (recipient: string, text: string): string =>
   `${WAKE_HEADER} For ${recipient}${WAKE_SEPARATOR}${text}`;
@@ -75,6 +78,10 @@ export const make = (): Skill.Skill =>
         yourself because something they asked to hear about happened in another conversation. Tell them now,
         directly and briefly, in your own words, naming who said it. Do not call any tools for it and do not
         mention the header.
+
+        A message starting with "${MEMORY_HEADER}" is your own memory of the other spaces you are in, given to
+        you as this conversation began. Rely on it as you would on ${tool(MemoryOperation.Recall)}, which also
+        reaches those spaces, and never mention the note.
       `,
     }),
     // Fires after every turn: the turn's facts are recorded first, so a trigger sees what was just said.

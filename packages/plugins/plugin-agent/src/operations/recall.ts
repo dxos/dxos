@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
+import * as Agent from '@dxos/assistant/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { HasSubject } from '@dxos/types';
@@ -11,6 +12,7 @@ import { HasSubject } from '@dxos/types';
 import { FactEntry, Goal, Memory, MemoryOperation, Profile } from '#types';
 
 import { queryFacts } from './annotations.ts';
+import { knowledgeElsewhere } from './presence.ts';
 
 /** pipeline-rdf's entity id for a surface form (`normalizeEntityId`), restated to keep its query engine out of this module. */
 const slug = (label: string): string =>
@@ -35,15 +37,36 @@ const entityIds = (entity: Obj.Unknown): Set<string> => {
   );
 };
 
+/** The ids of the entities sharing a name with the subject: the same person or organization, in another space. */
+const sameNamed = (entities: readonly Obj.Unknown[], ids: ReadonlySet<string>): Set<string> =>
+  new Set(entities.filter((candidate) => [...entityIds(candidate)].some((id) => ids.has(id))).map(({ id }) => id));
+
 const handler: Operation.WithHandler<typeof MemoryOperation.Recall> = MemoryOperation.Recall.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ subject, query, limit }) {
       const entity = subject ? yield* Database.load(subject) : undefined;
-      const candidates = entity
+      const ids = entity ? entityIds(entity) : undefined;
+      const local = entity
         ? (yield* Database.query(Query.select(Filter.id(entity.id)).targetOf(HasSubject.HasSubject)).run)
             .map((relation) => Relation.getSource(relation))
             .filter(Obj.instanceOf(Memory.Memory))
         : yield* Database.query(Filter.type(Memory.Memory)).run;
+
+      // The agents here remember the other spaces they are in. There the subject is another object, so it is
+      // matched by name, as facts are.
+      const elsewhere = yield* knowledgeElsewhere(yield* Database.query(Filter.type(Agent.Agent)).run);
+      const remote = elsewhere.map(({ memories, goals, entities }) => {
+        const subjects = ids && sameNamed(entities, ids);
+        return {
+          memories: memories
+            .filter((entry) => !subjects || entry.subjects.some((id) => subjects.has(id)))
+            .map(({ memory }) => memory),
+          goals: goals.filter(
+            (goal) => !subjects || goal.owners.some((owner) => [...subjects].some((id) => Profile.refersTo(owner, id))),
+          ),
+        };
+      });
+      const candidates = [...local, ...remote.flatMap(({ memories }) => memories)];
 
       const needle = query?.trim().toLowerCase();
       const memories = candidates
@@ -54,8 +77,7 @@ const handler: Operation.WithHandler<typeof MemoryOperation.Recall> = MemoryOper
 
       // Expired facts stay in the feed as history; recall leaves them out.
       const now = new Date().toISOString();
-      const ids = entity ? entityIds(entity) : undefined;
-      const facts = (yield* queryFacts)
+      const facts = [...(yield* queryFacts), ...elsewhere.flatMap(({ facts }) => facts)]
         .filter(({ fact }) => !fact.assertion.validTo || fact.assertion.validTo > now)
         .filter(({ fact }) => {
           if (!ids) {
@@ -74,9 +96,12 @@ const handler: Operation.WithHandler<typeof MemoryOperation.Recall> = MemoryOper
         )
         .slice(0, limit ?? undefined);
 
-      const goals = (yield* Database.query(Filter.type(Goal.Goal)).run)
-        .filter(Profile.isLiveGoal)
-        .filter((goal) => !entity || goal.owners.some((owner) => Profile.refersTo(owner, entity.id)));
+      const goals = [
+        ...(yield* Database.query(Filter.type(Goal.Goal)).run)
+          .filter(Profile.isLiveGoal)
+          .filter((goal) => !entity || goal.owners.some((owner) => Profile.refersTo(owner, entity.id))),
+        ...remote.flatMap(({ goals }) => goals),
+      ];
 
       return {
         memories: memories.map((memory) => ({

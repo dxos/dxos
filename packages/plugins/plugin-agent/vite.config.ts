@@ -20,6 +20,7 @@ export default defineConfig({
     translations: 'src/translations.ts',
     AgentChannels: 'src/types/AgentChannels.ts',
     AgentOperation: 'src/types/AgentOperation.ts',
+    AgentPresence: 'src/types/AgentPresence.ts',
     AgentCompanion: 'src/types/AgentCompanion.ts',
     BrainService: 'src/types/BrainService.ts',
     BrainSkill: 'src/skills/BrainSkill.ts',

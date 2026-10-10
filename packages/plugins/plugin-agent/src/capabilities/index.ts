@@ -4,6 +4,7 @@
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
 import { translations } from '#translations';
 
@@ -12,11 +13,14 @@ export const Brain = AppCapability.layerSpec(() => import('./brain.ts'), {
   environments: ['browser', 'node', 'tauri'],
 });
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'));
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'), {
+  environments: ['browser', 'node', 'tauri'],
+});
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.tsx'), {
-  roles: ['org.dxos.role.article', 'org.dxos.role.objectProperties'],
+  roles: ['org.dxos.role.article', 'org.dxos.role.dialog', 'org.dxos.role.objectProperties'],
 });
 export const Schema = AppCapability.schema(() => import('./schema.ts'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));

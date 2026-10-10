@@ -16,6 +16,7 @@ import { AgentOperation, ChatParticipant, Mode } from '#types';
 import { loadAgentBindings } from './ensure-channel-chat.ts';
 import { AgentOperationError } from './errors.ts';
 import { BASE_SKILL_KEYS, skillRef } from './modes.ts';
+import { seedBrief } from './presence.ts';
 
 /** Loaded on demand: the context runtime is heavy and only needed when a chat is first created. */
 const aiContextRuntime = () => import('@dxos/assistant/AiContext');
@@ -88,6 +89,8 @@ export const ensureParticipantChat = Effect.fnUntraced(function* (
   const agentBound = bindings.objects.some((ref) => ref.uri === Obj.getURI(agent));
   const objects = [...bindings.objects, ...(agentBound ? [] : [Ref.make<Obj.Unknown>(agent)]), Ref.make(chat)];
   yield* Effect.promise(() => binder.bind({ skills, objects }));
+  // An agent in other spaces too begins the conversation remembering them.
+  yield* seedBrief(agent, feed, { owner });
   return chat;
 }, Effect.scoped);
 

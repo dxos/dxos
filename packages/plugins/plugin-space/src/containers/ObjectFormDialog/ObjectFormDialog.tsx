@@ -112,19 +112,32 @@ const ObjectFormDialogBody = ({
   const entriesByModule = useAtomValue(manager.capabilities.atomByModule(SpaceCapabilities.CreateObjectEntry));
 
   const { capabilityEntries, pluginNameByEntryId } = useMemo(() => {
-    const entries: SpaceCapabilities.CreateObjectEntry[] = [];
-    const pluginByEntryId = new Map<string, string>();
     const plugins = manager.getPlugins();
+    const entries = new Map<string, SpaceCapabilities.CreateObjectEntry>();
+    const ownerByEntryId = new Map<string, (typeof plugins)[number]>();
     for (const [moduleId, contributions] of Object.entries(entriesByModule)) {
       const owningPlugin = plugins.find((plugin) => plugin.modules.some((module) => module.id === moduleId));
       for (const entry of contributions) {
-        entries.push(entry);
+        // One entry per type: when two plugins offer one, the plugin built on the other is the more specific.
+        const owner = ownerByEntryId.get(entry.id);
+        const supersedes =
+          !entries.has(entry.id) ||
+          (owner !== undefined && owningPlugin?.meta.profile.dependsOn?.includes(owner.meta.profile.key) === true);
+        if (!supersedes) {
+          continue;
+        }
+        entries.set(entry.id, entry);
         if (owningPlugin) {
-          pluginByEntryId.set(entry.id, owningPlugin.meta.profile.name);
+          ownerByEntryId.set(entry.id, owningPlugin);
+        } else {
+          ownerByEntryId.delete(entry.id);
         }
       }
     }
-    return { capabilityEntries: entries, pluginNameByEntryId: pluginByEntryId };
+    return {
+      capabilityEntries: [...entries.values()],
+      pluginNameByEntryId: new Map([...ownerByEntryId].map(([id, plugin]) => [id, plugin.meta.profile.name])),
+    };
   }, [entriesByModule, manager]);
 
   // Synthesize entries for database-persisted object schemas that have no registered capability.

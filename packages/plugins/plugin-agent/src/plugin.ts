@@ -7,6 +7,7 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import {
   AppGraphBuilder,
   Brain,
+  CreateObject,
   OperationHandler,
   ReactSurface,
   Schema,
@@ -18,6 +19,7 @@ import { meta } from '#meta';
 export const AgentPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(Schema),
   Plugin.addModule(Brain),
+  Plugin.addModule(CreateObject),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(AppGraphBuilder),

@@ -12,8 +12,17 @@ import * as Agent from '@dxos/assistant/Agent';
 import { Organization, Person } from '@dxos/types';
 import { Position } from '@dxos/util';
 
-import { AgentActivity, AgentKnowledge, AgentPrivateChat, ProfileProperties } from '#containers';
+import {
+  AgentActivity,
+  AgentKnowledge,
+  AgentPrivateChat,
+  InviteAgentDialog,
+  type InviteAgentDialogProps,
+  ProfileProperties,
+} from '#containers';
 import { AgentCompanion } from '#types';
+
+import { INVITE_AGENT_DIALOG } from '../constants.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -54,6 +63,13 @@ export default Capability.makeModule(() =>
         position: Position.last,
         component: ProfileProperties,
         props: ({ data: { subject } }) => ({ subject }),
+      }),
+      // Picks the space an agent is invited into.
+      Surface.create({
+        id: INVITE_AGENT_DIALOG,
+        filter: AppSurface.component<InviteAgentDialogProps>(AppSurface.Dialog, INVITE_AGENT_DIALOG),
+        component: InviteAgentDialog,
+        props: ({ data: { props } }) => ({ ...props }),
       }),
       Surface.create({
         id: 'organizationProfileGraph',

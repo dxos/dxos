@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, DXN, Obj, Ref } from '@dxos/echo';
+import { Database, DXN, Hypergraph, Obj, Ref } from '@dxos/echo';
 
 import * as Goal from './Goal.ts';
 import * as Memory from './Memory.ts';
@@ -115,7 +115,8 @@ export const Recall = Operation.make({
       'Returns the active memories and the facts read from documents and conversations about a subject (newest first), and the goals it owns.',
     icon: 'ph--magnifying-glass--regular',
   },
-  services: [Database.Service],
+  // The graph reaches the other spaces the agents here are in: an agent remembers across all of them.
+  services: [Database.Service, Hypergraph.Service],
   input: Schema.Struct({
     subject: Schema.optional(Ref.Ref(Obj.Unknown).annotate({ description: 'The entity to recall; all if omitted.' })),
     query: Schema.optional(Schema.String.annotate({ description: 'Only memories and facts containing this text.' })),

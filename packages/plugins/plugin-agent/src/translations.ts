@@ -50,6 +50,13 @@ export const translations = [
         'channels.label': 'Channels',
         'channels.description': 'Where the agent converses: pick channels; each backend shows its own settings below.',
         'create-agent.label': 'Add agent',
+        'invite-agent.label': 'Invite to space',
+        'invite-agent-dialog.title': 'Invite {{name}} to a space',
+        'invite-agent-dialog.description':
+          'The agent joins the space you pick and keeps its memory of every space it is in.',
+        'invite-agent-dialog.placeholder': 'Search spaces…',
+        'invite-agent-failed.title': 'Could not invite the agent',
+        'unnamed-space.label': 'Untitled space',
         'new-agent.name': 'New agent',
         'profile-graph-empty.message': 'Nothing recorded yet.',
         'profile-graph-goals.heading': 'Goals',

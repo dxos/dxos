@@ -201,6 +201,23 @@ op listAgents
   note: Lists all `Agent` objects, not only ones this plugin created.
 ```
 
+```mdl
+op inviteAgent
+  key: org.dxos.operation.agent.invite
+  desc: Invites an agent from another space into this one; it keeps its memory of the spaces it is in.
+  input:
+    agent: Ref<Agent>               # in any space it is in
+  output: { agent: Ref<Agent>, created: boolean }
+  effects: [echo:read, echo:write]
+  requires: [Database.Service, Hypergraph.Service]
+  note: |
+    Runs in the target space. There the agent's home returns the home agent, and any other space the
+    presence keyed `AgentPresence.homeKey(<home agent URI>)`, created on first invitation with the home's
+    name, DID and instructions (`makeAgent`, so its modes and first chat match op:createAgent). The new
+    presence's first chat starts with the memory note (F-6.4). Customized skills stay home: a presence
+    binds the compiled ones.
+```
+
 Memory operations (the Interview skill's tools).
 
 ```mdl
@@ -255,7 +272,10 @@ op retrieveMemories
       goals: { goal: Ref<Goal>, title, horizon, status }[] }
   effects: [echo:read]
   requires: [Database.Service]
-  note: Live goals are every status but `dropped`; ties in observedAt break on id.
+  note: |
+    Live goals are every status but `dropped`; ties in observedAt break on id. As built (`recall`) it also
+    returns the facts the agents here read in the other spaces they are present in, with those spaces'
+    memories and goals, matching the subject there by name (F-6.5).
 ```
 
 ```mdl
@@ -352,9 +372,35 @@ node AgentsSection
   source: node:SpaceRoot
   subject: type:Agent
   actions: [op:createAgent]
+  note: |
+    The section is suppressed while the space has no Agent, so "Add to space" also offers Agent (a Name
+    field; `capabilities/create-object.ts` invokes op:createAgent). Where plugin-assistant offers its own
+    Agent entry too (experimental types), plugin-space keeps this one: it belongs to the plugin built on the other.
+```
+
+```mdl
+node AgentActions
+  desc: |
+    Each Agent node's menu adds "Invite to space" (testId `agent.invite`), which opens
+    component:InviteAgentDialog for the agent.
+  source: node:AgentsSection
+  subject: type:Agent
+  actions: [op:inviteAgent]
 ```
 
 ## Components
+
+```mdl
+component InviteAgentDialog
+  desc: |
+    Container (containers/InviteAgentDialog): "Invite <name> to a space" over a searchable list of the
+    member's other visible spaces (never the agent's own, nor a settings space). Selecting one invokes
+    op:inviteAgent in that space and opens the agent there; a failure keeps the dialog open and toasts.
+  props:
+    agent: Agent
+  actions:
+    select(space) → op:inviteAgent, then org.dxos.operation.layout.open
+```
 
 ```mdl
 component ProfileGraph
@@ -413,6 +459,12 @@ component ProfileProperties
 ## Surfaces
 
 ```mdl
+surface InviteAgentDialog
+  role: dialog
+  component: component:InviteAgentDialog
+```
+
+```mdl
 companion AgentActivity
   of: type:Agent
   variant: activity
@@ -456,6 +508,7 @@ feat F-1: Agents
     when: op:createAgent runs
     then: an Agent exists with Instructions holding the Interview skill and a first chat bound to the Agent conversation skill
   req F-1.3: op:listAgents reports each Agent with the number of chats parented to it.
+  req F-1.4: A space with no agent creates its first from "Add to space" › Agent, named in the form.
 ```
 
 ```mdl
@@ -511,6 +564,21 @@ feat F-5: Interview and profile panel
   req F-5.3:
     when: a goal's status or a memory's status changes
     then: the properties panel updates without reopening
+```
+
+```mdl
+feat F-6: An agent in several spaces
+
+  req F-6.1: "Invite to space" on an Agent brings it into another space the member picks, and opens it there.
+  req F-6.2:
+    when: op:inviteAgent runs for an agent already in the space (its home, or an earlier presence)
+    then: that agent is returned and nothing is created
+  req F-6.3: A presence carries its home's name, DID and instructions, keyed to the home agent's URI; inviting a presence keys the new one to the same home.
+  req F-6.4:
+    when: a chat of an agent present in other spaces is created (a presence's first chat, a member's private chat)
+    then: it starts with a synthetic "[Memory from your other spaces]" note listing the facts, memories and goals there and the member's latest conversation there
+  req F-6.5: op:retrieveMemories also returns what the agents in the space know in the other spaces they are in; a host with no cross-space graph (EDGE) reads its own space only.
+  req F-6.6: A note never quotes a private chat of anyone but the member the new chat is for; a shared chat's note quotes shared chats only.
 ```
 
 ## Acceptance
@@ -590,6 +658,19 @@ scenario T-8: Scripted interview fills the profile panel
     - the space holds one Person, two confirmed goals and at least three memories
 ```
 
+```mdl
+scenario T-9: An agent keeps its memory across spaces   # invite-agent.test.ts
+  # covers [F-6.2, F-6.3, F-6.4, F-6.5, F-6.6]
+  given: Kai in a home space, with a private chat with Mykola, a fact he stated (attributed to his DID) and a memory about him
+  when: Kai is invited into a second space twice, then as its presence, then back home; Mykola's private chat with the presence opens
+  then:
+    - one presence exists, keyed to Kai's URI, with Kai's name and instructions; back home Kai itself is returned
+    - the presence's first chat starts with a synthetic note naming the fact (said by Mykola) and the memory, and not his private chat
+    - Mykola's new private chat there starts with his home conversation, the agent speaking as "You"
+    - the home's facts and memory are read from the second space through the graph, and the second space from home
+    - without a graph nothing is read elsewhere and no note is composed
+```
+
 ## Not built
 
 Design items from `docs/DESIGN.md` and `docs/MEMORY.md` that this package does not implement:
@@ -597,7 +678,16 @@ Design items from `docs/DESIGN.md` and `docs/MEMORY.md` that this package does n
 - The EDGE gateway Durable Object and the agent turn on EDGE live outside this package (EDGE repo).
   Until edge step 4 the gateway still reads a `DiscordBinding` and calls `ensureThreadChat`, neither of
   which exists any more, so Discord conversations do not reach the agent.
-- Real per-agent HALO identity and joined spaces.
+- Real per-agent HALO identity: a presence carries its home's DID but is not admitted to the space as
+  itself. On EDGE an agent reads only the space its turn runs in, so a remote chat knows its other spaces
+  through the note it started with, not through op:retrieveMemories; what it learns after that note stays
+  in its own space until a new chat is opened.
+- In a chat hosted on EDGE, the memory note is written by the client, so it has no EDGE position until
+  the feed is read again: after the chat's first turn it renders below that turn until the page reloads.
+  The model reads it either way. Pushing the feed on write (`Feed.sync`) fixes the order but made the
+  thread re-render without end in a live take, so it is left out.
+- What a presence learns stays in its space's annotation feeds: the brain is the union of them, read
+  through the client's graph, not one store (EDGE's BrainObject is meant to be that store).
 - Runtime-assembled memory context at the start of each turn; consolidation (dedupe, promotion of
   inferred memories); editing or retracting memories in the UI (`retracted` exists as a status only).
 - Required provenance: `Memory.source` is optional as built.
@@ -758,6 +848,57 @@ test QA-2: Interview a person and confirm their goals
       do: Right-click "QA: Interviewer $runId" and choose Delete agent.
       invoke: org.dxos.operation.space.removeObjects { objects: [Obj($agent.agent)] }
       expect: the agent and its chat leave the navtree
+```
+
+```mdl
+test QA-3: An agent invited into another space keeps the conversation going
+  desc: |
+    The cross-space journey: an agent made in one space learns about something in conversation, is invited
+    into a second space, and answers there from what it learned in the first. The autocue flow
+    `autocue/agent-across-spaces.mjs` walks it and records the demo.
+  actors: human
+  covers: [F-1.4, F-6.1, F-6.2, F-6.4]
+  status: passing             # 2026-10-10, recorded by autocue/agent-across-spaces.mjs against EDGE preview
+  given:
+    - an identity exists, with the display name "Mykola"
+    - space: "My Space" is open and SPACE_READY, with no agent
+    - other: a second space "Offsite team" exists
+    - plugin-agent is enabled
+    - a live model is available to the assistant (EDGE's AI service) — ABORT without one
+  steps:
+    - name: Create the agent
+      do: In My Space click + ("Add to space"), pick Agent, name it "Kai" and click Create.
+      invoke: [op:createAgent] { name: "Kai" }
+      capture: agent
+      expect: Kai is listed under Assistant › Agents and its empty chat opens
+    - name: Tell Kai about the offsite
+      do: Send "Hi Kai, I'm Mykola. Our team offsite is in Lisbon on November 14, for 12 people, and Dima is booking the venue."
+      expect: Kai acknowledges the place, the date and the headcount in a short reply
+      note: NO `invoke` — the model replies; the turn's facts are read into Kai's brain after it.
+    - name: Add the budget
+      do: Send "The budget is 8,000 euros, and flights are still open."
+      expect: Kai acknowledges the budget
+      note: NO `invoke` — model-driven.
+    - name: Invite Kai to the other space
+      do: Open Kai's menu in the navtree, choose "Invite to space" and pick "Offsite team".
+      invoke: [op:inviteAgent] { agent: Ref($agent.agent) }   # run in $given.other
+      capture: presence
+      expect: |
+        Offsite team opens on Kai, whose chat there starts with a collapsed "[Memory from your other
+        spaces]" note; both spaces now list Kai under Agents
+      assert: return $result.created === true
+    - name: Read what Kai remembers
+      do: Expand the memory note.
+      expect: it lists what Kai learned in My Space and the conversation Mykola had with it there
+    - name: Ask Kai in the other space
+      do: Send "What do we have so far for the offsite?"
+      expect: Kai answers from My Space's conversation — Lisbon, November 14, 12 people, Dima on the venue, the 8,000 euro budget
+      note: NO `invoke` — model-driven. These words were never said in Offsite team; the note carries them.
+  after:
+    - name: Delete Kai in both spaces
+      do: Delete Kai in Offsite team, then in My Space.
+      invoke: org.dxos.operation.space.removeObjects { objects: [Obj($presence.agent)] }   # then [Obj($agent.agent)] in $given.space
+      expect: neither space lists Kai
 ```
 
 ---

@@ -37,16 +37,30 @@ export const ensureAnnotationFeed = Effect.fnUntraced(function* (agent: Agent.Ag
 
 const annotationFeeds = Database.query(Filter.type(Feed.Feed, { kind: FactEntry.ANNOTATIONS_KEY })).run;
 
-/** Every fact of a completed pass in the space's annotation feeds. */
-export const queryFacts = Effect.gen(function* () {
-  const feeds = yield* annotationFeeds;
+/** Every fact of a completed pass in the given annotation feeds. */
+export const factsOf = Effect.fnUntraced(function* (feeds: readonly Feed.Feed[]) {
   if (feeds.length === 0) {
     return [];
   }
 
-  const entries = yield* Database.query(Query.select(Filter.type(FactEntry.FactEntry)).from(feeds)).run;
-  const passes = yield* Database.query(Query.select(Filter.type(FactEntry.ExtractionPass)).from(feeds)).run;
+  const entries = yield* Database.query(Query.select(Filter.type(FactEntry.FactEntry)).from([...feeds])).run;
+  const passes = yield* Database.query(Query.select(Filter.type(FactEntry.ExtractionPass)).from([...feeds])).run;
   return FactEntry.completed(entries, passes);
+});
+
+/** Every fact of a completed pass in the space's annotation feeds. */
+export const queryFacts = Effect.gen(function* () {
+  return yield* factsOf(yield* annotationFeeds);
+});
+
+/** The annotation feeds of one agent: one per source it read. */
+export const agentAnnotationFeeds = Effect.fnUntraced(function* (agent: Agent.Agent) {
+  // A child-of filter rather than `.children()`, which EDGE's query planner cannot run; `Filter.and` widens
+  // the result, so the feeds are narrowed back.
+  const found = yield* Database.query(
+    Filter.and(Filter.type(Feed.Feed, { kind: FactEntry.ANNOTATIONS_KEY }), Filter.childOf(agent)),
+  ).run;
+  return found.filter(Obj.instanceOf(Feed.Feed));
 });
 
 /**

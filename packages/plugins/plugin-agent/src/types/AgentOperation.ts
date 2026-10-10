@@ -11,7 +11,7 @@ import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
-import { Database, DXN, Feed, Obj, Ref } from '@dxos/echo';
+import { Database, DXN, Feed, Hypergraph, Obj, Ref } from '@dxos/echo';
 import { Channel } from '@dxos/types';
 
 import * as FactEntry from './FactEntry.ts';
@@ -167,7 +167,8 @@ export const EnsureParticipantChat = Operation.make({
     description: "Returns the agent's Composer chat with a person, creating it if absent.",
     icon: 'ph--user-circle-plus--regular',
   },
-  services: [Database.Service],
+  // The graph reaches the agent's other spaces, whose memory a new chat starts with.
+  services: [Database.Service, Hypergraph.Service],
   input: Schema.Struct({
     agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent.' }),
     person: Ref.Ref(Obj.Unknown).annotate({ description: 'The person the chat is with.' }),
@@ -194,7 +195,7 @@ export const OpenPrivateChat = Operation.make({
     description: "Returns the member's private chat with the agent, creating it (and their person) if absent.",
     icon: 'ph--lock-key--regular',
   },
-  services: [Database.Service],
+  services: [Database.Service, Hypergraph.Service],
   input: Schema.Struct({
     agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent.' }),
     identityDid: Schema.String.annotate({ description: "The member's identity DID; the chat is private to it." }),
@@ -208,6 +209,29 @@ export const OpenPrivateChat = Operation.make({
   output: Schema.Struct({
     chat: Ref.Ref(Chat.Chat),
     person: Ref.Ref(Obj.Unknown),
+  }),
+});
+
+/**
+ * Brings an agent into the space the operation runs in: the agent joins it as a presence of itself — its
+ * name, DID and instructions, linked to its home by `AgentPresence.homeKey` — and keeps one memory across
+ * every space it is in. Idempotent: the agent's existing presence in the space (or the agent itself, in its
+ * home) is returned.
+ */
+export const InviteAgent = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.agent.invite'),
+    name: 'Invite agent',
+    description: 'Invites an agent from another space into this one; it keeps its memory of the spaces it is in.',
+    icon: 'ph--user-plus--regular',
+  },
+  services: [Database.Service, Hypergraph.Service],
+  input: Schema.Struct({
+    agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent to invite, in any space it is in.' }),
+  }),
+  output: Schema.Struct({
+    agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent in this space.' }),
+    created: Schema.Boolean.annotate({ description: 'False when the agent was already in this space.' }),
   }),
 });
 

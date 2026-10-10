@@ -31,6 +31,9 @@
       "path": "../../common/keys"
     },
     {
+      "path": "../../common/log"
+    },
+    {
       "path": "../../common/util"
     },
     {
@@ -58,6 +61,9 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/echo/echo-client"
+    },
+    {
       "path": "../../core/echo/echo-react"
     },
     {
@@ -82,6 +88,9 @@
       "path": "../../sdk/config"
     },
     {
+      "path": "../../sdk/react-client"
+    },
+    {
       "path": "../../sdk/schema"
     },
     {
@@ -100,6 +109,9 @@
       "path": "../../ui/react-ui-menu"
     },
     {
+      "path": "../../ui/react-ui-search"
+    },
+    {
       "path": "../../ui/ui-theme"
     },
     {
@@ -107,6 +119,9 @@
     },
     {
       "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-space"
     },
     {
       "path": "../plugin-thread"
