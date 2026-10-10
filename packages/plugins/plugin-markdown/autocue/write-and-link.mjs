@@ -3,7 +3,8 @@
 //
 
 /**
- * Create a markdown document, write in it with live formatting, and link a new page from it with `@`.
+ * Create a markdown document, write in it with live formatting, comment on a phrase, and link a new page
+ * from it with `@`.
  *
  * @mdl packages/plugins/plugin-markdown/PLUGIN.mdl test QA-4
  * @app composer-app bundled dev build, served by `vite preview` on :4173
@@ -23,6 +24,29 @@ const BEAT = 800;
 
 const TITLE = 'Launch plan';
 const LINKED = 'Release checklist';
+
+/** The phrase the comment is anchored to, and what it says. */
+const COMMENT_ANCHOR = 'Links between pages';
+const COMMENT = 'Can we show backlinks too?';
+
+/** Selects `text` in the most recently mounted editor, in one evaluate so the offset cannot go stale. */
+const selectText = (page, text) =>
+  page.evaluate(async (text) => {
+    const deadline = performance.now() + 15_000;
+    for (;;) {
+      const view = globalThis.composer?.editorView;
+      const pos = view?.state.doc.toString().indexOf(text) ?? -1;
+      if (view && pos >= 0) {
+        view.dispatch({ selection: { anchor: pos, head: pos + text.length }, scrollIntoView: true });
+        view.focus();
+        return;
+      }
+      if (performance.now() > deadline) {
+        throw new Error(`text not found in the editor: ${text}`);
+      }
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+  }, text);
 
 /** The markdown editor of the plank on screen. */
 const EDITOR = '[data-testid="composer.markdownRoot"] .cm-content';
@@ -95,14 +119,23 @@ export const steps = [
     },
   },
   {
-    name: 'Add a checklist and tick an item',
-    narration: 'Add a checklist, and tick items off as you go.',
+    name: 'Comment on a phrase',
+    narration: 'Select any text to start a comment thread.',
     run: async ({ demo, page }) => {
-      await typeSlowly(page, '## Tasks\n\n- [ ] Write the docs\n[ ] Record the demo\n\n');
-      const box = `${EDITOR} input[type="checkbox"]`;
-      await page.locator(box).first().waitFor({ state: 'visible', timeout: 10_000 });
-      await demo.click({ selector: `${box} >> nth=0`, label: 'Done' });
-      await page.waitForTimeout(BEAT);
+      await selectText(page, COMMENT_ANCHOR);
+      const add = page.locator('[data-testid="deck.plank"] [data-testid="comments.comment.add"]').first();
+      await add.waitFor({ state: 'visible' });
+      await page.waitForFunction((element) => !element.disabled, await add.elementHandle(), { timeout: 10_000 });
+      await demo.click({
+        selector: '[data-testid="deck.plank"] [data-testid="comments.comment.add"] >> nth=0',
+        label: 'Comment',
+      });
+      const reply = '[data-testid=thread][aria-current="location"] [data-testid="thread.reply"] [role="textbox"]';
+      await page.locator(reply).first().waitFor({ state: 'visible', timeout: 10_000 });
+      await demo.type({ selector: `${reply} >> nth=0`, value: COMMENT, label: 'Comment' });
+      await demo.press({ key: 'Enter' });
+      await page.getByTestId('cm-comment').first().waitFor({ state: 'visible', timeout: 10_000 });
+      await page.waitForTimeout(BEAT * 2);
       // Back to the end of the document, where the next step types.
       await page.evaluate(() => {
         const view = globalThis.composer?.editorView;

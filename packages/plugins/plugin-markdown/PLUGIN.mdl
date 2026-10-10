@@ -562,7 +562,7 @@ test QA-3: A contributed slash-command runs
 ```
 
 ```mdl
-test QA-4: Write a document and link a new page from it
+test QA-4: Write, comment on, and link from a document
   desc: The demo path — create, write with live formatting, and create a linked page with `@`.
   actors: human
   covers: [F-1.1, F-4.1, F-4.2]
@@ -581,6 +581,10 @@ test QA-4: Write a document and link a new page from it
       expect: the heading, bold text and bullets render as they are typed, and the document takes
         the heading as its name in the navtree
       note: The editor continues a list on Enter and leaves it on an empty item.
+    - name: Comment on a phrase
+      do: Select "Links between pages", click the comment button, type "Can we show backlinks too?" and
+        press Enter.
+      expect: the phrase is highlighted and the thread appears in the Comments panel
     - name: Link a new page with @
       do: Type "Next: @Release checklist", choose "Add object", then Document.
       expect: a "Release checklist" reference appears inline and a new document of that name joins
