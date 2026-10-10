@@ -187,6 +187,7 @@ const speak = async (text) => {
 };
 
 const clips = [];
+const overlaps = [];
 for (const [index, cue] of cues.entries()) {
   const spoken = await speak(cue.text);
   const file = path.join(work, `${String(index + 1).padStart(2, '0')}${path.extname(spoken.file)}`);
@@ -195,7 +196,16 @@ for (const [index, cue] of cues.entries()) {
   clips.push({ ...cue, file, duration });
   const next = cues[index + 1];
   if (next && !options['synth-only'] && cue.at + duration > next.at) {
-    console.error(`cue ${index + 1} runs ${(cue.at + duration - next.at).toFixed(1)}s into the next one; shorten it`);
+    overlaps.push(`cue ${index + 1} runs ${(cue.at + duration - next.at).toFixed(1)}s into the next one; shorten it`);
+  }
+}
+
+// Two voices at once is a broken take, not a cosmetic flaw; `--allow-overlap` keeps a rough cut for review.
+if (overlaps.length) {
+  overlaps.forEach((overlap) => console.error(overlap));
+  if (!options['allow-overlap']) {
+    console.error('narration overlaps: retime or shorten the cues, or pass --allow-overlap for a rough cut');
+    process.exit(1);
   }
 }
 

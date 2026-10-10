@@ -794,6 +794,7 @@ const voiceover = async () => {
       '--cues',
       cuesFile,
       ...(typeof options.voice === 'string' ? ['--voice', options.voice] : []),
+      ...(options['allow-overlap'] ? ['--allow-overlap'] : []),
     ],
     { stdio: ['ignore', 'pipe', 'inherit'] },
   );
@@ -804,6 +805,11 @@ const voiceover = async () => {
 };
 
 const voiced = options.voiceover ? await voiceover() : undefined;
+// A narration that was asked for and failed (overlapping cues, no voice) must not ship as a silent upload.
+if (options.voiceover && !voiced) {
+  console.error('--voiceover failed; nothing uploaded');
+  process.exit(1);
+}
 
 /**
  * The Composer media bucket, served from its custom domain: demos land under `demos/<yyyy-mm-dd>-<name>.<ext>`,

@@ -615,7 +615,8 @@ node .agents/skills/autocue/scripts/trim-static.mjs --in /tmp/demo/session.webm 
   name. A `caption` raised inside a flow step is on-screen text only; the step's `narration` is the voice.
 - **The picture waits for the narrator.** With `--voiceover steps`, the trimmer synthesizes every line before
   trimming and holds each chapter's last frame until its line has been spoken, so lines never run into each other.
-  Speech is cached in `~/.cache/dxos/autocue/voice`, so a retake pays only for lines that changed.
+  Speech is cached in `~/.cache/dxos/autocue/voice`, so a retake pays only for lines that changed. Hand-timed cues (`--voiceover <cues.json>`) are not held: a line that runs into the next fails the trim
+  and nothing is uploaded; retime the cues, or pass `--allow-overlap` for a rough cut.
 - **Script in Markdown first.** A natural-language version of a flow (scenes as `##` sections, stage directions
   as paragraphs, narration as bullets) is the reviewable source: see `packages/apps/composer-app/flows/showcase.md`.
 
