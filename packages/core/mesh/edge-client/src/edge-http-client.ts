@@ -840,10 +840,7 @@ export class EdgeHttpClient extends BaseHttpClient {
     let handledAuth = false;
     while (true) {
       if (!this._authHeader) {
-        const authResponse = await fetch(new URL('/auth', this.baseUrl));
-        if (authResponse.status === 401) {
-          this._authHeader = await this._handleUnauthorized(authResponse);
-        }
+        await this._prefetchAuthHeader();
       }
 
       const headers = new Headers(request.headers);
