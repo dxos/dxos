@@ -9,6 +9,7 @@ import {
   findAttendedPlank,
   getRenderedPlanks,
   isCompanionOpen,
+  isCompanionShown,
   openCompanionPlank,
   resolveCompanionAnchor,
   resolveCompanionPlank,
@@ -157,5 +158,23 @@ describe('the companion flag', () => {
   test('closing an uninitialized deck is a no-op rather than materializing every other plank as open', ({ expect }) => {
     expect(closeCompanionPlank(undefined, false, 'a')).toEqual([]);
     expect(closeCompanionPlank(undefined, true, 'a')).toEqual([]);
+  });
+});
+
+describe('isCompanionShown', () => {
+  test('a plank with no companions shows no pane even while the deck-wide flag is open', ({ expect }) => {
+    const companionPlanks = ['doc'];
+    expect(isCompanionShown(isCompanionOpen(companionPlanks, true, 'registry'), [])).toBe(false);
+    // The flag is untouched, so returning to a plank with companions finds the pane open.
+    expect(isCompanionShown(isCompanionOpen(companionPlanks, true, 'doc'), ['comments'])).toBe(true);
+  });
+
+  test('companions not yet read count as open, so the pane never lays out collapsed first', ({ expect }) => {
+    expect(isCompanionShown(true, undefined)).toBe(true);
+  });
+
+  test('a closed flag stays closed whatever the plank offers', ({ expect }) => {
+    expect(isCompanionShown(false, ['comments'])).toBe(false);
+    expect(isCompanionShown(false, undefined)).toBe(false);
   });
 });

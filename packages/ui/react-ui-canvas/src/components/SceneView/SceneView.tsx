@@ -102,6 +102,9 @@ import { GRID_LEVELS, GRID_RANGE, useSceneSnap } from './useSceneSnap.ts';
 
 /** Major cells between the scene's frame and the viewport edge when fitting; `margin` overrides it. */
 const DEFAULT_MARGIN = 2;
+/** Quiet time after the view's last resize before fit mode refits, so a drag-resize refits once, where it ends. */
+const FIT_DEBOUNCE_MS = 150;
+
 /** Quiet time after the camera's last move before `onCameraChange` reports it. */
 const CAMERA_SETTLE_MS = 300;
 /** Zoom factor of one toolbar step. */
@@ -118,6 +121,12 @@ const PANEL_CLASSES = 'absolute top-2 right-2 w-80 h-auto max-h-[calc(100%-1rem)
 /** The link drawn as a preview during a drag; it never reaches the model. */
 const PREVIEW_LINK_ID = 'preview-link';
 
+/**
+ * The view's display toggles a host may persist: snapping (which draws the grid), the lattice guides, and fit mode
+ * (the camera keeps the scene framed until the user pans or zooms).
+ */
+export type SceneDisplay = { snap: boolean; guides: boolean; fit: boolean };
+
 export type SceneViewRootProps = Util.ThemedClassName<{
   store: SceneStore;
   root: SceneId;
@@ -133,6 +142,13 @@ export type SceneViewRootProps = Util.ThemedClassName<{
   initialCamera?: Camera;
   /** Called once the camera settles on the root scene, so a host can persist it. */
   onCameraChange?: (camera: Camera) => void;
+  /**
+   * The display toggles as last left; each is on when unset. With fit on, `initialCamera` is not restored: the view
+   * opens fitted.
+   */
+  initialDisplay?: Partial<SceneDisplay>;
+  /** Called when a display toggle changes, so a host can persist it. */
+  onDisplayChange?: (display: SceneDisplay) => void;
   /** Minor grid spacing in scene px; moves snap to it, creation and resizing to the major grid, `MAJOR_GRID_RATIO` times it. */
   grid?: number;
   /** Least gap between the scene's frame and each viewport edge when fitting, in major cells. */
@@ -158,6 +174,8 @@ const SceneViewRoot = ({
   atoms: atomsProp,
   initialCamera,
   onCameraChange,
+  initialDisplay,
+  onDisplayChange,
   grid = DEFAULT_GRID,
   margin = DEFAULT_MARGIN,
   readonly = false,
@@ -199,6 +217,34 @@ const SceneViewRoot = ({
   }, [active, selection, registry, atoms.active]);
   const debug = useAtomValue(atoms.debug);
   const guides = useAtomValue(atoms.guides);
+  // Fit mode keeps the current scene framed as the view resizes or opens another scene, until the user pans or zooms.
+  // A view opens fitted, in fit mode, unless the host restores it with fit mode off (and then its camera).
+  const [fitting, setFitting] = useState(() => initialDisplay?.fit ?? true);
+  const exitFit = useCallback(() => setFitting(false), []);
+  // Seeded once per atoms, before the host hears of any change, so restoring the toggles reports nothing back.
+  const reportedRef = useRef<SceneDisplay | undefined>(undefined);
+  useLayoutEffect(() => {
+    if (initialDisplay?.snap !== undefined) {
+      registry.set(atoms.snap, initialDisplay.snap);
+    }
+    if (initialDisplay?.guides !== undefined) {
+      registry.set(atoms.guides, initialDisplay.guides);
+    }
+    reportedRef.current = { snap: registry.get(atoms.snap), guides: registry.get(atoms.guides), fit: fitting };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [atoms]);
+  useEffect(() => {
+    const reported = reportedRef.current;
+    if (
+      !onDisplayChange ||
+      !reported ||
+      (reported.snap === snapEnabled && reported.guides === guides && reported.fit === fitting)
+    ) {
+      return;
+    }
+    reportedRef.current = { snap: snapEnabled, guides, fit: fitting };
+    onDisplayChange({ snap: snapEnabled, guides, fit: fitting });
+  }, [onDisplayChange, snapEnabled, guides, fitting]);
   const latticeOn = useAtomValue(atoms.lattice);
   const sceneId = path[path.length - 1];
   const canUndo = !readonly && undoState.key === sceneId && undoState.past.length > 0;
@@ -265,17 +311,73 @@ const SceneViewRoot = ({
 
   const measured = viewport.width > 0 && viewport.height > 0;
   useLayoutEffect(() => {
-    if (initialCamera) {
+    if (initialCamera && !fitting) {
       setCamera(initialCamera);
     }
     // Only the camera the view opened with is restored; later values are the host echoing ours back.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setCamera]);
+
+  // In fit mode the first fit lands before the first paint; opening another scene animates to its frame, and a resize
+  // animates to the new fit once the view has stopped changing size for `FIT_DEBOUNCE_MS`.
+  // What the last fit framed: the scene and the view size. Only a resize refits; an edit to the scene does not, so the
+  // camera holds still under someone editing.
+  const fitKey = `${viewport.width}x${viewport.height}`;
+  const fittedRef = useRef<{ scene: SceneId; key: string } | undefined>(undefined);
   useLayoutEffect(() => {
-    if (!interactedRef.current && measured) {
+    if (fitting && measured && !fittedRef.current) {
+      fittedRef.current = { scene: sceneId, key: fitKey };
       setCamera(fitBounds(fitTarget, viewport, inset, NOMINAL_ZOOM));
     }
-  }, [measured, viewport, fitTarget, inset, setCamera]);
+  }, [fitting, measured, viewport, fitTarget, inset, setCamera, sceneId, fitKey]);
+  // Keyed on values, not identities: the scene and the camera helpers are rebuilt on unrelated renders, and each rerun
+  // would restart the debounce before it fires. The latest helpers and frame are read when it does.
+  const fitLatestRef = useRef({
+    animateTo,
+    isAnimating,
+    frame: () => fitBounds(fitTarget, viewport, inset, NOMINAL_ZOOM),
+  });
+  fitLatestRef.current = { animateTo, isAnimating, frame: () => fitBounds(fitTarget, viewport, inset, NOMINAL_ZOOM) };
+  useEffect(() => {
+    const fitted = fittedRef.current;
+    if (!fitting || !measured || !fitted) {
+      return;
+    }
+    // Another scene opened: frame it now.
+    if (fitted.scene !== sceneId) {
+      fittedRef.current = { scene: sceneId, key: fitKey };
+      fitLatestRef.current.animateTo(fitLatestRef.current.frame());
+      return;
+    }
+    if (fitted.key === fitKey) {
+      return;
+    }
+    // A resize refits once it settles; an animation in flight (a drill) finishes first, since `animateTo` would cancel
+    // it before it lands.
+    let timeout: ReturnType<typeof setTimeout>;
+    const fit = () => {
+      if (fitLatestRef.current.isAnimating()) {
+        timeout = setTimeout(fit, FIT_DEBOUNCE_MS);
+        return;
+      }
+      fittedRef.current = { scene: sceneId, key: fitKey };
+      fitLatestRef.current.animateTo(fitLatestRef.current.frame());
+    };
+    timeout = setTimeout(fit, FIT_DEBOUNCE_MS);
+    return () => clearTimeout(timeout);
+  }, [fitting, measured, sceneId, fitKey]);
+  // Dragging the canvas takes the camera over.
+  useEffect(() => {
+    if (drag?.kind === 'pan') {
+      exitFit();
+    }
+  }, [drag?.kind, exitFit]);
+  // Fit frames the scene now and keeps it framed (fit mode) until the user pans or zooms.
+  const enterFit = useCallback(() => {
+    setFitting(true);
+    fittedRef.current = { scene: sceneId, key: fitKey };
+    animateTo(fitBounds(fitTarget, viewport, inset, NOMINAL_ZOOM));
+  }, [fitTarget, viewport, inset, animateTo, sceneId, fitKey]);
 
   // Reported after a quiet beat, so a wheel gesture or an animation is persisted once, where it ends.
   const atRoot = path.length === 1;
@@ -292,6 +394,7 @@ const SceneViewRoot = ({
     useCallback(
       (event, pointer) => {
         interactedRef.current = true;
+        exitFit();
         cancelAnimation();
         touchNavigation();
         if (event.ctrlKey || event.metaKey) {
@@ -300,7 +403,7 @@ const SceneViewRoot = ({
           setCamera((camera) => panBy(camera, { x: -event.deltaX / camera.zoom, y: -event.deltaY / camera.zoom }));
         }
       },
-      [setCamera, cancelAnimation, touchNavigation],
+      [setCamera, cancelAnimation, touchNavigation, exitFit],
     ),
   );
 
@@ -416,7 +519,6 @@ const SceneViewRoot = ({
     projection,
     capabilities,
     viewport,
-    bounds: fitTarget,
     inset,
     grid,
     select,
@@ -426,6 +528,8 @@ const SceneViewRoot = ({
     toggleDebug,
     onUndo,
     onRedo,
+    onFit: enterFit,
+    onExitFit: exitFit,
     animateTo,
     drillIn,
     drillOut,
@@ -708,10 +812,11 @@ const SceneViewRoot = ({
   const zoomTo = useCallback(
     (zoom: number) => {
       interactedRef.current = true;
+      exitFit();
       const centre = { x: viewport.width / 2, y: viewport.height / 2 };
       animateTo(zoomAt(registry.get(atoms.camera), centre, zoom));
     },
-    [viewport, animateTo, registry, atoms.camera],
+    [viewport, animateTo, registry, atoms.camera, exitFit],
   );
   const zoomBy = useCallback(
     (factor: number) => zoomTo(registry.get(atoms.camera).zoom * factor),
@@ -749,7 +854,8 @@ const SceneViewRoot = ({
       path,
       nameOf,
       onPath: (index) => drillOut(path.length - 1 - index),
-      fit: () => animateTo(fitBounds(fitTarget, viewport, inset, NOMINAL_ZOOM)),
+      fit: enterFit,
+      fitting,
       zoomReset: () => zoomTo(NOMINAL_ZOOM),
       zoomIn: () => zoomBy(ZOOM_STEP),
       zoomOut: () => zoomBy(1 / ZOOM_STEP),
@@ -783,6 +889,8 @@ const SceneViewRoot = ({
       drillOut,
       animateTo,
       fitTarget,
+      enterFit,
+      fitting,
       viewport,
       inset,
       zoomBy,
@@ -870,7 +978,8 @@ const SceneViewRoot = ({
       drag={drag}
       tool={tool}
       debug={debug}
-      panels={panels}
+      // Read-only, nothing is edited, so the panels float rather than taking room from the canvas.
+      panels={readonly ? 'floating' : panels}
       createFrame={createFrame}
       landing={landing}
       handlers={handlers}
@@ -1188,12 +1297,10 @@ SceneViewActions.displayName = 'SceneView.Actions';
 
 /** The camera's controls and numbers; nothing here changes the scene. */
 const SceneViewDebug = ({ classNames = 'bottom-2 left-2' }: SceneViewBarProps) => {
-  const { toolbarActions, camera, pointer } = useSceneViewContext('SceneView.Debug');
+  const { toolbarActions, camera } = useSceneViewContext('SceneView.Debug');
   return (
     <div className={mx(barFrame, classNames)}>
-      <CameraToolbar actions={toolbarActions}>
-        {Math.round(camera.zoom * 100)}% · ({Math.round(pointer.x)}, {Math.round(pointer.y)})
-      </CameraToolbar>
+      <CameraToolbar actions={toolbarActions}>{Math.round(camera.zoom * 100)}%</CameraToolbar>
     </div>
   );
 };
@@ -1418,9 +1525,12 @@ const ABOUT_SECTION: DockSection = { id: 'about', title: 'About', icon: 'ph--inf
 
 export type SceneViewAboutProps = Util.ThemedClassName<{}>;
 
-/** Counts of the scene's objects and the drawing's scenes; a dock section only, since it has no place over the canvas. */
-const SceneViewAbout = ({ classNames }: SceneViewAboutProps) => {
-  const { scene, store, panels } = useSceneViewContext('SceneView.About');
+/**
+ * Counts of the scene's objects and the drawing's scenes: a dock section, or floating over the canvas when read-only,
+ * where it is the only panel left.
+ */
+const SceneViewAbout = ({ classNames = PANEL_CLASSES }: SceneViewAboutProps) => {
+  const { scene, store, panels, readonly } = useSceneViewContext('SceneView.About');
   const scenes = useAtomValue(store.scenes);
   const docked = panels === 'docked';
   const stats = useMemo<AboutStat[]>(
@@ -1432,7 +1542,14 @@ const SceneViewAbout = ({ classNames }: SceneViewAboutProps) => {
     ],
     [scene, scenes],
   );
-  return useDockSection(ABOUT_SECTION, docked, <About classNames={mx('h-auto', classNames)} stats={stats} />);
+  const dockedPanel = useDockSection(ABOUT_SECTION, docked, <About classNames='h-auto' stats={stats} />);
+  if (docked) {
+    return dockedPanel;
+  }
+  // Floating beside an editable view, the properties and layers panels take this corner, so About shows only read-only.
+  return readonly ? (
+    <About classNames={mx('rounded-sm bg-modal-surface border border-separator', classNames)} stats={stats} />
+  ) : null;
 };
 
 SceneViewAbout.displayName = 'SceneView.About';
