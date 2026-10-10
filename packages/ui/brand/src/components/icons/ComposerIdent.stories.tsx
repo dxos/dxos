@@ -152,9 +152,9 @@ const variants: Record<VariantName, IdentVariant> = {
         { opacity: 1, offset: 0.25 },
         { opacity: 1, offset: 1, transform: 'rotate(0deg)' },
       ],
-      easing: 'cubic-bezier(0.33, 1, 0.68, 1)',
+      easing: 'cubic-bezier(0.25, 1, 0.5, 1)',
     }),
-    grow: { rate: 0.05, delay: 0, finishAt: 0.7 },
+    grow: { rate: 0.05, delay: 0, finishAt: 0.55 },
   },
   fade: {
     label: 'Fade',
