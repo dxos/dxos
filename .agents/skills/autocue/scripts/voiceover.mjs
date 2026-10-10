@@ -6,7 +6,7 @@
  * Narrates a finished demo with HeyGen text-to-speech: each cue is spoken by one voice and placed at its
  * time on the video, then the mix is muxed in as the video's audio track.
  *
- *   node voiceover.mjs --in demo.webm --cues cues.json [--out demo.voiced.webm] [--voice <id>] [--speed 1]
+ *   node voiceover.mjs --in demo.webm --cues cues.json [--out demo.voiced.webm] [--voice <id|name>] [--speed 1]
  *   node voiceover.mjs --voices                       # list Starfish voices (id, name, language, gender)
  *
  * `cues.json` is `[{ "at": 0.4, "text": "This is Composer." }, …]`, times in seconds of the input video.
@@ -58,12 +58,19 @@ const heygen = async (method, route, body) => {
   if (!response.ok || json.error) {
     throw new Error(`${method} ${route} → ${response.status}: ${JSON.stringify(json.error ?? json).slice(0, 400)}`);
   }
-  return json.data ?? json;
+  return json;
 };
 
+/** The catalog is paged by `next_token`, passed back as `token`; one page holds only twenty voices. */
 const listVoices = async () => {
-  const data = await heygen('GET', '/v3/voices?engine=starfish');
-  return data.voices ?? data;
+  const voices = [];
+  let token;
+  do {
+    const page = await heygen('GET', `/v3/voices?engine=starfish${token ? `&token=${encodeURIComponent(token)}` : ''}`);
+    voices.push(...page.data);
+    token = page.has_more ? page.next_token : undefined;
+  } while (token);
+  return voices;
 };
 
 if (options.voices) {
@@ -74,7 +81,7 @@ if (options.voices) {
 }
 
 if (!options.in || !options.cues || !existsSync(options.in) || !existsSync(options.cues)) {
-  console.error('usage: node voiceover.mjs --in <video> --cues <cues.json> [--out <video>] [--voice <id>]');
+  console.error('usage: node voiceover.mjs --in <video> --cues <cues.json> [--out <video>] [--voice <id|name>]');
   process.exit(1);
 }
 
@@ -84,19 +91,27 @@ const output = options.out ?? options.in.replace(new RegExp(`${extension}$`), `.
 const work = path.join(path.dirname(output), `${path.basename(output, extension)}.voice`);
 mkdirSync(work, { recursive: true });
 
-// Without a voice, the first English one in the catalog, so a run needs no setup beyond the key.
-const voice =
-  options.voice ??
-  (await listVoices()).find((entry) => /^en/i.test(entry.language ?? '') || /english/i.test(entry.language ?? ''))
-    ?.voice_id;
+// `--voice` is an id or the start of a name ("Rebecca"); without one, the first English voice in the catalog.
+const voice = await (async () => {
+  if (/^[0-9a-f]{32}$/.test(options.voice ?? '')) {
+    return options.voice;
+  }
+  const voices = await listVoices();
+  const name = typeof options.voice === 'string' ? options.voice.toLowerCase() : undefined;
+  return voices.find((entry) =>
+    name ? entry.name.toLowerCase().startsWith(name) : /^en|english/i.test(entry.language ?? ''),
+  )?.voice_id;
+})();
 if (!voice) {
-  console.error('no voice: pass --voice <id> (see --voices)');
+  console.error('no voice: pass --voice <id|name> (see --voices)');
   process.exit(1);
 }
 
 const clips = [];
 for (const [index, cue] of cues.entries()) {
-  const { audio_url: url, duration } = await heygen('POST', '/v3/voices/speech', {
+  const {
+    data: { audio_url: url, duration },
+  } = await heygen('POST', '/v3/voices/speech', {
     text: cue.text,
     voice_id: voice,
     speed: Number(options.speed ?? 1),
