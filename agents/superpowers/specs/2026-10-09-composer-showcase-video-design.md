@@ -39,8 +39,9 @@ if the first does not hold up on camera.
    - Bob comments on Alice's paragraph; the thread appears for her.
    - Alice invites Bob from the notifications inbox (APP QA-12).
 3. **Plugin gallery.** Plugins → Registry.
-   - **Filter, read a plugin card (its demo video plays), switch Maps on.**
-   - Switch on Studio, which scene 8 needs.
+   - **Filter and switch on Maps, then Cloudflare (the Cloudflare connector, a nod to what Composer runs on).**
+     Studio, Kanban, Sheet and Tables are already on by default, so they cannot be the plugins switched on.
+   - Open a plugin's Details card (its demo video plays).
    - Show the Registry tab: community plugins served from EDGE.
 4. **SaaS objects, one graph.** Table, Kanban and Sheet over the same ECHO records.
    - **Create a "Launch" table, add three rows, create a Kanban over the same type pivoted on status, drag a
@@ -48,22 +49,32 @@ if the first does not hold up on camera.
    - A sheet budget where changing a cell recomputes the total (the `plugin-sheet` `budget.mjs` demo).
    - Delete a card and restore it (kanban QA-1).
 5. **Agents in the document.**
-   - **Comment "@kai tighten this paragraph" on a paragraph; Kai proposes an edit; accept it.**
-   - **In the companion chat: "Research local-first software and add a short section with sources."**
-     The WebSearch skill is Anthropic-only, so the flow pins a Claude model.
+   - **Comment "@kai tighten this paragraph" on a paragraph; Kai rewrites it in place** and says so in the
+     thread. It edits directly, with no accept step.
+   - **In the companion chat: "Research … and add a Further reading section with three sources."** Verified on
+     preview with Claude Sonnet 5: three real, linked sources in about 30 s. WebSearch is Anthropic-only, so the
+     flow pins that model.
    - Translate a paragraph in place (APP QA-4).
 6. **Projects.** The World Clock project, already built by its agent.
    - **Open the project's Tasks (all done), open a task to see the agent's work, then open the installed
      World Clock and flip the map to a globe.**
    - Scrub the Assistant transcript and Trace panel.
    - Show it in Plugins → Registry as a private plugin (projects QA-2).
+
+   **Caveat.** On EDGE preview, `composer-plugin.mjs` builds the plugin in the local Computer harness and
+   loads it from a Vite dev server: there is no Cloudflare Sandbox in that take. Only the registry flow
+   (`composer-plugin-registry.mjs`, EDGE dev) runs the agent in a Cloudflare Sandbox and publishes to R2 and D1.
+   Per-scene stitching allows recording scene 6 from a dev-EDGE build. Otherwise the VO's Sandbox clause has
+   to go.
+
 7. **Inbox.** A synced Gmail mailbox.
    - **Open a thread: show its AI summary, then use AI reply to draft an answer.**
    - **Use Create Project on the message (tying it to scene 6).**
    - Extract contacts from the mailbox (the Extract menu).
 8. **Studio.**
-   - **Open the "Showcase" storyboard: one frame per scene, the narration script as instructions, and play
-     it.**
+   - **Open the "Composer showcase" storyboard: one frame per scene, each carrying its narration as notes, and
+     play it.** Setup creates it with `studio.createStoryboard` and generates no media, so the frames are
+     placeholders until each scene's clip is attached.
    - Generate a thumbnail variant with Ideogram.
    - Show the HeyGen voice-over artifact with its script.
 
@@ -78,29 +89,26 @@ against the edge repo (see "Cloudflare facts").
 > mail and AI agents live together in one workspace, and every byte of it belongs to you.
 >
 > **(0:18, scene 2)** Invite someone, and you're editing together in real time. Every change is stored on
-> your own device first, in ECHO, Composer's local-first database, and synced peer to peer. **[CF]** The
-> relay is a mesh of Cloudflare Durable Objects that coordinate each space's replication at the edge, close
-> to every user.
+> your own device first, in ECHO, Composer's local-first database. **[CF]** It syncs through a mesh of
+> Cloudflare Durable Objects at the edge, close to every user.
 >
 > **(0:40, scene 3)** Everything you see is a plugin. Types, views, operations, even the agent's skills are
-> all contributed by plugins, and you can switch them on, swap them out, or write your own.
+> contributed by plugins. Switch them on, swap them out, or write your own.
 >
 > **(0:55, scene 4)** Here's a table. Add a kanban board over the same records, and it's not a copy: both are
 > views over one graph. Move a card, and the table updates. Familiar SaaS tools, minus the silos.
 >
-> **(1:20, scene 5)** Agents work in your documents the way your colleagues do. Mention Kai in a comment and
-> it proposes an edit you can accept or reject. Ask the assistant to research a topic, and it writes the
-> section with its sources. **[CF]** Model calls route through Cloudflare's AI Gateway, to frontier models or
-> to open models running on Workers AI. You choose.
+> **(1:20, scene 5)** Agents work in your documents the way your colleagues do. Mention Kai in a comment, and
+> it rewrites the passage in place. Ask the assistant to research a topic, and it writes the section, with its
+> sources. **[CF]** Model calls route through Cloudflare's AI Gateway, to frontier models or to open models on
+> Workers AI. You choose.
 >
-> **(1:48, scene 6)** Projects go further. Describe a plugin, and an agent plans the work, writes the code
-> and tests it. **[CF]** It runs in a Cloudflare Sandbox, a container spun up on demand, and then publishes
-> the plugin to your private registry, stored in R2 and D1. Here it is, installed: a world clock that wasn't
-> part of Composer this morning.
+> **(1:48, scene 6)** Projects go further. Describe a plugin, and an agent plans the work, writes the code and
+> tests it **[CF]** in a Cloudflare Sandbox. Here it is, installed: a world clock that wasn't part of Composer
+> this morning.
 >
 > **(2:13, scene 7)** Your inbox lives here too. Gmail syncs into your space, so agents can summarize a
-> thread, draft a reply, or turn a request into a project. **[CF]** Sync runs on a schedule kept by Durable
-> Object alarms, even when your laptop is closed.
+> thread, draft a reply, or turn a request into a project.
 >
 > **(2:35, scene 8)** And this film? It was made in Composer. The script, the storyboard and the voice-over
 > are objects in a Studio space, and the screen recordings were driven by an agent, step by step.
@@ -123,52 +131,88 @@ Per-step `narration` in the flows covers single-scene cuts made with `--voiceove
 | Files and blobs in R2                                 | `blob-service/wrangler.jsonc:45`                                                   |
 
 Do **not** claim Email Routing, Workflows, Vectorize or Browser Rendering: none are used. Gmail sync runs on
-EDGE only when its trigger is `remote: true`; confirm the demo mailbox's trigger is, or drop the "laptop
-closed" clause.
+EDGE (on Durable Object alarms) only when its trigger is `remote: true`. The VO no longer claims it; if the
+demo mailbox's trigger is remote, scene 7 can add "and it keeps syncing at the edge while your laptop is
+closed".
 
 ## Recording pipeline
 
 ```bash
 export DX_EDGE_BASE_URL=https://preview.dxos.network/ DX_ENVIRONMENT=dev DX_PWA=false VITE_DX_DISABLE_ANIMATIONS=true
 moon run composer-app:bundle
-pnpm exec vite preview --configLoader native --port 4173 --strictPort   # in packages/apps/composer-app
 ```
 
-1. **Prepare the profile once (Rich, about 10 min).** In manual mode on `~/.local/state/dxos/autocue/showcase`,
-   sign in, then connect Gmail in a Mailbox and let it sync. Close the window.
-2. **Pre-run the coding project** on the same profile: `plugin-computer/autocue/composer-plugin.mjs`
-   (about 20 min, unattended). Scene 6 starts from its finished project.
-3. **Record each scene** in record mode on that profile (`--profile` now works in record mode):
-   `driver.mjs --profile ~/.local/state/dxos/autocue/showcase --out /tmp/showcase/NN`, then `run` the scene.
+Serve it with the `composer-showcase` launch config (`vite preview` on :4183, so it never collides with another
+worktree's :4173). Start the driver with proto's Node first on `PATH`: the World Clock flow spawns the plugin's
+Vite server from the driver, and Node 20 cannot load its `dx.config.ts`.
+
+1. **Prepare the profile once (Rich, about 10 min).** Run a manual-mode driver on
+   `~/.local/state/dxos/autocue/showcase`, sign in, create a Mailbox named "Gmail", connect it and let it sync.
+   Close the window.
+2. **Pre-run the coding project** on the same profile with `plugin-computer/autocue/composer-plugin.mjs`. It
+   runs unattended for about 20 min. Scene 6 starts from the finished project, and the plugin's dev server
+   on :3967 must still be up when scene 6 records. For the Sandbox claim, use the registry variant on EDGE dev
+   instead (see the scene 6 caveat).
+3. **Record each scene** in record mode on that profile:
+   `driver.mjs --url http://localhost:4183 --profile ~/.local/state/dxos/autocue/showcase --out /tmp/showcase/NN`,
+   then `steps` and `run` the scene file. Record scene 1 last, so its Home page and navtree show everything the
+   other scenes made.
 4. **Scene 2:** `pair.mjs --flow packages/apps/composer-app/autocue/two-peer-collaboration.mjs`.
-5. **Trim each scene** with `trim-static.mjs --upload off` (no ident, no voice), then concatenate them in order
-   with ffmpeg's concat demuxer.
-6. **Finish:** `trim-static.mjs --in showcase.webm --ident composer --voiceover voiceover-cues.json --duration
-170-185 --mp4 --name composer-showcase`. Retime the cues against the stitched video first.
+5. **Trim each scene** with `trim-static.mjs --upload off`, with no ident and no voice. Then concatenate the
+   scenes in order with ffmpeg's concat demuxer.
+6. **Finish:**
+   `trim-static.mjs --in showcase.webm --ident composer --voiceover showcase/voiceover-cues.json --duration 170-185 --mp4 --name composer-showcase`.
+   Retime the cues against the stitched video first.
+
+`composer-showcase.mjs` is the single-take alternative. It runs every scene's setup first, then scenes 1 and
+3–8 straight through after one countdown.
 
 ## Task list
 
 ### Unblock the flows
 
-- [x] Driver: `--profile` in record mode (was manual-only, so every take was a fresh identity).
-- [ ] Rich: prepare the showcase profile with Gmail connected and synced (step 1 above).
-- [ ] Confirm the Gmail sync trigger runs remotely (`remote: true`), or soften the VO line.
-- [ ] Pre-run `composer-plugin.mjs` on the profile and keep the finished World Clock project.
-- [ ] Scene 5: decide where `commentAgentMode` is set (Settings → Markdown) and confirm its selector.
-- [ ] Scene 5: confirm the WebSearch skill works on preview with a Claude model; otherwise use translate.
-- [ ] Scene 8: create the "Showcase" storyboard (one frame per scene) and the HeyGen VO artifact in setup;
-      Ideogram needs a credential for the thumbnail alternate.
-- [ ] Inbox toolbar actions have no testids; add `data-testid`s for Reply, AI reply and Create Project
-      rather than matching translated labels.
+- [x] Driver: `--profile` in record mode. It was manual-only before, so every take was a fresh identity.
+- [x] Scene 5: `commentAgentMode` is set in Settings → Markdown (`role=combobox[name="Comment agent mode"]`).
+- [x] Scene 5: WebSearch works on preview with Claude Sonnet 5.
+- [x] `composer-plugin.mjs`: fix the stale plugin-toggle and navtree-row selectors (switch root,
+      `branch-trigger`).
+- [ ] Rich: prepare the showcase profile with Gmail connected and synced (pipeline step 1).
+- [ ] Rich: choose scene 6's source. One option is the preview take (no Sandbox; drop the VO clause). The
+      other is the registry take on EDGE dev (Sandbox, R2, D1).
+- [ ] Pre-run `composer-plugin.mjs` to the end on the showcase profile.
+- [ ] Confirm the Gmail sync trigger is `remote: true` if the VO should claim edge sync.
+- [ ] Inbox toolbar actions have no testids, so the flow matches translated labels. Add `data-testid`s for AI
+      reply and Create Project.
 
 ### Make the flows run
 
-- [ ] Run each scene flow end to end and fix selectors (none has run yet; selectors come from the research
-      and from neighbouring committed flows).
-- [ ] Seed scene 1's space so the navtree sweep has something to show (plugin-debug "Generate Objects" or the
-      earlier scenes' objects).
+- [x] Scenes 1, 3, 4 and 5 run end to end against EDGE preview (scratch profile, record mode).
+- [ ] Scene 6: run against the finished World Clock project.
+- [ ] Scene 7: run against the synced mailbox (needs the profile).
+- [ ] Scene 8: run. It is untested whether `composer.invoke` resolves the space's database without a
+      `spaceId`.
+- [ ] Attach each scene's trimmed clip to its storyboard frame (`MediaArtifact.makeVideo({ url })`), so
+      scene 8 plays the film itself.
 - [ ] Add a stitch script (concat plus one trim pass) if the manual ffmpeg step becomes repetitive.
 - [ ] Retime `voiceover-cues.json` against the stitched cut; shorten any cue that overlaps the next.
+
+### Product issues seen while recording
+
+- [ ] A document titled "Local-first software" is named "Localfirst software" in the navtree: the derived
+      name drops the hyphen.
+- [ ] A new table orders its columns Description, Status, Title; Title should lead.
+- [ ] Kanban cards repeat the Title/Status/Description labels with an empty card header; the title is not
+      the card's heading.
+- [ ] Home → Recent fills with "New message" entries from comment threads.
+- [ ] With Numbered headings on, the assistant's "## Further reading" renders as "1). Further reading".
+- [ ] A red error indicator appears in the right rail after the kanban drag; check `app.log`.
+- [ ] Settings toggles the sidebar closed when pressed while settings are open, so the flows open settings
+      by URL.
+- [ ] On reload, a profile whose last view was Settings restores with no plank, so the driver's ready check
+      (`deck.plank`) times out.
+- [ ] Other committed flows still use the old `input[id="<plugin>-input"]` toggle selector
+      (`plugin-claude/autocue/claude-code-task.mjs`, `plugin-projects/autocue/composer-plugin-desktop.mjs`,
+      `composer-app/autocue/desktop-input.mjs`).
 
 ### Polish
 
