@@ -3,7 +3,7 @@
 //
 
 import { BaseError } from '@dxos/errors';
-import { EDGE_CLIENT_TOO_OLD, EDGE_CLIENT_VERSION_PARAM } from '@dxos/protocols';
+import { EDGE_CLIENT_TOO_OLD, EDGE_CLIENT_VERSION_HEADER, EDGE_CLIENT_VERSION_PROTOCOL_PREFIX } from '@dxos/protocols';
 
 import { version } from '../package.json';
 
@@ -19,16 +19,13 @@ export class ClientTooOldError extends BaseError.extend(
   'This app is too old to sync with EDGE; reload it to update.',
 ) {}
 
-/**
- * `url` advertising {@link CLIENT_SDK_VERSION}. Every request of the EDGE connect flow goes through this, so the
- * `/auth` challenge, its 401 fallback and the WebSocket upgrade all carry the version in the same form.
- */
-// TODO(mykola): Send it on every EDGE request once the AI proxy stops forwarding the query string upstream.
-export const withClientVersion = (url: URL): URL => {
-  const versioned = new URL(url);
-  versioned.searchParams.set(EDGE_CLIENT_VERSION_PARAM, CLIENT_SDK_VERSION);
-  return versioned;
-};
+/** Headers advertising {@link CLIENT_SDK_VERSION} on a request of the EDGE connect flow (`/auth` and its fallback). */
+export const clientVersionHeaders = (): Record<string, string> => ({
+  [EDGE_CLIENT_VERSION_HEADER]: CLIENT_SDK_VERSION,
+});
+
+/** The same advertisement for the WebSocket upgrade, where a browser can set no header but the subprotocol list. */
+export const clientVersionProtocol = (): string => `${EDGE_CLIENT_VERSION_PROTOCOL_PREFIX}${CLIENT_SDK_VERSION}`;
 
 /**
  * Throws {@link ClientTooOldError} when `response` is EDGE's 426 refusing this SDK. Matched on the body's type, as any

@@ -9,7 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { ClientTooOldError, assertClientSupported, withClientVersion } from './client-version.ts';
+import { ClientTooOldError, assertClientSupported, clientVersionHeaders } from './client-version.ts';
 import { type EdgeIdentity } from './edge-identity.ts';
 
 /**
@@ -171,7 +171,7 @@ export type AuthChallengeInfo = {
  */
 export const fetchAuthChallengeInfo = async (baseHttpUrl: string | URL): Promise<AuthChallengeInfo | undefined> => {
   try {
-    const response = await fetch(withClientVersion(new URL('/auth', baseHttpUrl)));
+    const response = await fetch(new URL('/auth', baseHttpUrl), { headers: clientVersionHeaders() });
     await assertClientSupported(response);
     const challenge = await readAuthChallenge(response);
     if (!challenge) {

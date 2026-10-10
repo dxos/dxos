@@ -5,7 +5,7 @@
 import { create } from '@bufbuild/protobuf';
 import { afterEach, describe, test, vi } from 'vitest';
 
-import { EDGE_CLIENT_TOO_OLD, EDGE_CLIENT_VERSION_PARAM } from '@dxos/protocols';
+import { EDGE_CLIENT_TOO_OLD, EDGE_CLIENT_VERSION_HEADER } from '@dxos/protocols';
 import { type Presentation, PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { version as packageVersion } from '../package.json';
@@ -140,15 +140,14 @@ describe('fetchAuthChallenge', () => {
 
   test('GETs /auth relative to the base URL, advertising the SDK version', async ({ expect }) => {
     // Typed with the input parameter so `mock.calls[0][0]` is a tuple element rather than `never`.
-    const fetchMock = vi.fn(async (_input: URL | RequestInfo) =>
+    const fetchMock = vi.fn(async (_input: URL | RequestInfo, _init?: RequestInit) =>
       jsonResponse({ success: true, data: { challenge: CHALLENGE } }),
     );
     vi.stubGlobal('fetch', fetchMock);
 
     expect(await fetchAuthChallenge('https://edge.example.com')).toBe(CHALLENGE);
-    expect(String(fetchMock.mock.calls[0][0])).toBe(
-      `https://edge.example.com/auth?${EDGE_CLIENT_VERSION_PARAM}=${packageVersion}`,
-    );
+    expect(String(fetchMock.mock.calls[0][0])).toBe('https://edge.example.com/auth');
+    expect(new Headers(fetchMock.mock.calls[0][1]?.headers).get(EDGE_CLIENT_VERSION_HEADER)).toBe(packageVersion);
   });
 
   test('throws when EDGE refuses the SDK as too old, rather than falling back', async ({ expect }) => {

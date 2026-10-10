@@ -7,12 +7,10 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Keyring } from '@dxos/keyring';
-import { EDGE_CLIENT_VERSION_PARAM } from '@dxos/protocols';
 import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { TextMessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { openAndClose } from '@dxos/test-utils';
 
-import { version as packageVersion } from '../package.json';
 import { createEphemeralEdgeIdentity, createTestHaloEdgeIdentity } from './auth.ts';
 import { protocol } from './defs.ts';
 import { EdgeClient } from './edge-client.ts';
@@ -35,16 +33,6 @@ describe('EdgeClient', () => {
     await closeConnection();
     await reconnectTrigger.wait();
     await expect(client.send(Context.default(), textMessage('Hello world 2'))).resolves.not.toThrow();
-  });
-
-  test('the WebSocket upgrade advertises the SDK version', async () => {
-    const { endpoint, cleanup, upgradeUrls } = await createTestEdgeWsServer(wsServerPort++);
-    onTestFinished(cleanup);
-
-    const { client } = await openNewClient(endpoint);
-    await client.send(Context.default(), textMessage('Hello world'));
-    const upgradeUrl = new URL(upgradeUrls()[0], endpoint);
-    expect(upgradeUrl.searchParams.get(EDGE_CLIENT_VERSION_PARAM)).toBe(packageVersion);
   });
 
   test('isConnected', async () => {

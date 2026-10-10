@@ -28,10 +28,9 @@ type TestEdgeWsServerProps = {
 
 export const createTestEdgeWsServer = async (port = DEFAULT_PORT, params?: TestEdgeWsServerProps) => {
   const admittedAttempts: number[] = [];
-  const upgradeUrls: string[] = [];
   const wsServer = new WebSocket.Server({
     port,
-    verifyClient: createConnectionDelayHandler(params, admittedAttempts, upgradeUrls),
+    verifyClient: createConnectionDelayHandler(params, admittedAttempts),
     handleProtocols: () => EdgeWebsocketProtocol.V1,
   });
 
@@ -94,8 +93,6 @@ export const createTestEdgeWsServer = async (port = DEFAULT_PORT, params?: TestE
     openConnectionCount: () => connections.length,
     /** Upgrade attempts admitted so far, by number; an admitted attempt's socket may already be gone. */
     admittedAttempts: () => [...admittedAttempts],
-    /** Request URL (path and query) of every upgrade attempt, in order. */
-    upgradeUrls: () => [...upgradeUrls],
     sendResponseMessage,
     sendMessage: (msg: Message) => {
       return requireNewestConnection().muxer.send(msg);
@@ -108,15 +105,10 @@ export const createTestEdgeWsServer = async (port = DEFAULT_PORT, params?: TestE
   };
 };
 
-const createConnectionDelayHandler = (
-  params: TestEdgeWsServerProps | undefined,
-  admittedAttempts: number[],
-  upgradeUrls: string[],
-) => {
+const createConnectionDelayHandler = (params: TestEdgeWsServerProps | undefined, admittedAttempts: number[]) => {
   let attempts = 0;
-  return (info: { req: { url?: string } }, callback: (admit: boolean) => void) => {
+  return (_: any, callback: (admit: boolean) => void) => {
     const attempt = ++attempts;
-    upgradeUrls.push(info.req.url ?? '');
     const admit = () => {
       callback(true);
       admittedAttempts.push(attempt);

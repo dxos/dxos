@@ -426,16 +426,13 @@ export enum EdgeWebsocketProtocol {
 }
 
 /**
- * Query parameter carrying the client's SDK version on a request to EDGE (e.g. `?dxos-version=0.13.1`). A parameter
- * because it is the one form both `fetch` and a browser WebSocket upgrade can carry, and it needs no CORS allow-list.
- */
-export const EDGE_CLIENT_VERSION_PARAM = 'dxos-version';
-
-/**
- * Prefix of the `Sec-WebSocket-Protocol` entry through which SDK 0.13.x sends its version (e.g. `dxos-version.0.13.0`);
- * later SDKs send {@link EDGE_CLIENT_VERSION_PARAM}, and EDGE reads this only until its minimum passes 0.13.x.
+ * Prefix of the `Sec-WebSocket-Protocol` entry carrying the client's SDK version (e.g. `dxos-version.0.12.0`).
+ * A subprotocol entry because browsers cannot set headers on a WebSocket; the router never selects it.
  */
 export const EDGE_CLIENT_VERSION_PROTOCOL_PREFIX = 'dxos-version.';
+
+/** HTTP header carrying the client's SDK version, the {@link EDGE_CLIENT_VERSION_PROTOCOL_PREFIX} of a plain request. */
+export const EDGE_CLIENT_VERSION_HEADER = 'X-DXOS-Version';
 
 /** `failure.data.type` of EDGE's 426 refusing an SDK older than the oldest it serves. */
 export const EDGE_CLIENT_TOO_OLD = 'client_too_old';
