@@ -2,15 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
+import montserrat from '@fontsource-variable/montserrat/files/montserrat-latin-wght-normal.woff2';
 import { loadFont } from '@remotion/fonts';
 import React from 'react';
-import { AbsoluteFill, Easing, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig } from 'remotion';
+import { AbsoluteFill, Easing, interpolate, spring, useCurrentFrame, useVideoConfig } from 'remotion';
 
 import { COLORS, TIMING } from './brand.ts';
 
-/** Composer's wordmark face (OFL, committed in public/fonts). */
+/** Composer's wordmark face: variable Montserrat, set light. */
 const WORDMARK_FAMILY = 'Montserrat';
-void loadFont({ family: WORDMARK_FAMILY, url: staticFile('fonts/Montserrat-Regular.woff2'), weight: '400' });
+void loadFont({ family: WORDMARK_FAMILY, url: montserrat, weight: '100 900' });
 
 /**
  * The Composer icon's four arcs (packages/ui/brand/assets/icons/composer-icon.svg), outermost first. Each is
@@ -77,11 +78,19 @@ export const ComposerIntro: React.FC = () => {
         alignItems: 'center',
         justifyContent: 'center',
         flexDirection: portrait ? 'column' : 'row',
-        gap: Math.round(56 * u),
+        gap: portrait ? Math.round(40 * u) : 0,
         opacity: fadeOut,
       }}
     >
-      <div style={{ position: 'relative', width: size, height: size }}>
+      {/* The arcs open to the right, so the right third of the icon's box is empty: pull the name into it. */}
+      <div
+        style={{
+          position: 'relative',
+          width: size,
+          height: size,
+          marginRight: portrait ? 0 : -Math.round(size * 0.16),
+        }}
+      >
         {ARCS.map((arc, index) => {
           const progress = spring({
             frame: frame - Math.round(index * ARC_STAGGER * fps),
@@ -111,8 +120,8 @@ export const ComposerIntro: React.FC = () => {
       <div
         style={{
           fontFamily: `"${WORDMARK_FAMILY}", sans-serif`,
-          fontWeight: 400,
-          fontSize: Math.round(150 * u),
+          fontWeight: 300,
+          fontSize: Math.round(200 * u),
           lineHeight: 1,
           letterSpacing: '0.01em',
           color: COLORS.main,

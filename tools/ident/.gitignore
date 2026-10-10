@@ -1,7 +1,4 @@
 
 # Licensed fonts: keep local, never commit (Sharp Sans is commercially licensed).
 public/fonts/*
-!public/fonts/README.md
-# Montserrat is OFL-licensed, so it is committed.
-!public/fonts/Montserrat-*.woff2
-out/
+!public/fonts/README.mdout/

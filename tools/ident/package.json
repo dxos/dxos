@@ -13,6 +13,7 @@
   "author": "info@dxos.org",
   "type": "module",
   "dependencies": {
+    "@fontsource-variable/montserrat": "catalog:",
     "@remotion/bundler": "catalog:",
     "@remotion/cli": "catalog:",
     "@remotion/fonts": "catalog:",
