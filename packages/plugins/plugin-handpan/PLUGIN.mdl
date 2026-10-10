@@ -6,12 +6,13 @@ version: 0.1.0
 
 Handpan music notation and real-time note detection for `DXOS` Composer. Phase 1 (this document)
 is the audio-analysis layer and a `Tuner` that calibrates the detector to an instrument and shows
-notes — and chords — as they are played. Notation (Song / Segment / Bar) is Phase 2; see
+notes — and chords — as they are played. Notation, built on `plugin-sequencer`'s `Score`, is Phase 2; see
 `docs/DESIGN.md` for the roadmap and the analysis techniques considered.
 
 ## Notes (Phase 2)
 
-- `Song` / `Segment` / `Bar` ECHO schema with inherited key and time signature
+- Notation on `plugin-sequencer`'s `Score` / `Sequence` / `Note` (key, per-sequence overrides and
+  `Note.articulation` added there); `strikesToNotes` converts detected strikes
 - Notation grid editor and article surface; register with `composer-app`
 - Record mode: strikes and tempo quantized into bars
 

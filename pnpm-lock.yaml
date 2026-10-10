@@ -12002,6 +12002,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/plugin-sequencer':
+        specifier: workspace:*
+        version: link:../plugin-sequencer
       '@dxos/react-ui-audio':
         specifier: workspace:*
         version: link:../../ui/react-ui-audio

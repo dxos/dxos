@@ -10,12 +10,12 @@ notation view and calibration target the **handpan**.
 
 ## Phases
 
-| Phase | Deliverable                                                                                                      |
-| ----- | ---------------------------------------------------------------------------------------------------------------- |
-| 1     | Plugin skeleton, audio analysis utility (`src/audio`), `Tuner` component + storybook: **Calibrate** and **Live** |
-| 2     | ECHO schema (`Song` / `Segment` / `Bar`), notation grid editor, article surface                                  |
-| 3     | Record mode: onsets + tempo estimate → quantized hits written into bars                                          |
-| 4     | Polyphony (two-note strikes), other instrument profiles                                                          |
+| Phase | Deliverable                                                                                                |
+| ----- | ---------------------------------------------------------------------------------------------------------- |
+| 1     | Plugin skeleton, audio analysis (`src/audio`), `Tuner` + storybook: **Calibrate**, **Live**, chords (done) |
+| 2     | Notation grid editor and article surface on `plugin-sequencer`'s `Score` (see Music model)                 |
+| 3     | Record mode: onsets + tempo estimate → quantized hits written into bars                                    |
+| 4     | Real-instrument chord validation, other instrument profiles                                                |
 
 ## Audio analysis (`src/audio`)
 
@@ -123,18 +123,23 @@ does not separate them: a resonance is a steady tone like the struck note. What 
 
 ## Music model (general)
 
-```text
-Song     { name, key: Scale, timeSignature, tempo, segments: Segment[] }
-Segment  { name, key?, timeSignature?, bars: Bar[] }
-Bar      { key?, timeSignature?, subdivision, hits: Hit[] }
-Hit      { position (subdivision index), pitch?: Pitch, articulation: 'note' | 'tak' | 'slap' | 'ghost', duration? }
-Scale    { name, ding?: Pitch, notes: Pitch[] }        // e.g. D Kurd: D3 | A3 Bb3 C4 D4 E4 F4 G4 A4
-Pitch    scientific pitch string ('Bb3'); MIDI number derived
-```
+Notation reuses `plugin-sequencer`'s ECHO types rather than defining its own:
 
-Key and time signature resolve by inheritance Bar → Segment → Song. Pitches are
-stored as absolute pitches so the model is instrument-neutral; the handpan **view**
-renders them as numbered notes (D = ding, 1…n ascending) plus `T`/`S` marks.
+| Handpan concept                    | Sequencer type                                       |
+| ---------------------------------- | ---------------------------------------------------- |
+| Song (name, tempo, time signature) | `Score` — plus `key?` (added for this plugin)        |
+| Segment                            | `Sequence` on one track, in `Score.sequences` order  |
+| Segment overrides                  | `Sequence.timeSignature?` / `Sequence.key?` (added)  |
+| Bar                                | derived from the time signature over `length`        |
+| Strike / chord                     | `Note`s (MIDI pitch, beats); a chord shares a start  |
+| Tak / slap                         | `Note.articulation?` (added); pitch is a placeholder |
+
+All additions are optional, so existing scores are unaffected. Per-bar time-signature changes are
+not modelled: a new `Sequence` starts a new meter. The handpan scale (instrument tuning) belongs to the
+track (`Track.instrument`, e.g. `handpan:d-kurd`), distinct from the musical key.
+
+`strikesToNotes` (`src/notation/strikes.ts`) is the bridge for record mode: strike times → quantized
+beats at the score's tempo, chords → notes sharing a start, taks → percussive notes.
 
 ## Phase 1 UI
 
