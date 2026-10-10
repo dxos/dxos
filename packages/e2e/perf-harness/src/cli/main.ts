@@ -5,12 +5,14 @@
 
 import { parseArgs } from 'node:util';
 
+import { capture } from './capture.ts';
 import { compare } from './compare.ts';
 import { doctor } from './doctor.ts';
 import { freeze, thaw } from './freeze.ts';
 import { gate } from './gate.ts';
 import { readLedger } from './ledger.ts';
 import { runCommand } from './run.ts';
+import { scenarioCheck, scenarioNew } from './scenario.ts';
 import { installInterruptHandlers } from './session.ts';
 import { expand, summarize } from './summarize.ts';
 import { HarnessError, errorCode, workspaceRoot } from './workspace.ts';
@@ -25,6 +27,13 @@ usage: pnpm perf <command> [options]
   summarize [<run>]       where the CPU went: top functions by self time, or by the change in
                           self time between a compare's arms; source-mapped, one handle per row
   expand <handle>         a summary row's callers and callees
+  capture --attach <port> profile every realm of an app someone is running (dev, preview, Electron
+                          with a debugging port) for --seconds 20, and print the summary
+  scenario new <name> --reproduces <text>
+                          scaffold a scenario spec that reproduces a field report
+  scenario check <name> [--capture <run>] [--inject <stage>:<ms>] [--rounds 6]
+                          before registering: A/A stability, injected-slowdown sensitivity, and
+                          overlap with the capture's hot functions
   gate                    the boot-graph budget CI gates every PR on
   ledger [-n 10]          this worktree's past measurements (.perf/ledger.tsv)
   freeze / thaw           pin the harness for an optimization loop: edits to it are refused,
@@ -51,7 +60,8 @@ run
   --snapshots <list>      heap snapshots at idle, a stage id, or end (comma-separated); every
                           stage after one is perturbed, so the run compares with nothing else
 
-common: --target composer  --ignore-load  --lock-wait <minutes, default 60>
+common: --target composer  --scenario <name> (run, compare: measure a scenario instead of the flow)
+         --ignore-load  --lock-wait <minutes, default 60>
 
 compare exits 0 improved, 1 regressed, 2 no change, 3 inconclusive, 4 could not measure.
 HEAD must be committed: each attempt is a commit, so the ledger can name what was measured.
@@ -73,6 +83,14 @@ const main = async (): Promise<number> => {
     allowPositionals: true,
     options: {
       'target': { type: 'string', default: 'composer' },
+      'scenario': { type: 'string' },
+      'attach': { type: 'string' },
+      'seconds': { type: 'string' },
+      'dist': { type: 'string' },
+      'reproduces': { type: 'string' },
+      'inject': { type: 'string' },
+      'capture': { type: 'string' },
+      'rounds': { type: 'string' },
       'base': { type: 'string' },
       'metric': { type: 'string', multiple: true },
       'check': { type: 'string', multiple: true },
@@ -98,6 +116,7 @@ const main = async (): Promise<number> => {
   const [command] = positionals;
   const common = {
     target: values.target,
+    scenario: values.scenario,
     ignoreLoad: values['ignore-load'],
     lockWaitMinutes: integer(values['lock-wait'], 60, 'lock-wait'),
   };
@@ -148,6 +167,42 @@ const main = async (): Promise<number> => {
         throw new HarnessError('expand needs a handle from `pnpm perf summarize`, e.g. h3');
       }
       return expand({ handle, run: values.run });
+    }
+    case 'capture': {
+      if (!values.attach) {
+        throw new HarnessError(
+          'capture needs --attach <port>: the remote debugging port of the browser running the app',
+        );
+      }
+      return capture({
+        target: values.target,
+        attach: integer(values.attach, 0, 'attach'),
+        seconds: integer(values.seconds, 20, 'seconds'),
+        dist: values.dist,
+        top: Math.max(1, Math.round(integer(values.top, 30, 'top'))),
+      });
+    }
+    case 'scenario': {
+      const [, verb, name] = positionals;
+      if (!name || (verb !== 'new' && verb !== 'check')) {
+        throw new HarnessError('usage: pnpm perf scenario new <name> --reproduces <text> | scenario check <name>');
+      }
+      if (verb === 'new') {
+        if (!values.reproduces) {
+          throw new HarnessError('scenario new needs --reproduces "<what the field report said, in one line>"');
+        }
+        return scenarioNew({ target: values.target, scenario: name, reproduces: values.reproduces });
+      }
+      return scenarioCheck({
+        target: values.target,
+        scenario: name,
+        capture: values.capture,
+        inject: values.inject,
+        rounds: Math.max(3, Math.round(integer(values.rounds, 6, 'rounds'))),
+        seed: integer(values.seed, 1, 'seed'),
+        ignoreLoad: values['ignore-load'],
+        lockWaitMinutes: integer(values['lock-wait'], 60, 'lock-wait'),
+      });
     }
     case 'gate':
       return gate({ target: values.target });
