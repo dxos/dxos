@@ -1,0 +1,24 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import React from 'react';
+import { AbsoluteFill } from 'remotion';
+// TODO(burdon): Restore once @dxos/hero is available in this repo.
+// import { DXOSTrail } from '@dxos/hero/trail';
+
+import { COLORS } from './brand.ts';
+
+/**
+ * The DXOS trail from @dxos/hero (fluid glow orbiting the mark), driven by the composition frame.
+ * Use it as a full-frame layer, e.g. behind the end card or as a standalone ident.
+ */
+export const Trail: React.FC = () => {
+  // const frame = useCurrentFrame();
+  // const { fps } = useVideoConfig();
+  return (
+    <AbsoluteFill style={{ backgroundColor: COLORS.ground }}>
+      {/* <DXOSTrail frame={frame} fps={fps} /> */}
+    </AbsoluteFill>
+  );
+};
