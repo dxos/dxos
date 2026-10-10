@@ -567,6 +567,14 @@ and the licensed Sharp Sans font in `tools/ident/public/fonts/` (without it they
 `--intro <video>` / `--outro <video>` bookend with any other clip. Clips are letterboxed to the recording's
 frame, their audio is dropped, and chapters and captions are shifted past the intro.
 
+### Voice-over: `voiceover.mjs`
+
+`scripts/voiceover.mjs` narrates a finished video with HeyGen text-to-speech. Write the cues as
+`[{ "at": <seconds>, "text": "…" }]` against the final (trimmed, bookended) video, then run
+`node voiceover.mjs --in demo.webm --cues cues.json [--voice <id>]`; `--voices` lists the Starfish voices.
+It needs `HEYGEN_API_KEY`, from the environment or `.secrets/heygen.env`. A cue that runs into the next one
+is reported, so shorten its text rather than letting the voices overlap.
+
 ### For a phone: `--mp4`
 
 iOS does not play VP9 or WebM from a file share, so a demo someone will watch on an iPhone needs an
