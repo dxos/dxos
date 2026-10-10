@@ -169,7 +169,7 @@ test QA-4: Plan a project and hand its tasks to an agent
     `packages/plugins/plugin-projects/autocue/plan-a-project.mjs`; it stops short of delegating, so no model is
     needed.
   actors: human
-  status: unverified
+  status: passing            # 2026-10-09, recorded by autocue/plan-a-project.mjs
   given:
     - an identity exists, on a fresh profile
     - space: the default space is open on its Home
