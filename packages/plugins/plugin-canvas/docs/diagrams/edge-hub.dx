@@ -1,4 +1,4 @@
-diagram flow=down
+diagram @ -128,-64 flow=down box=256x128 grid=384x192
 group worker "hub-service" {
   node Worker "hub worker" ref="edge/packages/services/hub-service/src/worker.ts"
   node Entry "HubServiceEntry" ref="edge/packages/services/hub-service/src/entrypoint/hub-service.ts"

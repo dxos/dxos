@@ -1,4 +1,4 @@
-diagram flow=down
+diagram @ -128,-64 flow=down box=256x128 grid=384x192
 group plugin "Plugin" {
   node PAssist "plugin-assistant" ref="packages/plugins/plugin-assistant"
 }

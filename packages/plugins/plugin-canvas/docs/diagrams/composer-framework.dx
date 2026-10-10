@@ -1,4 +1,4 @@
-diagram flow=down
+diagram @ -128,-64 flow=down box=256x128 grid=384x192
 group core "Plugin runtime" {
   node Manager "PluginManager" ref="packages/sdk/app-framework/src/core/plugin-manager"
   node Plugin "Plugin" ref="packages/sdk/app-framework/src/core/plugin.ts"

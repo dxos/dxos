@@ -1,4 +1,4 @@
-diagram flow=down
+diagram @ -128,-64 flow=down box=256x128 grid=384x192
 group app "App layer" {
   node Shell "Composer App" ref="packages/apps/composer-app"
   node Framework "App Framework" ref="packages/sdk/app-framework"

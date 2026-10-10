@@ -11,7 +11,7 @@
 //
 
 import { type Bounds, type Node, type Point } from '../model/types.ts';
-import { type LatticeSpec } from './lattice.ts';
+import { type LatticeSpec, onLattice } from './lattice.ts';
 import { sideNormal } from './ports.ts';
 import { type RouteEnd } from './route.ts';
 import { nodeBounds } from './shapes.ts';
@@ -114,7 +114,7 @@ export const gutterRoute = (
   const [pitchX, pitchY] = [spec.width + spec.gutterX, spec.height + spec.gutterY];
   const start = gutterExit(from, spec);
   const end = gutterExit(to, spec);
-  const frames = nodes.map(nodeBounds);
+  const frames = nodes.filter(onLattice).map(nodeBounds);
   // The local grid finds almost every route; only when it offers no way round does the search widen.
   const search = (transitive: boolean) =>
     searchGrid(from, to, start, end, frames, searchRegion(start, end, frames, pitchX, pitchY, transitive), spec);

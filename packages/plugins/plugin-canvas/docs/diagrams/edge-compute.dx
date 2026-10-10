@@ -1,4 +1,4 @@
-diagram flow=down
+diagram @ -128,-64 flow=down box=256x128 grid=384x192
 group entry "Entry" {
   node Entry "Entrypoints" ref="edge/packages/services/compute-service/src/entrypoint"
   node Triggers "triggers" ref="edge/packages/services/compute-service/src/triggers"

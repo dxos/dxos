@@ -8,7 +8,18 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import React, { type CSSProperties, Fragment, createContext, memo, useContext, useId, useMemo } from 'react';
+import React, {
+  type CSSProperties,
+  Fragment,
+  createContext,
+  memo,
+  useContext,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import * as Button from '@dxos/react-ui/Button';
 import { mx } from '@dxos/ui-theme';
@@ -21,6 +32,7 @@ import {
   type LineStyle,
   type Link,
   type LinkId,
+  MAJOR_GRID_RATIO,
   type Marker,
   type Node,
   type NodeId,
@@ -129,11 +141,15 @@ export const SceneLayer = memo(
     ghost,
     debug,
     handlers,
-    lattice,
+    lattice: latticeProp,
     cell: cellProp,
   }: SceneLayerProps) => {
     const inherited = useContext(CellContext);
     const cell = cellProp ?? inherited;
+    // A nested scene (a frame's contents, a drill-in in flight) routes on its parent's lattice, so its links do not
+    // jump onto the gutters when it settles as the root.
+    const inheritedLattice = useContext(LatticeContext);
+    const lattice = latticeProp ?? inheritedLattice;
     // A hidden layer's elements are not drawn (nor, for the root, hit: the view hit-tests the same visible scene).
     const scene = useMemo(() => visibleScene(sceneProp), [sceneProp]);
     const links = useMemo(
@@ -175,95 +191,98 @@ export const SceneLayer = memo(
 
     return (
       <CellContext.Provider value={cell}>
-        <svg className='absolute overflow-visible pointer-events-none' style={fadeStyle} width={1} height={1}>
-          <defs>
-            {lineHues.map((hue) => (
-              <Markers
-                key={hue ?? 'default'}
-                id={`${markerId}-${hue ?? 'default'}`}
-                cell={cell}
-                hue={hue}
-                width={linkWidth}
-              />
-            ))}
-          </defs>
-        </svg>
-        {groups.map((group) => (
-          <Fragment key={group.layer.id}>
-            <svg className='absolute overflow-visible pointer-events-none' style={fadeStyle} width={1} height={1}>
-              {group.links.map(({ link, path }) => (
-                <g key={link.id}>
-                  {/* A wide transparent twin makes the thin stroke easy to press. */}
-                  {handlers && (
-                    <path
-                      d={path}
-                      className='fill-none stroke-transparent pointer-events-auto cursor-pointer'
-                      style={{ pointerEvents: 'stroke' }}
-                      strokeWidth={12 * unit}
-                      onPointerDown={(event) => handlers.onLinkPointerDown?.(link, event)}
-                      onPointerEnter={() => handlers.onLinkHover?.(link.id)}
-                      onPointerLeave={() => handlers.onLinkHover?.(undefined)}
-                      onDoubleClick={(event) => handlers.onLinkDoubleClick?.(link, event)}
-                      onContextMenu={(event) => handlers.onLinkContextMenu?.(link, event)}
-                    />
-                  )}
-                  <path
-                    d={path}
-                    className={mx(
-                      'fill-none',
-                      plain
-                        ? lineClasses(lines.get(link.id)?.hue).stroke
-                        : selected?.has(link.id)
-                          ? 'stroke-focus'
-                          : hoveredLink === link.id
-                            ? 'stroke-focus/50'
-                            : lineClasses(lines.get(link.id)?.hue).stroke,
-                    )}
-                    strokeWidth={linkWidth}
-                    strokeDasharray={dashArray(lines.get(link.id)?.lineStyle, linkWidth)}
-                    strokeLinecap={lines.get(link.id)?.lineStyle === 'dotted' ? 'round' : undefined}
-                    data-link-id={link.id}
-                  />
-                </g>
-              ))}
-            </svg>
-            {group.nodes.map((node) => (
-              <NodeFrame
-                key={node.id}
-                store={store}
-                scene={scene}
-                registry={registry}
-                node={node}
-                styles={styles}
-                zoom={zoom}
-                depth={depth}
-                liveDepth={liveDepth}
-                selected={!plain && (selected?.has(node.id) ?? false)}
-                hovered={hover === node.id}
-                opening={opening === node.id}
-                fade={focus && focus.id !== node.id ? fadeStyle : undefined}
-                chromeFade={focus?.id === node.id ? fadeStyle : undefined}
-                editingPart={editing?.id === node.id ? editing.part : undefined}
-                active={active === node.id}
-                ghost={ghost === node.id}
-                debug={debug}
-                handlers={handlers}
-              />
-            ))}
-            {/* The ends paint over the layer's nodes, so an end centred on a node's edge shows whole. */}
-            <svg className='absolute overflow-visible pointer-events-none' style={fadeStyle} width={1} height={1}>
-              {group.links.map(({ link, path }) => (
-                <path
-                  key={link.id}
-                  d={path}
-                  className='fill-none stroke-none'
-                  markerStart={markerUrl(linkMarkers(link).start, 'start', lines.get(link.id)?.hue)}
-                  markerEnd={markerUrl(linkMarkers(link).end, 'end', lines.get(link.id)?.hue)}
+        <LatticeContext.Provider value={lattice}>
+          <svg className='absolute overflow-visible pointer-events-none' style={fadeStyle} width={1} height={1}>
+            <defs>
+              {lineHues.map((hue) => (
+                <Markers
+                  key={hue ?? 'default'}
+                  id={`${markerId}-${hue ?? 'default'}`}
+                  cell={cell}
+                  hue={hue}
+                  width={linkWidth}
                 />
               ))}
-            </svg>
-          </Fragment>
-        ))}
+            </defs>
+          </svg>
+          {groups.map((group) => (
+            <Fragment key={group.layer.id}>
+              <svg className='absolute overflow-visible pointer-events-none' style={fadeStyle} width={1} height={1}>
+                {group.links.map(({ link, path }) => (
+                  <g key={link.id}>
+                    {/* A wide transparent twin makes the thin stroke easy to press. */}
+                    {handlers && (
+                      <path
+                        d={path}
+                        className='fill-none stroke-transparent pointer-events-auto cursor-pointer'
+                        style={{ pointerEvents: 'stroke' }}
+                        strokeWidth={12 * unit}
+                        onPointerDown={(event) => handlers.onLinkPointerDown?.(link, event)}
+                        onPointerEnter={() => handlers.onLinkHover?.(link.id)}
+                        onPointerLeave={() => handlers.onLinkHover?.(undefined)}
+                        onDoubleClick={(event) => handlers.onLinkDoubleClick?.(link, event)}
+                        onContextMenu={(event) => handlers.onLinkContextMenu?.(link, event)}
+                      />
+                    )}
+                    <path
+                      d={path}
+                      className={mx(
+                        'fill-none',
+                        plain
+                          ? lineClasses(lines.get(link.id)?.hue).stroke
+                          : selected?.has(link.id)
+                            ? 'stroke-focus'
+                            : hoveredLink === link.id
+                              ? 'stroke-focus/50'
+                              : lineClasses(lines.get(link.id)?.hue).stroke,
+                      )}
+                      strokeWidth={linkWidth}
+                      strokeDasharray={dashArray(lines.get(link.id)?.lineStyle, linkWidth)}
+                      strokeLinecap={lines.get(link.id)?.lineStyle === 'dotted' ? 'round' : undefined}
+                      data-link-id={link.id}
+                    />
+                    {link.text && <LinkText path={path} text={link.text} />}
+                  </g>
+                ))}
+              </svg>
+              {group.nodes.map((node) => (
+                <NodeFrame
+                  key={node.id}
+                  store={store}
+                  scene={scene}
+                  registry={registry}
+                  node={node}
+                  styles={styles}
+                  zoom={zoom}
+                  depth={depth}
+                  liveDepth={liveDepth}
+                  selected={!plain && (selected?.has(node.id) ?? false)}
+                  hovered={hover === node.id}
+                  opening={opening === node.id}
+                  fade={focus && focus.id !== node.id ? fadeStyle : undefined}
+                  chromeFade={focus?.id === node.id ? fadeStyle : undefined}
+                  editingPart={editing?.id === node.id ? editing.part : undefined}
+                  active={active === node.id}
+                  ghost={ghost === node.id}
+                  debug={debug}
+                  handlers={handlers}
+                />
+              ))}
+              {/* The ends paint over the layer's nodes, so an end centred on a node's edge shows whole. */}
+              <svg className='absolute overflow-visible pointer-events-none' style={fadeStyle} width={1} height={1}>
+                {group.links.map(({ link, path }) => (
+                  <path
+                    key={link.id}
+                    d={path}
+                    className='fill-none stroke-none'
+                    markerStart={markerUrl(linkMarkers(link).start, 'start', lines.get(link.id)?.hue)}
+                    markerEnd={markerUrl(linkMarkers(link).end, 'end', lines.get(link.id)?.hue)}
+                  />
+                ))}
+              </svg>
+            </Fragment>
+          ))}
+        </LatticeContext.Provider>
       </CellContext.Provider>
     );
   },
@@ -289,6 +308,27 @@ export const lineWeight = (depth: number, zoom: number): number =>
 
 /** Scene px of a nominal unit for the layers below a `SceneLayer` given one, so nested scenes draw alike. */
 const CellContext = createContext(DEFAULT_CELL);
+
+/** The lattice smart links route on, inherited by nested layers. */
+const LatticeContext = createContext<LatticeSpec | undefined>(undefined);
+
+/** The scene's minor grid, in px, on each node frame for the text inside it. */
+const MINOR_GRID = '--dx-minor-grid';
+
+/**
+ * A text part covers the frame from its outer edge, border included, so its lines start on the grid the frame's edge is
+ * on rather than a border width inside it.
+ */
+// Spelled out, not built from `FRAME_BORDER`: Tailwind only emits classes it can read verbatim.
+// The text's own box is flush with the frame's edge and pads its text a grid unit either side; its lines need no
+// padding above or below, being on the grid already.
+const TEXT_BOX = 'absolute inset-[calc(-1*var(--scene-frame-border,2px))] [&>span]:px-(--dx-minor-grid)';
+
+/** A line is a whole number of minor grid units tall, the text centred in it, so lines of text sit on the grid. */
+const LINE_ON_GRID = mx(
+  // Important: a size class (`text-lg`) carries its own leading, which would otherwise win.
+  '[--dx-line:round(up,1.25em,var(--dx-minor-grid))] leading-(--dx-line)!',
+);
 
 /** A line pattern's dashes in scene units, relative to the stroke; a dot is a zero-length dash with a round cap. */
 const dashArray = (dash: LineStyle['lineStyle'], width = LINK_WIDTH): string | undefined =>
@@ -378,6 +418,62 @@ const Markers = ({ id, cell, hue, width }: { id: string; cell: number; hue: stri
   );
 };
 
+type LinkTextProps = { path: string; text: string };
+
+/** A caption's backdrop margin around its text, in scene units. */
+const LINK_TEXT_PAD = { x: 8, y: 2 };
+
+/** A link's caption at the middle of its route, over a halo of the canvas so it reads where it crosses lines. */
+const LinkText = ({ path, text }: LinkTextProps) => {
+  const ref = useRef<SVGPathElement>(null);
+  const textRef = useRef<SVGTextElement>(null);
+  const [at, setAt] = useState<{ x: number; y: number }>();
+  const [box, setBox] = useState<{ x: number; y: number; width: number; height: number }>();
+  // The route is only known as drawn: its midpoint is measured along the path, not between its ends.
+  useLayoutEffect(() => {
+    const element = ref.current;
+    if (element) {
+      const { x, y } = element.getPointAtLength(element.getTotalLength() / 2);
+      setAt({ x, y });
+    }
+  }, [path]);
+  // The backdrop fits the text as set, so it is measured once the text is placed.
+  useLayoutEffect(() => {
+    const element = textRef.current;
+    if (element && at) {
+      const { x, y, width, height } = element.getBBox();
+      setBox({
+        x: x - LINK_TEXT_PAD.x,
+        y: y - LINK_TEXT_PAD.y,
+        width: width + LINK_TEXT_PAD.x * 2,
+        height: height + LINK_TEXT_PAD.y * 2,
+      });
+    }
+  }, [at, text]);
+  return (
+    <>
+      <path ref={ref} d={path} className='fill-none stroke-none' />
+      {at && (
+        <>
+          {/* Opaque, so the caption reads over the lines it sits on. */}
+          {box && <rect {...box} rx={box.height / 2} className='fill-base-surface' data-link-text-box />}
+          <text
+            ref={textRef}
+            x={at.x}
+            y={at.y}
+            textAnchor='middle'
+            dominantBaseline='central'
+            className='fill-fg-muted text-sm'
+            data-link-text
+          >
+            {text}
+          </text>
+        </>
+      )}
+    </>
+  );
+};
+
 type NodeFrameProps = Omit<NodeViewProps, 'editing'> & {
   hovered?: boolean;
   editingPart?: PartKey;
@@ -396,6 +492,7 @@ type NodeFrameProps = Omit<NodeViewProps, 'editing'> & {
 const NodeFrame = memo(
   ({ handlers, hovered, editingPart, ghost, debug, fade, chromeFade, styles, ...props }: NodeFrameProps) => {
     const { node, registry, selected } = props;
+    const cell = useContext(CellContext);
     const drawn = useMemo(() => classedNode(node, styles), [node, styles]);
     const bounds = nodeBounds(node);
     const interactive = handlers !== undefined && !ghost;
@@ -433,6 +530,7 @@ const NodeFrame = memo(
       height: bounds.height,
       fontSize: drawn.style?.fontSize,
       [FRAME_BORDER]: chromeFade ? '0px' : `${border}px`,
+      [MINOR_GRID]: `${cell / MAJOR_GRID_RATIO}px`,
       ...(thick ? (chromeFade ? { padding: border } : { borderWidth: border }) : {}),
       ...fade,
     };
@@ -527,7 +625,9 @@ const LabelPart = ({ node, editing, label }: LabelPartProps) => (
     text={label}
     editing={editing}
     classNames={mx(
-      'dx-cover p-2 whitespace-pre-wrap',
+      TEXT_BOX,
+      'whitespace-pre-wrap',
+      LINE_ON_GRID,
       alignClasses(node.style, { horizontal: 'center', vertical: 'middle' }),
       sizeClass(node, 'text-lg'),
     )}
@@ -564,7 +664,9 @@ export const NoteNodeView = ({ node, editing }: NodeViewProps) => {
       text={text}
       editing={editing}
       classNames={mx(
-        'dx-cover p-3 whitespace-pre-wrap',
+        TEXT_BOX,
+        'whitespace-pre-wrap',
+        LINE_ON_GRID,
         alignClasses(node.style, { horizontal: 'left', vertical: 'top' }),
       )}
     >

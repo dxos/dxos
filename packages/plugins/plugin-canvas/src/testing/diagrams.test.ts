@@ -9,7 +9,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { isFrameNode } from '@dxos/react-ui-canvas/scene';
+import { DEFAULT_LATTICE, isFrameNode, nodeBounds, onLattice, quantize } from '@dxos/react-ui-canvas/scene';
 
 import { bindCanvasStore, elementId, parseLinkedSceneId } from '#model';
 
@@ -57,6 +57,17 @@ describe('loadDiagramSet', () => {
         return isFrameNode(node) && parseLinkedSceneId(node.scene) !== undefined;
       });
     await expect.poll(linked).toEqual(drills);
+
+    // The layout lands every box on a lattice cell, so links route along the gutters; group frames stay off it.
+    const nodes = Object.values(registry.get(bound.store.scenes)[bound.root].nodes);
+    const offLattice = nodes
+      .filter((node) => onLattice(node))
+      .filter((node) => {
+        const bounds = nodeBounds(node);
+        return JSON.stringify(quantize(bounds, DEFAULT_LATTICE)) !== JSON.stringify(bounds);
+      })
+      .map((node) => node.id);
+    expect(offLattice).toEqual([]);
     bound.dispose();
   });
 });

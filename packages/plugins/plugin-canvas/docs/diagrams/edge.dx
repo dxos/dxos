@@ -1,4 +1,4 @@
-diagram flow=down
+diagram @ -128,-64 flow=down box=256x128 grid=384x192
 group clients "Clients" {
   node Composer "Composer" ref="packages/apps/composer-app"
   node Cli "hub-cli" ref="edge/packages/apps/hub-cli"

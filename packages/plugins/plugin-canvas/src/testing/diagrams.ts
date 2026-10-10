@@ -9,7 +9,7 @@ import { type Database, Obj, Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 
-import { CanvasBuilder, createCanvas, elementId, isNodeRecord, nodeKey } from '#model';
+import { CanvasBuilder, createCanvas, elementId, isNodeRecord, nodeKey, updateCanvasRecord } from '#model';
 
 /** The part of a `.dx.svg` payload a drawing is rebuilt from: the semantic-DSL source it was rendered from. */
 const DslSource = Schema.Struct({
@@ -38,6 +38,10 @@ export const loadDiagramSet = async (db: Database.Database, set: DiagramSet): Pr
     const { commands } = await EffectEx.runPromise(Dsl.compile(source.text));
     const canvas = db.add(createCanvas());
     CanvasBuilder.apply(canvas, commands);
+    // On the lattice, links route square along the gutters between the boxes, as the layout drew them.
+    // The diagrams are laid out on the canvas lattice (`box`, `grid` and `@` origin match its cells), so turning it on
+    // routes links square along the gutters between the boxes.
+    Obj.update(canvas, (canvas) => updateCanvasRecord(canvas.content, { lattice: true }));
     drawings.set(id, db.add(Drawing.make({ name: set.names[id] ?? id, canvas })));
   }
 

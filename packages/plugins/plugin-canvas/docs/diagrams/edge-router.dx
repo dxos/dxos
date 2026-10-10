@@ -1,4 +1,4 @@
-diagram flow=down
+diagram @ -128,-64 flow=down box=256x128 grid=384x192
 group api "edge worker" {
   node Api "Hono API" ref="edge/packages/services/edge/src/api.ts"
   node Proxy "service proxy" ref="edge/packages/services/edge/src/service-proxy.ts"

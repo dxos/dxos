@@ -5,10 +5,10 @@
 import { describe, test } from 'vitest';
 
 import { type ContentMap, applyCommands } from '@dxos/diagram';
-import { isEllipseNode, isRectNode } from '@dxos/react-ui-canvas/scene';
+import { DEFAULT_LAYER, isEllipseNode, isRectNode, sortByZ } from '@dxos/react-ui-canvas/scene';
 
 import { ROOT_SCENE_ID, readScenes, rootOf, writeScenes } from './content.ts';
-import { SceneHandler, elementId } from './handler.ts';
+import { BACKDROP_LAYER, SceneHandler, elementId } from './handler.ts';
 
 const face = {
   id: 'face',
@@ -114,7 +114,10 @@ describe('SceneHandler', () => {
           object: {
             id: 'group',
             origin: { x: 0, y: 0 },
-            elements: [{ kind: 'rect', id: 'frame', x: 0, y: 0, w: 800, h: 400, stroke: 'dashed', fill: 'tint' }],
+            elements: [
+              { kind: 'rect', id: 'frame', x: 0, y: 0, w: 800, h: 400, stroke: 'dashed', fill: 'tint' },
+              { kind: 'text', id: 'label', x: 16, y: 8, text: 'Group', weight: 's' },
+            ],
           },
         },
         {
@@ -149,15 +152,29 @@ describe('SceneHandler', () => {
     );
     const root = readScenes(content)[ROOT_SCENE_ID];
     const link = root.links[elementId('edges', 'a-b-0')];
-    expect([link.type, link.source, link.target, link.ends]).toEqual([
+    // The caption is the link's own text, not a shape beside it.
+    expect([link.type, link.source, link.target, link.ends, link.text]).toEqual([
       'smart',
       { node: 'a/box' },
       { node: 'b/box' },
       { end: 'arrow' },
+      'calls',
     ]);
-    // The group is a dashed, faint backdrop; the caption is a bare label sized to its text.
-    expect(root.nodes[elementId('group', 'frame')].style).toMatchObject({ lineStyle: 'dashed', tone: 0 });
-    const label = root.nodes[elementId('edges', 'a-b-0-label')];
-    expect(isRectNode(label) && [label.label, label.style?.border, label.size.height]).toEqual(['calls', false, 20]);
+    expect(root.nodes[elementId('edges', 'a-b-0-label')]).toBeUndefined();
+    // The group is a guide (off the lattice) titled at its top-left corner; its title is no shape of its own.
+    const group = root.nodes[elementId('group', 'frame')];
+    expect(isRectNode(group) && [group.label, group.style]).toEqual([
+      'Group',
+      expect.objectContaining({ lineStyle: 'dashed', guide: true, alignHorizontal: 'left', alignVertical: 'top' }),
+    ]);
+    expect(root.nodes[elementId('group', 'label')]).toBeUndefined();
+    // The group is decoration, on a backdrop layer below the boxes and links it groups.
+    expect([group.layer, root.nodes[elementId('a', 'box')].layer, link.layer]).toEqual([
+      BACKDROP_LAYER.id,
+      DEFAULT_LAYER.id,
+      DEFAULT_LAYER.id,
+    ]);
+    const layers = sortByZ(Object.values(root.layers ?? {})).map((layer) => layer.id);
+    expect(layers).toEqual([BACKDROP_LAYER.id, DEFAULT_LAYER.id]);
   });
 });
