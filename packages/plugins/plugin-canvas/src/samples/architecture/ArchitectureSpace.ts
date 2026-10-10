@@ -10,26 +10,37 @@ import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { Database, Ref } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 
 import { loadDiagramDrawings } from './diagrams.ts';
+import { makeDocs } from './docs.ts';
 import { architectureDiagrams } from './sets.ts';
 import { DIAGRAM_SOURCES } from './sources.ts';
 
 const phases = {
   diagrams: SampleSpace.phase('diagrams', {
-    schemas: [Drawing.Drawing, Drawing.Canvas],
+    schemas: [Drawing.Drawing, Drawing.Canvas, Markdown.Document],
     run: () =>
       Effect.gen(function* () {
         const { db } = yield* Database.Service;
         const set = architectureDiagrams(DIAGRAM_SOURCES);
         // The DSL compiler is promise-based at this boundary; a failure is a broken bundled diagram, so a defect.
         const drawings = yield* Effect.promise(() => loadDiagramDrawings(db, set));
-        // Only the two overviews are listed; every other diagram is reached by drilling into a box.
-        const overviews = ['composer', 'edge'].flatMap((id) => {
-          const drawing = drawings.get(id);
-          return drawing ? [Ref.make(drawing)] : [];
-        });
-        yield* SampleSpace.collection('Architecture', overviews);
+        const composer = drawings.get('composer');
+        const data = drawings.get('composer-data');
+        const edge = drawings.get('edge');
+        if (!composer || !data || !edge) {
+          return yield* Effect.die(new Error('The architecture diagram set is missing an overview.'));
+        }
+        // The documents introduce the diagrams and embed them; every other diagram is reached by drilling into a box.
+        const docs = makeDocs({ composer, data, edge });
+        for (const doc of [docs.composer, docs.dxos, docs.edge]) {
+          yield* Database.add(doc);
+        }
+        yield* SampleSpace.collection(
+          'Architecture',
+          [docs.composer, docs.dxos, docs.edge, composer, edge].map((object) => Ref.make(object)),
+        );
       }),
   }),
 };
