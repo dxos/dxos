@@ -148,7 +148,7 @@ const variants: Record<VariantName, IdentVariant> = {
     stagger: 0,
     ring: (index) => ({
       keyframes: [
-        { opacity: 0, offset: 0, transform: `rotate(${(index % 2 ? -1 : 1) * (1080 - index * 180)}deg)` },
+        { opacity: 0, offset: 0, transform: `rotate(${(index % 2 ? -1 : 1) * (540 - index * 90)}deg)` },
         { opacity: 1, offset: 0.25 },
         { opacity: 1, offset: 1, transform: 'rotate(0deg)' },
       ],
