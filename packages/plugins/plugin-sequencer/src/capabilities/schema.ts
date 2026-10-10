@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Score } from '#types';
+import { Instrument, Score } from '#types';
 
 /**
  * Schemas this plugin registers, loaded on demand: the capability activates at idle,
  * so naming them here keeps them out of the plugin body's module graph.
  */
-export default [Score.Score];
+export default [Score.Score, Instrument.Instrument];

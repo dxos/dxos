@@ -1,0 +1,127 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React, { useState } from 'react';
+
+import type * as Instrument from '@dxos/plugin-sequencer/Instrument';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+
+import { SCALES } from '#audio';
+import { translations } from '#translations';
+
+import { scaleToTuning, tuningToScale } from '../../notation/index.ts';
+import { Tuner, type TunerProps } from './Tuner.tsx';
+
+const meta = {
+  title: 'plugins/plugin-handpan/components/Tuner',
+  component: Tuner,
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  args: {
+    defaultScale: SCALES[0].id,
+  },
+  argTypes: {
+    defaultScale: {
+      name: 'key',
+      options: SCALES.map(({ id }) => id),
+      control: { type: 'select', labels: Object.fromEntries(SCALES.map(({ id, name }) => [id, name])) },
+    },
+    defaultMode: { options: ['calibrate', 'live'], control: { type: 'inline-radio' } },
+    source: { options: ['microphone', 'synth'], control: { type: 'inline-radio' } },
+    persist: { control: 'boolean' },
+    silent: { control: 'boolean' },
+    chords: { control: 'boolean' },
+  },
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
+} satisfies Meta<typeof Tuner>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+/** Strike each note of the selected scale in turn (ding first); requires a microphone. */
+export const Calibrate: Story = {
+  args: {
+    source: 'microphone',
+    defaultMode: 'calibrate',
+    persist: true,
+  },
+};
+
+/** Shows the note being played on the instrument; requires a microphone. */
+export const Live: Story = {
+  args: {
+    source: 'microphone',
+    defaultMode: 'live',
+    persist: true,
+  },
+};
+
+/** Calibration driven by synthesized handpan tones: start, then click the highlighted pad. */
+export const SimulatedCalibrate: Story = {
+  args: {
+    source: 'synth',
+    defaultMode: 'calibrate',
+  },
+};
+
+/** Live detection of synthesized tones: start, then click any pad (or Tak). */
+export const SimulatedLive: Story = {
+  args: {
+    source: 'synth',
+    defaultMode: 'live',
+  },
+};
+
+/**
+ * Synthesized session (real clicks required: browsers start audio only on a genuine gesture).
+ * 1. Press Start; the status reads "Play note D (D3)".
+ * 2. Click each highlighted pad in turn; the status reads "Calibration complete".
+ * 3. Switch to Live and click pads 3, 1, 5 then Tak; the history ends `3 1 5 T`.
+ */
+export const SimulatedSession: Story = {
+  args: {
+    source: 'synth',
+    defaultMode: 'calibrate',
+    strikes: 1,
+    synthDetune: 0,
+  },
+};
+
+/** An instrument's tuning; the story holds its calibration as an ECHO `Instrument` object would. */
+const INSTRUMENT_TUNING: Instrument.Tuning = scaleToTuning(SCALES[0]);
+
+const InstrumentBoundStory = (props: TunerProps) => {
+  const [calibration, setCalibration] = useState<Instrument.NoteCalibration[]>([]);
+  return (
+    <>
+      <Tuner
+        {...props}
+        scales={[tuningToScale(INSTRUMENT_TUNING, 'instrument')]}
+        calibration={calibration}
+        onCalibrationChange={setCalibration}
+      />
+      <pre className='p-2 text-xs text-fg-subtle' data-testid='instrument.calibration'>
+        {calibration.map(({ pitch, strikes }) => `${pitch}×${strikes.length}`).join(' ') || '–'}
+      </pre>
+    </>
+  );
+};
+
+/**
+ * Calibration bound to an instrument (synthesized audio): strikes are reported through
+ * `onCalibrationChange` and listed below as `MIDI pitch × strikes`.
+ */
+export const InstrumentBound: Story = {
+  render: InstrumentBoundStory,
+  args: {
+    source: 'synth',
+    defaultMode: 'calibrate',
+    strikes: 1,
+    synthDetune: 0,
+  },
+};

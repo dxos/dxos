@@ -5,6 +5,9 @@
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
+import { Ref } from '@dxos/echo';
+
+import { Instrument } from './Instrument.ts';
 import { Patch } from './Patch.ts';
 
 /**
@@ -27,6 +30,8 @@ export const Track = Schema.Struct({
   hue: Schema.optional(Schema.String),
   /** Opaque instrument identifier (e.g. 'drums', 'piano'); informational only. */
   instrument: Schema.optional(Schema.String),
+  /** The physical instrument the track is played on: its tuning and calibration. */
+  instrumentRef: Schema.optional(Ref.Ref(Instrument)),
   /** Visible pitch floor, MIDI number. If omitted, the editor falls back to A0 (21). */
   minPitch: Schema.optional(Schema.Number),
   /** Visible pitch ceiling, MIDI number. If omitted, the editor falls back to C8 (108). */

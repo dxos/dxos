@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+export * as Instrument from './Instrument.ts';
 export * as Note from './Note.ts';
 export * as Patch from './Patch.ts';
 export * as Score from './Score.ts';

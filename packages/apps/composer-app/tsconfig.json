@@ -238,6 +238,9 @@
       "path": "../../plugins/plugin-graph"
     },
     {
+      "path": "../../plugins/plugin-handpan"
+    },
+    {
       "path": "../../plugins/plugin-heygen"
     },
     {
