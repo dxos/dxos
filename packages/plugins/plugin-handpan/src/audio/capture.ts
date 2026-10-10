@@ -10,17 +10,18 @@ class AudioTap extends AudioWorkletProcessor {
   constructor() {
     super();
     this.block = new Float32Array(512);
+    this.silence = new Float32Array(128);
     this.length = 0;
   }
   process(inputs) {
-    const channel = inputs[0] && inputs[0][0];
-    if (channel) {
-      for (let index = 0; index < channel.length; index++) {
-        this.block[this.length++] = channel[index];
-        if (this.length === this.block.length) {
-          this.port.postMessage(this.block.slice());
-          this.length = 0;
-        }
+    // An input with no active sources arrives with zero channels; it is silence, and must still
+    // advance the stream or the analyzer freezes on the last frame it saw.
+    const channel = (inputs[0] && inputs[0][0]) || this.silence;
+    for (let index = 0; index < channel.length; index++) {
+      this.block[this.length++] = channel[index];
+      if (this.length === this.block.length) {
+        this.port.postMessage(this.block.slice());
+        this.length = 0;
       }
     }
     return true;

@@ -12,3 +12,4 @@ export * from './onset.ts';
 export * from './pitch.ts';
 export * from './scale.ts';
 export * from './synth.ts';
+export * from './tracker.ts';

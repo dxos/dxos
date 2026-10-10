@@ -10,6 +10,7 @@ import { classifyNote, nominalTemplates } from './classify.ts';
 import { cents, formatPitch, frequencyToMidi, parsePitch, pitchToFrequency } from './pitch.ts';
 import { SCALES, getScaleNotes } from './scale.ts';
 import { mixInto, synthesizeHandpanTone, synthesizeTak } from './synth.ts';
+import { PitchTracker } from './tracker.ts';
 
 const SAMPLE_RATE = 48_000;
 const D_KURD = getScaleNotes(SCALES[0]);
@@ -262,5 +263,35 @@ describe('Calibration', () => {
     ]);
     expect(result?.template.pitch).toBe(D_KURD[4].pitch);
     expect(result?.cents).toBeCloseTo(0, 1);
+  });
+});
+
+describe('PitchTracker', () => {
+  const at = (key: string, offset = 0) => ({ key, cents: offset });
+
+  test('ignores single-frame flips between notes', ({ expect }) => {
+    const tracker = new PitchTracker<string>({ attackFrames: 3 });
+    const readings = ['E4', 'E4', 'E4', 'A4', 'E4', 'D4', 'E4', 'E4'].map((key) => tracker.update(at(key))?.key);
+    expect(readings).toEqual([undefined, undefined, 'E4', 'E4', 'E4', 'E4', 'E4', 'E4']);
+  });
+
+  test('switches once a new note persists', ({ expect }) => {
+    const tracker = new PitchTracker<string>({ attackFrames: 2 });
+    tracker.set(at('E4'));
+    expect(['D4', 'D4'].map((key) => tracker.update(at(key))?.key)).toEqual(['E4', 'D4']);
+  });
+
+  test('releases the note after sustained silence, not a brief dropout', ({ expect }) => {
+    const tracker = new PitchTracker<string>({ releaseFrames: 3 });
+    tracker.set(at('E4'));
+    expect(
+      [undefined, undefined, at('E4'), undefined, undefined, undefined].map((frame) => tracker.update(frame)?.key),
+    ).toEqual(['E4', 'E4', 'E4', 'E4', 'E4', undefined]);
+  });
+
+  test('smooths the cents reading', ({ expect }) => {
+    const tracker = new PitchTracker<string>({ smoothing: 0.5 });
+    tracker.set(at('E4', 0));
+    expect(tracker.update(at('E4', 20))?.cents).toBe(10);
   });
 });

@@ -25,6 +25,8 @@ export type NoteAnalyzerStatus = 'idle' | 'starting' | 'listening' | 'error';
 export type UseNoteAnalyzerOptions = {
   source: AudioSourceKind;
   onNote?: (event: NoteEvent) => void;
+  /** Every analysis frame (~90/s), called from the audio callback; keep it cheap and side-effect free of React state. */
+  onFrame?: (frame: AnalyzerFrame) => void;
   analyzer?: Omit<AnalyzerOptions, 'sampleRate'>;
   /** Analyze synthesized strikes without playing them through the speakers. */
   silent?: boolean;
@@ -51,13 +53,21 @@ type Session = {
 };
 
 /** Runs the streaming {@link Analyzer} over a live audio source. */
-export const useNoteAnalyzer = ({ source, onNote, analyzer, silent }: UseNoteAnalyzerOptions): NoteAnalyzer => {
+export const useNoteAnalyzer = ({
+  source,
+  onNote,
+  onFrame,
+  analyzer,
+  silent,
+}: UseNoteAnalyzerOptions): NoteAnalyzer => {
   const [status, setStatus] = useState<NoteAnalyzerStatus>('idle');
   const [error, setError] = useState<Error>();
   const [frame, setFrame] = useState<AnalyzerFrame>();
   const [monitor, setMonitor] = useState<AudioNode>();
   const onNoteRef = useRef(onNote);
   onNoteRef.current = onNote;
+  const onFrameRef = useRef(onFrame);
+  onFrameRef.current = onFrame;
   const sessionRef = useRef<Session>(undefined);
 
   const stop = useCallback(() => {
@@ -133,6 +143,7 @@ export const useNoteAnalyzer = ({ source, onNote, analyzer, silent }: UseNoteAna
         onSamples: (samples) => {
           const result = notes.push(samples);
           latest = result.frames.at(-1) ?? latest;
+          result.frames.forEach((frame) => onFrameRef.current?.(frame));
           result.notes.forEach((note) => onNoteRef.current?.(note));
         },
       });

@@ -14,18 +14,16 @@ import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import {
+  type AnalyzerFrame,
   Calibration,
   type Classification,
   type NoteEvent,
-  type NoteTemplate,
   type Pitch,
+  PitchTracker,
   type Scale,
   type ScaleNote,
   SCALES,
-  cents,
   classifyNote,
-  formatPitch,
-  frequencyToMidi,
   getScaleNotes,
   nominalTemplates,
 } from '#audio';
@@ -33,6 +31,7 @@ import { type AudioSourceKind, useNoteAnalyzer } from '#hooks';
 import { meta } from '#meta';
 
 import { HandpanLayout } from '../HandpanLayout/index.ts';
+import { LevelMeter } from '../LevelMeter/index.ts';
 import { NoteDisplay } from '../NoteDisplay/index.ts';
 
 export type TunerMode = 'calibrate' | 'live';
@@ -62,6 +61,13 @@ type PlayedNote = {
 };
 
 const HISTORY_SIZE = 16;
+
+/** Per-frame decay of the recent peak level (≈8 s half-life at ~90 frames/s), slower than a note's tail. */
+const PEAK_DECAY = 0.999;
+/** A frame counts as sounding only above this fraction of the recent peak level (−20 dB). */
+const RELATIVE_LEVEL = 0.1;
+/** Absolute floor (RMS) below which nothing counts as sounding. */
+const MIN_LEVEL = 0.002;
 
 const storageKey = (scaleId: string) => `${meta.profile.key}.calibration.${scaleId}`;
 const scaleStorageKey = `${meta.profile.key}.scale`;
@@ -98,12 +104,6 @@ const saveSamples = (scaleId: string, samples: Calibration.CalibrationState['sam
     // Storage unavailable.
   }
 };
-
-/** Frequency a played note is measured against: its classified template, else its scale pitch. */
-const referenceFrequency = ({ classification, note }: PlayedNote, templates: NoteTemplate[]): number | undefined =>
-  classification?.template.frequency ??
-  templates.find((template) => template.pitch === note?.pitch)?.frequency ??
-  note?.frequency;
 
 /**
  * Calibrates the note detector to an instrument and displays notes as they are played.
@@ -164,6 +164,33 @@ export const Tuner = ({
   const modeRef = useRef(mode);
   modeRef.current = mode;
 
+  // Per-frame estimates arrive outside render; the tracker and level live in refs and are read on
+  // the re-render the analyzer's frame update already triggers each animation frame.
+  const trackerRef = useRef(new PitchTracker<Pitch>());
+  const peakRmsRef = useRef(0);
+  const thresholdRef = useRef(MIN_LEVEL);
+  const liveRef = useRef<{ frequency: number; clarity: number }>(undefined);
+
+  const handleFrame = useCallback((frame: AnalyzerFrame) => {
+    peakRmsRef.current = Math.max(frame.rms, peakRmsRef.current * PEAK_DECAY);
+    // Relative to recent playing, so room noise and a decayed tail do not register as a note.
+    thresholdRef.current = Math.max(MIN_LEVEL, peakRmsRef.current * RELATIVE_LEVEL);
+    const loud = frame.rms >= thresholdRef.current;
+    const classification =
+      loud && frame.frequency !== undefined
+        ? classifyNote({ frequency: frame.frequency, partials: [] }, templatesRef.current)
+        : undefined;
+    const tracked = trackerRef.current.update(
+      classification ? { key: classification.template.pitch, cents: classification.cents } : undefined,
+    );
+    liveRef.current =
+      tracked && classification?.template.pitch === tracked.key && frame.frequency !== undefined
+        ? { frequency: frame.frequency, clarity: frame.clarity }
+        : tracked
+          ? liveRef.current
+          : undefined;
+  }, []);
+
   const handleNote = useCallback(
     (event: NoteEvent) => {
       if (modeRef.current === 'calibrate') {
@@ -172,6 +199,9 @@ export const Tuner = ({
         setCalibration(result.state);
         setRejection(result.rejected);
         if (!result.rejected) {
+          if (target) {
+            trackerRef.current.set({ key: target.pitch, cents: result.cents ?? 0 });
+          }
           setPlayed((previous) => [{ event, note: target }, ...previous].slice(0, HISTORY_SIZE));
         }
         onNote?.(event);
@@ -182,19 +212,23 @@ export const Tuner = ({
         ? classifyNote({ frequency: event.frequency, partials: event.partials }, templatesRef.current)
         : undefined;
       const note = classification && notes.find((candidate) => candidate.pitch === classification.template.pitch);
+      if (classification) {
+        trackerRef.current.set({ key: classification.template.pitch, cents: classification.cents });
+      }
       setPlayed((previous) => [{ event, note, classification }, ...previous].slice(0, HISTORY_SIZE));
       onNote?.(event, classification);
     },
     [notes, onNote, setCalibration],
   );
 
-  const analyzer = useNoteAnalyzer({ source, onNote: handleNote, silent });
+  const analyzer = useNoteAnalyzer({ source, onNote: handleNote, onFrame: handleFrame, silent });
   const listening = analyzer.status !== 'idle';
 
   const handleScaleChange = (id: string) => {
     const next = scales.find((candidate) => candidate.id === id);
     if (next) {
       setScaleId(id);
+      trackerRef.current.reset();
       if (persist) {
         saveScaleId(id);
       }
@@ -241,54 +275,26 @@ export const Tuner = ({
   );
 
   const [latest] = played;
-  const display = useMemo(() => {
-    const frame = analyzer.frame;
-    const reference = latest && !latest.event.percussive ? referenceFrequency(latest, templates) : undefined;
-    // While the struck note sustains, the live frame keeps its meter moving.
-    if (
-      latest &&
-      reference !== undefined &&
-      frame?.frequency !== undefined &&
-      frame.time >= latest.event.time &&
-      Math.abs(cents(frame.frequency, reference)) < 60
-    ) {
-      return {
-        label: latest.note?.label,
-        pitch: latest.note?.pitch,
-        frequency: frame.frequency,
-        cents: cents(frame.frequency, reference),
-        clarity: frame.clarity,
-      };
-    }
-    // Any other clear pitch is shown live, so input is visible before (or without) a resolved strike.
-    if (frame?.frequency !== undefined) {
-      const classification = classifyNote({ frequency: frame.frequency, partials: [] }, templates);
-      const note = classification && notes.find((candidate) => candidate.pitch === classification.template.pitch);
+  // Recomputed every render: the tracker advances between renders, driven by the frame updates.
+  const tracked = listening ? trackerRef.current.current : undefined;
+  const display = (() => {
+    if (tracked) {
+      const note = notes.find((candidate) => candidate.pitch === tracked.key);
       return {
         label: note?.label,
-        pitch: note?.pitch ?? formatPitch(frequencyToMidi(frame.frequency)),
-        frequency: frame.frequency,
-        cents: classification?.cents,
-        clarity: frame.clarity,
+        pitch: tracked.key,
+        frequency: liveRef.current?.frequency,
+        cents: tracked.cents,
+        clarity: liveRef.current?.clarity,
+        sounding: true,
       };
     }
     if (!latest) {
       return {};
     }
-    if (latest.event.percussive) {
-      return { percussive: true };
-    }
-    return {
-      label: latest.note?.label,
-      pitch: latest.note?.pitch,
-      frequency: latest.event.frequency,
-      cents:
-        latest.event.frequency !== undefined && reference !== undefined && latest.event.precise
-          ? cents(latest.event.frequency, reference)
-          : undefined,
-      clarity: latest.event.clarity,
-    };
-  }, [latest, analyzer.frame, templates, notes]);
+    // Nothing sounding: keep the last strike readable, but dimmed and without lighting its pad.
+    return latest.event.percussive ? { percussive: true } : { label: latest.note?.label, pitch: latest.note?.pitch };
+  })();
 
   const message = (() => {
     if (analyzer.status === 'error') {
@@ -363,17 +369,23 @@ export const Tuner = ({
       </Panel.Header>
       <Panel.Body asChild>
         <Layout.Flex column align='center' gap='lg' classNames='p-4 overflow-y-auto'>
-          <NoteDisplay {...display} />
-          <Oscilloscope
-            classNames='h-16 w-full max-w-md'
-            mode='waveform'
-            active={analyzer.status === 'listening'}
-            source={analyzer.monitor}
-          />
+          <NoteDisplay {...display} dimmed={!display.sounding} />
+          <Layout.Flex gap='sm' align='center' classNames='w-full max-w-md'>
+            <Oscilloscope
+              classNames='h-16 grow'
+              mode='waveform'
+              active={analyzer.status === 'listening'}
+              source={analyzer.monitor}
+            />
+            <LevelMeter
+              level={listening ? analyzer.frame?.rms : 0}
+              threshold={listening ? thresholdRef.current : undefined}
+            />
+          </Layout.Flex>
           <HandpanLayout
             notes={notes}
             target={target?.pitch}
-            active={display.label ? display.pitch : undefined}
+            active={display.sounding && display.label ? display.pitch : undefined}
             progress={mode === 'calibrate' ? progress : undefined}
             onSelect={source === 'synth' ? (listening ? handleSelect : undefined) : handleSelect}
           />

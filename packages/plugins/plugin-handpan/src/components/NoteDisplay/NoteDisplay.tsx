@@ -20,11 +20,22 @@ export type NoteDisplayProps = {
   /** Pitch clarity, 0–1. */
   clarity?: number;
   percussive?: boolean;
+  /** The note is no longer sounding: shown muted as the last note played. */
+  dimmed?: boolean;
   classNames?: string;
 };
 
 /** Large readout of the current note with a ±50 cent tuning meter. */
-export const NoteDisplay = ({ label, pitch, frequency, cents, clarity, percussive, classNames }: NoteDisplayProps) => {
+export const NoteDisplay = ({
+  label,
+  pitch,
+  frequency,
+  cents,
+  clarity,
+  percussive,
+  dimmed,
+  classNames,
+}: NoteDisplayProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const offset = Math.max(-50, Math.min(50, cents ?? 0));
   const inTune = cents !== undefined && Math.abs(cents) <= 10;
@@ -32,7 +43,14 @@ export const NoteDisplay = ({ label, pitch, frequency, cents, clarity, percussiv
   const rounded = cents !== undefined ? Math.round(cents) || 0 : undefined;
 
   return (
-    <Layout.Flex column align='center' gap='sm' classNames={classNames} data-testid='handpan.note-display'>
+    <Layout.Flex
+      column
+      align='center'
+      gap='sm'
+      classNames={mx('transition-opacity duration-300', dimmed && 'opacity-40', classNames)}
+      data-testid='handpan.note-display'
+      data-dimmed={dimmed || undefined}
+    >
       {/* Equal outer tracks keep the label centred over the meter whether or not a pitch is shown. */}
       <Layout.Grid cols={[1, 'auto', 1]} align='end' gap='md' classNames='w-full'>
         <span />

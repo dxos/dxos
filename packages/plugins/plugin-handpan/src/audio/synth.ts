@@ -32,13 +32,15 @@ export const synthesizeHandpanTone = (
   const total = partials.reduce((sum, partial) => sum + partial.amplitude, 0);
   const noise = createNoise(seed);
   const attack = 0.004 * sampleRate;
+  const release = 0.25 * sampleRate;
   for (let index = 0; index < length; index++) {
     const time = index / sampleRate;
     let value = 0;
     for (const { ratio, amplitude, decay } of partials) {
       value += amplitude * Math.exp(-time / decay) * Math.sin(2 * Math.PI * fundamental * ratio * time);
     }
-    const envelope = index < attack ? index / attack : 1;
+    // Fade out instead of truncating: an abrupt stop is a broadband click that reads as a strike.
+    const envelope = Math.min(1, index / attack, (length - index) / release);
     const transient = 0.3 * Math.exp(-time / 0.01) * noise();
     output[index] = gain * (envelope * (value / total) + transient);
   }
