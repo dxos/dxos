@@ -147,6 +147,47 @@ const { width, height, seconds } = await probe(options.in).catch((error) => {
 });
 
 /**
+ * `--duration <min>-<max>` (default 45-60 seconds, bookends included) picks the still-frame cap instead of a
+ * fixed `--max-static`: the longest cap whose result fits under the maximum, from one `--report` pass. A take
+ * too short to reach the minimum even untrimmed needs more steps, which no cap can supply.
+ */
+const fitDuration = async () => {
+  const [min, max] = String(options.duration ?? '45-60')
+    .split('-')
+    .map(Number);
+  const bookends = (
+    await Promise.all(
+      [options.intro, options.outro].filter(Boolean).map((clip) => probe(clip).then((info) => info.seconds ?? 0)),
+    )
+  ).reduce((total, value) => total + value, 0);
+  const report = spawnSync(
+    process.execPath,
+    [
+      new URL(import.meta.url).pathname,
+      ...process.argv.slice(2).filter((arg, index, all) => arg !== '--duration' && all[index - 1] !== '--duration'),
+      '--report',
+    ],
+    { encoding: 'utf8', maxBuffer: 1 << 24 },
+  );
+  const { atCap } = JSON.parse(report.stdout);
+  const fits = Object.entries(atCap)
+    .map(([cap, length]) => ({ cap: parseFloat(cap), total: length + bookends }))
+    .sort((left, right) => left.cap - right.cap);
+  const choice = fits.filter((entry) => entry.total <= max).pop() ?? fits[0];
+  if (choice.total > max) {
+    console.error(`--duration: even a ${choice.cap}s cap gives ${choice.total.toFixed(1)}s; shorten the flow`);
+  } else if (choice.total < min) {
+    console.error(`--duration: the take gives at most ${choice.total.toFixed(1)}s; add steps to reach ${min}s`);
+  }
+  options['max-static'] = choice.cap;
+  return { range: `${min}-${max}s`, cap: choice.cap, expected: +choice.total.toFixed(1) };
+};
+const fitted =
+  !options.report && !process.argv.includes('--max-static') && options.duration !== 'off'
+    ? await fitDuration()
+    : undefined;
+
+/**
  * Caption times as the driver recorded them, in source frames. `timeline.json` is written by
  * `driver.mjs` on `stop`; without it every pause gets the plain `--max-static` cap.
  */
@@ -179,6 +220,9 @@ const moved = (frame, previous) => {
   }
   return changed / samples.length > options.threshold || changed >= options['min-changed'];
 };
+
+/** The still-frame caps `--report` prices, and `--duration` chooses among. */
+const CAPS = [0.3, 0.5, 0.8, 1, 1.5, 2, 3, 4, 6, 10, 1000];
 
 const decodeArgs = [
   '-hide_banner',
@@ -254,7 +298,8 @@ if (options.report) {
   const capped = (cap) =>
     runs.reduce(
       (total, { length, start }) =>
-        total + Math.min(length, captionFrames.has(start) ? captionHold : cap * options.fps),
+        total +
+        Math.min(length, captionFrames.has(start) ? Math.max(captionHold, cap * options.fps) : cap * options.fps),
       0,
     );
   console.log(
@@ -270,9 +315,7 @@ if (options.report) {
         captionHold: `${options['caption-hold']}s`,
         // What each candidate `--max-static` would leave, motion and caption holds included: the still
         // runs are the only part a cap can shrink, and there are enough of them that it dominates.
-        atCap: Object.fromEntries(
-          [0.3, 0.5, 0.8, 1.0, 1.5, 2.0].map((cap) => [`${cap}s`, seconds(motion + capped(cap))]),
-        ),
+        atCap: Object.fromEntries(CAPS.map((cap) => [`${cap}s`, seconds(motion + capped(cap))])),
       },
       null,
       2,
@@ -399,7 +442,8 @@ for await (const chunk of decoder.stdout) {
     staticRun = !previous || moved(frame, previous) ? 0 : staticRun + 1;
     longestRun = Math.max(longestRun, staticRun);
 
-    const cap = readingWindow.has(index) ? captionHoldFrames : holdFrames;
+    // A caption's reading pause is never held for less than any other pause.
+    const cap = readingWindow.has(index) ? Math.max(captionHoldFrames, holdFrames) : holdFrames;
     // Inclusive: `--report` prices a run at `min(length, cap)`, and an exclusive test would keep one
     // frame fewer than it promised, so the estimate could never be trusted for tuning.
     if (staticRun <= cap) {
@@ -608,7 +652,7 @@ const toMp4 = async () => {
 const mp4 = options.mp4 ? await toMp4() : undefined;
 
 /** Spoken as the intro opens; `--intro-line <text>` replaces it and `--intro-line off` drops it. */
-const INTRO_LINE = 'This is Composer by DXOS.';
+const INTRO_LINE = 'This is Composer <break time="0.7s"/> by DXOS.';
 
 /**
  * `--voiceover steps` narrates each chapter with its step's `narration` (or name); `--voiceover <cues.json>`
@@ -749,6 +793,7 @@ console.log(
       reduction: `${Math.round((1 - after / before) * 100)}%`,
       longestStillRun: `${(longestRun / options.fps).toFixed(1)}s`,
       cap: `${options['max-static']}s`,
+      fitted,
     },
     null,
     2,

@@ -41,9 +41,15 @@ const apiKey = (() => {
   }
   // A harness worktree's `.secrets/` starts empty, so the primary checkout's is read too.
   const primary = ROOT.split(`${path.sep}.claude${path.sep}worktrees${path.sep}`)[0];
-  const files = [...new Set([ROOT, primary])].flatMap((root) =>
-    ['heygen.env', 'heygen.txt'].map((name) => path.join(root, '.secrets', name)),
-  );
+  const roots = [...new Set([ROOT, primary])];
+  // `.env` is `op inject -i .env.tpl -o .env` output (`export HEYGEN_API_KEY="…"`); never committed.
+  for (const file of roots.map((root) => path.join(root, '.env')).filter((candidate) => existsSync(candidate))) {
+    const match = readFileSync(file, 'utf8').match(/^(?:export )?HEYGEN_API_KEY=(.+)$/m);
+    if (match?.[1].trim()) {
+      return match[1].trim().replace(/^"(.*)"$/, '$1');
+    }
+  }
+  const files = roots.flatMap((root) => ['heygen.env', 'heygen.txt'].map((name) => path.join(root, '.secrets', name)));
   for (const file of files.filter((candidate) => existsSync(candidate))) {
     // Either `HEYGEN_API_KEY=<key>` or the bare key.
     const key = readFileSync(file, 'utf8')

@@ -20,7 +20,7 @@
  */
 
 /** A beat for the viewer after a visible change. */
-const BEAT = 800;
+const BEAT = 1_200;
 
 const TITLE = 'Launch plan';
 const LINKED = 'Release checklist';
@@ -52,7 +52,7 @@ const selectText = (page, text) =>
 const EDITOR = '[data-testid="composer.markdownRoot"] .cm-content';
 
 /** Types as a person would, a character at a time. */
-const typeSlowly = (page, text, delay = 35) => page.keyboard.type(text, { delay });
+const typeSlowly = (page, text, delay = 60) => page.keyboard.type(text, { delay });
 
 export const steps = [
   {
@@ -159,7 +159,35 @@ export const steps = [
         label: 'Document',
       });
       await page.locator(`${EDITOR} :text("${LINKED}")`).first().waitFor({ state: 'visible', timeout: 10_000 });
-      await page.waitForTimeout(BEAT * 4);
+      // Every typing step ends on a new line, so the document never stops mid-line on camera.
+      await page.keyboard.press('End');
+      await page.keyboard.press('Enter');
+      await page.waitForTimeout(BEAT * 2);
+    },
+  },
+  {
+    name: 'Open the linked page and add a checklist',
+    narration: 'Open the new page and add a checklist. Tick items off as you go.',
+    run: async ({ demo, page }) => {
+      await demo.click({ selector: `[role="treeitem"]:has-text("${LINKED}") >> nth=0`, label: LINKED });
+      const editor = page.locator('[data-testid="deck.plank"]', { hasText: LINKED }).locator(EDITOR).first();
+      await editor.waitFor({ state: 'visible', timeout: 15_000 });
+      await editor.click();
+      // A task list continues as tasks, so only the first item carries its marker.
+      await typeSlowly(page, '- [ ] Write the docs\nRecord the demo\nShip it\n\n');
+      const box = '[data-testid="deck.plank"] input[type="checkbox"]';
+      await page.locator(box).first().waitFor({ state: 'visible', timeout: 10_000 });
+      await demo.click({ selector: `${box} >> nth=0`, label: 'Done' });
+      await page.waitForTimeout(BEAT * 2);
+    },
+  },
+  {
+    name: 'Close on the finished pages',
+    narration:
+      'Everything you write lives on your device and syncs peer to peer, so teammates and AI agents can edit ' +
+      'the same page at once, with no server in the middle.',
+    run: async ({ page }) => {
+      await page.waitForTimeout(BEAT * 9);
     },
   },
 ];

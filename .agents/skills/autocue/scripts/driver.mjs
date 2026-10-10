@@ -106,7 +106,8 @@ const parseArgs = () => {
   }
   // A person recording their own screen wants the product on camera, not the agent's narration of it.
   const narrate = options.mode === 'manual' ? 'off' : 'on';
-  options.pills ??= narrate;
+  // The action feed reads as debug chrome in a demo; `--pills on` brings it back.
+  options.pills ??= 'off';
   options.captions ??= narrate;
   // Milliseconds between flow steps: a person watching live needs a beat to see each one land.
   options.pace ??= options.mode === 'manual' ? 800 : 0;

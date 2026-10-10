@@ -573,13 +573,26 @@ frame, their audio is dropped, and chapters and captions are shifted past the in
 `--voiceover steps` on the trimmer narrates each chapter as it starts: every on-camera flow step lands in the
 timeline, spoken as its `narration` field if it has one, else its name. `--voiceover <cues.json>` speaks
 hand-written lines instead; `--voice <name>` picks the voice. With an intro, the narration opens on "This is
-Composer by DXOS." as the intro starts (`--intro-line <text>` to change it, `--intro-line off` to drop it). One
-run gives the bookended, narrated, uploaded demo:
+Composer … by DXOS." (a pause after "Composer") as the intro starts (`--intro-line <text>` to change it,
+`--intro-line off` to drop it). One run gives the bookended, narrated, uploaded demo:
 
 ```bash
 node .agents/skills/autocue/scripts/trim-static.mjs --in /tmp/demo/session.webm --out demo.webm \
   --ident composer --voiceover steps --mp4 --screenshot
 ```
+
+### Writing a demo flow
+
+- **45–60 seconds by default.** The trimmer's `--duration <min>-<max>` (default `45-60`, bookends included)
+  picks the still-frame cap from a `--report` pass; `--max-static` or `--duration off` overrides it. It can
+  only shorten: a take below the minimum is reported, and the fix is more steps, slower typing (`delay` ~60 ms)
+  or longer beats in the flow.
+- **End on a closing step** that holds the finished result for ~10 seconds and whose `narration` says one
+  technically interesting thing the demo just showed — local-first storage and privacy, peer-to-peer sync and
+  decentralization, real-time collaboration, or agents working on the same objects. Keep it to one sentence.
+- **Every typing step ends with a new line**, so the document never stops mid-line on camera.
+- **No action feed.** Recordings leave the top-right feed of gestures off (`--pills on` restores it); the cursor
+  and click ripple still show what is clicked.
 
 ### Upload: on by default
 
@@ -588,9 +601,9 @@ The finished video (the narrated MP4 when there is one) is uploaded to the Compo
 `https://pub-343732155ecd4a85bba38961213b0515.r2.dev`). `<name>` is the package the flow lives in, e.g.
 `plugin-markdown`, taken from the flow path the driver writes to `timeline.json`; `--name` overrides it and
 `--upload off` skips the upload. The bucket is `composer` (`AUTOCUE_R2_BUCKET` to change it). It uses
-`hosting-artifacts`' `upload-artifact.mjs`, so it needs R2 keys: run the trimmer under
-`op run --env-file .env.tpl -- node …/trim-static.mjs …` so 1Password injects them without printing them, or
-put `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` in `.secrets/r2.env`. The URL it prints has been verified
+`hosting-artifacts`' `upload-artifact.mjs`, so it needs R2 keys. Generate a gitignored `.env` once with
+`op inject -i .env.tpl -o .env` (never commit it): the upload and the HeyGen voice-over both read their keys
+from it, in the worktree or the primary checkout. `.secrets/r2.env` also works. The URL it prints has been verified
 through the public domain.
 
 `--screenshot` then adds that URL to the plugin's `dx.config.ts` as a `screenshots` entry, which is what the
