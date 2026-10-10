@@ -559,6 +559,14 @@ decoder, none of `select`/`concat`/`mpdecimate` — so frames cannot be fed back
 `apt-get update && apt-get install -y ffmpeg`, or point `FFMPEG_PATH` at a real one. (In the cloud
 sandbox `apt-get update` first: the preinstalled index is stale and the install 404s without it.)
 
+### Intro and outro: `--ident`
+
+`--ident` opens the trimmed demo with the DXOS opening title and closes it with the end card, both from
+`tools/ident` (Remotion). They are rendered into `tools/ident/out/` on first use, which needs `pnpm install`
+and the licensed Sharp Sans font in `tools/ident/public/fonts/` (without it they render in a fallback face).
+`--intro <video>` / `--outro <video>` bookend with any other clip. Clips are letterboxed to the recording's
+frame, their audio is dropped, and chapters and captions are shifted past the intro.
+
 ### For a phone: `--mp4`
 
 iOS does not play VP9 or WebM from a file share, so a demo someone will watch on an iPhone needs an

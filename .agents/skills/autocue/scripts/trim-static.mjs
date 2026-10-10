@@ -20,6 +20,9 @@
  * spinner moves a few pixels every frame), while a mean over the frame is dominated by frame area and
  * reads a small moving object — a dragged chess piece — as stillness.
  *
+ * `--intro <video>` / `--outro <video>` bookend the trimmed demo with another clip (scaled and letterboxed
+ * to the demo's frame); `--ident` uses the DXOS ident from `tools/ident`, rendering it on first use.
+ *
  * Needs a full ffmpeg — the one bundled with Playwright is a stripped build with no `rawvideo` and no
  * PNG decoder, so frames cannot be fed back into it (`apt-get install ffmpeg`, or set `FFMPEG_PATH`).
  */
@@ -78,10 +81,42 @@ const escapeHtml = (value) =>
 
 const options = parseArgs();
 if (!options.in || !existsSync(options.in)) {
-  console.error('usage: node trim-static.mjs --in <video> [--out <video>] [--max-static 1.5] [--fps 15] [--mp4]');
+  console.error(
+    'usage: node trim-static.mjs --in <video> [--out <video>] [--max-static 1.5] [--fps 15] [--mp4] [--ident | --intro <video> --outro <video>]',
+  );
   process.exit(1);
 }
 const output = options.out ?? options.in.replace(/\.webm$/, '-trimmed.webm');
+
+/**
+ * The DXOS ident's opening title and end card, rendered by `tools/ident` into its `out/` on first use.
+ */
+const ident = (id) => {
+  const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../../../../tools/ident');
+  const file = path.join(root, 'out', id, `DXOS_SI_${id}_3s_16x9_v01.mp4`);
+  if (!existsSync(file)) {
+    console.error(`rendering ${id} ident…`);
+    const render = spawnSync('node', ['scripts/render.mjs', '--id', id, '--format', '16x9'], {
+      cwd: root,
+      stdio: ['ignore', 'ignore', 'inherit'],
+    });
+    if (render.status !== 0 || !existsSync(file)) {
+      console.error(`could not render the ${id} ident (run \`pnpm install\` and see tools/ident/README.md)`);
+      process.exit(1);
+    }
+  }
+  return file;
+};
+if (options.ident) {
+  options.intro ??= ident('OPEN');
+  options.outro ??= ident('END');
+}
+for (const clip of [options.intro, options.outro]) {
+  if (clip !== undefined && (typeof clip !== 'string' || !existsSync(clip))) {
+    console.error(`no such clip: ${clip}`);
+    process.exit(1);
+  }
+}
 
 /** Geometry and duration come off ffmpeg's stderr, so the script needs no ffprobe. */
 const probe = async (file) => {
@@ -289,6 +324,47 @@ const encoderClosed = once(encoder, 'close');
 decoder.stderr.pipe(process.stderr);
 encoder.stderr.pipe(process.stderr);
 
+/**
+ * Pipes a whole clip into the encoder at the demo's size and rate. Letterboxed rather than cropped, so a
+ * 16:9 ident inside a 16:10 recording keeps its edges; video only, since the recording has no audio.
+ */
+const bookend = async (clip) => {
+  const proc = spawn(FFMPEG, [
+    '-hide_banner',
+    '-loglevel',
+    'error',
+    '-i',
+    clip,
+    '-vf',
+    `scale=${width}:${height}:force_original_aspect_ratio=decrease,pad=${width}:${height}:(ow-iw)/2:(oh-ih)/2:black,setsar=1`,
+    '-r',
+    String(options.fps),
+    '-pix_fmt',
+    'yuv420p',
+    '-an',
+    '-f',
+    'rawvideo',
+    '-',
+  ]);
+  const closed = once(proc, 'close');
+  proc.stderr.pipe(process.stderr);
+  let frames = 0;
+  for await (const chunk of proc.stdout) {
+    frames += chunk.length;
+    if (!encoder.stdin.write(chunk)) {
+      await once(encoder.stdin, 'drain');
+    }
+  }
+  const [code] = await closed;
+  if (code !== 0) {
+    console.error(`ffmpeg failed to decode ${clip} (exit ${code})`);
+    process.exit(1);
+  }
+  return frames / frameBytes;
+};
+
+const introFrames = options.intro ? await bookend(options.intro) : 0;
+
 let pending = Buffer.alloc(0);
 let previous;
 let staticRun = 0;
@@ -333,6 +409,7 @@ for await (const chunk of decoder.stdout) {
   }
 }
 
+const outroFrames = options.outro ? await bookend(options.outro) : 0;
 encoder.stdin.end();
 const [encoderStatus] = await encoderClosed;
 const [decodeStatus] = await decoderClosed;
@@ -352,10 +429,10 @@ const annotate = async () => {
     for (let frame = sourceFrame; frame < read; frame++) {
       const output = outputFrameOf.get(frame);
       if (output !== undefined) {
-        return output / options.fps;
+        return (introFrames + output) / options.fps;
       }
     }
-    return kept / options.fps;
+    return (introFrames + kept) / options.fps;
   };
 
   // Two captions issued back to back describe the same instant — the earlier one was never really on
@@ -378,7 +455,7 @@ const annotate = async () => {
     return `${hours}:${minutes}:${secs}`;
   };
 
-  const end = kept / options.fps;
+  const end = (introFrames + kept) / options.fps;
   const metadata = [';FFMETADATA1'];
   const vtt = ['WEBVTT', ''];
   marks.forEach((mark, index) => {
@@ -528,7 +605,7 @@ console.log(
       output,
       annotated,
       mp4,
-      frames: { read, kept, dropped: read - kept },
+      frames: { read, kept, dropped: read - kept, intro: introFrames, outro: outroFrames },
       seconds: { before: +before.toFixed(1), after: +after.toFixed(1) },
       reduction: `${Math.round((1 - after / before) * 100)}%`,
       longestStillRun: `${(longestRun / options.fps).toFixed(1)}s`,
