@@ -187,12 +187,13 @@ Vite server from the driver, and Node 20 cannot load its `dx.config.ts`.
 ### Make the flows run
 
 - [x] Scenes 1, 3, 4 and 5 run end to end against EDGE preview (scratch profile, record mode).
-- [ ] Scene 6: run against the finished World Clock project.
+- [x] Pre-run `composer-plugin.mjs` on the scratch profile. The agent built World Clock in 3m41s, and it
+      loads, adds timezones and shows the globe.
+- [x] Scene 6 runs against the finished World Clock project.
+- [x] Scene 8 runs. `composer.invoke` needs the `spaceId`, which the flow reads off the Home plank.
 - [ ] Scene 7: run against the synced mailbox (needs the profile).
-- [ ] Scene 8: run. It is untested whether `composer.invoke` resolves the space's database without a
-      `spaceId`.
-- [ ] Attach each scene's trimmed clip to its storyboard frame (`MediaArtifact.makeVideo({ url })`), so
-      scene 8 plays the film itself.
+- [ ] Attach each scene's trimmed clip to its storyboard frame (`MediaArtifact.makeVideo({ url })`). Until
+      then Play is disabled, and scene 8 steps through empty frames instead of playing the film.
 - [ ] Add a stitch script (concat plus one trim pass) if the manual ffmpeg step becomes repetitive.
 - [ ] Retime `voiceover-cues.json` against the stitched cut; shorten any cue that overlaps the next.
 
@@ -213,6 +214,14 @@ Vite server from the driver, and Node 20 cannot load its `dx.config.ts`.
 - [ ] Other committed flows still use the old `input[id="<plugin>-input"]` toggle selector
       (`plugin-claude/autocue/claude-code-task.mjs`, `plugin-projects/autocue/composer-plugin-desktop.mjs`,
       `composer-app/autocue/desktop-input.mjs`).
+- [ ] The World Clock agent finished and announced "World Clock is ready", but it set no task statuses.
+      `composer-plugin.mjs` waits on "Offer the plugin to load" reaching done/review, so the step timed out
+      after 20 min and the rest was run by hand. Scene 6's task list shows nothing ticked.
+- [ ] `studio.createStoryboard` ignores the frame names it is given: the frames show as "Frame 1"…"Frame 8".
+- [ ] A storyboard created by the operation lands only under Database → Storyboards (a type node), not in
+      the space's collections, so it is reachable from Home → Recent but not from the navtree.
+- [ ] Opening a project leaves the Trace panel open in the complementary sidebar; the shared prep step does
+      not close it.
 
 ### Polish
 

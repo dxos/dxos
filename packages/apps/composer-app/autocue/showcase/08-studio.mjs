@@ -37,40 +37,39 @@ const FRAMES = [
   ['Studio', 'This storyboard', 'And this film? It was made in Composer.'],
 ].map(([name, prompt, notes]) => ({ name, kind: 'image', prompt, notes }));
 
-/** The navtree row of the object named exactly `name`. */
-const treeObject = async (page, name) => {
-  const index = await page
-    .locator('[data-testid="spacePlugin.object"]')
-    .evaluateAll((rows, name) => rows.findIndex((row) => row.innerText.trim().split('\n')[0] === name), name);
-  return index < 0 ? undefined : `[data-testid="spacePlugin.object"] >> nth=${index}`;
-};
+/**
+ * The storyboard's card under Home → Recent. The operation files it under Database → Storyboards, which lists the
+ * type rather than its objects, so Recent is the direct path to it.
+ */
+const RECENT = `[data-testid="deck.plank"][data-attendable-id$="/home"] >> text="${STORYBOARD}"`;
 
 export const steps = [
   prep,
   {
     name: 'Setup (off camera): the showcase storyboard',
     setup: true,
-    done: async ({ page }) => (await treeObject(page, STORYBOARD)) !== undefined,
+    done: async ({ page }) => (await page.locator(RECENT).count()) > 0,
     run: async ({ page }) => {
+      // The space on screen, read off the Home plank's id (`root/<spaceId>/home`); the operation needs one.
+      const spaceId = await page
+        .locator('[data-testid="deck.plank"][data-attendable-id$="/home"]')
+        .first()
+        .getAttribute('data-attendable-id')
+        .then((id) => id?.split('/')[1]);
       await page.evaluate(
-        ({ name, frames }) => composer.invoke('org.dxos.operation.studio.createStoryboard', { name, frames }),
-        { name: STORYBOARD, frames: FRAMES },
+        ({ name, frames, spaceId }) =>
+          composer.invoke('org.dxos.operation.studio.createStoryboard', { name, frames }, { spaceId }),
+        { name: STORYBOARD, frames: FRAMES, spaceId },
       );
-      await page.waitForFunction(
-        (name) =>
-          [...document.querySelectorAll('[data-testid="spacePlugin.object"]')].some(
-            (row) => row.innerText.trim().split('\n')[0] === name,
-          ),
-        STORYBOARD,
-        { timeout: 15_000 },
-      );
+      await page.locator(RECENT).first().waitFor({ state: 'visible', timeout: 15_000 });
     },
   },
   {
     name: 'Open the storyboard',
     narration: 'And this film? It was made in Composer.',
     run: async ({ demo, page }) => {
-      await demo.click({ selector: await treeObject(page, STORYBOARD), label: STORYBOARD });
+      await prep.run({ page });
+      await demo.click({ selector: `${RECENT} >> nth=0`, label: STORYBOARD });
       await page.locator('[data-testid="studioPlugin.play"]').first().waitFor({ state: 'visible', timeout: 15_000 });
       await page.waitForTimeout(BEAT * 2);
     },
@@ -81,8 +80,20 @@ export const steps = [
       'The script, the storyboard and the voice-over are objects in a Studio space, and the screen recordings were ' +
       'driven by an agent, step by step.',
     run: async ({ demo, page }) => {
-      await demo.click({ selector: '[data-testid="studioPlugin.play"] >> nth=0', label: 'Play' });
-      await page.waitForTimeout(BEAT * 6);
+      // Play needs media; until each frame carries its scene's clip, step through the frames instead.
+      if (await page.locator('[data-testid="studioPlugin.play"]').first().isEnabled()) {
+        await demo.click({ selector: '[data-testid="studioPlugin.play"] >> nth=0', label: 'Play' });
+        await page.waitForTimeout(BEAT * 6);
+        return;
+      }
+      for (const [index, { name }] of FRAMES.entries()) {
+        const frame = page.locator(`[data-testid="deck.plank"] >> text=/^(${name}|Frame ${index + 1})$/`).first();
+        if (await frame.isVisible().catch(() => false)) {
+          await frame.click();
+          await page.waitForTimeout(BEAT / 2);
+        }
+      }
+      await page.waitForTimeout(BEAT * 2);
     },
   },
 ];

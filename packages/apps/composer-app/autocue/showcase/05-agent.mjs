@@ -173,6 +173,15 @@ export const steps = [
     narration: 'Ask the assistant to research a topic, and it writes the section, with its sources.',
     run: async ({ demo, page }) => {
       await demo.clearCaption();
+      // A retry starts without the section the last attempt added, so the wait below sees the new one.
+      await page.evaluate(() => {
+        const view = globalThis.composer?.editorView;
+        const text = view.state.doc.toString();
+        const match = /\n#+ [^\n]*Further reading/.exec(text);
+        if (match) {
+          view.dispatch({ changes: { from: match.index, to: text.length, insert: '\n' } });
+        }
+      });
       // The comment opened the companion already; open it only when it is closed.
       if (
         !(await page
