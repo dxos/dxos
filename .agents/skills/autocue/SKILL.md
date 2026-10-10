@@ -589,8 +589,11 @@ node .agents/skills/autocue/scripts/trim-static.mjs --in /tmp/demo/session.webm 
   or longer beats in the flow.
 - **End on a closing step** that holds the finished result for ~10 seconds and whose `narration` says one
   technically interesting thing the demo just showed — local-first storage and privacy, peer-to-peer sync and
-  decentralization, real-time collaboration, or agents working on the same objects. Keep it to one sentence.
-- **Every typing step ends with a new line**, so the document never stops mid-line on camera.
+  decentralization, real-time collaboration, or agents working on the same objects. Keep it to one sentence, and
+  only claim what is true: data syncs through DXOS's EDGE service, so never say "no server"; lean on working
+  offline and agents collaborating alongside people.
+- **Finish typing in a document with one blank line** (two Enters at the end of the text), so it never stops
+  mid-line on camera.
 - **No action feed.** Recordings leave the top-right feed of gestures off (`--pills on` restores it); the cursor
   and click ripple still show what is clicked.
 

@@ -54,6 +54,14 @@ const EDITOR = '[data-testid="composer.markdownRoot"] .cm-content';
 /** Types as a person would, a character at a time. */
 const typeSlowly = (page, text, delay = 60) => page.keyboard.type(text, { delay });
 
+/** Ends a document's typing with one blank line, so the document never stops mid-line on camera. */
+const finishTyping = async (page) => {
+  await page.keyboard.press('End');
+  for (let line = 0; line < 2; line++) {
+    await page.keyboard.press('Enter', { delay: 120 });
+  }
+};
+
 export const steps = [
   {
     name: 'Prep (off camera): dismiss notices and close the help panel',
@@ -159,9 +167,7 @@ export const steps = [
         label: 'Document',
       });
       await page.locator(`${EDITOR} :text("${LINKED}")`).first().waitFor({ state: 'visible', timeout: 10_000 });
-      // Every typing step ends on a new line, so the document never stops mid-line on camera.
-      await page.keyboard.press('End');
-      await page.keyboard.press('Enter');
+      await finishTyping(page);
       await page.waitForTimeout(BEAT * 2);
     },
   },
@@ -174,7 +180,8 @@ export const steps = [
       await editor.waitFor({ state: 'visible', timeout: 15_000 });
       await editor.click();
       // A task list continues as tasks, so only the first item carries its marker.
-      await typeSlowly(page, '- [ ] Write the docs\nRecord the demo\nShip it\n\n');
+      await typeSlowly(page, '- [ ] Write the docs\nRecord the demo\nShip it\n');
+      await finishTyping(page);
       const box = '[data-testid="deck.plank"] input[type="checkbox"]';
       await page.locator(box).first().waitFor({ state: 'visible', timeout: 10_000 });
       await demo.click({ selector: `${box} >> nth=0`, label: 'Done' });
@@ -184,8 +191,8 @@ export const steps = [
   {
     name: 'Close on the finished pages',
     narration:
-      'Everything you write lives on your device and syncs peer to peer, so teammates and AI agents can edit ' +
-      'the same page at once, with no server in the middle.',
+      'Your pages work offline and sync when you reconnect, and AI agents edit them right alongside you and ' +
+      'your team.',
     run: async ({ page }) => {
       await page.waitForTimeout(BEAT * 9);
     },
