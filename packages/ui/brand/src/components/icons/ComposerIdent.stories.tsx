@@ -136,6 +136,7 @@ const variants: Record<VariantName, IdentVariant> = {
       ],
       easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
     }),
+    grow: { rate: 0.05, delay: 200 },
   },
   fade: {
     label: 'Fade',
