@@ -2,7 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/reactivity/Atom';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj, Type } from '@dxos/echo';
@@ -86,21 +88,25 @@ export const OutlineArticle = ({
   // parented to their parent task.
   const tasks = useQuery(db, taskSet ? Filter.and(Filter.type(Task.Task), Filter.childOf(taskSet)) : Filter.nothing());
   // `useQuery` re-emits only when result membership changes, never on a member's property change,
-  // so renames are observed by subscribing to each task; the bump rebuilds the resolver, whose new
-  // identity re-runs the editor's label sync.
-  const [tick, bump] = useReducer((count: number) => count + 1, 0);
-  useEffect(() => {
-    const unsubscribes = tasks.map((task) => Obj.subscribe(task, bump));
-    return () => unsubscribes.forEach((unsubscribe) => unsubscribe());
-  }, [tasks]);
+  // so titles are read through atoms; a rename yields a new resolver, whose identity re-runs the
+  // editor's label sync.
+  const labels = useAtomValue(
+    useMemo(
+      () =>
+        Atom.make((get) =>
+          tasks.map((task) => [Obj.getURI(task).toString(), get(Obj.atomProperty(task, 'title'))] as const),
+        ),
+      [tasks],
+    ),
+  );
 
   // An item that is already a link cannot be promoted again; the outline reports this as the caret moves.
   const [convertible, setConvertible] = useState(true);
 
   const resolveLinkLabel = useMemo(() => {
-    const labels = new Map(tasks.map((task) => [Obj.getURI(task).toString(), task.title]));
-    return (url: string) => labels.get(url);
-  }, [tasks, tick]);
+    const byUrl = new Map(labels);
+    return (url: string) => byUrl.get(url);
+  }, [labels]);
 
   const taskActions = useMenuBuilder(
     (): ActionGraphProps =>
