@@ -12,9 +12,9 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import { identity } from 'effect/Function';
 import * as Layer from 'effect/Layer';
+import * as PartitionedSemaphore from 'effect/PartitionedSemaphore';
 import * as Reactivity from 'effect/reactivity/Reactivity';
 import * as Scope from 'effect/Scope';
-import * as Semaphore from 'effect/Semaphore';
 import * as Client from 'effect/sql/SqlClient';
 import * as SqlConnection from 'effect/sql/SqlConnection';
 import * as SqlError from 'effect/sql/SqlError';
@@ -303,14 +303,15 @@ export const makeOpfs = (
       });
     });
 
-    const semaphore = yield* Semaphore.make(1);
+    // Hands a released permit straight to the longest waiter, where `Semaphore` frees it for whoever asks next.
+    const semaphore = yield* PartitionedSemaphore.make<'connection'>({ permits: 1 });
     const connection = yield* makeConnection;
 
-    const acquirer = semaphore.withPermits(1)(Effect.succeed(connection));
+    const acquirer = semaphore.withPermit('connection')(Effect.succeed(connection));
     const transactionAcquirer = Effect.uninterruptibleMask((restore) =>
       Effect.as(
         Effect.andThen(
-          restore(semaphore.take(1)),
+          restore(semaphore.take('connection', 1)),
           Effect.tap(Effect.scope, (scope) => Scope.addFinalizer(scope, semaphore.release(1))),
         ),
         connection,
@@ -332,8 +333,8 @@ export const makeOpfs = (
         // Object.assign widens unique symbol TypeId; same pattern as @effect/sql-sqlite-wasm makeMemory.
         [WasmSqliteClient.TypeId]: WasmSqliteClient.TypeId as WasmSqliteClient.TypeId,
         config: options,
-        export: semaphore.withPermits(1)(connection.export),
-        import: (data: Uint8Array) => semaphore.withPermits(1)(connection.import(data)),
+        export: semaphore.withPermit('connection')(connection.export),
+        import: (data: Uint8Array) => semaphore.withPermit('connection')(connection.import(data)),
       },
       // SqlClient.updateValues is incompatible with SqliteClient's `never`; Object.assign cannot narrow it.
     ) as unknown as WasmSqliteClient.SqliteClient;

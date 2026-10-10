@@ -40,6 +40,15 @@ export const yieldToEventLoop = (): Promise<void> => {
 };
 
 /**
+ * Resolves after the tasks already queued have run. {@link yieldToEventLoop} resumes ahead of them where the
+ * host has `scheduler.yield`, which suits input but keeps a background loop ahead of queued messages.
+ */
+export const yieldBehindQueuedTasks = (): Promise<void> =>
+  !isNode() && typeof MessageChannel !== 'undefined'
+    ? yieldViaMessageChannel()
+    : new Promise((resolve) => setTimeout(resolve, 0));
+
+/**
  * How eagerly {@link yieldOrContinue} gives the event loop a turn, named after `main-thread-scheduling`'s strategies:
  * the work keeps the page `interactive`, `smooth` or `idle`.
  */

@@ -9,6 +9,7 @@ import type * as SqlError from 'effect/sql/SqlError';
 import { type Context } from '@dxos/context';
 import { ATTR_META, ATTR_RELATION_SOURCE, ATTR_TYPE } from '@dxos/echo/internal';
 import * as SpanAttributes from '@dxos/effect/SpanAttributes';
+import { invariant } from '@dxos/invariant';
 import type { EntityId, SpaceId, URI } from '@dxos/keys';
 
 import { ConvergenceKeyIntentStore } from './convergence-key-intent-store.ts';
@@ -98,6 +99,50 @@ const accumulateIndexingResult = (acc: MutableIndexingResult, objects: readonly 
 };
 
 /**
+ * Bounds on one index write transaction. Queries share the database connection the index writes
+ * through, so a query arriving mid-pass waits behind at most one of these.
+ */
+export type IndexTransactionLimits = {
+  /** Objects one transaction writes at most. */
+  maxObjects: number;
+  /** Elapsed time (ms) after which a transaction commits what it has written. */
+  maxDurationMs: number;
+};
+
+const DEFAULT_INDEX_TRANSACTION_LIMITS: IndexTransactionLimits = { maxObjects: 250, maxDurationMs: 50 };
+
+/** Objects handed to each index per call; the time limit is checked between calls, and the indexes batch statements within one. */
+const TRANSACTION_SLICE = 25;
+
+export type IndexEngineOptions = {
+  transactionLimits?: Partial<IndexTransactionLimits>;
+  /** Runs between two transactions of one batch, while the engine holds no connection, so other work can use it. */
+  yieldBetweenTransactions?: () => Promise<void>;
+};
+
+/** A batch cursor and the position of the last batch object it covers, the object it commits with. */
+type PlacedCursor = { cursor: DataSourceCursor; lastObject: number };
+
+/**
+ * Commits a document's cursor with its last object, so a batch cut short between transactions never
+ * marks a document indexed while some of its objects are unwritten. A cursor no object maps to (a
+ * feed namespace, the secondary source's counter) commits with the batch's last object.
+ */
+const placeCursors = (objects: readonly IndexerObject[], cursors: readonly DataSourceCursor[]): PlacedCursor[] => {
+  const lastObjectByDocument = new Map<string, number>();
+  objects.forEach((obj, position) => {
+    if (obj.documentId) {
+      lastObjectByDocument.set(obj.documentId, position);
+    }
+  });
+  return cursors.map((cursor) => ({
+    cursor,
+    lastObject:
+      (cursor.resourceId === null ? undefined : lastObjectByDocument.get(cursor.resourceId)) ?? objects.length - 1,
+  }));
+};
+
+/**
  * The convergence key an indexed object contributes to the merge trigger, if any.
  *
  * Queue (feed) entities are out of merge scope — they have no automerge document to merge — and
@@ -110,6 +155,23 @@ const convergenceKeyOf = (obj: IndexerObject): string | undefined => {
   }
   const convergenceKey = (obj.data[ATTR_META] as { convergenceKey?: string } | undefined)?.convergenceKey;
   return typeof convergenceKey === 'string' && convergenceKey.length > 0 ? convergenceKey : undefined;
+};
+
+/** Convergence keys carried by `objects`, once per space. */
+const convergenceKeyIntents = (objects: readonly IndexerObject[]): { spaceId: SpaceId; convergenceKey: string }[] => {
+  const intents: { spaceId: SpaceId; convergenceKey: string }[] = [];
+  const seen = new Set<string>();
+  for (const obj of objects) {
+    const convergenceKey = convergenceKeyOf(obj);
+    if (convergenceKey !== undefined) {
+      const composite = JSON.stringify([obj.spaceId, convergenceKey]);
+      if (!seen.has(composite)) {
+        seen.add(composite);
+        intents.push({ spaceId: obj.spaceId, convergenceKey });
+      }
+    }
+  }
+  return intents;
 };
 
 /** Name every index tracks its cursor under; a new name retires the old cursor and rebuilds. */
@@ -174,8 +236,16 @@ export class IndexEngine {
   readonly #activityIndex: ActivityIndex;
   readonly #convergenceKeyIntents: ConvergenceKeyIntentStore;
   readonly #indexedObjectSource: IndexedObjectSource;
+  readonly #transactionLimits: IndexTransactionLimits;
+  readonly #yieldBetweenTransactions: (() => Promise<void>) | undefined;
 
-  constructor(sql: SqlClient.SqlClient) {
+  constructor(sql: SqlClient.SqlClient, options: IndexEngineOptions = {}) {
+    this.#transactionLimits = { ...DEFAULT_INDEX_TRANSACTION_LIMITS, ...options.transactionLimits };
+    invariant(
+      Number.isInteger(this.#transactionLimits.maxObjects) && this.#transactionLimits.maxObjects > 0,
+      'maxObjects must be a positive integer',
+    );
+    this.#yieldBetweenTransactions = options.yieldBetweenTransactions;
     this.#sql = sql;
     this.#tracker = new IndexTracker(sql);
     this.#objectMetaIndex = new EntityMetaIndex(sql);
@@ -273,6 +343,9 @@ export class IndexEngine {
    * Indexes one batch into every secondary index — those sourced from the index itself rather than
    * from automerge or a feed (see {@link IndexedObjectSource}). `done` reports an empty batch, so a
    * caller wanting the whole backlog loops until it is set, exactly as with {@link update}.
+   *
+   * A batch defaults to one transaction's worth of objects, so the source's counter cursor advances
+   * with every transaction and a caller can yield between batches.
    */
   updateSecondaryIndexes(ctx: Context, opts?: { limit?: number }): Effect.Effect<IndexingResult, SqlError.SqlError> {
     return Effect.gen({ self: this }, function* () {
@@ -285,7 +358,7 @@ export class IndexEngine {
         this.#indexedObjectSource,
         {
           spaceId: null,
-          limit: opts?.limit,
+          limit: opts?.limit ?? this.#transactionLimits.maxObjects,
           cursors: cursors.get(INDEX_NAMES.fts) ?? [],
         },
       );
@@ -457,6 +530,9 @@ export class IndexEngine {
             { legs: [reverseRefLeg], cursors: reverseRefCursors },
           ];
       for (const { legs, cursors } of batches) {
+        if (ctx.disposed) {
+          break;
+        }
         const { updated, done, drained, objects } = yield* this.#update(ctx, legs, dataSource, {
           spaceId: opts.spaceId,
           limit: opts.limit,
@@ -466,6 +542,13 @@ export class IndexEngine {
         result.done = result.done && done;
         result.drained = result.drained && drained;
         accumulateIndexingResult(result, objects);
+      }
+
+      // A pass closed mid-batch writes nothing more; the next one resumes from the cursors.
+      if (ctx.disposed) {
+        result.done = false;
+        result.drained = false;
+        return result as IndexingResult;
       }
 
       const activity = yield* this.#updateActivity(ctx, dataSource, {
@@ -492,9 +575,14 @@ export class IndexEngine {
   }
 
   /**
-   * Indexes one batch from a source into each of the given indexes, advancing their cursors in the same
-   * transaction as the write so an interrupted pass resumes rather than losing the batch. The indexes
-   * must stand at the same position (`opts.cursors`), since they share the batch read from it.
+   * Indexes one batch from a source into each of the given indexes. The indexes must stand at the
+   * same position (`opts.cursors`), since they share the batch read from it.
+   *
+   * The batch is written over transactions bounded by {@link IndexTransactionLimits}, yielding
+   * between them, and each cursor advances in the transaction that writes its last object (see
+   * {@link placeCursors}): a pass interrupted between transactions redoes only what it had not
+   * finished. A query running between two transactions can see a document partly indexed, as it
+   * already sees the index behind the documents; the pass invalidates queries when it ends.
    *
    * A source feeding a primary index carries objects that may be new, so the batch is first written
    * to `objectMeta` — which stamps each object's `version` and yields the `recordId` the index
@@ -531,54 +619,76 @@ export class IndexEngine {
         return { updated: 0, done: true, drained: true, objects: [] as readonly IndexerObject[] };
       }
 
-      // Convergence keys in this batch, deduplicated — recorded as durable merge intents inside the
-      // transaction below, atomically with the cursor advance that would otherwise be the only
-      // record that these writes were ever seen. A source reading the index has already contributed
-      // them, and would otherwise re-raise the same merge on every pass.
-      const intents: { spaceId: SpaceId; convergenceKey: string }[] = [];
-      const seenIntents = new Set<string>();
-      for (const obj of source.indexed ? [] : objects) {
-        const convergenceKey = convergenceKeyOf(obj);
-        if (convergenceKey !== undefined) {
-          const composite = JSON.stringify([obj.spaceId, convergenceKey]);
-          if (!seenIntents.has(composite)) {
-            seenIntents.add(composite);
-            intents.push({ spaceId: obj.spaceId, convergenceKey });
+      const cursors = placeCursors(objects, updatedCursors);
+      let written = 0;
+      while (written < objects.length) {
+        if (written > 0) {
+          const yieldBetweenTransactions = this.#yieldBetweenTransactions;
+          if (yieldBetweenTransactions) {
+            yield* Effect.promise(yieldBetweenTransactions);
+          }
+          if (ctx.disposed) {
+            const indexed = objects.slice(0, written);
+            return { updated: indexed.length * legs.length, done: false, drained: false, objects: indexed };
           }
         }
+        written = yield* sql.withTransaction(this.#writeTransaction(legs, source, objects, written, cursors));
+      }
+      return { updated: objects.length * legs.length, done: false, drained: more === false, objects };
+    }).pipe(Effect.withSpan('IndexEngine.#update'), SpanAttributes.annotateSpace(opts.spaceId));
+  }
+
+  /**
+   * Writes `objects` from `start` into every leg until a transaction limit is reached, with the
+   * cursors whose last object it wrote, and returns the position it stopped at. Runs inside the
+   * caller's transaction.
+   */
+  #writeTransaction(
+    legs: readonly IndexLeg[],
+    source: IndexDataSource,
+    objects: readonly IndexerObject[],
+    start: number,
+    cursors: readonly PlacedCursor[],
+  ): Effect.Effect<number, SqlError.SqlError> {
+    return Effect.gen({ self: this }, function* () {
+      const startedAt = performance.now();
+      const stop = Math.min(objects.length, start + this.#transactionLimits.maxObjects);
+      let end = start;
+      while (end < stop && (end === start || performance.now() - startedAt < this.#transactionLimits.maxDurationMs)) {
+        const slice = objects.slice(end, Math.min(stop, end + TRANSACTION_SLICE));
+        if (!source.indexed) {
+          // Ensure objects exist in EntityMetaIndex.
+          yield* this.#objectMetaIndex.update(slice);
+
+          // Look up recordIds for the objects.
+          yield* this.#objectMetaIndex.lookupRecordIds(slice);
+
+          // Durable merge intents commit with their objects, so no later than the cursor advance
+          // that would otherwise be the only record these writes were seen. A source reading the
+          // index has already contributed them, and would otherwise re-raise the same merge.
+          yield* this.#convergenceKeyIntents.record(convergenceKeyIntents(slice));
+        }
+
+        for (const { index } of legs) {
+          yield* index.update(slice);
+        }
+        end += slice.length;
       }
 
-      // Writes run INSIDE the transaction for atomicity.
-      return yield* sql.withTransaction(
-        Effect.gen({ self: this }, function* () {
-          if (!source.indexed) {
-            // Ensure objects exist in EntityMetaIndex.
-            yield* this.#objectMetaIndex.update(objects);
-
-            // Look up recordIds for the objects.
-            yield* this.#objectMetaIndex.lookupRecordIds(objects);
-
-            yield* this.#convergenceKeyIntents.record(intents);
-          }
-
-          for (const { index } of legs) {
-            yield* index.update(objects);
-          }
-          yield* this.#tracker.updateCursors(
-            legs.flatMap(({ indexName }) =>
-              updatedCursors.map((_): IndexCursor => ({
-                indexName,
-                spaceId: _.spaceId,
-                sourceName: source.sourceName,
-                resourceId: _.resourceId,
-                cursor: _.cursor,
-              })),
-            ),
-          );
-          return { updated: objects.length * legs.length, done: false, drained: more === false, objects };
-        }),
+      const committed = cursors.filter(({ lastObject }) => lastObject >= start && lastObject < end);
+      yield* this.#tracker.updateCursors(
+        legs.flatMap(({ indexName }) =>
+          committed.map(({ cursor }): IndexCursor => ({
+            indexName,
+            spaceId: cursor.spaceId,
+            sourceName: source.sourceName,
+            resourceId: cursor.resourceId,
+            cursor: cursor.cursor,
+          })),
+        ),
       );
-    }).pipe(Effect.withSpan('IndexEngine.#update'), SpanAttributes.annotateSpace(opts.spaceId));
+      return end;
+    });
   }
 
   #updateActivity(
