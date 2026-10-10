@@ -5,7 +5,7 @@
 import * as EffectContext from 'effect/Context';
 import { inspect } from 'node:util';
 
-import { type CleanupFn, Event, MulticastObservable, Trigger, asyncTimeout, synchronized } from '@dxos/async';
+import { Event, MulticastObservable, Trigger, asyncTimeout, synchronized } from '@dxos/async';
 import { createEdgeBlobBackend } from '@dxos/blob/hosted';
 import {
   type ClientServicesProvider,
@@ -44,6 +44,7 @@ import { type MeshProxy } from '../mesh/mesh-proxy.ts';
 import type { IFrameManager, Shell, ShellManager } from '../services/index.ts';
 import { DXOS_VERSION } from '../version.ts';
 import { ClientRuntime } from './client-runtime.ts';
+import { createRpcBlobStore } from './rpc-blob-store.ts';
 
 /** Longest a destroy waits for a database's pending writes to reach the host. */
 const DESTROY_FLUSH_TIMEOUT = 5_000;
@@ -128,7 +129,7 @@ export class Client {
   private _edgeHttpClient?: EdgeHttpClient = undefined;
   private _edgeApi?: ClientEdgeAPI = undefined;
   private _edgeIdentitySubscription?: { unsubscribe: () => void };
-  private _edgeBlobBackendCleanup?: CleanupFn;
+  private _blobBackendCleanup?: () => Promise<void>;
 
   constructor(options: ClientOptions = {}) {
     if (
@@ -550,23 +551,30 @@ export class Client {
           deviceSubscription.unsubscribe();
         },
       };
-
-      this._edgeBlobBackendCleanup = this._echoClient.graph.registerBlobBackend(
-        Blob.Storage.edge,
-        // Adapted rather than passed: the backend takes the four operations it needs, so it does not
-        // depend on the other twenty-nine methods of `EdgeHttpClient`, and `Context` stays here.
-        createEdgeBlobBackend({
-          transport: {
-            url: (key) => edgeHttpClient.getBlobUrl(key),
-            put: (key, data, options) => edgeHttpClient.putBlob(Context.default(), key, data, options),
-            get: (key) => edgeHttpClient.getBlob(Context.default(), key),
-            has: (key) => edgeHttpClient.hasBlob(Context.default(), key),
-            finalizeUpload: (uploadId) => edgeHttpClient.finalizeBlobUpload(Context.default(), uploadId),
-          },
-        }),
-        { default: true },
-      );
     }
+
+    // Registered with or without an edge endpoint: bytes always land in the host's local store, and
+    // the edge, when configured, is where they are uploaded to and fetched from on a local miss.
+    const edgeHttpClient = this._edgeHttpClient;
+    const blobBackend = createEdgeBlobBackend({
+      local: createRpcBlobStore(this._services.rpc, this._effectRuntime),
+      // Adapted rather than passed: the backend takes the four operations it needs, so it does not
+      // depend on the other twenty-nine methods of `EdgeHttpClient`, and `Context` stays here.
+      transport: edgeHttpClient && {
+        url: (key) => edgeHttpClient.getBlobUrl(key),
+        put: (key, data, options) => edgeHttpClient.putBlob(Context.default(), key, data, options),
+        get: (key) => edgeHttpClient.getBlob(Context.default(), key),
+        has: (key) => edgeHttpClient.hasBlob(Context.default(), key),
+        finalizeUpload: (uploadId) => edgeHttpClient.finalizeBlobUpload(Context.default(), uploadId),
+      },
+    });
+    const unregisterBlobBackend = this._echoClient.graph.registerBlobBackend(Blob.Storage.edge, blobBackend, {
+      default: true,
+    });
+    this._blobBackendCleanup = async () => {
+      unregisterBlobBackend();
+      await blobBackend.close();
+    };
 
     log('client._open: subscribing to system status...');
     this._fatalErrorUpdate.emit(null);
@@ -705,12 +713,13 @@ export class Client {
     await this._echoClient.close(this._ctx);
     await this._shellClientServer?.close();
     this._shellClientServer = undefined;
+    // Before the services: its uploader reaches the host's blob store through them.
+    await this._blobBackendCleanup?.();
+    this._blobBackendCleanup = undefined;
     log.verbose('client._close: closing services...');
     await this._services?.close();
     this._edgeIdentitySubscription?.unsubscribe();
     this._edgeIdentitySubscription = undefined;
-    this._edgeBlobBackendCleanup?.();
-    this._edgeBlobBackendCleanup = undefined;
     this._edgeHttpClient = undefined;
     this._edgeApi = undefined;
     log('closed');

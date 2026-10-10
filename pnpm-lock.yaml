@@ -4540,9 +4540,6 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
-      '@dxos/blob':
-        specifier: workspace:*
-        version: link:../../echo/blob
       '@dxos/client':
         specifier: workspace:*
         version: link:../../../sdk/client
@@ -5665,15 +5662,24 @@ importers:
 
   packages/core/echo/blob:
     dependencies:
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../../common/effect
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      effect:
+        specifier: 4.0.0
+        version: 4.0.0(patch_hash=3231d93074c153423d744d1ed6acc4a09d0344e58224e8d2f134b809622c47f2)
     devDependencies:
       vitest:
         specifier: 'catalog:'

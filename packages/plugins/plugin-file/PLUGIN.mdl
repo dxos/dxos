@@ -54,7 +54,7 @@ type BackendDescriptor
 type Settings
   desc: Per-user plugin settings stored in the ECHO space.
   fields:
-    backend?: string         # active backend's storage name; defaults to 'inline'
+    backend?: string         # active backend's storage name; defaults to the Hypergraph's default storage ('edge')
 ```
 
 ## Components
@@ -199,7 +199,9 @@ feat F-2: Backend capability system
     Blob object; no separate BlobBackend registration needed).
 
   req F-2.3: The active backend is determined by Settings.backend. If the
-    configured id is absent or unrecognised, the inline backend is used.
+    configured id is absent or unrecognised, the Hypergraph's default storage is
+    used: 'edge', which `@dxos/client` registers as local-first storage whether or
+    not an EDGE endpoint is configured.
 
   req F-2.4: A BackendDescriptor's `storage` names the Blob storage used by
     File.fromBytes; the actual upload/read/getUrl implementation lives in a
@@ -260,7 +262,7 @@ feat F-5: Settings
 
 ```mdl
 scenario T-1: Upload image inline
-  given: only the inline BackendDescriptor is registered
+  given: the inline backend is selected
   when: user uploads a 1 MB PNG via the Create Object form
   then:
     - op:Create returns a File whose data Ref resolves to a Blob with data._tag === 'inline'
@@ -303,10 +305,10 @@ scenario T-5: Preview PDF
 ```
 
 ```mdl
-scenario T-6: Backend fallback to inline
+scenario T-6: Backend fallback to the default storage
   given: Settings.backend is 'wnfs' but no BackendDescriptor with storage 'wnfs' is registered
   when: op:Create is invoked
-  then: the inline backend is used and the file is stored inline
+  then: the Hypergraph's default storage ('edge') is used and the bytes are stored on the device
 ```
 
 ```mdl

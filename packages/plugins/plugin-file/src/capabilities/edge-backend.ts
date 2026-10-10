@@ -16,15 +16,14 @@ export default Capability.makeModule(
     // `config` is initialized-only, and this event wave can land before the forked client
     // initialization completes.
     yield* Effect.promise(() => client.waitUntilInitialized());
+    // `@dxos/client` registers the backend either way: it stores bytes on this device first and
+    // uses the edge, when configured, as the copy other devices fetch from.
     const edgeUrl = client.config.values.runtime?.services?.edge?.url;
-    if (!edgeUrl) {
-      // No edge service configured — skip the declared provide (runtime warns, not fails).
-      return [];
-    }
-
     return Capability.contribute(FileCapabilities.Backend, {
       name: 'Blob Service',
-      description: 'Store files on the DXOS edge network. Scales beyond the inline size cap.',
+      description: edgeUrl
+        ? 'Store files on this device and sync them to the DXOS edge network. Scales beyond the inline size cap.'
+        : 'Store files on this device, outside the space. Other devices cannot fetch them until an edge network is configured.',
       storage: Blob.Storage.edge,
     });
   }),
