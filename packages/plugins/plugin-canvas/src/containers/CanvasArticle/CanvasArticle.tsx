@@ -117,8 +117,10 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
     fit,
   } = useViewState(canvasViewAspect, contextId);
   const { update: updateViewState } = useViewStateActions(canvasViewAspect, contextId);
-  // A section is a drawing shown inside another object (a document's embed), so it is only looked at, never edited.
-  const readonly = viewReadonly || role === AppSurface.Section.role;
+  // A section is a drawing shown inside another object (a document's embed), so it is only looked at, never edited,
+  // and shows the drawing alone: no palette and no panels.
+  const section = role === AppSurface.Section.role;
+  const readonly = viewReadonly || section;
   const handleCameraChange = useCallback(
     (camera: Camera) => updateViewState((state) => ({ ...state, camera })),
     [updateViewState],
@@ -179,7 +181,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   return (
     // A section takes the document's width and has no height of its own (its panels float, read-only), so its height
     // follows from the drawing's 3:2 frame.
-    <Panel.Root role={role} classNames={role === AppSurface.Section.role ? 'w-full aspect-[3/2]' : undefined}>
+    <Panel.Root role={role} classNames={section ? 'w-full aspect-[3/2]' : undefined}>
       <Panel.Body>
         {bound && (
           // An unset preference leaves the engine's own default in place.
@@ -207,10 +209,19 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
                   <SceneView.Debug />
                 </>
               )}
-              {(settings.showPalette ?? true) && <SceneView.Palette />}
-              <SceneView.Properties db={db} getOptions={getOptions} overrides={overrides} sceneFilter={isLocalScene} />
-              <SceneView.Layers />
-              <SceneView.About />
+              {!section && (
+                <>
+                  {(settings.showPalette ?? true) && <SceneView.Palette />}
+                  <SceneView.Properties
+                    db={db}
+                    getOptions={getOptions}
+                    overrides={overrides}
+                    sceneFilter={isLocalScene}
+                  />
+                  <SceneView.Layers />
+                  <SceneView.About />
+                </>
+              )}
             </SceneView.Root>
           </CanvasDatabaseContext.Provider>
         )}
