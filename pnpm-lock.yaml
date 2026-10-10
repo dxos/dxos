@@ -25255,6 +25255,9 @@ importers:
 
   tools/ident:
     dependencies:
+      '@dxos/brand':
+        specifier: workspace:*
+        version: link:../../packages/ui/brand
       '@fontsource/poiret-one':
         specifier: 'catalog:'
         version: 5.2.8
