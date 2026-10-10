@@ -3,9 +3,11 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
 import * as Stream from 'effect/Stream';
 import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
+import { Trigger, asyncTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Filter, Query } from '@dxos/echo';
 import { type DatabaseDirectory, EntityStructure, SpaceDocVersion } from '@dxos/echo-protocol';
@@ -16,6 +18,7 @@ import { FeedProtocol } from '@dxos/protocols';
 import { QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { type QueryService } from '@dxos/protocols/rpc';
 
+import { QueryExecutor } from '../query/index.ts';
 import { createTestSqliteRuntime } from '../testing/index.ts';
 import { EchoHost, type EchoHostProps } from './echo-host.ts';
 
@@ -112,6 +115,77 @@ describe('EchoHost query service', () => {
     );
     expect(check).toHaveBeenCalledTimes(1);
   });
+
+  test('a one-shot id lookup answers while a query batch is still running', async () => {
+    const { host, spaceId, saveObject } = await setup();
+    const objectId = EntityId.random();
+    await saveObject(objectId);
+    await host.updateIndexes();
+
+    const batchStarted = new Trigger();
+    const releaseBatch = new Trigger();
+    onTestFinished(() => {
+      releaseBatch.wake();
+    });
+    const execQuery = QueryExecutor.prototype.execQuery;
+    const spy = vi.spyOn(QueryExecutor.prototype, 'execQuery').mockImplementation(async function (this: QueryExecutor) {
+      if (this.queryId === 'batch') {
+        batchStarted.wake();
+        await releaseBatch.wait();
+      }
+      return execQuery.call(this);
+    });
+    onTestFinished(() => spy.mockRestore());
+
+    const batch = EffectEx.runPromise(
+      Stream.runHead(host.queryService['QueryService.execQuery'](oneShotRequest(spaceId, 'batch'))),
+    );
+    await batchStarted.wait();
+
+    const responses = await asyncTimeout(
+      EffectEx.runPromise(
+        Stream.runCollect(host.queryService['QueryService.execQuery'](idLookupRequest(spaceId, 'lookup', objectId))),
+      ),
+      1_000,
+    );
+    expect(responses.flatMap((response) => response.results ?? []).map((result) => result.id)).toEqual([objectId]);
+
+    releaseBatch.wake();
+    await batch;
+  });
+
+  test('a one-shot id lookup cancelled before it runs is never executed', async () => {
+    const { host, spaceId } = await setup({ queryExecutor: 'sql' });
+    const checkStarted = new Trigger();
+    const releaseCheck = new Trigger();
+    onTestFinished(() => {
+      releaseCheck.wake();
+    });
+    vi.spyOn(host.indexEngine, 'hasCompleteSnapshots').mockImplementation(() =>
+      Effect.promise(async () => {
+        checkStarted.wake();
+        await releaseCheck.wait();
+        return true;
+      }),
+    );
+    const executed: string[] = [];
+    const execQuery = QueryExecutor.prototype.execQuery;
+    const spy = vi.spyOn(QueryExecutor.prototype, 'execQuery').mockImplementation(function (this: QueryExecutor) {
+      executed.push(this.queryId);
+      return execQuery.call(this);
+    });
+    onTestFinished(() => spy.mockRestore());
+
+    const lookup = (queryId: string) => host.queryService['QueryService.execQuery'](idLookupRequest(spaceId, queryId));
+    const cancelled = Effect.runFork(Stream.runDrain(lookup('cancelled')));
+    await checkStarted.wait();
+    const answered = EffectEx.runPromise(Stream.runCollect(lookup('answered')));
+    await EffectEx.runPromise(Fiber.interrupt(cancelled));
+    releaseCheck.wake();
+    await answered;
+
+    expect(executed).toEqual(['answered']);
+  });
 });
 
 const TEST_TYPE = DXN.make('com.example.type.test', '0.1.0');
@@ -120,6 +194,15 @@ const oneShotRequest = (spaceId: SpaceId, queryId: string): QueryService.QueryRe
   queryId,
   reactivity: QueryReactivity.ONE_SHOT,
   query: JSON.stringify(Query.select(Filter.everything()).from([{ _tag: 'space', spaceId }]).ast),
+});
+
+const idLookupRequest = (
+  spaceId: SpaceId,
+  queryId: string,
+  objectId: EntityId = EntityId.random(),
+): QueryService.QueryRequest => ({
+  ...oneShotRequest(spaceId, queryId),
+  query: JSON.stringify(Query.select(Filter.id(objectId)).from([{ _tag: 'space', spaceId }]).ast),
 });
 
 const setup = async (options: Pick<EchoHostProps, 'queryExecutor'> = {}) => {

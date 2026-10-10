@@ -196,7 +196,6 @@ export class IndexQuerySource implements QuerySource {
   }
 
   async run(_ctx: Context, query: QueryAST.Query): Promise<SourceEntry[]> {
-    this._query = query;
     // The index serves spaces and feeds; a query whose explicit scopes target neither
     // (e.g. registry-only) is answered entirely by other sources. Forwarding it anyway
     // made the whole query fail on edge — the query host rejects space-less queries, and
@@ -476,7 +475,9 @@ export class IndexQuerySource implements QuerySource {
     for (const chunk of chunkArray([...records], HYDRATE_RECORDS_PER_YIELD_CHECK)) {
       await yieldOrContinue('smooth');
       processedResults.push(
-        ...(await Promise.all(chunk.map((result) => this._hydrateRecord(ctx, start, result, hydratedIntoFeedHandle)))),
+        ...(await Promise.all(
+          chunk.map((result) => this._hydrateRecord(ctx, query, start, result, hydratedIntoFeedHandle)),
+        )),
       );
     }
     const stalled = records.filter((_, index) => processedResults[index] === STALLED).map((record) => record.id);
@@ -519,12 +520,13 @@ export class IndexQuerySource implements QuerySource {
    */
   private async _hydrateRecord(
     ctx: Context,
+    query: QueryAST.Query,
     start: number,
     result: QueryService.QueryResult,
     hydratedIntoFeedHandle: Set<string>,
   ): Promise<SourceEntry | null | typeof STALLED> {
     const timeout = this._params.hydrationTimeout ?? RECORD_HYDRATION_TIMEOUT;
-    const hydration = this._filterMapResult(ctx, start, result, hydratedIntoFeedHandle);
+    const hydration = this._filterMapResult(ctx, query, start, result, hydratedIntoFeedHandle);
     // The abandoned hydration may still reject after the race has settled, which would surface as an
     // unhandled rejection; the real outcome is already taken below.
     hydration.catch(() => {});
@@ -557,6 +559,7 @@ export class IndexQuerySource implements QuerySource {
    */
   private async _filterMapResult(
     ctx: Context,
+    query: QueryAST.Query,
     queryStartTimestamp: number,
     result: QueryService.QueryResult,
     hydratedIntoFeedHandle?: Set<string>,
@@ -584,7 +587,7 @@ export class IndexQuerySource implements QuerySource {
       objectId: result.id,
       spaceId: result.spaceId,
       loadReason: 'query',
-      query: JSON.stringify(this._query ?? null),
+      query: JSON.stringify(query),
     }));
 
     invariant(SpaceId.isValid(result.spaceId), 'Invalid spaceId');
@@ -684,7 +687,7 @@ export class IndexQuerySource implements QuerySource {
     // The host's index lags a local delete: its in-flight response still lists the object, and
     // because results are a union across sources any stale entry resurfaces it after the working
     // set has already dropped it. The local flag is authoritative here.
-    if (!this._matchesDeletedOption(object)) {
+    if (!matchesDeletedOption(object, query)) {
       return null;
     }
 
@@ -696,19 +699,6 @@ export class IndexQuerySource implements QuerySource {
       group: _groupFromRemoteResult(result),
     };
     return queryResult;
-  }
-
-  /** Whether a hydrated object's local deleted flag satisfies the query's `deleted` option. */
-  private _matchesDeletedOption(object: Entity.Unknown): boolean {
-    const deleted = Entity.isDeleted(object);
-    switch (this._query === undefined ? 'exclude' : getQueryDeletedOption(this._query)) {
-      case 'exclude':
-        return !deleted;
-      case 'only':
-        return deleted;
-      case 'include':
-        return true;
-    }
   }
 
   /**
@@ -765,3 +755,16 @@ const _groupFromRemoteResult = (result: QueryService.QueryResult): SourceEntry['
         ...(result.aggregates !== undefined ? { aggregates: JSON.parse(result.aggregates) } : {}),
       }
     : undefined;
+
+/** Whether a hydrated object's local deleted flag satisfies the query's `deleted` option. */
+const matchesDeletedOption = (object: Entity.Unknown, query: QueryAST.Query): boolean => {
+  const deleted = Entity.isDeleted(object);
+  switch (getQueryDeletedOption(query)) {
+    case 'exclude':
+      return !deleted;
+    case 'only':
+      return deleted;
+    case 'include':
+      return true;
+  }
+};

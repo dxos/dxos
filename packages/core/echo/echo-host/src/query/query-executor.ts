@@ -709,6 +709,10 @@ export class QueryExecutor extends Resource {
     return this._plan.steps.some((step) => step._tag === 'SqlStep');
   }
 
+  get selectsById(): boolean {
+    return this.#scopes.isSimple && this.#scopes.objectIds !== null;
+  }
+
   getResults(): QueryService.QueryResult[] {
     if (this.#changeResultSet) {
       return changeResults(this.#changeResultSet);

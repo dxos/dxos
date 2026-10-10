@@ -251,6 +251,13 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
         if (queryEntry.feedScoped || (readsSnapshotStore && !(await this.#snapshotsComplete()))) {
           await this._params.updateIndexes();
         }
+        if (!this._queries.has(queryEntry)) {
+          return;
+        }
+        if (queryEntry.oneShot && queryEntry.executor.selectsById) {
+          await this.#runQuery(queryEntry);
+          return;
+        }
         queryEntry.open = true;
         this._updateQueries.schedule();
       });
