@@ -179,7 +179,7 @@ export const steps = [
   },
   {
     name: 'Graph the same records',
-    narration: 'And Explorer, a plugin switched on a moment ago, draws the same records as a graph.',
+    narration: 'And Explorer, switched on a moment ago, draws the whole space as one graph of connected objects.',
     done: async ({ page }) => (await page.locator(`[role="treeitem"]:has-text("${GRAPH}")`).count()) > 0,
     run: async ({ demo, page }) => {
       await demo.click({ selector: '[data-testid="spacePlugin.createObject"] >> nth=0', label: 'Add to space' });

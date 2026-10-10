@@ -98,9 +98,9 @@ Add to space → Kanban, named "Launch board", with card type "Launch" and pivot
 
 Add to space → Explorer, named "Launch graph", with type "Launch".
 
-> Expect: the graph draws the three records.
+> Expect: the graph draws the space's objects and their links.
 
-- And Explorer, a plugin switched on a moment ago, draws the same records as a graph.
+- And Explorer, switched on a moment ago, draws the whole space as one graph of connected objects.
 
 Open the board and drag "Write the announcement" to Done, then open the table.
 
