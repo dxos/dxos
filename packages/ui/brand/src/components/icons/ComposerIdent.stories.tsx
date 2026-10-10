@@ -9,7 +9,7 @@ import * as Button from '@dxos/react-ui/Button';
 import { withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
-import { composerRings } from './Composer.tsx';
+import { composerRingPaths } from './Composer.tsx';
 
 const FONT_URL = 'https://fonts.googleapis.com/css2?family=Poiret+One&display=swap';
 
@@ -28,13 +28,60 @@ type IdentVariant = {
   duration: number;
   /** Delay between successive rings (ms). */
   stagger: number;
+  /** Start from the symmetric mark, then extend each bottom arm to its true length. */
+  grow?: {
+    duration: number;
+    stagger: number;
+    /** Pause after the rings land before the arms grow (ms). */
+    delay: number;
+  };
 };
 
-const VARIANT_NAMES = ['ripple', 'focus', 'sweep', 'spin', 'fade'] as const;
+/**
+ * Bottom-arm vertices of each ring paired with their mirror image of the top arm across y = 128 (in path coordinates),
+ * so the mark can start symmetric; the bottom arms of the real mark are longer.
+ */
+const SYMMETRIC_ARMS: [string, string][][] = [
+  [
+    ['761.579,164', '729.238,164'],
+    ['769.5,140', '721.317,140'],
+  ],
+  [
+    ['1065.83,1064', '1047.85,1064'],
+    ['1074.47,1040', '1039.21,1040'],
+  ],
+  [
+    ['745.738,212', '745.079,212'],
+    ['753.659,188', '737.159,188'],
+  ],
+  [
+    ['152.958,212', '152.319,212'],
+    ['145.277,236', '160,236'],
+  ],
+];
+
+const symmetricPaths = composerRingPaths.map(({ d }, index) =>
+  SYMMETRIC_ARMS[index].reduce((path, [from, to]) => path.replaceAll(from, to), d),
+);
+
+const VARIANT_NAMES = ['grow', 'ripple', 'focus', 'sweep', 'spin', 'fade'] as const;
 
 type VariantName = (typeof VARIANT_NAMES)[number];
 
 const variants: Record<VariantName, IdentVariant> = {
+  grow: {
+    label: 'Grow',
+    duration: 700,
+    stagger: 180,
+    ring: () => ({
+      keyframes: [
+        { opacity: 0, transform: 'scale(0.85)' },
+        { opacity: 1, transform: 'scale(1)' },
+      ],
+      easing: 'ease-out',
+    }),
+    grow: { duration: 900, stagger: 120, delay: 300 },
+  },
   ripple: {
     label: 'Ripple',
     duration: 900,
@@ -162,6 +209,7 @@ const ComposerIdent = ({
 }: ComposerIdentProps) => {
   const metrics = useWordmarkMetrics();
   const ringRefs = useRef<(SVGGElement | null)[]>([]);
+  const pathRefs = useRef<(SVGPathElement | null)[]>([]);
   const wordmarkRef = useRef<SVGTextElement>(null);
 
   useEffect(() => {
@@ -169,8 +217,8 @@ const ComposerIdent = ({
       return;
     }
 
-    const { ring, outerFirst, duration, stagger } = variants[variant];
-    const count = composerRings.length;
+    const { ring, outerFirst, duration, stagger, grow } = variants[variant];
+    const count = composerRingPaths.length;
     const animations = ringRefs.current.flatMap((element, index) => {
       if (!element) {
         return [];
@@ -187,11 +235,32 @@ const ComposerIdent = ({
       ];
     });
 
+    let ringsEnd = (count - 1) * stagger + duration;
+    if (grow) {
+      const growStart = ringsEnd + grow.delay;
+      pathRefs.current.forEach((element, index) => {
+        if (element) {
+          animations.push(
+            element.animate(
+              [{ d: `path("${symmetricPaths[index]}")` }, { d: `path("${composerRingPaths[index].d}")` }],
+              {
+                duration: grow.duration * speed,
+                delay: (growStart + index * grow.stagger) * speed,
+                easing: 'cubic-bezier(0.65, 0, 0.35, 1)',
+                fill: 'both',
+              },
+            ),
+          );
+        }
+      });
+      ringsEnd = growStart + (count - 1) * grow.stagger + grow.duration;
+    }
+
     if (wordmarkRef.current) {
       animations.push(
         wordmarkRef.current.animate([{ opacity: 0 }, { opacity: 1 }], {
           duration: 1200 * speed,
-          delay: ((count - 1) * stagger + duration + wordmarkDelay) * speed,
+          delay: (ringsEnd + wordmarkDelay) * speed,
           easing: 'ease-in-out',
           fill: 'both',
         }),
@@ -205,7 +274,7 @@ const ComposerIdent = ({
   const width = wordmark && metrics ? WORDMARK_X + metrics.width : 256;
   return (
     <svg width={(size * width) / 256} height={size} viewBox={`0 0 ${width} 256`} className='overflow-visible shrink-0'>
-      {composerRings.map((ringElement, index) => (
+      {composerRingPaths.map(({ transform, fill, d }, index) => (
         <g
           key={index}
           ref={(element) => {
@@ -213,7 +282,14 @@ const ComposerIdent = ({
           }}
           style={{ opacity: 0, transformBox: 'view-box', transformOrigin: '128px 128px' }}
         >
-          {ringElement}
+          <path
+            ref={(element) => {
+              pathRefs.current[index] = element;
+            }}
+            transform={transform}
+            d={d}
+            style={{ fill }}
+          />
         </g>
       ))}
       {wordmark && metrics && (
@@ -278,7 +354,7 @@ const meta = {
     wordmarkDelay: { control: { type: 'range', min: 0, max: 2000, step: 50 } },
   },
   args: {
-    variant: 'ripple',
+    variant: 'grow',
     size: 160,
     speed: 1,
     wordmarkDelay: 100,
@@ -290,7 +366,9 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Ripple: Story = {};
+export const Grow: Story = {};
+
+export const Ripple: Story = { args: { variant: 'ripple' } };
 
 export const Focus: Story = { args: { variant: 'focus' } };
 
