@@ -28,6 +28,8 @@ type IdentVariant = {
   duration: number;
   /** Delay between successive rings (ms). */
   stagger: number;
+  /** Fraction (0-1) of the last ring's animation at which it looks at rest; long easing tails settle before they end. */
+  settledAt?: number;
   /** Start from the symmetric mark, then extend each bottom arm to its true length. */
   grow?: {
     /** Growth speed shared by every arm (viewBox units per ms), so shorter arms finish first. */
@@ -155,6 +157,8 @@ const variants: Record<VariantName, IdentVariant> = {
       easing: 'cubic-bezier(0.25, 1, 0.5, 1)',
     }),
     grow: { rate: 0.1, delay: 0, finishAt: 0.55 },
+    // The inner ring is within ~4° of rest here; with the default 100ms gap the wordmark starts as the C visibly stops.
+    settledAt: 0.8,
   },
   fade: {
     label: 'Fade',
@@ -241,7 +245,7 @@ const ComposerIdent = ({
       return;
     }
 
-    const { ring, outerFirst, duration, stagger, grow } = variants[variant];
+    const { ring, outerFirst, duration, stagger, grow, settledAt = 1 } = variants[variant];
     const count = composerRingPaths.length;
     const animations = ringRefs.current.flatMap((element, index) => {
       if (!element) {
@@ -259,7 +263,7 @@ const ComposerIdent = ({
       ];
     });
 
-    let ringsEnd = (count - 1) * stagger + duration;
+    let ringsEnd = (count - 1) * stagger + duration * settledAt;
     if (grow) {
       // Paths carry different x scales, so convert each arm's travel into viewBox units before timing it.
       const growDurations = pathRefs.current.map((element, index) => {
