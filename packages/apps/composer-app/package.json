@@ -1,6 +1,6 @@
 {
   "name": "@dxos/composer-app",
-  "version": "0.11.10",
+  "version": "0.11.11",
   "private": true,
   "description": "DXOS Composer application.",
   "homepage": "https://dxos.org",
@@ -102,6 +102,7 @@
     "@dxos/plugin-github": "workspace:*",
     "@dxos/plugin-google": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
+    "@dxos/plugin-handpan": "workspace:*",
     "@dxos/plugin-heygen": "workspace:*",
     "@dxos/plugin-higgsfield": "workspace:*",
     "@dxos/plugin-ibkr": "workspace:*",

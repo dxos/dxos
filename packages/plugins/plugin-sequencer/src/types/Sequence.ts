@@ -19,6 +19,10 @@ export const Sequence = Schema.Struct({
   name: Schema.optional(Schema.String),
   /** Length in beats. */
   length: Schema.Number,
+  /** Overrides the score's time signature for this sequence (e.g. '3/4'). */
+  timeSignature: Schema.optional(Schema.String),
+  /** Overrides the score's key for this sequence (e.g. 'D minor'). */
+  key: Schema.optional(Schema.String),
   notes: Schema.mutable(Schema.Array(Note)),
 }).mapFields(Struct.map(Schema.mutableKey));
 

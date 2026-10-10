@@ -76,4 +76,4 @@ Composer is an extensible, local-first workspace. Documents, sketches, tasks, pr
 
 - **Personal space** in the sidebar is empty and waiting. That's where to do your own work.
 - This Bramble sample space can be renamed, edited, or deleted at any time.
-- Questions, bug reports, feature requests? Join us on [Discord](https://dxos.org/discord) or read the [docs](https://docs.dxos.org).
+- Questions, bug reports, feature requests? Join us on [Discord](https://dxos.org/discord) or read the [docs](https://dxos.org/docs/).

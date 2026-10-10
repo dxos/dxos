@@ -1,0 +1,134 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import React, { useState } from 'react';
+
+import { mx } from '@dxos/ui-theme';
+
+import { type Pitch, type ScaleNote } from '#audio';
+
+export type HandpanLayoutProps = {
+  notes: ScaleNote[];
+  /** Note awaiting input (e.g. the calibration target). */
+  target?: Pitch;
+  /** Notes sounding now (several for a chord). */
+  active?: Pitch[];
+  /** Per-note completion (0–1), drawn as a ring; complete notes are drawn in the success colour. */
+  progress?: Record<Pitch, number>;
+  onSelect?: (note: ScaleNote) => void;
+  classNames?: string;
+};
+
+const SIZE = 320;
+const CENTER = SIZE / 2;
+const RING = 118;
+const DING_RADIUS = 46;
+const NOTE_RADIUS = 34;
+
+/**
+ * Top-down handpan: the ding in the centre and tone fields around the rim, ascending in the
+ * conventional zig-zag from the bottom (1 bottom, 2 left, 3 right, …).
+ */
+export const HandpanLayout = ({ notes, target, active, progress, onSelect, classNames }: HandpanLayoutProps) => {
+  const fields = notes.filter((note) => note.index > 0);
+  const isActive = (pitch: Pitch) => active?.includes(pitch) ?? false;
+  const [focused, setFocused] = useState<Pitch>();
+  const step = (2 * Math.PI) / Math.max(fields.length, 1);
+
+  const position = (note: ScaleNote) => {
+    if (note.index === 0) {
+      return { x: CENTER, y: CENTER, radius: DING_RADIUS };
+    }
+    const rank = note.index - 1;
+    const angle = Math.PI / 2 + Math.ceil(rank / 2) * step * (rank % 2 ? 1 : -1);
+    return { x: CENTER + RING * Math.cos(angle), y: CENTER + RING * Math.sin(angle), radius: NOTE_RADIUS };
+  };
+
+  return (
+    <svg
+      viewBox={`0 0 ${SIZE} ${SIZE}`}
+      // `shrink-0`: in a column the pan would otherwise give up height to siblings and shrink.
+      className={mx('w-full max-w-[24rem] aspect-square shrink-0 select-none', classNames)}
+      role='group'
+      aria-label='Handpan'
+    >
+      <circle cx={CENTER} cy={CENTER} r={CENTER - 4} className='fill-group-surface stroke-separator' strokeWidth={2} />
+      {notes.map((note) => {
+        const { x, y, radius } = position(note);
+        const done = progress?.[note.pitch] ?? 0;
+        const circumference = 2 * Math.PI * (radius + 4);
+        return (
+          <g
+            key={note.pitch}
+            role='button'
+            tabIndex={onSelect ? 0 : -1}
+            aria-label={`${note.label} ${note.pitch}`}
+            aria-pressed={isActive(note.pitch)}
+            aria-current={note.pitch === target || undefined}
+            data-calibrated={(progress?.[note.pitch] ?? 0) >= 1 || undefined}
+            data-testid={`handpan.note.${note.label}`}
+            className={mx('outline-none', onSelect && 'cursor-pointer')}
+            // An SVG `g` draws no useful outline, so keyboard focus rings the pad circle instead.
+            onFocus={(event) => event.currentTarget.matches(':focus-visible') && setFocused(note.pitch)}
+            onBlur={() => setFocused(undefined)}
+            onClick={() => onSelect?.(note)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                // Space would otherwise also scroll the enclosing panel.
+                event.preventDefault();
+                onSelect?.(note);
+              }
+            }}
+          >
+            <circle
+              cx={x}
+              cy={y}
+              r={radius}
+              strokeWidth={note.pitch === target || note.pitch === focused ? 3 : 1.5}
+              className={mx(
+                'transition-colors duration-150',
+                isActive(note.pitch) ? 'fill-accent-bg' : done >= 1 ? 'fill-success-surface/25' : 'fill-card-surface',
+                note.pitch === focused
+                  ? 'stroke-fg'
+                  : note.pitch === target
+                    ? 'stroke-accent-text'
+                    : done >= 1
+                      ? 'stroke-success-text'
+                      : 'stroke-separator',
+              )}
+            />
+            {done > 0 && (
+              <circle
+                cx={x}
+                cy={y}
+                r={radius + 4}
+                fill='none'
+                strokeWidth={3}
+                strokeDasharray={`${circumference * Math.min(done, 1)} ${circumference}`}
+                transform={`rotate(-90 ${x} ${y})`}
+                className={done >= 1 ? 'stroke-success-text' : 'stroke-accent-text'}
+              />
+            )}
+            <text
+              x={x}
+              y={y - 2}
+              textAnchor='middle'
+              className={mx('text-xl font-medium', isActive(note.pitch) ? 'fill-accent-fg' : 'fill-fg')}
+            >
+              {note.label}
+            </text>
+            <text
+              x={x}
+              y={y + 16}
+              textAnchor='middle'
+              className={mx('text-xs', isActive(note.pitch) ? 'fill-accent-fg' : 'fill-fg-muted')}
+            >
+              {note.pitch}
+            </text>
+          </g>
+        );
+      })}
+    </svg>
+  );
+};

@@ -6,7 +6,7 @@ import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
-import { Score } from '#types';
+import { Instrument, Score } from '#types';
 
 export const translations = [
   {
@@ -21,6 +21,17 @@ export const translations = [
         'rename-object.label': 'Rename score',
         'delete-object.label': 'Delete score',
         'object-deleted.label': 'Score deleted',
+      },
+      [Type.getTypename(Instrument.Instrument)]: {
+        'typename.label': 'Instrument',
+        'typename.label_zero': 'Instruments',
+        'typename.label_one': 'Instrument',
+        'typename.label_other': 'Instruments',
+        'object-name.placeholder': 'New instrument',
+        'add-object.label': 'Add instrument',
+        'rename-object.label': 'Rename instrument',
+        'delete-object.label': 'Delete instrument',
+        'object-deleted.label': 'Instrument deleted',
       },
       [meta.profile.key]: {
         'plugin.name': 'Sequencer',

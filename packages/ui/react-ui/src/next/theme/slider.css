@@ -1,7 +1,7 @@
 /*
- * Slider: an optional label above a block-tall control holding a 4px track and icon-sized thumbs. The machine centres
- * each thumb on its value (`thumbAlignment='center'`), so the control is inset by half a thumb on its main axis to keep
- * a thumb at either end inside the root, and pointer positions still map onto the track's own length.
+ * Slider: an optional label above a block-tall control holding a 4px track and icon-sized thumbs. Thumbs are kept
+ * within the track (`thumbAlignment='contain'`, with the thumb size measured by the component), so the track spans the
+ * full width and lines up with the label.
  */
 
 @layer dx-components {
@@ -29,7 +29,6 @@
     display: flex;
     align-items: center;
     height: var(--dx-block-size);
-    margin-inline: calc(var(--dx-slider-thumb) / 2);
   }
   .dx-slider-control[data-orientation='vertical'] {
     flex: 1 1 auto;
@@ -37,8 +36,6 @@
     justify-content: center;
     width: var(--dx-block-size);
     height: auto;
-    margin-inline: 0;
-    margin-block: calc(var(--dx-slider-thumb) / 2);
   }
 
   .dx-slider-track {

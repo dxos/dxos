@@ -1,5 +1,16 @@
 # @dxos/effect
 
+## 0.14.0
+
+### Patch Changes
+
+- 1819960: Invitation spans are no longer lost to sampling. Tail sampling now keeps every span marked `dxos.sampling.keep`, and both the host's `handleInvitationFlow` span and the guest's `acceptInvitation` span carry that mark, so short invitation flows are no longer dropped 70% of the time. The host span also records `ctx.outcome` when it ends.
+- @dxos/async@0.14.0
+  - @dxos/context@0.14.0
+  - @dxos/invariant@0.14.0
+  - @dxos/node-std@0.14.0
+  - @dxos/util@0.14.0
+
 ## 0.13.0
 
 ### Patch Changes
