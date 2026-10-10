@@ -55,9 +55,23 @@ export const prep = {
       await home.click();
     }
     await page.locator(HOME).first().waitFor({ state: 'visible', timeout: 30_000 });
+    // A project leaves its Trace panel open in the context sidebar, which narrows every plank after it.
+    const context = page.locator('[data-testid="deck.toggleComplementarySidebar"][aria-label="Close context sidebar"]');
+    if (
+      await context
+        .first()
+        .isVisible()
+        .catch(() => false)
+    ) {
+      await context
+        .first()
+        .click({ timeout: 2_000 })
+        .catch(() => undefined);
+    }
+    // Best effort: a companion left open by a document or project setup can sit under an overlay.
     const close = page.locator('role=button[name="Close companion"]').first();
     if (await close.isVisible().catch(() => false)) {
-      await close.click();
+      await close.click({ timeout: 2_000 }).catch(() => page.keyboard.press('Escape'));
     }
   },
 };

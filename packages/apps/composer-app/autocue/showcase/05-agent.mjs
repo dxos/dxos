@@ -107,6 +107,10 @@ export const steps = [
     done: async ({ page }) => (await treeObject(page, DOCUMENT)) !== undefined,
     run: async ({ page }) => {
       await prep.run({ page });
+      // `run` executes even when `done` holds (only a replay consults it), and a second copy confuses the scene.
+      if ((await treeObject(page, DOCUMENT)) !== undefined) {
+        return;
+      }
       await page.locator('[data-testid="spacePlugin.createObject"]').first().click();
       await page.locator('[data-testid="create-object-form.type.org.dxos.type.document"]').first().click();
       const name = page.locator('[data-testid="create-object-form"] [data-testid="name"]');

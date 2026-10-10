@@ -21,14 +21,15 @@ const search = new URL(import.meta.url).search;
 const SCENES = ['01-home', '03-plugins', '04-objects', '05-agent', '06-project', '07-inbox', '08-studio'];
 const scenes = await Promise.all(SCENES.map((scene) => import(`./showcase/${scene}.mjs${search}`)));
 
-// Scene 1's prep opens every scene, so it runs once up front and the scenes' own copies are dropped.
+// Scene 1's prep opens every scene; standalone, each scene runs it first, so in one take it runs between scenes.
 const { prep } = scenes[0];
-const all = scenes.flatMap((scene) => scene.steps).filter((step) => step !== prep);
+const own = scenes.map((scene) => scene.steps.filter((step) => step !== prep));
 
-// The setups leave the page wherever they finished, so the take starts from Home again.
+// Not a setup step: one mid-take would re-arm the countdown.
+const home = (scene) => ({ ...prep, setup: false, name: `Back to Home before ${SCENES[scene]}` });
+
 export const steps = [
   prep,
-  ...all.filter((step) => step.setup),
-  { ...prep, name: 'Prep (off camera): back to Home' },
-  ...all.filter((step) => !step.setup),
+  ...own.flatMap((scene) => scene.filter((step) => step.setup)),
+  ...own.flatMap((scene, index) => [home(index), ...scene.filter((step) => !step.setup)]),
 ];

@@ -38,18 +38,24 @@ const FRAMES = [
 ].map(([name, prompt, notes]) => ({ name, kind: 'image', prompt, notes }));
 
 /**
- * The storyboard's card under Home → Recent. The operation files it under Database → Storyboards, which lists the
- * type rather than its objects, so Recent is the direct path to it.
+ * Where the storyboard's navigation path is kept, in the profile's localStorage: the operation files it only under
+ * Database → Storyboards, a type node that lists no objects, so the scene opens it by path.
  */
-const RECENT = `[data-testid="deck.plank"][data-attendable-id$="/home"] >> text="${STORYBOARD}"`;
+const KEY = 'autocue.showcase.storyboard';
+
+const storedPath = (page) => page.evaluate((key) => localStorage.getItem(key), KEY);
 
 export const steps = [
   prep,
   {
     name: 'Setup (off camera): the showcase storyboard',
     setup: true,
-    done: async ({ page }) => (await page.locator(RECENT).count()) > 0,
+    done: async ({ page }) => (await storedPath(page)) !== null,
     run: async ({ page }) => {
+      if ((await storedPath(page)) !== null) {
+        return;
+      }
+      await prep.run({ page });
       // The space on screen, read off the Home plank's id (`root/<spaceId>/home`); the operation needs one.
       const spaceId = await page
         .locator('[data-testid="deck.plank"][data-attendable-id$="/home"]')
@@ -57,19 +63,33 @@ export const steps = [
         .getAttribute('data-attendable-id')
         .then((id) => id?.split('/')[1]);
       await page.evaluate(
-        ({ name, frames, spaceId }) =>
-          composer.invoke('org.dxos.operation.studio.createStoryboard', { name, frames }, { spaceId }),
-        { name: STORYBOARD, frames: FRAMES, spaceId },
+        async ({ name, frames, spaceId, key }) => {
+          const { storyboard } = await composer.invoke(
+            'org.dxos.operation.studio.createStoryboard',
+            { name, frames },
+            { spaceId },
+          );
+          // `echo:///<objectId>`, filed under the storyboard type's node.
+          const id = String(storyboard.dxn ?? storyboard.uri ?? storyboard)
+            .split('/')
+            .at(-1);
+          if (!/^[0-9A-Z]{26}$/.test(id)) {
+            throw new Error(`unexpected storyboard ref: ${String(storyboard)}`);
+          }
+          localStorage.setItem(key, `root/${spaceId}/system/database/org.dxos.type.storyboard/${id}`);
+        },
+        { name: STORYBOARD, frames: FRAMES, spaceId, key: KEY },
       );
-      await page.locator(RECENT).first().waitFor({ state: 'visible', timeout: 15_000 });
     },
   },
   {
     name: 'Open the storyboard',
     narration: 'And this film? It was made in Composer.',
-    run: async ({ demo, page }) => {
-      await prep.run({ page });
-      await demo.click({ selector: `${RECENT} >> nth=0`, label: STORYBOARD });
+    run: async ({ page }) => {
+      await page.evaluate(
+        (path) => composer.invoke('org.dxos.operation.appToolkit.open', { subject: [path] }),
+        await storedPath(page),
+      );
       await page.locator('[data-testid="studioPlugin.play"]').first().waitFor({ state: 'visible', timeout: 15_000 });
       await page.waitForTimeout(BEAT * 2);
     },
