@@ -171,6 +171,11 @@ export class Analyzer {
     return this.#sampleRate;
   }
 
+  /** Strike sensitivity (0–1); the default 0.7 matches the onset margin the analyzer is tuned for. */
+  setSensitivity(sensitivity: number): void {
+    this.#onsets.setDelta(sensitivityToDelta(sensitivity));
+  }
+
   /** Appends samples and returns the frames and notes completed by them. */
   push(samples: Float32Array): AnalyzerResult {
     const result: AnalyzerResult = { frames: [], notes: [] };
@@ -313,6 +318,11 @@ export class Analyzer {
     return output;
   }
 }
+
+export const DEFAULT_SENSITIVITY = 0.7;
+
+/** Maps sensitivity 0–1 to an onset flux margin of 0.31 (least) … 0.01 (most); 0.7 → 0.1. */
+const sensitivityToDelta = (sensitivity: number): number => 0.01 + 0.3 * (1 - Math.max(0, Math.min(1, sensitivity)));
 
 const computeRms = (frame: Float32Array): number => {
   let sum = 0;

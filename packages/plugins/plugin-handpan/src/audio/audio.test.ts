@@ -244,6 +244,15 @@ describe('Calibration', () => {
     expect(Calibration.getTemplates(restored)).toEqual(Calibration.getTemplates(state));
   });
 
+  test('folds a strike read at the compound fifth onto the target', ({ expect }) => {
+    const { rejected, state } = Calibration.addStrike(
+      Calibration.createCalibration(D_KURD, { strikes: 1 }),
+      strike(3 * 147),
+    );
+    expect(rejected).toBeUndefined();
+    expect(Calibration.getTemplates(state)[0].frequency).toBeCloseTo(147);
+  });
+
   test('folds an octave-high strike onto the target', ({ expect }) => {
     const { state, rejected } = Calibration.addStrike(
       Calibration.createCalibration(D_KURD, { strikes: 1 }),

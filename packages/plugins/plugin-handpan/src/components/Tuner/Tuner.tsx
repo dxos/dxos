@@ -7,6 +7,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Oscilloscope } from '@dxos/react-ui-audio';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Select from '@dxos/react-ui/Select';
@@ -17,6 +18,7 @@ import {
   type AnalyzerFrame,
   Calibration,
   type Classification,
+  DEFAULT_SENSITIVITY,
   type NoteEvent,
   type Pitch,
   PitchTracker,
@@ -24,6 +26,8 @@ import {
   type ScaleNote,
   SCALES,
   classifyNote,
+  formatPitch,
+  frequencyToMidi,
   getScaleNotes,
   nominalTemplates,
 } from '#audio';
@@ -61,6 +65,36 @@ type PlayedNote = {
 };
 
 const HISTORY_SIZE = 16;
+const STRIKE_LOG_SIZE = 5;
+
+const formatCents = (value: number) => `${Math.round(value) > 0 ? '+' : ''}${Math.round(value) || 0}`;
+
+/** What a strike sounded like, as a scale note if it is one, else a pitch name. */
+const describeHeard = (event: NoteEvent, notes: ScaleNote[]): string => {
+  if (event.frequency === undefined) {
+    return '?';
+  }
+  const classification = classifyNote({ frequency: event.frequency, partials: [] }, nominalTemplates(notes));
+  const note = classification && notes.find((candidate) => candidate.pitch === classification.template.pitch);
+  return note ? `${note.label} ${note.pitch}` : formatPitch(frequencyToMidi(event.frequency));
+};
+
+const loadNumber = (name: string): number | undefined => {
+  try {
+    const value = Number(localStorage.getItem(`${meta.profile.key}.${name}`) ?? undefined);
+    return Number.isFinite(value) ? value : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
+const saveNumber = (name: string, value: number) => {
+  try {
+    localStorage.setItem(`${meta.profile.key}.${name}`, String(value));
+  } catch {
+    // Storage unavailable.
+  }
+};
 
 /** Per-frame decay of the recent peak level (≈8 s half-life at ~90 frames/s), slower than a note's tail. */
 const PEAK_DECAY = 0.999;
@@ -151,6 +185,19 @@ export const Tuner = ({
     [persist],
   );
   const [rejection, setRejection] = useState<Calibration.StrikeRejection>();
+  const [strikeLog, setStrikeLog] = useState<{ key: number; text: string; accepted: boolean }[]>([]);
+  const [gain, setGain] = useState(() => (persist ? loadNumber('gain') : undefined) ?? 0);
+  const [sensitivity, setSensitivity] = useState(
+    () => (persist ? loadNumber('sensitivity') : undefined) ?? DEFAULT_SENSITIVITY,
+  );
+  const handleGainChange = (value: number) => {
+    setGain(value);
+    persist && saveNumber('gain', value);
+  };
+  const handleSensitivityChange = (value: number) => {
+    setSensitivity(value);
+    persist && saveNumber('sensitivity', value);
+  };
 
   const templates = useMemo(() => {
     const calibrated = Calibration.getTemplates(calibration);
@@ -198,6 +245,18 @@ export const Tuner = ({
         const result = Calibration.addStrike(calibrationRef.current, event);
         setCalibration(result.state);
         setRejection(result.rejected);
+        if (target) {
+          const heard = describeHeard(event, notes);
+          const text = result.rejected
+            ? t(`strike-log-${result.rejected}.message`, { heard, expected: `${target.label} ${target.pitch}` })
+            : t('strike-log-accepted.message', {
+                note: `${target.label} ${target.pitch}`,
+                cents: formatCents(result.cents ?? 0),
+              });
+          setStrikeLog((previous) =>
+            [{ key: event.time, text, accepted: !result.rejected }, ...previous].slice(0, STRIKE_LOG_SIZE),
+          );
+        }
         if (!result.rejected) {
           if (target) {
             trackerRef.current.set({ key: target.pitch, cents: result.cents ?? 0 });
@@ -221,7 +280,14 @@ export const Tuner = ({
     [notes, onNote, setCalibration],
   );
 
-  const analyzer = useNoteAnalyzer({ source, onNote: handleNote, onFrame: handleFrame, silent });
+  const analyzer = useNoteAnalyzer({
+    source,
+    onNote: handleNote,
+    onFrame: handleFrame,
+    silent,
+    gain,
+    sensitivity,
+  });
   const listening = analyzer.status !== 'idle';
 
   const handleScaleChange = (id: string) => {
@@ -254,6 +320,7 @@ export const Tuner = ({
   const handleReset = () => {
     setCalibration(Calibration.createCalibration(notes, { strikes }));
     setRejection(undefined);
+    setStrikeLog([]);
     setPlayed([]);
   };
 
@@ -382,6 +449,24 @@ export const Tuner = ({
               threshold={listening ? thresholdRef.current : undefined}
             />
           </Layout.Flex>
+          <Layout.Grid cols={2} gap='md' classNames='w-full max-w-md'>
+            <Input.Slider
+              label={`${t('gain.label')} ${gain > 0 ? '+' : ''}${gain} dB`}
+              value={[gain]}
+              min={-12}
+              max={36}
+              step={1}
+              onValueChange={([value]) => handleGainChange(value)}
+            />
+            <Input.Slider
+              label={`${t('sensitivity.label')} ${Math.round(sensitivity * 100)}%`}
+              value={[sensitivity]}
+              min={0}
+              max={1}
+              step={0.05}
+              onValueChange={([value]) => handleSensitivityChange(value)}
+            />
+          </Layout.Grid>
           <HandpanLayout
             notes={notes}
             target={target?.pitch}
@@ -397,6 +482,18 @@ export const Tuner = ({
           >
             {message}
           </span>
+          {mode === 'calibrate' && listening && (
+            <Layout.Flex column align='center' gap='xs' classNames='text-xs' data-testid='handpan.strike-log'>
+              <span className='text-fg-subtle'>
+                {strikeLog.length ? t('strike-log.label') : t('strike-log-empty.message')}
+              </span>
+              {strikeLog.map(({ key, text, accepted }) => (
+                <span key={key} className={accepted ? 'text-success-text' : 'text-fg-muted'}>
+                  {text}
+                </span>
+              ))}
+            </Layout.Flex>
+          )}
           {/* Always rendered so the first strike does not shift the pads. */}
           <Layout.Flex column align='center' gap='xs' classNames={played.length === 0 ? 'invisible' : undefined}>
             <span className='text-xs text-fg-subtle'>{t('history.label')}</span>

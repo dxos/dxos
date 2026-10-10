@@ -65,7 +65,7 @@ export const selectNote = (state: CalibrationState, pitch: Pitch): CalibrationSt
 
 /**
  * Records a strike for the current target; a strike is accepted only if it is pitched, fully
- * measured, and within `maxCents` of the target's nominal frequency (an octave error is folded back).
+ * measured, and within `maxCents` of the target's nominal frequency (octave and twelfth errors are folded back).
  */
 export const addStrike = (
   state: CalibrationState,
@@ -84,8 +84,10 @@ export const addStrike = (
     return { state, rejected: 'imprecise' };
   }
 
-  const frequency = [event.frequency, event.frequency / 2, event.frequency * 2].reduce((best, candidate) =>
-    Math.abs(cents(candidate, target.frequency)) < Math.abs(cents(best, target.frequency)) ? candidate : best,
+  // A handpan's octave and compound-fifth partials can capture the estimate: fold 2f, f/2 and 3f back.
+  const frequency = [event.frequency, event.frequency / 2, event.frequency * 2, event.frequency / 3].reduce(
+    (best, candidate) =>
+      Math.abs(cents(candidate, target.frequency)) < Math.abs(cents(best, target.frequency)) ? candidate : best,
   );
   const offset = cents(frequency, target.frequency);
   if (Math.abs(offset) > maxCents) {

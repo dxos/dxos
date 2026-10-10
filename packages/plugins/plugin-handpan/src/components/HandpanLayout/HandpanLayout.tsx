@@ -14,7 +14,7 @@ export type HandpanLayoutProps = {
   target?: Pitch;
   /** Note most recently played. */
   active?: Pitch;
-  /** Per-note completion (0–1), drawn as a ring. */
+  /** Per-note completion (0–1), drawn as a ring; complete notes are drawn in the success colour. */
   progress?: Record<Pitch, number>;
   onSelect?: (note: ScaleNote) => void;
   classNames?: string;
@@ -63,6 +63,7 @@ export const HandpanLayout = ({ notes, target, active, progress, onSelect, class
             aria-label={`${note.label} ${note.pitch}`}
             aria-pressed={note.pitch === active}
             aria-current={note.pitch === target || undefined}
+            data-calibrated={(progress?.[note.pitch] ?? 0) >= 1 || undefined}
             data-testid={`handpan.note.${note.label}`}
             className={mx('outline-none', onSelect && 'cursor-pointer')}
             onClick={() => onSelect?.(note)}
@@ -75,8 +76,8 @@ export const HandpanLayout = ({ notes, target, active, progress, onSelect, class
               strokeWidth={note.pitch === target ? 3 : 1.5}
               className={mx(
                 'transition-colors duration-150',
-                note.pitch === active ? 'fill-accent-bg' : 'fill-card-surface',
-                note.pitch === target ? 'stroke-accent-text' : 'stroke-separator',
+                note.pitch === active ? 'fill-accent-bg' : done >= 1 ? 'fill-success-surface/25' : 'fill-card-surface',
+                note.pitch === target ? 'stroke-accent-text' : done >= 1 ? 'stroke-success-text' : 'stroke-separator',
               )}
             />
             {done > 0 && (
@@ -88,7 +89,7 @@ export const HandpanLayout = ({ notes, target, active, progress, onSelect, class
                 strokeWidth={3}
                 strokeDasharray={`${circumference * Math.min(done, 1)} ${circumference}`}
                 transform={`rotate(-90 ${x} ${y})`}
-                className='stroke-accent-text'
+                className={done >= 1 ? 'stroke-success-text' : 'stroke-accent-text'}
               />
             )}
             <text

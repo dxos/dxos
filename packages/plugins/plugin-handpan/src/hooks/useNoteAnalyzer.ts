@@ -10,6 +10,7 @@ import {
   Analyzer,
   type AnalyzerFrame,
   type AnalyzerOptions,
+  DEFAULT_SENSITIVITY,
   type NoteEvent,
   openMicrophone,
   startCapture,
@@ -30,6 +31,10 @@ export type UseNoteAnalyzerOptions = {
   analyzer?: Omit<AnalyzerOptions, 'sampleRate'>;
   /** Analyze synthesized strikes without playing them through the speakers. */
   silent?: boolean;
+  /** Input gain (dB) applied before analysis and the visualizers. */
+  gain?: number;
+  /** Strike sensitivity (0–1). */
+  sensitivity?: number;
 };
 
 export type NoteAnalyzer = {
@@ -50,7 +55,11 @@ type Session = {
   cancelled: boolean;
   dispose: () => void;
   play?: NoteAnalyzer['play'];
+  gain?: GainNode;
+  analyzer?: Analyzer;
 };
+
+const dbToGain = (db: number) => 10 ** (db / 20);
 
 /** Runs the streaming {@link Analyzer} over a live audio source. */
 export const useNoteAnalyzer = ({
@@ -59,6 +68,8 @@ export const useNoteAnalyzer = ({
   onFrame,
   analyzer,
   silent,
+  gain = 0,
+  sensitivity = DEFAULT_SENSITIVITY,
 }: UseNoteAnalyzerOptions): NoteAnalyzer => {
   const [status, setStatus] = useState<NoteAnalyzerStatus>('idle');
   const [error, setError] = useState<Error>();
@@ -69,6 +80,11 @@ export const useNoteAnalyzer = ({
   const onFrameRef = useRef(onFrame);
   onFrameRef.current = onFrame;
   const sessionRef = useRef<Session>(undefined);
+  // Read at start and applied live, so moving a slider never restarts the audio session.
+  const gainRef = useRef(gain);
+  gainRef.current = gain;
+  const sensitivityRef = useRef(sensitivity);
+  sensitivityRef.current = sensitivity;
 
   const stop = useCallback(() => {
     const session = sessionRef.current;
@@ -106,6 +122,8 @@ export const useNoteAnalyzer = ({
 
     const run = async () => {
       const notes = new Analyzer({ ...analyzer, sampleRate: context.sampleRate });
+      notes.setSensitivity(sensitivityRef.current);
+      session.analyzer = notes;
       let input: AudioNode;
       if (source === 'microphone') {
         const microphone = await openMicrophone(context);
@@ -137,9 +155,14 @@ export const useNoteAnalyzer = ({
         };
       }
 
+      const inputGain = new GainNode(context, { gain: dbToGain(gainRef.current) });
+      input.connect(inputGain);
+      cleanup.push(() => inputGain.disconnect());
+      session.gain = inputGain;
+
       const disconnect = await startCapture({
         context,
-        source: input,
+        source: inputGain,
         onSamples: (samples) => {
           const result = notes.push(samples);
           latest = result.frames.at(-1) ?? latest;
@@ -161,7 +184,7 @@ export const useNoteAnalyzer = ({
 
       // Visualizers call `disconnect()` on their source, which must not detach the analysis tap.
       const monitorNode = new GainNode(context);
-      input.connect(monitorNode);
+      inputGain.connect(monitorNode);
       cleanup.push(() => monitorNode.disconnect());
       setMonitor(monitorNode);
 
@@ -183,6 +206,14 @@ export const useNoteAnalyzer = ({
   }, [source, analyzer, silent, stop]);
 
   useEffect(() => stop, [source, stop]);
+
+  useEffect(() => {
+    sessionRef.current?.gain?.gain.setTargetAtTime(dbToGain(gain), sessionRef.current.gain.context.currentTime, 0.05);
+  }, [gain]);
+
+  useEffect(() => {
+    sessionRef.current?.analyzer?.setSensitivity(sensitivity);
+  }, [sensitivity]);
 
   const play = useCallback<NoteAnalyzer['play']>((strike) => sessionRef.current?.play?.(strike), []);
 

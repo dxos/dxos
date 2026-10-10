@@ -34,7 +34,7 @@ export type OnsetResult = {
 export class OnsetDetector {
   readonly #historySize: number;
   readonly #multiplier: number;
-  readonly #delta: number;
+  #delta: number;
   readonly #refractoryFrames: number;
   readonly #compression: number;
   readonly #peakDecay: number;
@@ -60,6 +60,11 @@ export class OnsetDetector {
     this.#compression = compression;
     this.#peakDecay = peakDecay;
     this.#minPeak = minPeak;
+  }
+
+  /** Margin above the adaptive median a frame's flux must exceed; lower detects softer strikes. */
+  setDelta(delta: number): void {
+    this.#delta = delta;
   }
 
   /** Processes one magnitude spectrum; `gate` suppresses onsets (e.g. during silence). */
