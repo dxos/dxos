@@ -6,6 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import { SCALES } from '#audio';
 import { translations } from '#translations';
 
 import { Tuner } from './Tuner.tsx';
@@ -14,6 +15,20 @@ const meta = {
   title: 'plugins/plugin-handpan/components/Tuner',
   component: Tuner,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
+  args: {
+    defaultScale: SCALES[0].id,
+  },
+  argTypes: {
+    defaultScale: {
+      name: 'key',
+      options: SCALES.map(({ id }) => id),
+      control: { type: 'select', labels: Object.fromEntries(SCALES.map(({ id, name }) => [id, name])) },
+    },
+    defaultMode: { options: ['calibrate', 'live'], control: { type: 'inline-radio' } },
+    source: { options: ['microphone', 'synth'], control: { type: 'inline-radio' } },
+    persist: { control: 'boolean' },
+    silent: { control: 'boolean' },
+  },
   parameters: {
     layout: 'fullscreen',
     translations,

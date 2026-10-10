@@ -33,12 +33,14 @@ export const NoteDisplay = ({ label, pitch, frequency, cents, clarity, percussiv
 
   return (
     <Layout.Flex column align='center' gap='sm' classNames={classNames} data-testid='handpan.note-display'>
-      <Layout.Flex align='end' gap='md'>
+      {/* Equal outer tracks keep the label centred over the meter whether or not a pitch is shown. */}
+      <Layout.Grid cols={[1, 'auto', 1]} align='end' gap='md' classNames='w-full'>
+        <span />
         <span className='text-6xl font-semibold tabular-nums' data-testid='handpan.note-display.label'>
           {percussive ? t('percussive.label') : (label ?? '–')}
         </span>
         <span className='text-2xl text-fg-muted pb-1'>{percussive ? '' : (pitch ?? '')}</span>
-      </Layout.Flex>
+      </Layout.Grid>
       <svg viewBox='0 0 200 24' className='w-64' role='meter' aria-label={t('cents.label')} aria-valuenow={cents}>
         <line x1={0} y1={12} x2={200} y2={12} strokeWidth={2} className='stroke-separator' />
         {[-50, -25, 0, 25, 50].map((tick) => (

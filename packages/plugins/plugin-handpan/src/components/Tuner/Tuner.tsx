@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Oscilloscope } from '@dxos/react-ui-audio';
 import * as Button from '@dxos/react-ui/Button';
@@ -42,12 +42,15 @@ export type TunerProps = {
   source: AudioSourceKind;
   defaultMode?: TunerMode;
   scales?: Scale[];
+  /** Initial scale id; changing it later (e.g. from a story control) switches the tuner to it. */
   defaultScale?: string;
   /** Strikes recorded per note during calibration. */
   strikes?: number;
   /** Maximum random detuning (cents) of synthesized strikes, to exercise the tuning meter. */
   synthDetune?: number;
-  /** Keep each scale's calibration in this browser (local storage) across reloads. */
+  /** Analyze synthesized strikes without playing them (e.g. while a microphone is in use nearby). */
+  silent?: boolean;
+  /** Keep the selected scale and each scale's calibration in this browser (local storage) across reloads. */
   persist?: boolean;
   onNote?: (event: NoteEvent, classification?: Classification) => void;
 };
@@ -61,6 +64,23 @@ type PlayedNote = {
 const HISTORY_SIZE = 16;
 
 const storageKey = (scaleId: string) => `${meta.profile.key}.calibration.${scaleId}`;
+const scaleStorageKey = `${meta.profile.key}.scale`;
+
+const loadScaleId = (): string | undefined => {
+  try {
+    return localStorage.getItem(scaleStorageKey) ?? undefined;
+  } catch {
+    return undefined;
+  }
+};
+
+const saveScaleId = (scaleId: string) => {
+  try {
+    localStorage.setItem(scaleStorageKey, scaleId);
+  } catch {
+    // Storage unavailable.
+  }
+};
 
 /** Storage can be unavailable (private windows, blocked site data); calibration then lasts the session. */
 const loadSamples = (scaleId: string): Calibration.CalibrationState['samples'] => {
@@ -97,11 +117,15 @@ export const Tuner = ({
   strikes = 3,
   synthDetune = 15,
   persist = false,
+  silent = false,
   onNote,
 }: TunerProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const [mode, setMode] = useState<TunerMode>(defaultMode);
-  const [scaleId, setScaleId] = useState(defaultScale);
+  const [scaleId, setScaleId] = useState(() => {
+    const saved = persist ? loadScaleId() : undefined;
+    return scales.some((candidate) => candidate.id === saved) ? saved : defaultScale;
+  });
   const [played, setPlayed] = useState<PlayedNote[]>([]);
 
   const scale = scales.find((candidate) => candidate.id === scaleId) ?? scales[0];
@@ -164,13 +188,16 @@ export const Tuner = ({
     [notes, onNote, setCalibration],
   );
 
-  const analyzer = useNoteAnalyzer({ source, onNote: handleNote });
+  const analyzer = useNoteAnalyzer({ source, onNote: handleNote, silent });
   const listening = analyzer.status !== 'idle';
 
   const handleScaleChange = (id: string) => {
     const next = scales.find((candidate) => candidate.id === id);
     if (next) {
       setScaleId(id);
+      if (persist) {
+        saveScaleId(id);
+      }
       scaleIdRef.current = id;
       setCalibration(
         persist
@@ -180,6 +207,15 @@ export const Tuner = ({
       setPlayed([]);
     }
   };
+
+  // Skips the first render: the initial scale (possibly restored from storage) is already set.
+  const appliedDefaultRef = useRef(defaultScale);
+  useEffect(() => {
+    if (defaultScale && defaultScale !== appliedDefaultRef.current) {
+      appliedDefaultRef.current = defaultScale;
+      handleScaleChange(defaultScale);
+    }
+  }, [defaultScale]);
 
   const handleReset = () => {
     setCalibration(Calibration.createCalibration(notes, { strikes }));

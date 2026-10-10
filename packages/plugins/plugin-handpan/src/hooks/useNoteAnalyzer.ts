@@ -26,6 +26,8 @@ export type UseNoteAnalyzerOptions = {
   source: AudioSourceKind;
   onNote?: (event: NoteEvent) => void;
   analyzer?: Omit<AnalyzerOptions, 'sampleRate'>;
+  /** Analyze synthesized strikes without playing them through the speakers. */
+  silent?: boolean;
 };
 
 export type NoteAnalyzer = {
@@ -49,7 +51,7 @@ type Session = {
 };
 
 /** Runs the streaming {@link Analyzer} over a live audio source. */
-export const useNoteAnalyzer = ({ source, onNote, analyzer }: UseNoteAnalyzerOptions): NoteAnalyzer => {
+export const useNoteAnalyzer = ({ source, onNote, analyzer, silent }: UseNoteAnalyzerOptions): NoteAnalyzer => {
   const [status, setStatus] = useState<NoteAnalyzerStatus>('idle');
   const [error, setError] = useState<Error>();
   const [frame, setFrame] = useState<AnalyzerFrame>();
@@ -104,8 +106,11 @@ export const useNoteAnalyzer = ({ source, onNote, analyzer }: UseNoteAnalyzerOpt
         cleanup.push(microphone.close);
         input = microphone.source;
       } else {
+        // The capture tap keeps the bus rendering even when it is not routed to the speakers.
         const bus = new GainNode(context);
-        bus.connect(context.destination);
+        if (!silent) {
+          bus.connect(context.destination);
+        }
         cleanup.push(() => bus.disconnect());
         input = bus;
         session.play = (strike) => {
@@ -164,7 +169,7 @@ export const useNoteAnalyzer = ({ source, onNote, analyzer }: UseNoteAnalyzerOpt
         setStatus('error');
       }
     });
-  }, [source, analyzer, stop]);
+  }, [source, analyzer, silent, stop]);
 
   useEffect(() => stop, [source, stop]);
 
