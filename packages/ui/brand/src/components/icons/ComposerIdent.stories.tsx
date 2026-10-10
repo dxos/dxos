@@ -32,8 +32,10 @@ type IdentVariant = {
   grow?: {
     /** Growth speed shared by every arm (viewBox units per ms), so shorter arms finish first. */
     rate: number;
-    /** Pause after the rings land before the arms grow (ms). */
+    /** Pause after the rings land before the arms grow (ms); ignored when `overlap` is set. */
     delay: number;
+    /** Grow while the rings settle, so the arms close exactly as the rings come to rest. */
+    overlap?: boolean;
   };
 };
 
@@ -141,16 +143,18 @@ const variants: Record<VariantName, IdentVariant> = {
   turn: {
     label: 'Turn',
     outerFirst: true,
-    duration: 1200,
-    stagger: 120,
+    duration: 3200,
+    // Every ring stops at the same moment; inner rings turn further so they still move against each other.
+    stagger: 0,
     ring: (index) => ({
       keyframes: [
-        { opacity: 0, transform: `rotate(${index % 2 ? -270 : 270}deg)` },
-        { opacity: 1, transform: 'rotate(0deg)' },
+        { opacity: 0, offset: 0, transform: `rotate(${(index % 2 ? -1 : 1) * (1080 - index * 180)}deg)` },
+        { opacity: 1, offset: 0.25 },
+        { opacity: 1, offset: 1, transform: 'rotate(0deg)' },
       ],
-      easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+      easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
     }),
-    grow: { rate: 0.05, delay: 200 },
+    grow: { rate: 0.05, delay: 0, overlap: true },
   },
   fade: {
     label: 'Fade',
@@ -257,7 +261,6 @@ const ComposerIdent = ({
 
     let ringsEnd = (count - 1) * stagger + duration;
     if (grow) {
-      const growStart = ringsEnd + grow.delay;
       // Paths carry different x scales, so convert each arm's travel into viewBox units before timing it.
       const growDurations = pathRefs.current.map((element, index) => {
         const scaleX = element?.transform.baseVal.consolidate()?.matrix.a ?? 1;
@@ -265,7 +268,7 @@ const ComposerIdent = ({
       });
       const longest = Math.max(...growDurations);
       // Shorter arms start later at the same rate so every arm closes together.
-      const growEnd = growStart + longest;
+      const growEnd = grow.overlap ? ringsEnd : ringsEnd + grow.delay + longest;
       pathRefs.current.forEach((element, index) => {
         if (element) {
           const growDuration = growDurations[index];
