@@ -19,6 +19,7 @@ import {
   asyncTimeout,
   runInContextAsync,
   scheduleTask,
+  scheduleTaskInterval,
 } from '@dxos/async';
 import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import { raise, warnAfterTimeout } from '@dxos/debug';
@@ -96,6 +97,15 @@ interface ObjectUnavailable {
 
 type SpaceDocumentLinks = DatabaseDirectory['links'];
 
+export type DocumentEvictionOptions = {
+  /** How long after an object's document loaded or was last written before it may be released. */
+  idleMs?: number;
+  /** Loaded documents past which the least recently active eligible ones are released regardless of idle time. */
+  maxDocuments?: number;
+  /** How often objects are checked. */
+  intervalMs?: number;
+};
+
 export type EntityManagerProps = {
   graph: HypergraphImpl;
   dataService: DataService.Client;
@@ -105,6 +115,9 @@ export type EntityManagerProps = {
   spaceKey: PublicKey;
   /** Device-local persistence for the current-branch selection (non-synced). In-memory if omitted. */
   branchStore?: BranchStore;
+
+  /** Moves idle objects back onto the index's copy, releasing their documents. Off when omitted. */
+  eviction?: DocumentEvictionOptions;
 
   /** Mints the caller-facing proxy for a core, injected because the proxy layer is built on this one. */
   createEntity: (core: ObjectCore) => Entity.Unknown;
@@ -141,6 +154,8 @@ export class EntityManager implements IDatabaseBinding {
 
   /** Optional device-local persistence for {@link _currentBranches} (survives reload, never syncs). */
   private readonly _branchStore?: BranchStore;
+
+  private readonly _eviction?: DocumentEvictionOptions;
 
   private readonly _createEntity: (core: ObjectCore) => Entity.Unknown;
 
@@ -245,6 +260,7 @@ export class EntityManager implements IDatabaseBinding {
     this._queryService = options.queryService;
     this._runtime = options.runtime;
     this._branchStore = options.branchStore;
+    this._eviction = options.eviction;
     this._repoProxy = new RepoProxy(this._dataService, this._runtime, this._spaceId);
     this.saveStateChanged = this._repoProxy.saveStateChanged;
   }
@@ -286,6 +302,9 @@ export class EntityManager implements IDatabaseBinding {
     await this._repoProxy.open();
     ctx.onDispose(() => this._unsubscribeFromHandles());
     this.#snapshotWatchScheduled = false;
+    if (this._eviction) {
+      scheduleTaskInterval(ctx, () => this.#evictIdleDocuments(), this._eviction.intervalMs ?? EVICTION_INTERVAL);
+    }
     ctx.onDispose(() => {
       this.#snapshotWatch?.cleanup();
       this.#snapshotWatch = undefined;
@@ -634,6 +653,97 @@ export class EntityManager implements IDatabaseBinding {
       },
     );
     this.#snapshotWatch = { ids: key, cleanup };
+  }
+
+  #evicting = false;
+
+  /**
+   * Releases the documents of objects nothing is editing and nobody has written to for a while, once
+   * the index holds them at their current heads, moving each object back onto the index's copy.
+   */
+  async #evictIdleDocuments(): Promise<void> {
+    if (this.#evicting || !this._eviction) {
+      return;
+    }
+    this.#evicting = true;
+    try {
+      const idleMs = this._eviction.idleMs ?? EVICTION_IDLE;
+      const maxDocuments = this._eviction.maxDocuments ?? EVICTION_MAX_DOCUMENTS;
+      const now = performance.now();
+      const bound = this.allObjectCores().filter((core) => core.docHandle !== undefined);
+      const candidates = bound
+        .filter((core) => this.#isEvictable(core))
+        .sort((left, right) => left.activeAt - right.activeAt);
+      const overCap = Math.max(0, bound.length - maxDocuments);
+      const evict = candidates.filter((core, index) => index < overCap || now - core.activeAt >= idleMs);
+      if (evict.length === 0) {
+        return;
+      }
+
+      const query = Query.select(Filter.id(...evict.map((core) => core.id)))
+        .options({ lazy: true })
+        .from(Scope.space({ id: this._spaceId }));
+      const response = await runServiceCall(
+        this._runtime,
+        this._queryService['QueryService.execQuery']({
+          query: JSON.stringify(query.ast),
+          queryId: `evict:${this._spaceId}:${++snapshotWatchCount}`,
+          reactivity: QueryReactivity.ONE_SHOT,
+        }).pipe(Stream.runHead),
+        { timeout: RPC_TIMEOUT },
+      );
+      for (const result of Option.getOrUndefined(response)?.results ?? []) {
+        const core = this._objects.get(result.id);
+        const state = getSnapshotState(result);
+        // Re-checked after the round trip: a write or an editor may have arrived meanwhile.
+        if (!core?.docHandle || !state || !this.#isEvictable(core) || core.activeAt > now) {
+          continue;
+        }
+        if (!sameHeads(state.heads, getHeads(core.getLoadedDoc()))) {
+          continue;
+        }
+        this._demoteCore(core, state);
+      }
+    } catch (err) {
+      log.catch(err);
+    } finally {
+      this.#evicting = false;
+    }
+  }
+
+  #isEvictable(core: ObjectCore): boolean {
+    return (
+      core.docHandle !== undefined &&
+      core.docHandle !== this._spaceRootDocHandle &&
+      !core.hasAccessorListeners &&
+      !this.#pendingPromotions.has(core.id) &&
+      this.getCurrentBranch(core.id) === 'main' &&
+      this._objectDocumentHandles.get(core.id) === core.docHandle
+    );
+  }
+
+  /** Moves a bound core onto an index row at its document's heads and releases the document. */
+  private _demoteCore(core: ObjectCore, state: SnapshotState): void {
+    const handle = core.docHandle;
+    invariant(handle);
+    core.demote({
+      root: { objects: { [core.id]: state.structure } },
+      heads: state.heads,
+      version: state.version,
+      updatedAt: state.updatedAt,
+    });
+    countWork('echo.demotions');
+    this.#snapshotIds.add(core.id);
+    this.#scheduleSnapshotWatch();
+
+    this._unbindObjectDocument(core.id);
+    if (handle.url != null) {
+      this._currentlyLoadingObjects.delete({ url: handle.url, objectId: core.id });
+    }
+    if (handle.documentId != null && (this._documentObjects.get(handle)?.size ?? 0) === 0) {
+      // Deferred by the repo while the host has not taken the document's last change.
+      this._repoProxy.release(handle.documentId);
+    }
   }
 
   /**
@@ -2571,6 +2681,13 @@ const RPC_TIMEOUT = 20_000;
 
 /** How long a flush waits for the documents of objects with queued writes before it fails. */
 const PROMOTION_FLUSH_TIMEOUT = 20_000;
+
+const EVICTION_INTERVAL = 30_000;
+const EVICTION_IDLE = 60_000;
+const EVICTION_MAX_DOCUMENTS = 500;
+
+const sameHeads = (left: readonly string[], right: readonly string[]): boolean =>
+  left.length === right.length && left.every((head) => right.includes(head));
 
 /** Coalesces bursts of index-backed cores appearing or going into one restart of the watch query. */
 const SNAPSHOT_WATCH_DELAY = 100;

@@ -63,6 +63,7 @@ import type { SaveStateChangedEvent } from '../automerge/index.ts';
 import { type DocHandleProxy, type RepoProxy } from '../automerge/index.ts';
 import {
   type BranchStore,
+  type DocumentEvictionOptions,
   EntityManager,
   type LoadObjectOptions,
   type SnapshotState,
@@ -205,6 +206,9 @@ export type EchoDatabaseProps = {
   /** Device-local persistence for the current-branch selection (non-synced). In-memory if omitted. */
   branchStore?: BranchStore;
 
+  /** Moves idle objects back onto the index's copy, releasing their documents. Off when omitted. */
+  eviction?: DocumentEvictionOptions;
+
   /**
    * Run a reactive query for dynamic schemas.
    * @default true
@@ -343,6 +347,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       spaceId: params.spaceId,
       spaceKey: params.spaceKey,
       branchStore: params.branchStore,
+      eviction: params.eviction,
       createEntity: (core) => initEchoReactiveObjectRootProxy(core, this),
     });
 

@@ -12,7 +12,7 @@ import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
 
-import { type BranchStore } from '../core-db/index.ts';
+import { type BranchStore, type DocumentEvictionOptions } from '../core-db/index.ts';
 import { HypergraphImpl } from '../hypergraph.ts';
 import { DatabaseImpl } from '../proxy-db/index.ts';
 import { IndexQuerySourceProvider, type LoadObjectProps, type ObjectUpdate } from './index-query-source-provider.ts';
@@ -57,6 +57,9 @@ export type ConstructDatabaseProps = {
 
   /** Device-local persistence for the current-branch selection (non-synced). In-memory if omitted. */
   branchStore?: BranchStore;
+
+  /** Moves idle objects back onto the index's copy, releasing their documents. Off when omitted. */
+  eviction?: DocumentEvictionOptions;
 };
 
 /**
@@ -151,6 +154,7 @@ export class EchoClient extends Resource {
     preloadSchemaOnOpen,
     spaceKey,
     branchStore,
+    eviction,
   }: ConstructDatabaseProps): DatabaseImpl {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     invariant(!this._databases.has(spaceId), 'Database already exists.');
@@ -165,6 +169,7 @@ export class EchoClient extends Resource {
       preloadSchemaOnOpen,
       spaceKey,
       branchStore,
+      eviction,
     });
     this._graph._registerDatabase(spaceId, db, owningObject);
     this._databases.set(spaceId, db);

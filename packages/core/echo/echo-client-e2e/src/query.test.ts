@@ -4337,7 +4337,10 @@ describe('Query', () => {
   });
 
   /** A database reopened from storage, so the tab holds none of these objects' documents. */
-  const openReloaded = async (populate: (db: EchoDatabase) => Entity.Any[]) => {
+  const openReloaded = async (
+    populate: (db: EchoDatabase) => Entity.Any[],
+    options?: Parameters<EchoTestPeer['openLastDatabase']>[0],
+  ) => {
     const reloadBuilder = new EchoTestBuilder();
     onTestFinished(async () => {
       await reloadBuilder.close();
@@ -4350,7 +4353,7 @@ describe('Query', () => {
       ids.map((id) => [id, initialDb.getObjectCoreById(id, { load: false })?.docHandle?.documentId]),
     );
     await peer.reload();
-    const db = await peer.openLastDatabase();
+    const db = await peer.openLastDatabase(options);
     invariant(db instanceof DatabaseImpl);
     return { db, ids, peer, documentIds };
   };
@@ -4635,6 +4638,50 @@ describe('Query', () => {
       await peer.host.automergeHost.flush(Context.default());
       await db.flush({ secondaryIndexes: true });
       await waitForCondition({ condition: () => Obj.isDeleted(object), timeout: 5_000 });
+    });
+
+    test('an idle document nothing edits goes back to the index copy, and loads again on the next write', async () => {
+      const { db } = await openReloaded((db) => [db.add(createTestObject({ value: 1 }))], {
+        eviction: { idleMs: 300, intervalMs: 20 },
+      });
+      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando)).options({ lazy: true })).run();
+      await loadDocument(object);
+
+      // An editor's listener holds the document past its idle time.
+      const accessor = getObjectCore(object).getDocAccessor(['value']);
+      const listener = () => {};
+      accessor.handle.addListener('change', listener);
+      await sleep(600);
+      expect(isDocumentLoaded(object)).toBe(true);
+
+      accessor.handle.removeListener('change', listener);
+      await waitForCondition({ condition: () => !isDocumentLoaded(object), timeout: 5_000 });
+      expect(hasDocument(db, object.id)).toBe(false);
+      expect(object.value).toBe(1);
+
+      // The write loads it again, and it stays until it is idle once more.
+      Obj.update(object, (object) => {
+        object.value = 2;
+      });
+      await db.flush();
+      expect(hasDocument(db, object.id)).toBe(true);
+      expect(object.value).toBe(2);
+    });
+
+    test('past the document cap, the least recently active document goes back before it is idle', async () => {
+      const { db } = await openReloaded(
+        (db) => [db.add(createTestObject({ value: 1 })), db.add(createTestObject({ value: 2 }))],
+        { eviction: { idleMs: 60_000, maxDocuments: 1, intervalMs: 20 } },
+      );
+      const objects = await db
+        .query(Query.select(Filter.type(TestSchema.Expando)).orderBy(Order.natural()).options({ lazy: true }))
+        .run();
+      const [older, newer] = objects;
+      await loadDocument(older);
+      await loadDocument(newer);
+
+      await waitForCondition({ condition: () => !isDocumentLoaded(older), timeout: 5_000 });
+      expect(isDocumentLoaded(newer)).toBe(true);
     });
 
     test('a later index row updates the object in place and notifies; an earlier one is ignored', async () => {
