@@ -5,7 +5,7 @@
 import React, { type ReactNode } from 'react';
 
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { useQuery } from '@dxos/echo-react';
+import { useObject, useQuery } from '@dxos/echo-react';
 import { ActionMenu, type MenuAction, createMenuAction } from '@dxos/react-ui-menu';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -59,10 +59,14 @@ export type TaskPropertiesProps = Util.ThemedClassName<{
  */
 export const TaskProperties = ({ task, members = [], onTaskUpdate, classNames }: TaskPropertiesProps) => {
   const { t } = Hooks.useTranslation(translationKey);
-  const status = task.status ?? 'todo';
-  const priority = task.priority ?? undefined;
-  const estimate = task.estimate ?? undefined;
-  const assignee = task.assignee ?? undefined;
+  const [storedStatus] = useObject(task, 'status');
+  const [storedPriority] = useObject(task, 'priority');
+  const [storedEstimate] = useObject(task, 'estimate');
+  const [storedAssignee] = useObject(task, 'assignee');
+  const status = storedStatus ?? 'todo';
+  const priority = storedPriority ?? undefined;
+  const estimate = storedEstimate ?? undefined;
+  const assignee = storedAssignee ?? undefined;
 
   // The people the space knows, for the picker. Queried rather than read off refs: a contact's
   // target is not in memory on a cold load, and the picker must offer everyone, not only whoever
