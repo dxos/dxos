@@ -30,7 +30,7 @@
 
 import { spawn, spawnSync } from 'node:child_process';
 import { once } from 'node:events';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 const FFMPEG = process.env.FFMPEG_PATH ?? 'ffmpeg';
@@ -97,14 +97,26 @@ const output = options.out ?? options.in.replace(/\.webm$/, '-trimmed.webm');
  */
 const ident = (id) => {
   const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../../../../tools/ident');
-  const file = path.join(root, 'out', id, `DXOS_SI_${id}_3s_16x9_v01.mp4`);
-  if (!existsSync(file)) {
+  const dir = path.join(root, 'out', id);
+  // The clip's length is part of its name (`DXOS_SI_COMPOSER_3.5s_16x9_v01.mp4`), so find it rather than spell it.
+  const find = () =>
+    existsSync(dir)
+      ? readdirSync(dir)
+          .filter((name) => name.startsWith(`DXOS_SI_${id}_`) && name.endsWith('_16x9_v01.mp4'))
+          .map((name) => path.join(dir, name))[0]
+      : undefined;
+  // A clip older than the ident's sources is stale: re-render it rather than bookend with an old animation.
+  const sources = path.join(root, 'src');
+  const newest = Math.max(...readdirSync(sources).map((name) => statSync(path.join(sources, name)).mtimeMs));
+  let file = find();
+  if (!file || statSync(file).mtimeMs < newest) {
     console.error(`rendering ${id} ident…`);
     const render = spawnSync('node', ['scripts/render.mjs', '--id', id, '--format', '16x9'], {
       cwd: root,
       stdio: ['ignore', 'ignore', 'inherit'],
     });
-    if (render.status !== 0 || !existsSync(file)) {
+    file = find();
+    if (render.status !== 0 || !file) {
       console.error(`could not render the ${id} ident (run \`pnpm install\` and see tools/ident/README.md)`);
       process.exit(1);
     }

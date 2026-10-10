@@ -34,7 +34,7 @@ export const TIMING = {
   wordStep: 0.32, // gap between words appearing
   lineGap: 0.5, // pause between one line finishing and the next starting
   open: { duration: 3, fadeIn: 1.5 }, // opening title: logotype fades in, then holds
-  composer: { duration: 3 }, // Composer intro: the icon's arcs assemble, then the name
+  composer: { duration: 4 }, // Composer intro: the icon's arcs assemble, then the name
   trail: { duration: 8 }, // DXOS trail: fluid glow orbiting the mark
   spot10: { provocation: 7, cutToBlack: 5.6, endCard: 3 },
   spot30: {
