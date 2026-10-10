@@ -1119,8 +1119,9 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
     <>
       {/* Only while snapping: the lines are what a gesture lands on, so drawing them when nothing snaps
           states a constraint the canvas is not applying. The minor level goes when its cells get too
-          small to read. Read-only, nothing snaps, so neither grid nor guides are drawn. */}
-      {snapEnabled && !readonly && (
+          small to read. Read-only, nothing snaps, so neither grid nor guides are drawn. A lattice scene snaps to its
+          cells, not the lines, so its cells are its grid. */}
+      {snapEnabled && !readonly && !(latticeOn && projection.lattice) && (
         <GridComponent
           size={grid}
           scale={camera.zoom}

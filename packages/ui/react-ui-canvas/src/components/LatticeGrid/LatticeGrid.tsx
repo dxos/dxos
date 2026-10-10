@@ -46,7 +46,7 @@ export const LatticeGrid = memo(({ spec, bounds, unit }: LatticeGridProps) => {
           y={cell.y}
           width={cell.width}
           height={cell.height}
-          className='fill-none stroke-separator'
+          className='fill-none stroke-separator-subtle'
           strokeWidth={unit}
           strokeDasharray={`${4 * unit} ${4 * unit}`}
         />
