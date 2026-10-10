@@ -17,6 +17,7 @@ const BEAT = 1_200;
 
 const TABLE = 'Launch';
 const BOARD = 'Launch board';
+const GRAPH = 'Launch graph';
 const ROWS = ['Write the announcement', 'Record the demo', 'Ship the release'];
 
 const PLANK = '[data-testid="deck.plank"]';
@@ -25,9 +26,6 @@ const GRID = `${PLANK} .dx-grid`;
 /** A table cell, by zero-based column and row, in a grid plane. */
 const CELL = (col, row, plane = 'grid') =>
   `${GRID} [data-dx-grid-plane="${plane}"] [aria-colindex="${col}"][aria-rowindex="${row}"]`;
-
-/** Types as a person would, a character at a time. */
-const typeSlowly = (page, text, delay = 60) => page.keyboard.type(text, { delay });
 
 /** Resolves once the cell editor holds focus; keys sent before it mounts are dropped. */
 const cellEditorReady = (page) =>
@@ -151,8 +149,8 @@ export const steps = [
         await demo.click({ selector: `${CELL(title, row)} >> nth=0`, hud: false });
         await page.keyboard.press('Enter');
         await cellEditorReady(page);
-        await typeSlowly(page, name);
-        await page.waitForTimeout(300);
+        // The driver types into the focused cell editor and holds a beat once the text is in.
+        await demo.type({ value: name, label: 'Title' });
         await page.keyboard.press('Tab');
         await page.waitForTimeout(300);
       }
@@ -177,6 +175,22 @@ export const steps = [
       await demo.click({ selector: '[role="dialog"] [data-testid="save-button"]', label: 'Create' });
       await page.locator('[data-testid="board-column"]').first().waitFor({ state: 'visible', timeout: 15_000 });
       await page.waitForTimeout(BEAT);
+    },
+  },
+  {
+    name: 'Graph the same records',
+    narration: 'And Explorer, a plugin switched on a moment ago, draws the same records as a graph.',
+    done: async ({ page }) => (await page.locator(`[role="treeitem"]:has-text("${GRAPH}")`).count()) > 0,
+    run: async ({ demo, page }) => {
+      await demo.click({ selector: '[data-testid="spacePlugin.createObject"] >> nth=0', label: 'Add to space' });
+      await demo.click({ selector: '[data-testid="create-object-form.type.org.dxos.type.graph"]', label: 'Explorer' });
+      await page.locator('[role="dialog"] input[placeholder="Name"]').first().waitFor({ timeout: 10_000 });
+      await demo.type({ selector: '[role="dialog"] input[placeholder="Name"]', value: GRAPH, label: 'Name' });
+      await demo.click({ selector: '[role="dialog"] >> role=combobox >> nth=0', label: 'Type' });
+      await demo.click({ selector: `role=option[name="${TABLE}"] >> nth=0`, label: TABLE });
+      await demo.click({ selector: '[role="dialog"] [data-testid="save-button"]', label: 'Create' });
+      await page.locator(`${PLANK} svg`).first().waitFor({ state: 'visible', timeout: 15_000 });
+      await page.waitForTimeout(BEAT * 2);
     },
   },
   {

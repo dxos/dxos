@@ -4,7 +4,7 @@
 
 /**
  * Showcase scene 3: the plugin gallery. Open Plugins, filter, and switch on two plugins that are off by default:
- * Maps, and Cloudflare (a connector to the Cloudflare API, a nod to what Composer runs on).
+ * Explorer (scene 4 graphs the space with it), and Cloudflare (a connector to the Cloudflare API, a nod to what Composer runs on).
  *
  * @mdl packages/apps/composer-app/spec/APP.mdl test QA-13
  * @app composer-app bundled dev build against EDGE preview (launch config `composer-showcase`, :4183)
@@ -19,7 +19,7 @@ const FILTER = 'input[placeholder="Filter…"]';
 
 /** Plugins the scene switches on, by id and the display name the registry filters on. */
 const PLUGINS = [
-  { id: 'org.dxos.plugin.map', name: 'Maps' },
+  { id: 'org.dxos.plugin.explorer', name: 'Explorer' },
   { id: 'org.dxos.plugin.cloudflare', name: 'Cloudflare' },
 ];
 
@@ -53,7 +53,7 @@ export const steps = [
     },
   },
   {
-    name: 'Switch on Maps',
+    name: 'Switch on Explorer',
     narration: 'Types, views, operations, even the agent’s skills are all contributed by plugins.',
     done: ({ page }) => isActive(page, PLUGINS[0].id),
     run: (context) => enable(context, PLUGINS[0]),

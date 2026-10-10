@@ -14,8 +14,10 @@
  */
 
 import { spawn } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { once } from 'node:events';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { homedir } from 'node:os';
 import path from 'node:path';
 
 const FFMPEG = process.env.FFMPEG_PATH ?? 'ffmpeg';
@@ -112,9 +114,15 @@ if (options.voices) {
 
 // `--in a.webm,a.mp4` voices every copy from one set of clips, so the speech is synthesized once.
 const inputs = typeof options.in === 'string' ? options.in.split(',') : [];
-if (!inputs.length || !options.cues || !existsSync(options.cues) || inputs.some((input) => !existsSync(input))) {
+if (
+  (!inputs.length && !options['synth-only']) ||
+  !options.cues ||
+  !existsSync(options.cues) ||
+  inputs.some((input) => !existsSync(input))
+) {
   console.error(
-    'usage: node voiceover.mjs --in <video>[,<video>] --cues <cues.json> [--out <video>] [--voice <id|name>]',
+    'usage: node voiceover.mjs --in <video>[,<video>] --cues <cues.json> [--out <video>] [--voice <id|name>]\n' +
+      '       node voiceover.mjs --synth-only --cues <cues.json>   # line lengths only',
   );
   process.exit(1);
 }
@@ -125,7 +133,7 @@ const voicedPath = (input) => {
   return input.replace(new RegExp(`${extension}$`), `.voiced${extension}`);
 };
 const outputs = inputs.length === 1 && options.out ? [options.out] : inputs.map(voicedPath);
-const work = `${outputs[0].replace(/\.[^.]+$/, '')}.voice`;
+const work = outputs.length ? `${outputs[0].replace(/\.[^.]+$/, '')}.voice` : `${options.cues}.voice`;
 mkdirSync(work, { recursive: true });
 
 /** The house narrator: a private voice on the DXOS HeyGen account. */
@@ -146,23 +154,50 @@ if (!voice) {
   process.exit(1);
 }
 
-const clips = [];
-for (const [index, cue] of cues.entries()) {
+/**
+ * Speech already synthesized, keyed by voice, speed and text: the trimmer asks for every line's length before it
+ * trims (`--synth-only`) and again to mux, and a retake usually repeats most lines, so each is paid for once.
+ */
+const CACHE = path.join(homedir(), '.cache/dxos/autocue/voice');
+mkdirSync(CACHE, { recursive: true });
+
+const speak = async (text) => {
+  const speed = Number(options.speed ?? 1);
+  const key = createHash('sha256')
+    .update(JSON.stringify([voice, speed, text]))
+    .digest('hex')
+    .slice(0, 24);
+  const meta = path.join(CACHE, `${key}.json`);
+  if (existsSync(meta)) {
+    return JSON.parse(readFileSync(meta, 'utf8'));
+  }
   const {
     data: { audio_url: url, duration },
-  } = await heygen('POST', '/v3/voices/speech', {
-    text: cue.text,
-    voice_id: voice,
-    speed: Number(options.speed ?? 1),
-    language: 'en',
-  });
-  const file = path.join(work, `${String(index + 1).padStart(2, '0')}${path.extname(new URL(url).pathname) || '.mp3'}`);
+  } = await heygen('POST', '/v3/voices/speech', { text, voice_id: voice, speed, language: 'en' });
+  const file = path.join(CACHE, `${key}${path.extname(new URL(url).pathname) || '.mp3'}`);
   writeFileSync(file, Buffer.from(await (await fetch(url)).arrayBuffer()));
+  const entry = { file, duration };
+  writeFileSync(meta, JSON.stringify(entry));
+  return entry;
+};
+
+const clips = [];
+for (const [index, cue] of cues.entries()) {
+  const spoken = await speak(cue.text);
+  const file = path.join(work, `${String(index + 1).padStart(2, '0')}${path.extname(spoken.file)}`);
+  copyFileSync(spoken.file, file);
+  const { duration } = spoken;
   clips.push({ ...cue, file, duration });
   const next = cues[index + 1];
-  if (next && cue.at + duration > next.at) {
+  if (next && !options['synth-only'] && cue.at + duration > next.at) {
     console.error(`cue ${index + 1} runs ${(cue.at + duration - next.at).toFixed(1)}s into the next one; shorten it`);
   }
+}
+
+// `--synth-only` answers how long each line runs, for the trimmer to hold the picture until it ends.
+if (options['synth-only']) {
+  console.log(JSON.stringify({ voice, cues: clips.map(({ at, text, duration }) => ({ at, duration, text })) }));
+  process.exit(0);
 }
 
 // Each clip delayed to its cue, then summed; `normalize=0` keeps every clip at full level instead of

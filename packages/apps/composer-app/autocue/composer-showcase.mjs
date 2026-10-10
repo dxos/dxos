@@ -25,8 +25,14 @@ const scenes = await Promise.all(SCENES.map((scene) => import(`./showcase/${scen
 const { prep } = scenes[0];
 const own = scenes.map((scene) => scene.steps.filter((step) => step !== prep));
 
-// Not a setup step: one mid-take would re-arm the countdown.
-const home = (scene) => ({ ...prep, setup: false, name: `Back to Home before ${SCENES[scene]}` });
+// A stage direction: neither spoken nor a chapter; not a setup step, since one mid-take would re-arm the countdown.
+const home = (scene) => ({
+  ...prep,
+  setup: false,
+  narration: false,
+  chapter: false,
+  name: `Back to Home before ${SCENES[scene]}`,
+});
 
 export const steps = [
   prep,

@@ -56,6 +56,17 @@ const selectText = (page, text) =>
     }
   }, text);
 
+/** Waits on an agent off camera: a beat of it starting, then a jump cut to the result. */
+const cutWhile = async ({ demo, page }, wait) => {
+  await page.waitForTimeout(BEAT);
+  await demo.pause();
+  try {
+    await wait();
+  } finally {
+    await demo.resume();
+  }
+};
+
 const documentText = (page) => page.evaluate(() => globalThis.composer?.editorView?.state.doc.toString() ?? '');
 
 /** The navtree row of the object named exactly `name`. */
@@ -164,10 +175,12 @@ export const steps = [
       await demo.type({ selector: `${reply} >> nth=0`, value: COMMENT, label: 'Comment' });
       await demo.press({ key: 'Enter' });
       // Kai edits the anchored range directly and says so in the thread.
-      await page.waitForFunction(
-        (paragraph) => !globalThis.composer?.editorView?.state.doc.toString().includes(paragraph),
-        PARAGRAPH,
-        { timeout: 120_000 },
+      await cutWhile({ demo, page }, () =>
+        page.waitForFunction(
+          (paragraph) => !globalThis.composer?.editorView?.state.doc.toString().includes(paragraph),
+          PARAGRAPH,
+          { timeout: 120_000 },
+        ),
       );
       await page.waitForTimeout(BEAT * 3);
     },
@@ -201,13 +214,21 @@ export const steps = [
         label: 'Assistant',
       });
       await page.locator(PROMPT).first().waitFor({ state: 'visible', timeout: 15_000 });
-      await demo.type({ selector: `${PROMPT} >> nth=0`, value: RESEARCH, label: 'Prompt', delay: 25 });
+      await demo.type({ selector: `${PROMPT} >> nth=0`, value: RESEARCH, label: 'Prompt' });
       await demo.press({ key: 'Enter' });
-      await page.waitForFunction(
-        () => globalThis.composer?.editorView?.state.doc.toString().includes('Further reading'),
-        undefined,
-        { timeout: 300_000 },
-      );
+      // Cut until the chat has gone quiet with the section written, not merely begun.
+      await cutWhile({ demo, page }, async () => {
+        await page.waitForFunction(
+          () => globalThis.composer?.editorView?.state.doc.toString().includes('Further reading'),
+          undefined,
+          { timeout: 300_000 },
+        );
+        await page
+          .locator('[data-testid="assistant.chat-status"]')
+          .first()
+          .waitFor({ state: 'hidden', timeout: 120_000 })
+          .catch(() => undefined);
+      });
       await page.waitForTimeout(BEAT * 3);
     },
   },

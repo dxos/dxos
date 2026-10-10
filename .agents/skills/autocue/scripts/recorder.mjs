@@ -48,10 +48,17 @@ export const startRecorder = async (page, { dir, file, size, fps, crf, quality }
   // at display rate, and every extra frame is disk and encode time the output rate would discard anyway.
   const minGap = 1000 / fps;
 
+  /** While set, the time `pause` was called and the newest frame painted since; see `pause`. */
+  let paused;
+
   await page.screencast.start({
     size,
     quality,
     onFrame: ({ data, timestamp }) => {
+      if (paused) {
+        paused.data = data;
+        return;
+      }
       // Dated by when the browser presented it, not when it arrived: a frame painted before a `cut` can be
       // delivered after it, and would otherwise carry discarded footage into the new recording.
       const ms = (Number.isFinite(timestamp) ? timestamp : Date.now()) - started;
@@ -70,6 +77,7 @@ export const startRecorder = async (page, { dir, file, size, fps, crf, quality }
   });
 
   const stop = async () => {
+    resume();
     const stoppedMs = Date.now() - started;
     await page.screencast.stop();
     if (!frames.length) {
@@ -144,9 +152,39 @@ export const startRecorder = async (page, { dir, file, size, fps, crf, quality }
     // Deleted now rather than at `stop`: a long setup at 2x fills a sandbox's disk before the take begins.
     frames.slice(0, -1).forEach(({ file }) => rmSync(file, { force: true }));
     frames.length = 0;
+    paused = undefined;
     started = Date.now();
     if (last) {
       frames.push({ file: last.file, ms: 0 });
+    }
+    return started;
+  };
+
+  /**
+   * Drops what is painted from now until `resume`, and the time it took: a wait on the assistant or the tail of
+   * a long string being typed becomes a jump cut instead of dead air the still-frame trimmer cannot remove
+   * (a streaming reply is motion, not stillness).
+   */
+  const pause = () => {
+    paused ??= { at: Date.now(), data: undefined };
+  };
+
+  /**
+   * Ends a `pause`. The clock moves forward by the paused time, so footage and captions after it follow on
+   * without a gap, and the last frame painted during the pause opens the resumed footage: Chromium emits
+   * only on change, so a screen that settled while paused would otherwise never be shown.
+   */
+  const resume = () => {
+    if (!paused) {
+      return started;
+    }
+    const { at, data } = paused;
+    paused = undefined;
+    started += Date.now() - at;
+    if (data) {
+      const frameFile = path.join(framesDir, `${String(written++).padStart(6, '0')}.jpg`);
+      writeFileSync(frameFile, data);
+      frames.push({ file: frameFile, ms: Math.max(Date.now() - started, (frames.at(-1)?.ms ?? 0) + minGap) });
     }
     return started;
   };
@@ -156,6 +194,8 @@ export const startRecorder = async (page, { dir, file, size, fps, crf, quality }
       return started;
     },
     cut,
+    pause,
+    resume,
     stop,
   };
 };
