@@ -217,10 +217,10 @@ const timeline = (() => {
   const file = options.timeline ?? path.join(path.dirname(options.in), 'timeline.json');
   return existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : {};
 })();
-const captions = (timeline.steps ?? []).map((step) => ({
-  ...step,
-  frame: Math.round((step.ms / 1000) * options.fps),
-}));
+// Sorted: a step's chapter is recorded when the step ends, after any caption raised inside it.
+const captions = (timeline.steps ?? [])
+  .map((step) => ({ ...step, frame: Math.round((step.ms / 1000) * options.fps) }))
+  .sort((a, b) => a.frame - b.frame);
 const frameBytes = (width * height * 3) / 2; // yuv420p
 const holdFrames = Math.max(1, Math.round(options['max-static'] * options.fps));
 
@@ -366,6 +366,65 @@ const encoderArgs = hasVp9
     ]
   : ['-c:v', 'libvpx', '-b:v', '1400k'];
 
+/** The line a chapter speaks: a step's `narration` (null when silent), else a caption's text. */
+const spokenText = (caption) => (caption.narration === undefined ? caption.text : caption.narration);
+
+/** Seconds from a chapter's start to its line, and from the line's end to the next chapter. */
+const LINE_LEAD = 0.3;
+const LINE_GAP = 0.4;
+
+/**
+ * Per caption, the fewest output frames its chapter may last: long enough for its spoken line, so the picture
+ * waits for the narrator instead of the next line talking over this one. Zero without `--voiceover steps`, for
+ * a silent step, and for a caption the next replaces at once (the chapter it would open is dropped).
+ */
+const minimumFrames = await (async () => {
+  if (options.voiceover !== 'steps' && options.voiceover !== true) {
+    return captions.map(() => 0);
+  }
+  const spoken = captions
+    .map((caption, index) => ({ index, text: spokenText(caption) }))
+    .filter(({ index, text }) => {
+      const next = captions[index + 1];
+      return text && (!next || next.frame - captions[index].frame >= options['min-chapter'] * options.fps);
+    });
+  if (!spoken.length) {
+    return captions.map(() => 0);
+  }
+  const cuesFile = `${output.replace(/\.webm$/, '')}.lines.json`;
+  writeFileSync(cuesFile, JSON.stringify(spoken.map(({ text }) => ({ at: 0, text }))));
+  const synth = spawn(
+    process.execPath,
+    [
+      path.join(path.dirname(new URL(import.meta.url).pathname), 'voiceover.mjs'),
+      '--synth-only',
+      '--cues',
+      cuesFile,
+      ...(typeof options.voice === 'string' ? ['--voice', options.voice] : []),
+    ],
+    { stdio: ['ignore', 'pipe', 'inherit'] },
+  );
+  let text = '';
+  synth.stdout.on('data', (chunk) => (text += chunk));
+  const [code] = await once(synth, 'close');
+  if (code !== 0) {
+    console.error('--voiceover: could not synthesize the lines up front; chapters are not held for them');
+    return captions.map(() => 0);
+  }
+  let cues;
+  try {
+    ({ cues } = JSON.parse(text));
+  } catch {
+    console.error('--voiceover: unreadable line lengths from voiceover.mjs; chapters are not held for them');
+    return captions.map(() => 0);
+  }
+  const frames = captions.map(() => 0);
+  spoken.forEach(({ index }, position) => {
+    frames[index] = Math.ceil((LINE_LEAD + cues[position].duration + LINE_GAP) * options.fps);
+  });
+  return frames;
+})();
+
 const decoder = spawn(FFMPEG, decodeArgs);
 
 const encoder = spawn(FFMPEG, [
@@ -454,12 +513,36 @@ for (const caption of captions) {
 // Source frame -> output frame, so the caption times can be remapped onto the trimmed timeline.
 const outputFrameOf = new Map();
 
+/** The caption whose chapter is being written, where it began in the output, and the last frame written. */
+let chapter = -1;
+let chapterStart = 0;
+let lastWritten;
+let held = 0;
+
+/** Repeats the chapter's last frame until it has lasted as long as its spoken line needs. */
+const holdForLine = async () => {
+  const short = chapter < 0 || !lastWritten ? 0 : minimumFrames[chapter] - (kept - chapterStart);
+  for (let count = 0; count < short; count++) {
+    if (!encoder.stdin.write(lastWritten)) {
+      await once(encoder.stdin, 'drain');
+    }
+    kept++;
+    held++;
+  }
+};
+
 for await (const chunk of decoder.stdout) {
   pending = pending.length ? Buffer.concat([pending, chunk]) : chunk;
   while (pending.length >= frameBytes) {
     const frame = pending.subarray(0, frameBytes);
     pending = pending.subarray(frameBytes);
     const index = read++;
+
+    while (chapter + 1 < captions.length && index >= captions[chapter + 1].frame) {
+      await holdForLine();
+      chapter++;
+      chapterStart = kept;
+    }
 
     staticRun = !previous || moved(frame, previous) ? 0 : staticRun + 1;
     longestRun = Math.max(longestRun, staticRun);
@@ -477,9 +560,13 @@ for await (const chunk of decoder.stdout) {
     }
     // Copied because `frame` is a view into `pending`, which the next chunk replaces.
     previous = Buffer.from(frame);
+    if (outputFrameOf.get(index) !== undefined) {
+      lastWritten = previous;
+    }
   }
 }
 
+await holdForLine();
 const outroFrames = options.outro ? await bookend(options.outro) : 0;
 encoder.stdin.end();
 const [encoderStatus] = await encoderClosed;
@@ -519,7 +606,9 @@ const annotate = async () => {
       return !next || next.start - mark.start >= options['min-chapter'];
     });
   // A beat after the chapter starts, so the line lands on the step rather than on the cut into it.
-  stepCues = marks.map((mark) => ({ at: +(mark.start + 0.3).toFixed(2), text: mark.narration ?? mark.text }));
+  stepCues = marks
+    .map((mark) => ({ at: +(mark.start + LINE_LEAD).toFixed(2), text: spokenText(mark) }))
+    .filter((cue) => cue.text);
   if (!marks.length) {
     return undefined;
   }
@@ -705,6 +794,7 @@ const voiceover = async () => {
       '--cues',
       cuesFile,
       ...(typeof options.voice === 'string' ? ['--voice', options.voice] : []),
+      ...(options['allow-overlap'] ? ['--allow-overlap'] : []),
     ],
     { stdio: ['ignore', 'pipe', 'inherit'] },
   );
@@ -715,6 +805,11 @@ const voiceover = async () => {
 };
 
 const voiced = options.voiceover ? await voiceover() : undefined;
+// A narration that was asked for and failed (overlapping cues, no voice) must not ship as a silent upload.
+if (options.voiceover && !voiced) {
+  console.error('--voiceover failed; nothing uploaded');
+  process.exit(1);
+}
 
 /**
  * The Composer media bucket, served from its custom domain: demos land under `demos/<yyyy-mm-dd>-<name>.<ext>`,
@@ -823,7 +918,7 @@ console.log(
       voiced,
       uploaded,
       screenshot,
-      frames: { read, kept, dropped: read - kept, intro: introFrames, outro: outroFrames },
+      frames: { read, kept, dropped: read - (kept - held), held, intro: introFrames, outro: outroFrames },
       seconds: { before: +before.toFixed(1), after: +after.toFixed(1) },
       reduction: `${Math.round((1 - after / before) * 100)}%`,
       longestStillRun: `${(longestRun / options.fps).toFixed(1)}s`,

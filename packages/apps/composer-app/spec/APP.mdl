@@ -746,6 +746,49 @@ test QA-11: Composer basics tour
       expect: the whole globe shows, with the same pins
   then:
     - the default space holds the commented README, "About Composer", the drawing, the table and its type, the sheet and the map
+
+test QA-13: Composer showcase film
+  desc: |
+    The three-minute showcase: Composer as one app for sovereign AI, extensible by plugins, running on
+    Cloudflare. One scene per flow under autocue/showcase/, stitched with the two-peer scene (QA-8) and
+    narrated. Recorded as a demo.
+  actors: human
+  covers: [assistant:F-1]
+  status: unverified        # 2026-10-10, scenes 1 and 3-5 driven by autocue/showcase/*.mjs; 6-8 not yet run
+  given:
+    - a profile on EDGE preview whose first space holds a Mailbox named "Gmail", connected and synced
+    - the World Clock project finished by plugin-computer's composer-plugin flow, its dev server still up
+    - Claude Sonnet 5 reachable for the assistant (WebSearch is Anthropic-only)
+  steps:
+    - name: Open on the space Home
+      do: Open the first space's Home and sweep the pointer down its objects in the navtree.
+      expect: the Home page shows Recent and Activity for a populated space
+    - name: Switch on two plugins
+      do: In Plugins, filter for Explorer and switch it on, then Cloudflare.
+      expect: both plugins are active
+    - name: A table and a board over one type
+      do: Create a table "Launch" with no type and add three rows; create a Kanban "Launch board" over the Launch type pivoted on status; drag "Write the announcement" to Done.
+      expect: the card sits in Done and the table row's Status reads Done
+    - name: Graph the space
+      do: Create an Explorer "Launch graph" with type Launch.
+      expect: the graph draws the space's objects and their links
+    - name: Kai edits from a comment
+      do: With Markdown's Comment agent mode set to mention, comment "@kai tighten this paragraph" on a wordy paragraph.
+      expect: Kai rewrites the paragraph in place and says so in the thread
+    - name: The assistant researches
+      do: In the document's Assistant, ask for a "Further reading" section with three sources.
+      expect: the document gains the section with three linked sources
+    - name: The finished project
+      do: Open the World Clock project's tasks, select three, then open Clocks and toggle the globe.
+      expect: every task is done or in review; the clocks show on a globe
+    - name: Inbox
+      do: Open the Gmail mailbox, open a thread, use AI reply, then Create Project.
+      expect: a draft reply appears unsent, then a project made from the message opens
+    - name: Studio
+      do: Open the "Composer showcase" storyboard and press Play.
+      expect: the storyboard plays its eight frames
+  then:
+    - the space holds the table, the board, the researched document, the project and the storyboard; no mail was sent
 ```
 
 ## Suites

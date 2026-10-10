@@ -2,6 +2,15 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "composer-showcase",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && cd packages/apps/composer-app && pnpm exec vite preview --configLoader native --port 4183 --strictPort"
+      ],
+      "port": 4183
+    },
+    {
       "name": "composer-crx",
       "runtimeExecutable": "moon",
       "runtimeArgs": ["run", "composer-crx:serve"],

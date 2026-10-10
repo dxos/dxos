@@ -87,6 +87,12 @@ Run it in the background. `--mode manual` changes the driver in five ways:
 - **A local display is required.** The cloud sandbox has none, so this is for a session on the
   user's machine.
 
+**A recording can start from a prepared profile too.** A record-mode driver is a fresh identity unless
+`--profile <dir>` is passed, in which case it records headless from that profile. This is how a demo that
+needs a signed-in account (a synced Gmail mailbox) is recorded: the user connects the account once in a
+manual session on that profile, closes the window, and every later recording starts signed in. Use a
+dedicated directory, not the manual default, so a take never runs on the profile someone is using.
+
 ### Drive it from a flow script
 
 In manual mode, write the QA flow as a script and run it, rather than issuing one op per turn. Each op
@@ -596,6 +602,23 @@ node .agents/skills/autocue/scripts/trim-static.mjs --in /tmp/demo/session.webm 
   mid-line on camera.
 - **No action feed.** Recordings leave the top-right feed of gestures off (`--pills on` restores it); the cursor
   and click ripple still show what is clicked.
+- **Cut while an agent works.** A streaming reply is motion, so the still-frame trimmer keeps all of it. Wrap
+  every wait on the assistant, Kai or any agent in `demo.pause()` … `demo.resume()` after a one-beat glimpse of it
+  starting: the recorder drops what was painted and the time it took, and resumes on the finished result as a
+  jump cut. Resume in a `finally`, so a failed wait does not leave the recording paused.
+- **Type through `demo.type`, never `page.keyboard.type`.** With no `selector` it types into whatever has focus.
+  It types the first `--type-lead` characters (30) at reading pace, cuts to the end of a longer string, and then
+  holds `--type-settle` (500 ms) before the next action, so the viewer sees the finished text land. Pass
+  `trim: false` for a string that must be watched in full.
+- **Silence stage directions.** `narration: false` keeps a step silent, and `chapter: false` also keeps it out of
+  the chapters. Use both for navigation between scenes ("back to Home"); a step with neither is spoken by its
+  name. A `caption` raised inside a flow step is on-screen text only; the step's `narration` is the voice.
+- **The picture waits for the narrator.** With `--voiceover steps`, the trimmer synthesizes every line before
+  trimming and holds each chapter's last frame until its line has been spoken, so lines never run into each other.
+  Speech is cached in `~/.cache/dxos/autocue/voice`, so a retake pays only for lines that changed. Hand-timed cues (`--voiceover <cues.json>`) are not held: a line that runs into the next fails the trim
+  and nothing is uploaded; retime the cues, or pass `--allow-overlap` for a rough cut.
+- **Script in Markdown first.** A natural-language version of a flow (scenes as `##` sections, stage directions
+  as paragraphs, narration as bullets) is the reviewable source: see `packages/apps/composer-app/flows/showcase.md`.
 
 ### Upload: on by default
 
