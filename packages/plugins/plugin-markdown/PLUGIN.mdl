@@ -561,6 +561,32 @@ test QA-3: A contributed slash-command runs
       do: Select all and delete.
 ```
 
+```mdl
+test QA-4: Write a document and link a new page from it
+  desc: The demo path — create, write with live formatting, and create a linked page with `@`.
+  actors: human
+  covers: [F-1.1, F-4.1, F-4.2]
+  status: passing            # 2026-10-09, recorded by autocue/write-and-link.mjs
+  given:
+    - an identity exists, on a fresh profile
+    - space: the default space is open on its Home
+  steps:
+    - name: Create a markdown document
+      do: Click "Add to space" and choose Document.
+      expect: an empty document opens in a new plank
+    - name: Write in markdown
+      do: |
+        Type a "# Launch plan" heading, a sentence with a **bold** word, and a three-item list,
+        starting only the first item with "- ".
+      expect: the heading, bold text and bullets render as they are typed, and the document takes
+        the heading as its name in the navtree
+      note: The editor continues a list on Enter and leaves it on an empty item.
+    - name: Link a new page with @
+      do: Type "Next: @Release checklist", choose "Add object", then Document.
+      expect: a "Release checklist" reference appears inline and a new document of that name joins
+        the navtree
+```
+
 ---
 
 ## Appendix: Extension Definitions
