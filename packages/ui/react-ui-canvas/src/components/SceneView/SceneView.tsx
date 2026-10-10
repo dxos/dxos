@@ -830,6 +830,7 @@ const SceneViewRoot = ({
       store={store}
       projection={projection}
       capabilities={capabilities}
+      readonly={readonly}
       nodeRegistry={nodeRegistry}
       linkRegistry={linkRegistry}
       scene={scene}
@@ -944,6 +945,7 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
     atoms,
     store,
     capabilities,
+    readonly,
     projection,
     nodeRegistry,
     displayScene,
@@ -995,8 +997,8 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
     <>
       {/* Only while snapping: the lines are what a gesture lands on, so drawing them when nothing snaps
           states a constraint the canvas is not applying. The minor level goes when its cells get too
-          small to read. */}
-      {snapEnabled && (
+          small to read. Read-only, nothing snaps, so neither grid nor guides are drawn. */}
+      {snapEnabled && !readonly && (
         <GridComponent
           size={grid}
           scale={camera.zoom}
@@ -1011,7 +1013,7 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
         style={{ transform: cameraTransform(camera), transformOrigin: '0 0' }}
       >
         {/* A lattice scene shows its cells: the places a shape may land, separated by the gutters. */}
-        {guides && latticeOn && projection.lattice && (
+        {guides && !readonly && latticeOn && projection.lattice && (
           <LatticeGrid spec={projection.lattice} bounds={latticeBounds} unit={frameUnit} />
         )}
         <div className='pointer-events-auto'>
@@ -1038,28 +1040,31 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
             cell={grid * MAJOR_GRID_RATIO}
           />
         </div>
-        <ControlFrame
-          scene={shownScene}
-          registry={nodeRegistry}
-          selection={selection}
-          hover={hover}
-          hoveredLink={drag ? undefined : linkHover}
-          onLinkHover={handlers.onLinkHover}
-          selectedPoint={selectedPoint}
-          zoom={camera.zoom}
-          drag={drag}
-          capabilities={capabilities}
-          createFrame={createFrame}
-          landing={landing}
-          blocked={blocked}
-          lattice={latticeOn ? projection.lattice : undefined}
-          onHandlePointerDown={onHandlePointerDown}
-          onPortPointerDown={onPortPointerDown}
-          onEndPointerDown={onEndPointerDown}
-          onPointPointerDown={onPointPointerDown}
-          onMidpointPointerDown={onMidpointPointerDown}
-          onPointContextMenu={onPointContextMenu}
-        />
+        {/* Read-only, nothing is edited, so no selection frame, handle or port is drawn. */}
+        {!readonly && (
+          <ControlFrame
+            scene={shownScene}
+            registry={nodeRegistry}
+            selection={selection}
+            hover={hover}
+            hoveredLink={drag ? undefined : linkHover}
+            onLinkHover={handlers.onLinkHover}
+            selectedPoint={selectedPoint}
+            zoom={camera.zoom}
+            drag={drag}
+            capabilities={capabilities}
+            createFrame={createFrame}
+            landing={landing}
+            blocked={blocked}
+            lattice={latticeOn ? projection.lattice : undefined}
+            onHandlePointerDown={onHandlePointerDown}
+            onPortPointerDown={onPortPointerDown}
+            onEndPointerDown={onEndPointerDown}
+            onPointPointerDown={onPointPointerDown}
+            onMidpointPointerDown={onMidpointPointerDown}
+            onPointContextMenu={onPointContextMenu}
+          />
+        )}
         {overlay}
       </div>
       {/* Wheel events still bubble to the root through the shield, so a zoom keeps zooming. */}
@@ -1154,7 +1159,11 @@ SceneViewNavigation.displayName = 'SceneView.Navigation';
 
 /** Everything that changes the view or the scene. */
 const SceneViewActions = ({ classNames = 'bottom-2 left-1/2 -translate-x-1/2' }: SceneViewBarProps) => {
-  const { toolbarActions, nodeRegistry, capabilities } = useSceneViewContext('SceneView.Actions');
+  const { toolbarActions, nodeRegistry, capabilities, readonly } = useSceneViewContext('SceneView.Actions');
+  // Every action here edits the scene or how edits snap.
+  if (readonly) {
+    return null;
+  }
   return (
     <div className={mx(barFrame, classNames)}>
       <ActionToolbar actions={toolbarActions} nodes={nodeRegistry} capabilities={capabilities} />
@@ -1221,9 +1230,9 @@ const SceneViewProperties = ({
   overrides,
   sceneFilter,
 }: SceneViewPropertiesProps) => {
-  const { projection, atoms, nodeRegistry, capabilities, selection, store, path, panels } =
+  const { projection, atoms, nodeRegistry, capabilities, readonly, selection, store, path, panels } =
     useSceneViewContext('SceneView.Properties');
-  const docked = panels === 'docked';
+  const docked = panels === 'docked' && !readonly;
   const registry = useRegistry();
   const scenes = useAtomValue(store.scenes);
   const options = useMemo(() => sceneOptions(scenes, path, sceneFilter), [scenes, path, sceneFilter]);
@@ -1272,7 +1281,7 @@ const SceneViewProperties = ({
   // Docked, the panel stays in its section whatever is selected (it says when nothing is); floating, it shows only
   // with a selection.
   const dockedPanel = useDockSection(PROPERTIES_SECTION, docked, panel);
-  if (docked) {
+  if (docked || readonly) {
     return dockedPanel;
   }
   return selection.size > 0 ? panel : null;
@@ -1304,8 +1313,15 @@ export type SceneViewLayersProps = Util.ThemedClassName<{}>;
  * (the two take turns). Each edit is one intent, so one undo step.
  */
 const SceneViewLayers = ({ classNames = PANEL_CLASSES }: SceneViewLayersProps) => {
-  const { projection, atoms, capabilities, selection, panels } = useSceneViewContext('SceneView.Layers');
-  const docked = panels === 'docked';
+  const {
+    projection,
+    atoms,
+    capabilities,
+    readonly: viewReadonly,
+    selection,
+    panels,
+  } = useSceneViewContext('SceneView.Layers');
+  const docked = panels === 'docked' && !viewReadonly;
   const registry = useRegistry();
   const scene = useAtomValue(projection.scene);
   const active = useAtomValue(atoms.layer);
@@ -1372,7 +1388,7 @@ const SceneViewLayers = ({ classNames = PANEL_CLASSES }: SceneViewLayersProps) =
     />
   );
   const dockedPanel = useDockSection(LAYERS_SECTION, docked, panel);
-  if (docked) {
+  if (docked || viewReadonly) {
     return dockedPanel;
   }
   // Floating, the layers take the properties panel's place while nothing is selected.

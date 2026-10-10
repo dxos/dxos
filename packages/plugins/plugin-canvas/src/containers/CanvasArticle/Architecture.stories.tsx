@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
@@ -22,21 +23,27 @@ const files = import.meta.glob<string>('../../../docs/diagrams/*.dx.svg', {
   eager: true,
 });
 
+type StoryArgs = {
+  /** The drawings open read-only: no tool, handle, port or panel edits them. */
+  readonly: boolean;
+};
+
 // One drawing per diagram of the set; the overview opens as the article and its drill-down boxes open the others.
 const withDiagrams = (set: DiagramSet) =>
-  createStoryDecorators({
+  createStoryDecorators(({ args }) => ({
     types: [Drawing.Drawing, Drawing.Canvas],
     plugins: [IllustratorPlugin.make(), CanvasPlugin()],
     onInit: async ({ space }) => {
-      const root = await loadDiagramSet(space.db, set);
+      const root = await loadDiagramSet(space.db, set, { readonly: args.readonly === true });
       await space.db.flush();
       return [[Cell.article(root)]];
     },
-  });
+  }));
 
-const meta: Meta<typeof ModuleContainer> = {
+const meta: Meta<StoryArgs> = {
   title: 'plugins/plugin-canvas/containers/Architecture',
-  render: ModuleContainer,
+  render: () => <ModuleContainer />,
+  args: { readonly: true },
   parameters: {
     layout: 'fullscreen',
     translations,

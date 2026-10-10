@@ -12,3 +12,5 @@ In `@dxos/react-ui-canvas`, a link may carry `text`, drawn at the middle of its 
 In `@dxos/diagram`, a group frame's margin is the same on every side, its title inside the top margin, and a diagram with an explicit `grid` keeps every box on it: extra space between groups is whole cells.
 
 In `@dxos/react-ui-form`, picking a reference in `RefField` commits it, so an auto-saving form saves the pick at once rather than on the next field's edit; a canvas frame's object is resolved through the canvas's database, and its role field appears as soon as an object is picked.
+
+A drawing can be read-only: `SceneView.Root`'s `readonly` now also hides the selection frame, ports, the actions bar, the Properties and Layers panels, the grid and the lattice guides, and in `@dxos/plugin-canvas` the canvas record's `readonly` setting is toggled from the drawing's menu (Read only / Edit drawing).

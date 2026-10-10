@@ -15,19 +15,22 @@ import { Obj } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 
 import { meta } from '#meta';
+import { canvasRecordOf, updateCanvasRecord } from '#model';
 import { Canvas, CanvasCapabilities } from '#types';
 
 // Module-level: the graph dedupes action properties by reference, so a tuple rebuilt per evaluation re-emits the node.
 type LabelTuple = [string, { ns: string }];
 const DOCK_PANELS_LABEL: LabelTuple = ['dock-panels.label', { ns: meta.profile.key }];
 const FLOAT_PANELS_LABEL: LabelTuple = ['float-panels.label', { ns: meta.profile.key }];
+const LOCK_LABEL: LabelTuple = ['lock-drawing.label', { ns: meta.profile.key }];
+const UNLOCK_LABEL: LabelTuple = ['unlock-drawing.label', { ns: meta.profile.key }];
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const settingsCapabilityAtom = yield* Capability.atom(CanvasCapabilities.Settings);
 
     const extension = yield* AppGraphBuilder.createExtension({
-      id: 'dockPanels',
+      id: 'canvasActions',
       match: (node, get) =>
         Option.filter(
           AppNodeMatcher.whenEchoType(Drawing.Drawing)(node, get),
@@ -37,7 +40,25 @@ export default Capability.makeModule(
         const [settingsAtom] = get(settingsCapabilityAtom);
         // The item flips the mode, so it names the one it switches to.
         const docked = !settingsAtom || (get(settingsAtom).dockPanels ?? true);
+        const readonly = canvasRecordOf(get(Obj.atom(drawing.canvas))?.content ?? {})?.readonly === true;
         return Effect.succeed([
+          AppGraphNode.makeAction({
+            id: `${drawing.id}.readonly`,
+            data: () =>
+              Effect.sync(() => {
+                const canvas = drawing.canvas.target;
+                if (canvas) {
+                  Obj.update(canvas, (canvas) =>
+                    updateCanvasRecord(canvas.content, { readonly: !readonly || undefined }),
+                  );
+                }
+              }),
+            properties: {
+              label: readonly ? UNLOCK_LABEL : LOCK_LABEL,
+              icon: readonly ? 'ph--pencil-simple--regular' : 'ph--lock-simple--regular',
+              testId: 'canvas.readonly',
+            },
+          }),
           AppGraphNode.makeAction({
             id: `${drawing.id}.dockPanels`,
             data: () =>
