@@ -128,6 +128,8 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
     TasksPlugin.meta.profile.key,
     SheetPlugin.meta.profile.key,
     IllustratorPlugin.meta.profile.key,
+    // The illustrator's canvas variant; activation makes no network call.
+    CanvasPlugin.meta.profile.key,
     TldrawPlugin.meta.profile.key,
     ExcalidrawPlugin.meta.profile.key,
     TablePlugin.meta.profile.key,

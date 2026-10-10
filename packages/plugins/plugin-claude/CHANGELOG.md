@@ -1,5 +1,59 @@
 # @dxos/plugin-claude
 
+## 0.14.0
+
+### Minor Changes
+
+- ec6da5a: A chat can run on Claude Code on this computer or on EDGE.
+
+  A chat names the durable process that runs it in `session.process`. Plugins contribute agent processes through `AssistantCapabilities.AgentProcess`, and `AgentService` spawns the one a chat names, falling back to the assistant's own. The Claude plugin's Claude Code process starts the agent through the new `ShellService` (`@dxos/compute/ShellService`), which runs operating-system processes and bash scripts for a compute process. Each process gets its own instance, and every child it started ends when that process ends. The Node.js implementation is `@dxos/compute-runtime/node-shell`.
+
+  "Claude Code (cloud)", built on plugin-code's new `EdgeAgent.make`, runs a chat's turns on EDGE's coding-agent process in a sandbox container. The session keeps working with no client connected, and EDGE restarts the container and resumes the turn when the agent dies or stalls. Each turn lends the process the user's credential, so the credential never enters the container. The cloud session runs unattended by default: a permission request is denied on the spot, and the agent skips that step and carries on.
+
+  A new **Claude Code** connector stores a Claude subscription token: open a terminal, run `claude setup-token`, and paste the token it prints. The token is kept apart from the Anthropic API key. Claude Code on this computer receives it as `CLAUDE_CODE_OAUTH_TOKEN`, and the cloud harness lends it in preference to the API key.
+
+  A project lists the GitHub repositories its cloud sessions work on (`Project.repositories`), set in the project's header next to its name. The sandbox checks out the project's `repo` and each listed repository before the agent starts. Each turn lends the space's GitHub token to EDGE, resolving it through EDGE when EDGE holds it, and EDGE proxies the sandbox's git calls with it, so the token never enters the container either. The project folder setting applies only to Claude Code on this computer.
+
+  The Code plugin's coding-agent permission setting gains `bypassPermissions`, which never asks and runs everything.
+
+### Patch Changes
+
+- ebe3879: Claude Code (cloud) lends each turn's credentials as the environment the agent runs with, through one `provideCredentials` call: the Claude subscription token as `CLAUDE_CODE_OAUTH_TOKEN` (or the Anthropic key as `ANTHROPIC_API_KEY`) and the space's GitHub token as `GITHUB_TOKEN`/`GH_TOKEN`, so the agent can clone private repositories, push and open pull requests with `gh`. `EdgeAgent`'s definition takes a single `credentials` effect in place of `credential` and `gitCredential`, and `EdgeAgent.githubCredentials` replaces `githubCredential`.
+- Updated dependencies [f0fc12a]
+- Updated dependencies [0715304]
+- Updated dependencies [fd09131]
+- Updated dependencies [508be04]
+- Updated dependencies [347546a]
+- Updated dependencies [0e28f43]
+- Updated dependencies [ec6da5a]
+- Updated dependencies [a1e64db]
+- Updated dependencies [ebe3879]
+- Updated dependencies [28bb45b]
+- Updated dependencies [1eed6b1]
+- Updated dependencies [6847fe2]
+- Updated dependencies [35217f4]
+- Updated dependencies [3e98467]
+- Updated dependencies [eb5d14d]
+- Updated dependencies [5324de6]
+  - @dxos/assistant@0.14.0
+  - @dxos/app-framework@0.14.0
+  - @dxos/compute-runtime@0.14.0
+  - @dxos/react-ui@0.14.0
+  - @dxos/plugin-assistant@0.14.0
+  - @dxos/compute@0.14.0
+  - @dxos/plugin-code@0.14.0
+  - @dxos/echo@0.14.0
+  - @dxos/plugin-connector@0.14.0
+  - @dxos/agent-runtime@0.14.0
+  - @dxos/app-toolkit@0.14.0
+  - @dxos/link@0.14.0
+  - @dxos/types@0.14.0
+  - @dxos/edge-client@0.14.0
+  - @dxos/protocols@0.14.0
+  - @dxos/errors@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/util@0.14.0
+
 ## 0.13.0
 
 ### Patch Changes

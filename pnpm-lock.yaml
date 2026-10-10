@@ -1644,6 +1644,12 @@ overrides:
   '@lezer/markdown': ^1.6.3
   '@modelcontextprotocol/sdk': '>=1.26.0'
   '@remix-run/router': '>=1.23.2'
+  '@remotion/elevenlabs>zod': 4.3.6
+  '@remotion/media>zod': 4.3.6
+  '@remotion/openai-whisper>zod': 4.3.6
+  '@remotion/studio>zod': 4.3.6
+  '@remotion/studio-protocol>zod': 4.3.6
+  '@remotion/studio-server>zod': 4.3.6
   '@swc/core': 1.16.13
   '@types/node': 22.10.2
   '@types/react': ~19.2.17
@@ -2863,10 +2869,10 @@ importers:
     dependencies:
       '@ai-sdk/react':
         specifier: 'catalog:'
-        version: 3.0.99(react@19.2.7)(zod@4.5.4)
+        version: 3.0.99(react@19.2.7)(zod@4.3.6)
       '@cloudflare/ai-chat':
         specifier: 'catalog:'
-        version: 0.0.6(agents@0.3.10)(ai@6.0.97(zod@4.5.4))(react@19.2.7)(zod@4.5.4)
+        version: 0.0.6(agents@0.3.10)(ai@6.0.97(zod@4.3.6))(react@19.2.7)(zod@4.3.6)
       '@dxos/brand':
         specifier: workspace:*
         version: link:../../ui/brand
@@ -2905,10 +2911,10 @@ importers:
         version: link:../../ui/ui-editor
       agents:
         specifier: 'catalog:'
-        version: 0.3.10(@ai-sdk/react@3.0.99(react@19.2.7)(zod@4.5.4))(@cloudflare/ai-chat@0.0.6)(@cloudflare/workers-types@5.20260719.1)(ai@6.0.97(zod@4.5.4))(react@19.2.7)(viem@2.54.1(zod@4.5.4))(zod@4.5.4)
+        version: 0.3.10(@ai-sdk/react@3.0.99(react@19.2.7)(zod@4.3.6))(@cloudflare/ai-chat@0.0.6)(@cloudflare/workers-types@5.20260719.1)(ai@6.0.97(zod@4.3.6))(react@19.2.7)(viem@2.54.1(zod@4.3.6))(zod@4.3.6)
       ai:
         specifier: 'catalog:'
-        version: 6.0.97(zod@4.5.4)
+        version: 6.0.97(zod@4.3.6)
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -4118,10 +4124,10 @@ importers:
     dependencies:
       '@anthropic-ai/claude-agent-sdk':
         specifier: 'catalog:'
-        version: 0.3.233(@anthropic-ai/sdk@0.117.1(zod@4.5.4))(@modelcontextprotocol/sdk@1.27.1(@cfworker/json-schema@4.1.1))(zod@4.5.4)
+        version: 0.3.233(@anthropic-ai/sdk@0.117.1(zod@4.3.6))(@modelcontextprotocol/sdk@1.27.1(@cfworker/json-schema@4.1.1))(zod@4.3.6)
       '@anthropic-ai/sdk':
         specifier: 'catalog:'
-        version: 0.117.1(zod@4.5.4)
+        version: 0.117.1(zod@4.3.6)
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../echo/echo
@@ -9060,6 +9066,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/plugin-attention':
+        specifier: workspace:*
+        version: link:../plugin-attention
       '@dxos/plugin-illustrator':
         specifier: workspace:*
         version: link:../plugin-illustrator
@@ -9314,7 +9323,7 @@ importers:
     dependencies:
       '@agentclientprotocol/sdk':
         specifier: 'catalog:'
-        version: 1.7.0(zod@4.5.4)
+        version: 1.7.0(zod@4.3.6)
       '@dxos/agent-runtime':
         specifier: workspace:*
         version: link:../../core/compute/agent-runtime
@@ -9581,7 +9590,7 @@ importers:
     dependencies:
       '@agentclientprotocol/sdk':
         specifier: 'catalog:'
-        version: 1.7.0(zod@4.5.4)
+        version: 1.7.0(zod@4.3.6)
       '@codemirror/lang-javascript':
         specifier: 'catalog:'
         version: 6.2.5
@@ -14447,7 +14456,7 @@ importers:
         version: 4.0.0(patch_hash=3231d93074c153423d744d1ed6acc4a09d0344e58224e8d2f134b809622c47f2)
       viem:
         specifier: 'catalog:'
-        version: 2.54.1(zod@4.5.4)
+        version: 2.54.1(zod@4.3.6)
     devDependencies:
       '@effect/atom-react':
         specifier: 'catalog:'
@@ -45509,9 +45518,6 @@ packages:
   zod@4.3.6:
     resolution: {integrity: sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==}
 
-  zod@4.5.4:
-    resolution: {integrity: sha512-sC95tT5iHHH9gtpj6A81kh+NEaRAUFN+qlUPDUbRfOMvNf5QCBqsb3WgvnpVtK5Y+4UfA6KqufotuTvMGiTlsA==}
-
   zone.js@0.15.1:
     resolution: {integrity: sha512-XE96n56IQpJM7NAoXswY3XRLcWFW83xe0BiAOeMD7K5k5xecOeul3Qcpx6GqEeeHNkW5DWL5zOyTbEfB4eti8w==}
 
@@ -45574,23 +45580,23 @@ snapshots:
 
   '@adraffy/ens-normalize@1.11.1': {}
 
-  '@agentclientprotocol/sdk@1.7.0(zod@4.5.4)':
+  '@agentclientprotocol/sdk@1.7.0(zod@4.3.6)':
     dependencies:
-      zod: 4.5.4
+      zod: 4.3.6
 
-  '@ai-sdk/gateway@3.0.53(zod@4.5.4)':
+  '@ai-sdk/gateway@3.0.53(zod@4.3.6)':
     dependencies:
       '@ai-sdk/provider': 3.0.8
-      '@ai-sdk/provider-utils': 4.0.15(zod@4.5.4)
+      '@ai-sdk/provider-utils': 4.0.15(zod@4.3.6)
       '@vercel/oidc': 3.1.0
-      zod: 4.5.4
+      zod: 4.3.6
 
-  '@ai-sdk/provider-utils@4.0.15(zod@4.5.4)':
+  '@ai-sdk/provider-utils@4.0.15(zod@4.3.6)':
     dependencies:
       '@ai-sdk/provider': 3.0.8
       '@standard-schema/spec': 1.1.0
       eventsource-parser: 3.0.6
-      zod: 4.5.4
+      zod: 4.3.6
 
   '@ai-sdk/provider@2.0.3':
     dependencies:
@@ -45600,10 +45606,10 @@ snapshots:
     dependencies:
       json-schema: 0.4.0
 
-  '@ai-sdk/react@3.0.99(react@19.2.7)(zod@4.5.4)':
+  '@ai-sdk/react@3.0.99(react@19.2.7)(zod@4.3.6)':
     dependencies:
-      '@ai-sdk/provider-utils': 4.0.15(zod@4.5.4)
-      ai: 6.0.97(zod@4.5.4)
+      '@ai-sdk/provider-utils': 4.0.15(zod@4.3.6)
+      ai: 6.0.97(zod@4.3.6)
       react: 19.2.7
       swr: 2.3.6(react@19.2.7)
       throttleit: 2.1.0
@@ -45646,11 +45652,11 @@ snapshots:
   '@anthropic-ai/claude-agent-sdk-win32-x64@0.3.233':
     optional: true
 
-  '@anthropic-ai/claude-agent-sdk@0.3.233(@anthropic-ai/sdk@0.117.1(zod@4.5.4))(@modelcontextprotocol/sdk@1.27.1(@cfworker/json-schema@4.1.1))(zod@4.5.4)':
+  '@anthropic-ai/claude-agent-sdk@0.3.233(@anthropic-ai/sdk@0.117.1(zod@4.3.6))(@modelcontextprotocol/sdk@1.27.1(@cfworker/json-schema@4.1.1))(zod@4.3.6)':
     dependencies:
-      '@anthropic-ai/sdk': 0.117.1(zod@4.5.4)
+      '@anthropic-ai/sdk': 0.117.1(zod@4.3.6)
       '@modelcontextprotocol/sdk': 1.27.1(@cfworker/json-schema@4.1.1)
-      zod: 4.5.4
+      zod: 4.3.6
     optionalDependencies:
       '@anthropic-ai/claude-agent-sdk-darwin-arm64': 0.3.233
       '@anthropic-ai/claude-agent-sdk-darwin-x64': 0.3.233
@@ -45661,12 +45667,12 @@ snapshots:
       '@anthropic-ai/claude-agent-sdk-win32-arm64': 0.3.233
       '@anthropic-ai/claude-agent-sdk-win32-x64': 0.3.233
 
-  '@anthropic-ai/sdk@0.117.1(zod@4.5.4)':
+  '@anthropic-ai/sdk@0.117.1(zod@4.3.6)':
     dependencies:
       json-schema-to-ts: 3.1.1
       standardwebhooks: 1.0.0
     optionalDependencies:
-      zod: 4.5.4
+      zod: 4.3.6
 
   '@apideck/better-ajv-errors@0.3.6(ajv@8.18.0)':
     dependencies:
@@ -47332,12 +47338,12 @@ snapshots:
       fast-wrap-ansi: 0.2.2
       sisteransi: 1.0.5
 
-  '@cloudflare/ai-chat@0.0.6(agents@0.3.10)(ai@6.0.97(zod@4.5.4))(react@19.2.7)(zod@4.5.4)':
+  '@cloudflare/ai-chat@0.0.6(agents@0.3.10)(ai@6.0.97(zod@4.3.6))(react@19.2.7)(zod@4.3.6)':
     dependencies:
-      agents: 0.3.10(@ai-sdk/react@3.0.99(react@19.2.7)(zod@4.5.4))(@cloudflare/ai-chat@0.0.6)(@cloudflare/workers-types@5.20260719.1)(ai@6.0.97(zod@4.5.4))(react@19.2.7)(viem@2.54.1(zod@4.5.4))(zod@4.5.4)
-      ai: 6.0.97(zod@4.5.4)
+      agents: 0.3.10(@ai-sdk/react@3.0.99(react@19.2.7)(zod@4.3.6))(@cloudflare/ai-chat@0.0.6)(@cloudflare/workers-types@5.20260719.1)(ai@6.0.97(zod@4.3.6))(react@19.2.7)(viem@2.54.1(zod@4.3.6))(zod@4.3.6)
+      ai: 6.0.97(zod@4.3.6)
       react: 19.2.7
-      zod: 4.5.4
+      zod: 4.3.6
 
   '@cloudflare/kv-asset-handler@0.5.0': {}
 
@@ -51977,8 +51983,8 @@ snapshots:
       json-schema-typed: 8.0.2
       pkce-challenge: 5.0.0
       raw-body: 3.0.1
-      zod: 4.5.4
-      zod-to-json-schema: 3.25.1(zod@4.5.4)
+      zod: 4.3.6
+      zod-to-json-schema: 3.25.1(zod@4.3.6)
     optionalDependencies:
       '@cfworker/json-schema': 4.1.1
     transitivePeerDependencies:
@@ -54454,7 +54460,7 @@ snapshots:
   '@remotion/elevenlabs@4.0.534':
     dependencies:
       '@remotion/captions': 4.0.534
-      zod: 4.5.4
+      zod: 4.3.6
 
   '@remotion/fonts@4.0.534(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
     dependencies:
@@ -54480,12 +54486,12 @@ snapshots:
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       remotion: 4.0.534(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      zod: 4.5.4
+      zod: 4.3.6
 
   '@remotion/openai-whisper@4.0.534':
     dependencies:
       '@remotion/captions': 4.0.534
-      zod: 4.5.4
+      zod: 4.3.6
 
   '@remotion/paths@4.0.534(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
     dependencies:
@@ -54534,7 +54540,7 @@ snapshots:
 
   '@remotion/studio-protocol@4.0.534':
     dependencies:
-      zod: 4.5.4
+      zod: 4.3.6
 
   '@remotion/studio-server@4.0.534(@swc/core@1.16.13(@swc/helpers@0.5.17))(@swc/helpers@0.5.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
     dependencies:
@@ -54553,7 +54559,7 @@ snapshots:
       recast: 0.23.21
       remotion: 4.0.534(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       semver: 7.5.3
-      zod: 4.5.4
+      zod: 4.3.6
     transitivePeerDependencies:
       - '@minify-html/node'
       - '@remotion/video-matting'
@@ -54611,7 +54617,7 @@ snapshots:
       react-dom: 19.2.7(react@19.2.7)
       remotion: 4.0.534(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       semver: 7.5.3
-      zod: 4.5.4
+      zod: 4.3.6
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
@@ -57947,11 +57953,11 @@ snapshots:
     optionalDependencies:
       zod: 3.25.76
 
-  abitype@1.2.3(zod@4.5.4):
+  abitype@1.2.3(zod@4.3.6):
     dependencies:
       typescript: 6.0.3
     optionalDependencies:
-      zod: 4.5.4
+      zod: 4.3.6
 
   abort-controller@3.0.0:
     dependencies:
@@ -58046,12 +58052,12 @@ snapshots:
 
   agent-base@7.1.3: {}
 
-  agents@0.3.10(@ai-sdk/react@3.0.99(react@19.2.7)(zod@4.5.4))(@cloudflare/ai-chat@0.0.6)(@cloudflare/workers-types@5.20260719.1)(ai@6.0.97(zod@4.5.4))(react@19.2.7)(viem@2.54.1(zod@4.5.4))(zod@4.5.4):
+  agents@0.3.10(@ai-sdk/react@3.0.99(react@19.2.7)(zod@4.3.6))(@cloudflare/ai-chat@0.0.6)(@cloudflare/workers-types@5.20260719.1)(ai@6.0.97(zod@4.3.6))(react@19.2.7)(viem@2.54.1(zod@4.3.6))(zod@4.3.6):
     dependencies:
       '@cfworker/json-schema': 4.1.1
-      '@cloudflare/ai-chat': 0.0.6(agents@0.3.10)(ai@6.0.97(zod@4.5.4))(react@19.2.7)(zod@4.5.4)
+      '@cloudflare/ai-chat': 0.0.6(agents@0.3.10)(ai@6.0.97(zod@4.3.6))(react@19.2.7)(zod@4.3.6)
       '@modelcontextprotocol/sdk': 1.27.1(@cfworker/json-schema@4.1.1)
-      ai: 6.0.97(zod@4.5.4)
+      ai: 6.0.97(zod@4.3.6)
       cron-schedule: 6.0.0
       escape-html: 1.0.3
       json-schema: 0.4.0
@@ -58062,10 +58068,10 @@ snapshots:
       partysocket: 1.1.11
       react: 19.2.7
       yargs: 18.0.0
-      zod: 4.5.4
+      zod: 4.3.6
     optionalDependencies:
-      '@ai-sdk/react': 3.0.99(react@19.2.7)(zod@4.5.4)
-      viem: 2.54.1(zod@4.5.4)
+      '@ai-sdk/react': 3.0.99(react@19.2.7)(zod@4.3.6)
+      viem: 2.54.1(zod@4.3.6)
     transitivePeerDependencies:
       - '@cloudflare/workers-types'
       - supports-color
@@ -58075,13 +58081,13 @@ snapshots:
       clean-stack: 2.2.0
       indent-string: 4.0.0
 
-  ai@6.0.97(zod@4.5.4):
+  ai@6.0.97(zod@4.3.6):
     dependencies:
-      '@ai-sdk/gateway': 3.0.53(zod@4.5.4)
+      '@ai-sdk/gateway': 3.0.53(zod@4.3.6)
       '@ai-sdk/provider': 3.0.8
-      '@ai-sdk/provider-utils': 4.0.15(zod@4.5.4)
+      '@ai-sdk/provider-utils': 4.0.15(zod@4.3.6)
       '@opentelemetry/api': 1.9.0
-      zod: 4.5.4
+      zod: 4.3.6
 
   ajv-formats@3.0.1:
     dependencies:
@@ -65408,7 +65414,7 @@ snapshots:
     transitivePeerDependencies:
       - zod
 
-  ox@0.14.29(zod@4.5.4):
+  ox@0.14.29(zod@4.3.6):
     dependencies:
       '@adraffy/ens-normalize': 1.11.1
       '@noble/ciphers': 1.3.0
@@ -65416,7 +65422,7 @@ snapshots:
       '@noble/hashes': 1.8.0
       '@scure/bip32': 1.7.0
       '@scure/bip39': 1.6.0
-      abitype: 1.2.3(zod@4.5.4)
+      abitype: 1.2.3(zod@4.3.6)
       eventemitter3: 5.0.1
       typescript: 6.0.3
     transitivePeerDependencies:
@@ -69566,15 +69572,15 @@ snapshots:
       - utf-8-validate
       - zod
 
-  viem@2.54.1(zod@4.5.4):
+  viem@2.54.1(zod@4.3.6):
     dependencies:
       '@noble/curves': 1.9.1
       '@noble/hashes': 1.8.0
       '@scure/bip32': 1.7.0
       '@scure/bip39': 1.6.0
-      abitype: 1.2.3(zod@4.5.4)
+      abitype: 1.2.3(zod@4.3.6)
       isows: 1.0.7(ws@8.18.3)
-      ox: 0.14.29(zod@4.5.4)
+      ox: 0.14.29(zod@4.3.6)
       typescript: 6.0.3
       ws: 8.18.3
     transitivePeerDependencies:
@@ -70671,15 +70677,13 @@ snapshots:
     dependencies:
       zod: 3.25.76
 
-  zod-to-json-schema@3.25.1(zod@4.5.4):
+  zod-to-json-schema@3.25.1(zod@4.3.6):
     dependencies:
-      zod: 4.5.4
+      zod: 4.3.6
 
   zod@3.25.76: {}
 
   zod@4.3.6: {}
-
-  zod@4.5.4: {}
 
   zone.js@0.15.1: {}
 

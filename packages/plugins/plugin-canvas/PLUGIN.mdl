@@ -49,4 +49,48 @@ test QA-1: Draw, connect, and nest a scene on a canvas
     - name: Zoom back out and show the frame's contents
       do: Click Up, select the Storage frame, and turn on "Show contents" in the Properties panel.
       expect: the frame draws its nested scene live inside it
+
+test QA-2: Draw a nested architecture diagram of composer-app
+  desc: |
+    A complex diagram across three scenes — composer-app's top level, with the plugins and the client each
+    drawn as a nested scene inside a frame — every node and link taken from the packages' dependencies.
+  actors: human
+  covers: []
+  status: passing            # 2026-10-09, recorded by autocue/composer-uml.mjs
+  given:
+    - an identity exists, on a fresh profile
+    - plugin: Canvas is enabled in the plugin registry (it is off by default)
+    - space: the default space is open on its Home
+  steps:
+    - name: Create a canvas drawing
+      do: Click "Add to space", choose Drawing, pick the Canvas variant and click Create.
+      expect: an empty canvas opens in a new plank, with the palette on its left
+    - name: Draw the top level
+      do: |
+        Draw and label "Composer App" and "App Framework" (rectangles) and "EDGE" (ellipse); add two frames
+        from the toolbar's "+" menu, name them "Plugins" and "Client" in the Properties panel's Label field,
+        and move and resize each into place.
+      expect: three labelled shapes and two labelled frames; About counts 5 nodes and 3 scenes
+      note: |
+        Frames come from the "+" menu, not the Frame tool: a frame drawn with the tool keeps the drag
+        preview's child scene id, so every drawn frame shares one child scene (About stays at 2 scenes and
+        each frame shows the other's contents).
+    - name: Connect the top level by dependency
+      do: |
+        With the Smart line tool drag Composer App→Plugins, Composer App→App Framework,
+        Plugins→App Framework, Plugins→Client and Client→EDGE.
+      expect: five links, each attached to both of its ends
+    - name: Open Plugins and draw the plugins inside it
+      do: |
+        Click the Plugins frame's open control; draw and label Sheet, Markdown, Table, Canvas, Illustrator
+        and Space; link Sheet→Markdown, Markdown→Space, Table→Space, Canvas→Illustrator and Illustrator→Space.
+      expect: the canvas drills into the frame's scene (Up enabled) and shows six nodes and five links
+    - name: Open Client and draw its subsystems
+      do: |
+        Click Up, open the Client frame, draw and label Services, ECHO, HALO and MESH; link Services→ECHO,
+        Services→HALO, Services→MESH and ECHO→MESH.
+      expect: a second, separate nested scene with four nodes and four links
+    - name: Go up and show both nested scenes live
+      do: Click Up, then select each frame and turn on "Show contents" in the Properties panel.
+      expect: each frame draws its own nested scene live inside it, alongside the top-level diagram
 ```

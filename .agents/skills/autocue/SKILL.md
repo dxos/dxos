@@ -646,6 +646,71 @@ catalog. It needs `HEYGEN_API_KEY`, from the environment or `.secrets/heygen.env
 the worktree or the primary checkout). A cue that runs into the next one
 is reported, so shorten its text rather than letting the voices overlap.
 
+### Intro and outro: `--ident`
+
+`--ident` opens the trimmed demo with the DXOS opening title and closes it with the end card, both from
+`tools/ident` (Remotion). They are rendered into `tools/ident/out/` on first use, which needs `pnpm install`
+and the licensed Sharp Sans font in `tools/ident/public/fonts/` (without it they render in a fallback face).
+`--ident composer` opens on the Composer logo instead. `--intro <video>` / `--outro <video>` bookend with any
+other clip. Clips are letterboxed to the recording's
+frame, their audio is dropped, and chapters and captions are shifted past the intro.
+
+### Voice-over: `--voiceover`
+
+`--voiceover steps` on the trimmer narrates each chapter as it starts: every on-camera flow step lands in the
+timeline, spoken as its `narration` field if it has one, else its name. `--voiceover <cues.json>` speaks
+hand-written lines instead; `--voice <name>` picks the voice. With an intro, the narration opens on "This is
+Composer … by DXOS." (a pause after "Composer") as the intro starts (`--intro-line <text>` to change it,
+`--intro-line off` to drop it). One run gives the bookended, narrated, uploaded demo:
+
+```bash
+node .agents/skills/autocue/scripts/trim-static.mjs --in /tmp/demo/session.webm --out demo.webm \
+  --ident composer --voiceover steps --mp4 --screenshot
+```
+
+### Writing a demo flow
+
+- **45–60 seconds by default.** The trimmer's `--duration <min>-<max>` (default `45-60`, bookends included)
+  picks the still-frame cap from a `--report` pass; `--max-static` or `--duration off` overrides it. It can
+  only shorten: a take below the minimum is reported, and the fix is more steps, slower typing (`delay` ~60 ms)
+  or longer beats in the flow.
+- **End on a closing step** that holds the finished result for ~10 seconds and whose `narration` says one
+  technically interesting thing the demo just showed — local-first storage and privacy, peer-to-peer sync and
+  decentralization, real-time collaboration, or agents working on the same objects. Keep it to one sentence, and
+  only claim what is true: data syncs through DXOS's EDGE service, so never say "no server"; lean on working
+  offline and agents collaborating alongside people.
+- **Finish typing in a document with one blank line** (two Enters at the end of the text), so it never stops
+  mid-line on camera.
+- **No action feed.** Recordings leave the top-right feed of gestures off (`--pills on` restores it); the cursor
+  and click ripple still show what is clicked.
+
+### Upload: on by default
+
+The finished video (the narrated MP4 when there is one) is uploaded to the Composer media bucket as
+`demos/<yyyy-mm-dd>-<name>.<ext>` and served from `https://assets.composer.space` (the bucket's dev URL is
+`https://pub-343732155ecd4a85bba38961213b0515.r2.dev`). `<name>` is the package the flow lives in, e.g.
+`plugin-markdown`, taken from the flow path the driver writes to `timeline.json`; `--name` overrides it and
+`--upload off` skips the upload. The bucket is `composer` (`AUTOCUE_R2_BUCKET` to change it). It uses
+`hosting-artifacts`' `upload-artifact.mjs`, so it needs R2 keys. Generate a gitignored `.env` once with
+`op inject -i .env.tpl -o .env` (never commit it): the upload and the HeyGen voice-over both read their keys
+from it, in the worktree or the primary checkout. `.secrets/r2.env` also works. The URL it prints has been verified
+through the public domain with a GET, and carries `?v=<md5 prefix>`: `assets.composer.space` caches for four
+hours, so re-uploading the same day's demo under the same key would otherwise keep serving the old video.
+
+`--screenshot` then adds that URL to the plugin's `dx.config.ts` as a `screenshots` entry, which is what the
+plugin registry shows; review and commit the change with the flow.
+
+Under the hood it calls `voiceover.mjs`, which can also be run on its own:
+
+`scripts/voiceover.mjs` narrates a finished video with HeyGen text-to-speech. Write the cues as
+`[{ "at": <seconds>, "text": "…" }]` against the final (trimmed, bookended) video, then run
+`node .agents/skills/autocue/scripts/voiceover.mjs --in demo.webm --cues cues.json`; add `--voice` with a voice
+id or name to pick another. The default voice is `Britpop`, a
+private voice on the DXOS HeyGen account; `--voices` lists the account's own voices and the public Starfish
+catalog. It needs `HEYGEN_API_KEY`, from the environment or `.secrets/heygen.env` / `.secrets/heygen.txt` (in
+the worktree or the primary checkout). A cue that runs into the next one
+is reported, so shorten its text rather than letting the voices overlap.
+
 ### For a phone: `--mp4`
 
 iOS does not play VP9 or WebM from a file share, so a demo someone will watch on an iPhone needs an

@@ -1,5 +1,33 @@
 # @dxos/observability
 
+## 0.14.0
+
+### Minor Changes
+
+- 1fe9218: Skill hooks can now run in the background: an end-request `Skill.Hook` with `async: true` no longer holds up the request, and the agent process waits for it before finishing. Composer uses this for an opt-in **Report agent struggles** assistant setting (telemetry must also be on): a small model reviews each turn and, when the agent struggled because of its instructions or tools, the conversation is uploaded and an `agent_struggle` analytics event is emitted. `Observability.support` gains `uploadNdjson(ndjson, kind)` for uploading caller-built NDJSON bundles.
+
+### Patch Changes
+
+- 1819960: Invitation spans are no longer lost to sampling. Tail sampling now keeps every span marked `dxos.sampling.keep`, and both the host's `handleInvitationFlow` span and the guest's `acceptInvitation` span carry that mark, so short invitation flows are no longer dropped 70% of the time. The host span also records `ctx.outcome` when it ends.
+- Updated dependencies [1eed6b1]
+- Updated dependencies [6847fe2]
+- Updated dependencies [1819960]
+- Updated dependencies [eb5d14d]
+  - @dxos/echo@0.14.0
+  - @dxos/effect@0.14.0
+  - @dxos/client@0.14.0
+  - @dxos/client-protocol@0.14.0
+  - @dxos/protocols@0.14.0
+  - @dxos/config@0.14.0
+  - @dxos/async@0.14.0
+  - @dxos/context@0.14.0
+  - @dxos/invariant@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/log-store-idb@0.14.0
+  - @dxos/node-std@0.14.0
+  - @dxos/tracing@0.14.0
+  - @dxos/util@0.14.0
+
 ## 0.13.0
 
 ### Patch Changes

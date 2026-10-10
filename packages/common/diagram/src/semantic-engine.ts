@@ -29,8 +29,9 @@ const MAX_W = GRID * 6;
 const MIN_H = GRID * 3;
 const PAD_X = GRID;
 const PAD_Y = GRID / 2;
-/** Frame inset around a group's members; the top band also holds the title. */
+/** Frame inset around a group's members, the same on every side; the title sits in the top inset. */
 const FRAME_PAD = GRID;
+/** Room a frame's title takes above its members, when sizing the default pitch. */
 const FRAME_LABEL_H = GRID;
 /** Extra gutter where two frames face each other across a row gutter, so packages read as separate. */
 const FRAME_STACK_GAP = GRID * 2;
@@ -212,15 +213,17 @@ const geometry = (
     });
     return Math.max(stacked ? FRAME_STACK_GAP : 0, ...gaps);
   };
+  // An explicit grid is a lattice the boxes must stay on (a canvas lattice, say): extra space is whole cells.
+  const whole = (extra: number, step: number) => (diagram.grid && extra > 0 ? Math.ceil(extra / step) * step : extra);
   const colX = new Map<number, number>();
   for (let col = minCol, x = minCol * pitch.w; col <= maxCol; col++) {
     colX.set(col, x);
-    x += pitch.w + extraAfterCol(col);
+    x += pitch.w + whole(extraAfterCol(col), pitch.w);
   }
   const rowY = new Map<number, number>();
   for (let row = minRow, y = minRow * pitch.h; row <= maxRow; row++) {
     rowY.set(row, y);
-    y += pitch.h + extraAfterRow(row);
+    y += pitch.h + whole(extraAfterRow(row), pitch.h);
   }
   const at = (lookup: Map<number, number>, min: number, max: number, step: number, value: number) =>
     value < min
@@ -259,7 +262,7 @@ const geometry = (
       continue;
     }
     const x = Math.min(...members.map((rect) => rect.x)) - FRAME_PAD;
-    const y = Math.min(...members.map((rect) => rect.y)) - FRAME_PAD - FRAME_LABEL_H;
+    const y = Math.min(...members.map((rect) => rect.y)) - FRAME_PAD;
     const right = Math.max(...members.map((rect) => rect.x + rect.w)) + FRAME_PAD;
     const bottom = Math.max(...members.map((rect) => rect.y + rect.h)) + FRAME_PAD;
     frames.set(group.id, { x, y, w: right - x, h: bottom - y });
@@ -273,7 +276,7 @@ const geometry = (
       ? [
           {
             x: frame.x + FRAME_PAD / 2,
-            y: frame.y + (FRAME_LABEL_H - LABEL_FONT.lineH) / 2,
+            y: frame.y + (FRAME_PAD - LABEL_FONT.lineH) / 2,
             w: group.label.length * LABEL_FONT.charW,
             h: LABEL_FONT.lineH,
           },
@@ -424,7 +427,7 @@ const draw = (
                   kind: 'text',
                   id: 'label',
                   x: FRAME_PAD / 2,
-                  y: (FRAME_LABEL_H - LABEL_FONT.lineH) / 2,
+                  y: (FRAME_PAD - LABEL_FONT.lineH) / 2,
                   text: group.label,
                   weight: 's',
                   color: 'grey',
