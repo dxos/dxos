@@ -50,6 +50,10 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   decorators: withDrawing(),
+};
+
+export const ShowsOverlays: Story = {
+  ...Default,
   play: async ({ canvasElement }) => {
     // The scene view mounts only once the illustrator has resolved the canvas variant's article.
     await expect(

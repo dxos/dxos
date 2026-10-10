@@ -80,6 +80,10 @@ type Story = StoryObj<typeof meta>;
 /** The whole thing: prose, headings, side-by-side chunks and the navigation rail. */
 export const Default: Story = {
   args: { text: WALKTHROUGH },
+};
+
+export const RailScrollbar: Story = {
+  ...Default,
   play: async ({ canvasElement }) => {
     // The rail overflows in a short pane; it must scroll with the app's scrollbar, not the browser's.
     await waitFor(() => expect(canvasElement.querySelector('.cm-walkthrough-sidebar')).not.toBeNull(), {

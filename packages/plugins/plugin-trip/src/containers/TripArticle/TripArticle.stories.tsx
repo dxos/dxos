@@ -315,6 +315,10 @@ export const Default: Story = {
     segments.forEach((segment: Segment.Segment) => space.db.add(segment));
     space.db.add(trip);
   }),
+};
+
+export const RendersSegments: Story = {
+  ...Default,
   // The seed used to throw before `build()` — `airline.code` is not a `Provider` field — so nothing
   // was ever added and the article sat on its loading state. Asserting a segment renders is what
   // catches that; the render-only smoke test did not, because the throw was swallowed by the

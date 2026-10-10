@@ -54,6 +54,10 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   tags: ['test'],
+};
+
+export const RendersChrome: Story = {
+  ...Default,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
