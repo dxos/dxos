@@ -9,8 +9,9 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { ClientTooOldError, assertClientSupported, clientVersionHeaders } from './client-version.ts';
+import { assertClientSupported, clientVersionHeaders } from './client-version.ts';
 import { type EdgeIdentity } from './edge-identity.ts';
+import { ClientTooOldError } from './errors.ts';
 
 /**
  * The VerifiablePresentation challenge/response handshake, shared by the HTTP and WebSocket

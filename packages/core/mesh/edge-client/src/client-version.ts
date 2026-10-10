@@ -2,22 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import { BaseError } from '@dxos/errors';
 import { EDGE_CLIENT_TOO_OLD, EDGE_CLIENT_VERSION_HEADER, EDGE_CLIENT_VERSION_PROTOCOL_PREFIX } from '@dxos/protocols';
 
 import { version } from '../package.json';
+import { ClientTooOldError } from './errors.ts';
 
 /**
  * This SDK's version, which EDGE checks against the oldest it serves. It releases in lockstep with the rest of the
  * SDK, and Vite tree-shakes the import to this one field.
  */
 export const CLIENT_SDK_VERSION: string = version;
-
-/** EDGE refused this SDK as older than the oldest it serves; only reloading the app to a newer build clears it. */
-export class ClientTooOldError extends BaseError.extend(
-  'ClientTooOldError',
-  'This app is too old to sync with EDGE; reload it to update.',
-) {}
 
 /** Headers advertising {@link CLIENT_SDK_VERSION} on a request of the EDGE connect flow (`/auth` and its fallback). */
 export const clientVersionHeaders = (): Record<string, string> => ({

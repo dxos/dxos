@@ -16,8 +16,8 @@ import {
   parseChallengeHeader,
   readAuthChallenge,
 } from './auth-challenge.ts';
-import { ClientTooOldError } from './client-version.ts';
 import { type EdgeIdentity } from './edge-identity.ts';
+import { ClientTooOldError } from './errors.ts';
 
 const CHALLENGE = 'AQAAAZlqjGgAq83vEjRWeJCrze8SNFZ4kA==';
 
