@@ -632,6 +632,8 @@ export class AutomergeHost extends Resource {
     try {
       const subduction = await this._repo.subduction;
       await runMigrations({ storage: this._storage, subduction });
+      // TODO(mykola): Delete this every-open repair in the next release, once EDGE refuses the SDKs that write the old
+      //   fragment shape (`MIN_CLIENT_SDK_VERSION`) and repairs any that still reach it.
       const repaired = await repairSelfCheckpointedFragments(subduction, this._storage);
       if (repaired.rewritten + repaired.skipped + repaired.failed > 0) {
         log.info('repaired self-checkpointed fragments stored since the last open', repaired);
