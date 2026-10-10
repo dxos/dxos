@@ -1,5 +1,71 @@
 # @dxos/devtools
 
+## 0.14.0
+
+### Patch Changes
+
+- 716c951: The devtools EDGE card no longer reports spurious red flags right after startup: its first status query waits until each active space is replicating with EDGE, and it re-queries every second while EDGE still reports issues.
+- Updated dependencies [f0fc12a]
+- Updated dependencies [0715304]
+- Updated dependencies [5528d65]
+- Updated dependencies [fd09131]
+- Updated dependencies [508be04]
+- Updated dependencies [347546a]
+- Updated dependencies [ec6da5a]
+- Updated dependencies [a1e64db]
+- Updated dependencies [28bb45b]
+- Updated dependencies [1eed6b1]
+- Updated dependencies [ed52cb7]
+- Updated dependencies [4ea1487]
+- Updated dependencies [ea0f796]
+- Updated dependencies [6847fe2]
+- Updated dependencies [35217f4]
+- Updated dependencies [3e98467]
+- Updated dependencies [1819960]
+- Updated dependencies [eb5d14d]
+- Updated dependencies [5324de6]
+- Updated dependencies [b07f49f]
+  - @dxos/assistant@0.14.0
+  - @dxos/app-framework@0.14.0
+  - @dxos/compute-runtime@0.14.0
+  - @dxos/echo-host@0.14.0
+  - @dxos/react-ui@0.14.0
+  - @dxos/react-ui-list@0.14.0
+  - @dxos/compute@0.14.0
+  - @dxos/echo@0.14.0
+  - @dxos/echo-client@0.14.0
+  - @dxos/effect@0.14.0
+  - @dxos/ui-theme@0.14.0
+  - @dxos/conductor@0.14.0
+  - @dxos/app-toolkit@0.14.0
+  - @dxos/client@0.14.0
+  - @dxos/react-ui-trace@0.14.0
+  - @dxos/react-ui-table@0.14.0
+  - @dxos/react-client@0.14.0
+  - @dxos/react-ui-debug@0.14.0
+  - @dxos/react-ui-graph@0.14.0
+  - @dxos/react-ui-syntax-highlighter@0.14.0
+  - @dxos/ai@0.14.0
+  - @dxos/echo-protocol@0.14.0
+  - @dxos/edge-client@0.14.0
+  - @dxos/network-manager@0.14.0
+  - @dxos/rpc@0.14.0
+  - @dxos/protocols@0.14.0
+  - @dxos/config@0.14.0
+  - @dxos/messaging@0.14.0
+  - @dxos/async@0.14.0
+  - @dxos/context@0.14.0
+  - @dxos/debug@0.14.0
+  - @dxos/display-name@0.14.0
+  - @dxos/invariant@0.14.0
+  - @dxos/keys@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/timeframe@0.14.0
+  - @dxos/tracing@0.14.0
+  - @dxos/util@0.14.0
+  - @dxos/react-hooks@0.14.0
+  - @dxos/ui-types@0.14.0
+
 ## 0.13.0
 
 ### Patch Changes

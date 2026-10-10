@@ -1,5 +1,28 @@
 # @dxos/echo
 
+## 0.14.0
+
+### Minor Changes
+
+- 1eed6b1: Diagram connectors accept `tail=arrow`, so one connector can carry an arrowhead at both ends instead of drawing a two-way relationship as two arrows (`edge A -> B tail=arrow` in the diagram DSL). The layout engine now pulls apart connectors that would otherwise share a line, even when separating them adds a crossing.
+- eb5d14d: The MCP `runScript` tool now answers with the text the program printed instead of a JSON object. A failed program now returns an error result, and every answer ends with a trailer after `---` giving the number of calls the program made, the time spent in them, and the total time. `ScriptResult` gains `stats` (`calls`, `callMs`), counted by both the in-process and the isolate sandbox, and `McpServer.formatScriptAnswer` renders the answer.
+
+### Patch Changes
+
+- 6847fe2: Fragments in the pre-Automerge-3.5 shape that a client receives after its one-time migration are repaired on every open, so it no longer uploads fragments that hide a document's head from EDGE. The EDGE connect flow now sends the SDK version on `/auth` (`X-DXOS-Version`) as well as on the WebSocket, and EDGE's refusal of an outdated SDK surfaces as `EdgeClientTooOldError`, which is not retried.
+- Updated dependencies [1819960]
+  - @dxos/effect@0.14.0
+  - @dxos/echo-protocol@0.14.0
+  - @dxos/async@0.14.0
+  - @dxos/debug@0.14.0
+  - @dxos/errors@0.14.0
+  - @dxos/invariant@0.14.0
+  - @dxos/keys@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/node-std@0.14.0
+  - @dxos/util@0.14.0
+  - @dxos/blob@0.14.0
+
 ## 0.13.0
 
 ### Minor Changes

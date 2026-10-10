@@ -1,5 +1,14 @@
 # @dxos/context
 
+## 0.14.0
+
+### Patch Changes
+
+- @dxos/debug@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/node-std@0.14.0
+  - @dxos/util@0.14.0
+
 ## 0.13.0
 
 ### Patch Changes

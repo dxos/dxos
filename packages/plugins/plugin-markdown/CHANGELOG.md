@@ -1,5 +1,70 @@
 # @dxos/plugin-markdown
 
+## 0.14.0
+
+### Patch Changes
+
+- 085dcb1: `@dxos/brand` ships Poiret One (`assets/fonts/poiret-one`), the face of the Composer wordmark. The Markdown, Sheet, Tables and Projects plugins' details now include a narrated demo video, opening on the Composer ident.
+- 27b542c: Composer plugins lay out their panels with react-ui's `Layout.Flex` / `Layout.Grid` and theme colour tokens instead of hand-written flex/grid classes and raw palette colours, so status colours now follow the theme in light and dark mode.
+- Updated dependencies [f0fc12a]
+- Updated dependencies [0715304]
+- Updated dependencies [b0e4b60]
+- Updated dependencies [fd09131]
+- Updated dependencies [508be04]
+- Updated dependencies [347546a]
+- Updated dependencies [ec6da5a]
+- Updated dependencies [a1e64db]
+- Updated dependencies [28bb45b]
+- Updated dependencies [1eed6b1]
+- Updated dependencies [ed52cb7]
+- Updated dependencies [6847fe2]
+- Updated dependencies [385f3ce]
+- Updated dependencies [3e98467]
+- Updated dependencies [1819960]
+- Updated dependencies [eb5d14d]
+- Updated dependencies [2112757]
+- Updated dependencies [4820c02]
+- Updated dependencies [5324de6]
+- Updated dependencies [b07f49f]
+  - @dxos/assistant@0.14.0
+  - @dxos/app-framework@0.14.0
+  - @dxos/react-ui-form@0.14.0
+  - @dxos/react-ui@0.14.0
+  - @dxos/compute@0.14.0
+  - @dxos/echo@0.14.0
+  - @dxos/echo-client@0.14.0
+  - @dxos/plugin-space@0.14.0
+  - @dxos/effect@0.14.0
+  - @dxos/ui-theme@0.14.0
+  - @dxos/plugin-attention@0.14.0
+  - @dxos/plugin-client@0.14.0
+  - @dxos/plugin-graph@0.14.0
+  - @dxos/app-toolkit@0.14.0
+  - @dxos/client@0.14.0
+  - @dxos/react-client@0.14.0
+  - @dxos/react-ui-attention@0.14.0
+  - @dxos/react-ui-components@0.14.0
+  - @dxos/react-ui-dnd@0.14.0
+  - @dxos/react-ui-editor@0.14.0
+  - @dxos/react-ui-menu@0.14.0
+  - @dxos/echo-doc@0.14.0
+  - @dxos/echo-react@0.14.0
+  - @dxos/client-protocol@0.14.0
+  - @dxos/schema@0.14.0
+  - @dxos/types@0.14.0
+  - @dxos/versioning@0.14.0
+  - @dxos/ui-editor@0.14.0
+  - @dxos/ui@0.14.0
+  - @dxos/halo@0.14.0
+  - @dxos/halo-react@0.14.0
+  - @dxos/async@0.14.0
+  - @dxos/invariant@0.14.0
+  - @dxos/keys@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/util@0.14.0
+  - @dxos/react-focus@0.14.0
+  - @dxos/react-hooks@0.14.0
+
 ## 0.13.0
 
 ### Minor Changes
