@@ -215,6 +215,16 @@ projects:
     design: packages/core/echo/blob/docs/DESIGN.md
     prs: [12789]
     resume: 'Package extracted and published (@dxos/blob@0.11.1 on npm, contract + ni-uri + ./s3 + ./hosted; 42 tests green). NEXT: decide how the File properties panel surfaces a blob URL (three options in DESIGN.md discussion, recommendation is the stable s3:// URI plus backend name, NOT the presigned URL which expires). THEN the `edge`->`blob` storage-name and `ni:`->`blob:///` scheme migration, which is dual-read (backend declares both schemes, writes the new one) and must ship in ONE pass with any further package moves since both touch the same persisted objects. HARD CONSTRAINT, do not retry: BlobManager CANNOT move into @dxos/blob — @dxos/echo imports BlobBackend for Hypergraph.registerBlobBackend, so the package sits BELOW echo, while BlobManager creates Blob.Blob objects and throws EchoError. moon reports it as project_graph::would_cycle. The blob schema cannot come down to meet it either (Blob.ts is built on echo Obj/Type/Annotation/Database). Both backends DO live in @dxos/blob because neither needs echo — the hosted one takes its scheme from ni-uri SCHEME rather than Blob.Scheme.ni, which is what keeps the edge out of the graph. PACKAGING TRAP that cost a cycle: a NEW public package fails check-packages-published until someone runs `node scripts/publish-package.ts <name>` and configures npm trusted publishing, and a private one fails check-public-dependencies the moment a published package imports it — so the name must be published BEFORE the wiring lands. knip runs only under Node 22+ (its config uses node:fs globSync); on Node 20 it dies with a misleading config-load error, so run it under proto Node 24.'
+  - name: blob-local-first
+    status: active
+    user: dmaretskyi
+    host: claude-cloud
+    created: 2026-10-10
+    summary: 'Make the EDGE blob backend local-first: bytes land in a `blobs` table in the client services SQLite database (served over a new BlobStoreService RPC) and upload to EDGE in the background; local-only when no EDGE URL is configured.'
+    tasks: packages/core/echo/blob/TASKS.md
+    design: packages/core/echo/blob/docs/LOCAL-FIRST.md
+    prs: []
+    resume: 'Phase 5 of packages/core/echo/blob/TASKS.md implemented and tested. NEXT: eviction (needs BlobBackend.remove + refcounting), per-blob upload failure isolation, online-event wake, p2p transfer for no-EDGE spaces.'
   - name: plugin-s3
     status: active
     user: burdon

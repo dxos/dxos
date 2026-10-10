@@ -29,6 +29,7 @@ import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/confi
 import * as IdentityContract from '../../contracts/identity.ts';
 import * as Events from '../../Events.ts';
 import * as SqliteStorage from '../../SqliteStorage.ts';
+import { migrateBlobStore } from '../blobs/index.ts';
 import { type IdentityManagerProps, type InboxRelay, identityProviderFromManager } from '../identity/index.ts';
 import { type InvitationConnectionProps } from '../invitations/index.ts';
 import { IMetadataStoreService, SqliteMetadataStore } from '../metadata/index.ts';
@@ -126,6 +127,7 @@ export const storageMigrationLayer = Layer.effect(
         new SqliteMetadataStore({ runtime }).migrate,
         new SqliteKeyring({ runtime }).migrate,
         new SqliteStorage.SqliteStorage({ runtime }).migrate,
+        migrateBlobStore,
       ],
       { discard: true },
     );

@@ -41,6 +41,7 @@ import {
 import { SwarmNetworkManagerService, createIceProvider, createRtcTransportFactory } from '@dxos/network-manager';
 import { FeedProtocol } from '@dxos/protocols';
 import {
+  BlobStoreService,
   ContactsService,
   DataService,
   DevicesService,
@@ -66,6 +67,7 @@ import * as SpacesContract from '../../contracts/spaces.ts';
 import * as Readiness from '../../Readiness.ts';
 import * as SqliteStorage from '../../SqliteStorage.ts';
 import { EdgeAgentManagerLayer, EdgeAgentManagerService, EdgeAgentServiceLayer } from '../agents/index.ts';
+import { BlobStoreServiceLayer } from '../blobs/index.ts';
 import { DevicesServiceLayer } from '../devices/index.ts';
 import { DevtoolsHostLayer, DevtoolsHostService } from '../devtools/index.ts';
 import {
@@ -790,6 +792,16 @@ export const SqlServiceRegistrationSpec = LayerSpec.make(
   () => RegisterService(SqlService.Rpcs, SqlService.Tag),
 );
 
+export const BlobStoreServiceSpec = LayerSpec.make(
+  { affinity: 'application', requires: [SqlClient.SqlClient], provides: [BlobStoreService.Tag] },
+  () => BlobStoreServiceLayer,
+);
+
+export const BlobStoreServiceRegistrationSpec = LayerSpec.make(
+  { affinity: 'application', requires: [BlobStoreService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
+  () => RegisterService(BlobStoreService.Rpcs, BlobStoreService.Tag),
+);
+
 export const DevtoolsHostRegistrationSpec = LayerSpec.make(
   { affinity: 'application', requires: [DevtoolsHost.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
   () => RegisterService(DevtoolsHost.Rpcs, DevtoolsHost.Tag),
@@ -863,6 +875,8 @@ export const clientServiceSpecs = (options: ServiceStackServices): LayerSpec.Lay
   LoggingServiceRegistrationSpec,
   SqlServiceSpec,
   SqlServiceRegistrationSpec,
+  BlobStoreServiceSpec,
+  BlobStoreServiceRegistrationSpec,
   DevtoolsHostSpec,
   DevtoolsHostRegistrationSpec,
 ];

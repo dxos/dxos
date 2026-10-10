@@ -14,7 +14,7 @@ export const Settings = Schema.Struct({
     Schema.String.annotate({
       title: 'File storage backend',
       description:
-        'Where uploaded files are stored. Defaults to inline (bytes saved on the ECHO object). Install additional plugins (e.g. WNFS) to add external backends.',
+        'Where uploaded files are stored. Defaults to the Blob Service, which keeps bytes on this device and syncs them to the edge network when one is configured. Install additional plugins (e.g. WNFS) to add other backends.',
     }),
   ),
 }).mapFields(Struct.map(Schema.mutableKey));

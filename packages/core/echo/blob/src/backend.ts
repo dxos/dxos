@@ -48,6 +48,34 @@ export interface BlobTransport {
   finalizeUpload?(uploadId: string): Promise<{ key: string; size: number; contentType?: string }>;
 }
 
+/** Bytes held by a {@link LocalBlobStore}, with the content type they were written under. */
+export interface LocalBlob {
+  data: Uint8Array;
+  contentType?: string;
+}
+
+/**
+ * Durable, content-addressed store on this device, keyed by lowercase hex digest, that also records
+ * which entries have yet to reach the hosted store.
+ *
+ * The upload ledger lives beside the bytes rather than in the backend's memory so that a write made
+ * offline is still uploaded after a restart.
+ */
+export interface LocalBlobStore {
+  /**
+   * Stores bytes under `key`; a key already present keeps its bytes, since content addressing makes
+   * them identical, and only learns a missing content type. `uploaded` records that the hosted store
+   * already holds them (a read-through fill), and is never cleared by a later write.
+   */
+  put(key: string, data: Uint8Array, options: { contentType?: string; uploaded: boolean }): Promise<void>;
+  /** `undefined` means the key is not stored locally. */
+  get(key: string): Promise<LocalBlob | undefined>;
+  has(key: string): Promise<boolean>;
+  /** Keys not yet uploaded, oldest first. */
+  listPending(options: { limit: number }): Promise<string[]>;
+  markUploaded(key: string): Promise<void>;
+}
+
 /**
  * Implemented by pluggable blob storage backends and registered on the Hypergraph via
  * `registerBlobBackend`.
