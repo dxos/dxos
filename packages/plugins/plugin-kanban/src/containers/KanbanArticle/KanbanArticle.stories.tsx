@@ -188,6 +188,10 @@ export const Default: Story = {
       },
     }),
   ],
+};
+
+export const RendersColumns: Story = {
+  ...Default,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 

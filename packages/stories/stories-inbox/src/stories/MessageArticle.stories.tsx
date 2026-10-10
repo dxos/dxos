@@ -60,6 +60,10 @@ export const Default: Story = {
   args: {
     length: 8,
   },
+};
+
+export const ExpandsLatest: Story = {
+  ...Default,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     // The opened (most recent) message is the one expanded, so exactly one Reply All shows.

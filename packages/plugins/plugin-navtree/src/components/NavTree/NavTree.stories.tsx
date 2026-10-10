@@ -198,7 +198,9 @@ export default meta;
 
 type Story = StoryObj<typeof NavTreeContainer>;
 
-export const Default: Story = {
+export const Default: Story = {};
+
+export const KeyboardNavigation: Story = {
   play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
     const canvas = within(canvasElement);
 

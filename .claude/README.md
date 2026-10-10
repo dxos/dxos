@@ -71,6 +71,7 @@ stdout as context the agent reads. Every other event needs
 | `~/.claude/hooks/guard-worktree.sh` + [repo copy](./hooks/guard-worktree.sh)                                      | `PreToolUse(Edit\|Write)` | deny           | derived                                   |
 | [`hooks/mode.sh`](./hooks/mode.sh) → [`scripts/mode.sh`](./scripts/mode.sh)   | `UserPromptSubmit`        | agent          | **persisted** `.claude/.mode` + `.claude/.focus` |
 | [`hooks/autonomous.sh`](./hooks/autonomous.sh) → [`scripts/autonomous.sh`](./scripts/autonomous.sh) | `UserPromptSubmit`        | agent          | **persisted** `.claude/.autonomous*` (task, DoD, two logs) |
+| [`hooks/ui-skill.sh`](./hooks/ui-skill.sh) (test: [`scripts/ui-skill.test.sh`](./scripts/ui-skill.test.sh)) | `PostToolUse(Edit\|Write)` | agent | once per session (marker in `$TMPDIR`); injects composer-ui's non-negotiables on the first UI `.tsx` edit |
 | [`hooks/autonomous-stop.sh`](./hooks/autonomous-stop.sh)                                                          | `Stop`                    | block          | reads the same state                      |
 | `dxos` plugin → `hooks/track.sh` ([tools/claude/plugins/dxos](../tools/claude/plugins/dxos))                            | `UserPromptSubmit`        | agent          | persisted, backend-resolved (registry)    |
 | [`AGENTS.md`](../AGENTS.md) (+ `CLAUDE.md` / `GEMINI.md` symlinks), [`CLAUDE.md`](./CLAUDE.md)                    | —                         | agent          | static                                    |

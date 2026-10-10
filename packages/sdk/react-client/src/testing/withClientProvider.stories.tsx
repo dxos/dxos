@@ -63,6 +63,10 @@ export const Default: Story = {
   parameters: {
     layout: 'centered',
   },
+};
+
+export const Initializes: Story = {
+  ...Default,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const initializedText = await canvas.findByText(/"initialized": true/i, {}, { timeout: 30_000 });

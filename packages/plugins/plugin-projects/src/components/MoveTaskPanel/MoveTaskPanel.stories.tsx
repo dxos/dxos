@@ -38,7 +38,9 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
+export const Default: Story = {};
+
+export const FilterAndSelect: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
     // An unnamed project is labelled rather than left blank.

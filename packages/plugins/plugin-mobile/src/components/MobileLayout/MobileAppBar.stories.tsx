@@ -81,6 +81,10 @@ export const Default: Story = {
     onAction: fn(),
     onBack: fn(),
   },
+};
+
+export const TriggerActions: Story = {
+  ...Default,
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
 

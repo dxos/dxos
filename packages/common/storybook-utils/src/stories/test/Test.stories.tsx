@@ -27,14 +27,6 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  // Interactions tab.
-  // https://storybook.js.org/docs/writing-stories/play-function?renderer=react#writing-stories-with-the-play-function
-  play: async ({ args, canvasElement }: any) => {
-    const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole('button'));
-    await expect(args.onClick).toHaveBeenCalled();
-    await expect(canvas.getByText(args.label)).toBeInTheDocument();
-  },
   args: {
     variant: 'primary',
     icon: 'ph--rocket-launch--regular',
@@ -47,6 +39,18 @@ export const Default: Story = {
         component: 'A basic button component.',
       },
     },
+  },
+};
+
+export const Click: Story = {
+  ...Default,
+  // Interactions tab.
+  // https://storybook.js.org/docs/writing-stories/play-function?renderer=react#writing-stories-with-the-play-function
+  play: async ({ args, canvasElement }: any) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button'));
+    await expect(args.onClick).toHaveBeenCalled();
+    await expect(canvas.getByText(args.label)).toBeInTheDocument();
   },
 };
 

@@ -17,8 +17,10 @@ import noBareDotImports from './rules/no-bare-dot-imports.js';
 import noDeadTailwindLogical from './rules/no-dead-tailwind-logical.js';
 import noEffectRunPromise from './rules/no-effect-run-promise.js';
 import noEmptyPromiseCatch from './rules/no-empty-promise-catch.js';
+import noPlayOnDefaultStory from './rules/no-play-on-default-story.js';
 import noSimilarSiblingFiles from './rules/no-similar-sibling-files.js';
 import operationKeyShape from './rules/operation-key-shape.js';
+import preferScrollArea from './rules/prefer-scroll-area.js';
 import preferSizingUtilities from './rules/prefer-sizing-utilities.js';
 import translationKeyFormat from './rules/translation-key-format.js';
 
@@ -44,8 +46,10 @@ const plugin = {
     'no-dead-tailwind-logical': noDeadTailwindLogical,
     'no-effect-run-promise': noEffectRunPromise,
     'operation-key-shape': operationKeyShape,
+    'prefer-scroll-area': preferScrollArea,
     'prefer-sizing-utilities': preferSizingUtilities,
     'no-empty-promise-catch': noEmptyPromiseCatch,
+    'no-play-on-default-story': noPlayOnDefaultStory,
     'no-similar-sibling-files': noSimilarSiblingFiles,
     'translation-key-format': translationKeyFormat,
   },
