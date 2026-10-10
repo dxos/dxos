@@ -4,6 +4,7 @@
 
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
+import { Oscilloscope } from '@dxos/react-ui-audio';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
@@ -16,12 +17,15 @@ import {
   Calibration,
   type Classification,
   type NoteEvent,
+  type NoteTemplate,
   type Pitch,
   type Scale,
   type ScaleNote,
   SCALES,
   cents,
   classifyNote,
+  formatPitch,
+  frequencyToMidi,
   getScaleNotes,
   nominalTemplates,
 } from '#audio';
@@ -53,6 +57,12 @@ type PlayedNote = {
 };
 
 const HISTORY_SIZE = 16;
+
+/** Frequency a played note is measured against: its classified template, else its scale pitch. */
+const referenceFrequency = ({ classification, note }: PlayedNote, templates: NoteTemplate[]): number | undefined =>
+  classification?.template.frequency ??
+  templates.find((template) => template.pitch === note?.pitch)?.frequency ??
+  note?.frequency;
 
 /**
  * Calibrates the note detector to an instrument and displays notes as they are played.
@@ -157,37 +167,53 @@ export const Tuner = ({
 
   const [latest] = played;
   const display = useMemo(() => {
+    const frame = analyzer.frame;
+    const reference = latest && !latest.event.percussive ? referenceFrequency(latest, templates) : undefined;
+    // While the struck note sustains, the live frame keeps its meter moving.
+    if (
+      latest &&
+      reference !== undefined &&
+      frame?.frequency !== undefined &&
+      frame.time >= latest.event.time &&
+      Math.abs(cents(frame.frequency, reference)) < 60
+    ) {
+      return {
+        label: latest.note?.label,
+        pitch: latest.note?.pitch,
+        frequency: frame.frequency,
+        cents: cents(frame.frequency, reference),
+        clarity: frame.clarity,
+      };
+    }
+    // Any other clear pitch is shown live, so input is visible before (or without) a resolved strike.
+    if (frame?.frequency !== undefined) {
+      const classification = classifyNote({ frequency: frame.frequency, partials: [] }, templates);
+      const note = classification && notes.find((candidate) => candidate.pitch === classification.template.pitch);
+      return {
+        label: note?.label,
+        pitch: note?.pitch ?? formatPitch(frequencyToMidi(frame.frequency)),
+        frequency: frame.frequency,
+        cents: classification?.cents,
+        clarity: frame.clarity,
+      };
+    }
     if (!latest) {
       return {};
     }
     if (latest.event.percussive) {
       return { percussive: true };
     }
-    const reference =
-      latest.classification?.template.frequency ??
-      (latest.note && Calibration.getTemplates(calibration).find((template) => template.pitch === latest.note?.pitch))
-        ?.frequency ??
-      latest.note?.frequency;
-    // While the struck note sustains, the live frame keeps the meter moving.
-    const live =
-      analyzer.frame?.frequency !== undefined &&
-      reference !== undefined &&
-      analyzer.frame.time >= latest.event.time &&
-      Math.abs(cents(analyzer.frame.frequency, reference)) < 60
-        ? analyzer.frame
-        : undefined;
-    const frequency = live?.frequency ?? latest.event.frequency;
     return {
       label: latest.note?.label,
       pitch: latest.note?.pitch,
-      frequency,
+      frequency: latest.event.frequency,
       cents:
-        frequency !== undefined && reference !== undefined && (live || latest.event.precise)
-          ? cents(frequency, reference)
+        latest.event.frequency !== undefined && reference !== undefined && latest.event.precise
+          ? cents(latest.event.frequency, reference)
           : undefined,
-      clarity: live?.clarity ?? latest.event.clarity,
+      clarity: latest.event.clarity,
     };
-  }, [latest, analyzer.frame, calibration]);
+  }, [latest, analyzer.frame, templates, notes]);
 
   const message = (() => {
     if (analyzer.status === 'error') {
@@ -263,6 +289,12 @@ export const Tuner = ({
       <Panel.Body asChild>
         <Layout.Flex column align='center' gap='lg' classNames='p-4 overflow-y-auto'>
           <NoteDisplay {...display} />
+          <Oscilloscope
+            classNames='h-16 w-full max-w-md'
+            mode='waveform'
+            active={analyzer.status === 'listening'}
+            source={analyzer.monitor}
+          />
           <HandpanLayout
             notes={notes}
             target={target?.pitch}

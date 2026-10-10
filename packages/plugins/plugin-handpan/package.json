@@ -89,6 +89,7 @@
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/react-ui-audio": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:",
     "pitchy": "catalog:"

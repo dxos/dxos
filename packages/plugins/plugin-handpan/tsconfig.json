@@ -37,6 +37,9 @@
       "path": "../../ui/react-ui"
     },
     {
+      "path": "../../ui/react-ui-audio"
+    },
+    {
       "path": "../../ui/ui-theme"
     }
   ]

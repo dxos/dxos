@@ -33,6 +33,8 @@ export type NoteAnalyzer = {
   error?: Error;
   /** Most recent analysis frame, refreshed once per animation frame. */
   frame?: AnalyzerFrame;
+  /** Copy of the analyzed input for visualizers; disconnecting it does not affect analysis. */
+  monitor?: AudioNode;
   /** Must be called from a user gesture: browsers only start audio (and grant the microphone) in one. */
   start: () => void;
   stop: () => void;
@@ -51,6 +53,7 @@ export const useNoteAnalyzer = ({ source, onNote, analyzer }: UseNoteAnalyzerOpt
   const [status, setStatus] = useState<NoteAnalyzerStatus>('idle');
   const [error, setError] = useState<Error>();
   const [frame, setFrame] = useState<AnalyzerFrame>();
+  const [monitor, setMonitor] = useState<AudioNode>();
   const onNoteRef = useRef(onNote);
   onNoteRef.current = onNote;
   const sessionRef = useRef<Session>(undefined);
@@ -64,6 +67,7 @@ export const useNoteAnalyzer = ({ source, onNote, analyzer }: UseNoteAnalyzerOpt
     }
     setStatus('idle');
     setFrame(undefined);
+    setMonitor(undefined);
   }, []);
 
   const start = useCallback(() => {
@@ -139,6 +143,12 @@ export const useNoteAnalyzer = ({ source, onNote, analyzer }: UseNoteAnalyzerOpt
         return;
       }
 
+      // Visualizers call `disconnect()` on their source, which must not detach the analysis tap.
+      const monitorNode = new GainNode(context);
+      input.connect(monitorNode);
+      cleanup.push(() => monitorNode.disconnect());
+      setMonitor(monitorNode);
+
       const tick = () => {
         setFrame(latest);
         animation = requestAnimationFrame(tick);
@@ -160,5 +170,5 @@ export const useNoteAnalyzer = ({ source, onNote, analyzer }: UseNoteAnalyzerOpt
 
   const play = useCallback<NoteAnalyzer['play']>((strike) => sessionRef.current?.play?.(strike), []);
 
-  return { status, error, frame, start, stop, play };
+  return { status, error, frame, monitor, start, stop, play };
 };
