@@ -22,10 +22,10 @@ import {
   architectureDiagrams,
   diagramFiles,
   edgeDiagrams,
-  DIAGRAM_SOURCES as files,
+  DIAGRAM_COMMANDS as files,
   loadDiagramSet,
 } from '../../samples/architecture/index.ts';
-import { canvasViewModeAspect } from './view-mode.ts';
+import { canvasViewAspect } from './view-state.ts';
 
 type StoryArgs = {
   /** The drawings open read-only: nothing is selected, and no tool, handle, port or panel edits them. */
@@ -39,9 +39,7 @@ const ReadonlyView = ({ canvas, readonly, children }: ReadonlyViewProps) => {
   const viewState = Hooks.useCapability(AttentionCapabilities.ViewState);
   useEffect(() => {
     // The canvas is seeded during client init, after this wrapper mounts.
-    void canvas.then((contextId) =>
-      viewState.update(canvasViewModeAspect, contextId, (state) => ({ ...state, readonly })),
-    );
+    void canvas.then((contextId) => viewState.update(canvasViewAspect, contextId, (state) => ({ ...state, readonly })));
   }, [canvas, readonly, viewState]);
   return <>{children}</>;
 };

@@ -5,9 +5,9 @@
 import { type DiagramSet } from './diagrams.ts';
 
 /** Composer: the overview, whose framework, data, plugin and compute boxes open their own diagrams; the data stack's echo-host opens a third level. */
-export const composerDiagrams = (files: DiagramSet['files']): DiagramSet => ({
+export const composerDiagrams = (diagrams: DiagramSet['diagrams']): DiagramSet => ({
   root: 'composer',
-  files,
+  diagrams,
   names: {
     'composer': 'Composer',
     'composer-framework': 'App Framework',
@@ -30,9 +30,9 @@ export const composerDiagrams = (files: DiagramSet['files']): DiagramSet => ({
 });
 
 /** EDGE: the overview, whose router, db, compute and hub boxes open their own diagrams; db-service's replication opens a third level. */
-export const edgeDiagrams = (files: DiagramSet['files']): DiagramSet => ({
+export const edgeDiagrams = (diagrams: DiagramSet['diagrams']): DiagramSet => ({
   root: 'edge',
-  files,
+  diagrams,
   names: {
     'edge': 'EDGE',
     'edge-router': 'Router',
@@ -54,21 +54,17 @@ export const edgeDiagrams = (files: DiagramSet['files']): DiagramSet => ({
   },
 });
 
-/** The files of one set out of a map keyed by path, by diagram id (the basename without `.dx.svg`). */
-export const diagramFiles = (files: Record<string, string>, prefix: string): DiagramSet['files'] =>
-  Object.fromEntries(
-    Object.entries(files)
-      .map(([path, text]): [string, string] => [path.replace(/^.*\//, '').replace(/\.dx(\.svg)?$/, ''), text])
-      .filter(([id]) => id === prefix || id.startsWith(`${prefix}-`)),
-  );
+/** The diagrams of one set (the ids `prefix` names, or starts with `prefix-`). */
+export const diagramFiles = (diagrams: DiagramSet['diagrams'], prefix: string): DiagramSet['diagrams'] =>
+  Object.fromEntries(Object.entries(diagrams).filter(([id]) => id === prefix || id.startsWith(`${prefix}-`)));
 
 /** Composer with EDGE beneath it: the Composer overview's EDGE box opens the EDGE overview and everything under it. */
-export const architectureDiagrams = (files: Record<string, string>): DiagramSet => {
-  const composer = composerDiagrams(diagramFiles(files, 'composer'));
-  const edge = edgeDiagrams(diagramFiles(files, 'edge'));
+export const architectureDiagrams = (diagrams: DiagramSet['diagrams']): DiagramSet => {
+  const composer = composerDiagrams(diagramFiles(diagrams, 'composer'));
+  const edge = edgeDiagrams(diagramFiles(diagrams, 'edge'));
   return {
     root: composer.root,
-    files: { ...composer.files, ...edge.files },
+    diagrams: { ...composer.diagrams, ...edge.diagrams },
     names: { ...composer.names, ...edge.names },
     drills: {
       ...composer.drills,
