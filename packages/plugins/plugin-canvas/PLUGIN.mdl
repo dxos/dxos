@@ -1,0 +1,52 @@
+---
+id: org.dxos.plugin.canvas
+name: CanvasPlugin
+version: 0.1.0
+---
+
+An infinite, zoomable canvas of typed nodes and links at multiple depths, contributed to the illustrator
+plugin as a drawing variant (`dxos.org/scene/1`). A drawing is a scene graph stored in ECHO as one record
+per scene, node and link; a frame holds a child scene that opens in place and can show its contents live.
+
+## Extensions
+
+| Term   | URI                        |
+|--------|----------------------------|
+| `test` | `org.dxos.mdl.test@1.0`    |
+
+## QA
+
+Executable tests. Each step carries a human instruction (`do`) and an expectation (`expect`). Report
+failures by test and step number.
+
+```mdl
+test QA-1: Draw, connect, and nest a scene on a canvas
+  desc: The demo path — create a canvas drawing, draw and label shapes, connect them, and drill into a frame.
+  actors: human
+  covers: []
+  status: passing            # 2026-10-09, recorded by autocue/draw-and-nest.mjs
+  given:
+    - an identity exists, on a fresh profile
+    - plugin: Canvas is enabled in the plugin registry (it is off by default)
+    - space: the default space is open on its Home
+  steps:
+    - name: Create a canvas drawing
+      do: Click "Add to space", choose Drawing, pick the Canvas variant and click Create.
+      expect: an empty canvas opens in a new plank, with the palette on its left
+    - name: Draw and label shapes
+      do: |
+        With the Rectangle and Ellipse tools draw "Browser", "Agent" and "Space", double-clicking each to
+        type its label; then draw a Frame and name it "Storage" in the Properties panel's Label field.
+      expect: four labelled nodes on the canvas, and About counts 4 nodes
+      note: A double-click on a frame opens its scene rather than editing its label.
+    - name: Connect the shapes
+      do: With the Smart line tool drag Browser→Space, Agent→Space and Space→Storage; then move Agent.
+      expect: three links that follow the shapes as they move
+    - name: Open the frame and draw inside it
+      do: Click the frame's open control, draw and label "Objects" and "Sync", and link them.
+      expect: the canvas drills into the frame's scene and the Up control is enabled
+      note: The breadcrumb names the child scene "Untitled", not the frame's label.
+    - name: Zoom back out and show the frame's contents
+      do: Click Up, select the Storage frame, and turn on "Show contents" in the Properties panel.
+      expect: the frame draws its nested scene live inside it
+```
