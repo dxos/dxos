@@ -19,8 +19,8 @@ export type PropertyTreeProps = {
   value: unknown;
   /** Resolves references; without it a reference is a leaf. */
   db?: Database.Database;
-  /** Paths (`.`-joined keys) open on first render. */
-  defaultOpen?: string[];
+  /** Levels of objects and arrays open on first render; references stay closed, since opening one runs a query. */
+  defaultDepth?: number;
   /** Selects the referenced entity elsewhere (e.g. in the objects list). */
   onNavigate?: (id: EntityId) => void;
 };
@@ -30,10 +30,10 @@ export type PropertyTreeProps = {
  * target's own properties, queried only once the row is shown, so a cyclic or unbounded graph is
  * walked one opened level at a time rather than serialized whole.
  */
-export const PropertyTree = ({ value, db, defaultOpen, onNavigate }: PropertyTreeProps) => {
+export const PropertyTree = ({ value, db, defaultDepth = 2, onNavigate }: PropertyTreeProps) => {
   const registry = useContext(RegistryContext);
   const json = useMemo(() => toJson(value), [value]);
-  const model = useMemo(() => new PropertyTreeModel(json, db, defaultOpen), [json, db]);
+  const model = useMemo(() => new PropertyTreeModel(json, db, defaultDepth), [json, db, defaultDepth]);
   const contextValue = useMemo(() => ({ model, onNavigate }), [model, onNavigate]);
 
   const handleOpenChange = useCallback(
@@ -132,16 +132,17 @@ const childId = (parentId: string, key: string) => `${parentId}/${encodeURICompo
 class PropertyTreeModel {
   readonly #db?: Database.Database;
   readonly #root: PropertyNode;
-  readonly #defaultOpen: Set<string>;
+  readonly #defaultDepth: number;
 
-  constructor(json: JsonValue, db?: Database.Database, defaultOpen: string[] = []) {
+  constructor(json: JsonValue, db?: Database.Database, defaultDepth = 0) {
     this.#db = db;
     this.#root = makeNode(ROOT_ID, '', json);
-    this.#defaultOpen = new Set(defaultOpen.map((path) => path.split('.').reduce(childId, ROOT_ID)));
+    this.#defaultDepth = defaultDepth;
   }
 
-  open(id: string): Atom.Writable<boolean> {
-    return this.#open(id);
+  /** The row's explicit open state, as the user toggled it; unset rows follow the default depth. */
+  open(id: string): Atom.Writable<boolean | undefined> {
+    return this.#toggled(id);
   }
 
   /** The target of the reference at `id`, or undefined for any other node (or a dangling reference). */
@@ -159,7 +160,26 @@ class PropertyTreeModel {
     };
   }
 
-  #open = Atom.family((id: string) => Atom.make(this.#defaultOpen.has(id)));
+  #toggled = Atom.family((_id: string) => Atom.make<boolean | undefined>(undefined));
+
+  #open = Atom.family((id: string) =>
+    Atom.make((get): boolean => {
+      const toggled = get(this.#toggled(id));
+      if (toggled !== undefined) {
+        return toggled;
+      }
+      const node = get(this.#item(id));
+      // The root is depth 0, and each `/` in the id is one level below it.
+      const depth = id.split('/').length - 1;
+      return (
+        node !== undefined &&
+        node.kind !== 'ref' &&
+        depth >= 1 &&
+        depth <= this.#defaultDepth &&
+        get(this.#children(id)).length <= MAX_DEFAULT_OPEN_ENTRIES
+      );
+    }),
+  );
 
   /** A node is read from its parent's children, so it follows the parent's value (or reference target) as it changes. */
   #item = Atom.family((id: string) =>
@@ -240,6 +260,9 @@ class PropertyTreeModel {
 }
 
 const NEVER_CURRENT = Atom.make(false);
+
+/** A larger container (e.g. a blob's inline bytes) stays closed by default, so it does not bury its siblings. */
+const MAX_DEFAULT_OPEN_ENTRIES = 20;
 
 const ICONS: Record<PropertyKind, string> = {
   object: 'ph--brackets-curly--regular',
