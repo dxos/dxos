@@ -40,6 +40,7 @@ type Note
     startTime: number        # in beats from start of the sequence
     duration: number         # in beats
     velocity?: number        # 0.0..1.0; defaults to 0.8
+    articulation?: note | tak | slap | ghost   # defaults to note; percussive strikes have no musical pitch
     data?: object            # opaque per-note metadata (added by patches, plugins, etc.)
 ```
 
@@ -67,6 +68,8 @@ type Sequence
     trackId: string          # Track.id this sequence belongs to
     name?: string
     length: number           # length in beats
+    timeSignature?: string   # overrides the score's time signature
+    key?: string             # overrides the score's key
     notes: Note[]
 ```
 
@@ -79,6 +82,7 @@ type Score
     name?: string
     tempo: number            # BPM; defaults to 120
     timeSignature?: string   # e.g. '4/4'
+    key?: string             # e.g. 'D minor'
     tracks: Track[]
     sequences: Sequence[]
 ```
