@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { Analyzer } from './analyzer.ts';
-import { type ChordTemplate, ChordDecomposer, selectNotes } from './chord.ts';
+import { ChordDecomposer, type ChordTemplate, selectNotes } from './chord.ts';
 import { SCALES, getScaleNotes } from './scale.ts';
 import { mixInto, synthesizeHandpanTone } from './synth.ts';
 

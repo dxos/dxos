@@ -46,7 +46,7 @@ export class ChordDecomposer {
   /** Unit-length template spectra, one per note, over the first `#bins` bins. */
   readonly #dictionary: Float64Array[];
   /** Gram matrix DᵀD. */
-  readonly #gram: Float64Array[];
+  readonly #gram: number[][];
 
   constructor(
     templates: ChordTemplate[],
