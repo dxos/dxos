@@ -49,15 +49,31 @@ const cellEditorReady = (page) =>
   });
 
 /** The zero-based column index of the header labelled `label`. */
-/** How many of the demo's rows the table already holds, by title. */
-const rowsPresent = async (page) => {
-  let count = 0;
-  for (const [name] of ROWS) {
-    if ((await page.locator(`${GRID} [data-dx-grid-plane="grid"]`).getByText(name, { exact: true }).count()) > 0) {
-      count++;
-    }
+/** The text of a body cell, or undefined when the row does not exist yet. */
+const cellText = async (page, col, row) => {
+  const cell = page.locator(CELL(col, row)).first();
+  return (await cell.count()) > 0 ? (await cell.innerText()).trim() : undefined;
+};
+
+/**
+ * Per demo row, the grid row holding it (found by title, since sorting moves rows) and whether its rating is in;
+ * `count` is how many rows the table has, which is where the next added row lands.
+ */
+const rowsState = async (page) => {
+  const title = await columnIndex(page, 'Title');
+  const rating = await columnIndex(page, RATING.label);
+  const count =
+    title >= 0 ? await page.locator(`${GRID} [data-dx-grid-plane="grid"] [aria-colindex="${title}"]`).count() : 0;
+  const rowOf = new Map();
+  for (let row = 0; row < count; row++) {
+    rowOf.set(await cellText(page, title, row), row);
   }
-  return count;
+  const rows = [];
+  for (const [name, score] of ROWS) {
+    const row = rowOf.get(name);
+    rows.push({ row, rating: row !== undefined && rating >= 0 && (await cellText(page, rating, row)) === score });
+  }
+  return { count, rows };
 };
 
 const columnIndex = (page, label) =>
@@ -140,22 +156,30 @@ export const steps = [
   {
     name: 'Add rows',
     narration: 'Add rows and type straight into the cells. Each row is an object in your space.',
-    done: async ({ page }) => (await rowsPresent(page)) === ROWS.length,
+    done: async ({ page }) => (await rowsState(page)).rows.every(({ row, rating }) => row !== undefined && rating),
     run: async ({ demo, page }) => {
       const title = await columnIndex(page, 'Title');
       const rating = await columnIndex(page, RATING.label);
-      // Rows go in order, so a retry or replay resumes after the ones already added rather than duplicating them.
-      const present = await rowsPresent(page);
-      for (const [row, [name, score]] of ROWS.entries()) {
-        if (row < present) {
+      // A retry or replay completes rows already started instead of adding them again.
+      const { count, rows } = await rowsState(page);
+      let next = count;
+      for (const [index, [name, score]] of ROWS.entries()) {
+        const existing = rows[index];
+        if (existing.row !== undefined && existing.rating) {
           continue;
         }
-        await demo.click({ selector: `${CELL(0, 0, 'frozenRowsEnd')} >> nth=0`, label: 'Add row' });
+        const row = existing.row ?? next++;
+        if (existing.row === undefined) {
+          await demo.click({ selector: `${CELL(0, 0, 'frozenRowsEnd')} >> nth=0`, label: 'Add row' });
+        }
         await page.locator(CELL(title, row)).first().waitFor({ state: 'visible', timeout: 10_000 });
-        for (const [col, value] of [
-          [title, name],
-          [rating, score],
+        for (const [col, value, filled] of [
+          [title, name, existing.row !== undefined],
+          [rating, score, existing.rating],
         ]) {
+          if (filled) {
+            continue;
+          }
           await demo.click({ selector: `${CELL(col, row)} >> nth=0`, hud: false });
           await page.keyboard.press('Enter');
           await cellEditorReady(page);

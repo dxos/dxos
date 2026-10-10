@@ -123,6 +123,9 @@ const centres = (page) =>
     ),
   );
 
+/** Whether the scene on screen already has a node labelled `label`, so a retried step does not draw it twice. */
+const drawn = async (page, label) => Object.keys(await centres(page)).some((text) => text.startsWith(label));
+
 /** The centre of the node whose text starts with `label`; a frame's text runs on into its scene's summary. */
 const centreOf = (points, label) => {
   const key = Object.keys(points).find((text) => text.startsWith(label));
@@ -202,12 +205,24 @@ export const steps = [
   {
     name: 'Draw and label shapes',
     narration: 'Draw shapes from the palette and double-click to label them.',
+    done: async ({ page }) => {
+      for (const { label } of [...NODES, FRAME]) {
+        if (!(await drawn(page, label))) {
+          return false;
+        }
+      }
+      return true;
+    },
     run: async (context) => {
       const at = await sceneAt(context.page);
       for (const node of NODES) {
-        await drawShape(context, at(node), node);
+        if (!(await drawn(context.page, node.label))) {
+          await drawShape(context, at(node), node);
+        }
       }
-      await drawFrame(context, at(FRAME), FRAME);
+      if (!(await drawn(context.page, FRAME.label))) {
+        await drawFrame(context, at(FRAME), FRAME);
+      }
       await context.page.waitForTimeout(BEAT);
     },
   },
@@ -247,7 +262,9 @@ export const steps = [
       await page.waitForTimeout(BEAT);
       const at = await sceneAt(page);
       for (const node of INNER) {
-        await drawShape(context, at(node), node);
+        if (!(await drawn(page, node.label))) {
+          await drawShape(context, at(node), node);
+        }
       }
       const points = await centres(page);
       await demo.click({ selector: '[data-testid="palette-O"] >> nth=-1', label: 'Smart line' });
