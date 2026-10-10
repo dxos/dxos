@@ -59,6 +59,7 @@ import { type HandleQueryState, getHandleState, isDocumentLoaded, isLoaded } fro
 import { tryGetSpaceIdFromCollectionId } from './space-collection.ts';
 import { SqliteHeadsStore } from './sqlite-heads-store.ts';
 import { SqliteStorageAdapter, SUBDUCTION_KEY_FAMILIES, SUBDUCTION_PREFIX } from './sqlite-storage-adapter.ts';
+import { repairSelfCheckpointedFragments } from './subduction-migrations/0002_self_checkpointed_fragments.ts';
 import { runMigrations } from './subduction-migrations/index.ts';
 
 export type PeerIdProvider = () => string | undefined;
@@ -152,6 +153,16 @@ const NON_CONVERGENCE_WARN_INTERVAL = 30;
  * is ~15min of a pair making no progress, which no in-flight replication explains.
  */
 const NON_CONVERGENCE_ERROR_THRESHOLD = 90;
+
+/**
+ * Wait before a diverged document whose resync did not converge is resynced again at the same head pair. Above the
+ * Subduction heal loop's own backoff cap (60s), so a retry never pins that backoff at zero; doubling per attempt up
+ * to {@link DIVERGED_RESYNC_RETRY_MAX_MS}. Without it the only retry was a reconnect: minutes, or never.
+ */
+export const DIVERGED_RESYNC_RETRY_MIN_MS = 60_000;
+
+/** Ceiling for {@link DIVERGED_RESYNC_RETRY_MIN_MS}'s doubling. */
+const DIVERGED_RESYNC_RETRY_MAX_MS = 10 * 60_000;
 
 /**
  * Throttle for the repo-wide share-policy kick, as a per-resident-document cost.
@@ -291,18 +302,19 @@ export class AutomergeHost extends Resource {
    * Heads a diverged document was last re-synced at, keyed by `<collectionId>:<peerId>:<documentId>`.
    *
    * {@link resyncDocument} re-arms the Subduction heal loop, which then retries with its own
-   * backoff — so one call per observed head pair is the whole retry budget, and calling it again
-   * on the next diff pass would reset that backoff to zero and pin it there. Keyed by the heads
+   * backoff — so calling it again on the next diff pass would reset that backoff to zero and pin it
+   * there. That loop gives up after its last attempt, so a pair still diverged is resynced again at
+   * `retryAt`, on a doubling backoff (see {@link DIVERGED_RESYNC_RETRY_MIN_MS}). Keyed by the heads
    * rather than a plain "already tried" flag so that a genuine change on either side (the peer
-   * advanced, or we committed again) re-opens the retry. An evicted document spends it on the load that
-   * faults it in.
+   * advanced, or we committed again) re-opens the retry at once. An evicted document spends it on
+   * the load that faults it in.
    *
    * The map key is only for lookup: collection and peer ids both contain `:`, so no joined string is
    * unambiguous, and cleanup compares the ids stored on each entry instead.
    */
   private _divergedResyncHeads = new Map<
     string,
-    { collectionId: string; peerId: PeerId; documentId: DocumentId; heads: string }
+    { collectionId: string; peerId: PeerId; documentId: DocumentId; heads: string; attempts: number; retryAt: number }
   >();
 
   /** Earliest time the repo-wide share-policy kick may fan out again. See {@link SHARE_POLICY_KICK_MS_PER_DOCUMENT}. */
@@ -618,15 +630,23 @@ export class AutomergeHost extends Resource {
   }
 
   /**
-   * Runs the data migrations in `./subduction-migrations` over the stored Subduction records.
-   * Contained: a failed migration is logged and the host opens on the records as stored, since
-   * every migration is a repair of data the host can already read. Only stored records are
-   * migrated: a peer on `@automerge/automerge` 3.5 re-signs a fragment in the valid shape when it
-   * pushes it, so nothing arriving from an upgraded peer needs a rewrite.
+   * Runs the data migrations in `./subduction-migrations` over the stored Subduction records, then
+   * repairs the self-checkpointed fragments stored since the last open. Contained: a failed
+   * migration is logged and the host opens on the records as stored, since every migration is a
+   * repair of data the host can already read.
+   *
+   * The repair runs on every open, not once: a peer forwards a fragment with the signature it
+   * received it with and clients on `@automerge/automerge` < 3.5 still write the shape, so one
+   * kept as received would be uploaded to the next empty EDGE store and hide the document's head.
    */
   private async _runSubductionMigrations(): Promise<void> {
     try {
-      await runMigrations({ storage: this._storage, subduction: await this._repo.subduction });
+      const subduction = await this._repo.subduction;
+      await runMigrations({ storage: this._storage, subduction });
+      const repaired = await repairSelfCheckpointedFragments(subduction, this._storage);
+      if (repaired.rewritten + repaired.skipped + repaired.failed > 0) {
+        log.info('repaired self-checkpointed fragments stored since the last open', repaired);
+      }
     } catch (err) {
       log.error('subduction migrations failed; continuing on the stored records', { err });
     }
@@ -1697,7 +1717,8 @@ export class AutomergeHost extends Resource {
         // Both sides' heads: a round already spent against this exact pair cannot do better, but
         // either side advancing means the situation changed and is worth another.
         const heads = `${(localState.documents[documentId] ?? []).join(',')}|${(remoteState.documents[documentId] ?? []).join(',')}`;
-        if (this._divergedResyncHeads.get(resyncKey)?.heads === heads) {
+        const previous = this._divergedResyncHeads.get(resyncKey);
+        if (previous?.heads === heads && Date.now() < previous.retryAt) {
           // Verbose: this fires on every diff pass for docs that are in practice fully synced,
           // so at warn level it floods the console without indicating a real fault.
           log.verbose('diverged document already resynced at these heads', {
@@ -1708,7 +1729,10 @@ export class AutomergeHost extends Resource {
           });
           continue;
         }
-        this._divergedResyncHeads.set(resyncKey, { collectionId, peerId, documentId, heads });
+        const attempts = previous?.heads === heads ? previous.attempts + 1 : 0;
+        const retryAt =
+          Date.now() + Math.min(DIVERGED_RESYNC_RETRY_MIN_MS * 2 ** attempts, DIVERGED_RESYNC_RETRY_MAX_MS);
+        this._divergedResyncHeads.set(resyncKey, { collectionId, peerId, documentId, heads, attempts, retryAt });
         if (isDocumentLoaded(this._repo, documentId)) {
           log('resyncing diverged document', {
             collectionId,
