@@ -91,6 +91,9 @@ export const useLensValue = <S extends Obj.Unknown, T extends Record<string, any
   lens: Lens.Lens<any, T>,
   property?: K,
 ): any => {
+  // Opted out of the React Compiler: it would cache the projection below on `obj` and `lens`, which a
+  // change never replaces.
+  'use no memo';
   const [, bump] = useReducer((value: number) => value + 1, 0);
   useEffect(() => (obj ? Obj.subscribe(obj, bump) : undefined), [obj, bump]);
 
