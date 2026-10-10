@@ -405,14 +405,11 @@ export const Tuner = ({
         saveScaleId(id);
       }
       scaleIdRef.current = id;
-      const nextCalibration = loadCalibration(getScaleNotes(next, reference), id);
-      // A stored calibration belongs to the instrument, so switching scale must not overwrite it.
-      if (controlled) {
-        calibrationRef.current = nextCalibration;
-        setCalibrationState(nextCalibration);
-      } else {
-        setCalibration(nextCalibration);
-      }
+      const nextNotes = getScaleNotes(next, reference);
+      // A bound instrument with a new tuning is a different instrument, so its old strikes no longer apply.
+      setCalibration(
+        controlled ? Calibration.createCalibration(nextNotes, { strikes }) : loadCalibration(nextNotes, id),
+      );
       setPlayed([]);
     }
   };

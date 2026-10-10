@@ -17,7 +17,11 @@ export default Capability.makeModule(() =>
     Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'instrumentArticle',
-        filter: AppSurface.object(AppSurface.Article, Instrument.Instrument),
+        filter: AppSurface.object(
+          AppSurface.Article,
+          Instrument.Instrument,
+          (data) => data.subject.family === 'handpan',
+        ),
         component: InstrumentArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),

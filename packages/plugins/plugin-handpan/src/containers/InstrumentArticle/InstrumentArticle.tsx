@@ -14,19 +14,25 @@ import { Tuner } from '#components';
 
 import { scaleToTuning, tuningToScale } from '../../notation/index.ts';
 
+const isSameTuning = (a: Instrument.Tuning, b: Instrument.Tuning) =>
+  a.name === b.name &&
+  a.root === b.root &&
+  a.pitches.length === b.pitches.length &&
+  a.pitches.every((pitch, index) => pitch === b.pitches[index]);
+
 export type InstrumentArticleProps = AppSurface.ObjectArticleProps<Instrument.Instrument>;
 
 /** Calibrates an instrument and shows what is played on it; the calibration is stored on the object. */
 export const InstrumentArticle = ({ role, subject }: InstrumentArticleProps) => {
   const [instrument] = useObject(subject);
 
-  // The instrument's tuning is offered as a scale; a preset of the same name is reused so its id is stable.
+  // The instrument's tuning is offered as a scale; a preset with the same notes is reused so its id is stable.
   const { scales, current } = useMemo(() => {
     const tuning = instrument.tuning;
     if (!tuning) {
       return { scales: SCALES, current: SCALES[0] };
     }
-    const preset = SCALES.find(({ name }) => name === tuning.name);
+    const preset = SCALES.find((scale) => isSameTuning(scaleToTuning(scale), tuning));
     if (preset) {
       return { scales: SCALES, current: preset };
     }
