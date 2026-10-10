@@ -1,5 +1,49 @@
 # @dxos/client
 
+## 0.14.0
+
+### Patch Changes
+
+- Updated dependencies [0715304]
+- Updated dependencies [ec6da5a]
+- Updated dependencies [1eed6b1]
+- Updated dependencies [ed52cb7]
+- Updated dependencies [6847fe2]
+- Updated dependencies [35217f4]
+- Updated dependencies [1819960]
+- Updated dependencies [eb5d14d]
+- Updated dependencies [5324de6]
+  - @dxos/compute-runtime@0.14.0
+  - @dxos/echo@0.14.0
+  - @dxos/echo-client@0.14.0
+  - @dxos/client-services@0.14.0
+  - @dxos/effect@0.14.0
+  - @dxos/worker-framework@0.14.0
+  - @dxos/client-protocol@0.14.0
+  - @dxos/sql-sqlite@0.14.0
+  - @dxos/echo-protocol@0.14.0
+  - @dxos/edge-client@0.14.0
+  - @dxos/network-manager@0.14.0
+  - @dxos/rpc@0.14.0
+  - @dxos/protocols@0.14.0
+  - @dxos/config@0.14.0
+  - @dxos/credentials@0.14.0
+  - @dxos/messaging@0.14.0
+  - @dxos/websocket-rpc@0.14.0
+  - @dxos/rpc-tunnel@0.14.0
+  - @dxos/async@0.14.0
+  - @dxos/context@0.14.0
+  - @dxos/debug@0.14.0
+  - @dxos/errors@0.14.0
+  - @dxos/invariant@0.14.0
+  - @dxos/keys@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/node-std@0.14.0
+  - @dxos/timeframe@0.14.0
+  - @dxos/tracing@0.14.0
+  - @dxos/util@0.14.0
+  - @dxos/blob@0.14.0
+
 ## 0.13.0
 
 ### Minor Changes

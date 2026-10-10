@@ -1,0 +1,28 @@
+diagram @ -128,-64 flow=down box=256x128 grid=384x192
+group entry "Entry" {
+  node Entry "Entrypoints" ref="edge/packages/services/compute-service/src/entrypoint"
+  node Triggers "triggers" ref="edge/packages/services/compute-service/src/triggers"
+  node Process "ProcessObject" ref="edge/packages/services/compute-service/src/processes/process-object.ts"
+  node Workflow "WorkflowExecutor" ref="edge/packages/services/compute-service/src/workflow/workflow-executor.ts"
+}
+group exec "Execution" {
+  node Scheduler "Scheduler DO" ref="edge/packages/services/compute-service/src/triggers/scheduler-object.ts"
+  node Invoker "FunctionInvoker" ref="edge/packages/services/compute-service/src/invocation/function-invoker.ts"
+  node Runtime "Fn runtime" ref="edge/packages/services/compute-service/src/runtime"
+  node Registry "FunctionsRegistry" ref="edge/packages/services/compute-service/src/registry/functions-registry.ts"
+  node Logger "FunctionsLogger" ref="edge/packages/services/compute-service/src/functions-logger/functions-logger.ts"
+}
+group bindings "Bindings" {
+  node Store "D1 + R2" ref="edge/packages/services/compute-service/wrangler.jsonc"
+  node Ext "db / ai / kms" ref="edge/packages/services"
+}
+edge Entry -> Invoker "invoke"
+edge Triggers -> Scheduler "dispatch"
+edge Scheduler -> Invoker "fire"
+edge Process -> Invoker "spawn"
+edge Workflow -> Invoker "steps"
+edge Invoker -> Runtime "load"
+edge Runtime -> Logger "tail logs"
+edge Runtime -> Store "loader"
+edge Registry -> Store "upload"
+edge Invoker -> Ext "services"

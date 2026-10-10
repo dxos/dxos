@@ -2,11 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { describe, expect, onTestFinished, test } from 'vitest';
+import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
-import { Trigger } from '@dxos/async';
+import { Trigger, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Keyring } from '@dxos/keyring';
+import { EDGE_CLIENT_TOO_OLD, EdgeClientTooOldError, EdgeResponse } from '@dxos/protocols';
 import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { TextMessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { openAndClose } from '@dxos/test-utils';
@@ -177,6 +178,31 @@ describe('EdgeClient', () => {
     await openAndClose(client);
     await client.send(Context.default(), textMessage('Hello world 1'));
     expect(client.isOpen).is.true;
+  });
+
+  // Every retry would carry the same version and be refused the same way, so the client must stop and say why.
+  test('a refusal at /auth stops reconnecting and fails sends with the refusal', async () => {
+    const fetchMock = vi.fn(async (_input: URL | RequestInfo) =>
+      EdgeResponse.failure({
+        message: 'Client too old: SDK 0.12.0 is older than 0.13.0. Update the app (reload it) to continue.',
+        status: 426,
+        data: { type: EDGE_CLIENT_TOO_OLD, clientVersion: '0.12.0', minimumVersion: '0.13.0' },
+      }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    onTestFinished(() => {
+      vi.unstubAllGlobals();
+    });
+
+    const client = new EdgeClient(await createEphemeralEdgeIdentity(), { socketEndpoint: 'ws://127.0.0.1:1' });
+    await openAndClose(client);
+
+    await expect(client.send(Context.default(), textMessage('Hello'))).rejects.toBeInstanceOf(EdgeClientTooOldError);
+    // Several backoff periods (100 ms, doubling): a retrying client would have fetched /auth again by now.
+    await sleep(1_000);
+    // Counted by host: an earlier test's client may still be reconnecting through the same stub.
+    expect(fetchMock.mock.calls.filter((call) => new URL(String(call[0])).host === '127.0.0.1:1')).toHaveLength(1);
+    await expect(client.send(Context.default(), textMessage('Hello'))).rejects.toBeInstanceOf(EdgeClientTooOldError);
   });
 
   const textMessage = (message: string, source?: EdgeIdentity) =>

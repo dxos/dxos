@@ -1,5 +1,44 @@
 # @dxos/compute
 
+## 0.14.0
+
+### Minor Changes
+
+- ec6da5a: A chat can run on Claude Code on this computer or on EDGE.
+
+  A chat names the durable process that runs it in `session.process`. Plugins contribute agent processes through `AssistantCapabilities.AgentProcess`, and `AgentService` spawns the one a chat names, falling back to the assistant's own. The Claude plugin's Claude Code process starts the agent through the new `ShellService` (`@dxos/compute/ShellService`), which runs operating-system processes and bash scripts for a compute process. Each process gets its own instance, and every child it started ends when that process ends. The Node.js implementation is `@dxos/compute-runtime/node-shell`.
+
+  "Claude Code (cloud)", built on plugin-code's new `EdgeAgent.make`, runs a chat's turns on EDGE's coding-agent process in a sandbox container. The session keeps working with no client connected, and EDGE restarts the container and resumes the turn when the agent dies or stalls. Each turn lends the process the user's credential, so the credential never enters the container. The cloud session runs unattended by default: a permission request is denied on the spot, and the agent skips that step and carries on.
+
+  A new **Claude Code** connector stores a Claude subscription token: open a terminal, run `claude setup-token`, and paste the token it prints. The token is kept apart from the Anthropic API key. Claude Code on this computer receives it as `CLAUDE_CODE_OAUTH_TOKEN`, and the cloud harness lends it in preference to the API key.
+
+  A project lists the GitHub repositories its cloud sessions work on (`Project.repositories`), set in the project's header next to its name. The sandbox checks out the project's `repo` and each listed repository before the agent starts. Each turn lends the space's GitHub token to EDGE, resolving it through EDGE when EDGE holds it, and EDGE proxies the sandbox's git calls with it, so the token never enters the container either. The project folder setting applies only to Claude Code on this computer.
+
+  The Code plugin's coding-agent permission setting gains `bypassPermissions`, which never asks and runs everything.
+
+- a1e64db: A chat hosted on EDGE now shows its working indicators, phases and streamed reply for the whole turn, instead of reading idle while the agent works. `AgentProcess` takes a `resident` option that keeps the process for the next prompt rather than spawning a new one per turn, and `subscribeEphemeral` takes `{ replay }`. Breaking: plugin-assistant's `AiChatProcessor` is now `ChatModel` (`useChatProcessor` → `useChatModel`, `getProcessorState` → `getChatModelState`, and the `processor` prop of `Chat.Root`/`ChatPrompt` → `chatModel`).
+- 28bb45b: Operations now run as processes through `Process.Manager`, and durable operations are declared in two stages: `Operation.makeDurable({ ... })` (which accepts an optional `name`) followed by `Operation.withDurableHandler(...)`. Breaking: spawn a durable operation with `Process.spawn(durable, input)` and read its result with `Process.awaitOutput`, wrap a plain operation with `OperationProcess.make(op)` from `@dxos/compute-runtime` (which replaces `DurableOperation.fromOperation` and finds its handler in the process context), and reattach with the new `Process.Manager.attach`; `invokeFiber`/`attachFiber`/`OperationFiber` are removed. `Process.Handle` is merged into `Process.Process` (`parentId` → `parentPid`, `Process.Handle.Any` → `Process.Any`); processes are built only by the runtime, so fixtures use `makeTestProcess` from `@dxos/compute-runtime/testing`. `Trigger.Monitor`/`Trigger.TriggerMonitorService` are renamed `Trigger.Manager`/`Trigger.ManagerService`, and compute-runtime's `TriggerMonitor` module is now `TriggerManager`.
+
+### Patch Changes
+
+- 5324de6: Switching a routine's action between Instructions and an operation no longer carries one kind's trigger inputs into the other: a stray `input: {}` (or an operation's `connection`) failed every run until EDGE switched the trigger off. Switching a broken trigger back on now repairs it. Pressing Sync on an account whose sync routine is switched off now shows a toast that links to the routines panel, instead of retrying EDGE's 409 refusal for about 30 seconds. The trigger manager refuses a disabled trigger with a typed `TriggerDisabledError`, and EDGE force-runs no longer retry a 409 that is not about the trigger being switched off.
+- Updated dependencies [1eed6b1]
+- Updated dependencies [6847fe2]
+- Updated dependencies [1819960]
+- Updated dependencies [eb5d14d]
+  - @dxos/echo@0.14.0
+  - @dxos/effect@0.14.0
+  - @dxos/ai@0.14.0
+  - @dxos/link@0.14.0
+  - @dxos/schema@0.14.0
+  - @dxos/types@0.14.0
+  - @dxos/protocols@0.14.0
+  - @dxos/errors@0.14.0
+  - @dxos/invariant@0.14.0
+  - @dxos/keys@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/vendor-kbn-handlebars@0.14.0
+
 ## 0.13.0
 
 ### Minor Changes

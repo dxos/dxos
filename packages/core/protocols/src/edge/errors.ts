@@ -77,6 +77,16 @@ export class EdgeAuthChallengeError extends EdgeCallFailedError {
   }
 }
 
+/**
+ * EDGE refused this client SDK as older than the oldest it serves (`data.type` `EDGE_CLIENT_TOO_OLD`). Not
+ * retryable: every retry carries the same version, and only updating the app clears it.
+ */
+export class EdgeClientTooOldError extends EdgeCallFailedError {
+  constructor(body: EdgeFailure, status?: number) {
+    super({ message: body.message, data: body.data, status, isRetryable: false });
+  }
+}
+
 const getRetryAfterMillis = (response: Response) => {
   const retryAfter = Number(response.headers.get('Retry-After'));
   return Number.isNaN(retryAfter) || retryAfter === 0 ? undefined : retryAfter * 1000;

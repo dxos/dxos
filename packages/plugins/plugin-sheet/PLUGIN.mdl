@@ -398,6 +398,32 @@ test QA-1: Create a sheet, set values, evaluate a formula, read back
         default to that same collection rather than a different one.
 ```
 
+```mdl
+test QA-2: Build a budget and watch its totals recompute
+  desc: The demo path — create a sheet, type a small table, total it with SUM, and change a value.
+  actors: human
+  covers: [F-1.1, F-2.1, F-2.3, T-1, T-2]
+  status: passing            # 2026-10-09, recorded by autocue/budget.mjs
+  given:
+    - an identity exists, on a fresh profile
+    - space: the default space is open on its Home
+  steps:
+    - name: Create a sheet
+      do: Click "Add to space" and choose Sheet.
+      expect: an empty grid opens in a new plank
+    - name: Enter a header row and four rows of costs
+      do: |
+        From A1, type "Item", "Q1", "Q2" with Tab between cells and Enter at the end, then four rows:
+        Hosting 120 140, Design 80 95, Marketing 60 75, Support 40 45.
+      expect: the values fill A1:C5, numbers right-aligned
+    - name: Total each quarter with SUM
+      do: In A6 type "Total", then "=SUM(B2:B5)" in B6 and "=SUM(C2:C5)" in C6.
+      expect: B6 shows 300 and C6 shows 355
+    - name: Change a cost and watch the total update
+      do: Click B2, type "200" and press Enter.
+      expect: B6 updates to 380 without any other action
+```
+
 ---
 
 ## Appendix: Extension Definitions

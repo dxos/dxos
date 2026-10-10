@@ -173,7 +173,8 @@ export const frameClasses = (node: Node, selected: boolean, hovered = false): st
   const surface = opaque && clear ? 'bg-base-surface' : filled ? hue.surface : '';
   return [
     surface,
-    hue.text,
+    // A guide's hue marks its edge (a group's backdrop); its title reads in the default text colour.
+    style.guide ? '' : hue.text,
     selected
       ? 'border-focus'
       : hovered

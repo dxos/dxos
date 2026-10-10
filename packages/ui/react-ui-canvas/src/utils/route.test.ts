@@ -5,9 +5,18 @@
 import { describe, test } from 'vitest';
 
 import { defaultNodeRegistry } from '../model/registry.ts';
-import { type Link } from '../model/types.ts';
+import { type Link, type Scene } from '../model/types.ts';
 import { SceneBuilder } from './builder.ts';
-import { insertIndex, linkGeometry, linkPath, sideToward, smartPoints, splinePath } from './route.ts';
+import { DEFAULT_LATTICE } from './lattice.ts';
+import {
+  insertIndex,
+  linkGeometry,
+  linkPath,
+  sceneLinkGeometry,
+  sideToward,
+  smartPoints,
+  splinePath,
+} from './route.ts';
 
 const from = { point: { x: 0, y: 0 }, side: 'e' as const };
 const to = { point: { x: 300, y: 0 }, side: 'w' as const };
@@ -107,5 +116,35 @@ describe('route', () => {
       linkPath({ type: 'curve', id: 'c', z: 'a', source: { node: 'n' }, target: { point: free.point } }, port, free),
     ).toMatch(/, 100 37, 100 37$/);
     expect(smartPoints(port, free)).toEqual([port.point, { x: 32, y: 0 }, free.point]);
+  });
+
+  test('on a lattice a smart link takes the ports whose gutter route bends least', ({ expect }) => {
+    // MESH on (4, 1) and EDGE on (3, 4), as the Composer overview has them: the nearest ports (MESH's bottom-left,
+    // EDGE's top-right) need two bends round EDGE's corner; down the free column and in from the east needs one.
+    const box = (id: string, col: number, row: number) => ({
+      type: 'rect',
+      id,
+      z: 'a0',
+      center: { x: col * 384, y: row * 192 },
+      size: { width: 256, height: 128 },
+    });
+    const link: Link = { type: 'smart', id: 'link', z: 'a1', source: { node: 'mesh' }, target: { node: 'edge' } };
+    const scene: Scene = {
+      id: 'root',
+      nodes: { mesh: box('mesh', 4, 1), edge: box('edge', 3, 4) },
+      links: { link },
+    };
+    const [geometry] = sceneLinkGeometry(scene, defaultNodeRegistry, [link], DEFAULT_LATTICE);
+    expect([geometry.source.side, geometry.source.point, geometry.target.side, geometry.target.point]).toEqual([
+      's',
+      { x: 1536, y: 256 },
+      'e',
+      { x: 1280, y: 768 },
+    ]);
+    // One bend: a single rounded corner between the two straight runs.
+    expect(geometry.path.match(/Q/g)).toHaveLength(1);
+    // The same choice for the link on its own, so hit-testing and handles agree with what is drawn.
+    const single = linkGeometry(scene, defaultNodeRegistry, link, DEFAULT_LATTICE);
+    expect([single?.source.side, single?.target.side]).toEqual(['s', 'e']);
   });
 });
