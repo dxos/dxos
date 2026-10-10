@@ -7,3 +7,8 @@ packages/apps/composer-app/src/plugin-defs*.tsx @wittjosiah
 # The eager boot graph's ceiling. Raising it accepts startup cost for every user, so the increase
 # has to be motivated in review rather than merged to make a build pass.
 packages/apps/composer-app/scripts/check-boot-budget.mjs @wittjosiah
+
+# The perf nightly's budgets. A loosened target hides a regression on the dashboard, so a change to
+# one is reviewed by someone other than the agent or author that wanted the score back.
+packages/apps/composer-app/src/playwright/perf/budgets*.json @dmaretskyi @wittjosiah
+packages/core/compute/assistant-e2e/src/playwright/perf/budgets*.json @dmaretskyi @wittjosiah

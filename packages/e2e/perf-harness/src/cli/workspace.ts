@@ -67,3 +67,9 @@ export const trackedChanges = (root: string): string[] =>
 
 export const errorCode = (error: unknown): string | undefined =>
   error instanceof Error && 'code' in error && typeof error.code === 'string' ? error.code : undefined;
+
+/** Measurement files that differ between two commits; any at all and the arms measured different things. */
+export const harnessChanges = (root: string, base: string, head: string, paths: ReadonlyArray<string>): string[] =>
+  git(root, ['diff', '--name-only', base, head, '--', ...paths])
+    .split('\n')
+    .filter((file) => file && !file.endsWith('.test.ts'));

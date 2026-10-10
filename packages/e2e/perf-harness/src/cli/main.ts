@@ -7,6 +7,7 @@ import { parseArgs } from 'node:util';
 
 import { compare } from './compare.ts';
 import { doctor } from './doctor.ts';
+import { freeze, thaw } from './freeze.ts';
 import { gate } from './gate.ts';
 import { readLedger } from './ledger.ts';
 import { runCommand } from './run.ts';
@@ -22,6 +23,8 @@ usage: pnpm perf <command> [options]
   compare --base <ref>    paired A/B of HEAD against <ref>; the verdict is the exit code
   gate                    the boot-graph budget CI gates every PR on
   ledger [-n 10]          this worktree's past measurements (.perf/ledger.tsv)
+  freeze / thaw           pin the harness for an optimization loop: edits to it are refused,
+                          budgets cannot be rewritten, and compare voids a verdict after it moved
 
 compare
   --metric <pattern>      metric ids the verdict rests on; repeatable, * matches anything:
@@ -31,6 +34,9 @@ compare
   --threshold <percent>   smallest change that counts (default: work 5%, stage times 10%, run 5%)
   --min-rounds 6 --max-rounds 12 --max-minutes 60
   --base HEAD             A/A: both arms are the same tree, which shows this machine's noise
+  --check <command>       must pass before anything is measured; repeatable, e.g.
+                          --check 'moon run composer-app:test'
+  --allow-harness-change  measure even though the harness differs between the arms (otherwise void)
   --json                  one JSON line instead of the table
 
 common: --target composer  --ignore-load  --lock-wait <minutes, default 60>
@@ -57,6 +63,8 @@ const main = async (): Promise<number> => {
       'target': { type: 'string', default: 'composer' },
       'base': { type: 'string' },
       'metric': { type: 'string', multiple: true },
+      'check': { type: 'string', multiple: true },
+      'allow-harness-change': { type: 'boolean', default: false },
       'threshold': { type: 'string' },
       'min-rounds': { type: 'string' },
       'max-rounds': { type: 'string' },
@@ -103,10 +111,16 @@ const main = async (): Promise<number> => {
         maxMinutes: integer(values['max-minutes'], 60, 'max-minutes'),
         seed: integer(values.seed, 1, 'seed'),
         json: values.json,
+        checks: values.check ?? [],
+        allowHarnessChange: values['allow-harness-change'],
       });
     }
     case 'gate':
       return gate({ target: values.target });
+    case 'freeze':
+      return freeze({ target: values.target });
+    case 'thaw':
+      return thaw();
     case 'ledger': {
       const rows = readLedger(workspaceRoot()).slice(-Math.max(1, integer(values.iterations, 10, 'n')));
       process.stdout.write(
