@@ -2434,6 +2434,9 @@ importers:
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../../plugins/plugin-graph
+      '@dxos/plugin-handpan':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-handpan
       '@dxos/plugin-heygen':
         specifier: workspace:*
         version: link:../../plugins/plugin-heygen
@@ -11996,6 +11999,15 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute/compute
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
+      '@dxos/echo-react':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-react
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -12005,6 +12017,9 @@ importers:
       '@dxos/plugin-sequencer':
         specifier: workspace:*
         version: link:../plugin-sequencer
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
       '@dxos/react-ui-audio':
         specifier: workspace:*
         version: link:../../ui/react-ui-audio
