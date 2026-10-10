@@ -6,7 +6,7 @@ import { create } from '@bufbuild/protobuf';
 import { afterEach, describe, it, test, vi } from 'vitest';
 
 import { Context } from '@dxos/context';
-import { EDGE_CLIENT_TOO_OLD, EdgeClientTooOldError } from '@dxos/protocols';
+import { EDGE_CLIENT_TOO_OLD, EdgeClientTooOldError, EdgeResponse } from '@dxos/protocols';
 import { type Presentation, PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { createEphemeralEdgeIdentity } from './auth.ts';
@@ -335,16 +335,13 @@ describe('EdgeHttpClient outdated SDK', () => {
     vi.unstubAllGlobals();
   });
 
-  // The envelope `requireClientSdkVersion` answers with on EDGE.
+  // Built by EDGE's own envelope producer, exactly as `requireClientSdkVersion` answers.
   const refusal = () =>
-    new Response(
-      JSON.stringify({
-        success: false,
-        message: 'Client too old: SDK 0.12.0 is older than 0.13.0. Update the app (reload it) to continue.',
-        data: { type: EDGE_CLIENT_TOO_OLD, clientVersion: '0.12.0', minimumVersion: '0.13.0' },
-      }),
-      { status: 426, headers: { 'Content-Type': 'application/json' } },
-    );
+    EdgeResponse.failure({
+      message: 'Client too old: SDK 0.12.0 is older than 0.13.0. Update the app (reload it) to continue.',
+      status: 426,
+      data: { type: EDGE_CLIENT_TOO_OLD, clientVersion: '0.12.0', minimumVersion: '0.13.0' },
+    });
 
   // The prefetch swallows other failures to proceed unauthenticated, which here would only be refused again, silently.
   test('a refusal at the /auth prefetch fails the call once, without sending it', async ({ expect }) => {
