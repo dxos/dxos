@@ -6,6 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
@@ -109,13 +110,15 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   const contextId = Entity.getURI(canvas);
   const {
     camera: savedCamera,
-    readonly = false,
+    readonly: viewReadonly = false,
     floating = false,
     grid: snap,
     guides,
     fit,
   } = useViewState(canvasViewAspect, contextId);
   const { update: updateViewState } = useViewStateActions(canvasViewAspect, contextId);
+  // A section is a drawing shown inside another object (a document's embed), so it is only looked at, never edited.
+  const readonly = viewReadonly || role === AppSurface.Section.role;
   const handleCameraChange = useCallback(
     (camera: Camera) => updateViewState((state) => ({ ...state, camera })),
     [updateViewState],

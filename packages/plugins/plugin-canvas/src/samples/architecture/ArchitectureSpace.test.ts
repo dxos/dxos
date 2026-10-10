@@ -50,7 +50,8 @@ describe('ArchitectureSpace', () => {
     const [composer, dxos, edge] = ['Composer', 'DXOS', 'EDGE'].map(byName);
     const content = (await composer?.content.load())?.content ?? '';
     const composerDrawing = drawings.find((drawing) => drawing.name === 'Composer');
-    expect(content).toContain(`[DXOS](echo:///${dxos?.id})`);
+    // A paragraph is one line: a line break in the source would render as one in the editor.
+    expect(content).toContain(`React UI, on the [DXOS](echo:///${dxos?.id}) SDK`);
     expect(content).toContain(`[EDGE](echo:///${edge?.id})`);
     expect(content).toContain(`![Composer architecture](echo:///${composerDrawing?.id})`);
   });
