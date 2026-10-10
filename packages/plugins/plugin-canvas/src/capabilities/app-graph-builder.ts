@@ -65,6 +65,7 @@ export default Capability.makeModule(
             properties: {
               label: readonly ? UNLOCK_LABEL : LOCK_LABEL,
               icon: readonly ? 'ph--pencil-simple--regular' : 'ph--lock-simple--regular',
+              disposition: 'list-item',
               testId: 'canvas.readonly',
             },
           }),
@@ -78,6 +79,7 @@ export default Capability.makeModule(
             properties: {
               label: docked ? FLOAT_PANELS_LABEL : DOCK_PANELS_LABEL,
               icon: docked ? 'ph--arrow-square-out--regular' : 'ph--sidebar-simple--regular',
+              disposition: 'list-item',
               testId: 'canvas.dock-panels',
             },
           }),
