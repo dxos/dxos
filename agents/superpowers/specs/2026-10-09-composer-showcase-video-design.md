@@ -164,6 +164,14 @@ Vite server from the driver, and Node 20 cannot load its `dx.config.ts`.
    `trim-static.mjs --in showcase.webm --ident composer --voiceover showcase/voiceover-cues.json --duration 170-185 --mp4 --name composer-showcase`.
    Retime the cues against the stitched video first.
 
+When recording a single scene, send the driver a `cut` op once its setup steps have run. Setup footage is
+otherwise kept in the video, because the trimmer only caps still frames. `composer-showcase.mjs` cuts on its
+own.
+
+**Draft cut (2026-10-10).** The draft is one take of scenes 1, 3, 4, 5 and 8 on a fresh profile, with all 26
+steps passing. It was trimmed with `--ident composer --voiceover steps --duration 100-150 --upload off`,
+taking 169 s of raw footage to 138.7 s narrated. It stays local and is not uploaded.
+
 `composer-showcase.mjs` is the single-take alternative. It runs every scene's setup first, then scenes 1 and
 3–8 straight through after one countdown.
 

@@ -31,5 +31,14 @@ const home = (scene) => ({ ...prep, setup: false, name: `Back to Home before ${S
 export const steps = [
   prep,
   ...own.flatMap((scene) => scene.filter((step) => step.setup)),
+  // The setups run on the recorder too; the take starts here.
+  {
+    name: 'Cut (off camera): drop the boot and setup footage',
+    setup: true,
+    run: async ({ demo, page }) => {
+      await prep.run({ page });
+      await demo.cut();
+    },
+  },
   ...own.flatMap((scene, index) => [home(index), ...scene.filter((step) => !step.setup)]),
 ];
