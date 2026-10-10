@@ -1,0 +1,24 @@
+diagram flow=down
+group worker "hub-service" {
+  node Worker "hub worker" ref="edge/packages/services/hub-service/src/worker.ts"
+  node Entry "HubServiceEntry" ref="edge/packages/services/hub-service/src/entrypoint/hub-service.ts"
+  node Auth "passkey / session" ref="edge/packages/services/hub-service/src/auth"
+  node Api "account API" ref="edge/packages/services/hub-service/src/api"
+  node Managers "user / plan mgrs" ref="edge/packages/services/hub-service/src/db"
+}
+group objects "Durable Objects" {
+  node Mailbox "MailboxObject" ref="edge/packages/services/hub-service/src/mailbox/mailbox-object.ts"
+  node Metering "UserMetering" ref="edge/packages/services/hub-service/src/entrypoint/hub-metering.ts"
+}
+group bindings "Bindings" {
+  node Stores "D1 + SESSION_KV" ref="edge/packages/services/hub-service/wrangler.jsonc"
+  node DbService "db-service" ref="edge/packages/services/db-service"
+}
+edge Worker -> Auth "login"
+edge Worker -> Api
+edge Auth -> Stores "sessions"
+edge Api -> Managers "accounts"
+edge Managers -> Stores "D1 hub"
+edge Entry -> Metering "usage"
+edge Api -> Mailbox "messages"
+edge Managers -> DbService "DATA_SERVICE"

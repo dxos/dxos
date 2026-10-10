@@ -1,0 +1,33 @@
+diagram flow=down
+group client "Client" {
+  node ReactClient "React Client" ref="packages/sdk/react-client"
+  node Client "Client" ref="packages/sdk/client"
+  node EchoClient "echo-client" ref="packages/core/echo/echo-client"
+  node EchoApi "echo (schema)" ref="packages/core/echo/echo"
+}
+group host "Services (worker)" {
+  node Services "ServiceStack" ref="packages/sdk/client-services"
+  node EchoHost "echo-host" ref="packages/core/echo/echo-host/src/db-host"
+  node Automerge "Automerge Host" ref="packages/core/echo/echo-host/src/automerge"
+  node Index "Indexing" ref="packages/core/echo/index-core"
+  node Feed "Feed" ref="packages/core/echo/feed"
+  node Sqlite "SQLite / OPFS" ref="packages/common/sql-sqlite"
+}
+group sync "Sync" {
+  node Replicator "Edge Replicator" ref="packages/core/echo/echo-host/src/edge"
+  node EdgeClient "EDGE Client" ref="packages/core/mesh/edge-client"
+}
+edge ReactClient -> Client
+edge Client -> Services "services"
+edge Client -> EchoClient "db proxy"
+edge EchoClient -> EchoApi
+edge Services owns EchoHost "spaces"
+edge EchoHost owns Automerge "docs"
+edge EchoHost -> Index "queries"
+edge EchoHost -> Feed "queues"
+edge Automerge -> Sqlite "storage"
+edge Index -> Sqlite
+edge Feed -> Sqlite
+edge Automerge -> Replicator
+edge Replicator -> EdgeClient "replicate"
+edge Services -> EdgeClient "identity"

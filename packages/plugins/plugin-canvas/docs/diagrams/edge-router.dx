@@ -1,0 +1,28 @@
+diagram flow=down
+group api "edge worker" {
+  node Api "Hono API" ref="edge/packages/services/edge/src/api.ts"
+  node Proxy "service proxy" ref="edge/packages/services/edge/src/service-proxy.ts"
+  node Backups "backups API" ref="edge/packages/services/edge/src/backups/api.ts"
+  node Admin "admin / KMS" ref="edge/packages/services/edge/src/admin.ts"
+  node DataMgmt "data management" ref="edge/packages/services/edge/src/data-management"
+  node Purge "purge orchestr." ref="edge/packages/services/edge/src/purge-orchestrator.ts"
+}
+group router "router" {
+  node RouterApi "WS /inbox API" ref="edge/packages/services/router/src/worker/api.ts"
+  node RouterDO "RouterObject" ref="edge/packages/services/router/src/worker/router/router.ts"
+  node SwarmDO "SwarmObject" ref="edge/packages/services/router/src/worker/swarm/swarm.ts"
+  node Inbox "Inbox" ref="edge/packages/services/router/src/worker/inbox/inbox.ts"
+}
+group ext "Services" {
+  node Services "db / hub / kms ..." ref="edge/packages/services"
+}
+edge Api -> RouterApi "mount /"
+edge RouterApi -> RouterDO "WS per identity"
+edge RouterDO -> SwarmDO "peer swarms"
+edge RouterApi -> Inbox
+edge RouterDO -> Services "DATABASE_MESSENGER"
+edge Api -> Proxy "prefix routes"
+edge Proxy -> Services "bindings"
+edge Api -> Backups "R2 backups"
+edge Api -> Admin
+edge DataMgmt -> Purge "storage-purge Q"

@@ -1,0 +1,35 @@
+diagram flow=down
+group app "App layer" {
+  node Shell "Composer App" ref="packages/apps/composer-app"
+  node Framework "App Framework" ref="packages/sdk/app-framework"
+  node CorePlugins "Core Plugins" ref="packages/apps/composer-app/src/plugin-defs.core.tsx"
+  node FeaturePlugins "Feature Plugins" ref="packages/plugins"
+  node Ui "React UI" ref="packages/ui/react-ui"
+}
+group sdk "SDK and data" {
+  node Client "Client SDK" ref="packages/sdk/client"
+  node Services "Client Services" ref="packages/sdk/client-services"
+  node Echo "ECHO" ref="packages/core/echo"
+  node Halo "HALO Identity" ref="packages/core/halo"
+  node Mesh "MESH Network" ref="packages/core/mesh"
+  node Compute "Compute" ref="packages/core/compute"
+}
+group remote "Remote" {
+  node Edge "EDGE" ref="packages/core/mesh/edge-client"
+}
+edge Shell composes Framework "boots"
+edge Shell -> CorePlugins
+edge Shell -> FeaturePlugins
+edge CorePlugins -> Framework
+edge FeaturePlugins -> Framework
+edge FeaturePlugins -> Ui "renders"
+edge CorePlugins -> Client
+edge Framework -> Compute "operations"
+edge Client -> Services "RPC"
+edge Services owns Echo
+edge Services owns Halo
+edge Services -> Mesh
+edge Echo -> Edge "sync"
+edge Mesh -> Edge
+edge Compute -> Echo
+edge Compute -> Edge "remote invoke"

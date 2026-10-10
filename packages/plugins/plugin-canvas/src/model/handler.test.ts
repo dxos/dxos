@@ -103,4 +103,61 @@ describe('SceneHandler', () => {
     applyCommands(content, [{ op: 'remove-object', objectId: 'face' }], SceneHandler);
     expect(Object.keys(readScenes(content)[ROOT_SCENE_ID].nodes)).toEqual(['byhand']);
   });
+
+  test('a laid-out connector binds each end to the box it lands on, past the group around it', ({ expect }) => {
+    const content: ContentMap = {};
+    applyCommands(
+      content,
+      [
+        {
+          op: 'upsert-object',
+          object: {
+            id: 'group',
+            origin: { x: 0, y: 0 },
+            elements: [{ kind: 'rect', id: 'frame', x: 0, y: 0, w: 800, h: 400, stroke: 'dashed', fill: 'tint' }],
+          },
+        },
+        {
+          op: 'upsert-object',
+          object: {
+            id: 'a',
+            origin: { x: 32, y: 32 },
+            elements: [{ kind: 'rect', id: 'box', x: 0, y: 0, w: 192, h: 96 }],
+          },
+        },
+        {
+          op: 'upsert-object',
+          object: {
+            id: 'b',
+            origin: { x: 32, y: 256 },
+            elements: [{ kind: 'rect', id: 'box', x: 0, y: 0, w: 192, h: 96 }],
+          },
+        },
+        {
+          op: 'upsert-object',
+          object: {
+            id: 'edges',
+            origin: { x: 0, y: 0 },
+            elements: [
+              { kind: 'arrow', id: 'a-b-0', start: { x: 128, y: 128 }, end: { x: 128, y: 256 } },
+              { kind: 'text', id: 'a-b-0-label', x: 136, y: 180, text: 'calls', weight: 's' },
+            ],
+          },
+        },
+      ],
+      SceneHandler,
+    );
+    const root = readScenes(content)[ROOT_SCENE_ID];
+    const link = root.links[elementId('edges', 'a-b-0')];
+    expect([link.type, link.source, link.target, link.ends]).toEqual([
+      'smart',
+      { node: 'a/box' },
+      { node: 'b/box' },
+      { end: 'arrow' },
+    ]);
+    // The group is a dashed, faint backdrop; the caption is a bare label sized to its text.
+    expect(root.nodes[elementId('group', 'frame')].style).toMatchObject({ lineStyle: 'dashed', tone: 0 });
+    const label = root.nodes[elementId('edges', 'a-b-0-label')];
+    expect(isRectNode(label) && [label.label, label.style?.border, label.size.height]).toEqual(['calls', false, 20]);
+  });
 });

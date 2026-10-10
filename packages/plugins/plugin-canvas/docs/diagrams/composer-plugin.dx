@@ -1,0 +1,31 @@
+diagram flow=down
+group entry "Entry" {
+  node Entry "CanvasPlugin" ref="packages/plugins/plugin-canvas/src/CanvasPlugin.ts"
+  node Meta "meta" ref="packages/plugins/plugin-canvas/src/meta.ts"
+  node Body "plugin.tsx" ref="packages/plugins/plugin-canvas/src/plugin.tsx"
+}
+group caps "Capabilities" {
+  node Surface "react-surface" ref="packages/plugins/plugin-canvas/src/capabilities/react-surface.tsx"
+  node GraphBuilder "app-graph-builder" ref="packages/plugins/plugin-canvas/src/capabilities/app-graph-builder.ts"
+  node Settings "settings" ref="packages/plugins/plugin-canvas/src/capabilities/settings.ts"
+  node OpHandler "operation-handler" ref="packages/plugins/plugin-chess/src/capabilities/operation-handler.ts"
+}
+group code "Code" {
+  node Ops "Operations" ref="packages/plugins/plugin-chess/src/operations"
+  node Containers "Containers" ref="packages/plugins/plugin-canvas/src/containers"
+  node Model "Model" ref="packages/plugins/plugin-canvas/src/model"
+  node Types "Types/Schema" ref="packages/plugins/plugin-canvas/src/types"
+  node UiPkg "react-ui-canvas" ref="packages/ui/react-ui-canvas"
+}
+edge Entry -> Meta
+edge Entry composes Body "lazy import"
+edge Body composes Surface
+edge Body composes GraphBuilder
+edge Body composes Settings
+edge Body composes OpHandler
+edge OpHandler -> Ops
+edge Surface -> Containers "renders"
+edge Containers -> UiPkg
+edge Containers -> Model
+edge GraphBuilder -> Types
+edge Settings -> Types

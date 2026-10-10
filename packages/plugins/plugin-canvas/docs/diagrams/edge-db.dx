@@ -1,0 +1,30 @@
+diagram flow=down
+group entry "Entrypoints" {
+  node Entry "Entrypoints" ref="edge/packages/services/db-service/src/worker/entrypoint"
+  node Handlers "API handlers" ref="edge/packages/services/db-service/src/worker/api-handler"
+  node Registry "SpaceRegistry" ref="edge/packages/services/db-service/src/worker/space-registry/space-registry-object.ts"
+}
+group objects "Durable Objects" {
+  node Ssm "SpaceStateMachine" ref="edge/packages/services/db-service/src/worker/space/space-state-machine.ts"
+  node Subduction "Subduction repl." ref="edge/packages/services/db-service/src/worker/subduction"
+  node FeedSpace "FeedSpace" ref="edge/packages/services/db-service/src/worker/feed-space/feed-space.ts"
+  node FeedRep "FeedReplicator" ref="edge/packages/services/db-service/src/worker/feed/feed-replicator.ts"
+  node Indexer "Indexer" ref="edge/packages/services/db-service/src/worker/indexer/indexer.ts"
+  node Query "QueryExecutor" ref="edge/packages/services/db-service/src/worker/query/query-executor.ts"
+  node Meta "SpaceMetadata" ref="edge/packages/services/db-service/src/worker/space-metadata/space-metadata.ts"
+}
+group bindings "Bindings" {
+  node R2 "R2 space-backups" ref="edge/packages/services/db-service/src/worker/bindings.ts"
+  node Ext "router / kms / compute" ref="edge/packages/services"
+}
+edge Entry -> Ssm "credentials"
+edge Entry -> Subduction "automerge sync"
+edge Entry -> FeedSpace "feeds"
+edge FeedSpace -> FeedRep "replicate"
+edge Subduction -> Indexer "doc changes"
+edge Indexer -> Query "index lookup"
+edge Registry -> Entry "registry queue"
+edge Meta -> R2 "backups"
+edge Subduction -> Ext "ROUTER_MESSENGER"
+edge Entry -> Ext "KMS / FUNCTIONS"
+edge Handlers -> Entry

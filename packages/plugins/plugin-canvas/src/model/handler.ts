@@ -59,15 +59,54 @@ const HUES: Partial<Record<Dsl.Color, string>> = {
   'red': 'red',
 };
 
-const styleOf = (element: { color?: Dsl.Color; fill?: Dsl.Fill }): NodeStyle | undefined => {
+const styleOf = (element: { color?: Dsl.Color; fill?: Dsl.Fill; stroke?: Dsl.Stroke }): NodeStyle | undefined => {
   const hue = element.color ? HUES[element.color] : undefined;
   const fill = element.fill === 'none' ? false : undefined;
-  return hue || fill !== undefined ? { ...(hue ? { hue } : {}), ...(fill !== undefined ? { fill } : {}) } : undefined;
+  // A tint is the faintest tone of the hue: a group's backdrop, not a shape of its own.
+  const tone = element.fill === 'tint' ? 0 : undefined;
+  const lineStyle = element.stroke === 'dashed' || element.stroke === 'dotted' ? element.stroke : undefined;
+  const style: NodeStyle = {
+    ...(hue ? { hue } : {}),
+    ...(fill !== undefined ? { fill } : {}),
+    ...(tone !== undefined ? { tone } : {}),
+    ...(lineStyle ? { lineStyle } : {}),
+  };
+  return Object.keys(style).length > 0 ? style : undefined;
+};
+
+/** Px per character and line height of a small label, for sizing its box to its text (a note's default is a page). */
+const LABEL_CHAR = 7;
+const LABEL_HEIGHT = 20;
+
+/** The node a free connector end lands on: the smallest frame containing the point (a box, not the group around it). */
+const nodeAt = (nodes: readonly Node[], point: { x: number; y: number }, slack = 1): Node | undefined =>
+  nodes
+    .filter((node) => {
+      const { x, y, width, height } = nodeBounds(node);
+      return (
+        point.x >= x - slack && point.x <= x + width + slack && point.y >= y - slack && point.y <= y + height + slack
+      );
+    })
+    .sort((left, right) => left.size.width * left.size.height - right.size.width * right.size.height)[0];
+
+/** The canvas markers of a connector's ends; a canvas end marker is one of arrow, circle or triangle. */
+const endsOf = (arrow: Dsl.Arrow): Link['ends'] => {
+  const markers = Dsl.markersOf(arrow);
+  const marker = (value: Dsl.Marker | undefined) =>
+    value === 'triangle' ? 'triangle' : value === 'circle' ? 'circle' : value ? 'arrow' : undefined;
+  const start = marker(markers.start);
+  const end = marker(markers.end);
+  return start || end ? { ...(start ? { start } : {}), ...(end ? { end } : {}) } : undefined;
 };
 
 const withStyle = (node: Node, style: NodeStyle | undefined): Node => (style ? { ...node, style } : node);
 
 const managed = (content: ContentMap): ElementRecord[] => Object.values(content).filter(isElementRecord);
+
+const nodesOf = (content: ContentMap): Node[] =>
+  Object.values(content)
+    .filter(isNodeRecord)
+    .map((record) => record.node);
 
 const nodesIn = (content: ContentMap, scene: string): Node[] =>
   managed(content)
@@ -143,6 +182,22 @@ export const SceneHandler: ContentHandler = {
           break;
         }
         case 'text': {
+          // A small text is a label (a group's title, a connector's caption): its own size, no frame or fill.
+          if (element.weight === 's') {
+            const width = (element.w ?? element.text.length * LABEL_CHAR + 16) * placement.scale;
+            const height = LABEL_HEIGHT * placement.scale;
+            const node: RectNode = {
+              type: 'rect',
+              id,
+              z: nextZ(),
+              center: place(element.x + width / 2, element.y + height / 2),
+              size: { width, height },
+              label: element.text,
+              style: { fill: false, border: false, alignHorizontal: 'left', fontSize: 12 },
+            };
+            put(element.id, node);
+            break;
+          }
           const width = element.w ?? DEFAULT_SIZES.note.width;
           const height = DEFAULT_SIZES.note.height;
           const node: NoteNode = {
@@ -170,12 +225,39 @@ export const SceneHandler: ContentHandler = {
           break;
         }
         case 'arrow': {
-          if (!element.from || !element.to) {
+          // A laid-out connector carries points, not refs: each end binds to the node it lands on.
+          // A caption (an unbordered label, from this upsert or an earlier one) is never an end.
+          const shapes = [...nodesIn(content, scene), ...nodesOf(records)].filter(
+            (node) => node.style?.border !== false,
+          );
+          // A routed connector is its bends (`<id>-path`) then the arrow's last leg: the path starts at the source.
+          const path = object.elements.find((other) => other.kind === 'line' && other.id === `${element.id}-path`);
+          const start = path?.kind === 'line' ? path.points[0] : element.start;
+          const from = element.from
+            ? Dsl.resolveRef(element.from, object.id)
+            : start && nodeAt(shapes, place(start.x, start.y))?.id;
+          const to = element.to
+            ? Dsl.resolveRef(element.to, object.id)
+            : element.end && nodeAt(shapes, place(element.end.x, element.end.y))?.id;
+          if (!from || !to || from === to) {
             break;
           }
-          const source = { node: Dsl.resolveRef(element.from, object.id) };
-          const target = { node: Dsl.resolveRef(element.to, object.id) };
-          const link: Link = createLink({ type: 'line', id, z: nextZ(), source, target });
+          const ends = endsOf(element);
+          const dashed = Dsl.markersOf(element).dashed;
+          // A routed connector keeps its route: a spline through its bends, so its caption stays beside it.
+          const bends = path?.kind === 'line' ? path.points.slice(1).map((point) => place(point.x, point.y)) : [];
+          const base = createLink({
+            type: element.from ? 'line' : bends.length > 0 ? 'spline' : 'smart',
+            id,
+            z: nextZ(),
+            source: { node: from },
+            target: { node: to },
+          });
+          const link: Link = {
+            ...(base.type === 'spline' ? { ...base, points: bends } : base),
+            ...(ends ? { ends } : {}),
+            ...(dashed ? { style: { lineStyle: 'dashed' } } : {}),
+          };
           records[linkKey(id)] = { kind: 'link', scene, link, dsl: identity(element.id) } satisfies LinkRecord;
           break;
         }
