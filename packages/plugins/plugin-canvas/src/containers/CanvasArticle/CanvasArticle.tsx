@@ -110,7 +110,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   const contextId = Entity.getURI(canvas);
   const {
     camera: savedCamera,
-    readonly: viewReadonly = false,
+    readonly: viewReadonly,
     floating = false,
     grid: snap,
     guides,
@@ -120,7 +120,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   // A section is a drawing shown inside another object (a document's embed), so it is only looked at, never edited,
   // and shows the drawing alone: no palette and no panels.
   const section = role === AppSurface.Section.role;
-  const readonly = viewReadonly || section;
+  const readonly = (viewReadonly ?? record?.readonly ?? false) || section;
   const handleCameraChange = useCallback(
     (camera: Camera) => updateViewState((state) => ({ ...state, camera })),
     [updateViewState],

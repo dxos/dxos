@@ -50,6 +50,8 @@ export const CanvasRecord = Schema.Struct({
   lattice: Schema.optional(Schema.Boolean),
   /** Minor grid spacing in scene px; the engine's default when unset. */
   grid: Schema.optional(Schema.Number),
+  /** Opens read-only for a viewer who has not chosen otherwise (their view state's `readonly` wins). */
+  readonly: Schema.optional(Schema.Boolean),
 });
 export type CanvasRecord = Schema.Schema.Type<typeof CanvasRecord>;
 

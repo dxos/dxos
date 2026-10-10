@@ -45,18 +45,23 @@ export default Capability.makeModule(
         const canvas = drawing.canvas.target;
         const contextId = canvas && Entity.getURI(canvas);
         const state = viewState && contextId ? get(viewState.atom(canvasViewAspect, contextId)) : {};
-        const readonly = state.readonly === true;
+        // A viewer who has not chosen sees the drawing's own default (a template's drawings open read-only). Read from
+        // the canvas record inline: `#model` would pull React into the plugin's node and workerd entries.
+        const record: unknown = get(Obj.atom(drawing.canvas))?.content?.canvas;
+        const readonlyDefault =
+          typeof record === 'object' && record !== null && Reflect.get(record, 'readonly') === true;
+        const readonly = state.readonly ?? readonlyDefault;
         const floating = state.floating === true;
-        const toggle = (key: 'readonly' | 'floating') =>
+        const toggle = (key: 'readonly' | 'floating', current: boolean) =>
           Effect.sync(() => {
             if (viewState && contextId) {
-              viewState.update(canvasViewAspect, contextId, (state) => ({ ...state, [key]: state[key] !== true }));
+              viewState.update(canvasViewAspect, contextId, (state) => ({ ...state, [key]: !(state[key] ?? current) }));
             }
           });
         return Effect.succeed([
           AppGraphNode.makeAction({
             id: `${drawing.id}.readonly`,
-            data: () => toggle('readonly'),
+            data: () => toggle('readonly', readonlyDefault),
             properties: {
               label: readonly ? UNLOCK_LABEL : LOCK_LABEL,
               icon: readonly ? 'ph--pencil-simple--regular' : 'ph--lock-simple--regular',
@@ -66,7 +71,7 @@ export default Capability.makeModule(
           }),
           AppGraphNode.makeAction({
             id: `${drawing.id}.floating`,
-            data: () => toggle('floating'),
+            data: () => toggle('floating', false),
             properties: {
               label: floating ? DOCK_PANELS_LABEL : FLOAT_PANELS_LABEL,
               icon: floating ? 'ph--sidebar-simple--regular' : 'ph--arrow-square-out--regular',

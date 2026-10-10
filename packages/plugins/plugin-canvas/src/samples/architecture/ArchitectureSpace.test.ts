@@ -11,6 +11,8 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 
+import { canvasRecordOf } from '#model';
+
 import * as ArchitectureSpace from './ArchitectureSpace.ts';
 
 let builder: EchoTestBuilder;
@@ -33,6 +35,9 @@ describe('ArchitectureSpace', () => {
 
     const drawings = await db.query(Filter.type(Drawing.Drawing)).run();
     expect(drawings).toHaveLength(12);
+    // Reference diagrams open read-only for a viewer who has not chosen to edit.
+    const canvases = await Promise.all(drawings.map((drawing) => drawing.canvas.load()));
+    expect(canvases.every((canvas) => canvasRecordOf(canvas.content)?.readonly === true)).toBe(true);
     const collections = await db.query(Filter.type(Collection.Collection)).run();
     const listed = collections.find((collection) => collection.name === 'Architecture');
     const listedObjects = await Promise.all((listed?.objects ?? []).map((ref) => ref.load()));

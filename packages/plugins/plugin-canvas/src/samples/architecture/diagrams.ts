@@ -43,7 +43,8 @@ export const loadDiagramDrawings = async (
     CanvasBuilder.apply(canvas, commands);
     // The diagrams are laid out on the canvas lattice (`box`, `grid` and `@` origin match its cells), so turning it on
     // routes links square along the gutters between the boxes.
-    Obj.update(canvas, (canvas) => updateCanvasRecord(canvas.content, { lattice: true }));
+    // Reference diagrams: they open read-only until a viewer chooses to edit.
+    Obj.update(canvas, (canvas) => updateCanvasRecord(canvas.content, { lattice: true, readonly: true }));
     drawings.set(id, db.add(Drawing.make({ name: set.names[id] ?? id, canvas })));
   }
 
