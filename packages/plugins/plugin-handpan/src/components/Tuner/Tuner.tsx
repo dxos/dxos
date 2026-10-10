@@ -11,6 +11,7 @@ import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Select from '@dxos/react-ui/Select';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
@@ -384,10 +385,12 @@ export const Tuner = ({
     <Panel.Root>
       <Panel.Header>
         <Toolbar.Root>
-          <Button.Root
-            icon={listening ? 'ph--stop--regular' : 'ph--microphone--regular'}
+          <SystemButton.Mic
+            iconOnly
+            variant='ghost'
             label={t(listening ? 'stop.label' : 'start.label')}
-            onClick={listening ? analyzer.stop : analyzer.start}
+            recording={listening}
+            onToggle={listening ? analyzer.stop : analyzer.start}
             data-testid='handpan.listen'
           />
           <Select.Root
@@ -402,19 +405,6 @@ export const Tuner = ({
               ))}
             </Select.Content>
           </Select.Root>
-          <ToggleGroup.Root
-            type='single'
-            value={mode}
-            onValueChange={(value) => (value === 'calibrate' || value === 'live') && setMode(value)}
-          >
-            <ToggleGroup.Item
-              value='calibrate'
-              label={t('mode-calibrate.label')}
-              data-testid='handpan.mode.calibrate'
-            />
-            <ToggleGroup.Item value='live' label={t('mode-live.label')} data-testid='handpan.mode.live' />
-          </ToggleGroup.Root>
-          <Toolbar.Separator />
           {source === 'synth' && (
             <Button.Root
               icon='ph--hand-palm--regular'
@@ -432,6 +422,19 @@ export const Tuner = ({
               onClick={handleReset}
             />
           )}
+          <Toolbar.Separator variant='gap' />
+          <Toolbar.ToggleGroup
+            type='single'
+            value={mode}
+            onValueChange={(value) => (value === 'calibrate' || value === 'live') && setMode(value)}
+          >
+            <ToggleGroup.Item
+              value='calibrate'
+              label={t('mode-calibrate.label')}
+              data-testid='handpan.mode.calibrate'
+            />
+            <ToggleGroup.Item value='live' label={t('mode-live.label')} data-testid='handpan.mode.live' />
+          </Toolbar.ToggleGroup>
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body asChild>
@@ -482,8 +485,15 @@ export const Tuner = ({
           >
             {message}
           </span>
+          {/* Fixed height for the heading plus STRIKE_LOG_SIZE lines, so new strikes never move the pads. */}
           {mode === 'calibrate' && listening && (
-            <Layout.Flex column align='center' gap='xs' classNames='text-xs' data-testid='handpan.strike-log'>
+            <Layout.Flex
+              column
+              align='center'
+              gap='xs'
+              classNames='text-xs h-28 shrink-0 overflow-hidden'
+              data-testid='handpan.strike-log'
+            >
               <span className='text-fg-subtle'>
                 {strikeLog.length ? t('strike-log.label') : t('strike-log-empty.message')}
               </span>

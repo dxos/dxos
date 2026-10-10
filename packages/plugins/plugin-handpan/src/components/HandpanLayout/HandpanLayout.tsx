@@ -46,7 +46,8 @@ export const HandpanLayout = ({ notes, target, active, progress, onSelect, class
   return (
     <svg
       viewBox={`0 0 ${SIZE} ${SIZE}`}
-      className={mx('w-full max-w-[24rem] aspect-square select-none', classNames)}
+      // `shrink-0`: in a column the pan would otherwise give up height to siblings and shrink.
+      className={mx('w-full max-w-[24rem] aspect-square shrink-0 select-none', classNames)}
       role='group'
       aria-label='Handpan'
     >
