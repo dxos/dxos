@@ -17,10 +17,11 @@ import { createHash, createHmac } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { basename, dirname, extname, join, resolve, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 // Keys from `.secrets/r2.env` or `.env` when the environment has none; a harness worktree's `.secrets/` starts empty, so
 // the primary checkout's is read too.
-const ROOT = resolve(dirname(new URL(import.meta.url).pathname), '../../../..');
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../../..');
 for (const root of new Set([ROOT, ROOT.split(`${sep}.claude${sep}worktrees${sep}`)[0]])) {
   // `.env` is `op inject -i .env.tpl -o .env` output (`export NAME="value"`); never committed.
   for (const file of [join(root, '.secrets', 'r2.env'), join(root, '.env')].filter((file) => existsSync(file))) {

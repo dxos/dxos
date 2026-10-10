@@ -169,6 +169,10 @@ const fitDuration = async () => {
     ],
     { encoding: 'utf8', maxBuffer: 1 << 24 },
   );
+  if (report.status !== 0) {
+    console.error(`--duration: the report pass failed\n${report.stderr}`);
+    process.exit(1);
+  }
   const { atCap } = JSON.parse(report.stdout);
   const fits = Object.entries(atCap)
     .map(([cap, length]) => ({ cap: parseFloat(cap), total: length + bookends }))
@@ -727,6 +731,10 @@ const upload = async () => {
     .find((file) => existsSync(file));
   if (!uploadName) {
     console.error('upload skipped: no --name and the timeline names no flow package');
+    return undefined;
+  }
+  if (!video) {
+    console.error('upload skipped: no finished video found');
     return undefined;
   }
   const key = `${MEDIA.folder}/${new Date().toLocaleDateString('en-CA')}-${uploadName}${path.extname(video)}`;
