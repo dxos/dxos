@@ -16,8 +16,9 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { SubscriptionList } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { type Space, SpaceState } from '@dxos/client/echo';
-import { Annotation, Collection, Obj, Type } from '@dxos/echo';
-import { PublicKey, parseId } from '@dxos/keys';
+import { Annotation, Collection, Filter, Obj, Type } from '@dxos/echo';
+import { Doc } from '@dxos/echo-doc';
+import { EntityId, PublicKey, parseId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 // Explicit import so the emitted `.d.ts` references the package via its public
@@ -86,6 +87,19 @@ const awaitChange = (client: Client, settingsSpace: Space | undefined): Effect.E
       unsubscribe?.();
     });
   });
+
+/** Loads the document of the object a plank path names, when it is in the working set without one. */
+const loadDocumentAt = (client: Client, path: string) => {
+  const spaceId = GraphPath.getSpaceIdFromPath(path);
+  const objectId = path.split('/').at(-1);
+  if (!spaceId || !objectId || !EntityId.isValid(objectId)) {
+    return;
+  }
+  const [object] = client.spaces.get(spaceId)?.db.query(Filter.id(objectId)).runSync() ?? [];
+  if (object && !Doc.isLoaded(object)) {
+    Doc.load(object).catch((err) => log.catch(err));
+  }
+};
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -268,6 +282,20 @@ export default Capability.makeModule(
 
     // Subscribe to layout changes for broadcast.
     subscriptions.add(registry.subscribe(layoutAtom, setupBroadcast));
+
+    // An object opening in a plank starts loading its document now, alongside the article's code, rather
+    // than when the article mounts: an object a lazy query returned has none yet.
+    let opened = new Set<string>();
+    subscriptions.add(
+      registry.subscribe(layoutAtom, (layout) => {
+        for (const path of layout.active) {
+          if (!opened.has(path)) {
+            loadDocumentAt(client, path);
+          }
+        }
+        opened = new Set(layout.active);
+      }),
+    );
     // Subscribe to attention.current changes.
     subscriptions.add(attention.subscribeCurrent(() => setupBroadcast()));
     // Initial setup.
