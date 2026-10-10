@@ -3,8 +3,6 @@
 //
 
 import * as Registry from 'effect/reactivity/AtomRegistry';
-import { readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Ref } from '@dxos/echo';
@@ -14,15 +12,9 @@ import { DEFAULT_LATTICE, isFrameNode, nodeBounds, onLattice, quantize } from '@
 
 import { bindCanvasStore, elementId, isNodeRecord, nodeKey, parseLinkedSceneId } from '#model';
 
-import { architectureDiagrams, composerDiagrams, diagramFiles, edgeDiagrams } from './architecture.ts';
 import { loadDiagramDrawings, loadDiagramSet } from './diagrams.ts';
-
-const DIR = join(import.meta.dirname, '../../docs/diagrams');
-const files = Object.fromEntries(
-  readdirSync(DIR)
-    .filter((name) => name.endsWith('.dx.svg'))
-    .map((name) => [name, readFileSync(join(DIR, name), 'utf8')]),
-);
+import { architectureDiagrams, composerDiagrams, diagramFiles, edgeDiagrams } from './sets.ts';
+import { DIAGRAM_SOURCES as files } from './sources.ts';
 
 let builder: EchoTestBuilder;
 

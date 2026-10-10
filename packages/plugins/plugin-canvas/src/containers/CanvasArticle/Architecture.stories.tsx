@@ -17,16 +17,15 @@ import { Cell, ModuleContainer, createStoryDecorators } from '@dxos/storybook-te
 import { CanvasPlugin } from '#plugin';
 import { translations } from '#translations';
 
-import { architectureDiagrams, diagramFiles, edgeDiagrams } from '../../testing/architecture.ts';
-import { type DiagramSet, loadDiagramSet } from '../../testing/diagrams.ts';
+import {
+  type DiagramSet,
+  architectureDiagrams,
+  diagramFiles,
+  edgeDiagrams,
+  DIAGRAM_SOURCES as files,
+  loadDiagramSet,
+} from '../../samples/architecture/index.ts';
 import { canvasViewAspect } from './view-state.ts';
-
-// The rendered diagrams, each carrying the DSL source it was laid out from (`docs/diagrams`, `render-diagrams`).
-const files = import.meta.glob<string>('../../../docs/diagrams/*.dx.svg', {
-  query: '?raw',
-  import: 'default',
-  eager: true,
-});
 
 type StoryArgs = {
   /** The drawings open read-only: nothing is selected, and no tool, handle, port or panel edits them. */

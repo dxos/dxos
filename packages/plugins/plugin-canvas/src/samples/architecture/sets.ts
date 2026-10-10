@@ -58,7 +58,7 @@ export const edgeDiagrams = (files: DiagramSet['files']): DiagramSet => ({
 export const diagramFiles = (files: Record<string, string>, prefix: string): DiagramSet['files'] =>
   Object.fromEntries(
     Object.entries(files)
-      .map(([path, text]): [string, string] => [path.replace(/^.*\//, '').replace(/\.dx\.svg$/, ''), text])
+      .map(([path, text]): [string, string] => [path.replace(/^.*\//, '').replace(/\.dx(\.svg)?$/, ''), text])
       .filter(([id]) => id === prefix || id.startsWith(`${prefix}-`)),
   );
 

@@ -2,24 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
-
-import { Dsl, DxSvg } from '@dxos/diagram';
+import { Dsl } from '@dxos/diagram';
 import { type Database, Obj, Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 
 import { CanvasBuilder, createCanvas, elementId, isNodeRecord, nodeKey, updateCanvasRecord } from '#model';
 
-/** The part of a `.dx.svg` payload a drawing is rebuilt from: the semantic-DSL source it was rendered from. */
-const DslSource = Schema.Struct({
-  source: Schema.Struct({ language: Schema.Literal('dsl'), text: Schema.String }),
-});
-
 export type DiagramSet = {
   /** The diagram opened first. */
   root: string;
-  /** Each diagram's `.dx.svg` text, by diagram id. */
+  /** Each diagram's semantic-DSL source (its `.dx` file), by diagram id. */
   files: Readonly<Record<string, string>>;
   /** Each diagram's drawing name, by diagram id. */
   names: Readonly<Record<string, string>>;
@@ -28,7 +21,7 @@ export type DiagramSet = {
 };
 
 /**
- * Adds one canvas drawing per diagram of the set to `db`, each laid out from the DSL source its `.dx.svg` carries, and
+ * Adds one canvas drawing per diagram of the set to `db`, each laid out from its DSL source, and
  * turns every drill-down box into a frame onto the diagram it names; answers the root drawing.
  */
 export const loadDiagramSet = async (db: Database.Database, set: DiagramSet): Promise<Drawing.Drawing> => {
@@ -45,9 +38,8 @@ export const loadDiagramDrawings = async (
   set: DiagramSet,
 ): Promise<ReadonlyMap<string, Drawing.Drawing>> => {
   const drawings = new Map<string, Drawing.Drawing>();
-  for (const [id, svg] of Object.entries(set.files)) {
-    const { source } = Schema.decodeUnknownSync(DslSource)(DxSvg.extract(svg));
-    const { commands } = await EffectEx.runPromise(Dsl.compile(source.text));
+  for (const [id, source] of Object.entries(set.files)) {
+    const { commands } = await EffectEx.runPromise(Dsl.compile(source));
     const canvas = db.add(createCanvas());
     CanvasBuilder.apply(canvas, commands);
     // The diagrams are laid out on the canvas lattice (`box`, `grid` and `@` origin match its cells), so turning it on
