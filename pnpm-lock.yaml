@@ -219,14 +219,11 @@ catalogs:
     '@fontsource-variable/jetbrains-mono':
       specifier: 5.0.21
       version: 5.0.21
-    '@fontsource-variable/montserrat':
-      specifier: ^5.3.0
-      version: 5.3.0
     '@fontsource-variable/nunito':
       specifier: 5.2.7
       version: 5.2.7
     '@fontsource/poiret-one':
-      specifier: ^5.0.20
+      specifier: ^5.2.8
       version: 5.2.8
     '@hazae41/symbol-dispose-polyfill':
       specifier: ^1.0.2
@@ -25258,9 +25255,9 @@ importers:
 
   tools/ident:
     dependencies:
-      '@fontsource-variable/montserrat':
+      '@fontsource/poiret-one':
         specifier: 'catalog:'
-        version: 5.3.0
+        version: 5.2.8
       '@remotion/bundler':
         specifier: 'catalog:'
         version: 4.0.534(@swc/core@1.16.13(@swc/helpers@0.5.17))(@swc/helpers@0.5.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -28909,9 +28906,6 @@ packages:
 
   '@fontsource-variable/jetbrains-mono@5.0.21':
     resolution: {integrity: sha512-LL/57KBbM3r0UMuN6tSeYExiBObt0QuGq49m1FyoDFIv1GAcuKU0EQ/GAKJ/yt3R8onOCD3f5X9Dln//G6uzRQ==}
-
-  '@fontsource-variable/montserrat@5.3.0':
-    resolution: {integrity: sha512-7PaZoxaxrWLAyrhO46v65An9LhUhfkTExWLhfbywYZCnZEgg/W1rEHnlNmZKjNZ3nJTVYyicqxlJt10z/26yTA==}
 
   '@fontsource-variable/nunito@5.2.7':
     resolution: {integrity: sha512-2N8QhatkyKgSUbAGZO2FYLioxA32+RyI1EplVLawbpkGjUeui9Qg9VMrpkCaik1ydjFjfLV+kzQ0cGEsMrMenQ==}
@@ -51265,8 +51259,6 @@ snapshots:
   '@fontsource-variable/inter@5.2.8': {}
 
   '@fontsource-variable/jetbrains-mono@5.0.21': {}
-
-  '@fontsource-variable/montserrat@5.3.0': {}
 
   '@fontsource-variable/nunito@5.2.7': {}
 

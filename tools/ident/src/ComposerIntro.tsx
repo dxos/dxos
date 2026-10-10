@@ -2,16 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import montserrat from '@fontsource-variable/montserrat/files/montserrat-latin-wght-normal.woff2';
+import poiretOne from '@fontsource/poiret-one/files/poiret-one-latin-400-normal.woff2';
 import { loadFont } from '@remotion/fonts';
 import React from 'react';
 import { AbsoluteFill, Easing, interpolate, spring, useCurrentFrame, useVideoConfig } from 'remotion';
 
 import { COLORS, TIMING } from './brand.ts';
 
-/** Composer's wordmark face: variable Montserrat, set light. */
-const WORDMARK_FAMILY = 'Montserrat';
-void loadFont({ family: WORDMARK_FAMILY, url: montserrat, weight: '100 900' });
+/** Composer's wordmark face; Poiret One has a single, light weight. */
+const WORDMARK_FAMILY = 'Poiret One';
+void loadFont({ family: WORDMARK_FAMILY, url: poiretOne, weight: '400' });
 
 /**
  * The Composer icon's four arcs (packages/ui/brand/assets/icons/composer-icon.svg), outermost first. Each is
@@ -120,7 +120,7 @@ export const ComposerIntro: React.FC = () => {
       <div
         style={{
           fontFamily: `"${WORDMARK_FAMILY}", sans-serif`,
-          fontWeight: 300,
+          fontWeight: 400,
           fontSize: Math.round(200 * u),
           lineHeight: 1,
           letterSpacing: '0.01em',
