@@ -156,8 +156,8 @@ describe('fetchAuthChallenge', () => {
       jsonResponse(
         {
           success: false,
-          message: 'Client too old',
-          data: { type: EDGE_CLIENT_TOO_OLD, clientVersion: '0.13.0', minimumVersion: '9.0.0' },
+          message: 'Client too old: SDK 0.12.0 is older than 0.13.0. Update the app (reload it) to continue.',
+          data: { type: EDGE_CLIENT_TOO_OLD, clientVersion: '0.12.0', minimumVersion: '0.13.0' },
         },
         426,
       ),
