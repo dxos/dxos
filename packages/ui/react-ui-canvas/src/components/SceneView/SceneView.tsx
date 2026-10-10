@@ -889,6 +889,8 @@ const SceneViewRoot = ({
       drillOut,
       animateTo,
       fitTarget,
+      enterFit,
+      fitting,
       viewport,
       inset,
       zoomBy,
