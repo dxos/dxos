@@ -279,14 +279,14 @@ export const SceneHandler: ContentHandler = {
         case 'text': {
           // A small text is a label (a group's title, a connector's caption): its own size, no frame or fill.
           if (element.weight === 's') {
-            const width = (element.w ?? element.text.length * LABEL_CHAR + 16) * placement.scale;
-            const height = LABEL_HEIGHT * placement.scale;
+            const width = element.w ?? element.text.length * LABEL_CHAR + 16;
+            const height = LABEL_HEIGHT;
             const node: RectNode = {
               type: 'rect',
               id,
               z: nextZ(),
               center: place(element.x + width / 2, element.y + height / 2),
-              size: { width, height },
+              size: { width: width * placement.scale, height: height * placement.scale },
               label: element.text,
               style: { fill: false, border: false, alignHorizontal: 'left', fontSize: 12 },
             };
