@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 import { formatValue } from '../score/render.ts';
@@ -11,6 +11,7 @@ import { STAGE_CPU_GROUP, STAGE_WALL_GROUP, WORK_GROUP, groupOfId, toMeasurement
 import { buildWorkingTree, runFlow, serveArm } from './arms.ts';
 import { appendLedger } from './ledger.ts';
 import { elapsedMinutes, openSession, settle } from './session.ts';
+import { ARMS_FILE, type ArmsRecord } from './summarize.ts';
 import { HarnessError, git } from './workspace.ts';
 
 export type RunOptions = {
@@ -18,6 +19,8 @@ export type RunOptions = {
   iterations: number;
   ignoreLoad: boolean;
   lockWaitMinutes: number;
+  /** `DX_PERF_SNAPSHOTS` checkpoints (`idle`, a stage id, `end`); every later stage is perturbed. */
+  snapshots?: string;
 };
 
 /**
@@ -29,6 +32,7 @@ export const runCommand = async ({
   iterations,
   ignoreLoad,
   lockWaitMinutes,
+  snapshots,
 }: RunOptions): Promise<number> => {
   const session = await openSession({ command: 'perf run', target: targetName, ignoreLoad, lockWaitMinutes });
   const { root, target, dir, ports, progress } = session;
@@ -36,6 +40,10 @@ export const runCommand = async ({
     progress(`run ${path.relative(root, dir)}`);
     const arm = await buildWorkingTree({ root, target, logFile: path.join(dir, 'build.log') });
     progress(`${arm.ref} ${arm.commit.slice(0, 9)} ${arm.cached ? 'cached' : 'built'}`);
+    writeFileSync(
+      path.join(dir, ARMS_FILE),
+      JSON.stringify({ target: target.name, candidate: arm.dir } satisfies ArmsRecord),
+    );
     await settle(session);
     const server = await serveArm({
       root,
@@ -53,6 +61,7 @@ export const runCommand = async ({
           iterations,
           dir: path.join(dir, 'results'),
           logFile: path.join(dir, 'flow.log'),
+          ...(snapshots ? { env: { DX_PERF_SNAPSHOTS: snapshots } } : {}),
         });
       } finally {
         await server.stop();
@@ -107,7 +116,7 @@ export const runCommand = async ({
       harness: session.harness,
       rounds: String(iterations),
       verdict: `score ${report.overall.toFixed(3)}`,
-      summary: `${over.length} of ${report.metrics.length} budgeted metrics over limit`,
+      summary: `${over.length} of ${report.metrics.length} budgeted metrics over limit${snapshots ? `; snapshots at ${snapshots}, later stages perturbed` : ''}`,
       dir: path.relative(root, dir),
     });
     return result.exitCode === 0 ? 0 : 4;

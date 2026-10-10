@@ -242,6 +242,8 @@ export type RunFlowOptions = {
   /** Where the run's `test-results/perf` is moved once the flow ends. */
   dir: string;
   logFile: string;
+  /** Instruments that perturb the run, e.g. `DX_PERF_SNAPSHOTS`; never set by `compare`. */
+  env?: Record<string, string>;
 };
 
 /** One Playwright run of the target's flow against the server already listening on `ports.http`. */
@@ -252,6 +254,7 @@ export const runFlow = async ({
   iterations,
   dir,
   logFile,
+  env: extraEnv = {},
 }: RunFlowOptions): Promise<FlowResult> => {
   const results = reportDir(root);
   rmSync(results, { recursive: true, force: true });
@@ -262,6 +265,7 @@ export const runFlow = async ({
     DX_PERF_ITERATIONS: String(iterations),
     DX_PERF_MODES: 'measure',
     DX_PWA: 'false',
+    ...extraEnv,
   };
   // Unset CI so the config reuses this server rather than starting its own; no key, so nothing is published.
   delete env.CI;

@@ -186,3 +186,18 @@ Telling it not to does not work, so the CLI makes it structural:
   never reaches a timing.
 - A work counter that fell by more than half is listed whatever the targets are: a stage that
   stopped doing its job wins on every timing.
+
+### Where did the time go? `summarize` and `expand`
+
+Every measured stage already writes a `.cpuprofile` per realm. `pnpm perf summarize [<run>]` reads
+them for the newest run (or a named one) and prints about 30 lines: the functions with the most self
+time, or, for a `compare` run, the functions whose self time changed most between the arms, averaged
+per round. Frames are mapped back to source through each arm's own source maps, and worker realms
+drop the chunk hash so the same worker lines up across two builds. Each row gets a handle;
+`pnpm perf expand h3` prints that function's callers and callees, with the arm-to-arm change.
+
+`compare` also uses the profiles to flag an implausible win: a stage timing that fell by more than
+the changed files spent there at base. That is usually skipped work or a moved wait, not the change.
+
+`pnpm perf run --snapshots idle,end` takes heap snapshots (they perturb every later stage), and
+`pnpm perf summarize --heap` prints their composition through `scripts/memory/perf-snapshot-report.mjs`.
