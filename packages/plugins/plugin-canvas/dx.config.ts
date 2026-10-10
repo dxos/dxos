@@ -17,6 +17,7 @@ export default Config2.make({
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-canvas',
     dependsOn: ['org.dxos.plugin.illustrator'],
     icon: { key: 'ph--graph--regular', hue: 'teal' },
+    screenshots: [{ dark: 'https://assets.composer.space/demos/2026-10-09-plugin-canvas.mp4?v=5b3598bd' }],
     tags: ['labs'],
   },
 });

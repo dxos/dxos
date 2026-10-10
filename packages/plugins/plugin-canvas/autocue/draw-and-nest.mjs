@@ -284,9 +284,7 @@ export const steps = [
   },
   {
     name: 'Close on the finished diagram',
-    narration:
-      'Every shape and link is an object in your space, so teammates and AI agents can edit the same diagram ' +
-      'in real time.',
+    narration: 'Every shape is an object in your space, so AI agents can draw right alongside you.',
     run: async ({ page }) => {
       await page.waitForTimeout(BEAT * 9);
     },
