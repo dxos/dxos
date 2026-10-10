@@ -23,7 +23,8 @@ import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Tag from '@dxos/react-ui/Tag';
 import * as Theme from '@dxos/react-ui/Theme';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
-import { getStyles, osTranslations } from '@dxos/ui-theme';
+import { osTranslations } from '@dxos/ui-theme';
+import { type ChromaticPalette, hues } from '@dxos/ui-types';
 
 import { useArchiveMenuItem } from '#hooks';
 import { meta } from '#meta';
@@ -73,6 +74,9 @@ export const CollectionArticle = ({
   );
 };
 
+/** Narrows a type's free-form icon hue to one the Icon tints with; its `hue` uses the icon tone, unlike the text-tone class. */
+const isHue = (value: string | undefined): value is ChromaticPalette => hues.some((hue) => hue === value);
+
 type ObjectItem = {
   id: string;
   object: Obj.Unknown;
@@ -89,7 +93,6 @@ const ObjectTile: MosaicStackTileComponent<ObjectItem> = ({ data: item }) => {
   const label =
     Obj.getLabel(item.object) ??
     Theme.toLocalizedString(['object-name.placeholder', { ns: typename, defaultValue: item.id }], t);
-  const styles = item.iconHue ? getStyles(item.iconHue) : undefined;
 
   const handleClick = useCallback(
     () => void invokePromise(LayoutOperation.Open, { subject: [item.targetPath] }),
@@ -101,7 +104,7 @@ const ObjectTile: MosaicStackTileComponent<ObjectItem> = ({ data: item }) => {
     <Card.Root role='button' classNames='cursor-pointer' onClick={handleClick}>
       <Card.Header>
         <Layout.Block>
-          <Icon.Icon icon={item.icon} classNames={styles?.fg} />
+          <Icon.Icon icon={item.icon} hue={isHue(item.iconHue) ? item.iconHue : undefined} />
         </Layout.Block>
         <Card.Title>{label}</Card.Title>
         {archiveItem && (
