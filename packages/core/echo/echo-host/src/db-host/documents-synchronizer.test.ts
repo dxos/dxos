@@ -102,6 +102,30 @@ describe('DocumentsSynchronizer', () => {
     expect(batches.filter((size) => size > 0).length).toBeGreaterThanOrEqual(3);
   });
 
+  test('a document a client subscribes to is sent once it loads, not at the next rate-limited tick', async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const host = new AutomergeHost({ runtime });
+    await openAndClose(host);
+    const handles = await Promise.all(
+      Array.from({ length: 7 }, (_, index) => host.createDoc<{ text: string }>({ text: `doc-${index}` })),
+    );
+    const client = new TestClient();
+    const synchronizer = new DocumentsSynchronizer({ automergeHost: host, sendUpdates: client.receive });
+    await openAndClose(synchronizer);
+
+    // One after another, as promotions arrive: rate-limited, each would wait out its predecessor's 100 ms.
+    const elapsed: number[] = [];
+    for (const handle of handles) {
+      const started = performance.now();
+      await synchronizer.addDocuments([handle.documentId]);
+      await asyncTimeout(client.loaded(handle.documentId), 5_000);
+      elapsed.push(performance.now() - started);
+    }
+    elapsed.sort((left, right) => left - right);
+    expect(elapsed[Math.floor(elapsed.length / 2)]).toBeLessThan(50);
+  });
+
   test('a client write reaches the other subscriber and the heads store without a lease on the host', async () => {
     const { runtime, dispose } = createTestSqliteRuntime();
     onTestFinished(() => dispose());

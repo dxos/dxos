@@ -7,7 +7,7 @@ import { rmSync } from 'node:fs';
 import { afterAll, bench, describe } from 'vitest';
 
 import { Filter, Obj, Query, Type } from '@dxos/echo';
-import { type EchoDatabase } from '@dxos/echo-client';
+import { type EchoDatabase, loadDocument } from '@dxos/echo-client';
 import { EchoTestBuilder, type EchoTestPeer, createTmpPath } from '@dxos/echo-client/testing';
 import { DXN } from '@dxos/keys';
 
@@ -23,6 +23,11 @@ import { blackhole } from './testing/bench-util.ts';
 //                                     (re-run while short — see `query` — so a sample is the time to a
 //                                     full result set)
 //   + read one field per result       the first read of each object, where the object's data is materialized
+//
+// The lazy rows run the same cold query with `lazy: true`, which backs each result with the index's copy
+// instead of loading its document, and then price promotion: loading one result's document on demand.
+// The first promotion of a session is reported apart from the steady state (each promotion after it,
+// one at a time), and once more while a full cold load of the block competes with it.
 //
 // The warm rows run the same query against a peer that already holds every object, so the difference
 // between a cold and a warm query is the load itself. Property-access costs are the other file's
@@ -47,6 +52,8 @@ const WIDE_OBJECT_COUNT = 100;
 const COLD_OPTIONS = { iterations: 3, time: 0, warmupIterations: 1, warmupTime: 0 };
 const WARM_OPTIONS = { time: 300 };
 const SHORT_RESULT_RETRIES = 10;
+// Promotions timed one at a time after the first, per cold sample.
+const STEADY_PROMOTIONS = 20;
 
 class BenchObject extends Type.makeObject<BenchObject>(DXN.make('com.example.type.benchObject', '0.1.0'))(
   Schema.Struct({
@@ -127,7 +134,7 @@ afterAll(async () => {
   const lines = Object.entries(phaseSamples).map(([phase, samples]) => {
     const sorted = [...samples].sort((left, right) => left - right);
     const mean = samples.reduce((sum, sample) => sum + sample, 0) / samples.length;
-    return `${phase.padEnd(44)} mean ${mean.toFixed(1).padStart(7)} ms   min ${sorted[0].toFixed(1).padStart(7)} ms   p50 ${sorted[Math.floor(sorted.length / 2)].toFixed(1).padStart(7)} ms   n=${samples.length}`;
+    return `${phase.padEnd(64)} mean ${mean.toFixed(1).padStart(7)} ms   min ${sorted[0].toFixed(1).padStart(7)} ms   p50 ${sorted[Math.floor(sorted.length / 2)].toFixed(1).padStart(7)} ms   p95 ${sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * 0.95))].toFixed(1).padStart(7)} ms   n=${samples.length}`;
   });
   // eslint-disable-next-line no-console
   console.log(`\nPhase timings (measured inside the cold rows):\n${lines.join('\n')}\n`);
@@ -164,6 +171,22 @@ const defineRows = (label: string, state: Populated, type: typeof BenchObject | 
       return results;
     };
 
+    const lazyQuery = async (db: EchoDatabase, phase: string): Promise<(BenchObject | WideBenchObject)[]> => {
+      const started = performance.now();
+      const results = await db.query(Query.select(Filter.type(type)).options({ lazy: true })).run();
+      record(`${label}: ${phase}`, performance.now() - started);
+      if (results.length !== state.count) {
+        throw new Error(`Expected ${state.count} results, got ${results.length}`);
+      }
+      return results;
+    };
+
+    const promote = async (object: BenchObject | WideBenchObject, phase: string) => {
+      const started = performance.now();
+      await loadDocument(object);
+      record(`${label}: ${phase}`, performance.now() - started);
+    };
+
     const readAll = (results: (BenchObject | WideBenchObject)[], phase: string) => {
       const started = performance.now();
       let sum = 0;
@@ -196,6 +219,49 @@ const defineRows = (label: string, state: Populated, type: typeof BenchObject | 
       async () => {
         const db = await reopen();
         readAll(await query(db, 'query (cold, before read)'), 'read one field per result (cold)');
+      },
+      COLD_OPTIONS,
+    );
+
+    bench(
+      'reload + open + lazy query',
+      async () => {
+        const db = await reopen();
+        blackhole(await lazyQuery(db, 'lazy query (cold)'));
+      },
+      COLD_OPTIONS,
+    );
+
+    bench(
+      'reload + open + lazy query + read one field per result',
+      async () => {
+        const db = await reopen();
+        readAll(await lazyQuery(db, 'lazy query (cold, before read)'), 'read one field per lazy result (cold)');
+      },
+      COLD_OPTIONS,
+    );
+
+    bench(
+      'reload + open + lazy query + promote one, then more one at a time',
+      async () => {
+        const db = await reopen();
+        const results = await lazyQuery(db, 'lazy query (cold, before promotion)');
+        await promote(results[0], 'promotion (first of the session)');
+        for (let index = 1; index <= STEADY_PROMOTIONS; index++) {
+          await promote(results[index], 'promotion (steady state)');
+        }
+      },
+      COLD_OPTIONS,
+    );
+
+    bench(
+      'reload + open + lazy query + promote one during a full cold load',
+      async () => {
+        const db = await reopen();
+        const results = await lazyQuery(db, 'lazy query (cold, before burst)');
+        const burst = db.query(Query.select(Filter.type(type))).run();
+        await promote(results[results.length - 1], 'promotion (during a full cold load)');
+        blackhole(await burst);
       },
       COLD_OPTIONS,
     );

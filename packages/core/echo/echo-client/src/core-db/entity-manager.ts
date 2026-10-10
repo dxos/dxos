@@ -39,7 +39,7 @@ import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols
 import { QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
 import type { DataService, QueryService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
-import { ComplexSet, chunkArray, deepMapValues, defer } from '@dxos/util';
+import { ComplexSet, chunkArray, countWork, deepMapValues, defer, markWork } from '@dxos/util';
 
 import {
   type ChangeEvent,
@@ -536,6 +536,7 @@ export class EntityManager implements IDatabaseBinding {
       updatedAt: state.updatedAt,
     });
     this._objects.set(id, core);
+    countWork('echo.snapshotObjects');
     this.#snapshotIds.add(id);
     this.#scheduleSnapshotWatch();
     return this._createEntity(core);
@@ -639,7 +640,7 @@ export class EntityManager implements IDatabaseBinding {
    * Snapshot-backed cores whose document is loading because something wrote to them or needs the
    * document. Held strongly: a collected core would take its queued writes with it.
    */
-  readonly #pendingPromotions = new Map<string, { core: ObjectCore; bound: Trigger }>();
+  readonly #pendingPromotions = new Map<string, { core: ObjectCore; bound: Trigger; started: number }>();
 
   /** Writes queued on a snapshot-backed core are not durable until its document loads and takes them. */
   private async _waitForPendingPromotions(): Promise<void> {
@@ -661,9 +662,11 @@ export class EntityManager implements IDatabaseBinding {
     }
     let pending = this.#pendingPromotions.get(core.id);
     if (!pending) {
-      pending = { core, bound: new Trigger() };
+      pending = { core, bound: new Trigger(), started: performance.now() };
       this.#pendingPromotions.set(core.id, pending);
       this._loadObjectDocument(core.id);
+      // A write or an editor is waiting: request the document without the batch's throttle delay.
+      this._repoProxy.sendNow();
     }
     return pending.bound.wait();
   }
@@ -2306,6 +2309,7 @@ export class EntityManager implements IDatabaseBinding {
 
   private _onObjectDocumentLoaded({ handle, objectId }: ObjectDocumentLoaded): void {
     handle.on('change', this._onDocumentUpdate);
+    countWork('echo.objectDocumentsLoaded');
 
     const existing = this._objects.get(objectId);
     if (existing?.snapshot) {
@@ -2359,7 +2363,13 @@ export class EntityManager implements IDatabaseBinding {
     this._onObjectBoundToDocument(docHandle, core.id);
     const pending = this.#pendingPromotions.get(core.id);
     this.#pendingPromotions.delete(core.id);
-    pending?.bound.wake();
+    if (pending) {
+      const ms = performance.now() - pending.started;
+      countWork('echo.promotions');
+      countWork('echo.promotionMs', ms);
+      markWork('echo.promotion', ms.toFixed(1));
+      pending.bound.wake();
+    }
   }
 
   /**
