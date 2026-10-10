@@ -199,16 +199,19 @@ const useWordmarkMetrics = (): WordmarkMetrics | undefined => {
 
     let cancelled = false;
     const font = `${WORDMARK_SIZE}px "${FONT_FAMILY}"`;
-    void document.fonts.load(font).then(() => {
+    const measure = () => {
       const context = document.createElement('canvas').getContext('2d');
       if (cancelled || !context) {
         return;
       }
-      context.font = font;
+      // Lists the same fallback as the <text> element, so a failed font load still measures what renders.
+      context.font = `${font}, sans-serif`;
       const glyph = context.measureText('c');
       const glyphCentre = (glyph.actualBoundingBoxAscent - glyph.actualBoundingBoxDescent) / 2;
       setMetrics({ baseline: 128 + glyphCentre, width: context.measureText('composer').width });
-    });
+    };
+    // A failed load (offline, blocked) must not stall the ident.
+    void document.fonts.load(font).then(measure, measure);
 
     return () => {
       cancelled = true;
