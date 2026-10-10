@@ -35,7 +35,7 @@ describe('groupIntoScene', () => {
     const parent = reduceIntent(scene, { kind: 'batch', intents: group.intents });
     expect(Object.keys(parent.nodes).sort()).toEqual(['c', 'g']);
     expect(parent.nodes.g).toMatchObject({
-      type: 'scene',
+      type: 'frame',
       scene: 'g',
       center: { x: 150, y: 25 },
       size: { width: 300, height: 50 },

@@ -4,10 +4,11 @@
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 
-import { CanvasSettings, DrawingVariant, ReactSurface, Translations } from '#capabilities';
+import { AppGraphBuilder, CanvasSettings, DrawingVariant, ReactSurface, Translations } from '#capabilities';
 import { meta } from '#meta';
 
 export const CanvasPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(CanvasSettings),
   Plugin.addModule(DrawingVariant),
   Plugin.addModule(ReactSurface),

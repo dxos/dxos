@@ -6,6 +6,8 @@ import { type MutableRefObject, useCallback, useEffect, useMemo, useRef } from '
 
 import { type useRegistry } from '../../hooks/index.ts';
 import { type Drag, type HistoryEntry, type SceneViewAtoms } from '../../model/atoms.ts';
+import { nodeDef } from '../../model/node-def.ts';
+import { type NodeRegistry } from '../../model/registry.ts';
 import { type SceneStore } from '../../model/store.ts';
 import {
   type Bounds,
@@ -15,7 +17,7 @@ import {
   type Scene,
   type SceneId,
   type Size,
-  isPortalNode,
+  isFrameNode,
 } from '../../model/types.ts';
 import {
   DRILL_ANIMATION_MS,
@@ -44,6 +46,7 @@ const AUTO_DRILL_MS = 150;
 export type UseSceneNavigationOptions = {
   registry: ReturnType<typeof useRegistry>;
   atoms: SceneViewAtoms;
+  nodeRegistry: NodeRegistry;
   store: SceneStore;
   scenes: Record<SceneId, Scene>;
   scene: Scene;
@@ -69,6 +72,7 @@ export type SceneNavigation = {
   /** What Fit shows: the current scene's shapes themselves (the margin is the fit's own inset). */
   fitTarget: Bounds;
   pushHistory: (entry: HistoryEntry) => void;
+  /** Drills into a frame's scene, or opens the node in the host when its type has `hostOpen` for it. */
   drillIn: (portal: Node, animate?: boolean) => void;
   drillOut: (levels?: number, animate?: boolean) => void;
   goHistory: (offset: number) => void;
@@ -82,6 +86,7 @@ export type SceneNavigation = {
 export const useSceneNavigation = ({
   registry,
   atoms,
+  nodeRegistry,
   scenes,
   scene,
   path,
@@ -102,7 +107,7 @@ export const useSceneNavigation = ({
     (parentId: SceneId | undefined, childId: SceneId): Node | undefined => {
       const parent = parentId ? scenes[parentId] : undefined;
       return parent
-        ? Object.values(parent.nodes).find((node) => isPortalNode(node) && node.scene === childId)
+        ? Object.values(parent.nodes).find((node) => isFrameNode(node) && node.scene === childId)
         : undefined;
     },
     [scenes],
@@ -143,9 +148,16 @@ export const useSceneNavigation = ({
     [registry, atoms.history],
   );
 
+  const hostOpen = useCallback((node: Node) => nodeDef(nodeRegistry, node)?.hostOpen?.(node), [nodeRegistry]);
+
   const drillIn = useCallback(
     (portal: Node, animate = true) => {
-      const child = isPortalNode(portal) ? scenes[portal.scene] : undefined;
+      const open = hostOpen(portal);
+      if (open) {
+        open();
+        return;
+      }
+      const child = isFrameNode(portal) ? scenes[portal.scene] : undefined;
       if (!child) {
         return;
       }
@@ -174,6 +186,7 @@ export const useSceneNavigation = ({
       }
     },
     [
+      hostOpen,
       scenes,
       registry,
       atoms.path,
@@ -203,7 +216,7 @@ export const useSceneNavigation = ({
         const child = scenes[next[next.length - 1]];
         const parent = scenes[next[next.length - 2]];
         const portal = parent
-          ? Object.values(parent.nodes).find((node) => isPortalNode(node) && node.scene === child?.id)
+          ? Object.values(parent.nodes).find((node) => isFrameNode(node) && node.scene === child?.id)
           : undefined;
         if (!child || !portal) {
           break;
@@ -264,7 +277,7 @@ export const useSceneNavigation = ({
     }
     const timer = setTimeout(() => {
       const portal = Object.values(scene.nodes).find(
-        (node) => isPortalNode(node) && coverage(camera, nodeBounds(node), viewport) >= AUTO_ENTER,
+        (node) => isFrameNode(node) && !hostOpen(node) && coverage(camera, nodeBounds(node), viewport) >= AUTO_ENTER,
       );
       if (portal) {
         drillIn(portal, false);
@@ -280,7 +293,7 @@ export const useSceneNavigation = ({
       }
     }, AUTO_DRILL_MS);
     return () => clearTimeout(timer);
-  }, [camera, scene, bounds, path, viewport, drag, drillIn, drillOut, registry, atoms.history, isAnimating]);
+  }, [camera, scene, bounds, path, viewport, drag, hostOpen, drillIn, drillOut, registry, atoms.history, isAnimating]);
 
   return { nameOf, portalTo, frameOf, bounds, fitTarget, pushHistory, drillIn, drillOut, goHistory };
 };

@@ -3,14 +3,14 @@
 //
 
 import { type SceneMap } from '../model/store.ts';
-import { type Scene, type SceneId, isPortalNode } from '../model/types.ts';
+import { type Scene, type SceneId, isFrameNode } from '../model/types.ts';
 
 /** A scene a scene shape may open, as the properties panel lists it. */
 export type SceneOption = { value: SceneId; label: string };
 
 /** The scenes the shapes of `scene` open. */
 const childScenes = (scene: Scene | undefined): SceneId[] =>
-  scene ? Object.values(scene.nodes).flatMap((node) => (isPortalNode(node) ? [node.scene] : [])) : [];
+  scene ? Object.values(scene.nodes).flatMap((node) => (isFrameNode(node) ? [node.scene] : [])) : [];
 
 /** Whether `from`, or any scene it opens however deep, is one of `targets`. */
 const reaches = (scenes: SceneMap, from: SceneId, targets: ReadonlySet<SceneId>): boolean => {
@@ -42,7 +42,7 @@ export const sceneOptions = (
   const labels = new Map<SceneId, string>();
   for (const scene of Object.values(scenes)) {
     for (const node of Object.values(scene.nodes)) {
-      if (isPortalNode(node) && node.label && !labels.has(node.scene)) {
+      if (isFrameNode(node) && node.label && !labels.has(node.scene)) {
         labels.set(node.scene, node.label);
       }
     }

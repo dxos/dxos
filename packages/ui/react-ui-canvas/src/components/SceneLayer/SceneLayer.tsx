@@ -26,8 +26,8 @@ import {
   type NodeId,
   type Scene,
   type StyleMap,
+  isFrameNode,
   isNoteNode,
-  isPortalNode,
   linkMarkers,
   showsContents,
 } from '../../model/types.ts';
@@ -96,6 +96,8 @@ export type SceneLayerProps = {
   focus?: { id: ElementId; opacity: number };
   /** The text part being edited in place, if any. */
   editing?: { id: NodeId; part: PartKey };
+  /** The node whose embedded content takes input. */
+  active?: NodeId;
   /** A node drawn as a preview of what a gesture will create: translucent, dashed, and not pressable. */
   ghost?: NodeId;
   /** Frames show their id, type and geometry. */
@@ -123,6 +125,7 @@ export const SceneLayer = memo(
     opening,
     focus,
     editing,
+    active,
     ghost,
     debug,
     handlers,
@@ -241,6 +244,7 @@ export const SceneLayer = memo(
                 fade={focus && focus.id !== node.id ? fadeStyle : undefined}
                 chromeFade={focus?.id === node.id ? fadeStyle : undefined}
                 editingPart={editing?.id === node.id ? editing.part : undefined}
+                active={active === node.id}
                 ghost={ghost === node.id}
                 debug={debug}
                 handlers={handlers}
@@ -396,7 +400,9 @@ const NodeFrame = memo(
     const bounds = nodeBounds(node);
     const interactive = handlers !== undefined && !ghost;
     // A type the registry does not know is drawn as the core base: a box with its label.
-    const Component = nodeDef(registry, node)?.component ?? BoxNodeView;
+    const def = nodeDef(registry, node);
+    const Component = def?.component ?? BoxNodeView;
+    const Toolbar = interactive ? def?.toolbar : undefined;
     const editing = useMemo<PartEditing | undefined>(
       () =>
         editingPart && handlers
@@ -432,39 +438,74 @@ const NodeFrame = memo(
     };
     const frameLook = props.opening ? frameClasses(drawn, false).slice(1) : frameClasses(drawn, selected, hovered);
     return (
-      <div
-        className={mx(
-          'absolute box-border overflow-hidden',
-          // Fading, the border becomes padding of the same width so the contents stay put.
-          ...(chromeFade ? ['p-0.5 isolate'] : ['border-2', ...frameLook]),
-          // Every text part inherits the face, as it does `fontSize`.
-          drawn.style?.fontFamily === 'monospace' && 'font-mono',
-          interactive && !node.locked && 'cursor-grab',
-          ghost && 'opacity-50 border-dashed pointer-events-none',
-        )}
-        style={frameStyle}
-        data-node-id={node.id}
-        data-ghost={ghost || undefined}
-        onPointerDown={interactive ? (event) => handlers.onNodePointerDown?.(node, event) : undefined}
-      >
-        {/* Fading, the frame's fill and border are drawn behind the contents so they fade without them. */}
-        {chromeFade && (
+      <>
+        <div
+          className={mx(
+            'absolute box-border overflow-hidden',
+            // Fading, the border becomes padding of the same width so the contents stay put.
+            ...(chromeFade ? ['p-0.5 isolate'] : ['border-2', ...frameLook]),
+            // Every text part inherits the face, as it does `fontSize`.
+            drawn.style?.fontFamily === 'monospace' && 'font-mono',
+            interactive && !node.locked && 'cursor-grab',
+            ghost && 'opacity-50 border-dashed pointer-events-none',
+          )}
+          style={frameStyle}
+          data-node-id={node.id}
+          data-ghost={ghost || undefined}
+          onPointerDown={
+            interactive
+              ? (event) => {
+                  // React bubbles a portal's events through the tree: a press in a menu the node's content opened is
+                  // not a press on the node.
+                  if (event.target instanceof Element && event.currentTarget.contains(event.target)) {
+                    handlers.onNodePointerDown?.(node, event);
+                  }
+                }
+              : undefined
+          }
+        >
+          {/* Fading, the frame's fill and border are drawn behind the contents so they fade without them. */}
+          {chromeFade && (
+            <div
+              aria-hidden
+              className={mx('dx-cover -z-10 border-2 pointer-events-none', ...frameLook)}
+              style={thick ? { ...chromeFade, borderWidth: border } : chromeFade}
+            />
+          )}
+          <Component {...props} node={drawn} editing={editing} onOpen={onOpen} />
+          {debug && (
+            <div
+              className='absolute top-0 left-0 px-1 text-[10px] leading-4 font-mono whitespace-nowrap bg-modal-surface text-fg-muted pointer-events-none'
+              data-testid='node-debug'
+            >
+              {node.id} · {node.type} · {bounds.x},{bounds.y} {bounds.width}×{bounds.height} · z {node.z}
+            </div>
+          )}
+        </div>
+        {Toolbar && (
+          // Outside the frame, which clips its contents; scaled back to screen size from its bottom-right corner. Its
+          // own width (`w-max`): near the layer's edge an absolute box would shrink to the space left. Shown with the
+          // frame's hover or selection, and kept while the pointer crosses onto it.
           <div
-            aria-hidden
-            className={mx('dx-cover -z-10 border-2 pointer-events-none', ...frameLook)}
-            style={thick ? { ...chromeFade, borderWidth: border } : chromeFade}
-          />
-        )}
-        <Component {...props} node={drawn} editing={editing} onOpen={onOpen} />
-        {debug && (
-          <div
-            className='absolute top-0 left-0 px-1 text-[10px] leading-4 font-mono whitespace-nowrap bg-modal-surface text-fg-muted pointer-events-none'
-            data-testid='node-debug'
+            className={mx(
+              'absolute flex w-max pb-1 transition-opacity',
+              hovered || selected ? 'opacity-100' : 'opacity-0 hover:opacity-100',
+            )}
+            style={{
+              left: bounds.x + bounds.width,
+              top: bounds.y,
+              transform: `translate(-100%, -100%) scale(${1 / Math.max(props.zoom, 0.05)})`,
+              transformOrigin: 'bottom right',
+              ...fade,
+            }}
+            data-testid='node-toolbar'
+            onPointerDown={(event) => event.stopPropagation()}
+            onDoubleClick={(event) => event.stopPropagation()}
           >
-            {node.id} · {node.type} · {bounds.x},{bounds.y} {bounds.width}×{bounds.height} · z {node.z}
+            <Toolbar {...props} node={drawn} editing={editing} onOpen={onOpen} />
           </div>
         )}
-      </div>
+      </>
     );
   },
 );
@@ -533,17 +574,17 @@ export const NoteNodeView = ({ node, editing }: NodeViewProps) => {
 };
 
 /**
- * A box over a child scene: the centred label, or with `contents` the child drawn inside the frame (a
+ * A frame over a child scene: the centred label, or with `contents` the child drawn inside the frame (a
  * preview, then the live scene as it grows on screen), and a zoom-in control at the top-right.
  */
-export const PortalNodeView = (props: NodeViewProps) => {
+export const FrameNodeView = (props: NodeViewProps) => {
   const { node, store, registry, zoom, depth, liveDepth, opening, editing, onOpen } = props;
-  const child = useAtomValue(store.scene(isPortalNode(node) ? node.scene : ''));
-  const contents = opening || (isPortalNode(node) && showsContents(node));
+  const child = useAtomValue(store.scene(isFrameNode(node) ? node.scene : ''));
+  const contents = opening || (isFrameNode(node) && showsContents(node));
   // Being entered, the portal is already the child scene on the canvas: live.
   const tier = !child ? 'dot' : opening ? 'live' : tierFor(node, zoom, depth, liveDepth);
   const bounds = useMemo(() => (child ? portalFrame(node, contentBounds(child)) : undefined), [node, child]);
-  const title = (isPortalNode(node) ? node.label : undefined) ?? child?.name ?? child?.id ?? '';
+  const title = (isFrameNode(node) ? node.label : undefined) ?? child?.name ?? child?.id ?? '';
   // Too small to show anything inside (or with no child yet), it reads as a closed scene: frame and title.
   if (!contents || tier === 'dot') {
     return (
@@ -599,13 +640,15 @@ export const PortalNodeView = (props: NodeViewProps) => {
   );
 };
 
-/** The zoom-in control at a portal's top-right; it takes the press, so it neither drags nor selects the node. */
-const OpenControl = ({ onOpen }: { onOpen: () => void }) => (
+export type OpenControlProps = { label?: string; onOpen: () => void };
+
+/** The open control at a frame's top-right; it takes the press, so it neither drags nor selects the node. */
+export const OpenControl = ({ label = 'Open scene', onOpen }: OpenControlProps) => (
   <Button.Root
     variant='ghost'
     iconOnly
     icon='ph--arrows-out--regular'
-    label='Open scene'
+    label={label}
     classNames='absolute top-1 right-1'
     data-testid='portal-open'
     onPointerDown={(event) => event.stopPropagation()}

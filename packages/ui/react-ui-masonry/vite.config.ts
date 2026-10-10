@@ -6,5 +6,5 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   jsx: 'react',
-  test: { node: true, storybook: true },
+  test: { node: true, browser: 'chromium', storybook: true },
 });
