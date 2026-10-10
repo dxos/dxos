@@ -57,6 +57,7 @@ type Track
     minPitch?: int           # default scroll range floor; defaults to 36 (C2)
     maxPitch?: int           # default scroll range ceiling; defaults to 84 (C6)
     muted?: boolean
+    instrumentRef?: Ref<Instrument>  # the physical instrument (tuning, calibration)
 ```
 
 ```mdl
@@ -71,6 +72,20 @@ type Sequence
     timeSignature?: string   # overrides the score's time signature
     key?: string             # overrides the score's key
     notes: Note[]
+```
+
+```mdl
+type Instrument
+  desc: |
+    A physical instrument: what it can play (its tuning) and how it sounds (its calibration,
+    recorded by striking each note). Tracks reference it; transcription uses the calibration to
+    recognize its notes. Typename org.dxos.type.instrument.
+  fields:
+    name?: string
+    family: string                   # e.g. 'handpan', 'piano'
+    tuning?: { name?: string, root?: int, pitches: int[] }   # MIDI; root is a handpan's ding
+    reference?: number               # A4 in Hz; defaults to 440
+    calibration: { pitch: int, strikes: { frequency: number, partials: number[], peaks?: { frequency: number, amplitude: number }[] }[] }[]
 ```
 
 ```mdl

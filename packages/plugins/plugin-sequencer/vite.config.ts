@@ -21,6 +21,7 @@ export default defineConfig({
     Sequence: 'src/types/Sequence.ts',
     SequencerEvents: 'src/types/SequencerEvents.ts',
     Track: 'src/types/Track.ts',
+    Instrument: 'src/types/Instrument.ts',
     Note: 'src/types/Note.ts',
     Patch: 'src/types/Patch.ts',
     types: 'src/types/index.ts',
