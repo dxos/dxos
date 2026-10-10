@@ -23,7 +23,7 @@ export const translations = [
         'idle.message': 'Press start and play a note',
         'percussive.label': 'Tak',
         'clarity.label': 'Clarity',
-        'gain.label': 'Input gain',
+        'gain.label': 'Gain',
         'sensitivity.label': 'Sensitivity',
         'strike-log.label': 'Strikes heard (newest first)',
         'strike-log-empty.message':
