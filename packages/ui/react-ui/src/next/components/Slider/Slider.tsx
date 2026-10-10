@@ -3,7 +3,7 @@
 //
 
 import { Slider as SliderPrimitive } from '@ark-ui/react/slider';
-import React, { type ReactNode, forwardRef, useId } from 'react';
+import React, { type ReactNode, forwardRef, useId, useLayoutEffect, useRef, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { mx } from '@dxos/ui-theme';
@@ -46,6 +46,9 @@ export type SliderProps = ThemedClassName<
  * Ark's slider as a leaf control: an optional label above a block-tall row holding the track, its range and one thumb
  * per value. Every thumb must be named, so a missing name throws rather than rendering an unlabelled control.
  */
+/** Thumb size assumed until it is measured (the default-density icon size); also where layout is unavailable. */
+const DEFAULT_THUMB_SIZE = { width: 16, height: 16 };
+
 export const Slider = forwardRef<HTMLDivElement, SliderProps>(
   (
     {
@@ -79,6 +82,33 @@ export const Slider = forwardRef<HTMLDivElement, SliderProps>(
     const labelledBy =
       label && thumbLabels ? thumbLabels.map((_label, index) => `${ids.thumb(index)} ${ids.label}`) : undefined;
 
+    // Contained thumbs need their size. Left to the machine, it hides every thumb until a non-zero measurement
+    // arrives, which never happens without layout (jsdom), so the thumbs vanish; measuring here and passing the
+    // size keeps them visible, starting from the default size.
+    const [thumbSize, setThumbSize] = useState(DEFAULT_THUMB_SIZE);
+    const thumbRef = useRef<HTMLDivElement>(null);
+    useLayoutEffect(() => {
+      const thumb = thumbRef.current;
+      if (!thumb) {
+        return;
+      }
+      const measure = () => {
+        const { offsetWidth: width, offsetHeight: height } = thumb;
+        if (width > 0 && height > 0) {
+          setThumbSize((current) =>
+            current.width === width && current.height === height ? current : { width, height },
+          );
+        }
+      };
+      measure();
+      if (typeof ResizeObserver === 'undefined') {
+        return;
+      }
+      const observer = new ResizeObserver(measure);
+      observer.observe(thumb);
+      return () => observer.disconnect();
+    }, []);
+
     return (
       <SliderPrimitive.Root
         {...props}
@@ -91,8 +121,9 @@ export const Slider = forwardRef<HTMLDivElement, SliderProps>(
         orientation={orientation}
         aria-label={thumbLabels ?? (ariaLabel !== undefined ? [ariaLabel] : undefined)}
         aria-labelledby={labelledBy}
-        // The machine measures the CSS-sized thumb and keeps it within the track, so the track spans the full width.
+        // Thumbs stay within the track, so the track spans the full width and lines up with the label.
         thumbAlignment='contain'
+        thumbSize={thumbSize}
         className={mx(recipes.slider(), classNames)}
         ref={forwardedRef}
       >
@@ -102,7 +133,12 @@ export const Slider = forwardRef<HTMLDivElement, SliderProps>(
             <SliderPrimitive.Range className={recipes.sliderRange()} />
           </SliderPrimitive.Track>
           {Array.from({ length: thumbCount }, (_unused, index) => (
-            <SliderPrimitive.Thumb key={index} index={index} className={recipes.sliderThumb()}>
+            <SliderPrimitive.Thumb
+              key={index}
+              index={index}
+              className={recipes.sliderThumb()}
+              ref={index === 0 ? thumbRef : undefined}
+            >
               <SliderPrimitive.HiddenInput />
             </SliderPrimitive.Thumb>
           ))}

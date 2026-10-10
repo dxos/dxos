@@ -1,7 +1,7 @@
 /*
- * Slider: an optional label above a block-tall control holding a 4px track and icon-sized thumbs. The machine keeps each
- * thumb within the track (`thumbAlignment='contain'`, measuring the thumb itself), so the track spans the full width and
- * lines up with the label.
+ * Slider: an optional label above a block-tall control holding a 4px track and icon-sized thumbs. Thumbs are kept
+ * within the track (`thumbAlignment='contain'`, with the thumb size measured by the component), so the track spans the
+ * full width and lines up with the label.
  */
 
 @layer dx-components {
