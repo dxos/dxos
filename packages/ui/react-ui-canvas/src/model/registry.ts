@@ -18,12 +18,13 @@ import { type ComponentType } from 'react';
 
 import { type FormFieldMap } from '@dxos/react-ui-form';
 
-import { BoxNodeView, EllipseNodeView, NoteNodeView, PortalNodeView } from '../components/SceneLayer/SceneLayer.tsx';
+import { BoxNodeView, EllipseNodeView, FrameNodeView, NoteNodeView } from '../components/SceneLayer/SceneLayer.tsx';
 import { type PartEditing, type PartField } from '../utils/parts.ts';
 import { NOMINAL_SIZES, createNode } from '../utils/shapes.ts';
 import { type SceneStore } from './store.ts';
 import {
   EllipseNode,
+  FrameNode,
   type LinkType,
   type Node,
   type NodeBase,
@@ -31,7 +32,6 @@ import {
   NoteNode,
   type Point,
   type Port,
-  PortalNode,
   RectNode,
   type Scene,
   type Size,
@@ -53,6 +53,8 @@ export type NodeViewProps = {
   opening?: boolean;
   /** The text part of this node being edited in place, with the editor's callbacks. */
   editing?: PartEditing;
+  /** The node's embedded content takes input (`SceneViewAtoms.active`); otherwise it should be inert. */
+  active?: boolean;
   /** Opens the node (drills into a portal); absent where the layer is read-only. */
   onOpen?: () => void;
 };
@@ -81,8 +83,18 @@ export type NodeDef = {
   resizable?: boolean;
   minSize?: Size;
   maxSize?: Size;
-  /** Double-click opens the node (a portal drills in; a text node edits, later). */
+  /** Double-click opens the node (a frame drills in; a text node edits, later). */
   openable?: boolean;
+  /**
+   * The host's own way to open this node, when it has one (a frame showing an object rather than a scene):
+   * opening calls it instead of drilling in, and auto-drill passes the node by.
+   */
+  hostOpen?: (node: Node) => (() => void) | undefined;
+  /**
+   * Controls floating above the node, flush with its right edge and at screen size, so they neither cover the node's
+   * content nor scale with the camera; renders nothing when it returns `null`.
+   */
+  toolbar?: ComponentType<NodeViewProps>;
   /** The text properties edited in place, in order; the first is the node's main text. */
   parts?: readonly PartField[];
   /** Properties-panel renderers for this type's fields, by path (e.g. a list as lines). */
@@ -148,7 +160,7 @@ const MIN_SIZE: Size = { width: 64, height: 32 };
 
 /**
  * A framed shape with a centred, editable label: resizable, with ports spread along every side. The
- * built-in rectangle and scene are both boxes; a host type can extend it too.
+ * built-in rectangle and frame are both boxes; a host type can extend it too.
  */
 export const boxPrototype: NodeDefSpec = {
   component: BoxNodeView,
@@ -196,15 +208,15 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     resizable: true,
     minSize: MIN_SIZE,
   },
-  scene: {
+  frame: {
     extends: 'box',
-    name: 'Scene',
+    name: 'Frame',
     icon: 'ph--frame-corners--regular',
-    key: 'S',
-    schema: PortalNode,
-    component: PortalNodeView,
-    create: (props) => createNode({ type: 'scene', ...props }),
-    defaultSize: NOMINAL_SIZES.scene,
+    key: 'F',
+    schema: FrameNode,
+    component: FrameNodeView,
+    create: (props) => createNode({ type: 'frame', ...props }),
+    defaultSize: NOMINAL_SIZES.frame,
     minSize: { width: 96, height: 60 },
     openable: true,
   },

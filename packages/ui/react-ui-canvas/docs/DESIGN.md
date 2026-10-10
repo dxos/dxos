@@ -136,8 +136,8 @@ Rect     = NodeBase & { type: 'rect', label? }
 Ellipse  = NodeBase & { type: 'ellipse', label? }                // inscribed in the frame
 Class    = NodeBase & { type: 'class', name, attributes: string[], methods: string[] }   // UML
 Note     = NodeBase & { type: 'note', text }
-Portal   = NodeBase & { type: 'scene', scene: SceneId }
-BuiltinNode = Rect | Ellipse | Class | Note | Portal            // the engine's own; a host type is NodeBase & its fields
+Frame    = NodeBase & { type: 'frame', scene: SceneId }
+BuiltinNode = Rect | Ellipse | Class | Note | Frame             // the engine's own; a host type is NodeBase & its fields
 Object   = NodeBase & { type: 'object', size: Size, object: Ref, overrides? }   // phase 2: Surface + derived props
 
 LinkBase = { id, type, z, locked?, source: Endpoint, target: Endpoint, ends?: { start?: Marker, end?: Marker } }
@@ -247,12 +247,14 @@ spreading the prototype's field set (`boxFields`) into each type's struct.
 | ---------------- | --------------------------------------------------------------------------------------------------------------------------------- |
 | `box`            | A framed shape with a centred, editable `label`: `BoxNodeView`, resizable, 256x256, ports along every side.                       |
 | `rect`           | `extends: 'box'`; name, icon, schema, `create`. Nothing of its own look.                                                          |
-| `scene`          | `extends: 'box'`; its schema adds `scene` and `contents`, its view adds the child scene and an open control, `openable`, 512x256. |
+| `frame`          | `extends: 'box'`; its schema adds `scene` and `contents`, its view adds the child scene and an open control, `openable`, 512x256. |
 
-The scene shape is a box: a centred label, the type's ports, and a zoom-in control (react-ui `Button`,
+The frame is a box: a centred label, the type's ports, and a zoom-in control (react-ui `Button`,
 top-right) that drills in like a double-click. `contents` chooses the body: the child scene (preview, then
-live, decision 10) or the label. Unset, it shows the child while there is no label, so an unnamed portal
-still reads as its contents and naming one turns it into a plain box.
+live, decision 10) or the label. Unset, it shows the child while there is no label, so an unnamed frame
+still reads as its contents and naming one turns it into a plain box. A host may give a frame other content
+(plugin-canvas: a referenced ECHO object as a `Surface`) by replacing its component; `NodeDef.hostOpen`
+then lets the host open such a node itself, and auto-drill passes it by.
 
 **Instance prototypes (designed, not built; TASKS "Object classes and prototypes").** A node may name a
 prototype node: `prototype?: NodeId` (same scene first; a canvas-level class library later). Its unset

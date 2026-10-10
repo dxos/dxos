@@ -25,6 +25,12 @@ export const Settings = Schema.Struct({
       description: 'Display the node and link palette over the canvas.',
     }),
   ),
+  dockPanels: Schema.optional(
+    Schema.Boolean.annotate({
+      title: 'Dock panels',
+      description: 'Dock the properties and layers panels beside the canvas rather than floating them over it.',
+    }),
+  ),
   liveDepth: Schema.optional(
     Schema.Number.annotate({
       title: 'Live depth',

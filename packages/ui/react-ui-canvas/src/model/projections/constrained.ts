@@ -29,7 +29,7 @@ import {
   type Scene,
   type Size,
   isBuiltinNode,
-  isPortalNode,
+  isFrameNode,
 } from '../types.ts';
 
 /** `subject <relation> object`: "A east of B", "A aligned with B" (same row). */
@@ -286,7 +286,7 @@ export const createConstrainedProjection = ({ registry, model, options }: Constr
       }
       case 'create': {
         // The model records built-in types only; a portal or a host type has no place in it and is refused.
-        if (!isBuiltinNode(intent.node) || isPortalNode(intent.node)) {
+        if (!isBuiltinNode(intent.node) || isFrameNode(intent.node)) {
           return;
         }
         const node: ConstrainedNode = {
