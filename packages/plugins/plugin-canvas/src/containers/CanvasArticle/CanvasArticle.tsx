@@ -177,7 +177,9 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   );
 
   return (
-    <Panel.Root role={role}>
+    // A section takes the document's width and has no height of its own (its panels float, read-only), so its height
+    // follows from the drawing's 3:2 frame.
+    <Panel.Root role={role} classNames={role === AppSurface.Section.role ? 'w-full aspect-[3/2]' : undefined}>
       <Panel.Body>
         {bound && (
           // An unset preference leaves the engine's own default in place.
