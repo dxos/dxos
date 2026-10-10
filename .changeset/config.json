@@ -96,6 +96,7 @@
       "@dxos/halo-react",
       "@dxos/hypercore",
       "@dxos/i18n",
+      "@dxos/ident",
       "@dxos/index-core",
       "@dxos/introspect",
       "@dxos/introspect-mcp",

@@ -14,12 +14,33 @@
 //   upload-artifact.mjs --list [prefix]
 
 import { createHash, createHmac } from 'node:crypto';
+import { existsSync, readFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
-import { basename, extname } from 'node:path';
+import { basename, dirname, extname, join, resolve, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const ACCOUNT_ID = '950816f3f59b079880a1ae33fb0ec320';
-const BUCKET = 'agent-artifacts';
-const PUBLIC_BASE = 'https://pub-39066a86073446d7b77b1c157b660bb5.r2.dev';
+// Keys from `.secrets/r2.env` or `.env` when the environment has none; a harness worktree's `.secrets/` starts empty, so
+// the primary checkout's is read too.
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../../..');
+for (const root of new Set([ROOT, ROOT.split(`${sep}.claude${sep}worktrees${sep}`)[0]])) {
+  // `.env` is `op inject -i .env.tpl -o .env` output (`export NAME="value"`); never committed.
+  for (const file of [join(root, '.secrets', 'r2.env'), join(root, '.env')].filter((file) => existsSync(file))) {
+    for (const [, name, value] of readFileSync(file, 'utf8').matchAll(
+      /^(?:export )?((?:CLOUDFLARE_)?R2_[A-Z_]+)=(.*)$/gm,
+    )) {
+      process.env[name] ||= value.trim().replace(/^"(.*)"$/, '$1');
+    }
+  }
+}
+
+// `.env.tpl` (resolved by `op inject`) names the same keys with a CLOUDFLARE_ prefix.
+process.env.R2_ACCESS_KEY_ID ||= process.env.CLOUDFLARE_R2_ACCESS_KEY_ID ?? '';
+process.env.R2_SECRET_ACCESS_KEY ||= process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY ?? '';
+
+// Another bucket in the same account (e.g. the Composer media bucket) is chosen with R2_BUCKET / R2_PUBLIC_BASE.
+const ACCOUNT_ID = process.env.R2_ACCOUNT_ID || '950816f3f59b079880a1ae33fb0ec320';
+const BUCKET = process.env.R2_BUCKET || 'agent-artifacts';
+const PUBLIC_BASE = process.env.R2_PUBLIC_BASE || 'https://pub-39066a86073446d7b77b1c157b660bb5.r2.dev';
 const HOST = `${ACCOUNT_ID}.r2.cloudflarestorage.com`;
 const REGION = 'auto';
 
@@ -49,7 +70,7 @@ const sign = ({ method, key, payloadHash, headers, query = '' }) => {
   const accessKeyId = process.env.R2_ACCESS_KEY_ID;
   const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
   if (!accessKeyId || !secretAccessKey) {
-    fail('R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY are not set (source .env, or see the hosting-artifacts skill).');
+    fail('R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY are not set (.secrets/r2.env, or see the hosting-artifacts skill).');
   }
 
   const amzDate = new Date().toISOString().replace(/[:-]|\.\d{3}/g, '');
@@ -146,10 +167,15 @@ const main = async () => {
 
   await request({ method: 'PUT', key, body, contentType });
 
-  // Verify through the public URL rather than trusting the PUT: a wrong content type or a
-  // truncated body is invisible until a reviewer clicks the link.
-  const url = `${PUBLIC_BASE}/${key}`;
-  const head = await fetch(url, { method: 'HEAD' });
+  const localMd5 = createHash('md5').update(body).digest('hex');
+  // A CDN in front of the bucket (a custom domain caches for hours) keeps serving an overwritten key's old
+  // body, so the URL carries the content's version: each upload gets a URL no edge has cached.
+  const url = `${PUBLIC_BASE}/${key}?v=${localMd5.slice(0, 8)}`;
+
+  // Verify with a GET through the public URL rather than trusting the PUT: a HEAD can answer from a different
+  // cache entry than the body a viewer downloads, and a wrong type or truncated body is invisible until then.
+  const head = await fetch(url, { method: 'GET' });
+  await head.body?.cancel();
   const served = {
     status: head.status,
     type: head.headers.get('content-type'),
@@ -157,7 +183,6 @@ const main = async () => {
     etag: head.headers.get('etag')?.replaceAll('"', ''),
     ranges: head.headers.get('accept-ranges'),
   };
-  const localMd5 = createHash('md5').update(body).digest('hex');
 
   const problems = [
     served.status !== 200 && `public URL returned ${served.status}`,
