@@ -1,5 +1,46 @@
 # @dxos/plugin-calls
 
+## 0.14.0
+
+### Patch Changes
+
+- Updated dependencies [0715304]
+- Updated dependencies [fd09131]
+- Updated dependencies [508be04]
+- Updated dependencies [347546a]
+- Updated dependencies [1eed6b1]
+- Updated dependencies [6847fe2]
+- Updated dependencies [716c951]
+- Updated dependencies [eb5d14d]
+- Updated dependencies [b07f49f]
+  - @dxos/app-framework@0.14.0
+  - @dxos/react-ui@0.14.0
+  - @dxos/echo@0.14.0
+  - @dxos/devtools@0.14.0
+  - @dxos/ui-theme@0.14.0
+  - @dxos/plugin-client@0.14.0
+  - @dxos/plugin-graph@0.14.0
+  - @dxos/app-toolkit@0.14.0
+  - @dxos/client@0.14.0
+  - @dxos/app-graph@0.14.0
+  - @dxos/react-ui-audio@0.14.0
+  - @dxos/react-ui-components@0.14.0
+  - @dxos/client-protocol@0.14.0
+  - @dxos/types@0.14.0
+  - @dxos/graph@0.14.0
+  - @dxos/protocols@0.14.0
+  - @dxos/config@0.14.0
+  - @dxos/halo@0.14.0
+  - @dxos/async@0.14.0
+  - @dxos/av@0.14.0
+  - @dxos/context@0.14.0
+  - @dxos/debug@0.14.0
+  - @dxos/display-name@0.14.0
+  - @dxos/invariant@0.14.0
+  - @dxos/keys@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/util@0.14.0
+
 ## 0.13.0
 
 ### Patch Changes
