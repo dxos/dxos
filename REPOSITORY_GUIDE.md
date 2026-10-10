@@ -310,11 +310,11 @@ Everything runs in GitHub Actions — nobody runs `changeset` / `pnpm publish` /
 
 Packages ship as two lockstep groups — **A: Core/SDK** (`@dxos/echo`, `@dxos/client`, …) and **B: Plugins + CLI** (`@dxos/plugin-*`, `@dxos/cli`). Naming one member in a changeset bumps its whole group, and both share one "Version Packages" PR. **Apps are not in a group — they deploy, never publish.**
 
-**npm `@latest`.** Add a `.changeset/*.md` to feature PRs (optional — CI nudges if a publishable change lacks one). Pushes to `main` keep a **"Version Packages" PR** open; **merge it** and `publish-all.yml` publishes the bumped packages to `@latest` (OIDC + provenance) and pushes tags.
+**npm `@latest`.** Add a `.changeset/*.md` to feature PRs (optional — CI nudges if a publishable change lacks one). Pushes to `main` keep a **"Version Packages" PR** open; **merge it** and `publish-all.yml` publishes the bumped packages to `@latest` (OIDC + provenance) and pushes tags. The merge publishes even if other PRs added changesets after the Version PR was last updated; those go into the next Version PR. If the release run fails, re-run it: every step skips what already shipped.
 
 **npm `@next`.** A manual dispatch of `publish-all.yml` (Actions → **Publish** → Run workflow) cuts an ephemeral snapshot (`0.9.1-next-<datetime>`) — nothing committed, no tags. Both channels live in `publish-all.yml` because npm's OIDC trusted publisher is bound to that filename; the trigger picks the channel (push → `@latest`, dispatch → `@next`).
 
-**Previews.** Every push to `main` publishes all public packages to [pkg.pr.new](https://pkg.pr.new) (`pkg-pr-new.yml`) — an ephemeral per-commit install channel.
+**Previews.** `pkg-pr-new.yml` publishes all public packages to [pkg.pr.new](https://pkg.pr.new), an ephemeral per-commit install channel: `main` once a day at 06:00 UTC, every commit `deploy-apps.yml` deploys, and a branch tip on dispatch.
 
 **Deploy apps.** One entry point: the **Deploy Apps** workflow (`deploy-apps.yml`) — pick an environment and the app set follows. Deploys go to Cloudflare Workers Static Assets, decoupled from npm; "what's deployed where" is tracked by floating `<app>/<env>` git tags. Deployable apps are listed in [`.github/workflows/scripts/apps.mjs`](./.github/workflows/scripts/apps.mjs); everything else — Worker name, bundle task, output dir, target environments — derives from each app's `wrangler.jsonc`.
 

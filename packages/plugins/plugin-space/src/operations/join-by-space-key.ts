@@ -15,8 +15,8 @@ import * as Operation from '@dxos/compute/Operation';
 import { Identity } from '@dxos/halo';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { HaloServicesLayer } from '@dxos/plugin-client';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as HaloServices from '@dxos/plugin-client/HaloServices';
 
 import { meta } from '#meta';
 import { SpaceOperation } from '#types';
@@ -30,7 +30,7 @@ const joinBySpaceKey = Effect.fnUntraced(function* (spaceKeyHex: string) {
   const client = yield* Capability.get(ClientCapabilities.Client);
   // Deep links dispatch before `client.initialize()` resolves, and an uninitialized client reads as "no identity".
   yield* Effect.promise(() => client.waitUntilInitialized({ timeout: INITIALIZE_TIMEOUT }));
-  if (Option.isNone(yield* Identity.getSnapshot.pipe(Effect.provide(HaloServicesLayer)))) {
+  if (Option.isNone(yield* Identity.getSnapshot.pipe(Effect.provide(HaloServices.layer)))) {
     return yield* Effect.fail(new NoIdentityError());
   }
 

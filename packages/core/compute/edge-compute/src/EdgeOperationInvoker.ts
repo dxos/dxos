@@ -8,8 +8,8 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { type Client, ClientService } from '@dxos/client';
-import { FunctionError } from '@dxos/compute';
 import { RemoteOperationInvoker } from '@dxos/compute-runtime';
+import * as Operation from '@dxos/compute/Operation';
 import { type Context as DxosContext } from '@dxos/context';
 import { type SpaceId } from '@dxos/keys';
 
@@ -23,7 +23,7 @@ const make = (getEdgeClient: () => EdgeClient, spaceId?: SpaceId): RemoteOperati
       const cleanedId = deployedId.replace(/^\//, '');
       return yield* Effect.promise(() =>
         getEdgeClient().invokeFunction(ctx, { functionId: cleanedId, spaceId }, input),
-      ).pipe(Effect.mapError(FunctionError.wrap()), Effect.orDie);
+      ).pipe(Effect.mapError(Operation.FunctionError.wrap()), Effect.orDie);
     }),
 });
 

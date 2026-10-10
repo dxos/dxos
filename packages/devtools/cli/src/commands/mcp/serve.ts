@@ -20,11 +20,11 @@ import { Registry } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { McpServer } from '@dxos/mcp-server';
 import * as LocalUpload from '@dxos/mcp-server/LocalUpload';
-import { FileSkill } from '@dxos/plugin-file/skills';
+import * as FileSkill from '@dxos/plugin-file/FileSkill';
 import * as StagedUpload from '@dxos/plugin-file/StagedUpload';
 import * as ObservabilityCapabilities from '@dxos/plugin-observability/ObservabilityCapabilities';
 import * as ProjectsEvents from '@dxos/plugin-projects/ProjectsEvents';
-import { isRecordEnabled, loadPlugins } from '@dxos/plugin-registry';
+import * as PluginStorage from '@dxos/plugin-registry/PluginStorage';
 
 import { analyticsStdio } from './analytics.ts';
 import { handshakeAttribution } from './legacy-initialize-analytics.ts';
@@ -73,9 +73,9 @@ const watchOption = Options.Boolean('watch').pipe(
  */
 const devPluginPaths = Effect.gen(function* () {
   const { profile } = yield* CommandConfig;
-  const records = (yield* loadPlugins({ profile })) ?? [];
+  const records = (yield* PluginStorage.loadPlugins({ profile })) ?? [];
   return records.flatMap((record) =>
-    isRecordEnabled(record) && record.source?.kind === 'link' ? [record.source.path] : [],
+    PluginStorage.isRecordEnabled(record) && record.source?.kind === 'link' ? [record.source.path] : [],
   );
 });
 

@@ -25,5 +25,6 @@ export const GitHubOperationHandlerSet = OperationHandlerSet.lazy([
   ),
   GitHubOperation.GetPullRequestStatus.pipe(Operation.lazyHandler(() => import('./get-pull-request-status.ts'))),
   GitHubOperation.SyncPullRequest.pipe(Operation.lazyHandler(() => import('./sync-pull-request.ts'))),
+  GitHubOperation.RefreshPullRequests.pipe(Operation.lazyHandler(() => import('./refresh-pull-requests.ts'))),
   GitHubOperation.GetPullRequestDiff.pipe(Operation.lazyHandler(() => import('./get-pull-request-diff.ts'))),
 ]);

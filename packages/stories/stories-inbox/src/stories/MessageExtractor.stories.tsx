@@ -13,9 +13,9 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Role from '@dxos/app-framework/Role';
-import { Surface } from '@dxos/app-framework/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -23,7 +23,7 @@ import { Feed, Filter, Obj, Tag, Type } from '@dxos/echo';
 import { type ObjectExtractor } from '@dxos/extractor';
 import { mockAiService } from '@dxos/extractor/testing';
 import { DXN } from '@dxos/keys';
-import { MessageArticle } from '@dxos/plugin-inbox/containers';
+import * as Containers from '@dxos/plugin-inbox/Containers';
 import * as ExtractedFrom from '@dxos/plugin-inbox/ExtractedFrom';
 import * as InboxCapabilities from '@dxos/plugin-inbox/InboxCapabilities';
 import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
@@ -208,7 +208,7 @@ const seedMessage = (space: Space) => {
 const ExtractMessageRole = Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.extractMessage');
 
 const ExtractMessageModule = () => {
-  const space = useActiveSpace();
+  const space = Hooks.useActiveSpace();
   const [mailbox] = useQuery(space?.db, Filter.type(Mailbox.Mailbox));
   const [message] = useQuery(space?.db, Filter.type(MessageType.Message));
 
@@ -217,7 +217,13 @@ const ExtractMessageModule = () => {
   }
 
   return (
-    <MessageArticle testId='message-article' role='article' subject={message} attendableId='story' mailbox={mailbox} />
+    <Containers.MessageArticle
+      testId='message-article'
+      role='article'
+      subject={message}
+      attendableId='story'
+      mailbox={mailbox}
+    />
   );
 };
 

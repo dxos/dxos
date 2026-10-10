@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as EffectStream from 'effect/Stream';
 
 import { type Trigger } from '@dxos/async';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { fromPublicKey, requirePublicKey } from '@dxos/protocols/buf';
 import {
   type SubscribeToSpacesResponse,

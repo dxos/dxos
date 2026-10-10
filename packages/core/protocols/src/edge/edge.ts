@@ -425,6 +425,12 @@ export enum EdgeWebsocketProtocol {
   V1 = 'edge-ws-v1',
 }
 
+/**
+ * Prefix of the `Sec-WebSocket-Protocol` entry carrying the client's SDK version (e.g. `dxos-version.0.12.0`).
+ * A subprotocol entry because browsers cannot set headers on a WebSocket; the router never selects it.
+ */
+export const EDGE_CLIENT_VERSION_PROTOCOL_PREFIX = 'dxos-version.';
+
 // TODO(mykola): Reconcile with type in EDGE repo.
 export type EdgeStatus = {
   problems: string[];

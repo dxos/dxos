@@ -4,3 +4,4 @@
 
 export * from './ActionMenu.tsx';
 export * from './ActionToolbar.tsx';
+export * from './ViewOptionsMenu.tsx';

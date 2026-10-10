@@ -11,7 +11,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { DXN, Filter, Obj, Relation, Type } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { dispatch } from './dispatch.ts';
 import { type ExtractionTemplate, makeTemplateExtractor } from './ExtractionTemplate.ts';

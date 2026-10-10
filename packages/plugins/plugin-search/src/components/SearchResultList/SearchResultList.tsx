@@ -4,9 +4,9 @@
 
 import React from 'react';
 
-import { Banner, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { Highlighted, type SearchResult } from '@dxos/react-ui-search';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 
@@ -21,38 +21,29 @@ export type SearchResultListProps = {
 
 /**
  * Dense, read-only search-results list: each row shows the matched object's icon, highlighted
- * title and best-match snippet, and its type as trailing metadata. Built on `Listbox` in its
- * plain (non-selectable) mode — rows are `role=listitem`, not `role=option`.
+ * title and best-match snippet, and its type as trailing metadata. Built on `Listbox` with no selection.
  */
 export const SearchResultList = ({ results, query, onSelect }: SearchResultListProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   return (
-    <Listbox.Root>
-      <Listbox.Viewport>
-        {results.length === 0 ? (
-          // `Empty` renders a `<div>`; keep it out of `Listbox.Content`'s `<ul>` rather than
-          // nesting a non-`<li>` child inside the list.
-          <Banner.Empty label={t('search-result-list.empty.label')} />
-        ) : (
-          <Listbox.Content aria-label={t('search-result-list.label')}>
-            {results.map((result) => (
-              <Listbox.Item
-                key={result.id}
-                id={result.id}
-                classNames='grid grid-cols-[1fr_auto] items-center gap-2'
-                onClick={() => onSelect?.(result)}
-              >
-                <Listbox.ItemContent
-                  icon={result.icon}
-                  title={<Highlighted text={result.label ?? ''} query={query} />}
-                  description={result.snippet ? <Highlighted text={result.snippet} query={query} /> : undefined}
-                />
-                {result.type ? <span className='shrink-0 text-sm text-description'>{result.type}</span> : null}
-              </Listbox.Item>
-            ))}
-          </Listbox.Content>
-        )}
-      </Listbox.Viewport>
+    <Listbox.Root items={results.map((result) => ({ value: result.id, label: result.label ?? '' }))}>
+      <Listbox.Content aria-label={t('search-result-list.label')}>
+        {results.map((result) => (
+          <Listbox.Item key={result.id} id={result.id} onClick={() => onSelect?.(result)}>
+            <Listbox.ItemIcon icon={result.icon} />
+            <Listbox.ItemText>
+              <Highlighted text={result.label ?? ''} query={query} />
+            </Listbox.ItemText>
+            {result.snippet && (
+              <Listbox.ItemDescription>
+                <Highlighted text={result.snippet} query={query} />
+              </Listbox.ItemDescription>
+            )}
+            {result.type && <span className='shrink-0 text-sm text-fg-muted'>{result.type}</span>}
+          </Listbox.Item>
+        ))}
+      </Listbox.Content>
+      <Listbox.Empty>{t('search-result-list.empty.label')}</Listbox.Empty>
     </Listbox.Root>
   );
 };

@@ -8,7 +8,7 @@ import type * as Script from '@dxos/compute/Script';
 import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { FunctionsServiceClient } from '@dxos/edge-compute';
-import { Panel } from '@dxos/react-ui';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { TestPanel } from '#components';
 import { useDeployDeps } from '#hooks';
@@ -35,10 +35,10 @@ export const TestContainer = ({ role, script }: TestContainerProps) => {
   );
 
   return (
-    <Panel.Root role={role} classNames='dx-document'>
-      <Panel.Content asChild>
+    <Panel.Root role={role} width='document'>
+      <Panel.Body asChild>
         <TestPanel onInvoke={existingFunctionId ? handleInvoke : undefined} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

@@ -23,6 +23,21 @@ export type SqliteIoStats = {
   shortReads: number;
   /** Writes the VFS rejected, whose bytes are NOT counted in `writeBytes`. */
   writeErrors: number;
+  /** Prepared statements stepped, by leading keyword. */
+  selects: number;
+  inserts: number;
+  updates: number;
+  deletes: number;
+  otherStatements: number;
+  /** Statements that threw, which no other statement counter includes. */
+  statementErrors: number;
+  /** Rows the statements returned. */
+  rowsRead: number;
+  /** Rows INSERT, UPDATE and DELETE statements changed (`sqlite3_changes`). */
+  rowsChanged: number;
+  /** Page-cache hits and misses over every open connection, sampled when the counters are read. */
+  cacheHits: number;
+  cacheMisses: number;
 };
 
 const ZERO: SqliteIoStats = {
@@ -34,6 +49,16 @@ const ZERO: SqliteIoStats = {
   syncs: 0,
   shortReads: 0,
   writeErrors: 0,
+  selects: 0,
+  inserts: 0,
+  updates: 0,
+  deletes: 0,
+  otherStatements: 0,
+  statementErrors: 0,
+  rowsRead: 0,
+  rowsChanged: 0,
+  cacheHits: 0,
+  cacheMisses: 0,
 };
 
 const stats: SqliteIoStats = { ...ZERO };
@@ -47,12 +72,161 @@ const stats: SqliteIoStats = { ...ZERO };
  */
 export const SQLITE_IO_GLOBAL = '__dxosSqliteIo';
 
+/** Page-cache readings of one connection, cumulative since it opened. */
+export type CacheReading = { hits: number; misses: number };
+
+/** One sampler per open connection, removed when the connection closes. */
+const cacheSamplers = new Set<() => CacheReading>();
+
+/** Counts closed connections' final readings, so the totals stay monotonic across a close. */
+const closedCache: CacheReading = { hits: 0, misses: 0 };
+
+/**
+ * Registers a connection's page-cache sampler and returns its unregister function.
+ *
+ * Sampled on read rather than per statement: `sqlite3_db_status` is a wasm call with two heap
+ * allocations, which per statement would cost more than the counter is worth.
+ */
+export const registerCacheSampler = (sample: () => CacheReading): (() => void) => {
+  cacheSamplers.add(sample);
+  return () => {
+    const last = sample();
+    closedCache.hits += last.hits;
+    closedCache.misses += last.misses;
+    cacheSamplers.delete(sample);
+  };
+};
+
 /** A copy, so a caller cannot mutate the running totals by holding the object. */
-export const getSqliteIoStats = (): SqliteIoStats => ({ ...stats });
+export const getSqliteIoStats = (): SqliteIoStats => {
+  let cacheHits = closedCache.hits;
+  let cacheMisses = closedCache.misses;
+  for (const sample of cacheSamplers) {
+    const reading = sample();
+    cacheHits += reading.hits;
+    cacheMisses += reading.misses;
+  }
+  return { ...stats, cacheHits, cacheMisses };
+};
 
 /** Zeroes the module-level running counters. For tests; nothing in the app resets them. */
 export const resetSqliteIoStats = (): void => {
   Object.assign(stats, ZERO);
+  closedCache.hits = 0;
+  closedCache.misses = 0;
+};
+
+export type StatementKind = 'select' | 'insert' | 'update' | 'delete' | 'other';
+
+const VERBS: ReadonlySet<string> = new Set(['select', 'insert', 'replace', 'update', 'delete']);
+
+/**
+ * The verb of the statement a `WITH` clause introduces: the first verb outside every parenthesis,
+ * since each CTE body is parenthesized and may itself contain any verb.
+ */
+const verbAfterCte = (sql: string): string | undefined => {
+  let depth = 0;
+  for (const match of sql.matchAll(/'(?:[^']|'')*'|"(?:[^"]|"")*"|[()]|\w+/g)) {
+    const token = match[0];
+    if (token === '(') {
+      depth += 1;
+    } else if (token === ')') {
+      depth -= 1;
+    } else if (depth === 0 && VERBS.has(token.toLowerCase())) {
+      return token.toLowerCase();
+    }
+  }
+  return undefined;
+};
+
+/** A statement's kind from its verb, looking past a leading `WITH` clause to the statement it introduces. */
+export const statementKind = (sql: string): StatementKind => {
+  const leading = /^\s*(\w+)/.exec(sql)?.[1]?.toLowerCase();
+  const keyword = leading === 'with' ? verbAfterCte(sql) : leading;
+  switch (keyword) {
+    case 'select':
+      return 'select';
+    case 'insert':
+    case 'replace':
+      return 'insert';
+    case 'update':
+      return 'update';
+    case 'delete':
+      return 'delete';
+    default:
+      return 'other';
+  }
+};
+
+const KIND_FIELD = {
+  select: 'selects',
+  insert: 'inserts',
+  update: 'updates',
+  delete: 'deletes',
+  other: 'otherStatements',
+} as const satisfies Record<StatementKind, keyof SqliteIoStats>;
+
+/**
+ * Counts one executed statement.
+ *
+ * `changed` is passed only for a write: `sqlite3_changes` keeps the LAST write's count through any
+ * later SELECT, so reading it after a select would count that write again.
+ */
+export const recordStatement = (kind: StatementKind, rows: number, changed: number): void => {
+  stats[KIND_FIELD[kind]] += 1;
+  stats.rowsRead += rows;
+  stats.rowsChanged += changed;
+};
+
+/** Counts a statement that threw; its rows, if any, were never returned. */
+export const recordStatementError = (): void => {
+  stats.statementErrors += 1;
+};
+
+/** `SQLITE_DBSTATUS_CACHE_HIT` / `_MISS`, absent from wa-sqlite's constants. */
+const DBSTATUS_CACHE_HIT = 7;
+const DBSTATUS_CACHE_MISS = 8;
+
+/** The Emscripten exports `sqlite3_db_status` needs; wa-sqlite wraps no `db_status`. */
+type DbStatusModule = {
+  _sqlite3_db_status: (db: number, op: number, pCurrent: number, pHighwater: number, reset: number) => number;
+  _malloc: (bytes: number) => number;
+  _free: (pointer: number) => void;
+  getValue: (pointer: number, type: 'i32') => number;
+};
+
+const hasDbStatus = (module: unknown): module is DbStatusModule =>
+  typeof module === 'object' &&
+  module !== null &&
+  typeof Reflect.get(module, '_sqlite3_db_status') === 'function' &&
+  typeof Reflect.get(module, '_malloc') === 'function' &&
+  typeof Reflect.get(module, '_free') === 'function' &&
+  typeof Reflect.get(module, 'getValue') === 'function';
+
+/**
+ * A page-cache sampler for one connection, or undefined when the module lacks the exports.
+ *
+ * Reads with `reset = 0`, so each reading is cumulative since the connection opened and the
+ * harness's two boundary readings difference cleanly.
+ */
+export const makeCacheSampler = (module: unknown, db: number): (() => CacheReading) | undefined => {
+  if (!hasDbStatus(module)) {
+    return undefined;
+  }
+  const read = (op: number): number => {
+    const pointer = module._malloc(8);
+    try {
+      return module._sqlite3_db_status(db, op, pointer, pointer + 4, 0) === 0 ? module.getValue(pointer, 'i32') : 0;
+    } finally {
+      module._free(pointer);
+    }
+  };
+  return () => ({ hits: read(DBSTATUS_CACHE_HIT), misses: read(DBSTATUS_CACHE_MISS) });
+};
+
+/** Publishes the reader for the out-of-realm harness; idempotent. */
+const publish = (): void => {
+  Object.assign(globalThis, { [SQLITE_IO_GLOBAL]: getSqliteIoStats });
 };
 
 /** wa-sqlite's VFS examples are untyped JS, so the shape is declared where it is wrapped. */
@@ -136,5 +310,5 @@ export const instrumentVfs = (vfs: unknown): void => {
 
   // Published for the out-of-realm reader; assigned after wrapping so the global never exposes a
   // half-instrumented VFS.
-  Object.assign(globalThis, { [SQLITE_IO_GLOBAL]: getSqliteIoStats });
+  publish();
 };

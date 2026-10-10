@@ -8,7 +8,7 @@ import { dirname, join } from 'node:path';
 import { createInterface } from 'node:readline';
 import { type Readable, type Writable } from 'node:stream';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { LocalSandboxBackend, defaultSandboxRoot } from './LocalSandboxBackend.ts';
 import { serve } from './server.ts';

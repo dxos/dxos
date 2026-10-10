@@ -37,7 +37,7 @@ export class AppManager {
   }
 
   getCollaboratorCursors() {
-    return this.page.locator('.cm-collab-selectionInfo');
+    return this.page.locator('.cm-collab-selectionCaret');
   }
 
   // Actions

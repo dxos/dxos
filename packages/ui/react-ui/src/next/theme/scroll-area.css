@@ -4,7 +4,7 @@
  */
 
 @layer dx-components {
-  .nx-scroll-root {
+  .dx-scroll-root {
     position: relative;
     min-height: 0;
     min-width: 0;
@@ -15,75 +15,97 @@
   }
 
   /* `thin` fits inside the rail Block's margin at every size; `regular` may overlap its icon. */
-  .nx-scroll-root[data-width='thin'] {
-    --nx-scroll-width: 4px;
+  .dx-scroll-root[data-width='thin'] {
+    --dx-scroll-width: 4px;
   }
-  .nx-scroll-root[data-width='regular'] {
-    --nx-scroll-width: 8px;
+  .dx-scroll-root[data-width='regular'] {
+    --dx-scroll-width: 8px;
   }
 
-  .nx-scroll-root:has(> .nx-grid[data-gutter='inherit']) {
+  .dx-scroll-root:has(> .dx-container[data-gutter='inherit']) {
     grid-column: full;
     grid-template-columns: subgrid;
     /* Containment makes a grid independent, which silently turns subgrid back into a standalone grid. */
     container-type: normal;
   }
 
-  .nx-scroll-viewport {
+  /*
+   * Contained only on the axis that scrolls: a swipe along the other axis passes to the nearest ancestor that scrolls
+   * it (a horizontal chart inside a vertical panel), where `contain` on both would swallow it.
+   */
+  .dx-scroll-viewport {
     min-height: 0;
     overflow-y: auto;
-    overscroll-behavior: contain;
+    overscroll-behavior-y: contain;
   }
-  .nx-scroll-viewport:not([data-native]) {
+  /*
+   * A row track with a fixed minimum (`minmax(block, auto)`) grows only into the viewport's free space, so content
+   * taller than the viewport overflowed it centred, half above the top; content-sized rows let the viewport scroll.
+   */
+  .dx-scroll-viewport.dx-container[data-layout='row'] {
+    grid-auto-rows: auto;
+  }
+  /*
+   * A nested scrolling list that joins its host's gutters (a subgrid viewport) is height-bound by its host, where
+   * `auto` rows shrink toward their items' minimum to fit; its rows keep their content height and the list scrolls.
+   * Host bodies (template roots) keep `auto` rows so a flexible child, like this list, can take the remaining height.
+   */
+  .dx-scroll-viewport.dx-container[data-gutter='inherit']:not([data-layout='row']) {
+    grid-auto-rows: max-content;
+  }
+  .dx-scroll-viewport:not([data-native]) {
     scrollbar-width: none;
   }
-  .nx-scroll-viewport:not([data-native])::-webkit-scrollbar {
+  .dx-scroll-viewport:not([data-native])::-webkit-scrollbar {
     display: none;
   }
-  .nx-scroll-root[data-mode='reserve'] > .nx-scroll-viewport,
-  .nx-scroll-viewport[data-native] {
-    --nx-scroll-reserve: var(--nx-scroll-width);
+  .dx-scroll-root[data-mode='reserve'] > .dx-scroll-viewport,
+  .dx-scroll-viewport[data-native] {
+    --dx-scroll-reserve: var(--dx-scroll-width);
   }
-  .nx-scroll-viewport[data-native] {
+  .dx-scroll-viewport[data-native] {
     scrollbar-gutter: stable;
   }
-  .nx-scroll-viewport[data-native]::-webkit-scrollbar {
-    width: var(--nx-scroll-width);
-    height: var(--nx-scroll-width);
+  .dx-scroll-viewport[data-native]::-webkit-scrollbar {
+    width: var(--dx-scroll-width);
+    height: var(--dx-scroll-width);
   }
-  .nx-scroll-viewport[data-native]::-webkit-scrollbar-thumb {
+  .dx-scroll-viewport[data-native]::-webkit-scrollbar-thumb {
     background: var(--color-scrollbar-thumb, gray);
   }
 
   /* Axis: a horizontal pane scrolls sideways only, so a native bar takes nothing out of the end track. */
-  .nx-scroll-root[data-orientation='horizontal'] > .nx-scroll-viewport {
-    --nx-scroll-reserve: 0px;
+  .dx-scroll-root[data-orientation='horizontal'] > .dx-scroll-viewport {
+    --dx-scroll-reserve: 0px;
     overflow-x: auto;
     overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    overscroll-behavior-y: auto;
     /* `stable` would still reserve an inline-end gutter for the hidden vertical axis. */
     scrollbar-gutter: auto;
   }
-  .nx-scroll-root[data-orientation='all'] > .nx-scroll-viewport {
+  .dx-scroll-root[data-orientation='all'] > .dx-scroll-viewport {
     overflow: auto;
+    overscroll-behavior: contain;
   }
 
   /* Mandatory snapping on the scrolling axis; the children carry their own `scroll-snap-align`. */
-  .nx-scroll-root[data-snap][data-orientation='vertical'] > .nx-scroll-viewport {
+  .dx-scroll-root[data-snap][data-orientation='vertical'] > .dx-scroll-viewport {
     scroll-snap-type: y mandatory;
   }
-  .nx-scroll-root[data-snap][data-orientation='horizontal'] > .nx-scroll-viewport {
+  .dx-scroll-root[data-snap][data-orientation='horizontal'] > .dx-scroll-viewport {
     scroll-snap-type: x mandatory;
   }
-  .nx-scroll-root[data-snap][data-orientation='all'] > .nx-scroll-viewport {
+  .dx-scroll-root[data-snap][data-orientation='all'] > .dx-scroll-viewport {
     scroll-snap-type: both mandatory;
   }
 
   /* No bar at all: the native one is hidden too, and reserves no width. */
-  .nx-scroll-root[data-scrollbars='false'] > .nx-scroll-viewport {
-    --nx-scroll-reserve: 0px;
+  .dx-scroll-root[data-scrollbars='false'] > .dx-scroll-viewport {
+    --dx-scroll-reserve: 0px;
     scrollbar-width: none;
   }
-  .nx-scroll-root[data-scrollbars='false'] > .nx-scroll-viewport::-webkit-scrollbar {
+  .dx-scroll-root[data-scrollbars='false'] > .dx-scroll-viewport::-webkit-scrollbar {
     display: none;
   }
 }

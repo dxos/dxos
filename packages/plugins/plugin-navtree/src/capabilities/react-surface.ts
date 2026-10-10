@@ -7,10 +7,10 @@ import { type ComponentProps } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/ui';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Position } from '@dxos/util';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as Position from '@dxos/util/Position';
 
 import { CommandsDialogContent, CommandsTrigger, NavTreeContainer, NavTreeDocumentTitle } from '#containers';
 import { COMMANDS_DIALOG } from '#meta';

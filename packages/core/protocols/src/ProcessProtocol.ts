@@ -9,7 +9,7 @@ import type { SerializedError } from './edge/index.ts';
 /**
  * Wire protocol for controlling processes hosted by a remote runtime (EDGE).
  *
- * Mirrors the local `ProcessManager.Manager` / `ProcessManager.Handle` surface in
+ * Mirrors the local `ProcessManager.Manager` / `Process.Process` surface in
  * `@dxos/compute-runtime` over HTTP. Declared here rather than in `@dxos/compute` so that both the
  * client (`@dxos/edge-client`, which depends only on this package) and the EDGE worker can share one
  * definition instead of structurally re-declaring it on each side.
@@ -41,7 +41,7 @@ export interface ProcessParams {
   annotations: Record<string, unknown>;
 }
 
-/** Wire form of `Process.Info`. */
+/** Wire form of `Process.Process`. */
 export interface ProcessInfo {
   pid: string;
   parentPid: string | null;
@@ -68,7 +68,7 @@ export interface ProcessInfo {
 }
 
 /**
- * Spawn a process from the host's built-in registry. `key` is a `Process.Process.key`; the host
+ * Spawn a process from the host's built-in registry. `key` is an `Operation.Durable.key`; the host
  * rejects a key it does not host, since a process definition cannot be sent over the wire.
  */
 export interface SpawnProcessRequest {
@@ -96,7 +96,7 @@ export interface SpawnProcessResponse {
   info: ProcessInfo;
 }
 
-/** Filters mirroring `ProcessManager.ListOptions`. */
+/** Filters mirroring `Process.ListOptions`. */
 export interface ListProcessesQuery {
   key?: string;
   target?: string;

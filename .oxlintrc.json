@@ -50,6 +50,7 @@
   "rules": {
     "@dxos/eslint-plugin-rules/consistent-update-param": "error",
     "@dxos/eslint-plugin-rules/dxos-package-imports": "warn",
+    "@dxos/eslint-plugin-rules/dxos-subpath-entrypoints": "error",
     "@dxos/eslint-plugin-rules/dxos-subpath-exports": "warn",
     "@dxos/eslint-plugin-rules/dxos-subpath-imports": "warn",
     "@dxos/eslint-plugin-rules/effect-subpath-imports": "warn",
@@ -82,8 +83,6 @@
           "packages/plugins/plugin-support/src/hooks/useTours.ts",
           "packages/sdk/app-toolkit/src/app-framework/AppCapabilities.ts",
           "packages/sdk/app-toolkit/src/app-framework/AppCapability.ts",
-          "packages/ui/react-ui-canvas-editor/src/components/Canvas/Shape.tsx",
-          "packages/ui/react-ui-canvas-editor/src/components/Canvas/Shapes.tsx",
           "packages/ui/react-ui-menu/src/components/ActionLabel.tsx",
           "packages/ui/react-ui-menu/src/components/action-label.ts",
           "packages/ui/react-ui/src/providers/ThemeProvider/IconRegistry.tsx",
@@ -236,5 +235,19 @@
     "vitest": {
       "typecheck": false
     }
-  }
+  },
+  "overrides": [
+    {
+      "files": ["packages/ui/react-ui/src/next/recipes.ts"],
+      "rules": {
+        "perfectionist/sort-objects": [
+          "error",
+          {
+            "order": "asc",
+            "type": "natural"
+          }
+        ]
+      }
+    }
+  ]
 }

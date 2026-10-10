@@ -6,10 +6,10 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 import React, { type FC } from 'react';
 
-import { type ShapeDef, getAnchorPoints } from '@dxos/react-ui-canvas-editor';
-import { createAnchors } from '@dxos/react-ui-canvas-editor';
+import { type NodeDef } from '@dxos/react-ui-canvas/scene';
 
-import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs.ts';
+import { createRowPorts, defineComputeNode, getRowPoints } from './common/index.ts';
+import { ComputeShape, type CreateShapeProps, createAnchorId, createShape, withZ } from './defs.ts';
 
 //
 // Gate utils.
@@ -35,36 +35,39 @@ const createGate = (props: CreateGateProps): GateShape =>
   });
 
 // TODO(burdon): Create custom icons.
-const defineShape = <S extends GateShape>({
+const defineGate = ({
   type,
   name,
   icon,
   symbol: Symbol,
-  createShape,
+  create,
   inputs,
   outputs = [createAnchorId('output')],
 }: {
   type: GateType;
   symbol: FC<GateSymbolProps>;
-  createShape: ShapeDef<S>['createShape'];
+  create: (props: Pick<GateShape, 'id' | 'center'>) => GateShape;
   inputs: string[];
   outputs?: string[];
-} & Pick<ShapeDef<GateShape>, 'name' | 'icon'>): ShapeDef<GateShape> => ({
-  type,
-  name,
-  icon,
-  // NOTE: Preact interprets captitalized properties as React components.
-  // Be careful not to name component factories with a capital letter.
-  component: () => {
-    return (
-      <div className='flex w-full justify-center items-center'>
-        <Symbol />
-      </div>
-    );
-  },
-  createShape,
-  getAnchors: (shape) => createAnchors({ shape, inputs, outputs }),
-});
+} & Pick<NodeDef, 'name' | 'icon'>): NodeDef =>
+  defineComputeNode<GateShape>({
+    type,
+    name,
+    icon,
+    group: 'Operations',
+    schema: withZ(GateShape),
+    // NOTE: Preact interprets captitalized properties as React components.
+    // Be careful not to name component factories with a capital letter.
+    component: () => {
+      return (
+        <div className='flex w-full justify-center items-center'>
+          <Symbol />
+        </div>
+      );
+    },
+    create,
+    ports: (shape) => createRowPorts({ size: shape.size, inputs, outputs }),
+  });
 
 //
 // Symbols
@@ -97,7 +100,7 @@ const createSymbol =
     return (
       <svg viewBox={`0 0 ${width} ${height}`} className='dx-fill'>
         {/* Input line. */}
-        {getAnchorPoints({ x: 0, y: centerY }, inputs).map(({ x, y }, i) => (
+        {getRowPoints({ x: 0, y: centerY }, inputs).map(({ x, y }, i) => (
           <line key={i} x1={x} y1={y} x2={startX * 1.3} y2={y} strokeWidth={strokeWidth} className={className} />
         ))}
 
@@ -135,12 +138,12 @@ export type AndShape = GateShape;
 export const createAnd = (props: Omit<CreateGateProps, 'type' | 'node'>) => {
   return createGate({ ...props, type: 'and' });
 };
-export const andShape = defineShape({
+export const andNodeDef = defineGate({
   type: 'and',
   name: 'AND',
   icon: 'ph--intersection--regular',
   symbol: AndSymbol,
-  createShape: createAnd,
+  create: createAnd,
   inputs: ['input.a', 'input.b'],
 });
 
@@ -169,12 +172,12 @@ export type OrShape = GateShape;
 export const createOr = (props: Omit<CreateGateProps, 'type' | 'node'>) => {
   return createGate({ ...props, type: 'or' });
 };
-export const orShape = defineShape({
+export const orNodeDef = defineGate({
   type: 'or',
   name: 'OR',
   icon: 'ph--union--regular',
   symbol: OrSymbol,
-  createShape: createOr,
+  create: createOr,
   inputs: ['input.a', 'input.b'],
 });
 
@@ -205,11 +208,11 @@ export type NotShape = GateShape;
 export const createNot = (props: Omit<CreateGateProps, 'type' | 'node'>) => {
   return createGate({ ...props, type: 'not' });
 };
-export const notShape = defineShape({
+export const notNodeDef = defineGate({
   type: 'not',
   name: 'NOT',
   icon: 'ph--x--regular',
   symbol: NotSymbol,
-  createShape: createNot,
+  create: createNot,
   inputs: [createAnchorId('input')],
 });

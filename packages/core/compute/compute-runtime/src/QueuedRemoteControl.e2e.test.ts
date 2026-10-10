@@ -3,6 +3,7 @@
 //
 
 import { describe, it } from '@effect/vitest';
+import * as Deferred from 'effect/Deferred';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
@@ -13,6 +14,7 @@ import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 
+import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Process from '@dxos/compute/Process';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
@@ -120,6 +122,38 @@ describe('queued remote control (e2e against a local host)', () => {
   );
 
   it.live(
+    'a process with an undelivered input reads as RUNNING, not the IDLE the host last reported',
+    Effect.fn(function* ({ expect }) {
+      // The host answers an input only once the turn it starts has settled (EDGE's process object does),
+      // so a command stays queued for the whole turn; held here to observe that window.
+      const release = yield* Deferred.make<void>();
+      const holdInputs = (control: RemoteProcessManager.Control): RemoteProcessManager.Control => ({
+        ...control,
+        submitInput: (target) => Deferred.await(release).pipe(Effect.andThen(control.submitInput(target))),
+      });
+      yield* withHarness(
+        ({ client }) =>
+          Effect.gen(function* () {
+            const { pid } = yield* client.spawn({ spaceId: SPACE, key: EchoProcess.key });
+            yield* client.drained;
+            expect((yield* client.status({ spaceId: SPACE, pid })).state).toEqual(Process.State.IDLE);
+
+            // A caller waiting for the turn to settle polls `status`: answered IDLE here, it would return
+            // before the input it just submitted had even reached the host.
+            yield* client.submitInput({ spaceId: SPACE, pid, input: 'one' });
+            expect((yield* client.status({ spaceId: SPACE, pid })).state).toEqual(Process.State.RUNNING);
+            expect((yield* client.list({ spaceId: SPACE })).map((info) => info.state)).toEqual([Process.State.RUNNING]);
+
+            yield* Deferred.succeed(release, undefined);
+            yield* client.drained;
+            expect((yield* client.status({ spaceId: SPACE, pid })).state).toEqual(Process.State.IDLE);
+          }),
+        { wrap: holdInputs },
+      );
+    }),
+  );
+
+  it.live(
     'a terminate is TERMINATING at once and drops the queued inputs behind it',
     Effect.fn(function* ({ expect }) {
       yield* withHarness(({ client, host, link }) =>
@@ -175,14 +209,13 @@ describe('queued remote control (e2e against a local host)', () => {
   );
 
   it.live(
-    'a process the host keeps rejecting does not hold up another process, and keeps its own commands',
+    'a process whose delivery keeps failing does not hold up another process, and keeps its own commands',
     Effect.fn(function* ({ expect }) {
       yield* withHarness(
         ({ client, host }) =>
           Effect.gen(function* () {
-            // The host hosts no such process, so every delivery for it is rejected — the failure an
-            // outage cannot be told apart from, and the one that must not become head-of-line.
-            const doomed = yield* client.spawn({ spaceId: SPACE, key: 'test.not-hosted', name: 'doomed' });
+            // Every delivery for it fails the way an outage does, which must not become head-of-line.
+            const doomed = yield* client.spawn({ spaceId: SPACE, key: UNREACHABLE_KEY, name: 'doomed' });
             // Queued BEHIND it, for a different process.
             yield* client.spawn({ spaceId: SPACE, key: EchoProcess.key, name: 'other' });
 
@@ -206,8 +239,15 @@ describe('queued remote control (e2e against a local host)', () => {
             // The other process is untouched by any of this — it is on the host and stays there.
             expect((yield* client.list({ spaceId: SPACE })).map((info) => info.params.name)).toEqual(['other']);
           }),
-        // Fast backoff so the losing process cycles quickly; nothing here depends on its timing.
-        { backoff: { initial: Duration.millis(1), max: Duration.millis(5) } },
+        {
+          // Fast backoff so the losing process cycles quickly; nothing here depends on its timing.
+          backoff: { initial: Duration.millis(1), max: Duration.millis(5) },
+          wrap: (control) => ({
+            ...control,
+            spawn: (request) =>
+              request.key === UNREACHABLE_KEY ? Effect.die(new Error('host unavailable')) : control.spawn(request),
+          }),
+        },
       );
     }),
   );
@@ -302,6 +342,33 @@ describe('queued remote control (e2e against a local host)', () => {
   );
 
   it.live(
+    'a spawn the host rejects fails the process instead of retrying it forever',
+    Effect.fn(function* ({ expect }) {
+      yield* withHarness(({ client, host }) =>
+        Effect.gen(function* () {
+          const { pid } = yield* client.spawn({ spaceId: SPACE, key: 'test.not-hosted' });
+          // Drains only because the refusal settled the spawn: a retried one would stay queued.
+          yield* client.drained;
+          expect((yield* client.status({ spaceId: SPACE, pid })).state).toEqual(Process.State.FAILED);
+
+          // Every read reports the host's reason, which is what a caller waiting on the process surfaces.
+          const status = yield* client.status({ spaceId: SPACE, pid });
+          expect(status.error?.message).toContain("does not host process 'test.not-hosted'");
+          const page = yield* client.readEvents({ spaceId: SPACE, pid, cursor: 0 });
+          expect(page.snapshot.state).toEqual(Process.State.FAILED);
+
+          // Nothing is left to retry, and an input for the failed process is refused rather than queued.
+          expect(yield* client.pending).toEqual([]);
+          const input = yield* client.submitInput({ spaceId: SPACE, pid, input: 'late' }).pipe(Effect.exit);
+          expect(Exit.isFailure(input)).toEqual(true);
+          expect(yield* client.pending).toEqual([]);
+          expect(yield* host.list({ spaceId: SPACE })).toEqual([]);
+        }),
+      );
+    }),
+  );
+
+  it.live(
     'the client manager built over the queue spawns and streams through it',
     Effect.fn(function* ({ expect }) {
       // The whole client stack — `makeControlVerbs` + `RemoteProcessHandle` — over the queued control,
@@ -325,23 +392,31 @@ describe('queued remote control (e2e against a local host)', () => {
 
 const SPACE = SpaceId.random();
 
+/** A process key whose spawn the harness fails as an outage would, rather than as a refusal. */
+const UNREACHABLE_KEY = 'test.unreachable';
+
 /** Long enough that only `connected` can end it — which is what makes the signal the thing under test. */
 const BACKOFF = { initial: Duration.seconds(30), max: Duration.seconds(30) };
 
 /** Echoes each input back as an output; the only part of a definition the remote path uses. */
-const EchoProcess = Process.make(
-  { key: 'test.queued-echo', input: Schema.String, output: Schema.String, services: [] },
-  (ctx) =>
+const EchoProcess = Operation.makeDurable({
+  key: 'test.queued-echo',
+  input: Schema.String,
+  output: Schema.String,
+  services: [],
+}).pipe(
+  Operation.withDurableHandler((ctx) =>
     Effect.succeed({
       onSpawn: () => Effect.void,
       onInput: (input: string) => Effect.sync(() => ctx.submitOutput(`echo:${input}`)),
       onAlarm: () => Effect.void,
       onChildEvent: () => Effect.void,
     }),
+  ),
 );
 
 const tree = (registry: Registry.AtomRegistry) => {
-  const atom = Atom.make<readonly Process.Info[]>([]);
+  const atom = Atom.make<readonly Process.Process[]>([]);
   registry.mount(atom);
   return atom;
 };
@@ -377,7 +452,11 @@ interface Harness {
  */
 const withHarness = (
   body: (harness: Harness) => Effect.Effect<void, never, Registry.AtomRegistry | Scope.Scope>,
-  options: { backoff?: QueuedRemoteControl.Backoff } = {},
+  options: {
+    backoff?: QueuedRemoteControl.Backoff;
+    /** Interposes on the channel between the client and the host. */
+    wrap?: (control: RemoteProcessManager.Control) => RemoteProcessManager.Control;
+  } = {},
 ) =>
   Effect.gen(function* () {
     const registry = yield* Registry.AtomRegistry;
@@ -402,7 +481,7 @@ const withHarness = (
     const clients = yield* Scope.make();
     const makeClient = (kvStore: KeyValueStore.KeyValueStore) =>
       QueuedRemoteControl.make({
-        control,
+        control: options.wrap?.(control) ?? control,
         kvStore,
         backoff: options.backoff ?? BACKOFF,
       }).pipe(Effect.provideService(Scope.Scope, clients));

@@ -8,7 +8,7 @@ import * as HttpClientResponse from 'effect/http/HttpClientResponse';
 import * as Layer from 'effect/Layer';
 import { describe, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { makeRepositoryBackend } from './repository-backend.ts';
 import { RepositoryClient } from './RepositoryClient.ts';

@@ -50,6 +50,10 @@ describe('channelVariant', () => {
     expect(channelVariant('build', 'staging')).toEqual('staging');
   });
 
+  test('the TestFlight build wears the dev mark it ships from', ({ expect }) => {
+    expect(channelVariant('build', 'testflight')).toEqual('dev');
+  });
+
   test('an environment with no artwork fails the build rather than shipping the released mark', ({ expect }) => {
     expect(() => channelVariant('build', 'labs')).toThrow(/unknown environment: labs/);
   });

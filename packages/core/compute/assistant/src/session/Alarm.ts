@@ -25,6 +25,12 @@ export class Alarm extends Type.makeObject<Alarm>(DXN.make('org.dxos.type.alarm'
   }),
 ) {}
 
+/**
+ * Most alarms that may wake the agent in a row without a user prompt between them; each wake is a full turn over the
+ * whole context, so an agent polling on alarms would otherwise spend without bound.
+ */
+export const MAX_SELF_WAKES = 10;
+
 export type MakeProps = {
   wakeAt: number;
   message?: string;

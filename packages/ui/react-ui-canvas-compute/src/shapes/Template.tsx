@@ -8,24 +8,25 @@ import React, { useRef } from 'react';
 import { ComputeValueType, getTemplateInputSchema } from '@dxos/conductor';
 import * as JsonSchema from '@dxos/echo/JsonSchema';
 import { invariant } from '@dxos/invariant';
+
+import { useComputeNodeState } from '../hooks/index.ts';
 import {
-  type ShapeComponentProps,
+  Box,
+  type ComputeNodeViewProps,
   TextBox,
   type TextBoxControl,
   type TextBoxProps,
-} from '@dxos/react-ui-canvas-editor';
-
-import { useComputeNodeState } from '../hooks/index.ts';
-import { Box, TypeSelect } from './common/index.ts';
+  TypeSelect,
+} from './common/index.ts';
 import { type TemplateShape } from './template-def.ts';
 
 //
 // Component
 //
 
-type TextInputComponentProps = ShapeComponentProps<TemplateShape> & TextBoxProps & { title?: string };
+type TextInputComponentProps = ComputeNodeViewProps<TemplateShape> & Pick<TextBoxProps, 'placeholder'>;
 
-const TextInputComponent = ({ shape, title, ...props }: TextInputComponentProps) => {
+const TextInputComponent = ({ node: shape, placeholder }: TextInputComponentProps) => {
   const { node } = useComputeNodeState(shape);
   const inputRef = useRef<TextBoxControl>(null);
 
@@ -53,7 +54,7 @@ const TextInputComponent = ({ shape, title, ...props }: TextInputComponentProps)
       status={<TypeSelect value={node.valueType ?? 'string'} onValueChange={handleTypeChange} />}
     >
       <TextBox
-        {...props}
+        placeholder={placeholder}
         ref={inputRef}
         value={node.value}
         language={node.valueType === 'object' ? 'json' : undefined}
@@ -64,6 +65,6 @@ const TextInputComponent = ({ shape, title, ...props }: TextInputComponentProps)
   );
 };
 
-export const TemplateComponent = (props: ShapeComponentProps<TemplateShape>) => (
+export const TemplateComponent = (props: ComputeNodeViewProps<TemplateShape>) => (
   <TextInputComponent {...props} placeholder={'Prompt'} />
 );

@@ -16,6 +16,7 @@ import * as Ref from 'effect/Ref';
 import * as Stream from 'effect/Stream';
 
 import * as AiService from '../AiService.ts';
+import * as AiTelemetry from '../AiTelemetry.ts';
 
 //
 // A deterministic, offline `LanguageModel` whose output is scripted rather than generated.
@@ -350,12 +351,12 @@ export const __testing = {
 
 /** A {@link LanguageModel.LanguageModel} layer backed by the scripted model. */
 export const layer = (script: Script): Layer.Layer<LanguageModel.LanguageModel> =>
-  Layer.effect(LanguageModel.LanguageModel, makeScriptedLanguageModel(script));
+  Layer.effect(LanguageModel.LanguageModel, Effect.map(makeScriptedLanguageModel(script), AiTelemetry.markRequests));
 
 // A single shared model memo per script: sessions in separate processes each call `languageModel()`,
 // and separate model instances would each start their script from turn zero.
 const sharedModel = (script: Script): AiService.LanguageModelResolver => {
-  const model = Effect.runSync(Effect.cached(makeScriptedLanguageModel(script)));
+  const model = Effect.runSync(Effect.cached(Effect.map(makeScriptedLanguageModel(script), AiTelemetry.markRequests)));
   return () => Layer.effect(LanguageModel.LanguageModel, model);
 };
 

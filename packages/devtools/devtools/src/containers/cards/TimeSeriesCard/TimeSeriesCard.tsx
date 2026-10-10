@@ -100,7 +100,7 @@ export const TimeSeriesCard = () => {
   return (
     <StatCard.Root>
       <StatCard.Header icon='ph--clock-countdown--regular' hue={STAT_CARD_HUES.ui} title='Frame rate' />
-      <StatCard.Content classNames='relative h-[160px]'>
+      <StatCard.Content full classNames='relative h-[160px]'>
         <canvas ref={canvasRef} />
       </StatCard.Content>
     </StatCard.Root>

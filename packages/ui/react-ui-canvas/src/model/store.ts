@@ -10,7 +10,7 @@
 import * as Atom from 'effect/reactivity/Atom';
 import type * as Registry from 'effect/reactivity/AtomRegistry';
 
-import { type Scene, type SceneId } from './types.ts';
+import { type Scene, type SceneId, type StyleMap } from './types.ts';
 
 export type SceneMap = Readonly<Record<SceneId, Scene>>;
 
@@ -19,13 +19,20 @@ export type SceneStore = {
   readonly scenes: Atom.Writable<SceneMap>;
   /** Derived atom for one scene; stable per id so subscriptions do not churn. */
   scene: (id: SceneId) => Atom.Atom<Scene | undefined>;
+  /** The drawing's style classes; a store without them offers none. */
+  readonly styles?: Atom.Writable<StyleMap>;
 };
 
-export const createMemoryStore = (initial: readonly Scene[] = []): SceneStore => {
+/** A store held in memory, which always keeps style classes. */
+export type MemorySceneStore = SceneStore & { readonly styles: Atom.Writable<StyleMap> };
+
+export const createMemoryStore = (initial: readonly Scene[] = [], initialStyles: StyleMap = {}): MemorySceneStore => {
+  const styles = Atom.keepAlive(Atom.make<StyleMap>(initialStyles));
   const scenes = Atom.keepAlive(Atom.make<SceneMap>(Object.fromEntries(initial.map((scene) => [scene.id, scene]))));
   const derived = new Map<SceneId, Atom.Atom<Scene | undefined>>();
   return {
     scenes,
+    styles,
     scene: (id) => {
       let atom = derived.get(id);
       if (!atom) {
@@ -58,3 +65,6 @@ export const updateScene = (
 export const putScene = (registry: Registry.AtomRegistry, store: SceneStore, scene: Scene): void => {
   registry.set(store.scenes, { ...registry.get(store.scenes), [scene.id]: scene });
 };
+
+/** No classes: what a store without `styles` reads as. */
+export const NO_STYLES: Atom.Atom<StyleMap> = Atom.keepAlive(Atom.make<StyleMap>({}));

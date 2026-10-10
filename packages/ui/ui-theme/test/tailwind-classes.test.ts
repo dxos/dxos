@@ -71,7 +71,7 @@ describe('tailwind classes', () => {
   });
 
   test('custom theme tokens resolve', ({ expect }) => {
-    expect(isValidClass('text-subdued')).toBe(true);
+    expect(isValidClass('text-fg-subtle')).toBe(true);
   });
 
   test('hue/role tokens resolve', ({ expect }) => {

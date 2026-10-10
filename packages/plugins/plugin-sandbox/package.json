@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-sandbox",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "private": true,
   "description": "DXOS Sandbox plugin for running isolated shell environments",
   "homepage": "https://dxos.org",
@@ -11,7 +11,7 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#capabilities": {
@@ -79,47 +79,12 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./package.json": "./package.json",
-    "./Sandbox": {
-      "source": "./src/types/Sandbox.ts",
-      "types": "./dist/types/src/types/Sandbox.d.ts",
-      "import": "./dist/lib/Sandbox.mjs"
-    },
-    "./SandboxEvents": {
-      "source": "./src/types/SandboxEvents.ts",
-      "types": "./dist/types/src/types/SandboxEvents.d.ts",
-      "import": "./dist/lib/SandboxEvents.mjs"
-    },
-    "./SandboxPlugin": {
-      "source": "./src/SandboxPlugin.ts",
-      "types": "./dist/types/src/SandboxPlugin.d.ts",
-      "import": "./dist/lib/SandboxPlugin.mjs"
-    },
-    "./SandboxOperation": {
-      "source": "./src/types/SandboxOperation.ts",
-      "types": "./dist/types/src/types/SandboxOperation.d.ts",
-      "import": "./dist/lib/SandboxOperation.mjs"
-    },
-    "./SandboxService": {
-      "source": "./src/types/SandboxService.ts",
-      "types": "./dist/types/src/types/SandboxService.d.ts",
-      "import": "./dist/lib/SandboxService.mjs"
-    },
-    "./SandboxCapabilities": {
-      "source": "./src/types/SandboxCapabilities.ts",
-      "types": "./dist/types/src/types/SandboxCapabilities.d.ts",
-      "import": "./dist/lib/SandboxCapabilities.mjs"
-    },
-    "./Settings": {
-      "source": "./src/types/Settings.ts",
-      "types": "./dist/types/src/types/Settings.d.ts",
-      "import": "./dist/lib/Settings.mjs"
-    },
     "./HttpBackend": {
       "source": "./src/services/HttpBackend.ts",
       "types": "./dist/types/src/services/HttpBackend.d.ts",
       "import": "./dist/lib/HttpBackend.mjs"
     },
+    "./package.json": "./package.json",
     "./Repository": {
       "source": "./src/types/Repository.ts",
       "types": "./dist/types/src/types/Repository.d.ts",
@@ -134,6 +99,46 @@
       "source": "./src/types/RepositoryService.ts",
       "types": "./dist/types/src/types/RepositoryService.d.ts",
       "import": "./dist/lib/RepositoryService.mjs"
+    },
+    "./Sandbox": {
+      "source": "./src/types/Sandbox.ts",
+      "types": "./dist/types/src/types/Sandbox.d.ts",
+      "import": "./dist/lib/Sandbox.mjs"
+    },
+    "./SandboxCapabilities": {
+      "source": "./src/types/SandboxCapabilities.ts",
+      "types": "./dist/types/src/types/SandboxCapabilities.d.ts",
+      "import": "./dist/lib/SandboxCapabilities.mjs"
+    },
+    "./SandboxEvents": {
+      "source": "./src/types/SandboxEvents.ts",
+      "types": "./dist/types/src/types/SandboxEvents.d.ts",
+      "import": "./dist/lib/SandboxEvents.mjs"
+    },
+    "./SandboxOperation": {
+      "source": "./src/types/SandboxOperation.ts",
+      "types": "./dist/types/src/types/SandboxOperation.d.ts",
+      "import": "./dist/lib/SandboxOperation.mjs"
+    },
+    "./SandboxPlugin": {
+      "source": "./src/SandboxPlugin.ts",
+      "types": "./dist/types/src/SandboxPlugin.d.ts",
+      "import": "./dist/lib/SandboxPlugin.mjs"
+    },
+    "./SandboxService": {
+      "source": "./src/types/SandboxService.ts",
+      "types": "./dist/types/src/types/SandboxService.d.ts",
+      "import": "./dist/lib/SandboxService.mjs"
+    },
+    "./SandboxSkill": {
+      "source": "./src/skills/SandboxSkill.ts",
+      "types": "./dist/types/src/skills/SandboxSkill.d.ts",
+      "import": "./dist/lib/ns/SandboxSkill.mjs"
+    },
+    "./Settings": {
+      "source": "./src/types/Settings.ts",
+      "types": "./dist/types/src/types/Settings.d.ts",
+      "import": "./dist/lib/Settings.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

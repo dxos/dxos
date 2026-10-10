@@ -212,6 +212,11 @@ outlines, sheets, contacts, …), distinct from its tasks and its outline.
   import the PR with `github-import-pull-request` (its URL, or `owner/repo#number`), and attach the
   returned `pullRequest` reference with `tasks-add-artifact { task, object }`. Import as soon as
   the PR exists, not when it merges; importing again returns the same object.
+- **Attach the PR to the task it implements.** A PR covering a whole tree goes on its root; a PR
+  that fixes one sub-task goes on that sub-task, even when the root already has its own PR. A
+  task holds one open PR at a time: a second, different open PR on the same task is refused —
+  attach it to the sub-task it fixes (create one if needed), never paste its URL into a
+  description instead.
 - **When the change has a visual side** (UI, layout, rendering), capture screenshots or a short
   screen recording, upload each with the File skill (`createUpload`, the returned `curl`, then
   `file-create-from-upload`), and attach the resulting `File` to the task with
@@ -356,9 +361,9 @@ spaceId }`. Report the new project id.
 6. **A follow-up you discover mid-task is a task, never a chip** — record it with `tasks-create`
    (`/project track`). `spawn` is the one sanctioned use of a chip, and it only ever acts on a
    task already recorded in the ledger.
-7. **A task with sub-tasks is one unit of work** — claim, branch and open the PR for the ROOT task,
-   never a lone sub-task; the PR covers every sub-task, and is attached to the root
-   (`tasks-add-artifact` redirects it there). Claiming or starting any task claims its whole tree.
+7. **A task with sub-tasks is one unit of work** — claim the ROOT task; claiming or starting any
+   task claims its whole tree. One PR for the whole tree goes on the root; a sub-task fixed by its
+   own PR carries that PR (see "Artifacts").
 
 ## Common mistakes
 

@@ -7,9 +7,9 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 import { expect, screen, userEvent, within } from 'storybook/test';
 
+import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
@@ -19,7 +19,7 @@ import * as Calendar from '@dxos/plugin-inbox/Calendar';
 import * as InboxPlugin from '@dxos/plugin-inbox/InboxPlugin';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import * as TranscriptionPlugin from '@dxos/plugin-transcription/TranscriptionPlugin';
 import { Config } from '@dxos/react-client';
@@ -85,7 +85,7 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager<StoryArgs>(({ args }) => ({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: [
             Feed.Feed,

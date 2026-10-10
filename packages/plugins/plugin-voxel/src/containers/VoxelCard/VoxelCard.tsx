@@ -4,8 +4,8 @@
 
 import React, { useMemo } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Card } from '@dxos/react-ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as Card from '@dxos/react-ui/Card';
 
 import { VoxelEditor } from '#components';
 import { Voxel } from '#types';

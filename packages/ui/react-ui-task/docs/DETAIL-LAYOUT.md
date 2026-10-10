@@ -205,25 +205,15 @@ All five steps landed; the notes below are the places where building it moved th
 
 ## Step 5, as it actually happened
 
-The plan was a `Form.Layout` over the `Task` schema. What landed is `TaskEditor` — the title and the
-description, and nothing else — because the premise changed while steps 1 to 4 were built: the
-pane's status, priority and estimate became `TaskProperties`, menu rows with a glyph and a value,
-which a form would have rendered as three selects. That left the form covering exactly two fields,
-and those two are the least form-like in the pane: a held-open markdown editor with host-contributed
-extensions, and a title that commits on blur.
+The title and description are a `Form` over the `Task` schema in `TaskArticle`, filtered to those two
+fields: the pane's status, priority and estimate are `TaskProperties` (menu rows with a glyph and a
+value), so the form covers exactly the two text fields. The description is the form's markdown field
+(`Task.description` carries the Markdown format), with the host's contributed editor extensions passed
+as `Form.Root`'s `markdownExtensions`. Fields commit on blur (and the title on Enter), through
+`TaskOperation.UpdateTask`, so a rename is one history entry.
 
-So the article mounts `TaskEditor` and no longer wraps anything in `TaskList.Root`. The Form version
-is still the right answer the day a field needs what a schema gives — `RefField` for the assignee's
-picker rather than the hand-rolled one, validation, a layout template — and that is the trigger to
-revisit it, not the layout.
-
-**Still duplicated:** `TaskEditor` and `TaskList.Editor` each implement the field logic (draft state,
-commit-on-blur, the per-task reset). Folding the strip's edit path into `TaskEditor` costs more than
-it removes today: the strip's create path renders the same two cells with an uncontrolled editor, and
-its Save and Cancel drive the description's imperative handle. `TaskEditor` is split into
-`Root`/`Title`/`Description` so the fold is cheap when the strip is next touched — and the cleaner
-end state may be deletion rather than delegation, if selecting a row stops editing inline and always
-opens the pane.
+**Still separate:** `TaskList.Editor` keeps its own fields — its create path, held-open description,
+Save/Cancel and file drop are the strip's, not a detail pane's.
 
 ## Migration
 

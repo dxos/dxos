@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, expect, test } from 'vitest';
 
 import { Filter, Obj, Type } from '@dxos/echo';
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { DXN } from '@dxos/keys';
 
 import { EchoTestBuilder } from '../testing/index.ts';

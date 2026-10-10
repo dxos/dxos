@@ -1,0 +1,514 @@
+{
+  "generated": "2026-10-01T14:58:37.174Z",
+  "paths": ["packages"],
+  "changed": [
+    "packages/devtools/devtools/src/components/ObjectsTree.tsx",
+    "packages/devtools/devtools/src/containers/panels/client/SqliteArticle/SqliteArticle.tsx",
+    "packages/plugins/plugin-assistant/src/capabilities/AssistantSurfaces.tsx",
+    "packages/plugins/plugin-assistant/src/components/Chat/ObjectCardWidget.tsx",
+    "packages/plugins/plugin-assistant/src/containers/IntegrationPrompt/IntegrationPrompt.tsx",
+    "packages/plugins/plugin-assistant/src/containers/PluginPrompt/PluginPrompt.tsx",
+    "packages/plugins/plugin-assistant/src/containers/PluginUrlPrompt/PluginUrlPrompt.tsx",
+    "packages/plugins/plugin-atproto/src/containers/PdsBrowser/PdsBrowser.tsx",
+    "packages/plugins/plugin-blogger/src/components/PostCard/PostCard.tsx",
+    "packages/plugins/plugin-bookmarks/src/containers/BookmarkCard/BookmarkCard.tsx",
+    "packages/plugins/plugin-client/src/containers/AccountContainer/AccountContainer.tsx",
+    "packages/plugins/plugin-client/src/containers/InvitationsContainer/InvitationsContainer.tsx",
+    "packages/plugins/plugin-commerce/src/containers/ResultCard/ResultCard.tsx",
+    "packages/plugins/plugin-crm/src/operations/EnrichImages.stories.tsx",
+    "packages/plugins/plugin-deck/src/components/FoldSpine/FoldSpine.tsx",
+    "packages/plugins/plugin-doctor/src/containers/DiagnosticsPanel/DiagnosticsPanel.tsx",
+    "packages/plugins/plugin-file/src/components/Preview/Preview.tsx",
+    "packages/plugins/plugin-github/src/cards/GitHubCard.tsx",
+    "packages/plugins/plugin-inbox/src/components/ConversationStack/ConversationStack.tsx",
+    "packages/plugins/plugin-inbox/src/components/InboxStack/InboxStack.tsx",
+    "packages/plugins/plugin-inbox/src/components/ObjectArticle/ObjectArticle.tsx",
+    "packages/plugins/plugin-inbox/src/containers/EditMessageArticle/EditMessageArticle.tsx",
+    "packages/plugins/plugin-iroh-beacon/src/components/BeaconStatusIndicator.tsx",
+    "packages/plugins/plugin-library/src/containers/BookArticle/BookInfo.tsx",
+    "packages/plugins/plugin-library/src/containers/BookArticle/BookReader.tsx",
+    "packages/plugins/plugin-magazine/src/components/PostStack/PostStack.tsx",
+    "packages/plugins/plugin-magazine/src/containers/FeedArticle/FeedArticle.stories.tsx",
+    "packages/plugins/plugin-magazine/src/containers/MagazineArticle/MagazineTile.tsx",
+    "packages/plugins/plugin-magazine/src/containers/PostCard/PostCard.tsx",
+    "packages/plugins/plugin-markdown/src/containers/MarkdownCard/MarkdownCard.tsx",
+    "packages/plugins/plugin-mobile/src/containers/MobileLayout/MobileMain.tsx",
+    "packages/plugins/plugin-navtree/src/components/Sidebar/L1Panel.tsx",
+    "packages/plugins/plugin-onboarding/src/components/AuthorizingDeviceDialog/AuthorizingDeviceDialog.tsx",
+    "packages/plugins/plugin-onboarding/src/containers/WelcomeContainer/Welcome/Welcome.tsx",
+    "packages/plugins/plugin-projects/src/components/ObjectCard/ObjectCard.tsx",
+    "packages/plugins/plugin-projects/src/containers/ProjectArticle/ProjectArticle.tsx",
+    "packages/plugins/plugin-routine/src/containers/SkillArticle/SkillArticle.tsx",
+    "packages/plugins/plugin-script/src/components/TestPanel/TestPanel.tsx",
+    "packages/plugins/plugin-script/src/containers/NotebookArticle/NotebookArticle.tsx",
+    "packages/plugins/plugin-script/src/containers/TestContainer/TestContainer.tsx",
+    "packages/plugins/plugin-space/src/components/CardMasonry/CardMasonry.tsx",
+    "packages/plugins/plugin-space/src/containers/ImportSpaceDialog/ImportSpaceDialog.tsx",
+    "packages/plugins/plugin-space/src/containers/SpaceSettingsContainer/SpaceSettingsContainer.tsx",
+    "packages/plugins/plugin-studio/src/components/GalleryImage/GalleryImage.tsx",
+    "packages/plugins/plugin-studio/src/containers/MediaArtifactArticle/MediaArtifactVariants.tsx",
+    "packages/plugins/plugin-tasks/src/containers/RemoteSessionCard/RemoteSessionCard.tsx",
+    "packages/plugins/plugin-template/src/components/TemplatePanel/TemplatePanel.tsx",
+    "packages/plugins/plugin-trip/src/components/OfferStack/OfferStack.tsx",
+    "packages/plugins/plugin-trip/src/containers/SegmentArticle/SegmentArticle.tsx",
+    "packages/plugins/plugin-video/src/components/Pending/Pending.tsx",
+    "packages/plugins/plugin-zen/src/containers/ZenArticle/ZenArticle.tsx",
+    "packages/stories/storybook-testing/src/modules/DatabaseModule.tsx",
+    "packages/ui/react-ui-assistant/src/components/MessageChrome/MessageChrome.tsx",
+    "packages/ui/react-ui-assistant/src/widgets/ToolWidget.tsx",
+    "packages/ui/react-ui-components/src/components/TogglePanel/TogglePanel.stories.tsx",
+    "packages/ui/react-ui-editor/src/stories/Widgets.stories.tsx",
+    "packages/ui/react-ui-feed/src/testing/widgets.tsx",
+    "packages/ui/react-ui-form/src/components/Form/FormField/FormField.tsx",
+    "packages/ui/react-ui-list/src/components/Listbox/ListItemContent.stories.tsx",
+    "packages/ui/react-ui-list/src/components/Listbox/Listbox.stories.tsx",
+    "packages/ui/react-ui-task/src/components/TaskList/TaskListEditor.tsx",
+    "packages/ui/react-ui-task/src/components/TaskList/TaskProperties.tsx",
+    "packages/ui/react-ui-task/src/components/TaskList/TaskRowCells.tsx",
+    "packages/ui/react-ui-task/src/components/TaskQuestion/TaskQuestion.tsx",
+    "packages/ui/react-ui-trace/src/components/ProcessTree/ProcessTree.tsx"
+  ],
+  "transforms": [
+    {
+      "transform": "classnames",
+      "filesScanned": 12375,
+      "filesChanged": 65,
+      "rules": {
+        "Icon shrink-0 dropped": 18,
+        "Input font-mono → variant='mono'": 2,
+        "Panel.Root dx-document → width='document'": 11,
+        "Card.Title line-clamp-1 → lines={1}": 1,
+        "Icon text-subdued → tone='subdued'": 10,
+        "Icon text-description → tone='description'": 7,
+        "Card.Title line-clamp-2 → lines={2}": 7,
+        "Icon text-success-text → valence='success'": 5,
+        "Card.Text text-description → variant='description'": 6,
+        "Icon animate-spin → spin": 9,
+        "Card.Text truncate → truncate": 1,
+        "Icon text-info-text → valence='info'": 1,
+        "Card.Title truncate → truncate": 3,
+        "Card.Title text-description → tone='description'": 2,
+        "Icon text-error-text → valence='error'": 2,
+        "Icon text-warning-text → valence='warning'": 2
+      },
+      "residue": [
+        {
+          "transform": "classnames",
+          "file": "packages/devtools/devtools/src/containers/panels/client/SqliteArticle/SqliteArticle.tsx",
+          "line": 278,
+          "column": 34,
+          "reason": "col-span-2 on Toolbar.Root: the prop exists only on other hosts",
+          "snippet": "'col-span-2'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/plugins/plugin-assistant/src/containers/AgentArticle/AgentArticle.tsx",
+          "line": 53,
+          "column": 34,
+          "reason": "dx-document on Toolbar.Root: the prop exists only on other hosts",
+          "snippet": "'dx-document'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/plugins/plugin-assistant/src/containers/AgentArticle/AgentArticle.tsx",
+          "line": 58,
+          "column": 30,
+          "reason": "dx-document on Panel.Body: the prop exists only on other hosts",
+          "snippet": "'dx-document'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/plugins/plugin-blogger/src/components/PostCard/PostCard.tsx",
+          "line": 66,
+          "column": 57,
+          "reason": "line-clamp-3 on Card.Text: the prop exists only on other hosts",
+          "snippet": "'line-clamp-3'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/plugins/plugin-bookmarks/src/containers/BookmarkCard/BookmarkCard.tsx",
+          "line": 36,
+          "column": 55,
+          "reason": "line-clamp-3 on Card.Text: the prop exists only on other hosts",
+          "snippet": "'line-clamp-3'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/plugins/plugin-chess/src/components/Chessboard/Info.tsx",
+          "line": 194,
+          "column": 62,
+          "reason": "text-error-text on Icon inside a computed classNames",
+          "snippet": "'text-error-text'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/plugins/plugin-chess/src/components/Chessboard/Info.tsx",
+          "line": 194,
+          "column": 82,
+          "reason": "text-success-text on Icon inside a computed classNames",
+          "snippet": "'text-success-text'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/plugins/plugin-debug/src/containers/SpaceGenerator/SpaceGenerator.tsx",
+          "line": 204,
+          "column": 45,
+          "reason": "dx-document on ScrollArea.Viewport: the prop exists only on other hosts",
+          "snippet": "'dx-document gap-4 divide-y divide-subdued-separator'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/plugins/plugin-github/src/cards/GitHubCard.tsx",
+          "line": 73,
+          "column": 33,
+          "reason": "line-clamp-3 on Card.Text: the prop exists only on other hosts",
+          "snippet": "'line-clamp-3 text-description'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/plugins/plugin-github/src/stories/Generate.stories.tsx",
+          "line": 109,
+          "column": 32,
+          "reason": "animate-spin on Icon inside a computed classNames",
+          "snippet": "'animate-spin'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/plugins/plugin-ibkr/src/containers/InstrumentCard/InstrumentCard.tsx",
+          "line": 29,
+          "column": 53,
+          "reason": "line-clamp-1 on Card.Text: the prop exists only on other hosts",
+          "snippet": "'line-clamp-1'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/plugins/plugin-inbox/src/components/ConversationStack/ConversationStack.tsx",
+          "line": 590,
+          "column": 28,
+          "reason": "line-clamp-2 on Collapsible.Trigger: the prop exists only on other hosts",
+          "snippet": "'line-clamp-2'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/plugins/plugin-inbox/src/components/EditMessage/EditMessage.tsx",
+          "line": 304,
+          "column": 30,
+          "reason": "col-span-3 on Input: the prop exists only on other hosts",
+          "snippet": "'col-span-3'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/plugins/plugin-inbox/src/components/Event/EventDetails.tsx",
+          "line": 86,
+          "column": 33,
+          "reason": "line-clamp-2 on Card.Text: the prop exists only on other hosts",
+          "snippet": "'text-lg line-clamp-2'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/plugins/plugin-inbox/src/components/Header/Header.stories.tsx",
+          "line": 62,
+          "column": 33,
+          "reason": "line-clamp-2 on Card.Text: the prop exists only on other hosts",
+          "snippet": "'text-lg line-clamp-2'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/plugins/plugin-inbox/src/containers/MessageCard/MessageCard.tsx",
+          "line": 22,
+          "column": 68,
+          "reason": "col-span-2 on Flex: the prop exists only on other hosts",
+          "snippet": "'col-span-2'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/plugins/plugin-inbox/src/containers/SubscriptionsArticle/SubscriptionsArticle.tsx",
+          "line": 165,
+          "column": 36,
+          "reason": "dx-document on Toolbar.Root: the prop exists only on other hosts",
+          "snippet": "'dx-document px-3'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/plugins/plugin-inbox/src/containers/SubscriptionsArticle/SubscriptionsArticle.tsx",
+          "line": 190,
+          "column": 47,
+          "reason": "dx-document on ScrollArea.Viewport: the prop exists only on other hosts",
+          "snippet": "'dx-document'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/plugins/plugin-iroh-beacon/src/components/BeaconStatusIndicator.tsx",
+          "line": 60,
+          "column": 97,
+          "reason": "text-description on Icon inside a computed classNames",
+          "snippet": "'text-description'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/plugins/plugin-iroh-beacon/src/components/BeaconStatusIndicator.tsx",
+          "line": 101,
+          "column": 69,
+          "reason": "text-description on Icon inside a computed classNames",
+          "snippet": "'text-description'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/plugins/plugin-library/src/containers/BookArticle/BookInfo.tsx",
+          "line": 241,
+          "column": 61,
+          "reason": "text-subdued on Icon inside a computed classNames",
+          "snippet": "'text-subdued'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/plugins/plugin-lingo/src/components/WordList/WordList.tsx",
+          "line": 82,
+          "column": 58,
+          "reason": "text-subdued on Icon inside a computed classNames",
+          "snippet": "'text-subdued'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/plugins/plugin-magazine/src/containers/MagazineArticle/MagazineTile.tsx",
+          "line": 69,
+          "column": 59,
+          "reason": "line-clamp-3 on Card.Text: the prop exists only on other hosts",
+          "snippet": "'line-clamp-3'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/plugins/plugin-magazine/src/containers/PostCard/PostCard.tsx",
+          "line": 54,
+          "column": 55,
+          "reason": "line-clamp-3 on Card.Text: the prop exists only on other hosts",
+          "snippet": "'line-clamp-3'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/plugins/plugin-registry/src/components/PluginDetail/PluginDetail.tsx",
+          "line": 170,
+          "column": 24,
+          "reason": "dx-document on Grid: the prop exists only on other hosts",
+          "snippet": "'dx-document gap-x-4 p-4'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/plugins/plugin-registry/src/components/PluginDetail/PluginDetail.tsx",
+          "line": 181,
+          "column": 26,
+          "reason": "col-span-2 on Grid: the prop exists only on other hosts",
+          "snippet": "'row-start-1 col-start-2 col-span-2 gap-x-3 w-full pt-1'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/plugins/plugin-review/src/containers/CommentsArticle/CommentsArticle.tsx",
+          "line": 79,
+          "column": 31,
+          "reason": "col-span-3 on Card.Root: the prop exists only on other hosts",
+          "snippet": "'grid col-span-3 py-1 pr-4'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/plugins/plugin-review/src/containers/ObjectHistory/ObjectHistory.tsx",
+          "line": 182,
+          "column": 34,
+          "reason": "dx-document on Toolbar.Root: the prop exists only on other hosts",
+          "snippet": "'dx-document'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/plugins/plugin-routine/src/components/RoutineCard/RoutineCard.tsx",
+          "line": 39,
+          "column": 53,
+          "reason": "line-clamp-2 on Card.Text: the prop exists only on other hosts",
+          "snippet": "'line-clamp-2'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/plugins/plugin-space/src/containers/DefaultProperties/DefaultProperties.tsx",
+          "line": 66,
+          "column": 36,
+          "reason": "dx-document on Toolbar.Root: the prop exists only on other hosts",
+          "snippet": "'dx-document'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/plugins/plugin-space/src/containers/SpaceHomeArticle/SpaceHomeArticle.tsx",
+          "line": 52,
+          "column": 48,
+          "reason": "dx-document on Flex: the prop exists only on other hosts",
+          "snippet": "'dx-document pb-trim-2xl'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/plugins/plugin-space/src/containers/SpaceHomeArticle/SpaceHomeArticle.tsx",
+          "line": 57,
+          "column": 37,
+          "reason": "dx-document on Column.Center: the prop exists only on other hosts",
+          "snippet": "'dx-document pb-4'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/plugins/plugin-space/src/containers/SyncStatus/SyncStatus.tsx",
+          "line": 84,
+          "column": 40,
+          "reason": "text-success-text on Icon inside a computed classNames",
+          "snippet": "'text-success-text'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/plugins/plugin-space/src/containers/SyncStatus/SyncStatus.tsx",
+          "line": 84,
+          "column": 62,
+          "reason": "text-error-text on Icon inside a computed classNames",
+          "snippet": "'text-error-text animate-pulse'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/plugins/plugin-stack/src/containers/StackArticle/StackArticle.tsx",
+          "line": 181,
+          "column": 34,
+          "reason": "dx-document on Toolbar.Root: the prop exists only on other hosts",
+          "snippet": "'dx-document'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/plugins/plugin-studio/src/containers/MediaArtifactArticle/MediaArtifactForm.tsx",
+          "line": 298,
+          "column": 30,
+          "reason": "dx-document on Panel.Body: the prop exists only on other hosts",
+          "snippet": "'grid grid-rows-[auto_1fr] dx-document overflow-hidden'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/plugins/plugin-tasks/src/containers/RemoteSessionCard/RemoteSessionCard.tsx",
+          "line": 96,
+          "column": 33,
+          "reason": "line-clamp-3 on Card.Text: the prop exists only on other hosts",
+          "snippet": "'line-clamp-3 text-description'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/plugins/plugin-tasks/src/containers/TaskArticle/TaskArticle.tsx",
+          "line": 77,
+          "column": 34,
+          "reason": "dx-document on Toolbar.Root: the prop exists only on other hosts",
+          "snippet": "'dx-document'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/plugins/plugin-tasks/src/containers/TaskArticle/TaskArticle.tsx",
+          "line": 86,
+          "column": 43,
+          "reason": "dx-document on ScrollArea.Viewport: the prop exists only on other hosts",
+          "snippet": "'dx-document'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/plugins/plugin-thread/src/components/MessageThread/MessageThread.tsx",
+          "line": 108,
+          "column": 31,
+          "reason": "col-span-3 on Card.Root: the prop exists only on other hosts",
+          "snippet": "'grid col-span-3 py-1 pr-4'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/ui/react-ui-canvas-compute/src/shapes/Audio.tsx",
+          "line": 26,
+          "column": 71,
+          "reason": "text-error-text on Icon inside a computed classNames",
+          "snippet": "'opacity-100 text-error-text'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/ui/react-ui-card/src/components/Row/Row.stories.tsx",
+          "line": 136,
+          "column": 35,
+          "reason": "line-clamp-2 on Card.Text: the prop exists only on other hosts",
+          "snippet": "'text-lg line-clamp-2'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/ui/react-ui-editor/src/stories/Folding.stories.tsx",
+          "line": 83,
+          "column": 34,
+          "reason": "dx-document on Toolbar.Root: the prop exists only on other hosts",
+          "snippet": "'dx-document'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/ui/react-ui-feed/src/components/MessageList/MessageList.tsx",
+          "line": 653,
+          "column": 22,
+          "reason": "dx-document on ScrollArea.Viewport: the prop exists only on other hosts",
+          "snippet": "'dx-document'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/ui/react-ui-menu/src/components/ActionMenu.tsx",
+          "line": 89,
+          "column": 52,
+          "reason": "animate-spin on Icon inside a computed classNames",
+          "snippet": "'animate-spin'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/ui/react-ui-syntax-highlighter/src/Syntax/Syntax.tsx",
+          "line": 165,
+          "column": 24,
+          "reason": "font-mono on Input: variant is already set",
+          "snippet": "'p-1 px-2 font-mono'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/ui/react-ui-task/src/components/TaskList/TaskProperties.tsx",
+          "line": 221,
+          "column": 62,
+          "reason": "text-description on Icon inside a computed classNames",
+          "snippet": "'text-description'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/ui/react-ui-thread/src/Thread/Thread.tsx",
+          "line": 394,
+          "column": 39,
+          "reason": "col-span-2 on ScrollArea.Root: the prop exists only on other hosts",
+          "snippet": "'col-span-2 dx-grow'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/ui/react-ui-trace/src/components/ProcessTree/ProcessTree.tsx",
+          "line": 161,
+          "column": 56,
+          "reason": "animate-spin on Icon inside a computed classNames",
+          "snippet": "'animate-spin'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/ui/react-ui-trace/src/components/ProcessTree/ProcessTree.tsx",
+          "line": 162,
+          "column": 55,
+          "reason": "text-error-text on Icon inside a computed classNames",
+          "snippet": "'text-error-text'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/ui/react-ui-trace/src/components/ProcessTree/ProcessTree.tsx",
+          "line": 163,
+          "column": 58,
+          "reason": "text-success-text on Icon inside a computed classNames",
+          "snippet": "'text-success-text'"
+        },
+        {
+          "transform": "classnames",
+          "file": "packages/ui/react-ui-trace/src/components/Timeline/Timeline.tsx",
+          "line": 454,
+          "column": 55,
+          "reason": "animate-spin on Icon inside a computed classNames",
+          "snippet": "'animate-spin'"
+        }
+      ]
+    }
+  ]
+}

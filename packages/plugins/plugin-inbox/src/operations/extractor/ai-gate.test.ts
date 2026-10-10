@@ -5,13 +5,13 @@
 import { describe, test } from 'vitest';
 
 import { AiService } from '@dxos/ai';
-import { ServiceNotAvailableError } from '@dxos/compute';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 
 import { isAiServiceUnavailable } from './ai-gate.ts';
 
 describe('isAiServiceUnavailable', () => {
   test('true for a ServiceNotAvailableError naming the AiService tag (structured context)', ({ expect }) => {
-    const error = new ServiceNotAvailableError(AiService.key);
+    const error = new ServiceResolver.ServiceNotAvailableError(AiService.key);
     expect(isAiServiceUnavailable(error)).toBe(true);
   });
 
@@ -25,7 +25,7 @@ describe('isAiServiceUnavailable', () => {
   });
 
   test('false for a ServiceNotAvailableError for a different service', ({ expect }) => {
-    const error = new ServiceNotAvailableError('@dxos/echo/Database');
+    const error = new ServiceResolver.ServiceNotAvailableError('@dxos/echo/Database');
     expect(isAiServiceUnavailable(error)).toBe(false);
   });
 

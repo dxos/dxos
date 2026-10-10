@@ -6,6 +6,7 @@ export * from './boot-reports.ts';
 export * from './config.ts';
 export * from './constants.ts';
 export * from './dev-rss-banner.ts';
+export * from './drag-region-focus.ts';
 export * from './halo.ts';
 export * from './log-download.ts';
 export * from './preload-recovery.ts';

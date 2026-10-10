@@ -56,6 +56,9 @@
       "path": "../../core/compute/compute"
     },
     {
+      "path": "../../core/compute/compute-runtime"
+    },
+    {
       "path": "../../core/compute/link"
     },
     {
@@ -69,6 +72,9 @@
     },
     {
       "path": "../../core/echo/echo-query"
+    },
+    {
+      "path": "../../plugins/plugin-agent"
     },
     {
       "path": "../../plugins/plugin-assistant"
@@ -155,6 +161,9 @@
       "path": "../../plugins/plugin-transcription"
     },
     {
+      "path": "../../plugins/plugin-uml"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
@@ -185,9 +194,6 @@
       "path": "../../ui/react-ui-chat"
     },
     {
-      "path": "../../ui/react-ui-components"
-    },
-    {
       "path": "../../ui/react-ui-debug"
     },
     {
@@ -201,6 +207,9 @@
     },
     {
       "path": "../../ui/react-ui-menu"
+    },
+    {
+      "path": "../../ui/react-ui-query"
     },
     {
       "path": "../../ui/react-ui-syntax-highlighter"

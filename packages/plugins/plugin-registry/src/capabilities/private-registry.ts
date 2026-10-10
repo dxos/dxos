@@ -5,9 +5,9 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { EdgeRegistryPluginProvider } from '@dxos/app-framework';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Registry from '@dxos/app-framework/Registry';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
@@ -29,7 +29,7 @@ export default Capability.makeModule(
     }
 
     // One provider per identity, so another identity's listings and caches never outlive a switch.
-    let current: { did: string; http: EdgeHttpClient; provider: EdgeRegistryPluginProvider } | undefined;
+    let current: { did: string; http: EdgeHttpClient; provider: Registry.EdgePluginProvider } | undefined;
     const unsubscribe = identityService.subscribe(() => {
       const edgeIdentity = identityService.getEdgeIdentity();
       const did = Option.isSome(edgeIdentity) ? edgeIdentity.value.identityDid : undefined;
@@ -46,7 +46,7 @@ export default Capability.makeModule(
       }
       const http = new EdgeHttpClient(edgeUrl);
       http.setIdentity(edgeIdentity.value);
-      current = { did, http, provider: new EdgeRegistryPluginProvider(http, { catalog: 'private' }) };
+      current = { did, http, provider: new Registry.EdgePluginProvider(http, { catalog: 'private' }) };
       manager.pluginRegistry.addProvider(current.provider);
     });
 

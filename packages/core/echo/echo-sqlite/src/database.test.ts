@@ -16,9 +16,9 @@ import { afterEach, beforeEach } from 'vitest';
 
 import { Annotation, Blob, Database, Entity, Filter, Obj, Order, Query, Ref, Relation, Tag, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN, SpaceId } from '@dxos/keys';
-import { SqlMigrations } from '@dxos/sql-sqlite';
+import * as SqlMigrations from '@dxos/sql-sqlite/SqlMigrations';
 
 import { type OpenOptions, SqliteDatabase } from './database.ts';
 import { UnsupportedOperationError, UnsupportedQueryError } from './errors.ts';

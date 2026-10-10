@@ -5,8 +5,8 @@
 import type * as Atom from 'effect/reactivity/Atom';
 import React from 'react';
 
-import { Panel } from '@dxos/react-ui';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { postReadAtom, postTagsAtom } from '#atoms';
 import { meta } from '#meta';
@@ -109,9 +109,9 @@ export const PostToolbar = ({
   );
 
   return (
-    <Panel.Toolbar asChild>
+    <Panel.Header>
       <ActionToolbar {...menuActions} attendableId={attendableId} />
-    </Panel.Toolbar>
+    </Panel.Header>
   );
 };
 

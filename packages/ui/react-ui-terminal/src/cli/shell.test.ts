@@ -7,7 +7,7 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import * as XtermContext from './context.ts';
 import { runShell } from './shell.ts';

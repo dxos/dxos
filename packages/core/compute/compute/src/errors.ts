@@ -67,6 +67,13 @@ export class InvalidOperationOutputError extends BaseError.extend(
 
 export class TriggerStateNotFoundError extends BaseError.extend('TriggerStateNotFound', 'Trigger state not found') {}
 
+/** A manual run was asked of a trigger that is switched off; nothing was dispatched. */
+export class TriggerDisabledError extends BaseError.extend('TriggerDisabledError', 'Trigger is disabled') {
+  constructor(triggerId: string) {
+    super({ context: { triggerId } });
+  }
+}
+
 /**
  * Raised when the upstream AI gateway responds with a structured JSON error envelope
  * (`{ "type": "error", "error": { "type": ..., "message": ... } }`). Surfaces as a typed

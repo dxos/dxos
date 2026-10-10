@@ -36,7 +36,20 @@ export const useSceneProjection = ({
   const path = useAtomValue(atoms.path);
   const sceneId = path[path.length - 1];
   return useMemo(
-    () => projection ?? withUndo(createProjection({ registry, store, sceneId }), registry, atoms.undo, sceneId),
-    [projection, createProjection, registry, store, sceneId, atoms.undo],
+    () =>
+      projection ??
+      withUndo(
+        createProjection({
+          registry,
+          store,
+          sceneId,
+          // Snap lands on the lattice only while both snap and the lattice toggle are on.
+          constrained: () => registry.get(atoms.snap) && registry.get(atoms.lattice),
+        }),
+        registry,
+        atoms.undo,
+        sceneId,
+      ),
+    [projection, createProjection, registry, store, sceneId, atoms.undo, atoms.snap, atoms.lattice],
   );
 };

@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { QueryAST } from '@dxos/echo-protocol';
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { DXN, PublicKey } from '@dxos/keys';
 
 import * as Annotation from './Annotation.ts';

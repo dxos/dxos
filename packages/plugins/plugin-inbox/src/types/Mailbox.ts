@@ -7,7 +7,6 @@ import * as Schema from 'effect/Schema';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Skill from '@dxos/compute/Skill';
 import { Annotation, type Database, DXN, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
-import { FormInputAnnotation } from '@dxos/echo/Annotation';
 import * as ConnectorAnnotations from '@dxos/plugin-connector/ConnectorAnnotations';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { FeedAnnotation, Tagging, TagIndex } from '@dxos/schema';
@@ -54,7 +53,7 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
     name: Schema.String.pipe(Schema.optional),
 
     /** The durable message log. Every pipeline in `docs/PIPELINE.md` reads from (or writes to) this. */
-    feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(), FormInputAnnotation.set(false)),
+    feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(), Annotation.FormInputAnnotation.set(false)),
 
     /**
      * Append-only feed of derived annotations about the messages in {@link feed} — summaries today
@@ -66,7 +65,11 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
      * old. The primary feed stays pure — no reader has to filter annotations out of the message list.
      * Provisioned lazily on first annotation, like {@link tags}.
      */
-    annotations: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(), FormInputAnnotation.set(false), Schema.optional),
+    annotations: Ref.Ref(Feed.Feed).pipe(
+      Annotation.SetParent.set(),
+      Annotation.FormInputAnnotation.set(false),
+      Schema.optional,
+    ),
 
     /**
      * Inverse tag index for immutable feed Messages: tag id (a `Tag` object's URI) → message ids.
@@ -75,7 +78,7 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
      * live in a child `TagIndex` object instead (the `meta.tags` augmentation for feed objects). Tag
      * labels and hues live on the `Tag` objects themselves.
      */
-    tags: Ref.Ref(TagIndex.TagIndex).pipe(Annotation.SetParent.set(), FormInputAnnotation.set(false)),
+    tags: Ref.Ref(TagIndex.TagIndex).pipe(Annotation.SetParent.set(), Annotation.FormInputAnnotation.set(false)),
 
     /**
      * Which contributed object extractors run over this mailbox, and the confidence a match must
@@ -84,7 +87,7 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
     extractors: Schema.Struct({
       enabled: Schema.Array(Schema.String),
       threshold: Schema.Number.pipe(Schema.check(Schema.isBetween({ minimum: 0, maximum: 1 }))),
-    }).pipe(FormInputAnnotation.set(false), Schema.optional),
+    }).pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
 
     /**
      * Provenance for extracted objects: message id → extracted object ids.
@@ -94,7 +97,7 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
      * are space-db objects resolved by id (`db.getObjectById`).
      */
     extracted: Schema.Record(Schema.String, Schema.Array(Schema.String)).pipe(
-      FormInputAnnotation.set(false),
+      Annotation.FormInputAnnotation.set(false),
       Schema.optional,
     ),
 
@@ -108,7 +111,7 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
      */
     // TODO(wittjosiah): Factor out to relation?
     filters: Schema.Array(Schema.Struct({ name: Schema.String, filter: Schema.String })).pipe(
-      FormInputAnnotation.set(false),
+      Annotation.FormInputAnnotation.set(false),
     ),
 
     /**
@@ -137,7 +140,7 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
      * Replaced wholesale each run — persisted derived state for the UI, never a source of truth,
      * which is why that pass must see every message and cannot take a feed cursor.
      */
-    subscriptions: Schema.Array(Subscription).pipe(FormInputAnnotation.set(false), Schema.optional),
+    subscriptions: Schema.Array(Subscription).pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
   }).pipe(
     FeedAnnotation.set({ property: 'feed' }),
     Annotation.IconAnnotation.set({ icon: 'ph--tray--regular', hue: 'rose' }),

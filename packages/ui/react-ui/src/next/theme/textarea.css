@@ -3,11 +3,11 @@
  */
 
 @layer dx-components {
-  .nx-textarea {
+  .dx-textarea {
     display: block;
     height: auto;
-    min-height: var(--nx-control-size);
-    padding-block: calc((var(--nx-control-size) - var(--nx-line-height)) / 2);
+    min-height: var(--dx-control-size);
+    padding-block: calc((var(--dx-control-size) - var(--dx-line-height)) / 2);
     resize: vertical;
   }
 }

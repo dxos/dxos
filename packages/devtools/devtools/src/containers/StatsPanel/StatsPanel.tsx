@@ -4,7 +4,12 @@
 
 import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
-import { Flex, Icon, IconButton, Panel, ScrollArea, Toggle, Toolbar } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 const LIVE_INTERVAL = 5_000;
 
@@ -28,11 +33,11 @@ export const StatsPanel = ({ children, role, onRefresh }: StatsPanelProps) => {
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           <Toolbar.Text>Stats</Toolbar.Text>
           <Toolbar.Separator variant='gap' />
-          <IconButton
+          <Button.Root
             iconOnly
             variant='ghost'
             icon='ph--arrow-clockwise--regular'
@@ -40,20 +45,20 @@ export const StatsPanel = ({ children, role, onRefresh }: StatsPanelProps) => {
             disabled={!onRefresh}
             onClick={onRefresh}
           />
-          <Toggle pressed={live} disabled={!onRefresh} onPressedChange={setLive}>
-            <Icon icon={live ? 'ph--pause--regular' : 'ph--play--regular'} />
-          </Toggle>
+          <Button.Toggle pressed={live} disabled={!onRefresh} onPressedChange={setLive}>
+            <Icon.Icon icon={live ? 'ph--pause--regular' : 'ph--play--regular'} />
+          </Button.Toggle>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content asChild>
-        <ScrollArea.Root thin>
+      </Panel.Header>
+      <Panel.Body asChild>
+        <ScrollArea.Root>
           <ScrollArea.Viewport classNames='p-2'>
-            <Flex column gap='sm'>
+            <Layout.Flex column gap='sm'>
               {children}
-            </Flex>
+            </Layout.Flex>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

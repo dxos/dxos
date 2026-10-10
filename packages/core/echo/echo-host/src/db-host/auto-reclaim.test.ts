@@ -12,7 +12,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
-import { RuntimeProvider } from '@dxos/effect';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { SpaceId } from '@dxos/keys';
 
 import { documentIdToSedimentreeIdHex } from '../automerge/index.ts';

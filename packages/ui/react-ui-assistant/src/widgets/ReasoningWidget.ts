@@ -38,7 +38,7 @@ export class ReasoningWidget extends WidgetType {
   override toDOM() {
     return Domino.of('div').append(
       Domino.of('div')
-        .classNames('relative overflow-hidden p-px border border-subdued-separator rounded-md')
+        .classNames('relative overflow-hidden p-px border border-separator-subtle rounded-md')
         .attributes({ 'data-trail-container': '' })
         .append(
           Domino.of('div')
@@ -56,9 +56,7 @@ export class ReasoningWidget extends WidgetType {
               // `items-start`, not centred: past `max-h` the box scrolls, and centred overflow puts
               // the first lines above the scroll origin where they cannot be reached.
               Domino.of('div')
-                .classNames(
-                  'flex items-start max-h-[5lh] overflow-y-auto dx-scrollbar-thin text-description tabular-nums',
-                )
+                .classNames('flex items-start max-h-[5lh] overflow-y-auto dx-scrollbar-thin text-fg-muted tabular-nums')
                 .text(this.text)
                 .attributes({ 'data-reasoning-text': '' }),
             ),

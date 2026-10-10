@@ -6,7 +6,7 @@ import { type Extension } from '@codemirror/state';
 import { useCallback, useMemo, useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { useOptionalCapability } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as CollaborationOperation from '@dxos/app-toolkit/CollaborationOperation';
 import { Obj } from '@dxos/echo';
 import { toCursorRange } from '@dxos/echo-client';
@@ -80,7 +80,7 @@ export const useReviewExtensions = ({
   // in suggest mode — and `branch` is the compare (author) branch key (`reviewBranch`).
   // Optional: every call site already guards `invokePromise?.` — accept/reject are simply inert in
   // hosts without an operation invoker (bare stories, headless scenario tests).
-  const invokePromise = useOptionalCapability(Capabilities.OperationInvoker)?.invokePromise;
+  const invokePromise = Hooks.useOptionalCapability(Capabilities.OperationInvoker)?.invokePromise;
   const handleAcceptChange = useCallback(
     (hunk: DiffHunk) => {
       const content = Obj.instanceOf(Markdown.Document, object) ? object.content?.target : undefined;

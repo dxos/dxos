@@ -4,8 +4,8 @@
 
 import React, { type PropsWithChildren, useCallback, useMemo } from 'react';
 
-import { Splitter } from '@dxos/react-ui';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
+import * as Splitter from '@dxos/react-ui/Splitter';
 
 import { DebugPanelContext, type DebugPanelContextValue } from './DebugPanelContext.ts';
 import { DebugPanelMain } from './DebugPanelMain.tsx';
@@ -55,7 +55,7 @@ const DebugPanelBody = () => (
     <Splitter.Panel position='start'>
       <DebugPanelSidebar />
     </Splitter.Panel>
-    <Splitter.Handle />
+    <Splitter.ResizeTrigger />
     <Splitter.Panel position='end'>
       <DebugPanelMain />
     </Splitter.Panel>

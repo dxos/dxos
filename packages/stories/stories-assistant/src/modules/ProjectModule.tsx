@@ -4,9 +4,10 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import * as Project from '@dxos/compute/Project';
 import { Filter } from '@dxos/echo';
 import { type Space, useQuery } from '@dxos/react-client/echo';
@@ -17,7 +18,7 @@ import { Loading } from '@dxos/react-ui/testing';
 const PROJECT_SETTLE_DELAY = 2_000;
 
 export const ProjectModule = () => {
-  const space = useActiveSpace();
+  const space = Hooks.useActiveSpace();
   if (!space) {
     return <Loading data={{ space: !!space }} />;
   }
@@ -42,7 +43,7 @@ const ProjectModuleContainer = ({ space }: { space: Space }) => {
 
   if (!project) {
     return settled ? (
-      <div className='grid place-items-center p-2 text-sm text-description'>
+      <div className='grid place-items-center p-2 text-sm text-fg-muted'>
         No project in {space.properties.name ?? space.id}.
       </div>
     ) : (

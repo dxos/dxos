@@ -53,20 +53,32 @@ describe('project skill operations', () => {
     }).pipe(Effect.provide(testLayer())),
   );
 
-  it.effect('artifact-add records a pull request made for a sub-task on the root of its tree', () =>
+  it.effect('artifact-add records a pull request on the sub-task it was made for', () =>
     Effect.gen(function* () {
       const project = yield* Database.add(Project.make({ name: 'Voyage' }));
       const child = yield* Database.add(Task.make({ title: 'Child' }));
       const root = yield* Database.add(Task.make({ title: 'Root', subtasks: [Ref.make(child)] }));
-      const pullRequest = yield* Database.add(
+      const rootPullRequest = yield* Database.add(
         PullRequest.make({ owner: 'dxos', repo: 'dxos', number: 1, title: 'Root', state: 'open' }),
+      );
+      const childPullRequest = yield* Database.add(
+        PullRequest.make({ owner: 'dxos', repo: 'dxos', number: 2, title: 'Child', state: 'open' }),
       );
       yield* Database.flush();
 
-      yield* artifactAdd.handler({ project: Ref.make(project), object: Ref.make(pullRequest), task: Ref.make(child) });
+      yield* artifactAdd.handler({
+        project: Ref.make(project),
+        object: Ref.make(rootPullRequest),
+        task: Ref.make(root),
+      });
+      yield* artifactAdd.handler({
+        project: Ref.make(project),
+        object: Ref.make(childPullRequest),
+        task: Ref.make(child),
+      });
 
-      expect(root.artifacts?.map((ref) => Task.refEntityId(ref))).toEqual([pullRequest.id]);
-      expect(child.artifacts ?? []).toHaveLength(0);
+      expect(root.artifacts?.map((ref) => Task.refEntityId(ref))).toEqual([rootPullRequest.id]);
+      expect(child.artifacts?.map((ref) => Task.refEntityId(ref))).toEqual([childPullRequest.id]);
     }).pipe(
       Effect.provide(
         TestDatabaseLayer({
@@ -76,11 +88,10 @@ describe('project skill operations', () => {
     ),
   );
 
-  it.effect('artifact-add leaves the project unchanged when the task tree already has another open PR', () =>
+  it.effect('artifact-add leaves the project unchanged when the task already has another open PR', () =>
     Effect.gen(function* () {
       const project = yield* Database.add(Project.make({ name: 'Voyage' }));
-      const child = yield* Database.add(Task.make({ title: 'Child' }));
-      const root = yield* Database.add(Task.make({ title: 'Root', subtasks: [Ref.make(child)] }));
+      const task = yield* Database.add(Task.make({ title: 'Task' }));
       const first = yield* Database.add(
         PullRequest.make({ owner: 'dxos', repo: 'dxos', number: 1, title: 'First', state: 'open' }),
       );
@@ -89,14 +100,14 @@ describe('project skill operations', () => {
       );
       yield* Database.flush();
 
-      yield* artifactAdd.handler({ project: Ref.make(project), object: Ref.make(first), task: Ref.make(root) });
+      yield* artifactAdd.handler({ project: Ref.make(project), object: Ref.make(first), task: Ref.make(task) });
       const error = yield* Effect.flip(
-        artifactAdd.handler({ project: Ref.make(project), object: Ref.make(second), task: Ref.make(child) }),
+        artifactAdd.handler({ project: Ref.make(project), object: Ref.make(second), task: Ref.make(task) }),
       );
 
       expect(error).toBeInstanceOf(Task.PullRequestConflictError);
       expect(project.artifacts.map((ref) => Task.refEntityId(ref))).toEqual([first.id]);
-      expect(root.artifacts?.map((ref) => Task.refEntityId(ref))).toEqual([first.id]);
+      expect(task.artifacts?.map((ref) => Task.refEntityId(ref))).toEqual([first.id]);
     }).pipe(
       Effect.provide(
         TestDatabaseLayer({

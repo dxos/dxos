@@ -6,6 +6,8 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    'ns/MailSync': 'src/MailSync.ts',
+    'ns/Containers': 'src/Containers.ts',
     'InboxSendSkill': 'src/skills/InboxSendSkill.ts',
     'InboxSkill': 'src/skills/InboxSkill.ts',
     'CalendarSkill': 'src/skills/CalendarSkill.ts',
@@ -48,5 +50,5 @@ export default defineConfig({
   // allocate Wasm memory for new instance`). Share the module graph across files instead.
   // The first story in a file pays the whole lazy module-load bill — tens of seconds, against a
   // couple for each story after it — which the 15s browser-mode default cannot cover.
-  test: { node: true, storybook: { isolate: false, timeout: 60_000 } },
+  test: { node: true, storybook: { isolate: false, timeout: 60_000 }, workerd: true },
 });

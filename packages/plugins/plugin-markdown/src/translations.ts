@@ -3,9 +3,9 @@
 //
 
 import { Type } from '@dxos/echo';
-import { type Resource } from '@dxos/react-ui';
 import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
 import { translations as editorTranslations } from '@dxos/react-ui-editor/translations';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
 import { Markdown } from '#types';
@@ -80,4 +80,4 @@ export const translations = [
   },
   ...editorTranslations,
   ...componentsTranslations,
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

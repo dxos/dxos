@@ -10,7 +10,7 @@ import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Skill from '@dxos/compute/Skill';
-import { Database, Feed, Obj, Type } from '@dxos/echo';
+import { Database, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
@@ -47,6 +47,34 @@ describe('Agent (0.2.0)', () => {
         // Compare by id: the two query paths may resolve distinct proxy instances.
         const linkedAgent = chat ? yield* Agent.loadForChat(chat) : undefined;
         expect(linkedAgent?.id).toBe(agent.id);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'loadChat skips chats bridged from an external conversation',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const agent = yield* Agent.makeInitialized(
+          { name: 'Test', instructions: 'Do the thing.' },
+          Skill.make({ key: 'org.dxos.test.skill', name: 'Test' }),
+        );
+        const primary = yield* Agent.loadChat(agent);
+
+        const feed = yield* Database.add(Feed.make());
+        yield* Database.add(
+          Chat.make({
+            [Obj.Meta]: { keys: [{ source: 'discord.com', id: 'thread-1' }] },
+            [Obj.Parent]: agent,
+            feed: Ref.make(feed),
+          }),
+        );
+        yield* Database.flush();
+
+        const chat = yield* Agent.loadChat(agent);
+        expect(chat?.id).toBe(primary?.id);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

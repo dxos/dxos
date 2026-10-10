@@ -6,7 +6,7 @@ import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
 import * as SchemaIssue from 'effect/SchemaIssue';
 
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 
 export type ValidationError = { path: string; message: string };
 

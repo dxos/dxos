@@ -19,5 +19,5 @@ import { tags } from '@lezer/highlight';
 export const diagramHighlightStyle = () =>
   HighlightStyle.define([
     { tag: tags.attributeValue, class: 'text-accent' },
-    { tag: tags.null, class: 'text-subdued' },
+    { tag: tags.null, class: 'text-fg-subtle' },
   ]);

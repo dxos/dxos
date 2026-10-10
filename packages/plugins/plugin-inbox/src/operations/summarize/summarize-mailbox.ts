@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
-import { PROGRESS_STATUS_COMPLETE, PROGRESS_STATUS_FAILED } from '@dxos/app-toolkit';
+import * as Progress from '@dxos/app-toolkit/Progress';
 import * as Cancellation from '@dxos/compute/Cancellation';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
@@ -228,7 +228,7 @@ const summarize = Effect.fnUntraced(function* (
     remaining,
   });
   reportStatus({
-    message: summarized_ === 0 && batch.length > 0 ? PROGRESS_STATUS_FAILED : PROGRESS_STATUS_COMPLETE,
+    message: summarized_ === 0 && batch.length > 0 ? Progress.STATUS_FAILED : Progress.STATUS_COMPLETE,
   });
 
   return { pending: candidates.length, summarized: summarized_, remaining };

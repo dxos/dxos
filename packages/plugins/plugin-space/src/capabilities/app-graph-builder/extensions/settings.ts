@@ -9,7 +9,7 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { meta } from '#meta';
 import { SpaceSchema } from '#types';

@@ -1,5 +1,40 @@
 # @dxos/react-ui
 
+## 0.13.0
+
+### Minor Changes
+
+- 321c99f: Every `@dxos/react-ui` component family is now a namespace module with its own subpath. A compound family exports its parts: `import * as Dialog from '@dxos/react-ui/Dialog'` gives `Dialog.Root`, `Dialog.Content` and `Dialog.RootProps`. A single component keeps its own names: `<Icon.Icon>`, `Icon.IconProps`. Related components share a namespace: `Button` (`Button.Root`, `Button.Toggle`, `Button.Menu`, `Button.Group`), `Input` (`Input.Root`, `Input.Textarea`, `Input.Number`, `Input.Password`, `Input.Pin`, `Input.Date`, `Input.Slider`, `Input.Frame`, `Input.Checkbox`, `Input.Switch`), `Layout` (`Layout.Flex`, `Layout.Grid`, `Layout.Container`, `Layout.Block`, `Layout.Separator`), `Status` (`Status.Empty`, `Status.Skeleton`, `Status.Deferred`, `Status.Error`, `Status.Progress`, `Status.Steps`), `Typography` (`Typography.Text`, `Typography.Link`, `Typography.Timestamp`, `Typography.Crawl`) and `Media` (`Media.Image`, `Media.Player`). `ThemeProvider` is now `Theme.Provider`. General hooks live in `@dxos/react-ui/Hooks` (`Hooks.useTranslation`) and composition helpers in `@dxos/react-ui/Util`. The root exports namespaces only, so `import { Dialog } from '@dxos/react-ui'` still works, but flat names such as `ButtonProps` and `useTranslation` are gone, and so are the `@dxos/ui-types` re-exports (import those from `@dxos/ui-types`).
+
+  `AttentionGlyph` moves from `@dxos/react-ui` to `@dxos/react-ui-attention`.
+
+### Patch Changes
+
+- d2a6aad: `AlertDialog` closes only through its own controls, and `AlertDialog.Root` no longer takes `closeOnInteractOutside` or `closeOnEscape`.
+- 7d222fc: - **Inbox conversation:** each message tile is a grid card, so the sender's avatar and the detail rows' icons (recipients, attachments, tags) share one start rail and every text starts at the same edge; the disclosure caret sits after the sender's name and the open/close animates.
+  - **Card.Section:** merges a `className` from an `asChild` parent, so `Collapsible.Content asChild` keeps its height animation; a collapsible on a section keeps the section's subgrid.
+  - **Card.Row:** `align='start'` centres the leading icon and trailing cell on the row's first line, for a title over a snippet.
+- 1b37aa8: The `Loading` testing component no longer crashes under a production React build, where `captureOwnerStack` is not exported.
+- 49731e1: Long lists of rows with differing heights can now be windowed: `useVirtualRows`, `Listbox` and `Tree` accept `virtual='measured'`, which mounts only the rows in view and measures each as it mounts. The task list uses it, so a project with hundreds of tasks no longer renders every row, and checking a task re-renders only the rows in view.
+
+  `Obj.getSnapshot` no longer throws and catches two errors for every non-relation object it snapshots.
+
+- Updated dependencies [cb1e218]
+- Updated dependencies [e99ee70]
+- Updated dependencies [1894fc1]
+  - @dxos/util@0.13.0
+  - @dxos/async@0.13.0
+  - @dxos/effect@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/react-focus@0.13.0
+  - @dxos/react-hooks@0.13.0
+  - @dxos/react-error-boundary@0.13.0
+  - @dxos/lit-ui@0.13.0
+  - @dxos/i18n@0.13.0
+  - @dxos/invariant@0.13.0
+  - @dxos/ui-theme@0.13.0
+  - @dxos/ui-types@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

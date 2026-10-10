@@ -13,7 +13,7 @@ import { translationKey } from '#translations';
 
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import { Button } from '../Button/index.ts';
+import { Button } from '../Button/Button.tsx';
 import { usePopupSize } from '../ScrollArea/PopupScroll.tsx';
 
 /** Months and years are laid out four to a row, as the current Calendar's pickers. */

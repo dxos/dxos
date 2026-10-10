@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Stream from 'effect/Stream';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { throwUnhandledError } from '@dxos/util';
 
 import { RpcClosedError, TimeoutError } from './errors/index.ts';

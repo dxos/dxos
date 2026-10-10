@@ -53,7 +53,8 @@ export const diffProcessCpu = (before: ProcessCpu, after: ProcessCpu): ProcessCp
   return { totalMs, byProcess };
 };
 
-const EMPTY_THREAD: ThreadMetrics = {
+/** A page with no `Performance` reading, or a realm without the domain. */
+export const EMPTY_THREAD: ThreadMetrics = {
   taskMs: 0,
   scriptMs: 0,
   layoutMs: 0,
@@ -63,6 +64,10 @@ const EMPTY_THREAD: ThreadMetrics = {
   processTimeMs: 0,
   layoutCount: 0,
   recalcStyleCount: 0,
+  taskOtherMs: 0,
+  devToolsCommandMs: 0,
+  layoutObjects: 0,
+  frames: 0,
 };
 
 /**
@@ -125,6 +130,10 @@ export const readThreadMetrics = async (target: Attached): Promise<ThreadMetrics
     processTimeMs: toMs(byName.get('ProcessTime')),
     layoutCount: byName.get('LayoutCount') ?? 0,
     recalcStyleCount: byName.get('RecalcStyleCount') ?? 0,
+    taskOtherMs: toMs(byName.get('TaskOtherDuration')),
+    devToolsCommandMs: toMs(byName.get('DevToolsCommandDuration')),
+    layoutObjects: byName.get('LayoutObjects') ?? 0,
+    frames: byName.get('Frames') ?? 0,
   };
 };
 
@@ -145,4 +154,9 @@ export const diffThreadMetrics = (before: ThreadMetrics, after: ThreadMetrics): 
   processTimeMs: after.processTimeMs - before.processTimeMs,
   layoutCount: after.layoutCount - before.layoutCount,
   recalcStyleCount: after.recalcStyleCount - before.recalcStyleCount,
+  taskOtherMs: after.taskOtherMs - before.taskOtherMs,
+  devToolsCommandMs: after.devToolsCommandMs - before.devToolsCommandMs,
+  // Levels, so the stage's end is the reading; their delta would be the render tree's growth.
+  layoutObjects: after.layoutObjects,
+  frames: after.frames,
 });

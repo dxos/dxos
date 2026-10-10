@@ -166,7 +166,7 @@ class TimestampMarker extends GutterMarker {
 
   override toDOM(view: EditorView) {
     const el = document.createElement('div');
-    el.className = 'text-sm text-subdued hover:bg-hover-surface cursor-pointer';
+    el.className = 'text-sm text-fg-subtle hover:bg-hover-surface cursor-pointer';
     el.textContent = formatTimestamp(this._timestamp, this._started);
     // TODO(burdon): Click to bookmark or copy hyperlink.
     el.onclick = () => {

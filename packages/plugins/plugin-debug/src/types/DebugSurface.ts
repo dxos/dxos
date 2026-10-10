@@ -5,7 +5,7 @@
 // @import-as-namespace
 
 import * as Role from '@dxos/app-framework/Role';
-import type { AppSurface } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 
 import { meta } from '#meta';
 

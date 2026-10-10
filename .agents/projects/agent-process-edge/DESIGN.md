@@ -12,7 +12,7 @@ Two repos:
 
 ## 1. Where this fits the existing surface
 
-`@dxos/compute` already owns the process model (`Process.Process`, `Process.State`,
+`@dxos/compute` already owns the process model (`Operation.Durable`, `Process.State`,
 `Process.Monitor`) and `@dxos/compute-runtime` owns two managers:
 
 | Interface                      | Shape today                                                                        | Backed by                                       |
@@ -148,8 +148,8 @@ carried by new `EdgeHttpClient` methods:
 | Route                                     | Verb   | Maps to                                                             |
 | ----------------------------------------- | ------ | ------------------------------------------------------------------- |
 | `/compute/processes/:spaceId`             | POST   | `spawn` (body: process key, params, environment, annotations) → pid |
-| `/compute/processes/:spaceId`             | GET    | `list` (query: key, target, state) → `Process.Info[]`               |
-| `/compute/processes/:spaceId/:pid`        | GET    | `status` → `Process.Info`                                           |
+| `/compute/processes/:spaceId`             | GET    | `list` (query: key, target, state) → `Process.Process[]`            |
+| `/compute/processes/:spaceId/:pid`        | GET    | `status` → `Process.Process`                                        |
 | `/compute/processes/:spaceId/:pid`        | DELETE | `terminate`                                                         |
 | `/compute/processes/:spaceId/:pid/input`  | POST   | `submitInput`                                                       |
 | `/compute/processes/:spaceId/:pid/rpc`    | POST   | one RPC request/response against the process's `RpcGroup`           |

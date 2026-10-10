@@ -19,7 +19,8 @@ import {
 import { failUndefined } from '@dxos/debug';
 import { type EchoHost } from '@dxos/echo-host';
 import { type EdgeConnection, EdgeConnectionService } from '@dxos/edge-client';
-import { EffectEx, Hook } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import * as Hook from '@dxos/effect/Hook';
 import { type HypercoreStore, HypercoreStoreService } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type KeyringApi, KeyringApiService } from '@dxos/keyring';

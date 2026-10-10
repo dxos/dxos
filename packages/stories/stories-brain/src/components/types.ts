@@ -20,7 +20,7 @@ export type EntityItem = {
 export const entitiesFromFacts = (facts: RDF.Fact[]): EntityItem[] => {
   const byId = new Map<string, EntityItem>();
   const add = (term: RDF.Term) => {
-    if (!('entity' in term)) {
+    if (term.kind !== 'entity') {
       return;
     }
     const existing = byId.get(term.entity);

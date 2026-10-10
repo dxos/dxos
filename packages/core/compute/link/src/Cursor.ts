@@ -53,8 +53,9 @@ export const ExternalSpec = Schema.Struct({
    * bidirectional tag reconciliation (`plugin-inbox/docs/TAG-SYNC.md`). Read back with
    * `Obj.getVersion` to recover what the index looked like then, without storing a shadow copy.
    *
-   * Written only together with {@link token} (see {@link writeSyncState}): the two describe the same
-   * position, and advancing one without the other lets a run diff a fresh delta against a stale base.
+   * Written in the same update as {@link token} (see {@link writeSyncState}), and also alone by a capped
+   * run: heads ahead of the token only re-read a delta the base already holds (idempotent absent
+   * concurrent local edits), whereas a token ahead of the heads diffs a fresh delta against a stale base.
    */
   tagHeads: Schema.Array(Schema.String).pipe(Schema.optional),
 });

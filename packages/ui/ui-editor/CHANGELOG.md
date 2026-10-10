@@ -1,5 +1,61 @@
 # @dxos/ui-editor
 
+## 0.13.0
+
+### Patch Changes
+
+- ab1bddf: Scrolling a markdown document does less work per frame: images are decorated as the parser reaches them instead of by re-scanning the whole document on every scroll, and the remembered scroll position is measured once per frame in the editor's own measure phase instead of forcing a layout on every scroll event.
+- 7a177b9: Pressing Enter on an empty second bullet in the markdown editor now ends the list. It used to insert a blank line that made the list loose, after which every Enter in that list added another blank line.
+- 3d05b7f: - **Remote cursor name:** a collaborator's name shows as a tooltip on hovering their caret, drawn outside the editor's scroller so it is never clipped; it sits above the caret like a flag, stays up for at least a second, hides when the peer moves, and hides the caret's dot while shown. The caret keeps the name as visually hidden text for assistive tech.
+  - **Banner:** a neutral (default) banner is transparent and bordered, with the host's text colour and a muted body; valence banners keep their own surfaces. The chat's plugin prompt is now a Banner.
+  - **Devices settings:** the logout section is headed "Danger Zone", with the full warning on the Log out field.
+- Updated dependencies [162fd6d]
+- Updated dependencies [aad3e41]
+- Updated dependencies [bb2b672]
+- Updated dependencies [cb1e218]
+- Updated dependencies [1ef899b]
+- Updated dependencies [32f32a0]
+- Updated dependencies [469e7f7]
+- Updated dependencies [665261a]
+- Updated dependencies [2e96a73]
+- Updated dependencies [945092e]
+- Updated dependencies [c531b05]
+- Updated dependencies [3672aff]
+- Updated dependencies [2f95d25]
+- Updated dependencies [c7cc480]
+- Updated dependencies [8980a93]
+- Updated dependencies [e99ee70]
+- Updated dependencies [161f994]
+- Updated dependencies [1894fc1]
+- Updated dependencies [246ee3c]
+- Updated dependencies [8ebe8d6]
+- Updated dependencies [7715216]
+- Updated dependencies [1737cad]
+- Updated dependencies [a999417]
+- Updated dependencies [6a7bed4]
+- Updated dependencies [3022878]
+- Updated dependencies [c2a300a]
+- Updated dependencies [17008f0]
+- Updated dependencies [4f8e566]
+- Updated dependencies [a449958]
+  - @dxos/echo@0.13.0
+  - @dxos/util@0.13.0
+  - @dxos/client@0.13.0
+  - @dxos/echo-client@0.13.0
+  - @dxos/app-graph@0.13.0
+  - @dxos/echo-doc@0.13.0
+  - @dxos/nlp@0.13.0
+  - @dxos/async@0.13.0
+  - @dxos/context@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/protocols@0.13.0
+  - @dxos/display-name@0.13.0
+  - @dxos/invariant@0.13.0
+  - @dxos/keys@0.13.0
+  - @dxos/ui@0.13.0
+  - @dxos/ui-theme@0.13.0
+  - @dxos/ui-types@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

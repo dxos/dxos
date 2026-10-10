@@ -8,8 +8,8 @@ import * as Effect from 'effect/Effect';
 import React, { type PropsWithChildren } from 'react';
 import { describe, expect, test } from 'vitest';
 
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import { setupPluginManager } from '@dxos/app-framework/testing';
-import { PluginManagerProvider } from '@dxos/app-framework/ui';
 import * as Chat from '@dxos/assistant/Chat';
 import { Database, Feed, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
@@ -27,7 +27,7 @@ describe('usePresets', () => {
   // chat's picker runs in — presets then come straight from the edge catalog.
   const pluginManager = setupPluginManager();
   const wrapper = ({ children }: PropsWithChildren) => (
-    <PluginManagerProvider value={pluginManager}>{children}</PluginManagerProvider>
+    <PluginManagerProvider.Root value={pluginManager}>{children}</PluginManagerProvider.Root>
   );
 
   // The selection round-trips through `Chat.session`, so it only moves if what is read back out of the

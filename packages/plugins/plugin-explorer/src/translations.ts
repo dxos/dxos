@@ -3,8 +3,8 @@
 //
 
 import { Type } from '@dxos/echo';
-import { type Resource } from '@dxos/react-ui';
-import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
+import { translations as queryTranslations } from '@dxos/react-ui-query/translations';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
 import { Graph } from '#types';
@@ -32,5 +32,5 @@ export const translations = [
       },
     },
   },
-  ...componentsTranslations,
-] as const satisfies Resource[];
+  ...queryTranslations,
+] as const satisfies Theme.Resource[];

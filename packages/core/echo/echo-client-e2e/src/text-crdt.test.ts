@@ -10,7 +10,7 @@ import { Database, Obj, Text } from '@dxos/echo';
 import { getObjectCore } from '@dxos/echo-client';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 const TestLayer = TestDatabaseLayer({ types: [TestSchema.Person] });
 

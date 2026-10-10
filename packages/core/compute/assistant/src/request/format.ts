@@ -6,7 +6,6 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
-import { type FunctionNotFoundError } from '@dxos/compute';
 import type * as Operation from '@dxos/compute/Operation';
 import * as Template from '@dxos/compute/Template';
 import { Database, type Error, Obj, type Registry } from '@dxos/echo';
@@ -30,7 +29,7 @@ export const formatSystemPrompt = ({
   instructions = [],
 }: Pick<AiRequest.RunProps, 'system' | 'skills' | 'objects' | 'instructions'>): Effect.Effect<
   string,
-  FunctionNotFoundError | Error.EntityNotFoundError,
+  Operation.FunctionNotFoundError | Error.EntityNotFoundError,
   Database.Service | Registry.Service | Operation.Service
 > =>
   Effect.gen(function* () {
@@ -114,7 +113,8 @@ export const formatSystemPrompt = ({
 export const formatUserPrompt = ({
   prompt,
   history = [],
-}: Pick<AiRequest.RunProps, 'prompt' | 'history'>): Effect.Effect<Message.Message, AiRequest.RunError> =>
+  sender,
+}: Pick<AiRequest.RunProps, 'prompt' | 'history' | 'sender'>): Effect.Effect<Message.Message, AiRequest.RunError> =>
   Effect.gen(function* () {
     const blocks: ContentBlock.Any[] = [];
 
@@ -148,7 +148,8 @@ export const formatUserPrompt = ({
 
     return Obj.make(Message.Message, {
       created: new Date().toISOString(),
-      sender: { role: 'user' },
+      // A named sender is what lets the model tell speakers apart (see `AiPreprocessor`).
+      sender: { ...sender, role: 'user' },
       blocks: typeof prompt === 'string' ? [...blocks, { _tag: 'text', text: prompt }] : [...blocks, ...prompt],
     });
   }).pipe(Effect.withSpan('formatUserPrompt'));

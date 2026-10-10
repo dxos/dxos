@@ -6,8 +6,8 @@ version: 0.1.0
 
 A music sequencer / step-grid editor for `DXOS` Composer. A `Score` owns a set of
 tracks and per-track `Sequence` objects whose `Note`s are edited on a 2D grid
-(pitch on the y-axis, time on the x-axis). Backed by the canvas-based
-`react-ui-canvas` `CellGrid` component.
+(pitch on the y-axis, time on the x-axis). Backed by the plugin's own canvas-based
+`CellGrid` component.
 
 ## Notes (Phase 2)
 
@@ -90,7 +90,7 @@ component SequenceGrid
   desc: |
     2D grid editor for a single Sequence. Y-axis = pitch (high pitches on top,
     matching standard piano-roll convention); x-axis = time in beats.
-    Renders via @dxos/react-ui-canvas CellGrid.
+    Renders via the plugin's CellGrid component.
   props:
     sequence: Sequence
     track: Track

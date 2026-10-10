@@ -15,7 +15,7 @@ import { type Space } from '@dxos/client/echo';
 import { Annotation, Collection, type Database, Obj, Ref, Registry, Type } from '@dxos/echo';
 import { Attention } from '@dxos/react-ui-attention/types';
 import { type TreeData } from '@dxos/react-ui-list';
-import { type Position } from '@dxos/util';
+import type * as Position from '@dxos/util/Position';
 
 import { NotFound } from '../app/index.ts';
 import { Translations } from '../app/index.ts';
@@ -316,6 +316,7 @@ export const makeDeckCompanion = <TData = any>({
   position,
   joyride,
   mount,
+  badge,
 }: {
   id: string;
   label: Translations.Label;
@@ -324,6 +325,8 @@ export const makeDeckCompanion = <TData = any>({
   position?: Position.Position;
   joyride?: string;
   mount?: DeckCompanionMount;
+  /** Count shown on the companion's rail tab while greater than zero (e.g. unread items). */
+  badge?: Atom.Atom<number | undefined>;
 }): AppGraphNode.NodeArg<TData> => ({
   id,
   type: DECK_COMPANION_TYPE,
@@ -335,6 +338,7 @@ export const makeDeckCompanion = <TData = any>({
     ...(position !== undefined && { position }),
     ...(joyride !== undefined && { joyride }),
     ...(mount !== undefined && { mount }),
+    ...(badge !== undefined && { badge }),
   },
 });
 

@@ -8,7 +8,7 @@ import * as Atom from 'effect/reactivity/Atom';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { log } from '@dxos/log';
-import { toMetrics } from '@dxos/plugin-space/dashboard';
+import * as Dashboard from '@dxos/plugin-space/Dashboard';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 
 import * as LaMetric from '#protocol';
@@ -70,7 +70,7 @@ export default Capability.makeModule(
           ({ stats, tasks }) =>
             // MAX_FRAMES is this device's geometry, which is why the slot count is applied here rather
             // than in the space's projection.
-            pusher?.send({ frames: toFrames(toMetrics(tasks, stats, LaMetric.MAX_FRAMES)) }),
+            pusher?.send({ frames: toFrames(Dashboard.toMetrics(tasks, stats, LaMetric.MAX_FRAMES)) }),
           { immediate: true },
         );
       };

@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Client, Config, ConfigService } from '@dxos/client';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 /**
  * Creates a HALO identity and one space in the CLI profile rooted at `$HOME`, then prints

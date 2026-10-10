@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import * as Operation from '@dxos/compute/Operation';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 
 import { meta } from '#meta';
 import { RegistryOperation } from '#operations';
@@ -13,7 +13,7 @@ import { RegistryPlugin } from '#plugin';
 
 describe('RegistryOperation.QueryPlugins', () => {
   test('lists the installed plugins on both axes', async ({ expect }) => {
-    await using harness = await createComposerTestApp({ plugins: [RegistryPlugin()] });
+    await using harness = await Harness.createComposerTestApp({ plugins: [RegistryPlugin()] });
 
     const { plugins } = await harness.runPromise(Operation.invoke(RegistryOperation.QueryPlugins, {}));
 
@@ -24,7 +24,7 @@ describe('RegistryOperation.QueryPlugins', () => {
   });
 
   test('filters to the enabled set', async ({ expect }) => {
-    await using harness = await createComposerTestApp({ plugins: [RegistryPlugin()] });
+    await using harness = await Harness.createComposerTestApp({ plugins: [RegistryPlugin()] });
 
     const { plugins } = await harness.runPromise(Operation.invoke(RegistryOperation.QueryPlugins, { enabled: true }));
 

@@ -10,8 +10,8 @@ import * as Layer from 'effect/Layer';
 // export condition advertises a TS file that isn't shipped in its dist, causing Bun resolution to
 // fail).
 import { OpaqueToolkit } from '@dxos/ai';
-import { WebSearchToolkit } from '@dxos/assistant-toolkit';
-import { ChatContextHandlers, ChatContextSkill } from '@dxos/assistant-toolkit';
+import * as ChatContextSkill from '@dxos/assistant-toolkit/ChatContextSkill';
+import * as WebSearchSkill from '@dxos/assistant-toolkit/WebSearchSkill';
 import * as Chat from '@dxos/assistant/Chat';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
@@ -90,7 +90,7 @@ export const skillRegistry = makeRegistry({
 
 export const operationHandlers = OperationHandlerSet.merge(
   // NOTE: Operation handlers referenced by skills above need to be added here.
-  ChatContextHandlers,
+  ChatContextSkill.Handlers,
   SpaceOperationHandlerSet.handlers,
   ChessOperationHandlerSet.handlers,
   InboxOperationHandlerSet.handlers,
@@ -109,7 +109,7 @@ export const operationHandlers = OperationHandlerSet.merge(
 
 export const toolkits: OpaqueToolkit.OpaqueToolkit[] = [
   // NOTE: Toolkits referenced by skills above need to be added here.
-  OpaqueToolkit.make(WebSearchToolkit, Layer.empty),
+  OpaqueToolkit.make(WebSearchSkill.Toolkit, Layer.empty),
 
   // TODO(burdon): Remove?
   OpaqueToolkit.make(TestToolkit.toolkit, TestToolkit.layer),

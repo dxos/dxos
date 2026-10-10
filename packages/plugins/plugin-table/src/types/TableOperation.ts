@@ -15,12 +15,14 @@ import { Table } from '@dxos/react-ui-table/types';
 export const CreateTableSchema = Schema.Struct({
   name: Schema.optional(Schema.String),
   // TODO(wittjosiah): This should be a query input instead.
+  // Optional: left empty, the table gets a new type of its own, named after it.
   typename: Schema.String.pipe(
-    Schema.annotate({ title: 'Select type' }),
+    Schema.annotate({ title: 'Select type', description: 'Leave empty to create a new type.' }),
     SpaceForm.TypeInputOptionsAnnotation.set({
       location: ['database', 'runtime'],
       kind: ['user'],
     }),
+    Schema.optional,
   ),
 });
 

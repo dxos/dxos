@@ -1,6 +1,6 @@
 {
   "name": "@dxos/sql-sqlite",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "description": "Sqlite client",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,16 +10,12 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "info@dxos.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
       "default": "./dist/lib/index.mjs"
-    },
-    "./SqliteClient": {
-      "types": "./dist/types/src/SqliteClient.d.ts",
-      "default": "./dist/lib/SqliteClient.mjs"
     },
     "./OpfsPool": {
       "types": "./dist/types/src/OpfsPool.d.ts",
@@ -29,11 +25,7 @@
       "types": "./dist/types/src/OpfsWorker.d.ts",
       "default": "./dist/lib/OpfsWorker.mjs"
     },
-    "./SqliteMigrator": {
-      "types": "./dist/types/src/SqliteMigrator.d.ts",
-      "default": "./dist/lib/SqliteMigrator.mjs"
-    },
-    "./platform": {
+    "./Platform": {
       "types": "./dist/types/src/platform/browser.d.ts",
       "browser": "./dist/lib/platform/browser.mjs",
       "bun": "./dist/lib/platform/bun.mjs",
@@ -42,6 +34,14 @@
     "./SqlExport": {
       "types": "./dist/types/src/SqlExport.d.ts",
       "default": "./dist/lib/SqlExport.mjs"
+    },
+    "./SqliteClient": {
+      "types": "./dist/types/src/SqliteClient.d.ts",
+      "default": "./dist/lib/SqliteClient.mjs"
+    },
+    "./SqliteMigrator": {
+      "types": "./dist/types/src/SqliteMigrator.d.ts",
+      "default": "./dist/lib/SqliteMigrator.mjs"
     },
     "./SqlMigrations": {
       "types": "./dist/types/src/SqlMigrations.d.ts",

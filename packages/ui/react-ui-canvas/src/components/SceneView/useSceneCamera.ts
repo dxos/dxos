@@ -15,8 +15,8 @@ const NAVIGATION_SETTLE_MS = 150;
 export type SceneCamera = {
   /** Write the camera, from a value or from its predecessor. */
   setCamera: (next: Camera | ((camera: Camera) => Camera)) => void;
-  /** Animate to `target`, calling `done` when the last frame lands. */
-  animateTo: (target: Camera, done?: () => void) => void;
+  /** Animate to `target`, calling `done` when the last frame lands; `duration` fixes its length in ms. */
+  animateTo: (target: Camera, done?: () => void, duration?: number) => void;
   /** Abandon an animation in flight, leaving the camera where it reached. */
   cancelAnimation: () => void;
   /** The camera is moving on its own, so the canvas ignores the pointer. */
@@ -88,14 +88,21 @@ export const useSceneCamera = (
   }, [setNavigation]);
 
   const animateTo = useCallback(
-    (target: Camera, done?: () => void) => {
+    (target: Camera, done?: () => void, duration?: number) => {
       cancelAnimation();
       setNavigation(true);
-      cancelRef.current = animateCamera(registry.get(atoms.camera), target, viewport, setCamera, () => {
-        cancelRef.current = undefined;
-        setNavigation(false);
-        done?.();
-      });
+      cancelRef.current = animateCamera(
+        registry.get(atoms.camera),
+        target,
+        viewport,
+        setCamera,
+        () => {
+          cancelRef.current = undefined;
+          setNavigation(false);
+          done?.();
+        },
+        duration,
+      );
     },
     [registry, atoms.camera, viewport, setCamera, cancelAnimation, setNavigation],
   );

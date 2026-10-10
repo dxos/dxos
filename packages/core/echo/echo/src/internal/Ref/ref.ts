@@ -16,7 +16,7 @@ import type * as Types from 'effect/Types';
 import { Event } from '@dxos/async';
 import { type CustomInspectFunction, inspectCustom } from '@dxos/debug';
 import { EncodedReference } from '@dxos/echo-protocol';
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId, type URI } from '@dxos/keys';
 

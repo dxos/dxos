@@ -1,5 +1,19 @@
 # @dxos/mcp-client
 
+## 0.13.0
+
+### Patch Changes
+
+- Updated dependencies [c6922ce]
+- Updated dependencies [1b2e9f3]
+- Updated dependencies [5a27d5c]
+- Updated dependencies [3e73e53]
+- Updated dependencies [246ee3c]
+  - @dxos/ai@0.13.0
+  - @dxos/effect@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/invariant@0.13.0
+
 ## 0.12.0
 
 ### Patch Changes

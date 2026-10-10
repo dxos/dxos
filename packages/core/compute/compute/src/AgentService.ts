@@ -14,6 +14,7 @@ import type { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import type { ContentBlock } from '@dxos/types';
 
+import type * as Process from './Process.ts';
 import type * as Trace from './Trace.ts';
 import { Instructions } from './types/index.ts';
 
@@ -53,6 +54,21 @@ export class AgentService extends Context.Service<AgentService, Service>()('@dxo
 export const key = AgentService.key;
 
 /**
+ * Who a prompt is from, when it is not the session's own reader: the plain-data subset of `Actor`,
+ * because the prompt crosses a JSON boundary (a remote process) where a `Ref` cannot be supplied.
+ */
+export type PromptSender = {
+  readonly name?: string;
+  readonly identityDid?: string;
+  readonly email?: string;
+};
+
+export type SubmitPromptOptions = {
+  /** Recorded on the appended user message; a named sender is shown to the model as the speaker. */
+  readonly sender?: PromptSender;
+};
+
+/**
  * Handle to an agent session.
  */
 export interface Session {
@@ -79,7 +95,7 @@ export interface Session {
   /**
    * Submit a turn: a plain user prompt, or pre-built content blocks (e.g. synthetic context + prompt).
    */
-  submitPrompt: (prompt: string | ContentBlock.Any[]) => Effect.Effect<void>;
+  submitPrompt: (prompt: string | ContentBlock.Any[], options?: SubmitPromptOptions) => Effect.Effect<void>;
 
   /**
    * True while the agent is working on a turn (running, or waiting on a tool call or alarm); false
@@ -105,7 +121,7 @@ export interface Session {
    * `runPromise(Effect.forEach(subscribe))`), use {@link Effect.forkDetach} so the
    * stream survives after the parent scope closes; interrupt it on dispose.
    */
-  subscribeEphemeral: () => Stream.Stream<Trace.Message>;
+  subscribeEphemeral: (options?: Process.SubscribeEphemeralOptions) => Stream.Stream<Trace.Message>;
 }
 
 export const getSession = (...args: Parameters<Context.Service.Shape<typeof AgentService>['getSession']>) =>

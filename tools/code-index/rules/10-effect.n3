@@ -1,0 +1,264 @@
+# Effect constructs. See `rules/50-example.n3` for what belongs in a rule file and what belongs in a
+# query — in short: classification and joins here, reachability in SPARQL.
+#
+# `{ … } <= { … }` rules are backward (goal-directed): the engine proves them on demand for a forward
+# rule's premise and never materializes them, so the `rule:` helpers below cost no stored quads.
+
+@prefix deus: <https://dxos.org/vocab/deus#>.
+@prefix rule: <https://dxos.org/vocab/deus/rule#>.
+@prefix effect: <https://dxos.org/deus/module/effect/>.
+@prefix Context: <https://dxos.org/deus/module/effect/Context#>.
+@prefix Layer: <https://dxos.org/deus/module/effect/Layer#>.
+@prefix RpcMiddleware: <https://dxos.org/deus/module/effect/rpc/RpcMiddleware#>.
+@prefix errors: <https://dxos.org/deus/module/@dxos/errors#>.
+@prefix list: <http://www.w3.org/2000/10/swap/list#>.
+@prefix log: <http://www.w3.org/2000/10/swap/log#>.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix string: <http://www.w3.org/2000/10/swap/string#>.
+
+#
+# Services.
+#
+
+# A service key: `class Store extends Context.Service<Store, Api>()('id')`, a `Context.Reference`
+# (a key with a default), or an RPC middleware tag (its class is a `Context.Service`).
+{ ?s rule:serviceKey true } <= {
+  ?s deus:extends ?base. ?base list:in (Context:Service Context:Reference RpcMiddleware:Service).
+}.
+# The function-style key: `const Store = Context.Service<Api>('id')`.
+{ ?s rule:serviceKey true } <= { ?s deus:constructedBy ?f. ?f list:in (Context:Service Context:Reference) }.
+{ ?s rule:serviceKey true } => { ?s rdf:type deus:EffectService }.
+
+#
+# Layers.
+#
+
+# Every `Layer` function whose result — applied in full, data-first or as a `.pipe` stage — is a
+# `Layer`. Absent: `build*`/`launch` (an `Effect`), `isLayer`, the memo-map plumbing, and the
+# `satisfies*` helpers (identity functions whose own call returns a function).
+{ ?f rule:layerFunction true } <= {
+  ?f list:in (Layer:succeed Layer:succeedContext Layer:sync Layer:syncContext Layer:effect Layer:effectContext
+    Layer:effectDiscard Layer:scoped Layer:suspend Layer:unwrap Layer:mergeAll Layer:merge Layer:provide
+    Layer:provideMerge Layer:flatMap Layer:tap Layer:tapError Layer:tapCause Layer:orDie Layer:catchTag
+    Layer:catchCause Layer:catch Layer:updateService Layer:fresh Layer:mock Layer:span Layer:parentSpan
+    Layer:withSpan Layer:withParentSpan Layer:fromBuild Layer:fromBuildMemo).
+}.
+
+# Every `.pipe(…)` stage is a `Layer` function, so the last one — whose result is the value — is too.
+# Holds vacuously for an unpiped initializer. One `Effect.provide` or `Layer.launch` stage defeats it.
+{ ?s rule:layerPipeline true } <= {
+  (?stage { ?s deus:pipedThrough ?stage } ?stages) log:collectAllIn ?scope.
+  (?stage { ?s deus:pipedThrough ?stage. ?stage rule:layerFunction true } ?layerStages) log:collectAllIn ?scope.
+  ?stages list:length ?count.
+  ?layerStages list:length ?count.
+}.
+
+# Built by a `Layer` function and piped only through `Layer` functions: `Layer.effect(S, …)`,
+# `Layer.mergeAll(…).pipe(Layer.provide(…))`. (A dual called with its data argument missing —
+# `const f = Layer.provide(x)` — is a function; the parser does not count arguments, and the repo has
+# no such declaration.)
+{ ?s rule:layer true } <= { ?s deus:constructedBy ?f. ?f rule:layerFunction true. ?s rule:layerPipeline true }.
+{ ?s rule:layer true } <= { ?s deus:derivedFrom Layer:empty. ?s rule:layerPipeline true }.
+
+# Whatever the base, a pipeline whose stages are all `Layer` functions ends in a `Layer`:
+# `Store.layer.pipe(Layer.provide(Clock.layer))`, `Effect.gen(…).pipe(Layer.effect(Store))`.
+{ ?s rule:layer true } <= { ?s deus:pipedThrough ?f. ?f rule:layerFunction true. ?s rule:layerPipeline true }.
+{ ?s rule:layer true } => { ?s rdf:type deus:EffectLayer }.
+
+#
+# Resolving a reference to its declaration. A reference names a symbol as its importer addressed
+# it: `file:<barrel>#Store` through an `export *` barrel, `module:@dxos/x#Store` under a bare
+# specifier. `deus:resolvesTo` links such a reference to the declaration it denotes. The
+# `resolve-refs` pass states it for every reference; this file states it again for the service keys
+# below, because only it resolves a member under an ambiguous `#imports` specifier (through the
+# import's `file:` twin in the same symbol). The duplicates are harmless.
+#
+
+# `file:<path>#<name>` → the file it is addressed in, and the local name. `log:uri` cannot build an
+# IRI back from text, so the file is found by its `deus:path`.
+{ ?r rule:addressedIn ?file } <= {
+  ?r log:uri ?iri.
+  (?iri "^https://dxos\\.org/deus/file/([^#]*)#") string:scrape ?path.
+  ?file deus:path ?path.
+}.
+{ ?r rule:localName ?name } <= { ?r log:uri ?iri. (?iri "#([^#]*)$") string:scrape ?name }.
+
+# A declaration proper: neither a re-export alias nor a namespace. (Only a declared symbol has a kind.)
+{ ?d rule:declaration true } <= {
+  ?d deus:kind ?kind.
+  ?kind log:notEqualTo "reexport".
+  ?kind log:notEqualTo "namespace".
+}.
+
+# `export *` reaches through up to four barrels (package index → packlet index → module).
+{ ?file rule:exposes ?module } <= { ?file deus:reexports ?module }.
+{ ?file rule:exposes ?module } <= { ?file deus:reexports ?a. ?a deus:reexports ?module }.
+{ ?file rule:exposes ?module } <= { ?file deus:reexports ?a. ?a deus:reexports ?b. ?b deus:reexports ?module }.
+{ ?file rule:exposes ?module } <= {
+  ?file deus:reexports ?a. ?a deus:reexports ?b. ?b deus:reexports ?c. ?c deus:reexports ?module.
+}.
+
+# What a symbol IRI found in a module denotes: itself, or the origin of a named re-export.
+{ ?x rule:origin ?x } <= { ?x rule:declaration true }.
+{ ?x rule:origin ?d } <= { ?x deus:aliasOf ?d. ?d rule:declaration true }.
+
+# Not declared where it is addressed (a local declaration shadows `export *`), so found through a barrel.
+{ ?r rule:denotes ?d } <= {
+  ?r rule:localName ?name.
+  ?r rule:addressedIn ?file.
+  (?y { ?file deus:declares ?y. ?y deus:name ?name } ?shadows) log:collectAllIn ?scope.
+  ?shadows list:length 0.
+  ?file rule:exposes ?module.
+  ?module deus:declares ?x.
+  ?x deus:name ?name; deus:exported true.
+  ?x rule:origin ?d.
+}.
+# Declared where it is addressed.
+{ ?r rule:denotes ?d } <= { ?r rule:origin ?d }.
+# A named re-export: `export { Store } from './store'`, the origin itself perhaps behind a barrel.
+{ ?r rule:denotes ?d } <= { ?r deus:aliasOf ?o. ?o rule:origin ?d }.
+{ ?r rule:denotes ?d } <= {
+  ?r deus:aliasOf ?o.
+  ?o rule:localName ?name.
+  ?o rule:addressedIn ?file.
+  ?file rule:exposes ?module.
+  ?module deus:declares ?x.
+  ?x deus:name ?name; deus:exported true.
+  ?x rule:origin ?d.
+}.
+
+# A member `module:<specifier>#<path>`, read in symbol `?s`: the importing file's bindings give the
+# same import a `file:` reference too, and `?s` depends on both — so the `file:` reference with the
+# member's name denotes the declaration; for `Ns.Name`, the namespace's module declares `Name`.
+{ (?m ?s) rule:memberDenotes ?d } <= {
+  ?m log:uri ?iri.
+  (?iri "^https://dxos\\.org/deus/module/[^#]*#([^.#]+)$") string:scrape ?name.
+  ?s rule:dependsOn ?r.
+  ?r rule:localName ?name.
+  ?r rule:imported ?s.
+  ?r rule:denotes ?d.
+  ?d deus:name ?name.
+}.
+{ (?m ?s) rule:memberDenotes ?d } <= {
+  ?m log:uri ?iri.
+  (?iri "^https://dxos\\.org/deus/module/[^#]*#([^.#]+)\\.[^.#]+$") string:scrape ?namespaceName.
+  (?iri "^https://dxos\\.org/deus/module/[^#]*#[^.#]+\\.([^.#]+)$") string:scrape ?name.
+  ?s rule:dependsOn ?r.
+  ?r rule:localName ?namespaceName.
+  ?r rule:imported ?s.
+  ?r rule:namespaceModule ?module.
+  ?module deus:declares ?x.
+  ?x deus:name ?name; deus:exported true.
+  ?x rule:origin ?d.
+}.
+# `file:` reference `?r` names another file than symbol `?s`'s own: an import, not a local of the same name.
+{ ?r rule:imported ?s } <= {
+  ?r log:uri ?iri. (?iri "^https://dxos\\.org/deus/file/([^#]*)#") string:scrape ?path.
+  ?s log:uri ?own. (?own "^https://dxos\\.org/deus/file/([^#]*)#") string:scrape ?ownPath.
+  ?path log:notEqualTo ?ownPath.
+}.
+
+# The module a namespace reference publishes: `export * as Trace from './Trace'`, perhaps behind a barrel.
+{ ?r rule:namespaceModule ?module } <= { ?r deus:namespaceOf ?module }.
+{ ?r rule:namespaceModule ?module } <= {
+  ?r rule:localName ?name.
+  ?r rule:addressedIn ?file.
+  ?file rule:exposes ?barrel.
+  ?barrel deus:declares ?namespace.
+  ?namespace deus:name ?name; deus:namespaceOf ?module.
+}.
+{ ?s rule:dependsOn ?x } <= { ?s deus:apiDependsOn ?x }.
+{ ?s rule:dependsOn ?x } <= { ?s deus:implDependsOn ?x }.
+
+{ (?r ?s) rule:resolves ?d } <= { ?r rule:denotes ?d }.
+{ (?r ?s) rule:resolves ?d } <= { (?r ?s) rule:memberDenotes ?d }.
+
+# The references that name a service key: a providing constructor's first argument, and each
+# service in a `Layer` type's `ROut` or `RIn`.
+{ ?s rule:serviceReference ?tag } <= {
+  ?s deus:constructedBy ?f.
+  ?f list:in (Layer:effect Layer:succeed Layer:sync Layer:scoped Layer:mock).
+  ?s deus:argument ?tag.
+}.
+{ ?s rule:serviceReference ?service } <= { ?s rule:layerService ?service }.
+{ ?s rule:serviceReference ?r } <= { ?s rule:layer true. ?s rule:readsKey ?r. ?r rule:member true }.
+{ ?s rule:layerService ?service } <= { ?s rule:layerPosition ?t. ?t deus:typeKind "ref"; deus:typeHead ?service }.
+{ ?s rule:layerService ?service } <= {
+  ?s rule:layerPosition ?t. ?t deus:typeKind "union"; deus:typeMember ?member.
+  ?member deus:typeKind "ref"; deus:typeHead ?service.
+}.
+{ ?s rule:layerPosition ?out } <= { ?s deus:hasType ?t. ?t deus:typeHead Layer:Layer; deus:typeArg0 ?out. ?s deus:kind ?k }.
+{ ?s rule:layerPosition ?in } <= { ?s deus:hasType ?t. ?t deus:typeHead Layer:Layer; deus:typeArg2 ?in. ?s deus:kind ?k }.
+
+{ ?s rule:serviceReference ?r. (?r ?s) rule:resolves ?d. ?r log:notEqualTo ?d }
+  => { ?r deus:resolvesTo ?d }.
+
+#
+# What a layer provides: the key `Layer.effect(Store, …)` (or `succeed`, `sync`, `scoped`, `mock`)
+# is built for — a key by the constructor's signature. Named by its declaration when the reference
+# resolves to one; an Effect library key (`SqlClient.SqlClient`) is named by its member.
+#
+
+{ ?s rule:layer true. ?s rule:providedService ?service } => { ?s deus:providesService ?service }.
+{ ?s rule:providedService ?d } <= { ?s rule:providedKey ?tag. (?tag ?s) rule:resolves ?d. ?d rule:serviceKey true }.
+# A member that resolves to no declaration (a library's key, or a subpath export the resolver could
+# not follow) is still a key: the member IRI keeps the whole path the source wrote.
+{ ?s rule:providedService ?tag } <= {
+  ?s rule:providedKey ?tag.
+  ?tag rule:member true.
+  (?d { ?s rule:providedKey ?key. (?key ?s) rule:resolves ?d. ?d rule:serviceKey true } ?declared)
+    log:collectAllIn ?scope.
+  ?declared list:length 0.
+}.
+{ ?s rule:providedKey ?tag } <= {
+  ?s deus:constructedBy ?f.
+  ?f list:in (Layer:effect Layer:succeed Layer:sync Layer:scoped Layer:mock).
+  ?s deus:argument ?tag.
+}.
+# What a layer's implementation reads: a service key its initializer refers to, for a layer whose
+# constructor runs an effect for the service (`Layer.effect(Store, Effect.gen(function* () {
+# yield* Clock }))`), other than the key it provides. Whether a `Layer.provide` stage then supplies
+# it is `deus:layerRequires`' business; this says what the code uses.
+{ ?s rule:layer true. ?s rule:readsKey ?r. (?r ?s) rule:resolves ?d. ?d rule:serviceKey true.
+  (?x { ?s rule:providedService ?d } ?provided) log:collectAllIn ?scope. ?provided list:length 0 }
+  => { ?s deus:requiresService ?d }.
+# `Layer.unwrap` and `Layer.effectContext` are absent: their effect builds the layer or context it
+# provides, so a key it names may be provided rather than read. A layer that calls
+# `Effect.serviceOption` reads some key optionally, and which one is not visible here.
+# A member that resolves to no declaration (a library's key, `SqlClient.SqlClient`) is read as a key
+# when the repo uses it as one somewhere: a providing constructor's argument, or a `Layer` type's service.
+{ ?s rule:layer true. ?s rule:readsKey ?m. ?m rule:member true. ?m rule:knownKey true.
+  (?d { (?m ?s) rule:resolves ?d } ?declarations) log:collectAllIn ?scope. ?declarations list:length 0.
+  (?x { ?s rule:providedService ?m } ?provided) log:collectAllIn ?scope. ?provided list:length 0 }
+  => { ?s deus:requiresService ?m }.
+{ ?m rule:knownKey true } <= { ?layer rule:providedKey ?m }.
+{ ?m rule:knownKey true } <= { ?layer rule:layerService ?m }.
+{ ?s rule:readsKey ?r } <= {
+  ?s deus:constructedBy ?f.
+  ?f list:in (Layer:effect Layer:scoped Layer:effectDiscard).
+  (?x { ?s deus:implDependsOn <https://dxos.org/deus/module/effect/Effect#serviceOption> } ?optional) log:collectAllIn ?scope.
+  ?optional list:length 0.
+  ?s deus:implDependsOn ?r.
+}.
+
+{ ?m rule:member true } <= { ?m log:uri ?iri. ?iri string:matches "^https://dxos\\.org/deus/module/[^#]*#.+$" }.
+
+#
+# Schemas.
+#
+
+{ ?s deus:constructedBy <https://dxos.org/deus/module/effect/Schema#Struct> } => { ?s rdf:type deus:Schema }.
+{ ?s deus:constructedBy <https://dxos.org/deus/module/effect/Schema#TaggedStruct> } => { ?s rdf:type deus:Schema }.
+{ ?s deus:constructedBy <https://dxos.org/deus/module/effect/Schema#Union> } => { ?s rdf:type deus:Schema }.
+{ ?s deus:constructedBy <https://dxos.org/deus/module/effect/Schema#Literal> } => { ?s rdf:type deus:Schema }.
+{ ?s deus:constructedBy <https://dxos.org/deus/module/effect/Schema#Array> } => { ?s rdf:type deus:Schema }.
+{ ?s deus:extends <https://dxos.org/deus/module/effect/Schema#Schema.Type> } => { ?s rdf:type deus:Schema }.
+{ ?s deus:extends <https://dxos.org/deus/module/effect/Schema#Class> } => { ?s rdf:type deus:Schema }.
+
+# Domain errors: the repo's `BaseError.extend`, plus Effect's own tagged errors.
+{ ?s deus:extends errors:BaseError.extend } => { ?s rdf:type deus:DomainError }.
+{ ?s deus:extends <https://dxos.org/deus/module/effect/Data#TaggedError> } => { ?s rdf:type deus:DomainError }.
+{ ?s deus:extends <https://dxos.org/deus/module/effect/Schema#TaggedError> } => { ?s rdf:type deus:DomainError }.
+
+# RPC groups.
+{ ?s deus:constructedBy <https://dxos.org/deus/module/effect/rpc/RpcGroup#make> } => { ?s rdf:type deus:Rpc }.

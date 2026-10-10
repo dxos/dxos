@@ -25,13 +25,13 @@ export const mermaidHighlightStyle = (_options: MermaidHighlightOptions = {}) =>
     },
     // Connectors recede; the nodes they join are the content. `link` is the arrow itself (`-->`),
     // so it must not be underlined — that reads as a hyperlink.
-    { tag: [flowchartTags.link, flowchartTags.nodeEdge], class: 'text-subdued' },
+    { tag: [flowchartTags.link, flowchartTags.nodeEdge], class: 'text-fg-subtle' },
     // Labels, on nodes and on edges. Node ids are left inheriting, as the backbone of the source.
     {
       tag: [flowchartTags.nodeText, flowchartTags.nodeEdgeText, flowchartTags.string, flowchartTags.number],
       class: 'text-accent',
     },
-    { tag: [flowchartTags.lineComment], class: 'text-description' },
+    { tag: [flowchartTags.lineComment], class: 'text-fg-muted' },
   ]);
 
 /**

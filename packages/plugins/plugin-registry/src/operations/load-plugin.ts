@@ -7,9 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Operation from '@dxos/compute/Operation';
 
-import { LoadPlugin } from './definitions.ts';
+import * as RegistryOperation from '../types/RegistryOperation.ts';
 
-const handler: Operation.WithHandler<typeof LoadPlugin> = LoadPlugin.pipe(
+const handler: Operation.WithHandler<typeof RegistryOperation.LoadPlugin> = RegistryOperation.LoadPlugin.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ url, enable = true }) {
       const manager = yield* Plugin.Service;

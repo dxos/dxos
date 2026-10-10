@@ -5,14 +5,13 @@
 import React from 'react';
 
 import { ClientRepeater } from '@dxos/react-client/testing';
-import { ThemeProvider } from '@dxos/react-ui';
-import { defaultTx } from '@dxos/react-ui';
+import * as Theme from '@dxos/react-ui/Theme';
 
 import { Demo, NetworkToggle } from './components/index.ts';
 
 const App = () => {
   return (
-    <ThemeProvider tx={defaultTx}>
+    <Theme.Provider tx={Theme.defaultTx}>
       <ClientRepeater
         className='flex place-content-evenly'
         component={Demo}
@@ -20,7 +19,7 @@ const App = () => {
         createSpace
         controls={NetworkToggle}
       />
-    </ThemeProvider>
+    </Theme.Provider>
   );
 };
 

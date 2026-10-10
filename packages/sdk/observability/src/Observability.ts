@@ -277,6 +277,13 @@ class ObservabilityImpl implements Observability {
         }
         return key;
       },
+      uploadNdjson: async (ndjson, kind) => {
+        let key: string | undefined;
+        for (const extension of this._getExtensions('support')) {
+          key = (await extension.uploadNdjson(ndjson, kind)) ?? key;
+        }
+        return key;
+      },
       sessionContext: () => {
         for (const extension of this._getExtensions('support')) {
           const context = extension.sessionContext();

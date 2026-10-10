@@ -8,8 +8,8 @@ import * as Schema from 'effect/Schema';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Ref } from '@dxos/echo';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
-import { makeRoutine } from '@dxos/plugin-routine';
 import type * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
+import * as Wire from '@dxos/plugin-routine/Wire';
 
 import { CrmOperation } from '#types';
 
@@ -36,7 +36,7 @@ export const crm: RoutineCapabilities.Template = {
 
       // The feed spec requires the live feed object; Database.load is a read-only DB operation.
       const feed = yield* Database.load(mailbox.feed);
-      return makeRoutine({
+      return Wire.makeRoutine({
         name: name ?? `CRM — ${mailbox.name ?? 'Mailbox'}`,
         spec: { kind: 'runnable', runnable: Ref.fromURI(CrmOperation.ProcessMailbox.meta.key) },
         trigger: Trigger.make({

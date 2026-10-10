@@ -8,7 +8,7 @@ import * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { createKvsStore } from '@dxos/effect';
+import * as KvsStore from '@dxos/effect/KvsStore';
 import { invariant } from '@dxos/invariant';
 
 import { meta } from '#meta';
@@ -50,7 +50,7 @@ const defaultDeckEphemeralState: DeckSchema.EphemeralDeckState = {
 export default Capability.makeModule(
   Effect.fnUntraced(function* ({ platform = 'desktop' }: DeckCapabilities.DeckPluginOptions = {}) {
     // Persisted state using KVS store.
-    const stateAtom = createKvsStore({
+    const stateAtom = KvsStore.make({
       key: STATE_KEY,
       schema: DeckSchema.StoredDeckState,
       defaultValue: () => ({ ...defaultDeckState }),

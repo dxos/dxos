@@ -5,8 +5,8 @@
 import * as Schema from 'effect/Schema';
 
 import { LogLevel } from '@dxos/log';
-import { createContext } from '@dxos/react-ui';
 import { ViewState } from '@dxos/react-ui-attention';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { type LogRow } from './log-buffer.ts';
 import { type LevelName, LEVELS } from './recorder.ts';
@@ -36,11 +36,6 @@ export const levelColor = (level: LogLevel) =>
         ? 'text-info-text'
         : 'text-success-text';
 
-/** Guard clipboard writes so rejected or unavailable writes surface rather than dangling as unhandled rejections. */
-export const copyToClipboard = (text: string): void => {
-  void navigator.clipboard?.writeText(text)?.catch((err) => console.warn('clipboard write failed', err));
-};
-
 export type LoggerContextValue = {
   rows: LogRow[];
   filter: string;
@@ -60,7 +55,8 @@ export type LoggerContextValue = {
   checked: Set<number>;
   toggleChecked: (id: number) => void;
   clear: () => void;
-  copyAll: () => void;
+  /** Text the toolbar's copy button writes: the checked rows, else the whole buffer. */
+  getCopyText: () => string;
 };
 
-export const [LoggerProvider, useLoggerContext] = createContext<LoggerContextValue>('Logger');
+export const [LoggerProvider, useLoggerContext] = Hooks.createContext<LoggerContextValue>('Logger');

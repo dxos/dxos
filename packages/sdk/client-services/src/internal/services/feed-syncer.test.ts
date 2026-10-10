@@ -12,7 +12,7 @@ import { describe, expect, onTestFinished, test, vi } from 'vitest';
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type EdgeConnection, MessageSchema, type ReconnectListener } from '@dxos/edge-client';
-import { RuntimeProvider } from '@dxos/effect';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { FeedStore, SyncServer } from '@dxos/feed';
 import { EntityId, SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
@@ -21,7 +21,7 @@ import { createBuf } from '@dxos/protocols/buf';
 import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { EdgeStatusSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type Message as RouterMessage } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
-import { layerMemory } from '@dxos/sql-sqlite/platform';
+import { layerMemory } from '@dxos/sql-sqlite/Platform';
 import { bufferToArray } from '@dxos/util';
 
 import { FeedSyncer } from './feed-syncer.ts';

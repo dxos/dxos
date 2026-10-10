@@ -185,7 +185,7 @@ export const ghost = (options: GhostOptions = {}): Extension => {
         placeContent: 'center',
         // `size-3`: the glyph is 1em.
         fontSize: '0.75rem',
-        color: 'var(--color-description, currentColor)',
+        color: 'var(--color-fg-muted, currentColor)',
       },
     }),
   ];

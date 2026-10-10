@@ -37,8 +37,11 @@ export type ScriptRequest = {
   readonly maxOutput: number;
 };
 
-/** What the program printed, and why it failed when it did. */
-export type ScriptResult = { readonly output: string; readonly error?: string };
+/** The host calls a program made: how many, and the wall time spent waiting on them (summed, so concurrent calls can exceed the run). */
+export type ScriptStats = { readonly calls: number; readonly callMs: number };
+
+/** What the program printed, why it failed when it did, and the calls it made when the sandbox counted them. */
+export type ScriptResult = { readonly output: string; readonly error?: string; readonly stats?: ScriptStats };
 
 /**
  * Runs one script. `dispatch` answers its calls in this process; a sandbox in another runtime routes
@@ -64,15 +67,28 @@ export const inProcess: Sandbox = {
       const services = yield* Effect.context<never>();
       const printer = makePrinter(maxOutput);
       const tokens = new Set(skillTokens);
+      const stats = { calls: 0, callMs: 0 };
+      const counted = (call: ScriptCall): Effect.Effect<unknown, ToolFailure> =>
+        Effect.suspend(() => {
+          const start = performance.now();
+          stats.calls++;
+          return dispatch(call).pipe(
+            Effect.ensuring(
+              Effect.sync(() => {
+                stats.callMs += performance.now() - start;
+              }),
+            ),
+          );
+        });
       const bindings = {
         Effect,
         spaceId,
         print: (...values: unknown[]) => Effect.sync(() => printer.print(...values)),
         invoke: (key: unknown, input?: unknown, options?: unknown) =>
-          dispatch({ binding: 'invoke', args: [key, input, withSkillTokens(options, tokens)] }),
-        queryOperations: (...args: unknown[]) => dispatch({ binding: 'queryOperations', args }),
+          counted({ binding: 'invoke', args: [key, input, withSkillTokens(options, tokens)] }),
+        queryOperations: (...args: unknown[]) => counted({ binding: 'queryOperations', args }),
         loadSkill: (...args: unknown[]) =>
-          dispatch({ binding: 'loadSkill', args }).pipe(Effect.tap((listing) => recordSkillToken(listing, tokens))),
+          counted({ binding: 'loadSkill', args }).pipe(Effect.tap((listing) => recordSkillToken(listing, tokens))),
         /** Supplied by the wrapper, not by the script: runs its program and reports how it failed. */
         runEffect: (program: unknown): Promise<unknown> =>
           isProgram(program)
@@ -92,14 +108,15 @@ export const inProcess: Sandbox = {
         try: () => evaluate(wrap(code), bindings, timeout),
         catch: describeFailure,
       }).pipe(Effect.result);
+      const callStats = { calls: stats.calls, callMs: Math.round(stats.callMs) };
       if (result._tag === 'Failure') {
-        return { output: printer.output(), error: result.failure };
+        return { output: printer.output(), error: result.failure, stats: callStats };
       }
       // A program that printed nothing but returned a value would otherwise answer with nothing.
       if (result.success !== undefined && printer.isEmpty()) {
         printer.print(result.success);
       }
-      return { output: printer.output() };
+      return { output: printer.output(), stats: callStats };
     }),
 };
 
@@ -241,4 +258,20 @@ const format = (value: unknown): string => {
   } catch {
     return String(value);
   }
+};
+
+/**
+ * The text a `runScript` call answers with: what the program printed, its failure when it failed,
+ * and a trailer with the calls it made and how long they took, so the caller can tell a slow script
+ * from a chatty one without asking for timings in the code.
+ */
+export const formatAnswer = ({ output, error, stats }: ScriptResult, totalMs: number): string => {
+  const trailer = [
+    stats ? `${stats.calls} ${stats.calls === 1 ? 'call' : 'calls'}` : undefined,
+    stats ? `${stats.callMs} ms in calls` : undefined,
+    `${Math.round(totalMs)} ms total`,
+  ].filter((part) => part !== undefined);
+  return [output, error === undefined ? undefined : `Error: ${error}`, `---\n${trailer.join(' · ')}`]
+    .filter((part) => part !== undefined && part.length > 0)
+    .join('\n');
 };

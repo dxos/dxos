@@ -18,6 +18,17 @@ export const GEOMETRY: Record<Size, { block: number; inset: number; icon: number
 /** Control height per size: the block less its inset on both sides. */
 export const controlSize = (size: Size) => GEOMETRY[size].block - 2 * GEOMETRY[size].inset;
 
+/**
+ * A trailing icon (a control's caret, trigger or stepper; a row's icon-only action) sits in the block-wide end cell of
+ * whatever ends at `end`: its centre half a block from that edge and its box the control icon size, so every trailing
+ * icon of a form column shares one column and one size.
+ */
+export const expectEndCell = async (icon: Element | null | undefined, end: number, size: Size, message: string) => {
+  const box = icon?.getBoundingClientRect();
+  await expect(box && box.left + box.width / 2, `${message} centre`).toBeCloseTo(end - GEOMETRY[size].block / 2, 0);
+  await expect(box?.width, `${message} icon`).toBeCloseTo(GEOMETRY[size].icon, 0);
+};
+
 export const byTestId = (root: HTMLElement, testId: string) => {
   const element = root.querySelector<HTMLElement>(`[data-testid="${testId}"]`);
   if (!element) {
@@ -37,7 +48,7 @@ export const centreX = (rect: DOMRect) => rect.left + rect.width / 2;
  * The surface a popup is painted on: the popup itself, or the ScrollArea frame of a scrolling popup (Menu, Select,
  * Combobox), whose viewport is the Ark content.
  */
-export const popupFrame = (popup: HTMLElement) => popup.closest<HTMLElement>('.nx-popup') ?? popup;
+export const popupFrame = (popup: HTMLElement) => popup.closest<HTMLElement>('.dx-popup') ?? popup;
 
 /**
  * Asserts a popup renders at `size` (Phase 4 decision 2): its surface carries the `data-size` and resolves that size's
@@ -46,7 +57,7 @@ export const popupFrame = (popup: HTMLElement) => popup.closest<HTMLElement>('.n
 export const expectPopupSize = async (popup: HTMLElement, size: Size) => {
   const frame = popupFrame(popup);
   await expect(frame).toHaveAttribute('data-size', size);
-  await expect(getComputedStyle(frame).getPropertyValue('--nx-block-size')).toBe(`${GEOMETRY[size].block / 16}rem`);
+  await expect(getComputedStyle(frame).getPropertyValue('--dx-block-size')).toBe(`${GEOMETRY[size].block / 16}rem`);
 };
 
 /** A popup's arrow part, if it renders one; a scrolling popup draws it in its frame, outside the clipping viewport. */
@@ -124,7 +135,7 @@ export const expectArrow = async (anchor: HTMLElement, popup: HTMLElement) => {
  * shows no native bar, and keeps the highlighted item in view while ArrowDown walks `steps` items past the fold.
  */
 export const expectScrollingPopup = async (popup: HTMLElement, steps: number) => {
-  await expect(popup).toHaveClass('nx-scroll-viewport');
+  await expect(popup).toHaveClass('dx-scroll-viewport');
   // A direct child: a dev slot-warning wrapper in between would break the frame's child rules.
   await expect(popup.parentElement).toBe(popupFrame(popup));
   await expect(popup.scrollHeight, 'popup overflows').toBeGreaterThan(popup.clientHeight);
@@ -154,7 +165,7 @@ export const expectThumbReserve = async (popup: HTMLElement) => {
     await expect(thumb, 'vertical thumb').not.toBeNull();
     await expect(popupFrame(popup)).toHaveAttribute('data-overflow-y');
     const thumbRect = thumb?.getBoundingClientRect() ?? new DOMRect();
-    const ring = parseFloat(getComputedStyle(popup).getPropertyValue('--nx-focus-ring-width'));
+    const ring = parseFloat(getComputedStyle(popup).getPropertyValue('--dx-focus-ring-width'));
     await expect(ring, 'focus ring width').toBeGreaterThan(0);
     await expect(thumbRect.right, 'thumb inside ring').toBeLessThanOrEqual(
       popup.getBoundingClientRect().right - ring + 0.5,
@@ -176,7 +187,9 @@ export const expectNonScrollingPopup = async (popup: HTMLElement) => {
   await expect(popup.scrollHeight, 'popup fits').toBeLessThanOrEqual(popup.clientHeight);
   await expect(popupFrame(popup)).not.toHaveAttribute('data-overflow-y');
   await expect(popupFrame(popup).querySelector('[data-scroll-thumb]')).toBeNull();
-  await expect(getComputedStyle(popup).paddingRight, 'no reserve').toBe('0px');
+  // Its inline inset is the same on both sides; a reserved strip would widen only the end.
+  const style = getComputedStyle(popup);
+  await expect(style.paddingRight, 'no reserve').toBe(style.paddingLeft);
 };
 
 /** Hovers with a real pointer (the storybook runner's Playwright), since synthetic events never apply `:hover`. */
@@ -212,10 +225,16 @@ export const watchResizeObserverLoop = (root: HTMLElement) => {
   };
 };
 
+// Theme utilities share the `dx-` prefix but style any element (a story's layout wrapper), so they mark no part.
+const THEME_UTILITY = /^dx-(scope|expand|fill|fullscreen|grow|shrink|.+-surface)$/;
+
 /** Every themed part carries Ark's scope/part attributes (decision 10). */
 export const expectScoped = async (root: HTMLElement) => {
-  for (const part of root.querySelectorAll('[class*="nx-"]:not(.nx-scope)')) {
-    await expect(part.hasAttribute('data-scope'), part.className).toBe(true);
+  for (const part of root.querySelectorAll('[class*="dx-"]')) {
+    const themed = [...part.classList].some((name) => name.startsWith('dx-') && !THEME_UTILITY.test(name));
+    if (themed) {
+      await expect(part.hasAttribute('data-scope'), part.className).toBe(true);
+    }
   }
 };
 

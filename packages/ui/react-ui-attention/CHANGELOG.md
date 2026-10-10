@@ -1,5 +1,28 @@
 # @dxos/react-ui-attention
 
+## 0.13.0
+
+### Minor Changes
+
+- 321c99f: Every `@dxos/react-ui` component family is now a namespace module with its own subpath. A compound family exports its parts: `import * as Dialog from '@dxos/react-ui/Dialog'` gives `Dialog.Root`, `Dialog.Content` and `Dialog.RootProps`. A single component keeps its own names: `<Icon.Icon>`, `Icon.IconProps`. Related components share a namespace: `Button` (`Button.Root`, `Button.Toggle`, `Button.Menu`, `Button.Group`), `Input` (`Input.Root`, `Input.Textarea`, `Input.Number`, `Input.Password`, `Input.Pin`, `Input.Date`, `Input.Slider`, `Input.Frame`, `Input.Checkbox`, `Input.Switch`), `Layout` (`Layout.Flex`, `Layout.Grid`, `Layout.Container`, `Layout.Block`, `Layout.Separator`), `Status` (`Status.Empty`, `Status.Skeleton`, `Status.Deferred`, `Status.Error`, `Status.Progress`, `Status.Steps`), `Typography` (`Typography.Text`, `Typography.Link`, `Typography.Timestamp`, `Typography.Crawl`) and `Media` (`Media.Image`, `Media.Player`). `ThemeProvider` is now `Theme.Provider`. General hooks live in `@dxos/react-ui/Hooks` (`Hooks.useTranslation`) and composition helpers in `@dxos/react-ui/Util`. The root exports namespaces only, so `import { Dialog } from '@dxos/react-ui'` still works, but flat names such as `ButtonProps` and `useTranslation` are gone, and so are the `@dxos/ui-types` re-exports (import those from `@dxos/ui-types`).
+
+  `AttentionGlyph` moves from `@dxos/react-ui` to `@dxos/react-ui-attention`.
+
+### Patch Changes
+
+- Updated dependencies [d2a6aad]
+- Updated dependencies [7d222fc]
+- Updated dependencies [1b37aa8]
+- Updated dependencies [321c99f]
+- Updated dependencies [49731e1]
+  - @dxos/react-ui@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/react-focus@0.13.0
+  - @dxos/react-hooks@0.13.0
+  - @dxos/invariant@0.13.0
+  - @dxos/ui-theme@0.13.0
+  - @dxos/ui-types@0.13.0
+
 ## 0.12.0
 
 ### Patch Changes

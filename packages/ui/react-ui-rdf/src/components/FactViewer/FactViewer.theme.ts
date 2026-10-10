@@ -22,20 +22,20 @@ const factViewerStyles = tv({
     graphTree: 'dx-fill',
 
     // Subject group card.
-    group: 'shrink-0 flex flex-col dx-card-surface border border-subdued-separator rounded-sm overflow-hidden',
+    group: 'shrink-0 flex flex-col dx-card-surface border border-separator-subtle rounded-sm overflow-hidden',
     groupHeader: 'flex px-3 py-1 items-center justify-between',
     groupConflict: 'flex items-center gap-1',
 
     // Fact row.
     row: 'flex flex-col items-stretch gap-2 px-3 py-1',
-    rowQuote: 'text-sm text-description italic',
+    rowQuote: 'text-sm text-fg-muted italic',
     rowGrid: 'grid grid-cols-[1fr_5rem] items-center justify-between gap-2',
     rowTriple: 'w-full grid grid-cols-[1fr_1rem_1fr_1rem_1fr] items-center flex-wrap',
-    cell: 'bg-input-surface border border-subdued-separator rounded-sm px-2 py-0.5 font-medium whitespace-nowrap truncate',
-    cellDivider: 'border border-subdued-separator',
+    cell: 'bg-input-surface border border-separator-subtle rounded-sm px-2 py-0.5 font-medium whitespace-nowrap truncate',
+    cellDivider: 'border border-separator-subtle',
     rowMeta: 'flex items-center justify-end gap-2 shrink-0',
-    rowConfidence: 'text-xs text-subdued',
-    rowAttribution: 'text-xs text-subdued text-right',
+    rowConfidence: 'text-xs text-fg-subtle',
+    rowAttribution: 'text-xs text-fg-subtle text-right',
   },
   variants: {
     // Conflicting facts get a warning rule on the inline-start edge.

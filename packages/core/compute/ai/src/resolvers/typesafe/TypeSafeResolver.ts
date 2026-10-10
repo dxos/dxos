@@ -158,6 +158,11 @@ export type Options<R = never> = {
   readonly endpoint?: () => string;
   /** How long one call may take; a stalled endpoint otherwise holds every decision waiting on it. */
   readonly timeout?: Duration.Input;
+  /**
+   * Whether the back-end reads System One's `images` extension (Clef does, jev does not). Without it a
+   * decision that passes images fails rather than being answered blind.
+   */
+  readonly images?: boolean;
 };
 
 export const DEFAULT_TIMEOUT: Duration.Input = '30 seconds';
@@ -166,6 +171,32 @@ const MODULE = 'TypeSafe';
 
 const aiError = (reason: AiError.AiErrorReason): AiError.AiError =>
   AiError.make({ module: MODULE, method: 'decide', reason });
+
+const base64 = (bytes: Uint8Array): string => {
+  let binary = '';
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte);
+  }
+  return btoa(binary);
+};
+
+/**
+ * An image as System One's `images` extension takes it: an embedded data URL. A remote URL is refused
+ * here, since the API does not fetch one.
+ */
+export const toDataUrl = ({ mediaType, data }: DecisionModel.Image): Effect.Effect<string, AiError.AiError> => {
+  if (data instanceof URL) {
+    return data.protocol === 'data:'
+      ? Effect.succeed(data.href)
+      : Effect.fail(
+          aiError(new AiError.InvalidUserInputError({ description: 'System One accepts only embedded images.' })),
+        );
+  }
+  if (typeof data === 'string') {
+    return Effect.succeed(data.startsWith('data:') ? data : `data:${mediaType};base64,${data}`);
+  }
+  return Effect.succeed(`data:${mediaType};base64,${base64(data)}`);
+};
 
 const fromHttpClientError = (error: HttpClientError.HttpClientError): AiError.AiError => {
   switch (error.reason._tag) {
@@ -183,16 +214,18 @@ const fromHttpClientError = (error: HttpClientError.HttpClientError): AiError.Ai
 /** A `DecisionModel` answering through System One's `backend` model. */
 export const makeDecisionModel = <R = never>(
   backend: string,
-  { apiKey, endpoint = () => DEFAULT_ENDPOINT, timeout = DEFAULT_TIMEOUT }: Options<R>,
+  { apiKey, endpoint = () => DEFAULT_ENDPOINT, timeout = DEFAULT_TIMEOUT, images: supportsImages = false }: Options<R>,
 ): Effect.Effect<DecisionModel.DecisionModel, never, HttpClient.HttpClient | R> =>
   Effect.gen(function* () {
     const client = yield* HttpClient.HttpClient;
     // Captured so `decide` can resolve the key without the caller providing its services.
     const context = yield* Effect.context<R>();
     return yield* DecisionModel.make({
-      decide: ({ state, decisions }) =>
+      supportsImages,
+      decide: ({ state, decisions, images }) =>
         Effect.gen(function* () {
           const key = yield* apiKey;
+          const dataUrls = images ? yield* Effect.forEach(images, toDataUrl) : undefined;
           const request = HttpClientRequest.post(endpoint()).pipe(
             (request) => (key ? HttpClientRequest.bearerToken(request, key) : request),
             HttpClientRequest.bodyJsonUnsafe({
@@ -201,6 +234,7 @@ export const makeDecisionModel = <R = never>(
               questions: Object.fromEntries(
                 Object.entries(decisions).map(([name, decision]) => [name, toQuestion(decision)]),
               ),
+              ...(dataUrls ? { images: dataUrls } : {}),
             }),
           );
           const json = yield* client.execute(request).pipe(
@@ -275,7 +309,9 @@ export const make = <R = never>(
         return model && options
           ? Layer.effect(
               DecisionModel.DecisionModel,
-              makeDecisionModel(model.backend, options).pipe(Effect.provide(context)),
+              makeDecisionModel(model.backend, { ...options, images: model.characteristics?.image === true }).pipe(
+                Effect.provide(context),
+              ),
             )
           : Layer.unwrap(Effect.fail(new AiModelNotAvailableError(id)));
       };

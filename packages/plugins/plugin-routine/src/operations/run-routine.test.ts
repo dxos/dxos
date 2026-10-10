@@ -31,7 +31,7 @@ const received: unknown[] = [];
 const monitorInvocations: string[] = [];
 
 /** Stands in for the aggregate monitor, whose real implementation routes `remote` triggers to EDGE over HTTP. */
-const TestMonitor = Layer.succeed(Trigger.TriggerMonitorService, {
+const TestMonitor = Layer.succeed(Trigger.ManagerService, {
   triggers: Atom.make<readonly Trigger.State[]>([]),
   localDispatcherEnabled: false,
   invokeTrigger: ({ trigger }) => Effect.sync(() => void monitorInvocations.push(trigger.id)),

@@ -48,7 +48,8 @@ import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Ref from 'effect/Ref';
 import * as Semaphore from 'effect/Semaphore';
 
-import { AtomEx, EffectEx } from '@dxos/effect';
+import * as AtomEx from '@dxos/effect/AtomEx';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 
 import type * as ActivationEvent from '../activation-event.ts';

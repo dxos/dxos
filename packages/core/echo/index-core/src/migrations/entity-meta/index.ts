@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as SqlClient from 'effect/sql/SqlClient';
 
-import { SqlMigrations } from '@dxos/sql-sqlite';
+import * as SqlMigrations from '@dxos/sql-sqlite/SqlMigrations';
 
 import init from './0001_init.sql?raw';
 import indexes from './0003_indexes.sql?raw';

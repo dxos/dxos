@@ -13,7 +13,7 @@ import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSettings from '@dxos/app-toolkit/AppSettings';
 import { Annotation, Database, Obj, Ref } from '@dxos/echo';
-import { createKvsStore } from '@dxos/effect';
+import * as KvsStore from '@dxos/effect/KvsStore';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
@@ -76,7 +76,7 @@ export default Capability.makeModule(
       }),
     );
     // This device's pins. One per device, so the key names no device.
-    const device = createKvsStore({
+    const device = KvsStore.make({
       key: 'org.dxos.app-toolkit.settings-scope',
       schema: AppSettings.DeviceSettings,
       defaultValue: AppSettings.makeDeviceSettings,

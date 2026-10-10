@@ -4,7 +4,7 @@
 
 import type * as JSONSchema from 'effect/JsonSchema';
 
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 
 import { createAnnotationHelper } from '../Annotation/index.ts';
 import { type JsonSchemaType } from '../JsonSchema/index.ts';

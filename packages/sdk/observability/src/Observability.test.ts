@@ -362,8 +362,18 @@ describe('Observability', () => {
         const uploadLogs = vi.fn(async () => 'logs/1.ndjson');
         const sessionContext = vi.fn(() => ({ distinctId: 'd', widgetSessionId: 'w' }));
         const flushLogs = vi.fn(async () => {});
+        const uploadNdjson = vi.fn(async () => 'trajectories/1.ndjson.gz');
         const supportExt = createMockExtension({
-          apis: [{ kind: 'support', isAvailable: () => Effect.succeed(true), uploadLogs, sessionContext, flushLogs }],
+          apis: [
+            {
+              kind: 'support',
+              isAvailable: () => Effect.succeed(true),
+              uploadLogs,
+              uploadNdjson,
+              sessionContext,
+              flushLogs,
+            },
+          ],
         });
         const obs = yield* Function.pipe(
           Observability.make(),
@@ -371,6 +381,10 @@ describe('Observability', () => {
           Observability.initialize,
         );
         expect(yield* Effect.promise(() => obs.support.uploadLogs())).toBe('logs/1.ndjson');
+        expect(yield* Effect.promise(() => obs.support.uploadNdjson('{}', 'trajectory'))).toBe(
+          'trajectories/1.ndjson.gz',
+        );
+        expect(uploadNdjson).toHaveBeenCalledWith('{}', 'trajectory');
         expect(obs.support.sessionContext()).toEqual({ distinctId: 'd', widgetSessionId: 'w' });
         yield* Effect.promise(() => obs.support.flushLogs({ ticketId: 'ticket-1' }));
         expect(flushLogs).toHaveBeenCalledWith({ ticketId: 'ticket-1' });

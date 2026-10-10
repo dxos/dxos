@@ -7,9 +7,9 @@ import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
-import { Dialog } from '@dxos/react-ui';
+import * as Dialog from '@dxos/react-ui/Dialog';
 import { withLayout } from '@dxos/react-ui/testing';
 
 import { NavTreePlugin } from '#plugin';
@@ -19,9 +19,7 @@ import { CommandsDialogContent } from './CommandsDialogContent.tsx';
 
 const DefaultStory = () => (
   <Dialog.Root defaultOpen>
-    <Dialog.Overlay>
-      <CommandsDialogContent />
-    </Dialog.Overlay>
+    <CommandsDialogContent />
   </Dialog.Root>
 );
 
@@ -32,7 +30,7 @@ const meta = {
   decorators: [
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
-      plugins: [...corePlugins(), StorybookPlugin.make({}), NavTreePlugin()],
+      plugins: [...CorePlugins.make(), StorybookPlugin.make({}), NavTreePlugin()],
     }),
   ],
   tags: ['test'],

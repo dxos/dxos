@@ -13,7 +13,7 @@ import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import {
   type ExtractError,
   ExtractError as ExtractErrorClass,

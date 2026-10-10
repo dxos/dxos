@@ -21,7 +21,7 @@
 import * as Effect from 'effect/Effect';
 import type * as Stream from 'effect/Stream';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import { isTauri } from '@dxos/util';
 

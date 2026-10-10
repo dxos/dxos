@@ -10,14 +10,14 @@ import { log } from '@dxos/log';
 
 import { InboxOperation } from '#types';
 
-import { findFeedCursor } from './FeedCursor.ts';
+import * as FeedCursor from './FeedCursor.ts';
 
 /** Clears a consumer's feed cursor so its next run reprocesses the whole mailbox feed. */
 const handler = InboxOperation.ResetFeedCursor.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ mailbox: mailboxRef, cursorId }) {
       const mailbox = yield* Database.load(mailboxRef);
-      const cursor = yield* findFeedCursor(mailbox, cursorId);
+      const cursor = yield* FeedCursor.findFeedCursor(mailbox, cursorId);
       if (!cursor) {
         return { reset: false };
       }

@@ -9,7 +9,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Expando } from '@dxos/schema';
 
 import * as AccessToken from './AccessToken.ts';

@@ -197,7 +197,7 @@ const Mounted = ({ definition }: { definition: ScenarioDefinition }) => {
       estimateSize={definition.estimateSize}
       stickyBottom={definition.stickyBottom}
     >
-      <MessageList.Viewport classNames='dx-fullscreen' padding />
+      <MessageList.Viewport classNames='dx-cover' />
     </MessageList.Root>
   );
 };

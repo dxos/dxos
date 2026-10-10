@@ -16,23 +16,23 @@ import React, { type FC, type PropsWithChildren, type ReactNode, useEffect, useM
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as PluginManager from '@dxos/app-framework/PluginManager';
 import { type WithPluginManagerOptions, activateDemandGatedModules } from '@dxos/app-framework/testing';
-import { useApp } from '@dxos/app-framework/ui';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { persistentClientServices } from '@dxos/client/testing';
 import { Obj } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { AccessToken } from '@dxos/link';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
-import { type ClientPluginOptions } from '@dxos/plugin-client/ClientOptions';
+import type * as ClientOptions from '@dxos/plugin-client/ClientOptions';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -58,7 +58,7 @@ export type StoryDecoratorsProps = {
   setupEvents?: WithPluginManagerOptions['setupEvents'];
   /** Rendered inside the plugin-manager context, wrapping the story (e.g. a chat-context binder). */
   Wrapper?: FC<PropsWithChildren>;
-} & Omit<ClientPluginOptions, 'onClientInitialized' | 'onSpacesAvailable'>;
+} & Omit<ClientOptions.ClientPluginOptions, 'onClientInitialized' | 'onSpacesAvailable'>;
 
 /**
  * Props, or a function of the story context — the function form gives seeding code access to the
@@ -131,7 +131,7 @@ const buildStoryPluginOptions = ({
   return {
     setupEvents,
     plugins: [
-      ...corePlugins(),
+      ...CorePlugins.make(),
       ClientPlugin.make({
         types,
         onClientInitialized: ({ client }) =>
@@ -253,7 +253,7 @@ const PluginManagerHost = ({
   // Forward `setupEvents` (e.g. SetupSettings) so plugins contribute their settings capabilities;
   // `useApp` is what fires them, and without this the lazy path skips them (the non-lazy
   // `withPluginManager` path forwards them automatically).
-  const App = useApp({ pluginManager: manager, setupEvents: options.setupEvents });
+  const App = Hooks.useApp({ pluginManager: manager, setupEvents: options.setupEvents });
   return <App />;
 };
 

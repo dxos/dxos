@@ -5,8 +5,10 @@
 import React, { forwardRef } from 'react';
 
 import { type Type } from '@dxos/echo';
-import { Card, Panel, ScrollArea } from '@dxos/react-ui';
 import { ObjectForm } from '@dxos/react-ui-form';
+import * as Card from '@dxos/react-ui/Card';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 
 import { SpaceCapabilities } from '#types';
 
@@ -22,15 +24,15 @@ export type MergePreviewProps = {
  */
 export const MergePreview = forwardRef<HTMLDivElement, MergePreviewProps>(({ type, preview }, forwardedRef) => (
   <Panel.Root ref={forwardedRef}>
-    <Panel.Content asChild>
-      <ScrollArea.Root orientation='vertical' centered>
+    <Panel.Body asChild>
+      <ScrollArea.Root orientation='vertical'>
         <ScrollArea.Viewport>
-          <Card.Root fullWidth classNames='pb-form-gap'>
+          <Card.Root classNames='pb-form-gap'>
             <ObjectForm object={preview.preview} type={type} />
           </Card.Root>
         </ScrollArea.Viewport>
       </ScrollArea.Root>
-    </Panel.Content>
+    </Panel.Body>
   </Panel.Root>
 ));
 

@@ -17,6 +17,8 @@ const handler: Operation.WithHandler<typeof SpaceOperation.OpenSettings> = Space
         subject: [GraphPath.getSpacePath(input.space.id, 'settings', 'settings')],
         workspace: GraphPath.getSpacePath(input.space.id),
       });
+      // As with the app settings, a companion carried over from the space's objects would only narrow the settings.
+      yield* LayoutOperation.closeCompanion();
     }),
   ),
 );

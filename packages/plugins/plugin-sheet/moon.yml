@@ -5,6 +5,7 @@ tags:
   - e2e
   - ts-vite-build
   - ts-test
+  - ts-test-workerd
   - ts-test-storybook
   - pack
   - storybook

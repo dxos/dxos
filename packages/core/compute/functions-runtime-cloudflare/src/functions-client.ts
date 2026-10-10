@@ -8,7 +8,7 @@ import * as Scope from 'effect/Scope';
 
 import { Resource } from '@dxos/context';
 import { EchoClient } from '@dxos/echo-client';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { type EdgeFunctionEnv, makeInProcessClient } from '@dxos/protocols';

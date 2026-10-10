@@ -6,11 +6,11 @@ import * as Effect from 'effect/Effect';
 import * as PubSub from 'effect/PubSub';
 import * as Stream from 'effect/Stream';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import { OperationInvoker } from '@dxos/operation';
 
-import { type Label } from '../../common/index.ts';
+import { type Label } from '../../common/translations.ts';
 import { EmptyHistoryError } from './errors.ts';
 import type { HistoryEntry } from './types.ts';
 import { resolveMessage } from './undo-mapping.ts';
@@ -142,3 +142,6 @@ export const make = (
     undoable,
   };
 };
+
+export { EmptyHistoryError } from './errors.ts';
+export type { HistoryEntry } from './types.ts';

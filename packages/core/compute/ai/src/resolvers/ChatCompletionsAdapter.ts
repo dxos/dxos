@@ -65,6 +65,31 @@ const unknownError = (method: string, detail: string, cause?: unknown) =>
   });
 
 /**
+ * The error for a non-2xx response, carrying the provider's own message. Ollama answers a tool call
+ * it cannot parse (gpt-oss writing a JS object literal for the arguments) with a 500, which is a
+ * fault in the model's output rather than the request, so it is reported as one: callers retry
+ * `InvalidOutputError` and not `UnknownError`.
+ */
+export const rejectionError = (method: string, status: number, body: string): AiError.AiError => {
+  let message = body;
+  try {
+    const error = JSON.parse(body).error;
+    if (typeof error === 'string') {
+      message = error;
+    } else if (typeof error?.message === 'string') {
+      message = error.message;
+    }
+  } catch {}
+  return new AiError.AiError({
+    module: MODULE,
+    method,
+    reason: message.includes('error parsing tool call')
+      ? new AiError.InvalidOutputError({ description: message })
+      : new AiError.UnknownError({ description: `HTTP ${status}: ${message}` }),
+  });
+};
+
+/**
  * OpenAI-style tool call (both Ollama and OpenAI endpoints emit a variant of this).
  *
  * - OpenAI: `arguments` is a JSON-encoded string.
@@ -747,7 +772,21 @@ export const make = (model: string, requestOptions: RequestOptions = {}) =>
           const endpoint = getChatEndpoint(config.baseUrl, config.apiFormat);
           const httpRequest = HttpClientRequest.post(endpoint).pipe(HttpClientRequest.bodyJson(requestBody));
           const response = yield* httpRequest.pipe(
-            Effect.flatMap((req) => httpClient.execute(req).pipe(Effect.flatMap((res) => res.json))),
+            Effect.flatMap((req) => httpClient.execute(req)),
+            // Without this a rejection's error body is read as a reply with no content, and the turn
+            // ends silently instead of failing.
+            Effect.flatMap((res) =>
+              res.status === 200
+                ? res.json
+                : Effect.flatMap(res.text, (body) => {
+                    log.warn('chat completions request rejected', {
+                      status: res.status,
+                      body: body.slice(0, 500),
+                      messages: describeMessages(messages),
+                    });
+                    return Effect.fail(rejectionError('generateText', res.status, body));
+                  }),
+            ),
             Effect.timeoutOrElse({
               duration: requestTimeout,
               orElse: () => networkError('generateText', `request timed out after ${Duration.format(requestTimeout)}`),
@@ -865,14 +904,7 @@ export const make = (model: string, requestOptions: RequestOptions = {}) =>
                 body: body.slice(0, 500),
                 messages: describeMessages(messages),
               });
-              try {
-                const json = JSON.parse(body);
-                const error = json.error;
-                if (typeof error === 'string') {
-                  return Stream.fail(unknownError('streamText', error));
-                }
-              } catch {}
-              return Stream.fail(unknownError('streamText', body));
+              return Stream.fail(rejectionError('streamText', response.status, body));
             }
 
             const textId = `chat-text-${Date.now()}`;

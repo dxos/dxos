@@ -6,8 +6,9 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { expect } from 'storybook/test';
 
-import { IconButton, Toolbar } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
 import { ListModel } from './list-model.ts';
@@ -144,14 +145,14 @@ const DefaultStory = ({
   return (
     <div className='flex flex-col h-full'>
       <Toolbar.Root>
-        <IconButton
+        <Button.Root
           icon='ph--caret-up--regular'
           iconOnly
           label='Previous'
           data-testid='window.prev'
           onClick={() => step(-1)}
         />
-        <IconButton
+        <Button.Root
           icon='ph--caret-down--regular'
           iconOnly
           label='Next'
@@ -159,14 +160,14 @@ const DefaultStory = ({
           onClick={() => step(1)}
         />
         <Toolbar.Separator />
-        <IconButton
+        <Button.Root
           icon='ph--arrow-line-up--regular'
           iconOnly
           label='Top'
           data-testid='window.top'
           onClick={() => controller.current?.scrollToIndex(0)}
         />
-        <IconButton
+        <Button.Root
           icon='ph--arrow-line-down--regular'
           iconOnly
           label='Bottom'
@@ -175,7 +176,7 @@ const DefaultStory = ({
         />
         {(append || prepend || grow) && <Toolbar.Separator />}
         {prepend && (
-          <IconButton
+          <Button.Root
             icon='ph--arrow-u-left-up--regular'
             iconOnly
             label='Prepend'
@@ -191,7 +192,7 @@ const DefaultStory = ({
           />
         )}
         {append && (
-          <IconButton
+          <Button.Root
             icon='ph--arrow-u-right-down--regular'
             iconOnly
             label='Append'
@@ -207,7 +208,7 @@ const DefaultStory = ({
           />
         )}
         {grow && (
-          <IconButton
+          <Button.Root
             icon='ph--arrows-out-line-vertical--regular'
             iconOnly
             label='Grow'
@@ -256,7 +257,7 @@ const DefaultStory = ({
         </Window>
       </div>
 
-      <div className='px-2 py-1 flex gap-4 text-xs text-description tabular-nums' data-testid='placement.report'>
+      <div className='px-2 py-1 flex gap-4 text-xs text-fg-muted tabular-nums' data-testid='placement.report'>
         <span data-testid='window.index'>{state?.index ?? 0}</span>
         <span data-testid='window.range'>
           {state ? `${state.visible.first}–${state.visible.last}` : '—'} of {state?.count ?? 0}

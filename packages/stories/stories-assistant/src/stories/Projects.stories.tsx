@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { userEvent, within } from 'storybook/test';
 
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { log } from '@dxos/log';
 import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
 import * as Sandbox from '@dxos/plugin-sandbox/Sandbox';

@@ -21,7 +21,7 @@ export const PluginAsset = AppCapability.pluginAsset({
   mimeType: 'application/x-mdl',
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
-  roles: ['org.dxos.role.article', 'org.dxos.role.section'],
+  roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.section'],
 });
 export const Schema = AppCapability.schema(() => import('./schema.ts'));
 export const SpacetimeSettings = AppCapability.settings(() => import('./settings.ts'), {

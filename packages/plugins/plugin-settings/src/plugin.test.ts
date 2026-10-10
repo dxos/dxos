@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { ProcessManagerPlugin } from '@dxos/app-framework';
+import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import { createTestApp } from '@dxos/app-framework/testing';
 import * as GraphPlugin from '@dxos/plugin-graph/GraphPlugin';
 
@@ -19,7 +19,7 @@ describe('SettingsPlugin', () => {
     // All plugin-settings modules are dependency-mode and activate during the startup
     // dependency pass, regardless of the legacy Setup*/Ready event waves.
     await using harness = await createTestApp({
-      plugins: [GraphPlugin.make(), ProcessManagerPlugin(), SettingsPlugin()],
+      plugins: [GraphPlugin.make(), ProcessManagerPlugin.make(), SettingsPlugin()],
     });
 
     expect(harness.manager.getActive()).toEqual(

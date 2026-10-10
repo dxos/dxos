@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+import * as McpSchema from 'effect/ai/McpSchema';
 import * as McpServer$ from 'effect/ai/McpServer';
 import * as Tool from 'effect/ai/Tool';
 import * as Toolkit from 'effect/ai/Toolkit';
@@ -585,8 +586,12 @@ export const invokeHosted = (
 export type ScriptSandbox = scriptInternal.Sandbox;
 export type ScriptRequest = scriptInternal.ScriptRequest;
 export type ScriptResult = scriptInternal.ScriptResult;
+export type ScriptStats = scriptInternal.ScriptStats;
 export type ScriptDispatch = scriptInternal.ScriptDispatch;
 export { ScriptCall, type ScriptOutcome } from './internal/script.ts';
+
+/** The text `runScript` answers with: the printed output, the failure, and a trailer of call counts and timings. */
+export const formatScriptAnswer = scriptInternal.formatAnswer;
 
 /** In-process evaluation — NOT a security boundary; only for a host whose caller already holds its authority. */
 export const inProcessScriptSandbox: ScriptSandbox = scriptInternal.inProcess;
@@ -633,7 +638,9 @@ export const RunScript = Tool.make('runScript', {
     "is { _tag: 'Success', success } or { _tag: 'Failure', failure }. Run independent calls together " +
     'with `yield* Effect.all([...], { concurrency: 8 })`. Nothing else is in scope: no import, ' +
     'require or fetch. Only printed values reach you — print the fields you need, not whole objects. ' +
-    'Look up input schemas with queryOperations before writing code against them.',
+    'Look up input schemas with queryOperations before writing code against them. The answer is the ' +
+    'printed text, then a failure line when the program failed (the call is then an error), then a ' +
+    'trailer after `---` counting the calls the program made and the time they took.',
   parameters: Schema.Struct({
     code: Schema.String.annotate({
       description: 'The body of an Effect.gen generator, without the wrapper. Print anything you need to see.',
@@ -980,20 +987,64 @@ export const toolsLayer = ({
         Layer.provide(ServerToolkit.toLayer(Effect.map(handlers, ({ handlers }) => ServerToolkit.of(handlers)))),
       );
     }
-    return McpServer$.toolkit(ScriptServerToolkit).pipe(
+    // Built once, so the toolkit's handlers and the plain-text runScript share one skill gate.
+    const built = yield* handlers;
+    const runScriptRequest = (request: typeof RunScript.parametersSchema.Type) =>
+      Effect.flatMap(built.source.registry, (registry) => runScript(registry, built.host, built.gate, request, script));
+    return Layer.effectDiscard(
+      Effect.gen(function* () {
+        yield* McpServer$.registerToolkit(ScriptServerToolkit);
+        yield* registerPlainTextRunScript(runScriptRequest);
+      }),
+    ).pipe(
       Layer.provide(
-        ScriptServerToolkit.toLayer(
-          Effect.map(handlers, ({ source, host, gate, handlers }) =>
-            ScriptServerToolkit.of({
-              ...handlers,
-              runScript: (request) =>
-                Effect.flatMap(source.registry, (registry) => runScript(registry, host, gate, request, script)),
-            }),
-          ),
-        ),
+        ScriptServerToolkit.toLayer(ScriptServerToolkit.of({ ...built.handlers, runScript: runScriptRequest })),
       ),
+      Layer.provide(McpServer$.McpServer.layer),
     );
   }).pipe(Layer.unwrap);
+
+/**
+ * Re-registers {@link RunScript} to answer with text rather than the toolkit's JSON-encoded result:
+ * the answer is meant to be read, and a failed program is an error result. The toolkit registration
+ * it replaces supplies the descriptor (schema, description, annotations); the output schema is
+ * dropped, since a tool that declares one must answer with structured content.
+ */
+const registerPlainTextRunScript = (
+  run: (request: typeof RunScript.parametersSchema.Type) => Effect.Effect<ScriptResult, ToolFailure>,
+): Effect.Effect<void, never, McpServer$.McpServer> =>
+  Effect.gen(function* () {
+    const server = yield* McpServer$.McpServer;
+    const registered = server.tools.find(({ tool }) => tool.name === RunScript.name);
+    if (registered === undefined) {
+      return yield* Effect.die(new Error(`${RunScript.name} was not registered by its toolkit.`));
+    }
+    const decode = Schema.decodeUnknownEffect(RunScript.parametersSchema);
+    yield* server.addTool({
+      tool: new McpSchema.Tool({ ...registered.tool, outputSchema: undefined }),
+      annotations: registered.annotations,
+      handle: (payload) =>
+        decode(payload ?? {}).pipe(
+          Effect.mapError((error) => new McpSchema.InvalidParams({ message: String(error) })),
+          Effect.flatMap((request) =>
+            Effect.timed(run(request)).pipe(
+              Effect.map(
+                ([duration, result]) =>
+                  new McpSchema.CallToolResult({
+                    isError: result.error !== undefined,
+                    content: [{ type: 'text', text: formatScriptAnswer(result, Duration.toMillis(duration)) }],
+                  }),
+              ),
+              Effect.catchTag('ToolFailure', (error) =>
+                Effect.succeed(
+                  new McpSchema.CallToolResult({ isError: true, content: [{ type: 'text', text: error.message }] }),
+                ),
+              ),
+            ),
+          ),
+        ),
+    });
+  });
 
 /**
  * Registers the opted-in skills of `registry` as prompts on an already-running server. Needs skills

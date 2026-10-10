@@ -27,6 +27,28 @@ tasks:
       - $NODE_OPTIONS
     outputs:
       - out/storybook-react/
+  # Static build of only the stories the chat perf flow loads (`assistant-e2e:e2e-perf`), which serves
+  # it with `vite preview` so its stages measure the bundled app, not Vite serving unbundled modules.
+  bundle-perf:
+    command: storybook build
+    args:
+      - --output-dir=out/storybook-perf
+    env:
+      DX_STORIES: stories/stories-assistant
+      # See `.storybook/perf-bundle.ts`: without it the built chat story never mounts.
+      DX_PERF_BUNDLE: '1'
+    deps:
+      # See `bundle`.
+      - '#ts-vite-build:build'
+      - '#ts-compile:build'
+      - '#vendor:build'
+      - '#storybook:#prebuild'
+    outputs:
+      - out/storybook-perf/
+    options:
+      # The stories resolve every `@dxos/*` package from source, which no input list here can cover, and
+      # a perf run must measure the checkout as it is.
+      cache: false
   serve:
     # Wrapper, not `storybook dev` directly: it arms the hang watcher beside the server (see
     # `diagnose.sh`) and forwards every argument through.

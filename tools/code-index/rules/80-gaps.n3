@@ -1,0 +1,76 @@
+# What is missing: code no spec describes, specs naming code that is not there, fields a schema does
+# not know, and dependencies nothing uses. Every rule here negates a predicate an earlier file
+# concludes (`65-packages.n3`, `70-specs.n3`), which is why this is a file of its own: a stratum
+# cannot negate its own conclusions.
+
+@prefix deus: <https://dxos.org/vocab/deus#>.
+@prefix list: <http://www.w3.org/2000/10/swap/list#>.
+@prefix log: <http://www.w3.org/2000/10/swap/log#>.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+
+# A package-public symbol no block describes, in a package that has a spec at all. Barrel aliases and
+# namespaces are skipped: the declaration they stand for is what gets reported.
+{
+  ?s deus:packagePublic true. ?file deus:declares ?s. ?file deus:inPackage ?package. ?package deus:hasSpec ?spec.
+  (?b { ?b deus:describes ?s } ?describers) log:collectAllIn ?scope1. ?describers list:length 0.
+  (?s { ?s deus:kind "reexport" } ?aliases) log:collectAllIn ?scope2. ?aliases list:length 0.
+  (?m { ?s deus:namespaceOf ?m } ?namespaces) log:collectAllIn ?scope3. ?namespaces list:length 0.
+} => { ?s deus:undocumented true }.
+
+# A block naming a declaration its package does not have.
+{
+  ?b deus:blockType "type". ?b deus:name ?name. ?b deus:inPackage ?package.
+  (?s { ?s deus:name ?name. ?file deus:declares ?s. ?file deus:inPackage ?package } ?found) log:collectAllIn ?scope.
+  ?found list:length 0.
+} => { ?b deus:phantom true }.
+{
+  ?b deus:blockType "service". ?b deus:name ?name. ?b deus:inPackage ?package.
+  (?s { ?s deus:name ?name. ?file deus:declares ?s. ?file deus:inPackage ?package } ?found) log:collectAllIn ?scope.
+  ?found list:length 0.
+} => { ?b deus:phantom true }.
+{
+  ?b deus:blockType "component". ?b deus:name ?name. ?b deus:inPackage ?package.
+  (?s { ?s deus:name ?name. ?file deus:declares ?s. ?file deus:inPackage ?package } ?found) log:collectAllIn ?scope.
+  ?found list:length 0.
+} => { ?b deus:phantom true }.
+{
+  ?b deus:blockType "surface". ?b deus:name ?name. ?b deus:inPackage ?package.
+  (?s { ?s deus:name ?name. ?file deus:declares ?s. ?file deus:inPackage ?package } ?found) log:collectAllIn ?scope.
+  ?found list:length 0.
+} => { ?b deus:phantom true }.
+{
+  ?b deus:blockType "module". ?b deus:name ?name. ?b deus:inPackage ?package.
+  (?s { ?s deus:name ?name. ?file deus:declares ?s. ?file deus:inPackage ?package } ?found) log:collectAllIn ?scope.
+  ?found list:length 0.
+} => { ?b deus:phantom true }.
+# An `op` block whose key no operation carries, anywhere.
+{
+  ?b deus:blockType "op". ?b deus:hasField ?field. ?field deus:key "key". ?field deus:value ?key.
+  (?op { ?op deus:operationKey ?key } ?found) log:collectAllIn ?scope. ?found list:length 0.
+} => { ?b deus:phantom true }.
+
+# An operation no block specifies.
+{
+  ?op rdf:type deus:Operation.
+  (?b { ?b deus:specifies ?op } ?specs) log:collectAllIn ?scope. ?specs list:length 0.
+} => { ?op deus:unspecified true }.
+
+# A field the block has that no schema in scope declares, and one a schema requires that it lacks.
+# A schema declaring nothing — a URI no `ext` block defines — cannot call a field unknown; that check
+# comes last, so it only runs for the few keys the negation lets through.
+{
+  ?b deus:schema ?ext. ?b deus:hasKey ?key.
+  (?other { ?b deus:schema ?other. ?other deus:declaresField ?key } ?declared) log:collectAllIn ?scope.
+  ?declared list:length 0.
+  ?ext deus:declaresField ?any.
+} => { ?b deus:unknownField ?key. ?b deus:violatesSchema ?ext }.
+{
+  ?b deus:schema ?ext. ?ext deus:requiresField ?key.
+  (?key { ?b deus:hasKey ?key } ?present) log:collectAllIn ?scope. ?present list:length 0.
+} => { ?b deus:missingField ?key. ?b deus:violatesSchema ?ext }.
+
+# A declared dependency no file of the package imports.
+{
+  ?package deus:declaresDep ?used.
+  (?used { ?package deus:usesPackage ?used } ?uses) log:collectAllIn ?scope. ?uses list:length 0.
+} => { ?package deus:unusedDependency ?used }.

@@ -3,5 +3,4 @@
 //
 
 export * as VideoPlugin from './VideoPlugin.ts';
-export * from '#meta';
 export * from '#types';

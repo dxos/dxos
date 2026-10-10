@@ -1,0 +1,6 @@
+# Reads `constructs-a.n3`'s output: its backward conclusions and facts must stay invisible here.
+
+@prefix u: <urn:u#>.
+{ ?x u:isKey true } => { ?x u:seenKey true }.
+{ ?x u:key true } => { ?x u:leakedKey true }.
+{ ?x u:role ?r } => { ?x u:leakedFact ?r }.

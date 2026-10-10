@@ -44,10 +44,10 @@ nothing beyond `node:*` and `bun:*`, and can also be run by hand. Tests:
   scripts/finalize.ts     # merge fragments → REVIEW.md (index, issues, appendix)
   scripts/unresolved.ts   # re-print unresolved issues across all runs
   scripts/system-one.ts   # cheap first pass with TypeSafe System One; routes the rest onward
-  scripts/fast.ts         # PR mode: prepare --fast → System One → finalize, no subagents
+  scripts/fast.ts         # PR mode: prepare --fast → System One → finalize; supersedes older PR stores
   scripts/check-pr.ts     # CI: a finalized review exists, issues addressed, drift ≤ 20%
   lib/system-one/          # budget, source segmentation, context fetchers, questions, checker
-  lib/                     # mdl, frontmatter, git, discovery, diagnostics, resolution, review-doc, store
+  lib/                     # mdl, frontmatter, git, discovery, diagnostics, resolution, review-doc, store, supersede
   rules/                   # seed rules (repo-wide non-negotiables)
 ```
 
@@ -119,7 +119,8 @@ Give each subagent its group number and the store path. Prompt template:
 decision model that returns calibrated probabilities for typed questions. It is
 orders of magnitude cheaper than a subagent (input tokens only, $0.042 per
 million) but cannot explore, so each rule's `context` field decides what it is
-shown. Needs `TYPESAFE_API_KEY`, which is `op://CI/Typesafe AI Test Key/credential` in 1Password.
+shown. Needs `TYPESAFE_API_KEY`: use it from the shell when it is already exported, otherwise
+it is `op://CI/Typesafe AI Test Key/credential` in 1Password (see the `1password` skill).
 
 ```sh
 bun .agents/skills/agentic-review/scripts/prepare.ts --pr-only
@@ -230,7 +231,9 @@ Every PR is expected to carry a review of its own change. The author or agent ru
 only checks the committed store, so CI needs no API key and spends nothing.
 
 ```sh
-TYPESAFE_API_KEY='op://CI/Typesafe AI Test Key/credential' op run -- bun .agents/skills/agentic-review/scripts/fast.ts
+[ -n "$(printenv TYPESAFE_API_KEY)" ] && echo exported || echo unset   # check the environment first
+bun .agents/skills/agentic-review/scripts/fast.ts            # key already exported
+TYPESAFE_API_KEY='op://CI/Typesafe AI Test Key/credential' op run -- bun .agents/skills/agentic-review/scripts/fast.ts  # only with OP_SERVICE_ACCOUNT_TOKEN set
 bun .agents/skills/agentic-review/scripts/fast.ts --dry-run  # plan and price only
 ```
 
@@ -241,10 +244,19 @@ asked for, never spawns subagents for them. Only an explicit request from the us
 review runs the subagent workflow above. Then fix or dismiss each issue, set its index row to
 `resolved` or `ignored`, and commit the store with the fixes.
 
+- **One store per PR.** `fast.ts` reviews the whole PR diff from its merge-base with main, then
+  deletes every earlier `mode: fast` store the PR added; commit those deletions with the new
+  store. A full or `--pr-only` store stays, because it also judged rules a fast run skips.
+  - An `ignored` row carries into the new index when its rule and location match, or its rule
+    and file when that pair is unique on both sides. A `resolved` finding raised again is a
+    regression, so it stays `unresolved`.
+  - An earlier store whose index does not parse stops the run before it reviews anything, so its
+    dismissals are never dropped unseen.
+  - `--base=<ref>` reviews less than the whole PR, so it keeps every earlier store.
 - **Changed files ignore merges.** `--pr-only` / `--fast` review only files a non-merge commit
   on HEAD's first-parent line touched and that still differ from the base, so a merge from
-  main — and the conflict resolution inside it — brings nothing into the review. A prior
-  review is a starting point only if it was made on this branch (not already on main).
+  main — and the conflict resolution inside it — brings nothing into the review. `--pr-only`
+  starts from a prior review only if it was made on this branch (not already on main).
 - **CI (`.depot/workflows/agentic-review.yml`, advisory — never a required check).**
   `check-pr.ts` fails when the PR's diff adds no finalized review store, when any issue in
   those stores is still `unresolved`, or when drift exceeds 20%:

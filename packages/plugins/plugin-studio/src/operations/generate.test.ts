@@ -15,7 +15,7 @@ import { configuredCredentialsLayer } from '@dxos/compute-runtime';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { GenerationService, MediaArtifact, StudioCapabilities, Variant } from '#types';
 

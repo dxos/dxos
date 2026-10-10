@@ -10,12 +10,12 @@ import { type Quad } from 'n3';
 import { SemanticIndexError } from '../errors.ts';
 import { insertQuadsMemory, makeMemorySource } from '../internal/source/memory-source.ts';
 import { insertQuads, makeSqliteSource } from '../internal/source/sqlite-source.ts';
-import { makeEngine, selectTriples } from '../internal/sparql/engine.ts';
-import { factToTriples, triplesToFacts } from '../internal/sparql/mapping.ts';
+import type * as Engine from '../internal/sparql/engine.ts';
 import { queryMemory } from '../internal/sparql/query-memory.ts';
 import { querySqlite } from '../internal/sparql/query-sqlite.ts';
 import { migrate } from '../internal/sqlite/schema.ts';
 import { type Fact } from '../types/index.ts';
+import * as Mapping from '../types/Mapping.ts';
 import { FactStore, type FactStoreApi } from './fact-store.ts';
 
 //
@@ -27,16 +27,30 @@ import { FactStore, type FactStoreApi } from './fact-store.ts';
 // triplesToFacts validates via Schema and can throw a ParseError on malformed stored data.
 const reassemble = (quads: Quad[]): Effect.Effect<Fact[], SemanticIndexError> =>
   Effect.try({
-    try: () => triplesToFacts(quads),
+    try: () => Mapping.triplesToFacts(quads),
     catch: (cause) => new SemanticIndexError({ message: 'Failed to reassemble facts', cause }),
   });
 
-// Raw SPARQL execution via Comunica. The engine is constructed lazily so persist-only flows never
-// pay for it — and so the memory layer can avoid it entirely (Comunica does not run in the browser).
-const makeSelect = (source: Parameters<typeof selectTriples>[1]): FactStoreApi['select'] => {
-  let engine: ReturnType<typeof makeEngine> | undefined;
-  const getEngine = () => (engine ??= makeEngine());
-  return (sparql) => selectTriples(getEngine(), source, sparql).pipe(Effect.flatMap(reassemble));
+// Raw SPARQL execution via Comunica, imported on first use: Comunica does not run in the browser or a
+// Worker, so the persist and structured-query paths must not load it at all.
+const makeSelect = (source: Parameters<typeof Engine.selectTriples>[1]): FactStoreApi['select'] => {
+  let engine: Promise<{ module: typeof Engine; engine: ReturnType<typeof Engine.makeEngine> }> | undefined;
+  // A failed load is forgotten, so the next query retries instead of replaying the same rejection.
+  const getEngine = () =>
+    (engine ??= import('../internal/sparql/engine.ts')
+      .then((module) => ({ module, engine: module.makeEngine() }))
+      .catch((error: unknown) => {
+        engine = undefined;
+        throw error;
+      }));
+  return (sparql) =>
+    Effect.tryPromise({
+      try: getEngine,
+      catch: (cause) => new SemanticIndexError({ message: 'Failed to load the SPARQL engine', cause }),
+    }).pipe(
+      Effect.flatMap(({ module, engine }) => module.selectTriples(engine, source, sparql)),
+      Effect.flatMap(reassemble),
+    );
 };
 
 export const layer: Layer.Layer<FactStore, never, SqlClient.SqlClient> = Layer.effect(
@@ -48,7 +62,7 @@ export const layer: Layer.Layer<FactStore, never, SqlClient.SqlClient> = Layer.e
     const source = makeSqliteSource(sql);
 
     const putFacts: FactStoreApi['putFacts'] = (facts) =>
-      insertQuads(sql, facts.flatMap(factToTriples)).pipe(
+      insertQuads(sql, facts.flatMap(Mapping.factToTriples)).pipe(
         Effect.mapError((cause) => new SemanticIndexError({ message: 'Failed to persist facts', cause })),
       );
 
@@ -94,7 +108,7 @@ export const makeMemory = (): FactStoreApi => {
 
   const putFacts: FactStoreApi['putFacts'] = (facts) =>
     Effect.try({
-      try: () => insertQuadsMemory(source, facts.flatMap(factToTriples)),
+      try: () => insertQuadsMemory(source, facts.flatMap(Mapping.factToTriples)),
       catch: (cause) => new SemanticIndexError({ message: 'Failed to persist facts', cause }),
     });
 

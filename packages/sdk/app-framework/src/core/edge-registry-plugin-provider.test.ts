@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { type PluginView } from '@dxos/protocols';
 
 import { EdgeRegistryPluginProvider, type RegistryHttpClient } from './edge-registry-plugin-provider.ts';

@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { fromDigestHex } from '@dxos/blob';
 import { Blob, Database, Error } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { EchoTestBuilder } from '../testing/index.ts';
 

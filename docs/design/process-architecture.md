@@ -62,18 +62,18 @@ flowchart LR
 
 ### Modules
 
-| Module                                               | Role                                                                                                                                                                                           |
-| ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@dxos/compute` `Trigger`, `Routine`, `Instructions` | The control objects. `Routine` is app-level only; `wireTriggers` compiles it to a trigger pointing at an operation.                                                                            |
-| `@dxos/compute` `Process`, `Operation`               | Process definition (`onSpawn`/`onInput`/`onAlarm`/`onChildEvent`, RPCs) and the operation model; `Process.fromOperation` wraps any operation as a one-input process.                           |
-| `@dxos/compute-runtime` `TriggerDispatcher`          | Client scheduler, one per space. Live query on triggers; 1-min cron tick; a live query per feed/subscription trigger; global semaphore (5); 30 s cooldown; in-memory `runAgain` retry.         |
-| `@dxos/compute-runtime` `ProcessManager`             | Client process runtime. Spawns processes with resolved services, a durable KV record and event mailbox, alarms, parent/child linking, hydration of dormant records.                            |
-| `@dxos/agent-runtime` `AgentProcess`, `AgentService` | The agent as a native process bound to a session (`Chat`; rename pending). Queue and alarms are feed records; turn loop in `onAlarm`; tool calls and delegated sub-agents are child processes. |
-| `@dxos/assistant-toolkit` `RunInstructions`          | The operation a trigger runs for an instructions action: an `AiSession` inside one handler call, ending on `completeJob`.                                                                      |
-| `@dxos/edge-compute`                                 | Client-side adapters for EDGE: trigger status poll, `forceRunCronTrigger`, `cancelTriggerRun`, remote operation invoke.                                                                        |
-| edge `compute-service` `TriggersDispatcher` DO       | EDGE scheduler, one per space. Cron via `DurableObjectCronScheduler` (inactivity-gated); subscription changes and `runAgain` continuations in `DurableObjectQueue`s.                           |
-| edge `compute-service` `FunctionInvoker`             | Resolves `dxn:` / `worker:` / `echo:` targets and invokes them; writes trace envelopes.                                                                                                        |
-| edge `operation-service`                             | Runs a platform operation handler inline in one RPC: space DB, harness from conversation, 10-min timeout, cooperative cancel. No process state.                                                |
+| Module                                               | Role                                                                                                                                                                                                                                                        |
+| ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@dxos/compute` `Trigger`, `Routine`, `Instructions` | The control objects. `Routine` is app-level only; `wireTriggers` compiles it to a trigger pointing at an operation.                                                                                                                                         |
+| `@dxos/compute` `Process`, `Operation`               | Process info and monitor; the operation model, including durable operations (`Operation.DurableHandler`: `onSpawn`/`onInput`/`onAlarm`/`onChildEvent`, RPCs); `OperationProcess.make` (`@dxos/compute-runtime`) wraps any operation as a one-input process. |
+| `@dxos/compute-runtime` `TriggerDispatcher`          | Client scheduler, one per space. Live query on triggers; 1-min cron tick; a live query per feed/subscription trigger; global semaphore (5); 30 s cooldown; in-memory `runAgain` retry.                                                                      |
+| `@dxos/compute-runtime` `ProcessManager`             | Client process runtime. Spawns processes with resolved services, a durable KV record and event mailbox, alarms, parent/child linking, hydration of dormant records.                                                                                         |
+| `@dxos/agent-runtime` `AgentProcess`, `AgentService` | The agent as a native process bound to a session (`Chat`; rename pending). Queue and alarms are feed records; turn loop in `onAlarm`; tool calls and delegated sub-agents are child processes.                                                              |
+| `@dxos/assistant-toolkit` `RunInstructions`          | The operation a trigger runs for an instructions action: an `AiSession` inside one handler call, ending on `completeJob`.                                                                                                                                   |
+| `@dxos/edge-compute`                                 | Client-side adapters for EDGE: trigger status poll, `forceRunCronTrigger`, `cancelTriggerRun`, remote operation invoke.                                                                                                                                     |
+| edge `compute-service` `TriggersDispatcher` DO       | EDGE scheduler, one per space. Cron via `DurableObjectCronScheduler` (inactivity-gated); subscription changes and `runAgain` continuations in `DurableObjectQueue`s.                                                                                        |
+| edge `compute-service` `FunctionInvoker`             | Resolves `dxn:` / `worker:` / `echo:` targets and invokes them; writes trace envelopes.                                                                                                                                                                     |
+| edge `operation-service`                             | Runs a platform operation handler inline in one RPC: space DB, harness from conversation, 10-min timeout, cooperative cancel. No process state.                                                                                                             |
 
 ### Flow
 
@@ -92,7 +92,7 @@ A `remote` cron trigger, end-to-end:
 5. **Settle.** `runAgain` enqueues a durable continuation for the next alarm; any other error is logged and **not
    retried**; the schedule advances either way. The client sees the outcome via the trace feed and a 15 s status poll.
 
-Locally the shape is the same with different parts: the dispatcher's tick finds the due trigger, `Process.fromOperation` builds the process, `ProcessManager.spawn` runs it, and a failure sets a 30 s cooldown.
+Locally the shape is the same with different parts: the dispatcher's tick finds the due trigger, `OperationProcess.make` builds the process, `ProcessManager.spawn` runs it, and a failure sets a 30 s cooldown.
 
 ### Assessment
 
@@ -154,7 +154,7 @@ The same cron, after the change:
    a lease (an annotation with a device id and expiry, first writer wins after replication settles) or keep local
    execution single-device by policy; see open question 5. The other runtime never claims, only reads.
 4. **Execute.** Unchanged: `FunctionInvoker.invokeTrigger` with the Job's precomputed `input`, the same `pid`
-   correlating to the trace feed. Locally, `Process.fromOperation` + `spawn`.
+   correlating to the trace feed. Locally, `OperationProcess.make` + `spawn`.
 5. **Settle.** Append `Ack { attempt, output? }` or `Failed { attempt, error, terminal }` to the Job; delete the
    working-set row. A settle whose `attempt` is not the executor's current claim is ignored (a late completion from a
    reclaimed attempt cannot overwrite the new one). `runAgain` = `Ack` + a new Job with `continues` and the same
@@ -278,7 +278,7 @@ Open questions to settle before phase 2:
 | Scheduler (EDGE)   | `TriggersDispatcher` Durable Object, one per space                                                        | edge `compute-service/src/triggers/trigger-dispatcher-object.ts` |
 | Executor           | proposed; today the scheduler invokes directly                                                            | —                                                                |
 | Process Manager    | `ProcessManager.Manager`, one per client runtime                                                          | `compute-runtime/src/ProcessManager.ts`                          |
-| Process            | `Process.Process` definition; `ProcessHandle` instance                                                    | `compute/src/Process.ts`, `compute-runtime/src/ProcessHandle.ts` |
+| Process            | `Operation.Durable` definition; `ProcessHandle` instance                                                  | `compute/src/Process.ts`, `compute-runtime/src/ProcessHandle.ts` |
 | Agent Process      | `AgentProcess` (key `org.dxos.testing.process.agent`)                                                     | `agent-runtime/src/agent-service/agent-process.ts`               |
 | Session            | `Chat.Chat` → owns a `Feed.Feed` (rename to `Session` pending; sessions are not always interactive chats) | `assistant/src/types/Chat.ts`                                    |
 | Alarm              | `Alarm.Alarm` feed record; `HarnessControl.setAlarm`                                                      | `assistant/src/session/Alarm.ts`                                 |

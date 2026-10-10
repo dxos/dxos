@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
+import { expect, within } from 'storybook/test';
 
 import { Invitation_AuthMethod } from '@dxos/react-client/invitations';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -136,6 +137,20 @@ export const SpaceInvitationAuthenticator: Story = {
   args: {
     mode: 'halo-only',
     activeView: 'space-invitation-authenticator',
+    invitationAuthMethods: { Space: Invitation_AuthMethod.SHARED_SECRET },
+    invitationIds: { Space: '6e0bd5a8f2c4' },
+  },
+  play: async ({ canvasElement }) => {
+    // The dialog renders in a portal outside the canvas.
+    const canvas = within(canvasElement.ownerDocument.body);
+    const cells = await canvas.findByTestId('space-auth-code-input');
+    const emoji = canvas.getByText('Be sure the other device shows the following emoji', { exact: false });
+    const inputs = cells.querySelectorAll('input');
+    const rowCentre =
+      (inputs[0].getBoundingClientRect().left + inputs[inputs.length - 1].getBoundingClientRect().right) / 2;
+    const reference = emoji.getBoundingClientRect();
+    // The cell row is centred like the rest of the panel, not pinned to its inline start.
+    await expect(Math.abs(rowCentre - (reference.left + reference.right) / 2)).toBeLessThan(2);
   },
 };
 

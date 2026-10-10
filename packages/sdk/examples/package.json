@@ -1,6 +1,6 @@
 {
   "name": "@dxos/examples",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "private": true,
   "description": "Example stories used by the docs.",
   "homepage": "https://dxos.org",

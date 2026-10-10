@@ -6,12 +6,13 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
-    index: 'src/index.ts',
-    MapPlugin: 'src/MapPlugin.ts',
-    plugin: 'src/plugin.tsx',
-    capabilities: 'src/capabilities/index.ts',
-    components: 'src/components/index.ts',
-    meta: 'src/meta.ts',
+    'ns/MapSolidEvents': 'src/MapSolidEvents.ts',
+    'index': 'src/index.ts',
+    'MapPlugin': 'src/MapPlugin.ts',
+    'plugin': 'src/plugin.tsx',
+    'capabilities': 'src/capabilities/index.ts',
+    'components': 'src/components/index.ts',
+    'meta': 'src/meta.ts',
   },
   jsx: 'solid',
   // `vite-plugin-solid` adds the `browser` export condition under vitest, so

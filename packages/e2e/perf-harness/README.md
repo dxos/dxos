@@ -44,6 +44,32 @@ than trusting a caller to remember.
 | `responsiveness.tbtMs`     | Long Tasks API                        | Not gated to a paint event: inside a stage, every long task blocks an interaction already made. |
 | `stillFrame*`              | `Page.screencastFrame` timestamps     | `diagnose` only. The only measurement of what the SCREEN did. Same frames serve as the stage stills. |
 
+## Work counters
+
+Wall time and CPU move 10–30% run to run with the runner's load. Counts of work done do not: the
+same render restyles the same elements on a fast machine and a slow one. These fields exist so a
+budget can sit within a few percent of the measured value. Each is a delta over the stage unless
+marked a level.
+
+| Field (row → PostHog `ci…`)                         | Source                                            | Cost / switch |
+| --------------------------------------------------- | ------------------------------------------------- | ------------- |
+| `thread.layoutCount`, `recalcStyleCount`            | `Performance.getMetrics` (page)                   | free, always  |
+| `thread.layoutObjects` (level), `taskOtherMs`, `devToolsCommandMs` | the same read                      | free, always  |
+| `traceCounters.render.*` → `styleRecalcElements`, `layoutDirtyObjects`, `forcedLayouts`, … | a `devtools.timeline` trace per stage, cut at the stage marks | `trace`: opt-in, +7% wall / +10–15% CPU |
+| `traceCounters.instructions[]` → `instructions*`, `instructionThreads` | `--enable-thread-instruction-count` deltas on the same trace | needs a PMU; see METRICS.md |
+| `jsCalls[]` → `jsCalls*`, `jsCallsTotal`            | V8 precise coverage, `callCount: true`            | `calls`: opt-in, +12–29% wall |
+| `react` → `reactCommits`, `reactRenders`, `reactMounts`, `reactWastedRenders` | React devtools global hook, installed by `installReactProbe` | `react`: on by default, +3–5% |
+| `data.counters` → `sqlite*`, `automerge*`, `echo*`  | the app's `__dxosWorkCounters` and `__dxosSqliteIo` | free, always |
+| `rpcCallsByMethod`                                  | `__dxosRpcTiming`'s per-method totals             | free, NDJSON only |
+| `network.byEndpoint`, `network.socketFrames`        | Playwright `response` / `websocket` events        | free; endpoints NDJSON only |
+
+`DX_PERF_COUNTERS` takes `all`, `none`, `default` (unset: `react` alone, the one cheap enough to
+leave on — METRICS.md §"The work counters' cost"), or a list such as `trace,react`; every
+row records the set as `comparability.counters`. A counter that did not run publishes no column,
+so a missing column means "not measured" and a `0` means "no work". Per-stage breakdowns —
+`<stage>-calls.json` (top functions by calls, per realm) and `<stage>-react.json` (top components
+by renders, with wasted renders) — land in `artifacts/.../counters/`.
+
 ## Why raw CDP
 
 Playwright's `newCDPSession` reaches the page and its dedicated workers, but **not a shared

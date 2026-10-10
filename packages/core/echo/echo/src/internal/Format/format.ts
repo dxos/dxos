@@ -30,6 +30,7 @@ export namespace Format {
   export const Formula = StringUtil.Formula;
   export const Hostname = StringUtil.Hostname;
   export const Regex = StringUtil.Regex;
+  export const Text = StringUtil.Text;
   export const URL = StringUtil.URL;
   export const UUID = Schema.String.check(Schema.isUUID());
 

@@ -4,9 +4,9 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { useObject } from '@dxos/echo-react';
-import { Panel } from '@dxos/react-ui';
+import * as Panel from '@dxos/react-ui/Panel';
 import { type Hue } from '@dxos/ui-theme';
 
 import { DEFAULT_HUE, type ToolMode, VoxelEditor, VoxelToolbar } from '#components';
@@ -119,7 +119,7 @@ export const VoxelArticle = ({ subject: world, attendableId: _attendableId }: Vo
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <VoxelToolbar
           toolMode={toolMode}
           selectedHue={selectedHue}
@@ -133,8 +133,8 @@ export const VoxelArticle = ({ subject: world, attendableId: _attendableId }: Vo
           onToggleLife={handleToggleLife}
           onSeedLife={handleSeedLife}
         />
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <div className='relative grow'>
           <VoxelEditor
             voxels={voxels}
@@ -152,14 +152,14 @@ export const VoxelArticle = ({ subject: world, attendableId: _attendableId }: Vo
             <Hint toolMode={toolMode} />
           </div>
         </div>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };
 
 const Hint = ({ toolMode }: { toolMode: ToolMode }) => {
   return (
-    <div className='px-trim-md py-trim-xs text-xs text-description bg-base-surface backdrop-blur-sm rounded-full shadow-md border border-separator'>
+    <div className='px-trim-md py-trim-xs text-xs text-fg-muted bg-base-surface backdrop-blur-sm rounded-full shadow-md border border-separator'>
       {TOOL_HINTS[toolMode]}
     </div>
   );

@@ -11,9 +11,9 @@ import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
-import { ChatContextHandlers, ChatContextSkill } from '@dxos/assistant-toolkit';
+import * as ChatContextSkill from '@dxos/assistant-toolkit/ChatContextSkill';
 import { Database, Feed, Filter } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { TestContextService } from '@dxos/effect/testing';
 import { DXN } from '@dxos/keys';
 import { type RDF } from '@dxos/pipeline-rdf';
@@ -78,7 +78,7 @@ export const runAgentEval = async (config: AgentEvalConfig, testContext: TestCon
   ];
   const operationHandlers = [
     SpaceOperationHandlerSet.handlers,
-    ChatContextHandlers,
+    ChatContextSkill.Handlers,
     ...(usesFactStore(config.mode) ? [BrainOperationHandlerSet.handlers] : []),
     ...(config.mode === 'rag' ? [RagOperationHandlerSet] : []),
     ...(config.mode === 'hybrid' ? [HybridOperationHandlerSet] : []),

@@ -9,7 +9,6 @@ import * as Pipeable from 'effect/Pipeable';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
-import { RUN_AGAIN_ERROR_CODE, RUN_AGAIN_MESSAGE } from '@dxos/compute';
 import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
 import { Annotation } from '@dxos/echo';
@@ -93,7 +92,7 @@ const ICONS = {
 
 export interface BuildExecutionGraphParams {
   traceMessages: readonly Trace.Message[];
-  activeProcesses?: readonly Process.Info[];
+  activeProcesses?: readonly Process.Process[];
   collapseCompletedSpans?: boolean;
   eventLimit?: number;
   /**
@@ -336,8 +335,8 @@ const presentEvent = (event: Trace.FlatEvent, toolCallContext: ToolCallContext):
     // the legacy message for events persisted before `errorCode` existed.
     const incomplete =
       event.data.outcome === 'failure' &&
-      (event.data.errorCode === RUN_AGAIN_ERROR_CODE ||
-        (event.data.errorCode === undefined && event.data.error === RUN_AGAIN_MESSAGE));
+      (event.data.errorCode === Process.RUN_AGAIN_ERROR_CODE ||
+        (event.data.errorCode === undefined && event.data.error === Process.RUN_AGAIN_MESSAGE));
     const presentation =
       event.data.outcome === 'success'
         ? { icon: ICONS.operationEndSuccess.icon, level: ICONS.operationEndSuccess.level, suffix: '' }
@@ -585,7 +584,7 @@ const parentIds = (...tips: (Commit | undefined)[]): string[] =>
 
 const spanTreeToCommits = (
   root: Span,
-  activeProcesses: readonly Process.Info[],
+  activeProcesses: readonly Process.Process[],
   toolCallContext: ToolCallContext,
   collapseCompletedSpans: boolean,
 ): { branches: string[]; commits: Commit[]; details: ExecutionGraphDetailsMap } => {

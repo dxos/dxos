@@ -5,7 +5,8 @@
 import React, { type ComponentType } from 'react';
 
 import { random } from '@dxos/random';
-import { IconButton, SystemIconButton } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 import { type ContentBlock, Message } from '@dxos/types';
 import { type XmlWidgetRegistry } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
@@ -399,7 +400,7 @@ const PlainItem = ({ content, message }: { content: { data?: unknown }; message:
 
   return (
     <div className='flex flex-col gap-1 py-2 text-sm' style={{ height }}>
-      <div className='flex items-center gap-2 text-xs text-description'>
+      <div className='flex items-center gap-2 text-xs text-fg-muted'>
         <span className='font-medium'>{message.sender.name}</span>
         <span className='tabular-nums'>{height}px</span>
       </div>
@@ -420,7 +421,7 @@ const PlainItem = ({ content, message }: { content: { data?: unknown }; message:
 const PlainChrome = ({ index, children }: MessageChromeProps) => (
   <Row classNames='py-0 grid grid-cols-[3rem_1fr] gap-2'>
     <div className='self-start flex items-center h-[1lh] text-base leading-normal'>
-      <span className='text-xs text-subdued tabular-nums'>{index}</span>
+      <span className='text-xs text-fg-subtle tabular-nums'>{index}</span>
     </div>
     <div className='min-w-0'>{children}</div>
   </Row>
@@ -452,13 +453,7 @@ const Row = ({ children, classNames }: { children: React.ReactNode; classNames?:
  */
 /** Copies the message's extracted text — the model's truth, not the DOM's partial render. */
 const CopyButton = ({ message }: { message: Message.Message }) => (
-  <SystemIconButton.Clipboard
-    iconOnly
-    label='Copy'
-    variant='ghost'
-    density='sm'
-    onCopy={() => Message.extractText(message)}
-  />
+  <SystemButton.Clipboard iconOnly label='Copy' variant='ghost' size='sm' onCopy={() => Message.extractText(message)} />
 );
 
 const AssistantChrome = ({ message, index, selected, children }: MessageChromeProps) => {
@@ -478,17 +473,17 @@ const AssistantChrome = ({ message, index, selected, children }: MessageChromePr
                 changes the row's height, and a pointer travelling down a scrolling list would then
                 move every row below it. Opacity costs nothing to measure. The toolbar follows the
                 bubble's edge — right-aligned, like the words it belongs to. */}
-            <div className='flex items-center justify-end gap-1 pt-1 text-xs text-description opacity-0 transition-opacity group-hover:opacity-100'>
+            <div className='flex items-center justify-end gap-1 pt-1 text-xs text-fg-muted opacity-0 transition-opacity group-hover:opacity-100'>
               <CopyButton message={message} />
-              <IconButton
+              <Button.Root
                 icon='ph--arrow-counter-clockwise--regular'
                 iconOnly
                 label='Rewind'
                 variant='ghost'
-                density='sm'
+                size='sm'
               />
-              <IconButton icon='ph--git-branch--regular' iconOnly label='Fork' variant='ghost' density='sm' />
-              <span className='text-subdued'>#{index}</span>
+              <Button.Root icon='ph--git-branch--regular' iconOnly label='Fork' variant='ghost' size='sm' />
+              <span className='text-fg-subtle'>#{index}</span>
               <span>{timeOf(message)}</span>
             </div>
           </div>
@@ -496,10 +491,10 @@ const AssistantChrome = ({ message, index, selected, children }: MessageChromePr
       ) : (
         <div className='min-w-0'>
           {children}
-          <div className='flex items-center gap-1 pt-1 text-xs text-description opacity-0 transition-opacity group-hover:opacity-100'>
+          <div className='flex items-center gap-1 pt-1 text-xs text-fg-muted opacity-0 transition-opacity group-hover:opacity-100'>
             <CopyButton message={message} />
-            <IconButton icon='ph--arrow-bend-up-left--regular' iconOnly label='Reply' variant='ghost' density='sm' />
-            <span className='text-subdued'>#{index}</span>
+            <Button.Root icon='ph--arrow-bend-up-left--regular' iconOnly label='Reply' variant='ghost' size='sm' />
+            <span className='text-fg-subtle'>#{index}</span>
             <span>{timeOf(message)}</span>
           </div>
         </div>
@@ -513,11 +508,11 @@ const EmailChrome = ({ message, children }: MessageChromeProps) => (
   <Row classNames='border-b border-separator'>
     <div className='flex items-baseline gap-2'>
       <span className='font-medium'>{message.sender.name}</span>
-      <span className='text-xs text-description'>{message.sender.email}</span>
+      <span className='text-xs text-fg-muted'>{message.sender.email}</span>
       <span className='grow' />
-      <span className='text-xs text-description'>{new Date(message.created).toLocaleString()}</span>
+      <span className='text-xs text-fg-muted'>{new Date(message.created).toLocaleString()}</span>
     </div>
-    <p className='text-xs text-description'>{String(message.properties?.subject ?? '')}</p>
+    <p className='text-xs text-fg-muted'>{String(message.properties?.subject ?? '')}</p>
     <div className='mt-1'>{children}</div>
   </Row>
 );
@@ -529,7 +524,7 @@ const ThreadChrome = ({ message, children }: MessageChromeProps) => (
       {message.sender.name?.[0]}
     </div>
     <div className='min-w-0'>
-      <div className='flex items-center gap-2 text-xs text-description'>
+      <div className='flex items-center gap-2 text-xs text-fg-muted'>
         <span className='font-medium'>{message.sender.name}</span>
         <span>{timeOf(message)}</span>
       </div>
@@ -540,20 +535,20 @@ const ThreadChrome = ({ message, children }: MessageChromeProps) => (
 
 /** Comments: the quoted anchor above the comment, and a resolve control. */
 const CommentChrome = ({ message, children }: MessageChromeProps) => (
-  <Row classNames={mx('border-b border-subdued-separator', message.properties?.resolved && 'opacity-50')}>
-    <p className='mb-1 ps-2 border-s-2 border-separator text-xs text-description line-clamp-1'>
+  <Row classNames={mx('border-b border-separator-subtle', message.properties?.resolved && 'opacity-50')}>
+    <p className='mb-1 ps-2 border-s-2 border-separator text-xs text-fg-muted line-clamp-1'>
       {String(message.properties?.anchor ?? '')}
     </p>
-    <div className='flex items-center gap-2 text-xs text-description'>
+    <div className='flex items-center gap-2 text-xs text-fg-muted'>
       <span className='font-medium'>{message.sender.name}</span>
       <span>{timeOf(message)}</span>
       <span className='grow' />
-      <IconButton
+      <Button.Root
         icon={message.properties?.resolved ? 'ph--check-circle--regular' : 'ph--circle--regular'}
         iconOnly
         label='Resolve'
         variant='ghost'
-        size={3}
+        iconSize='xs'
       />
     </div>
     {children}
@@ -563,11 +558,11 @@ const CommentChrome = ({ message, children }: MessageChromeProps) => (
 /** Transcription: a timestamp and speaker in the gutter, and no separators — it reads as one text. */
 const TranscriptChrome = ({ message, children }: MessageChromeProps) => (
   <Row classNames='grid grid-cols-[5rem_1fr] gap-2 py-0.5'>
-    <div className='text-xs text-description tabular-nums'>
+    <div className='text-xs text-fg-muted tabular-nums'>
       {timeOf(message, { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
     </div>
     <div className='min-w-0'>
-      <span className='me-2 text-xs font-medium text-description'>{message.sender.name}</span>
+      <span className='me-2 text-xs font-medium text-fg-muted'>{message.sender.name}</span>
       {children}
     </div>
   </Row>

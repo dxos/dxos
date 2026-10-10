@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Fieldset.tsx';
+export * as Fieldset from './Fieldset.tsx';

@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Select } from '@dxos/react-ui';
+import * as Select from '@dxos/react-ui/Select';
 
 export type ControlledSelectorProps<T> = {
   values: T[];
@@ -13,23 +13,30 @@ export type ControlledSelectorProps<T> = {
   placeholder?: string;
 };
 
-export const ControlledSelector = <T extends string>(props: ControlledSelectorProps<T>) => {
+export const ControlledSelector = <T extends string>({
+  values,
+  value,
+  setValue,
+  placeholder,
+}: ControlledSelectorProps<T>) => {
+  const items = values.map((mode) => ({ value: mode, label: mode }));
   return (
-    <Select.Root value={props.value} onValueChange={props.setValue}>
-      <Select.TriggerButton placeholder={props.placeholder ?? 'Select space'} />
-      <Select.Portal>
-        <Select.Content>
-          <Select.Viewport>
-            {props.values.map((mode) => (
-              <Select.Option key={mode} value={mode}>
-                <div className='flex items-center gap-2'>
-                  <span className='font-mono text-neutral-250'>{mode}</span>
-                </div>
-              </Select.Option>
-            ))}
-          </Select.Viewport>
-        </Select.Content>
-      </Select.Portal>
+    <Select.Root
+      items={items}
+      value={[value]}
+      onValueChange={({ value: [next] }) => {
+        const mode = values.find((candidate) => candidate === next);
+        if (mode !== undefined) {
+          setValue(mode);
+        }
+      }}
+    >
+      <Select.Trigger placeholder={placeholder ?? 'Select space'} />
+      <Select.Content>
+        {items.map((item) => (
+          <Select.Item key={item.value} item={item} classNames='font-mono' />
+        ))}
+      </Select.Content>
     </Select.Root>
   );
 };

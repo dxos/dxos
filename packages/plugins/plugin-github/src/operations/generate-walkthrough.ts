@@ -10,7 +10,7 @@ import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
-import { PROGRESS_STATUS_CANCELLED, PROGRESS_STATUS_FAILED } from '@dxos/app-toolkit';
+import * as Progress from '@dxos/app-toolkit/Progress';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Obj, Ref } from '@dxos/echo';
@@ -111,7 +111,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.GenerateWalkthrough>
               if (Exit.isSuccess(exit)) {
                 return;
               }
-              const terminal = Cause.hasInterrupts(exit.cause) ? PROGRESS_STATUS_CANCELLED : PROGRESS_STATUS_FAILED;
+              const terminal = Cause.hasInterrupts(exit.cause) ? Progress.STATUS_CANCELLED : Progress.STATUS_FAILED;
               report(terminal, GENERATE_PHASES);
             }),
           ),

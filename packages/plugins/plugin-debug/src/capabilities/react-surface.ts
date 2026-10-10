@@ -6,12 +6,12 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/ui';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import { type IdbLogStore } from '@dxos/log-store-idb';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { DebugPanelDrawer, DebugPanelStatus, DebugStatus, LoggerPanel, StatsPanel, Wireframe } from '#containers';
 import { meta } from '#meta';

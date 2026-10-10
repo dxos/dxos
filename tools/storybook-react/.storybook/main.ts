@@ -15,6 +15,8 @@ import { IconsPlugin, iconSymbolPattern } from '@dxos/vite-plugin-icons';
 import importSource from '@dxos/vite-plugin-import-source';
 import { ModuleUrlPlugin } from '@dxos/vite-plugin-module-url';
 
+import { isPerfBundle, perfBundlePlugin } from './perf-bundle.ts';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
@@ -318,6 +320,11 @@ export const createConfig = ({
   features: {
     sidebarOnboardingChecklist: false,
     menuOnboardingChecklist: false,
+    // Nothing here highlights, yet once armed (every story load resets it) the addon re-runs
+    // `getComputedStyle` over every element in the preview on each DOM mutation of the story root.
+    highlight: false,
+    // Marks stories whose files git reports changed; its `git` spawn fails here (EBADF) and logs an error on every start.
+    changeDetection: false,
   },
   typescript: {
     // TODO(thure): react-docgen is failing on something in @dxos/hypercore, invoking a dialog in unrelated stories.
@@ -422,7 +429,7 @@ export const createConfig = ({
         },
         worker: {
           format: 'es',
-          plugins: () => [wasm()],
+          plugins: () => [isPerfBundle && perfBundlePlugin(), wasm()],
         },
         plugins: [
           //
@@ -458,6 +465,9 @@ export const createConfig = ({
           },
 
           !isVitestRun && rearmWatchPlugin(),
+
+          // Ahead of `importSource`, which would otherwise resolve the automerge packages first.
+          isPerfBundle && perfBundlePlugin(),
 
           // `?module-url` imports: stories that hand module URLs to a worker to `import()`.
           ModuleUrlPlugin(),
@@ -539,8 +549,12 @@ export const createConfig = ({
             contentPaths: content,
             // Keeps every `PxIcons` entry in the sprite so stories paint without a round trip.
             scanPaths: [resolve(rootDir, 'packages/ui/ui-icons/src/index.ts')],
-            // Only `px` is served: the Phosphor catalog is ~9,000 files, too many to hand to a story.
-            assets: [{ route: '/px-icons', dir: extendedIconsDir }],
+            // Phosphor is served but never copied (~9,000 files): a story module loaded after the
+            // iframe fetched the sprite misses its icons there, and the registry fetches them instead.
+            assets: [
+              { route: '/phosphor', dir: iconsDir, copy: false },
+              { route: '/px-icons', dir: extendedIconsDir },
+            ],
             spriteFile: 'icons.svg',
           }),
 

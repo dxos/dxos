@@ -15,7 +15,7 @@ import * as Schema from 'effect/Schema';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, JsonSchema, Type } from '@dxos/echo';
 import { EchoClient } from '@dxos/echo-client';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN, PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 

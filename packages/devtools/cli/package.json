@@ -1,6 +1,6 @@
 {
   "name": "@dxos/cli",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "private": true,
   "description": "DXOS CLI",
   "homepage": "https://dxos.org",
@@ -17,6 +17,7 @@
     "dx": "./bin/dx"
   },
   "dependencies": {
+    "@dxos/agent-code-mode": "workspace:*",
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",

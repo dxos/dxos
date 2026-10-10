@@ -8,7 +8,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type Client } from '@dxos/client';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 
 import { ClientCapabilities, ClientEvents } from '#types';

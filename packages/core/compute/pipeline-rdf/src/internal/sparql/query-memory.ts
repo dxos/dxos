@@ -5,9 +5,9 @@
 import { DataFactory, type Store } from 'n3';
 
 import { type Fact } from '../../types/index.ts';
-import { FACT, entityIri, prov, sx } from '../vocab.ts';
-import { triplesToFacts } from './mapping.ts';
-import { normalizePredicate } from './normalize-predicate.ts';
+import * as Mapping from '../../types/Mapping.ts';
+import * as Predicate from '../../types/Predicate.ts';
+import * as Vocab from '../../types/Vocab.ts';
 import { type SemanticQuery } from './query-builder.ts';
 
 const { literal, namedNode } = DataFactory;
@@ -18,7 +18,7 @@ const { literal, namedNode } = DataFactory;
  * fact nodes matching each constraint, intersects them, then reassembles each node's triples.
  */
 export const queryMemory = (store: Store, query: SemanticQuery): Fact[] => {
-  const subjectsMatching = (predicate: ReturnType<typeof sx>, object: ReturnType<typeof entityIri>) =>
+  const subjectsMatching = (predicate: ReturnType<typeof Vocab.sx>, object: ReturnType<typeof Vocab.entityIri>) =>
     new Set(store.getQuads(null, predicate, object, null).map((quad) => quad.subject.value));
 
   let nodes: Set<string> | undefined;
@@ -27,16 +27,16 @@ export const queryMemory = (store: Store, query: SemanticQuery): Fact[] => {
   };
 
   if (query.subjectEntity) {
-    restrict(subjectsMatching(sx('subject'), entityIri(query.subjectEntity)));
+    restrict(subjectsMatching(Vocab.sx('subject'), Vocab.entityIri(query.subjectEntity)));
   }
   if (query.predicate) {
     // Match on the normalized relation key (case/inflection/auxiliary variants collapse), then keep a
     // substring fallback in either direction, since the LLM rarely reproduces the verb phrase verbatim.
-    const needle = normalizePredicate(query.predicate);
+    const needle = Predicate.normalize(query.predicate);
     const matches = store
-      .getQuads(null, sx('predicate'), null, null)
+      .getQuads(null, Vocab.sx('predicate'), null, null)
       .filter((quad) => {
-        const value = normalizePredicate(quad.object.value);
+        const value = Predicate.normalize(quad.object.value);
         return value === needle || value.includes(needle) || needle.includes(value);
       })
       .map((quad) => quad.subject.value);
@@ -44,12 +44,14 @@ export const queryMemory = (store: Store, query: SemanticQuery): Fact[] => {
   }
   if (query.source) {
     restrict(
-      new Set(store.getQuads(null, prov('wasDerivedFrom'), literal(query.source), null).map((q) => q.subject.value)),
+      new Set(
+        store.getQuads(null, Vocab.prov('wasDerivedFrom'), literal(query.source), null).map((q) => q.subject.value),
+      ),
     );
   }
   if (query.entity) {
-    const iri = entityIri(query.entity);
-    restrict(new Set([...subjectsMatching(sx('subject'), iri), ...subjectsMatching(sx('object'), iri)]));
+    const iri = Vocab.entityIri(query.entity);
+    restrict(new Set([...subjectsMatching(Vocab.sx('subject'), iri), ...subjectsMatching(Vocab.sx('object'), iri)]));
   }
 
   // No constraints → every fact node (subjects under the fact IRI namespace).
@@ -59,11 +61,11 @@ export const queryMemory = (store: Store, query: SemanticQuery): Fact[] => {
       store
         .getQuads(null, null, null, null)
         .map((quad) => quad.subject.value)
-        .filter((iri) => iri.startsWith(FACT)),
+        .filter((iri) => iri.startsWith(Vocab.FACT)),
     );
 
   const quads = [...factNodes].flatMap((iri) => store.getQuads(namedNode(iri), null, null, null));
-  const facts = triplesToFacts(quads);
+  const facts = Mapping.triplesToFacts(quads);
   if (query.minConfidence === undefined) {
     return facts;
   }

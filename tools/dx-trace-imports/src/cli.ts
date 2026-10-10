@@ -4,6 +4,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import fs from 'node:fs';
+import path from 'node:path';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
@@ -45,6 +47,22 @@ const stringList = (value: unknown): string[] =>
  */
 const foldTargets = (targets: string[]): string => (targets.length === 1 ? targets[0] : `{${targets.join(',')}}`);
 
+/**
+ * Every export subpath of the package in `cwd` that resolves to a module: everything except
+ * `./package.json`, wildcard patterns and stylesheet or data exports (`./theme.css`).
+ */
+const allExportSubpaths = (cwd: string): string[] => {
+  // Boundary: package.json contents are untyped JSON.
+  const manifest = JSON.parse(fs.readFileSync(path.join(cwd, 'package.json'), 'utf8')) as { exports?: unknown };
+  const exports = manifest.exports;
+  if (typeof exports !== 'object' || exports === null || Array.isArray(exports)) {
+    return ['.'];
+  }
+  return Object.keys(exports).filter(
+    (subpath) => subpath !== './package.json' && !subpath.includes('*') && !/\.(css|json|svg|wasm)$/.test(subpath),
+  );
+};
+
 const parseFailOn = (value: unknown): FailMode | null => {
   if (value === undefined || value === null || value === '') {
     return null;
@@ -64,12 +82,17 @@ const parseConditions = (raw: string): string[] =>
 const parseArgs = async (): Promise<ParsedArgs> => {
   const argv: any = await yargs(hideBin(process.argv))
     .scriptName('dx-trace-imports')
-    .usage('$0 (--from <entry.ts> | --export <subpath>) --to <package-or-pattern-or-path> [options]')
+    .usage('$0 (--from <entry.ts> | --export <subpath> | --all-exports) --to <package-or-pattern-or-path> [options]')
     .option('from', { type: 'string', describe: 'Entry file (relative path or absolute)' })
     .option('export', {
       type: 'string',
       array: true,
       describe: 'Package export subpath resolved via package.json exports (e.g. ./plugin). Repeatable.',
+    })
+    .option('all-exports', {
+      type: 'boolean',
+      default: false,
+      describe: 'Trace every export subpath in ./package.json, so the guard covers subpaths added later.',
     })
     .option('to', {
       type: 'string',
@@ -98,12 +121,13 @@ const parseArgs = async (): Promise<ParsedArgs> => {
       describe: 'Exit non-zero if any chains are present or if no chains are found',
     })
     .check((args) => {
-      const exports = stringList(args.export);
-      if (!args.from && exports.length === 0) {
-        throw new Error('Provide either --from <entry.ts> or --export <subpath>.');
+      const sources = [Boolean(args.from), stringList(args.export).length > 0, Boolean(args.allExports)];
+      const count = sources.filter(Boolean).length;
+      if (count === 0) {
+        throw new Error('Provide one of --from <entry.ts>, --export <subpath> or --all-exports.');
       }
-      if (args.from && exports.length > 0) {
-        throw new Error('Use only one of --from or --export.');
+      if (count > 1) {
+        throw new Error('Use only one of --from, --export or --all-exports.');
       }
       return true;
     })
@@ -129,7 +153,7 @@ const parseArgs = async (): Promise<ParsedArgs> => {
 
   return {
     from: argv.from ? String(argv.from) : null,
-    exportSubpaths: stringList(argv.export),
+    exportSubpaths: argv.allExports ? allExportSubpaths(process.cwd()) : stringList(argv.export),
     to: foldTargets(targets),
     maxChains,
     conditionSets,

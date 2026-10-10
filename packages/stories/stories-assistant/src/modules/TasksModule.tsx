@@ -4,13 +4,15 @@
 
 import React from 'react';
 
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Filter, Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { type Space, useQuery } from '@dxos/react-client/echo';
-import { Panel, Toolbar, useThemeContext } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import {
   createBasicExtensions,
   createDataExtensions,
@@ -20,7 +22,7 @@ import {
 } from '@dxos/ui-editor';
 
 export const TasksModule = () => {
-  const space = useActiveSpace();
+  const space = ToolkitHooks.useActiveSpace();
   if (!space) {
     return null;
   }
@@ -29,7 +31,7 @@ export const TasksModule = () => {
 };
 
 const TasksModuleContainer = ({ space }: { space: Space }) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = Hooks.useThemeMode();
   const [document] = useQuery(space.db, Filter.type(Markdown.Document));
   if (!document?.content.target) {
     return null;
@@ -37,12 +39,12 @@ const TasksModuleContainer = ({ space }: { space: Space }) => {
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
-        <Toolbar.Root classNames='border-b border-subdued-separator'>
+      <Panel.Header>
+        <Toolbar.Root classNames='border-b border-separator-subtle'>
           <Toolbar.Text>{Obj.getLabel(document)}</Toolbar.Text>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         <Editor.Root>
           <Editor.View
             id={document.id}
@@ -56,7 +58,7 @@ const TasksModuleContainer = ({ space }: { space: Space }) => {
             ]}
           />
         </Editor.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

@@ -26,7 +26,8 @@ import {
   createIdFromSpaceKey,
   isSpaceRoot,
 } from '@dxos/echo-protocol';
-import { EffectEx, RuntimeProvider } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { FeedStore } from '@dxos/feed';
 import { IndexEngine, type IndexingResult } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
@@ -35,6 +36,7 @@ import { log } from '@dxos/log';
 import { type FeedProtocol } from '@dxos/protocols';
 import { type DataService, type FeedService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
+import { countWork } from '@dxos/util';
 
 import {
   AutomergeHost,
@@ -48,6 +50,7 @@ import {
   type RootDocumentSpaceKeyProvider,
   deriveCollectionIdFromSpaceId,
 } from '../automerge/index.ts';
+import { SLOW_WORK_MS } from '../util.ts';
 import { AutomergeDataSource } from './automerge-data-source.ts';
 import { ConvergenceKeyMerger } from './convergence-key-merge.ts';
 import { DataServiceImpl } from './data-service.ts';
@@ -500,7 +503,9 @@ export class EchoHost extends Resource {
    * @returns Number of records indexed.
    */
   async updateSecondaryIndexes(): Promise<number> {
+    const startedAt = performance.now();
     let records = 0;
+    let batches = 0;
     let hint: InvalidationHint | undefined;
     for (;;) {
       if (this._ctx.disposed || !this.isOpen) {
@@ -510,6 +515,7 @@ export class EchoHost extends Resource {
         .updateSecondaryIndexes(this._ctx)
         .pipe(RuntimeProvider.runPromise(this._runtime));
       records += result.updated;
+      batches++;
       const batch = hintFromIndexingResult(result);
       if (batch) {
         hint = hint ? mergeHints(hint, batch) : batch;
@@ -523,6 +529,11 @@ export class EchoHost extends Resource {
     // the indexer is the sole invalidation source, and this pass is the only writer of the rows.
     if (hint) {
       this._queryService.invalidateQueries(hint);
+    }
+
+    const durationMs = performance.now() - startedAt;
+    if (durationMs >= SLOW_WORK_MS) {
+      log.warn('slow full-text catch-up', { durationMs, records, batches });
     }
     return records;
   }
@@ -1324,14 +1335,17 @@ export class EchoHost extends Resource {
         });
       }
 
+      countWork('echo.indexPasses');
+      countWork('echo.indexedObjects', combinedResult.updated);
       if (combinedResult.updated > 0) {
         this.#scheduleFtsFlush();
       }
 
       const hint = hintFromIndexingResult(combinedResult);
-      log.verbose('indexEngine update completed', {
+      const durationMs = performance.now() - startedAt;
+      const summary = {
         reasons,
-        durationMs: performance.now() - startedAt,
+        durationMs,
         // A run that indexed nothing yet still invalidates queries is the signature of a
         // self-sustaining invalidation loop, so record whether this run re-armed its own trigger.
         invalidates: !!hint,
@@ -1343,7 +1357,12 @@ export class EchoHost extends Resource {
         documents: combinedResult.documents.size,
         types: combinedResult.types.size,
         objects: combinedResult.objects.size,
-      });
+      };
+      if (durationMs >= SLOW_WORK_MS) {
+        log.warn('slow index pass', summary);
+      } else {
+        log.verbose('indexEngine update completed', summary);
+      }
       await sleep(1);
       // Invalidate queries after index update — the indexer is the sole invalidation source.
       if (hint) {

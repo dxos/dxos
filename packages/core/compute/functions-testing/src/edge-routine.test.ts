@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { RunInstructions } from '@dxos/assistant-toolkit';
+import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
 import * as Chat from '@dxos/assistant/Chat';
 import { Client } from '@dxos/client';
 import * as Instructions from '@dxos/compute/Instructions';
@@ -76,7 +76,7 @@ describe('Edge instructions', { tags: ['functions-e2e'] }, () => {
         skills: [Ref.make(databaseSkill)],
       }),
     );
-    const fn = Operation.serialize(RunInstructions);
+    const fn = Operation.serialize(AgentOperation.RunInstructions);
     dbg(Obj.toJSON(fn));
 
     const trigger = space.db.add(

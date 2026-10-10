@@ -5,15 +5,25 @@
 import { describe, test } from 'vitest';
 
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
-import { type CanvasBoard, type Polygon } from '@dxos/react-ui-canvas-editor';
-import { type Link, type Node, type Scene, reduceIntent, sortByZ } from '@dxos/react-ui-canvas/scene';
+import { type Link, type Node, type NodeStyle, type Scene, reduceIntent, sortByZ } from '@dxos/react-ui-canvas/scene';
 
+import { type ComputeShape } from '../shapes/index.ts';
+import { type CanvasBoard } from '../types/index.ts';
 import { applySceneToLayout, sceneFromLayout } from './echo-store.ts';
 
-type Layout = { nodes: Polygon[]; edges: CanvasBoard.Connection[] };
+type Layout = { nodes: ComputeShape[]; edges: CanvasBoard.Connection[] };
 
-const shape = (id: string, x: number, rest: Record<string, unknown> = {}): Polygon =>
-  ({ id, type: 'constant', center: { x, y: 0 }, size: { width: 64, height: 32 }, ...rest }) as Polygon;
+const shape = (
+  id: string,
+  x: number,
+  rest: Partial<ComputeShape> & { style?: NodeStyle } = {},
+): ComputeShape & { style?: NodeStyle } => ({
+  id,
+  type: 'constant',
+  center: { x, y: 0 },
+  size: { width: 64, height: 32 },
+  ...rest,
+});
 
 const edge = (id: string, source: string, target: string, rest: Record<string, unknown> = {}) =>
   ({ id, source, target, ...rest }) as CanvasBoard.Connection;
@@ -54,10 +64,11 @@ describe('echo store', () => {
       nodes: [shape('a', 0, { guide: true, classNames: 'text-red-500' }), shape('b', 1, { style: { hue: 'sky' } })],
       edges: [],
     });
-    expect(scene.nodes.a.style).toEqual({ guide: true, className: 'text-red-500' });
+    expect(scene.nodes.a.style).toEqual({ guide: true });
     expect(scene.nodes.b.style).toEqual({ hue: 'sky' });
     expect('guide' in scene.nodes.a).toBe(false);
-    expect('classNames' in scene.nodes.a).toBe(false);
+    // The old editor's classes ride through untouched; the engine draws none.
+    expect(Reflect.get(scene.nodes.a, 'classNames')).toBe('text-red-500');
   });
 
   test('a move writes back the node and nothing else', ({ expect }) => {

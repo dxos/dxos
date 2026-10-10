@@ -2,21 +2,34 @@
 // Copyright 2025 DXOS.org
 //
 
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { type JSX, useCallback, useMemo, useState } from 'react';
 
-import { Provider } from '@dxos/ai';
-import { useAtomCapabilityState, useOptionalCapability } from '@dxos/app-framework/ui';
+import { Provider, SessionConfig } from '@dxos/ai';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { type AiContext } from '@dxos/assistant';
-import type * as ChatModule from '@dxos/assistant/Chat';
+import * as Agent from '@dxos/assistant/Agent';
+import type * as Chat from '@dxos/assistant/Chat';
 import * as McpServer from '@dxos/compute/McpServer';
 import { type Database, Filter, Obj, Ref, type Registry, Type, URI } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { AccessToken } from '@dxos/link';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { Field, Flex, IconButton, Popover, Select, Tabs, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type ChatView } from '@dxos/react-ui-assistant';
 import { Listbox } from '@dxos/react-ui-list';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Popover from '@dxos/react-ui/Popover';
+import * as Select from '@dxos/react-ui/Select';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
+import * as Tabs from '@dxos/react-ui/Tabs';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { getStyles, mx } from '@dxos/ui-theme';
 
 import {
@@ -32,31 +45,42 @@ import {
 import { meta } from '#meta';
 import { Assistant, AssistantCapabilities, AssistantPreset } from '#types';
 
-import { resolveProvider } from '../../processor/index.ts';
+import { resolveProvider } from '../../chat-model/index.ts';
+import { agentOptions } from '../../util/agent-options.ts';
 
 const styles = {
   panel: 'w-[calc(100dvw-.5rem)] sm:w-max max-w-document-width',
-  toolbar: 'p-0! gap-0! border-t border-separator',
 };
 
 export type ChatOptionsProps = AssistantPreset.ChatPresetProps & {
   db: Database.Database;
-  chat?: ChatModule.Chat;
+  chat?: Chat.Chat;
   context?: AiContext.Binder;
   registry?: Registry.Registry;
+  /** Whether the conversation has begun; its agent is fixed from then on. */
+  started?: boolean;
 };
 
 /**
  * Manages the runtime context for the chat.
  */
-export const ChatOptions = ({ db, chat, context, registry, presets, preset, onPresetChange }: ChatOptionsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+export const ChatOptions = ({
+  db,
+  chat,
+  context,
+  registry,
+  started,
+  presets,
+  preset,
+  onPresetChange,
+}: ChatOptionsProps) => {
+  const { t } = UiHooks.useTranslation(meta.profile.key);
 
   return (
-    <div className='flex'>
-      <Popover.Root>
+    <Layout.Flex>
+      <Popover.Root positioning={{ placement: 'top' }}>
         <Popover.Trigger asChild>
-          <IconButton
+          <Button.Root
             variant='ghost'
             icon='ph--plus--regular'
             iconOnly
@@ -64,17 +88,15 @@ export const ChatOptions = ({ db, chat, context, registry, presets, preset, onPr
             disabled={!context}
           />
         </Popover.Trigger>
-        <Popover.Portal>
-          <Popover.Content side='top' classNames={styles.panel}>
-            <Popover.Viewport>{context && <ObjectsPanel db={db} context={context} />}</Popover.Viewport>
-            <Popover.Arrow />
-          </Popover.Content>
-        </Popover.Portal>
+        <Popover.Content classNames={styles.panel}>
+          {/* No Body: the list scrolls itself above its filter controls, in the popover's column. */}
+          {context && <ObjectsPanel db={db} context={context} />}
+        </Popover.Content>
       </Popover.Root>
 
-      <Popover.Root>
+      <Popover.Root positioning={{ placement: 'top' }}>
         <Popover.Trigger asChild>
-          <IconButton
+          <Button.Root
             variant='ghost'
             icon='ph--sliders-horizontal--regular'
             iconOnly
@@ -83,59 +105,134 @@ export const ChatOptions = ({ db, chat, context, registry, presets, preset, onPr
             disabled={!context}
           />
         </Popover.Trigger>
-        <Popover.Portal>
-          <Popover.Content side='top' classNames={styles.panel}>
-            <Popover.Viewport>
-              <Tabs.Root asChild orientation='horizontal' defaultValue='view' defaultActivePart='list' tabIndex={-1}>
-                <Tabs.Viewport classNames={mx('grid grid-rows-[1fr_40px] w-full')}>
-                  <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='view'>
-                    <ViewPanel chat={chat} />
-                  </Tabs.Panel>
-                  <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='skills'>
-                    {context && <SkillsPanel registry={registry} db={db} context={context} />}
-                  </Tabs.Panel>
-                  <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='mcp-servers'>
-                    <McpServersPanel db={db} />
-                  </Tabs.Panel>
-                  <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='model'>
-                    <ModelsPanel presets={presets} preset={preset} onPresetChange={onPresetChange} />
-                  </Tabs.Panel>
-                  <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='environment'>
-                    <EnvironmentPanel chat={chat} />
-                  </Tabs.Panel>
-                  <Tabs.Tablist classNames={[styles.toolbar]}>
-                    <Tabs.IconButton value='view' icon='ph--eye--regular' label={t('chat-view.title')} />
-                    <Tabs.IconButton value='skills' icon='ph--blueprint--regular' label={t('options.skills.title')} />
-                    <Tabs.IconButton
-                      value='mcp-servers'
-                      icon='ph--plugs-connected--regular'
-                      label={t('options.mcp.title')}
-                    />
-                    <Tabs.IconButton
-                      value='model'
-                      icon='ph--cpu--regular'
-                      label={t('options.chat-model.title')}
-                      data-testid='assistant.options.model'
-                    />
-                    <Tabs.IconButton
-                      value='environment'
-                      icon='ph--hard-drives--regular'
-                      label={t('options.environment.title')}
-                    />
-                  </Tabs.Tablist>
-                </Tabs.Viewport>
-              </Tabs.Root>
-            </Popover.Viewport>
-            <Popover.Arrow />
-          </Popover.Content>
-        </Popover.Portal>
+        <Popover.Content classNames={styles.panel}>
+          {/* No Body: each tab's list and the tab bar share the popover's own padding. */}
+          {/* A chat that has not begun opens on its agent, since that is the choice it is about to lose. */}
+          <Tabs.Root
+            orientation='horizontal'
+            defaultValue={started ? 'view' : 'agent'}
+            classNames='grid grid-rows-[1fr_40px] w-full'
+          >
+            <Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='agent'>
+              <AgentPanel chat={chat} started={started} />
+            </Tabs.Content>
+            <Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='view'>
+              <ViewPanel chat={chat} />
+            </Tabs.Content>
+            <Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='skills'>
+              {context && <SkillsPanel registry={registry} db={db} context={context} />}
+            </Tabs.Content>
+            <Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='mcp-servers'>
+              <McpServersPanel db={db} />
+            </Tabs.Content>
+            <Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='model'>
+              <ModelsPanel presets={presets} preset={preset} onPresetChange={onPresetChange} />
+            </Tabs.Content>
+            <Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='environment'>
+              <EnvironmentPanel chat={chat} />
+            </Tabs.Content>
+            <Tabs.List classNames='p-1 gap-1 border-t border-separator'>
+              <Tabs.Trigger
+                value='agent'
+                icon='ph--robot--regular'
+                label={t('options.agent.title')}
+                data-testid='assistant.options.agent'
+              />
+              <Tabs.Trigger value='view' icon='ph--eye--regular' label={t('chat-view.title')} />
+              <Tabs.Trigger value='skills' icon='ph--student--regular' label={t('options.skills.title')} />
+              <Tabs.Trigger value='mcp-servers' icon='ph--plugs-connected--regular' label={t('options.mcp.title')} />
+              <Tabs.Trigger
+                value='model'
+                icon='ph--cpu--regular'
+                label={t('options.chat-model.title')}
+                data-testid='assistant.options.model'
+              />
+              <Tabs.Trigger
+                value='environment'
+                icon='ph--hard-drives--regular'
+                label={t('options.environment.title')}
+              />
+            </Tabs.List>
+          </Tabs.Root>
+        </Popover.Content>
       </Popover.Root>
-    </div>
+
+      <AgentBadge chat={chat} />
+    </Layout.Flex>
+  );
+};
+
+/** The chat's agent and the picker's rows, live with each agent's availability. */
+const useChatAgent = (chat: Chat.Chat | undefined) => {
+  const agents = Hooks.useOptionalCapabilities(AssistantCapabilities.Agent);
+  const availabilityAtom = useMemo(() => Atom.make((get) => agents.map((agent) => get(agent.availability))), [agents]);
+  const availability = useAtomValue(availabilityAtom);
+  const [session] = useObject(chat, 'session');
+  const current = SessionConfig.harnessOf(session);
+  const options = useMemo(() => agentOptions({ agents, availability, current }), [agents, availability, current]);
+  return { current, options };
+};
+
+/**
+ * Which agent runs this chat. Picked before the first message only: an agent keeps its own session
+ * with the model, so one switched in mid-conversation would answer without the turns before it.
+ */
+const AgentPanel = ({ chat, started }: Pick<ChatOptionsProps, 'chat' | 'started'>) => {
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { current, options } = useChatAgent(chat);
+  const handleChange = useCallback(
+    (harness: string) => {
+      if (chat) {
+        Obj.update(chat, (chat) => {
+          chat.session = { ...chat.session, harness };
+        });
+      }
+    },
+    [chat],
+  );
+
+  return (
+    <Layout.Flex column classNames='dx-expand' data-testid='assistant.agents'>
+      <Listbox.Root value={current} onValueChange={handleChange} disabled={!chat || started} autoFocus items={options}>
+        <Listbox.Content gutter='none' aria-label={t('options.agent.title')}>
+          {options.map(({ value }) => (
+            <Listbox.Item
+              key={value}
+              id={value}
+              classNames='dx-focus-ring rounded-xs'
+              data-testid={`assistant.agents.${value}`}
+            />
+          ))}
+        </Listbox.Content>
+      </Listbox.Root>
+      {started && <p className='px-form-chrome py-1 text-xs text-fg-muted'>{t('agent-locked.message')}</p>}
+    </Layout.Flex>
+  );
+};
+
+/** Names the agent beside the options when it is not Composer's own, so a reader knows who answers. */
+const AgentBadge = ({ chat }: Pick<ChatOptionsProps, 'chat'>) => {
+  const { current, options } = useChatAgent(chat);
+  const agent = options.find(({ value }) => value === current);
+  if (!agent || agent.value === SessionConfig.COMPOSER_HARNESS) {
+    return null;
+  }
+
+  return (
+    <Layout.Flex
+      align='center'
+      gap='xs'
+      classNames='text-xs text-fg-muted whitespace-nowrap'
+      data-testid='assistant.agent'
+    >
+      <Icon.Icon icon={agent.icon} size='sm' />
+      <span>{agent.label}</span>
+    </Layout.Flex>
   );
 };
 
 const SkillsPanel = ({ registry, db, context }: Pick<ChatOptionsProps, 'registry' | 'db' | 'context'>) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
 
   const skills = useSkills({ registry, db });
   const activeSkills = useActiveSkills({ context });
@@ -156,7 +253,7 @@ const SkillsPanel = ({ registry, db, context }: Pick<ChatOptionsProps, 'registry
             const isActive = activeSkills.has(skillId);
             return (
               <SearchList.Item
-                classNames='flex items-center overflow-hidden'
+                classNames='overflow-hidden'
                 key={skillId}
                 value={skillId}
                 label={skill.name}
@@ -166,24 +263,35 @@ const SkillsPanel = ({ registry, db, context }: Pick<ChatOptionsProps, 'registry
             );
           })}
         </SearchList.Viewport>
-        <SearchList.Input placeholder={t('search.placeholder')} classNames='border-t border-separator' autoFocus />
+        <Toolbar.Root>
+          <SearchList.Input placeholder={t('search.placeholder')} classNames='border-t border-separator' autoFocus />
+        </Toolbar.Root>
       </SearchList.Content>
     </SearchList.Root>
   );
 };
 
 const ViewPanel = ({ chat }: Pick<ChatOptionsProps, 'chat'>) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const [view, setView] = useObject(chat, 'viewType');
   const value = (view as ChatView | undefined) ?? 'normal';
 
   return (
-    <Listbox.Root value={value} onValueChange={setView} autoFocus>
-      <Listbox.Content aria-label={t('chat-view.title')}>
+    <Listbox.Root
+      value={value}
+      onValueChange={setView}
+      autoFocus
+      items={Assistant.ChatViews.map((view) => ({
+        value: view,
+        label: t(`chat-view.${view}.label`, { defaultValue: view }),
+      }))}
+    >
+      {/* No gutter: the popover's padding is the inset, shared with the tab bar below. */}
+      <Listbox.Content gutter='none' aria-label={t('chat-view.title')}>
         {Assistant.ChatViews.map((view) => (
-          <Listbox.Item key={view} id={view} classNames='px-2 py-1 dx-focus-ring rounded-xs'>
-            <Listbox.ItemLabel>{t(`chat-view.${view}.label`, { defaultValue: view })}</Listbox.ItemLabel>
-            <Listbox.Indicator />
+          <Listbox.Item key={view} id={view} classNames='dx-focus-ring rounded-xs'>
+            <Listbox.ItemText>{t(`chat-view.${view}.label`, { defaultValue: view })}</Listbox.ItemText>
+            <Listbox.ItemIndicator />
           </Listbox.Item>
         ))}
       </Listbox.Content>
@@ -198,25 +306,41 @@ const ViewPanel = ({ chat }: Pick<ChatOptionsProps, 'chat'>) => {
  * respawns it on the other host.
  */
 const EnvironmentPanel = ({ chat }: Pick<ChatOptionsProps, 'chat'>) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const [remote, setRemote] = useObject(chat, 'remote');
-  const client = useOptionalCapability(ClientCapabilities.Client);
+  const client = Hooks.useOptionalCapability(ClientCapabilities.Client);
   // Offered only where an edge service is configured, which is the same condition that decides
   // whether `RemoteProcessManager` is the real manager or `layerNoop`: against the noop a spawn has
   // no `list` or `spawn`, so choosing `remote` would persist a flag the next prompt cannot honour.
-  const environments = client?.config.values.runtime?.services?.edge?.url
-    ? CHAT_ENVIRONMENTS
-    : CHAT_ENVIRONMENTS.filter((environment) => environment !== 'remote');
-  const value: ChatEnvironment = remote ? 'remote' : 'local';
+  // An agent's chat runs on EDGE (`Agent.chatLocation`) unless explicitly kept local: with EDGE configured local is
+  // no choice there, and without it local stays offered so the chat can be moved somewhere it can run.
+  const edgeConfigured = Boolean(client?.config.values.runtime?.services?.edge?.url);
+  const agentOnEdge = chat !== undefined && Agent.isAgentChat(chat) && chat.remote !== false;
+  const environments =
+    agentOnEdge && edgeConfigured
+      ? CHAT_ENVIRONMENTS.filter((environment) => environment === 'remote')
+      : agentOnEdge || edgeConfigured
+        ? CHAT_ENVIRONMENTS
+        : CHAT_ENVIRONMENTS.filter((environment) => environment !== 'remote');
+  const value: ChatEnvironment = remote || agentOnEdge ? 'remote' : 'local';
   const handleChange = useCallback((value: string) => setRemote(value === 'remote'), [setRemote]);
 
   return (
-    <Listbox.Root value={value} onValueChange={handleChange} autoFocus>
-      <Listbox.Content aria-label={t('options.environment.title')}>
+    <Listbox.Root
+      value={value}
+      onValueChange={handleChange}
+      autoFocus
+      items={environments.map((environment) => ({
+        value: environment,
+        label: t(`chat-environment.${environment}.label`),
+      }))}
+    >
+      {/* No gutter: the popover's padding is the inset, shared with the tab bar below. */}
+      <Listbox.Content gutter='none' aria-label={t('options.environment.title')}>
         {environments.map((environment) => (
-          <Listbox.Item key={environment} id={environment} classNames='px-2 py-1 dx-focus-ring rounded-xs'>
-            <Listbox.ItemLabel>{t(`chat-environment.${environment}.label`)}</Listbox.ItemLabel>
-            <Listbox.Indicator />
+          <Listbox.Item key={environment} id={environment} classNames='dx-focus-ring rounded-xs'>
+            <Listbox.ItemText>{t(`chat-environment.${environment}.label`)}</Listbox.ItemText>
+            <Listbox.ItemIndicator />
           </Listbox.Item>
         ))}
       </Listbox.Content>
@@ -224,29 +348,30 @@ const EnvironmentPanel = ({ chat }: Pick<ChatOptionsProps, 'chat'>) => {
   );
 };
 
-type ChatEnvironment = (typeof CHAT_ENVIRONMENTS)[number];
-
 const CHAT_ENVIRONMENTS = ['local', 'remote'] as const;
+
+type ChatEnvironment = (typeof CHAT_ENVIRONMENTS)[number];
 
 const ModelsPanel = ({
   presets,
   preset,
   onPresetChange,
 }: Pick<ChatOptionsProps, 'presets' | 'preset' | 'onPresetChange'>) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+
   return (
-    <div className='dx-expand flex flex-col'>
-      <Listbox.Root value={preset} onValueChange={onPresetChange} autoFocus>
-        <Listbox.Content aria-label={t('options.chat-model.title')} data-testid='assistant.models'>
+    <Layout.Flex column classNames='dx-expand'>
+      <Listbox.Root
+        value={preset}
+        onValueChange={onPresetChange}
+        autoFocus
+        items={(presets ?? []).map(({ id, label }) => ({ value: id, label: label }))}
+      >
+        <Listbox.Content gutter='none' aria-label={t('options.chat-model.title')} data-testid='assistant.models'>
           {presets?.map(({ id, label }) => (
-            <Listbox.Item
-              key={id}
-              id={id}
-              classNames='px-2 py-1 dx-focus-ring rounded-xs'
-              data-testid={`assistant.models.${id}`}
-            >
-              <Listbox.ItemLabel>{label}</Listbox.ItemLabel>
-              <Listbox.Indicator />
+            <Listbox.Item key={id} id={id} classNames='dx-focus-ring rounded-xs' data-testid={`assistant.models.${id}`}>
+              <Listbox.ItemText>{label}</Listbox.ItemText>
+              <Listbox.ItemIndicator />
             </Listbox.Item>
           ))}
         </Listbox.Content>
@@ -254,7 +379,7 @@ const ModelsPanel = ({
       <Toolbar.Root>
         <OnlineSwitch />
       </Toolbar.Root>
-    </div>
+    </Layout.Flex>
   );
 };
 
@@ -267,9 +392,9 @@ const ModelsPanel = ({
  * Ollama elsewhere — which is the same reconciliation `usePresets` does when it reads the setting.
  */
 const OnlineSwitch = () => {
-  const { t } = useTranslation(meta.profile.key);
-  const [settings, setSettings] = useAtomCapabilityState(AssistantCapabilities.Settings);
-  const hasBuiltIn = useOptionalCapability(AssistantCapabilities.OllamaManager) !== undefined;
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const [settings, setSettings] = Hooks.useAtomCapabilityState(AssistantCapabilities.Settings);
+  const hasBuiltIn = Hooks.useOptionalCapability(AssistantCapabilities.OllamaManager) !== undefined;
   const online = resolveProvider(settings.modelProvider, hasBuiltIn) === Provider.edge.id;
 
   const handleChange = useCallback(
@@ -281,16 +406,13 @@ const OnlineSwitch = () => {
   );
 
   return (
-    <div className='px-1 flex items-center gap-2'>
-      <Field.Switch checked={online} onCheckedChange={handleChange} data-testid='assistant.online'>
-        {t('online-switch.label')}
-      </Field.Switch>
-    </div>
+    <Input.Switch
+      checked={online}
+      onCheckedChange={({ checked }) => handleChange(checked)}
+      data-testid='assistant.online'
+      label={t('online-switch.label')}
+    />
   );
-};
-
-type McpServersPanelProps = {
-  db: Database.Database;
 };
 
 type McpServerDraft = {
@@ -300,8 +422,12 @@ type McpServerDraft = {
   apiKey?: string;
 };
 
+type McpServersPanelProps = {
+  db: Database.Database;
+};
+
 const McpServersPanel = ({ db }: McpServersPanelProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const servers = useQuery(db, Filter.type(McpServer.McpServer));
   const [adding, setAdding] = useState(false);
 
@@ -338,8 +464,8 @@ const McpServersPanel = ({ db }: McpServersPanelProps) => {
   );
 
   return (
-    <Flex column gap='xs' classNames='p-form-chrome' data-testid='assistant.mcp-servers'>
-      <Listbox.Root>
+    <Layout.Flex column data-testid='assistant.mcp-servers'>
+      <Listbox.Root items={servers.map((server) => ({ value: server.id, label: server.name ?? server.id }))}>
         <Listbox.Content aria-label={t('options.mcp.title')} classNames='gap-1'>
           {servers.map((server) => (
             <McpServerRow key={server.id} server={server} onRemove={handleRemove} />
@@ -347,17 +473,19 @@ const McpServersPanel = ({ db }: McpServersPanelProps) => {
         </Listbox.Content>
       </Listbox.Root>
       {adding ? (
-        <McpServerForm onSubmit={handleAdd} onCancel={() => setAdding(false)} />
+        <McpForm onSubmit={handleAdd} onCancel={() => setAdding(false)} />
       ) : (
-        <IconButton
-          variant='ghost'
-          icon='ph--plus--regular'
-          label={t('mcp-server-add.label')}
-          onClick={() => setAdding(true)}
-          data-testid='assistant.mcp-server.add'
-        />
+        <Layout.Flex classNames='p-1'>
+          <Button.Root
+            variant='ghost'
+            icon='ph--plus--regular'
+            label={t('mcp-server-add.label')}
+            onClick={() => setAdding(true)}
+            data-testid='assistant.mcp-server.add'
+          />
+        </Layout.Flex>
       )}
-    </Flex>
+    </Layout.Flex>
   );
 };
 
@@ -372,7 +500,7 @@ type McpServerRowProps = {
  * to keep the row in sync with mutations made through the returned setters (or elsewhere).
  */
 const McpServerRow = ({ server, onRemove }: McpServerRowProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const [enabled, setEnabled] = useObject(server, 'enabled');
   // Subscribed so the status re-checks once a sign-in stores tokens.
   useObject(server, 'oauth');
@@ -394,17 +522,17 @@ const McpServerRow = ({ server, onRemove }: McpServerRowProps) => {
 
   return (
     <Listbox.Item id={server.id} classNames='flex-col items-stretch px-form-chrome' data-testid='assistant.mcp-server'>
-      <Flex align='center' gap='sm'>
+      <Layout.Flex align='center' gap='sm'>
         <Field.Root>
           <Field.Label srOnly>{name}</Field.Label>
-          <Field.Switch checked={enabled !== false} onCheckedChange={(checked) => setEnabled(!!checked)} />
+          <Input.Switch checked={enabled !== false} onCheckedChange={({ checked }) => setEnabled(!!checked)} />
         </Field.Root>
-        <Flex column grow classNames='min-w-0'>
+        <Layout.Flex column grow classNames='min-w-0'>
           <span className='truncate text-sm'>{name}</span>
-          <span className='truncate text-xs text-description'>{url}</span>
-        </Flex>
+          <span className='truncate text-xs text-fg-muted'>{url}</span>
+        </Layout.Flex>
         {status.state === 'unauthorized' && (
-          <IconButton
+          <Button.Root
             variant='primary'
             icon='ph--sign-in--regular'
             label={t('mcp-server-sign-in.label')}
@@ -414,7 +542,7 @@ const McpServerRow = ({ server, onRemove }: McpServerRowProps) => {
           />
         )}
         {(status.state === 'error' || status.state === 'unauthorized') && (
-          <IconButton
+          <Button.Root
             variant='ghost'
             icon='ph--arrow-clockwise--regular'
             iconOnly
@@ -422,14 +550,14 @@ const McpServerRow = ({ server, onRemove }: McpServerRowProps) => {
             onClick={() => setRevision((revision) => revision + 1)}
           />
         )}
-        <IconButton
+        <Button.Root
           variant='ghost'
           icon='ph--x--regular'
           iconOnly
           label={t('mcp-server-remove.label')}
           onClick={() => onRemove(server)}
         />
-      </Flex>
+      </Layout.Flex>
       <span
         className={mx(
           'text-xs truncate',
@@ -446,13 +574,13 @@ const McpServerRow = ({ server, onRemove }: McpServerRowProps) => {
   );
 };
 
-type McpServerFormProps = {
+type McpFormProps = {
   onSubmit: (draft: McpServerDraft) => void;
   onCancel: () => void;
 };
 
-const McpServerForm = ({ onSubmit, onCancel }: McpServerFormProps) => {
-  const { t } = useTranslation(meta.profile.key);
+const McpForm = ({ onSubmit, onCancel }: McpFormProps) => {
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const [name, setName] = useState('');
   const [url, setUrl] = useState('');
   // Streamable HTTP is the current transport; the client falls back to SSE when a server answers 405.
@@ -477,7 +605,7 @@ const McpServerForm = ({ onSubmit, onCancel }: McpServerFormProps) => {
     >
       <Field.Root>
         <Field.Label srOnly>{t('mcp-server-name.label')}</Field.Label>
-        <Field.Input
+        <Input.Root
           placeholder={t('mcp-server-name.placeholder')}
           value={name}
           onChange={(event) => setName(event.target.value)}
@@ -487,7 +615,7 @@ const McpServerForm = ({ onSubmit, onCancel }: McpServerFormProps) => {
       </Field.Root>
       <Field.Root>
         <Field.Label srOnly>{t('mcp-server-url.label')}</Field.Label>
-        <Field.Input
+        <Input.Root
           type='url'
           placeholder={t('mcp-server-url.placeholder')}
           value={url}
@@ -495,47 +623,39 @@ const McpServerForm = ({ onSubmit, onCancel }: McpServerFormProps) => {
           data-testid='assistant.mcp-server.url'
         />
       </Field.Root>
-      <Select.Root value={protocol} onValueChange={(value) => setProtocol(value === 'sse' ? 'sse' : 'http')}>
-        <Select.TriggerButton placeholder={t('mcp-server-protocol.label')} />
-        <Select.Portal>
-          <Select.Content>
-            <Select.Viewport>
-              <Select.Option value='http'>HTTP</Select.Option>
-              <Select.Option value='sse'>SSE</Select.Option>
-            </Select.Viewport>
-          </Select.Content>
-        </Select.Portal>
+      <Select.Root
+        value={[protocol]}
+        onValueChange={({ value: [value] }) => setProtocol(value === 'sse' ? 'sse' : 'http')}
+        items={[
+          { value: 'http', label: 'HTTP' },
+          { value: 'sse', label: 'SSE' },
+        ]}
+      >
+        <Select.Trigger placeholder={t('mcp-server-protocol.label')} />
+        <Select.Content>
+          <Select.Item item={{ value: 'http', label: 'HTTP' }} />
+          <Select.Item item={{ value: 'sse', label: 'SSE' }} />
+        </Select.Content>
       </Select.Root>
       <Field.Root>
         <Field.Label srOnly>{t('mcp-server-api-key.label')}</Field.Label>
-        <Field.Input
-          type='password'
-          autoComplete='off'
+        <Input.Password
+          ignorePasswordManagers
           placeholder={t('mcp-server-api-key.placeholder')}
           value={apiKey}
-          onChange={(event) => setApiKey(event.target.value)}
+          onValueChange={setApiKey}
           data-testid='assistant.mcp-server.api-key'
         />
       </Field.Root>
-      <div className='flex gap-2'>
-        <IconButton
+      <Layout.Flex justify='end'>
+        <SystemButton.Save
           type='submit'
           variant='ghost'
-          icon='ph--check--regular'
-          iconOnly
-          label={t('save.button')}
           disabled={!canSubmit}
           data-testid='assistant.mcp-server.save'
         />
-        <IconButton
-          type='button'
-          variant='ghost'
-          icon='ph--x--regular'
-          iconOnly
-          label={t('cancel.button')}
-          onClick={onCancel}
-        />
-      </div>
+        <SystemButton.Cancel type='button' variant='ghost' onClick={onCancel} />
+      </Layout.Flex>
     </form>
   );
 };
@@ -544,7 +664,7 @@ const ANY = '__any__' as const;
 
 /** @private */
 export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'context'>): JSX.Element => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
 
   // Item types sorted by label.
   const types = useFilteredTypes(db);
@@ -561,6 +681,14 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
     return options;
   }, [types, t]);
 
+  const typeItems = useMemo(
+    () => [
+      { value: ANY, label: t('any-type-filter.label') },
+      ...typeOptions.map(({ uri, label }) => ({ value: uri, label })),
+    ],
+    [typeOptions, t],
+  );
+
   // Current type URI and filter.
   const [selectedUri, setSelectedUri] = useState<URI.URI | typeof ANY>(ANY);
   const anyFilter = useMemo(() => Filter.or(...typeOptions.map(({ uri }) => Filter.type(uri))), [typeOptions]);
@@ -574,56 +702,55 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
   });
 
   return (
-    <SearchList.Root onSearch={handleSearch}>
-      {/* No chrome padding: the rows align with the toolbar below, which is a sibling of
+    <Layout.Flex column classNames='min-h-0 divide-y divide-separator'>
+      {/* Shrinks to the popover's height, so the list scrolls rather than pushing the filter out of it. */}
+      <SearchList.Root onSearch={handleSearch}>
+        {/* No chrome padding: the rows align with the toolbar below, which is a sibling of
           `Content` and so sits flush against the panel edge. */}
-      <SearchList.Content>
-        <SearchList.Viewport padding={false}>
-          {results.length ? (
-            results.map((object) => {
-              const isActive = contextObjects.findIndex((obj) => obj.id === object.id) !== -1;
-              const { icon, hue } = Obj.getIcon(object) ?? { icon: 'ph--cube--regular', hue: undefined };
-              const styles = hue ? getStyles(hue) : undefined;
-              return (
-                <SearchList.Item
-                  classNames='flex items-center overflow-hidden'
-                  key={object.id}
-                  value={object.id}
-                  icon={icon}
-                  iconClassNames={styles?.text}
-                  label={Obj.getLabel(object) ?? Obj.getTypename(object) ?? object.id}
-                  checked={isActive}
-                  onSelect={() => onUpdateObject?.(Obj.getURI(object), !isActive)}
-                />
-              );
-            })
-          ) : (
-            <SearchList.Item value='__empty__' label={t('no-results.message')} />
-          )}
-        </SearchList.Viewport>
-      </SearchList.Content>
+        <SearchList.Content classNames='flex flex-col'>
+          <SearchList.Viewport padding={false} classNames='min-h-0 flex-auto'>
+            {results.length ? (
+              results.map((object) => {
+                const isActive = contextObjects.findIndex((obj) => obj.id === object.id) !== -1;
+                const { icon, hue } = Obj.getIcon(object) ?? { icon: 'ph--cube--regular', hue: undefined };
+                const styles = hue ? getStyles(hue) : undefined;
+                return (
+                  <SearchList.Item
+                    classNames='overflow-hidden'
+                    key={object.id}
+                    value={object.id}
+                    icon={icon}
+                    iconClassNames={styles?.text}
+                    label={Obj.getLabel(object) ?? Obj.getTypename(object) ?? object.id}
+                    checked={isActive}
+                    onSelect={() => onUpdateObject?.(Obj.getURI(object), !isActive)}
+                  />
+                );
+              })
+            ) : (
+              <SearchList.Item value='__empty__' label={t('no-results.message')} />
+            )}
+          </SearchList.Viewport>
+        </SearchList.Content>
 
-      <div className={mx('flex flex-col', styles.toolbar)}>
-        <Select.Root
-          value={selectedUri === ANY ? undefined : selectedUri}
-          onValueChange={(val) => setSelectedUri(val as URI.URI | typeof ANY)}
-        >
-          <Select.TriggerButton placeholder={t('type-filter.placeholder')} />
-          <Select.Portal>
+        <Toolbar.Root>
+          <SearchList.Input placeholder={t('search.placeholder')} autoFocus />
+          <Select.Root
+            items={typeItems}
+            value={selectedUri === ANY ? [] : [selectedUri]}
+            onValueChange={({ value: [value] }) =>
+              setSelectedUri(typeOptions.find(({ uri }) => uri === value)?.uri ?? ANY)
+            }
+          >
+            <Select.Trigger fixed placeholder={t('type-filter.placeholder')} />
             <Select.Content>
-              <Select.Viewport>
-                <Select.Option value={ANY}>{t('any-type-filter.label')}</Select.Option>
-                {typeOptions.map(({ uri, label }) => (
-                  <Select.Option key={uri} value={uri}>
-                    {label}
-                  </Select.Option>
-                ))}
-              </Select.Viewport>
+              {typeItems.map((item) => (
+                <Select.Item key={item.value} item={item} />
+              ))}
             </Select.Content>
-          </Select.Portal>
-        </Select.Root>
-        <SearchList.Input placeholder={t('search.placeholder')} autoFocus />
-      </div>
-    </SearchList.Root>
+          </Select.Root>
+        </Toolbar.Root>
+      </SearchList.Root>
+    </Layout.Flex>
   );
 };

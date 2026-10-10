@@ -8,7 +8,7 @@
 // `Diagnostics`, so they show what the renderer draws rather than what the source declared.
 //
 
-import { analyze } from './diagnostics.ts';
+import { analyze, arrowPoints, bindTargets } from './diagnostics.ts';
 import type * as Scene from './scene.ts';
 
 type Point = Scene.Point;
@@ -48,6 +48,7 @@ export const extract = (objects: readonly Scene.WorldObject[]): Drawing => {
   const boxes: Box[] = [];
   const lines = new Map<string, Path>();
   const labels = new Map<string, string>();
+  const targets = bindTargets(objects);
   for (const object of objects) {
     const scale = object.scale ?? 1;
     for (const element of object.elements) {
@@ -68,9 +69,9 @@ export const extract = (objects: readonly Scene.WorldObject[]): Drawing => {
       }
     }
     for (const element of object.elements) {
-      if (element.kind === 'arrow' && element.start && element.end) {
+      const head = element.kind === 'arrow' ? arrowPoints(object, element, targets) : undefined;
+      if (element.kind === 'arrow' && head) {
         const ref = `${object.id}/${element.id}`;
-        const head = [place(object, element.start), place(object, element.end)];
         const existing = lines.get(ref);
         const { head: headMarker, tail, stroke } = element;
         const style = {
@@ -161,7 +162,7 @@ const HEADS: Record<string, string> = {
   crowsfoot: "crow's foot head",
   none: 'no head',
 };
-const TAILS: Record<string, string> = { circle: 'dot at the start' };
+const TAILS: Record<string, string> = { circle: 'dot at the start', arrow: 'arrowhead at the start' };
 
 /** A path's markers in words, e.g. "dashed, hollow triangle head", or undefined for a plain arrow. */
 const describe = (style?: Path['style']) => {

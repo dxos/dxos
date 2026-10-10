@@ -64,7 +64,6 @@ export const ProjectPhase: SampleSpace.Phase<ProjectResult, ProjectInput> = Samp
       const instructions = yield* Database.add(
         Instructions.make({
           name: 'Chess MCP on Workers',
-          description: 'Bindings for a chat working this project.',
           text: INSTRUCTIONS,
           skills: [Ref.make(skill.skill)],
           objects: [Ref.make(docs.brief), Ref.make(tasks.taskSet), Ref.make(game.game)],

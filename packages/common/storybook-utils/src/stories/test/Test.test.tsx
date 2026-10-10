@@ -6,7 +6,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
-import { ThemeProvider } from '@dxos/react-ui';
+import * as Theme from '@dxos/react-ui/Theme';
 
 import { Test } from './Test.tsx';
 
@@ -18,9 +18,9 @@ describe('Test', () => {
   it('calls onClick when clicked', () => {
     const handleClick = vi.fn();
     const { container } = render(
-      <ThemeProvider>
+      <Theme.Provider>
         <Test id='test' icon='ph--x--regular' label='Test' onClick={handleClick} />
-      </ThemeProvider>,
+      </Theme.Provider>,
     );
 
     fireEvent.click(container.querySelector('#test')!);

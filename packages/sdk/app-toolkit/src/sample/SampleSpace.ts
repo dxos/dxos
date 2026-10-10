@@ -10,7 +10,7 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
 import { Annotation, Collection, Database, type Feed, Obj, Ref, Tag, type Type } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError } from '@dxos/errors';
 import { Tagging } from '@dxos/schema';
 import { iconValues } from '@dxos/ui-types';

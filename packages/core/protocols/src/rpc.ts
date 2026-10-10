@@ -21,4 +21,5 @@ export * as LoggingService from './LoggingService.ts';
 export * as NetworkService from './NetworkService.ts';
 export * as QueryService from './QueryService.ts';
 export * as SpacesService from './SpacesService.ts';
+export * as SqlService from './SqlService.ts';
 export * as SystemService from './SystemService.ts';

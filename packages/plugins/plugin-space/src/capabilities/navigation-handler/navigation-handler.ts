@@ -15,8 +15,8 @@ import * as Operation from '@dxos/compute/Operation';
 import { Identity } from '@dxos/halo';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { HaloServicesLayer } from '@dxos/plugin-client';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as HaloServices from '@dxos/plugin-client/HaloServices';
 
 import { meta } from '#meta';
 import { SpaceOperation } from '#types';
@@ -52,7 +52,7 @@ export default Capability.makeModule(
     // here and bypassing the normal onboarding flow.
     const hasLocalIdentity = Effect.gen(function* () {
       yield* Effect.promise(() => client.waitUntilInitialized({ timeout: INITIALIZE_TIMEOUT }));
-      return Option.isSome(yield* Identity.getSnapshot.pipe(Effect.provide(HaloServicesLayer)));
+      return Option.isSome(yield* Identity.getSnapshot.pipe(Effect.provide(HaloServices.layer)));
     });
 
     const reportFailure = (error: unknown) =>

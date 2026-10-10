@@ -1,5 +1,121 @@
 # @dxos/plugin-tasks
 
+## 0.13.0
+
+### Minor Changes
+
+- 3e73e53: Chats can run on a coding agent other than Composer's own. `SessionConfig` gains `harness` (which agent runs the chat) and `host` (the device that runs it). Plugins register agents through `AssistantCapabilities.Agent`, and the agent service picks the turn engine per chat from it. `MakeTurnProducerOptions` now includes the `chat`.
+
+  `plugin-code` adds the desktop app's agent helper and an ACP turn engine. It streams the agent's transcript into the chat, keeps the agent's session warm between turns and resumes it after a restart. `plugin-claude` uses it to offer Claude Code on the user's machine.
+
+  An agent's permission requests arrive as a `request` content block (`ContentBlock.Request`). The chat renders it as a card, and the answer goes back through `AssistantOperation.RespondToRequest`.
+
+  `ProjectOperation.DelegateTaskToChat` takes an optional `harness`. Without one, it uses the new `defaultAgent` assistant setting while that agent is available, and Composer otherwise. A task's menu lists an "Assign to" entry per registered agent and disables those that cannot run on this device. To support this, `ObjectAction` gains `group` and `unavailable`.
+
+  A project overview has a settings slot, `ProjectView.Settings`, where other plugins add settings. `plugin-code` uses it for the project's repository folder on this device, and a delegated chat works in its own git worktree of that folder.
+
+  A coding agent gets Composer's operations as the `composer` MCP server, scoped to its chat's space. The page serves the same surface as `dx mcp serve`, and the agent helper relays the agent's requests to it.
+
+  `CodeAgent.make` takes `sessionMeta`, agent-specific ACP session options built from the Composer tools on offer. Claude Code uses it to call Composer's read-only tools without asking each time. The Claude plugin now depends on the Code plugin, which runs the agent helper.
+
+### Patch Changes
+
+- fcbb5c4: A pull request now stays on the task it is attached to, so a sub-task fixed on its own can carry its own PR alongside its parent's; only a second, different open PR on the same task is refused. `Task.artifactTarget` is replaced by `Task.checkArtifact`, which validates without redirecting.
+- Updated dependencies [ecd099a]
+- Updated dependencies [bbe9f18]
+- Updated dependencies [d2a6aad]
+- Updated dependencies [162fd6d]
+- Updated dependencies [aad3e41]
+- Updated dependencies [44b7b80]
+- Updated dependencies [bb2b672]
+- Updated dependencies [cb1e218]
+- Updated dependencies [1ef899b]
+- Updated dependencies [32f32a0]
+- Updated dependencies [dc16fdd]
+- Updated dependencies [66727e3]
+- Updated dependencies [469e7f7]
+- Updated dependencies [665261a]
+- Updated dependencies [68dc875]
+- Updated dependencies [2e96a73]
+- Updated dependencies [ab1bddf]
+- Updated dependencies [ec9f207]
+- Updated dependencies [945092e]
+- Updated dependencies [c531b05]
+- Updated dependencies [eb14798]
+- Updated dependencies [3672aff]
+- Updated dependencies [2f95d25]
+- Updated dependencies [69a4a85]
+- Updated dependencies [c7cc480]
+- Updated dependencies [7d222fc]
+- Updated dependencies [8980a93]
+- Updated dependencies [e99ee70]
+- Updated dependencies [161f994]
+- Updated dependencies [ff92c50]
+- Updated dependencies [3e73e53]
+- Updated dependencies [7a177b9]
+- Updated dependencies [9ab98cd]
+- Updated dependencies [8fc641a]
+- Updated dependencies [38e2ddb]
+- Updated dependencies [1894fc1]
+- Updated dependencies [246ee3c]
+- Updated dependencies [8ebe8d6]
+- Updated dependencies [596728d]
+- Updated dependencies [64f1a7a]
+- Updated dependencies [7715216]
+- Updated dependencies [1b37aa8]
+- Updated dependencies [1737cad]
+- Updated dependencies [321c99f]
+- Updated dependencies [3d05b7f]
+- Updated dependencies [a999417]
+- Updated dependencies [6a7bed4]
+- Updated dependencies [3022878]
+- Updated dependencies [c2a300a]
+- Updated dependencies [17008f0]
+- Updated dependencies [6ea9d4d]
+- Updated dependencies [dde8f43]
+- Updated dependencies [4f8e566]
+- Updated dependencies [fcbb5c4]
+- Updated dependencies [a449958]
+- Updated dependencies [49731e1]
+  - @dxos/react-ui-menu@0.13.0
+  - @dxos/compute@0.13.0
+  - @dxos/react-ui@0.13.0
+  - @dxos/echo@0.13.0
+  - @dxos/react-ui-form@0.13.0
+  - @dxos/util@0.13.0
+  - @dxos/types@0.13.0
+  - @dxos/plugin-space@0.13.0
+  - @dxos/plugin-markdown@0.13.0
+  - @dxos/ui-editor@0.13.0
+  - @dxos/app-toolkit@0.13.0
+  - @dxos/plugin-client@0.13.0
+  - @dxos/app-framework@0.13.0
+  - @dxos/react-ui-attention@0.13.0
+  - @dxos/echo-client@0.13.0
+  - @dxos/react-ui-editor@0.13.0
+  - @dxos/react-ui-task@0.13.0
+  - @dxos/plugin-file@0.13.0
+  - @dxos/plugin-preview@0.13.0
+  - @dxos/app-graph@0.13.0
+  - @dxos/react-client@0.13.0
+  - @dxos/react-ui-calendar@0.13.0
+  - @dxos/react-ui-markdown@0.13.0
+  - @dxos/react-ui-query@0.13.0
+  - @dxos/echo-doc@0.13.0
+  - @dxos/echo-query@0.13.0
+  - @dxos/echo-react@0.13.0
+  - @dxos/schema@0.13.0
+  - @dxos/effect@0.13.0
+  - @dxos/graph@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/react-hooks@0.13.0
+  - @dxos/lit-ui@0.13.0
+  - @dxos/halo-react@0.13.0
+  - @dxos/display-name@0.13.0
+  - @dxos/errors@0.13.0
+  - @dxos/keys@0.13.0
+  - @dxos/ui-theme@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

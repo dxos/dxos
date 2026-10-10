@@ -97,7 +97,11 @@ describe('answerOpenQuestions', () => {
 
 const fact = (id: string): RDF.Fact => ({
   id,
-  assertion: { subject: { entity: 'carol' }, predicate: 'works on', object: { entity: 'opfs' } },
+  assertion: {
+    subject: { kind: 'entity', entity: 'carol' },
+    predicate: 'works on',
+    object: { kind: 'entity', entity: 'opfs' },
+  },
   factuality: { value: 'CT+', polarity: '+', confidence: 0.9 },
   attribution: { agent: 'carol', source: `discord:${id}`, generatedAtTime: '2026-06-01T00:00:00.000Z' },
   recordedAt: '2026-06-01T00:00:00.000Z',

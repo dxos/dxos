@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { type AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { type ModelVariant } from '../models.ts';
 

@@ -25,7 +25,9 @@ import {
   View,
 } from '@dxos/echo';
 import { TypeEnum } from '@dxos/echo/Format';
-import { EffectEx, SchemaAST, SchemaEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { invariant } from '@dxos/invariant';
 
 import { ProjectionModel, createEchoChangeCallback } from '../projection/index.ts';

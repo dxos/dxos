@@ -7,7 +7,7 @@ import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as SqlClient from 'effect/sql/SqlClient';
 
-import { RuntimeProvider } from '@dxos/effect';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 
 import { SqliteStorageAdapter, type SqliteStorageCallbacks } from '../automerge/sqlite-storage-adapter.ts';
 

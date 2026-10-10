@@ -51,7 +51,7 @@ describe('route', () => {
         { x: 10, y: 10 },
       ]),
     ).toBe('M 0 0 L 10 10');
-    // A right angle is cut 32 back along each segment; the corner is the quadratic's control, so the
+    // A right angle is cut one minor cell (16) back along each segment; the corner is the quadratic's control, so the
     // route bends around it and never reaches it.
     expect(
       splinePath([
@@ -59,7 +59,7 @@ describe('route', () => {
         { x: 100, y: 0 },
         { x: 100, y: 100 },
       ]),
-    ).toBe('M 0 0 L 68 0 Q 100 0, 100 32 L 100 100');
+    ).toBe('M 0 0 L 84 0 Q 100 0, 100 16 L 100 100');
     // Segments shorter than two radii share what they have, so neighbouring corners never overlap.
     expect(
       splinePath([
@@ -81,11 +81,13 @@ describe('route', () => {
   });
 
   test('a free end faces the other end, and a node end facing it takes its nearest port', ({ expect }) => {
-    const scene = SceneBuilder.create('s')
-      .rect('a', { x: 0, y: 0, width: 256, height: 128 })
-      .line('free', '@-200,64', '@-100,64')
-      .line('half', '@640,64', 'a')
-      .build();
+    const {
+      scenes: [scene],
+    } = SceneBuilder.scene('s', [
+      SceneBuilder.rect('a', { x: 0, y: 0, width: 256, height: 128 }),
+      SceneBuilder.link('line', '@-200,64', '@-100,64').id('free'),
+      SceneBuilder.link('line', '@640,64', 'a').id('half'),
+    ]).build();
     expect(sideToward({ x: 0, y: 0 }, { x: 10, y: 3 })).toBe('e');
     expect(sideToward({ x: 0, y: 0 }, { x: -3, y: 10 })).toBe('s');
     const free = linkGeometry(scene, defaultNodeRegistry, scene.links.free);
@@ -95,5 +97,15 @@ describe('route', () => {
     const half = linkGeometry(scene, defaultNodeRegistry, scene.links.half);
     expect(half?.target).toEqual({ point: { x: 256, y: 64 }, side: 'e' });
     expect(half?.source.side).toBe('w');
+  });
+
+  test('a route runs straight to a free end rather than turning to its side', ({ expect }) => {
+    const port = { point: { x: 0, y: 0 }, side: 'e' as const };
+    const free = { point: { x: 100, y: 37 }, side: 'w' as const, free: true };
+    // A curve's control point at a free end is the end itself, and a smart link has no stub there.
+    expect(
+      linkPath({ type: 'curve', id: 'c', z: 'a', source: { node: 'n' }, target: { point: free.point } }, port, free),
+    ).toMatch(/, 100 37, 100 37$/);
+    expect(smartPoints(port, free)).toEqual([port.point, { x: 32, y: 0 }, free.point]);
   });
 });

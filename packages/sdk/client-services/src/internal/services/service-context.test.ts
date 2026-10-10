@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
 import { Context } from '@dxos/context';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { failedInvariant } from '@dxos/invariant';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { fromPublicKey } from '@dxos/protocols/buf';

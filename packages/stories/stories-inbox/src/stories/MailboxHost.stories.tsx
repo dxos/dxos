@@ -10,8 +10,8 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Role from '@dxos/app-framework/Role';
+import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface } from '@dxos/app-framework/ui';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { Invitation_AuthMethod, Invitation_State, InvitationEncoder } from '@dxos/client/invitations';
 import { persistentClientServices } from '@dxos/client/testing';
@@ -23,7 +23,7 @@ import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
 import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useClient } from '@dxos/react-client';
 import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
@@ -122,7 +122,7 @@ const HostModule = () => {
     <div className='flex flex-col gap-4 p-4 max-w-[48rem]' data-testid='mailbox-host'>
       <div className='flex flex-col gap-1'>
         <h1 className='text-lg font-medium'>Live mailbox host</h1>
-        <p className='text-sm text-description'>
+        <p className='text-sm text-fg-muted'>
           A persistent, EDGE-dev space seeded with a mailbox. Connect the CLI to this identity, then read the mailbox
           over EDGE replication:
         </p>
@@ -132,15 +132,15 @@ const HostModule = () => {
       </div>
 
       <dl className='grid grid-cols-[8rem_1fr] gap-1 text-sm'>
-        <dt className='text-description'>Identity</dt>
+        <dt className='text-fg-muted'>Identity</dt>
         <dd className='font-mono break-all' data-testid='identity-did'>
           {identity?.did ?? '<none>'}
         </dd>
-        <dt className='text-description'>Space</dt>
+        <dt className='text-fg-muted'>Space</dt>
         <dd className='font-mono break-all' data-testid='space-id'>
           {space?.id ?? '<none>'}
         </dd>
-        <dt className='text-description'>Seeded senders</dt>
+        <dt className='text-fg-muted'>Seeded senders</dt>
         <dd>{SEED_SENDERS.map((sender) => sender.email).join(', ')}</dd>
       </dl>
 
@@ -156,7 +156,7 @@ const HostModule = () => {
           </button>
         </div>
         {status && (
-          <div className='text-xs text-description' data-testid='recovery-status'>
+          <div className='text-xs text-fg-muted' data-testid='recovery-status'>
             {status}
           </div>
         )}
@@ -180,7 +180,7 @@ const HostModule = () => {
         </div>
         {invitation && (
           <>
-            <div className='text-sm text-description'>State: {invitation.state}</div>
+            <div className='text-sm text-fg-muted'>State: {invitation.state}</div>
             {invitation.code && (
               <textarea
                 className='font-mono text-xs rounded border border-separator p-2'
@@ -215,7 +215,11 @@ const StoryHostPlugin = Plugin.define(
     activate: () =>
       Effect.succeed([
         Capability.contribute(Capabilities.ReactSurface, [
-          Surface.create({ id: 'inbox.mailboxHost', filter: Surface.makeFilter(HostRole), component: HostModule }),
+          Surface.create({
+            id: 'inbox.mailboxHost',
+            filter: Surface.makeFilter(HostRole),
+            component: HostModule,
+          }),
           ...moduleSurfaces,
         ]),
       ]),
@@ -233,7 +237,7 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager(() => ({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: HOST_STORY_TYPES,
           ...HOST_STORY_CLIENT_SERVICES,

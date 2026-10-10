@@ -5,14 +5,16 @@
 import React, { useEffect } from 'react';
 
 import { log } from '@dxos/log';
-import { ErrorFallback, type ErrorFallbackProps, Flex, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Status from '@dxos/react-ui/Status';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
 /** User-facing error fallback for a plank's content Surface. */
-export const PlankErrorFallback = ({ error }: ErrorFallbackProps) => {
-  const { t } = useTranslation(meta.profile.key);
+export const PlankErrorFallback = ({ error }: Status.ErrorProps) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   useEffect(() => {
     if (error) {
@@ -21,16 +23,21 @@ export const PlankErrorFallback = ({ error }: ErrorFallbackProps) => {
   }, [error]);
 
   if (process.env.NODE_ENV === 'development') {
-    return <ErrorFallback title='Plank Error' error={error} />;
+    return <Status.Error title='Plank Error' error={error} />;
   }
 
   // Show only a generic message to end users; raw error details stay in logs / the dev fallback above.
   return (
-    <Flex center role='alert' data-testid='plank-content-error' classNames='dx-attention-surface overflow-y-auto p-8'>
-      <Flex column gap='sm' align='center'>
+    <Layout.Flex
+      center
+      role='alert'
+      data-testid='plank-content-error'
+      classNames='dx-attention-surface overflow-y-auto p-8'
+    >
+      <Layout.Flex column gap='sm' align='center'>
         <p className={mx(descriptionMessage, 'break-all rounded-md p-4')}>{t('error-fallback.message')}</p>
-      </Flex>
-    </Flex>
+      </Layout.Flex>
+    </Layout.Flex>
   );
 };
 

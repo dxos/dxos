@@ -6,19 +6,19 @@ import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
-import { RunInstructions } from '@dxos/assistant-toolkit';
+import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { Database, Feed, Filter, Ref } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { EntityId } from '@dxos/keys';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 import { Message } from '@dxos/types';
 
 import { AssistantPlugin } from '#plugin';
@@ -32,7 +32,7 @@ describe('Agent prompt (composer plugin harness)', () => {
     'chat mode appends assistant messages to the chat queue',
     { tags: ['manual'], timeout: 60_000 },
     async ({ expect }) => {
-      await using harness = await createComposerTestApp({
+      await using harness = await Harness.createComposerTestApp({
         plugins: [ClientPlugin.make({}), AssistantPlugin(), RoutinePlugin.make()],
       });
 
@@ -59,7 +59,7 @@ describe('Agent prompt (composer plugin harness)', () => {
           yield* Database.flush();
 
           const result = yield* Operation.invoke(
-            RunInstructions,
+            AgentOperation.RunInstructions,
             {
               instructions: Ref.make(instructions),
               input: {},

@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { expect, test } from 'vitest';
 
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { log } from '@dxos/log';
 
 /**

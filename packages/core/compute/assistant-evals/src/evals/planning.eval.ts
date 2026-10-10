@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { evalite } from 'evalite';
 
 import { Database } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Outline } from '@dxos/types';
 import { trim } from '@dxos/util';
 

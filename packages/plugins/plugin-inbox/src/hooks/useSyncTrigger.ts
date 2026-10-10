@@ -6,12 +6,13 @@ import * as Effect from 'effect/Effect';
 import { useCallback, useMemo, useState } from 'react';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as Routine from '@dxos/compute/Routine';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Filter, Obj, Query, Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import * as Binding from '@dxos/plugin-connector/Binding';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
@@ -47,8 +48,8 @@ export const useSyncTrigger = ({
   handleToggleSync: () => Promise<void>;
 } => {
   const [pending, setPending] = useState(false);
-  const { invokePromise } = useOperationInvoker();
-  const manager = usePluginManager();
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const manager = PluginManagerProvider.usePluginManager();
   const { connection } = useTargetConnection(subject);
   const connector = useConnectorEntry(connection, connectors);
 
@@ -110,8 +111,8 @@ export const useSyncTrigger = ({
           Binding.syncCreatedRoutine({ created, connector, spaceId: db.spaceId }).pipe(
             Effect.provideService(Capability.Service, manager.capabilities),
             Effect.catch((error) => Effect.sync(() => log.warn('first sync after routine created failed', { error }))),
-            // An EDGE force-run that outlives its replication backoff arrives as a defect
-            // (`Effect.orDie`), which the typed catch above would let escape unreported.
+            // A force-run EDGE fails other than as switched off arrives as a defect, which the typed
+            // catch above would let escape unreported.
             Effect.catchDefect((defect) =>
               Effect.sync(() => log.warn('first sync after routine created died', { defect })),
             ),

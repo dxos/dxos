@@ -10,7 +10,7 @@ import * as Fiber from 'effect/Fiber';
 import * as PubSub from 'effect/PubSub';
 import * as Ref from 'effect/Ref';
 
-import { Performance } from '@dxos/effect';
+import * as Performance from '@dxos/effect/Performance';
 import { log } from '@dxos/log';
 
 import { ActivationEvents } from '../../common/index.ts';

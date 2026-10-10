@@ -3,9 +3,10 @@
 //
 
 import { Type } from '@dxos/echo';
-import { type Resource } from '@dxos/react-ui';
 import { translations as cardTranslations } from '@dxos/react-ui-card/translations';
 import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
+import { translations as queryTranslations } from '@dxos/react-ui-query/translations';
+import type * as Theme from '@dxos/react-ui/Theme';
 import { Message } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -191,4 +192,5 @@ export const translations = [
   },
   ...cardTranslations,
   ...componentsTranslations,
-] as const satisfies Resource[];
+  ...queryTranslations,
+] as const satisfies Theme.Resource[];

@@ -8,7 +8,7 @@ import * as Atom from 'effect/reactivity/Atom';
 import { useMemo } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { useOptionalCapability } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Chat from '@dxos/assistant/Chat';
 import type * as Process from '@dxos/compute/Process';
 import { Obj } from '@dxos/echo';
@@ -20,7 +20,7 @@ import {
 } from '@dxos/react-ui-trace';
 import { Task } from '@dxos/types';
 
-const atomEmpty = Atom.make(() => [] as const as readonly Process.Info[]);
+const atomEmpty = Atom.make(() => [] as const as readonly Process.Process[]);
 
 /** A chat as the timeline's session: its uri is the agent process's target, its feed the trace meta's. */
 export const sessionFromChat = (chat: Chat.Chat): Session => ({
@@ -48,7 +48,7 @@ export const useSessionTimeline = (
   space: Space | undefined,
   { chats, tasks }: UseSessionTimelineOptions,
 ): SessionTimeline => {
-  const monitor = useOptionalCapability(Capabilities.ProcessMonitor);
+  const monitor = Hooks.useOptionalCapability(Capabilities.ProcessManager);
   const processes = useAtomValue(
     useMemo(() => monitor?.processTreeAtom.pipe(Atom.debounce(Duration.millis(500))) ?? atomEmpty, [monitor]),
   );

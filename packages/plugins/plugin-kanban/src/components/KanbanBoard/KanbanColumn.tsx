@@ -45,13 +45,7 @@ export const KanbanColumn = forwardRef<HTMLDivElement, KanbanColumnProps>(
         dragHandle={dragHandle}
         ref={forwardedRef}
       >
-        {uncategorized ? (
-          <div className='border-b border-separator p-2' data-testid='board-column-header'>
-            <span className='font-medium'>{title}</span>
-          </div>
-        ) : (
-          <Board.Column.Header label={title} dragHandleRef={setDragHandle} />
-        )}
+        <Board.Column.Header label={title} dragHandleRef={uncategorized ? undefined : setDragHandle} />
         <Board.Column.Body
           data={column}
           eventHandler={eventHandler}

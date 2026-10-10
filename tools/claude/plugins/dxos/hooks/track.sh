@@ -27,7 +27,7 @@
 # appends one BACKEND line saying HOW to perform it. Swapping the store (e.g. to
 # an MCP server) is a change to that one function — the verbs, the command file
 # and the skill are untouched. Configure with:
-#   DX_PROJECT_BACKEND   file (default) | mcp
+#   DX_PROJECT_BACKEND   mcp (default) | file
 #   DX_PROJECT_REGISTRY  path to the registry, relative to the project root
 #                        (default .agents/projects/registry.yml) — `file` only
 #   DX_PROJECT_SPACE     space to resolve projects in — `mcp` only; when unset
@@ -43,7 +43,7 @@ input=$(cat)
 prompt=$(printf '%s' "$input" | jq -r '.prompt // empty' 2>/dev/null || printf '')
 
 root="${CLAUDE_PROJECT_DIR:-$(pwd)}"
-backend="${DX_PROJECT_BACKEND:-file}"
+backend="${DX_PROJECT_BACKEND:-mcp}"
 registry="${DX_PROJECT_REGISTRY:-.agents/projects/registry.yml}"
 
 # One line appended to every directive, describing the store rather than the

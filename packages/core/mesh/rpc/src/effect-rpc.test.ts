@@ -17,7 +17,7 @@ import * as Stream from 'effect/Stream';
 import { describe, onTestFinished, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { layerProtocolRpcPortServer, makeProtocolRpcPortClient } from './effect-rpc.ts';
 import { createLinkedPorts } from './testing.ts';

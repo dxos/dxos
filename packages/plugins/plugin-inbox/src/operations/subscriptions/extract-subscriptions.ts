@@ -6,7 +6,7 @@ import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
-import { PROGRESS_STATUS_CANCELLED, PROGRESS_STATUS_COMPLETE, PROGRESS_STATUS_FAILED } from '@dxos/app-toolkit';
+import * as Progress from '@dxos/app-toolkit/Progress';
 import * as Cancellation from '@dxos/compute/Cancellation';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
@@ -79,7 +79,7 @@ const handler = InboxOperation.ExtractSubscriptions.pipe(
           signal,
           Effect.sync(() => {
             log.info('subscriptions: pipeline cancelled', { mailbox: Obj.getURI(mailbox), scanned });
-            reportStatus({ message: PROGRESS_STATUS_CANCELLED });
+            reportStatus({ message: Progress.STATUS_CANCELLED });
           }),
         ),
       );
@@ -88,7 +88,7 @@ const handler = InboxOperation.ExtractSubscriptions.pipe(
         Effect.onError((cause) =>
           Effect.sync(() => {
             if (!Cause.hasInterruptsOnly(cause)) {
-              reportStatus({ message: PROGRESS_STATUS_FAILED });
+              reportStatus({ message: Progress.STATUS_FAILED });
             }
           }),
         ),
@@ -108,7 +108,7 @@ const handler = InboxOperation.ExtractSubscriptions.pipe(
         matched,
         subscriptions: subscriptions.length,
       });
-      reportStatus({ message: PROGRESS_STATUS_COMPLETE });
+      reportStatus({ message: Progress.STATUS_COMPLETE });
       return { scanned, matched, subscriptions: subscriptions.length };
     }),
   ),

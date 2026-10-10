@@ -9,14 +9,14 @@ import { useEffect, useMemo } from 'react';
 import { addEventListener, combine } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type ThemedClassName } from '@dxos/react-ui';
+import type * as Util from '@dxos/react-ui/Util';
 
 // TODO(burdon): Particle effects.
 // TODO(burdon): Spring: https://examples.motion.dev/react/follow-pointer-with-spring
 // TODO(burdon): Magnets: https://examples.motion.dev/react/magnetic-filings
 // TODO(burdon): Grid: https://examples.motion.dev/react/staggered-grid
 
-export type GhostProps = ThemedClassName<{
+export type GhostProps = Util.ThemedClassName<{
   SIM_RESOLUTION: number;
   DYE_RESOLUTION: number;
   CAPTURE_RESOLUTION: number;

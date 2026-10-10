@@ -4,7 +4,7 @@
 
 import * as Predicate from 'effect/Predicate';
 
-import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
+import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
 import { BaseError } from '@dxos/errors';
 
 const INVALID_TRELLO_ACCESS_TOKEN_MESSAGE =
@@ -23,7 +23,7 @@ export const formatTrelloSyncFailure = (error: unknown): string => {
   if (InvalidTrelloAccessTokenError.is(error)) {
     return INVALID_TRELLO_ACCESS_TOKEN_MESSAGE;
   }
-  if (SyncDatabaseMissingError.is(error)) {
+  if (ConnectorSync.DatabaseMissingError.is(error)) {
     return error.message;
   }
   if (error instanceof BaseError) {

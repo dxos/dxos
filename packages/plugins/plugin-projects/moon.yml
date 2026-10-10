@@ -4,6 +4,7 @@ tags:
   - composer-plugin
   - ts-vite-build
   - ts-test
+  - ts-test-workerd
   - ts-test-storybook
   - storybook
 tasks:

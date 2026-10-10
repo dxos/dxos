@@ -11,7 +11,7 @@ import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 
 import * as Pipeline from './Pipeline.ts';

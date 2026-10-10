@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-file",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "description": "Inline file (image / PDF) storage plugin for DXOS",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,7 +10,9 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": [
+    "*.css"
+  ],
   "type": "module",
   "imports": {
     "#capabilities": {
@@ -74,12 +76,6 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./package.json": "./package.json",
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
-    },
     "./FileCapabilities": {
       "source": "./src/types/FileCapabilities.ts",
       "types": "./dist/types/src/types/FileCapabilities.d.ts",
@@ -105,20 +101,26 @@
       "types": "./dist/types/src/FilePlugin.d.ts",
       "import": "./dist/lib/FilePlugin.mjs"
     },
+    "./FileSkill": {
+      "source": "./src/skills/FileSkill.ts",
+      "types": "./dist/types/src/skills/FileSkill.d.ts",
+      "import": "./dist/lib/FileSkill.mjs"
+    },
+    "./package.json": "./package.json",
     "./Settings": {
       "source": "./src/types/Settings.ts",
       "types": "./dist/types/src/types/Settings.d.ts",
       "import": "./dist/lib/Settings.mjs"
     },
-    "./skills": {
-      "source": "./src/skills/index.ts",
-      "types": "./dist/types/src/skills/index.d.ts",
-      "import": "./dist/lib/skills.mjs"
-    },
     "./StagedUpload": {
       "source": "./src/StagedUpload.ts",
       "types": "./dist/types/src/StagedUpload.d.ts",
       "import": "./dist/lib/StagedUpload.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -141,9 +143,6 @@
       ],
       "StagedUpload": [
         "dist/types/src/StagedUpload.d.ts"
-      ],
-      "skills": [
-        "dist/types/src/skills/index.d.ts"
       ]
     }
   },

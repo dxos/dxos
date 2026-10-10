@@ -6,8 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { useCapability } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { withTheme } from '@dxos/react-ui/testing';
 
@@ -18,7 +18,7 @@ import { ProgressStatusIndicator } from './ProgressStatusIndicator.tsx';
 
 /** Seeds the shared {@link AppCapabilities.ProgressRegistry} with two active providers on mount. */
 const DefaultStory = () => {
-  const progress = useCapability(AppCapabilities.ProgressRegistry);
+  const progress = Hooks.useCapability(AppCapabilities.ProgressRegistry);
   useEffect(() => {
     progress.register('sync/inbox', { label: 'Syncing Inbox', total: 120 }).set(42);
     progress.register('sync/calendar', { label: 'Syncing Calendar' }).set(7);
@@ -62,7 +62,7 @@ const SPACES: ScriptedSpace[] = [
  * the only way to see that an open popover follows the registry rather than the state it opened on.
  */
 const LiveStory = () => {
-  const progress = useCapability(AppCapabilities.ProgressRegistry);
+  const progress = Hooks.useCapability(AppCapabilities.ProgressRegistry);
   useEffect(() => {
     const current = new Map(SPACES.map((space) => [space.key, 0]));
     const monitors = new Map(
@@ -105,7 +105,7 @@ const LiveStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-progress/ProgressStatusIndicator',
+  title: 'plugins/plugin-progress/components/ProgressStatusIndicator',
   component: ProgressStatusIndicator,
   render: DefaultStory,
   decorators: [withTheme(), withPluginManager({ plugins: [ProgressPlugin()] })],
@@ -122,7 +122,8 @@ export const Live: Story = {
   render: LiveStory,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(await canvas.findByRole('button'));
+    // The plugin manager boots before the indicator renders, which outlasts the default 1s under load.
+    await userEvent.click(await canvas.findByRole('button', {}, { timeout: 10_000 }));
 
     // Read from the bar's value rather than the readout's text: the popover is portaled, and the
     // readout's format is the meter's to change.

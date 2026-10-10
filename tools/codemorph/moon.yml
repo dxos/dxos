@@ -2,3 +2,11 @@ layer: tool
 language: typescript
 tags:
   - ts-compile
+  - ts-test
+
+tasks:
+  # The test task inherits coverage/junit outputs this package never writes.
+  test:
+    options:
+      mergeOutputs: replace
+    outputs: []

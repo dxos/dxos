@@ -9,9 +9,12 @@ import React, { useCallback, useEffect, useState } from 'react';
 import '@dxos/lit-ui';
 import { PublicKey } from '@dxos/keys';
 import { random } from '@dxos/random';
-import { Field, Toolbar } from '@dxos/react-ui';
-import { Panel } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Input from '@dxos/react-ui/Input';
+import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Domino } from '@dxos/ui';
 import { type WidgetProps, type XmlWidgetRegistry, getXmlTextChild } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
@@ -130,40 +133,34 @@ const DefaultStory = ({
 
   return (
     <Panel.Root data-hue={userHue}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
-          <Toolbar.IconButton
+          <Button.Root
             disabled={streaming}
             icon='ph--play--regular'
             iconOnly
             label='Start'
             onClick={() => setStreaming(true)}
           />
-          <Toolbar.IconButton
+          <Button.Root
             disabled={!streaming}
             icon='ph--stop--regular'
             iconOnly
             label='Stop'
             onClick={() => setStreaming(false)}
           />
-          <Toolbar.IconButton icon='ph--trash--regular' iconOnly label='Reset' onClick={handleReset} />
-          <Toolbar.IconButton
-            disabled={streaming}
-            icon='ph--plus--regular'
-            iconOnly
-            label='Append'
-            onClick={handleAppend}
-          />
+          <Button.Root icon='ph--trash--regular' iconOnly label='Reset' onClick={handleReset} />
+          <Button.Root disabled={streaming} icon='ph--plus--regular' iconOnly label='Append' onClick={handleAppend} />
           <Toolbar.Separator />
           <Field.Root>
             <Field.Label classNames='pr-1'>Debug</Field.Label>
-            <Field.Switch checked={debug} onCheckedChange={setDebug} />
+            <Input.Switch checked={debug} onCheckedChange={({ checked }) => setDebug(checked)} />
           </Field.Root>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         <MarkdownStream {...props} debug={debug} ref={setController} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

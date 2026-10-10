@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
 import { Database, Obj, Ref } from '@dxos/echo';
-import { type EntityNotFoundError } from '@dxos/echo/Error';
+import type * as EchoError from '@dxos/echo/Error';
 import { type Resolver } from '@dxos/extractor';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
@@ -90,7 +90,7 @@ export const syncCalendar = ({
   pageSize = CALENDAR_SYNC_CONFIG.listPageSize,
 }: SyncCalendarProps): Effect.Effect<
   { newEvents: number },
-  GoogleCalendarApiError | EntityNotFoundError,
+  GoogleCalendarApiError | EchoError.EntityNotFoundError,
   Database.Service | Resolver | GoogleCalendarApi
 > =>
   Effect.gen(function* () {

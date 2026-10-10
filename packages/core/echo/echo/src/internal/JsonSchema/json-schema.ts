@@ -9,7 +9,8 @@ import * as Schema from 'effect/Schema';
 import type * as Types from 'effect/Types';
 
 import { raise } from '@dxos/debug';
-import { SchemaAST, SchemaEx } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';

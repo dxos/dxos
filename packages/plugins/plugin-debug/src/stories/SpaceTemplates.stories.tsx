@@ -11,7 +11,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as ProgressPlugin from '@dxos/plugin-progress/ProgressPlugin';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
@@ -60,7 +60,7 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager(() => ({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         StorybookPlugin.make({}),
         ProgressPlugin.make(),
         ClientPlugin.make({

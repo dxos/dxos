@@ -6,10 +6,12 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { createContext, useContext, useMemo } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
-import { Card, Icon } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
+import * as Card from '@dxos/react-ui/Card';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import { isNonNullable } from '@dxos/util';
 
 import { ObjectCard } from '../ObjectCard/index.ts';
@@ -116,10 +118,12 @@ const CardMasonryTile = ({ data: tile }: { data: Tile }) => {
 const PendingCard = ({ label }: { label: string }) => (
   <Card.Root data-testid='cardMasonry.pending' aria-busy='true'>
     <Card.Header>
-      <Card.Block>
-        <Icon icon='ph--spinner-gap--regular' classNames='animate-spin' />
-      </Card.Block>
-      <Card.Title classNames='truncate text-description'>{label}</Card.Title>
+      <Layout.Block>
+        <Icon.Icon icon='ph--spinner-gap--regular' spin />
+      </Layout.Block>
+      <Card.Title truncate tone='muted'>
+        {label}
+      </Card.Title>
     </Card.Header>
   </Card.Root>
 );

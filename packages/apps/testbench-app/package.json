@@ -32,6 +32,7 @@
     "@dxos/shell": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/atom-react": "catalog:",
     "@effect/platform-browser": "catalog:",

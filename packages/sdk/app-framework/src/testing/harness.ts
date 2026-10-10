@@ -8,7 +8,7 @@ import * as PubSub from 'effect/PubSub';
 import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 import type * as Operation from '@dxos/compute/Operation';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 
 import { ActivationEvents, Capabilities } from '../common/index.ts';

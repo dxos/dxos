@@ -9,7 +9,7 @@ import { Devtools } from '@dxos/client-services';
 import { mountDevtoolsHooks } from '@dxos/client/devtools';
 import { type LocalClientServices, fromHost } from '@dxos/client/local';
 import { Config, defs } from '@dxos/config';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Runtime_Client_Storage_SqliteMode } from '@dxos/protocols/buf/dxos/config_pb';
 
 import { initEchoHostWasm } from '../util/automerge-wasm.ts';

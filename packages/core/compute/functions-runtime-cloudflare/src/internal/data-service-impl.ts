@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as EffectStream from 'effect/Stream';
 
 import { raise } from '@dxos/debug';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError, NotImplementedError, RuntimeServiceError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';

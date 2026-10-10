@@ -5,7 +5,7 @@
 import { type Extension } from '@codemirror/state';
 import { useMemo } from 'react';
 
-import { useThemeContext } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
@@ -29,7 +29,7 @@ export type UseBasicMarkdownExtensionsOptions = {
 
 /**
  * Returns the standard CodeMirror extension stack for an inline markdown editor:
- * basic editor behaviors, themed syntax highlighting (theme mode read from {@link useThemeContext}),
+ * basic editor behaviors, themed syntax highlighting (theme mode read from {@link useThemeMode}),
  * markdown parsing, and visual decorations.
  *
  * Used by surfaces such as `AgentProperties` and `MagazineProperties` to render the
@@ -44,7 +44,7 @@ export const useBasicMarkdownExtensions = ({
   readonly = false,
   extensions,
 }: UseBasicMarkdownExtensionsOptions = {}): Extension[] => {
-  const { themeMode } = useThemeContext();
+  const themeMode = Hooks.useThemeMode();
   return useMemo(
     () => [
       createBasicExtensions({ placeholder, readOnly: readonly }),

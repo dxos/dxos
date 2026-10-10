@@ -4,11 +4,11 @@
 
 import { describe, test } from 'vitest';
 
-import { type Shortcut } from '@dxos/plugin-space/dashboard';
+import type * as Dashboard from '@dxos/plugin-space/Dashboard';
 
 import { renderEmptyKey, renderKey } from './key.ts';
 
-const spec: Shortcut = { target: 'eid:01J/abc', label: 'Notes', icon: 'ph--note--regular', hue: 'cyan' };
+const spec: Dashboard.Shortcut = { target: 'eid:01J/abc', label: 'Notes', icon: 'ph--note--regular', hue: 'cyan' };
 
 describe('renderKey', () => {
   test('renders a square SVG at the requested size', ({ expect }) => {

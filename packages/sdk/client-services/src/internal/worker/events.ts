@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Hook } from '@dxos/effect';
+import * as Hook from '@dxos/effect/Hook';
 
 import { type WorkerSession } from './worker-runtime.ts';
 

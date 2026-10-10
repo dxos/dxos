@@ -7,13 +7,12 @@ import type * as Effect from 'effect/Effect';
 import * as Atom from 'effect/reactivity/Atom';
 import { use, useCallback, useLayoutEffect, useRef } from 'react';
 
-import { NoHandlerError } from '@dxos/compute/errors';
-import type * as Operation from '@dxos/compute/Operation';
+import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
 import { Capabilities } from '../../common/index.ts';
 import { type Capability } from '../../core/index.ts';
-import { usePluginManager } from '../components/index.ts';
+import { usePluginManager } from '../components/PluginManager/PluginManagerProvider.ts';
 
 /** Stable atom yielding `undefined`, used as the fallback for optional atom-capability lookups. */
 const emptyAtomValue = Atom.make(() => undefined);
@@ -161,7 +160,7 @@ export const useOperationHandler: {
   const handlers = useCapability(Capabilities.OperationHandlers);
   const withHandler = use(OperationHandlerSet.findHandler(handlers, operation));
   if (!withHandler) {
-    throw new NoHandlerError(operation.meta.key);
+    throw new Operation.NoHandlerError(operation.meta.key);
   }
   const handler = withHandler.handler;
   // The ref is updated in a layout effect so a discarded concurrent render's mapper (closing

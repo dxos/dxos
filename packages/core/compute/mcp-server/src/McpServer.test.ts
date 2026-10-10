@@ -22,7 +22,7 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { Database, Obj, Registry } from '@dxos/echo';
 import { makeRegistry } from '@dxos/echo-client';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN, SpaceId } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
@@ -713,9 +713,12 @@ describe('McpServer', () => {
         `,
         { spaceId: SPACE_A },
       );
-      const { output, error } = await result;
+      const { output, error, stats } = await result;
       expect(error).to.be.undefined;
       expect(output).to.equal('a true\nb true\nc true');
+      // One loadSkill and three invokes, each counted by the sandbox that ran the program.
+      expect(stats?.calls).to.equal(4);
+      expect(stats?.callMs).to.be.at.least(0);
       expect(invocations.map(({ input, spaceId }) => ({ input, spaceId }))).to.deep.equal(
         ['a', 'b', 'c'].map((title) => ({ input: { title }, spaceId: SPACE_A })),
       );
@@ -733,7 +736,9 @@ describe('McpServer', () => {
         `,
         { spaceId: SPACE_A },
       );
-      expect(await result).to.deep.equal({ output: '2' });
+      const { output, stats } = await result;
+      expect(output).to.equal('2');
+      expect(stats?.calls).to.equal(3);
       expect(invocations).to.have.length(2);
     });
 
@@ -790,7 +795,7 @@ describe('McpServer', () => {
 
     test('a thrown error is reported with what was printed before it', async ({ expect }) => {
       const { result } = run(`yield* print('before'); throw new Error('boom');`);
-      expect(await result).to.deep.equal({ output: 'before', error: 'boom' });
+      expect(await result).to.deep.include({ output: 'before', error: 'boom' });
     });
 
     test('a returned value is the output when nothing was printed', async ({ expect }) => {
@@ -1224,8 +1229,22 @@ describe('McpServer.toolsLayer', () => {
         },
       });
       expect(called.result.isError).not.to.equal(true);
-      expect(called.result.structuredContent).to.deep.equal({ output: 'true' });
+      expect(called.result.structuredContent).to.be.undefined;
+      const [content] = called.result.content;
+      expect(content.type).to.equal('text');
+      expect(content.text).to.match(/^true\n---\n1 call · \d+ ms in calls · \d+ ms total$/);
       expect(invocations).to.have.length(1);
+
+      const failed = await send(handler, 'tools/call', {
+        name: 'runScript',
+        arguments: { code: `yield* print('before'); yield* Effect.fail('boom');`, spaceId: SPACE_A },
+      });
+      expect(failed.result.isError).to.equal(true);
+      expect(failed.result.content[0].text).to.match(/^before\nError: boom\n---\n0 calls · /);
+
+      const descriptor = listed.result.tools.find((tool: { name: string }) => tool.name === 'runScript');
+      expect(descriptor.outputSchema).to.be.undefined;
+      expect(descriptor.inputSchema.properties).to.have.property('code');
     } finally {
       await dispose();
     }

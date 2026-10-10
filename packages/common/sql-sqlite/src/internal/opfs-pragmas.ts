@@ -22,7 +22,7 @@ export const DEFAULT_SYNCHRONOUS: SqliteSynchronous = 'normal';
 type Sqlite3 = ReturnType<typeof WaSqlite.Factory>;
 
 /**
- * Apply OPFS SQLite durability PRAGMAs on a connection.
+ * Apply OPFS SQLite durability and temp-storage PRAGMAs on a connection.
  * WAL on AccessHandlePoolVFS requires exclusive locking because the VFS has no shared-memory (`xShm`) support.
  */
 export const applyOpfsPragmas = (sqlite3: Sqlite3, db: number, options: OpfsPragmaOptions = {}): void => {
@@ -32,6 +32,9 @@ export const applyOpfsPragmas = (sqlite3: Sqlite3, db: number, options: OpfsPrag
     ...(journalMode === 'wal' ? ['PRAGMA locking_mode=EXCLUSIVE'] : []),
     `PRAGMA journal_mode=${journalMode}`,
     `PRAGMA synchronous=${synchronous}`,
+    // Statement journals and sorter spills otherwise land in OPFS pool files: they were the largest
+    // share of a feed append's writes, ahead of the WAL itself.
+    'PRAGMA temp_store=MEMORY',
   ];
   for (const pragma of pragmas) {
     for (const stmt of sqlite3.statements(db, pragma)) {

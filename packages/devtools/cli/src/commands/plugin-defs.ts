@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ProcessManagerPlugin } from '@dxos/app-framework';
 import type * as Plugin from '@dxos/app-framework/Plugin';
+import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import { type Config } from '@dxos/client';
 import { Blob } from '@dxos/echo';
 import type * as Observability from '@dxos/observability/Observability';
@@ -81,7 +81,7 @@ export const getPlugins = ({ config, namespace, observability }: PluginConfig): 
     InboxPlugin.make(),
     MarkdownPlugin.make(),
     ObservabilityPlugin.make({ namespace, observability }),
-    ProcessManagerPlugin(),
+    ProcessManagerPlugin.make(),
     ProjectsPlugin.make(),
     RegistryPlugin.make(),
     RoutinePlugin.make(),

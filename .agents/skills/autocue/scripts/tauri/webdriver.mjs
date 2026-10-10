@@ -7,9 +7,6 @@
  * be a dependency for twenty lines of HTTP, and every command here is one endpoint of the spec.
  */
 
-/** The key the spec names for an element reference in JSON. */
-export const ELEMENT_KEY = 'element-6066-11e4-a52e-4f735466cecf';
-
 export class WebDriverError extends Error {
   constructor(command, { error, message }) {
     super(`${command}: ${error}${message ? ` — ${message.split('\n')[0]}` : ''}`);
@@ -24,12 +21,12 @@ export class WebDriverError extends Error {
  * @param {object} capabilities `alwaysMatch` capabilities of the new session.
  */
 export const createSession = async (server, capabilities) => {
-  const call = async (method, path, body) => {
+  const call = async (method, path, body, signal) => {
     const response = await fetch(
       `${server}${path}`,
       body === undefined
-        ? { method }
-        : { method, headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) },
+        ? { method, signal }
+        : { method, signal, headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) },
     );
     const text = await response.text();
     let payload;
@@ -64,10 +61,20 @@ export const createSession = async (server, capabilities) => {
     navigate: (url) => session('POST', '/url', { url }),
     url: () => session('GET', '/url'),
     screenshot: () => session('GET', '/screenshot'),
+    /**
+     * A screenshot outside the command queue, for a recorder that must not wait behind a long script. Bounded, and
+     * abandoned when `signal` aborts, so a webview that stops answering cannot stall the recorder's shutdown.
+     */
+    frame: (signal) =>
+      call(
+        'GET',
+        `${base}/screenshot`,
+        undefined,
+        AbortSignal.any([AbortSignal.timeout(5_000), ...(signal ? [signal] : [])]),
+      ),
     setTimeouts: (timeouts) => session('POST', '/timeouts', timeouts),
     windowRect: () => session('GET', '/window/rect'),
     setWindowRect: (rect) => session('POST', '/window/rect', rect),
-    elementClick: (element) => session('POST', `/element/${element[ELEMENT_KEY]}/click`, {}),
     performActions: (actions) => session('POST', '/actions', { actions }),
     releaseActions: () => session('DELETE', '/actions'),
     close: () => session('DELETE').catch(() => undefined),

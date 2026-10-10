@@ -3,5 +3,4 @@
 //
 
 export * as NativePlugin from './NativePlugin.ts';
-export * from '#meta';
 export * from '#types';

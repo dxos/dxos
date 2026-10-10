@@ -10,9 +10,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
 import { type GraphDiagnostic } from '@dxos/conductor';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Select, Toolbar } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
-import { ShapeRegistry } from '@dxos/react-ui-canvas-editor';
 import {
   type FreehandProjectionOptions,
   SceneView,
@@ -22,12 +20,14 @@ import {
   useSceneProjection,
 } from '@dxos/react-ui-canvas/scene';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import * as Select from '@dxos/react-ui/Select';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { DiagnosticOverlay } from '../components/index.ts';
 import { type ComputeGraphController, createComputeGraphController } from '../graph/index.ts';
 import { ComputeContext } from '../hooks/index.ts';
-import { computeShapes } from '../registry.ts';
+import { computeNodeRegistry } from '../registry.ts';
 import {
   createArtifactCircuit,
   createAudioCircuit,
@@ -42,7 +42,6 @@ import {
 } from '../testing/index.ts';
 import { createStoryRuntime } from '../testing/services.ts';
 import { Bullets } from './Bullets.tsx';
-import { computeNodeRegistry } from './defs.ts';
 import { createComputeProjection } from './projection.ts';
 import { sceneFromCircuit } from './scene.ts';
 
@@ -70,7 +69,6 @@ const DefaultStory = ({ controller, circuit, sidebar: sidebarProp }: StoryProps)
     [controller],
   );
   const projection = useSceneProjection({ store, atoms, createProjection });
-  const shapeRegistry = useMemo(() => new ShapeRegistry(computeShapes), []);
   // A function body opening grows its node through the model, so links re-route with it.
   const resize = useCallback(
     (id: string, delta: number) => {
@@ -102,7 +100,7 @@ const DefaultStory = ({ controller, circuit, sidebar: sidebarProp }: StoryProps)
 
   return (
     <div className='grid grid-cols-[1fr_360px] dx-fill'>
-      <ComputeContext.Provider value={{ controller, registry: shapeRegistry, resize }}>
+      <ComputeContext.Provider value={{ controller, resize }}>
         <div className={sidebar ? 'relative flex overflow-hidden' : 'relative flex overflow-hidden col-span-2'}>
           <SceneView.Root
             store={store}
@@ -123,19 +121,17 @@ const DefaultStory = ({ controller, circuit, sidebar: sidebarProp }: StoryProps)
       {sidebar && (
         <div className='flex flex-col h-full overflow-hidden border-l border-separator'>
           <Toolbar.Root>
-            <Select.Root value={sidebar} onValueChange={(value) => setSidebar(value as Sidebar)}>
-              <Select.TriggerButton classNames='w-full'>{sidebar}</Select.TriggerButton>
-              <Select.Portal>
-                <Select.Content>
-                  <Select.Viewport>
-                    {sidebarTypes.map((type) => (
-                      <Select.Item key={type} value={type}>
-                        {type}
-                      </Select.Item>
-                    ))}
-                  </Select.Viewport>
-                </Select.Content>
-              </Select.Portal>
+            <Select.Root
+              value={[sidebar]}
+              onValueChange={({ value: [value] }) => setSidebar(value as Sidebar)}
+              items={sidebarTypes.map((type) => ({ value: type, label: type }))}
+            >
+              <Select.Trigger classNames='w-full' />
+              <Select.Content>
+                {sidebarTypes.map((type) => (
+                  <Select.Item key={type} item={{ value: type, label: type }} />
+                ))}
+              </Select.Content>
             </Select.Root>
           </Toolbar.Root>
           <SidebarJson sidebar={sidebar} controller={controller} projection={projection} atoms={atoms} />
@@ -189,7 +185,7 @@ const SidebarJson = ({
 };
 
 const meta = {
-  title: 'ui/react-ui-canvas-compute/scene',
+  title: 'ui/react-ui-canvas-compute/Circuits',
   render: DefaultStory,
   decorators: [
     withRegistry,

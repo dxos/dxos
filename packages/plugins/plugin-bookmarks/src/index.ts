@@ -3,5 +3,4 @@
 //
 
 export * as BookmarksPlugin from './BookmarksPlugin.ts';
-export * from '#meta';
 export * from '#types';

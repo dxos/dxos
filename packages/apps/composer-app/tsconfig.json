@@ -121,6 +121,9 @@
       "path": "../../e2e/perf-harness"
     },
     {
+      "path": "../../plugins/plugin-agent"
+    },
+    {
       "path": "../../plugins/plugin-assistant"
     },
     {
@@ -295,6 +298,9 @@
       "path": "../../plugins/plugin-mermaid"
     },
     {
+      "path": "../../plugins/plugin-messenger"
+    },
+    {
       "path": "../../plugins/plugin-mobile"
     },
     {
@@ -431,6 +437,9 @@
     },
     {
       "path": "../../plugins/plugin-typesafe"
+    },
+    {
+      "path": "../../plugins/plugin-uml"
     },
     {
       "path": "../../plugins/plugin-video"

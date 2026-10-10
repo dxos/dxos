@@ -4,6 +4,8 @@
 
 // @import-as-namespace
 
+import type * as Atom from 'effect/reactivity/Atom';
+
 /**
  * A menu item one plugin contributes to another plugin's object surface — "analyse this mailbox",
  * "research this sender", "delegate this task to a chat".
@@ -23,6 +25,10 @@ export type ObjectAction<T> = {
   label: string;
   /** Phosphor icon name. */
   icon?: string;
+  /** Consecutive actions sharing a group are set apart from their neighbours by a separator. */
+  group?: string;
+  /** Why the action cannot run right now; the host shows it disabled with this reason. */
+  unavailable?: Atom.Atom<string | undefined>;
   /**
    * What to run, in order — a list, because the useful actions are composites (research, then image)
    * and a contributor should not have to model that as one operation.

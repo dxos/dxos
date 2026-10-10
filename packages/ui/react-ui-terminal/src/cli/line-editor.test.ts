@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import { describe, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { type LineResult, readLineResult } from './line-editor.ts';
 import { TestBridge } from './testing.ts';

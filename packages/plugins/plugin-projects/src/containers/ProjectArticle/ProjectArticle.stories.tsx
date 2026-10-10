@@ -26,7 +26,7 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as GitHubPlugin from '@dxos/plugin-github/GitHubPlugin';
 import { FixtureLinkSourcePlugin } from '@dxos/plugin-github/testing';
 import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
-import { PreviewEvents } from '@dxos/plugin-preview';
+import * as PreviewEvents from '@dxos/plugin-preview/PreviewEvents';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
@@ -34,7 +34,7 @@ import { translations as routineTranslations } from '@dxos/plugin-routine/transl
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import { translations as tasksTranslations } from '@dxos/plugin-tasks/translations';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { AttendableContainer } from '@dxos/react-ui-attention';
@@ -142,6 +142,26 @@ const createProject = (space: Space, storyGeneration: number) => {
   Obj.update(taskSet, (taskSet) => {
     taskSet.tasks = [Ref.make(task), Ref.make(linkTask)];
   });
+
+  // Sub-tasks, two levels deep, so the list reads as the hierarchy it is: each child is in its parent's `subtasks`
+  // and parented to it, as the move verbs leave it.
+  const addSubtask = (parent: Task.Task, title: string, status: Task.Status) => {
+    const subtask = space.db.add(Task.make({ [Obj.Parent]: parent, title, status }));
+    Obj.update(parent, (parent) => {
+      parent.subtasks ??= [];
+      parent.subtasks.push(Ref.make(subtask));
+    });
+    return subtask;
+  };
+  // A task of its own, so the two the delegate story ticks stay leaves: ticking a parent takes its sub-tasks too.
+  const launch = space.db.add(Task.make({ [Obj.Parent]: taskSet, title: 'Plan the launch', status: 'started' }));
+  Obj.update(taskSet, (taskSet) => {
+    taskSet.tasks.push(Ref.make(launch));
+  });
+  addSubtask(launch, 'Write the announcement', 'done');
+  const flag = addSubtask(launch, 'Wire the feature flag', 'started');
+  addSubtask(flag, 'Default it on for internal spaces', 'todo');
+  addSubtask(flag, 'Add the flag to the settings panel', 'todo');
 
   // The third item is what promotion leaves behind: a link to the task in the project's set.
   Obj.update(outline.content.target, (text) => {
@@ -259,7 +279,7 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         TasksPlugin.make(),
         // The plugin under test, for its own contributions rather than its surfaces: the `TaskAction`
         // module is what puts an action on a task row, and Assistant supplies the `CreateChat`

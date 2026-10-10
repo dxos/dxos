@@ -4,7 +4,7 @@
 
 import type * as Schema from 'effect/Schema';
 
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 
 import * as Type from '../../Type.ts';
 import { type Plan, type ResolvedEntry } from './types.ts';

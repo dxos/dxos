@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Collapsible.tsx';
+export * as Collapsible from './Collapsible.tsx';

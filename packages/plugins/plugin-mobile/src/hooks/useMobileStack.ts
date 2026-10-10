@@ -4,11 +4,11 @@
 
 import { useCallback, useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
-import { useDeckState } from '@dxos/plugin-deck/hooks';
+import * as DeckHooks from '@dxos/plugin-deck/Hooks';
 
 export type MobileStack = {
   /** Panel ids, root (workspace list panel) first; the visible panel is last. */
@@ -27,8 +27,8 @@ export type MobileStack = {
  * SwitchWorkspace(root) from there — the same operations every other surface uses.
  */
 export const useMobileStack = (): MobileStack => {
-  const { state, deck } = useDeckState();
-  const { invokePromise } = useOperationInvoker();
+  const { state, deck } = DeckHooks.useDeckState();
+  const { invokePromise } = Hooks.useOperationInvoker();
 
   const rootId = state.activeDeck === DeckSchema.DEFAULT_DECK_ID ? GraphNode.RootId : state.activeDeck;
   const stack = useMemo(() => [rootId, ...deck.active], [rootId, deck.active]);

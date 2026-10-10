@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 
 import { type AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import { buildThreads, clusterThreads, materializeTopics, summarizeTopics } from '@dxos/pipeline-email';
 import { type RDF } from '@dxos/pipeline-rdf';

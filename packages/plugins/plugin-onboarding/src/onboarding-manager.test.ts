@@ -9,7 +9,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Client } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
 import type * as Operation from '@dxos/compute/Operation';
-import { ClientOperation } from '@dxos/plugin-client';
+import * as ClientOperation from '@dxos/plugin-client/ClientOperation';
 import { InvalidRecoveryTokenError } from '@dxos/protocols';
 
 import { WELCOME_SCREEN } from './constants.ts';

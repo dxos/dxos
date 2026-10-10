@@ -11,10 +11,13 @@ import { expect } from 'storybook/test';
 import { random } from '@dxos/random';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, centreY, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Block } from '../Block/Block.tsx';
+import { Container } from '../Container/Container.tsx';
+import * as Icon from '../Icon/Icon.tsx';
+import * as Typography from './Typography.tsx';
 
 random.seed(123);
 
@@ -22,32 +25,43 @@ const TEXT = random.lorem.paragraph();
 
 const DefaultStory = ({ size }: SizeArgs) => (
   <>
-    <Next.Container>
-      <Next.Block rail='start' data-testid={`icon-${size}`}>
-        <Next.Icon icon='ph--chat-circle--regular' />
-      </Next.Block>
-      <Next.Typography data-testid={`text-${size}`}>{TEXT}</Next.Typography>
-    </Next.Container>
-    <Next.Container layout='row' columns='minmax(0, 1fr) auto'>
-      <Next.Typography truncate data-testid={`truncate-${size}`}>
+    <Container>
+      <Block rail='start' data-testid={`icon-${size}`}>
+        <Icon.Icon icon='ph--chat-circle--regular' />
+      </Block>
+      <Typography.Text data-testid={`text-${size}`}>{TEXT}</Typography.Text>
+    </Container>
+    <Container layout='row' columns='minmax(0, 1fr) auto'>
+      <Typography.Text truncate data-testid={`truncate-${size}`}>
         {TEXT}
-      </Next.Typography>
-      <Next.Typography tone='description' data-testid={`description-${size}`}>
+      </Typography.Text>
+      <Typography.Text tone='muted' data-testid={`description-${size}`}>
         Description
-      </Next.Typography>
-    </Next.Container>
-    <Next.Container>
-      <Next.Typography asChild>
+      </Typography.Text>
+    </Container>
+    <Container>
+      <Typography.Text lines={2} data-testid={`lines-${size}`}>
+        {TEXT} {TEXT}
+      </Typography.Text>
+      <Typography.Text tone='subtle' data-testid={`subdued-${size}`}>
+        Subdued interface text
+      </Typography.Text>
+      <Typography.Text mono data-testid={`mono-${size}`}>
+        did:key:z6Mk
+      </Typography.Text>
+    </Container>
+    <Container>
+      <Typography.Text asChild>
         <h2 className='font-medium' data-testid={`heading-${size}`}>
           Typography as a heading
         </h2>
-      </Next.Typography>
-    </Next.Container>
+      </Typography.Text>
+    </Container>
   </>
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/Typography',
+  title: 'ui/react-ui-core/components/Typography',
   render: DefaultStory,
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
   args: { size: 'md' },
@@ -63,7 +77,8 @@ export const Default: Story = {};
 
 /**
  * Wrapped text keeps its first line centred in a block, so the rail icon beside it lines up at every size. `truncate`
- * keeps one block-tall line ending in an ellipsis; `tone='description'` takes the secondary text colour.
+ * keeps one block-tall line ending in an ellipsis; `lines` clamps to that many lines; `tone='muted'` and
+ * `tone='subtle'` take the secondary and interface text colours; `mono` the monospace font.
  */
 export const Test: Story = {
   args: { allSizes: true },
@@ -90,6 +105,18 @@ export const Test: Story = {
         sizeRow(canvasElement, size).getBoundingClientRect().right - GEOMETRY[size].block + 0.5,
       );
     }
+
+    for (const size of SIZES) {
+      const clamped = byTestId(canvasElement, `lines-${size}`);
+      const style = getComputedStyle(clamped);
+      const contentHeight = clamped.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
+      await expect(contentHeight, size).toBeCloseTo(2 * parseFloat(style.lineHeight), 0);
+    }
+    const plain = getComputedStyle(byTestId(canvasElement, 'text-md'));
+    const subdued = getComputedStyle(byTestId(canvasElement, 'subdued-md'));
+    await expect(subdued.color).not.toBe(plain.color);
+    await expect(subdued.color).not.toBe(getComputedStyle(byTestId(canvasElement, 'description-md')).color);
+    await expect(getComputedStyle(byTestId(canvasElement, 'mono-md')).fontFamily).toMatch(/mono/i);
 
     // `asChild` moves the metrics onto the heading itself.
     const heading = byTestId(canvasElement, 'heading-md');

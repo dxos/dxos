@@ -107,10 +107,10 @@ skill CrmSkill
     - plugin-crm/process-mailbox
     - plugin-crm/research-person
     - plugin-crm/research-organization
-    - plugin-crm/ProfileOf (schema registration)
+    - @dxos/types ProfileOf (schema registration)
     - tools from registered ResearchSource contracts (v1: none)
   instructions: >
-    Authored inline in `src/skills/crm/skill.ts`, deliberately thin: entity
+    Authored inline in `src/skills/crm/CrmSkill.ts`, deliberately thin: entity
     shapes, dedup semantics, and profile structure are owned by the CRM
     operations, so the prose covers only subject resolution, when to prefer
     the operations over ad-hoc object edits, content-enrichment conventions

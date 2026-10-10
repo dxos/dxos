@@ -2,99 +2,71 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { ShapeDef } from '@dxos/react-ui-canvas-editor';
-import { noteShape } from '@dxos/react-ui-canvas-editor';
+import { type NodeDef, type NodeRegistry, defaultNodeRegistry } from '@dxos/react-ui-canvas/scene';
 
 import {
-  andShape,
-  appendShape,
-  audioShape,
-  beaconShape,
-  chatShape,
-  constantShape,
-  databaseShape,
-  feedShape,
-  functionShape,
-  gptRealtimeShape,
-  gptShape,
-  ifElseShape,
-  ifShape,
-  jsonShape,
-  jsonTransformShape,
-  notShape,
-  orShape,
-  randomShape,
-  reducerShape,
-  scopeShape,
-  surfaceShape,
-  switchShape,
-  templateShape,
-  textShape,
-  textToImageShape,
-  threadShape,
-  triggerShape,
+  andNodeDef,
+  appendNodeDef,
+  audioNodeDef,
+  beaconNodeDef,
+  chatNodeDef,
+  constantNodeDef,
+  databaseNodeDef,
+  feedNodeDef,
+  functionNodeDef,
+  gptNodeDef,
+  gptRealtimeNodeDef,
+  ifElseNodeDef,
+  ifNodeDef,
+  jsonNodeDef,
+  jsonTransformNodeDef,
+  notNodeDef,
+  orNodeDef,
+  randomNodeDef,
+  reducerNodeDef,
+  scopeNodeDef,
+  surfaceNodeDef,
+  switchNodeDef,
+  templateNodeDef,
+  textNodeDef,
+  textToImageNodeDef,
+  threadNodeDef,
+  triggerNodeDef,
 } from './shapes/index.ts';
 
-/**
- * Order used by toolbar.
- */
-export const computeShapes: { title: string; shapes: ShapeDef[] }[] = [
-  {
-    title: 'Inputs',
-    shapes: [
-      //
-      constantShape,
-      templateShape,
-      chatShape,
-      switchShape,
-      audioShape,
-      triggerShape,
-      randomShape,
-    ],
-  },
-  {
-    title: 'Transform',
-    shapes: [
-      //
-      gptShape,
-      gptRealtimeShape,
-      functionShape,
-      databaseShape,
-      textToImageShape,
-      appendShape,
-    ],
-  },
-  {
-    title: 'Operations',
-    shapes: [
-      //
-      ifShape,
-      ifElseShape,
-      andShape,
-      orShape,
-      notShape,
-      reducerShape,
-      jsonTransformShape,
-    ],
-  },
-  {
-    title: 'Outputs',
-    shapes: [
-      //
-      jsonShape,
-      feedShape,
-      threadShape,
-      textShape,
-      surfaceShape,
-      beaconShape,
-      scopeShape,
-    ],
-  },
-  {
-    title: 'Misc',
-    shapes: [
-      //
-      noteShape,
-    ],
-  },
+/** The compute types in palette order, each under its group (Inputs, Transform, Operations, Outputs). */
+export const computeNodeDefs: NodeDef[] = [
+  constantNodeDef,
+  templateNodeDef,
+  chatNodeDef,
+  switchNodeDef,
+  audioNodeDef,
+  triggerNodeDef,
+  randomNodeDef,
+  gptNodeDef,
+  gptRealtimeNodeDef,
+  functionNodeDef,
+  databaseNodeDef,
+  textToImageNodeDef,
+  appendNodeDef,
+  ifNodeDef,
+  ifElseNodeDef,
+  andNodeDef,
+  orNodeDef,
+  notNodeDef,
+  reducerNodeDef,
+  jsonTransformNodeDef,
+  jsonNodeDef,
+  feedNodeDef,
+  threadNodeDef,
+  textNodeDef,
+  surfaceNodeDef,
+  beaconNodeDef,
+  scopeNodeDef,
 ];
+
+/** The compute types plus the engine's note under a `Misc` group. */
+export const computeNodeRegistry: NodeRegistry = {
+  ...Object.fromEntries(computeNodeDefs.map((def) => [def.type, def])),
+  note: { ...defaultNodeRegistry.note, group: 'Misc' },
+};

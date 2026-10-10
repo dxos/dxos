@@ -22,12 +22,13 @@ import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { type Space, isSpace } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Collection, Entity, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { ViewAnnotation } from '@dxos/schema';
 import { isLabel, toLocalizedString } from '@dxos/ui-types/translations';
 import { createFilename, downloadBlob, isNonNullable } from '@dxos/util';
 
+import { SPACE_STATS_QUERY, typeUrisWithObjects } from '#dashboard';
 import { meta } from '#meta';
 import { SpaceCapabilities, SpaceEvents, SpaceOperation } from '#types';
 
@@ -121,17 +122,18 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
         });
 
         const viewIndex = buildViewIndex(get, space, allSchemas);
+        // Index-only per-type counts; the same query as the space dashboard, so both share one result.
+        const withObjects = typeUrisWithObjects(get(space.db.query(SPACE_STATS_QUERY).atom));
 
         const visibleSchemas = userSchemas.filter((schema) => {
           if (Type.getDatabase(schema) != null) {
             return true;
           }
           const typeUri = Type.getURI(schema);
-          const objects = get(space.db.query(Filter.type(typeUri)).atom);
           if (ViewAnnotation.has(schema)) {
-            return objects.some((obj) => !viewIndex.isView(obj));
+            return viewIndex.typeUrisWithNonViewObjects.has(typeUri);
           }
-          return objects.length > 0 || viewIndex.typeUrisWithViews.has(typeUri);
+          return withObjects.has(typeUri) || viewIndex.typeUrisWithViews.has(typeUri);
         });
 
         // Sort alphabetically by display name. Static types' labels are `typename.label` translation

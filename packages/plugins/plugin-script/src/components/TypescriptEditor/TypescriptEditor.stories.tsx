@@ -7,9 +7,11 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { Doc } from '@dxos/echo-doc';
 import { createObject } from '@dxos/react-client/echo';
-import { Panel, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Button from '@dxos/react-ui/Button';
+import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { createDataExtensions } from '@dxos/ui-editor';
 import { trim } from '@dxos/util';
 
@@ -66,17 +68,17 @@ const DefaultStory = (props: TypescriptEditorProps) => {
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
-          <Toolbar.Button onClick={handleRun}>Run</Toolbar.Button>
+          <Button.Root onClick={handleRun}>Run</Button.Root>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         <div className='grid grid-rows-[1fr_min-content] h-full overflow-hidden text-sm'>
           <TypescriptEditor {...props} initialValue={object.content} extensions={extensions} />
-          <JsonHighlighter data={result} classNames='shrink-0 p-2 border-y border-subdued-separator' />
+          <JsonHighlighter data={result} classNames='shrink-0 p-2 border-y border-separator-subtle' />
         </div>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

@@ -283,10 +283,10 @@ Verified by import tracing after the `react-ui-card` extraction:
   Message header (`ConversationStack`) now hand-rolls its own subgrid, so the **only**
   consumer is `Event/Event.tsx` (calendar). → **drop from the shared set**; inline
   into `Event` or keep as a calendar-local helper. Do NOT put in `react-ui-card`.
-- **`HtmlViewer`** — feasible to generalize into `@dxos/react-ui-components`, but
+- **`HtmlViewer`** — generalized into `@dxos/react-ui-html` (`Html`); originally
   email-coupled today (`attachments`/`db` resolve `cid:` images against message
   Blobs; `isPersonal`; `processEmailColors`). Split = generic sandboxed-iframe +
-  DOMPurify + theme-color core → `react-ui-components`, with image-resolution +
+  DOMPurify + theme-color core → `react-ui-html`, with image-resolution +
   color-processing injected as callbacks; email glue stays in plugin-inbox.
   **Only one consumer** (`ConversationStack`), so **defer** until a second wants a
   sandboxed HTML viewer.

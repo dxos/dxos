@@ -1,0 +1,53 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import React from 'react';
+
+import { Format } from '@dxos/echo';
+import * as Input from '@dxos/react-ui/Input';
+
+import { type FormFieldRendererProps } from '#types';
+
+import { FormStaticValue } from '../FormField.tsx';
+import { presentationFor } from '../presentation.tsx';
+
+export const TextField = ({
+  type,
+  format,
+  readonly,
+  placeholder,
+  presentation,
+  autoFocus,
+  jsonPath,
+  getValue,
+  onBlur,
+  onValueChange,
+}: FormFieldRendererProps<string>) => {
+  const value = getValue() ?? '';
+  if (presentationFor(presentation).isStatic) {
+    return <FormStaticValue value={value} format={format} />;
+  }
+
+  // An opaque identifier is not prose: no spellcheck squiggles, no autocorrect, no capitalisation.
+  const key = format === Format.TypeFormat.Key;
+  return (
+    <Input.Root
+      noAutoFill
+      autoFocus={autoFocus}
+      disabled={!!readonly}
+      placeholder={placeholder}
+      value={value}
+      onBlur={onBlur}
+      onChange={(event) => onValueChange(type, event.target.value)}
+      // Enter commits the field as leaving it does, so an auto-saving form saves without the user tabbing away.
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
+          onBlur();
+        }
+      }}
+      data-testid={jsonPath}
+      {...(key && { variant: 'mono', spellCheck: false, autoCorrect: 'off', autoCapitalize: 'none' })}
+    />
+  );
+};

@@ -55,6 +55,9 @@
       "path": "../../core/echo/echo-client"
     },
     {
+      "path": "../../core/echo/echo-query"
+    },
+    {
       "path": "../../core/echo/echo-react"
     },
     {
@@ -70,6 +73,9 @@
       "path": "../../sdk/app-toolkit"
     },
     {
+      "path": "../../sdk/react-client"
+    },
+    {
       "path": "../../sdk/types"
     },
     {
@@ -77,6 +83,9 @@
     },
     {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-attention"
     },
     {
       "path": "../../ui/react-ui-components"
@@ -98,6 +107,9 @@
     },
     {
       "path": "../../ui/react-ui-menu"
+    },
+    {
+      "path": "../../ui/react-ui-query"
     },
     {
       "path": "../../ui/ui-editor"

@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { type EditableActivation } from '@dxos/react-ui';
+import type * as Editable from '@dxos/react-ui/Editable';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { MarkdownEditable } from './MarkdownEditable.tsx';
@@ -14,7 +14,7 @@ import { MarkdownEditable } from './MarkdownEditable.tsx';
 type StoryArgs = {
   initialValue?: string;
   placeholder?: string;
-  activation?: EditableActivation;
+  activation?: Editable.EditableActivation;
   readonly?: boolean;
   multiline?: boolean;
   editing?: boolean;
@@ -49,7 +49,7 @@ const DefaultStory = ({
         multiline={multiline}
         editing={editing}
       />
-      <div className='text-sm text-description' data-testid='markdownEditable.commits'>
+      <div className='text-sm text-fg-muted' data-testid='markdownEditable.commits'>
         {`Commits: ${commits}`}
       </div>
     </div>

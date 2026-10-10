@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { type EntityId } from '@dxos/keys';
 
 import { type ATTR_META, type EntityMeta } from './meta.ts';

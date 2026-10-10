@@ -15,7 +15,7 @@ import { log } from '@dxos/log';
 import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 import * as InboxOperationHandlerSet from '@dxos/plugin-inbox/InboxOperationHandlerSet';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
-import { getTaggedIds } from '@dxos/plugin-inbox/SystemTags';
+import * as SystemTags from '@dxos/plugin-inbox/SystemTags';
 import { TagIndex } from '@dxos/schema';
 import { ContentBlock, Message, Person } from '@dxos/types';
 
@@ -106,7 +106,7 @@ describe.skipIf(!ENABLED)(`classify fixture: "${FIXTURE}" (live LLM, opt-in)`, (
         const tags = yield* Database.query(Filter.type(Tag.Tag)).run;
         const histogram = Object.fromEntries(
           tags
-            .map((tag) => [tag.label, getTaggedIds(mailbox, Obj.getURI(tag).toString()).size] as const)
+            .map((tag) => [tag.label, SystemTags.getTaggedIds(mailbox, Obj.getURI(tag).toString()).size] as const)
             .filter(([, count]) => count > 0)
             .sort((left, right) => right[1] - left[1]),
         );

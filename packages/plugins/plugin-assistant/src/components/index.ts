@@ -10,4 +10,3 @@ export { TracePanel } from '../containers/TracePanel/TracePanel.tsx';
 export * from './Toolbox/index.ts';
 
 export { ChatPrompt, type ChatPromptProps } from './ChatPrompt/ChatPrompt.tsx';
-export { ChatQueue as ChatQueueList, type ChatQueueProps as ChatQueueListProps } from './ChatQueue/ChatQueue.tsx';

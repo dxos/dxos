@@ -5,15 +5,21 @@
 import * as Option from 'effect/Option';
 import React, { useCallback, useMemo } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as CollectionOperation from '@dxos/app-toolkit/CollectionOperation';
+import * as ObjectCard from '@dxos/app-toolkit/ObjectCard';
 import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
-import { AppSurface, CardIconSlot } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Card, Focus, Icon, Tag, useTranslation } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
+import * as Focus from '@dxos/react-ui/Focus';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Menu from '@dxos/react-ui/Menu';
+import * as Tag from '@dxos/react-ui/Tag';
 import { CardAnnotation } from '@dxos/schema';
-import { getStyles, osTranslations } from '@dxos/ui-theme';
+import { osTranslations } from '@dxos/ui-theme';
 
 import { useArchiveMenuItem } from '#hooks';
 import { meta } from '#meta';
@@ -37,18 +43,14 @@ export const TileAdapter = ({ data }: { data: TileData | undefined; index: numbe
 
 /** Selectable header-only card for a single object. */
 export const ObjectTile = ({ object, current, onSelect, onOpen, onDelete }: TileData) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   // Subscribe so the label re-renders when the object changes.
   const [live] = useObject(object);
   const typename = Obj.getTypename(live);
   const label =
     Obj.getLabel(live) ||
     t('object-name.placeholder', { ns: typename ?? meta.profile.key, defaultValue: t('object-name.placeholder') });
-
-  const iconAnnotation = Obj.getIcon(live);
-  const icon = iconAnnotation?.icon ?? 'ph--circle-dashed--regular';
-  const iconStyles = iconAnnotation?.hue ? getStyles(iconAnnotation.hue) : undefined;
 
   // Render a content preview body only for types that opt in via `CardAnnotation`.
   const type = Obj.getType(object);
@@ -105,23 +107,32 @@ export const ObjectTile = ({ object, current, onSelect, onOpen, onDelete }: Tile
 
   return (
     <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-      <Card.Root fullWidth classNames={['dx-hover', onSelect && 'cursor-pointer', current && 'dx-current']}>
-        <Card.Header>
-          <Card.Block>
-            <CardIconSlot subject={live}>
-              <Icon icon={icon} classNames={iconStyles?.text} />
-            </CardIconSlot>
-          </Card.Block>
-          <Card.Title>{label}</Card.Title>
-          {menuItems.length > 0 && <Card.Menu items={menuItems} />}
-        </Card.Header>
+      <ObjectCard.Root classNames={['dx-hover', onSelect && 'cursor-pointer', current && 'dx-current']}>
+        <ObjectCard.Header
+          subject={live}
+          menu={
+            menuItems.length > 0 && (
+              <Card.Menu label={t('toolbar-menu.label', { ns: osTranslations })}>
+                {menuItems.map((menuItem) => (
+                  <Menu.Item
+                    key={menuItem.label}
+                    item={{ value: menuItem.label, label: menuItem.label, icon: menuItem.icon }}
+                    onClick={menuItem.onClick}
+                  />
+                ))}
+              </Card.Menu>
+            )
+          }
+        >
+          {label}
+        </ObjectCard.Header>
         {archived && (
           <Card.Row>
-            <Tag classNames='justify-self-start'>{t('archived.label')}</Tag>
+            <Tag.Tag classNames='justify-self-start'>{t('archived.label')}</Tag.Tag>
           </Card.Row>
         )}
         {showCardContent && <Surface.Surface type={AppSurface.CardContent} data={cardData} limit={1} />}
-      </Card.Root>
+      </ObjectCard.Root>
     </Focus.Item>
   );
 };

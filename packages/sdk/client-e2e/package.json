@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client-e2e",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "private": true,
   "description": "DXOS Client public-API and integration tests.",
   "homepage": "https://dxos.org",
@@ -30,6 +30,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
+    "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "fast-deep-equal": "catalog:"
   },

@@ -4,7 +4,7 @@
 
 import { useCallback } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 
 import { PresenterOperation } from '#types';
 
@@ -14,7 +14,7 @@ import { PresenterOperation } from '#types';
  * separately races, leaving the deck stuck in fullscreen.
  */
 export const useExitPresenter = (object: any) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
 
   return useCallback(
     () => invokePromise(PresenterOperation.SetPresenting, { object, state: false }),

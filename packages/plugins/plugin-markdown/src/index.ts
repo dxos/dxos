@@ -3,6 +3,6 @@
 //
 
 export * as MarkdownPlugin from './MarkdownPlugin.ts';
-export * from '#meta';
+export * from '#operations';
+export * from '#skills';
 export * from '#types';
-export * from './util.tsx';

@@ -472,7 +472,7 @@ overriding or delete the hooks.
   usage: those came from `tailwindcss-logical`, dropped in the Tailwind v4 migration (#10611), so
   they had been generating no CSS at all. Note `mbs-*`/`mbe-*`/`pbs-*`/`pbe-*`/`ps-*`/`pe-*` are
   v4 natives and remain valid.
-- **`dx-fullscreen` is unadopted** (4 uses vs 60 `absolute inset-0`) — adopt it mechanically or
+- **`dx-cover` is unadopted** (4 uses vs 60 `absolute inset-0`) — adopt it mechanically or
   delete it. **`dx-column` is dead** (1 real use) and its name collides with the `dx-column-root`
   marker — delete.
 - Document the trio's contract in one place: `dx-expander` = fill + allow shrink;
@@ -486,7 +486,7 @@ overriding or delete the hooks.
   114 sites paid for a clip to get a size.
 
   The vocabulary is now `dx-fill` (`h-full w-full`), `dx-grow` (`flex-1 min-h-0 min-w-0`),
-  `dx-expand` (both, renamed from `dx-expander`), and `dx-fullscreen` (`absolute inset-0`, its own
+  `dx-expand` (both, renamed from `dx-expander`), and `dx-cover` (`absolute inset-0`, its own
   `overflow-hidden` dropped for the same reason). Clipping is explicit at the ~15 sites that want
   it: rounded or bordered boxes whose child surface would paint over the radius, and hosts for
   something that draws past its bounds (a map, a canvas, a scaled slide).
@@ -504,7 +504,7 @@ overriding or delete the hooks.
   The `dx-container-type-*` / `dx-container-query-*` collision noted elsewhere resolves itself, and
   bit during the migration: a blanket rename caught them and silently broke 9 container-query sites.
 
-- **`dx-fullscreen` is adopted** (69 sites), which also unwound the 7 `dx-container absolute inset-0`
+- **`dx-cover` is adopted** (69 sites), which also unwound the 7 `dx-container absolute inset-0`
   sites where the sizing half was already inert. One exception is preserved: a replaced element
   (`canvas`, `img`, `video`) is not stretched by the insets and sizes to its intrinsic dimensions,
   so the Terra canvases keep `dx-fill` alongside.

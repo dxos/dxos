@@ -5,8 +5,11 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Field, Toolbar } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Input from '@dxos/react-ui/Input';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { translations } from '#translations';
 
@@ -23,8 +26,8 @@ const meta = {
     return (
       <>
         <Toolbar.Root>
-          <Toolbar.Button onClick={() => setOpen((open) => !open)}>Open</Toolbar.Button>
-          <Toolbar.Button onClick={() => setExpanded((expanded) => !expanded)}>Expand</Toolbar.Button>
+          <Button.Root onClick={() => setOpen((open) => !open)}>Open</Button.Root>
+          <Button.Root onClick={() => setExpanded((expanded) => !expanded)}>Expand</Button.Root>
         </Toolbar.Root>
 
         <ChatDialog.Root
@@ -44,7 +47,7 @@ const meta = {
           </ChatDialog.Content>
           <ChatDialog.Footer classNames='px-2 items-center'>
             <Field.Root>
-              <Field.Input classNames='border-none' placeholder='Test' />
+              <Input.Root classNames='border-none' placeholder='Test' />
             </Field.Root>
           </ChatDialog.Footer>
         </ChatDialog.Root>

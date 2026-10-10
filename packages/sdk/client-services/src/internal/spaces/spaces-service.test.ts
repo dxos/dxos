@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, onTestFinished, test, vi } fro
 
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { subscribeStream } from '@dxos/protocols';

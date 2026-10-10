@@ -282,7 +282,7 @@ legible by exactly the machinery that judges our own layouts.
    (b) the Tier‑1 report on the result, (c) an LLM judge for faithfulness. Scorer interface first,
    memoized fixtures later.
 
-The corpus lives in `docs/diagrams/*.mmd` and is simultaneously the deliverable (rendered `.svg`
+The corpus lives in `docs/diagrams/*.mmd` and is simultaneously the deliverable (rendered `.dx.svg`
 beside each source) — one copy, so it cannot drift from what the tests exercise.
 
 ### The repair loop

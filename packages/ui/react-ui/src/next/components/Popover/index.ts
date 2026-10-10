@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Popover.tsx';
+export * as Popover from './Popover.tsx';

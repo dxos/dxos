@@ -6,7 +6,7 @@ import { useMemo } from 'react';
 
 import { type Database, Filter, Obj, Tag } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { type Shortcut, findFavoriteTag, toShortcuts } from '@dxos/plugin-space/dashboard';
+import * as Dashboard from '@dxos/plugin-space/Dashboard';
 
 /**
  * Live shortcuts for the space's favorites.
@@ -14,9 +14,9 @@ import { type Shortcut, findFavoriteTag, toShortcuts } from '@dxos/plugin-space/
  * Only the panel needs this: the headless driver reads the same facts off the dashboard capability,
  * which already owns the queries.
  */
-export const useFavorites = (db: Database.Queryable | undefined, slots: number): (Shortcut | null)[] => {
+export const useFavorites = (db: Database.Queryable | undefined, slots: number): (Dashboard.Shortcut | null)[] => {
   const tags = useQuery(db, Filter.type(Tag.Tag));
-  const tag = useMemo(() => findFavoriteTag(tags), [tags]);
+  const tag = useMemo(() => Dashboard.findFavoriteTag(tags), [tags]);
   const objects = useQuery(db, tag ? Filter.tag(Obj.getURI(tag)) : Filter.nothing());
-  return useMemo(() => toShortcuts(objects, slots), [objects, slots]);
+  return useMemo(() => Dashboard.toShortcuts(objects, slots), [objects, slots]);
 };

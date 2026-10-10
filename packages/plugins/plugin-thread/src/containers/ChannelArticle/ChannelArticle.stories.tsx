@@ -9,7 +9,7 @@ import React from 'react';
 import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Database, Feed, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
@@ -17,7 +17,7 @@ import * as CallsPlugin from '@dxos/plugin-calls/CallsPlugin';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { Config } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
@@ -53,7 +53,7 @@ const meta = {
         Capability.contribute(AppCapabilities.Schema, [Channel.Channel, Feed.Feed, Thread.Thread, Message.Message]),
       ],
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: [Channel.Channel, Feed.Feed, Thread.Thread, Message.Message],
           config: new Config({

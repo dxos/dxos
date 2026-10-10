@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import type { JsonSchema as JsonSchemaType } from '@dxos/echo/JsonSchema';
+import type * as JsonSchema from '@dxos/echo/JsonSchema';
 
 /**
  * Is used for to route the request to the metadata handler instead of the main handler.
@@ -31,10 +31,10 @@ export type FunctionMetadata = {
   /**
    * Input schema.
    */
-  inputSchema?: JsonSchemaType;
+  inputSchema?: JsonSchema.JsonSchema;
 
   /**
    * Output schema.
    */
-  outputSchema?: JsonSchemaType;
+  outputSchema?: JsonSchema.JsonSchema;
 };

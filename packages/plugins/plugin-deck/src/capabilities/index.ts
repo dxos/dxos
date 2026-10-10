@@ -31,7 +31,7 @@ export const NotificationTracker = Capability.lazyModule(
     requires: [
       Capabilities.AtomRegistry,
       DeckCapabilities.EphemeralState,
-      Capabilities.ProcessMonitor,
+      Capabilities.ProcessManager,
       Capabilities.PluginManager,
       Capabilities.OperationInvoker,
       Capabilities.OperationHandler,

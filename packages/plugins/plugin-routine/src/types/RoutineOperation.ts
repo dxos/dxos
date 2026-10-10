@@ -98,7 +98,7 @@ export const RunRoutine = Operation.make({
     name: 'Run Routine',
     icon: 'ph--play--regular',
   },
-  services: [Capability.Service, Trigger.TriggerMonitorService],
+  services: [Capability.Service, Trigger.ManagerService],
   input: Schema.Struct({
     routine: Ref.Ref(Routine.Routine),
   }),

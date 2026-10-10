@@ -14,7 +14,7 @@ import { createMockedComputeRuntimeProvider } from '@dxos/compute-hyperformula/t
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { Obj } from '@dxos/echo';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { AttendableContainer } from '@dxos/react-ui-attention';
@@ -41,7 +41,7 @@ const meta = {
     withClientProvider({ types: [Sheet.Sheet], createSpace: true }),
     withComputeGraphDecorator({ registry }),
     withPluginManager({
-      plugins: [...corePlugins()],
+      plugins: [...CorePlugins.make()],
       capabilities: [
         Capability.contribute(SheetCapabilities.ComputeGraphRegistry, registry),
         Capability.contribute(

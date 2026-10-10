@@ -1,0 +1,111 @@
+/*
+ * Steps: a row of icon-sized circles joined by lines that flex, so the gaps stay even at any stage count. Every item
+ * but the last grows to give its trailing line the room; the last would otherwise pull the final circle off the end.
+ * Lines share Progress's 4px separator-coloured track and accent fill, so a planned run and a planless one read alike.
+ */
+
+@layer dx-components {
+  .dx-steps {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    min-height: var(--dx-block-size);
+  }
+
+  .dx-steps-item {
+    display: flex;
+    align-items: center;
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  .dx-steps-item[data-last] {
+    flex: 0 0 auto;
+  }
+
+  /* Stages ahead of the run are an outline; everything the run reached is filled. */
+  .dx-steps-indicator {
+    position: relative;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    width: var(--dx-icon-size);
+    height: var(--dx-icon-size);
+    padding: 0;
+    border: 1px solid var(--color-separator);
+    border-radius: 9999px;
+    background: var(--color-base-surface);
+    background-clip: content-box;
+    transition:
+      background-color 200ms,
+      border-color 200ms;
+  }
+  .dx-steps-indicator:is([data-state='active'], [data-state='complete']) {
+    border-color: transparent;
+    background-color: var(--color-accent-bg);
+  }
+  /* What failed is the run, not only the stage it stopped on; a stage it never reached did not fail. */
+  .dx-steps-indicator[data-state='error'],
+  .dx-steps[data-error] .dx-steps-indicator:is([data-state='active'], [data-state='complete']) {
+    border-color: transparent;
+    background-color: var(--color-error-surface);
+  }
+  /* Selection is the reader's own marker, so it outranks the run's colours. */
+  .dx-steps .dx-steps-indicator[data-selected] {
+    border-color: transparent;
+    background-color: var(--color-neutral-500);
+  }
+  .dx-steps-button {
+    cursor: pointer;
+  }
+  .dx-steps-button.dx-focus-ring:focus-visible {
+    box-shadow: 0 0 0 var(--dx-focus-ring-width) var(--dx-focus-ring-color);
+  }
+
+  /* An uncounted stage in flight: the fill is inset and a notch spins around it. */
+  .dx-steps-indicator[data-spinning] {
+    padding: 3px;
+    border-color: transparent;
+  }
+  .dx-steps-indicator[data-spinning]::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border: 2px solid transparent;
+    border-top-color: var(--color-accent-bg);
+    border-right-color: var(--color-accent-bg);
+    border-radius: 9999px;
+    animation: dx-spin 1s linear infinite;
+  }
+
+  .dx-steps-separator {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 4px;
+    height: 4px;
+    border-radius: 9999px;
+    overflow: hidden;
+    background: var(--color-separator);
+  }
+
+  .dx-steps-fill {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    border-radius: 9999px;
+    background: var(--color-accent-bg);
+    transition: width var(--dx-steps-duration, 500ms) linear;
+  }
+  .dx-steps[data-error] .dx-steps-fill {
+    background: var(--color-error-surface);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dx-steps-indicator,
+    .dx-steps-fill {
+      transition: none;
+    }
+    .dx-steps-indicator[data-spinning]::after {
+      animation: none;
+    }
+  }
+}

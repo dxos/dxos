@@ -6,7 +6,7 @@ import * as Atom from 'effect/reactivity/Atom';
 
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { ActivationEvents, Capabilities } from '../../../common/index.ts';
 import { ActivationEvent, type CapabilityManager, type PluginManager } from '../../../core/index.ts';

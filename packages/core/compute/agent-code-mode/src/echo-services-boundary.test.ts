@@ -12,7 +12,7 @@ import { ClientRpcServer, makeClientServicesRpc } from '@dxos/client-protocol';
 import { Filter, JsonSchema, Obj, Type } from '@dxos/echo';
 import { EchoClient } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN } from '@dxos/keys';
 
 /**

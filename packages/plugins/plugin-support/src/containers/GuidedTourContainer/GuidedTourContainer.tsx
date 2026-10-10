@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { useAtomCapabilityState } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 
 import { GuidedTour } from '#components';
 import { useTourSteps } from '#hooks';
@@ -12,7 +12,7 @@ import { HelpCapabilities } from '#types';
 
 /** Runs whichever tour the help state names, and forgets it once the reader closes it. */
 export const GuidedTourContainer = () => {
-  const [state, updateState] = useAtomCapabilityState(HelpCapabilities.State);
+  const [state, updateState] = Hooks.useAtomCapabilityState(HelpCapabilities.State);
   const steps = useTourSteps(state.tourId, state.subjectId);
 
   return (

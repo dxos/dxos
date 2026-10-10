@@ -11,10 +11,10 @@ import * as Instructions from '@dxos/compute/Instructions';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Card } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
@@ -58,7 +58,7 @@ const meta = {
     withLayout(),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: [MediaArtifact.MediaArtifact, Variant.Variant, Instructions.Instructions, Text.Text],
           onClientInitialized: ({ client }) =>

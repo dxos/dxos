@@ -4,7 +4,8 @@
 
 import type * as Schema from 'effect/Schema';
 
-import { SchemaAST, SchemaEx } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 
 import * as Type from '../../Type.ts';
 import { getReferenceAst } from '../Ref/ref.ts';

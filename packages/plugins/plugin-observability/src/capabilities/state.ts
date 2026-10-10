@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { createKvsStore } from '@dxos/effect';
+import * as KvsStore from '@dxos/effect/KvsStore';
 import * as Observability from '@dxos/observability/Observability';
 
 import { meta } from '#meta';
@@ -14,8 +14,8 @@ import { ObservabilityCapabilities } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* ({ namespace }: { namespace: string }) {
-    const stateAtom = createKvsStore({
-      key: meta.profile.key,
+    const stateAtom = KvsStore.make({
+      key: `${meta.profile.key}.state`,
       schema: ObservabilityCapabilities.StateSchema,
       defaultValue: () => ({}),
     });

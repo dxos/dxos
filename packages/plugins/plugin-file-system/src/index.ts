@@ -3,5 +3,4 @@
 //
 
 export * as FileSystemPlugin from './FileSystemPlugin.ts';
-export * from '#meta';
 export * from '#types';

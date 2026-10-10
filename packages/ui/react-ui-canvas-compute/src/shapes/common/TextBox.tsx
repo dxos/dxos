@@ -1,0 +1,137 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import { json } from '@codemirror/lang-json';
+import { Prec } from '@codemirror/state';
+import { EditorView, keymap } from '@codemirror/view';
+import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
+
+import { useTextEditor } from '@dxos/react-ui-editor';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import type * as Util from '@dxos/react-ui/Util';
+import {
+  type BasicExtensionsOptions,
+  createBasicExtensions,
+  createMarkdownExtensions,
+  createThemeExtensions,
+  decorateMarkdown,
+} from '@dxos/ui-editor';
+import { mx } from '@dxos/ui-theme';
+
+// An always-editable field, since the engine's `TextPart` edits only an opened part and focuses on mount.
+
+export interface TextBoxControl {
+  setText(text: string): void;
+  focus(): void;
+}
+
+export type TextBoxProps = Util.ThemedClassName<
+  {
+    value?: string;
+    centered?: boolean;
+    onBlur?: (value: string) => void;
+    onEnter?: (value: string) => void;
+    onCancel?: () => void;
+    language?: 'json' | 'markdown';
+  } & Pick<BasicExtensionsOptions, 'placeholder'>
+>;
+
+export const TextBox = forwardRef<TextBoxControl, TextBoxProps>(
+  ({ classNames, value = '', centered, onEnter, onCancel, language, ...rest }, forwardedRef) => {
+    const themeMode = Hooks.useThemeMode();
+    const modified = useRef(false);
+    const doc = useRef(value);
+    useEffect(() => {
+      modified.current = false;
+      doc.current = value;
+    }, [value]);
+
+    const { parentRef, view, focusAttributes } = useTextEditor(() => {
+      return {
+        id: 'text',
+        initialValue: value,
+        extensions: [
+          createBasicExtensions({ lineWrapping: !centered, ...rest }),
+          ...(language === 'json'
+            ? [json()]
+            : language === 'markdown'
+              ? [createMarkdownExtensions(), decorateMarkdown()]
+              : []),
+          createThemeExtensions({
+            themeMode,
+            syntaxHighlighting: !!language,
+            slots: {
+              editor: { className: 'h-full w-full [&>.cm-scroller]:scrollbar-none p-2' },
+              content: { className: mx(centered && 'text-center') },
+            },
+          }),
+          // Detect changes.
+          EditorView.updateListener.of((update) => {
+            if (update.docChanged) {
+              modified.current = doc.current !== update.state.doc.toString();
+            }
+          }),
+          // TODO(burdon): Only fire if modified.
+          EditorView.focusChangeEffect.of((state, focusing) => {
+            if (!focusing && modified.current) {
+              onEnter?.(state.doc.toString());
+            }
+
+            return null;
+          }),
+          Prec.highest(
+            keymap.of([
+              {
+                key: 'Enter',
+                preventDefault: true,
+                run: (view) => {
+                  onEnter?.(view.state.doc.toString());
+                  modified.current = false;
+                  return true;
+                },
+              },
+              {
+                key: 'Shift-Enter',
+                run: (view) => {
+                  // The new line is an edit like any other, so leaving the field still commits it.
+                  view.dispatch(view.state.replaceSelection('\n'));
+                  return true;
+                },
+              },
+              {
+                key: 'Escape',
+                run: () => {
+                  onCancel?.();
+                  modified.current = false;
+                  return true;
+                },
+              },
+            ]),
+          ),
+        ],
+      };
+    }, [value, language]);
+
+    // External control.
+    useImperativeHandle(
+      forwardedRef,
+      () => ({
+        setText: (text: string) => {
+          view?.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: text } });
+        },
+        focus: () => {
+          view?.focus();
+        },
+      }),
+      [view],
+    );
+
+    // Scroll to bottom.
+    useEffect(() => {
+      view?.dispatch({ selection: { anchor: view.state.doc.length } });
+    }, [view]);
+
+    return <div ref={parentRef} {...focusAttributes} className={mx('dx-fill overflow-hidden', classNames)} />;
+  },
+);

@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { ark } from '@ark-ui/react/factory';
 import { Popover as PopoverPrimitive, usePopoverContext } from '@ark-ui/react/popover';
 import { Portal } from '@ark-ui/react/portal';
@@ -11,8 +13,10 @@ import React, {
   type RefObject,
   createContext,
   forwardRef,
+  useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from 'react';
 
@@ -21,10 +25,10 @@ import { type ThemedClassName } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import { Button } from '../Button/index.ts';
-import { Container } from '../Container/index.ts';
-import { ScrollArea, type ScrollAreaRootProps } from '../ScrollArea/index.ts';
+import { Button } from '../Button/Button.tsx';
+import { Container, DefaultGutterProvider } from '../Container/Container.tsx';
 import { popupPositioning, usePopupSize } from '../ScrollArea/PopupScroll.tsx';
+import * as ScrollArea from '../ScrollArea/ScrollArea.tsx';
 
 /** Gap between trigger and popup, in px (positioning takes a number, not a CSS variable). */
 const POPUP_GUTTER = 2;
@@ -62,7 +66,7 @@ const PopoverRoot = ({ lazyMount = true, unmountOnExit = true, positioning, ...p
   />
 );
 
-PopoverRoot.displayName = 'Next.Popover.Root';
+PopoverRoot.displayName = 'Popover.Root';
 
 //
 // Trigger
@@ -70,12 +74,12 @@ PopoverRoot.displayName = 'Next.Popover.Root';
 
 type PopoverTriggerProps = PopoverPrimitive.TriggerProps;
 
-/** Use `asChild` to open the popover from a `Next.Button`. */
+/** Use `asChild` to open the popover from a `Button`. */
 const PopoverTrigger = forwardRef<HTMLButtonElement, PopoverTriggerProps>((props, forwardedRef) => (
   <PopoverPrimitive.Trigger {...props} ref={forwardedRef} />
 ));
 
-PopoverTrigger.displayName = 'Next.Popover.Trigger';
+PopoverTrigger.displayName = 'Popover.Trigger';
 
 //
 // Anchor
@@ -88,7 +92,7 @@ const PopoverAnchor = forwardRef<HTMLDivElement, PopoverAnchorProps>((props, for
   <PopoverPrimitive.Anchor {...props} ref={forwardedRef} />
 ));
 
-PopoverAnchor.displayName = 'Next.Popover.Anchor';
+PopoverAnchor.displayName = 'Popover.Anchor';
 
 //
 // Content
@@ -118,9 +122,17 @@ const PopoverContent = forwardRef<HTMLDivElement, PopoverContentProps>(
     const [register] = useState(
       () => (part: LabelPart, present: boolean) => setLabels((labels) => ({ ...labels, [part]: present })),
     );
+    // zag measures on opening, so a positioner that mounts later (keyed or conditional content) would stay at 0,0.
+    const repositionRef = useRef(popover.reposition);
+    repositionRef.current = popover.reposition;
+    const handlePositioner = useCallback((element: HTMLDivElement | null) => {
+      if (element) {
+        repositionRef.current();
+      }
+    }, []);
     return (
       <Portal container={container}>
-        <PopoverPrimitive.Positioner>
+        <PopoverPrimitive.Positioner ref={handlePositioner}>
           <PopoverPrimitive.Content
             {...props}
             {...(labels.title && { 'aria-labelledby': popover.getTitleProps().id })}
@@ -143,7 +155,7 @@ const PopoverContent = forwardRef<HTMLDivElement, PopoverContentProps>(
   },
 );
 
-PopoverContent.displayName = 'Next.Popover.Content';
+PopoverContent.displayName = 'Popover.Content';
 
 //
 // Header
@@ -162,7 +174,7 @@ const PopoverHeader = forwardRef<HTMLDivElement, PopoverHeaderProps>(({ classNam
   />
 ));
 
-PopoverHeader.displayName = 'Next.Popover.Header';
+PopoverHeader.displayName = 'Popover.Header';
 
 //
 // Title
@@ -175,7 +187,7 @@ const PopoverTitle = forwardRef<HTMLHeadingElement, PopoverTitleProps>(({ classN
   return <PopoverPrimitive.Title {...props} className={mx(recipes.popoverTitle(), classNames)} ref={forwardedRef} />;
 });
 
-PopoverTitle.displayName = 'Next.Popover.Title';
+PopoverTitle.displayName = 'Popover.Title';
 
 //
 // Description
@@ -196,13 +208,13 @@ const PopoverDescription = forwardRef<HTMLParagraphElement, PopoverDescriptionPr
   },
 );
 
-PopoverDescription.displayName = 'Next.Popover.Description';
+PopoverDescription.displayName = 'Popover.Description';
 
 //
 // Body
 //
 
-type PopoverBodyProps = ThemedClassName<Pick<ScrollAreaRootProps, 'mode' | 'width' | 'native'>> & {
+type PopoverBodyProps = ThemedClassName<Pick<ScrollArea.RootProps, 'mode' | 'width' | 'native'>> & {
   children?: ReactNode;
 };
 
@@ -213,19 +225,22 @@ type PopoverBodyProps = ThemedClassName<Pick<ScrollAreaRootProps, 'mode' | 'widt
 const PopoverBody = forwardRef<HTMLDivElement, PopoverBodyProps>(({ classNames, children, ...props }, forwardedRef) => (
   <ScrollArea.Root {...props} classNames={mx(recipes.popoverBody(), classNames)} ref={forwardedRef}>
     <ScrollArea.Viewport asChild>
-      <Container gutter='inset'>{children}</Container>
+      <Container gutter='inset'>
+        {/* Its direct content (a form's Viewport) joins these rails rather than nesting a second inset. */}
+        <DefaultGutterProvider gutter='inherit'>{children}</DefaultGutterProvider>
+      </Container>
     </ScrollArea.Viewport>
   </ScrollArea.Root>
 ));
 
-PopoverBody.displayName = 'Next.Popover.Body';
+PopoverBody.displayName = 'Popover.Body';
 
 //
 // CloseTrigger
 //
 
 type PopoverCloseTriggerProps = Omit<PopoverPrimitive.CloseTriggerProps, 'children'> & {
-  /** With `asChild`, the child (e.g. a `Next.Button`) closes the popover instead of the default icon button. */
+  /** With `asChild`, the child (e.g. a `Button`) closes the popover instead of the default icon button. */
   children?: ReactNode;
   icon?: string;
   label?: string;
@@ -257,28 +272,27 @@ const PopoverCloseTrigger = forwardRef<HTMLButtonElement, PopoverCloseTriggerPro
   },
 );
 
-PopoverCloseTrigger.displayName = 'Next.Popover.CloseTrigger';
-
-export const Popover = {
-  Root: PopoverRoot,
-  Trigger: PopoverTrigger,
-  Anchor: PopoverAnchor,
-  Content: PopoverContent,
-  Header: PopoverHeader,
-  Title: PopoverTitle,
-  Description: PopoverDescription,
-  Body: PopoverBody,
-  CloseTrigger: PopoverCloseTrigger,
+PopoverCloseTrigger.displayName = 'Popover.CloseTrigger';
+export type {
+  PopoverAnchorProps as AnchorProps,
+  PopoverBodyProps as BodyProps,
+  PopoverCloseTriggerProps as CloseTriggerProps,
+  PopoverContentProps as ContentProps,
+  PopoverDescriptionProps as DescriptionProps,
+  PopoverHeaderProps as HeaderProps,
+  PopoverRootProps as RootProps,
+  PopoverTitleProps as TitleProps,
+  PopoverTriggerProps as TriggerProps,
 };
 
-export type {
-  PopoverAnchorProps,
-  PopoverBodyProps,
-  PopoverCloseTriggerProps,
-  PopoverContentProps,
-  PopoverDescriptionProps,
-  PopoverHeaderProps,
-  PopoverRootProps,
-  PopoverTitleProps,
-  PopoverTriggerProps,
+export {
+  PopoverAnchor as Anchor,
+  PopoverBody as Body,
+  PopoverCloseTrigger as CloseTrigger,
+  PopoverContent as Content,
+  PopoverDescription as Description,
+  PopoverHeader as Header,
+  PopoverRoot as Root,
+  PopoverTitle as Title,
+  PopoverTrigger as Trigger,
 };

@@ -4,7 +4,7 @@
 
 import React, { type ComponentType, type ReactElement } from 'react';
 
-import { Next } from '../Next.tsx';
+import { Container, type Gutter } from '../components/Container/Container.tsx';
 import { type Size, SIZES } from '../sizes.ts';
 
 /**
@@ -29,7 +29,7 @@ export const SIZE_ARG_TYPES = {
  */
 type SizesDecorator = (
   Story: ComponentType<{ args?: Record<string, unknown> }>,
-  context: { args: Record<string, unknown> },
+  context: { args: Record<string, unknown>; parameters?: { sizes?: { gutter?: Gutter } } },
 ) => ReactElement;
 
 export type WithSizesOptions = {
@@ -38,7 +38,7 @@ export type WithSizesOptions = {
 
 /**
  * Renders the story at its `size` arg (default `md`), or once per size when `allSizes` is set, each in its own row: a
- * `level='base'` rail-gutter Container at that size, `data-testid='size-<size>'`, with the size passed as the `size` arg.
+ * `level='base'` rail-gutter Container at that size (a story's `parameters.sizes.gutter` overrides the gutter), `data-testid='size-<size>'`, with the size passed as the `size` arg.
  * The rows share a full-width frame, the pane (the query container of decision 5), so its width is set by an outer
  * decorator (e.g. `withLayout({ classNames: 'p-0 w-[32rem]' })`).
  */
@@ -48,11 +48,17 @@ export const withSizes =
     const selected = SIZES.find((size) => size === context.args.size) ?? 'md';
     const shown = context.args.allSizes === true ? sizes : [selected];
     return (
-      <div className='nx-scope @container flex flex-col w-full' data-size='md'>
+      <div className='dx-scope @container flex flex-col w-full' data-size='md'>
         {shown.map((size) => (
-          <Next.Container key={size} size={size} gutter='rail' level='base' data-testid={`size-${size}`}>
+          <Container
+            key={size}
+            size={size}
+            gutter={context.parameters?.sizes?.gutter ?? 'rail'}
+            level='base'
+            data-testid={`size-${size}`}
+          >
             <Story args={{ ...context.args, size }} />
-          </Next.Container>
+          </Container>
         ))}
       </div>
     );

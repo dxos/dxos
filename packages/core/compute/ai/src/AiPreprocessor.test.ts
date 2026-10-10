@@ -37,6 +37,24 @@ describe('AiPreprocessor.preprocessPrompt', () => {
   );
 
   it.effect(
+    'attributes a user message to its named sender',
+    Effect.fn(function* ({ expect }) {
+      const message = Message.make({
+        sender: { role: 'user', name: 'Alice' },
+        blocks: [{ _tag: 'text', text: 'Hello' }],
+      });
+      const input = yield* AiPreprocessor.preprocessPrompt([message]);
+      expect(input).toEqual(
+        Prompt.fromMessages([
+          Prompt.makeMessage('user', {
+            content: [Prompt.makePart('text', { text: '[From: Alice]' }), Prompt.makePart('text', { text: 'Hello' })],
+          }),
+        ]),
+      );
+    }),
+  );
+
+  it.effect(
     'drops tool results at the start of a message when there is no matching tool call',
     Effect.fn(function* ({ expect }) {
       const message = makeMessage('tool', [

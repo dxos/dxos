@@ -14,7 +14,8 @@ export const EFFECT_MODULE = 'effect.js';
  * - {@link EFFECT_MODULE} exports the `Cause`, `Data`, `Effect` and `Exit` namespaces of `effect`.
  * - `env.HOST.call(binding, args)` answers each call with a `ScriptOutcome`; the host decides it
  *   with `scriptCallOutcome`, so the isolate holds no authority of its own.
- * - The default export's `fetch` answers with a `ScriptResult` as JSON, whatever the program did.
+ * - The default export's `fetch` answers with a `ScriptResult` as JSON, whatever the program did,
+ *   its `stats` counting the calls the program made through `env.HOST`.
  *
  * The program is compiled at module scope, so the only names it can reach are its bindings and the
  * module's own helpers — not `env`, and not the request.
@@ -89,9 +90,18 @@ export default {
     const printer = __printer(${JSON.stringify(maxOutput)});
     // The tokens the program holds: the caller's, plus each one its own loadSkill returns.
     const tokens = new Set(${JSON.stringify(skillTokens)});
+    const stats = { calls: 0, callMs: 0 };
     const call = (binding, args) =>
       Effect.tryPromise({
-        try: () => env.HOST.call(binding, args),
+        try: async () => {
+          const start = performance.now();
+          stats.calls++;
+          try {
+            return await env.HOST.call(binding, args);
+          } finally {
+            stats.callMs += performance.now() - start;
+          }
+        },
         catch: (error) => new ToolFailure({ code: 'operation_failed', message: __describe(error) }),
       }).pipe(
         Effect.flatMap((outcome) =>
@@ -126,15 +136,24 @@ export default {
             ),
         }),
       );
+      const callStats = () => ({ calls: stats.calls, callMs: Math.round(stats.callMs) });
       if (Exit.isSuccess(exit)) {
         if (exit.value !== undefined && printer.isEmpty()) {
           printer.print(exit.value);
         }
-        return Response.json({ output: printer.output() });
+        return Response.json({ output: printer.output(), stats: callStats() });
       }
-      return Response.json({ output: printer.output(), error: __describe(Cause.squash(exit.cause)) });
+      return Response.json({
+        output: printer.output(),
+        error: __describe(Cause.squash(exit.cause)),
+        stats: callStats(),
+      });
     } catch (error) {
-      return Response.json({ output: printer.output(), error: __describe(error) });
+      return Response.json({
+        output: printer.output(),
+        error: __describe(error),
+        stats: { calls: stats.calls, callMs: Math.round(stats.callMs) },
+      });
     }
   },
 };

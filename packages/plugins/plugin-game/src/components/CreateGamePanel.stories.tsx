@@ -9,7 +9,7 @@ import React, { useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { DXN, Obj, Type } from '@dxos/echo';
-import { Dialog } from '@dxos/react-ui';
+import * as Dialog from '@dxos/react-ui/Dialog';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -54,27 +54,25 @@ const DefaultStory = () => {
   const [submitted, setSubmitted] = useState<Record<string, any> | undefined>(undefined);
   return (
     <Dialog.Root open>
-      <Dialog.Overlay>
-        <Dialog.Content>
-          <Dialog.Header>
-            <Dialog.Title>Create game</Dialog.Title>
-          </Dialog.Header>
-          <Dialog.Body>
-            <CreateGamePanel
-              target={{} as any}
-              variants={dummyVariants}
-              onCreateObject={(data) => {
-                setSubmitted(data);
-              }}
-            />
-            {submitted && (
-              <pre className='mt-form-gap p-2 text-xs bg-group-surface rounded-xs overflow-auto'>
-                {JSON.stringify(submitted, null, 2)}
-              </pre>
-            )}
-          </Dialog.Body>
-        </Dialog.Content>
-      </Dialog.Overlay>
+      <Dialog.Content>
+        <Dialog.Header>
+          <Dialog.Title>Create game</Dialog.Title>
+        </Dialog.Header>
+        <Dialog.Body>
+          <CreateGamePanel
+            target={{} as any}
+            variants={dummyVariants}
+            onCreateObject={(data) => {
+              setSubmitted(data);
+            }}
+          />
+          {submitted && (
+            <pre className='mt-form-gap p-2 text-xs bg-group-surface rounded-xs overflow-auto'>
+              {JSON.stringify(submitted, null, 2)}
+            </pre>
+          )}
+        </Dialog.Body>
+      </Dialog.Content>
     </Dialog.Root>
   );
 };

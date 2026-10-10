@@ -1,5 +1,60 @@
 # @dxos/edge-compute
 
+## 0.13.0
+
+### Patch Changes
+
+- Updated dependencies [bbe9f18]
+- Updated dependencies [162fd6d]
+- Updated dependencies [aad3e41]
+- Updated dependencies [bb2b672]
+- Updated dependencies [cb1e218]
+- Updated dependencies [1ef899b]
+- Updated dependencies [32f32a0]
+- Updated dependencies [469e7f7]
+- Updated dependencies [665261a]
+- Updated dependencies [68dc875]
+- Updated dependencies [2e96a73]
+- Updated dependencies [fe08304]
+- Updated dependencies [945092e]
+- Updated dependencies [c531b05]
+- Updated dependencies [3672aff]
+- Updated dependencies [2f95d25]
+- Updated dependencies [c7cc480]
+- Updated dependencies [8980a93]
+- Updated dependencies [e99ee70]
+- Updated dependencies [161f994]
+- Updated dependencies [1894fc1]
+- Updated dependencies [246ee3c]
+- Updated dependencies [8ebe8d6]
+- Updated dependencies [0ee5ecf]
+- Updated dependencies [596728d]
+- Updated dependencies [7715216]
+- Updated dependencies [1737cad]
+- Updated dependencies [6a7bed4]
+- Updated dependencies [3022878]
+- Updated dependencies [c2a300a]
+- Updated dependencies [17008f0]
+- Updated dependencies [dde8f43]
+- Updated dependencies [4f8e566]
+- Updated dependencies [a449958]
+  - @dxos/compute@0.13.0
+  - @dxos/echo@0.13.0
+  - @dxos/util@0.13.0
+  - @dxos/edge-client@0.13.0
+  - @dxos/client@0.13.0
+  - @dxos/compute-runtime@0.13.0
+  - @dxos/functions-runtime-cloudflare@0.13.0
+  - @dxos/context@0.13.0
+  - @dxos/effect@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/protocols@0.13.0
+  - @dxos/crypto@0.13.0
+  - @dxos/errors@0.13.0
+  - @dxos/invariant@0.13.0
+  - @dxos/keys@0.13.0
+  - @dxos/node-std@0.13.0
+
 ## 0.12.0
 
 ### Patch Changes

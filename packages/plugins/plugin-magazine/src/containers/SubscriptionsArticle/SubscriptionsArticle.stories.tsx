@@ -14,7 +14,7 @@ import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
@@ -44,7 +44,7 @@ const meta: Meta<typeof DefaultStory> = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: [Subscription.Subscription, Subscription.Post],
           onClientInitialized: ({ client }: { client: Client }) =>

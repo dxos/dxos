@@ -9,7 +9,7 @@ import { type InspectOptionsStylized } from 'node:util';
 
 import { Event } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { getDeep } from '@dxos/util';
 

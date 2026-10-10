@@ -10,13 +10,14 @@ import React, {
   useState,
 } from 'react';
 
+import { sampleDominantColor } from '@dxos/lit-ui';
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
 import { clickableProps } from '../../clickable.ts';
 import { recipes } from '../../recipes.ts';
-import { type CSSVariables } from '../Container/index.ts';
-import { Icon } from '../Icon/index.ts';
+import { type CSSVariables } from '../Container/Container.tsx';
+import * as Icon from '../Icon/Icon.tsx';
 
 type ImageStatus = 'loading' | 'loaded' | 'error';
 
@@ -32,6 +33,11 @@ export type ImageProps = ThemedClassName<Omit<ComponentPropsWithoutRef<'div'>, '
     /** CSS `aspect-ratio` of the frame. */
     aspectRatio?: string;
     fit?: 'cover' | 'contain';
+    /**
+     * `dominant` fills the frame behind a loaded image (the letterbox of `contain`) with the colour of its corners;
+     * an image whose pixels cannot be read (cross-origin without `crossOrigin` and CORS) leaves the host surface.
+     */
+    backdrop?: 'dominant';
   };
 
 /**
@@ -53,6 +59,7 @@ export const Image = forwardRef<HTMLDivElement, ImageProps>(
       decoding = 'async',
       aspectRatio = '16 / 9',
       fit = 'cover',
+      backdrop,
       onLoad,
       onError,
       onClick,
@@ -63,9 +70,13 @@ export const Image = forwardRef<HTMLDivElement, ImageProps>(
   ) => {
     // Keyed by source so a new `src` starts loading again without an effect racing the load event.
     const source = `${src ?? ''} ${srcSet ?? ''}`;
-    const [result, setResult] = useState<{ source: string; status: ImageStatus }>();
+    const [result, setResult] = useState<{ source: string; status: ImageStatus; color?: string }>();
     const status: ImageStatus = result?.source === source ? result.status : 'loading';
-    const aspectStyle: CSSProperties & CSSVariables = { '--nx-image-aspect': aspectRatio };
+    const color = result?.source === source ? result.color : undefined;
+    const aspectStyle: CSSProperties & CSSVariables = {
+      '--dx-image-aspect': aspectRatio,
+      ...(color ? { '--dx-image-backdrop': color } : {}),
+    };
     return (
       <div
         {...props}
@@ -74,12 +85,13 @@ export const Image = forwardRef<HTMLDivElement, ImageProps>(
         data-part='root'
         data-fit={fit}
         data-status={status}
+        data-backdrop={backdrop}
         style={{ ...aspectStyle, ...style }}
         className={mx(recipes.image(), onClick && recipes.imageClickable(), classNames)}
         ref={forwardedRef}
       >
         {status === 'error' ? (
-          <Icon icon='ph--image-broken--regular' label={alt} />
+          <Icon.Icon icon='ph--image-broken--regular' label={alt} />
         ) : (
           <img
             src={src}
@@ -93,7 +105,8 @@ export const Image = forwardRef<HTMLDivElement, ImageProps>(
             data-scope='image'
             data-part='img'
             onLoad={(event) => {
-              setResult({ source, status: 'loaded' });
+              const sampled = backdrop === 'dominant' ? sampleDominantColor(event.currentTarget) : undefined;
+              setResult({ source, status: 'loaded', color: sampled });
               onLoad?.(event);
             }}
             onError={(event) => {
@@ -107,4 +120,4 @@ export const Image = forwardRef<HTMLDivElement, ImageProps>(
   },
 );
 
-Image.displayName = 'Next.Image';
+Image.displayName = 'Image';

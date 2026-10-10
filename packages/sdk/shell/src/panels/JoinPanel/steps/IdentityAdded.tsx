@@ -7,7 +7,8 @@ import React, { cloneElement } from 'react';
 import { generateName } from '@dxos/display-name';
 import { toPublicKey } from '@dxos/protocols/buf';
 import type { Identity } from '@dxos/react-client/halo';
-import { Avatar, useId, useTranslation } from '@dxos/react-ui';
+import * as Avatar from '@dxos/react-ui/Avatar';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { mx } from '@dxos/ui-theme';
 import { hexToFallback } from '@dxos/util';
 
@@ -24,11 +25,11 @@ export interface IdentityAddedProps extends JoinStepProps {
 export const IdentityAdded = (props: IdentityAddedProps) => {
   const { mode, addedIdentity, active, send, onDone, doneActionParent } = props;
   const disabled = !active;
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
 
   const addedIdentityHex = toPublicKey(addedIdentity?.identityKey)?.toHex() ?? '0';
   const fallbackValue = hexToFallback(addedIdentityHex);
-  const labelId = useId('identityListItem__label');
+  const labelId = Hooks.useId('identityListItem__label');
   const displayName = addedIdentity?.profile?.displayName ?? (addedIdentity && generateName(addedIdentityHex));
 
   const doneAction = (
@@ -46,16 +47,15 @@ export const IdentityAdded = (props: IdentityAddedProps) => {
     <>
       <InputLabel>{t('identity-added.label')}</InputLabel>
       <div className='grow flex flex-col items-center justify-center text-center gap-2'>
-        <Avatar.Root labelId={labelId}>
-          <Avatar.Content
-            status='active'
-            hue={profileString(addedIdentity, 'hue') || fallbackValue.hue}
-            fallback={profileString(addedIdentity, 'emoji') || fallbackValue.emoji}
-          />
-          <Avatar.Label classNames={mx('text-lg truncate', !addedIdentity?.profile?.displayName && 'font-mono')}>
-            {displayName}
-          </Avatar.Label>
-        </Avatar.Root>
+        <Avatar.Root
+          aria-labelledby={labelId}
+          status='active'
+          hue={Avatar.toAvatarHue(profileString(addedIdentity, 'hue') || fallbackValue.hue)}
+          fallback={profileString(addedIdentity, 'emoji') || fallbackValue.emoji}
+        />
+        <span id={labelId} className={mx('text-lg truncate', !addedIdentity?.profile?.displayName && 'font-mono')}>
+          {displayName}
+        </span>
       </div>
       <ActionBar>
         {mode === 'halo-only' ? (

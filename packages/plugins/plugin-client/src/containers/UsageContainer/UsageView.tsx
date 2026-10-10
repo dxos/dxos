@@ -6,8 +6,10 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { type GetProfileUsageResponse, type MeteringLimit, type MeteringUsageItem } from '@dxos/protocols';
-import { Banner, Progress, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldProvider } from '@dxos/react-ui-form';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Status from '@dxos/react-ui/Status';
 
 import { meta } from '#meta';
 
@@ -171,7 +173,7 @@ const STATE_MESSAGES = {
  * collapsible raw-response viewer. Pure — all data via props.
  */
 export const UsageView = ({ state, data, lastUpdated, onRefresh }: UsageViewProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const [rawExpanded, setRawExpanded] = useState(false);
 
   const { schema, values, empty } = useMemo(() => {
@@ -196,7 +198,7 @@ export const UsageView = ({ state, data, lastUpdated, onRefresh }: UsageViewProp
       return (
         <Form.Field standalone label={label} description={description}>
           {typeof percent === 'number' ? (
-            <Progress progress={percent / 100} aria-label={t('usage-percent-used.label', { percent })} />
+            <Status.Progress value={percent / 100} label={t('usage-percent-used.label', { percent })} />
           ) : (
             t('usage-unlimited.label')
           )}
@@ -213,10 +215,8 @@ export const UsageView = ({ state, data, lastUpdated, onRefresh }: UsageViewProp
           <Form.FieldSet label={t('usage-section.title')} description={t('usage-section.description')}>
             {message ? (
               <Banner.Root valence={message.valence}>
-                <Banner.Content>
-                  <Banner.Title icon={message.icon}>{t(message.title)}</Banner.Title>
-                  <Banner.Body>{t(message.description)}</Banner.Body>
-                </Banner.Content>
+                <Banner.Title icon={message.icon}>{t(message.title)}</Banner.Title>
+                <Banner.Body>{t(message.description)}</Banner.Body>
               </Banner.Root>
             ) : (
               <Form.Fields fieldProvider={meterFieldProvider} />

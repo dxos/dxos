@@ -7,12 +7,14 @@ import * as Atom from 'effect/reactivity/Atom';
 import React, { type FC, useEffect, useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as Role from '@dxos/app-framework/Role';
-import { Surface, useCapabilities, useCapability, useSurfaceManager } from '@dxos/app-framework/ui';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Obj } from '@dxos/echo';
 import * as StorybookCapabilities from '@dxos/plugin-testing/StorybookCapabilities';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
@@ -178,7 +180,7 @@ const BindingDebug = ({ role, data }: { role: string; data: Record<string, any> 
  */
 const SurfaceCell = ({ type, data }: { type: Role.Role<any>; data: Record<string, any> }) => {
   const isAvailable = Surface.useIsAvailable();
-  const surfaceManager = useSurfaceManager();
+  const surfaceManager = Surface.useSurfaceManager();
   useAtomValue(surfaceManager.candidatesAtom(type.role));
   const pending = useAtomValue(surfaceManager.pendingAtom(type.role));
   const [settled, setSettled] = useState(false);
@@ -208,14 +210,14 @@ const SurfaceCell = ({ type, data }: { type: Role.Role<any>; data: Record<string
  * in the story decorators to make attention actually track focus.
  */
 export const ModuleContainer = ({ layout, columns, rows, compact = false }: ModuleContainerProps) => {
-  const atomRegistry = useCapability(Capabilities.AtomRegistry);
-  const layoutState = useCapability(StorybookCapabilities.LayoutState);
-  const { graph } = useAppGraph();
+  const atomRegistry = Hooks.useCapability(Capabilities.AtomRegistry);
+  const layoutState = Hooks.useCapability(StorybookCapabilities.LayoutState);
+  const { graph } = ToolkitHooks.useAppGraph();
   const spaces = useSpaces();
   const [space] = spaces;
 
   // A harness may contribute a runtime layout (built by `onInit`); prefer it over the static prop.
-  const [layoutAtom] = useCapabilities(StoryLayout.Atom);
+  const [layoutAtom] = Hooks.useCapabilities(StoryLayout.Atom);
   const resolvedLayout = useAtomValue(layoutAtom ?? emptyLayoutAtom) ?? layout ?? [];
 
   // Falls back to the first space only while the workspace names none that exists: a story may own
@@ -248,7 +250,7 @@ export const ModuleContainer = ({ layout, columns, rows, compact = false }: Modu
 
   return (
     <div
-      className={mx('dx-fill dx-fullscreen grid', !compact && 'gap-2 p-2')}
+      className={mx('dx-fill dx-cover grid', !compact && 'gap-2 p-2')}
       style={{ gridTemplateColumns: tracks(columns, resolvedLayout.length) }}
     >
       {resolvedLayout.map((column, columnIndex) => (

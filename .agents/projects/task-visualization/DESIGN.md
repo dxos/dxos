@@ -22,7 +22,7 @@ metadata such as token counts.
 ## Join keys
 
 - `Trace.Meta.conversation` → feed → `Chat` (`Chat.loadForFeed` / `feedEntityId`) → `chat.tasks`.
-- Agent process: `Process.Info.key === AGENT_PROCESS_KEY`, `TargetAnnotation` = feed URI.
-- Sub-agent: `Process.Info.parentPid` = agent pid; task via D4.
+- Agent process: `Process.Process.key === AGENT_PROCESS_KEY`, `TargetAnnotation` = feed URI.
+- Sub-agent: `Process.Process.parentPid` = agent pid; task via D4.
 - Tokens: `ContentBlock.Stats.usage` per turn (`CompleteBlock` trace event / feed message);
-  `Process.Info.metrics` for wall time and I/O counts.
+  `Process.Process.metrics` for wall time and I/O counts.

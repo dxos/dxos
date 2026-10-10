@@ -10,13 +10,14 @@ import { LayerStack } from '@dxos/compute-runtime';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { type Config, ConfigService } from '@dxos/config';
 import { type QueryExecutorMode } from '@dxos/echo-host';
-import { Hook } from '@dxos/effect';
+import * as Hook from '@dxos/effect/Hook';
 import { type SignalManager } from '@dxos/messaging';
 import { type TransportFactory } from '@dxos/network-manager';
 import { Runtime_Client_QueryExecutor } from '@dxos/protocols/buf/dxos/config_pb';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 
 import * as Events from '../../Events.ts';
+import { type InboxRelay } from '../identity/index.ts';
 import { clientServiceSpecs } from './layer-specs.ts';
 import { type ServiceContextRuntimeProps } from './service-stack.ts';
 
@@ -33,6 +34,8 @@ export type ClientServicesStackOptions = {
   signalManager?: SignalManager;
   /** Overrides the WebRTC transport; tests pass the in-memory transport. */
   transportFactory?: TransportFactory;
+  /** Replaces the EDGE inbox; tests share one relay between clients. */
+  inboxRelay?: InboxRelay;
   /** @default true */
   connectionLog?: boolean;
   /**
@@ -121,6 +124,7 @@ const layerSpecsFromConfig = (
           edgeAvailable: !!config.get('runtime.services.edge.url'),
           signalManager: options.signalManager,
           transportFactory: options.transportFactory,
+          inboxRelay: options.inboxRelay,
           connectionLog: options.connectionLog ?? true,
           autoConnect: options.autoConnect ?? true,
         }),

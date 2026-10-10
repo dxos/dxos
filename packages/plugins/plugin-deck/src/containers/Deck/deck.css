@@ -1,0 +1,62 @@
+/*
+ * The deck's slide transitions: the fullscreen and plank strips animate their padding and width with the app shell's
+ * clock (`--dx-main-transition-*`, react-ui `main.css`).
+ */
+
+@layer dx-components {
+  .dx-main-content-padding-transitions {
+    transition-duration: var(--dx-main-transition-duration);
+    transition-timing-function: var(--dx-main-transition-easing);
+    transition-property:
+      padding-inline-start, padding-inline-end, padding-block-end, scroll-padding-start, scroll-padding-end;
+  }
+
+  .dx-main-intrinsic-size {
+    inline-size: calc(100dvw - 2 * var(--main-spacing));
+    transition-property: inline-size;
+    transition-duration: var(--dx-main-transition-duration);
+    transition-timing-function: var(--dx-main-transition-easing);
+
+    @media (width >= 64rem) {
+      &[data-sidebar-left-state='closed'][data-sidebar-right-state='closed'] {
+        inline-size: calc(100dvw - 2 * var(--main-spacing));
+      }
+      &[data-sidebar-left-state='collapsed'][data-sidebar-right-state='closed'] {
+        inline-size: calc(100dvw - var(--dx-l0-size) - 2 * var(--main-spacing));
+      }
+      &[data-sidebar-left-state='expanded'][data-sidebar-right-state='closed'] {
+        inline-size: calc(100dvw - var(--dx-nav-sidebar-size) - 2 * var(--main-spacing));
+      }
+
+      &[data-sidebar-left-state='closed'][data-sidebar-right-state='collapsed'] {
+        inline-size: calc(100dvw - var(--dx-r0-size) - 2 * var(--main-spacing));
+      }
+      &[data-sidebar-left-state='collapsed'][data-sidebar-right-state='collapsed'] {
+        inline-size: calc(100dvw - var(--dx-l0-size) - var(--dx-r0-size) - 2 * var(--main-spacing));
+      }
+      &[data-sidebar-left-state='expanded'][data-sidebar-right-state='collapsed'] {
+        inline-size: calc(100dvw - var(--dx-nav-sidebar-size) - var(--dx-r0-size) - 2 * var(--main-spacing));
+      }
+
+      &[data-sidebar-left-state='closed'][data-sidebar-right-state='expanded'] {
+        inline-size: calc(100dvw - var(--dx-complementary-sidebar-size) - 2 * var(--main-spacing));
+      }
+      &[data-sidebar-left-state='collapsed'][data-sidebar-right-state='expanded'] {
+        inline-size: calc(100dvw - var(--dx-l0-size) - var(--dx-complementary-sidebar-size) - 2 * var(--main-spacing));
+      }
+      &[data-sidebar-left-state='expanded'][data-sidebar-right-state='expanded'] {
+        inline-size: calc(
+          100dvw - var(--dx-nav-sidebar-size) - var(--dx-complementary-sidebar-size) - 2 * var(--main-spacing)
+        );
+      }
+    }
+  }
+
+  /* The new-state snapshot is captured a frame into a running slide, so the layout would jump the rest of the way when the view transition ends. */
+  :root:active-view-transition {
+    .dx-main-content-padding-transitions,
+    .dx-main-intrinsic-size {
+      transition: none;
+    }
+  }
+}

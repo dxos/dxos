@@ -87,7 +87,7 @@ export const parse = (source: string): UmlModel => {
   let direction: Direction = 'TB';
   let open: UmlClass | undefined;
 
-  const declare = (id: string): UmlClass => {
+  const declareClass = (id: string): UmlClass => {
     let entry = classes.get(id);
     if (!entry) {
       entry = { id, label: genericLabel(id), attributes: [], methods: [] };
@@ -134,7 +134,7 @@ export const parse = (source: string): UmlModel => {
     const cls = CLASS.exec(line);
     if (cls) {
       const [, id, label, brace] = cls;
-      const entry = declare(id);
+      const entry = declareClass(id);
       if (label) {
         entry.label = label;
       }
@@ -147,8 +147,8 @@ export const parse = (source: string): UmlModel => {
     const relation = RELATION.exec(line);
     if (relation) {
       const [, left, leftCardinality, token, rightCardinality, right, label] = relation;
-      declare(left);
-      declare(right);
+      declareClass(left);
+      declareClass(right);
       const [, kind, leftIsTarget] = RELATIONS.find(([candidate]) => candidate === token)!;
       const [from, to] = leftIsTarget ? [right, left] : [left, right];
       const [fromCardinality, toCardinality] = leftIsTarget
@@ -168,7 +168,7 @@ export const parse = (source: string): UmlModel => {
     const inline = INLINE_MEMBER.exec(line);
     if (inline) {
       const [, id, member] = inline;
-      addMember(declare(id), member);
+      addMember(declareClass(id), member);
     }
   }
 
@@ -218,14 +218,27 @@ const measure = (entry: UmlClass, maxWidth: number): ClassBox => {
   return { entry, w, h: titleH + attributesH + methodsH, titleH, attributesH, methodsH };
 };
 
-/** Arrow styling per relation kind; dependency and realization render dashed, as in UML. */
-export const relationStyle = (kind: RelationKind): { stroke?: Scene.Stroke } =>
-  kind === 'dependency' || kind === 'realization' ? { stroke: 'dashed' } : {};
+const SCENE_RELATION: Record<RelationKind, Scene.Relation | undefined> = {
+  inheritance: 'inheritance',
+  realization: 'implementation',
+  composition: 'composition',
+  aggregation: 'aggregation',
+  association: undefined,
+  dependency: 'dependency',
+};
 
-/** Mid-arrow label: cardinalities and the diamond glyph UML puts at the whole end. */
+/** Arrow styling per relation kind: the scene relation sets the markers; dependency and realization dash, as in UML. */
+export const relationStyle = (kind: RelationKind): Pick<Scene.Arrow, 'relation' | 'stroke'> => {
+  const relation = SCENE_RELATION[kind];
+  return {
+    ...(relation ? { relation } : {}),
+    ...(kind === 'dependency' || kind === 'realization' ? { stroke: 'dashed' as const } : {}),
+  };
+};
+
+/** Mid-arrow label: the cardinalities around the label; the diamond at the whole end is a marker now. */
 export const relationText = (relation: UmlRelation): string | undefined => {
-  const glyph = relation.kind === 'composition' ? '◆' : relation.kind === 'aggregation' ? '◇' : undefined;
-  const text = [relation.fromCardinality, relation.label ?? glyph, relation.toCardinality].filter(Boolean).join(' ');
+  const text = [relation.fromCardinality, relation.label, relation.toCardinality].filter(Boolean).join(' ');
   return text || undefined;
 };
 

@@ -21,7 +21,7 @@ import {
 import { raise } from '@dxos/debug';
 import { type EchoHost, EchoHostService } from '@dxos/echo-host';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError } from '@dxos/errors';
 import { writeMessages } from '@dxos/feed-store';
 import { assertArgument, assertState, invariant } from '@dxos/invariant';

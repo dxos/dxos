@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { TYPESAFE_CONNECTOR_ID, TYPESAFE_SOURCE } from '../constants.ts';
 import { createTypeSafeConnectorEntry } from './connector.ts';

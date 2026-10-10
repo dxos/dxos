@@ -18,7 +18,9 @@ import {
   Type,
 } from '@dxos/echo';
 import { type AnyProperties, getSchemaReference } from '@dxos/echo/internal';
-import { EffectEx, SchemaAST, SchemaEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { getDeep } from '@dxos/util';

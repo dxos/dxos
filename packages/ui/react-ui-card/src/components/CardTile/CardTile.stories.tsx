@@ -5,17 +5,17 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Card } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
 import { CardTile } from './CardTile.tsx';
 
-// CardTile.Header standalone inside Card chrome; CardTile.Root's mosaic shell is exercised by the
+// CardTile.Header standalone inside the grid Card chrome CardTile.Root renders; CardTile.Root's mosaic shell is exercised by the
 // EventStack / InboxStack stories (it requires a Mosaic.Container ancestor).
 const DefaultStory = ({ menu, starred }: { menu?: boolean; starred?: boolean }) => (
-  <Card.Root fullWidth border={false} classNames='p-1'>
+  <Card.Root grid border={false} classNames='p-1'>
     <CardTile.Header
       menu={menu}
       starred={starred}
@@ -23,13 +23,13 @@ const DefaultStory = ({ menu, starred }: { menu?: boolean; starred?: boolean }) 
       title={
         <>
           <span className='grow truncate font-medium'>Project kickoff — agenda and notes</span>
-          <span className='text-xs text-description whitespace-nowrap shrink-0'>2:30 PM</span>
+          <span className='text-xs text-fg-muted whitespace-nowrap shrink-0'>2:30 PM</span>
         </>
       }
     />
     <Card.Body>
       <Card.Row>
-        <Card.Text variant='description'>Body content rendered beneath the tile header.</Card.Text>
+        <Card.Text variant='muted'>Body content rendered beneath the tile header.</Card.Text>
       </Card.Row>
     </Card.Body>
   </Card.Root>

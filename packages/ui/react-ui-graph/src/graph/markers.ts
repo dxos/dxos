@@ -62,12 +62,12 @@ export const createMarkers =
         {
           id: 'marker-arrow-start',
           generator: createArrow(arrowSize, -0.5, true),
-          className: 'dx-arrow',
+          className: 'dx-graph-arrow',
         },
         {
           id: 'marker-arrow-end',
           generator: createArrow(arrowSize, 0.5, false),
-          className: 'dx-arrow',
+          className: 'dx-graph-arrow',
         },
         {
           id: 'marker-dot',

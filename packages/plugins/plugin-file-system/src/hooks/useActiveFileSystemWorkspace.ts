@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomCapabilityState } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import { useLayout } from '@dxos/app-toolkit/ui';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 
 import { FileSystemCapabilities } from '#types';
 
@@ -17,8 +17,8 @@ const getWorkspaceId = (qualifiedPath: string): string => {
 
 /** Returns the filesystem workspace matching the current layout workspace, if any. */
 export const useActiveFileSystemWorkspace = (): FileSystemCapabilities.FileSystemWorkspace | undefined => {
-  const layout = useLayout();
-  const [state] = useAtomCapabilityState(FileSystemCapabilities.State);
+  const layout = ToolkitHooks.useLayout();
+  const [state] = Hooks.useAtomCapabilityState(FileSystemCapabilities.State);
   const workspaceId = getWorkspaceId(layout.workspace);
   return state.workspaces.find((ws) => ws.id === workspaceId);
 };

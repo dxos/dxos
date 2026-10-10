@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Order, Query, Ref, Relation, Type, type URI } from '@dxos/echo';
-import { RuntimeProvider } from '@dxos/effect';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 

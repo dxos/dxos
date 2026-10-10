@@ -7,7 +7,6 @@ import * as Schema from 'effect/Schema';
 
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { Annotation, Database, DXN, Obj, Ref, Type, View } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/Annotation';
 import { Format, FormatAnnotation } from '@dxos/echo/Format';
 import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import * as Kanban from '@dxos/plugin-kanban/Kanban';
@@ -60,7 +59,7 @@ const RoastLog = Type.makeObject(DXN.make('example.type.roastLog', '0.1.0'))(
     ),
     notes: Schema.optional(Schema.String.pipe(Schema.annotate({ title: 'Notes' }))),
   }).pipe(
-    LabelAnnotation.set(['title']),
+    Annotation.LabelAnnotation.set(['title']),
     Annotation.IconAnnotation.set({ icon: 'ph--fire-simple--regular', hue: 'amber' }),
     Annotation.UserType.set(),
   ),

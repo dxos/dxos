@@ -53,6 +53,9 @@ export class CollectionSynchronizer extends Resource {
   /** Open sync span ids, by collection then peer. */
   private readonly _syncSpans = new Map<string, Map<PeerId, string>>();
 
+  /** Open sync spans with EDGE, by collection alone: each reconnect reaches EDGE under a new peer id. */
+  private readonly _edgeSyncSpans = new Map<string, EdgeSyncSpan>();
+
   /** The manual span registry is global, so ids must differ across synchronizers and across a pair's spans. */
   private readonly _spanIdPrefix = `collection-sync-${PublicKey.random().toHex()}`;
   private _syncSpanCount = 0;
@@ -88,6 +91,7 @@ export class CollectionSynchronizer extends Resource {
 
   protected override async _close(_ctx: Context): Promise<void> {
     this._endSyncSpans('closed', () => true);
+    this._endEdgeSyncSpans('closed', () => true);
   }
 
   getRegisteredCollectionIds(): string[] {
@@ -131,6 +135,7 @@ export class CollectionSynchronizer extends Resource {
 
   clearLocalCollectionState(collectionId: string): void {
     this._endSyncSpans('closed', (spanCollectionId) => spanCollectionId === collectionId);
+    this._endEdgeSyncSpans('closed', (spanCollectionId) => spanCollectionId === collectionId);
     this._activeCollections.delete(collectionId);
     this._perCollectionStates.delete(collectionId);
     log('clearLocalCollectionState', { collectionId });
@@ -186,6 +191,12 @@ export class CollectionSynchronizer extends Resource {
   onConnectionClosed(peerId: PeerId): void {
     log('onConnectionClosed', { peerId });
 
+    // An EDGE span outlives the connection: the next one resumes it, so it only counts the drop.
+    for (const span of this._edgeSyncSpans.values()) {
+      if (span.connectedPeers.delete(peerId)) {
+        span.disconnects++;
+      }
+    }
     this._endSyncSpans('disconnected', (_, spanPeerId) => spanPeerId === peerId);
     this._connectedPeers.delete(peerId);
 
@@ -275,7 +286,11 @@ export class CollectionSynchronizer extends Resource {
       hasLocalChange: this._hasLocalChange,
     });
     if (isDiffEmpty(diff)) {
-      this._endSyncSpan(collectionId, peerId, 'synced');
+      if (isEdgePeerId(peerId)) {
+        this._endEdgeSyncSpan(collectionId, 'synced');
+      } else {
+        this._endSyncSpan(collectionId, peerId, 'synced');
+      }
     } else {
       this._startSyncSpan(collectionId, peerId, trigger, diff);
     }
@@ -294,7 +309,11 @@ export class CollectionSynchronizer extends Resource {
     });
   }
 
-  /** Opens a span when a (collection, peer) pair diverges; see {@link SYNC_SPAN_METHOD} for its dashboard. */
+  /**
+   * Opens a span when a collection diverges from a peer; see {@link SYNC_SPAN_METHOD} for its dashboard.
+   * Spans with EDGE are keyed by the collection, so one span covers a catch-up however many connections
+   * it takes; spans with other peers, whose ids survive a reconnect, are keyed by the peer as well.
+   */
   private _startSyncSpan(
     collectionId: string,
     peerId: PeerId,
@@ -302,17 +321,33 @@ export class CollectionSynchronizer extends Resource {
     diff: CollectionStateDiff,
   ): void {
     // Nothing would end a span for a closed synchronizer, a gone peer or an inactive collection.
-    if (
-      !this.isOpen ||
-      !this._connectedPeers.has(peerId) ||
-      !this._activeCollections.has(collectionId) ||
-      this._syncSpans.get(collectionId)?.has(peerId)
-    ) {
+    if (!this.isOpen || !this._connectedPeers.has(peerId) || !this._activeCollections.has(collectionId)) {
+      return;
+    }
+
+    const edgeSpan = isEdgePeerId(peerId) ? this._edgeSyncSpans.get(collectionId) : undefined;
+    if (edgeSpan) {
+      if (!edgeSpan.connectedPeers.has(peerId)) {
+        edgeSpan.connectedPeers.add(peerId);
+        edgeSpan.connections++;
+      }
+      return;
+    }
+    if (this._syncSpans.get(collectionId)?.has(peerId)) {
       return;
     }
 
     const spanId = `${this._spanIdPrefix}-${collectionId}-${peerId}-${++this._syncSpanCount}`;
-    defaultMap(this._syncSpans, collectionId, () => new Map<PeerId, string>()).set(peerId, spanId);
+    if (isEdgePeerId(peerId)) {
+      this._edgeSyncSpans.set(collectionId, {
+        spanId,
+        connections: 1,
+        disconnects: 0,
+        connectedPeers: new Set([peerId]),
+      });
+    } else {
+      defaultMap(this._syncSpans, collectionId, () => new Map<PeerId, string>()).set(peerId, spanId);
+    }
     const spaceId = tryGetSpaceIdFromCollectionId(collectionId);
     // The derived ctx is discarded: the downstream `_queryCollectionState` hop is a user-supplied callback with no ctx.
     void trace.spanStart({
@@ -331,6 +366,26 @@ export class CollectionSynchronizer extends Resource {
         different: diff.different.length,
       },
     });
+  }
+
+  private _endEdgeSyncSpan(collectionId: string, outcome: SyncSpanOutcome): void {
+    const span = this._edgeSyncSpans.get(collectionId);
+    if (!span) {
+      return;
+    }
+
+    this._edgeSyncSpans.delete(collectionId);
+    trace.spanEnd(span.spanId, {
+      attributes: { outcome, connections: span.connections, disconnects: span.disconnects },
+    });
+  }
+
+  private _endEdgeSyncSpans(outcome: SyncSpanOutcome, matches: (collectionId: string) => boolean): void {
+    for (const collectionId of [...this._edgeSyncSpans.keys()]) {
+      if (matches(collectionId)) {
+        this._endEdgeSyncSpan(collectionId, outcome);
+      }
+    }
   }
 
   private _endSyncSpan(collectionId: string, peerId: PeerId, outcome: SyncSpanOutcome): void {
@@ -438,10 +493,24 @@ export type CollectionStateDiff = {
   different: DocumentId[];
 };
 
+/** One collection's sync span with EDGE, across however many connections the catch-up takes. */
+type EdgeSyncSpan = {
+  spanId: string;
+  /** Connections to EDGE that diverged while the span was open. */
+  connections: number;
+  /** Connections to EDGE that dropped while the span was open. */
+  disconnects: number;
+  /** EDGE peers of this span still connected; a drop counts once per peer. */
+  connectedPeers: Set<PeerId>;
+};
+
 /** What exposed a divergence: the pair's first comparison, a peer change, or a local change. */
 type SyncSpanTrigger = 'initial' | 'remote' | 'local';
 
-/** `closed` covers both a cleared collection and a closed synchronizer. */
+/**
+ * `closed` covers both a cleared collection and a closed synchronizer; `disconnected` ends only a
+ * span with a non-EDGE peer, since one with EDGE carries on over the next connection.
+ */
 type SyncSpanOutcome = 'synced' | 'disconnected' | 'closed';
 
 const isDiffEmpty = (diff: CollectionStateDiff): boolean =>
@@ -598,5 +667,6 @@ const isValidDocumentId = (documentId: DocumentId) => {
 /**
  * The PostHog dashboard "EDGE replication latency" (https://eu.posthog.com/project/126171/dashboard/973334) queries
  * this name, the attributes set in `_startSyncSpan` and the trigger and outcome values: update it when changing them.
+ * A span with EDGE also ends with `connections` and `disconnects`: how many connections diverged and dropped under it.
  */
 const SYNC_SPAN_METHOD = 'syncPeer';

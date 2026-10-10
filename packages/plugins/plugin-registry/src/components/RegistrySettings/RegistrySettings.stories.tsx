@@ -64,7 +64,9 @@ export const RejoinPrompt: Story = {
     onRejoin.mockClear();
     const body = within(document.body);
 
-    const scopeSwitch = await body.findByTestId('registrySettings.pluginScope', undefined, { timeout: 10_000 });
+    // The test id names the Switch's row; its `switch` input carries the state.
+    const scopeRow = await body.findByTestId('registrySettings.pluginScope', undefined, { timeout: 10_000 });
+    const scopeSwitch = within(scopeRow).getByRole('switch');
     await expect(scopeSwitch).toBeChecked();
 
     await userEvent.click(scopeSwitch);

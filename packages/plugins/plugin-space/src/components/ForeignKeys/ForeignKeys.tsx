@@ -5,8 +5,9 @@
 import React, { useCallback } from 'react';
 
 import { type Key } from '@dxos/echo';
-import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 
@@ -18,7 +19,7 @@ export type ForeignKeysProps = {
 // TODO(wittjosiah): This is a clone of `TokenManager`. Consider a form variant for arrays of read-only objects.
 export const ForeignKeys = ({ keys, onDelete }: ForeignKeysProps) => {
   return (
-    <Listbox.Root>
+    <Listbox.Root items={keys.map((key) => ({ value: key.id, label: key.source, description: key.id }))}>
       <Listbox.Content classNames='gap-2'>
         {keys.map((key) => (
           <KeyItem key={key.id} forignKey={key} onDelete={onDelete} />
@@ -34,19 +35,17 @@ type KeyItemProps = {
 };
 
 const KeyItem = ({ forignKey, onDelete }: KeyItemProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   const handleDelete = useCallback(() => {
     onDelete?.(forignKey);
   }, [forignKey, onDelete]);
 
   return (
-    <Listbox.Item id={forignKey.id} classNames='px-2 gap-2'>
-      <div className='flex flex-col grow truncate'>
-        <div>{forignKey.source}</div>
-        <div className='text-description text-sm truncate'>{forignKey.id}</div>
-      </div>
-      <IconButton
+    <Listbox.Item id={forignKey.id}>
+      <Listbox.ItemText />
+      <Listbox.ItemDescription />
+      <Button.Root
         iconOnly
         icon='ph--x--regular'
         variant='ghost'

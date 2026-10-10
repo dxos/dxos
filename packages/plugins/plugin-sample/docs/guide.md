@@ -86,7 +86,7 @@ See [Graph Builder API](../../../sdk/app-toolkit/docs/graph-builder-api.md) for 
 ## Settings
 
 - [`src/types/Settings.ts`](../src/types/Settings.ts) — Schema definition.
-- [`src/capabilities/settings.ts`](../src/capabilities/settings.ts) — Creates a persistent `createKvsStore` atom and contributes it both locally (`SampleCapabilities.Settings`) and globally (`AppCapabilities.Settings`).
+- [`src/capabilities/settings.ts`](../src/capabilities/settings.ts) — Creates a persistent `KvsStore.make` atom and contributes it both locally (`SampleCapabilities.Settings`) and globally (`AppCapabilities.Settings`).
 
 ## Companions
 

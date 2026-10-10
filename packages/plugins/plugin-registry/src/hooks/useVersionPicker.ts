@@ -8,7 +8,7 @@ import { type Dispatch, type SetStateAction, useEffect, useMemo, useState } from
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import type * as Registry from '@dxos/app-framework/Registry';
 import * as UrlLoader from '@dxos/app-framework/UrlLoader';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 /**
  * Owns the version picker's state machine: fetches the available versions list

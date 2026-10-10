@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import { DXN, Obj, Type } from '@dxos/echo';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import * as Tour from './Tour.ts';
 

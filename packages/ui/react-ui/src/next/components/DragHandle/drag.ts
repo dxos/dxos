@@ -4,7 +4,7 @@
 
 import { type Size, SIZES } from '../../sizes.ts';
 
-const ANNOUNCER_ID = 'nx-drag-announcer';
+const ANNOUNCER_ID = 'dx-drag-announcer';
 
 /**
  * Speaks `message` through one polite live region shared by every drag handle, created on first use at the end of the

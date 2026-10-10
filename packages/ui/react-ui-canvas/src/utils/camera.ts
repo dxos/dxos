@@ -9,19 +9,14 @@
 
 import { interpolateZoom } from 'd3';
 
-import {
-  type Bounds,
-  type Camera,
-  MAJOR_GRID,
-  MAJOR_GRID_RATIO,
-  type Node,
-  type Point,
-  type Size,
-} from '../model/types.ts';
+import { type Bounds, type Camera, type Node, type Point, type Size } from '../model/types.ts';
 import { nodeBounds } from './shapes.ts';
 
 export const MIN_ZOOM = 1 / 32;
 export const MAX_ZOOM = 32;
+
+/** True size: one scene px is one screen px, at every level. Fit never zooms past it. */
+export const NOMINAL_ZOOM = 1;
 
 export const clampZoom = (zoom: number) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom));
 
@@ -82,33 +77,23 @@ export const portalScale = (portal: Node, region: Bounds) => {
 };
 
 /**
- * The frame a portal gives its child: the child-space region that maps exactly onto the portal. It is
- * the portal's box scaled by the smallest power of the grid ratio, at least one, that contains the child's
- * derived bounds, placed on the major grid scaled by that factor as near their centre as containing them
- * allows. A power of the ratio maps every child grid level onto a parent level (the child's major grid is
- * the parent's minor one, one level down), and placing the frame on the scaled grid puts the child's lines
- * on the parent's, not merely at their spacing, so the grids stay aligned through a drill-in. Drilling in
- * shows this frame; a portal draws the child centred in it.
+ * The frame a portal gives its child: the child-space region, of the portal's proportions, that maps onto
+ * the portal's box. It is the child's content (`child`) centred in the smallest such region that holds it,
+ * and never smaller than the box itself, so the preview shrinks a large scene to fit but never magnifies a
+ * small one. Every scene keeps its own scale: the frame only says where the child sits under the portal,
+ * and entering it maps the camera through the frame, so a shape is the same size at the same zoom on any
+ * level. An empty child is the box itself, centred on its origin.
  */
-export const portalFrame = (portal: Node, child: Bounds, unit = MAJOR_GRID, ratio = MAJOR_GRID_RATIO): Bounds => {
+export const portalFrame = (portal: Node, child: Bounds | undefined): Bounds => {
   const { width, height } = nodeBounds(portal);
-  let factor = ratio;
-  while (factor * width < child.width || factor * height < child.height) {
-    factor *= ratio;
-  }
+  const content = child ?? { x: 0, y: 0, width: 0, height: 0 };
+  const factor = Math.max(1, content.width / width, content.height / height);
   const frame = { width: width * factor, height: height * factor };
   return {
-    x: place(child.x, child.width, frame.width, unit * factor),
-    y: place(child.y, child.height, frame.height, unit * factor),
+    x: content.x + (content.width - frame.width) / 2,
+    y: content.y + (content.height - frame.height) / 2,
     ...frame,
   };
-};
-
-/** The grid-aligned start of a span of `length` centred on `[start, start + inner]` as far as containing it allows. */
-const place = (start: number, inner: number, length: number, unit: number): number => {
-  const centred = Math.round((start + inner / 2 - length / 2) / unit) * unit;
-  // Rounding a small negative yields -0, which `toEqual` and `Object.is` tell apart from 0.
-  return Math.max(Math.min(centred, start), start + inner - length) + 0;
 };
 
 /** Child-scene CSS transform inside a portal node whose own origin is the node's top-left. */
@@ -142,6 +127,24 @@ export const exitPortal = (camera: Camera, portal: Node, child: Bounds): Camera 
   };
 };
 
+/** A portal filling this share of the viewport (on its tighter axis) leaves the rest of its layer fully shown… */
+const FADE_START = 0.25;
+/** …and this share hides it: zooming into a portal fades out what is around it, and zooming out fades it back. */
+const FADE_END = 0.75;
+
+/**
+ * The opacity of a layer around a portal, from how much of the viewport the portal fills on its tighter axis:
+ * 1 while it is small, falling to 0 as it grows towards filling the view. A wheel zoom, a drill-in and a
+ * drill-out all move the camera, so all three fade alike.
+ */
+export const layerOpacity = (camera: Camera, bounds: Bounds, viewport: Size): number => {
+  if (viewport.width === 0 || viewport.height === 0) {
+    return 1;
+  }
+  const fill = Math.min((bounds.width * camera.zoom) / viewport.width, (bounds.height * camera.zoom) / viewport.height);
+  return Math.min(1, Math.max(0, (FADE_END - fill) / (FADE_END - FADE_START)));
+};
+
 /** Fraction of the viewport covered by the bounds' screen rectangle. */
 export const coverage = (camera: Camera, bounds: Bounds, viewport: Size) => {
   if (viewport.width === 0 || viewport.height === 0) {
@@ -168,16 +171,20 @@ const fromView = ([cx, cy, width]: [number, number, number], viewport: Size): Ca
 export const MIN_ANIMATION_MS = 250;
 export const MAX_ANIMATION_MS = 800;
 
-/** Animate between cameras; returns a cancel function. */
+/** How long a drill in or out takes, either way, so entering and leaving a scene feel the same. */
+export const DRILL_ANIMATION_MS = 1000;
+
+/** Animate between cameras, over `fixedDuration` ms or a time fitted to the distance; returns a cancel function. */
 export const animateCamera = (
   from: Camera,
   to: Camera,
   viewport: Size,
   apply: (camera: Camera) => void,
   done?: () => void,
+  fixedDuration?: number,
 ): (() => void) => {
   const interpolate = interpolateZoom(toView(from, viewport), toView(to, viewport));
-  const duration = Math.min(MAX_ANIMATION_MS, Math.max(MIN_ANIMATION_MS, interpolate.duration));
+  const duration = fixedDuration ?? Math.min(MAX_ANIMATION_MS, Math.max(MIN_ANIMATION_MS, interpolate.duration));
   const start = performance.now();
   let frame = 0;
   const tick = (now: number) => {

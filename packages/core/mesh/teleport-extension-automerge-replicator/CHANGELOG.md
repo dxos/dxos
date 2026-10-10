@@ -1,5 +1,18 @@
 # @dxos/teleport-extension-automerge-replicator
 
+## 0.13.0
+
+### Patch Changes
+
+- @dxos/async@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/rpc@0.13.0
+  - @dxos/teleport@0.13.0
+  - @dxos/protocols@0.13.0
+  - @dxos/invariant@0.13.0
+  - @dxos/keys@0.13.0
+  - @dxos/node-std@0.13.0
+
 ## 0.12.0
 
 ### Patch Changes

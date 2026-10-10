@@ -16,7 +16,7 @@ import { describe, onTestFinished, test } from 'vitest';
 import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type CollectionId, createIdFromSpaceKey } from '@dxos/echo-protocol';
-import { RuntimeProvider } from '@dxos/effect';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { TestBuilder as TeleportBuilder, TestPeer as TeleportPeer } from '@dxos/teleport/testing';

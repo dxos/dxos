@@ -29,5 +29,6 @@ export default Config2.make({
     icon: { key: 'ph--discord-logo--regular', hue: 'indigo' },
     spec: 'PLUGIN.mdl',
     tags: ['labs', 'connector'],
+    dependsOn: ['org.dxos.plugin.thread'],
   },
 });

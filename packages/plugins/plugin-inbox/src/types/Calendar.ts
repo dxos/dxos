@@ -6,21 +6,27 @@ import * as Schema from 'effect/Schema';
 
 import * as Skill from '@dxos/compute/Skill';
 import { Annotation, DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation } from '@dxos/echo/Annotation';
 import * as ConnectorAnnotations from '@dxos/plugin-connector/ConnectorAnnotations';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { FeedAnnotation, TagIndex } from '@dxos/schema';
 
 export const SKILL_KEY = 'org.dxos.skill.calendar';
 
+/**
+ * Selection context id for a calendar's planning date range. Kept distinct from the calendar's own
+ * context id (which holds the `single` event selection) so the two selection modes don't collide.
+ * Written by `CalendarArticle` (on range drag) and read by plugin-trip's "Plan trip from calendar".
+ */
+export const getRangeSelectionId = (contextId: string): string => `${contextId}/plan-range`;
+
 /** Calendar object schema. */
 export class Calendar extends Type.makeObject<Calendar>(DXN.make('org.dxos.type.calendar', '0.1.0'))(
   Schema.Struct({
     name: Schema.String.pipe(Schema.optional),
-    feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(), FormInputAnnotation.set(false)),
+    feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(), Annotation.FormInputAnnotation.set(false)),
     // Inverse tag index for immutable feed Events (e.g. the "starred" tag): events are immutable Queue
     // items, so their tag associations live in this child `TagIndex` rather than in object meta.
-    tags: Ref.Ref(TagIndex.TagIndex).pipe(Annotation.SetParent.set(), FormInputAnnotation.set(false)),
+    tags: Ref.Ref(TagIndex.TagIndex).pipe(Annotation.SetParent.set(), Annotation.FormInputAnnotation.set(false)),
   }).pipe(
     FeedAnnotation.set({ property: 'feed' }),
     Annotation.IconAnnotation.set({ icon: 'ph--calendar--regular', hue: 'rose' }),

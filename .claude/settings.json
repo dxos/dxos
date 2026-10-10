@@ -66,6 +66,17 @@
           }
         ]
       }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null)}/.claude/hooks/env-inventory.sh\"",
+            "statusMessage": "Taking environment inventory"
+          }
+        ]
+      }
     ]
   },
   "enabledPlugins": {

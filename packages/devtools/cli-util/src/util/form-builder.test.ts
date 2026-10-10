@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { FormBuilder, print } from '@dxos/cli-util';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 describe('FormBuilder', () => {
   it('option', () =>

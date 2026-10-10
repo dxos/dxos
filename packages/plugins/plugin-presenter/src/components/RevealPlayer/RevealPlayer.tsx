@@ -15,8 +15,9 @@ import Reveal from 'reveal.js';
 import RevealHighlight from 'reveal.js/plugin/highlight/highlight';
 import RevealMarkdown, { type MarkdownPlugin } from 'reveal.js/plugin/markdown/plugin.js';
 
-import { useAsyncEffect } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 const styles = `
@@ -178,7 +179,7 @@ const createPlayer = async (element: HTMLElement, slides: HTMLElement, content: 
   return { deck, markdown, highlight, slides, renderedContent: content };
 };
 
-export const RevealPlayer = composable<HTMLDivElement, RevealProps>(
+export const RevealPlayer = Util.composable<HTMLDivElement, RevealProps>(
   ({ content, slide, fullscreen = true, onExit, children, ...props }, forwardedRef) => {
     const deckDivRef = useRef<HTMLDivElement>(null);
     const slidesRef = useRef<HTMLDivElement>(null);
@@ -190,7 +191,7 @@ export const RevealPlayer = composable<HTMLDivElement, RevealProps>(
       }
     }, [player, content]);
 
-    useAsyncEffect(async (controller) => {
+    Hooks.useAsyncEffect(async (controller) => {
       const element = deckDivRef.current;
       const slides = slidesRef.current;
       if (!element || !slides) {
@@ -228,20 +229,18 @@ export const RevealPlayer = composable<HTMLDivElement, RevealProps>(
       };
     });
 
-    // TODO(burdon): Trap cursor keys (otherwise the enclosing focus group grabs focus.)
     return (
-      <div
-        {...composableProps(props, {
-          classNames: [
-            'dx-expand overflow-hidden grid place-items-center bg-scrim-surface [container-type:size]',
-            fullscreen && 'dx-fullscreen',
-          ],
+      <Layout.Grid
+        grow
+        center
+        {...Util.composableProps(props, {
+          classNames: ['overflow-hidden bg-scrim-surface [container-type:size]', fullscreen && 'dx-cover'],
         })}
         ref={forwardedRef}
       >
         {/* Sized from the container, not clamped by `max-h-full`: WebKit gives an inset child the unclamped height. */}
         <div className='relative aspect-video w-[min(100cqw,calc(100cqh*16/9))] overflow-hidden'>
-          <div ref={deckDivRef} className='dx-fullscreen reveal'>
+          <div ref={deckDivRef} className='dx-cover reveal'>
             {/* React hoists these to <head>; they must not be wrapped in <style> (which only renders CSS text). */}
             <link rel='preconnect' href='https://fonts.gstatic.com' {...{ crossOrigin: '' }} />
             <link rel='preconnect' href='https://fonts.googleapis.com' />
@@ -252,7 +251,7 @@ export const RevealPlayer = composable<HTMLDivElement, RevealProps>(
             <div ref={slidesRef} className={mx('slides', !fullscreen && 'dx-base-surface p-8')} />
           </div>
         </div>
-      </div>
+      </Layout.Grid>
     );
   },
 );

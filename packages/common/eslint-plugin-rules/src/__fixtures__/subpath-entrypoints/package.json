@@ -1,0 +1,17 @@
+{
+  "name": "@fixture/subpath-entrypoints",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": { "source": "./src/index.ts" },
+    "./Alpha": { "source": "./src/Alpha.ts" },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./components": { "source": "./src/components.ts" },
+    "./package.json": "./package.json",
+    "./plugin": { "source": "./src/plugin.ts" },
+    "./testing": { "source": "./src/testing.ts" },
+    "./testing/react": { "source": "./src/testing-react.ts" },
+    "./translations": { "source": "./src/translations.ts" }
+  }
+}

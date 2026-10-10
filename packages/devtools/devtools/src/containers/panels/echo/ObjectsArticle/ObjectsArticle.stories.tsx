@@ -157,7 +157,7 @@ export const WithTree: Story = {
       return <div>No space</div>;
     }
     return (
-      <div className='text-base-fg'>
+      <div className='text-fg'>
         <ObjectsTree db={space.db} />
       </div>
     );

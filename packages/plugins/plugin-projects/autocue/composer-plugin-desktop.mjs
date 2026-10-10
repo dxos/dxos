@@ -34,13 +34,18 @@ const at = (name) => {
  * pinned to the commit the app was built from, and the plugin loads from the URL Publish Files returns.
  *
  * @mdl packages/plugins/plugin-projects/PLUGIN.mdl test QA-1
- * @app composer-app desktop release build (`cargo build --release --features tauri/custom-protocol` in src-tauri),
- *   frontend bundled against EDGE preview from a commit pkg.pr.new has published, driven by
- *   `driver.mjs --target tauri`
+ * @app composer-app desktop release build, frontend bundled against EDGE preview from a commit pkg.pr.new has
+ *   published, driven by `driver.mjs --target tauri`
  *
  *   export DX_TAURI=true   # the `tauri` build condition, without which the bundle has no sandbox helper launcher
- *   export DX_EDGE_BASE_URL=https://preview.dxos.network/ DX_PWA=false VITE_DX_DISABLE_ANIMATIONS=true VITE_DX_STORAGE=memory
+ *   export DX_EDGE_BASE_URL=https://preview.dxos.network/ DX_PWA=false VITE_DX_DISABLE_ANIMATIONS=true
  *   export DX_PLUGIN_TOOLCHAIN_COMMIT=<a main commit>   # only for a build of an unpublished branch
+ *
+ *   # macOS: the test build, with its embedded WebDriver, on a fresh test profile.
+ *   moon run composer-app:tauri-build-test
+ *   node .agents/skills/autocue/scripts/driver.mjs --target tauri --fresh on --out /tmp/demo
+ *
+ *   # Linux: add VITE_DX_STORAGE=memory to the exports above.
  *   moon run composer-app:bundle && moon run composer-app:stage-sandbox-helper
  *   (cd packages/apps/composer-app/src-tauri && cargo build --release --features tauri/custom-protocol)
  *   node .agents/skills/autocue/scripts/driver.mjs --target tauri --out /tmp/demo

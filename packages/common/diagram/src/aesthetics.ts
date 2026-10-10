@@ -20,6 +20,10 @@ const HOW_TO_READ =
   'row-by-row reading of the boxes and of which way each arrow runs. Judge how the drawing reads to a person ' +
   'looking at it, not whether the architecture it shows is good.';
 
+const HOW_TO_SEE =
+  'The input is a diagram as drawn: the attached image is the page. Judge how the drawing reads to a person ' +
+  'looking at it, not whether the architecture it shows is good.';
+
 const rule = (
   id: string,
   key: string,
@@ -120,18 +124,24 @@ export const RULES: readonly Architecture.Rule[] = [
   ),
 ];
 
+/** {@link RULES} for a judge shown the page as an image (`Architecture.Subject.images`) instead of `layout`. */
+export const IMAGE_RULES: readonly Architecture.Rule[] = RULES.map((rule) => ({
+  ...rule,
+  instructions: `${HOW_TO_SEE}${rule.instructions.slice(HOW_TO_READ.length)}`,
+}));
+
 /**
- * Every aesthetic rule as a score from one `DecisionModel` call. Without `layout` there is nothing to
- * judge, so each rule reports an error rather than a guess.
+ * Every aesthetic rule as a score from one `DecisionModel` call. Without `layout` or an image of the
+ * page there is nothing to judge, so each rule reports an error rather than a guess.
  */
 export const judge = (
   rules: readonly Architecture.Rule[] = RULES,
-): Score.Batch<{ readonly content: Architecture.Content }, DecisionModel.DecisionModel> => {
+): Score.Batch<Architecture.Subject, DecisionModel.DecisionModel> => {
   const inner = Architecture.judge(rules, 'aesthetics');
   return {
     entries: inner.entries,
     evaluate: (subject) =>
-      subject.content.layout
+      subject.content.layout || subject.images?.length
         ? inner.evaluate(subject)
         : Effect.succeed(rules.map(() => ({ score: 0, error: 'No layout to judge.' }))),
   };

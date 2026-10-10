@@ -1,0 +1,175 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
+
+import { type AiService } from '@dxos/ai';
+import type * as Agent from '@dxos/assistant/Agent';
+import * as Operation from '@dxos/compute/Operation';
+import { Database, Obj, Ref } from '@dxos/echo';
+import { type RDF } from '@dxos/pipeline-rdf';
+
+import { BrainService, Goal, Profile, RelayOperation, Trigger } from '#types';
+
+import { composeUpdate } from './compose-update.ts';
+import { agentId, personDid } from './members.ts';
+
+/** Statuses after which a goal's triggers have nothing left to wait for. */
+const CLOSED: readonly Goal.Status[] = ['achieved', 'dropped'];
+
+/**
+ * Pushes `facts` into the agent's brain, then delivers what its subscriptions queued: each subscription
+ * with events sends one update, composed by the model from those facts and the conversation `transcript`
+ * under the relay rules. A one-time subscription also marks its goal achieved and is removed; an ongoing
+ * one acknowledges its events and keeps watching. Subscriptions whose goal closed meanwhile are removed
+ * undelivered.
+ *
+ * Facts the agent itself stated are stored but queue nothing: its replies restate what it passed on, and
+ * a watch matching them would wake the chat it just woke, without end.
+ */
+export type PushFactsOptions = {
+  /** The conversation the facts were read from, for composing updates. */
+  transcript?: string;
+  /** The read cursor to move with the facts. */
+  read?: BrainService.ReadCursor;
+};
+
+export const pushFacts: (
+  agent: Agent.Agent,
+  facts: readonly RDF.Fact[],
+  options?: PushFactsOptions,
+) => Effect.Effect<
+  { fired: string[]; undelivered: string[] },
+  BrainService.BrainError,
+  AiService.AiService | Database.Service | Operation.Service | BrainService.BrainService
+> = Effect.fnUntraced(function* (agent, facts, { transcript, read } = {}) {
+  const brain = yield* BrainService.BrainService;
+  if (facts.length === 0 && !read) {
+    return { fired: [], undelivered: [] };
+  }
+  // The id `readSource` attributes the agent's own messages to.
+  const queued = yield* brain.push(agent.id, facts, { quiet: [agentId(agent)], ...(read ? { read } : {}) });
+  if (queued === 0) {
+    return { fired: [], undelivered: [] };
+  }
+  return yield* deliver(agent, transcript);
+});
+
+/**
+ * Delivers what the agent's subscriptions have queued — after a push, or after a clock tick: each
+ * subscription with events sends one update, composed by the model from the facts behind its wakes
+ * (and the conversation `transcript`, when a turn caused them) under the relay rules. A one-time
+ * subscription also marks its goal achieved and is removed; an ongoing one acknowledges its events and
+ * keeps watching. Subscriptions whose goal closed meanwhile are removed undelivered.
+ */
+export const deliver: (
+  agent: Agent.Agent,
+  transcript?: string,
+) => Effect.Effect<
+  { fired: string[]; undelivered: string[] },
+  BrainService.BrainError,
+  AiService.AiService | Database.Service | Operation.Service | BrainService.BrainService
+> = Effect.fnUntraced(function* (agent, transcript) {
+  const brain = yield* BrainService.BrainService;
+  const fired: string[] = [];
+  const undelivered: string[] = [];
+
+  for (const subscription of yield* brain.subscriptions(agent.id)) {
+    const allEvents = yield* brain.take(subscription.id);
+    if (allEvents.length === 0) {
+      continue;
+    }
+    const goal = subscription.goal
+      ? yield* Database.resolve(subscription.goal, Goal.Goal).pipe(Effect.orElseSucceed(() => undefined))
+      : undefined;
+    if (goal && CLOSED.includes(goal.status)) {
+      yield* brain.unsubscribe(subscription.id);
+      continue;
+    }
+
+    // Through the database: a subscription read back from the brain carries refs with no resolver of their own.
+    // `Effect.option` because the schema-less overload still fails at runtime when the target is gone.
+    const resolved = Option.getOrUndefined(yield* Database.resolve(subscription.then.recipient).pipe(Effect.option));
+    const recipient = Obj.isObject(resolved) ? resolved : undefined;
+    // A watch never tells its recipient what they said themselves: they know, and a watch on a topic they
+    // speak about (or one set up for the wrong person) would otherwise echo their own words back to them.
+    const saidByRecipient = isSaidBy(recipient ? personDid(recipient) : undefined);
+    const events = allEvents.filter((event) => !saidByRecipient(event));
+    if (events.length === 0) {
+      yield* brain.ack(
+        subscription.id,
+        allEvents.map(({ id }) => id),
+      );
+      continue;
+    }
+    // A one-time subscription closes when its outcome happened: compiled rules say so with `achieved`,
+    // a translated pattern with its single wake. Other wakes (a follow-up, a reply) pass on and keep it open.
+    const closes =
+      !subscription.ongoing && events.some(({ label }) => label === 'achieved' || label === Trigger.MATCH_LABEL);
+    // Removed before acting, so a turn ending in another chat meanwhile cannot fire it twice.
+    if (closes && !(yield* brain.unsubscribe(subscription.id))) {
+      continue;
+    }
+
+    const matched = uniqueFacts(events);
+    const [first] = matched;
+    const text = yield* composeUpdate({
+      agentName: agent.name ?? 'Agent',
+      recipientName: recipient ? Profile.displayName(recipient) : 'the requester',
+      request: subscription.request ?? goal?.title ?? subscription.then.message,
+      facts: matched,
+      transcript,
+      hint: Trigger.renderMessage(
+        subscription,
+        first
+          ? (first.assertion.quote ?? BrainService.factText(first))
+          : (subscription.request ?? subscription.then.message),
+      ),
+    });
+    // Composing is a model call, long enough for the watch to be cancelled meanwhile (e.g. set up for the wrong person).
+    if (!closes && !(yield* brain.subscriptions(agent.id)).some(({ id }) => id === subscription.id)) {
+      continue;
+    }
+    const delivery = yield* Operation.invoke(RelayOperation.SendMessage, {
+      agent: Ref.make(agent),
+      recipient: recipient ? Ref.make(recipient) : subscription.then.recipient,
+      text,
+    }).pipe(Effect.orElseSucceed(() => ({ delivered: false, reason: 'The message could not be sent.' })));
+    if (!delivery.delivered) {
+      undelivered.push(delivery.reason ?? 'The message could not be delivered.');
+    }
+    if (!closes) {
+      // Acknowledged even when undelivered: the failure is reported to this turn, and a retry would resend on every turn.
+      yield* brain.ack(
+        subscription.id,
+        allEvents.map(({ id }) => id),
+      );
+    } else if (goal) {
+      Obj.update(goal, (goal) => {
+        goal.status = 'achieved';
+      });
+    }
+    fired.push(subscription.id);
+  }
+  yield* Database.flush();
+  return { fired, undelivered };
+});
+
+/** Whether an event rests only on facts the identity stated; a wake the clock caused (no facts) never does. */
+const isSaidBy =
+  (did: string | undefined) =>
+  ({ facts }: BrainService.Event): boolean =>
+    did !== undefined && facts.length > 0 && facts.every(({ attribution }) => attribution.agent === did);
+
+/** The facts behind the events, each once, in the order they were queued. */
+const uniqueFacts = (events: readonly BrainService.Event[]): RDF.Fact[] => {
+  const seen = new Map<string, RDF.Fact>();
+  for (const { facts } of events) {
+    for (const fact of facts) {
+      seen.set(fact.id, seen.get(fact.id) ?? fact);
+    }
+  }
+  return [...seen.values()];
+};

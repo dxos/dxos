@@ -1,4 +1,4 @@
-import { createContext } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
 //
 // Copyright 2026 DXOS.org
 //
@@ -40,7 +40,8 @@ export type PickerInputContextValue = {
   triggerSelect: () => void;
 };
 
-export const [PickerItemContextProvider, usePickerItemContext] = createContext<PickerItemContextValue>('PickerItem');
+export const [PickerItemContextProvider, usePickerItemContext] =
+  Hooks.createContext<PickerItemContextValue>('PickerItem');
 
 export const [PickerInputContextProvider, usePickerInputContext] =
-  createContext<PickerInputContextValue>('PickerInput');
+  Hooks.createContext<PickerInputContextValue>('PickerInput');

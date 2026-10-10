@@ -13,7 +13,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import { AgentRegistry, type Type } from '@dxos/crawler';
 import { Database, Filter, Obj, Query } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Pipeline } from '@dxos/pipeline';
 import { Person } from '@dxos/types';
 

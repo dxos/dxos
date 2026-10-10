@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './SystemButton.tsx';
+export * as SystemButton from './SystemButton.tsx';

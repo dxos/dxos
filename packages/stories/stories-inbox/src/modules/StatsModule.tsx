@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as DebugSurface from '@dxos/plugin-debug/DebugSurface';
 
 /** The transient-stats panel — plugin-debug's surface rendering the sync telemetry store. */

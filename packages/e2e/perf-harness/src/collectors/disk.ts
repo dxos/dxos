@@ -89,3 +89,42 @@ export const diffDisk = (before: DiskMetrics, after: DiskMetrics): DiskMetrics =
   syncs: after.syncs - before.syncs,
   realms: after.realms,
 });
+
+export type WaitForQuietDiskOptions = {
+  /** How long SQLite must go without a write before it counts as settled. */
+  quietMs?: number;
+  timeoutMs?: number;
+  pollMs?: number;
+};
+
+/**
+ * Resolves once SQLite has written nothing for `quietMs`.
+ *
+ * A session that ends while index passes and saves are still landing leaves them to the next load,
+ * which then charges another stage for work it did not cause; ending on a quiet disk keeps a
+ * "returning profile" one whose writes have all settled.
+ */
+export const waitForQuietDisk = async (
+  targets: Attached[],
+  { quietMs = 5_000, timeoutMs = 120_000, pollMs = 250 }: WaitForQuietDiskOptions = {},
+): Promise<void> => {
+  const deadline = Date.now() + timeoutMs;
+  const first = await readDisk(targets);
+  // With no realm publishing counters every reading is zero, which would read as quiet at once.
+  if (first.realms === 0) {
+    throw new Error('No attached realm publishes SQLite counters');
+  }
+  let writes = first.writes;
+  let quietSince = Date.now();
+  while (Date.now() - quietSince < quietMs) {
+    if (Date.now() > deadline) {
+      throw new Error(`SQLite still writing after ${timeoutMs} ms`);
+    }
+    await new Promise((resolve) => setTimeout(resolve, pollMs));
+    const current = (await readDisk(targets)).writes;
+    if (current !== writes) {
+      writes = current;
+      quietSince = Date.now();
+    }
+  }
+};

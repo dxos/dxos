@@ -9,10 +9,11 @@ import React, { useState } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, controlSize, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import * as Field from '../Field/Field.tsx';
+import { PinInput } from './PinInput.tsx';
 
 /** Types with the runner's real keyboard, so zag's `beforeinput` validation (numeric cells) sees trusted input. */
 const realType = async (text: string) => {
@@ -25,39 +26,39 @@ const DefaultStory = ({ size }: SizeArgs) => {
   const [complete, setComplete] = useState('');
   return (
     <>
-      <Next.Field.Root>
-        <Next.Field.Label>Code</Next.Field.Label>
-        <Next.PinInput
+      <Field.Root>
+        <Field.Label>Code</Field.Label>
+        <PinInput
           otp
           value={value}
           onValueChange={setValue}
           onValueComplete={setComplete}
           data-testid={`pin-${size}`}
         />
-        <Next.Field.HelperText>
+        <Field.HelperText>
           Value: <output data-testid={`pin-${size}-value`}>{value}</output>, complete:{' '}
           <output data-testid={`pin-${size}-complete`}>{complete}</output>
-        </Next.Field.HelperText>
-      </Next.Field.Root>
-      <Next.Field.Root>
-        <Next.Field.Label>PIN</Next.Field.Label>
-        <Next.PinInput length={4} mask defaultValue='12' data-testid={`masked-${size}`} />
-      </Next.Field.Root>
-      <Next.Field.Root invalid>
-        <Next.Field.Label>Expired</Next.Field.Label>
-        <Next.PinInput length={4} type='alphanumeric' defaultValue='AB12' data-testid={`invalid-${size}`} />
-        <Next.Field.ErrorText>The code has expired.</Next.Field.ErrorText>
-      </Next.Field.Root>
-      <Next.Field.Root disabled>
-        <Next.Field.Label>Locked</Next.Field.Label>
-        <Next.PinInput length={4} data-testid={`disabled-${size}`} />
-      </Next.Field.Root>
+        </Field.HelperText>
+      </Field.Root>
+      <Field.Root>
+        <Field.Label>PIN</Field.Label>
+        <PinInput length={4} mask defaultValue='12' data-testid={`masked-${size}`} />
+      </Field.Root>
+      <Field.Root invalid>
+        <Field.Label>Expired</Field.Label>
+        <PinInput length={4} type='alphanumeric' defaultValue='AB12' data-testid={`invalid-${size}`} />
+        <Field.ErrorText>The code has expired.</Field.ErrorText>
+      </Field.Root>
+      <Field.Root disabled>
+        <Field.Label>Locked</Field.Label>
+        <PinInput length={4} data-testid={`disabled-${size}`} />
+      </Field.Root>
     </>
   );
 };
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/PinInput',
+  title: 'ui/react-ui-core/components/PinInput',
   render: DefaultStory,
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
   args: { size: 'md' },

@@ -10,7 +10,7 @@ import { Type } from '@dxos/echo';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Table } from '@dxos/react-ui-table/types';
-import { ViewModel } from '@dxos/schema';
+import { ViewModel, createDefaultSchema } from '@dxos/schema';
 
 import { TableOperation } from '#types';
 
@@ -22,10 +22,18 @@ export default Capability.makeModule(
       createObject: (props, options) =>
         Effect.gen(function* () {
           const object = yield* Effect.promise(async () => {
-            const { view, jsonSchema } = await ViewModel.makeFromDatabase({
-              db: options.db,
-              typename: props.typename,
-            });
+            // A new space has no types to pick, so an empty pick makes one, named after the table.
+            let typename = props.typename;
+            if (!typename) {
+              const type = await options.db.addType(createDefaultSchema());
+              if (props.name) {
+                Type.update(type, (type) => {
+                  type.name = props.name;
+                });
+              }
+              typename = Type.getTypename(type);
+            }
+            const { view, jsonSchema } = await ViewModel.makeFromDatabase({ db: options.db, typename });
             return Table.make({ name: props.name, view, jsonSchema });
           });
           return yield* Operation.invoke(

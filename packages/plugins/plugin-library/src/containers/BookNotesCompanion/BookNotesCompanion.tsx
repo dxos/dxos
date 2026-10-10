@@ -4,8 +4,8 @@
 
 import React, { useEffect } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/react-client/echo';
 import { Text } from '@dxos/schema';

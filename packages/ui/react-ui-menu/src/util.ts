@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { type MenuActionProperties, type MenuItemGroupProperties } from '@dxos/ui-types';
 import { resolveKeyBinding } from '@dxos/util';
 

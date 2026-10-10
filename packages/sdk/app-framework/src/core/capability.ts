@@ -750,3 +750,5 @@ export const makeModule = <
 >(
   fn: (props: TProps) => Effect.Effect<TReturn, E, R | Scope.Scope>,
 ): ((props: TProps) => Effect.Effect<TReturn, E, R | Scope.Scope>) => fn;
+
+export { CapabilityNotFoundError as NotFoundError } from './errors.ts';

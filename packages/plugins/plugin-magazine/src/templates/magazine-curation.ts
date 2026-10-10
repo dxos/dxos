@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Ref } from '@dxos/echo';
 import type * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
-import { makeRoutine } from '@dxos/plugin-routine/util';
+import * as Wire from '@dxos/plugin-routine/Wire';
 
 import { FeedOperation, Magazine } from '#types';
 
@@ -40,7 +40,7 @@ export const magazineCuration: RoutineCapabilities.Template = {
       const magazine = yield* Database.resolve(input.magazine, Magazine.Magazine);
 
       // Pre-populate the trigger's input so the magazine binding is preserved through the save flow.
-      return makeRoutine({
+      return Wire.makeRoutine({
         name: name ?? magazine.name ?? 'Curate Magazine',
         // Bind the CurateMagazine operation directly as the action (an operation action, not instructions-based).
         spec: { kind: 'runnable', runnable: Ref.fromURI(FeedOperation.CurateMagazine.meta.key) },

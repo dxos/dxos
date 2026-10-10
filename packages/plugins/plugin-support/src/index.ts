@@ -3,8 +3,6 @@
 //
 
 export * as SupportPlugin from './SupportPlugin.ts';
-export * from './constants.ts';
-export * from './errors.ts';
-export * from '#meta';
-export * from '#skills';
+export * as SupportSurface from './SupportSurface.ts';
 export * from '#types';
+export * as FeedbackForm from './FeedbackForm.ts';

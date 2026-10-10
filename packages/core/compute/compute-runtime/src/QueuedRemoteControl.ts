@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+import * as Cause from 'effect/Cause';
 import * as Deferred from 'effect/Deferred';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
@@ -17,21 +18,14 @@ import * as Process from '@dxos/compute/Process';
 import type { Annotation } from '@dxos/echo';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { ErrorCodec } from '@dxos/protocols';
 
+import { RemoteCommandRejectedError } from './errors.ts';
 import { type Command, RemoteCommandQueue } from './remote-command-queue.ts';
 import type * as RemoteProcessManager from './RemoteProcessManager.ts';
 
 const toProcessId = Schema.decodeUnknownSync(Process.ID);
 const toSpaceId = (value: string): SpaceId => value as SpaceId;
-
-/** States a host will never move out of, and therefore the point at which queued work is dead. */
-const TERMINAL_STATES: readonly Process.State[] = [
-  Process.State.SUCCEEDED,
-  Process.State.FAILED,
-  Process.State.TERMINATED,
-];
-
-const isTerminal = (state: Process.State): boolean => TERMINAL_STATES.includes(state);
 
 export interface Backoff {
   readonly initial: Duration.Duration;
@@ -43,19 +37,30 @@ const DEFAULT_BACKOFF: Backoff = { initial: Duration.seconds(1), max: Duration.m
 /** How long the flusher sits on an empty queue before re-reading it, absent a wake-up. */
 const IDLE_POLL = Duration.seconds(5);
 
+/** Failed processes kept for reads after the host refused their spawn; bounded since nothing else evicts them. */
+const MAX_REJECTED = 64;
+
+/** The host's refusal carried by `cause`, as opposed to a failure to reach it. */
+const rejectionOf = (cause: Cause.Cause<unknown>): Error | undefined => {
+  const defect = Cause.squash(cause);
+  return RemoteCommandRejectedError.is(defect) ? defect : undefined;
+};
+
 /**
  * Ordering is per PROCESS, not across the whole queue.
  *
- * A command the host will never accept — a process it has dropped, a key it does not host — retries
- * forever, because `Control` reports a rejection and an outage identically (both are defects) and
- * nothing here can tell them apart. What must not happen is that command holding OTHER processes'
- * commands behind it, so the flusher skips a process that is waiting out its backoff and delivers
- * for another one instead.
+ * A command the host could not be reached for retries until it lands, and must not hold OTHER
+ * processes' commands behind it, so the flusher skips a process that is waiting out its backoff and
+ * delivers for another one instead.
  *
- * The alternative — discarding a command that has failed for long enough — was tried and is worse:
- * any cutoff long enough not to fire during an outage is also long enough that firing means silently
- * dropping work a user asked for, and the threshold is a guess about the network rather than
- * anything the host actually said.
+ * A command the host REFUSED — a key it does not host, a request it will never accept — is not
+ * retried: the `Control` dies with {@link RemoteCommandRejectedError} for those, and a refused spawn
+ * fails its process with the host's reason. Retrying it would only leave the caller waiting on a
+ * process that can never start.
+ *
+ * Discarding a command that has merely failed for long enough was tried and is worse: any cutoff long
+ * enough not to fire during an outage is also long enough that firing means silently dropping work a
+ * user asked for, and the threshold is a guess about the network rather than anything the host said.
  */
 
 export interface Options {
@@ -128,6 +133,21 @@ export const make = (options: Options): Effect.Effect<Queued, never, Scope.Scope
     /** Local pid -> host pid, mirrored from the durable alias map so reads can resolve synchronously. */
     const aliases = new Map<Process.ID, Process.ID>();
     const localPids = new Map<Process.ID, Process.ID>();
+    /** Processes whose spawn the host refused, by local pid: a FAILED snapshot and the host's reason. */
+    const rejected = new Map<Process.ID, { readonly snapshot: RemoteProcessManager.Snapshot; readonly error: Error }>();
+    /**
+     * Inputs queued for each process (by local pid) that the host has not acknowledged. The host answers
+     * an input only once the turn it starts has settled, so this also spans the turn itself.
+     */
+    const pendingInputs = new Map<Process.ID, number>();
+    const countInput = (localPid: Process.ID, delta: number) => {
+      const next = (pendingInputs.get(localPid) ?? 0) + delta;
+      if (next > 0) {
+        pendingInputs.set(localPid, next);
+      } else {
+        pendingInputs.delete(localPid);
+      }
+    };
 
     let wake = yield* Deferred.make<void>();
 
@@ -168,6 +188,7 @@ export const make = (options: Options): Effect.Effect<Queued, never, Scope.Scope
     const forget = (localPid: Process.ID): Effect.Effect<void> =>
       Effect.sync(() => {
         overlay.delete(localPid);
+        pendingInputs.delete(localPid);
         const remote = aliases.get(localPid);
         aliases.delete(localPid);
         if (remote !== undefined) {
@@ -183,14 +204,23 @@ export const make = (options: Options): Effect.Effect<Queued, never, Scope.Scope
     const reconcile = (snapshot: RemoteProcessManager.Snapshot): Effect.Effect<RemoteProcessManager.Snapshot> =>
       Effect.gen(function* () {
         const localPid = localPidOf(snapshot.pid);
-        if (isTerminal(snapshot.state)) {
+        if (Process.isExited(snapshot.state)) {
           yield* forget(localPid);
           return snapshot;
         }
         const local = overlay.get(localPid);
-        return local?.state === Process.State.TERMINATING
-          ? { ...snapshot, state: Process.State.TERMINATING }
-          : snapshot;
+        if (local?.state === Process.State.TERMINATING) {
+          return { ...snapshot, state: Process.State.TERMINATING };
+        }
+        // An input the host has not acknowledged is work in flight: reported idle or hybernating, a
+        // caller waiting for the turn to settle would return before the turn has even started.
+        if (
+          pendingInputs.has(localPid) &&
+          (snapshot.state === Process.State.IDLE || snapshot.state === Process.State.HYBERNATING)
+        ) {
+          return { ...snapshot, state: Process.State.RUNNING };
+        }
+        return snapshot;
       });
 
     const startingSnapshot = (
@@ -239,6 +269,7 @@ export const make = (options: Options): Effect.Effect<Queued, never, Scope.Scope
           break;
         }
         case 'submitInput':
+          countInput(command.localPid, 1);
           break;
       }
     }
@@ -289,6 +320,49 @@ export const make = (options: Options): Effect.Effect<Queued, never, Scope.Scope
       }
     };
 
+    /**
+     * Settles a command the host refused. A refused spawn fails its process, so every read reports the
+     * host's reason; a refused input or terminate is dropped, since the host has said it never will.
+     */
+    const reject = (command: Command, error: Error): Effect.Effect<void> =>
+      Effect.gen(function* () {
+        retryAt.delete(command.localPid);
+        log.warn('remote host rejected command', {
+          command: command.payload._tag,
+          id: command.id,
+          pid: command.localPid,
+          error,
+        });
+        switch (command.payload._tag) {
+          case 'spawn': {
+            const payload = command.payload;
+            const starting =
+              overlay.get(command.localPid) ??
+              startingSnapshot(command.localPid, { spaceId: toSpaceId(payload.spaceId), key: payload.key });
+            yield* forget(command.localPid);
+            rejected.set(command.localPid, {
+              snapshot: {
+                ...starting,
+                state: Process.State.FAILED,
+                error: ErrorCodec.encode(error),
+                completedAt: Option.some(Date.now()),
+              },
+              error,
+            });
+            if (rejected.size > MAX_REJECTED) {
+              const [oldest] = rejected.keys();
+              rejected.delete(oldest);
+            }
+            return;
+          }
+          case 'submitInput':
+            countInput(command.localPid, -1);
+            return yield* queue.complete(command.id);
+          case 'terminate':
+            return yield* queue.complete(command.id).pipe(Effect.andThen(forget(command.localPid)));
+        }
+      });
+
     const backoffFor = (attempts: number): Duration.Duration => {
       const millis = Duration.toMillis(backoff.initial) * 2 ** Math.max(0, attempts - 1);
       return Duration.millis(Math.min(millis, Duration.toMillis(backoff.max)));
@@ -318,7 +392,14 @@ export const make = (options: Options): Effect.Effect<Queued, never, Scope.Scope
       const exit = yield* deliver(command).pipe(Effect.exit);
       if (Exit.isSuccess(exit)) {
         retryAt.delete(command.localPid);
+        if (command.payload._tag === 'submitInput') {
+          countInput(command.localPid, -1);
+        }
         return yield* queue.complete(command.id);
+      }
+      const rejection = rejectionOf(exit.cause);
+      if (rejection !== undefined) {
+        return yield* reject(command, rejection);
       }
       const { attempts } = yield* queue.recordAttempt(command.id);
       const delay = backoffFor(attempts);
@@ -331,6 +412,7 @@ export const make = (options: Options): Effect.Effect<Queued, never, Scope.Scope
         pid: command.localPid,
         attempts,
         delay: Duration.toMillis(delay),
+        error: Cause.squash(exit.cause),
       });
     });
 
@@ -346,6 +428,8 @@ export const make = (options: Options): Effect.Effect<Queued, never, Scope.Scope
           // Derived from the idempotency key rather than minted fresh, so the "is there an existing
           // one that matches" answer survives a reload: the same key addresses the same process.
           const localPid = toProcessId(`local:${id}`);
+          // A spawn re-issued after a refusal asks the host again; it may host the key by now.
+          rejected.delete(localPid);
           const queued = overlay.get(localPid);
           if (queued) {
             return queued;
@@ -372,11 +456,27 @@ export const make = (options: Options): Effect.Effect<Queued, never, Scope.Scope
         }),
 
       submitInput: ({ spaceId, pid, input }) =>
-        enqueue(localPidOf(pid), newId(), { _tag: 'submitInput', spaceId, pid, value: input }),
+        // Counted before the enqueue, since the flusher may deliver (and uncount) the command before
+        // this fiber resumes; uncounted again if the durable write dies.
+        Effect.suspend(() => {
+          const refused = rejected.get(localPidOf(pid));
+          // An input for a process the host refused to start could never be applied.
+          return refused !== undefined ? Effect.die(refused.error) : Effect.sync(() => countInput(localPidOf(pid), 1));
+        }).pipe(
+          Effect.andThen(
+            enqueue(localPidOf(pid), newId(), { _tag: 'submitInput', spaceId, pid, value: input }).pipe(
+              Effect.tapCause(() => Effect.sync(() => countInput(localPidOf(pid), -1))),
+            ),
+          ),
+        ),
 
       terminate: ({ spaceId, pid }) =>
         Effect.gen(function* () {
           const localPid = localPidOf(pid);
+          if (rejected.has(localPid)) {
+            // Already terminal: the host refused to start it, so there is nothing to stop.
+            return;
+          }
           const pending = yield* queue.list();
           const spawnPending = pending.some(
             (command) => command.localPid === localPid && command.payload._tag === 'spawn',
@@ -405,6 +505,10 @@ export const make = (options: Options): Effect.Effect<Queued, never, Scope.Scope
       status: ({ spaceId, pid }) =>
         Effect.gen(function* () {
           const localPid = localPidOf(pid);
+          const refused = rejected.get(localPid);
+          if (refused !== undefined) {
+            return refused.snapshot;
+          }
           const local = overlay.get(localPid);
           if (local !== undefined && !aliases.has(localPid) && localPid === pid) {
             // Not yet spawned on the host: it could only answer "no such process".
@@ -435,6 +539,11 @@ export const make = (options: Options): Effect.Effect<Queued, never, Scope.Scope
       readEvents: ({ spaceId, pid, cursor }) =>
         Effect.gen(function* () {
           const localPid = localPidOf(pid);
+          const refused = rejected.get(localPid);
+          if (refused !== undefined) {
+            // The host never ran it: no events, and a terminal state that ends the caller's read.
+            return { events: [], cursor, truncated: false, snapshot: refused.snapshot };
+          }
           const local = overlay.get(localPid);
           if (local !== undefined && !aliases.has(localPid) && localPid === pid) {
             // No host process yet, so no events either — an empty page at the caller's cursor.

@@ -10,7 +10,7 @@ import { describe, expect, test } from 'vitest';
 
 import * as Operation from '@dxos/compute/Operation';
 import { TestSchema } from '@dxos/echo/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN } from '@dxos/keys';
 
 describe('Operation', () => {

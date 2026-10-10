@@ -6,6 +6,14 @@ tags:
   - ts-test
 
 tasks:
+  # The manual e2e suites read these, so a cached run with other values must not replay. Credentials
+  # stay out: moon records input values in its cache manifests.
+  test:
+    inputs:
+      - $DX_E2E_EDGE_URL
+      - $DX_E2E_EDGE_FAKE_AGENT
+      - $DX_E2E_MODEL
+      - $DX_E2E_CLAUDE_ACP_VERSION
   check-module-structure:
     # The plugin generates node and workerd capability barrels, so its headless entry must stay
     # UI-free: fail if React ever becomes reachable from it under either condition.
@@ -25,3 +33,16 @@ tasks:
       - /pnpm-lock.yaml
     options:
       timeout: 60
+  # The Claude Code agent the desktop app's agent helper runs (the ACP adapter, bundled). Not part of
+  # `build`: only composer-app's Tauri build consumes it, and it installs the pinned adapter from npm.
+  compile-agent:
+    command: bun
+    args:
+      - ./scripts/build-agent.ts
+    inputs:
+      - scripts/build-agent.ts
+      - /.prototools
+    outputs:
+      - dist/agent/
+    options:
+      timeout: 300

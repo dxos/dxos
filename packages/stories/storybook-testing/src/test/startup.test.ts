@@ -59,13 +59,13 @@ describe('ClientPlugin startup', () => {
 
     // Phase 1: Lazy-load plugins.
     let phaseStart = performance.now();
-    const [{ PluginManager, ProcessManagerPlugin }, ClientPlugin, GraphPlugin, { ClientCapabilities }] =
-      await Promise.all([
-        import('@dxos/app-framework'),
-        import('@dxos/plugin-client/ClientPlugin'),
-        import('@dxos/plugin-graph/GraphPlugin'),
-        import('@dxos/plugin-client'),
-      ]);
+    const [PluginManager, ProcessManagerPlugin, ClientPlugin, GraphPlugin, { ClientCapabilities }] = await Promise.all([
+      import('@dxos/app-framework/PluginManager'),
+      import('@dxos/app-framework/ProcessManagerPlugin'),
+      import('@dxos/plugin-client/ClientPlugin'),
+      import('@dxos/plugin-graph/GraphPlugin'),
+      import('@dxos/plugin-client'),
+    ]);
     mark('dynamic imports', phaseStart);
 
     // Phase 2: Create PluginManager with core plugins + ClientPlugin.
@@ -105,7 +105,7 @@ describe('ClientPlugin startup', () => {
     });
 
     // Minimal set of framework plugins needed for ClientPlugin to activate.
-    const plugins: Plugin.Plugin[] = [GraphPlugin.make(), ProcessManagerPlugin(), clientPlugin];
+    const plugins: Plugin.Plugin[] = [GraphPlugin.make(), ProcessManagerPlugin.make(), clientPlugin];
 
     const pluginLoader = Effect.fn(function* (id: string) {
       const plugin = plugins.find((plugin) => plugin.meta.profile.key === id);

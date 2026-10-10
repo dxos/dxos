@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Dialog.tsx';
+export * as Dialog from './Dialog.tsx';

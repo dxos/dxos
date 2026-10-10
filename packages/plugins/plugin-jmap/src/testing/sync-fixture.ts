@@ -9,12 +9,12 @@ import type * as Capability from '@dxos/app-framework/Capability';
 import type * as Operation from '@dxos/compute/Operation';
 import type * as Trace from '@dxos/compute/Trace';
 import { type Database, Ref } from '@dxos/echo';
-import { type EntityNotFoundError } from '@dxos/echo/Error';
+import type * as EchoError from '@dxos/echo/Error';
 import { type Resolver } from '@dxos/extractor';
 import { type Connection } from '@dxos/link';
-import { type ConnectionAuthExpiredError } from '@dxos/plugin-connector';
 import * as Binding from '@dxos/plugin-connector/Binding';
-import { type MailSyncError, type RunMailSyncOptions, runMailSync } from '@dxos/plugin-inbox/sync';
+import type * as ConnectorError from '@dxos/plugin-connector/ConnectorError';
+import * as MailSync from '@dxos/plugin-inbox/MailSync';
 import { ambientSyncServices } from '@dxos/plugin-inbox/testing/sync';
 
 import { type JmapDataset, JmapMailApi } from '#services';
@@ -29,15 +29,15 @@ import { jmapMailSyncProvider } from '../operations/mail/sync/sync-provider.ts';
 export const runJmapSync = ({
   connection,
   ...options
-}: { connection: Ref.Ref<Connection.Connection> } & Omit<RunMailSyncOptions, 'binding'>): Effect.Effect<
+}: { connection: Ref.Ref<Connection.Connection> } & Omit<MailSync.RunMailSyncOptions, 'binding'>): Effect.Effect<
   { newMessages: number },
-  MailSyncError | EntityNotFoundError | ConnectionAuthExpiredError,
+  MailSync.MailSyncError | EchoError.EntityNotFoundError | ConnectorError.ConnectionAuthExpiredError,
   Database.Service | Capability.Service | Operation.Service | Trace.TraceService | JmapMailApi | Resolver
 > =>
   Binding.syncAll({
     connection,
     sync: (binding) =>
-      runMailSync({ binding: Ref.make(binding), ...options }).pipe(
+      MailSync.runMailSync({ binding: Ref.make(binding), ...options }).pipe(
         Effect.provide(jmapMailSyncProvider()),
         Effect.withSpan('jmap-sync'),
       ),

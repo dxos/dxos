@@ -28,5 +28,5 @@ export default defineConfig({
     types: 'src/types/index.ts',
   },
   jsx: 'react',
-  test: { node: true, storybook: true },
+  test: { node: true, storybook: true, workerd: true },
 });

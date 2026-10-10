@@ -18,7 +18,7 @@ import * as Option from 'effect/Option';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 
-import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
+import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
 import { type Config } from '@dxos/config';
 import { Database, Obj, type Ref } from '@dxos/echo';
 import { type AccessToken, Connection } from '@dxos/link';
@@ -347,7 +347,7 @@ export const fromConnection = (connectionRef: Ref.Ref<Connection.Connection>, co
       const accessToken = yield* Database.load(connection.accessToken);
       const db = Obj.getDatabase(connection);
       if (!db) {
-        return yield* Effect.fail(new SyncDatabaseMissingError());
+        return yield* Effect.fail(new ConnectorSync.DatabaseMissingError());
       }
       return yield* packageCredentials(accessToken, db, config);
     }),
@@ -361,7 +361,7 @@ export const fromAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken>
       const accessToken = yield* Database.load(accessTokenRef);
       const db = Obj.getDatabase(accessToken);
       if (!db) {
-        return yield* Effect.fail(new SyncDatabaseMissingError());
+        return yield* Effect.fail(new ConnectorSync.DatabaseMissingError());
       }
       return yield* packageCredentials(accessToken, db, config);
     }),

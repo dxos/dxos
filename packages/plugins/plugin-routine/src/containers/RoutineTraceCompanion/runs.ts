@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { RUN_AGAIN_ERROR_CODE, RUN_AGAIN_MESSAGE } from '@dxos/compute';
+import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
 import { type Obj, type Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
@@ -109,7 +109,8 @@ export const groupIntoRuns = (
     // code, but the run will be re-invoked — surface it as `incomplete`, neither success nor hard failure.
     // Fall back to the legacy message for events persisted before `errorCode` existed.
     const isRunAgain = (data: { errorCode?: string; error?: string }): boolean =>
-      data.errorCode === RUN_AGAIN_ERROR_CODE || (data.errorCode === undefined && data.error === RUN_AGAIN_MESSAGE);
+      data.errorCode === Process.RUN_AGAIN_ERROR_CODE ||
+      (data.errorCode === undefined && data.error === Process.RUN_AGAIN_MESSAGE);
     let status: RunStatus = 'pending';
     for (const evt of allEvents) {
       if (Trace.isOfType(Trace.OperationEnd, evt)) {

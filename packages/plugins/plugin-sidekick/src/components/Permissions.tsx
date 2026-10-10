@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { Field, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
 
 import { meta } from '#meta';
 
@@ -24,7 +25,7 @@ export type PermissionsProps = {
 };
 
 export const Permissions = ({ entries, onUpdate }: PermissionsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   if (entries.length === 0) {
     return null;
@@ -34,7 +35,7 @@ export const Permissions = ({ entries, onUpdate }: PermissionsProps) => {
     <Section title={t('permissions.title')}>
       <table className='w-full text-sm'>
         <thead>
-          <tr className='text-left text-description'>
+          <tr className='text-left text-fg-muted'>
             <th className='pb-1 font-normal'>{t('contact.label')}</th>
             <th className='pb-1 font-normal text-center'>{t('auto-respond.label')}</th>
             <th className='pb-1 font-normal text-center'>{t('create-draft.label')}</th>
@@ -46,23 +47,23 @@ export const Permissions = ({ entries, onUpdate }: PermissionsProps) => {
             <tr key={entry.profileId} className='border-t border-separator'>
               <td className='py-1'>{entry.name}</td>
               <td className='py-1 text-center'>
-                <Field.Checkbox
+                <Input.Checkbox
                   checked={entry.autoRespond}
-                  onCheckedChange={(checked) => onUpdate?.(entry.profileId, 'autoRespond', checked === true)}
+                  onCheckedChange={({ checked }) => onUpdate?.(entry.profileId, 'autoRespond', checked === true)}
                   aria-label={`Auto-respond for ${entry.name}`}
                 />
               </td>
               <td className='py-1 text-center'>
-                <Field.Checkbox
+                <Input.Checkbox
                   checked={entry.createDraft}
-                  onCheckedChange={(checked) => onUpdate?.(entry.profileId, 'createDraft', checked === true)}
+                  onCheckedChange={({ checked }) => onUpdate?.(entry.profileId, 'createDraft', checked === true)}
                   aria-label={`Draft for ${entry.name}`}
                 />
               </td>
               <td className='py-1 text-center'>
-                <Field.Checkbox
+                <Input.Checkbox
                   checked={entry.researchEnabled}
-                  onCheckedChange={(checked) => onUpdate?.(entry.profileId, 'researchEnabled', checked === true)}
+                  onCheckedChange={({ checked }) => onUpdate?.(entry.profileId, 'researchEnabled', checked === true)}
                   aria-label={`Research for ${entry.name}`}
                 />
               </td>

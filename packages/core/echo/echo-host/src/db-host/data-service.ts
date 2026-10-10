@@ -8,7 +8,7 @@ import * as EffectStream from 'effect/Stream';
 
 import { UpdateScheduler } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';

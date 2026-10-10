@@ -12,7 +12,7 @@ import { type ThemedClassName } from '@dxos/ui-types';
 import { translationKey } from '#translations';
 
 import { recipes } from '../../recipes.ts';
-import { Button } from '../Button/index.ts';
+import { Button } from '../Button/Button.tsx';
 
 export type NumberInputProps = ThemedClassName<
   Pick<
@@ -120,4 +120,4 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
   },
 );
 
-NumberInput.displayName = 'Next.NumberInput';
+NumberInput.displayName = 'NumberInput';

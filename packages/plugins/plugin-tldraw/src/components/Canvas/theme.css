@@ -21,3 +21,14 @@
     }
   }
 }
+
+/* Maps the app's surfaces onto tldraw's own variables. */
+.tl-background {
+  --color-background: var(--color-base-surface);
+}
+.tl-container.tl-theme__light,
+.tl-container.tl-theme__dark {
+  --color-selected: var(--color-accent-bg);
+  --color-panel: var(--color-modal-surface);
+  --color-panel-contrast: var(--color-separator);
+}

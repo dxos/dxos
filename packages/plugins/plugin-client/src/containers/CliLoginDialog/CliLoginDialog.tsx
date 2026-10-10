@@ -4,13 +4,15 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { type Invitation } from '@dxos/halo';
 import { useIdentity, useInvitationFlow } from '@dxos/halo-react';
 import { log } from '@dxos/log';
-import { AlertDialog, Button, useTranslation } from '@dxos/react-ui';
+import * as AlertDialog from '@dxos/react-ui/AlertDialog';
+import * as Button from '@dxos/react-ui/Button';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 import { ClientCapabilities, CliLogin } from '#types';
@@ -32,10 +34,10 @@ type Status = 'confirm' | 'sending' | 'waiting' | 'success' | 'error';
  * why it is only created on an explicit click and only sent to a loopback callback.
  */
 export const CliLoginDialog = ({ callback, state }: CliLoginDialogProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const identity = useIdentity();
-  const [identityService] = useCapabilities(ClientCapabilities.IdentityService);
+  const [identityService] = Hooks.useCapabilities(ClientCapabilities.IdentityService);
   const [flow, setFlow] = useState<Invitation.Flow>();
   const [status, setStatus] = useState<Status>('confirm');
   const [error, setError] = useState<string>();
@@ -112,7 +114,7 @@ export const CliLoginDialog = ({ callback, state }: CliLoginDialogProps) => {
         </AlertDialog.Description>
         {identity && (
           <div className='py-2'>
-            <p className='text-sm text-subdued'>{t('cli-login-code.label')}</p>
+            <p className='text-sm text-fg-subtle'>{t('cli-login-code.label')}</p>
             <p className='py-2 font-mono text-2xl tracking-widest text-center' data-testid='cliLogin.state'>
               {state}
             </p>
@@ -125,32 +127,31 @@ export const CliLoginDialog = ({ callback, state }: CliLoginDialogProps) => {
           {status === 'error' && t('cli-login-error.message', { error })}
         </p>
       </AlertDialog.Body>
-      <AlertDialog.ActionBar>
+      <AlertDialog.Footer>
         {status === 'confirm' || status === 'sending' ? (
           <>
-            <AlertDialog.Cancel asChild>
-              <Button data-testid='cliLogin.deny' disabled={status === 'sending'} onClick={close}>
-                {t('cli-login-deny.label')}
-              </Button>
+            <AlertDialog.Cancel data-testid='cliLogin.deny' disabled={status === 'sending'} onClick={close}>
+              {t('cli-login-deny.label')}
             </AlertDialog.Cancel>
-            <Button
+            <Button.Root
               data-testid='cliLogin.authorize'
               variant='primary'
               disabled={!identity || status === 'sending'}
               onClick={handleAuthorize}
             >
               {t('cli-login-authorize.label')}
-            </Button>
+            </Button.Root>
           </>
         ) : (
-          <AlertDialog.Action asChild>
-            {/* While the CLI is joining, closing cancels the invitation, so the action says so. */}
-            <Button data-testid='cliLogin.done' variant={status === 'success' ? 'primary' : 'default'} onClick={close}>
-              {t(status === 'waiting' ? 'cli-login-cancel.label' : 'cli-login-done.label')}
-            </Button>
+          <AlertDialog.Action
+            data-testid='cliLogin.done'
+            variant={status === 'success' ? 'primary' : 'default'}
+            onClick={close}
+          >
+            {t(status === 'waiting' ? 'cli-login-cancel.label' : 'cli-login-done.label')}
           </AlertDialog.Action>
         )}
-      </AlertDialog.ActionBar>
+      </AlertDialog.Footer>
     </AlertDialog.Content>
   );
 };

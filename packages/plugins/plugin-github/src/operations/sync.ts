@@ -7,7 +7,6 @@ import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
 import * as Semaphore from 'effect/Semaphore';
 
-import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
@@ -605,7 +604,7 @@ const syncRepoBinding = Effect.fn('syncRepoBinding')(function* (binding: Cursor.
   const project = yield* Database.load(binding.spec.target);
   const db = Obj.getDatabase(binding) ?? Obj.getDatabase(project);
   if (!db) {
-    return yield* Effect.fail(new SyncDatabaseMissingError());
+    return yield* Effect.fail(new ConnectorSync.DatabaseMissingError());
   }
 
   // The repo's foreign id: prefer the binding's `externalId`, falling back

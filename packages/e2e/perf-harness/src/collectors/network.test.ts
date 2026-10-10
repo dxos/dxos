@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { EDGE_REQUEST_RESOURCE_TYPES, classify, classifyOrigin } from './network.ts';
+import { EDGE_REQUEST_RESOURCE_TYPES, classify, classifyOrigin, endpointOf } from './network.ts';
 
 describe('classifyOrigin', () => {
   test('a subdomain of an edge host is edge', ({ expect }) => {
@@ -71,5 +71,13 @@ describe('classify', () => {
     expect(EDGE_REQUEST_RESOURCE_TYPES.has('eventsource')).toBe(false);
     expect(EDGE_REQUEST_RESOURCE_TYPES.has('fetch')).toBe(true);
     expect(EDGE_REQUEST_RESOURCE_TYPES.has('xhr')).toBe(true);
+  });
+});
+
+describe('endpointOf', () => {
+  test('keeps the host and first path segment only', ({ expect }) => {
+    expect(endpointOf('https://dxos.network/ai/generate/abc?x=1')).toBe('dxos.network/ai');
+    expect(endpointOf('wss://dxos.network/')).toBe('dxos.network');
+    expect(endpointOf('not a url')).toBe('invalid');
   });
 });

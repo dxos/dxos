@@ -15,7 +15,7 @@ import * as Schema from 'effect/Schema';
 
 import { Database, Obj, type Ref } from '@dxos/echo';
 import { proxyFetchLegacy } from '@dxos/edge-client';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Connection } from '@dxos/link';
 import * as Publisher from '@dxos/plugin-blogger/Publisher';
 

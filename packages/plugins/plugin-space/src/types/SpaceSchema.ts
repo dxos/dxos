@@ -10,7 +10,7 @@ import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import { type PublicKey } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Database, Obj } from '@dxos/echo';
-import { type ComplexMap } from '@dxos/util';
+import { type ComplexMap, trim } from '@dxos/util';
 
 import { meta } from '#meta';
 
@@ -161,6 +161,19 @@ export type CreateObject = (
 export const IconAnnotationId = '@dxos/plugin-space/annotation/Icon';
 export const HueAnnotationId = '@dxos/plugin-space/annotation/Hue';
 
+/** The create dialog's layout: the icon and colour pickers are small, so they share a row (settings keep one row each). */
+export const SPACE_FORM_CREATE_LAYOUT = 'create';
+
+const SPACE_FORM_LAYOUT_CREATE = trim`
+  <grid cols="2">
+    <field name="name" span="2"/>
+    <field name="icon"/>
+    <field name="hue"/>
+    <field name="private" span="2"/>
+    <field name="edgeReplication" span="2"/>
+  </grid>
+`;
+
 // TOOD(burdon): Use SpacePropertiesSchema.
 export const SpaceForm = Schema.Struct({
   name: Schema.optional(Schema.String.annotate({ title: 'Name' })),
@@ -176,4 +189,4 @@ export const SpaceForm = Schema.Struct({
   origin: Schema.optional(
     Schema.Literals(['user', 'system', 'unknown']).pipe(Annotation.FormInputAnnotation.set(false)),
   ),
-});
+}).pipe(Annotation.FormLayoutAnnotation.set({ [SPACE_FORM_CREATE_LAYOUT]: SPACE_FORM_LAYOUT_CREATE }));

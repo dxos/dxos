@@ -4,10 +4,17 @@
 
 import React, { useCallback } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Button, Column, Field, Flex, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { meta } from '#meta';
 import { Support } from '#types';
@@ -15,7 +22,7 @@ import { Support } from '#types';
 export type SupportArticleProps = AppSurface.ObjectArticleProps<Support.Ticket>;
 
 export const SupportArticle = ({ role, subject }: SupportArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const [ticket] = useObject(subject);
 
   const handleSetTitle = useCallback(
@@ -62,56 +69,56 @@ export const SupportArticle = ({ role, subject }: SupportArticleProps) => {
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           <Toolbar.Text>{t(`status-${status}.label`)}</Toolbar.Text>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content asChild>
-        <Column.Root>
-          <ScrollArea.Root orientation='vertical' padding>
-            <ScrollArea.Viewport>
+      </Panel.Header>
+      <Panel.Body asChild>
+        <ScrollArea.Root orientation='vertical'>
+          <ScrollArea.Viewport asChild>
+            <Layout.Container gutter='lg' gap='md'>
               <Field.Root>
                 <Field.Label>{t('title.label')}</Field.Label>
-                <Field.Input value={ticket.title ?? ''} onChange={(event) => handleSetTitle(event.target.value)} />
+                <Input.Root value={ticket.title ?? ''} onChange={(event) => handleSetTitle(event.target.value)} />
               </Field.Root>
 
               <Field.Root>
                 <Field.Label>{t('body.label')}</Field.Label>
-                <Field.Textarea value={ticket.body ?? ''} onChange={(event) => handleSetBody(event.target.value)} />
+                <Input.Textarea value={ticket.body ?? ''} onChange={(event) => handleSetBody(event.target.value)} />
               </Field.Root>
 
               {status === 'resolved' && (
                 <Field.Root>
                   <Field.Label>{t('resolution.label')}</Field.Label>
-                  <Field.Textarea
+                  <Input.Textarea
                     value={ticket.resolution ?? ''}
                     onChange={(event) => handleSetResolution(event.target.value)}
                   />
                 </Field.Root>
               )}
 
-              <Flex gap='sm' align='center'>
+              <Layout.Flex gap='sm' align='center'>
                 {status === 'open' && (
-                  <Button variant='outline' onClick={() => handleStatus('in_progress')}>
+                  <Button.Root variant='outline' onClick={() => handleStatus('in_progress')}>
                     {t('mark-in-progress.button')}
-                  </Button>
+                  </Button.Root>
                 )}
                 {status !== 'resolved' && (
-                  <Button variant='primary' onClick={() => handleStatus('resolved')}>
+                  <Button.Root variant='primary' onClick={() => handleStatus('resolved')}>
                     {t('resolve.button')}
-                  </Button>
+                  </Button.Root>
                 )}
                 {status === 'resolved' && (
-                  <Button variant='outline' onClick={() => handleStatus('open')}>
+                  <Button.Root variant='outline' onClick={() => handleStatus('open')}>
                     {t('reopen.button')}
-                  </Button>
+                  </Button.Root>
                 )}
-              </Flex>
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
-        </Column.Root>
-      </Panel.Content>
+              </Layout.Flex>
+            </Layout.Container>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Panel.Body>
     </Panel.Root>
   );
 };

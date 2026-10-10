@@ -18,7 +18,7 @@ import { Trigger } from '@dxos/async';
 import { PROXY_CONNECTION_TIMEOUT, makeRtcServiceClientOverProtocol } from '@dxos/client-protocol';
 import { LayerStack } from '@dxos/compute-runtime';
 import { type Config, ConfigService } from '@dxos/config';
-import { Hook } from '@dxos/effect';
+import * as Hook from '@dxos/effect/Hook';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, setIdentityTags } from '@dxos/messaging';
@@ -70,7 +70,7 @@ export type WorkerRuntimeOptions = {
 
   /**
    * Optional SQLite layer for Effect. Defaults to LocalSqliteOpfsLayer.
-   * For testing in Node.js, use `sqliteLayerMemory` from `@dxos/sql-sqlite/platform`.
+   * For testing in Node.js, use `layerMemory` from `@dxos/sql-sqlite/Platform`.
    */
   sqliteLayer?: Layer.Layer<SqlClient.SqlClient | SqlExport.SqlExport, unknown>;
 

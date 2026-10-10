@@ -14,7 +14,7 @@ import { setupGraphBuilder } from '@dxos/app-graph/testing';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN, Obj, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { Connection, Cursor } from '@dxos/link';

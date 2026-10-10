@@ -39,3 +39,19 @@ without the patch `plugin-discord` fails to typecheck and its layers fail to loa
 **Retesting after a dfx upgrade.** If the new release's `dist` has no `effect/unstable/` imports, drop
 this patch's line from `pnpm-workspace.yaml`, reinstall, and run `moon run plugin-discord:build`. A
 clean build means the patch and this section can go.
+
+## `effect@4.0.0`
+
+**What.** Lets a decision carry images: `DecisionModel.decide(definition, { input, images })` passes
+them to the provider as `ProviderOptions.images`, and `DecisionModel.make({ supportsImages })` says
+whether the provider can read them. A model made without it fails a call that passes images with
+`AiError.InvalidUserInputError`, so a text-only model never answers about a picture it did not see.
+
+**Why.** Cloudflare's Clef decision models read up to four images beside the state, which is how the
+illustrator's judges see a diagram as drawn instead of an ASCII rendering of it. Effect's
+`DecisionModel` hands a provider only the encoded state, so there was no way to send one.
+
+**Retesting after an effect upgrade.** If the new release's `effect/ai/DecisionModel` exports `Image`
+and `DecideOptions` has `images`, drop this patch's line from `pnpm-workspace.yaml`, reinstall, and
+run `moon run ai:test -- src/resolvers/typesafe/TypeSafeResolver.test.ts`. A pass means the patch and
+this section can go.

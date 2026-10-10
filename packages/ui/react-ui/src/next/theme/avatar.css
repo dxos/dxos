@@ -1,0 +1,145 @@
+/*
+ * Avatar: a block-sized circle or square (or its host's width with `data-fill`) holding an image over a fallback.
+ * The root is a size container, so the fallback's text and icon scale with the avatar at any size. Hues reuse Tag's
+ * per-hue variables (`tag.css`): `fill` paints the solid `--dx-hue-fill`, `surface` the Tag tint.
+ */
+
+@layer dx-components {
+  .dx-avatar {
+    --dx-avatar-size: var(--dx-block-size);
+    --dx-avatar-bg: var(--color-input-surface);
+    --dx-avatar-fg: var(--color-fg-muted);
+    --dx-avatar-ring: transparent;
+    --dx-avatar-ring-width: 0px;
+    position: relative;
+    display: inline-grid;
+    flex-shrink: 0;
+    box-sizing: border-box;
+    width: var(--dx-avatar-size);
+    height: var(--dx-avatar-size);
+    container-type: size;
+    border-radius: 9999px;
+    background: var(--dx-avatar-bg);
+    color: var(--dx-avatar-fg);
+    overflow: hidden;
+    user-select: none;
+  }
+  /* `backdrop='dominant'`: the loaded image's edge colour stands in for the hue fill behind it. */
+  .dx-avatar[data-backdrop='dominant'] {
+    background: var(--dx-avatar-backdrop, var(--dx-avatar-bg));
+    transition: background-color 0.5s ease-in-out;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .dx-avatar[data-backdrop='dominant'] {
+      transition: none;
+    }
+  }
+  .dx-avatar[data-fill] {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+  }
+  .dx-avatar[data-variant='square'] {
+    border-radius: var(--radius-sm, 0.25rem);
+  }
+
+  /* Tag paints neutral by default rather than through a hue rule, so the avatar names its neutral itself. */
+  .dx-avatar[data-hue='neutral'] {
+    --dx-hue-fill: var(--color-input-surface);
+    --dx-hue-bg: var(--color-neutral-surface);
+    --dx-hue-fg: var(--color-neutral-fg);
+  }
+  .dx-avatar[data-hue][data-hue-variant='fill'] {
+    --dx-avatar-bg: var(--dx-hue-fill);
+    --dx-avatar-fg: var(--color-accent-fg);
+  }
+  .dx-avatar[data-hue='neutral'][data-hue-variant='fill'] {
+    --dx-avatar-fg: var(--color-fg-muted);
+  }
+  .dx-avatar[data-hue][data-hue-variant='surface'] {
+    --dx-avatar-bg: var(--dx-hue-bg);
+    --dx-avatar-fg: var(--dx-hue-fg);
+  }
+  .dx-avatar[data-hue-variant='transparent'] {
+    --dx-avatar-bg: transparent;
+    --dx-avatar-fg: currentColor;
+  }
+
+  /* The ring is an inset shadow, so the image and fallback keep the whole frame and nothing shifts. */
+  .dx-avatar[data-status] {
+    --dx-avatar-ring-width: max(1px, calc(var(--dx-avatar-size) / 16));
+  }
+  .dx-avatar::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow:
+      inset 0 0 0 var(--dx-avatar-ring-width) var(--dx-avatar-ring),
+      inset 0 0 0 calc(2 * var(--dx-avatar-ring-width)) var(--dx-surface-bg, var(--color-base-surface));
+    pointer-events: none;
+  }
+  .dx-avatar:not([data-status])::after {
+    content: none;
+  }
+  .dx-avatar[data-status='active'] {
+    --dx-avatar-ring: var(--color-success-border);
+  }
+  .dx-avatar[data-status='inactive'] {
+    --dx-avatar-ring: var(--color-neutral-border);
+  }
+  .dx-avatar[data-status='current'] {
+    --dx-avatar-ring: var(--color-focus);
+  }
+  .dx-avatar[data-status='internal'] {
+    --dx-avatar-ring: var(--color-separator);
+  }
+  .dx-avatar[data-status='error'] {
+    --dx-avatar-ring: var(--color-error-border);
+  }
+  .dx-avatar[data-status='warning'] {
+    --dx-avatar-ring: var(--color-warning-border);
+  }
+  .dx-avatar[data-animation='pulse']::after {
+    animation: dx-avatar-pulse 1s ease-in-out infinite;
+  }
+
+  .dx-avatar-image,
+  .dx-avatar-fallback {
+    grid-area: 1 / 1;
+    width: 100%;
+    height: 100%;
+  }
+  .dx-avatar-image {
+    object-fit: cover;
+  }
+  .dx-avatar-fallback {
+    display: grid;
+    place-items: center;
+    font-size: 40cqi;
+    line-height: 1;
+    font-weight: 500;
+  }
+  /* An emoji fills more of the frame than initials: text-2xl in an xl avatar. */
+  .dx-avatar-fallback[data-emoji] {
+    font-size: 50cqi;
+  }
+  .dx-avatar-fallback[hidden] {
+    display: none;
+  }
+  .dx-avatar-fallback .dx-icon {
+    width: 60cqi;
+    height: 60cqi;
+  }
+
+  @keyframes dx-avatar-pulse {
+    50% {
+      opacity: 0.3;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .dx-avatar[data-animation='pulse']::after {
+      animation: none;
+    }
+  }
+}

@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from '@effect/vitest';
 
-import { RuntimeProvider } from '@dxos/effect';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { EntityId, SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 import { range } from '@dxos/util';

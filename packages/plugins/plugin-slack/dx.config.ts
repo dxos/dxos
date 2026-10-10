@@ -32,10 +32,15 @@ export default Config2.make({
       All Slack API calls use POST with \`application/x-www-form-urlencoded\`
       bodies to satisfy Slack's CORS constraints, and include automatic retry with
       exponential back-off for transient failures.
+
+      Each synced conversation is a Slack-backed Channel, so agents can converse
+      through it: they post as the connection's bot, reply in threads, and open
+      direct messages with people whose Slack id is on their contact card.
     `,
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-slack',
     spec: 'PLUGIN.mdl',
     icon: { key: 'ph--slack-logo--regular', hue: 'purple' },
     tags: ['labs', 'connector'],
+    dependsOn: ['org.dxos.plugin.thread'],
   },
 });

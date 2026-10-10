@@ -6,6 +6,7 @@ import { assertArgument } from '@dxos/invariant';
 import { deepMapValues } from '@dxos/util';
 
 import {
+  EntityKind,
   KindId,
   ObjectDatabaseId,
   ObjectDeletedId,
@@ -112,11 +113,14 @@ export const getSnapshot = <T extends object>(obj: T): T => {
     return copy;
   });
 
-  // Relation endpoint symbols.
-  copySymbolProperty(source, snapshot, RelationSourceDXNId);
-  copySymbolProperty(source, snapshot, RelationTargetDXNId);
-  copySymbolProperty(source, snapshot, RelationSourceId);
-  copySymbolProperty(source, snapshot, RelationTargetId);
+  // Relation endpoint symbols, read only on a relation: on any other object the echo-db getters throw an invariant
+  // violation, so every snapshot of a plain object paid for two caught, stack-traced errors.
+  if (source[KindId] === EntityKind.Relation) {
+    copySymbolProperty(source, snapshot, RelationSourceDXNId);
+    copySymbolProperty(source, snapshot, RelationTargetDXNId);
+    copySymbolProperty(source, snapshot, RelationSourceId);
+    copySymbolProperty(source, snapshot, RelationTargetId);
+  }
 
   return Object.freeze(snapshot) as T;
 };

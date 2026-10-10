@@ -9,7 +9,7 @@ import { buildFactGraph, factSourceFromFacts } from './fact-graph.ts';
 
 const mk = (id: string, subject: string, predicate: string, object: string): Fact => ({
   id,
-  assertion: { subject: { entity: subject }, predicate, object: { entity: object } },
+  assertion: { subject: { kind: 'entity', entity: subject }, predicate, object: { kind: 'entity', entity: object } },
   factuality: { value: 'CT+', polarity: '+' },
   attribution: { source: `test:${id}`, generatedAtTime: '2026-06-30T00:00:00.000Z' },
   recordedAt: '2026-06-30T00:00:00.000Z',

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Resource } from '@dxos/react-ui';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 export const translationKey = '@dxos/react-ui-form';
 
@@ -27,11 +27,13 @@ export const translations = [
         'add-property-button.label': 'Add property',
         'boolean-input-true.value': 'Yes',
         'boolean-input-false.value': 'No',
+        'indeterminate.placeholder': 'Mixed',
         'show-field.label': 'Show field',
         'hide-field.label': 'Hide field',
         'delete-field.label': 'Delete field',
         'create-option.label': 'Create',
         'add-tag.label': 'Add tag',
+        'add-tag-query.label': 'Add tag “{{text}}”',
 
         'ref-field-combobox-input.placeholder': 'Search…',
         'ref-field.placeholder': 'Select…',
@@ -39,6 +41,7 @@ export const translations = [
         'ref-field.placeholder_other': 'Select items…',
 
         'example.placeholder': 'Example',
+        'select.placeholder': 'Select…',
         'latitude.placeholder': 'Latitude (e.g., 40.7128)',
         'longitude.placeholder': 'Longitude (e.g., -74.0060)',
 
@@ -84,6 +87,7 @@ export const translations = [
         // SelectOptionsField.
         'select-option.label': 'Label',
         'select-option-label.placeholder': 'Option label',
+        'select-option-color.label': 'Color',
         'select-option-delete.button': 'Delete',
         'select-option-add.button': 'Add option',
 
@@ -94,4 +98,4 @@ export const translations = [
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

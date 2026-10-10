@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-settings",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "description": "DXOS Settings plugin for managing application settings.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,7 +10,7 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#capabilities": {
@@ -63,15 +63,10 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./testing": {
-      "source": "./src/testing.ts",
-      "types": "./dist/types/src/testing.d.ts",
-      "import": "./dist/lib/testing.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
+    "./SettingsAction": {
+      "source": "./src/SettingsAction.ts",
+      "types": "./dist/types/src/SettingsAction.d.ts",
+      "import": "./dist/lib/ns/SettingsAction.mjs"
     },
     "./SettingsPath": {
       "source": "./src/types/SettingsPath.ts",
@@ -82,6 +77,16 @@
       "source": "./src/SettingsPlugin.ts",
       "types": "./dist/types/src/SettingsPlugin.d.ts",
       "import": "./dist/lib/SettingsPlugin.mjs"
+    },
+    "./testing": {
+      "source": "./src/testing.ts",
+      "types": "./dist/types/src/testing.d.ts",
+      "import": "./dist/lib/testing.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

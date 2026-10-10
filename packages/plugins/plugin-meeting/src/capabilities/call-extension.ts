@@ -10,7 +10,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type CallState, type MediaState } from '@dxos/plugin-calls';
+import type * as CallManager from '@dxos/plugin-calls/CallManager';
 import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as TranscriptionCapabilities from '@dxos/plugin-transcription/TranscriptionCapabilities';
@@ -48,7 +48,7 @@ export default Capability.makeModule(
         await transcriptionManager?.close();
         store.updateState(() => ({}));
       },
-      onCallStateUpdated: async (callState: CallState) => {
+      onCallStateUpdated: async (callState: CallManager.CallState) => {
         const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
         const typename = Type.getTypename(Meeting.Meeting);
         const activity = typename ? callState.activities?.[typename] : undefined;
@@ -59,7 +59,7 @@ export default Capability.makeModule(
         const payload: MeetingPayload = activity.payload;
         await invokePromise(MeetingOperation.HandlePayload, payload);
       },
-      onMediaStateUpdated: async ([mediaState, isSpeaking]: [MediaState, boolean]) => {
+      onMediaStateUpdated: async ([mediaState, isSpeaking]: [CallManager.MediaState, boolean]) => {
         const { transcriptionManager } = store.state;
         // Not awaited (media updates must not block on transcription), but a rejection — e.g. no
         // transcription endpoint configured — has to be logged rather than left unhandled.

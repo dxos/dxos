@@ -2,7 +2,8 @@
 
 Architecture diagrams of the DXOS and EDGE repositories, written as mermaid flowcharts and
 compiled by the illustrator's engine-backed flowchart dialect (`src/model/mermaid-engine.ts`).
-Each `.mmd` is the source of truth; the `.svg` beside it is a rendered artifact.
+Each `.mmd` is the source of truth; the `.dx.svg` beside it is a rendered artifact: an ordinary SVG that also carries
+the drawing's ECHO objects and mermaid source, so it imports back into Composer as an editable drawing.
 
 The corpus is simultaneously the **eval fixture set**: `src/model/corpus.test.ts` compiles every
 source, asserts no hard layout defects (`Diagnostics.errors`), snapshots the soft metrics, and
@@ -25,6 +26,6 @@ the code must not drift from the code.
 moon run plugin-illustrator:render-diagrams
 ```
 
-renders every `.mmd` to `.svg` and prints the Tier-1 report; `-- --scoreboard` prints the Tier-2
-strategy × metric table instead; `-- /abs/path/x.mmd` renders just that file, writing the `.svg`
+renders every `.mmd` to `.dx.svg` and prints the Tier-1 report; `-- --scoreboard` prints the Tier-2
+strategy × metric table instead; `-- /abs/path/x.mmd` renders just that file, writing the `.dx.svg`
 beside it. The end-to-end workflow is the `drawing-diagrams` agent skill.

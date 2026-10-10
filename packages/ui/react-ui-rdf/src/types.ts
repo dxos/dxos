@@ -67,11 +67,11 @@ export const groupFacts = (facts: RDF.Fact[], filter: string): Group[] => {
 };
 
 /** The join/grouping key: the entity slug (or literal). Casing variants collapse to one key. */
-export const termKey = (term: RDF.Term): string => ('entity' in term ? term.entity : term.literal);
+export const termKey = (term: RDF.Term): string => (term.kind === 'entity' ? term.entity : term.literal);
 
 /** Display form: the preserved surface label, else a prettified slug; literals render verbatim. */
 export const formatTerm = (term: RDF.Term): string =>
-  'entity' in term ? (term.label ?? humanize(term.entity)) : term.literal;
+  term.kind === 'entity' ? (term.label ?? humanize(term.entity)) : term.literal;
 
 /**
  * Convert a {@link FactGraph} into a rooted {@link TreeNode} hierarchy for the tidy-tree renderer.

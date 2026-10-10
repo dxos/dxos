@@ -10,7 +10,7 @@ import type * as Registry from 'effect/reactivity/AtomRegistry';
 import { synchronized } from '@dxos/async';
 import { Resource } from '@dxos/context';
 import { Database, Feed, Obj } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import { Transcriber } from '@dxos/pipeline-transcription';
 import { MediaStreamRecorder } from '@dxos/react-ui-transcription/capture';

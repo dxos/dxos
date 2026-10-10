@@ -2,7 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type ComponentType, lazy } from 'react';
+import { type ComponentType, type LazyExoticComponent, lazy } from 'react';
+
+import type { SpaceInvitationContainerProps } from './SpaceInvitationContainer/index.ts';
 
 export { type CliLoginDialogProps } from './CliLoginDialog/index.ts';
 export { type RecoveryCodeDialogProps } from './RecoveryCodeDialog/index.ts';
@@ -14,7 +16,9 @@ export const ContactPickerContainer: ComponentType<any> = lazy(() => import('./C
 export const ContactsContainer: ComponentType<any> = lazy(() => import('./ContactsContainer/index.ts'));
 export const DevicesContainer: ComponentType<any> = lazy(() => import('./DevicesContainer/index.ts'));
 export const InvitationsContainer: ComponentType<any> = lazy(() => import('./InvitationsContainer/index.ts'));
-export const SpaceInvitationsContainer: ComponentType<any> = lazy(() => import('./SpaceInvitationsContainer/index.ts'));
+export const SpaceInvitationContainer: LazyExoticComponent<ComponentType<SpaceInvitationContainerProps>> = lazy(
+  () => import('./SpaceInvitationContainer/index.ts'),
+);
 export const UsageContainer: ComponentType<any> = lazy(() => import('./UsageContainer/index.ts'));
 export const JoinDialog: ComponentType<any> = lazy(() => import('./JoinDialog/index.ts'));
 export const ProfileContainer: ComponentType<any> = lazy(() => import('./ProfileContainer/index.ts'));

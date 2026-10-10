@@ -6,6 +6,8 @@ import { type MutableRefObject, useCallback, useEffect, useMemo, useRef } from '
 
 import { type useRegistry } from '../../hooks/index.ts';
 import { type Drag, type HistoryEntry, type SceneViewAtoms } from '../../model/atoms.ts';
+import { nodeDef } from '../../model/node-def.ts';
+import { type NodeRegistry } from '../../model/registry.ts';
 import { type SceneStore } from '../../model/store.ts';
 import {
   type Bounds,
@@ -15,12 +17,26 @@ import {
   type Scene,
   type SceneId,
   type Size,
-  isPortalNode,
+  isFrameNode,
 } from '../../model/types.ts';
-import { coverage, enterPortal, exitPortal, fitBounds, portalFrame, portalScale } from '../../utils/camera.ts';
-import { contentBounds, sceneBounds } from '../../utils/hit.ts';
+import {
+  DRILL_ANIMATION_MS,
+  NOMINAL_ZOOM,
+  coverage,
+  enterPortal,
+  exitPortal,
+  fitBounds,
+  portalFrame,
+} from '../../utils/camera.ts';
+import { contentBounds } from '../../utils/hit.ts';
 import { nodeBounds } from '../../utils/shapes.ts';
 import { type SceneCamera } from './useSceneCamera.ts';
+
+/** An empty root has nothing to frame: fitting it centres the origin at true size. */
+const EMPTY_FRAME: Bounds = { x: 0, y: 0, width: 0, height: 0 };
+
+/** The shapes of a scene, unpadded: what Fit frames, with its inset as the only margin. */
+const fitFrame = (scene: Scene): Bounds => contentBounds(scene, 0, 1) ?? EMPTY_FRAME;
 
 /** A portal covering this much of the viewport becomes the root; a root below this yields to its parent. */
 const AUTO_ENTER = 0.85;
@@ -30,6 +46,7 @@ const AUTO_DRILL_MS = 150;
 export type UseSceneNavigationOptions = {
   registry: ReturnType<typeof useRegistry>;
   atoms: SceneViewAtoms;
+  nodeRegistry: NodeRegistry;
   store: SceneStore;
   scenes: Record<SceneId, Scene>;
   scene: Scene;
@@ -48,13 +65,14 @@ export type SceneNavigation = {
   nameOf: (id: SceneId) => string;
   /** The portal in `parent` that shows `childId`, if any. */
   portalTo: (parentId: SceneId | undefined, childId: SceneId) => Node | undefined;
-  /** The frame of the scene at the head of `path`: its parent portal's frame, or its derived bounds. */
+  /** What fitting the scene at the head of `path` shows: its parent portal's frame, or its content. */
   frameOf: (path: SceneId[], scene: Scene) => Bounds;
   /** The current scene's frame, held for the visit rather than re-derived as its content changes. */
   bounds: Bounds;
-  /** The zoom against this level's own 1:1 rather than the root's; display only. */
-  nominalZoom: number;
+  /** What Fit shows: the current scene's shapes themselves (the margin is the fit's own inset). */
+  fitTarget: Bounds;
   pushHistory: (entry: HistoryEntry) => void;
+  /** Drills into a frame's scene, or opens the node in the host when its type has `hostOpen` for it. */
   drillIn: (portal: Node, animate?: boolean) => void;
   drillOut: (levels?: number, animate?: boolean) => void;
   goHistory: (offset: number) => void;
@@ -68,6 +86,7 @@ export type SceneNavigation = {
 export const useSceneNavigation = ({
   registry,
   atoms,
+  nodeRegistry,
   scenes,
   scene,
   path,
@@ -88,7 +107,7 @@ export const useSceneNavigation = ({
     (parentId: SceneId | undefined, childId: SceneId): Node | undefined => {
       const parent = parentId ? scenes[parentId] : undefined;
       return parent
-        ? Object.values(parent.nodes).find((node) => isPortalNode(node) && node.scene === childId)
+        ? Object.values(parent.nodes).find((node) => isFrameNode(node) && node.scene === childId)
         : undefined;
     },
     [scenes],
@@ -97,7 +116,7 @@ export const useSceneNavigation = ({
   const frameOf = useCallback(
     (scenePath: SceneId[], current: Scene): Bounds => {
       const portal = portalTo(scenePath[scenePath.length - 2], current.id);
-      return portal ? portalFrame(portal, contentBounds(current)) : sceneBounds(current);
+      return portal ? portalFrame(portal, contentBounds(current)) : (contentBounds(current) ?? EMPTY_FRAME);
     },
     [portalTo],
   );
@@ -118,23 +137,7 @@ export const useSceneNavigation = ({
     return frameRef.current.frame;
   }, [frameOf, path, scene]);
 
-  /**
-   * A portal frame is the portal's box times a power of the grid ratio, so entering one divides the
-   * camera by that factor; reported raw, the number would drop fourfold on a drill-in that changed
-   * nothing the user can see. Display only — nothing derives geometry from it, so the frame growing
-   * with its content cannot feed back.
-   */
-  const nominalZoom = useMemo(() => {
-    const scale = path.slice(1).reduce((accumulated, sceneId, index) => {
-      const parent = scenes[path[index]];
-      const child = scenes[sceneId];
-      const portal = parent && child ? portalTo(parent.id, sceneId) : undefined;
-      return portal && child
-        ? accumulated * portalScale(portal, portalFrame(portal, contentBounds(child)))
-        : accumulated;
-    }, 1);
-    return camera.zoom / scale;
-  }, [path, scenes, portalTo, camera.zoom]);
+  const fitTarget = useMemo(() => fitFrame(scene), [scene]);
 
   const pushHistory = useCallback(
     (entry: HistoryEntry) => {
@@ -145,9 +148,16 @@ export const useSceneNavigation = ({
     [registry, atoms.history],
   );
 
+  const hostOpen = useCallback((node: Node) => nodeDef(nodeRegistry, node)?.hostOpen?.(node), [nodeRegistry]);
+
   const drillIn = useCallback(
     (portal: Node, animate = true) => {
-      const child = isPortalNode(portal) ? scenes[portal.scene] : undefined;
+      const open = hostOpen(portal);
+      if (open) {
+        open();
+        return;
+      }
+      const child = isFrameNode(portal) ? scenes[portal.scene] : undefined;
       if (!child) {
         return;
       }
@@ -168,14 +178,15 @@ export const useSceneNavigation = ({
         // Land the child where fitting it would, margin and all, but never past 1:1, so its text lands at
         // its natural size rather than magnified to fill the view. Expressed in the child's own space and
         // mapped back out, so the zoom ends exactly where the swap puts the camera.
-        const target = exitPortal(fitBounds(childBounds, viewport, inset, 1), portal, childBounds);
-        animateTo(target, () => swap(target));
+        const target = exitPortal(fitBounds(fitFrame(child), viewport, inset, NOMINAL_ZOOM), portal, childBounds);
+        animateTo(target, () => swap(target), DRILL_ANIMATION_MS);
         setOpening(portal.id);
       } else {
         swap(registry.get(atoms.camera));
       }
     },
     [
+      hostOpen,
       scenes,
       registry,
       atoms.path,
@@ -205,7 +216,7 @@ export const useSceneNavigation = ({
         const child = scenes[next[next.length - 1]];
         const parent = scenes[next[next.length - 2]];
         const portal = parent
-          ? Object.values(parent.nodes).find((node) => isPortalNode(node) && node.scene === child?.id)
+          ? Object.values(parent.nodes).find((node) => isFrameNode(node) && node.scene === child?.id)
           : undefined;
         if (!child || !portal) {
           break;
@@ -220,7 +231,7 @@ export const useSceneNavigation = ({
       setCamera(exited);
       const parent = scenes[next[next.length - 1]];
       if (animate && parent) {
-        animateTo(fitBounds(frameOf(next, parent), viewport, inset));
+        animateTo(fitBounds(fitFrame(parent), viewport, inset, NOMINAL_ZOOM), undefined, DRILL_ANIMATION_MS);
       }
       pushHistory({ path: next, camera: exited });
     },
@@ -266,7 +277,7 @@ export const useSceneNavigation = ({
     }
     const timer = setTimeout(() => {
       const portal = Object.values(scene.nodes).find(
-        (node) => isPortalNode(node) && coverage(camera, nodeBounds(node), viewport) >= AUTO_ENTER,
+        (node) => isFrameNode(node) && !hostOpen(node) && coverage(camera, nodeBounds(node), viewport) >= AUTO_ENTER,
       );
       if (portal) {
         drillIn(portal, false);
@@ -282,7 +293,7 @@ export const useSceneNavigation = ({
       }
     }, AUTO_DRILL_MS);
     return () => clearTimeout(timer);
-  }, [camera, scene, bounds, path, viewport, drag, drillIn, drillOut, registry, atoms.history, isAnimating]);
+  }, [camera, scene, bounds, path, viewport, drag, hostOpen, drillIn, drillOut, registry, atoms.history, isAnimating]);
 
-  return { nameOf, portalTo, frameOf, bounds, nominalZoom, pushHistory, drillIn, drillOut, goHistory };
+  return { nameOf, portalTo, frameOf, bounds, fitTarget, pushHistory, drillIn, drillOut, goHistory };
 };

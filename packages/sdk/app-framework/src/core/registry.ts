@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Atom from 'effect/reactivity/Atom';
 import type * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 
 import { PluginManagerError } from './plugin-manager/errors.ts';
@@ -183,3 +183,8 @@ export class Manager {
     return rest.reduce((effect, provider) => Effect.catch(effect, () => lookup(provider)), lookup(first));
   }
 }
+
+export {
+  EdgeRegistryPluginProvider as EdgePluginProvider,
+  type EdgeRegistryPluginProviderOptions as EdgePluginProviderOptions,
+} from './edge-registry-plugin-provider.ts';

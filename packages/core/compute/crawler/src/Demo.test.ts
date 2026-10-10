@@ -77,7 +77,7 @@ describe('demo', () => {
             console.log(heading(`Query: facts mentioning "${top.label}" (${about.length})`));
             for (const fact of about.slice(0, 8)) {
               const object =
-                'entity' in fact.assertion.object ? fact.assertion.object.entity : fact.assertion.object.literal;
+                fact.assertion.object.kind === 'entity' ? fact.assertion.object.entity : fact.assertion.object.literal;
               console.log(
                 `  ${fact.attribution.agent ?? '?'}  —${fact.assertion.predicate}→  ${object}   (${fact.attribution.source})`,
               );

@@ -1,0 +1,4 @@
+# Keep in sync with `rust` in /.prototools; CI's setup action installs exactly this.
+[toolchain]
+channel = "1.93.0"
+profile = "minimal"

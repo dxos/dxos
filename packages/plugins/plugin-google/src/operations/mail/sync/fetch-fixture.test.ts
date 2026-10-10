@@ -9,7 +9,7 @@ import { describe, test } from 'vitest';
 
 import { Feed, Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import { seedMailboxBinding } from '@dxos/plugin-inbox/testing/sync';
 import { Message } from '@dxos/types';

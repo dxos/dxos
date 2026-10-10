@@ -1,0 +1,202 @@
+---
+id: org.dxos.plugin.messenger
+name: MessengerPlugin
+version: 0.1.0
+---
+
+Cross-space notifications for Composer. Contacts and bots send short messages through the HALO
+inbox (signed envelopes relayed by EDGE); each recipient device stores them once in a feed in the
+user's default space and lists them in a deck companion panel with an unread badge. Space
+invitations are messages too: they render plugin-client's Join/Open surface and raise a toast on the
+device that stored them. A message is an alert that points elsewhere — a short text and a link to
+the object where the work lives — not a chat channel.
+
+Design: `agents/superpowers/specs/2026-10-04-plugin-messenger-design.md`.
+
+## Extensions
+
+| Term        | URI                           |
+|-------------|-------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`       |
+| `feat`      | `org.dxos.mdl.feat@1.0`       |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`   |
+| `component` | `org.dxos.mdl.component@1.0`  |
+| `op`        | `org.dxos.mdl.op@1.1`         |
+| `test`      | `org.dxos.mdl.test@1.0`       |
+
+## Types
+
+```mdl
+type Notifications
+  fields:
+    feed: Ref<Feed>                       # messages, in arrival order; owned (SetParent)
+    readKeys: string[]                    # keys (envelope id, else message id) of read messages
+  typename: org.dxos.type.notifications
+  version: 0.1.0
+  note: |
+    Not a user type, so it never appears in the navtree. One per default space, created by the
+    materializer when it first stores a message; if two devices race, the lowest id wins.
+```
+
+```mdl
+type StoredMessage
+  base: org.dxos.type.message
+  conventions:
+    sender.identityDid: the verified envelope signer, never the payload's own claim
+    attachments[].ref: the object the message points to; the first is opened on click
+    properties.subject: subject line
+    meta.keys: { source: "org.dxos.inbox", id: <envelope id> }   # dedupe across devices
+```
+
+## Capabilities
+
+```mdl
+component MessengerCapabilities.Sender
+  desc: |
+    `send(recipientDid, message): Effect<void, InboxSendError>`. Resolves the DID through the
+    contact book (a DID cannot be turned back into an identity key), JSON-encodes the message and
+    calls `client.halo.inbox.sendMessage`.
+  errors: UnknownRecipientError | MessageSendError | InboxPayloadTooLargeError
+```
+
+```mdl
+component MessengerCapabilities.NotificationsContainers
+  desc: |
+    Atom of the default space's Notifications containers, the one every device writes to first; empty
+    until one exists, and more than one only until the materializer converges them.
+```
+
+```mdl
+component InboxMaterializer
+  desc: |
+    Startup module (ClientEvents.SpacesAvailable). On every change to `halo.inbox.messages`,
+    `halo.contacts` or `client.spaces`, runs one pass (passes never overlap):
+      1. keep `org.dxos.inbox.message` messages from contacts; leave the rest pending;
+      2. decode the payload (`Message.decodeJson`); ack undecodable payloads;
+      3. skip messages whose envelope id is already stored (meta key), else append to the feed;
+      4. flush, then ack every handled id.
+    Toasts each newly written space invitation with a Join action.
+```
+
+## Components
+
+```mdl
+component NotificationTile
+  desc: Mosaic tile (in the NotificationsPanel folder) — unread dot, subject, time; invitation surface or sender + text + links; menu.
+  props:
+    message: Message
+    read: boolean
+    renderInvitation?: (data, sender) => ReactNode
+  emits:
+    onAction(open | mark-read | mark-unread | delete)
+```
+
+```mdl
+component NotificationsPanel
+  desc: |
+    Panel with a toggle-group filter (all / unread / invitations) and "Mark all as read", over a
+    Mosaic.VirtualStack of NotificationTile, newest first. Click marks read and calls onOpen.
+  props:
+    notifications: Notifications
+    renderInvitation?: InvitationRenderer
+    onOpen?: (message) => void
+```
+
+```mdl
+component MessengerCompanion
+  desc: |
+    Deck companion `messenger` (icon ph--envelope--regular). Renders invitations through
+    `AppSurface.SpaceInvitation` (plugin-client) and opens the first attachment with
+    `LayoutOperation.Open`. The companion's `badge` atom is the unread count.
+```
+
+## Operations
+
+```mdl
+op send
+  key: org.dxos.operation.messenger.send
+  desc: Sends a notification to a contact through MessengerCapabilities.Sender.
+  input:
+    recipientDid: string
+    text: string
+    subject?: string
+    link?: Ref<Obj>
+  output: void
+  effects: [inbox:send]
+```
+
+## Features
+
+```mdl
+feat F-1: Materialization
+  req F-1.1:
+    when: a contact's message arrives in the HALO inbox
+    then: it is stored once in the default space's notifications feed and then acked
+  req F-1.2:
+    when: a message arrives from a non-contact
+    then: it stays pending and is shown if the sender later becomes a contact
+  req F-1.3:
+    when: two devices of one identity receive the same envelope
+    then: one copy is stored; both ack
+  req F-1.4:
+    when: a space invitation is stored
+    then: the storing device shows a toast with Join; other devices do not
+```
+
+```mdl
+feat F-2: Panel
+  req F-2.1:
+    when: there are unread notifications
+    then: the envelope tab in R0 shows the unread count
+  req F-2.2:
+    when: the user clicks a notification
+    then: it is marked read and its first linked object is opened
+  req F-2.3:
+    when: the user picks a filter
+    then: only all / unread / invitation notifications are listed
+  req F-2.4:
+    when: the user chooses Mark as unread or Delete from a tile's menu
+    then: the read state changes, or the message leaves the feed
+```
+
+```mdl
+feat F-3: Sending
+  req F-3.1:
+    when: a plugin or agent sends to a contact's DID
+    then: the message is relayed; non-contacts and oversized messages fail with typed errors
+```
+
+## Acceptance
+
+```mdl
+scenario T-1: Two users
+  given: users A and B share a space (story Messenger/TwoUsers)
+  when: A sends "Please review" to B
+  then:
+    - a tile appears in B's panel and B's badge reads 1
+    - clicking the tile clears the badge
+```
+
+---
+
+## QA
+
+```mdl
+test QA-1: A contact's notification reaches the panel
+  desc: Send from one identity, receive and read on another, through the storybook harness.
+  actors: agent
+  covers: [F-1.1, F-2.1, F-2.2, T-1]
+  status: unverified
+  given:
+    - storybook is serving this worktree
+  steps:
+    - name: Open the two-user story
+      do: Open the story plugins/plugin-messenger/Messenger/TwoUsers.
+      expect: left column shows Alice's compose form; right column shows Bob's empty panel
+    - name: Send
+      do: Pick Bob as recipient, type "Please review", press Send.
+      expect: a tile reading "Please review" appears in Bob's panel and the badge reads 1
+    - name: Read
+      do: Click the tile.
+      expect: the badge clears
+```

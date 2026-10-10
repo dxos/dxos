@@ -8,7 +8,8 @@ import * as Exit from 'effect/Exit';
 
 import { AssistantTestLayerWithTriggers } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
-import { AgentHandlers, RunInstructions } from '@dxos/assistant-toolkit';
+import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
+import * as AgentOperationHandlerSet from '@dxos/assistant-toolkit/AgentOperationHandlerSet';
 import { TriggerDispatcher } from '@dxos/compute-runtime';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
@@ -59,7 +60,7 @@ const TestLayer = AssistantTestLayerWithTriggers({
     ProjectOperationHandlerSet.handlers,
     TasksOperationHandlerSet.handlers,
     SpaceOperationHandlerSet.handlers,
-    AgentHandlers,
+    AgentOperationHandlerSet.handlers,
   ],
   types: TYPES,
   skills: [ProjectSkill.make()],
@@ -117,7 +118,7 @@ const seed = () =>
     );
 
     const { db } = yield* Database.Service;
-    const record = Operation.serialize(RunInstructions);
+    const record = Operation.serialize(AgentOperation.RunInstructions);
     db.registry.add([record]);
 
     const trigger = yield* Database.add(

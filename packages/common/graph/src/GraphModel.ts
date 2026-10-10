@@ -12,7 +12,7 @@ import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
 
 import { inspectCustom } from '@dxos/debug';
-import { AtomEx } from '@dxos/effect';
+import * as AtomEx from '@dxos/effect/AtomEx';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { type MakeOptional, type Specialize } from '@dxos/util';
 

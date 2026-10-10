@@ -1,5 +1,13 @@
 # @dxos/teleport-e2e
 
+## 0.13.0
+
+### Patch Changes
+
+- @dxos/async@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/teleport@0.13.0
+
 ## 0.12.0
 
 ### Patch Changes

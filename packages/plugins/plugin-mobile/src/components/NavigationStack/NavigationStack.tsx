@@ -11,7 +11,8 @@ import React, {
   useRef,
 } from 'react';
 
-import { type ThemedClassName, useMediaQuery } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 /**
@@ -60,7 +61,7 @@ const poseFor = (offset: number, drag: number): Pose => {
 
 const transformFor = (pose: Pose) => `translate3d(${pose.x}%, 0, 0)`;
 
-export type NavigationStackProps = ThemedClassName<{
+export type NavigationStackProps = Util.ThemedClassName<{
   /** Panel ids, root first; the panel the user has navigated to is `index`. */
   items: string[];
   /** Index of the panel currently on top of the stack. */
@@ -78,7 +79,7 @@ export const NavigationStack = ({ classNames, items, index, onIndexChange, rende
   const rootRef = useRef<HTMLDivElement>(null);
   const panelRefs = useRef<(HTMLDivElement | null)[]>([]);
   const dimRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const [reducedMotion] = useMediaQuery('(prefers-reduced-motion: reduce)', { fallback: false });
+  const [reducedMotion] = Hooks.useMediaQuery('(prefers-reduced-motion: reduce)', { fallback: false });
 
   const gestureRef = useRef<{
     pointerId: number;
@@ -358,7 +359,7 @@ export const NavigationStack = ({ classNames, items, index, onIndexChange, rende
             inert={offset !== 0 || undefined}
             // Opaque per layer: the outgoing panel only travels a third of the width, so the rest of it
             // stays underneath the incoming one and shows straight through a transparent panel.
-            className={mx('dx-fullscreen dx-base-surface', nearby ? 'will-change-transform' : 'invisible')}
+            className={mx('dx-cover dx-base-surface', nearby ? 'will-change-transform' : 'invisible')}
             style={{
               zIndex: itemIndex,
               // Each panel composites independently; without containment a heavy subtree re-laying out
@@ -375,7 +376,7 @@ export const NavigationStack = ({ classNames, items, index, onIndexChange, rende
                 dimRefs.current[itemIndex] = element;
               }}
               aria-hidden
-              className='dx-fullscreen bg-black pointer-events-none'
+              className='dx-cover bg-black pointer-events-none'
               style={{ opacity: 0 }}
             />
           </div>

@@ -6,7 +6,7 @@ import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
 import * as AppGraph from '@dxos/app-graph/AppGraph';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { firstOpenableChild } from './openable-children.ts';
 

@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 
 import * as Credential from '@dxos/compute/Credential';
 import { EdgeHttpClient } from '@dxos/edge-client';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { SpaceId } from '@dxos/keys';
 import { type EdgeFunctionEnv } from '@dxos/protocols';
 

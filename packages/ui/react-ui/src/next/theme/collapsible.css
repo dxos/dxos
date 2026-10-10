@@ -3,63 +3,79 @@
  */
 
 @layer dx-components {
-  .nx-collapsible {
+  /* A Container or card Section host keeps its own layout (a grid, or a card's subgrid of rails). */
+  .dx-collapsible:not(.dx-container, .dx-card-section) {
     display: flex;
     flex-direction: column;
     min-width: 0;
   }
 
-  .nx-collapsible-trigger {
+  .dx-collapsible-trigger {
     display: flex;
     align-items: center;
-    gap: var(--nx-gap-size);
+    gap: var(--dx-gap-size);
     width: 100%;
-    min-height: var(--nx-block-size);
+    min-height: var(--dx-block-size);
     padding: 0;
     border: none;
     border-radius: var(--radius-sm, 0.25rem);
     background: none;
-    color: var(--color-description);
+    color: var(--color-fg-muted);
     font: inherit;
-    font-size: var(--nx-font-size);
-    line-height: var(--nx-line-height);
+    font-size: var(--dx-font-size);
+    line-height: var(--dx-line-height);
     text-align: start;
     cursor: pointer;
   }
   /* A disclosure row is text, not a control: hover strengthens the text (same hue) rather than filling a surface. */
-  .nx-collapsible-trigger:hover {
+  .dx-collapsible-trigger:hover {
     color: var(--color-hover-fg);
   }
 
-  .nx-collapsible-indicator {
+  /* Caret only: a block square, the trailing disclosure of a list row, with a control's hover fill. */
+  .dx-collapsible-trigger[data-caret-only] {
+    justify-content: center;
+    width: var(--dx-block-size);
+    height: var(--dx-block-size);
+    color: inherit;
+  }
+  .dx-collapsible-trigger[data-caret-only]:hover {
+    background: var(--color-hover-surface);
+  }
+
+  .dx-collapsible-indicator {
     display: grid;
     place-items: center;
-    transition: transform 150ms ease-out;
+    transition: transform var(--dx-disclosure-duration) var(--dx-disclosure-ease-open);
   }
-  .nx-collapsible-indicator[data-state='open'] {
+  .dx-collapsible-indicator[data-state='open'] {
     transform: rotate(90deg);
   }
 
-  .nx-collapsible-content {
+  .dx-collapsible-content {
     overflow: hidden;
   }
-  .nx-collapsible-content[data-state='open'] {
-    animation: nx-collapsible-open 150ms ease-out;
+  /* A grid content (`gutter='inherit'`) spaces its rows as its parent grid does, since a subgrid shares columns only. */
+  .dx-collapsible-content.dx-container {
+    row-gap: inherit;
   }
-  .nx-collapsible-content[data-state='closed'] {
-    animation: nx-collapsible-close 150ms ease-out;
+  .dx-collapsible-content[data-state='open'] {
+    animation: dx-collapsible-open var(--dx-disclosure-duration) var(--dx-disclosure-ease-open);
+  }
+  .dx-collapsible-content[data-state='closed'] {
+    animation: dx-collapsible-close var(--dx-disclosure-duration) var(--dx-disclosure-ease-close);
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .nx-collapsible-indicator {
+    .dx-collapsible-indicator {
       transition: none;
     }
-    .nx-collapsible-content[data-state] {
+    .dx-collapsible-content[data-state] {
       animation: none;
     }
   }
 
-  @keyframes nx-collapsible-open {
+  @keyframes dx-collapsible-open {
     from {
       height: 0;
     }
@@ -67,7 +83,7 @@
       height: var(--height);
     }
   }
-  @keyframes nx-collapsible-close {
+  @keyframes dx-collapsible-close {
     from {
       height: var(--height);
     }

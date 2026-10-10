@@ -11,7 +11,7 @@ import { Filter, Query, Type, View } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
@@ -48,7 +48,7 @@ const meta: Meta<StoryArgs> = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         StorybookPlugin.make({}),
         ClientPlugin.make({
           types: [

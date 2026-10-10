@@ -16,3 +16,4 @@ export * from './useSettingsScope.ts';
 export * from './useSettingsSpace.ts';
 export * from './useShowItem.ts';
 export * from './useTypeOptions.ts';
+export * from './useUpdateRow.tsx';

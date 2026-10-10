@@ -8,7 +8,8 @@ import { describe, test } from 'vitest';
 
 import { Annotation, DXN, JsonSchema, Type } from '@dxos/echo';
 import { Format } from '@dxos/echo/Format';
-import { SchemaAST, SchemaEx } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 
 import { AutofillAnnotation, OptionsLookupAnnotation, autofill, optionsLookup } from '../annotations.ts';
 import { omitId } from './omit.ts';

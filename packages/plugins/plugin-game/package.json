@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-game",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "description": "Game plugin for DXOS Composer (unifies game variants like chess, tic-tac-toe).",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,7 +10,7 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#capabilities": {
@@ -96,9 +96,9 @@
       "import": "./dist/lib/GamePlugin.mjs"
     },
     "./GameUtil": {
-      "source": "./src/util/load-game.ts",
-      "types": "./dist/types/src/util/load-game.d.ts",
-      "import": "./dist/lib/GameUtil.mjs"
+      "source": "./src/GameUtil.ts",
+      "types": "./dist/types/src/GameUtil.d.ts",
+      "import": "./dist/lib/ns/GameUtil.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

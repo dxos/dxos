@@ -12,7 +12,7 @@ import * as PathResolution from '@dxos/app-graph/PathResolution';
 import { setupGraphBuilder } from '@dxos/app-graph/testing';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 

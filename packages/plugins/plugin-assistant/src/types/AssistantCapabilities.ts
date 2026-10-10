@@ -9,12 +9,13 @@ import type * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
-import type { MakeTurnProducer } from '@dxos/agent-runtime';
+import type { AgentProcessDefinition, MakeTurnProducer } from '@dxos/agent-runtime';
 import * as Capability from '@dxos/app-framework/Capability';
 import type { AiContext } from '@dxos/assistant';
 import type * as Chat from '@dxos/assistant/Chat';
 import type * as Instructions from '@dxos/compute/Instructions';
 import { type Database, type Obj, type Ref, type Registry } from '@dxos/echo';
+import { type Message } from '@dxos/types';
 
 import { meta } from '#meta';
 
@@ -74,6 +75,44 @@ export const HomeSuggestionsCache = Capability.makeSingleton<Atom.Writable<HomeS
 export const AgentTurnProducer = Capability.make<MakeTurnProducer>()(
   'org.dxos.plugin.assistant.capability.agentTurnProducer',
 );
+
+/**
+ * Whether an agent can run on this device; one that cannot is still listed, with the reason as a
+ * short lowercase phrase shown after its name.
+ */
+export type AgentAvailability = { readonly available: true } | { readonly available: false; readonly reason: string };
+
+/** A person's answer to a request block an agent added to a chat. */
+export type AgentResponse = {
+  chat: Chat.Chat;
+  /** The message holding the request block. */
+  message: Message.Message;
+  requestId: string;
+  optionId: string;
+};
+
+/**
+ * An agent a chat can run on, keyed by `chat.session.harness`. Each plugin registers the agents it
+ * provides; this plugin registers Composer's own loop as `composer`.
+ */
+export type Agent = {
+  readonly id: string;
+  readonly label: string;
+  readonly icon: string;
+  readonly availability: Atom.Atom<AgentAvailability>;
+  readonly makeTurnProducer: MakeTurnProducer;
+  /** Hands a person's answer to the agent; false when nothing is waiting on that request. */
+  readonly respond?: (response: AgentResponse) => Effect.Effect<boolean, never, Database.Service>;
+};
+
+export const Agent = Capability.make<Agent>()(`${meta.profile.key}.capability.agent`);
+
+/**
+ * A durable process a chat can run on in place of the assistant's own agent process, named by its
+ * key in `chat.session.process`. The agent service spawns it for such a chat; a chat that names
+ * none runs on the assistant's.
+ */
+export const AgentProcess = Capability.make<AgentProcessDefinition>()(`${meta.profile.key}.capability.agentProcess`);
 
 /** Context a chat receives when it runs against a subject object. */
 export type SubjectBindings = AiContext.BindingProps & {

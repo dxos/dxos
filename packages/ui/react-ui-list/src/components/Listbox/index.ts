@@ -1,6 +1,6 @@
 //
-// Copyright 2022 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
 export * from './Listbox.tsx';
-export { useListboxSelection } from './ListboxContext.ts';
+export * from './selection.ts';

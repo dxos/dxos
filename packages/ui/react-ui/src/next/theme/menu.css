@@ -1,65 +1,78 @@
 /*
- * Menu: a portalled popup (`.nx-popup` supplies size, level and the focus outline) of block-tall item rows.
+ * Menu: a portalled popup (`.dx-popup` supplies size, level and the focus outline) of block-tall item rows.
  */
 
 @layer dx-components {
-  /* The frame of `PopupScroll`; a long menu scrolls in it (`.nx-popup` with a viewport, `control.css`). */
-  .nx-menu {
+  /* The frame of `PopupScroll`; a long menu scrolls in it (`.dx-popup` with a viewport, `control.css`). */
+  .dx-menu {
     min-width: 10rem;
   }
   /*
    * A submenu's frame overhangs its positioner by the viewport's block padding, so the first item (or, flipped, the
    * last) lines up with the SubTrigger row that floating-ui aligns the positioner to.
    */
-  .nx-submenu:has(> [data-placement$='-start']) {
-    margin-block-start: calc(-1 * var(--nx-control-inset));
+  .dx-submenu:has(> [data-placement$='-start']) {
+    margin-block-start: calc(-1 * var(--dx-control-inset));
   }
-  .nx-submenu:has(> [data-placement$='-end']) {
-    margin-block-end: calc(-1 * var(--nx-control-inset));
+  .dx-submenu:has(> [data-placement$='-end']) {
+    margin-block-end: calc(-1 * var(--dx-control-inset));
   }
 
-  .nx-menu-item {
+  /* A palette: square cells, `columns` to a row; the frame shrinks to the grid rather than a menu's minimum width. */
+  .dx-menu:has([data-columns]) {
+    min-width: 0;
+  }
+  [data-scope='menu'][data-part='content'][data-columns] {
+    display: grid;
+  }
+  [data-columns] > .dx-menu-item {
+    justify-content: center;
+    padding-inline: 0;
+  }
+
+  .dx-menu-item {
     display: flex;
     align-items: center;
-    gap: var(--nx-gap-size);
-    height: var(--nx-block-size);
-    padding-inline: var(--nx-gap-size);
+    gap: var(--dx-gap-size);
+    height: var(--dx-block-size);
+    padding-inline: var(--dx-gap-size);
     cursor: pointer;
   }
-  .nx-menu-item[data-highlighted] {
+  .dx-menu-item[data-highlighted] {
     background: var(--color-hover-surface);
+    border-radius: var(--radius-xs, 0.125rem);
   }
-  .nx-menu-item[data-disabled] {
+  .dx-menu-item[data-disabled] {
     opacity: 0.5;
     cursor: default;
   }
-  .nx-menu-item-text {
+  .dx-menu-item-text {
     flex: 1;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .nx-menu-shortcut {
-    padding-inline-start: var(--nx-gap-size);
+  .dx-menu-shortcut {
+    padding-inline-start: var(--dx-gap-size);
     font-family: inherit;
-    font-size: var(--nx-label-font-size);
-    line-height: var(--nx-label-line-height);
-    color: var(--color-description);
+    font-size: var(--dx-label-font-size);
+    line-height: var(--dx-label-line-height);
+    color: var(--color-fg-muted);
   }
 
   /* An icon-sized leading cell that keeps its place while unchecked, so option labels stay aligned. */
-  .nx-menu-indicator {
+  .dx-menu-indicator {
     display: grid;
     place-items: center;
     flex-shrink: 0;
-    width: var(--nx-icon-size);
-    height: var(--nx-icon-size);
+    width: var(--dx-icon-size);
+    height: var(--dx-icon-size);
   }
-  .nx-menu-indicator[data-state='unchecked'] {
+  .dx-menu-indicator[data-state='unchecked'] {
     visibility: hidden;
   }
-  .nx-menu-item[data-state='open'] {
+  .dx-menu-item[data-state='open'] {
     background: var(--color-hover-surface);
   }
 }

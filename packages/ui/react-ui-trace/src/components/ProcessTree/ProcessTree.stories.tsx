@@ -13,7 +13,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { makeProcess } from '../../testing/index.ts';
 import { ProcessTree, type ProcessTreeProps } from './ProcessTree.tsx';
 
-const processes: Process.Info[] = [
+const processes: Process.Process[] = [
   makeProcess({
     pid: Process.ID.make('97793611-815e-4a67-bc04-60fa67b2c987'),
     name: 'Trigger watcher',

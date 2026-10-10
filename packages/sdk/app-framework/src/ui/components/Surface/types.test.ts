@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import * as Role from '../../../common/Role.ts';
 import { useIsSurfaceAvailable } from './SurfaceComponent.tsx';

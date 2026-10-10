@@ -8,7 +8,7 @@ import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { describe, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Pipeline, Stage } from '@dxos/pipeline';
 import { captureSink } from '@dxos/pipeline/testing';
 import { Message } from '@dxos/types';

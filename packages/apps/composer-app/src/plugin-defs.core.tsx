@@ -4,8 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { ProcessManagerPlugin } from '@dxos/app-framework';
 import type * as Plugin from '@dxos/app-framework/Plugin';
+import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
 import { type Client, type ClientServicesProvider, type Config } from '@dxos/client';
 import { type IdbLogStore } from '@dxos/log-store-idb';
@@ -16,6 +16,7 @@ import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as ConnectorPlugin from '@dxos/plugin-connector/ConnectorPlugin';
 import * as DeckPlugin from '@dxos/plugin-deck/DeckPlugin';
 import * as GraphPlugin from '@dxos/plugin-graph/GraphPlugin';
+import * as MessengerPlugin from '@dxos/plugin-messenger/MessengerPlugin';
 import * as MobilePlugin from '@dxos/plugin-mobile/MobilePlugin';
 import * as NativePlugin from '@dxos/plugin-native/NativePlugin';
 import * as NavTreePlugin from '@dxos/plugin-navtree/NavTreePlugin';
@@ -126,6 +127,8 @@ export const getCorePlugins = ({
     ConnectorPlugin.make(),
     GraphPlugin.make(),
     ...layoutPlugins,
+    // Core because invitations reach the user only through its inbox materializer.
+    MessengerPlugin.make(),
     NavTreePlugin.make(),
     ObservabilityPlugin.make({
       namespace: appKey,
@@ -135,7 +138,7 @@ export const getCorePlugins = ({
     OnboardingPlugin.make({ generateDemoSpace: !isLocal }),
     isTauri && !isMobile && !isPopover && NativePlugin.make(),
     PreviewPlugin.make(),
-    ProcessManagerPlugin(),
+    ProcessManagerPlugin.make(),
     ProgressPlugin.make(),
     !isTauri && isPwa && PwaPlugin.make(),
     RegistryPlugin.make({ externalPlugins }),

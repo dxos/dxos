@@ -16,14 +16,18 @@ to behave while it is on.
 
 The state and the two logs live under `.claude/` (all untracked, per-worktree):
 
-| File                  | Written by                     | What it is                      |
-| --------------------- | ------------------------------ | ------------------------------- |
-| `.autonomous`         | the `UserPromptSubmit` hook    | the pinned task                 |
-| `.autonomous-dod`     | **you**, once, before working  | the definition of done          |
-| `.autonomous-user.md` | the hook, every turn, verbatim | every message the user has sent |
-| `.autonomous-log.md`  | **you**, as you decide         | the decision log                |
+| File                  | Written by                     | What it is                    |
+| --------------------- | ------------------------------ | ----------------------------- |
+| `.autonomous`         | the `UserPromptSubmit` hook    | the pinned task               |
+| `.autonomous-session` | the hook, with the task        | the session that owns the run |
+| `.autonomous-dod`     | **you**, once, before working  | the definition of done        |
+| `.autonomous-user.md` | the hook, every turn, verbatim | what the user told the owner  |
+| `.autonomous-log.md`  | **you**, as you decide         | the decision log              |
 
-Everything is driven through one script:
+Only the owning session sees the block, is held by the Stop hook, or has its
+messages logged. Everything is driven through one script. Call it by the
+absolute path the `AUTONOMOUS MODE` block prints: the state can live in a
+different checkout from your cwd.
 
 ```bash
 bash .claude/scripts/autonomous.sh dod set '1. … 2. …'   # once, first
@@ -54,7 +58,7 @@ The user is not available. Ambiguity is still resolvable — in almost every cas
 the answer already exists:
 
 1. **The user log — read it first.** `autonomous.sh user show` is every message
-   the user has sent this session, verbatim, oldest first. **Scoping and PR-size
+   the user has sent the session that owns the run, verbatim, oldest first. **Scoping and PR-size
    questions are what it is for.** "Should this also fix the adjacent bug?"
    "One PR or three?" "Do they want the migration too?" — the user has almost
    always already said, in an aside three turns before the task existed. Grep it

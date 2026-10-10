@@ -4,11 +4,13 @@
 
 import React, { useMemo } from 'react';
 
-import { type Surface } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Database, JsonSchema, Obj, Type } from '@dxos/echo';
+import type * as Surface from '@dxos/app-framework/Surface';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { Database, JsonSchema, Obj, URI } from '@dxos/echo';
+import { useType } from '@dxos/echo-react';
 import { Format } from '@dxos/echo/Format';
 import { type FormFieldRendererProps, SelectField, useFormValues } from '@dxos/react-ui-form';
+import * as Field from '@dxos/react-ui/Field';
 
 /** The form renderer's own props ride alongside `data` on the surface envelope; `type` comes from the field AST. */
 export type LocationFieldProps = Surface.ComponentProps<AppSurface.FormInputData> &
@@ -22,19 +24,11 @@ export const LocationField = ({ data, ...inputProps }: LocationFieldProps) => {
   const ast = data.fieldPropertyAst;
   const target = data.target;
   const db = Database.isDatabase(target) ? target : Obj.isObject(target) ? Obj.getDatabase(target) : undefined;
+  // The type picker's value is the type's URI, and a user's own type lives in the space rather than the
+  // shared registry, so it is resolved across both.
   const { typename } = useFormValues('MapForm');
-  // Both derivations are memoized: the registry scan is O(types), and an unmemoized
-  // `toJsonSchema` would return a fresh identity each render, defeating the memo below.
-  const schema = useMemo(
-    () =>
-      typename && db
-        ? db.graph.registry
-            .list()
-            .filter(Type.isType)
-            .find((type) => Type.getTypename(type) === typename)
-        : undefined,
-    [db, typename],
-  );
+  const schema = useType(db, URI.isURI(typename) ? typename : undefined);
+  // Memoized: an unmemoized `toJsonSchema` would return a fresh identity each render, defeating the memo below.
   const jsonSchema = useMemo(() => (schema ? JsonSchema.toJsonSchema(schema) : undefined), [schema]);
   const coordinateProperties = useMemo(() => {
     if (!jsonSchema?.properties) {
@@ -60,5 +54,11 @@ export const LocationField = ({ data, ...inputProps }: LocationFieldProps) => {
 
   const props: FormFieldRendererProps = { ...inputProps, type: ast };
 
-  return <SelectField {...props} options={coordinateProperties.map((property) => ({ value: property }))} />;
+  // A provided field owns its row, so it carries its own label.
+  return (
+    <Field.Root>
+      <Field.Label>{inputProps.label}</Field.Label>
+      <SelectField {...props} options={coordinateProperties.map((property) => ({ value: property }))} />
+    </Field.Root>
+  );
 };

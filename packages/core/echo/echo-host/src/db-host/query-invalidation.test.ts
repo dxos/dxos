@@ -9,7 +9,7 @@ import { beforeAll, describe, test } from 'vitest';
 import { Aggregate, Filter, Query } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
-import { RuntimeProvider } from '@dxos/effect';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { IndexEngine } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';

@@ -1,5 +1,25 @@
 # @dxos/react-ui-experimental
 
+## 0.13.0
+
+### Patch Changes
+
+- Updated dependencies [d2a6aad]
+- Updated dependencies [cb1e218]
+- Updated dependencies [7d222fc]
+- Updated dependencies [e99ee70]
+- Updated dependencies [1894fc1]
+- Updated dependencies [1b37aa8]
+- Updated dependencies [321c99f]
+- Updated dependencies [49731e1]
+  - @dxos/react-ui@0.13.0
+  - @dxos/util@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/invariant@0.13.0
+  - @dxos/node-std@0.13.0
+  - @dxos/ui-theme@0.13.0
+  - @dxos/ui-types@0.13.0
+
 ## 0.12.0
 
 ### Patch Changes

@@ -8,7 +8,7 @@ import { resourceFromAttributes } from '@opentelemetry/resources';
 import { BasicTracerProvider, InMemorySpanExporter, type ReadableSpan } from '@opentelemetry/sdk-trace-base';
 import { afterEach, describe, expect, test } from 'vitest';
 
-import { SpanAttributes } from '@dxos/effect';
+import * as SpanAttributes from '@dxos/effect/SpanAttributes';
 import { invariant } from '@dxos/invariant';
 
 import * as OtelSpanSink from './OtelSpanSink.ts';

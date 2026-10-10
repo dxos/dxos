@@ -8,9 +8,7 @@ import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
-import { type Organization, type Person } from '@dxos/types';
-
-import { ProfileOf } from '#types';
+import { type Organization, type Person, ProfileOf } from '@dxos/types';
 
 /** One profile document section; empty bodies render as a heading the user/agent fills in. */
 export type ProfileSection = {

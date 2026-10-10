@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 
 import { FormatAnnotation, TypeFormat } from './types.ts';
 

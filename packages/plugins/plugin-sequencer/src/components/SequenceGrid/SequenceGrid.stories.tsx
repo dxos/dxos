@@ -96,7 +96,7 @@ const DefaultStory = ({ playback }: StoryArgs) => {
   };
 
   return (
-    <div className='dx-fullscreen'>
+    <div className='dx-cover'>
       <SequenceGrid
         sequence={sequence}
         track={sampleTrack}

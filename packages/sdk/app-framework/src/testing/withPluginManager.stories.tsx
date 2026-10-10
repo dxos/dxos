@@ -6,8 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
-import { ThrowError } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { ThrowError, withTheme } from '@dxos/react-ui/testing';
 
 import { Capabilities } from '../common/index.ts';
 import * as Role from '../common/Role.ts';

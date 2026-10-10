@@ -54,6 +54,19 @@ describe('Plugin module authoring', () => {
       expect(module.id).toEqual('org.dxos.plugin.test.module.total');
     });
 
+    it('rejects two modules with the same id', () => {
+      const multiMaker = Capability.moduleMaker('Multi', Multi);
+      const loader = () =>
+        Promise.resolve({
+          default: Capability.makeModule(() => Effect.succeed(Capability.contribute(Multi, { entry: 'x' }))),
+        });
+      const Test = Plugin.make(
+        Plugin.define(testMeta).pipe(Plugin.addModule(multiMaker(loader)), Plugin.addModule(multiMaker(loader))),
+      );
+
+      expect(() => Test()).toThrow(/Duplicate module id org\.dxos\.plugin\.test\.module\.Multi/);
+    });
+
     it.effect('activate runs against the declared requires', () =>
       Effect.gen(function* () {
         const manager = makeManager();

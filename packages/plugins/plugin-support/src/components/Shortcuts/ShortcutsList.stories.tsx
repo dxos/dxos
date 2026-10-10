@@ -20,6 +20,10 @@ const DefaultStory = () => {
     commands: [
       { hotkey: 'meta+k', label: 'Commands', action: () => {} },
       { hotkey: "meta+'", label: 'Settings', action: () => {} },
+      { hotkey: 'meta+ctrl+/', label: 'Toggle sidebar', action: () => {} },
+      { hotkey: 'shift+meta+/', label: 'Shortcuts', action: () => {} },
+      { hotkey: 'alt+enter', label: 'Submit', action: () => {} },
+      { hotkey: 'shift+tab', label: 'Previous field', action: () => {} },
     ],
   });
 

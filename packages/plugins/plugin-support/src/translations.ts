@@ -3,7 +3,7 @@
 //
 
 import { Type } from '@dxos/echo';
-import { type Resource } from '@dxos/react-ui';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
 import { Support } from '#types';
@@ -85,7 +85,15 @@ export const translations = [
         'download-apps.label': 'Download apps',
         'about.label': 'About Composer',
         'released.message': 'Released {{released}}',
+        'update-check.label': 'Check for updates',
+        'update-checking.label': 'Checking for updates…',
+        'update-up-to-date.message': 'Composer is up to date',
+        'update-failed.message': 'Update failed. Try again.',
+        'update-available.message': '{{version}} available',
+        'update-download.label': 'Download update',
+        'update-downloading.label': 'Downloading… {{percent}}%',
+        'update-restart.label': 'Restart to update',
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

@@ -39,7 +39,6 @@ export const ProjectPhase: SampleSpace.Phase<ProjectResult, ProjectInput> = Samp
       const instructions = yield* Database.add(
         Instructions.make({
           name: 'Incident 0516 retrospective',
-          description: 'Bindings for a chat working this retro.',
           text: INSTRUCTIONS,
           objects: [...sources.map((doc) => Ref.make(doc)), Ref.make(tasks.taskSet)],
         }),

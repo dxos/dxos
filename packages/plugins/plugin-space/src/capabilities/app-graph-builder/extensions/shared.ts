@@ -104,6 +104,8 @@ export type ViewIndex = {
   getViewsForTypeUri: (typeUri: string) => Obj.Any[];
   /** True when the schema has `ViewAnnotation` and that path resolves non-null on `object`; false otherwise (no annotation, or null/undefined path — e.g. Kanban with unset `view`). */
   isView: (object: Obj.Any) => boolean;
+  /** View-annotated type URIs with at least one instance that is not a view. */
+  typeUrisWithNonViewObjects: Set<string>;
 };
 
 /**
@@ -120,6 +122,7 @@ export const buildViewIndex = (get: Atom.AtomContext, space: Space, schemas: Typ
   // Used by `isView` to distinguish view instances from regular instances of
   // the same schema (e.g. items-variant Kanban vs view-variant Kanban).
   const viewObjectIds = new Set<string>();
+  const typeUrisWithNonViewObjects = new Set<string>();
 
   if (viewSchemas.length > 0) {
     const filter = Filter.or(...viewSchemas.map((schema) => Filter.type(schema)));
@@ -149,6 +152,8 @@ export const buildViewIndex = (get: Atom.AtomContext, space: Space, schemas: Typ
       // be of a view-annotated schema.
       if (holder != null) {
         viewObjectIds.add(viewObject.id);
+      } else if (holderType) {
+        typeUrisWithNonViewObjects.add(Type.getURI(holderType));
       }
 
       const viewTarget = holder != null ? get(Obj.atom(holder as Obj.Any)) : undefined;
@@ -165,5 +170,6 @@ export const buildViewIndex = (get: Atom.AtomContext, space: Space, schemas: Typ
     typeUrisWithViews: new Set(viewsByTypeUri.keys()),
     getViewsForTypeUri: (typeUri) => viewsByTypeUri.get(typeUri) ?? [],
     isView: (object) => viewObjectIds.has(object.id),
+    typeUrisWithNonViewObjects,
   };
 };

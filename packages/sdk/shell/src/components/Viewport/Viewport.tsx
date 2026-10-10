@@ -13,7 +13,8 @@ import React, {
 
 import { KEYBOARD_MODALITY_ATTR, findFirstFocusable } from '@dxos/react-focus';
 import { createContext, useControllableState } from '@dxos/react-hooks';
-import { type ThemedClassName, useForwardedRef } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 const VIEWPORT_NAME = 'Viewport';
@@ -28,7 +29,7 @@ type ViewportContextValue = {
 
 const [ViewportProvider, useViewportContext] = createContext<ViewportContextValue>(VIEWPORT_NAME);
 
-type ViewportRootProps = ThemedClassName<ComponentPropsWithRef<'div'>> &
+type ViewportRootProps = Util.ThemedClassName<ComponentPropsWithRef<'div'>> &
   Partial<{
     focusManaged: boolean;
     defaultActiveView: string;
@@ -61,7 +62,9 @@ const ViewportRoot = ({
 
 ViewportRoot.displayName = VIEWPORT_NAME;
 
-type ViewportViewsProps = ThemedClassName<Omit<ComponentPropsWithRef<'div'>, 'children'>> & { children: ReactNode[] };
+type ViewportViewsProps = Util.ThemedClassName<Omit<ComponentPropsWithRef<'div'>, 'children'>> & {
+  children: ReactNode[];
+};
 
 const ViewportViews = ({ classNames, children, ...props }: ViewportViewsProps) => {
   const size = { inlineSize: `${Math.ceil(children.length) * 100}%` };
@@ -74,7 +77,7 @@ const ViewportViews = ({ classNames, children, ...props }: ViewportViewsProps) =
 
 ViewportViews.displayName = VIEWS_NAME;
 
-type ViewportViewProps = ThemedClassName<Omit<ComponentPropsWithRef<'div'>, 'id'>> & {
+type ViewportViewProps = Util.ThemedClassName<Omit<ComponentPropsWithRef<'div'>, 'id'>> & {
   id: string;
 };
 
@@ -82,7 +85,7 @@ const ViewportView = forwardRef<HTMLDivElement, ViewportViewProps>(
   ({ classNames, children, id, ...props }, forwardedRef) => {
     const { activeView, focusManaged }: ViewportContextValue = useViewportContext(VIEW_NAME);
     const isActive = id === activeView;
-    const ref = useForwardedRef(forwardedRef);
+    const ref = Hooks.useForwardedRef(forwardedRef);
     useEffect(() => {
       if (!focusManaged && isActive && document.body.hasAttribute(KEYBOARD_MODALITY_ATTR) && ref.current) {
         findFirstFocusable(ref.current)?.focus();

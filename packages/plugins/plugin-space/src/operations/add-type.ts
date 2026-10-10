@@ -9,7 +9,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
-import { SpaceCapabilities, SpaceEvents, SpaceOperation } from '#types';
+import { SpaceCapabilities, SpaceOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.AddType> = SpaceOperation.AddType.pipe(
   Operation.withHandler(
@@ -36,24 +36,20 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddType> = SpaceOpera
       });
 
       // Read from the ambient context rather than declared: a headless host (edge, `dx mcp serve`)
-      // binds neither manager, and a declared service would resolve eagerly and die there.
-      // Activation first, since it is what makes a lazy module contribute its `OnTypeAdded` callback.
-      const pluginManager = yield* Effect.serviceOption(Plugin.Service);
-      yield* Option.match(pluginManager, {
-        onNone: () => Effect.void,
-        onSome: (manager) => manager.activate(SpaceEvents.TypeAdded),
-      });
-      const capabilityManager = yield* Effect.serviceOption(Capability.Service);
-      const onTypeAdded = Option.match(capabilityManager, {
-        onNone: () => [],
-        onSome: (manager) => manager.getAll(SpaceCapabilities.OnTypeAdded),
-      });
-      yield* Effect.all(
-        onTypeAdded.map((callback) => callback({ db, type, show: input.show })),
-        { concurrency: 'unbounded' },
-      );
+      // binds neither manager, and a declared service would resolve eagerly and die there. A process
+      // resolves only the services it declares, so a caller with the managers in hand is told the
+      // plugins were not notified and does it itself (see `notified`).
+      const plugins = yield* Effect.serviceOption(Plugin.Service);
+      const capabilities = yield* Effect.serviceOption(Capability.Service);
+      const notified = Option.isSome(plugins) && Option.isSome(capabilities);
+      if (notified) {
+        yield* SpaceCapabilities.notifyTypeAdded(
+          { plugins: plugins.value, capabilities: capabilities.value },
+          { db, type, show: input.show },
+        );
+      }
 
-      return { id: type.id, object: type };
+      return { id: type.id, object: type, notified };
     }),
   ),
 );

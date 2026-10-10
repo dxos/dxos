@@ -50,6 +50,13 @@ export type Comparability = {
    * stage inherits the allocator pages the snapshot committed in the realm it serialized.
    */
   snapshotStages?: string[];
+  /**
+   * Which work counters ran (`DX_PERF_COUNTERS`), e.g. `trace+react+calls`.
+   *
+   * Its own axis rather than part of `instruments`: the counters' cost was measured separately, and
+   * a flag that adds one must not split the `instruments` series the timings are trended on.
+   */
+  counters?: string;
 };
 
 /** A CDP target the harness measures. Shared workers matter most: ECHO and automerge live there. */
@@ -121,6 +128,92 @@ export type ThreadMetrics = {
   processTimeMs: number;
   layoutCount: number;
   recalcStyleCount: number;
+  /** Task time Blink could not attribute to script, layout or style: paint, parsing, IPC. */
+  taskOtherMs: number;
+  /** Time the renderer spent answering CDP, which is the harness's own cost to the stage. */
+  devToolsCommandMs: number;
+  /** A LEVEL at the stage's end, not a delta: layout objects alive, the render tree's size. */
+  layoutObjects: number;
+  /** A LEVEL at the stage's end: frames (iframes included) in the page. */
+  frames: number;
+};
+
+/**
+ * Rendering work a trace counted on the page's main thread, summed over the stage.
+ *
+ * Counts rather than durations because a count does not move with machine load: the same render
+ * restyles the same elements and lays out the same objects on a fast runner and a slow one.
+ */
+export type RenderCounters = {
+  /** `UpdateLayoutTree` events — style recalculations. */
+  styleRecalcs: number;
+  /** Elements restyled, summed over every `UpdateLayoutTree`. */
+  styleRecalcElements: number;
+  /** `Layout` events. */
+  layouts: number;
+  /** Objects that needed layout, summed over every `Layout`'s `dirtyObjects`. */
+  layoutDirtyObjects: number;
+  /** Layouts run synchronously inside script — a script read geometry it had just invalidated. */
+  forcedLayouts: number;
+};
+
+/**
+ * Instructions a realm's threads retired over the stage, from Chrome's thread instruction counter.
+ *
+ * Only present when the kernel exposes a PMU to the process: `--enable-thread-instruction-count`
+ * is a no-op without one, which is why `threads` exists.
+ */
+export type RealmInstructions = {
+  kind: TargetKind;
+  instructions: number;
+  /** Threads that reported a count; `0` means the counter is unsupported here, not idle. */
+  threads: number;
+};
+
+/** What the per-stage counter trace saw, beside its own integrity readings. */
+export type TraceCounters = {
+  render: RenderCounters;
+  instructions: RealmInstructions[];
+  /** Events the counter pass parsed; `0` means the trace did not run for this stage. */
+  events: number;
+  /** Chrome reported dropped events, so every count above is a lower bound. */
+  dataLoss: boolean;
+};
+
+/** JS function calls a realm made over the stage, from V8's precise coverage. */
+export type RealmCalls = {
+  kind: TargetKind;
+  name: string;
+  calls: number;
+  /** Distinct functions called at least once during the stage. */
+  functions: number;
+};
+
+/**
+ * React work over the stage, from the devtools global hook the harness installs.
+ *
+ * `wastedRenders` is a re-render whose props were shallow-equal to the previous ones and whose
+ * state and context values were identical, i.e. one `memo` would have skipped.
+ */
+export type ReactCounters = {
+  commits: number;
+  renders: number;
+  mounts: number;
+  wastedRenders: number;
+  /** Renderers that injected into the hook; `0` means React never saw it, not that nothing rendered. */
+  renderers: number;
+};
+
+/**
+ * Data-layer work over the stage, from the app's own `__dxosDataCounters` probes, summed over realms.
+ *
+ * Keyed by counter name (`sqlite.statements.select`, `automerge.saves`, …) so a probe can add a
+ * counter without a harness change; the publisher maps a fixed set of names to columns.
+ */
+export type DataCounters = {
+  counters: Record<string, number>;
+  /** Realms that published the probe; `0` means nothing was instrumented. */
+  realms: number;
 };
 
 /**
@@ -253,7 +346,17 @@ export type NetworkMetrics = {
   edgeSocketFrames: number;
   /** Analytics and third-party bytes, recorded so the edge columns can be read as clean. */
   analyticsBytes: number;
+  /** WebSocket frames to ANY host, both directions. */
+  socketFrames: number;
+  /**
+   * Requests, bytes and socket frames per endpoint (`host/first-path-segment`).
+   *
+   * NDJSON only: a column per endpoint would mint a PostHog series per URL shape.
+   */
+  byEndpoint: Record<string, EndpointTraffic>;
 };
+
+export type EndpointTraffic = { requests: number; bytes: number; frames: number };
 
 /**
  * Responsiveness as a user would perceive it, from three independent probes.
@@ -274,6 +377,33 @@ export type ResponsivenessMetrics = {
   /** Absent in `measure` mode, which attaches no screencast. */
   stillFrameMaxMs?: number;
   stillFrameCount?: number;
+};
+
+/** One mark on a latency path, as milliseconds since the path's start. */
+export type LatencyStep = {
+  name: string;
+  kind: TargetKind;
+  ms: number;
+};
+
+/**
+ * Prompt-to-model latency over the stage, joined from every realm's work marks on their absolute time.
+ *
+ * Two quantities because a chat turn has two kinds of input: the user's prompt, and — on every later
+ * turn of an agent loop — the previous response, whose tool calls must run before the next request.
+ * Both are the time the app spends between having its input and asking the model.
+ */
+export type RequestLatency = {
+  /** `chat.submit` → the first agent `ai.request` after it, one per submit. */
+  submitToRequestMs: number[];
+  /** An agent `ai.response` → the next agent `ai.request`, one per later turn. */
+  turnToRequestMs: number[];
+  /** The first submit's path: every mark between it and its request. NDJSON only. */
+  submitPath: LatencyStep[];
+  /** Each mark's median offset into the later turns, where it occurred in at least half of them. NDJSON only. */
+  turnPath: LatencyStep[];
+  /** Realms that published marks; `0` means nothing was instrumented. */
+  realms: number;
 };
 
 /** One stage of one flow, in one mode — the unit both the NDJSON row and the PostHog event carry. */
@@ -336,6 +466,23 @@ export type StageRow = {
   disk: DiskMetrics;
   /** RPC queue wait, service and round trip per realm. Empty when no realm published the counters. */
   rpc: RealmRpc[];
+  /** Calls served per RPC method, summed over realms. NDJSON only. */
+  rpcCallsByMethod?: Record<string, number>;
+  /** Rendering counts and instructions from the per-stage counter trace. Absent when it did not run. */
+  traceCounters?: TraceCounters;
+  /** Exact JS call counts per realm. Absent unless call counting is on. */
+  jsCalls?: RealmCalls[];
+  /** React commits and renders. Absent unless the React probe is on. */
+  react?: ReactCounters;
+  /** The app's data-layer counters: automerge, ECHO, SQLite statements. */
+  data?: DataCounters;
+  /**
+   * Submit (the keydown) to the first frame showing the submitted prompt in the thread, read by the
+   * flow's in-page probe. Absent unless the flow measured it in this stage.
+   */
+  submitToQueuedVisibleMs?: number;
+  /** Prompt-to-model latency. Absent when the stage made no model request. */
+  latency?: RequestLatency;
   responsiveness: ResponsivenessMetrics;
 
   comparability: Comparability;

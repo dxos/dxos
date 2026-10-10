@@ -9,7 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { objectKey, probeAccess, regionFromHost } from '@dxos/blob/s3';
 import { Format, Obj, Ref } from '@dxos/echo';
 import { AccessToken, Connection } from '@dxos/link';
-import { ConnectionTestError } from '@dxos/plugin-connector';
+import * as ConnectorError from '@dxos/plugin-connector/ConnectorError';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 import { S3_CONNECTOR_ID, S3_SOURCE } from '../constants.ts';
@@ -172,7 +172,10 @@ export const createS3ConnectorEntry = (): ConnectorSpec.ConnectorEntry => ({
           credentials: { accessKeyId: accessToken.account ?? '', secretAccessKey: accessToken.token },
         }),
       catch: (cause) =>
-        new ConnectionTestError({ message: cause instanceof Error ? cause.message : String(cause), cause }),
+        new ConnectorError.ConnectionTestError({
+          message: cause instanceof Error ? cause.message : String(cause),
+          cause,
+        }),
     }),
 });
 

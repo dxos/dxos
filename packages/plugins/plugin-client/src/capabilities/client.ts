@@ -12,7 +12,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { Client, ClientService, fromClient } from '@dxos/client';
 import { INITIALIZE_TIMEOUT } from '@dxos/client-protocol';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError } from '@dxos/errors';
 import { makeIdentityService, makeSpaceService } from '@dxos/halo-adapter-client';
 import { log } from '@dxos/log';

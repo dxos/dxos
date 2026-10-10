@@ -12,7 +12,7 @@
 import * as Atom from 'effect/reactivity/Atom';
 
 import { DefaultInput, DefaultOutput } from '@dxos/conductor';
-import { toEffectSchema } from '@dxos/echo/JsonSchema';
+import * as JsonSchema from '@dxos/echo/JsonSchema';
 import {
   type FreehandProjectionOptions,
   type Intent,
@@ -34,8 +34,7 @@ import {
   syncDelete,
   syncLink,
 } from '../graph/index.ts';
-import { type ComputeShape, createFunctionAnchors, parseAnchorId } from '../shapes/index.ts';
-import { anchorsToPorts } from './ports.ts';
+import { type ComputeShape, createFunctionPorts, parseAnchorId } from '../shapes/index.ts';
 
 /** What the projection needs of the controller: the graph it mirrors into and the runtime's change event. */
 export type ComputeGraphSource = Pick<ComputeGraphController, 'graph' | 'update'>;
@@ -233,9 +232,9 @@ const withRuntimePorts = (controller: ComputeGraphSource, node: Node): Node => {
   if (!computeNode?.inputSchema && !computeNode?.outputSchema) {
     return node;
   }
-  const inputSchema = computeNode.inputSchema ? toEffectSchema(computeNode.inputSchema) : DefaultInput;
-  const outputSchema = computeNode.outputSchema ? toEffectSchema(computeNode.outputSchema) : DefaultOutput;
-  return { ...node, ports: anchorsToPorts(createFunctionAnchors(node, inputSchema, outputSchema), node.size) };
+  const inputSchema = computeNode.inputSchema ? JsonSchema.toEffectSchema(computeNode.inputSchema) : DefaultInput;
+  const outputSchema = computeNode.outputSchema ? JsonSchema.toEffectSchema(computeNode.outputSchema) : DefaultOutput;
+  return { ...node, ports: createFunctionPorts(node.size, inputSchema, outputSchema) };
 };
 
 const model = (controller: ComputeGraphSource) => controller.graph;

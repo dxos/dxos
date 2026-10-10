@@ -9,7 +9,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Blob, Database } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { FileOperation } from '#types';

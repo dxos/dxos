@@ -4,8 +4,8 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { composable, composableProps } from '@dxos/react-ui';
 import { Form, type FormFieldMap, SelectField, omitId } from '@dxos/react-ui-form';
+import * as Util from '@dxos/react-ui/Util';
 
 import { Sequence } from '#types';
 
@@ -17,7 +17,7 @@ export type SoundProps = {
 };
 
 /** Form editor for a single sequence layer. */
-export const Sound = composable<HTMLDivElement, SoundProps>(({ sequence, onUpdate, ...props }, forwardedRef) => {
+export const Sound = Util.composable<HTMLDivElement, SoundProps>(({ sequence, onUpdate, ...props }, forwardedRef) => {
   const schema = useMemo(() => omitId(Sequence.Sequence), []);
 
   // Custom field map to render the source.type discriminator as a select.
@@ -79,7 +79,7 @@ export const Sound = composable<HTMLDivElement, SoundProps>(({ sequence, onUpdat
   );
 
   return (
-    <div {...composableProps(props)} ref={forwardedRef}>
+    <div {...Util.composableProps(props)} ref={forwardedRef}>
       <Form.Root<Omit<Sequence.Sequence, 'id'>>
         key={`${sequence.id}-${sequence.source.type}-${sequence.source.type === 'generator' ? sequence.source.preset : sequence.source.sample}`}
         schema={schema}

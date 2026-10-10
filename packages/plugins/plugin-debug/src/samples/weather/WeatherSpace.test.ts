@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { buildArchive, histogram } from '@dxos/app-toolkit/testing';
 import { Type } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import * as WeatherSpace from './WeatherSpace.ts';
 

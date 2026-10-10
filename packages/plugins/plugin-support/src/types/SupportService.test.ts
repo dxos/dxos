@@ -5,13 +5,16 @@
 import * as Effect from 'effect/Effect';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import type * as Observability from '@dxos/observability/Observability';
 
 import * as SupportService from './SupportService.ts';
 
-const observabilityWith = (support: Observability.Observability['support']): Observability.Observability =>
-  ({ support }) as unknown as Observability.Observability;
+/** Reports never upload caller-built bundles, so the mocks leave `uploadNdjson` out. */
+const observabilityWith = (
+  support: Omit<Observability.Observability['support'], 'uploadNdjson'>,
+): Observability.Observability =>
+  ({ support: { uploadNdjson: async () => undefined, ...support } }) as unknown as Observability.Observability;
 
 /** Runs to a result so a failure is asserted on rather than thrown. */
 const run = <A, E>(effect: Effect.Effect<A, E>) =>

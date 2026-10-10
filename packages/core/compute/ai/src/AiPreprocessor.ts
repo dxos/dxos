@@ -52,16 +52,23 @@ export const preprocessPrompt: (
       Effect.forEach(
         Effect.fnUntraced(function* (msg) {
           switch (msg.sender.role) {
-            case 'user':
+            case 'user': {
+              const content = yield* Function.pipe(
+                msg.blocks,
+                Effect.forEach(convertUserMessagePart),
+                Effect.map(Array.filter(Predicate.isNotUndefined)),
+              );
               return [
                 Prompt.makeMessage('user', {
-                  content: yield* Function.pipe(
-                    msg.blocks,
-                    Effect.forEach(convertUserMessagePart),
-                    Effect.map(Array.filter(Predicate.isNotUndefined)),
-                  ),
+                  // The prompt has no per-message author, so a named sender (e.g. a relayed chat
+                  // participant) is the only way the model can tell speakers apart.
+                  content:
+                    msg.sender.name && content.length > 0
+                      ? [Prompt.makePart('text', { text: formatSender(msg.sender) }), ...content]
+                      : content,
                 }),
               ];
+            }
             case 'assistant':
               return [
                 Prompt.makeMessage('assistant', {
@@ -92,6 +99,9 @@ export const preprocessPrompt: (
     Effect.map(setCacheControl(cacheControl)),
   );
 });
+
+/** Attribution line prepended to a user message whose sender is named. */
+const formatSender = (sender: Message.Message['sender']): string => `[From: ${sender.name}]`;
 
 /**
  * Fast regex-based token estimation.

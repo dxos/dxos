@@ -6,14 +6,14 @@ import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
-import { RunInstructions } from '@dxos/assistant-toolkit';
+import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
 import { FeedTraceSink } from '@dxos/compute-runtime';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Skill from '@dxos/compute/Skill';
 import { Collection, Database, Obj, Ref } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
@@ -23,7 +23,7 @@ import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 
 import { findObject, toolInvocations } from '../../assertions.ts';
 import { EvalRunError } from '../../errors.ts';
@@ -47,7 +47,7 @@ describe('weather MCP hand-off', () => {
       // Filled in once the space is seeded and the server is up; the script reads them when it emits.
       const target: { skill?: string; server?: string } = {};
 
-      await using harness = await createComposerTestApp({
+      await using harness = await Harness.createComposerTestApp({
         plugins: [
           ClientPlugin.make({ types: [...WeatherSpace.make().schemas, Collection.Collection] }),
           AssistantPlugin.make({
@@ -110,7 +110,7 @@ describe('weather MCP hand-off', () => {
           yield* Database.flush();
 
           const output = yield* Operation.invoke(
-            RunInstructions,
+            AgentOperation.RunInstructions,
             { instructions: Ref.make(instructions), input: null, chat: seeded.chat },
             { spaceId: defaultSpace.id },
           );

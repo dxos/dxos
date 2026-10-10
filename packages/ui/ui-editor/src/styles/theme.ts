@@ -160,7 +160,7 @@ export const baseTheme = EditorView.baseTheme({
   '.cm-gutter': {},
   '.cm-gutter.cm-lineNumbers': {
     paddingRight: '4px',
-    color: 'var(--color-subdued)',
+    color: 'var(--color-fg-subtle)',
   },
   '.cm-gutter.cm-lineNumbers .cm-gutterElement': {
     minWidth: '40px',
@@ -278,11 +278,11 @@ export const baseTheme = EditorView.baseTheme({
   },
   '.cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected]': {
     background: 'var(--color-current-surface)',
-    color: 'var(--color-base-fg)',
+    color: 'var(--color-fg)',
   },
   '.cm-tooltip.cm-tooltip-autocomplete > ul > completion-section': {
     paddingLeft: '4px !important',
-    color: 'var(--color-base-fg)',
+    color: 'var(--color-fg)',
   },
 
   /**
@@ -298,11 +298,11 @@ export const baseTheme = EditorView.baseTheme({
     display: 'none',
   },
   '.cm-completionLabel': {
-    color: 'var(--color-description)',
+    color: 'var(--color-fg-muted)',
     padding: '0 4px',
   },
   '.cm-completionMatchedText': {
-    color: 'var(--color-base-fg)',
+    color: 'var(--color-fg)',
     textDecoration: 'none !important',
   },
 
@@ -327,7 +327,7 @@ export const baseTheme = EditorView.baseTheme({
     backgroundColor: 'var(--surface-bg)',
   },
   '.cm-panel input, .cm-panel button, .cm-panel label': {
-    color: 'var(--color-subdued)',
+    color: 'var(--color-fg-subtle)',
     fontSize: '14px',
     all: 'unset',
     margin: '3px !important',

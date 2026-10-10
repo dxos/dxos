@@ -5,12 +5,12 @@
 import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, expect, test } from 'vitest';
 
-import { createProgressRegistry } from './progress-registry.ts';
+import { makeRegistry } from './progress-registry.ts';
 
-describe('createProgressRegistry', () => {
+describe('makeRegistry', () => {
   test('register surfaces a task in the snapshot atom', () => {
     const registry = Registry.make();
-    const progress = createProgressRegistry(registry);
+    const progress = makeRegistry(registry);
 
     const monitor = progress.register('sync/a', { label: 'Mailbox A', total: 10 });
     let snapshot = registry.get(progress.snapshotAtom);
@@ -26,7 +26,7 @@ describe('createProgressRegistry', () => {
 
   test('monitorAtom isolates one task and is stable per name', () => {
     const registry = Registry.make();
-    const progress = createProgressRegistry(registry);
+    const progress = makeRegistry(registry);
     progress.register('sync/a', { label: 'A' }).set(2);
     progress.register('sync/b', { label: 'B' }).set(5);
 
@@ -38,7 +38,7 @@ describe('createProgressRegistry', () => {
 
   test('re-registering a name starts fresh (drops prior errored state)', () => {
     const registry = Registry.make();
-    const progress = createProgressRegistry(registry);
+    const progress = makeRegistry(registry);
 
     const first = progress.register('sync/a', { label: 'A' });
     first.advance(5);
@@ -58,7 +58,7 @@ describe('createProgressRegistry', () => {
 
   test('remove drops the task from the snapshot', () => {
     const registry = Registry.make();
-    const progress = createProgressRegistry(registry);
+    const progress = makeRegistry(registry);
     const monitor = progress.register('sync/a', { label: 'A' });
     expect(registry.get(progress.snapshotAtom).tasks).toHaveLength(1);
     monitor.remove();

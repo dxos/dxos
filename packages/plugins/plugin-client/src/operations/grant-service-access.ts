@@ -7,15 +7,16 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Identity } from '@dxos/halo';
 
-import { GrantServiceAccess } from './definitions.ts';
+import * as ClientOperation from '../types/ClientOperation.ts';
 
 /** An operation so a component can grant access without holding a credential-write surface. */
-const handler: Operation.WithHandler<typeof GrantServiceAccess> = GrantServiceAccess.pipe(
-  Operation.withHandler(
-    Effect.fnUntraced(function* ({ serverName, capabilities }) {
-      yield* Identity.grantServiceAccess({ serverName, capabilities });
-    }),
-  ),
-);
+const handler: Operation.WithHandler<typeof ClientOperation.GrantServiceAccess> =
+  ClientOperation.GrantServiceAccess.pipe(
+    Operation.withHandler(
+      Effect.fnUntraced(function* ({ serverName, capabilities }) {
+        yield* Identity.grantServiceAccess({ serverName, capabilities });
+      }),
+    ),
+  );
 
 export default handler;

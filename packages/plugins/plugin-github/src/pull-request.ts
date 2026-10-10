@@ -35,6 +35,8 @@ export const toPullRequestProps = (
   headBranch: pull.head?.ref,
   additions: pull.additions,
   deletions: pull.deletions,
+  createdAt: pull.created_at ?? undefined,
+  updatedAt: pull.updated_at ?? undefined,
 });
 
 /** Fields a re-sync may overwrite; the coordinates and URL name the pull request and never drift. */
@@ -47,6 +49,8 @@ const SYNCED_FIELDS = [
   'headBranch',
   'additions',
   'deletions',
+  'createdAt',
+  'updatedAt',
 ] as const;
 
 type SyncedField = (typeof SYNCED_FIELDS)[number];

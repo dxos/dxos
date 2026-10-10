@@ -4,7 +4,7 @@
 
 import React, { Fragment } from 'react';
 
-import { Button } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
 
 import { type SceneId } from '../../model/index.ts';
 
@@ -20,10 +20,24 @@ export const Breadcrumbs = ({ path, nameOf, onSelect }: BreadcrumbsProps) => (
   <nav className='flex items-center gap-1 text-sm font-mono'>
     {path.map((id, index) => (
       <Fragment key={`${index}:${id}`}>
-        {index > 0 && <span className='text-subdued'>›</span>}
-        <Button variant='ghost' density='sm' disabled={index === path.length - 1} onClick={() => onSelect(index)}>
-          {nameOf(id)}
-        </Button>
+        {index > 0 && <span className='text-fg-subtle'>›</span>}
+        {/* The root is home whatever its scene is called. */}
+        {index === 0 ? (
+          <Button.Root
+            variant='ghost'
+            size='sm'
+            iconOnly
+            icon='ph--house--regular'
+            label={nameOf(id)}
+            disabled={index === path.length - 1}
+            data-testid='breadcrumb-root'
+            onClick={() => onSelect(index)}
+          />
+        ) : (
+          <Button.Root variant='ghost' size='sm' disabled={index === path.length - 1} onClick={() => onSelect(index)}>
+            {nameOf(id)}
+          </Button.Root>
+        )}
       </Fragment>
     ))}
   </nav>

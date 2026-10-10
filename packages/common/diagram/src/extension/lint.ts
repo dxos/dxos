@@ -7,7 +7,7 @@ import { type Extension } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
 
 import * as Diagnostics from '../diagnostics.ts';
-import { parse, toScene } from '../dsl/parse.ts';
+import { parse, read, toScene } from '../dsl/parse.ts';
 
 export type LintOptions = {
   /**
@@ -26,7 +26,8 @@ export type LintOptions = {
  * agent-facing path reports the same problems.
  */
 export const diagramDiagnostics = (text: string, { layout = false }: LintOptions = {}): Diagnostic[] => {
-  const { commands, problems, ranges } = parse(text);
+  // Laying out semantic statements is a search; without the layout report only the reading is needed.
+  const { commands, problems, ranges } = layout ? parse(text) : read(text);
   const clamp = (value: number) => Math.max(0, Math.min(value, text.length));
 
   const diagnostics: Diagnostic[] = problems.map(({ severity, message, from, to }) => ({

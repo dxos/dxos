@@ -6,11 +6,10 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
 import { AppendInput } from '@dxos/conductor';
-import { type ShapeDef } from '@dxos/react-ui-canvas-editor';
 
 import { AppendComponent } from './Append.tsx';
-import { createFunctionAnchors, getHeight } from './common/index.ts';
-import { ComputeShape, type CreateShapeProps, createShape } from './defs.ts';
+import { createFunctionPorts, defineComputeNode, getHeight } from './common/index.ts';
+import { ComputeShape, type CreateShapeProps, createShape, withZ } from './defs.ts';
 
 // Kept out of `Append.tsx`: react-refresh only fast-refreshes a module whose
 // exports are all components, so values exported beside them force a full page reload on every edit.
@@ -32,11 +31,13 @@ export const createAppend = (props: CreateAppendProps) =>
     ...props,
   });
 
-export const appendShape: ShapeDef<AppendShape> = {
+export const appendNodeDef = defineComputeNode<AppendShape>({
   type: 'append',
   name: 'Append',
   icon: 'ph--list-plus--regular',
+  group: 'Transform',
+  schema: withZ(AppendShape),
   component: AppendComponent,
-  createShape: createAppend,
-  getAnchors: (shape) => createFunctionAnchors(shape, AppendInput),
-};
+  create: createAppend,
+  ports: (shape) => createFunctionPorts(shape.size, AppendInput),
+});

@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 
 import { Database, DXN, Filter, Obj, Ref, Type, URI } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { Outline, Task, TaskSet } from '@dxos/types';
 

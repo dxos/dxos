@@ -1,5 +1,182 @@
 # @dxos/plugin-markdown
 
+## 0.13.0
+
+### Minor Changes
+
+- 3672aff: The project timeline (Gantt) draws its chart again beside the lane names, and its panel scrolls vertically with a thin scrollbar when the lanes outgrow it. An object card's title is one truncated line by default (pass `lines` to `ObjectCard.Header` to clamp to more), and the card popover is only as tall as its content rather than at least `--spacing-card-min-height`.
+- 2f95d25: The project timeline is two columns: lane names and the chart. A lane's token and tool counts move into a hover card over its name, and a new `Gantt.LegendToggle` beside the axis switch shows the counts in that column instead (`legend` / `onLegendChange` on `Gantt.Root`, persisted with the project view). The chart scrolls both ways in one area with the horizontal scrollbar at the panel's foot, and is keyboard-navigable: clicking a node focuses the chart, the arrow keys move between lanes and along the timeline, and Space toggles the node's card (Enter selects it). A parent task's bar no longer starts after its sub-tasks'. In a flat deck, a plank's breadcrumbs show its place in the tree (e.g. a session's project and Sessions branch) rather than the navigation history.
+
+  **Breaking:** `Gantt.Meta` is removed (its content is the legend's hover card and stats mode), and `Gantt.Chart`'s ref is now the `svg` element.
+
+- 7715216: UI layout primitives get simpler, typed APIs; heavy components move into their own packages; and the chat bounds what an agent can queue or spend on its own.
+
+  **Breaking:**
+
+  - `Grid`'s `cols` and `rows` take typed track tokens instead of raw CSS: `'fill'` (a flexible track that may shrink below its content), a number (a share of the free space, also shrinkable), `'min'`/`'max'`/`'auto'` (sized to the content), or a length such as `'18rem'` or `var(--…)`. A count is that many equal `fill` tracks, and `grow` now defaults to `false`.
+  - `Spinner` is now an interface (`SpinnerProps`, with an `ActivityState` of `'ready' | 'thinking' | 'alert' | 'error'`) with two implementations: `ShapeSpinner`, the morphing square (its states were `pulse`/`spin`/`flash`), and `PulseSpinner`, a dot matrix. Import spinners from the root of `@dxos/react-ui-components`, whose `./Spinner` subpath is removed.
+  - `QueryEditor`, `QueryForm` and `useQueryBuilder` move to the new `@dxos/react-ui-query` (translations at `@dxos/react-ui-query/translations`), and `Html` with its colour-scheme and email transforms moves to the new `@dxos/react-ui-html`, so `@dxos/react-ui-components` no longer carries CodeMirror, `@dxos/echo-query` or DOMPurify. `Matrix` moves to `@dxos/react-ui-experimental`.
+  - The `dx-fullscreen` utility is renamed `dx-cover` (`absolute inset-0`): it covers the nearest positioned ancestor, not the screen.
+  - `ScrollArea.Root` hides its overlay thumbs until the pointer is over the frame (`autoHide` defaults to `true`).
+
+  **Fixes and behaviour:**
+
+  - A popover whose content mounts after it opens (the chat thread outline's card) is positioned beside its anchor instead of the viewport's top-left corner.
+  - The chat prompt takes at most three prompts queued behind a running turn (`maxQueue`), on every submit path; queued prompts are small, right-aligned rows flush with the status chip.
+  - An agent may wake itself with alarms at most `Alarm.MAX_SELF_WAKES` (10) times in a row without a user prompt; each wake-up prompt states how many remain, a later alarm is dropped without a turn, and the chat status shows the count beside the next wake time.
+
+- 1737cad: `@dxos/react-ui` is rebuilt on Ark UI primitives styled by plain `dx-*` component CSS, and every UI package and plugin
+  renders on it; the former component APIs are removed.
+
+  - Components are exported flat by name (`Button`, `Toolbar`, `Card`, `Panel`, `Container`, `Field`, `Input`, `Combobox`,
+    `Menu`, `Tabs`, `Main`, `Splitter`, `Toast`, `Tour`, `Banner`, `Empty`, …) and sized by `data-size` scopes (`xs`–`xl`;
+    `Size` is that scale). `Container` lays out rails and subgrids, `ControlFrame` frames a control with adornments
+    (`Input copyable`, `variant='mono'`), and `useMainLandmark` declares the app's focus areas (Tab and Arrow Left/Right
+    move between them). `Combobox` adds a trigger mode, option descriptions, a create row and async results. `Label` is
+    no longer public (use `Field.Label`), and the flow helper is `Match` (`Match.Root`/`Match.Case`).
+  - `@dxos/react-ui-list` provides `Listbox`, `OrderedList` and `Tree` (virtual rows, drag and drop, disclosure
+    animation); `@dxos/react-ui-form` provides `Form` (`Root`, `Viewport`, `Content`, `Fields`, `Actions`, …),
+    `ObjectProperties`, `ObjectPicker`, `ViewEditor` and `RefEditor`; `@dxos/react-ui-menu` renders `ActionToolbar` and
+    `ActionMenu` on the new Toolbar and Menu; `@dxos/app-toolkit` adds the `ObjectCard` composite.
+  - `@dxos/ui-theme` renames the text tokens to `--color-fg`/`fg-muted`/`fg-subtle` (`text-fg`, `text-fg-muted`,
+    `text-fg-subtle`; Typography and Icon `tone='muted' | 'subtle'`) and `--color-subdued-separator` to
+    `--color-separator-subtle`, adds `--color-focus` for the keyboard focus ring, and derives the control fill from one
+    offset off its host surface in both themes.
+  - `@dxos/echo` adds `Annotation.ArrayPresentationAnnotation` (`ordered`, `display: 'tag' | 'title'`) for reference
+    arrays; `@dxos/effect` `SchemaEx.getProperties` keeps an annotated optional field's annotations; `@dxos/ui-editor`
+    markdown tables keep empty cells; `@dxos/plugin-markdown` marks `Document.description` as markdown, and the rename
+    popover shows an object's properties.
+
+  Breaking: the former `@dxos/react-ui` component APIs and the transitional `Next` namespace are gone; import components
+  from `@dxos/react-ui` by name and use the renamed theme tokens.
+
+- 3022878: The selection companion stacks the selected objects as plain cards in one scroll area with a small gutter, and its "No objects selected" banner sits in the same column, where the first card would. A form's nested object shows its label and disclosure above the bordered group of its fields rather than inside it. `Banner.Root` takes `inset` to override its own gutter, for a host that already pads it.
+
+  **Breaking:** `Instructions` no longer has a `description` field (nothing read it), and `Instructions.make` no longer accepts one.
+
+- a449958: Task lists, trees and the chat prompt are reworked on the react-ui components.
+
+  - Task list rows and the task editor place their cells by column name on one shared template, so the editor's fields, pickers and cancel sit in the rows' columns. The editor creates with an estimate and a priority, saves from an end adornment on its title field, and always takes the list's grid. `TaskList.Root` adds `flush`, `showAssignees` and `showMnemonics`; the leading column holds one reference button that shows the ordinal and copies the task's URI. `TaskProperties` and `TaskHistory` are top-level components, and the task's reference heads `TaskProperties`.
+  - **Breaking:** `Grid` no longer grows by default (pass `grow` to fill and clip its parent), matching `Flex`. `TaskEditor` and `TaskOrdinal` are removed (the task article renders a form over the `Task` schema, whose description is Markdown), `TaskMnemonic` is no longer exported, and `TaskList.Editor` drops `grid` and `showControls`.
+  - `Tree.Content` has no gutter by default and pads row ends (`rowInset`), so row highlights run edge to edge under an overlay thumb. A deferred `ActionMenu` keeps the focus an outside click moved; `ActionToolbar` takes a `start` slot.
+  - `Form.Root` takes `markdownExtensions`. Popup options sit in an equal inset, an empty `Select` opens no popup, `Select.Trigger` takes `fixed`, a splitter drag no longer dims its panes, and clickable tags keep their hue's text colour.
+  - Surface modules in plugin-client, plugin-preview and plugin-file declare every role they bind.
+
+### Patch Changes
+
+- 66727e3: Fixes found driving a Composer basics demo. Creating an object from an `@` link keeps the typed name. Creating a type now opens its table, from the create dialog and from the debug object generator. Types and views navigate to their node in the Database section instead of a plank stuck on "Loading…". A table can be created without picking a type: it gets a new type named after it. The table's add-column button appears for a database type. The type and location pickers in the create forms list their options and show their labels. A map created on a table's type offers the type's location properties. Toggling a world-view map shows the whole globe.
+- 665261a: The Create Space dialog puts the icon and colour pickers side by side, and its Cancel and Create buttons end at the fields' edge rather than in the gutter. Across forms, a control narrower than its field (a picker button) now starts under its label instead of centring.
+- 945092e: Layout and contrast fixes for the new `@dxos/react-ui` components:
+
+  - Forms in a dialog or popover now line up with the host's columns, and a form in a popover takes the popover's surface.
+  - Combobox and select triggers placed directly in a form span the form's content column.
+  - A panel no longer shifts its body under the header when focus scrolls it.
+  - List rows with a description keep their icon and actions on the title's line.
+  - A scrolling block in a settings row (such as the debug port log) spans the row instead of collapsing to zero width.
+  - The log list scrolls inside its panel, an expanded entry opens beneath its row, a clicked row is ringed as current, rows' checkboxes are optional (`Logger.List checkable`), and the drawer's focus ring is no longer hidden by its panes.
+  - Row hover and selection are lower-contrast, and a fieldset's collapse button is a ghost button.
+  - The `description` of Project, Task, TaskSet, Milestone, Organization, Issue, PullRequest, Event, Pipeline, Skill, Routine and Script is `Format.Text`, so forms edit it as multi-line text; `Format.Text` is also on the `Format` namespace from `@dxos/echo/Format`.
+  - The task set's add-task editor stays at the bottom, below the list.
+  - Popovers are unpadded by default (the call site sets the inset; Body and Header keep theirs); a popup's arrow no longer covers its first highlighted row; menu checkbox and radio rows show the action's icon with a trailing check; an inheriting Container whose parent is no grid lays out its own column.
+  - `Select.Trigger`'s `fit='options'` is now the boolean `fixed` (the trigger keeps its widest option's width); a selected tab takes the control fill.
+
+- 6a7bed4: A ScrollArea contains overscroll only along the axis it scrolls, so a vertical two-finger swipe over a horizontally scrolling area (such as the project timeline's chart) scrolls the panel around it instead of being swallowed.
+- 4f8e566: Card layout cleanups. A grid `Card.Root` takes `gutter` (`rail`, `md` or `lg`) to widen its rails; stats cards use `lg`, so their rows sit further in at the same text size. `Card.Row` takes `end`, content centred in the end rail (unlike `trailing`, which reaches back into the content track); stats rows put their controls there, centred, and their units at its start, so values end on one edge. Every stats card header has one layout: the icon in the start rail, the title and optional info as a two-column grid, and the button or menu centred in an end rail that is kept even when empty, so the info ends at the same edge on every card. An icon-only button inside a `Block` no longer adds its own inset, which had pushed it off-centre in the cell. The Surfaces card shows a selected role's surfaces as JSON blocks again (a label row had clipped them to nothing), and the EDGE, Indexer and Sync cards show each space's name or id beside its copy button rather than a bare icon. `Card.Row` takes `span` — `full` across both rails, `end` on through the end rail — in place of hand-written grid-column overrides, and a markdown card's word count now spans the rails as its snippet does, so the two start at the same edge. A parent task's timeline lane carries every descendant's start and finish as nodes, read from the task tree, so its first node is where its sub-tasks' work began even when they are not on one checklist. The project timeline's horizontal scrollbar spans only the chart, not the sticky lane names, via a new `trackStart` on `ScrollArea.Root`. The debug port's session id is a disabled copyable input, as the Space ID is. A form's markdown field (e.g. a task's description) fills its frame and wraps long tokens such as an inline-code URL, so it no longer scrolls sideways with its scrollbar mid-field.
+- Updated dependencies [ecd099a]
+- Updated dependencies [bbe9f18]
+- Updated dependencies [d2a6aad]
+- Updated dependencies [162fd6d]
+- Updated dependencies [aad3e41]
+- Updated dependencies [44b7b80]
+- Updated dependencies [bb2b672]
+- Updated dependencies [cb1e218]
+- Updated dependencies [1ef899b]
+- Updated dependencies [32f32a0]
+- Updated dependencies [dc16fdd]
+- Updated dependencies [66727e3]
+- Updated dependencies [469e7f7]
+- Updated dependencies [665261a]
+- Updated dependencies [68dc875]
+- Updated dependencies [2e96a73]
+- Updated dependencies [ab1bddf]
+- Updated dependencies [ec9f207]
+- Updated dependencies [945092e]
+- Updated dependencies [c531b05]
+- Updated dependencies [eb14798]
+- Updated dependencies [3672aff]
+- Updated dependencies [2f95d25]
+- Updated dependencies [69a4a85]
+- Updated dependencies [c7cc480]
+- Updated dependencies [7d222fc]
+- Updated dependencies [8980a93]
+- Updated dependencies [e99ee70]
+- Updated dependencies [161f994]
+- Updated dependencies [ff92c50]
+- Updated dependencies [3e73e53]
+- Updated dependencies [7a177b9]
+- Updated dependencies [9ab98cd]
+- Updated dependencies [8fc641a]
+- Updated dependencies [38e2ddb]
+- Updated dependencies [1894fc1]
+- Updated dependencies [246ee3c]
+- Updated dependencies [8ebe8d6]
+- Updated dependencies [596728d]
+- Updated dependencies [64f1a7a]
+- Updated dependencies [7715216]
+- Updated dependencies [1b37aa8]
+- Updated dependencies [1737cad]
+- Updated dependencies [321c99f]
+- Updated dependencies [3d05b7f]
+- Updated dependencies [a999417]
+- Updated dependencies [6a7bed4]
+- Updated dependencies [3022878]
+- Updated dependencies [c2a300a]
+- Updated dependencies [17008f0]
+- Updated dependencies [6ea9d4d]
+- Updated dependencies [dde8f43]
+- Updated dependencies [4f8e566]
+- Updated dependencies [fcbb5c4]
+- Updated dependencies [a449958]
+- Updated dependencies [49731e1]
+  - @dxos/react-ui-menu@0.13.0
+  - @dxos/compute@0.13.0
+  - @dxos/react-ui@0.13.0
+  - @dxos/echo@0.13.0
+  - @dxos/react-ui-form@0.13.0
+  - @dxos/util@0.13.0
+  - @dxos/types@0.13.0
+  - @dxos/plugin-space@0.13.0
+  - @dxos/ui-editor@0.13.0
+  - @dxos/app-toolkit@0.13.0
+  - @dxos/client@0.13.0
+  - @dxos/plugin-client@0.13.0
+  - @dxos/app-framework@0.13.0
+  - @dxos/assistant@0.13.0
+  - @dxos/react-ui-attention@0.13.0
+  - @dxos/echo-client@0.13.0
+  - @dxos/react-ui-editor@0.13.0
+  - @dxos/plugin-attention@0.13.0
+  - @dxos/plugin-graph@0.13.0
+  - @dxos/react-client@0.13.0
+  - @dxos/react-ui-components@0.13.0
+  - @dxos/react-ui-dnd@0.13.0
+  - @dxos/echo-doc@0.13.0
+  - @dxos/echo-react@0.13.0
+  - @dxos/client-protocol@0.13.0
+  - @dxos/schema@0.13.0
+  - @dxos/versioning@0.13.0
+  - @dxos/async@0.13.0
+  - @dxos/effect@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/react-focus@0.13.0
+  - @dxos/react-hooks@0.13.0
+  - @dxos/halo@0.13.0
+  - @dxos/halo-react@0.13.0
+  - @dxos/invariant@0.13.0
+  - @dxos/keys@0.13.0
+  - @dxos/ui@0.13.0
+  - @dxos/ui-theme@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

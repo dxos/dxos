@@ -3,5 +3,4 @@
 //
 
 export * as AttentionPlugin from './AttentionPlugin.ts';
-export * from '#meta';
 export * from '#types';

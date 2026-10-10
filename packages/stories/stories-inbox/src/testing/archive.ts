@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Connection, Cursor } from '@dxos/link';
 import * as Binding from '@dxos/plugin-connector/Binding';
 import type * as Mailbox from '@dxos/plugin-inbox/Mailbox';

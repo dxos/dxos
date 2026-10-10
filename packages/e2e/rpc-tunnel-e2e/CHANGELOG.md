@@ -1,5 +1,16 @@
 # @dxos/rpc-tunnel-e2e
 
+## 0.13.0
+
+### Patch Changes
+
+- @dxos/async@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/rpc@0.13.0
+  - @dxos/protocols@0.13.0
+  - @dxos/react-hooks@0.13.0
+  - @dxos/rpc-tunnel@0.13.0
+
 ## 0.12.0
 
 ### Patch Changes

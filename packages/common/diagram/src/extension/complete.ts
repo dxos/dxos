@@ -7,7 +7,35 @@ import { syntaxTree } from '@codemirror/language';
 import { type Extension } from '@codemirror/state';
 import { type SyntaxNode } from '@lezer/common';
 
-import { ELEMENT_ATTRS, ELEMENT_KINDS, type ElementKind, OBJECT_ATTRS, STATEMENT_KEYWORDS } from '../dsl/vocabulary.ts';
+import {
+  type AttrSpec,
+  DIAGRAM_ATTRS,
+  EDGE_ATTRS,
+  ELEMENT_ATTRS,
+  ELEMENT_KINDS,
+  type ElementKind,
+  GROUP_ATTRS,
+  NODE_ATTRS,
+  OBJECT_ATTRS,
+  RELATION_WORDS,
+  STATEMENT_KEYWORDS,
+} from '../dsl/vocabulary.ts';
+
+/** What a semantic statement accepts after its id: attributes, plus relations or edge clauses. */
+const SEMANTIC: Record<string, { attrs: readonly AttrSpec[]; words: readonly string[] }> = {
+  DiagramDecl: { attrs: DIAGRAM_ATTRS, words: [] },
+  GroupDecl: { attrs: GROUP_ATTRS, words: [...RELATION_WORDS, 'compact'] },
+  NodeDecl: { attrs: NODE_ATTRS, words: RELATION_WORDS },
+  EdgeDecl: { attrs: EDGE_ATTRS, words: ['via', 'bus'] },
+};
+
+const attributeOptions = (attrs: readonly AttrSpec[]) =>
+  attrs.map(({ name, type }) => ({
+    label: name,
+    type: 'property',
+    detail: type === 'enum' ? undefined : type,
+    apply: `${name}=`,
+  }));
 
 /** The element kind a completion is inside, read off the tree rather than re-lexing the line. */
 const enclosingKind = (context: CompletionContext, pos: number): ElementKind | undefined => {
@@ -47,6 +75,18 @@ const source = (context: CompletionContext): CompletionResult | null => {
   }
 
   const ancestors = ancestorsOf(context, context.pos);
+  // Inside a semantic statement the innermost one decides; a group's body holds nodes and edges.
+  const innermost = ancestors.find((name) => name in SEMANTIC || name === 'GroupBody');
+  if (innermost === 'GroupBody') {
+    return { from: word.from, options: ['node', 'edge'].map((label) => ({ label, type: 'keyword' })) };
+  }
+  if (innermost) {
+    const { attrs, words } = SEMANTIC[innermost];
+    return {
+      from: word.from,
+      options: [...words.map((label) => ({ label, type: 'keyword' })), ...attributeOptions(attrs)],
+    };
+  }
   // Outside any declaration only a statement can start.
   if (!ancestors.includes('ObjectDecl') && !ancestors.includes('ElementsDecl')) {
     return { from: word.from, options: STATEMENT_KEYWORDS.map((label) => ({ label, type: 'keyword' })) };
@@ -59,15 +99,7 @@ const source = (context: CompletionContext): CompletionResult | null => {
     return { from: word.from, options: ELEMENT_KINDS.map((label) => ({ label, type: 'keyword' })) };
   }
 
-  return {
-    from: word.from,
-    options: (kind ? ELEMENT_ATTRS[kind] : OBJECT_ATTRS).map(({ name, type }) => ({
-      label: name,
-      type: 'property',
-      detail: type === 'enum' ? undefined : type,
-      apply: `${name}=`,
-    })),
-  };
+  return { from: word.from, options: attributeOptions(kind ? ELEMENT_ATTRS[kind] : OBJECT_ATTRS) };
 };
 
 export const diagramComplete: Extension = autocompletion({ override: [source] });

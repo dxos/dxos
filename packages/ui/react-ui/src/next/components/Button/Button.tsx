@@ -4,20 +4,22 @@
 
 import React, { type ButtonHTMLAttributes, type ReactNode } from 'react';
 
-import { type ChromaticPalette, type MessageValence, type NeutralPalette } from '@dxos/ui-types';
+import { type ChromaticPalette, type ClassNameValue, type MessageValence, type NeutralPalette } from '@dxos/ui-types';
 
-import { composable, composableProps } from '../../../util/index.ts';
+import { composable, composableProps } from '../../../util/slots.ts';
 import { recipes } from '../../recipes.ts';
-import { Icon } from '../Icon/index.ts';
-import { useToolbarItem } from '../Toolbar/index.ts';
-import { Tooltip, type TooltipSide } from '../Tooltip/index.ts';
+import { type Size } from '../../sizes.ts';
+import * as Fieldset from '../Fieldset/Fieldset.tsx';
+import * as Icon from '../Icon/Icon.tsx';
+import { useToolbarItem } from '../Toolbar/toolbar-context.ts';
+import * as Tooltip from '../Tooltip/Tooltip.tsx';
 
 /** The current Button's variants; `primary` marks the one action a surface leads with (e.g. a form's Save). */
 export type ButtonVariant = 'default' | 'primary' | 'ghost' | 'outline' | 'destructive' | 'valence';
 
 export type ButtonValence = MessageValence;
 
-/** Tag's palette (`Next.TagHue`), repeated here since Tag builds on nothing of Button's. */
+/** Tag's palette (`TagHue`), repeated here since Tag builds on nothing of Button's. */
 export type ButtonHue = NeutralPalette | ChromaticPalette | MessageValence;
 
 export type ButtonVariantProps = {
@@ -34,6 +36,16 @@ export type ButtonVariantProps = {
   compact?: boolean;
   /** A trailing caret marking a button that opens a menu. */
   caretDown?: boolean;
+  /** `start` packs icon and label at the start (a full-width menu-like button) instead of centring them. */
+  align?: 'center' | 'start';
+  /** Spins the leading icon, as a busy indicator. */
+  spin?: boolean;
+  /** Sizes just this button (`data-size` scopes `theme/size.css`'s metrics to it), whatever its enclosing scope. */
+  size?: Size;
+  /** The icons at this size's scale instead of the button's. */
+  iconSize?: Size;
+  /** Classes for the leading icon (e.g. a state colour), where the button's own colour would not reach it. */
+  iconClassNames?: ClassNameValue;
 };
 
 /** Content is a label (or children) with optional leading/trailing icons, or a lone icon named by its label. */
@@ -59,7 +71,7 @@ export type ButtonContentProps =
       /** Opt out of the label Tooltip, e.g. when the caller wraps the button in its own `Tooltip.Trigger`. */
       showTooltip?: boolean;
       /** Side of the trigger the label Tooltip opens on; below by default. */
-      tooltipSide?: TooltipSide;
+      tooltipSide?: Tooltip.Side;
       iconEnd?: never;
       children?: never;
     };
@@ -78,6 +90,11 @@ export const Button = composable<HTMLButtonElement, ButtonProps>(
       hue,
       compact,
       caretDown,
+      align,
+      spin,
+      size,
+      iconSize,
+      iconClassNames,
       id,
       onFocus,
       icon,
@@ -91,11 +108,13 @@ export const Button = composable<HTMLButtonElement, ButtonProps>(
     },
     forwardedRef,
   ) => {
-    const toolbarItem = useToolbarItem(buttonProps.disabled);
+    const disabled = Fieldset.useFieldsetDisabled(buttonProps.disabled);
+    const toolbarItem = useToolbarItem(disabled);
     const { className, ...attributes } = composableProps(buttonProps, { classNames: recipes.button() });
     const button = (
       <button
         {...attributes}
+        disabled={disabled}
         {...toolbarItem}
         id={id}
         onFocus={(event) => {
@@ -107,18 +126,21 @@ export const Button = composable<HTMLButtonElement, ButtonProps>(
         data-scope='button'
         data-part='root'
         data-square={iconOnly ? '' : undefined}
+        data-size={size}
         data-variant={variant}
         data-valence={variant === 'valence' ? valence : undefined}
         data-hue={hue}
         data-compact={compact ? '' : undefined}
         data-caret={caretDown ? '' : undefined}
+        data-align={align === 'start' ? align : undefined}
         className={className}
         ref={forwardedRef}
       >
-        {icon && <Icon icon={icon} />}
-        {!iconOnly && (children ?? label)}
-        {iconEnd && <Icon icon={iconEnd} />}
-        {caretDown && <Icon icon='ph--caret-down--bold' />}
+        {icon && <Icon.Icon icon={icon} spin={spin} size={iconSize} classNames={iconClassNames} />}
+        {/* Icon-only children stand in for the icon (e.g. a swatch), so they keep the square's padding. */}
+        {iconOnly ? !icon && children : (children ?? label)}
+        {iconEnd && <Icon.Icon icon={iconEnd} size={iconSize} />}
+        {caretDown && <Icon.Icon icon='ph--caret-down--bold' />}
       </button>
     );
 
@@ -139,4 +161,4 @@ export const Button = composable<HTMLButtonElement, ButtonProps>(
   },
 );
 
-Button.displayName = 'Next.Button';
+Button.displayName = 'Button';

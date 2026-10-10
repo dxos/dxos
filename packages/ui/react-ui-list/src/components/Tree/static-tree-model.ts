@@ -5,7 +5,7 @@
 import * as Atom from 'effect/reactivity/Atom';
 
 import { Path } from '../../util/index.ts';
-import { type TreeItemDataProps, type TreeModel } from './TreeContext.ts';
+import { type TreeItemDataProps, type TreeModel } from './tree-model.ts';
 
 export type TreeNodeState = {
   open: boolean;

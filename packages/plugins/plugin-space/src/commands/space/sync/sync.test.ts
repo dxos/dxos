@@ -9,7 +9,7 @@ import * as Option from 'effect/Option';
 import { TestLayer } from '@dxos/cli-util/testing';
 import { ClientService } from '@dxos/client';
 import { SpaceState } from '@dxos/client/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { handler } from './sync.ts';
 

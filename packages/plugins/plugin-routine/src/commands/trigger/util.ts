@@ -25,7 +25,8 @@ import {
   Scope,
   Type,
 } from '@dxos/echo';
-import { SchemaAST, SchemaEx } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { DXN } from '@dxos/keys';
 import { getFeedRef, isFeedOwnerSchema } from '@dxos/schema';
 

@@ -1,0 +1,30 @@
+{
+  "name": "@dxos/ident",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Sovereign Intelligence video ads: provocation cards and DXOS end card, rendered with Remotion.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "info@dxos.org",
+  "type": "module",
+  "dependencies": {
+    "@dxos/brand": "workspace:*",
+    "@fontsource/poiret-one": "catalog:",
+    "@remotion/cli": "catalog:",
+    "@remotion/fonts": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "remotion": "catalog:"
+  },
+  "devDependencies": {
+    "@remotion/bundler": "catalog:",
+    "@remotion/renderer": "catalog:",
+    "@types/react": "catalog:",
+    "typescript": "catalog:"
+  }
+}

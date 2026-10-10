@@ -16,8 +16,9 @@ import * as Schema from 'effect/Schema';
 import * as Skill from '@dxos/compute/Skill';
 import { Resource } from '@dxos/context';
 import { Database, DXN, Feed, Obj, Query, type QueryResult, Ref, Type } from '@dxos/echo';
-import { AtomEx, RuntimeProvider } from '@dxos/effect';
-import { assertArgument } from '@dxos/invariant';
+import * as AtomEx from '@dxos/effect/AtomEx';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
+import { assertArgument, invariant } from '@dxos/invariant';
 import { EID, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ComplexSet, isNonNullable } from '@dxos/util';
@@ -60,31 +61,56 @@ export class Bindings {
   }
 }
 
+/**
+ * Bindings appended in this realm, per feed id (stable whether or not the feed is persisted yet).
+ *
+ * Lets {@link Binder.sync} skip its re-read when nothing here could have changed the bindings: the
+ * re-read is a feed-scoped query, which waits for an index pass over every pending write, and it
+ * exists only for read-your-writes — a binding written elsewhere arrives through the live query.
+ */
+const bindingWrites = new Map<string, number>();
+
+const bindingWriteCount = (feed: Feed.Feed): number => bindingWrites.get(feed.id) ?? 0;
+
+const countBindingWrite = (feed: Feed.Feed): void => {
+  bindingWrites.set(feed.id, (bindingWrites.get(feed.id) ?? 0) + 1);
+};
+
 export type BinderOptions = {
   feed: Feed.Feed;
   runtime: Context.Context<Database.Service>;
   /** @effect/atom-react Registry for reactive state management. */
   registry?: AtomRegistry.AtomRegistry;
+  /** Holds bindings in memory until {@link Binder.flush}, so the feed need not be stored yet (a draft conversation). */
+  hold?: boolean;
 };
 
 /**
  * Manages bindings of skills and objects to a conversation.
  */
-// TODO(burdon): Context should manage ephemeral state of bindings until prompt is issued?
 export class Binder extends Resource {
   private readonly _skills = Atom.make<Skill.Skill[]>([]).pipe(Atom.keepAlive);
   private readonly _objects = Atom.make<Obj.Unknown[]>([]).pipe(Atom.keepAlive);
   private readonly _registry: AtomRegistry.AtomRegistry;
   private readonly _feed: Feed.Feed;
   private readonly _runtime: Context.Context<Database.Service>;
+  private readonly _hold: boolean;
 
   #bindingsQuery: QueryResult.QueryResult<Binding> | undefined;
+
+  /** {@link bindingWriteCount} at the last read of the bindings query. */
+  #readWrites = 0;
 
   /**
    * Keys of the refs the feed already binds, whether or not their targets resolve here: a registry
    * skill bound by URI never matches its resolved target's URI, so the atoms alone cannot tell it is bound.
    */
   #bound = { skills: new Set<URI.URI>(), objects: new Set<URI.URI>() };
+
+  #pending?: Binding[];
+
+  /** Bumped by each held write, so only the latest resolution of the held bindings lands. */
+  #heldGeneration = 0;
 
   constructor(options: BinderOptions) {
     super();
@@ -93,6 +119,7 @@ export class Binder extends Resource {
     this._feed = options.feed;
     this._runtime = options.runtime;
     this._registry = options.registry ?? AtomEx.makeRegistry();
+    this._hold = options.hold ?? false;
   }
 
   /**
@@ -138,12 +165,43 @@ export class Binder extends Resource {
   }
 
   protected override async _open(): Promise<void> {
+    if (this._hold) {
+      this.#pending = [];
+      return;
+    }
+    await this._follow();
+  }
+
+  /**
+   * Writes a holding binder's bindings to its feed, which the caller has stored, as one binding. Later
+   * writes go straight to the feed, which the binder does not follow.
+   */
+  async flush(): Promise<void> {
+    const held = this.#pending;
+    if (!held) {
+      return;
+    }
+    invariant(Obj.getDatabase(this._feed), 'The feed must be stored before its bindings are flushed.');
+    this.#pending = undefined;
+    const { skills, objects } = this._reduce(held);
+    if (skills.size > 0 || objects.size > 0) {
+      await this._append(
+        Obj.make(Binding, {
+          skills: { added: [...skills], removed: [] },
+          objects: { added: [...objects], removed: [] },
+        }),
+      );
+    }
+  }
+
+  private async _follow(): Promise<void> {
     const bindingsQuery = await RuntimeProvider.runPromise(Effect.succeed(this._runtime))(
       Feed.query(this._feed, Query.type(Binding)),
     );
     this.#bindingsQuery = bindingsQuery;
 
     // Process initial state before returning.
+    this.#readWrites = bindingWriteCount(this._feed);
     const initialResults = await bindingsQuery.run();
     await this._updateBindings(initialResults);
 
@@ -156,10 +214,12 @@ export class Binder extends Resource {
   }
 
   /**
-   * Re-reads bindings from the feed to pick up changes made by other processes.
+   * Re-reads bindings from the feed to pick up changes made by other processes in this realm, such
+   * as a tool that bound a skill. A no-op when none has been written since the last read.
    */
   async sync(): Promise<void> {
-    if (this.#bindingsQuery) {
+    const writes = bindingWriteCount(this._feed);
+    if (this.#bindingsQuery && writes !== this.#readWrites) {
       let results: Binding[];
       try {
         results = await this.#bindingsQuery.run();
@@ -172,6 +232,8 @@ export class Binder extends Resource {
       }
       log('sync', { bindingItems: results.length });
       await this._updateBindings(results);
+      // Only after the update lands, so one that fails is retried by the next sync.
+      this.#readWrites = writes;
       log('sync complete', {
         skills: this._registry.get(this._skills).length,
         // Read the meta key directly: `Skill.getKey` throws on a space-authored skill, which would
@@ -260,19 +322,17 @@ export class Binder extends Resource {
     this._registry.set(this._objects, nextObjects);
 
     log('bind', { skills: addedSkills.length, objects: addedObjects.length });
-    await RuntimeProvider.runPromise(Effect.succeed(this._runtime))(
-      Feed.append(this._feed, [
-        Obj.make(Binding, {
-          skills: {
-            added: addedSkills,
-            removed: [],
-          },
-          objects: {
-            added: addedObjects,
-            removed: [],
-          },
-        }),
-      ]),
+    await this._write(
+      Obj.make(Binding, {
+        skills: {
+          added: addedSkills,
+          removed: [],
+        },
+        objects: {
+          added: addedObjects,
+          removed: [],
+        },
+      }),
     );
   }
 
@@ -285,38 +345,71 @@ export class Binder extends Resource {
     (objects ?? []).forEach((ref) => this.#bound.objects.delete(refKey(ref.uri)));
 
     // Immediately update atom state so removals are reflected before the queue round-trips.
-    const removedSkillDxns = (skills ?? []).map((ref) => ref.uri);
-    const removedObjectDxns = (objects ?? []).map((ref) => ref.uri);
-    if (removedSkillDxns.length > 0) {
+    const removedSkillKeys = new Set((skills ?? []).map((ref) => refKey(ref.uri)));
+    const removedObjectKeys = new Set((objects ?? []).map((ref) => refKey(ref.uri)));
+    if (removedSkillKeys.size > 0) {
       const current = this._registry.get(this._skills);
       this._registry.set(
         this._skills,
-        current.filter((obj) => !removedSkillDxns.some((uri) => Obj.getURI(obj) === uri)),
+        current.filter((obj) => !removedSkillKeys.has(refKey(Obj.getURI(obj)))),
       );
     }
-    if (removedObjectDxns.length > 0) {
+    if (removedObjectKeys.size > 0) {
       const current = this._registry.get(this._objects);
       this._registry.set(
         this._objects,
-        current.filter((obj) => !removedObjectDxns.some((uri) => Obj.getURI(obj) === uri)),
+        current.filter((obj) => !removedObjectKeys.has(refKey(Obj.getURI(obj)))),
       );
     }
 
     log('unbind', { skills: skills?.length, objects: objects?.length });
-    await RuntimeProvider.runPromise(Effect.succeed(this._runtime))(
-      Feed.append(this._feed, [
-        Obj.make(Binding, {
-          skills: {
-            added: [],
-            removed: skills ?? [],
-          },
-          objects: {
-            added: [],
-            removed: objects ?? [],
-          },
-        }),
-      ]),
+    await this._write(
+      Obj.make(Binding, {
+        skills: {
+          added: [],
+          removed: skills ?? [],
+        },
+        objects: {
+          added: [],
+          removed: objects ?? [],
+        },
+      }),
     );
+  }
+
+  private async _write(binding: Binding): Promise<void> {
+    if (this.#pending) {
+      this.#pending.push(binding);
+      await this._resolveHeld(this.#pending);
+      return;
+    }
+    await this._append(binding);
+  }
+
+  /**
+   * Sets the atoms from the held bindings. Their refs have no feed query to hydrate them, so each is
+   * resolved against the database, which also spans the registry.
+   */
+  private async _resolveHeld(held: Binding[]): Promise<void> {
+    const generation = ++this.#heldGeneration;
+    const { db } = Context.get(this._runtime, Database.Service);
+    const { skills, objects } = this._reduce(held);
+    const hydrate = <T extends Obj.Unknown>(refs: Iterable<Ref.Ref<T>>): Ref.Ref<T>[] =>
+      [...refs].map((ref) => (ref.isAvailable ? ref : db.makeRef<T>(ref.uri)));
+    const [resolvedSkills, resolvedObjects] = await Promise.all([
+      this._resolve(hydrate(skills), this._registry.get(this._skills)),
+      this._resolve(hydrate(objects), this._registry.get(this._objects)),
+    ]);
+    if (generation !== this.#heldGeneration) {
+      return;
+    }
+    this._registry.set(this._skills, resolvedSkills);
+    this._registry.set(this._objects, resolvedObjects);
+  }
+
+  private async _append(binding: Binding): Promise<void> {
+    await RuntimeProvider.runPromise(Effect.succeed(this._runtime))(Feed.append(this._feed, [binding]));
+    countBindingWrite(this._feed);
   }
 
   /**
@@ -423,7 +516,13 @@ export class Binder extends Resource {
         }
 
         // Fallback to existing object.
-        return target ?? current.find((obj) => Obj.getURI(obj) === ref.uri);
+        const resolved = target ?? current.find((obj) => Obj.getURI(obj) === ref.uri);
+        if (!resolved) {
+          // A binding that cannot load (e.g. a registry skill the host never registered) would otherwise
+          // vanish from the session without trace.
+          log.warn('unresolved context binding', { uri: ref.uri });
+        }
+        return resolved;
       })
       .filter(isNonNullable);
   }

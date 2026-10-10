@@ -7,9 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Identity } from '@dxos/halo';
 
-import { UpdateProfile } from './definitions.ts';
+import * as ClientOperation from '../types/ClientOperation.ts';
 
-const handler: Operation.WithHandler<typeof UpdateProfile> = UpdateProfile.pipe(
+const handler: Operation.WithHandler<typeof ClientOperation.UpdateProfile> = ClientOperation.UpdateProfile.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (profile) {
       yield* Identity.updateProfile({ displayName: profile.displayName, data: profile.data });

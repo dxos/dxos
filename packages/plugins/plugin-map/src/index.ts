@@ -3,5 +3,6 @@
 //
 
 export * as MapPlugin from './MapPlugin.ts';
-export * from '#meta';
+export * from '#operations';
+export * from '#skills';
 export * from '#types';

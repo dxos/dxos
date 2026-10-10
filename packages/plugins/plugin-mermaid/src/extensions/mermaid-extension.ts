@@ -17,10 +17,10 @@ export type MermaidOptions = Pick<MermaidConfig, 'theme' | 'themeVariables' | 't
  */
 const DEFAULT_THEME_CSS = `
   .node rect, .node circle, .node ellipse, .node polygon, .node path { fill: var(--color-card-surface); stroke: var(--color-separator); }
-  .label text, .node text, .nodeLabel, .edgeLabel, .label span { color: var(--color-base-fg); fill: var(--color-base-fg); }
-  .edgePath .path, .flowchart-link { stroke: var(--color-subdued); }
+  .label text, .node text, .nodeLabel, .edgeLabel, .label span { color: var(--color-fg); fill: var(--color-fg); }
+  .edgePath .path, .flowchart-link { stroke: var(--color-fg-subtle); }
   .edgeLabel { background-color: var(--color-group-surface); }
-  .marker { fill: var(--color-subdued); stroke: var(--color-subdued); }
+  .marker { fill: var(--color-fg-subtle); stroke: var(--color-fg-subtle); }
 `;
 
 /** The full mermaid config for the editor's colour mode; `options` win over the defaults. */
@@ -166,7 +166,7 @@ export const mermaid = (options: MermaidOptions = {}): Extension => {
         position: 'absolute',
         right: '16px',
         fontFamily: 'unset',
-        color: 'var(--color-subdued)',
+        color: 'var(--color-fg-subtle)',
       },
       '& .cm-mermaid-error': {
         display: 'inline-block',

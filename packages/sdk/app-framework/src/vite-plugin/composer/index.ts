@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { type Plugin as VitePlugin } from 'vite';
 
-import { Plugin, PLUGIN_DEV_SERVER_PORT } from '../../core/index.ts';
+import { Plugin, PluginManifest } from '../../core/index.ts';
 import { findDxConfigFile, loadDxConfig } from '../load.ts';
 import { type BuildMeta, ENTRY_FILENAME, MANIFEST_ASSET_NAME, serializeManifest, toBuildMeta } from '../manifest.ts';
 import { DEFAULT_PACKAGES, isSharedPackage } from '../packages.ts';
@@ -110,7 +110,7 @@ const REQUIRE_SHIM_BANNER = [
 export type ComposerPluginOptions = {
   /** Entry point for the plugin bundle. Defaults to `src/plugin.tsx`. */
   entry?: string;
-  /** Dev server port. Defaults to {@link PLUGIN_DEV_SERVER_PORT}. */
+  /** Dev server port. Defaults to {@link PluginManifest.DEV_SERVER_PORT}. */
   port?: number;
   /**
    * Path to the project's `dx.config.ts`. Defaults to auto-discovery in the project root
@@ -145,7 +145,7 @@ export type ComposerPluginOptions = {
  */
 export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] => {
   const entry = options?.entry ?? 'src/plugin.tsx';
-  const port = options?.port ?? PLUGIN_DEV_SERVER_PORT;
+  const port = options?.port ?? PluginManifest.DEV_SERVER_PORT;
   // Plugin metadata source of truth is `dx.config.ts` (`@dxos/protocols` `Config2.Config`). When the caller
   // doesn't pass `meta` explicitly, load + validate the config and derive a `BuildMeta` from it
   // (augmented with the package `version` and a resolved dependency snapshot). Loaded once the Vite root

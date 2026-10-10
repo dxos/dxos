@@ -16,7 +16,6 @@ import * as Schema from 'effect/Schema';
 import * as Tracer from 'effect/Tracer';
 
 import { AiService } from '@dxos/ai';
-import { ServiceNotAvailableError } from '@dxos/compute';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Runnable from '@dxos/compute/Runnable';
@@ -53,7 +52,7 @@ const SpaceAwareResolverLayer = Layer.effect(
       context.space === dbService.db.spaceId
         ? Effect.succeed(dbService)
         : Effect.fail(
-            new ServiceNotAvailableError(
+            new ServiceResolver.ServiceNotAvailableError(
               `Database.Service requires space context (got ${context.space ?? 'none'}, want ${dbService.db.spaceId})`,
             ),
           ),

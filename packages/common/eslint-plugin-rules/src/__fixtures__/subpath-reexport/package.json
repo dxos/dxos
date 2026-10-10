@@ -1,0 +1,11 @@
+{
+  "name": "@dxos/plugin-fixture-reexport",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": { "source": "./src/index.ts" },
+    "./Alpha": { "source": "./src/Alpha.ts" },
+    "./Hooks": { "source": "./src/hooks/index.ts" }
+  }
+}

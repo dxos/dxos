@@ -1,5 +1,14 @@
 # @dxos/sql-sqlite
 
+## 0.13.0
+
+### Patch Changes
+
+- @dxos/effect@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/errors@0.13.0
+  - @dxos/node-std@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

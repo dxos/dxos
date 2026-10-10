@@ -18,7 +18,7 @@ import * as Routine from '@dxos/compute/Routine';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { Database, EID, type Key, Obj, Ref, Type } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { AccessToken, Connection } from '@dxos/link';
 import { log } from '@dxos/log';
@@ -192,8 +192,8 @@ const openCreateSyncRoutineDialog = (
         Binding.syncCreatedRoutine({ created, connector, spaceId: db.spaceId }).pipe(
           Effect.provideService(Capability.Service, capabilities),
           Effect.catch((error) => Effect.sync(() => log.warn('first sync after routine created failed', { error }))),
-          // An EDGE force-run that outlives its replication backoff arrives as a defect
-          // (`Effect.orDie`), which the typed catch above would let escape unreported.
+          // A force-run EDGE fails other than as switched off arrives as a defect, which the typed
+          // catch above would let escape unreported.
           Effect.catchDefect((defect) =>
             Effect.sync(() => log.warn('first sync after routine created died', { defect })),
           ),

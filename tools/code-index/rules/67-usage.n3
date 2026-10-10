@@ -1,0 +1,16 @@
+# Uses of deprecated declarations, through barrels and bare specifiers. A user names a declaration
+# as its file imported it (`file:<barrel>#X`, `module:@dxos/x#X`); `deus:resolvesTo`, from the
+# `resolve-refs` pass, gives the declaration. Positive joins only, so the stratum stays incremental.
+# A re-export is no user: it publishes the name, and its importers are reported instead.
+
+@prefix deus: <https://dxos.org/vocab/deus#>.
+@prefix log: <http://www.w3.org/2000/10/swap/log#>.
+
+{ ?s deus:implDependsOn ?d. ?d deus:deprecated true. ?s deus:kind ?k. ?k log:notEqualTo "reexport" }
+  => { ?s deus:usesDeprecated ?d }.
+{ ?s deus:apiDependsOn ?d. ?d deus:deprecated true. ?s deus:kind ?k. ?k log:notEqualTo "reexport" }
+  => { ?s deus:usesDeprecated ?d }.
+{ ?s deus:implDependsOn ?r. ?r deus:resolvesTo ?d. ?d deus:deprecated true. ?s deus:kind ?k. ?k log:notEqualTo "reexport" }
+  => { ?s deus:usesDeprecated ?d }.
+{ ?s deus:apiDependsOn ?r. ?r deus:resolvesTo ?d. ?d deus:deprecated true. ?s deus:kind ?k. ?k log:notEqualTo "reexport" }
+  => { ?s deus:usesDeprecated ?d }.

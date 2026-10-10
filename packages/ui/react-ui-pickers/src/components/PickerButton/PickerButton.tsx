@@ -5,10 +5,14 @@
 import React, { type FC, useEffect, useState } from 'react';
 
 import { useControllableState } from '@dxos/react-hooks';
-import { Button, Icon, type IconProps, Menu, type ThemedClassName, Toolbar, Tooltip } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Menu from '@dxos/react-ui/Menu';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
+import type * as Util from '@dxos/react-ui/Util';
 
-export type PickerButtonProps = ThemedClassName<{
-  Component: FC<{ value: string; size?: IconProps['size'] }>;
+export type PickerButtonProps = Util.ThemedClassName<{
+  Component: FC<{ value: string; size?: Icon.IconProps['size'] }>;
   label: string;
   icon: string;
   values: readonly string[];
@@ -18,8 +22,11 @@ export type PickerButtonProps = ThemedClassName<{
   onChange?: (value: string) => void;
   onReset?: () => void;
   rootVariant?: 'button' | 'toolbar-button';
-  iconSize?: IconProps['size'];
+  iconSize?: Icon.IconProps['size'];
 }>;
+
+/** Menu value of the reset row; outside every picker's value set. */
+const RESET = '__reset__';
 
 export const PickerButton = ({
   Component,
@@ -33,7 +40,7 @@ export const PickerButton = ({
   onChange,
   onReset,
   rootVariant = 'button',
-  iconSize = 5,
+  iconSize,
 }: PickerButtonProps) => {
   const [value, setValue] = useControllableState<string>({
     prop: valueProp,
@@ -44,48 +51,45 @@ export const PickerButton = ({
   useEffect(() => setValue(valueProp), [valueProp]);
 
   const [open, setOpen] = useState<boolean>(false);
-  const TriggerRoot = rootVariant === 'toolbar-button' ? Toolbar.Button : Button;
 
   return (
-    <Menu.Root modal={false} open={open} onOpenChange={setOpen}>
+    <Menu.Root open={open} onOpenChange={({ open }) => setOpen(open)} positioning={{ placement: 'bottom' }}>
       {/* The menu trigger is outermost: both machines find the button by its id, and the tooltip adopts
           the id it is handed while the menu would lose its own to one set above it. */}
       <Menu.Trigger asChild>
         <Tooltip.Trigger asChild content={label} side='bottom'>
-          <TriggerRoot classNames={['gap-2 py-1', classNames]} disabled={disabled}>
-            <span className='sr-only'>{label}</span>
-            {(value && <Component value={value} size={iconSize} />) || <Icon icon={icon} size={iconSize} />}
-            <Icon icon='ph--caret-down--bold' size={3} classNames='mx-0.5' />
-          </TriggerRoot>
+          <Button.Root
+            variant={rootVariant === 'toolbar-button' ? 'ghost' : 'default'}
+            iconOnly
+            showTooltip={false}
+            label={label}
+            caretDown
+            classNames={classNames}
+            disabled={disabled}
+          >
+            {(value && <Component value={value} size={iconSize} />) || <Icon.Icon icon={icon} size={iconSize} />}
+          </Button.Root>
         </Tooltip.Trigger>
       </Menu.Trigger>
-      <Menu.Portal>
-        <Menu.Content side='bottom' classNames='!w-min'>
-          <Menu.Viewport classNames='grid grid-cols-[repeat(6,min-content)]'>
-            {values.map((_value) => {
-              return (
-                <Menu.CheckboxItem
-                  key={_value}
-                  checked={_value === value}
-                  onCheckedChange={() => setValue(_value)}
-                  classNames={'p-1 items-center justify-center aspect-square'}
-                >
-                  <Component value={_value} size={iconSize} />
-                </Menu.CheckboxItem>
-              );
-            })}
-            {onReset && (
-              <Menu.CheckboxItem
-                onCheckedChange={() => onReset()}
-                classNames={'p-1 items-center justify-center aspect-square'}
-              >
-                <Icon icon='ph--x--regular' size={iconSize} />
-              </Menu.CheckboxItem>
-            )}
-          </Menu.Viewport>
-          <Menu.Arrow />
-        </Menu.Content>
-      </Menu.Portal>
+      <Menu.Content columns={6}>
+        {values.map((_value) => {
+          return (
+            <Menu.CheckboxItem
+              key={_value}
+              item={{ value: _value, label: _value }}
+              checked={_value === value}
+              onCheckedChange={() => setValue(_value)}
+            >
+              <Component value={_value} size={iconSize} />
+            </Menu.CheckboxItem>
+          );
+        })}
+        {onReset && (
+          <Menu.Item item={{ value: RESET, label: 'Reset' }} onClick={() => onReset()}>
+            <Icon.Icon icon='ph--x--regular' size={iconSize} />
+          </Menu.Item>
+        )}
+      </Menu.Content>
     </Menu.Root>
   );
 };

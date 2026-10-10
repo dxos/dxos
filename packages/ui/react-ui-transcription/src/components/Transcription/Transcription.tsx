@@ -4,8 +4,9 @@
 
 import React from 'react';
 
-import { composable, composableProps, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Util from '@dxos/react-ui/Util';
 import { type Message, type Transcript } from '@dxos/types';
 import {
   createBasicExtensions,
@@ -26,9 +27,9 @@ export type TranscriptionProps = {
 };
 
 // TODO(burdon): Rename Transcript.
-export const Transcription = composable<HTMLDivElement, TranscriptionProps>(
+export const Transcription = Util.composable<HTMLDivElement, TranscriptionProps>(
   ({ transcript: object, model, children, ...props }, forwardedRef) => {
-    const { themeMode } = useThemeContext();
+    const themeMode = Hooks.useThemeMode();
     const { parentRef } = useTextEditor(() => {
       return {
         extensions: [
@@ -45,7 +46,7 @@ export const Transcription = composable<HTMLDivElement, TranscriptionProps>(
 
     return (
       <div
-        {...composableProps(props, { classNames: 'dx-expand' })}
+        {...Util.composableProps(props, { classNames: 'dx-expand' })}
         data-popover-collision-boundary={true}
         ref={parentRef}
       />

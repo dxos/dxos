@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Resource } from '@dxos/react-ui';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 export const translationKey = '@dxos/react-ui-task';
 
@@ -41,12 +41,10 @@ export const translations = [
         'priority-urgent.label': 'Urgent',
         'task-actions.label': 'Task actions',
         'task-check.label': 'Select task',
-        'task-title.placeholder': 'Untitled',
-        'add-task.placeholder': 'Add task',
-        'task-description.placeholder': 'Add a description',
-        'save-task.label': 'Save',
+        'task-title.placeholder': 'Task title',
+        'add-task.placeholder': 'Task title',
+        'task-description.placeholder': 'Task description',
         'task-history.label': 'Activity',
-        'cancel-edit.label': 'Cancel',
         'question-answer.label': 'Your answer',
         'question-answer.placeholder': 'Type an answer…',
         'question-submit.label': 'Answer',
@@ -54,4 +52,4 @@ export const translations = [
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

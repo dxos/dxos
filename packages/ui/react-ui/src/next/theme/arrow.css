@@ -4,16 +4,28 @@
  */
 
 @layer dx-components {
-  .nx-arrow {
-    --arrow-size: calc(var(--nx-gap-size) + 2px);
+  .dx-arrow {
+    --arrow-size: calc(var(--dx-gap-size) + 2px);
     /* The popup's own surface, so the arrow reads as part of it. */
     --arrow-background: var(--surface-bg);
+    /*
+     * Under the popup's content, above its background (the popup is a stacking context): the half of the tip inside the
+     * popup matches the background, so an item's highlight is not cut by it.
+     */
+    z-index: -1;
   }
   /*
    * zag rotates a full-box square, whose corner would overhang the box by (√2 − 1)/2 of its size and eat the gutter;
    * scaled by 1/√2 its corners touch the box edges, so the tip ends exactly at the gutter zag reserved.
    */
-  .nx-arrow-tip {
+  .dx-arrow-tip {
     scale: 0.7071;
+    /*
+     * zag rotates the tip so its top and left edges face the anchor. A popup with a coloured border sets
+     * `--dx-arrow-border` to continue it along those edges: an inset shadow rather than a border, since border widths
+     * snap to device pixels and would shrink below the box's 1px after the 1/√2 scale.
+     */
+    --dx-arrow-stroke: calc(var(--dx-arrow-border-width, 1px) * 1.4142);
+    box-shadow: inset var(--dx-arrow-stroke) var(--dx-arrow-stroke) 0 0 var(--dx-arrow-border, transparent);
   }
 }

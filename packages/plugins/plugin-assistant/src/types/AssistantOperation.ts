@@ -161,6 +161,32 @@ export const RunPromptInChat = Operation.make({
 });
 
 /**
+ * Answers a request an agent raised in a chat (allow or refuse a tool call) and hands the choice to the
+ * agent waiting on it.
+ */
+export const RespondToRequest = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.assistant.respondToRequest'),
+    name: 'Respond to Request',
+    icon: 'ph--check-circle--regular',
+    // Kept off every agent's tool surface: an agent must never be able to answer its own request.
+    skipRegistry: true,
+  },
+  services: [Capability.Service, Database.Service],
+  input: Schema.Struct({
+    chat: Type.getSchema(Chat.Chat),
+    /** The message holding the request block. */
+    messageId: Schema.String,
+    requestId: Schema.String,
+    optionId: Schema.String,
+  }),
+  output: Schema.Struct({
+    /** False when nothing was waiting on the request any more (its turn ended, or it was answered). */
+    answered: Schema.Boolean,
+  }),
+});
+
+/**
  * Records a reader's answer to a question in a task's history and resumes the conversation that
  * asked it.
  *

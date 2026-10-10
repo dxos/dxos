@@ -1,5 +1,73 @@
 # @dxos/react-ui-form
 
+## 0.13.0
+
+### Minor Changes
+
+- 44b7b80: Add numeric `min`, `max` and `step` to `FormFieldOverride`, so a form can offer a narrower range than its schema enforces. Canvas nodes gain a ports-per-side property; new rectangles, ellipses and classes share one 256x256 default size (nested scenes 512x256) in scene units, no longer scaled by the zoom; a palette drag centres the shape on the pointer and previews it in place of the browser's drag image; ⌘-drag copies the selection; a new link is selected; a link dropped on empty canvas creates a copy of its source shape; a selected node hides its ports; font sizes and port counts outside the editor's range no longer drop a stored node from its scene; and the multi-select panel no longer shares fields whose constraints differ.
+- ec9f207: Add `fieldOverrides` to `Form.Root` for per-field label, description, placeholder, readonly, hidden and indeterminate (multi-object "Mixed") values, a `fixed` grid in form layouts, and an indeterminate `Switch`; Enter in a text field commits it as leaving it does. The canvas properties panel floats over the scene, edits several selected elements at once, and uses the standard number fields for geometry and font size; canvas shortcuts fire only while the canvas has focus.
+
+### Patch Changes
+
+- eb14798: `Form.Content` now submits on Ctrl+Enter as well as Cmd+Enter, including from a markdown field, and
+  only when the form is valid, so the create-task dialog creates a task from the keyboard and does
+  nothing while the title is blank. The dialog's description is now a multi-line markdown field.
+- Updated dependencies [d2a6aad]
+- Updated dependencies [162fd6d]
+- Updated dependencies [aad3e41]
+- Updated dependencies [bb2b672]
+- Updated dependencies [cb1e218]
+- Updated dependencies [1ef899b]
+- Updated dependencies [32f32a0]
+- Updated dependencies [469e7f7]
+- Updated dependencies [665261a]
+- Updated dependencies [2e96a73]
+- Updated dependencies [ab1bddf]
+- Updated dependencies [945092e]
+- Updated dependencies [c531b05]
+- Updated dependencies [3672aff]
+- Updated dependencies [2f95d25]
+- Updated dependencies [c7cc480]
+- Updated dependencies [7d222fc]
+- Updated dependencies [e99ee70]
+- Updated dependencies [161f994]
+- Updated dependencies [7a177b9]
+- Updated dependencies [1894fc1]
+- Updated dependencies [246ee3c]
+- Updated dependencies [8ebe8d6]
+- Updated dependencies [7715216]
+- Updated dependencies [1b37aa8]
+- Updated dependencies [1737cad]
+- Updated dependencies [321c99f]
+- Updated dependencies [3d05b7f]
+- Updated dependencies [6a7bed4]
+- Updated dependencies [3022878]
+- Updated dependencies [c2a300a]
+- Updated dependencies [17008f0]
+- Updated dependencies [4f8e566]
+- Updated dependencies [a449958]
+- Updated dependencies [49731e1]
+  - @dxos/react-ui@0.13.0
+  - @dxos/echo@0.13.0
+  - @dxos/util@0.13.0
+  - @dxos/ui-editor@0.13.0
+  - @dxos/react-ui-editor@0.13.0
+  - @dxos/react-ui-list@0.13.0
+  - @dxos/react-ui-query@0.13.0
+  - @dxos/echo-doc@0.13.0
+  - @dxos/echo-react@0.13.0
+  - @dxos/schema@0.13.0
+  - @dxos/async@0.13.0
+  - @dxos/effect@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/react-hooks@0.13.0
+  - @dxos/lit-ui@0.13.0
+  - @dxos/invariant@0.13.0
+  - @dxos/keys@0.13.0
+  - @dxos/ui@0.13.0
+  - @dxos/ui-theme@0.13.0
+  - @dxos/ui-types@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

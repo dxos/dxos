@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Combobox.tsx';
+export * as Combobox from './Combobox.tsx';

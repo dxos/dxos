@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { ProfileOf } from '#types';
+import { ProfileOf } from '@dxos/types';
 
 /**
  * Schemas this plugin registers, loaded on demand: the capability activates at idle,

@@ -17,7 +17,7 @@ import isEqual from 'fast-deep-equal';
 import { Event, UpdateScheduler } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { DatabaseDirectory } from '@dxos/echo-protocol';
-import { RuntimeProvider } from '@dxos/effect';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -229,10 +229,12 @@ export class SpaceStateManager extends Resource {
       this._roots.delete(prevRootId);
     }
 
-    await this._saveSpace(spaceId, root.url);
-
-    // A space restored from storage is re-assigned the directory it was saved with, which retires nothing.
+    // A space restored from storage is re-assigned the directory it was saved with, which retires nothing
+    // and has nothing new to persist.
     let retiredRootId = prevRootId !== root.documentId ? prevRootId : undefined;
+    if (prevRootId !== root.documentId) {
+      await this._saveSpace(spaceId, root.url);
+    }
 
     const ctx = new Context();
 

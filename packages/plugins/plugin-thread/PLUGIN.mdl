@@ -59,6 +59,48 @@ op AppendChannelMessage
     text: String
 ```
 
+```mdl
+op SendToChannel
+  key: org.dxos.operation.thread.sendToChannel
+  desc: |
+    Send text to a channel, or to a backend thread inside it, through the provider resolved by
+    `channel.backend.kind`. A backend refusal returns `delivered: false` with a reason; a missing
+    provider or a backend without threads fails with a typed error.
+  in:
+    channel: Ref<Channel>
+    thread?: String
+    text: String
+  out:
+    delivered: Boolean
+    messageIds?: String[]
+    properties?: Record
+    reason?: String
+```
+
+```mdl
+op OpenDirect
+  key: org.dxos.operation.thread.openDirect
+  desc: |
+    Open a direct conversation (a DM) with a Person through the channel's account, via the
+    backend's optional `openDirect`; returns a thread id for SendToChannel.
+  in:
+    channel: Ref<Channel>
+    person: Ref<Person>
+  out:
+    thread?: String
+    reason?: String
+```
+
+```mdl
+op ConnectChannel
+  key: org.dxos.operation.thread.connectChannel
+  desc: Start the backend's optional connection (a bot gateway); DisconnectChannel and GetChannelStatus stop and report it.
+  in:
+    channel: Ref<Channel>
+  out:
+    status: ConnectionStatus
+```
+
 ## Features
 
 ```mdl

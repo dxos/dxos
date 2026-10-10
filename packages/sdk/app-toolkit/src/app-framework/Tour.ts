@@ -6,8 +6,8 @@
 
 import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { Obj, Type } from '@dxos/echo';
-import type { TourStepPlacement } from '@dxos/react-ui';
-import { Position } from '@dxos/util';
+import type * as Tour from '@dxos/react-ui/Tour';
+import * as Position from '@dxos/util/Position';
 
 import type * as Translations from '../app/Translations.ts';
 
@@ -24,7 +24,7 @@ export type Step = {
   target: string | (() => HTMLElement | null);
   title: string;
   description: string;
-  placement?: TourStepPlacement;
+  placement?: Tour.StepPlacement;
   /** Runs before the step shows and may bring the target into being (open a sidebar); awaited. */
   before?: (capabilities: CapabilityManager.CapabilityManager) => void | Promise<void>;
 };

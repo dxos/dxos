@@ -20,7 +20,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { type TestHarness } from '@dxos/app-framework/testing';
 import { AiContext } from '@dxos/assistant';
-import { RunInstructions } from '@dxos/assistant-toolkit';
+import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
 import * as Chat from '@dxos/assistant/Chat';
 import { Config } from '@dxos/client';
 import { FeedTraceSink } from '@dxos/compute-runtime';
@@ -32,7 +32,7 @@ import type * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { EDGE_URLS } from '@dxos/config';
 import { Database, Feed, Filter, Obj, Ref, Registry, Tag, type Type } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN, type SpaceId } from '@dxos/keys';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
@@ -43,7 +43,7 @@ import * as InboxPlugin from '@dxos/plugin-inbox/InboxPlugin';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 import { Employer, Message, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -99,13 +99,17 @@ const EDGE_URL = process.env.DX_EDGE_BASE_URL ?? EDGE_URLS.preview;
 
 /**
  * Whether a model is served through EDGE with the harness identity, the way the app serves it,
- * rather than by the direct testing preset with a vendor key. DeepSeek has no key of its own to
- * give; the edge path needs nothing but the identity the run creates.
+ * rather than by the direct testing preset with a vendor key. DeepSeek goes direct only when
+ * `DEEPSEEK_API_KEY` is set; otherwise the edge path needs nothing but the identity the run creates.
  */
-const servedByEdge = (model: DXN.DXN): boolean => Model.developer(model) === 'com.deepseek';
+const servedByEdge = (model: DXN.DXN): boolean =>
+  Model.developer(model) === 'com.deepseek' && !process.env.DEEPSEEK_API_KEY;
 
-const directAiService = (): Promise<AiService.Service> =>
-  AiService.tag.pipe(Effect.provide(AiServiceTestingPreset('direct')), EffectEx.runAndForwardErrors);
+const directAiService = (model: DXN.DXN): Promise<AiService.Service> =>
+  AiService.tag.pipe(
+    Effect.provide(AiServiceTestingPreset(Model.developer(model) === 'com.deepseek' ? 'deepseek' : 'direct')),
+    EffectEx.runAndForwardErrors,
+  );
 
 /**
  * Contributes an alternative turn engine to the run. `AgentServiceSpec` reads this registry once,
@@ -154,7 +158,7 @@ const createDefaultPlugins = async (options: {
     // The plugin's own resolvers serve an EDGE model through EDGE, authenticated as the run.
     aiServiceMiddleware: servedByEdge(options.model)
       ? (upstream) => Usage.instrument(upstream, options.record)
-      : await directAiService().then((direct) => () => Usage.instrument(direct, options.record)),
+      : await directAiService(options.model).then((direct) => () => Usage.instrument(direct, options.record)),
   }),
   RoutinePlugin.make(),
   InboxPlugin.make(),
@@ -195,7 +199,7 @@ const runInstructions = <I>(
       }
 
       return yield* Operation.invoke(
-        RunInstructions,
+        AgentOperation.RunInstructions,
         {
           instructions: Ref.make(instructions),
           input,
@@ -222,6 +226,8 @@ const runAgentSession = <I>(
   spaceId: SpaceId,
   input: I,
   seededChat?: Ref.Ref<Chat.Chat>,
+  conversation?: Conversation<I>,
+  transcript: Scorer.Turn[] = [],
 ) =>
   harness.runPromise(
     Effect.gen(function* () {
@@ -241,15 +247,37 @@ const runAgentSession = <I>(
             model,
             context,
           });
-      yield* agent.submitPrompt(prompt);
-      yield* agent.waitForCompletion();
+      // Each turn's reply is every assistant text since its prompt: a turn may span several messages.
+      let seen = 0;
+      const turn = (text: string, said = text) =>
+        Effect.gen(function* () {
+          transcript.push({ role: 'user', text: said });
+          // Re-read per step: a session whose process finished its turn hands the prompt to a new
+          // process, and waiting on the old one would return at once.
+          yield* (yield* AgentService.getSession(agent.chat)).submitPrompt(text);
+          yield* (yield* AgentService.getSession(agent.chat)).waitForCompletion();
+          const messages = yield* Feed.query(agent.feed, Filter.type(Message.Message)).run;
+          const reply = messages
+            .slice(seen)
+            .filter((message) => message.sender.role === 'assistant')
+            .map(Message.extractText)
+            .filter((text) => text.length > 0)
+            .join('\n\n');
+          seen = messages.length;
+          transcript.push({ role: 'assistant', text: reply });
+          return reply;
+        });
 
-      const transcript = yield* Feed.query(agent.feed, Filter.type(Message.Message)).run;
-      return transcript
-        .filter((message) => message.sender.role === 'assistant')
-        .map(Message.extractText)
-        .filter((text) => text.length > 0)
-        .at(-1);
+      const opening = conversation?.opening(input);
+      let reply = yield* opening === undefined ? turn(prompt) : turn(`${prompt}\n\n${opening}`, opening);
+      for (let turns = 1; conversation && turns < conversation.maxTurns; turns++) {
+        const next = yield* conversation.reply({ input, transcript });
+        if (next === undefined) {
+          break;
+        }
+        reply = yield* turn(next);
+      }
+      return reply.length > 0 ? reply : undefined;
     }).pipe(
       Effect.scoped,
       Effect.provide(
@@ -281,6 +309,20 @@ const sessionOnChat = (
     return yield* AgentService.getSession(chat);
   });
 
+/**
+ * Drives an agent session as a conversation with a simulated user: the first prompt carries
+ * `opening`, and after every agent turn `reply` writes the user's next message, or ends the
+ * conversation with `undefined`.
+ */
+export type Conversation<I> = {
+  /** The user's first message, appended to the instructions. */
+  opening: (input: I) => string;
+  /** The user's next message given everything said so far, or `undefined` to end. */
+  reply: (context: { input: I; transcript: readonly Scorer.Turn[] }) => Effect.Effect<string | undefined, unknown>;
+  /** Upper bound on user messages, the opening included. */
+  maxTurns: number;
+};
+
 export interface CreateEvalRunnerOptions<I, O> {
   instructions: string;
   input: Schema.Schema<I>;
@@ -304,6 +346,11 @@ export interface CreateEvalRunnerOptions<I, O> {
    * identically. Implied by a `makeTurnProducer`, which `RunInstructions` would ignore.
    */
   agentSession?: boolean;
+  /**
+   * Runs the session as a multi-turn conversation (implies `agentSession`). The scorers read the
+   * exchanged messages from `Scorer.Run`'s `transcript`.
+   */
+  conversation?: Conversation<I>;
   plugins?: Plugin.Plugin[];
   /**
    * Provisions a {@link Chat} on the session feed so planning and other chat-scoped tools work
@@ -452,7 +499,7 @@ export function createEvalRunner<I, O>(
     const run = Effect.scoped(
       Effect.gen(function* () {
         const harness = yield* Effect.promise(async () =>
-          createComposerTestApp({
+          Harness.createComposerTestApp({
             plugins: await createDefaultPlugins({ ...options, model, makeTurnProducer, record }),
           }),
         );
@@ -485,11 +532,23 @@ export function createEvalRunner<I, O>(
           }
         }
 
-        const asSession = options.agentSession === true || makeTurnProducer !== undefined;
+        const asSession =
+          options.agentSession === true || makeTurnProducer !== undefined || options.conversation !== undefined;
+        // Filled as the session runs, so a timed-out conversation is still graded on what was said.
+        const transcript: Scorer.Turn[] = [];
         const agentStep = Effect.tryPromise({
           try: (): Promise<O> =>
             asSession
-              ? runAgentSession(harness, instructions, model, defaultSpace.id, input, seeded.chat).then((reply) => {
+              ? runAgentSession(
+                  harness,
+                  instructions,
+                  model,
+                  defaultSpace.id,
+                  input,
+                  seeded.chat,
+                  options.conversation,
+                  transcript,
+                ).then((reply) => {
                   // The reply is free text, so only a scenario whose output admits a string can run this way.
                   if (!Schema.is(options.output)(reply)) {
                     throw new Error(`Agent reply does not match the eval's output schema: ${String(reply)}`);
@@ -525,7 +584,7 @@ export function createEvalRunner<I, O>(
           Database.Service,
           FeedTraceSink.FeedTraceSink,
         );
-        const provideRun = Scorer.sessionServices({ durationMillis });
+        const provideRun = Scorer.sessionServices({ durationMillis, transcript });
 
         // Graded one dimension at a time: `Scorer.shared` memoizes a completed exit, so two
         // dimensions naming one query must not be in flight together.

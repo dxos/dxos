@@ -14,10 +14,10 @@ import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials
 // TODO(wittjosiah): Restore observability for testbench.
 // import { initializeAppObservability } from '@dxos/observability';
 import { type Client, ClientProvider } from '@dxos/react-client';
-import { type ThemeMode, ThemeProvider } from '@dxos/react-ui';
-import { defaultTx } from '@dxos/react-ui';
+import * as Theme from '@dxos/react-ui/Theme';
 import { Expando } from '@dxos/schema';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
+import { type ThemeMode } from '@dxos/ui-types';
 
 import { AppContainer, Error, Main } from './components/index.ts';
 import { SyncBench } from './components/SyncBench.tsx';
@@ -69,9 +69,9 @@ const useThemeWatcher = () => {
 const App = () => {
   const themeMode = useThemeWatcher();
   return (
-    <ThemeProvider tx={defaultTx} themeMode={themeMode} resourceExtensions={translations}>
+    <Theme.Provider tx={Theme.defaultTx} themeMode={themeMode} resourceExtensions={translations}>
       <RouterProvider router={router} />
-    </ThemeProvider>
+    </Theme.Provider>
   );
 };
 

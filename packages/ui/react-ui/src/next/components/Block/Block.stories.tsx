@@ -9,25 +9,36 @@ import React from 'react';
 import { expect } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, centreY, expectScoped } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Container } from '../Container/Container.tsx';
+import * as Icon from '../Icon/Icon.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import { Block } from './Block.tsx';
 
 const DefaultStory = ({ size }: SizeArgs) => (
-  <Next.Container gutter='rail' layout='row' data-testid={`row-${size}`}>
-    <Next.Block rail='start' data-testid={`start-${size}`}>
-      <Next.Icon icon='ph--circle--regular' />
-    </Next.Block>
-    <Next.Typography>Block</Next.Typography>
-    <Next.Block rail='end' data-testid={`end-${size}`}>
-      <Next.Icon icon='ph--dots-three--regular' />
-    </Next.Block>
-  </Next.Container>
+  <>
+    <Container gutter='rail' layout='row' data-testid={`row-${size}`}>
+      <Block rail='start' data-testid={`start-${size}`}>
+        <Icon.Icon icon='ph--circle--regular' />
+      </Block>
+      <Typography.Text>Block</Typography.Text>
+      <Block rail='end' data-testid={`end-${size}`}>
+        <Icon.Icon icon='ph--dots-three--regular' />
+      </Block>
+    </Container>
+    <Container gutter='rail' layout='row'>
+      <Block rail='start' compact data-testid={`compact-${size}`}>
+        <Icon.Icon icon='ph--star--regular' />
+      </Block>
+      <Typography.Text>Compact</Typography.Text>
+    </Container>
+  </>
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/Block',
+  title: 'ui/react-ui-core/components/Block',
   render: DefaultStory,
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
   args: { size: 'md' },
@@ -41,7 +52,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-/** A Block is a block-sized square that centres its icon; rail Blocks fill their row's gutters. */
+/** A Block is a block-sized square that centres its icon; rail Blocks fill their row's gutters; a compact one is only icon-tall. */
 export const Test: Story = {
   args: { allSizes: true },
   play: async ({ canvasElement }) => {
@@ -58,6 +69,11 @@ export const Test: Story = {
       await expect(row.height, `row-${size} height`).toBeCloseTo(block, 0);
       await expect(rect.left, `start-${size} left`).toBeCloseTo(row.left, 0);
       await expect(byTestId(canvasElement, `end-${size}`).getBoundingClientRect().right).toBeCloseTo(row.right, 0);
+      const compact = byTestId(canvasElement, `compact-${size}`).getBoundingClientRect();
+      const compactIcon = byTestId(canvasElement, `compact-${size}`).querySelector('svg')?.getBoundingClientRect();
+      await expect(compact.width, `compact-${size} width`).toBeCloseTo(block, 0);
+      await expect(compact.height, `compact-${size} height`).toBeCloseTo(compactIcon?.height ?? 0, 0);
+      await expect(compact.height).toBeLessThan(block);
     }
     await expectScoped(canvasElement);
   },

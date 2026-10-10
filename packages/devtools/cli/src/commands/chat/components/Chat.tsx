@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { For, Match, Switch, createEffect, createMemo, createSignal, useContext } from 'solid-js';
 
 import { type AiSession, GenerationObserver } from '@dxos/assistant';
-import * as ChatSchema from '@dxos/assistant/Chat';
+import * as AssistantChat from '@dxos/assistant/Chat';
 import * as Skill from '@dxos/compute/Skill';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import { useAtomValue } from '@dxos/effect-atom-solid';
@@ -35,7 +35,7 @@ export type ChatProps = {
   conversation: AiSession.Session;
   model: DXN.DXN;
   verbose?: boolean;
-  onChatSelect?: (chat: ChatSchema.Chat) => void;
+  onChatSelect?: (chat: AssistantChat.Chat) => void;
   onChatCreate?: ({ skills }: { skills: string[] }) => void;
 };
 
@@ -275,12 +275,12 @@ const SkillPicker = (props: Pick<PickerProps, 'selected' | 'onSave' | 'onCancel'
 };
 
 const ChatPicker = (
-  props: { db: Database.Database; onSave?: (chat: ChatSchema.Chat) => void } & Pick<PickerProps, 'onCancel'>,
+  props: { db: Database.Database; onSave?: (chat: AssistantChat.Chat) => void } & Pick<PickerProps, 'onCancel'>,
 ) => {
-  const [chats, setChats] = createSignal<ChatSchema.Chat[]>([]);
+  const [chats, setChats] = createSignal<AssistantChat.Chat[]>([]);
 
   createEffect(async () => {
-    const chats = await props.db.query(Filter.type(ChatSchema.Chat)).run();
+    const chats = await props.db.query(Filter.type(AssistantChat.Chat)).run();
     setChats(chats);
   });
 

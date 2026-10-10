@@ -2,4 +2,21 @@
 //
 // For a full list of overridable settings, and general information on folder-specific settings,
 // see the documentation: https://zed.dev/docs/configuring-zed#settings-files
-{}
+{
+  // Replaces Zed's default list, so the defaults are repeated; nested worktrees and build output otherwise flood the scanner.
+  "file_scan_exclusions": [
+    "**/.git",
+    "**/.svn",
+    "**/.hg",
+    "**/.jj",
+    "**/CVS",
+    "**/.DS_Store",
+    "**/Thumbs.db",
+    "**/.classpath",
+    "**/.settings",
+    "**/.claude/worktrees",
+    "**/.moon/cache",
+    "**/.store/conversations",
+    "**/dist"
+  ]
+}

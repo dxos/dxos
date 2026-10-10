@@ -32,7 +32,7 @@ const OrganizationSchema = Schema.Struct({
     }),
     Schema.optional,
   ),
-  description: Schema.String.pipe(
+  description: Format.Text.pipe(
     Schema.annotate({ title: 'Description' }),
     Annotation.GeneratorAnnotation.set({
       generator: 'lorem.paragraphs',

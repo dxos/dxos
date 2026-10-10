@@ -3,5 +3,4 @@
 //
 
 export * as SequencerPlugin from './SequencerPlugin.ts';
-export * from '#meta';
 export * from '#types';

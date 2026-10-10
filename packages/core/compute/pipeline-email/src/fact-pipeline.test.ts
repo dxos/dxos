@@ -5,7 +5,7 @@
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Message, Organization, Person } from '@dxos/types';
 
 import { EmailFactPipeline } from './fact-pipeline.ts';

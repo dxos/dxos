@@ -21,7 +21,7 @@ import * as CompanionViewState from '@dxos/plugin-deck/CompanionViewState';
 import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
 import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
 import { Attention } from '@dxos/react-ui-attention/types';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { ASSISTANT_COMPANION_VARIANT } from '#meta';
 import { AssistantCapabilities, AssistantOperation } from '#types';

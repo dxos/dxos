@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-calls",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "description": "DXOS Calls (video / audio conferencing) plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,7 +10,7 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#capabilities": {
@@ -69,12 +69,11 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
+    "./CallManager": {
+      "source": "./src/CallManager.ts",
+      "types": "./dist/types/src/CallManager.d.ts",
+      "import": "./dist/lib/ns/CallManager.mjs"
     },
-    "./package.json": "./package.json",
     "./CallsCapabilities": {
       "source": "./src/types/CallsCapabilities.ts",
       "types": "./dist/types/src/types/CallsCapabilities.d.ts",
@@ -89,6 +88,12 @@
       "source": "./src/CallsPlugin.ts",
       "types": "./dist/types/src/CallsPlugin.d.ts",
       "import": "./dist/lib/CallsPlugin.mjs"
+    },
+    "./package.json": "./package.json",
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

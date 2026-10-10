@@ -10,7 +10,7 @@ import * as HttpClientRequest from 'effect/http/HttpClientRequest';
 import * as HttpClientResponse from 'effect/http/HttpClientResponse';
 import { describe, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { GitHubRepoInaccessibleError } from '../errors.ts';
 import { GitHubApi } from '../services/index.ts';

@@ -28,7 +28,7 @@ export type Column = Schema.Schema.Type<typeof Column>;
 export class Pipeline extends Type.makeObject<Pipeline>(DXN.make('org.dxos.type.pipeline', '0.1.0'))(
   Schema.Struct({
     name: Schema.String.pipe(Annotation.GeneratorAnnotation.set('commerce.productName'), Schema.optional),
-    description: Schema.String.pipe(Schema.optional),
+    description: Format.Text.pipe(Schema.optional),
     image: Format.URL.pipe(Schema.annotate({ title: 'Image' }), Schema.optional),
     columns: Schema.Array(Column).pipe(Annotation.FormInputAnnotation.set(false)),
   }).pipe(

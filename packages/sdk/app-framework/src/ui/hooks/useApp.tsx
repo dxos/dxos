@@ -8,7 +8,7 @@ import * as Fiber from 'effect/Fiber';
 import * as PubSub from 'effect/PubSub';
 import React, { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError, withContext } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -19,9 +19,12 @@ import { ContextProtocolProvider } from '@dxos/web-context-react';
 import { ActivationEvents, Capabilities } from '../../common/index.ts';
 import { PluginManagerContext } from '../../context.ts';
 import { type ActivationEvent, type Plugin, PluginManager } from '../../core/index.ts';
-import { setupDevtools } from '../../devtools.ts';
+import * as Devtools from '../../Devtools.ts';
+import { App } from '../components/App/App.tsx';
 import { bootLoader } from '../components/App/loader.ts';
-import { App, PluginManagerProvider, SurfaceManager, SurfaceManagerProvider } from '../components/index.ts';
+import { PluginManagerProvider } from '../components/PluginManager/PluginManagerProvider.ts';
+import { SurfaceManager } from '../components/Surface/SurfaceManager.ts';
+import { SurfaceManagerProvider } from '../components/Surface/SurfaceManagerContext.ts';
 import { createStartupWatchdog } from './startup-watchdog.ts';
 
 const ENABLED_KEY = 'org.dxos.app-framework.enabled';
@@ -238,7 +241,7 @@ export const useApp = ({
   }, [cacheEnabled, manager]);
 
   useEffect(() => {
-    setupDevtools(manager);
+    Devtools.setup(manager);
   }, [manager]);
 
   // Hand the boot loader the enabled plugins' icons from their own meta. This registers, it does

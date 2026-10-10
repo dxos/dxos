@@ -5,7 +5,7 @@
 import { openSearchPanel } from '@codemirror/search';
 import { type EditorView } from '@codemirror/view';
 
-import { type ActionGroupBuilderFn } from '@dxos/react-ui-menu';
+import type { ActionGroupBuilderFn } from '@dxos/react-ui-menu';
 
 import { translationKey } from '#translations';
 

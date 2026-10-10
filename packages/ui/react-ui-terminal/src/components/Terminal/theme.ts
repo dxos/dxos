@@ -10,22 +10,22 @@ import type { ITheme } from '@xterm/xterm';
  * slots step through the greys so dim output stays legible against the surface.
  */
 const ANSI_TOKENS = {
-  black: '--color-subdued',
+  black: '--color-fg-subtle',
   red: '--color-red-text',
   green: '--color-green-text',
   yellow: '--color-yellow-text',
   blue: '--color-blue-text',
   magenta: '--color-fuchsia-text',
   cyan: '--color-cyan-text',
-  white: '--color-description',
-  brightBlack: '--color-description',
+  white: '--color-fg-muted',
+  brightBlack: '--color-fg-muted',
   brightRed: '--color-red-text',
   brightGreen: '--color-green-text',
   brightYellow: '--color-yellow-text',
   brightBlue: '--color-blue-text',
   brightMagenta: '--color-fuchsia-text',
   brightCyan: '--color-cyan-text',
-  brightWhite: '--color-base-fg',
+  brightWhite: '--color-fg',
 } as const;
 
 /**
@@ -73,7 +73,7 @@ export const createXtermTheme = (element: Element): ITheme => {
   const { resolve, dispose } = makeResolver(element);
   try {
     const surface = resolve('--color-base-surface');
-    const foreground = resolve('--color-base-fg');
+    const foreground = resolve('--color-fg');
     const ansi = Object.fromEntries(Object.entries(ANSI_TOKENS).map(([slot, token]) => [slot, resolve(token)])) as Pick<
       ITheme,
       keyof typeof ANSI_TOKENS

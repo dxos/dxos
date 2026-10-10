@@ -8,7 +8,7 @@ import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
 
 import { layerMemory } from '@dxos/config';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { ClientService, layer } from './client-service.ts';
 

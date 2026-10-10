@@ -10,10 +10,10 @@ import * as AppMigrations from '@dxos/app-toolkit/AppMigrations';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { Annotation } from '@dxos/echo';
 import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
-import { ClientOperation } from '@dxos/plugin-client';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as ClientOperation from '@dxos/plugin-client/ClientOperation';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 
 import { SpacePlugin } from '#plugin';
@@ -29,7 +29,7 @@ describe('identity creation', () => {
   AppMigrations.define();
 
   test('provisions the default and settings spaces', async ({ expect }) => {
-    await using harness = await createComposerTestApp({
+    await using harness = await Harness.createComposerTestApp({
       plugins: [ClientPlugin.make({}), SpacePlugin({})],
     });
 

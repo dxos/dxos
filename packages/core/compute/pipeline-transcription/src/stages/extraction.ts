@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { insertReferences } from '@dxos/assistant/extraction';
+import { insertReferences } from '@dxos/assistant/Extraction';
 import { type Ref } from '@dxos/echo';
 import { type ContentBlock } from '@dxos/types';
 

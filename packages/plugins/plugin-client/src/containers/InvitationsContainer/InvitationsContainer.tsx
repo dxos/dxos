@@ -5,11 +5,15 @@
 import { useAtom, useAtomSet } from '@effect/atom-react/Hooks';
 import React, { useCallback, useState } from 'react';
 
-import { useCapability } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { Context } from '@dxos/context';
-import { Flex, Icon, IconButton, SystemIconButton, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Button from '@dxos/react-ui/Button';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 
 import { meta } from '#meta';
 import { AccountCache, ClientCapabilities } from '#types';
@@ -17,8 +21,8 @@ import { AccountCache, ClientCapabilities } from '#types';
 import { useHubHttpClient } from '../../hooks/index.ts';
 
 export const InvitationsContainer = () => {
-  const { t } = useTranslation(meta.profile.key);
-  const accountCacheAtom = useCapability(ClientCapabilities.AccountCache);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const accountCacheAtom = Hooks.useCapability(ClientCapabilities.AccountCache);
   const [cache] = useAtom(accountCacheAtom);
   const setCache = useAtomSet(accountCacheAtom);
   const [pending, setPending] = useState(false);
@@ -26,7 +30,7 @@ export const InvitationsContainer = () => {
   // Account/invitation routes live on hub-service, not the edge worker.
   const hubClient = useHubHttpClient();
 
-  useAsyncEffect(async () => {
+  UiHooks.useAsyncEffect(async () => {
     if (!hubClient) {
       return;
     }
@@ -75,7 +79,7 @@ export const InvitationsContainer = () => {
               label={t('generate-invitation.label')}
               description={t('generate-invitation.description', { count: remaining })}
             >
-              <IconButton
+              <Button.Root
                 icon='ph--plus--regular'
                 label={t('generate-invitation.label')}
                 variant='primary'
@@ -87,8 +91,8 @@ export const InvitationsContainer = () => {
 
           {available.length > 0 ? (
             <Form.FieldSet label={t('available-invitations.title')}>
-              <Listbox.Root>
-                <Listbox.Content classNames='gap-1'>
+              <Listbox.Root items={available.map((row) => ({ value: row.code, label: row.code }))}>
+                <Listbox.Content scroll={false} classNames='gap-1'>
                   {available.map((row) => (
                     <AvailableInvitationItem key={row.code} row={row} />
                   ))}
@@ -99,8 +103,8 @@ export const InvitationsContainer = () => {
 
           {redeemed.length > 0 ? (
             <Form.FieldSet label={t('redeemed-invitations.title')}>
-              <Listbox.Root>
-                <Listbox.Content classNames='gap-1'>
+              <Listbox.Root items={redeemed.map((row) => ({ value: row.code, label: row.code }))}>
+                <Listbox.Content scroll={false} classNames='gap-1'>
                   {redeemed.map((row) => (
                     <RedeemedInvitationItem key={row.code} row={row} />
                   ))}
@@ -116,12 +120,12 @@ export const InvitationsContainer = () => {
 
 const AvailableInvitationItem = ({ row }: { row: AccountCache.AccountCacheInvitation }) => (
   <Listbox.Item id={row.code} classNames='grid grid-cols-[min-content_1fr_min-content] items-center gap-2'>
-    <Icon icon='ph--paper-plane-tilt--duotone' size={5} classNames='text-description' />
-    <Flex column classNames='min-w-0'>
+    <Icon.Icon icon='ph--paper-plane-tilt--duotone' size='lg' tone='muted' />
+    <Layout.Flex column classNames='min-w-0'>
       <div className='font-mono truncate'>{row.code}</div>
-      <p className='text-description text-xs'>{new Date(row.createdAt).toLocaleString()}</p>
-    </Flex>
-    <SystemIconButton.Clipboard iconOnly value={row.code} />
+      <p className='text-fg-muted text-xs'>{new Date(row.createdAt).toLocaleString()}</p>
+    </Layout.Flex>
+    <SystemButton.Clipboard iconOnly value={row.code} />
   </Listbox.Item>
 );
 
@@ -129,11 +133,11 @@ const RedeemedInvitationItem = ({ row }: { row: AccountCache.AccountCacheInvitat
   const date = row.redeemedAt ?? row.createdAt;
   return (
     <Listbox.Item id={row.code} classNames='grid grid-cols-[min-content_1fr] items-center gap-2'>
-      <Icon icon='ph--check-circle--duotone' size={5} classNames='text-success-text' />
-      <Flex column classNames='min-w-0'>
+      <Icon.Icon icon='ph--check-circle--duotone' size='lg' valence='success' />
+      <Layout.Flex column classNames='min-w-0'>
         <div className='font-mono truncate'>{row.code}</div>
-        <p className='text-description text-xs'>{new Date(date).toLocaleString()}</p>
-      </Flex>
+        <p className='text-fg-muted text-xs'>{new Date(date).toLocaleString()}</p>
+      </Layout.Flex>
     </Listbox.Item>
   );
 };

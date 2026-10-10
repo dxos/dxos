@@ -2,27 +2,28 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type HTMLAttributes, type PropsWithChildren } from 'react';
+import React, { type ComponentProps, type HTMLAttributes, type PropsWithChildren } from 'react';
 
-import { type ClassNameValue, Icon, type Size } from '@dxos/react-ui';
+import * as Icon from '@dxos/react-ui/Icon';
 import { mx } from '@dxos/ui-theme';
+import { type ClassNameValue } from '@dxos/ui-types';
 
 import { visitNodes } from './visit-nodes.ts';
 
 export const IconButton = ({
   iconName,
   classNames,
-  size = 4,
+  size = 'md',
   onClick,
 }: {
   iconName: string;
   classNames?: ClassNameValue;
-  size?: Size;
+  size?: ComponentProps<typeof Icon.Icon>['size'];
 } & Pick<HTMLAttributes<HTMLDivElement>, 'onClick'>) => {
   // TODO(burdon): Density aware.
   return (
     <div className={mx('flex w-6 h-6 items-center justify-center select-none', classNames)} onClick={onClick}>
-      <Icon icon={iconName} classNames='cursor-pointer' size={size} />
+      <Icon.Icon icon={iconName} classNames='cursor-pointer' size={size} />
     </div>
   );
 };
@@ -99,7 +100,7 @@ const StateIcon = ({ node, open, selected, active }: TreeNodeProps) => {
   return (
     <IconButton
       iconName={isActive ? 'ph--user-circle--regular' : 'ph--circle--regular'}
-      size={4}
+      size='md'
       classNames={mx(
         'text-slate-500',
         !isChildActive && 'opacity-0 transition duration-500',
@@ -118,7 +119,7 @@ const OpenIcon = ({
     (children?.length && open && (
       <IconButton
         iconName='ph--caret-right--regular'
-        size={3}
+        size='xs'
         classNames={mx('transition duration-200', open?.[id] ? 'rotate-90' : 'transform-none')}
         onClick={(ev) => {
           ev.stopPropagation();
@@ -133,7 +134,7 @@ const OpenIcon = ({
 const ItemIcon = ({
   node: { children, iconName = children?.length ? 'ph--folder--regular' : 'ph--file--regular', color },
 }: Pick<TreeNodeProps, 'node'>) => {
-  return (iconName && <IconButton iconName={iconName} classNames={color ?? 'text-subdued'} />) || <div />;
+  return (iconName && <IconButton iconName={iconName} classNames={color ?? 'text-fg-subtle'} />) || <div />;
 };
 
 const MenuItem = ({ node: { id }, onMenuAction }: Pick<TreeNodeProps, 'node' | 'onMenuAction'>) => {

@@ -5,7 +5,8 @@
 import React from 'react';
 
 import { useConfig } from '@dxos/react-client';
-import { Panel, Toolbar } from '@dxos/react-ui';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { JsonView } from '../../../../components/index.ts';
 import { EdgeSelector, VaultSelector } from '../../../../containers/index.ts';
@@ -21,15 +22,15 @@ export const ConfigArticle = ({ role, vaultSelector = true, edgeSelector = true 
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           {vaultSelector && <VaultSelector />}
           {edgeSelector && <EdgeSelector />}
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         <JsonView data={config.values} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

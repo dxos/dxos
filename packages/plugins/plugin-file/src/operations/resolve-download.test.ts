@@ -9,11 +9,11 @@ import { describe, test } from 'vitest';
 import { fromDigestHex } from '@dxos/blob';
 import * as Operation from '@dxos/compute/Operation';
 import { Blob, Ref } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 import { File } from '@dxos/types';
 
 import { FilePlugin } from '#plugin';
@@ -59,7 +59,7 @@ describe('FileOperation.ResolveDownload', () => {
 });
 
 const setup = async () => {
-  const harness = await createComposerTestApp({ plugins: [ClientPlugin.make({}), FilePlugin()] });
+  const harness = await Harness.createComposerTestApp({ plugins: [ClientPlugin.make({}), FilePlugin()] });
   const { defaultSpace } = await EffectEx.runAndForwardErrors(
     initializeIdentity(harness.get(ClientCapabilities.Client)),
   );

@@ -8,7 +8,7 @@ import type * as Types from 'effect/Types';
 
 import { Format, JsonSchema } from '@dxos/echo';
 import { DecimalPrecision, SelectOption, TypeEnum } from '@dxos/echo/Format';
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 
 /**
  * Base schema.
@@ -172,56 +172,7 @@ export const formatToSchema: Record<Format.TypeFormat, Schema.Codec<FormatSchema
  * This is the schema used by the ViewEditor's Form.
  * It is mapped to/from the View's Field AND Schema properties via the ViewProjection.
  */
-export const PropertySchema = Schema.Union([
-  formatToSchema[Format.TypeFormat.None],
-  formatToSchema[Format.TypeFormat.String],
-  formatToSchema[Format.TypeFormat.Number],
-  formatToSchema[Format.TypeFormat.Boolean],
-  formatToSchema[Format.TypeFormat.Ref],
-
-  //
-  // Strings
-  //
-
-  formatToSchema[Format.TypeFormat.DID],
-  formatToSchema[Format.TypeFormat.DXN],
-  formatToSchema[Format.TypeFormat.Email],
-  formatToSchema[Format.TypeFormat.Formula],
-  formatToSchema[Format.TypeFormat.Hostname],
-  formatToSchema[Format.TypeFormat.JSON],
-  formatToSchema[Format.TypeFormat.Key],
-  formatToSchema[Format.TypeFormat.Markdown],
-  formatToSchema[Format.TypeFormat.Password],
-  formatToSchema[Format.TypeFormat.Regex],
-  formatToSchema[Format.TypeFormat.URL],
-  formatToSchema[Format.TypeFormat.UUID],
-  formatToSchema[Format.TypeFormat.SingleSelect],
-  formatToSchema[Format.TypeFormat.MultiSelect],
-
-  //
-  // Numbers
-  //
-
-  formatToSchema[Format.TypeFormat.Currency],
-  formatToSchema[Format.TypeFormat.Integer],
-  formatToSchema[Format.TypeFormat.Percent],
-  formatToSchema[Format.TypeFormat.Timestamp],
-
-  //
-  // Dates
-  //
-
-  formatToSchema[Format.TypeFormat.DateTime],
-  formatToSchema[Format.TypeFormat.Date],
-  formatToSchema[Format.TypeFormat.Time],
-  formatToSchema[Format.TypeFormat.Duration],
-
-  //
-  // Objects
-  //
-
-  formatToSchema[Format.TypeFormat.GeoPoint],
-]);
+export const PropertySchema = Schema.Union(Object.values(formatToSchema));
 
 export interface PropertyType extends Types.Simplify<Schema.Schema.Type<typeof PropertySchema>> {}
 

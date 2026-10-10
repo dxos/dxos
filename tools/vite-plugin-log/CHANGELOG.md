@@ -1,5 +1,11 @@
 # @dxos/vite-plugin-log
 
+## 0.13.0
+
+### Patch Changes
+
+- @dxos/log@0.13.0
+
 ## 0.12.0
 
 ### Patch Changes

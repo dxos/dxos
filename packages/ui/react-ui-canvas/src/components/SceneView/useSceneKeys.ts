@@ -7,10 +7,11 @@ import { type KeyboardEvent, useCallback } from 'react';
 import { type useRegistry } from '../../hooks/index.ts';
 import { type SceneViewAtoms } from '../../model/atoms.ts';
 import { isToolKey, keyAction } from '../../model/keys.ts';
+import { nodeDef } from '../../model/node-def.ts';
 import { type Projection } from '../../model/projection.ts';
-import { type LinkRegistry, type NodeRegistry, nodeDef } from '../../model/registry.ts';
+import { type LinkRegistry, type NodeRegistry } from '../../model/registry.ts';
 import { type Bounds, type Capabilities, type ElementId, type Scene, type Size } from '../../model/types.ts';
-import { fitBounds, zoomAt } from '../../utils/camera.ts';
+import { NOMINAL_ZOOM, fitBounds, zoomAt } from '../../utils/camera.ts';
 import { unionBounds } from '../../utils/hit.ts';
 import { nodeBounds } from '../../utils/shapes.ts';
 import { toolForKey } from '../Palette/Palette.tsx';
@@ -37,6 +38,8 @@ export type UseSceneKeysOptions = {
   grid: number;
   select: (ids: Iterable<ElementId>) => void;
   toggleSnap: () => void;
+  toggleGuides: () => void;
+  toggleLattice: () => void;
   toggleDebug: () => void;
   onUndo: () => void;
   onRedo: () => void;
@@ -65,6 +68,8 @@ export const useSceneKeys = ({
   grid,
   select,
   toggleSnap,
+  toggleGuides,
+  toggleLattice,
   toggleDebug,
   onUndo,
   onRedo,
@@ -114,18 +119,20 @@ export const useSceneKeys = ({
           break;
         }
         case 'fit':
-          animateTo(fitBounds(bounds, viewport, inset));
+          animateTo(fitBounds(bounds, viewport, inset, NOMINAL_ZOOM));
           event.preventDefault();
           break;
         case 'fitSelection': {
           const union = unionBounds(selectedNodes.map((id) => nodeBounds(scene.nodes[id])));
           if (union) {
-            animateTo(fitBounds(union, viewport, inset));
+            animateTo(fitBounds(union, viewport, inset, NOMINAL_ZOOM));
           }
           break;
         }
         case 'zoomReset':
-          animateTo(zoomAt(registry.get(atoms.camera), { x: viewport.width / 2, y: viewport.height / 2 }, 1));
+          animateTo(
+            zoomAt(registry.get(atoms.camera), { x: viewport.width / 2, y: viewport.height / 2 }, NOMINAL_ZOOM),
+          );
           break;
         case 'back':
           goHistory(-1);
@@ -174,6 +181,12 @@ export const useSceneKeys = ({
         case 'snap':
           toggleSnap();
           break;
+        case 'guides':
+          toggleGuides();
+          break;
+        case 'lattice':
+          toggleLattice();
+          break;
         case 'debug':
           toggleDebug();
           break;
@@ -212,6 +225,8 @@ export const useSceneKeys = ({
       major,
       setTool,
       toggleSnap,
+      toggleGuides,
+      toggleLattice,
       toggleDebug,
       onUndo,
       onRedo,

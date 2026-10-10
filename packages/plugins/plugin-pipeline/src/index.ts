@@ -3,4 +3,3 @@
 //
 
 export * as PipelinePlugin from './PipelinePlugin.ts';
-export * from '#meta';

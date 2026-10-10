@@ -4,9 +4,13 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Panel, Show, Toolbar, useMediaQuery, useTranslation } from '@dxos/react-ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Calendar, type CalendarController } from '@dxos/react-ui-calendar';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Show from '@dxos/react-ui/Show';
+import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
 import { Journal as JournalComponent, type JournalProps } from '#components';
@@ -16,12 +20,12 @@ import { Journal } from '#types';
 export type JournalArticleProps = AppSurface.ObjectArticleProps<Journal.Journal>;
 
 export const JournalArticle = ({ role, attendableId: _attendableId, subject: journal }: JournalArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const [showCalendar, setShowCalendar] = useState(false);
   const controllerRef = useRef<CalendarController>(null);
 
   // TODO(burdon): Instead of media query should check physical geometry of plank.
-  const [isNotMobile] = useMediaQuery('md');
+  const [isNotMobile] = Hooks.useMediaQuery('md');
 
   const handleSelect = useCallback<NonNullable<JournalProps['onSelect']>>(({ date }) => {
     controllerRef.current?.scrollTo(date);
@@ -29,14 +33,14 @@ export const JournalArticle = ({ role, attendableId: _attendableId, subject: jou
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           <Toolbar.ToggleGroup
             type='single'
             value={showCalendar ? 'calendar' : ''}
             onValueChange={(value) => setShowCalendar(value === 'calendar')}
           >
-            <Toolbar.ToggleGroupIconItem
+            <ToggleGroup.Item
               value='calendar'
               label={t('toggle-calendar.label')}
               icon='ph--calendar--regular'
@@ -44,8 +48,8 @@ export const JournalArticle = ({ role, attendableId: _attendableId, subject: jou
             />
           </Toolbar.ToggleGroup>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         {/* TODO(burdon): Splitter. */}
         <div
           className={mx(
@@ -56,22 +60,22 @@ export const JournalArticle = ({ role, attendableId: _attendableId, subject: jou
               : 'contents',
           )}
         >
-          <Show when={showCalendar}>
+          <Show.Show when={showCalendar}>
             <Calendar.Root ref={controllerRef}>
               <Panel.Root>
-                <Panel.Toolbar asChild>
+                <Panel.Header>
                   <Calendar.Toolbar />
-                </Panel.Toolbar>
-                <Panel.Content asChild>
+                </Panel.Header>
+                <Panel.Body asChild>
                   <Calendar.Grid rows={isNotMobile ? undefined : 6} />
-                </Panel.Content>
+                </Panel.Body>
               </Panel.Root>
             </Calendar.Root>
-          </Show>
+          </Show.Show>
 
           <JournalComponent journal={journal} classNames='dx-document' onSelect={handleSelect} />
         </div>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

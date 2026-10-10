@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { Panel } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Panel from '@dxos/react-ui/Panel';
 
 /**
  * Generic JSON inspector module: renders the cell's bound `subject` as highlighted JSON. Bind data
@@ -14,8 +14,8 @@ import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
  */
 export const JsonModule = ({ data }: { data?: { subject?: unknown } }) => (
   <Panel.Root>
-    <Panel.Content classNames='overflow-auto p-2 text-sm'>
+    <Panel.Body classNames='overflow-auto p-2 text-sm'>
       <JsonHighlighter data={data?.subject} />
-    </Panel.Content>
+    </Panel.Body>
   </Panel.Root>
 );

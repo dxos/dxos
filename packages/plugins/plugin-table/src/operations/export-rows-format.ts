@@ -4,7 +4,7 @@
 
 import { Format, Obj } from '@dxos/echo';
 import { TypeEnum } from '@dxos/echo/Format';
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { formatForDisplay } from '@dxos/schema';
 
 export type ExportFormat = 'csv' | 'json' | 'xml';

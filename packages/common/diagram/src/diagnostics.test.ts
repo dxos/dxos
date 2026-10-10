@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { analyze, errors } from './diagnostics.ts';
+import { analyze, arrowPoints, bindTargets, errors, layoutLabel, routes } from './diagnostics.ts';
 import type * as Scene from './scene.ts';
 import { CLASS_DIAGRAM } from './testing.ts';
 import * as UmlEngine from './uml-engine.ts';
@@ -174,6 +174,178 @@ describe('diagnostics', () => {
         { maxBends: 2 },
       ).diagnostics.map(({ code }) => code),
     ).toEqual(['excessive-bends']);
+  });
+});
+
+describe('connector geometry', () => {
+  const line = (id: string, points: Scene.Point[]): Scene.Element => ({ kind: 'line', id, points });
+
+  test('a bound arrow is measured along the clipped segment the renderer draws', ({ expect }) => {
+    const bound: Scene.WorldObject = {
+      id: 'edges',
+      elements: [{ kind: 'arrow', id: 'a-b', from: 'a/frame', to: 'b/frame' }],
+    };
+    const report = analyze([box('a', 0, 0), box('blocker', 0, 128), box('b', 0, 320), bound]);
+    expect(report.metrics.connectors).toBe(1);
+    expect(report.metrics.length).toBe(256);
+    expect(report.diagnostics.map(({ code }) => code)).toEqual(['route-through-node']);
+
+    const objects = [box('a', 0, 0), box('b', 200, 200), bound];
+    expect(
+      arrowPoints(bound, { kind: 'arrow', id: 'a-b', from: 'a/frame', to: 'b/frame' }, bindTargets(objects)),
+    ).toEqual([
+      { x: 64, y: 64 },
+      { x: 200, y: 200 },
+    ]);
+  });
+
+  test('a T where one connector ends on another at a port is not a crossing', ({ expect }) => {
+    const report = analyze([
+      box('port', 40, 50, 20, 20),
+      {
+        id: 'edges',
+        elements: [
+          arrow('along', { x: 0, y: 50 }, { x: 100, y: 50 }),
+          arrow('into', { x: 50, y: 100 }, { x: 50, y: 50 }),
+        ],
+      },
+    ]);
+    expect(report.metrics.crossings).toBe(0);
+  });
+
+  test('a bus trunk and its spokes are one connector, traced once per spoke', ({ expect }) => {
+    const objects: Scene.WorldObject[] = [
+      box('hub', 68, 0),
+      box('left', -12, 200),
+      box('middle', 28, 200),
+      box('other', 300, 100),
+      {
+        id: 'edges',
+        elements: [
+          line('hub-bus-0-trunk', [
+            { x: 100, y: 64 },
+            { x: 100, y: 120 },
+          ]),
+          // Both spokes leave the junction along one run before they part.
+          line('hub-left-path', [
+            { x: 100, y: 120 },
+            { x: 60, y: 120 },
+            { x: 20, y: 120 },
+          ]),
+          arrow('hub-left', { x: 20, y: 120 }, { x: 20, y: 200 }),
+          line('hub-middle-path', [
+            { x: 100, y: 120 },
+            { x: 60, y: 120 },
+          ]),
+          arrow('hub-middle', { x: 60, y: 120 }, { x: 60, y: 200 }),
+          // One unrelated connector crosses the trunk and both spokes' shared run.
+          line('stray-path', [
+            { x: 332, y: 100 },
+            { x: 332, y: 90 },
+            { x: 80, y: 90 },
+          ]),
+          arrow('stray', { x: 80, y: 90 }, { x: 80, y: 150 }),
+        ],
+      },
+    ];
+    const report = analyze(objects, { maxBends: 1 });
+    expect(report.metrics).toMatchObject({ connectors: 3, crossings: 1, edgeOverlaps: 0 });
+    // A spoke is traced from the hub; the turn at the junction is the bus's shape, its own corner a bend.
+    expect(report.diagnostics.filter(({ code }) => code === 'excessive-bends').map(({ refs }) => refs)).toEqual([
+      ['edges/stray'],
+    ]);
+    expect(routes(objects).find(({ ref }) => ref === 'edges/hub-left')).toMatchObject({ bends: 1 });
+    expect(routes(objects).find(({ ref }) => ref === 'edges/hub-left')?.points).toEqual([
+      { x: 100, y: 64 },
+      { x: 100, y: 120 },
+      { x: 20, y: 120 },
+      { x: 20, y: 200 },
+    ]);
+  });
+
+  test('stubs meeting an inheritance bus mid-line do not cross it', ({ expect }) => {
+    const report = analyze([
+      box('base', 68, 0),
+      box('first', 0, 200),
+      box('second', 68, 200),
+      box('third', 136, 200),
+      {
+        id: 'edges',
+        elements: [
+          line('base-bus', [
+            { x: 32, y: 132 },
+            { x: 168, y: 132 },
+          ]),
+          ...[32, 100, 168].map((x, index) =>
+            line(`sub-${index}-base-stub-${index}`, [
+              { x, y: 200 },
+              { x, y: 132 },
+            ]),
+          ),
+          {
+            kind: 'arrow',
+            id: 'base-inherit',
+            start: { x: 100, y: 132 },
+            end: { x: 100, y: 64 },
+            relation: 'inheritance',
+          },
+        ],
+      },
+    ]);
+    expect(report.metrics).toMatchObject({ connectors: 3, crossings: 0, edgeOverlaps: 0 });
+  });
+
+  test('a self-loop is drawn off its box and measures without NaN or a crossing', ({ expect }) => {
+    const objects: Scene.WorldObject[] = [
+      box('a', 0, 0),
+      box('b', 0, 200),
+      {
+        id: 'edges',
+        elements: [
+          { kind: 'arrow', id: 'a-a', from: 'a/frame', to: 'a/frame' },
+          { kind: 'arrow', id: 'a-b', from: 'a/frame', to: 'b/frame' },
+        ],
+      },
+    ];
+    const { metrics, diagnostics } = analyze(objects);
+    expect(Object.values(metrics).every((value) => !Number.isNaN(value))).toBe(true);
+    expect(metrics).toMatchObject({ connectors: 2, crossings: 0, routesThroughNodes: 0, bends: 3 });
+    expect(diagnostics).toEqual([]);
+  });
+
+  test('a connector with an empty path is skipped rather than bused', ({ expect }) => {
+    const objects: Scene.WorldObject[] = [
+      box('a', 0, 0),
+      box('b', 0, 200),
+      {
+        id: 'edges',
+        elements: [{ kind: 'line', id: 'stray-path', points: [] }, arrow('a-b', { x: 32, y: 64 }, { x: 32, y: 200 })],
+      },
+    ];
+    expect(analyze(objects).metrics).toMatchObject({ connectors: 1, crossings: 0 });
+    expect(routes(objects).map(({ ref }) => ref)).toEqual(['edges/a-b']);
+  });
+});
+
+describe('box labels', () => {
+  test('a long label wraps at camel case, and one too long to fit is ellipsized at a smaller size', ({ expect }) => {
+    const wrapped = layoutLabel('RemoteProcessHandleWithLongName', 'm', { w: 192, h: 160 });
+    expect(wrapped).toMatchObject({ lines: ['RemoteProcess', 'HandleWithLong', 'Name'], size: 18, overflow: false });
+
+    const squeezed = layoutLabel('RemoteProcessHandleWithLongName', 'm', { w: 192, h: 64 });
+    expect(squeezed.size).toBeLessThan(18);
+    expect(squeezed.overflow).toBe(false);
+    expect(squeezed.lines.join('')).toBe('RemoteProcessHandleWithLongName');
+
+    const truncated = layoutLabel('RemoteProcessHandleWithLongName and then some more words', 'm', { w: 192, h: 40 });
+    expect(truncated.overflow).toBe(true);
+    expect(truncated.lines).toHaveLength(1);
+    expect(truncated.lines[0].endsWith('…')).toBe(true);
+  });
+
+  test('label-overflow reports what the renderer cannot show, not text it wraps', ({ expect }) => {
+    const report = analyze([box('a', 0, 0, 192, 160, 'RemoteProcessHandleWithLongName')]);
+    expect(report.metrics.labelOverflows).toBe(0);
   });
 });
 

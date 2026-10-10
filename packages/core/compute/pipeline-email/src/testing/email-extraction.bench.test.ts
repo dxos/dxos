@@ -12,7 +12,7 @@ import { describe, test } from 'vitest';
 
 import { Provider } from '@dxos/ai';
 import { OllamaAiServiceLayer } from '@dxos/ai/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import { Pipeline } from '@dxos/pipeline';
 import { type DocumentFacts, extractFactsStage } from '@dxos/pipeline-rdf';

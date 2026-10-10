@@ -12,7 +12,7 @@ import { describe, test } from 'vitest';
 
 import * as ObservabilityMapping from '@dxos/app-toolkit/ObservabilityMapping';
 import * as Operation from '@dxos/compute/Operation';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN } from '@dxos/keys';
 import { OperationInvoker } from '@dxos/operation';
 

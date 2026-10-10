@@ -6,8 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { corePlugins } from '@dxos/plugin-testing';
-import { Dialog } from '@dxos/react-ui';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
+import * as Dialog from '@dxos/react-ui/Dialog';
 
 import { ClientPlugin } from '#plugin';
 import { translations } from '#translations';
@@ -16,9 +16,7 @@ import { JoinDialog } from './JoinDialog.tsx';
 
 const DefaultStory = () => (
   <Dialog.Root defaultOpen>
-    <Dialog.Overlay>
-      <JoinDialog />
-    </Dialog.Overlay>
+    <JoinDialog />
   </Dialog.Root>
 );
 
@@ -28,7 +26,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withPluginManager({
-      plugins: [...corePlugins(), ClientPlugin({})],
+      plugins: [...CorePlugins.make(), ClientPlugin({})],
     }),
   ],
   parameters: {

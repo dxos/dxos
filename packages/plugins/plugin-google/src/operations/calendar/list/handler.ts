@@ -8,7 +8,7 @@ import * as HttpClient from 'effect/http/HttpClient';
 import * as HttpClientRequest from 'effect/http/HttpClientRequest';
 import * as HttpClientResponse from 'effect/http/HttpClientResponse';
 
-import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
+import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
 import { withAuthorization } from '@dxos/compute-runtime';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
@@ -47,7 +47,7 @@ const handler: Operation.WithHandler<typeof GoogleOperation.GetGoogleCalendars> 
         const target = connection.target;
         const db = target ? Obj.getDatabase(target) : undefined;
         if (!db) {
-          return yield* Effect.fail(new SyncDatabaseMissingError());
+          return yield* Effect.fail(new ConnectorSync.DatabaseMissingError());
         }
 
         return yield* Effect.gen(function* () {

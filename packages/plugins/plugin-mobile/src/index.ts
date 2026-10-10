@@ -3,4 +3,3 @@
 //
 
 export * as MobilePlugin from './MobilePlugin.ts';
-export * from '#meta';

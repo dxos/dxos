@@ -177,6 +177,36 @@ describe('IndexEngine', () => {
     }, Effect.provide(TestLayer)),
   );
 
+  // Each transaction rewrites every page it dirties, so a second stamp per pass doubled the writes.
+  it.effect(
+    'stamps each object once per pass while the snapshot and reverse-ref legs share a position',
+    Effect.fnUntraced(function* () {
+      const { engine, metaIndex } = yield* setup;
+      const dataSource = new MockIndexDataSource();
+      const spaceId = SpaceId.random();
+      const object: IndexerObject = {
+        spaceId,
+        documentId: 'doc-1',
+        queueId: null,
+        queueNamespace: null,
+        recordId: null,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_DEFAULT, title: 'Hello' },
+      };
+
+      dataSource.push([object]);
+      yield* engine.update(Context.default(), dataSource, { spaceId: null });
+      const [created] = yield* metaIndex.query({ spaceId, typeDXN: TYPE_DEFAULT });
+      expect(created.version).toBe(1);
+
+      dataSource.push([{ ...object, data: { ...object.data, title: 'Hello World' } }]);
+      yield* engine.update(Context.default(), dataSource, { spaceId: null });
+      const [updated] = yield* metaIndex.query({ spaceId, typeDXN: TYPE_DEFAULT });
+      expect(updated.version).toBe(2);
+    }, Effect.provide(TestLayer)),
+  );
+
   it.effect(
     'should index and update objects',
     Effect.fnUntraced(function* () {

@@ -3,6 +3,7 @@
 //
 
 export * from './anchor.ts';
+export * from './annotations.ts';
 export * from './axis.ts';
 export * from './density.ts';
 export * from './elevation.ts';

@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { MediaPlayer } from '@dxos/react-ui';
+import * as Media from '@dxos/react-ui/Media';
 
 import { type VariantContent } from '#surfaces';
 
@@ -22,7 +22,7 @@ export const ImageVariant = ({ variant }: ImageVariantProps) => {
     return null;
   }
 
-  return <MediaPlayer classNames='dx-expand' src={src} fit='contain' alt={variant.generation?.prompt} />;
+  return <Media.Player classNames='dx-expand' src={src} fit='contain' alt={variant.generation?.prompt} />;
 };
 
 ImageVariant.displayName = 'ImageVariant';

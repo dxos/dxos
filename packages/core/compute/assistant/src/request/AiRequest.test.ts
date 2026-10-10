@@ -17,7 +17,7 @@ import { operationServiceLayerNoop } from '@dxos/compute/testing';
 import * as Trace from '@dxos/compute/Trace';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { registryLayerNoop } from '@dxos/echo/testing';
-import { makeTracer } from '@dxos/effect';
+import * as OtelTracer from '@dxos/effect/OtelTracer';
 import { ContentBlock, type Message } from '@dxos/types';
 
 import * as AiRequest from './AiRequest.ts';
@@ -121,7 +121,7 @@ describe('AiRequest.Request.run (telemetry)', () => {
       const request = new AiRequest.Request();
       yield* request
         .run({ toolkit, prompt: 'Echo hello.', history: [] })
-        .pipe(Effect.provideService(Tracer.Tracer, makeTracer(provider, 'test')));
+        .pipe(Effect.provideService(Tracer.Tracer, OtelTracer.make(provider, 'test')));
       yield* Effect.promise(() => provider.forceFlush());
 
       const toolSpan = exporter.getFinishedSpans().find(({ name }) => name === 'callTool');
@@ -144,7 +144,7 @@ describe('AiRequest.Request.run (telemetry)', () => {
       const request = new AiRequest.Request();
       yield* request
         .run({ toolkit, prompt: 'Echo hello.', history: [] })
-        .pipe(Effect.provideService(Tracer.Tracer, makeTracer(provider, 'test')));
+        .pipe(Effect.provideService(Tracer.Tracer, OtelTracer.make(provider, 'test')));
       yield* Effect.promise(() => provider.forceFlush());
 
       const modelSpans = exporter.getFinishedSpans().filter(({ name }) => name.startsWith('LanguageModel.'));

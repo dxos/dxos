@@ -11,9 +11,9 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
-import { Position } from '@dxos/util';
+import * as SupportSurface from '@dxos/plugin-support/SupportSurface';
+import * as Position from '@dxos/util/Position';
 
-import { ABOUT_DIALOG } from '../constants.ts';
 import { meta } from '../meta.ts';
 
 export default Capability.makeModule(
@@ -27,7 +27,7 @@ export default Capability.makeModule(
             id: 'openAbout',
             data: Effect.fnUntraced(function* () {
               yield* Operation.invoke(LayoutOperation.UpdateDialog, {
-                subject: ABOUT_DIALOG,
+                subject: SupportSurface.ABOUT_DIALOG,
               });
             }),
             properties: {

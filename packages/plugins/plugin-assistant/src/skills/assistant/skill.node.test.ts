@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { ChatContextHandlers, ChatContextSkill } from '@dxos/assistant-toolkit';
+import * as ChatContextSkill from '@dxos/assistant-toolkit/ChatContextSkill';
 import * as Skill from '@dxos/compute/Skill';
 import { Feed } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -20,7 +20,7 @@ EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
   aiServicePreset: 'edge-remote',
-  operationHandlers: ChatContextHandlers,
+  operationHandlers: ChatContextSkill.Handlers,
   types: [Organization.Organization, Skill.Skill, Feed.Feed],
   skills: [AssistantSkill.make(), ChatContextSkill.make()],
   tracing: 'pretty',

@@ -9,7 +9,7 @@ import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import { SpaceProperties } from '@dxos/client/echo';
 import { Annotation, Collection, Database, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { resolveCollectionObjectPath, walkCollectionChainToRoot } from './collection-path.ts';
 

@@ -3,5 +3,4 @@
 //
 
 export * as BoardPlugin from './BoardPlugin.ts';
-export * from '#meta';
 export * from '#types';

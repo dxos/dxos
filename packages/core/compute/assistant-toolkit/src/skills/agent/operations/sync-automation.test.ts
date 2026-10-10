@@ -15,13 +15,13 @@ import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
 
 import { OperationTestLayer } from '../../../testing/index.ts';
-import AgentSkillDef from '../skill.ts';
+import * as AgentSkill from '../AgentSkill.ts';
 import { Relay, SyncAutomation } from './definitions.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
 describe('SyncAutomation', () => {
-  const skill = AgentSkillDef.make();
+  const skill = AgentSkill.make();
 
   it.effect(
     'cron creates a timer routine that relays into the agent session',

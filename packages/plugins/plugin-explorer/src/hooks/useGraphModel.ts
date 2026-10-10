@@ -5,7 +5,7 @@
 import { useEffect, useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { useCapability } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { type Database, type Entity, type Filter } from '@dxos/echo';
 import { SpaceGraphModel, type SpaceGraphModelOptions } from '@dxos/schema';
 
@@ -16,7 +16,7 @@ export const useGraphModel = (
   options?: SpaceGraphModelOptions,
   items?: readonly Entity.Unknown[],
 ): SpaceGraphModel | undefined => {
-  const registry = useCapability(Capabilities.AtomRegistry);
+  const registry = Hooks.useCapability(Capabilities.AtomRegistry);
   const [model, setModel] = useState<SpaceGraphModel | undefined>(undefined);
 
   useEffect(() => {

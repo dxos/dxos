@@ -13,7 +13,7 @@ import { type Obj } from '@dxos/echo';
 import { type SerializedFeed, type SerializedSpace } from '@dxos/echo-client';
 import { type DatabaseRoot, type EchoHost } from '@dxos/echo-host';
 import { type DatabaseDirectory, type EntityStructure } from '@dxos/echo-protocol';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { assertState, invariant } from '@dxos/invariant';
 import { DXN, type EntityId, type IdentityDid, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';

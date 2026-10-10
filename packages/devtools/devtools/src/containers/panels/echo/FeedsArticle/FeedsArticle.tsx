@@ -15,8 +15,10 @@ import { type Client, useClient } from '@dxos/react-client';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { type Space } from '@dxos/react-client/echo';
 import { useContacts } from '@dxos/react-client/halo';
-import { IconButton, Panel, Toolbar } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
+import * as Button from '@dxos/react-ui/Button';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { Bitbar, MasterDetailTable, PublicKeySelector } from '../../../../components/index.ts';
 import { DataSpaceSelector } from '../../../../containers/index.ts';
@@ -102,7 +104,7 @@ export const FeedsArticle = ({ role, ...props }: ArticleProps & { space?: Space 
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           {!props.space && <DataSpaceSelector />}
           <PublicKeySelector
@@ -113,15 +115,15 @@ export const FeedsArticle = ({ role, ...props }: ArticleProps & { space?: Space 
             onChange={handleSelect}
           />
 
-          <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' onClick={handleRefresh} />
+          <Button.Root icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' onClick={handleRefresh} />
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         <div className='h-full'>
           <Bitbar value={feed?.downloaded ?? new Uint8Array()} length={feed?.length ?? 0} className='m-4' />
           <MasterDetailTable properties={properties} data={tableData} detailsPosition='bottom' />
         </div>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };
