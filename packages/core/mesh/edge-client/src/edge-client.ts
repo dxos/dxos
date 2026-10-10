@@ -31,7 +31,7 @@ import {
   presentCredentialsForChallenge,
   readAuthChallenge,
 } from './auth-challenge.ts';
-import { clientSdkVersionHeaders } from './client-version.ts';
+import { assertClientSupported, withClientVersion } from './client-version.ts';
 import { protocol } from './defs.ts';
 import { type EdgeIdentity } from './edge-identity.ts';
 import { EdgeWsConnection } from './edge-ws-connection.ts';
@@ -297,7 +297,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
     }
 
     const restartRequired = new Trigger();
-    const url = new URL(path, this._baseWsUrl);
+    const url = withClientVersion(new URL(path, this._baseWsUrl));
     log('Opening websocket', { url: url.toString(), protocolHeader });
     const connection = new EdgeWsConnection(
       identity,
@@ -447,10 +447,8 @@ export class EdgeClient extends Resource implements EdgeConnection {
       return encodePresentationWsAuthHeader(authentication.presentation);
     }
 
-    const response = await fetch(new URL(path, this._baseHttpUrl), {
-      method: 'GET',
-      headers: clientSdkVersionHeaders(),
-    });
+    const response = await fetch(withClientVersion(new URL(path, this._baseHttpUrl)), { method: 'GET' });
+    await assertClientSupported(response);
     // Gate on a parsed VP challenge, not merely on a 401. A 401 forwarded from upstream can carry
     // an unrelated `WWW-Authenticate` (or none), and signing a challenge that isn't there would
     // throw instead of degrading to an unauthenticated attempt.

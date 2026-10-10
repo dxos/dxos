@@ -6,10 +6,8 @@ import { create } from '@bufbuild/protobuf';
 import { afterEach, describe, it, test, vi } from 'vitest';
 
 import { Context } from '@dxos/context';
-import { EDGE_CLIENT_VERSION_HEADER } from '@dxos/protocols';
 import { type Presentation, PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { version as packageVersion } from '../package.json';
 import { createEphemeralEdgeIdentity } from './auth.ts';
 import { EdgeHttpClient } from './edge-http-client.ts';
 import { type EdgeIdentity } from './edge-identity.ts';
@@ -38,7 +36,7 @@ describe('EdgeHttpClient.aiRequest', () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) => {
       const url = input instanceof Request ? input.url : String(input);
       // `/auth` preflight: respond non-401 so no auth header is attached.
-      if (url.endsWith('/auth')) {
+      if (isAuthUrl(url)) {
         return new Response(null, { status: 200 });
       }
       return new Response(JSON.stringify({ ok: true }), { status: 200 });
@@ -56,7 +54,7 @@ describe('EdgeHttpClient.aiRequest', () => {
 
     expect(response.status).toBe(200);
 
-    const targetCall = fetchMock.mock.calls.find((call) => !String(call[0]).endsWith('/auth'));
+    const targetCall = fetchMock.mock.calls.find((call) => !isAuthUrl(call[0]));
     expect(targetCall).toBeDefined();
     expect(String(targetCall![0])).toBe('https://edge.example.com/ai/generate/anthropic/v1/messages?beta=true');
     expect(targetCall![1]?.method).toBe('POST');
@@ -71,7 +69,7 @@ describe('EdgeHttpClient.request', () => {
   test('sends method and JSON body to the path and unwraps the envelope', async ({ expect }) => {
     const fetchMock = vi.fn(async (input: any, _init?: RequestInit) => {
       const url = String(input instanceof URL ? input : (input.url ?? input));
-      if (url.endsWith('/auth')) {
+      if (isAuthUrl(url)) {
         return new Response(null, { status: 200 });
       }
       return new Response(JSON.stringify({ success: true, data: { running: true } }), {
@@ -88,50 +86,10 @@ describe('EdgeHttpClient.request', () => {
     });
 
     expect(data).toEqual({ running: true });
-    const targetCall = fetchMock.mock.calls.find((call) => !String(call[0]).endsWith('/auth'));
+    const targetCall = fetchMock.mock.calls.find((call) => !isAuthUrl(call[0]));
     expect(String(targetCall?.[0])).toBe('https://edge.example.com/compute/discord/bots/app-1');
     expect(targetCall?.[1]?.method).toBe('PUT');
     expect(targetCall?.[1]?.body).toBe(JSON.stringify({ spaceId: 'space' }));
-  });
-});
-
-describe('EdgeHttpClient SDK version header', () => {
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
-
-  /** Answers every call, recording the headers each one sent. */
-  const stubFetch = () => {
-    const sent: Array<{ url: string; headers: Headers }> = [];
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
-        const url = String(input instanceof URL ? input : input instanceof Request ? input.url : input);
-        sent.push({ url, headers: new Headers(init?.headers) });
-        if (url.endsWith('/auth')) {
-          return new Response(null, { status: 200 });
-        }
-        return new Response(JSON.stringify({ success: true, data: {} }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        });
-      }),
-    );
-    return sent;
-  };
-
-  // EDGE refuses an outdated client by this header, so a request without it would be refused once EDGE checks HTTP.
-  test('every request, the /auth probe and the AI proxy included, carries the package version', async ({ expect }) => {
-    const sent = stubFetch();
-    const client = new EdgeHttpClient('https://edge.example.com');
-
-    await client.request(Context.default(), '/compute/discord/bots/app-1', { method: 'PUT', body: {} });
-    await client.aiRequest('anthropic', new Request('http://edge/v1/messages', { method: 'POST', body: '{}' }));
-
-    expect(sent.length).toBeGreaterThanOrEqual(3);
-    for (const { headers } of sent) {
-      expect(headers.get(EDGE_CLIENT_VERSION_HEADER)).toBe(packageVersion);
-    }
   });
 });
 
@@ -150,7 +108,7 @@ describe('EdgeHttpClient auth refresh', () => {
   const makeFetchMock = (authData: Record<string, unknown>) =>
     vi.fn(async (input: any, _init?: RequestInit) => {
       const url = String(input instanceof URL ? input : (input.url ?? input));
-      if (url.endsWith('/auth')) {
+      if (isAuthUrl(url)) {
         return new Response(JSON.stringify({ success: true, data: authData }), {
           status: 200,
           headers: { 'Content-Type': 'application/json' },
@@ -160,7 +118,7 @@ describe('EdgeHttpClient auth refresh', () => {
     });
 
   const authCalls = (fetchMock: { mock: { calls: unknown[][] } }) =>
-    fetchMock.mock.calls.filter((call) => String(call[0]).endsWith('/auth')).length;
+    fetchMock.mock.calls.filter((call) => isAuthUrl(call[0])).length;
 
   // `presentCredentials` throws on a device with no HALO chain (`invariant(chain)` in `auth.ts`,
   // reachable mid-invitation). The prefetch is documented as best-effort, so that must leave the
@@ -186,7 +144,7 @@ describe('EdgeHttpClient auth refresh', () => {
     // Assert the throw actually happened: without this the test would also pass if the prefetch
     // were skipped entirely, which is a different behaviour from recovering from it.
     expect(presentCredentials).toHaveBeenCalledTimes(1);
-    const targetCall = fetchMock.mock.calls.find((call) => !String(call[0]).endsWith('/auth'));
+    const targetCall = fetchMock.mock.calls.find((call) => !isAuthUrl(call[0]));
     expect(targetCall).toBeDefined();
     expect((targetCall![1] as RequestInit | undefined)?.headers).not.toHaveProperty('Authorization');
   });
@@ -224,7 +182,7 @@ describe('EdgeHttpClient auth refresh', () => {
     });
     const fetchMock = vi.fn(async (input: any, _init?: RequestInit) => {
       const url = String(input instanceof URL ? input : (input.url ?? input));
-      if (url.endsWith('/auth')) {
+      if (isAuthUrl(url)) {
         signalAuthStarted();
         await gate;
         return new Response(JSON.stringify({ success: true, data: { challenge: 'Y2hhbGxlbmdl' } }), {
@@ -266,7 +224,7 @@ describe('EdgeHttpClient auth refresh', () => {
     let authCallCount = 0;
     const fetchMock = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) => {
       const url = String(input instanceof URL ? input : typeof input === 'string' ? input : (input.url ?? input));
-      if (url.endsWith('/auth')) {
+      if (isAuthUrl(url)) {
         if (authCallCount++ === 0) {
           signalAuthStarted();
           await gate;
@@ -312,7 +270,7 @@ describe('EdgeHttpClient auth refresh', () => {
     let authCallCount = 0;
     const fetchMock = vi.fn(async (input: any, _init?: RequestInit) => {
       const url = String(input instanceof URL ? input : (input.url ?? input));
-      if (url.endsWith('/auth')) {
+      if (isAuthUrl(url)) {
         const index = authCallCount++;
         if (index < 2) {
           startSignals[index]();
@@ -385,7 +343,7 @@ describe('EdgeHttpClient blobs', () => {
   test('putBlob sends a raw POST body and pre-fetches /auth', async ({ expect }) => {
     const fetchMock = vi.fn(async (input: any, _init?: RequestInit) => {
       const url = String(input instanceof URL ? input : (input.url ?? input));
-      if (url.endsWith('/auth')) {
+      if (isAuthUrl(url)) {
         return new Response(JSON.stringify({ success: true, data: { challenge: 'Y2hhbGxlbmdl' } }), {
           status: 200,
           headers: { 'Content-Type': 'application/json' },
@@ -404,7 +362,7 @@ describe('EdgeHttpClient blobs', () => {
     const bytes = new Uint8Array([1, 2, 3]);
     await client.putBlob(Context.default(), 'abc123', bytes, { contentType: 'application/octet-stream' });
 
-    const authCall = fetchMock.mock.calls.find((call) => String(call[0]).endsWith('/auth'));
+    const authCall = fetchMock.mock.calls.find((call) => isAuthUrl(call[0]));
     expect(authCall).toBeDefined();
 
     const putCall = fetchMock.mock.calls.find((call) => String(call[0]).includes('/blob/file/abc123'));
@@ -424,7 +382,7 @@ describe('EdgeHttpClient blobs', () => {
 
     const fetchMock = vi.fn(async (input: any, init?: RequestInit) => {
       const url = String(input instanceof URL ? input : (input.url ?? input));
-      if (url.endsWith('/auth')) {
+      if (isAuthUrl(url)) {
         return new Response(null, { status: 200 });
       }
       const headers = init?.headers as Record<string, string> | undefined;
@@ -463,7 +421,7 @@ describe('EdgeHttpClient blobs', () => {
       };
 
       const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
-        if (requestUrl(input).endsWith('/auth')) {
+        if (isAuthUrl(requestUrl(input))) {
           return new Response(null, { status: 404 });
         }
         return new Response(null, { status: 401, headers: { 'WWW-Authenticate': header } });
@@ -549,7 +507,7 @@ describe('EdgeHttpClient api key', () => {
     // Mirror uploadBundleDirect's call shape: VP auth off, so the api key is the only credential.
     await client.uploadPluginBundle(Context.default(), { slug: 'x', version: '1', files: [] }, { auth: false });
 
-    const authCall = fetchMock.mock.calls.find((call) => String(call[0]).endsWith('/auth'));
+    const authCall = fetchMock.mock.calls.find((call) => isAuthUrl(call[0]));
     expect(authCall).toBeUndefined();
     const uploadCall = fetchMock.mock.calls.find((call) => String(call[0]).includes('/registry/upload'));
     expect((uploadCall![1]?.headers as Record<string, string>).Authorization).toBe('Bearer secret-key');
@@ -601,7 +559,7 @@ describe('EdgeHttpClient api key', () => {
     const client = new EdgeHttpClient('https://edge.example.com', { apiKey: 'secret-key' });
     await client.putBlob(Context.default(), 'abc123', new Uint8Array([1, 2, 3]));
 
-    const authCall = fetchMock.mock.calls.find((call) => String(call[0]).endsWith('/auth'));
+    const authCall = fetchMock.mock.calls.find((call) => isAuthUrl(call[0]));
     expect(authCall).toBeUndefined();
     const putCall = fetchMock.mock.calls.find((call) => String(call[0]).includes('/blob/file/abc123'));
     expect((putCall![1]?.headers as Record<string, string>).Authorization).toBe('Bearer secret-key');
@@ -670,3 +628,6 @@ describe('EdgeHttpClient inbox', () => {
     await expect(client.listInbox(Context.default())).rejects.toThrow();
   });
 });
+
+/** The `/auth` challenge fetch, whatever query it carries. */
+const isAuthUrl = (url: unknown): boolean => new URL(String(url)).pathname === '/auth';

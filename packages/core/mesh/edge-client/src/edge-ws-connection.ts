@@ -8,11 +8,10 @@ import { Mutex, scheduleTask, scheduleTaskInterval } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log, logInfo } from '@dxos/log';
-import { EDGE_CLIENT_VERSION_PROTOCOL_PREFIX, EdgeWebsocketProtocol } from '@dxos/protocols';
+import { EdgeWebsocketProtocol } from '@dxos/protocols';
 import { buf } from '@dxos/protocols/buf';
 import { type Message, MessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 
-import { CLIENT_SDK_VERSION } from './client-version.ts';
 import { protocol } from './defs.ts';
 import { type EdgeIdentity } from './edge-identity.ts';
 import { CLOUDFLARE_MESSAGE_MAX_BYTES, WebSocketClosedError, WebSocketMuxer } from './edge-ws-muxer.ts';
@@ -181,11 +180,7 @@ export class EdgeWsConnection extends Resource {
   }
 
   protected override async _open(): Promise<void> {
-    // Browsers cannot set WebSocket headers, so the SDK version rides in the subprotocol list.
-    const baseProtocols = [
-      ...Object.values(EdgeWebsocketProtocol),
-      `${EDGE_CLIENT_VERSION_PROTOCOL_PREFIX}${CLIENT_SDK_VERSION}`,
-    ];
+    const baseProtocols = Object.values(EdgeWebsocketProtocol);
     this._ws = new WebSocket(
       this._connectionInfo.url.toString(),
       this._connectionInfo.protocolHeader

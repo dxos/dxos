@@ -5,8 +5,10 @@
 import { create } from '@bufbuild/protobuf';
 import { afterEach, describe, test, vi } from 'vitest';
 
+import { EDGE_CLIENT_TOO_OLD, EDGE_CLIENT_VERSION_PARAM } from '@dxos/protocols';
 import { type Presentation, PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
+import { version as packageVersion } from '../package.json';
 import {
   authenticateViaChallengeEndpoint,
   fetchAuthChallenge,
@@ -14,6 +16,7 @@ import {
   parseChallengeHeader,
   readAuthChallenge,
 } from './auth-challenge.ts';
+import { ClientTooOldError } from './client-version.ts';
 import { type EdgeIdentity } from './edge-identity.ts';
 
 const CHALLENGE = 'AQAAAZlqjGgAq83vEjRWeJCrze8SNFZ4kA==';
@@ -135,7 +138,7 @@ describe('fetchAuthChallenge', () => {
     vi.unstubAllGlobals();
   });
 
-  test('GETs /auth relative to the base URL', async ({ expect }) => {
+  test('GETs /auth relative to the base URL, advertising the SDK version', async ({ expect }) => {
     // Typed with the input parameter so `mock.calls[0][0]` is a tuple element rather than `never`.
     const fetchMock = vi.fn(async (_input: URL | RequestInfo) =>
       jsonResponse({ success: true, data: { challenge: CHALLENGE } }),
@@ -143,7 +146,24 @@ describe('fetchAuthChallenge', () => {
     vi.stubGlobal('fetch', fetchMock);
 
     expect(await fetchAuthChallenge('https://edge.example.com')).toBe(CHALLENGE);
-    expect(String(fetchMock.mock.calls[0][0])).toBe('https://edge.example.com/auth');
+    expect(String(fetchMock.mock.calls[0][0])).toBe(
+      `https://edge.example.com/auth?${EDGE_CLIENT_VERSION_PARAM}=${packageVersion}`,
+    );
+  });
+
+  test('throws when EDGE refuses the SDK as too old, rather than falling back', async ({ expect }) => {
+    // Every fallback carries the same version, so swallowing the refusal would only retry into it.
+    vi.stubGlobal('fetch', async () =>
+      jsonResponse(
+        {
+          success: false,
+          message: 'Client too old',
+          data: { type: EDGE_CLIENT_TOO_OLD, clientVersion: '0.13.0', minimumVersion: '9.0.0' },
+        },
+        426,
+      ),
+    );
+    await expect(fetchAuthChallenge('https://edge.example.com')).rejects.toBeInstanceOf(ClientTooOldError);
   });
 
   test('still works against a server whose /auth only answers 401', async ({ expect }) => {
