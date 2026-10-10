@@ -978,7 +978,7 @@ const SceneViewRoot = ({
       drag={drag}
       tool={tool}
       debug={debug}
-      // Read-only, nothing is edited, so the panels float rather than taking room from the canvas.
+      // Read-only, nothing is edited, so there is no dock taking room from the canvas and no panel floats over it.
       panels={readonly ? 'floating' : panels}
       createFrame={createFrame}
       landing={landing}
@@ -1523,14 +1523,9 @@ SceneViewLayers.displayName = 'SceneView.Layers';
 
 const ABOUT_SECTION: DockSection = { id: 'about', title: 'About', icon: 'ph--info--regular', order: 2 };
 
-export type SceneViewAboutProps = Util.ThemedClassName<{}>;
-
-/**
- * Counts of the scene's objects and the drawing's scenes: a dock section, or floating over the canvas when read-only,
- * where it is the only panel left.
- */
-const SceneViewAbout = ({ classNames = PANEL_CLASSES }: SceneViewAboutProps) => {
-  const { scene, store, panels, readonly } = useSceneViewContext('SceneView.About');
+/** Counts of the scene's objects and the drawing's scenes: a dock section only, so a read-only view shows none. */
+const SceneViewAbout = () => {
+  const { scene, store, panels } = useSceneViewContext('SceneView.About');
   const scenes = useAtomValue(store.scenes);
   const docked = panels === 'docked';
   const stats = useMemo<AboutStat[]>(
@@ -1542,14 +1537,7 @@ const SceneViewAbout = ({ classNames = PANEL_CLASSES }: SceneViewAboutProps) => 
     ],
     [scene, scenes],
   );
-  const dockedPanel = useDockSection(ABOUT_SECTION, docked, <About classNames='h-auto' stats={stats} />);
-  if (docked) {
-    return dockedPanel;
-  }
-  // Floating beside an editable view, the properties and layers panels take this corner, so About shows only read-only.
-  return readonly ? (
-    <About classNames={mx('rounded-sm bg-modal-surface border border-separator', classNames)} stats={stats} />
-  ) : null;
+  return useDockSection(ABOUT_SECTION, docked, <About classNames='h-auto' stats={stats} />);
 };
 
 SceneViewAbout.displayName = 'SceneView.About';

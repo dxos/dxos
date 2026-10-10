@@ -339,5 +339,9 @@ test.describe('SceneView', () => {
     // Only the select and pan tools remain, and the actions bar, which only edits, is gone.
     await expect(page.locator('[data-testid="palette"] button')).toHaveCount(2);
     await expect(page.getByTestId('canvas-actions')).toHaveCount(0);
+    // No panel floats over a read-only canvas.
+    await expect(page.locator('[data-testid="properties"]')).toHaveCount(0);
+    await expect(page.locator('[data-testid="layers"]')).toHaveCount(0);
+    await expect(page.locator('[data-testid="about"]')).toHaveCount(0);
   });
 });
