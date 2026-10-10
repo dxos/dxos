@@ -1,5 +1,11 @@
 # @dxos/react-list
 
+## 0.14.0
+
+### Patch Changes
+
+- @dxos/react-hooks@0.14.0
+
 ## 0.13.0
 
 ### Patch Changes

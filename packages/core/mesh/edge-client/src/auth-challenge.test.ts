@@ -5,8 +5,10 @@
 import { create } from '@bufbuild/protobuf';
 import { afterEach, describe, test, vi } from 'vitest';
 
+import { EDGE_CLIENT_TOO_OLD, EDGE_CLIENT_VERSION_HEADER, EdgeClientTooOldError, EdgeResponse } from '@dxos/protocols';
 import { type Presentation, PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
+import { version as packageVersion } from '../package.json';
 import {
   authenticateViaChallengeEndpoint,
   fetchAuthChallenge,
@@ -135,15 +137,28 @@ describe('fetchAuthChallenge', () => {
     vi.unstubAllGlobals();
   });
 
-  test('GETs /auth relative to the base URL', async ({ expect }) => {
+  test('GETs /auth relative to the base URL, advertising the SDK version', async ({ expect }) => {
     // Typed with the input parameter so `mock.calls[0][0]` is a tuple element rather than `never`.
-    const fetchMock = vi.fn(async (_input: URL | RequestInfo) =>
+    const fetchMock = vi.fn(async (_input: URL | RequestInfo, _init?: RequestInit) =>
       jsonResponse({ success: true, data: { challenge: CHALLENGE } }),
     );
     vi.stubGlobal('fetch', fetchMock);
 
     expect(await fetchAuthChallenge('https://edge.example.com')).toBe(CHALLENGE);
     expect(String(fetchMock.mock.calls[0][0])).toBe('https://edge.example.com/auth');
+    expect(new Headers(fetchMock.mock.calls[0][1]?.headers).get(EDGE_CLIENT_VERSION_HEADER)).toBe(packageVersion);
+  });
+
+  test('throws when EDGE refuses the SDK as too old, rather than falling back', async ({ expect }) => {
+    // Every fallback carries the same version, so swallowing the refusal would only retry into it.
+    vi.stubGlobal('fetch', async () =>
+      EdgeResponse.failure({
+        message: 'Client too old: SDK 0.12.0 is older than 0.13.0. Update the app (reload it) to continue.',
+        status: 426,
+        data: { type: EDGE_CLIENT_TOO_OLD, clientVersion: '0.12.0', minimumVersion: '0.13.0' },
+      }),
+    );
+    await expect(fetchAuthChallenge('https://edge.example.com')).rejects.toBeInstanceOf(EdgeClientTooOldError);
   });
 
   test('still works against a server whose /auth only answers 401', async ({ expect }) => {
