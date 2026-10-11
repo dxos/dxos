@@ -976,6 +976,9 @@
       "path": "packages/common/tracing/tsconfig.json"
     },
     {
+      "path": "packages/core/compute/trajectory/tsconfig.json"
+    },
+    {
       "path": "packages/sdk/types/tsconfig.json"
     },
     {
