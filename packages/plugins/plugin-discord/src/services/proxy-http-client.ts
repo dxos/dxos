@@ -56,7 +56,11 @@ export interface EdgeProxyHttpClientOptions {
  * verifiable presentation.
  */
 export const makeEdgeProxyHttpClientLayer = (options?: EdgeProxyHttpClientOptions): Layer.Layer<never> =>
-  Layer.succeed(FetchHttpClient.Fetch, ((input, init) => {
+  Layer.succeed(FetchHttpClient.Fetch, makeProxyFetch(options));
+
+/** A `fetch` that reaches Discord through the integration proxy, as a browser must. */
+export const makeProxyFetch = (options?: EdgeProxyHttpClientOptions): typeof fetch =>
+  ((input, init) => {
     const url = input instanceof URL ? input : new URL(typeof input === 'string' ? input : input.url);
     // Seed from the Request's own headers first (caller used `fetch(new Request(...))`),
     // then overlay anything in `init.headers`. dfx currently always uses string/URL +
@@ -75,4 +79,4 @@ export const makeEdgeProxyHttpClientLayer = (options?: EdgeProxyHttpClientOption
       headers.set(USER_AGENT_OVERRIDE_HEADER, DISCORD_BOT_USER_AGENT);
     }
     return proxyFetchLegacy(url, { ...init, headers });
-  }) as typeof fetch);
+  }) as typeof fetch;

@@ -18,6 +18,14 @@ export const DiscordApiBase = Context.Reference<string>('@dxos/plugin-discord/Di
   defaultValue: () => DISCORD_API_BASE,
 });
 
+/**
+ * The `fetch` Discord calls go through: the platform's own by default (EDGE), replaced by the integration proxy where
+ * Discord's missing CORS headers would make a browser refuse the response.
+ */
+export const DiscordFetch = Context.Reference<typeof fetch>('@dxos/plugin-discord/DiscordFetch', {
+  defaultValue: () => (input, init) => globalThis.fetch(input, init),
+});
+
 /** Discord's per-message content limit. */
 export const MAX_MESSAGE_LENGTH = 2000;
 
@@ -65,10 +73,10 @@ const request = Effect.fnUntraced(function* (
   payload?: unknown,
 ) {
   const base = yield* DiscordApiBase;
+  const discordFetch = yield* DiscordFetch;
   return yield* Effect.tryPromise({
     try: async (): Promise<DiscordResponse> => {
-      // Read at call time, not captured, so a test or host can substitute `fetch`.
-      const response = await globalThis.fetch(`${base}${path}`, {
+      const response = await discordFetch(`${base}${path}`, {
         method,
         headers: { 'Authorization': `Bot ${token}`, 'Content-Type': 'application/json' },
         ...(payload === undefined ? {} : { body: JSON.stringify(payload) }),
