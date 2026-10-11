@@ -6,12 +6,14 @@ import * as Role from '@dxos/app-framework/Role';
 import * as Surface from '@dxos/app-framework/Surface';
 
 import { AgentCompanionModule, type AgentCompanionModuleData } from './AgentCompanionModule.tsx';
+import { DiscordBindingsModule } from './DiscordBindingsModule.tsx';
 import { DiscordBotModule } from './DiscordBotModule.tsx';
 
 /** Story panels with no plugin surface of their own. */
 export const StoryRole = {
   AgentCompanion: Role.make<AgentCompanionModuleData>('org.dxos.storybook.role.agentCompanion'),
   DiscordBot: Role.make<Record<string, unknown>>('org.dxos.storybook.role.discordBot'),
+  DiscordBindings: Role.make<Record<string, unknown>>('org.dxos.storybook.role.discordBindings'),
 };
 
 export const moduleSurfaces: Surface.Definition[] = [
@@ -24,5 +26,10 @@ export const moduleSurfaces: Surface.Definition[] = [
     id: 'role.discordBot',
     filter: Surface.makeFilter(StoryRole.DiscordBot),
     component: DiscordBotModule,
+  }),
+  Surface.create({
+    id: 'role.discordBindings',
+    filter: Surface.makeFilter(StoryRole.DiscordBindings),
+    component: DiscordBindingsModule,
   }),
 ];
