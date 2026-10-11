@@ -320,6 +320,35 @@ describe('Relay', () => {
   );
 
   it.effect(
+    'reaches a person through a direct conversation before a Composer chat they may not have open',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { agent, agentRef, channel } = yield* setupAgent({ kind: TEST_MIRRORED_BACKEND_KIND });
+        const josiah = yield* resolve('Josiah', '200');
+        const composerChat = yield* Database.add(
+          Chat.make({ [Obj.Parent]: agent, name: 'Josiah', feed: Ref.make(yield* Database.add(Feed.make())) }),
+        );
+        yield* Operation.invoke(RelayOperation.AssignChatParticipant, { chat: Ref.make(composerChat), person: josiah });
+
+        const delivered = yield* Operation.invoke(RelayOperation.SendMessage, {
+          agent: agentRef,
+          recipient: josiah,
+          text: 'Rich asked me to ask you to review the PR.',
+        });
+        expect(delivered).toMatchObject({ delivered: true, via: 'channel' });
+        expect(woken()).toEqual([]);
+        if (delivered.chat) {
+          const dmChat = yield* Database.load(delivered.chat);
+          expect(dmChat.id).not.toBe(composerChat.id);
+          expect(AgentChannels.conversationOf(dmChat)).toEqual({ channelId: channel.id, thread: 'dm-200' });
+        }
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
     "is not delivered when the backend refuses, with the backend's reason",
     Effect.fnUntraced(
       function* ({ expect }) {

@@ -182,7 +182,10 @@ cursor into the chat's feed; whatever is past the cursor is posted, and the curs
 | A relay into another known thread or DM | `RelayOperation.SendMessage` appends the message to that conversation's chat (`ensureChannelChat`), with no send.                                                                                                             | A sweep (`sweepThread`, after every handled message and every 5 seconds) posts what each known conversation's chat has past its cursor; a conversation whose thread was never started (a silent first turn) gets it then. |
 | A relay to someone with no conversation | `SendMessage` asks the channel for a direct thread; Discord's backend answers `dm:<Discord user id>` from the person's `discord` identity without a Discord call, and the chat is keyed by it plus `AgentChannels.directKey`. | The sweep queries chats carrying the direct key for the `Channel`, opens the DM with its own token, records the DM channel → chat (so the person's replies pass the DM gate into the same chat), and posts.               |
 
-`ChatParticipant` ties the chat to the person, so later relays to them reuse it. A turn's mirror and the sweep share
+`SendMessage` picks where a relay goes in this order: back to the requester's thread when reporting; the person's
+newest conversation on a channel; a new DM through the agent's channels; and only then a Composer chat with them,
+which it wakes, since they may never have it open. `ChatParticipant` ties the chat to the person, so later relays to
+them reuse it. A turn's mirror and the sweep share
 the cursor and a per-thread lock, and the sweep skips a thread whose turn is mirroring, so each message is posted once.
 A conversation Discord refuses for good (closed DMs, a deleted thread: 403 or 404) is dropped and reported in the bot's
 `lastError` rather than retried. A backend declares this split with `ChannelBackendProvider.mirrored`; for any other

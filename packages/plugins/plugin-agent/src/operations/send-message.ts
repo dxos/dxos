@@ -47,50 +47,62 @@ const handler: Operation.WithHandler<typeof RelayOperation.SendMessage> = RelayO
           }
         }
 
-        const chats = yield* loadChats(agent);
-        const chat = chats
+        // Newest first: a person's latest conversation with the agent is the one they are most likely to read.
+        const chats = (yield* loadChats(agent))
           .filter((chat) => ChatParticipant.get(chat) === recipient.id)
-          .sort((left, right) => left.id.localeCompare(right.id))
-          .at(-1);
-        if (chat) {
+          .sort((left, right) => right.id.localeCompare(left.id));
+
+        // A conversation on a channel (a Discord thread or DM) reaches them where they talk to the agent.
+        for (const chat of chats) {
           const conversation = AgentChannels.conversationOf(chat);
           const channel = conversation && (yield* findChannel(conversation.channelId));
-          if (!conversation || !channel) {
-            // A Composer chat: wake it, so the agent tells them in a turn of its own there.
-            const woken = yield* brain
-              .wake({ chat, prompt: BrainSkill.wakePrompt(partyName(recipient), text), sender: { name: agent.name } })
-              .pipe(Effect.result);
-            return Result.isSuccess(woken)
-              ? { delivered: true, via: 'chat', chat: Ref.make(chat) }
-              : { delivered: false, reason: woken.failure.message };
+          if (conversation && channel) {
+            const sent = yield* postToChannel(agent, channel, conversation.thread, text);
+            return sent.delivered
+              ? { delivered: true, via: 'channel', chat: Ref.make(chat) }
+              : { delivered: false, reason: sent.reason };
           }
-          const sent = yield* postToChannel(agent, channel, conversation.thread, text);
-          return sent.delivered
-            ? { delivered: true, via: 'channel', chat: Ref.make(chat) }
-            : { delivered: false, reason: sent.reason };
         }
 
+        // Then a direct conversation opened through one of the agent's channels, before a Composer chat the person
+        // may never have open.
         const name = partyName(recipient);
-        if (!Obj.instanceOf(Person.Person, recipient)) {
-          return { delivered: false, reason: `${name} has no conversation with the agent; ask who to tell there.` };
-        }
-
-        // No conversation yet: the first of the agent's channels that can reach the person directly.
         const channels = yield* AgentChannels.loadChannels(agent);
         const reasons: string[] = [];
-        for (const channel of channels) {
-          const direct = yield* openDirect(channel, recipient);
-          if (direct.thread === undefined) {
-            reasons.push(direct.reason ?? `${channel.name ?? 'A channel'} cannot reach them.`);
-            continue;
+        if (Obj.instanceOf(Person.Person, recipient)) {
+          for (const channel of channels) {
+            const direct = yield* openDirect(channel, recipient);
+            if (direct.thread === undefined) {
+              reasons.push(direct.reason ?? `${channel.name ?? 'A channel'} cannot reach them.`);
+              continue;
+            }
+            const sent = yield* postToChannel(agent, channel, direct.thread, text, { direct: true });
+            if (!sent.delivered) {
+              return { delivered: false, reason: sent.reason };
+            }
+            // Replies in the direct conversation, and later deliveries, belong to this person's chat.
+            Obj.update(sent.chat, (chat) => ChatParticipant.set(chat, recipient));
+            return { delivered: true, via: 'channel', chat: Ref.make(sent.chat) };
           }
-          const sent = yield* postToChannel(agent, channel, direct.thread, text, { direct: true });
-          if (!sent.delivered) {
-            return { delivered: false, reason: sent.reason };
-          }
-          // Replies in the direct conversation, and later deliveries, belong to this person's chat.
-          Obj.update(sent.chat, (chat) => ChatParticipant.set(chat, recipient));
-          return { delivered: true, via: 'channel', chat: Ref.make(sent.chat) };
+        }
+
+        // Last, a Composer chat: wake it, so the agent tells them in a turn of its own there.
+        const composerChat = chats.find((chat) => AgentChannels.conversationOf(chat) === undefined);
+        if (composerChat) {
+          const woken = yield* brain
+            .wake({
+              chat: composerChat,
+              prompt: BrainSkill.wakePrompt(partyName(recipient), text),
+              sender: { name: agent.name },
+            })
+            .pipe(Effect.result);
+          return Result.isSuccess(woken)
+            ? { delivered: true, via: 'chat', chat: Ref.make(composerChat) }
+            : { delivered: false, reason: woken.failure.message };
+        }
+
+        if (!Obj.instanceOf(Person.Person, recipient)) {
+          return { delivered: false, reason: `${name} has no conversation with the agent; ask who to tell there.` };
         }
 
         return {
