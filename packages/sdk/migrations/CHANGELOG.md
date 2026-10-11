@@ -1,5 +1,18 @@
 # @dxos/migrations
 
+## 0.15.0
+
+### Patch Changes
+
+- Updated dependencies [3aed53a]
+  - @dxos/echo@0.15.0
+  - @dxos/echo-client@0.15.0
+  - @dxos/client@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/echo-protocol@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes

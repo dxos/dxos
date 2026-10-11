@@ -1,5 +1,31 @@
 # @dxos/plugin-mobile
 
+## 0.14.1
+
+### Patch Changes
+
+- Updated dependencies [3d151fc]
+- Updated dependencies [71fc002]
+- Updated dependencies [8190cc5]
+  - @dxos/react-ui@0.15.0
+  - @dxos/plugin-deck@0.14.1
+  - @dxos/app-framework@0.15.0
+  - @dxos/app-graph@0.15.0
+  - @dxos/app-toolkit@0.15.0
+  - @dxos/react-ui-attention@0.15.0
+  - @dxos/react-ui-dnd@0.15.0
+  - @dxos/react-ui-menu@0.15.0
+  - @dxos/react-ui-mosaic@0.15.0
+  - @dxos/react-ui-search@0.15.0
+  - @dxos/compute@0.15.0
+  - @dxos/plugin-graph@0.14.1
+  - @dxos/async@0.15.0
+  - @dxos/graph@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/react-hooks@0.15.0
+  - @dxos/ui-theme@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes

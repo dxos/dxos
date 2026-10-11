@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-messenger",
-  "version": "0.14.0",
+  "version": "0.14.1",
   "private": true,
   "description": "Cross-space notifications inbox: messages relayed between identities through the HALO inbox",
   "homepage": "https://dxos.org",

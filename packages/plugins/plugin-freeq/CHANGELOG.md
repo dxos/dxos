@@ -1,5 +1,19 @@
 # @dxos/plugin-freeq
 
+## 0.14.1
+
+### Patch Changes
+
+- Updated dependencies [3aed53a]
+  - @dxos/echo@0.15.0
+  - @dxos/plugin-thread@0.14.1
+  - @dxos/app-framework@0.15.0
+  - @dxos/app-toolkit@0.15.0
+  - @dxos/types@0.15.0
+  - @dxos/errors@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/util@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes

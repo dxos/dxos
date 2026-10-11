@@ -1,5 +1,11 @@
 # @dxos/datalog
 
+## 0.15.0
+
+### Patch Changes
+
+- @dxos/errors@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes

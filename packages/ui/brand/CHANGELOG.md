@@ -1,5 +1,11 @@
 # @dxos/brand
 
+## 0.15.0
+
+### Patch Changes
+
+- @dxos/ui-theme@0.15.0
+
 ## 0.14.0
 
 ### Minor Changes

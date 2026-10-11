@@ -1,5 +1,16 @@
 # @dxos/config
 
+## 0.15.0
+
+### Patch Changes
+
+- @dxos/client-protocol@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/node-std@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/protocols@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes

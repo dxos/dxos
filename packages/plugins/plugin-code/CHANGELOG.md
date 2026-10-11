@@ -1,5 +1,51 @@
 # @dxos/plugin-code
 
+## 0.14.1
+
+### Patch Changes
+
+- Updated dependencies [3d151fc]
+- Updated dependencies [3aed53a]
+- Updated dependencies [71fc002]
+- Updated dependencies [8190cc5]
+  - @dxos/plugin-space@0.14.1
+  - @dxos/react-ui@0.15.0
+  - @dxos/echo@0.15.0
+  - @dxos/plugin-assistant@0.14.1
+  - @dxos/plugin-projects@0.14.1
+  - @dxos/plugin-client@0.14.1
+  - @dxos/app-framework@0.15.0
+  - @dxos/app-graph@0.15.0
+  - @dxos/app-toolkit@0.15.0
+  - @dxos/react-client@0.15.0
+  - @dxos/react-ui-editor@0.15.0
+  - @dxos/react-ui-form@0.15.0
+  - @dxos/react-ui-menu@0.15.0
+  - @dxos/agent-runtime@0.15.0
+  - @dxos/assistant@0.15.0
+  - @dxos/compute@0.15.0
+  - @dxos/compute-runtime@0.15.0
+  - @dxos/edge-compute@0.15.0
+  - @dxos/link@0.15.0
+  - @dxos/mcp-server@0.15.0
+  - @dxos/echo-doc@0.15.0
+  - @dxos/echo-react@0.15.0
+  - @dxos/client@0.15.0
+  - @dxos/schema@0.15.0
+  - @dxos/types@0.15.0
+  - @dxos/ui-editor@0.15.0
+  - @dxos/halo-react@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/errors@0.15.0
+  - @dxos/graph@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/protocols@0.15.0
+  - @dxos/deus@0.15.0
+  - @dxos/ui-theme@0.15.0
+
 ## 0.14.0
 
 ### Minor Changes

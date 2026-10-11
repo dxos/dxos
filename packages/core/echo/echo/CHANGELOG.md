@@ -1,5 +1,22 @@
 # @dxos/echo
 
+## 0.15.0
+
+### Patch Changes
+
+- 3aed53a: A document whose heads overlap a peer's counts as synced again, so collection sync stops reporting it as not converging. If the peer also advertises a change this replica lacks, one sync round is still run to fetch it.
+- @dxos/async@0.15.0
+  - @dxos/debug@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/errors@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/node-std@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/blob@0.15.0
+  - @dxos/echo-protocol@0.15.0
+
 ## 0.14.0
 
 ### Minor Changes
