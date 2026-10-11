@@ -6,7 +6,18 @@ import { type CleanupFn, Event } from '@dxos/async';
 import { type BlobBackend } from '@dxos/blob';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
-import { type Database, type Entity, Feed, Filter, type Hypergraph, Query, Ref, type Registry, Type } from '@dxos/echo';
+import {
+  type Database,
+  type Entity,
+  Feed,
+  Filter,
+  type Hypergraph,
+  Lens,
+  Query,
+  Ref,
+  type Registry,
+  Type,
+} from '@dxos/echo';
 import { QueryAST } from '@dxos/echo-protocol';
 import {
   type AnyProperties,
@@ -76,7 +87,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
 
   constructor() {
     this._registry = makeRegistry();
-    this._registry.add([Type.Type]);
+    this._registry.add([Type.Type, Lens.Stored]);
   }
 
   get registry(): Registry.Registry {

@@ -142,7 +142,11 @@ export const objectFromJSON = async (
     // `Type.isType` skip them and the schema registry never picks them up.
     // Mirrors the kind resolution in `createObject` (the in-memory path).
     const annotationKind = schema != null ? getTypeAnnotation(schema)?.kind : undefined;
-    defineHiddenProperty(obj, KindId, annotationKind === EntityKind.Type ? EntityKind.Type : EntityKind.Object);
+    defineHiddenProperty(
+      obj,
+      KindId,
+      annotationKind === EntityKind.Type || annotationKind === EntityKind.Lens ? annotationKind : EntityKind.Object,
+    );
   }
 
   if (typeof jsonData[ATTR_META] === 'object') {

@@ -494,10 +494,72 @@ class CoreRefResolver implements RefResolver {
   }
 }
 
+/**
+ * Resolves a ref declared to a specific version of its target's type to the target at that version, so a
+ * typed ref yields the shape its schema names when the target is stored as one document per version.
+ */
+class VersionedRefResolver implements RefResolver {
+  constructor(
+    private readonly _base: CoreRefResolver,
+    private readonly _target: ProxyTarget,
+    private readonly _type: string,
+  ) {}
+
+  #peek(result: AnyProperties | undefined, onLoad?: () => void): AnyProperties | undefined {
+    const database = getEchoDatabase(this._target[symbolInternals]);
+    return database && Obj.isObject(result) ? database._peekVersionOfType(result, this._type, onLoad) : result;
+  }
+
+  async #load(result: AnyProperties | undefined): Promise<AnyProperties | undefined> {
+    const database = getEchoDatabase(this._target[symbolInternals]);
+    return database && Obj.isObject(result) ? database._versionOfType(result, this._type) : result;
+  }
+
+  resolve(uri: URI.URI, options: { source: RefSource }): RefResolverRequest {
+    const request = this._base.resolve(uri, options);
+    return {
+      get state() {
+        return request.state;
+      },
+      stateChanged: request.stateChanged,
+      getResult: () => this.#peek(request.getResult(), () => request.stateChanged.emit()),
+      wait: async () => this.#load(await request.wait()),
+      abort: () => request.abort(),
+    };
+  }
+
+  resolveSync(uri: URI.URI, load: boolean, onLoad?: () => void): AnyProperties | undefined {
+    return this.#peek(this._base.resolveSync(uri, load, onLoad), load ? onLoad : undefined);
+  }
+
+  async resolveLegacy(uri: URI.URI, options?: LoadOptions): Promise<AnyProperties | undefined> {
+    return this.#load(await this._base.resolveLegacy(uri, options));
+  }
+
+  async resolveSchema(uri: URI.URI): Promise<Schema.Codec<any, any> | undefined> {
+    return this._base.resolveSchema(uri);
+  }
+
+  async resolveType(uri: URI.URI): Promise<unknown | undefined> {
+    return this._base.resolveType(uri);
+  }
+}
+
 /** One resolver per target, since every ref read off it resolves the same way. */
 const refResolvers = new WeakMap<ProxyTarget, CoreRefResolver>();
 
-export const lookupRef = (target: ProxyTarget, encodedRef: EncodedReference): Ref<any> | undefined => {
+/** One resolver per target and declared target type. */
+const versionedRefResolvers = new WeakMap<ProxyTarget, Map<string, VersionedRefResolver>>();
+
+/**
+ * @param targetType The type URI, version included, the ref's schema declares for its target; the ref then
+ *   resolves to the target at that version.
+ */
+export const lookupRef = (
+  target: ProxyTarget,
+  encodedRef: EncodedReference,
+  targetType?: string,
+): Ref<any> | undefined => {
   const uri = EncodedReference.toURI(encodedRef);
   const resolver = defaultMap(refResolvers, target, () => new CoreRefResolver(target));
   // Pinned when the link cache already names the object, so assigning this ref onward still carries the
@@ -507,7 +569,18 @@ export const lookupRef = (target: ProxyTarget, encodedRef: EncodedReference): Re
   // unpersisted routine draft binds its runnable that way). Off-database such a ref has nothing to
   // resolve through, and `isAvailable` reports a resolver it was given, so it is left without one.
   if (resolver.canResolve(uri)) {
-    setRefResolver(refImpl, resolver);
+    setRefResolver(
+      refImpl,
+      targetType === undefined
+        ? resolver
+        : defaultMap(
+            defaultMap(versionedRefResolvers, target, () => new Map()),
+            targetType,
+            () => {
+              return new VersionedRefResolver(resolver, target, targetType);
+            },
+          ),
+    );
   }
   return refImpl;
 };

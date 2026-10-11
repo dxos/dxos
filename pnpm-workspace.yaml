@@ -130,6 +130,7 @@ catalog:
   '@modelcontextprotocol/sdk': ^1.27.1
   '@moonrepo/cli': 2.5.2
   '@ngneat/falso': ^7.1.1
+  '@noble/hashes': ^1.8.0
   '@observablehq/plot': ^0.6.11
   '@obsidize/tar-browserify': ^5.2.0
   '@octokit/core': ^7.0.6

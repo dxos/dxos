@@ -20,7 +20,6 @@
     "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
     "@dxos/echo-host": "workspace:*",
-    "@dxos/echo-panproto": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/index-core": "workspace:*",

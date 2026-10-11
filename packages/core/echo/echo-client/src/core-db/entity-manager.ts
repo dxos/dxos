@@ -3,7 +3,7 @@
 //
 
 import { next as A, type Heads, getHeads } from '@automerge/automerge';
-import { type AutomergeUrl, type DocumentId } from '@automerge/automerge-repo';
+import { type AutomergeUrl, type DocumentId, isValidAutomergeUrl } from '@automerge/automerge-repo';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
@@ -21,7 +21,8 @@ import {
 } from '@dxos/async';
 import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import { raise, warnAfterTimeout } from '@dxos/debug';
-import { type Database, type Entity, Ref } from '@dxos/echo';
+import { type Database, type Entity, Lens, Ref } from '@dxos/echo';
+import { imageHeads } from '@dxos/echo-host/versions';
 import {
   type BranchRecord,
   DatabaseDirectory,
@@ -32,7 +33,7 @@ import {
 } from '@dxos/echo-protocol';
 import { type RefResolver, type RefResolverRequest, batchEvents } from '@dxos/echo/internal';
 import { assertState, invariant } from '@dxos/invariant';
-import { EID, type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
+import { EID, EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import type { DataService, QueryService } from '@dxos/protocols/rpc';
@@ -133,6 +134,9 @@ export class EntityManager implements IDatabaseBinding {
    * Hydrated from {@link _branchStore} on open (if provided) and persisted on switch.
    */
   private readonly _currentBranches = new Map<string, string>();
+
+  /** Type URIs of the schema versions this client reads; each object routes to its newest one of them. */
+  #knownVersionTypes: ReadonlySet<string> = new Set();
 
   /** Optional device-local persistence for {@link _currentBranches} (survives reload, never syncs). */
   private readonly _branchStore?: BranchStore;
@@ -404,11 +408,14 @@ export class EntityManager implements IDatabaseBinding {
     this._unsubscribeFromHandles();
     this._clearHandleReferences();
     this._objects.clear();
+    this.#versionCoreDisposers.splice(0).forEach((dispose) => dispose());
+    this.#versionCores.clear();
     this._unavailableObjects.clear();
     this._objectsPendingDocumentLoad.clear();
     this._currentlyLoadingObjects.clear();
     this._objectsForNextDbUpdate.clear();
     this._objectsForNextUpdate.clear();
+    this.#pendingReroutes.clear();
     await this._repoProxy.close();
   }
 
@@ -886,6 +893,18 @@ export class EntityManager implements IDatabaseBinding {
     }
   }
 
+  /**
+   * Every document the space directory references besides itself: linked objects, and the branch registry's
+   * version and branch documents, the same set the host replicates.
+   */
+  #spaceDocumentIds(doc: DatabaseDirectory): DocumentId[] {
+    const urls = [
+      ...Object.values(doc.links ?? {}).map((link) => link.toString()),
+      ...DatabaseDirectory.getAllBranchDocUrls(doc),
+    ];
+    return [...new Set(urls.filter(isValidAutomergeUrl).map((url) => toDocumentId(url)))];
+  }
+
   async getDocumentHeads(): Promise<SpaceDocumentHeads> {
     const root = this.getSpaceRootDocHandle();
     const doc = root.doc();
@@ -896,7 +915,7 @@ export class EntityManager implements IDatabaseBinding {
     const headsStates = await runServiceCall(
       this._runtime,
       this._dataService['DataService.getDocumentHeads']({
-        documentIds: Object.values(doc.links ?? {}).map((link) => toDocumentId(link.toString() as AutomergeUrl)),
+        documentIds: this.#spaceDocumentIds(doc),
       }),
       { timeout: RPC_TIMEOUT },
     );
@@ -962,10 +981,7 @@ export class EntityManager implements IDatabaseBinding {
     await runServiceCall(
       this._runtime,
       this._dataService['DataService.reIndexHeads']({
-        documentIds: [
-          root.documentId,
-          ...Object.values(doc.links ?? {}).map((link) => toDocumentId(link as AutomergeUrl)),
-        ],
+        documentIds: [root.documentId, ...this.#spaceDocumentIds(doc)],
       }),
     );
   }
@@ -1137,16 +1153,24 @@ export class EntityManager implements IDatabaseBinding {
    * Works for a subtree root or any of its members (members inherit the root's branches).
    */
   listBranches(objectId: string): string[] {
-    const rootId = this.getBranchRegistry(objectId) ? objectId : this._findBranchRootFor(objectId);
-    return ['main', ...Object.keys((rootId && this.getBranchRegistry(rootId)) || {})];
+    const rootId = this._userBranches(objectId) ? objectId : this._findBranchRootFor(objectId);
+    return ['main', ...Object.keys((rootId && this._userBranches(rootId)) || {})];
+  }
+
+  /** The user branches of a subtree root, without the entries the runtime reserves (version documents). */
+  private _userBranches(rootObjectId: string): Record<string, BranchRecord> | undefined {
+    const entries = Object.entries(this.getBranchRegistry(rootObjectId) ?? {}).filter(
+      ([name]) => !DatabaseDirectory.isReservedBranchName(name),
+    );
+    return entries.length > 0 ? Object.fromEntries(entries) : undefined;
   }
 
   /** The subtree root that owns the branch set containing `objectId`, if any. */
   private _findBranchRootFor(objectId: string): string | undefined {
     const branches = this.getSpaceRootDocHandle().doc().branches ?? {};
     for (const [rootId, byName] of Object.entries(branches)) {
-      for (const record of Object.values(byName)) {
-        if (record.members[objectId]) {
+      for (const [name, record] of Object.entries(byName)) {
+        if (!DatabaseDirectory.isReservedBranchName(name) && record.members[objectId]) {
           return rootId;
         }
       }
@@ -1183,6 +1207,7 @@ export class EntityManager implements IDatabaseBinding {
   ): Promise<void> {
     invariant(name !== 'main', "'main' is the implicit default branch");
     invariant(!this.getBranchRegistry(rootObjectId)?.[name], `branch already exists: ${name}`);
+    invariant(!DatabaseDirectory.isReservedBranchName(name), `branch names starting with '@' are reserved: ${name}`);
     const rootCore = this._objects.get(rootObjectId) ?? (await this.loadObjectCoreById(rootObjectId)) ?? undefined;
     invariant(rootCore, 'root object not found');
 
@@ -1202,13 +1227,37 @@ export class EntityManager implements IDatabaseBinding {
     }
 
     const memberUrls: BranchRecord['members'] = {};
-    for (const member of members) {
+    const versionUrls: NonNullable<BranchRecord['versions']> = {};
+    const fork = async (doc: A.Doc<DatabaseDirectory>, heads: Heads | undefined): Promise<string> => {
       // No `change` listener here: the object stays on its current branch; the branch doc only needs
       // to exist and replicate (referenced via the registry below). A listener is attached on switch.
-      const handle = this._repoProxy.import<DatabaseDirectory>(forkDump(member.getDoc(), memberHeads[member.id]));
+      const handle = this._repoProxy.import<DatabaseDirectory>(forkDump(doc, heads));
       await handle.whenReady();
       invariant(handle.url, 'branch document has no url');
-      memberUrls[member.id] = handle.url;
+      return handle.url;
+    };
+    for (const member of members) {
+      const heads = memberHeads[member.id];
+      const versions = await this.#mainVersionHandles(member.id);
+      if (versions.length === 0) {
+        memberUrls[member.id] = await fork(member.getDoc(), heads);
+        continue;
+      }
+      // Every version is forked, each at the point matching the one the object is read at, so the branch
+      // is a whole alternate timeline that merges back version by version.
+      const read = member.getDoc();
+      const link = this.getSpaceRootDocHandle().doc().links?.[member.id]?.toString();
+      for (const { version, handle } of versions) {
+        const doc = handle.doc();
+        const at = heads && (handle === member.docHandle ? heads : imageHeads(read, heads, doc, member.id));
+        const url = await fork(doc, at);
+        if (handle.url === link) {
+          memberUrls[member.id] = url;
+        } else {
+          versionUrls[member.id] ??= {};
+          versionUrls[member.id][version] = url;
+        }
+      }
     }
 
     const spaceRoot = this.getSpaceRootDocHandle();
@@ -1219,7 +1268,12 @@ export class EntityManager implements IDatabaseBinding {
       // literal under Automerge and silently drops the write).
       doc.branches ??= {};
       doc.branches[rootObjectId] ??= {};
-      doc.branches[rootObjectId][name] = { members: memberUrls, baseHeads, createdAt };
+      doc.branches[rootObjectId][name] = {
+        members: memberUrls,
+        baseHeads,
+        createdAt,
+        ...(Object.keys(versionUrls).length > 0 ? { versions: versionUrls } : {}),
+      };
     });
     this.branchesChanged.emit();
   }
@@ -1289,15 +1343,9 @@ export class EntityManager implements IDatabaseBinding {
       invariant(record, `branch not found: ${name}`);
       // Preflight every member's branch doc + main handle before mutating any of them, so a member
       // that fails to load aborts the merge cleanly rather than leaving the subtree half-merged.
-      const merges: Array<{ branchDoc: A.Doc<DatabaseDirectory>; mainHandle: DocHandleProxy<DatabaseDirectory> }> = [];
-      for (const [memberId, urlData] of Object.entries(record.members)) {
-        const branchHandle = this._repoProxy.find<DatabaseDirectory>(urlData.toString() as DocumentId);
-        await branchHandle.whenReady();
-        const mainHandle = await this._mainDocHandle(memberId);
-        merges.push({ branchDoc: branchHandle.doc(), mainHandle });
-      }
-      for (const { branchDoc, mainHandle } of merges) {
-        mainHandle.update((doc) => A.merge(doc, branchDoc));
+      const pairs = await this.#branchPairs(record);
+      for (const { branch, main } of pairs) {
+        main.update((doc) => A.merge(doc, branch.doc()));
       }
       await this.#switchBranchInternal(rootObjectId, 'main');
       if (opts?.deleteAfter) {
@@ -1318,15 +1366,9 @@ export class EntityManager implements IDatabaseBinding {
       const record = this.getBranchRegistry(rootObjectId)?.[name];
       invariant(record, `branch not found: ${name}`);
       // Preflight every member before mutating any, so a failed load aborts cleanly.
-      const merges: Array<{ branchHandle: DocHandleProxy<DatabaseDirectory>; mainDoc: A.Doc<DatabaseDirectory> }> = [];
-      for (const [memberId, urlData] of Object.entries(record.members)) {
-        const branchHandle = this._repoProxy.find<DatabaseDirectory>(urlData.toString() as DocumentId);
-        await branchHandle.whenReady();
-        const mainHandle = await this._mainDocHandle(memberId);
-        merges.push({ branchHandle, mainDoc: mainHandle.doc() });
-      }
-      for (const { branchHandle, mainDoc } of merges) {
-        branchHandle.update((doc) => A.merge(doc, mainDoc));
+      const pairs = await this.#branchPairs(record);
+      for (const { branch, main } of pairs) {
+        branch.update((doc) => A.merge(doc, main.doc()));
       }
       this._scheduleThrottledDbUpdate(Object.keys(record.members));
     });
@@ -1406,6 +1448,94 @@ export class EntityManager implements IDatabaseBinding {
     return handle;
   }
 
+  /** Every version document of an object on main, with its version; empty for an unversioned object. */
+  async #mainVersionHandles(
+    objectId: string,
+  ): Promise<{ version: string; handle: DocHandleProxy<DatabaseDirectory> }[]> {
+    const entries = DatabaseDirectory.getVersionDocs(this.getSpaceRootDocHandle().doc(), objectId);
+    return Promise.all(
+      entries.flatMap(({ version, url }) => {
+        if (!isValidAutomergeUrl(url)) {
+          return [];
+        }
+        const handle = this._repoProxy.find<DatabaseDirectory>(url);
+        return [handle.whenReady().then(() => ({ version, handle }))];
+      }),
+    );
+  }
+
+  /**
+   * Main's document holding the version a branch member's document holds, matched by the type the member's own
+   * document records, since `links` can move to another version after the branch opens.
+   */
+  async #mainCounterpart(
+    memberId: string,
+    member: DocHandleProxy<DatabaseDirectory>,
+  ): Promise<DocHandleProxy<DatabaseDirectory>> {
+    const versions = DatabaseDirectory.getVersionDocs(this.getSpaceRootDocHandle().doc(), memberId);
+    if (versions.length === 0) {
+      return this._mainDocHandle(memberId);
+    }
+    const type = member.doc().objects?.[memberId]?.system?.type;
+    const url = versions.find((entry) => type !== undefined && entry.type === EncodedReference.toURI(type))?.url;
+    invariant(url && isValidAutomergeUrl(url), `main has no document for the version branch member ${memberId} holds`);
+    const handle = this._repoProxy.find<DatabaseDirectory>(url);
+    await handle.whenReady();
+    return handle;
+  }
+
+  /**
+   * Each branch document paired with its main counterpart: each of a member's documents with main's document
+   * for the version it holds. Every
+   * handle is loaded before any is returned, so a failed load leaves nothing half-merged.
+   */
+  async #branchPairs(
+    record: BranchRecord,
+  ): Promise<{ branch: DocHandleProxy<DatabaseDirectory>; main: DocHandleProxy<DatabaseDirectory> }[]> {
+    const load = async (url: string) => {
+      invariant(isValidAutomergeUrl(url), `not a document url: ${url}`);
+      const handle = this._repoProxy.find<DatabaseDirectory>(url);
+      await handle.whenReady();
+      return handle;
+    };
+    const pairs = [];
+    for (const [memberId, url] of Object.entries(record.members)) {
+      const member = await load(url.toString());
+      pairs.push({ branch: member, main: await this.#mainCounterpart(memberId, member) });
+      const mainVersions = DatabaseDirectory.getVersionDocUrls(this.getSpaceRootDocHandle().doc(), memberId);
+      for (const [version, branchUrl] of Object.entries(record.versions?.[memberId] ?? {})) {
+        const mainUrl = mainVersions[version];
+        if (mainUrl) {
+          pairs.push({ branch: await load(branchUrl.toString()), main: await load(mainUrl) });
+        }
+      }
+    }
+    return pairs;
+  }
+
+  /**
+   * The member's document on a branch that this client reads: of its branch versions, the newest whose
+   * type the client knows, else the one `members` names.
+   */
+  #routedBranchUrl(record: BranchRecord, memberId: string): string | undefined {
+    const member = record.members[memberId]?.toString();
+    const root = this.getSpaceRootDocHandle().doc();
+    const main = DatabaseDirectory.getVersionDocs(root, memberId);
+    const linked = main.find((entry) => entry.url === root.links?.[memberId]?.toString());
+    const candidates = [
+      ...(member !== undefined && linked ? [{ version: linked.version, type: linked.type, url: member }] : []),
+      ...Object.entries(record.versions?.[memberId] ?? {}).map(([version, url]) => ({
+        version,
+        type: main.find((entry) => entry.version === version)?.type,
+        url: url.toString(),
+      })),
+    ];
+    const [newest] = candidates
+      .filter(({ type }) => type !== undefined && this.#knownVersionTypes.has(type))
+      .sort((left, right) => Lens.compareVersions(right.version, left.version));
+    return newest?.url ?? member;
+  }
+
   /**
    * Core-level independent-instance branch binding: an ephemeral `ObjectCore` bound to the branch document
    * of one object, independent of the device-global selection (`switchBranch`) and of other
@@ -1415,12 +1545,12 @@ export class EntityManager implements IDatabaseBinding {
    */
   async bindCoreToBranch(objectId: string, name: string): Promise<{ core: ObjectCore; dispose: () => void }> {
     invariant(name !== 'main', "binding to 'main' resolves the live object; no core binding needed");
-    const rootId = this.getBranchRegistry(objectId) ? objectId : this._findBranchRootFor(objectId);
-    const record = rootId ? this.getBranchRegistry(rootId)?.[name] : undefined;
+    const rootId = this._userBranches(objectId)?.[name] ? objectId : this._findBranchRootFor(objectId);
+    const record = rootId ? this._userBranches(rootId)?.[name] : undefined;
     invariant(record, `branch not found: ${name}`);
-    const url = record.members[objectId]?.toString();
-    invariant(url, `object is not a member of branch: ${name}`);
-    const handle = this._repoProxy.find<DatabaseDirectory>(url as DocumentId);
+    const url = this.#routedBranchUrl(record, objectId);
+    invariant(url && isValidAutomergeUrl(url), `object is not a member of branch: ${name}`);
+    const handle = this._repoProxy.find<DatabaseDirectory>(url);
     await handle.whenReady();
 
     const core = new ObjectCore();
@@ -1461,13 +1591,15 @@ export class EntityManager implements IDatabaseBinding {
     if (!core) {
       return;
     }
-    const url = name !== 'main' ? registry?.[name]?.members[memberId]?.toString() : undefined;
+    const record = name !== 'main' ? registry?.[name] : undefined;
+    const url = record ? this.#routedBranchUrl(record, memberId) : undefined;
+    const readUrl = url ?? this.#routedUrl(this.getSpaceRootDocHandle().doc(), memberId);
     let handle: DocHandleProxy<DatabaseDirectory>;
-    if (url) {
-      handle = this._repoProxy.find<DatabaseDirectory>(url as DocumentId);
+    if (readUrl && isValidAutomergeUrl(readUrl)) {
+      handle = this._repoProxy.find<DatabaseDirectory>(readUrl);
       await handle.whenReady();
     } else {
-      // 'main', or a member absent from this branch's set, binds to its main document.
+      // An inline object, which only ever lives in the space root.
       handle = await this._mainDocHandle(memberId);
     }
     if (handle === core.docHandle) {
@@ -1570,9 +1702,13 @@ export class EntityManager implements IDatabaseBinding {
       added.forEach((objectId) => this.#linkedObjectIds.add(objectId));
       this._linksAddedEvent.emit(added);
     }
-    const linksAwaitingLoad = Object.entries(links).filter(([objectId]) =>
-      this._objectsPendingDocumentLoad.has(objectId),
-    );
+    const spaceRootDoc = this._spaceRootDocHandle?.doc();
+    const linksAwaitingLoad = Object.entries(links)
+      .filter(([objectId]) => this._objectsPendingDocumentLoad.has(objectId))
+      .map(([objectId, url]): [string, string] => [
+        objectId,
+        (spaceRootDoc && this.#routedUrl(spaceRootDoc, objectId)) ?? url.toString(),
+      ]);
     if (linksAwaitingLoad.length > 0) {
       const groups = new Map<boolean, typeof linksAwaitingLoad>();
       for (const entry of linksAwaitingLoad) {
@@ -1690,8 +1826,256 @@ export class EntityManager implements IDatabaseBinding {
   private _getLinkedDocumentUrl(objectId: string): AutomergeUrl | undefined {
     const spaceRootDoc = this._spaceRootDocHandle?.doc();
     invariant(spaceRootDoc);
-    return (spaceRootDoc.links ?? {})[objectId]?.toString() as AutomergeUrl;
+    return this.#routedUrl(spaceRootDoc, objectId);
   }
+
+  /**
+   * The document an object is read from: of its version documents, the newest this client knows, else
+   * the document `links` names, which is the one released apps read.
+   */
+  #routedUrl(spaceRootDoc: DatabaseDirectory, objectId: string): AutomergeUrl | undefined {
+    const link = spaceRootDoc.links?.[objectId]?.toString();
+    const [newest] =
+      link === undefined || this.#knownVersionTypes.size === 0
+        ? []
+        : DatabaseDirectory.getVersionDocs(spaceRootDoc, objectId)
+            .filter(({ type }) => type !== undefined && this.#knownVersionTypes.has(type))
+            .sort((left, right) => Lens.compareVersions(right.version, left.version));
+    const url = newest?.url ?? link;
+    return url !== undefined && isValidAutomergeUrl(url) ? url : undefined;
+  }
+
+  /** Type URIs of the schema versions this client reads, oldest first. */
+  get knownVersionTypes(): readonly string[] {
+    return [...this.#knownVersionTypes];
+  }
+
+  /**
+   * Sets the schema versions this client reads, by type URI oldest first, and moves every loaded
+   * object to the newest of its version documents among them.
+   */
+  setKnownVersionTypes(types: Iterable<string>): void {
+    const next = new Set(types);
+    if (next.size === this.#knownVersionTypes.size && [...next].every((type) => this.#knownVersionTypes.has(type))) {
+      return;
+    }
+    this.#knownVersionTypes = next;
+    this.#rerouteObjects([...this._objects.keys()]);
+  }
+
+  /** Moves each loaded object whose routed document changed onto it, one at a time, in order. */
+  #rerouteObjects(objectIds: readonly string[]): void {
+    this.#rerouteChain = this.#rerouteChain
+      .then(async () => {
+        for (const objectId of objectIds) {
+          await this.#rerouteObject(objectId).catch((err) => log.catch(err));
+        }
+      })
+      .catch((err) => log.catch(err));
+  }
+
+  #rerouteChain: Promise<void> = Promise.resolve();
+
+  /** Moves waiting for a routed document to arrive, keyed by object and url so a newer route is not shadowed. */
+  readonly #pendingReroutes = new Set<string>();
+
+  /** Moves the object's live core onto the document it routes to, and resolves once every pending move has run. */
+  async reroute(objectId: string): Promise<void> {
+    this.#rerouteObjects([objectId]);
+    await this.#rerouteChain;
+  }
+
+  /**
+   * Waits for `url` to load, or for the object to stop routing to it, since a document that never arrives would
+   * otherwise hold the caller after the object moved on; then moves the object's live core onto its route.
+   */
+  async rerouteWhenReady(objectId: string, url: AutomergeUrl): Promise<void> {
+    const root = this.getSpaceRootDocHandle();
+    const stale = this.#rejectWhenStale(this.#generation);
+    let onRootChange = () => {};
+    const moved = new Promise<void>((resolve) => {
+      onRootChange = () => {
+        if (this.#readUrl(objectId) !== url) {
+          resolve();
+        }
+      };
+    });
+    root.on('change', onRootChange);
+    onRootChange();
+    try {
+      await Promise.race([this.#whenAvailable(this._repoProxy.find<DatabaseDirectory>(url)), moved, stale.promise]);
+    } finally {
+      root.off('change', onRootChange);
+      stale.dispose();
+    }
+    await this.reroute(objectId);
+  }
+
+  /**
+   * Resolves once `handle` is ready, waiting past an `unavailable` verdict for the document to arrive; any other
+   * failure rejects, since no `available` event follows it.
+   */
+  #whenAvailable(handle: DocHandleProxy<DatabaseDirectory>): Promise<void> {
+    return handle.whenReady().catch((err) => {
+      if (handle.isReady()) {
+        return;
+      }
+      if (!DocumentUnavailableError.is(err)) {
+        throw err;
+      }
+      return new Promise<void>((resolve) => handle.once('available', () => resolve()));
+    });
+  }
+
+  /** The record of the branch this device views the object on, if not main. */
+  #viewedBranchRecord(objectId: string): BranchRecord | undefined {
+    const branch = this._currentBranches.get(objectId);
+    const rootId =
+      branch && (this.getBranchRegistry(objectId)?.[branch] ? objectId : this._findBranchRootFor(objectId));
+    return branch && rootId ? this.getBranchRegistry(rootId)?.[branch] : undefined;
+  }
+
+  /** The document an object's live core reads: on the branch this device views, else on main. */
+  #readUrl(objectId: string): AutomergeUrl | undefined {
+    const record = this.#viewedBranchRecord(objectId);
+    const url = record
+      ? this.#routedBranchUrl(record, objectId)
+      : this.#routedUrl(this.getSpaceRootDocHandle().doc(), objectId);
+    return url !== undefined && isValidAutomergeUrl(url) ? url : undefined;
+  }
+
+  async #rerouteObject(objectId: string): Promise<void> {
+    const core = this._objects.get(objectId);
+    const spaceRoot = this._spaceRootDocHandle;
+    if (!core || !spaceRoot || !core.docHandle || core.docHandle === spaceRoot) {
+      return;
+    }
+    const url = this.#readUrl(objectId);
+    if (!url || url === core.docHandle.url) {
+      return;
+    }
+    const handle = this._repoProxy.find<DatabaseDirectory>(url);
+    if (!handle.isReady() && !(await handle.whenSettledOnDisk())) {
+      // Not on this device yet: the object keeps its binding, and moves once the document arrives, without
+      // holding back the moves queued behind it.
+      const key = `${objectId} ${url}`;
+      if (!this.#pendingReroutes.has(key)) {
+        this.#pendingReroutes.add(key);
+        const generation = this.#generation;
+        void this.#whenAvailable(handle).then(
+          () => {
+            this.#pendingReroutes.delete(key);
+            if (!this.#isStale(generation)) {
+              this.#rerouteObjects([objectId]);
+            }
+          },
+          (err) => {
+            this.#pendingReroutes.delete(key);
+            if (!this.#isStale(generation)) {
+              log.catch(err);
+            }
+          },
+        );
+      }
+      return;
+    }
+    if (this._objects.get(objectId) !== core || this.#readUrl(objectId) !== url) {
+      return;
+    }
+    // Only the bound document may carry the update listener: `_processDocumentUpdate` rebinds an object
+    // to whichever document fires a change holding it, and every version document holds it.
+    core.docHandle.off('change', this._onDocumentUpdate);
+    handle.off('change', this._onDocumentUpdate);
+    handle.on('change', this._onDocumentUpdate);
+    core.bind({ db: this, docHandle: handle, path: ['objects', objectId], assignFromLocalState: false });
+    this._onObjectBoundToDocument(handle, objectId);
+    this._emitObjectUpdateEvent([objectId]);
+    this._scheduleThrottledDbUpdate([objectId]);
+  }
+
+  /** The url of the object's version document whose id is `documentId`, if it is one. */
+  versionDocumentUrl(objectId: string, documentId: string): AutomergeUrl | undefined {
+    const spaceRootDoc = this.getSpaceRootDocHandle().doc();
+    const urls = [
+      spaceRootDoc.links?.[objectId]?.toString(),
+      ...DatabaseDirectory.getVersionDocs(spaceRootDoc, objectId).map(({ url }) => url),
+    ];
+    return urls.find(
+      (url): url is AutomergeUrl => url !== undefined && isValidAutomergeUrl(url) && toDocumentId(url) === documentId,
+    );
+  }
+
+  /**
+   * Of documents holding `objectId`, the one to read it from: the one it is routed to, else the newest version the
+   * registry records among them, else the first; none while the database is not open.
+   */
+  preferredDocument(objectId: string, documentIds: readonly string[]): string | undefined {
+    // A query can be answered before the database opens or after it closes, when no registry is at hand.
+    if (!this._spaceRootDocHandle) {
+      return undefined;
+    }
+    const routed = this.routedDocumentUrl(objectId);
+    if (routed && documentIds.includes(toDocumentId(routed))) {
+      return toDocumentId(routed);
+    }
+    const [newest] = DatabaseDirectory.getVersionDocs(this.getSpaceRootDocHandle().doc(), objectId)
+      .filter(({ url }) => isValidAutomergeUrl(url) && documentIds.includes(toDocumentId(url)))
+      .sort((left, right) => Lens.compareVersions(right.version, left.version));
+    return newest && isValidAutomergeUrl(newest.url) ? toDocumentId(newest.url) : documentIds[0];
+  }
+
+  /** The url of the object's document holding version `type` (a type URI) on the branch this device views, if recorded. */
+  versionDocumentUrlOfType(objectId: string, type: string): AutomergeUrl | undefined {
+    const root = this.getSpaceRootDocHandle().doc();
+    const entry = DatabaseDirectory.getVersionDocs(root, objectId).find((entry) => entry.type === type);
+    const record = entry && this.#viewedBranchRecord(objectId);
+    // On a branch the member's own document holds the version `links` names, and `versions` holds the rest.
+    const url = record
+      ? entry.url === root.links?.[objectId]?.toString()
+        ? record.members[objectId]?.toString()
+        : record.versions?.[objectId]?.[entry.version]?.toString()
+      : entry?.url;
+    return url !== undefined && isValidAutomergeUrl(url) ? url : undefined;
+  }
+
+  /** The document the object's live core reads. */
+  routedDocumentUrl(objectId: string): AutomergeUrl | undefined {
+    return this.#routedUrl(this.getSpaceRootDocHandle().doc(), objectId);
+  }
+
+  /**
+   * A core bound to one version document of an object, beside the object's live core, which reads the
+   * version it routes to. Kept for the manager's lifetime so every read of that version shares it.
+   */
+  async bindCoreToVersion(objectId: string, url: AutomergeUrl): Promise<ObjectCore> {
+    const key = `${objectId} ${url}`;
+    const existing = this.#versionCores.get(key);
+    if (existing) {
+      return existing;
+    }
+    const handle = this._repoProxy.find<DatabaseDirectory>(url);
+    await handle.whenReady();
+    const raced = this.#versionCores.get(key);
+    if (raced) {
+      return raced;
+    }
+    const core = new ObjectCore();
+    core.id = EntityId.make(objectId);
+    core.bind({ db: this, docHandle: handle, path: ['objects', objectId], assignFromLocalState: false });
+    // Routed to this core directly: the id-keyed routing of `_onDocumentUpdate` serves the live core only.
+    const onChange = (event: ChangeEvent<DatabaseDirectory>) => {
+      if (event.patches.some((patch) => patch.path[0] === 'objects' && patch.path[1] === objectId)) {
+        core.notifyUpdate();
+      }
+    };
+    handle.on('change', onChange);
+    this.#versionCores.set(key, core);
+    this.#versionCoreDisposers.push(() => handle.off('change', onChange));
+    return core;
+  }
+
+  readonly #versionCores = new Map<string, ObjectCore>();
+  readonly #versionCoreDisposers: (() => void)[] = [];
 
   private _loadLinkedObjects(links: SpaceDocumentLinks, opts: LoadObjectDocumentOptions = {}): void {
     if (!links) {
@@ -1886,7 +2270,12 @@ export class EntityManager implements IDatabaseBinding {
 
     const spaceRootDoc: DatabaseDirectory = spaceRootDocHandle.doc();
     const inlinedObjectIds = new Set(Object.keys(spaceRootDoc.objects ?? {}));
-    const linkedObjectIds = new Map(Object.entries(spaceRootDoc.links ?? {}).map(([k, v]) => [k, v.toString()]));
+    const linkedObjectIds = new Map(
+      Object.keys(spaceRootDoc.links ?? {}).flatMap((objectId) => {
+        const url = this.#routedUrl(spaceRootDoc, objectId);
+        return url === undefined ? [] : [[objectId, url] as const];
+      }),
+    );
 
     const objectsToRebind = new Map<string, { handle: DocHandleProxy<DatabaseDirectory>; objectIds: string[] }>();
     objectsToRebind.set(spaceRootUrl, { handle: spaceRootDocHandle, objectIds: [] });
@@ -1912,7 +2301,7 @@ export class EntityManager implements IDatabaseBinding {
         }
         let newDocHandle: DocHandleProxy<DatabaseDirectory>;
         try {
-          newDocHandle = this._repoProxy.find<DatabaseDirectory>(newObjectDocUrl as DocumentId);
+          newDocHandle = this._repoProxy.find<DatabaseDirectory>(newObjectDocUrl);
         } catch (err) {
           if (!RepoClosedError.is(err)) {
             throw err;
@@ -1978,6 +2367,21 @@ export class EntityManager implements IDatabaseBinding {
 
   private readonly _onDocumentUpdate = (event: ChangeEvent<DatabaseDirectory>) => {
     this._evictRemovedObjects(event);
+    if (event.handle === this._spaceRootDocHandle && this.#knownVersionTypes.size > 0) {
+      const branches = event.handle.doc().branches ?? {};
+      const rerouted = new Set(
+        event.patches
+          .filter(({ path }) => (path[0] === 'branches' || path[0] === 'links') && typeof path[1] === 'string')
+          .flatMap(({ path }) => {
+            const id = String(path[1]);
+            // A user branch is keyed by its subtree root; any member of it may have gained a version.
+            return [id, ...Object.values(branches[id] ?? {}).flatMap((record) => Object.keys(record.members ?? {}))];
+          }),
+      );
+      if (rerouted.size > 0) {
+        this.#rerouteObjects([...rerouted]);
+      }
+    }
     const documentChanges = this._processDocumentUpdate(event);
     this._rebindObjects(event.handle, documentChanges.objectsToRebind);
     this._onObjectLinksUpdated(documentChanges.linkedDocuments);

@@ -30,6 +30,7 @@ export default defineConfig({
     Text: 'src/Text.ts',
     Order: 'src/Order.ts',
     Key: 'src/Key.ts',
+    Lens: 'src/Lens.ts',
     Migration: 'src/Migration.ts',
     Type: 'src/Type.ts',
     Aggregate: 'src/Aggregate.ts',

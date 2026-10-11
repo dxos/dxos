@@ -7,7 +7,7 @@ import * as Layer from 'effect/Layer';
 import * as Atom from 'effect/reactivity/Atom';
 
 import { Event, type ReadOnlyEvent } from '@dxos/async';
-import { type Database, Entity, type Filter, Query, type QueryResult, Registry, Type } from '@dxos/echo';
+import { type Database, Entity, type Filter, Lens, Query, type QueryResult, Registry, Type } from '@dxos/echo';
 import { filterMatchEntity } from '@dxos/echo-host/filter';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
@@ -42,6 +42,9 @@ export class RegistryImpl implements Registry.Registry {
    * type under both its typename DXN and identifier EID).
    */
   readonly #entitiesByUri: Map<URI.URI, Entity.Unknown> = new Map();
+
+  /** Kept out of the entity maps, so lists and queries never see lenses. */
+  readonly #lenses = new Lens.LensSet();
   readonly #upstream: Registry.Registry | undefined;
 
   // Shares one QueryResult instance (and its subscription) across repeated calls with the same
@@ -71,6 +74,10 @@ export class RegistryImpl implements Registry.Registry {
   }
 
   remove(id: string): boolean {
+    if (this.#lenses.remove(id)) {
+      this.#changed.emit();
+      return true;
+    }
     const entity = this.#entitiesById.get(id);
     if (entity == null) {
       return false;
@@ -89,6 +96,7 @@ export class RegistryImpl implements Registry.Registry {
   clear(): void {
     this.#entitiesById.clear();
     this.#entitiesByUri.clear();
+    this.#lenses.clear();
     this.#changed.emit();
   }
 
@@ -121,11 +129,27 @@ export class RegistryImpl implements Registry.Registry {
     return this.#queryResultCache.getOrCreate(normalized, () => new RegistryQueryResult<unknown>(this, normalized));
   }
 
+  lenses(): readonly Lens.Any[] {
+    return Lens.shadow(this.#upstream?.lenses() ?? [], this.#lenses.values());
+  }
+
+  lensBetween(source: string, target: string): Lens.Any | undefined {
+    return Lens.between(this.lenses(), source, target);
+  }
+
+  lensesFrom(source: string): readonly Lens.Any[] {
+    return Lens.lensesFrom(this.lenses(), source);
+  }
+
   getByURI(uri: string): Entity.Unknown | undefined {
     return this.#entitiesByUri.get(normalizeURI(uri)) ?? this.#upstream?.getByURI(uri);
   }
 
   #put(entity: Entity.Unknown): void {
+    if (Lens.isLens(entity)) {
+      this.#lenses.add(entity);
+      return;
+    }
     this.#entitiesById.set(getEntityId(entity), entity);
 
     // Index by every URI that addresses the entity for fast lookup.

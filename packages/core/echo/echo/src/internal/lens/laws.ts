@@ -2,8 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Obj } from '@dxos/echo';
-
+import * as Obj from '../../Obj.ts';
 import { readSource } from './mapping.ts';
 import { type AnyLens, type Write } from './types.ts';
 

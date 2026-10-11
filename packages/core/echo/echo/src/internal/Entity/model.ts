@@ -109,7 +109,10 @@ export function assertObjectModel(obj: unknown): asserts obj is InternalObjectPr
   invariant(EntityId.isValid(obj.id), 'Invalid object model: invalid id');
   invariant(obj[TypeId] === undefined || typeof obj[TypeId] === 'string', 'Invalid object model: invalid type');
   invariant(
-    obj[KindId] === EntityKind.Object || obj[KindId] === EntityKind.Relation || obj[KindId] === EntityKind.Type,
+    obj[KindId] === EntityKind.Object ||
+      obj[KindId] === EntityKind.Relation ||
+      obj[KindId] === EntityKind.Type ||
+      obj[KindId] === EntityKind.Lens,
     'Invalid object model: invalid entity kind',
   );
 

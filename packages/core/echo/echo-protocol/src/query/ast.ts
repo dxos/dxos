@@ -661,6 +661,13 @@ export const QueryOptions = Schema.Struct({
    * Diagnostics-only label for logs / tooling (not used by execution semantics).
    */
   debugLabel: Schema.optional(Schema.String),
+
+  /**
+   * Type URIs of the schema versions the reader reads, oldest first. An object stored as one document
+   * per version is returned once, from its newest version listed here, or from every document when
+   * none is listed.
+   */
+  versions: Schema.optional(Schema.Array(Schema.String)),
 });
 
 export interface QueryOptions extends Schema.Schema.Type<typeof QueryOptions> {}

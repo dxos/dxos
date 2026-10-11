@@ -4,8 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { Obj } from '@dxos/echo';
-import { Lens } from '@dxos/echo-panproto';
+import { Lens, Obj } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 
 import { DEMO_MARKDOWN, RichTextLens, blockText, diffBlocks, parseBlocks, plain } from './rich-text.ts';

@@ -69,6 +69,10 @@ export interface DatabaseDirectory {
    *
    * Which branch a device is currently viewing is NOT stored here — that is device-local,
    * non-synced state.
+   *
+   * Names starting with `@` are reserved. `@v<version>` records the object's version document for
+   * that schema version (see {@link DatabaseDirectory.versionBranchName}); it is kept here, rather
+   * than in a field of its own, because every release that replicates branches replicates it too.
    */
   branches?: SpaceBranchRegistry;
 
@@ -98,7 +102,23 @@ export type BranchRecord = {
   baseHeads?: string[];
   /** Unix ms timestamp at branch creation. */
   createdAt?: number;
+  /**
+   * For a version branch (`@v<version>`), the URI of the schema version its document holds, so a reader
+   * can route the object to a version it knows without loading the document.
+   */
+  type?: string;
+  /**
+   * For members stored as one document per schema version: the branch's document for each version,
+   * besides the one `members` names, which is the version released apps read.
+   */
+  versions?: { [objectId: string]: { [version: string]: string | RawString } };
 };
+
+const RESERVED_BRANCH_PREFIX = '@';
+const VERSION_BRANCH_PREFIX = `${RESERVED_BRANCH_PREFIX}v`;
+
+const parseVersionBranch = (name: string): string | undefined =>
+  name.startsWith(VERSION_BRANCH_PREFIX) ? name.slice(VERSION_BRANCH_PREFIX.length) : undefined;
 
 export const DatabaseDirectory = Object.freeze({
   /**
@@ -164,6 +184,62 @@ export const DatabaseDirectory = Object.freeze({
         for (const url of Object.values(record.members ?? {})) {
           urls.push(url.toString());
         }
+        for (const byVersion of Object.values(record.versions ?? {})) {
+          for (const url of Object.values(byVersion)) {
+            urls.push(url.toString());
+          }
+        }
+      }
+    }
+    return urls;
+  },
+
+  /**
+   * @returns The urls of user-branch documents, whose changes duplicate main's. Version documents, recorded under
+   * reserved names, hold edits of their own and are not among them.
+   */
+  getUserBranchDocUrls: (doc: DatabaseDirectory): string[] =>
+    Object.values(doc.branches ?? {}).flatMap((byName) =>
+      Object.entries(byName).flatMap(([name, record]) =>
+        name.startsWith(RESERVED_BRANCH_PREFIX)
+          ? []
+          : [
+              ...Object.values(record.members ?? {}),
+              ...Object.values(record.versions ?? {}).flatMap((byVersion) => Object.values(byVersion)),
+            ].map((url) => url.toString()),
+      ),
+    ),
+
+  /** The reserved branch name recording an object's version document for schema `version`. */
+  versionBranchName: (version: string): string => `${VERSION_BRANCH_PREFIX}${version}`,
+
+  /** The schema version a reserved version branch name records, or undefined for any other name. */
+  parseVersionBranch: (name: string): string | undefined => parseVersionBranch(name),
+
+  /** Whether `name` is reserved for the runtime rather than a user branch. */
+  isReservedBranchName: (name: string): boolean => name.startsWith(RESERVED_BRANCH_PREFIX),
+
+  /**
+   * @returns The object's version documents recorded in the registry, by schema version, with the type
+   * URI each holds.
+   */
+  getVersionDocs: (doc: DatabaseDirectory, objectId: string): { version: string; url: string; type?: string }[] =>
+    Object.entries(doc.branches?.[objectId] ?? {}).flatMap(([name, record]) => {
+      const version = parseVersionBranch(name);
+      const url = record.members?.[objectId];
+      return version !== undefined && url != null
+        ? [{ version, url: url.toString(), ...(record.type != null ? { type: String(record.type) } : {}) }]
+        : [];
+    }),
+
+  /** @returns The urls of the object's version documents recorded in the registry, by schema version. */
+  getVersionDocUrls: (doc: DatabaseDirectory, objectId: string): Record<string, string> => {
+    const urls: Record<string, string> = {};
+    for (const [name, record] of Object.entries(doc.branches?.[objectId] ?? {})) {
+      const version = parseVersionBranch(name);
+      const url = record.members?.[objectId];
+      if (version !== undefined && url != null) {
+        urls[version] = url.toString();
       }
     }
     return urls;
@@ -219,9 +295,9 @@ export const EntityStructure = Object.freeze({
   /**
    * @throws On invalid object structure.
    */
-  getEntityKind: (object: EntityStructure): 'object' | 'relation' | 'type' => {
+  getEntityKind: (object: EntityStructure): 'object' | 'relation' | 'type' | 'lens' => {
     const kind = object.system?.kind ?? 'object';
-    invariant(kind === 'object' || kind === 'relation' || kind === 'type', 'Invalid kind');
+    invariant(kind === 'object' || kind === 'relation' || kind === 'type' || kind === 'lens', 'Invalid kind');
     return kind;
   },
 
@@ -396,10 +472,10 @@ export type EntityMeta = {
 export type EntitySystem = {
   /**
    * Entity kind. `'type'` covers persisted ECHO type definitions (instances of
-   * the `Type.Type` meta-schema); `'object'` / `'relation'` cover regular ECHO
-   * instances.
+   * the `Type.Type` meta-schema); `'lens'` covers stored lenses (edges between two
+   * types); `'object'` / `'relation'` cover regular ECHO instances.
    */
-  kind?: 'object' | 'relation' | 'type';
+  kind?: 'object' | 'relation' | 'type' | 'lens';
 
   /**
    * Object reference ('protobuf' protocol) type — DXN of the schema this

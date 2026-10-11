@@ -1,0 +1,16 @@
+---
+'@dxos/echo': minor
+'@dxos/echo-client': minor
+'@dxos/echo-host': minor
+'@dxos/echo-panproto': minor
+'@dxos/echo-protocol': minor
+'@dxos/protocols': minor
+---
+
+Keep every version of an ECHO object readable and editable: an object of a versioned type keeps one document per schema version, and the host translates each edit between them through lenses, so an app that knows only an older version keeps working with peers on a newer one.
+
+- **Version documents.** Each version's document is recorded under a reserved `@v<version>` branch name that released hosts already replicate. A query returns each object once, at the version its type filter names (the newest the client knows when it names none), `db.version(obj, Type)` returns an object at a given version, and a typed reference resolves to the version its schema declares. Clients send the versions they know as `QueryOptions.versions`. A branch opened before an upgrade gains the new versions. Branch names starting with `@` are reserved.
+- **Lenses move to `@dxos/echo` and become entities.** `Lens` moves from `@dxos/echo-panproto` (which keeps the panproto engine and React hooks) to `@dxos/echo`, with `compose`, `invert` and version-aware `findPath`/`resolveView`. A lens has its own entity kind (`EntityKind.Lens`, stored as `system.kind: 'lens'`), is named by its two types (`lens.name`; at most one per pair) and identified by `lens.digest`. `Lens.make(source, target, mapping, { defaults })` takes no id. Lenses are registered with `registry.add` and read with `registry.lenses()`/`lensBetween()`/`lensesFrom()`; `Lens.findPath`/`resolveView` take the lenses to walk. `db.addLens` stores a lens in a space and `db.add` rejects lenses. A database stores the lenses registered between two versions of one type in every space it opens, and the host keeps those spaces' version documents in sync with them (`@dxos/echo-host/versions`). Older clients' queries throw on a space holding a stored lens.
+- **What a lens can express.** Renames and defaults; `Lens.within`, `Lens.each` and `Lens.values` map a struct, each list element (by position) or each record value through an inner mapping; `Lens.concat`, `Lens.part`, `Lens.mapValue` and `Lens.constant` are one-way transforms stored as data. `Lens.extract` moves a struct into an object of its own, `Lens.extractEach` does so for each element of a list of structs, and `Lens.absorb` embeds a referenced object as a struct. The host creates extracted objects with `lens:` convergence keys, so copies two devices create concurrently merge into one.
+- **Convergence-key merge.** `ConvergenceKeyMerger` replays a losing duplicate's edits onto the winner, so an edit made only on the loser before the merge is kept. For `lens:` keys it writes no data, since translation carries every duplicate's edits.
+- **Fixes.** A document a client creates no longer gets a second, concurrent first change from the host: `DataService.createDocument` takes the client's saved document as `initialDoc`, which the host imports (hosts that predate it still use `initialValue`). `waitUntilHeadsReplicated` no longer hangs when the awaited change merges without a patch. A nested element no longer keeps a stale `id` after a remote change removes it. `TestReplicationNetwork` supports partition and heal.

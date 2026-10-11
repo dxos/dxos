@@ -132,7 +132,9 @@ export class DataServiceImpl implements DataService.Handlers {
   ): Effect.Effect<DataService.CreateDocumentResponse, Error> {
     return Effect.tryPromise({
       try: async () => {
-        const created = await this._automergeHost.createDoc(request.initialValue);
+        const created = request.initialDoc
+          ? await this._automergeHost.createDoc(request.initialDoc, { preserveHistory: true })
+          : await this._automergeHost.createDoc(request.initialValue);
         this._pendingCreations.set(created.documentId, created);
         return { documentId: created.documentId };
       },

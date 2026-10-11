@@ -124,9 +124,16 @@ export class EchoClient extends Resource {
         updateEvent: this._objectsUpdated,
       },
       graph: this._graph,
+      versionsFor: this.#versionsFor,
     });
     this._graph.registerQuerySourceProvider(this._indexQuerySourceProvider);
   }
+
+  /** The schema versions the database of a space reads, or every open database, which its queries name to the host. */
+  readonly #versionsFor = (spaceId?: SpaceId): readonly string[] =>
+    spaceId === undefined
+      ? [...this._databases.values()].flatMap((db) => db._entityManager.knownVersionTypes)
+      : (this._databases.get(spaceId)?._entityManager.knownVersionTypes ?? []);
 
   protected override async _close(ctx: Context): Promise<void> {
     if (this._indexQuerySourceProvider) {
@@ -231,6 +238,7 @@ export class EchoClient extends Resource {
           updateEvent: this._objectsUpdated,
         },
         graph: this._graph,
+        versionsFor: this.#versionsFor,
       });
       this._graph.registerQuerySourceProvider(this._indexQuerySourceProvider);
     }
@@ -274,6 +282,12 @@ export class EchoClient extends Resource {
     }
 
     const objectDocId = db.getObjectDocumentId(objectId) ?? (await this._waitForObjectLink(db, objectId));
+    const versionUrl =
+      documentId && objectDocId !== documentId ? db._entityManager.versionDocumentUrl(objectId, documentId) : undefined;
+    if (versionUrl) {
+      // A hit on another version of the object is the object at that version, as the query asked.
+      return db._loadVersionBinding(objectId, versionUrl);
+    }
     if (objectDocId !== documentId) {
       // Dropping the hit makes the result short, which reads to a caller as "no such object".
       log.warn('index hit dropped: the space root does not route the object to the indexed document', {

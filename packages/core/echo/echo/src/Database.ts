@@ -27,6 +27,7 @@ import { type AnyProperties, EntityKind, KindId } from './internal/common/types/
 import { isInstanceOf } from './internal/Entity/type-uri.ts';
 import * as queryInternal from './internal/Query/index.ts';
 import type { LoadOptions, Ref } from './internal/Ref/ref.ts';
+import type * as Lens from './Lens.ts';
 import type * as Obj from './Obj.ts';
 import type * as Query from './Query.ts';
 import type * as QueryResult from './QueryResult.ts';
@@ -114,14 +115,16 @@ export type AddOptions = {
 };
 
 /**
- * Rejects Type entities from {@link Database.add} at compile time via their `[KindId]` brand. Used
+ * Rejects Type entities and lenses from {@link Database.add} at compile time via their `[KindId]` brand. Used
  * as `T & RejectTypeEntity<T>` to preserve inference of `T`. Bounding `add` on
  * `Obj.Unknown | Relation.Unknown` instead would reject broadly-typed instance adds (e.g.
  * `Entity.Any`, `Obj.OfShape<T>`), forcing casts repo-wide.
  */
 export type RejectTypeEntity<T> = T extends { readonly [KindId]: EntityKind.Type }
   ? { __error: 'Type entities must be persisted via db.addType(), not db.add().' }
-  : T;
+  : T extends { readonly [KindId]: EntityKind.Lens }
+    ? { __error: 'Lenses must be persisted via db.addLens(), not db.add().' }
+    : T;
 
 export type FlushOptions = {
   /**
@@ -249,6 +252,12 @@ export interface Database extends Queryable {
    * @performance Async; O(t) in the space persisted types, which it queries in full for a duplicate before writing.
    */
   addType<T extends Type.AnyEntity>(type: T, opts?: WriteOptions): Promise<T>;
+
+  /**
+   * Persists a lens so it replicates to other peers, and returns the stored lens. A stored lens with the
+   * same name and digest is reused. Only declarative lenses can be stored; see `Lens.toStored`.
+   */
+  addLens(lens: Lens.Any): Promise<Lens.Stored>;
 
   /**
    * Removes object from the database.

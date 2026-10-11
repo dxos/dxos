@@ -30,6 +30,7 @@ export namespace QueryPlan {
     | SelectStep
     | FilterStep
     | FilterDeletedStep
+    | ResolveVersionsStep
     | TraverseStep
     | UnionStep
     | SetDifferenceStep
@@ -245,6 +246,18 @@ export namespace QueryPlan {
       }
     },
   });
+
+  /**
+   * Keeps, for each object stored as one document per schema version, only its rows of the newest version
+   * the reader lists among the rows in the working set; rows of no listed version are kept only when no
+   * row of the object is listed.
+   */
+  export type ResolveVersionsStep = {
+    _tag: 'ResolveVersionsStep';
+
+    /** Type URIs the reader reads, oldest first. */
+    versions: readonly string[];
+  };
 
   /**
    * Filter objects in the current working set based on the deleted state.

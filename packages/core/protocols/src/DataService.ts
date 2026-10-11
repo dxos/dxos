@@ -50,6 +50,12 @@ export const CreateDocumentRequest = Schema.Struct({
    * Optional - if not provided, an empty document will be created.
    */
   initialValue: Schema.optional(protoStruct),
+  /**
+   * The document the creator already built from `initialValue`, saved. A host that imports it holds the
+   * creator's own first change, so the document has one root instead of a second, concurrent one of the host's
+   * that replicates back to the creator later. Hosts that predate it use `initialValue`.
+   */
+  initialDoc: Schema.optional(Schema.Uint8Array),
 });
 export interface CreateDocumentRequest extends Schema.Schema.Type<typeof CreateDocumentRequest> {}
 
