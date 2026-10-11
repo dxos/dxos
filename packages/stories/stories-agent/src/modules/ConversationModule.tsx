@@ -31,9 +31,12 @@ export const ConversationModule = (_props: Surface.ComponentProps<Record<string,
 
 const ConversationPanel = ({ space }: { space: Space }) => {
   const chats = useQuery(space.db, Filter.type(AssistantChat.Chat));
-  // Created in order, so the last is the newest conversation.
+  // In the order they started, as the Activity panel lists them (ULID ids sort by creation); the last is the newest.
   const conversations = useMemo(
-    () => chats.filter((chat) => AgentChannels.conversationOf(chat) !== undefined),
+    () =>
+      chats
+        .filter((chat) => AgentChannels.conversationOf(chat) !== undefined)
+        .sort((left, right) => left.id.localeCompare(right.id)),
     [chats],
   );
   const [selected, setSelected] = useState<string>();
