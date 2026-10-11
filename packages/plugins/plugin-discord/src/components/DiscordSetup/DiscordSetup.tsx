@@ -11,6 +11,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { meta } from '#meta';
 
@@ -99,7 +100,21 @@ const DiscordSetupToolbar = ({
     [signedIn, busy, onConnect, onSignOut, onRefresh],
   );
 
-  return <ActionToolbar {...menuActions} attendableId={attendableId} alwaysActive={attendableId === undefined} />;
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  return (
+    <ActionToolbar
+      {...menuActions}
+      attendableId={attendableId}
+      alwaysActive={attendableId === undefined}
+      // The panel's name leads, and the gap pushes the actions to the end.
+      start={
+        <>
+          <Toolbar.Text>{t('discord-setup.title')}</Toolbar.Text>
+          <Toolbar.Separator variant='gap' />
+        </>
+      }
+    />
+  );
 };
 
 DiscordSetupToolbar.displayName = 'DiscordSetup.Toolbar';

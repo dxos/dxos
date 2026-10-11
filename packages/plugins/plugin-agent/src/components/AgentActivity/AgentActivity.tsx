@@ -12,6 +12,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import * as Typography from '@dxos/react-ui/Typography';
 
 import { meta } from '#meta';
@@ -47,16 +48,49 @@ AgentActivityRoot.displayName = 'AgentActivity.Root';
 
 type AgentActivityToolbarProps = {
   attendableId?: string;
+  /** Whether any of the agent's channels is connected. */
+  running?: boolean;
+  /** Whether the agent has channels to connect. */
+  connectable?: boolean;
   busy?: boolean;
+  onStart?: () => void;
+  onStop?: () => void;
   onRefresh?: () => void;
 };
 
-/** Re-reads the agent's skills and conversations. */
-const AgentActivityToolbar = ({ attendableId, busy = false, onRefresh }: AgentActivityToolbarProps) => {
+/** Connects the agent's channels (or reconnects them), disconnects them, and re-reads the panel. */
+const AgentActivityToolbar = ({
+  attendableId,
+  running = false,
+  connectable = false,
+  busy = false,
+  onStart,
+  onStop,
+  onRefresh,
+}: AgentActivityToolbarProps) => {
   const menuActions = useMenuBuilder(
     () =>
       MenuBuilder.make()
         .root({ label: ['activity-actions.label', { ns: meta.profile.key }] })
+        .action(
+          'start',
+          {
+            // Reconfigures running connections, so the label follows the state.
+            label: [running ? 'activity-restart.label' : 'activity-start.label', { ns: meta.profile.key }],
+            icon: running ? 'ph--arrow-clockwise--regular' : 'ph--play--regular',
+            disabled: busy || !connectable,
+          },
+          () => onStart?.(),
+        )
+        .action(
+          'stop',
+          {
+            label: ['activity-stop.label', { ns: meta.profile.key }],
+            icon: 'ph--stop--regular',
+            disabled: busy || !running,
+          },
+          () => onStop?.(),
+        )
         .action(
           'refresh',
           {
@@ -67,10 +101,24 @@ const AgentActivityToolbar = ({ attendableId, busy = false, onRefresh }: AgentAc
           () => onRefresh?.(),
         )
         .build(),
-    [busy, onRefresh],
+    [running, connectable, busy, onStart, onStop, onRefresh],
   );
 
-  return <ActionToolbar {...menuActions} attendableId={attendableId} alwaysActive={attendableId === undefined} />;
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  return (
+    <ActionToolbar
+      {...menuActions}
+      attendableId={attendableId}
+      alwaysActive={attendableId === undefined}
+      // The panel's name leads, and the gap pushes the actions to the end.
+      start={
+        <>
+          <Toolbar.Text>{t('activity-companion.label')}</Toolbar.Text>
+          <Toolbar.Separator variant='gap' />
+        </>
+      }
+    />
+  );
 };
 
 AgentActivityToolbar.displayName = 'AgentActivity.Toolbar';
@@ -111,20 +159,15 @@ AgentActivityList.displayName = 'AgentActivity.List';
 
 type AgentActivityChannelsProps = PropsWithChildren<{
   ids: readonly string[];
-  /** Each channel's backend settings (e.g. the Discord bot), below the rows. */
-  settings?: ReactNode;
 }>;
 
 /** The channels the agent converses in; children are {@link AgentActivityChannel} rows. */
-const AgentActivityChannels = ({ ids, settings, children }: AgentActivityChannelsProps) => {
+const AgentActivityChannels = ({ ids, children }: AgentActivityChannelsProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   return (
-    <>
-      <AgentActivityList label={t('channels.label')} ids={ids} empty={t('channels-empty.message')}>
-        {children}
-      </AgentActivityList>
-      {settings}
-    </>
+    <AgentActivityList label={t('channels.label')} ids={ids} empty={t('channels-empty.message')}>
+      {children}
+    </AgentActivityList>
   );
 };
 
@@ -137,16 +180,19 @@ AgentActivityChannels.displayName = 'AgentActivity.Channels';
 type AgentActivityChannelProps = {
   id: string;
   name?: string;
+  /** The connection's state, e.g. `ready`, or why it last failed. */
+  detail?: string;
   onRemove?: (id: string) => void;
 };
 
 /** One channel the agent converses in. */
-const AgentActivityChannel = ({ id, name, onRemove }: AgentActivityChannelProps) => {
+const AgentActivityChannel = ({ id, name, detail, onRemove }: AgentActivityChannelProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   return (
     <Listbox.Item id={id}>
       <Listbox.ItemIcon icon='ph--hash--regular' />
       <Listbox.ItemText>{name || t('channel-unnamed.label')}</Listbox.ItemText>
+      {detail && <Listbox.ItemDescription>{detail}</Listbox.ItemDescription>}
       <RowButton icon='ph--x--regular' label={t('channel-remove.label')} onClick={() => onRemove?.(id)} />
     </Listbox.Item>
   );

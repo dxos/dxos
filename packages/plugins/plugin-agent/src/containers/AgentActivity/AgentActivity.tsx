@@ -5,8 +5,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
-import * as Surface from '@dxos/app-framework/Surface';
-import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import type * as Agent from '@dxos/assistant/Agent';
@@ -14,6 +12,8 @@ import * as Chat from '@dxos/assistant/Chat';
 import type * as Skill from '@dxos/compute/Skill';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
+import { type SpaceId } from '@dxos/keys';
+import * as ThreadOperation from '@dxos/plugin-thread/ThreadOperation';
 import { type Channel, Message } from '@dxos/types';
 
 import { AgentActivity as AgentActivityComponent } from '#components';
@@ -71,20 +71,36 @@ export const AgentActivity = ({ role, agent, attendableId }: AgentActivityProps)
   );
 
   const skills = useAgentSkills(agent);
+  const connections = useChannelConnections(channels, db?.spaceId);
+
+  const handleRefresh = useCallback(() => {
+    void skills.refresh();
+    void connections.refresh();
+  }, [skills.refresh, connections.refresh]);
 
   return (
     <AgentActivityComponent.Root
       role={role}
-      toolbar={<AgentActivityComponent.Toolbar attendableId={attendableId} onRefresh={skills.refresh} />}
+      toolbar={
+        <AgentActivityComponent.Toolbar
+          attendableId={attendableId}
+          running={connections.running}
+          connectable={channels.length > 0}
+          busy={connections.busy}
+          onStart={connections.start}
+          onStop={connections.stop}
+          onRefresh={handleRefresh}
+        />
+      }
     >
-      <AgentActivityComponent.Channels
-        ids={channels.map((ref) => ref.uri)}
-        settings={channels.map((ref) => (
-          <ChannelSettings key={ref.uri} channel={ref} />
-        ))}
-      >
+      <AgentActivityComponent.Channels ids={channels.map((ref) => ref.uri)}>
         {channels.map((ref) => (
-          <ChannelTile key={ref.uri} channel={ref} onRemove={handleRemoveChannel} />
+          <ChannelTile
+            key={ref.uri}
+            channel={ref}
+            status={connections.statuses[ref.uri]}
+            onRemove={handleRemoveChannel}
+          />
         ))}
       </AgentActivityComponent.Channels>
       <AgentActivityComponent.Skills ids={skills.skills.map((skill) => skill.key)}>
@@ -101,26 +117,78 @@ export const AgentActivity = ({ role, agent, attendableId }: AgentActivityProps)
   );
 };
 
-/** One channel row, named by the channel its ref resolves to. */
-const ChannelTile = ({
-  channel: ref,
-  onRemove,
-}: {
+type ChannelTileProps = {
   channel: Ref.Ref<Channel.Channel>;
+  status?: ChannelStatus;
   onRemove: (uri: string) => void;
-}) => {
-  const channel = useResolveRef(ref);
-  return <AgentActivityComponent.Channel id={ref.uri} name={channel?.name} onRemove={onRemove} />;
 };
 
-/** The channel's backend settings, from whichever plugin owns its backend (e.g. the Discord bot). */
-const ChannelSettings = ({ channel: ref }: { channel: Ref.Ref<Channel.Channel> }) => {
+/** One channel row, named by the channel its ref resolves to, with its connection's state. */
+const ChannelTile = ({ channel: ref, status, onRemove }: ChannelTileProps) => {
   const channel = useResolveRef(ref);
-  const data = useMemo<AppSurface.ObjectPropertiesData | undefined>(
-    () => (channel ? { subject: channel } : undefined),
-    [channel],
+  const detail = status?.error ?? status?.status?.error ?? status?.status?.state;
+  return <AgentActivityComponent.Channel id={ref.uri} name={channel?.name} detail={detail} onRemove={onRemove} />;
+};
+
+/** How often connection status is re-read; a backend changes state on EDGE without notifying Composer. */
+const STATUS_POLL_MS = 5_000;
+
+type ChannelStatus = { status?: ThreadOperation.ConnectionStatus; error?: string };
+
+/** Each channel's connection status (polled while mounted), and connect/disconnect for all of them. */
+const useChannelConnections = (channels: readonly Ref.Ref<Channel.Channel>[], spaceId: SpaceId | undefined) => {
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const [statuses, setStatuses] = useState<Record<string, ChannelStatus>>({});
+  const [busy, setBusy] = useState(false);
+
+  const run = useCallback(
+    async (
+      operation:
+        | typeof ThreadOperation.ConnectChannel
+        | typeof ThreadOperation.DisconnectChannel
+        | typeof ThreadOperation.GetChannelStatus,
+    ) => {
+      if (!spaceId || channels.length === 0) {
+        return;
+      }
+
+      const results = await Promise.all(
+        channels.map(async (channel) => {
+          const { data, error } = await invokePromise(operation, { channel }, { spaceId });
+          return [channel.uri, { status: data?.status, error: error?.message }] as const;
+        }),
+      );
+      // A failed read keeps the last status on screen beside the error.
+      setStatuses((previous) =>
+        Object.fromEntries(
+          results.map(([uri, next]) => [uri, { status: next.status ?? previous[uri]?.status, error: next.error }]),
+        ),
+      );
+    },
+    [invokePromise, channels, spaceId],
   );
-  return data ? <Surface.Surface type={AppSurface.ObjectProperties} data={data} /> : null;
+
+  const refresh = useCallback(() => run(ThreadOperation.GetChannelStatus), [run]);
+  useEffect(() => {
+    void refresh();
+    const interval = setInterval(() => void refresh(), STATUS_POLL_MS);
+    return () => clearInterval(interval);
+  }, [refresh]);
+
+  const withBusy = useCallback(
+    async (operation: typeof ThreadOperation.ConnectChannel | typeof ThreadOperation.DisconnectChannel) => {
+      setBusy(true);
+      await run(operation);
+      setBusy(false);
+    },
+    [run],
+  );
+
+  const start = useCallback(() => void withBusy(ThreadOperation.ConnectChannel), [withBusy]);
+  const stop = useCallback(() => void withBusy(ThreadOperation.DisconnectChannel), [withBusy]);
+  const running = Object.values(statuses).some(({ status }) => status?.running);
+
+  return { statuses, running, busy, start, stop, refresh };
 };
 
 AgentActivity.displayName = 'AgentActivity';
