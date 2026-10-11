@@ -55,7 +55,7 @@ const ConversationPanel = ({ space }: { space: Space }) => {
           onValueChange={({ value: [value] }) => value && setSelected(value)}
           items={conversations.map((conversation) => ({ value: conversation.id, label: titleOf(conversation) }))}
         >
-          <Select.Trigger classNames='text-sm' />
+          <Select.Trigger classNames='max-w-[50%] min-w-0 text-sm' />
           <Select.Content>
             {conversations.map((conversation) => (
               <Select.Item
