@@ -47,8 +47,8 @@ const ConversationPanel = ({ space }: { space: Space }) => {
 
   const toolbar = (
     <Toolbar.Root>
+      {/* The text takes the free space, which keeps the picker at the end. */}
       <Toolbar.Text>Conversation</Toolbar.Text>
-      <Toolbar.Separator variant='gap' />
       {chat && conversations.length > 0 && (
         <Select.Root
           value={[chat.id]}

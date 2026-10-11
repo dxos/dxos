@@ -106,11 +106,10 @@ const DiscordSetupToolbar = ({
       {...menuActions}
       attendableId={attendableId}
       alwaysActive={attendableId === undefined}
-      // The panel's name leads, and the gap pushes the actions to the end.
+      // The panel's name leads and takes the free space, which keeps the actions at the end.
       start={
         <>
           <Toolbar.Text>{t('discord-setup.title')}</Toolbar.Text>
-          <Toolbar.Separator variant='gap' />
         </>
       }
     />
