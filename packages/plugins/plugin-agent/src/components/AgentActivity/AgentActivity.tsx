@@ -29,7 +29,7 @@ type AgentActivityRootProps = PropsWithChildren<{
   error?: string;
 }>;
 
-/** The agent's activity panel: its channels, skills and conversations in one scrolling body. */
+/** The agent's activity panel: who it is, its skills, channels and conversations in one scrolling body. */
 const AgentActivityRoot = ({ role, toolbar, error, children }: AgentActivityRootProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   return (

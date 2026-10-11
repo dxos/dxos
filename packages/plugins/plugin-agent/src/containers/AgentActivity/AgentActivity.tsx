@@ -114,6 +114,11 @@ export const AgentActivity = ({ role, agent, attendableId }: AgentActivityProps)
       }
     >
       <AgentActivityComponent.Agent id={agent.id} name={name} />
+      <AgentActivityComponent.Skills ids={skills.skills.map((skill) => skill.key)}>
+        {skills.skills.map(({ key, name, customized }) => (
+          <AgentActivityComponent.Skill key={key} id={key} name={name} onOpen={customized ? skills.open : undefined} />
+        ))}
+      </AgentActivityComponent.Skills>
       <AgentActivityComponent.Channels ids={channels.map((ref) => ref.uri)}>
         {channels.map((ref) => (
           <ChannelTile
@@ -124,11 +129,6 @@ export const AgentActivity = ({ role, agent, attendableId }: AgentActivityProps)
           />
         ))}
       </AgentActivityComponent.Channels>
-      <AgentActivityComponent.Skills ids={skills.skills.map((skill) => skill.key)}>
-        {skills.skills.map(({ key, name, customized }) => (
-          <AgentActivityComponent.Skill key={key} id={key} name={name} onOpen={customized ? skills.open : undefined} />
-        ))}
-      </AgentActivityComponent.Skills>
       <AgentActivityComponent.Conversations ids={conversations.map((chat) => chat.id)}>
         {conversations.map((chat) => (
           <ConversationTile

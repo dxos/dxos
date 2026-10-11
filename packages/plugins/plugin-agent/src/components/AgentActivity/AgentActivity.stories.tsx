@@ -48,6 +48,11 @@ const DefaultStory = ({
   return (
     <AgentActivity.Root toolbar={<AgentActivity.Toolbar />}>
       <AgentActivity.Agent id='01KAGENTKAI0000000000000000' name='Kai' />
+      <AgentActivity.Skills ids={skills.map((skill) => skill.id)}>
+        {skills.map((skill) => (
+          <AgentActivity.Skill key={skill.id} {...skill} />
+        ))}
+      </AgentActivity.Skills>
       <AgentActivity.Channels ids={channels.map((channel) => channel.id)}>
         {channels.map((channel) => (
           <AgentActivity.Channel
@@ -57,11 +62,6 @@ const DefaultStory = ({
           />
         ))}
       </AgentActivity.Channels>
-      <AgentActivity.Skills ids={skills.map((skill) => skill.id)}>
-        {skills.map((skill) => (
-          <AgentActivity.Skill key={skill.id} {...skill} />
-        ))}
-      </AgentActivity.Skills>
       <AgentActivity.Conversations ids={conversations.map((conversation) => conversation.id)}>
         {conversations.map((conversation) => (
           <AgentActivity.Conversation
