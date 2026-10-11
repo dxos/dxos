@@ -4,7 +4,7 @@
 
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import type * as Agent from '@dxos/assistant/Agent';
-import { type Database, Filter, type Obj, Ref } from '@dxos/echo';
+import { type Database, Filter, Obj, Ref } from '@dxos/echo';
 import * as AgentOperation from '@dxos/plugin-agent/AgentOperation';
 import * as Memory from '@dxos/plugin-agent/Memory';
 import * as MemoryOperation from '@dxos/plugin-agent/MemoryOperation';
@@ -21,14 +21,20 @@ export type SupportTeamMember = {
   fullName: string;
   preferredName: string;
   jobTitle: string;
-  /** What to send them; each entry becomes one memory, so a topic query finds the right person. */
+  /** What to send them; together they make one memory, so a topic query finds the right person. */
   expertise: readonly string[];
+  /** Their Discord user id, which lets a relay open a DM with them. */
+  discordId: string;
 };
+
+/** The `Person.identities` label plugin-discord reads a person's Discord user id from. */
+const DISCORD_IDENTITY = 'discord';
 
 /** From the areas each person has changed most in the dxos and edge repositories. */
 export const SUPPORT_TEAM: readonly SupportTeamMember[] = [
   {
     fullName: 'Rich Burdon',
+    discordId: '242308925523755008',
     preferredName: 'Rich',
     jobTitle: 'Founder; product and UI',
     expertise: [
@@ -39,6 +45,7 @@ export const SUPPORT_TEAM: readonly SupportTeamMember[] = [
   },
   {
     fullName: 'Josiah Witt',
+    discordId: '332330209858813952',
     preferredName: 'Josiah',
     jobTitle: 'Engineer; Composer app and integrations',
     expertise: [
@@ -49,6 +56,7 @@ export const SUPPORT_TEAM: readonly SupportTeamMember[] = [
   },
   {
     fullName: 'Dmytro Maretskyi',
+    discordId: '389106806086959104',
     preferredName: 'Dmytro',
     jobTitle: 'Engineer; ECHO, compute and agents',
     expertise: [
@@ -59,6 +67,7 @@ export const SUPPORT_TEAM: readonly SupportTeamMember[] = [
   },
   {
     fullName: 'Mykola Veremchuk',
+    discordId: '985848421195862056',
     preferredName: 'Mykola',
     jobTitle: 'Engineer; sync, networking and storage',
     expertise: [
@@ -102,10 +111,18 @@ export const seedSupportTeam = async ({
 
   await remember(`${SUPPORT_TEAM_NAME} is the support team for the community channel.`, [Ref.make<Obj.Unknown>(team)]);
   const people = await db.query(Filter.type(Person.Person)).run();
-  for (const { fullName, preferredName, jobTitle, expertise } of SUPPORT_TEAM) {
+  for (const { fullName, preferredName, jobTitle, expertise, discordId } of SUPPORT_TEAM) {
+    const identity = { label: DISCORD_IDENTITY, value: discordId };
+    const existing = people.find((person) => person.fullName === fullName);
     const person =
-      people.find((person) => person.fullName === fullName) ??
-      db.add(Person.make({ fullName, preferredName, jobTitle, organization: Ref.make(team) }));
+      existing ??
+      db.add(Person.make({ fullName, preferredName, jobTitle, organization: Ref.make(team), identities: [identity] }));
+    // A space seeded before the team had Discord ids gets them now.
+    if (existing && !existing.identities?.some(({ label }) => label === DISCORD_IDENTITY)) {
+      Obj.update(existing, (existing) => {
+        existing.identities = [...(existing.identities ?? []), identity];
+      });
+    }
     // One memory per person, so the list shows each member once with every area they cover.
     await remember(`${fullName} (${SUPPORT_TEAM_NAME}) is the one to ask about ${expertise.join('; ')}.`, [
       Ref.make<Obj.Unknown>(person),
