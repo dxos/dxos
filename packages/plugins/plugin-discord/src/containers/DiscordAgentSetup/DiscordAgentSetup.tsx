@@ -185,7 +185,11 @@ export const DiscordAgentSetup = ({ role, agent, attendableId }: DiscordAgentSet
     [bindings, agent],
   );
   const connected = useMemo(() => channels.filter(isMine), [channels, isMine]);
-  const available = useMemo(() => channels.filter((channel) => !isMine(channel)), [channels, isMine]);
+  // An archived channel (one filed under an "Archive" category) is not one to connect an agent to.
+  const available = useMemo(
+    () => channels.filter((channel) => !isMine(channel) && !isArchived(channel)),
+    [channels, isMine],
+  );
   // The servers the user administers, plus any the bot is in that the user's list does not show (e.g. not signed in).
   const guilds = useMemo(
     () => [...managed, ...installed.filter(({ id }) => !managed.some((guild) => guild.id === id))],
@@ -307,6 +311,10 @@ export const DiscordAgentSetup = ({ role, agent, attendableId }: DiscordAgentSet
 };
 
 DiscordAgentSetup.displayName = 'DiscordAgentSetup';
+
+/** Whether the server files the channel under an archive category. */
+const isArchived = ({ category }: DiscordAdminOperation.GuildChannel): boolean =>
+  category !== undefined && /archive/i.test(category);
 
 /** The object id an agent ref URI names, whatever its space qualification. */
 const entityIdOf = (uri: string): string | undefined => {

@@ -34,6 +34,8 @@ export const GuildChannel = Schema.Struct({
   name: Schema.String,
   type: Schema.Number,
   parentId: Schema.optional(Schema.String),
+  /** The name of the category the channel is filed under. */
+  category: Schema.optional(Schema.String),
 });
 
 export interface GuildChannel extends Schema.Schema.Type<typeof GuildChannel> {}
