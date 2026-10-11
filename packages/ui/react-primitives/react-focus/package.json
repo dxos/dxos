@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-focus",
-  "version": "0.14.0",
+  "version": "0.15.0",
   "description": "Composite-widget focus management primitives for React.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

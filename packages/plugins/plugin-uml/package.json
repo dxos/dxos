@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-uml",
-  "version": "0.14.0",
+  "version": "0.14.1",
   "private": true,
   "description": "UML for drawings: a class diagram skill and a canvas class shape",
   "homepage": "https://dxos.org",

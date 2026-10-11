@@ -1,5 +1,34 @@
 # @dxos/assistant-toolkit
 
+## 0.15.0
+
+### Patch Changes
+
+- Updated dependencies [3d151fc]
+- Updated dependencies [3aed53a]
+- Updated dependencies [71fc002]
+- Updated dependencies [8190cc5]
+  - @dxos/react-ui@0.15.0
+  - @dxos/echo@0.15.0
+  - @dxos/app-toolkit@0.15.0
+  - @dxos/agent-runtime@0.15.0
+  - @dxos/ai@0.15.0
+  - @dxos/assistant@0.15.0
+  - @dxos/compute@0.15.0
+  - @dxos/compute-runtime@0.15.0
+  - @dxos/client-protocol@0.15.0
+  - @dxos/schema@0.15.0
+  - @dxos/types@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/errors@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/edge-client@0.15.0
+  - @dxos/protocols@0.15.0
+  - @dxos/ui-theme@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes

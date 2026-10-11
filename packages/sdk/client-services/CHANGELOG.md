@@ -1,5 +1,49 @@
 # @dxos/client-services
 
+## 0.15.0
+
+### Patch Changes
+
+- Updated dependencies [3aed53a]
+  - @dxos/echo@0.15.0
+  - @dxos/compute@0.15.0
+  - @dxos/compute-runtime@0.15.0
+  - @dxos/echo-client@0.15.0
+  - @dxos/echo-doc@0.15.0
+  - @dxos/echo-host@0.15.0
+  - @dxos/client-protocol@0.15.0
+  - @dxos/types@0.15.0
+  - @dxos/config@0.15.0
+  - @dxos/async@0.15.0
+  - @dxos/context@0.15.0
+  - @dxos/crypto@0.15.0
+  - @dxos/debug@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/errors@0.15.0
+  - @dxos/feed-store@0.15.0
+  - @dxos/hypercore@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/node-std@0.15.0
+  - @dxos/random-access-storage@0.15.0
+  - @dxos/sql-sqlite@0.15.0
+  - @dxos/timeframe@0.15.0
+  - @dxos/tracing@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/echo-protocol@0.15.0
+  - @dxos/feed@0.15.0
+  - @dxos/credentials@0.15.0
+  - @dxos/keyring@0.15.0
+  - @dxos/edge-client@0.15.0
+  - @dxos/messaging@0.15.0
+  - @dxos/network-manager@0.15.0
+  - @dxos/rpc@0.15.0
+  - @dxos/teleport@0.15.0
+  - @dxos/teleport-extension-gossip@0.15.0
+  - @dxos/teleport-extension-replicator@0.15.0
+  - @dxos/protocols@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes

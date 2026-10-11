@@ -1,5 +1,31 @@
 # @dxos/react-ui-table
 
+## 0.15.0
+
+### Patch Changes
+
+- Updated dependencies [3d151fc]
+- Updated dependencies [3aed53a]
+- Updated dependencies [71fc002]
+- Updated dependencies [8190cc5]
+  - @dxos/react-ui@0.15.0
+  - @dxos/echo@0.15.0
+  - @dxos/react-ui-attention@0.15.0
+  - @dxos/react-ui-form@0.15.0
+  - @dxos/react-ui-grid@0.15.0
+  - @dxos/react-ui-menu@0.15.0
+  - @dxos/schema@0.15.0
+  - @dxos/async@0.15.0
+  - @dxos/context@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/lit-grid@0.15.0
+  - @dxos/react-hooks@0.15.0
+  - @dxos/ui-theme@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes

@@ -1,5 +1,32 @@
 # @dxos/echo-client-e2e
 
+## 0.15.0
+
+### Patch Changes
+
+- Updated dependencies [3aed53a]
+  - @dxos/echo@0.15.0
+  - @dxos/compute@0.15.0
+  - @dxos/echo-client@0.15.0
+  - @dxos/echo-host@0.15.0
+  - @dxos/echo-panproto@0.15.0
+  - @dxos/index-core@0.15.0
+  - @dxos/types@0.15.0
+  - @dxos/async@0.15.0
+  - @dxos/context@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/random@0.15.0
+  - @dxos/sql-sqlite@0.15.0
+  - @dxos/test-utils@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/echo-protocol@0.15.0
+  - @dxos/teleport@0.15.0
+  - @dxos/protocols@0.15.0
+  - @dxos/perf-harness@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes

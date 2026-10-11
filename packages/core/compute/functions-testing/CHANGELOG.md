@@ -1,5 +1,28 @@
 # @dxos/functions-testing
 
+## 0.15.0
+
+### Patch Changes
+
+- Updated dependencies [3d151fc]
+- Updated dependencies [3aed53a]
+  - @dxos/plugin-space@0.14.1
+  - @dxos/echo@0.15.0
+  - @dxos/assistant-toolkit@0.15.0
+  - @dxos/assistant@0.15.0
+  - @dxos/compute@0.15.0
+  - @dxos/edge-compute@0.15.0
+  - @dxos/client@0.15.0
+  - @dxos/schema@0.15.0
+  - @dxos/config@0.15.0
+  - @dxos/async@0.15.0
+  - @dxos/context@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/protocols@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes

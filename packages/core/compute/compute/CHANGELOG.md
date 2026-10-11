@@ -1,5 +1,23 @@
 # @dxos/compute
 
+## 0.15.0
+
+### Patch Changes
+
+- Updated dependencies [3aed53a]
+  - @dxos/echo@0.15.0
+  - @dxos/ai@0.15.0
+  - @dxos/link@0.15.0
+  - @dxos/schema@0.15.0
+  - @dxos/types@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/errors@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/protocols@0.15.0
+  - @dxos/vendor-kbn-handlebars@0.15.0
+
 ## 0.14.0
 
 ### Minor Changes

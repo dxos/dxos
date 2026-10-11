@@ -1,5 +1,12 @@
 # @dxos/rpc-tunnel
 
+## 0.15.0
+
+### Patch Changes
+
+- @dxos/log@0.15.0
+  - @dxos/rpc@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes

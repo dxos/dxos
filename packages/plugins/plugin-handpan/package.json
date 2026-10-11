@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-handpan",
-  "version": "0.13.0",
+  "version": "0.14.1",
   "private": true,
   "description": "Handpan notation and real-time note detection.",
   "homepage": "https://dxos.org",

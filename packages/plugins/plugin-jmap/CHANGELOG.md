@@ -1,5 +1,30 @@
 # @dxos/plugin-jmap
 
+## 0.14.1
+
+### Patch Changes
+
+- Updated dependencies [3aed53a]
+  - @dxos/echo@0.15.0
+  - @dxos/plugin-connector@0.14.1
+  - @dxos/plugin-inbox@0.14.1
+  - @dxos/app-framework@0.15.0
+  - @dxos/app-toolkit@0.15.0
+  - @dxos/compute@0.15.0
+  - @dxos/compute-runtime@0.15.0
+  - @dxos/extractor@0.15.0
+  - @dxos/extractor-lib@0.15.0
+  - @dxos/link@0.15.0
+  - @dxos/pipeline-email@0.15.0
+  - @dxos/schema@0.15.0
+  - @dxos/types@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/errors@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/pipeline@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes

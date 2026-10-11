@@ -1,5 +1,23 @@
 # @dxos/plugin-iroh-beacon
 
+## 0.14.1
+
+### Patch Changes
+
+- Updated dependencies [3d151fc]
+- Updated dependencies [71fc002]
+- Updated dependencies [8190cc5]
+  - @dxos/react-ui@0.15.0
+  - @dxos/plugin-client@0.14.1
+  - @dxos/plugin-status-bar@0.14.1
+  - @dxos/app-framework@0.15.0
+  - @dxos/app-toolkit@0.15.0
+  - @dxos/halo@0.15.0
+  - @dxos/async@0.15.0
+  - @dxos/context@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/ui-theme@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes
