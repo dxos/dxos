@@ -117,7 +117,7 @@ const AgentActivityToolbar = ({
       // The panel's name leads, and the gap pushes the actions to the end.
       start={
         <>
-          <Toolbar.Text>{t('activity.title')}</Toolbar.Text>
+          <Toolbar.Text>{t('activity-companion.label')}</Toolbar.Text>
           <Toolbar.Separator variant='gap' />
         </>
       }
