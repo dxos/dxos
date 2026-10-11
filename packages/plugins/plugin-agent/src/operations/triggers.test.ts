@@ -38,7 +38,7 @@ import {
   TriggerOperation,
 } from '#types';
 
-import { TEST_MEMBERS, createLocalAgent, makeTestBrain, testSpaceLayer } from '../brain/testing.ts';
+import { TEST_MEMBERS, createLocalAgent, makeTestBrain, noChannelBackends, testSpaceLayer } from '../brain/testing.ts';
 import { RELAY_RULES } from '../skills/relay-rules.ts';
 import { TriggerRegistry } from '../triggers.ts';
 import { COMPOSE_PROMPT } from './compose-update.ts';
@@ -317,7 +317,7 @@ const TestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
         Message.Message,
       ],
       skills: [ConversationSkill.make(), RelaySkill.make(), ModesSkill.make(), GoalsSkill.make(), BrainSkill.make()],
-      extraServices: Layer.merge(brain.layer, testSpaceLayer),
+      extraServices: Layer.mergeAll(brain.layer, testSpaceLayer, noChannelBackends),
       aiService: ScriptedLanguageModel.scriptedAiService(makeScript(refs)),
     }),
   ),
@@ -600,7 +600,7 @@ const PostedTestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
         Message.Message,
       ],
       skills: [ConversationSkill.make(), RelaySkill.make(), ModesSkill.make(), GoalsSkill.make(), BrainSkill.make()],
-      extraServices: Layer.merge(brain.layer, testSpaceLayer),
+      extraServices: Layer.mergeAll(brain.layer, testSpaceLayer, noChannelBackends),
       aiService: ScriptedLanguageModel.scriptedAiService(makePostedScript(postedRefs)),
     }),
   ),
