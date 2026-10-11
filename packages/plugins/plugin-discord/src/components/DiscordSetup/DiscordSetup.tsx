@@ -76,6 +76,15 @@ const DiscordSetupToolbar = ({
       MenuBuilder.make()
         .root({ label: ['discord-setup-actions.label', { ns: meta.profile.key }] })
         .action(
+          'refresh',
+          {
+            label: ['discord-setup-refresh.label', { ns: meta.profile.key }],
+            icon: 'ph--arrows-counter-clockwise--regular',
+            disabled: busy,
+          },
+          () => onRefresh?.(),
+        )
+        .action(
           signedIn ? 'sign-out' : 'connect',
           {
             label: [
@@ -86,15 +95,6 @@ const DiscordSetupToolbar = ({
             disabled: busy,
           },
           () => (signedIn ? onSignOut : onConnect)?.(),
-        )
-        .action(
-          'refresh',
-          {
-            label: ['discord-setup-refresh.label', { ns: meta.profile.key }],
-            icon: 'ph--arrows-counter-clockwise--regular',
-            disabled: busy,
-          },
-          () => onRefresh?.(),
         )
         .build(),
     [signedIn, busy, onConnect, onSignOut, onRefresh],

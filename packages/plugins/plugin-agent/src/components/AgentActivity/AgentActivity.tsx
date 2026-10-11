@@ -73,16 +73,6 @@ const AgentActivityToolbar = ({
       MenuBuilder.make()
         .root({ label: ['activity-actions.label', { ns: meta.profile.key }] })
         .action(
-          'start',
-          {
-            // Reconfigures running connections, so the label follows the state.
-            label: [running ? 'activity-restart.label' : 'activity-start.label', { ns: meta.profile.key }],
-            icon: running ? 'ph--arrow-clockwise--regular' : 'ph--plugs--regular',
-            disabled: busy || !connectable,
-          },
-          () => onStart?.(),
-        )
-        .action(
           'stop',
           {
             label: ['activity-stop.label', { ns: meta.profile.key }],
@@ -99,6 +89,16 @@ const AgentActivityToolbar = ({
             disabled: busy,
           },
           () => onRefresh?.(),
+        )
+        .action(
+          'start',
+          {
+            // Reconfigures running connections, so the label follows the state.
+            label: [running ? 'activity-restart.label' : 'activity-start.label', { ns: meta.profile.key }],
+            icon: running ? 'ph--arrow-clockwise--regular' : 'ph--plugs--regular',
+            disabled: busy || !connectable,
+          },
+          () => onStart?.(),
         )
         .build(),
     [running, connectable, busy, onStart, onStop, onRefresh],
