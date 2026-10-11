@@ -486,14 +486,8 @@ const LoggerList = ({ classNames, checkable = true }: LoggerListProps) => {
   return (
     <Listbox.Root items={visible.map(({ id }) => ({ value: String(id), label: String(id) }))}>
       <div
-        // The listbox moves its own highlighted row on arrow keys; following it keeps a single current row, rather
-        // than the highlight and the last-clicked row both being ringed.
-        onKeyUp={(event) => {
-          const value = highlightedId(event.currentTarget);
-          if (value !== undefined) {
-            setCurrent(value);
-          }
-        }}
+        // Keys act on the listbox's own highlighted row, which is the only ringed one: marking a separate current row
+        // as well would ring two rows while the highlight moves ahead of it.
         onKeyDown={(event) => {
           const target = highlightedId(event.currentTarget) ?? current;
           if (target === undefined) {
@@ -519,7 +513,6 @@ const LoggerList = ({ classNames, checkable = true }: LoggerListProps) => {
               <Listbox.Item
                 key={id}
                 id={String(id)}
-                current={current === id}
                 onFocus={() => setCurrent(id)}
                 onClick={() => setCurrent(id)}
                 // The first track keeps the row's height, so its cells stay centred with or without the checkbox and while the
