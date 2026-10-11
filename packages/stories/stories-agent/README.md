@@ -7,18 +7,19 @@ locally running EDGE stack. Design: [plugin-agent `docs/DISCORD.md`](../../plugi
 ## Setup
 
 You need a dxos checkout (this repo, `<dxos>` below), an edge checkout on a branch with the Discord bot bindings
-(`claude/discord-bot-channel-refs`, `<edge>` below), Chrome, and access to the `eng-dev` 1Password vault.
+(`claude/discord-bot-channel-refs`, `<edge>` below), Chrome, and access to the `eng` and `eng-dev` 1Password vaults.
 
 ### 1. The Discord app (Kai)
 
 Kai is application `1555777706459660288`
 ([Developer Portal](https://discord.com/developers/applications/1555777706459660288/information)). Its secrets are in
-1Password item `com.discord.bot.kai` (vault `eng-dev`):
+two 1Password items named `com.discord.bot.kai`:
 
-| Field | What | Used by |
+| Reference | What | Used by |
 | --- | --- | --- |
-| `credential` | bot token | the EDGE bot (`DISCORD_BOT_TOKEN_DEV`) |
-| `CLIENT_SECRET` | OAuth2 client secret | EDGE kms-service, for **Connect Discord** |
+| `op://eng-dev/com.discord.bot.kai/credential` | bot token | the EDGE bot (`DISCORD_BOT_TOKEN_DEV`, via `pnpm dev:env`) |
+| `op://eng/com.discord.bot.kai/APPLICATION_ID` | application id | `.env.tpl` (`KAI_APPLICATION_ID`) |
+| `op://eng/com.discord.bot.kai/CLIENT_SECRET` | OAuth2 client secret | `.env.tpl` (`KAI_DISCORD_CLIENT_SECRET`), for **Connect Discord** |
 
 In the portal, once:
 
@@ -43,18 +44,36 @@ From `<edge>`:
 2. Point kms-service's **local** Discord OAuth at Kai:
    - `packages/services/kms-service/wrangler.jsonc`, top-level `vars`: `"DISCORD_CLIENT_ID": "1555777706459660288"`.
    - `packages/services/kms-service/secrets.jsonc`, `env[""].secrets`:
-     `"DISCORD_CLIENT_SECRET": "op://eng-dev/com.discord.bot.kai/CLIENT_SECRET"`.
+     `"DISCORD_CLIENT_SECRET": "op://eng/com.discord.bot.kai/CLIENT_SECRET"`.
 
-3. Write the secrets into the workers' `.env` files (1Password asks you to approve). The first writes every worker's
-   `.env`, including the bot token (`DISCORD_BOT_TOKEN_DEV`); the second writes only the Discord client secret:
+3. Write the secrets (1Password asks you to approve each command):
+   - Every worker's `.env`, including the bot token (`DISCORD_BOT_TOKEN_DEV`):
 
-   ```bash
-   pnpm dev:env
-   ```
+     ```bash
+     pnpm dev:env
+     ```
 
-   ```bash
-   node scripts/secrets.mjs apply --worker kms-service --local --secret DISCORD_CLIENT_SECRET
-   ```
+   - Kai's OAuth values, from the repo's `.env.tpl` into `<edge>/.env` (gitignored):
+
+     ```bash
+     op inject -i .env.tpl -o .env
+     ```
+
+     then copy the client secret into kms-service's local `.env` as `DISCORD_CLIENT_SECRET` (the value is never
+     printed):
+
+     ```bash
+     node -e "const fs=require('node:fs');const v=fs.readFileSync('.env','utf8').match(/KAI_DISCORD_CLIENT_SECRET=\"?([^\"\n]+)/)[1];const p='packages/services/kms-service/.env';const l=(fs.existsSync(p)?fs.readFileSync(p,'utf8'):'').split('\n').filter(x=>x&&!x.startsWith('DISCORD_CLIENT_SECRET='));l.push('DISCORD_CLIENT_SECRET='+v);fs.writeFileSync(p,l.join('\n')+'\n',{mode:0o600})"
+     ```
+
+   - kms-service builds its ATPROTO handler for every OAuth flow, so it also needs `ATPROTO_CLIENT_JWK_BASE64`.
+     `pnpm dev:env` does not write one locally; any P-256 key pair will do for Discord:
+
+     ```bash
+     node -e "const c=require('node:crypto');const k=c.generateKeyPairSync('ec',{namedCurve:'P-256'});const v=Buffer.from(JSON.stringify({publicKey:k.publicKey.export({format:'jwk'}),privateKey:k.privateKey.export({format:'jwk'})})).toString('base64');const fs=require('node:fs');const p='packages/services/kms-service/.env';const l=(fs.existsSync(p)?fs.readFileSync(p,'utf8'):'').split('\n').filter(x=>x&&!x.startsWith('ATPROTO_CLIENT_JWK_BASE64='));l.push('ATPROTO_CLIENT_JWK_BASE64='+v);fs.writeFileSync(p,l.join('\n')+'\n',{mode:0o600})"
+     ```
+
+     Run these after `pnpm dev:env`, which rewrites the `.env` files.
 
 4. Give the stack its own state directory, so story spaces never mix with your everyday local world, then migrate and
    start it (EDGE listens on `:8787`):
@@ -88,7 +107,7 @@ SharedWorker requests, so they cannot boot there.
 
 ### 4. Check the bot
 
-With the bot token in your shell (`export DISCORD_BOT_TOKEN="$(op read op://eng-dev/com.discord.bot.kai/credential)"`),
+With the bot token in your shell (`export DISCORD_BOT_TOKEN="$(op read -n op://eng-dev/com.discord.bot.kai/credential)"`),
 each of these prints without revealing the token:
 
 ```bash
@@ -109,4 +128,5 @@ The first must show `message_content_intent: true`; the second lists the servers
 | **Could not reach EDGE**, every request failing | The stack is down: `node scripts/stack.mjs status`, then `start` (with the same `DX_DEV_STATE_DIR`). |
 | The story never finishes loading, "coordinator worker error" | Opened in the Claude desktop app's browser; use Chrome. |
 | **Connect Discord** fails at Discord | The redirect URL (§1.1) is missing, or kms-service has no client secret (§2.3). |
+| **Discord setup failed** on **Connect Discord**, `MissingBindingError` in the EDGE log | kms-service's `.env` lacks a value it reads (§2.3), e.g. `ATPROTO_CLIENT_JWK_BASE64`. |
 | Messages arrive with no text | Message Content Intent is off (§1.2). |
