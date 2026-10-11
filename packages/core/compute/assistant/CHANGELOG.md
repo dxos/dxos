@@ -1,5 +1,46 @@
 # @dxos/assistant
 
+## 0.14.0
+
+### Minor Changes
+
+- f0fc12a: An agent's chats now run on EDGE (`Agent.chatLocation`) unless a chat sets `remote: false`, so every chat shares the agent's one brain. Facts the agent records are attributed to space members by identity DID, with the display name as an optional label (`attribution.agentLabel`), and watches resolve the person they name to that member's DID and match on it (someone who is no member is matched by name, as their words are attributed); a chat with a member no longer invents a placeholder "Me" person.
+- 3e98467: The space Home assistant prompt no longer adds a feed to the space on every visit: its chat is an in-memory draft until the user sends, when the chat, its feed and its bindings are written together. `AiContext.Binder` now opens over a feed that is not stored yet, holding bindings in memory until `flush()` writes them once the feed is stored, and `unbind` removes an object from the bound set immediately whichever URI form the ref uses.
+
+### Patch Changes
+
+- Updated dependencies [0715304]
+- Updated dependencies [ec6da5a]
+- Updated dependencies [a1e64db]
+- Updated dependencies [28bb45b]
+- Updated dependencies [1eed6b1]
+- Updated dependencies [ed52cb7]
+- Updated dependencies [6847fe2]
+- Updated dependencies [35217f4]
+- Updated dependencies [1819960]
+- Updated dependencies [eb5d14d]
+- Updated dependencies [5324de6]
+  - @dxos/compute-runtime@0.14.0
+  - @dxos/compute@0.14.0
+  - @dxos/echo@0.14.0
+  - @dxos/echo-client@0.14.0
+  - @dxos/effect@0.14.0
+  - @dxos/ai@0.14.0
+  - @dxos/echo-doc@0.14.0
+  - @dxos/schema@0.14.0
+  - @dxos/types@0.14.0
+  - @dxos/mcp-client@0.14.0
+  - @dxos/echo-protocol@0.14.0
+  - @dxos/protocols@0.14.0
+  - @dxos/context@0.14.0
+  - @dxos/debug@0.14.0
+  - @dxos/errors@0.14.0
+  - @dxos/invariant@0.14.0
+  - @dxos/keys@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/node-std@0.14.0
+  - @dxos/util@0.14.0
+
 ## 0.13.0
 
 ### Minor Changes

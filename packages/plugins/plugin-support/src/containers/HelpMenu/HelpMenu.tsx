@@ -23,7 +23,7 @@ import { ABOUT_DIALOG, SHORTCUTS_DIALOG } from '../../constants.ts';
 import { downloadUrl } from './download.ts';
 import { UpdateMenuItem } from './UpdateMenuItem.tsx';
 
-const DOCS_URL = 'https://docs.dxos.org/composer/introduction/';
+const DOCS_URL = 'https://dxos.org/docs/composer/introduction/';
 const DISCORD_URL = 'https://dxos.org/discord';
 const GITHUB_URL = 'https://github.com/dxos/dxos';
 

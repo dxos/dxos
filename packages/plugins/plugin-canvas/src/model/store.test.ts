@@ -69,6 +69,66 @@ describe('bindCanvasStore', () => {
     bound.dispose();
   });
 
+  test('a linked drawing’s frame on a third drawing opens it, and an edit keeps the frame’s own child id', async ({
+    expect,
+  }) => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([Drawing.Drawing, Drawing.Canvas]);
+    const leafCanvas = db.add(createCanvas());
+    const leaf = db.add(Drawing.make({ name: 'Leaf', canvas: leafCanvas }));
+    const middleCanvas = db.add(createCanvas());
+    const middle = db.add(Drawing.make({ name: 'Middle', canvas: middleCanvas }));
+    const canvas = db.add(createCanvas());
+    db.add(Drawing.make({ name: 'Main', canvas }));
+    const frameOn = (id: string, object: Drawing.Drawing) => ({
+      kind: 'node',
+      scene: 'root',
+      node: { id, type: 'frame', z: 'a1', ...frame, scene: id, object: Ref.make(object) },
+    });
+    Obj.update(middleCanvas, (middleCanvas) => {
+      middleCanvas.content['scene:g'] = { kind: 'scene', id: 'g' };
+      middleCanvas.content[nodeKey('g')] = frameOn('g', leaf);
+    });
+    Obj.update(canvas, (canvas) => {
+      canvas.content['scene:f'] = { kind: 'scene', id: 'f' };
+      canvas.content[nodeKey('f')] = frameOn('f', middle);
+    });
+    await db.flush();
+
+    const registry = Registry.make();
+    const bound = bindCanvasStore(registry, canvas);
+    const nameOf = (id: string | undefined) => (id ? registry.get(bound.store.scenes)[id]?.name : undefined);
+    // Main's frame opens Middle's root, and Middle's frame opens Leaf's.
+    const middleFrame = () => {
+      const scenes = registry.get(bound.store.scenes);
+      const middleRoot = scenes.root.nodes.f;
+      const inner = isFrameNode(middleRoot) ? scenes[middleRoot.scene]?.nodes.g : undefined;
+      return inner && isFrameNode(inner) ? nameOf(inner.scene) : undefined;
+    };
+    await expect.poll(middleFrame).toBe('Leaf');
+
+    // Writing Middle back leaves its frame on its own child scene, not on Leaf's.
+    registry.set(bound.store.scenes, { ...registry.get(bound.store.scenes) });
+    const record = middleCanvas.content[nodeKey('g')];
+    expect(isNodeRecord(record) && record.node).toMatchObject({ scene: 'g' });
+
+    // Pointing Middle's frame at another drawing through the store opens that drawing once the write settles.
+    const other = db.add(Drawing.make({ name: 'Other', canvas: db.add(createCanvas()) }));
+    const scenes = registry.get(bound.store.scenes);
+    const middleRoot = scenes.root.nodes.f;
+    const middleId = isFrameNode(middleRoot) ? middleRoot.scene : '';
+    const inner = scenes[middleId].nodes.g;
+    registry.set(bound.store.scenes, {
+      ...scenes,
+      [middleId]: {
+        ...scenes[middleId],
+        nodes: { ...scenes[middleId].nodes, g: { ...inner, object: Ref.make(other) } },
+      },
+    });
+    await expect.poll(middleFrame).toBe('Other');
+    bound.dispose();
+  });
+
   test('a frame given a canvas drawing through the store opens it', async ({ expect }) => {
     const { db, graph } = await builder.createDatabase();
     graph.registry.add([Drawing.Drawing, Drawing.Canvas]);

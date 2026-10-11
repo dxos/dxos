@@ -6,6 +6,7 @@ import { create } from '@bufbuild/protobuf';
 import { afterEach, describe, it, test, vi } from 'vitest';
 
 import { Context } from '@dxos/context';
+import { EDGE_CLIENT_TOO_OLD, EdgeClientTooOldError, EdgeResponse } from '@dxos/protocols';
 import { type Presentation, PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { createEphemeralEdgeIdentity } from './auth.ts';
@@ -326,6 +327,48 @@ describe('EdgeHttpClient auth refresh', () => {
     vi.advanceTimersByTime(3_600_000);
     await client.putBlob(Context.default(), 'two', new Uint8Array([2]), { contentType: 'application/octet-stream' });
     expect(authCalls(fetchMock)).toBe(1);
+  });
+});
+
+describe('EdgeHttpClient outdated SDK', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  // Built by EDGE's own envelope producer, exactly as `requireClientSdkVersion` answers.
+  const refusal = () =>
+    EdgeResponse.failure({
+      message: 'Client too old: SDK 0.12.0 is older than 0.13.0. Update the app (reload it) to continue.',
+      status: 426,
+      data: { type: EDGE_CLIENT_TOO_OLD, clientVersion: '0.12.0', minimumVersion: '0.13.0' },
+    });
+
+  // The prefetch swallows other failures to proceed unauthenticated, which here would only be refused again, silently.
+  test('a refusal at the /auth prefetch fails the call once, without sending it', async ({ expect }) => {
+    const fetchMock = vi.fn(async (_input: any, _init?: RequestInit) => refusal());
+    vi.stubGlobal('fetch', fetchMock);
+    const client = new EdgeHttpClient('https://edge.example.com');
+    client.setIdentity({
+      peerKey: 'peer-key',
+      identityDid: 'did:halo:test',
+      presentCredentials: async (): Promise<Presentation> => create(PresentationSchema, {}),
+    });
+
+    const error = await client.getStatus(Context.default()).catch((error: unknown) => error);
+    expect(error).toBeInstanceOf(EdgeClientTooOldError);
+    expect(error).toMatchObject({ status: 426, isRetryable: false, data: { minimumVersion: '0.13.0' } });
+    expect(fetchMock.mock.calls.map((call) => new URL(String(call[0])).pathname)).toEqual(['/auth']);
+  });
+
+  test('a route refusing the SDK fails with the typed error and is not retried', async ({ expect }) => {
+    const fetchMock = vi.fn(async (_input: any, _init?: RequestInit) => refusal());
+    vi.stubGlobal('fetch', fetchMock);
+    const client = new EdgeHttpClient('https://edge.example.com');
+
+    await expect(client.request(Context.default(), '/status', { method: 'GET' })).rejects.toBeInstanceOf(
+      EdgeClientTooOldError,
+    );
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });
 

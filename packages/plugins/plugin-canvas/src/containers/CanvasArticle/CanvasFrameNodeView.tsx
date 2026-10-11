@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useEffect, useRef } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useRef } from 'react';
 
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { Entity, Obj } from '@dxos/echo';
+import { type Database, Entity, Obj } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { useAttentionAttributes, useAttentionContext } from '@dxos/react-ui-attention';
@@ -17,11 +17,19 @@ import * as Card from '@dxos/react-ui/Card';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
-import { type FrameRole, frameRole, isSceneCanvas, objectRef, parseLinkedSceneId } from '#model';
+import { type FrameRole, frameRole, isSceneCanvas, objectRef, objectUri, parseLinkedSceneId } from '#model';
+
+/** The canvas's database, which resolves a frame's `object` (node views get no host props of their own). */
+export const CanvasDatabaseContext = createContext<Database.Database | undefined>(undefined);
 
 /** The object a frame shows as a surface, or `undefined` when it shows a scene (its own or a canvas drawing's). */
 const useSurfaceObject = (node: NodeViewProps['node']): Obj.Unknown | undefined => {
-  const object = useResolveRef(objectRef(node));
+  const db = useContext(CanvasDatabaseContext);
+  const uri = objectUri(node);
+  // Keyed by URI, so a re-rendered node keeps one ref (and its subscription) rather than making a new one each time.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const ref = useMemo(() => objectRef(node, db), [db, uri]);
+  const object = useResolveRef(ref);
   const canvas = useResolveRef(Obj.instanceOf(Drawing.Drawing, object) ? object.canvas : undefined);
   // A canvas drawing is a scene, and so is a drawing whose canvas has not loaded yet; the store links it.
   const drawing = Obj.instanceOf(Drawing.Drawing, object) && (canvas === undefined || isSceneCanvas(canvas));

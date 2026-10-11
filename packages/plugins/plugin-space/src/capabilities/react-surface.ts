@@ -98,7 +98,7 @@ export default Capability.makeModule(
         position: Position.last,
         filter: AppSurface.object(AppSurface.Article, Collection.Collection),
         component: CollectionArticle,
-        props: ({ data: { subject, attendableId } }) => ({ subject, attendableId }),
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
       Surface.create({
         id: 'recordArticle',

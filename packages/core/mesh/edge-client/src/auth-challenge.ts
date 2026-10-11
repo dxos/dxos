@@ -7,8 +7,10 @@ import { base64Decode } from '@bufbuild/protobuf/wire';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { EdgeClientTooOldError } from '@dxos/protocols';
 import { PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
+import { assertClientSupported, clientVersionHeaders } from './client-version.ts';
 import { type EdgeIdentity } from './edge-identity.ts';
 
 /**
@@ -165,11 +167,13 @@ export type AuthChallengeInfo = {
  * console and records a routine auth failure server-side on each client boot.
  *
  * Returns undefined if the endpoint is unreachable or answers in neither known shape; callers fall
- * back to the 401 path, which still works against every server.
+ * back to the 401 path, which still works against every server. Throws {@link EdgeClientTooOldError} when EDGE refuses
+ * this SDK, which no fallback can get past.
  */
 export const fetchAuthChallengeInfo = async (baseHttpUrl: string | URL): Promise<AuthChallengeInfo | undefined> => {
   try {
-    const response = await fetch(new URL('/auth', baseHttpUrl));
+    const response = await fetch(new URL('/auth', baseHttpUrl), { headers: clientVersionHeaders() });
+    await assertClientSupported(response);
     const challenge = await readAuthChallenge(response);
     if (!challenge) {
       log.verbose('no challenge in /auth response', { status: response.status });
@@ -186,6 +190,9 @@ export const fetchAuthChallengeInfo = async (baseHttpUrl: string | URL): Promise
     }
     return { challenge, expiresInMs };
   } catch (error) {
+    if (error instanceof EdgeClientTooOldError) {
+      throw error;
+    }
     log.verbose('failed to fetch auth challenge', { error });
     return undefined;
   }

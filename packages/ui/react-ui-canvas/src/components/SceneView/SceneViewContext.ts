@@ -47,6 +47,8 @@ export type SceneViewContextValue = {
   store: SceneStore;
   projection: Projection;
   capabilities: Capabilities;
+  /** The scene is only looked at: the parts that edit it (selection frame, ports, actions, properties) hide. */
+  readonly: boolean;
   nodeRegistry: NodeRegistry;
   linkRegistry: LinkRegistry;
 

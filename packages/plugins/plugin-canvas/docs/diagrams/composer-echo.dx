@@ -1,0 +1,37 @@
+diagram @ -128,-64 flow=down box=256x128 grid=384x192
+group host "echo-host" {
+  node EchoHost "EchoHost" ref="packages/core/echo/echo-host/src/db-host/echo-host.ts"
+  node SpaceState "SpaceStateManager" ref="packages/core/echo/echo-host/src/db-host/space-state-manager.ts"
+  node DbRoot "DatabaseRoot" ref="packages/core/echo/echo-host/src/db-host/database-root.ts"
+  node Scheduler "IndexScheduler" below DataSource ref="packages/core/echo/echo-host/src/db-host/index-scheduler.ts"
+  node DataSource "AutomergeSource" ref="packages/core/echo/echo-host/src/db-host/automerge-data-source.ts"
+}
+group services "RPC services" {
+  node DataService "DataService" ref="packages/core/echo/echo-host/src/db-host/data-service.ts"
+  node DocsSync "DocsSynchronizer" ref="packages/core/echo/echo-host/src/db-host/documents-synchronizer.ts"
+  node QueryService "QueryService" ref="packages/core/echo/echo-host/src/db-host/query-service.ts"
+  node Executor "QueryExecutor" ref="packages/core/echo/echo-host/src/query/query-executor.ts"
+  node Planner "QueryPlanner" ref="packages/core/echo/echo-host/src/query/query-planner.ts"
+}
+group automerge "Automerge" {
+  node AmHost "AutomergeHost" ref="packages/core/echo/echo-host/src/automerge/automerge-host.ts"
+  node CollSync "CollectionSync" ref="packages/core/echo/echo-host/src/automerge/collection-synchronizer.ts"
+  node Network "NetworkAdapter" ref="packages/core/echo/echo-host/src/automerge/echo-network-adapter.ts"
+  node Storage "SqliteStorage" ref="packages/core/echo/echo-host/src/automerge/sqlite-storage-adapter.ts"
+}
+edge EchoHost -> DataService
+edge EchoHost -> QueryService
+edge EchoHost -> SpaceState "spaces"
+edge EchoHost -> Scheduler
+edge EchoHost -> DataSource
+edge EchoHost -> AmHost "docs"
+edge DataService -> DocsSync "subscribe"
+edge DataService -> SpaceState
+edge DocsSync -> AmHost
+edge QueryService -> Executor "run"
+edge Executor -> Planner "plan"
+edge SpaceState -> DbRoot
+edge DataSource -> AmHost "changes"
+edge AmHost -> CollSync
+edge AmHost -> Network "replicate"
+edge AmHost -> Storage "persist"

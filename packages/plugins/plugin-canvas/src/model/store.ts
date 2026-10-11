@@ -9,8 +9,9 @@
 //
 // A frame whose `object` is a canvas drawing shows that drawing: that drawing's canvas is bound alongside,
 // its scenes join the store under ids prefixed with the drawing's URI, the frame opens its root, and edits
-// inside it are written to that drawing. Only this drawing's own links are followed (a linked drawing's
-// links show their local scenes), so a reference cannot cycle. Any other object is left to the frame's view.
+// inside it are written to that drawing. A linked drawing's own links are followed the same way, so a drawing
+// opens drawings to any depth; each is bound once by its URI, so a reference cycle shows a scene already bound
+// rather than binding again. Any other object is left to the frame's view.
 //
 
 import type * as Registry from 'effect/reactivity/AtomRegistry';
@@ -114,7 +115,21 @@ export const bindCanvasStore = (registry: Registry.AtomRegistry, canvas: Drawing
       for (const scene of Object.values(readScenes(clone(link.canvas.content)))) {
         const id = linkedSceneId(uri, scene.id);
         scenes[id] = {
-          ...mapNodes(scene, (node) => (isFrameNode(node) ? withScene(node, linkedSceneId(uri, node.scene)) : node)),
+          ...mapNodes(scene, (node) => {
+            if (!isFrameNode(node)) {
+              return node;
+            }
+            // A frame of a linked drawing that shows another drawing opens that drawing's root, as one here does.
+            const child = objectUri(node);
+            if (child) {
+              ensure(child);
+            }
+            const childLink = child ? linked.get(child) : undefined;
+            return withScene(
+              node,
+              child && childLink ? linkedSceneId(child, childLink.root) : linkedSceneId(uri, node.scene),
+            );
+          }),
           id,
           // An unnamed root reads as the drawing it belongs to, not its prefixed id.
           name: scene.name ?? (scene.id === link.root ? link.name : undefined),
@@ -142,9 +157,19 @@ export const bindCanvasStore = (registry: Registry.AtomRegistry, canvas: Drawing
         });
         continue;
       }
-      const unprefixed = mapNodes(scene, (node) =>
-        isFrameNode(node) ? withScene(node, parseLinkedSceneId(node.scene)?.scene ?? node.scene) : node,
-      );
+      const content = linked.get(parsed.uri)?.canvas.content;
+      const unprefixed = mapNodes(scene, (node) => {
+        if (!isFrameNode(node)) {
+          return node;
+        }
+        const target = parseLinkedSceneId(node.scene);
+        // A frame opening another drawing keeps its own child scene's id in the record, as one here does.
+        if (target && target.uri !== parsed.uri) {
+          const record = content?.[nodeKey(node.id)];
+          return withScene(node, isNodeRecord(record) && isFrameNode(record.node) ? record.node.scene : node.id);
+        }
+        return withScene(node, target?.scene ?? node.scene);
+      });
       byUri.set(parsed.uri, { ...byUri.get(parsed.uri), [parsed.scene]: { ...unprefixed, id: parsed.scene } });
     }
     Obj.update(canvas, (canvas) => {
@@ -243,21 +268,20 @@ export const bindCanvasStore = (registry: Registry.AtomRegistry, canvas: Drawing
   const stale = (scenes: SceneMap): boolean => {
     let result = false;
     for (const [id, scene] of Object.entries(scenes)) {
-      if (parseLinkedSceneId(id)) {
-        continue;
-      }
+      // Frames in a linked drawing are checked too: `read` resolves their objects the same way as this drawing's.
+      const owner = parseLinkedSceneId(id)?.uri;
       for (const node of Object.values(scene.nodes)) {
         if (!isFrameNode(node)) {
           continue;
         }
         const uri = objectUri(node);
-        if (!uri) {
-          result ||= parseLinkedSceneId(node.scene) !== undefined;
-          continue;
+        if (uri) {
+          ensure(uri);
         }
-        ensure(uri);
-        const link = linked.get(uri);
-        result ||= link ? node.scene !== linkedSceneId(uri, link.root) : parseLinkedSceneId(node.scene) !== undefined;
+        const link = uri ? linked.get(uri) : undefined;
+        // Without a bound drawing a frame opens its own child scene, which belongs to the frame's own drawing.
+        result ||=
+          uri && link ? node.scene !== linkedSceneId(uri, link.root) : parseLinkedSceneId(node.scene)?.uri !== owner;
       }
     }
     return result;
