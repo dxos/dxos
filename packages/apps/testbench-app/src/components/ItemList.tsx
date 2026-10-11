@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Obj, Type } from '@dxos/echo';
-import { Doc } from '@dxos/echo-doc';
+import { useDocAccessor } from '@dxos/react-client/echo';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import * as Button from '@dxos/react-ui/Button';
 import * as Field from '@dxos/react-ui/Field';
@@ -115,17 +115,22 @@ export const Item = ({ object, onDelete }: ItemProps<Obj.Any>) => {
 
 const Editor = ({ object, prop }: { object: Obj.Any; prop: string }) => {
   const themeMode = Hooks.useThemeMode();
+  const accessor = useDocAccessor(object, [prop]);
   const { parentRef } = useTextEditor(() => {
+    if (!accessor) {
+      return {};
+    }
+
     return {
       initialValue: object[prop],
       extensions: [
         createBasicExtensions(),
         createMarkdownExtensions(),
         createThemeExtensions({ themeMode, slots: { content: { className: 'p-0' } } }),
-        automerge(Doc.createAccessor(object, [prop])),
+        automerge(accessor),
       ],
     };
-  }, []);
+  }, [accessor]);
 
   return <div ref={parentRef} className='grow' />;
 };

@@ -669,9 +669,9 @@ export const QueryOptions = Schema.Struct({
   snapshot: Schema.optional(Schema.Boolean),
 
   /**
-   * Return live objects backed by the index's copy of each object, so none waits on its document;
-   * a document loads only when something writes to the object or needs it. The host ships each
-   * document row's state, heads and version (`QueryResult.state`).
+   * Ship each document row's state, heads and version (`QueryResult.state`), so the client can back the
+   * result with the index's copy instead of loading its document. Set by the ECHO client on the queries it
+   * sends (see `EchoClientProps.lazyQueries`), not by callers.
    */
   lazy: Schema.optional(Schema.Boolean),
 });

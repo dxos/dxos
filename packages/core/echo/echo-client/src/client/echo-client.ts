@@ -20,7 +20,14 @@ import { IndexQuerySourceProvider, type LoadObjectProps, type ObjectUpdate } fro
 /** A root that has not linked an index hit by then may never; `linksAdded` re-hydrates it if it does. */
 const ROOT_LINK_WAIT_TIMEOUT = 2_000;
 
-export type EchoClientProps = {};
+export type EchoClientProps = {
+  /**
+   * Back index query results with the index's copy of each object, loading an object's document only when
+   * it is written to or its document is read (see `Doc.load`).
+   * @default true
+   */
+  lazyQueries?: boolean;
+};
 
 export type ConnectToServiceProps = {
   dataService: DataService.Client;
@@ -84,8 +91,11 @@ export class EchoClient extends Resource {
   private readonly _objectsUpdated = new Event<ObjectUpdate>();
   private readonly _dbUpdateSubscriptions = new Map<SpaceId, CleanupFn>();
 
-  constructor(_: EchoClientProps = {}) {
+  readonly #lazyQueries: boolean;
+
+  constructor({ lazyQueries = true }: EchoClientProps = {}) {
     super();
+    this.#lazyQueries = lazyQueries;
   }
 
   get graph(): HypergraphImpl {
@@ -127,6 +137,7 @@ export class EchoClient extends Resource {
         updateEvent: this._objectsUpdated,
       },
       graph: this._graph,
+      lazyQueries: this.#lazyQueries,
     });
     this._graph.registerQuerySourceProvider(this._indexQuerySourceProvider);
   }
@@ -236,6 +247,7 @@ export class EchoClient extends Resource {
           updateEvent: this._objectsUpdated,
         },
         graph: this._graph,
+        lazyQueries: this.#lazyQueries,
       });
       this._graph.registerQuerySourceProvider(this._indexQuerySourceProvider);
     }

@@ -232,9 +232,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
         // Feed-only objects (e.g. games appended via Feed.append) are not in the Automerge graph;
         // includeFeeds resolves them too.
         const objects = get(
-          space.db.query(
-            Query.select(Filter.type(typeUri)).options({ lazy: true }).from(space.db, { includeFeeds: true }),
-          ).atom,
+          space.db.query(Query.select(Filter.type(typeUri)).from(space.db, { includeFeeds: true })).atom,
         );
 
         return Effect.succeed(

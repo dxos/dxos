@@ -11,7 +11,7 @@ import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 
 import { type Database, Filter, Obj, Ref, Type } from '@dxos/echo';
-import { DatabaseImpl } from '@dxos/echo-client';
+import { DatabaseImpl, loadDocument } from '@dxos/echo-client';
 import { EntityId, URI } from '@dxos/keys';
 
 /**
@@ -156,10 +156,17 @@ const load = (
   db: Database.Database,
 ): Effect.Effect<Obj.Unknown, WireError> =>
   Effect.tryPromise({
-    try: async () =>
-      spaceId === String(db.spaceId) && EntityId.isValid(id)
-        ? (await db.query(Filter.id(id)).run())[0]
-        : await db.makeRef(URI.make(uri)).load(),
+    try: async () => {
+      const object =
+        spaceId === String(db.spaceId) && EntityId.isValid(id)
+          ? (await db.query(Filter.id(id)).run())[0]
+          : await db.makeRef(URI.make(uri)).load();
+      // Catching up compares the document's heads, so it needs the document, not the index's copy.
+      if (Obj.isObject(object)) {
+        await loadDocument(object);
+      }
+      return object;
+    },
     catch: (cause) => new WireError({ message: `Object not found: ${uri}`, cause }),
   }).pipe(
     Effect.flatMap((object) =>

@@ -6,6 +6,7 @@ import React, { type ReactNode, useCallback, useEffect, useMemo, useState } from
 
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
+import { useDocLoaded } from '@dxos/react-client/echo';
 import { type Text } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 import { Branch, Version } from '@dxos/versioning';
@@ -139,10 +140,12 @@ const BranchContent = ({
   // rather than recomputed per render (which pegged the CPU as the reader typed).
   const parent = 'content' in document ? (document as { content?: { target?: Text.Text } }).content?.target : undefined;
   const anchor = branch.anchor?.join(',');
+  // The historical read needs the parent's document.
+  const parentLoaded = useDocLoaded(parent);
   const base = useMemo(
-    () => (parent && branch.anchor?.length ? Version.contentAt(parent, branch.anchor) : undefined),
+    () => (parent && parentLoaded && branch.anchor?.length ? Version.contentAt(parent, branch.anchor) : undefined),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [parent, anchor],
+    [parent, parentLoaded, anchor],
   );
   useEffect(() => {
     if (content !== undefined) {

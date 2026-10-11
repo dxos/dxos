@@ -82,7 +82,11 @@ export type ObjectSnapshot = {
 };
 
 /** The state an index row carries for an object, as `EntityManager.upsertSnapshot` takes it. */
-export type SnapshotState = Omit<ObjectSnapshot, 'root'> & { structure: EntityStructure };
+export type SnapshotState = Omit<ObjectSnapshot, 'root'> & {
+  structure: EntityStructure;
+  /** The document the row was read from; checked against the space root's routing. */
+  documentId?: string;
+};
 
 /**
  * The single key a write is touching, so the proxy targets are refreshed for that key alone.
@@ -429,7 +433,7 @@ export class ObjectCore {
       this.#writeQueue.push(changeFn);
       this.notifyUpdate();
       if (first) {
-        void this.entityManager?.promote(this);
+        this.entityManager?.promote(this).catch((err) => log('promotion ended without the document', { err }));
       }
       return;
     }

@@ -434,12 +434,27 @@ export class EntityManager implements IDatabaseBinding {
     this._unsubscribeFromHandles();
     this._clearHandleReferences();
     this._objects.clear();
+    this.#settlePendingPromotions(new ContextDisposedError());
     this._unavailableObjects.clear();
     this._objectsPendingDocumentLoad.clear();
     this._currentlyLoadingObjects.clear();
     this._objectsForNextDbUpdate.clear();
     this._objectsForNextUpdate.clear();
     await this._repoProxy.close();
+  }
+
+  /** Ends every waiting promotion, or the one for `objectId`; writes still queued on it are lost and logged. */
+  #settlePendingPromotions(error: Error, objectId?: string): void {
+    for (const [id, { core, bound }] of this.#pendingPromotions) {
+      if (objectId !== undefined && id !== objectId) {
+        continue;
+      }
+      if (core.hasQueuedWrites) {
+        log.warn('queued writes dropped before their document loaded', { objectId: id, error });
+      }
+      this.#pendingPromotions.delete(id);
+      bound.throw(error);
+    }
   }
 
   /** Whether the lifetime a load started in has ended — closed, or already replaced by a reopen. */
@@ -535,12 +550,20 @@ export class EntityManager implements IDatabaseBinding {
    * Undefined when the row cannot back the object, which then loads its document as usual.
    */
   upsertSnapshot(id: EntityId, state: SnapshotState): Entity.Unknown | undefined {
+    // Closed, or not routed here (including before the root arrives): the document path decides instead.
+    if (this.#closed || !this.#routesTo(id, state)) {
+      return undefined;
+    }
     // A selected branch reads and writes another document, which the index row does not describe.
     if (this.getCurrentBranch(id) !== 'main') {
       return undefined;
     }
     const existing = this.getObjectCoreById(id, { load: false });
     if (existing) {
+      // Bound to a document whose body has not arrived: the document path decides, as for any load.
+      if (!existing.isBodyAvailable) {
+        return undefined;
+      }
       this.#refreshSnapshot(existing, state);
       return existing.rootProxy ?? this._createEntity(existing);
     }
@@ -559,6 +582,15 @@ export class EntityManager implements IDatabaseBinding {
     this.#snapshotIds.add(id);
     this.#scheduleSnapshotWatch();
     return this._createEntity(core);
+  }
+
+  /** Whether the space root routes the object to the document the row was read from (not a branch or stale copy). */
+  #routesTo(id: string, state: SnapshotState): boolean {
+    // No root mid-swap: nothing can be checked against it yet.
+    if (!this._spaceRootDocHandle) {
+      return false;
+    }
+    return state.documentId === undefined || this.getObjectDocumentId(id) === state.documentId;
   }
 
   /** Moves a snapshot-backed core onto a newer index row, unless writes it queued are the user's view. */
@@ -629,11 +661,14 @@ export class EntityManager implements IDatabaseBinding {
       }),
       {
         onData: (response) => {
+          if (this.#closed) {
+            return;
+          }
           for (const result of response.results ?? []) {
             // Rows only refresh cores still held: the watch must not keep an object alive.
             const core = this._objects.get(result.id);
             const state = core?.snapshot && getSnapshotState(result);
-            if (core && state) {
+            if (core && state && this.#routesTo(core.id, state)) {
               this.#refreshSnapshot(core, state);
             }
           }
@@ -754,7 +789,8 @@ export class EntityManager implements IDatabaseBinding {
 
   /** Writes queued on a snapshot-backed core are not durable until its document loads and takes them. */
   private async _waitForPendingPromotions(): Promise<void> {
-    const pending = [...this.#pendingPromotions.values()];
+    // A load nothing wrote through (an editor opening, a prefetch) is not a durability concern.
+    const pending = [...this.#pendingPromotions.values()].filter(({ core }) => core.hasQueuedWrites);
     if (pending.length === 0) {
       return;
     }
@@ -766,9 +802,30 @@ export class EntityManager implements IDatabaseBinding {
     );
   }
 
+  /**
+   * Waits until the core's strong dependencies (parent, relation endpoints, stored type) are in the
+   * working set or known to be unavailable on disk, as a document load does, without loading the
+   * core's own document.
+   */
+  async waitForStrongDeps(core: ObjectCore): Promise<void> {
+    const generation = this.#generation;
+    const request = this._ensureSatisfactionRequest(core);
+    if (request.state !== 'ready' && request.state !== 'unavailable') {
+      const cancellation = this.#rejectWhenStale(generation);
+      try {
+        await Promise.race([request.wait(), cancellation.promise]);
+      } finally {
+        cancellation.dispose();
+      }
+    }
+  }
+
   promote(core: ObjectCore): Promise<void> {
     if (!core.snapshot) {
       return Promise.resolve();
+    }
+    if (this.#closed) {
+      return Promise.reject(new ContextDisposedError());
     }
     let pending = this.#pendingPromotions.get(core.id);
     if (!pending) {
@@ -2337,6 +2394,10 @@ export class EntityManager implements IDatabaseBinding {
     }
 
     this._objectsPendingDocumentLoad.delete(objectId);
+    this.#settlePendingPromotions(
+      new EchoClientError({ message: 'Object removed from the space before its document loaded.' }),
+      objectId,
+    );
     const handle = this._unbindObjectDocument(objectId);
     if (handle == null || handle === this._spaceRootDocHandle || handle.documentId == null) {
       return;
@@ -2468,6 +2529,11 @@ export class EntityManager implements IDatabaseBinding {
       this._replayWrites(core.id, docHandle, core.snapshot.heads, writes);
     }
     core.bind({ db: this, docHandle, path: ['objects', core.id], assignFromLocalState: false });
+    // A subscriber notified by the replay's change event wrote while the core was still unbound; that
+    // write was queued after the queue was taken, so it lands now.
+    for (const write of core.takeQueuedWrites()) {
+      core.change(write);
+    }
     this.#unwatchSnapshot(core.id);
     this._markObjectAvailable(core.id);
     this._onObjectBoundToDocument(docHandle, core.id);
@@ -2546,7 +2612,7 @@ export class EntityManager implements IDatabaseBinding {
 
   /** The index served a snapshot-backed core only with its closure present, so it is not re-resolved from disk. */
   private _areDepsSatisfied(core: ObjectCore): boolean {
-    return core.snapshot !== undefined || this._ensureSatisfactionRequest(core).state === 'ready';
+    return this._ensureSatisfactionRequest(core).state === 'ready';
   }
 
   /**
@@ -2555,9 +2621,6 @@ export class EntityManager implements IDatabaseBinding {
    * forever when a dependency is unreachable on disk.
    */
   private _areDepsResolved(core: ObjectCore): boolean {
-    if (core.snapshot !== undefined) {
-      return true;
-    }
     const state = this._ensureSatisfactionRequest(core).state;
     return state === 'ready' || state === 'unavailable';
   }
@@ -2622,6 +2685,10 @@ export class EntityManager implements IDatabaseBinding {
     for (const objectId of objectIds) {
       const objectCore = this._objects.get(objectId);
       invariant(objectCore);
+      if (objectCore.snapshot) {
+        this._bindSnapshotCore(objectCore, docHandle);
+        continue;
+      }
       objectCore.bind({
         db: this,
         docHandle,

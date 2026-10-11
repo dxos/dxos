@@ -48,12 +48,12 @@ export const makeSectionRearrangeCallback = AppNode.createFactory(
 
 /**
  * The objects a type section lists: unarchived ones without a parent, an owned object being reached
- * through its owner. Lazy, so listing them loads no documents.
+ * through its owner.
  */
 export const sectionQuery = (type: Type.AnyEntity): Query.Any =>
   Query.select(
     Filter.and(Filter.type(type), Filter.hasParent(false), Filter.not(Filter.annotation(ArchivedAnnotation, true))),
-  ).options({ lazy: true });
+  );
 
 /**
  * Creates a graph extension that surfaces all objects of an ECHO type under

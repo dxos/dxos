@@ -22,5 +22,6 @@ export const getSnapshotState = (result: QueryService.QueryResult): SnapshotStat
     heads: result.heads,
     version: result.version,
     updatedAt: result.updatedAt,
+    documentId: result.documentId,
   };
 };

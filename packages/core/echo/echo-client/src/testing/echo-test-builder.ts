@@ -48,6 +48,8 @@ type PeerOptions = {
   queryExecutor?: QueryExecutorMode;
   /** Host live-query debounce; see {@link QueryDebounceOptions}. */
   queryDebounce?: Partial<QueryDebounceOptions>;
+  /** See `EchoClientProps.lazyQueries`. */
+  lazyQueries?: boolean;
 };
 
 export class EchoTestBuilder extends Resource {
@@ -93,6 +95,7 @@ export class EchoTestPeer extends Resource {
   private readonly _storagePath?: string;
   private readonly _queryExecutor?: QueryExecutorMode;
   private readonly _queryDebounce?: Partial<QueryDebounceOptions>;
+  private readonly _lazyQueries?: boolean;
   private readonly _clients = new Set<EchoClient>();
   private _echoHost!: EchoHost;
   private _echoClient!: EchoClient;
@@ -128,10 +131,19 @@ export class EchoTestPeer extends Resource {
   private _persistentRuntime?: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient | SqlExport.SqlExport, never>;
   private _managedRuntime!: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient | SqlExport.SqlExport, never>;
 
-  constructor({ types, registry, assignQueuePositions, storagePath, queryExecutor, queryDebounce }: PeerOptions = {}) {
+  constructor({
+    types,
+    registry,
+    assignQueuePositions,
+    storagePath,
+    queryExecutor,
+    queryDebounce,
+    lazyQueries,
+  }: PeerOptions = {}) {
     super();
     this._queryExecutor = queryExecutor;
     this._queryDebounce = queryDebounce;
+    this._lazyQueries = lazyQueries;
     // Include Expando as default type for tests that use Obj.make(TestSchema.Expando, ...).
     this._types = [TestSchema.Expando, ...(types ?? [])];
     this._registry = registry ?? [];
@@ -172,7 +184,7 @@ export class EchoTestPeer extends Resource {
       queryDebounce: this._queryDebounce,
     });
     this._clients.clear();
-    this._echoClient = new EchoClient();
+    this._echoClient = new EchoClient({ lazyQueries: this._lazyQueries });
     this._clients.add(this._echoClient);
     void this._echoClient.graph.registry.add(this._types);
     void this._echoClient.graph.registry.add(this._registry);
@@ -272,7 +284,7 @@ export class EchoTestPeer extends Resource {
   }
 
   async createClient(): Promise<EchoClient> {
-    const client = new EchoClient();
+    const client = new EchoClient({ lazyQueries: this._lazyQueries });
     await client.graph.registry.add(this._types);
     this._clients.add(client);
     await this._connectServices(client);

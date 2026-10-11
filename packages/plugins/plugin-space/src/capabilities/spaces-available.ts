@@ -95,7 +95,12 @@ const loadDocumentAt = (client: Client, path: string) => {
   if (!spaceId || !objectId || !EntityId.isValid(objectId)) {
     return;
   }
-  const [object] = client.spaces.get(spaceId)?.db.query(Filter.id(objectId)).runSync() ?? [];
+  // Before a space is ready its database has no root to look the object up against.
+  const space = client.spaces.get(spaceId);
+  if (space?.state.get() !== SpaceState.SPACE_READY) {
+    return;
+  }
+  const [object] = space.db.query(Filter.id(objectId)).runSync();
   if (object && !Doc.isLoaded(object)) {
     Doc.load(object).catch((err) => log.catch(err));
   }

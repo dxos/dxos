@@ -8,6 +8,7 @@ import { type Database, Obj } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import { useDocLoaded } from '@dxos/react-client/echo';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { type Text } from '@dxos/schema';
 import { Branch, History, Version } from '@dxos/versioning';
@@ -145,33 +146,37 @@ export const useVersioning = (subject?: unknown): UseVersioningResult => {
 
   // The compare/merge base: parent content at the branch anchor.
   const branchParent = useResolveRef(activeBranch?.parent);
+  // Content at an anchor is read from the document's history, so each source text loads first.
+  const branchParentLoaded = useDocLoaded(branchParent);
   const branchBaseContent = useMemo(() => {
-    if (!activeBranch || !branchParent) {
+    if (!activeBranch || !branchParent || !branchParentLoaded) {
       return undefined;
     }
     return Version.contentAt(branchParent, activeBranch.anchor);
-  }, [activeBranch, branchParent]);
+  }, [activeBranch, branchParent, branchParentLoaded]);
 
   // The fork point: parent content at the fork's anchor — the read-only state the branch began from.
   const forkParent = useResolveRef(activeFork?.parent);
+  const forkParentLoaded = useDocLoaded(forkParent);
   const forkContent = useMemo(() => {
-    if (!activeFork || !forkParent) {
+    if (!activeFork || !forkParent || !forkParentLoaded) {
       return undefined;
     }
     return Version.contentAt(forkParent, activeFork.anchor);
-  }, [activeFork, forkParent]);
+  }, [activeFork, forkParent, forkParentLoaded]);
 
   // A checkpoint on an ACTIVE branch reads/pins against the branch-bound Text (its heads live in the
   // branch document). A base checkpoint — or a checkpoint on a since-merged branch, whose heads the
   // merge folded into the root — resolves against the root target directly.
   const versionTarget = useResolveRef(activeVersion?.target);
   const checkpointText = activeVersion ? (checkpointBranch ? branchBinding?.object : versionTarget) : undefined;
+  const checkpointTextLoaded = useDocLoaded(checkpointText);
   const checkpointContent = useMemo(() => {
-    if (!activeVersion || !checkpointText) {
+    if (!activeVersion || !checkpointText || !checkpointTextLoaded) {
       return undefined;
     }
     return Version.contentAt(checkpointText, activeVersion.heads);
-  }, [activeVersion, checkpointText]);
+  }, [activeVersion, checkpointText, checkpointTextLoaded]);
 
   // Viewing a checkpoint no longer pins the live Text: the editor renders `checkpointContent` (a
   // detached snapshot read via `contentAt`), so only the editor shows history — the live object and

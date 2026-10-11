@@ -3,7 +3,7 @@
 //
 
 import { type Database, Text as EchoText, Obj, Ref } from '@dxos/echo';
-import { checkoutVersion } from '@dxos/echo-client';
+import { checkoutVersion, loadDocument } from '@dxos/echo-client';
 import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
 
@@ -212,6 +212,8 @@ export const mergeBranch = async (doc: VersionedObject, branch: Versioning.Branc
   } else {
     const branchText = stored.content?.target;
     invariant(branchText, 'branch refs not loaded');
+    // The merge base is read from the parent's history.
+    await loadDocument(parent);
     const base = contentAt(parent, stored.anchor);
     const merged = merge3({ base, ours: parent.content, theirs: branchText.content });
     conflicts = merged.conflicts;

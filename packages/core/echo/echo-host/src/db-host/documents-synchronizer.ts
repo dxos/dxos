@@ -135,10 +135,9 @@ export class DocumentsSynchronizer extends Resource {
         syncState.initialLease = undefined;
         lease[Symbol.dispose]();
         // Queued whether or not the load succeeded: a failed one is retried by the send loop, which
-        // gives up on a document this host does not store rather than retrying it forever. Sent without
-        // the rate limit's delay, since the client is waiting on it; later updates keep the limit.
+        // gives up on a document this host does not store rather than retrying it forever.
         this._pendingUpdates.add(documentId);
-        this._sendUpdatesJob?.forceTrigger();
+        this._sendUpdatesJob?.trigger();
       }
     }
   }

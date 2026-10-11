@@ -90,7 +90,7 @@ export class Client {
   private readonly _fatalErrorUpdate = new Event<Error | null>();
   private readonly _fatalError = MulticastObservable.from(this._fatalErrorUpdate, null);
 
-  private readonly _echoClient = new EchoClient();
+  private readonly _echoClient: EchoClient;
 
   private readonly _options: ClientOptions;
 
@@ -146,6 +146,7 @@ export class Client {
 
     this._options = options;
     this._effectRuntime = options.runtime ?? EffectContext.empty();
+    this._echoClient = new EchoClient({ lazyQueries: options.config?.get('runtime.client.lazyQueries', true) });
 
     // TODO(wittjosiah): Reconcile this with @dxos/log loading config from localStorage.
     const filter = options.config?.get('runtime.client.log.filter');

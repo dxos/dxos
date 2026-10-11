@@ -12,7 +12,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
-import { Filter, Obj, Query } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { Task, TaskSet } from '@dxos/types';
 
@@ -55,11 +55,7 @@ export default Capability.makeModule(
             return Effect.succeed([]);
           }
 
-          // Lazy: listing a set's tasks loads none of their documents.
-          const tasks = get(
-            db.query(Query.select(Filter.and(Filter.type(Task.Task), Filter.childOf(taskSet))).options({ lazy: true }))
-              .atom,
-          );
+          const tasks = get(db.query(Filter.and(Filter.type(Task.Task), Filter.childOf(taskSet))).atom);
           return Effect.succeed(
             tasks
               .map((task) => AppNode.makeObject({ get, db, object: task, disposition: 'hidden' }))
