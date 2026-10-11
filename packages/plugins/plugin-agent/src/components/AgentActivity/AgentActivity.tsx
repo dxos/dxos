@@ -158,6 +158,31 @@ const AgentActivityList = ({ label, ids, empty, children }: AgentActivityListPro
 AgentActivityList.displayName = 'AgentActivity.List';
 
 //
+// Agent
+//
+
+type AgentActivityAgentProps = {
+  id: string;
+  name?: string;
+};
+
+/** Which agent the panel is about: its name, and the object id EDGE and the bindings refer to it by. */
+const AgentActivityAgent = ({ id, name }: AgentActivityAgentProps) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  return (
+    <AgentActivityList label={t('agent.heading')} ids={[id]} empty=''>
+      <Listbox.Item id={id}>
+        <Listbox.ItemIcon icon='ph--robot--regular' />
+        <Listbox.ItemText>{name || t('agent-unnamed.label')}</Listbox.ItemText>
+        <Listbox.ItemDescription classNames='font-mono'>{id}</Listbox.ItemDescription>
+      </Listbox.Item>
+    </AgentActivityList>
+  );
+};
+
+AgentActivityAgent.displayName = 'AgentActivity.Agent';
+
+//
 // Channels
 //
 
@@ -332,6 +357,7 @@ const RowButton = ({ icon, label, onClick }: { icon: string; label: string; onCl
 export const AgentActivity = {
   Root: AgentActivityRoot,
   Toolbar: AgentActivityToolbar,
+  Agent: AgentActivityAgent,
   Channels: AgentActivityChannels,
   Channel: AgentActivityChannel,
   Skills: AgentActivitySkills,
@@ -341,6 +367,7 @@ export const AgentActivity = {
 };
 
 export type {
+  AgentActivityAgentProps,
   AgentActivityChannelProps,
   AgentActivityChannelsProps,
   AgentActivityConversationProps,

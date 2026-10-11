@@ -46,6 +46,7 @@ const DefaultStory = ({
   const [conversations, setConversations] = useState(initialConversations);
   return (
     <AgentActivity.Root toolbar={<AgentActivity.Toolbar />}>
+      <AgentActivity.Agent id='01KAGENTKAI0000000000000000' name='Kai' />
       <AgentActivity.Channels ids={channels.map((channel) => channel.id)}>
         {channels.map((channel) => (
           <AgentActivity.Channel

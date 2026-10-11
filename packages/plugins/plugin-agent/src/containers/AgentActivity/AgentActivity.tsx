@@ -33,6 +33,7 @@ export const AgentActivity = ({ role, agent, attendableId }: AgentActivityProps)
   const { invokePromise } = Hooks.useOperationInvoker();
   const db = Obj.getDatabase(agent);
 
+  const [name] = useObject(agent, 'name');
   const list = useAgentChannelList(agent);
   const [values] = useObject(list);
   const channels = values?.channels ?? [];
@@ -112,6 +113,7 @@ export const AgentActivity = ({ role, agent, attendableId }: AgentActivityProps)
         />
       }
     >
+      <AgentActivityComponent.Agent id={agent.id} name={name} />
       <AgentActivityComponent.Channels ids={channels.map((ref) => ref.uri)}>
         {channels.map((ref) => (
           <ChannelTile
