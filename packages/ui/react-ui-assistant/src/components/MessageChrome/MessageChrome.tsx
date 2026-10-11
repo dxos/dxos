@@ -247,9 +247,9 @@ const SyntheticContext = ({ message }: { message: Message.Message }) => {
     <div className='pb-1 opacity-60' data-testid='chat.context'>
       <TogglePanel.Root>
         <TogglePanel.Content classNames='border border-separator-subtle rounded-sm'>
-          <TogglePanel.Header classNames='flex items-center gap-2 px-2 py-1 text-sm'>
-            <span className='grow text-fg-muted truncate'>{t('context.label')}</span>
-            <Icon.Icon icon='ph--brain--regular' size='md' tone='muted' />
+          {/* The header's own layout: the disclosure and the icon each sit in a `Layout.Block` either side of the title. */}
+          <TogglePanel.Header icon={<Icon.Icon icon='ph--brain--regular' size='md' tone='muted' />}>
+            <span className='text-sm text-fg-muted truncate'>{t('context.label')}</span>
           </TogglePanel.Header>
           <TogglePanel.Body>
             <TogglePanel.Viewport classNames='px-2 pb-1 max-h-40 overflow-y-auto text-sm text-fg-muted whitespace-pre-wrap'>
