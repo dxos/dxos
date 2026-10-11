@@ -76,22 +76,27 @@ const plugins = () => [ThreadPlugin.make(), DiscordPlugin.make(), AgentPlugin.ma
 
 /**
  * Kai bound to a Discord channel whose bot runs on a local EDGE stack (`:8787`, see plugin-agent's
- * `docs/SETUP.md`); EDGE substitutes `DISCORD_BOT_TOKEN_DEV` for the space's placeholder token. Set the
- * application and channel ids in Controls (or the form, which persists), press **Start bot** in the
+ * `docs/SETUP.md`); EDGE substitutes `DISCORD_BOT_TOKEN_DEV` for the space's placeholder token. The ids
+ * default to Kai's bot and the DXOS #test-bot channel (change them in Controls); press **Start bot** in the
  * Activity panel, then mention the bot in the Discord channel: the thread's conversation appears under
  * Conversations, in the chat panel, and the monitor records each gateway transition. Live, so excluded from CI.
  */
 export const Live: Story = {
   decorators: createDecorators<StoryArgs>(({ args }) => ({
-    config: config.edgeLocalPersistent,
+    config: config.edgeLocal,
     plugins: plugins(),
     types: TYPES,
     onReady: async ({ db, invoker }) => {
       await setupDiscordAgent({ db, invoker, ...args, remote: true });
     },
   })),
-  // The DXOS server's agent test channel; the application id comes from the bot's portal page.
-  args: { layout: LAYOUT, applicationId: '', channelId: '1494842957340086382', guildId: '837138313172353095' },
+  // Kai's bot and the DXOS server's #test-bot channel.
+  args: {
+    layout: LAYOUT,
+    applicationId: '1555777706459660288',
+    channelId: '1494842957340086382',
+    guildId: '837138313172353095',
+  },
   tags: ['!test'],
 };
 

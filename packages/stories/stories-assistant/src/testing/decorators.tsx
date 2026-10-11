@@ -115,25 +115,6 @@ export const config = {
       },
     },
   }),
-  /** {@link config.edgeLocal} on persistent storage, so what a story's forms hold survives a reload. */
-  edgeLocalPersistent: new Config({
-    runtime: {
-      client: {
-        storage: {
-          persistent: true,
-        },
-        edgeFeatures: {
-          signaling: true,
-          subductionReplicator: true,
-          feedReplicator: true,
-        },
-      },
-      services: {
-        edge: { url: 'http://localhost:8787' },
-        ai: { server: 'http://localhost:8787/ai' },
-      },
-    },
-  }),
   /**
    * Persistent OPFS storage with no EDGE: the client gates every EDGE layer on an edge URL, so
    * leaving it out keeps replication, signaling and agents off and a perf run measures only the

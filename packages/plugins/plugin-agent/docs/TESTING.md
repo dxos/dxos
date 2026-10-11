@@ -51,11 +51,10 @@ told and the goal is achieved. Tagged `!test`.
 
 **Agent on Discord** (`stories-stories-assistant-agentdiscord--live`): Kai bound to a Discord-backed
 channel whose bot runs on a local EDGE stack (`:8787`, [SETUP.md](./SETUP.md)); EDGE substitutes
-`DISCORD_BOT_TOKEN_DEV` for the space's placeholder token. Set the application id in Controls (the
-channel and server ids default to the DXOS test channel), press **Start bot** in the Activity panel and
+`DISCORD_BOT_TOKEN_DEV` for the space's placeholder token. The ids default to Kai's bot and the DXOS
+`#test-bot` channel (change them in Controls); press **Start bot** in the Activity panel and
 mention the bot in Discord: the conversation appears under Conversations and in the chat panel, and the
-Discord bot panel logs each gateway transition. Persistent storage, so the form survives a reload.
-Tagged `!test`. **AgentDiscord › Scripted** runs the same panels against a fake EDGE bot host and checks
+Discord bot panel logs each gateway transition. Needs dxos/edge#1279. Tagged `!test`. **AgentDiscord › Scripted** runs the same panels against a fake EDGE bot host and checks
 Start → connecting → ready → Stop in CI.
 
 ## 2. Tests and stories (CI)
