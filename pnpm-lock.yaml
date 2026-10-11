@@ -7400,9 +7400,6 @@ importers:
         specifier: '>=8.17.1'
         version: 8.18.3
     devDependencies:
-      '@automerge/automerge':
-        specifier: 3.5.0
-        version: 3.5.0
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random

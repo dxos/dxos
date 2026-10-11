@@ -84,7 +84,6 @@
     "ws": "catalog:"
   },
   "devDependencies": {
-    "@automerge/automerge": "catalog:",
     "@dxos/config": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
