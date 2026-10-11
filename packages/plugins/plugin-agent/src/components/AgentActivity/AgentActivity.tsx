@@ -58,7 +58,7 @@ type AgentActivityToolbarProps = {
   onRefresh?: () => void;
 };
 
-/** Connects the agent's channels (or reconnects them), disconnects them, and re-reads the panel. */
+/** Re-reads the panel, and connects the agent's channels or, once they run, disconnects them. */
 const AgentActivityToolbar = ({
   attendableId,
   running = false,
@@ -73,15 +73,6 @@ const AgentActivityToolbar = ({
       MenuBuilder.make()
         .root({ label: ['activity-actions.label', { ns: meta.profile.key }] })
         .action(
-          'stop',
-          {
-            label: ['activity-stop.label', { ns: meta.profile.key }],
-            icon: 'ph--plugs-connected--regular',
-            disabled: busy || !running,
-          },
-          () => onStop?.(),
-        )
-        .action(
           'refresh',
           {
             label: ['activity-refresh.label', { ns: meta.profile.key }],
@@ -91,14 +82,13 @@ const AgentActivityToolbar = ({
           () => onRefresh?.(),
         )
         .action(
-          'start',
+          running ? 'stop' : 'start',
           {
-            // Reconfigures running connections, so the label follows the state.
-            label: [running ? 'activity-restart.label' : 'activity-start.label', { ns: meta.profile.key }],
-            icon: running ? 'ph--arrow-clockwise--regular' : 'ph--plugs--regular',
-            disabled: busy || !connectable,
+            label: [running ? 'activity-stop.label' : 'activity-start.label', { ns: meta.profile.key }],
+            icon: running ? 'ph--plugs-connected--regular' : 'ph--plugs--regular',
+            disabled: busy || (!running && !connectable),
           },
-          () => onStart?.(),
+          () => (running ? onStop : onStart)?.(),
         )
         .build(),
     [running, connectable, busy, onStart, onStop, onRefresh],
