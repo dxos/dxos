@@ -69,6 +69,7 @@ import * as SqliteStorage from '../../SqliteStorage.ts';
 import { EdgeAgentManagerLayer, EdgeAgentManagerService, EdgeAgentServiceLayer } from '../agents/index.ts';
 import {
   BlobReplicationLayer,
+  BlobReplicationNoopLayer,
   BlobReplicationService,
   BlobStoreServiceLayer,
   LocalBlobStoreLayer,
@@ -803,27 +804,30 @@ export const LocalBlobStoreSpec = LayerSpec.make(
   () => LocalBlobStoreLayer,
 );
 
-/** Only included with an edge endpoint: without one, blobs live on this device alone. */
-export const BlobReplicationSpec = LayerSpec.make(
+/** Replicates with the edge only when one is configured; without it, blobs live on this device alone. */
+export const BlobReplicationSpec = (options: ServiceStackServices) =>
+  options.edgeAvailable
+    ? LayerSpec.make(
+        {
+          affinity: 'application',
+          requires: [LocalBlobStoreService, EdgeHttpClientService, Hook.Controller],
+          provides: [BlobReplicationService],
+        },
+        () => BlobReplicationLayer,
+      )
+    : LayerSpec.make(
+        { affinity: 'application', requires: [LocalBlobStoreService], provides: [BlobReplicationService] },
+        () => BlobReplicationNoopLayer,
+      );
+
+export const BlobStoreServiceSpec = LayerSpec.make(
   {
     affinity: 'application',
-    requires: [LocalBlobStoreService, EdgeHttpClientService, Hook.Controller],
-    provides: [BlobReplicationService],
+    requires: [LocalBlobStoreService, BlobReplicationService],
+    provides: [BlobStoreService.Tag],
   },
-  () => BlobReplicationLayer,
+  () => BlobStoreServiceLayer,
 );
-
-// Replication is required only when configured, so the service is built after it rather than
-// finding it absent.
-export const BlobStoreServiceSpec = (options: ServiceStackServices) =>
-  LayerSpec.make(
-    {
-      affinity: 'application',
-      requires: [LocalBlobStoreService, ...(options.edgeAvailable ? [BlobReplicationService] : [])],
-      provides: [BlobStoreService.Tag],
-    },
-    () => BlobStoreServiceLayer,
-  );
 
 export const BlobStoreServiceRegistrationSpec = LayerSpec.make(
   { affinity: 'application', requires: [BlobStoreService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
@@ -904,8 +908,8 @@ export const clientServiceSpecs = (options: ServiceStackServices): LayerSpec.Lay
   SqlServiceSpec,
   SqlServiceRegistrationSpec,
   LocalBlobStoreSpec,
-  ...(options.edgeAvailable ? [BlobReplicationSpec] : []),
-  BlobStoreServiceSpec(options),
+  BlobReplicationSpec(options),
+  BlobStoreServiceSpec,
   BlobStoreServiceRegistrationSpec,
   DevtoolsHostSpec,
   DevtoolsHostRegistrationSpec,

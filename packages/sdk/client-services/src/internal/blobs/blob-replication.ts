@@ -31,6 +31,18 @@ export class BlobReplicationService extends EffectContext.Service<BlobReplicatio
   '@dxos/client-services/BlobReplication',
 ) {}
 
+/**
+ * Replication for a stack with no EDGE endpoint: reads are served by the local store alone and writes
+ * stay in its ledger, to be pushed by a later session that has one.
+ */
+export const BlobReplicationNoopLayer: Layer.Layer<BlobReplicationService, never, LocalBlobStoreService> = Layer.effect(
+  BlobReplicationService,
+  Effect.gen(function* () {
+    const local = yield* LocalBlobStoreService;
+    return { store: local, wake: () => {} };
+  }),
+);
+
 const edgeBlobTransport = (edge: EdgeHttpClient): BlobTransport => ({
   url: (key) => edge.getBlobUrl(key),
   put: (key, data, options) => edge.putBlob(Context.default(), key, data, options),

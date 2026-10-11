@@ -11,7 +11,7 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { makeInProcessClient } from '@dxos/protocols';
 import { BlobStoreService } from '@dxos/protocols/rpc';
 
-import { type BlobReplication, BlobReplicationService } from './blob-replication.ts';
+import { type BlobReplication, BlobReplicationNoopLayer, BlobReplicationService } from './blob-replication.ts';
 import { BlobStoreServiceLayer } from './blob-store-service.ts';
 import { LocalBlobStoreService } from './local-blob-store.ts';
 
@@ -21,9 +21,12 @@ const withService = (
   replication: BlobReplication | undefined,
   body: (client: BlobStoreService.Client) => Effect.Effect<void, unknown>,
 ) => {
+  const localLayer = Layer.succeed(LocalBlobStoreService, local);
   const dependencies = Layer.mergeAll(
-    Layer.succeed(LocalBlobStoreService, local),
-    replication ? Layer.succeed(BlobReplicationService, replication) : Layer.empty,
+    localLayer,
+    replication
+      ? Layer.succeed(BlobReplicationService, replication)
+      : BlobReplicationNoopLayer.pipe(Layer.provide(localLayer)),
   );
   return EffectEx.runPromise(
     Effect.gen(function* () {
@@ -34,7 +37,7 @@ const withService = (
 };
 
 describe('BlobStoreService', () => {
-  test('without replication, writes and reads are served by the local store alone', async () => {
+  test('with the noop replication, writes and reads are served by the local store alone', async () => {
     const local = createMemoryBlobStore();
     await withService(local, undefined, (client) =>
       Effect.gen(function* () {

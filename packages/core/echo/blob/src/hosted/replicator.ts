@@ -107,8 +107,8 @@ export const withReadThrough = ({
 };
 
 /** Uploads pending blobs until the ledger is empty; fails on the first blob that does not upload. */
-const uploadPending = (local: LocalBlobStore, transport: BlobTransport): Effect.Effect<void, Cause.UnknownError> =>
-  Effect.gen(function* () {
+const uploadPending: (local: LocalBlobStore, transport: BlobTransport) => Effect.Effect<void, Cause.UnknownError> =
+  Effect.fnUntraced(function* (local, transport) {
     for (;;) {
       const keys = yield* Effect.tryPromise(() => local.listPending({ limit: UPLOAD_BATCH_SIZE }));
       if (keys.length === 0) {
@@ -125,33 +125,26 @@ const uploadPending = (local: LocalBlobStore, transport: BlobTransport): Effect.
     }
   });
 
-const replicationLoop = ({
-  local,
-  transport,
-  wake,
-  baseDelay,
-  maxDelay,
-}: {
+const replicationLoop: (options: {
   local: LocalBlobStore;
   transport: BlobTransport;
   wake: Queue.Queue<void>;
   baseDelay: number;
   maxDelay: number;
-}): Effect.Effect<never> =>
-  Effect.gen(function* () {
-    let failures = 0;
-    for (;;) {
-      const exit = yield* Effect.exit(uploadPending(local, transport));
-      if (Exit.isSuccess(exit)) {
-        failures = 0;
-        yield* Queue.take(wake);
-        continue;
-      }
-
-      failures++;
-      const delay = Math.min(baseDelay * 2 ** (failures - 1), maxDelay);
-      log.info('blob replication failed; retrying', { failures, delay, error: Cause.squash(exit.cause) });
-      // Jittered within the upper half of the delay, so clients that went offline together do not retry together.
-      yield* Effect.sleep(delay / 2 + Math.random() * (delay / 2));
+}) => Effect.Effect<never> = Effect.fnUntraced(function* ({ local, transport, wake, baseDelay, maxDelay }) {
+  let failures = 0;
+  for (;;) {
+    const exit = yield* Effect.exit(uploadPending(local, transport));
+    if (Exit.isSuccess(exit)) {
+      failures = 0;
+      yield* Queue.take(wake);
+      continue;
     }
-  });
+
+    failures++;
+    const delay = Math.min(baseDelay * 2 ** (failures - 1), maxDelay);
+    log.info('blob replication failed; retrying', { failures, delay, error: Cause.squash(exit.cause) });
+    // Jittered within the upper half of the delay, so clients that went offline together do not retry together.
+    yield* Effect.sleep(delay / 2 + Math.random() * (delay / 2));
+  }
+});

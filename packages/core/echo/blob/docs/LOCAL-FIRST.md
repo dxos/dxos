@@ -40,7 +40,8 @@ complete on its own.
   store; `finalizeUpload` (adopting a direct upload) is the one EDGE call it can make.
 - **`BlobStoreService`** (`@dxos/protocols/rpc`) is served by three layers in `client-services`:
   - `LocalBlobStoreLayer` — the `blobs` table. Always present.
-  - `BlobReplicationLayer` — only in a stack with an EDGE endpoint. Runs `createBlobReplicator`
+  - `BlobReplicationLayer` — only in a stack with an EDGE endpoint; without one,
+    `BlobReplicationNoopLayer` serves reads from the local store and leaves writes in the ledger. Runs `createBlobReplicator`
     (`@dxos/blob/hosted`), which pushes the ledger to EDGE, and `withReadThrough`, which fills local
     misses from EDGE. It starts on `NetworkReady`, once the worker's EDGE client is authenticated.
   - `BlobStoreServiceLayer` — the RPC handlers. A `put` is confirmed once the local store holds the
