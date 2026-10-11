@@ -449,6 +449,9 @@ type LoggerListProps = Util.ThemedClassName<{
   checkable?: boolean;
 }>;
 
+/** Keys that move the listbox's highlight. */
+const NAVIGATION_KEYS = new Set(['ArrowUp', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown']);
+
 /** The row id of the listbox's highlighted option, if any. */
 const highlightedId = (container: HTMLElement): number | undefined => {
   const value = container.querySelector('[role=option][data-highlighted]')?.getAttribute('data-value');
@@ -486,9 +489,12 @@ const LoggerList = ({ classNames, checkable = true }: LoggerListProps) => {
   return (
     <Listbox.Root items={visible.map(({ id }) => ({ value: String(id), label: String(id) }))}>
       <div
-        // Keys act on the listbox's own highlighted row, which is the only ringed one: marking a separate current row
-        // as well would ring two rows while the highlight moves ahead of it.
+        // A click marks its row current; once the keys move the listbox's own highlight, that is the only ringed row, since
+        // a current row left behind would be ringed alongside it.
         onKeyDown={(event) => {
+          if (NAVIGATION_KEYS.has(event.key)) {
+            setCurrent(undefined);
+          }
           const target = highlightedId(event.currentTarget) ?? current;
           if (target === undefined) {
             return;
@@ -513,7 +519,7 @@ const LoggerList = ({ classNames, checkable = true }: LoggerListProps) => {
               <Listbox.Item
                 key={id}
                 id={String(id)}
-                onFocus={() => setCurrent(id)}
+                current={current === id}
                 onClick={() => setCurrent(id)}
                 // The first track keeps the row's height, so its cells stay centred with or without the checkbox and while the
                 // detail below it is open.

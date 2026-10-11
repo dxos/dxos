@@ -51,7 +51,7 @@ export type LoggerContextValue = {
   expanded: Set<number>;
   toggleExpand: (id: number) => void;
   current: number | undefined;
-  setCurrent: (id: number) => void;
+  setCurrent: (id: number | undefined) => void;
   checked: Set<number>;
   toggleChecked: (id: number) => void;
   clear: () => void;
