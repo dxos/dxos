@@ -4,24 +4,32 @@
 
 import React, { useMemo, useState } from 'react';
 
-import * as Surface from '@dxos/app-framework/Surface';
-import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as AppHooks from '@dxos/app-framework/Hooks';
+import type * as Surface from '@dxos/app-framework/Surface';
 import * as Hooks from '@dxos/app-toolkit/Hooks';
-import * as Chat from '@dxos/assistant/Chat';
+import * as AssistantChat from '@dxos/assistant/Chat';
 import { Filter, Obj } from '@dxos/echo';
 import * as AgentChannels from '@dxos/plugin-agent/AgentChannels';
-import { useQuery } from '@dxos/react-client/echo';
+import * as Assistant from '@dxos/plugin-assistant/Assistant';
+import * as Chat from '@dxos/plugin-assistant/Chat';
+import * as AssistantHooks from '@dxos/plugin-assistant/Hooks';
+import { type Space, useObject, useQuery, useRegistry } from '@dxos/react-client/echo';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Select from '@dxos/react-ui/Select';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 /**
- * One of the agent's channel conversations (a Discord channel, thread or DM bridged into the space), shown by the chat
- * surface the app uses: the newest until another is picked.
+ * The agent's channel conversations (Discord channels, threads and DMs bridged into the space), one at a time and read
+ * only: the thread without a prompt, since people talk to the agent in Discord. The newest is shown until the story's
+ * toolbar picks another.
  */
 export const ConversationModule = (_props: Surface.ComponentProps<Record<string, unknown>>) => {
   const space = Hooks.useActiveSpace();
-  const chats = useQuery(space?.db, Filter.type(Chat.Chat));
+  return space ? <ConversationPanel space={space} /> : null;
+};
+
+const ConversationPanel = ({ space }: { space: Space }) => {
+  const chats = useQuery(space.db, Filter.type(AssistantChat.Chat));
   // Created in order, so the last is the newest conversation.
   const conversations = useMemo(
     () => chats.filter((chat) => AgentChannels.conversationOf(chat) !== undefined),
@@ -29,43 +37,57 @@ export const ConversationModule = (_props: Surface.ComponentProps<Record<string,
   );
   const [selected, setSelected] = useState<string>();
   const chat = conversations.find(({ id }) => id === selected) ?? conversations.at(-1);
-  const data = useMemo(() => (chat ? { subject: chat, attendableId: chat.id } : undefined), [chat]);
+
+  const { preset } = AssistantHooks.usePresets({}, chat);
+  const registry = useRegistry();
+  const runtime = AppHooks.useProcessManagerRuntime();
+  const chatModel = AssistantHooks.useChatModel({ runtime, db: space.db, chat, preset, registry });
+  const [viewValue] = useObject(chat, 'viewType');
+  const view = Assistant.ChatViews.find((value) => value === viewValue);
+
+  const toolbar = (
+    <Toolbar.Root>
+      <Toolbar.Text>Conversation</Toolbar.Text>
+      <Toolbar.Separator variant='gap' />
+      {chat && conversations.length > 0 && (
+        <Select.Root
+          value={[chat.id]}
+          onValueChange={({ value: [value] }) => value && setSelected(value)}
+          items={conversations.map((conversation) => ({ value: conversation.id, label: titleOf(conversation) }))}
+        >
+          <Select.Trigger classNames='text-sm' />
+          <Select.Content>
+            {conversations.map((conversation) => (
+              <Select.Item
+                key={conversation.id}
+                classNames='text-sm'
+                item={{ value: conversation.id, label: titleOf(conversation) }}
+              />
+            ))}
+          </Select.Content>
+        </Select.Root>
+      )}
+    </Toolbar.Root>
+  );
 
   return (
     <Panel.Root data-testid='agent-conversation'>
-      <Panel.Header>
-        <Toolbar.Root>
-          <Toolbar.Text>Conversation</Toolbar.Text>
-          <Toolbar.Separator variant='gap' />
-          {conversations.length > 1 && chat && (
-            <Select.Root
-              value={[chat.id]}
-              onValueChange={({ value: [value] }) => value && setSelected(value)}
-              items={conversations.map((conversation) => ({ value: conversation.id, label: titleOf(conversation) }))}
-            >
-              <Select.Trigger classNames='text-sm' />
-              <Select.Content>
-                {conversations.map((conversation) => (
-                  <Select.Item
-                    key={conversation.id}
-                    classNames='text-sm'
-                    item={{ value: conversation.id, label: titleOf(conversation) }}
-                  />
-                ))}
-              </Select.Content>
-            </Select.Root>
-          )}
-        </Toolbar.Root>
-      </Panel.Header>
-      <Panel.Body>
-        {data ? (
-          <Surface.Surface type={AppSurface.Article} data={data} />
-        ) : (
+      <Panel.Header>{toolbar}</Panel.Header>
+      {chat && chatModel ? (
+        <Chat.Root chat={chat} chatModel={chatModel}>
+          <Panel.Body asChild>
+            <Chat.Content>
+              <Chat.Thread viewType={view} />
+            </Chat.Content>
+          </Panel.Body>
+        </Chat.Root>
+      ) : (
+        <Panel.Body>
           <p className='p-2 text-description'>No channel conversations yet.</p>
-        )}
-      </Panel.Body>
+        </Panel.Body>
+      )}
     </Panel.Root>
   );
 };
 
-const titleOf = (chat: Chat.Chat): string => Obj.getLabel(chat) ?? chat.name ?? chat.id;
+const titleOf = (chat: AssistantChat.Chat): string => Obj.getLabel(chat) ?? chat.name ?? chat.id;
