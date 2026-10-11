@@ -2,16 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type PropsWithChildren } from 'react';
+import React, { type PropsWithChildren, type ReactNode } from 'react';
 
 import { Listbox } from '@dxos/react-ui-list';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import * as Banner from '@dxos/react-ui/Banner';
-import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import * as Typography from '@dxos/react-ui/Typography';
 
 import { meta } from '#meta';
 
@@ -19,17 +18,17 @@ import { meta } from '#meta';
 // Root
 //
 
-type DiscordSetupRootProps = PropsWithChildren<{ role?: string; error?: string }>;
+type DiscordSetupRootProps = PropsWithChildren<{ role?: string; error?: string; toolbar?: ReactNode }>;
 
-/** Setting up an agent on Discord: the user's account, the servers, and the channels routed to the agent. */
-const DiscordSetupRoot = ({ role, error, children }: DiscordSetupRootProps) => {
+/** Setting up an agent on Discord: the servers, and the channels routed to the agent. */
+const DiscordSetupRoot = ({ role, error, toolbar, children }: DiscordSetupRootProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   return (
     <Panel.Root role={role} data-testid='discord-setup'>
+      {toolbar && <Panel.Header>{toolbar}</Panel.Header>}
       <Panel.Body asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport asChild>
-            {/* A wider gap between sections than within one, so each heading reads with its own list. */}
             <Layout.Container gap='lg'>
               {error && (
                 <Banner.Root valence='error'>
@@ -49,50 +48,61 @@ const DiscordSetupRoot = ({ role, error, children }: DiscordSetupRootProps) => {
 DiscordSetupRoot.displayName = 'DiscordSetup.Root';
 
 //
-// Section
+// Toolbar
 //
 
-type DiscordSetupSectionProps = PropsWithChildren<{ title: string; description?: string }>;
-
-const DiscordSetupSection = ({ title, description, children }: DiscordSetupSectionProps) => (
-  <Layout.Flex asChild column gap='xs'>
-    <section aria-label={title}>
-      <h3 className='text-sm text-fg-muted'>{title}</h3>
-      {description && <Typography.Text tone='muted'>{description}</Typography.Text>}
-      {children}
-    </section>
-  </Layout.Flex>
-);
-
-DiscordSetupSection.displayName = 'DiscordSetup.Section';
-
-//
-// Account
-//
-
-type DiscordSetupAccountProps = { account?: string; busy?: boolean; onConnect?: () => void };
-
-/** The signed-in Discord user, or the button that signs them in. */
-const DiscordSetupAccount = ({ account, busy, onConnect }: DiscordSetupAccountProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  return (
-    <DiscordSetupSection title={t('discord-setup-account.label')} description={t('discord-setup-account.description')}>
-      {account ? (
-        <Typography.Text data-testid='discord-setup-account'>{account}</Typography.Text>
-      ) : (
-        <Button.Root
-          icon='ph--discord-logo--regular'
-          label={t('discord-setup-connect.label')}
-          disabled={busy}
-          onClick={onConnect}
-          data-testid='discord-setup-connect'
-        />
-      )}
-    </DiscordSetupSection>
-  );
+type DiscordSetupToolbarProps = {
+  attendableId?: string;
+  /** Whether the user is signed in to Discord. */
+  signedIn?: boolean;
+  busy?: boolean;
+  onConnect?: () => void;
+  onSignOut?: () => void;
+  onRefresh?: () => void;
 };
 
-DiscordSetupAccount.displayName = 'DiscordSetup.Account';
+/** Signs the user in to (or out of) Discord, and re-reads the servers. */
+const DiscordSetupToolbar = ({
+  attendableId,
+  signedIn = false,
+  busy = false,
+  onConnect,
+  onSignOut,
+  onRefresh,
+}: DiscordSetupToolbarProps) => {
+  const menuActions = useMenuBuilder(
+    () =>
+      MenuBuilder.make()
+        .root({ label: ['discord-setup-actions.label', { ns: meta.profile.key }] })
+        .action(
+          signedIn ? 'sign-out' : 'connect',
+          {
+            label: [
+              signedIn ? 'discord-setup-sign-out.label' : 'discord-setup-connect.label',
+              { ns: meta.profile.key },
+            ],
+            icon: signedIn ? 'ph--sign-out--regular' : 'ph--discord-logo--regular',
+            disabled: busy,
+          },
+          () => (signedIn ? onSignOut : onConnect)?.(),
+        )
+        .action(
+          'refresh',
+          {
+            label: ['discord-setup-refresh.label', { ns: meta.profile.key }],
+            icon: 'ph--arrows-counter-clockwise--regular',
+            disabled: busy,
+          },
+          () => onRefresh?.(),
+        )
+        .build(),
+    [signedIn, busy, onConnect, onSignOut, onRefresh],
+  );
+
+  return <ActionToolbar {...menuActions} attendableId={attendableId} alwaysActive={attendableId === undefined} />;
+};
+
+DiscordSetupToolbar.displayName = 'DiscordSetup.Toolbar';
 
 //
 // List
@@ -144,8 +154,7 @@ DiscordSetupItem.displayName = 'DiscordSetup.Item';
 
 export const DiscordSetup = {
   Root: DiscordSetupRoot,
-  Section: DiscordSetupSection,
-  Account: DiscordSetupAccount,
+  Toolbar: DiscordSetupToolbar,
   List: DiscordSetupList,
   Item: DiscordSetupItem,
 };

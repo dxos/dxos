@@ -17,7 +17,7 @@ import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { type Channel, Message } from '@dxos/types';
 
 import { AgentActivity as AgentActivityComponent } from '#components';
-import { AgentChannels, AgentOperation } from '#types';
+import { AgentOperation } from '#types';
 
 import { useAgentChannelList, useAgentConversations } from '../useAgentConversations.ts';
 import { selectPrimaryChat, useBindingCount } from '../useSkillBindings.ts';
@@ -25,28 +25,28 @@ import { selectPrimaryChat, useBindingCount } from '../useSkillBindings.ts';
 export type AgentActivityProps = {
   role?: string;
   agent: Agent.Agent;
+  attendableId?: string;
 };
 
 /** The Agent's main article: the channels it converses in (with each backend's settings), its skills and its conversations. */
-export const AgentActivity = ({ role, agent }: AgentActivityProps) => {
+export const AgentActivity = ({ role, agent, attendableId }: AgentActivityProps) => {
   const { invokePromise } = Hooks.useOperationInvoker();
   const db = Obj.getDatabase(agent);
 
   const list = useAgentChannelList(agent);
   const [values] = useObject(list);
+  const channels = values?.channels ?? [];
   const conversations = useAgentConversations(agent);
 
-  const handleSave = useCallback(
-    ({ channels }: AgentChannels.Properties) => {
+  const handleRemoveChannel = useCallback(
+    (uri: string) => {
       if (list) {
         Obj.update(list, (list) => {
-          list.channels = [...channels];
+          list.channels = list.channels.filter((ref) => ref.uri !== uri);
         });
-      } else {
-        db?.add(AgentChannels.make({ agent, channels }));
       }
     },
-    [db, list, agent],
+    [list],
   );
 
   const handleSelect = useCallback(
@@ -59,36 +59,58 @@ export const AgentActivity = ({ role, agent }: AgentActivityProps) => {
     [conversations, invokePromise],
   );
 
+  // The channel opens a fresh conversation on its next message, so deleting one only clears its history here.
+  const handleDelete = useCallback(
+    (id: string) => {
+      const chat = conversations.find((chat) => chat.id === id);
+      if (chat) {
+        db?.remove(chat);
+      }
+    },
+    [conversations, db],
+  );
+
   const skills = useAgentSkills(agent);
 
   return (
-    <AgentActivityComponent.Root role={role}>
-      <AgentActivityComponent.Channels db={db} values={values ?? { channels: [] }} onSave={handleSave}>
-        {(values?.channels ?? []).map((ref) => (
+    <AgentActivityComponent.Root
+      role={role}
+      toolbar={<AgentActivityComponent.Toolbar attendableId={attendableId} onRefresh={skills.refresh} />}
+    >
+      <AgentActivityComponent.Channels
+        ids={channels.map((ref) => ref.uri)}
+        settings={channels.map((ref) => (
           <ChannelSettings key={ref.uri} channel={ref} />
+        ))}
+      >
+        {channels.map((ref) => (
+          <ChannelTile key={ref.uri} channel={ref} onRemove={handleRemoveChannel} />
         ))}
       </AgentActivityComponent.Channels>
       <AgentActivityComponent.Skills ids={skills.skills.map((skill) => skill.key)}>
         {skills.skills.map(({ key, name, customized }) => (
-          <AgentActivityComponent.Skill
-            key={key}
-            id={key}
-            name={name}
-            customized={customized}
-            busy={skills.busy}
-            onOpen={skills.open}
-            onCustomize={skills.customize}
-            onReset={skills.reset}
-          />
+          <AgentActivityComponent.Skill key={key} id={key} name={name} onOpen={customized ? skills.open : undefined} />
         ))}
       </AgentActivityComponent.Skills>
       <AgentActivityComponent.Conversations ids={conversations.map((chat) => chat.id)}>
         {conversations.map((chat) => (
-          <ConversationTile key={chat.id} chat={chat} onSelect={handleSelect} />
+          <ConversationTile key={chat.id} chat={chat} onSelect={handleSelect} onDelete={handleDelete} />
         ))}
       </AgentActivityComponent.Conversations>
     </AgentActivityComponent.Root>
   );
+};
+
+/** One channel row, named by the channel its ref resolves to. */
+const ChannelTile = ({
+  channel: ref,
+  onRemove,
+}: {
+  channel: Ref.Ref<Channel.Channel>;
+  onRemove: (uri: string) => void;
+}) => {
+  const channel = useResolveRef(ref);
+  return <AgentActivityComponent.Channel id={ref.uri} name={channel?.name} onRemove={onRemove} />;
 };
 
 /** The channel's backend settings, from whichever plugin owns its backend (e.g. the Discord bot). */
@@ -106,10 +128,11 @@ AgentActivity.displayName = 'AgentActivity';
 type ConversationTileProps = {
   chat: Chat.Chat;
   onSelect: (id: string) => void;
+  onDelete: (id: string) => void;
 };
 
 /** Owns the subscriptions to one chat's name and feed, so a new message re-renders only its own row. */
-const ConversationTile = ({ chat, onSelect }: ConversationTileProps) => {
+const ConversationTile = ({ chat, onSelect, onDelete }: ConversationTileProps) => {
   const [name] = useObject(chat, 'name');
   const [feedRef] = useObject(chat, 'feed');
   const feed = useResolveRef(feedRef);
@@ -128,16 +151,22 @@ const ConversationTile = ({ chat, onSelect }: ConversationTileProps) => {
   );
 
   return (
-    <AgentActivityComponent.Conversation id={chat.id} title={name} lastActivity={lastActivity} onSelect={onSelect} />
+    <AgentActivityComponent.Conversation
+      id={chat.id}
+      title={name}
+      lastActivity={lastActivity}
+      onSelect={onSelect}
+      onDelete={onDelete}
+    />
   );
 };
 
 type ListedSkill = { key: string; name: string; customized: boolean; skill?: Ref.Ref<Skill.Skill> };
 
 /**
- * The plugin skills the agent's conversation binds, with customize/reset/open. Bindings live in the chat's
+ * The plugin skills the agent's conversation binds; a customized one opens for editing. Bindings live in the chat's
  * feed and are read through an operation, so the list is re-read whenever the feed gains a binding entry —
- * a mode switch from anywhere, not only this panel's own customize and reset.
+ * a mode switch from anywhere.
  */
 const useAgentSkills = (agent: Agent.Agent) => {
   const { invokePromise } = Hooks.useOperationInvoker();
@@ -148,7 +177,6 @@ const useAgentSkills = (agent: Agent.Agent) => {
   const bindings = useBindingCount(primary);
   const [skills, setSkills] = useState<ListedSkill[]>([]);
   const refreshGeneration = useRef(0);
-  const [busy, setBusy] = useState(false);
 
   const refresh = useCallback(async () => {
     if (!spaceId) {
@@ -173,23 +201,6 @@ const useAgentSkills = (agent: Agent.Agent) => {
     void refresh();
   }, [refresh, primary?.id, bindings]);
 
-  const run = useCallback(
-    async (operation: typeof AgentOperation.CustomizeSkill | typeof AgentOperation.ResetSkill, key: string) => {
-      if (!spaceId) {
-        return;
-      }
-
-      setBusy(true);
-      await invokePromise(operation, { agent: Ref.make(agent), skill: key }, { spaceId });
-      await refresh();
-      setBusy(false);
-    },
-    [invokePromise, agent, spaceId, refresh],
-  );
-
-  const customize = useCallback((key: string) => void run(AgentOperation.CustomizeSkill, key), [run]);
-  const reset = useCallback((key: string) => void run(AgentOperation.ResetSkill, key), [run]);
-
   const open = useCallback(
     async (key: string) => {
       const ref = skills.find((skill) => skill.key === key)?.skill;
@@ -204,5 +215,5 @@ const useAgentSkills = (agent: Agent.Agent) => {
     [skills, db, invokePromise],
   );
 
-  return { skills, busy, customize, reset, open };
+  return { skills, open, refresh };
 };

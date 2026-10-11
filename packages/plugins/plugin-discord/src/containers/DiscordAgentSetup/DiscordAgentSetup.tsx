@@ -13,9 +13,9 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { EID } from '@dxos/keys';
 import { Connection } from '@dxos/link';
 import * as ConnectorCoordination from '@dxos/plugin-connector/ConnectorCoordination';
+import { Section } from '@dxos/react-ui-components';
 import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
-import * as Typography from '@dxos/react-ui/Typography';
 
 import { DiscordChannelForm, DiscordSetup } from '#components';
 import { meta } from '#meta';
@@ -39,13 +39,14 @@ const installUrl = (applicationId: string, guildId: string) =>
 export type DiscordAgentSetupProps = {
   role?: string;
   agent: Agent.Agent;
+  attendableId?: string;
 };
 
 /**
  * The agent's Discord companion: sign in to Discord, install the bot in a server the user administers, and route
  * that server's channels to this agent.
  */
-export const DiscordAgentSetup = ({ role, agent }: DiscordAgentSetupProps) => {
+export const DiscordAgentSetup = ({ role, agent, attendableId }: DiscordAgentSetupProps) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   // Absent until plugin-connector activates it (or when it is not enabled); Connect stays disabled meanwhile.
@@ -127,6 +128,19 @@ export const DiscordAgentSetup = ({ role, agent }: DiscordAgentSetupProps) => {
     ).finally(() => setBusy(false));
   }, [coordinator, db, spaceId]);
 
+  // Forgets the sign-in in this space; the grant itself stays on Discord until the user revokes it there.
+  const handleSignOut = useCallback(() => {
+    if (db && connection) {
+      db.remove(connection);
+      setManaged([]);
+    }
+  }, [db, connection]);
+
+  const handleRefresh = useCallback(() => {
+    void refreshGuilds();
+    void refreshChannels();
+  }, [refreshGuilds, refreshChannels]);
+
   const handleBind = useCallback(
     async (channel: DiscordAdminOperation.GuildChannel, bound: boolean) => {
       if (!spaceId || !bot || !guildId) {
@@ -176,56 +190,67 @@ export const DiscordAgentSetup = ({ role, agent }: DiscordAgentSetupProps) => {
   );
 
   return (
-    <DiscordSetup.Root role={role} error={error}>
-      <DiscordSetup.Account account={connection?.name} busy={busy || !coordinator} onConnect={handleConnect} />
-
+    <DiscordSetup.Root
+      role={role}
+      error={error}
+      toolbar={
+        <DiscordSetup.Toolbar
+          attendableId={attendableId}
+          signedIn={connection !== undefined}
+          busy={busy || !coordinator}
+          onConnect={handleConnect}
+          onSignOut={handleSignOut}
+          onRefresh={handleRefresh}
+        />
+      }
+    >
       {!bot && <BotForm db={db} />}
 
-      <DiscordSetup.Section title={t('discord-setup-servers.label')}>
-        <DiscordSetup.List
-          ids={guilds.map(({ id }) => id)}
-          value={guildId}
-          onValueChange={(id) => installedIds.has(id) && setGuildId(id)}
-        >
-          {guilds.map((guild) => {
-            const isInstalled = installedIds.has(guild.id);
-            return (
-              <DiscordSetup.Item
-                key={guild.id}
-                id={guild.id}
-                icon='ph--users-three--regular'
-                label={guild.name}
-                detail={isInstalled ? t('discord-setup-installed.label') : undefined}
-              >
-                {!isInstalled && bot && (
-                  <Button.Root
-                    variant='ghost'
-                    label={t('discord-setup-install.label')}
-                    icon='ph--plus--regular'
-                    onClick={(event: MouseEvent<HTMLButtonElement>) => {
-                      // The row selects the server; installing must not also select it.
-                      event.stopPropagation();
-                      window.open(installUrl(bot.applicationId, guild.id), '_blank', 'noopener');
-                    }}
-                  />
-                )}
-              </DiscordSetup.Item>
-            );
-          })}
-        </DiscordSetup.List>
-        <Button.Root
-          variant='ghost'
-          icon='ph--arrows-counter-clockwise--regular'
-          label={t('discord-setup-refresh.label')}
-          onClick={() => void refreshGuilds()}
-        />
-      </DiscordSetup.Section>
+      <Section.Root>
+        <Section.Label>{t('discord-setup-servers.label')}</Section.Label>
+        {guilds.length === 0 ? (
+          <Section.Empty>{t('discord-setup-servers-empty.label')}</Section.Empty>
+        ) : (
+          <DiscordSetup.List
+            ids={guilds.map(({ id }) => id)}
+            value={guildId}
+            onValueChange={(id) => installedIds.has(id) && setGuildId(id)}
+          >
+            {guilds.map((guild) => {
+              const isInstalled = installedIds.has(guild.id);
+              return (
+                <DiscordSetup.Item
+                  key={guild.id}
+                  id={guild.id}
+                  icon='ph--users-three--regular'
+                  label={guild.name}
+                  detail={isInstalled ? t('discord-setup-installed.label') : undefined}
+                >
+                  {!isInstalled && bot && (
+                    <Button.Root
+                      variant='ghost'
+                      label={t('discord-setup-install.label')}
+                      icon='ph--plus--regular'
+                      onClick={(event: MouseEvent<HTMLButtonElement>) => {
+                        // The row selects the server; installing must not also select it.
+                        event.stopPropagation();
+                        window.open(installUrl(bot.applicationId, guild.id), '_blank', 'noopener');
+                      }}
+                    />
+                  )}
+                </DiscordSetup.Item>
+              );
+            })}
+          </DiscordSetup.List>
+        )}
+      </Section.Root>
 
       {guildId && (
         <>
-          <DiscordSetup.Section title={t('discord-setup-connected.label')}>
+          <Section.Root>
+            <Section.Label>{t('discord-setup-connected.label')}</Section.Label>
             {connected.length === 0 ? (
-              <Typography.Text tone='muted'>{t('discord-setup-connected-empty.label')}</Typography.Text>
+              <Section.Empty>{t('discord-setup-connected-empty.label')}</Section.Empty>
             ) : (
               <DiscordSetup.List ids={connected.map(({ id }) => id)}>
                 {connected.map((channel) => (
@@ -240,9 +265,10 @@ export const DiscordAgentSetup = ({ role, agent }: DiscordAgentSetupProps) => {
                 ))}
               </DiscordSetup.List>
             )}
-          </DiscordSetup.Section>
+          </Section.Root>
 
-          <DiscordSetup.Section title={t('discord-setup-channels.label')}>
+          <Section.Root>
+            <Section.Label>{t('discord-setup-channels.label')}</Section.Label>
             <DiscordSetup.List ids={available.map(({ id }) => id)}>
               {available.map((channel) => {
                 const elsewhere = bindings.some(({ discordChannelId }) => discordChannelId === channel.id);
@@ -264,7 +290,7 @@ export const DiscordAgentSetup = ({ role, agent }: DiscordAgentSetupProps) => {
                 );
               })}
             </DiscordSetup.List>
-          </DiscordSetup.Section>
+          </Section.Root>
         </>
       )}
     </DiscordSetup.Root>
