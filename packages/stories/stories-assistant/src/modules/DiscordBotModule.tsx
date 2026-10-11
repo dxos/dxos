@@ -53,9 +53,9 @@ export const DiscordBotModule = (_props: Surface.ComponentProps<Record<string, u
   const { invokePromise } = AppHooks.useOperationInvoker();
   const [entries, setEntries] = useState<Entry[]>([]);
 
-  const poll = useCallback(async () => {
+  const read = useCallback(async (): Promise<Entry | undefined> => {
     if (!channel || !space) {
-      return;
+      return undefined;
     }
 
     const { data, error } = await invokePromise(
@@ -63,18 +63,38 @@ export const DiscordBotModule = (_props: Surface.ComponentProps<Record<string, u
       { channel: Ref.make(channel) },
       { spaceId: space.id },
     );
-    const entry: Entry = { at: new Date(), status: data?.status, error: error?.message };
-    setEntries((entries) => {
-      const last = entries.at(-1);
-      return last && describe(last) === describe(entry) ? entries : [...entries, entry].slice(-MAX_ENTRIES);
-    });
+    return { at: new Date(), status: data?.status, error: error?.message };
   }, [invokePromise, channel, space]);
 
   useEffect(() => {
+    // One read at a time, and none applied after unmount: a slow EDGE would otherwise stack reads and land them out of order.
+    let cancelled = false;
+    let inFlight = false;
+    const poll = async () => {
+      if (inFlight) {
+        return;
+      }
+      inFlight = true;
+      try {
+        const entry = await read();
+        if (entry && !cancelled) {
+          setEntries((entries) => {
+            const last = entries.at(-1);
+            return last && describe(last) === describe(entry) ? entries : [...entries, entry].slice(-MAX_ENTRIES);
+          });
+        }
+      } finally {
+        inFlight = false;
+      }
+    };
+
     void poll();
     const interval = setInterval(() => void poll(), POLL_MS);
-    return () => clearInterval(interval);
-  }, [poll]);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [read]);
 
   return (
     <Panel.Root data-testid='discord-bot-monitor'>

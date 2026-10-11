@@ -86,11 +86,21 @@ export const setupDiscordAgent = async ({
 };
 
 const ensureAgent = async (db: Database.Database, invoker: Capabilities.OperationInvoker, remote: boolean) => {
-  const existing = (await db.query(Filter.type(Agent.Agent)).run()).find(({ name }) => name === AGENT_NAME);
-  if (existing) {
-    return existing;
-  }
+  const agent =
+    (await db.query(Filter.type(Agent.Agent)).run()).find(({ name }) => name === AGENT_NAME) ??
+    (await createAgent(db, invoker));
 
+  // Applied to a reused agent too: its chat may have been created for the other mode. An agent's chat runs on EDGE unless told otherwise.
+  const [chat] = await db.query(Filter.and(Filter.type(Chat.Chat), Filter.childOf(agent))).run();
+  if (chat && Obj.instanceOf(Chat.Chat, chat) && chat.remote !== remote) {
+    Obj.update(chat, (chat) => {
+      chat.remote = remote;
+    });
+  }
+  return agent;
+};
+
+const createAgent = async (db: Database.Database, invoker: Capabilities.OperationInvoker) => {
   const { data, error } = await invoker.invokePromise(
     AgentOperation.CreateAgent,
     { name: AGENT_NAME },
@@ -99,15 +109,7 @@ const ensureAgent = async (db: Database.Database, invoker: Capabilities.Operatio
   if (error || !data) {
     throw error ?? new Error('CreateAgent returned nothing.');
   }
-  const agent = await data.agent.load();
-  const [chat] = await db.query(Filter.and(Filter.type(Chat.Chat), Filter.childOf(agent))).run();
-  if (chat && Obj.instanceOf(Chat.Chat, chat)) {
-    // An agent's chat runs on EDGE unless told otherwise.
-    Obj.update(chat, (chat) => {
-      chat.remote = remote;
-    });
-  }
-  return agent;
+  return data.agent.load();
 };
 
 const ensureChannel = async (db: Database.Database) => {
