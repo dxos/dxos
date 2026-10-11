@@ -14,6 +14,7 @@ import * as DiscordChannel from '@dxos/plugin-discord/DiscordChannel';
 import { Channel } from '@dxos/types';
 
 import { AGENT_NAME } from './playground.ts';
+import { seedSupportTeam } from './support-team.ts';
 
 //
 // The Discord bot story: one agent (Kai) bound to one Discord-backed channel, whose bot runs on EDGE.
@@ -57,6 +58,7 @@ export const setupDiscordAgent = async ({
   remote = false,
 }: SetupDiscordAgentProps): Promise<{ agent: Agent.Agent; channel: Channel.Channel }> => {
   const agent = await ensureAgent(db, invoker, remote);
+  await seedSupportTeam({ db, invoker, agent });
   await enableSupport(db, invoker, agent);
   const channel = await ensureChannel(db);
 

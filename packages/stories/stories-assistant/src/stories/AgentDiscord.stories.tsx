@@ -143,6 +143,8 @@ export const Scripted: Story = {
     // Setup put the agent in Support mode after the Activity panel mounted, so its skill list must follow the bindings.
     const skills = await canvas.findByRole('region', { name: 'Skills' }, { timeout: 30_000 });
     await within(skills).findByText('Community support', {}, { timeout: 30_000 });
+    // Setup recorded each team member's expertise, which the skill reads to choose who to offer.
+    await canvas.findByText(/Dmytro Maretskyi \(DXOS\) is the one to ask about ECHO/, {}, { timeout: 30_000 });
 
     await userEvent.click(await canvas.findByRole('button', { name: 'Start bot' }, { timeout: 30_000 }));
     await findEntry(monitor, 'running · connecting');

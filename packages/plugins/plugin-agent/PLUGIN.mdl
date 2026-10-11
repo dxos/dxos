@@ -347,14 +347,15 @@ skill SupportSkill
     - op:recordMemory
     - op:sendMessage
   instructions: >
-    Authored in `src/skills/SupportSkill.ts`; also binds the relay operations (create, update). Resolve the asker and recall their setup and earlier answers
-    first. A question gets the shortest correct answer, never an invented command, API or link. A bug
-    report gets the missing details asked for once, a summary, and an "event" memory. A feature request
-    gets a "note" memory and no promise. What it cannot answer, confirmed bugs, and every security, data
-    loss, billing or account issue go to the support contact named in the agent's instructions as a relay
-    whose reply channel is the thread; with no resolvable contact, or an undelivered message, it says so
-    rather than claim a handoff. Never asks for secrets, tells anyone who posts one
-    to rotate it, never shares what it knows about other people.
+    Authored in `src/skills/SupportSkill.ts`; also binds the relay operations (create, update). Resolve the
+    asker and recall their setup and earlier answers first. A question gets the shortest correct answer, never
+    an invented command, API or link. A bug report gets the missing details asked for once, a summary, and an
+    "event" memory. A feature request gets a "note" memory and no promise. What it cannot answer it offers to
+    the team member whose expertise fits — the team and each member's areas are memories it recalls ("support
+    team"), not part of the skill — and relays only once the person agrees (security, data loss, billing and
+    account access go at once), with the thread as the reply channel; with no fitting member, or an
+    undelivered message, it says so rather than claim a handoff. Never asks for secrets, tells anyone who
+    posts one to rotate it, shares of the team only a first name and an area.
 ```
 
 Both are contributed as `SkillDefinition`s; createAgent puts the Interview skill in every new agent's
