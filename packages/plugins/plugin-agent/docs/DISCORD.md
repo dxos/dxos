@@ -149,11 +149,11 @@ What is built (dxos/dxos#13887, dxos/edge#1279), set up from the agent's **Disco
 
 Connecting a channel (`DiscordAdminOperation.BindChannel`, the companion's **Connect**) writes three things:
 
-| Where | Object                        | What it holds                                                                                                     |
-| ----- | ----------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| space | `Channel` (backend `discord`) | One per agent, bot and server; its `DiscordChannel` config names the bot, the server and the Discord channel ids. |
-| space | `AgentChannels`               | The agent's list of `Channel`s; the server's `Channel` is added to it the first time.                             |
-| EDGE  | binding in `DiscordBot`       | Discord channel id → the owning space, the `Channel`'s EID and its config's EID.                                  |
+| Where | Object                        | What it holds                                                                                                                   |
+| ----- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| space | `Channel` (backend `discord`) | One per connected Discord channel, named after it; its `DiscordChannel` config names the bot, the server and that channel's id. |
+| space | `AgentChannels`               | The agent's list of `Channel`s; the new `Channel` is added to it.                                                               |
+| EDGE  | binding in `DiscordBot`       | Discord channel id → the owning space, the `Channel`'s EID and its config's EID.                                                |
 
 The binding does not name the agent: EDGE resolves it per message as the agent whose `AgentChannels` lists the
 binding's `Channel`, so the space stays the authority on which agent answers.
@@ -169,8 +169,8 @@ When someone posts in a bound channel:
    thread.
 4. The agent runs a turn in the space, and its reply is posted back through the bot.
 
-**Disconnect** (`UnbindChannel`) deletes the binding and removes the id from the config's channel list; the `Channel`
-stays in the agent's list. Deleting a thread conversation in the Activity panel deletes the Discord thread through EDGE
+**Disconnect** (`UnbindChannel`) deletes the binding and removes the id from the config; a `Channel` left with no Discord
+channel leaves the agent's list, and its conversations stay in the space. Deleting a thread conversation in the Activity panel deletes the Discord thread through EDGE
 (the bot needs Manage Threads) and then the chat.
 
 ## Phases

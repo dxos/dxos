@@ -16,7 +16,7 @@ import { Channel } from '@dxos/types';
 import { DiscordAdminOperation, DiscordChannel } from '#types';
 
 import { botQuery, callAdminRoute } from './bot.ts';
-import { findGuildChannel } from './guild-channel.ts';
+import { findDiscordChannel } from './guild-channel.ts';
 
 /** EDGE reads the new objects from the space, which can trail a local write by a moment. */
 const BIND_ATTEMPTS = 5;
@@ -29,18 +29,13 @@ const handler: Operation.WithHandler<typeof DiscordAdminOperation.BindChannel> =
       accessToken,
       agent: agentRef,
       guildId,
-      guildName,
       discordChannelId,
+      channelName,
     }) {
       const agent = yield* Database.load(agentRef).pipe(Effect.orDie);
-      const found = yield* findGuildChannel(agent, applicationId, guildId);
       const { channel, config } =
-        found ?? (yield* createGuildChannel(agent, { applicationId, accessToken, guildId, guildName }));
-      if (!config.channels.includes(discordChannelId)) {
-        Obj.update(config, (config) => {
-          config.channels = [...config.channels, discordChannelId];
-        });
-      }
+        (yield* findDiscordChannel(agent, applicationId, discordChannelId)) ??
+        (yield* createDiscordChannel(agent, { applicationId, accessToken, guildId, discordChannelId, channelName }));
       yield* Database.flush();
 
       const { spaceId } = yield* botQuery();
@@ -72,24 +67,29 @@ const handler: Operation.WithHandler<typeof DiscordAdminOperation.BindChannel> =
 
 export default handler;
 
-/** The agent's Discord `Channel` for one guild: a new config naming the bot, added to the agent's channels. */
-const createGuildChannel = Effect.fnUntraced(function* (
+/**
+ * The agent's `Channel` for one Discord channel, named after it so the agent's channel list reads as Discord does: a
+ * config naming the bot and that channel, added to the agent's channels.
+ */
+const createDiscordChannel = Effect.fnUntraced(function* (
   agent: Agent.Agent,
   {
     applicationId,
     accessToken,
     guildId,
-    guildName,
+    discordChannelId,
+    channelName,
   }: {
     applicationId: string;
     accessToken: DiscordChannel.Properties['accessToken'];
     guildId: string;
-    guildName?: string;
+    discordChannelId: string;
+    channelName?: string;
   },
 ) {
-  const config = DiscordChannel.make({ accessToken, applicationId, guildId, channels: [] });
+  const config = DiscordChannel.make({ accessToken, applicationId, guildId, channels: [discordChannelId] });
   const channel = yield* Database.add(
-    Channel.make({ name: guildName ?? 'Discord', backend: { kind: DiscordChannel.BACKEND_KIND, config } }),
+    Channel.make({ name: channelName ?? discordChannelId, backend: { kind: DiscordChannel.BACKEND_KIND, config } }),
   );
   const list = yield* AgentChannels.loadForAgent(agent);
   if (list) {

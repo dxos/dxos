@@ -163,8 +163,8 @@ export const DiscordAgentSetup = ({ role, agent, attendableId }: DiscordAgentSet
               accessToken: bot.accessToken,
               agent: Ref.make(agent),
               guildId,
-              guildName: installed.find(({ id }) => id === guildId)?.name,
               discordChannelId: channel.id,
+              channelName: channel.name,
             },
             { spaceId },
           );
@@ -172,7 +172,7 @@ export const DiscordAgentSetup = ({ role, agent, attendableId }: DiscordAgentSet
       await refreshChannels();
       setBusy(false);
     },
-    [invokePromise, spaceId, bot, guildId, agent, installed, refreshChannels],
+    [invokePromise, spaceId, bot, guildId, agent, refreshChannels],
   );
 
   const installedIds = useMemo(() => new Set(installed.map(({ id }) => id)), [installed]);
