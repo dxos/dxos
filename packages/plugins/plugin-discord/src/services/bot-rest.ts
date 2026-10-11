@@ -18,14 +18,6 @@ export const DiscordApiBase = Context.Reference<string>('@dxos/plugin-discord/Di
   defaultValue: () => DISCORD_API_BASE,
 });
 
-/**
- * The `fetch` Discord calls go through: the platform's own by default (EDGE), replaced by the integration proxy where
- * Discord's missing CORS headers would make a browser refuse the response.
- */
-export const DiscordFetch = Context.Reference<typeof fetch>('@dxos/plugin-discord/DiscordFetch', {
-  defaultValue: () => (input, init) => globalThis.fetch(input, init),
-});
-
 /** Discord's per-message content limit. */
 export const MAX_MESSAGE_LENGTH = 2000;
 
@@ -65,21 +57,16 @@ type DiscordResponse = { ok: boolean; status: number; body: DiscordBody };
 const decodeBody = (value: unknown): DiscordBody =>
   Schema.decodeUnknownOption(DiscordBody)(value).pipe(Option.getOrElse((): DiscordBody => ({})));
 
-/** One authenticated JSON request; the token goes only into the header, never into errors or logs. */
-const request = Effect.fnUntraced(function* (
-  method: 'POST' | 'DELETE',
-  token: string,
-  path: string,
-  payload?: unknown,
-) {
+/** One authenticated JSON POST; the token goes only into the header, never into errors or logs. */
+const post = Effect.fnUntraced(function* (token: string, path: string, payload: unknown) {
   const base = yield* DiscordApiBase;
-  const discordFetch = yield* DiscordFetch;
   return yield* Effect.tryPromise({
     try: async (): Promise<DiscordResponse> => {
-      const response = await discordFetch(`${base}${path}`, {
-        method,
+      // Read at call time, not captured, so a test or host can substitute `fetch`.
+      const response = await globalThis.fetch(`${base}${path}`, {
+        method: 'POST',
         headers: { 'Authorization': `Bot ${token}`, 'Content-Type': 'application/json' },
-        ...(payload === undefined ? {} : { body: JSON.stringify(payload) }),
+        body: JSON.stringify(payload),
       });
       // Error bodies are not always JSON (a proxy's HTML 502), and only the status matters then.
       const body = await response.json().catch(() => undefined);
@@ -88,8 +75,6 @@ const request = Effect.fnUntraced(function* (
     catch: (cause) => new DiscordChannelError({ message: `Discord request to ${path} failed.`, cause }),
   });
 });
-
-const post = (token: string, path: string, payload: unknown) => request('POST', token, path, payload);
 
 /** Turns a Discord error response into a reason the agent can relay to a person. */
 const failureReason = (response: DiscordResponse): string => {
@@ -135,16 +120,3 @@ export const postText: (
   }
   return messageIds;
 });
-
-/** Deletes a Discord thread for everyone in it; Discord requires the bot to hold Manage Threads. */
-export const deleteThread: (token: string, threadId: string) => Effect.Effect<void, DiscordChannelError> =
-  Effect.fnUntraced(function* (token, threadId) {
-    const response = yield* request('DELETE', token, `/channels/${encodeURIComponent(threadId)}`);
-    if (!response.ok) {
-      const reason =
-        response.status === 403
-          ? 'The bot lacks Manage Threads in this server; reinstall it from Discord setup to grant it.'
-          : failureReason(response);
-      return yield* Effect.fail(new DiscordChannelError({ message: reason }));
-    }
-  });

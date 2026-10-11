@@ -16,9 +16,14 @@ import { type Channel, Message } from '@dxos/types';
 import { DiscordChannel } from '#types';
 
 import { DiscordChannelError } from '../errors.ts';
-import { type EdgeClientResolver, appEdgeClient, callBot, toConnectionStatus } from '../services/bot-gateway.ts';
-import { DiscordFetch, deleteThread, openDirectMessage, postText } from '../services/bot-rest.ts';
-import { makeProxyFetch } from '../services/proxy-http-client.ts';
+import {
+  type EdgeClientResolver,
+  appEdgeClient,
+  callBot,
+  callBotRoute,
+  toConnectionStatus,
+} from '../services/bot-gateway.ts';
+import { openDirectMessage, postText } from '../services/bot-rest.ts';
 
 export type DiscordChannelBackendOptions = {
   /** Where the EDGE client for the bot routes comes from; the app's client by default. */
@@ -74,9 +79,22 @@ export const makeDiscordChannelBackend = ({
       }),
     remove: (channel, thread) =>
       Effect.gen(function* () {
-        const { token } = yield* loadBot(channel);
-        // Deleting is asked for from the app, where only the proxy can reach Discord.
-        yield* deleteThread(token, thread).pipe(Effect.provideService(DiscordFetch, makeProxyFetch()));
+        // Through EDGE, which holds the bot's real token (a space may only record a placeholder) and reaches Discord
+        // without the browser's CORS limits.
+        const { config, spaceId } = yield* loadConfig(channel);
+        const accessToken = yield* Effect.tryPromise({
+          try: () => config.accessToken.load(),
+          catch: (cause) => new DiscordChannelError({ message: 'Could not load the bot token.', cause }),
+        });
+        const edge = yield* edgeClient;
+        const query = new URLSearchParams({ spaceId, accessToken: accessToken.id });
+        yield* callBotRoute(
+          edge,
+          config.applicationId,
+          `/threads/${encodeURIComponent(thread)}?${query.toString()}`,
+          { method: 'DELETE' },
+          DeletedAnswer,
+        );
       }),
   },
   connection: {
@@ -123,6 +141,9 @@ const post = (token: string, target: string, message: Message.Message) =>
     messageIds,
     properties: { discord: { channelId: target, messageId: messageIds.at(0), messageIds } },
   }));
+
+/** EDGE's answer to a thread deletion. */
+const DeletedAnswer = Schema.Struct({ deleted: Schema.Boolean });
 
 const loadConfig = (channel: Channel.Channel) =>
   Effect.gen(function* () {
