@@ -49,6 +49,16 @@ export const isAnyCompanionOpen = (
 ): boolean => (companionPlanks === undefined ? !!flatten : companionPlanks.length > 0);
 
 /**
+ * Whether a plank whose companion flag is `open` actually shows the pane. A plank with no companions
+ * (the plugin registry, settings) has nothing to show, so it renders closed without clearing the flag —
+ * flat mode's flag is deck-wide, and navigating back to a document must find the pane still open.
+ * `companions` is undefined until read, which counts as open so a plank that has companions never lays
+ * out collapsed first.
+ */
+export const isCompanionShown = (open: boolean, companions: readonly unknown[] | undefined): boolean =>
+  open && companions?.length !== 0;
+
+/**
  * `companionPlanks` with `plankId` marked open. Flat mode holds a single entry (the flag is deck-wide),
  * stacked mode appends.
  */

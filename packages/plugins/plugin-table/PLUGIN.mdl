@@ -303,6 +303,34 @@ test QA-1: Create a table bound to a schema and add a row
       expect: the row leaves the navtree and its plank closes if it was open
 ```
 
+```mdl
+test QA-2: Build a typed table and sort it
+  desc: The demo path — create a table, add a typed column, enter rows, and sort by that column.
+  actors: human
+  covers: [F-1.1, F-2.2, F-3.1, T-2, T-3]
+  status: passing            # 2026-10-09, recorded by autocue/reading-list.mjs
+  given:
+    - an identity exists, on a fresh profile
+    - space: the default space is open on its Home
+  steps:
+    - name: Create a table
+      do: Click "Add to space", choose Table, name it "Reading list" and click Create without picking a type.
+      expect: a table with Description, Status and Title columns opens in a new plank, under a new
+        "Reading list" type in the Database section
+    - name: Add a typed number column
+      do: Click + at the end of the header row, set the label to "Rating", choose the Number format and Save.
+      expect: a "Rating" column joins the header row
+    - name: Add rows
+      do: |
+        For each of Dune 4, Neuromancer 5, Snow Crash 3 and Foundation 4.5, click + in the last row, then
+        type the title into Title and the number into Rating.
+      expect: four rows appear, the ratings right-aligned as numbers
+      note: Enter that commits a cell in the last row inserts another, empty row; Tab commits without one.
+    - name: Sort by rating
+      do: Open the Rating column's menu and choose Sort Descending.
+      expect: the rows reorder to Neuromancer, Foundation, Dune, Snow Crash, and the header shows a sort icon
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl

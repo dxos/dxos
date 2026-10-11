@@ -14,7 +14,7 @@ import { translations } from '#translations';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { type Size, SIZES } from '../../sizes.ts';
-import { byTestId, centreY, controlSize, expectScoped, sizeRow } from '../../testing.ts';
+import { byTestId, centreY, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 import { Button } from '../Button/Button.tsx';
 import { Container } from '../Container/Container.tsx';
@@ -100,7 +100,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 /**
- * A tag is one inset shorter than a control on each side, centred in its row, in the size's label text; each hue maps
+ * A tag is its label's line box tall, with no block inset, centred in its row, in the size's label text; each hue maps
  * to ui-theme's surface/fg tokens, and valences share the current Tag's hues (error is rose). A plain tag is a span; an
  * `onClick` tag is a button (click and Enter); an `onDelete` tag has a trailing "Remove <text>" button that fits the
  * pill without changing its height and fires only `onDelete`; a clickable tag also deletes on Backspace; no button
@@ -112,9 +112,8 @@ export const Test: Story = {
     for (const size of SIZES) {
       const tag = byTestId(canvasElement, `tag-${size}`);
       const row = byTestId(canvasElement, `row-${size}`);
-      const inset = parseFloat(getComputedStyle(row).getPropertyValue('--dx-control-inset'));
       const rect = tag.getBoundingClientRect();
-      await expect(rect.height, size).toBeCloseTo(controlSize(size) - 2 * inset, 0);
+      await expect(rect.height, size).toBeCloseTo(parseFloat(getComputedStyle(tag).lineHeight), 0);
       await expect(centreY(rect), size).toBeCloseTo(centreY(row.getBoundingClientRect()), 0);
       await expect(parseFloat(getComputedStyle(tag).fontSize), size).toBe(LABEL_FONT[size]);
     }
