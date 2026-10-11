@@ -140,6 +140,8 @@ export const Scripted: Story = {
     const canvas = within(canvasElement);
     const monitor = await canvas.findByTestId('discord-bot-monitor', {}, { timeout: 60_000 });
     await findEntry(monitor, 'stopped · idle');
+    // Setup put the agent in Support mode, so its Activity panel lists the community-support skill.
+    await canvas.findByText('Community support', {}, { timeout: 30_000 });
 
     await userEvent.click(await canvas.findByRole('button', { name: 'Start bot' }, { timeout: 30_000 }));
     await findEntry(monitor, 'running · connecting');

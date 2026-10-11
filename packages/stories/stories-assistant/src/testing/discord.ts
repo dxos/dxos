@@ -9,6 +9,7 @@ import { type Database, Filter, Obj, Ref } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';
 import * as AgentChannels from '@dxos/plugin-agent/AgentChannels';
 import * as AgentOperation from '@dxos/plugin-agent/AgentOperation';
+import * as ModeOperation from '@dxos/plugin-agent/ModeOperation';
 import * as DiscordChannel from '@dxos/plugin-discord/DiscordChannel';
 import { Channel } from '@dxos/types';
 
@@ -29,6 +30,9 @@ export type DiscordBotArgs = {
 };
 
 export const DISCORD_CHANNEL_NAME = 'Discord';
+
+/** The mode the agent works in on the community channel; each Discord thread's chat inherits its skills. */
+export const SUPPORT_MODE = 'Support';
 
 /** Placeholder secret: local EDGE substitutes `DISCORD_BOT_TOKEN_DEV`, so the space never holds the real token. */
 const PLACEHOLDER_TOKEN = 'dev';
@@ -53,6 +57,7 @@ export const setupDiscordAgent = async ({
   remote = false,
 }: SetupDiscordAgentProps): Promise<{ agent: Agent.Agent; channel: Channel.Channel }> => {
   const agent = await ensureAgent(db, invoker, remote);
+  await enableSupport(db, invoker, agent);
   const channel = await ensureChannel(db);
 
   const config = await channel.backend.config.load();
@@ -98,6 +103,25 @@ const ensureAgent = async (db: Database.Database, invoker: Capabilities.Operatio
     });
   }
   return agent;
+};
+
+/**
+ * Puts the agent's own chat in Support mode: `ensureChannelChat` copies that chat's skills into every
+ * conversation it creates, so each Discord thread starts with the community-support skill bound.
+ */
+const enableSupport = async (db: Database.Database, invoker: Capabilities.OperationInvoker, agent: Agent.Agent) => {
+  const [chat] = await db.query(Filter.and(Filter.type(Chat.Chat), Filter.childOf(agent))).run();
+  if (!chat || !Obj.instanceOf(Chat.Chat, chat)) {
+    return;
+  }
+  const { error } = await invoker.invokePromise(
+    ModeOperation.SwitchMode,
+    { chat: Ref.make(chat), mode: SUPPORT_MODE },
+    { spaceId: db.spaceId },
+  );
+  if (error) {
+    throw error;
+  }
 };
 
 const createAgent = async (db: Database.Database, invoker: Capabilities.OperationInvoker) => {

@@ -337,8 +337,27 @@ skill InterviewSkill
     answer's status (dropped for rejections), update the person's and any team's profile, summarise.
 ```
 
+```mdl
+skill SupportSkill
+  key: org.dxos.skill.agentSupport
+  desc: Community support in a public channel; bound by the built-in Support mode.
+  contributes:
+    - op:resolveEntity
+    - op:retrieveMemories
+    - op:recordMemory
+    - op:sendMessage
+  instructions: >
+    Authored in `src/skills/SupportSkill.ts`; also binds the relay operations (create, update). Resolve the asker and recall their setup and earlier answers
+    first. A question gets the shortest correct answer, never an invented command, API or link. A bug
+    report gets the missing details asked for once, a summary, and an "event" memory. A feature request
+    gets a "note" memory and no promise. What it cannot answer, confirmed bugs, and every security, data
+    loss, billing or account issue go to the support contact (named in the agent's instructions, else its
+    team) as a relay whose reply channel is the thread. Never asks for secrets, tells anyone who posts one
+    to rotate it, never shares what it knows about other people.
+```
+
 Both are contributed as `SkillDefinition`s; createAgent puts the Interview skill in every new agent's
-Instructions.
+Instructions. The Support skill is bound by the built-in Support mode.
 
 ## App graph
 
