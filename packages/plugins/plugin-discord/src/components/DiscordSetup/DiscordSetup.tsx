@@ -157,7 +157,7 @@ type DiscordSetupItemProps = PropsWithChildren<{
 
 /** One server or channel: its name, its state, and (as children) its action. */
 const DiscordSetupItem = ({ id, icon, label, detail, children }: DiscordSetupItemProps) => (
-  <Listbox.Item id={id} data-testid={`discord-setup-item-${id}`}>
+  <Listbox.Item id={id} classNames='dx-hover' data-testid={`discord-setup-item-${id}`}>
     <Listbox.ItemIcon icon={icon} />
     <Listbox.ItemText>{label}</Listbox.ItemText>
     {detail && <Listbox.ItemDescription>{detail}</Listbox.ItemDescription>}

@@ -179,7 +179,7 @@ type AgentActivityChannelProps = {
 const AgentActivityChannel = ({ id, name, detail, onRemove }: AgentActivityChannelProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   return (
-    <Listbox.Item id={id}>
+    <Listbox.Item id={id} classNames='dx-hover'>
       <Listbox.ItemIcon icon='ph--hash--regular' />
       <Listbox.ItemText>{name || t('channel-unnamed.label')}</Listbox.ItemText>
       {detail && <Listbox.ItemDescription>{detail}</Listbox.ItemDescription>}
@@ -225,7 +225,7 @@ type AgentActivitySkillProps = {
 
 /** One skill the agent runs. */
 const AgentActivitySkill = ({ id, name, onOpen }: AgentActivitySkillProps) => (
-  <Listbox.Item id={id} onClick={onOpen ? () => onOpen(id) : undefined}>
+  <Listbox.Item id={id} onClick={onOpen ? () => onOpen(id) : undefined} classNames='dx-hover'>
     <Listbox.ItemIcon icon='ph--blueprint--regular' />
     <Listbox.ItemText>{name}</Listbox.ItemText>
   </Listbox.Item>
@@ -280,7 +280,7 @@ const AgentActivityConversation = ({
 }: AgentActivityConversationProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   return (
-    <Listbox.Item id={id} onClick={() => onSelect?.(id)}>
+    <Listbox.Item id={id} onClick={() => onSelect?.(id)} classNames='dx-hover'>
       <Listbox.ItemIcon icon='ph--chat-circle-dots--regular' />
       <Listbox.ItemText>{title || t('conversation-untitled.label')}</Listbox.ItemText>
       {lastActivity !== undefined && (
