@@ -8,6 +8,7 @@ import React, { useEffect, useState } from 'react';
 
 import { Blob, Database, Obj, Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
+import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Media from '@dxos/react-ui/Media';
@@ -17,22 +18,49 @@ import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 const MAX_TEXT_LENGTH = 64 * 1024;
 
 /**
- * The blob an object carries: the object itself when it is a {@link Blob.Blob}, else the first top-level
- * reference to one (e.g. `File.data`). Synchronous, so a panel can decide whether to open before loading.
+ * The blob a value carries: the value itself when it is (or is a checkout of) a {@link Blob.Blob}, else the first top-level
+ * reference to one (e.g. `File.data`). A reference is either live (a `Ref`) or, in a historical checkout,
+ * its encoded `{ "/": uri }` form, which `lookup` resolves by entity id. Synchronous, so a panel can
+ * decide whether to open before loading.
  */
-export const findBlobRef = (object: Obj.Unknown | undefined): Blob.Blob | Ref.Ref<Obj.Unknown> | undefined => {
-  if (!object) {
+export const findBlob = (
+  value: unknown,
+  lookup: (id: string) => unknown,
+): Blob.Blob | Ref.Ref<Obj.Unknown> | undefined => {
+  if (value === null || typeof value !== 'object') {
     return undefined;
   }
-  if (Obj.instanceOf(Blob.Blob, object)) {
-    return object;
+  if (Obj.isObject(value) && Obj.instanceOf(Blob.Blob, value)) {
+    return value;
   }
-  for (const value of Object.values(object)) {
-    if (Ref.isRef(value) && value.target && Obj.instanceOf(Blob.Blob, value.target)) {
-      return value;
+  // A historical checkout of a blob is raw data; its bytes never change, so the live blob stands in for it.
+  const self = 'id' in value && typeof value.id === 'string' ? lookup(value.id) : undefined;
+  if (Obj.isObject(self) && Obj.instanceOf(Blob.Blob, self)) {
+    return self;
+  }
+  for (const entry of Object.values(value)) {
+    if (Ref.isRef(entry)) {
+      if (entry.target && Obj.instanceOf(Blob.Blob, entry.target)) {
+        return entry;
+      }
+      continue;
+    }
+    const id = encodedRefId(entry);
+    const target = id ? lookup(id) : undefined;
+    if (Obj.isObject(target) && Obj.instanceOf(Blob.Blob, target)) {
+      return target;
     }
   }
   return undefined;
+};
+
+/** The entity id of an encoded reference (`{ "/": uri }`), the shape refs take in raw document data. */
+const encodedRefId = (value: unknown): string | undefined => {
+  if (value === null || typeof value !== 'object' || !('/' in value) || typeof value['/'] !== 'string') {
+    return undefined;
+  }
+  const eid = EID.tryParse(value['/']);
+  return eid ? EID.getEntityId(eid) : undefined;
 };
 
 type BlobResource = {

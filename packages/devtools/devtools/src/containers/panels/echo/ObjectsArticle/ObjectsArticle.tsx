@@ -2,7 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import { formatDistanceToNow } from 'date-fns';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { type ComponentRef, useCallback, useMemo, useRef, useState } from 'react';
 
 import { type Database, Entity, Filter, Format, Obj, Query, Tag, Type } from '@dxos/echo';
@@ -28,7 +30,7 @@ import {
   ObjectsTree,
   Placeholder,
   PropertyTree,
-  findBlobRef,
+  findBlob,
 } from '../../../../components/index.ts';
 import { DataSpaceSelector } from '../../../../containers/index.ts';
 import { useDevtoolsState } from '../../../../hooks/index.ts';
@@ -88,12 +90,20 @@ export const ObjectsArticle = ({ role, ...props }: ArticleProps & { space?: Spac
   const selected = useMemo(() => items.find((item) => item.id === selectedId), [items, selectedId]);
   // The version is held here rather than in the inspector, so the blob preview shows the same version it does.
   const [version, setVersion] = useState<number>();
-  const history = useEditHistory(selected);
+  // An edit keeps the entity's identity, so its atom is what tells the memos below to recompute.
+  const selectedAtom = useMemo(() => (selected ? Entity.atom(selected) : NO_SNAPSHOT), [selected]);
+  const snapshot = useAtomValue(selectedAtom);
+  const history = useEditHistory(selected, snapshot);
   const displayed = useMemo(() => {
     const heads = version !== undefined ? history[version]?.heads : undefined;
     return heads && Obj.isObject(selected) ? checkoutVersion(selected, heads) : selected;
-  }, [selected, history, version]);
-  const blob = useMemo(() => (Obj.isObject(displayed) ? findBlobRef(displayed) : undefined), [displayed]);
+  }, [selected, snapshot, history, version]);
+  // Serialized afresh on each change, since the property tree memoizes on the value it is given.
+  const inspected = useMemo(() => toJson(displayed), [displayed, snapshot]);
+  const blob = useMemo(
+    () => findBlob(displayed, (id) => items.find((item) => item.id === id)),
+    [displayed, snapshot, items],
+  );
 
   const handleSelect = useCallback((id: string | undefined) => {
     setSelectedId(id);
@@ -152,7 +162,7 @@ export const ObjectsArticle = ({ role, ...props }: ArticleProps & { space?: Spac
           {selected && db ? (
             <Inspector
               entity={selected}
-              value={displayed}
+              value={inspected}
               db={db}
               history={history}
               version={version}
@@ -313,7 +323,7 @@ const Inspector = ({ entity, value, db, history, version, onVersionChange, onSel
   );
 };
 
-const useEditHistory = (entity: Entity.Unknown | undefined): VersionDiff[] =>
+const useEditHistory = (entity: Entity.Unknown | undefined, snapshot: unknown): VersionDiff[] =>
   useMemo(() => {
     if (!Obj.isObject(entity)) {
       return [];
@@ -325,7 +335,13 @@ const useEditHistory = (entity: Entity.Unknown | undefined): VersionDiff[] =>
       log.catch(err);
       return [];
     }
-  }, [entity]);
+    // `snapshot` changes on every edit to `entity`, whose own identity does not.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entity, snapshot]);
+
+const NO_SNAPSHOT = Atom.make<Entity.Snapshot | undefined>(undefined);
+
+const toJson = (value: unknown): unknown => (value === undefined ? undefined : JSON.parse(JSON.stringify(value)));
 
 type HistoryProps = {
   history: VersionDiff[];
@@ -373,12 +389,16 @@ const History = ({ history, version, onVersionChange }: HistoryProps) => (
 /** Tag registry keyed by the `Tag` object's uri — the id space `#tag` terms and `meta.tags` share. */
 const useTagMap = (db: Database.Database | undefined): Tag.Map => {
   const tags = useQuery(db, Filter.type(Tag.Tag));
+  // Keyed on the tags themselves, not the result array: the query editor rebuilds its view (and drops
+  // focus) whenever this map's identity changes, and the query can hand back a new array on any render.
+  const key = tags.map((tag) => Obj.getURI(tag).toString()).join();
   return useMemo(
     () =>
       tags.reduce<Tag.Map>((acc, tag) => {
         acc[Obj.getURI(tag).toString()] = tag;
         return acc;
       }, {}),
-    [tags],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [key],
   );
 };
