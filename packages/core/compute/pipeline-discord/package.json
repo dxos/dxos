@@ -27,7 +27,8 @@
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
-    "src"
+    "src",
+    "!src/testing/fixtures"
   ],
   "dependencies": {
     "@dxos/ai": "workspace:*",
