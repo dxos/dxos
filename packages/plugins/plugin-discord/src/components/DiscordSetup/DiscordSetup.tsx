@@ -4,6 +4,7 @@
 
 import React, { type PropsWithChildren } from 'react';
 
+import { Listbox } from '@dxos/react-ui-list';
 import * as Banner from '@dxos/react-ui/Banner';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -93,40 +94,57 @@ const DiscordSetupAccount = ({ account, busy, onConnect }: DiscordSetupAccountPr
 DiscordSetupAccount.displayName = 'DiscordSetup.Account';
 
 //
-// Row
+// List
 //
 
-type DiscordSetupRowProps = PropsWithChildren<{
-  label: string;
-  detail?: string;
-  testId?: string;
-  selected?: boolean;
-  onSelect?: () => void;
+type DiscordSetupListProps = PropsWithChildren<{
+  /** The ids of the rows, in order. */
+  ids: readonly string[];
+  /** The selected row, for a list the user picks from; omitted for a list of actions only. */
+  value?: string;
+  onValueChange?: (id: string) => void;
 }>;
 
-/** One server or channel: its name, its state, and its action. */
-const DiscordSetupRow = ({ label, detail, testId, selected, onSelect, children }: DiscordSetupRowProps) => (
-  <Layout.Flex gap='sm' classNames='items-center' data-testid={testId} data-selected={selected || undefined}>
-    {onSelect ? (
-      <Button.Root
-        variant={selected ? 'primary' : 'ghost'}
-        label={label}
-        onClick={onSelect}
-        classNames='grow justify-start'
-      />
-    ) : (
-      <Typography.Text classNames='grow truncate'>{label}</Typography.Text>
-    )}
-    {detail && <Typography.Text tone='muted'>{detail}</Typography.Text>}
-    {children}
-  </Layout.Flex>
+/** Servers or channels as one list; children are {@link DiscordSetupItem} rows. */
+const DiscordSetupList = ({ ids, value, onValueChange, children }: DiscordSetupListProps) => (
+  <Listbox.Root
+    items={ids.map((id) => ({ value: id, label: id }))}
+    {...(onValueChange ? { value, onValueChange } : {})}
+  >
+    <Listbox.Content scroll={false}>{children}</Listbox.Content>
+  </Listbox.Root>
 );
 
-DiscordSetupRow.displayName = 'DiscordSetup.Row';
+DiscordSetupList.displayName = 'DiscordSetup.List';
+
+//
+// Item
+//
+
+type DiscordSetupItemProps = PropsWithChildren<{
+  id: string;
+  icon: string;
+  label: string;
+  /** The row's state, e.g. "Installed" or the agent a channel is routed to. */
+  detail?: string;
+}>;
+
+/** One server or channel: its name, its state, and (as children) its action. */
+const DiscordSetupItem = ({ id, icon, label, detail, children }: DiscordSetupItemProps) => (
+  <Listbox.Item id={id} data-testid={`discord-setup-item-${id}`}>
+    <Listbox.ItemIcon icon={icon} />
+    <Listbox.ItemText>{label}</Listbox.ItemText>
+    {detail && <Listbox.ItemDescription>{detail}</Listbox.ItemDescription>}
+    {children}
+  </Listbox.Item>
+);
+
+DiscordSetupItem.displayName = 'DiscordSetup.Item';
 
 export const DiscordSetup = {
   Root: DiscordSetupRoot,
   Section: DiscordSetupSection,
   Account: DiscordSetupAccount,
-  Row: DiscordSetupRow,
+  List: DiscordSetupList,
+  Item: DiscordSetupItem,
 };

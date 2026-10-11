@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { type MouseEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as Agent from '@dxos/assistant/Agent';
@@ -174,27 +174,37 @@ export const DiscordAgentSetup = ({ role, agent }: DiscordAgentSetupProps) => {
         title={t('discord-setup-servers.label')}
         description={t('discord-setup-servers.description')}
       >
-        {guilds.map((guild) => {
-          const isInstalled = installedIds.has(guild.id);
-          return (
-            <DiscordSetup.Row
-              key={guild.id}
-              label={guild.name}
-              testId={`discord-setup-guild-${guild.id}`}
-              selected={guild.id === guildId}
-              onSelect={isInstalled ? () => setGuildId(guild.id) : undefined}
-              detail={isInstalled ? t('discord-setup-installed.label') : undefined}
-            >
-              {!isInstalled && bot && (
-                <Button.Root
-                  label={t('discord-setup-install.label')}
-                  icon='ph--plus--regular'
-                  onClick={() => window.open(installUrl(bot.applicationId, guild.id), '_blank', 'noopener')}
-                />
-              )}
-            </DiscordSetup.Row>
-          );
-        })}
+        <DiscordSetup.List
+          ids={guilds.map(({ id }) => id)}
+          value={guildId}
+          onValueChange={(id) => installedIds.has(id) && setGuildId(id)}
+        >
+          {guilds.map((guild) => {
+            const isInstalled = installedIds.has(guild.id);
+            return (
+              <DiscordSetup.Item
+                key={guild.id}
+                id={guild.id}
+                icon='ph--users-three--regular'
+                label={guild.name}
+                detail={isInstalled ? t('discord-setup-installed.label') : undefined}
+              >
+                {!isInstalled && bot && (
+                  <Button.Root
+                    variant='ghost'
+                    label={t('discord-setup-install.label')}
+                    icon='ph--plus--regular'
+                    onClick={(event: MouseEvent<HTMLButtonElement>) => {
+                      // The row selects the server; installing must not also select it.
+                      event.stopPropagation();
+                      window.open(installUrl(bot.applicationId, guild.id), '_blank', 'noopener');
+                    }}
+                  />
+                )}
+              </DiscordSetup.Item>
+            );
+          })}
+        </DiscordSetup.List>
         <Button.Root
           variant='ghost'
           icon='ph--arrows-counter-clockwise--regular'
@@ -208,30 +218,34 @@ export const DiscordAgentSetup = ({ role, agent }: DiscordAgentSetupProps) => {
           title={t('discord-setup-channels.label')}
           description={t('discord-setup-channels.description')}
         >
-          {channels.map((channel) => {
-            const binding = bindings.find(({ discordChannelId }) => discordChannelId === channel.id);
-            const mine = binding !== undefined && entityIdOf(binding.agent) === agent.id;
-            return (
-              <DiscordSetup.Row
-                key={channel.id}
-                label={`#${channel.name}`}
-                testId={`discord-setup-channel-${channel.id}`}
-                detail={
-                  binding
-                    ? mine
-                      ? t('discord-setup-bound-here.label')
-                      : t('discord-setup-bound-other.label')
-                    : undefined
-                }
-              >
-                <Button.Root
-                  label={mine ? t('discord-setup-unbind.label') : t('discord-setup-bind.label')}
-                  disabled={busy || (binding !== undefined && !mine)}
-                  onClick={() => void handleBind(channel, mine)}
-                />
-              </DiscordSetup.Row>
-            );
-          })}
+          <DiscordSetup.List ids={channels.map(({ id }) => id)}>
+            {channels.map((channel) => {
+              const binding = bindings.find(({ discordChannelId }) => discordChannelId === channel.id);
+              const mine = binding !== undefined && entityIdOf(binding.agent) === agent.id;
+              return (
+                <DiscordSetup.Item
+                  key={channel.id}
+                  id={channel.id}
+                  icon='ph--hash--regular'
+                  label={channel.name}
+                  detail={
+                    binding
+                      ? mine
+                        ? t('discord-setup-bound-here.label')
+                        : t('discord-setup-bound-other.label')
+                      : undefined
+                  }
+                >
+                  <Button.Root
+                    variant='ghost'
+                    label={mine ? t('discord-setup-unbind.label') : t('discord-setup-bind.label')}
+                    disabled={busy || (binding !== undefined && !mine)}
+                    onClick={() => void handleBind(channel, mine)}
+                  />
+                </DiscordSetup.Item>
+              );
+            })}
+          </DiscordSetup.List>
         </DiscordSetup.Section>
       )}
     </DiscordSetup.Root>

@@ -165,6 +165,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/sql-sqlite": "workspace:*",
     "@dxos/types": "workspace:*",
