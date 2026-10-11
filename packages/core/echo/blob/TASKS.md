@@ -1,8 +1,8 @@
 # @dxos/blob — Tasks
 
 _Resume: local-first storage (Phase 5) implemented; next is its eviction gap, then the File
-properties panel and the `edge`/`ni:` → `blob` migration. Uncommitted: none. Last: the `edge`
-backend stores bytes in the worker's SQLite first and uploads to EDGE in the background._
+properties panel and the `edge`/`ni:` → `blob` migration. Uncommitted: none. Last: replication to
+EDGE moved into its own client-services layer, present only with an EDGE URL._
 
 Design and the decisions behind it: [docs/DESIGN.md](./docs/DESIGN.md).
 
@@ -54,15 +54,17 @@ crashed a tab when hundreds of photos were stored inline. Design: [docs/LOCAL-FI
 
 - [x] **`LocalBlobStore` contract and in-memory store** — content-addressed `put`/`get`/`has` plus the
       upload ledger (`listPending`, `markUploaded`); `createMemoryBlobStore` for tests.
-- [x] **Local-first `createEdgeBlobBackend`** — writes local, uploads in the background with jittered
-      backoff, reads through from EDGE and caches, `getUrl` as an object URL; `transport` optional.
+- [x] **Local-first `createEdgeBlobBackend`** — talks only to the local store; a write is confirmed
+      once stored locally; `getUrl` as an object URL.
+- [x] **Replication as a host layer** — `createBlobReplicator` + `withReadThrough`, run by
+      `BlobReplicationLayer` in `client-services` only when an EDGE URL is configured.
 - [x] **`blobs` table and `BlobStoreService`** — migration `blobs_migrations/0001_init` in
-      `client-services`, served over the client services RPC.
+      `client-services`; the RPC is `put`/`get`/`has`, with the ledger kept host-side.
 - [x] **Registered by `@dxos/client` with or without EDGE**, as the default storage.
 - [ ] **Eviction** — needs `BlobBackend.remove` and reference counting (or a mark-and-sweep over the
       spaces' `Blob` objects); until then the local store only grows.
 - [ ] **Per-blob failure isolation** — one blob EDGE rejects permanently stalls the ledger behind it.
-- [ ] **Wake the uploader on connectivity** (`online` event) rather than waiting out the backoff.
+- [ ] **Wake replication on connectivity** (`online` event) rather than waiting out the backoff.
 - [ ] **Peer-to-peer transfer** for spaces with no EDGE, where another peer cannot fetch the bytes.
 
 ## Phase 4: Backlog

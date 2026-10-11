@@ -18,24 +18,33 @@ putting the bytes in Automerge.
 
 ## Shape
 
+A client writes to the store on its device and is done. Replication with EDGE is a separate layer in
+the client services host, present only when an EDGE URL is configured; without it the client is
+complete on its own.
+
 ```text
- tab / app                                      worker (client services host)
-┌──────────────────────────────────┐          ┌────────────────────────────────┐
-│ BlobManager ── createEdgeBlobBackend         │                                │
-│                 │   │                        │  BlobStoreService (RPC)        │
-│     local ──────┘   └── transport ──► EDGE   │   └─ blobs table in the DXOS   │
-│  (createRpcBlobStore) ─────────────────────► │      OPFS SQLite database      │
-└──────────────────────────────────┘          └────────────────────────────────┘
+ tab / app                               worker (client services host)
+┌──────────────────────────────┐        ┌─────────────────────────────────────────┐
+│ BlobManager                  │        │ BlobStoreService (RPC)                  │
+│   └─ createEdgeBlobBackend   │  RPC   │   ├─ LocalBlobStore ── blobs table      │
+│        └─ createRpcBlobStore ├───────►│   │                    (OPFS SQLite)    │
+└──────────────────────────────┘        │   └─ BlobReplication ─ async ──► EDGE   │
+                                        │      (only with an EDGE URL)            │
+                                        └─────────────────────────────────────────┘
 ```
 
-- **`LocalBlobStore`** (`@dxos/blob`) is the contract: content-addressed `put`/`get`/`has`, plus the
-  upload ledger (`listPending`, `markUploaded`). `createMemoryBlobStore` implements it in memory for
-  tests and for hosts with no durable store.
-- **`BlobStoreService`** (`@dxos/protocols/rpc`) serves that contract from the `blobs` table of the
-  client services host's database — in the browser, the OPFS database the dedicated worker opens.
-  `@dxos/client` adapts the RPC to `LocalBlobStore` (`createRpcBlobStore`).
-- **`createEdgeBlobBackend({ local, transport? })`** composes the two. `transport` is optional: with no
-  EDGE endpoint configured the backend is local-only.
+- **`BlobStore`** (`@dxos/blob`) is what a client needs: content-addressed `put`/`get`/`has`.
+  **`LocalBlobStore`** extends it with the upload ledger (`listPending`, `markUploaded`);
+  `createMemoryBlobStore` implements it in memory.
+- **`createEdgeBlobBackend({ store, finalizeUpload? })`** is the client's backend. It talks only to the
+  store; `finalizeUpload` (adopting a direct upload) is the one EDGE call it can make.
+- **`BlobStoreService`** (`@dxos/protocols/rpc`) is served by three layers in `client-services`:
+  - `LocalBlobStoreLayer` — the `blobs` table. Always present.
+  - `BlobReplicationLayer` — only in a stack with an EDGE endpoint. Runs `createBlobReplicator`
+    (`@dxos/blob/hosted`), which pushes the ledger to EDGE, and `withReadThrough`, which fills local
+    misses from EDGE. It starts on `NetworkReady`, once the worker's EDGE client is authenticated.
+  - `BlobStoreServiceLayer` — the RPC handlers. A `put` is confirmed once the local store holds the
+    bytes, and only then is replication woken; it never waits on the network.
 
 ### Table
 
@@ -56,21 +65,20 @@ ledger, so scanning for pending work never reads the bytes.
 
 ## Behaviour
 
-| Operation | Local-only (no EDGE URL)          | With EDGE                                                                     |
-| --------- | --------------------------------- | ----------------------------------------------------------------------------- |
-| `put`     | local write                       | local write, then wake the uploader; never waits on the network               |
-| `get`     | local                             | local; on a miss fetch from EDGE and cache it as already uploaded             |
-| `has`     | local                             | local, else EDGE                                                              |
-| `getUrl`  | object URL over the local bytes   | same, after a read-through; if EDGE cannot be reached, EDGE's own URL         |
-| upload    | entries stay pending indefinitely | background loop drains the ledger; jittered exponential backoff, 1 s to 5 min |
+| Operation   | Without EDGE URL                | With EDGE                                                                   |
+| ----------- | ------------------------------- | --------------------------------------------------------------------------- |
+| `put`       | local write, confirmed          | local write, confirmed; then replication is woken                           |
+| `get`       | local                           | local; on a miss the host fetches from EDGE and caches it as already pushed |
+| `has`       | local                           | local, else EDGE                                                            |
+| `getUrl`    | object URL over the local bytes | same, after the host's read-through                                         |
+| replication | absent; entries stay pending    | drains the ledger; jittered exponential backoff, 1 s to 5 min               |
 
 URIs are unchanged — `ni:///sha-256;…` — so existing blobs resolve and EDGE addressing is the same.
-Uploads are idempotent because the key is the content hash, which is why the background loop and
-`flush()` can safely overlap, and why a duplicate upload from two tabs costs bandwidth, not
-correctness.
+Uploads are idempotent because the key is the content hash, which is why the replication loop and
+`flush()` can safely overlap.
 
 The ledger lives in the database rather than in memory, so a write made offline is uploaded by
-whichever later session has a transport — including a session that only gains an EDGE URL later.
+whichever later session replicates — including one that only gains an EDGE URL later.
 
 `getUrl` returns an object URL over the local bytes so a blob renders offline. Each URL is created
 once per hash and revoked when the backend closes; the bytes it holds stay in memory until then.
@@ -81,9 +89,10 @@ once per hash and revoked when the backend closes; the bytes it holds stay in me
    tab, but the database belongs to the worker (OPFS sync handles are exclusive). A dedicated
    four-verb RPC is narrower than reusing `SqlService`, whose statement screening is built for
    untrusted operations.
-2. **The uploader runs in the client, not the host.** It needs the authenticated `EdgeHttpClient`
-   the client already holds, and it keeps the backend testable against an in-memory store and
-   transport. The cost is one uploader per open client — idempotent, so harmless.
+2. **Replication runs in the host, as its own layer.** A client write is confirmed once the bytes
+   are stored locally; pushing to EDGE is asynchronous replication, like document sync, and is
+   absent from a stack with no EDGE URL. One replicator per host rather than per tab, using the
+   worker's EDGE client, which is authenticated once the identity loads.
 3. **The backend is the default storage with or without EDGE.** Bytes always land locally first, so
    a client with no EDGE URL no longer falls back to inline storage. The trade: without EDGE, another
    peer cannot fetch those bytes (inline bytes replicated with the document); a peer-to-peer blob
@@ -95,11 +104,11 @@ once per hash and revoked when the backend closes; the bytes it holds stay in me
 - **The local store only grows.** Content-addressed bytes can be shared by several `Blob` objects
   and nothing counts references, so nothing knows when an entry is safe to evict. Eviction needs
   `BlobBackend.remove` plus reference counting or a mark-and-sweep over the spaces' `Blob` objects.
-- **One failing blob stalls the queue.** The uploader works the ledger oldest first and retries the
+- **One failing blob stalls the queue.** Replication works the ledger oldest first and retries the
   whole pass on any failure, so a blob EDGE rejects permanently blocks the ones behind it. Sizes are
   checked before the write (`MAX_EDGE_BLOB_SIZE`), which removes the obvious cause.
 - **Directly uploaded blobs are not copied locally until first read** (`adoptUpload`), since the bytes
   never passed through this process.
-- **No connectivity signal.** The uploader learns that EDGE is back only when its next retry
+- **No connectivity signal.** Replication learns that EDGE is back only when its next retry
   succeeds, up to five minutes later; an `online` event could wake it sooner.
 - **Peer-to-peer blob transfer** — see decision 3.

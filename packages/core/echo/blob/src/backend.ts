@@ -48,29 +48,38 @@ export interface BlobTransport {
   finalizeUpload?(uploadId: string): Promise<{ key: string; size: number; contentType?: string }>;
 }
 
-/** Bytes held by a {@link LocalBlobStore}, with the content type they were written under. */
+/** Bytes held by a {@link BlobStore}, with the content type they were written under. */
 export interface LocalBlob {
   data: Uint8Array;
   contentType?: string;
 }
 
 /**
- * Durable, content-addressed store on this device, keyed by lowercase hex digest, that also records
- * which entries have yet to reach the hosted store.
- *
- * The upload ledger lives beside the bytes rather than in the backend's memory so that a write made
- * offline is still uploaded after a restart.
+ * Content-addressed bytes keyed by lowercase hex digest: what a client needs from the store on its
+ * device. Replication to the hosted store happens behind it, never in the caller's write path.
  */
-export interface LocalBlobStore {
-  /**
-   * Stores bytes under `key`; a key already present keeps its bytes, since content addressing makes
-   * them identical, and only learns a missing content type. `uploaded` records that the hosted store
-   * already holds them (a read-through fill), and is never cleared by a later write.
-   */
-  put(key: string, data: Uint8Array, options: { contentType?: string; uploaded: boolean }): Promise<void>;
-  /** `undefined` means the key is not stored locally. */
+export interface BlobStore {
+  /** Stores bytes under `key`; a key already present keeps its bytes, since content addressing makes them identical. */
+  put(key: string, data: Uint8Array, options?: { contentType?: string }): Promise<void>;
+  /** `undefined` means the key was not found. */
   get(key: string): Promise<LocalBlob | undefined>;
   has(key: string): Promise<boolean>;
+}
+
+/**
+ * The durable {@link BlobStore} on this device, together with its ledger of entries the hosted store
+ * does not hold yet.
+ *
+ * The ledger lives beside the bytes rather than in a replicator's memory so that a write made
+ * offline is still replicated after a restart.
+ */
+export interface LocalBlobStore extends BlobStore {
+  /**
+   * As {@link BlobStore.put}; an existing key only learns a missing content type. `uploaded` records
+   * that the hosted store already holds the bytes (a read-through fill), and is never cleared by a
+   * later write.
+   */
+  put(key: string, data: Uint8Array, options?: { contentType?: string; uploaded?: boolean }): Promise<void>;
   /** Keys not yet uploaded, oldest first. */
   listPending(options: { limit: number }): Promise<string[]>;
   markUploaded(key: string): Promise<void>;

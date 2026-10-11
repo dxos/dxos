@@ -220,11 +220,11 @@ projects:
     user: dmaretskyi
     host: claude-cloud
     created: 2026-10-10
-    summary: 'Make the EDGE blob backend local-first: bytes land in a `blobs` table in the client services SQLite database (served over a new BlobStoreService RPC) and upload to EDGE in the background; local-only when no EDGE URL is configured.'
+    summary: 'Make the EDGE blob backend local-first: bytes land in a `blobs` table in the client services SQLite database (served over a new BlobStoreService RPC); a separate host layer replicates them to EDGE asynchronously, only when an EDGE URL is configured.'
     tasks: packages/core/echo/blob/TASKS.md
     design: packages/core/echo/blob/docs/LOCAL-FIRST.md
     prs: [13880]
-    resume: 'Phase 5 of packages/core/echo/blob/TASKS.md implemented and tested. NEXT: eviction (needs BlobBackend.remove + refcounting), per-blob upload failure isolation, online-event wake, p2p transfer for no-EDGE spaces.'
+    resume: 'Phase 5 of packages/core/echo/blob/TASKS.md implemented: client writes are confirmed once stored locally; EDGE replication is a separate client-services layer (BlobReplicationLayer) present only with an EDGE URL. NEXT: land PR #13880, then eviction (needs BlobBackend.remove + refcounting), per-blob failure isolation, online-event wake, p2p transfer for no-EDGE spaces.'
   - name: plugin-s3
     status: active
     user: burdon

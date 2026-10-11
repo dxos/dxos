@@ -67,7 +67,13 @@ import * as SpacesContract from '../../contracts/spaces.ts';
 import * as Readiness from '../../Readiness.ts';
 import * as SqliteStorage from '../../SqliteStorage.ts';
 import { EdgeAgentManagerLayer, EdgeAgentManagerService, EdgeAgentServiceLayer } from '../agents/index.ts';
-import { BlobStoreServiceLayer } from '../blobs/index.ts';
+import {
+  BlobReplicationLayer,
+  BlobReplicationService,
+  BlobStoreServiceLayer,
+  LocalBlobStoreLayer,
+  LocalBlobStoreService,
+} from '../blobs/index.ts';
 import { DevicesServiceLayer } from '../devices/index.ts';
 import { DevtoolsHostLayer, DevtoolsHostService } from '../devtools/index.ts';
 import {
@@ -792,10 +798,32 @@ export const SqlServiceRegistrationSpec = LayerSpec.make(
   () => RegisterService(SqlService.Rpcs, SqlService.Tag),
 );
 
-export const BlobStoreServiceSpec = LayerSpec.make(
-  { affinity: 'application', requires: [SqlClient.SqlClient], provides: [BlobStoreService.Tag] },
-  () => BlobStoreServiceLayer,
+export const LocalBlobStoreSpec = LayerSpec.make(
+  { affinity: 'application', requires: [SqlClient.SqlClient], provides: [LocalBlobStoreService] },
+  () => LocalBlobStoreLayer,
 );
+
+/** Only included with an edge endpoint: without one, blobs live on this device alone. */
+export const BlobReplicationSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [LocalBlobStoreService, EdgeHttpClientService, Hook.Controller],
+    provides: [BlobReplicationService],
+  },
+  () => BlobReplicationLayer,
+);
+
+// Replication is required only when configured, so the service is built after it rather than
+// finding it absent.
+export const BlobStoreServiceSpec = (options: ServiceStackServices) =>
+  LayerSpec.make(
+    {
+      affinity: 'application',
+      requires: [LocalBlobStoreService, ...(options.edgeAvailable ? [BlobReplicationService] : [])],
+      provides: [BlobStoreService.Tag],
+    },
+    () => BlobStoreServiceLayer,
+  );
 
 export const BlobStoreServiceRegistrationSpec = LayerSpec.make(
   { affinity: 'application', requires: [BlobStoreService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
@@ -875,7 +903,9 @@ export const clientServiceSpecs = (options: ServiceStackServices): LayerSpec.Lay
   LoggingServiceRegistrationSpec,
   SqlServiceSpec,
   SqlServiceRegistrationSpec,
-  BlobStoreServiceSpec,
+  LocalBlobStoreSpec,
+  ...(options.edgeAvailable ? [BlobReplicationSpec] : []),
+  BlobStoreServiceSpec(options),
   BlobStoreServiceRegistrationSpec,
   DevtoolsHostSpec,
   DevtoolsHostRegistrationSpec,

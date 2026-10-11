@@ -3,56 +3,70 @@
 //
 
 import * as Effect from 'effect/Effect';
-import { describe, expect, test } from 'vitest';
+import * as Layer from 'effect/Layer';
+import { describe, expect, test, vi } from 'vitest';
 
+import { type LocalBlobStore, createMemoryBlobStore } from '@dxos/blob';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { layerMemory } from '@dxos/sql-sqlite/Platform';
+import { makeInProcessClient } from '@dxos/protocols';
+import { BlobStoreService } from '@dxos/protocols/rpc';
 
-import { makeBlobStore, migrateBlobStore } from './blob-store-service.ts';
+import { type BlobReplication, BlobReplicationService } from './blob-replication.ts';
+import { BlobStoreServiceLayer } from './blob-store-service.ts';
+import { LocalBlobStoreService } from './local-blob-store.ts';
 
-type BlobStore = Effect.Success<typeof makeBlobStore>;
-
-const run = (body: (store: BlobStore) => Effect.Effect<void, unknown>) =>
-  EffectEx.runPromise(
-    Effect.gen(function* () {
-      yield* migrateBlobStore;
-      yield* body(yield* makeBlobStore);
-    }).pipe(Effect.provide(layerMemory), Effect.orDie),
+/** Runs `body` against the service over an in-process RPC client, with replication only if given. */
+const withService = (
+  local: LocalBlobStore,
+  replication: BlobReplication | undefined,
+  body: (client: BlobStoreService.Client) => Effect.Effect<void, unknown>,
+) => {
+  const dependencies = Layer.mergeAll(
+    Layer.succeed(LocalBlobStoreService, local),
+    replication ? Layer.succeed(BlobReplicationService, replication) : Layer.empty,
   );
+  return EffectEx.runPromise(
+    Effect.gen(function* () {
+      const handlers = yield* BlobStoreService.Tag;
+      yield* body(yield* makeInProcessClient(BlobStoreService.Rpcs, handlers));
+    }).pipe(Effect.provide(BlobStoreServiceLayer.pipe(Layer.provide(dependencies))), Effect.scoped),
+  );
+};
 
 describe('BlobStoreService', () => {
-  test('stores bytes and reports them pending until uploaded', async () => {
-    const data = new Uint8Array([1, 2, 3]);
-    await run((store) =>
+  test('without replication, writes and reads are served by the local store alone', async () => {
+    const local = createMemoryBlobStore();
+    await withService(local, undefined, (client) =>
       Effect.gen(function* () {
-        yield* store.put({ key: 'aa', data, contentType: 'image/png', uploaded: false });
-        yield* store.put({ key: 'bb', data: new Uint8Array([4]), uploaded: false });
-
-        const { blob } = yield* store.get({ key: 'aa' });
-        expect(blob?.contentType).toBe('image/png');
-        expect(new Uint8Array(blob?.data ?? [])).toEqual(data);
-        expect((yield* store.get({ key: 'bb' })).blob?.contentType).toBeUndefined();
-        expect(yield* store.get({ key: 'cc' })).toEqual({});
-        expect(yield* store.has({ key: 'aa' })).toEqual({ exists: true });
-        expect(yield* store.has({ key: 'cc' })).toEqual({ exists: false });
-
-        expect(yield* store.listPending({ limit: 10 })).toEqual({ keys: ['aa', 'bb'] });
-        expect(yield* store.listPending({ limit: 1 })).toEqual({ keys: ['aa'] });
-
-        yield* store.markUploaded({ key: 'aa' });
-        expect(yield* store.listPending({ limit: 10 })).toEqual({ keys: ['bb'] });
+        yield* client['BlobStoreService.put']({ key: 'aa', data: new Uint8Array([1]) });
+        expect(yield* client['BlobStoreService.get']({ key: 'aa' })).toEqual({ blob: { data: new Uint8Array([1]) } });
+        expect(yield* client['BlobStoreService.get']({ key: 'bb' })).toEqual({});
+        expect(yield* client['BlobStoreService.has']({ key: 'aa' })).toEqual({ exists: true });
       }),
     );
+    expect(await local.listPending({ limit: 10 })).toEqual(['aa']);
   });
 
-  test('a repeated write never clears an upload, and a read-through fill is not pending', async () => {
-    await run((store) =>
-      Effect.gen(function* () {
-        yield* store.put({ key: 'aa', data: new Uint8Array([1]), uploaded: true });
-        yield* store.put({ key: 'aa', data: new Uint8Array([1]), contentType: 'text/plain', uploaded: false });
+  test('with replication, a write is stored locally before replication is woken, and reads go through it', async () => {
+    const local = createMemoryBlobStore();
+    const remote = createMemoryBlobStore();
+    await remote.put('bb', new Uint8Array([2]));
+    // What the local store held at the moment replication was told, to show confirmation comes first.
+    const storedWhenWoken: Promise<boolean>[] = [];
+    const wake = vi.fn(() => {
+      storedWhenWoken.push(local.has('aa'));
+    });
+    const replication: BlobReplication = {
+      store: { put: local.put, get: async (key) => (await local.get(key)) ?? remote.get(key), has: local.has },
+      wake,
+    };
 
-        expect(yield* store.listPending({ limit: 10 })).toEqual({ keys: [] });
-        expect((yield* store.get({ key: 'aa' })).blob?.contentType).toBe('text/plain');
+    await withService(local, replication, (client) =>
+      Effect.gen(function* () {
+        yield* client['BlobStoreService.put']({ key: 'aa', data: new Uint8Array([1]) });
+        expect(wake).toHaveBeenCalledTimes(1);
+        expect(yield* Effect.promise(() => Promise.all(storedWhenWoken))).toEqual([true]);
+        expect(yield* client['BlobStoreService.get']({ key: 'bb' })).toEqual({ blob: { data: new Uint8Array([2]) } });
       }),
     );
   });

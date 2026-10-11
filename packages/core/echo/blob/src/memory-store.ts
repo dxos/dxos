@@ -17,7 +17,7 @@ export const createMemoryBlobStore = (): LocalBlobStore => {
   const entries = new Map<string, Entry>();
 
   return {
-    put: async (key, data, { contentType, uploaded }) => {
+    put: async (key, data, { contentType, uploaded = false } = {}) => {
       const existing = entries.get(key);
       if (existing) {
         existing.contentType ??= contentType;

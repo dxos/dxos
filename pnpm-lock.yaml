@@ -19833,6 +19833,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/blob':
+        specifier: workspace:*
+        version: link:../../core/echo/blob
       '@dxos/client-protocol':
         specifier: workspace:*
         version: link:../client-protocol

@@ -2,11 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
 import { describe, onTestFinished, test } from 'vitest';
 
 import { Blob } from '@dxos/echo';
-import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { Client } from '../client/index.ts';
 import { TestBuilder } from '../testing/index.ts';
@@ -30,10 +28,8 @@ describe('local blob storage', () => {
     expect(await space.db.readBlob(blob)).toEqual(bytes);
     expect(await space.db.blobExists(blob)).toBe(true);
 
-    // Pending: there is no EDGE to upload to, and the ledger keeps it for a session that has one.
-    const { keys } = await EffectEx.runPromise(
-      client.services.rpc['BlobStoreService.listPending']({ limit: 10 }).pipe(Effect.orDie),
-    );
-    expect(keys).toHaveLength(1);
+    // Served by the host's local store: there is no EDGE in this stack to replicate to.
+    const key = blob.data._tag === 'external' ? blob.data.uri : '';
+    expect(key).toMatch(/^ni:/);
   });
 });
