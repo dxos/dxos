@@ -122,7 +122,9 @@ Goals:
   `results`, `runSync()`, and the subscriber notification all happen inside `db.add` / the
   proxy assignment, after the change has committed.
 - A remote entry never outlives the local evidence against it. If the local document is loaded
-  with a body, local evaluation is authoritative for that entry.
+  with a body, local evaluation is authoritative for that entry. For traversal hits this covers the
+  derivations the remote supplied; a path-truncated answer (§3.4) is reported as unverified rather
+  than revalidated.
 - Every result carries a completeness value a UI can act on without guessing, including failure
   and staleness.
 - Static characteristics are a pure function of the AST, testable without a database.
@@ -167,6 +169,18 @@ The rule, per remote entry, for `revalidation: entry`:
 3. **Remote entry names a different `documentId` than the local directory.** The directory is
    authoritative on placement; treat as case 1 against the local document. The remote is reading
    an epoch or a pre-move copy.
+
+The mirror case is deliberate and worth stating: a **remote-ahead change that excludes an object
+the local document still matches** (a peer's edit the host has indexed but this tab has not
+replicated yet) keeps the object in the result. The remote sends no negative evidence for it, and
+the engine does not ask for any. The result then agrees with what the rest of the UI renders from
+the same document (the object's own fields still show the pre-edit values), and it converges when
+replication lands and the post-commit notify re-runs the affect check. Negative evidence
+("id X is excluded at version V") would cost a per-query exclusion list on every answer to hide an
+object whose visible state matches, which is the inconsistency the proposal is removing elsewhere.
+The same holds for the aggregate manifest in §3.4: a loaded local member absent from the manifest
+contributes its local value, whether the remote excluded it or never saw it. The `stale` and
+`merged` completeness values are how a UI learns a remote answer is in flight.
 
 Versions matter for `revalidation: path` and `manifest`, where the remote's conclusion depends on
 objects other than the entry itself (§3.4): there, `A.getMissingDeps(localDoc, remote.heads).length
@@ -347,8 +361,13 @@ Size: the index source already strips `documentJson` from retained results becau
 hundreds of KB per mail message for the subscription's lifetime; a path DAG per result on a
 mailbox-scale incoming-reference query would be retained twice (host response, engine). The cap is
 therefore **bytes per query answer**, set by the remote, and an answer over the cap carries
-`truncated: 'paths'`, which makes the branch `revalidation: none` (remote verdict stands) for that
-answer. This is decided, not open.
+`truncated: 'paths'`. For that answer path-level revalidation is lost: a local edge change cannot
+disqualify a remote traversal hit until the remote re-runs. What survives is entry-level
+revalidation of each hit (tombstone, the trailing filter if the traversal has one) and local
+augmentation from loaded anchors. The engine reports such an answer as `merged` with
+`verified: false` on its unverifiable entries, and the §2 guarantee is qualified accordingly: it
+holds for the derivations the engine was given, and a truncated answer withholds them. This is
+decided, not open.
 
 **Aggregations.** Split by kind:
 
