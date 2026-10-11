@@ -5,6 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
+
 import { StoryRole } from '../modules/index.ts';
 import {
   type DiscordBotArgs,
@@ -27,7 +29,8 @@ type StoryArgs = DiscordBotArgs & { layout?: ModuleLayout };
 const meta: Meta<StoryArgs> = {
   title: 'stories/stories-agent/AgentDiscord',
   render: ModuleContainer,
-  parameters: storyParameters,
+  // The bot monitor renders `@dxos/react-ui-debug`'s Logger, so its namespace must be registered.
+  parameters: { ...storyParameters, translations: [...storyParameters.translations, ...debugTranslations] },
 };
 
 export default meta;
@@ -60,7 +63,7 @@ export const Setup: Story = {
     },
   }),
   args: {
-    layout: [[companion('discord')], [companion('activity')], [StoryRole.DiscordBot], [companion('brain')]],
+    layout: [[companion('discord')], [StoryRole.DiscordBot], [companion('activity')], [companion('brain')]],
   },
   tags: ['!test'],
 };
@@ -71,7 +74,8 @@ let fakeBot: FakeDiscordBot | undefined;
 const findEntry = (monitor: HTMLElement, text: string) =>
   waitFor(
     () => {
-      const rows = within(monitor).queryAllByTestId('discord-bot-monitor-entry');
+      // The monitor is a `Logger.List`, whose rows are listbox options.
+      const rows = within(monitor).queryAllByRole('option');
       if (!rows.some((row) => row.textContent?.includes(text))) {
         throw new Error(
           `"${text}" never appeared; the timeline shows: ${rows.map((row) => row.textContent).join(' | ')}`,
@@ -100,7 +104,7 @@ export const Scripted: Story = {
       await setupDiscordAgent({ db, invoker, applicationId: '1234567890', channelId: '987654321', guildId: '555' });
     },
   }),
-  args: { layout: [[companion('activity')], [StoryRole.DiscordBot], [companion('brain')]] },
+  args: { layout: [[StoryRole.DiscordBot], [companion('activity')], [companion('brain')]] },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const monitor = await canvas.findByTestId('discord-bot-monitor', {}, { timeout: 60_000 });

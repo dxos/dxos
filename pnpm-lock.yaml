@@ -20759,6 +20759,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
       '@dxos/plugin-discord':
         specifier: workspace:*
         version: link:../../plugins/plugin-discord
@@ -20771,6 +20774,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
+      '@dxos/react-ui-debug':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-debug
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form

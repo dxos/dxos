@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type LogEntry } from '@dxos/log';
+import { type LogEntry, type LogFilter, parseFilter, shouldLog } from '@dxos/log';
 
 import { type LevelName, type LogRecorder, composeFilter, startLogRecording } from './recorder.ts';
 
@@ -10,8 +10,16 @@ export const DEFAULT_MAX_LINES = 1_000;
 
 export type LogRow = { id: number; entry: LogEntry };
 
+export type LogBufferOptions = {
+  /**
+   * Feed the buffer from `@dxos/log` when started; otherwise rows arrive only via `append`, so a
+   * caller-owned buffer never registers a processor on the shared log config.
+   */
+  recordLog?: boolean;
+};
+
 /**
- * Process-wide log buffer, deliberately outside React.
+ * Log buffer, deliberately outside React; `logBuffer` is the process-wide instance fed by `@dxos/log`.
  *
  * The panel that displays these rows is a deck companion: closing it unmounts the tree. When the
  * buffer and the recorder lived in component state, that unmount disposed the recorder and discarded
@@ -22,7 +30,8 @@ export type LogRow = { id: number; entry: LogEntry };
  * Rows are exposed as an immutable snapshot so `useSyncExternalStore` can compare by identity; the
  * snapshot is rebuilt only when the buffer actually changes.
  */
-class LogBuffer {
+export class LogBuffer {
+  readonly #recordLog: boolean;
   #rows: LogRow[] = [];
   #files = new Set<string>();
   #fileSnapshot: string[] = [];
@@ -33,9 +42,20 @@ class LogBuffer {
   #fileLevels = new Map<string, LevelName>();
   #nextId = 0;
   #paused = false;
+  #started = false;
+  #filters: LogFilter[] = parseFilter(this.#baseFilter);
+
+  constructor({ recordLog = false }: LogBufferOptions = {}) {
+    this.#recordLog = recordLog;
+  }
+
+  /** Whether `start` attaches to `@dxos/log`; false for a buffer fed only by `append`. */
+  get recordsLog(): boolean {
+    return this.#recordLog;
+  }
 
   get recording(): boolean {
-    return this.#recorder !== undefined && !this.#paused;
+    return this.#started && !this.#paused;
   }
 
   get capacity(): number {
@@ -51,31 +71,31 @@ class LogBuffer {
    * without either having to know whether the other ran first.
    */
   start(): void {
-    if (this.#recorder) {
+    if (this.#started) {
       return;
     }
 
-    this.#recorder = startLogRecording(this.#effectiveFilter(), (entry, matched) => {
-      const file = entry.meta?.F;
-      if (file && !this.#files.has(file)) {
-        this.#files.add(file);
-        this.#fileSnapshot = [...this.#files].sort();
-        this.#emit();
-      }
-      // Files are discovered even while paused (every entry is delivered regardless of the display
-      // filter); only row capture stops, so resuming does not lose the file list.
-      if (matched && !this.#paused) {
-        this.#rows = [...this.#rows, { id: this.#nextId++, entry }].slice(-this.#capacity);
-        this.#emit();
-      }
-    });
+    this.#started = true;
+    if (this.#recordLog) {
+      this.#recorder = startLogRecording(this.#effectiveFilter(), (entry, matched) => this.#add(entry, matched));
+    }
+    this.#emit();
   }
 
   /** Release the log processor entirely. Rows are kept, so a later `start` resumes the same buffer. */
   stop(): void {
     this.#recorder?.dispose();
     this.#recorder = undefined;
+    this.#started = false;
     this.#emit();
+  }
+
+  /**
+   * Add an entry from a caller-owned source; it is held to the same filter, capacity and pause state
+   * as a recorded one.
+   */
+  append(entry: LogEntry): void {
+    this.#add(entry, shouldLog(entry, this.#filters));
   }
 
   /** Pause row capture without releasing the processor, so file discovery continues. */
@@ -100,6 +120,7 @@ class LogBuffer {
   setFilter(baseFilter: string, fileLevels: Map<string, LevelName>): void {
     this.#baseFilter = baseFilter;
     this.#fileLevels = new Map(fileLevels);
+    this.#filters = parseFilter(this.#effectiveFilter());
     this.#recorder?.setFilter(this.#effectiveFilter());
   }
 
@@ -139,6 +160,21 @@ class LogBuffer {
     }
   }
 
+  #add(entry: LogEntry, matched: boolean): void {
+    const file = entry.meta?.F;
+    if (file && !this.#files.has(file)) {
+      this.#files.add(file);
+      this.#fileSnapshot = [...this.#files].sort();
+      this.#emit();
+    }
+    // Files are discovered even while paused (every entry is delivered regardless of the display
+    // filter); only row capture stops, so resuming does not lose the file list.
+    if (matched && !this.#paused) {
+      this.#rows = [...this.#rows, { id: this.#nextId++, entry }].slice(-this.#capacity);
+      this.#emit();
+    }
+  }
+
   #effectiveFilter(): string {
     return composeFilter(this.#baseFilter, this.#fileLevels);
   }
@@ -150,4 +186,5 @@ class LogBuffer {
   }
 }
 
-export const logBuffer = new LogBuffer();
+/** Process-wide buffer fed by `@dxos/log`; the default for every `Logger.Root`. */
+export const logBuffer = new LogBuffer({ recordLog: true });

@@ -2,18 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 
 import * as AppHooks from '@dxos/app-framework/Hooks';
 import type * as Surface from '@dxos/app-framework/Surface';
 import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { Filter, Ref } from '@dxos/echo';
+import { LogEntry, LogLevel } from '@dxos/log';
 import * as DiscordChannel from '@dxos/plugin-discord/DiscordChannel';
 import * as ThreadOperation from '@dxos/plugin-thread/ThreadOperation';
 import { useQuery } from '@dxos/react-client/echo';
-import * as Layout from '@dxos/react-ui/Layout';
+import { LogBuffer, Logger } from '@dxos/react-ui-debug';
 import * as Panel from '@dxos/react-ui/Panel';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Channel } from '@dxos/types';
 
@@ -23,8 +23,10 @@ const POLL_MS = 2_000;
 /** How many transitions the timeline keeps. */
 const MAX_ENTRIES = 200;
 
+/** Fed only by the poll below, so the column shows bot transitions rather than the app's `@dxos/log` stream. */
+const monitorBuffer = new LogBuffer();
+
 type Entry = {
-  at: Date;
   /** `running`, `state`, `detail` and `error` of the status read, or the failure to read it. */
   status?: ThreadOperation.ConnectionStatus;
   error?: string;
@@ -42,6 +44,9 @@ const describe = ({ status, error }: Entry): string =>
         .filter(Boolean)
         .join(' · ');
 
+const level = ({ status, error }: Entry): LogLevel =>
+  error ? LogLevel.WARN : status?.error ? LogLevel.ERROR : LogLevel.INFO;
+
 /**
  * A timeline of the space's Discord bot status as EDGE reports it: one row each time the gateway state,
  * thread count or error changes, so a reconnect or a watchdog retry stays visible after it recovers.
@@ -51,7 +56,13 @@ export const DiscordBotModule = (_props: Surface.ComponentProps<Record<string, u
   const channels = useQuery(space?.db, Filter.type(Channel.Channel));
   const channel = channels.find(({ backend }) => backend.kind === DiscordChannel.BACKEND_KIND);
   const { invokePromise } = AppHooks.useOperationInvoker();
-  const [entries, setEntries] = useState<Entry[]>([]);
+  const lastRef = useRef<string>(undefined);
+
+  // The buffer outlives the module, so each mount starts its own timeline.
+  useEffect(() => {
+    lastRef.current = undefined;
+    monitorBuffer.clear();
+  }, []);
 
   const read = useCallback(async (): Promise<Entry | undefined> => {
     if (!channel || !space) {
@@ -63,7 +74,7 @@ export const DiscordBotModule = (_props: Surface.ComponentProps<Record<string, u
       { channel: Ref.make(channel) },
       { spaceId: space.id },
     );
-    return { at: new Date(), status: data?.status, error: error?.message };
+    return { status: data?.status, error: error?.message };
   }, [invokePromise, channel, space]);
 
   useEffect(() => {
@@ -77,11 +88,10 @@ export const DiscordBotModule = (_props: Surface.ComponentProps<Record<string, u
       inFlight = true;
       try {
         const entry = await read();
-        if (entry && !cancelled) {
-          setEntries((entries) => {
-            const last = entries.at(-1);
-            return last && describe(last) === describe(entry) ? entries : [...entries, entry].slice(-MAX_ENTRIES);
-          });
+        const message = entry && describe(entry);
+        if (entry && message && !cancelled && message !== lastRef.current) {
+          lastRef.current = message;
+          monitorBuffer.append(new LogEntry({ level: level(entry), message }));
         }
       } finally {
         inFlight = false;
@@ -97,33 +107,23 @@ export const DiscordBotModule = (_props: Surface.ComponentProps<Record<string, u
   }, [read]);
 
   return (
-    <Panel.Root data-testid='discord-bot-monitor'>
-      <Panel.Header>
-        <Toolbar.Root>
-          <Toolbar.Text>Discord bot</Toolbar.Text>
-        </Toolbar.Root>
-      </Panel.Header>
-      <Panel.Body asChild>
-        <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport asChild>
-            <Layout.Container>
-              {!channel && <p className='text-description'>No Discord channel in this space.</p>}
-              <ol className='flex flex-col gap-1 text-sm'>
-                {entries.map((entry, index) => (
-                  <li key={index} data-testid='discord-bot-monitor-entry' className='flex gap-2 min-w-0'>
-                    <time className='shrink-0 text-description tabular-nums'>
-                      {entry.at.toLocaleTimeString(undefined, { hour12: false })}
-                    </time>
-                    <span className='truncate' title={describe(entry)}>
-                      {describe(entry)}
-                    </span>
-                  </li>
-                ))}
-              </ol>
-            </Layout.Container>
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </Panel.Body>
-    </Panel.Root>
+    <Logger.Root buffer={monitorBuffer} maxLines={MAX_ENTRIES}>
+      <Panel.Root data-testid='discord-bot-monitor'>
+        <Panel.Header>
+          <Toolbar.Root>
+            <Toolbar.Text>Discord bot</Toolbar.Text>
+          </Toolbar.Root>
+        </Panel.Header>
+        <Panel.Body asChild>
+          <Logger.Content>
+            {channel ? (
+              <Logger.List checkable={false} />
+            ) : (
+              <p className='p-2 text-description'>No Discord channel in this space.</p>
+            )}
+          </Logger.Content>
+        </Panel.Body>
+      </Panel.Root>
+    </Logger.Root>
   );
 };

@@ -36,7 +36,7 @@ import { type ComposableProps } from '@dxos/ui-types';
 import { translationKey } from '#translations';
 
 import { formatLogEntry, packageName } from './format.ts';
-import { DEFAULT_MAX_LINES, type LogRow, logBuffer } from './log-buffer.ts';
+import { DEFAULT_MAX_LINES, type LogBuffer, type LogRow, logBuffer } from './log-buffer.ts';
 import { LoggerProvider, levelColor, logLevelsAspect, useLoggerContext } from './LoggerContext.ts';
 import { type LevelName, LEVELS, composeFilter } from './recorder.ts';
 
@@ -69,6 +69,11 @@ type LoggerRootProps = PropsWithChildren<{
    * Must be stable across renders — hoist it or memoize it.
    */
   rowFilter?: (row: LogRow) => boolean;
+  /**
+   * Source of rows; defaults to the process-wide buffer fed by `@dxos/log`. A caller-owned buffer is
+   * fed by its `append`. Must be stable across renders.
+   */
+  buffer?: LogBuffer;
 }>;
 
 const LoggerRoot = ({
@@ -77,6 +82,7 @@ const LoggerRoot = ({
   initialFilter = 'info',
   defaultRecording = true,
   rowFilter,
+  buffer = logBuffer,
 }: LoggerRootProps) => {
   const [filter, setFilter] = useState(initialFilter);
   const [textFilter, setTextFilter] = useState('');
@@ -92,26 +98,31 @@ const LoggerRoot = ({
   );
   const fileLevels = useMemo(() => new Map(Object.entries(fileLevelsRecord)), [fileLevelsRecord]);
 
-  // Rows, files and the recorder live in the process-wide buffer, not here: this panel is a deck
-  // companion, so mounting is not the lifetime we want recording to follow.
-  const allRows = useSyncExternalStore(logBuffer.subscribe, logBuffer.getRows);
+  // Rows, files and the recorder live in the buffer, not here: this panel is a deck companion, so
+  // mounting is not the lifetime we want recording to follow.
+  const allRows = useSyncExternalStore(buffer.subscribe, buffer.getRows);
   // Applied here rather than in `Logger.List` so row pruning, selection and copy all agree on the
   // same set — a scoped panel should never copy out rows it never showed.
   const rows = useMemo(() => (rowFilter ? allRows.filter(rowFilter) : allRows), [allRows, rowFilter]);
-  const files = useSyncExternalStore(logBuffer.subscribe, logBuffer.getFiles);
-  const recording = useSyncExternalStore(logBuffer.subscribe, logBuffer.getRecording);
+  const files = useSyncExternalStore(buffer.subscribe, buffer.getFiles);
+  const recording = useSyncExternalStore(buffer.subscribe, buffer.getRecording);
 
-  // Absorb files registered at module load (dev registry) plus any registered after mount.
+  // Absorb files registered at module load (dev registry) plus any registered after mount; a buffer
+  // fed by `append` holds none of those files' entries, so it lists only the files it was given.
   useEffect(() => {
-    const sync = () => logBuffer.addFiles(logFileRegistry.getFiles());
+    if (!buffer.recordsLog) {
+      return;
+    }
+
+    const sync = () => buffer.addFiles(logFileRegistry.getFiles());
     sync();
     return logFileRegistry.subscribe(sync);
-  }, []);
+  }, [buffer]);
 
-  useEffect(() => logBuffer.setCapacity(maxLines), [maxLines]);
+  useEffect(() => buffer.setCapacity(maxLines), [buffer, maxLines]);
 
   const effectiveFilter = useMemo(() => composeFilter(filter, fileLevels), [filter, fileLevels]);
-  useEffect(() => logBuffer.setFilter(filter, fileLevels), [filter, fileLevels, effectiveFilter]);
+  useEffect(() => buffer.setFilter(filter, fileLevels), [buffer, filter, fileLevels, effectiveFilter]);
 
   // `defaultRecording` seeds the buffer the first time a panel mounts; thereafter the buffer's own
   // state wins, so reopening the panel does not silently resume a stream the user paused.
@@ -120,16 +131,19 @@ const LoggerRoot = ({
     if (!seeded.current) {
       seeded.current = true;
       if (defaultRecording) {
-        logBuffer.start();
+        buffer.start();
       }
     }
-  }, [defaultRecording]);
+  }, [buffer, defaultRecording]);
 
-  const setRecording = useCallback((fn: (value: boolean) => boolean) => {
-    const next = fn(logBuffer.recording);
-    logBuffer.start();
-    logBuffer.setPaused(!next);
-  }, []);
+  const setRecording = useCallback(
+    (fn: (value: boolean) => boolean) => {
+      const next = fn(buffer.recording);
+      buffer.start();
+      buffer.setPaused(!next);
+    },
+    [buffer],
+  );
 
   // Drop per-row state (expansion, selection) for evicted rows so the sets stay bounded.
   useEffect(() => {
@@ -161,11 +175,11 @@ const LoggerRoot = ({
   );
   const clearFileLevels = useCallback(() => clearFileLevelsAction(), [clearFileLevelsAction]);
   const clear = useCallback(() => {
-    logBuffer.clear();
+    buffer.clear();
     setExpanded(new Set());
     setChecked(new Set());
     setCurrent(undefined);
-  }, []);
+  }, [buffer]);
   // Copy the checked rows when any are checked, else the rows the search leaves visible.
   const getCopyText = useCallback(() => {
     const selected =
@@ -444,6 +458,16 @@ const LoggerList = ({ classNames, checkable = true }: LoggerListProps) => {
   const visible = rows
     .map((row) => ({ ...row, record: formatLogEntry(row.entry) }))
     .filter(({ record }) => matchesText(record, textFilter));
+  // Entries from a caller-owned buffer usually carry no call-site file, so the column shows their time instead of staying empty.
+  const showFile = visible.some(({ record }) => record.file);
+  // Literal class names, since Tailwind only generates classes it finds verbatim in source.
+  const columns = checkable
+    ? showFile
+      ? 'grid-cols-[auto_1rem_8rem_1fr_max-content]'
+      : 'grid-cols-[auto_1rem_max-content_1fr_max-content]'
+    : showFile
+      ? 'grid-cols-[1rem_8rem_1fr_max-content] pl-2'
+      : 'grid-cols-[1rem_max-content_1fr_max-content] pl-2';
 
   if (visible.length === 0) {
     return (
@@ -483,12 +507,7 @@ const LoggerList = ({ classNames, checkable = true }: LoggerListProps) => {
                 current={current === id}
                 onFocus={() => setCurrent(id)}
                 onClick={() => setCurrent(id)}
-                classNames={mx(
-                  'group grid gap-2 items-center p-0 dx-current',
-                  checkable
-                    ? 'grid-cols-[auto_1rem_8rem_1fr_max-content]'
-                    : 'grid-cols-[1rem_8rem_1fr_max-content] pl-2',
-                )}
+                classNames={mx('group grid gap-2 items-center p-0 dx-current', columns)}
               >
                 {checkable && (
                   <Layout.Flex align='center' classNames='pl-2'>
@@ -501,14 +520,20 @@ const LoggerList = ({ classNames, checkable = true }: LoggerListProps) => {
                     </Field.Root>
                   </Layout.Flex>
                 )}
-                <span className={mx('justify-self-center', levelColor(entry.level))}>{record.level}</span>
-                <div
-                  className={mx('flex flex-col min-w-0 leading-tight', !expanded.has(id) && 'text-fg-muted')}
-                  title={record.file}
-                >
-                  <span className='truncate'>{record.file?.split('/').pop() ?? record.file}</span>
-                </div>
-                <span className='truncate' title={record.message}>
+                <span className={mx('justify-self-center leading-none', levelColor(entry.level))}>{record.level}</span>
+                {showFile ? (
+                  <span
+                    className={mx('truncate leading-none', !expanded.has(id) && 'text-fg-muted')}
+                    title={record.file}
+                  >
+                    {record.file?.split('/').pop() ?? record.file}
+                  </span>
+                ) : (
+                  <time className='leading-none tabular-nums text-fg-muted' dateTime={record.timestamp}>
+                    {new Date(entry.timestamp).toLocaleTimeString(undefined, { hour12: false })}
+                  </time>
+                )}
+                <span className='truncate leading-none' title={record.message}>
                   {record.message}
                 </span>
                 <SystemButton.Clipboard
@@ -525,7 +550,7 @@ const LoggerList = ({ classNames, checkable = true }: LoggerListProps) => {
                     {/* The viewport owns the scrolling, so a long line gets the themed bar, not the native one. */}
                     <Syntax.Viewport>
                       <JsonHighlighter
-                        classNames='p-2 overflow-visible'
+                        classNames='px-2 py-1 text-sm overflow-visible'
                         data={{
                           file: record.line ? `${record.file}:${record.line}` : record.file,
                           message: record.message,
