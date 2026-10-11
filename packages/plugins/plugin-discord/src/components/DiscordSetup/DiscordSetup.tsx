@@ -29,7 +29,8 @@ const DiscordSetupRoot = ({ role, error, children }: DiscordSetupRootProps) => {
       <Panel.Body asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport asChild>
-            <Layout.Container>
+            {/* A wider gap between sections than within one, so each heading reads with its own list. */}
+            <Layout.Container gap='lg'>
               {error && (
                 <Banner.Root valence='error'>
                   <Banner.Title>{t('discord-setup-error.label')}</Banner.Title>
@@ -54,7 +55,7 @@ DiscordSetupRoot.displayName = 'DiscordSetup.Root';
 type DiscordSetupSectionProps = PropsWithChildren<{ title: string; description?: string }>;
 
 const DiscordSetupSection = ({ title, description, children }: DiscordSetupSectionProps) => (
-  <Layout.Flex asChild column gap='sm'>
+  <Layout.Flex asChild column gap='xs'>
     <section aria-label={title}>
       <h3 className='text-sm text-fg-muted'>{title}</h3>
       {description && <Typography.Text tone='muted'>{description}</Typography.Text>}

@@ -181,10 +181,7 @@ export const DiscordAgentSetup = ({ role, agent }: DiscordAgentSetupProps) => {
 
       {!bot && <BotForm db={db} />}
 
-      <DiscordSetup.Section
-        title={t('discord-setup-servers.label')}
-        description={t('discord-setup-servers.description')}
-      >
+      <DiscordSetup.Section title={t('discord-setup-servers.label')}>
         <DiscordSetup.List
           ids={guilds.map(({ id }) => id)}
           value={guildId}
