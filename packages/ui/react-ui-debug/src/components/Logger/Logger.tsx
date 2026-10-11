@@ -449,6 +449,12 @@ type LoggerListProps = Util.ThemedClassName<{
   checkable?: boolean;
 }>;
 
+/** The row id of the listbox's highlighted option, if any. */
+const highlightedId = (container: HTMLElement): number | undefined => {
+  const value = container.querySelector('[role=option][data-highlighted]')?.getAttribute('data-value');
+  return value === null || value === undefined ? undefined : Number(value);
+};
+
 const LoggerList = ({ classNames, checkable = true }: LoggerListProps) => {
   const { t } = Hooks.useTranslation(translationKey);
   const { rows, expanded, toggleExpand, current, setCurrent, checked, toggleChecked, textFilter } =
@@ -480,16 +486,25 @@ const LoggerList = ({ classNames, checkable = true }: LoggerListProps) => {
   return (
     <Listbox.Root items={visible.map(({ id }) => ({ value: String(id), label: String(id) }))}>
       <div
+        // The listbox moves its own highlighted row on arrow keys; following it keeps a single current row, rather
+        // than the highlight and the last-clicked row both being ringed.
+        onKeyUp={(event) => {
+          const value = highlightedId(event.currentTarget);
+          if (value !== undefined) {
+            setCurrent(value);
+          }
+        }}
         onKeyDown={(event) => {
-          if (current === undefined) {
+          const target = highlightedId(event.currentTarget) ?? current;
+          if (target === undefined) {
             return;
           }
           if (event.key === ' ') {
             event.preventDefault();
-            toggleExpand(current);
+            toggleExpand(target);
           } else if (event.key === 'Enter' && checkable) {
             event.preventDefault();
-            toggleChecked(current);
+            toggleChecked(target);
           }
         }}
       >
@@ -507,8 +522,12 @@ const LoggerList = ({ classNames, checkable = true }: LoggerListProps) => {
                 current={current === id}
                 onFocus={() => setCurrent(id)}
                 onClick={() => setCurrent(id)}
-                // The row's minimum height exceeds its cells without the checkbox, so the track is centred rather than left at the top.
-                classNames={mx('group grid gap-2 items-center content-center p-0 dx-current', columns)}
+                // The first track keeps the row's height, so its cells stay centred with or without the checkbox and while the
+                // detail below it is open.
+                classNames={mx(
+                  'group grid gap-2 items-center p-0 [grid-template-rows:minmax(var(--dx-block-size),auto)]',
+                  columns,
+                )}
               >
                 {checkable && (
                   <Layout.Flex align='center'>
