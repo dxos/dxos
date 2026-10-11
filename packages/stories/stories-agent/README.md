@@ -18,8 +18,8 @@ two 1Password items named `com.discord.bot.kai`:
 | Reference | What | Used by |
 | --- | --- | --- |
 | `op://eng-dev/com.discord.bot.kai/credential` | bot token | the EDGE bot (`DISCORD_BOT_TOKEN_DEV`, via `pnpm dev:env`) |
-| `op://eng/com.discord.bot.kai/APPLICATION_ID` | application id | `.env.tpl` (`KAI_APPLICATION_ID`) |
-| `op://eng/com.discord.bot.kai/CLIENT_SECRET` | OAuth2 client secret | `.env.tpl` (`KAI_DISCORD_CLIENT_SECRET`), for **Connect Discord** |
+| `op://eng/com.discord.bot.kai/APPLICATION_ID` | application id | `.env.tpl` (`DISCORD_KAI_APPLICATION_ID`) |
+| `op://eng/com.discord.bot.kai/CLIENT_SECRET` | OAuth2 client secret | `.env.tpl` (`DISCORD_KAI_CLIENT_SECRET`), for **Connect Discord** |
 
 In the portal, once:
 
@@ -56,14 +56,14 @@ From `<edge>`:
    - Kai's OAuth values, from the repo's `.env.tpl` into `<edge>/.env` (gitignored):
 
      ```bash
-     op inject -i .env.tpl -o .env
+     op inject -i .env.tpl -o .env --force
      ```
 
      then copy the client secret into kms-service's local `.env` as `DISCORD_CLIENT_SECRET` (the value is never
      printed):
 
      ```bash
-     node -e "const fs=require('node:fs');const v=fs.readFileSync('.env','utf8').match(/KAI_DISCORD_CLIENT_SECRET=\"?([^\"\n]+)/)[1];const p='packages/services/kms-service/.env';const l=(fs.existsSync(p)?fs.readFileSync(p,'utf8'):'').split('\n').filter(x=>x&&!x.startsWith('DISCORD_CLIENT_SECRET='));l.push('DISCORD_CLIENT_SECRET='+v);fs.writeFileSync(p,l.join('\n')+'\n',{mode:0o600})"
+     node -e "const fs=require('node:fs');const v=fs.readFileSync('.env','utf8').match(/DISCORD_KAI_CLIENT_SECRET=\"?([^\"\n]+)/)[1];const p='packages/services/kms-service/.env';const l=(fs.existsSync(p)?fs.readFileSync(p,'utf8'):'').split('\n').filter(x=>x&&!x.startsWith('DISCORD_CLIENT_SECRET='));l.push('DISCORD_CLIENT_SECRET='+v);fs.writeFileSync(p,l.join('\n')+'\n',{mode:0o600})"
      ```
 
    - kms-service builds its ATPROTO handler for every OAuth flow, so it also needs `ATPROTO_CLIENT_JWK_BASE64`.
