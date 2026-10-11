@@ -50,6 +50,7 @@ export const translations = [
         'channels-empty.message': 'No channels connected.',
         'channel-unnamed.label': 'Unnamed channel',
         'channel-remove.label': 'Remove channel',
+        'channel-missing.label': 'Missing channel',
         'activity-actions.label': 'Activity actions',
         'activity-refresh.label': 'Refresh',
         'agent-knowledge-actions.label': 'Knowledge actions',

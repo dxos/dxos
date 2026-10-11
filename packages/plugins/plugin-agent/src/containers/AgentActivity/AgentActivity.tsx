@@ -153,13 +153,21 @@ type ChannelTileProps = {
 const ChannelTile = ({ channel: ref, status, onRemove }: ChannelTileProps) => {
   const channel = useResolveRef(ref);
   const detail = status?.error ?? status?.status?.error ?? status?.status?.state;
-  return <AgentActivityComponent.Channel id={ref.uri} name={channel?.name} detail={detail} onRemove={onRemove} />;
+  return (
+    <AgentActivityComponent.Channel
+      id={ref.uri}
+      name={channel?.name}
+      detail={detail}
+      missing={status?.missing}
+      onRemove={onRemove}
+    />
+  );
 };
 
 /** How often connection status is re-read; a backend changes state on EDGE without notifying Composer. */
 const STATUS_POLL_MS = 5_000;
 
-type ChannelStatus = { status?: ThreadOperation.ConnectionStatus; error?: string };
+type ChannelStatus = { status?: ThreadOperation.ConnectionStatus; error?: string; missing?: boolean };
 
 /** Each channel's connection status (polled while mounted), and connect/disconnect for all of them. */
 const useChannelConnections = (channels: readonly Ref.Ref<Channel.Channel>[], spaceId: SpaceId | undefined) => {
@@ -179,15 +187,22 @@ const useChannelConnections = (channels: readonly Ref.Ref<Channel.Channel>[], sp
       }
 
       const results = await Promise.all(
-        channels.map(async (channel) => {
+        channels.map(async (channel): Promise<readonly [string, ChannelStatus]> => {
+          // A ref that does not resolve (still loading, or its channel deleted) has no connection to read.
+          if (!(await channel.tryLoad())) {
+            return [channel.uri, { missing: true }];
+          }
           const { data, error } = await invokePromise(operation, { channel }, { spaceId });
-          return [channel.uri, { status: data?.status, error: error?.message }] as const;
+          return [channel.uri, { status: data?.status, error: error?.message }];
         }),
       );
       // A failed read keeps the last status on screen beside the error.
       setStatuses((previous) =>
         Object.fromEntries(
-          results.map(([uri, next]) => [uri, { status: next.status ?? previous[uri]?.status, error: next.error }]),
+          results.map(([uri, next]) => [
+            uri,
+            next.missing ? next : { status: next.status ?? previous[uri]?.status, error: next.error },
+          ]),
         ),
       );
     },

@@ -210,17 +210,19 @@ type AgentActivityChannelProps = {
   name?: string;
   /** The connection's state, e.g. `ready`, or why it last failed. */
   detail?: string;
+  /** The channel the agent lists is not in the space (deleted); the row stays so it can be removed. */
+  missing?: boolean;
   onRemove?: (id: string) => void;
 };
 
 /** One channel the agent converses in. */
-const AgentActivityChannel = ({ id, name, detail, onRemove }: AgentActivityChannelProps) => {
+const AgentActivityChannel = ({ id, name, detail, missing = false, onRemove }: AgentActivityChannelProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   return (
     <Listbox.Item id={id} classNames='dx-hover'>
       <Listbox.ItemIcon icon='ph--hash--regular' />
-      <Listbox.ItemText>{name || t('channel-unnamed.label')}</Listbox.ItemText>
-      {detail && <Listbox.ItemDescription>{detail}</Listbox.ItemDescription>}
+      <Listbox.ItemText>{missing ? t('channel-missing.label') : name || t('channel-unnamed.label')}</Listbox.ItemText>
+      {!missing && detail && <Listbox.ItemDescription>{detail}</Listbox.ItemDescription>}
       <RowButton icon='ph--x--regular' label={t('channel-remove.label')} onClick={() => onRemove?.(id)} />
     </Listbox.Item>
   );
