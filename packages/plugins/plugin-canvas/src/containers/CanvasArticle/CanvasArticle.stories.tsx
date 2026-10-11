@@ -78,7 +78,7 @@ export const ObjectFrame: Story = {
       node: {
         id,
         type: 'frame',
-        z: id === 'card' ? 'a0' : 'a1',
+        z: id === 'card' ? 'a1' : 'a2',
         center: { x, y: 0 },
         size: { width: cells.width * DEFAULT_CELL, height: cells.height * DEFAULT_CELL },
         scene: id,

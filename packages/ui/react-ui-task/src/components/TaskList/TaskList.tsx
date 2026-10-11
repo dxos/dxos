@@ -576,8 +576,13 @@ const TaskListItem = ({
       <TaskPriorityIcon task={task} classNames={TRACK.priority} />
       <TaskListItemActions task={task} classNames={TRACK.actions} />
 
-      {/* The row's second line, under the title; it takes no height when the task has no chips. */}
-      <Layout.Flex align='center' classNames='col-[title] row-start-2 empty:hidden' data-testid='taskList.item.chips'>
+      {/* The row's second line, under the title and inset as it is; it takes no height when the task has no chips. */}
+      <Layout.Flex
+        align='center'
+        gap='xs'
+        classNames='col-[title] row-start-2 px-(--dx-gap-size) empty:hidden'
+        data-testid='taskList.item.chips'
+      >
         <TaskListItemTags task={task} />
       </Layout.Flex>
       {/* Under the title and the chips, clearing the gutter and the status control so it does not read as the row

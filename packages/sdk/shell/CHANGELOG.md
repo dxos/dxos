@@ -1,5 +1,26 @@
 # @dxos/shell
 
+## 0.14.0
+
+### Patch Changes
+
+- Updated dependencies [347546a]
+  - @dxos/react-ui-list@0.14.0
+  - @dxos/react-client@0.14.0
+  - @dxos/react-ui-pickers@0.14.0
+  - @dxos/client-protocol@0.14.0
+  - @dxos/rpc@0.14.0
+  - @dxos/protocols@0.14.0
+  - @dxos/rpc-tunnel@0.14.0
+  - @dxos/async@0.14.0
+  - @dxos/display-name@0.14.0
+  - @dxos/invariant@0.14.0
+  - @dxos/keys@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/util@0.14.0
+  - @dxos/react-focus@0.14.0
+  - @dxos/react-hooks@0.14.0
+
 ## 0.13.0
 
 ### Patch Changes

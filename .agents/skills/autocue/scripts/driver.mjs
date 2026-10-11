@@ -106,7 +106,8 @@ const parseArgs = () => {
   }
   // A person recording their own screen wants the product on camera, not the agent's narration of it.
   const narrate = options.mode === 'manual' ? 'off' : 'on';
-  options.pills ??= narrate;
+  // The action feed reads as debug chrome in a demo; `--pills on` brings it back.
+  options.pills ??= 'off';
   options.captions ??= narrate;
   // Milliseconds between flow steps: a person watching live needs a beat to see each one land.
   options.pace ??= options.mode === 'manual' ? 800 : 0;
@@ -220,6 +221,18 @@ const logFile = options.log === 'off' ? undefined : (options.log ?? path.join(op
 const logTap = logFile
   ? await (native ? startPolledLogTap({ page, file: logFile }) : startLogTap({ context, page, file: logFile }))
   : undefined;
+// A blinking caret is motion the trimmer cannot tell from typing, so a recording holds it steady.
+if (!manual && !native) {
+  await context.addInitScript(() => {
+    const style = () => {
+      const sheet = document.createElement('style');
+      sheet.textContent = '.cm-cursorLayer, .cm-cursor { animation: none !important; }';
+      document.head.append(sheet);
+    };
+    document.head ? style() : document.addEventListener('DOMContentLoaded', style);
+  });
+}
+
 const overlay = createOverlay(page, {
   enabled: options.overlay !== 'off',
   feed: options.pills !== 'off',
@@ -602,7 +615,16 @@ const runFlow = async (command) => {
         await interruptible(overlay.countdown({ wait: command.wait ?? manual }));
         flow.state = 'running';
       }
+      // Every on-camera step is a chapter, and its `narration` (or name) the line a voice-over speaks; it is
+      // committed only once the step succeeds, so a retried step does not leave a duplicate chapter.
+      const at = Date.now();
+      const mark = { ms: at - started, text: step.name, narration: step.narration ?? step.name };
       await interruptible(step.run({ page, demo }));
+      if (!step.setup) {
+        // A boot cut inside the step (its `goto`) moves `started`; the chapter then opens at the cut.
+        mark.ms = Math.max(0, at - started);
+        timeline.push(mark);
+      }
       results.push({ step: index + 1, name: step.name, ok: true, screenshot: await screenshot(index) });
       flow.next = index + 1;
     } catch (error) {
@@ -878,7 +900,8 @@ const handlers = {
       return { browser: 'left open; closing the window ends the driver' };
     }
     const timelineFile = path.join(options.out, 'timeline.json');
-    writeFileSync(timelineFile, JSON.stringify({ started, steps: timeline }, null, 2));
+    // The flow file names the package it exercises, which the trimmer uses to name and place the upload.
+    writeFileSync(timelineFile, JSON.stringify({ started, flow: flow.file, steps: timeline }, null, 2));
     let recorded;
     try {
       recorded = await recorder?.stop();

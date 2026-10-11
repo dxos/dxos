@@ -367,7 +367,7 @@ describe('AutomergeHost', () => {
     expect([...resyncHeads.values()].some((entry) => entry.documentId === documentId)).toBe(false);
   });
 
-  test('a resident document is different when an overlapping remote head is missing locally', async () => {
+  test('a resident document whose heads overlap is synced, and resynced once for a remote head it lacks', async () => {
     const { runtime, dispose } = createTestSqliteRuntime();
     onTestFinished(() => dispose());
     const host = new AutomergeHost({ runtime, useSubduction: true });
@@ -386,19 +386,30 @@ describe('AutomergeHost', () => {
     const [localHead] = (await host.getHeads([documentId]))[0] ?? [];
     const [missingHead] = A.getHeads(A.from({ elsewhere: true }));
 
+    const resynced: DocumentId[] = [];
+    const resyncDocument = host.resyncDocument.bind(host);
+    host.resyncDocument = (id) => {
+      resynced.push(id);
+      resyncDocument(id);
+    };
+
     const synchronizer = host['_collectionSynchronizer'];
     const peerId = 'test-peer' as PeerId;
-    synchronizer.onRemoteStateReceived(collectionId, peerId, { documents: { [documentId]: [localHead, missingHead] } });
-    expect((await host.getCollectionSyncState(collectionId)).peers?.[0]?.differentDocuments).toEqual(1);
+    const advertise = async (heads: string[]) => {
+      synchronizer.onRemoteStateReceived(collectionId, peerId, { documents: { [documentId]: heads } });
+      await host['_handleCollectionSync'](Context.default(), collectionId, peerId);
+    };
+    await advertise([localHead, missingHead]);
+    expect((await host.getCollectionSyncState(collectionId)).peers?.[0]?.differentDocuments).toEqual(0);
+    expect(resynced).toEqual([documentId]);
 
     // A malformed head is ignored rather than fatal.
-    synchronizer.onRemoteStateReceived(collectionId, peerId, {
-      documents: { [documentId]: [localHead, 'not-a-hash'] },
-    });
+    await advertise([localHead, 'not-a-hash']);
     expect((await host.getCollectionSyncState(collectionId)).peers?.[0]?.differentDocuments).toEqual(0);
+    expect(resynced).toEqual([documentId]);
   });
 
-  test('an evicted document is different until an overlapping remote head is confirmed', async () => {
+  test('an evicted document is loaded for an overlapping remote head it has not confirmed', async () => {
     const { runtime, dispose } = createTestSqliteRuntime();
     onTestFinished(() => dispose());
     const host = new AutomergeHost({
@@ -428,23 +439,32 @@ describe('AutomergeHost', () => {
     const peerId = 'test-peer' as PeerId;
     const differentDocuments = async () =>
       (await host.getCollectionSyncState(collectionId)).peers?.[0]?.differentDocuments;
+    let loads = 0;
+    const leaseUntilSettled = host['_leaseUntilSettled'];
+    host['_leaseUntilSettled'] = (id: DocumentId) => {
+      loads += id === documentId ? 1 : 0;
+      leaseUntilSettled.call(host, id);
+    };
+    const loadsAfter = async (heads: string[]) => {
+      const before = loads;
+      synchronizer.onRemoteStateReceived(collectionId, peerId, { documents: { [documentId]: heads } });
+      await host['_handleCollectionSync'](Context.default(), collectionId, peerId);
+      return loads - before;
+    };
 
     // Resident: checked and confirmed.
-    synchronizer.onRemoteStateReceived(collectionId, peerId, {
-      documents: { [documentId]: [localHead, ancestorHead] },
-    });
-    expect(await differentDocuments()).toEqual(0);
+    expect(await loadsAfter([localHead, ancestorHead])).toEqual(0);
 
     handle[Symbol.dispose]();
     await waitForEviction(expect, host, documentId);
 
-    // Evicted: only a confirmed head counts as present.
+    // Evicted: only a confirmed head counts as present, and the heads overlap either way.
+    expect(await loadsAfter([localHead, ancestorHead])).toEqual(0);
+    expect(await loadsAfter([localHead, missingHead])).toEqual(1);
     expect(await differentDocuments()).toEqual(0);
-    synchronizer.onRemoteStateReceived(collectionId, peerId, { documents: { [documentId]: [localHead, missingHead] } });
-    expect(await differentDocuments()).toEqual(1);
   });
 
-  test('an evicted document lacking a change stays different and is loaded once per head pair and connection', async () => {
+  test('an evicted document lacking a change stays synced and is loaded once per head pair and connection', async () => {
     const { runtime, dispose } = createTestSqliteRuntime();
     onTestFinished(() => dispose());
     const host = new AutomergeHost({
@@ -490,7 +510,7 @@ describe('AutomergeHost', () => {
     expect(await loadsAfter(advertise([localHead, missingHead]))).toEqual(1);
     handle[Symbol.dispose]();
     await waitForEviction(expect, host, documentId);
-    expect(await differentDocuments()).toEqual(1);
+    expect(await differentDocuments()).toEqual(0);
     expect(await loadsAfter(() => {})).toEqual(0);
 
     expect(await loadsAfter(advertise([localHead, otherMissingHead]))).toEqual(1);

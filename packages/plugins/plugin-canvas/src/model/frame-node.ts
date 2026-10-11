@@ -11,7 +11,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Ref } from '@dxos/echo';
+import { type Database, Obj, Ref } from '@dxos/echo';
 import { URI } from '@dxos/keys';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { FrameNode, type NodeBase, type SceneId } from '@dxos/react-ui-canvas/scene';
@@ -60,8 +60,15 @@ export const objectUri = (node: NodeBase): URI.URI | undefined => {
   return undefined;
 };
 
-/** A frame's `object` as the store presents it: a live `Ref`. */
-export const objectRef = (node: NodeBase): Ref.Ref<Obj.Unknown> | undefined => {
+/**
+ * A frame's `object` as a `Ref` that resolves: made by `db` when given, since a ref fresh from the object picker
+ * has no resolver until the store writes it back.
+ */
+export const objectRef = (node: NodeBase, db?: Database.Database): Ref.Ref<Obj.Unknown> | undefined => {
+  const uri = db && objectUri(node);
+  if (db && uri) {
+    return db.makeRef<Obj.Unknown>(uri);
+  }
   const object: unknown = Reflect.get(node, 'object');
   return Ref.isRef(object) ? object : undefined;
 };
