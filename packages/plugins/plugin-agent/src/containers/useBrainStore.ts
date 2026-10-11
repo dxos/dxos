@@ -13,6 +13,7 @@ import { TriggerOperation } from '#types';
 
 import * as BrainInspection from '../brain/BrainInspection.ts';
 import { labelOf } from '../operations/members.ts';
+import { pollDelay } from './pollDelay.ts';
 import { useRemoteBrain } from './useBrainLocation.ts';
 
 /** How often the brain is re-read; neither brain has a change feed for its facts and outboxes. */
@@ -44,6 +45,7 @@ export const useBrainStore = (agent: Agent.Agent): BrainStoreData => {
     }
 
     let cancelled = false;
+    let failures = 0;
     let timeout: ReturnType<typeof setTimeout> | undefined;
     // Each read schedules the next once it settles, so a slow call never overlaps (or overwrites) a newer one.
     const read = async () => {
@@ -59,7 +61,8 @@ export const useBrainStore = (agent: Agent.Agent): BrainStoreData => {
         setSnapshot(data);
       }
       setError(error ? error.message : undefined);
-      timeout = setTimeout(() => void read(), POLL_MS);
+      failures = error ? failures + 1 : 0;
+      timeout = setTimeout(() => void read(), pollDelay(POLL_MS, failures));
     };
     void read();
     return () => {

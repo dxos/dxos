@@ -28,6 +28,8 @@ export interface ChannelThreads {
     thread: string,
     message: Message.Message,
   ) => Effect.Effect<SendResult, Error, Capability.Service>;
+  /** Deletes a thread inside the channel, for everyone; absent where the backend cannot. */
+  remove?: (channel: Channel.Channel, thread: string) => Effect.Effect<void, Error, Capability.Service>;
 }
 
 /** A connection that must be started (a bot gateway, an IRC socket). */

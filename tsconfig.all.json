@@ -907,6 +907,9 @@
       "path": "packages/common/sql-sqlite/tsconfig.json"
     },
     {
+      "path": "packages/stories/stories-agent/tsconfig.json"
+    },
+    {
       "path": "packages/stories/stories-assistant/tsconfig.json"
     },
     {

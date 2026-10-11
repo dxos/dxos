@@ -41,7 +41,7 @@ export const PluginAsset = AppCapability.pluginAsset({
   mimeType: 'application/x-mdl',
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.tsx'), {
-  roles: ['org.dxos.role.objectProperties'],
+  roles: ['org.dxos.role.article', 'org.dxos.role.objectProperties'],
 });
 export const Schema = AppCapability.schema(() => import('./schema.ts'));
 export const Translations = AppCapability.translations(translations);

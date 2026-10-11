@@ -1,0 +1,48 @@
+{
+  "name": "@dxos/stories-agent",
+  "version": "0.14.0",
+  "private": true,
+  "description": "Storybook stories for agents on Discord: installing the DXOS Discord app and routing channels to agents, end to end with local EDGE.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "DXOS.org",
+  "sideEffects": true,
+  "exports": {},
+  "dependencies": {
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/app-toolkit": "workspace:*",
+    "@dxos/assistant": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/plugin-discord": "workspace:*",
+    "@dxos/plugin-thread": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-debug": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
+    "@dxos/types": "workspace:*",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/link": "workspace:*",
+    "@dxos/plugin-agent": "workspace:*",
+    "@dxos/plugin-assistant": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-connector": "workspace:*",
+    "@dxos/plugin-routine": "workspace:*",
+    "@dxos/storybook-testing": "workspace:*",
+    "@storybook/react-vite": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "vite": "catalog:"
+  }
+}

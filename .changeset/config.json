@@ -194,6 +194,7 @@
       "@dxos/solid-ui",
       "@dxos/solid-ui-geo",
       "@dxos/sql-sqlite",
+      "@dxos/stories-agent",
       "@dxos/stories-assistant",
       "@dxos/stories-brain",
       "@dxos/stories-compute",

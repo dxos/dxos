@@ -2,50 +2,51 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
-import * as Surface from '@dxos/app-framework/Surface';
-import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import type * as Agent from '@dxos/assistant/Agent';
-import type * as Chat from '@dxos/assistant/Chat';
+import * as Chat from '@dxos/assistant/Chat';
 import type * as Skill from '@dxos/compute/Skill';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
+import { EID, type SpaceId } from '@dxos/keys';
+import * as ThreadOperation from '@dxos/plugin-thread/ThreadOperation';
 import { type Channel, Message } from '@dxos/types';
 
 import { AgentActivity as AgentActivityComponent } from '#components';
 import { AgentChannels, AgentOperation } from '#types';
 
 import { useAgentChannelList, useAgentConversations } from '../useAgentConversations.ts';
+import { selectPrimaryChat, useBindingCount } from '../useSkillBindings.ts';
 
 export type AgentActivityProps = {
   role?: string;
   agent: Agent.Agent;
+  attendableId?: string;
 };
 
 /** The Agent's main article: the channels it converses in (with each backend's settings), its skills and its conversations. */
-export const AgentActivity = ({ role, agent }: AgentActivityProps) => {
+export const AgentActivity = ({ role, agent, attendableId }: AgentActivityProps) => {
   const { invokePromise } = Hooks.useOperationInvoker();
   const db = Obj.getDatabase(agent);
 
   const list = useAgentChannelList(agent);
   const [values] = useObject(list);
+  const channels = values?.channels ?? [];
   const conversations = useAgentConversations(agent);
 
-  const handleSave = useCallback(
-    ({ channels }: AgentChannels.Properties) => {
+  const handleRemoveChannel = useCallback(
+    (uri: string) => {
       if (list) {
         Obj.update(list, (list) => {
-          list.channels = [...channels];
+          list.channels = list.channels.filter((ref) => ref.uri !== uri);
         });
-      } else {
-        db?.add(AgentChannels.make({ agent, channels }));
       }
     },
-    [db, list, agent],
+    [list],
   );
 
   const handleSelect = useCallback(
@@ -58,57 +59,178 @@ export const AgentActivity = ({ role, agent }: AgentActivityProps) => {
     [conversations, invokePromise],
   );
 
+  const [error, setError] = useState<string>();
+
+  // A thread is deleted on its backend too (a Discord thread, for everyone in it); a whole channel's conversation only
+  // loses its history here, since the channel itself is not the agent's to delete.
+  const handleDelete = useCallback(
+    async (id: string) => {
+      const chat = conversations.find((chat) => chat.id === id);
+      if (!chat || !db) {
+        return;
+      }
+      const conversation = AgentChannels.conversationOf(chat);
+      const channel = channels.find((ref) => entityIdOf(ref.uri) === conversation?.channelId);
+      if (conversation?.thread !== undefined && channel) {
+        const { data, error } = await invokePromise(
+          ThreadOperation.DeleteThread,
+          { channel, thread: conversation.thread },
+          { spaceId: db.spaceId },
+        );
+        if (error || !data?.deleted) {
+          setError(error?.message ?? data?.reason);
+          return;
+        }
+      }
+      setError(undefined);
+      db.remove(chat);
+    },
+    [conversations, channels, db, invokePromise],
+  );
+
   const skills = useAgentSkills(agent);
+  const connections = useChannelConnections(channels, db?.spaceId);
+
+  const handleRefresh = useCallback(() => {
+    void skills.refresh();
+    void connections.refresh();
+  }, [skills.refresh, connections.refresh]);
 
   return (
-    <AgentActivityComponent.Root role={role}>
-      <AgentActivityComponent.Channels db={db} values={values ?? { channels: [] }} onSave={handleSave}>
-        {(values?.channels ?? []).map((ref) => (
-          <ChannelSettings key={ref.uri} channel={ref} />
+    <AgentActivityComponent.Root
+      role={role}
+      error={error}
+      toolbar={
+        <AgentActivityComponent.Toolbar
+          attendableId={attendableId}
+          running={connections.running}
+          connectable={channels.length > 0}
+          busy={connections.busy}
+          onStart={connections.start}
+          onStop={connections.stop}
+          onRefresh={handleRefresh}
+        />
+      }
+    >
+      <AgentActivityComponent.Channels ids={channels.map((ref) => ref.uri)}>
+        {channels.map((ref) => (
+          <ChannelTile
+            key={ref.uri}
+            channel={ref}
+            status={connections.statuses[ref.uri]}
+            onRemove={handleRemoveChannel}
+          />
         ))}
       </AgentActivityComponent.Channels>
       <AgentActivityComponent.Skills ids={skills.skills.map((skill) => skill.key)}>
         {skills.skills.map(({ key, name, customized }) => (
-          <AgentActivityComponent.Skill
-            key={key}
-            id={key}
-            name={name}
-            customized={customized}
-            busy={skills.busy}
-            onOpen={skills.open}
-            onCustomize={skills.customize}
-            onReset={skills.reset}
-          />
+          <AgentActivityComponent.Skill key={key} id={key} name={name} onOpen={customized ? skills.open : undefined} />
         ))}
       </AgentActivityComponent.Skills>
       <AgentActivityComponent.Conversations ids={conversations.map((chat) => chat.id)}>
         {conversations.map((chat) => (
-          <ConversationTile key={chat.id} chat={chat} onSelect={handleSelect} />
+          <ConversationTile
+            key={chat.id}
+            chat={chat}
+            onSelect={handleSelect}
+            onDelete={(id) => void handleDelete(id)}
+          />
         ))}
       </AgentActivityComponent.Conversations>
     </AgentActivityComponent.Root>
   );
 };
 
-/** The channel's backend settings, from whichever plugin owns its backend (e.g. the Discord bot). */
-const ChannelSettings = ({ channel: ref }: { channel: Ref.Ref<Channel.Channel> }) => {
+type ChannelTileProps = {
+  channel: Ref.Ref<Channel.Channel>;
+  status?: ChannelStatus;
+  onRemove: (uri: string) => void;
+};
+
+/** One channel row, named by the channel its ref resolves to, with its connection's state. */
+const ChannelTile = ({ channel: ref, status, onRemove }: ChannelTileProps) => {
   const channel = useResolveRef(ref);
-  const data = useMemo<AppSurface.ObjectPropertiesData | undefined>(
-    () => (channel ? { subject: channel } : undefined),
-    [channel],
+  const detail = status?.error ?? status?.status?.error ?? status?.status?.state;
+  return <AgentActivityComponent.Channel id={ref.uri} name={channel?.name} detail={detail} onRemove={onRemove} />;
+};
+
+/** How often connection status is re-read; a backend changes state on EDGE without notifying Composer. */
+const STATUS_POLL_MS = 5_000;
+
+type ChannelStatus = { status?: ThreadOperation.ConnectionStatus; error?: string };
+
+/** Each channel's connection status (polled while mounted), and connect/disconnect for all of them. */
+const useChannelConnections = (channels: readonly Ref.Ref<Channel.Channel>[], spaceId: SpaceId | undefined) => {
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const [statuses, setStatuses] = useState<Record<string, ChannelStatus>>({});
+  const [busy, setBusy] = useState(false);
+
+  const run = useCallback(
+    async (
+      operation:
+        | typeof ThreadOperation.ConnectChannel
+        | typeof ThreadOperation.DisconnectChannel
+        | typeof ThreadOperation.GetChannelStatus,
+    ) => {
+      if (!spaceId || channels.length === 0) {
+        return;
+      }
+
+      const results = await Promise.all(
+        channels.map(async (channel) => {
+          const { data, error } = await invokePromise(operation, { channel }, { spaceId });
+          return [channel.uri, { status: data?.status, error: error?.message }] as const;
+        }),
+      );
+      // A failed read keeps the last status on screen beside the error.
+      setStatuses((previous) =>
+        Object.fromEntries(
+          results.map(([uri, next]) => [uri, { status: next.status ?? previous[uri]?.status, error: next.error }]),
+        ),
+      );
+    },
+    [invokePromise, channels, spaceId],
   );
-  return data ? <Surface.Surface type={AppSurface.ObjectProperties} data={data} /> : null;
+
+  const refresh = useCallback(() => run(ThreadOperation.GetChannelStatus), [run]);
+  useEffect(() => {
+    void refresh();
+    const interval = setInterval(() => void refresh(), STATUS_POLL_MS);
+    return () => clearInterval(interval);
+  }, [refresh]);
+
+  const withBusy = useCallback(
+    async (operation: typeof ThreadOperation.ConnectChannel | typeof ThreadOperation.DisconnectChannel) => {
+      setBusy(true);
+      await run(operation);
+      setBusy(false);
+    },
+    [run],
+  );
+
+  const start = useCallback(() => void withBusy(ThreadOperation.ConnectChannel), [withBusy]);
+  const stop = useCallback(() => void withBusy(ThreadOperation.DisconnectChannel), [withBusy]);
+  const running = Object.values(statuses).some(({ status }) => status?.running);
+
+  return { statuses, running, busy, start, stop, refresh };
 };
 
 AgentActivity.displayName = 'AgentActivity';
 
+/** The object id a ref URI names, whatever its space qualification. */
+const entityIdOf = (uri: string): string | undefined => {
+  const eid = EID.parse(uri);
+  return eid ? EID.getEntityId(eid) : undefined;
+};
+
 type ConversationTileProps = {
   chat: Chat.Chat;
   onSelect: (id: string) => void;
+  onDelete: (id: string) => void;
 };
 
 /** Owns the subscriptions to one chat's name and feed, so a new message re-renders only its own row. */
-const ConversationTile = ({ chat, onSelect }: ConversationTileProps) => {
+const ConversationTile = ({ chat, onSelect, onDelete }: ConversationTileProps) => {
   const [name] = useObject(chat, 'name');
   const [feedRef] = useObject(chat, 'feed');
   const feed = useResolveRef(feedRef);
@@ -127,29 +249,44 @@ const ConversationTile = ({ chat, onSelect }: ConversationTileProps) => {
   );
 
   return (
-    <AgentActivityComponent.Conversation id={chat.id} title={name} lastActivity={lastActivity} onSelect={onSelect} />
+    <AgentActivityComponent.Conversation
+      id={chat.id}
+      title={name}
+      lastActivity={lastActivity}
+      onSelect={onSelect}
+      onDelete={onDelete}
+    />
   );
 };
 
 type ListedSkill = { key: string; name: string; customized: boolean; skill?: Ref.Ref<Skill.Skill> };
 
 /**
- * The plugin skills the agent's conversation binds, with customize/reset/open. Bindings live in the chat's
- * feed and are read through an operation, so the list is re-read after each change rather than subscribed.
+ * The plugin skills the agent's conversation binds; a customized one opens for editing. Bindings live in the chat's
+ * feed and are read through an operation, so the list is re-read whenever the feed gains a binding entry —
+ * a mode switch from anywhere.
  */
 const useAgentSkills = (agent: Agent.Agent) => {
   const { invokePromise } = Hooks.useOperationInvoker();
   const db = Obj.getDatabase(agent);
   const spaceId = db?.spaceId;
+  const chats = useQuery(db, Filter.and(Filter.type(Chat.Chat), Filter.childOf(agent)));
+  const primary = useMemo(() => selectPrimaryChat(chats), [chats]);
+  const bindings = useBindingCount(primary);
   const [skills, setSkills] = useState<ListedSkill[]>([]);
-  const [busy, setBusy] = useState(false);
+  const refreshGeneration = useRef(0);
 
   const refresh = useCallback(async () => {
     if (!spaceId) {
       return;
     }
 
+    const generation = ++refreshGeneration.current;
     const { data } = await invokePromise(AgentOperation.ListSkills, { agent: Ref.make(agent) }, { spaceId });
+    // Reads overlap when bindings change in quick succession; only the latest may land.
+    if (generation !== refreshGeneration.current) {
+      return;
+    }
     // Space-authored skills have no registry key and are edited where they live, not here.
     setSkills(
       (data?.skills ?? []).flatMap(({ key, name, customized, skill }) =>
@@ -160,24 +297,7 @@ const useAgentSkills = (agent: Agent.Agent) => {
 
   useEffect(() => {
     void refresh();
-  }, [refresh]);
-
-  const run = useCallback(
-    async (operation: typeof AgentOperation.CustomizeSkill | typeof AgentOperation.ResetSkill, key: string) => {
-      if (!spaceId) {
-        return;
-      }
-
-      setBusy(true);
-      await invokePromise(operation, { agent: Ref.make(agent), skill: key }, { spaceId });
-      await refresh();
-      setBusy(false);
-    },
-    [invokePromise, agent, spaceId, refresh],
-  );
-
-  const customize = useCallback((key: string) => void run(AgentOperation.CustomizeSkill, key), [run]);
-  const reset = useCallback((key: string) => void run(AgentOperation.ResetSkill, key), [run]);
+  }, [refresh, primary?.id, bindings]);
 
   const open = useCallback(
     async (key: string) => {
@@ -193,5 +313,5 @@ const useAgentSkills = (agent: Agent.Agent) => {
     [skills, db, invokePromise],
   );
 
-  return { skills, busy, customize, reset, open };
+  return { skills, open, refresh };
 };
