@@ -655,7 +655,7 @@ index c1f722a51f7e273ee8161e4569b1602c2e3c3d11..f35b76264c687b78d606eca08a7b5141
       */
      resync(documentId: DocumentId): void;
 diff --git a/dist/subduction/source.js b/dist/subduction/source.js
-index 4692619444edfae0ef5f111cef6ce29499507afa..2ff8f2705accc8f6144f79cb872d948a6eb4980c 100644
+index 4692619444edfae0ef5f111cef6ce29499507afa..2dbaff6220aaea16a23e91037155a96e199c0fbd 100644
 --- a/dist/subduction/source.js
 +++ b/dist/subduction/source.js
 @@ -13,8 +13,8 @@ import { WebSocketEndpoint, } from "./websocket-endpoint.js";
@@ -1340,39 +1340,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..2ff8f2705accc8f6144f79cb872d948a
              entry.lastSyncResult = null;
          }
          this.#scheduleRecompute(entry);
-@@ -1222,6 +1636,22 @@ export class SubductionSource {
-      * Callers shouldn't invoke this directly — go through
-      * `#scheduleCompaction` so overlapping passes don't pile up.
-      */
-+    /**
-+     * DXOS patch: Subduction cannot absorb loose commits into a fragment
-+     * whose head never arrived loose, and never sees a storage delete, so
-+     * after compaction its in-memory tree can still hold the commits just
-+     * deleted: it keeps advertising them and re-uploads them to a peer that
-+     * dropped them. Evict the tree so the next read reloads it from storage.
-+     */
-+    async #evictIfHeld(entry, staleCommits) {
-+        const subduction = await this.#subduction;
-+        const sid = entry.sedimentreeId;
-+        const held = new Set(((await subduction.getCommits(sid)) ?? []).map(commit => commit.commitId.toHexString()));
-+        if (!staleCommits.some(hex => held.has(hex)))
-+            return;
-+        await this.#storage.evictWhile(sid, () => subduction.removeSedimentree(sid));
-+        this.#log.debug(`evicted ${sid.toString().slice(0, 8)}: it still held compacted commits`);
-+    }
-     async #compactAbsorbed(entry) {
-         if (entry.persistedCommitHashes.size === 0 &&
-             entry.persistedFragmentHashes.size === 0) {
-@@ -1279,6 +1709,8 @@ export class SubductionSource {
-         }
-         try {
-             await Promise.all(ops);
-+            if (staleCommits.length > 0)
-+                await this.#evictIfHeld(entry, staleCommits);
-             for (const hex of staleCommits)
-                 entry.persistedCommitHashes.delete(hex);
-             for (const hex of staleFragments)
-@@ -1297,6 +1729,27 @@ export class SubductionSource {
+@@ -1297,6 +1711,27 @@ export class SubductionSource {
      isHealing(sedimentreeId) {
          return this.#scheduler.isHealing(sedimentreeId);
      }
@@ -1400,7 +1368,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..2ff8f2705accc8f6144f79cb872d948a
      /**
       * Force a fresh outbound sync round for a document, re-arming the
       * self-healing retry loop.
-@@ -1321,6 +1774,11 @@ export class SubductionSource {
+@@ -1321,6 +1756,11 @@ export class SubductionSource {
              return;
          this.#scheduler.resetHealState(sid);
          entry.lastSyncResult = null;
@@ -1412,7 +1380,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..2ff8f2705accc8f6144f79cb872d948a
          this.#scheduleRecompute(entry);
      }
      // ── Flush ───────────────────────────────────────────────────────────
-@@ -1478,12 +1936,28 @@ export class SubductionSource {
+@@ -1478,12 +1918,28 @@ export class SubductionSource {
          catch (e) {
              this.#log.debug("error disconnecting subduction transports: %O", e);
          }
@@ -1442,24 +1410,10 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..2ff8f2705accc8f6144f79cb872d948a
      async #awaitStorageIdle() {
          let timer;
 diff --git a/dist/subduction/storage.d.ts b/dist/subduction/storage.d.ts
-index 8d260aa38e6de498e56efff9747149696c150d0c..73ab43a052766cfe17faa863d8f0732fb38cc189 100644
+index 8d260aa38e6de498e56efff9747149696c150d0c..480cabdb6687a5d8b22b1af7c63b88aa90ef364d 100644
 --- a/dist/subduction/storage.d.ts
 +++ b/dist/subduction/storage.d.ts
-@@ -52,6 +52,13 @@ export declare class SubductionStorageBridge implements SedimentreeStorage {
-     private droppedWriteCount;
-     private idleWaiters;
-     private log;
-+    /** DXOS patch: sedimentrees whose removal deletes nothing while set; see {@link evictWhile}. */
-+    retained: Set<string>;
-+    /**
-+     * DXOS patch: run `evict` (Subduction's `removeSedimentree`) with the tree's records kept, so it only drops the
-+     * tree from the engine's memory and the next read loads it from storage again.
-+     */
-+    evictWhile<T>(sedimentreeId: SedimentreeId, evict: () => Promise<T>): Promise<T>;
-     constructor(adapter: StorageAdapterInterface, prefix?: string);
-     /**
-      * Wait for in-scope save operations to drain.
-@@ -129,6 +136,7 @@ export declare class SubductionStorageBridge implements SedimentreeStorage {
+@@ -129,6 +129,7 @@ export declare class SubductionStorageBridge implements SedimentreeStorage {
      saveSedimentreeId(sedimentreeId: SedimentreeId): Promise<void>;
      deleteSedimentreeId(sedimentreeId: SedimentreeId): Promise<void>;
      loadAllSedimentreeIds(): Promise<SedimentreeId[]>;
@@ -1468,51 +1422,10 @@ index 8d260aa38e6de498e56efff9747149696c150d0c..73ab43a052766cfe17faa863d8f0732f
      loadCommit(sedimentreeId: SedimentreeId, commitId: CommitId): Promise<CommitWithBlob | null>;
      /**
 diff --git a/dist/subduction/storage.js b/dist/subduction/storage.js
-index 37f9cc727f7ab1d24118879efadc4bb44f90e827..01a66ecc4cd09d0be105a7c7f223f3033666be75 100644
+index 37f9cc727f7ab1d24118879efadc4bb44f90e827..7c3f51b53a8df1512ee45f69c6a7c0d4e024da8c 100644
 --- a/dist/subduction/storage.js
 +++ b/dist/subduction/storage.js
-@@ -39,10 +39,31 @@ export class SubductionStorageBridge {
-     droppedWriteCount = 0;
-     idleWaiters = [];
-     log = makeLogger("automerge-repo:subduction:storage");
-+    /**
-+     * DXOS patch: sedimentrees whose removal deletes nothing while set, so
-+     * {@link evictWhile} turns Subduction's `removeSedimentree` into an
-+     * eviction of its in-memory tree.
-+     */
-+    retained = new Set();
-     constructor(adapter, prefix = DEFAULT_PREFIX) {
-         this.prefix = prefix;
-         this.adapter = adapter;
-     }
-+    /**
-+     * DXOS patch: run `evict` (Subduction's `removeSedimentree`) with the
-+     * tree's records kept, so it only drops the tree from the engine's
-+     * memory and the next read loads it from storage again.
-+     */
-+    async evictWhile(sedimentreeId, evict) {
-+        const sid = sedimentreeId.toString();
-+        this.retained.add(sid);
-+        try {
-+            return await evict();
-+        }
-+        finally {
-+            this.retained.delete(sid);
-+        }
-+    }
-     /**
-      * Wait for in-scope save operations to drain.
-      *
-@@ -232,6 +253,8 @@ export class SubductionStorageBridge {
-         await this.guarded("saveSedimentreeId", undefined, () => this.adapter.save(key, ID_MARKER));
-     }
-     async deleteSedimentreeId(sedimentreeId) {
-+        if (this.retained.has(sedimentreeId.toString()))
-+            return;
-         const key = [this.prefix, IDS_PREFIX, sedimentreeId.toString()];
-         await this.guarded("deleteSedimentreeId", undefined, () => this.adapter.remove(key));
-     }
-@@ -243,6 +266,15 @@ export class SubductionStorageBridge {
+@@ -243,6 +243,15 @@ export class SubductionStorageBridge {
                  .map(chunk => SedimentreeId.fromBytes(hexToBytes(chunk.key[2])));
          });
      }
@@ -1528,21 +1441,3 @@ index 37f9cc727f7ab1d24118879efadc4bb44f90e827..01a66ecc4cd09d0be105a7c7f223f303
      // ==================== Commits (compound storage with blob) ====================
      async saveCommit(sedimentreeId, commitId, signedCommit, blob) {
          // Encode the signed commit to bytes
-@@ -355,6 +387,8 @@ export class SubductionStorageBridge {
-     }
-     async deleteAllCommits(sedimentreeId) {
-         const sid = sedimentreeId.toString();
-+        if (this.retained.has(sid))
-+            return;
-         await this.guarded("deleteAllCommits", undefined, () => Promise.all([
-             this.adapter.removeRange([this.prefix, COMMITS_PREFIX, sid]),
-             this.adapter.removeRange([this.prefix, BLOBS_PREFIX, sid]),
-@@ -458,6 +492,8 @@ export class SubductionStorageBridge {
-     }
-     async deleteAllFragments(sedimentreeId) {
-         const sid = sedimentreeId.toString();
-+        if (this.retained.has(sid))
-+            return;
-         await this.guarded("deleteAllFragments", undefined, () => Promise.all([
-             this.adapter.removeRange([this.prefix, FRAGMENTS_PREFIX, sid]),
-             this.adapter.removeRange([this.prefix, FRAGMENT_BLOBS_PREFIX, sid]),
