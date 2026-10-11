@@ -77,7 +77,7 @@ const AgentActivityToolbar = ({
           {
             // Reconfigures running connections, so the label follows the state.
             label: [running ? 'activity-restart.label' : 'activity-start.label', { ns: meta.profile.key }],
-            icon: running ? 'ph--arrow-clockwise--regular' : 'ph--play--regular',
+            icon: running ? 'ph--arrow-clockwise--regular' : 'ph--plugs--regular',
             disabled: busy || !connectable,
           },
           () => onStart?.(),
@@ -86,7 +86,7 @@ const AgentActivityToolbar = ({
           'stop',
           {
             label: ['activity-stop.label', { ns: meta.profile.key }],
-            icon: 'ph--stop--regular',
+            icon: 'ph--plugs-connected--regular',
             disabled: busy || !running,
           },
           () => onStop?.(),
