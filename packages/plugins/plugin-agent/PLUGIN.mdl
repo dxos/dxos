@@ -95,7 +95,7 @@ type Memory
     (source = memory, target = entity). Never overwritten: a contradiction supersedes. Label: `content`.
   fields:
     content: string
-    kind: fact | preference | goal | commitment | relationship | event
+    kind: fact | preference | goal | commitment | relationship | event | note | directive
     origin: stated | inferred       # default stated
     confidence?: number             # 0..1, checked by recordMemory
     observedAt: DateTime            # default now
@@ -228,7 +228,7 @@ op recordMemory
   desc: Records one atomic third-person claim about the given subjects.
   input:
     content: string
-    kind: fact | preference | goal | commitment | relationship | event
+    kind: fact | preference | goal | commitment | relationship | event | note | directive
     origin?: stated | inferred
     subjects: Ref<Obj>[]            # at least one
     confidence?: number             # 0..1
