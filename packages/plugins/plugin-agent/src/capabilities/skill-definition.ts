@@ -15,6 +15,7 @@ import {
   ModesSkill,
   NoteTakerSkill,
   RelaySkill,
+  SupportSkill,
 } from '#skills';
 
 export default () =>
@@ -26,4 +27,5 @@ export default () =>
     Capability.contribute(AppCapabilities.SkillDefinition, BrainSkill),
     Capability.contribute(AppCapabilities.SkillDefinition, ModesSkill),
     Capability.contribute(AppCapabilities.SkillDefinition, NoteTakerSkill),
+    Capability.contribute(AppCapabilities.SkillDefinition, SupportSkill),
   ]);

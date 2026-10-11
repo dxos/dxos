@@ -20777,6 +20777,9 @@ importers:
       '@dxos/plugin-assistant':
         specifier: workspace:*
         version: link:../../plugins/plugin-assistant
+      '@dxos/plugin-discord':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-discord
       '@dxos/plugin-explorer':
         specifier: workspace:*
         version: link:../../plugins/plugin-explorer
@@ -20786,6 +20789,9 @@ importers:
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../../plugins/plugin-space
+      '@dxos/plugin-thread':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-thread
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -20931,9 +20937,6 @@ importers:
       '@dxos/plugin-tasks':
         specifier: workspace:*
         version: link:../../plugins/plugin-tasks
-      '@dxos/plugin-thread':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-thread
       '@dxos/plugin-tldraw':
         specifier: workspace:*
         version: link:../../plugins/plugin-tldraw

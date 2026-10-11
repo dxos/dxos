@@ -188,6 +188,11 @@
       "types": "./dist/types/src/skills/RelaySkill.d.ts",
       "import": "./dist/lib/RelaySkill.mjs"
     },
+    "./SupportSkill": {
+      "source": "./src/skills/SupportSkill.ts",
+      "types": "./dist/types/src/skills/SupportSkill.d.ts",
+      "import": "./dist/lib/SupportSkill.mjs"
+    },
     "./Trigger": {
       "source": "./src/types/Trigger.ts",
       "types": "./dist/types/src/types/Trigger.d.ts",
@@ -264,6 +269,9 @@
       ],
       "RelaySkill": [
         "dist/types/src/skills/RelaySkill.d.ts"
+      ],
+      "SupportSkill": [
+        "dist/types/src/skills/SupportSkill.d.ts"
       ]
     }
   },

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Surface from '@dxos/app-framework/Surface';
@@ -10,7 +10,7 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import type * as Agent from '@dxos/assistant/Agent';
-import type * as Chat from '@dxos/assistant/Chat';
+import * as Chat from '@dxos/assistant/Chat';
 import type * as Skill from '@dxos/compute/Skill';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
@@ -20,6 +20,7 @@ import { AgentActivity as AgentActivityComponent } from '#components';
 import { AgentChannels, AgentOperation } from '#types';
 
 import { useAgentChannelList, useAgentConversations } from '../useAgentConversations.ts';
+import { selectPrimaryChat, useBindingCount } from '../useSkillBindings.ts';
 
 export type AgentActivityProps = {
   role?: string;
@@ -135,13 +136,18 @@ type ListedSkill = { key: string; name: string; customized: boolean; skill?: Ref
 
 /**
  * The plugin skills the agent's conversation binds, with customize/reset/open. Bindings live in the chat's
- * feed and are read through an operation, so the list is re-read after each change rather than subscribed.
+ * feed and are read through an operation, so the list is re-read whenever the feed gains a binding entry —
+ * a mode switch from anywhere, not only this panel's own customize and reset.
  */
 const useAgentSkills = (agent: Agent.Agent) => {
   const { invokePromise } = Hooks.useOperationInvoker();
   const db = Obj.getDatabase(agent);
   const spaceId = db?.spaceId;
+  const chats = useQuery(db, Filter.and(Filter.type(Chat.Chat), Filter.childOf(agent)));
+  const primary = useMemo(() => selectPrimaryChat(chats), [chats]);
+  const bindings = useBindingCount(primary);
   const [skills, setSkills] = useState<ListedSkill[]>([]);
+  const refreshGeneration = useRef(0);
   const [busy, setBusy] = useState(false);
 
   const refresh = useCallback(async () => {
@@ -149,7 +155,12 @@ const useAgentSkills = (agent: Agent.Agent) => {
       return;
     }
 
+    const generation = ++refreshGeneration.current;
     const { data } = await invokePromise(AgentOperation.ListSkills, { agent: Ref.make(agent) }, { spaceId });
+    // Reads overlap when bindings change in quick succession; only the latest may land.
+    if (generation !== refreshGeneration.current) {
+      return;
+    }
     // Space-authored skills have no registry key and are edited where they live, not here.
     setSkills(
       (data?.skills ?? []).flatMap(({ key, name, customized, skill }) =>
@@ -160,7 +171,7 @@ const useAgentSkills = (agent: Agent.Agent) => {
 
   useEffect(() => {
     void refresh();
-  }, [refresh]);
+  }, [refresh, primary?.id, bindings]);
 
   const run = useCallback(
     async (operation: typeof AgentOperation.CustomizeSkill | typeof AgentOperation.ResetSkill, key: string) => {

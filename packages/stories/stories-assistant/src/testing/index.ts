@@ -15,3 +15,5 @@ export * from './busy-space.ts';
 export * from './helpdesk-space.ts';
 export * from './voyage-space.ts';
 export * from './playground.ts';
+export * from './discord.ts';
+export * from './support-team.ts';

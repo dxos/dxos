@@ -17,6 +17,7 @@ import {
   ModesSkill,
   NoteTakerSkill,
   RelaySkill,
+  SupportSkill,
 } from '#skills';
 import { Memory, Mode } from '#types';
 
@@ -54,6 +55,12 @@ export const BUILTIN_MODES: readonly BuiltinMode[] = [
     description: 'Carries messages between people and reports back what they said.',
     skills: [RelaySkill.key],
     records: ['commitment'],
+  },
+  {
+    name: 'Support',
+    description: 'Answers community questions, gathers bug reports and hands what it cannot solve to the team.',
+    skills: [SupportSkill.key],
+    records: ['event', 'note'],
   },
 ];
 

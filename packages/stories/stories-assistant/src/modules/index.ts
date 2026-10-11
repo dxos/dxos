@@ -6,11 +6,13 @@ import * as Role from '@dxos/app-framework/Role';
 import * as Surface from '@dxos/app-framework/Surface';
 import { ModuleRole, moduleSurfaces as commonSurfaces } from '@dxos/storybook-testing/modules';
 
+import { AgentActivityModule } from './AgentActivityModule.tsx';
 import { AgentKnowledgeModule } from './AgentKnowledgeModule.tsx';
 import { AgentModule } from './AgentModule.tsx';
 import { AgentStateModule } from './AgentStateModule.tsx';
 import { ChatModule } from './ChatModule.tsx';
 import { ContextModule } from './ContextModule.tsx';
+import { DiscordBotModule } from './DiscordBotModule.tsx';
 import { GraphModule } from './GraphModule.tsx';
 import { ProfileModule } from './ProfileModule.tsx';
 import { ProjectModule } from './ProjectModule.tsx';
@@ -29,10 +31,12 @@ export const StoryRole = {
   ...ModuleRole,
 
   Agent: Role.make<Record<string, unknown>>('org.dxos.storybook.role.agent'),
+  AgentActivity: Role.make<Record<string, unknown>>('org.dxos.storybook.role.agentActivity'),
   AgentKnowledge: Role.make<Record<string, unknown>>('org.dxos.storybook.role.agentKnowledge'),
   AgentState: Role.make<Record<string, unknown>>('org.dxos.storybook.role.agentState'),
   Chat: Role.make<Record<string, unknown>>('org.dxos.storybook.role.chat'),
   Context: Role.make<Record<string, unknown>>('org.dxos.storybook.role.context'),
+  DiscordBot: Role.make<Record<string, unknown>>('org.dxos.storybook.role.discordBot'),
   Graph: Role.make<Record<string, unknown>>('org.dxos.storybook.role.graph'),
   Profile: Role.make<Record<string, unknown>>('org.dxos.storybook.role.profile'),
   Project: Role.make<Record<string, unknown>>('org.dxos.storybook.role.project'),
@@ -55,6 +59,11 @@ export const moduleSurfaces: Surface.Definition[] = [
     component: AgentModule,
   }),
   Surface.create({
+    id: 'role.agentActivity',
+    filter: Surface.makeFilter(StoryRole.AgentActivity),
+    component: AgentActivityModule,
+  }),
+  Surface.create({
     id: 'role.agentKnowledge',
     filter: Surface.makeFilter(StoryRole.AgentKnowledge),
     component: AgentKnowledgeModule,
@@ -68,6 +77,11 @@ export const moduleSurfaces: Surface.Definition[] = [
     id: 'role.chat',
     filter: Surface.makeFilter(StoryRole.Chat),
     component: ChatModule,
+  }),
+  Surface.create({
+    id: 'role.discordBot',
+    filter: Surface.makeFilter(StoryRole.DiscordBot),
+    component: DiscordBotModule,
   }),
   Surface.create({
     id: 'role.context',
