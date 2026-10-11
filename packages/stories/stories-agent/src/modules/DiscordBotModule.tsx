@@ -110,9 +110,13 @@ export const DiscordBotModule = (_props: Surface.ComponentProps<Record<string, u
               {!channel && <p className='text-description'>No Discord channel in this space.</p>}
               <ol className='flex flex-col gap-1 text-sm'>
                 {entries.map((entry, index) => (
-                  <li key={index} data-testid='discord-bot-monitor-entry' className='flex gap-2'>
-                    <time className='text-description tabular-nums'>{entry.at.toLocaleTimeString()}</time>
-                    <span>{describe(entry)}</span>
+                  <li key={index} data-testid='discord-bot-monitor-entry' className='flex gap-2 min-w-0'>
+                    <time className='shrink-0 text-description tabular-nums'>
+                      {entry.at.toLocaleTimeString(undefined, { hour12: false })}
+                    </time>
+                    <span className='truncate' title={describe(entry)}>
+                      {describe(entry)}
+                    </span>
                   </li>
                 ))}
               </ol>
