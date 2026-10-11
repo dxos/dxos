@@ -15,6 +15,7 @@ import { Connection } from '@dxos/link';
 import * as ConnectorCoordination from '@dxos/plugin-connector/ConnectorCoordination';
 import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Typography from '@dxos/react-ui/Typography';
 
 import { DiscordChannelForm, DiscordSetup } from '#components';
 import { meta } from '#meta';
@@ -158,6 +159,16 @@ export const DiscordAgentSetup = ({ role, agent }: DiscordAgentSetupProps) => {
   );
 
   const installedIds = useMemo(() => new Set(installed.map(({ id }) => id)), [installed]);
+  // This agent's channels in the selected server first, then the rest it could be connected to.
+  const isMine = useCallback(
+    (channel: DiscordAdminOperation.GuildChannel) =>
+      bindings.some(
+        ({ discordChannelId, agent: bound }) => discordChannelId === channel.id && entityIdOf(bound) === agent.id,
+      ),
+    [bindings, agent],
+  );
+  const connected = useMemo(() => channels.filter(isMine), [channels, isMine]);
+  const available = useMemo(() => channels.filter((channel) => !isMine(channel)), [channels, isMine]);
   // The servers the user administers, plus any the bot is in that the user's list does not show (e.g. not signed in).
   const guilds = useMemo(
     () => [...managed, ...installed.filter(({ id }) => !managed.some((guild) => guild.id === id))],
@@ -214,39 +225,56 @@ export const DiscordAgentSetup = ({ role, agent }: DiscordAgentSetupProps) => {
       </DiscordSetup.Section>
 
       {guildId && (
-        <DiscordSetup.Section
-          title={t('discord-setup-channels.label')}
-          description={t('discord-setup-channels.description')}
-        >
-          <DiscordSetup.List ids={channels.map(({ id }) => id)}>
-            {channels.map((channel) => {
-              const binding = bindings.find(({ discordChannelId }) => discordChannelId === channel.id);
-              const mine = binding !== undefined && entityIdOf(binding.agent) === agent.id;
-              return (
-                <DiscordSetup.Item
-                  key={channel.id}
-                  id={channel.id}
-                  icon='ph--hash--regular'
-                  label={channel.name}
-                  detail={
-                    binding
-                      ? mine
-                        ? t('discord-setup-bound-here.label')
-                        : t('discord-setup-bound-other.label')
-                      : undefined
-                  }
-                >
-                  <Button.Root
-                    variant='ghost'
-                    label={mine ? t('discord-setup-unbind.label') : t('discord-setup-bind.label')}
-                    disabled={busy || (binding !== undefined && !mine)}
-                    onClick={() => void handleBind(channel, mine)}
-                  />
-                </DiscordSetup.Item>
-              );
-            })}
-          </DiscordSetup.List>
-        </DiscordSetup.Section>
+        <>
+          <DiscordSetup.Section
+            title={t('discord-setup-connected.label')}
+            description={t('discord-setup-connected.description')}
+          >
+            {connected.length === 0 ? (
+              <Typography.Text tone='muted'>{t('discord-setup-connected-empty.label')}</Typography.Text>
+            ) : (
+              <DiscordSetup.List ids={connected.map(({ id }) => id)}>
+                {connected.map((channel) => (
+                  <DiscordSetup.Item key={channel.id} id={channel.id} icon='ph--hash--regular' label={channel.name}>
+                    <Button.Root
+                      variant='ghost'
+                      label={t('discord-setup-disconnect.label')}
+                      disabled={busy}
+                      onClick={() => void handleBind(channel, true)}
+                    />
+                  </DiscordSetup.Item>
+                ))}
+              </DiscordSetup.List>
+            )}
+          </DiscordSetup.Section>
+
+          <DiscordSetup.Section
+            title={t('discord-setup-channels.label')}
+            description={t('discord-setup-channels.description')}
+          >
+            <DiscordSetup.List ids={available.map(({ id }) => id)}>
+              {available.map((channel) => {
+                const elsewhere = bindings.some(({ discordChannelId }) => discordChannelId === channel.id);
+                return (
+                  <DiscordSetup.Item
+                    key={channel.id}
+                    id={channel.id}
+                    icon='ph--hash--regular'
+                    label={channel.name}
+                    detail={elsewhere ? t('discord-setup-bound-other.label') : undefined}
+                  >
+                    <Button.Root
+                      variant='ghost'
+                      label={t('discord-setup-connect-channel.label')}
+                      disabled={busy || elsewhere}
+                      onClick={() => void handleBind(channel, false)}
+                    />
+                  </DiscordSetup.Item>
+                );
+              })}
+            </DiscordSetup.List>
+          </DiscordSetup.Section>
+        </>
       )}
     </DiscordSetup.Root>
   );
