@@ -1,5 +1,34 @@
 # @dxos/react-ui-assistant
 
+## 0.14.0
+
+### Minor Changes
+
+- 1759426: A queued prompt's delivery ticks now sit on the prompt bubble's bottom edge instead of adding a line inside it, and its remove control moves into the toolbar under the bubble, which stays shown while the prompt can be removed.
+
+  Breaking: `createDeliveryWidget` is removed, and the renderer no longer emits a `<delivery>` tag; `ChatThread` renders the ticks from the message's delivery annotation itself.
+
+### Patch Changes
+
+- Updated dependencies [fd09131]
+- Updated dependencies [508be04]
+- Updated dependencies [347546a]
+- Updated dependencies [1eed6b1]
+- Updated dependencies [6847fe2]
+- Updated dependencies [eb5d14d]
+- Updated dependencies [b07f49f]
+  - @dxos/react-ui@0.14.0
+  - @dxos/echo@0.14.0
+  - @dxos/ui-theme@0.14.0
+  - @dxos/react-ui-components@0.14.0
+  - @dxos/react-ui-feed@0.14.0
+  - @dxos/react-ui-syntax-highlighter@0.14.0
+  - @dxos/types@0.14.0
+  - @dxos/ui-editor@0.14.0
+  - @dxos/ui@0.14.0
+  - @dxos/keys@0.14.0
+  - @dxos/util@0.14.0
+
 ## 0.13.0
 
 ### Minor Changes

@@ -22,14 +22,14 @@ const MIN_QUERY_INTERVAL = 5_000;
 
 const POLL_INTERVAL = 10_000;
 
-/** Whether the local replica of a document contains the change with the given hash; `false` marks it `different`. */
+/** Whether the local replica of a document contains the change with the given hash; `false` marks it `advertised`. */
 export type HasLocalChange = (documentId: DocumentId, changeHash: string) => boolean;
 
 export type CollectionSynchronizerProps = {
   sendCollectionState: (collectionId: string, peerId: PeerId, state: CollectionState) => void;
   queryCollectionState: (collectionId: string, peerId: PeerId) => void;
   shouldSyncCollection: (collectionId: string, peerId: PeerId) => boolean;
-  /** Tells an ancestor head from a missing change. */
+  /** Tells an ancestor head from a change worth a sync round. */
   hasLocalChange?: HasLocalChange;
 };
 
@@ -300,6 +300,7 @@ export class CollectionSynchronizer extends Resource {
       missingOnLocal: diff.missingOnLocal,
       missingOnRemote: diff.missingOnRemote,
       different: diff.different,
+      advertised: diff.advertised,
     });
     log('emit peer collection state update');
     this.peerCollectionStateUpdated.emit({
@@ -491,6 +492,11 @@ export type CollectionStateDiff = {
   missingOnRemote: DocumentId[];
   missingOnLocal: DocumentId[];
   different: DocumentId[];
+  /**
+   * In sync, since the heads overlap, but the remote advertises a change the local replica lacks: worth one sync
+   * round in case it is new, never a divergence.
+   */
+  advertised: DocumentId[];
 };
 
 /** One collection's sync span with EDGE, across however many connections the catch-up takes. */
@@ -513,6 +519,7 @@ type SyncSpanTrigger = 'initial' | 'remote' | 'local';
  */
 type SyncSpanOutcome = 'synced' | 'disconnected' | 'closed';
 
+/** In sync: a document that is only {@link CollectionStateDiff.advertised} does not count. */
 const isDiffEmpty = (diff: CollectionStateDiff): boolean =>
   diff.different.length === 0 && diff.missingOnLocal.length === 0 && diff.missingOnRemote.length === 0;
 
@@ -583,25 +590,28 @@ export const diffCollectionState = (
   const missingOnRemote: DocumentId[] = [];
   const missingOnLocal: DocumentId[] = [];
   const different: DocumentId[] = [];
+  const advertised: DocumentId[] = [];
   for (const documentId of allDocuments) {
     if (!localDocuments[documentId]) {
       missingOnLocal.push(documentId);
     } else if (!remoteDocuments[documentId]) {
       missingOnRemote.push(documentId);
-    } else if (
-      exact
-        ? !headsEqual(local.documents[documentId], remote.documents[documentId])
-        : !headsOverlap(local.documents[documentId], remote.documents[documentId]) ||
-          advertisesMissingChange(documentId, local.documents[documentId], remote.documents[documentId], hasLocalChange)
-    ) {
+    } else if (exact) {
+      if (!headsEqual(local.documents[documentId], remote.documents[documentId])) {
+        different.push(documentId);
+      }
+    } else if (!headsOverlap(local.documents[documentId], remote.documents[documentId])) {
       // Subduction's `getAllHeads()` on the edge mixes raw `LooseCommit` tips with
       // fragment heads (commit IDs promoted to depth >= 1 by leading-zero count of the
       // hash). The host's `automerge.getHeads(doc)` only ever sees raw change tips —
       // it has no notion of fragments — so the two views can disagree on a doc's
       // head set even when every change byte is replicated. We treat the doc as in
-      // sync as long as both sides agree on at least one head and the remote advertises no change
-      // the local replica lacks.
+      // sync as long as both sides agree on at least one head.
       different.push(documentId);
+    } else if (
+      advertisesMissingChange(documentId, local.documents[documentId], remote.documents[documentId], hasLocalChange)
+    ) {
+      advertised.push(documentId);
     }
   }
 
@@ -609,6 +619,7 @@ export const diffCollectionState = (
     missingOnRemote,
     missingOnLocal,
     different,
+    advertised,
   };
 };
 

@@ -281,6 +281,7 @@
       "@dxos/plugin-github",
       "@dxos/plugin-google",
       "@dxos/plugin-graph",
+      "@dxos/plugin-handpan",
       "@dxos/plugin-heygen",
       "@dxos/plugin-higgsfield",
       "@dxos/plugin-ibkr",

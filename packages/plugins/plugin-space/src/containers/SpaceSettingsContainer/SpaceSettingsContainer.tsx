@@ -22,7 +22,6 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Dialog from '@dxos/react-ui/Dialog';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
-import * as Layout from '@dxos/react-ui/Layout';
 import * as Menu from '@dxos/react-ui/Menu';
 
 import { meta } from '#meta';
@@ -257,19 +256,19 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
                   </Dialog.Header>
                   <Dialog.Body>
                     <Dialog.Description>{t('delete-space-confirm.description')}</Dialog.Description>
-                    <Layout.Flex gap='sm' justify='end' classNames='mt-4'>
-                      <Dialog.CloseTrigger asChild>
-                        <Button.Root>{t('cancel.label')}</Button.Root>
-                      </Dialog.CloseTrigger>
-                      <Button.Root
-                        variant='destructive'
-                        onClick={handleDelete}
-                        data-testid='spaceSettings.deleteSpaceConfirm'
-                      >
-                        {t('delete-space.label')}
-                      </Button.Root>
-                    </Layout.Flex>
                   </Dialog.Body>
+                  <Dialog.Footer>
+                    <Dialog.CloseTrigger asChild>
+                      <Button.Root>{t('cancel.label')}</Button.Root>
+                    </Dialog.CloseTrigger>
+                    <Button.Root
+                      variant='destructive'
+                      onClick={handleDelete}
+                      data-testid='spaceSettings.deleteSpaceConfirm'
+                    >
+                      {t('delete-space.label')}
+                    </Button.Root>
+                  </Dialog.Footer>
                 </Dialog.Content>
               </Dialog.Root>
             </Form.Field>

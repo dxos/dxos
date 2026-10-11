@@ -298,6 +298,8 @@ const linkBase = {
   target: Endpoint,
   /** End markers; an arrow at `end` reads as the link's direction. */
   ends: Schema.optional(LinkEnds),
+  /** A caption drawn at the middle of the link's route. */
+  text: Schema.optional(Schema.String.annotate({ title: 'Label' })),
   /** A style class of the drawing the link takes its style from; its own `style` wins over it. */
   /** The scene layer the element is on; unset, or naming no layer of the scene, it is on the bottom one. */
   layer: Schema.optional(Schema.String.annotate({ title: 'Layer' })),

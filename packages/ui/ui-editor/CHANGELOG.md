@@ -1,5 +1,32 @@
 # @dxos/ui-editor
 
+## 0.14.0
+
+### Patch Changes
+
+- Updated dependencies [1eed6b1]
+- Updated dependencies [ed52cb7]
+- Updated dependencies [6847fe2]
+- Updated dependencies [eb5d14d]
+- Updated dependencies [b07f49f]
+  - @dxos/echo@0.14.0
+  - @dxos/echo-client@0.14.0
+  - @dxos/ui-theme@0.14.0
+  - @dxos/client@0.14.0
+  - @dxos/app-graph@0.14.0
+  - @dxos/echo-doc@0.14.0
+  - @dxos/protocols@0.14.0
+  - @dxos/ui@0.14.0
+  - @dxos/nlp@0.14.0
+  - @dxos/async@0.14.0
+  - @dxos/context@0.14.0
+  - @dxos/display-name@0.14.0
+  - @dxos/invariant@0.14.0
+  - @dxos/keys@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/util@0.14.0
+  - @dxos/ui-types@0.14.0
+
 ## 0.13.0
 
 ### Patch Changes

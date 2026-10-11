@@ -536,6 +536,7 @@ catalog:
   pdfjs-dist: ^6.2.108
   picomatch: ^2.3.0
   pify: ~5.0.0
+  pitchy: ^4.1.0
   pkg-up: ^3.1.0
   platform: ^1.3.6
   playwright: 1.63.0
