@@ -97,6 +97,25 @@ export const makeDiscordChannelBackend = ({
           DeletedAnswer,
         );
       }),
+    remove: (channel, thread) =>
+      Effect.gen(function* () {
+        // Through EDGE, which holds the bot's real token (a space may only record a placeholder) and reaches Discord
+        // without the browser's CORS limits.
+        const { config, spaceId } = yield* loadConfig(channel);
+        const accessToken = yield* Effect.tryPromise({
+          try: () => config.accessToken.load(),
+          catch: (cause) => new DiscordChannelError({ message: 'Could not load the bot token.', cause }),
+        });
+        const edge = yield* edgeClient;
+        const query = new URLSearchParams({ spaceId, accessToken: accessToken.id });
+        yield* callBotRoute(
+          edge,
+          config.applicationId,
+          `/threads/${encodeURIComponent(thread)}?${query.toString()}`,
+          { method: 'DELETE' },
+          DeletedAnswer,
+        );
+      }),
   },
   connection: {
     start: (channel) =>

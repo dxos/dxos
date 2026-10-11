@@ -164,6 +164,37 @@ describe('channel operations', () => {
     }).pipe(Effect.provide(testLayer())),
   );
 
+  it.effect('deleteThread removes the thread on the backend and reports a refusal as an outcome', () =>
+    Effect.gen(function* () {
+      const { provider, removed } = makeFakeBackend();
+      const channel = yield* Database.add(Channel.make({ backend: { kind: FAKE_KIND, config: Feed.make() } }));
+      const withBackend = Effect.provideService(Capability.Service, capabilities(feedChannelBackend, provider));
+
+      expect(yield* deleteThread.handler({ channel: Ref.make(channel), thread: 't1' }).pipe(withBackend)).toEqual({
+        deleted: true,
+      });
+      expect(removed).toEqual(['t1']);
+
+      const refused = yield* deleteThread.handler({ channel: Ref.make(channel), thread: 'locked' }).pipe(withBackend);
+      expect(refused.deleted).toBe(false);
+      expect(refused.reason).toContain('refused');
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('deleteThread reports a backend that cannot delete threads', () =>
+    Effect.gen(function* () {
+      const { provider } = makeFakeBackend();
+      const threads: ThreadCapabilities.ChannelThreads = {
+        send: (_channel, _thread, message) => provider.send(channel, message),
+      };
+      const channel = yield* Database.add(Channel.make({ backend: { kind: FAKE_KIND, config: Feed.make() } }));
+      const result = yield* deleteThread
+        .handler({ channel: Ref.make(channel), thread: 't1' })
+        .pipe(Effect.provideService(Capability.Service, capabilities({ ...provider, threads })));
+      expect(result).toEqual({ deleted: false, reason: 'The Fake channel backend cannot delete threads.' });
+    }).pipe(Effect.provide(testLayer())),
+  );
+
   it.effect('dispatches threads, direct conversations and the connection to the backend', () =>
     Effect.gen(function* () {
       const { provider, sent } = makeFakeBackend();
