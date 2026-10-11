@@ -226,10 +226,7 @@ export const DiscordAgentSetup = ({ role, agent }: DiscordAgentSetupProps) => {
 
       {guildId && (
         <>
-          <DiscordSetup.Section
-            title={t('discord-setup-connected.label')}
-            description={t('discord-setup-connected.description')}
-          >
+          <DiscordSetup.Section title={t('discord-setup-connected.label')}>
             {connected.length === 0 ? (
               <Typography.Text tone='muted'>{t('discord-setup-connected-empty.label')}</Typography.Text>
             ) : (
@@ -248,10 +245,7 @@ export const DiscordAgentSetup = ({ role, agent }: DiscordAgentSetupProps) => {
             )}
           </DiscordSetup.Section>
 
-          <DiscordSetup.Section
-            title={t('discord-setup-channels.label')}
-            description={t('discord-setup-channels.description')}
-          >
+          <DiscordSetup.Section title={t('discord-setup-channels.label')}>
             <DiscordSetup.List ids={available.map(({ id }) => id)}>
               {available.map((channel) => {
                 const elsewhere = bindings.some(({ discordChannelId }) => discordChannelId === channel.id);
