@@ -62,7 +62,9 @@ export const createEdgeBlobBackend = ({ store, finalizeUpload }: CreateEdgeBlobB
 
     getUrl: async ({ uri, contentType }) => {
       const key = parseNiUri(uri);
-      const existing = objectUrls.get(key);
+      // Keyed by type as well: identical bytes stored under two declared types must render as each.
+      const cacheKey = `${key}|${contentType ?? ''}`;
+      const existing = objectUrls.get(cacheKey);
       if (existing) {
         return existing;
       }
@@ -74,7 +76,7 @@ export const createEdgeBlobBackend = ({ store, finalizeUpload }: CreateEdgeBlobB
       const url = URL.createObjectURL(
         new Blob([new Uint8Array(blob.data)], { type: contentType ?? blob.contentType ?? '' }),
       );
-      objectUrls.set(key, url);
+      objectUrls.set(cacheKey, url);
       return url;
     },
 

@@ -54,6 +54,10 @@ describe('createEdgeBlobBackend', () => {
     expect(await response.text()).toBe('hello');
     expect(response.headers.get('content-type')).toBe('text/plain');
     expect(await backend.getUrl({ spaceId, uri: fromDigestHex('c0ffee') })).toBeUndefined();
+
+    const asHtml = await backend.getUrl({ spaceId, uri, contentType: 'text/html' });
+    expect(asHtml).not.toBe(url);
+    expect((await fetch(asHtml ?? '')).headers.get('content-type')).toBe('text/html');
     backend.close();
   });
 
