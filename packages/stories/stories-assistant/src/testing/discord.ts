@@ -153,22 +153,25 @@ export type FakeDiscordBot = {
 
 const BOT_PATH = /\/compute\/discord\/bots\/([^/?]+)/;
 
-/** The gateway's states after a start, one per status read, so the monitor sees the transition. */
-const STARTUP: DiscordChannel.GatewayState[] = ['connecting', 'ready'];
+/**
+ * How long a started gateway reports `connecting` before `ready`: longer than the monitor's poll interval, so the
+ * monitor records the step however many other panels read the status meanwhile.
+ */
+const CONNECTING_MS = 3_000;
 
 const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify({ success: true, data }), { status, headers: { 'Content-Type': 'application/json' } });
 
 /**
  * Stands in for EDGE's Discord bot routes (`/compute/discord/bots/<applicationId>`) by wrapping `fetch`:
- * PUT starts the bot (connecting, then ready on the next read), DELETE stops it, GET reports. EDGE's
+ * PUT starts the bot (connecting for {@link CONNECTING_MS}, then ready), DELETE stops it, GET reports. EDGE's
  * `/auth` challenge answers 404 so the client proceeds unauthenticated instead of reaching a real EDGE.
  */
 export const installFakeDiscordBot = (): FakeDiscordBot => {
   const original = globalThis.fetch;
   const calls: FakeBotCall[] = [];
   let status: FakeBotStatus = { running: false, gateway: 'idle', threads: 0 };
-  let startup: DiscordChannel.GatewayState[] = [];
+  let startedAt: number | undefined;
 
   globalThis.fetch = async (input, init) => {
     const url = new URL(input instanceof Request ? input.url : String(input));
@@ -188,10 +191,10 @@ export const installFakeDiscordBot = (): FakeDiscordBot => {
 
     switch (method) {
       case 'PUT': {
-        startup = [...STARTUP];
+        startedAt = Date.now();
         status = {
           running: true,
-          gateway: startup.shift() ?? 'ready',
+          gateway: 'connecting',
           threads: status.threads,
           botUserId: 'bot-user',
           config: {
@@ -205,14 +208,14 @@ export const installFakeDiscordBot = (): FakeDiscordBot => {
         break;
       }
       case 'DELETE': {
-        startup = [];
+        startedAt = undefined;
         status = { running: false, gateway: 'closed', threads: status.threads };
         break;
       }
       default: {
-        const next = startup.shift();
-        if (next) {
-          status = { ...status, gateway: next };
+        if (startedAt !== undefined && Date.now() - startedAt >= CONNECTING_MS) {
+          startedAt = undefined;
+          status = { ...status, gateway: 'ready' };
         }
       }
     }

@@ -142,6 +142,7 @@ export const Scripted: Story = {
     await findEntry(monitor, 'stopped · idle');
 
     await userEvent.click(await canvas.findByRole('button', { name: 'Start bot' }, { timeout: 30_000 }));
+    await findEntry(monitor, 'running · connecting');
     await findEntry(monitor, 'running · ready');
     const start = fakeBot?.calls.find(({ method }) => method === 'PUT');
     await expect(start?.applicationId).toBe('1234567890');
