@@ -40,7 +40,7 @@ export const SUPPORT_TEAM: readonly SupportTeamMember[] = [
     expertise: [
       'the react-ui design system: components, theming, forms (react-ui-form), the editor and the canvas',
       'Composer plugins such as inbox, assistant, markdown, deck and space, and the devtools',
-      'product direction, roadmap and anything without an obvious owner',
+      'product direction, roadmap, funding',
     ],
   },
   {
