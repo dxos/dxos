@@ -525,6 +525,97 @@ Until that is agreed, phase 1's "heads on index hits" is implementable only on t
 non-bare, document-loading path. That path is enough for phase 1's target (flat type and property
 queries on the owning space), and the column is the first deliverable of phase 2.
 
+### 3.9 The index ↔ engine API
+
+Today the boundary is one streamed RPC, `execQuery` on `QueryService`
+(`protocols/src/QueryService.ts`: `QueryRequest { queryId, reactivity, query }` → a stream of
+`QueryResponse { queryId, results, objects }`), plus `awaitQueryUpdates` behind `db.flush({ indexes:
+true })`, plus the out-of-band `ObjectLoader` the client uses to turn a hit into a live object. The
+host and EDGE serve the same RPC. The proposal keeps the one-RPC shape and changes what crosses it,
+in both directions.
+
+**Engine → index.** The request says what the engine can use and what it already has:
+
+```ts
+type QueryRequest = {
+  queryId: string;
+  reactivity: 'one-shot' | 'reactive';
+  query: QueryAST.Query;
+  /** Absent on an old client; an old host ignores it. Each field is opt-in. */
+  wants?: {
+    versions: true;
+    paths?: { budgetBytes: number };
+    manifest?: { budgetBytes: number };
+  };
+  /** Documents the engine holds loaded with a body; the index omits bodies for hits in them. */
+  loaded?: readonly DocumentId[];
+};
+```
+
+`loaded` is the engine telling the index what the working set already covers. A hit in a loaded
+document needs only its id and version to be merged (§3.1 case 1 evaluates it locally); only hits
+the engine cannot evaluate (case 2) need a body, and for a document-backed hit that body is the
+automerge document, fetched through the existing document load, not through this RPC.
+`documentJson` on the wire stays for feed items, which have no document to load.
+
+**Index → engine.** Each answer is self-describing about its own freshness and completeness:
+
+```ts
+type QueryAnswer = {
+  queryId: string;
+  /** Index progress this answer was computed at, per in-scope space. */
+  watermark: Record<SpaceId, IndexSeq>;
+  /** False while a one-shot is still paging; a reactive answer is always complete for its watermark. */
+  complete: boolean;
+  truncated?: 'paths' | 'manifest';
+  entries: RemoteEntry[];
+  /** Scalar aggregates only: one record per group. */
+  groups?: { key: GroupKey; aggregates: Record<string, AggregateValue>; manifest?: ManifestEntry[] }[];
+};
+
+type RemoteEntry = {
+  id: EntityId;
+  spaceId: SpaceId;
+  rank: number;
+  version: Version; // { kind: 'automerge', documentId, heads } | { kind: 'feed', insertionId, sequence, actorId }
+  paths?: PathEdge[][];
+  groupKey?: GroupKey;
+  body?: { documentJson: string }; // feed items; never for a document the request listed as loaded
+};
+```
+
+`IndexSeq` is a per-space monotonic counter the indexer advances each time it commits a cursor
+move (`IndexEngine` already tracks a cursor per `(spaceId, resourceId)`; the counter is the commit
+number of that tracker transaction). It is the one new piece of state the index exposes.
+
+**Index → engine, progress.** A second stream, subscribed once per client rather than per query:
+
+```ts
+type IndexProgress = { spaceId: SpaceId; seq: IndexSeq; documents: { documentId: DocumentId; heads: Heads }[] };
+```
+
+This is what makes `stale` precise (§3.3). On a local commit inside a live query's scope the engine
+records `(documentId, heads)` against that query and marks it `stale`. A progress event tells it at
+which `seq` the indexer absorbed those heads; the first answer whose `watermark[spaceId]` is at or
+past that `seq` clears the flag. `awaitQueryUpdates` becomes a client-side wait on the same two
+streams (progress past the flushed heads, then an answer past that seq) and stops being an RPC.
+
+**What does not cross this boundary.** Invalidation stays host-side: the host keeps re-running
+reactive queries from its own hints and debounce, and pushes answers. The engine never asks the
+index to re-run; it reports `stale` and waits. Hydration of document-backed hits stays on the
+document-load path. Revalidation is entirely client-side; the index never learns the engine's
+verdicts.
+
+**Inside the host.** `QueryExecutor` ↔ `IndexEngine` is unchanged in shape. The executor gains
+three reads: the heads column per hit (§3.8), the `(holder, kind, from, to)` rows from the
+traversal step, and the manifest rows from the aggregate step; the `QueryServiceImpl` stamps the
+watermark from the tracker's current seq when it sends. EDGE's executor serves the identical
+`QueryAnswer` over its transport, with its indexer Durable Object's commit counter as the seq.
+
+**Compatibility.** Every new request field is optional and every new answer field is additive.
+An engine talking to an old host sees no `version` and treats every entry as `verified: false`
+(§3.8, point 4); an old client talking to a new host sends no `wants` and gets today's answer.
+
 ## 4. Phases
 
 0. **Characteristics and harness.** `Query.characteristics` as a pure function with a table test
