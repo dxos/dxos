@@ -7,10 +7,12 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Result from 'effect/Result';
 
+import type * as Capability from '@dxos/app-framework/Capability';
 import type * as Agent from '@dxos/assistant/Agent';
 import type * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import * as ChannelBackend from '@dxos/plugin-thread/ChannelBackend';
 import * as ThreadOperation from '@dxos/plugin-thread/ThreadOperation';
 import { Channel, Message, Person, Task } from '@dxos/types';
 
@@ -24,6 +26,8 @@ import { applyStatus } from './update-relay.ts';
 
 type Delivery = Operation.Definition.Output<typeof RelayOperation.SendMessage>;
 
+type Services = Database.Service | Operation.Service | Capability.Service;
+
 const handler: Operation.WithHandler<typeof RelayOperation.SendMessage> = RelayOperation.SendMessage.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ agent: agentRef, recipient: recipientRef, text, relay: relayRef }) {
@@ -33,7 +37,7 @@ const handler: Operation.WithHandler<typeof RelayOperation.SendMessage> = RelayO
       const role = relay ? roleIn(relay, recipient) : undefined;
 
       const brain = yield* BrainService.BrainService;
-      const deliver: Effect.Effect<Delivery, never, Database.Service | Operation.Service> = Effect.gen(function* () {
+      const deliver: Effect.Effect<Delivery, never, Services> = Effect.gen(function* () {
         // The requester asked from a particular conversation, so the outcome goes back there first.
         if (role === 'requester' && relay?.replyChannel) {
           const channel = yield* Database.load(relay.replyChannel).pipe(Effect.orDie);
@@ -80,7 +84,7 @@ const handler: Operation.WithHandler<typeof RelayOperation.SendMessage> = RelayO
             reasons.push(direct.reason ?? `${channel.name ?? 'A channel'} cannot reach them.`);
             continue;
           }
-          const sent = yield* postToChannel(agent, channel, direct.thread, text);
+          const sent = yield* postToChannel(agent, channel, direct.thread, text, { direct: true });
           if (!sent.delivered) {
             return { delivered: false, reason: sent.reason };
           }
@@ -140,11 +144,23 @@ const findChannel = (id: string) =>
 type Posted = { delivered: true; chat: Chat.Chat } | { delivered: false; reason?: string };
 
 /**
- * Posts through the channel's backend and records the post in the agent's chat for that conversation,
- * stamped with the backend's receipt so a mirror of the chat (EDGE's Discord bot) does not post it again.
+ * Delivers into a channel conversation and records it in the agent's chat for that conversation. On a mirrored
+ * channel the record is the delivery: its host (EDGE's Discord bot) posts it with credentials only it holds.
+ * Elsewhere the backend posts it, and the record carries the backend's receipt so no mirror posts it again.
  */
-const postToChannel = (agent: Agent.Agent, channel: Channel.Channel, thread: string | undefined, text: string) =>
+const postToChannel = (
+  agent: Agent.Agent,
+  channel: Channel.Channel,
+  thread: string | undefined,
+  text: string,
+  { direct = false }: { direct?: boolean } = {},
+) =>
   Effect.gen(function* () {
+    if (yield* ChannelBackend.isMirrored(channel)) {
+      const chat = yield* ensureChannelChat({ agent, channel, thread, direct }).pipe(Effect.orDie);
+      yield* appendToChat(agent, chat, text);
+      return { delivered: true, chat } satisfies Posted;
+    }
     const sent = yield* Operation.invoke(ThreadOperation.SendToChannel, { channel: Ref.make(channel), thread, text });
     if (!sent.delivered) {
       return { delivered: false, reason: sent.reason } satisfies Posted;

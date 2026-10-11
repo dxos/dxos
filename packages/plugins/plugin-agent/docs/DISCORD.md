@@ -142,7 +142,8 @@ What is built (dxos/dxos#13887, dxos/edge#1279), set up from the agent's **Disco
   each routed to a `Channel` in one owning space. A binding from another space is refused (409) instead of taking
   the bot over.
 - The bot token and application id live on the space's `DiscordChannel` config; locally EDGE uses its own
-  `DISCORD_BOT_TOKEN_DEV`, and the routes that need the token (listing channels, deleting a thread) run on EDGE.
+  `DISCORD_BOT_TOKEN_DEV`, and everything that needs the token (listing channels, deleting a thread, posting the
+  agent's messages and relays) runs on EDGE.
 - No installation records, KMS-held tokens, slash commands or webhooks yet.
 
 ### How a Discord channel reaches an agent
@@ -169,6 +170,29 @@ When someone posts in a bound channel:
    thread.
 4. The agent runs a turn in the space, and its reply is posted back through the bot.
 
+### How the agent's messages reach Discord
+
+The agent never posts to Discord itself: it appends assistant messages to its chat for the conversation, and the bot
+host posts them. Each conversation the bot knows (a thread or DM) has a record in the bot's `threads` table with a
+cursor into the chat's feed; whatever is past the cursor is posted, and the cursor advances.
+
+| Case                                    | What the agent does                                                                                                                                                                                                           | What the bot host does                                                                                                                                                                                                    |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A reply in the thread whose turn ran    | Appends its reply during the turn.                                                                                                                                                                                            | Posts it right after the turn settles (`mirrorReplies`), starting the thread if the message was top-level.                                                                                                                |
+| A relay into another known thread or DM | `RelayOperation.SendMessage` appends the message to that conversation's chat (`ensureChannelChat`), with no send.                                                                                                             | A sweep (`sweepThread`, after every handled message and every 5 seconds) posts what each known conversation's chat has past its cursor; a conversation whose thread was never started (a silent first turn) gets it then. |
+| A relay to someone with no conversation | `SendMessage` asks the channel for a direct thread; Discord's backend answers `dm:<Discord user id>` from the person's `discord` identity without a Discord call, and the chat is keyed by it plus `AgentChannels.directKey`. | The sweep queries chats carrying the direct key for the `Channel`, opens the DM with its own token, records the DM channel → chat (so the person's replies pass the DM gate into the same chat), and posts.               |
+
+`ChatParticipant` ties the chat to the person, so later relays to them reuse it. A turn's mirror and the sweep share
+the cursor and a per-thread lock, and the sweep skips a thread whose turn is mirroring, so each message is posted once.
+A conversation Discord refuses for good (closed DMs, a deleted thread: 403 or 404) is dropped and reported in the bot's
+`lastError` rather than retried. A backend declares this split with `ChannelBackendProvider.mirrored`; for any other
+backend `SendMessage` still sends through `ThreadOperation.SendToChannel`.
+
+**Only the bot host talks to Discord with the token EDGE holds.** `SendMessage` runs inside an agent's tool call on
+EDGE (operation-service), where there is no app client to reach the bot routes, and the space may hold only a
+placeholder token (locally) or a KMS-managed one the operation cannot read. The bot host resolves the real token once
+(`bot-token.ts`) and already holds the gateway, so sending lives there too.
+
 **Disconnect** (`UnbindChannel`) deletes the binding and removes the id from the config; a `Channel` left with no Discord
 channel leaves the agent's list, and its conversations stay in the space. Deleting a thread conversation in the Activity panel deletes the Discord thread through EDGE
 (the bot needs Manage Threads) and then the chat.
@@ -178,7 +202,8 @@ channel leaves the agent's list, and its conversations stay in the space. Deleti
 1. **Bindings.** Built: the bot host routes by binding, and a claim from another space is refused. Still to do:
    Installation records. (edge, plugin-agent)
 2. **Administration in plugin-agent.** Built: Connect Discord (OAuth), list servers and channels, connect and
-   disconnect. Still to do: the nickname, and tokens in KMS for sending as well as receiving.
+   disconnect; agent messages and relays are posted by the bot host, so sending needs no token in the space. Still to
+   do: the nickname, and tokens in KMS.
 3. **Concierge and webhooks.** Kai routes among a channel's agents; agents reply through webhooks under their own
    names.
 4. **Developer kit.** App registration, slash commands handled by operations, and the decision on custom event handlers.

@@ -47,6 +47,8 @@ export type EnsureChannelChatProps = {
   channel: Channel.Channel;
   thread?: string;
   title?: string;
+  /** A direct conversation the channel's host has yet to open; the chat also carries {@link AgentChannels.directKey}. */
+  direct?: boolean;
 };
 
 /**
@@ -58,6 +60,7 @@ export const ensureChannelChat = Effect.fnUntraced(function* ({
   channel,
   thread,
   title,
+  direct,
 }: EnsureChannelChatProps) {
   const key = AgentChannels.chatKey(channel.id, thread);
   // The same conversation may be bridged to more than one agent.
@@ -73,7 +76,7 @@ export const ensureChannelChat = Effect.fnUntraced(function* ({
   const feed = yield* Database.add(Feed.make());
   const chat = yield* Database.add(
     Chat.make({
-      [Obj.Meta]: { keys: [key] },
+      [Obj.Meta]: { keys: direct ? [key, AgentChannels.directKey(channel.id)] : [key] },
       [Obj.Parent]: agent,
       name: title,
       feed: Ref.make(feed),

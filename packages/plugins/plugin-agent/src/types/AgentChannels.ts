@@ -71,6 +71,15 @@ export const chatKey = (channelId: string, thread?: string) => ({
   id: thread === undefined ? channelId : `${channelId}/${thread}`,
 });
 
+/**
+ * `Obj.Meta` key source of a chat for a direct conversation the agent opened on a mirrored channel; the id is the
+ * channel's entity id, so the channel's host can find the conversations it still has to open.
+ */
+export const DIRECT_SOURCE = 'org.dxos.agent/direct';
+
+/** Second foreign key of a direct conversation's chat on a mirrored channel; see {@link DIRECT_SOURCE}. */
+export const directKey = (channelId: string) => ({ source: DIRECT_SOURCE, id: channelId });
+
 /** The channel (and thread) a chat mirrors, read back from its {@link chatKey}. */
 export const conversationOf = (chat: Chat.Chat): { channelId: string; thread?: string } | undefined => {
   const id = Obj.getMeta(chat).keys.find(({ source }) => source === CHAT_SOURCE)?.id;

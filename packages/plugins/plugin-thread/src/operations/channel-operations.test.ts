@@ -203,6 +203,26 @@ describe('channel operations', () => {
     }).pipe(Effect.provide(testLayer())),
   );
 
+  it.effect('a backend is mirrored only when it says so', () =>
+    Effect.gen(function* () {
+      const { provider } = makeFakeBackend();
+      const fake = yield* Database.add(Channel.make({ backend: { kind: FAKE_KIND, config: Feed.make() } }));
+      const feed = yield* Database.add(Channel.make({ name: 'general' }));
+      const orphan = yield* Database.add(
+        Channel.make({ backend: { kind: 'org.dxos.channel.backend.missing', config: Feed.make() } }),
+      );
+      const mirrored = (...providers: ThreadCapabilities.ChannelBackendProvider[]) =>
+        Effect.forEach([fake, feed, orphan], (channel) =>
+          ChannelBackend.isMirrored(channel).pipe(
+            Effect.provideService(Capability.Service, capabilities(feedChannelBackend, ...providers)),
+          ),
+        );
+
+      expect(yield* mirrored(provider)).toEqual([false, false, false]);
+      expect(yield* mirrored({ ...provider, mirrored: true })).toEqual([true, false, false]);
+    }).pipe(Effect.provide(testLayer())),
+  );
+
   it.effect('openDirect and the connection fail with a typed error on a backend without them', () =>
     Effect.gen(function* () {
       const channel = yield* Database.add(Channel.make({ name: 'general' }));

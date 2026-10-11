@@ -6,6 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import * as Capability from '@dxos/app-framework/Capability';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
@@ -110,8 +111,9 @@ export type DeliveryChannel = Schema.Schema.Type<typeof DeliveryChannel>;
 /**
  * Delivers a message to a person through whatever conversation the agent has with them: their chat with
  * the agent (see `ChatParticipant`, posted through its channel when it mirrors one), else a direct
- * message opened through one of the agent's channels. Given a relay, delivery to its recipient
- * marks it `delivered` and delivery to its requester marks it `reported`.
+ * message opened through one of the agent's channels. On a mirrored channel (Discord) the message is
+ * appended to the conversation's chat and the channel's host posts it. Given a relay, delivery to its
+ * recipient marks it `delivered` and delivery to its requester marks it `reported`.
  */
 export const SendMessage = Operation.make({
   meta: {
@@ -121,7 +123,7 @@ export const SendMessage = Operation.make({
       "Sends a message to a person through the agent's conversation with them (their chat, else a direct message through one of the agent's channels). Pass the relay it belongs to.",
     icon: 'ph--paper-plane-tilt--regular',
   },
-  services: [Database.Service, BrainService.BrainService],
+  services: [Database.Service, Capability.Service, BrainService.BrainService],
   input: Schema.Struct({
     agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent sending the message.' }),
     recipient: Ref.Ref(Obj.Unknown).annotate({ description: 'The person to deliver to.' }),
@@ -129,7 +131,9 @@ export const SendMessage = Operation.make({
     relay: Schema.optional(Ref.Ref(Relay.Relay).annotate({ description: 'The relay this delivery belongs to.' })),
   }),
   output: Schema.Struct({
-    delivered: Schema.Boolean,
+    delivered: Schema.Boolean.annotate({
+      description: "Whether the message was delivered, or on a mirrored channel queued for the channel's host to post.",
+    }),
     via: Schema.optional(DeliveryChannel),
     chat: Schema.optional(Ref.Ref(Chat.Chat).annotate({ description: 'The chat the message was recorded in.' })),
     reason: Schema.optional(Schema.String.annotate({ description: 'Why the message was not delivered.' })),
