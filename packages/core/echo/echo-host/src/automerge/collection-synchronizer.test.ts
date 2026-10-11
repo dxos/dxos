@@ -248,6 +248,7 @@ describe('CollectionSynchronizer', () => {
       missingOnLocal: ['d'],
       missingOnRemote: ['c'],
       different: ['b'],
+      advertised: [],
     });
   });
 
@@ -286,6 +287,7 @@ describe('CollectionSynchronizer', () => {
       missingOnLocal: [],
       missingOnRemote: [],
       different: [],
+      advertised: [],
     });
 
     expect(Object.keys(subsetRemoteToLocal(local, remoteEdge).documents).sort()).to.deep.equal(['a', 'root']);
@@ -381,23 +383,25 @@ describe('CollectionSynchronizer', () => {
       expect(diff.missingOnRemote).toEqual([]);
     });
 
-    test('a superset that shares a head is different when another remote head is missing locally', ({ expect }) => {
+    test('a superset that shares a head is in sync, and advertised when another remote head is missing locally', ({
+      expect,
+    }) => {
       const [staleTip] = localHeads;
       const [newerCommit] = TEST_HEADS[1];
       const local = { documents: { [documentId]: [staleTip] } as Record<DocumentId, A.Heads> };
       const remote = { documents: { [documentId]: [staleTip, newerCommit] } as Record<DocumentId, A.Heads> };
 
       const lacksNewer = (_documentId: DocumentId, head: string) => head !== newerCommit;
-      expect(diffCollectionStateForPeer(local, remote, { ...asEdge, hasLocalChange: lacksNewer }).different).toEqual([
-        documentId,
-      ]);
+      const diff = diffCollectionStateForPeer(local, remote, { ...asEdge, hasLocalChange: lacksNewer });
+      expect(diff.different).toEqual([]);
+      expect(diff.advertised).toEqual([documentId]);
 
-      // An ancestor the local document holds is not missing.
+      // An ancestor the local document holds is not worth a sync round.
       const holdsAll = () => true;
-      expect(diffCollectionStateForPeer(local, remote, { ...asEdge, hasLocalChange: holdsAll }).different).toEqual([]);
+      expect(diffCollectionStateForPeer(local, remote, { ...asEdge, hasLocalChange: holdsAll }).advertised).toEqual([]);
     });
 
-    test('an unchanged remote state is re-diffed while it advertises a missing change', async ({ expect }) => {
+    test('an unchanged remote state that advertises a missing change is diffed once', async ({ expect }) => {
       const edgePeerId = 'subduction-replicator:edge-space-1:abc' as PeerId;
       const collectionId = 'collection-test';
       const [staleTip] = localHeads;
@@ -424,12 +428,12 @@ describe('CollectionSynchronizer', () => {
       await Promise.resolve();
       updates.length = 0;
 
-      // Each repeat must reach `_handleCollectionSync`, or the replication retry never runs.
+      // The overlapping heads are in sync, so the first state kicks one sync round and repeats are deduped.
       const remote = { documents: { [documentId]: [staleTip, newerCommit] } as Record<DocumentId, A.Heads> };
       for (const _pass of range(3)) {
         peer.onRemoteStateReceived(collectionId, edgePeerId, structuredClone(remote));
       }
-      expect(updates).toEqual([edgePeerId, edgePeerId, edgePeerId]);
+      expect(updates).toEqual([edgePeerId]);
     });
 
     // An overlap-based dedupe would drop the new head and never record the new state.
