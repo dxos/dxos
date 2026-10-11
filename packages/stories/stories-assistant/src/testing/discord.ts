@@ -237,7 +237,8 @@ export const installFakeDiscordBot = (): FakeDiscordBot => {
         break;
       }
       default: {
-        if (startedAt !== undefined && Date.now() - startedAt >= CONNECTING_MS) {
+        // Only from `connecting`: a state a test set with `setStatus` (e.g. a failure) must survive the timer.
+        if (startedAt !== undefined && status.gateway === 'connecting' && Date.now() - startedAt >= CONNECTING_MS) {
           startedAt = undefined;
           status = { ...status, gateway: 'ready' };
         }

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Surface from '@dxos/app-framework/Surface';
@@ -147,6 +147,7 @@ const useAgentSkills = (agent: Agent.Agent) => {
   const primary = useMemo(() => selectPrimaryChat(chats), [chats]);
   const bindings = useBindingCount(primary);
   const [skills, setSkills] = useState<ListedSkill[]>([]);
+  const refreshGeneration = useRef(0);
   const [busy, setBusy] = useState(false);
 
   const refresh = useCallback(async () => {
@@ -154,7 +155,12 @@ const useAgentSkills = (agent: Agent.Agent) => {
       return;
     }
 
+    const generation = ++refreshGeneration.current;
     const { data } = await invokePromise(AgentOperation.ListSkills, { agent: Ref.make(agent) }, { spaceId });
+    // Reads overlap when bindings change in quick succession; only the latest may land.
+    if (generation !== refreshGeneration.current) {
+      return;
+    }
     // Space-authored skills have no registry key and are edited where they live, not here.
     setSkills(
       (data?.skills ?? []).flatMap(({ key, name, customized, skill }) =>

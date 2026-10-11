@@ -351,8 +351,9 @@ skill SupportSkill
     first. A question gets the shortest correct answer, never an invented command, API or link. A bug
     report gets the missing details asked for once, a summary, and an "event" memory. A feature request
     gets a "note" memory and no promise. What it cannot answer, confirmed bugs, and every security, data
-    loss, billing or account issue go to the support contact (named in the agent's instructions, else its
-    team) as a relay whose reply channel is the thread. Never asks for secrets, tells anyone who posts one
+    loss, billing or account issue go to the support contact named in the agent's instructions as a relay
+    whose reply channel is the thread; with no resolvable contact, or an undelivered message, it says so
+    rather than claim a handoff. Never asks for secrets, tells anyone who posts one
     to rotate it, never shares what it knows about other people.
 ```
 

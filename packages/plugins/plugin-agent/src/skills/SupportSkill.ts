@@ -59,15 +59,19 @@ export const make = (): Skill.Skill =>
 
         Handing it on (when you cannot answer, for a confirmed bug, and always for security reports, data loss,
         billing or account access):
-        1. The support contact is the person or team your instructions name for support; without one, the team
-           you work for. Resolve them with ${tool(MemoryOperation.ResolveEntity)}.
+        1. The support contact is the person or team your instructions name for support escalations. If your
+           instructions name none, or ${tool(MemoryOperation.ResolveEntity)} cannot resolve the one they name, do
+           not claim a handoff: tell the person you have recorded the report for the team to review here, and stop.
         2. Call ${tool(RelayOperation.CreateRelay)} with the contact as recipient, the person asking as requester,
            the summary as the message, and this channel as replyChannel (its thread id as replyThread), so the
            answer comes back to this conversation.
         3. Call ${tool(RelayOperation.SendMessage)} to the contact with the summary and a link back to the
            thread if you have one.
-        4. Tell the person, in one sentence, that you have passed it to the team and will follow up here. Never
-           promise a fix or a date. When the contact answers, report it in the thread and call
+        4. Check what ${tool(RelayOperation.SendMessage)} returned. Only when it was delivered, tell the person in one
+           sentence that you have passed it to the team and will follow up here. When it was not, call
+           ${tool(RelayOperation.UpdateRelay)} with status "failed" and the reason, and tell the person the handoff
+           did not go through (with the reason if it helps them) — never say the team has it.
+        5. Never promise a fix or a date. When the contact answers, report it in the thread and call
            ${tool(RelayOperation.UpdateRelay)} with the outcome.
 
         Safety in public:

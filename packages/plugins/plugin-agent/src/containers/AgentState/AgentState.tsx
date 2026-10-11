@@ -4,7 +4,7 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
-import React, { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as Agent from '@dxos/assistant/Agent';
@@ -134,13 +134,19 @@ const useBoundSkills = (agent: Agent.Agent, chat: Chat.Chat | undefined): AgentS
   const spaceId = Obj.getDatabase(agent)?.spaceId;
   const bindings = useBindingCount(chat);
   const [skills, setSkills] = useState<AgentStateSkill[]>([]);
+  const refreshGeneration = useRef(0);
 
   const refresh = useCallback(async () => {
     if (!spaceId) {
       return;
     }
 
+    const generation = ++refreshGeneration.current;
     const { data } = await invokePromise(AgentOperation.ListSkills, { agent: Ref.make(agent) }, { spaceId });
+    // Reads overlap when bindings change in quick succession; only the latest may land.
+    if (generation !== refreshGeneration.current) {
+      return;
+    }
     // A chat can bind the built-in skill and the agent's space copy under one key; the mode names it once.
     const byKey = new Map((data?.skills ?? []).map(({ key, name }) => [key ?? name, { key: key ?? name, name }]));
     setSkills([...byKey.values()]);
