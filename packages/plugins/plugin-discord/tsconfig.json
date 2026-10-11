@@ -46,6 +46,9 @@
       "path": "../../core/compute/ai"
     },
     {
+      "path": "../../core/compute/assistant"
+    },
+    {
       "path": "../../core/compute/compute"
     },
     {
@@ -107,6 +110,9 @@
     },
     {
       "path": "../../ui/ui-types"
+    },
+    {
+      "path": "../plugin-agent"
     },
     {
       "path": "../plugin-client"

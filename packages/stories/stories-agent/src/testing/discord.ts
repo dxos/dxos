@@ -13,12 +13,17 @@ import * as ModeOperation from '@dxos/plugin-agent/ModeOperation';
 import * as DiscordChannel from '@dxos/plugin-discord/DiscordChannel';
 import { Channel } from '@dxos/types';
 
-import { AGENT_NAME } from './playground.ts';
 import { seedSupportTeam } from './support-team.ts';
 
 //
-// The Discord bot story: one agent (Kai) bound to one Discord-backed channel, whose bot runs on EDGE.
+// The Discord stories: one agent (Kai) in Support mode, the DXOS team it escalates to, and the Discord app (bot)
+// that routes Discord channels to it through EDGE.
 //
+
+export const AGENT_NAME = 'Kai';
+
+/** Kai's Discord application id (see the package README). */
+export const KAI_APPLICATION_ID = '1555777706459660288';
 
 /** The Discord ids the story's channel config is seeded with; empty values keep what the space already holds. */
 export type DiscordBotArgs = {
@@ -38,11 +43,37 @@ export const SUPPORT_MODE = 'Support';
 /** Placeholder secret: local EDGE substitutes `DISCORD_BOT_TOKEN_DEV`, so the space never holds the real token. */
 const PLACEHOLDER_TOKEN = 'dev';
 
-export type SetupDiscordAgentProps = DiscordBotArgs & {
+export type SetupAgentProps = {
   db: Database.Database;
   invoker: Capabilities.OperationInvoker;
   /** Runs the agent's chats on EDGE, where the bot's turns run; off for a story with no EDGE. */
   remote?: boolean;
+};
+
+export type SetupDiscordAgentProps = DiscordBotArgs & SetupAgentProps;
+
+/** The agent, in Support mode, with the team it escalates to; reuses what a previous run left in the space. */
+export const setupAgent = async ({ db, invoker, remote = false }: SetupAgentProps): Promise<Agent.Agent> => {
+  const agent = await ensureAgent(db, invoker, remote);
+  await seedSupportTeam({ db, invoker, agent });
+  await enableSupport(db, invoker, agent);
+  return agent;
+};
+
+/**
+ * The space's record of the bot before any channel is bound: a Discord channel config attached to no channel,
+ * naming the app and its token object. Binding a channel creates the per-server configs.
+ */
+export const ensureBotRecord = async (db: Database.Database, applicationId: string): Promise<void> => {
+  const configs = await db.query(Filter.type(DiscordChannel.DiscordChannel)).run();
+  if (configs.some((config) => config.applicationId === applicationId)) {
+    return;
+  }
+  const accessToken = db.add(
+    AccessToken.make({ source: 'discord.com', account: AGENT_NAME, token: PLACEHOLDER_TOKEN }),
+  );
+  db.add(DiscordChannel.make({ accessToken: Ref.make(accessToken), applicationId, channels: [] }));
+  await db.flush({ indexes: true });
 };
 
 /**
@@ -57,9 +88,7 @@ export const setupDiscordAgent = async ({
   guildId,
   remote = false,
 }: SetupDiscordAgentProps): Promise<{ agent: Agent.Agent; channel: Channel.Channel }> => {
-  const agent = await ensureAgent(db, invoker, remote);
-  await seedSupportTeam({ db, invoker, agent });
-  await enableSupport(db, invoker, agent);
+  const agent = await setupAgent({ db, invoker, remote });
   const channel = await ensureChannel(db);
 
   const config = await channel.backend.config.load();

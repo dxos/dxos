@@ -98,9 +98,6 @@
       "path": "../../plugins/plugin-debug"
     },
     {
-      "path": "../../plugins/plugin-discord"
-    },
-    {
       "path": "../../plugins/plugin-explorer"
     },
     {

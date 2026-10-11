@@ -7,10 +7,8 @@ import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { Obj } from '@dxos/echo';
-import { type EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
-import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ThreadCapabilities from '@dxos/plugin-thread/ThreadCapabilities';
 import { isManagedAccessToken } from '@dxos/protocols';
 import { type Channel, Message } from '@dxos/types';
@@ -18,22 +16,8 @@ import { type Channel, Message } from '@dxos/types';
 import { DiscordChannel } from '#types';
 
 import { DiscordChannelError } from '../errors.ts';
-import { callBot, toConnectionStatus } from '../services/bot-gateway.ts';
+import { type EdgeClientResolver, appEdgeClient, callBot, toConnectionStatus } from '../services/bot-gateway.ts';
 import { openDirectMessage, postText } from '../services/bot-rest.ts';
-
-/** Resolves the EDGE client that signs bot-route requests with the user's identity. */
-export type EdgeClientResolver = Effect.Effect<EdgeHttpClient, DiscordChannelError, Capability.Service>;
-
-/** The app's client; absent on EDGE itself, where the gateway routes are not called. */
-const appEdgeClient: EdgeClientResolver = Effect.gen(function* () {
-  const [client] = yield* Capability.getAll(ClientCapabilities.Client);
-  if (!client) {
-    return yield* Effect.fail(
-      new DiscordChannelError({ message: 'Starting a Discord bot needs the app client, which this host lacks.' }),
-    );
-  }
-  return client.edge.http;
-});
 
 export type DiscordChannelBackendOptions = {
   /** Where the EDGE client for the bot routes comes from; the app's client by default. */
