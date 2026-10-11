@@ -31,8 +31,8 @@ export type CompanionPlankProps = Util.ThemedClassName<{
  * trailing companion plank; the close control turns the deck companion off. Attention is shared with
  * the context plank via `attendableId`.
  *
- * A plank with no companions still has a pane: the reader opened it and only the reader closes it, so
- * the tab strip is empty and {@link Companion} says so rather than the pane collapsing.
+ * The deck lays out no pane beside a plank with no companions (see `isCompanionShown`); should one mount
+ * anyway, {@link Companion} says there is nothing related rather than rendering an empty pane.
  */
 export const CompanionPlank = ({ id, fullscreen, classNames }: CompanionPlankProps) => {
   const { graph } = ToolkitHooks.useAppGraph();

@@ -44,6 +44,7 @@ import * as FreeqPlugin from '@dxos/plugin-freeq/FreeqPlugin';
 import * as GamePlugin from '@dxos/plugin-game/GamePlugin';
 import * as GitHubPlugin from '@dxos/plugin-github/GitHubPlugin';
 import * as GooglePlugin from '@dxos/plugin-google/GooglePlugin';
+import * as HandpanPlugin from '@dxos/plugin-handpan/HandpanPlugin';
 import * as HeyGenPlugin from '@dxos/plugin-heygen/HeyGenPlugin';
 import * as HiggsfieldPlugin from '@dxos/plugin-higgsfield/HiggsfieldPlugin';
 import * as IbkrPlugin from '@dxos/plugin-ibkr/IbkrPlugin';
@@ -157,6 +158,7 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
       DevtoolsPlugin.meta.profile.key,
       DuffelPlugin.meta.profile.key,
       GamePlugin.meta.profile.key,
+      HandpanPlugin.meta.profile.key,
       HeyGenPlugin.meta.profile.key,
       HiggsfieldPlugin.meta.profile.key,
       IdeogramPlugin.meta.profile.key,
@@ -337,6 +339,7 @@ const experimental: Plugin.Plugin[] = [
   FilePlugin.make(),
   FreeqPlugin.make(),
   GitHubPlugin.make(),
+  HandpanPlugin.make(),
   HeyGenPlugin.make(),
   HiggsfieldPlugin.make(),
   IbkrPlugin.make(),

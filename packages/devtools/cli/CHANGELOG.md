@@ -1,5 +1,92 @@
 # @dxos/cli
 
+## 0.14.0
+
+### Minor Changes
+
+- 253b32b: `dx eval` runs a program against a space in the code-mode dialect a Composer agent writes for its `eval` tool (`--dialect effect`, the default, or `plain`), and prints the same text the tool would return; a failing program exits non-zero. The program is an argument, `--file`, or stdin; `--skill` binds the operations it may invoke (every skill by default), and `--instructions` prints the dialect's API reference. `@dxos/agent-code-mode` exports `evaluate`, `projectOperations` and `describeTypes` for hosts that run code mode outside a turn.
+
+### Patch Changes
+
+- Updated dependencies [f0fc12a]
+- Updated dependencies [1fe9218]
+- Updated dependencies [0715304]
+- Updated dependencies [085dcb1]
+- Updated dependencies [0e28f43]
+- Updated dependencies [ec6da5a]
+- Updated dependencies [a1e64db]
+- Updated dependencies [28bb45b]
+- Updated dependencies [1eed6b1]
+- Updated dependencies [ed52cb7]
+- Updated dependencies [6847fe2]
+- Updated dependencies [35217f4]
+- Updated dependencies [385f3ce]
+- Updated dependencies [3e98467]
+- Updated dependencies [1819960]
+- Updated dependencies [eb5d14d]
+- Updated dependencies [2112757]
+- Updated dependencies [27b542c]
+- Updated dependencies [1d3eea3]
+- Updated dependencies [e0cd29c]
+- Updated dependencies [5e1acd0]
+- Updated dependencies [5324de6]
+  - @dxos/assistant@0.14.0
+  - @dxos/observability@0.14.0
+  - @dxos/app-framework@0.14.0
+  - @dxos/compute-runtime@0.14.0
+  - @dxos/plugin-routine@0.14.0
+  - @dxos/plugin-markdown@0.14.0
+  - @dxos/plugin-table@0.14.0
+  - @dxos/plugin-projects@0.14.0
+  - @dxos/plugin-assistant@0.14.0
+  - @dxos/compute@0.14.0
+  - @dxos/echo@0.14.0
+  - @dxos/echo-client@0.14.0
+  - @dxos/plugin-space@0.14.0
+  - @dxos/effect@0.14.0
+  - @dxos/plugin-registry@0.14.0
+  - @dxos/edge-compute@0.14.0
+  - @dxos/plugin-connector@0.14.0
+  - @dxos/agent-code-mode@0.14.0
+  - @dxos/assistant-toolkit@0.14.0
+  - @dxos/plugin-inbox@0.14.0
+  - @dxos/plugin-review@0.14.0
+  - @dxos/plugin-script@0.14.0
+  - @dxos/plugin-transcription@0.14.0
+  - @dxos/plugin-observability@0.14.0
+  - @dxos/cli-util@0.14.0
+  - @dxos/plugin-chess@0.14.0
+  - @dxos/plugin-client@0.14.0
+  - @dxos/plugin-file@0.14.0
+  - @dxos/plugin-game@0.14.0
+  - @dxos/plugin-google@0.14.0
+  - @dxos/plugin-jmap@0.14.0
+  - @dxos/plugin-kanban@0.14.0
+  - @dxos/plugin-map@0.14.0
+  - @dxos/plugin-sample@0.14.0
+  - @dxos/plugin-tasks@0.14.0
+  - @dxos/app-toolkit@0.14.0
+  - @dxos/client@0.14.0
+  - @dxos/mcp-server@0.14.0
+  - @dxos/ai@0.14.0
+  - @dxos/introspect@0.14.0
+  - @dxos/client-protocol@0.14.0
+  - @dxos/schema@0.14.0
+  - @dxos/types@0.14.0
+  - @dxos/effect-atom-solid@0.14.0
+  - @dxos/halo-adapter-client@0.14.0
+  - @dxos/edge-client@0.14.0
+  - @dxos/protocols@0.14.0
+  - @dxos/halo@0.14.0
+  - @dxos/async@0.14.0
+  - @dxos/context@0.14.0
+  - @dxos/errors@0.14.0
+  - @dxos/invariant@0.14.0
+  - @dxos/keys@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/random@0.14.0
+  - @dxos/util@0.14.0
+
 ## 0.13.0
 
 ### Patch Changes

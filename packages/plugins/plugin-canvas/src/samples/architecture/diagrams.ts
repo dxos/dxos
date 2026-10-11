@@ -2,18 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Dsl } from '@dxos/diagram';
 import { type Database, Obj, Ref } from '@dxos/echo';
-import * as EffectEx from '@dxos/effect/EffectEx';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 
 import { CanvasBuilder, createCanvas, elementId, isNodeRecord, nodeKey, updateCanvasRecord } from '#model';
 
+import { type CompiledDiagrams } from './compiled.ts';
+
 export type DiagramSet = {
   /** The diagram opened first. */
   root: string;
-  /** Each diagram's semantic-DSL source (its `.dx` file), by diagram id. */
-  files: Readonly<Record<string, string>>;
+  /** Each diagram's compiled scene commands (from its `.dx` source), by diagram id. */
+  diagrams: CompiledDiagrams;
   /** Each diagram's drawing name, by diagram id. */
   names: Readonly<Record<string, string>>;
   /** Per diagram, the boxes (by DSL node id) that open another diagram (by id) as a nested level. */
@@ -21,7 +21,7 @@ export type DiagramSet = {
 };
 
 /**
- * Adds one canvas drawing per diagram of the set to `db`, each laid out from its DSL source, and
+ * Adds one canvas drawing per diagram of the set to `db`, each built from its compiled commands, and
  * turns every drill-down box into a frame onto the diagram it names; answers the root drawing.
  */
 export const loadDiagramSet = async (db: Database.Database, set: DiagramSet): Promise<Drawing.Drawing> => {
@@ -38,13 +38,13 @@ export const loadDiagramDrawings = async (
   set: DiagramSet,
 ): Promise<ReadonlyMap<string, Drawing.Drawing>> => {
   const drawings = new Map<string, Drawing.Drawing>();
-  for (const [id, source] of Object.entries(set.files)) {
-    const { commands } = await EffectEx.runPromise(Dsl.compile(source));
+  for (const [id, commands] of Object.entries(set.diagrams)) {
     const canvas = db.add(createCanvas());
     CanvasBuilder.apply(canvas, commands);
     // The diagrams are laid out on the canvas lattice (`box`, `grid` and `@` origin match its cells), so turning it on
     // routes links square along the gutters between the boxes.
-    Obj.update(canvas, (canvas) => updateCanvasRecord(canvas.content, { lattice: true }));
+    // Reference diagrams: they open read-only until a viewer chooses to edit.
+    Obj.update(canvas, (canvas) => updateCanvasRecord(canvas.content, { lattice: true, readonly: true }));
     drawings.set(id, db.add(Drawing.make({ name: set.names[id] ?? id, canvas })));
   }
 

@@ -21,6 +21,6 @@ export default Config2.make({
       { dark: 'https://assets.composer.space/demos/2026-10-09-plugin-canvas.mp4?v=5b3598bd' },
       { dark: 'https://assets.composer.space/demos/2026-10-10-plugin-canvas-uml.mp4?v=b7c7aa13' },
     ],
-    tags: ['labs'],
+    tags: ['beta'],
   },
 });

@@ -1,5 +1,23 @@
 # @dxos/plugin-duffel
 
+## 0.14.0
+
+### Patch Changes
+
+- Updated dependencies [0715304]
+- Updated dependencies [fd09131]
+- Updated dependencies [508be04]
+- Updated dependencies [347546a]
+- Updated dependencies [1819960]
+  - @dxos/app-framework@0.14.0
+  - @dxos/react-ui@0.14.0
+  - @dxos/effect@0.14.0
+  - @dxos/plugin-trip@0.14.0
+  - @dxos/app-toolkit@0.14.0
+  - @dxos/edge-client@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/util@0.14.0
+
 ## 0.13.0
 
 ### Patch Changes

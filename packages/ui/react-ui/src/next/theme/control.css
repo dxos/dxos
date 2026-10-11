@@ -973,10 +973,14 @@
    * The gap is one control inset: square icon-only Buttons already sit in an inset cell, and every other control takes the
    * same inline margin, so any two adjacent items are three insets apart.
    */
-  /* A field in a toolbar (a search or filter input) takes the row's remaining width. */
+  /*
+   * A field in a toolbar (a search or filter input) takes the row's remaining width. Its inset is the field's padding,
+   * not its control's margin: the control fills the field, and a margin on top of that would overflow the toolbar.
+   */
   .dx-toolbar > .dx-field {
     flex: 1 1 auto;
     min-width: 0;
+    padding-inline: var(--dx-control-inset);
   }
   /* A row's cross axis is vertical, so the start alignment a Field column needs would pin it to the toolbar's top. */
   .dx-toolbar > :is(.dx-checkbox, .dx-switch) {
@@ -999,7 +1003,6 @@
     container-type: normal;
   }
   .dx-toolbar > .dx-control:not([data-square]),
-  .dx-toolbar > .dx-field > .dx-control,
   .dx-toolbar > .dx-select > .dx-control {
     margin-inline: var(--dx-control-inset);
   }

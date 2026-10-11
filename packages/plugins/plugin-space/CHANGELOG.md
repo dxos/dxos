@@ -1,5 +1,81 @@
 # @dxos/plugin-space
 
+## 0.14.0
+
+### Patch Changes
+
+- 385f3ce: The space Home page no longer holds its sections back or shifts while documents load: Recent reserves placeholder tiles sized from an index-only count, Activity waits for its stats instead of showing zeros, starter prompts show from the cache at once and skip the recent-objects query within the refresh interval, the assistant prompt renders before its chat model opens, and the recent-objects filter no longer repeats types. `Masonry` now lays out at its measured size in its first painted frame instead of starting at zero height, and reveals at once when an earlier mount cached every tile's height.
+- 2112757: The navtree's Types section decides which types to show from the space's index-only per-type counts (the same query the space dashboard runs) instead of one live query per type that loaded every object.
+- Updated dependencies [0715304]
+- Updated dependencies [b0e4b60]
+- Updated dependencies [fd09131]
+- Updated dependencies [508be04]
+- Updated dependencies [347546a]
+- Updated dependencies [ec6da5a]
+- Updated dependencies [a1e64db]
+- Updated dependencies [28bb45b]
+- Updated dependencies [1eed6b1]
+- Updated dependencies [ed52cb7]
+- Updated dependencies [6847fe2]
+- Updated dependencies [385f3ce]
+- Updated dependencies [1819960]
+- Updated dependencies [eb5d14d]
+- Updated dependencies [4820c02]
+- Updated dependencies [5324de6]
+- Updated dependencies [b07f49f]
+  - @dxos/app-framework@0.14.0
+  - @dxos/react-ui-form@0.14.0
+  - @dxos/react-ui@0.14.0
+  - @dxos/react-ui-list@0.14.0
+  - @dxos/compute@0.14.0
+  - @dxos/echo@0.14.0
+  - @dxos/echo-client@0.14.0
+  - @dxos/react-ui-masonry@0.14.0
+  - @dxos/effect@0.14.0
+  - @dxos/ui-theme@0.14.0
+  - @dxos/cli-util@0.14.0
+  - @dxos/plugin-attention@0.14.0
+  - @dxos/plugin-client@0.14.0
+  - @dxos/plugin-graph@0.14.0
+  - @dxos/plugin-settings@0.14.0
+  - @dxos/plugin-status-bar@0.14.0
+  - @dxos/app-toolkit@0.14.0
+  - @dxos/client@0.14.0
+  - @dxos/react-ui-table@0.14.0
+  - @dxos/app-graph@0.14.0
+  - @dxos/react-client@0.14.0
+  - @dxos/shell@0.14.0
+  - @dxos/react-ui-attention@0.14.0
+  - @dxos/react-ui-components@0.14.0
+  - @dxos/react-ui-dashboard@0.14.0
+  - @dxos/react-ui-dnd@0.14.0
+  - @dxos/react-ui-menu@0.14.0
+  - @dxos/react-ui-mosaic@0.14.0
+  - @dxos/react-ui-pickers@0.14.0
+  - @dxos/react-ui-query@0.14.0
+  - @dxos/react-ui-search@0.14.0
+  - @dxos/extractor@0.14.0
+  - @dxos/echo-react@0.14.0
+  - @dxos/client-protocol@0.14.0
+  - @dxos/migrations@0.14.0
+  - @dxos/schema@0.14.0
+  - @dxos/types@0.14.0
+  - @dxos/graph@0.14.0
+  - @dxos/echo-protocol@0.14.0
+  - @dxos/protocols@0.14.0
+  - @dxos/halo@0.14.0
+  - @dxos/halo-react@0.14.0
+  - @dxos/async@0.14.0
+  - @dxos/context@0.14.0
+  - @dxos/display-name@0.14.0
+  - @dxos/errors@0.14.0
+  - @dxos/invariant@0.14.0
+  - @dxos/keys@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/util@0.14.0
+  - @dxos/progress@0.14.0
+  - @dxos/ui-types@0.14.0
+
 ## 0.13.0
 
 ### Minor Changes
