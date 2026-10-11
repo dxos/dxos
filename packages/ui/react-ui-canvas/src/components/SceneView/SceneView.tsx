@@ -978,7 +978,7 @@ const SceneViewRoot = ({
       drag={drag}
       tool={tool}
       debug={debug}
-      // Read-only, nothing is edited, so the panels float rather than taking room from the canvas.
+      // Read-only, nothing is edited, so there is no dock taking room from the canvas and no panel floats over it.
       panels={readonly ? 'floating' : panels}
       createFrame={createFrame}
       landing={landing}
@@ -1017,12 +1017,12 @@ const SceneViewRoot = ({
         {/* The canvas beside the dock, which docked panels move into; with none docked, it takes no space.
             Clipped rather than hidden: a hidden box still scrolls, so focusing content embedded in a node (an editor's
             caret) would scroll the whole canvas to reveal it, out from under the camera. */}
-        <div className={mx('flex dx-fill overflow-clip', classNames)}>
+        <div className={mx('flex dx-fill overflow-clip bg-base-surface', classNames)}>
           <div
             ref={rootRef}
             tabIndex={0}
             className={mx(
-              'relative grow h-full overflow-clip bg-base-surface outline-none touch-none select-none',
+              'relative grow h-full overflow-clip outline-none touch-none select-none',
               tool.kind === 'hand' && 'cursor-grab',
               tool.kind === 'node' && 'cursor-crosshair',
             )}
@@ -1119,8 +1119,9 @@ const SceneViewCanvas = ({ liveDepth = MAX_LIVE_DEPTH, overlay }: SceneViewCanva
     <>
       {/* Only while snapping: the lines are what a gesture lands on, so drawing them when nothing snaps
           states a constraint the canvas is not applying. The minor level goes when its cells get too
-          small to read. Read-only, nothing snaps, so neither grid nor guides are drawn. */}
-      {snapEnabled && !readonly && (
+          small to read. Read-only, nothing snaps, so neither grid nor guides are drawn. A lattice scene snaps to its
+          cells, not the lines, so its cells are its grid. */}
+      {snapEnabled && !readonly && !(latticeOn && projection.lattice) && (
         <GridComponent
           size={grid}
           scale={camera.zoom}
@@ -1523,14 +1524,9 @@ SceneViewLayers.displayName = 'SceneView.Layers';
 
 const ABOUT_SECTION: DockSection = { id: 'about', title: 'About', icon: 'ph--info--regular', order: 2 };
 
-export type SceneViewAboutProps = Util.ThemedClassName<{}>;
-
-/**
- * Counts of the scene's objects and the drawing's scenes: a dock section, or floating over the canvas when read-only,
- * where it is the only panel left.
- */
-const SceneViewAbout = ({ classNames = PANEL_CLASSES }: SceneViewAboutProps) => {
-  const { scene, store, panels, readonly } = useSceneViewContext('SceneView.About');
+/** Counts of the scene's objects and the drawing's scenes: a dock section only, so a read-only view shows none. */
+const SceneViewAbout = () => {
+  const { scene, store, panels } = useSceneViewContext('SceneView.About');
   const scenes = useAtomValue(store.scenes);
   const docked = panels === 'docked';
   const stats = useMemo<AboutStat[]>(
@@ -1542,14 +1538,7 @@ const SceneViewAbout = ({ classNames = PANEL_CLASSES }: SceneViewAboutProps) => 
     ],
     [scene, scenes],
   );
-  const dockedPanel = useDockSection(ABOUT_SECTION, docked, <About classNames='h-auto' stats={stats} />);
-  if (docked) {
-    return dockedPanel;
-  }
-  // Floating beside an editable view, the properties and layers panels take this corner, so About shows only read-only.
-  return readonly ? (
-    <About classNames={mx('rounded-sm bg-modal-surface border border-separator', classNames)} stats={stats} />
-  ) : null;
+  return useDockSection(ABOUT_SECTION, docked, <About classNames='h-auto' stats={stats} />);
 };
 
 SceneViewAbout.displayName = 'SceneView.About';

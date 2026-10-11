@@ -3,7 +3,7 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
@@ -25,28 +25,17 @@ import {
   SceneView,
   type SceneViewPropertiesProps,
   createLatticeProjection,
-  createNodeRegistry,
-  defaultNodePrototypes,
-  defaultNodeTypes,
   isFrameNode,
   isLink,
   useRegistry,
 } from '@dxos/react-ui-canvas/scene';
 import * as Panel from '@dxos/react-ui/Panel';
 
-import {
-  type BoundCanvasStore,
-  CanvasFrameNode,
-  bindCanvasStore,
-  canvasRecordOf,
-  isCanvasDrawing,
-  objectRef,
-  objectUri,
-  parseLinkedSceneId,
-} from '#model';
+import { canvasRecordOf, isCanvasDrawing, objectRef, objectUri, parseLinkedSceneId } from '#model';
 import { CanvasCapabilities } from '#types';
 
-import { CanvasDatabaseContext, CanvasFrameNodeView, CanvasFrameToolbar } from './CanvasFrameNodeView.tsx';
+import { CanvasDatabaseContext } from './CanvasFrameNodeView.tsx';
+import { useBoundCanvasStore, useCanvasNodes } from './use-canvas-scene.ts';
 import { canvasViewAspect } from './view-state.ts';
 
 export type CanvasArticleProps = IllustratorCapabilities.DrawingVariantSurfaceProps;
@@ -56,8 +45,6 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   invariant(Obj.instanceOf(Drawing.Canvas, canvas));
   const registry = useRegistry();
   const settings = useAtomValue(Hooks.useCapability(CanvasCapabilities.Settings));
-  // The built-in node types and whatever other plugins contribute (a contribution may replace a built-in).
-  const contributed = Hooks.useCapabilities(CanvasCapabilities.NodeType);
   // A frame showing an object (not a canvas drawing) opens it in the app; the frame's view shows the frame's own
   // scene until the object loads, so opening drills into that scene until then too.
   const { invokePromise } = Hooks.useOperationInvoker();
@@ -74,32 +61,8 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
     },
     [invokePromise, db],
   );
-  const nodes = useMemo(
-    () =>
-      createNodeRegistry(
-        {
-          ...defaultNodeTypes,
-          // The canvas's frame may show an object (`object`): a canvas drawing the store binds alongside, else a surface.
-          frame: {
-            ...defaultNodeTypes.frame,
-            schema: CanvasFrameNode,
-            component: CanvasFrameNodeView,
-            toolbar: CanvasFrameToolbar,
-            hostOpen: openObject,
-          },
-          ...Object.fromEntries(contributed.map(({ type, spec }) => [type, spec])),
-        },
-        defaultNodePrototypes,
-      ),
-    [contributed, openObject],
-  );
-  // Bound for the canvas's lifetime in this view; a new canvas rebinds.
-  const [bound, setBound] = useState<BoundCanvasStore>();
-  useEffect(() => {
-    const next = bindCanvasStore(registry, canvas);
-    setBound(next);
-    return () => next.dispose();
-  }, [registry, canvas]);
+  const nodes = useCanvasNodes(openObject);
+  const bound = useBoundCanvasStore(canvas);
 
   // The drawing's settings, edited in the properties companion: the lattice picks the projection.
   const [snapshot] = useObject(canvas);

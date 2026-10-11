@@ -11,6 +11,7 @@ import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvide
 import * as AppSettings from '@dxos/app-toolkit/AppSettings';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { PluginDetail, PluginScope } from '#components';
 
@@ -100,31 +101,36 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
   });
 
   return (
-    <PluginDetail
-      plugin={plugin}
-      scope={
-        scope.available ? <PluginScope synced={scope.synced} onPin={scope.pin} onUnpin={scope.unpin} /> : undefined
-      }
-      enabled={enabled}
-      installing={actions.installing}
-      updating={actions.updating}
-      hasUpdate={hasUpdate}
-      installedVersionTag={installedVersionTag}
-      selectedVersionTag={selectedVersionTag}
-      versions={pickerVersions}
-      dependencies={dependencies}
-      dependents={dependents}
-      failure={failure}
-      onOpenSpec={actions.handleOpenSpec}
-      onEnabledChange={actions.handleEnableChange}
-      onInstall={!isInstalled && moduleUrl ? actions.handleInstall : undefined}
-      onInstallVersion={pickerVersions.length > 0 ? actions.handleInstallVersion : undefined}
-      onNavigateToPlugin={handleNavigateToPlugin}
-      onResolvePluginName={handleResolvePluginName}
-      onUninstall={canUninstall ? actions.handleUninstall : undefined}
-      onUpdate={hasUpdate ? actions.handleUpdate : undefined}
-      onVersionChange={setSelectedVersionTag}
-    />
+    // The panel bounds the detail's height, so its scroll area scrolls in a companion as well as a plank.
+    <Panel.Root>
+      <Panel.Body asChild>
+        <PluginDetail
+          plugin={plugin}
+          scope={
+            scope.available ? <PluginScope synced={scope.synced} onPin={scope.pin} onUnpin={scope.unpin} /> : undefined
+          }
+          enabled={enabled}
+          installing={actions.installing}
+          updating={actions.updating}
+          hasUpdate={hasUpdate}
+          installedVersionTag={installedVersionTag}
+          selectedVersionTag={selectedVersionTag}
+          versions={pickerVersions}
+          dependencies={dependencies}
+          dependents={dependents}
+          failure={failure}
+          onOpenSpec={actions.handleOpenSpec}
+          onEnabledChange={actions.handleEnableChange}
+          onInstall={!isInstalled && moduleUrl ? actions.handleInstall : undefined}
+          onInstallVersion={pickerVersions.length > 0 ? actions.handleInstallVersion : undefined}
+          onNavigateToPlugin={handleNavigateToPlugin}
+          onResolvePluginName={handleResolvePluginName}
+          onUninstall={canUninstall ? actions.handleUninstall : undefined}
+          onUpdate={hasUpdate ? actions.handleUpdate : undefined}
+          onVersionChange={setSelectedVersionTag}
+        />
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 
