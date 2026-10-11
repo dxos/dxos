@@ -20780,6 +20780,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/plugin-agent':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-agent
       '@dxos/plugin-discord':
         specifier: workspace:*
         version: link:../../plugins/plugin-discord
@@ -20792,18 +20795,12 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
-      '@dxos/react-ui-components':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-components
       '@dxos/react-ui-debug':
         specifier: workspace:*
         version: link:../../ui/react-ui-debug
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
-      '@dxos/react-ui-list':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-list
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
@@ -20823,9 +20820,6 @@ importers:
       '@dxos/link':
         specifier: workspace:*
         version: link:../../core/compute/link
-      '@dxos/plugin-agent':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-agent
       '@dxos/plugin-assistant':
         specifier: workspace:*
         version: link:../../plugins/plugin-assistant
