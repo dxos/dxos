@@ -466,8 +466,8 @@ const LoggerList = ({ classNames, checkable = true }: LoggerListProps) => {
       ? 'grid-cols-[auto_1rem_8rem_1fr_max-content]'
       : 'grid-cols-[auto_1rem_max-content_1fr_max-content]'
     : showFile
-      ? 'grid-cols-[1rem_8rem_1fr_max-content] pl-2'
-      : 'grid-cols-[1rem_max-content_1fr_max-content] pl-2';
+      ? 'grid-cols-[1rem_8rem_1fr_max-content]'
+      : 'grid-cols-[1rem_max-content_1fr_max-content]';
 
   if (visible.length === 0) {
     return (
@@ -507,10 +507,10 @@ const LoggerList = ({ classNames, checkable = true }: LoggerListProps) => {
                 current={current === id}
                 onFocus={() => setCurrent(id)}
                 onClick={() => setCurrent(id)}
-                classNames={mx('group grid gap-2 items-center p-0 dx-current', columns)}
+                classNames={mx('group grid gap-x-2 items-center p-0 dx-current', columns)}
               >
                 {checkable && (
-                  <Layout.Flex align='center' classNames='pl-2'>
+                  <Layout.Flex align='center'>
                     <Field.Root>
                       <Input.Checkbox
                         tabIndex={-1}
@@ -520,20 +520,33 @@ const LoggerList = ({ classNames, checkable = true }: LoggerListProps) => {
                     </Field.Root>
                   </Layout.Flex>
                 )}
-                <span className={mx('justify-self-center leading-none', levelColor(entry.level))}>{record.level}</span>
+                <span className={mx('grid size-6 place-items-center text-sm', levelColor(entry.level))}>
+                  {record.level}
+                </span>
                 {showFile ? (
                   <span
-                    className={mx('truncate leading-none', !expanded.has(id) && 'text-fg-muted')}
+                    className={mx(
+                      'min-w-0 overflow-x-clip overflow-y-visible text-ellipsis whitespace-nowrap [text-box:trim-both_cap_alphabetic]',
+                      !expanded.has(id) && 'text-fg-muted',
+                    )}
                     title={record.file}
                   >
                     {record.file?.split('/').pop() ?? record.file}
                   </span>
                 ) : (
-                  <time className='leading-none tabular-nums text-fg-muted' dateTime={record.timestamp}>
+                  <time
+                    className='tabular-nums text-fg-muted [text-box:trim-both_cap_alphabetic]'
+                    dateTime={record.timestamp}
+                  >
                     {new Date(entry.timestamp).toLocaleTimeString(undefined, { hour12: false })}
                   </time>
                 )}
-                <span className='truncate leading-none' title={record.message}>
+                {/* Trimmed to the cap height so text without descenders (times, capitals) centres in the row instead of riding high;
+                    clipped on x only, since `truncate`'s hidden overflow would cut the descenders the trim leaves outside the box. */}
+                <span
+                  className='min-w-0 overflow-x-clip overflow-y-visible text-ellipsis whitespace-nowrap [text-box:trim-both_cap_alphabetic]'
+                  title={record.message}
+                >
                   {record.message}
                 </span>
                 <SystemButton.Clipboard
@@ -550,7 +563,7 @@ const LoggerList = ({ classNames, checkable = true }: LoggerListProps) => {
                     {/* The viewport owns the scrolling, so a long line gets the themed bar, not the native one. */}
                     <Syntax.Viewport>
                       <JsonHighlighter
-                        classNames='px-2 py-1 text-sm overflow-visible'
+                        classNames='text-sm'
                         data={{
                           file: record.line ? `${record.file}:${record.line}` : record.file,
                           message: record.message,
