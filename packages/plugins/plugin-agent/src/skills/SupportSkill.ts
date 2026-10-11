@@ -77,8 +77,8 @@ export const make = (): Skill.Skill =>
         Handing it on (once the person agrees, or at once for the exceptions above):
         1. Call ${tool(MemoryOperation.ResolveEntity)} for the team member by their full name.
         2. Call ${tool(RelayOperation.CreateRelay)} with the member as recipient, the person asking as requester,
-           a short summary (the question, what you already said, the person's setup) as the message, and this
-           channel as replyChannel (its thread id as replyThread), so the answer comes back to this conversation.
+           and a short summary (the question, what you already said, the person's setup) as the message; it records
+           this conversation, so the answer comes back here.
         3. Call ${tool(RelayOperation.SendMessage)} to the member with that summary.
         4. Check what ${tool(RelayOperation.SendMessage)} returned. Only when it was delivered, tell the person in one
            sentence that you have asked them and will follow up here. When it was not, call

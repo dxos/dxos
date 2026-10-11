@@ -16,7 +16,7 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { EntityId } from '@dxos/keys';
+import { EntityId, URI } from '@dxos/keys';
 import * as ThreadOperationHandlerSet from '@dxos/plugin-thread/ThreadOperationHandlerSet';
 import { Text } from '@dxos/schema';
 import { Channel, Message, Organization, Person, Task, TaskSet } from '@dxos/types';
@@ -26,6 +26,7 @@ import { BrainSkill, ConversationSkill, GoalsSkill, InterviewSkill, ModesSkill, 
 import { AgentChannels, AgentOperation, ChatParticipant, MemoryOperation, Mode, Relay, RelayOperation } from '#types';
 
 import { makeTestBrain, testSpaceLayer } from '../brain/testing.ts';
+import { ensureChannelChat } from './ensure-channel-chat.ts';
 import {
   TEST_HANDLE_LABEL,
   TEST_MIRRORED_BACKEND_KIND,
@@ -99,6 +100,13 @@ const chatMessages = (chat: Chat.Chat) =>
     const feed = yield* Database.load(chat.feed);
     const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
     return messages.filter((message) => Obj.instanceOf(Message.Message, message));
+  });
+
+/** A channel thread's chat, named as EDGE names the conversation an agent turn runs in. */
+const conversationIn = (agentRef: Ref.Ref<Agent.Agent>, channel: Channel.Channel, thread: string) =>
+  Effect.gen(function* () {
+    const chat = yield* ensureChannelChat({ agent: yield* Database.load(agentRef), channel, thread });
+    return URI.make(`echo:///${chat.id}`);
   });
 
 describe('Relay', () => {
@@ -198,14 +206,16 @@ describe('Relay', () => {
         const { agentRef, channel } = yield* setupAgent();
         const rich = yield* resolve('Rich', '100');
         const josiah = yield* resolve('Josiah', '200');
-        const { relay: relayRef } = yield* Operation.invoke(RelayOperation.CreateRelay, {
-          agent: agentRef,
-          recipient: josiah,
-          requester: rich,
-          message: 'Review the PR.',
-          replyChannel: Ref.make(channel),
-          replyThread: 'thread-9',
-        });
+        const { relay: relayRef } = yield* Operation.invoke(
+          RelayOperation.CreateRelay,
+          {
+            agent: agentRef,
+            recipient: josiah,
+            requester: rich,
+            message: 'Review the PR.',
+          },
+          { conversation: yield* conversationIn(agentRef, channel, 'thread-9') },
+        );
 
         const delivered = yield* Operation.invoke(RelayOperation.SendMessage, {
           agent: agentRef,
@@ -259,14 +269,16 @@ describe('Relay', () => {
         const { agentRef, channel } = yield* setupAgent({ kind: TEST_MIRRORED_BACKEND_KIND });
         const rich = yield* resolve('Rich', '100');
         const josiah = yield* resolve('Josiah', '200');
-        const { relay: relayRef } = yield* Operation.invoke(RelayOperation.CreateRelay, {
-          agent: agentRef,
-          recipient: josiah,
-          requester: rich,
-          message: 'Review the PR.',
-          replyChannel: Ref.make(channel),
-          replyThread: 'thread-9',
-        });
+        const { relay: relayRef } = yield* Operation.invoke(
+          RelayOperation.CreateRelay,
+          {
+            agent: agentRef,
+            recipient: josiah,
+            requester: rich,
+            message: 'Review the PR.',
+          },
+          { conversation: yield* conversationIn(agentRef, channel, 'thread-9') },
+        );
 
         const delivered = yield* Operation.invoke(RelayOperation.SendMessage, {
           agent: agentRef,

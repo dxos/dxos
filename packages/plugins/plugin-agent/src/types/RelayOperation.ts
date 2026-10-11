@@ -22,7 +22,7 @@ export const CreateRelay = Operation.make({
     key: DXN.make('org.dxos.operation.agent.createRelay'),
     name: 'Create relay',
     description:
-      'Records a request to pass a message to someone ("tell Josiah about X") as a task in the agent\'s task list. Call before delivering it.',
+      'Records a request to pass a message to someone ("tell Josiah about X") as a task in the agent\'s task list, and the conversation it was asked in, where the report goes. Call before delivering it.',
     icon: 'ph--arrows-left-right--regular',
   },
   services: [Database.Service],
@@ -33,12 +33,6 @@ export const CreateRelay = Operation.make({
       Ref.Ref(Obj.Unknown).annotate({ description: 'The person who asked (the current speaker, resolved first).' }),
     ),
     message: Schema.String.annotate({ description: 'Exactly what the requester asked to pass on.' }),
-    replyChannel: Schema.optional(
-      Ref.Ref(Channel.Channel).annotate({ description: "The requester's current channel, for the report." }),
-    ),
-    replyThread: Schema.optional(
-      Schema.String.annotate({ description: "The requester's current thread inside that channel, if any." }),
-    ),
     dueInHours: Schema.optional(
       Schema.Number.annotate({ description: `Hours until the relay is overdue (default ${Relay.DEFAULT_DUE_HOURS}).` }),
     ),
