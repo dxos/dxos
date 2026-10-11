@@ -10,3 +10,4 @@ Agents can be set up on Discord and run community support there.
 - `@dxos/react-ui-components`: a `Section` composite (`Section.Root`, `Section.Label`, `Section.Empty`) gives a panel's labelled lists one heading style, aligned with list rows.
 - `@dxos/react-ui-debug`: `Logger.Root` takes a `buffer` prop, so a panel can show its own entries (`new LogBuffer()`, `append(entry)`) with the viewer's filtering, search and copy; rows centre their text, an open row keeps its header centred, and only one row is ringed at a time.
 - `@dxos/react-ui-assistant`: the Context panel above a prompt lays out its header like other disclosure panels.
+- `@dxos/plugin-discord`, `@dxos/crawler` and `@dxos/pipeline-discord` are now published, so EDGE can host the Discord channel backend for agent turns.
