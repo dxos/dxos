@@ -106,12 +106,11 @@ export const seedSupportTeam = async ({
     const person =
       people.find((person) => person.fullName === fullName) ??
       db.add(Person.make({ fullName, preferredName, jobTitle, organization: Ref.make(team) }));
-    for (const area of expertise) {
-      await remember(`${fullName} (${SUPPORT_TEAM_NAME}) is the one to ask about ${area}.`, [
-        Ref.make<Obj.Unknown>(person),
-        Ref.make<Obj.Unknown>(team),
-      ]);
-    }
+    // One memory per person, so the list shows each member once with every area they cover.
+    await remember(`${fullName} (${SUPPORT_TEAM_NAME}) is the one to ask about ${expertise.join('; ')}.`, [
+      Ref.make<Obj.Unknown>(person),
+      Ref.make<Obj.Unknown>(team),
+    ]);
     const { error } = await invoker.invokePromise(
       AgentOperation.EnsureParticipantChat,
       { agent: Ref.make(agent), person: Ref.make<Obj.Unknown>(person) },
