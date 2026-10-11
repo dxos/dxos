@@ -7,6 +7,7 @@ import React, { type MouseEvent, type PropsWithChildren, type ReactNode } from '
 import { Section } from '@dxos/react-ui-components';
 import { Listbox } from '@dxos/react-ui-list';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Banner from '@dxos/react-ui/Banner';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
@@ -24,21 +25,34 @@ import { meta } from '#meta';
 type AgentActivityRootProps = PropsWithChildren<{
   role?: string;
   toolbar?: ReactNode;
+  /** Why the last action failed. */
+  error?: string;
 }>;
 
 /** The agent's activity panel: its channels, skills and conversations in one scrolling body. */
-const AgentActivityRoot = ({ role, toolbar, children }: AgentActivityRootProps) => (
-  <Panel.Root role={role}>
-    {toolbar && <Panel.Header>{toolbar}</Panel.Header>}
-    <Panel.Body asChild>
-      <ScrollArea.Root orientation='vertical'>
-        <ScrollArea.Viewport asChild>
-          <Layout.Container gap='lg'>{children}</Layout.Container>
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
-    </Panel.Body>
-  </Panel.Root>
-);
+const AgentActivityRoot = ({ role, toolbar, error, children }: AgentActivityRootProps) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  return (
+    <Panel.Root role={role}>
+      {toolbar && <Panel.Header>{toolbar}</Panel.Header>}
+      <Panel.Body asChild>
+        <ScrollArea.Root orientation='vertical'>
+          <ScrollArea.Viewport asChild>
+            <Layout.Container gap='lg'>
+              {error && (
+                <Banner.Root valence='error'>
+                  <Banner.Title>{t('activity-error.label')}</Banner.Title>
+                  <Banner.Body>{error}</Banner.Body>
+                </Banner.Root>
+              )}
+              {children}
+            </Layout.Container>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Panel.Body>
+    </Panel.Root>
+  );
+};
 
 AgentActivityRoot.displayName = 'AgentActivity.Root';
 

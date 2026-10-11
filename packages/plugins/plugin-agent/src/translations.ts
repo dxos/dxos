@@ -50,6 +50,7 @@ export const translations = [
         'channel-remove.label': 'Remove channel',
         'activity-actions.label': 'Activity actions',
         'activity-refresh.label': 'Refresh',
+        'activity-error.label': 'That did not work',
         'activity-start.label': 'Connect channels',
         'activity-stop.label': 'Disconnect channels',
         'create-agent.label': 'Add agent',

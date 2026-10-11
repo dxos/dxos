@@ -23,8 +23,11 @@ import { DiscordAdminOperation, DiscordChannel } from '#types';
 
 import { DISCORD_USER_PROVIDER_ID } from '../../constants.ts';
 
-/** The permissions Kai asks for when installed: view, send, send in threads, create public threads, read history. */
-const BOT_PERMISSIONS = '309237713920';
+/**
+ * The permissions Kai asks for when installed: view, send, read history, create public threads, send in threads, and
+ * manage threads (deleting a conversation's thread from Composer).
+ */
+const BOT_PERMISSIONS = String((1n << 10n) | (1n << 11n) | (1n << 16n) | (1n << 34n) | (1n << 35n) | (1n << 38n));
 
 /** The OAuth link that installs the bot in one guild (Discord's own consent page; no callback). */
 const installUrl = (applicationId: string, guildId: string) =>
@@ -226,11 +229,13 @@ export const DiscordAgentSetup = ({ role, agent, attendableId }: DiscordAgentSet
                   label={guild.name}
                   detail={isInstalled ? t('discord-setup-installed.label') : undefined}
                 >
-                  {!isInstalled && bot && (
+                  {bot && (
                     <Button.Root
                       variant='ghost'
-                      label={t('discord-setup-install.label')}
-                      icon='ph--plus--regular'
+                      iconOnly
+                      // Installing again over an existing install is how a server grants permissions added since.
+                      label={t(isInstalled ? 'discord-setup-reinstall.label' : 'discord-setup-install.label')}
+                      icon={isInstalled ? 'ph--arrows-clockwise--regular' : 'ph--plus--regular'}
                       onClick={(event: MouseEvent<HTMLButtonElement>) => {
                         // The row selects the server; installing must not also select it.
                         event.stopPropagation();

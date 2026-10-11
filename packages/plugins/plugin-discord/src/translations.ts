@@ -34,6 +34,7 @@ export const translations = [
         'discord-setup-servers-empty.label': 'Sign in to Discord to see the servers you administer.',
         'discord-setup-installed.label': 'Installed',
         'discord-setup-install.label': 'Install',
+        'discord-setup-reinstall.label': 'Reinstall (update permissions)',
         'discord-setup-refresh.label': 'Refresh',
         'discord-setup-connected.label': 'Connected channels',
         'discord-setup-connected-empty.label': 'No channels connected yet.',

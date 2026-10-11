@@ -12,12 +12,12 @@ import * as Chat from '@dxos/assistant/Chat';
 import type * as Skill from '@dxos/compute/Skill';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
-import { type SpaceId } from '@dxos/keys';
+import { EID, type SpaceId } from '@dxos/keys';
 import * as ThreadOperation from '@dxos/plugin-thread/ThreadOperation';
 import { type Channel, Message } from '@dxos/types';
 
 import { AgentActivity as AgentActivityComponent } from '#components';
-import { AgentOperation } from '#types';
+import { AgentChannels, AgentOperation } from '#types';
 
 import { useAgentChannelList, useAgentConversations } from '../useAgentConversations.ts';
 import { selectPrimaryChat, useBindingCount } from '../useSkillBindings.ts';
@@ -59,15 +59,33 @@ export const AgentActivity = ({ role, agent, attendableId }: AgentActivityProps)
     [conversations, invokePromise],
   );
 
-  // The channel opens a fresh conversation on its next message, so deleting one only clears its history here.
+  const [error, setError] = useState<string>();
+
+  // A thread is deleted on its backend too (a Discord thread, for everyone in it); a whole channel's conversation only
+  // loses its history here, since the channel itself is not the agent's to delete.
   const handleDelete = useCallback(
-    (id: string) => {
+    async (id: string) => {
       const chat = conversations.find((chat) => chat.id === id);
-      if (chat) {
-        db?.remove(chat);
+      if (!chat || !db) {
+        return;
       }
+      const conversation = AgentChannels.conversationOf(chat);
+      const channel = channels.find((ref) => entityIdOf(ref.uri) === conversation?.channelId);
+      if (conversation?.thread !== undefined && channel) {
+        const { data, error } = await invokePromise(
+          ThreadOperation.DeleteThread,
+          { channel, thread: conversation.thread },
+          { spaceId: db.spaceId },
+        );
+        if (error || !data?.deleted) {
+          setError(error?.message ?? data?.reason);
+          return;
+        }
+      }
+      setError(undefined);
+      db.remove(chat);
     },
-    [conversations, db],
+    [conversations, channels, db, invokePromise],
   );
 
   const skills = useAgentSkills(agent);
@@ -81,6 +99,7 @@ export const AgentActivity = ({ role, agent, attendableId }: AgentActivityProps)
   return (
     <AgentActivityComponent.Root
       role={role}
+      error={error}
       toolbar={
         <AgentActivityComponent.Toolbar
           attendableId={attendableId}
@@ -110,7 +129,12 @@ export const AgentActivity = ({ role, agent, attendableId }: AgentActivityProps)
       </AgentActivityComponent.Skills>
       <AgentActivityComponent.Conversations ids={conversations.map((chat) => chat.id)}>
         {conversations.map((chat) => (
-          <ConversationTile key={chat.id} chat={chat} onSelect={handleSelect} onDelete={handleDelete} />
+          <ConversationTile
+            key={chat.id}
+            chat={chat}
+            onSelect={handleSelect}
+            onDelete={(id) => void handleDelete(id)}
+          />
         ))}
       </AgentActivityComponent.Conversations>
     </AgentActivityComponent.Root>
@@ -192,6 +216,12 @@ const useChannelConnections = (channels: readonly Ref.Ref<Channel.Channel>[], sp
 };
 
 AgentActivity.displayName = 'AgentActivity';
+
+/** The object id a ref URI names, whatever its space qualification. */
+const entityIdOf = (uri: string): string | undefined => {
+  const eid = EID.parse(uri);
+  return eid ? EID.getEntityId(eid) : undefined;
+};
 
 type ConversationTileProps = {
   chat: Chat.Chat;

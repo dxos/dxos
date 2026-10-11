@@ -57,16 +57,21 @@ type DiscordResponse = { ok: boolean; status: number; body: DiscordBody };
 const decodeBody = (value: unknown): DiscordBody =>
   Schema.decodeUnknownOption(DiscordBody)(value).pipe(Option.getOrElse((): DiscordBody => ({})));
 
-/** One authenticated JSON POST; the token goes only into the header, never into errors or logs. */
-const post = Effect.fnUntraced(function* (token: string, path: string, payload: unknown) {
+/** One authenticated JSON request; the token goes only into the header, never into errors or logs. */
+const request = Effect.fnUntraced(function* (
+  method: 'POST' | 'DELETE',
+  token: string,
+  path: string,
+  payload?: unknown,
+) {
   const base = yield* DiscordApiBase;
   return yield* Effect.tryPromise({
     try: async (): Promise<DiscordResponse> => {
       // Read at call time, not captured, so a test or host can substitute `fetch`.
       const response = await globalThis.fetch(`${base}${path}`, {
-        method: 'POST',
+        method,
         headers: { 'Authorization': `Bot ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        ...(payload === undefined ? {} : { body: JSON.stringify(payload) }),
       });
       // Error bodies are not always JSON (a proxy's HTML 502), and only the status matters then.
       const body = await response.json().catch(() => undefined);
@@ -75,6 +80,8 @@ const post = Effect.fnUntraced(function* (token: string, path: string, payload: 
     catch: (cause) => new DiscordChannelError({ message: `Discord request to ${path} failed.`, cause }),
   });
 });
+
+const post = (token: string, path: string, payload: unknown) => request('POST', token, path, payload);
 
 /** Turns a Discord error response into a reason the agent can relay to a person. */
 const failureReason = (response: DiscordResponse): string => {
@@ -120,3 +127,16 @@ export const postText: (
   }
   return messageIds;
 });
+
+/** Deletes a Discord thread for everyone in it; Discord requires the bot to hold Manage Threads. */
+export const deleteThread: (token: string, threadId: string) => Effect.Effect<void, DiscordChannelError> =
+  Effect.fnUntraced(function* (token, threadId) {
+    const response = yield* request('DELETE', token, `/channels/${encodeURIComponent(threadId)}`);
+    if (!response.ok) {
+      const reason =
+        response.status === 403
+          ? 'The bot lacks Manage Threads in this server; reinstall it from Discord setup to grant it.'
+          : failureReason(response);
+      return yield* Effect.fail(new DiscordChannelError({ message: reason }));
+    }
+  });

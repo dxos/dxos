@@ -17,7 +17,7 @@ import { DiscordChannel } from '#types';
 
 import { DiscordChannelError } from '../errors.ts';
 import { type EdgeClientResolver, appEdgeClient, callBot, toConnectionStatus } from '../services/bot-gateway.ts';
-import { openDirectMessage, postText } from '../services/bot-rest.ts';
+import { deleteThread, openDirectMessage, postText } from '../services/bot-rest.ts';
 
 export type DiscordChannelBackendOptions = {
   /** Where the EDGE client for the bot routes comes from; the app's client by default. */
@@ -70,6 +70,11 @@ export const makeDiscordChannelBackend = ({
       Effect.gen(function* () {
         const { token } = yield* loadBot(channel);
         return yield* post(token, thread, message);
+      }),
+    remove: (channel, thread) =>
+      Effect.gen(function* () {
+        const { token } = yield* loadBot(channel);
+        yield* deleteThread(token, thread);
       }),
   },
   connection: {
