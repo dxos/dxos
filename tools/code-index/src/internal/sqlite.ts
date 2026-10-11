@@ -19,9 +19,9 @@ export const clientLayer = (
     Effect.promise(async (): Promise<Layer.Layer<SqlClient.SqlClient>> => {
       if (typeof globalThis.Bun !== 'undefined') {
         const { SqliteClient } = await import('@effect/sql-sqlite-bun');
-        return SqliteClient.layer({ filename, readonly: options?.readonly });
+        return Layer.orDie(SqliteClient.layer({ filename, readonly: options?.readonly }));
       }
       const { SqliteClient } = await import('@effect/sql-sqlite-node');
-      return SqliteClient.layer({ filename, readonly: options?.readonly });
+      return Layer.orDie(SqliteClient.layer({ filename, readonly: options?.readonly }));
     }),
   );

@@ -353,7 +353,7 @@ type Captured = ObservabilityExtension.Inference;
 const stubModel = LanguageModel.make({
   generateText: ({ span }) =>
     Effect.sync(() => {
-      Telemetry.addGenAIAnnotations(span, { system: 'anthropic', request: { model: 'test-model' } });
+      Telemetry.addGenAIAnnotations(span, { provider: { name: 'anthropic' }, request: { model: 'test-model' } });
       return [
         { type: 'text' as const, text: 'hello' },
         {

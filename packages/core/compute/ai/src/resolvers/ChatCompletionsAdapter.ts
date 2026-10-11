@@ -1144,7 +1144,7 @@ const annotateRequest = (
   config: ChatCompletionsClientConfig,
 ): void =>
   Telemetry.addGenAIAnnotations(span, {
-    system: config.provider ?? config.apiFormat,
+    provider: { name: config.provider ?? config.apiFormat },
     operation: { name: 'chat' },
     request: { model },
   });

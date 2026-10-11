@@ -77,7 +77,7 @@ const fromResponse = (
   );
   return {
     model: backendName(model),
-    provider: string(span.attributes.get('gen_ai.system')),
+    provider: string(span.attributes.get('gen_ai.provider.name') ?? span.attributes.get('gen_ai.system')),
     spanName: span.name,
     parameters: Object.keys(parameters).length > 0 ? parameters : undefined,
     input: json(span.attributes.get('dxos.ai.input')),
