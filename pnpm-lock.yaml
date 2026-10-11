@@ -20886,6 +20886,9 @@ importers:
       '@dxos/plugin-debug':
         specifier: workspace:*
         version: link:../../plugins/plugin-debug
+      '@dxos/plugin-discord':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-discord
       '@dxos/plugin-game':
         specifier: workspace:*
         version: link:../../plugins/plugin-game

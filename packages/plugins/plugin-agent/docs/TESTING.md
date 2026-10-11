@@ -49,6 +49,15 @@ watch, both listed in the knowledge panel's Goals tab. As Dima, "still working o
 Rich), then "the indexer PR is up" — the end-of-turn read records the fact, the watch fires, Rich is
 told and the goal is achieved. Tagged `!test`.
 
+**Agent on Discord** (`stories-stories-assistant-agentdiscord--live`): Kai bound to a Discord-backed
+channel whose bot runs on a local EDGE stack (`:8787`, [SETUP.md](./SETUP.md)); EDGE substitutes
+`DISCORD_BOT_TOKEN_DEV` for the space's placeholder token. Set the application id in Controls (the
+channel and server ids default to the DXOS test channel), press **Start bot** in the Activity panel and
+mention the bot in Discord: the conversation appears under Conversations and in the chat panel, and the
+Discord bot panel logs each gateway transition. Persistent storage, so the form survives a reload.
+Tagged `!test`. **AgentDiscord › Scripted** runs the same panels against a fake EDGE bot host and checks
+Start → connecting → ready → Stop in CI.
+
 ## 2. Tests and stories (CI)
 
 - **Operations** — deterministic, no model: `moon run plugin-agent:test`. `interview.test.ts` drives
