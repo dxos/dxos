@@ -507,7 +507,8 @@ const LoggerList = ({ classNames, checkable = true }: LoggerListProps) => {
                 current={current === id}
                 onFocus={() => setCurrent(id)}
                 onClick={() => setCurrent(id)}
-                classNames={mx('group grid gap-x-2 items-center p-0 dx-current', columns)}
+                // The row's minimum height exceeds its cells without the checkbox, so the track is centred rather than left at the top.
+                classNames={mx('group grid gap-2 items-center content-center p-0 dx-current', columns)}
               >
                 {checkable && (
                   <Layout.Flex align='center'>
