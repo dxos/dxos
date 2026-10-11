@@ -257,6 +257,8 @@ export const DiscordAgentSetup = ({ role, agent, attendableId }: DiscordAgentSet
                   <DiscordSetup.Item key={channel.id} id={channel.id} icon='ph--hash--regular' label={channel.name}>
                     <Button.Root
                       variant='ghost'
+                      iconOnly
+                      icon='ph--plugs-connected--regular'
                       label={t('discord-setup-disconnect.label')}
                       disabled={busy}
                       onClick={() => void handleBind(channel, true)}
@@ -282,6 +284,8 @@ export const DiscordAgentSetup = ({ role, agent, attendableId }: DiscordAgentSet
                   >
                     <Button.Root
                       variant='ghost'
+                      iconOnly
+                      icon='ph--plugs--regular'
                       label={t('discord-setup-connect-channel.label')}
                       disabled={busy || elsewhere}
                       onClick={() => void handleBind(channel, false)}
