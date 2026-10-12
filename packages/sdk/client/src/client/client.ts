@@ -481,7 +481,8 @@ export class Client {
     // The services open alongside the proxy imports rather than after them: the worker handshake is
     // the long pole, and each sequential import waits out a main thread busy with plugin activation.
     log('client._open: importing proxy modules and opening services...');
-    const edgeUrl = this._config!.get('runtime.services.edge.url');
+    invariant(this._config, 'Client not initialized.');
+    const edgeUrl = this._config.get('runtime.services.edge.url');
     const [{ SpaceList }, { HaloProxy }, { MeshProxy }, { Shell }, edgeClientModule] = await Promise.all([
       import('../echo/space-list.ts'),
       import('../halo/halo-proxy.ts'),

@@ -37,9 +37,19 @@ export default Capability.makeModule(
     // the atom re-runs the connector once they (or a plugin enabled later) contribute.
     const pluginAssetsAtom = yield* Capability.atom(AppCapabilities.PluginAsset);
     const manager = yield* PluginNS.Service;
-    // Deferred out of the connector's atom read, since activation writes the capability atoms.
-    const requestPluginAssets = () =>
-      queueMicrotask(() => EffectEx.runDetached(manager.activate(ActivationEvents.PluginAssetsRequested)));
+    // Deferred out of the connector's atom read, since activation writes the capability atoms; one
+    // request per turn, since a connector pass misses every spec at once.
+    let assetsRequestPending = false;
+    const requestPluginAssets = () => {
+      if (assetsRequestPending) {
+        return;
+      }
+      assetsRequestPending = true;
+      queueMicrotask(() => {
+        assetsRequestPending = false;
+        EffectEx.runDetached(manager.activate(ActivationEvents.PluginAssetsRequested));
+      });
+    };
 
     const extensions = yield* Effect.all([
       // Per-plugin `spec` child node, attached to the registry's
