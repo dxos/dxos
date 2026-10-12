@@ -132,7 +132,7 @@ export const steps = [
           'set DX_DEMO_CLAUDE_TOKEN and DX_DEMO_GITHUB_TOKEN (or DX_DEMO_GITHUB_TOKEN_FILE) in the driver environment',
         );
       }
-      await page.locator('[data-testid="deck.plank"]').first().waitFor({ timeout: 180_000 });
+      await page.locator('[data-testid="spacePlugin.createObject"]').first().waitFor({ timeout: 180_000 });
       const notice = page.locator('[data-testid="org.dxos.plugin.observability.notice"] button:has-text("Close")');
       if (await notice.isVisible().catch(() => false)) {
         await notice.click();
