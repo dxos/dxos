@@ -462,6 +462,7 @@ describe('SqliteDatabase', () => {
         id: 'org.dxos.annotation.echo-sqlite-distance',
         schema: Schema.Struct({ meters: Schema.Number }),
       });
+      const Pinned = Annotation.make({ id: 'org.dxos.annotation.echo-sqlite-pinned', schema: Schema.Boolean });
       const spaceId = SpaceId.random();
       yield* session(
         async (db) => {
@@ -473,7 +474,10 @@ describe('SqliteDatabase', () => {
           ] as const) {
             const person = db.add(Obj.make(TestSchema.Person, { name }));
             if (meters !== undefined) {
-              Obj.update(person, (person) => Annotation.set(person, Distance, { meters }));
+              Obj.update(person, (person) => {
+                Annotation.set(person, Distance, { meters });
+                Annotation.set(person, Pinned, meters !== 200);
+              });
             }
           }
         },
@@ -499,6 +503,11 @@ describe('SqliteDatabase', () => {
             'Near',
             'Mid',
           ]);
+          // Booleans order as 0/1: pinned (true) first, then unpinned, then unannotated.
+          const byPinned = Query.select(Filter.type(TestSchema.Person)).orderBy(Order.annotation(Pinned, 'desc'));
+          const pinned = (await db.query(byPinned).run()).map((person) => person.name);
+          expect(pinned.slice(0, 2).sort()).toEqual(['Far', 'Near']);
+          expect(pinned.slice(2)).toEqual(['Mid', 'Unplaced']);
         },
         { spaceId },
       );
