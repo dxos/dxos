@@ -328,11 +328,14 @@ export class DocumentsSynchronizer extends Resource {
     });
     invariant(lease, 'Document not found');
     const headsBefore = A.getHeads(lease.doc());
-    using _imported = await this._params.automergeHost.createDoc(mutation, { documentId, preserveHistory: true });
+    const imported = this._params.automergeHost.createDoc(mutation, { documentId, preserveHistory: true });
+    // Read before awaiting: another client's write imported meanwhile is not something this client holds.
+    const headsAfter = A.getHeads(lease.doc());
+    using _imported = await imported;
 
     if (A.equals(headsBefore, syncState.lastSentHead)) {
       // No new mutations were discovered on network, so we do not need to send updates from worker to client.
-      syncState.lastSentHead = A.getHeads(lease.doc());
+      syncState.lastSentHead = headsAfter;
     }
   }
 }
