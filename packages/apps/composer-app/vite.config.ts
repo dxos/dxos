@@ -88,6 +88,8 @@ const boot = bootChunking({
       /@ark-ui\/react\/dist\/components\/(accordion|carousel|floating-panel|hover-card|qr-code|slider|toc)\//,
       /react-ui\/src\/next\/components\/(Accordion|Carousel|FloatingPanel|HoverCard|QrCode|Slider)\//,
       /node_modules\/(\.pnpm\/)?uqr[@/]/,
+      // Indexing runs in the worker; the tab reaches these only through the `@dxos/index-core` barrel.
+      /echo\/index-core\/src\/(index-engine|index-tracker|indexed-object-source|convergence-key-intent-store|indexes\/(activity|object-snapshot)-index|migrations\/(activity|convergence-key-intents|object-snapshot|tracker)\/)/,
     ]
       .map((pattern) => pattern.source)
       .join('|'),
