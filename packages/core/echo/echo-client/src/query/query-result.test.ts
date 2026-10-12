@@ -193,6 +193,8 @@ const makeQueryContext = (results: SourceEntry[] = []): QueryContext => ({
   getResults: () => results,
   isSynchronous: () => true,
   hasPendingSources: () => false,
+  getCompleteness: () => 'complete',
+  getSourceStates: () => [],
   changed: new Event<void>(),
   run: async () => [],
   update: () => {},

@@ -105,6 +105,8 @@ type ActiveQuery = {
   debouncedUntil: number;
 
   sendResults: (results: QueryService.QueryResult[]) => void;
+  /** Reports a re-run whose result matched the last one sent. */
+  sendUnchanged: () => void;
   onError: (err: Error) => void;
 
   close: () => Promise<void>;
@@ -331,6 +333,12 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
         }
         onResults({ queryId: request.queryId, results });
       },
+      sendUnchanged: () => {
+        if (ctx.disposed) {
+          return;
+        }
+        onResults({ queryId: request.queryId, unchanged: true });
+      },
       onError,
       close: async () => {
         onClose();
@@ -442,6 +450,9 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
         countWork('echo.queryResultsSent');
         countWork('echo.queryResultRows', results.length);
         query.sendResults(results);
+      } else if (!query.oneShot) {
+        // A client that holds local writes against this query waits for a re-run to know its answer is current.
+        query.sendUnchanged();
       }
     } catch (err) {
       log.catch(err, {

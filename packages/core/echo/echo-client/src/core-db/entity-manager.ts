@@ -30,7 +30,7 @@ import {
   SpaceDocVersion,
   type SpaceState,
 } from '@dxos/echo-protocol';
-import { type RefResolver, type RefResolverRequest, batchEvents } from '@dxos/echo/internal';
+import { type RefResolver, type RefResolverRequest, afterCommit, batchEvents, runInCommit } from '@dxos/echo/internal';
 import { assertState, invariant } from '@dxos/invariant';
 import { EID, type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -167,6 +167,8 @@ export class EntityManager implements IDatabaseBinding {
 
   // ── Events ──────────────────────────────────────────────────────────────
   readonly _updateEvent = new Event<ItemsUpdatedEvent>();
+  /** Objects a local commit wrote, emitted synchronously after the commit and before {@link _updateEvent}. */
+  readonly _localCommitEvent = new Event<ItemsUpdatedEvent>();
   readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
 
   /** Fires when the database has finished loading its initial space root document. */
@@ -442,6 +444,11 @@ export class EntityManager implements IDatabaseBinding {
     return Array.from(this._objects.values());
   }
 
+  /** Where the object falls in {@link allObjectCores} order, comparable across ids; undefined when absent. */
+  objectSequence(id: string): number | undefined {
+    return this._objects.sequenceOf(id);
+  }
+
   getObjectCoreById(id: string, { load = true }: GetObjectCoreByIdOptions = {}): ObjectCore | undefined {
     // A closed database has an empty working set, and every caller of this synchronous read already
     // treats an absent core as unresolved — whereas throwing reaches the fire-and-forget query
@@ -710,6 +717,11 @@ export class EntityManager implements IDatabaseBinding {
   }
 
   addCore(core: ObjectCore, opts?: AddCoreOptions): void {
+    // One commit: live queries must see the object bound and available, not the link written before it.
+    runInCommit(() => this.#addCore(core, opts));
+  }
+
+  #addCore(core: ObjectCore, opts?: AddCoreOptions): void {
     if (core.entityManager) {
       if (core.entityManager !== this) {
         throw new Error('Object already belongs to another database');
@@ -781,6 +793,11 @@ export class EntityManager implements IDatabaseBinding {
    * @returns Ids of the objects dropped from the directory.
    */
   retainObjects(keep: Iterable<string>): string[] {
+    // One commit: live queries are notified after the dropped objects are evicted, not between the write and the eviction.
+    return runInCommit(() => this.#retainObjects(keep));
+  }
+
+  #retainObjects(keep: Iterable<string>): string[] {
     const root = this.getSpaceRootDocHandle();
     const doc = root.doc();
     const retained = new Set(keep);
@@ -1987,6 +2004,29 @@ export class EntityManager implements IDatabaseBinding {
     this._scheduleThrottledDbUpdate(documentChanges.updatedObjectIds, {
       coalesce: event.patchInfo.source === 'bulk',
     });
+    // A local write reaches live queries before the writing call returns; host deliveries keep the scheduler.
+    if (event.patchInfo.source === 'change') {
+      afterCommit(this.#flushLocalCommit);
+    }
+  };
+
+  /**
+   * Emits the db update a local commit produced, once that commit has ended. Object-level notifications
+   * queued by other paths (satisfaction, availability) stay on the scheduler: the written objects already
+   * notified inside the commit, and anything else is not this commit's to deliver early.
+   */
+  readonly #flushLocalCommit = (): void => {
+    // Mid root-document swap there is nothing to emit against; the scheduler re-emits after the swap.
+    if (this.#closed || !this._spaceRootDocHandle || this._objectsForNextDbUpdate.size === 0) {
+      return;
+    }
+    const event: ItemsUpdatedEvent = {
+      spaceId: this.spaceId,
+      itemsUpdated: [...this._objectsForNextDbUpdate].map((id) => ({ id })),
+    };
+    this._objectsForNextDbUpdate.clear();
+    this._localCommitEvent.emit(event);
+    batchEvents(() => this._updateEvent.emit(event));
   };
 
   /**

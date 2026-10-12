@@ -35,9 +35,13 @@ const indexAnswers = (query: QueryResult.QueryResult<unknown>): number =>
   query.sources.find((source) => source.source === 'index')?.answers ?? 0;
 
 /** Pushes local writes through the host index and waits for the live query's next index answer. */
-const waitForIndexAnswer = async (db: EchoDatabase, query: QueryResult.QueryResult<unknown>): Promise<void> => {
+const waitForIndexAnswer = async (
+  db: EchoDatabase,
+  query: QueryResult.QueryResult<unknown>,
+  { secondaryIndexes = false }: { secondaryIndexes?: boolean } = {},
+): Promise<void> => {
   const before = indexAnswers(query);
-  await db.flush({ indexes: true });
+  await db.flush({ indexes: true, secondaryIndexes });
   await expect.poll(() => indexAnswers(query), { timeout: 5_000 }).toBeGreaterThan(before);
 };
 
@@ -97,6 +101,17 @@ describe('synchronous query propagation', () => {
       await waitForIndexAnswer(db, query);
       expect(updates).toHaveLength(baseline + added.length);
       expect(ids(query.results)).toEqual(expect.arrayContaining(added));
+    });
+
+    test('the first write after subscribe notifies before anything has read the results', async () => {
+      const db = await openDatabase();
+      await db.flush({ indexes: true });
+
+      const query = db.query(Filter.type(TestSchema.Person));
+      const updates = recordUpdates(query);
+      const added = db.add(person({ name: 'ada' }));
+      expect(updates).toHaveLength(1);
+      expect(updates[0].ids).toEqual([added.id]);
     });
 
     test('an edit that disqualifies an object removes it before the edit returns, and the index does not bring it back', async () => {
@@ -309,14 +324,19 @@ describe('synchronous query propagation', () => {
 
       const query = db.query(Filter.type(TestSchema.Person, { name: 'alice' }));
       const seen: string[][] = [];
+      let armed = false;
       let echoed: Entity.Unknown | undefined;
       const unsubscribe = query.subscribe((result) => {
+        if (!armed) {
+          return;
+        }
         seen.push(ids(result.results));
         echoed ??= db.add(person({ name: 'alice' }));
       });
       onTestFinished(unsubscribe);
       await waitForCompleteness(query, 'complete');
 
+      armed = true;
       const first = db.add(person({ name: 'alice' }));
       expect(echoed).toBeDefined();
       expect(seen).toEqual([[first.id], [first.id, echoed!.id]]);
@@ -342,7 +362,8 @@ describe('synchronous query propagation', () => {
     test('a text query is pending until the index answers, and stale after a local write until it answers again', async () => {
       const db = await openDatabase();
       db.add(person({ name: 'lovelace' }));
-      await db.flush({ indexes: true });
+      // Full text is a secondary index, which a plain index flush does not wait for.
+      await db.flush({ indexes: true, secondaryIndexes: true });
 
       const query = db.query(Query.select(Filter.text('lovelace', { type: 'full-text' })));
       const updates = recordUpdates(query);
@@ -355,9 +376,10 @@ describe('synchronous query propagation', () => {
       expect(query.completeness).toBe('stale');
       expect(updates).toHaveLength(baseline);
 
-      await waitForIndexAnswer(db, query);
+      // A re-run driven by the primary index can answer before full text has caught up, so wait for the match.
+      await db.flush({ indexes: true, secondaryIndexes: true });
+      await expect.poll(() => query.results.length, { timeout: 5_000 }).toBe(2);
       expect(query.completeness).toBe('complete');
-      expect(query.results).toHaveLength(2);
       expect(updates).toHaveLength(baseline + 1);
     });
 

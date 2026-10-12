@@ -1,7 +1,10 @@
 # Synchronous query propagation
 
-Status: design brainstorm, no code. Revised once after an adversarial review against the code; the
-review's findings are folded in and the ones that changed the design are called out in §7.
+Status: phase 1 implemented for flat queries on the owning space (§8 lists what landed and how it
+differs from the design); later phases are design. Revised once after an adversarial review against the
+code; the review's findings are folded in and the ones that changed the design are called out in §7.
+
+Tests: `echo-client-e2e/src/sync-query.test.ts` counts subscriber notifications per write.
 
 Related documents:
 
@@ -709,3 +712,84 @@ Kept here so the next reader does not re-derive them:
 - The registry moved from the remote side of the diagram to the synchronous side (dmaretskyi):
   `RegistryQuerySource` answers simple selections in memory, including upstream-hydrated entries,
   and emits synchronously on write. Registry `remote` is unserved today.
+
+## 8. Phase 1 as implemented
+
+What landed, mapped to the design, and where it deliberately differs. The update-counting suite in
+`echo-client-e2e/src/sync-query.test.ts` pins every behaviour below.
+
+**Commit scope** (`@dxos/echo/internal`, `commit-scope.ts`). A depth counter and a deduplicating
+post-commit queue. `executeChange` (so one `Obj.update` is one commit), `docChangeSemaphore`,
+`DocHandleProxy.change`/`changeAt`/`update`, `EntityManager.addCore` and `retainObjects` each open a
+commit. The queue drains when the outermost commit ends, after every semaphore is released and every
+change event delivered, and before the writing call returns. A write made from a callback ends its own
+commit inside the drain and runs in the next round. A throwing callback does not stop the others and is
+rethrown in a microtask, so it surfaces as unhandled instead of making the write throw.
+
+**Post-commit flush** (`EntityManager`). A change event with `source: 'change'` requests
+`#flushLocalCommit`, which emits `_localCommitEvent` and then the existing `_updateEvent` synchronously.
+Host deliveries (`host`, `bulk`) keep the `UpdateScheduler` path. No new recompute machinery was needed:
+`SpaceQuerySource` already listens to `_updateEvent` and `QueryResultImpl` already recomputes and diffs
+on `changed`, so making the event synchronous made the whole chain synchronous.
+
+**The engine is `GraphQueryContext`, evolved rather than renamed.** `QuerySource` gained `kind`,
+`isServing`, `answers` and `isFailed`; no `RemoteQuerySource` split. `getResults` and `run` both merge
+through one `#merge`: in-process entries first, then remote entries `keepRemoteEntry` does not overrule,
+using the plan from `merge-plan.ts`.
+
+**Revalidation** applies to single-branch flat queries (`select`, `filter`, `options`, `from` scope,
+`order`, `limit`, `skip`) whose characteristics say `entry`. A remote entry whose object is loaded with a
+body is re-evaluated with `filterMatchDoc` against the flat filter and the deleted option; anything else
+stands. No heads are compared yet (§3.1 makes equality a skip, not a rule), so this needs no protocol
+change. `verified` on entries is not implemented.
+
+**Windows.** A property-ordered window with a limit and no skip admits loaded local matches that sort at
+or before the last entry of a full remote window, re-sorts stably with the host's comparator
+(`compareOrderValues`, now exported from the working-set executor) and cuts to the limit. A short
+remote window admits every local match. Before the remote answers, the window is empty. Other windows
+are drop-only. Because the working set does not serve windows, the engine re-merges on
+`_localCommitEvent` itself.
+
+**Completeness** is computed live from the sources and the plan. Reading it never notifies; subscribers
+are still notified only when ids or order change, so a `stale` transition alone is silent. `merged`
+means some remote sources answered and some have not; it is not used for unverifiable entries.
+`subscribe({ fire })` keeps its existing heuristic rather than keying on completeness, because a
+`local-only` empty result would otherwise fire and a default-creating subscriber would act on it.
+
+**Staleness and the `unchanged` heartbeat.** A local write marks a query stale when local evidence
+cannot decide its membership (no entry revalidation, or a window), the write's canonical typename
+passes the query's typename constraint (never narrower than the host's own invalidation), and a remote
+serves it. It clears when the remote's answer count passes the count at the write. To make that count
+move when a re-run changes nothing, the host now sends `QueryResponse.unchanged` for a reactive re-run
+whose result matches the last one sent. Known gap: a re-run already in flight when the write lands, or
+one driven by the primary index before full text catches up, clears `stale` early. The per-space
+watermark of §3.9 is the fix.
+
+**Per-write cost.** A notification per write means the recompute must cost the write, not a scan. For a
+single flat type or wildcard selection, `SpaceQuerySource` applies each written object to its cached
+results as a delta: removed when it no longer matches, inserted where a full recompute would place it.
+That position comes from an insertion sequence `ObjectCoreRegistry` now keeps, which is the working
+set's iteration order. Other shapes still recompute through the executor. `_collapseDuplicates` skips
+working-set entries, which the executor already filtered for tombstones. Measured on the sandbox (4
+cores), a synchronous loop of 1000 `db.add` calls with a subscribed type query:
+
+| Build   | Loop  | Settled | Notifications |
+| ------- | ----- | ------- | ------------- |
+| Before  | 6.2 s | 11.8 s  | 0             |
+| Phase 1 | 7.4 s | 13.3 s  | 1000          |
+
+The remaining overhead is `QueryResultImpl` presenting O(results) per notification. "Before" delivered no
+notifications because of the gap below, so it is a floor rather than a like-for-like baseline.
+
+**A gap this closed.** `SpaceQuerySource._onUpdate` returned early while its results were uncomputed, so
+a subscriber that had not read yet missed every write until some later event computed the results. It now
+signals a relevant write either way.
+
+**Not done in phase 1**: the typename map in the working set (window admission and non-delta shapes
+still scan all cores), heads on the wire, paths, manifests, `RemoteQuerySource`, the progress stream,
+and skipping the remote stream for a by-id query whose ids are all loaded. A by-id query reports
+`complete` once its ids are loaded, but the index stream still opens.
+
+**Initial notification.** The first recompute after subscribe still notifies even when the result
+equals what an earlier read returned; this predates the change and the suite counts from a baseline
+taken after it.

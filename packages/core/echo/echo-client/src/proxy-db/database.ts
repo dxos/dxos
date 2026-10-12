@@ -384,6 +384,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return this._entityManager._updateEvent;
   }
 
+  get _localCommitEvent() {
+    return this._entityManager._localCommitEvent;
+  }
+
   get opened() {
     return this._entityManager.opened;
   }

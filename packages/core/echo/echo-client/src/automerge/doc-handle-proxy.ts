@@ -7,6 +7,7 @@ import { type AutomergeUrl, type DocumentId, stringifyAutomergeUrl } from '@auto
 import { EventEmitter } from 'eventemitter3';
 
 import { Trigger, TriggerState } from '@dxos/async';
+import { runInCommit } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 
@@ -183,44 +184,51 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   change(fn: (doc: A.Doc<T>) => void, opts?: A.ChangeOptions<any>): void {
     invariant(this._doc, 'DocHandleProxy.change called on deleted doc');
     const before = this._doc;
-    const headsBefore = A.getHeads(this._doc);
-    this._doc = opts ? A.change(this._doc, opts, fn) : A.change(this._doc, fn);
-    this.emit('change', {
-      handle: this,
-      doc: this._doc,
-      patches: A.diff(this._doc, headsBefore, A.getHeads(this._doc)),
-      patchInfo: { before, after: this._doc, source: 'change' },
+    // A local change is a commit: post-commit callbacks run only once every listener has seen the event.
+    runInCommit(() => {
+      const headsBefore = A.getHeads(before);
+      this._doc = opts ? A.change(before, opts, fn) : A.change(before, fn);
+      this.emit('change', {
+        handle: this,
+        doc: this._doc,
+        patches: A.diff(this._doc, headsBefore, A.getHeads(this._doc)),
+        patchInfo: { before, after: this._doc, source: 'change' },
+      });
     });
   }
 
   changeAt(heads: A.Heads, fn: (doc: A.Doc<T>) => void, opts?: A.ChangeOptions<any>): A.Heads | undefined {
     invariant(this._doc, 'DocHandleProxy.changeAt called on deleted doc');
     const before = this._doc;
-    const headsBefore = A.getHeads(this._doc);
-    const { newDoc, newHeads } = opts ? A.changeAt(this._doc, heads, opts, fn) : A.changeAt(this._doc, heads, fn);
+    return runInCommit(() => {
+      const headsBefore = A.getHeads(before);
+      const { newDoc, newHeads } = opts ? A.changeAt(before, heads, opts, fn) : A.changeAt(before, heads, fn);
 
-    this._doc = newDoc;
-    this.emit('change', {
-      handle: this,
-      doc: this._doc,
-      patches: newHeads ? A.diff(this._doc, headsBefore, newHeads) : [],
-      patchInfo: { before, after: this._doc, source: 'change' },
+      this._doc = newDoc;
+      this.emit('change', {
+        handle: this,
+        doc: this._doc,
+        patches: newHeads ? A.diff(this._doc, headsBefore, newHeads) : [],
+        patchInfo: { before, after: this._doc, source: 'change' },
+      });
+      return newHeads ?? undefined;
     });
-    return newHeads ?? undefined;
   }
 
   update(updateCallback: (doc: A.Doc<T>) => A.Doc<T>): void {
     invariant(this._doc, 'DocHandleProxy.update called on deleted doc');
     const before = this._doc;
-    const headsBefore = A.getHeads(this._doc);
-    const newDoc = updateCallback(this._doc);
-    invariant(newDoc, 'DocHandleProxy.update returned undefined doc');
-    this._doc = newDoc;
-    this.emit('change', {
-      handle: this,
-      doc: this._doc,
-      patches: A.diff(this._doc, headsBefore, A.getHeads(this._doc)),
-      patchInfo: { before, after: this._doc, source: 'change' },
+    runInCommit(() => {
+      const headsBefore = A.getHeads(before);
+      const newDoc = updateCallback(before);
+      invariant(newDoc, 'DocHandleProxy.update returned undefined doc');
+      this._doc = newDoc;
+      this.emit('change', {
+        handle: this,
+        doc: this._doc,
+        patches: A.diff(this._doc, headsBefore, A.getHeads(this._doc)),
+        patchInfo: { before, after: this._doc, source: 'change' },
+      });
     });
   }
 
