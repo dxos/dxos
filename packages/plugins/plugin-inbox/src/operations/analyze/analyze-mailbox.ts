@@ -103,7 +103,9 @@ const handler = InboxOperation.AnalyzeMailbox.pipe(
       // a host without a plugin manager contributes them directly.
       const plugins = yield* Effect.serviceOption(Plugin.Service);
       if (Option.isSome(plugins)) {
-        yield* plugins.value.activate(InboxEvents.Start);
+        yield* plugins.value
+          .activate(InboxEvents.Start)
+          .pipe(Effect.catch((error) => Effect.sync(() => log.warn('inbox start activation failed', { error }))));
       }
       const contributed = yield* Capability.getAll(InboxCapabilities.MailboxProcessor);
       const { ordered, excluded } = Topology.sort(contributed.filter((processor) => selected.has(processor.tier)));

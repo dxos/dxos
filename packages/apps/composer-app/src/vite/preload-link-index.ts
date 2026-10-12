@@ -5,6 +5,7 @@
 import { type PluginOption } from 'vite';
 
 const PRELOAD_HELPER_ID = '\0vite/preload-helper.js';
+const SEEN_DECLARATION = 'const seen = {};';
 
 /** Vite's per-dependency scan over every `<link>` in the document (`preload` in vite/dist/node). */
 const LINK_SCAN =
@@ -42,7 +43,10 @@ export const preloadLinkIndex = (): PluginOption => ({
           'if ((isCss ? documentLinks.css : documentLinks.any).has(dep)) return;',
         ].join('\n'),
       );
-      return indexed.replace('const seen = {};', 'const seen = {}; let documentLinks;');
+      if (!indexed.includes(SEEN_DECLARATION)) {
+        this.error('vite preload helper changed: the `seen` declaration this plugin extends was not found.');
+      }
+      return indexed.replace(SEEN_DECLARATION, `${SEEN_DECLARATION} let documentLinks;`);
     },
   },
 });
