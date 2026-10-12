@@ -14,6 +14,7 @@ import { defineHiddenProperty } from './define-hidden-property.ts';
 import { attachTypedJsonSerializer } from './json-serializer.ts';
 import { createProxy, getProxyTarget, isProxy, isValidProxyTarget } from './proxy-utils.ts';
 import {
+  type PrepareTargetOptions,
   TypedReactiveHandler,
   TypeSource,
   prepareDecodedTypedTarget,
@@ -53,9 +54,10 @@ export const makeObject = <T extends AnyProperties>(
   obj: NoInfer<MakeObjectProps<T>>,
   meta?: Partial<EntityMeta>,
   typeSource?: TypeSource,
+  options?: PrepareTargetOptions,
 ): T => {
   // Use Object.assign to copy symbol properties (like ParentId) that spread operator doesn't copy.
-  return createReactiveObject<T>(Object.assign({}, obj) as T, meta, schema, typeSource);
+  return createReactiveObject<T>(Object.assign({}, obj) as T, meta, schema, typeSource, options);
 };
 
 const createReactiveObject = <T extends AnyProperties>(
@@ -63,6 +65,7 @@ const createReactiveObject = <T extends AnyProperties>(
   meta?: Partial<EntityMeta>,
   schema?: Schema.Schema<T>,
   typeSource?: TypeSource,
+  options?: PrepareTargetOptions,
 ): T => {
   if (!isValidProxyTarget(obj)) {
     throw new Error('Value cannot be made into a reactive object.');
@@ -83,11 +86,11 @@ const createReactiveObject = <T extends AnyProperties>(
     setIdOnTarget(obj);
     defineHiddenProperty(obj, KindId, annotation.kind);
   }
-  initMeta(obj, meta);
+  initMeta(obj, meta, options);
   if (parent !== undefined) {
     defineHiddenProperty(obj, ParentId, parent);
   }
-  prepareTypedTarget(obj, schema, typeSource);
+  prepareTypedTarget(obj, schema, typeSource, options);
   attachTypedJsonSerializer(obj);
   const proxy = createProxy<T>(obj, TypedReactiveHandler.instance);
 
@@ -157,7 +160,7 @@ const setIdOnTarget = (target: any) => {
  * Set metadata on object.
  */
 // TODO(dmaretskyi): Move to echo-schema.
-const initMeta = <T>(obj: T, meta?: Partial<EntityMeta>) => {
+const initMeta = <T>(obj: T, meta?: Partial<EntityMeta>, options?: PrepareTargetOptions) => {
   // Backfill required fields so callers may pass a partial meta, or one whose `keys`/`tags`/
   // `annotations` are explicitly `undefined` (coalesce, don't let a spread reintroduce undefined).
   const fullMeta: EntityMeta = {
@@ -166,6 +169,6 @@ const initMeta = <T>(obj: T, meta?: Partial<EntityMeta>) => {
     tags: meta?.tags ?? [],
     annotations: meta?.annotations ?? {},
   };
-  prepareTypedTarget(fullMeta, EntityMetaSchema);
+  prepareTypedTarget(fullMeta, EntityMetaSchema, undefined, options);
   defineHiddenProperty(obj, MetaId, createProxy(fullMeta, TypedReactiveHandler.instance as any));
 };
