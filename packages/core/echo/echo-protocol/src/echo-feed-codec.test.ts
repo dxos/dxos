@@ -35,7 +35,7 @@ describe('EchoFeedCodec', () => {
     'keeps decoding blocks after 2 GiB under WebKit TextDecoder accounting',
     { timeout: 300_000 },
     async ({ expect }) => {
-      // The codec builds its decoder when its module loads, so the module loads after WebKit's is installed.
+      // Loaded after WebKit's decoder is installed, so a decoder the codec builds at load is WebKit's too.
       vi.stubGlobal('TextDecoder', WebKitTextDecoder);
       vi.resetModules();
       const { EchoFeedCodec } = await import('./echo-feed-codec.ts');
