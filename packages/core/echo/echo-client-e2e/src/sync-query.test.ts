@@ -301,6 +301,24 @@ describe('synchronous query propagation', () => {
       expect(updates).toHaveLength(baseline + 1);
     });
 
+    test('a window the index answered empty admits a new match before the add returns', async () => {
+      const db = await openDatabase();
+      await db.flush({ indexes: true });
+      const query = db.query(
+        Query.select(Filter.type(TestSchema.Person, { username: 'member' }))
+          .orderBy(Order.property('name', 'asc'))
+          .limit(3),
+      );
+      const updates = recordUpdates(query);
+      await waitForCompleteness(query, 'complete');
+      expect(query.results).toEqual([]);
+      const baseline = updates.length;
+
+      const first = db.add(person({ name: 'a', username: 'member' }));
+      expect(ids(query.results)).toEqual([first.id]);
+      expect(updates).toHaveLength(baseline + 1);
+    });
+
     test('a new match that sorts after the window does not notify', async () => {
       const { db, query, updates, members } = await openWindow();
       const baseline = updates.length;

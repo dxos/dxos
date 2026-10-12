@@ -155,7 +155,8 @@ export class GraphQueryContext implements QueryContext {
     for (const source of this._sources) {
       (isInProcess(source) ? local : remote).push(...source.getResults());
     }
-    return this.#merge(this._query, this.#plan, local, remote);
+    const remoteAnswered = this.#servingRemotes().some((source) => source.answers() > 0);
+    return this.#merge(this._query, this.#plan, local, remote, remoteAnswered);
   }
 
   /**
@@ -248,6 +249,7 @@ export class GraphQueryContext implements QueryContext {
       createMergePlan(query),
       answers.flatMap((answer) => (answer.inProcess ? answer.results : [])),
       answers.flatMap((answer) => (answer.inProcess ? [] : answer.results)),
+      answers.some((answer) => !answer.inProcess),
     );
   }
 
@@ -277,13 +279,20 @@ export class GraphQueryContext implements QueryContext {
    * In-process entries first, then every remote entry local evidence does not overrule. A property-ordered
    * window also admits local matches that sort within the remote window, re-sorted and cut to its limit.
    */
-  #merge(query: QueryAST.Query, plan: MergePlan, local: SourceEntry[], remote: SourceEntry[]): SourceEntry[] {
+  #merge(
+    query: QueryAST.Query,
+    plan: MergePlan,
+    local: SourceEntry[],
+    remote: SourceEntry[],
+    remoteAnswered: boolean,
+  ): SourceEntry[] {
     const kept = remote.filter((entry) => keepRemoteEntry(plan, entry));
     if (!plan.window) {
       return [...local, ...kept];
     }
-    // A window is the remote's to define; before it answers there is nothing to admit into.
-    if (remote.length === 0) {
+    // A window is the remote's to define; before it answers there is nothing to admit into. An empty answer is an
+    // answer, so local writes the index has not seen still enter it.
+    if (!remoteAnswered) {
       return kept;
     }
     const { orders, limit } = plan.window;
@@ -468,7 +477,14 @@ export class SpaceQuerySource implements QuerySource {
       const core = this.coreById(id);
       const data = core?.getObjectStructure()?.data;
       // `admit` reads one sort key and runs first, so the full filter only sees objects inside the window.
-      if (core && data !== undefined && (admit === undefined || admit(data)) && evaluateCore(plan, core) === true) {
+      if (
+        core &&
+        data !== undefined &&
+        (admit === undefined || admit(data)) &&
+        evaluateCore(plan, core) === true &&
+        // Every other working-set result waits for its strong dependencies, so an admitted one does too.
+        this._database.areStrongDepsSatisfied(core)
+      ) {
         matches.push({ id, data });
       }
     }
