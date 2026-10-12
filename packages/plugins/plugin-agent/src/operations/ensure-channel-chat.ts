@@ -67,6 +67,12 @@ export const ensureChannelChat = Effect.fnUntraced(function* ({
   const existing = yield* Database.query(Query.select(Filter.foreignKeys(Chat.Chat, [key]))).run;
   const match = existing.find((chat) => Obj.getParent(chat)?.id === agent.id);
   if (match) {
+    // A chat first made without `direct` (e.g. by `EnsureChannelChat`) still needs the key the host finds pending DMs by.
+    if (direct && !Obj.getMeta(match).keys.some(({ source }) => source === AgentChannels.DIRECT_SOURCE)) {
+      Obj.update(match, (match) => {
+        Obj.getMeta(match).keys.push(AgentChannels.directKey(channel.id));
+      });
+    }
     return match;
   }
 

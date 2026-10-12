@@ -64,6 +64,7 @@ export default handler;
 
 /** The object id a ref URI names, whatever its space qualification. */
 const entityIdOf = (uri: string): string | undefined => {
-  const eid = EID.parse(uri);
+  // Scanned refs may be malformed; skipping one beats aborting after the binding is already gone.
+  const eid = EID.tryParse(uri);
   return eid ? EID.getEntityId(eid) : undefined;
 };

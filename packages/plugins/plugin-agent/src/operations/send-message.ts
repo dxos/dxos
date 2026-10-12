@@ -52,15 +52,18 @@ const handler: Operation.WithHandler<typeof RelayOperation.SendMessage> = RelayO
           .filter((chat) => ChatParticipant.get(chat) === recipient.id)
           .sort((left, right) => right.id.localeCompare(left.id));
 
-        // A conversation on a channel (a Discord thread or DM) reaches them where they talk to the agent.
+        // A conversation on a channel (a Discord thread or DM) reaches them where they talk to the agent; one that refuses
+        // (a deleted thread) falls through to the next, then to the routes below.
+        const reasons: string[] = [];
         for (const chat of chats) {
           const conversation = AgentChannels.conversationOf(chat);
           const channel = conversation && (yield* findChannel(conversation.channelId));
           if (conversation && channel) {
             const sent = yield* postToChannel(agent, channel, conversation.thread, text);
-            return sent.delivered
-              ? { delivered: true, via: 'channel', chat: Ref.make(chat) }
-              : { delivered: false, reason: sent.reason };
+            if (sent.delivered) {
+              return { delivered: true, via: 'channel', chat: Ref.make(chat) };
+            }
+            reasons.push(sent.reason ?? `${channel.name ?? 'A channel'} refused the message.`);
           }
         }
 
@@ -68,7 +71,6 @@ const handler: Operation.WithHandler<typeof RelayOperation.SendMessage> = RelayO
         // may never have open.
         const name = partyName(recipient);
         const channels = yield* AgentChannels.loadChannels(agent);
-        const reasons: string[] = [];
         if (Obj.instanceOf(Person.Person, recipient)) {
           for (const channel of channels) {
             const direct = yield* openDirect(channel, recipient);

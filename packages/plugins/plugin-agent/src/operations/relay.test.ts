@@ -332,6 +332,30 @@ describe('Relay', () => {
   );
 
   it.effect(
+    'a chat first made without the direct key gets it when a DM is delivered into it',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { agent, agentRef, channel } = yield* setupAgent({ kind: TEST_MIRRORED_BACKEND_KIND });
+        const josiah = yield* resolve('Josiah', '200');
+        // As the `EnsureChannelChat` handler makes it: the DM's thread key, but no direct key.
+        const earlier = yield* ensureChannelChat({ agent, channel, thread: 'dm-200' });
+        expect(Obj.getMeta(earlier).keys).not.toContainEqual(AgentChannels.directKey(channel.id));
+
+        const delivered = yield* Operation.invoke(RelayOperation.SendMessage, {
+          agent: agentRef,
+          recipient: josiah,
+          text: 'Rich asked me to ask you to review the PR.',
+        });
+        expect(delivered).toMatchObject({ delivered: true, via: 'channel' });
+        expect(delivered.chat && (yield* Database.load(delivered.chat)).id).toBe(earlier.id);
+        expect(Obj.getMeta(earlier).keys).toContainEqual(AgentChannels.directKey(channel.id));
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
     'reaches a person through a direct conversation before a Composer chat they may not have open',
     Effect.fnUntraced(
       function* ({ expect }) {

@@ -318,7 +318,7 @@ const isArchived = ({ category }: DiscordAdminOperation.GuildChannel): boolean =
 
 /** The object id an agent ref URI names, whatever its space qualification. */
 const entityIdOf = (uri: string): string | undefined => {
-  const eid = EID.parse(uri);
+  const eid = EID.tryParse(uri);
   return eid ? EID.getEntityId(eid) : undefined;
 };
 
