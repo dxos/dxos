@@ -459,13 +459,6 @@ export class Client {
   private async _open(ctx: Context): Promise<void> {
     log('opening...');
     invariant(this._services);
-    log('client._open: importing proxy modules');
-    const { SpaceList } = await import('../echo/space-list.ts');
-    const { HaloProxy } = await import('../halo/halo-proxy.ts');
-    const { MeshProxy } = await import('../mesh/mesh-proxy.ts');
-    const { Shell } = await import('../services/index.ts');
-    log('client._open: proxy modules loaded');
-
     const trigger = new Trigger<Error | undefined>();
     this._services.closed?.on(async (error) => {
       log('terminated', { resetting: this._resetting });
@@ -485,13 +478,22 @@ export class Client {
         this.reloaded.emit();
       }
     });
-    log('client._open: opening services...');
-    await this._services.open();
+    // The services open alongside the proxy imports rather than after them: the worker handshake is
+    // the long pole, and each sequential import waits out a main thread busy with plugin activation.
+    log('client._open: importing proxy modules and opening services...');
+    const edgeUrl = this._config!.get('runtime.services.edge.url');
+    const [{ SpaceList }, { HaloProxy }, { MeshProxy }, { Shell }, edgeClientModule] = await Promise.all([
+      import('../echo/space-list.ts'),
+      import('../halo/halo-proxy.ts'),
+      import('../mesh/mesh-proxy.ts'),
+      import('../services/index.ts'),
+      edgeUrl ? import('@dxos/edge-client') : undefined,
+      this._services.open(),
+    ]);
     log('client._open: services opened');
 
-    const edgeUrl = this._config!.get('runtime.services.edge.url');
-    if (edgeUrl) {
-      const { EdgeHttpClient } = await import('@dxos/edge-client');
+    if (edgeUrl && edgeClientModule) {
+      const { EdgeHttpClient } = edgeClientModule;
       const clientTag = resolveTelemetryTag(this._config);
       this._edgeHttpClient = new EdgeHttpClient(edgeUrl, { clientTag });
       this._edgeApi = createClientEdgeAPI({ client: this, edgeClient: this._edgeHttpClient });
