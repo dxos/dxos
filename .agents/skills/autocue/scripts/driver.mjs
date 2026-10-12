@@ -205,9 +205,9 @@ const recordContextOptions = {
   deviceScaleFactor: scale,
   colorScheme: options.theme,
   recordVideo: hires ? undefined : { dir: options.out, size: viewport },
-        // The sandbox's egress proxy re-signs some hosts (github.com) with its own CA, which Chromium does not
-        // trust; the proxy itself verifies the upstream certificate.
-        ignoreHTTPSErrors: Boolean(sandbox),
+  // The sandbox's egress proxy re-signs some hosts (github.com) with its own CA, which Chromium does not
+  // trust; the proxy itself verifies the upstream certificate.
+  ignoreHTTPSErrors: Boolean(sandbox),
 };
 
 // A persistent context has no separate `Browser`: the context is the browser, and closing it quits.
