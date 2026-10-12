@@ -212,7 +212,9 @@
   },
   "devDependencies": {
     "@dxos/assistant": "workspace:*",
+    "@dxos/credentials": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@effect/atom-react": "catalog:",
