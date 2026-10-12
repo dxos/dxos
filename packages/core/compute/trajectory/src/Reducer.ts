@@ -113,7 +113,7 @@ export const session: Reducer<SessionState> = {
           ? { ...state, queue: state.queue.filter((id) => id !== payload.message) }
           : { ...state, rejected: [...state.rejected, event.id] };
       case 'turnBegin':
-        return { ...state, turns: [...state.turns, event.id], model: payload.model };
+        return { ...state, turns: [...state.turns, event.id], model: payload.model ?? state.model };
       case 'turnEnd':
         return { ...state, turns: state.turns.filter((id) => id !== payload.begin) };
       case 'modelChange':
@@ -225,6 +225,8 @@ export const thread: Reducer<ThreadView> = {
 
 export type PromptEntry = {
   readonly role: Trajectory.Role;
+  /** The sender's name, which lets the model tell several people (or sources) apart. */
+  readonly name?: string;
   readonly blocks: readonly ContentBlock.Any[];
   /** Events this entry was built from, so a later `compact` can find its range. */
   readonly source: readonly Trajectory.EventId[];
@@ -393,6 +395,7 @@ const place = (state: PromptState, event: Trajectory.Event): PromptState => {
     case 'message': {
       const entry: PromptEntry = {
         role: event.sender.role,
+        ...(event.sender.name !== undefined ? { name: event.sender.name } : {}),
         blocks: payload.blocks,
         source: [event.id],
         at: state.position,

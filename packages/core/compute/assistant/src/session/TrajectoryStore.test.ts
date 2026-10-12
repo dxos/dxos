@@ -13,8 +13,8 @@ import { Message } from '@dxos/types';
 
 import * as AiContext from './AiContext.ts';
 import * as Alarm from './Alarm.ts';
+import * as Legacy from './Legacy.ts';
 import * as SessionLink from './SessionLink.ts';
-import { ConsumedAnnotation, QueuedAnnotation, SessionStore } from './SessionStore.ts';
 import * as TrajectoryStore from './TrajectoryStore.ts';
 
 let clock = 0;
@@ -28,17 +28,17 @@ const TestLayer = TestDatabaseLayer({
 });
 
 describe('TrajectoryStore', () => {
-  it.effect('a legacy feed loads the same history SessionStore built', () =>
+  it.effect('a legacy feed loads the history the annotation queue showed', () =>
     Effect.gen(function* () {
       const { db } = yield* Database.Service;
       const feed = db.add(Feed.make());
       const queued = message('queued then answered');
       Obj.update(queued, (queued) => {
-        Annotation.set(queued, QueuedAnnotation, true);
-        Annotation.set(queued, ConsumedAnnotation, true);
+        Annotation.set(queued, Legacy.QueuedAnnotation, true);
+        Annotation.set(queued, Legacy.ConsumedAnnotation, true);
       });
       const pending = message('still queued');
-      Obj.update(pending, (pending) => Annotation.set(pending, QueuedAnnotation, true));
+      Obj.update(pending, (pending) => Annotation.set(pending, Legacy.QueuedAnnotation, true));
       yield* Feed.append(feed, [
         message('hello'),
         message('hi', 'assistant'),
@@ -48,9 +48,7 @@ describe('TrajectoryStore', () => {
         pending,
       ]);
 
-      const legacy = yield* new SessionStore().loadState(feed);
       const history = yield* TrajectoryStore.history(feed);
-      expect(texts(history)).toEqual(texts(legacy.history));
       expect(texts(history)).toEqual(['hello', 'hi', 'queued then answered', 'answer']);
 
       const { state } = yield* TrajectoryStore.load(feed, Durable.session);
@@ -76,7 +74,7 @@ describe('TrajectoryStore', () => {
       const feed = db.add(Feed.make());
       const target = db.add(Feed.make());
       const fired = Alarm.make({ wakeAt: 1 });
-      Obj.update(fired, (fired) => Annotation.set(fired, ConsumedAnnotation, true));
+      Obj.update(fired, (fired) => Annotation.set(fired, Legacy.ConsumedAnnotation, true));
       const pending = Alarm.make({ wakeAt: 2, message: 'later' });
       yield* Feed.append(feed, [
         Obj.make(AiContext.Binding, {

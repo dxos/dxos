@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { AiContext, Alarm, SessionLink } from '@dxos/assistant';
+import { TrajectoryStore } from '@dxos/assistant';
 import * as Memory from '@dxos/assistant-toolkit/Memory';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
@@ -20,12 +20,9 @@ import { HasSubject, Message } from '@dxos/types';
 const types: ReadonlyArray<Type.AnyEntity> = [
   Chat.Chat,
   Skill.Skill,
-  AiContext.Binding,
-  Alarm.Alarm,
-  SessionLink.SessionLink,
+  ...TrajectoryStore.types,
   Feed.Feed,
   HasSubject.HasSubject,
-  Message.Message,
   Instructions.Instructions,
   Agent.Agent,
   McpServer.McpServer,

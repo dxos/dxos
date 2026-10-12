@@ -62,6 +62,7 @@ const ThreadView = Schema.Struct({
 
 const PromptEntry = Schema.Struct({
   role: Trajectory.Role,
+  name: Schema.optional(Schema.String),
   blocks: Schema.Array(ContentBlock.Any),
   source: EventIds,
   at: Schema.Number,

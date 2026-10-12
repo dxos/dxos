@@ -4266,6 +4266,9 @@ importers:
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../../common/errors
+      '@dxos/trajectory':
+        specifier: workspace:*
+        version: link:../trajectory
       '@effect/vitest':
         specifier: 'catalog:'
         version: 4.0.0(effect@4.0.0(patch_hash=3231d93074c153423d744d1ed6acc4a09d0344e58224e8d2f134b809622c47f2))(vitest@4.1.10)

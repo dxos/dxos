@@ -4,7 +4,10 @@
 
 // @import-as-namespace
 
-import { Feed, Obj } from '@dxos/echo';
+import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
+
+import { Annotation, Feed, Obj } from '@dxos/echo';
 import { IdentityDid } from '@dxos/keys';
 import { Trajectory } from '@dxos/trajectory';
 import { Message } from '@dxos/types';
@@ -12,7 +15,52 @@ import { Message } from '@dxos/types';
 import * as AiContext from './AiContext.ts';
 import * as Alarm from './Alarm.ts';
 import * as SessionLink from './SessionLink.ts';
-import { isConsumed, isQueued } from './SessionStore.ts';
+
+/**
+ * Legacy queue marker: a feed `Message` queued as agent input, pending processing. A queued message is the queue
+ * entry, not a turn, so it never enters conversation history — the turn the agent runs from it
+ * appends its own user message, which is what history shows.
+ */
+export const QueuedAnnotation: Annotation.Annotation<boolean> = Annotation.make({
+  id: 'org.dxos.annotation.queued',
+  schema: Schema.Boolean,
+});
+
+/**
+ * Marks a queued item (a `Message` or an {@link Alarm.Alarm}) as taken up and finished with.
+ *
+ * Written by the agent AFTER the turn it drove, never before: the mark is the ack in a queue, and an
+ * ack written up front would drop the item on a process that dies mid-turn. Because it lands late,
+ * an interrupted turn is redelivered — at-least-once, matching how tool results already behave.
+ */
+export const ConsumedAnnotation: Annotation.Annotation<boolean> = Annotation.make({
+  id: 'org.dxos.annotation.consumed',
+  schema: Schema.Boolean,
+});
+
+/**
+ * Marks a queued item as taken up by the turn currently running.
+ *
+ * Distinct from {@link ConsumedAnnotation}, which cannot serve this purpose: the ack lands only after
+ * the turn, so between the agent dequeuing an entry and finishing with it the entry is still pending
+ * — and the turn has meanwhile appended its own user message built from the entry's blocks, leaving
+ * the same content rendered in both the queue and the thread. An in-flight entry stays in the pending
+ * set, so a process that dies mid-turn still redelivers it; it is only held out of the queue view,
+ * which the thread now speaks for.
+ */
+export const InFlightAnnotation: Annotation.Annotation<boolean> = Annotation.make({
+  id: 'org.dxos.annotation.inFlight',
+  schema: Schema.Boolean,
+});
+
+export const isQueued = (item: Obj.Unknown | Obj.Snapshot): boolean =>
+  Option.getOrElse(Annotation.get(item, QueuedAnnotation), () => false);
+
+export const isConsumed = (item: Obj.Unknown | Obj.Snapshot): boolean =>
+  Option.getOrElse(Annotation.get(item, ConsumedAnnotation), () => false);
+
+export const isInFlight = (item: Obj.Unknown | Obj.Snapshot): boolean =>
+  Option.getOrElse(Annotation.get(item, InFlightAnnotation), () => false);
 
 /**
  * A record a feed held before conversations became trajectories.

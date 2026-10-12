@@ -86,8 +86,8 @@ export type ThreadOrigin = Schema.Schema.Type<typeof ThreadOrigin>;
  * carries it as `thread`, and `turnEnd` merges the thread into its parent.
  */
 export const TurnBegin = Schema.TaggedStruct('turnBegin', {
-  /** Model DXN, as `SessionConfig.model` stores it. */
-  model: DXN.Schema,
+  /** Model DXN, as `SessionConfig.model` stores it; absent when the writer does not choose the model. */
+  model: Schema.optional(DXN.Schema),
   /** What the turn saw; absent when it started on an empty log. */
   from: Schema.optional(ThreadOrigin),
 });

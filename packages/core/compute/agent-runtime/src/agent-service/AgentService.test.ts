@@ -19,7 +19,7 @@ import * as Tracer from 'effect/Tracer';
 import { expect } from 'vitest';
 
 import { LanguageModelFixture } from '@dxos/ai/testing';
-import { type HarnessControlRpcs, SessionLink } from '@dxos/assistant';
+import { type HarnessControlRpcs, SessionLink, TrajectoryStore } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { OperationProcess } from '@dxos/compute-runtime';
@@ -934,7 +934,7 @@ describe('Agent Service (control plane)', () => {
         yield* session.submitPrompt('What is the codename of the project?');
         yield* session.waitForCompletion();
 
-        const messages = yield* Feed.query(session.feed, Filter.type(Message.Message)).run;
+        const messages = yield* TrajectoryStore.history(session.feed);
         const text = messages.map(Message.extractText).join('\n');
         expect(text.toLocaleLowerCase()).toContain('kingfisher');
       },
