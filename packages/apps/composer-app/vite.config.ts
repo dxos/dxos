@@ -23,7 +23,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 import solid from 'vite-plugin-solid';
 import wasm from 'vite-plugin-wasm';
 
-import { bootLoaderPlugin, importMapPlugin } from '@dxos/app-framework/vite-plugin';
+import { bootLoaderPlugin, importMapPlugin, pluginConfigPlugin } from '@dxos/app-framework/vite-plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
 import { isNonNullable } from '@dxos/util';
@@ -537,6 +537,8 @@ export default defineConfig((env) => ({
     plugins: () => [...sharedPlugins(env)],
   },
   plugins: [
+    // Serves each `Plugin.config`-defined `dx.config.ts` as its build-time manifest.
+    pluginConfigPlugin(),
     traceBootLeak(path.resolve(dirname, 'src/main.tsx')),
     ShutdownPlugin(),
     ...sharedPlugins(env),

@@ -14,6 +14,7 @@ import { type Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 
 import { type Translations } from '../app/index.ts';
+import schemaAdapter from './adapters/schema.ts';
 import * as AppActivationEvents from './AppActivationEvents.ts';
 import * as AppCapabilities from './AppCapabilities.ts';
 
@@ -189,25 +190,31 @@ export const undeclaredSurfaceRoles = (result: unknown, declared: readonly strin
  * for only that role never loads the module, so the surface silently renders nothing wherever no
  * declared role was requested first.
  */
-const withDeclaredRolesCheck =
-  <Props, Requires extends readonly Capability$.AnyTag[], Provides extends readonly Capability$.AnyTag[]>(
-    loader: Capability$.LoadModule<Props, Requires, Provides>,
-    roles: readonly string[],
-  ): Capability$.LoadModule<Props, Requires, Provides> =>
-  () =>
-    loader().then((module) => ({
-      default: (props: Props) =>
-        module.default(props).pipe(
-          Effect.tap((result) =>
-            Effect.sync(() => {
-              const undeclared = undeclaredSurfaceRoles(result, roles);
-              if (undeclared.length > 0) {
-                log.error('surface module binds roles missing from its declared roles', { undeclared, roles });
-              }
-            }),
+const withDeclaredRolesCheck = <
+  Props,
+  Requires extends readonly Capability$.AnyTag[],
+  Provides extends readonly Capability$.AnyTag[],
+>(
+  loader: Capability$.LoadModule<Props, Requires, Provides>,
+  roles: readonly string[],
+): Capability$.LoadModule<Props, Requires, Provides> =>
+  Capability$.wrapLoader(
+    () =>
+      loader().then((module) => ({
+        default: (props: Props) =>
+          module.default(props).pipe(
+            Effect.tap((result) =>
+              Effect.sync(() => {
+                const undeclared = undeclaredSurfaceRoles(result, roles);
+                if (undeclared.length > 0) {
+                  log.error('surface module binds roles missing from its declared roles', { undeclared, roles });
+                }
+              }),
+            ),
           ),
-        ),
-    }));
+      })),
+    loader,
+  );
 
 const surfaceMaker: Maker<typeof Capabilities.ReactSurface> = Capability$.moduleMaker(
   'ReactSurface',
@@ -299,10 +306,12 @@ export const schema = (
   } as const;
   if (typeof types === 'function') {
     const loader = types;
-    return Capability$.lazyModule<readonly [typeof AppCapabilities.Schema]>(options?.name ?? 'schema', spec, () =>
-      loader().then(({ default: values }) => ({
-        default: () => Effect.succeed([Capability$.contribute(AppCapabilities.Schema, values)]),
-      })),
+    return Capability$.lazyModule<readonly [typeof AppCapabilities.Schema]>(
+      options?.name ?? 'schema',
+      spec,
+      Capability$.wrapLoader(() => loader().then(schemaAdapter), loader, {
+        module: '@dxos/app-toolkit/adapters/schema',
+      }),
     );
   }
   return Capability$.inlineModule(options?.name ?? 'schema', spec, () =>

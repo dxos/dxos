@@ -624,6 +624,8 @@ export type ConfigOptions = Config2.Config & {
 export type PluginConfig<T = void> = Config2.Config & {
   meta: Meta;
   make: PluginFactory<T>;
+  /** The authored module list, read by build tools to emit the plugin's {@link Manifest}. */
+  modules: ReadonlyArray<Capability.Module<any> | undefined>;
 };
 
 /**
@@ -640,7 +642,54 @@ export type PluginConfig<T = void> = Config2.Config & {
  */
 export const config = <T = void>({ modules, ...data }: ConfigOptions): PluginConfig<T> => {
   const meta = getMetaFromConfig(data);
-  return { ...data, meta, make: fromModules<T>(meta, modules) };
+  return { ...data, meta, make: fromModules<T>(meta, modules), modules };
+};
+
+/** A capability tag as serialized in a {@link Manifest}: the identity the plugin manager matches on. */
+export type ManifestTag = { identifier: string; arity: Capability.Arity };
+
+/** One module of a {@link Manifest}: its activation spec as data and the URL of its body. */
+export type ManifestModule = {
+  id: string;
+  url: string;
+  activatesOn?: ActivationEvent.Events;
+  requires: readonly ManifestTag[];
+  provides: readonly ManifestTag[];
+  /** Transform applied to what `url` exports, when the module's maker adapts a data module. */
+  adapter?: { url: string; args?: unknown };
+};
+
+/**
+ * Static description of a plugin, emitted at build time from its `dx.config.ts` for one target
+ * environment, so the app loads only data plus the module bodies it activates.
+ */
+export type Manifest = Config2.Config & { modules: readonly ManifestModule[] };
+
+/** Builds a plugin from a build-time {@link Manifest}; each module body loads from its URL on activation. */
+export const fromManifest = <T = void>({
+  modules,
+  ...data
+}: Manifest): Pick<PluginConfig<T>, 'plugin' | 'meta' | 'make'> => {
+  const meta = getMetaFromConfig(data);
+  const toTags = (tags: readonly ManifestTag[]) =>
+    tags.map(({ identifier, arity }) => Capability.fromIdentifier(identifier, arity));
+  return {
+    plugin: data.plugin,
+    meta,
+    make: fromModules<T>(
+      meta,
+      modules.map(({ id, url, activatesOn, requires, provides, adapter }) =>
+        Capability.lazyModule(id, { activatesOn, requires: toTags(requires), provides: toTags(provides) }, async () => {
+          const loaded = await import(/* @vite-ignore */ url);
+          if (!adapter) {
+            return loaded;
+          }
+          const { default: adapt } = await import(/* @vite-ignore */ adapter.url);
+          return adapt(loaded, adapter.args);
+        }),
+      ),
+    ),
+  };
 };
 
 /**

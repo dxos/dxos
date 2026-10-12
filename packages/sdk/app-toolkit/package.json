@@ -46,6 +46,11 @@
       "types": "./dist/types/src/app-framework/AppCapability.d.ts",
       "import": "./dist/lib/app-framework/AppCapability.mjs"
     },
+    "./adapters/schema": {
+      "source": "./src/app-framework/adapters/schema.ts",
+      "types": "./dist/types/src/app-framework/adapters/schema.d.ts",
+      "import": "./dist/lib/app-framework/adapters/schema.mjs"
+    },
     "./AppMigrations": {
       "source": "./src/echo/AppMigrations.ts",
       "types": "./dist/types/src/echo/AppMigrations.d.ts",
