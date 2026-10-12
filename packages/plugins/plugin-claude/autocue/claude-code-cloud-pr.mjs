@@ -107,9 +107,24 @@ const send = async ({ demo, page }, text, caption) => {
 
 /** Shows a GitHub page, then returns to the chat. */
 const visit = async ({ demo, page }, url) => {
-  const app = page.url();
+  // A re-run of a step can start on GitHub, so the app's URL is the one the first visit left from.
+  if (page.url().startsWith('http://localhost')) {
+    globalThis.autocueAppUrl = page.url();
+  }
+  const app = globalThis.autocueAppUrl ?? new URL('/', page.url()).href;
   // GitHub's page outlasts a gesture's timeout, so the navigation returns once it commits and the wait is here.
-  await demo.goto({ url, waitUntil: 'commit' });
+  for (let attempt = 0; ; attempt++) {
+    const result = await demo.goto({ url, waitUntil: 'commit' }).then(
+      () => undefined,
+      (error) => error,
+    );
+    if (!result) {
+      break;
+    }
+    if (attempt >= 3) {
+      throw result;
+    }
+  }
   await page.waitForLoadState('load', { timeout: 60_000 }).catch(() => {});
   await page
     .getByText(url.split('/').pop())
