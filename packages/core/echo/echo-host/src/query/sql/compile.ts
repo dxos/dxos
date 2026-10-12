@@ -931,6 +931,22 @@ export class SqlPlanCompiler {
         // Only scalars order; anything else sorts with the nulls, last.
         return sql`CASE WHEN json_type(d.snapshot, ${at}) IN ('text', 'integer', 'real', 'true', 'false') THEN json_extract(d.snapshot, ${at}) END ${direction} NULLS LAST`;
       }
+      case 'annotation': {
+        // The key and each path segment are matched with `json_each`, as the annotation filter does,
+        // since a JSON path cannot address every key; a non-object level yields no row, so NULL.
+        const objectOrEmpty = (level: string) =>
+          sql`json_each(CASE WHEN ${sql.literal(level)}.type = 'object' THEN ${sql.literal(level)}.value ELSE '{}' END)`;
+        const path = order.path ?? [];
+        const joins = path.map(
+          (segment, index) =>
+            sql`JOIN ${objectOrEmpty(index === 0 ? 'a' : `p${index - 1}`)} ${sql.literal(`p${index}`)} ON ${sql.literal(`p${index}`)}.key = ${segment}`,
+        );
+        const leaf = sql.literal(path.length === 0 ? 'a' : `p${path.length - 1}`);
+        // Only scalars order; anything else sorts with the nulls, last.
+        return sql`(SELECT CASE WHEN ${leaf}.type IN ('text', 'integer', 'real', 'true', 'false') THEN ${leaf}.value END
+          FROM json_each(COALESCE(m.annotations, '{}')) a ${sql.join(' ', false)(joins)}
+          WHERE a.key = ${order.key}) ${direction} NULLS LAST`;
+      }
       default:
         return sql`w.ord`;
     }

@@ -6,7 +6,7 @@ import { next as A } from '@automerge/automerge';
 import { type DocumentId } from '@automerge/automerge-repo';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { describe, expect, onTestFinished, test } from 'vitest';
+import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { Trigger, asyncTimeout, waitForCondition } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -192,6 +192,58 @@ describe('DocumentsSynchronizer', () => {
       stored.set(entry.documentId, entry.heads);
     }
     expect(stored.get(documentId)).to.deep.equal(A.getHeads(client1.doc(documentId)));
+  });
+
+  test('concurrent writes from two clients reach both clients', async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const host = new AutomergeHost({ runtime });
+    await openAndClose(host);
+    const { documentId } = await host.createDoc<Record<string, string>>({ host: 'initial' });
+
+    const client1 = new TestClient<Record<string, string>>();
+    const client2 = new TestClient<Record<string, string>>();
+    const synchronizer1 = new DocumentsSynchronizer({ automergeHost: host, sendUpdates: client1.receive });
+    const synchronizer2 = new DocumentsSynchronizer({ automergeHost: host, sendUpdates: client2.receive });
+    await openAndClose(synchronizer1, synchronizer2);
+    await synchronizer1.addDocuments([documentId]);
+    await synchronizer2.addDocuments([documentId]);
+    await asyncTimeout(Promise.all([client1.loaded(documentId), client2.loaded(documentId)]), 1_000);
+
+    // Holds the first write's import open until the second client's write has been imported.
+    const createDoc = host.createDoc.bind(host);
+    const secondImported = new Trigger();
+    let imports = 0;
+    vi.spyOn(host, 'createDoc').mockImplementation(async (initialValue, opts) => {
+      const lease = await createDoc(initialValue, opts);
+      if (++imports === 1) {
+        await secondImported.wait();
+      } else {
+        secondImported.wake();
+      }
+      return lease;
+    });
+
+    await Promise.all([
+      synchronizer1.update(Context.default(), [
+        { documentId, mutation: client1.change(documentId, (doc) => (doc.one = 'client 1')) },
+      ]),
+      synchronizer2.update(Context.default(), [
+        { documentId, mutation: client2.change(documentId, (doc) => (doc.two = 'client 2')) },
+      ]),
+    ]);
+
+    const both = { host: 'initial', one: 'client 1', two: 'client 2' };
+    await asyncTimeout(
+      waitForCondition({
+        condition: () =>
+          A.toJS(client1.peek(documentId) ?? {}).two === both.two &&
+          A.toJS(client2.peek(documentId) ?? {}).one === both.one,
+      }),
+      1_000,
+    );
+    expect(A.toJS(client1.doc(documentId))).to.deep.equal(both);
+    expect(A.toJS(client2.doc(documentId))).to.deep.equal(both);
   });
 
   test('unsubscribing while the initial load is in flight releases the lease', async () => {

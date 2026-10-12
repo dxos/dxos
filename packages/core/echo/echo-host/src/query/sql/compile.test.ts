@@ -82,7 +82,14 @@ const seed = Effect.gen(function* () {
     doc(
       ids.t1,
       TASK,
-      { title: 'alpha', priority: 2, due: -1, tags: ['a', 'b'], assignee: ref(ids.alice) },
+      {
+        title: 'alpha',
+        priority: 2,
+        due: -1,
+        tags: ['a', 'b'],
+        assignee: ref(ids.alice),
+        [ATTR_META]: { annotations: { 'test.rank': 2, 'odd"key': { 'meters': 20, 'm"x': 5 } } },
+      },
       { [ATTR_PARENT]: EID.make({ entityId: ids.project }) },
     ),
     doc(
@@ -91,13 +98,20 @@ const seed = Effect.gen(function* () {
       { title: 'beta', priority: 1, tags: ['b'], assignee: ref(ids.bob) },
       { [ATTR_PARENT]: EID.make({ entityId: ids.deletedProject }) },
     ),
-    doc(ids.t3, TASK, { title: 'gamma', priority: 3, due: 3_600_001, tags: [], assignee: ref(ids.alice) }),
+    doc(ids.t3, TASK, {
+      title: 'gamma',
+      priority: 3,
+      due: 3_600_001,
+      tags: [],
+      assignee: ref(ids.alice),
+      [ATTR_META]: { annotations: { 'test.rank': { nested: true }, 'odd"key': { 'meters': 10, 'm"x': 1 } } },
+    }),
     doc(ids.t4, TASK, {
       title: 'delta',
       due: 'soon',
       tags: ['a'],
       done: true,
-      [ATTR_META]: { keys: [{ source: 'github.com', id: '42' }] },
+      [ATTR_META]: { keys: [{ source: 'github.com', id: '42' }], annotations: { 'test.rank': 1, 'odd"key': 'text' } },
     }),
     doc(ids.alice, PERSON, { name: 'alice' }),
     doc(ids.bob, PERSON, { name: 'bob' }),
@@ -266,6 +280,48 @@ describe('SqlPlanCompiler', () => {
           page.rows.map((row) => row.objectId),
         ),
       ).toEqual(['t4']);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('orders by an annotation value with non-scalars and missing values last', () =>
+    Effect.gen(function* () {
+      const fixture = yield* seed;
+      const scope = [{ _tag: 'space' as const, spaceId: fixture.spaceId }];
+      // Built as AST: these keys hold `"`, which a JSON path cannot address and `Annotation.make` would not mint.
+      const orderedBy = (order: QueryAST.Order, window: { skip?: number; limit?: number } = {}) =>
+        Effect.gen(function* () {
+          const query = Query.fromAst({
+            type: 'order',
+            query: Query.select(Filter.type(TASK)).from(scope).ast,
+            order: [order],
+          });
+          const skipped = window.skip === undefined ? query : query.skip(window.skip);
+          const { rows } = yield* run(fixture, window.limit === undefined ? skipped : skipped.limit(window.limit));
+          return names(
+            fixture,
+            rows.map((row) => row.objectId),
+          );
+        });
+
+      expect(yield* orderedBy({ kind: 'annotation', key: 'test.rank', direction: 'asc' })).toEqual(['t4', 't1', 't3']);
+      expect(yield* orderedBy({ kind: 'annotation', key: 'test.rank', direction: 'desc' })).toEqual(['t1', 't4', 't3']);
+      // A path into a text-valued annotation reads as null rather than failing the statement.
+      expect(yield* orderedBy({ kind: 'annotation', key: 'odd"key', path: ['meters'], direction: 'asc' })).toEqual([
+        't3',
+        't1',
+        't4',
+      ]);
+      expect(yield* orderedBy({ kind: 'annotation', key: 'odd"key', path: ['m"x'], direction: 'desc' })).toEqual([
+        't1',
+        't3',
+        't4',
+      ]);
+      expect(
+        yield* orderedBy(
+          { kind: 'annotation', key: 'odd"key', path: ['meters'], direction: 'asc' },
+          { skip: 1, limit: 1 },
+        ),
+      ).toEqual(['t1']);
     }).pipe(Effect.provide(TestLayer)),
   );
 

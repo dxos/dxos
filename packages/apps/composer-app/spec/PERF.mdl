@@ -241,6 +241,28 @@ test QA-1: A project with a large task set and long documents
         answers. A live model's latency and variable tool use would otherwise be most of the number;
         this measures the app's side of an agent loop — streaming render, tool dispatch, the query
         itself — with a fixed 250 ms per turn that the wall time includes.
+    - name: Come back to the space
+      id: revisit-boot
+      do: Reopen the app at the fixture space, on the same profile.
+      expect: the app reaches ready with the space's navtree
+      note: |
+        The return visit, after every stage above has run with the space resident in the tab because
+        the fixture built it there. A new tab holds no document, so this and the next two stages are
+        where the app loads what its queries return — or answers them from the index without loading
+        anything. Read `echoObjectDocumentsLoaded` and `echoSnapshotObjects` beside the timings: the
+        first counts documents the tab loaded, the second objects it held from the index instead.
+    - name: Open the project again
+      id: revisit-open-project
+      do: Open the first project from the navtree.
+      invoke: org.dxos.operation.appToolkit.open { subject: ["root/$given.space.id/content/$given.project.id"] }
+      expect: ProjectArticle renders on the Overview tab
+      note: |
+        `open-project` on a cold tab: the task-set summary reads every task, so this is the stage where
+        a returning user waits for 200 tasks' documents if each one has to load first.
+    - name: Render the task list again
+      id: revisit-open-tasks
+      do: Click the Tasks tab.
+      expect: the hierarchical task list renders and the first rows are visible
   after:
     - name: Delete the fixture space
       do: Delete the space from its settings.

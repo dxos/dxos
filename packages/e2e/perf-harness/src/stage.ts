@@ -20,7 +20,7 @@ import {
   readThreadMetrics,
 } from './collectors/cpu.ts';
 import { type DataReading, diffData, readData } from './collectors/data.ts';
-import { diffDisk, readDisk } from './collectors/disk.ts';
+import { EMPTY_DISK, diffDisk, readDisk } from './collectors/disk.ts';
 import { type Screencast } from './collectors/frames.ts';
 import { requestLatency } from './collectors/latency.ts';
 import { readMarks } from './collectors/marks.ts';
@@ -135,8 +135,13 @@ export class StageRunner {
     this.#fixtureSize = size;
   }
 
-  /** Adopts an already-attached set, so the caller can start the profiler before the first stage. */
+  /**
+   * Adopts an already-attached set, so the caller can start the profiler before the first stage.
+   * Sessions it replaces are closed: one left attached to a worker outlives the runner's view of it.
+   */
   adopt(targets: Attached[]): void {
+    const adopted = new Set(targets);
+    detachAll(this.#targets.filter((target) => !adopted.has(target)));
     this.#targets = targets;
   }
 
@@ -183,11 +188,30 @@ export class StageRunner {
       .catch(() => undefined);
   }
 
-  /** Runs one stage, bracketing `body` with the boundary reads. */
-  async stage(id: string, body: () => Promise<void>): Promise<StageRow> {
+  /**
+   * Runs one stage, bracketing `body` with the boundary reads.
+   *
+   * @param restartsApp The stage reloads the app, which starts every realm's counters over under the
+   *   same names; its opening readings are dropped, so each realm's closing reading is the stage's whole.
+   */
+  async stage(
+    id: string,
+    body: () => Promise<void>,
+    { restartsApp = false }: { restartsApp?: boolean } = {},
+  ): Promise<StageRow> {
     const { page, browserCdp, debugPort, network, mode } = this.#options;
 
     this.#targets = await refreshTargets(debugPort, this.#targets);
+    if (restartsApp) {
+      // A debugger session left on the shared coordinator across the restart keeps the new page's
+      // worker from ever connecting, so workers are detached here and attached afresh at the close.
+      this.#targets = this.#targets.filter((target) => {
+        if (target.kind !== 'page') {
+          target.cdp.close();
+        }
+        return target.kind === 'page';
+      });
+    }
     const pageTarget = this.#targets.find((target) => target.kind === 'page');
     // A worker that appeared since the last boundary has no probe yet; the call is idempotent.
     await Promise.all(this.#targets.map(installWorkerProbe));
@@ -230,6 +254,15 @@ export class StageRunner {
     }
 
     await this.#mark(id, 'end');
+    if (restartsApp) {
+      Object.assign(before, {
+        thread: { ...EMPTY_THREAD },
+        threadByRealm: [],
+        disk: { ...EMPTY_DISK },
+        rpc: [],
+        data: [],
+      });
+    }
     const wallMs = Date.now() - before.at;
     const cpu = diffProcessCpu(before.cpu, await readProcessCpu(browserCdp));
     const thread = pageTarget

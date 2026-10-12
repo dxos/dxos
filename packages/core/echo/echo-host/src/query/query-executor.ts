@@ -18,7 +18,7 @@ import {
   QueryAST,
   isEncodedReference,
 } from '@dxos/echo-protocol';
-import { ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
+import { ATTR_META, ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import {
   type EntityMeta,
@@ -132,6 +132,16 @@ type QueryItem = {
   state?: { heads: readonly string[]; structure: string; bytes?: Uint8Array; version: number };
 };
 
+/** Parsed once per index row: an order step reads it on every comparison. */
+const indexedAnnotations = new WeakMap<EntityMeta, Readonly<Record<string, unknown>> | undefined>();
+
+const parseIndexedAnnotations = (meta: EntityMeta): Readonly<Record<string, unknown>> | undefined => {
+  if (!indexedAnnotations.has(meta)) {
+    indexedAnnotations.set(meta, meta.annotations === null ? undefined : JSON.parse(meta.annotations));
+  }
+  return indexedAnnotations.get(meta);
+};
+
 const QueryItem = Object.freeze({
   /** An item for an index row, carrying no document; `null` for a row that is not document-backed. */
   fromIndexRow: (meta: EntityMeta): QueryItem | null =>
@@ -164,6 +174,19 @@ const QueryItem = Object.freeze({
       return item.meta.deleted;
     } else {
       throw new Error('Invalid query item');
+    }
+  },
+
+  /** The entity's `meta.annotations`, from whichever representation the item carries. */
+  getAnnotations: (item: QueryItem): Readonly<Record<string, unknown>> | undefined => {
+    if (item.doc) {
+      return item.doc.meta?.annotations;
+    } else if (item.data) {
+      return item.data[ATTR_META]?.annotations;
+    } else if (item.meta) {
+      return parseIndexedAnnotations(item.meta);
+    } else {
+      return undefined;
     }
   },
 
@@ -720,6 +743,10 @@ export class QueryExecutor extends Resource {
 
   get compiled(): boolean {
     return this._plan.steps.some((step) => step._tag === 'SqlStep');
+  }
+
+  get selectsById(): boolean {
+    return this.#scopes.isSimple && this.#scopes.objectIds !== null;
   }
 
   getResults(): QueryService.QueryResult[] {
@@ -1911,6 +1938,12 @@ export class QueryExecutor extends Resource {
         const comparison = a.rank - b.rank;
         return order.direction === 'desc' ? -comparison : comparison;
       }
+      case 'annotation':
+        return QueryAST.compareAnnotationOrderValues(
+          QueryAST.getAnnotationOrderValue(QueryItem.getAnnotations(a), order),
+          QueryAST.getAnnotationOrderValue(QueryItem.getAnnotations(b), order),
+          order.direction,
+        );
       case 'timestamp': {
         // Order by the system createdAt/updatedAt timestamp from the meta index.
         // Missing timestamps sort as oldest (0).

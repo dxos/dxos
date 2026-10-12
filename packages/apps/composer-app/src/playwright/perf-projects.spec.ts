@@ -538,6 +538,30 @@ const runFlow = async (mode: Mode, scale: Scale, iteration: number) => {
     page.context().off('request', onRequest);
     log.info('assistant stages', { liveModelCalls: liveModelCalls.length });
 
+    // The return visit: the same profile, reopened at the space, the way someone comes back to a space
+    // they already have. Every stage above runs with the space resident in the tab, since the fixture
+    // built it there; these are where what a query returns has to be loaded, or not.
+    await runner.stage(
+      'revisit-boot',
+      async () => {
+        await page.goto(`${BASE_URL}/w/${fixture.spaceId}?profiler=1&model=scripted`, { timeout: 120_000 });
+        await waitForReady(page);
+      },
+      { restartsApp: true },
+    );
+
+    await runner.stage('revisit-open-project', async () => {
+      await invokeInPage(page, 'org.dxos.operation.appToolkit.open', {
+        subject: [projectPath(fixture.spaceId, fixture.projectIds[0])],
+      });
+      await page.getByTestId('projectsPlugin.tab.tasks').waitFor({ timeout: budget });
+    });
+
+    await runner.stage('revisit-open-tasks', async () => {
+      await page.getByTestId('projectsPlugin.tab.tasks').click({ timeout: budget });
+      await page.getByTestId('taskList.item').first().waitFor({ timeout: budget });
+    });
+
     const rows = runner.rows;
     const name = `${FLOW}-${mode}`;
     const capturedAt = new Date().toISOString();
