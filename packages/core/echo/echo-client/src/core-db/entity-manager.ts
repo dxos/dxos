@@ -597,14 +597,19 @@ export class EntityManager implements IDatabaseBinding {
       return;
     }
     snapshot.handle._setPassive({ bytes: state.bytes, heads: state.heads });
+    const previous = snapshot.root.objects[core.id];
+    const structure = shareStructure(previous, state.structure);
     core.snapshot = {
-      root: { objects: { [core.id]: shareStructure(snapshot.root.objects[core.id], state.structure) } },
+      root: structure === previous ? snapshot.root : { objects: { [core.id]: structure } },
       heads: state.heads,
       version: state.version,
       updatedAt: state.updatedAt,
       handle: snapshot.handle,
     };
-    core.notifyUpdate();
+    // A row that holds what the object already shows changes nothing a reader sees.
+    if (structure !== previous) {
+      core.notifyUpdate();
+    }
   }
 
   /**

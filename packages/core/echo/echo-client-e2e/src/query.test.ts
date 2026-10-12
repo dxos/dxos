@@ -4605,7 +4605,7 @@ describe('Query', () => {
       let notified = 0;
       onTestFinished(Obj.subscribe(object, () => notified++));
 
-      // Read from another document (a branch, or a copy the root no longer links), or no newer: ignored.
+      // Read from another document (a branch, or a copy the root no longer links), or not newer: ignored.
       db._upsertSnapshot(object.id, {
         ...row,
         structure: withValue(99),
@@ -4613,10 +4613,12 @@ describe('Query', () => {
         documentId: 'not-the-routed-document',
       });
       db._upsertSnapshot(object.id, { ...row, structure: withValue(3), version: row.version });
+      // Newer but holding what the object already shows: nothing for a reader to see.
+      db._upsertSnapshot(object.id, { ...row, structure: withValue(1), version: row.version + 1 });
       expect(object.value).toBe(1);
       expect(notified).toBe(0);
 
-      expect(db._upsertSnapshot(object.id, { ...row, structure: withValue(2), version: row.version + 1 })).toBe(object);
+      expect(db._upsertSnapshot(object.id, { ...row, structure: withValue(2), version: row.version + 2 })).toBe(object);
       expect(object.value).toBe(2);
       expect(notified).toBe(1);
     });
