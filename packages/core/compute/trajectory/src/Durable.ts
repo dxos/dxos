@@ -55,7 +55,7 @@ const ThreadView = Schema.Struct({
       blocks: Schema.Array(ContentBlock.Any),
       created: Schema.String,
       thread: Schema.optional(Trajectory.EventId),
-      status: Schema.Literals(['queued', 'consumed', 'cancelled', 'sent']),
+      status: Schema.Literals(['queued', 'consumed', 'cancelled', 'sent', 'rewound']),
     }),
   ),
 });

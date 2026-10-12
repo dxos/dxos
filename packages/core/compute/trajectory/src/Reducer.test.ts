@@ -144,6 +144,19 @@ describe('Reducer', () => {
         ),
       ).to.deep.eq(['sent:call', 'sent:result', 'consumed:typed mid-turn']);
     });
+    test('a resolution settles the request block it names, leaving the message itself as written', ({ expect }) => {
+      const ask = event({
+        _tag: 'message',
+        blocks: [{ _tag: 'request', requestId: 'r1', title: 'Write note.txt', options: [] }],
+      });
+      const { state } = Reducer.run(Reducer.thread, [
+        ask,
+        event({ _tag: 'requestResolve', message: ask.id, requestId: 'r1', resolution: { outcome: 'cancelled' } }),
+      ]);
+      const [block] = state.items[0].blocks;
+      expect(block._tag === 'request' && block.resolution).to.deep.eq({ outcome: 'cancelled' });
+      expect(ask.payload._tag === 'message' && ask.payload.blocks[0]).to.not.have.property('resolution');
+    });
   });
 
   describe('prompt', () => {
@@ -322,8 +335,11 @@ describe('Reducer', () => {
 
       const thread = Reducer.run(Reducer.thread, events).state;
       expect(
-        thread.items.map((item) => item.blocks.map((block) => (block._tag === 'text' ? block.text : ''))).flat(),
+        thread.items
+          .filter((item) => item.status !== 'rewound')
+          .flatMap((item) => item.blocks.map((block) => (block._tag === 'text' ? block.text : ''))),
       ).to.deep.eq(['kept', 'after']);
+      expect(thread.items.filter((item) => item.status === 'rewound')).to.have.length(2);
     });
 
     test('compact replaces its range with the summary', ({ expect }) => {

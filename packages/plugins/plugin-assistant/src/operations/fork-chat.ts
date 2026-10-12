@@ -8,14 +8,14 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { AiContext, SessionLink } from '@dxos/assistant';
+import { TrajectoryStore } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Message } from '@dxos/types';
+import { Durable, Trajectory } from '@dxos/trajectory';
 
 import { AssistantOperation } from '#types';
 
@@ -31,14 +31,12 @@ const handler: Operation.WithHandler<typeof AssistantOperation.ForkChat> = Assis
 
       const dbLayer = Database.layer(space.db);
 
-      const messages = yield* Feed.query(sourceFeed, Filter.type(Message.Message)).run.pipe(Effect.provide(dbLayer));
+      // The fork continues from the source's last entry, and starts with the skills and objects bound there.
+      const { state: prompt } = yield* TrajectoryStore.load(sourceFeed, Durable.prompt).pipe(Effect.provide(dbLayer));
+      const { state: session } = yield* TrajectoryStore.load(sourceFeed, Durable.session).pipe(Effect.provide(dbLayer));
+      const point = prompt.entries.at(-1)?.source[0];
 
-      // Sort chronologically to find the last message.
-      const sorted = messages
-        .filter(Obj.instanceOf(Message.Message))
-        .sort((a, b) => a.created.localeCompare(b.created));
-
-      // Create a new chat, then apply source bindings and session link.
+      // Create a new chat, then record where it forks from and what it binds.
       const sourceName = Obj.getLabel(chat);
       const { object: newChat } = yield* Operation.invoke(
         AssistantOperation.CreateChat,
@@ -48,42 +46,20 @@ const handler: Operation.WithHandler<typeof AssistantOperation.ForkChat> = Assis
       yield* Operation.invoke(SpaceOperation.AddObject, { object: newChat }, { spaceId: db.spaceId });
       const newFeed = yield* Database.load(newChat.feed);
 
-      if (sorted.length > 0) {
-        const lastMessage = sorted[sorted.length - 1];
-
-        // Append a SessionLink record pointing to the last message of the source feed.
-        yield* Feed.append(newFeed, [
-          Obj.make(SessionLink.SessionLink, {
-            feedRef: Ref.make(sourceFeed),
-            messageId: lastMessage.id,
-          }),
-        ]).pipe(Effect.provide(dbLayer));
-      }
-
-      // Copy source chat's skill and object bindings to the new feed.
-      // Sort chronologically so add/remove events are applied in the correct order.
-      const sourceBindings = (yield* Feed.query(sourceFeed, Filter.type(AiContext.Binding)).run.pipe(
-        Effect.provide(dbLayer),
-      )).filter(Obj.instanceOf(AiContext.Binding));
-
-      if (sourceBindings.length > 0) {
-        // Reduce binding events to the final active set.
-        const skillRefMap = new Map<string, Ref.Ref<any>>();
-        const objectRefMap = new Map<string, Ref.Ref<any>>();
-        for (const binding of sourceBindings) {
-          binding.skills.added.forEach((ref: Ref.Ref<any>) => skillRefMap.set(ref.uri, ref));
-          binding.skills.removed.forEach((ref: Ref.Ref<any>) => skillRefMap.delete(ref.uri));
-          binding.objects.added.forEach((ref: Ref.Ref<any>) => objectRefMap.set(ref.uri, ref));
-          binding.objects.removed.forEach((ref: Ref.Ref<any>) => objectRefMap.delete(ref.uri));
-        }
-
-        yield* Feed.append(newFeed, [
-          Obj.make(AiContext.Binding, {
-            skills: { added: Array.from(skillRefMap.values()), removed: [] },
-            objects: { added: Array.from(objectRefMap.values()), removed: [] },
-          }),
-        ]).pipe(Effect.provide(dbLayer));
-      }
+      const sender: Trajectory.Sender = { role: 'event', name: 'fork' };
+      yield* TrajectoryStore.append(newFeed, [
+        ...(point !== undefined
+          ? [Trajectory.make({ payload: { _tag: 'fork', from: { feed: Ref.make(sourceFeed), event: point } }, sender })]
+          : []),
+        ...(session.skills.length > 0 || session.objects.length > 0
+          ? [
+              Trajectory.make({
+                payload: { _tag: 'contextBind', skills: session.skills, objects: session.objects },
+                sender: { role: 'event', name: 'context' },
+              }),
+            ]
+          : []),
+      ]).pipe(Effect.provide(dbLayer));
 
       if (companionTo) {
         // Wire the forked chat as a companion and switch to it without navigating away.

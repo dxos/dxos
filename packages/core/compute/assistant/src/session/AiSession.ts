@@ -6,10 +6,8 @@
 
 import type * as Tool from 'effect/ai/Tool';
 import * as Array from 'effect/Array';
-import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
-import * as Exit from 'effect/Exit';
 import { pipe } from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import type * as AtomRegistry from 'effect/reactivity/AtomRegistry';
@@ -28,7 +26,7 @@ import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { McpToolkit } from '@dxos/mcp-client';
-import { Durable, Trajectory } from '@dxos/trajectory';
+import { Trajectory } from '@dxos/trajectory';
 import { type ContentBlock, Message } from '@dxos/types';
 import { markWork } from '@dxos/util';
 
@@ -71,7 +69,7 @@ export type RunProps<R = never> = {
   model?: Trajectory.TurnBegin['model'];
 };
 
-export type TurnSource = { readonly message: Trajectory.EventId } | { readonly alarm: Trajectory.EventId };
+export type TurnSource = TrajectoryStore.TurnSource;
 
 export type Options = {
   feed: Feed.Feed;
@@ -191,26 +189,21 @@ export class Session extends Resource {
   #turn: Trajectory.EventId | undefined;
 
   /**
-   * Opens a turn: a rewind the UI left on the feed is recorded first, then `turnBegin` with what the turn saw.
+   * Opens a turn, recording first a rewind the UI left on the feed.
    */
   #beginTurn(model: RunProps['model']): Effect.Effect<Trajectory.EventId, never, Database.Service> {
     return Effect.gen({ self: this }, function* () {
       yield* this.applyPendingRewind();
-      const { head } = yield* TrajectoryStore.load(this._feed, Durable.prompt);
-      const begin = Trajectory.make({
-        payload: { _tag: 'turnBegin', model, from: head !== undefined ? { event: head } : undefined },
-        sender: { role: 'assistant' },
-      });
-      yield* TrajectoryStore.append(this._feed, [begin]);
-      this.#turn = begin.id;
-      return begin.id;
+      const begin = yield* TrajectoryStore.beginTurn(this._feed, { model });
+      this.#turn = begin;
+      return begin;
     });
   }
 
   /**
-   * The events one output of the turn becomes. The turn's prompt is the first user message: a queued source is
-   * consumed or fired instead of copied, a direct prompt is appended to the main thread and consumed by the turn.
-   * Any later user-role output is a note from the system (e.g. a tool fault), not something a person typed.
+   * The events one output of the turn becomes. The turn's prompt is its first user message (see
+   * `TrajectoryStore.promptEvents`); any later user-role output is a note from the system (e.g. a tool fault), not
+   * something a person typed.
    */
   #outputEvents(message: Message.Message, turn: Trajectory.EventId, prompt: { source?: TurnSource; written: boolean }) {
     if (message.sender.role !== 'user') {
@@ -219,19 +212,8 @@ export class Session extends Resource {
     if (prompt.written) {
       return [toEvent(message, turn, { role: 'event', name: 'system' })];
     }
-
     prompt.written = true;
-    const source = prompt.source;
-    if (source && 'message' in source) {
-      return [consume(source.message, turn)];
-    }
-    if (source && 'alarm' in source) {
-      return [
-        Trajectory.make({ payload: { _tag: 'alarmFire', alarm: source.alarm }, sender: ALARM, thread: turn }),
-        toEvent(message, turn, ALARM),
-      ];
-    }
-    return [toEvent(message), consume(message.id, turn)];
+    return TrajectoryStore.promptEvents(message, turn, prompt.source);
   }
 
   /**
@@ -309,6 +291,7 @@ export class Session extends Resource {
         instructions: this.#instructions,
         prompt: params.prompt,
         sender: params.sender,
+        promptId: params.source && 'message' in params.source ? params.source.message : undefined,
         system: params.system,
         systemPrompt: yield* formatSystem(skills, objects),
       });
@@ -379,7 +362,7 @@ export class Session extends Resource {
       Effect.onExit((exit) => {
         const turn = this.#turn;
         this.#turn = undefined;
-        return turn !== undefined ? TrajectoryStore.append(this._feed, [turnEnd(turn, exit)]) : Effect.void;
+        return turn !== undefined ? TrajectoryStore.endTurn(this._feed, turn, exit) : Effect.void;
       }),
       Effect.provideService(Database.Service, Context.get(this._runtime, Database.Service)),
       Effect.provide(
@@ -474,8 +457,6 @@ const connectMcpServers = (
   });
 };
 
-const ALARM: Trajectory.Sender = { role: 'event', name: 'alarm' };
-
 /** A message of the turn as the event recording it, in the turn's thread when given. */
 const toEvent = (message: Message.Message, thread?: Trajectory.EventId, sender?: Trajectory.Sender): Trajectory.Event =>
   Trajectory.make({
@@ -484,20 +465,6 @@ const toEvent = (message: Message.Message, thread?: Trajectory.EventId, sender?:
     sender: sender ?? Legacy.toSender(message.sender),
     thread,
     created: message.created,
-  });
-
-const consume = (message: Trajectory.EventId, thread: Trajectory.EventId): Trajectory.Event =>
-  Trajectory.make({ payload: { _tag: 'promptConsume', message }, sender: { role: 'assistant' }, thread });
-
-/** How a request ended, as its `turnEnd` records it; a stop the reader asked for is not an error. */
-const turnEnd = (begin: Trajectory.EventId, exit: Exit.Exit<unknown, unknown>): Trajectory.Event =>
-  Trajectory.make({
-    payload: Exit.isSuccess(exit)
-      ? { _tag: 'turnEnd', begin, finishReason: 'stop' }
-      : Cause.hasInterrupts(exit.cause)
-        ? { _tag: 'turnEnd', begin, finishReason: 'other', error: 'interrupted' }
-        : { _tag: 'turnEnd', begin, finishReason: 'error', error: Cause.pretty(exit.cause) },
-    sender: { role: 'assistant' },
   });
 
 /** The prompt as the turn span carries it: text as is, blocks reduced to what identifies them. */

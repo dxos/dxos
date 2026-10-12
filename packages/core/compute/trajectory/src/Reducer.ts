@@ -154,7 +154,8 @@ export const session: Reducer<SessionState> = {
 // Thread view: what the UI renders.
 //
 
-export type ItemStatus = 'queued' | 'consumed' | 'cancelled' | 'sent';
+/** `rewound`: discarded by a rewind; kept so a reader can tell a message it already showed from a new one. */
+export type ItemStatus = 'queued' | 'consumed' | 'cancelled' | 'sent' | 'rewound';
 
 export type ThreadItem = {
   readonly id: Trajectory.EventId;
@@ -167,6 +168,17 @@ export type ThreadItem = {
 };
 
 export type ThreadView = { readonly items: readonly ThreadItem[] };
+
+/** `blocks` with the request the resolution answers settled; a request already settled keeps its first answer. */
+const resolveRequest = (
+  blocks: readonly ContentBlock.Any[],
+  { requestId, resolution }: Trajectory.RequestResolve,
+): readonly ContentBlock.Any[] =>
+  blocks.map((block) =>
+    block._tag === 'request' && block.requestId === requestId && block.resolution === undefined
+      ? { ...block, resolution }
+      : block,
+  );
 
 const setItemStatus = (items: readonly ThreadItem[], id: Trajectory.EventId, status: ItemStatus) =>
   items.map((item) => (item.id === id ? { ...item, status } : item));
@@ -205,9 +217,21 @@ export const thread: Reducer<ThreadView> = {
         };
       case 'promptConsume':
         return { items: consume(state.items, payload.message, event.thread) };
+      case 'requestResolve':
+        return {
+          items: state.items.map((item) =>
+            item.id === payload.message ? { ...item, blocks: resolveRequest(item.blocks, payload) } : item,
+          ),
+        };
       case 'rewind': {
         const from = state.items.findIndex((item) => item.id === payload.from);
-        return event.thread === undefined && from !== -1 ? { items: state.items.slice(0, from) } : state;
+        return event.thread === undefined && from !== -1
+          ? {
+              items: state.items.map((item, index) =>
+                index >= from && item.status !== 'queued' ? { ...item, status: 'rewound' as const } : item,
+              ),
+            }
+          : state;
       }
       case 'promptCancel':
         return state.items.some((item) => item.id === payload.message && item.status === 'queued')
@@ -462,6 +486,20 @@ const place = (state: PromptState, event: Trajectory.Event): PromptState => {
     }
     case 'fork':
       return { ...state, origin: payload.from };
+    case 'requestResolve': {
+      const resolve = (entry: PromptEntry): PromptEntry =>
+        entry.source.includes(payload.message) ? { ...entry, blocks: resolveRequest(entry.blocks, payload) } : entry;
+      return {
+        ...state,
+        entries: state.entries.map(resolve),
+        threads: Object.fromEntries(
+          Object.entries(state.threads).map(([id, buffer]) => [
+            id,
+            { ...buffer, entries: buffer.entries.map(resolve) },
+          ]),
+        ),
+      };
+    }
     default:
       return state;
   }

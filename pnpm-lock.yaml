@@ -4134,6 +4134,9 @@ importers:
       '@anthropic-ai/sdk':
         specifier: 'catalog:'
         version: 0.117.1(zod@4.3.6)
+      '@dxos/assistant':
+        specifier: workspace:*
+        version: link:../assistant
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../echo/echo
@@ -7974,6 +7977,9 @@ importers:
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
+      '@dxos/trajectory':
+        specifier: workspace:*
+        version: link:../../core/compute/trajectory
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
@@ -8221,6 +8227,9 @@ importers:
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
+      '@dxos/trajectory':
+        specifier: workspace:*
+        version: link:../../core/compute/trajectory
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
@@ -9745,6 +9754,9 @@ importers:
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
+      '@dxos/trajectory':
+        specifier: workspace:*
+        version: link:../../core/compute/trajectory
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types

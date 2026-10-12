@@ -19,6 +19,9 @@
     },
     {
       "path": "../../echo/echo"
+    },
+    {
+      "path": "../assistant"
     }
   ]
 }

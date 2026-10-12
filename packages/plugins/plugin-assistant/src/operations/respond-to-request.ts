@@ -6,9 +6,9 @@ import * as Effect from 'effect/Effect';
 
 import { SessionConfig } from '@dxos/ai';
 import * as Capability from '@dxos/app-framework/Capability';
+import { TrajectoryStore } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Feed, Filter } from '@dxos/echo';
-import { Message } from '@dxos/types';
+import { Database } from '@dxos/echo';
 
 import { AssistantCapabilities, AssistantOperation } from '#types';
 
@@ -24,7 +24,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.RespondToRequest>
         }
 
         const feed = yield* Database.load(chat.feed);
-        const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
+        const messages = yield* TrajectoryStore.messages(feed);
         const message = messages.find((message) => message.id === messageId);
         if (!message) {
           return { answered: false };

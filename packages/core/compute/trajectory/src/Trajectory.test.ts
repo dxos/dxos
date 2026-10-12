@@ -39,6 +39,7 @@ const payloads: Trajectory.Payload[] = [
   { _tag: 'hookBegin', hook: 'lint', kind: 'agentic', thread: anchor },
   { _tag: 'hookEnd', begin: anchor, blocks: [{ _tag: 'text', text: 'ok' }] },
   { _tag: 'compact', from: anchor, to: anchor, summary: [{ _tag: 'text', text: 'earlier work' }] },
+  { _tag: 'requestResolve', message: anchor, requestId: 'r1', resolution: { outcome: 'selected', optionId: 'allow' } },
   { _tag: 'rewind', from: anchor },
   { _tag: 'fork', from: { event: anchor } },
   { _tag: 'threadOpen', mode: 'fork', from: { event: anchor }, purpose: 'turn' },

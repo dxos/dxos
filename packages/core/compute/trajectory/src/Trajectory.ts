@@ -212,6 +212,19 @@ export const Compact = Schema.TaggedStruct('compact', {
 export type Compact = Schema.Schema.Type<typeof Compact>;
 
 /**
+ * A person's answer to a `request` block an agent asked in an earlier message; the message itself never changes.
+ */
+export const RequestResolve = Schema.TaggedStruct('requestResolve', {
+  message: EventId,
+  requestId: Schema.String,
+  resolution: Schema.Struct({
+    outcome: Schema.Literals(['selected', 'cancelled']),
+    optionId: Schema.optional(Schema.String),
+  }),
+});
+export type RequestResolve = Schema.Schema.Type<typeof RequestResolve>;
+
+/**
  * Discards the main thread from `from` on: its prompt entries and thread items go, the events stay in the log.
  */
 export const Rewind = Schema.TaggedStruct('rewind', {
@@ -306,6 +319,7 @@ export const Payload = Schema.Union([
   HookBegin,
   HookEnd,
   Compact,
+  RequestResolve,
   Rewind,
   Fork,
   ThreadOpen,

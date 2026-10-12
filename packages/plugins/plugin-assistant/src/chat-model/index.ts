@@ -7,3 +7,4 @@ export * from './presets.ts';
 export * from './chat-model.ts';
 export * from './prompt.ts';
 export * from './thread.ts';
+export * from './trajectory-view.ts';

@@ -12,7 +12,7 @@ import * as Skill from '@dxos/compute/Skill';
 import { Sequence } from '@dxos/conductor';
 import { Feed, type Type } from '@dxos/echo';
 import { Text } from '@dxos/schema';
-import { HasSubject, Message } from '@dxos/types';
+import { HasSubject } from '@dxos/types';
 
 // The single source for the plugin's schema list, loaded lazily by every `AssistantPlugin`
 // variant's schema module: these types ride heavy barrels (@dxos/assistant → @effect/ai →

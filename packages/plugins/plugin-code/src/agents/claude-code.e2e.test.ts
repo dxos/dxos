@@ -12,10 +12,11 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
-import { Chat } from '@dxos/assistant';
+import { Chat, TrajectoryStore } from '@dxos/assistant';
 import * as Trace from '@dxos/compute/Trace';
-import { Database, Feed, Filter, Ref } from '@dxos/echo';
+import { Database, Feed, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
+import { Durable } from '@dxos/trajectory';
 import { type ContentBlock, Message } from '@dxos/types';
 
 import { serve } from '../agent-helper/server.ts';
@@ -76,19 +77,28 @@ const summarize = (block: ContentBlock.Any): string => {
   }
 };
 
-const transcript = (feed: Feed.Feed) =>
-  Feed.query(feed, Filter.type(Message.Message)).run.pipe(
-    Effect.map((messages) => messages.flatMap((message) => message.blocks.map(summarize))),
+/** The thread's live items, answers to requests included. */
+const threadItems = (feed: Feed.Feed) =>
+  TrajectoryStore.load(feed, Durable.thread).pipe(
+    Effect.map(({ state }) => state.items.filter((item) => item.status !== 'cancelled' && item.status !== 'rewound')),
   );
+
+const transcript = (feed: Feed.Feed) =>
+  threadItems(feed).pipe(Effect.map((items) => items.flatMap((item) => item.blocks.map(summarize))));
 
 /** The first request block the turn parks, once it is there. */
 const findRequest = (feed: Feed.Feed) =>
   Effect.gen(function* () {
     while (true) {
-      const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
-      for (const message of messages) {
-        for (const block of message.blocks) {
+      for (const item of yield* threadItems(feed)) {
+        for (const block of item.blocks) {
           if (block._tag === 'request' && block.resolution === undefined) {
+            const message = Message.make({
+              id: item.id,
+              created: item.created,
+              sender: TrajectoryStore.toActor(item.sender),
+              blocks: [...item.blocks],
+            });
             return { message, block };
           }
         }
@@ -99,7 +109,7 @@ const findRequest = (feed: Feed.Feed) =>
 
 describe.runIf(ENABLED && (OAUTH_TOKEN || API_KEY) && CLAUDE)('Claude Code on this computer, end to end', () => {
   const TestLayer = Layer.mergeAll(
-    TestDatabaseLayer({ types: [Feed.Feed, Message.Message, Chat.Chat] }),
+    TestDatabaseLayer({ types: [Feed.Feed, Chat.Chat, ...TrajectoryStore.types] }),
     Layer.succeed(Trace.TraceService, { write: () => {} }),
   );
 

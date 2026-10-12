@@ -3,15 +3,16 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Order from 'effect/Order';
 
 import type { AiService } from '@dxos/ai';
+import { TrajectoryStore } from '@dxos/assistant';
 import type * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Feed, Filter, Obj } from '@dxos/echo';
+import { Database, Filter, Obj } from '@dxos/echo';
 import { type EntityNotFoundError } from '@dxos/echo/Error';
 import { type Space } from '@dxos/halo';
+import { EID } from '@dxos/keys';
 import { type RDF, type SemanticIndexError, extractDocFacts } from '@dxos/pipeline-rdf';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
@@ -104,10 +105,6 @@ const speakerOf = Effect.fnUntraced(function* (
   return participantDid ? memberSpeaker(members, participantDid) : ({ speaker: 'User' } satisfies Speaker);
 });
 
-/** Feed items in append order. */
-const inAppendOrder = <T extends Obj.Unknown>(items: readonly T[]): T[] =>
-  [...items].sort(Order.mapInput(Order.Number, Feed.getPosition));
-
 /** How many messages before the cursor an incremental read shows the extractor, so references in new messages resolve. */
 const CONTEXT_MESSAGES = 8;
 
@@ -128,8 +125,13 @@ const readChat = Effect.fnUntraced(function* (
   after?: string,
 ) {
   const feed = yield* Database.load(chat.feed);
-  const messages = inAppendOrder(yield* Feed.query(feed, Filter.type(Message.Message)).run);
-  const index = after === undefined ? -1 : messages.findIndex((message) => Obj.getURI(message) === after);
+  const messages = yield* TrajectoryStore.messages(feed);
+  // Messages read from the trajectory are not database objects, so their URIs are minted in the chat's space; a cursor
+  // stored before matches on the id it names.
+  const { db } = yield* Database.Service;
+  const uriOf = (message: Message.Message) => EID.make({ spaceId: db.spaceId, entityId: message.id });
+  const afterId = after === undefined ? undefined : EID.tryParse(after);
+  const index = afterId === undefined ? -1 : messages.findIndex((message) => message.id === EID.getEntityId(afterId));
   const start = index + 1;
   const participantId = ChatParticipant.get(chat);
   const participant = participantId ? (yield* Database.query(Filter.id(participantId)).run).at(0) : undefined;
@@ -145,7 +147,7 @@ const readChat = Effect.fnUntraced(function* (
     return {
       text,
       ...(yield* speakerOf(agent, members, message, participant)),
-      source: Obj.getURI(message),
+      source: uriOf(message),
       at: message.created,
     } satisfies Segment;
   });
@@ -172,7 +174,7 @@ const readChat = Effect.fnUntraced(function* (
     text: context.length === 0 ? lines : `${CONTEXT_HEADER}\n${contextLines}\n\n${NEW_HEADER}\n${lines}`,
     transcript: context.length === 0 ? lines : `${contextLines}\n${lines}`,
     segments,
-    through: last && Obj.getURI(last),
+    through: last && uriOf(last),
   };
 });
 

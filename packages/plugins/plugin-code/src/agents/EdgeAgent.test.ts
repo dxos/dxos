@@ -9,17 +9,18 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as RpcTest from 'effect/rpc/RpcTest';
 
-import { Chat } from '@dxos/assistant';
+import { Chat, TrajectoryStore } from '@dxos/assistant';
 import { type RemoteProcessManager } from '@dxos/compute-runtime';
 import * as Credential from '@dxos/compute/Credential';
 import * as Process from '@dxos/compute/Process';
 import * as Project from '@dxos/compute/Project';
 import * as Trace from '@dxos/compute/Trace';
-import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { AccessToken } from '@dxos/link';
 import { MANAGED_ACCESS_TOKEN } from '@dxos/protocols';
-import { type ContentBlock, Message, Outline, Repo, TaskSet } from '@dxos/types';
+import { Durable } from '@dxos/trajectory';
+import { type ContentBlock, Outline, Repo, TaskSet } from '@dxos/types';
 
 import { AgentError } from '../errors.ts';
 import * as EdgeAgent from './EdgeAgent.ts';
@@ -140,9 +141,14 @@ const setup = Effect.fn(function* (script: Script, mode?: string) {
   return { feed, chat, edge, options };
 });
 
+/** The conversation as the thread shows it, answers to requests included. */
 const transcript = (feed: Feed.Feed) =>
-  Feed.query(feed, Filter.type(Message.Message)).run.pipe(
-    Effect.map((messages) => messages.map((message) => [message.sender.role, ...message.blocks.map(summarize)])),
+  TrajectoryStore.load(feed, Durable.thread).pipe(
+    Effect.map(({ state }) =>
+      state.items
+        .filter((item) => item.status !== 'cancelled' && item.status !== 'rewound')
+        .map((item) => [item.sender.role, ...item.blocks.map(summarize)]),
+    ),
   );
 
 const summarize = (block: ContentBlock.Any): string => {
@@ -161,7 +167,7 @@ describe('EdgeAgent', () => {
     TestDatabaseLayer({
       types: [
         Feed.Feed,
-        Message.Message,
+        ...TrajectoryStore.types,
         Chat.Chat,
         Project.Project,
         Repo.Repo,

@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 
 import { type Delegation, type DelegationStrategy } from '@dxos/agent-runtime';
-import { AiContext } from '@dxos/assistant';
+import { AiContext, TrajectoryStore } from '@dxos/assistant';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import { OperationProcess } from '@dxos/compute-runtime';
@@ -271,6 +271,6 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
       ];
 
       const feed = yield* Database.load(chat.feed).pipe(Effect.orDie);
-      yield* Feed.append(feed, [Message.make({ sender: 'assistant', blocks })]);
+      yield* TrajectoryStore.appendMessages(feed, [Message.make({ sender: 'assistant', blocks })]);
     }),
 });
