@@ -179,53 +179,69 @@ export const steps = [
         value: `Give the project its repository: ${REPOSITORY}`,
         subtitle: 'Its agents check it out in their sandbox',
       });
+      // The Repo object stands for the GitHub repository; adding one has no UI of its own, so it is made here.
       const spaceId = await spaceIdOf(page);
       await page.evaluate(
-        async ({ spaceId, title, repository }) => {
+        async ({ spaceId, repository }) => {
           const [owner, name] = repository.split('/');
-          const db = dxos.spaces(spaceId).db;
-          const projects = await db.query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.project'))).run();
-          const project = projects.findLast((project) => project.name === title);
-          const { object: repo } = await composer.invoke(
-            'org.dxos.operation.space.addObject',
-            {
-              object: {
-                '@type': 'org.dxos.type.repo',
-                owner,
-                name,
-                'url': `https://github.com/${repository}`,
-                'defaultBranch': 'main',
+          const repos = await dxos
+            .spaces(spaceId)
+            .db.query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.repo')))
+            .run();
+          if (!repos.some((repo) => repo.owner === owner && repo.name === name)) {
+            await composer.invoke(
+              'org.dxos.operation.space.addObject',
+              {
+                object: {
+                  '@type': 'org.dxos.type.repo',
+                  owner,
+                  name,
+                  'url': `https://github.com/${repository}`,
+                  'defaultBranch': 'main',
+                },
               },
-            },
-            { spaceId },
-          );
-          dxos.Obj.update(project, (project) => {
-            project.repositories = [dxos.Ref.make(repo)];
-          });
+              { spaceId },
+            );
+          }
         },
-        { spaceId, title: PROJECT_TITLE, repository: REPOSITORY },
+        { spaceId, repository: REPOSITORY },
       );
-      await page
-        .locator('[data-testid="deck.plank"]')
-        .getByText(REPOSITORY.split('/')[1])
-        .first()
-        .waitFor({ timeout: 10_000 })
-        .catch(() => {});
+      await demo.click({ text: 'Checked out for coding agents that run in the cloud.', label: 'Repositories' });
+      const option = `[data-scope="combobox"][role="option"]:has-text("${REPOSITORY.split('/')[1]}")`;
+      await page.locator(option).first().waitFor({ timeout: 10_000 });
+      await demo.click({ selector: option, label: REPOSITORY });
+      await page.waitForTimeout(1_000);
+      await demo.press({ key: 'Escape' });
+      const attached = await page.evaluate(
+        async ({ spaceId, title }) => {
+          const projects = await dxos
+            .spaces(spaceId)
+            .db.query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.project')))
+            .run();
+          return (projects.findLast((project) => project.name === title)?.repositories ?? []).length;
+        },
+        { spaceId, title: PROJECT_TITLE },
+      );
+      if (attached !== 1) {
+        throw new Error(`the project has ${attached} repositories, not 1`);
+      }
       await page.waitForTimeout(LINGER);
     },
   },
   {
     name: 'Add a task',
     run: async ({ demo, page }) => {
-      await demo.caption({ value: 'Add a task', subtitle: TASK_TITLE });
       await demo.click({ selector: '[data-testid="projectsPlugin.tab.tasks"] >> nth=0', label: 'Tasks' });
-      await demo.fill({ selector: '[data-testid="taskList.edit.title"]', value: TASK_TITLE, label: 'Title' });
+      // The task editor sits at the bottom of the plank, under the caption banner.
+      await demo.clearCaption();
+      await demo.fill({ selector: '[data-testid="taskList.edit.title"] input', value: TASK_TITLE, label: 'Title' });
       await demo.fill({
         selector: '[data-testid="taskList.edit.description"] .cm-content',
         value: TASK_DESCRIPTION,
         label: 'Description',
       });
       await demo.click({ selector: '[data-testid="taskList.edit.save"]', label: 'Save' });
+      await demo.caption({ value: 'Add a task', subtitle: TASK_TITLE });
       await page
         .locator(`[data-testid="taskList.item"]:has-text("${TASK_TITLE}")`)
         .first()
