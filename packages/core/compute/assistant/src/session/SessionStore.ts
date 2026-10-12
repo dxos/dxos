@@ -16,7 +16,7 @@ import * as TrajectoryStore from './TrajectoryStore.ts';
  * The pending (queued, un-acked) portion of a session's feed state.
  */
 export interface PendingState {
-  /** Queued, unconsumed input messages in feed order. */
+  /** Input messages owed a reply: those whose turn died mid-way, then the queue in feed order. */
   pendingMessages: Message.Message[];
   /** Alarms that have neither fired nor been cancelled, earliest `wakeAt` first. */
   pendingAlarms: Alarm.Alarm[];
@@ -48,10 +48,18 @@ export class SessionStore {
       const { state: session } = yield* TrajectoryStore.load(feed, Durable.session);
       const { state: thread } = yield* TrajectoryStore.load(feed, Durable.thread);
       const queued = new Map(thread.items.map((item) => [item.id, item]));
-      const pendingMessages = session.queue.flatMap((id) => {
-        const item = queued.get(id);
-        return item ? [toQueuedMessage(item)] : [];
-      });
+      // A message whose turn never ended (its process died mid-turn) is owed a reply, so it stays pending.
+      const open = new Set(session.turns);
+      const interrupted = thread.items.filter(
+        (item) => item.status === 'consumed' && item.thread !== undefined && open.has(item.thread),
+      );
+      const pendingMessages = [
+        ...interrupted.map(toQueuedMessage),
+        ...session.queue.flatMap((id) => {
+          const item = queued.get(id);
+          return item ? [toQueuedMessage(item)] : [];
+        }),
+      ];
       const pendingAlarms = session.alarms
         .map((alarm) =>
           Obj.make(Alarm.Alarm, { id: alarm.id, wakeAt: alarm.wakeAt, message: alarm.message, created: '' }),
@@ -79,7 +87,12 @@ export class SessionStore {
     return TrajectoryStore.append(feed, [
       Trajectory.make({
         id: message.id,
-        payload: { _tag: 'message', blocks: message.blocks, attachments: message.attachments },
+        payload: {
+          _tag: 'message',
+          blocks: message.blocks,
+          attachments: message.attachments,
+          properties: message.properties,
+        },
         sender: { ...Legacy.toSender(message.sender), role: 'user' },
         created: message.created,
       }),
@@ -87,8 +100,9 @@ export class SessionStore {
   }
 
   /**
-   * Retires a queued item without a turn: an alarm fires, a message is cancelled. A message a turn consumed is
-   * already out of the queue, so acking it after the turn writes nothing.
+   * Retires a queued item without a turn: an alarm fires, a message is cancelled, and a turn that died consuming a
+   * message is closed as interrupted. A message whose turn ended is already out of the queue, so acking it writes
+   * nothing.
    */
   ack(feed: Feed.Feed, item: Message.Message | Alarm.Alarm): Effect.Effect<void, never, Database.Service> {
     return Effect.gen(function* () {
@@ -103,6 +117,8 @@ export class SessionStore {
         yield* TrajectoryStore.append(feed, [
           Trajectory.make({ payload: { _tag: 'promptCancel', message: item.id }, sender: { role: 'assistant' } }),
         ]);
+      } else {
+        yield* TrajectoryStore.resumeInterrupted(feed, { message: item.id });
       }
     });
   }

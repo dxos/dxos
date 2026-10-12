@@ -4,10 +4,11 @@
 
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
-import { Trajectory } from '@dxos/trajectory';
+import { Durable, Trajectory } from '@dxos/trajectory';
 import { Message } from '@dxos/types';
 
 import * as Alarm from './Alarm.ts';
@@ -83,6 +84,56 @@ describe('SessionStore', () => {
         const before = (yield* TrajectoryStore.read(feed)).length;
         yield* store.ack(feed, queued);
         expect((yield* TrajectoryStore.read(feed)).length).toBe(before);
+      }).pipe(Effect.provide(TestLayer)),
+    );
+    it.effect('a message whose turn never ended is pending again, and redelivering it closes that turn', () =>
+      Effect.gen(function* () {
+        const { db } = yield* Database.Service;
+        const feed = db.add(Feed.make());
+        const store = new SessionStore();
+        const queued = yield* store.enqueueMessage(feed, makeMessage('question'));
+        const dead = yield* TrajectoryStore.beginTurn(feed);
+        yield* TrajectoryStore.append(feed, TrajectoryStore.promptEvents(queued, dead, { message: queued.id }));
+
+        const { pendingMessages } = yield* store.loadPending(feed);
+        expect(pendingMessages.map((message) => message.id)).toEqual([queued.id]);
+
+        expect(yield* TrajectoryStore.resumeInterrupted(feed, { message: queued.id })).toBe(true);
+        expect((yield* store.loadPending(feed)).pendingMessages).toEqual([]);
+        expect(texts((yield* store.loadState(feed)).history)).toEqual(['question']);
+        expect(yield* TrajectoryStore.resumeInterrupted(feed, { message: queued.id })).toBe(false);
+      }).pipe(Effect.provide(TestLayer)),
+    );
+
+    it.effect('an interrupted turn answering a queued message stays open, so the message stays owed', () =>
+      Effect.gen(function* () {
+        const { db } = yield* Database.Service;
+        const feed = db.add(Feed.make());
+        const store = new SessionStore();
+        const queued = yield* store.enqueueMessage(feed, makeMessage('question'));
+        const source = { message: queued.id };
+        const turn = yield* TrajectoryStore.beginTurn(feed);
+        yield* TrajectoryStore.append(feed, TrajectoryStore.promptEvents(queued, turn, source));
+        yield* TrajectoryStore.endTurn(feed, turn, Exit.interrupt(), { source });
+
+        const { pendingMessages } = yield* store.loadPending(feed);
+        expect(pendingMessages.map((message) => message.id)).toEqual([queued.id]);
+      }).pipe(Effect.provide(TestLayer)),
+    );
+
+    it.effect('acking a message whose turn never ended closes the turn', () =>
+      Effect.gen(function* () {
+        const { db } = yield* Database.Service;
+        const feed = db.add(Feed.make());
+        const store = new SessionStore();
+        const queued = yield* store.enqueueMessage(feed, makeMessage('stopped'));
+        const dead = yield* TrajectoryStore.beginTurn(feed);
+        yield* TrajectoryStore.append(feed, TrajectoryStore.promptEvents(queued, dead, { message: queued.id }));
+        yield* store.ack(feed, queued);
+
+        expect((yield* store.loadPending(feed)).pendingMessages).toEqual([]);
+        const { state } = yield* TrajectoryStore.load(feed, Durable.session);
+        expect(state.turns).toEqual([]);
       }).pipe(Effect.provide(TestLayer)),
     );
   });

@@ -205,7 +205,11 @@ export class Session extends Resource {
    * `TrajectoryStore.promptEvents`); any later user-role output is a note from the system (e.g. a tool fault), not
    * something a person typed.
    */
-  #outputEvents(message: Message.Message, turn: Trajectory.EventId, prompt: { source?: TurnSource; written: boolean }) {
+  #outputEvents(
+    message: Message.Message,
+    turn: Trajectory.EventId,
+    prompt: { source?: TurnSource; resumed: boolean; written: boolean },
+  ) {
     if (message.sender.role !== 'user') {
       return [toEvent(message, turn)];
     }
@@ -213,7 +217,7 @@ export class Session extends Resource {
       return [toEvent(message, turn, { role: 'event', name: 'system' })];
     }
     prompt.written = true;
-    return TrajectoryStore.promptEvents(message, turn, prompt.source);
+    return TrajectoryStore.promptEvents(message, turn, prompt.source, { resumed: prompt.resumed });
   }
 
   /**
@@ -229,9 +233,11 @@ export class Session extends Resource {
       );
 
       yield* Trace.emitRequestPhase('loading-history');
+      // Before the history is read, so a redelivered prompt's interrupted turn is part of it.
+      const resumed = yield* TrajectoryStore.resumeInterrupted(this._feed, params.source);
       const history = yield* TrajectoryStore.history(this._feed);
       const turn = yield* this.#beginTurn(params.model);
-      const prompt = { source: params.source, written: false };
+      const prompt = { source: params.source, resumed, written: false };
       markWork('session.history-loaded');
       const skills = this.context.getSkills();
       const objects = this.context.getObjects();
@@ -358,11 +364,13 @@ export class Session extends Resource {
       }
       return output;
     }).pipe(
-      // Every turn that began ends, so its thread merges into the conversation even when the request failed.
+      // A turn that began ends, so its thread merges into the conversation even when the request failed.
       Effect.onExit((exit) => {
         const turn = this.#turn;
         this.#turn = undefined;
-        return turn !== undefined ? TrajectoryStore.endTurn(this._feed, turn, exit) : Effect.void;
+        return turn !== undefined
+          ? TrajectoryStore.endTurn(this._feed, turn, exit, { source: params.source })
+          : Effect.void;
       }),
       Effect.provideService(Database.Service, Context.get(this._runtime, Database.Service)),
       Effect.provide(
@@ -461,7 +469,12 @@ const connectMcpServers = (
 const toEvent = (message: Message.Message, thread?: Trajectory.EventId, sender?: Trajectory.Sender): Trajectory.Event =>
   Trajectory.make({
     id: message.id,
-    payload: { _tag: 'message', blocks: message.blocks, attachments: message.attachments },
+    payload: {
+      _tag: 'message',
+      blocks: message.blocks,
+      attachments: message.attachments,
+      properties: message.properties,
+    },
     sender: sender ?? Legacy.toSender(message.sender),
     thread,
     created: message.created,

@@ -19,7 +19,7 @@ import * as Tracer from 'effect/Tracer';
 import { expect } from 'vitest';
 
 import { LanguageModelFixture } from '@dxos/ai/testing';
-import { type HarnessControlRpcs, SessionLink, TrajectoryStore } from '@dxos/assistant';
+import { type HarnessControlRpcs, TrajectoryStore } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { OperationProcess } from '@dxos/compute-runtime';
@@ -32,11 +32,12 @@ import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import * as Trace from '@dxos/compute/Trace';
-import { Annotation, Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Annotation, Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { makeRecordingTracer } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
+import { Trajectory } from '@dxos/trajectory';
 import { ContentBlock, Message, Organization } from '@dxos/types';
 
 import { AssistantTestLayer, waitForMessage } from '../testing/index.ts';
@@ -243,7 +244,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
         yield* session.submitPrompt('What is the capital of France?');
         yield* session.waitForCompletion();
 
-        const messages = yield* Feed.query(session.feed, Filter.type(Message.Message)).run;
+        const messages = yield* TrajectoryStore.messages(session.feed);
         const text = messages.map(Message.extractText).join('\n');
         expect(text.toLocaleLowerCase()).toContain('paris');
       },
@@ -386,7 +387,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
         yield* session.submitPrompt('What country did I just ask you about? Reply with just the country name.');
         yield* session.waitForCompletion();
 
-        const messages = yield* Feed.query(session.feed, Filter.type(Message.Message)).run;
+        const messages = yield* TrajectoryStore.messages(session.feed);
         const text = messages.map(Message.extractText).join('\n');
         expect(text.toLocaleLowerCase()).toContain('paris');
         expect(text.toLocaleLowerCase()).toContain('france');
@@ -499,7 +500,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
   // Placed last so it does not perturb the shared deterministic ID stream of the tests above
   // (memoized conversations are keyed per file and depend on prior execution order).
   it.effect(
-    'forks a conversation into a new feed and replays source history via a SessionLink',
+    'forks a conversation into a new feed and replays source history via a fork event',
     Effect.fnUntraced(
       function* (_) {
         // Original conversation.
@@ -508,32 +509,26 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
         yield* source.waitForCompletion();
 
         // Branch point: the last message of the source conversation.
-        const sourceMessages = (yield* Feed.query(source.feed, Filter.type(Message.Message)).run).filter(
-          Obj.instanceOf(Message.Message),
-        );
-        const lastMessage = sourceMessages.sort((a, b) => a.created.localeCompare(b.created)).at(-1);
+        const lastMessage = (yield* TrajectoryStore.messages(source.feed)).at(-1);
         if (!lastMessage) {
           return yield* Effect.die(new Error('source conversation produced no messages'));
         }
 
-        // Fork: a fresh session whose feed links back to the source via a SessionLink (mirrors the
+        // Fork: a fresh session whose feed starts with a `fork` event naming the source (mirrors the
         // ForkChat operation). The forked agent has no messages of its own, so a context-dependent
         // follow-up only resolves if the source history is replayed through the link.
         const fork = yield* AgentService.createSession();
-        yield* Feed.append(fork.feed, [
-          Obj.make(SessionLink.SessionLink, {
-            feedRef: Ref.make(source.feed),
-            messageId: lastMessage.id,
+        yield* TrajectoryStore.append(fork.feed, [
+          Trajectory.make({
+            payload: { _tag: 'fork', from: { feed: Ref.make(source.feed), event: lastMessage.id } },
+            sender: { role: 'event', name: 'fork' },
           }),
         ]);
 
         yield* fork.submitPrompt('What country did I just ask you about? Reply with just the country name.');
         yield* fork.waitForCompletion();
 
-        const forkText = (yield* Feed.query(fork.feed, Filter.type(Message.Message)).run)
-          .filter(Obj.instanceOf(Message.Message))
-          .map(Message.extractText)
-          .join('\n');
+        const forkText = (yield* TrajectoryStore.messages(fork.feed)).map(Message.extractText).join('\n');
         expect(forkText.toLocaleLowerCase()).toContain('france');
       },
       Effect.provide(TestLayer()),
@@ -574,7 +569,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
         const processes = yield* processManager.list({ target, key: AGENT_PROCESS_KEY });
         expect(processes.some((process) => String(process.pid) !== firstPid)).toBe(true);
 
-        const messages = yield* Feed.query(session.feed, Filter.type(Message.Message)).run;
+        const messages = yield* TrajectoryStore.messages(session.feed);
         const text = messages.map(Message.extractText).join('\n');
         expect(text.toLocaleLowerCase()).toContain('france');
       },
@@ -638,7 +633,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
         yield* session.waitForCompletion();
 
         expect(pingCount).toBe(1);
-        const messages = yield* Feed.query(session.feed, Filter.type(Message.Message)).run;
+        const messages = yield* TrajectoryStore.messages(session.feed);
         expect(messages.map(Message.extractText).join('\n').toLocaleLowerCase()).toContain('pong');
       },
       Effect.provide(TestLayer()),
@@ -680,7 +675,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
 
         yield* resumed.submitPrompt('What is the capital of France? Reply with just the city name.');
         yield* resumed.waitForCompletion();
-        const messages = yield* Feed.query(resumed.feed, Filter.type(Message.Message)).run;
+        const messages = yield* TrajectoryStore.messages(resumed.feed);
         expect(messages.map(Message.extractText).join('\n').toLocaleLowerCase()).toContain('paris');
 
         // Let the stalled tool finish so the blocked teardown can complete with the test.

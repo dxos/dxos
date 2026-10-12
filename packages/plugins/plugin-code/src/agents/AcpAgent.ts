@@ -208,6 +208,7 @@ export const runTurn = (
     const cwd = yield* options.workspace(chat);
     const resume = sessionIdOf(chat, options.id);
     const produced: Message.Message[] = [];
+    const resumed = yield* TrajectoryStore.resumeInterrupted(feed, request.source);
     const turn = yield* TrajectoryStore.beginTurn(feed, { model: request.model });
     const append = (messages: Message.Message[]) =>
       Effect.gen(function* () {
@@ -251,7 +252,7 @@ export const runTurn = (
       // The turn consumes a queued prompt rather than copying it; a direct one is recorded and consumed.
       const prompt = Message.make({ sender: 'user', blocks: promptBlocks(request.prompt) });
       produced.push(prompt);
-      yield* TrajectoryStore.append(feed, TrajectoryStore.promptEvents(prompt, turn, request.source));
+      yield* TrajectoryStore.append(feed, TrajectoryStore.promptEvents(prompt, turn, request.source, { resumed }));
 
       const events = yield* Queue.unbounded<TurnEvent>();
       const projection = new Projection.TurnProjection();
@@ -324,7 +325,7 @@ export const runTurn = (
     }).pipe(
       // However the turn ends, its questions can no longer be answered, and the turn closes into the conversation.
       Effect.ensuring(Effect.suspend(() => cancelOpenRequests(feed, produced))),
-      Effect.onExit((exit) => TrajectoryStore.endTurn(feed, turn, exit)),
+      Effect.onExit((exit) => TrajectoryStore.endTurn(feed, turn, exit, { source: request.source })),
       Effect.ensuring(options.sessions.release(chat.id)),
     );
   });

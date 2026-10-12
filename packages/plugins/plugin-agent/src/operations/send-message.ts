@@ -137,13 +137,14 @@ const roleIn = (relay: Relay.Relay, party: Obj.Unknown): 'recipient' | 'requeste
       : undefined;
 
 /** Records the message in a Composer chat, where whoever has the chat open reads it. */
-const appendToChat = (agent: Agent.Agent, chat: Chat.Chat, text: string) =>
+const appendToChat = (agent: Agent.Agent, chat: Chat.Chat, text: string, properties?: Record<string, unknown>) =>
   Effect.gen(function* () {
     const feed = yield* Database.load(chat.feed).pipe(Effect.orDie);
     yield* TrajectoryStore.appendMessages(feed, [
       Message.make({
         sender: { role: 'assistant', name: agent.name },
         blocks: [{ _tag: 'text', text }],
+        properties,
       }),
     ]);
   });
@@ -180,7 +181,7 @@ const postToChannel = (
       return { delivered: false, reason: sent.reason } satisfies Posted;
     }
     const chat = yield* ensureChannelChat({ agent, channel, thread }).pipe(Effect.orDie);
-    yield* appendToChat(agent, chat, text);
+    yield* appendToChat(agent, chat, text, sent.properties);
     return { delivered: true, chat } satisfies Posted;
   }).pipe(Effect.orDie);
 

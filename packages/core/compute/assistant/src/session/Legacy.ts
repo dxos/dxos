@@ -122,7 +122,12 @@ const fromMessage = (message: Message.Message, reachable: ReadonlySet<string>): 
   const sender = toSender(message.sender);
   const content = Trajectory.make({
     id: message.id,
-    payload: { _tag: 'message', blocks: message.blocks, attachments: message.attachments },
+    payload: {
+      _tag: 'message',
+      blocks: message.blocks,
+      attachments: message.attachments,
+      properties: message.properties,
+    },
     sender,
     created: message.created,
   });

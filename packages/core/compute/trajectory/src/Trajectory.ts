@@ -50,6 +50,11 @@ export const Message = Schema.TaggedStruct('message', {
   blocks: Schema.Array(ContentBlock.Any),
   /** Files or objects attached alongside the blocks, as on `Message.Message`. */
   attachments: Schema.optional(Schema.Array(TypesMessage.Attachment)),
+  /**
+   * `Message.Message`'s properties, carried so a message converts both ways; a channel backend's post receipt lives
+   * here (e.g. `discord.messageId`), which tells a mirror the message is already posted.
+   */
+  properties: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
 });
 export type Message = Schema.Schema.Type<typeof Message>;
 

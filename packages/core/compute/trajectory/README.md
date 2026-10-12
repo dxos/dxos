@@ -45,6 +45,12 @@ turn's prompt does not change under it.
   (`trajectory_checkpoint`), holding the encoded state, the head event and the event count. A load reads only the
   events after the head in local order and folds them onto the stored state. If the head is gone or the state no
   longer decodes, it refolds the whole feed.
+- **An interrupted turn is redelivered.** A turn consumes its queued prompt when it begins. If the turn is
+  interrupted (its process stops or restarts), it writes no `turnEnd` and stays open, and
+  `SessionStore.loadPending` lists the prompt as pending again. A rehydrated process redelivers it:
+  `resumeInterrupted` closes the dead turn as interrupted, so its partial output joins the conversation, and the new
+  turn does not consume the prompt a second time. A freshly spawned process, which is what the user's stop leads to,
+  acks what it inherits instead, and acking closes the turn the same way.
 - **A turn is one batched append.** Producers write a turn's events through `TrajectoryStore.turn` or
   `beginTurn` → `promptEvents` → `appendMessages` → `endTurn`. Each call is a single `Feed.append`, so a turn costs a
   handful of writes however many events it holds.

@@ -45,6 +45,7 @@ export const messages = (feed: Feed.Feed): Effect.Effect<Message.Message[], neve
               sender: toActor(event.sender),
               blocks: [...event.payload.blocks],
               attachments: event.payload.attachments ? [...event.payload.attachments] : undefined,
+              properties: event.payload.properties,
             }),
           ]
         : [],
@@ -181,7 +182,12 @@ export const appendMessages = (
     messages.flatMap((message) => {
       const event = Trajectory.make({
         id: message.id,
-        payload: { _tag: 'message', blocks: message.blocks, attachments: message.attachments },
+        payload: {
+          _tag: 'message',
+          blocks: message.blocks,
+          attachments: message.attachments,
+          properties: message.properties,
+        },
         sender: Legacy.toSender(message.sender),
         thread: options.thread,
         created: message.created,
@@ -234,14 +240,23 @@ export const promptEvents = (
   prompt: Message.Message,
   turn: Trajectory.EventId,
   source?: TurnSource,
+  { resumed = false }: { resumed?: boolean } = {},
 ): Trajectory.Event[] => {
+  if (resumed) {
+    return [];
+  }
   if (source && 'message' in source) {
     return [consume(source.message, turn)];
   }
   const event = (thread?: Trajectory.EventId, sender?: Trajectory.Sender) =>
     Trajectory.make({
       id: prompt.id,
-      payload: { _tag: 'message', blocks: prompt.blocks, attachments: prompt.attachments },
+      payload: {
+        _tag: 'message',
+        blocks: prompt.blocks,
+        attachments: prompt.attachments,
+        properties: prompt.properties,
+      },
       sender: sender ?? Legacy.toSender(prompt.sender),
       thread,
       created: prompt.created,
@@ -259,24 +274,71 @@ const consume = (message: Trajectory.EventId, thread: Trajectory.EventId): Traje
   Trajectory.make({ payload: { _tag: 'promptConsume', message }, sender: { role: 'assistant' }, thread });
 
 /**
+ * The turn that consumed `message` and never ended: its writer died mid-turn, so the message is still owed a reply.
+ */
+export const interruptedTurn = (
+  feed: Feed.Feed,
+  message: Trajectory.EventId,
+): Effect.Effect<Trajectory.EventId | undefined, never, Database.Service> =>
+  Effect.gen(function* () {
+    const { state: session } = yield* load(feed, Durable.session);
+    const { state: thread } = yield* load(feed, Durable.thread);
+    const item = thread.items.find((item) => item.id === message);
+    return item?.status === 'consumed' && item.thread !== undefined && session.turns.includes(item.thread)
+      ? item.thread
+      : undefined;
+  });
+
+/**
+ * Prepares a turn that redelivers `source`: when the message was consumed by a turn that never ended, closes that
+ * turn as interrupted (its partial output joins the conversation) and returns true, so the new turn does not consume
+ * the message again.
+ */
+export const resumeInterrupted = (
+  feed: Feed.Feed,
+  source?: TurnSource,
+): Effect.Effect<boolean, never, Database.Service> =>
+  Effect.gen(function* () {
+    const dead = source && 'message' in source ? yield* interruptedTurn(feed, source.message) : undefined;
+    if (dead === undefined) {
+      return false;
+    }
+    yield* append(feed, [interrupted(dead)]);
+    return true;
+  });
+
+const interrupted = (begin: Trajectory.EventId): Trajectory.Event =>
+  Trajectory.make({
+    payload: { _tag: 'turnEnd', begin, finishReason: 'other', error: 'interrupted' },
+    sender: { role: 'assistant' },
+  });
+
+/**
  * Closes a turn, recording how it ended; a stop the reader asked for is not an error. Its thread merges into the
- * conversation whether or not it succeeded.
+ * conversation whether or not it succeeded. An interrupted turn answering a queued message stays open: its process
+ * redelivers the message after a restart, or closes the turn when it acks the message after a stop.
  */
 export const endTurn = (
   feed: Feed.Feed,
   begin: Trajectory.EventId,
   exit: Exit.Exit<unknown, unknown>,
-): Effect.Effect<void, never, Database.Service> =>
-  append(feed, [
-    Trajectory.make({
-      payload: Exit.isSuccess(exit)
-        ? { _tag: 'turnEnd', begin, finishReason: 'stop' }
-        : Cause.hasInterrupts(exit.cause)
-          ? { _tag: 'turnEnd', begin, finishReason: 'other', error: 'interrupted' }
-          : { _tag: 'turnEnd', begin, finishReason: 'error', error: Cause.pretty(exit.cause) },
-      sender: { role: 'assistant' },
-    }),
+  { source }: { source?: TurnSource } = {},
+): Effect.Effect<void, never, Database.Service> => {
+  const interruptedExit = Exit.isFailure(exit) && Cause.hasInterrupts(exit.cause);
+  if (interruptedExit && source && 'message' in source) {
+    return Effect.void;
+  }
+  return append(feed, [
+    interruptedExit
+      ? interrupted(begin)
+      : Trajectory.make({
+          payload: Exit.isSuccess(exit)
+            ? { _tag: 'turnEnd', begin, finishReason: 'stop' }
+            : { _tag: 'turnEnd', begin, finishReason: 'error', error: Cause.pretty(exit.cause) },
+          sender: { role: 'assistant' },
+        }),
   ]);
+};
 
 /**
  * Runs `body` as one turn of the conversation: opens it, puts `prompt` in (see {@link promptEvents}), hands `body`
@@ -291,9 +353,10 @@ export const turn = <A, E, R>(
   ) => Effect.Effect<A, E, R>,
 ): Effect.Effect<A, E, R | Database.Service> =>
   Effect.gen(function* () {
+    const resumed = yield* resumeInterrupted(feed, source);
     const begin = yield* beginTurn(feed, { model });
-    yield* append(feed, promptEvents(prompt, begin, source));
+    yield* append(feed, promptEvents(prompt, begin, source, { resumed }));
     return yield* body((messages) => appendMessages(feed, messages, { thread: begin })).pipe(
-      Effect.onExit((exit) => endTurn(feed, begin, exit)),
+      Effect.onExit((exit) => endTurn(feed, begin, exit, { source })),
     );
   });
