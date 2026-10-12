@@ -24,6 +24,7 @@ import type * as Plugin from '@dxos/app-framework/Plugin';
 import * as PluginAssetCache from '@dxos/app-framework/PluginAssetCache';
 import * as Registry from '@dxos/app-framework/Registry';
 import * as UrlLoader from '@dxos/app-framework/UrlLoader';
+import { LEADER_LOCK_KEY } from '@dxos/client/lock-key';
 // Narrow entry: the barrel also re-exports auth and the ws muxer, neither of which the
 // boot path uses.
 import { EdgeHttpClient } from '@dxos/edge-client/http';
@@ -57,6 +58,7 @@ import {
   initializeObservability,
   isFalse,
   isTrue,
+  prespawnWorker,
   readBootAssetFailure,
   registerPreloadErrorHandler,
   reportBootAssetFailure,
@@ -199,6 +201,12 @@ const createAssetCache = async (isPwa: boolean, isTauri: boolean): Promise<Plugi
   return PluginAssetCache.noop();
 };
 
+const createDedicatedWorker = () =>
+  new Worker(new URL('./workers/dedicated-worker.ts', import.meta.url), {
+    type: 'module',
+    name: 'dxos-client-worker',
+  });
+
 const main = async () => {
   if (import.meta.env?.DEV) {
     log('composer main: main() running', { bootId: BOOT_ID });
@@ -226,6 +234,9 @@ const main = async () => {
   const profilerParam = url.searchParams.get(PARAM_PROFILER);
   const profilerEnabled = profilerParam === null ? Boolean(import.meta.env?.DEV) : isTrue(profilerParam);
   startupMark('main:start');
+  // Spawned ahead of the imports and config below, so the worker's script evaluates in parallel
+  // with them instead of after `client.initialize` elects this tab; config reaches it on `init`.
+  const prespawnedWorker = prespawnWorker({ create: createDedicatedWorker, leaderLockKey: LEADER_LOCK_KEY });
   const profiler = profilerEnabled ? startupProfiler() : undefined;
 
   // Registered before any lazy route can be reached, since a chunk missing after a deploy fails
@@ -512,6 +523,7 @@ const main = async () => {
     ? defs.Runtime_Client_ServicesMode.HOST
     : defs.Runtime_Client_ServicesMode.DEDICATED_WORKER;
   if (useLocalServices) {
+    prespawnedWorker.dispose();
     // Echo runs in this page, and its Repo constructs Subduction; a worker-mode tab never does.
     await initEchoHostWasm();
   }
@@ -532,11 +544,7 @@ const main = async () => {
     config.values,
   );
   const services = await createClientServices(config, {
-    createDedicatedWorker: () =>
-      new Worker(new URL('./workers/dedicated-worker.ts', import.meta.url), {
-        type: 'module',
-        name: 'dxos-client-worker',
-      }),
+    createDedicatedWorker: () => prespawnedWorker.take() ?? createDedicatedWorker(),
     createCoordinatorWorker: () =>
       new SharedWorker(new URL('./workers/coordinator-worker.ts', import.meta.url), {
         type: 'module',
@@ -569,7 +577,11 @@ const main = async () => {
   // has to not reject unhandled.
   performance.mark('milestone:client-initialize:start');
   const client = new Client({ config, services });
-  void client.initialize().catch((err) => log.error('client services failed to open', { error: err }));
+  void client
+    .initialize()
+    .catch((err) => log.error('client services failed to open', { error: err }))
+    // A follower tab never takes the worker, which would otherwise hold its place on the storage lock.
+    .finally(() => prespawnedWorker.dispose());
 
   // Started here rather than from plugin-debug, which a plain local `serve` leaves disabled —
   // tying the flag to it would make the flag silently do nothing.
