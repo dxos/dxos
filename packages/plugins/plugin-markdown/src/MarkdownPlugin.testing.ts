@@ -2,8 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Plugin from '@dxos/app-framework/Plugin';
+
+import * as Capabilities from '#capabilities';
 import { meta as pluginMeta } from '#meta';
-import { MarkdownPlugin } from '#plugin';
 
 /** Plugin metadata, available without loading the plugin body. */
 export const meta = pluginMeta;
@@ -13,4 +15,4 @@ export const meta = pluginMeta;
  * under vite-dev, where webkit cannot reliably settle the lazy stub's dynamic import (see
  * `@dxos/plugin-testing/src/core.ts`).
  */
-export const make = MarkdownPlugin;
+export const make = Plugin.fromCapabilities(meta, Capabilities);

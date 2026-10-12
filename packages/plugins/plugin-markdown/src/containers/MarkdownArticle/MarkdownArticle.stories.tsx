@@ -37,9 +37,10 @@ import { Text } from '@dxos/schema';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { Organization, Person } from '@dxos/types';
 
-import { MarkdownPlugin } from '#plugin';
 import { translations } from '#translations';
 import { Markdown, MarkdownCapabilities } from '#types';
+
+import * as MarkdownPlugin from '../../MarkdownPlugin.testing.ts';
 
 random.seed(1);
 
@@ -191,7 +192,7 @@ const meta = {
 
           // Contributes the versioning-state atom consumed by useVersioning.
           SpacePlugin({}),
-          MarkdownPlugin(),
+          MarkdownPlugin.make(),
           PreviewPlugin.make(),
         ],
       }),

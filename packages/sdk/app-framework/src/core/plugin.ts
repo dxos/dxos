@@ -597,6 +597,53 @@ export function lazy<T = void>(meta: Meta, loader: LazyLoader<T>): ((options: T)
  */
 export const isLazy = (plugin: Plugin): boolean => LazyTag in plugin;
 
+/** A plugin's capability barrel: the module namespace its {@link Capability.Module}s are exported from. */
+export type CapabilityBarrel = Readonly<Record<string, unknown>>;
+
+/**
+ * Builds a plugin from every {@link Capability.Module} a capability barrel exports, so the barrel is
+ * the single list of a plugin's modules. Non-module exports (helpers, values) are skipped.
+ */
+export const fromCapabilities = <T = void>(meta: Meta, barrel: CapabilityBarrel): PluginFactory<T> =>
+  make(
+    Object.values(barrel)
+      .filter(Capability.isModule)
+      .reduce((builder, module) => addModule<T>(module)(builder), define<T>(meta)),
+  );
+
+/** Authoring input for {@link config}: the `dx.config.ts` data plus the loader of its capability barrel. */
+export type ConfigOptions = Config2.Config & {
+  /** Called on first enable only, so tooling that reads the config never loads plugin code. */
+  capabilities: () => Promise<CapabilityBarrel>;
+};
+
+/** A plugin's `dx.config.ts` default export: its config data, runtime {@link Meta} and lazy factory. */
+export type PluginConfig<T = void> = Config2.Config & {
+  meta: Meta;
+  make: PluginFactory<T>;
+};
+
+/**
+ * Defines a plugin entirely from its `dx.config.ts`.
+ *
+ * @example
+ * ```ts
+ * // dx.config.ts
+ * export default Plugin.config({
+ *   plugin: { key: 'org.dxos.plugin.markdown', name: 'Markdown' },
+ *   capabilities: () => import('#capabilities'),
+ * });
+ * ```
+ */
+export const config = <T = void>({ capabilities, ...data }: ConfigOptions): PluginConfig<T> => {
+  const meta = getMetaFromConfig(data);
+  return {
+    ...data,
+    meta,
+    make: lazy<T>(meta, () => capabilities().then((barrel) => ({ default: fromCapabilities<T>(meta, barrel) }))),
+  };
+};
+
 /**
  * Tagged error for failures during lazy plugin resolution. `context.id` is
  * the lazy plugin's `meta.profile.key`; `context.reason` discriminates the failure

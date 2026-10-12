@@ -9,7 +9,7 @@ import { Type } from '@dxos/echo';
 
 import { Markdown, MarkdownOperation } from '#types';
 
-import * as MarkdownPlugin from './MarkdownPlugin.ts';
+import * as MarkdownPlugin from '../dx.config.ts';
 
 describe('MarkdownPlugin in workerd', () => {
   test('activates headless and contributes operations and types', async ({ expect }) => {

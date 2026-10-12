@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Config2 } from '@dxos/app-framework/config';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { trim } from '@dxos/util';
 
-export default Config2.make({
+const config = Plugin.config({
   plugin: {
     key: 'org.dxos.plugin.markdown',
     name: 'Markdown',
@@ -34,4 +34,9 @@ export default Config2.make({
     ],
     tags: ['beta'],
   },
+  capabilities: () => import('#capabilities'),
 });
+
+export const { meta, make } = config;
+
+export default config;

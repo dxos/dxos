@@ -91,8 +91,11 @@ export const extractPlugins = (rootPath: string, packages: readonly PackageLike[
 };
 
 const tryExtract = (rootPath: string, pkg: PackageLike): PluginRecord | null => {
-  const metaPath = join(rootPath, pkg.path, 'src', 'meta.ts');
-  if (!existsSync(metaPath)) {
+  // A plugin defined by `Plugin.config` has no `src/meta.ts`; its `dx.config.ts` carries the metadata.
+  const metaPath = [join(rootPath, pkg.path, 'src', 'meta.ts'), join(rootPath, pkg.path, 'dx.config.ts')].find(
+    (candidate) => existsSync(candidate),
+  );
+  if (!metaPath) {
     return null;
   }
 
@@ -265,8 +268,13 @@ const readPluginMetaFromConfig = (rootPath: string, pkg: PackageLike, project: P
     return null;
   }
 
-  const exportAssignment = configSource.getExportAssignment((decl) => !decl.isExportEquals());
-  const makeCall = exportAssignment?.getExpressionIfKind(SyntaxKind.CallExpression);
+  // `export default Config2.make({...})`, or `export default config` naming a `const config = Plugin.config({...})`.
+  const exportExpression = configSource.getExportAssignment((decl) => !decl.isExportEquals())?.getExpression();
+  const makeCall =
+    exportExpression?.asKind(SyntaxKind.CallExpression) ??
+    (exportExpression?.isKind(SyntaxKind.Identifier)
+      ? configSource.getVariableDeclaration(exportExpression.getText())?.getInitializerIfKind(SyntaxKind.CallExpression)
+      : undefined);
   const configArg = makeCall?.getArguments()[0];
   if (!configArg || configArg.getKind() !== SyntaxKind.ObjectLiteralExpression) {
     return null;
