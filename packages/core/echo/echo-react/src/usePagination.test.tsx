@@ -3,9 +3,10 @@
 //
 
 import { renderHook, waitFor } from '@testing-library/react';
+import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Aggregate, Database, Feed, Filter, Obj, Order, Query } from '@dxos/echo';
+import { Aggregate, Annotation, Database, Feed, Filter, Obj, Order, Query } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 
@@ -348,6 +349,48 @@ describe('usePagination', () => {
     expect(result.current.isLoading).toBe(false);
 
     await waitFor(() => expect(result.current.items).toHaveLength(5));
+  });
+
+  test('pages by an annotation order, nearest first, with unannotated objects last', async () => {
+    const Distance = Annotation.make({
+      id: 'org.dxos.annotation.test-distance',
+      schema: Schema.Struct({ meters: Schema.Number }),
+    });
+    await using peer = await builder.createPeer({ types: [TestSchema.Person] });
+    const db = await peer.createDatabase();
+    // Inserted out of order so the result order can only come from the annotation.
+    for (const meters of [500, 100, 400, 200, 300]) {
+      const person = db.add(Obj.make(TestSchema.Person, { name: `person-${meters}` }));
+      Obj.update(person, (person) => Annotation.set(person, Distance, { meters }));
+    }
+    db.add(Obj.make(TestSchema.Person, { name: 'unplaced' }));
+    await db.flush({ indexes: true });
+
+    const query = Query.select(Filter.type(TestSchema.Person))
+      .orderBy(Order.annotation(Distance, 'asc', ['meters']))
+      .limit(2);
+    const { result } = renderHook(() => usePagination(db, query));
+
+    await waitFor(() => {
+      expect(result.current.items.map((person) => person.name)).toEqual(['person-100', 'person-200']);
+    });
+    expect(result.current.hasMore).toBe(true);
+
+    result.current.getNext();
+    await waitFor(() => {
+      expect(result.current.items).toHaveLength(4);
+    });
+    result.current.getNext();
+    await waitFor(() => {
+      expect(result.current.items.map((person) => person.name)).toEqual([
+        'person-100',
+        'person-200',
+        'person-300',
+        'person-400',
+        'person-500',
+        'unplaced',
+      ]);
+    });
   });
 
   test('pages over whole groups for a grouped query', async () => {
