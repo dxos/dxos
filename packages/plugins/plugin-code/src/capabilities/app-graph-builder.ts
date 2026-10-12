@@ -36,15 +36,10 @@ export default Capability.makeModule(
     // Asset modules wait for `PluginAssetsRequested`, which the spec connector fires on first use;
     // the atom re-runs the connector once they (or a plugin enabled later) contribute.
     const pluginAssetsAtom = yield* Capability.atom(AppCapabilities.PluginAsset);
-    // A host without a plugin manager has no event to fire; the connector then shows what is already contributed.
-    const plugins = yield* Effect.serviceOption(PluginNS.Service);
+    const manager = yield* PluginNS.Service;
+    // Deferred out of the connector's atom read, since activation writes the capability atoms.
     const requestPluginAssets = () =>
-      Option.match(plugins, {
-        onNone: () => undefined,
-        // Deferred out of the connector's atom read, since activation writes the capability atoms.
-        onSome: (manager) =>
-          queueMicrotask(() => EffectEx.runDetached(manager.activate(ActivationEvents.PluginAssetsRequested))),
-      });
+      queueMicrotask(() => EffectEx.runDetached(manager.activate(ActivationEvents.PluginAssetsRequested)));
 
     const extensions = yield* Effect.all([
       // Per-plugin `spec` child node, attached to the registry's

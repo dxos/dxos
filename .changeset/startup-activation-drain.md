@@ -2,7 +2,7 @@
 '@dxos/echo': minor
 ---
 
-Composer reaches `startup:ready` about 2.1s sooner, and its client is ready about 0.3s sooner on a reload by spawning the dedicated worker at main start, on a cached, signed-out load (3,022ms → 901ms median in a headless benchmark), mostly by no longer draining plugin activation messages one per 4ms timer.
+On a cached, signed-out load, Composer reaches `startup:ready` about 2.1s sooner (3,022ms → 901ms median in a headless benchmark), mostly by no longer draining plugin activation messages one per 4ms timer. Its client is ready about 0.3s sooner on a reload because the dedicated worker now spawns at main start.
 
 - `@dxos/app-framework`: the `useApp` listener and the plugin manager's failure supervisor drain activation messages without a yield per message; fibers are tracked with exit observers instead of a forked waiter each; the slow-module warning is one shared watcher instead of a sleeping fiber per module.
 - `@dxos/echo`: `Obj.make` takes `{ skipValidation }` for props built from already-typed values.
