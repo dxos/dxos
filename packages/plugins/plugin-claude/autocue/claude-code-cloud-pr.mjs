@@ -72,6 +72,28 @@ const pullState = async (url) => {
   return (await response.json()).state;
 };
 
+/** Waits for the chat to show a pull request URL: a cold sandbox checks the repository out before the agent says anything. */
+const waitForPullRequest = async (page) => {
+  const deadline = Date.now() + TURN_TIMEOUT;
+  while (Date.now() < deadline) {
+    if ((await page.locator(ERROR).count()) > 0) {
+      throw new Error(`the chat reported an error: ${await page.locator(ERROR).first().innerText()}`);
+    }
+    const url = (
+      await page
+        .locator(THREAD)
+        .first()
+        .innerText()
+        .catch(() => '')
+    ).match(PR_URL)?.[0];
+    if (url) {
+      return url;
+    }
+    await page.waitForTimeout(2_000);
+  }
+  throw new Error('no pull request URL in time');
+};
+
 /** Waits for the agent's turn to end: its activity line gone for a few checks in a row. Fails on an error toast. */
 const waitForTurn = async (page) => {
   const deadline = Date.now() + TURN_TIMEOUT;
@@ -226,11 +248,8 @@ export const steps = [
         value: 'Ask it to clone dxos/dxos and open a pull request',
         subtitle: BRANCH,
       });
+      const url = await waitForPullRequest(page);
       await waitForTurn(page);
-      const url = (await page.locator(THREAD).first().innerText()).match(PR_URL)?.[0];
-      if (!url) {
-        throw new Error('the reply has no pull request URL');
-      }
       if ((await pullState(url)) !== 'open') {
         throw new Error(`${url} is not open`);
       }
