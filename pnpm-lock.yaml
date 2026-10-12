@@ -4399,6 +4399,12 @@ importers:
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../../sdk/schema
+      '@dxos/sql-sqlite':
+        specifier: workspace:*
+        version: link:../../../common/sql-sqlite
+      '@dxos/trajectory':
+        specifier: workspace:*
+        version: link:../trajectory
       '@dxos/types':
         specifier: workspace:*
         version: link:../../../sdk/types

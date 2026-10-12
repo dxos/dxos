@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import * as Skill from '@dxos/compute/Skill';
 import { Annotation, DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { IdentityDid } from '@dxos/keys';
-import { ContentBlock } from '@dxos/types';
+import { ContentBlock, Message as TypesMessage } from '@dxos/types';
 
 /**
  * Id of an earlier event in the same log; events reference each other by id because they are never mutated.
@@ -48,6 +48,8 @@ export type Sender = Schema.Schema.Type<typeof Sender>;
  */
 export const Message = Schema.TaggedStruct('message', {
   blocks: Schema.Array(ContentBlock.Any),
+  /** Files or objects attached alongside the blocks, as on `Message.Message`. */
+  attachments: Schema.optional(Schema.Array(TypesMessage.Attachment)),
 });
 export type Message = Schema.Schema.Type<typeof Message>;
 
@@ -209,6 +211,23 @@ export const Compact = Schema.TaggedStruct('compact', {
 });
 export type Compact = Schema.Schema.Type<typeof Compact>;
 
+/**
+ * Discards the main thread from `from` on: its prompt entries and thread items go, the events stay in the log.
+ */
+export const Rewind = Schema.TaggedStruct('rewind', {
+  /** First event discarded. */
+  from: EventId,
+});
+export type Rewind = Schema.Schema.Type<typeof Rewind>;
+
+/**
+ * Continues another conversation: its prompt up to `from.event` precedes this feed's main thread.
+ */
+export const Fork = Schema.TaggedStruct('fork', {
+  from: ThreadOrigin,
+});
+export type Fork = Schema.Schema.Type<typeof Fork>;
+
 //
 // Threads
 //
@@ -287,6 +306,8 @@ export const Payload = Schema.Union([
   HookBegin,
   HookEnd,
   Compact,
+  Rewind,
+  Fork,
   ThreadOpen,
   ThreadMerge,
   ThreadClose,
@@ -326,6 +347,8 @@ export class Event extends Type.makeObject<Event>(DXN.make('org.dxos.type.trajec
 export type EventOf<T extends PayloadTag> = Event & { readonly payload: PayloadOf<T> };
 
 export type MakeProps<T extends Payload = Payload> = {
+  /** Set only when converting a record that already has an id, so references to it still resolve. */
+  id?: EventId;
   payload: T;
   sender: Sender;
   thread?: EventId;
@@ -336,8 +359,9 @@ export type MakeProps<T extends Payload = Payload> = {
 /**
  * Creates an event (not yet appended to a feed).
  */
-export const make = <T extends Payload>({ payload, sender, thread, prev, created }: MakeProps<T>): Event =>
+export const make = <T extends Payload>({ id, payload, sender, thread, prev, created }: MakeProps<T>): Event =>
   Obj.make(Event, {
+    id,
     thread,
     prev,
     sender,

@@ -32,6 +32,9 @@
       "path": "../../../common/node-std"
     },
     {
+      "path": "../../../common/sql-sqlite"
+    },
+    {
       "path": "../../../common/util"
     },
     {
@@ -66,6 +69,9 @@
     },
     {
       "path": "../mcp-client"
+    },
+    {
+      "path": "../trajectory"
     }
   ]
 }

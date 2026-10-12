@@ -39,6 +39,8 @@ const payloads: Trajectory.Payload[] = [
   { _tag: 'hookBegin', hook: 'lint', kind: 'agentic', thread: anchor },
   { _tag: 'hookEnd', begin: anchor, blocks: [{ _tag: 'text', text: 'ok' }] },
   { _tag: 'compact', from: anchor, to: anchor, summary: [{ _tag: 'text', text: 'earlier work' }] },
+  { _tag: 'rewind', from: anchor },
+  { _tag: 'fork', from: { event: anchor } },
   { _tag: 'threadOpen', mode: 'fork', from: { event: anchor }, purpose: 'turn' },
   { _tag: 'threadMerge', thread: anchor, mode: 'summary', summary: [{ _tag: 'text', text: 'subagent result' }] },
   { _tag: 'threadClose', thread: anchor, status: 'completed' },

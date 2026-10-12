@@ -100,6 +100,8 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/schema": "workspace:*",
+    "@dxos/sql-sqlite": "workspace:*",
+    "@dxos/trajectory": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "lodash.defaultsdeep": "catalog:"

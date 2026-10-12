@@ -29,9 +29,9 @@ export type Checkpoint<S> = {
 };
 
 /**
- * Folds `events` (the tail after `from.head`, in feed order) onto a checkpoint, or onto the initial state.
- * Fold only events EDGE has confirmed (`Feed.getPosition` is finite): confirmed positions never change, while an
- * unconfirmed append can still land after events that sync later, so folding it would make the state depend on timing.
+ * Folds `events` (the tail after `from.head`) onto a checkpoint, or onto the initial state.
+ * Fold in local order (`Feed.getLocalCursor`): it never changes under a reader, so a checkpoint stays valid as sync
+ * repositions the feed; server position decides only races between writers, such as two consumes of one prompt.
  */
 export const run = <S>(
   reducer: Reducer<S>,
@@ -205,6 +205,10 @@ export const thread: Reducer<ThreadView> = {
         };
       case 'promptConsume':
         return { items: consume(state.items, payload.message, event.thread) };
+      case 'rewind': {
+        const from = state.items.findIndex((item) => item.id === payload.from);
+        return event.thread === undefined && from !== -1 ? { items: state.items.slice(0, from) } : state;
+      }
       case 'promptCancel':
         return state.items.some((item) => item.id === payload.message && item.status === 'queued')
           ? { items: setItemStatus(state.items, payload.message, 'cancelled') }
@@ -260,6 +264,8 @@ export type PromptState = {
    * The merge still happens; whether to accept, re-run or correct is the harness's call.
    */
   readonly stale: Readonly<Record<Trajectory.EventId, readonly Trajectory.EventId[]>>;
+  /** Conversation this feed continues (`fork`); its prompt up to `origin.event` precedes `entries`. */
+  readonly origin?: Trajectory.ThreadOrigin;
 };
 
 const omit = <V>(record: Readonly<Record<string, V>>, key: string): Readonly<Record<string, V>> =>
@@ -370,7 +376,7 @@ const compact = (state: PromptState, payload: Trajectory.Compact, id: Trajectory
 };
 
 /**
- * Builds the model prompt. Apart from `compact`, every event leaves `entries` as a prefix of what it was, which is
+ * Builds the model prompt. Apart from `compact` and `rewind`, every event leaves `entries` as a prefix of what it was, which is
  * what keeps the provider's prompt cache valid from one request to the next.
  */
 export const prompt: Reducer<PromptState> = {
@@ -447,6 +453,12 @@ const place = (state: PromptState, event: Trajectory.Event): PromptState => {
       return live(state, payload.thread) ? { ...state, threads: end(state.threads, payload.thread) } : state;
     case 'compact':
       return event.thread === undefined ? { ...state, entries: compact(state, payload, event.id) } : state;
+    case 'rewind': {
+      const from = state.entries.findIndex((entry) => entry.source.includes(payload.from));
+      return event.thread === undefined && from !== -1 ? { ...state, entries: state.entries.slice(0, from) } : state;
+    }
+    case 'fork':
+      return { ...state, origin: payload.from };
     default:
       return state;
   }

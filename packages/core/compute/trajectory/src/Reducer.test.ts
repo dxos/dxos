@@ -304,6 +304,28 @@ describe('Reducer', () => {
       expect(texts(Reducer.promptFor(state, subagent.id))).to.deep.eq(['brief', 'work']);
     });
 
+    test('rewind drops the main prompt and thread from its event on, and a fork records its origin', ({ expect }) => {
+      const kept = message('kept');
+      const dropped = message('dropped');
+      const origin = { feed: Ref.make(Feed.make()), event: kept.id };
+      const events = [
+        event({ _tag: 'fork', from: origin }),
+        kept,
+        dropped,
+        message('also dropped'),
+        event({ _tag: 'rewind', from: dropped.id }),
+        message('after'),
+      ];
+      const prompt = Reducer.run(Reducer.prompt, events).state;
+      expect(texts(prompt.entries)).to.deep.eq(['kept', 'after']);
+      expect(prompt.origin?.event).to.eq(kept.id);
+
+      const thread = Reducer.run(Reducer.thread, events).state;
+      expect(
+        thread.items.map((item) => item.blocks.map((block) => (block._tag === 'text' ? block.text : ''))).flat(),
+      ).to.deep.eq(['kept', 'after']);
+    });
+
     test('compact replaces its range with the summary', ({ expect }) => {
       const first = message('one');
       const second = message('two');
@@ -443,7 +465,7 @@ describe('Reducer', () => {
         let state = Reducer.prompt.initial;
         for (const next of sequence(seed, 60)) {
           const after = Reducer.prompt.step(state, next);
-          if (next.payload._tag !== 'compact') {
+          if (next.payload._tag !== 'compact' && next.payload._tag !== 'rewind') {
             expect(after.entries.slice(0, state.entries.length), `seed ${seed}`).to.deep.eq(state.entries);
           }
           state = after;
