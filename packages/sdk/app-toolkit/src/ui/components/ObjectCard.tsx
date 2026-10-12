@@ -5,6 +5,7 @@
 import React, { type ReactNode, forwardRef } from 'react';
 
 import { Entity } from '@dxos/echo';
+import { useLabel } from '@dxos/react-client/echo';
 import * as Card from '@dxos/react-ui/Card';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
@@ -52,6 +53,7 @@ export const ObjectCardHeader = forwardRef<HTMLDivElement, ObjectCardHeaderProps
     const iconAnnotation = entity && Entity.getIcon(entity);
     const icon = iconProp ?? iconAnnotation?.icon ?? DEFAULT_ICON;
     const iconStyles = iconAnnotation?.hue ? getStyles(iconAnnotation.hue) : undefined;
+    const label = useLabel(entity, { fallback: 'typename' });
 
     return (
       <Card.Header ref={forwardedRef}>
@@ -61,7 +63,7 @@ export const ObjectCardHeader = forwardRef<HTMLDivElement, ObjectCardHeaderProps
           </CardIconSlot>
         </Layout.Block>
         <Card.Title truncate={lines === undefined} lines={lines}>
-          {children ?? (entity && Entity.getLabel(entity, { fallback: 'typename' }))}
+          {children ?? label}
         </Card.Title>
         {menu}
       </Card.Header>

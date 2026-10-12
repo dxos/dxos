@@ -79,6 +79,7 @@ export interface EntityMetaJSON {
   tags?: string[];
   key?: string;
   version?: string;
+  annotations?: Readonly<Record<string, unknown>>;
 }
 
 /**

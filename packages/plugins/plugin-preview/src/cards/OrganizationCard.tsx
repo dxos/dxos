@@ -5,11 +5,12 @@
 import React from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { useObject } from '@dxos/echo-react';
 import * as Card from '@dxos/react-ui/Card';
 import { type Organization } from '@dxos/types';
 
 export const OrganizationCard = ({ subject }: AppSurface.ObjectCardProps<Organization.Organization>) => {
-  const { name, image, description, website } = subject;
+  const [{ name, image, description, website }] = useObject(subject);
 
   return (
     <Card.Body>

@@ -15,7 +15,7 @@ import {
   type EntityPropPath,
   EntityStructure,
   PROPERTY_ID,
-  type QueryAST,
+  QueryAST,
   isEncodedReference,
 } from '@dxos/echo-protocol';
 import { EscapedPropPath, referenceIndexKey } from '@dxos/index-core';
@@ -557,6 +557,12 @@ export class WorkingSetQueryExecutor {
       case 'timestamp':
         // No timestamp index on client; treat as equal.
         return 0;
+      case 'annotation':
+        return QueryAST.compareAnnotationOrderValues(
+          QueryAST.getAnnotationOrderValue(itemA.structure.meta?.annotations, order),
+          QueryAST.getAnnotationOrderValue(itemB.structure.meta?.annotations, order),
+          order.direction,
+        );
       case 'property': {
         // On a grouped working set, a property order names a group field: prefer a stamped scalar
         // aggregate (max/min/count) when present, else the member/row property (which also covers a
