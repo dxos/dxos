@@ -171,6 +171,13 @@ describe('matchesFilter', () => {
       expect(matchesFilter(build('#later'), task, tagged)).to.be.true;
       expect(matchesFilter(build('#urgent'), task, tagged)).to.be.false;
     });
+
+    test('a stored tag in local form matches the absolute uri a tag map is keyed by', ({ expect }) => {
+      // A tag held by an object in a database is written as a local ref (`echo:///<id>`).
+      const tagged = { tags: () => [`echo:///${tagLater.id}`] };
+      expect(matchesFilter(build('#later'), makeTask({ title: 'Ship it' }), tagged)).to.be.true;
+      expect(matchesFilter(build('#urgent'), makeTask({ title: 'Ship it' }), tagged)).to.be.false;
+    });
   });
 
   describe('operators', () => {

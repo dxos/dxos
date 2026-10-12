@@ -43,6 +43,13 @@ export const findBlob = (
       if (entry.target && Obj.instanceOf(Blob.Blob, entry.target)) {
         return entry;
       }
+      // A ref loads its target lazily, so an unloaded one is resolved by id like an encoded ref.
+      const eid = EID.tryParse(entry.uri);
+      const refId = eid ? EID.getEntityId(eid) : undefined;
+      const target = refId ? lookup(refId) : undefined;
+      if (Obj.isObject(target) && Obj.instanceOf(Blob.Blob, target)) {
+        return target;
+      }
       continue;
     }
     const id = encodedRefId(entry);

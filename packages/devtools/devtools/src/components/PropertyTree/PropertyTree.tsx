@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Atom from 'effect/reactivity/Atom';
-import React, { createContext, useCallback, useContext, useMemo } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo } from 'react';
 
 import { raise } from '@dxos/debug';
 import { type Database, Entity, Filter, Query } from '@dxos/echo';
@@ -33,7 +33,13 @@ export type PropertyTreeProps = {
 export const PropertyTree = ({ value, db, defaultDepth = 2, onNavigate }: PropertyTreeProps) => {
   const registry = useContext(RegistryContext);
   const json = useMemo(() => toJson(value), [value]);
-  const model = useMemo(() => new PropertyTreeModel(json, db, defaultDepth), [json, db, defaultDepth]);
+  // One model per database, fed each new value: rebuilding it on every edit would drop the rows the user opened.
+  const model = useMemo(
+    () => new PropertyTreeModel(json, db, defaultDepth),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [db, defaultDepth],
+  );
+  useEffect(() => registry.set(model.value, json), [registry, model, json]);
   const contextValue = useMemo(() => ({ model, onNavigate }), [model, onNavigate]);
 
   const handleOpenChange = useCallback(
@@ -152,12 +158,13 @@ const childId = (parentId: string, key: string) => `${parentId}/${encodeURICompo
 
 class PropertyTreeModel {
   readonly #db?: Database.Database;
-  readonly #root: PropertyNode;
   readonly #defaultDepth: number;
+  /** The inspected value; replacing it keeps the open state, which is keyed by path. */
+  readonly value: Atom.Writable<JsonValue>;
 
   constructor(json: JsonValue, db?: Database.Database, defaultDepth = 0) {
     this.#db = db;
-    this.#root = makeNode(ROOT_ID, '', json);
+    this.value = Atom.make<JsonValue>(json);
     this.#defaultDepth = defaultDepth;
   }
 
@@ -206,7 +213,7 @@ class PropertyTreeModel {
   #item = Atom.family((id: string) =>
     Atom.make((get): PropertyNode | undefined => {
       if (id === ROOT_ID) {
-        return this.#root;
+        return makeNode(ROOT_ID, '', get(this.value));
       }
       const parentId = id.slice(0, id.lastIndexOf('/'));
       return get(this.#children(parentId)).find((child) => child.id === id);
@@ -296,11 +303,18 @@ const VALUE_CLASSES: Record<PropertyKind, string> = {
 
 const toJson = (value: unknown): JsonValue => {
   try {
-    return JSON.parse(JSON.stringify(value ?? null));
+    return JSON.parse(JSON.stringify(value ?? null, elideBytes));
   } catch {
     return String(value);
   }
 };
+
+/**
+ * Stands in for byte arrays: an inline blob's bytes would otherwise serialize to one key per byte
+ * (up to `Blob.MAX_INLINE_SIZE`), and the tree would build a node for each.
+ */
+export const elideBytes = (_key: string, value: unknown): unknown =>
+  value instanceof Uint8Array ? `<${value.length} bytes>` : value;
 
 const isRecord = (value: JsonValue): value is { [key: string]: JsonValue } =>
   typeof value === 'object' && value !== null && !Array.isArray(value);

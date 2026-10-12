@@ -64,7 +64,14 @@ export const ObjectsTree = ({ db, root, onSelect, onOpen, canOpen, filter, ids, 
   const handleOpenChange = useCallback(
     ({ item, path, open }: { item: ObjectsTreeItem; path: string[]; open: boolean }) => {
       registry.set(model.openAtPath(path), open);
-      registry.set(model.markOpen(item.id), open);
+      const openPaths = model.openPaths(item.id);
+      const next = new Set(registry.get(openPaths));
+      if (open) {
+        next.add(path.join('/'));
+      } else {
+        next.delete(path.join('/'));
+      }
+      registry.set(openPaths, next);
     },
     [model, registry],
   );
@@ -324,12 +331,14 @@ class ObjectsTreeModel {
   );
 
   /** True when any path addressing this node is open; the walk is keyed by id, the rows by path. */
-  #openIds = Atom.family((id: string) => Atom.make((get) => get(this.#openIdState(id))));
-  #openIdState = Atom.family((_id: string) => Atom.make(false));
+  #openIds = Atom.family((id: string) => Atom.make((get) => get(this.#openPathsState(id)).size > 0));
+  // A set rather than a flag: the same entity appears at several paths (a child, a relation's two ends),
+  // and closing one of them must not empty the others.
+  #openPathsState = Atom.family((_id: string) => Atom.make<ReadonlySet<string>>(new Set<string>()));
 
   /** Walk-gating state, keyed by id — `Tree` addresses rows by path, but `childIds` only has the id. */
-  markOpen(id: string): Atom.Writable<boolean> {
-    return this.#openIdState(id);
+  openPaths(id: string): Atom.Writable<ReadonlySet<string>> {
+    return this.#openPathsState(id);
   }
 
   #itemFamily = Atom.family((id: string) => {
