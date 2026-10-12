@@ -4,7 +4,9 @@
 
 // @import-as-namespace
 
+import * as HashMap from 'effect/HashMap';
 import * as Schema from 'effect/Schema';
+import * as SchemaTransformation from 'effect/SchemaTransformation';
 
 import { type Obj, type Ref } from '@dxos/echo';
 import { ContentBlock } from '@dxos/types';
@@ -82,7 +84,15 @@ const PromptState = Schema.Struct({
     }),
   ),
   position: Schema.Number,
-  positions: Schema.Record(Schema.String, Schema.Number),
+  positions: Schema.Record(Trajectory.EventId, Schema.Number).pipe(
+    Schema.decodeTo(
+      Schema.HashMap(Trajectory.EventId, Schema.Number),
+      SchemaTransformation.transform({
+        decode: (record) => HashMap.fromIterable(Object.entries(record)),
+        encode: (positions) => Object.fromEntries(positions),
+      }),
+    ),
+  ),
   stale: Schema.Record(Schema.String, EventIds),
   origin: Schema.optional(Trajectory.ThreadOrigin),
 });

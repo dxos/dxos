@@ -237,7 +237,7 @@ describe('samples', () => {
       edgeTurn,
       won,
       lost,
-      // EDGE confirmed #5 after #4, so the edge harness lost the claim and ends its turn without calling the model.
+      // #5 folds after #4, so the edge harness lost the claim and ends its turn without calling the model.
       Trajectory.make({
         payload: { _tag: 'turnEnd', begin: edgeTurn.id, finishReason: 'other', error: 'prompt claimed by laptop' },
         sender: edge,

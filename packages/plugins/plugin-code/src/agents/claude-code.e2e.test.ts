@@ -16,8 +16,7 @@ import { Chat, TrajectoryStore } from '@dxos/assistant';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
-import { Durable } from '@dxos/trajectory';
-import { type ContentBlock, Message } from '@dxos/types';
+import { type ContentBlock } from '@dxos/types';
 
 import { serve } from '../agent-helper/server.ts';
 import * as AcpAgent from './AcpAgent.ts';
@@ -77,28 +76,18 @@ const summarize = (block: ContentBlock.Any): string => {
   }
 };
 
-/** The thread's live items, answers to requests included. */
-const threadItems = (feed: Feed.Feed) =>
-  TrajectoryStore.load(feed, Durable.thread).pipe(
-    Effect.map(({ state }) => state.items.filter((item) => item.status !== 'cancelled' && item.status !== 'rewound')),
-  );
-
 const transcript = (feed: Feed.Feed) =>
-  threadItems(feed).pipe(Effect.map((items) => items.flatMap((item) => item.blocks.map(summarize))));
+  TrajectoryStore.threadMessages(feed).pipe(
+    Effect.map((messages) => messages.flatMap((message) => message.blocks.map(summarize))),
+  );
 
 /** The first request block the turn parks, once it is there. */
 const findRequest = (feed: Feed.Feed) =>
   Effect.gen(function* () {
     while (true) {
-      for (const item of yield* threadItems(feed)) {
-        for (const block of item.blocks) {
+      for (const message of yield* TrajectoryStore.threadMessages(feed)) {
+        for (const block of message.blocks) {
           if (block._tag === 'request' && block.resolution === undefined) {
-            const message = Message.make({
-              id: item.id,
-              created: item.created,
-              sender: TrajectoryStore.toActor(item.sender),
-              blocks: [...item.blocks],
-            });
             return { message, block };
           }
         }

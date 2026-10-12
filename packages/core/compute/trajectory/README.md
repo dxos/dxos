@@ -14,26 +14,57 @@ Nothing in the log is ever edited; every view of the conversation is derived fro
 
 ## Several writers on one feed
 
-EDGE assigns each confirmed event a feed position, and confirmed positions never move. A writer's own append shows
-locally before EDGE confirms it, and it can still land after events that sync in later. Four rules follow:
+Reducers fold the feed in **local order**: the order this replica stored events in, read with
+`Filter.feedCursor({ order: 'local' })`. Unlike the feed position EDGE assigns, local order never changes under a
+reader, so a checkpoint stays valid while sync places other writers' events. An event that syncs in later is folded
+after everything already stored. Three rules follow:
 
-- **Fold only confirmed events.** The reducers' state then depends on the feed alone, not on when each replica
-  synced.
-- **What a turn saw is its `from.event`.** A harness writes its confirmed feed head there. `promptFor` keeps only
-  the parent entries placed at or before that position, so an event that syncs in later never enters a running
-  turn's prompt.
+- **What a turn saw is its `from.event`.** A harness writes the last event it folded there. `promptFor` keeps only
+  the parent entries placed at or before that event, so an event that arrives later never enters a running turn's
+  prompt.
 - **A merge onto entries the turn never saw is stale.** `PromptState.stale` lists, for each such turn or fork, the
   source events it missed. The merge still happens, and the harness decides whether to accept, re-run or correct.
-- **The first consume in feed order claims a message.** A later consume of the same message is listed in
-  `SessionState.rejected`, and it changes neither the prompt nor the UI. A harness runs a turn only once its consume
-  is confirmed and not rejected.
+- **The first consume a replica folds claims the message.** A later consume of the same message is listed in
+  `SessionState.rejected`, and it changes neither the prompt nor the UI. Two replicas can each see their own consume
+  first; the agent runtime avoids that by running one process per chat. A harness that races another writer must
+  also check which consume EDGE confirmed first.
 
 If a thread merges while a turn inside it is still running, the thread is kept frozen until that turn ends, so the
 turn's prompt does not change under it.
 
+## Storage and loading
+
+`@dxos/assistant`'s `TrajectoryStore` is the only code that reads or writes a chat feed.
+
+- **Legacy feeds load as events.** A feed written before events existed holds `Message`, `AiContext.Binding`,
+  `Alarm` and `SessionLink` records with queue annotations. `Legacy.toEvents` converts them in memory: a user
+  message becomes a `message` plus the `promptConsume` that took it, a binding becomes `contextBind`/`contextUnbind`,
+  an alarm becomes `alarmSet` (and `alarmFire` once consumed), and a link becomes a `fork`. Rewound lineage is dropped
+  with `Feed.history`. Nothing writes legacy records any more, and nothing rewrites old feeds.
+- **Checkpoints are cached in SQLite.** `TrajectoryCache.load(feed, durable)` keeps one row per feed and reducer
+  (`trajectory_checkpoint`), holding the encoded state, the head event and the event count. A load reads only the
+  events after the head in local order and folds them onto the stored state. If the head is gone or the state no
+  longer decodes, it refolds the whole feed.
+- **A turn is one batched append.** Producers write a turn's events through `TrajectoryStore.turn` or
+  `beginTurn` → `promptEvents` → `appendMessages` → `endTurn`. Each call is a single `Feed.append`, so a turn costs a
+  handful of writes however many events it holds.
+
+Measured with `DX_BENCH=1` (`TrajectoryStore.bench.test.ts`, in-memory database, 1,000 turns of 5 events):
+
+| Step                                     | Time   |
+| ---------------------------------------- | ------ |
+| Cold load (no checkpoint; read and fold) | 642 ms |
+| Warm load (checkpoint, no new events)    | 64 ms  |
+| Load after one more turn                 | 91 ms  |
+| `Reducer.prompt` fold of all 5,000       | 55 ms  |
+| Writing one turn                         | 4.5 ms |
+
+A cold load is dominated by reading the feed, and happens once per feed and device; after that, each turn folds only
+its own events.
+
 ## Sample trajectories
 
-Both samples are built and asserted, output for output, in [`src/samples.test.ts`](src/samples.test.ts).
+The samples are built and asserted, output for output, in [`src/samples.test.ts`](src/samples.test.ts).
 
 ### 1. A chat turn with a tool call and a prompt typed mid-turn
 
@@ -114,7 +145,7 @@ A laptop and an EDGE agent share the feed, and both see #1 as their head.
 | 1   | user alice       |        | `message` "Summarise the design doc."                             |
 | 2   | assistant laptop |        | `turnBegin { model, from: { event: #1 } }`                        |
 | 3   | assistant edge   |        | `turnBegin { model, from: { event: #1 } }`                        |
-| 4   | assistant laptop | #2     | `promptConsume { message: #1 }` (confirmed first, so it wins)     |
+| 4   | assistant laptop | #2     | `promptConsume { message: #1 }` (folded first, so it wins)        |
 | 5   | assistant edge   | #3     | `promptConsume { message: #1 }` (rejected)                        |
 | 6   | assistant edge   |        | `turnEnd { begin: #3, finishReason: 'other', error }`             |
 | 7   | event alarm      |        | `message` "CI is green." (lands on main while the laptop runs)    |

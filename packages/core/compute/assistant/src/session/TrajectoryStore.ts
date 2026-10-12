@@ -51,6 +51,19 @@ export const messages = (feed: Feed.Feed): Effect.Effect<Message.Message[], neve
     ),
   );
 
+/**
+ * The main conversation as a reader sees it, as messages in thread order: answers to requests applied, cancelled and
+ * rewound items left out, a queued prompt where it waits.
+ */
+export const threadMessages = (feed: Feed.Feed): Effect.Effect<Message.Message[], never, Database.Service> =>
+  Effect.map(load(feed, Durable.thread), ({ state }) =>
+    state.items
+      .filter((item) => item.status !== 'cancelled' && item.status !== 'rewound')
+      .map((item) =>
+        Message.make({ id: item.id, created: item.created, sender: toActor(item.sender), blocks: [...item.blocks] }),
+      ),
+  );
+
 /** A trajectory sender as a message actor; an `event` sender (alarm, hook, system note) speaks as a user. */
 export const toActor = (sender: Trajectory.Sender): Message.Message['sender'] => ({
   role: sender.role === 'event' ? 'user' : sender.role,

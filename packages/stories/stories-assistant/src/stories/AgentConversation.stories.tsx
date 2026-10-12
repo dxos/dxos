@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { waitFor, within } from 'storybook/test';
 
 import * as Chat from '@dxos/assistant/Chat';
-import { type Database, Filter, Query } from '@dxos/echo';
+import { type Database, Filter } from '@dxos/echo';
 import * as AgentPlugin from '@dxos/plugin-agent/AgentPlugin';
 import * as ChatParticipant from '@dxos/plugin-agent/ChatParticipant';
 import * as Goal from '@dxos/plugin-agent/Goal';
@@ -24,6 +24,7 @@ import {
   PARTICIPANTS,
   PLAYGROUND_MODEL,
   type PlaygroundRefs,
+  chatMessages,
   createDecorators,
   setupPlayground,
   storyParameters,
@@ -98,7 +99,7 @@ const assistantMessages = async (db: Database.Database, participant: Participant
   if (!feed) {
     return [];
   }
-  const messages = await db.query(Query.select(Filter.type(Message.Message)).from(feed)).run();
+  const messages = await chatMessages(db, feed);
   return messages.filter(({ sender }) => sender.role === 'assistant');
 };
 

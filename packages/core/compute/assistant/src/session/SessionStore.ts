@@ -87,14 +87,6 @@ export class SessionStore {
   }
 
   /**
-   * Kept for callers written against the annotation queue: the turn's `promptConsume` takes an entry out of the
-   * queue view, so there is nothing to mark.
-   */
-  markInFlight(_feed: Feed.Feed, _item: Message.Message | Alarm.Alarm): Effect.Effect<void, never, Database.Service> {
-    return Effect.void;
-  }
-
-  /**
    * Retires a queued item without a turn: an alarm fires, a message is cancelled. A message a turn consumed is
    * already out of the queue, so acking it after the turn writes nothing.
    */

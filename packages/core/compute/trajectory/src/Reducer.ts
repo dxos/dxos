@@ -4,6 +4,9 @@
 
 // @import-as-namespace
 
+import * as HashMap from 'effect/HashMap';
+import * as Option from 'effect/Option';
+
 import { type ContentBlock } from '@dxos/types';
 
 import type * as Trajectory from './Trajectory.ts';
@@ -31,7 +34,7 @@ export type Checkpoint<S> = {
 /**
  * Folds `events` (the tail after `from.head`) onto a checkpoint, or onto the initial state.
  * Fold in local order (`Feed.getLocalCursor`): it never changes under a reader, so a checkpoint stays valid as sync
- * repositions the feed; server position decides only races between writers, such as two consumes of one prompt.
+ * repositions the feed.
  */
 export const run = <S>(
   reducer: Reducer<S>,
@@ -82,8 +85,8 @@ export type SessionState = {
   readonly turns: readonly Trajectory.EventId[];
   /**
    * `promptConsume`s and `promptCancel`s whose message was no longer queued, because another writer consumed or
-   * cancelled it first; a harness claims a message by writing its consume and runs only once that consume is
-   * confirmed and not listed here.
+   * cancelled it first; a harness claims a message by writing its consume and runs only if that consume is not listed
+   * here.
    */
   readonly rejected: readonly Trajectory.EventId[];
 };
@@ -283,8 +286,8 @@ export type PromptState = {
   readonly threads: Readonly<Record<Trajectory.EventId, ThreadBuffer>>;
   /** Events folded so far, which is the feed position of the next one. */
   readonly position: number;
-  /** Feed position of every folded event, to resolve a `from.event`. */
-  readonly positions: Readonly<Record<Trajectory.EventId, number>>;
+  /** Feed position of every folded event, to resolve a `from.event`; persistent, since a copy per event is quadratic. */
+  readonly positions: HashMap.HashMap<Trajectory.EventId, number>;
   /**
    * Threads and turns that merged into a parent holding entries they never saw, with those entries' source events.
    * The merge still happens; whether to accept, re-run or correct is the harness's call.
@@ -359,10 +362,12 @@ const end = (threads: PromptState['threads'], id: Trajectory.EventId): PromptSta
 
 /**
  * Feed position a thread with this origin saw up to; an origin this log does not hold (it cannot precede the
- * opener in a confirmed feed) falls back to everything before the opener.
+ * opener in local order) falls back to everything before the opener.
  */
 const seenAt = (state: PromptState, origin?: Trajectory.ThreadOrigin) =>
-  origin && !origin.feed ? (state.positions[origin.event] ?? state.position) : state.position;
+  origin && !origin.feed
+    ? Option.getOrElse(HashMap.get(state.positions, origin.event), () => state.position)
+    : state.position;
 
 const open = (state: PromptState, id: Trajectory.EventId, buffer: ThreadBuffer): PromptState => ({
   ...state,
@@ -406,10 +411,10 @@ const compact = (state: PromptState, payload: Trajectory.Compact, id: Trajectory
  * what keeps the provider's prompt cache valid from one request to the next.
  */
 export const prompt: Reducer<PromptState> = {
-  initial: { entries: [], held: {}, threads: {}, position: 0, positions: {}, stale: {} },
+  initial: { entries: [], held: {}, threads: {}, position: 0, positions: HashMap.empty(), stale: {} },
   step: (state, event) => {
     const next = place(state, event);
-    return { ...next, position: state.position + 1, positions: { ...next.positions, [event.id]: state.position } };
+    return { ...next, position: state.position + 1, positions: HashMap.set(next.positions, event.id, state.position) };
   },
 };
 
