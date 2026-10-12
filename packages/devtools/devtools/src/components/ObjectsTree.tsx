@@ -41,8 +41,9 @@ export interface ObjectsTreeProps {
 
 /**
  * The object graph as a tree: every row is an entity, its children the objects and relations
- * reachable from it, walked one level ahead of what is open so an unbounded graph is never queried
- * whole. Renders through `Tree`, so disclosure, roving focus and the APG keymap are the machine's.
+ * reachable from it. One space-wide query lists the rows and tells each whether it has children;
+ * only an open node holds a query of its own, so live queries scale with what is open, not with the
+ * size of the space. Renders through `Tree`, so disclosure, roving focus and the APG keymap are the machine's.
  */
 export const ObjectsTree = ({ db, root, onSelect, onOpen, canOpen, filter, ids, selected }: ObjectsTreeProps) => {
   const [model, setModel] = useState(() => new ObjectsTreeModel(db, root ?? null, onSelect ?? (() => {})));
@@ -245,11 +246,27 @@ const ExpandedKeySchema = Schema.TemplateLiteralParser([
   Schema.Number,
 ]);
 
-class ObjectsTreeModel {
+/**
+ * Every entity in the space, indexed so a row can tell whether it has children without a query of
+ * its own. Built from the live entities, not snapshots: reading every snapshot would rebuild the
+ * index on each entity's change, which is quadratic while a space loads or syncs. The cost is that a
+ * re-parented object updates a closed row's toggle only at the next change to the result set.
+ */
+type ObjectsGraphIndex = {
+  objects: readonly string[];
+  byId: ReadonlyMap<string, Entity.Unknown>;
+  /** Ids reachable from each anchor: its child objects, the relations it is an end of, and a relation's two ends. */
+  reachable: ReadonlyMap<string, readonly string[]>;
+};
+
+/** @internal Exported for tests. */
+export class ObjectsTreeModel {
   #onSelect: (entity: Entity.Snapshot) => void;
   #database: Database.Database;
   #root: Entity.Unknown | null;
   #atoms = Atom.family((anchor: string | null) => this.#makeNodeAtom(anchor));
+  /** The one query every row shares; per-anchor queries are reserved for open nodes. */
+  #graph: Atom.Atom<ObjectsGraphIndex>;
   #expandedState = Atom.family((_key: string) => Atom.make(false));
   /** Top-level label filter, set by the component's `filter` prop. */
   readonly filter = Atom.make('');
@@ -262,6 +279,10 @@ class ObjectsTreeModel {
     this.#database = database;
     this.#root = root;
     this.#onSelect = onSelect;
+    const entities: Atom.Atom<Entity.Unknown[]> = database.query(
+      Query.select(Filter.everything()).options({ deleted: 'include' }).from(database),
+    ).atom;
+    this.#graph = Atom.make((get) => buildGraphIndex(get(entities)));
   }
 
   get database(): Database.Database {
@@ -296,10 +317,9 @@ class ObjectsTreeModel {
   /**
    * `TreeModel` view over the same atoms.
    *
-   * `childIds` yields nothing until the node is open, so the tree's walk — which recurses into every
-   * branch regardless of `open` — stops one level ahead rather than querying the whole reachable
-   * object graph. `itemProps.parentOf` still reads that one level, which is what the row needed
-   * anyway to decide whether to draw a toggle.
+   * `childIds` yields nothing until the node is open, so the walk never starts a per-node query for a
+   * closed row, and the query is released when the node closes. `itemProps.parentOf` of a closed node
+   * comes from the space-wide index, which is all the row needs to decide whether to draw a toggle.
    */
   get treeModel(): TreeModel<ObjectsTreeItem> {
     return {
@@ -318,15 +338,17 @@ class ObjectsTreeModel {
       if (anchor !== ROOT_ANCHOR && !get(this.#openIds(anchor))) {
         return [];
       }
-      const children = get(this.#atoms(anchor === ROOT_ANCHOR ? null : anchor));
-      if (anchor !== ROOT_ANCHOR) {
-        return children.map((child) => child.id);
+      if (anchor !== ROOT_ANCHOR || this.#root !== null) {
+        return get(this.#atoms(anchor === ROOT_ANCHOR ? null : anchor)).map((child) => child.id);
       }
       const filter = get(this.filter).trim().toLowerCase();
       const ids = get(this.ids);
-      return children
-        .filter((child) => (!filter || child.label.toLowerCase().includes(filter)) && (!ids || ids.has(child.id)))
-        .map((child) => child.id);
+      // Labels are read only while filtering, so an unfiltered list does not depend on every row's snapshot.
+      return get(this.#graph).objects.filter(
+        (id) =>
+          (!ids || ids.has(id)) &&
+          (!filter || (get(this.#itemFamily(id))?.label.toLowerCase().includes(filter) ?? false)),
+      );
     }),
   );
 
@@ -341,13 +363,36 @@ class ObjectsTreeModel {
     return this.#openPathsState(id);
   }
 
-  #itemFamily = Atom.family((id: string) => {
+  #itemFamily = Atom.family((id: string) =>
+    Atom.make((get): ObjectsTreeItem | undefined => {
+      const live = get(this.#indexedFamily(id));
+      const entity = live ? get(Entity.atom(live)) : get(this.#entityByIdFamily(id));
+      return entity ? this.#mapEntityToTreeItems(entity, null) : undefined;
+    }),
+  );
+
+  /**
+   * Per-id views of the space-wide index. Each change to the result set rebuilds the index, and each
+   * row atom must settle to an equal value unless its own entry changed, or the walk re-runs once per row.
+   */
+  #indexedFamily = Atom.family((id: string) =>
+    Atom.make((get): Entity.Unknown | undefined => get(this.#graph).byId.get(id)),
+  );
+
+  #reachableFamily = Atom.family((id: string) =>
+    Atom.make((get): readonly string[] => get(this.#graph).reachable.get(id) ?? []).pipe(
+      Atom.withEquality(Array.makeEquivalence((a: string, b: string) => a === b)),
+    ),
+  );
+
+  /** Fallback for an entity the space-wide index has not seen yet (e.g. a root outside it); read only on a miss. */
+  #entityByIdFamily = Atom.family((id: string) => {
     const entities = this.#database.query(
       Query.select(Filter.id(id)).options({ deleted: 'include' }).from(this.#database),
     ).atom;
-    return Atom.make((get): ObjectsTreeItem | undefined => {
+    return Atom.make((get): Entity.Snapshot | undefined => {
       const entity = get(entities)[0];
-      return entity ? this.#mapEntityToTreeItems(get(Entity.atom(entity)), null) : undefined;
+      return entity ? get(Entity.atom(entity)) : undefined;
     });
   });
 
@@ -367,27 +412,39 @@ class ObjectsTreeModel {
       // The synthetic root is not an entity id, and `#atoms` asserts that it is one.
       const parent = path.length > 1 ? path[path.length - 2] : null;
       const anchor = parent === ROOT_ANCHOR ? null : parent;
-      return get(this.#atoms(anchor)).find((sibling) => sibling.id === id) ?? get(this.#itemFamily(id));
+      // A top-level row is reached through no relation, so its id-keyed item is already exact.
+      if (anchor === null && this.#root === null) {
+        return get(this.#itemFamily(id));
+      }
+      return get(this.#siblingsFamily(anchor)).get(id) ?? get(this.#itemFamily(id));
     }),
+  );
+
+  /** Keyed by id so resolving every row under an anchor is linear in its children, not quadratic. */
+  #siblingsFamily = Atom.family((anchor: string | null) =>
+    Atom.make((get) => new Map(get(this.#atoms(anchor)).map((item) => [item.id, item]))),
   );
 
   /**
    * Props are keyed by path, not id: `type` and the relation arrows are computed relative to the
    * anchor the node was reached through, so the same entity reads differently under two parents.
+   * A closed node reads its children from the space-wide index, so only open nodes hold a query.
    */
   #itemPropsFamily = Atom.family((key: string) =>
     Atom.make((get): TreeItemDataProps => {
       const path = key.split('/');
       const id = path[path.length - 1];
       const item = get(this.#itemAtFamily(key));
-      const children = get(this.#atoms(id));
+      const children = get(this.#openIds(id))
+        ? get(this.#atoms(id)).map((child) => child.id)
+        : get(this.#reachableFamily(id));
       return {
         id,
         label: item?.label ?? id,
         icon: item?.icon,
         iconHue: item?.iconHue,
         headingClassName: item?.deleted ? 'line-through opacity-60' : undefined,
-        ...(children.length > 0 && { parentOf: children.map((child) => child.id) }),
+        ...(children.length > 0 && { parentOf: [...children] }),
       };
     }),
   );
@@ -422,18 +479,11 @@ class ObjectsTreeModel {
     } else if (this.#root !== null) {
       return Entity.atom(this.#root).pipe((_) => Atom.make((get) => [this.#mapEntityToTreeItems(get(_), null)]));
     } else {
-      const entities: Atom.Atom<Entity.Unknown[]> = this.#database.query(
-        Query.select(Filter.everything()).options({ deleted: 'include' }).from(this.#database),
-      ).atom;
-
       return Atom.make((get) =>
-        pipe(
-          get(entities),
-          Array.filter(Obj.isObject),
-          Array.map((entity) => Obj.atom(entity).pipe(get)),
-          Array.map((entity) => this.#mapEntityToTreeItems(entity, null)),
-          Array.sortBy(itemOrder),
-        ),
+        get(this.#graph).objects.flatMap((id) => {
+          const item = get(this.#itemFamily(id));
+          return item ? [item] : [];
+        }),
       );
     }
   }
@@ -462,6 +512,41 @@ class ObjectsTreeModel {
     };
   }
 }
+
+/** Mirrors the per-anchor query in `#makeNodeAtom` (children, sourceOf, targetOf, source, target) over one result set. */
+const buildGraphIndex = (entities: readonly Entity.Unknown[]): ObjectsGraphIndex => {
+  const objects: string[] = [];
+  const byId = new Map<string, Entity.Unknown>();
+  const reachable = new Map<string, string[]>();
+  const link = (anchor: string | undefined, id: string) => {
+    if (anchor === undefined) {
+      return;
+    }
+    const ids = reachable.get(anchor);
+    if (ids) {
+      ids.push(id);
+    } else {
+      reachable.set(anchor, [id]);
+    }
+  };
+
+  for (const entity of entities) {
+    byId.set(entity.id, entity);
+    if (Relation.isRelation(entity)) {
+      const source = EID.getEntityId(Relation.getSourceURI(entity));
+      const target = EID.getEntityId(Relation.getTargetURI(entity));
+      link(source, entity.id);
+      link(target, entity.id);
+      source && link(entity.id, source);
+      target && link(entity.id, target);
+    } else if (Obj.isObject(entity)) {
+      objects.push(entity.id);
+      link(Obj.getParent(entity)?.id, entity.id);
+    }
+  }
+
+  return { objects, byId, reachable };
+};
 
 /** Synthetic anchor for the top level; `childIds` is ungated here so roots always load. */
 const ROOT_ANCHOR = 'objects';
