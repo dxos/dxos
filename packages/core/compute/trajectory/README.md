@@ -41,8 +41,9 @@ assistant: Oslo is 12°C with rain.
 After #9 the same four lines are followed by `user: And in Bergen?`, which only extends the prompt, so the provider's
 prompt cache covers everything sent before.
 
-`Reducer.session` after #8: `queue` is `[#5]` and `turn` is unset. `Reducer.thread` after #9 lists #1, #4, #5, #6 and #7,
-with statuses `consumed`, `sent`, `consumed`, `sent`, `sent`.
+`Reducer.session` after #8: `queue` is `[#5]` and `turn` is unset. `Reducer.thread` shows #5 where it was typed, as
+`queued`, until #9 moves it to the end as `consumed`, the position the model sees it at. After #9 it lists #1, #4, #6, #7
+and #5.
 
 ### 2. An alarm, a subagent thread and a compaction
 

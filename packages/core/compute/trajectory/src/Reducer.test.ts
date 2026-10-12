@@ -103,7 +103,23 @@ describe('Reducer', () => {
         message('reply'),
         event({ _tag: 'alarmSet', wakeAt: 1 }),
       ]);
-      expect(state.items.map((item) => item.status)).to.deep.eq(['consumed', 'cancelled', 'sent']);
+      expect(state.items.map((item) => item.status)).to.deep.eq(['cancelled', 'consumed', 'sent']);
+    });
+
+    test('a consumed message moves to where the model sees it', ({ expect }) => {
+      const typed = message('typed mid-turn', user);
+      const { state } = Reducer.run(Reducer.thread, [
+        message('call'),
+        typed,
+        message('result'),
+        event({ _tag: 'promptConsume', message: typed.id }),
+      ]);
+      expect(
+        state.items.map(
+          (item) =>
+            `${item.status}:${item.blocks.map((block) => (block._tag === 'text' ? block.text : block._tag)).join(' ')}`,
+        ),
+      ).to.deep.eq(['sent:call', 'sent:result', 'consumed:typed mid-turn']);
     });
   });
 

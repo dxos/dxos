@@ -161,9 +161,15 @@ export type ThreadView = { readonly items: readonly ThreadItem[] };
 const setItemStatus = (items: readonly ThreadItem[], id: Trajectory.EventId, status: ItemStatus) =>
   items.map((item) => (item.id === id ? { ...item, status } : item));
 
+const moveToEnd = (items: readonly ThreadItem[], id: Trajectory.EventId, status: ItemStatus): readonly ThreadItem[] => {
+  const item = items.find((candidate) => candidate.id === id);
+  return item ? [...items.filter((candidate) => candidate.id !== id), { ...item, status }] : items;
+};
+
 /**
- * Every message in feed order, including turn threads still streaming; a consume or cancel whose message lies
- * outside the loaded window is ignored, so the UI can fold just the tail of a long conversation.
+ * Every message, including turn threads still streaming; a user message moves to where it is consumed, the position
+ * the model sees it at. A consume or cancel whose message lies outside the loaded window is ignored, so the UI can
+ * fold just the tail of a long conversation.
  */
 export const thread: Reducer<ThreadView> = {
   initial: { items: [] },
@@ -185,7 +191,7 @@ export const thread: Reducer<ThreadView> = {
           ],
         };
       case 'promptConsume':
-        return { items: setItemStatus(state.items, payload.message, 'consumed') };
+        return { items: moveToEnd(state.items, payload.message, 'consumed') };
       case 'promptCancel':
         return { items: setItemStatus(state.items, payload.message, 'cancelled') };
       default:

@@ -103,9 +103,9 @@ describe('samples', () => {
     expect(thread.items.map((item) => `${item.sender.role}:${item.status}`)).to.deep.eq([
       'user:consumed',
       'assistant:sent',
-      'user:consumed',
       'tool:sent',
       'assistant:sent',
+      'user:consumed',
     ]);
   });
 
