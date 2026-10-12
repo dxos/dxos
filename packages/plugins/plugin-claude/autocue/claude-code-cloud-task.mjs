@@ -4,6 +4,8 @@
 
 import { readFileSync } from 'node:fs';
 
+import { showPage } from './show-page.mjs';
+
 /** The GitHub token: `DX_DEMO_GITHUB_TOKEN`, or the `GITHUB_TOKEN=` line of the `.secrets/` file `DX_DEMO_GITHUB_TOKEN_FILE` names. */
 const githubToken = () =>
   process.env.DX_DEMO_GITHUB_TOKEN ??
@@ -104,36 +106,9 @@ const waitForTurn = async (page) => {
   throw new Error('the agent did not finish its turn in time');
 };
 
-/** Shows a GitHub page, then returns to the project. */
-const visit = async ({ demo, page }, url) => {
-  // A re-run of a step can start on GitHub, so the app's URL is the one the first visit left from.
-  if (page.url().startsWith('http://localhost')) {
-    globalThis.autocueAppUrl = page.url();
-  }
-  const app = globalThis.autocueAppUrl ?? new URL('/', page.url()).href;
-  // GitHub's page outlasts a gesture's timeout, so the navigation returns once it commits and the wait is here.
-  for (let attempt = 0; ; attempt++) {
-    const result = await demo.goto({ url, waitUntil: 'commit' }).then(
-      () => undefined,
-      (error) => error,
-    );
-    if (!result) {
-      break;
-    }
-    if (attempt >= 5) {
-      throw result;
-    }
-    await page.waitForTimeout(3_000);
-  }
-  await page.waitForLoadState('load', { timeout: 60_000 }).catch(() => {});
-  await page
-    .getByText(url.split('/').pop())
-    .first()
-    .waitFor({ timeout: 60_000 })
-    .catch(() => {});
-  await page.waitForTimeout(LINGER * 2);
-  await demo.goto({ url: app });
-  await page.locator('[data-testid="projectsPlugin.tab.tasks"]').first().waitFor({ timeout: 120_000 });
+/** Shows a GitHub page over the app, then lingers on the app. */
+const visit = async ({ page }, url) => {
+  await showPage(page, url, { hold: LINGER * 2, ready: url.split('/').pop() });
   await page.waitForTimeout(LINGER);
 };
 
