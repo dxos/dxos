@@ -25,9 +25,17 @@ import {
   type Side,
   isPointEndpoint,
 } from '../model/types.ts';
-import { gutterRoute } from './gutter-route.ts';
+import { gutterRoute, gutterRouteWithCost } from './gutter-route.ts';
 import { type LatticeSpec } from './lattice.ts';
-import { type PortTerminal, nearestPort, nodePorts, pairPorts, portPoint, sideNormal } from './ports.ts';
+import {
+  type PortTerminal,
+  nearestPort,
+  nodePorts,
+  pairPorts,
+  portCandidates,
+  portPoint,
+  sideNormal,
+} from './ports.ts';
 import { nodeBounds } from './shapes.ts';
 
 const MIN_TANGENT = 40;
@@ -174,6 +182,90 @@ const routeEnd = (terminal: PortTerminal, port: Port): RouteEnd => ({
   side: port.side,
 });
 
+/** Port pairs searched per tier of fewest possible bends. */
+const PAIRS_PER_TIER = 3;
+
+/**
+ * The fewest bends any right-angled route between two ports could take: none when they face each other on one line,
+ * one when their sides are perpendicular and each points toward the corner they share, otherwise at least two.
+ */
+const leastBends = (from: RouteEnd, to: RouteEnd): number => {
+  const out = sideNormal(from.side);
+  // A route arrives at its target moving against the target side's normal.
+  const arrive = sideNormal(to.side);
+  const [dx, dy] = [to.point.x - from.point.x, to.point.y - from.point.y];
+  const ahead = (normal: Point, x: number, y: number) => normal.x * x + normal.y * y > 0;
+  if (out.x === -arrive.x && out.y === -arrive.y) {
+    const aligned = out.x !== 0 ? dy === 0 : dx === 0;
+    return aligned && ahead(out, dx, dy) ? 0 : 2;
+  }
+  if (out.x * arrive.x + out.y * arrive.y === 0) {
+    // The corner is where the source's line meets the target's.
+    const corner = out.x !== 0 ? { x: to.point.x, y: from.point.y } : { x: from.point.x, y: to.point.y };
+    const first = ahead(out, corner.x - from.point.x, corner.y - from.point.y);
+    const second = ahead({ x: -arrive.x, y: -arrive.y }, to.point.x - corner.x, to.point.y - corner.y);
+    return first && second ? 1 : 2;
+  }
+  return 2;
+};
+
+/**
+ * The ends and gutter route of a smart link between two nodes on a lattice: of the pairs of side-centre ports (or the
+ * pinned ones), the one whose route is cheapest, fewest bends first, so a link leaves straight down a free column
+ * rather than from the nearest port round a corner. Pairs are tried nearest first, so a tie keeps the nearest.
+ */
+const latticeEnds = (
+  scene: Scene,
+  registry: NodeRegistry,
+  link: Link,
+  route: LatticeRoute,
+): { from: RouteEnd; to: RouteEnd; points: Point[] } | undefined => {
+  if (link.type !== 'smart' || isPointEndpoint(link.source) || isPointEndpoint(link.target)) {
+    return undefined;
+  }
+  const source = terminalOf(scene, registry, link.source);
+  const target = terminalOf(scene, registry, link.target);
+  if (!source || !target) {
+    return undefined;
+  }
+  // A side's centre, where a side has one; a pinned port or a custom layout keeps what it offers.
+  const centres = (ports: readonly Port[]) => {
+    const middle = ports.filter((port) => port.offset === 0.5);
+    return middle.length > 0 ? middle : ports;
+  };
+  const sources = centres(portCandidates(source, 'out'));
+  const targets = centres(portCandidates(target, 'in'));
+  // Fewest possible bends first, then nearest: the search stops once no pair left could bend less than the best found.
+  const pairs = sources
+    .flatMap((from) => targets.map((to) => ({ from: routeEnd(source, from), to: routeEnd(target, to) })))
+    .map((pair) => ({
+      ...pair,
+      least: leastBends(pair.from, pair.to),
+      distance: Math.hypot(pair.from.point.x - pair.to.point.x, pair.from.point.y - pair.to.point.y),
+    }))
+    .sort((left, right) => left.least - right.least || left.distance - right.distance);
+  let best: { from: RouteEnd; to: RouteEnd; points: Point[]; bends: number } | undefined;
+  // Within a tier only the nearest few are searched: a farther pair seldom routes better, and each search has a cost.
+  const tried = new Map<number, number>();
+  for (const pair of pairs) {
+    if (best && pair.least >= best.bends) {
+      break;
+    }
+    const count = tried.get(pair.least) ?? 0;
+    if (count >= PAIRS_PER_TIER) {
+      continue;
+    }
+    tried.set(pair.least, count + 1);
+    const routed = gutterRouteWithCost(route.nodes, route.spec, pair.from, pair.to);
+    // The route's points are its ends and its corners.
+    const bends = routed ? routed.points.length - 2 : Infinity;
+    if (routed && (!best || bends < best.bends)) {
+      best = { from: pair.from, to: pair.to, points: routed.points, bends };
+    }
+  }
+  return best;
+};
+
 /**
  * Resolve a link's ends and route it by its type: two node ends take the automatic (or pinned) port pair,
  * a node end facing a free point takes the port nearest that point, and two free points face each other.
@@ -184,12 +276,16 @@ export const linkGeometry = (
   link: Link,
   lattice?: LatticeSpec,
 ): LinkGeometry | undefined => {
+  const route = lattice ? { spec: lattice, nodes: Object.values(scene.nodes) } : undefined;
+  const routed = route && latticeEnds(scene, registry, link, route);
+  if (routed) {
+    return { link, path: splinePath(routed.points), source: routed.from, target: routed.to };
+  }
   const ends = resolveEnds(scene, registry, link.source, link.target);
   if (!ends) {
     return undefined;
   }
   const [from, to] = ends;
-  const route = lattice ? { spec: lattice, nodes: Object.values(scene.nodes) } : undefined;
   return { link, path: linkPath(link, from, to, route), source: from, target: to };
 };
 
@@ -258,7 +354,12 @@ export const sceneLinkGeometry = (
     const node = isPointEndpoint(end) ? undefined : scene.nodes[end.node];
     return node ? rect(nodeBounds(node)) : undefined;
   };
+  const route = { spec: lattice, nodes };
   const routed = links.flatMap((link) => {
+    const chosen = latticeEnds(scene, registry, link, route);
+    if (chosen) {
+      return [{ link, from: chosen.from, to: chosen.to, points: chosen.points }];
+    }
     const ends = resolveEnds(scene, registry, link.source, link.target);
     if (!ends) {
       return [];

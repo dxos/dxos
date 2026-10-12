@@ -1,0 +1,31 @@
+diagram @ -128,-64 flow=down box=256x128 grid=384x192
+group core "Plugin runtime" {
+  node Manager "PluginManager" ref="packages/sdk/app-framework/src/core/plugin-manager"
+  node Plugin "Plugin" ref="packages/sdk/app-framework/src/core/plugin.ts"
+  node ActGraph "Activation Graph" ref="packages/sdk/app-framework/src/core/plugin-manager/activation-graph.ts"
+  node Events "ActivationEvents" ref="packages/sdk/app-framework/src/common/activation-events.ts"
+  node Capability "Capability" ref="packages/sdk/app-framework/src/core/capability.ts"
+  node CapMgr "CapabilityManager" ref="packages/sdk/app-framework/src/core/capability-manager.ts"
+}
+group consumers "Consumers" {
+  node Surface "Surface" ref="packages/sdk/app-framework/src/ui/components/Surface"
+  node Operation "OperationInvoker" ref="packages/core/compute/operation/src/OperationInvoker.ts"
+  node AppGraph "App Graph" ref="packages/sdk/app-graph/src/AppGraph.ts"
+  node Toolkit "App Toolkit" ref="packages/sdk/app-toolkit/src/app-framework"
+}
+group shell "Shell plugins" {
+  node Deck "Deck" ref="packages/plugins/plugin-deck"
+  node Navtree "NavTree" ref="packages/plugins/plugin-navtree"
+}
+edge Manager owns Plugin "loads"
+edge Manager owns ActGraph "schedules"
+edge ActGraph -> Events "fires on"
+edge Plugin composes Capability "contributes"
+edge Manager owns CapMgr
+edge Surface -> CapMgr
+edge Operation -> CapMgr
+edge AppGraph -> CapMgr
+edge Toolkit -> Plugin
+edge Deck -> AppGraph
+edge Deck -> Surface "articles"
+edge Navtree -> AppGraph

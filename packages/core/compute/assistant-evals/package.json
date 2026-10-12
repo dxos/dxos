@@ -1,6 +1,6 @@
 {
   "name": "@dxos/assistant-evals",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "private": true,
   "description": "Cross-plugin assistant evaluations: evalite-scored evals graded against real DB/tool effects.",
   "homepage": "https://dxos.org",
@@ -40,7 +40,6 @@
     "@dxos/assistant": "workspace:*",
     "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",
-    "@dxos/blob": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/compute-runtime": "workspace:*",

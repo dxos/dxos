@@ -1,0 +1,60 @@
+name: Vitest
+description: >
+  Run one Check test cell — a `moon exec` partition of the given targets — then upload its JUnit to
+  Trunk, its report as an artifact and its coverage to Codecov. Call after the setup and affected
+  actions. Reads TRUNK_TOKEN and CODECOV_TOKEN from the job's environment.
+
+inputs:
+  suite:
+    description: Suite name, used in the artifact name.
+    required: true
+  targets:
+    description: moon targets this suite partitions.
+    required: true
+  shard:
+    description: Zero-based index of this cell.
+    required: true
+  of:
+    description: Number of cells in the suite.
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    # `--on-failure continue` because moon's default bail drops a failing cell's remaining targets,
+    # hiding what they cost.
+    - name: Test
+      if: ${{ env.TRUNK_TOKEN != '' }}
+      uses: trunk-io/analytics-uploader@v1
+      with:
+        junit-paths: 'test-results/**/results.xml'
+        org-slug: dxos
+        token: ${{ env.TRUNK_TOKEN }}
+        quarantine: true
+        run: >-
+          moon exec --on-failure continue ${{ inputs.targets }}
+          --job ${{ inputs.shard }} --job-total ${{ inputs.of }} -- --no-file-parallelism
+
+    - name: Test (no analytics)
+      if: ${{ env.TRUNK_TOKEN == '' }}
+      shell: bash
+      run: >-
+        moon exec --on-failure continue ${{ inputs.targets }}
+        --job ${{ inputs.shard }} --job-total ${{ inputs.of }} -- --no-file-parallelism
+
+    - name: Upload Test Results
+      if: always()
+      uses: actions/upload-artifact@v7
+      with:
+        name: vitest-report-${{ inputs.suite }}-${{ inputs.shard }}
+        path: test-results
+        retention-days: 7
+
+    - uses: codecov/codecov-action@v5
+      if: ${{ env.VITEST_COVERAGE == 'true' }}
+      with:
+        directory: ./coverage
+        fail_ci_if_error: false
+        handle_no_reports_found: true
+        token: ${{ env.CODECOV_TOKEN }}
+        verbose: true

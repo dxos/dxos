@@ -6,108 +6,81 @@ import { describe, test, vi } from 'vitest';
 
 import { SpaceId } from '@dxos/keys';
 
-import { type BlobTransport } from '../backend.ts';
-import { fromDigestHex } from '../ni-uri.ts';
+import { type BlobStore } from '../backend.ts';
+import { createMemoryBlobStore } from '../memory-store.ts';
+import { digestHexFromBytes, fromDigestHex } from '../ni-uri.ts';
 import { createEdgeBlobBackend } from './blob-backend.ts';
 
-/**
- * A transport whose unused operations reject. Before the backend took a `BlobTransport` these tests
- * built partial `EdgeHttpClient`s behind `as unknown as`, which asserted a 33-method class from a
- * one-method object; the narrow interface makes each stub honest.
- */
-const transportWith = (overrides: Partial<BlobTransport>): BlobTransport => ({
-  url: () => {
-    throw new Error('url not stubbed');
-  },
-  put: async () => {
-    throw new Error('put not stubbed');
-  },
-  get: async () => {
-    throw new Error('get not stubbed');
-  },
-  has: async () => {
-    throw new Error('has not stubbed');
-  },
-  ...overrides,
-});
-
 describe('createEdgeBlobBackend', () => {
-  const niUri = fromDigestHex('deadbeef');
+  const spaceId = SpaceId.random();
 
-  test('put uploads via the transport and returns an ni: URI', async ({ expect }) => {
-    const put = vi.fn(async () => undefined);
-    const backend = createEdgeBlobBackend({ transport: transportWith({ put }) });
+  test('put is confirmed once the local store holds the bytes, and returns an ni: URI', async ({ expect }) => {
+    const store = createMemoryBlobStore();
+    const backend = createEdgeBlobBackend({ store });
 
-    const spaceId = SpaceId.random();
     const data = new Uint8Array([1, 2, 3]);
-    const response = await backend.put({ spaceId, data, contentType: 'image/png', contentHash: 'deadbeef' });
+    const contentHash = await digestHexFromBytes(data);
+    const { uri } = await backend.put({ spaceId, data, contentType: 'image/png', contentHash });
 
-    expect(response.uri).toBe(niUri);
-    expect(put).toHaveBeenCalledWith('deadbeef', data, { contentType: 'image/png' });
+    expect(uri).toBe(fromDigestHex(contentHash));
+    expect(await store.get(contentHash)).toEqual({ data, contentType: 'image/png' });
+    expect(await backend.get({ spaceId, uri })).toEqual(data);
+    expect(await backend.has({ spaceId, uri })).toBe(true);
+    expect(await backend.get({ spaceId, uri: fromDigestHex('c0ffee') })).toBeUndefined();
+    expect(await backend.has({ spaceId, uri: fromDigestHex('c0ffee') })).toBe(false);
   });
 
-  test('get downloads using the digest encoded in the URI', async ({ expect }) => {
-    const bytes = new Uint8Array([9, 8, 7]);
-    const get = vi.fn(async () => bytes);
-    const backend = createEdgeBlobBackend({ transport: transportWith({ get }) });
+  test('a write is not held up by replication behind the store', async ({ expect }) => {
+    // A store whose replication never settles: the backend must not wait on anything but the put.
+    const store: BlobStore = { ...createMemoryBlobStore(), put: vi.fn(async () => undefined) };
+    const backend = createEdgeBlobBackend({ store });
 
-    const spaceId = SpaceId.random();
-    const result = await backend.get({ spaceId, uri: niUri });
-
-    expect(result).toBe(bytes);
-    expect(get).toHaveBeenCalledWith('deadbeef');
+    await expect(backend.put({ spaceId, data: new Uint8Array([1]), contentHash: 'deadbeef' })).resolves.toEqual({
+      uri: fromDigestHex('deadbeef'),
+    });
+    expect(store.put).toHaveBeenCalledWith('deadbeef', new Uint8Array([1]), { contentType: undefined });
   });
 
-  test('get returns undefined when the transport reports a miss', async ({ expect }) => {
-    const get = vi.fn(async () => undefined);
-    const backend = createEdgeBlobBackend({ transport: transportWith({ get }) });
+  test('getUrl serves an object URL over the local bytes and reuses it', async ({ expect }) => {
+    const store = createMemoryBlobStore();
+    const backend = createEdgeBlobBackend({ store });
+    const data = new TextEncoder().encode('hello');
+    const { uri } = await backend.put({ spaceId, data, contentType: 'text/plain', contentHash: 'aa' });
 
-    const spaceId = SpaceId.random();
-    const result = await backend.get({ spaceId, uri: fromDigestHex('c0ffee') });
+    const url = await backend.getUrl({ spaceId, uri });
+    expect(url).toMatch(/^blob:/);
+    expect(await backend.getUrl({ spaceId, uri })).toBe(url);
+    const response = await fetch(url ?? '');
+    expect(await response.text()).toBe('hello');
+    expect(response.headers.get('content-type')).toBe('text/plain');
+    expect(await backend.getUrl({ spaceId, uri: fromDigestHex('c0ffee') })).toBeUndefined();
 
-    expect(result).toBeUndefined();
+    const asHtml = await backend.getUrl({ spaceId, uri, contentType: 'text/html' });
+    expect(asHtml).not.toBe(url);
+    expect((await fetch(asHtml ?? '')).headers.get('content-type')).toBe('text/html');
+    backend.close();
   });
 
-  test('has checks using the digest encoded in the URI', async ({ expect }) => {
-    const has = vi.fn(async () => true);
-    const backend = createEdgeBlobBackend({ transport: transportWith({ has }) });
+  test('adoptUpload finalizes the upload and returns an ni: URI with the stored size and type', async ({ expect }) => {
+    const finalizeUpload = vi.fn(async () => ({ key: 'deadbeef', size: 42, contentType: 'image/png' }));
+    const backend = createEdgeBlobBackend({ store: createMemoryBlobStore(), finalizeUpload });
 
-    const spaceId = SpaceId.random();
-    const result = await backend.has({ spaceId, uri: niUri });
-
-    expect(result).toBe(true);
-    expect(has).toHaveBeenCalledWith('deadbeef');
+    expect(await backend.adoptUpload?.({ spaceId, uploadId: 'u1' })).toEqual({
+      uri: fromDigestHex('deadbeef'),
+      size: 42,
+      contentType: 'image/png',
+    });
+    expect(finalizeUpload).toHaveBeenCalledWith('u1');
   });
 
-  test('adoptUpload turns a finalized upload into an ni: URI', async ({ expect }) => {
-    const finalizeUpload = vi.fn(async () => ({ key: 'deadbeef', size: 1234, contentType: 'video/webm' }));
-    const backend = createEdgeBlobBackend({ transport: transportWith({ finalizeUpload }) });
-
-    const spaceId = SpaceId.random();
-    const result = await backend.adoptUpload?.({ spaceId, uploadId: 'upload-1' });
-
-    // The service's key becomes the blob's identity; its size and type are reported verbatim,
-    // because nothing on this side of the wire ever saw the bytes.
-    expect(result).toEqual({ uri: niUri, size: 1234, contentType: 'video/webm' });
-    expect(finalizeUpload).toHaveBeenCalledWith('upload-1');
-  });
-
-  test('adoptUpload is absent when the transport cannot finalize uploads', async ({ expect }) => {
-    const backend = createEdgeBlobBackend({ transport: transportWith({}) });
-
+  test('adoptUpload is absent without a way to finalize uploads', ({ expect }) => {
     // Absent rather than throwing: the manager distinguishes "this backend cannot adopt uploads"
     // from "the adoption failed", and only the missing method expresses the first.
-    expect(backend.adoptUpload).toBeUndefined();
+    expect(createEdgeBlobBackend({ store: createMemoryBlobStore() }).adoptUpload).toBeUndefined();
   });
 
-  test('getUrl builds a direct URL from the digest encoded in the URI', async ({ expect }) => {
-    const url = vi.fn((key: string) => new URL(`/blob/file/${key}`, 'https://edge.example.com'));
-    const backend = createEdgeBlobBackend({ transport: transportWith({ url }) });
-
-    const spaceId = SpaceId.random();
-    const result = await backend.getUrl?.({ spaceId, uri: niUri });
-
-    expect(result).toBe('https://edge.example.com/blob/file/deadbeef');
-    expect(url).toHaveBeenCalledWith('deadbeef');
+  test('rejects URIs with the wrong scheme', async ({ expect }) => {
+    const backend = createEdgeBlobBackend({ store: createMemoryBlobStore() });
+    await expect(backend.get({ spaceId, uri: 's3://bucket/key' })).rejects.toThrow();
   });
 });

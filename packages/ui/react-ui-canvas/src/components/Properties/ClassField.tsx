@@ -8,8 +8,8 @@ import { Form, type FormFieldRenderer, SelectControl } from '@dxos/react-ui-form
 
 import { type StyleMap } from '../../model/types.ts';
 
-/** The drawing's style classes, for the class field. */
-export const StyleClassesContext = createContext<StyleMap>({});
+/** The drawing's style classes, for the class field; unset when the host offers none, so the field is hidden. */
+export const StyleClassesContext = createContext<StyleMap | undefined>(undefined);
 
 /** The select's value for no class: a select item needs a non-empty value. */
 const NO_CLASS = '-';
@@ -20,7 +20,7 @@ export const ClassField: FormFieldRenderer = ({ type, label, jsonPath, readonly,
   const items = useMemo(
     () => [
       { value: NO_CLASS, label: 'None' },
-      ...Object.values(styles)
+      ...Object.values(styles ?? {})
         .map((styleClass) => ({ value: styleClass.id, label: styleClass.name }))
         .sort((left, right) => left.label.localeCompare(right.label)),
     ],

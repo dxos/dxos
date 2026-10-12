@@ -350,6 +350,8 @@ export const translations = [
         'layout-duplicates.label': 'Duplicates',
         'open-object.label': 'Open object',
         'search-placeholder.label': 'Filter objects...',
+        'collection-filter.label': 'Filter objects',
+        'collection-filter.placeholder': 'Filter…',
         'search-no-results.message': 'No matches.',
         'item-count.label_zero': 'No items',
         'item-count.label_one': '1 item',

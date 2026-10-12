@@ -92,6 +92,10 @@ export type StyleHue = Schema.Schema.Type<typeof StyleHue>;
 export const NodeTone = Schema.Literals([0, 1, 2, 3]);
 export type NodeTone = Schema.Schema.Type<typeof NodeTone>;
 
+/** The typefaces a shape's text may use: the theme's body face, or its fixed-width one. */
+export const FONT_FAMILIES = ['default', 'monospace'] as const;
+export type FontFamily = (typeof FONT_FAMILIES)[number];
+
 /** Where text sits across a shape, and down it. */
 export const HORIZONTAL_ALIGNS = ['left', 'center', 'right'] as const;
 export const VERTICAL_ALIGNS = ['top', 'middle', 'bottom'] as const;
@@ -130,6 +134,8 @@ export const styleFields = {
   border: Schema.optional(Schema.Boolean),
   /** A guide: drawn dashed and unfilled, an annotation rather than content. */
   guide: Schema.optional(Schema.Boolean),
+  /** The face of the shape's text; unset is the theme's body face. */
+  fontFamily: Schema.optional(Schema.Literals(FONT_FAMILIES).annotate({ title: 'Font' })),
   /** Text size in the node's own scene units (the editor offers a readable range; stored values are not checked). */
   fontSize: Schema.optional(Schema.Number.annotate({ title: 'Font size' })),
   /** Where the text sits across the shape; unset is the type's own (a label centres, a note starts at the left). */
@@ -202,22 +208,22 @@ export const NoteNode = Schema.Struct({
 });
 export type NoteNode = Schema.Schema.Type<typeof NoteNode>;
 
-/** Portal to the next depth: renders the referenced scene scaled into this node's bounds. */
-export const PortalNode = Schema.Struct({
-  type: Schema.Literal('scene'),
+/** A frame onto the next depth: renders its child scene scaled into this node's bounds. */
+export const FrameNode = Schema.Struct({
+  type: Schema.Literal('frame'),
   ...nodeBase,
   ...boxFields,
   scene: Schema.String,
   /** Draw the child scene inside the frame rather than the label; unset, it does so while there is no label. */
   contents: Schema.optional(Schema.Boolean.annotate({ title: 'Show contents' })),
 });
-export type PortalNode = Schema.Schema.Type<typeof PortalNode>;
+export type FrameNode = Schema.Schema.Type<typeof FrameNode>;
 
 /** The engine's own node types. A host may add its own (decision 1); those are `NodeBase` to the engine. */
-export const BuiltinNode = Schema.Union([RectNode, EllipseNode, NoteNode, PortalNode]);
+export const BuiltinNode = Schema.Union([RectNode, EllipseNode, NoteNode, FrameNode]);
 export type BuiltinNode = Schema.Schema.Type<typeof BuiltinNode>;
 export type BuiltinNodeType = BuiltinNode['type'];
-export const NODE_TYPES: readonly BuiltinNodeType[] = ['rect', 'ellipse', 'note', 'scene'];
+export const NODE_TYPES: readonly BuiltinNodeType[] = ['rect', 'ellipse', 'note', 'frame'];
 
 /** A node of the scene: the engine handles any `NodeBase`; built-in code narrows with the guards below. */
 export type Node = NodeBase;
@@ -228,11 +234,11 @@ export type NodeType = string;
 export const isRectNode = (node: NodeBase): node is RectNode => node.type === 'rect';
 export const isEllipseNode = (node: NodeBase): node is EllipseNode => node.type === 'ellipse';
 export const isNoteNode = (node: NodeBase): node is NoteNode => node.type === 'note';
-export const isPortalNode = (node: NodeBase): node is PortalNode => node.type === 'scene';
+export const isFrameNode = (node: NodeBase): node is FrameNode => node.type === 'frame';
 /** A node built on the `box` prototype, carrying a centred, editable label. */
-export const isBoxNode = (node: NodeBase): node is RectNode | PortalNode => isRectNode(node) || isPortalNode(node);
-/** Whether a portal draws its child scene: as set, else while it has no label to show instead. */
-export const showsContents = (node: PortalNode): boolean => node.contents ?? node.label === undefined;
+export const isBoxNode = (node: NodeBase): node is RectNode | FrameNode => isRectNode(node) || isFrameNode(node);
+/** Whether a frame draws its child scene: as set, else while it has no label to show instead. */
+export const showsContents = (node: FrameNode): boolean => node.contents ?? node.label === undefined;
 export const isBuiltinNode = (node: NodeBase): node is BuiltinNode => NODE_TYPES.some((type) => type === node.type);
 
 //
@@ -292,6 +298,8 @@ const linkBase = {
   target: Endpoint,
   /** End markers; an arrow at `end` reads as the link's direction. */
   ends: Schema.optional(LinkEnds),
+  /** A caption drawn at the middle of the link's route. */
+  text: Schema.optional(Schema.String.annotate({ title: 'Label' })),
   /** A style class of the drawing the link takes its style from; its own `style` wins over it. */
   /** The scene layer the element is on; unset, or naming no layer of the scene, it is on the bottom one. */
   layer: Schema.optional(Schema.String.annotate({ title: 'Layer' })),
@@ -368,7 +376,7 @@ export const createSceneSchema = <const Nodes extends readonly Schema.Codec<Node
   });
 
 /** The scene schema over the built-in node types. */
-export const Scene = createSceneSchema([RectNode, EllipseNode, NoteNode, PortalNode]);
+export const Scene = createSceneSchema([RectNode, EllipseNode, NoteNode, FrameNode]);
 
 /** The scene schema over any node with the shared fields: what the engine itself can validate for a host. */
 export const OpenScene = createSceneSchema([NodeBase]);

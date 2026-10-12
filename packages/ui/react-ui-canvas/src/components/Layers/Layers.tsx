@@ -7,9 +7,10 @@ import React, { useMemo, useState } from 'react';
 import { OrderedList } from '@dxos/react-ui-list';
 import * as Button from '@dxos/react-ui/Button';
 import * as Editable from '@dxos/react-ui/Editable';
+import * as Menu from '@dxos/react-ui/Menu';
+import * as Panel from '@dxos/react-ui/Panel';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import type * as Util from '@dxos/react-ui/Util';
-import { mx } from '@dxos/ui-theme';
 
 import { type Layer, type LayerId } from '../../model/types.ts';
 
@@ -31,6 +32,8 @@ export type LayersPanelProps = Util.ThemedClassName<{
   onDelete?: (ids: LayerId[]) => void;
   /** Merges the selected layers into the top-most of them; offered while two or more are selected. */
   onMerge?: (ids: LayerId[], into: LayerId) => void;
+  /** Whether the panel is docked beside the canvas. */
+  docked?: boolean;
 }>;
 
 type LayerNameProps = {
@@ -88,6 +91,7 @@ export const LayersPanel = ({
   onCreate,
   onDelete,
   onMerge,
+  docked = false,
 }: LayersPanelProps) => {
   const items = useMemo(() => [...layers].reverse(), [layers]);
   // The row whose name is open; a new layer opens its own, so it is named as it is made.
@@ -99,98 +103,114 @@ export const LayersPanel = ({
   );
   const top = selected[selected.length - 1];
   return (
-    <div className={mx('flex flex-col overflow-hidden', classNames)} data-testid='layers'>
-      <Toolbar.Root data-testid='layers-toolbar'>
-        <Button.Root
-          variant='ghost'
-          iconOnly
-          icon='ph--plus--regular'
-          label='Add layer'
-          disabled={readonly || !onCreate}
-          data-testid='layers-create'
-          onClick={() => {
-            const id = onCreate?.();
-            if (id) {
-              setEditingId(id);
-            }
-          }}
-        />
-        <Button.Root
-          variant='ghost'
-          iconOnly
-          icon='ph--trash--regular'
-          label='Delete layers'
-          disabled={readonly || !onDelete || selected.length === 0 || selected.length >= layers.length}
-          data-testid='layers-delete'
-          onClick={() => onDelete?.(selected)}
-        />
-        <Button.Root
-          variant='ghost'
-          iconOnly
-          icon='ph--arrow-line-down--regular'
-          label='Merge layers'
-          disabled={readonly || !onMerge || selected.length < 2}
-          data-testid='layers-merge'
-          onClick={() => top && onMerge?.(selected, top)}
-        />
-      </Toolbar.Root>
-      <OrderedList.Root
-        items={items}
-        getLabel={(layer) => layer.name}
-        readonly={readonly || !onMove}
-        multiple
-        value={selected}
-        onValueChange={(ids) => onSelectedChange?.(ids)}
-        // The list is top first; the order the model keeps is bottom first.
-        onMove={(from, to) => onMove?.(items[from].id, items.length - 1 - to)}
-      >
-        {({ items }) => (
-          <OrderedList.Content
-            aria-label='Layers'
-            // The gutter frames the rows above and below as well as at the sides.
-            padBlock
-            onKeyDown={(event) => {
-              // Enter on the list (as well as selecting the highlighted row) opens that row's name.
-              if (event.key !== 'Enter' || event.target !== event.currentTarget || readonly || !onRename) {
-                return;
-              }
-              const active = event.currentTarget.getAttribute('aria-activedescendant');
-              const id = active ? event.currentTarget.ownerDocument.getElementById(active)?.dataset.value : undefined;
+    <Panel.Root classNames={classNames} data-testid='layers'>
+      <Panel.Header asChild>
+        <Toolbar.Root data-testid='layers-toolbar'>
+          <Button.Root
+            variant='ghost'
+            iconOnly
+            icon='ph--plus--regular'
+            label='Add layer'
+            disabled={readonly || !onCreate}
+            data-testid='layers-create'
+            onClick={() => {
+              const id = onCreate?.();
               if (id) {
                 setEditingId(id);
               }
             }}
-          >
-            {items.map((layer) => (
-              <OrderedList.Item key={layer.id} id={layer.id} data-testid={`layer-${layer.id}`}>
-                <OrderedList.DragHandle />
-                <LayerName
-                  layer={layer}
-                  readonly={readonly}
-                  editing={editingId === layer.id}
-                  onEditingChange={(editing) =>
-                    setEditingId((current) => (editing ? layer.id : current === layer.id ? undefined : current))
-                  }
-                  onRename={(name) => onRename?.(layer.id, name)}
-                />
-                <Button.Root
-                  variant='ghost'
-                  iconOnly
-                  icon={layer.hidden ? 'ph--eye-slash--regular' : 'ph--eye--regular'}
-                  label={layer.hidden ? 'Show layer' : 'Hide layer'}
-                  disabled={readonly || !onToggle}
-                  data-testid={`layer-toggle-${layer.id}`}
-                  onClick={(event) => {
-                    // The row's own click selects it; showing or hiding a layer leaves the selection alone.
-                    event.stopPropagation();
-                    onToggle?.(layer.id);
-                  }}
-                />
-              </OrderedList.Item>
-            ))}
-          </OrderedList.Content>
-        )}
-      </OrderedList.Root>
-    </div>
+          />
+          {/* The rarer, destructive edits wait in a menu at the toolbar's end. */}
+          <Toolbar.Separator variant='gap' />
+          <Menu.Root positioning={{ placement: 'bottom-end', gutter: 4 }}>
+            <Menu.Trigger asChild>
+              <Button.Root
+                variant='ghost'
+                iconOnly
+                icon='ph--dots-three-vertical--regular'
+                label='Layer actions'
+                disabled={readonly}
+                data-testid='layers-menu'
+              />
+            </Menu.Trigger>
+            <Menu.Content>
+              <Menu.Item
+                item={{ value: 'merge', label: 'Merge layers', icon: 'ph--arrow-line-down--regular' }}
+                disabled={!onMerge || selected.length < 2}
+                data-testid='layers-merge'
+                onSelect={() => top && onMerge?.(selected, top)}
+              />
+              <Menu.Item
+                item={{ value: 'delete', label: 'Delete layers', icon: 'ph--trash--regular' }}
+                disabled={!onDelete || selected.length === 0 || selected.length >= layers.length}
+                data-testid='layers-delete'
+                onSelect={() => onDelete?.(selected)}
+              />
+            </Menu.Content>
+          </Menu.Root>
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body>
+        <OrderedList.Root
+          items={items}
+          getLabel={(layer) => layer.name}
+          readonly={readonly || !onMove}
+          multiple
+          value={selected}
+          onValueChange={(ids) => onSelectedChange?.(ids)}
+          // The list is top first; the order the model keeps is bottom first.
+          onMove={(from, to) => onMove?.(items[from].id, items.length - 1 - to)}
+        >
+          {({ items }) => (
+            <OrderedList.Content
+              // Docked, the dock scrolls the panels together, so the list keeps no scroll of its own (it would hold the wheel).
+              scroll={!docked}
+              // Rows run edge to edge, with no gutter around them.
+              gutter='none'
+              aria-label='Layers'
+              onKeyDown={(event) => {
+                // Enter on the list (as well as selecting the highlighted row) opens that row's name.
+                if (event.key !== 'Enter' || event.target !== event.currentTarget || readonly || !onRename) {
+                  return;
+                }
+                const active = event.currentTarget.getAttribute('aria-activedescendant');
+                const id = active ? event.currentTarget.ownerDocument.getElementById(active)?.dataset.value : undefined;
+                if (id) {
+                  setEditingId(id);
+                }
+              }}
+            >
+              {items.map((layer) => (
+                <OrderedList.Item key={layer.id} id={layer.id} data-testid={`layer-${layer.id}`}>
+                  <OrderedList.DragHandle />
+                  <LayerName
+                    layer={layer}
+                    readonly={readonly}
+                    editing={editingId === layer.id}
+                    onEditingChange={(editing) =>
+                      setEditingId((current) => (editing ? layer.id : current === layer.id ? undefined : current))
+                    }
+                    onRename={(name) => onRename?.(layer.id, name)}
+                  />
+                  <Button.Root
+                    variant='ghost'
+                    iconOnly
+                    icon={layer.hidden ? 'ph--eye-slash--regular' : 'ph--eye--regular'}
+                    label={layer.hidden ? 'Show layer' : 'Hide layer'}
+                    disabled={readonly || !onToggle}
+                    data-testid={`layer-toggle-${layer.id}`}
+                    onClick={(event) => {
+                      // The row's own click selects it; showing or hiding a layer leaves the selection alone.
+                      event.stopPropagation();
+                      onToggle?.(layer.id);
+                    }}
+                  />
+                </OrderedList.Item>
+              ))}
+            </OrderedList.Content>
+          )}
+        </OrderedList.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };

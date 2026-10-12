@@ -28,6 +28,12 @@ const TestViewWrapper = Type.makeObject(DXN.make('com.example.type.viewWrapper',
   }).pipe(ViewAnnotation.set(['view'])),
 );
 
+const TestOptionalViewWrapper = Type.makeObject(DXN.make('com.example.type.optionalViewWrapper', '0.1.0'))(
+  Schema.Struct({
+    view: Schema.optional(Ref.Ref(View.View)),
+  }).pipe(ViewAnnotation.set(['view'])),
+);
+
 describe('buildViewIndex', () => {
   let testBuilder: EchoTestBuilder;
   let db: EchoDatabase;
@@ -35,7 +41,9 @@ describe('buildViewIndex', () => {
 
   beforeEach(async () => {
     testBuilder = await new EchoTestBuilder().open();
-    const result = await testBuilder.createDatabase({ types: [TestContact, TestViewWrapper, View.View] });
+    const result = await testBuilder.createDatabase({
+      types: [TestContact, TestViewWrapper, TestOptionalViewWrapper, View.View],
+    });
     db = result.db;
     registry = AtomRegistry.make();
   });
@@ -99,6 +107,22 @@ describe('buildViewIndex', () => {
     const views = viewIndex.getViewsForTypeUri(Type.getURI(TestContact));
     expect(views).toHaveLength(1);
     expect(views[0].id).toBe(tableView.id);
+  });
+
+  test('typeUrisWithNonViewObjects lists view types with an instance that is not a view', async ({ expect }) => {
+    const viewObj = db.add(View.make({ query: { ast: Query.select(Filter.type(TestContact)).ast } }));
+    db.add(Obj.make(TestViewWrapper, { view: Ref.make(viewObj) }));
+    db.add(Obj.make(TestOptionalViewWrapper, {}));
+    await db.flush();
+
+    const allSchemas = db.graph.registry
+      .list()
+      .filter(Type.isType)
+      .filter((t) => !Type.isTypeKind(t));
+    const viewIndex = buildViewIndex(registry.get.bind(registry) as any, { db } as any, allSchemas);
+
+    expect(viewIndex.typeUrisWithNonViewObjects.has(Type.getURI(TestOptionalViewWrapper))).toBe(true);
+    expect(viewIndex.typeUrisWithNonViewObjects.has(Type.getURI(TestViewWrapper))).toBe(false);
   });
 
   test('returns empty index when no view schemas exist', async ({ expect }) => {

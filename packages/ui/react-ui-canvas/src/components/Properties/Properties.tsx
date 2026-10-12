@@ -25,9 +25,9 @@ import {
 } from '@dxos/react-ui-form';
 import * as Button from '@dxos/react-ui/Button';
 import * as Input from '@dxos/react-ui/Input';
+import * as Panel from '@dxos/react-ui/Panel';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import type * as Util from '@dxos/react-ui/Util';
-import { mx } from '@dxos/ui-theme';
 
 import { useRegistry } from '../../hooks/index.ts';
 import { SCENE_OVERLAY_ATTRIBUTE } from '../../hooks/useWheel.ts';
@@ -50,9 +50,9 @@ import {
   type StyleClass,
   type StyleMap,
   getElement,
+  isFrameNode,
   isLink,
   isNoteNode,
-  isPortalNode,
   showsContents,
 } from '../../model/types.ts';
 import { elementLayer, sceneLayers } from '../../utils/layers.ts';
@@ -62,8 +62,9 @@ import { type SceneOption } from '../../utils/scenes.ts';
 import { flipLink } from '../../utils/shapes.ts';
 import { classedLink, classedNode, resolveStyle, splitClassEdit } from '../../utils/style.ts';
 import { AlignField } from './AlignField.tsx';
-import { ClassField, StyleClassesContext } from './ClassField.tsx';
-import { LayerField, LayersContext } from './LayerField.tsx';
+import { StyleClassesContext } from './ClassField.tsx';
+import { FontField } from './FontField.tsx';
+import { LayerClassField, LayersContext } from './LayerField.tsx';
 import { SceneField, SceneOptionsContext } from './SceneField.tsx';
 import { OutlineStyleField, StyleGridField } from './StyleGrid.tsx';
 
@@ -101,9 +102,9 @@ export const LinesField: FormFieldRenderer = ({ type, label, jsonPath, readonly,
 export const DEFAULT_FIELDS: FormFieldMap = {
   'style.hue': StyleGridField,
   'style.alignHorizontal': AlignField,
+  'style.fontFamily': FontField,
   'scene': SceneField,
-  'class': ClassField,
-  'layer': LayerField,
+  'layer': LayerClassField,
 };
 
 const LINK_SCHEMAS: Record<LinkType, Schema.Codec<any, any>> = {
@@ -140,7 +141,7 @@ const formValues = (
         layer: elementLayer(element, layers),
         style: { ...textAlign(element), ...resolveStyle(classedNode(element, styles).style) },
         portsPerSide: portsPerSideOf(nodes, element),
-        ...(isPortalNode(element) ? { contents: showsContents(element) } : {}),
+        ...(isFrameNode(element) ? { contents: showsContents(element) } : {}),
       };
 
 /**
@@ -152,7 +153,7 @@ const FIELD_OVERRIDES: Record<string, FormFieldOverride> = {
   'style.hue': { label: 'Style' },
   'style.tone': { hidden: true },
   'style.alignVertical': { hidden: true },
-  'style.fontSize': { min: 8, max: 80, step: 1 },
+  'style.fontSize': { hidden: true },
   'portsPerSide': { min: 1, max: MAX_PORTS_PER_SIDE, step: 1 },
   'scene': { label: 'Scene' },
   'layer': { label: 'Layer' },
@@ -186,6 +187,8 @@ export type PropertiesProps = Util.ThemedClassName<{
   styles?: Atom.Writable<StyleMap>;
   /** Moves the selection into a new scene (`groupIntoScene`); offered for a selection of several elements. */
   onGroup?: () => void;
+  /** Whether the panel is docked beside the canvas. */
+  docked?: boolean;
 }>;
 
 export const Properties = ({
@@ -201,6 +204,7 @@ export const Properties = ({
   sceneOptions,
   styles,
   onGroup,
+  docked = false,
 }: PropertiesProps) => {
   const registry = useRegistry();
   const scene = useAtomValue(projection.scene);
@@ -221,7 +225,8 @@ export const Properties = ({
     const fieldOverrides: Record<string, FormFieldOverride> = {
       ...FIELD_OVERRIDES,
       ...(sceneOptions ? {} : { scene: { hidden: true } }),
-      ...(styles ? {} : { class: { hidden: true } }),
+      // The class is edited in the layer's row (`LayerClassField`).
+      class: { hidden: true },
       ...overrides?.(elements),
     };
     for (const path of mixed) {
@@ -305,94 +310,89 @@ export const Properties = ({
 
   if (elements.length === 0) {
     return (
-      <div
-        className={mx('flex flex-col overflow-hidden', classNames)}
-        data-testid='properties'
-        {...{ [SCENE_OVERLAY_ATTRIBUTE]: true }}
-      >
-        <div className='p-2 text-sm text-fg-muted'>Select a node or link to edit its properties.</div>
-      </div>
+      <Panel.Root classNames={classNames} data-testid='properties' {...{ [SCENE_OVERLAY_ATTRIBUTE]: true }}>
+        <Panel.Body>
+          <p className='p-2 text-sm text-fg-muted'>Select a node or link to edit its properties.</p>
+        </Panel.Body>
+      </Panel.Root>
     );
   }
 
   const summary = elements.length > 1 && `${describeSelection(elements)}${schema ? '' : ' — no shared properties'}`;
   return (
-    <div
-      className={mx('flex flex-col overflow-hidden', classNames)}
-      data-testid='properties'
-      {...{ [SCENE_OVERLAY_ATTRIBUTE]: true }}
-    >
-      <Toolbar.Root data-testid='properties-toolbar'>
-        {onGroup && elements.length > 1 && elements.some((element) => !isLink(element)) && (
-          <Button.Root
-            variant='ghost'
-            iconOnly
-            icon='ph--frame-corners--regular'
-            label='New scene from selection'
-            disabled={readonly}
-            data-testid='properties-group'
-            onClick={onGroup}
-          />
+    <Panel.Root classNames={classNames} data-testid='properties' {...{ [SCENE_OVERLAY_ATTRIBUTE]: true }}>
+      <Panel.Header asChild>
+        <Toolbar.Root data-testid='properties-toolbar'>
+          {onGroup && elements.length > 1 && elements.some((element) => !isLink(element)) && (
+            <Button.Root
+              variant='ghost'
+              iconOnly
+              icon='ph--frame-corners--regular'
+              label='New scene from selection'
+              disabled={readonly}
+              data-testid='properties-group'
+              onClick={onGroup}
+            />
+          )}
+          {styles && single && (
+            <Button.Root
+              variant='ghost'
+              iconOnly
+              icon='ph--swatches--regular'
+              label='New class from selection'
+              disabled={readonly}
+              data-testid='properties-new-class'
+              onClick={onCreateClass}
+            />
+          )}
+          {links.length > 0 && links.length === elements.length && (
+            <Button.Root
+              variant='ghost'
+              iconOnly
+              icon='ph--arrows-left-right--regular'
+              label='Flip direction'
+              disabled={readonly}
+              data-testid='properties-flip'
+              onClick={onFlip}
+            />
+          )}
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body>
+        {schema && (
+          <LayersContext.Provider value={layers}>
+            <StyleClassesContext.Provider value={styles ? styleMap : undefined}>
+              <SceneOptionsContext.Provider value={sceneOptions ?? []}>
+                <Form.Root
+                  key={[...selection].join()}
+                  schema={schema}
+                  values={values}
+                  fieldOverrides={fieldOverrides}
+                  fieldMap={fieldMap}
+                  db={db}
+                  getOptions={getOptions}
+                  readonly={readonly}
+                  autoSave
+                  onSave={onSave}
+                >
+                  {/* Floating, the panel is as tall as its host and a long form scrolls inside it; docked, the dock scrolls
+                      the panels together, so the form keeps no scroll of its own (it would hold the wheel). */}
+                  <Form.Viewport scroll={!docked}>
+                    <Form.Content>
+                      <Form.Fields exclude={HIDDEN} />
+                    </Form.Content>
+                  </Form.Viewport>
+                </Form.Root>
+              </SceneOptionsContext.Provider>
+            </StyleClassesContext.Provider>
+          </LayersContext.Provider>
         )}
-        {styles && single && (
-          <Button.Root
-            variant='ghost'
-            iconOnly
-            icon='ph--swatches--regular'
-            label='New class from selection'
-            disabled={readonly}
-            data-testid='properties-new-class'
-            onClick={onCreateClass}
-          />
-        )}
-        {links.length > 0 && links.length === elements.length && (
-          <Button.Root
-            variant='ghost'
-            iconOnly
-            icon='ph--arrows-left-right--regular'
-            label='Flip direction'
-            disabled={readonly}
-            data-testid='properties-flip'
-            onClick={onFlip}
-          />
-        )}
-      </Toolbar.Root>
-      {schema ? (
-        <LayersContext.Provider value={layers}>
-          <StyleClassesContext.Provider value={styleMap}>
-            <SceneOptionsContext.Provider value={sceneOptions ?? []}>
-              <Form.Root
-                key={[...selection].join()}
-                schema={schema}
-                values={values}
-                fieldOverrides={fieldOverrides}
-                fieldMap={fieldMap}
-                db={db}
-                getOptions={getOptions}
-                readonly={readonly}
-                autoSave
-                onSave={onSave}
-              >
-                {/* Scrolling: the panel is as tall as its host, and a long form (a class with many members) scrolls inside it. */}
-                <Form.Viewport scroll>
-                  <Form.Content>
-                    <Form.Fields exclude={HIDDEN} />
-                    {summary && (
-                      <p className='text-sm text-fg-muted' data-testid='properties-summary'>
-                        {summary}
-                      </p>
-                    )}
-                  </Form.Content>
-                </Form.Viewport>
-              </Form.Root>
-            </SceneOptionsContext.Provider>
-          </StyleClassesContext.Provider>
-        </LayersContext.Provider>
-      ) : (
-        <p className='p-2 text-sm text-fg-muted' data-testid='properties-summary'>
+      </Panel.Body>
+      <Panel.Footer classNames='text-center'>
+        <span className='text-sm text-fg-muted' data-testid='properties-summary'>
           {summary}
-        </p>
-      )}
-    </div>
+        </span>
+      </Panel.Footer>
+    </Panel.Root>
   );
 };
