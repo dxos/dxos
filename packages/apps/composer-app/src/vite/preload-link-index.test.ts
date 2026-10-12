@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, test } from 'vitest';
-import { build } from 'vite';
-import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync, mkdirSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { build } from 'vite';
+import { describe, test } from 'vitest';
 
 import { preloadLinkIndex } from './preload-link-index.ts';
 
@@ -19,7 +19,13 @@ describe('preloadLinkIndex', () => {
       writeFileSync(path.join(root, 'src/main.js'), "void import('./a.js').then(({ a }) => a());");
       writeFileSync(path.join(root, 'src/a.js'), "import { b } from './b.js';\nexport const a = () => b();");
       writeFileSync(path.join(root, 'src/b.js'), 'export const b = () => 1;');
-      await build({ root, logLevel: 'silent', configFile: false, plugins: [preloadLinkIndex()], build: { minify: false } });
+      await build({
+        root,
+        logLevel: 'silent',
+        configFile: false,
+        plugins: [preloadLinkIndex()],
+        build: { minify: false },
+      });
       const assets = path.join(root, 'dist/assets');
       const code = readdirSync(assets)
         .filter((file) => file.endsWith('.js'))
