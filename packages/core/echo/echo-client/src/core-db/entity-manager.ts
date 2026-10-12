@@ -668,7 +668,7 @@ export class EntityManager implements IDatabaseBinding {
     }
 
     const query = Query.select(Filter.id(...(ids as EntityId[])))
-      .options({ lazy: true, deleted: 'include' })
+      .options({ lazy: true, followVersions: true, deleted: 'include' })
       .from(Scope.space({ id: this._spaceId }));
     const cleanup = subscribeStream(
       this._runtime,

@@ -668,27 +668,40 @@ export const QueryOptions = Schema.Struct({
    * sends (see `EchoClientProps.lazyQueries`), not by callers.
    */
   lazy: Schema.optional(Schema.Boolean),
+
+  /**
+   * With `lazy`: a reactive query also re-sends when a row's version changes, not only when its rows or
+   * their order do. Set by the ECHO client on the query that keeps its index-backed objects current.
+   */
+  followVersions: Schema.optional(Schema.Boolean),
 });
 
 export interface QueryOptions extends Schema.Schema.Type<typeof QueryOptions> {}
 
 /**
- * Whether the query returns index-backed live objects (see {@link QueryOptions.lazy}). Only the outer
- * clause chain is read: a subquery's options do not decide what the outer query returns.
+ * Whether an option is set on the outer clause chain. A subquery's options do not decide what the outer
+ * query returns.
  */
-export const isLazyQuery = (query: Query): boolean => {
+const hasOuterOption = (query: Query, isSet: (options: QueryOptions) => boolean): boolean => {
   switch (query.type) {
     case 'options':
-      return query.options.lazy === true || isLazyQuery(query.query);
+      return isSet(query.options) || hasOuterOption(query.query, isSet);
     case 'order':
     case 'limit':
     case 'skip':
     case 'from':
-      return isLazyQuery(query.query);
+      return hasOuterOption(query.query, isSet);
     default:
       return false;
   }
 };
+
+/** Whether the query returns index-backed live objects (see {@link QueryOptions.lazy}). */
+export const isLazyQuery = (query: Query): boolean => hasOuterOption(query, (options) => options.lazy === true);
+
+/** Whether a version change alone re-sends the query's rows (see {@link QueryOptions.followVersions}). */
+export const followsVersions = (query: Query): boolean =>
+  hasOuterOption(query, (options) => options.followVersions === true);
 
 /**
  * Selects from a space (automerge documents).

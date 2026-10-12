@@ -116,10 +116,12 @@ describe('EchoHost query service', () => {
 });
 
 describe('EchoHost lazy queries', () => {
-  test('a reactive query re-sends a row it already shipped without its state and bytes', async () => {
+  test('a reactive lazy query re-sends on a change of rows, and only what changed carries its state', async () => {
     const { host, spaceId, saveObject } = await setup({ queryExecutor: 'sql' });
-    const first = EntityId.random();
-    await saveObject(first);
+    const unchanged = EntityId.random();
+    const edited = EntityId.random();
+    await saveObject(unchanged);
+    const editedHandle = await saveObject(edited);
     await host.updateIndexes();
 
     const emissions: QueryService.QueryResponse[] = [];
@@ -145,20 +147,27 @@ describe('EchoHost lazy queries', () => {
       ),
     );
     await firstEmission.wait({ timeout: 5_000 });
-    const second = EntityId.random();
-    await saveObject(second);
+
+    // A new version alone is not a change of rows, so the next send is the one a new object causes.
+    editedHandle.change((doc) => {
+      doc.objects![edited].data.title = 'edited';
+    });
+    await host.flush(Context.default());
+    await host.updateIndexes();
+    const added = EntityId.random();
+    await saveObject(added);
     await host.updateIndexes();
     await asyncTimeout(done, 5_000);
 
     const [initial, update] = emissions;
-    const shipped = initial.results?.find((result) => result.id === first);
-    expect(shipped?.state).toBeDefined();
-    expect(shipped?.bytes).toBeDefined();
-    const resent = update.results?.find((result) => result.id === first);
-    expect(resent?.version).toBe(shipped?.version);
-    expect(resent?.state).toBeUndefined();
-    expect(resent?.bytes).toBeUndefined();
-    expect(update.results?.find((result) => result.id === second)?.bytes).toBeDefined();
+    const row = (response: QueryService.QueryResponse, id: EntityId) => response.results?.find((r) => r.id === id);
+    expect(row(initial, unchanged)?.bytes).toBeDefined();
+    expect(row(update, added)?.bytes).toBeDefined();
+    expect(row(update, edited)?.version).toBeGreaterThan(row(initial, edited)!.version!);
+    expect(row(update, edited)?.bytes).toBeDefined();
+    expect(row(update, unchanged)?.version).toBe(row(initial, unchanged)?.version);
+    expect(row(update, unchanged)?.state).toBeUndefined();
+    expect(row(update, unchanged)?.bytes).toBeUndefined();
   });
 });
 
@@ -194,13 +203,14 @@ const setup = async (options: Pick<EchoHostProps, 'queryExecutor'> = {}) => {
 
   // One document per object, as a stream of writes would produce: each save is a new index input.
   const saveObject = async (objectId: EntityId) => {
-    await host.createDoc<DatabaseDirectory>({
+    const handle = await host.createDoc<DatabaseDirectory>({
       version: SpaceDocVersion.CURRENT,
       access: { spaceId },
       objects: { [objectId]: EntityStructure.makeObject({ type: TEST_TYPE, data: { title: objectId } }) },
       links: {},
     });
     await host.flush(Context.default());
+    return handle;
   };
 
   return { host, runtime, spaceId, saveDocs, saveObject };

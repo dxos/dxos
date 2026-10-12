@@ -658,6 +658,8 @@ export class QueryExecutor extends Resource {
   readonly #mode: QueryExecutorMode;
   /** The query returns index-backed live objects, so document rows ship their state. */
   readonly #lazy: boolean;
+  /** A row whose version changed is a changed result (see `QueryOptions.followVersions`). */
+  readonly #followVersions: boolean;
   /** The state version each object last shipped with, so a re-emit leaves unchanged state and bytes off. */
   #sentVersions = new Map<string, number>();
 
@@ -691,6 +693,7 @@ export class QueryExecutor extends Resource {
     this._query = options.query;
     this._reactivity = options.reactivity;
     this.#lazy = QueryAST.isLazyQuery(this._query);
+    this.#followVersions = QueryAST.followsVersions(this._query);
 
     this.#mode = options.executor ?? 'memory';
     this.#planner = new QueryPlanner({ executor: this.#mode, sql: options.sql });
@@ -846,7 +849,8 @@ export class QueryExecutor extends Resource {
     this._trace = trace;
 
     const changed =
-      previous.length !== workingSet.length || previous.some((item, index) => !_sameResult(workingSet[index], item));
+      previous.length !== workingSet.length ||
+      previous.some((item, index) => !_sameResult(workingSet[index], item, this.#followVersions));
 
     // Disabled because concurrent queries don't print hierarchies correctly.
     // ExecutionTrace.putOnPerformanceTimeline(trace);
@@ -2173,7 +2177,7 @@ export class QueryExecutor extends Resource {
       return null;
     }
     const state = this.#lazy
-      ? encodeObjectState(object, A.getHeads(lease.doc()), saveObjectDocument(lease.doc()))
+      ? encodeObjectState(object, A.getHeads(lease.doc()), () => saveObjectDocument(lease.doc()))
       : undefined;
     return {
       objectId: meta.objectId,
@@ -2630,7 +2634,7 @@ const compiledRowToItem = (row: CompiledRow): QueryItem => {
  * `SqlStep` item already carries its shipped form, so comparing that is comparing the record; an
  * item the steps built is compared on the fields `getResults` derives the record from.
  */
-const _sameResult = (a: QueryItem, b: QueryItem): boolean => {
+const _sameResult = (a: QueryItem, b: QueryItem, followVersions: boolean): boolean => {
   if (a.result !== undefined || b.result !== undefined) {
     return (
       a.result?.id === b.result?.id &&
@@ -2644,8 +2648,8 @@ const _sameResult = (a: QueryItem, b: QueryItem): boolean => {
       a.result?.rank === b.result?.rank &&
       // A feed row ships its indexed body, so an edit to it changes the record without moving the row.
       a.result?.documentJson === b.result?.documentJson &&
-      // A lazy query ships each row's state, stamped anew by every re-index of it.
-      a.result?.version === b.result?.version
+      // Every re-index stamps a new version, so only a query that asks re-sends on it.
+      (!followVersions || a.result?.version === b.result?.version)
     );
   }
   return (
@@ -2659,6 +2663,6 @@ const _sameResult = (a: QueryItem, b: QueryItem): boolean => {
     _serializeOptionalGroupKey(a.groupKey) === _serializeOptionalGroupKey(b.groupKey) &&
     // A collapsed group ships only its size and aggregates, so those are what can change.
     _serializeCollapsed(a) === _serializeCollapsed(b) &&
-    a.state?.version === b.state?.version
+    (!followVersions || a.state?.version === b.state?.version)
   );
 };

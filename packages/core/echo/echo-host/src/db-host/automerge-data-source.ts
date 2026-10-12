@@ -209,7 +209,7 @@ export class AutomergeDataSource implements IndexDataSource {
               data: objectStructureToJson(objectId, structure),
               createdAt: typeof storedCreatedAt === 'number' ? storedCreatedAt : null,
               updatedAt,
-              state: stateHeads && encodeObjectState(structure, stateHeads, saveObjectDocument(doc)),
+              state: stateHeads && encodeObjectState(structure, stateHeads, () => saveObjectDocument(doc)),
             });
           }
 
