@@ -6,7 +6,7 @@ import { next as A } from '@automerge/automerge';
 import { type DocumentId } from '@automerge/automerge-repo';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { describe, expect, onTestFinished, test } from 'vitest';
+import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { Trigger, asyncTimeout, waitForCondition } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -159,6 +159,20 @@ describe('DocumentsSynchronizer', () => {
     await synchronizer1.addDocuments([documentId]);
     await synchronizer2.addDocuments([documentId]);
     await asyncTimeout(Promise.all([client1.loaded(documentId), client2.loaded(documentId)]), 1_000);
+
+    // Holds the first write's import open until the second client's write has been imported.
+    const createDoc = host.createDoc.bind(host);
+    const secondImported = new Trigger();
+    let imports = 0;
+    vi.spyOn(host, 'createDoc').mockImplementation(async (initialValue, opts) => {
+      const lease = await createDoc(initialValue, opts);
+      if (++imports === 1) {
+        await secondImported.wait();
+      } else {
+        secondImported.wake();
+      }
+      return lease;
+    });
 
     await Promise.all([
       synchronizer1.update(Context.default(), [
