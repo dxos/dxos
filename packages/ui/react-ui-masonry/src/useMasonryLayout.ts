@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { type RefObject, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { type LayoutResult, getColumnWidth, layout } from './layout.ts';
 
@@ -10,7 +10,7 @@ import { type LayoutResult, getColumnWidth, layout } from './layout.ts';
 const HEIGHT_EPSILON = 0.5;
 
 /** Assumed tile height (px) before any real measurement exists, so the first layout is spaced out. */
-const ESTIMATED_TILE_HEIGHT = 280;
+export const ESTIMATED_TILE_HEIGHT = 280;
 
 /**
  * Tile heights measured anywhere in the app, keyed by the caller's `cacheKey`, the tile id, and the
@@ -54,9 +54,13 @@ const rememberHeight = (scope: string | undefined, id: string, width: number, he
 /** Clears the shared height cache. Exported for tests and for callers that recycle ids. */
 export const clearHeightCache = (): void => heightCache.clear();
 
+const allCached = (scope: string | undefined, ids: readonly string[], width: number): boolean =>
+  scope !== undefined && ids.every((id) => heightCache.get(scopedKey(scope, id))?.width === width);
+
 export type MasonryLayout = LayoutResult & {
   /** True once every tile has a height measured at the current column width, so positions are final. */
   measured: boolean;
+  cachedAtFirstLayout: boolean | undefined;
   /**
    * Ids the layout has some height for — measured now, or remembered from a previous mount or width.
    * Anything outside this set is sitting at a guess and should not be painted.
@@ -113,6 +117,25 @@ export const useMasonryLayout = ({
   // The observer is created once, so it reads the current column width and scope through refs.
   const widthRef = useRef(0);
   const scopeRef = useRef<string | undefined>(cacheKey);
+  const cachedAtFirstLayout = useRef<boolean | undefined>(undefined);
+
+  const record = (id: string, height: number): boolean => {
+    const previous = heights.current.get(id);
+    if (previous !== undefined && Math.abs(previous - height) <= HEIGHT_EPSILON) {
+      return false;
+    }
+    heights.current.set(id, height);
+    rememberHeight(scopeRef.current, id, widthRef.current, height);
+    return true;
+  };
+
+  const relayout = (): void => {
+    const values = [...heights.current.values()];
+    if (values.length > 0) {
+      estimate.current = values.reduce((sum, value) => sum + value, 0) / values.length;
+    }
+    setVersion((value) => value + 1);
+  };
 
   const observer = useMemo(() => {
     if (typeof ResizeObserver === 'undefined') {
@@ -123,28 +146,29 @@ export const useMasonryLayout = ({
       let changed = false;
       for (const entry of entries) {
         const id = elementIds.current.get(entry.target);
-        if (!id) {
-          continue;
-        }
-        // ResizeObserver types `target` as Element; we only ever observe HTMLElement tile wrappers,
-        // whose border-box height (offsetHeight) is what the layout stacks.
-        const height = (entry.target as HTMLElement).offsetHeight;
-        const previous = heights.current.get(id);
-        if (previous === undefined || Math.abs(previous - height) > HEIGHT_EPSILON) {
-          heights.current.set(id, height);
-          rememberHeight(scopeRef.current, id, widthRef.current, height);
-          changed = true;
+        const element = id === undefined ? undefined : nodes.current.get(id);
+        if (id !== undefined && element) {
+          changed = record(id, element.offsetHeight) || changed;
         }
       }
       if (changed) {
-        const values = [...heights.current.values()];
-        if (values.length > 0) {
-          estimate.current = values.reduce((sum, value) => sum + value, 0) / values.length;
-        }
-        setVersion((value) => value + 1);
+        relayout();
       }
     });
   }, []);
+
+  const measureNewTiles = (): void => {
+    let changed = false;
+    for (const [id, element] of nodes.current) {
+      if (!heights.current.has(id)) {
+        changed = record(id, element.offsetHeight) || changed;
+      }
+    }
+    if (changed) {
+      relayout();
+    }
+  };
+  useLayoutEffect(measureNewTiles);
 
   useEffect(() => () => observer?.disconnect(), [observer]);
 
@@ -207,6 +231,10 @@ export const useMasonryLayout = ({
     // Height for each tile, best source first: measured this mount, remembered at this exact column
     // width (as good as measured — the tile has not reflowed), remembered at some other width (a
     // close estimate, since content usually dominates), else the running average.
+    if (cachedAtFirstLayout.current === undefined && containerWidth > 0) {
+      cachedAtFirstLayout.current = allCached(cacheKey, ids, columnWidth);
+    }
+
     const measuredIds = new Set<string>();
     const knownIds = new Set<string>();
     const tileHeights = ids.map((id) => {
@@ -232,6 +260,7 @@ export const useMasonryLayout = ({
     return {
       ...layout({ heights: tileHeights, columnCount, containerWidth, gapPx, maxColumnWidthPx, centered }),
       measured: measuredIds.size === ids.length,
+      cachedAtFirstLayout: cachedAtFirstLayout.current,
       knownIds,
     };
     // `version` re-runs layout when a measured height changes.

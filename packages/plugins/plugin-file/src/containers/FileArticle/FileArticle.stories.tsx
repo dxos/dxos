@@ -48,8 +48,8 @@ const DefaultStory = () => {
 /**
  * Seeds the space with one file.
  *
- * Bytes land in `inline` storage: no backend is registered in a story, and inline is the blob
- * registry's own default, so the article resolves a `data:` URL without any of the plugin wiring.
+ * Bytes land in the client's default `edge` storage, which keeps them in the client services' local
+ * store, so the article resolves an object URL over them without EDGE or any of the plugin wiring.
  * `Blob.Blob` must be in `types` alongside `File.File` — the file holds a `Ref` to a blob, and an
  * unregistered schema fails at resolution rather than at insert.
  */
@@ -93,7 +93,7 @@ export const Image: Story = {
     await waitFor(async () => {
       const image = canvasElement.querySelector('img');
       await expect(image).not.toBeNull();
-      await expect(image!.getAttribute('src')).toMatch(/^data:image\/png/);
+      await expect(image!.getAttribute('src')).toMatch(/^blob:/);
       await expect(image!.naturalWidth).toBe(4);
     });
   },

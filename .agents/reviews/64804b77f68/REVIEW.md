@@ -32,7 +32,7 @@ System One judges this a likely violation of `named-react-imports` (Import React
 
 System One judges this a likely violation of `story-for-new-ui-component` (A new container or component ships with a Storybook story at the right level), p=0.87. The likeliest place is lines 16-29 (`export const DockToggle = ({ docked, onDockedChange }: DockToggleProps) => (`, location confidence 0.91). This is a single-shot classifier: confirm against the rule before acting.
 
-**Resolved:** Covered by the `SceneView` `Docked` story, whose play test exercises the dock's sections, a collapse, and the toggle that floats the panels.
+**Resolved:** Covered by the `SceneView` `Docked` story, whose play test exercises the dock's sections and a collapse, and the `Floating` story, which renders the panels undocked.
 
 # ERROR 64804b77f68-3 key-chords-live-in-the-table `packages/ui/react-ui-canvas/src/components/Layers/Layers.tsx:155`
 
@@ -42,7 +42,7 @@ System One judges this a likely violation of `key-chords-live-in-the-table` (Eve
 
 System One judges this a likely violation of `story-for-new-ui-component` (A new container or component ships with a Storybook story at the right level), p=0.82. The likeliest place is lines 83-94 (`export const Dock = () => {`, location confidence 0.85). This is a single-shot classifier: confirm against the rule before acting.
 
-**Resolved:** Covered by the `SceneView` `Docked` story, whose play test exercises the dock's sections, a collapse, and the toggle that floats the panels.
+**Resolved:** Covered by the `SceneView` `Docked` story, whose play test exercises the dock's sections and a collapse, and the `Floating` story, which renders the panels undocked.
 
 # WARN 64804b77f68-5 extract-non-rendering-logic-from-component `packages/ui/react-ui-canvas/src/components/SceneView/SceneView.tsx:782`
 

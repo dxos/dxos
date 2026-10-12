@@ -17,13 +17,13 @@ import {
   type BuiltinNode,
   type BuiltinNodeType,
   type Endpoint,
+  type FrameNode,
   type Link,
   type LinkType,
   type Node,
   type NodeBase,
   type NodeStyle,
   type Point,
-  type PortalNode,
   type Scene,
   type SceneId,
 } from '../model/types.ts';
@@ -111,7 +111,7 @@ export class SceneElement {
     readonly elements: readonly BuilderElement[],
     readonly frame?: Box,
     readonly sceneName?: string,
-    readonly portal: NodeProperties<PortalNode> = {},
+    readonly portal: NodeProperties<FrameNode> = {},
   ) {}
 
   /** The scene's name (breadcrumbs, previews). */
@@ -125,7 +125,7 @@ export class SceneElement {
   }
 
   /** The scene shape's own properties (label, contents, style). */
-  properties(values: NodeProperties<PortalNode>): SceneElement {
+  properties(values: NodeProperties<FrameNode>): SceneElement {
     return new SceneElement(this.id, this.elements, this.frame, this.sceneName, {
       ...this.portal,
       ...values,
@@ -181,11 +181,11 @@ const buildScene = (element: SceneElement, registry: NodeRegistry, scenes: Scene
         if (!child.frame) {
           throw new Error(`Nested scene ${child.id} needs a frame: call at(box).`);
         }
-        const node: PortalNode = {
-          ...createNode({ type: 'scene', id: child.id, z, center: center(child.frame), size: sizeOf(child.frame) }),
+        const node: FrameNode = {
+          ...createNode({ type: 'frame', id: child.id, z, center: center(child.frame), size: sizeOf(child.frame) }),
           layer: DEFAULT_LAYER.id,
           ...child.portal,
-          type: 'scene',
+          type: 'frame',
           scene: child.id,
         };
         check(registry, node);
@@ -246,7 +246,7 @@ function node(type: string, id: string, box: Box): NodeElement<NodeBase> {
   return new NodeElement<NodeBase>(base);
 }
 
-const BUILTIN_TYPES: readonly string[] = ['rect', 'ellipse', 'note', 'scene'] satisfies BuiltinNodeType[];
+const BUILTIN_TYPES: readonly string[] = ['rect', 'ellipse', 'note', 'frame'] satisfies BuiltinNodeType[];
 const isBuiltinType = (type: string): type is BuiltinNodeType => BUILTIN_TYPES.includes(type);
 
 type Ends = Pick<Link, 'source' | 'target'>;

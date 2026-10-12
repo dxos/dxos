@@ -268,6 +268,9 @@
       "path": "packages/common/i18n/tsconfig.json"
     },
     {
+      "path": "tools/ident/tsconfig.json"
+    },
+    {
       "path": "packages/core/echo/index-core/tsconfig.json"
     },
     {
@@ -482,6 +485,9 @@
     },
     {
       "path": "packages/plugins/plugin-graph/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-handpan/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-heygen/tsconfig.json"
@@ -899,6 +905,9 @@
     },
     {
       "path": "packages/common/sql-sqlite/tsconfig.json"
+    },
+    {
+      "path": "packages/stories/stories-agent/tsconfig.json"
     },
     {
       "path": "packages/stories/stories-assistant/tsconfig.json"

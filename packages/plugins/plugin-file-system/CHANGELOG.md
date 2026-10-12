@@ -1,5 +1,53 @@
 # @dxos/plugin-native-filesystem
 
+## 0.14.0
+
+### Patch Changes
+
+- Updated dependencies [0715304]
+- Updated dependencies [085dcb1]
+- Updated dependencies [b0e4b60]
+- Updated dependencies [fd09131]
+- Updated dependencies [508be04]
+- Updated dependencies [347546a]
+- Updated dependencies [ec6da5a]
+- Updated dependencies [a1e64db]
+- Updated dependencies [28bb45b]
+- Updated dependencies [1eed6b1]
+- Updated dependencies [ed52cb7]
+- Updated dependencies [6847fe2]
+- Updated dependencies [385f3ce]
+- Updated dependencies [1819960]
+- Updated dependencies [eb5d14d]
+- Updated dependencies [2112757]
+- Updated dependencies [27b542c]
+- Updated dependencies [4820c02]
+- Updated dependencies [5324de6]
+  - @dxos/app-framework@0.14.0
+  - @dxos/plugin-markdown@0.14.0
+  - @dxos/react-ui-form@0.14.0
+  - @dxos/react-ui@0.14.0
+  - @dxos/compute@0.14.0
+  - @dxos/echo@0.14.0
+  - @dxos/echo-client@0.14.0
+  - @dxos/plugin-space@0.14.0
+  - @dxos/effect@0.14.0
+  - @dxos/plugin-client@0.14.0
+  - @dxos/app-toolkit@0.14.0
+  - @dxos/client@0.14.0
+  - @dxos/app-graph@0.14.0
+  - @dxos/react-client@0.14.0
+  - @dxos/react-ui-pickers@0.14.0
+  - @dxos/schema@0.14.0
+  - @dxos/ui-editor@0.14.0
+  - @dxos/graph@0.14.0
+  - @dxos/protocols@0.14.0
+  - @dxos/async@0.14.0
+  - @dxos/invariant@0.14.0
+  - @dxos/keys@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/util@0.14.0
+
 ## 0.13.0
 
 ### Patch Changes

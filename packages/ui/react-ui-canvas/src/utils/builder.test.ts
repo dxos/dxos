@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { isEllipseNode, isNoteNode, isPortalNode, isRectNode } from '../model/types.ts';
+import { isEllipseNode, isFrameNode, isNoteNode, isRectNode } from '../model/types.ts';
 import { SceneBuilder } from './builder.ts';
 import { DEFAULT_LAYER } from './layers.ts';
 
@@ -68,7 +68,7 @@ describe('SceneBuilder', () => {
     expect(root).toBe('root');
     expect(scenes.map((scene) => scene.id)).toEqual(['root', 'f']);
     const portal = scenes[0].nodes.f;
-    expect(isPortalNode(portal) && [portal.scene, portal.label, portal.center]).toEqual([
+    expect(isFrameNode(portal) && [portal.scene, portal.label, portal.center]).toEqual([
       'f',
       'Inner',
       { x: 500, y: 50 },

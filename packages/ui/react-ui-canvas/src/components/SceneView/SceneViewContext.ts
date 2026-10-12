@@ -23,6 +23,7 @@ import {
   type Capabilities,
   type ElementId,
   type LinkId,
+  type NodeId,
   type Scene,
   type SceneId,
   type Tool,
@@ -46,6 +47,8 @@ export type SceneViewContextValue = {
   store: SceneStore;
   projection: Projection;
   capabilities: Capabilities;
+  /** The scene is only looked at: the parts that edit it (selection frame, ports, actions, properties) hide. */
+  readonly: boolean;
   nodeRegistry: NodeRegistry;
   linkRegistry: LinkRegistry;
 
@@ -80,6 +83,8 @@ export type SceneViewContextValue = {
   hover: ElementId | undefined;
   selectedPoint: ControlPointRef | undefined;
   editing: EditingPart | undefined;
+  /** The node whose embedded content takes input. */
+  active: NodeId | undefined;
   clipboard: Clipboard | undefined;
   drag: Drag | undefined;
   tool: Tool;

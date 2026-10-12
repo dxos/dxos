@@ -161,4 +161,38 @@ test QA-3: Read a project's tasks as details
       expect: |
         the task opens in the main plank with "Roastery Ops" in its breadcrumb, and its attachment is not open
         beside it
+
+test QA-4: Plan a project and hand its tasks to an agent
+  desc: |
+    The demo path — create a project from the Default template, brief its agent, break the work into tasks, fill
+    one in, and select tasks for the agent. Walked by the autocue flow
+    `packages/plugins/plugin-projects/autocue/plan-a-project.mjs`; it stops short of delegating, so no model is
+    needed.
+  actors: human
+  status: passing            # 2026-10-09, recorded by autocue/plan-a-project.mjs
+  given:
+    - an identity exists, on a fresh profile
+    - space: the default space is open on its Home
+  steps:
+    - name: Create a project
+      do: Click "Add to space", choose Project, title it "Roastery Ops", pick the Default template and click Save.
+      capture: project
+      expect: the project opens on its Overview tab, with the default agent instructions, and joins the navtree
+        under Projects
+    - name: Brief the project's agent
+      do: Type a description, then add a line to the Instructions.
+      expect: both fields keep what was typed
+    - name: Break the work into tasks
+      do: Open the Tasks tab and add "Service both roasters", "Order green beans" and "Hire a roastery assistant"
+        from the Add task row, pressing Enter after each.
+      expect: the three tasks list in the order added
+    - name: Fill in a task
+      do: Click "Service both roasters", type a description, set its priority to High and its status to Started.
+      expect: |
+        the task opens in a "Task" tab beside the project, and its Activity records the priority and status
+        changes
+    - name: Select tasks for the agent
+      do: Tick "Order green beans" and "Hire a roastery assistant", then point at "Assign selected tasks to agent".
+      expect: the two rows are selected and the button is enabled
+      note: Clicking it starts a delegated chat that needs a model; QA-1 and QA-2 walk that path.
 ```

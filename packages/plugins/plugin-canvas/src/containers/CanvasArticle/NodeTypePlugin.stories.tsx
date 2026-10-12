@@ -87,17 +87,17 @@ const seed = (canvas: Drawing.Canvas) => {
     canvas.content[nodeKey('r')] = {
       kind: 'node',
       scene: ROOT_SCENE_ID,
-      node: { id: 'r', type: 'rect', z: 'a0', ...frame(-320), label: 'Rect' },
+      node: { id: 'r', type: 'rect', z: 'a1', ...frame(-320), label: 'Rect' },
     };
     canvas.content[nodeKey('t1')] = {
       kind: 'node',
       scene: ROOT_SCENE_ID,
-      node: { id: 't1', type: 'task', z: 'a1', ...frame(0), label: 'Write the spec', done: true },
+      node: { id: 't1', type: 'task', z: 'a2', ...frame(0), label: 'Write the spec', done: true },
     };
     canvas.content[nodeKey('t2')] = {
       kind: 'node',
       scene: ROOT_SCENE_ID,
-      node: { id: 't2', type: 'task', z: 'a2', ...frame(320), label: 'Ship it' },
+      node: { id: 't2', type: 'task', z: 'a3', ...frame(320), label: 'Ship it' },
     };
   });
 };

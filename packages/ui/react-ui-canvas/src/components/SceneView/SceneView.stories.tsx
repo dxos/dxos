@@ -28,9 +28,9 @@ import { SceneView } from './SceneView.tsx';
  * 3. L / K / P pick the line, curve or spline link tool: every port shows; dropping onto empty canvas creates a
  *    rectangle and links to it. A selected spline shows a diamond per control point and a dot per span midpoint:
  *    drag a diamond to move a point, drag a dot to add one there, alt-click a diamond to remove one.
- * 4. R / E / T / S then drag draws a rectangle, ellipse, text or nested scene (the UML class is plugin-uml's);
+ * 4. R / E / T / F then drag draws a rectangle, ellipse, text or frame (the UML class is plugin-uml's);
  *    Delete removes the selection (nodes or links).
- * 5. Double-click a portal (or zoom until it fills the view) drills in; Escape, Up or the breadcrumb drills out.
+ * 5. Double-click a frame (or zoom until it fills the view) drills in; Escape, Up or the breadcrumb drills out.
  * 6. G (or the Grid button) toggles the grid; with it off nothing snaps. The floating panel (top right) edits the
  *    selected element.
  */
@@ -38,7 +38,7 @@ type StoryArgs = {
   depth: number;
   liveDepth: number;
   readonly?: boolean;
-  fixture?: 'elements' | 'model' | 'square' | 'lattice' | 'scenes';
+  fixture?: 'elements' | 'model' | 'square' | 'lattice' | 'scenes' | 'frame';
   panels?: PanelMode;
 };
 
@@ -193,6 +193,27 @@ const createScenesTree = () => {
     .build();
 };
 
+/** A labelled frame onto a nested scene of two linked shapes, beside a rectangle. */
+const createFrameTree = () => {
+  const root = 'scene:root';
+  const size = { width: 256, height: 128 };
+  const at = (x: number, y = 0) => ({ x: x - size.width / 2, y: y - size.height / 2, ...size });
+  return SceneBuilder.scene(root, [
+    SceneBuilder.rect('a', at(-384)).properties({ label: 'A' }),
+    SceneBuilder.scene('frame', [
+      SceneBuilder.rect('b', at(-192)).properties({ label: 'B' }),
+      SceneBuilder.rect('c', at(192)).properties({ label: 'C' }),
+      SceneBuilder.link('smart', 'b', 'c'),
+    ])
+      .name('Inner')
+      .at({ x: 0, y: -128, width: 512, height: 256 })
+      .properties({ label: 'Frame' }),
+    SceneBuilder.link('smart', 'a', 'frame'),
+  ])
+    .name('root')
+    .build();
+};
+
 const DefaultStory = ({ depth, liveDepth, readonly, fixture, panels }: StoryArgs) => {
   const { store, root } = useMemo(() => {
     // The model fixture is a fixed three levels, so `depth` does not apply to it.
@@ -205,7 +226,9 @@ const DefaultStory = ({ depth, liveDepth, readonly, fixture, panels }: StoryArgs
             ? createLatticeTree()
             : fixture === 'scenes'
               ? createScenesTree()
-              : createSceneTree(depth);
+              : fixture === 'frame'
+                ? createFrameTree()
+                : createSceneTree(depth);
     return { store: createMemoryStore(tree.scenes), root: tree.root };
   }, [depth, fixture]);
 
@@ -316,5 +339,20 @@ export const Floating: Story = {
     await expect(canvas.queryByTestId('scene-view-dock')).not.toBeInTheDocument();
     // About lives only in the dock.
     await expect(canvas.queryByTestId('about')).not.toBeInTheDocument();
+  },
+};
+
+/** A frame onto a nested scene: its open control drills into the child scene, and Up returns. */
+export const Frame: Story = {
+  args: { depth: 0, liveDepth: 1, fixture: 'frame' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // 1. The frame shows its label and an open control; the root has nowhere up to go.
+    await waitFor(() => expect(canvasElement.querySelector('[data-node-id="frame"]')).toHaveTextContent('Frame'));
+    await waitFor(() => expect(canvas.getByTestId('toolbar-up')).toBeDisabled());
+    // 2. Opening the frame drills into its scene.
+    await userEvent.click(await canvas.findByTestId('portal-open'));
+    await waitFor(() => expect(canvas.getByTestId('toolbar-up')).toBeEnabled());
+    await waitFor(() => expect(canvasElement.querySelector('[data-node-id="b"]')).not.toBeNull());
   },
 };

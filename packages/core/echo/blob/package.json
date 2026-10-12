@@ -1,6 +1,6 @@
 {
   "name": "@dxos/blob",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "description": "Blob storage contract and registry: pluggable content-addressed backends for ECHO.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -36,9 +36,12 @@
   ],
   "scripts": {},
   "dependencies": {
+    "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/util": "workspace:*"
+    "@dxos/log": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "effect": "catalog:"
   },
   "devDependencies": {
     "vitest": "catalog:"

@@ -7,10 +7,12 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Result from 'effect/Result';
 
+import type * as Capability from '@dxos/app-framework/Capability';
 import type * as Agent from '@dxos/assistant/Agent';
 import type * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import * as ChannelBackend from '@dxos/plugin-thread/ChannelBackend';
 import * as ThreadOperation from '@dxos/plugin-thread/ThreadOperation';
 import { Channel, Message, Person, Task } from '@dxos/types';
 
@@ -24,6 +26,8 @@ import { applyStatus } from './update-relay.ts';
 
 type Delivery = Operation.Definition.Output<typeof RelayOperation.SendMessage>;
 
+type Services = Database.Service | Operation.Service | Capability.Service;
+
 const handler: Operation.WithHandler<typeof RelayOperation.SendMessage> = RelayOperation.SendMessage.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ agent: agentRef, recipient: recipientRef, text, relay: relayRef }) {
@@ -33,7 +37,7 @@ const handler: Operation.WithHandler<typeof RelayOperation.SendMessage> = RelayO
       const role = relay ? roleIn(relay, recipient) : undefined;
 
       const brain = yield* BrainService.BrainService;
-      const deliver: Effect.Effect<Delivery, never, Database.Service | Operation.Service> = Effect.gen(function* () {
+      const deliver: Effect.Effect<Delivery, never, Services> = Effect.gen(function* () {
         // The requester asked from a particular conversation, so the outcome goes back there first.
         if (role === 'requester' && relay?.replyChannel) {
           const channel = yield* Database.load(relay.replyChannel).pipe(Effect.orDie);
@@ -43,50 +47,64 @@ const handler: Operation.WithHandler<typeof RelayOperation.SendMessage> = RelayO
           }
         }
 
-        const chats = yield* loadChats(agent);
-        const chat = chats
+        // Newest first: a person's latest conversation with the agent is the one they are most likely to read.
+        const chats = (yield* loadChats(agent))
           .filter((chat) => ChatParticipant.get(chat) === recipient.id)
-          .sort((left, right) => left.id.localeCompare(right.id))
-          .at(-1);
-        if (chat) {
+          .sort((left, right) => right.id.localeCompare(left.id));
+
+        // A conversation on a channel (a Discord thread or DM) reaches them where they talk to the agent; one that refuses
+        // (a deleted thread) falls through to the next, then to the routes below.
+        const reasons: string[] = [];
+        for (const chat of chats) {
           const conversation = AgentChannels.conversationOf(chat);
           const channel = conversation && (yield* findChannel(conversation.channelId));
-          if (!conversation || !channel) {
-            // A Composer chat: wake it, so the agent tells them in a turn of its own there.
-            const woken = yield* brain
-              .wake({ chat, prompt: BrainSkill.wakePrompt(partyName(recipient), text), sender: { name: agent.name } })
-              .pipe(Effect.result);
-            return Result.isSuccess(woken)
-              ? { delivered: true, via: 'chat', chat: Ref.make(chat) }
-              : { delivered: false, reason: woken.failure.message };
+          if (conversation && channel) {
+            const sent = yield* postToChannel(agent, channel, conversation.thread, text);
+            if (sent.delivered) {
+              return { delivered: true, via: 'channel', chat: Ref.make(chat) };
+            }
+            reasons.push(sent.reason ?? `${channel.name ?? 'A channel'} refused the message.`);
           }
-          const sent = yield* postToChannel(agent, channel, conversation.thread, text);
-          return sent.delivered
-            ? { delivered: true, via: 'channel', chat: Ref.make(chat) }
-            : { delivered: false, reason: sent.reason };
         }
 
+        // Then a direct conversation opened through one of the agent's channels, before a Composer chat the person
+        // may never have open.
         const name = partyName(recipient);
+        const channels = yield* AgentChannels.loadChannels(agent);
+        if (Obj.instanceOf(Person.Person, recipient)) {
+          for (const channel of channels) {
+            const direct = yield* openDirect(channel, recipient);
+            if (direct.thread === undefined) {
+              reasons.push(direct.reason ?? `${channel.name ?? 'A channel'} cannot reach them.`);
+              continue;
+            }
+            const sent = yield* postToChannel(agent, channel, direct.thread, text, { direct: true });
+            if (!sent.delivered) {
+              return { delivered: false, reason: sent.reason };
+            }
+            // Replies in the direct conversation, and later deliveries, belong to this person's chat.
+            Obj.update(sent.chat, (chat) => ChatParticipant.set(chat, recipient));
+            return { delivered: true, via: 'channel', chat: Ref.make(sent.chat) };
+          }
+        }
+
+        // Last, a Composer chat: wake it, so the agent tells them in a turn of its own there.
+        const composerChat = chats.find((chat) => AgentChannels.conversationOf(chat) === undefined);
+        if (composerChat) {
+          const woken = yield* brain
+            .wake({
+              chat: composerChat,
+              prompt: BrainSkill.wakePrompt(partyName(recipient), text),
+              sender: { name: agent.name },
+            })
+            .pipe(Effect.result);
+          return Result.isSuccess(woken)
+            ? { delivered: true, via: 'chat', chat: Ref.make(composerChat) }
+            : { delivered: false, reason: woken.failure.message };
+        }
+
         if (!Obj.instanceOf(Person.Person, recipient)) {
           return { delivered: false, reason: `${name} has no conversation with the agent; ask who to tell there.` };
-        }
-
-        // No conversation yet: the first of the agent's channels that can reach the person directly.
-        const channels = yield* AgentChannels.loadChannels(agent);
-        const reasons: string[] = [];
-        for (const channel of channels) {
-          const direct = yield* openDirect(channel, recipient);
-          if (direct.thread === undefined) {
-            reasons.push(direct.reason ?? `${channel.name ?? 'A channel'} cannot reach them.`);
-            continue;
-          }
-          const sent = yield* postToChannel(agent, channel, direct.thread, text);
-          if (!sent.delivered) {
-            return { delivered: false, reason: sent.reason };
-          }
-          // Replies in the direct conversation, and later deliveries, belong to this person's chat.
-          Obj.update(sent.chat, (chat) => ChatParticipant.set(chat, recipient));
-          return { delivered: true, via: 'channel', chat: Ref.make(sent.chat) };
         }
 
         return {
@@ -140,11 +158,23 @@ const findChannel = (id: string) =>
 type Posted = { delivered: true; chat: Chat.Chat } | { delivered: false; reason?: string };
 
 /**
- * Posts through the channel's backend and records the post in the agent's chat for that conversation,
- * stamped with the backend's receipt so a mirror of the chat (EDGE's Discord bot) does not post it again.
+ * Delivers into a channel conversation and records it in the agent's chat for that conversation. On a mirrored
+ * channel the record is the delivery: its host (EDGE's Discord bot) posts it with credentials only it holds.
+ * Elsewhere the backend posts it, and the record carries the backend's receipt so no mirror posts it again.
  */
-const postToChannel = (agent: Agent.Agent, channel: Channel.Channel, thread: string | undefined, text: string) =>
+const postToChannel = (
+  agent: Agent.Agent,
+  channel: Channel.Channel,
+  thread: string | undefined,
+  text: string,
+  { direct = false }: { direct?: boolean } = {},
+) =>
   Effect.gen(function* () {
+    if (yield* ChannelBackend.isMirrored(channel)) {
+      const chat = yield* ensureChannelChat({ agent, channel, thread, direct }).pipe(Effect.orDie);
+      yield* appendToChat(agent, chat, text);
+      return { delivered: true, chat } satisfies Posted;
+    }
     const sent = yield* Operation.invoke(ThreadOperation.SendToChannel, { channel: Ref.make(channel), thread, text });
     if (!sent.delivered) {
       return { delivered: false, reason: sent.reason } satisfies Posted;

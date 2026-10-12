@@ -8,7 +8,7 @@ import * as EffectContext from 'effect/Context';
 import { type CleanupFn, Event, type ReadOnlyEvent, TimeoutError, asyncTimeout, yieldOrContinue } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Entity, Feed, type Hypergraph, Obj, Query } from '@dxos/echo';
-import { type QueryAST } from '@dxos/echo-protocol';
+import { QueryAST } from '@dxos/echo-protocol';
 import { ATTR_TYPE, makeDecodedEntityLive } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId, SpaceId } from '@dxos/keys';

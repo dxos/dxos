@@ -50,9 +50,9 @@ import {
   type StyleClass,
   type StyleMap,
   getElement,
+  isFrameNode,
   isLink,
   isNoteNode,
-  isPortalNode,
   showsContents,
 } from '../../model/types.ts';
 import { elementLayer, sceneLayers } from '../../utils/layers.ts';
@@ -141,7 +141,7 @@ const formValues = (
         layer: elementLayer(element, layers),
         style: { ...textAlign(element), ...resolveStyle(classedNode(element, styles).style) },
         portsPerSide: portsPerSideOf(nodes, element),
-        ...(isPortalNode(element) ? { contents: showsContents(element) } : {}),
+        ...(isFrameNode(element) ? { contents: showsContents(element) } : {}),
       };
 
 /**
