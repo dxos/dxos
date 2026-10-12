@@ -508,6 +508,12 @@ export type FeedCursorRange = {
   begin?: Feed.Cursor;
   /** Read up to but not including this cursor. Defaults to the end of the feed. */
   end?: Feed.Cursor;
+  /**
+   * `position` (default): confirmed items in the order the position authority assigned, cursors from
+   * `Feed.getCursor`. `local`: every item, unconfirmed ones included, in the order this replica indexed it, cursors
+   * from `Feed.getLocalCursor`; that order never changes under a reader, so state derived from it stays valid.
+   */
+  order?: 'position' | 'local';
 };
 
 /**
@@ -537,6 +543,7 @@ export const feedCursor = (range: FeedCursorRange = {}): Any =>
     type: 'feed-cursor',
     ...(range.begin !== undefined ? { begin: range.begin } : {}),
     ...(range.end !== undefined ? { end: range.end } : {}),
+    ...(range.order !== undefined ? { order: range.order } : {}),
   });
 
 export type ChildOfOptions = {

@@ -10,7 +10,6 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import { pipe } from 'effect/Function';
 import * as Layer from 'effect/Layer';
-import * as Order from 'effect/Order';
 import type * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 import * as Record from 'effect/Record';
 import type * as Scope from 'effect/Scope';
@@ -21,13 +20,13 @@ import * as Operation from '@dxos/compute/Operation';
 import type * as Skill from '@dxos/compute/Skill';
 import * as Trace from '@dxos/compute/Trace';
 import { Resource } from '@dxos/context';
-import { Database, Feed, Filter, Obj, Registry } from '@dxos/echo';
+import { Database, Feed, Obj, Registry } from '@dxos/echo';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { McpToolkit } from '@dxos/mcp-client';
-import { FeedProtocol } from '@dxos/protocols';
+import { Trajectory } from '@dxos/trajectory';
 import { type ContentBlock, Message } from '@dxos/types';
 import { markWork } from '@dxos/util';
 
@@ -35,9 +34,10 @@ import { AiRequest, type GenerationObserver, formatSystemPrompt } from '../reque
 import { ToolExecutionServices } from '../tool-runtime/index.ts';
 import * as AiContext from './AiContext.ts';
 import * as Harness from './Harness.ts';
-import { SessionStore, isQueued } from './SessionStore.ts';
+import * as Legacy from './Legacy.ts';
 import * as SkillHooks from './SkillHooks.ts';
 import { createToolkit } from './toolkit.ts';
+import * as TrajectoryStore from './TrajectoryStore.ts';
 
 export type RunProps<R = never> = {
   prompt: string | ContentBlock.Any[];
@@ -58,7 +58,18 @@ export type RunProps<R = never> = {
    * @default true
    */
   persist?: boolean;
+
+  /**
+   * The queued record this turn answers. Its content is already in the feed, so the turn consumes it (a message) or
+   * fires it (an alarm) rather than appending the prompt as a new message.
+   */
+  source?: TurnSource;
+
+  /** Model the turn runs on, recorded on its `turnBegin`. */
+  model?: Trajectory.TurnBegin['model'];
 };
+
+export type TurnSource = TrajectoryStore.TurnSource;
 
 export type Options = {
   feed: Feed.Feed;
@@ -92,8 +103,6 @@ export class Session extends Resource {
    */
   private readonly _binder: AiContext.Binder;
 
-  private readonly _sessionStore = new SessionStore();
-
   public constructor(options: Options) {
     super();
     this._feed = options.feed;
@@ -125,22 +134,7 @@ export class Session extends Resource {
    * head, so a soft fork's abandoned turns are excluded.
    */
   public async getHistory(): Promise<Message.Message[]> {
-    const { items: reachable } = Feed.history(await this.#messagesInAppendOrder());
-    return RuntimeProvider.runPromise(Effect.succeed(this._runtime))(
-      this._sessionStore.reifyHistory(this._feed, reachable),
-    );
-  }
-
-  /**
-   * Every message in the feed, in append order — what `Feed.history` needs, since it walks lineage
-   * positionally rather than by `created`, a wall clock peers do not agree on.
-   */
-  async #messagesInAppendOrder(): Promise<Message.Message[]> {
-    const queryResult = await RuntimeProvider.runPromise(Effect.succeed(this._runtime))(
-      Feed.query(this._feed, Filter.type(Message.Message)),
-    );
-    const items = await queryResult.run();
-    return Array.sort(items.filter(Obj.instanceOf(Message.Message)), byFeedPosition);
+    return RuntimeProvider.runPromise(Effect.succeed(this._runtime))(TrajectoryStore.history(this._feed));
   }
 
   getTools(): Effect.Effect<Record<string, Tool.Any>, never, ToolExecutionService | ToolResolverService> {
@@ -164,42 +158,66 @@ export class Session extends Resource {
   }
 
   /**
-   * Appends one of this turn's messages to the feed, consuming a pending rewind if there is one.
-   *
-   * The rewind decision is made in the UI, but the continuation is appended by the agent's process,
-   * which resolves the feed and never sees the chat — so the feed carries the intent and this is where
-   * it becomes lineage. `rewindFrom` names the earliest discarded message, so the new parent is whatever
-   * precedes it; nothing preceding means the continuation starts a fresh line. Only the first message of
-   * a turn finds it set, since the append clears it, so the rest of the turn chains implicitly. Clearing
-   * after the append (rather than before) leaves the rewind pending if the turn fails.
+   * Appends one of the current turn's messages to the feed, in the turn's thread when one is open.
    */
   public async appendTurnMessage(message: Message.Message): Promise<void> {
-    const rewindFrom = this._feed.rewindFrom;
-    const parent = rewindFrom !== undefined ? await this.#parentForRewind(rewindFrom) : undefined;
-
     await RuntimeProvider.runPromise(Effect.succeed(this._runtime))(
-      Feed.append(this._feed, [message], parent !== undefined ? { parent } : undefined),
+      TrajectoryStore.append(this._feed, [toEvent(message, this.#turn)]),
     );
-    if (rewindFrom !== undefined) {
-      // Cleared only once feed queries see the continuation: the thread truncates on the pointer, and
-      // clearing it before the index has the continuation shows the abandoned turn again until it does.
-      await this.#messagesInAppendOrder();
-      Obj.update(this._feed, (feed) => {
-        feed.rewindFrom = undefined;
-      });
-    }
   }
 
   /**
-   * The message preceding `rewindFrom` in append order, which the continuation parents to.
-   *
-   * Queue entries are skipped: a turn's own user message is appended right after the entry it was
-   * taken from, and an entry never joins the thread, so parenting to one cuts the lineage off.
+   * Records a rewind the UI left on the feed (`rewindFrom`, the first discarded message) as a `rewind` event and
+   * clears it, so the next turn continues from what precedes it.
    */
-  async #parentForRewind(rewindFrom: string): Promise<string | undefined> {
-    const messages = (await this.#messagesInAppendOrder()).filter((message) => !isQueued(message));
-    const index = messages.findIndex((message) => message.id === rewindFrom);
-    return index > 0 ? messages[index - 1].id : undefined;
+  applyPendingRewind(): Effect.Effect<void, never, Database.Service> {
+    return Effect.gen({ self: this }, function* () {
+      const rewindFrom = this._feed.rewindFrom;
+      if (rewindFrom === undefined) {
+        return;
+      }
+      yield* TrajectoryStore.append(this._feed, [
+        Trajectory.make({ payload: { _tag: 'rewind', from: rewindFrom }, sender: { role: 'user' } }),
+      ]);
+      Obj.update(this._feed, (feed) => {
+        feed.rewindFrom = undefined;
+      });
+    });
+  }
+
+  /** The open turn's `turnBegin` id, which its events carry as their thread. */
+  #turn: Trajectory.EventId | undefined;
+
+  /**
+   * Opens a turn, recording first a rewind the UI left on the feed.
+   */
+  #beginTurn(model: RunProps['model']): Effect.Effect<Trajectory.EventId, never, Database.Service> {
+    return Effect.gen({ self: this }, function* () {
+      yield* this.applyPendingRewind();
+      const begin = yield* TrajectoryStore.beginTurn(this._feed, { model });
+      this.#turn = begin;
+      return begin;
+    });
+  }
+
+  /**
+   * The events one output of the turn becomes. The turn's prompt is its first user message (see
+   * `TrajectoryStore.promptEvents`); any later user-role output is a note from the system (e.g. a tool fault), not
+   * something a person typed.
+   */
+  #outputEvents(
+    message: Message.Message,
+    turn: Trajectory.EventId,
+    prompt: { source?: TurnSource; resumed: boolean; written: boolean },
+  ) {
+    if (message.sender.role !== 'user') {
+      return [toEvent(message, turn)];
+    }
+    if (prompt.written) {
+      return [toEvent(message, turn, { role: 'event', name: 'system' })];
+    }
+    prompt.written = true;
+    return TrajectoryStore.promptEvents(message, turn, prompt.source, { resumed: prompt.resumed });
   }
 
   /**
@@ -215,7 +233,11 @@ export class Session extends Resource {
       );
 
       yield* Trace.emitRequestPhase('loading-history');
-      const history = yield* Effect.promise(() => this.getHistory());
+      // Before the history is read, so a redelivered prompt's interrupted turn is part of it.
+      const resumed = yield* TrajectoryStore.resumeInterrupted(this._feed, params.source);
+      const history = yield* TrajectoryStore.history(this._feed);
+      const turn = yield* this.#beginTurn(params.model);
+      const prompt = { source: params.source, resumed, written: false };
       markWork('session.history-loaded');
       const skills = this.context.getSkills();
       const objects = this.context.getObjects();
@@ -262,7 +284,10 @@ export class Session extends Resource {
         summarizationThreshold: SUMMARY_THRESHOLD,
         observer: params.observer,
         persist: params.persist,
-        onOutput: (message) => Effect.promise(() => this.appendTurnMessage(message)),
+        onOutput: (message) =>
+          TrajectoryStore.append(this._feed, this.#outputEvents(message, turn, prompt)).pipe(
+            Effect.provideService(Database.Service, Context.get(this._runtime, Database.Service)),
+          ),
       });
 
       yield* request.begin({
@@ -272,6 +297,7 @@ export class Session extends Resource {
         instructions: this.#instructions,
         prompt: params.prompt,
         sender: params.sender,
+        promptId: params.source && 'message' in params.source ? params.source.message : undefined,
         system: params.system,
         systemPrompt: yield* formatSystem(skills, objects),
       });
@@ -338,6 +364,15 @@ export class Session extends Resource {
       }
       return output;
     }).pipe(
+      // A turn that began ends, so its thread merges into the conversation even when the request failed.
+      Effect.onExit((exit) => {
+        const turn = this.#turn;
+        this.#turn = undefined;
+        return turn !== undefined
+          ? TrajectoryStore.endTurn(this._feed, turn, exit, { source: params.source })
+          : Effect.void;
+      }),
+      Effect.provideService(Database.Service, Context.get(this._runtime, Database.Service)),
       Effect.provide(
         Layer.mergeAll(
           // Tier A only: the agent's own turn fiber has no `ProcessManager.Service` in scope, so
@@ -430,21 +465,20 @@ const connectMcpServers = (
   });
 };
 
-/**
- * Orders feed items by the position the server assigned them. Unpositioned blocks (written locally and
- * not yet acknowledged) sort last, which is what we want: a message just written is the newest.
- */
-const byFeedPosition = Order.make<Message.Message>((a, b) => {
-  const positionA = feedPosition(a);
-  const positionB = feedPosition(b);
-  return positionA === positionB ? 0 : positionA < positionB ? -1 : 1;
-});
-
-const feedPosition = (message: Message.Message): number => {
-  const key = Obj.getKeys(message, FeedProtocol.KEY_QUEUE_POSITION).at(0)?.id;
-  const position = key !== undefined ? Number(key) : Number.NaN;
-  return Number.isNaN(position) ? Number.POSITIVE_INFINITY : position;
-};
+/** A message of the turn as the event recording it, in the turn's thread when given. */
+const toEvent = (message: Message.Message, thread?: Trajectory.EventId, sender?: Trajectory.Sender): Trajectory.Event =>
+  Trajectory.make({
+    id: message.id,
+    payload: {
+      _tag: 'message',
+      blocks: message.blocks,
+      attachments: message.attachments,
+      properties: message.properties,
+    },
+    sender: sender ?? Legacy.toSender(message.sender),
+    thread,
+    created: message.created,
+  });
 
 /** The prompt as the turn span carries it: text as is, blocks reduced to what identifies them. */
 export const serializePrompt = (prompt: string | readonly ContentBlock.Any[]): unknown =>

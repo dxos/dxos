@@ -10,6 +10,7 @@ import { ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
 import { type Obj, Query } from '@dxos/echo';
 import {
   DatabaseDirectory,
+  EchoFeedCodec,
   EncodedReference,
   type EntityPropPath,
   EntityStructure,
@@ -1806,7 +1807,11 @@ export class QueryExecutor extends Resource {
     trace.objectCount = rows.length;
     trace.sql = step.sql;
     trace.explain = explain;
-    return { workingSet: rows.map(compiledRowToItem), trace };
+    // Only a local-order read resumes from the stamp, and stamping re-serializes each body.
+    const localOrder = step.steps.some(
+      (inner) => inner._tag === 'SelectStep' && inner.feedCursorRange?.order === 'local',
+    );
+    return { workingSet: rows.map((row) => compiledRowToItem(row, localOrder)), trace };
   }
 
   private async _execAggregateStep(
@@ -2112,7 +2117,8 @@ export class QueryExecutor extends Resource {
       queueNamespace: meta.queueNamespace || null,
       documentId: null,
       doc: null,
-      data: snapshot as Obj.JSON,
+      // Stamped on every read so a local-order reader can resume from the item it stopped at.
+      data: EchoFeedCodec.withLocalOrder(snapshot as Record<string, unknown>, meta.recordId) as Obj.JSON,
       rank: 1,
       createdAt: meta.createdAt,
       updatedAt: meta.updatedAt,
@@ -2443,6 +2449,16 @@ const extractQueueWindow = (step: QueryPlan.SelectStep): QueueWindow | undefined
     });
   }
 
+  if (range.order === 'local') {
+    // The empty string is the start sentinel; `recordId` starts at 1.
+    return {
+      kind: 'local',
+      after: range.begin ? parseCursor(range.begin, Number.MAX_SAFE_INTEGER) : 0,
+      ...(range.end ? { before: parseCursor(range.end, 0) } : {}),
+      ...(step.limit !== undefined ? { limit: step.limit } : {}),
+    };
+  }
+
   return {
     kind: 'cursor',
     // The empty string is the start sentinel (`Feed.START`), which bounds nothing.
@@ -2545,7 +2561,11 @@ const _inQueryCacheKey = (node: QueryAST.FilterInQuery): string => `${JSON.strin
  * document to derive it from. A collapsed group stands for its members, so it ships no object
  * fields and its id is the serialized group key.
  */
-const compiledRowToItem = (row: CompiledRow): QueryItem => {
+/** A feed row's body stamped with the order this replica indexed it in, so a local-order reader can resume after it. */
+const withLocalOrder = (documentJson: string, recordId: number): string =>
+  JSON.stringify(EchoFeedCodec.withLocalOrder(JSON.parse(documentJson), recordId));
+
+const compiledRowToItem = (row: CompiledRow, localOrder: boolean): QueryItem => {
   const result: QueryService.QueryResult =
     row.aggregates !== null && row.groupKey !== null
       ? {
@@ -2563,7 +2583,10 @@ const compiledRowToItem = (row: CompiledRow): QueryItem => {
           queueId: row.queueId !== '' ? row.queueId : undefined,
           queueNamespace: row.queueNamespace !== '' ? row.queueNamespace : undefined,
           rank: row.rank,
-          documentJson: row.documentJson ?? undefined,
+          documentJson:
+            row.documentJson !== null && localOrder
+              ? withLocalOrder(row.documentJson, row.recordId)
+              : (row.documentJson ?? undefined),
           groupKey: row.groupKey ?? undefined,
           groupCount: row.groupCount ?? undefined,
         };

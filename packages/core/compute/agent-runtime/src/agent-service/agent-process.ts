@@ -17,13 +17,13 @@ import * as Struct from 'effect/Struct';
 
 import { AiService, Model, OpaqueToolkit } from '@dxos/ai';
 import {
-  AiContext,
   Alarm,
   HarnessControl,
   type HarnessControlRpcs,
   type PendingState,
   SessionStore,
   SkillHooks,
+  TrajectoryStore,
   getOperationFromTool,
   makeToolExecutionService,
   makeToolResolverFromOperations,
@@ -189,16 +189,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
     // not know matches nothing. Without them a hosted agent reads its own skill bindings back
     // empty and runs every turn with an EMPTY TOOLKIT — the model can only answer in prose.
     // `McpServer` and `AccessToken` are read each turn to connect the space's MCP servers.
-    types: [
-      Chat.Chat,
-      Feed.Feed,
-      Message.Message,
-      Alarm.Alarm,
-      AiContext.Binding,
-      Skill.Skill,
-      McpServer.McpServer,
-      AccessToken.AccessToken,
-    ],
+    types: [Chat.Chat, Feed.Feed, ...TrajectoryStore.types, Skill.Skill, McpServer.McpServer, AccessToken.AccessToken],
     services: [
       Database.Service,
       OpaqueToolkit.OpaqueToolkitProvider,
@@ -620,12 +611,6 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 [
                   loadSpaceMcpServers(),
                   Effect.gen(function* () {
-                    // The turn appends its own user message built from `prompt`, so the queue entry that
-                    // supplied it must leave the queue view now or the same content shows in both places
-                    // until the late ack below.
-                    if (dequeued !== undefined) {
-                      yield* sessionStore.markInFlight(feed, dequeued);
-                    }
                     log('begin request', { prompt });
                     log('trace agent request begin');
                     yield* Trace.write(Trace.AgentRequestBegin, {});
@@ -644,6 +629,13 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                   // toolkit: AsynchronousExectionToolkit,
                   system: options.systemPrompt,
                   mcpServers,
+                  source:
+                    dequeued === undefined
+                      ? undefined
+                      : Obj.instanceOf(Message.Message, dequeued)
+                        ? { message: dequeued.id }
+                        : { alarm: dequeued.id },
+                  model,
                 })
                 .pipe(
                   Effect.onExit((exit) =>
@@ -666,8 +658,8 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               endHooksFired = false;
               yield* ToolResultsCell.set(toolResults);
 
-              // Ack only now: the turn is what the queue entry was for, so a process that dies before
-              // this point must find the entry still pending and redeliver it.
+              // The turn consumed or fired the entry when it began; recording it as acked keeps a read that
+              // has not caught up with that from handing the same entry to the next wake.
               if (dequeued !== undefined) {
                 yield* sessionStore.ack(feed, dequeued);
                 ackedEntries = [...ackedEntries, dequeued.id];

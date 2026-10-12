@@ -12,10 +12,10 @@ import * as Stream from 'effect/Stream';
 import * as Struct from 'effect/Struct';
 
 import { AiService, Model, ToolExecutionService, ToolId, ToolResolverService } from '@dxos/ai';
-import { AiRequest, GenerationObserver } from '@dxos/assistant';
+import { AiRequest, GenerationObserver, TrajectoryStore } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
-import { Database, DXN, Feed, Filter, Ref, Registry, Type } from '@dxos/echo';
+import { Database, DXN, Feed, Ref, Registry, Type } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
@@ -125,9 +125,7 @@ export const gptNode = defineComputeNode({
     const conversationFeed = conversation
       ? yield* Database.resolve(conversation, Feed.Feed).pipe(Effect.orDie)
       : undefined;
-    const historyMessages = conversationFeed
-      ? yield* Feed.query(conversationFeed, Filter.type(Message.Message)).run
-      : (history ?? []);
+    const historyMessages = conversationFeed ? yield* TrajectoryStore.history(conversationFeed) : (history ?? []);
 
     log.info('generating', { systemPrompt, prompt, historyMessages, tools });
 
@@ -180,7 +178,7 @@ export const gptNode = defineComputeNode({
       log.info('messages', { messages });
 
       if (conversationFeed) {
-        yield* Feed.append(conversationFeed, [...messages]).pipe(Effect.provide(runDeps));
+        yield* TrajectoryStore.appendMessages(conversationFeed, messages).pipe(Effect.provide(runDeps));
       }
 
       const text = messages

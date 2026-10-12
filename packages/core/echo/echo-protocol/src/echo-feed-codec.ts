@@ -10,7 +10,11 @@ import type { ForeignKey } from './foreign-key.ts';
 const ATTR_META = '@meta';
 
 /** Meta keys a store stamps on decode and strips on encode: they describe the block, not the object. */
-const FEED_KEY_SOURCES: readonly string[] = [FeedProtocol.KEY_QUEUE_POSITION, FeedProtocol.KEY_FEED_BLOCK];
+const FEED_KEY_SOURCES: readonly string[] = [
+  FeedProtocol.KEY_QUEUE_POSITION,
+  FeedProtocol.KEY_FEED_BLOCK,
+  FeedProtocol.KEY_FEED_LOCAL_ORDER,
+];
 
 /**
  * Identity and order of the feed block an object was decoded from, as stamped into its `@meta`.
@@ -21,6 +25,8 @@ export type FeedBlockRef = {
   actorId?: string;
   sequence?: number;
   position?: number;
+  /** Order this replica indexed the block in, when the read stamped it. */
+  localOrder?: number;
 };
 
 /** The stored fields {@link EchoFeedCodec.decodeBlock} reads. */
@@ -94,6 +100,11 @@ export class EchoFeedCodec {
         if (Number.isFinite(position)) {
           ref.position = position;
         }
+      } else if (key.source === FeedProtocol.KEY_FEED_LOCAL_ORDER) {
+        const order = Number(key.id);
+        if (Number.isFinite(order)) {
+          ref.localOrder = order;
+        }
       } else if (key.source === FeedProtocol.KEY_FEED_BLOCK) {
         Object.assign(ref, parseBlockId(key.id));
       }
@@ -115,6 +126,15 @@ export class EchoFeedCodec {
       ...value,
       [ATTR_META]: { ...meta, keys: keys.filter((key) => !FEED_KEY_SOURCES.includes(key.source)) },
     };
+  }
+
+  /**
+   * Returns a copy of an indexed snapshot stamped with the order this replica indexed it in, for local cursors.
+   */
+  static withLocalOrder(value: Record<string, unknown>, order: number): Record<string, unknown> {
+    const copy = { ...value };
+    EchoFeedCodec.#setKey(copy, FeedProtocol.KEY_FEED_LOCAL_ORDER, order.toString());
+    return copy;
   }
 
   static #setKey(obj: Record<string, unknown>, source: string, id: string): void {
@@ -143,3 +163,6 @@ const parseBlockId = (id: string): FeedBlockRef => {
  * Re-exported so `@dxos/echo` can read it without depending on `@dxos/protocols`.
  */
 export const KEY_QUEUE_POSITION = FeedProtocol.KEY_QUEUE_POSITION;
+
+/** Foreign-key source for the order this replica indexed a feed block in; see `Feed.getLocalCursor`. */
+export const KEY_FEED_LOCAL_ORDER = FeedProtocol.KEY_FEED_LOCAL_ORDER;

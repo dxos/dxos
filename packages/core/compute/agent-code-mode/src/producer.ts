@@ -10,12 +10,19 @@ import * as Record from 'effect/Record';
 
 import { type MakeTurnProducer, type TurnProducer, type TurnRequest } from '@dxos/agent-runtime';
 import { callTool } from '@dxos/ai';
-import { AiRequest, AiSession, createToolkit, formatSystemPrompt, getOperationFromTool } from '@dxos/assistant';
+import {
+  AiRequest,
+  AiSession,
+  TrajectoryStore,
+  createToolkit,
+  formatSystemPrompt,
+  getOperationFromTool,
+} from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
 import type * as Skill from '@dxos/compute/Skill';
 import { Database, Obj } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import type { ContentBlock, Message } from '@dxos/types';
+import { type ContentBlock, Message } from '@dxos/types';
 
 import { PlainDialect } from './dialect-plain.ts';
 import type { Dialect, SandboxOperation, SandboxType } from './Dialect.ts';
@@ -105,67 +112,82 @@ const runCodeModeTurn = ({
     const runtime = yield* Effect.context<Database.Service | Operation.Service>();
 
     const history = yield* Effect.promise(() => session.getHistory());
-    // Rebound each turn below, since a skill enabled mid-request changes what the operations are.
-    let labelCall = labelEvalCall([]);
-    const request = new AiRequest.Request({
-      onOutput: (message) => Effect.promise(() => session.appendTurnMessage(labelEvalCalls(message, labelCall))),
+    // The turn records the prompt itself (consuming a queued one), so the request's copy of it is not appended again.
+    const prompt = Message.make({
+      sender: { role: 'user', ...params.sender },
+      blocks: typeof params.prompt === 'string' ? [{ _tag: 'text', text: params.prompt }] : [...params.prompt],
     });
+    const promptId = params.source && 'message' in params.source ? params.source.message : prompt.id;
+    return yield* TrajectoryStore.turn(feed, { prompt, source: params.source, model: params.model }, (append) =>
+      Effect.gen(function* () {
+        // Rebound each turn below, since a skill enabled mid-request changes what the operations are.
+        let labelCall = labelEvalCall([]);
+        const request = new AiRequest.Request({
+          onOutput: (message) =>
+            message.id === promptId
+              ? Effect.void
+              : append([labelEvalCalls(message, labelCall)]).pipe(Effect.provide(runtime)),
+        });
 
-    yield* request.begin({
-      history,
-      skills: session.context.getSkills(),
-      objects: session.context.getObjects(),
-      instructions,
-      prompt: params.prompt,
-      system: params.system,
-    });
+        yield* request.begin({
+          history,
+          skills: session.context.getSkills(),
+          objects: session.context.getObjects(),
+          instructions,
+          prompt: params.prompt,
+          promptId,
+          sender: params.sender,
+          system: params.system,
+        });
 
-    const maxTurns = options.maxTurns ?? DEFAULT_MAX_TURNS;
-    for (let turn = 0; ; turn++) {
-      yield* Effect.promise(() => session.context.sync());
-      const skills = session.context.getSkills();
-      const operations = yield* projectOperations(skills);
-      labelCall = labelEvalCall(operations);
-      const toolkit = makeEvalToolkit({
-        dialect,
-        sandbox,
-        runtime,
-        operations,
-        maxOutput: options.maxOutput,
-        timeout: options.timeout,
-      });
-      const system = yield* formatSystemPrompt({
-        system: [dialect.instructions({ operations, types: yield* registeredTypes }), options.system, params.system]
-          .filter(isPresent)
-          .join('\n\n'),
-        skills,
-        objects: session.context.getObjects(),
-        instructions,
-      }).pipe(Effect.orDie);
+        const maxTurns = options.maxTurns ?? DEFAULT_MAX_TURNS;
+        for (let turn = 0; ; turn++) {
+          yield* Effect.promise(() => session.context.sync());
+          const skills = session.context.getSkills();
+          const operations = yield* projectOperations(skills);
+          labelCall = labelEvalCall(operations);
+          const toolkit = makeEvalToolkit({
+            dialect,
+            sandbox,
+            runtime,
+            operations,
+            maxOutput: options.maxOutput,
+            timeout: options.timeout,
+          });
+          const system = yield* formatSystemPrompt({
+            system: [dialect.instructions({ operations, types: yield* registeredTypes }), options.system, params.system]
+              .filter(isPresent)
+              .join('\n\n'),
+            skills,
+            objects: session.context.getObjects(),
+            instructions,
+          }).pipe(Effect.orDie);
 
-      const { done, finishReason } = yield* request.runAgentTurn({
-        system,
-        toolkit,
-      });
-      if (done) {
-        break;
-      }
-      // Checked before the pause branch below: a provider that keeps pausing would otherwise
-      // re-issue the request forever, since a paused turn skips the rest of the loop.
-      if (turn + 1 >= maxTurns) {
-        yield* request.submitNotice(
-          `Stopped after ${maxTurns} turns without a final answer. Report what you established and what is left.`,
-        );
-        break;
-      }
-      // A paused server-tool turn resumes with another request and no local tool execution.
-      if (finishReason === 'pause') {
-        continue;
-      }
-      yield* request.runTools({ toolkit });
-    }
+          const { done, finishReason } = yield* request.runAgentTurn({
+            system,
+            toolkit,
+          });
+          if (done) {
+            break;
+          }
+          // Checked before the pause branch below: a provider that keeps pausing would otherwise
+          // re-issue the request forever, since a paused turn skips the rest of the loop.
+          if (turn + 1 >= maxTurns) {
+            yield* request.submitNotice(
+              `Stopped after ${maxTurns} turns without a final answer. Report what you established and what is left.`,
+            );
+            break;
+          }
+          // A paused server-tool turn resumes with another request and no local tool execution.
+          if (finishReason === 'pause') {
+            continue;
+          }
+          yield* request.runTools({ toolkit });
+        }
 
-    return [...request.pending];
+        return [...request.pending];
+      }),
+    );
   }).pipe(
     // What `AiSession.createRequest` provides around its own turn: an operation invoked from the
     // sandbox is part of this conversation, the same as one invoked as a tool.

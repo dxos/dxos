@@ -15,7 +15,7 @@ import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 
 import { AgentInput, type AgentProcessDefinition, makeInputMessage } from '@dxos/agent-runtime';
-import { Alarm, HarnessControl, type PendingState, SessionStore } from '@dxos/assistant';
+import { Alarm, HarnessControl, type PendingState, SessionStore, TrajectoryStore } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
@@ -60,7 +60,7 @@ export const make = (options: Options): AgentProcessDefinition =>
     output: Schema.Void,
     // Typed queries match nothing for an unregistered type: `SessionStore` reads the queue with them,
     // and the agent's subscription token is found with one.
-    types: [Chat.Chat, Feed.Feed, Message.Message, Alarm.Alarm, AccessToken.AccessToken],
+    types: [Chat.Chat, Feed.Feed, ...TrajectoryStore.types, AccessToken.AccessToken],
     services: [Database.Service, ShellService.ShellService],
     rpcs: HarnessControl,
   }).pipe(
@@ -148,9 +148,12 @@ export const make = (options: Options): AgentProcessDefinition =>
           }
         });
 
-        const runTurn = Effect.fnUntraced(function* (prompt: readonly ContentBlock.Any[]) {
+        const runTurn = Effect.fnUntraced(function* (
+          prompt: readonly ContentBlock.Any[],
+          source: TrajectoryStore.TurnSource,
+        ) {
           yield* Trace.write(Trace.AgentRequestBegin, {});
-          yield* AcpAgent.runTurn(agent, { chat, feed }, { prompt: [...prompt] }).pipe(
+          yield* AcpAgent.runTurn(agent, { chat, feed }, { prompt: [...prompt], source }).pipe(
             Effect.onExit((exit) =>
               Trace.write(Trace.AgentRequestEnd, {
                 status: Exit.isSuccess(exit) ? 'success' : Exit.hasInterrupts(exit) ? 'interrupted' : 'error',
@@ -186,9 +189,7 @@ export const make = (options: Options): AgentProcessDefinition =>
                 if (message.sender.role === 'user') {
                   yield* SelfWakesCell.set(0);
                 }
-                // The turn appends its own user message, so the queue entry leaves the queue view now.
-                yield* store.markInFlight(feed, message);
-                yield* runTurn(message.blocks);
+                yield* runTurn(message.blocks, { message: message.id });
                 unseen.delete(message.id);
                 yield* store.ack(feed, message);
               } else if (due) {
@@ -198,7 +199,7 @@ export const make = (options: Options): AgentProcessDefinition =>
                   log.warn('claude code self-wake budget spent, dropping alarm', { wakes: selfWakes });
                 } else {
                   yield* SelfWakesCell.set(selfWakes + 1);
-                  yield* runTurn([ContentBlock.Text.make({ text: due.message ?? 'Continue.' })]);
+                  yield* runTurn([ContentBlock.Text.make({ text: due.message ?? 'Continue.' })], { alarm: due.id });
                 }
                 yield* store.ack(feed, due);
               }

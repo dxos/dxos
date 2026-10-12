@@ -8,7 +8,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
-import { type Database, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { type Database, Filter, Obj, Ref } from '@dxos/echo';
 import * as AgentPlugin from '@dxos/plugin-agent/AgentPlugin';
 import * as ChatParticipant from '@dxos/plugin-agent/ChatParticipant';
 import * as Goal from '@dxos/plugin-agent/Goal';
@@ -18,7 +18,7 @@ import * as Relay from '@dxos/plugin-agent/Relay';
 import { translations as agentTranslations } from '@dxos/plugin-agent/translations';
 import * as TriggerOperation from '@dxos/plugin-agent/TriggerOperation';
 import * as ThreadPlugin from '@dxos/plugin-thread/ThreadPlugin';
-import { HasSubject, Message, Organization, Person, ProfileOf } from '@dxos/types';
+import { HasSubject, Organization, Person, ProfileOf } from '@dxos/types';
 
 import { StoryRole } from '../modules/index.ts';
 import {
@@ -31,6 +31,7 @@ import {
   SCRIPTED_PROMPTS,
   SCRIPTED_REPLIES,
   TRANSCRIPT_FACTS,
+  chatMessages,
   config,
   createDecorators,
   greeting,
@@ -208,7 +209,7 @@ const readReplies = async (db: Database.Database, participant: string) => {
   if (!feed) {
     return [];
   }
-  const messages = await db.query(Query.select(Filter.type(Message.Message)).from(feed)).run();
+  const messages = await chatMessages(db, feed);
   return messages
     .filter(({ sender }) => sender.role === 'assistant')
     .flatMap(({ blocks }) => blocks.flatMap((block) => (block._tag === 'text' ? [block.text] : [])));
@@ -377,7 +378,7 @@ const readRichReplies = async (db: Database.Database) => {
   if (!feed) {
     return [];
   }
-  const messages = await db.query(Query.select(Filter.type(Message.Message)).from(feed)).run();
+  const messages = await chatMessages(db, feed);
   return messages
     .filter(({ sender }) => sender.role === 'assistant')
     .flatMap(({ blocks }) => blocks.flatMap((block) => (block._tag === 'text' ? [block.text] : [])));

@@ -12,7 +12,7 @@ import { AiService } from '@dxos/ai';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { AiContext } from '@dxos/assistant';
+import { TrajectoryStore } from '@dxos/assistant';
 import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
 import * as ChatContextSkill from '@dxos/assistant-toolkit/ChatContextSkill';
 import * as SkillManagerSkill from '@dxos/assistant-toolkit/SkillManagerSkill';
@@ -21,7 +21,7 @@ import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Skill from '@dxos/compute/Skill';
-import { Database, Feed, Query, Ref, Registry } from '@dxos/echo';
+import { Database, Ref, Registry } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN, EntityId } from '@dxos/keys';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
@@ -30,6 +30,7 @@ import { initializeIdentity } from '@dxos/plugin-client/testing';
 import * as RegistryPlugin from '@dxos/plugin-registry/RegistryPlugin';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as Harness from '@dxos/plugin-testing/Harness';
+import { Durable } from '@dxos/trajectory';
 
 import { meta } from '#meta';
 import { AssistantPlugin } from '#plugin';
@@ -121,8 +122,8 @@ describe('AssistantPlugin', () => {
           yield* Database.flush();
 
           const feed = yield* Database.load(chat.feed);
-          const bindings = yield* Feed.query(feed, Query.type(AiContext.Binding)).run;
-          return bindings.flatMap((binding) => binding.skills.added.map((ref) => ref.uri));
+          const { state } = yield* TrajectoryStore.load(feed, Durable.session);
+          return state.skills.map((ref) => ref.uri);
         }).pipe(Effect.provide(ServiceResolver.provide({ space: defaultSpace.id }, Database.Service))),
       );
     };

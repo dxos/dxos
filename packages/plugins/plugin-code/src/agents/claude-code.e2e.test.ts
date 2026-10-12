@@ -12,11 +12,11 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
-import { Chat } from '@dxos/assistant';
+import { Chat, TrajectoryStore } from '@dxos/assistant';
 import * as Trace from '@dxos/compute/Trace';
-import { Database, Feed, Filter, Ref } from '@dxos/echo';
+import { Database, Feed, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
-import { type ContentBlock, Message } from '@dxos/types';
+import { type ContentBlock } from '@dxos/types';
 
 import { serve } from '../agent-helper/server.ts';
 import * as AcpAgent from './AcpAgent.ts';
@@ -77,7 +77,7 @@ const summarize = (block: ContentBlock.Any): string => {
 };
 
 const transcript = (feed: Feed.Feed) =>
-  Feed.query(feed, Filter.type(Message.Message)).run.pipe(
+  TrajectoryStore.threadMessages(feed).pipe(
     Effect.map((messages) => messages.flatMap((message) => message.blocks.map(summarize))),
   );
 
@@ -85,8 +85,7 @@ const transcript = (feed: Feed.Feed) =>
 const findRequest = (feed: Feed.Feed) =>
   Effect.gen(function* () {
     while (true) {
-      const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
-      for (const message of messages) {
+      for (const message of yield* TrajectoryStore.threadMessages(feed)) {
         for (const block of message.blocks) {
           if (block._tag === 'request' && block.resolution === undefined) {
             return { message, block };
@@ -99,7 +98,7 @@ const findRequest = (feed: Feed.Feed) =>
 
 describe.runIf(ENABLED && (OAUTH_TOKEN || API_KEY) && CLAUDE)('Claude Code on this computer, end to end', () => {
   const TestLayer = Layer.mergeAll(
-    TestDatabaseLayer({ types: [Feed.Feed, Message.Message, Chat.Chat] }),
+    TestDatabaseLayer({ types: [Feed.Feed, Chat.Chat, ...TrajectoryStore.types] }),
     Layer.succeed(Trace.TraceService, { write: () => {} }),
   );
 
