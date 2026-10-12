@@ -165,8 +165,13 @@ export const startRecorder = async (page, { dir, file, size, fps, crf, quality }
    * a long string being typed becomes a jump cut instead of dead air the still-frame trimmer cannot remove
    * (a streaming reply is motion, not stillness).
    */
+  /** Returns whether this call began the pause, so a caller nested inside another pause leaves it to its owner. */
   const pause = () => {
-    paused ??= { at: Date.now(), data: undefined };
+    if (paused) {
+      return false;
+    }
+    paused = { at: Date.now(), data: undefined };
+    return true;
   };
 
   /**
@@ -192,6 +197,10 @@ export const startRecorder = async (page, { dir, file, size, fps, crf, quality }
   return {
     get started() {
       return started;
+    },
+    /** When the current pause began, or undefined while recording. */
+    get pausedAt() {
+      return paused?.at;
     },
     cut,
     pause,

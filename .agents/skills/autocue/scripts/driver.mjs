@@ -639,6 +639,9 @@ const runFlow = async (command) => {
       // also keeps it out of the chapters.
       const at = Date.now();
       const skippedBefore = skipped;
+      const startedBefore = started;
+      // Where the step begins in the kept video: a step that starts inside a pause begins where the pause did.
+      const keptAt = (recorder?.pausedAt ?? at) - started;
       const mark = {
         ms: at - started,
         text: step.name,
@@ -646,9 +649,10 @@ const runFlow = async (command) => {
       };
       await interruptible(step.run({ page, demo }));
       if (!step.setup && step.chapter !== false) {
-        // A boot cut inside the step (its `goto`) moves `started`, and the chapter then opens at the cut; a
-        // pause inside it moves `started` too, by time the chapter's own start must not lose.
-        mark.ms = Math.max(0, at - started + (skipped - skippedBefore));
+        // A boot cut inside the step (its `goto`) moves `started` and the chapter then opens at the cut; a pause
+        // ending inside it moves `started` too, but by kept time removed, which the chapter's start must not lose.
+        const cutShift = started - startedBefore - (skipped - skippedBefore);
+        mark.ms = Math.max(0, keptAt - cutShift);
         timeline.push(mark);
       }
       results.push({ step: index + 1, name: step.name, ok: true, screenshot: await screenshot(index) });
@@ -712,8 +716,7 @@ const handlers = {
     if (!recorder?.pause) {
       return { paused: false };
     }
-    recorder.pause();
-    return { paused: true };
+    return { paused: true, began: recorder.pause() };
   },
   resume: () => {
     if (!recorder?.resume) {
@@ -759,12 +762,15 @@ const handlers = {
     const trim = command.trim !== false && recorder?.pause && command.value.length > lead + 8;
     if (trim) {
       await keys(command.value.slice(0, lead), delay);
-      await handlers.pause();
+      // Inside a pause the flow opened itself, the cut is already running and is the flow's to end.
+      const { began } = await handlers.pause();
       try {
         // Still per key, not `fill`: editors such as CodeMirror react to key events, and the speed is off camera.
         await keys(command.value.slice(lead), 5);
       } finally {
-        await handlers.resume();
+        if (began) {
+          await handlers.resume();
+        }
       }
     } else {
       await keys(command.value, delay);
