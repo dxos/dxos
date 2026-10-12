@@ -389,13 +389,11 @@ export class ModuleLoader {
     }).pipe(
       Effect.tapCause(() => Scope.close(scope, Exit.void)),
       Effect.withSpan('ModuleLoader.load', { attributes: { 'dx.module.id': module.id } }),
-      together(
-        Effect.sleep(Duration.seconds(10)).pipe(
-          Effect.andThen(
-            Effect.sync(() => log.warn(`module is taking a long time to activate`, { module: module.id })),
-          ),
-        ),
-      ),
+      (activation) =>
+        Effect.suspend(() => {
+          const settled = slowModuleWatch.start(module.id);
+          return activation.pipe(Effect.ensuring(Effect.sync(settled)));
+        }),
       Performance.addTrackEntry({
         name: module.id,
         devtools: {
@@ -542,6 +540,45 @@ export class ModuleLoader {
     });
   }
 }
+
+const SLOW_MODULE_WARNING_MS = 10_000;
+
+/**
+ * Warns about modules still activating after {@link SLOW_MODULE_WARNING_MS}. One shared host interval,
+ * running only while activations are in flight, instead of a sleeping fiber per module: a boot activates
+ * hundreds of modules, and each fiber's timer and fork costs main-thread time for a warning that almost
+ * never fires.
+ */
+class SlowModuleWatch {
+  readonly #inFlight = new Set<{ moduleId: string; started: number; warned: boolean }>();
+  #interval: ReturnType<typeof setInterval> | undefined;
+
+  /** Records the start of an activation; returns the callback marking it settled. */
+  start(moduleId: string): () => void {
+    const activation = { moduleId, started: performance.now(), warned: false };
+    this.#inFlight.add(activation);
+    this.#interval ??= setInterval(() => this.#check(), 1_000);
+    return () => {
+      this.#inFlight.delete(activation);
+      if (this.#inFlight.size === 0 && this.#interval !== undefined) {
+        clearInterval(this.#interval);
+        this.#interval = undefined;
+      }
+    };
+  }
+
+  #check(): void {
+    const now = performance.now();
+    for (const activation of this.#inFlight) {
+      if (!activation.warned && now - activation.started >= SLOW_MODULE_WARNING_MS) {
+        activation.warned = true;
+        log.warn('module is taking a long time to activate', { module: activation.moduleId });
+      }
+    }
+  }
+}
+
+const slowModuleWatch = new SlowModuleWatch();
 
 /**
  * Runs an effect concurrently with another effect.
