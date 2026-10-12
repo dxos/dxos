@@ -106,9 +106,17 @@ export const QueryResult = Schema.Struct({
    * document row the index has a state for; the client backs a live object with it.
    */
   state: Schema.optional(Schema.String),
-  /** Heads of the document {@link state} was read at; a write made against it replays there. */
+  /** Heads of the document {@link state} and {@link bytes} were read at. */
   heads: Schema.optional(mutableArray(Schema.String)),
-  /** Index stamp of the row, increasing with every re-index; orders two states of one object. */
+  /**
+   * The document's Automerge bytes at {@link heads}, sent with {@link state} for a document that holds
+   * only this object; the client loads them when it first writes to the object.
+   */
+  bytes: Schema.optional(Schema.Uint8Array),
+  /**
+   * Index stamp of the row, increasing with every re-index; orders two states of one object. A
+   * reactive query re-sends a row whose stamp it already shipped with this alone, without the state.
+   */
   version: Schema.optional(Schema.Number),
   /** Unix ms of the object's last change, sent with {@link state}. */
   updatedAt: Schema.optional(Schema.Number),

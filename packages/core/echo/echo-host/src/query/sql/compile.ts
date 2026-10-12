@@ -79,6 +79,8 @@ export type CompiledRow = {
   heads: string | null;
   /** The row's `objectMeta.version` stamp, in a lazy query only. */
   version: number | null;
+  /** The document's Automerge bytes at {@link heads}, in a lazy query only. */
+  bytes: Uint8Array | null;
 };
 
 /**
@@ -1132,8 +1134,8 @@ export class SqlPlanCompiler {
   #final(ws: Relation, { lazy }: { lazy: boolean }): Fragment {
     const sql = this.#sql;
     const stateColumns = lazy
-      ? sql`d.state AS state, d.heads AS heads, m.version AS version`
-      : sql`NULL AS state, NULL AS heads, NULL AS version`;
+      ? sql`d.state AS state, d.heads AS heads, m.version AS version, d.bytes AS bytes`
+      : sql`NULL AS state, NULL AS heads, NULL AS version, NULL AS bytes`;
     const aggregates =
       ws.grouped?.collapsed && ws.grouped.aggregateNames.length > 0
         ? sql`json_object(${sql.join(', ', false)(ws.grouped.aggregateNames.map((name) => sql`${name}, w.${sql.literal(aggregateColumn(name))}`))})`

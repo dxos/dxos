@@ -97,6 +97,37 @@ describe('RepoProxy', () => {
     expect(clientHandle.doc()?.text).to.equal(text);
   });
 
+  test('a passive handle loads the bytes it holds on first use and catches up from their heads', async () => {
+    const { host, dataService } = await setup();
+    const [clientRepo] = createProxyRepos(dataService);
+    await openAndClose(clientRepo);
+
+    const hostHandle = await host.createDoc<{ text: string; extra?: number }>({ text: 'held' });
+    const bytes = A.save(hostHandle.doc()!);
+    const heads = A.getHeads(hostHandle.doc()!);
+    hostHandle.change((doc) => {
+      doc.text = 'after';
+    });
+    await host.flush(Context.default());
+
+    const handle = clientRepo.findPassive<{ text: string; extra?: number }>(hostHandle.documentId, { bytes, heads });
+    expect(handle.state).toBe('passive');
+    expect(clientRepo.handles[hostHandle.documentId]).toBeUndefined();
+
+    // Loaded synchronously from the bytes; ready once the host has sent what came after them.
+    expect(handle.doc().text).toBe('held');
+    expect(handle.isLoaded()).toBe(true);
+    expect(clientRepo.handles[hostHandle.documentId]).toBe(handle);
+    await asyncTimeout(handle.whenReady(), 1_000);
+    expect(handle.doc().text).toBe('after');
+
+    handle.change((doc) => {
+      doc.extra = 1;
+    });
+    await clientRepo.flush();
+    await waitForCondition({ condition: () => hostHandle.doc()?.extra === 1, timeout: 1_000 });
+  });
+
   test('two peers exchange document', async () => {
     const peer1 = await setup();
     const [repo1] = createProxyRepos(peer1.dataService);

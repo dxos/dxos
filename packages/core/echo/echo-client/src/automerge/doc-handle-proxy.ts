@@ -35,15 +35,25 @@ export type ClientDocHandleEvents<T> = {
   available: { handle: DocHandleProxy<T> };
 };
 
+/** A document's Automerge bytes held on the JS heap, unloaded, with the heads they are at. */
+export type PassiveDocument = { bytes: Uint8Array; heads: A.Heads };
+
 export type DocHandleProxyOptions<T> = {
   initialValue?: T;
   documentId?: DocumentId;
+  /** Bytes the client already holds: the handle starts passive and loads them on first use. */
+  passive?: PassiveDocument;
   onDelete: () => void;
+  /** Called once a passive handle has loaded its bytes, so it can be subscribed from their heads. */
+  onActivate?: (heads: A.Heads) => void;
 };
 
 /**
  * Lifecycle of {@link DocHandleProxy}.
  *
+ * - `'passive'`  — the client holds the document's bytes but has not loaded them and is not
+ *                  subscribed; {@link DocHandleProxy.doc} loads them synchronously, and the handle
+ *                  is usable at once and `'ready'` once the host confirms it is current.
  * - `'pending'`  — handle just created; the worker has not yet reported the
  *                  outcome of the local-storage probe.
  * - `'requesting'` — worker confirmed the doc is **not** on disk and is
@@ -53,7 +63,7 @@ export type DocHandleProxyOptions<T> = {
  *                     {@link DocHandleProxy.whenReady} rejects rather than
  *                     waiting on bytes nothing is fetching.
  */
-export type DocHandleProxyState = 'pending' | 'requesting' | 'ready' | 'unavailable';
+export type DocHandleProxyState = 'passive' | 'pending' | 'requesting' | 'ready' | 'unavailable';
 
 /**
  * Settled state of the worker-side disk probe.
@@ -105,12 +115,21 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   /** {@link url} for {@link _documentId}; the base58check encode behind it hashes twice per call. */
   #url?: { documentId: DocumentId; url: AutomergeUrl } = undefined;
   private readonly _onDelete: () => void;
+  #onActivate?: (heads: A.Heads) => void;
+  /** Set while passive: kept off the wasm heap, which never shrinks, until something reads or writes. */
+  #passive?: PassiveDocument = undefined;
+  /** Loaded from bytes the client held, so usable before the host's first send confirms it. */
+  #loadedFromBytes = false;
 
-  constructor({ documentId, initialValue, onDelete }: DocHandleProxyOptions<T>) {
+  constructor({ documentId, initialValue, passive, onDelete, onActivate }: DocHandleProxyOptions<T>) {
     super();
     this._documentId = documentId;
     this._onDelete = onDelete;
-    if (initialValue) {
+    this.#onActivate = onActivate;
+    if (passive) {
+      this.#passive = passive;
+      this._state = 'passive';
+    } else if (initialValue) {
       // T should really be constrained to extend `Record<string, unknown>` (an automerge doc can't be
       // e.g. a primitive, an array, etc. - it must be an object). But adding that constraint creates
       // a bunch of other problems elsewhere so for now we'll just cast it here to make Automerge happy.
@@ -149,7 +168,14 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
     return this._state;
   }
 
+  /** The bytes and heads of a passive handle; undefined once loaded. */
+  get passive(): PassiveDocument | undefined {
+    return this.#passive;
+  }
+
+  /** Loads a passive handle's bytes. */
   doc(): A.Doc<T> {
+    this._activate();
     if (!this._doc) {
       throw new Error('DocHandleProxy.doc called on deleted doc');
     }
@@ -161,11 +187,17 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
    * Rejects with {@link DocumentUnavailableError} if the host reports it cannot produce the doc.
    */
   async whenReady(): Promise<void> {
+    this._activate();
     await this._ready.wait();
   }
 
   isReady(): boolean {
     return this._ready.state === TriggerState.RESOLVED;
+  }
+
+  /** Whether the document can be read and written now: ready, or loaded from bytes the client held. */
+  isLoaded(): boolean {
+    return this.isReady() || (this.#loadedFromBytes && this.#passive === undefined && this._doc !== undefined);
   }
 
   /**
@@ -181,6 +213,7 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   }
 
   change(fn: (doc: A.Doc<T>) => void, opts?: A.ChangeOptions<any>): void {
+    this._activate();
     invariant(this._doc, 'DocHandleProxy.change called on deleted doc');
     const before = this._doc;
     const headsBefore = A.getHeads(this._doc);
@@ -194,6 +227,7 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   }
 
   changeAt(heads: A.Heads, fn: (doc: A.Doc<T>) => void, opts?: A.ChangeOptions<any>): A.Heads | undefined {
+    this._activate();
     invariant(this._doc, 'DocHandleProxy.changeAt called on deleted doc');
     const before = this._doc;
     const headsBefore = A.getHeads(this._doc);
@@ -210,6 +244,7 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   }
 
   update(updateCallback: (doc: A.Doc<T>) => A.Doc<T>): void {
+    this._activate();
     invariant(this._doc, 'DocHandleProxy.update called on deleted doc');
     const before = this._doc;
     const headsBefore = A.getHeads(this._doc);
@@ -228,6 +263,45 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
     this._onDelete();
     this.emit('delete', { handle: this });
     this._doc = undefined;
+  }
+
+  /**
+   * Loads a passive handle's bytes and hands its heads to the repo, which subscribes it from there;
+   * a no-op for a handle that is not passive. The document is usable at once; `whenReady` waits for the
+   * host to confirm it is current.
+   * @internal
+   */
+  _activate(): void {
+    const passive = this.#passive;
+    if (!passive) {
+      return;
+    }
+    this.#passive = undefined;
+    this.#loadedFromBytes = true;
+    this._doc = A.load<T>(passive.bytes);
+    // The host holds these heads, so only changes made from here on are sent.
+    this._lastSentHeads = A.getHeads(this._doc);
+    // Usable at once, but not `whenReady` until the host's first send says it is current: the bytes
+    // can be older than the document, and a reader that waits expects what the host holds.
+    this._state = 'pending';
+    if (this._ready.state !== TriggerState.WAITING) {
+      this._ready.reset();
+    }
+    this.#onActivate?.(this._lastSentHeads);
+  }
+
+  /**
+   * Holds `passive` instead of a loaded document: replaces a passive handle's bytes with newer ones,
+   * or moves a loaded handle the host has fully acknowledged back to bytes, dropping its document.
+   * `onActivate` replaces the hook that subscribes the handle again once it loads.
+   * @internal
+   */
+  _setPassive(passive: PassiveDocument, onActivate?: (heads: A.Heads) => void): void {
+    invariant(this.#passive || this._isAcknowledged(), 'A document with unsent changes cannot go passive.');
+    this.#passive = passive;
+    this.#onActivate = onActivate ?? this.#onActivate;
+    this._doc = undefined;
+    this._state = 'passive';
   }
 
   /**

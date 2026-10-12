@@ -1,5 +1,5 @@
 --
--- Re-present every automerge document to the snapshot store so it fills the `heads` and `state`
+-- Re-present every automerge document to the snapshot store so it fills the `heads`, `state` and `bytes`
 -- columns (see `migrations/object-snapshot/0002_object_state.sql`). Feed rows carry no state, so
 -- their cursors stay.
 --

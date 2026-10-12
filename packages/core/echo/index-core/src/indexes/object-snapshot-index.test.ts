@@ -118,16 +118,22 @@ describe('ObjectSnapshotIndex', () => {
         createdAt: null,
         updatedAt: Date.now(),
         data: { id, [ATTR_TYPE]: TYPE_PERSON, value: 'alpha' },
-        state: { heads: ['h1', 'h2'], structure: '{"data":{"value":"alpha"}}' },
+        state: { heads: ['h1', 'h2'], structure: '{"data":{"value":"alpha"}}', bytes: new Uint8Array([1, 2, 3]) },
       };
       yield* metaIndex.update([object]);
       yield* metaIndex.lookupRecordIds([object]);
       yield* store.update([object]);
 
       expect(yield* store.queryStates([object.recordId!])).toEqual([
-        { recordId: object.recordId!, heads: ['h1', 'h2'], structure: '{"data":{"value":"alpha"}}' },
+        {
+          recordId: object.recordId!,
+          heads: ['h1', 'h2'],
+          structure: '{"data":{"value":"alpha"}}',
+          bytes: new Uint8Array([1, 2, 3]),
+        },
       ]);
 
+      // A document that now holds another object ships its state without bytes.
       yield* store.update([{ ...object, state: { heads: ['h3'], structure: '{"data":{"value":"beta"}}' } }]);
       expect(yield* store.queryStates([object.recordId!])).toEqual([
         { recordId: object.recordId!, heads: ['h3'], structure: '{"data":{"value":"beta"}}' },

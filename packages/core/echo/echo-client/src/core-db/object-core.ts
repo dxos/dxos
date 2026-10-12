@@ -32,7 +32,6 @@ import { ComplexMap, defer, getDeep, setDeep, throwUnhandledError } from '@dxos/
 
 import * as Doc from '../automerge/Doc.ts';
 import { type DocHandleProxy } from '../automerge/index.ts';
-import { DocumentNotLoadedError } from '../errors.ts';
 import { docChangeSemaphore } from './doc-semaphore.ts';
 import { type DecodedAutomergePrimaryValue, type GetObjectCoreByIdOptions, TargetKey } from './types.ts';
 
@@ -45,8 +44,8 @@ import { type DecodedAutomergePrimaryValue, type GetObjectCoreByIdOptions, Targe
 export interface IDatabaseBinding {
   readonly spaceId: SpaceId;
   getObjectCoreById(id: string, opts?: GetObjectCoreByIdOptions): ObjectCore | undefined;
-  /** Loads a snapshot-backed core's document and moves the core onto it, replaying its queued writes. */
-  promote(core: ObjectCore): Promise<void>;
+  /** Loads a snapshot-backed core's document from the bytes it holds and binds the core to it. */
+  activate(core: ObjectCore): void;
 }
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
@@ -70,22 +69,25 @@ export type ObjectCoreOptions = {
 };
 
 /**
- * The index's copy of an object, backing its core until the object's document loads: the structure
- * mounted as a document would hold it, so the core's paths are unchanged, and the document heads and
- * index stamp it was read at.
+ * The index's copy of an object, backing its core until something needs the object's document: the
+ * structure mounted as a document would hold it, so the core's paths are unchanged, the heads and
+ * index stamp it was read at, and the passive handle holding the document's bytes at those heads.
  */
 export type ObjectSnapshot = {
   root: { objects: Record<string, EntityStructure> };
   heads: Heads;
   version: number;
   updatedAt: number | undefined;
+  handle: DocHandleProxy<DatabaseDirectory>;
 };
 
 /** The state an index row carries for an object, as `EntityManager.upsertSnapshot` takes it. */
-export type SnapshotState = Omit<ObjectSnapshot, 'root'> & {
+export type SnapshotState = Omit<ObjectSnapshot, 'root' | 'handle'> & {
   structure: EntityStructure;
+  /** The document's Automerge bytes at {@link ObjectSnapshot.heads}. */
+  bytes: Uint8Array;
   /** The document the row was read from; checked against the space root's routing. */
-  documentId?: string;
+  documentId: string;
 };
 
 /**
@@ -122,17 +124,8 @@ export class ObjectCore {
    */
   public docHandle?: DocHandleProxy<DatabaseDirectory> = undefined;
 
-  /** Set while the object is backed by the index's copy instead of a document. */
+  /** Set while the object is backed by the index's copy instead of a loaded document. */
   public snapshot?: ObjectSnapshot = undefined;
-
-  /**
-   * Writes made to a snapshot-backed core, in order, waiting for its document: each is the change
-   * callback a bound write would have run, replayed at the snapshot's heads once the document loads.
-   */
-  #writeQueue: ChangeFn<any>[] = [];
-
-  /** The snapshot with the queued writes applied, so reads see them before the document loads. */
-  #scratch: AutomergeDoc<ObjectSnapshot['root']> | undefined = undefined;
 
   /** When the core last bound to its document or wrote to it (`performance.now()`), for eviction. */
   public activeAt = 0;
@@ -298,12 +291,11 @@ export class ObjectCore {
   bind(options: BindOptions): void {
     // When loading existing documents, wait for the document to be ready.
     // When creating new documents (assignFromLocalState), the local doc is immediately usable.
-    invariant(options.assignFromLocalState || options.docHandle.isReady());
+    invariant(options.assignFromLocalState || options.docHandle.isLoaded());
     this.entityManager = options.db;
     this.docHandle = options.docHandle;
     this.mountPath = options.path;
     this.snapshot = undefined;
-    this.#scratch = undefined;
     this.activeAt = performance.now();
 
     const doc = this.doc;
@@ -324,17 +316,19 @@ export class ObjectCore {
   }
 
   /**
-   * The object's Automerge document, for what reads it as one (history, heads, cursors). Throws
-   * {@link DocumentNotLoadedError} for a snapshot-backed core, whose {@link getDoc} is the index's copy.
+   * The object's Automerge document, for what reads it as one (history, cursors); a snapshot-backed
+   * core loads it first from the bytes it holds, since its {@link getDoc} is the index's copy.
    */
   getLoadedDoc(): AutomergeDoc<unknown> {
-    this.#assertDocumentLoaded();
+    this.#activate();
     return this.getDoc();
   }
 
-  #assertDocumentLoaded(): void {
+  /** Moves a snapshot-backed core onto its document, loaded synchronously from the bytes it holds. */
+  #activate(): void {
     if (!this.doc && !this.docHandle && this.snapshot) {
-      throw new DocumentNotLoadedError({ objectId: this.id });
+      invariant(this.entityManager, 'A snapshot-backed core belongs to a database.');
+      this.entityManager.activate(this);
     }
   }
 
@@ -345,10 +339,6 @@ export class ObjectCore {
 
     if (this.docHandle) {
       return this.docHandle.doc();
-    }
-
-    if (this.#scratch) {
-      return this.#scratch;
     }
 
     if (this.snapshot) {
@@ -373,18 +363,6 @@ export class ObjectCore {
     this.snapshot = snapshot;
     // Same values, so the targets are rebuilt from the snapshot without notifying anyone.
     this.#reportingErrors(() => this.#refresh());
-  }
-
-  /** Whether writes are queued for this snapshot-backed core's document. */
-  get hasQueuedWrites(): boolean {
-    return this.#writeQueue.length > 0;
-  }
-
-  /** Hands over the queued writes for replay; reads keep seeing them until the core binds. */
-  takeQueuedWrites(): ChangeFn<any>[] {
-    const queue = this.#writeQueue;
-    this.#writeQueue = [];
-    return queue;
   }
 
   /** Backs this unbound core with the index's copy of the object until it binds to its document. */
@@ -422,21 +400,10 @@ export class ObjectCore {
    * Do not take into account mountPath.
    */
   change(changeFn: ChangeFn<any>, options?: A.ChangeOptions<any>): void {
+    // Before the semaphore, which is keyed on the handle activation binds.
+    this.#activate();
     // Prevent recursive change calls.
     using _ = defer(docChangeSemaphore(this.docHandle ?? this));
-
-    if (!this.doc && !this.docHandle && this.snapshot) {
-      // Accepted now against a scratch copy, so reads see it; the document gets it when it loads.
-      const first = this.#writeQueue.length === 0;
-      const scratch = this.#scratch ?? A.from(this.snapshot.root);
-      this.#scratch = options ? A.change(scratch, options, changeFn) : A.change(scratch, changeFn);
-      this.#writeQueue.push(changeFn);
-      this.notifyUpdate();
-      if (first) {
-        this.entityManager?.promote(this).catch((err) => log('promotion ended without the document', { err }));
-      }
-      return;
-    }
 
     if (this.doc) {
       if (options) {
@@ -460,7 +427,7 @@ export class ObjectCore {
    * Do not take into account mountPath.
    */
   changeAt(heads: Heads, callback: ChangeFn<any>, options?: ChangeOptions<any>): Heads | undefined {
-    this.#assertDocumentLoaded();
+    this.#activate();
     // Prevent recursive change calls.
     using _ = defer(docChangeSemaphore(this.docHandle ?? this));
 

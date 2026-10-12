@@ -7,9 +7,10 @@ import React, { useMemo } from 'react';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import type * as Script from '@dxos/compute/Script';
 import { Obj } from '@dxos/echo';
+import { Doc } from '@dxos/echo-doc';
 import { useResolveRef } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
-import { getSpace, useDocAccessor } from '@dxos/react-client/echo';
+import { getSpace } from '@dxos/react-client/echo';
 import * as Panel from '@dxos/react-ui/Panel';
 import { createDataExtensions, editorClassNames, listener } from '@dxos/ui-editor';
 
@@ -36,17 +37,16 @@ export const ScriptArticle = ({
   const state = useToolbarState();
   useDeployState({ script, state });
   const source = useResolveRef(script.source);
-  const accessor = useDocAccessor(source, ['content']);
 
   const extensions = useMemo(() => {
-    if (!accessor) {
+    if (!source) {
       return [];
     }
 
     return [
       createDataExtensions({
         id: script.id,
-        text: accessor,
+        text: Doc.createAccessor(source, ['content']),
         messenger: space,
         identity,
       }),
@@ -60,7 +60,7 @@ export const ScriptArticle = ({
         },
       }),
     ];
-  }, [identity, space, script, source, accessor]);
+  }, [identity, space, script, source]);
 
   if (!extensions.length) {
     return null;

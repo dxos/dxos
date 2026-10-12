@@ -76,18 +76,27 @@ export class ObjectSnapshotIndex implements Index {
    */
   queryStates(
     recordIds: readonly number[],
-  ): Effect.Effect<readonly { recordId: number; heads: string[]; structure: string }[], SqlError.SqlError> {
+  ): Effect.Effect<
+    readonly { recordId: number; heads: string[]; structure: string; bytes?: Uint8Array }[],
+    SqlError.SqlError
+  > {
     return Effect.gen({ self: this }, function* () {
       const sql = this.#sql;
-      const results: { recordId: number; heads: string[]; structure: string }[] = [];
+      const results: { recordId: number; heads: string[]; structure: string; bytes?: Uint8Array }[] = [];
       for (const chunk of chunkArray([...recordIds])) {
         const rows = yield* sql<{
           recordId: number;
           heads: string;
           state: string;
-        }>`SELECT recordId, heads, state FROM objectSnapshot WHERE recordId IN ${sql.in(chunk)} AND state IS NOT NULL`;
+          bytes: Uint8Array | null;
+        }>`SELECT recordId, heads, state, bytes FROM objectSnapshot WHERE recordId IN ${sql.in(chunk)} AND state IS NOT NULL`;
         for (const row of rows) {
-          results.push({ recordId: row.recordId, heads: JSON.parse(row.heads), structure: row.state });
+          results.push({
+            recordId: row.recordId,
+            heads: JSON.parse(row.heads),
+            structure: row.state,
+            ...(row.bytes !== null ? { bytes: new Uint8Array(row.bytes) } : {}),
+          });
         }
       }
       return results;
@@ -175,13 +184,14 @@ export class ObjectSnapshotIndex implements Index {
           snapshot: JSON.stringify(stored),
           heads: object.state ? JSON.stringify(object.state.heads) : null,
           state: object.state?.structure ?? null,
+          bytes: object.state?.bytes ?? null,
         };
       });
 
       for (const chunk of chunkRows(rows)) {
         yield* sql`
             INSERT INTO objectSnapshot ${sql.insert(chunk)}
-            ON CONFLICT (recordId) DO UPDATE SET snapshot = excluded.snapshot, heads = excluded.heads, state = excluded.state
+            ON CONFLICT (recordId) DO UPDATE SET snapshot = excluded.snapshot, heads = excluded.heads, state = excluded.state, bytes = excluded.bytes
           `;
       }
     }),

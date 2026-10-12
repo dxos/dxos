@@ -16,7 +16,7 @@ import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
 import { type DocHandleProxy, type RepoProxy } from '../automerge/index.ts';
-import { getObjectCore, loadDocument } from '../echo-handler/index.ts';
+import { getObjectCore } from '../echo-handler/index.ts';
 import { type DatabaseImpl } from '../proxy-db/index.ts';
 import { EchoTestBuilder, createTmpPath } from '../testing/index.ts';
 
@@ -152,7 +152,6 @@ describe('DatabaseImpl', () => {
         newDoc.links = getDocHandles(db).spaceRootHandle.doc().links;
       });
       const beforeUpdate = await db.query(Query.type(TestSchema.Expando, { id: originalObj.id })).first();
-      await loadDocument(beforeUpdate);
       expect(getObjectDocHandle(beforeUpdate).url).to.eq(
         getDocHandles(db).spaceRootHandle.doc().links?.[beforeUpdate.id].toString(),
       );
@@ -201,7 +200,8 @@ describe('DatabaseImpl', () => {
       const newRootDocHandle = await createTestRootDoc(db._repo);
 
       for (const id of ids) {
-        await loadDocument(await db.query(Query.type(TestSchema.Expando, { id })).first());
+        // Loaded, so the new root's links rebind a document rather than the index's copy.
+        getObjectCore(await db.query(Query.type(TestSchema.Expando, { id })).first()).getLoadedDoc();
       }
 
       newRootDocHandle.change((newDoc: any) => {
@@ -557,7 +557,12 @@ const getDocHandles = (db: DatabaseImpl): DocumentHandles => ({
   linkedDocHandles: db.getLinkedDocHandles(),
 });
 
-const getObjectDocHandle = (obj: any) => getObjectCore(obj).docHandle!;
+/** The object's document handle, loading an object backed by the index's copy from the bytes it holds. */
+const getObjectDocHandle = (obj: any) => {
+  const core = getObjectCore(obj);
+  core.getLoadedDoc();
+  return core.docHandle!;
+};
 
 const createClientDbInSpaceWithObject = async (
   object: Entity.Any,

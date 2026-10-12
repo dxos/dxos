@@ -41,8 +41,10 @@ export type DocumentsSynchronizerProps = {
 };
 
 interface DocSyncState {
-  /** Heads the client holds as of the last send; unset until the initial send. */
+  /** Heads the client holds as of the last send; unset until the initial send unless the client named its own. */
   lastSentHead?: Heads;
+  /** The client named heads it holds and waits to hear it is current, so the first send goes out even if empty. */
+  confirm?: boolean;
   /**
    * Held only until the document is loaded for its initial send. Nothing pins the document after
    * that: the host's residency policy decides, and each send re-leases it for the duration of a read.
@@ -102,14 +104,19 @@ export class DocumentsSynchronizer extends Resource {
     }
   }
 
-  async addDocuments(documentIds: DocumentId[]): Promise<void> {
+  /**
+   * @param knownHeads Heads the client already holds for some of the documents, so their first send
+   *   is only what came after.
+   */
+  async addDocuments(documentIds: DocumentId[], knownHeads?: ReadonlyMap<DocumentId, Heads>): Promise<void> {
     for (const documentId of documentIds) {
       if (this._syncStates.has(documentId) || this._lifecycleState === LifecycleState.CLOSED) {
         continue;
       }
       log('loading document', { documentId });
       const lease = this._params.automergeHost.acquireDoc<DatabaseDirectory>(documentId);
-      const syncState: DocSyncState = { initialLease: lease };
+      const lastSentHead = knownHeads?.get(documentId);
+      const syncState: DocSyncState = { initialLease: lease, lastSentHead, confirm: lastSentHead !== undefined };
       this._syncStates.set(documentId, syncState);
       // Background disk probe so the client can distinguish
       // "not on disk, waiting for network" from "still loading".
@@ -300,10 +307,14 @@ export class DocumentsSynchronizer extends Resource {
       return;
     }
     const doc = lease.doc();
-    const mutation = syncState.lastSentHead ? A.saveSince(doc, syncState.lastSentHead) : A.save(doc);
-    if (mutation.length === 0) {
+    // Heads the client named that this host does not hold cannot be diffed against; it gets the whole document.
+    const since =
+      syncState.lastSentHead && A.hasHeads(doc, syncState.lastSentHead) ? syncState.lastSentHead : undefined;
+    const mutation = since ? A.saveSince(doc, since) : A.save(doc);
+    if (mutation.length === 0 && !syncState.confirm) {
       return;
     }
+    syncState.confirm = false;
     syncState.lastSentHead = A.getHeads(doc);
     countWork('automerge.mutationsSent');
     countWork('automerge.mutationSentBytes', mutation.length);

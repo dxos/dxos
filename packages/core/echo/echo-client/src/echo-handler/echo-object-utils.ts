@@ -22,20 +22,6 @@ export const getObjectCore = <T extends AnyProperties>(obj: T): ObjectCore => {
 };
 
 /**
- * False only for an object backed by the index's copy whose document has not loaded yet.
- */
-export const isDocumentLoaded = <T extends AnyProperties>(obj: T): boolean => getObjectCore(obj).snapshot === undefined;
-
-/**
- * Loads the document of an object backed by the index's copy, moving the object onto it; resolves at
- * once for an object that already has its document.
- */
-export const loadDocument = async <T extends AnyProperties>(obj: T): Promise<void> => {
-  const core = getObjectCore(obj);
-  await core.entityManager?.promote(core);
-};
-
-/**
  * Checks if a proxy target is a root data object.
  */
 export const isRootDataObject = (target: ProxyTarget) => {

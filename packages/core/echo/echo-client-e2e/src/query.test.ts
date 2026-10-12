@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout, sleep, waitForCondition } from '@dxos/async';
-import { Context, ContextDisposedError } from '@dxos/context';
+import { Context } from '@dxos/context';
 import {
   Aggregate,
   Annotation,
@@ -27,13 +27,7 @@ import {
   Type,
   View,
 } from '@dxos/echo';
-import {
-  DatabaseImpl,
-  DocumentNotLoadedError,
-  type EchoDatabase,
-  isDocumentLoaded,
-  loadDocument,
-} from '@dxos/echo-client';
+import { DatabaseImpl, type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder, type EchoTestPeer, createTmpPath, getObjectCore } from '@dxos/echo-client/testing';
 import { type DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
@@ -2191,7 +2185,8 @@ describe('Query', () => {
 
       const object = queryResult.find((obj) => obj.id === assertion.objectId);
       invariant(object, 'object missing after reload');
-      await loadDocument(object);
+      // Loaded from the bytes it holds, so it is bound to its document.
+      getObjectCore(object).getLoadedDoc();
       const objectDocHandle = getObjectCore(object).docHandle;
       invariant(objectDocHandle, 'docHandle missing');
       expect(objectDocHandle.url).to.eq(assertion.documentUrl);
@@ -4360,37 +4355,51 @@ describe('Query', () => {
   };
 
   describe('Lazy queries', () => {
-    /** Whether the tab holds the object's document, as opposed to an index-backed core or nothing. */
+    /** Whether the tab holds the object's document loaded, as opposed to an index-backed core or nothing. */
     const hasDocument = (db: DatabaseImpl, id: string) =>
       db.getObjectCoreById(id, { load: false })?.docHandle !== undefined;
 
-    test('returns live objects backed by the index, without loading their documents', async () => {
+    /** The index row an index-backed object was built from, for feeding variations of it back in. */
+    const rowOf = (db: DatabaseImpl, object: Entity.Any) => {
+      const snapshot = db.getObjectCoreById(object.id, { load: false })?.snapshot;
+      const passive = snapshot?.handle.passive;
+      invariant(snapshot && passive && snapshot.handle.documentId);
+      return {
+        structure: snapshot.root.objects[object.id],
+        heads: snapshot.heads,
+        version: snapshot.version,
+        updatedAt: snapshot.updatedAt,
+        bytes: passive.bytes,
+        documentId: snapshot.handle.documentId,
+      };
+    };
+
+    test('returns live objects backed by the index and its bytes, without loading their documents', async () => {
       const { db, ids } = await openReloaded((db) => [
         db.add(createTestObject({ value: 1 })),
         db.add(createTestObject({ value: 2 })),
       ]);
 
       const results = await db
-        .query(Query.select(Filter.type(TestSchema.Expando)).orderBy(Order.natural()).limit(10).options({ lazy: true }))
+        .query(Query.select(Filter.type(TestSchema.Expando)).orderBy(Order.natural()).limit(10))
         .run();
       expect(results.map((object) => object.id).sort()).toEqual([...ids].sort());
       expect(results.map((object) => object.value).sort()).toEqual([1, 2]);
       for (const object of results) {
         expect(Obj.isSnapshot(object)).toBe(false);
         expect(hasDocument(db, object.id)).toBe(false);
+        expect(getObjectCore(object).snapshot?.handle.state).toBe('passive');
         expect(db.getObjectById(object.id)).toBe(object);
         expect(Obj.version(object).automergeHeads?.length).toBeGreaterThan(0);
       }
     });
 
-    test('a full-text lazy query backs its objects too', async () => {
+    test('a full-text query backs its objects too', async () => {
       const { db, ids } = await openReloaded((db) => [
         db.add(Obj.make(TestSchema.Expando, { title: 'lazy search target' })),
       ]);
 
-      const results = await db
-        .query(Query.select(Filter.text('lazy search target', { type: 'full-text' })).options({ lazy: true }))
-        .run();
+      const results = await db.query(Query.select(Filter.text('lazy search target', { type: 'full-text' }))).run();
       expect(results.map((object) => object.id)).toEqual(ids);
       expect(results[0].title).toBe('lazy search target');
       expect(hasDocument(db, ids[0])).toBe(false);
@@ -4401,39 +4410,39 @@ describe('Query', () => {
       const object = db.add(createTestObject({ value: 1 }));
       await db.flush({ indexes: true });
 
-      const [result] = await db.query(Query.select(Filter.type(TestSchema.Expando)).options({ lazy: true })).run();
+      const [result] = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
       expect(result).toBe(object);
       expect(hasDocument(db, object.id)).toBe(true);
     });
 
-    test('a write is visible at once, loads the document, and persists there', async () => {
+    test('a write loads the document from the bytes the object holds and is a real change at once', async () => {
       const { db, peer } = await openReloaded((db) => [db.add(createTestObject({ value: 1 }))]);
-      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando)).options({ lazy: true })).run();
-      expect(hasDocument(db, object.id)).toBe(false);
+      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
+      const headsBefore = Obj.version(object).automergeHeads;
 
       Obj.update(object, (object) => {
         object.value = 2;
       });
-      expect(object.value).toBe(2);
-
-      await db.flush();
       expect(hasDocument(db, object.id)).toBe(true);
       expect(db.getObjectById(object.id)).toBe(object);
       expect(object.value).toBe(2);
+      expect(Obj.version(object).automergeHeads).not.toEqual(headsBefore);
+      expect(Obj.getChanges(object).length).toBeGreaterThan(1);
 
+      await db.flush();
       await peer.reload();
       const reloaded = await peer.openLastDatabase();
       const [persisted] = await reloaded.query(Query.select(Filter.id(object.id))).run();
       expect(persisted.value).toBe(2);
     });
 
-    test('a write replays at the heads its snapshot was read at, merging with later document changes', async () => {
+    test('a write merges with document changes the index had not seen, which then arrive', async () => {
       const { db, peer, documentIds } = await openReloaded((db) => [
         db.add(Obj.make(TestSchema.Expando, { tags: ['a'] })),
       ]);
-      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando)).options({ lazy: true })).run();
+      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
 
-      // A change the tab has not seen: another writer puts an element ahead of the one the tab removes.
+      // A change the tab's bytes do not hold: another writer puts an element ahead of the one the tab removes.
       const documentId = documentIds.get(object.id);
       invariant(documentId);
       using lease = await peer.host.automergeHost.loadDoc<DatabaseDirectory>(Context.default(), documentId);
@@ -4443,48 +4452,41 @@ describe('Query', () => {
       });
       await peer.host.automergeHost.flush(Context.default());
 
-      // Index 0 is `a` in the snapshot the tab holds, and `host` in the document by now.
       Obj.update(object, (object) => {
         object.tags.splice(0, 1);
       });
       expect([...object.tags]).toEqual([]);
 
       await db.flush();
-      expect(hasDocument(db, object.id)).toBe(true);
+      await waitForCondition({ condition: () => object.tags.length === 1, timeout: 5_000 });
       expect([...object.tags]).toEqual(['host']);
+      expect(A.getHeads(lease.doc())).toEqual(Obj.version(object).automergeHeads);
     });
 
-    test('what reads the document waits for it to load; writes do not', async () => {
+    test('reading the document loads it from the bytes the object holds', async () => {
       const { db } = await openReloaded((db) => [db.add(createTestObject({ value: 1 }))]);
-      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando)).options({ lazy: true })).run();
+      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
+      const heads = Obj.version(object).automergeHeads;
 
       const accessor = getObjectCore(object).getDocAccessor(['value']);
-      expect(() => accessor.handle.doc()).toThrow(DocumentNotLoadedError);
-      expect(() => accessor.handle.changeAt([], () => {})).toThrow(DocumentNotLoadedError);
-      expect(isDocumentLoaded(object)).toBe(false);
-
-      await loadDocument(object);
-      expect(isDocumentLoaded(object)).toBe(true);
+      expect(A.getHeads(accessor.handle.doc())).toEqual(heads);
       expect(hasDocument(db, object.id)).toBe(true);
-      expect(A.getHeads(accessor.handle.doc()).length).toBeGreaterThan(0);
+      expect(Obj.getChanges(object).length).toBeGreaterThan(0);
     });
 
-    test('history waits for the document; branching loads it first', async () => {
+    test('branching loads the document from the bytes first', async () => {
       const { db } = await openReloaded((db) => [db.add(createTestObject({ value: 1 }))]);
-      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando)).options({ lazy: true })).run();
-      expect(() => Obj.getChanges(object)).toThrow(DocumentNotLoadedError);
+      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
 
       await db.createBranch(object.id, 'draft');
-      expect(isDocumentLoaded(object)).toBe(true);
-      expect(Obj.getChanges(object).length).toBeGreaterThan(0);
-
+      expect(hasDocument(db, object.id)).toBe(true);
       await db.switchBranch(object.id, 'draft');
       expect(object.value).toBe(1);
     });
 
-    test('an object held after its query has finished keeps up with the index', async () => {
+    test('an object held after its query has finished keeps up with the index, bytes included', async () => {
       const { db, peer, documentIds } = await openReloaded((db) => [db.add(createTestObject({ value: 1 }))]);
-      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando)).options({ lazy: true })).run();
+      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
 
       const documentId = documentIds.get(object.id);
       invariant(documentId);
@@ -4498,41 +4500,52 @@ describe('Query', () => {
 
       await waitForCondition({ condition: () => object.value === 2, timeout: 5_000 });
       expect(hasDocument(db, object.id)).toBe(false);
+      // The bytes moved with the row, so a write starts from what the tab shows.
+      expect(getObjectCore(object).snapshot?.heads).toEqual(A.getHeads(lease.doc()));
+      Obj.update(object, (object) => {
+        object.marked = true;
+      });
+      expect(object.value).toBe(2);
+      await db.flush();
 
       lease.change((doc) => {
         doc.objects![object.id].system!.deleted = true;
       });
       await peer.host.automergeHost.flush(Context.default());
-      await db.flush({ secondaryIndexes: true });
       await waitForCondition({ condition: () => Obj.isDeleted(object), timeout: 5_000 });
     });
 
-    test('an idle document nothing edits goes back to the index copy, and loads again on the next write', async () => {
+    test('an idle document nothing edits goes back to bytes, and loads again on the next write', async () => {
       const { db } = await openReloaded((db) => [db.add(createTestObject({ value: 1 }))], {
         eviction: { idleMs: 300, intervalMs: 20 },
       });
-      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando)).options({ lazy: true })).run();
-      await loadDocument(object);
+      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
+      Obj.update(object, (object) => {
+        object.value = 2;
+      });
+      await db.flush({ secondaryIndexes: true });
 
       // An editor's listener holds the document past its idle time.
       const accessor = getObjectCore(object).getDocAccessor(['value']);
       const listener = () => {};
       accessor.handle.addListener('change', listener);
       await sleep(600);
-      expect(isDocumentLoaded(object)).toBe(true);
+      expect(hasDocument(db, object.id)).toBe(true);
 
       accessor.handle.removeListener('change', listener);
-      await waitForCondition({ condition: () => !isDocumentLoaded(object), timeout: 5_000 });
-      expect(hasDocument(db, object.id)).toBe(false);
-      expect(object.value).toBe(1);
-
-      // The write loads it again, and it stays until it is idle once more.
-      Obj.update(object, (object) => {
-        object.value = 2;
-      });
-      await db.flush();
-      expect(hasDocument(db, object.id)).toBe(true);
+      await waitForCondition({ condition: () => !hasDocument(db, object.id), timeout: 5_000 });
+      expect(getObjectCore(object).snapshot?.handle.state).toBe('passive');
       expect(object.value).toBe(2);
+
+      // The write loads the bytes again and subscribes from their heads.
+      Obj.update(object, (object) => {
+        object.value = 3;
+      });
+      expect(hasDocument(db, object.id)).toBe(true);
+      expect(object.value).toBe(3);
+      await db.flush({ secondaryIndexes: true });
+      const [persisted] = await db.query(Query.select(Filter.id(object.id))).run();
+      expect(persisted.value).toBe(3);
     });
 
     test('past the document cap, the least recently active document goes back before it is idle', async () => {
@@ -4540,22 +4553,14 @@ describe('Query', () => {
         (db) => [db.add(createTestObject({ value: 1 })), db.add(createTestObject({ value: 2 }))],
         { eviction: { idleMs: 60_000, maxDocuments: 1, intervalMs: 20 } },
       );
-      const objects = await db
-        .query(Query.select(Filter.type(TestSchema.Expando)).orderBy(Order.natural()).options({ lazy: true }))
+      const [older, newer] = await db
+        .query(Query.select(Filter.type(TestSchema.Expando)).orderBy(Order.natural()))
         .run();
-      const [older, newer] = objects;
-      await loadDocument(older);
-      await loadDocument(newer);
+      getObjectCore(older).getLoadedDoc();
+      getObjectCore(newer).getLoadedDoc();
 
-      await waitForCondition({ condition: () => !isDocumentLoaded(older), timeout: 5_000 });
-      expect(isDocumentLoaded(newer)).toBe(true);
-    });
-
-    test('a query that asks for nothing returns objects backed by the index', async () => {
-      const { db } = await openReloaded((db) => [db.add(createTestObject({ value: 1 }))]);
-      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
-      expect(object.value).toBe(1);
-      expect(hasDocument(db, object.id)).toBe(false);
+      await waitForCondition({ condition: () => !hasDocument(db, older.id), timeout: 5_000 });
+      expect(hasDocument(db, newer.id)).toBe(true);
     });
 
     test('with lazy queries off, a query loads each result document', async () => {
@@ -4575,45 +4580,9 @@ describe('Query', () => {
       expect(hasDocument(db, object.id)).toBe(true);
     });
 
-    test('a write a subscriber makes while queued writes replay is kept', async () => {
-      const { db } = await openReloaded((db) => [db.add(createTestObject({ value: 1 }))]);
-      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando)).options({ lazy: true })).run();
-      let armed = false;
-      onTestFinished(
-        Obj.subscribe(object, () => {
-          if (armed && object.marked === undefined) {
-            Obj.update(object, (object) => {
-              object.marked = true;
-            });
-          }
-        }),
-      );
-
-      Obj.update(object, (object) => {
-        object.value = 2;
-      });
-      armed = true;
-      await db.flush();
-      expect(hasDocument(db, object.id)).toBe(true);
-      expect(object.marked).toBe(true);
-    });
-
-    test('a document load that has not finished holds up neither a flush nor a close', async () => {
-      const { db, peer } = await openReloaded((db) => [db.add(createTestObject({ value: 1 }))]);
-      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando)).options({ lazy: true })).run();
-      peer.host.dataService.setAllSubscriptionsSendUpdatesPaused(true);
-      onTestFinished(() => peer.host.dataService.setAllSubscriptionsSendUpdatesPaused(false));
-
-      const loading = loadDocument(object);
-      await asyncTimeout(db.flush(), 2_000);
-
-      await db.close();
-      await expect(asyncTimeout(loading, 2_000)).rejects.toThrow(ContextDisposedError);
-    });
-
-    test('a new space root keeps a queued write on an object backed by the index', async () => {
+    test('a new space root that inlines the object binds it there and drops the bytes', async () => {
       const { db, peer, ids, documentIds } = await openReloaded((db) => [db.add(createTestObject({ value: 1 }))]);
-      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando)).options({ lazy: true })).run();
+      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
       const documentId = documentIds.get(ids[0]);
       invariant(documentId);
       const structure = await (async () => {
@@ -4622,82 +4591,61 @@ describe('Query', () => {
         return JSON.parse(JSON.stringify(lease.doc().objects![object.id]));
       })();
 
-      // The write waits for a document load the host is holding back.
-      peer.host.dataService.setAllSubscriptionsSendUpdatesPaused(true);
-      onTestFinished(() => peer.host.dataService.setAllSubscriptionsSendUpdatesPaused(false));
-      Obj.update(object, (object) => {
-        object.value = 2;
-      });
-
-      // The new root holds the object inline, so the swap binds it there before that load lands.
       const root = db._repo.create<DatabaseDirectory>({ version: SpaceDocVersion.CURRENT });
       await root.whenReady();
       root.change((doc: DatabaseDirectory) => {
         doc.objects = { [object.id]: structure };
       });
       await db.setSpaceRoot(root.url!);
-      expect(object.value).toBe(2);
+      expect(getObjectCore(object).docHandle).toBe(root);
+      expect(object.value).toBe(1);
 
-      peer.host.dataService.setAllSubscriptionsSendUpdatesPaused(false);
-      await db.flush();
-      expect(object.value).toBe(2);
+      Obj.update(object, (object) => {
+        object.value = 2;
+      });
+      expect(root.doc().objects![object.id].data.value).toBe(2);
     });
 
     test('a row from a document the space root does not route the object to backs nothing', async () => {
-      const { db, ids, documentIds } = await openReloaded((db) => [db.add(createTestObject({ value: 1 }))]);
-      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando)).options({ lazy: true })).run();
-      const snapshot = db.getObjectCoreById(object.id, { load: false })?.snapshot;
-      invariant(snapshot);
-      const structure = snapshot.root.objects[object.id];
-      const withValue = (value: number) => ({ ...structure, data: { ...structure.data, value } });
+      const { db } = await openReloaded((db) => [db.add(createTestObject({ value: 1 }))]);
+      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
+      const row = rowOf(db, object);
+      const withValue = (value: number) => ({ ...row.structure, data: { ...row.structure.data, value } });
 
       // A newer row read from another document: a branch, or a copy the root no longer links.
       db._upsertSnapshot(object.id, {
-        ...snapshot,
+        ...row,
         structure: withValue(99),
-        version: snapshot.version + 1,
+        version: row.version + 1,
         documentId: 'not-the-routed-document',
       });
       expect(object.value).toBe(1);
 
-      db._upsertSnapshot(object.id, {
-        ...snapshot,
-        structure: withValue(2),
-        version: snapshot.version + 1,
-        documentId: documentIds.get(ids[0]),
-      });
+      db._upsertSnapshot(object.id, { ...row, structure: withValue(2), version: row.version + 1 });
       expect(object.value).toBe(2);
     });
 
     test('an index row that arrives before the space root backs nothing yet', async () => {
       const { db, peer } = await openReloaded((db) => [db.add(createTestObject({ value: 1 }))]);
-      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando)).options({ lazy: true })).run();
-      const snapshot = db.getObjectCoreById(object.id, { load: false })?.snapshot;
-      invariant(snapshot);
+      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
 
       const early = peer.client.constructDatabase({ spaceId: SpaceId.random(), spaceKey: PublicKey.random() });
-      expect(early._upsertSnapshot(object.id, { ...snapshot, structure: snapshot.root.objects[object.id] })).toBe(
-        undefined,
-      );
+      expect(early._upsertSnapshot(object.id, rowOf(db, object))).toBe(undefined);
     });
 
     test('a later index row updates the object in place and notifies; an earlier one is ignored', async () => {
       const { db } = await openReloaded((db) => [db.add(createTestObject({ value: 1 }))]);
-      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando)).options({ lazy: true })).run();
-      const snapshot = db.getObjectCoreById(object.id, { load: false })?.snapshot;
-      invariant(snapshot);
-      const structure = snapshot.root.objects[object.id];
+      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
+      const row = rowOf(db, object);
       let notified = 0;
       onTestFinished(Obj.subscribe(object, () => notified++));
 
-      const withValue = (value: number) => ({ ...structure, data: { ...structure.data, value } });
-      expect(
-        db._upsertSnapshot(object.id, { ...snapshot, structure: withValue(2), version: snapshot.version + 1 }),
-      ).toBe(object);
+      const withValue = (value: number) => ({ ...row.structure, data: { ...row.structure.data, value } });
+      expect(db._upsertSnapshot(object.id, { ...row, structure: withValue(2), version: row.version + 1 })).toBe(object);
       expect(object.value).toBe(2);
       expect(notified).toBe(1);
 
-      db._upsertSnapshot(object.id, { ...snapshot, structure: withValue(3), version: snapshot.version });
+      db._upsertSnapshot(object.id, { ...row, structure: withValue(3), version: row.version });
       expect(object.value).toBe(2);
       expect(notified).toBe(1);
     });

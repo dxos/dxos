@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { isDocumentLoaded } from '@dxos/echo-client';
 import { type Commit } from '@dxos/react-ui-trace';
 import { type Text } from '@dxos/schema';
 import { Branch, type History, Version, diffSpans, diffStats } from '@dxos/versioning';
@@ -220,8 +219,7 @@ const branchStats = (branch: Branch.Branch) => {
   // and arrive with the stage-3 binding-aware timeline.
   const branchText = branch.content?.target;
   const parentText = branch.parent.target;
-  // Stats need the parent's history; they appear once its document loads.
-  if (!branchText || !parentText || !isDocumentLoaded(parentText)) {
+  if (!branchText || !parentText) {
     return undefined;
   }
   return diffStats(diffSpans(Version.contentAt(parentText, branch.anchor), branchText.content));

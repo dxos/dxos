@@ -42,7 +42,7 @@ import { filterMatchDoc, filterMatchEntityMeta, filterMatchObjectJSON, getEntity
 import { type ChangeItem, changeResults, executeChangesPlan, serializeChangeResults } from './changes-executor.ts';
 import { QueryError } from './errors.ts';
 import { type GroupAggregates, GroupBy, type GroupKeyValue, compareCodeUnits } from './group-by.ts';
-import { encodeObjectState } from './object-state.ts';
+import { encodeObjectState, saveObjectDocument } from './object-state.ts';
 import { QueryPlan } from './plan.ts';
 import { type QueryExecutorMode, QueryPlanner, filterContainsInQuery } from './query-planner.ts';
 import { type CompiledRow } from './sql/index.ts';
@@ -128,8 +128,8 @@ type QueryItem = {
    */
   result?: QueryService.QueryResult;
 
-  /** In a lazy query: the object's document state, the heads it was read at, and its index stamp. */
-  state?: { heads: readonly string[]; structure: string; version: number };
+  /** In a lazy query: the object's document state and bytes, the heads they were read at, and its index stamp. */
+  state?: { heads: readonly string[]; structure: string; bytes?: Uint8Array; version: number };
 };
 
 const QueryItem = Object.freeze({
@@ -658,6 +658,8 @@ export class QueryExecutor extends Resource {
   readonly #mode: QueryExecutorMode;
   /** The query returns index-backed live objects, so document rows ship their state. */
   readonly #lazy: boolean;
+  /** The state version each object last shipped with, so a re-emit leaves unchanged state and bytes off. */
+  #sentVersions = new Map<string, number>();
 
   /**
    * Resolved `in-query` (subquery-membership) sets for the current `execQuery` run, keyed by
@@ -731,7 +733,7 @@ export class QueryExecutor extends Resource {
       groupCounts.set(serialized, (groupCounts.get(serialized) ?? 0) + 1);
     }
 
-    return this._lastResultSet.map((item): QueryService.QueryResult => {
+    const results = this._lastResultSet.map((item): QueryService.QueryResult => {
       if (item.result !== undefined) {
         return item.result;
       }
@@ -762,9 +764,28 @@ export class QueryExecutor extends Resource {
 
         state: item.state?.structure,
         heads: item.state ? [...item.state.heads] : undefined,
+        bytes: item.state?.bytes,
         version: item.state?.version,
         updatedAt: item.state ? (item.updatedAt ?? undefined) : undefined,
       };
+    });
+    return this.#lazy ? this.#omitSentStates(results) : results;
+  }
+
+  /** Strips the state a client already holds from the rows whose version this query has shipped. */
+  #omitSentStates(results: QueryService.QueryResult[]): QueryService.QueryResult[] {
+    const sent = this.#sentVersions;
+    this.#sentVersions = new Map();
+    return results.map((result) => {
+      if (result.version === undefined || result.state === undefined) {
+        return result;
+      }
+      this.#sentVersions.set(result.id, result.version);
+      if (sent.get(result.id) !== result.version) {
+        return result;
+      }
+      const { state: _state, heads: _heads, bytes: _bytes, updatedAt: _updatedAt, ...unchanged } = result;
+      return unchanged;
     });
   }
 
@@ -2151,7 +2172,9 @@ export class QueryExecutor extends Resource {
     if (!object) {
       return null;
     }
-    const state = this.#lazy ? encodeObjectState(object, A.getHeads(lease.doc())) : undefined;
+    const state = this.#lazy
+      ? encodeObjectState(object, A.getHeads(lease.doc()), saveObjectDocument(lease.doc()))
+      : undefined;
     return {
       objectId: meta.objectId,
       documentId: meta.documentId as DocumentId,
@@ -2583,6 +2606,7 @@ const compiledRowToItem = (row: CompiledRow): QueryItem => {
           groupCount: row.groupCount ?? undefined,
           state: row.state ?? undefined,
           heads: row.heads !== null ? JSON.parse(row.heads) : undefined,
+          bytes: row.bytes !== null ? new Uint8Array(row.bytes) : undefined,
           version: row.version ?? undefined,
           updatedAt: row.state !== null ? (row.updatedAt ?? undefined) : undefined,
         };

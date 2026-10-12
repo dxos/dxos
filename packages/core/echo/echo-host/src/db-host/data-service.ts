@@ -112,7 +112,10 @@ export class DataServiceImpl implements DataService.Handlers {
         invariant(synchronizer, 'Subscription not found');
 
         if (request.addIds?.length) {
-          await synchronizer.addDocuments(request.addIds as DocumentId[]);
+          const knownHeads = new Map(
+            (request.addHeads ?? []).map(({ documentId, heads }) => [documentId as DocumentId, heads]),
+          );
+          await synchronizer.addDocuments(request.addIds as DocumentId[], knownHeads);
           // The subscription now holds each document, so the creation lease has nothing left to guard.
           for (const documentId of request.addIds as DocumentId[]) {
             this._pendingCreations.get(documentId)?.[Symbol.dispose]();

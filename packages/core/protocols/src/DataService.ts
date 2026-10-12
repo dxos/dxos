@@ -34,6 +34,13 @@ export const UpdateSubscriptionRequest = Schema.Struct({
    */
   addIds: Schema.optional(mutableArray(Schema.String)),
   /**
+   * Heads the client already holds for some of `addIds` (bytes it got with a query result), so the
+   * host starts their sync there and sends only what came after.
+   */
+  addHeads: Schema.optional(
+    mutableArray(Schema.Struct({ documentId: Schema.String, heads: mutableArray(Schema.String) })),
+  ),
+  /**
    * Automerge document ids to unsubscribe from.
    */
   removeIds: Schema.optional(mutableArray(Schema.String)),

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { RawString, getHeads } from '@automerge/automerge';
+import { RawString, getHeads, load } from '@automerge/automerge';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Context } from '@dxos/context';
@@ -138,6 +138,34 @@ describe('AutomergeDataSource', () => {
     expect(structure.data.body).toBeInstanceOf(RawString);
     expect(structure.data.body.toString()).toBe('raw text');
     expect(large?.state).toBeUndefined();
+  });
+
+  test('ships the bytes of a document that holds only its object, at the heads its state was read at', async () => {
+    const host = await setupAutomergeHost();
+    const spaceId = SpaceId.random();
+    const own = await createDatabaseDirectory(host, spaceId, {
+      'obj-1': EntityStructure.makeObject({ type: TEST_TYPE, data: { title: 'saved' } }),
+    });
+    await createDatabaseDirectory(host, spaceId, {
+      'obj-2': EntityStructure.makeObject({ type: TEST_TYPE, data: { title: 'shared' } }),
+      'obj-3': EntityStructure.makeObject({ type: TEST_TYPE, data: { title: 'shared' } }),
+    });
+    await host.flush(Context.default());
+    own.change((doc) => {
+      doc.objects!['obj-1'].data.title = 'unsaved';
+    });
+
+    const dataSource = new AutomergeDataSource(host);
+    const { objects } = await EffectEx.runAndForwardErrors(dataSource.getChangedObjects(Context.default(), []));
+    const single = objects.find((object) => object.data.id === 'obj-1');
+    invariant(single?.state?.bytes);
+    const loaded = load<DatabaseDirectory>(single.state.bytes);
+    expect(getHeads(loaded)).toEqual(single.state.heads);
+    expect(loaded.objects?.['obj-1'].data.title).toBe('unsaved');
+
+    const shared = objects.filter((object) => object.data.id === 'obj-2' || object.data.id === 'obj-3');
+    expect(shared).toHaveLength(2);
+    expect(shared.every((object) => object.state !== undefined && object.state.bytes === undefined)).toBe(true);
   });
 
   test('returns documents with changed heads', async () => {

@@ -15,7 +15,7 @@ import { TLDrawStoreAdapter } from './adapter.ts';
 
 /**
  * Hook that manages the TLDraw store adapter lifecycle for a canvas object.
- * Loads the canvas's document, then opens the adapter on it.
+ * Creates a doc accessor and opens the adapter.
  *
  * @param canvas - Optional canvas whose content will be synced.
  * @returns The TLDrawStoreAdapter instance managing the tldraw store.
@@ -34,11 +34,7 @@ export const useStoreAdapter = (canvas?: Drawing.Canvas) => {
         return;
       }
 
-      const accessor = await Doc.loadAccessor(canvas, ['content']);
-      if (controller.signal.aborted) {
-        return;
-      }
-
+      const accessor = Doc.createAccessor(canvas, ['content']);
       await adapter.open(accessor);
       if (controller.signal.aborted) {
         void adapter.close();

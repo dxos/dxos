@@ -12,7 +12,7 @@ import { type VersionDiff, checkoutVersion, getEditHistoryWithDiffs } from '@dxo
 import { QueryBuilder, matchesFilter } from '@dxos/echo-query';
 import { type EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type Space, useDocLoaded, useQuery } from '@dxos/react-client/echo';
+import { type Space, useQuery } from '@dxos/react-client/echo';
 import { QueryEditor } from '@dxos/react-ui-query';
 import { DynamicTable, type TableFeatures } from '@dxos/react-ui-table';
 import * as Button from '@dxos/react-ui/Button';
@@ -95,9 +95,7 @@ export const ObjectsArticle = ({ role, ...props }: ArticleProps & { space?: Spac
   const selectedAtom = useMemo(() => (selected ? Entity.atom(selected) : NO_SNAPSHOT), [selected]);
   const snapshot = useAtomValue(selectedAtom);
   const [showHistory, setShowHistory] = useState(false);
-  // History is read from the selected object's document.
-  const historyLoaded = useDocLoaded(showHistory ? selected : undefined);
-  const history = useEditHistory(selected, snapshot, showHistory && historyLoaded);
+  const history = useEditHistory(selected, snapshot, showHistory);
   const displayed = useMemo(() => {
     const heads = version !== undefined ? history[version]?.heads : undefined;
     return heads && Obj.isObject(selected) ? checkoutVersion(selected, heads) : selected;

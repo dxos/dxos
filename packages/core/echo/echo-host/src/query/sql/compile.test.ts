@@ -74,7 +74,7 @@ const seed = Effect.gen(function* () {
     createdAt: 1000,
     updatedAt: 2000,
     data: { id, [ATTR_TYPE]: type, [ATTR_DELETED]: false, ...extra, ...data },
-    state: { heads: [`heads-${id}`], structure: JSON.stringify({ data }) },
+    state: { heads: [`heads-${id}`], structure: JSON.stringify({ data }), bytes: new TextEncoder().encode(id) },
   });
   const objects: IndexerObject[] = [
     doc(ids.project, PROJECT, { name: 'live' }),
@@ -485,13 +485,17 @@ describe('SqlPlanCompiler', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  it.effect('ships each document row its state, heads and index stamp only in a lazy query', () =>
+  it.effect('ships each document row its state, heads, bytes and index stamp only in a lazy query', () =>
     Effect.gen(function* () {
       const fixture = yield* seed;
       const query = Query.select(Filter.type(PERSON)).from([{ _tag: 'space' as const, spaceId: fixture.spaceId }]);
 
       const plain = yield* run(fixture, query);
-      expect(plain.rows.every((row) => row.state === null && row.heads === null && row.version === null)).toBe(true);
+      expect(
+        plain.rows.every(
+          (row) => row.state === null && row.heads === null && row.version === null && row.bytes === null,
+        ),
+      ).toBe(true);
 
       const { rows } = yield* run(fixture, query, { lazy: true });
       expect(
@@ -504,6 +508,7 @@ describe('SqlPlanCompiler', () => {
         expect(JSON.parse(row.heads ?? 'null')).toEqual([`heads-${row.objectId}`]);
         expect(JSON.parse(row.state ?? 'null').data.name).toBe(row.objectId === fixture.ids.alice ? 'alice' : 'bob');
         expect(row.version).toBeGreaterThan(0);
+        expect(new TextDecoder().decode(row.bytes ?? undefined)).toBe(row.objectId);
       }
     }).pipe(Effect.provide(TestLayer)),
   );

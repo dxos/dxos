@@ -16,9 +16,9 @@ import React, {
   useState,
 } from 'react';
 
+import { Doc } from '@dxos/echo-doc';
 // Registers `<dx-anchor>`, which the link chips render.
 import '@dxos/lit-ui';
-import { useDocAccessor } from '@dxos/react-client/echo';
 import { composeRefs, createContext } from '@dxos/react-hooks';
 import {
   type EditorMenuGroup,
@@ -219,7 +219,6 @@ const OutlineContent = Util.composable<HTMLDivElement, OutlineContentProps>((pro
   } = useOutlineContext(OUTLINE_CONTENT_NAME);
   const { t } = Hooks.useTranslation(meta.profile.key);
   const themeMode = Hooks.useThemeMode();
-  const accessor = useDocAccessor(text, ['content']);
 
   const { parentRef, focusAttributes, view } = useTextEditor(
     () => ({
@@ -228,9 +227,8 @@ const OutlineContent = Util.composable<HTMLDivElement, OutlineContentProps>((pro
       selection: EditorSelection.cursor(text.content.length),
       initialValue: text.content,
       extensions: [
-        // Read-only until the document loads and the editor binds to it.
-        accessor ? createDataExtensions({ id, text: accessor }) : [],
-        createBasicExtensions({ readOnly: !!readonly || !accessor, search: true }),
+        createDataExtensions({ id, text: Doc.createAccessor(text, ['content']) }),
+        createBasicExtensions({ readOnly: !!readonly, search: true }),
         createMarkdownExtensions(),
         createThemeExtensions({
           themeMode,
@@ -251,7 +249,7 @@ const OutlineContent = Util.composable<HTMLDivElement, OutlineContentProps>((pro
         extensions ?? [],
       ],
     }),
-    [id, text, accessor, autoFocus, themeMode, readonly, extensions],
+    [id, text, autoFocus, themeMode, readonly, extensions],
   );
 
   // Publish view to Root so the controller can access it.

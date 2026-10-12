@@ -103,6 +103,5 @@ const anchorFromRange = Effect.fnUntraced(function* (subject: Obj.Unknown, range
   if (!Number.isInteger(from) || !Number.isInteger(to) || from < 0 || from > to || to > length) {
     return yield* Effect.fail(new InvalidCommentRangeError());
   }
-  const accessor = yield* Effect.promise(() => Doc.loadAccessor(content, ['content']));
-  return toCursorRange(accessor, from, to);
+  return toCursorRange(Doc.createAccessor(content, ['content']), from, to);
 });

@@ -15,7 +15,7 @@ import { ExcalidrawStoreAdapter, type ExcalidrawStoreAdapterProps } from './adap
 
 /**
  * Hook that manages the Excalidraw store adapter lifecycle for a canvas object.
- * Loads the canvas's document, then opens the adapter on it.
+ * Creates a doc accessor and opens the adapter.
  *
  * @param canvas - Optional canvas whose content will be synced.
  * @param options - Adapter callbacks, notably `onUpdate` for scene changes.
@@ -38,11 +38,7 @@ export const useStoreAdapter = (canvas?: Drawing.Canvas, options: ExcalidrawStor
         return;
       }
 
-      const accessor = await Doc.loadAccessor(canvas, ['content']);
-      if (controller.signal.aborted) {
-        return;
-      }
-
+      const accessor = Doc.createAccessor(canvas, ['content']);
       adapter.open(accessor);
       if (controller.signal.aborted) {
         adapter.close();

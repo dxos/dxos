@@ -102,6 +102,56 @@ describe('DocumentsSynchronizer', () => {
     expect(batches.filter((size) => size > 0).length).toBeGreaterThanOrEqual(3);
   });
 
+  test('a subscription from heads the client holds sends only what came after them', async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const host = new AutomergeHost({ runtime });
+    await openAndClose(host);
+    const handle = await host.createDoc<{ text: string }>({ text: 'held' });
+    const held = A.save(handle.doc()!);
+    const heldHeads = A.getHeads(handle.doc()!);
+    handle.change((doc) => {
+      doc.text = 'after';
+    });
+    const unknown = await host.createDoc<{ text: string }>({ text: 'unknown' });
+    const current = await host.createDoc<{ text: string }>({ text: 'current' });
+
+    const sent = new Map<string, Uint8Array>();
+    const delivered = new Trigger();
+    const synchronizer = new DocumentsSynchronizer({
+      automergeHost: host,
+      sendUpdates: (batch) => {
+        for (const { documentId, mutation } of batch.updates ?? []) {
+          if (mutation) {
+            sent.set(documentId, mutation);
+          }
+        }
+        if (sent.size === 3) {
+          delivered.wake();
+        }
+      },
+    });
+    await openAndClose(synchronizer);
+
+    await synchronizer.addDocuments(
+      [handle.documentId, unknown.documentId, current.documentId],
+      new Map([
+        [handle.documentId, heldHeads],
+        [unknown.documentId, heldHeads],
+        [current.documentId, A.getHeads(current.doc()!)],
+      ]),
+    );
+    await delivered.wait({ timeout: 5_000 });
+
+    const delta = sent.get(handle.documentId)!;
+    expect(delta).toEqual(A.saveSince(handle.doc()!, heldHeads));
+    expect(A.loadIncremental(A.load<{ text: string }>(held), delta).text).toBe('after');
+    // Heads this host does not hold for a document: it sends the whole document.
+    expect(A.load<{ text: string }>(sent.get(unknown.documentId)!).text).toBe('unknown');
+    // Nothing came after them: an empty send still tells the client it is current.
+    expect(sent.get(current.documentId)).toHaveLength(0);
+  });
+
   test('a client write reaches the other subscriber and the heads store without a lease on the host', async () => {
     const { runtime, dispose } = createTestSqliteRuntime();
     onTestFinished(() => dispose());

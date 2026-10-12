@@ -62,10 +62,11 @@ export interface IndexerObject {
 
   /**
    * The object as its document holds it, for a client to back a live object with: the structure
-   * encoded by `encodeEntityStructure` and the document heads it was read at. Absent for feed
-   * objects, branch documents, and objects too large to ship.
+   * encoded by `encodeEntityStructure`, the document's Automerge bytes, and the heads both were read
+   * at. Absent for feed objects, branch documents, and objects too large to ship; `bytes` is absent
+   * for a document that holds more than this object.
    */
-  state?: { heads: readonly string[]; structure: string };
+  state?: { heads: readonly string[]; structure: string; bytes?: Uint8Array };
 }
 
 export interface ChangeSummary {

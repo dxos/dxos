@@ -7,7 +7,7 @@ import { rmSync } from 'node:fs';
 import { afterAll, bench, describe } from 'vitest';
 
 import { Filter, Obj, Query, Type } from '@dxos/echo';
-import { type EchoDatabase, loadDocument } from '@dxos/echo-client';
+import { type EchoDatabase, getObjectCore } from '@dxos/echo-client';
 import { EchoTestBuilder, type EchoTestPeer, createTmpPath } from '@dxos/echo-client/testing';
 import { DXN } from '@dxos/keys';
 
@@ -24,10 +24,10 @@ import { blackhole } from './testing/bench-util.ts';
 //                                     full result set)
 //   + read one field per result       the first read of each object, where the object's data is materialized
 //
-// The lazy rows run the same cold query with `lazy: true`, which backs each result with the index's copy
-// instead of loading its document, and then price promotion: loading one result's document on demand.
-// The first promotion of a session is reported apart from the steady state (each promotion after it,
-// one at a time), and once more while a full cold load of the block competes with it.
+// The plain rows run with lazy queries off, so every result loads its document. The lazy rows run the
+// same cold query with them on (the default), which backs each result with the index's copy and its
+// document's bytes, and then price the first write: loading one result's bytes into a document, in
+// the tab, with no round trip. The first of a session is reported apart from the steady state.
 //
 // The warm rows run the same query against a peer that already holds every object, so the difference
 // between a cold and a warm query is the load itself. Property-access costs are the other file's
@@ -52,8 +52,8 @@ const WIDE_OBJECT_COUNT = 100;
 const COLD_OPTIONS = { iterations: 3, time: 0, warmupIterations: 1, warmupTime: 0 };
 const WARM_OPTIONS = { time: 300 };
 const SHORT_RESULT_RETRIES = 10;
-// Promotions timed one at a time after the first, per cold sample.
-const STEADY_PROMOTIONS = 20;
+// Writes timed one at a time after the first, per cold sample.
+const STEADY_WRITES = 20;
 
 class BenchObject extends Type.makeObject<BenchObject>(DXN.make('com.example.type.benchObject', '0.1.0'))(
   Schema.Struct({
@@ -145,9 +145,9 @@ afterAll(async () => {
 
 const defineRows = (label: string, state: Populated, type: typeof BenchObject | typeof WideBenchObject) => {
   describe(label, () => {
-    const reopen = async (): Promise<EchoDatabase> => {
+    const reopen = async ({ lazyQueries = false }: { lazyQueries?: boolean } = {}): Promise<EchoDatabase> => {
       const started = performance.now();
-      await state.peer.reload();
+      await state.peer.reload({ lazyQueries });
       const db = await state.peer.openLastDatabase();
       record(`${label}: reload + open`, performance.now() - started);
       state.db = db;
@@ -173,18 +173,28 @@ const defineRows = (label: string, state: Populated, type: typeof BenchObject | 
 
     const lazyQuery = async (db: EchoDatabase, phase: string): Promise<(BenchObject | WideBenchObject)[]> => {
       const started = performance.now();
-      const results = await db.query(Query.select(Filter.type(type)).options({ lazy: true })).run();
+      const results = await db.query(Query.select(Filter.type(type))).run();
       record(`${label}: ${phase}`, performance.now() - started);
       if (results.length !== state.count) {
         throw new Error(`Expected ${state.count} results, got ${results.length}`);
       }
+      const held = results.reduce(
+        (sum, object) => sum + (getObjectCore(object).snapshot?.handle.passive?.bytes.length ?? 0),
+        0,
+      );
+      record(`${label}: document bytes held per lazy result (value = bytes)`, held / results.length);
       return results;
     };
 
-    const promote = async (object: BenchObject | WideBenchObject, phase: string) => {
+    const firstWrite = (object: BenchObject | WideBenchObject, phase: string) => {
       const started = performance.now();
-      await loadDocument(object);
+      Obj.update(object, (object) => {
+        object.value += 1;
+      });
       record(`${label}: ${phase}`, performance.now() - started);
+      if (getObjectCore(object).docHandle === undefined) {
+        throw new Error('The write did not load the document.');
+      }
     };
 
     const readAll = (results: (BenchObject | WideBenchObject)[], phase: string) => {
@@ -226,7 +236,7 @@ const defineRows = (label: string, state: Populated, type: typeof BenchObject | 
     bench(
       'reload + open + lazy query',
       async () => {
-        const db = await reopen();
+        const db = await reopen({ lazyQueries: true });
         blackhole(await lazyQuery(db, 'lazy query (cold)'));
       },
       COLD_OPTIONS,
@@ -235,33 +245,22 @@ const defineRows = (label: string, state: Populated, type: typeof BenchObject | 
     bench(
       'reload + open + lazy query + read one field per result',
       async () => {
-        const db = await reopen();
+        const db = await reopen({ lazyQueries: true });
         readAll(await lazyQuery(db, 'lazy query (cold, before read)'), 'read one field per lazy result (cold)');
       },
       COLD_OPTIONS,
     );
 
     bench(
-      'reload + open + lazy query + promote one, then more one at a time',
+      'reload + open + lazy query + write one, then more one at a time',
       async () => {
-        const db = await reopen();
-        const results = await lazyQuery(db, 'lazy query (cold, before promotion)');
-        await promote(results[0], 'promotion (first of the session)');
-        for (let index = 1; index <= STEADY_PROMOTIONS; index++) {
-          await promote(results[index], 'promotion (steady state)');
+        const db = await reopen({ lazyQueries: true });
+        const results = await lazyQuery(db, 'lazy query (cold, before writes)');
+        firstWrite(results[0], 'first write (first of the session)');
+        for (let index = 1; index <= STEADY_WRITES; index++) {
+          firstWrite(results[index], 'first write (steady state)');
         }
-      },
-      COLD_OPTIONS,
-    );
-
-    bench(
-      'reload + open + lazy query + promote one during a full cold load',
-      async () => {
-        const db = await reopen();
-        const results = await lazyQuery(db, 'lazy query (cold, before burst)');
-        const burst = db.query(Query.select(Filter.type(type))).run();
-        await promote(results[results.length - 1], 'promotion (during a full cold load)');
-        blackhole(await burst);
+        await db.flush();
       },
       COLD_OPTIONS,
     );

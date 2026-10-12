@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
+import { Trigger, asyncTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Filter, Query } from '@dxos/echo';
 import { type DatabaseDirectory, EntityStructure, SpaceDocVersion } from '@dxos/echo-protocol';
@@ -111,6 +112,53 @@ describe('EchoHost query service', () => {
       ),
     );
     expect(check).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('EchoHost lazy queries', () => {
+  test('a reactive query re-sends a row it already shipped without its state and bytes', async () => {
+    const { host, spaceId, saveObject } = await setup({ queryExecutor: 'sql' });
+    const first = EntityId.random();
+    await saveObject(first);
+    await host.updateIndexes();
+
+    const emissions: QueryService.QueryResponse[] = [];
+    const firstEmission = new Trigger();
+    const done = EffectEx.runPromise(
+      host.queryService['QueryService.execQuery']({
+        queryId: 'lazy',
+        reactivity: QueryReactivity.REACTIVE,
+        query: JSON.stringify(
+          Query.select(Filter.everything())
+            .from([{ _tag: 'space', spaceId }])
+            .options({ lazy: true }).ast,
+        ),
+      }).pipe(
+        Stream.tap((response) =>
+          Effect.sync(() => {
+            emissions.push(response);
+            firstEmission.wake();
+          }),
+        ),
+        Stream.take(2),
+        Stream.runDrain,
+      ),
+    );
+    await firstEmission.wait({ timeout: 5_000 });
+    const second = EntityId.random();
+    await saveObject(second);
+    await host.updateIndexes();
+    await asyncTimeout(done, 5_000);
+
+    const [initial, update] = emissions;
+    const shipped = initial.results?.find((result) => result.id === first);
+    expect(shipped?.state).toBeDefined();
+    expect(shipped?.bytes).toBeDefined();
+    const resent = update.results?.find((result) => result.id === first);
+    expect(resent?.version).toBe(shipped?.version);
+    expect(resent?.state).toBeUndefined();
+    expect(resent?.bytes).toBeUndefined();
+    expect(update.results?.find((result) => result.id === second)?.bytes).toBeDefined();
   });
 });
 

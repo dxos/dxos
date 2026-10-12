@@ -22,8 +22,8 @@ const ROOT_LINK_WAIT_TIMEOUT = 2_000;
 
 export type EchoClientProps = {
   /**
-   * Back index query results with the index's copy of each object, loading an object's document only when
-   * it is written to or its document is read (see `Doc.load`).
+   * Back index query results with the index's copy of each object and its document's bytes, loading the
+   * bytes into a document only when the object is written to or its document is read.
    * @default true
    */
   lazyQueries?: boolean;

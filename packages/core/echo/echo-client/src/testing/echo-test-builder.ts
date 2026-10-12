@@ -95,7 +95,7 @@ export class EchoTestPeer extends Resource {
   private readonly _storagePath?: string;
   private readonly _queryExecutor?: QueryExecutorMode;
   private readonly _queryDebounce?: Partial<QueryDebounceOptions>;
-  private readonly _lazyQueries?: boolean;
+  private _lazyQueries?: boolean;
   private readonly _clients = new Set<EchoClient>();
   private _echoHost!: EchoHost;
   private _echoClient!: EchoClient;
@@ -278,8 +278,10 @@ export class EchoTestPeer extends Resource {
   /**
    * Simulates a reload of the process by re-creation ECHO.
    */
-  async reload(): Promise<void> {
+  /** @param lazyQueries Replaces the peer's `lazyQueries` from this reload on. */
+  async reload({ lazyQueries = this._lazyQueries }: { lazyQueries?: boolean } = {}): Promise<void> {
     await this.close();
+    this._lazyQueries = lazyQueries;
     await this.open();
   }
 

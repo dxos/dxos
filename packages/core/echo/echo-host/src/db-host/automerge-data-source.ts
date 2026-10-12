@@ -18,7 +18,7 @@ import {
 import { log } from '@dxos/log';
 
 import { type AutomergeHost } from '../automerge/index.ts';
-import { encodeObjectState } from '../query/object-state.ts';
+import { encodeObjectState, saveObjectDocument } from '../query/object-state.ts';
 import { toChangeRecord } from './change-record.ts';
 
 const HEADS_DELIMITER = '|';
@@ -209,7 +209,7 @@ export class AutomergeDataSource implements IndexDataSource {
               data: objectStructureToJson(objectId, structure),
               createdAt: typeof storedCreatedAt === 'number' ? storedCreatedAt : null,
               updatedAt,
-              state: stateHeads && encodeObjectState(structure, stateHeads),
+              state: stateHeads && encodeObjectState(structure, stateHeads, saveObjectDocument(doc)),
             });
           }
 
