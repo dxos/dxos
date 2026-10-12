@@ -232,6 +232,7 @@ describe("the Composer app's on:'edge' invocations", () => {
     await expect
       .poll(() => edge.calls)
       .toEqual([{ functionId: String(Double.meta.key), spaceId: app.spaceId, input: { value: 5 } }]);
+    expect(await processKeys(app)).not.toContain(DXN.getName(Double.meta.key));
   });
 });
 
