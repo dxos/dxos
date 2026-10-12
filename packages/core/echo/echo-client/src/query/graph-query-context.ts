@@ -15,7 +15,6 @@ import { type ItemsUpdatedEvent, type ObjectCore } from '../core-db/index.ts';
 import { type DatabaseImpl } from '../proxy-db/index.ts';
 import {
   type MergePlan,
-  compareByWindow,
   compareWindowData,
   createMergePlan,
   evaluateCore,
@@ -288,24 +287,38 @@ export class GraphQueryContext implements QueryContext {
       return kept;
     }
     const { orders, limit } = plan.window;
-    const compare = (left: SourceEntry, right: SourceEntry) => compareByWindow(orders, left, right);
+    // Sort data is read once per candidate, since a comparison against the live document re-reads it on
+    // every step of the sort, and only local matches that land inside the window are built into entries.
+    const candidates: WindowCandidate[] = kept.map((entry) => ({ id: entry.id, data: windowData(entry), entry }));
     // A short remote window is the whole result, so every local match belongs; a full one bounds admission.
     const full = remote.length >= limit;
     const boundary = full ? windowData(remote[remote.length - 1]) : undefined;
-    const admit = full ? (data: EntityStructure['data']) => compareWindowData(orders, data, boundary) <= 0 : undefined;
-    const merged = new Map(kept.map((entry) => [entry.id, entry]));
+    const seen = new Set(kept.map((entry) => entry.id));
     for (const source of this._sources) {
       if (!(source instanceof SpaceQuerySource) || !source.coversQuery(query)) {
         continue;
       }
-      for (const entry of source.matchLocal(plan, admit)) {
-        if (!merged.has(entry.id)) {
-          merged.set(entry.id, entry);
+      for (const match of source.matchLocal(plan)) {
+        if (seen.has(match.id) || (full && compareWindowData(orders, match.data, boundary) > 0)) {
+          continue;
         }
+        seen.add(match.id);
+        candidates.push({ id: match.id, data: match.data, source });
       }
     }
-    // Stable, so entries the remote ordered as equals keep its order.
-    return [...merged.values()].sort(compare).slice(0, limit);
+    // Stable, so entries the remote ordered as equals keep their order ahead of local matches that tie with them.
+    candidates.sort((left, right) => compareWindowData(orders, left.data, right.data));
+    const window: SourceEntry[] = [];
+    for (const candidate of candidates) {
+      if (window.length === limit) {
+        break;
+      }
+      const entry = 'entry' in candidate ? candidate.entry : candidate.source.entryFor(candidate.id);
+      if (entry) {
+        window.push(entry);
+      }
+    }
+    return window;
   }
 
   #watchLocalCommits(source: QuerySource): void {
@@ -355,6 +368,15 @@ export class GraphQueryContext implements QueryContext {
     return plan.ids.every((id) => spaces.some((source) => source.holdsBody(id)));
   }
 }
+
+/** A loaded object local evaluation admits, with the document data a window orders it by. */
+type LocalMatch = { id: string; data: EntityStructure['data'] };
+
+/** A remote entry or a local match competing for a window's slots, with its sort data read once. */
+type WindowCandidate = { id: string; data: EntityStructure['data'] | undefined } & (
+  | { entry: SourceEntry }
+  | { source: SpaceQuerySource }
+);
 
 const isInProcess = (source: QuerySource): boolean => source.kind === 'local' || source.kind === 'registry';
 
@@ -434,24 +456,18 @@ export class SpaceQuerySource implements QuerySource {
     return this.coreById(id)?.getObjectStructure() !== undefined;
   }
 
-  /**
-   * Every loaded object local evaluation admits under the plan's flat filter and `admit` accepts by its
-   * document data, checked before an entry is built since most matches fall outside a window.
-   */
-  matchLocal(plan: MergePlan, admit?: (data: EntityStructure['data']) => boolean): SourceEntry<Obj.Unknown>[] {
+  /** Every loaded object local evaluation admits under the plan's flat filter, with its document data. */
+  matchLocal(plan: MergePlan): LocalMatch[] {
     return this._database.allObjectCores().flatMap((core) => {
-      if (evaluateCore(plan, core) !== true) {
-        return [];
-      }
       const data = core.getObjectStructure()?.data;
-      if (admit && (data === undefined || !admit(data))) {
-        return [];
-      }
-      const result = this._database.getObjectById<Obj.Unknown>(core.id, { deleted: true });
-      return result
-        ? [{ id: core.id, result, match: { rank: 1 }, resolution: { source: 'local' as const, time: 0 } }]
-        : [];
+      return data !== undefined && evaluateCore(plan, core) === true ? [{ id: core.id, data }] : [];
     });
+  }
+
+  /** A working-set entry for a loaded object, as `matchLocal` admitted it. */
+  entryFor(id: string): SourceEntry<Obj.Unknown> | undefined {
+    const result = this._database.getObjectById<Obj.Unknown>(id, { deleted: true });
+    return result ? { id, result, match: { rank: 1 }, resolution: { source: 'local', time: 0 } } : undefined;
   }
 
   open(): void {}

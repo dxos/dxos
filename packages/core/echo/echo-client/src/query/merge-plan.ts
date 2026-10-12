@@ -112,10 +112,6 @@ export const writeAffects = (plan: MergePlan, core: ObjectCore | undefined): boo
   return type !== undefined && plan.typenames.has(canonicalTypename(EncodedReference.toURI(type)));
 };
 
-/** Orders two entries by the window's property orders, reading each object's local document. */
-export const compareByWindow = (orders: readonly QueryAST.Order[], left: SourceEntry, right: SourceEntry): number =>
-  compareWindowData(orders, windowData(left), windowData(right));
-
 /** Orders two objects' document data by the window's property orders; missing data compares as missing values. */
 export const compareWindowData = (
   orders: readonly QueryAST.Order[],
