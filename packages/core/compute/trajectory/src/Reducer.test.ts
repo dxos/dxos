@@ -75,7 +75,7 @@ describe('Reducer', () => {
       expect(state.objects).to.have.length(1);
       expect(state.background).to.deep.eq([{ toolCallId: 't2', pid: undefined }]);
       expect(state.threads).to.deep.eq([{ id: open.id, mode: 'fresh', status: 'completed' }]);
-      expect(state.turn).to.eq(turn.id);
+      expect(state.turns).to.deep.eq([turn.id]);
       expect(state.model).to.eq(model);
 
       const ended = Reducer.run(
@@ -86,7 +86,7 @@ describe('Reducer', () => {
         ],
         { state, count: 10 },
       );
-      expect(ended.state.turn).to.be.undefined;
+      expect(ended.state.turns).to.deep.eq([]);
       expect(ended.state.objects).to.have.length(0);
     });
   });
@@ -106,14 +106,17 @@ describe('Reducer', () => {
       expect(state.items.map((item) => item.status)).to.deep.eq(['cancelled', 'consumed', 'sent']);
     });
 
-    test('a consumed message moves to where the model sees it', ({ expect }) => {
+    test('a consumed message moves to where the model sees it and joins the turn', ({ expect }) => {
       const typed = message('typed mid-turn', user);
+      const turn = event({ _tag: 'turnBegin', model });
       const { state } = Reducer.run(Reducer.thread, [
         message('call'),
         typed,
         message('result'),
-        event({ _tag: 'promptConsume', message: typed.id }),
+        turn,
+        event({ _tag: 'promptConsume', message: typed.id }, assistant, turn.id),
       ]);
+      expect(state.items.at(-1)?.thread).to.eq(turn.id);
       expect(
         state.items.map(
           (item) =>
@@ -150,6 +153,56 @@ describe('Reducer', () => {
       ]);
       expect(texts(state.entries)).to.deep.eq(['meanwhile', 'turn reply', 'subagent summary']);
       expect(state.threads).to.deep.eq({});
+    });
+
+    test('a turn reaches the main prompt as one block at its turnEnd', ({ expect }) => {
+      const question = message('question', user);
+      const first = event({ _tag: 'turnBegin', model, from: { event: question.id } });
+      const second = event({ _tag: 'turnBegin', model, from: { event: question.id } });
+      const steps = [
+        question,
+        first,
+        second,
+        event({ _tag: 'promptConsume', message: question.id }, assistant, first.id),
+        message('first: call', assistant, first.id),
+        message('second: call', assistant, second.id),
+        message('first: answer', assistant, first.id),
+      ];
+      const during = Reducer.run(Reducer.prompt, steps);
+      expect(texts(during.state.entries)).to.deep.eq([]);
+      expect(texts(Reducer.promptFor(during.state, first.id))).to.deep.eq(['question', 'first: call', 'first: answer']);
+      expect(texts(Reducer.promptFor(during.state, second.id))).to.deep.eq(['second: call']);
+
+      const { state } = Reducer.run(
+        Reducer.prompt,
+        [
+          event({ _tag: 'turnEnd', begin: first.id, finishReason: 'stop' }),
+          event({ _tag: 'turnEnd', begin: second.id, finishReason: 'stop' }),
+        ],
+        during,
+      );
+      expect(texts(state.entries)).to.deep.eq(['question', 'first: call', 'first: answer', 'second: call']);
+      expect(state.threads).to.deep.eq({});
+    });
+
+    test('a turn inside a thread merges into that thread, not main', ({ expect }) => {
+      const subagent = event({ _tag: 'threadOpen', mode: 'fresh' });
+      const brief = message('brief', system, subagent.id);
+      const turn = event(
+        { _tag: 'turnBegin', model, from: { thread: subagent.id, event: brief.id } },
+        assistant,
+        subagent.id,
+      );
+      const { state } = Reducer.run(Reducer.prompt, [
+        message('main'),
+        subagent,
+        brief,
+        turn,
+        message('work', assistant, turn.id),
+        event({ _tag: 'turnEnd', begin: turn.id, finishReason: 'stop' }, assistant, subagent.id),
+      ]);
+      expect(texts(state.entries)).to.deep.eq(['main']);
+      expect(texts(Reducer.promptFor(state, subagent.id))).to.deep.eq(['brief', 'work']);
     });
 
     test('compact replaces its range with the summary', ({ expect }) => {
@@ -203,11 +256,13 @@ describe('Reducer', () => {
       const events: Trajectory.Event[] = [];
       const users: Trajectory.EventId[] = [];
       const threads: Trajectory.EventId[] = [];
+      const turns: Trajectory.EventId[] = [];
       for (let index = 0; index < length; index++) {
         const roll = next();
         const thread = next() < 0.3 ? pick(threads) : undefined;
         const queued = pick(users);
         const merged = pick(threads);
+        const ending = pick(turns);
         const compactFrom = pick(events.slice(0, 2));
         const compactTo = pick(events);
         let created: Trajectory.Event;
@@ -235,6 +290,17 @@ describe('Reducer', () => {
             to: compactTo.id,
             summary: text(`compact ${index}`),
           });
+        } else if (roll < 0.97) {
+          const head = events.at(-1);
+          created = event(
+            { _tag: 'turnBegin', model, from: head ? { thread, event: head.id } : undefined },
+            assistant,
+            thread,
+          );
+          threads.push(created.id);
+          turns.push(created.id);
+        } else if (ending) {
+          created = event({ _tag: 'turnEnd', begin: ending, finishReason: 'stop' }, assistant);
         } else {
           created = event({ _tag: 'alarmSet', wakeAt: index });
         }

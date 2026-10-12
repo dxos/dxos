@@ -64,11 +64,27 @@ export const Usage = Schema.Struct({
 export type Usage = Schema.Schema.Type<typeof Usage>;
 
 /**
- * Start of one model request.
+ * What a thread or turn could see when it started: the parent thread up to and including `event`.
+ */
+export const ThreadOrigin = Schema.Struct({
+  /** Feed of another conversation; absent for the current one. */
+  feed: Schema.optional(Ref.Ref(Feed.Feed)),
+  /** Parent thread; absent for the main thread. */
+  thread: Schema.optional(EventId),
+  /** Last event of the parent that was visible. */
+  event: EventId,
+});
+export type ThreadOrigin = Schema.Schema.Type<typeof ThreadOrigin>;
+
+/**
+ * Start of one model request, which opens a thread whose id is this event's id; every event the turn produces
+ * carries it as `thread`, and `turnEnd` merges the thread into its parent.
  */
 export const TurnBegin = Schema.TaggedStruct('turnBegin', {
   /** Model DXN, as `SessionConfig.model` stores it. */
   model: DXN.Schema,
+  /** What the turn saw; absent when it started on an empty log. */
+  from: Schema.optional(ThreadOrigin),
 });
 export type TurnBegin = Schema.Schema.Type<typeof TurnBegin>;
 
@@ -197,13 +213,6 @@ export type Compact = Schema.Schema.Type<typeof Compact>;
 export const ThreadMode = Schema.Literals(['fork', 'fresh']);
 export type ThreadMode = Schema.Schema.Type<typeof ThreadMode>;
 
-export const ThreadOrigin = Schema.Struct({
-  /** Feed of another conversation; absent for the current one. */
-  feed: Schema.optional(Ref.Ref(Feed.Feed)),
-  event: EventId,
-});
-export type ThreadOrigin = Schema.Schema.Type<typeof ThreadOrigin>;
-
 /**
  * Opens a thread whose id is this event's id.
  */
@@ -297,7 +306,7 @@ export type PayloadOf<T extends PayloadTag> = Extract<Payload, { _tag: T }>;
  */
 export class Event extends Type.makeObject<Event>(DXN.make('org.dxos.type.trajectory.event', '0.1.0'))(
   Schema.Struct({
-    /** Thread the event belongs to: the id of its `threadOpen` event, absent for the main thread. */
+    /** Thread the event belongs to: the id of its `threadOpen` or `turnBegin`, absent for the main thread. */
     thread: Schema.optional(EventId),
     /** Writer's head of `thread` when appending, so concurrent writers can be detected. */
     prev: Schema.optional(EventId),

@@ -33,12 +33,25 @@ describe('samples', () => {
       payload: { _tag: 'message', blocks: text('What is the weather in Oslo?') },
       sender: alice,
     });
-    const turn = Trajectory.make({ payload: { _tag: 'turnBegin', model }, sender: agent });
+    const turn = Trajectory.make({
+      payload: { _tag: 'turnBegin', model, from: { event: question.id } },
+      sender: agent,
+    });
     const followUp = Trajectory.make({ payload: { _tag: 'message', blocks: text('And in Bergen?') }, sender: alice });
+    // Every event the turn produces carries `thread: turn.id`; #5 is typed by alice on the main thread meanwhile.
+    const end = Trajectory.make({
+      payload: {
+        _tag: 'turnEnd',
+        begin: turn.id,
+        finishReason: 'stop',
+        usage: { inputTokens: 900, cacheReadTokens: 0 },
+      },
+      sender: agent,
+    });
     const events = [
       question,
-      Trajectory.make({ payload: { _tag: 'promptConsume', message: question.id }, sender: agent }),
       turn,
+      Trajectory.make({ payload: { _tag: 'promptConsume', message: question.id }, sender: agent, thread: turn.id }),
       Trajectory.make({
         payload: {
           _tag: 'message',
@@ -53,6 +66,7 @@ describe('samples', () => {
           ],
         },
         sender: agent,
+        thread: turn.id,
       }),
       followUp,
       Trajectory.make({
@@ -69,44 +83,53 @@ describe('samples', () => {
           ],
         },
         sender: tool,
+        thread: turn.id,
       }),
-      Trajectory.make({ payload: { _tag: 'message', blocks: text('Oslo is 12°C with rain.') }, sender: agent }),
       Trajectory.make({
-        payload: {
-          _tag: 'turnEnd',
-          begin: turn.id,
-          finishReason: 'stop',
-          usage: { inputTokens: 900, cacheReadTokens: 0 },
-        },
+        payload: { _tag: 'message', blocks: text('Oslo is 12°C with rain.') },
         sender: agent,
+        thread: turn.id,
       }),
     ];
 
-    const afterTurn = Reducer.run(Reducer.prompt, events);
-    expect(lines(afterTurn.state.entries)).to.deep.eq([
+    // While the turn runs, main is untouched and the turn sees main plus its own thread.
+    const during = Reducer.run(Reducer.prompt, events);
+    expect(lines(during.state.entries)).to.deep.eq([]);
+    expect(lines(Reducer.promptFor(during.state, turn.id))).to.deep.eq([
       'user: What is the weather in Oslo?',
       'assistant: toolCall',
       'tool: toolResult',
       'assistant: Oslo is 12°C with rain.',
     ]);
 
-    const session = Reducer.run(Reducer.session, events).state;
+    const afterTurn = Reducer.run(Reducer.prompt, [end], during);
+    expect(lines(afterTurn.state.entries)).to.deep.eq(lines(Reducer.promptFor(during.state, turn.id)));
+
+    const session = Reducer.run(Reducer.session, [...events, end]).state;
     expect(session.queue).to.deep.eq([followUp.id]);
-    expect(session.turn).to.be.undefined;
+    expect(session.turns).to.deep.eq([]);
 
-    // The next turn picks up the queued prompt; the earlier entries are untouched, so the provider cache hits.
-    const next = Trajectory.make({ payload: { _tag: 'promptConsume', message: followUp.id }, sender: agent });
-    const nextPrompt = Reducer.run(Reducer.prompt, [next], afterTurn);
-    expect(lines(nextPrompt.state.entries)).to.deep.eq([...lines(afterTurn.state.entries), 'user: And in Bergen?']);
-
-    const thread = Reducer.run(Reducer.thread, [...events, next]).state;
-    expect(thread.items.map((item) => `${item.sender.role}:${item.status}`)).to.deep.eq([
-      'user:consumed',
-      'assistant:sent',
-      'tool:sent',
-      'assistant:sent',
-      'user:consumed',
+    // The next turn starts from what main showed after #8 and picks up the queued prompt; the earlier entries are
+    // untouched, so the provider cache hits.
+    const nextTurn = Trajectory.make({
+      payload: { _tag: 'turnBegin', model, from: { event: end.id } },
+      sender: agent,
+    });
+    const next = Trajectory.make({
+      payload: { _tag: 'promptConsume', message: followUp.id },
+      sender: agent,
+      thread: nextTurn.id,
+    });
+    const nextPrompt = Reducer.run(Reducer.prompt, [nextTurn, next], afterTurn);
+    expect(lines(Reducer.promptFor(nextPrompt.state, nextTurn.id))).to.deep.eq([
+      ...lines(afterTurn.state.entries),
+      'user: And in Bergen?',
     ]);
+
+    const thread = Reducer.run(Reducer.thread, [...events, end, nextTurn, next]).state;
+    expect(
+      thread.items.map((item) => `${item.sender.role}:${item.status}:${item.thread === turn.id ? 1 : 2}`),
+    ).to.deep.eq(['user:consumed:1', 'assistant:sent:1', 'tool:sent:1', 'assistant:sent:1', 'user:consumed:2']);
   });
 
   test('2. an alarm, a subagent thread and a compaction', ({ expect }) => {

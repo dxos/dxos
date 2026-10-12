@@ -76,8 +76,8 @@ export type SessionState = {
   readonly background: readonly BackgroundTool[];
   readonly threads: readonly ThreadInfo[];
   readonly model?: Trajectory.ModelChange['model'];
-  /** The `turnBegin` of a turn that has not ended. */
-  readonly turn?: Trajectory.EventId;
+  /** `turnBegin`s of turns that have not ended; more than one when several writers run turns at once. */
+  readonly turns: readonly Trajectory.EventId[];
 };
 
 const bind = <T extends { uri: string }>(current: readonly T[], added: readonly T[]): readonly T[] =>
@@ -93,7 +93,7 @@ const setThreadStatus = (threads: readonly ThreadInfo[], id: Trajectory.EventId,
   threads.map((thread) => (thread.id === id ? { ...thread, status } : thread));
 
 export const session: Reducer<SessionState> = {
-  initial: { queue: [], alarms: [], skills: [], objects: [], background: [], threads: [] },
+  initial: { queue: [], alarms: [], skills: [], objects: [], background: [], threads: [], turns: [] },
   step: (state, event) => {
     const payload = event.payload;
     switch (payload._tag) {
@@ -103,9 +103,9 @@ export const session: Reducer<SessionState> = {
       case 'promptCancel':
         return { ...state, queue: state.queue.filter((id) => id !== payload.message) };
       case 'turnBegin':
-        return { ...state, turn: event.id, model: payload.model };
+        return { ...state, turns: [...state.turns, event.id], model: payload.model };
       case 'turnEnd':
-        return state.turn === payload.begin ? { ...state, turn: undefined } : state;
+        return { ...state, turns: state.turns.filter((id) => id !== payload.begin) };
       case 'modelChange':
         return { ...state, model: payload.model };
       case 'contextBind':
@@ -161,14 +161,16 @@ export type ThreadView = { readonly items: readonly ThreadItem[] };
 const setItemStatus = (items: readonly ThreadItem[], id: Trajectory.EventId, status: ItemStatus) =>
   items.map((item) => (item.id === id ? { ...item, status } : item));
 
-const moveToEnd = (items: readonly ThreadItem[], id: Trajectory.EventId, status: ItemStatus): readonly ThreadItem[] => {
+const consume = (items: readonly ThreadItem[], id: Trajectory.EventId, thread?: Trajectory.EventId) => {
   const item = items.find((candidate) => candidate.id === id);
-  return item ? [...items.filter((candidate) => candidate.id !== id), { ...item, status }] : items;
+  return item
+    ? [...items.filter((candidate) => candidate.id !== id), { ...item, thread, status: 'consumed' as const }]
+    : items;
 };
 
 /**
  * Every message, including turn threads still streaming; a user message moves to where it is consumed, the position
- * the model sees it at. A consume or cancel whose message lies outside the loaded window is ignored, so the UI can
+ * the model sees it at, and joins the consuming turn's thread. A consume or cancel whose message lies outside the loaded window is ignored, so the UI can
  * fold just the tail of a long conversation.
  */
 export const thread: Reducer<ThreadView> = {
@@ -191,7 +193,7 @@ export const thread: Reducer<ThreadView> = {
           ],
         };
       case 'promptConsume':
-        return { items: moveToEnd(state.items, payload.message, 'consumed') };
+        return { items: consume(state.items, payload.message, event.thread) };
       case 'promptCancel':
         return { items: setItemStatus(state.items, payload.message, 'cancelled') };
       default:
@@ -211,22 +213,65 @@ export type PromptEntry = {
   readonly source: readonly Trajectory.EventId[];
 };
 
+/**
+ * Entries written in an open thread or turn, merged into `parent` (absent: main) when it ends.
+ */
+export type ThreadBuffer = {
+  readonly parent?: Trajectory.EventId;
+  /** A fresh thread's prompt is its own entries only; a fork's starts with its parent's. */
+  readonly fresh: boolean;
+  readonly entries: readonly PromptEntry[];
+};
+
 export type PromptState = {
   /** The main thread's prompt; only appended to, except by `compact`. */
   readonly entries: readonly PromptEntry[];
   /** User messages waiting for a `promptConsume`. */
   readonly held: Readonly<Record<Trajectory.EventId, PromptEntry>>;
-  /** Entries written in each open thread, spliced into `entries` by a raw `threadMerge`. */
-  readonly threads: Readonly<Record<Trajectory.EventId, readonly PromptEntry[]>>;
+  readonly threads: Readonly<Record<Trajectory.EventId, ThreadBuffer>>;
 };
 
 const omit = <V>(record: Readonly<Record<string, V>>, key: string): Readonly<Record<string, V>> =>
   Object.fromEntries(Object.entries(record).filter(([other]) => other !== key));
 
-const append = (state: PromptState, threadId: Trajectory.EventId | undefined, entry: PromptEntry): PromptState =>
-  threadId === undefined
-    ? { ...state, entries: [...state.entries, entry] }
-    : { ...state, threads: { ...state.threads, [threadId]: [...(state.threads[threadId] ?? []), entry] } };
+const append = (state: PromptState, threadId: Trajectory.EventId | undefined, entry: PromptEntry): PromptState => {
+  if (threadId === undefined) {
+    return { ...state, entries: [...state.entries, entry] };
+  }
+
+  const buffer = state.threads[threadId] ?? { fresh: false, entries: [] };
+  return { ...state, threads: { ...state.threads, [threadId]: { ...buffer, entries: [...buffer.entries, entry] } } };
+};
+
+/**
+ * Closes a thread, appending `entries` to its parent; a parent that has already ended stands in for main.
+ */
+const mergeInto = (state: PromptState, threadId: Trajectory.EventId, entries: readonly PromptEntry[]) => {
+  const parent = state.threads[threadId]?.parent;
+  const target = parent !== undefined && state.threads[parent] ? parent : undefined;
+  return entries.reduce<PromptState>((next, entry) => append(next, target, entry), {
+    ...state,
+    threads: omit(state.threads, threadId),
+  });
+};
+
+const open = (state: PromptState, id: Trajectory.EventId, buffer: ThreadBuffer): PromptState => ({
+  ...state,
+  threads: { ...state.threads, [id]: buffer },
+});
+
+/**
+ * The prompt a turn in `thread` sends: its own entries after its parents', back to main, unless a fresh thread
+ * cuts the chain.
+ */
+export const promptFor = (state: PromptState, thread?: Trajectory.EventId): readonly PromptEntry[] => {
+  const buffer = thread === undefined ? undefined : state.threads[thread];
+  if (!buffer) {
+    return state.entries;
+  }
+
+  return buffer.fresh ? buffer.entries : [...promptFor(state, buffer.parent), ...buffer.entries];
+};
 
 const compact = (state: PromptState, payload: Trajectory.Compact, id: Trajectory.EventId) => {
   const entries = state.entries;
@@ -282,16 +327,23 @@ export const prompt: Reducer<PromptState> = {
           ? append(state, event.thread, { role: 'event', blocks: payload.blocks, source: [event.id] })
           : state;
       case 'threadOpen':
-        return { ...state, threads: { ...state.threads, [event.id]: [] } };
+        // A fork of another conversation has no parent in this log, so its history starts empty.
+        return open(state, event.id, {
+          parent: payload.from?.feed ? undefined : (payload.from?.thread ?? event.thread),
+          fresh: payload.mode === 'fresh' || payload.from?.feed !== undefined,
+          entries: [],
+        });
+      case 'turnBegin':
+        return open(state, event.id, { parent: payload.from?.thread ?? event.thread, fresh: false, entries: [] });
+      case 'turnEnd': {
+        const turn = state.threads[payload.begin];
+        return turn ? mergeInto(state, payload.begin, turn.entries) : state;
+      }
       case 'threadMerge': {
-        const merged = state.threads[payload.thread] ?? [];
-        const threads = omit(state.threads, payload.thread);
-        if (payload.mode === 'summary') {
-          const summary: PromptEntry = { role: 'event', blocks: payload.summary ?? [], source: [event.id] };
-          return append({ ...state, threads }, event.thread, summary);
-        }
-
-        return merged.reduce<PromptState>((next, entry) => append(next, event.thread, entry), { ...state, threads });
+        const merged = state.threads[payload.thread]?.entries ?? [];
+        return payload.mode === 'summary'
+          ? mergeInto(state, payload.thread, [{ role: 'event', blocks: payload.summary ?? [], source: [event.id] }])
+          : mergeInto(state, payload.thread, merged);
       }
       case 'threadClose':
         return { ...state, threads: omit(state.threads, payload.thread) };
