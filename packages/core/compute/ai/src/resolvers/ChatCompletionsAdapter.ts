@@ -283,7 +283,7 @@ export type ChatCompletionsClientConfig = {
   readonly baseUrl: string;
   readonly apiFormat: ApiFormat;
   /**
-   * The serving product, reported as `gen_ai.system`. Distinct from {@link ApiFormat}, which is the
+   * The serving product, reported as `gen_ai.provider.name`. Distinct from {@link ApiFormat}, which is the
    * wire dialect: LM Studio and any other OpenAI-compatible endpoint speak `'openai'` without being
    * OpenAI, and consumers price on this field. Defaults to the API format.
    */
@@ -1144,7 +1144,7 @@ const annotateRequest = (
   config: ChatCompletionsClientConfig,
 ): void =>
   Telemetry.addGenAIAnnotations(span, {
-    system: config.provider ?? config.apiFormat,
+    provider: { name: config.provider ?? config.apiFormat },
     operation: { name: 'chat' },
     request: { model },
   });

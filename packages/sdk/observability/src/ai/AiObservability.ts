@@ -108,7 +108,7 @@ export type Options = {
 const STREAM_SPAN_NAME = 'LanguageModel.streamText';
 
 /** Marker attributes identifying a GenAI span (per OTel GenAI semantic conventions). */
-const GEN_AI_MARKERS = ['gen_ai.system', 'gen_ai.request.model', 'gen_ai.response.model'];
+const GEN_AI_MARKERS = ['gen_ai.provider.name', 'gen_ai.system', 'gen_ai.request.model', 'gen_ai.response.model'];
 
 /**
  * Session/content attributes stamped by `AiTelemetry.ATTRIBUTES` in `@dxos/ai` (not part of the
@@ -215,7 +215,7 @@ export class AiSpanProcessor implements SpanProcessor {
       spanId: spanContext.spanId,
       parentSpanId: span.parentSpanContext?.spanId,
       spanName: span.name,
-      provider: stringAttribute(attributes['gen_ai.system']),
+      provider: stringAttribute(attributes['gen_ai.provider.name'] ?? attributes['gen_ai.system']),
       model: stringAttribute(attributes['gen_ai.response.model'] ?? attributes['gen_ai.request.model']),
       sessionId: stringAttribute(attributes[SESSION_ID_ATTR]),
       parameters: modelParameters(attributes),

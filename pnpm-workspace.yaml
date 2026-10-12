@@ -91,19 +91,19 @@ catalog:
   '@dxos/ui-types': ^0.9.0
   '@dxos/wa-sqlite': ^0.2.1
   '@effect-rx/rx-react': ^0.42.4
-  '@effect/ai-anthropic': 4.0.0
-  '@effect/ai-openai': 4.0.0
-  '@effect/atom-react': 4.0.0
-  '@effect/language-service': ^0.87.3
-  '@effect/opentelemetry': 4.0.0
-  '@effect/platform-browser': 4.0.0
-  '@effect/platform-bun': 4.0.0
-  '@effect/platform-node': 4.0.0
-  '@effect/sql-sqlite-bun': 4.0.0
-  '@effect/sql-sqlite-node': 4.0.0
-  '@effect/sql-sqlite-wasm': 4.0.0
+  '@effect/ai-anthropic': 4.0.3
+  '@effect/ai-openai': 4.0.3
+  '@effect/atom-react': 4.0.3
+  '@effect/language-service': ^0.87.4
+  '@effect/opentelemetry': 4.0.3
+  '@effect/platform-browser': 4.0.3
+  '@effect/platform-bun': 4.0.3
+  '@effect/platform-node': 4.0.3
+  '@effect/sql-sqlite-bun': 4.0.3
+  '@effect/sql-sqlite-node': 4.0.3
+  '@effect/sql-sqlite-wasm': 4.0.3
   '@effect/tsgo': ^0.36.5
-  '@effect/vitest': 4.0.0
+  '@effect/vitest': 4.0.3
   '@effect/wa-sqlite': ^0.1.2
   '@elgato/streamdeck': ^2.1.2
   '@emoji-mart/data': ^1.1.2
@@ -393,7 +393,7 @@ catalog:
   discord.js: ^14.14.1
   domain-browser: ^4.22.0
   dompurify: ^3.3.1
-  effect: 4.0.0
+  effect: 4.0.2
   elkjs: ^0.12.0
   emoji-mart: ^5.5.2
   enquirer: ^2.3.6
@@ -788,7 +788,6 @@ patchedDependencies:
   '@vitest/browser@4.1.10': patches/@vitest__browser@4.1.10.patch
   '@zag-js/presence@1.43.3': patches/@zag-js__presence@1.43.3.patch
   dfx@1.0.15: patches/dfx@1.0.15.patch
-  effect@4.0.0: patches/effect@4.0.0.patch
   js-clipper@1.0.1: patches/js-clipper@1.0.1.patch
   random-access-idb@1.2.2: patches/random-access-idb@1.2.2.patch
   uuid@8.3.2: patches/uuid@8.3.2.patch
