@@ -5,6 +5,7 @@
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
@@ -98,8 +99,12 @@ const handler = InboxOperation.AnalyzeMailbox.pipe(
       // the same run as `['deterministic', 'summarize']` rather than a cascade that summarizes against
       // contacts it has not extracted.
       const selected = new Set(tiers);
-      // Processors are start-gated; a routine can run this before any inbox surface has loaded.
-      yield* Plugin.activate(InboxEvents.Start);
+      // Processors are start-gated, and a routine can run this before any inbox surface has loaded;
+      // a host without a plugin manager contributes them directly.
+      const plugins = yield* Effect.serviceOption(Plugin.Service);
+      if (Option.isSome(plugins)) {
+        yield* plugins.value.activate(InboxEvents.Start);
+      }
       const contributed = yield* Capability.getAll(InboxCapabilities.MailboxProcessor);
       const { ordered, excluded } = Topology.sort(contributed.filter((processor) => selected.has(processor.tier)));
 
