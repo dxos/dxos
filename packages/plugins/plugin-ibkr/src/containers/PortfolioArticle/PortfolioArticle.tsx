@@ -163,20 +163,18 @@ export const PortfolioArticle = ({ role, subject, attendableId }: PortfolioArtic
               onValueChange={handleNavigate}
               items={rows.map((row) => ({ value: row.id, label: row.id }))}
             >
-              <Listbox.Viewport>
-                <Listbox.Content aria-label={t('reports.label')}>
-                  {rows.map((row) => (
-                    <Listbox.Item key={row.id} id={row.id}>
-                      {t('report-row.label', {
-                        date: row.date,
-                        positions: row.positions,
-                        trades: row.trades,
-                        cash: row.cash,
-                      })}
-                    </Listbox.Item>
-                  ))}
-                </Listbox.Content>
-              </Listbox.Viewport>
+              <Listbox.Content aria-label={t('reports.label')}>
+                {rows.map((row) => (
+                  <Listbox.Item key={row.id} id={row.id}>
+                    {t('report-row.label', {
+                      date: row.date,
+                      positions: row.positions,
+                      trades: row.trades,
+                      cash: row.cash,
+                    })}
+                  </Listbox.Item>
+                ))}
+              </Listbox.Content>
             </Listbox.Root>
           </ScrollArea.Viewport>
         </ScrollArea.Root>

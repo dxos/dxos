@@ -55,33 +55,31 @@ export const PredicateList = ({ predicates, selected, onSelect, classNames }: Pr
             onValueChange={onSelect}
             items={predicates.map((item) => ({ value: item.predicate, label: item.predicate }))}
           >
-            <Listbox.Viewport>
-              <Listbox.Content aria-label='Predicates'>
-                {predicates.map((item) => (
-                  <Listbox.Item
-                    classNames='gap-2'
-                    key={item.predicate}
-                    id={item.predicate}
-                    onMouseDown={() => {
-                      pointerSelectionRef.current = { itemId: item.predicate, selected };
-                    }}
-                    onClick={() => {
-                      const pointerSelection = pointerSelectionRef.current;
-                      pointerSelectionRef.current = undefined;
-                      if (pointerSelection?.itemId === item.predicate) {
-                        onSelect(pointerSelection.selected === item.predicate ? undefined : item.predicate);
-                      } else {
-                        onSelect(item.predicate);
-                      }
-                    }}
-                  >
-                    <Listbox.ItemText>{item.predicate}</Listbox.ItemText>
-                    <span className='shrink-0 text-fg-subtle tabular-nums'>{item.count}</span>
-                    <Listbox.ItemIndicator />
-                  </Listbox.Item>
-                ))}
-              </Listbox.Content>
-            </Listbox.Viewport>
+            <Listbox.Content aria-label='Predicates'>
+              {predicates.map((item) => (
+                <Listbox.Item
+                  classNames='gap-2'
+                  key={item.predicate}
+                  id={item.predicate}
+                  onMouseDown={() => {
+                    pointerSelectionRef.current = { itemId: item.predicate, selected };
+                  }}
+                  onClick={() => {
+                    const pointerSelection = pointerSelectionRef.current;
+                    pointerSelectionRef.current = undefined;
+                    if (pointerSelection?.itemId === item.predicate) {
+                      onSelect(pointerSelection.selected === item.predicate ? undefined : item.predicate);
+                    } else {
+                      onSelect(item.predicate);
+                    }
+                  }}
+                >
+                  <Listbox.ItemText>{item.predicate}</Listbox.ItemText>
+                  <span className='shrink-0 text-fg-subtle tabular-nums'>{item.count}</span>
+                  <Listbox.ItemIndicator />
+                </Listbox.Item>
+              ))}
+            </Listbox.Content>
           </Listbox.Root>
         )}
       </Panel.Body>

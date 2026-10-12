@@ -308,18 +308,16 @@ const NavContainer = forwardRef<HTMLDivElement, NavContainerProps>((_props, forw
   return (
     <div className='dx-expand overflow-y-auto p-2' ref={forwardedRef}>
       <Listbox.Root items={items.map(toOption)}>
-        <Listbox.Viewport>
-          <Listbox.Content aria-label='Navigation'>
-            {items.map((node) => (
-              <Listbox.Item
-                key={node.id}
-                id={node.id}
-                current={activeSet.has(node.id)}
-                onClick={() => void invokePromise(LayoutOperation.Set, { subject: [node.id] })}
-              />
-            ))}
-          </Listbox.Content>
-        </Listbox.Viewport>
+        <Listbox.Content aria-label='Navigation'>
+          {items.map((node) => (
+            <Listbox.Item
+              key={node.id}
+              id={node.id}
+              current={activeSet.has(node.id)}
+              onClick={() => void invokePromise(LayoutOperation.Set, { subject: [node.id] })}
+            />
+          ))}
+        </Listbox.Content>
       </Listbox.Root>
     </div>
   );

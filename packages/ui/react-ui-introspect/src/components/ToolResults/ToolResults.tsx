@@ -137,18 +137,16 @@ const ResultTable = ({ data }: { data: unknown }) => {
               {filtered.length === 0 ? (
                 <Status.Empty>{t('no-matching-rows.message')}</Status.Empty>
               ) : (
-                <Listbox.Viewport>
-                  <Listbox.Content
-                    aria-label={t('tool-result.label')}
-                    classNames='grid grid-cols-[max-content_1fr] gap-x-3'
-                  >
-                    {filtered.map((item) => (
-                      <Listbox.Item key={item.id} id={item.id} classNames='col-span-2 grid grid-cols-subgrid gap-y-0.5'>
-                        <KeyValueTable record={item.value} />
-                      </Listbox.Item>
-                    ))}
-                  </Listbox.Content>
-                </Listbox.Viewport>
+                <Listbox.Content
+                  aria-label={t('tool-result.label')}
+                  classNames='grid grid-cols-[max-content_1fr] gap-x-3'
+                >
+                  {filtered.map((item) => (
+                    <Listbox.Item key={item.id} id={item.id} classNames='col-span-2 grid grid-cols-subgrid gap-y-0.5'>
+                      <KeyValueTable record={item.value} />
+                    </Listbox.Item>
+                  ))}
+                </Listbox.Content>
               )}
             </ScrollArea.Viewport>
           </ScrollArea.Root>

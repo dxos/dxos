@@ -54,6 +54,10 @@ const useNow = (active: boolean): number => {
   return now;
 };
 
+/** The row's value: GitHub's run id, or its name and URL for a run recorded without one. */
+const checkRunId = (run: GitHubOperation.CheckRun): string =>
+  run.id !== undefined ? String(run.id) : `${run.name}-${run.url ?? ''}`;
+
 /** Sorts runs by what needs attention, then by name so shards read in order. */
 export const sortCheckRuns = (runs: readonly GitHubOperation.CheckRun[]): GitHubOperation.CheckRun[] =>
   [...runs].sort(
@@ -81,7 +85,7 @@ export const CheckRunList = ({ runs }: CheckRunListProps) => {
 
   return (
     <Listbox.Root
-      items={sorted.map((run) => ({ value: `${run.name}-${run.url ?? ''}`, label: run.name }))}
+      items={sorted.map((run) => ({ value: checkRunId(run), label: run.name }))}
       // Icon, name, a short time column, then the open button: one line per check.
       columns='var(--dx-block-size) minmax(0, 1fr) max-content var(--dx-block-size)'
       onHighlightChange={(value) => value && setCurrent(value)}
@@ -102,7 +106,7 @@ export const CheckRunList = ({ runs }: CheckRunListProps) => {
                 ? [t('check-outcome.pending.label'), duration].filter(Boolean).join(' · ')
                 : (duration ?? t(`check-outcome.${run.outcome}.label`));
           const url = run.url;
-          const id = `${run.name}-${url ?? ''}`;
+          const id = checkRunId(run);
           return (
             <Listbox.Item
               key={id}

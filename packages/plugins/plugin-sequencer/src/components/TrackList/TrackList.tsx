@@ -46,56 +46,54 @@ export const TrackList = ({
   return (
     <Listbox.Root items={tracks.map((track) => ({ value: track.id, label: track.name }))}>
       <Layout.Flex column gap='xs' classNames={['p-2 overflow-y-auto', classNames]}>
-        <Listbox.Viewport>
-          <Listbox.Content aria-label='Tracks' classNames='gap-1'>
-            {tracks.map((track) => {
-              const selected = track.id === selectedTrackId;
-              return (
-                <Listbox.Item
-                  key={track.id}
-                  id={track.id}
-                  current={selected}
-                  classNames='gap-2 px-2 py-1 rounded-sm text-sm'
+        <Listbox.Content aria-label='Tracks' classNames='gap-1'>
+          {tracks.map((track) => {
+            const selected = track.id === selectedTrackId;
+            return (
+              <Listbox.Item
+                key={track.id}
+                id={track.id}
+                current={selected}
+                classNames='gap-2 px-2 py-1 rounded-sm text-sm'
+              >
+                <span
+                  className='inline-block size-3 rounded-sm shrink-0 border border-black/20'
+                  style={{ backgroundColor: hueToHex(hueFor(track)) }}
+                  aria-hidden
+                />
+                <button
+                  type='button'
+                  className='flex-1 min-w-0 truncate text-start rounded-sm dx-focus-ring'
+                  onClick={() => onSelect?.(track.id)}
+                  aria-current={selected || undefined}
                 >
-                  <span
-                    className='inline-block size-3 rounded-sm shrink-0 border border-black/20'
-                    style={{ backgroundColor: hueToHex(hueFor(track)) }}
-                    aria-hidden
-                  />
-                  <button
-                    type='button'
-                    className='flex-1 min-w-0 truncate text-start rounded-sm dx-focus-ring'
-                    onClick={() => onSelect?.(track.id)}
-                    aria-current={selected || undefined}
-                  >
-                    {track.name}
-                  </button>
-                  <button
-                    type='button'
-                    className={mx(
-                      'p-1 rounded text-xs dx-focus-ring',
-                      track.muted ? 'text-amber-text' : 'text-fg-subtle hover:text-fg',
-                    )}
-                    onClick={() => onMute?.(track.id, !track.muted)}
-                    aria-label={track.muted ? 'Unmute' : 'Mute'}
-                  >
-                    <Icon.Icon icon={track.muted ? 'ph--speaker-x--regular' : 'ph--speaker-high--regular'} size='md' />
-                  </button>
-                  {onRemove && (
-                    <button
-                      type='button'
-                      className='p-1 rounded text-xs text-fg-subtle dx-focus-ring'
-                      onClick={() => onRemove(track.id)}
-                      aria-label='Remove track'
-                    >
-                      <Icon.Icon icon='ph--trash--regular' size='md' />
-                    </button>
+                  {track.name}
+                </button>
+                <button
+                  type='button'
+                  className={mx(
+                    'p-1 rounded text-xs dx-focus-ring',
+                    track.muted ? 'text-amber-text' : 'text-fg-subtle hover:text-fg',
                   )}
-                </Listbox.Item>
-              );
-            })}
-          </Listbox.Content>
-        </Listbox.Viewport>
+                  onClick={() => onMute?.(track.id, !track.muted)}
+                  aria-label={track.muted ? 'Unmute' : 'Mute'}
+                >
+                  <Icon.Icon icon={track.muted ? 'ph--speaker-x--regular' : 'ph--speaker-high--regular'} size='md' />
+                </button>
+                {onRemove && (
+                  <button
+                    type='button'
+                    className='p-1 rounded text-xs text-fg-subtle dx-focus-ring'
+                    onClick={() => onRemove(track.id)}
+                    aria-label='Remove track'
+                  >
+                    <Icon.Icon icon='ph--trash--regular' size='md' />
+                  </button>
+                )}
+              </Listbox.Item>
+            );
+          })}
+        </Listbox.Content>
         {onAdd && (
           <Button.Root onClick={onAdd} classNames='mt-1 justify-start gap-2'>
             <Icon.Icon icon='ph--plus--regular' size='md' />
