@@ -28,8 +28,10 @@ test.describe('Presenter', () => {
 
     await Presenter.openCompanion(plank.locator);
     await expect(Presenter.currentSlide(host.page)).toContainText('Alpha');
-    await expect(host.page).toHaveURL(/\/companion\/presenter$/);
-    const url = host.page.url();
+    // The URL carries a `?title=` that follows the document's title, so only the path is stable.
+    const pathname = () => new URL(host.page.url()).pathname;
+    await expect.poll(pathname).toMatch(/\/companion\/presenter$/);
+    const path = pathname();
 
     await Presenter.togglePresenting(host.getObjectByName('Alpha'));
     await expect(host.deck.viewport()).toBeHidden();
@@ -41,12 +43,12 @@ test.describe('Presenter', () => {
           ((await Presenter.deck(host.page).boundingBox())?.width ?? 0) / (host.page.viewportSize()?.width ?? 1),
       )
       .toBeGreaterThan(0.95);
-    await expect(host.page).toHaveURL(url);
+    await expect.poll(pathname).toBe(path);
 
     await host.page.keyboard.press('Escape');
     await expect(host.deck.viewport()).toBeVisible();
     await expect(Presenter.companionTab(host.page)).toBeVisible();
     await expect(Presenter.currentSlide(host.page)).toContainText('Alpha');
-    await expect(host.page).toHaveURL(url);
+    await expect.poll(pathname).toBe(path);
   });
 });
