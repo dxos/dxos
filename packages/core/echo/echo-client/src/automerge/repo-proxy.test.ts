@@ -121,7 +121,7 @@ describe('RepoProxy', () => {
     await asyncTimeout(handle.whenReady(), 1_000);
     expect(handle.doc().text).toBe('after');
 
-    handle.change((doc) => {
+    handle.change((doc: { text: string; extra?: number }) => {
       doc.extra = 1;
     });
     await clientRepo.flush();
