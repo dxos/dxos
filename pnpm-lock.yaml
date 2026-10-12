@@ -6109,6 +6109,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../../common/keys
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../../common/node-std
