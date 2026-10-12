@@ -46,24 +46,26 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
   return (
     <>
       <Listbox.Root items={items} selectionMode='none'>
-        <Listbox.Content aria-label='Order' data-testid={`list-${size}`}>
-          {items.map((item, index) => (
-            <Listbox.Item
-              key={item.value}
-              item={item}
-              data-testid={`row-${item.value}-${size}`}
-              ref={index === 0 ? (element) => setSource(element) : index === 1 ? rowRef : undefined}
-            >
-              <Listbox.ItemText />
-              <DragHandle.DragHandle
-                label={`Move ${item.label}`}
-                onMove={(direction) => move(item.value, direction)}
-                data-testid={`handle-${item.value}-${size}`}
-              />
-              {index === 1 && <DragHandle.DropIndicator edge='top' />}
-            </Listbox.Item>
-          ))}
-        </Listbox.Content>
+        <Listbox.Viewport>
+          <Listbox.Content aria-label='Order' data-testid={`list-${size}`}>
+            {items.map((item, index) => (
+              <Listbox.Item
+                key={item.value}
+                item={item}
+                data-testid={`row-${item.value}-${size}`}
+                ref={index === 0 ? (element) => setSource(element) : index === 1 ? rowRef : undefined}
+              >
+                <Listbox.ItemText />
+                <DragHandle.DragHandle
+                  label={`Move ${item.label}`}
+                  onMove={(direction) => move(item.value, direction)}
+                  data-testid={`handle-${item.value}-${size}`}
+                />
+                {index === 1 && <DragHandle.DropIndicator edge='top' />}
+              </Listbox.Item>
+            ))}
+          </Listbox.Content>
+        </Listbox.Viewport>
       </Listbox.Root>
       <Typography.Text data-testid={`order-${size}`}>{items.map((item) => item.value).join(' ')}</Typography.Text>
       <DragHandle.DragPreview source={source}>

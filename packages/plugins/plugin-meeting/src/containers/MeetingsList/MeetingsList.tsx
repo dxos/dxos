@@ -81,11 +81,13 @@ export const MeetingsList = ({ companionTo: channel }: MeetingsListProps) => {
         <Button.Root onClick={handleCreateMeeting}>{t('create-meeting.label')}</Button.Root>
       </Layout.Flex>
       <Listbox.Root items={sortedMeetings.map((meeting) => ({ value: meeting.id, label: getLabel(meeting) }))}>
-        <Listbox.Content aria-label={t('meeting-list.label')}>
-          {sortedMeetings.map((meeting) => (
-            <MeetingItem key={meeting.id} meeting={meeting} />
-          ))}
-        </Listbox.Content>
+        <Listbox.Viewport>
+          <Listbox.Content aria-label={t('meeting-list.label')}>
+            {sortedMeetings.map((meeting) => (
+              <MeetingItem key={meeting.id} meeting={meeting} />
+            ))}
+          </Listbox.Content>
+        </Listbox.Viewport>
       </Listbox.Root>
     </div>
   );

@@ -143,6 +143,13 @@
     > * {
     grid-column: auto;
     grid-row: auto;
+    align-self: center;
+  }
+  /* A description here is a track on the title's line, not a line under it, so neither keeps the stacked padding. */
+  :is(.dx-listbox-content[data-columns], .dx-listbox-content[data-columns] > .dx-collapsible)
+    > .dx-listbox-item.dx-container
+    > :is(.dx-listbox-item-text, .dx-listbox-item-description) {
+    padding-block: 0;
   }
 
   /* A collapsible row: the Collapsible root spans the content track, the row above its detail, both full width. */

@@ -28,12 +28,14 @@ export const InvitationList = ({ invitations, send, ...invitationProps }: Invita
         return { value, label: value };
       })}
     >
-      <Listbox.Content classNames={['flex flex-col gap-2', className]} aria-label={t('invitation-list.heading')}>
-        {invitations.map((invitation) => {
-          const value = invitation.get().invitationId;
-          return <Item key={value} send={send} invitation={invitation} {...invitationProps} />;
-        })}
-      </Listbox.Content>
+      <Listbox.Viewport>
+        <Listbox.Content classNames={['flex flex-col gap-2', className]} aria-label={t('invitation-list.heading')}>
+          {invitations.map((invitation) => {
+            const value = invitation.get().invitationId;
+            return <Item key={value} send={send} invitation={invitation} {...invitationProps} />;
+          })}
+        </Listbox.Content>
+      </Listbox.Viewport>
     </Listbox.Root>
   );
 };

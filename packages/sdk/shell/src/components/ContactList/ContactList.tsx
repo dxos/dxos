@@ -64,20 +64,22 @@ export const ContactList = ({ classNames, contacts, spaces, filter = '', onSelec
     <Listbox.Root
       items={visible.map((contact) => ({ value: contactKeyHex(contact), label: contactDisplayName(contact) }))}
     >
-      <Listbox.Content
-        classNames={[classNames, 'flex flex-col gap-2']}
-        aria-label={t('contacts.label')}
-        data-testid='contact-list'
-      >
-        {visible.map((contact) => (
-          <ContactListItem
-            key={contactKeyHex(contact)}
-            contact={contact}
-            spaces={spaces}
-            onSelectSpace={onSelectSpace}
-          />
-        ))}
-      </Listbox.Content>
+      <Listbox.Viewport>
+        <Listbox.Content
+          classNames={[classNames, 'flex flex-col gap-2']}
+          aria-label={t('contacts.label')}
+          data-testid='contact-list'
+        >
+          {visible.map((contact) => (
+            <ContactListItem
+              key={contactKeyHex(contact)}
+              contact={contact}
+              spaces={spaces}
+              onSelectSpace={onSelectSpace}
+            />
+          ))}
+        </Listbox.Content>
+      </Listbox.Viewport>
     </Listbox.Root>
   );
 };
