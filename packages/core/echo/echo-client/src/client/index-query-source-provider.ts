@@ -168,6 +168,12 @@ export class IndexQuerySource implements QuerySource {
   /** Subscription to local object-load updates (plumbed from `DatabaseImpl`). */
   private _updateSubscription?: CleanupFn = undefined;
 
+  /** Keys of {@link _lastRemoteResults}, rebuilt when that array is replaced. */
+  #recordKeys?: { records: readonly QueryService.QueryResult[]; keys: ReadonlySet<string> } = undefined;
+
+  /** Whether a hydration pass requested by an object update is waiting for its microtask. */
+  #hydrateQueued = false;
+
   constructor(private readonly _params: IndexQuerySourceProps) {}
 
   open(): void {
@@ -419,15 +425,25 @@ export class IndexQuerySource implements QuerySource {
       return;
     }
 
-    // Re-hydrate only when an updated object is among the records the host returned.
-    const updated = new Set(event.objectIds);
-    const affectsResults = records.some((record) => record.spaceId === event.spaceId && updated.has(record.id));
-    if (!affectsResults) {
+    // Re-hydrate only when an updated object is among the records the host returned. Every local write
+    // reaches here, so the check costs the update rather than the record count.
+    if (this.#recordKeys?.records !== records) {
+      this.#recordKeys = { records, keys: new Set(records.map((record) => recordKey(record.spaceId, record.id))) };
+    }
+    const keys = this.#recordKeys.keys;
+    if (!event.objectIds.some((objectId) => keys.has(recordKey(event.spaceId, objectId)))) {
       return;
     }
 
     log('re-hydrating index results after object update', { queryId: this._reactiveQueryId, spaceId: event.spaceId });
-    this._scheduleHydrate();
+    // A pass is asynchronous anyway; starting it a microtask later lets a burst of synchronous writes share one.
+    if (!this.#hydrateQueued) {
+      this.#hydrateQueued = true;
+      queueMicrotask(() => {
+        this.#hydrateQueued = false;
+        this._scheduleHydrate();
+      });
+    }
   }
 
   /**
@@ -807,3 +823,5 @@ const _groupFromRemoteResult = (result: QueryService.QueryResult): SourceEntry['
         ...(result.aggregates !== undefined ? { aggregates: JSON.parse(result.aggregates) } : {}),
       }
     : undefined;
+
+const recordKey = (spaceId: string, objectId: string): string => `${spaceId}:${objectId}`;
