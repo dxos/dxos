@@ -108,7 +108,14 @@ const send = async ({ demo, page }, text, caption) => {
 /** Shows a GitHub page, then returns to the chat. */
 const visit = async ({ demo, page }, url) => {
   const app = page.url();
-  await demo.goto({ url, waitUntil: 'load' });
+  // GitHub's page outlasts a gesture's timeout, so the navigation returns once it commits and the wait is here.
+  await demo.goto({ url, waitUntil: 'commit' });
+  await page.waitForLoadState('load', { timeout: 60_000 }).catch(() => {});
+  await page
+    .getByText(url.split('/').pop())
+    .first()
+    .waitFor({ timeout: 60_000 })
+    .catch(() => {});
   await page.waitForTimeout(LINGER * 2);
   await demo.goto({ url: app });
   await page.locator(PROMPT).first().waitFor({ timeout: 120_000 });
