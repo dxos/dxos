@@ -13,7 +13,7 @@ import { Filter, Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { invariant } from '@dxos/invariant';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useObject, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { createMenuAction } from '@dxos/react-ui-menu';
@@ -85,10 +85,11 @@ const TaskSetView = ({ outline, taskSet }: { outline: Outline.Outline; taskSet?:
   // Queried by type and filtered to the set's members: `useQuery` re-emits on membership changes
   // but not on a member's property change, and the form edits titles in place.
   const tasks = useQuery(db, Filter.type(Task.Task));
+  const [memberRefs] = useObject(taskSet, 'tasks');
   const filtered = useMemo(() => {
-    const members = new Set(taskSet?.tasks.map((ref) => ref.target?.id));
+    const members = new Set(memberRefs?.map((ref) => ref.target?.id));
     return tasks.filter((task) => members.has(task.id));
-  }, [tasks, taskSet]);
+  }, [tasks, memberRefs]);
 
   const handleCreate = useCallback(
     ({ title, ...props }: Task.Draft) => {
