@@ -1,0 +1,276 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+/**
+ * A project task delegated to Claude Code (cloud): the project names dxos/dxos as its repository, so the agent's EDGE
+ * sandbox checks it out; the task asks for a pull request, which the agent opens with the space's GitHub token. The
+ * flow shows the pull request, then closes it from the same chat.
+ *
+ * @mdl packages/plugins/plugin-claude/PLUGIN.mdl test QA-5
+ * @app as `claude-code-cloud-pr.mjs`: a composer-app bundle against an EDGE that runs the coding agent, served on
+ *   :4173, with `DX_DEMO_CLAUDE_TOKEN` and `DX_DEMO_GITHUB_TOKEN` in the driver's environment.
+ */
+
+const LINGER = 3_000;
+const TURN_TIMEOUT = 15 * 60_000;
+
+const REPOSITORY = 'dxos/dxos';
+const PROJECT_TITLE = 'DXOS';
+const BRANCH = `demo/claude-code-task-${Date.now()}`;
+const TASK_TITLE = 'Add a contributor note for coding agents';
+const TASK_DESCRIPTION = [
+  `Add a file \`demo/coding-agents.md\` with a short note (two or three sentences) on how coding agents work on this repository.`,
+  `Commit it on the branch \`${BRANCH}\`, push it, and open a draft pull request with \`gh pr create --draft\`.`,
+  'Reply with the pull request URL.',
+].join(' ');
+const ASK_TO_CLOSE =
+  'Thanks. Now close that pull request with `gh pr close --delete-branch`, and confirm when it is closed.';
+
+const COMPANION = '[data-testid="deck.companion"]';
+const PROMPT = `${COMPANION} [data-testid="assistant.prompt"] .cm-content`;
+const THREAD = `${COMPANION} [data-testid="assistant.thread"]`;
+const ACTIVITY = `${COMPANION} [data-testid="assistant.chat-activity"]`;
+const ERROR = '[data-testid="assistant.error"]';
+const PR_URL = new RegExp(`https://github\\.com/${REPOSITORY}/pull/\\d+`);
+
+const github = (path) =>
+  fetch(`https://api.github.com${path}`, {
+    headers: { authorization: `Bearer ${process.env.DX_DEMO_GITHUB_TOKEN}`, accept: 'application/vnd.github+json' },
+  });
+
+const pullState = async (url) =>
+  (await (await github(`/repos/${REPOSITORY}/pulls/${url.split('/').pop()}`)).json()).state;
+
+const spaceIdOf = (page) =>
+  page.evaluate(() => document.querySelector('[data-testid="spacePlugin.space"]').dataset.value.split('/').pop());
+
+/** Waits for the agent's turn to end: its activity line gone for a few checks in a row. Fails on an error toast. */
+const waitForTurn = async (page) => {
+  const deadline = Date.now() + TURN_TIMEOUT;
+  await page
+    .locator(ACTIVITY)
+    .first()
+    .waitFor({ timeout: 60_000 })
+    .catch(() => {});
+  let quiet = 0;
+  while (Date.now() < deadline) {
+    if ((await page.locator(ERROR).count()) > 0) {
+      throw new Error(`the chat reported an error: ${await page.locator(ERROR).first().innerText()}`);
+    }
+    quiet = (await page.locator(ACTIVITY).count()) > 0 ? 0 : quiet + 1;
+    if (quiet >= 5) {
+      return;
+    }
+    await page.waitForTimeout(1_000);
+  }
+  throw new Error('the agent did not finish its turn in time');
+};
+
+/** Shows a GitHub page, then returns to the project. */
+const visit = async ({ demo, page }, url) => {
+  const app = page.url();
+  await demo.goto({ url, waitUntil: 'load' });
+  await page.waitForTimeout(LINGER * 2);
+  await demo.goto({ url: app });
+  await page.locator('[data-testid="projectsPlugin.tab.tasks"]').first().waitFor({ timeout: 120_000 });
+  await page.waitForTimeout(LINGER);
+};
+
+export const steps = [
+  {
+    name: 'Prep (off camera): enable Claude and add the tokens to the space',
+    setup: true,
+    run: async ({ demo, page }) => {
+      if (!process.env.DX_DEMO_CLAUDE_TOKEN || !process.env.DX_DEMO_GITHUB_TOKEN) {
+        throw new Error('set DX_DEMO_CLAUDE_TOKEN and DX_DEMO_GITHUB_TOKEN in the driver environment');
+      }
+      await page.locator('[data-testid="deck.plank"]').first().waitFor({ timeout: 180_000 });
+      const notice = page.locator('[data-testid="org.dxos.plugin.observability.notice"] button:has-text("Close")');
+      if (await notice.isVisible().catch(() => false)) {
+        await notice.click();
+      }
+      if (!(await page.evaluate(() => composer.manager.getEnabled().includes('org.dxos.plugin.claude')))) {
+        await demo.click({ selector: '[data-testid="treeView.pluginRegistry"]', label: 'Plugins' });
+        await demo.fill({ selector: 'input[placeholder="Filter…"]', value: 'Claude' });
+        await demo.click({ selector: 'input[id="org.dxos.plugin.claude-input"]', label: 'Enable Claude' });
+        await page.waitForFunction(() => composer.manager.getEnabled().includes('org.dxos.plugin.claude'));
+        await demo.click({ selector: '[data-testid="spacePlugin.space"] >> nth=0', label: 'Space' });
+      }
+      await page.evaluate(
+        async (tokens) => {
+          const spaceId = document.querySelector('[data-testid="spacePlugin.space"]').dataset.value.split('/').pop();
+          const existing = await dxos
+            .spaces(spaceId)
+            .db.query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.accessToken')))
+            .run();
+          for (const { source, token } of tokens) {
+            if (!existing.some((accessToken) => accessToken.source === source && accessToken.token === token)) {
+              await composer.invoke(
+                'org.dxos.operation.space.addObject',
+                { object: { '@type': 'org.dxos.type.accessToken', source, token } },
+                { spaceId },
+              );
+            }
+          }
+        },
+        [
+          { source: 'claude.ai', token: process.env.DX_DEMO_CLAUDE_TOKEN },
+          { source: 'github.com', token: process.env.DX_DEMO_GITHUB_TOKEN },
+        ],
+      );
+      await demo.cut();
+    },
+  },
+  {
+    name: 'Create a project',
+    run: async ({ demo, page }) => {
+      await demo.caption({ value: 'Create a project', subtitle: PROJECT_TITLE });
+      await demo.click({ selector: '[data-testid="spacePlugin.createObject"] >> nth=0', label: 'Add to space' });
+      await demo.click({ selector: '[data-testid="create-object-form.type.org.dxos.type.project"]', label: 'Project' });
+      await demo.type({
+        selector: '[data-testid="create-project-panel.name-input"]',
+        value: PROJECT_TITLE,
+        label: 'Name',
+      });
+      await demo.click({ selector: '[role="dialog"] [data-testid="save-button"]', label: 'Save' });
+      await page.getByTestId('projectsPlugin.tab.tasks').first().waitFor({ timeout: 30_000 });
+      await page.waitForTimeout(LINGER);
+    },
+  },
+  {
+    name: 'Give the project the dxos/dxos repository',
+    run: async ({ demo, page }) => {
+      await demo.caption({
+        value: `Give the project its repository: ${REPOSITORY}`,
+        subtitle: 'Its agents check it out in their sandbox',
+      });
+      const spaceId = await spaceIdOf(page);
+      await page.evaluate(
+        async ({ spaceId, title, repository }) => {
+          const [owner, name] = repository.split('/');
+          const db = dxos.spaces(spaceId).db;
+          const projects = await db.query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.project'))).run();
+          const project = projects.findLast((project) => project.name === title);
+          const { object: repo } = await composer.invoke(
+            'org.dxos.operation.space.addObject',
+            {
+              object: {
+                '@type': 'org.dxos.type.repo',
+                owner,
+                name,
+                'url': `https://github.com/${repository}`,
+                'defaultBranch': 'main',
+              },
+            },
+            { spaceId },
+          );
+          dxos.Obj.update(project, (project) => {
+            project.repositories = [dxos.Ref.make(repo)];
+          });
+        },
+        { spaceId, title: PROJECT_TITLE, repository: REPOSITORY },
+      );
+      await page
+        .locator('[data-testid="deck.plank"]')
+        .getByText(REPOSITORY.split('/')[1])
+        .first()
+        .waitFor({ timeout: 10_000 })
+        .catch(() => {});
+      await page.waitForTimeout(LINGER);
+    },
+  },
+  {
+    name: 'Add a task',
+    run: async ({ demo, page }) => {
+      await demo.caption({ value: 'Add a task', subtitle: TASK_TITLE });
+      await demo.click({ selector: '[data-testid="projectsPlugin.tab.tasks"] >> nth=0', label: 'Tasks' });
+      await demo.fill({ selector: '[data-testid="taskList.edit.title"]', value: TASK_TITLE, label: 'Title' });
+      await demo.fill({
+        selector: '[data-testid="taskList.edit.description"] .cm-content',
+        value: TASK_DESCRIPTION,
+        label: 'Description',
+      });
+      await demo.click({ selector: '[data-testid="taskList.edit.save"]', label: 'Save' });
+      await page
+        .locator(`[data-testid="taskList.item"]:has-text("${TASK_TITLE}")`)
+        .first()
+        .waitFor({ timeout: 10_000 });
+      await page.waitForTimeout(LINGER);
+    },
+  },
+  {
+    name: 'Assign the task to Claude Code (cloud)',
+    run: async ({ demo, page }) => {
+      await demo.caption({ value: 'Assign it to Claude Code (cloud)', subtitle: 'From the task’s menu' });
+      const row = `[data-testid="taskList.item"]:has-text("${TASK_TITLE}")`;
+      await demo.hover({ selector: row });
+      await demo.click({ selector: `${row} >> [data-testid="taskList.item.actions"]`, label: 'Task actions' });
+      await page.waitForTimeout(1_500);
+      await demo.click({
+        selector: '[role="menuitem"]:has-text("Assign to Claude Code (cloud)")',
+        label: 'Assign to Claude Code (cloud)',
+      });
+      await page.waitForTimeout(LINGER);
+    },
+  },
+  {
+    name: 'Watch it open the pull request',
+    run: async ({ demo, page }) => {
+      await demo.caption({
+        value: 'It checks out dxos/dxos in an EDGE sandbox and opens a pull request',
+        subtitle: BRANCH,
+      });
+      const tab = page.locator(`${COMPANION} >> role=tab[name="Assistant"]`).first();
+      if ((await tab.count()) && (await tab.getAttribute('aria-selected')) !== 'true') {
+        await demo.click({ selector: `${COMPANION} >> role=tab[name="Assistant"]`, label: 'Assistant' });
+      }
+      await page.locator(THREAD).first().waitFor({ timeout: 60_000 });
+      await waitForTurn(page);
+      const url = (await page.locator(THREAD).first().innerText()).match(PR_URL)?.[0];
+      if (!url) {
+        throw new Error('the reply has no pull request URL');
+      }
+      if ((await pullState(url)) !== 'open') {
+        throw new Error(`${url} is not open`);
+      }
+      globalThis.autocuePullRequest = url;
+      await page.waitForTimeout(LINGER);
+    },
+  },
+  {
+    name: 'Show the pull request on GitHub',
+    run: async ({ demo, page }) => {
+      await demo.caption({ value: 'The draft pull request', subtitle: globalThis.autocuePullRequest });
+      await visit({ demo, page }, globalThis.autocuePullRequest);
+    },
+  },
+  {
+    name: 'Ask it to close the pull request',
+    run: async ({ demo, page }) => {
+      await demo.caption({ value: 'Ask it to close the pull request', subtitle: 'In the project’s chat' });
+      const tab = page.locator(`${COMPANION} >> role=tab[name="Assistant"]`).first();
+      if ((await tab.count()) && (await tab.getAttribute('aria-selected')) !== 'true') {
+        await demo.click({ selector: `${COMPANION} >> role=tab[name="Assistant"]`, label: 'Assistant' });
+      }
+      await demo.click({ selector: PROMPT, label: 'Prompt' });
+      await demo.fill({ selector: PROMPT, value: ASK_TO_CLOSE, label: 'Prompt' });
+      await page.waitForTimeout(1_000);
+      await demo.press({ key: 'Enter' });
+      await waitForTurn(page);
+      for (let attempt = 0; (await pullState(globalThis.autocuePullRequest)) !== 'closed'; attempt++) {
+        if (attempt >= 30) {
+          throw new Error(`${globalThis.autocuePullRequest} is still open`);
+        }
+        await page.waitForTimeout(2_000);
+      }
+    },
+  },
+  {
+    name: 'Show the closed pull request',
+    run: async ({ demo, page }) => {
+      await demo.caption({ value: 'Closed, and its branch deleted', subtitle: globalThis.autocuePullRequest });
+      await visit({ demo, page }, globalThis.autocuePullRequest);
+    },
+  },
+];
