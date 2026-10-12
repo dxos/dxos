@@ -283,8 +283,8 @@ export const fetchAttachments = (
     // Skip an attachment larger than the inline blob cap BEFORE downloading it. The default blob store
     // is inline (the EDGE operation runtime registers S3 without making it the default), so
     // `processAttachments` drops anything past this cap anyway — downloading it first only pulls tens of
-    // MB into the 128 MB isolate and caused the production `syncMail` OOM ("Worker exceeded memory
-    // limit."). `size` is Gmail part metadata, known here without the download.
+    // MB into the 128 MB isolate, enough to end a run with "Worker exceeded memory limit.". `size` is
+    // Gmail part metadata, known here without the download.
     const downloadable = attachments.filter((attachment) => {
       if (attachment.size > Blob.MAX_INLINE_SIZE) {
         log.info('gmail sync: skipping attachment past the inline blob cap', {

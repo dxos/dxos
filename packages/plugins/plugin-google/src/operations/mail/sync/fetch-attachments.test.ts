@@ -16,9 +16,9 @@ import { fetchAttachments } from './fetch.ts';
 
 const MB = 1024 * 1024;
 
-// Guards the fix for the production `syncMail` OOM ("Worker exceeded memory limit.", 128 MB isolate):
-// an attachment past the inline blob cap must be dropped from the download list by its metadata `size`,
-// before `getAttachment` pulls its bytes into memory (the pipeline drops it post-download regardless).
+// Keeps large attachments out of the 128 MB isolate, where they end a run with "Worker exceeded memory
+// limit.": an attachment past the inline blob cap must be dropped from the download list by its metadata
+// `size`, before `getAttachment` pulls its bytes into memory (the pipeline drops it post-download regardless).
 describe('fetchAttachments', () => {
   test('skips attachments past the inline blob cap before downloading, keeps the rest', async ({ expect }) => {
     const downloads: string[] = [];
