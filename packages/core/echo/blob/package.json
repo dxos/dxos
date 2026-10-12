@@ -36,9 +36,12 @@
   ],
   "scripts": {},
   "dependencies": {
+    "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/util": "workspace:*"
+    "@dxos/log": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "effect": "catalog:"
   },
   "devDependencies": {
     "vitest": "catalog:"

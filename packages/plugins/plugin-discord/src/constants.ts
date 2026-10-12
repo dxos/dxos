@@ -75,3 +75,6 @@ export const generateInviteUrl = (applicationId: string): string => {
   });
   return `https://discord.com/oauth2/authorize?${params.toString()}`;
 };
+
+/** Companion variant (and surface literal) of an agent's Discord setup: account, servers and routed channels. */
+export const DISCORD_AGENT_COMPANION = 'discord';

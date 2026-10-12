@@ -142,17 +142,18 @@ to its own package only where a boot-budget measurement or an ownership boundary
 
 This decision entrenches scheme = backend identity. The digest stays _semantically_
 location-independent while becoming _syntactically_ owned, so one reference resolvable from several
-stores is no longer expressible in the URI alone. Two features want that:
+stores is no longer expressible in the URI alone. One feature wants that:
 
-- the local cache blocked in [hosted/blob-backend.ts](../src/hosted/blob-backend.ts), which needs to
-  serve a `blob:` reference from disk before reaching the network;
 - an IPFS mirror of DXOS-hosted content.
 
-Both would need a resolution-order mechanism — several backends expressing interest in one
+The local cache, once the other example here, did not need it: it lives inside the hosted backend,
+which serves its own scheme from disk before reaching the network — see [LOCAL-FIRST.md](./LOCAL-FIRST.md).
+
+It would need a resolution-order mechanism — several backends expressing interest in one
 reference — rather than falling out of a shared scheme. The alternative considered was a universal
 `blob://<store>/<ref>` scheme dispatching on authority, which gives multi-store resolution for free
-but requires a `BlobManager` contract change now for a feature that is speculative. Revisit if
-either feature becomes real.
+but requires a `BlobManager` contract change now for a feature that is speculative. Revisit if it
+becomes real.
 
 ## Call sites
 
