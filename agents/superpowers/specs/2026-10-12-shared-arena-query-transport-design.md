@@ -26,7 +26,9 @@ are the same bytes, and the SQL filter compiler keeps using `json_extract` on th
    DB thread to UI thread, is inside each tab.
 2. **A SAB requires cross-origin isolation** (`Cross-Origin-Opener-Policy: same-origin`,
    `Cross-Origin-Embedder-Policy: require-corp`). Only `testbench-app` sets these today. The follower
-   path must work on its own so the leader degrades to it when `crossOriginIsolated` is false.
+   path must work on its own so the leader degrades to it when `crossOriginIsolated` is false, or
+   when the growable `SharedArrayBuffer` (`maxByteLength` option, `grow()`) is missing. Both are
+   feature-detected at startup; either one failing selects the follower path.
 3. **SQLite memcpys every blob column once.** `OP_Column` copies the cell out of the page into the
    statement register before `sqlite3_column_blob` returns a pointer; there is no API to a page.
    The floor is two copies per blob (page to register, register to arena). We do not rebuild
@@ -82,8 +84,10 @@ offset 64        SlotTable        maxSlots × 16 B
 
 The buffer is a growable SAB: `new SharedArrayBuffer(initial, { maxByteLength })`. Only the entries
 region grows. Views created without an explicit length track the buffer length, so readers never
-refresh them. `maxSlots` is fixed at creation; exhausting it triggers a new arena and a migration of
-pinned entries, which is counted and alarmed on rather than optimized.
+refresh them. `maxSlots` is fixed at creation; exhausting it triggers a new arena, which is counted
+and alarmed on rather than optimized. The old arena is not migrated: the writer stops publishing into
+it and keeps it alive until every pin it holds is released, then drops it. Handles never move
+between arenas (see **Handles** below).
 
 **ArenaHeader (64 B)**
 
@@ -95,7 +99,7 @@ pinned entries, which is counted and alarmed on rather than optimized.
 16  u32  refCountOffset
 20  u32  entriesOffset
 24  u32  epoch           bumped after every publish batch
-28  u32  writerId        random; a reader detects a different arena
+28  u32  arenaId         random, unique per arena instance; messages name the arena they refer to
 32..63   reserved, zero
 ```
 
@@ -110,8 +114,14 @@ pinned entries, which is counted and alarmed on rather than optimized.
 14  u16  reserved
 ```
 
-A **handle** is `(slot, generation)`. In messages it is a `Uint32Array` pair, or one JS number
-`slot * 2**32 + generation`.
+**Handles**
+
+A handle is `(slot, generation)` and is always scoped to one arena. In messages it is a `Uint32Array`
+pair; a result list is one `Uint32Array` of pairs plus the `arenaId` it belongs to. There is no
+single-number form: `slot * 2**32 + generation` exceeds `Number.MAX_SAFE_INTEGER` once `slot` reaches
+`2**21`, and two handles could then collide. The reader keeps a `Map<arenaId, ArenaView>`; a handle
+is resolved against the arena its message named, so a handle from a retired arena still reads the
+retired arena's bytes, never a same-numbered slot in its successor.
 
 **EntryHeader (16 B) + body**
 
@@ -147,16 +157,30 @@ Heads come before meta and payload so a reader checking staleness reads `16 + 32
 
 ```
  0  u16  columnCount
- 2       per column: u8 type (sqlite3_column_type: 1 INT, 2 FLOAT, 3 TEXT, 4 BLOB, 5 NULL)
+ 2       per column: u8 type   1 INT, 2 FLOAT, 3 TEXT, 4 BLOB, 5 NULL   (sqlite3_column_type values)
+                               6 REF                                     (not a SQLite type; see below)
                      u8 reserved, u32 length
-         cells, each 8-aligned; INT as i64, FLOAT as f64, TEXT as UTF-8 bytes, BLOB as bytes
+         cells, each 8-aligned; INT as i64, FLOAT as f64, TEXT as UTF-8 bytes, BLOB as bytes,
+         REF as u32 ref + u32 generation
 ```
 
 The executor writes a Row with no per-shape code: for each column, `switch (column_type)`, with
 TEXT and BLOB copied via `column_blob` (which returns the stored UTF-8 bytes for a TEXT register, no
-conversion). Column names travel once per query in the result-list message, not per row. The
-snapshot is not a cell; the Row carries the Snapshot entry's handle in a cell, so the large bytes are
-written once per document version and shared across queries.
+conversion). Column names travel once per query in the result-list message, not per row.
+
+**REF cells.** The snapshot is not inlined in the Row. The executor replaces the snapshot column with
+a REF cell pointing at the Snapshot entry, so the large bytes are written once per document version
+and shared across queries. A REF's meaning depends on the transport:
+
+| transport | `ref`                                      | `generation`          |
+| --------- | ------------------------------------------ | --------------------- |
+| leader    | slot in the arena the message named        | the slot's generation |
+| follower  | index into the response buffer's directory | 0                     |
+
+**INT cells** are read as a JS `number` when the value fits `Number.MIN_SAFE_INTEGER..MAX_SAFE_INTEGER`
+and as a `bigint` otherwise, which is what `readRow` already gets from wa-sqlite's `row()` (its
+`cvt32x2AsSafe` applies the same rule to `sqlite3_column_int64`), so callers see no type change.
+Boundary tests cover `2**53 - 1`, `2**53`, `-(2**53)` and `i64` min/max.
 
 ### Protocols
 
@@ -187,6 +211,14 @@ written once per document version and shared across queries.
   so a count never goes 0 → 1 on the reader side.
 - Release is `Atomics.sub`. No message back.
 
+**View lifetime.** A lazy `QueryResult` or snapshot view is owned by the result set that delivered
+it and is valid only until that set is released. Code that keeps a view past the subscription must
+`retain()` it first, which promotes the underlying handle (`Atomics.add`) and returns a disposable;
+disposing it releases the promoted pin. A view read after its owner is released throws, in every
+build: the view checks its owner's `released` flag before touching bytes, and the generation check
+in **Dereference** is the second line of defence once the slot has been swept. Values already decoded
+and cached on the view stay readable, since they no longer point into the arena.
+
 **Sweep (writer)**
 
 On free-list pressure or a periodic tick: for each slot with even generation and
@@ -198,15 +230,21 @@ return the slot to the slot free list. A reader cannot resurrect a zero-count sl
 Worker, per `step()`:
 
 1. Look up `recordId → Snapshot handle` in a worker-side map. On a miss, `column_blob` the JSONB
-   snapshot into a new Snapshot entry and pin it for the worker's cache.
-2. Write one Row entry: scalar cells, id cells as raw UTF-8, the Snapshot handle.
+   snapshot into a new Snapshot entry and pin it for the worker's cache. The worker asserts the
+   blob's first header byte has type nibble 12 (OBJECT); anything else is a row the migration in
+   **Storage changes** did not reach, and is an error, not a fallback.
+2. Write one Row entry: scalar cells, id cells as raw UTF-8, a REF cell to the Snapshot entry.
 3. Append `(slot, generation)` to a `Uint32Array` and `rank` to a `Float64Array`.
 
 Response:
 
-- Leader: `{ queryId, columns, handles: Uint32Array, ranks: Float64Array }`.
-- Follower: `{ queryId, columns, rows: ArrayBuffer }` with the Row and Snapshot entries
-  concatenated; one transfer.
+- Leader: `{ queryId, arenaId, columns, handles: Uint32Array, ranks: Float64Array }`.
+- Follower: `{ queryId, columns, buffer: ArrayBuffer, ranks: Float64Array }`, one transfer. The
+  buffer starts with a **directory**: `u32 entryCount`, then `(u32 offset, u32 length)` per entry,
+  padded to 8, followed by the entries. Rows come first in result order, then each distinct Snapshot
+  entry once. REF cells in the Rows were rewritten during packing to `(directoryIndex, 0)`, so a
+  follower resolves them with no slot table. The same Snapshot bytes are copied into the buffer once
+  per response, however many Rows reference them.
 
 Tab:
 
@@ -215,7 +253,18 @@ Tab:
 2. The Snapshot payload is read by a **lazy JSONB reader** (below). The result object is a read-only
    snapshot proxy over the bytes; a property decodes on first `get` and is cached on the proxy.
    Nested objects and arrays return child proxies over their own offsets.
-3. Schema validation moves to first access per property, or to materialization.
+3. **Schema validation moves to the writer.** Today `Obj.fromJSON` validates every hydrated object
+   in the tab before `_mapRecords` returns it, so an invalid object never reaches a component. A
+   lazy proxy cannot keep that contract in the tab without a full decode, which is the cost this
+   design removes. The contract is kept by moving it: the indexer validates a snapshot against its
+   schema when it writes `objectSnapshot`, once per document version, and records the outcome in the
+   row (`valid` column, or a flag in the Snapshot entry's header). The executor filters invalid rows
+   with the same gate it uses for dependency-broken objects, so the tab sees only validated bytes.
+   Tab-side validation then runs only on materialization (first write), where a full decode happens
+   anyway. The failure contract for the client is unchanged: invalid objects are absent from results.
+   What changes is where the schema lookup runs, which needs schema resolution available in the
+   worker; `index-core` already has it for typed indexing. Open question 5 asks whether this holds
+   for dynamic schemas.
 4. On the first write the proxy materializes into a normal reactive object (copy-on-write). The
    reactive handler keeps its mutable plain target; Automerge stays the only mutation path for
    documents.
@@ -237,14 +286,23 @@ Requirements, from oxc's raw-transfer work where string decoding dominated lazy 
 2. **Hand-rolled ASCII decode** below ~16 bytes; `String.fromCharCode` beats a `TextDecoder` call.
 3. One `TextDecoder('utf-8', { ignoreBOM: true })` instance for everything longer.
 4. Objects with many keys or large arrays build a key/offset table on first touch; small objects scan.
-5. `TEXTJ` and `TEXT5` are unescaped in JS; `TEXT` is used verbatim.
+5. `TEXTJ` and `TEXT5` are unescaped in JS. `TEXT` and `TEXTRAW` are both raw UTF-8 contents and
+   are decoded verbatim; the difference matters only when the reader emits JSON text, where
+   `TEXTRAW` contents must be escaped and `TEXT` contents need not be.
 6. A fuzz test compares the reader against SQLite's own `json()` output for the same `jsonb()` input,
-   including Cyrillic, CJK, an emoji (surrogate pair) and a lone surrogate, so the two never drift.
+   including Cyrillic, CJK, an emoji (surrogate pair), a lone surrogate, and a `TEXTRAW` string
+   holding `"`, `\` and control characters, so the two never drift.
 
 ### Storage changes
 
 - `objectSnapshot.snapshot` becomes JSONB: writes go through `INSERT … jsonb(?)` so `JSON.stringify`
   stays native and the conversion runs in C. Reads for export or debugging use `json(d.snapshot)`.
+- **Existing rows hold JSON text** (`JSON.stringify` output). A SQLite migration, written per
+  `.agents/projects/sql-migrations/DESIGN.md`, rewrites them in place:
+  `UPDATE objectSnapshot SET snapshot = jsonb(snapshot) WHERE typeof(snapshot) = 'text'`. It runs
+  before the first query on the new path, and the worker's type-nibble assertion above catches any
+  row it missed. There is no dual-format reader: supporting both formats at read time would put a
+  branch on the hot path for a one-time condition.
 - `compile.ts` `#final` drops `json(d.snapshot)` and selects the column bare. Filters are unchanged;
   `json_extract` and `json_each` accept JSONB and run faster on it.
 - Assert `PRAGMA encoding = 'UTF-8'` at open, since `column_blob` on a TEXT register returns the
@@ -271,8 +329,8 @@ Requirements, from oxc's raw-transfer work where string decoding dominated lazy 
    transferred bytes for every tab. No isolation needed. Node tests run writer and reader in two
    `worker_threads` over a real SAB.
 2. **JSONB storage.** `objectSnapshot.snapshot` to JSONB, `json()` dropped from `#final`, fuzz test.
-3. **Leader arena.** Allocator, slot table, refcounts, sweep, behind a `crossOriginIsolated` check.
-   COOP/COEP for Composer is a product decision taken in this phase.
+3. **Leader arena.** Allocator, slot table, refcounts, sweep, behind the `crossOriginIsolated` and
+   growable-SAB checks. COOP/COEP for Composer is a product decision taken in this phase.
 4. **Automerge entries.** `AmSnapshot` and `AmChanges` chained by `baseSlot`; the window checks heads
    before loading.
 
@@ -283,3 +341,5 @@ Requirements, from oxc's raw-transfer work where string decoding dominated lazy 
    decides whether lazy is the default or kicks in above a threshold.
 3. Whether COOP/COEP is acceptable for Composer, given its embeds and iframes.
 4. CRC32 always on or debug only (~1 GB/s in JS; cheap for sub-page entries).
+5. Writer-side validation needs the schema in the worker at index time. Does `index-core` resolve
+   dynamic (database-stored) schemas there today, or only static ones?
