@@ -66,6 +66,18 @@ const distance = (left: Point, right: Point): [number, number] => [left.x - righ
 export const isLinkDrawn = ({ from, to }: { from: Point; to: Point }, minimum: number): boolean =>
   Math.hypot(to.x - from.x, to.y - from.y) >= minimum;
 
+/**
+ * Whether the pointer is over the canvas itself: not over a panel the view hosts, nor over a popup portalled from one,
+ * whose events React still bubbles to the view. Content embedded in a node is part of the canvas.
+ */
+const overCanvas = (event: PointerEvent, root: HTMLElement | null): boolean => {
+  if (!(event.target instanceof Element) || !root?.contains(event.target)) {
+    return false;
+  }
+  const overlay = event.target.closest(`[${SCENE_OVERLAY_ATTRIBUTE}]`);
+  return !overlay || overlay.closest('[data-node-id]') !== null;
+};
+
 /** Whether a link between two endpoints has a direction: either pinned port declares `in` or `out`. */
 const isDirected = (scene: Scene, registry: NodeRegistry, source: Endpoint, target: Endpoint): boolean =>
   [source, target].some((end) => {
@@ -539,7 +551,7 @@ export const usePointerMachine = ({
       const current = registry.get(atoms.drag);
       if (!current) {
         if (!isNavigating()) {
-          updateHover(toScene(event));
+          updateHover(overCanvas(event, rootRef.current) ? toScene(event) : undefined);
         }
         return;
       }
@@ -636,6 +648,7 @@ export const usePointerMachine = ({
       updateHover,
       isNavigating,
       capabilities.create,
+      rootRef,
     ],
   );
 

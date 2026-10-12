@@ -100,13 +100,13 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   // A frame may show any object listed in the navtree but this drawing itself.
   const getOptions = useCallback<NonNullable<SceneViewPropertiesProps['getOptions']>>(
     (results) =>
-      results
-        // System objects (space properties, canvases, traces) have no place in the navtree, so none here either.
-        .filter((result) => Obj.isObject(result) && TypeOptions.isUserObject(result))
+      // Only what the navigator or a Database section lists: no system objects, unregistered types or root collection.
+      TypeOptions.filterListedObjects(results)
         .filter((result) => !(Obj.instanceOf(Drawing.Drawing, result) && result.canvas.target === canvas))
         .map((result) => {
           const id = Entity.getURI(result, { prefer: 'named' });
-          return { id, label: Entity.getLabel(result) ?? id };
+          const icon = Entity.getIcon(result);
+          return { id, label: Entity.getLabel(result) ?? id, icon: icon?.icon, iconHue: icon?.hue };
         }),
     [canvas],
   );
