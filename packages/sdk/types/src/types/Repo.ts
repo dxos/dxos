@@ -45,7 +45,7 @@ export class Repo extends Type.makeObject<Repo>(DXN.make('org.dxos.type.repo', '
   }).pipe(
     Schema.annotate({ title: 'Repository', description: 'A source-code repository.' }),
     Annotation.LabelAnnotation.set(['name']),
-    Annotation.IconAnnotation.set({ icon: 'ph--git-branch--regular', hue: 'neutral' }),
+    Annotation.IconAnnotation.set({ icon: 'ph--git-branch--regular', hue: 'green' }),
     Annotation.UserType.set(),
   ),
 ) {}

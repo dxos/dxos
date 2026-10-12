@@ -61,13 +61,15 @@ const DefaultStory = ({ keywords }: StoryArgs) => {
 
       <Panel.Body>
         <Listbox.Root value={matched} items={keywords.map((keyword) => ({ value: keyword, label: keyword }))}>
-          <Listbox.Content aria-label='Keywords'>
-            {keywords.map((keyword) => (
-              <Listbox.Item key={keyword} id={keyword}>
-                <Listbox.ItemText>{keyword}</Listbox.ItemText>
-              </Listbox.Item>
-            ))}
-          </Listbox.Content>
+          <Listbox.Viewport>
+            <Listbox.Content aria-label='Keywords'>
+              {keywords.map((keyword) => (
+                <Listbox.Item key={keyword} id={keyword}>
+                  <Listbox.ItemText>{keyword}</Listbox.ItemText>
+                </Listbox.Item>
+              ))}
+            </Listbox.Content>
+          </Listbox.Viewport>
         </Listbox.Root>
       </Panel.Body>
     </Panel.Root>

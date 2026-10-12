@@ -2,20 +2,21 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type MouseEvent, type PropsWithChildren } from 'react';
+import React, { type MouseEvent, type PropsWithChildren, type ReactNode } from 'react';
 
-import { type Database } from '@dxos/echo';
-import { Form } from '@dxos/react-ui-form';
+import { Section } from '@dxos/react-ui-components';
 import { Listbox } from '@dxos/react-ui-list';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Banner from '@dxos/react-ui/Banner';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import * as Typography from '@dxos/react-ui/Typography';
 
 import { meta } from '#meta';
-import { AgentChannels } from '#types';
 
 //
 // Root
@@ -23,65 +24,211 @@ import { AgentChannels } from '#types';
 
 type AgentActivityRootProps = PropsWithChildren<{
   role?: string;
+  toolbar?: ReactNode;
+  /** Why the last action failed. */
+  error?: string;
 }>;
 
-/** The agent's activity panel: its channels, skills and conversations in one scrolling body. */
-const AgentActivityRoot = ({ role, children }: AgentActivityRootProps) => (
-  <Panel.Root role={role}>
-    <Panel.Body asChild>
-      <ScrollArea.Root orientation='vertical'>
-        <ScrollArea.Viewport asChild>
-          <Layout.Container>{children}</Layout.Container>
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
-    </Panel.Body>
-  </Panel.Root>
-);
+/** The agent's activity panel: who it is, its skills, channels and conversations in one scrolling body. */
+const AgentActivityRoot = ({ role, toolbar, error, children }: AgentActivityRootProps) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  return (
+    <Panel.Root role={role}>
+      {toolbar && <Panel.Header>{toolbar}</Panel.Header>}
+      <Panel.Body asChild>
+        <ScrollArea.Root orientation='vertical'>
+          <ScrollArea.Viewport asChild>
+            <Layout.Container gap='lg'>
+              {error && (
+                <Banner.Root valence='error'>
+                  <Banner.Title>{t('activity-error.label')}</Banner.Title>
+                  <Banner.Body>{error}</Banner.Body>
+                </Banner.Root>
+              )}
+              {children}
+            </Layout.Container>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Panel.Body>
+    </Panel.Root>
+  );
+};
 
 AgentActivityRoot.displayName = 'AgentActivity.Root';
+
+//
+// Toolbar
+//
+
+type AgentActivityToolbarProps = {
+  attendableId?: string;
+  /** Whether any of the agent's channels is connected. */
+  running?: boolean;
+  /** Whether the agent has channels to connect. */
+  connectable?: boolean;
+  busy?: boolean;
+  onStart?: () => void;
+  onStop?: () => void;
+  onRefresh?: () => void;
+};
+
+/** Re-reads the panel, and connects the agent's channels or, once they run, disconnects them. */
+const AgentActivityToolbar = ({
+  attendableId,
+  running = false,
+  connectable = false,
+  busy = false,
+  onStart,
+  onStop,
+  onRefresh,
+}: AgentActivityToolbarProps) => {
+  const menuActions = useMenuBuilder(
+    () =>
+      MenuBuilder.make()
+        .root({ label: ['activity-actions.label', { ns: meta.profile.key }] })
+        .action(
+          'refresh',
+          {
+            label: ['activity-refresh.label', { ns: meta.profile.key }],
+            icon: 'ph--arrows-counter-clockwise--regular',
+            disabled: busy,
+          },
+          () => onRefresh?.(),
+        )
+        .action(
+          running ? 'stop' : 'start',
+          {
+            label: [running ? 'activity-stop.label' : 'activity-start.label', { ns: meta.profile.key }],
+            icon: running ? 'ph--plugs-connected--regular' : 'ph--plugs--regular',
+            disabled: busy || (!running && !connectable),
+          },
+          () => (running ? onStop : onStart)?.(),
+        )
+        .build(),
+    [running, connectable, busy, onStart, onStop, onRefresh],
+  );
+
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  return (
+    <ActionToolbar
+      {...menuActions}
+      attendableId={attendableId}
+      alwaysActive={attendableId === undefined}
+      // The panel's name leads and takes the free space, which keeps the actions at the end.
+      start={
+        <>
+          <Toolbar.Text>{t('activity-companion.label')}</Toolbar.Text>
+        </>
+      }
+    />
+  );
+};
+
+AgentActivityToolbar.displayName = 'AgentActivity.Toolbar';
+
+//
+// List
+//
+
+type AgentActivityListProps = PropsWithChildren<{
+  /** Section heading. */
+  label: string;
+  /** The ids of the rows, in order. */
+  ids: readonly string[];
+  /** Shown in place of the rows when there are none. */
+  empty: string;
+}>;
+
+/** A labelled list of rows; Channels, Skills and Conversations share it so their headings and rows align. */
+const AgentActivityList = ({ label, ids, empty, children }: AgentActivityListProps) => (
+  <Section.Root>
+    <Section.Label>{label}</Section.Label>
+    {ids.length === 0 ? (
+      <Section.Empty>{empty}</Section.Empty>
+    ) : (
+      // Rows render their own text, so an option carries only the id Ark keys it by.
+      <Listbox.Root items={ids.map((id) => ({ value: id, label: id }))}>
+        <Listbox.Content>{children}</Listbox.Content>
+      </Listbox.Root>
+    )}
+  </Section.Root>
+);
+
+AgentActivityList.displayName = 'AgentActivity.List';
+
+//
+// Agent
+//
+
+type AgentActivityAgentProps = {
+  id: string;
+  name?: string;
+};
+
+/** Which agent the panel is about: its name, and the object id EDGE and the bindings refer to it by. */
+const AgentActivityAgent = ({ id, name }: AgentActivityAgentProps) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  return (
+    <AgentActivityList label={t('agent.heading')} ids={[id]} empty=''>
+      <Listbox.Item id={id}>
+        <Listbox.ItemIcon icon='ph--robot--regular' />
+        <Listbox.ItemText>{name || t('agent-unnamed.label')}</Listbox.ItemText>
+        <Listbox.ItemDescription classNames='font-mono'>{id}</Listbox.ItemDescription>
+      </Listbox.Item>
+    </AgentActivityList>
+  );
+};
+
+AgentActivityAgent.displayName = 'AgentActivity.Agent';
 
 //
 // Channels
 //
 
 type AgentActivityChannelsProps = PropsWithChildren<{
-  /** Database the channel picker queries. */
-  db?: Database.Database;
-  values?: Partial<AgentChannels.Properties>;
-  onSave?: (values: AgentChannels.Properties) => void;
+  ids: readonly string[];
 }>;
 
-/**
- * The channels the agent converses in; children render each channel's backend settings
- * (e.g. the Discord bot) below the picker.
- */
-const AgentActivityChannels = ({ db, values, onSave, children }: AgentActivityChannelsProps) => {
+/** The channels the agent converses in; children are {@link AgentActivityChannel} rows. */
+const AgentActivityChannels = ({ ids, children }: AgentActivityChannelsProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   return (
-    <Layout.Flex asChild column gap='sm'>
-      <section aria-label={t('channels.label')}>
-        <Form.Root<AgentChannels.Properties>
-          schema={AgentChannels.Properties}
-          db={db}
-          values={values}
-          autoSave
-          onSave={onSave}
-        >
-          <Form.Viewport>
-            <Form.Content>
-              <Form.FieldSet label={t('channels.label')} description={t('channels.description')}>
-                <Form.Fields />
-              </Form.FieldSet>
-            </Form.Content>
-          </Form.Viewport>
-        </Form.Root>
-        {children}
-      </section>
-    </Layout.Flex>
+    <AgentActivityList label={t('channels.label')} ids={ids} empty={t('channels-empty.message')}>
+      {children}
+    </AgentActivityList>
   );
 };
 
 AgentActivityChannels.displayName = 'AgentActivity.Channels';
+
+//
+// Channel
+//
+
+type AgentActivityChannelProps = {
+  id: string;
+  name?: string;
+  /** The connection's state, e.g. `ready`, or why it last failed. */
+  detail?: string;
+  /** The channel the agent lists is not in the space (deleted); the row stays so it can be removed. */
+  missing?: boolean;
+  onRemove?: (id: string) => void;
+};
+
+/** One channel the agent converses in. */
+const AgentActivityChannel = ({ id, name, detail, missing = false, onRemove }: AgentActivityChannelProps) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  return (
+    <Listbox.Item id={id} classNames='dx-hover'>
+      <Listbox.ItemIcon icon='ph--hash--regular' />
+      <Listbox.ItemText>{missing ? t('channel-missing.label') : name || t('channel-unnamed.label')}</Listbox.ItemText>
+      {!missing && detail && <Listbox.ItemDescription>{detail}</Listbox.ItemDescription>}
+      <RowButton icon='ph--x--regular' label={t('channel-remove.label')} onClick={() => onRemove?.(id)} />
+    </Listbox.Item>
+  );
+};
+
+AgentActivityChannel.displayName = 'AgentActivity.Channel';
 
 //
 // Skills
@@ -96,27 +243,13 @@ type AgentActivitySkillsProps = PropsWithChildren<{
 const AgentActivitySkills = ({ ids, children }: AgentActivitySkillsProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   return (
-    <Layout.Container asChild>
-      <section aria-label={t('skills.heading')}>
-        <h3 className='px-2 text-sm text-fg-muted'>{t('skills.heading')}</h3>
-        {ids.length === 0 ? (
-          <Layout.Flex center classNames='p-2 text-fg-muted' role='status'>
-            {t('skills-empty.message')}
-          </Layout.Flex>
-        ) : (
-          <Listbox.Root items={toOptions(ids)}>
-            <Listbox.Content scroll={false}>{children}</Listbox.Content>
-          </Listbox.Root>
-        )}
-      </section>
-    </Layout.Container>
+    <AgentActivityList label={t('skills.heading')} ids={ids} empty={t('skills-empty.message')}>
+      {children}
+    </AgentActivityList>
   );
 };
 
 AgentActivitySkills.displayName = 'AgentActivity.Skills';
-
-// Rows render their own text (a conversation's name is read by its row), so an option carries only the id Ark keys it by.
-const toOptions = (ids: readonly string[]) => ids.map((id) => ({ value: id, label: id }));
 
 //
 // Skill
@@ -126,48 +259,17 @@ type AgentActivitySkillProps = {
   /** The skill's registry key. */
   id: string;
   name: string;
-  /** Whether the agent runs an editable space copy rather than the built-in skill. */
-  customized?: boolean;
-  /** Disables the row's action while a customize/reset is in flight. */
-  busy?: boolean;
+  /** Opens the skill; absent for a built-in skill, which has no object to open. */
   onOpen?: (id: string) => void;
-  onCustomize?: (id: string) => void;
-  onReset?: (id: string) => void;
 };
 
-/** One skill the agent runs: a built-in one can be customized; a customized one opens for editing or resets. */
-const AgentActivitySkill = ({
-  id,
-  name,
-  customized = false,
-  busy = false,
-  onOpen,
-  onCustomize,
-  onReset,
-}: AgentActivitySkillProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  return (
-    <Listbox.Item id={id} onClick={customized ? () => onOpen?.(id) : undefined}>
-      <Listbox.ItemIcon icon='ph--blueprint--regular' />
-      <Listbox.ItemText>{name}</Listbox.ItemText>
-      <Listbox.ItemDescription>
-        {t(customized ? 'skill-customized.label' : 'skill-compiled.label')}
-      </Listbox.ItemDescription>
-      <Button.Root
-        iconOnly
-        variant='ghost'
-        disabled={busy}
-        icon={customized ? 'ph--arrow-counter-clockwise--regular' : 'ph--pencil-simple--regular'}
-        label={t(customized ? 'skill-reset.label' : 'skill-customize.label')}
-        onClick={(event: MouseEvent<HTMLButtonElement>) => {
-          // The row itself opens the skill; the button must not also trigger that.
-          event.stopPropagation();
-          (customized ? onReset : onCustomize)?.(id);
-        }}
-      />
-    </Listbox.Item>
-  );
-};
+/** One skill the agent runs. */
+const AgentActivitySkill = ({ id, name, onOpen }: AgentActivitySkillProps) => (
+  <Listbox.Item id={id} onClick={onOpen ? () => onOpen(id) : undefined} classNames='dx-hover'>
+    <Listbox.ItemIcon icon='ph--blueprint--regular' />
+    <Listbox.ItemText>{name}</Listbox.ItemText>
+  </Listbox.Item>
+);
 
 AgentActivitySkill.displayName = 'AgentActivity.Skill';
 
@@ -184,20 +286,9 @@ type AgentActivityConversationsProps = PropsWithChildren<{
 const AgentActivityConversations = ({ ids, children }: AgentActivityConversationsProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   return (
-    <Layout.Container asChild>
-      <section aria-label={t('conversations.heading')}>
-        <h3 className='px-2 text-sm text-fg-muted'>{t('conversations.heading')}</h3>
-        {ids.length === 0 ? (
-          <Layout.Flex center classNames='p-2 text-fg-muted' role='status'>
-            {t('conversations-empty.message')}
-          </Layout.Flex>
-        ) : (
-          <Listbox.Root items={toOptions(ids)}>
-            <Listbox.Content scroll={false}>{children}</Listbox.Content>
-          </Listbox.Root>
-        )}
-      </section>
-    </Layout.Container>
+    <AgentActivityList label={t('conversations.heading')} ids={ids} empty={t('conversations-empty.message')}>
+      {children}
+    </AgentActivityList>
   );
 };
 
@@ -215,13 +306,21 @@ type AgentActivityConversationProps = {
   /** Fixes the instant timestamps are measured against, so stories and tests do not drift. */
   now?: Date;
   onSelect?: (id: string) => void;
+  onDelete?: (id: string) => void;
 };
 
 /** One channel conversation (a channel, thread or DM) the agent converses in. */
-const AgentActivityConversation = ({ id, title, lastActivity, now, onSelect }: AgentActivityConversationProps) => {
+const AgentActivityConversation = ({
+  id,
+  title,
+  lastActivity,
+  now,
+  onSelect,
+  onDelete,
+}: AgentActivityConversationProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   return (
-    <Listbox.Item id={id} onClick={() => onSelect?.(id)}>
+    <Listbox.Item id={id} onClick={() => onSelect?.(id)} classNames='dx-hover'>
       <Listbox.ItemIcon icon='ph--chat-circle-dots--regular' />
       <Listbox.ItemText>{title || t('conversation-untitled.label')}</Listbox.ItemText>
       {lastActivity !== undefined && (
@@ -229,11 +328,28 @@ const AgentActivityConversation = ({ id, title, lastActivity, now, onSelect }: A
           <Typography.Timestamp date={lastActivity} now={now} />
         </Listbox.ItemDescription>
       )}
+      {onDelete && (
+        <RowButton icon='ph--trash--regular' label={t('conversation-delete.label')} onClick={() => onDelete(id)} />
+      )}
     </Listbox.Item>
   );
 };
 
 AgentActivityConversation.displayName = 'AgentActivity.Conversation';
+
+/** A row's icon action; it must not also trigger the row's own click. */
+const RowButton = ({ icon, label, onClick }: { icon: string; label: string; onClick: () => void }) => (
+  <Button.Root
+    iconOnly
+    variant='ghost'
+    icon={icon}
+    label={label}
+    onClick={(event: MouseEvent<HTMLButtonElement>) => {
+      event.stopPropagation();
+      onClick();
+    }}
+  />
+);
 
 //
 // AgentActivity
@@ -241,7 +357,10 @@ AgentActivityConversation.displayName = 'AgentActivity.Conversation';
 
 export const AgentActivity = {
   Root: AgentActivityRoot,
+  Toolbar: AgentActivityToolbar,
+  Agent: AgentActivityAgent,
   Channels: AgentActivityChannels,
+  Channel: AgentActivityChannel,
   Skills: AgentActivitySkills,
   Skill: AgentActivitySkill,
   Conversations: AgentActivityConversations,
@@ -249,10 +368,13 @@ export const AgentActivity = {
 };
 
 export type {
+  AgentActivityAgentProps,
+  AgentActivityChannelProps,
   AgentActivityChannelsProps,
   AgentActivityConversationProps,
   AgentActivityConversationsProps,
   AgentActivityRootProps,
   AgentActivitySkillProps,
   AgentActivitySkillsProps,
+  AgentActivityToolbarProps,
 };

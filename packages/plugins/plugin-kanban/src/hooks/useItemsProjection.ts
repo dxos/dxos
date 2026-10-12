@@ -2,12 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import { useMemo } from 'react';
 
 import type { ProjectionModel } from '@dxos/schema';
 
 import { Kanban } from '#types';
+
+import { makeColumnIdsAtom, makePivotFieldIdAtom } from '../util/index.ts';
 
 /**
  * Minimal `ProjectionModel` for `spec.kind === 'items'` (no View). Supplies `pivotField`
@@ -16,10 +19,10 @@ import { Kanban } from '#types';
  * board/card UI; hides the pivot on the card body (column shows it); Expando cards render title only.
  */
 export const useItemsProjection = (kanban: Kanban.KanbanItems): ProjectionModel => {
-  return useMemo(() => {
-    const pivotField = kanban.spec.pivotField;
+  const pivotField = useAtomValue(useMemo(() => makePivotFieldIdAtom(kanban), [kanban]));
+  const optionIds = useAtomValue(useMemo(() => makeColumnIdsAtom(kanban), [kanban]));
 
-    const optionIds = Object.keys(kanban.arrangement?.columns ?? {});
+  return useMemo(() => {
     const options = optionIds.map((id) => ({ id, title: id, color: 'neutral' as const }));
 
     const fieldProjection: any = {
@@ -35,10 +38,10 @@ export const useItemsProjection = (kanban: Kanban.KanbanItems): ProjectionModel 
       fields,
       tryGetFieldProjection: (id: string) => (id === pivotField ? fieldProjection : undefined),
       getFieldProjections: () => [],
-      getHiddenProperties: () => [pivotField],
+      getHiddenProperties: () => (pivotField ? [pivotField] : []),
     };
 
     // TODO(wittjosiah): Refactor ProjectionModel to be an interface that we can fulfill.
     return stub as unknown as ProjectionModel;
-  }, [kanban.arrangement?.columns, kanban.spec.pivotField]);
+  }, [optionIds, pivotField]);
 };

@@ -27,7 +27,7 @@ import { AgentOperation, ChatParticipant, Goal, Memory, Mode, Relay, type Trigge
 import { loadChats } from '../operations/agent-skills.ts';
 import { COMPOSE_PROMPT } from '../operations/compose-update.ts';
 import { BRAIN_SCENARIO as SCENARIO } from './scenario.ts';
-import { createLocalAgent, makeTestBrain, makeTestSpaceLayer } from './testing.ts';
+import { createLocalAgent, makeTestBrain, makeTestSpaceLayer, noChannelBackends } from './testing.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -109,7 +109,7 @@ const TestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
   Layer.provideMerge(
     AssistantTestLayer({
       operationHandlers: AgentOperationHandlerSet,
-      extraServices: Layer.merge(brain.layer, testSpaceLayer),
+      extraServices: Layer.mergeAll(brain.layer, testSpaceLayer, noChannelBackends),
       types: [
         Agent.Agent,
         Chat.Chat,

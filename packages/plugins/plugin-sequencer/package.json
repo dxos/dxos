@@ -71,6 +71,11 @@
       "import": "./dist/lib/translations.mjs"
     },
     "./package.json": "./package.json",
+    "./Instrument": {
+      "source": "./src/types/Instrument.ts",
+      "types": "./dist/types/src/types/Instrument.d.ts",
+      "import": "./dist/lib/Instrument.mjs"
+    },
     "./Note": {
       "source": "./src/types/Note.ts",
       "types": "./dist/types/src/types/Note.d.ts",
@@ -129,6 +134,9 @@
       ],
       "Track": [
         "dist/types/src/types/Track.d.ts"
+      ],
+      "Instrument": [
+        "dist/types/src/types/Instrument.d.ts"
       ],
       "Note": [
         "dist/types/src/types/Note.d.ts"

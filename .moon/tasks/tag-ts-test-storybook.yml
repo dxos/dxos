@@ -17,6 +17,7 @@ tasks:
       - '^:#prebuild'
     inputs:
       - '@group(sources)'
+      - /react-compiler.config.ts
       - /tools/storybook-react/.storybook/main.ts
       - /tools/storybook-react/.storybook/vitest.setup.ts
       - /vite.base.config.ts
