@@ -35,28 +35,27 @@ type Row = {
  * for the events since its last read rather than for the whole conversation. Without `SqlService`, or when the stored
  * checkpoint cannot be trusted, it refolds the feed.
  */
-export const load = <S>(
+export const load = Effect.fnUntraced(function* <S>(
   feed: Feed.Feed,
   reducer: Durable.Durable<S>,
-): Effect.Effect<Reducer.Checkpoint<S>, never, Database.Service> =>
-  Effect.gen(function* () {
-    const service = yield* Effect.serviceOption(SqlService.SqlService);
-    if (Option.isNone(service)) {
-      return yield* refold(feed, reducer);
-    }
+): Effect.fn.Return<Reducer.Checkpoint<S>, never, Database.Service> {
+  const service = yield* Effect.serviceOption(SqlService.SqlService);
+  if (Option.isNone(service)) {
+    return yield* refold(feed, reducer);
+  }
 
-    return yield* cached(feed, reducer).pipe(
-      Effect.provide(SqlService.database({ name: DATABASE })),
-      Effect.provideService(SqlService.SqlService, service.value),
-      // The cache only saves work; an unusable one must not take the conversation down with it.
-      Effect.catchTag('SqlError', (error) =>
-        Effect.gen(function* () {
-          log.warn('trajectory cache unavailable', { error });
-          return yield* refold(feed, reducer);
-        }),
-      ),
-    );
-  });
+  return yield* cached(feed, reducer).pipe(
+    Effect.provide(SqlService.database({ name: DATABASE })),
+    Effect.provideService(SqlService.SqlService, service.value),
+    // The cache only saves work; an unusable one must not take the conversation down with it.
+    Effect.catchTag('SqlError', (error) =>
+      Effect.gen(function* () {
+        log.warn('trajectory cache unavailable', { error });
+        return yield* refold(feed, reducer);
+      }),
+    ),
+  );
+});
 
 const refold = <S>(
   feed: Feed.Feed,
@@ -64,79 +63,77 @@ const refold = <S>(
 ): Effect.Effect<Reducer.Checkpoint<S>, never, Database.Service> =>
   Effect.map(readItems(feed), (items) => Reducer.run(reducer, Legacy.toEvents(items)));
 
-const cached = <S>(
+const cached = Effect.fnUntraced(function* <S>(
   feed: Feed.Feed,
   reducer: Durable.Durable<S>,
-): Effect.Effect<Reducer.Checkpoint<S>, SqlError.SqlError, Database.Service | SqlClient.SqlClient> =>
-  Effect.gen(function* () {
-    yield* migrate();
-    const sql = yield* SqlClient.SqlClient;
-    const key = Feed.getFeedUri(feed) ?? feed.id;
-    const [row] = yield* sql<Row>`
+): Effect.fn.Return<Reducer.Checkpoint<S>, SqlError.SqlError, Database.Service | SqlClient.SqlClient> {
+  yield* migrate();
+  const sql = yield* SqlClient.SqlClient;
+  const key = Feed.getFeedUri(feed) ?? feed.id;
+  const [row] = yield* sql<Row>`
       SELECT cursor, head, count, state FROM trajectory_checkpoint WHERE feed = ${key} AND reducer = ${reducer.id}
     `;
 
-    const resumed = row ? yield* resume(feed, reducer, row) : undefined;
-    const items = resumed?.tail ?? (yield* readItems(feed));
-    const checkpoint = Reducer.run(reducer, Legacy.toEvents(items), resumed?.checkpoint);
+  const resumed = row ? yield* resume(feed, reducer, row) : undefined;
+  const items = resumed?.tail ?? (yield* readItems(feed));
+  const checkpoint = Reducer.run(reducer, Legacy.toEvents(items), resumed?.checkpoint);
 
-    const last = items.at(-1);
-    const cursor = last && Feed.getLocalCursor(last);
-    if (last && cursor !== undefined) {
-      const state = JSON.stringify(Schema.encodeSync(reducer.schema)(checkpoint.state));
-      yield* sql`
+  const last = items.at(-1);
+  const cursor = last && Feed.getLocalCursor(last);
+  if (last && cursor !== undefined) {
+    const state = JSON.stringify(Schema.encodeSync(reducer.schema)(checkpoint.state));
+    yield* sql`
         INSERT INTO trajectory_checkpoint (feed, reducer, cursor, head, count, state)
         VALUES (${key}, ${reducer.id}, ${cursor}, ${last.id}, ${checkpoint.count}, ${state})
         ON CONFLICT (feed, reducer) DO UPDATE SET
           cursor = excluded.cursor, head = excluded.head, count = excluded.count, state = excluded.state
       `;
-    }
+  }
 
-    return checkpoint;
-  });
+  return checkpoint;
+});
 
 /**
  * The stored checkpoint and the items after it, or `undefined` when it has to be rebuilt: the item at its cursor is
  * no longer the one it was taken at (a rebuilt index), the tail holds a legacy record (whose conversion needs the
  * whole feed), or the stored state no longer decodes.
  */
-const resume = <S>(
+const resume = Effect.fnUntraced(function* <S>(
   feed: Feed.Feed,
   reducer: Durable.Durable<S>,
   row: Row,
-): Effect.Effect<
+): Effect.fn.Return<
   { checkpoint: Reducer.Checkpoint<S>; tail: (Trajectory.Event | Legacy.Record)[] } | undefined,
   never,
   Database.Service
-> =>
-  Effect.gen(function* () {
-    const at = Number(row.cursor);
-    if (!Number.isSafeInteger(at)) {
-      return undefined;
-    }
+> {
+  const at = Number(row.cursor);
+  if (!Number.isSafeInteger(at)) {
+    return undefined;
+  }
 
-    const [head] = yield* readItems(feed, {
-      after: Feed.Cursor.make(String(at - 1)),
-      before: Feed.Cursor.make(String(at + 1)),
-    });
-    if (head?.id !== row.head) {
-      return undefined;
-    }
-
-    const tail = yield* readItems(feed, { after: Feed.Cursor.make(row.cursor) });
-    if (tail.some(Legacy.isRecord)) {
-      return undefined;
-    }
-
-    const decoded = Schema.decodeUnknownOption(reducer.schema)(parseJson(row.state));
-    if (Option.isNone(decoded)) {
-      return undefined;
-    }
-
-    const { db } = yield* Database.Service;
-    const state = reducer.rebind ? reducer.rebind(decoded.value, (ref) => db.makeRef(ref.uri)) : decoded.value;
-    return { checkpoint: { state, head: row.head, count: row.count }, tail };
+  const [head] = yield* readItems(feed, {
+    after: Feed.Cursor.make(String(at - 1)),
+    before: Feed.Cursor.make(String(at + 1)),
   });
+  if (head?.id !== row.head) {
+    return undefined;
+  }
+
+  const tail = yield* readItems(feed, { after: Feed.Cursor.make(row.cursor) });
+  if (tail.some(Legacy.isRecord)) {
+    return undefined;
+  }
+
+  const decoded = Schema.decodeUnknownOption(reducer.schema)(parseJson(row.state));
+  if (Option.isNone(decoded)) {
+    return undefined;
+  }
+
+  const { db } = yield* Database.Service;
+  const state = reducer.rebind ? reducer.rebind(decoded.value, (ref) => db.makeRef(ref.uri)) : decoded.value;
+  return { checkpoint: { state, head: row.head, count: row.count }, tail };
+});
 
 const migrate = (): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
   Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(

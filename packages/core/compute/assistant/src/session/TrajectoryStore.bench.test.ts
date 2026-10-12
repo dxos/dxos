@@ -45,12 +45,13 @@ const turnEvents = (index: number): Trajectory.Event[] => {
   ];
 };
 
-const timed = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<[A, number], E, R> =>
-  Effect.gen(function* () {
-    const start = performance.now();
-    const result = yield* effect;
-    return [result, Math.round(performance.now() - start)] as [A, number];
-  });
+const timed = Effect.fnUntraced(function* <A, E, R>(
+  effect: Effect.Effect<A, E, R>,
+): Effect.fn.Return<[A, number], E, R> {
+  const start = performance.now();
+  const result = yield* effect;
+  return [result, Math.round(performance.now() - start)] as [A, number];
+});
 
 describe.runIf(process.env.DX_BENCH === '1')('TrajectoryStore load cost', () => {
   it.effect(

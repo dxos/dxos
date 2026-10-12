@@ -97,10 +97,7 @@ const resolve = (name: string, handle?: string) =>
 const hoursUntil = (iso: string) => (Date.parse(iso) - Date.now()) / 3_600_000;
 
 const chatMessages = (chat: Chat.Chat) =>
-  Effect.gen(function* () {
-    const feed = yield* Database.load(chat.feed);
-    return yield* TrajectoryStore.messages(feed);
-  });
+  Database.load(chat.feed).pipe(Effect.flatMap((feed) => TrajectoryStore.messages(feed)));
 
 /** A channel thread's chat, named as EDGE names the conversation an agent turn runs in. */
 const conversationIn = (agentRef: Ref.Ref<Agent.Agent>, channel: Channel.Channel, thread: string) =>

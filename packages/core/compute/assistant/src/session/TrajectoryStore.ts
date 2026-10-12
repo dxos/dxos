@@ -85,31 +85,31 @@ export const load = <S>(
  * The conversation a turn in `thread` (absent: the main thread) sends, as messages: a forked feed's origin first,
  * then this feed's prompt.
  */
-export const history = (
+export const history = Effect.fnUntraced(function* (
   feed: Feed.Feed,
   thread?: Trajectory.EventId,
-): Effect.Effect<Message.Message[], never, Database.Service> =>
-  Effect.gen(function* () {
-    const { state } = yield* load(feed, Durable.prompt);
-    const origin = state.origin ? yield* originHistory(state.origin) : [];
-    return [...origin, ...Reducer.promptFor(state, thread).map(toMessage)];
-  });
+): Effect.fn.Return<Message.Message[], never, Database.Service> {
+  const { state } = yield* load(feed, Durable.prompt);
+  const origin = state.origin ? yield* originHistory(state.origin) : [];
+  return [...origin, ...Reducer.promptFor(state, thread).map(toMessage)];
+});
 
 /**
  * The prompt of the conversation a fork continues, up to and including the entry holding `origin.event`.
  */
-const originHistory = (origin: Trajectory.ThreadOrigin): Effect.Effect<Message.Message[], never, Database.Service> =>
-  Effect.gen(function* () {
-    const source = origin.feed?.target;
-    if (!source) {
-      return [];
-    }
+const originHistory = Effect.fnUntraced(function* (
+  origin: Trajectory.ThreadOrigin,
+): Effect.fn.Return<Message.Message[], never, Database.Service> {
+  const source = origin.feed?.target;
+  if (!source) {
+    return [];
+  }
 
-    const messages = yield* history(source);
-    const cutoff = messages.findIndex((message) => message.id === origin.event);
-    // A fork point the source no longer shows would otherwise splice in history the fork never had.
-    return cutoff === -1 ? [] : messages.slice(0, cutoff + 1);
-  });
+  const messages = yield* history(source);
+  const cutoff = messages.findIndex((message) => message.id === origin.event);
+  // A fork point the source no longer shows would otherwise splice in history the fork never had.
+  return cutoff === -1 ? [] : messages.slice(0, cutoff + 1);
+});
 
 /**
  * A prompt entry as the message the model layer takes; its id is the first source event, so a reference to that
@@ -216,21 +216,20 @@ const ALARM: Trajectory.Sender = { role: 'event', name: 'alarm' };
  * Opens a turn: appends `turnBegin` recording the last item this replica has folded as what the turn saw, and
  * returns its id, which every event of the turn carries as its thread.
  */
-export const beginTurn = (
+export const beginTurn = Effect.fnUntraced(function* (
   feed: Feed.Feed,
   { id, model }: { id?: Trajectory.EventId; model?: Trajectory.TurnBegin['model'] } = {},
-): Effect.Effect<Trajectory.EventId, never, Database.Service> =>
-  Effect.gen(function* () {
-    const { head } = yield* load(feed, Durable.prompt);
-    const begin = Trajectory.make({
-      // Set when the turn already has an id elsewhere (a hosted agent's turn key), so a resumed turn is the same one.
-      id,
-      payload: { _tag: 'turnBegin', model, from: head !== undefined ? { event: head } : undefined },
-      sender: { role: 'assistant' },
-    });
-    yield* append(feed, [begin]);
-    return begin.id;
+): Effect.fn.Return<Trajectory.EventId, never, Database.Service> {
+  const { head } = yield* load(feed, Durable.prompt);
+  const begin = Trajectory.make({
+    // Set when the turn already has an id elsewhere (a hosted agent's turn key), so a resumed turn is the same one.
+    id,
+    payload: { _tag: 'turnBegin', model, from: head !== undefined ? { event: head } : undefined },
+    sender: { role: 'assistant' },
   });
+  yield* append(feed, [begin]);
+  return begin.id;
+});
 
 /**
  * The events that put a turn's prompt into the conversation: a queued source is consumed (a message) or fired (an
@@ -276,36 +275,34 @@ const consume = (message: Trajectory.EventId, thread: Trajectory.EventId): Traje
 /**
  * The turn that consumed `message` and never ended: its writer died mid-turn, so the message is still owed a reply.
  */
-export const interruptedTurn = (
+export const interruptedTurn = Effect.fnUntraced(function* (
   feed: Feed.Feed,
   message: Trajectory.EventId,
-): Effect.Effect<Trajectory.EventId | undefined, never, Database.Service> =>
-  Effect.gen(function* () {
-    const { state: session } = yield* load(feed, Durable.session);
-    const { state: thread } = yield* load(feed, Durable.thread);
-    const item = thread.items.find((item) => item.id === message);
-    return item?.status === 'consumed' && item.thread !== undefined && session.turns.includes(item.thread)
-      ? item.thread
-      : undefined;
-  });
+): Effect.fn.Return<Trajectory.EventId | undefined, never, Database.Service> {
+  const { state: session } = yield* load(feed, Durable.session);
+  const { state: thread } = yield* load(feed, Durable.thread);
+  const item = thread.items.find((item) => item.id === message);
+  return item?.status === 'consumed' && item.thread !== undefined && session.turns.includes(item.thread)
+    ? item.thread
+    : undefined;
+});
 
 /**
  * Prepares a turn that redelivers `source`: when the message was consumed by a turn that never ended, closes that
  * turn as interrupted (its partial output joins the conversation) and returns true, so the new turn does not consume
  * the message again.
  */
-export const resumeInterrupted = (
+export const resumeInterrupted = Effect.fnUntraced(function* (
   feed: Feed.Feed,
   source?: TurnSource,
-): Effect.Effect<boolean, never, Database.Service> =>
-  Effect.gen(function* () {
-    const dead = source && 'message' in source ? yield* interruptedTurn(feed, source.message) : undefined;
-    if (dead === undefined) {
-      return false;
-    }
-    yield* append(feed, [interrupted(dead)]);
-    return true;
-  });
+): Effect.fn.Return<boolean, never, Database.Service> {
+  const dead = source && 'message' in source ? yield* interruptedTurn(feed, source.message) : undefined;
+  if (dead === undefined) {
+    return false;
+  }
+  yield* append(feed, [interrupted(dead)]);
+  return true;
+});
 
 const interrupted = (begin: Trajectory.EventId): Trajectory.Event =>
   Trajectory.make({
@@ -345,18 +342,17 @@ export const endTurn = (
  * an appender that writes into the turn's thread, and closes it however `body` ends. For turn producers that do not
  * go through `AiSession`.
  */
-export const turn = <A, E, R>(
+export const turn = Effect.fnUntraced(function* <A, E, R>(
   feed: Feed.Feed,
   { prompt, source, model }: { prompt: Message.Message; source?: TurnSource; model?: Trajectory.TurnBegin['model'] },
   body: (
     append: (messages: readonly Message.Message[]) => Effect.Effect<void, never, Database.Service>,
   ) => Effect.Effect<A, E, R>,
-): Effect.Effect<A, E, R | Database.Service> =>
-  Effect.gen(function* () {
-    const resumed = yield* resumeInterrupted(feed, source);
-    const begin = yield* beginTurn(feed, { model });
-    yield* append(feed, promptEvents(prompt, begin, source, { resumed }));
-    return yield* body((messages) => appendMessages(feed, messages, { thread: begin })).pipe(
-      Effect.onExit((exit) => endTurn(feed, begin, exit, { source })),
-    );
-  });
+): Effect.fn.Return<A, E, R | Database.Service> {
+  const resumed = yield* resumeInterrupted(feed, source);
+  const begin = yield* beginTurn(feed, { model });
+  yield* append(feed, promptEvents(prompt, begin, source, { resumed }));
+  return yield* body((messages) => appendMessages(feed, messages, { thread: begin })).pipe(
+    Effect.onExit((exit) => endTurn(feed, begin, exit, { source })),
+  );
+});
