@@ -4,6 +4,7 @@
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
@@ -19,7 +20,8 @@ export const ClaudeCodeAgent = Capability.lazyModule(
   'ClaudeCodeAgent',
   {
     provides: [AssistantCapabilities.Agent, AssistantCapabilities.AgentProcess],
-    activatesOn: ActivationEvents.Startup,
+    // Off the boot path: loading it pulls in the MCP SDK, and agents are only read once the assistant runs a turn.
+    activatesOn: AppActivationEvents.AssistantStart,
   },
   () => import('./claude-code-agent.ts'),
 );
@@ -31,7 +33,7 @@ export const ShellService = AppCapability.layerSpec(() => import('./shell-servic
 
 export const ClaudeCodeEdgeAgent = Capability.lazyModule(
   'ClaudeCodeEdgeAgent',
-  { provides: [AssistantCapabilities.Agent], activatesOn: ActivationEvents.Startup },
+  { provides: [AssistantCapabilities.Agent], activatesOn: AppActivationEvents.AssistantStart },
   () => import('./claude-code-edge-agent.ts'),
 );
 

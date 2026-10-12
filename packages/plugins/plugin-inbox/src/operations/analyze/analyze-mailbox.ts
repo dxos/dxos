@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Progress from '@dxos/app-toolkit/Progress';
 import * as Cancellation from '@dxos/compute/Cancellation';
 import * as Operation from '@dxos/compute/Operation';
@@ -15,6 +16,7 @@ import { Database, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 
 import * as InboxCapabilities from '../../types/InboxCapabilities.ts';
+import * as InboxEvents from '../../types/InboxEvents.ts';
 import * as InboxOperation from '../../types/InboxOperation.ts';
 import { unmetPrecondition } from '../precondition.ts';
 import * as Topology from '../topology.ts';
@@ -96,6 +98,8 @@ const handler = InboxOperation.AnalyzeMailbox.pipe(
       // the same run as `['deterministic', 'summarize']` rather than a cascade that summarizes against
       // contacts it has not extracted.
       const selected = new Set(tiers);
+      // Processors are start-gated; a routine can run this before any inbox surface has loaded.
+      yield* Plugin.activate(InboxEvents.Start);
       const contributed = yield* Capability.getAll(InboxCapabilities.MailboxProcessor);
       const { ordered, excluded } = Topology.sort(contributed.filter((processor) => selected.has(processor.tier)));
 
