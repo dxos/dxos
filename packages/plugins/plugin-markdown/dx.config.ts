@@ -52,16 +52,16 @@ const config: Plugin.PluginConfig = Plugin.config({
         provides: [AppCapabilities.AnchorResolver],
         environments: ['browser', 'tauri'],
       },
-      () => import('./src/capabilities/anchor-resolver.ts'),
+      () => import('./src/capabilities/anchor-resolver.ts', { with: { type: 'dx-module' } }),
     ),
-    AppCapability.anchorSort(() => import('./src/capabilities/anchor-sort.ts'), {
+    AppCapability.anchorSort(() => import('./src/capabilities/anchor-sort.ts', { with: { type: 'dx-module' } }), {
       requires: [AppCapabilities.AppGraph],
     }),
-    AppCapability.commentConfig(() => import('./src/capabilities/comment-config.ts')),
-    SpaceCapability.createObject(() => import('./src/capabilities/create-object.ts'), {
+    AppCapability.commentConfig(() => import('./src/capabilities/comment-config.ts', { with: { type: 'dx-module' } })),
+    SpaceCapability.createObject(() => import('./src/capabilities/create-object.ts', { with: { type: 'dx-module' } }), {
       environments: ['browser', 'node', 'tauri'],
     }),
-    AppCapability.settings(() => import('./src/capabilities/settings.ts'), {
+    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'dx-module' } }), {
       provides: [MarkdownCapabilities.Settings],
     }),
     // Browser-only: requires attention's view state, which only the app shell provides.
@@ -72,25 +72,29 @@ const config: Plugin.PluginConfig = Plugin.config({
         provides: [MarkdownCapabilities.EditorState, MarkdownCapabilities.EditorViews],
         environments: ['browser', 'tauri'],
       },
-      () => import('./src/capabilities/state.ts'),
+      () => import('./src/capabilities/state.ts', { with: { type: 'dx-module' } }),
     ),
-    AppCapability.operationHandler(() => import('./src/capabilities/operation-handler.ts')),
-    AppCapability.surface(() => import('./src/capabilities/react-surface.ts'), {
+    AppCapability.operationHandler(
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+    ),
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
       roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.section', 'org.dxos.role.tabpanel'],
     }),
-    AppCapability.schema(() => import('./src/capabilities/schema.ts')),
-    AppCapability.skillDefinition(() => import('./src/capabilities/skill-definition.ts')),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'dx-module' } })),
+    AppCapability.skillDefinition(
+      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'dx-module' } }),
+    ),
     Capability.lazyModule(
       'Tour',
       { provides: [AppCapabilities.Tour], environments: ['browser', 'tauri'] },
-      () => import('./src/capabilities/tour.ts'),
+      () => import('./src/capabilities/tour.ts', { with: { type: 'dx-module' } }),
     ),
     Capability.lazyModule(
       'translations',
       { provides: [AppCapabilities.Translations], environments: ['browser', 'node', 'tauri', 'workerd'] },
-      () => import('./src/capabilities/translations.ts'),
+      () => import('./src/capabilities/translations.ts', { with: { type: 'dx-module' } }),
     ),
-    AppCapability.undoMappings(() => import('./src/capabilities/undo-mappings.ts')),
+    AppCapability.undoMappings(() => import('./src/capabilities/undo-mappings.ts', { with: { type: 'dx-module' } })),
   ],
 });
 

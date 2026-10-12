@@ -16,30 +16,73 @@ const CONFIG_FILE = /\/dx\.config\.ts$/;
 
 const MODULE_REF = Symbol.for('@dxos/app-framework/vite-plugin/ModuleRef');
 
-// Literal-specifier dynamic imports only: a computed specifier cannot be resolved at build time.
-const DYNAMIC_IMPORT = /\bimport\(\s*(['"])([^'"]+)\1\s*\)/g;
+/**
+ * Import attribute marking a dynamic import in `dx.config.ts` as a module body, e.g.
+ * `() => import('./src/capabilities/state.ts', { with: { type: 'dx-module' } })`: the build records
+ * its location and never loads it. Other runtimes ignore the attribute, and builds drop it.
+ */
+export const MODULE_BODY_TYPE = 'dx-module';
+
+type ModuleBodyImport = { start: number; end: number; specifier: unknown; marked: boolean };
+
+const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
+
+const hasProperty = (node: unknown, name: string, test: (value: unknown) => boolean): boolean =>
+  isRecord(node) &&
+  Array.isArray(node.properties) &&
+  node.properties.some(
+    (property) => isRecord(property) && isRecord(property.key) && property.key.name === name && test(property.value),
+  );
+
+// Every `import()` in a config, matched on the parsed AST, flagged when it carries the module-body attribute.
+const findModuleBodyImports = (node: unknown, found: ModuleBodyImport[] = []): ModuleBodyImport[] => {
+  if (Array.isArray(node)) {
+    node.forEach((child) => findModuleBodyImports(child, found));
+  } else if (isRecord(node)) {
+    if (node.type === 'ImportExpression' && typeof node.start === 'number' && typeof node.end === 'number') {
+      found.push({
+        start: node.start,
+        end: node.end,
+        specifier: isRecord(node.source) ? node.source.value : undefined,
+        marked: hasProperty(node.options, 'with', (attributes) =>
+          hasProperty(attributes, 'type', (type) => isRecord(type) && type.value === MODULE_BODY_TYPE),
+        ),
+      });
+    } else {
+      Object.values(node).forEach((child) => findModuleBodyImports(child, found));
+    }
+  }
+  return found;
+};
 
 /**
- * Rewrites each `import('…')` in a `dx.config.ts` to a promise of a marker holding the resolved
+ * Replaces each module-body import in a `dx.config.ts` with a promise of a marker holding the resolved
  * file, so evaluating the config at build time records module locations without loading any body.
+ * Runs after TypeScript is stripped, because Vite drops dynamic-import attributes before resolution.
  */
 const moduleRefPlugin = (): VitePlugin => ({
   name: 'dx-plugin-config:module-ref',
-  enforce: 'pre',
   async transform(code, id) {
     if (!CONFIG_FILE.test(id)) {
       return null;
     }
     let out = code;
-    for (const [match, , specifier] of code.matchAll(DYNAMIC_IMPORT)) {
+    for (const { start, end, specifier, marked } of findModuleBodyImports(this.parse(code)).reverse()) {
+      // An unmarked body would be loaded here, in Node, at build time.
+      if (!marked) {
+        this.error(
+          `Dynamic import of '${String(specifier)}' in ${id} needs \`{ with: { type: '${MODULE_BODY_TYPE}' } }\`.`,
+        );
+      }
+      if (typeof specifier !== 'string') {
+        this.error(`A '${MODULE_BODY_TYPE}' import in ${id} needs a literal specifier to be located at build time.`);
+      }
       const resolved = await this.resolve(specifier, id);
       if (!resolved) {
         this.error(`Cannot resolve module body '${specifier}' in ${id}.`);
       }
-      out = out.replace(
-        match,
-        `Promise.resolve({ [Symbol.for('@dxos/app-framework/vite-plugin/ModuleRef')]: ${JSON.stringify(resolved.id)} })`,
-      );
+      const marker = `Promise.resolve({ [Symbol.for('@dxos/app-framework/vite-plugin/ModuleRef')]: ${JSON.stringify(resolved.id)} })`;
+      out = out.slice(0, start) + marker + out.slice(end);
     }
     return out;
   },
