@@ -4,13 +4,13 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
-import React, { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
-import { DXN, Filter, Obj, Query, Ref } from '@dxos/echo';
-import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
+import { Filter, Obj, Ref } from '@dxos/echo';
+import { useObject, useQuery } from '@dxos/echo-react';
 import { Organization, Person, Task } from '@dxos/types';
 
 import {
@@ -21,16 +21,11 @@ import {
 } from '#components';
 import { AgentOperation, ChatParticipant, Goal, Memory, Mode, Profile } from '#types';
 
-import { useFactEntries } from '../useFactEntries.ts';
+import { useBrainStore } from '../useBrainStore.ts';
+import { selectPrimaryChat, useBindingCount } from '../useSkillBindings.ts';
 
 /** Statuses after which a task no longer needs doing. */
 const CLOSED_TASK_STATUSES: readonly Task.Status[] = ['done', 'duplicate', 'cancelled', 'failed'];
-
-/**
- * The binding entries a chat's feed records; named by typename because the `AiContext` module that
- * defines them carries the heavy session runtime.
- */
-const BINDING_TYPE = DXN.make('org.dxos.type.contextBinding', '0.1.0');
 
 /** A memory past its `expiresAt`; memories without one never expire. */
 const isExpired = (memory: Memory.Memory, now: string): boolean =>
@@ -57,7 +52,8 @@ export const AgentState = ({ role, agent, actions }: AgentStateProps) => {
   const people = useQuery(db, Filter.type(Person.Person));
   const organizations = useQuery(db, Filter.type(Organization.Organization));
   const tasks = useQuery(db, Filter.type(Task.Task));
-  const { facts, sources } = useFactEntries(agent);
+  const { inspection } = useBrainStore(agent);
+  const facts = inspection?.facts;
 
   // A query re-emits on membership only, so status, title and checklist changes need per-object subscriptions.
   const stateAtom = useMemo(
@@ -83,7 +79,13 @@ export const AgentState = ({ role, agent, actions }: AgentStateProps) => {
 
         const counts: AgentStateCounts = {
           memories: { active: active.length, expired: expired.length },
-          facts: sources > 0 ? { count: facts.length, sources } : undefined,
+          facts:
+            facts && facts.length > 0
+              ? {
+                  count: facts.length,
+                  speakers: new Set(facts.flatMap(({ fact }) => fact.attribution.agent ?? [])).size,
+                }
+              : undefined,
           goals: {
             proposed: goals.filter((goal) => goal.status === 'proposed').length,
             confirmed: goals.filter((goal) => goal.status === 'confirmed' || goal.status === 'active').length,
@@ -104,19 +106,11 @@ export const AgentState = ({ role, agent, actions }: AgentStateProps) => {
 
         return { counts };
       }),
-    [chats, memories, goals, people, organizations, tasks, facts, sources],
+    [chats, memories, goals, people, organizations, tasks, facts],
   );
   const { counts } = useAtomValue(stateAtom);
 
-  const primary = useMemo(
-    () =>
-      chats
-        // Discord thread chats carry a foreign key and are never the agent's primary conversation.
-        .filter((chat) => Obj.getMeta(chat).keys.length === 0)
-        .sort((left, right) => left.id.localeCompare(right.id))
-        .at(-1),
-    [chats],
-  );
+  const primary = useMemo(() => selectPrimaryChat(chats), [chats]);
   const skills = useBoundSkills(agent, primary);
   const channels = useChannels(agent, chats, people);
 
@@ -137,23 +131,22 @@ AgentState.displayName = 'AgentState';
  */
 const useBoundSkills = (agent: Agent.Agent, chat: Chat.Chat | undefined): AgentStateSkill[] => {
   const { invokePromise } = Hooks.useOperationInvoker();
-  const db = Obj.getDatabase(agent);
-  const spaceId = db?.spaceId;
-  const [feedRef] = useObject(chat, 'feed');
-  const feed = useResolveRef(feedRef);
-  const bindingsQuery = useMemo(
-    () => (feed ? Query.select(Filter.type(BINDING_TYPE)).from(feed) : Query.select(Filter.nothing())),
-    [feed],
-  );
-  const bindings = useQuery(db, bindingsQuery);
+  const spaceId = Obj.getDatabase(agent)?.spaceId;
+  const bindings = useBindingCount(chat);
   const [skills, setSkills] = useState<AgentStateSkill[]>([]);
+  const refreshGeneration = useRef(0);
 
   const refresh = useCallback(async () => {
     if (!spaceId) {
       return;
     }
 
+    const generation = ++refreshGeneration.current;
     const { data } = await invokePromise(AgentOperation.ListSkills, { agent: Ref.make(agent) }, { spaceId });
+    // Reads overlap when bindings change in quick succession; only the latest may land.
+    if (generation !== refreshGeneration.current) {
+      return;
+    }
     // A chat can bind the built-in skill and the agent's space copy under one key; the mode names it once.
     const byKey = new Map((data?.skills ?? []).map(({ key, name }) => [key ?? name, { key: key ?? name, name }]));
     setSkills([...byKey.values()]);
@@ -161,7 +154,7 @@ const useBoundSkills = (agent: Agent.Agent, chat: Chat.Chat | undefined): AgentS
 
   useEffect(() => {
     void refresh();
-  }, [refresh, chat?.id, bindings.length]);
+  }, [refresh, chat?.id, bindings]);
 
   return skills;
 };

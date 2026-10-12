@@ -22,10 +22,10 @@ import { HasSubject, Message, Organization, Person } from '@dxos/types';
 
 import { AgentOperationHandlerSet } from '#operations';
 import { BrainSkill, ConversationSkill, GoalsSkill, ModesSkill, RelaySkill } from '#skills';
-import { AgentOperation, BrainService, FactEntry, Goal, Memory, Mode, Relay, Trigger, TriggerOperation } from '#types';
+import { AgentOperation, BrainService, Goal, Memory, Mode, Relay, Trigger, TriggerOperation } from '#types';
 
 import { COMPOSE_PROMPT } from '../operations/compose-update.ts';
-import { TEST_MEMBERS, createLocalAgent, makeTestBrain, testSpaceLayer } from './testing.ts';
+import { TEST_MEMBERS, createLocalAgent, makeTestBrain, noChannelBackends, testSpaceLayer } from './testing.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -223,7 +223,7 @@ const TestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
   Layer.provideMerge(
     AssistantTestLayer({
       operationHandlers: AgentOperationHandlerSet,
-      extraServices: Layer.merge(brain.layer, testSpaceLayer),
+      extraServices: Layer.mergeAll(brain.layer, testSpaceLayer, noChannelBackends),
       types: [
         Agent.Agent,
         Chat.Chat,
@@ -239,8 +239,6 @@ const TestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
         Mode.Mode,
         Relay.Relay,
         Message.Message,
-        FactEntry.FactEntry,
-        FactEntry.ExtractionPass,
       ],
       skills: [ConversationSkill.make(), RelaySkill.make(), ModesSkill.make(), GoalsSkill.make(), BrainSkill.make()],
       aiService: ScriptedLanguageModel.scriptedAiService(makeScript(refs)),

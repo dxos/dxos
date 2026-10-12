@@ -39,7 +39,7 @@ with Kai (`ensureParticipantChat`, `ChatParticipant`) and attributes every promp
 passes a `sender` to `useChatModel`, the agent process records it on the user message, and the
 model sees `[From: Dima]`. On load the space holds the three people, the "DXOS Eng" team and a
 transcript of an earlier CI-triage conversation, which the agent reads on load (`readSource`: a
-direct pipeline-rdf extraction, no chat) into facts in the transcript's annotation feed — the state
+direct pipeline-rdf extraction, no chat) into facts in the agent's brain — the state
 panel counts them and the knowledge panel's Facts tab lists them. Try "tell Dima the fix landed", Dima's reply, "take notes", "interview me".
 Tagged `!test`.
 
@@ -48,6 +48,14 @@ transcript. As Rich, "let me know when Dima's indexer PR is up" — Kai records 
 watch, both listed in the knowledge panel's Goals tab. As Dima, "still working on it" (nothing reaches
 Rich), then "the indexer PR is up" — the end-of-turn read records the fact, the watch fires, Rich is
 told and the goal is achieved. Tagged `!test`.
+
+**Agent on Discord** (`stories-stories-assistant-agentdiscord--live`): Kai bound to a Discord-backed
+channel whose bot runs on a local EDGE stack (`:8787`, [SETUP.md](./SETUP.md)); EDGE substitutes
+`DISCORD_BOT_TOKEN_DEV` for the space's placeholder token. The ids default to Kai's bot and the DXOS
+`#test-bot` channel (change them in Controls); press **Start bot** in the Activity panel and
+mention the bot in Discord: the conversation appears under Conversations and in the chat panel, and the
+Discord bot panel logs each gateway transition. Needs dxos/edge#1279. Tagged `!test`. **AgentDiscord › Scripted** runs the same panels against a fake EDGE bot host and checks
+Start → connecting → ready → Stop in CI.
 
 ## 2. Tests and stories (CI)
 

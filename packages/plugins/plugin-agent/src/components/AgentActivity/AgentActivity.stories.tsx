@@ -15,52 +15,64 @@ const NOW = new Date('2026-10-03T12:00:00Z');
 
 type Conversation = { id: string; title: string; lastActivity?: string };
 
+/** In the order they started, as the container lists them. */
 const THREADS: Conversation[] = [
-  { id: 'thread-3', title: 'Launch checklist', lastActivity: '2026-10-03T11:52:00Z' },
-  { id: 'thread-2', title: 'Hiring plan', lastActivity: '2026-10-03T08:15:00Z' },
   { id: 'thread-1', title: 'Discord bot on EDGE', lastActivity: '2026-09-28T16:40:00Z' },
+  { id: 'thread-2', title: 'Hiring plan', lastActivity: '2026-10-03T08:15:00Z' },
+  { id: 'thread-3', title: 'Launch checklist', lastActivity: '2026-10-03T11:52:00Z' },
 ];
 
-type SkillRow = { id: string; name: string; customized: boolean };
+type Row = { id: string; name: string };
 
-const SKILLS: SkillRow[] = [
-  { id: 'org.dxos.skill.agentConversation', name: 'Agent conversation', customized: false },
-  { id: 'org.dxos.skill.interview', name: 'Interview', customized: true },
+const CHANNELS: Row[] = [{ id: 'channel-1', name: 'test-bot' }];
+
+const SKILLS: Row[] = [
+  { id: 'org.dxos.skill.agentConversation', name: 'Agent conversation' },
+  { id: 'org.dxos.skill.agentSupport', name: 'Community support' },
 ];
 
 type StoryProps = {
   conversations: Conversation[];
-  skills?: SkillRow[];
+  channels?: Row[];
+  skills?: Row[];
 };
 
-const DefaultStory = ({ conversations, skills = [] }: StoryProps) => (
-  <AgentActivity.Root>
-    <AgentActivity.Channels values={{ channels: [] }} />
-    <SkillList initial={skills} />
-    <AgentActivity.Conversations ids={conversations.map((conversation) => conversation.id)}>
-      {conversations.map((conversation) => (
-        <AgentActivity.Conversation key={conversation.id} {...conversation} now={NOW} />
-      ))}
-    </AgentActivity.Conversations>
-  </AgentActivity.Root>
-);
-
-/** Customize/Reset toggle the row locally, standing in for the operations the container invokes. */
-const SkillList = ({ initial }: { initial: SkillRow[] }) => {
-  const [skills, setSkills] = useState(initial);
-  const setCustomized = (id: string, customized: boolean) =>
-    setSkills((skills) => skills.map((skill) => (skill.id === id ? { ...skill, customized } : skill)));
+/** Remove and Delete drop the row locally, standing in for the object removal the container performs. */
+const DefaultStory = ({
+  conversations: initialConversations,
+  channels: initialChannels = [],
+  skills = [],
+}: StoryProps) => {
+  const [channels, setChannels] = useState(initialChannels);
+  const [conversations, setConversations] = useState(initialConversations);
   return (
-    <AgentActivity.Skills ids={skills.map((skill) => skill.id)}>
-      {skills.map((skill) => (
-        <AgentActivity.Skill
-          key={skill.id}
-          {...skill}
-          onCustomize={(id) => setCustomized(id, true)}
-          onReset={(id) => setCustomized(id, false)}
-        />
-      ))}
-    </AgentActivity.Skills>
+    <AgentActivity.Root toolbar={<AgentActivity.Toolbar />}>
+      <AgentActivity.Agent id='01KAGENTKAI0000000000000000' name='Kai' />
+      <AgentActivity.Skills ids={skills.map((skill) => skill.id)}>
+        {skills.map((skill) => (
+          <AgentActivity.Skill key={skill.id} {...skill} />
+        ))}
+      </AgentActivity.Skills>
+      <AgentActivity.Channels ids={channels.map((channel) => channel.id)}>
+        {channels.map((channel) => (
+          <AgentActivity.Channel
+            key={channel.id}
+            {...channel}
+            onRemove={(id) => setChannels((rows) => rows.filter((row) => row.id !== id))}
+          />
+        ))}
+      </AgentActivity.Channels>
+      <AgentActivity.Conversations ids={conversations.map((conversation) => conversation.id)}>
+        {conversations.map((conversation) => (
+          <AgentActivity.Conversation
+            key={conversation.id}
+            {...conversation}
+            now={NOW}
+            onDelete={(id) => setConversations((rows) => rows.filter((row) => row.id !== id))}
+          />
+        ))}
+      </AgentActivity.Conversations>
+    </AgentActivity.Root>
   );
 };
 
@@ -81,6 +93,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     conversations: THREADS,
+    channels: CHANNELS,
     skills: SKILLS,
   },
 };

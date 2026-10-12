@@ -12,7 +12,7 @@ import {
   useState,
 } from 'react';
 
-import { type useRegistry } from '../../hooks/index.ts';
+import { SCENE_OVERLAY_ATTRIBUTE, type useRegistry } from '../../hooks/index.ts';
 import { type ControlPointRef, type Drag, type Handle, type SceneViewAtoms } from '../../model/atoms.ts';
 import { nodeDef } from '../../model/node-def.ts';
 import { type Projection } from '../../model/projection.ts';
@@ -33,8 +33,8 @@ import {
   type SplineLink,
   type Tool,
   endpointNode,
+  isFrameNode,
   isPointEndpoint,
-  isPortalNode,
 } from '../../model/types.ts';
 import { boundsCenter, panBy, screenToScene } from '../../utils/camera.ts';
 import { duplicateSelection } from '../../utils/clipboard.ts';
@@ -252,6 +252,17 @@ export const usePointerMachine = ({
     [registry, atoms.selection, select],
   );
 
+  /** Makes a node's embedded content live (`SceneViewAtoms.active`), when it has any. */
+  const activate = useCallback(
+    (id: NodeId) => {
+      // Escaped: a host's node id may hold characters a selector would misread.
+      if (rootRef.current?.querySelector(`[data-node-id="${CSS.escape(id)}"] [${SCENE_OVERLAY_ATTRIBUTE}]`)) {
+        registry.set(atoms.active, id);
+      }
+    },
+    [rootRef, registry, atoms.active],
+  );
+
   const onNodePointerDown = useCallback(
     (node: Node, event: PointerEvent) => {
       const currentTool = registry.get(atoms.tool);
@@ -269,6 +280,12 @@ export const usePointerMachine = ({
         return;
       }
       const next = clickSelect(node.id, event);
+      // A press on the content of the active node (its own toolbar or editor) starts no move: the drag's pointer
+      // capture would take the click from that content's controls. Inactive, the content is inert and the node moves.
+      const embedded = event.target instanceof Element && event.target.closest(`[${SCENE_OVERLAY_ATTRIBUTE}]`);
+      if (embedded && registry.get(atoms.active) === node.id) {
+        return;
+      }
       if (capabilities.move && !node.locked) {
         const { x, y } = nodeBounds(node);
         const ids = [...next].filter((id) => scene.nodes[id] !== undefined);
@@ -276,9 +293,23 @@ export const usePointerMachine = ({
           { kind: 'move', ids, origin: toScene(event), anchor: { x, y }, delta: { x: 0, y: 0 }, copy: event.metaKey },
           event,
         );
+      } else if (next.size === 1) {
+        // A node that cannot move has no drag to end in a click, so the press itself activates it.
+        activate(node.id);
       }
     },
-    [registry, atoms.tool, clickSelect, capabilities.move, capabilities.link, scene.nodes, toScene, startDrag],
+    [
+      registry,
+      atoms.tool,
+      atoms.active,
+      activate,
+      clickSelect,
+      capabilities.move,
+      capabilities.link,
+      scene.nodes,
+      toScene,
+      startDrag,
+    ],
   );
 
   const onLinkPointerDown = useCallback(
@@ -674,7 +705,7 @@ export const usePointerMachine = ({
   /** Adds a new node; a new portal opens onto a fresh scene of its own, whichever path created it. */
   const addNode = useCallback(
     (node: Node) => {
-      if (isPortalNode(node)) {
+      if (isFrameNode(node)) {
         registry.set(store.scenes, {
           ...registry.get(store.scenes),
           [node.scene]: {
@@ -733,6 +764,10 @@ export const usePointerMachine = ({
         }
         case 'move': {
           if (current.delta.x === 0 && current.delta.y === 0) {
+            // A click (a press that never moved) on a node with embedded content makes that content live.
+            if (current.ids.length === 1) {
+              activate(current.ids[0]);
+            }
             break;
           }
           // ⌘-drag leaves the selection where it was and drops a copy, which becomes the selection.
@@ -856,6 +891,7 @@ export const usePointerMachine = ({
       minor,
       cell,
       snapMinor,
+      activate,
     ],
   );
 

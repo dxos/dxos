@@ -31,6 +31,9 @@
       "path": "../../common/keys"
     },
     {
+      "path": "../../common/random"
+    },
+    {
       "path": "../../common/util"
     },
     {
@@ -44,6 +47,9 @@
     },
     {
       "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-graph"
     },
     {
       "path": "../../sdk/app-toolkit"
@@ -70,10 +76,16 @@
       "path": "../../ui/ui-theme"
     },
     {
+      "path": "../plugin-attention"
+    },
+    {
       "path": "../plugin-client"
     },
     {
       "path": "../plugin-illustrator"
+    },
+    {
+      "path": "../plugin-markdown"
     },
     {
       "path": "../plugin-testing"

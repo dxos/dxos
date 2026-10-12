@@ -10,17 +10,20 @@ import * as EffectStream from 'effect/Stream';
 import { DeferredTask, scheduleMicroTask, scheduleTask, synchronized } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { raise } from '@dxos/debug';
+import { Query } from '@dxos/echo';
 import { QueryAST } from '@dxos/echo-protocol';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import type * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { type IndexEngine } from '@dxos/index-core';
 import { log } from '@dxos/log';
+import { QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { QueryService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 import { countWork } from '@dxos/util';
 
 import { type AutomergeHost } from '../automerge/index.ts';
 import { type ExecutionTrace, QueryExecutor, type QueryExecutorMode } from '../query/index.ts';
+import { SLOW_WORK_MS } from '../util.ts';
 import { type InvalidationHint, mergeHints } from './invalidation-hint.ts';
 import type { SpaceStateManager } from './space-state-manager.ts';
 
@@ -92,6 +95,9 @@ type ActiveQuery = {
   /** Query reads from at least one feed scope, so its first result must await indexing. */
   feedScoped: boolean;
 
+  /** Answered once and never re-run; its stream ends after the first response. */
+  oneShot: boolean;
+
   /** Cost (ms) of the last run; 0 until the query has run. */
   cost: number;
 
@@ -134,11 +140,19 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
   /** Cached once true: the store only ever finishes filling, so the check need not repeat. */
   #snapshotsKnownComplete = false;
 
+  /** Shared by queries that register while a check is running; each check is a full scan. */
+  #snapshotsCheck: Promise<boolean> | undefined;
+
   async #snapshotsComplete(): Promise<boolean> {
     if (this.#snapshotsKnownComplete || !this._params.hasCompleteSnapshots) {
       return true;
     }
-    this.#snapshotsKnownComplete = await this._params.hasCompleteSnapshots();
+    this.#snapshotsCheck ??= this._params.hasCompleteSnapshots().finally(() => {
+      this.#snapshotsCheck = undefined;
+    });
+    if (await this.#snapshotsCheck) {
+      this.#snapshotsKnownComplete = true;
+    }
     return this.#snapshotsKnownComplete;
   }
 
@@ -222,7 +236,7 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
   ['QueryService.execQuery'](
     request: QueryService.QueryRequest,
   ): EffectStream.Stream<QueryService.QueryResponse, Error> {
-    return EffectEx.streamFromEmitter<QueryService.QueryResponse, Error>((emit) => {
+    const stream = EffectEx.streamFromEmitter<QueryService.QueryResponse, Error>((emit) => {
       const ctx = Context.default();
       const queryEntry = this._createQuery(
         ctx,
@@ -245,6 +259,8 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
         await ctx.dispose();
       });
     });
+    // The client settles on the first response; ending the stream there runs the finalizer above.
+    return request.reactivity === QueryReactivity.ONE_SHOT ? stream.pipe(EffectStream.take(1)) : stream;
   }
 
   /**
@@ -306,6 +322,7 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
       open: false,
       firstResult: true,
       feedScoped: queryHasFeedScope(parsedQuery),
+      oneShot: request.reactivity === QueryReactivity.ONE_SHOT,
       cost: 0,
       debouncedUntil: 0,
       sendResults: (results) => {
@@ -338,6 +355,9 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
       if (query.firstResult) {
         // First run is always executed regardless of hint.
         query.dirty = true;
+        continue;
+      }
+      if (query.oneShot) {
         continue;
       }
       if (hint === 'all') {
@@ -386,7 +406,22 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
       (this.#stats.averageQueriesActive * (this.#stats.totalExecutionBatches - 1) + activeCount) /
       this.#stats.totalExecutionBatches;
 
-    log.verbose('executed queries', { dirty: dirtyCount, active: activeCount, duration: performance.now() - begin });
+    const duration = performance.now() - begin;
+    if (duration >= SLOW_WORK_MS) {
+      const slowest = ready.reduce<ActiveQuery | undefined>(
+        (max, query) => (max && max.cost >= query.cost ? max : query),
+        undefined,
+      );
+      log.warn('slow query batch', {
+        dirty: dirtyCount,
+        active: activeCount,
+        duration,
+        slowest: slowest && Query.pretty(Query.fromAst(slowest.executor.query)),
+        slowestCost: slowest?.cost,
+      });
+    } else {
+      log.verbose('executed queries', { dirty: dirtyCount, active: activeCount, duration });
+    }
   }
 
   async #runQuery(query: ActiveQuery): Promise<void> {

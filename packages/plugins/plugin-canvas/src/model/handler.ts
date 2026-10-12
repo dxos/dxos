@@ -11,8 +11,10 @@
 
 import { type ContentHandler, type ContentMap, Scene as Dsl, type ReadWorldObject } from '@dxos/diagram';
 import {
+  DEFAULT_LAYER,
   DEFAULT_SIZES,
   type EllipseNode,
+  type Layer,
   type Link,
   type Node,
   type NodeStyle,
@@ -26,6 +28,7 @@ import {
   isNoteNode,
   nodeBounds,
   nodeTitle,
+  sortByZ,
   topZ,
 } from '@dxos/react-ui-canvas/scene';
 
@@ -35,9 +38,12 @@ import {
   type LinkRecord,
   type NodeRecord,
   isElementRecord,
+  isLinkRecord,
   isNodeRecord,
+  isSceneRecord,
   linkKey,
   nodeKey,
+  sceneKey,
   seedContent,
 } from './content.ts';
 
@@ -59,20 +65,104 @@ const HUES: Partial<Record<Dsl.Color, string>> = {
   'red': 'red',
 };
 
-const styleOf = (element: { color?: Dsl.Color; fill?: Dsl.Fill }): NodeStyle | undefined => {
+const styleOf = (element: { color?: Dsl.Color; fill?: Dsl.Fill; stroke?: Dsl.Stroke }): NodeStyle | undefined => {
   const hue = element.color ? HUES[element.color] : undefined;
   const fill = element.fill === 'none' ? false : undefined;
-  return hue || fill !== undefined ? { ...(hue ? { hue } : {}), ...(fill !== undefined ? { fill } : {}) } : undefined;
+  // A tinted shape is a group's backdrop: a guide, an annotation the lattice and the link router pass over.
+  const guide = element.fill === 'tint' ? true : undefined;
+  const lineStyle = element.stroke === 'dashed' || element.stroke === 'dotted' ? element.stroke : undefined;
+  const style: NodeStyle = {
+    ...(hue ? { hue } : {}),
+    ...(fill !== undefined ? { fill } : {}),
+    ...(guide ? { guide } : {}),
+    ...(lineStyle ? { lineStyle } : {}),
+  };
+  return Object.keys(style).length > 0 ? style : undefined;
+};
+
+/** The size of a box's title (a group's name), the layout's small text. */
+const TITLE_FONT_SIZE = 14;
+
+/** Px per character and line height of a small label, for sizing its box to its text (a note's default is a page). */
+const LABEL_CHAR = 7;
+const LABEL_HEIGHT = 20;
+
+/** The node a free connector end lands on: the smallest frame containing the point (a box, not the group around it). */
+const nodeAt = (nodes: readonly Node[], point: { x: number; y: number }, slack = 1): Node | undefined =>
+  nodes
+    .filter((node) => {
+      const { x, y, width, height } = nodeBounds(node);
+      return (
+        point.x >= x - slack && point.x <= x + width + slack && point.y >= y - slack && point.y <= y + height + slack
+      );
+    })
+    .sort((left, right) => left.size.width * left.size.height - right.size.width * right.size.height)[0];
+
+/** The canvas markers of a connector's ends; a canvas end marker is one of arrow, circle or triangle. */
+const endsOf = (arrow: Dsl.Arrow): Link['ends'] => {
+  const markers = Dsl.markersOf(arrow);
+  const marker = (value: Dsl.Marker | undefined) =>
+    value === 'triangle' ? 'triangle' : value === 'circle' ? 'circle' : value ? 'arrow' : undefined;
+  const start = marker(markers.start);
+  const end = marker(markers.end);
+  return start || end ? { ...(start ? { start } : {}), ...(end ? { end } : {}) } : undefined;
 };
 
 const withStyle = (node: Node, style: NodeStyle | undefined): Node => (style ? { ...node, style } : node);
 
 const managed = (content: ContentMap): ElementRecord[] => Object.values(content).filter(isElementRecord);
 
+const nodesOf = (content: ContentMap): Node[] =>
+  Object.values(content)
+    .filter(isNodeRecord)
+    .map((record) => record.node);
+
 const nodesIn = (content: ContentMap, scene: string): Node[] =>
   managed(content)
     .filter((record): record is NodeRecord => isNodeRecord(record) && record.scene === scene)
     .map((record) => record.node);
+
+/** The layer a drawing's decorations (group backdrops, guides) sit on, below the shapes they group. */
+export const BACKDROP_LAYER: Layer = { id: 'backdrop', name: 'Backdrop', z: '' };
+
+/**
+ * Puts an upsert's guides on the backdrop layer and everything else on the scene's top layer. Every element is placed
+ * explicitly: an element naming no layer is on the bottom one, which once there is a backdrop is the backdrop.
+ */
+const placeOnLayers = (content: ContentMap, scene: string, records: ContentMap) => {
+  const record = content[sceneKey(scene)];
+  if (!isSceneRecord(record)) {
+    return;
+  }
+  const layers: readonly Layer[] = record.layers ? Object.values(record.layers) : [];
+  const named = layers.filter((layer) => layer.id !== BACKDROP_LAYER.id);
+  const own = sortByZ(named.length > 0 ? named : [DEFAULT_LAYER]);
+  const main = own.at(-1) ?? DEFAULT_LAYER;
+  const guides = Object.values(records).some((other) => isNodeRecord(other) && other.node.style?.guide);
+  const backdrop = guides || record.layers?.[BACKDROP_LAYER.id] !== undefined;
+  for (const [key, other] of Object.entries(records)) {
+    const node: NodeRecord | undefined = isNodeRecord(other) ? other : undefined;
+    const link: LinkRecord | undefined = isLinkRecord(other) ? other : undefined;
+    if (node) {
+      records[key] = { ...node, node: { ...node.node, layer: node.node.style?.guide ? BACKDROP_LAYER.id : main.id } };
+    } else if (link) {
+      records[key] = { ...link, link: { ...link.link, layer: main.id } };
+    }
+  }
+  if (backdrop) {
+    const lowest = own[0] ?? DEFAULT_LAYER;
+    content[sceneKey(scene)] = {
+      ...record,
+      layers: {
+        ...Object.fromEntries(own.map((layer) => [layer.id, layer])),
+        [BACKDROP_LAYER.id]: record.layers?.[BACKDROP_LAYER.id] ?? {
+          ...BACKDROP_LAYER,
+          z: between(undefined, lowest.z),
+        },
+      },
+    };
+  }
+};
 
 export const SceneHandler: ContentHandler = {
   identify: (record) =>
@@ -109,7 +199,42 @@ export const SceneHandler: ContentHandler = {
     const put = (element: string, node: Node) => {
       records[nodeKey(node.id)] = { kind: 'node', scene, node, dsl: identity(element) } satisfies NodeRecord;
     };
+
+    // A small text belongs to what it captions rather than standing alone: a connector's caption
+    // (`<arrow>-label`) is the link's text, and a title inside an untitled box of its object is that box's label.
+    const captions = new Map<string, string>();
+    const titles = new Map<string, string>();
+    const absorbed = new Set<string>();
     for (const element of object.elements) {
+      if (element.kind !== 'text' || element.weight !== 's') {
+        continue;
+      }
+      const arrow = element.id.endsWith('-label') ? element.id.slice(0, -'-label'.length) : undefined;
+      if (arrow && object.elements.some((other) => other.kind === 'arrow' && other.id === arrow)) {
+        captions.set(arrow, element.text);
+        absorbed.add(element.id);
+        continue;
+      }
+      const box = object.elements.find(
+        (other) =>
+          other.kind === 'rect' &&
+          !other.text &&
+          !titles.has(other.id) &&
+          element.x >= other.x &&
+          element.x <= other.x + other.w &&
+          element.y >= other.y &&
+          element.y <= other.y + other.h,
+      );
+      if (box) {
+        titles.set(box.id, element.text);
+        absorbed.add(element.id);
+      }
+    }
+
+    for (const element of object.elements) {
+      if (absorbed.has(element.id)) {
+        continue;
+      }
       const id = elementId(object.id, element.id);
       switch (element.kind) {
         case 'rect':
@@ -117,8 +242,17 @@ export const SceneHandler: ContentHandler = {
         case 'triangle': {
           const size = { width: element.w * placement.scale, height: element.h * placement.scale };
           const center = place(element.x + element.w / 2, element.y + element.h / 2);
-          const node: RectNode = { type: 'rect', id, z: nextZ(), center, size, label: element.text };
-          put(element.id, withStyle(node, styleOf(element)));
+          const title = titles.get(element.id);
+          const node: RectNode = { type: 'rect', id, z: nextZ(), center, size, label: element.text ?? title };
+          const style = styleOf(element);
+          // A title reads from the box's top-left corner, small, as the layout set it; a label stays centred.
+          put(
+            element.id,
+            withStyle(
+              node,
+              title ? { ...style, alignHorizontal: 'left', alignVertical: 'top', fontSize: TITLE_FONT_SIZE } : style,
+            ),
+          );
           break;
         }
         case 'ellipse': {
@@ -143,6 +277,22 @@ export const SceneHandler: ContentHandler = {
           break;
         }
         case 'text': {
+          // A small text is a label (a group's title, a connector's caption): its own size, no frame or fill.
+          if (element.weight === 's') {
+            const width = element.w ?? element.text.length * LABEL_CHAR + 16;
+            const height = LABEL_HEIGHT;
+            const node: RectNode = {
+              type: 'rect',
+              id,
+              z: nextZ(),
+              center: place(element.x + width / 2, element.y + height / 2),
+              size: { width: width * placement.scale, height: height * placement.scale },
+              label: element.text,
+              style: { fill: false, border: false, alignHorizontal: 'left', fontSize: 12 },
+            };
+            put(element.id, node);
+            break;
+          }
           const width = element.w ?? DEFAULT_SIZES.note.width;
           const height = DEFAULT_SIZES.note.height;
           const node: NoteNode = {
@@ -170,12 +320,39 @@ export const SceneHandler: ContentHandler = {
           break;
         }
         case 'arrow': {
-          if (!element.from || !element.to) {
+          // A laid-out connector carries points, not refs: each end binds to the node it lands on.
+          // A caption (an unbordered label, from this upsert or an earlier one) is never an end.
+          const shapes = [...nodesIn(content, scene), ...nodesOf(records)].filter(
+            (node) => node.style?.border !== false,
+          );
+          // A routed connector is its bends (`<id>-path`) then the arrow's last leg: the path starts at the source.
+          const path = object.elements.find((other) => other.kind === 'line' && other.id === `${element.id}-path`);
+          const start = path?.kind === 'line' ? path.points[0] : element.start;
+          const from = element.from
+            ? Dsl.resolveRef(element.from, object.id)
+            : start && nodeAt(shapes, place(start.x, start.y))?.id;
+          const to = element.to
+            ? Dsl.resolveRef(element.to, object.id)
+            : element.end && nodeAt(shapes, place(element.end.x, element.end.y))?.id;
+          if (!from || !to || from === to) {
             break;
           }
-          const source = { node: Dsl.resolveRef(element.from, object.id) };
-          const target = { node: Dsl.resolveRef(element.to, object.id) };
-          const link: Link = createLink({ type: 'line', id, z: nextZ(), source, target });
+          const ends = endsOf(element);
+          const dashed = Dsl.markersOf(element).dashed;
+          // Routed by the canvas (on a lattice, along its gutters) rather than through the layout's bends: the canvas
+          // attaches at its own ports, so a route through the layout's points would kink at each end.
+          const link: Link = {
+            ...createLink({
+              type: element.from ? 'line' : 'smart',
+              id,
+              z: nextZ(),
+              source: { node: from },
+              target: { node: to },
+            }),
+            ...(ends ? { ends } : {}),
+            ...(element.text || captions.get(element.id) ? { text: element.text || captions.get(element.id) } : {}),
+            ...(dashed ? { style: { lineStyle: 'dashed' } } : {}),
+          };
           records[linkKey(id)] = { kind: 'link', scene, link, dsl: identity(element.id) } satisfies LinkRecord;
           break;
         }
@@ -183,6 +360,7 @@ export const SceneHandler: ContentHandler = {
           break;
       }
     }
+    placeOnLayers(content, scene, records);
     return records;
   },
 
@@ -230,7 +408,13 @@ export const SceneHandler: ContentHandler = {
           if (sourceNode !== undefined && targetNode !== undefined) {
             const from = refTo(content, sourceNode, id);
             const to = refTo(content, targetNode, id);
-            elements.push({ kind: 'arrow', id: element, from, to });
+            elements.push({
+              kind: 'arrow',
+              id: element,
+              from,
+              to,
+              ...(record.link.text ? { text: record.link.text } : {}),
+            });
           }
         }
       }

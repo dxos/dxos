@@ -36,7 +36,7 @@ import { type ComposableProps } from '@dxos/ui-types';
 import { translationKey } from '#translations';
 
 import { formatLogEntry, packageName } from './format.ts';
-import { DEFAULT_MAX_LINES, type LogRow, logBuffer } from './log-buffer.ts';
+import { DEFAULT_MAX_LINES, type LogBuffer, type LogRow, logBuffer } from './log-buffer.ts';
 import { LoggerProvider, levelColor, logLevelsAspect, useLoggerContext } from './LoggerContext.ts';
 import { type LevelName, LEVELS, composeFilter } from './recorder.ts';
 
@@ -69,6 +69,11 @@ type LoggerRootProps = PropsWithChildren<{
    * Must be stable across renders — hoist it or memoize it.
    */
   rowFilter?: (row: LogRow) => boolean;
+  /**
+   * Source of rows; defaults to the process-wide buffer fed by `@dxos/log`. A caller-owned buffer is
+   * fed by its `append`. Must be stable across renders.
+   */
+  buffer?: LogBuffer;
 }>;
 
 const LoggerRoot = ({
@@ -77,6 +82,7 @@ const LoggerRoot = ({
   initialFilter = 'info',
   defaultRecording = true,
   rowFilter,
+  buffer = logBuffer,
 }: LoggerRootProps) => {
   const [filter, setFilter] = useState(initialFilter);
   const [textFilter, setTextFilter] = useState('');
@@ -92,26 +98,31 @@ const LoggerRoot = ({
   );
   const fileLevels = useMemo(() => new Map(Object.entries(fileLevelsRecord)), [fileLevelsRecord]);
 
-  // Rows, files and the recorder live in the process-wide buffer, not here: this panel is a deck
-  // companion, so mounting is not the lifetime we want recording to follow.
-  const allRows = useSyncExternalStore(logBuffer.subscribe, logBuffer.getRows);
+  // Rows, files and the recorder live in the buffer, not here: this panel is a deck companion, so
+  // mounting is not the lifetime we want recording to follow.
+  const allRows = useSyncExternalStore(buffer.subscribe, buffer.getRows);
   // Applied here rather than in `Logger.List` so row pruning, selection and copy all agree on the
   // same set — a scoped panel should never copy out rows it never showed.
   const rows = useMemo(() => (rowFilter ? allRows.filter(rowFilter) : allRows), [allRows, rowFilter]);
-  const files = useSyncExternalStore(logBuffer.subscribe, logBuffer.getFiles);
-  const recording = useSyncExternalStore(logBuffer.subscribe, logBuffer.getRecording);
+  const files = useSyncExternalStore(buffer.subscribe, buffer.getFiles);
+  const recording = useSyncExternalStore(buffer.subscribe, buffer.getRecording);
 
-  // Absorb files registered at module load (dev registry) plus any registered after mount.
+  // Absorb files registered at module load (dev registry) plus any registered after mount; a buffer
+  // fed by `append` holds none of those files' entries, so it lists only the files it was given.
   useEffect(() => {
-    const sync = () => logBuffer.addFiles(logFileRegistry.getFiles());
+    if (!buffer.recordsLog) {
+      return;
+    }
+
+    const sync = () => buffer.addFiles(logFileRegistry.getFiles());
     sync();
     return logFileRegistry.subscribe(sync);
-  }, []);
+  }, [buffer]);
 
-  useEffect(() => logBuffer.setCapacity(maxLines), [maxLines]);
+  useEffect(() => buffer.setCapacity(maxLines), [buffer, maxLines]);
 
   const effectiveFilter = useMemo(() => composeFilter(filter, fileLevels), [filter, fileLevels]);
-  useEffect(() => logBuffer.setFilter(filter, fileLevels), [filter, fileLevels, effectiveFilter]);
+  useEffect(() => buffer.setFilter(filter, fileLevels), [buffer, filter, fileLevels, effectiveFilter]);
 
   // `defaultRecording` seeds the buffer the first time a panel mounts; thereafter the buffer's own
   // state wins, so reopening the panel does not silently resume a stream the user paused.
@@ -120,16 +131,19 @@ const LoggerRoot = ({
     if (!seeded.current) {
       seeded.current = true;
       if (defaultRecording) {
-        logBuffer.start();
+        buffer.start();
       }
     }
-  }, [defaultRecording]);
+  }, [buffer, defaultRecording]);
 
-  const setRecording = useCallback((fn: (value: boolean) => boolean) => {
-    const next = fn(logBuffer.recording);
-    logBuffer.start();
-    logBuffer.setPaused(!next);
-  }, []);
+  const setRecording = useCallback(
+    (fn: (value: boolean) => boolean) => {
+      const next = fn(buffer.recording);
+      buffer.start();
+      buffer.setPaused(!next);
+    },
+    [buffer],
+  );
 
   // Drop per-row state (expansion, selection) for evicted rows so the sets stay bounded.
   useEffect(() => {
@@ -161,11 +175,11 @@ const LoggerRoot = ({
   );
   const clearFileLevels = useCallback(() => clearFileLevelsAction(), [clearFileLevelsAction]);
   const clear = useCallback(() => {
-    logBuffer.clear();
+    buffer.clear();
     setExpanded(new Set());
     setChecked(new Set());
     setCurrent(undefined);
-  }, []);
+  }, [buffer]);
   // Copy the checked rows when any are checked, else the rows the search leaves visible.
   const getCopyText = useCallback(() => {
     const selected =
@@ -435,6 +449,15 @@ type LoggerListProps = Util.ThemedClassName<{
   checkable?: boolean;
 }>;
 
+/** Keys that move the listbox's highlight. */
+const NAVIGATION_KEYS = new Set(['ArrowUp', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown']);
+
+/** The row id of the listbox's highlighted option, if any. */
+const highlightedId = (container: HTMLElement): number | undefined => {
+  const value = container.querySelector('[role=option][data-highlighted]')?.getAttribute('data-value');
+  return value === null || value === undefined ? undefined : Number(value);
+};
+
 const LoggerList = ({ classNames, checkable = true }: LoggerListProps) => {
   const { t } = Hooks.useTranslation(translationKey);
   const { rows, expanded, toggleExpand, current, setCurrent, checked, toggleChecked, textFilter } =
@@ -444,6 +467,16 @@ const LoggerList = ({ classNames, checkable = true }: LoggerListProps) => {
   const visible = rows
     .map((row) => ({ ...row, record: formatLogEntry(row.entry) }))
     .filter(({ record }) => matchesText(record, textFilter));
+  // Entries from a caller-owned buffer usually carry no call-site file, so the column shows their time instead of staying empty.
+  const showFile = visible.some(({ record }) => record.file);
+  // Literal class names, since Tailwind only generates classes it finds verbatim in source.
+  const columns = checkable
+    ? showFile
+      ? 'grid-cols-[auto_1rem_8rem_1fr_max-content]'
+      : 'grid-cols-[auto_1rem_max-content_1fr_max-content]'
+    : showFile
+      ? 'grid-cols-[1rem_8rem_1fr_max-content]'
+      : 'grid-cols-[1rem_max-content_1fr_max-content]';
 
   if (visible.length === 0) {
     return (
@@ -456,16 +489,22 @@ const LoggerList = ({ classNames, checkable = true }: LoggerListProps) => {
   return (
     <Listbox.Root items={visible.map(({ id }) => ({ value: String(id), label: String(id) }))}>
       <div
+        // A click marks its row current; once the keys move the listbox's own highlight, that is the only ringed row, since
+        // a current row left behind would be ringed alongside it.
         onKeyDown={(event) => {
-          if (current === undefined) {
+          if (NAVIGATION_KEYS.has(event.key)) {
+            setCurrent(undefined);
+          }
+          const target = highlightedId(event.currentTarget) ?? current;
+          if (target === undefined) {
             return;
           }
           if (event.key === ' ') {
             event.preventDefault();
-            toggleExpand(current);
+            toggleExpand(target);
           } else if (event.key === 'Enter' && checkable) {
             event.preventDefault();
-            toggleChecked(current);
+            toggleChecked(target);
           }
         }}
       >
@@ -481,17 +520,16 @@ const LoggerList = ({ classNames, checkable = true }: LoggerListProps) => {
                 key={id}
                 id={String(id)}
                 current={current === id}
-                onFocus={() => setCurrent(id)}
                 onClick={() => setCurrent(id)}
+                // The first track keeps the row's height, so its cells stay centred with or without the checkbox and while the
+                // detail below it is open.
                 classNames={mx(
-                  'group grid gap-2 items-center p-0 dx-current',
-                  checkable
-                    ? 'grid-cols-[auto_1rem_8rem_1fr_max-content]'
-                    : 'grid-cols-[1rem_8rem_1fr_max-content] pl-2',
+                  'group grid gap-2 items-center p-0 [grid-template-rows:minmax(var(--dx-block-size),auto)]',
+                  columns,
                 )}
               >
                 {checkable && (
-                  <Layout.Flex align='center' classNames='pl-2'>
+                  <Layout.Flex align='center'>
                     <Field.Root>
                       <Input.Checkbox
                         tabIndex={-1}
@@ -501,14 +539,33 @@ const LoggerList = ({ classNames, checkable = true }: LoggerListProps) => {
                     </Field.Root>
                   </Layout.Flex>
                 )}
-                <span className={mx('justify-self-center', levelColor(entry.level))}>{record.level}</span>
-                <div
-                  className={mx('flex flex-col min-w-0 leading-tight', !expanded.has(id) && 'text-fg-muted')}
-                  title={record.file}
+                <span className={mx('grid size-6 place-items-center text-sm', levelColor(entry.level))}>
+                  {record.level}
+                </span>
+                {showFile ? (
+                  <span
+                    className={mx(
+                      'min-w-0 overflow-x-clip overflow-y-visible text-ellipsis whitespace-nowrap [text-box:trim-both_cap_alphabetic]',
+                      !expanded.has(id) && 'text-fg-muted',
+                    )}
+                    title={record.file}
+                  >
+                    {record.file?.split('/').pop() ?? record.file}
+                  </span>
+                ) : (
+                  <time
+                    className='tabular-nums text-fg-muted [text-box:trim-both_cap_alphabetic]'
+                    dateTime={record.timestamp}
+                  >
+                    {new Date(entry.timestamp).toLocaleTimeString(undefined, { hour12: false })}
+                  </time>
+                )}
+                {/* Trimmed to the cap height so text without descenders (times, capitals) centres in the row instead of riding high;
+                    clipped on x only, since `truncate`'s hidden overflow would cut the descenders the trim leaves outside the box. */}
+                <span
+                  className='min-w-0 overflow-x-clip overflow-y-visible text-ellipsis whitespace-nowrap [text-box:trim-both_cap_alphabetic]'
+                  title={record.message}
                 >
-                  <span className='truncate'>{record.file?.split('/').pop() ?? record.file}</span>
-                </div>
-                <span className='truncate' title={record.message}>
                   {record.message}
                 </span>
                 <SystemButton.Clipboard
@@ -525,7 +582,7 @@ const LoggerList = ({ classNames, checkable = true }: LoggerListProps) => {
                     {/* The viewport owns the scrolling, so a long line gets the themed bar, not the native one. */}
                     <Syntax.Viewport>
                       <JsonHighlighter
-                        classNames='p-2 overflow-visible'
+                        classNames='text-sm'
                         data={{
                           file: record.line ? `${record.file}:${record.line}` : record.file,
                           message: record.message,

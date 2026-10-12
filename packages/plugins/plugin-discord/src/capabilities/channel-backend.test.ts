@@ -118,21 +118,32 @@ describe('Discord channel backend', () => {
     vi.unstubAllGlobals();
   });
 
-  it.effect('opens a DM from the discord identity and posts into it in chunks without mentions', () =>
+  it.effect('names a pending DM from the discord identity without calling Discord', () =>
     Effect.gen(function* () {
       const backend = makeDiscordChannelBackend();
-      const { channel } = yield* makeChannel();
+      const { channel } = yield* makeChannel(MANAGED_ACCESS_TOKEN);
+      expect(backend.mirrored).toBe(true);
       const josiah = Person.make({ fullName: 'Josiah', identities: [{ label: 'discord', value: 'user-7' }] });
-
       const thread = yield* (backend.openDirect?.(channel, josiah) ?? Effect.succeed(undefined)).pipe(withCapabilities);
-      expect(thread).toBe('dm-1');
+      expect(thread).toBe(DiscordChannel.pendingDmThread('user-7'));
+      expect(DiscordChannel.pendingDmUser(thread ?? '')).toBe('user-7');
+      expect(DiscordChannel.pendingDmUser('1400000000000000001')).toBeUndefined();
       const nobody = Person.make({ fullName: 'Nobody' });
       expect(
         yield* (backend.openDirect?.(channel, nobody) ?? Effect.succeed(undefined)).pipe(withCapabilities),
       ).toBeUndefined();
+      expect(discord.calls).toHaveLength(0);
+    }).pipe(Effect.provide(testLayer())),
+  );
 
+  it.effect('a direct send to a pending DM opens it and posts in chunks without mentions', () =>
+    Effect.gen(function* () {
+      const backend = makeDiscordChannelBackend();
+      const { channel } = yield* makeChannel();
       const body = `${'a'.repeat(1500)}\n${'b'.repeat(1000)}`;
-      const receipt = yield* (backend.threads?.send(channel, 'dm-1', text(body)) ?? Effect.void).pipe(withCapabilities);
+      const receipt = yield* (
+        backend.threads?.send(channel, DiscordChannel.pendingDmThread('user-7'), text(body)) ?? Effect.void
+      ).pipe(withCapabilities);
       expect(receipt).toEqual({
         messageIds: ['message-1', 'message-2'],
         properties: { discord: { channelId: 'dm-1', messageId: 'message-1', messageIds: ['message-1', 'message-2'] } },

@@ -1,5 +1,30 @@
 # @dxos/plugin-native
 
+## 0.14.0
+
+### Patch Changes
+
+- 2e6b92a: The Composer help menu can check for updates and, once one is downloaded, offers "Restart to update"; the desktop update toast and settings button now use the same "Restart to update" wording.
+- Updated dependencies [0715304]
+- Updated dependencies [b0e4b60]
+- Updated dependencies [fd09131]
+- Updated dependencies [508be04]
+- Updated dependencies [347546a]
+- Updated dependencies [0e28f43]
+- Updated dependencies [a1e64db]
+- Updated dependencies [3e98467]
+- Updated dependencies [1819960]
+- Updated dependencies [4820c02]
+  - @dxos/app-framework@0.14.0
+  - @dxos/react-ui-form@0.14.0
+  - @dxos/react-ui@0.14.0
+  - @dxos/plugin-assistant@0.14.0
+  - @dxos/effect@0.14.0
+  - @dxos/app-toolkit@0.14.0
+  - @dxos/ai@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/util@0.14.0
+
 ## 0.13.0
 
 ### Patch Changes

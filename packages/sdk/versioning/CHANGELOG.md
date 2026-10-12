@@ -1,5 +1,18 @@
 # @dxos/versioning
 
+## 0.14.0
+
+### Patch Changes
+
+- Updated dependencies [1eed6b1]
+- Updated dependencies [ed52cb7]
+- Updated dependencies [6847fe2]
+- Updated dependencies [eb5d14d]
+  - @dxos/echo@0.14.0
+  - @dxos/echo-client@0.14.0
+  - @dxos/schema@0.14.0
+  - @dxos/invariant@0.14.0
+
 ## 0.13.0
 
 ### Patch Changes

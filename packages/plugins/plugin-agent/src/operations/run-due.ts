@@ -9,7 +9,7 @@ import { Database } from '@dxos/echo';
 
 import { BrainService, TriggerOperation } from '#types';
 
-import { deliver } from './run-triggers.ts';
+import { deliver } from './deliver.ts';
 
 const handler: Operation.WithHandler<typeof TriggerOperation.RunDue> = TriggerOperation.RunDue.pipe(
   Operation.withHandler(

@@ -13,6 +13,7 @@ import * as Stream from 'effect/Stream';
 import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 
+import { RemoteCommandRejectedError } from '../errors.ts';
 import type * as ProcessManager from '../ProcessManager.ts';
 import type * as RemoteProcessManager from '../RemoteProcessManager.ts';
 
@@ -116,7 +117,10 @@ export const makeHost = (options: Options): Effect.Effect<Host> =>
             Effect.gen(function* () {
               const definition = definitionFor(request.key);
               if (!definition) {
-                return yield* Effect.die(`host does not host process '${request.key}'`);
+                // Rejected, as EDGE's 400 for an unknown key reaches a client through `EdgeProcessControl`.
+                return yield* Effect.die(
+                  new RemoteCommandRejectedError({ message: `host does not host process '${request.key}'` }),
+                );
               }
               const handle = yield* options.manager.spawn(definition, {
                 ...(request.name !== undefined ? { name: request.name } : {}),

@@ -70,6 +70,12 @@
       "path": "../../core/echo/echo-react"
     },
     {
+      "path": "../../core/halo/credentials"
+    },
+    {
+      "path": "../../core/protocols"
+    },
+    {
       "path": "../../devtools/cli-util"
     },
     {

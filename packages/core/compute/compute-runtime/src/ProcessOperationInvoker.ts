@@ -6,15 +6,19 @@
 
 import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import * as PubSub from 'effect/PubSub';
 import * as Ref from 'effect/Ref';
+import * as Schema from 'effect/Schema';
 import * as Tracer from 'effect/Tracer';
 
 import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
+import { Context as DxosContext } from '@dxos/context';
 import { Database } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as SpanAttributes from '@dxos/effect/SpanAttributes';
@@ -22,7 +26,9 @@ import { log } from '@dxos/log';
 import { type OperationInvoker } from '@dxos/operation';
 import { markWork } from '@dxos/util';
 
+import { RemoteRuntimeUnreachableError } from './errors.ts';
 import * as OperationProcess from './OperationProcess.ts';
+import * as RemoteOperationInvoker from './RemoteOperationInvoker.ts';
 
 export type ProcessOperationInvoker = Operation.OperationService & OperationInvoker.OperationInvokerInternal;
 
@@ -31,20 +37,36 @@ export class Service extends Context.Service<Service, ProcessOperationInvoker>()
 ) {}
 
 /**
+ * How long an awaited `on: 'edge'` invocation waits for EDGE to accept its process. A remote manager
+ * may queue the spawn while EDGE is unreachable, and the caller awaiting the output would otherwise
+ * wait for as long as the outage lasts.
+ */
+export const DEFAULT_REMOTE_ACCEPT_TIMEOUT = Duration.seconds(30);
+
+/**
  * Creates an invoker that runs every operation as a process spawned through `manager`, which owns service
- * resolution, storage and lifecycle. `InvokeOptions.on === 'edge'` spawns it on the EDGE runtime hosting
- * `InvokeOptions.spaceId`.
+ * resolution, storage and lifecycle. `InvokeOptions.on === 'edge'` runs it on EDGE for `InvokeOptions.spaceId`:
+ * one request through `remote` when given, or else a process spawned on the EDGE runtime.
  */
 export const make = ({
   manager,
   origin,
   tracer,
+  remote,
+  remoteAcceptTimeout = DEFAULT_REMOTE_ACCEPT_TIMEOUT,
 }: {
   /** Inside a process, the one whose spawns default their parent to that process. */
   manager: Process.Manager;
   /** Who the spawned processes attribute their database writes to (see `Database.Origin`). */
   origin?: Database.Origin;
   tracer?: Tracer.Tracer;
+  /**
+   * Runs an `on: 'edge'` invocation as one request to EDGE's operation host: an operation is a call, not a
+   * process, so it gets no Durable Object of its own. Resolved per call, since the host may not have it ready.
+   */
+  remote?: Effect.Effect<RemoteOperationInvoker.Invoker>;
+  /** See {@link DEFAULT_REMOTE_ACCEPT_TIMEOUT}; applies to an `on: 'edge'` invocation spawned without `remote`. */
+  remoteAcceptTimeout?: Duration.Duration;
 }): ProcessOperationInvoker => {
   // Beneath the caller's context: `invokePromise` starts a fresh, empty-context fiber that would otherwise
   // fall back to Effect's native tracer, whose spans never reach OpenTelemetry.
@@ -96,6 +118,90 @@ export const make = ({
       }),
     );
 
+  /**
+   * {@link Process.awaitOutput} for a process spawned on EDGE, failing if EDGE has not accepted it
+   * within `remoteAcceptTimeout`. The unaccepted spawn is terminated rather than left queued, so a
+   * caller that gave up does not start the operation when EDGE comes back.
+   */
+  const awaitRemoteOutput = <O>(handle: Process.Process<any, O, any>, key: string): Effect.Effect<O> =>
+    Effect.raceFirst(
+      Process.awaitOutput(handle),
+      Effect.sleep(remoteAcceptTimeout).pipe(
+        Effect.andThen(() =>
+          handle.status.state === Process.State.STARTING
+            ? handle.terminate().pipe(
+                // Best effort: the host is presumed unreachable, so reading back its state may die too.
+                Effect.catchCause(() => Effect.void),
+                Effect.andThen(
+                  Effect.die(
+                    new RemoteRuntimeUnreachableError({
+                      message: `EDGE did not accept '${key}' within ${Duration.format(remoteAcceptTimeout)}.`,
+                    }),
+                  ),
+                ),
+              )
+            : Effect.never,
+        ),
+      ),
+    );
+
+  /** Whether `options` send the call through `remote` rather than spawning it. */
+  const goesRemote = (options: Operation.InvokeOptions | undefined): boolean =>
+    options?.on === 'edge' && options.spaceId !== undefined && remote !== undefined;
+
+  /**
+   * The remote request carries only the space, so a call that needs its `conversation` or `notify` is refused
+   * rather than run without them; `tracing` only groups traces and is not forwarded.
+   */
+  const refuseUnforwardable = (
+    op: Operation.Definition.Any,
+    options: Operation.InvokeOptions | undefined,
+  ): Effect.Effect<void> =>
+    goesRemote(options) && (options?.conversation !== undefined || options?.notify !== undefined)
+      ? Effect.die(new Error(`Operation '${op.meta.key}' cannot run on EDGE with a conversation or notify option.`))
+      : Effect.void;
+
+  /**
+   * The output of `op`, run on EDGE through `remote`: by its deployment id when it has one, else as the operation
+   * EDGE hosts under its key. Input and output cross the wire in their encoded form.
+   */
+  const invokeRemote = <I, O>(
+    op: Operation.Definition<I, O>,
+    input: I,
+    options: Operation.InvokeOptions & { spaceId: NonNullable<Operation.InvokeOptions['spaceId']> },
+    invoker: Effect.Effect<RemoteOperationInvoker.Invoker>,
+  ): Effect.Effect<O> =>
+    Effect.gen(function* () {
+      yield* refuseUnforwardable(op, options);
+      const encoded = yield* Schema.encodeEffect(op.input)(input).pipe(Effect.orDie);
+      const target = op.meta.deployedId ?? String(op.meta.key);
+      const output = yield* (yield* invoker).invoke(DxosContext.default(), target, encoded, {
+        spaceId: options.spaceId,
+      });
+      return yield* Schema.decodeUnknownEffect(op.output)(output).pipe(Effect.orDie);
+    }).pipe(
+      Effect.withSpan('ProcessOperationInvoker.invokeRemote', {
+        attributes: { [SpanAttributes.OPERATION.key]: op.meta.key.toString() },
+      }),
+    );
+
+  /** Runs `op` to its output: on EDGE through `remote` when asked for and available, else as a process. */
+  const run = <I, O>(
+    op: Operation.Definition<I, O>,
+    input: I,
+    options: Operation.InvokeOptions | undefined,
+    detached: boolean,
+  ): Effect.Effect<O> =>
+    goesRemote(options) && options?.spaceId !== undefined && remote !== undefined
+      ? invokeRemote(op, input, { ...options, spaceId: options.spaceId }, remote)
+      : spawn(op, input, options, detached).pipe(
+          Effect.flatMap((handle) =>
+            options?.on === 'edge' && !detached
+              ? awaitRemoteOutput(handle, op.meta.key.toString())
+              : Process.awaitOutput(handle),
+          ),
+        );
+
   const invoke: Operation.OperationService['invoke'] = <I, O>(
     op: Operation.Definition<I, O>,
     ...args: any[]
@@ -103,8 +209,7 @@ export const make = ({
     const input = args[0] as I;
     const options = args[1] as Operation.InvokeOptions | undefined;
     return Effect.gen(function* () {
-      const handle = yield* spawn(op, input, options, false);
-      const output = yield* Process.awaitOutput(handle);
+      const output = yield* run(op, input, options, false);
       yield* PubSub.publish(pubsub, { operation: op, input, output, timestamp: Date.now() });
       return output;
     }).pipe(
@@ -126,10 +231,11 @@ export const make = ({
     const input = args[0] as I;
     const options = args[1] as Operation.InvokeOptions | undefined;
     return Effect.gen(function* () {
+      // Before detaching: the scheduled call's own failure is only logged, so the caller would never see this one.
+      yield* refuseUnforwardable(op, options);
       yield* Ref.update(pendingCount, (count) => count + 1);
       // Through the output, not just the spawn: `awaitFollowups` waits for the operation to finish.
-      const fiber = yield* spawn(op, input, options, true).pipe(
-        Effect.flatMap((handle) => Process.awaitOutput(handle)),
+      const fiber = yield* run(op, input, options, true).pipe(
         Effect.ensuring(Ref.update(pendingCount, (count) => count - 1)),
         Effect.tapCause((cause) =>
           Effect.sync(() => {
@@ -184,7 +290,13 @@ export const layer: Layer.Layer<Operation.Service | Service, never, Process.Mana
     // A host provides `Database.Origin` to label what its root invocations write, e.g. `user` for an app's UI.
     const origin = yield* Database.Origin;
     const tracer = yield* Effect.tracer;
-    const invoker = make({ manager, origin, tracer });
+    const remote = yield* Effect.serviceOption(RemoteOperationInvoker.Service);
+    const invoker = make({
+      manager,
+      origin,
+      tracer,
+      remote: Option.getOrUndefined(Option.map(remote, (remoteInvoker) => Effect.succeed(remoteInvoker))),
+    });
     return Context.make(Operation.Service, invoker).pipe(Context.add(Service, invoker));
   }),
 );
