@@ -3,7 +3,7 @@
 //
 
 import type { QueryAST } from '@dxos/echo-protocol';
-import type { EscapedPropPath } from '@dxos/index-core';
+import type { EscapedPropPath } from '@dxos/index-core/query';
 import type { EID, EntityId, URI } from '@dxos/keys';
 
 export namespace QueryPlan {

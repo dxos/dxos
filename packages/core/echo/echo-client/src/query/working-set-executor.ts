@@ -18,7 +18,7 @@ import {
   QueryAST,
   isEncodedReference,
 } from '@dxos/echo-protocol';
-import { EscapedPropPath, referenceIndexKey } from '@dxos/index-core';
+import { EscapedPropPath, referenceIndexKey } from '@dxos/index-core/query';
 import { EID, type EntityId, type SpaceId, type URI } from '@dxos/keys';
 import { getDeep, visitValues } from '@dxos/util';
 

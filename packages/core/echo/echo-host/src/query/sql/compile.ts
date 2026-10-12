@@ -17,7 +17,7 @@ import {
   buildTypeDxnCondition,
   normalizePropPath,
   referenceIndexKey,
-} from '@dxos/index-core';
+} from '@dxos/index-core/query';
 import { DXN, EID, EntityId, type SpaceId } from '@dxos/keys';
 
 import { QueryError } from '../errors.ts';

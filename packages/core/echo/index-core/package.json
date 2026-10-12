@@ -17,6 +17,11 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./query": {
+      "source": "./src/query.ts",
+      "types": "./dist/types/src/query.d.ts",
+      "import": "./dist/lib/query.mjs"
     }
   },
   "files": [

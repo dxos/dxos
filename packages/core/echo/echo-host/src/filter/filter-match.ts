@@ -12,7 +12,7 @@ import {
   filterMatchValue,
   makeFilterMatcher,
 } from '@dxos/echo/internal';
-import { type EntityMeta } from '@dxos/index-core';
+import { type EntityMeta } from '@dxos/index-core/query';
 import { EntityId, SpaceId } from '@dxos/keys';
 
 export { filterMatchEntity, filterMatchValue };
