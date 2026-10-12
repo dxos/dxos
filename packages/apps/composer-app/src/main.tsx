@@ -346,9 +346,19 @@ const main = async () => {
 
   // Intentionally do not await; the buffering backend in TRACE_PROCESSOR captures
   // early spans and replays them once the real OTEL backend registers.
-  const observability = initializeObservability(config, isTauri, logStore, observabilityDisabled, {
-    post: (message) => observabilityWorker.postMessage(message),
+  // Replay starts once boot settles: the recorder's snapshot and compression cost ~150ms of main thread during startup.
+  const startupSettled = new Promise<void>((resolve) => {
+    window.addEventListener(Hooks.STARTUP_ACTIVATED_EVENT, () => resolve(), { once: true });
+    window.addEventListener(Hooks.STARTUP_FAILED_EVENT, () => resolve(), { once: true });
   });
+  const observability = initializeObservability(
+    config,
+    isTauri,
+    logStore,
+    observabilityDisabled,
+    { post: (message) => observabilityWorker.postMessage(message) },
+    startupSettled,
+  );
 
   const captureStartupSummary = (): Record<string, string | number | boolean | undefined> => {
     const measures = performance.getEntriesByType('measure');
