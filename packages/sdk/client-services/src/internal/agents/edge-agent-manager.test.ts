@@ -9,7 +9,12 @@ import { Event, Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { IdentityDid, PublicKey, SpaceId } from '@dxos/keys';
-import { type CreateAgentRequestBody, type CreateAgentResponseBody, EdgeAgentStatus } from '@dxos/protocols';
+import {
+  type CreateAgentRequestBody,
+  type CreateAgentResponseBody,
+  EdgeAgentStatus,
+  type GetAgentStatusResponseBody,
+} from '@dxos/protocols';
 import { requirePublicKey } from '@dxos/protocols/buf';
 import { Runtime_Client_EdgeFeaturesSchema } from '@dxos/protocols/buf/dxos/config_pb';
 import { CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
@@ -84,7 +89,31 @@ describe('EdgeAgentManager', () => {
     expect(manager.agentStatus).not.toEqual(EdgeAgentStatus.ACTIVE);
     await manager.close();
   });
+
+  test('does not apply a status EDGE reports for an identity replaced during the query', async ({ expect }) => {
+    const guest = new TestOwner();
+    const host = new TestOwner();
+    let active = guest;
+    const edge = new TestEdge();
+    edge.status = new Trigger();
+    const manager = new TestManager(AGENTS_ENABLED, edge, new TestSpaces(), () => active);
+
+    const fetching = manager.fetchAgentStatus(new Context());
+    await edge.statusRequested.wait();
+    active = host;
+    edge.status.wake({ agent: { status: EdgeAgentStatus.ACTIVE, deviceKey: PublicKey.random().toHex() } });
+    await fetching;
+
+    expect(manager.agentStatus).toBeUndefined();
+  });
 });
+
+/** Exposes the status query that the manager otherwise only schedules when it opens. */
+class TestManager extends EdgeAgentManager {
+  fetchAgentStatus(ctx: Context): Promise<void> {
+    return this._fetchAgentStatus(ctx);
+  }
+}
 
 /** An identity that records the devices it admits instead of writing credentials. */
 class TestOwner implements AgentOwner {
@@ -108,15 +137,22 @@ class TestOwner implements AgentOwner {
 class TestEdge implements Pick<EdgeHttpClient, 'createAgent' | 'getAgentStatus'> {
   readonly requested = new Trigger<CreateAgentRequestBody>();
   readonly created = new Trigger<CreateAgentResponseBody>();
+  readonly statusRequested = new Trigger();
+  /** When set, status queries answer only when the test wakes it; otherwise there is no agent. */
+  status?: Trigger<GetAgentStatusResponseBody>;
 
   readonly createAgent: EdgeHttpClient['createAgent'] = async (_ctx, body) => {
     this.requested.wake(body);
     return this.created.wait();
   };
 
-  readonly getAgentStatus: EdgeHttpClient['getAgentStatus'] = async () => ({
-    agent: { status: EdgeAgentStatus.NOT_FOUND },
-  });
+  readonly getAgentStatus: EdgeHttpClient['getAgentStatus'] = async () => {
+    if (!this.status) {
+      return { agent: { status: EdgeAgentStatus.NOT_FOUND } };
+    }
+    this.statusRequested.wake();
+    return this.status.wait();
+  };
 }
 
 class TestSpaces implements Pick<SpacesContract.Manager, 'spaces' | 'updated'> {
