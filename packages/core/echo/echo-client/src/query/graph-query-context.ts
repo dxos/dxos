@@ -293,13 +293,14 @@ export class GraphQueryContext implements QueryContext {
     // A short remote window is the whole result, so every local match belongs; a full one bounds admission.
     const full = remote.length >= limit;
     const boundary = full ? windowData(remote[remote.length - 1]) : undefined;
+    const admit = full ? (data: EntityStructure['data']) => compareWindowData(orders, data, boundary) <= 0 : undefined;
     const seen = new Set(kept.map((entry) => entry.id));
     for (const source of this._sources) {
       if (!(source instanceof SpaceQuerySource) || !source.coversQuery(query)) {
         continue;
       }
-      for (const match of source.matchLocal(plan)) {
-        if (seen.has(match.id) || (full && compareWindowData(orders, match.data, boundary) > 0)) {
+      for (const match of source.matchLocal(plan, admit)) {
+        if (seen.has(match.id)) {
           continue;
         }
         seen.add(match.id);
@@ -456,12 +457,22 @@ export class SpaceQuerySource implements QuerySource {
     return this.coreById(id)?.getObjectStructure() !== undefined;
   }
 
-  /** Every loaded object local evaluation admits under the plan's flat filter, with its document data. */
-  matchLocal(plan: MergePlan): LocalMatch[] {
-    return this._database.allObjectCores().flatMap((core) => {
-      const data = core.getObjectStructure()?.data;
-      return data !== undefined && evaluateCore(plan, core) === true ? [{ id: core.id, data }] : [];
-    });
+  /**
+   * Every object with an unindexed local write that local evaluation admits under the plan's flat filter and `admit`
+   * accepts by its document data, with that data.
+   */
+  matchLocal(plan: MergePlan, admit?: (data: EntityStructure['data']) => boolean): LocalMatch[] {
+    const matches: LocalMatch[] = [];
+    // Only an object with a local write the index has not seen can be missing from an index answer.
+    for (const id of this._database.unindexedWrites()) {
+      const core = this.coreById(id);
+      const data = core?.getObjectStructure()?.data;
+      // `admit` reads one sort key and runs first, so the full filter only sees objects inside the window.
+      if (core && data !== undefined && (admit === undefined || admit(data)) && evaluateCore(plan, core) === true) {
+        matches.push({ id, data });
+      }
+    }
+    return matches;
   }
 
   /** A working-set entry for a loaded object, as `matchLocal` admitted it. */

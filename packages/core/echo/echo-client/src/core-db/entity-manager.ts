@@ -210,6 +210,9 @@ export class EntityManager implements IDatabaseBinding {
   private _objectsForNextDbUpdate = new Set<string>();
   /** Objects the current local commit wrote, emitted by {@link #flushLocalCommit} once it ends. */
   readonly #objectsForLocalCommit = new Set<string>();
+  /** Objects written locally since the last flush that reached the index, with the sequence of their last write. */
+  readonly #unindexedWrites = new Map<string, number>();
+  #writeSequence = 0;
   private _objectsForNextUpdate = new Set<string>();
   private _updateScheduler!: UpdateScheduler;
 
@@ -413,6 +416,7 @@ export class EntityManager implements IDatabaseBinding {
     this._currentlyLoadingObjects.clear();
     this._objectsForNextDbUpdate.clear();
     this.#objectsForLocalCommit.clear();
+    this.#unindexedWrites.clear();
     this._objectsForNextUpdate.clear();
     await this._repoProxy.close();
   }
@@ -445,6 +449,14 @@ export class EntityManager implements IDatabaseBinding {
   /** @deprecated Return only loaded objects. */
   allObjectCores(): ObjectCore[] {
     return Array.from(this._objects.values());
+  }
+
+  /**
+   * Objects written locally that the index may not reflect yet: everything written since the last flush that waited
+   * for indexing. Only these can disagree with an index answer, since the index holds everything else this client has.
+   */
+  unindexedWrites(): Iterable<string> {
+    return this.#unindexedWrites.keys();
   }
 
   /** Where the object falls in {@link allObjectCores} order, comparable across ids; undefined when absent. */
@@ -892,6 +904,7 @@ export class EntityManager implements IDatabaseBinding {
     updates = false,
   }: Database.FlushOptions = {}): Promise<void> {
     log('flush', { disk, indexes, secondaryIndexes, updates });
+    const watermark = this.#writeSequence;
     await this._waitForPendingCreations();
     if (disk) {
       await this._repoProxy.flush({ disk: true });
@@ -899,6 +912,14 @@ export class EntityManager implements IDatabaseBinding {
 
     if (indexes || secondaryIndexes) {
       await runServiceCall(this._runtime, this._dataService['DataService.updateIndexes']({ secondaryIndexes }));
+      // Only a flush that pushed local changes to the host knows they reached the index.
+      if (disk) {
+        for (const [id, sequence] of this.#unindexedWrites) {
+          if (sequence <= watermark) {
+            this.#unindexedWrites.delete(id);
+          }
+        }
+      }
     }
 
     if (updates) {
@@ -2009,6 +2030,7 @@ export class EntityManager implements IDatabaseBinding {
     if (event.patchInfo.source === 'change') {
       for (const id of documentChanges.updatedObjectIds) {
         this.#objectsForLocalCommit.add(id);
+        this.#unindexedWrites.set(id, ++this.#writeSequence);
       }
       afterCommit(this.#flushLocalCommit);
     } else {

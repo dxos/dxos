@@ -1117,6 +1117,11 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return this._entityManager.allObjectCores();
   }
 
+  /** Objects written locally that the index may not reflect yet; see `EntityManager.unindexedWrites`. */
+  unindexedWrites(): Iterable<string> {
+    return this._entityManager.unindexedWrites();
+  }
+
   areStrongDepsSatisfied(core: Parameters<EntityManager['areStrongDepsSatisfied']>[0]) {
     return this._entityManager.areStrongDepsSatisfied(core);
   }
