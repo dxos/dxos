@@ -517,7 +517,7 @@ export type LayerOptions = Omit<
    * The type that carries `foreignKeySource` keys, for a feed that also holds objects without them (a
    * mailbox feed holds its attachment blobs, inline up to 4 MB each). The seed then reads only this type,
    * in any schema version, so its tail counts, and its pages load, only objects it can dedup. Defaults to
-   * every feed object.
+   * every feed object, which suits a feed that holds only keyed objects.
    */
   readonly dedupSeedType?: Type.AnyObj;
   /**

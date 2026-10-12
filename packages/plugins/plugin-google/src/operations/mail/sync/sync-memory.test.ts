@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
-import { setFlagsFromString } from 'node:v8';
+import { serialize, setFlagsFromString } from 'node:v8';
 import { runInNewContext } from 'node:vm';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
@@ -26,15 +26,15 @@ import { GMAIL_CONNECTOR_ID, GMAIL_SOURCE } from '../../../constants.ts';
 import { generateGmailDataset } from '../../../testing/gmail-fixtures.ts';
 import { runGoogleSync } from '../../../testing/sync-fixture.ts';
 
-// Memory profile of a capped Gmail backfill, from the production `syncMail` failures (operation-service,
-// 128 MB isolate): "Worker exceeded memory limit." and "Query execution failed ... limited to 32MiB"
-// (47,206,633 bytes). Two causes, each asserted here:
+// Memory profile of a capped Gmail backfill, from the production `syncMail` failure in operation-service
+// (128 MB isolate): "Query execution failed ... limited to 32MiB" (47,206,633 bytes). Two causes, each
+// asserted here:
 // - Tag heads were saved only by uncapped runs, so every backfill run re-pushed, and loaded in full, every
 //   message synced so far (production logged 100, 200, … 1100 pushed ops). No run may re-push.
 // - `Cursor.seedDedupSet` read the newest and oldest 500 feed objects (HTML bodies and inline attachment
 //   blobs) in one query each, only to read their foreign ids. No query response may reach the 32 MiB cap.
-// In-process there is no RPC, so the test sizes the documents each host query response carries: what
-// crosses that cap on EDGE. The CI guards are `tag-push.test.ts` and `Cursor.test.ts`; this one is gated
+// In-process there is no RPC, so the test sizes each host query response as V8 serializes it: what crosses
+// that cap on EDGE. The CI guards are `tag-push.test.ts` and `Cursor.test.ts`; this one is gated
 // and prints a table.
 //
 //   DX_SYNC_MEMORY=1 moon run plugin-google:test -- src/operations/mail/sync/sync-memory.test.ts
@@ -190,13 +190,12 @@ describe.runIf(process.env.DX_SYNC_MEMORY)('mail sync memory (production OOM rep
     expect(Math.max(...rows.map((row) => row.largestQueryMb))).toBeLessThan(RPC_CAP_MB);
   });
 
-  // Repro of the production OOM ("Worker exceeded memory limit.", operation-service/compute-service,
-  // syncMail `invokeOperation`) driven by a large attachment rather than body volume. `fetchAttachments`
-  // downloads every attachment into a Buffer before anything looks at its size, and the pipeline holds a
-  // commit page (10) + buffer (16) + fetch concurrency (5) of them at once, so a run pulls many copies of
-  // a big attachment into the 128 MB isolate. Worse, the inline blob cap is 4 MB, so `processAttachments`
-  // drops an oversized one AFTER the full download. Before the fix, peak heap scales with attachment size
-  // and every attachment is fetched; after it, oversized attachments are skipped before download.
+  // Memory driven by a large attachment rather than body volume, which ends a run on EDGE with "Worker exceeded
+  // memory limit.". `fetchAttachments` downloads every attachment into a Buffer before anything looks at its
+  // size, and the pipeline holds a commit page (10) + buffer (16) + fetch concurrency (5) of them at once, so a
+  // run pulls many copies of a big attachment into the 128 MB isolate. Worse, the inline blob cap is 4 MB, so
+  // `processAttachments` drops an oversized one AFTER the full download. Before the fix, peak heap scales with
+  // attachment size and every attachment is fetched; after it, oversized attachments are skipped before download.
   test('a big attachment is not pulled into the isolate (OOM guard)', async ({ expect }) => {
     const now = new Date();
     const attachMb = Number.parseInt(process.env.DX_SYNC_ATTACH_MB ?? '8', 10);
@@ -301,9 +300,10 @@ const attachmentCountingApi = (dataset: GmailDataset, counter: { downloads: numb
   ).pipe(Layer.provide(GoogleMailApi.mock(dataset)));
 
 /**
- * Records, in MB, the documents each query response from the builder's latest peer carries: the payload
- * EDGE's query RPC caps. `normalizeHandlers` resolves the handler per call, so replacing it here serves
- * every query the client issues from now on.
+ * Records, in MB, each query response from the builder's latest peer as V8 serializes it, the encoding
+ * Workers RPC applies to the response EDGE's query RPC caps: a two-byte string takes 2 bytes per character,
+ * so summing JSON lengths would undercount. `normalizeHandlers` resolves the handler per call, so replacing
+ * it here serves every query the client issues from now on.
  */
 const recordQueryResponses = (builder: EchoTestBuilder): number[] => {
   const queryService = builder.lastPeer?.host.queryService;
@@ -314,8 +314,7 @@ const recordQueryResponses = (builder: EchoTestBuilder): number[] => {
     execQuery(request).pipe(
       Stream.tap((response) =>
         Effect.sync(() => {
-          const chars = (response.results ?? []).reduce((sum, item) => sum + (item.documentJson?.length ?? 0), 0);
-          responsesMb.push(chars / MB);
+          responsesMb.push(serialize(response).byteLength / MB);
         }),
       ),
     );

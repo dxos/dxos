@@ -512,7 +512,7 @@ export const syncAll = <A, E, R>({
 const hasTarget = (cursor: Cursor.ExternalCursor): Effect.Effect<boolean> =>
   Database.load(cursor.spec.target, { deleted: 'include' }).pipe(
     Effect.map((target) => !Obj.isDeleted(target)),
-    Effect.orElseSucceed(() => false),
+    Effect.catchTag('EntityNotFoundError', () => Effect.succeed(false)),
     Effect.tap((exists) =>
       exists ? Effect.void : Effect.sync(() => log.warn('sync skipped: binding target is gone', { cursor: cursor.id })),
     ),
