@@ -5,6 +5,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { Listbox } from '@dxos/react-ui-list';
+import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Status from '@dxos/react-ui/Status';
 
@@ -66,20 +67,25 @@ export type CheckRunListProps = {
   runs?: readonly GitHubOperation.CheckRun[];
 };
 
-/** Every check on the head commit: its outcome, how long it took, and its logs a click away. */
+/** Every check on the head commit: its outcome, how long it took, and a button to its logs. */
 export const CheckRunList = ({ runs }: CheckRunListProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const sorted = useMemo(() => (runs ? sortCheckRuns(runs) : undefined), [runs]);
   const summary = useCheckSummary(runs);
   const now = useNow(runs?.some((run) => run.outcome === 'pending' && run.startedAt) ?? false);
+  const [current, setCurrent] = useState<string>();
 
   if (!sorted || sorted.length === 0) {
     return <Status.Empty>{t(sorted ? 'no-checks.message' : 'checks-loading.message')}</Status.Empty>;
   }
 
   return (
-    <Listbox.Root items={sorted.map((run) => ({ value: `${run.name}-${run.url ?? ''}`, label: run.name }))}>
-      <Listbox.Content aria-label={summary} data-testid='pull-request.checks'>
+    <Listbox.Root
+      items={sorted.map((run) => ({ value: `${run.name}-${run.url ?? ''}`, label: run.name }))}
+      onHighlightChange={(value) => value && setCurrent(value)}
+    >
+      {/* The tab's viewport scrolls; a ScrollArea of the list's own would swallow wheel and trackpad gestures. */}
+      <Listbox.Content aria-label={summary} scroll={false} data-testid='pull-request.checks'>
         {sorted.map((run) => {
           const { icon, classNames } = outcomeIcon[run.outcome];
           const duration = formatDuration(run.startedAt, run.completedAt, run.outcome === 'pending' ? now : undefined);
@@ -95,17 +101,30 @@ export const CheckRunList = ({ runs }: CheckRunListProps) => {
                 ? [t('check-outcome.pending.label'), duration].filter(Boolean).join(' · ')
                 : (duration ?? t(`check-outcome.${run.outcome}.label`));
           const url = run.url;
+          const id = `${run.name}-${url ?? ''}`;
           return (
             <Listbox.Item
-              key={`${run.name}-${url ?? ''}`}
-              id={`${run.name}-${url ?? ''}`}
+              key={id}
+              id={id}
+              current={id === current}
+              highlightOnHover={false}
+              classNames='dx-hover'
               data-outcome={run.outcome}
               data-testid='pull-request.check'
-              onClick={url ? () => window.open(url, '_blank', 'noopener,noreferrer') : undefined}
             >
               <Listbox.ItemIcon icon={icon} classNames={classNames} />
               <Listbox.ItemText>{run.name}</Listbox.ItemText>
               <Listbox.ItemDescription>{[detail, outcome].filter(Boolean).join(' · ')}</Listbox.ItemDescription>
+              {url && (
+                <Button.Root
+                  iconOnly
+                  variant='ghost'
+                  icon='ph--arrow-square-out--regular'
+                  label={t('open-link.label')}
+                  data-testid='pull-request.check.open'
+                  onClick={() => window.open(url, '_blank', 'noopener,noreferrer')}
+                />
+              )}
             </Listbox.Item>
           );
         })}

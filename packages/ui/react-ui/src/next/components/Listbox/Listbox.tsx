@@ -80,6 +80,8 @@ type ListboxRootProps = ThemedClassName<Omit<ComponentPropsWithoutRef<'div'>, 'd
   value?: string[];
   defaultValue?: string[];
   onValueChange?: (value: string[]) => void;
+  /** The row keyboard or pointer navigation moved to (null when none). */
+  onHighlightChange?: (value: string | null) => void;
   /** Clicking the selected item of a single-selection list clears it. */
   deselectable?: boolean;
   disabled?: boolean;
@@ -108,6 +110,7 @@ const ListboxRoot = forwardRef<HTMLDivElement, ListboxRootProps>(
       value,
       defaultValue,
       onValueChange,
+      onHighlightChange,
       deselectable,
       disabled,
       loopFocus,
@@ -144,6 +147,7 @@ const ListboxRoot = forwardRef<HTMLDivElement, ListboxRootProps>(
           value={value}
           defaultValue={defaultValue}
           onValueChange={onValueChange && (({ value }) => onValueChange(value))}
+          onHighlightChange={onHighlightChange && (({ highlightedValue }) => onHighlightChange(highlightedValue))}
           deselectable={deselectable}
           disabled={disabled}
           loopFocus={loopFocus}

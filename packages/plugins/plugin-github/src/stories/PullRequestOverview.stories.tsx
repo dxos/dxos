@@ -96,6 +96,25 @@ export const FailingChecks: Story = {
   },
 };
 
+/** Rows are navigated, not followed: a click or an arrow key moves the current row; the trailing button opens the logs. */
+export const CheckNavigation: Story = {
+  args: { ...REAL_PULL_REQUEST },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const list = await canvas.findByTestId('pull-request.checks', {}, { timeout: 10_000 });
+    // The tab's viewport scrolls, so the list must not trap wheel gestures in a scroller of its own.
+    await expect(list.querySelector('.dx-scroll-viewport')).toBeNull();
+    const [first, second] = canvas.getAllByTestId('pull-request.check');
+    await expect(first).toHaveClass('dx-hover');
+    await userEvent.click(first);
+    await expect(first).toHaveAttribute('aria-current', 'true');
+    await userEvent.keyboard('{ArrowDown}');
+    await expect(second).toHaveAttribute('aria-current', 'true');
+    await expect(first).not.toHaveAttribute('aria-current');
+    await expect(within(first).getByTestId('pull-request.check.open')).toBeInTheDocument();
+  },
+};
+
 /** A pill opens its demo video in place. */
 export const ArtifactPreview: Story = {
   args: { ...REAL_PULL_REQUEST },
