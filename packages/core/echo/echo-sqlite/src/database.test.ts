@@ -456,6 +456,55 @@ describe('SqliteDatabase', () => {
     }),
   );
 
+  it.effect('orders by an annotation path in SQL, missing values last', () =>
+    Effect.gen(function* () {
+      const Distance = Annotation.make({
+        id: 'org.dxos.annotation.echo-sqlite-distance',
+        schema: Schema.Struct({ meters: Schema.Number }),
+      });
+      const spaceId = SpaceId.random();
+      yield* session(
+        async (db) => {
+          for (const [name, meters] of [
+            ['Far', 300],
+            ['Near', 100],
+            ['Unplaced', undefined],
+            ['Mid', 200],
+          ] as const) {
+            const person = db.add(Obj.make(TestSchema.Person, { name }));
+            if (meters !== undefined) {
+              Obj.update(person, (person) => Annotation.set(person, Distance, { meters }));
+            }
+          }
+        },
+        { spaceId },
+      );
+      yield* session(
+        async (db) => {
+          const byDistance = (direction: 'asc' | 'desc') =>
+            Query.select(Filter.type(TestSchema.Person)).orderBy(Order.annotation(Distance, direction, ['meters']));
+          expect((await db.query(byDistance('asc')).run()).map((person) => person.name)).toEqual([
+            'Near',
+            'Mid',
+            'Far',
+            'Unplaced',
+          ]);
+          expect((await db.query(byDistance('desc')).run()).map((person) => person.name)).toEqual([
+            'Far',
+            'Mid',
+            'Near',
+            'Unplaced',
+          ]);
+          expect((await db.query(byDistance('asc').limit(2)).run()).map((person) => person.name)).toEqual([
+            'Near',
+            'Mid',
+          ]);
+        },
+        { spaceId },
+      );
+    }),
+  );
+
   it.effect('notifies subscribers only when results change (T-7)', () =>
     session(async (db) => {
       const query = db.query(Filter.type(TestSchema.Person, { age: Filter.gt(18) }));

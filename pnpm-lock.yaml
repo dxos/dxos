@@ -6150,6 +6150,9 @@ importers:
       '@types/react-dom':
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
+      effect:
+        specifier: 4.0.0
+        version: 4.0.0(patch_hash=3231d93074c153423d744d1ed6acc4a09d0344e58224e8d2f134b809622c47f2)
       react:
         specifier: ~19.2.7
         version: 19.2.7
