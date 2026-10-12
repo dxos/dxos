@@ -277,19 +277,15 @@ const compact = (state: PromptState, payload: Trajectory.Compact, id: Trajectory
   const entries = state.entries;
   const first = entries.findIndex((entry) => entry.source.includes(payload.from));
   const last = entries.findLastIndex((entry) => entry.source.includes(payload.to));
-  // A `from` still waiting for its consume is not in the prompt yet, so the range cannot be placed.
-  if (last === -1 || (first === -1 && state.held[payload.from])) {
+  // An id that is not in the prompt (a queued or cancelled message, a non-content event) cannot place the range.
+  if (first === -1 || last === -1 || first > last) {
     return entries;
   }
 
-  // A range that starts before the loaded checkpoint is folded from the first entry the state still has.
-  const start = first === -1 ? 0 : first;
-  if (start > last) {
-    return entries;
-  }
-
-  const summary: PromptEntry = { role: 'event', blocks: payload.summary, source: [id] };
-  return [...entries.slice(0, start), summary, ...entries.slice(last + 1)];
+  // The summary keeps the ids it replaced, so a later range that starts inside it still finds where to begin.
+  const replaced = entries.slice(first, last + 1).flatMap((entry) => entry.source);
+  const summary: PromptEntry = { role: 'event', blocks: payload.summary, source: [id, ...replaced] };
+  return [...entries.slice(0, first), summary, ...entries.slice(last + 1)];
 };
 
 /**

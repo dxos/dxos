@@ -229,6 +229,34 @@ describe('Reducer', () => {
       expect(texts(state.entries)).to.deep.eq(['earlier', 'reply']);
     });
 
+    test('a compact starting inside an earlier summary starts at that summary', ({ expect }) => {
+      const first = message('one');
+      const second = message('two');
+      const third = message('three');
+      const { state } = Reducer.run(Reducer.prompt, [
+        message('zero'),
+        first,
+        second,
+        third,
+        message('four'),
+        event({ _tag: 'compact', from: first.id, to: second.id, summary: text('one and two') }),
+        event({ _tag: 'compact', from: second.id, to: third.id, summary: text('one to three') }),
+      ]);
+      expect(texts(state.entries)).to.deep.eq(['zero', 'one to three', 'four']);
+    });
+
+    test('a compact naming an event outside the prompt leaves it unchanged', ({ expect }) => {
+      const alarm = event({ _tag: 'alarmSet', wakeAt: 1 });
+      const later = message('later');
+      const { state } = Reducer.run(Reducer.prompt, [
+        message('earlier'),
+        alarm,
+        later,
+        event({ _tag: 'compact', from: alarm.id, to: later.id, summary: text('summary') }),
+      ]);
+      expect(texts(state.entries)).to.deep.eq(['earlier', 'later']);
+    });
+
     test('a reversed compact range leaves the prompt unchanged', ({ expect }) => {
       const first = message('one');
       const second = message('two');
