@@ -7,12 +7,13 @@ import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
+import * as Stream from 'effect/Stream';
 import { setFlagsFromString } from 'node:v8';
 import { runInNewContext } from 'node:vm';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
 import * as Process from '@dxos/compute/Process';
-import { Feed, Filter, Obj, Order, Query, Ref, Scope } from '@dxos/echo';
+import { Feed, Filter, Query, Ref, Scope } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
@@ -25,22 +26,29 @@ import { GMAIL_CONNECTOR_ID, GMAIL_SOURCE } from '../../../constants.ts';
 import { generateGmailDataset } from '../../../testing/gmail-fixtures.ts';
 import { runGoogleSync } from '../../../testing/sync-fixture.ts';
 
-// Memory profile of a capped Gmail backfill, from the production `syncMail` OOM ("Worker exceeded memory
-// limit.", operation-service, 128 MB isolate). Before the fix, tag heads were saved only by uncapped runs,
-// so every backfill run re-pushed — and loaded in full — every message synced so far (production logged
-// 100, 200, … 1100 pushed ops, then the 32 MiB RPC cap, then the OOM). This asserts no run re-pushes.
-// The regression guard that runs in CI is `tag-push.test.ts`; this one is gated and prints a table.
-//
-// Still loaded in full every run: `Cursor.seedDedupSet` reads the newest and oldest 500 feed messages,
-// so it saturates at `2 × DEFAULT_DEDUP_SEED_TAIL × message size` once the feed passes 1000.
+// Memory profile of a capped Gmail backfill, from the production `syncMail` failures (operation-service,
+// 128 MB isolate): "Worker exceeded memory limit." and "Query execution failed ... limited to 32MiB"
+// (47,206,633 bytes). Two causes, each asserted here:
+// - Tag heads were saved only by uncapped runs, so every backfill run re-pushed, and loaded in full, every
+//   message synced so far (production logged 100, 200, … 1100 pushed ops). No run may re-push.
+// - `Cursor.seedDedupSet` read the newest and oldest 500 feed objects (HTML bodies and inline attachment
+//   blobs) in one query each, only to read their foreign ids. No query response may reach the 32 MiB cap.
+// In-process there is no RPC, so the test sizes the documents each host query response carries: what
+// crosses that cap on EDGE. The CI guards are `tag-push.test.ts` and `Cursor.test.ts`; this one is gated
+// and prints a table.
 //
 //   DX_SYNC_MEMORY=1 moon run plugin-google:test -- src/operations/mail/sync/sync-memory.test.ts
 //
 // `DX_SYNC_MEMORY_BODY_KB` (default 60) sets the per-message HTML size; marketing mail is typically 30-150 KB.
+// `DX_SYNC_MEMORY_ATTACH_KB` (default 512) and `DX_SYNC_MEMORY_ATTACH_EVERY` (default 10) attach an inline
+// blob to every Nth message, as invoices and receipts do; the blobs land in the same feed.
 const BODY_KB = Number.parseInt(process.env.DX_SYNC_MEMORY_BODY_KB ?? '60', 10);
 const MESSAGES = Number.parseInt(process.env.DX_SYNC_MEMORY_MESSAGES ?? '1500', 10);
+const ATTACH_KB = Number.parseInt(process.env.DX_SYNC_MEMORY_ATTACH_KB ?? '512', 10);
+const ATTACH_EVERY = Number.parseInt(process.env.DX_SYNC_MEMORY_ATTACH_EVERY ?? '10', 10);
 const RUN_CAP = 100;
-const SEED_TAIL = 500;
+/** EDGE's cap on one query RPC response. */
+const RPC_CAP_MB = 32;
 const MB = 1024 * 1024;
 
 /** Forces a full GC; works without `--expose-gc` on the command line. */
@@ -102,11 +110,15 @@ describe.runIf(process.env.DX_SYNC_MEMORY)('mail sync memory (production OOM rep
     await builder.close();
   });
 
-  test('a capped backfill re-pushes nothing and its dedup seed saturates at 2 × seed tail', async ({ expect }) => {
+  test('a capped backfill re-pushes nothing and keeps every query response under the RPC cap', async ({ expect }) => {
     const now = new Date();
-    const dataset = withHtmlBodies(
-      generateGmailDataset({ count: MESSAGES, seed: 11, start: subDays(now, 27), end: subDays(now, 1) }),
-      BODY_KB,
+    const dataset = withAttachments(
+      withHtmlBodies(
+        generateGmailDataset({ count: MESSAGES, seed: 11, start: subDays(now, 27), end: subDays(now, 1) }),
+        BODY_KB,
+      ),
+      ATTACH_KB * 1024,
+      ATTACH_EVERY,
     );
     const { db, mailbox, binding } = await seedMailboxBinding(builder, {
       source: GMAIL_SOURCE,
@@ -117,25 +129,7 @@ describe.runIf(process.env.DX_SYNC_MEMORY)('mail sync memory (production OOM rep
     invariant(feed, 'mailbox feed not loaded');
     const feedUri = Feed.getFeedUri(feed);
     invariant(feedUri, 'mailbox feed has no URI');
-
-    // What `Cursor.seedDedupSet` loads every run, measured as the JSON that crosses the RPC on EDGE.
-    const seedBytes = async () => {
-      const tail = (direction: 'asc' | 'desc') =>
-        db
-          .query(
-            Query.select(Filter.everything())
-              .from(Scope.feed(feedUri))
-              .orderBy(Order.natural(direction))
-              .limit(SEED_TAIL),
-          )
-          .run();
-      const [newest, oldest] = await Promise.all([tail('desc'), tail('asc')]);
-      const items = [...newest, ...oldest];
-      return {
-        count: items.length,
-        mb: items.reduce((sum, item) => sum + JSON.stringify(Obj.toJSON(item)).length, 0) / MB,
-      };
-    };
+    const responsesMb = recordQueryResponses(builder);
 
     const counter = { pushed: 0 };
     const services = Layer.mergeAll(countingApi(dataset, counter), ambientSyncServices(db));
@@ -143,8 +137,9 @@ describe.runIf(process.env.DX_SYNC_MEMORY)('mail sync memory (production OOM rep
       run: number;
       feed: number;
       pushedOps: number;
-      seedItems: number;
-      seedJsonMb: number;
+      queries: number;
+      largestQueryMb: number;
+      queriedMb: number;
       peakHeapMb: number;
       retainedMb: number;
     }[] = [];
@@ -152,8 +147,8 @@ describe.runIf(process.env.DX_SYNC_MEMORY)('mail sync memory (production OOM rep
     let run = 0;
     do {
       run += 1;
-      const seed = await seedBytes();
       counter.pushed = 0;
+      const firstResponse = responsesMb.length;
       const { result, peakMb, baselineMb } = await measurePeak(() =>
         EffectEx.runPromise(
           Effect.exit(runGoogleSync({ binding: Ref.make(binding), maxMessages: RUN_CAP, now })).pipe(
@@ -165,29 +160,34 @@ describe.runIf(process.env.DX_SYNC_MEMORY)('mail sync memory (production OOM rep
       if (Exit.isFailure(exit)) {
         expect(Process.RunAgainError.is(Cause.squash(exit.cause))).toBe(true);
       }
+      const runResponsesMb = responsesMb.slice(firstResponse);
       collectGarbage();
       const feed = (await db.query(Query.select(Filter.everything()).from(Scope.feed(feedUri))).run()).length;
       rows.push({
         run,
         feed,
         pushedOps: counter.pushed,
-        seedItems: seed.count,
-        seedJsonMb: round(seed.mb),
+        queries: runResponsesMb.length,
+        largestQueryMb: round(Math.max(0, ...runResponsesMb)),
+        queriedMb: round(runResponsesMb.reduce((sum, mb) => sum + mb, 0)),
         peakHeapMb: round(peakMb),
         retainedMb: round(process.memoryUsage().heapUsed / MB - baselineMb),
       });
     } while (Exit.isFailure(exit) && run < Math.ceil(MESSAGES / RUN_CAP) + 2);
 
     // eslint-disable-next-line no-console
-    console.log(`\n=== mail sync memory: ${MESSAGES} messages × ${BODY_KB} KB HTML, ${RUN_CAP}/run ===`);
+    console.log(
+      `\n=== mail sync memory: ${MESSAGES} messages × ${BODY_KB} KB HTML, ` +
+        `${ATTACH_KB} KB attachment every ${ATTACH_EVERY}, ${RUN_CAP}/run ===`,
+    );
     // eslint-disable-next-line no-console
     console.table(rows);
 
     expect(Exit.isSuccess(exit)).toBe(true);
     // No tags change locally in this scenario, so nothing may be pushed back.
     expect(rows.every((row) => row.pushedOps === 0)).toBe(true);
-    // The seed saturates at 2 × tail once the feed holds more than that.
-    expect(rows.at(-1)?.seedItems).toBe(2 * SEED_TAIL);
+    // On EDGE a response past the cap fails the query, and with it the run.
+    expect(Math.max(...rows.map((row) => row.largestQueryMb))).toBeLessThan(RPC_CAP_MB);
   });
 
   // Repro of the production OOM ("Worker exceeded memory limit.", operation-service/compute-service,
@@ -201,7 +201,7 @@ describe.runIf(process.env.DX_SYNC_MEMORY)('mail sync memory (production OOM rep
     const now = new Date();
     const attachMb = Number.parseInt(process.env.DX_SYNC_ATTACH_MB ?? '8', 10);
     const count = Number.parseInt(process.env.DX_SYNC_ATTACH_COUNT ?? '12', 10);
-    const dataset = withLargeAttachments(
+    const dataset = withAttachments(
       generateGmailDataset({ count, seed: 7, start: subDays(now, 10), end: subDays(now, 1) }),
       attachMb * MB,
     );
@@ -256,15 +256,18 @@ const countingApi = (dataset: GmailDataset, counter: { pushed: number }): Layer.
   ).pipe(Layer.provide(GoogleMailApi.mock(dataset)));
 
 /**
- * Rewrites every message to a multipart payload — a `text/html` body part (so the message still decodes)
- * plus one attachment part — and registers `sizeBytes` of attachment data in the dataset, so a run must
- * download `sizeBytes` per message. One shared base64 blob keeps the fixture small; `getAttachment` hands
- * out the same body each call and `fetchAttachments` decodes a fresh Buffer per message.
+ * Rewrites every `every`th message to a multipart payload — a `text/html` body part (so the message still
+ * decodes) plus one attachment part — and registers `sizeBytes` of attachment data in the dataset, so a run
+ * must download `sizeBytes` per such message. One shared base64 blob keeps the fixture small;
+ * `getAttachment` hands out the same body each call and `fetchAttachments` decodes a fresh Buffer per message.
  */
-const withLargeAttachments = (dataset: GmailDataset, sizeBytes: number): GmailDataset => {
+const withAttachments = (dataset: GmailDataset, sizeBytes: number, every = 1): GmailDataset => {
   const data = Buffer.alloc(sizeBytes, 0x61).toString('base64');
   const attachments: Record<string, GoogleMail.MessagePartBody> = { ...dataset.attachments };
-  const messages = dataset.messages.map((message) => {
+  const messages = dataset.messages.map((message, index) => {
+    if (index % every !== 0) {
+      return message;
+    }
     const attachmentId = `att-${message.id}`;
     attachments[attachmentId] = { size: sizeBytes, data };
     return {
@@ -296,5 +299,27 @@ const attachmentCountingApi = (dataset: GmailDataset, counter: { downloads: numb
       });
     }),
   ).pipe(Layer.provide(GoogleMailApi.mock(dataset)));
+
+/**
+ * Records, in MB, the documents each query response from the builder's latest peer carries: the payload
+ * EDGE's query RPC caps. `normalizeHandlers` resolves the handler per call, so replacing it here serves
+ * every query the client issues from now on.
+ */
+const recordQueryResponses = (builder: EchoTestBuilder): number[] => {
+  const queryService = builder.lastPeer?.host.queryService;
+  invariant(queryService, 'no peer to record');
+  const execQuery = queryService['QueryService.execQuery'].bind(queryService);
+  const responsesMb: number[] = [];
+  queryService['QueryService.execQuery'] = (request) =>
+    execQuery(request).pipe(
+      Stream.tap((response) =>
+        Effect.sync(() => {
+          const chars = (response.results ?? []).reduce((sum, item) => sum + (item.documentJson?.length ?? 0), 0);
+          responsesMb.push(chars / MB);
+        }),
+      ),
+    );
+  return responsesMb;
+};
 
 const round = (value: number): number => Math.round(value * 10) / 10;
