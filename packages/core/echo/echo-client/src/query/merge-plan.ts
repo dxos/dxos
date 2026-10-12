@@ -3,7 +3,7 @@
 //
 
 import { filterMatchDoc } from '@dxos/echo-host/filter';
-import { EncodedReference, QueryAST } from '@dxos/echo-protocol';
+import { EncodedReference, type EntityStructure, QueryAST } from '@dxos/echo-protocol';
 import { DXN, type EntityId } from '@dxos/keys';
 import { getDeep } from '@dxos/util';
 
@@ -113,12 +113,20 @@ export const writeAffects = (plan: MergePlan, core: ObjectCore | undefined): boo
 };
 
 /** Orders two entries by the window's property orders, reading each object's local document. */
-export const compareByWindow = (orders: readonly QueryAST.Order[], left: SourceEntry, right: SourceEntry): number => {
+export const compareByWindow = (orders: readonly QueryAST.Order[], left: SourceEntry, right: SourceEntry): number =>
+  compareWindowData(orders, windowData(left), windowData(right));
+
+/** Orders two objects' document data by the window's property orders; missing data compares as missing values. */
+export const compareWindowData = (
+  orders: readonly QueryAST.Order[],
+  left: EntityStructure['data'] | undefined,
+  right: EntityStructure['data'] | undefined,
+): number => {
   for (const order of orders) {
     if (order.kind !== 'property') {
       continue;
     }
-    const comparison = compareOrderValues(propertyOf(left, order.property), propertyOf(right, order.property));
+    const comparison = compareOrderValues(getDeep(left, [order.property]), getDeep(right, [order.property]));
     if (comparison !== 0) {
       return order.direction === 'desc' ? -comparison : comparison;
     }
@@ -126,8 +134,9 @@ export const compareByWindow = (orders: readonly QueryAST.Order[], left: SourceE
   return 0;
 };
 
-const propertyOf = (entry: SourceEntry, property: string): unknown =>
-  isEchoObject(entry.result) ? getDeep(getObjectCore(entry.result).getObjectStructure()?.data, [property]) : undefined;
+/** An entry's local document data, or undefined when its object is not loaded here with a body. */
+export const windowData = (entry: SourceEntry): EntityStructure['data'] | undefined =>
+  isEchoObject(entry.result) ? getObjectCore(entry.result).getObjectStructure()?.data : undefined;
 
 /** Version-less typename, as the host keys invalidation (`echo-host` `canonicalTypename`). */
 const canonicalTypename = (uri: string): string => {

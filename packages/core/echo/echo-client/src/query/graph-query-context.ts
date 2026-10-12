@@ -7,7 +7,7 @@ import { Context } from '@dxos/context';
 import { Obj, Query, type QueryResult } from '@dxos/echo';
 import { filterMatchDoc } from '@dxos/echo-host/filter';
 import { GroupBy, QueryPlanner, queryContainsChanges } from '@dxos/echo-host/query';
-import { QueryAST } from '@dxos/echo-protocol';
+import { type EntityStructure, QueryAST } from '@dxos/echo-protocol';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -16,9 +16,11 @@ import { type DatabaseImpl } from '../proxy-db/index.ts';
 import {
   type MergePlan,
   compareByWindow,
+  compareWindowData,
   createMergePlan,
   evaluateCore,
   keepRemoteEntry,
+  windowData,
   writeAffects,
 } from './merge-plan.ts';
 import { type QueryContext, type SourceEntry } from './query-context.ts';
@@ -288,14 +290,16 @@ export class GraphQueryContext implements QueryContext {
     const { orders, limit } = plan.window;
     const compare = (left: SourceEntry, right: SourceEntry) => compareByWindow(orders, left, right);
     // A short remote window is the whole result, so every local match belongs; a full one bounds admission.
-    const boundary = remote.length >= limit ? remote[remote.length - 1] : undefined;
+    const full = remote.length >= limit;
+    const boundary = full ? windowData(remote[remote.length - 1]) : undefined;
+    const admit = full ? (data: EntityStructure['data']) => compareWindowData(orders, data, boundary) <= 0 : undefined;
     const merged = new Map(kept.map((entry) => [entry.id, entry]));
     for (const source of this._sources) {
       if (!(source instanceof SpaceQuerySource) || !source.coversQuery(query)) {
         continue;
       }
-      for (const entry of source.matchLocal(plan)) {
-        if (!merged.has(entry.id) && (boundary === undefined || compare(entry, boundary) <= 0)) {
+      for (const entry of source.matchLocal(plan, admit)) {
+        if (!merged.has(entry.id)) {
           merged.set(entry.id, entry);
         }
       }
@@ -365,6 +369,7 @@ export class SpaceQuerySource implements QuerySource {
   private _ctx: Context = new Context();
   private _query: QueryAST.Query | undefined = undefined;
   private _results?: SourceEntry<Obj.Any>[] = undefined;
+  readonly #covers = new WeakMap<QueryAST.Query, boolean>();
   /** Present when a write can be applied to cached results as a delta instead of a full recompute. */
   #delta?: { filter: QueryAST.Filter; options: QueryAST.QueryOptions | undefined } = undefined;
   private readonly _executor: WorkingSetQueryExecutor;
@@ -411,7 +416,13 @@ export class SpaceQuerySource implements QuerySource {
 
   /** Whether `query` selects from this space, whether or not this source evaluates it itself. */
   coversQuery(query: QueryAST.Query): boolean {
-    return this._isValidSourceForQuery(query) && this._servesSpaceScope(query);
+    // Asked on every local write for every live query, and each answer walks the whole AST.
+    let covers = this.#covers.get(query);
+    if (covers === undefined) {
+      covers = this._isValidSourceForQuery(query) && this._servesSpaceScope(query);
+      this.#covers.set(query, covers);
+    }
+    return covers;
   }
 
   coreById(id: string): ObjectCore | undefined {
@@ -423,10 +434,17 @@ export class SpaceQuerySource implements QuerySource {
     return this.coreById(id)?.getObjectStructure() !== undefined;
   }
 
-  /** Every loaded object local evaluation admits under the plan's flat filter. */
-  matchLocal(plan: MergePlan): SourceEntry<Obj.Unknown>[] {
+  /**
+   * Every loaded object local evaluation admits under the plan's flat filter and `admit` accepts by its
+   * document data, checked before an entry is built since most matches fall outside a window.
+   */
+  matchLocal(plan: MergePlan, admit?: (data: EntityStructure['data']) => boolean): SourceEntry<Obj.Unknown>[] {
     return this._database.allObjectCores().flatMap((core) => {
       if (evaluateCore(plan, core) !== true) {
+        return [];
+      }
+      const data = core.getObjectStructure()?.data;
+      if (admit && (data === undefined || !admit(data))) {
         return [];
       }
       const result = this._database.getObjectById<Obj.Unknown>(core.id, { deleted: true });
