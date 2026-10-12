@@ -6,10 +6,7 @@ import { ark } from '@ark-ui/react/factory';
 import React, {
   Children,
   type ComponentPropsWithoutRef,
-  type ForwardRefExoticComponent,
   type ReactNode,
-  type RefAttributes,
-  forwardRef,
   isValidElement,
   useCallback,
   useMemo,
