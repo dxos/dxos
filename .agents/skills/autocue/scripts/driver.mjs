@@ -213,6 +213,9 @@ const context = tauri
         deviceScaleFactor: scale,
         colorScheme: options.theme,
         recordVideo: hires ? undefined : { dir: options.out, size: viewport },
+        // The sandbox's egress proxy re-signs some hosts (github.com) with its own CA, which Chromium does not
+        // trust; the proxy itself verifies the upstream certificate.
+        ignoreHTTPSErrors: Boolean(sandbox),
       });
 // A persistent profile opens with a tab already; driving it avoids leaving a stray blank one beside it.
 const page = native ? native.page : (context.pages()[0] ?? (await context.newPage()));

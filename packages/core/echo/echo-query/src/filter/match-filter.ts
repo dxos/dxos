@@ -3,6 +3,7 @@
 //
 
 import { Entity, type Filter, type QueryAST } from '@dxos/echo';
+import { EID } from '@dxos/keys';
 
 export type MatchFilterOptions<T extends Entity.Unknown> = {
   /**
@@ -42,8 +43,10 @@ const matchesAst = <T extends Entity.Unknown>(
       return ast.filters.some((sub) => matchesAst(sub, object, options));
     case 'not':
       return !matchesAst(ast.filter, object, options);
-    case 'tag':
-      return (options.tags ?? metaTags)(object).includes(ast.tag);
+    case 'tag': {
+      const target = canonicalTag(ast.tag);
+      return (options.tags ?? metaTags)(object).some((tag) => canonicalTag(tag) === target);
+    }
     case 'text-search':
       return matchesText(ast.text, (options.text ?? stringProperties)(object));
     case 'object': {
@@ -152,6 +155,15 @@ const getPath = (object: unknown, path: string): unknown =>
 // The id is not text a reader wrote, so a word that happens to occur in one does not match.
 const stringProperties = (object: Entity.Unknown): string[] =>
   Object.entries(object).flatMap(([key, value]) => (key !== 'id' && typeof value === 'string' ? [value] : []));
+
+/**
+ * A tag's entity id, so the absolute uri a tag map is keyed by (`echo://<space>/<id>`) matches the
+ * local form a stored meta tag carries (`echo:///<id>`), as the query engine's own tag match does.
+ */
+const canonicalTag = (uri: string): string => {
+  const eid = EID.tryParse(uri);
+  return (eid && EID.getEntityId(eid)) || uri;
+};
 
 const metaTags = (object: Entity.Unknown): string[] => {
   try {
