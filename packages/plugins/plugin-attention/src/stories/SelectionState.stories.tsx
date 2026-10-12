@@ -131,20 +131,22 @@ const SelectionStateStory = () => {
         <div className='px-3 py-2 text-sm font-medium text-fg-subtle border-b border-separator'>Items</div>
         <OrderedList.Root<StoryItem> items={ITEMS} getId={(item) => item.id} getLabel={(item) => item.label}>
           {({ items: resolved }) => (
-            <OrderedList.Content>
-              {resolved.map((item) => (
-                <OrderedList.Item
-                  key={item.id}
-                  id={item.id}
-                  canDrag={false}
-                  highlightOnHover
-                  current={item.id === selectedId}
-                  onClick={() => single(item.id)}
-                >
-                  <OrderedList.ItemText>{item.label}</OrderedList.ItemText>
-                </OrderedList.Item>
-              ))}
-            </OrderedList.Content>
+            <OrderedList.Viewport>
+              <OrderedList.Content>
+                {resolved.map((item) => (
+                  <OrderedList.Item
+                    key={item.id}
+                    id={item.id}
+                    canDrag={false}
+                    highlightOnHover
+                    current={item.id === selectedId}
+                    onClick={() => single(item.id)}
+                  >
+                    <OrderedList.ItemText>{item.label}</OrderedList.ItemText>
+                  </OrderedList.Item>
+                ))}
+              </OrderedList.Content>
+            </OrderedList.Viewport>
           )}
         </OrderedList.Root>
       </div>

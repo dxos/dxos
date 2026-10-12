@@ -90,19 +90,21 @@ const ToolListContent = Util.composable<HTMLDivElement, ToolListContentProps>(
   ({ renderItem, ...props }, forwardedRef) => {
     const tools = useContext(ToolsContext);
     return (
-      <Listbox.Content
-        {...Util.composableProps<HTMLDivElement>(props, { classNames: 'flex flex-col gap-px' })}
-        aria-label='Tools'
-        ref={forwardedRef}
-      >
-        {tools.map((tool) =>
-          renderItem ? (
-            <Fragment key={tool.id}>{renderItem(tool)}</Fragment>
-          ) : (
-            <ToolListItem key={tool.id} tool={tool} />
-          ),
-        )}
-      </Listbox.Content>
+      <Listbox.Viewport>
+        <Listbox.Content
+          {...Util.composableProps<HTMLDivElement>(props, { classNames: 'flex flex-col gap-px' })}
+          aria-label='Tools'
+          ref={forwardedRef}
+        >
+          {tools.map((tool) =>
+            renderItem ? (
+              <Fragment key={tool.id}>{renderItem(tool)}</Fragment>
+            ) : (
+              <ToolListItem key={tool.id} tool={tool} />
+            ),
+          )}
+        </Listbox.Content>
+      </Listbox.Viewport>
     );
   },
 );

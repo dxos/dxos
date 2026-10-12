@@ -82,6 +82,7 @@ export const toCheckRun = (run: GitHubApi.GitHubCheckRun): GitHubOperation.Check
             : 'success';
   const url = run.details_url ?? run.html_url;
   return {
+    ...(run.id !== undefined ? { id: run.id } : {}),
     name: run.name,
     outcome,
     ...(run.conclusion ? { conclusion: run.conclusion } : {}),

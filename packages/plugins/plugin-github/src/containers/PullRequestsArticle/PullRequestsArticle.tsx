@@ -185,16 +185,18 @@ const PullRequestList = ({ role, attendableId, db }: PullRequestsArticleProps & 
           </Status.Empty>
         ) : (
           <Listbox.Root items={options}>
-            <Listbox.Content
-              classNames='dx-expand'
-              aria-label={t('typename.label_other', { ns: PULL_REQUEST_TYPENAME })}
-            >
-              {groups
-                ? groups
-                    .filter((group) => group.rows.length > 0)
-                    .map((group) => <GroupSection key={group.id} group={group} onOpen={openObject} />)
-                : rows.map((row) => <PullRequestListRow key={row.pullRequest.id} row={row} onOpen={openObject} />)}
-            </Listbox.Content>
+            <Listbox.Viewport>
+              <Listbox.Content
+                classNames='dx-expand'
+                aria-label={t('typename.label_other', { ns: PULL_REQUEST_TYPENAME })}
+              >
+                {groups
+                  ? groups
+                      .filter((group) => group.rows.length > 0)
+                      .map((group) => <GroupSection key={group.id} group={group} onOpen={openObject} />)
+                  : rows.map((row) => <PullRequestListRow key={row.pullRequest.id} row={row} onOpen={openObject} />)}
+              </Listbox.Content>
+            </Listbox.Viewport>
           </Listbox.Root>
         )}
       </Panel.Body>

@@ -194,16 +194,18 @@ const AgentPanel = ({ chat, started }: Pick<ChatOptionsProps, 'chat' | 'started'
   return (
     <Layout.Flex column classNames='dx-expand' data-testid='assistant.agents'>
       <Listbox.Root value={current} onValueChange={handleChange} disabled={!chat || started} autoFocus items={options}>
-        <Listbox.Content gutter='none' aria-label={t('options.agent.title')}>
-          {options.map(({ value }) => (
-            <Listbox.Item
-              key={value}
-              id={value}
-              classNames='dx-focus-ring rounded-xs'
-              data-testid={`assistant.agents.${value}`}
-            />
-          ))}
-        </Listbox.Content>
+        <Listbox.Viewport>
+          <Listbox.Content gutter='none' aria-label={t('options.agent.title')}>
+            {options.map(({ value }) => (
+              <Listbox.Item
+                key={value}
+                id={value}
+                classNames='dx-focus-ring rounded-xs'
+                data-testid={`assistant.agents.${value}`}
+              />
+            ))}
+          </Listbox.Content>
+        </Listbox.Viewport>
       </Listbox.Root>
       {started && <p className='px-form-chrome py-1 text-xs text-fg-muted'>{t('agent-locked.message')}</p>}
     </Layout.Flex>
@@ -287,14 +289,16 @@ const ViewPanel = ({ chat }: Pick<ChatOptionsProps, 'chat'>) => {
       }))}
     >
       {/* No gutter: the popover's padding is the inset, shared with the tab bar below. */}
-      <Listbox.Content gutter='none' aria-label={t('chat-view.title')}>
-        {Assistant.ChatViews.map((view) => (
-          <Listbox.Item key={view} id={view} classNames='dx-focus-ring rounded-xs'>
-            <Listbox.ItemText>{t(`chat-view.${view}.label`, { defaultValue: view })}</Listbox.ItemText>
-            <Listbox.ItemIndicator />
-          </Listbox.Item>
-        ))}
-      </Listbox.Content>
+      <Listbox.Viewport>
+        <Listbox.Content gutter='none' aria-label={t('chat-view.title')}>
+          {Assistant.ChatViews.map((view) => (
+            <Listbox.Item key={view} id={view} classNames='dx-focus-ring rounded-xs'>
+              <Listbox.ItemText>{t(`chat-view.${view}.label`, { defaultValue: view })}</Listbox.ItemText>
+              <Listbox.ItemIndicator />
+            </Listbox.Item>
+          ))}
+        </Listbox.Content>
+      </Listbox.Viewport>
     </Listbox.Root>
   );
 };
@@ -336,14 +340,16 @@ const EnvironmentPanel = ({ chat }: Pick<ChatOptionsProps, 'chat'>) => {
       }))}
     >
       {/* No gutter: the popover's padding is the inset, shared with the tab bar below. */}
-      <Listbox.Content gutter='none' aria-label={t('options.environment.title')}>
-        {environments.map((environment) => (
-          <Listbox.Item key={environment} id={environment} classNames='dx-focus-ring rounded-xs'>
-            <Listbox.ItemText>{t(`chat-environment.${environment}.label`)}</Listbox.ItemText>
-            <Listbox.ItemIndicator />
-          </Listbox.Item>
-        ))}
-      </Listbox.Content>
+      <Listbox.Viewport>
+        <Listbox.Content gutter='none' aria-label={t('options.environment.title')}>
+          {environments.map((environment) => (
+            <Listbox.Item key={environment} id={environment} classNames='dx-focus-ring rounded-xs'>
+              <Listbox.ItemText>{t(`chat-environment.${environment}.label`)}</Listbox.ItemText>
+              <Listbox.ItemIndicator />
+            </Listbox.Item>
+          ))}
+        </Listbox.Content>
+      </Listbox.Viewport>
     </Listbox.Root>
   );
 };
@@ -367,14 +373,21 @@ const ModelsPanel = ({
         autoFocus
         items={(presets ?? []).map(({ id, label }) => ({ value: id, label: label }))}
       >
-        <Listbox.Content gutter='none' aria-label={t('options.chat-model.title')} data-testid='assistant.models'>
-          {presets?.map(({ id, label }) => (
-            <Listbox.Item key={id} id={id} classNames='dx-focus-ring rounded-xs' data-testid={`assistant.models.${id}`}>
-              <Listbox.ItemText>{label}</Listbox.ItemText>
-              <Listbox.ItemIndicator />
-            </Listbox.Item>
-          ))}
-        </Listbox.Content>
+        <Listbox.Viewport>
+          <Listbox.Content gutter='none' aria-label={t('options.chat-model.title')} data-testid='assistant.models'>
+            {presets?.map(({ id, label }) => (
+              <Listbox.Item
+                key={id}
+                id={id}
+                classNames='dx-focus-ring rounded-xs'
+                data-testid={`assistant.models.${id}`}
+              >
+                <Listbox.ItemText>{label}</Listbox.ItemText>
+                <Listbox.ItemIndicator />
+              </Listbox.Item>
+            ))}
+          </Listbox.Content>
+        </Listbox.Viewport>
       </Listbox.Root>
       <Toolbar.Root>
         <OnlineSwitch />
@@ -466,11 +479,13 @@ const McpServersPanel = ({ db }: McpServersPanelProps) => {
   return (
     <Layout.Flex column data-testid='assistant.mcp-servers'>
       <Listbox.Root items={servers.map((server) => ({ value: server.id, label: server.name ?? server.id }))}>
-        <Listbox.Content aria-label={t('options.mcp.title')} classNames='gap-1'>
-          {servers.map((server) => (
-            <McpServerRow key={server.id} server={server} onRemove={handleRemove} />
-          ))}
-        </Listbox.Content>
+        <Listbox.Viewport>
+          <Listbox.Content aria-label={t('options.mcp.title')} classNames='gap-1'>
+            {servers.map((server) => (
+              <McpServerRow key={server.id} server={server} onRemove={handleRemove} />
+            ))}
+          </Listbox.Content>
+        </Listbox.Viewport>
       </Listbox.Root>
       {adding ? (
         <McpForm onSubmit={handleAdd} onCancel={() => setAdding(false)} />

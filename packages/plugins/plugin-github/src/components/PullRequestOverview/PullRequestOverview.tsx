@@ -12,6 +12,7 @@ import { MarkdownLink, MarkdownView, type MarkdownViewProps } from '@dxos/react-
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Status from '@dxos/react-ui/Status';
+import * as Typography from '@dxos/react-ui/Typography';
 
 import { meta } from '#meta';
 import { type GitHubOperation } from '#types';
@@ -60,7 +61,10 @@ export const PullRequestOverview = ({ body, details, runs }: PullRequestOverview
               <RelatedCards items={related} />
             </Form.FieldSet>
           )}
-          <Form.FieldSet label={checkSummary}>
+          <Form.FieldSet label={t('checks.label')}>
+            {runs && runs.length > 0 && (
+              <Typography.Text data-testid='pull-request.checks.summary'>{checkSummary}</Typography.Text>
+            )}
             <CheckRunList runs={runs} />
           </Form.FieldSet>
         </Form.Content>

@@ -122,7 +122,7 @@ export const ArrayField = ({ type, path, label, readonly, layout, fieldProps, ..
         readonly={!editable}
       >
         {({ items }) => (
-          <OrderedList.Content scroll={false} gutter='inherit' gap='sm' aria-label={label}>
+          <OrderedList.Content gutter='inherit' gap='sm' aria-label={label}>
             {items.map((item) => (
               <OrderedList.Item key={item.id} id={item.id} canDrag={ordered && editable}>
                 {ordered && editable && <OrderedList.DragHandle />}

@@ -165,14 +165,16 @@ const ProviderHarness = () => {
             </div>
             {outcome.ok ? (
               <Listbox.Root items={outcome.options.map((option) => ({ value: option.id, label: option.name }))}>
-                <Listbox.Content aria-label={outcome.kind}>
-                  {outcome.options.map((option) => (
-                    <Listbox.Item key={option.id} id={option.id}>
-                      <Listbox.ItemText>{option.name}</Listbox.ItemText>
-                      <Listbox.ItemDescription>{option.id}</Listbox.ItemDescription>
-                    </Listbox.Item>
-                  ))}
-                </Listbox.Content>
+                <Listbox.Viewport>
+                  <Listbox.Content aria-label={outcome.kind}>
+                    {outcome.options.map((option) => (
+                      <Listbox.Item key={option.id} id={option.id}>
+                        <Listbox.ItemText>{option.name}</Listbox.ItemText>
+                        <Listbox.ItemDescription>{option.id}</Listbox.ItemDescription>
+                      </Listbox.Item>
+                    ))}
+                  </Listbox.Content>
+                </Listbox.Viewport>
               </Listbox.Root>
             ) : (
               <div className='text-error-text'>{outcome.error}</div>

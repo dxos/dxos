@@ -161,54 +161,58 @@ export const LayersPanel = ({
           // The list is top first; the order the model keeps is bottom first.
           onMove={(from, to) => onMove?.(items[from].id, items.length - 1 - to)}
         >
-          {({ items }) => (
-            <OrderedList.Content
-              // Docked, the dock scrolls the panels together, so the list keeps no scroll of its own (it would hold the wheel).
-              scroll={!docked}
-              // Rows run edge to edge, with no gutter around them.
-              gutter='none'
-              aria-label='Layers'
-              onKeyDown={(event) => {
-                // Enter on the list (as well as selecting the highlighted row) opens that row's name.
-                if (event.key !== 'Enter' || event.target !== event.currentTarget || readonly || !onRename) {
-                  return;
-                }
-                const active = event.currentTarget.getAttribute('aria-activedescendant');
-                const id = active ? event.currentTarget.ownerDocument.getElementById(active)?.dataset.value : undefined;
-                if (id) {
-                  setEditingId(id);
-                }
-              }}
-            >
-              {items.map((layer) => (
-                <OrderedList.Item key={layer.id} id={layer.id} data-testid={`layer-${layer.id}`}>
-                  <OrderedList.DragHandle />
-                  <LayerName
-                    layer={layer}
-                    readonly={readonly}
-                    editing={editingId === layer.id}
-                    onEditingChange={(editing) =>
-                      setEditingId((current) => (editing ? layer.id : current === layer.id ? undefined : current))
-                    }
-                    onRename={(name) => onRename?.(layer.id, name)}
-                  />
-                  <Button.Root
-                    variant='ghost'
-                    iconOnly
-                    icon={layer.hidden ? 'ph--eye-slash--regular' : 'ph--eye--regular'}
-                    label={layer.hidden ? 'Show layer' : 'Hide layer'}
-                    disabled={readonly || !onToggle}
-                    data-testid={`layer-toggle-${layer.id}`}
-                    onClick={(event) => {
-                      // The row's own click selects it; showing or hiding a layer leaves the selection alone.
-                      event.stopPropagation();
-                      onToggle?.(layer.id);
-                    }}
-                  />
-                </OrderedList.Item>
-              ))}
-            </OrderedList.Content>
-          )}
+          {({ items }) => {
+            const content = (
+              <OrderedList.Content
+                // Rows run edge to edge, with no gutter around them.
+                gutter='none'
+                aria-label='Layers'
+                onKeyDown={(event) => {
+                  // Enter on the list (as well as selecting the highlighted row) opens that row's name.
+                  if (event.key !== 'Enter' || event.target !== event.currentTarget || readonly || !onRename) {
+                    return;
+                  }
+                  const active = event.currentTarget.getAttribute('aria-activedescendant');
+                  const id = active
+                    ? event.currentTarget.ownerDocument.getElementById(active)?.dataset.value
+                    : undefined;
+                  if (id) {
+                    setEditingId(id);
+                  }
+                }}
+              >
+                {items.map((layer) => (
+                  <OrderedList.Item key={layer.id} id={layer.id} data-testid={`layer-${layer.id}`}>
+                    <OrderedList.DragHandle />
+                    <LayerName
+                      layer={layer}
+                      readonly={readonly}
+                      editing={editingId === layer.id}
+                      onEditingChange={(editing) =>
+                        setEditingId((current) => (editing ? layer.id : current === layer.id ? undefined : current))
+                      }
+                      onRename={(name) => onRename?.(layer.id, name)}
+                    />
+                    <Button.Root
+                      variant='ghost'
+                      iconOnly
+                      icon={layer.hidden ? 'ph--eye-slash--regular' : 'ph--eye--regular'}
+                      label={layer.hidden ? 'Show layer' : 'Hide layer'}
+                      disabled={readonly || !onToggle}
+                      data-testid={`layer-toggle-${layer.id}`}
+                      onClick={(event) => {
+                        // The row's own click selects it; showing or hiding a layer leaves the selection alone.
+                        event.stopPropagation();
+                        onToggle?.(layer.id);
+                      }}
+                    />
+                  </OrderedList.Item>
+                ))}
+              </OrderedList.Content>
+            );
+            // Docked, the dock scrolls the panels together, so the list keeps no scroll of its own (it would hold the wheel).
+            return docked ? content : <OrderedList.Viewport>{content}</OrderedList.Viewport>;
+          }}
         </OrderedList.Root>
       </Panel.Body>
     </Panel.Root>

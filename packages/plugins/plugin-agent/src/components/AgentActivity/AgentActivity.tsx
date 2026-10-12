@@ -148,7 +148,7 @@ const AgentActivityList = ({ label, ids, empty, children }: AgentActivityListPro
     ) : (
       // Rows render their own text, so an option carries only the id Ark keys it by.
       <Listbox.Root items={ids.map((id) => ({ value: id, label: id }))}>
-        <Listbox.Content scroll={false}>{children}</Listbox.Content>
+        <Listbox.Content>{children}</Listbox.Content>
       </Listbox.Root>
     )}
   </Section.Root>

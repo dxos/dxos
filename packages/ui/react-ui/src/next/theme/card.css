@@ -13,6 +13,8 @@
     --dx-card-header-gap: var(--dx-gap-size);
     --dx-card-title-inset: 0px;
     --dx-card-trailing-min: 0px;
+    /* A card's icons read a step larger than its text; a sized card (`data-size`) keeps that size's scale. */
+    --dx-icon-size: 1.25rem;
     display: flex;
     flex-direction: column;
     min-width: 0;
