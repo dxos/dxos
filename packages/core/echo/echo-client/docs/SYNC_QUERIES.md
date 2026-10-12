@@ -177,8 +177,10 @@ The rule, per remote entry, for `revalidation: entry`:
 1. **Local core loaded with a body in the document the directory places it in.** Evaluate locally,
    full stop. Concurrent or remote-ahead heads do not change this: the local document already
    contains the user's write, and automerge merge adds the peer's fields without reverting it, so
-   the local verdict is what the merged document will say too. This is the case the proposal exists
-   for, and the earlier draft got it wrong by trusting the remote on concurrent heads.
+   the local verdict is what the merged document will say too — except where a peer assigned the
+   same property concurrently, whose value can win the merge and change the verdict once
+   replication lands and the query re-runs. This is the case the proposal exists for, and the
+   earlier draft got it wrong by trusting the remote on concurrent heads.
 2. **Local core absent, or loaded without a body.** Trust the remote verdict, request the document
    (`batchLoadObjectCores`), re-evaluate when it lands.
 3. **Remote entry names a different `documentId` than the local directory.** The directory is

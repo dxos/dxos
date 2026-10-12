@@ -208,6 +208,8 @@ export class EntityManager implements IDatabaseBinding {
 
   // ── Update scheduling ────────────────────────────────────────────────────
   private _objectsForNextDbUpdate = new Set<string>();
+  /** Objects the current local commit wrote, emitted by {@link #flushLocalCommit} once it ends. */
+  readonly #objectsForLocalCommit = new Set<string>();
   private _objectsForNextUpdate = new Set<string>();
   private _updateScheduler!: UpdateScheduler;
 
@@ -410,6 +412,7 @@ export class EntityManager implements IDatabaseBinding {
     this._objectsPendingDocumentLoad.clear();
     this._currentlyLoadingObjects.clear();
     this._objectsForNextDbUpdate.clear();
+    this.#objectsForLocalCommit.clear();
     this._objectsForNextUpdate.clear();
     await this._repoProxy.close();
   }
@@ -2001,12 +2004,17 @@ export class EntityManager implements IDatabaseBinding {
     this._createInlineObjects(event.handle, documentChanges.createdObjectIds);
     this._markBodiesAvailable(documentChanges.updatedObjectIds);
     this._emitObjectUpdateEvent(documentChanges.updatedObjectIds);
-    this._scheduleThrottledDbUpdate(documentChanges.updatedObjectIds, {
-      coalesce: event.patchInfo.source === 'bulk',
-    });
-    // A local write reaches live queries before the writing call returns; host deliveries keep the scheduler.
+    // A local write reaches live queries before the writing call returns; host deliveries keep the scheduler,
+    // in a separate set so a local commit neither re-labels nor hurries the host updates waiting to coalesce.
     if (event.patchInfo.source === 'change') {
+      for (const id of documentChanges.updatedObjectIds) {
+        this.#objectsForLocalCommit.add(id);
+      }
       afterCommit(this.#flushLocalCommit);
+    } else {
+      this._scheduleThrottledDbUpdate(documentChanges.updatedObjectIds, {
+        coalesce: event.patchInfo.source === 'bulk',
+      });
     }
   };
 
@@ -2016,15 +2024,17 @@ export class EntityManager implements IDatabaseBinding {
    * notified inside the commit, and anything else is not this commit's to deliver early.
    */
   readonly #flushLocalCommit = (): void => {
-    // Mid root-document swap there is nothing to emit against; the scheduler re-emits after the swap.
-    if (this.#closed || !this._spaceRootDocHandle || this._objectsForNextDbUpdate.size === 0) {
+    if (this.#closed || this.#objectsForLocalCommit.size === 0) {
       return;
     }
-    const event: ItemsUpdatedEvent = {
-      spaceId: this.spaceId,
-      itemsUpdated: [...this._objectsForNextDbUpdate].map((id) => ({ id })),
-    };
-    this._objectsForNextDbUpdate.clear();
+    const ids = [...this.#objectsForLocalCommit];
+    this.#objectsForLocalCommit.clear();
+    // Mid root-document swap there is nothing to emit against; the scheduler re-emits after the swap.
+    if (!this._spaceRootDocHandle) {
+      this._scheduleThrottledDbUpdate(ids);
+      return;
+    }
+    const event: ItemsUpdatedEvent = { spaceId: this.spaceId, itemsUpdated: ids.map((id) => ({ id })) };
     this._localCommitEvent.emit(event);
     batchEvents(() => this._updateEvent.emit(event));
   };
