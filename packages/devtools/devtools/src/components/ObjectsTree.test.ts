@@ -23,6 +23,8 @@ const PERSONS = 2_000;
 const ORGANIZATIONS = 10;
 /** Persons with a relation; kept below `PERSONS` because seeding every entity through the test host dominates the run. */
 const EMPLOYED = 200;
+/** Mirrors the model's page size, which the first page fills. */
+const PAGE_SIZE = 100;
 
 /**
  * Counts the queries that hold at least one subscriber — what the worker's QueryService keeps live.
@@ -94,7 +96,7 @@ describe('ObjectsTreeModel', () => {
     await builder.close();
   });
 
-  test('live queries track open nodes, not listed objects', { timeout: 180_000 }, async ({ expect }) => {
+  test('live queries follow what is on screen, not the size of the space', { timeout: 180_000 }, async ({ expect }) => {
     const { db: database, graph } = await builder.createDatabase();
     graph.registry.add([TestSchema.Person, TestSchema.Organization, WorksAt]);
     const organizations = Array.from({ length: ORGANIZATIONS }, (_, index) =>
@@ -117,48 +119,43 @@ describe('ObjectsTreeModel', () => {
     const model = new ObjectsTreeModel(db, null, () => {});
     const registry = Registry.make();
     const rows = walk(model);
-    const unsubscribe = registry.subscribe(rows, () => {});
+    // `immediate` builds the walk now, as `Tree` does on mount; a lazy subscription would hold no queries until read.
+    const unsubscribe = registry.subscribe(rows, () => {}, { immediate: true });
+    const topLevel = () => registry.get(model.treeModel.childIds());
 
-    // Sampled while the space loads, which is when a per-row query would first appear.
-    let peak = 0;
-    await expect
-      .poll(
-        () => {
-          peak = Math.max(peak, live());
-          return registry.get(rows).length;
-        },
-        { timeout: 120_000 },
-      )
-      .toBe(PERSONS + ORGANIZATIONS);
-    expect(peak).toBe(1);
-    // Closed rows still know their children, from the space-wide index.
+    // One page of the top level is listed, from one query, however large the space.
+    await expect.poll(() => topLevel().length, { timeout: 30_000 }).toBe(PAGE_SIZE);
+    const firstPage = topLevel().length;
+    expect(live()).toBe(1);
+
+    // Rows in view share one presence query, which is what draws their toggles.
+    const hides = topLevel()
+      .slice(0, 30)
+      .map((id) => model.show(registry, id));
+    await expect.poll(() => live()).toBe(2);
     const organization = organizations[0].id;
-    expect(registry.get(model.treeModel.itemProps([ROOT, organization])).parentOf).toHaveLength(
-      EMPLOYED / ORGANIZATIONS,
-    );
+    await expect
+      .poll(() => registry.get(model.treeModel.itemProps([ROOT, organization])).parentOf, { timeout: 30_000 })
+      .toHaveLength(EMPLOYED / ORGANIZATIONS);
 
-    // What `ObjectsTree`'s `handleOpenChange` writes on a toggle.
-    const open = (parentPath: string[], id: string, value: boolean) => {
-      const path = [...parentPath, id];
-      registry.set(model.openAtPath(path), value);
-      registry.set(model.openPaths(id), value ? new Set([path.join('/')]) : new Set<string>());
-    };
+    model.setOpen(registry, [ROOT, organization], true);
+    await expect.poll(() => registry.get(rows).length, { timeout: 30_000 }).toBe(firstPage + EMPLOYED / ORGANIZATIONS);
+    expect(live()).toBe(3);
 
-    open([ROOT], organization, true);
-    await expect.poll(() => registry.get(rows).length).toBe(PERSONS + ORGANIZATIONS + EMPLOYED / ORGANIZATIONS);
-    expect(live()).toBe(2);
-
-    const relation = registry.get(model.treeModel.childIds(organization))[0];
-    open([ROOT, organization], relation, true);
-    await expect.poll(() => live()).toBe(3);
-
-    // Closing releases the node's query.
-    open([ROOT, organization], relation, false);
-    open([ROOT], organization, false);
+    // Closing a node, then scrolling its rows away, releases what they held.
+    model.setOpen(registry, [ROOT, organization], false);
+    await expect.poll(() => live()).toBe(2);
+    hides.forEach((hide) => hide());
     await expect.poll(() => live()).toBe(1);
-    expect(registry.get(rows)).toHaveLength(PERSONS + ORGANIZATIONS);
+
+    // Reaching the end of the loaded rows asks for the next page rather than a query per row.
+    const hide = model.show(registry, topLevel()[firstPage - 1]);
+    await expect.poll(() => topLevel().length, { timeout: 30_000 }).toBeGreaterThan(firstPage);
+    expect(live()).toBe(2);
+    hide();
 
     unsubscribe();
+    model.dispose();
     registry.dispose();
     await expect.poll(() => live()).toBe(0);
   });
