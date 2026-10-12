@@ -122,7 +122,8 @@ export const pluginConfigPlugin = (): VitePlugin => {
         if (this.environment.mode !== 'build') {
           return `/@fs${moduleFile}`;
         }
-        chunkRefs.push(this.emitFile({ type: 'chunk', id: moduleFile }));
+        // App builds drop entry exports; the body's `default` is the contract the manifest loads.
+        chunkRefs.push(this.emitFile({ type: 'chunk', id: moduleFile, preserveSignature: 'exports-only' }));
         return `__DX_CHUNK_${chunkRefs.length - 1}__`;
       };
       const modules: Plugin.ManifestModule[] = [];
