@@ -141,8 +141,14 @@
     color: var(--color-fg-muted);
   }
 
+  /* Framed by its host, so neither edge nor rounding of its own; the border keeps its width so nothing shifts. */
   .dx-card[data-border='false'] {
     border-color: transparent;
+    border-radius: 0;
+  }
+  .dx-card[data-border='false'] > .dx-card-poster:first-child {
+    border-start-start-radius: 0;
+    border-start-end-radius: 0;
   }
   .dx-card[data-selected] {
     border-color: var(--color-accent-bg);

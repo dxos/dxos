@@ -6,10 +6,9 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
 import { IfElseInput, IfElseOutput, IfInput, IfOutput } from '@dxos/conductor';
-import { type ShapeDef } from '@dxos/react-ui-canvas-editor';
 
-import { createFunctionAnchors, getHeight } from './common/index.ts';
-import { ComputeShape, type CreateShapeProps, createShape } from './defs.ts';
+import { createFunctionPorts, defineComputeNode, getHeight } from './common/index.ts';
+import { ComputeShape, type CreateShapeProps, createShape, withZ } from './defs.ts';
 import { IfComponent, IfElseComponent } from './Logic.tsx';
 
 // Kept out of `Logic.tsx`: react-refresh only fast-refreshes a module whose
@@ -44,25 +43,29 @@ export type CreateIfProps = CreateShapeProps<IfShape> & { if?: string };
 export const createIf = (props: CreateIfProps) =>
   createShape<IfShape>({ type: 'if', size: { width: 192, height: getHeight(IfInput) }, ...props });
 
-export const ifShape: ShapeDef<IfShape> = {
+export const ifNodeDef = defineComputeNode<IfShape>({
   type: 'if',
   name: 'IF',
   icon: 'ph--arrows-split--regular',
+  group: 'Operations',
+  schema: withZ(IfShape),
   component: IfComponent,
-  createShape: createIf,
-  getAnchors: (shape) => createFunctionAnchors(shape, IfInput, IfOutput),
-};
+  create: createIf,
+  ports: (shape) => createFunctionPorts(shape.size, IfInput, IfOutput),
+});
 
 export type CreateIfElseProps = CreateShapeProps<IfShape> & { if?: string };
 
 export const createIfElse = (props: CreateIfElseProps) =>
   createShape<IfElseShape>({ type: 'if-else', size: { width: 192, height: getHeight(IfElseInput) }, ...props });
 
-export const ifElseShape: ShapeDef<IfElseShape> = {
+export const ifElseNodeDef = defineComputeNode<IfElseShape>({
   type: 'if-else',
   name: 'IF/ELSE',
   icon: 'ph--arrows-merge--regular',
+  group: 'Operations',
+  schema: withZ(IfElseShape),
   component: IfElseComponent,
-  createShape: createIfElse,
-  getAnchors: (shape) => createFunctionAnchors(shape, IfElseInput, IfElseOutput),
-};
+  create: createIfElse,
+  ports: (shape) => createFunctionPorts(shape.size, IfElseInput, IfElseOutput),
+});

@@ -3,3 +3,4 @@
 //
 
 export * from './blob-backend.ts';
+export * from './replicator.ts';

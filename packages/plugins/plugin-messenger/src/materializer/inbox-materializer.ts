@@ -51,6 +51,8 @@ export const startInboxMaterializer = ({
   let rerun = false;
   let watchedSpace: Space | undefined;
   let unwatchContainers = () => {};
+  // Converging costs a query and a feed scan, so it runs only when the container set may have changed.
+  let containersChanged = true;
 
   const pass = Effect.gen(function* () {
     const space = getSpace();
@@ -67,8 +69,14 @@ export const startInboxMaterializer = ({
     if (watchedSpace !== space) {
       unwatchContainers();
       watchedSpace = space;
-      unwatchContainers = space.db.query(Filter.type(Notifications.Notifications)).subscribe(schedule);
+      containersChanged = true;
+      unwatchContainers = space.db.query(Filter.type(Notifications.Notifications)).subscribe(() => {
+        containersChanged = true;
+        schedule();
+      });
     }
+    const converge = containersChanged;
+    containersChanged = false;
     const contacts = new Map(
       client.halo.contacts.get().flatMap((contact) => {
         const identityKey = toPublicKey(contact.identityKey);
@@ -79,7 +87,16 @@ export const startInboxMaterializer = ({
       messages: client.halo.inbox.messages.get(),
       contacts,
       ack: (ids) => client.halo.inbox.ack(ids),
-    }).pipe(Effect.provide(Database.layer(space.db)));
+      converge,
+    }).pipe(
+      Effect.provide(Database.layer(space.db)),
+      // A failed pass may not have converged, so the next one tries again.
+      Effect.onError(() =>
+        Effect.sync(() => {
+          containersChanged ||= converge;
+        }),
+      ),
+    );
     written.forEach((message) => onWritten?.(message));
   });
 

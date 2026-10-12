@@ -1,5 +1,66 @@
 # @dxos/plugin-agent
 
+## 0.14.0
+
+### Minor Changes
+
+- 62abfd7: An agent gains a "Brain store" companion: a read-only debug view of its brain as held, showing the raw facts with full attribution, each watch's rules, the facts encoded as the Datalog relations those rules match, and each watch's pending events with when the clock next matters. It reads the brain through the new `TriggerOperation.InspectBrain`, and `@dxos/brain` adds `Encoding.format` and `Encoding.formatEntry` to print encoded facts in the rules dialect.
+- f0fc12a: An agent's chats now run on EDGE (`Agent.chatLocation`) unless a chat sets `remote: false`, so every chat shares the agent's one brain. Facts the agent records are attributed to space members by identity DID, with the display name as an optional label (`attribution.agentLabel`), and watches resolve the person they name to that member's DID and match on it (someone who is no member is matched by name, as their words are attributed); a chat with a member no longer invents a placeholder "Me" person.
+- 469e811: An agent's extracted facts now live only in its brain (`BrainService`): reading a chat or a document no longer writes `FactEntry`/`ExtractionPass` items to an annotation feed in the space, and documents read with `ReadSource` now wake watches as chat turns do. Breaking: the `@dxos/plugin-agent/FactEntry` export is removed, `ReadSource` returns `fired`/`undelivered` instead of a `pass` ref, `BrainService` gains `readThrough` and a `read` push option (the chat read cursor, kept with the facts), and annotation feeds already in a space are no longer read.
+- 37b0196: `@dxos/brain` gains `Evaluator`, which evaluates every subscription of one brain with `GoalRules` over a shared fact stream (`push`, `tick`, `hydrate`, `nextDueAt`), and `Oracle`, the replay gate a compiled goal must pass. `GoalRules.nextDueAt` reports when the clock next matters, `every` fires once per period even when every evaluation falls on a boundary, and `about` also matches an entity's label. plugin-agent's in-memory brain now evaluates subscriptions with the `Evaluator`: a `Trigger` carries `rules`, compiled from the goal's text by `WatchFacts` (gated by the oracle, naming the space's members by DID) or translated from its `FactPattern` by `Trigger.toRules`, replacing `Trigger.matchesPattern` and `BrainService.matchEvent`. `BrainService` events carry the wake's label and facts, and the service gains `tick` and `nextDueAt`; `TriggerOperation.RunDue` runs due watches.
+
+### Patch Changes
+
+- f20db7f: An agent watch no longer notifies its recipient about something they said themselves, refuses a watch that would only ever do so, and sends nothing for a watch cancelled while its update was being written.
+- 2d0a302: The in-memory brain wakes a chat where the chat runs (`Agent.chatLocation`), so an agent chat on EDGE no longer gets a second, local session when a watch fires.
+- Updated dependencies [62abfd7]
+- Updated dependencies [f0fc12a]
+- Updated dependencies [0715304]
+- Updated dependencies [37b0196]
+- Updated dependencies [085dcb1]
+- Updated dependencies [b0e4b60]
+- Updated dependencies [fd09131]
+- Updated dependencies [508be04]
+- Updated dependencies [347546a]
+- Updated dependencies [ec6da5a]
+- Updated dependencies [a1e64db]
+- Updated dependencies [28bb45b]
+- Updated dependencies [1eed6b1]
+- Updated dependencies [6847fe2]
+- Updated dependencies [3e98467]
+- Updated dependencies [1819960]
+- Updated dependencies [eb5d14d]
+- Updated dependencies [27b542c]
+- Updated dependencies [4820c02]
+- Updated dependencies [5324de6]
+- Updated dependencies [b07f49f]
+  - @dxos/brain@0.14.0
+  - @dxos/assistant@0.14.0
+  - @dxos/app-framework@0.14.0
+  - @dxos/plugin-markdown@0.14.0
+  - @dxos/react-ui-form@0.14.0
+  - @dxos/react-ui@0.14.0
+  - @dxos/react-ui-list@0.14.0
+  - @dxos/compute@0.14.0
+  - @dxos/echo@0.14.0
+  - @dxos/effect@0.14.0
+  - @dxos/ui-theme@0.14.0
+  - @dxos/plugin-explorer@0.14.0
+  - @dxos/plugin-thread@0.14.0
+  - @dxos/app-toolkit@0.14.0
+  - @dxos/app-graph@0.14.0
+  - @dxos/react-ui-menu@0.14.0
+  - @dxos/ai@0.14.0
+  - @dxos/echo-react@0.14.0
+  - @dxos/schema@0.14.0
+  - @dxos/types@0.14.0
+  - @dxos/pipeline-rdf@0.14.0
+  - @dxos/halo@0.14.0
+  - @dxos/halo-react@0.14.0
+  - @dxos/errors@0.14.0
+  - @dxos/keys@0.14.0
+  - @dxos/util@0.14.0
+
 ## 0.13.0
 
 ### Minor Changes

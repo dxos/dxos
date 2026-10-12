@@ -18,7 +18,6 @@ import * as Atom from 'effect/reactivity/Atom';
 
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
-import { CanvasBoard } from '@dxos/react-ui-canvas-editor';
 import {
   type Link,
   LINK_TYPES,
@@ -34,6 +33,7 @@ import {
 } from '@dxos/react-ui-canvas/scene';
 
 import { createAnchorId, parseAnchorId } from '../shapes/defs.ts';
+import { type CanvasBoard } from '../types/index.ts';
 
 /** A board's layout as both representations see it: the arrays, whether live (ECHO) or plain. */
 type Layout = { nodes: CanvasBoard.Shape[]; edges: CanvasBoard.Connection[] };

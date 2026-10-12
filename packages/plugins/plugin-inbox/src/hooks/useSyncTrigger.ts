@@ -111,8 +111,8 @@ export const useSyncTrigger = ({
           Binding.syncCreatedRoutine({ created, connector, spaceId: db.spaceId }).pipe(
             Effect.provideService(Capability.Service, manager.capabilities),
             Effect.catch((error) => Effect.sync(() => log.warn('first sync after routine created failed', { error }))),
-            // An EDGE force-run that outlives its replication backoff arrives as a defect
-            // (`Effect.orDie`), which the typed catch above would let escape unreported.
+            // A force-run EDGE fails other than as switched off arrives as a defect, which the typed
+            // catch above would let escape unreported.
             Effect.catchDefect((defect) =>
               Effect.sync(() => log.warn('first sync after routine created died', { defect })),
             ),

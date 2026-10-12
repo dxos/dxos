@@ -6,10 +6,10 @@ import {
   type Element,
   type ElementId,
   type Endpoint,
+  type FrameNode,
   type Intent,
   type LayerId,
   type Link,
-  type PortalNode,
   type Scene,
   endpointNode,
 } from '../model/types.ts';
@@ -58,8 +58,8 @@ export const groupIntoScene = (
   const moved = links.filter((link) => isInside(link.source) && isInside(link.target));
   const crossing = links.filter((link) => !moved.includes(link));
 
-  const portal: PortalNode = {
-    type: 'scene',
+  const portal: FrameNode = {
+    type: 'frame',
     id,
     z: topZ(Object.values(scene.nodes)),
     center: { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 },

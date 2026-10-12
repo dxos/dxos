@@ -10,9 +10,9 @@ Each of these carries the same explanation as a comment at the top of its own fi
 
 | Workflow | Trigger | Why it is still on Actions |
 | :-- | :-- | :-- |
-| [`pr-build.yml`](pr-build.yml) | `pull_request` | Builds the composer-app bundle with no secrets and uploads it as an artifact. Paired with `pr-deploy.yml` and stuck for the same reason. |
+| [`pr-build.yml`](pr-build.yml) | `pull_request` labeled `preview` | Builds the composer-app bundle with no secrets and uploads it as an artifact. Paired with `pr-deploy.yml` and stuck for the same reason. |
 | [`pr-deploy.yml`](pr-deploy.yml) | `workflow_run` | Downloads `pr-build`'s artifact by `workflow_run.id` and deploys it as a Cloudflare Worker preview. Once `pr-build` ran on Depot, every attempt failed with `Unable to download artifact(s): Not Found`. A Depot-executed run's synthesized `workflow_run.id` does not resolve through GitHub's real artifact API. |
-| [`pkg-pr-new.yml`](pkg-pr-new.yml) | `push` to main, dispatch | pkg.pr.new's publish CLI verifies the calling run against GitHub's Actions run tracking. On Depot it answered `Check failed (404): There is no workflow defined for <id>` every time. |
+| [`pkg-pr-new.yml`](pkg-pr-new.yml) | `schedule`, dispatch, `workflow_call` from `deploy-apps.yml` | pkg.pr.new's publish CLI verifies the calling run against GitHub's Actions run tracking. On Depot it answered `Check failed (404): There is no workflow defined for <id>` every time. |
 | [`publish-all.yml`](publish-all.yml) | `push` to main, dispatch | npm's OIDC trusted publisher accepts a fixed set of CI identities, and Depot's is not among them, so `id-token: write` provenance cannot be minted there. The filename is load-bearing, because OIDC is configured against `publish-all.yml`. |
 | [`deploy-apps.yml`](deploy-apps.yml) | `schedule`, dispatch | Calls `deploy-tauri.yaml`, whose builds need `depot-macos-latest`. Depot CI's own orchestrator has no macOS sandboxes yet. |
 | [`deploy-tauri.yaml`](deploy-tauri.yaml) | `workflow_call` | Same macOS constraint. Code signing and notarization run on `depot-macos-latest`. |

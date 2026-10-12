@@ -59,7 +59,7 @@ const DefaultStory = () => {
 };
 
 const meta: Meta = {
-  title: 'ui/react-ui-canvas/scene/Toolbar',
+  title: 'ui/react-ui-canvas/Toolbar',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'centered', classNames: 'w-[30rem]' })],
 };

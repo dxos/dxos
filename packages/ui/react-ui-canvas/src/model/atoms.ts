@@ -77,6 +77,9 @@ export type ControlPointRef = { link: LinkId; index: number };
 /** The text part being edited in place (`parts.ts`). */
 export type EditingPart = { id: NodeId; part: PartKey };
 
+/** Where the properties and layers panels sit: floating over the canvas, or docked in a column beside it. */
+export type PanelMode = 'floating' | 'docked';
+
 export type SceneViewAtoms = {
   camera: Atom.Writable<Camera>;
   path: Atom.Writable<SceneId[]>;
@@ -104,6 +107,11 @@ export type SceneViewAtoms = {
   /** The last cut or copied fragment (`clipboard.ts`). */
   clipboard: Atom.Writable<Clipboard | undefined>;
   editing: Atom.Writable<EditingPart | undefined>;
+  /**
+   * The node whose embedded content takes input (an editor in a frame), entered by clicking the node; any other
+   * node's embedded content is inert, so a press anywhere on it selects and moves it.
+   */
+  active: Atom.Writable<NodeId | undefined>;
   /** Frames show their id, type and geometry. */
   debug: Atom.Writable<boolean>;
 };
@@ -130,5 +138,6 @@ export const createSceneViewAtoms = (root: SceneId): SceneViewAtoms => ({
   undo: Atom.keepAlive(Atom.make<UndoState>(emptyUndo())),
   clipboard: Atom.keepAlive(Atom.make<Clipboard | undefined>(undefined)),
   editing: Atom.keepAlive(Atom.make<EditingPart | undefined>(undefined)),
+  active: Atom.keepAlive(Atom.make<NodeId | undefined>(undefined)),
   debug: Atom.keepAlive(Atom.make<boolean>(false)),
 });

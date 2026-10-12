@@ -22,7 +22,15 @@ import { Text } from '@dxos/schema';
 import { HasSubject, Message, Organization, Person, ProfileOf, Task, TaskSet } from '@dxos/types';
 
 import { AgentOperationHandlerSet } from '#operations';
-import { ConversationSkill, GoalsSkill, InterviewSkill, ModesSkill, NoteTakerSkill, RelaySkill } from '#skills';
+import {
+  ConversationSkill,
+  GoalsSkill,
+  InterviewSkill,
+  ModesSkill,
+  NoteTakerSkill,
+  RelaySkill,
+  SupportSkill,
+} from '#skills';
 import { AgentOperation, ChatParticipant, Goal, Memory, MemoryOperation, Mode, ModeOperation, Relay } from '#types';
 
 import { testSpaceLayer } from '../brain/testing.ts';
@@ -61,6 +69,7 @@ const SKILLS = [
   ModesSkill.make(),
   NoteTakerSkill.make(),
   GoalsSkill.make(),
+  SupportSkill.make(),
 ];
 
 const TestLayer = AssistantTestLayer({
@@ -93,7 +102,13 @@ describe('Modes', () => {
 
         const listed = yield* Operation.invoke(ModeOperation.ListModes, { chat: Ref.make(chat) });
         expect(listed.current).toBe(Mode.DEFAULT);
-        expect(listed.modes.map(({ name }) => name)).toEqual(['Conversation', 'Note-taker', 'Interviewer', 'Relay']);
+        expect(listed.modes.map(({ name }) => name)).toEqual([
+          'Conversation',
+          'Note-taker',
+          'Interviewer',
+          'Relay',
+          'Support',
+        ]);
         expect(listed.modes.find(({ name }) => name === 'Note-taker')?.skills).toEqual([NoteTakerSkill.key]);
         expect(yield* boundKeys(agentRef, chat)).toEqual(
           expect.arrayContaining([ConversationSkill.key, ModesSkill.key, RelaySkill.key]),
@@ -102,7 +117,7 @@ describe('Modes', () => {
 
         // Idempotent: listing again creates no second set of modes.
         yield* Operation.invoke(ModeOperation.ListModes, { chat: Ref.make(chat) });
-        expect((yield* Database.query(Filter.type(Mode.Mode)).run).length).toBe(4);
+        expect((yield* Database.query(Filter.type(Mode.Mode)).run).length).toBe(5);
 
         const switched = yield* Operation.invoke(ModeOperation.SwitchMode, {
           chat: Ref.make(chat),
@@ -124,6 +139,14 @@ describe('Modes', () => {
         expect(interviewing).not.toContain(NoteTakerSkill.key);
         expect(interviewing).toEqual(expect.arrayContaining([ConversationSkill.key, ModesSkill.key, RelaySkill.key]));
         expect(new Set(interviewing).size).toBe(interviewing.length);
+
+        // Support binds the community-support skill in place of the interviewer's.
+        const supporting = yield* Operation.invoke(ModeOperation.SwitchMode, { chat: Ref.make(chat), mode: 'support' });
+        expect(supporting).toEqual({ mode: 'Support', skills: [SupportSkill.key] });
+        yield* Database.flush();
+        const supportKeys = yield* boundKeys(agentRef, chat);
+        expect(supportKeys).toContain(SupportSkill.key);
+        expect(supportKeys).not.toContain(InterviewSkill.key);
 
         const unknown = yield* Operation.invoke(ModeOperation.SwitchMode, {
           chat: Ref.make(chat),

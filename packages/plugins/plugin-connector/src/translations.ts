@@ -40,6 +40,9 @@ export const translations = [
         'account-mismatch.description':
           'This was not connected, because it already syncs a different account. To sync the account you just authorized, create a new item for it and connect that instead.',
         'close.label': 'Close',
+        'sync-routine-disabled.title': 'Sync is switched off',
+        'sync-routine-disabled.description': 'The routine that syncs this account is turned off. Turn it on to sync.',
+        'open-routines.label': 'Open routines',
         'sync-connection.label': 'Sync now',
         'no-connector.message': 'No service plugin is registered for this connection.',
         'connection-status.label': 'Status',

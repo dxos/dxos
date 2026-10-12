@@ -18,6 +18,11 @@ export const Note = Schema.Struct({
   duration: Schema.Number,
   /** Velocity 0.0..1.0; defaults to 0.8. */
   velocity: Schema.optional(Schema.Number),
+  /**
+   * How the note is played; defaults to `note`. Percussive strikes (`tak`, `slap`) have no musical
+   * pitch — `pitch` then names the field or drum struck, for placement only.
+   */
+  articulation: Schema.optional(Schema.Literals(['note', 'tak', 'slap', 'ghost'])),
 }).mapFields(Struct.map(Schema.mutableKey));
 
 export interface Note extends Schema.Schema.Type<typeof Note> {}

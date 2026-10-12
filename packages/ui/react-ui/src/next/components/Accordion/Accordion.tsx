@@ -11,6 +11,7 @@ import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
+import { Block } from '../Block/Block.tsx';
 import * as Icon from '../Icon/Icon.tsx';
 
 //
@@ -80,17 +81,19 @@ const AccordionItemTrigger = forwardRef<HTMLButtonElement, AccordionItemTriggerP
         ref={forwardedRef}
       >
         {icon && (
-          <span data-scope='accordion' data-part='item-icon' className={recipes.accordionItemIcon()}>
+          <Block classNames={recipes.accordionItemIcon()}>
             <Icon.Icon icon={icon} />
-          </span>
+          </Block>
         )}
         <span data-scope='accordion' data-part='item-text' className={recipes.accordionItemText()}>
           {children}
         </span>
         {!disabled && (
-          <AccordionPrimitive.ItemIndicator className={recipes.accordionItemIndicator()}>
-            <Icon.Icon icon='ph--caret-right--regular' />
-          </AccordionPrimitive.ItemIndicator>
+          <Block>
+            <AccordionPrimitive.ItemIndicator className={recipes.accordionItemIndicator()}>
+              <Icon.Icon icon='ph--caret-right--regular' />
+            </AccordionPrimitive.ItemIndicator>
+          </Block>
         )}
       </AccordionPrimitive.ItemTrigger>
     );

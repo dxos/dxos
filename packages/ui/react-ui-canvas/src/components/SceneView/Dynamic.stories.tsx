@@ -126,7 +126,7 @@ const DefaultStory = () => {
 };
 
 const meta: Meta = {
-  title: 'ui/react-ui-canvas/scene/Dynamic',
+  title: 'ui/react-ui-canvas/Dynamic',
   render: DefaultStory,
   decorators: [withRegistry, withTheme(), withLayout({ layout: 'fullscreen' })],
 };

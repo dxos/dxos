@@ -4,7 +4,7 @@
 
 import { type ExpectStatic, describe, test } from 'vitest';
 
-import { type Bounds, type Camera, type PortalNode } from '../model/types.ts';
+import { type Bounds, type Camera, type FrameNode } from '../model/types.ts';
 import {
   MAX_ZOOM,
   MIN_ZOOM,
@@ -21,8 +21,8 @@ import { nodeBounds } from './shapes.ts';
 
 const viewport = { width: 800, height: 600 };
 
-const portal: PortalNode = {
-  type: 'scene',
+const portal: FrameNode = {
+  type: 'frame',
   id: 'p',
   z: 'V',
   center: { x: 640, y: 620 },
