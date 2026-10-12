@@ -15,6 +15,8 @@ import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { Config2, PluginProfileSchema, PluginReleaseSchema } from '@dxos/protocols';
 
+import * as Environment from '#environment';
+
 import * as ActivationEvent from './activation-event.ts';
 import * as Capability from './capability.ts';
 import type * as PluginManager from './plugin-manager/index.ts';
@@ -597,27 +599,28 @@ export function lazy<T = void>(meta: Meta, loader: LazyLoader<T>): ((options: T)
  */
 export const isLazy = (plugin: Plugin): boolean => LazyTag in plugin;
 
-/** A plugin's capability barrel: the module namespace its {@link Capability.Module}s are exported from. */
-export type CapabilityBarrel = Readonly<Record<string, unknown>>;
-
 /**
- * Builds a plugin from every {@link Capability.Module} a capability barrel exports, so the barrel is
- * the single list of a plugin's modules. Non-module exports (helpers, values) are skipped.
+ * Builds a plugin from its module list, keeping only the modules that run in this build's
+ * {@link Environment.current}; a module with no `environments` runs everywhere.
  */
-export const fromCapabilities = <T = void>(meta: Meta, barrel: CapabilityBarrel): PluginFactory<T> =>
+export const fromModules = <T = void>(
+  meta: Meta,
+  modules: ReadonlyArray<Capability.Module<any> | undefined>,
+): PluginFactory<T> =>
   make(
-    Object.values(barrel)
-      .filter(Capability.isModule)
+    modules
+      .filter((module) => module !== undefined)
+      .filter((module) => module.environments?.includes(Environment.current) ?? true)
       .reduce((builder, module) => addModule<T>(module)(builder), define<T>(meta)),
   );
 
-/** Authoring input for {@link config}: the `dx.config.ts` data plus the loader of its capability barrel. */
+/** Authoring input for {@link config}: the `dx.config.ts` data plus the plugin's modules. */
 export type ConfigOptions = Config2.Config & {
-  /** Called on first enable only, so tooling that reads the config never loads plugin code. */
-  capabilities: () => Promise<CapabilityBarrel>;
+  /** Module specs only; each body is a dynamic import, so reading the config loads no plugin code. */
+  modules: ReadonlyArray<Capability.Module<any> | undefined>;
 };
 
-/** A plugin's `dx.config.ts` default export: its config data, runtime {@link Meta} and lazy factory. */
+/** A plugin's `dx.config.ts` default export: its config data, runtime {@link Meta} and factory. */
 export type PluginConfig<T = void> = Config2.Config & {
   meta: Meta;
   make: PluginFactory<T>;
@@ -631,17 +634,13 @@ export type PluginConfig<T = void> = Config2.Config & {
  * // dx.config.ts
  * export default Plugin.config({
  *   plugin: { key: 'org.dxos.plugin.markdown', name: 'Markdown' },
- *   capabilities: () => import('#capabilities'),
+ *   modules: [AppCapability.schema(() => import('./src/capabilities/schema.ts'))],
  * });
  * ```
  */
-export const config = <T = void>({ capabilities, ...data }: ConfigOptions): PluginConfig<T> => {
+export const config = <T = void>({ modules, ...data }: ConfigOptions): PluginConfig<T> => {
   const meta = getMetaFromConfig(data);
-  return {
-    ...data,
-    meta,
-    make: lazy<T>(meta, () => capabilities().then((barrel) => ({ default: fromCapabilities<T>(meta, barrel) }))),
-  };
+  return { ...data, meta, make: fromModules<T>(meta, modules) };
 };
 
 /**

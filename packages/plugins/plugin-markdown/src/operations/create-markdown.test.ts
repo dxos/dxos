@@ -10,7 +10,7 @@ import * as Harness from '@dxos/plugin-testing/Harness';
 
 import { Markdown, MarkdownOperation } from '#types';
 
-import * as MarkdownPlugin from '../MarkdownPlugin.testing.ts';
+import * as MarkdownPlugin from '../../dx.config.ts';
 
 describe('CreateMarkdown', () => {
   test('returns an unpersisted document with the given name and content', async ({ expect }) => {

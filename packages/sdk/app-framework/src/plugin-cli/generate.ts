@@ -33,7 +33,8 @@ export const generate = (pluginDir: string): GenerateResult => {
   const capabilitiesDir = path.join(pluginDir, 'src/capabilities');
   const indexPath = findFirst(capabilitiesDir, ['index.ts', 'index.tsx']);
   if (!indexPath) {
-    throw new Error(`no capabilities barrel found at ${capabilitiesDir}/index.ts`);
+    // A plugin defined by `Plugin.config` lists its modules in `dx.config.ts` and is filtered at runtime.
+    return { pluginDir, environments: [], files: [] };
   }
 
   const members = parseBarrel(indexPath);

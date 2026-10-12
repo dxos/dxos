@@ -9,7 +9,6 @@ export default defineConfig({
     index: 'src/index.ts',
     MarkdownPlugin: 'dx.config.ts',
     skills: 'src/skills/index.ts',
-    capabilities: 'src/capabilities/index.ts',
     components: 'src/components/index.ts',
     containers: 'src/containers/index.ts',
     hooks: 'src/hooks/index.ts',

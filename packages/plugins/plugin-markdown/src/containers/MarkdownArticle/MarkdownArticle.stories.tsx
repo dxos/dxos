@@ -40,7 +40,7 @@ import { Organization, Person } from '@dxos/types';
 import { translations } from '#translations';
 import { Markdown, MarkdownCapabilities } from '#types';
 
-import * as MarkdownPlugin from '../../MarkdownPlugin.testing.ts';
+import * as MarkdownPlugin from '../../../dx.config.ts';
 
 random.seed(1);
 

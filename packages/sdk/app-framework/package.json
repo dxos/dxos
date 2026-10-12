@@ -159,6 +159,21 @@
       "import": "./dist/lib/vite-plugin.mjs"
     }
   },
+  "imports": {
+    "#environment": {
+      "source": {
+        "workerd": "./src/core/environment/workerd.ts",
+        "node": "./src/core/environment/node.ts",
+        "tauri": "./src/core/environment/tauri.ts",
+        "browser": "./src/core/environment/browser.ts"
+      },
+      "types": "./dist/types/src/core/environment/browser.d.ts",
+      "workerd": "./dist/lib/core/environment/workerd.mjs",
+      "node": "./dist/lib/core/environment/node.mjs",
+      "tauri": "./dist/lib/core/environment/tauri.mjs",
+      "browser": "./dist/lib/core/environment/browser.mjs"
+    }
+  },
   "types": "dist/types/src/index.d.ts",
   "bin": {
     "dx-plugin": "./bin/dx-plugin.mjs"

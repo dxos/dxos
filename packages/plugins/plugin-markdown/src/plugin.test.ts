@@ -9,7 +9,7 @@ import * as Harness from '@dxos/plugin-testing/Harness';
 
 import { meta } from '#meta';
 
-import * as MarkdownPlugin from './MarkdownPlugin.testing.ts';
+import * as MarkdownPlugin from '../dx.config.ts';
 
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 

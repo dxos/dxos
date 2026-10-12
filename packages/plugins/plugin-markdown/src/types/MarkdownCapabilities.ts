@@ -18,8 +18,6 @@ import { type Text } from '@dxos/schema';
 import { type EditorStateStore } from '@dxos/ui-editor';
 import { type EditorViewMode } from '@dxos/ui-editor/types';
 
-import { meta } from '#meta';
-
 import type * as Markdown from './Markdown.ts';
 
 export type EditorViewEntry = { view: EditorView; documentId: string };
@@ -33,19 +31,23 @@ export type EditorViewRegistry = {
 };
 
 export const Settings = Capability.makeSingleton<Atom.Writable<Markdown.Settings>>()(
-  `${meta.profile.key}.capability.settings`,
+  'org.dxos.plugin.markdown.capability.settings',
 );
 
 /** Editor state store for cursor positions, scroll state, etc. */
-export const EditorState = Capability.makeSingleton<EditorStateStore>()(`${meta.profile.key}.capability.editorState`);
+export const EditorState = Capability.makeSingleton<EditorStateStore>()(
+  'org.dxos.plugin.markdown.capability.editorState',
+);
 
 /** Registry of active EditorView instances keyed by attendable ID. */
-export const EditorViews = Capability.makeSingleton<EditorViewRegistry>()(`${meta.profile.key}.capability.editorViews`);
+export const EditorViews = Capability.makeSingleton<EditorViewRegistry>()(
+  'org.dxos.plugin.markdown.capability.editorViews',
+);
 
 // TODO(burdon): Move to ./types (external API)?
 // Multi capability: each contributing plugin provides one batch (array) of extension providers.
 export const ExtensionProvider = Capability.make<MarkdownExtensionProvider[]>()(
-  `${meta.profile.key}.capability.extensions`,
+  'org.dxos.plugin.markdown.capability.extensions',
 );
 
 /**
@@ -54,7 +56,9 @@ export const ExtensionProvider = Capability.make<MarkdownExtensionProvider[]>()(
  * affordances. Contributions are app-lifetime: replacing the hook remounts the article (scroll and
  * selection reset), so contributors must register once at activation, not per render.
  */
-export const EditorBindingHook = Capability.make<UseEditorBinding>()(`${meta.profile.key}.capability.editorBinding`);
+export const EditorBindingHook = Capability.make<UseEditorBinding>()(
+  'org.dxos.plugin.markdown.capability.editorBinding',
+);
 
 /**
  * A contributed entry for the editor's view-mode dropdown: surfaces a per-document review mode (e.g.
@@ -75,7 +79,7 @@ export type ViewModeExtension = {
 };
 
 export const ViewModeExtension = Capability.make<ViewModeExtension>()(
-  `${meta.profile.key}.capability.viewModeExtension`,
+  'org.dxos.plugin.markdown.capability.viewModeExtension',
 );
 
 /**
@@ -105,7 +109,7 @@ export type MenuExtension = {
   operation: Operation.Definition.Any;
 };
 
-export const MenuExtension = Capability.make<MenuExtension>()(`${meta.profile.key}.capability.menuExtension`);
+export const MenuExtension = Capability.make<MenuExtension>()('org.dxos.plugin.markdown.capability.menuExtension');
 
 /** Per-document editing posture (Google-Docs-style); the review semantics are owned by contributors. */
 export type ReviewMode = 'editing' | 'suggesting' | 'viewing';

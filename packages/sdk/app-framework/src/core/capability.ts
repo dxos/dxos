@@ -695,9 +695,6 @@ export const getModuleTag = (capability: unknown): string | undefined => {
     : undefined;
 };
 
-/** Type guard for a {@link Module} exported from a capability barrel. */
-export const isModule = (value: unknown): value is Module<any> => getModuleTag(value) !== undefined;
-
 /**
  * Helper to define a capability module with explicit typing.
  * Wraps the default export function to provide better type inference and make the pattern explicit.
