@@ -188,7 +188,8 @@ export const Test: Story = {
     await expect(separator).not.toHaveAttribute('tabindex');
 
     for (const size of ['md', 'lg'] as const) {
-      const expected = 3 * GEOMETRY[size].inset;
+      // The toolbar adds no gap of its own: items are spaced by their own insets.
+      const expected = 2 * GEOMETRY[size].inset;
       const items = ['add', 'remove', 'separator', 'button', 'input', 'select', 'list', 'grid'].map((part) =>
         byTestId(canvasElement, `${part}-${size}`).getBoundingClientRect(),
       );

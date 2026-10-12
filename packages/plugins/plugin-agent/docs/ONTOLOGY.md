@@ -208,8 +208,9 @@ How the agent is working in one conversation — conversation, note-taker, inter
 transcriber, designer, fact-checker, researcher. A `Mode` names a reusable bundle of skills.
 
 **As built (2026-10-03):** `Mode` (`org.dxos.type.agent.mode` 0.1.0) is `{ name, description?, skills,
-records? }`. Every agent owns four built-in modes (parented to it): **Conversation** (default),
-**Note-taker** (`org.dxos.skill.agentNotes`), **Interviewer** and **Relay**. Every chat keeps the
+records? }`. Every agent owns five built-in modes (parented to it): **Conversation** (default),
+**Note-taker** (`org.dxos.skill.agentNotes`), **Interviewer**, **Relay** and **Support**
+(`org.dxos.skill.agentSupport`, community support in a public channel). Every chat keeps the
 base skills bound — conversation, modes (`listModes`, `switchMode`) and relay — so "tell Dima" works in
 any mode. `switchMode {chat, mode}` rebinds the mode's skills and records the mode on the chat as the
 `org.dxos.agent.chatMode` annotation; the knowledge panel shows it per conversation.

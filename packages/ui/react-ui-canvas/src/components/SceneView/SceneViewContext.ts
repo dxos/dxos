@@ -7,7 +7,13 @@ import { type KeyboardEvent, type MouseEvent, type RefObject } from 'react';
 import { createContext } from '@dxos/react-hooks';
 
 import { type useRegistry } from '../../hooks/index.ts';
-import { type ControlPointRef, type Drag, type EditingPart, type SceneViewAtoms } from '../../model/atoms.ts';
+import {
+  type ControlPointRef,
+  type Drag,
+  type EditingPart,
+  type PanelMode,
+  type SceneViewAtoms,
+} from '../../model/atoms.ts';
 import { type Projection } from '../../model/projection.ts';
 import { type LinkRegistry, type NodeRegistry } from '../../model/registry.ts';
 import { type SceneStore } from '../../model/store.ts';
@@ -17,6 +23,7 @@ import {
   type Capabilities,
   type ElementId,
   type LinkId,
+  type NodeId,
   type Scene,
   type SceneId,
   type Tool,
@@ -40,6 +47,8 @@ export type SceneViewContextValue = {
   store: SceneStore;
   projection: Projection;
   capabilities: Capabilities;
+  /** The scene is only looked at: the parts that edit it (selection frame, ports, actions, properties) hide. */
+  readonly: boolean;
   nodeRegistry: NodeRegistry;
   linkRegistry: LinkRegistry;
 
@@ -74,10 +83,14 @@ export type SceneViewContextValue = {
   hover: ElementId | undefined;
   selectedPoint: ControlPointRef | undefined;
   editing: EditingPart | undefined;
+  /** The node whose embedded content takes input. */
+  active: NodeId | undefined;
   clipboard: Clipboard | undefined;
   drag: Drag | undefined;
   tool: Tool;
   debug: boolean;
+  /** Where the properties and layers panels sit. */
+  panels: PanelMode;
 
   /** The bounds a create gesture would land, drawn whether or not the node itself previews. */
   createFrame: Bounds | undefined;

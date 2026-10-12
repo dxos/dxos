@@ -33,6 +33,10 @@ export interface ObjectsTreeProps {
   canOpen?: (entity: Entity.Snapshot) => boolean;
   /** Narrows the top-level rows to those whose label contains this text (case-insensitive). */
   filter?: string;
+  /** Narrows the top-level rows to these entities (e.g. the matches of a query); all rows when undefined. */
+  ids?: ReadonlySet<string>;
+  /** Highlights the rows showing this entity. */
+  selected?: string;
 }
 
 /**
@@ -40,7 +44,7 @@ export interface ObjectsTreeProps {
  * reachable from it, walked one level ahead of what is open so an unbounded graph is never queried
  * whole. Renders through `Tree`, so disclosure, roving focus and the APG keymap are the machine's.
  */
-export const ObjectsTree = ({ db, root, onSelect, onOpen, canOpen, filter }: ObjectsTreeProps) => {
+export const ObjectsTree = ({ db, root, onSelect, onOpen, canOpen, filter, ids, selected }: ObjectsTreeProps) => {
   const [model, setModel] = useState(() => new ObjectsTreeModel(db, root ?? null, onSelect ?? (() => {})));
   useEffect(() => {
     setModel((prev) =>
@@ -52,13 +56,22 @@ export const ObjectsTree = ({ db, root, onSelect, onOpen, canOpen, filter }: Obj
 
   const registry = useContext(RegistryContext);
   useEffect(() => registry.set(model.filter, filter ?? ''), [registry, model, filter]);
+  useEffect(() => registry.set(model.ids, ids), [registry, model, ids]);
+  useEffect(() => registry.set(model.selected, selected), [registry, model, selected]);
   const contextValue = useMemo(() => ({ model, onOpen, canOpen }), [model, onOpen, canOpen]);
 
   // The walk is gated by id while rows are addressed by path, so a toggle writes both.
   const handleOpenChange = useCallback(
     ({ item, path, open }: { item: ObjectsTreeItem; path: string[]; open: boolean }) => {
       registry.set(model.openAtPath(path), open);
-      registry.set(model.markOpen(item.id), open);
+      const openPaths = model.openPaths(item.id);
+      const next = new Set(registry.get(openPaths));
+      if (open) {
+        next.add(path.join('/'));
+      } else {
+        next.delete(path.join('/'));
+      }
+      registry.set(openPaths, next);
     },
     [model, registry],
   );
@@ -240,6 +253,10 @@ class ObjectsTreeModel {
   #expandedState = Atom.family((_key: string) => Atom.make(false));
   /** Top-level label filter, set by the component's `filter` prop. */
   readonly filter = Atom.make('');
+  /** Top-level id filter, set by the component's `ids` prop. */
+  readonly ids = Atom.make<ReadonlySet<string> | undefined>(undefined);
+  /** Highlighted entity, set by the component's `selected` prop. */
+  readonly selected = Atom.make<string | undefined>(undefined);
 
   constructor(database: Database.Database, root: Entity.Unknown | null, onSelect: (entity: Entity.Snapshot) => void) {
     this.#database = database;
@@ -290,9 +307,11 @@ class ObjectsTreeModel {
       item: (id: string) => this.#itemFamily(id),
       itemProps: (path: string[]) => this.#itemPropsFamily(path.join('/')),
       itemOpen: (path: string[]) => this.openAtPath(path),
-      itemCurrent: () => NEVER_CURRENT,
+      itemCurrent: (path: string[]) => this.#currentFamily(path.at(-1) ?? ''),
     };
   }
+
+  #currentFamily = Atom.family((id: string) => Atom.make((get) => get(this.selected) === id));
 
   #childIdsFamily = Atom.family((anchor: string) =>
     Atom.make((get): string[] => {
@@ -300,18 +319,26 @@ class ObjectsTreeModel {
         return [];
       }
       const children = get(this.#atoms(anchor === ROOT_ANCHOR ? null : anchor));
-      const filter = anchor === ROOT_ANCHOR ? get(this.filter).trim().toLowerCase() : '';
-      return children.filter((child) => !filter || child.label.toLowerCase().includes(filter)).map((child) => child.id);
+      if (anchor !== ROOT_ANCHOR) {
+        return children.map((child) => child.id);
+      }
+      const filter = get(this.filter).trim().toLowerCase();
+      const ids = get(this.ids);
+      return children
+        .filter((child) => (!filter || child.label.toLowerCase().includes(filter)) && (!ids || ids.has(child.id)))
+        .map((child) => child.id);
     }),
   );
 
   /** True when any path addressing this node is open; the walk is keyed by id, the rows by path. */
-  #openIds = Atom.family((id: string) => Atom.make((get) => get(this.#openIdState(id))));
-  #openIdState = Atom.family((_id: string) => Atom.make(false));
+  #openIds = Atom.family((id: string) => Atom.make((get) => get(this.#openPathsState(id)).size > 0));
+  // A set rather than a flag: the same entity appears at several paths (a child, a relation's two ends),
+  // and closing one of them must not empty the others.
+  #openPathsState = Atom.family((_id: string) => Atom.make<ReadonlySet<string>>(new Set<string>()));
 
   /** Walk-gating state, keyed by id — `Tree` addresses rows by path, but `childIds` only has the id. */
-  markOpen(id: string): Atom.Writable<boolean> {
-    return this.#openIdState(id);
+  openPaths(id: string): Atom.Writable<ReadonlySet<string>> {
+    return this.#openPathsState(id);
   }
 
   #itemFamily = Atom.family((id: string) => {
@@ -438,9 +465,6 @@ class ObjectsTreeModel {
 
 /** Synthetic anchor for the top level; `childIds` is ungated here so roots always load. */
 const ROOT_ANCHOR = 'objects';
-
-/** Selection is reported through `onSelect`, not held in the model. */
-const NEVER_CURRENT = Atom.make(false);
 
 const DEFAULT_OBJECT_ICON = 'ph--cube--regular';
 const DEFAULT_RELATION_ICON = 'ph--link--regular';

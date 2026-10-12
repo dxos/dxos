@@ -36,10 +36,10 @@
   .dx-accordion-item-trigger {
     display: flex;
     align-items: center;
-    gap: var(--dx-gap-size);
     width: 100%;
     min-height: var(--dx-block-size);
-    padding: 0 var(--dx-gap-size);
+    /* The icon and the caret are Blocks, which set the row's rhythm; only a row without an icon pads its text. */
+    padding: 0;
     border: none;
     border-radius: inherit;
     background: none;
@@ -72,6 +72,9 @@
   .dx-accordion-item-text {
     flex: 1;
     min-width: 0;
+  }
+  .dx-accordion-item-trigger > .dx-accordion-item-text:first-child {
+    padding-inline-start: var(--dx-gap-size);
   }
 
   .dx-accordion-item-indicator {

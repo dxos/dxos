@@ -17,7 +17,7 @@ import { DEFAULT_SIZES } from './shapes.ts';
 const cell = (units: number) => units * 64;
 
 const CLASS_SIZE = { width: cell(4), height: cell(3) };
-const PORTAL_SIZE = DEFAULT_SIZES.scene;
+const PORTAL_SIZE = DEFAULT_SIZES.frame;
 
 type ClassDef = { key: string; name: string; attributes: string[]; methods: string[] };
 type LevelDef = { key: string; title: string; classes: ClassDef[]; children?: LevelDef[] };
@@ -113,7 +113,7 @@ export const createSceneTree = (depth: number, prefix = 'root'): SceneTree => tr
 /** The fixture's unit: every point and size is written as a count of these, never as raw pixels. */
 const scale = (units: number) => units * 32;
 
-const PORTAL = DEFAULT_SIZES.scene;
+const PORTAL = DEFAULT_SIZES.frame;
 
 /** Child scene variants, chosen by nesting level and side so siblings differ. */
 const VARIANTS = ['flow', 'model', 'cycle', 'note'] as const;

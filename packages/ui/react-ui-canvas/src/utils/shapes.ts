@@ -58,8 +58,8 @@ export const nominalSize = (size: Size, cell: number = DEFAULT_CELL): Size => ({
 export const NOMINAL_SIZES: Record<BuiltinNodeType, Size> = {
   rect: { width: 2, height: 1 },
   ellipse: { width: 2, height: 2 },
-  note: { width: 2, height: 2 },
-  scene: { width: 4, height: 2 },
+  note: { width: 4, height: 2 },
+  frame: { width: 4, height: 2 },
 };
 
 /** The built-in types' sizes in scene px, for fixtures and imports, whose layouts are written against them. */
@@ -67,7 +67,7 @@ export const DEFAULT_SIZES: Record<BuiltinNodeType, Size> = {
   rect: { width: 256, height: 256 },
   ellipse: { width: 256, height: 256 },
   note: { width: 256, height: 128 },
-  scene: { width: 512, height: 256 },
+  frame: { width: 512, height: 256 },
 };
 
 /** The bounding box a new basic shape gets at the default grid. */
@@ -79,7 +79,7 @@ export type CreateNodeProps = {
   z: string;
   center: Point;
   size?: Size;
-  /** A portal's child scene id. */
+  /** A frame's child scene id. */
   scene?: string;
 };
 
@@ -100,7 +100,7 @@ export const createNode = ({
       return { type, id, z, center, size };
     case 'note':
       return { type, id, z, center, size, text: 'Note' };
-    case 'scene':
+    case 'frame':
       return { type, id, z, center, size, scene: scene ?? id };
   }
 };

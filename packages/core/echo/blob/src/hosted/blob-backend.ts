@@ -4,11 +4,22 @@
 
 import { invariant } from '@dxos/invariant';
 
-import { type BlobBackend, type BlobTransport } from '../backend.ts';
+import { type BlobBackend, type BlobStore, type BlobTransport } from '../backend.ts';
 import { SCHEME, digestHex, fromDigestHex } from '../ni-uri.ts';
 
 export interface CreateEdgeBlobBackendOptions {
-  transport: BlobTransport;
+  /** The store on this device; every read and write goes here and nowhere else. */
+  store: BlobStore;
+  /** Adopts a direct upload made to the hosted store; absent when no EDGE endpoint is configured. */
+  finalizeUpload?: BlobTransport['finalizeUpload'];
+}
+
+/** {@link BlobBackend} whose bytes are held on this device. */
+export interface EdgeBlobBackend extends BlobBackend {
+  /** Always present: local bytes can be rendered without the network. */
+  getUrl: NonNullable<BlobBackend['getUrl']>;
+  /** Revokes the object URLs `getUrl` handed out. */
+  close(): void;
 }
 
 // `SCHEME` from `ni-uri` rather than `Blob.Scheme.ni` from `@dxos/echo`: both are the string `ni`,
@@ -23,45 +34,67 @@ const parseNiUri = (uri: string): string => {
 export const MAX_EDGE_BLOB_SIZE = 50 * 1024 * 1024;
 
 /**
- * Blob backend that stores bytes in the edge blob service, addressed by RFC 6920 `ni:` URIs over a
- * SHA-256 digest of the complete blob. The edge blob service itself is a flat key-value store keyed
- * by hex digest — online-only in v1; reads and writes reject if the edge is unreachable and there is
- * no local cache.
+ * Local-first blob backend addressed by RFC 6920 `ni:` URIs over a SHA-256 digest of the complete
+ * blob.
+ *
+ * A write is confirmed once the {@link BlobStore} on this device holds it; the backend never talks to
+ * the edge blob service for reads or writes. Replication is the store's concern — in the client, the
+ * client services host pushes stored blobs to the edge asynchronously (see `createBlobReplicator`) and
+ * fills local misses from it.
  *
  * @see {@link https://www.rfc-editor.org/rfc/rfc6920 RFC 6920}
- *
- * TODO(wittjosiah): Add a local cache (e.g. via `@dxos/random-access-storage`, keyed by content
- * hash) so reads/writes don't always round-trip to the edge. Blocked on `BlobBackend` gaining a
- * `remove` and GC/refcounting for content-addressed blobs — without that, a local cache has no way
- * to know when a cached entry is safe to evict once its owning Blob object is deleted.
  */
-export const createEdgeBlobBackend = ({ transport }: CreateEdgeBlobBackendOptions): BlobBackend => {
-  // Bound once here rather than re-read inside the closure: the capability check and the call then
-  // share one proof that the method exists, and `bind` keeps a method-style transport working.
-  const finalizeUpload = transport.finalizeUpload?.bind(transport);
+export const createEdgeBlobBackend = ({ store, finalizeUpload }: CreateEdgeBlobBackendOptions): EdgeBlobBackend => {
+  const objectUrls = new Map<string, string>();
 
   return {
     schemes: [SCHEME],
     maxSize: MAX_EDGE_BLOB_SIZE,
 
     put: async ({ data, contentType, contentHash }) => {
-      await transport.put(contentHash, data, { contentType });
+      await store.put(contentHash, data, { contentType });
       return { uri: fromDigestHex(contentHash) };
     },
 
-    get: async ({ uri }) => transport.get(parseNiUri(uri)),
+    get: async ({ uri }) => (await store.get(parseNiUri(uri)))?.data,
 
-    has: async ({ uri }) => transport.has(parseNiUri(uri)),
+    has: async ({ uri }) => store.has(parseNiUri(uri)),
 
-    getUrl: async ({ uri }) => transport.url(parseNiUri(uri)).toString(),
+    getUrl: async ({ uri, contentType }) => {
+      const key = parseNiUri(uri);
+      // Keyed by type as well: identical bytes stored under two declared types must render as each.
+      const cacheKey = `${key}|${contentType ?? ''}`;
+      const existing = objectUrls.get(cacheKey);
+      if (existing) {
+        return existing;
+      }
+      const blob = await store.get(key);
+      if (!blob) {
+        return undefined;
+      }
+      // An object URL over the local bytes, so the blob renders offline.
+      const url = URL.createObjectURL(
+        new Blob([new Uint8Array(blob.data)], { type: contentType ?? blob.contentType ?? '' }),
+      );
+      objectUrls.set(cacheKey, url);
+      return url;
+    },
 
     // Spread rather than always present: `adoptUpload` being absent is how the manager tells a
     // backend that cannot adopt uploads from an adoption that failed.
     ...(finalizeUpload && {
       adoptUpload: async ({ uploadId }: { uploadId: string }) => {
+        // Not copied here: the bytes were uploaded straight to the edge, and the first read fills them.
         const { key, size, contentType } = await finalizeUpload(uploadId);
         return { uri: fromDigestHex(key), size, contentType };
       },
     }),
+
+    close: () => {
+      for (const url of objectUrls.values()) {
+        URL.revokeObjectURL(url);
+      }
+      objectUrls.clear();
+    },
   };
 };
