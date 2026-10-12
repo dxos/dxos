@@ -93,7 +93,8 @@ def strip_fenced_code(text):
                 out.append("")
             else:
                 out.append(line)
-        elif m and m.group(1)[0] == opener[0] and len(m.group(1)) >= len(opener):
+        elif (m and m.group(1)[0] == opener[0] and len(m.group(1)) >= len(opener)
+              and not line[m.end():].strip()):
             opener = None
             out.append("")
     return "\n".join(out)
