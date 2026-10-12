@@ -7,6 +7,7 @@ export * from './array.ts';
 export * from './assume.ts';
 export * from './binder.ts';
 export * from './bitfield.ts';
+export * from './bounded-text-decoder.ts';
 export * from './browser-storage.ts';
 export * from './callback-collection.ts';
 export * from './callback.ts';

@@ -57,6 +57,7 @@
     "@dxos/errors": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@dxos/wa-sqlite": "catalog:",
     "@effect/sql-sqlite-bun": "catalog:",
     "@effect/sql-sqlite-node": "catalog:",

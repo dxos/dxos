@@ -3,6 +3,7 @@
 //
 
 import { FeedProtocol } from '@dxos/protocols';
+import { makeBoundedTextDecoder } from '@dxos/util';
 
 import type { ForeignKey } from './foreign-key.ts';
 
@@ -37,7 +38,8 @@ export type FeedBlockData = {
  */
 export class EchoFeedCodec {
   static readonly #encoder = new TextEncoder();
-  static readonly #decoder = new TextDecoder();
+  // One decoder reads every feed block a worker loads, so it must stay under WebKit's per-decoder byte cap.
+  static readonly #decoder = new (makeBoundedTextDecoder(TextDecoder))();
 
   /**
    * Feed blocks are always whole-object snapshots; the index collapses entries by id to the latest
