@@ -5,7 +5,8 @@
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { trim } from '@dxos/util';
 
-const config = Plugin.config({
+// Annotated: the capability modules import `meta` from here, so inferring it would be circular.
+const config: Plugin.PluginConfig = Plugin.config({
   plugin: {
     key: 'org.dxos.plugin.markdown',
     name: 'Markdown',
