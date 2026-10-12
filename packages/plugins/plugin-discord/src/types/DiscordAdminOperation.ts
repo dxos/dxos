@@ -128,8 +128,9 @@ export const BindChannel = Operation.make({
     ...Bot,
     agent: Ref.Ref(Agent.Agent),
     guildId: Schema.String,
-    guildName: Schema.optional(Schema.String),
     discordChannelId: Schema.String,
+    /** The Discord channel's name, which the agent's `Channel` takes. */
+    channelName: Schema.optional(Schema.String),
   }),
   output: Schema.Struct({ channel: Ref.Ref(Channel.Channel) }),
 });

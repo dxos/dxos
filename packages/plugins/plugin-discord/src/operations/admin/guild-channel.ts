@@ -11,11 +11,11 @@ import { type Channel } from '@dxos/types';
 
 import { DiscordChannel } from '#types';
 
-/** The agent's Discord `Channel` for one bot and guild, with its config, if the agent has one. */
-export const findGuildChannel = Effect.fnUntraced(function* (
+/** The agent's `Channel` for one Discord channel of a bot, with its config, if the agent has one. */
+export const findDiscordChannel = Effect.fnUntraced(function* (
   agent: Agent.Agent,
   applicationId: string,
-  guildId: string,
+  discordChannelId: string,
 ) {
   const channels = yield* AgentChannels.loadChannels(agent);
   for (const channel of channels) {
@@ -23,7 +23,11 @@ export const findGuildChannel = Effect.fnUntraced(function* (
       continue;
     }
     const config = yield* Database.load(channel.backend.config).pipe(Effect.orDie);
-    if (DiscordChannel.instanceOf(config) && config.applicationId === applicationId && config.guildId === guildId) {
+    if (
+      DiscordChannel.instanceOf(config) &&
+      config.applicationId === applicationId &&
+      config.channels.includes(discordChannelId)
+    ) {
       return { channel, config } satisfies { channel: Channel.Channel; config: DiscordChannel.DiscordChannel };
     }
   }

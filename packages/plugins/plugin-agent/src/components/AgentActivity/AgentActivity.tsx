@@ -29,7 +29,7 @@ type AgentActivityRootProps = PropsWithChildren<{
   error?: string;
 }>;
 
-/** The agent's activity panel: its channels, skills and conversations in one scrolling body. */
+/** The agent's activity panel: who it is, its skills, channels and conversations in one scrolling body. */
 const AgentActivityRoot = ({ role, toolbar, error, children }: AgentActivityRootProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   return (
@@ -114,11 +114,10 @@ const AgentActivityToolbar = ({
       {...menuActions}
       attendableId={attendableId}
       alwaysActive={attendableId === undefined}
-      // The panel's name leads, and the gap pushes the actions to the end.
+      // The panel's name leads and takes the free space, which keeps the actions at the end.
       start={
         <>
           <Toolbar.Text>{t('activity-companion.label')}</Toolbar.Text>
-          <Toolbar.Separator variant='gap' />
         </>
       }
     />
@@ -158,6 +157,31 @@ const AgentActivityList = ({ label, ids, empty, children }: AgentActivityListPro
 AgentActivityList.displayName = 'AgentActivity.List';
 
 //
+// Agent
+//
+
+type AgentActivityAgentProps = {
+  id: string;
+  name?: string;
+};
+
+/** Which agent the panel is about: its name, and the object id EDGE and the bindings refer to it by. */
+const AgentActivityAgent = ({ id, name }: AgentActivityAgentProps) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  return (
+    <AgentActivityList label={t('agent.heading')} ids={[id]} empty=''>
+      <Listbox.Item id={id}>
+        <Listbox.ItemIcon icon='ph--robot--regular' />
+        <Listbox.ItemText>{name || t('agent-unnamed.label')}</Listbox.ItemText>
+        <Listbox.ItemDescription classNames='font-mono'>{id}</Listbox.ItemDescription>
+      </Listbox.Item>
+    </AgentActivityList>
+  );
+};
+
+AgentActivityAgent.displayName = 'AgentActivity.Agent';
+
+//
 // Channels
 //
 
@@ -186,17 +210,19 @@ type AgentActivityChannelProps = {
   name?: string;
   /** The connection's state, e.g. `ready`, or why it last failed. */
   detail?: string;
+  /** The channel the agent lists is not in the space (deleted); the row stays so it can be removed. */
+  missing?: boolean;
   onRemove?: (id: string) => void;
 };
 
 /** One channel the agent converses in. */
-const AgentActivityChannel = ({ id, name, detail, onRemove }: AgentActivityChannelProps) => {
+const AgentActivityChannel = ({ id, name, detail, missing = false, onRemove }: AgentActivityChannelProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   return (
     <Listbox.Item id={id} classNames='dx-hover'>
       <Listbox.ItemIcon icon='ph--hash--regular' />
-      <Listbox.ItemText>{name || t('channel-unnamed.label')}</Listbox.ItemText>
-      {detail && <Listbox.ItemDescription>{detail}</Listbox.ItemDescription>}
+      <Listbox.ItemText>{missing ? t('channel-missing.label') : name || t('channel-unnamed.label')}</Listbox.ItemText>
+      {!missing && detail && <Listbox.ItemDescription>{detail}</Listbox.ItemDescription>}
       <RowButton icon='ph--x--regular' label={t('channel-remove.label')} onClick={() => onRemove?.(id)} />
     </Listbox.Item>
   );
@@ -332,6 +358,7 @@ const RowButton = ({ icon, label, onClick }: { icon: string; label: string; onCl
 export const AgentActivity = {
   Root: AgentActivityRoot,
   Toolbar: AgentActivityToolbar,
+  Agent: AgentActivityAgent,
   Channels: AgentActivityChannels,
   Channel: AgentActivityChannel,
   Skills: AgentActivitySkills,
@@ -341,6 +368,7 @@ export const AgentActivity = {
 };
 
 export type {
+  AgentActivityAgentProps,
   AgentActivityChannelProps,
   AgentActivityChannelsProps,
   AgentActivityConversationProps,

@@ -20774,9 +20774,18 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/plugin-agent':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-agent
+      '@dxos/plugin-assistant':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-assistant
       '@dxos/plugin-discord':
         specifier: workspace:*
         version: link:../../plugins/plugin-discord
@@ -20811,18 +20820,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
-      '@dxos/keys':
-        specifier: workspace:*
-        version: link:../../common/keys
       '@dxos/link':
         specifier: workspace:*
         version: link:../../core/compute/link
-      '@dxos/plugin-agent':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-agent
-      '@dxos/plugin-assistant':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-assistant
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../../plugins/plugin-client

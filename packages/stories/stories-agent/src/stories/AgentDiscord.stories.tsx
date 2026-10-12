@@ -63,7 +63,12 @@ export const Setup: Story = {
     },
   }),
   args: {
-    layout: [[companion('discord')], [StoryRole.DiscordBot], [companion('activity')], [companion('brain')]],
+    layout: [
+      [companion('discord'), StoryRole.DiscordBot],
+      [companion('activity')],
+      [StoryRole.Conversation],
+      [companion('brain')],
+    ],
   },
   tags: ['!test'],
 };

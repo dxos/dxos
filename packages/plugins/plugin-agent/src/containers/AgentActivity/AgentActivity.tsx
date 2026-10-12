@@ -33,6 +33,7 @@ export const AgentActivity = ({ role, agent, attendableId }: AgentActivityProps)
   const { invokePromise } = Hooks.useOperationInvoker();
   const db = Obj.getDatabase(agent);
 
+  const [name] = useObject(agent, 'name');
   const list = useAgentChannelList(agent);
   const [values] = useObject(list);
   const channels = values?.channels ?? [];
@@ -112,6 +113,12 @@ export const AgentActivity = ({ role, agent, attendableId }: AgentActivityProps)
         />
       }
     >
+      <AgentActivityComponent.Agent id={agent.id} name={name} />
+      <AgentActivityComponent.Skills ids={skills.skills.map((skill) => skill.key)}>
+        {skills.skills.map(({ key, name, customized }) => (
+          <AgentActivityComponent.Skill key={key} id={key} name={name} onOpen={customized ? skills.open : undefined} />
+        ))}
+      </AgentActivityComponent.Skills>
       <AgentActivityComponent.Channels ids={channels.map((ref) => ref.uri)}>
         {channels.map((ref) => (
           <ChannelTile
@@ -122,11 +129,6 @@ export const AgentActivity = ({ role, agent, attendableId }: AgentActivityProps)
           />
         ))}
       </AgentActivityComponent.Channels>
-      <AgentActivityComponent.Skills ids={skills.skills.map((skill) => skill.key)}>
-        {skills.skills.map(({ key, name, customized }) => (
-          <AgentActivityComponent.Skill key={key} id={key} name={name} onOpen={customized ? skills.open : undefined} />
-        ))}
-      </AgentActivityComponent.Skills>
       <AgentActivityComponent.Conversations ids={conversations.map((chat) => chat.id)}>
         {conversations.map((chat) => (
           <ConversationTile
@@ -151,13 +153,21 @@ type ChannelTileProps = {
 const ChannelTile = ({ channel: ref, status, onRemove }: ChannelTileProps) => {
   const channel = useResolveRef(ref);
   const detail = status?.error ?? status?.status?.error ?? status?.status?.state;
-  return <AgentActivityComponent.Channel id={ref.uri} name={channel?.name} detail={detail} onRemove={onRemove} />;
+  return (
+    <AgentActivityComponent.Channel
+      id={ref.uri}
+      name={channel?.name}
+      detail={detail}
+      missing={status?.missing}
+      onRemove={onRemove}
+    />
+  );
 };
 
 /** How often connection status is re-read; a backend changes state on EDGE without notifying Composer. */
 const STATUS_POLL_MS = 5_000;
 
-type ChannelStatus = { status?: ThreadOperation.ConnectionStatus; error?: string };
+type ChannelStatus = { status?: ThreadOperation.ConnectionStatus; error?: string; missing?: boolean };
 
 /** Each channel's connection status (polled while mounted), and connect/disconnect for all of them. */
 const useChannelConnections = (channels: readonly Ref.Ref<Channel.Channel>[], spaceId: SpaceId | undefined) => {
@@ -177,15 +187,22 @@ const useChannelConnections = (channels: readonly Ref.Ref<Channel.Channel>[], sp
       }
 
       const results = await Promise.all(
-        channels.map(async (channel) => {
+        channels.map(async (channel): Promise<readonly [string, ChannelStatus]> => {
+          // A ref that does not resolve (still loading, or its channel deleted) has no connection to read.
+          if (!(await channel.tryLoad())) {
+            return [channel.uri, { missing: true }];
+          }
           const { data, error } = await invokePromise(operation, { channel }, { spaceId });
-          return [channel.uri, { status: data?.status, error: error?.message }] as const;
+          return [channel.uri, { status: data?.status, error: error?.message }];
         }),
       );
       // A failed read keeps the last status on screen beside the error.
       setStatuses((previous) =>
         Object.fromEntries(
-          results.map(([uri, next]) => [uri, { status: next.status ?? previous[uri]?.status, error: next.error }]),
+          results.map(([uri, next]) => [
+            uri,
+            next.missing ? next : { status: next.status ?? previous[uri]?.status, error: next.error },
+          ]),
         ),
       );
     },
@@ -219,7 +236,7 @@ AgentActivity.displayName = 'AgentActivity';
 
 /** The object id a ref URI names, whatever its space qualification. */
 const entityIdOf = (uri: string): string | undefined => {
-  const eid = EID.parse(uri);
+  const eid = EID.tryParse(uri);
   return eid ? EID.getEntityId(eid) : undefined;
 };
 

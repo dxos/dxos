@@ -15,10 +15,11 @@ const NOW = new Date('2026-10-03T12:00:00Z');
 
 type Conversation = { id: string; title: string; lastActivity?: string };
 
+/** In the order they started, as the container lists them. */
 const THREADS: Conversation[] = [
-  { id: 'thread-3', title: 'Launch checklist', lastActivity: '2026-10-03T11:52:00Z' },
-  { id: 'thread-2', title: 'Hiring plan', lastActivity: '2026-10-03T08:15:00Z' },
   { id: 'thread-1', title: 'Discord bot on EDGE', lastActivity: '2026-09-28T16:40:00Z' },
+  { id: 'thread-2', title: 'Hiring plan', lastActivity: '2026-10-03T08:15:00Z' },
+  { id: 'thread-3', title: 'Launch checklist', lastActivity: '2026-10-03T11:52:00Z' },
 ];
 
 type Row = { id: string; name: string };
@@ -46,6 +47,12 @@ const DefaultStory = ({
   const [conversations, setConversations] = useState(initialConversations);
   return (
     <AgentActivity.Root toolbar={<AgentActivity.Toolbar />}>
+      <AgentActivity.Agent id='01KAGENTKAI0000000000000000' name='Kai' />
+      <AgentActivity.Skills ids={skills.map((skill) => skill.id)}>
+        {skills.map((skill) => (
+          <AgentActivity.Skill key={skill.id} {...skill} />
+        ))}
+      </AgentActivity.Skills>
       <AgentActivity.Channels ids={channels.map((channel) => channel.id)}>
         {channels.map((channel) => (
           <AgentActivity.Channel
@@ -55,11 +62,6 @@ const DefaultStory = ({
           />
         ))}
       </AgentActivity.Channels>
-      <AgentActivity.Skills ids={skills.map((skill) => skill.id)}>
-        {skills.map((skill) => (
-          <AgentActivity.Skill key={skill.id} {...skill} />
-        ))}
-      </AgentActivity.Skills>
       <AgentActivity.Conversations ids={conversations.map((conversation) => conversation.id)}>
         {conversations.map((conversation) => (
           <AgentActivity.Conversation

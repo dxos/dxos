@@ -31,9 +31,10 @@ export type DiscordChannelBackendOptions = {
 };
 
 /**
- * Discord channel backend: posts as the config's bot over Discord REST (a thread or DM channel id is
- * a Discord channel id), opens DMs from a person's `discord` identity, and starts the bot's EDGE
- * gateway, which is what receives messages and drives agent turns.
+ * Discord channel backend: starts the bot's EDGE gateway, which receives messages, drives agent turns and posts
+ * what agents write into their conversation chats (so the backend is `mirrored`). Direct sends post as the config's
+ * bot over Discord REST (a thread or DM channel id is a Discord channel id); a DM is named by the person's `discord`
+ * identity and opened by whoever posts to it first.
  */
 export const makeDiscordChannelBackend = ({
   edgeClient = appEdgeClient,
@@ -62,20 +63,20 @@ export const makeDiscordChannelBackend = ({
     }),
   // Posting from the article would bypass the agent, so the composer stays hidden.
   readOnly: () => true,
-  openDirect: (channel, person) =>
-    Effect.gen(function* () {
+  mirrored: true,
+  // No Discord call: EDGE's bot opens the DM with the token it holds when it posts the agent's message.
+  openDirect: (_channel, person) =>
+    Effect.sync(() => {
       const userId = person.identities?.find((identity) => identity.label === 'discord')?.value;
-      if (userId === undefined) {
-        return undefined;
-      }
-      const { token } = yield* loadBot(channel);
-      return yield* openDirectMessage(token, userId);
+      return userId === undefined ? undefined : DiscordChannel.pendingDmThread(userId);
     }),
   threads: {
     send: (channel, thread, message) =>
       Effect.gen(function* () {
         const { token } = yield* loadBot(channel);
-        return yield* post(token, thread, message);
+        const userId = DiscordChannel.pendingDmUser(thread);
+        const target = userId === undefined ? thread : yield* openDirectMessage(token, userId);
+        return yield* post(token, target, message);
       }),
     remove: (channel, thread) =>
       Effect.gen(function* () {

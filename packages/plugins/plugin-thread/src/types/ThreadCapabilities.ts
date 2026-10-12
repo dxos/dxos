@@ -68,9 +68,15 @@ export interface ChannelBackendProvider {
   /** Whether the channel is read-only. Defaults to "channel has foreign-key Obj.Meta". */
   readOnly?: (channel: Channel.Channel) => boolean;
   /**
+   * Whether a host (EDGE's Discord bot) posts what an agent writes into its chat for a conversation;
+   * an agent then appends there instead of sending, since only the host holds the account's credentials.
+   */
+  mirrored?: boolean;
+  /**
    * Opens a direct conversation with a person through the channel's account (a Discord DM),
    * returning its thread id; `undefined` when the person has no handle this backend knows.
-   * The person's handle is the backend's business, read from `Person.identities`.
+   * The person's handle is the backend's business, read from `Person.identities`. A mirrored
+   * backend may return a thread its host opens on the first post.
    */
   openDirect?: (
     channel: Channel.Channel,
