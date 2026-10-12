@@ -2,6 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
+import { readFileSync } from 'node:fs';
+
+/** The GitHub token: `DX_DEMO_GITHUB_TOKEN`, or the `GITHUB_TOKEN=` line of the `.secrets/` file `DX_DEMO_GITHUB_TOKEN_FILE` names. */
+const githubToken = () =>
+  process.env.DX_DEMO_GITHUB_TOKEN ??
+  (process.env.DX_DEMO_GITHUB_TOKEN_FILE &&
+    readFileSync(process.env.DX_DEMO_GITHUB_TOKEN_FILE, 'utf8')
+      .match(/^GITHUB_TOKEN=(.+)$/m)?.[1]
+      ?.trim());
+
 /**
  * A standalone chat on Claude Code (cloud): the agent runs in an EDGE sandbox on the space's Claude subscription
  * token, clones dxos/dxos with the space's GitHub token, opens a draft pull request, and closes it when asked.
@@ -49,7 +59,7 @@ const github = (path, init = {}) =>
   fetch(`https://api.github.com${path}`, {
     ...init,
     headers: {
-      authorization: `Bearer ${process.env.DX_DEMO_GITHUB_TOKEN}`,
+      authorization: `Bearer ${githubToken()}`,
       accept: 'application/vnd.github+json',
       ...init.headers,
     },
@@ -110,8 +120,10 @@ export const steps = [
     name: 'Prep (off camera): enable Claude and add the tokens to the space',
     setup: true,
     run: async ({ demo, page }) => {
-      if (!process.env.DX_DEMO_CLAUDE_TOKEN || !process.env.DX_DEMO_GITHUB_TOKEN) {
-        throw new Error('set DX_DEMO_CLAUDE_TOKEN and DX_DEMO_GITHUB_TOKEN in the driver environment');
+      if (!process.env.DX_DEMO_CLAUDE_TOKEN || !githubToken()) {
+        throw new Error(
+          'set DX_DEMO_CLAUDE_TOKEN and DX_DEMO_GITHUB_TOKEN (or DX_DEMO_GITHUB_TOKEN_FILE) in the driver environment',
+        );
       }
       await page.locator('[data-testid="deck.plank"]').first().waitFor({ timeout: 180_000 });
       const notice = page.locator('[data-testid="org.dxos.plugin.observability.notice"] button:has-text("Close")');
@@ -144,7 +156,7 @@ export const steps = [
         },
         [
           { source: 'claude.ai', token: process.env.DX_DEMO_CLAUDE_TOKEN },
-          { source: 'github.com', token: process.env.DX_DEMO_GITHUB_TOKEN },
+          { source: 'github.com', token: githubToken() },
         ],
       );
       await demo.cut();
