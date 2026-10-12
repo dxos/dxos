@@ -93,7 +93,7 @@ export const steps = [
       if (!(await page.evaluate(() => composer.manager.getEnabled().includes('org.dxos.plugin.claude')))) {
         await demo.click({ selector: '[data-testid="treeView.pluginRegistry"]', label: 'Plugins' });
         await demo.fill({ selector: 'input[placeholder="Filter…"]', value: 'Claude' });
-        await demo.click({ selector: 'input[id="org.dxos.plugin.claude-input"]', label: 'Enable Claude' });
+        await demo.click({ selector: 'label.dx-switch:has(input[aria-label="Claude"])', label: 'Enable Claude' });
         await page.waitForFunction(() => composer.manager.getEnabled().includes('org.dxos.plugin.claude'));
         await demo.click({ selector: '[data-testid="spacePlugin.space"] >> nth=0', label: 'Space' });
       }
@@ -248,15 +248,17 @@ export const steps = [
   {
     name: 'Ask it to close the pull request',
     run: async ({ demo, page }) => {
-      await demo.caption({ value: 'Ask it to close the pull request', subtitle: 'In the project’s chat' });
       const tab = page.locator(`${COMPANION} >> role=tab[name="Assistant"]`).first();
       if ((await tab.count()) && (await tab.getAttribute('aria-selected')) !== 'true') {
         await demo.click({ selector: `${COMPANION} >> role=tab[name="Assistant"]`, label: 'Assistant' });
       }
+      // The caption banner sits over the prompt and would take the click.
+      await demo.clearCaption();
       await demo.click({ selector: PROMPT, label: 'Prompt' });
       await demo.fill({ selector: PROMPT, value: ASK_TO_CLOSE, label: 'Prompt' });
       await page.waitForTimeout(1_000);
       await demo.press({ key: 'Enter' });
+      await demo.caption({ value: 'Ask it to close the pull request', subtitle: 'In the project’s chat' });
       await waitForTurn(page);
       for (let attempt = 0; (await pullState(globalThis.autocuePullRequest)) !== 'closed'; attempt++) {
         if (attempt >= 30) {

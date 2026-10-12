@@ -85,11 +85,14 @@ const waitForTurn = async (page) => {
 };
 
 /** Sends a prompt to the chat. */
-const send = async ({ demo, page }, text) => {
+const send = async ({ demo, page }, text, caption) => {
+  // The caption banner sits over the prompt and would take the click.
+  await demo.clearCaption();
   await demo.click({ selector: PROMPT, label: 'Prompt' });
   await demo.fill({ selector: PROMPT, value: text, label: 'Prompt' });
   await page.waitForTimeout(1_000);
   await demo.press({ key: 'Enter' });
+  await demo.caption(caption);
 };
 
 /** Shows a GitHub page, then returns to the chat. */
@@ -118,7 +121,7 @@ export const steps = [
       if (!(await page.evaluate(() => composer.manager.getEnabled().includes('org.dxos.plugin.claude')))) {
         await demo.click({ selector: '[data-testid="treeView.pluginRegistry"]', label: 'Plugins' });
         await demo.fill({ selector: 'input[placeholder="Filter…"]', value: 'Claude' });
-        await demo.click({ selector: 'input[id="org.dxos.plugin.claude-input"]', label: 'Enable Claude' });
+        await demo.click({ selector: 'label.dx-switch:has(input[aria-label="Claude"])', label: 'Enable Claude' });
         await page.waitForFunction(() => composer.manager.getEnabled().includes('org.dxos.plugin.claude'));
         await demo.click({ selector: '[data-testid="spacePlugin.space"] >> nth=0', label: 'Space' });
       }
@@ -185,8 +188,10 @@ export const steps = [
   {
     name: 'Ask it to clone dxos/dxos and open a pull request',
     run: async ({ demo, page }) => {
-      await demo.caption({ value: 'Ask it to clone dxos/dxos and open a pull request', subtitle: BRANCH });
-      await send({ demo, page }, ASK_FOR_PR);
+      await send({ demo, page }, ASK_FOR_PR, {
+        value: 'Ask it to clone dxos/dxos and open a pull request',
+        subtitle: BRANCH,
+      });
       await waitForTurn(page);
       const url = (await page.locator(THREAD).first().innerText()).match(PR_URL)?.[0];
       if (!url) {
@@ -212,8 +217,10 @@ export const steps = [
   {
     name: 'Ask it to close the pull request',
     run: async ({ demo, page }) => {
-      await demo.caption({ value: 'Ask it to close the pull request', subtitle: 'Same session, same sandbox' });
-      await send({ demo, page }, ASK_TO_CLOSE);
+      await send({ demo, page }, ASK_TO_CLOSE, {
+        value: 'Ask it to close the pull request',
+        subtitle: 'Same session, same sandbox',
+      });
       await waitForTurn(page);
       for (let attempt = 0; (await pullState(globalThis.autocuePullRequest)) !== 'closed'; attempt++) {
         if (attempt >= 30) {
