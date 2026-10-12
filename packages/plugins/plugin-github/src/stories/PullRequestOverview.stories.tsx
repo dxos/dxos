@@ -72,6 +72,7 @@ export const Default: Story = {
       'session_016GM9fXXzbrr6JGNeeQBCmj',
     );
     await expect(canvas.getAllByTestId('pull-request.check')).toHaveLength(PULL_REQUEST_13348_RUNS.length);
+    await expect(canvas.getByTestId('pull-request.checks.summary')).toHaveTextContent(/\d+ passed/);
   },
 };
 
