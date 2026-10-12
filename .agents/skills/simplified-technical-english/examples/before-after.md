@@ -34,7 +34,7 @@ After:
 > The fuel system has a group of connected subsystems.
 > The engine control unit monitors these subsystems.
 > If the fuel pressure changes, the unit adjusts the flow.
-> Thus, the engine performance stays in the correct range.
+> Thus, the engine always has the best performance.
 
 The change: one topic in each sentence, active voice, no "-ing" verb forms, specific statements.
 
@@ -48,7 +48,7 @@ Before:
 After:
 
 > WARNING: Do not touch the high-voltage terminals.
-> The terminals can cause injury or death to personnel.
+> The terminals can cause injury to personnel.
 
 The change: a command comes first, then the risk. No vague words.
 

@@ -110,7 +110,7 @@ You must also compare your words with `references/word-list.md`.
 
 ## Use in this repository
 
-Use STE for text that a reader must parse with no help: procedures in docs, runbooks, error messages, prompts, tool descriptions, and all the text that the user asks for in STE.
+Use STE for text that a reader must parse with no help. Examples: procedures in docs, runbooks, error messages, prompts, and tool descriptions. Also use STE for all the text that the user asks for in STE.
 For other prose (a PR body, a commit message, a design document, a review comment), obey the `readable-prose` skill.
 The two skills agree on the sentence rules. STE adds the word rules.
 
@@ -120,7 +120,7 @@ If a rewrite removes a condition, a number, or a limit, keep the long sentence a
 
 Code, identifiers, file paths, commands, and the names of packages, operations, and types are technical names. Do not change them.
 
-Run the check tool before you give the text to the user. The tool is Python 3 with no other dependencies.
+If you can run scripts, run the check tool before you give the text to the user. The tool is Python 3 with no other dependencies.
 
 ## Reference files
 

@@ -66,7 +66,7 @@ BE_ING = re.compile(
     r"\b(?:is|are|was|were|be|been|am)\s+\w+ing\b", re.IGNORECASE
 )
 
-SENT_SPLIT = re.compile(r"(?<=[.!?:])\s+")
+SENT_SPLIT = re.compile(r"(?<=[.!?])\s+")
 WORDISH = re.compile(r"[A-Za-z0-9'&/’-]+")
 
 LIMITS = {"procedural": 20, "descriptive": 25, "mixed": 25}
@@ -74,10 +74,36 @@ LIMITS = {"procedural": 20, "descriptive": 25, "mixed": 25}
 
 # ---------------------------------------------------------------- helpers
 
+FENCE = re.compile(r"^\s{0,3}(`{3,}|~{3,})")
+
+
+def strip_fenced_code(text):
+    """Remove fenced code blocks (rule 1.6: code is not controlled text).
+
+    A fence closes only on a line of the same character and at least the
+    same length, so a four-backtick fence keeps a triple-backtick example.
+    """
+    out = []
+    opener = None
+    for line in text.splitlines():
+        m = FENCE.match(line)
+        if opener is None:
+            if m:
+                opener = m.group(1)
+                out.append("")
+            else:
+                out.append(line)
+        elif (m and m.group(1)[0] == opener[0] and len(m.group(1)) >= len(opener)
+              and not line[m.end():].strip()):
+            opener = None
+            out.append("")
+    return "\n".join(out)
+
+
 def strip_markdown(text):
     """Remove parts of the text that the STE rules do not control."""
     text = re.sub(r"^---\n.*?\n---\n", "", text, flags=re.DOTALL)   # frontmatter
-    text = re.sub(r"```.*?```", " ", text, flags=re.DOTALL)          # code blocks
+    text = strip_fenced_code(text)                                    # code blocks
     text = re.sub(r"`[^`\n]+`", " CODE ", text)                      # inline code
     text = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", text)             # links
     text = re.sub(r"https?://\S+", " URL ", text)                    # bare URLs
@@ -123,7 +149,7 @@ def load_word_list(path):
                 for w in f.strip().split():
                     approved.add(w.lower())
         # plurals of nouns (rule: plural of a countable noun is approved)
-        if "(n)" in line:
+        if "n" in _pos.split(", "):
             word = head.lower()
             approved.add(word + "s")
             if word.endswith(("s", "x", "ch", "sh")):
@@ -233,15 +259,15 @@ def check_text(text, mode, report, name, approved):
         if not par or not WORDISH.search(par):
             continue
         # a heading or a table row is a title or quoted text (rule 8.6)
-        if par.startswith("#") or par.startswith("|"):
+        lines = [line for line in par.splitlines() if not line.lstrip().startswith(("#", "|"))]
+        if not lines:
             continue
-        lines = par.splitlines()
         bullet = re.compile(r"\s*(?:[-*+]|\d+\.)\s")
-        items = [l for l in lines if bullet.match(l)]
-        prose = [l for l in lines if not bullet.match(l)]
+        items = [line for line in lines if bullet.match(line)]
+        prose = [line for line in lines if not bullet.match(line)]
         # a list item counts as its own sentence (rule 8.4)
-        for l in items:
-            item = re.sub(r"^\s*(?:[-*+]|\d+\.)\s+", "", l)
+        for line in items:
+            item = re.sub(r"^\s*(?:[-*+]|\d+\.)\s+", "", line)
             for s in iter_sentences(item):
                 check_sentence(s, mode, report, f"{name}:list")
             if approved:
