@@ -113,9 +113,10 @@ Host-delivered changes take the same `forceTrigger` path unless a single inbox b
   the same purpose (can this change affect this query). The classification below extends it.
 - `SpaceQuerySource._onUpdate` already does a per-object "does this change affect me" check for
   simple queries (`filterMatchDoc` on the updated core); the engine generalizes it.
-- `A.getMissingDeps(doc, heads)` answers "is every remote head in local history" in one call. Full
-  history is present client-side: the host ships `A.save` then `saveSince`
-  (`documents-synchronizer.ts`).
+- `A.getHeads(doc)` is a sorted hash list, so two documents with equal heads are the same state and
+  heads compare as arrays. Full history is present client-side (the host ships `A.save` then
+  `saveSince`, `documents-synchronizer.ts`), so `A.view(doc, heads)` can reconstruct a past state
+  when the heads are known locally.
 - Feed blocks carry `(actorId, sequence)` and the server-assigned `insertionId`
   (`feed/src/feed-store.ts`); feed-live-objects stage 3 defines the one comparator every read path
   uses.
@@ -193,10 +194,19 @@ The same holds for the aggregate manifest in §3.4: a loaded local member absent
 contributes its local value, whether the remote excluded it or never saw it. The `stale` and
 `merged` completeness values are how a UI learns a remote answer is in flight.
 
-Versions matter for `revalidation: path` and `manifest`, where the remote's conclusion depends on
-objects other than the entry itself (§3.4): there, `A.getMissingDeps(localDoc, remote.heads).length
-=== 0` means local is at or ahead of what the remote saw for that holder, and local re-checks the
-edge; otherwise the remote's edge stands until sync.
+**Heads are compared for equality only.** The engine never asks whether local is ahead, behind, or
+concurrent with what the remote saw, because no rule acts on the answer: a loaded document is
+evaluated locally in every case (case 1 above, and the same for a path holder or a manifest member
+in §3.4), and an unloaded one is trusted (case 2). What equality buys is a skip: when the local
+document's heads equal the remote entry's, the remote evaluated the exact state local holds, so the
+local re-check would reproduce its verdict and is not run. That makes the common steady-state case
+(nothing changed since the index ran) free. `A.getMissingDeps` is not needed; it would cost a wasm
+call per entry to compute a three-way distinction the design discards.
+
+The one place history matters is the scalar-aggregate watermark in §3.4, which reconstructs a
+member's previous state with `A.view(doc, heads)`. That call fails when the heads are not in local
+history, and the engine takes the failure as "cannot delta, report `merged`" rather than testing
+first.
 
 Feeds use the feed-live-objects stage 3 comparator: `insertionId` primary, `(sequence, actorId)`
 only as the Lamport tiebreak for same-id blocks. `sequence` is per actor, so it is not an order on
@@ -363,11 +373,14 @@ type TraversalPath = PathEdge[];
 ```
 
 For a result reached by several paths the remote returns each path (a DAG per result, deduped by
-edge). Local revalidation walks each path: for every edge whose holder is loaded locally and
-`getMissingDeps(holderDoc, holderVersion.heads)` is empty, re-check the edge against the holder's
-document (the property still references `to`, the relation endpoint is unchanged, the parent pointer
-is unchanged). An unloaded or behind holder leaves the edge standing. A path with a broken edge is
-dead; the result survives if any path survives or if the local traversal produces it.
+edge). Local revalidation walks each path: for every edge whose holder is loaded locally with a
+body, re-check the edge against the holder's document (the property still references `to`, the
+relation endpoint is unchanged, the parent pointer is unchanged), skipping the check when the
+holder's heads equal `holderVersion.heads`. An unloaded holder leaves the edge standing. A path with
+a broken edge is dead; the result survives if any path survives or if the local traversal produces
+it. This is the §3.1 rule applied to the holder: a path the local document cannot reproduce is not
+shown, even when the remote found it through an edge this tab has not replicated yet, because the
+local traversal would not find it either and the result converges on sync.
 
 Local also _adds_: the engine runs the traversal plan over the working set seeded with the union of
 local anchors and remote anchors. Two anchor rules: a remote anchor local cannot evaluate is trusted
@@ -413,9 +426,9 @@ contribution)` per member. Before any delta, manifest ids are resolved through t
 
 A manifest is `O(members)`, the same order as `items`. Scalar-only aggregates over large groups (a
 count of 50k) are the case where this is too much; there the remote sends the scalar plus a version
-watermark, local applies deltas only for cores it knows to be ahead of the watermark whose
-_previous_ state it can reconstruct from automerge history (`A.view(doc, heads)`), and otherwise
-reports `merged`.
+watermark, local applies deltas only for loaded cores whose heads differ from the watermark and
+whose _previous_ state it can reconstruct from automerge history (`A.view(doc, heads)`), and
+otherwise reports `merged`.
 
 ### 3.5 Does the query API change
 
@@ -641,10 +654,10 @@ An engine talking to an old host sees no `version` and treats every entry as `ve
 
 1. By-id queries with all ids loaded: skip the remote stream entirely, or keep it open at low
    priority as a safety net for directory changes the tab missed?
-2. `local-ahead` for inline objects: heads are per document, so an unrelated inline object's write
-   makes every object in that document look changed. The affect check (§3.6) bounds the recompute
-   to queries that hold or match the changed core, but path holders in the space root are the case
-   to measure.
+2. Heads equality for inline objects: heads are per document, so an unrelated inline object's write
+   makes every object in that document miss the equality skip and re-check. The affect check (§3.6)
+   bounds the recompute to queries that hold or match the changed core, but path holders in the
+   space root are the case to measure.
 3. Should `completeness` be on the entry stream (per source) or only on the result? Per result is
    enough for UI; `sources` carries the per-source state for diagnostics.
 4. Set-difference: is drop-only acceptable past phase 1, or does the remote return `exclude`
@@ -673,8 +686,9 @@ An engine talking to an old host sees no `version` and treats every entry as `ve
 
 Kept here so the next reader does not re-derive them:
 
-- Versions carry `documentId`; comparison is `A.getMissingDeps`, not a per-hash lookup
-  (`getChangeByHash` is a wasm-backend method, not a top-level export).
+- Versions carry `documentId`. The review first replaced a per-hash lookup (`getChangeByHash` is a
+  wasm-backend method, not a top-level export) with `A.getMissingDeps`; a later pass (dmaretskyi)
+  dropped the ancestry test altogether: heads compare for equality only, as a skip.
 - A loaded local document is always evaluated locally; the version only matters when local cannot
   evaluate (absent core, path holder, manifest member).
 - Path edges name their holder; relation and incoming-reference edges live on a third object or on
