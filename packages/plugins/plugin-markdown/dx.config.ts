@@ -10,12 +10,13 @@ import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabili
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import { trim } from '@dxos/util';
 
+import { MarkdownNamespace } from './src/namespace.ts';
 import * as MarkdownCapabilities from './src/types/MarkdownCapabilities.ts';
 
 // Annotated: the capability modules import `meta` from here, so inferring it would be circular.
 const config: Plugin.PluginConfig = Plugin.config({
   plugin: {
-    key: 'org.dxos.plugin.markdown',
+    key: MarkdownNamespace.key,
     name: 'Markdown',
     author: 'DXOS',
     description: trim`
