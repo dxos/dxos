@@ -28,10 +28,9 @@ test.describe('Presenter', () => {
 
     await Presenter.openCompanion(plank.locator);
     await expect(Presenter.currentSlide(host.page)).toContainText('Alpha');
-    // The companion appends the document title as a query string once it resolves, so only the path is stable.
-    await expect(host.page).toHaveURL(/\/companion\/presenter(\?|$)/);
-    const path = new URL(host.page.url()).pathname;
-    const samePath = (url: URL) => url.pathname === path;
+    // Waits for the `?title=` links carry, so the URL compared below is the settled one.
+    await expect(host.page).toHaveURL(/\/companion\/presenter\?title=Alpha$/);
+    const url = host.page.url();
 
     await Presenter.togglePresenting(host.getObjectByName('Alpha'));
     await expect(host.deck.viewport()).toBeHidden();
@@ -43,12 +42,12 @@ test.describe('Presenter', () => {
           ((await Presenter.deck(host.page).boundingBox())?.width ?? 0) / (host.page.viewportSize()?.width ?? 1),
       )
       .toBeGreaterThan(0.95);
-    await expect(host.page).toHaveURL(samePath);
+    await expect(host.page).toHaveURL(url);
 
     await host.page.keyboard.press('Escape');
     await expect(host.deck.viewport()).toBeVisible();
     await expect(Presenter.companionTab(host.page)).toBeVisible();
     await expect(Presenter.currentSlide(host.page)).toContainText('Alpha');
-    await expect(host.page).toHaveURL(samePath);
+    await expect(host.page).toHaveURL(url);
   });
 });
