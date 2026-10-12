@@ -69,6 +69,9 @@ const github = (path, init = {}) =>
 const pullState = async (url) => {
   const number = url.split('/').pop();
   const response = await github(`/repos/${REPOSITORY}/pulls/${number}`);
+  if (!response.ok) {
+    throw new Error(`GitHub ${response.status} for ${url}: ${await response.text()}`);
+  }
   return (await response.json()).state;
 };
 

@@ -49,8 +49,13 @@ const github = (path) =>
     headers: { authorization: `Bearer ${githubToken()}`, accept: 'application/vnd.github+json' },
   });
 
-const pullState = async (url) =>
-  (await (await github(`/repos/${REPOSITORY}/pulls/${url.split('/').pop()}`)).json()).state;
+const pullState = async (url) => {
+  const response = await github(`/repos/${REPOSITORY}/pulls/${url.split('/').pop()}`);
+  if (!response.ok) {
+    throw new Error(`GitHub ${response.status} for ${url}: ${await response.text()}`);
+  }
+  return (await response.json()).state;
+};
 
 const spaceIdOf = (page) =>
   page.evaluate(() => document.querySelector('[data-testid="spacePlugin.space"]').dataset.value.split('/').pop());
