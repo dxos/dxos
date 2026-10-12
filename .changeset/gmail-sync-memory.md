@@ -3,4 +3,4 @@
 '@dxos/plugin-google': patch
 ---
 
-Gmail sync no longer overruns EDGE's memory and query limits on large mailboxes. Attachments past the inline blob cap are now skipped before download (the sync discarded them after downloading anyway), and the cursor's dedup seed reads the feed 50 messages per query instead of loading the newest and oldest 500 objects, bodies and attachment blobs included, in two queries whose responses outgrew EDGE's 32 MiB cap and failed every run.
+Large Gmail mailboxes sync again: attachments past the inline blob cap are skipped before download, the dedup seed reads 50 messages per query instead of loading 1,000 objects at once (which outgrew EDGE's 32 MiB query cap), a binding whose mailbox was deleted is skipped instead of failing every run, and a reference to a deleted object no longer downloads every feed in the space. Scheduled local syncs no longer fail on an unset `priority`, and one bad trigger or failed tick no longer stops the local trigger runner until a reload.
