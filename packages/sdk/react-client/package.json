@@ -61,6 +61,7 @@
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/echo-doc": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/keys": "workspace:*",
@@ -70,6 +71,7 @@
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {
+    "@dxos/echo-client": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/random": "workspace:*",

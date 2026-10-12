@@ -59,6 +59,13 @@ export interface IndexerObject {
    * Timestamp of the last update of the object.
    */
   updatedAt: number;
+
+  /**
+   * The object as its document holds it, for a client to back a live object with: the structure
+   * encoded by `encodeEntityStructure` and the document heads it was read at. Absent for feed
+   * objects, branch documents, and objects too large to ship.
+   */
+  state?: { heads: readonly string[]; structure: string };
 }
 
 export interface ChangeSummary {

@@ -13,6 +13,7 @@ import * as Cancellation from '@dxos/compute/Cancellation';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Filter, Obj, Query, type Ref } from '@dxos/echo';
+import { loadDocument } from '@dxos/echo-client';
 import type * as EchoError from '@dxos/echo/Error';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
@@ -458,6 +459,8 @@ export const runMailSync = (
 
     // Resolve the child tag index so provider-label tags can be applied synchronously during commit.
     const tagIndex = yield* Database.load(mailbox.tags);
+    // Reconciling tags reads the index at the heads last pushed, which needs its document.
+    yield* Effect.promise(() => loadDocument(tagIndex));
 
     // Pool already-sent drafts once; `EmailStage.reconcileDrafts` matches incoming messages so a
     // canonical copy's arrival removes its now-redundant draft during commit.

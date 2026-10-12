@@ -18,6 +18,8 @@ import { QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { QueryService } from '@dxos/protocols/rpc';
 import { chunkArray, isNonNullable } from '@dxos/util';
 
+import { getSnapshotState } from '../core-db/snapshot-state.ts';
+import { getObjectCore } from '../echo-handler/index.ts';
 import { type FeedHandle } from '../feed/feed-handle.ts';
 import { type QuerySourceProvider, recordObjectDiagnostic } from '../hypergraph.ts';
 import { DatabaseImpl } from '../proxy-db/index.ts';
@@ -65,6 +67,8 @@ export type IndexQueryProviderProps = {
   queryTimeout?: number;
   /** Overrides {@link RECORD_HYDRATION_TIMEOUT}; tests drive the budget rather than waiting it out. */
   hydrationTimeout?: number;
+  /** Asks the host for each document row's state, so results are backed by the index's copy (see `EchoClientProps`). */
+  lazyQueries?: boolean;
 };
 
 /**
@@ -95,6 +99,7 @@ export class IndexQuerySourceProvider implements QuerySourceProvider {
       graph: this._params.graph,
       queryTimeout: this._params.queryTimeout,
       hydrationTimeout: this._params.hydrationTimeout,
+      lazyQueries: this._params.lazyQueries,
     });
   }
 }
@@ -108,6 +113,8 @@ export type IndexQuerySourceProps = {
   queryTimeout?: number;
   /** Overrides {@link RECORD_HYDRATION_TIMEOUT}; tests drive the budget rather than waiting it out. */
   hydrationTimeout?: number;
+  /** Asks the host for each document row's state, so results are backed by the index's copy (see `EchoClientProps`). */
+  lazyQueries?: boolean;
 };
 
 /**
@@ -270,7 +277,7 @@ export class IndexQuerySource implements QuerySource {
     cleanup = subscribeStream(
       this._params.runtime,
       this._params.service['QueryService.execQuery']({
-        query: JSON.stringify(query),
+        query: JSON.stringify(this._requestedQuery(query)),
         queryId: String(queryId),
         reactivity: QueryReactivity.ONE_SHOT,
       }),
@@ -336,7 +343,7 @@ export class IndexQuerySource implements QuerySource {
     this._streamCleanup = subscribeStream(
       this._params.runtime,
       this._params.service['QueryService.execQuery']({
-        query: JSON.stringify(query),
+        query: JSON.stringify(this._requestedQuery(query)),
         queryId: String(queryId),
         reactivity: QueryReactivity.REACTIVE,
       }),
@@ -672,7 +679,7 @@ export class IndexQuerySource implements QuerySource {
       return queryResult;
     }
 
-    const object = await this._resolveIndexedObject(result);
+    const object = (await this._hydrateFromState(result)) ?? (await this._resolveIndexedObject(result));
     if (!object) {
       return null;
     }
@@ -696,6 +703,36 @@ export class IndexQuerySource implements QuerySource {
       group: _groupFromRemoteResult(result),
     };
     return queryResult;
+  }
+
+  /**
+   * A lazy query's row as an object backed by the state the host shipped with it, so no document
+   * loads; undefined when the row carries none (too large, a branch document) or cannot back it.
+   */
+  private async _hydrateFromState(result: QueryService.QueryResult): Promise<Entity.Unknown | undefined> {
+    const state = getSnapshotState(result);
+    if (state === undefined) {
+      return undefined;
+    }
+    const database = this._params.graph.getDatabase(SpaceId.make(result.spaceId));
+    if (!(database instanceof DatabaseImpl)) {
+      return undefined;
+    }
+    const entity = database._upsertSnapshot(EntityId.make(result.id), state);
+    if (entity === undefined) {
+      return undefined;
+    }
+    // Its parent, relation endpoints and stored type are read synchronously, so they join the working set first.
+    await database._entityManager.waitForStrongDeps(getObjectCore(entity));
+    return entity;
+  }
+
+  /** The query as sent to the host: with lazy queries on, every document row ships its state. */
+  private _requestedQuery(query: QueryAST.Query): QueryAST.Query {
+    if (!this._params.lazyQueries || QueryAST.isLazyQuery(query)) {
+      return query;
+    }
+    return { type: 'options', query, options: { lazy: true } };
   }
 
   /** Whether a hydrated object's local deleted flag satisfies the query's `deleted` option. */

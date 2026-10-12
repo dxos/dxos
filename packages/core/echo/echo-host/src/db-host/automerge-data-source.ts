@@ -18,6 +18,7 @@ import {
 import { log } from '@dxos/log';
 
 import { type AutomergeHost } from '../automerge/index.ts';
+import { encodeObjectState } from '../query/object-state.ts';
 import { toChangeRecord } from './change-record.ts';
 
 const HEADS_DELIMITER = '|';
@@ -191,6 +192,8 @@ export class AutomergeDataSource implements IndexDataSource {
           });
 
           const docObjects = extractObjects ? (doc.objects ?? {}) : {};
+          // The heads the structures below are read at; the scanned `docHeads` can be older.
+          const stateHeads = this.#branchDocumentIds.has(documentId) ? undefined : A.getHeads(doc);
           for (const [objectId, structure] of Object.entries(docObjects)) {
             if (changedObjectIds && !changedObjectIds.has(objectId)) {
               continue;
@@ -206,6 +209,7 @@ export class AutomergeDataSource implements IndexDataSource {
               data: objectStructureToJson(objectId, structure),
               createdAt: typeof storedCreatedAt === 'number' ? storedCreatedAt : null,
               updatedAt,
+              state: stateHeads && encodeObjectState(structure, stateHeads),
             });
           }
 

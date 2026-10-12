@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as A from '@automerge/automerge';
 import type { AutomergeUrl, DocumentId } from '@automerge/automerge-repo';
 import * as Effect from 'effect/Effect';
 import * as SqlClient from 'effect/sql/SqlClient';
@@ -41,6 +42,7 @@ import { filterMatchDoc, filterMatchEntityMeta, filterMatchObjectJSON, getEntity
 import { type ChangeItem, changeResults, executeChangesPlan, serializeChangeResults } from './changes-executor.ts';
 import { QueryError } from './errors.ts';
 import { type GroupAggregates, GroupBy, type GroupKeyValue, compareCodeUnits } from './group-by.ts';
+import { encodeObjectState } from './object-state.ts';
 import { QueryPlan } from './plan.ts';
 import { type QueryExecutorMode, QueryPlanner, filterContainsInQuery } from './query-planner.ts';
 import { type CompiledRow } from './sql/index.ts';
@@ -125,6 +127,9 @@ type QueryItem = {
    * carries no document, data or meta, so it is only ever produced by the plan's last step.
    */
   result?: QueryService.QueryResult;
+
+  /** In a lazy query: the object's document state, the heads it was read at, and its index stamp. */
+  state?: { heads: readonly string[]; structure: string; version: number };
 };
 
 const QueryItem = Object.freeze({
@@ -651,6 +656,8 @@ export class QueryExecutor extends Resource {
   #changeResultSet: ChangeItem[] | undefined;
   readonly #planner: QueryPlanner;
   readonly #mode: QueryExecutorMode;
+  /** The query returns index-backed live objects, so document rows ship their state. */
+  readonly #lazy: boolean;
 
   /**
    * Resolved `in-query` (subquery-membership) sets for the current `execQuery` run, keyed by
@@ -681,6 +688,7 @@ export class QueryExecutor extends Resource {
     this._id = options.queryId;
     this._query = options.query;
     this._reactivity = options.reactivity;
+    this.#lazy = QueryAST.isLazyQuery(this._query);
 
     this.#mode = options.executor ?? 'memory';
     this.#planner = new QueryPlanner({ executor: this.#mode, sql: options.sql });
@@ -751,6 +759,11 @@ export class QueryExecutor extends Resource {
 
         groupKey: serializedGroupKey,
         groupCount: serializedGroupKey !== undefined ? groupCounts.get(serializedGroupKey) : undefined,
+
+        state: item.state?.structure,
+        heads: item.state ? [...item.state.heads] : undefined,
+        version: item.state?.version,
+        updatedAt: item.state ? (item.updatedAt ?? undefined) : undefined,
       };
     });
   }
@@ -2138,6 +2151,7 @@ export class QueryExecutor extends Resource {
     if (!object) {
       return null;
     }
+    const state = this.#lazy ? encodeObjectState(object, A.getHeads(lease.doc())) : undefined;
     return {
       objectId: meta.objectId,
       documentId: meta.documentId as DocumentId,
@@ -2149,6 +2163,7 @@ export class QueryExecutor extends Resource {
       rank: 1,
       createdAt: meta.createdAt,
       updatedAt: meta.updatedAt,
+      state: state && { ...state, version: meta.version },
     };
   }
 
@@ -2566,6 +2581,10 @@ const compiledRowToItem = (row: CompiledRow): QueryItem => {
           documentJson: row.documentJson ?? undefined,
           groupKey: row.groupKey ?? undefined,
           groupCount: row.groupCount ?? undefined,
+          state: row.state ?? undefined,
+          heads: row.heads !== null ? JSON.parse(row.heads) : undefined,
+          version: row.version ?? undefined,
+          updatedAt: row.state !== null ? (row.updatedAt ?? undefined) : undefined,
         };
   return {
     objectId: row.objectId,
@@ -2600,7 +2619,9 @@ const _sameResult = (a: QueryItem, b: QueryItem): boolean => {
       a.result?.aggregates === b.result?.aggregates &&
       a.result?.rank === b.result?.rank &&
       // A feed row ships its indexed body, so an edit to it changes the record without moving the row.
-      a.result?.documentJson === b.result?.documentJson
+      a.result?.documentJson === b.result?.documentJson &&
+      // A lazy query ships each row's state, stamped anew by every re-index of it.
+      a.result?.version === b.result?.version
     );
   }
   return (
@@ -2613,6 +2634,7 @@ const _sameResult = (a: QueryItem, b: QueryItem): boolean => {
     // (e.g. the last item of group A becomes the first item of group B at the same index).
     _serializeOptionalGroupKey(a.groupKey) === _serializeOptionalGroupKey(b.groupKey) &&
     // A collapsed group ships only its size and aggregates, so those are what can change.
-    _serializeCollapsed(a) === _serializeCollapsed(b)
+    _serializeCollapsed(a) === _serializeCollapsed(b) &&
+    a.state?.version === b.state?.version
   );
 };

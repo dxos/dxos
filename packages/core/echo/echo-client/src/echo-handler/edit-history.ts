@@ -23,7 +23,7 @@ export const getEditHistory = (object: Obj.Unknown): State<any>[] => {
   assertArgument(isEchoObject(object), 'expected ECHO object stored in the database');
 
   const objectCore = getObjectCore(object);
-  const doc = objectCore.getDoc();
+  const doc = objectCore.getLoadedDoc();
   const changes = A.getHistory(doc as Doc<any>);
   return changes;
 };
@@ -64,7 +64,7 @@ export const getEditHistoryWithDiffs = (object: Obj.Unknown): VersionDiff[] => {
   assertArgument(isEchoObject(object), 'object', 'expected ECHO object stored in the database');
 
   const objectCore = getObjectCore(object);
-  const doc = objectCore.getDoc() as Doc<any>;
+  const doc = objectCore.getLoadedDoc() as Doc<any>;
   const history = A.getHistory(doc);
   const changes = A.getAllChanges(doc);
 
@@ -128,7 +128,7 @@ export const checkoutVersion = (object: Obj.Unknown, version: Heads): unknown =>
   assertArgument(Array.isArray(version), 'version', 'expected automerge heads array');
 
   const objectCore = getObjectCore(object);
-  const doc = objectCore.getDoc();
+  const doc = objectCore.getLoadedDoc();
   const snapshot = A.view(doc as Doc<any>, version);
 
   // TODO(dmaretskyi): Refactor so this doesn't have to create another core.
@@ -158,7 +158,7 @@ export const checkoutVersionSnapshot = <T extends Obj.Unknown>(object: T, versio
   assertArgument(Array.isArray(version), 'version', 'expected automerge heads array');
 
   const objectCore = getObjectCore(object);
-  return snapshotAt<T>(objectCore, A.view(objectCore.getDoc() as Doc<any>, version));
+  return snapshotAt<T>(objectCore, A.view(objectCore.getLoadedDoc() as Doc<any>, version));
 };
 
 /**
@@ -176,7 +176,7 @@ export const getObjectChanges = <T extends Obj.Unknown>(
   assertArgument(isEchoObject(object), 'object', 'expected ECHO object stored in the database');
   const { property } = opts;
   const objectCore = getObjectCore(object);
-  const doc = objectCore.getDoc() as Doc<any>;
+  const doc = objectCore.getLoadedDoc() as Doc<any>;
   const mountPath = [...objectCore.mountPath];
   const target: Prop[] = property === undefined ? mountPath : [...mountPath, 'data', property];
 

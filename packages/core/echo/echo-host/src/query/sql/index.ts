@@ -7,6 +7,7 @@ export {
   type CompiledRow,
   type CompileOptions,
   type PlanSubquery,
+  SNAPSHOT_JSON_LIMIT,
   SqlPlanCompiler,
   compilePlan,
   planDeclinedByCompiler,

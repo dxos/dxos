@@ -18,7 +18,7 @@ const handler: Operation.WithHandler<typeof CommentOperation.CreateProposals> = 
     Effect.fn(function* ({ doc, diffs }) {
       const object = yield* Database.load(doc);
       const content = yield* Effect.promise(() => object.content.load());
-      const accessor = Doc.createAccessor(content, ['content']);
+      const accessor = yield* Effect.promise(() => Doc.loadAccessor(content, ['content']));
 
       // v4 dropped `Effect.allWith`; `Effect.all` takes its options directly.
       yield* Effect.all(

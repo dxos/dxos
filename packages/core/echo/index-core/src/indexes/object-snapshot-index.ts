@@ -71,6 +71,30 @@ export class ObjectSnapshotIndex implements Index {
   }
 
   /**
+   * The document state stored with each record (see {@link IndexerObject.state}); records without
+   * one are omitted.
+   */
+  queryStates(
+    recordIds: readonly number[],
+  ): Effect.Effect<readonly { recordId: number; heads: string[]; structure: string }[], SqlError.SqlError> {
+    return Effect.gen({ self: this }, function* () {
+      const sql = this.#sql;
+      const results: { recordId: number; heads: string[]; structure: string }[] = [];
+      for (const chunk of chunkArray([...recordIds])) {
+        const rows = yield* sql<{
+          recordId: number;
+          heads: string;
+          state: string;
+        }>`SELECT recordId, heads, state FROM objectSnapshot WHERE recordId IN ${sql.in(chunk)} AND state IS NOT NULL`;
+        for (const row of rows) {
+          results.push({ recordId: row.recordId, heads: JSON.parse(row.heads), structure: row.state });
+        }
+      }
+      return results;
+    });
+  }
+
+  /**
    * How many indexed objects have no snapshot yet. Non-zero only while the store is filling after
    * its introduction; a reader that cannot tolerate a partial store waits for this to reach zero.
    */
@@ -146,13 +170,18 @@ export class ObjectSnapshotIndex implements Index {
         const stored = object.documentId
           ? Object.fromEntries(Object.entries(merged).filter(([key]) => key !== ATTR_META))
           : merged;
-        return { recordId, snapshot: JSON.stringify(stored) };
+        return {
+          recordId,
+          snapshot: JSON.stringify(stored),
+          heads: object.state ? JSON.stringify(object.state.heads) : null,
+          state: object.state?.structure ?? null,
+        };
       });
 
       for (const chunk of chunkRows(rows)) {
         yield* sql`
             INSERT INTO objectSnapshot ${sql.insert(chunk)}
-            ON CONFLICT (recordId) DO UPDATE SET snapshot = excluded.snapshot
+            ON CONFLICT (recordId) DO UPDATE SET snapshot = excluded.snapshot, heads = excluded.heads, state = excluded.state
           `;
       }
     }),

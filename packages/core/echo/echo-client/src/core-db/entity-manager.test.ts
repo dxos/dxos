@@ -16,7 +16,7 @@ import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
 import { type DocHandleProxy, type RepoProxy } from '../automerge/index.ts';
-import { getObjectCore } from '../echo-handler/index.ts';
+import { getObjectCore, loadDocument } from '../echo-handler/index.ts';
 import { type DatabaseImpl } from '../proxy-db/index.ts';
 import { EchoTestBuilder, createTmpPath } from '../testing/index.ts';
 
@@ -116,9 +116,10 @@ describe('DatabaseImpl', () => {
       await db.loadObjectCoreById(objectIds[0]);
       expect(db.getLinkedDocHandles()).toHaveLength(1);
 
+      // Results are backed by the index's copy, so listing them opens no further documents either.
       const objects = await db.query(Filter.type(TestSchema.Expando)).run();
       expect(objects).toHaveLength(5);
-      expect(db.getLinkedDocHandles()).toHaveLength(5);
+      expect(db.getLinkedDocHandles()).toHaveLength(1);
     });
   });
 
@@ -151,6 +152,7 @@ describe('DatabaseImpl', () => {
         newDoc.links = getDocHandles(db).spaceRootHandle.doc().links;
       });
       const beforeUpdate = await db.query(Query.type(TestSchema.Expando, { id: originalObj.id })).first();
+      await loadDocument(beforeUpdate);
       expect(getObjectDocHandle(beforeUpdate).url).to.eq(
         getDocHandles(db).spaceRootHandle.doc().links?.[beforeUpdate.id].toString(),
       );
@@ -199,7 +201,7 @@ describe('DatabaseImpl', () => {
       const newRootDocHandle = await createTestRootDoc(db._repo);
 
       for (const id of ids) {
-        await db.query(Query.type(TestSchema.Expando, { id })).run();
+        await loadDocument(await db.query(Query.type(TestSchema.Expando, { id })).first());
       }
 
       newRootDocHandle.change((newDoc: any) => {

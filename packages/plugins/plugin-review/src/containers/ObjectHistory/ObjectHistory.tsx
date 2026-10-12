@@ -10,6 +10,7 @@ import * as NamePopover from '@dxos/app-toolkit/NamePopover';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
+import { useDocLoaded } from '@dxos/react-client/echo';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { type Commit, Timeline } from '@dxos/react-ui-trace';
 import * as Button from '@dxos/react-ui/Button';
@@ -94,6 +95,8 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
   // Recomputed per render: the component subscribes to history mutations and the model is
   // cheap at panel scale (a handful of records).
   const rootText = provider?.getTarget(subject);
+  // The model reads branch stats from the root's history; re-renders once its document is in.
+  useDocLoaded(rootText);
   const { commits, branches } = provider
     ? createTimelineModel(subject, rootText, { nowLabel: t('now.label'), branchTipLabel: t('branch-tip.label') })
     : { commits: [], branches: [] };

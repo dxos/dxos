@@ -6,10 +6,9 @@ import React, { forwardRef, useMemo } from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { mdl, mdlBlockDescription } from '@dxos/deus/extension';
-import { Doc } from '@dxos/echo-doc';
 import { useObject } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
-import { getSpace } from '@dxos/react-client/echo';
+import { getSpace, useDocAccessor } from '@dxos/react-client/echo';
 import { Editor } from '@dxos/react-ui-editor';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
@@ -49,26 +48,29 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
     // Trigger re-render when the bound content ref resolves (no-op when there is no spec).
     useObject(spec?.content);
     const target = spec?.content.target;
+    const accessor = useDocAccessor(target, ['content']);
+    // Read-only until the bound content's document loads and the editor binds to it.
+    const pending = spec != null && !accessor;
 
     const extensions = useMemo(
       () =>
         [
-          createBasicExtensions({ lineNumbers: true, readOnly }),
+          createBasicExtensions({ lineNumbers: true, readOnly: readOnly || pending }),
           createMarkdownExtensions({ codeLanguages: [mdlBlockDescription] }),
           createThemeExtensions({ themeMode, slots: documentSlots }),
           decorateMarkdown(),
           mdl(),
           // Live two-way binding only when editing an ECHO Spec; static content is rendered via `value`.
           spec &&
-            target &&
+            accessor &&
             createDataExtensions({
               id: spec.id,
-              text: Doc.createAccessor(target, ['content']),
+              text: accessor,
               messenger: space,
               identity,
             }),
         ].filter(isTruthy),
-      [identity, space, spec?.id, target, themeMode, readOnly],
+      [identity, space, spec?.id, accessor, pending, themeMode, readOnly],
     );
 
     return (

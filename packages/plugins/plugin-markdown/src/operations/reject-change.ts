@@ -36,7 +36,7 @@ const handler: Operation.WithHandler<typeof CollaborationOperation.RejectChange>
         const content = yield* Effect.promise(() => document.content.load());
 
         // The anchor is expressed against the base (main) content.
-        const accessor = Doc.createAccessor(content, ['content']);
+        const accessor = yield* Effect.promise(() => Doc.loadAccessor(content, ['content']));
         const range = getRangeFromCursor(accessor, anchor);
         if (!range) {
           return {};

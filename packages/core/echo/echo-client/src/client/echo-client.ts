@@ -12,7 +12,7 @@ import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
 
-import { type BranchStore } from '../core-db/index.ts';
+import { type BranchStore, type DocumentEvictionOptions } from '../core-db/index.ts';
 import { HypergraphImpl } from '../hypergraph.ts';
 import { DatabaseImpl } from '../proxy-db/index.ts';
 import { IndexQuerySourceProvider, type LoadObjectProps, type ObjectUpdate } from './index-query-source-provider.ts';
@@ -20,7 +20,14 @@ import { IndexQuerySourceProvider, type LoadObjectProps, type ObjectUpdate } fro
 /** A root that has not linked an index hit by then may never; `linksAdded` re-hydrates it if it does. */
 const ROOT_LINK_WAIT_TIMEOUT = 2_000;
 
-export type EchoClientProps = {};
+export type EchoClientProps = {
+  /**
+   * Back index query results with the index's copy of each object, loading an object's document only when
+   * it is written to or its document is read (see `Doc.load`).
+   * @default true
+   */
+  lazyQueries?: boolean;
+};
 
 export type ConnectToServiceProps = {
   dataService: DataService.Client;
@@ -57,6 +64,9 @@ export type ConstructDatabaseProps = {
 
   /** Device-local persistence for the current-branch selection (non-synced). In-memory if omitted. */
   branchStore?: BranchStore;
+
+  /** Moves idle objects back onto the index's copy, releasing their documents. Off when omitted. */
+  eviction?: DocumentEvictionOptions;
 };
 
 /**
@@ -81,8 +91,11 @@ export class EchoClient extends Resource {
   private readonly _objectsUpdated = new Event<ObjectUpdate>();
   private readonly _dbUpdateSubscriptions = new Map<SpaceId, CleanupFn>();
 
-  constructor(_: EchoClientProps = {}) {
+  readonly #lazyQueries: boolean;
+
+  constructor({ lazyQueries = true }: EchoClientProps = {}) {
     super();
+    this.#lazyQueries = lazyQueries;
   }
 
   get graph(): HypergraphImpl {
@@ -124,6 +137,7 @@ export class EchoClient extends Resource {
         updateEvent: this._objectsUpdated,
       },
       graph: this._graph,
+      lazyQueries: this.#lazyQueries,
     });
     this._graph.registerQuerySourceProvider(this._indexQuerySourceProvider);
   }
@@ -151,6 +165,7 @@ export class EchoClient extends Resource {
     preloadSchemaOnOpen,
     spaceKey,
     branchStore,
+    eviction,
   }: ConstructDatabaseProps): DatabaseImpl {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     invariant(!this._databases.has(spaceId), 'Database already exists.');
@@ -165,6 +180,7 @@ export class EchoClient extends Resource {
       preloadSchemaOnOpen,
       spaceKey,
       branchStore,
+      eviction,
     });
     this._graph._registerDatabase(spaceId, db, owningObject);
     this._databases.set(spaceId, db);
@@ -231,6 +247,7 @@ export class EchoClient extends Resource {
           updateEvent: this._objectsUpdated,
         },
         graph: this._graph,
+        lazyQueries: this.#lazyQueries,
       });
       this._graph.registerQuerySourceProvider(this._indexQuerySourceProvider);
     }

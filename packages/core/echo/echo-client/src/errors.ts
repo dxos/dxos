@@ -34,3 +34,16 @@ export class RepoClosedError extends BaseError.extend(
     super({ context, ...options });
   }
 }
+
+/**
+ * The object is backed by the index's copy and its document has not loaded, so what needs the
+ * document itself (its heads, history, cursors) cannot be answered yet; `Doc.loadAccessor` loads it.
+ */
+export class DocumentNotLoadedError extends BaseError.extend(
+  'DocumentNotLoadedError',
+  "The object's document has not loaded.",
+) {
+  constructor(context: { objectId: string }, options?: BaseErrorOptions) {
+    super({ context, ...options });
+  }
+}

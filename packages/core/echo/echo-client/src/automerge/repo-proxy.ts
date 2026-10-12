@@ -202,6 +202,11 @@ export class RepoProxy extends Resource {
    * @throws {RepoClosedError} If the proxy is closing or closed — the document can never arrive, so
    * a caller whose work is abandonable should treat this as the client going away.
    */
+  /** Sends what is queued for the host now, skipping the rate limit, because someone is waiting on it. */
+  sendNow(): void {
+    this._sendUpdatesJob?.forceTrigger();
+  }
+
   find<T>(id: AnyDocumentId): DocHandleProxy<T> {
     if (typeof id !== 'string') {
       throw new TypeError(`Invalid documentId ${id}`);

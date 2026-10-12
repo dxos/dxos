@@ -19,7 +19,8 @@ export default Capability.makeModule(() =>
       key: Type.getTypename(Markdown.Document),
       sort: (anchorA: AnchoredTo.AnchoredTo, anchorB: AnchoredTo.AnchoredTo) => {
         const doc = Relation.getTarget(anchorA) as Markdown.Document;
-        const accessor = doc.content.target ? Doc.createAccessor(doc.content.target, ['content']) : undefined;
+        const text = doc.content.target;
+        const accessor = text && Doc.isLoaded(text) ? Doc.createAccessor(text, ['content']) : undefined;
         if (doc !== Relation.getTarget(anchorB) || !accessor) {
           return 0;
         }

@@ -6,8 +6,8 @@ import { EditorView } from '@codemirror/view';
 import React, { useEffect } from 'react';
 
 import { type Ref } from '@dxos/echo';
-import { Doc } from '@dxos/echo-doc';
 import { useObject } from '@dxos/echo-react';
+import { useDocAccessor } from '@dxos/react-client/echo';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Util from '@dxos/react-ui/Util';
@@ -48,16 +48,17 @@ export const Transcript = Util.composable<HTMLDivElement, TranscriptProps>(
     // `.target` loads asynchronously and isn't reactive on its own, so without this the editor
     // mounts empty (e.g. the Summary tab is blank until toggled away and back).
     const [resolved] = useObject(source);
+    const text = useDocAccessor(resolved ? source?.target : undefined, ['content']);
     const { parentRef, view } = useTextEditor(() => {
       const target = source?.target;
-      if (!resolved || !target) {
+      if (!resolved || !target || !text) {
         return {};
       }
 
       return {
         initialValue: target.content ?? '',
         extensions: [
-          createDataExtensions({ id, text: Doc.createAccessor(target, ['content']) }),
+          createDataExtensions({ id, text }),
           createBasicExtensions({ readOnly: true, lineWrapping: true, search: true }),
           createThemeExtensions({ themeMode, slots: documentSlots }),
           // Remove blockquote parsing so `>>` speaker markers aren't styled as quotes (see decorate-transcript).
@@ -66,7 +67,7 @@ export const Transcript = Util.composable<HTMLDivElement, TranscriptProps>(
           decorateMarkdown(),
         ],
       };
-    }, [themeMode, id, resolved, onSeek]);
+    }, [themeMode, id, resolved, text, onSeek]);
 
     // Scroll to the last timestamp line at or before currentSeconds.
     useEffect(() => {

@@ -51,13 +51,13 @@
     "@codemirror/view": "catalog:",
     "@dxos/async": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-doc": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/lit-ui": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/react-client": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
@@ -71,7 +71,6 @@
     "date-fns": "catalog:"
   },
   "devDependencies": {
-    "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/types": "workspace:*",

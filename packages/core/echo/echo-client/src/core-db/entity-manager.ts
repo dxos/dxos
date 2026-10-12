@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { next as A, type Heads, getHeads } from '@automerge/automerge';
+import { next as A, type ChangeFn, type Heads, getHeads } from '@automerge/automerge';
 import { type AutomergeUrl, type DocumentId } from '@automerge/automerge-repo';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
@@ -18,10 +18,12 @@ import {
   UpdateScheduler,
   asyncTimeout,
   runInContextAsync,
+  scheduleTask,
+  scheduleTaskInterval,
 } from '@dxos/async';
 import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import { raise, warnAfterTimeout } from '@dxos/debug';
-import { type Database, type Entity, Ref } from '@dxos/echo';
+import { type Database, type Entity, Filter, Query, Ref, Scope } from '@dxos/echo';
 import {
   type BranchRecord,
   DatabaseDirectory,
@@ -35,9 +37,10 @@ import { assertState, invariant } from '@dxos/invariant';
 import { EID, type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
+import { QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
 import type { DataService, QueryService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
-import { ComplexSet, chunkArray, deepMapValues } from '@dxos/util';
+import { ComplexSet, chunkArray, countWork, deepMapValues, defer, markWork } from '@dxos/util';
 
 import {
   type ChangeEvent,
@@ -49,8 +52,11 @@ import {
 import { DocumentUnavailableError, EchoClientError, RepoClosedError } from '../errors.ts';
 import { type HypergraphImpl } from '../hypergraph.ts';
 import { type BranchStore, forkDump, referencedObjectIds } from './branching.ts';
+import { docChangeSemaphore } from './doc-semaphore.ts';
 import { ObjectCoreRegistry } from './object-core-registry.ts';
-import { type IDatabaseBinding, ObjectCore } from './object-core.ts';
+import { type IDatabaseBinding, ObjectCore, type SnapshotState } from './object-core.ts';
+import { shareStructure } from './share-structure.ts';
+import { getSnapshotState } from './snapshot-state.ts';
 import {
   type AddCoreOptions,
   type AtomicReplaceObjectProps,
@@ -91,6 +97,15 @@ interface ObjectUnavailable {
 
 type SpaceDocumentLinks = DatabaseDirectory['links'];
 
+export type DocumentEvictionOptions = {
+  /** How long after an object's document loaded or was last written before it may be released. */
+  idleMs?: number;
+  /** Loaded documents past which the least recently active eligible ones are released regardless of idle time. */
+  maxDocuments?: number;
+  /** How often objects are checked. */
+  intervalMs?: number;
+};
+
 export type EntityManagerProps = {
   graph: HypergraphImpl;
   dataService: DataService.Client;
@@ -100,6 +115,9 @@ export type EntityManagerProps = {
   spaceKey: PublicKey;
   /** Device-local persistence for the current-branch selection (non-synced). In-memory if omitted. */
   branchStore?: BranchStore;
+
+  /** Moves idle objects back onto the index's copy, releasing their documents. Off when omitted. */
+  eviction?: DocumentEvictionOptions;
 
   /** Mints the caller-facing proxy for a core, injected because the proxy layer is built on this one. */
   createEntity: (core: ObjectCore) => Entity.Unknown;
@@ -136,6 +154,8 @@ export class EntityManager implements IDatabaseBinding {
 
   /** Optional device-local persistence for {@link _currentBranches} (survives reload, never syncs). */
   private readonly _branchStore?: BranchStore;
+
+  private readonly _eviction?: DocumentEvictionOptions;
 
   private readonly _createEntity: (core: ObjectCore) => Entity.Unknown;
 
@@ -240,6 +260,7 @@ export class EntityManager implements IDatabaseBinding {
     this._queryService = options.queryService;
     this._runtime = options.runtime;
     this._branchStore = options.branchStore;
+    this._eviction = options.eviction;
     this._repoProxy = new RepoProxy(this._dataService, this._runtime, this._spaceId);
     this.saveStateChanged = this._repoProxy.saveStateChanged;
   }
@@ -280,6 +301,15 @@ export class EntityManager implements IDatabaseBinding {
 
     await this._repoProxy.open();
     ctx.onDispose(() => this._unsubscribeFromHandles());
+    this.#snapshotWatchScheduled = false;
+    if (this._eviction) {
+      scheduleTaskInterval(ctx, () => this.#evictIdleDocuments(), this._eviction.intervalMs ?? EVICTION_INTERVAL);
+    }
+    ctx.onDispose(() => {
+      this.#snapshotWatch?.cleanup();
+      this.#snapshotWatch = undefined;
+      this.#snapshotIds.clear();
+    });
     ctx.onDispose(() => {
       for (const request of this._satisfactionRequests.values()) {
         request.abort();
@@ -404,12 +434,27 @@ export class EntityManager implements IDatabaseBinding {
     this._unsubscribeFromHandles();
     this._clearHandleReferences();
     this._objects.clear();
+    this.#settlePendingPromotions(new ContextDisposedError());
     this._unavailableObjects.clear();
     this._objectsPendingDocumentLoad.clear();
     this._currentlyLoadingObjects.clear();
     this._objectsForNextDbUpdate.clear();
     this._objectsForNextUpdate.clear();
     await this._repoProxy.close();
+  }
+
+  /** Ends every waiting promotion, or the one for `objectId`; writes still queued on it are lost and logged. */
+  #settlePendingPromotions(error: Error, objectId?: string): void {
+    for (const [id, { core, bound }] of this.#pendingPromotions) {
+      if (objectId !== undefined && id !== objectId) {
+        continue;
+      }
+      if (core.hasQueuedWrites) {
+        log.warn('queued writes dropped before their document loaded', { objectId: id, error });
+      }
+      this.#pendingPromotions.delete(id);
+      bound.throw(error);
+    }
   }
 
   /** Whether the lifetime a load started in has ended — closed, or already replaced by a reopen. */
@@ -496,6 +541,301 @@ export class EntityManager implements IDatabaseBinding {
       return undefined;
     }
     return core.rootProxy ?? this._createEntity(core);
+  }
+
+  /**
+   * The entity for an index row of an object whose document the tab has not loaded, backed by the
+   * row's state. A core the tab already holds wins: a bound one is authoritative and ignores the row,
+   * and a snapshot-backed one takes it only when the index stamped it later than the copy it holds.
+   * Undefined when the row cannot back the object, which then loads its document as usual.
+   */
+  upsertSnapshot(id: EntityId, state: SnapshotState): Entity.Unknown | undefined {
+    // Closed, or not routed here (including before the root arrives): the document path decides instead.
+    if (this.#closed || !this.#routesTo(id, state)) {
+      return undefined;
+    }
+    // A selected branch reads and writes another document, which the index row does not describe.
+    if (this.getCurrentBranch(id) !== 'main') {
+      return undefined;
+    }
+    const existing = this.getObjectCoreById(id, { load: false });
+    if (existing) {
+      // Bound to a document whose body has not arrived: the document path decides, as for any load.
+      if (!existing.isBodyAvailable) {
+        return undefined;
+      }
+      this.#refreshSnapshot(existing, state);
+      return existing.rootProxy ?? this._createEntity(existing);
+    }
+
+    const core = new ObjectCore();
+    core.id = id;
+    core.entityManager = this;
+    core.setSnapshot({
+      root: { objects: { [id]: state.structure } },
+      heads: state.heads,
+      version: state.version,
+      updatedAt: state.updatedAt,
+    });
+    this._objects.set(id, core);
+    countWork('echo.snapshotObjects');
+    this.#snapshotIds.add(id);
+    this.#scheduleSnapshotWatch();
+    return this._createEntity(core);
+  }
+
+  /** Whether the space root routes the object to the document the row was read from (not a branch or stale copy). */
+  #routesTo(id: string, state: SnapshotState): boolean {
+    // No root mid-swap: nothing can be checked against it yet.
+    if (!this._spaceRootDocHandle) {
+      return false;
+    }
+    return state.documentId === undefined || this.getObjectDocumentId(id) === state.documentId;
+  }
+
+  /** Moves a snapshot-backed core onto a newer index row, unless writes it queued are the user's view. */
+  #refreshSnapshot(core: ObjectCore, state: SnapshotState): void {
+    if (!core.snapshot || core.hasQueuedWrites || state.version <= core.snapshot.version) {
+      return;
+    }
+    core.snapshot = {
+      root: { objects: { [core.id]: shareStructure(core.snapshot.root.objects[core.id], state.structure) } },
+      heads: state.heads,
+      version: state.version,
+      updatedAt: state.updatedAt,
+    };
+    core.notifyUpdate();
+  }
+
+  /**
+   * Ids of the cores backed by the index's copy. One reactive lazy query over them keeps each current
+   * while something holds it, since the query that returned it may since have stopped or filtered it out.
+   */
+  readonly #snapshotIds = new Set<string>();
+  #snapshotWatch: { ids: string; cleanup: CleanupFn } | undefined = undefined;
+  #snapshotWatchScheduled = false;
+
+  #unwatchSnapshot(id: string): void {
+    if (this.#snapshotIds.delete(id)) {
+      this.#scheduleSnapshotWatch();
+    }
+  }
+
+  /** Coalesces the id set's changes into one restart of the watch query. */
+  #scheduleSnapshotWatch(): void {
+    if (this.#snapshotWatchScheduled || !this._ctx || this._ctx.disposed) {
+      return;
+    }
+    this.#snapshotWatchScheduled = true;
+    scheduleTask(
+      this._ctx,
+      () => {
+        this.#snapshotWatchScheduled = false;
+        this.#watchSnapshots();
+      },
+      SNAPSHOT_WATCH_DELAY,
+    );
+  }
+
+  #watchSnapshots(): void {
+    const ids = [...this.#snapshotIds].sort();
+    const key = ids.join(',');
+    if (this.#snapshotWatch?.ids === key) {
+      return;
+    }
+    this.#snapshotWatch?.cleanup();
+    this.#snapshotWatch = undefined;
+    if (ids.length === 0) {
+      return;
+    }
+
+    const query = Query.select(Filter.id(...(ids as EntityId[])))
+      .options({ lazy: true, deleted: 'include' })
+      .from(Scope.space({ id: this._spaceId }));
+    const cleanup = subscribeStream(
+      this._runtime,
+      this._queryService['QueryService.execQuery']({
+        query: JSON.stringify(query.ast),
+        queryId: `snapshot-watch:${this._spaceId}:${++snapshotWatchCount}`,
+        reactivity: QueryReactivity.REACTIVE,
+      }),
+      {
+        onData: (response) => {
+          if (this.#closed) {
+            return;
+          }
+          for (const result of response.results ?? []) {
+            // Rows only refresh cores still held: the watch must not keep an object alive.
+            const core = this._objects.get(result.id);
+            const state = core?.snapshot && getSnapshotState(result);
+            if (core && state && this.#routesTo(core.id, state)) {
+              this.#refreshSnapshot(core, state);
+            }
+          }
+        },
+        onError: (err) => {
+          if (this.#snapshotWatch?.cleanup === cleanup) {
+            this.#snapshotWatch = undefined;
+          }
+          if (err instanceof RpcClosedError) {
+            if (this._ctx) {
+              this._reconnected.once(this._ctx, () => this.#scheduleSnapshotWatch());
+            }
+          } else if (err != null) {
+            log.catch(err);
+          }
+        },
+      },
+    );
+    this.#snapshotWatch = { ids: key, cleanup };
+  }
+
+  #evicting = false;
+
+  /**
+   * Releases the documents of objects nothing is editing and nobody has written to for a while, once
+   * the index holds them at their current heads, moving each object back onto the index's copy.
+   */
+  async #evictIdleDocuments(): Promise<void> {
+    if (this.#evicting || !this._eviction) {
+      return;
+    }
+    this.#evicting = true;
+    try {
+      const idleMs = this._eviction.idleMs ?? EVICTION_IDLE;
+      const maxDocuments = this._eviction.maxDocuments ?? EVICTION_MAX_DOCUMENTS;
+      const now = performance.now();
+      const bound = this.allObjectCores().filter((core) => core.docHandle !== undefined);
+      const candidates = bound
+        .filter((core) => this.#isEvictable(core))
+        .sort((left, right) => left.activeAt - right.activeAt);
+      const overCap = Math.max(0, bound.length - maxDocuments);
+      const evict = candidates.filter((core, index) => index < overCap || now - core.activeAt >= idleMs);
+      if (evict.length === 0) {
+        return;
+      }
+
+      const query = Query.select(Filter.id(...evict.map((core) => core.id)))
+        .options({ lazy: true })
+        .from(Scope.space({ id: this._spaceId }));
+      const response = await runServiceCall(
+        this._runtime,
+        this._queryService['QueryService.execQuery']({
+          query: JSON.stringify(query.ast),
+          queryId: `evict:${this._spaceId}:${++snapshotWatchCount}`,
+          reactivity: QueryReactivity.ONE_SHOT,
+        }).pipe(Stream.runHead),
+        { timeout: RPC_TIMEOUT },
+      );
+      for (const result of Option.getOrUndefined(response)?.results ?? []) {
+        const core = this._objects.get(result.id);
+        const state = getSnapshotState(result);
+        // Re-checked after the round trip: a write or an editor may have arrived meanwhile.
+        if (!core?.docHandle || !state || !this.#isEvictable(core) || core.activeAt > now) {
+          continue;
+        }
+        if (!sameHeads(state.heads, getHeads(core.getLoadedDoc()))) {
+          continue;
+        }
+        this._demoteCore(core, state);
+      }
+    } catch (err) {
+      log.catch(err);
+    } finally {
+      this.#evicting = false;
+    }
+  }
+
+  #isEvictable(core: ObjectCore): boolean {
+    return (
+      core.docHandle !== undefined &&
+      core.docHandle !== this._spaceRootDocHandle &&
+      !core.hasAccessorListeners &&
+      !this.#pendingPromotions.has(core.id) &&
+      this.getCurrentBranch(core.id) === 'main' &&
+      this._objectDocumentHandles.get(core.id) === core.docHandle
+    );
+  }
+
+  /** Moves a bound core onto an index row at its document's heads and releases the document. */
+  private _demoteCore(core: ObjectCore, state: SnapshotState): void {
+    const handle = core.docHandle;
+    invariant(handle);
+    core.demote({
+      root: { objects: { [core.id]: state.structure } },
+      heads: state.heads,
+      version: state.version,
+      updatedAt: state.updatedAt,
+    });
+    countWork('echo.demotions');
+    this.#snapshotIds.add(core.id);
+    this.#scheduleSnapshotWatch();
+
+    this._unbindObjectDocument(core.id);
+    if (handle.url != null) {
+      this._currentlyLoadingObjects.delete({ url: handle.url, objectId: core.id });
+    }
+    if (handle.documentId != null && (this._documentObjects.get(handle)?.size ?? 0) === 0) {
+      // Deferred by the repo while the host has not taken the document's last change.
+      this._repoProxy.release(handle.documentId);
+    }
+  }
+
+  /**
+   * Snapshot-backed cores whose document is loading because something wrote to them or needs the
+   * document. Held strongly: a collected core would take its queued writes with it.
+   */
+  readonly #pendingPromotions = new Map<string, { core: ObjectCore; bound: Trigger; started: number }>();
+
+  /** Writes queued on a snapshot-backed core are not durable until its document loads and takes them. */
+  private async _waitForPendingPromotions(): Promise<void> {
+    // A load nothing wrote through (an editor opening, a prefetch) is not a durability concern.
+    const pending = [...this.#pendingPromotions.values()].filter(({ core }) => core.hasQueuedWrites);
+    if (pending.length === 0) {
+      return;
+    }
+    const ids = pending.map(({ core }) => core.id);
+    await asyncTimeout(
+      Promise.all(pending.map(({ bound }) => bound.wait())),
+      PROMOTION_FLUSH_TIMEOUT,
+      new TimeoutError(PROMOTION_FLUSH_TIMEOUT, `documents of objects with queued writes to load: ${ids.join(', ')}`),
+    );
+  }
+
+  /**
+   * Waits until the core's strong dependencies (parent, relation endpoints, stored type) are in the
+   * working set or known to be unavailable on disk, as a document load does, without loading the
+   * core's own document.
+   */
+  async waitForStrongDeps(core: ObjectCore): Promise<void> {
+    const generation = this.#generation;
+    const request = this._ensureSatisfactionRequest(core);
+    if (request.state !== 'ready' && request.state !== 'unavailable') {
+      const cancellation = this.#rejectWhenStale(generation);
+      try {
+        await Promise.race([request.wait(), cancellation.promise]);
+      } finally {
+        cancellation.dispose();
+      }
+    }
+  }
+
+  promote(core: ObjectCore): Promise<void> {
+    if (!core.snapshot) {
+      return Promise.resolve();
+    }
+    if (this.#closed) {
+      return Promise.reject(new ContextDisposedError());
+    }
+    let pending = this.#pendingPromotions.get(core.id);
+    if (!pending) {
+      pending = { core, bound: new Trigger(), started: performance.now() };
+      this.#pendingPromotions.set(core.id, pending);
+      this._loadObjectDocument(core.id);
+      // A write or an editor is waiting: request the document without the batch's throttle delay.
+      this._repoProxy.sendNow();
+    }
+    return pending.bound.wait();
   }
 
   /** Like {@link getEntityById}, but loads the object's document first. */
@@ -873,6 +1213,7 @@ export class EntityManager implements IDatabaseBinding {
   }: Database.FlushOptions = {}): Promise<void> {
     log('flush', { disk, indexes, secondaryIndexes, updates });
     await this._waitForPendingCreations();
+    await this._waitForPendingPromotions();
     if (disk) {
       await this._repoProxy.flush({ disk: true });
     }
@@ -1192,6 +1533,8 @@ export class EntityManager implements IDatabaseBinding {
       : (opts?.fromHeads ?? {});
 
     const members = await this._collectSubtree(rootCore);
+    // Forks read each member's document, so one backed by the index's copy loads (and takes its queued writes) first.
+    await Promise.all(members.map((member) => this.promote(member)));
     // Validate the whole subtree up front, before importing any documents: a member failing the
     // check mid-loop would otherwise leave already-imported branch docs orphaned in the repo. Fork
     // only from main — the source doc is the member's current core doc, so a subtree switched to
@@ -1396,6 +1739,11 @@ export class EntityManager implements IDatabaseBinding {
 
   /** Resolve the object's main (default-branch) document handle. */
   private async _mainDocHandle(objectId: string): Promise<DocHandleProxy<DatabaseDirectory>> {
+    // Merges read and write the main document, which must already hold the core's queued writes.
+    const core = this._objects.get(objectId);
+    if (core) {
+      await this.promote(core);
+    }
     const spaceRoot = this.getSpaceRootDocHandle();
     const url = spaceRoot.doc().links?.[objectId]?.toString();
     if (!url) {
@@ -1461,6 +1809,8 @@ export class EntityManager implements IDatabaseBinding {
     if (!core) {
       return;
     }
+    // Rebinding replaces the core's backing, so queued writes reach the main document first.
+    await this.promote(core);
     const url = name !== 'main' ? registry?.[name]?.members[memberId]?.toString() : undefined;
     let handle: DocHandleProxy<DatabaseDirectory>;
     if (url) {
@@ -2024,6 +2374,7 @@ export class EntityManager implements IDatabaseBinding {
    * object mounted in it, and never the space root), since it is the document that holds the payload.
    */
   private _releaseObject(objectId: string, { releaseDocument = false }: ReleaseObjectOptions = {}): void {
+    this.#unwatchSnapshot(objectId);
     // Never dropped while still resolving, because aborting one releases its load ops and cancels
     // the IO a reader is waiting on; it is dropped when it settles instead.
     const request = this._satisfactionRequests.get(objectId as EntityId);
@@ -2043,6 +2394,10 @@ export class EntityManager implements IDatabaseBinding {
     }
 
     this._objectsPendingDocumentLoad.delete(objectId);
+    this.#settlePendingPromotions(
+      new EchoClientError({ message: 'Object removed from the space before its document loaded.' }),
+      objectId,
+    );
     const handle = this._unbindObjectDocument(objectId);
     if (handle == null || handle === this._spaceRootDocHandle || handle.documentId == null) {
       return;
@@ -2125,8 +2480,13 @@ export class EntityManager implements IDatabaseBinding {
 
   private _onObjectDocumentLoaded({ handle, objectId }: ObjectDocumentLoaded): void {
     handle.on('change', this._onDocumentUpdate);
+    countWork('echo.objectDocumentsLoaded');
 
-    const core = this._objects.get(objectId) ?? this._createObjectInDocument(handle, objectId);
+    const existing = this._objects.get(objectId);
+    if (existing?.snapshot) {
+      this._bindSnapshotCore(existing, handle);
+    }
+    const core = existing ?? this._createObjectInDocument(handle, objectId);
 
     // A ready handle does not mean the body arrived: a linked document settles empty while the peer
     // holding it is still replicating. The core is created either way so the object keeps one
@@ -2148,8 +2508,70 @@ export class EntityManager implements IDatabaseBinding {
 
   private _createInlineObjects(docHandle: DocHandleProxy<DatabaseDirectory>, objectIds: string[]): void {
     for (const id of objectIds) {
-      invariant(!this._objects.has(id));
+      // An index row can back the object before the root change that adds it arrives.
+      const existing = this._objects.get(id);
+      if (existing?.snapshot) {
+        this._bindSnapshotCore(existing, docHandle);
+        continue;
+      }
+      invariant(!existing);
       this._createObjectInDocument(docHandle, id);
+    }
+  }
+
+  /**
+   * Moves a snapshot-backed core onto its document, keeping the core and its proxy, after replaying the
+   * writes it queued.
+   */
+  private _bindSnapshotCore(core: ObjectCore, docHandle: DocHandleProxy<DatabaseDirectory>): void {
+    const writes = core.takeQueuedWrites();
+    if (writes.length > 0 && core.snapshot) {
+      this._replayWrites(core.id, docHandle, core.snapshot.heads, writes);
+    }
+    core.bind({ db: this, docHandle, path: ['objects', core.id], assignFromLocalState: false });
+    // A subscriber notified by the replay's change event wrote while the core was still unbound; that
+    // write was queued after the queue was taken, so it lands now.
+    for (const write of core.takeQueuedWrites()) {
+      core.change(write);
+    }
+    this.#unwatchSnapshot(core.id);
+    this._markObjectAvailable(core.id);
+    this._onObjectBoundToDocument(docHandle, core.id);
+    const pending = this.#pendingPromotions.get(core.id);
+    this.#pendingPromotions.delete(core.id);
+    if (pending) {
+      const ms = performance.now() - pending.started;
+      countWork('echo.promotions');
+      countWork('echo.promotionMs', ms);
+      markWork('echo.promotion', ms.toFixed(1));
+      pending.bound.wake();
+    }
+  }
+
+  /**
+   * Applies writes made against a snapshot to its document at the snapshot's heads, so they merge as
+   * concurrent with whatever the document gained since; at the current heads if those are missing.
+   */
+  private _replayWrites(
+    objectId: string,
+    docHandle: DocHandleProxy<DatabaseDirectory>,
+    heads: Heads,
+    writes: readonly ChangeFn<any>[],
+  ): void {
+    const replay = (doc: DatabaseDirectory) => {
+      for (const write of writes) {
+        write(doc);
+      }
+    };
+    using _ = defer(docChangeSemaphore(docHandle));
+    const doc = docHandle.doc();
+    if (doc && A.getMissingDeps(doc, heads).length === 0) {
+      // Forked and merged rather than `changeAt`, whose result can read stale when the heads differ.
+      const fork = A.change(A.clone(A.view(doc, heads)), replay);
+      docHandle.update((current) => A.merge(current, fork));
+    } else {
+      log.warn('snapshot heads are missing from the loaded document, replaying at its heads', { objectId });
+      docHandle.change(replay);
     }
   }
 
@@ -2188,6 +2610,7 @@ export class EntityManager implements IDatabaseBinding {
     return this._areDepsResolved(core);
   }
 
+  /** The index served a snapshot-backed core only with its closure present, so it is not re-resolved from disk. */
   private _areDepsSatisfied(core: ObjectCore): boolean {
     return this._ensureSatisfactionRequest(core).state === 'ready';
   }
@@ -2262,6 +2685,10 @@ export class EntityManager implements IDatabaseBinding {
     for (const objectId of objectIds) {
       const objectCore = this._objects.get(objectId);
       invariant(objectCore);
+      if (objectCore.snapshot) {
+        this._bindSnapshotCore(objectCore, docHandle);
+        continue;
+      }
       objectCore.bind({
         db: this,
         docHandle,
@@ -2318,3 +2745,18 @@ export class EntityManager implements IDatabaseBinding {
 }
 
 const RPC_TIMEOUT = 20_000;
+
+/** How long a flush waits for the documents of objects with queued writes before it fails. */
+const PROMOTION_FLUSH_TIMEOUT = 20_000;
+
+const EVICTION_INTERVAL = 30_000;
+const EVICTION_IDLE = 60_000;
+const EVICTION_MAX_DOCUMENTS = 500;
+
+const sameHeads = (left: readonly string[], right: readonly string[]): boolean =>
+  left.length === right.length && left.every((head) => right.includes(head));
+
+/** Coalesces bursts of index-backed cores appearing or going into one restart of the watch query. */
+const SNAPSHOT_WATCH_DELAY = 100;
+
+let snapshotWatchCount = 0;

@@ -661,9 +661,34 @@ export const QueryOptions = Schema.Struct({
    * Diagnostics-only label for logs / tooling (not used by execution semantics).
    */
   debugLabel: Schema.optional(Schema.String),
+
+  /**
+   * Ship each document row's state, heads and version (`QueryResult.state`), so the client can back the
+   * result with the index's copy instead of loading its document. Set by the ECHO client on the queries it
+   * sends (see `EchoClientProps.lazyQueries`), not by callers.
+   */
+  lazy: Schema.optional(Schema.Boolean),
 });
 
 export interface QueryOptions extends Schema.Schema.Type<typeof QueryOptions> {}
+
+/**
+ * Whether the query returns index-backed live objects (see {@link QueryOptions.lazy}). Only the outer
+ * clause chain is read: a subquery's options do not decide what the outer query returns.
+ */
+export const isLazyQuery = (query: Query): boolean => {
+  switch (query.type) {
+    case 'options':
+      return query.options.lazy === true || isLazyQuery(query.query);
+    case 'order':
+    case 'limit':
+    case 'skip':
+    case 'from':
+      return isLazyQuery(query.query);
+    default:
+      return false;
+  }
+};
 
 /**
  * Selects from a space (automerge documents).

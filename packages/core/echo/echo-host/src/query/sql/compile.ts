@@ -73,6 +73,12 @@ export type CompiledRow = {
    * serialized key rather than an object.
    */
   aggregates: string | null;
+  /** The document row's stored state (`encodeEntityStructure`), in a lazy query only. */
+  state: string | null;
+  /** JSON array of the heads {@link state} was read at, in a lazy query only. */
+  heads: string | null;
+  /** The row's `objectMeta.version` stamp, in a lazy query only. */
+  version: number | null;
 };
 
 /**
@@ -141,7 +147,7 @@ export class SqlPlanCompiler {
     if (options.strongDependencyFilter !== false) {
       root = this.#compileStrongDependencyFilter(root);
     }
-    const final = this.#final(root);
+    const final = this.#final(root, { lazy: options.lazy === true });
     const withClause = sql.join(', ', false)(this.#ctes);
     const statement = sql<CompiledRow>`WITH RECURSIVE ${withClause} ${final}`;
     const [text, params] = statement.compile();
@@ -1123,8 +1129,11 @@ export class SqlPlanCompiler {
   // Final projection.
   //
 
-  #final(ws: Relation): Fragment {
+  #final(ws: Relation, { lazy }: { lazy: boolean }): Fragment {
     const sql = this.#sql;
+    const stateColumns = lazy
+      ? sql`d.state AS state, d.heads AS heads, m.version AS version`
+      : sql`NULL AS state, NULL AS heads, NULL AS version`;
     const aggregates =
       ws.grouped?.collapsed && ws.grouped.aggregateNames.length > 0
         ? sql`json_object(${sql.join(', ', false)(ws.grouped.aggregateNames.map((name) => sql`${name}, w.${sql.literal(aggregateColumn(name))}`))})`
@@ -1137,6 +1146,7 @@ export class SqlPlanCompiler {
     return sql`SELECT w.recordId, w.objectId, w.spaceId, m.documentId, m.queueId, m.queueNamespace, w.rank AS rank,
       m.createdAt, m.updatedAt,
       CASE WHEN m.queueId != '' THEN json(d.snapshot) END AS documentJson,
+      ${stateColumns},
       ${groupColumns}
       FROM ${this.#ref(ws)} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId LEFT JOIN objectSnapshot d ON d.recordId = w.recordId
       ORDER BY w.ord`;
@@ -1149,7 +1159,16 @@ export type CompileOptions = {
    * executor mirrors the client-side gate so dependency-broken objects never reach it.
    */
   strongDependencyFilter?: boolean;
+
+  /** Ship every document row's stored state, heads and version, for a lazy query (`QueryOptions.lazy`). */
+  lazy?: boolean;
 };
+
+/**
+ * Largest object state, in characters of encoded JSON, that the index stores for a lazy query; a larger
+ * object goes without, and the client loads its document instead.
+ */
+export const SNAPSHOT_JSON_LIMIT = 64 * 1024;
 
 /**
  * Compiles a plan, first resolving every `metaVersion` filter to the literal versions present

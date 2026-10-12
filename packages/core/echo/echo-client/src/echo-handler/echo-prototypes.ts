@@ -50,7 +50,6 @@
 //   `rawTarget(this)` and keep `this` as the receiver for any re-entrant reads.
 //
 
-import * as A from '@automerge/automerge';
 import * as Schema from 'effect/Schema';
 
 import { Event } from '@dxos/async';
@@ -389,10 +388,10 @@ const getStaticTypeSchemaSlot = (target: ProxyTarget, receiver: any): Schema.Cod
 
 /** Backs the `ObjectVersionId` slot, i.e. `Obj.version`. The only version accessor in this package. */
 const getVersion = (target: ProxyTarget): Obj.Version => {
-  const accessor = target[symbolInternals].getDocAccessor();
-  const doc = accessor.handle.doc();
-  invariant(doc);
-  const heads = A.getHeads(doc);
+  const core = target[symbolInternals];
+  invariant(core.hasDoc);
+  // A snapshot-backed object reports the heads its index copy was read at.
+  const heads = core.getHeads();
   return {
     [Obj.VersionTypeId]: Obj.VersionTypeId,
     versioned: true,

@@ -8,7 +8,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { Filter, Format, Obj, Query, Type } from '@dxos/echo';
 import { checkoutVersion, getEditHistory } from '@dxos/echo-client';
 import { EID, type URI } from '@dxos/keys';
-import { type Space, useQuery } from '@dxos/react-client/echo';
+import { type Space, useDocLoaded, useQuery } from '@dxos/react-client/echo';
 import { DynamicTable, type TableFeatures } from '@dxos/react-ui-table';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
@@ -77,10 +77,12 @@ export const ObjectsArticle = ({ role, ...props }: ArticleProps & { space?: Spac
     setSelected(object);
   };
 
+  // History is read from the selected object's document.
+  const selectedLoaded = useDocLoaded(selected);
   const history = useMemo(() => {
     // It's better for performance to materialize all changes here in one loop.
-    return selected ? getEditHistory(selected).map(mapHistoryRow) : [];
-  }, [selected]);
+    return selected && selectedLoaded ? getEditHistory(selected).map(mapHistoryRow) : [];
+  }, [selected, selectedLoaded]);
 
   const dataProperties = useMemo(
     () => [

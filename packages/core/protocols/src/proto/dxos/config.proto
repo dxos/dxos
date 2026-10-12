@@ -231,6 +231,11 @@ message Runtime {
     /// suspected regression is bisected against the pre-compiler path. `DX_ECHO_QUERY_EXECUTOR`
     /// overrides it when unset.
     optional QueryExecutor query_executor = 18 [ (env_var) = "DX_ECHO_QUERY_EXECUTOR" ];
+
+    /// Back query results with the index's copy of each object, loading an object's document only
+    /// when it is written to or its document is read. On by default; set false to load every result's
+    /// document as before. Set via DX_ECHO_LAZY_QUERIES.
+    optional bool lazy_queries = 19 [ (env_var) = "DX_ECHO_LAZY_QUERIES" ];
   }
 
   message App {

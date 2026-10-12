@@ -33,3 +33,7 @@ DX_EDGE_FEED_REPLICATOR:
 DX_AUTOMERGE_CREDENTIALS:
   path: runtime.client.automergeCredentials
   type: boolean
+
+DX_ECHO_LAZY_QUERIES:
+  path: runtime.client.lazyQueries
+  type: boolean

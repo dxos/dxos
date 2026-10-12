@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Doc } from '@dxos/echo-doc';
+import { useDocAccessor } from '@dxos/react-client/echo';
 import type * as Util from '@dxos/react-ui/Util';
 import { type Event as EventType } from '@dxos/types';
 import { automerge } from '@dxos/ui-editor';
@@ -23,8 +23,12 @@ export type EventBodyEditorProps = Util.ThemedClassName<{
  * written live to the ECHO object via an automerge doc accessor.
  */
 export const EventBodyEditor = ({ event, markdown = true, classNames }: EventBodyEditorProps) => {
-  const accessor = useMemo(() => Doc.createAccessor(event, ['description']), [event]);
-  const extensions = useMemo(() => [automerge(accessor)], [accessor]);
+  const accessor = useDocAccessor(event, ['description']);
+  const extensions = useMemo(() => (accessor ? [automerge(accessor)] : []), [accessor]);
+  if (!accessor) {
+    return null;
+  }
+
   return (
     <Editor
       lineWrapping

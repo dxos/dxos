@@ -13,10 +13,10 @@ export type SelectionRange = {
   text: string;
 };
 
-/** Resolve an anchor against the document's loaded text content; `undefined` while the ref is unloaded. */
+/** Resolve an anchor against the document's loaded text content; `undefined` while the ref or its document is unloaded. */
 export const getMarkdownAnchorText = (doc: Markdown.Document, anchor: string): string | undefined => {
   const target = doc.content?.target;
-  if (!target) {
+  if (!target || !Doc.isLoaded(target)) {
     return undefined;
   }
   return getTextInAnchorRange(Doc.createAccessor(target, ['content']), anchor);

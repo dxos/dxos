@@ -102,6 +102,44 @@ describe('ObjectSnapshotIndex', () => {
   );
 
   it.effect(
+    'stores the document state with a record and clears it when an update carries none',
+    Effect.fnUntraced(function* () {
+      const { store } = yield* migrated();
+      const metaIndex = new EntityMetaIndex(yield* SqlClient.SqlClient);
+      yield* metaIndex.migrate();
+
+      const id = EntityId.random();
+      const object: IndexerObject = {
+        spaceId: SpaceId.random(),
+        queueId: null,
+        queueNamespace: null,
+        documentId: 'doc-1',
+        recordId: null,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: { id, [ATTR_TYPE]: TYPE_PERSON, value: 'alpha' },
+        state: { heads: ['h1', 'h2'], structure: '{"data":{"value":"alpha"}}' },
+      };
+      yield* metaIndex.update([object]);
+      yield* metaIndex.lookupRecordIds([object]);
+      yield* store.update([object]);
+
+      expect(yield* store.queryStates([object.recordId!])).toEqual([
+        { recordId: object.recordId!, heads: ['h1', 'h2'], structure: '{"data":{"value":"alpha"}}' },
+      ]);
+
+      yield* store.update([{ ...object, state: { heads: ['h3'], structure: '{"data":{"value":"beta"}}' } }]);
+      expect(yield* store.queryStates([object.recordId!])).toEqual([
+        { recordId: object.recordId!, heads: ['h3'], structure: '{"data":{"value":"beta"}}' },
+      ]);
+
+      // An object that grew past the size cap, or moved to a branch document, ships no state.
+      yield* store.update([{ ...object, state: undefined }]);
+      expect(yield* store.queryStates([object.recordId!])).toEqual([]);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
     'handles more than 999 recordIds without exceeding SQLite variable limit',
     Effect.fnUntraced(function* () {
       const { store } = yield* migrated();

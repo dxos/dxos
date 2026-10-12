@@ -34,7 +34,8 @@ export default Update.pipe(
 
       if (edits && edits.length > 0) {
         const text = yield* Database.load(script.source);
-        const accessor = Doc.createAccessor(text, ['content']);
+        // Edits are located against the current text, which they read from the document.
+        const accessor = yield* Effect.promise(() => Doc.loadAccessor(text, ['content']));
         applyEdits(accessor, edits);
 
         Obj.update(script, (script) => {

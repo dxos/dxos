@@ -7,7 +7,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 
 import type * as Process from '@dxos/compute/Process';
 import { Obj } from '@dxos/echo';
-import { type Space } from '@dxos/react-client/echo';
+import { isDocumentLoaded } from '@dxos/echo-client';
+import { type Space, useDocLoaded } from '@dxos/react-client/echo';
 import { type Task } from '@dxos/types';
 
 import {
@@ -69,11 +70,15 @@ export const useSessionTimeline = (
     return () => clearInterval(interval);
   }, []);
 
+  // Status moves are read from each task's history, which needs its document.
+  const tasksLoaded = useDocLoaded(tasks);
   const statusChangeCache = useRef<StatusChangeCache>(new Map());
   return useMemo(() => {
     const taskStatusChanges = new Map(
-      (tasks ?? []).map((task) => [task.id, cachedStatusChanges(statusChangeCache.current, task)]),
+      (tasks ?? [])
+        .filter((task) => isDocumentLoaded(task))
+        .map((task) => [task.id, cachedStatusChanges(statusChangeCache.current, task)]),
     );
     return buildSessionTimeline({ traceMessages, processes, sessions, tasks, taskStatusChanges, now });
-  }, [traceMessages, processes, sessions, tasks, now]);
+  }, [traceMessages, processes, sessions, tasks, tasksLoaded, now]);
 };

@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
-import { type EchoDatabase } from '@dxos/echo-client';
+import { type EchoDatabase, loadDocument } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { DXN, PublicKey } from '@dxos/keys';
 
@@ -51,6 +51,8 @@ const readerCopy = async <T extends Obj.Any>(peers: Peers, id: string): Promise<
   for (let attempt = 0; attempt < 100; attempt++) {
     const [found] = await peers.reader.query(Filter.id(id)).run();
     if (found) {
+      // Loaded before anything is read: binding to the document re-materializes every value once.
+      await loadDocument(found);
       return found as T;
     }
     await new Promise((resolve) => setTimeout(resolve, 10));
