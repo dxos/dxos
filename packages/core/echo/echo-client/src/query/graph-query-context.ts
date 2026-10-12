@@ -499,7 +499,15 @@ const getSelectedIds = (query: QueryAST.Query) => {
   return simple?.filter.type === 'object' && simple.filter.id?.length ? simple.filter.id : undefined;
 };
 
-const selectIds = (query: QueryAST.Query, ids: readonly EntityId[]): QueryAST.Query =>
-  QueryAST.map(query, (node) =>
-    node.type === 'select' && node.filter.type === 'object' ? { ...node, filter: { ...node.filter, id: ids } } : node,
-  );
+// Walks the shape `getSelectedIds` accepts, so a nested `from` query keeps its own filter.
+const selectIds = (query: QueryAST.Query, ids: readonly EntityId[]): QueryAST.Query => {
+  switch (query.type) {
+    case 'options':
+    case 'from':
+      return { ...query, query: selectIds(query.query, ids) };
+    case 'select':
+      return query.filter.type === 'object' ? { ...query, filter: { ...query.filter, id: ids } } : query;
+    default:
+      return query;
+  }
+};
