@@ -522,7 +522,7 @@ harness already crosses and summed over realms, keyed by name:
   synchronizer, with bytes.
 - `echo.*` — host query executions and the result batches and rows sent; client one-shot runs,
   reactive recomputes, the objects they presented, and the subscriber callbacks fired; index
-  passes and the objects indexed.
+  passes and the objects indexed; object documents the tab loaded (`objectDocumentsLoaded`).
 
 `rpcCallsByMethod` is the served-call count per Effect RPC method (`rpc._tag`), from the timing
 middleware. It has no byte counts: page↔worker messages are structured-cloned with no

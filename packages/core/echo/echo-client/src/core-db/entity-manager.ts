@@ -37,7 +37,7 @@ import { log } from '@dxos/log';
 import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import type { DataService, QueryService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
-import { ComplexSet, chunkArray, deepMapValues } from '@dxos/util';
+import { ComplexSet, chunkArray, countWork, deepMapValues } from '@dxos/util';
 
 import {
   type ChangeEvent,
@@ -2125,6 +2125,7 @@ export class EntityManager implements IDatabaseBinding {
 
   private _onObjectDocumentLoaded({ handle, objectId }: ObjectDocumentLoaded): void {
     handle.on('change', this._onDocumentUpdate);
+    countWork('echo.objectDocumentsLoaded');
 
     const core = this._objects.get(objectId) ?? this._createObjectInDocument(handle, objectId);
 
