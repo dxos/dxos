@@ -4,7 +4,6 @@
 
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
-import { sleep } from '@dxos/async';
 import { Aggregate, type Entity, Filter, Obj, Order, Query, type QueryResult, Scope } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
@@ -43,12 +42,6 @@ const waitForIndexAnswer = async (
   const before = indexAnswers(query);
   await db.flush({ indexes: true, secondaryIndexes });
   await expect.poll(() => indexAnswers(query), { timeout: 5_000 }).toBeGreaterThan(before);
-};
-
-/** A negative assertion needs a window for a wrongful late notification to arrive in. */
-const quiesce = async (db: EchoDatabase): Promise<void> => {
-  await db.flush({ indexes: true });
-  await sleep(100);
 };
 
 const waitForCompleteness = async (
@@ -213,8 +206,12 @@ describe('synchronous query propagation', () => {
       expect(updates).toHaveLength(baseline);
       expect(query.completeness).toBe('complete');
 
-      await quiesce(db);
-      expect(updates).toHaveLength(baseline);
+      // A matching write behind it is a marker: anything the unrelated write caused late has arrived by the
+      // time the index answers the marker, so the count settles at exactly one more.
+      const marker = db.add(person({ name: 'marker' }));
+      await waitForIndexAnswer(db, query);
+      expect(updates).toHaveLength(baseline + 1);
+      expect(ids(query.results)).toContain(marker.id);
     });
 
     test('one update that leaves and re-enters the filter notifies nobody', async () => {
@@ -339,7 +336,9 @@ describe('synchronous query propagation', () => {
       armed = true;
       const first = db.add(person({ name: 'alice' }));
       expect(echoed).toBeDefined();
-      expect(seen).toEqual([[first.id], [first.id, echoed!.id]]);
+      const echoedId = echoed?.id;
+      expect(echoedId).toBeDefined();
+      expect(seen).toEqual([[first.id], [first.id, echoedId]]);
 
       await waitForIndexAnswer(db, query);
       expect(seen).toHaveLength(2);
