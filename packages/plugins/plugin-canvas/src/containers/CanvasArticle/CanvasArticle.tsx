@@ -29,6 +29,7 @@ import {
   isLink,
   useRegistry,
 } from '@dxos/react-ui-canvas/scene';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 
 import { canvasRecordOf, isCanvasDrawing, objectRef, objectUri, parseLinkedSceneId } from '#model';
@@ -98,6 +99,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   const isLocalScene = useCallback((id: SceneId) => !parseLinkedSceneId(id), []);
 
   // A frame may show any object listed in the navtree but this drawing itself.
+  const { t } = UiHooks.useTranslation();
   const getOptions = useCallback<NonNullable<SceneViewPropertiesProps['getOptions']>>(
     (results) =>
       // Only what the navigator or a Database section lists: no system objects, unregistered types or root collection.
@@ -106,9 +108,16 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
         .map((result) => {
           const id = Entity.getURI(result, { prefer: 'named' });
           const icon = Entity.getIcon(result);
-          return { id, label: Entity.getLabel(result) ?? id, icon: icon?.icon, iconHue: icon?.hue };
-        }),
-    [canvas],
+          // An unnamed object reads as its type's placeholder, as the navigator shows it.
+          const typename = Obj.getTypename(result);
+          const label =
+            Entity.getLabel(result) ??
+            (typename && t('object-name.placeholder', { ns: typename, defaultValue: 'New item' })) ??
+            id;
+          return { id, label, icon: icon?.icon, iconHue: icon?.hue };
+        })
+        .sort((left, right) => left.label.localeCompare(right.label)),
+    [canvas, t],
   );
 
   // A frame holds its own scene or an object, never both: it may take an object only while its own child scene is
