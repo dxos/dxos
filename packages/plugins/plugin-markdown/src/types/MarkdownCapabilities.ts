@@ -4,19 +4,19 @@
 
 // @import-as-namespace
 
-import { type Extension } from '@codemirror/state';
-import { type EditorView } from '@codemirror/view';
+import type { Extension } from '@codemirror/state';
+import type { EditorView } from '@codemirror/view';
 import type * as Atom from 'effect/reactivity/Atom';
-import { type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import type * as Operation from '@dxos/compute/Operation';
-import { type Obj } from '@dxos/echo';
-import { type ViewModeItem } from '@dxos/react-ui-editor';
+import type { Obj } from '@dxos/echo';
+import type { ViewModeItem } from '@dxos/react-ui-editor';
 import type * as Theme from '@dxos/react-ui/Theme';
-import { type Text } from '@dxos/schema';
-import { type EditorStateStore } from '@dxos/ui-editor';
-import { type EditorViewMode } from '@dxos/ui-editor/types';
+import type { Text } from '@dxos/schema';
+import type { EditorStateStore } from '@dxos/ui-editor';
+import type { EditorViewMode } from '@dxos/ui-editor/types';
 
 import type * as Markdown from './Markdown.ts';
 
