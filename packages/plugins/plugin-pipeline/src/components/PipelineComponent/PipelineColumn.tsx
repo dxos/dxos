@@ -43,15 +43,9 @@ export const PipelineColumn = ({ data: column, location, classNames, debug }: Pi
   const db = view && Obj.getDatabase(view);
   const { Item } = usePipeline(PIPELINE_COLUMN_NAME);
   const [type, setType] = useState<Type.AnyEntity>();
-  const query = useMemo(() => {
-    if (!view) {
-      return Query.select(Filter.nothing());
-    } else {
-      // NOTE: Snapshot is required to prevent signal read in prohibited scope.
-      // TODO(wittjosiah): Without stringify, filter.filters remains a proxied array.
-      return Query.fromAst(JSON.parse(JSON.stringify(viewSnapshot?.query.ast)));
-    }
-  }, [JSON.stringify(viewSnapshot?.query.ast)]);
+  // Keyed by the AST and rebuilt from it, so the query only changes when the view's query does.
+  const astKey = view ? JSON.stringify(viewSnapshot?.query.ast) : undefined;
+  const query = useMemo(() => (astKey ? Query.fromAst(JSON.parse(astKey)) : Query.select(Filter.nothing())), [astKey]);
 
   Hooks.useAsyncEffect(async () => {
     if (!query || !db) {
