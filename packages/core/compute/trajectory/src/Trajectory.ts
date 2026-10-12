@@ -71,7 +71,10 @@ export const ThreadOrigin = Schema.Struct({
   feed: Schema.optional(Ref.Ref(Feed.Feed)),
   /** Parent thread; absent for the main thread. */
   thread: Schema.optional(EventId),
-  /** Last event of the parent that was visible. */
+  /**
+   * Last event of the parent that was visible: the writer's feed head when it wrote the opener, which must be an
+   * event EDGE has confirmed, so every replica places it, and anything that synced in after it, the same way.
+   */
   event: EventId,
 });
 export type ThreadOrigin = Schema.Schema.Type<typeof ThreadOrigin>;

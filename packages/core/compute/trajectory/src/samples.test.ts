@@ -203,4 +203,69 @@ describe('samples', () => {
       'event: Both failures are a flaky echo test.',
     ]);
   });
+
+  test('3. two harnesses race for one prompt while a notice syncs in', ({ expect }) => {
+    const laptop: Trajectory.Sender = { role: 'assistant', name: 'laptop' };
+    const edge: Trajectory.Sender = { role: 'assistant', name: 'edge' };
+    const question = Trajectory.make({
+      payload: { _tag: 'message', blocks: text('Summarise the design doc.') },
+      sender: alice,
+    });
+    // Both harnesses see #1 as their feed head and start a turn.
+    const laptopTurn = Trajectory.make({
+      payload: { _tag: 'turnBegin', model, from: { event: question.id } },
+      sender: laptop,
+    });
+    const edgeTurn = Trajectory.make({
+      payload: { _tag: 'turnBegin', model, from: { event: question.id } },
+      sender: edge,
+    });
+    const won = Trajectory.make({
+      payload: { _tag: 'promptConsume', message: question.id },
+      sender: laptop,
+      thread: laptopTurn.id,
+    });
+    const lost = Trajectory.make({
+      payload: { _tag: 'promptConsume', message: question.id },
+      sender: edge,
+      thread: edgeTurn.id,
+    });
+    const notice = Trajectory.make({ payload: { _tag: 'message', blocks: text('CI is green.') }, sender: alarm });
+    const events = [
+      question,
+      laptopTurn,
+      edgeTurn,
+      won,
+      lost,
+      // EDGE confirmed #5 after #4, so the edge harness lost the claim and ends its turn without calling the model.
+      Trajectory.make({
+        payload: { _tag: 'turnEnd', begin: edgeTurn.id, finishReason: 'other', error: 'prompt claimed by laptop' },
+        sender: edge,
+      }),
+      notice,
+      Trajectory.make({
+        payload: { _tag: 'message', blocks: text('It replaces messages with one event log.') },
+        sender: laptop,
+        thread: laptopTurn.id,
+      }),
+      Trajectory.make({ payload: { _tag: 'turnEnd', begin: laptopTurn.id, finishReason: 'stop' }, sender: laptop }),
+    ];
+
+    const session = Reducer.run(Reducer.session, events).state;
+    expect(session.rejected).to.deep.eq([lost.id]);
+    expect(session.turns).to.deep.eq([]);
+
+    const prompt = Reducer.run(Reducer.prompt, events).state;
+    expect(lines(prompt.entries)).to.deep.eq([
+      'event: CI is green.',
+      'user: Summarise the design doc.',
+      'assistant: It replaces messages with one event log.',
+    ]);
+    // The laptop's turn ran without the notice that landed in main meanwhile; its merge is flagged, not undone.
+    expect(prompt.stale).to.deep.eq({ [laptopTurn.id]: [notice.id] });
+
+    const thread = Reducer.run(Reducer.thread, events).state;
+    // The question shows once, where the laptop consumed it.
+    expect(thread.items.map((item) => item.thread)).to.deep.eq([laptopTurn.id, undefined, laptopTurn.id]);
+  });
 });

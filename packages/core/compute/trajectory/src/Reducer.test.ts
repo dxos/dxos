@@ -89,6 +89,26 @@ describe('Reducer', () => {
       expect(ended.state.turns).to.deep.eq([]);
       expect(ended.state.objects).to.have.length(0);
     });
+
+    test('the first consume in feed order claims a message; later ones are rejected', ({ expect }) => {
+      const question = message('question', user);
+      const first = event({ _tag: 'turnBegin', model, from: { event: question.id } });
+      const second = event({ _tag: 'turnBegin', model, from: { event: question.id } });
+      const won = event({ _tag: 'promptConsume', message: question.id }, assistant, first.id);
+      const lost = event({ _tag: 'promptConsume', message: question.id }, assistant, second.id);
+      const events = [question, first, second, won, lost];
+
+      const session = Reducer.run(Reducer.session, events).state;
+      expect(session.queue).to.deep.eq([]);
+      expect(session.rejected).to.deep.eq([lost.id]);
+
+      const thread = Reducer.run(Reducer.thread, events).state;
+      expect(thread.items.map((item) => item.thread)).to.deep.eq([first.id]);
+
+      const prompt = Reducer.run(Reducer.prompt, events).state;
+      expect(texts(Reducer.promptFor(prompt, first.id))).to.deep.eq(['question']);
+      expect(texts(Reducer.promptFor(prompt, second.id))).to.deep.eq([]);
+    });
   });
 
   describe('thread', () => {
@@ -182,6 +202,85 @@ describe('Reducer', () => {
         during,
       );
       expect(texts(state.entries)).to.deep.eq(['question', 'first: call', 'first: answer', 'second: call']);
+      expect(state.threads).to.deep.eq({});
+      // The second turn merged after a block it never saw.
+      expect(Object.keys(state.stale)).to.deep.eq([second.id]);
+      expect(state.stale[second.id]).to.include.members([question.id, steps[4].id, steps[6].id]);
+    });
+
+    test('a turn sees only what was in the feed at its from.event, however late the rest syncs', ({ expect }) => {
+      const question = message('question', user);
+      const consume = event({ _tag: 'promptConsume', message: question.id });
+      // Another writer's message, confirmed between what the turn saw and its turnBegin.
+      const concurrent = message('concurrent', system);
+      const turn = event({ _tag: 'turnBegin', model, from: { event: consume.id } });
+      const during = Reducer.run(Reducer.prompt, [
+        question,
+        consume,
+        concurrent,
+        turn,
+        message('answer', assistant, turn.id),
+      ]);
+      expect(texts(during.state.entries)).to.deep.eq(['question', 'concurrent']);
+      expect(texts(Reducer.promptFor(during.state, turn.id))).to.deep.eq(['question', 'answer']);
+
+      const { state } = Reducer.run(
+        Reducer.prompt,
+        [event({ _tag: 'turnEnd', begin: turn.id, finishReason: 'stop' })],
+        during,
+      );
+      expect(texts(state.entries)).to.deep.eq(['question', 'concurrent', 'answer']);
+      expect(state.stale).to.deep.eq({ [turn.id]: [concurrent.id] });
+    });
+
+    test('a turn that saw everything merges clean', ({ expect }) => {
+      const question = message('question', user);
+      const consume = event({ _tag: 'promptConsume', message: question.id });
+      const turn = event({ _tag: 'turnBegin', model, from: { event: consume.id } });
+      const { state } = Reducer.run(Reducer.prompt, [
+        question,
+        consume,
+        turn,
+        message('answer', assistant, turn.id),
+        event({ _tag: 'turnEnd', begin: turn.id, finishReason: 'stop' }),
+      ]);
+      expect(texts(state.entries)).to.deep.eq(['question', 'answer']);
+      expect(state.stale).to.deep.eq({});
+    });
+
+    test('a fork does not see what its parent gains after it opens', ({ expect }) => {
+      const before = message('before');
+      const fork = event({ _tag: 'threadOpen', mode: 'fork', from: { event: before.id } });
+      const { state } = Reducer.run(Reducer.prompt, [
+        before,
+        fork,
+        message('after'),
+        message('forked', assistant, fork.id),
+      ]);
+      expect(texts(Reducer.promptFor(state, fork.id))).to.deep.eq(['before', 'forked']);
+    });
+
+    test('a thread merged while a turn inside it runs stays frozen until the turn ends', ({ expect }) => {
+      const fork = event({ _tag: 'threadOpen', mode: 'fork' });
+      const brief = message('brief', system, fork.id);
+      const turn = event({ _tag: 'turnBegin', model, from: { thread: fork.id, event: brief.id } }, assistant, fork.id);
+      const during = Reducer.run(Reducer.prompt, [
+        message('main'),
+        fork,
+        brief,
+        turn,
+        event({ _tag: 'threadMerge', thread: fork.id, mode: 'summary', summary: text('fork summary') }),
+      ]);
+      expect(texts(Reducer.promptFor(during.state, turn.id))).to.deep.eq(['main', 'brief']);
+      expect(during.state.threads[fork.id]?.closed).to.eq(true);
+
+      const { state } = Reducer.run(
+        Reducer.prompt,
+        [message('work', assistant, turn.id), event({ _tag: 'turnEnd', begin: turn.id, finishReason: 'stop' })],
+        during,
+      );
+      // The turn's parent had already ended, so its block lands in main; the frozen parent goes with it.
+      expect(texts(state.entries)).to.deep.eq(['main', 'fork summary', 'work']);
       expect(state.threads).to.deep.eq({});
     });
 
@@ -346,6 +445,24 @@ describe('Reducer', () => {
           const after = Reducer.prompt.step(state, next);
           if (next.payload._tag !== 'compact') {
             expect(after.entries.slice(0, state.entries.length), `seed ${seed}`).to.deep.eq(state.entries);
+          }
+          state = after;
+        }
+      }
+    });
+
+    test('an open turn or fork sends a prompt that only grows, whatever other writers append', ({ expect }) => {
+      for (let seed = 1; seed <= 50; seed++) {
+        let state = Reducer.prompt.initial;
+        for (const next of sequence(seed, 60)) {
+          const after = Reducer.prompt.step(state, next);
+          if (next.payload._tag !== 'compact') {
+            for (const id of Object.keys(state.threads)) {
+              if (after.threads[id]) {
+                const sent = Reducer.promptFor(state, id);
+                expect(Reducer.promptFor(after, id).slice(0, sent.length), `seed ${seed}`).to.deep.eq(sent);
+              }
+            }
           }
           state = after;
         }

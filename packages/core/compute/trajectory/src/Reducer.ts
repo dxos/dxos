@@ -30,6 +30,8 @@ export type Checkpoint<S> = {
 
 /**
  * Folds `events` (the tail after `from.head`, in feed order) onto a checkpoint, or onto the initial state.
+ * Fold only events EDGE has confirmed (`Feed.getPosition` is finite): confirmed positions never change, while an
+ * unconfirmed append can still land after events that sync later, so folding it would make the state depend on timing.
  */
 export const run = <S>(
   reducer: Reducer<S>,
@@ -78,6 +80,12 @@ export type SessionState = {
   readonly model?: Trajectory.ModelChange['model'];
   /** `turnBegin`s of turns that have not ended; more than one when several writers run turns at once. */
   readonly turns: readonly Trajectory.EventId[];
+  /**
+   * `promptConsume`s and `promptCancel`s whose message was no longer queued, because another writer consumed or
+   * cancelled it first; a harness claims a message by writing its consume and runs only once that consume is
+   * confirmed and not listed here.
+   */
+  readonly rejected: readonly Trajectory.EventId[];
 };
 
 const bind = <T extends { uri: string }>(current: readonly T[], added: readonly T[]): readonly T[] =>
@@ -93,7 +101,7 @@ const setThreadStatus = (threads: readonly ThreadInfo[], id: Trajectory.EventId,
   threads.map((thread) => (thread.id === id ? { ...thread, status } : thread));
 
 export const session: Reducer<SessionState> = {
-  initial: { queue: [], alarms: [], skills: [], objects: [], background: [], threads: [], turns: [] },
+  initial: { queue: [], alarms: [], skills: [], objects: [], background: [], threads: [], turns: [], rejected: [] },
   step: (state, event) => {
     const payload = event.payload;
     switch (payload._tag) {
@@ -101,7 +109,9 @@ export const session: Reducer<SessionState> = {
         return event.sender.role === 'user' ? { ...state, queue: [...state.queue, event.id] } : state;
       case 'promptConsume':
       case 'promptCancel':
-        return { ...state, queue: state.queue.filter((id) => id !== payload.message) };
+        return state.queue.includes(payload.message)
+          ? { ...state, queue: state.queue.filter((id) => id !== payload.message) }
+          : { ...state, rejected: [...state.rejected, event.id] };
       case 'turnBegin':
         return { ...state, turns: [...state.turns, event.id], model: payload.model };
       case 'turnEnd':
@@ -162,7 +172,8 @@ const setItemStatus = (items: readonly ThreadItem[], id: Trajectory.EventId, sta
   items.map((item) => (item.id === id ? { ...item, status } : item));
 
 const consume = (items: readonly ThreadItem[], id: Trajectory.EventId, thread?: Trajectory.EventId) => {
-  const item = items.find((candidate) => candidate.id === id);
+  // A second consume of the same message lost the claim, so the message stays where the first one put it.
+  const item = items.find((candidate) => candidate.id === id && candidate.status === 'queued');
   return item
     ? [...items.filter((candidate) => candidate.id !== id), { ...item, thread, status: 'consumed' as const }]
     : items;
@@ -195,7 +206,9 @@ export const thread: Reducer<ThreadView> = {
       case 'promptConsume':
         return { items: consume(state.items, payload.message, event.thread) };
       case 'promptCancel':
-        return { items: setItemStatus(state.items, payload.message, 'cancelled') };
+        return state.items.some((item) => item.id === payload.message && item.status === 'queued')
+          ? { items: setItemStatus(state.items, payload.message, 'cancelled') }
+          : state;
       default:
         return state;
     }
@@ -211,6 +224,8 @@ export type PromptEntry = {
   readonly blocks: readonly ContentBlock.Any[];
   /** Events this entry was built from, so a later `compact` can find its range. */
   readonly source: readonly Trajectory.EventId[];
+  /** Feed position of the event that placed the entry in its current buffer. */
+  readonly at: number;
 };
 
 /**
@@ -220,6 +235,13 @@ export type ThreadBuffer = {
   readonly parent?: Trajectory.EventId;
   /** A fresh thread's prompt is its own entries only; a fork's starts with its parent's. */
   readonly fresh: boolean;
+  /**
+   * Feed position of the last event the thread saw when it opened (its `from.event`); parent entries placed later
+   * were written concurrently and are not in its prompt.
+   */
+  readonly seen: number;
+  /** Merged or closed while a child was still open; kept, frozen, so the child's prompt does not change under it. */
+  readonly closed?: boolean;
   readonly entries: readonly PromptEntry[];
 };
 
@@ -229,31 +251,86 @@ export type PromptState = {
   /** User messages waiting for a `promptConsume`. */
   readonly held: Readonly<Record<Trajectory.EventId, PromptEntry>>;
   readonly threads: Readonly<Record<Trajectory.EventId, ThreadBuffer>>;
+  /** Events folded so far, which is the feed position of the next one. */
+  readonly position: number;
+  /** Feed position of every folded event, to resolve a `from.event`. */
+  readonly positions: Readonly<Record<Trajectory.EventId, number>>;
+  /**
+   * Threads and turns that merged into a parent holding entries they never saw, with those entries' source events.
+   * The merge still happens; whether to accept, re-run or correct is the harness's call.
+   */
+  readonly stale: Readonly<Record<Trajectory.EventId, readonly Trajectory.EventId[]>>;
 };
 
 const omit = <V>(record: Readonly<Record<string, V>>, key: string): Readonly<Record<string, V>> =>
   Object.fromEntries(Object.entries(record).filter(([other]) => other !== key));
 
-const append = (state: PromptState, threadId: Trajectory.EventId | undefined, entry: PromptEntry): PromptState => {
+const append = (
+  state: PromptState,
+  threadId: Trajectory.EventId | undefined,
+  placed: Omit<PromptEntry, 'at'>,
+): PromptState => {
+  const entry: PromptEntry = { ...placed, at: state.position };
   if (threadId === undefined) {
     return { ...state, entries: [...state.entries, entry] };
   }
 
-  const buffer = state.threads[threadId] ?? { fresh: false, entries: [] };
+  const buffer = state.threads[threadId] ?? { fresh: false, seen: state.position, entries: [] };
   return { ...state, threads: { ...state.threads, [threadId]: { ...buffer, entries: [...buffer.entries, entry] } } };
 };
 
 /**
  * Closes a thread, appending `entries` to its parent; a parent that has already ended stands in for main.
+ * A fresh thread never saw its parent, so only a fork or turn can be stale.
  */
-const mergeInto = (state: PromptState, threadId: Trajectory.EventId, entries: readonly PromptEntry[]) => {
-  const parent = state.threads[threadId]?.parent;
-  const target = parent !== undefined && state.threads[parent] ? parent : undefined;
+const mergeInto = (state: PromptState, threadId: Trajectory.EventId, entries: readonly Omit<PromptEntry, 'at'>[]) => {
+  const buffer = live(state, threadId);
+  const parent = buffer?.parent;
+  const target = parent !== undefined && live(state, parent) ? parent : undefined;
+  const unseen =
+    buffer && !buffer.fresh
+      ? promptFor(state, target)
+          .filter((entry) => entry.at > buffer.seen)
+          .flatMap((entry) => entry.source)
+      : [];
   return entries.reduce<PromptState>((next, entry) => append(next, target, entry), {
     ...state,
-    threads: omit(state.threads, threadId),
+    threads: end(state.threads, threadId),
+    stale: unseen.length > 0 ? { ...state.stale, [threadId]: unseen } : state.stale,
   });
 };
+
+/** A thread that is open and has not been merged or closed. */
+const live = (state: PromptState, id: Trajectory.EventId) => {
+  const buffer = state.threads[id];
+  return buffer && !buffer.closed ? buffer : undefined;
+};
+
+/**
+ * Removes an ended thread, or freezes it while a child still builds on it; a frozen parent goes once its last child
+ * has ended.
+ */
+const end = (threads: PromptState['threads'], id: Trajectory.EventId): PromptState['threads'] => {
+  const buffer = threads[id];
+  if (!buffer) {
+    return threads;
+  }
+
+  if (Object.values(threads).some((other) => other.parent === id)) {
+    return { ...threads, [id]: { ...buffer, closed: true } };
+  }
+
+  const rest = omit(threads, id);
+  const parent = buffer.parent === undefined ? undefined : rest[buffer.parent];
+  return buffer.parent !== undefined && parent?.closed ? end(rest, buffer.parent) : rest;
+};
+
+/**
+ * Feed position a thread with this origin saw up to; an origin this log does not hold (it cannot precede the
+ * opener in a confirmed feed) falls back to everything before the opener.
+ */
+const seenAt = (state: PromptState, origin?: Trajectory.ThreadOrigin) =>
+  origin && !origin.feed ? (state.positions[origin.event] ?? state.position) : state.position;
 
 const open = (state: PromptState, id: Trajectory.EventId, buffer: ThreadBuffer): PromptState => ({
   ...state,
@@ -270,7 +347,9 @@ export const promptFor = (state: PromptState, thread?: Trajectory.EventId): read
     return state.entries;
   }
 
-  return buffer.fresh ? buffer.entries : [...promptFor(state, buffer.parent), ...buffer.entries];
+  return buffer.fresh
+    ? buffer.entries
+    : [...promptFor(state, buffer.parent).filter((entry) => entry.at <= buffer.seen), ...buffer.entries];
 };
 
 const compact = (state: PromptState, payload: Trajectory.Compact, id: Trajectory.EventId) => {
@@ -284,7 +363,9 @@ const compact = (state: PromptState, payload: Trajectory.Compact, id: Trajectory
 
   // The summary keeps the ids it replaced, so a later range that starts inside it still finds where to begin.
   const replaced = entries.slice(first, last + 1).flatMap((entry) => entry.source);
-  const summary: PromptEntry = { role: 'event', blocks: payload.summary, source: [id, ...replaced] };
+  // A thread that saw only part of the range sees the whole summary; compaction rewrites history either way.
+  const at = Math.min(...entries.slice(first, last + 1).map((entry) => entry.at));
+  const summary: PromptEntry = { role: 'event', blocks: payload.summary, source: [id, ...replaced], at };
   return [...entries.slice(0, first), summary, ...entries.slice(last + 1)];
 };
 
@@ -293,60 +374,80 @@ const compact = (state: PromptState, payload: Trajectory.Compact, id: Trajectory
  * what keeps the provider's prompt cache valid from one request to the next.
  */
 export const prompt: Reducer<PromptState> = {
-  initial: { entries: [], held: {}, threads: {} },
+  initial: { entries: [], held: {}, threads: {}, position: 0, positions: {}, stale: {} },
   step: (state, event) => {
-    const payload = event.payload;
-    switch (payload._tag) {
-      case 'message': {
-        const entry: PromptEntry = { role: event.sender.role, blocks: payload.blocks, source: [event.id] };
-        return event.sender.role === 'user'
-          ? { ...state, held: { ...state.held, [event.id]: entry } }
-          : append(state, event.thread, entry);
-      }
-      case 'promptConsume': {
-        const entry = state.held[payload.message];
-        if (!entry) {
-          return state;
-        }
-
-        return append({ ...state, held: omit(state.held, payload.message) }, event.thread, {
-          ...entry,
-          source: [...entry.source, event.id],
-        });
-      }
-      case 'promptCancel':
-        return { ...state, held: omit(state.held, payload.message) };
-      case 'toolDeliver':
-        return append(state, event.thread, { role: 'event', blocks: [payload.result], source: [event.id] });
-      case 'hookEnd':
-        return payload.blocks
-          ? append(state, event.thread, { role: 'event', blocks: payload.blocks, source: [event.id] })
-          : state;
-      case 'threadOpen':
-        // A fork of another conversation has no parent in this log, so its history starts empty.
-        return open(state, event.id, {
-          parent: payload.from?.feed ? undefined : (payload.from?.thread ?? event.thread),
-          fresh: payload.mode === 'fresh' || payload.from?.feed !== undefined,
-          entries: [],
-        });
-      case 'turnBegin':
-        return open(state, event.id, { parent: payload.from?.thread ?? event.thread, fresh: false, entries: [] });
-      case 'turnEnd': {
-        const turn = state.threads[payload.begin];
-        return turn ? mergeInto(state, payload.begin, turn.entries) : state;
-      }
-      case 'threadMerge': {
-        const merged = state.threads[payload.thread]?.entries ?? [];
-        return payload.mode === 'summary'
-          ? mergeInto(state, payload.thread, [{ role: 'event', blocks: payload.summary ?? [], source: [event.id] }])
-          : mergeInto(state, payload.thread, merged);
-      }
-      case 'threadClose':
-        return { ...state, threads: omit(state.threads, payload.thread) };
-      case 'compact':
-        return event.thread === undefined ? { ...state, entries: compact(state, payload, event.id) } : state;
-      default:
-        return state;
-    }
+    const next = place(state, event);
+    return { ...next, position: state.position + 1, positions: { ...next.positions, [event.id]: state.position } };
   },
+};
+
+const place = (state: PromptState, event: Trajectory.Event): PromptState => {
+  const payload = event.payload;
+  switch (payload._tag) {
+    case 'message': {
+      const entry: PromptEntry = {
+        role: event.sender.role,
+        blocks: payload.blocks,
+        source: [event.id],
+        at: state.position,
+      };
+      return event.sender.role === 'user'
+        ? { ...state, held: { ...state.held, [event.id]: entry } }
+        : append(state, event.thread, entry);
+    }
+    case 'promptConsume': {
+      const entry = state.held[payload.message];
+      if (!entry) {
+        return state;
+      }
+
+      return append({ ...state, held: omit(state.held, payload.message) }, event.thread, {
+        ...entry,
+        source: [...entry.source, event.id],
+      });
+    }
+    case 'promptCancel':
+      return { ...state, held: omit(state.held, payload.message) };
+    case 'toolDeliver':
+      return append(state, event.thread, { role: 'event', blocks: [payload.result], source: [event.id] });
+    case 'hookEnd':
+      return payload.blocks
+        ? append(state, event.thread, { role: 'event', blocks: payload.blocks, source: [event.id] })
+        : state;
+    case 'threadOpen':
+      // A fork of another conversation has no parent in this log, so its history starts empty.
+      return open(state, event.id, {
+        parent: payload.from?.feed ? undefined : (payload.from?.thread ?? event.thread),
+        fresh: payload.mode === 'fresh' || payload.from?.feed !== undefined,
+        seen: seenAt(state, payload.from),
+        entries: [],
+      });
+    case 'turnBegin':
+      return open(state, event.id, {
+        parent: payload.from?.thread ?? event.thread,
+        fresh: false,
+        seen: seenAt(state, payload.from),
+        entries: [],
+      });
+    case 'turnEnd': {
+      const turn = live(state, payload.begin);
+      return turn ? mergeInto(state, payload.begin, turn.entries) : state;
+    }
+    case 'threadMerge': {
+      if (state.threads[payload.thread]?.closed) {
+        return state;
+      }
+
+      const merged = state.threads[payload.thread]?.entries ?? [];
+      return payload.mode === 'summary'
+        ? mergeInto(state, payload.thread, [{ role: 'event', blocks: payload.summary ?? [], source: [event.id] }])
+        : mergeInto(state, payload.thread, merged);
+    }
+    case 'threadClose':
+      return live(state, payload.thread) ? { ...state, threads: end(state.threads, payload.thread) } : state;
+    case 'compact':
+      return event.thread === undefined ? { ...state, entries: compact(state, payload, event.id) } : state;
+    default:
+      return state;
+  }
 };
