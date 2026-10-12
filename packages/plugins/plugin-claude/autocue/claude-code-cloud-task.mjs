@@ -115,9 +115,10 @@ const visit = async ({ demo, page }, url) => {
     if (!result) {
       break;
     }
-    if (attempt >= 3) {
+    if (attempt >= 5) {
       throw result;
     }
+    await page.waitForTimeout(3_000);
   }
   await page.waitForLoadState('load', { timeout: 60_000 }).catch(() => {});
   await page
