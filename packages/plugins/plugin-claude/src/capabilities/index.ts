@@ -13,9 +13,6 @@ import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../../PLUGIN.mdl?raw';
-
 export const ClaudeCodeAgent = Capability.lazyModule(
   'ClaudeCodeAgent',
   {
@@ -50,7 +47,7 @@ export const OperationHandler = AppCapability.operationHandler(() => import('./o
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
   path: 'PLUGIN.mdl',
-  content: pluginSpec,
+  content: () => import('../../PLUGIN.mdl?raw'),
   mimeType: 'application/x-mdl',
 });
 export const Schema = AppCapability.schema(() => import('./schema.ts'));

@@ -5,8 +5,9 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
-import type * as PluginNS from '@dxos/app-framework/Plugin';
+import * as PluginNS from '@dxos/app-framework/Plugin';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
@@ -14,6 +15,7 @@ import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import { isSpace } from '@dxos/client/echo';
 import { Filter, Type } from '@dxos/echo';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import * as Position from '@dxos/util/Position';
 
@@ -31,11 +33,18 @@ import { makePluginSpecSubject } from '../plugin-spec.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    // `addPluginAssetModule` is dependency-mode (declared in `requires`), so every plugin's
-    // asset module is already contributed by the time this module runs.
-    // Subscribe to the reactive asset atom so the connector re-runs when a
-    // plugin enabled later in the session contributes (or removes) its spec.
+    // Asset modules wait for `PluginAssetsRequested`, which the spec connector fires on first use;
+    // the atom re-runs the connector once they (or a plugin enabled later) contribute.
     const pluginAssetsAtom = yield* Capability.atom(AppCapabilities.PluginAsset);
+    // A host without a plugin manager has no event to fire; the connector then shows what is already contributed.
+    const plugins = yield* Effect.serviceOption(PluginNS.Service);
+    const requestPluginAssets = () =>
+      Option.match(plugins, {
+        onNone: () => undefined,
+        // Deferred out of the connector's atom read, since activation writes the capability atoms.
+        onSome: (manager) =>
+          queueMicrotask(() => EffectEx.runDetached(manager.activate(ActivationEvents.PluginAssetsRequested))),
+      });
 
     const extensions = yield* Effect.all([
       // Per-plugin `spec` child node, attached to the registry's
@@ -62,6 +71,7 @@ export default Capability.makeModule(
             (entry) => entry.pluginId === slug && entry.path === spec,
           )?.content;
           if (!content) {
+            requestPluginAssets();
             return Effect.succeed([]);
           }
           return Effect.succeed([

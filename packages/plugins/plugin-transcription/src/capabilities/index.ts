@@ -16,9 +16,6 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 import { TranscriptionCapabilities, TranscriptionEvents } from '#types';
 
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../../PLUGIN.mdl?raw';
-
 // RecordingSession / PipelineStatus / TranscriptionSettings stay eager with the driver
 // (ReactContext): its components read them via strict useAtomCapability hooks, so deferring
 // any of them while the driver mounts trips the missing-capability invariant.
@@ -88,6 +85,6 @@ export const Translations = AppCapability.translations(translations);
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
   path: 'PLUGIN.mdl',
-  content: pluginSpec,
+  content: () => import('../../PLUGIN.mdl?raw'),
   mimeType: 'application/x-mdl',
 });
