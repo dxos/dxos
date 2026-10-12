@@ -41,14 +41,16 @@ export const EchoObjectsList = ({ classNames, objects }: EchoObjectsListProps) =
             <Status.Empty>No objects.</Status.Empty>
           ) : (
             <Listbox.Root items={objects.map((object) => ({ value: object.id, label: object.label }))}>
-              <Listbox.Content aria-label='ECHO objects'>
-                {objects.map((object) => (
-                  <Listbox.Item classNames='gap-2' key={object.id} id={object.id}>
-                    <Listbox.ItemText>{object.label}</Listbox.ItemText>
-                    <Tag.Tag hue='neutral'>{object.typename}</Tag.Tag>
-                  </Listbox.Item>
-                ))}
-              </Listbox.Content>
+              <Listbox.Viewport>
+                <Listbox.Content aria-label='ECHO objects'>
+                  {objects.map((object) => (
+                    <Listbox.Item classNames='gap-2' key={object.id} id={object.id}>
+                      <Listbox.ItemText>{object.label}</Listbox.ItemText>
+                      <Tag.Tag hue='neutral'>{object.typename}</Tag.Tag>
+                    </Listbox.Item>
+                  ))}
+                </Listbox.Content>
+              </Listbox.Viewport>
             </Listbox.Root>
           )}
         </ScrollArea.Viewport>

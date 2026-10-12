@@ -140,7 +140,7 @@ const AgentKnowledgeMemories = ({ memories, now }: AgentKnowledgeMemoriesProps) 
                 icon: MEMORY_ICONS[memory.kind],
               }))}
             >
-              <Listbox.Content scroll={false}>
+              <Listbox.Content>
                 {memories.map((memory) => (
                   <Listbox.Item key={memory.id} id={memory.id}>
                     <Listbox.ItemIcon />
@@ -205,7 +205,7 @@ const AgentKnowledgeFacts = ({ facts, now }: AgentKnowledgeFactsProps) => {
             <Listbox.Root
               items={facts.map((fact) => ({ value: fact.id, label: fact.text, icon: 'ph--graph--regular' }))}
             >
-              <Listbox.Content scroll={false}>
+              <Listbox.Content>
                 {facts.map((fact) => (
                   <Listbox.Item key={fact.id} id={fact.id} data-testid='agent-knowledge-fact'>
                     <Listbox.ItemIcon />
@@ -293,7 +293,7 @@ const AgentKnowledgeGoals = ({ goals }: AgentKnowledgeGoalsProps) => {
                 })),
               ])}
             >
-              <Listbox.Content scroll={false}>
+              <Listbox.Content>
                 {goals.flatMap((goal) => [
                   <Listbox.Item
                     key={goal.id}

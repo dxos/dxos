@@ -89,7 +89,7 @@ export const SelectOptionField = ({
         readonly={!!readonly}
       >
         {({ items }) => (
-          <OrderedList.Content scroll={false} gutter='inherit' aria-label={label}>
+          <OrderedList.Content gutter='inherit' aria-label={label}>
             {items.map((option) => (
               <OrderedList.Item
                 key={option.id}

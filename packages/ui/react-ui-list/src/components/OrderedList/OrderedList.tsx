@@ -19,6 +19,7 @@ import React, {
 import * as Collapsible from '@dxos/react-ui/Collapsible';
 import * as DragHandle from '@dxos/react-ui/DragHandle';
 import * as Listbox from '@dxos/react-ui/Listbox';
+import * as Util from '@dxos/react-ui/Util';
 
 import { useReorderAutoScroll, useReorderItem, useReorderList } from '../../hooks/index.ts';
 import {
@@ -178,27 +179,27 @@ const OrderedListRoot = <T,>({
 type OrderedListContentProps = NextContentProps;
 
 /**
- * The listbox element, as `Listbox.Content`: its own thin ScrollArea by default (a drag near its edges
- * auto-scrolls it), or `scroll={false}` inside a host that scrolls.
+ * The listbox element, as `Listbox.Content`. Under an `OrderedList.Viewport` it is the scrolling element, so a drag near
+ * its edges auto-scrolls it; otherwise its host scrolls.
  */
-const OrderedListContent: ForwardRefExoticComponent<OrderedListContentProps & RefAttributes<HTMLDivElement>> =
-  forwardRef<HTMLDivElement, OrderedListContentProps>(({ scroll = true, ...props }, forwardedRef) => {
-    const autoScrollRef = useReorderAutoScroll();
-    const ref = useCallback(
-      (element: HTMLDivElement | null) => {
-        if (scroll) {
-          autoScrollRef(element);
-        }
-        if (typeof forwardedRef === 'function') {
-          forwardedRef(element);
-        } else if (forwardedRef) {
-          forwardedRef.current = element;
-        }
-      },
-      [scroll, autoScrollRef, forwardedRef],
-    );
-    return <Listbox.Content {...props} scroll={scroll} ref={ref} />;
-  });
+const OrderedListContent = Util.composable<HTMLDivElement, OrderedListContentProps>((props, forwardedRef) => {
+  const inViewport = Listbox.useViewport();
+  const autoScrollRef = useReorderAutoScroll();
+  const ref = useCallback(
+    (element: HTMLDivElement | null) => {
+      if (inViewport) {
+        autoScrollRef(element);
+      }
+      if (typeof forwardedRef === 'function') {
+        forwardedRef(element);
+      } else if (forwardedRef) {
+        forwardedRef.current = element;
+      }
+    },
+    [inViewport, autoScrollRef, forwardedRef],
+  );
+  return <Listbox.Content {...props} ref={ref} />;
+});
 
 OrderedListContent.displayName = 'OrderedList.Content';
 
@@ -333,20 +334,23 @@ OrderedListDragHandle.displayName = 'OrderedList.DragHandle';
  * @example
  *   <OrderedList.Root items={items} getLabel={(item) => item.label} onMove={move}>
  *     {({ items }) => (
- *       <OrderedList.Content>
- *         {items.map((item) => (
- *           <OrderedList.Item key={item.id} id={item.id}>
- *             <OrderedList.DragHandle />
- *             <OrderedList.ItemText />
- *           </OrderedList.Item>
- *         ))}
- *       </OrderedList.Content>
+ *       <OrderedList.Viewport>
+ *         <OrderedList.Content>
+ *           {items.map((item) => (
+ *             <OrderedList.Item key={item.id} id={item.id}>
+ *               <OrderedList.DragHandle />
+ *               <OrderedList.ItemText />
+ *             </OrderedList.Item>
+ *           ))}
+ *         </OrderedList.Content>
+ *       </OrderedList.Viewport>
  *     )}
  *   </OrderedList.Root>
  */
 export const OrderedList: {
   Root: typeof OrderedListRoot;
   Label: typeof Listbox.Label;
+  Viewport: typeof Listbox.Viewport;
   Content: typeof OrderedListContent;
   Empty: typeof Listbox.Empty;
   Item: typeof OrderedListItem;
@@ -358,6 +362,7 @@ export const OrderedList: {
 } = {
   Root: OrderedListRoot,
   Label: Listbox.Label,
+  Viewport: Listbox.Viewport,
   Content: OrderedListContent,
   Empty: Listbox.Empty,
   Item: OrderedListItem,

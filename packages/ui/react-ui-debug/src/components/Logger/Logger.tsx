@@ -355,48 +355,50 @@ const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
                   )}
                   {visibleFiles.length > 0 && (
                     <Listbox.Root items={visibleFiles.map((file) => ({ value: file, label: file }))}>
-                      <Listbox.Content classNames='dx-density-sm'>
-                        {visibleFiles.map((file) => {
-                          const basename = file.split('/').pop() ?? file;
-                          const pkg = packageName(file);
-                          const value = fileLevels.get(file) ?? 'inherit';
-                          return (
-                            <Listbox.Item
-                              key={file}
-                              id={file}
-                              classNames='grid grid-cols-[1fr_7rem] items-center gap-1 py-0.5'
-                            >
-                              {/* One line so the row can honour the compact density; the package
-                                    and full path are carried in the tooltip instead of a second line. */}
-                              <Listbox.ItemText classNames='truncate text-xs' title={pkg ? `${pkg} · ${file}` : file}>
-                                {basename}
-                              </Listbox.ItemText>
-                              <Select.Root
-                                items={levelItems}
-                                value={[value]}
-                                onValueChange={({ value: [next] }) =>
-                                  setFileLevel(file, next === 'inherit' ? undefined : (next as LevelName))
-                                }
+                      <Listbox.Viewport>
+                        <Listbox.Content classNames='dx-density-sm'>
+                          {visibleFiles.map((file) => {
+                            const basename = file.split('/').pop() ?? file;
+                            const pkg = packageName(file);
+                            const value = fileLevels.get(file) ?? 'inherit';
+                            return (
+                              <Listbox.Item
+                                key={file}
+                                id={file}
+                                classNames='grid grid-cols-[1fr_7rem] items-center gap-1 py-0.5'
                               >
-                                <Select.Trigger classNames='w-full text-sm' placeholder={t('levels.inherit.label')} />
-                                <Select.Content>
-                                  <Select.Item
-                                    classNames='text-sm'
-                                    item={{ value: 'inherit', label: t('levels.inherit.label') }}
-                                  />
-                                  {LEVELS.map((level) => (
+                                {/* One line so the row can honour the compact density; the package
+                                    and full path are carried in the tooltip instead of a second line. */}
+                                <Listbox.ItemText classNames='truncate text-xs' title={pkg ? `${pkg} · ${file}` : file}>
+                                  {basename}
+                                </Listbox.ItemText>
+                                <Select.Root
+                                  items={levelItems}
+                                  value={[value]}
+                                  onValueChange={({ value: [next] }) =>
+                                    setFileLevel(file, next === 'inherit' ? undefined : (next as LevelName))
+                                  }
+                                >
+                                  <Select.Trigger classNames='w-full text-sm' placeholder={t('levels.inherit.label')} />
+                                  <Select.Content>
                                     <Select.Item
-                                      key={level}
                                       classNames='text-sm'
-                                      item={{ value: level, label: t(`level.${level}`) }}
+                                      item={{ value: 'inherit', label: t('levels.inherit.label') }}
                                     />
-                                  ))}
-                                </Select.Content>
-                              </Select.Root>
-                            </Listbox.Item>
-                          );
-                        })}
-                      </Listbox.Content>
+                                    {LEVELS.map((level) => (
+                                      <Select.Item
+                                        key={level}
+                                        classNames='text-sm'
+                                        item={{ value: level, label: t(`level.${level}`) }}
+                                      />
+                                    ))}
+                                  </Select.Content>
+                                </Select.Root>
+                              </Listbox.Item>
+                            );
+                          })}
+                        </Listbox.Content>
+                      </Listbox.Viewport>
                     </Listbox.Root>
                   )}
                 </ScrollArea.Viewport>
@@ -510,7 +512,7 @@ const LoggerList = ({ classNames, checkable = true }: LoggerListProps) => {
       >
         {/* `Logger.Content` is the scroll area, so the list joins it rather than nesting a second one; its viewport is not a
             grid, so the list lays out its own column rather than inheriting one. */}
-        <Listbox.Content scroll={false} gutter='none' classNames={mx('dx-density-sm', classNames)}>
+        <Listbox.Content gutter='none' classNames={mx('dx-density-sm', classNames)}>
           {visible.map(({ id, entry, record }) => {
             const isExpanded = expanded.has(id);
             // Parse the serialized stack into frames only while expanded (deterministic via error-stack-parser).

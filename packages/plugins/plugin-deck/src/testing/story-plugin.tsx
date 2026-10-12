@@ -308,16 +308,18 @@ const NavContainer = forwardRef<HTMLDivElement, NavContainerProps>((_props, forw
   return (
     <div className='dx-expand overflow-y-auto p-2' ref={forwardedRef}>
       <Listbox.Root items={items.map(toOption)}>
-        <Listbox.Content aria-label='Navigation'>
-          {items.map((node) => (
-            <Listbox.Item
-              key={node.id}
-              id={node.id}
-              current={activeSet.has(node.id)}
-              onClick={() => void invokePromise(LayoutOperation.Set, { subject: [node.id] })}
-            />
-          ))}
-        </Listbox.Content>
+        <Listbox.Viewport>
+          <Listbox.Content aria-label='Navigation'>
+            {items.map((node) => (
+              <Listbox.Item
+                key={node.id}
+                id={node.id}
+                current={activeSet.has(node.id)}
+                onClick={() => void invokePromise(LayoutOperation.Set, { subject: [node.id] })}
+              />
+            ))}
+          </Listbox.Content>
+        </Listbox.Viewport>
       </Listbox.Root>
     </div>
   );
@@ -342,13 +344,15 @@ const ItemComponent = ({ id }: ItemComponentProps) => {
 
   return (
     <Listbox.Root items={items.map(toOption)}>
-      <Listbox.Content aria-label='Items'>
-        {items.map((node) => {
-          const open = () =>
-            void invokePromise(LayoutOperation.Open, { subject: [node.id], pivotId: id, navigation: 'immediate' });
-          return <Listbox.Item key={node.id} id={node.id} highlightOnHover onClick={open} />;
-        })}
-      </Listbox.Content>
+      <Listbox.Viewport>
+        <Listbox.Content aria-label='Items'>
+          {items.map((node) => {
+            const open = () =>
+              void invokePromise(LayoutOperation.Open, { subject: [node.id], pivotId: id, navigation: 'immediate' });
+            return <Listbox.Item key={node.id} id={node.id} highlightOnHover onClick={open} />;
+          })}
+        </Listbox.Content>
+      </Listbox.Viewport>
     </Listbox.Root>
   );
 };

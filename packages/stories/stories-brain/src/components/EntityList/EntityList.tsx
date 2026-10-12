@@ -57,33 +57,35 @@ export const EntityList = ({ entities, selected, onSelect, classNames }: EntityL
             onValueChange={onSelect}
             items={entities.map((entity) => ({ value: entity.id, label: entity.label }))}
           >
-            <Listbox.Content aria-label='Entities'>
-              {entities.map((entity) => (
-                <Listbox.Item
-                  classNames='gap-2'
-                  key={entity.id}
-                  id={entity.id}
-                  onMouseDown={() => {
-                    pointerSelectionRef.current = { itemId: entity.id, selected };
-                  }}
-                  onClick={() => {
-                    // Consume the pre-gesture selection captured on mouse-down (cleared each gesture so a
-                    // later click without a fresh mouse-down can't toggle against stale state).
-                    const pointerSelection = pointerSelectionRef.current;
-                    pointerSelectionRef.current = undefined;
-                    if (pointerSelection?.itemId === entity.id) {
-                      onSelect(pointerSelection.selected === entity.id ? undefined : entity.id);
-                    } else {
-                      onSelect(entity.id);
-                    }
-                  }}
-                >
-                  <Listbox.ItemText>{entity.label}</Listbox.ItemText>
-                  <span className='shrink-0 text-fg-subtle tabular-nums'>{entity.count}</span>
-                  <Listbox.ItemIndicator />
-                </Listbox.Item>
-              ))}
-            </Listbox.Content>
+            <Listbox.Viewport>
+              <Listbox.Content aria-label='Entities'>
+                {entities.map((entity) => (
+                  <Listbox.Item
+                    classNames='gap-2'
+                    key={entity.id}
+                    id={entity.id}
+                    onMouseDown={() => {
+                      pointerSelectionRef.current = { itemId: entity.id, selected };
+                    }}
+                    onClick={() => {
+                      // Consume the pre-gesture selection captured on mouse-down (cleared each gesture so a
+                      // later click without a fresh mouse-down can't toggle against stale state).
+                      const pointerSelection = pointerSelectionRef.current;
+                      pointerSelectionRef.current = undefined;
+                      if (pointerSelection?.itemId === entity.id) {
+                        onSelect(pointerSelection.selected === entity.id ? undefined : entity.id);
+                      } else {
+                        onSelect(entity.id);
+                      }
+                    }}
+                  >
+                    <Listbox.ItemText>{entity.label}</Listbox.ItemText>
+                    <span className='shrink-0 text-fg-subtle tabular-nums'>{entity.count}</span>
+                    <Listbox.ItemIndicator />
+                  </Listbox.Item>
+                ))}
+              </Listbox.Content>
+            </Listbox.Viewport>
           </Listbox.Root>
         )}
       </Panel.Body>

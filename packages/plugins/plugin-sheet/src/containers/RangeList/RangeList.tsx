@@ -61,7 +61,7 @@ export const RangeList = ({ sheet: sheetProp }: RangeListProps) => {
       ) : (
         <OrderedList.Root<Sheet.Range> items={sheet.ranges} getId={getRangeId} getLabel={getLabel}>
           {({ items: ranges }) => (
-            <OrderedList.Content aria-label={t('range-list.heading')} scroll={false}>
+            <OrderedList.Content aria-label={t('range-list.heading')}>
               {ranges.map((range) => {
                 const id = getRangeId(range);
                 return (

@@ -49,34 +49,40 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
         onDeselect={() => setSelected(undefined)}
       >
         <Listbox.Label>Letters</Listbox.Label>
-        <Listbox.Content>
-          {ITEMS.map((item) => (
-            <Listbox.Item key={item.value} id={item.value} data-testid={`letter-${item.value}-${size}`}>
-              <Listbox.ItemIcon icon='ph--circle--regular' />
-              <Listbox.ItemText />
-              {item.description && <Listbox.ItemDescription />}
-              <Listbox.ItemIndicator />
-            </Listbox.Item>
-          ))}
-        </Listbox.Content>
+        <Listbox.Viewport>
+          <Listbox.Content>
+            {ITEMS.map((item) => (
+              <Listbox.Item key={item.value} id={item.value} data-testid={`letter-${item.value}-${size}`}>
+                <Listbox.ItemIcon icon='ph--circle--regular' />
+                <Listbox.ItemText />
+                {item.description && <Listbox.ItemDescription />}
+                <Listbox.ItemIndicator />
+              </Listbox.Item>
+            ))}
+          </Listbox.Content>
+        </Listbox.Viewport>
       </Listbox.Root>
       <Typography.Text data-testid={`selected-${size}`}>{selected ?? 'None'}</Typography.Text>
       <Listbox.Root items={ITEMS}>
-        <Listbox.Content aria-label='Plain'>
-          {ITEMS.map((item) => (
-            <Listbox.Item key={item.value} id={item.value} />
-          ))}
-        </Listbox.Content>
+        <Listbox.Viewport>
+          <Listbox.Content aria-label='Plain'>
+            {ITEMS.map((item) => (
+              <Listbox.Item key={item.value} id={item.value} />
+            ))}
+          </Listbox.Content>
+        </Listbox.Viewport>
       </Listbox.Root>
       <UiListbox.Root items={ITEMS} {...listboxSelection({ mode: 'multi', value: picked, onValueChange: setPicked })}>
-        <UiListbox.Content aria-label='Picked'>
-          {ITEMS.map((item) => (
-            <UiListbox.Item key={item.value} item={item}>
-              <UiListbox.ItemText />
-              <UiListbox.ItemIndicator />
-            </UiListbox.Item>
-          ))}
-        </UiListbox.Content>
+        <UiListbox.Viewport>
+          <UiListbox.Content aria-label='Picked'>
+            {ITEMS.map((item) => (
+              <UiListbox.Item key={item.value} item={item}>
+                <UiListbox.ItemText />
+                <UiListbox.ItemIndicator />
+              </UiListbox.Item>
+            ))}
+          </UiListbox.Content>
+        </UiListbox.Viewport>
       </UiListbox.Root>
       <Typography.Text data-testid={`picked-${size}`}>{Array.from(picked).join(' ')}</Typography.Text>
       <div className='h-48'>
@@ -93,11 +99,13 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
           </Panel.Header>
           <Panel.Body>
             <Listbox.Root items={filtered} value={undefined} onValueChange={() => {}}>
-              <Listbox.Content aria-label='Long'>
-                {filtered.map((item) => (
-                  <Listbox.Item key={item.value} id={item.value} />
-                ))}
-              </Listbox.Content>
+              <Listbox.Viewport>
+                <Listbox.Content aria-label='Long'>
+                  {filtered.map((item) => (
+                    <Listbox.Item key={item.value} id={item.value} />
+                  ))}
+                </Listbox.Content>
+              </Listbox.Viewport>
               <Listbox.Empty>No matches</Listbox.Empty>
             </Listbox.Root>
           </Panel.Body>

@@ -137,15 +137,17 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
                 onValueChange={(value) => setSelected(new Set(value))}
                 disabled={submitting}
               >
-                <Listbox.Content aria-label={t('sync-targets-dialog.title')}>
-                  {targetItems.map((item) => (
-                    <Listbox.Item key={item.value} item={item}>
-                      <Listbox.ItemIndicator />
-                      <Listbox.ItemText />
-                      {item.description && <Listbox.ItemDescription />}
-                    </Listbox.Item>
-                  ))}
-                </Listbox.Content>
+                <Listbox.Viewport>
+                  <Listbox.Content aria-label={t('sync-targets-dialog.title')}>
+                    {targetItems.map((item) => (
+                      <Listbox.Item key={item.value} item={item}>
+                        <Listbox.ItemIndicator />
+                        <Listbox.ItemText />
+                        {item.description && <Listbox.ItemDescription />}
+                      </Listbox.Item>
+                    ))}
+                  </Listbox.Content>
+                </Listbox.Viewport>
               </Listbox.Root>
             </ScrollArea.Viewport>
           </ScrollArea.Root>

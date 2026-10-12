@@ -56,22 +56,24 @@ export const SpaceMemberListImpl = ({ members, onSelect }: SpaceMemberListImplPr
   });
   return visibleMembers.length > 0 ? (
     <Listbox.Root items={items}>
-      <Listbox.Content
-        classNames='flex flex-col gap-2'
-        aria-label={t('space-member-list.heading')}
-        data-testid='space-members-list'
-      >
-        {visibleMembers.map((member) => {
-          return (
-            <IdentityListItem
-              key={toPublicKey(member.identity.identityKey)?.toHex()}
-              identity={member.identity}
-              presence={member.presence}
-              onClick={onSelect && (() => onSelect(member))}
-            />
-          );
-        })}
-      </Listbox.Content>
+      <Listbox.Viewport>
+        <Listbox.Content
+          classNames='flex flex-col gap-2'
+          aria-label={t('space-member-list.heading')}
+          data-testid='space-members-list'
+        >
+          {visibleMembers.map((member) => {
+            return (
+              <IdentityListItem
+                key={toPublicKey(member.identity.identityKey)?.toHex()}
+                identity={member.identity}
+                presence={member.presence}
+                onClick={onSelect && (() => onSelect(member))}
+              />
+            );
+          })}
+        </Listbox.Content>
+      </Listbox.Viewport>
     </Listbox.Root>
   ) : (
     <div className='grow flex items-center p-2'>

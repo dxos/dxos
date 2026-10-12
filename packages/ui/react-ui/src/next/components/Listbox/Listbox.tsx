@@ -179,125 +179,134 @@ const ListboxLabel = forwardRef<HTMLLabelElement, ListboxLabelProps>(({ classNam
 ListboxLabel.displayName = 'Listbox.Label';
 
 //
+// Viewport
+//
+
+/** True under a `Listbox.Viewport`: the list scrolls itself rather than in its host. */
+const ViewportContext = createContext(false);
+
+type ListboxViewportProps = ThemedClassName<Pick<ScrollArea.RootProps, 'mode' | 'width' | 'native'>> & {
+  /** The `Listbox.Content`, which becomes the scrolling element. */
+  children: ReactNode;
+};
+
+/**
+ * A thin overlay ScrollArea (decision 5) that grows to fill the Root, for a list that owns its scrolling (a picker, a
+ * fixed-height panel). Its `Content` is the scrolling element, so the thumb sits in the Content's end gutter. Omit it
+ * inside a host that already scrolls, which would otherwise trap wheel and trackpad gestures in a nested scroller.
+ */
+const ListboxViewport = forwardRef<HTMLDivElement, ListboxViewportProps>(
+  ({ classNames, mode, width, native, children }, forwardedRef) => (
+    <ViewportContext.Provider value={true}>
+      <ScrollArea.Root
+        mode={mode}
+        width={width}
+        native={native}
+        classNames={[recipes.listboxScroll(), classNames]}
+        ref={forwardedRef}
+      >
+        <ScrollArea.Viewport asChild>{children}</ScrollArea.Viewport>
+      </ScrollArea.Root>
+    </ViewportContext.Provider>
+  ),
+);
+
+ListboxViewport.displayName = 'Listbox.Viewport';
+
+//
 // Content
 //
 
 type ListboxContentProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> &
-  Pick<ScrollArea.RootProps, 'mode' | 'width' | 'native'> &
-  Pick<ContainerProps, 'gutter' | 'gap' | 'padBlock'> & {
-    /**
-     * `false` renders the rows without a ScrollArea of their own, for a host that already scrolls (a ScrollArea
-     * composed in `Panel.Body`): the rows then inherit the host's rails (`gutter='inherit'` by default).
-     */
-    scroll?: boolean;
-  };
+  Pick<ContainerProps, 'gutter' | 'gap' | 'padBlock'>;
 
 /**
- * The listbox element: zag's content props with the grid keyboard in front of them, a Container's attributes so the
- * ScrollArea viewport slot merges onto it, and the Root's `virtual` windowing over its direct children (the rows).
+ * The listbox element: zag's content props with the grid keyboard in front of them, a Container's attributes so a
+ * `Viewport`'s slot merges onto it, and the Root's `virtual` windowing over its direct children (the rows). Under a
+ * `Viewport` it is the scrolling element (`inset` gutter by default); otherwise its host scrolls and the rows inherit the
+ * host's rails (`inherit`). A windowed (`virtual`) list measures its scroller, so it needs a `Viewport`.
  */
-const ListboxViewport = composable<
-  HTMLDivElement,
-  ContainerProps & Omit<ComponentPropsWithoutRef<'div'>, 'className'> & { hostScrolls?: boolean }
->(({ gutter, gap, padBlock, hostScrolls, onKeyDown, onFocus, onBlur, children, ...props }, forwardedRef) => {
-  const api = useListboxContext();
-  const { columns, virtual, scrollToIndexRef } = useRootContext('Content');
-  const [element, setElement] = useState<HTMLDivElement | null>(null);
-  const rows = Children.toArray(children);
-  const windowing = useVirtualRows({ mode: virtual, count: rows.length });
-  scrollToIndexRef.current = isWindowed(virtual) ? windowing.scrollToIndex : null;
-  const ref = useComposedRefs<HTMLDivElement>(forwardedRef, setElement, windowing.listRef);
-  useRowTabStops(element);
+const ListboxContent = composable<HTMLDivElement, ContainerProps & Omit<ComponentPropsWithoutRef<'div'>, 'className'>>(
+  ({ gutter, gap, padBlock, onKeyDown, onFocus, onBlur, children, ...props }, forwardedRef) => {
+    const api = useListboxContext();
+    const { columns, virtual, scrollToIndexRef } = useRootContext('Content');
+    const inViewport = useContext(ViewportContext);
+    const [element, setElement] = useState<HTMLDivElement | null>(null);
+    const rows = Children.toArray(children);
+    const windowing = useVirtualRows({ mode: virtual, count: rows.length });
+    scrollToIndexRef.current = isWindowed(virtual) ? windowing.scrollToIndex : null;
+    const ref = useComposedRefs<HTMLDivElement>(forwardedRef, setElement, windowing.listRef);
+    useRowTabStops(element);
 
-  const { style, ...attributes } = containerAttributes({ gutter, gap, columns, padBlock });
-  const {
-    className,
-    style: ownStyle,
-    ...rest
-  } = composableProps(props, {
-    classNames: [recipes.container(), recipes.listboxContent()],
-  });
-  const contentProps = api.getContentProps();
-  return (
-    <div
-      {...contentProps}
-      {...rest}
-      {...attributes}
-      data-scope='listbox'
-      data-part='content'
-      data-virtual={virtual}
-      style={{ ...contentProps.style, ...style, ...ownStyle }}
-      className={className}
-      onFocus={(event) => {
-        contentProps.onFocus?.(event);
-        onFocus?.(event);
-      }}
-      onBlur={(event) => {
-        contentProps.onBlur?.(event);
-        onBlur?.(event);
-      }}
-      onKeyDown={(event) => {
-        onKeyDown?.(event);
-        if (event.defaultPrevented && event.target === event.currentTarget) {
-          return;
-        }
-        if (handleGridKeyDown(event)) {
-          return;
-        }
-        contentProps.onKeyDown?.(event);
-        if (hostScrolls && !isWindowed(virtual)) {
-          // zag scrolls the highlighted row into view only when the listbox itself overflows; here the host scrolls.
-          const content = event.currentTarget;
-          requestAnimationFrame(() =>
-            content.querySelector('[data-highlighted]')?.scrollIntoView({ block: 'nearest' }),
-          );
-        }
-      }}
-      ref={ref}
-    >
-      {isWindowed(virtual) ? (
-        <>
-          <VirtualSpacer height={windowing.before} />
-          {rows.slice(windowing.first, windowing.last + 1)}
-          <VirtualSpacer height={windowing.after} />
-        </>
-      ) : (
-        children
-      )}
-    </div>
-  );
-});
-
-/**
- * The rows, as the viewport of a thin overlay ScrollArea (decision 5) that grows to fill the Root; the listbox element
- * is a stack Container (`inset` gutter by default), so the thumb sits in its end gutter. With Root `virtual='fixed'`
- * only the rows in view mount: give Content the rows as its direct children.
- */
-const ListboxContent = forwardRef<HTMLDivElement, ListboxContentProps>(
-  ({ classNames, mode, width, native, scroll = true, gutter, gap, children, ...props }, forwardedRef) =>
-    scroll ? (
-      <ScrollArea.Root mode={mode} width={width} native={native} classNames={recipes.listboxScroll()}>
-        <ScrollArea.Viewport asChild>
-          <ListboxViewport {...props} gutter={gutter ?? 'inset'} gap={gap} classNames={classNames} ref={forwardedRef}>
-            {children}
-          </ListboxViewport>
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
-    ) : (
-      <ListboxViewport
-        {...props}
-        hostScrolls
-        gutter={gutter ?? 'inherit'}
-        gap={gap}
-        classNames={classNames}
-        ref={forwardedRef}
+    const { style, ...attributes } = containerAttributes({
+      gutter: gutter ?? (inViewport ? 'inset' : 'inherit'),
+      gap,
+      columns,
+      padBlock,
+    });
+    const {
+      className,
+      style: ownStyle,
+      ...rest
+    } = composableProps(props, {
+      classNames: [recipes.container(), recipes.listboxContent()],
+    });
+    const contentProps = api.getContentProps();
+    return (
+      <div
+        {...contentProps}
+        {...rest}
+        {...attributes}
+        data-scope='listbox'
+        data-part='content'
+        data-virtual={virtual}
+        style={{ ...contentProps.style, ...style, ...ownStyle }}
+        className={className}
+        onFocus={(event) => {
+          contentProps.onFocus?.(event);
+          onFocus?.(event);
+        }}
+        onBlur={(event) => {
+          contentProps.onBlur?.(event);
+          onBlur?.(event);
+        }}
+        onKeyDown={(event) => {
+          onKeyDown?.(event);
+          if (event.defaultPrevented && event.target === event.currentTarget) {
+            return;
+          }
+          if (handleGridKeyDown(event)) {
+            return;
+          }
+          contentProps.onKeyDown?.(event);
+          if (!inViewport && !isWindowed(virtual)) {
+            // zag scrolls the highlighted row into view only when the listbox itself overflows; here the host scrolls.
+            const content = event.currentTarget;
+            requestAnimationFrame(() =>
+              content.querySelector('[data-highlighted]')?.scrollIntoView({ block: 'nearest' }),
+            );
+          }
+        }}
+        ref={ref}
       >
-        {children}
-      </ListboxViewport>
-    ),
+        {isWindowed(virtual) ? (
+          <>
+            <VirtualSpacer height={windowing.before} />
+            {rows.slice(windowing.first, windowing.last + 1)}
+            <VirtualSpacer height={windowing.after} />
+          </>
+        ) : (
+          children
+        )}
+      </div>
+    );
+  },
 );
 
 ListboxContent.displayName = 'Listbox.Content';
+
+/** True inside a `Listbox.Viewport`, for parts that act on the scrolling element (e.g. drag auto-scroll). */
+const useListboxViewport = (): boolean => useContext(ViewportContext);
 
 //
 // Empty
@@ -601,6 +610,7 @@ export type {
   ListboxItemTextProps as ItemTextProps,
   ListboxLabelProps as LabelProps,
   ListboxRootProps as RootProps,
+  ListboxViewportProps as ViewportProps,
 };
 
 export {
@@ -615,7 +625,9 @@ export {
   ListboxItemText as ItemText,
   ListboxLabel as Label,
   ListboxRoot as Root,
+  ListboxViewport as Viewport,
   useListboxRootContext as useContext,
+  useListboxViewport as useViewport,
 };
 export type { ListboxOption as Option, ListboxSelectionMode as SelectionMode };
 export { RowContext, type RowContextValue } from './grid.ts';

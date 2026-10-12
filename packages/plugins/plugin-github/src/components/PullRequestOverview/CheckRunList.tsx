@@ -82,10 +82,11 @@ export const CheckRunList = ({ runs }: CheckRunListProps) => {
   return (
     <Listbox.Root
       items={sorted.map((run) => ({ value: `${run.name}-${run.url ?? ''}`, label: run.name }))}
+      // Icon, name, a short time column, then the open button: one line per check.
+      columns='var(--dx-block-size) minmax(0, 1fr) max-content var(--dx-block-size)'
       onHighlightChange={(value) => value && setCurrent(value)}
     >
-      {/* The tab's viewport scrolls; a ScrollArea of the list's own would swallow wheel and trackpad gestures. */}
-      <Listbox.Content aria-label={summary} scroll={false} data-testid='pull-request.checks'>
+      <Listbox.Content aria-label={summary} data-testid='pull-request.checks'>
         {sorted.map((run) => {
           const { icon, classNames } = outcomeIcon[run.outcome];
           const duration = formatDuration(run.startedAt, run.completedAt, run.outcome === 'pending' ? now : undefined);
@@ -114,8 +115,10 @@ export const CheckRunList = ({ runs }: CheckRunListProps) => {
             >
               <Listbox.ItemIcon icon={icon} classNames={classNames} />
               <Listbox.ItemText>{run.name}</Listbox.ItemText>
-              <Listbox.ItemDescription>{[detail, outcome].filter(Boolean).join(' · ')}</Listbox.ItemDescription>
-              {url && (
+              <Listbox.ItemDescription classNames='text-right tabular-nums'>
+                {[detail, outcome].filter(Boolean).join(' · ')}
+              </Listbox.ItemDescription>
+              {url ? (
                 <Button.Root
                   iconOnly
                   variant='ghost'
@@ -124,6 +127,8 @@ export const CheckRunList = ({ runs }: CheckRunListProps) => {
                   data-testid='pull-request.check.open'
                   onClick={() => window.open(url, '_blank', 'noopener,noreferrer')}
                 />
+              ) : (
+                <span />
               )}
             </Listbox.Item>
           );

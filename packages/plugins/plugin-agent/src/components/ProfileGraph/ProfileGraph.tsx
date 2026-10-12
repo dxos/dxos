@@ -67,11 +67,13 @@ export const ProfileGraph = ({ goals, memories }: ProfileGraphProps) => {
                 ),
               }))}
             >
-              <Listbox.Content>
-                {goals.map((goal) => (
-                  <Listbox.Item key={goal.id} id={goal.id} />
-                ))}
-              </Listbox.Content>
+              <Listbox.Viewport>
+                <Listbox.Content>
+                  {goals.map((goal) => (
+                    <Listbox.Item key={goal.id} id={goal.id} />
+                  ))}
+                </Listbox.Content>
+              </Listbox.Viewport>
             </Listbox.Root>
           </section>
         </Layout.Flex>
@@ -92,11 +94,13 @@ export const ProfileGraph = ({ goals, memories }: ProfileGraphProps) => {
                 ].join(' · '),
               }))}
             >
-              <Listbox.Content>
-                {memories.map((memory) => (
-                  <Listbox.Item key={memory.id} id={memory.id} />
-                ))}
-              </Listbox.Content>
+              <Listbox.Viewport>
+                <Listbox.Content>
+                  {memories.map((memory) => (
+                    <Listbox.Item key={memory.id} id={memory.id} />
+                  ))}
+                </Listbox.Content>
+              </Listbox.Viewport>
             </Listbox.Root>
           </section>
         </Layout.Flex>
