@@ -1,5 +1,111 @@
 # @dxos/compute
 
+## 0.14.0
+
+### Minor Changes
+
+- ec6da5a: A chat can run on Claude Code on this computer or on EDGE.
+
+  A chat names the durable process that runs it in `session.process`. Plugins contribute agent processes through `AssistantCapabilities.AgentProcess`, and `AgentService` spawns the one a chat names, falling back to the assistant's own. The Claude plugin's Claude Code process starts the agent through the new `ShellService` (`@dxos/compute/ShellService`), which runs operating-system processes and bash scripts for a compute process. Each process gets its own instance, and every child it started ends when that process ends. The Node.js implementation is `@dxos/compute-runtime/node-shell`.
+
+  "Claude Code (cloud)", built on plugin-code's new `EdgeAgent.make`, runs a chat's turns on EDGE's coding-agent process in a sandbox container. The session keeps working with no client connected, and EDGE restarts the container and resumes the turn when the agent dies or stalls. Each turn lends the process the user's credential, so the credential never enters the container. The cloud session runs unattended by default: a permission request is denied on the spot, and the agent skips that step and carries on.
+
+  A new **Claude Code** connector stores a Claude subscription token: open a terminal, run `claude setup-token`, and paste the token it prints. The token is kept apart from the Anthropic API key. Claude Code on this computer receives it as `CLAUDE_CODE_OAUTH_TOKEN`, and the cloud harness lends it in preference to the API key.
+
+  A project lists the GitHub repositories its cloud sessions work on (`Project.repositories`), set in the project's header next to its name. The sandbox checks out the project's `repo` and each listed repository before the agent starts. Each turn lends the space's GitHub token to EDGE, resolving it through EDGE when EDGE holds it, and EDGE proxies the sandbox's git calls with it, so the token never enters the container either. The project folder setting applies only to Claude Code on this computer.
+
+  The Code plugin's coding-agent permission setting gains `bypassPermissions`, which never asks and runs everything.
+
+- a1e64db: A chat hosted on EDGE now shows its working indicators, phases and streamed reply for the whole turn, instead of reading idle while the agent works. `AgentProcess` takes a `resident` option that keeps the process for the next prompt rather than spawning a new one per turn, and `subscribeEphemeral` takes `{ replay }`. Breaking: plugin-assistant's `AiChatProcessor` is now `ChatModel` (`useChatProcessor` → `useChatModel`, `getProcessorState` → `getChatModelState`, and the `processor` prop of `Chat.Root`/`ChatPrompt` → `chatModel`).
+- 28bb45b: Operations now run as processes through `Process.Manager`, and durable operations are declared in two stages: `Operation.makeDurable({ ... })` (which accepts an optional `name`) followed by `Operation.withDurableHandler(...)`. Breaking: spawn a durable operation with `Process.spawn(durable, input)` and read its result with `Process.awaitOutput`, wrap a plain operation with `OperationProcess.make(op)` from `@dxos/compute-runtime` (which replaces `DurableOperation.fromOperation` and finds its handler in the process context), and reattach with the new `Process.Manager.attach`; `invokeFiber`/`attachFiber`/`OperationFiber` are removed. `Process.Handle` is merged into `Process.Process` (`parentId` → `parentPid`, `Process.Handle.Any` → `Process.Any`); processes are built only by the runtime, so fixtures use `makeTestProcess` from `@dxos/compute-runtime/testing`. `Trigger.Monitor`/`Trigger.TriggerMonitorService` are renamed `Trigger.Manager`/`Trigger.ManagerService`, and compute-runtime's `TriggerMonitor` module is now `TriggerManager`.
+
+### Patch Changes
+
+- 5324de6: Switching a routine's action between Instructions and an operation no longer carries one kind's trigger inputs into the other: a stray `input: {}` (or an operation's `connection`) failed every run until EDGE switched the trigger off. Switching a broken trigger back on now repairs it. Pressing Sync on an account whose sync routine is switched off now shows a toast that links to the routines panel, instead of retrying EDGE's 409 refusal for about 30 seconds. The trigger manager refuses a disabled trigger with a typed `TriggerDisabledError`, and EDGE force-runs no longer retry a 409 that is not about the trigger being switched off.
+- Updated dependencies [1eed6b1]
+- Updated dependencies [6847fe2]
+- Updated dependencies [1819960]
+- Updated dependencies [eb5d14d]
+  - @dxos/echo@0.14.0
+  - @dxos/effect@0.14.0
+  - @dxos/ai@0.14.0
+  - @dxos/link@0.14.0
+  - @dxos/schema@0.14.0
+  - @dxos/types@0.14.0
+  - @dxos/protocols@0.14.0
+  - @dxos/errors@0.14.0
+  - @dxos/invariant@0.14.0
+  - @dxos/keys@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/vendor-kbn-handlebars@0.14.0
+
+## 0.13.0
+
+### Minor Changes
+
+- bbe9f18: Agents gain a brain: each member talks to an agent in their own private chat, the agent records facts from every turn in an RDF fact store and watches them against the goals people set, and a matching fact wakes the requester's chat with an update, relayed as a synthetic system note. The brain runs in memory locally and as a SQLite Durable Object on EDGE. Fact extraction now works with Anthropic structured output, and `@dxos/compute` adds `Process.EnvironmentService`, and `Process.currentEnvironment`.
+- 68dc875: Process definitions are now durable operations: `Process.make` → `Operation.makeDurable`, `Process.Process` → `Operation.Durable`, `Process.Callbacks` → `Operation.DurableHandler`, `Process.ProcessContext` → `Operation.DurableContext`, and `BaseServices`/`ChildEvent` move to `Operation`. `Process.fromOperation` moves to `@dxos/compute-runtime` as `DurableOperation.fromOperation`. The `Process` name now means a running process: `Process.Info` → `Process.Process`.
+- 246ee3c: Add `@dxos/plugin-agent`, an agent that talks to people through any channel, remembers them as ECHO objects, reads every conversation turn into facts, relays messages, and keeps one-time and ongoing ("keep me posted") watches whose updates it writes from the conversation's context. Every subpath of the package is a namespace: `AgentState` and `AgentKnowledge` (each with a `Root` container), one per skill (`ConversationSkill`, `GoalsSkill`, `InterviewSkill`, `ModesSkill`, `NoteTakerSkill`, `RelaySkill`), and one per type and operation set.
+
+  `@dxos/plugin-thread` channel backends can now open direct conversations (`openDirect`), post into threads (`threads.send`), run a connection (`connection.start`/`stop`/`status`), and return a send receipt. New operations `sendToChannel`, `openDirect`, `connectChannel`, `disconnectChannel` and `getChannelStatus` dispatch to them, and the handlers are published as the `ThreadOperationHandlerSet` subpath. The Discord and Slack plugins implement these backends.
+
+  An agent prompt can name its sender: `AgentProcess` accepts `{ prompt, sender?, properties? }` as well as a bare prompt (`AgentInput`, `makeInputMessage`), `AgentService.Session.submitPrompt` and the assistant's request and session take a `sender`, and the model sees a named sender as `[From: <name>]`. `useChatProcessor` and `AiChatProcessor` take a `sender`, and `ChatThread` takes a `userHue`.
+
+  `Agent.loadChat` no longer picks a chat bridged from an external conversation as the agent's primary chat, and finds chats with a child-of filter so it also works on EDGE. `Agent.makeInitialized` accepts a skill ref, and `Skill.makeRef` binds a database skill as-is and any other by registry URI.
+
+  The `ProfileOf` relation moves from `@dxos/plugin-crm` to `@dxos/types` with its typename unchanged, so existing profiles still resolve. `EdgeHttpClient.request` makes an authenticated call to any EDGE route. `pipeline-rdf` exports `DEFAULT_MODEL`. `FormInlineAnnotation` now survives the JSON-schema round trip. A plugin that declares two modules with the same id now fails when it is constructed instead of silently dropping one.
+
+- 596728d: `Process.Manager` (`Process.ManagerService`) replaces `Process.Monitor`: it keeps the process-tree reads and trace stream that span local and remote runtimes, and adds `spawn` and `handles` verbs that take a `Process.Location`, so a caller no longer holds the local and remote managers separately. `Process.isTerminal` and `Process.isExited` replace hand-written checks of terminal process states.
+
+  Breaking: `Process.Monitor`, `Process.MonitorFilter` and `Process.ProcessMonitorService` are removed (use `Process.Manager`, `Process.Filter`, `Process.ManagerService`); `ProcessManager.Handle`, `Status`, `SpawnOptions` and `ListOptions` move to `Process`; `ProcessMonitor.layer` is now `UnifiedProcessManager.layer`; the local manager exposes `processTreeAtom` and `subscribeToTraceMessages` directly instead of `monitor`; the `Capabilities.ProcessMonitor` capability is now `Capabilities.ProcessManager`; and `AgentService.layer` requires `Process.ManagerService` instead of both process managers.
+
+- dde8f43: Add `SqlService`: operations and processes declare it and call `SqlService.database({ name })` for an Effect `SqlClient`, including `withTransaction`. Locally it runs on the client services host, which rejects statements that touch SQLite internals, host tables or another database's tables, and connection-level commands such as `PRAGMA` and `ATTACH`.
+
+### Patch Changes
+
+- Updated dependencies [162fd6d]
+- Updated dependencies [aad3e41]
+- Updated dependencies [bb2b672]
+- Updated dependencies [c6922ce]
+- Updated dependencies [1ef899b]
+- Updated dependencies [1b2e9f3]
+- Updated dependencies [5a27d5c]
+- Updated dependencies [32f32a0]
+- Updated dependencies [dc16fdd]
+- Updated dependencies [469e7f7]
+- Updated dependencies [665261a]
+- Updated dependencies [2e96a73]
+- Updated dependencies [945092e]
+- Updated dependencies [c531b05]
+- Updated dependencies [3672aff]
+- Updated dependencies [2f95d25]
+- Updated dependencies [c7cc480]
+- Updated dependencies [161f994]
+- Updated dependencies [3e73e53]
+- Updated dependencies [246ee3c]
+- Updated dependencies [8ebe8d6]
+- Updated dependencies [7715216]
+- Updated dependencies [1737cad]
+- Updated dependencies [6a7bed4]
+- Updated dependencies [3022878]
+- Updated dependencies [c2a300a]
+- Updated dependencies [17008f0]
+- Updated dependencies [4f8e566]
+- Updated dependencies [fcbb5c4]
+- Updated dependencies [a449958]
+  - @dxos/echo@0.13.0
+  - @dxos/ai@0.13.0
+  - @dxos/types@0.13.0
+  - @dxos/link@0.13.0
+  - @dxos/schema@0.13.0
+  - @dxos/effect@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/protocols@0.13.0
+  - @dxos/errors@0.13.0
+  - @dxos/invariant@0.13.0
+  - @dxos/keys@0.13.0
+  - @dxos/vendor-kbn-handlebars@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

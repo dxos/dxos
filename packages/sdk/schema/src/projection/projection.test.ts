@@ -975,6 +975,7 @@ describe('ProjectionModel', () => {
       { format: Format.TypeFormat.Integer, expectedType: TypeEnum.Number, fieldName: 'count' },
       { format: Format.TypeFormat.DXN, expectedType: TypeEnum.String, fieldName: 'identifier' },
       { format: Format.TypeFormat.Hostname, expectedType: TypeEnum.String, fieldName: 'host' },
+      { format: Format.TypeFormat.Text, expectedType: TypeEnum.String, fieldName: 'notes' },
     ];
 
     for (const { format, expectedType, fieldName } of testCases) {

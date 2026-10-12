@@ -8,6 +8,7 @@ import * as NamePopover from '@dxos/app-toolkit/NamePopover';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Tag from '@dxos/react-ui/Tag';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
@@ -94,7 +95,7 @@ export const VersionBanner = ({
 
   return (
     <Toolbar.Root data-testid={`version-banner-${mode}`} aria-live='polite'>
-      <div className='flex items-center gap-1 px-2 truncate'>
+      <Layout.Flex align='center' gap='xs' classNames='px-2 truncate'>
         <Icon.Icon icon={mode === 'checkpoint' ? 'ph--bookmark-simple--regular' : 'ph--git-branch--regular'} />
         <Tag.Tag hue={hue}>{name}</Tag.Tag>
         {timestamp && (
@@ -102,7 +103,7 @@ export const VersionBanner = ({
             <Tag.Tag hue='sky'>{relativeTime(timestamp)}</Tag.Tag>
           </Tooltip.Trigger>
         )}
-      </div>
+      </Layout.Flex>
       <Toolbar.Separator />
       {mode === 'checkpoint' && onRestore && (
         <Button.Root variant='ghost' onClick={onRestore}>

@@ -1,5 +1,23 @@
 # @dxos/crypto
 
+## 0.14.0
+
+### Patch Changes
+
+- @dxos/invariant@0.14.0
+  - @dxos/keys@0.14.0
+  - @dxos/node-std@0.14.0
+  - @dxos/vendor-hypercore@0.14.0
+
+## 0.13.0
+
+### Patch Changes
+
+- @dxos/invariant@0.13.0
+  - @dxos/keys@0.13.0
+  - @dxos/node-std@0.13.0
+  - @dxos/vendor-hypercore@0.13.0
+
 ## 0.12.0
 
 ### Patch Changes

@@ -12,7 +12,7 @@ import '@dxos/react-ui/theme.css';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
@@ -36,8 +36,7 @@ const matchesFilter = (plugin: Plugin.Plugin, query: string) => {
 };
 
 export type BaseRegistryArticleProps = {
-  /** Article id used as the pivotId when opening a plugin's detail surface. */
-  id: string;
+  contextId: string;
   /** Plugins to display, pre-sorted by the caller. */
   plugins: readonly Plugin.Plugin[];
   /**
@@ -63,7 +62,7 @@ export type BaseRegistryArticleProps = {
 export const BaseRegistryArticle = Util.composable<HTMLDivElement, BaseRegistryArticleProps>(
   (
     {
-      id,
+      contextId,
       plugins,
       source,
       empty,
@@ -124,15 +123,7 @@ export const BaseRegistryArticle = Util.composable<HTMLDivElement, BaseRegistryA
       [dispatchToggle, requestDisable],
     );
 
-    const handleClick = useCallback(
-      (pluginId: string) =>
-        invokePromise(LayoutOperation.Open, {
-          subject: [getPluginPath(pluginId)],
-          pivotId: getPluginPath(id),
-          disposition: 'add',
-        }),
-      [invokePromise, id],
-    );
+    const handleClick = ToolkitHooks.useDetailNavigation({ contextId, getPath: getPluginPath });
 
     const hasSettings = useCallback(
       (pluginId: string) => allSettings.some((setting) => setting.prefix === pluginId),

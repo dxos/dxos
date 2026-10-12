@@ -9,6 +9,7 @@ import { createContext } from '@dxos/react-hooks';
 import { Form, type FormFieldRenderer, type FormFieldRendererProps, type FormUpdateMeta } from '@dxos/react-ui-form';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { type DiscordPresence } from '#hooks';
 import { meta } from '#meta';
@@ -137,7 +138,7 @@ const FeedbackFormDownloadLogs = ({ onDownloadLogs }: FeedbackFormDownloadLogsPr
   }
 
   return (
-    <div className='flex w-full pt-form-padding'>
+    <Layout.Flex classNames='w-full pt-form-padding'>
       <Button.Root
         classNames='w-full'
         type='button'
@@ -146,7 +147,7 @@ const FeedbackFormDownloadLogs = ({ onDownloadLogs }: FeedbackFormDownloadLogsPr
         onClick={handleClick}
         data-testid='download-logs-button'
       />
-    </div>
+    </Layout.Flex>
   );
 };
 

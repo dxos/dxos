@@ -29,9 +29,9 @@ const registry = makeFactStoreRegistry();
 const fact = (id: string, subject: string, predicate: string, object: string): RDF.Fact => ({
   id,
   assertion: {
-    subject: { entity: subject.toLowerCase(), label: subject },
+    subject: { kind: 'entity', entity: subject.toLowerCase(), label: subject },
     predicate,
-    object: { entity: object.toLowerCase(), label: object },
+    object: { kind: 'entity', entity: object.toLowerCase(), label: object },
   },
   factuality: { value: 'CT+', polarity: '+' },
   attribution: { source: 'story:doc', generatedAtTime: '2026-01-01T00:00:00.000Z' },

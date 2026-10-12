@@ -83,7 +83,7 @@ export const FailingChecks: Story = {
       ...PULL_REQUEST_13348_RUNS.slice(2),
       { ...PULL_REQUEST_13348_RUNS[0], name: 'Check / test (shard=6)', outcome: 'failure', conclusion: 'failure' },
       { ...PULL_REQUEST_13348_RUNS[1], name: 'Check / e2e (shard=7)', outcome: 'failure', conclusion: 'timed_out' },
-      { name: 'Check / storybook', outcome: 'pending' },
+      { name: 'Check / storybook', outcome: 'pending', startedAt: new Date(Date.now() - 252_000).toISOString() },
     ],
   },
   play: async ({ canvasElement }) => {
@@ -92,6 +92,7 @@ export const FailingChecks: Story = {
     await expect(first).toHaveAttribute('data-outcome', 'failure');
     await expect(second).toHaveAttribute('data-outcome', 'failure');
     await expect(third).toHaveAttribute('data-outcome', 'pending');
+    await expect(third).toHaveTextContent(/Running · \d+m \d+s/);
   },
 };
 

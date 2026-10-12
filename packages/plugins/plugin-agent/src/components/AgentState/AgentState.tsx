@@ -154,8 +154,8 @@ AgentStateIdentity.displayName = 'AgentState.Identity';
 
 type AgentStateCounts = {
   memories: { active: number; expired: number };
-  /** Facts read from sources into annotation feeds; absent when none were read. */
-  facts?: { count: number; sources: number };
+  /** Facts in the agent's brain and how many people said them; absent when none were read. */
+  facts?: { count: number; speakers: number };
   goals: { proposed: number; confirmed: number };
   people: number;
   organizations: number;

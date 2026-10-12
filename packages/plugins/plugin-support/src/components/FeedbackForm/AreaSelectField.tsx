@@ -5,6 +5,7 @@
 import React, { type ComponentProps, useCallback, useMemo } from 'react';
 
 import { Form, type FormFieldRendererProps } from '@dxos/react-ui-form';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Select from '@dxos/react-ui/Select';
 
 import type { FeedbackPluginOption } from './types.ts';
@@ -78,10 +79,10 @@ export const AreaSelectField = ({
                 </Select.Item>
               ) : (
                 <Select.Item key={item.value} item={item}>
-                  <div className='flex flex-col w-full text-left'>
+                  <Layout.Flex column classNames='w-full text-left'>
                     <Select.ItemText />
                     <div className='text-xs text-fg-muted font-mono py-1'>{item.value}</div>
-                  </div>
+                  </Layout.Flex>
                   <Select.ItemIndicator />
                 </Select.Item>
               ),

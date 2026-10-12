@@ -30,7 +30,6 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Util from '@dxos/react-ui/Util';
 import { Organization, Person, Task } from '@dxos/types';
-import { mx } from '@dxos/ui-theme';
 import { sortKeys } from '@dxos/util';
 
 import { type ObjectGenerator, SchemaTable, createGenerator, generator, staticGenerators } from '#components';
@@ -340,7 +339,7 @@ const ProgressGenerator = ({ classNames }: ProgressGeneratorProps) => {
   );
 
   return (
-    <div className={mx('flex flex-col gap-1 py-1', classNames)}>
+    <Layout.Flex column gap='xs' classNames={['py-1', classNames]}>
       <Layout.Flex gap='sm' align='center'>
         <span className='grow'>Progress Monitor</span>
         {running ? (
@@ -361,6 +360,6 @@ const ProgressGenerator = ({ classNames }: ProgressGeneratorProps) => {
       {monitor && (monitor.status === 'running' || monitor.status === 'error') && (
         <ProgressMeter state={monitor} onCancel={() => registry?.cancel(TEST_PROGRESS_NAME)} />
       )}
-    </div>
+    </Layout.Flex>
   );
 };

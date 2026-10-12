@@ -5,14 +5,14 @@
 import { type Expression, type IriTerm, type LiteralTerm, Parser, type Pattern, type Triple } from 'sparqljs';
 
 import { SemanticIndexError } from '../../errors.ts';
-import { ENTITY, PROV, SX, entityIdFromIri } from '../vocab.ts';
+import * as Vocab from '../../types/Vocab.ts';
 import { type SemanticQuery } from './query-builder.ts';
 
 // Reified-fact predicates (see DESIGN.md "Reification").
-const PRED_SUBJECT = SX + 'subject';
-const PRED_OBJECT = SX + 'object';
-const PRED_PREDICATE = SX + 'predicate';
-const PRED_SOURCE = PROV + 'wasDerivedFrom';
+const PRED_SUBJECT = Vocab.SX + 'subject';
+const PRED_OBJECT = Vocab.SX + 'object';
+const PRED_PREDICATE = Vocab.SX + 'predicate';
+const PRED_SOURCE = Vocab.PROV + 'wasDerivedFrom';
 
 const isIri = (term: { readonly termType: string }): term is IriTerm => term.termType === 'NamedNode';
 const isLiteral = (term: { readonly termType: string }): term is LiteralTerm => term.termType === 'Literal';
@@ -98,13 +98,13 @@ export const parseSparqlToQuery = (sparql: string): SemanticQuery => {
     const object = triple.object;
     switch (p.value) {
       case PRED_SUBJECT:
-        if (isIri(object) && object.value.startsWith(ENTITY)) {
-          subjectEntities.add(entityIdFromIri(object.value));
+        if (isIri(object) && object.value.startsWith(Vocab.ENTITY)) {
+          subjectEntities.add(Vocab.entityIdFromIri(object.value));
         }
         break;
       case PRED_OBJECT:
-        if (isIri(object) && object.value.startsWith(ENTITY)) {
-          objectEntities.add(entityIdFromIri(object.value));
+        if (isIri(object) && object.value.startsWith(Vocab.ENTITY)) {
+          objectEntities.add(Vocab.entityIdFromIri(object.value));
         }
         break;
       case PRED_PREDICATE:

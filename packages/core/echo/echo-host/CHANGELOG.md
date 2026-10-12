@@ -1,5 +1,96 @@
 # @dxos/echo-host
 
+## 0.14.0
+
+### Patch Changes
+
+- 5528d65: Update `@automerge/automerge-subduction` to 0.19.0, which adds `Subduction.getHeads(id)` for reading one tree's heads without loading the whole space.
+- 4ea1487: A one-shot query's stream now ends after its first result, so the query no longer stays registered and re-runs on invalidations until the client's interrupt arrives. Queries that register while the snapshot store is still filling share one completeness check instead of each running a full scan.
+- ea0f796: The worker now logs a warning, above its default log filter, when an index pass, a query batch, full-text catch-up or a storage-only document load takes 1 s or more. A slow query batch names its slowest query.
+- Updated dependencies [1eed6b1]
+- Updated dependencies [6847fe2]
+- Updated dependencies [1819960]
+- Updated dependencies [eb5d14d]
+  - @dxos/echo@0.14.0
+  - @dxos/effect@0.14.0
+  - @dxos/index-core@0.14.0
+  - @dxos/sql-sqlite@0.14.0
+  - @dxos/echo-protocol@0.14.0
+  - @dxos/feed@0.14.0
+  - @dxos/edge-client@0.14.0
+  - @dxos/protocols@0.14.0
+  - @dxos/teleport@0.14.0
+  - @dxos/teleport-extension-automerge-replicator@0.14.0
+  - @dxos/async@0.14.0
+  - @dxos/context@0.14.0
+  - @dxos/crypto@0.14.0
+  - @dxos/debug@0.14.0
+  - @dxos/errors@0.14.0
+  - @dxos/invariant@0.14.0
+  - @dxos/keys@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/node-std@0.14.0
+  - @dxos/tracing@0.14.0
+  - @dxos/typings@0.14.0
+  - @dxos/util@0.14.0
+
+## 0.13.0
+
+### Patch Changes
+
+- 8d0cdd5: Speed up local writes on OPFS: SQLite temp files now stay in memory, and Automerge chunk writes that arrive together commit in one transaction instead of one each, so a large flush no longer times out its RPC.
+- Updated dependencies [162fd6d]
+- Updated dependencies [aad3e41]
+- Updated dependencies [bb2b672]
+- Updated dependencies [cb1e218]
+- Updated dependencies [1ef899b]
+- Updated dependencies [32f32a0]
+- Updated dependencies [469e7f7]
+- Updated dependencies [665261a]
+- Updated dependencies [2e96a73]
+- Updated dependencies [fe08304]
+- Updated dependencies [945092e]
+- Updated dependencies [c531b05]
+- Updated dependencies [3672aff]
+- Updated dependencies [2f95d25]
+- Updated dependencies [c7cc480]
+- Updated dependencies [e99ee70]
+- Updated dependencies [161f994]
+- Updated dependencies [1894fc1]
+- Updated dependencies [246ee3c]
+- Updated dependencies [8ebe8d6]
+- Updated dependencies [7715216]
+- Updated dependencies [1737cad]
+- Updated dependencies [6a7bed4]
+- Updated dependencies [3022878]
+- Updated dependencies [c2a300a]
+- Updated dependencies [17008f0]
+- Updated dependencies [e65ca2f]
+- Updated dependencies [4f8e566]
+- Updated dependencies [a449958]
+  - @dxos/echo@0.13.0
+  - @dxos/util@0.13.0
+  - @dxos/edge-client@0.13.0
+  - @dxos/index-core@0.13.0
+  - @dxos/async@0.13.0
+  - @dxos/context@0.13.0
+  - @dxos/effect@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/tracing@0.13.0
+  - @dxos/echo-protocol@0.13.0
+  - @dxos/feed@0.13.0
+  - @dxos/teleport@0.13.0
+  - @dxos/protocols@0.13.0
+  - @dxos/teleport-extension-automerge-replicator@0.13.0
+  - @dxos/sql-sqlite@0.13.0
+  - @dxos/crypto@0.13.0
+  - @dxos/debug@0.13.0
+  - @dxos/errors@0.13.0
+  - @dxos/invariant@0.13.0
+  - @dxos/keys@0.13.0
+  - @dxos/node-std@0.13.0
+  - @dxos/typings@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

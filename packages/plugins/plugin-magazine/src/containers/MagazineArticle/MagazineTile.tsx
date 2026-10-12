@@ -67,10 +67,15 @@ export const MagazineTile = ({ post, magazine, current, onToggleStar, onOpen }: 
             </Card.Row>
           )}
           <Card.Row>
-            <div className='grid grid-cols-[minmax(0,1fr)_auto] items-center gap-trim-sm py-trim-xs text-sm text-fg-muted overflow-hidden'>
+            <Layout.Grid
+              cols={['fill', 'auto']}
+              gap='sm'
+              align='center'
+              classNames='py-trim-xs text-sm text-fg-muted overflow-hidden'
+            >
               <span className='truncate'>{feedName ?? ''}</span>
               <span className='text-end shrink-0'>{formatPublished(snapshot) ?? ''}</span>
-            </div>
+            </Layout.Grid>
           </Card.Row>
         </Card.Body>
       </Card.Root>

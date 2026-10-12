@@ -95,15 +95,15 @@ SubscriptionStack.displayName = 'SubscriptionStack';
 const icons: Record<Subscription.FeedType, { icon: string; className?: string }> = {
   'standard-site': {
     icon: 'ph--article--regular',
-    className: 'text-sky-500',
+    className: 'text-sky-text',
   },
   'rss': {
     icon: 'ph--rss--regular',
-    className: 'text-green-500',
+    className: 'text-green-text',
   },
   'bluesky': {
     icon: 'ph--butterfly--regular',
-    className: 'text-blue-500',
+    className: 'text-blue-text',
   },
 };
 

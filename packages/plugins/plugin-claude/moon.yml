@@ -6,6 +6,14 @@ tags:
   - ts-test
 
 tasks:
+  # The manual e2e suites read these, so a cached run with other values must not replay. Credentials
+  # stay out: moon records input values in its cache manifests.
+  test:
+    inputs:
+      - $DX_E2E_EDGE_URL
+      - $DX_E2E_EDGE_FAKE_AGENT
+      - $DX_E2E_MODEL
+      - $DX_E2E_CLAUDE_ACP_VERSION
   check-module-structure:
     # The plugin generates node and workerd capability barrels, so its headless entry must stay
     # UI-free: fail if React ever becomes reachable from it under either condition.

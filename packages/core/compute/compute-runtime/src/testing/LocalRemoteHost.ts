@@ -13,6 +13,7 @@ import * as Stream from 'effect/Stream';
 import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 
+import { RemoteCommandRejectedError } from '../errors.ts';
 import type * as ProcessManager from '../ProcessManager.ts';
 import type * as RemoteProcessManager from '../RemoteProcessManager.ts';
 
@@ -49,7 +50,7 @@ export interface Options {
  */
 export const makeHost = (options: Options): Effect.Effect<Host> =>
   Effect.gen(function* () {
-    const handles = new Map<Process.ID, Process.Handle.Any>();
+    const handles = new Map<Process.ID, Process.Any>();
     const events = new Map<Process.ID, RemoteProcessManager.Event[]>();
     const inputCounts = new Map<Process.ID, number>();
     const applied: { pid: Process.ID; input: unknown }[] = [];
@@ -59,9 +60,9 @@ export const makeHost = (options: Options): Effect.Effect<Host> =>
 
     const definitionFor = (key: string) => options.definitions.find((definition) => definition.key === key);
 
-    const snapshot = (handle: Process.Handle.Any): RemoteProcessManager.Snapshot => ({
+    const snapshot = (handle: Process.Any): RemoteProcessManager.Snapshot => ({
       pid: handle.pid,
-      parentPid: handle.parentId,
+      parentPid: handle.parentPid,
       key: handle.key,
       params: handle.params,
       environment: handle.environment,
@@ -79,7 +80,7 @@ export const makeHost = (options: Options): Effect.Effect<Host> =>
       },
     });
 
-    const handleFor = (pid: Process.ID): Effect.Effect<Process.Handle.Any> => {
+    const handleFor = (pid: Process.ID): Effect.Effect<Process.Any> => {
       const handle = handles.get(pid);
       return handle ? Effect.succeed(handle) : Effect.die(`no such process on host: ${pid}`);
     };
@@ -116,7 +117,10 @@ export const makeHost = (options: Options): Effect.Effect<Host> =>
             Effect.gen(function* () {
               const definition = definitionFor(request.key);
               if (!definition) {
-                return yield* Effect.die(`host does not host process '${request.key}'`);
+                // Rejected, as EDGE's 400 for an unknown key reaches a client through `EdgeProcessControl`.
+                return yield* Effect.die(
+                  new RemoteCommandRejectedError({ message: `host does not host process '${request.key}'` }),
+                );
               }
               const handle = yield* options.manager.spawn(definition, {
                 ...(request.name !== undefined ? { name: request.name } : {}),

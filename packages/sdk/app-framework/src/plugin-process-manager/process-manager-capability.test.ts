@@ -3,15 +3,20 @@
 //
 
 import { describe, expect, it, test } from '@effect/vitest';
+import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 
+import { RemoteProcessManager } from '@dxos/compute-runtime';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
+import * as Process from '@dxos/compute/Process';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Trace from '@dxos/compute/Trace';
 import { Obj } from '@dxos/echo';
-import { DXN } from '@dxos/keys';
+import { DXN, SpaceId } from '@dxos/keys';
 import { type LogConfig, type LogEntry, LogLevel, log } from '@dxos/log';
 
 import { ActivationEvents, Capabilities } from '../common/index.ts';
@@ -280,4 +285,76 @@ describe('dynamic trace sink', () => {
     makeDynamicTraceSink(() => factories, ServiceResolver.empty).write(message);
     expect(reached).toEqual(['second']);
   });
+});
+
+describe('one process manager', () => {
+  const remoteMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.test.remoteRuntime'), name: 'Remote runtime' });
+  const edge = { location: { kind: 'edge', space: SpaceId.random() } } as const;
+
+  /** A plugin contributing a remote manager whose `list` records the spaces it was asked about, as EDGE's does. */
+  const RemoteRuntime = (listed: string[]) =>
+    Plugin.make(
+      Plugin.define(remoteMeta).pipe(
+        Plugin.addModule({
+          id: 'remote-process-manager',
+          activatesOn: ActivationEvents.Startup,
+          provides: [Capabilities.LayerSpec],
+          activate: () =>
+            Effect.succeed([
+              Capability.contribute(
+                Capabilities.LayerSpec,
+                LayerSpec.make(
+                  {
+                    affinity: 'application',
+                    requires: [Registry.AtomRegistry],
+                    provides: [RemoteProcessManager.Service],
+                  },
+                  () =>
+                    Layer.effect(
+                      RemoteProcessManager.Service,
+                      Effect.gen(function* () {
+                        const noop = yield* RemoteProcessManager.Service;
+                        return {
+                          ...noop,
+                          list: ({ spaceId }: RemoteProcessManager.ListOptions) =>
+                            Effect.sync(() => {
+                              listed.push(spaceId);
+                              return [];
+                            }),
+                        };
+                      }),
+                    ).pipe(Layer.provide(RemoteProcessManager.layerNoop)),
+                ),
+              ),
+            ]),
+        }),
+      ),
+    );
+
+  it.effect("sends the app's edge control to the remote manager a plugin contributes", () =>
+    Effect.gen(function* () {
+      const listed: string[] = [];
+      const manager = makeManager({ plugins: [RemoteRuntime(listed)()], enabled: [remoteMeta.profile.key] });
+      yield* manager.activate(ActivationEvents.Startup);
+
+      // The app's manager and the stack's (the one `AgentService` resolves) are the same one.
+      const appManager = yield* manager.capabilities.waitFor(Capabilities.ProcessManager);
+      const stackManager = yield* resolveWith(manager, Process.ManagerService);
+      yield* appManager.handles(edge);
+      yield* stackManager.handles(edge);
+      expect(listed).toEqual([edge.location.space, edge.location.space]);
+    }),
+  );
+
+  it.effect('falls back to no remote control without such a plugin, and keeps local control', () =>
+    Effect.gen(function* () {
+      const manager = makeManager({ plugins: [], enabled: [] });
+      yield* manager.activate(ActivationEvents.Startup);
+
+      const appManager = yield* manager.capabilities.waitFor(Capabilities.ProcessManager);
+      expect(yield* appManager.handles()).toEqual([]);
+      const remote = yield* Effect.exit(appManager.handles(edge));
+      expect(Exit.isFailure(remote) && String(Cause.squash(remote.cause))).toContain('offers no process control');
+    }),
+  );
 });

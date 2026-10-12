@@ -25,8 +25,8 @@ export const FileSettings = ({ subject }: FileSettingsProps) => {
   // Sorted by name: contribution order is module activation order, which is neither stable nor
   // meaningful to the reader, so the list would otherwise reshuffle as plugins are toggled.
   const backends = useMemo(() => [...contributed].sort((a, b) => a.name.localeCompare(b.name)), [contributed]);
-  // No explicit choice defers to the Blob registry's own configured default (edge when
-  // configured, inline otherwise), so the Select reflects what an upload will actually use.
+  // No explicit choice defers to the Blob registry's own configured default (the local-first
+  // edge backend), so the Select reflects what an upload will actually use.
   const requested = settings.backend ? backends.find((b) => b.storage === settings.backend) : undefined;
   const active = requested ?? backends.find((b) => b.storage === client.graph.defaultBlobStorage) ?? backends[0];
   // Use the resolved backend's storage name so the Select never shows a missing/stale value.

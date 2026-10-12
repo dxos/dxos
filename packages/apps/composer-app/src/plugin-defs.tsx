@@ -44,6 +44,7 @@ import * as FreeqPlugin from '@dxos/plugin-freeq/FreeqPlugin';
 import * as GamePlugin from '@dxos/plugin-game/GamePlugin';
 import * as GitHubPlugin from '@dxos/plugin-github/GitHubPlugin';
 import * as GooglePlugin from '@dxos/plugin-google/GooglePlugin';
+import * as HandpanPlugin from '@dxos/plugin-handpan/HandpanPlugin';
 import * as HeyGenPlugin from '@dxos/plugin-heygen/HeyGenPlugin';
 import * as HiggsfieldPlugin from '@dxos/plugin-higgsfield/HiggsfieldPlugin';
 import * as IbkrPlugin from '@dxos/plugin-ibkr/IbkrPlugin';
@@ -93,6 +94,7 @@ import * as TrelloPlugin from '@dxos/plugin-trello/TrelloPlugin';
 import * as TripPlugin from '@dxos/plugin-trip/TripPlugin';
 import * as TypefullyPlugin from '@dxos/plugin-typefully/TypefullyPlugin';
 import * as TypeSafePlugin from '@dxos/plugin-typesafe/TypeSafePlugin';
+import * as UmlPlugin from '@dxos/plugin-uml/UmlPlugin';
 import * as VideoPlugin from '@dxos/plugin-video/VideoPlugin';
 import * as VoxelPlugin from '@dxos/plugin-voxel/VoxelPlugin';
 import * as WnfsPlugin from '@dxos/plugin-wnfs/WnfsPlugin';
@@ -127,6 +129,8 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
     TasksPlugin.meta.profile.key,
     SheetPlugin.meta.profile.key,
     IllustratorPlugin.meta.profile.key,
+    // The illustrator's canvas variant; activation makes no network call.
+    CanvasPlugin.meta.profile.key,
     TldrawPlugin.meta.profile.key,
     ExcalidrawPlugin.meta.profile.key,
     TablePlugin.meta.profile.key,
@@ -154,6 +158,7 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
       DevtoolsPlugin.meta.profile.key,
       DuffelPlugin.meta.profile.key,
       GamePlugin.meta.profile.key,
+      HandpanPlugin.meta.profile.key,
       HeyGenPlugin.meta.profile.key,
       HiggsfieldPlugin.meta.profile.key,
       IdeogramPlugin.meta.profile.key,
@@ -177,6 +182,7 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
       StudioPlugin.meta.profile.key,
       TranscriptionPlugin.meta.profile.key,
       TypefullyPlugin.meta.profile.key,
+      UmlPlugin.meta.profile.key,
       VideoPlugin.meta.profile.key,
       ZenPlugin.meta.profile.key,
     ],
@@ -312,6 +318,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     ThreadPlugin.make(),
     TldrawPlugin.make(),
     TranscriptionPlugin.make(),
+    UmlPlugin.make(),
     ...experimental,
   ]
     .filter(isTruthy)
@@ -332,6 +339,7 @@ const experimental: Plugin.Plugin[] = [
   FilePlugin.make(),
   FreeqPlugin.make(),
   GitHubPlugin.make(),
+  HandpanPlugin.make(),
   HeyGenPlugin.make(),
   HiggsfieldPlugin.make(),
   IbkrPlugin.make(),

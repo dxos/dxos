@@ -8,6 +8,7 @@ import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 import * as AttentionSigil from '@dxos/app-toolkit/AttentionSigil';
 import { Attention, useAttention } from '@dxos/react-ui-attention';
 import * as Button from '@dxos/react-ui/Button';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Util from '@dxos/react-ui/Util';
 import { iconSize, mx } from '@dxos/ui-theme';
 import type { Merge } from '@dxos/util';
@@ -31,19 +32,20 @@ import type { Merge } from '@dxos/util';
 type PaneRootProps = Util.ThemedClassName<ComponentPropsWithRef<'div'>>;
 
 const PaneRoot = forwardRef<HTMLDivElement, PaneRootProps>(({ children, ...props }, forwardedRef) => (
-  <div
+  <Layout.Flex
+    column
     {...Util.composableProps(props, {
       role: 'article',
       // No `dx-density-*` here: the class sets `--dx-control` for the whole subtree, so a pane-wide
       // `lg` reached the content body and rendered form labels and inputs at 40px. The toolbar gets
       // `lg` from its own size scope (see `Pane.Toolbar`); the body keeps the `md` default. Its focus ring is the
       // shell's landmark ring (the plank and companion are `useMainLandmark` areas).
-      classNames: 'dx-expand flex flex-col dx-attention-surface relative',
+      classNames: 'dx-expand dx-attention-surface relative',
     })}
     ref={forwardedRef}
   >
     {children}
-  </div>
+  </Layout.Flex>
 ));
 
 PaneRoot.displayName = 'Pane.Root';
@@ -150,9 +152,11 @@ const PaneTabs = forwardRef<HTMLDivElement, PaneTabsProps>(
     const { hasAttention, isAncestor, isRelated } = useAttention(attendableId);
     const attended = (related && isRelated) || hasAttention || isAncestor;
     return (
-      <div
+      <Layout.Flex
         role='tablist'
-        className={mx('flex-1 overflow-x-auto scrollbar-none flex items-center gap-1', classNames)}
+        align='center'
+        gap='xs'
+        classNames={['flex-1 overflow-x-auto scrollbar-none', classNames]}
         ref={forwardedRef}
       >
         {tabs.map(({ id, icon, label, testId }) => (
@@ -170,7 +174,7 @@ const PaneTabs = forwardRef<HTMLDivElement, PaneTabsProps>(
             onClick={() => onValueChange?.(id)}
           />
         ))}
-      </div>
+      </Layout.Flex>
     );
   },
 );

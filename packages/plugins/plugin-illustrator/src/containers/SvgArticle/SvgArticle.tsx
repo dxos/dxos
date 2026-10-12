@@ -25,7 +25,7 @@ export const SvgArticle = ({ canvas, selection, onSelectionChange, onActivate }:
   const objects = useMemo(() => SvgHandler.read(snapshot?.content ?? {}).scene.objects, [snapshot]);
 
   return (
-    <Panel.Root classNames='dx-fill'>
+    <Panel.Root>
       <Panel.Body classNames='dx-attention-surface'>
         <SceneSvg
           objects={objects}

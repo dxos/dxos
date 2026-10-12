@@ -17,6 +17,7 @@ import {
   type Camera,
   type ElementId,
   type Endpoint,
+  type LayerId,
   type LinkId,
   type LinkType,
   type NodeId,
@@ -41,9 +42,10 @@ export type Drag =
   /**
    * Moving the selection; `anchor` is the pressed node's top-left, which is what snaps to the grid,
    * and `delta` the resulting scene-space offset applied transiently to every selected node. With
-   * `copy` (⌘ held) the originals stay and copies land at `delta` instead.
+   * `copy` (⌘ held) the originals stay and copies land at `delta` instead. `raw` is the pointer's own offset, which
+   * the nodes follow while the drag is in flight; `delta` is where they land.
    */
-  | { kind: 'move'; ids: NodeId[]; origin: Point; anchor: Point; delta: Point; copy?: boolean }
+  | { kind: 'move'; ids: NodeId[]; origin: Point; anchor: Point; delta: Point; raw?: Point; copy?: boolean }
   /** Resizing one node by a handle; `bounds` is the transient result. */
   | { kind: 'resize'; id: NodeId; handle: Handle; start: Bounds; bounds: Bounds }
   /**
@@ -61,6 +63,13 @@ export type Drag =
   /** Re-attaching one end of a link; `fixed` is the other end's resolved port for the rubber band. */
   | { kind: 'end'; id: LinkId; end: 'source' | 'target'; fixed: Point; fixedSide: Side; to: Point; target?: Endpoint };
 
+/**
+ * Whether a move has left where it was pressed: until it does, a press on a selected node is a click, and the
+ * selection keeps its outline and handles rather than flickering off and on.
+ */
+export const isMoving = (drag: Drag | undefined): boolean =>
+  drag?.kind === 'move' && drag.raw !== undefined && (drag.raw.x !== 0 || drag.raw.y !== 0);
+
 export type HistoryEntry = { path: SceneId[]; camera: Camera };
 
 export type ControlPointRef = { link: LinkId; index: number };
@@ -68,11 +77,18 @@ export type ControlPointRef = { link: LinkId; index: number };
 /** The text part being edited in place (`parts.ts`). */
 export type EditingPart = { id: NodeId; part: PartKey };
 
+/** Where the properties and layers panels sit: floating over the canvas, or docked in a column beside it. */
+export type PanelMode = 'floating' | 'docked';
+
 export type SceneViewAtoms = {
   camera: Atom.Writable<Camera>;
   path: Atom.Writable<SceneId[]>;
   selection: Atom.Writable<ReadonlySet<ElementId>>;
   hover: Atom.Writable<NodeId | undefined>;
+  /** The link under the pointer, which shows its end handles as a selected one does. */
+  linkHover: Atom.Writable<LinkId | undefined>;
+  /** The layer new shapes and links go on; unset (or a layer the scene does not have), the top one. */
+  layer: Atom.Writable<LayerId | undefined>;
   /** The selected control point of a selected spline, if any. */
   point: Atom.Writable<ControlPointRef | undefined>;
   tool: Atom.Writable<Tool>;
@@ -80,7 +96,7 @@ export type SceneViewAtoms = {
   linkType: Atom.Writable<LinkType>;
   /** Grid shown and moves/resizes snapped to it. */
   snap: Atom.Writable<boolean>;
-  /** Guides shown: the scene's page frame and, on a lattice, its cells. */
+  /** Guides shown: on a lattice, its cells. */
   guides: Atom.Writable<boolean>;
   /** On a lattice scene, snap lands on the lattice's cells rather than the basic grid. */
   lattice: Atom.Writable<boolean>;
@@ -91,6 +107,11 @@ export type SceneViewAtoms = {
   /** The last cut or copied fragment (`clipboard.ts`). */
   clipboard: Atom.Writable<Clipboard | undefined>;
   editing: Atom.Writable<EditingPart | undefined>;
+  /**
+   * The node whose embedded content takes input (an editor in a frame), entered by clicking the node; any other
+   * node's embedded content is inert, so a press anywhere on it selects and moves it.
+   */
+  active: Atom.Writable<NodeId | undefined>;
   /** Frames show their id, type and geometry. */
   debug: Atom.Writable<boolean>;
 };
@@ -104,6 +125,8 @@ export const createSceneViewAtoms = (root: SceneId): SceneViewAtoms => ({
   path: Atom.keepAlive(Atom.make<SceneId[]>([root])),
   selection: Atom.keepAlive(Atom.make<ReadonlySet<ElementId>>(new Set<ElementId>())),
   hover: Atom.keepAlive(Atom.make<NodeId | undefined>(undefined)),
+  linkHover: Atom.keepAlive(Atom.make<LinkId | undefined>(undefined)),
+  layer: Atom.keepAlive(Atom.make<LayerId | undefined>(undefined)),
   point: Atom.keepAlive(Atom.make<ControlPointRef | undefined>(undefined)),
   tool: Atom.keepAlive(Atom.make<Tool>({ kind: 'select' })),
   linkType: Atom.keepAlive(Atom.make<LinkType>('curve')),
@@ -115,5 +138,6 @@ export const createSceneViewAtoms = (root: SceneId): SceneViewAtoms => ({
   undo: Atom.keepAlive(Atom.make<UndoState>(emptyUndo())),
   clipboard: Atom.keepAlive(Atom.make<Clipboard | undefined>(undefined)),
   editing: Atom.keepAlive(Atom.make<EditingPart | undefined>(undefined)),
+  active: Atom.keepAlive(Atom.make<NodeId | undefined>(undefined)),
   debug: Atom.keepAlive(Atom.make<boolean>(false)),
 });

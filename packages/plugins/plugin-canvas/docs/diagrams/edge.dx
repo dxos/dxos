@@ -1,0 +1,33 @@
+diagram @ -128,-64 flow=down box=256x128 grid=384x192
+group clients "Clients" {
+  node Composer "Composer" ref="packages/apps/composer-app"
+  node Cli "hub-cli" ref="edge/packages/apps/hub-cli"
+}
+group gateway "Gateway" {
+  node Router "edge router" ref="edge/packages/services/edge/wrangler.jsonc"
+  node Hub "hub (accounts)" ref="edge/packages/services/hub-service/wrangler.jsonc"
+}
+group services "Services" compact {
+  node Db "db-service" ref="edge/packages/services/db-service/wrangler.jsonc"
+  node Compute "compute-service" ref="edge/packages/services/compute-service/wrangler.jsonc"
+  node Identity "identity-service" ref="edge/packages/services/identity-service/wrangler.jsonc"
+  node Kms "kms-service" ref="edge/packages/services/kms-service/wrangler.jsonc"
+  node Ai "ai-service" ref="edge/packages/services/ai-service/wrangler.jsonc"
+  node Blob "blob-service" ref="edge/packages/services/blob-service/wrangler.jsonc"
+  node Store "KV / R2 / D1 / Q" ref="edge/packages/services/edge/wrangler.jsonc"
+}
+edge Composer -> Router "WebSocket + HTTP"
+edge Cli -> Router "HTTP API"
+edge Composer -> Hub "passkey login"
+edge Router -> Hub "auth lookup"
+edge Router -> Db "/db"
+edge Router -> Compute "/functions"
+edge Router -> Identity "/identity"
+edge Router -> Kms "/kms"
+edge Router -> Ai "/ai"
+edge Router -> Blob "/blob"
+edge Db -> Compute "functions"
+edge Db -> Kms
+edge Compute -> Ai
+edge Hub -> Db "data"
+edge Router -> Store "queues, backups"

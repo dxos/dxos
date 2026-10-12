@@ -336,7 +336,7 @@ export const Send: Story = {
 /**
  * Submitting again without waiting for the running turn: the second prompt is QUEUED on the feed and
  * runs after the first, rather than being dropped (the composer used to ignore a submit while a turn
- * was active) or cancelling the turn in flight (`processor.request` interrupts, `enqueue` does not).
+ * was active) or cancelling the turn in flight (`chatModel.request` interrupts, `enqueue` does not).
  *
  * Deliberately no wait between the two submits — that is the whole case. Both replies landing is what
  * proves the second prompt survived; the agent-level ordering and mid-turn arrival are pinned

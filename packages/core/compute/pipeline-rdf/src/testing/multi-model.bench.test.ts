@@ -86,7 +86,7 @@ describe.skipIf(!ENABLED)('pipeline-rdf multi-model extraction benchmark (Ollama
             const entities = new Set(
               allFacts.flatMap((fact) =>
                 [fact.assertion.subject, fact.assertion.object].flatMap((term) =>
-                  'entity' in term ? [term.entity] : [],
+                  term.kind === 'entity' ? [term.entity] : [],
                 ),
               ),
             );

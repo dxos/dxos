@@ -11,7 +11,7 @@
 //
 
 import { type Bounds, type Node, type Point } from '../model/types.ts';
-import { type LatticeSpec } from './lattice.ts';
+import { type LatticeSpec, onLattice } from './lattice.ts';
 import { sideNormal } from './ports.ts';
 import { type RouteEnd } from './route.ts';
 import { nodeBounds } from './shapes.ts';
@@ -19,7 +19,7 @@ import { nodeBounds } from './shapes.ts';
 /** A bend costs as much as this much distance: turns dominate, length breaks ties. */
 const TURN_COST = 100_000;
 
-/** Gutter lines beyond the two ends the search may use, so a route can go round an obstacle. */
+/** Gutter lines beyond the ends and the shapes the search may use, so a route can go round the outermost. */
 const MARGIN = 3;
 
 const EPSILON = 1e-6;
@@ -49,6 +49,53 @@ const gutterLines = (low: number, high: number, pitch: number): number[] => {
   return Array.from({ length: last - first + 1 }, (_, index) => (first + index + 0.5) * pitch);
 };
 
+type Region = { left: number; right: number; top: number; bottom: number };
+
+/**
+ * The span the search covers: the ends, grown by every frame within `MARGIN` pitches of them, so a way round
+ * an obstacle is in range while a distant shape adds no lines to the grid. `transitive` keeps growing by the
+ * frames near the grown span until none is left, for the rare detour round a chain of abutting shapes.
+ */
+const searchRegion = (
+  start: Point,
+  end: Point,
+  frames: readonly Bounds[],
+  pitchX: number,
+  pitchY: number,
+  transitive: boolean,
+): Region => {
+  const region: Region = {
+    left: Math.min(start.x, end.x),
+    right: Math.max(start.x, end.x),
+    top: Math.min(start.y, end.y),
+    bottom: Math.max(start.y, end.y),
+  };
+  const [reachX, reachY] = [MARGIN * pitchX, MARGIN * pitchY];
+  const pending = new Set(frames);
+  for (let grown = true; grown;) {
+    grown = false;
+    // A single pass measures nearness against the ends' span only, so one frame cannot pull in the next.
+    const reach = { ...region };
+    for (const frame of pending) {
+      const span = transitive ? region : reach;
+      const near =
+        frame.x <= span.right + reachX &&
+        frame.x + frame.width >= span.left - reachX &&
+        frame.y <= span.bottom + reachY &&
+        frame.y + frame.height >= span.top - reachY;
+      if (near) {
+        region.left = Math.min(region.left, frame.x);
+        region.right = Math.max(region.right, frame.x + frame.width);
+        region.top = Math.min(region.top, frame.y);
+        region.bottom = Math.max(region.bottom, frame.y + frame.height);
+        pending.delete(frame);
+        grown = transitive;
+      }
+    }
+  }
+  return region;
+};
+
 const sortedUnique = (values: number[]): number[] =>
   [...new Set(values.map((value) => Math.round(value * 1000) / 1000))].sort((left, right) => left - right);
 
@@ -63,15 +110,43 @@ export const gutterRoute = (
   spec: LatticeSpec,
   from: RouteEnd,
   to: RouteEnd,
-): Point[] | undefined => {
+): Point[] | undefined => gutterRouteWithCost(nodes, spec, from, to)?.points;
+
+/** A gutter route and what it cost the search: `TURN_COST` a bend, plus its length. */
+export type GutterRoute = { points: Point[]; cost: number };
+
+/** {@link gutterRoute} with its cost, so routes between different ports can be compared. */
+export const gutterRouteWithCost = (
+  nodes: readonly Node[],
+  spec: LatticeSpec,
+  from: RouteEnd,
+  to: RouteEnd,
+): GutterRoute | undefined => {
   const [pitchX, pitchY] = [spec.width + spec.gutterX, spec.height + spec.gutterY];
   const start = gutterExit(from, spec);
   const end = gutterExit(to, spec);
-  const verticals = gutterLines(Math.min(start.x, end.x), Math.max(start.x, end.x), pitchX);
-  const horizontals = gutterLines(Math.min(start.y, end.y), Math.max(start.y, end.y), pitchY);
+  const frames = nodes.filter(onLattice).map(nodeBounds);
+  // The local grid finds almost every route; only when it offers no way round does the search widen.
+  const search = (transitive: boolean) =>
+    searchGrid(from, to, start, end, frames, searchRegion(start, end, frames, pitchX, pitchY, transitive), spec);
+  return search(false) ?? search(true);
+};
+
+/** Dijkstra over the gutter lines and port lines in `region`, from the gutter exit `start` to `end`. */
+const searchGrid = (
+  from: RouteEnd,
+  to: RouteEnd,
+  start: Point,
+  end: Point,
+  frames: readonly Bounds[],
+  region: Region,
+  spec: LatticeSpec,
+): GutterRoute | undefined => {
+  const [pitchX, pitchY] = [spec.width + spec.gutterX, spec.height + spec.gutterY];
+  const verticals = gutterLines(region.left, region.right, pitchX);
+  const horizontals = gutterLines(region.top, region.bottom, pitchY);
   const xs = sortedUnique([...verticals, start.x, end.x]);
   const ys = sortedUnique([...horizontals, start.y, end.y]);
-  const frames = nodes.map(nodeBounds);
   const clear = (a: Point, b: Point) => !frames.some((frame) => crosses(a, b, frame));
 
   const indexOf = (values: number[], value: number) => values.indexOf(Math.round(value * 1000) / 1000);
@@ -80,25 +155,29 @@ export const gutterRoute = (
   // The stub leaves along the side's normal, so the first run continuing that axis is not a bend.
   const axisOf = (end: RouteEnd): Axis => (end.side === 'e' || end.side === 'w' ? 'h' : 'v');
 
-  // Dijkstra over (column, row, arriving axis); the grid is a few dozen lines a side, so a linear scan of
-  // the open set is cheap enough.
+  // Dijkstra over (column, row, arriving axis), the open set a binary heap: a route is searched for each candidate
+  // pair of ports, so each search must be cheap.
   type State = { i: number; j: number; axis: Axis };
   const key = ({ i, j, axis }: State) => `${i},${j},${axis}`;
   const cost = new Map<string, number>();
   const previous = new Map<string, State>();
-  const open: State[] = [];
+  const open = new MinHeap<State>();
   const startState: State = { i: startI, j: startJ, axis: axisOf(from) };
   cost.set(key(startState), 0);
-  open.push(startState);
+  open.push(startState, 0);
   let best: State | undefined;
   let bestCost = Infinity;
-  while (open.length > 0) {
-    open.sort((left, right) => (cost.get(key(left)) ?? Infinity) - (cost.get(key(right)) ?? Infinity));
-    const current = open.shift();
-    if (!current) {
+  while (open.size > 0) {
+    const entry = open.pop();
+    if (!entry) {
       break;
     }
+    const current = entry.value;
     const currentCost = cost.get(key(current)) ?? Infinity;
+    // A state queued again at a lower cost leaves its older entry behind; skip the stale one.
+    if (entry.priority > currentCost) {
+      continue;
+    }
     if (currentCost >= bestCost) {
       break;
     }
@@ -132,7 +211,7 @@ export const gutterRoute = (
       if (nextCost < (cost.get(key(next)) ?? Infinity)) {
         cost.set(key(next), nextCost);
         previous.set(key(next), current);
-        open.push(next);
+        open.push(next, nextCost);
       }
     }
   }
@@ -144,8 +223,55 @@ export const gutterRoute = (
   for (let state: State | undefined = best; state; state = previous.get(key(state))) {
     corners.unshift({ x: xs[state.i], y: ys[state.j] });
   }
-  return collapse([from.point, ...corners, to.point]);
+  return { points: collapse([from.point, ...corners, to.point]), cost: bestCost };
 };
+
+/** A binary min-heap of values by priority. */
+class MinHeap<T> {
+  #items: { value: T; priority: number }[] = [];
+
+  get size(): number {
+    return this.#items.length;
+  }
+
+  push(value: T, priority: number): void {
+    const items = this.#items;
+    items.push({ value, priority });
+    for (let index = items.length - 1; index > 0;) {
+      const parent = (index - 1) >> 1;
+      if (items[parent].priority <= items[index].priority) {
+        break;
+      }
+      [items[parent], items[index]] = [items[index], items[parent]];
+      index = parent;
+    }
+  }
+
+  pop(): { value: T; priority: number } | undefined {
+    const items = this.#items;
+    const top = items[0];
+    const last = items.pop();
+    if (items.length > 0 && last) {
+      items[0] = last;
+      for (let index = 0; ;) {
+        const [left, right] = [index * 2 + 1, index * 2 + 2];
+        let smallest = index;
+        if (left < items.length && items[left].priority < items[smallest].priority) {
+          smallest = left;
+        }
+        if (right < items.length && items[right].priority < items[smallest].priority) {
+          smallest = right;
+        }
+        if (smallest === index) {
+          break;
+        }
+        [items[smallest], items[index]] = [items[index], items[smallest]];
+        index = smallest;
+      }
+    }
+    return top;
+  }
+}
 
 /** Drops repeated points and the middle of any three collinear ones, so only the real bends remain. */
 const collapse = (points: Point[]): Point[] => {

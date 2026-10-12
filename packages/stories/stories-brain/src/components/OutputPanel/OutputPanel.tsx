@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { Fragment, type ReactNode, useMemo, useState } from 'react';
+import React, { type ReactNode, useMemo, useState } from 'react';
 
 import { type RDF } from '@dxos/pipeline-rdf';
 import * as Button from '@dxos/react-ui/Button';
@@ -10,7 +10,7 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Status from '@dxos/react-ui/Status';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
-import type * as Util from '@dxos/react-ui/Util';
+import * as Util from '@dxos/react-ui/Util';
 
 import { type EchoObjectItem, EchoObjectsList } from '../EchoObjectsList/index.ts';
 import { FactPanel } from '../FactPanel/index.ts';
@@ -65,18 +65,32 @@ export const OutputPanel = ({ classNames, facts, objects, stats = [], details = 
           ))}
         </Toolbar.Root>
       </Panel.Header>
-      <Panel.Body>
-        {active === 'facts' && <FactPanel facts={facts} classNames='h-full' />}
-        {active === 'objects' && <EchoObjectsList objects={objects} classNames='h-full' />}
-        {active === 'stats' && <StatsView stats={stats} />}
-        {details.map((detail) => (active === detail.id ? <Fragment key={detail.id}>{detail.content}</Fragment> : null))}
-      </Panel.Body>
+      {/* Each view takes the body's row: slotted (`asChild`) where it has no height of its own, and as a child
+          where it fills its parent already (a `Panel.Root`). */}
+      {active === 'facts' && (
+        <Panel.Body asChild>
+          <FactPanel facts={facts} />
+        </Panel.Body>
+      )}
+      {active === 'objects' && (
+        <Panel.Body>
+          <EchoObjectsList objects={objects} />
+        </Panel.Body>
+      )}
+      {active === 'stats' && (
+        <Panel.Body asChild>
+          <StatsView stats={stats} />
+        </Panel.Body>
+      )}
+      {details.map((detail) =>
+        active === detail.id ? <Panel.Body key={detail.id}>{detail.content}</Panel.Body> : null,
+      )}
     </Panel.Root>
   );
 };
 
-const StatsView = ({ stats }: { stats: StatItem[] }) => (
-  <ScrollArea.Root classNames='h-full'>
+const StatsView = Util.composable<HTMLDivElement, { stats: StatItem[] }>(({ stats, ...props }, forwardedRef) => (
+  <ScrollArea.Root {...Util.composableProps(props)} ref={forwardedRef}>
     <ScrollArea.Viewport classNames='flex flex-col gap-1 py-1'>
       {stats.length === 0 && <Status.Empty>No stats.</Status.Empty>}
       {stats.map((stat) => (
@@ -87,4 +101,6 @@ const StatsView = ({ stats }: { stats: StatItem[] }) => (
       ))}
     </ScrollArea.Viewport>
   </ScrollArea.Root>
-);
+));
+
+StatsView.displayName = 'StatsView';

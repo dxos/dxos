@@ -20,7 +20,6 @@ export default defineConfig({
     'operations': 'src/operations/index.ts',
     'skills': 'src/skills/index.ts',
     'DrawingSkill': 'src/skills/DrawingSkill.ts',
-    'UmlSkill': 'src/skills/UmlSkill.ts',
     'translations': 'src/translations.ts',
     'util': 'src/util/index.ts',
     'Drawing': 'src/types/Drawing.ts',

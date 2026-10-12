@@ -10,8 +10,8 @@ import { isToolKey, keyAction } from '../../model/keys.ts';
 import { nodeDef } from '../../model/node-def.ts';
 import { type Projection } from '../../model/projection.ts';
 import { type LinkRegistry, type NodeRegistry } from '../../model/registry.ts';
-import { type Bounds, type Capabilities, type ElementId, type Scene, type Size } from '../../model/types.ts';
-import { fitBounds, zoomAt } from '../../utils/camera.ts';
+import { type Capabilities, type ElementId, type Scene, type Size } from '../../model/types.ts';
+import { NOMINAL_ZOOM, fitBounds, zoomAt } from '../../utils/camera.ts';
 import { unionBounds } from '../../utils/hit.ts';
 import { nodeBounds } from '../../utils/shapes.ts';
 import { toolForKey } from '../Palette/Palette.tsx';
@@ -30,8 +30,6 @@ export type UseSceneKeysOptions = {
   projection: Projection;
   capabilities: Capabilities;
   viewport: Size;
-  /** The current scene's frame, which `fit` frames. */
-  bounds: Bounds;
   /** Least gap between that frame and a viewport edge when fitting, in scene units. */
   inset: number;
   /** Minor grid spacing in scene px; an arrow nudges by it. */
@@ -43,6 +41,10 @@ export type UseSceneKeysOptions = {
   toggleDebug: () => void;
   onUndo: () => void;
   onRedo: () => void;
+  /** Frames the scene and enters fit mode. */
+  onFit: () => void;
+  /** The user moved the camera, which ends fit mode. */
+  onExitFit: () => void;
 } & Pick<SceneCamera, 'animateTo'> &
   Pick<SceneNavigation, 'drillIn' | 'drillOut' | 'goHistory'> &
   Pick<SceneSnap, 'major'> &
@@ -63,7 +65,6 @@ export const useSceneKeys = ({
   projection,
   capabilities,
   viewport,
-  bounds,
   inset,
   grid,
   select,
@@ -73,6 +74,8 @@ export const useSceneKeys = ({
   toggleDebug,
   onUndo,
   onRedo,
+  onFit,
+  onExitFit,
   animateTo,
   drillIn,
   drillOut,
@@ -119,18 +122,22 @@ export const useSceneKeys = ({
           break;
         }
         case 'fit':
-          animateTo(fitBounds(bounds, viewport, inset));
+          onFit();
           event.preventDefault();
           break;
         case 'fitSelection': {
           const union = unionBounds(selectedNodes.map((id) => nodeBounds(scene.nodes[id])));
           if (union) {
-            animateTo(fitBounds(union, viewport, inset));
+            onExitFit();
+            animateTo(fitBounds(union, viewport, inset, NOMINAL_ZOOM));
           }
           break;
         }
         case 'zoomReset':
-          animateTo(zoomAt(registry.get(atoms.camera), { x: viewport.width / 2, y: viewport.height / 2 }, 1));
+          onExitFit();
+          animateTo(
+            zoomAt(registry.get(atoms.camera), { x: viewport.width / 2, y: viewport.height / 2 }, NOMINAL_ZOOM),
+          );
           break;
         case 'back':
           goHistory(-1);
@@ -215,7 +222,6 @@ export const useSceneKeys = ({
       nodeRegistry,
       linkRegistry,
       animateTo,
-      bounds,
       viewport,
       inset,
       goHistory,
@@ -228,6 +234,8 @@ export const useSceneKeys = ({
       toggleDebug,
       onUndo,
       onRedo,
+      onFit,
+      onExitFit,
       copy,
       cut,
       paste,

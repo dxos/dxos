@@ -7,8 +7,8 @@ import React, { useCallback, useState } from 'react';
 import { Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import * as Button from '@dxos/react-ui/Button';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Util from '@dxos/react-ui/Util';
-import { mx } from '@dxos/ui-theme';
 
 export type SchemaTableProps = Util.ThemedClassName<{
   types: any[];
@@ -47,14 +47,14 @@ export const SchemaTable = ({ classNames, types, objects = {}, label, onClick }:
   );
 
   return (
-    <div className={mx('grid grid-cols-[1fr_80px_40px] gap-1 overflow-none', classNames)}>
+    <Layout.Grid cols={['fill', '80px', '40px']} gap='xs' classNames={classNames}>
       <h2 className='p-2'>{label}</h2>
       {types.map((type) => {
         // Preset descriptors are plain `{ typename }` objects, while class-based type entities carry
         // no `typename` property — those resolve via `Type.getTypename`.
         const typename = typeof type.typename === 'string' ? type.typename : Type.getTypename(type);
         return (
-          <div key={typename} className='grid grid-cols-subgrid col-span-3 items-center'>
+          <Layout.Grid key={typename} cols='subgrid' align='center'>
             <div className='px-2 text-sm font-mono text-fg-subtle'>{rowName(type, typename)}</div>
             {/* A labelled row is a preset rather than a type, so it has no object count to show. */}
             <div className='px-2 text-right font-mono'>
@@ -68,9 +68,9 @@ export const SchemaTable = ({ classNames, types, objects = {}, label, onClick }:
               label={`Create ${rowName(type, typename)}`}
               onClick={() => typename && void handleClick(typename)}
             />
-          </div>
+          </Layout.Grid>
         );
       })}
-    </div>
+    </Layout.Grid>
   );
 };

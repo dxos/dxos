@@ -101,7 +101,7 @@ const normalize = (value: string): string =>
     .replace(/[.,;:!?]+$/, '');
 
 const termLabel = (term: Assertion['subject']): string =>
-  'entity' in term ? (term.label ?? term.entity) : term.literal;
+  term.kind === 'entity' ? (term.label ?? term.entity) : term.literal;
 
 // Two surfaces "align" when equal or one contains the other after normalization — tolerates phrasing
 // drift ("Greek philosopher" vs "philosopher", "is a" vs "is-a") while still requiring the right terms.

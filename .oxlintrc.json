@@ -83,8 +83,6 @@
           "packages/plugins/plugin-support/src/hooks/useTours.ts",
           "packages/sdk/app-toolkit/src/app-framework/AppCapabilities.ts",
           "packages/sdk/app-toolkit/src/app-framework/AppCapability.ts",
-          "packages/ui/react-ui-canvas-editor/src/components/Canvas/Shape.tsx",
-          "packages/ui/react-ui-canvas-editor/src/components/Canvas/Shapes.tsx",
           "packages/ui/react-ui-menu/src/components/ActionLabel.tsx",
           "packages/ui/react-ui-menu/src/components/action-label.ts",
           "packages/ui/react-ui/src/providers/ThemeProvider/IconRegistry.tsx",

@@ -95,11 +95,7 @@ export const RepositoryViewer = ({
           />
         ) : (
           <Layout.Grid grow cols={['18rem', 'fill']} classNames='divide-x divide-separator'>
-            <div
-              role='region'
-              aria-label={t('files-pane.label')}
-              className='dx-expand grid content-start overflow-auto'
-            >
+            <Layout.Grid grow role='region' aria-label={t('files-pane.label')} classNames='content-start overflow-auto'>
               <RepositoryFileTree
                 directories={directories}
                 expanded={expanded}
@@ -107,17 +103,19 @@ export const RepositoryViewer = ({
                 onExpandedChange={onExpandedChange}
                 onSelect={onSelectPath}
               />
-            </div>
-            <div
+            </Layout.Grid>
+            <Layout.Grid
+              grow
+              rows={['min', 'fill']}
               role='region'
               aria-label={t('file-pane.label')}
-              className='dx-expand grid grid-rows-[min-content_1fr] overflow-hidden'
+              classNames='overflow-hidden'
             >
               <div className='px-3 py-1 text-sm text-fg-muted border-b border-separator truncate'>
                 {selectedPath ?? t('no-file-selected.message')}
               </div>
               {file ? <RepositoryFileView file={file} /> : <div />}
-            </div>
+            </Layout.Grid>
           </Layout.Grid>
         )}
       </Panel.Body>
@@ -126,7 +124,7 @@ export const RepositoryViewer = ({
 };
 
 const Message = ({ children, testId }: { children: string; testId: string }) => (
-  <div className='dx-expand grid place-items-center p-4 text-fg-muted text-center' data-testid={testId}>
+  <Layout.Grid grow center classNames='p-4 text-fg-muted text-center' data-testid={testId}>
     {children}
-  </div>
+  </Layout.Grid>
 );

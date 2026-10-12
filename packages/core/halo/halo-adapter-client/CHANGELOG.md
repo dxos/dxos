@@ -1,5 +1,42 @@
 # @dxos/halo-adapter-client
 
+## 0.14.0
+
+### Patch Changes
+
+- Updated dependencies [1819960]
+  - @dxos/effect@0.14.0
+  - @dxos/client@0.14.0
+  - @dxos/link@0.14.0
+  - @dxos/client-protocol@0.14.0
+  - @dxos/echo-protocol@0.14.0
+  - @dxos/protocols@0.14.0
+  - @dxos/halo@0.14.0
+  - @dxos/async@0.14.0
+  - @dxos/context@0.14.0
+  - @dxos/keys@0.14.0
+  - @dxos/util@0.14.0
+
+## 0.13.0
+
+### Patch Changes
+
+- Updated dependencies [cb1e218]
+- Updated dependencies [8980a93]
+- Updated dependencies [e99ee70]
+- Updated dependencies [1894fc1]
+  - @dxos/util@0.13.0
+  - @dxos/client@0.13.0
+  - @dxos/link@0.13.0
+  - @dxos/client-protocol@0.13.0
+  - @dxos/async@0.13.0
+  - @dxos/context@0.13.0
+  - @dxos/effect@0.13.0
+  - @dxos/echo-protocol@0.13.0
+  - @dxos/protocols@0.13.0
+  - @dxos/halo@0.13.0
+  - @dxos/keys@0.13.0
+
 ## 0.12.0
 
 ### Patch Changes

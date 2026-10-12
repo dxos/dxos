@@ -525,9 +525,11 @@
   /* The required mark trails the label text in the error colour; hidden from the name, since `aria-required` says it. */
   /*
    * A field's label reads a step below its value, in ui-theme's subdued text; a Checkbox or Switch's own label is the
-   * control's text, not a field label, so it keeps the base colour.
+   * control's text, not a field label, so it keeps the base colour. A Select's root takes no box, so its label counts as
+   * the field's.
    */
-  :is(.dx-field, .dx-field-header) > :is(.dx-label, .dx-typography) {
+  :is(.dx-field, .dx-field-header) > :is(.dx-label, .dx-typography),
+  .dx-field > .dx-select > .dx-label {
     color: var(--color-fg-subtle);
   }
   /* The required mark is the current Form's: a warning-coloured `*` a small gap after the label at every size. */
@@ -971,24 +973,26 @@
    * The gap is one control inset: square icon-only Buttons already sit in an inset cell, and every other control takes the
    * same inline margin, so any two adjacent items are three insets apart.
    */
-  /* A field in a toolbar (a search or filter input) takes the row's remaining width. */
+  /*
+   * A field in a toolbar (a search or filter input) takes the row's remaining width. Its inset is the field's padding,
+   * not its control's margin: the control fills the field, and a margin on top of that would overflow the toolbar.
+   */
   .dx-toolbar > .dx-field {
     flex: 1 1 auto;
     min-width: 0;
+    padding-inline: var(--dx-control-inset);
   }
   /* A row's cross axis is vertical, so the start alignment a Field column needs would pin it to the toolbar's top. */
-  .dx-toolbar > .dx-checkbox {
+  .dx-toolbar > :is(.dx-checkbox, .dx-switch) {
     align-self: center;
   }
   .dx-toolbar {
     display: flex;
     flex-shrink: 0;
     align-items: center;
-    gap: var(--dx-control-inset);
+    /* No gap or padding of its own: the items are block-sized controls, which carry their own spacing. */
     width: 100%;
     min-height: var(--dx-block-size);
-    /* Half a gap of inline padding (px-1 at md), so the end items are not flush with a pane's edge. */
-    padding-inline: calc(var(--dx-gap-size) / 2);
     font-size: var(--dx-font-size);
     line-height: var(--dx-line-height);
   }
@@ -999,7 +1003,6 @@
     container-type: normal;
   }
   .dx-toolbar > .dx-control:not([data-square]),
-  .dx-toolbar > .dx-field > .dx-control,
   .dx-toolbar > .dx-select > .dx-control {
     margin-inline: var(--dx-control-inset);
   }

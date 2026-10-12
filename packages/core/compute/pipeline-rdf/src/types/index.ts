@@ -9,3 +9,7 @@ export * from './Extract.ts';
 export * from './Fact.ts';
 export * from './Factuality.ts';
 export * from './Illocution.ts';
+
+export * as Mapping from './Mapping.ts';
+export * as Predicate from './Predicate.ts';
+export * as Vocab from './Vocab.ts';

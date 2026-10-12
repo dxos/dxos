@@ -15,6 +15,9 @@ import { Channel, Message } from '@dxos/types';
 /** `Channel.backend.kind` of the {@link makeTestChannelBackend} channels. */
 export const TEST_BACKEND_KIND = 'org.dxos.channel.backend.test';
 
+/** `Channel.backend.kind` of a mirrored test backend, standing in for Discord's (a host posts the agent's chats). */
+export const TEST_MIRRORED_BACKEND_KIND = 'org.dxos.channel.backend.test-mirrored';
+
 /** `Person.identities` label the test backend reaches people by, as Discord reads `discord`. */
 export const TEST_HANDLE_LABEL = 'test';
 
@@ -26,7 +29,10 @@ class TestBackendRefusedError extends BaseError.extend('TestBackendRefusedError'
  * A channel backend with every optional member, standing in for Discord: it records posts, opens a
  * direct thread `dm-<handle>` for people with a `test` identity, and refuses handles in `refuse`.
  */
-export const makeTestChannelBackend = ({ refuse = [] }: { refuse?: readonly string[] } = {}) => {
+export const makeTestChannelBackend = ({
+  refuse = [],
+  mirrored = false,
+}: { refuse?: readonly string[]; mirrored?: boolean } = {}) => {
   const posts: TestPost[] = [];
   const post = (channel: Channel.Channel, thread: string | undefined, message: Message.Message) =>
     Effect.suspend(() => {
@@ -39,8 +45,9 @@ export const makeTestChannelBackend = ({ refuse = [] }: { refuse?: readonly stri
     });
 
   const provider: ThreadCapabilities.ChannelBackendProvider = {
-    kind: TEST_BACKEND_KIND,
+    kind: mirrored ? TEST_MIRRORED_BACKEND_KIND : TEST_BACKEND_KIND,
     label: 'Test',
+    mirrored,
     createFields: Schema.Struct({}),
     makeConfig: () => Feed.make(),
     subscribe: (_channel, onMessages) => {
@@ -72,5 +79,5 @@ export const makeChannelCapabilities = (...providers: ThreadCapabilities.Channel
 };
 
 /** A channel on the test backend. */
-export const makeTestChannel = (name = 'general') =>
-  Channel.make({ name, backend: { kind: TEST_BACKEND_KIND, config: Feed.make() } });
+export const makeTestChannel = (name = 'general', kind = TEST_BACKEND_KIND) =>
+  Channel.make({ name, backend: { kind, config: Feed.make() } });

@@ -7,6 +7,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
+import type * as AgentService from '@dxos/compute/AgentService';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Skill from '@dxos/compute/Skill';
 import { Annotation, Database, DXN, type Error as EchoError, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
@@ -126,6 +127,20 @@ export const loadForChat = (chat: Chat.Chat): Effect.Effect<Agent | undefined> =
     const parent = Obj.getParent(chat);
     return parent && Obj.instanceOf(Agent, parent) ? parent : undefined;
   });
+
+/**
+ * Where a chat's turns run: as its `remote` flag says, else on EDGE for an agent's chat, since its chats share
+ * the agent's one brain, which only EDGE holds. An explicit `remote: false` keeps an agent's chats local, for
+ * a runtime with no EDGE to reach (a story or test), where every chat shares the client's brain instead.
+ */
+export const chatLocation = (chat: Chat.Chat): AgentService.AgentLocation =>
+  (chat.remote ?? isAgentChat(chat)) ? 'edge' : 'local';
+
+/** Whether the chat runs as an agent (the agent parents it); synchronous, like {@link loadForChat}. */
+export const isAgentChat = (chat: Chat.Chat): boolean => {
+  const parent = Obj.getParent(chat);
+  return parent !== undefined && Obj.instanceOf(Agent, parent);
+};
 
 export type MakeProps = Omit<Obj.MakeProps<typeof Agent>, 'instructions'> & {
   instructions: string;

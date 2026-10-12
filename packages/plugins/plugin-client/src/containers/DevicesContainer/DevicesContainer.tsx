@@ -205,7 +205,7 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
   return (
     <>
       <p className='text-fg-muted'>{t('qr-code.description', { ns: meta.profile.key })}</p>
-      <div role='group' className='grid grid-cols-[1fr_min-content]'>
+      <Layout.Grid role='group' cols={['fill', 'min']}>
         <Layout.Flex justify='center' classNames='py-4'>
           <div className='w-full md:max-w-80 aspect-square relative text-fg-muted'>
             <QrCode.QrCode aria-labelledby={qrLabel} errorCorrection='Q' value={url ?? 'never'} />
@@ -217,7 +217,7 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
         <span id={qrLabel} className='sr-only'>
           {t('qr.label')}
         </span>
-      </div>
+      </Layout.Grid>
       {/* TODO(burdon): Factor out button bar */}
       <Layout.Flex justify='center'>
         <Layout.Flex gap='sm'>

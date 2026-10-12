@@ -7,6 +7,7 @@ import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
@@ -29,7 +30,11 @@ type LobbyRootProps = PropsWithChildren<Util.ThemedClassName>;
 
 // TODO(burdon): Make headless?
 const LobbyRoot = ({ children }: LobbyRootProps) => {
-  return <div className='relative flex flex-col grow overflow-hidden group'>{children}</div>;
+  return (
+    <Layout.Flex column classNames='relative grow overflow-hidden group'>
+      {children}
+    </Layout.Flex>
+  );
 };
 
 LobbyRoot.displayName = 'LobbyRoot';
@@ -61,7 +66,7 @@ const LobbyPreview = (_props: LobbyPreviewProps) => {
   }, [videoEnabled]);
 
   return (
-    <div className='grid grow p-4'>
+    <Layout.Grid classNames='grow p-4'>
       <ResponsivePanel>
         {(videoEnabled && (
           <VideoObject
@@ -75,7 +80,7 @@ const LobbyPreview = (_props: LobbyPreviewProps) => {
           />
         )) || <div className='p-4 outline outline-separator rounded-md'>{t('camera-off.label')}</div>}
       </ResponsivePanel>
-    </div>
+    </Layout.Grid>
   );
 };
 
@@ -106,9 +111,9 @@ const LobbyToolbar = ({ roomId, ...props }: LobbyToolbarProps) => {
   }, [call, roomId]);
 
   return (
-    <div className='absolute bottom-0 left-0 right-0 flex justify-center'>
+    <Layout.Flex justify='center' classNames='absolute bottom-0 left-0 right-0'>
       <Toolbar participants={count} isInRoom={false} {...props} />
-    </div>
+    </Layout.Flex>
   );
 };
 

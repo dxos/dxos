@@ -45,7 +45,7 @@ type ListboxOption = {
 };
 
 /** `none` keeps zag's focus, keyboard and typeahead with no selection (AUDIT §6 group B: every list runs the machine). */
-type ListboxSelectionMode = 'single' | 'multiple' | 'none';
+type ListboxSelectionMode = 'single' | 'multiple' | 'extended' | 'none';
 
 type RootContextValue = {
   items: readonly ListboxOption[];
@@ -72,7 +72,10 @@ const useRootContext = (part: string) => {
 
 type ListboxRootProps = ThemedClassName<Omit<ComponentPropsWithoutRef<'div'>, 'defaultValue' | 'onSelect'>> & {
   items: readonly ListboxOption[];
-  /** `single` by default; `multiple` toggles each item; `none` selects nothing but keeps navigation and typeahead. */
+  /**
+   * `single` by default; `multiple` toggles each item; `extended` selects one on a click and adds with Cmd/Ctrl or a
+   * Shift range, as a desktop list does; `none` selects nothing but keeps navigation and typeahead.
+   */
   selectionMode?: ListboxSelectionMode;
   value?: string[];
   defaultValue?: string[];
@@ -177,7 +180,7 @@ ListboxLabel.displayName = 'Listbox.Label';
 
 type ListboxContentProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> &
   Pick<ScrollArea.RootProps, 'mode' | 'width' | 'native'> &
-  Pick<ContainerProps, 'gutter' | 'gap'> & {
+  Pick<ContainerProps, 'gutter' | 'gap' | 'padBlock'> & {
     /**
      * `false` renders the rows without a ScrollArea of their own, for a host that already scrolls (a ScrollArea
      * composed in `Panel.Body`): the rows then inherit the host's rails (`gutter='inherit'` by default).
@@ -192,7 +195,7 @@ type ListboxContentProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> &
 const ListboxViewport = composable<
   HTMLDivElement,
   ContainerProps & Omit<ComponentPropsWithoutRef<'div'>, 'className'> & { hostScrolls?: boolean }
->(({ gutter, gap, hostScrolls, onKeyDown, onFocus, onBlur, children, ...props }, forwardedRef) => {
+>(({ gutter, gap, padBlock, hostScrolls, onKeyDown, onFocus, onBlur, children, ...props }, forwardedRef) => {
   const api = useListboxContext();
   const { columns, virtual, scrollToIndexRef } = useRootContext('Content');
   const [element, setElement] = useState<HTMLDivElement | null>(null);
@@ -202,7 +205,7 @@ const ListboxViewport = composable<
   const ref = useComposedRefs<HTMLDivElement>(forwardedRef, setElement, windowing.listRef);
   useRowTabStops(element);
 
-  const { style, ...attributes } = containerAttributes({ gutter, gap, columns });
+  const { style, ...attributes } = containerAttributes({ gutter, gap, columns, padBlock });
   const {
     className,
     style: ownStyle,

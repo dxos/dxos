@@ -20,6 +20,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { makeInProcessClient, normalizeHandlers, runServiceCall, toServiceError } from '@dxos/protocols';
 import {
+  BlobStoreService,
   ContactsService,
   DataService,
   DevicesService,
@@ -33,6 +34,7 @@ import {
   NetworkService,
   QueryService,
   SpacesService,
+  SqlService,
   SystemService,
 } from '@dxos/protocols/rpc';
 import { type RequestOptions } from '@dxos/protocols/service-contract';
@@ -70,6 +72,8 @@ export class ClientServicesRpcs extends RpcGroup.make().merge(
   ContactsService.Rpcs,
   InboxService.Rpcs,
   EdgeAgentService.Rpcs,
+  SqlService.Rpcs,
+  BlobStoreService.Rpcs,
   DevtoolsHost.Rpcs,
 ) {}
 
@@ -94,6 +98,8 @@ export type ClientServicesHandlers = {
   ContactsService: ContactsService.Handlers;
   InboxService: InboxService.Handlers;
   EdgeAgentService: EdgeAgentService.Handlers;
+  SqlService: SqlService.Handlers;
+  BlobStoreService: BlobStoreService.Handlers;
   DevtoolsHost: DevtoolsHost.Handlers;
 };
 
@@ -350,6 +356,8 @@ export interface ClientServicesRpc
     ContactsService.Client,
     InboxService.Client,
     EdgeAgentService.Client,
+    SqlService.Client,
+    BlobStoreService.Client,
     DevtoolsHost.Client {}
 
 /**

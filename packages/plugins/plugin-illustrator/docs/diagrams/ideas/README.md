@@ -18,7 +18,7 @@ What each rule changed in the first drafts:
 | `echo`            | `state-owned-once`                                          | Each store's owner is named on its edge: `AutomergeHost` owns doc chunks, `IndexEngine` the index, `FeedStore` the blocks.                         |
 | `echo`            | `public-surface-only`                                       | Client-to-host edges land only on `DataService` and `QueryService`, the RPC seams.                                                                 |
 | `compute`         | `bounded-live-state`                                        | Added the dispatcher's capped run log (`MAX_TRACKED_INVOCATIONS`), the one bounded collection on the path.                                         |
-| `compute`         | `no-pointless-indirection`                                  | Dropped `TriggerMonitor`, which only merges two atoms, and the dispatcher's reach through `ProcessManager.operationHandlerSet`.                     |
+| `compute`         | `no-pointless-indirection`                                  | Dropped `TriggerManager`, which only merges two atoms, and the dispatcher's reach through `ProcessManager.operationHandlerSet`.                     |
 | `client-services` | `one-mechanism-per-concern`                                 | Proxies talk to one `ServicesProvider`; the two transports hang off it instead of each proxy wiring both.                                          |
 | `client-services` | `no-pointless-indirection`                                  | Dropped the `devices` and `network` services, which only forward to their managers.                                                                |
 | `process`         | `bounded-live-state`                                        | The live table's owner is labelled `owns, no cap`: `ProcessManager.#handles` has no limit and keeps finished handles until shutdown.               |
@@ -43,9 +43,7 @@ to 0.47 and leaves the other rules unchanged; the edge stays because the cycle i
 
 Findings the diagrams surface but do not fix, each a candidate issue:
 
-- `ProcessManager.#handles` and `ProcessOperationInvoker`'s `fiberCache` grow for the whole session
-  (`bounded-live-state` 0.24).
-- `ProcessManager` and `ProcessOperationInvoker` depend on each other (`dependency-direction` 0.15–0.19).
+- `ProcessManager.#handles` grows for the whole session (`bounded-live-state` 0.24).
 - Local and EDGE process managers are parallel services merged only by their callers
   (`one-mechanism-per-concern` 0.24).
 - `echo-client` imports `QueryPlanner` and filters from `@dxos/echo-host`, so the query engine runs on both tiers.

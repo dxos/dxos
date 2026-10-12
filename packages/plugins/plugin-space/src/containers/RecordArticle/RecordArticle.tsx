@@ -27,7 +27,6 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import { mx } from '@dxos/ui-theme';
 
 import { ObjectCard, RelatedTypeFilter } from '#components';
 import { useRelatedObjects, useRelatedTypeFilter } from '#hooks';
@@ -83,9 +82,7 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
 
             {/* Gated on the unfiltered set so hiding every type does not remove the filter itself. */}
             {relatedObjects.length > 0 && (
-              <div
-                className={mx('dx-expand flex flex-col gap-form-gap', singleColumn ? 'dx-card-max-width' : 'w-full')}
-              >
+              <Layout.Flex column gap='form' classNames={['dx-expand', singleColumn ? 'dx-card-max-width' : 'w-full']}>
                 <Field.Root>
                   <Field.Label>{t('related-objects.label')}</Field.Label>
                 </Field.Root>
@@ -101,7 +98,7 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
                     <Masonry.Viewport items={related} />
                   </Masonry.Content>
                 </Masonry.Root>
-              </div>
+              </Layout.Flex>
             )}
           </ScrollArea.Viewport>
         </ScrollArea.Root>

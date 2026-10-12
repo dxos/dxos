@@ -13,6 +13,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Attention } from '@dxos/react-ui-attention';
 import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Main from '@dxos/react-ui/Main';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Tabs from '@dxos/react-ui/Tabs';
@@ -112,12 +113,13 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
               />
             ))}
           </Tabs.List>
-          <div
-            className='grid grid-cols-1 justify-items-center auto-rows-(--dx-rail-item) py-0.5 gap-0.5 overflow-y-auto scrollbar-none'
+          <Layout.Grid
+            cols={1}
+            classNames='justify-items-center auto-rows-(--dx-rail-item) py-0.5 gap-0.5 overflow-y-auto scrollbar-none'
             style={iconSize(4)}
           >
             <Surface.Surface type={AppSurface.StatusIndicator} />
-          </div>
+          </Layout.Grid>
           <div className='hidden lg:grid grid-cols-1 justify-items-center auto-rows-(--dx-rail-action) p-1'>
             {/* Rail-action sized like the tab triggers above it, so the glyphs share one centre line. */}
             <ToggleComplementarySidebarButton classNames='w-(--dx-rail-action) h-(--dx-rail-action) min-h-0 px-0' />

@@ -16,9 +16,9 @@ import { type FactExtractor, type FactUnit, extractFactsUnitStage } from './extr
 const ALICE_FACT: RDF.Fact = {
   id: 'fact-1',
   assertion: {
-    subject: { entity: 'alice' },
+    subject: { kind: 'entity', entity: 'alice' },
     predicate: 'travelsTo',
-    object: { entity: 'paris' },
+    object: { kind: 'entity', entity: 'paris' },
     validFrom: '2026-06-12',
     quote: "I think I'm probably going to Paris next week",
   },

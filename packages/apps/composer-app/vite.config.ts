@@ -4,7 +4,7 @@
 
 import react from '@vitejs/plugin-react';
 import { execFileSync } from 'node:child_process';
-import { createReadStream, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { createReadStream, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { ResolverFactory } from 'oxc-resolver';
 // import sourcemaps from 'rollup-plugin-sourcemaps';
@@ -172,21 +172,6 @@ const REACT_EXCLUDE = [
 ];
 
 /**
- * React Compiler options; `sources` covers every workspace root except `react-ui`, whose primitives
- * ship whole in the boot graph (an import-map shared package) where compiled caches cost ~75 KB
- * and rarely hit. Scoped here rather than by `exclude` so those primitives keep Fast Refresh.
- */
-const reactCompilerOptions = {
-  sources: readdirSync(path.join(rootDir, 'packages')).flatMap((group) =>
-    group === 'ui'
-      ? readdirSync(path.join(rootDir, 'packages/ui'))
-          .filter((name) => name !== 'react-ui')
-          .map((name) => `/packages/ui/${name}/`)
-      : [`/packages/${group}/`],
-  ),
-};
-
-/**
  * Transpile targets for oxc (dev) and Rolldown (build).
  */
 const browserTargets = ['chrome108', 'edge107', 'firefox104', 'safari16'] as const;
@@ -266,8 +251,8 @@ const PLUGIN_SHARED_PACKAGES = [
 ];
 
 /**
- * The commit this bundle's `@dxos/*` packages are published at on pkg.pr.new (every push to `main` publishes
- * one) and the versions of the libraries it shares with a plugin. `DX_PLUGIN_TOOLCHAIN_COMMIT` overrides the
+ * The commit this bundle's `@dxos/*` packages are published at on pkg.pr.new (`main` publishes daily, and every
+ * deploy publishes the commit it builds) and the versions of the libraries it shares with a plugin. `DX_PLUGIN_TOOLCHAIN_COMMIT` overrides the
  * commit, for a build of a branch whose own commit was never published, and `DX_PLUGIN_TOOLCHAIN_CLI` the `dx` a
  * sandbox publishes with, for a CLI change no pkg.pr.new build carries yet. Empty when neither is available.
  */
@@ -652,9 +637,8 @@ export default defineConfig((env) => ({
     // Must be placed before React plugin to process Solid files first.
     solid({ include: SOLID_SOURCES }),
 
-    // React Compiler via oxc (`oxc-transform-react`) rather than Babel, on `.jsx`/`.tsx` only because
-    // over plain script modules it emits Fast Refresh registrations that throw in the client's workers.
-    react({ compiler: reactCompilerOptions, include: /\.[jt]sx$/, exclude: REACT_EXCLUDE }),
+    // `.jsx`/`.tsx` only: over plain script modules it emits Fast Refresh registrations that throw in the client's workers.
+    react({ include: /\.[jt]sx$/, exclude: REACT_EXCLUDE }),
 
     isBundledDev && reactRefreshPreamble(react.preambleCode),
 

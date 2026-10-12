@@ -15,6 +15,7 @@ import { ActionMenu, type MenuItem } from '@dxos/react-ui-menu';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Main from '@dxos/react-ui/Main';
 import * as Status from '@dxos/react-ui/Status';
 import * as Tabs from '@dxos/react-ui/Tabs';
@@ -93,14 +94,15 @@ const L1PanelInner = ({ open, path, id, item, unavailable, isCurrent, onBack }: 
     >
       {shouldRenderContent &&
         (pending ? (
-          <div
+          <Layout.Flex
             role='status'
             aria-label={t('pending-workspace.label')}
-            className='row-start-2 self-start flex justify-center p-4 animate-fade-in'
+            justify='center'
+            classNames='row-start-2 self-start p-4 animate-fade-in'
             style={{ animationDelay: RENDER_DELAY, animationFillMode: 'backwards' }}
           >
             <Icon.Icon icon='ph--spinner-gap--regular' size='xl' spin />
-          </div>
+          </Layout.Flex>
         ) : item ? (
           <L1PanelContent open={open} path={path} item={item} onBack={onBack} />
         ) : (

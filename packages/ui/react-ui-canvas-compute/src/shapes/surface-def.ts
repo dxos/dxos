@@ -5,10 +5,8 @@
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
-import { type ShapeDef } from '@dxos/react-ui-canvas-editor';
-import { createAnchorMap } from '@dxos/react-ui-canvas-editor';
-
-import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs.ts';
+import { createPorts, defineComputeNode } from './common/index.ts';
+import { ComputeShape, type CreateShapeProps, createAnchorId, createShape, withZ } from './defs.ts';
 import { SurfaceComponent } from './Surface.tsx';
 
 // Kept out of `Surface.tsx`: react-refresh only fast-refreshes a module whose
@@ -31,12 +29,14 @@ export const createSurface = (props: CreateSurfaceProps) =>
     ...props,
   });
 
-export const surfaceShape: ShapeDef<SurfaceShape> = {
+export const surfaceNodeDef = defineComputeNode<SurfaceShape>({
   type: 'surface',
   name: 'Surface',
   icon: 'ph--frame-corners--regular',
+  group: 'Outputs',
+  schema: withZ(SurfaceShape),
   component: SurfaceComponent,
-  createShape: createSurface,
-  getAnchors: (shape) => createAnchorMap(shape, { [createAnchorId('input')]: { x: -1, y: 0 } }),
+  create: createSurface,
+  ports: (shape) => createPorts(shape.size, { [createAnchorId('input')]: { x: -1, y: 0 } }),
   resizable: true,
-};
+});

@@ -229,21 +229,21 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
         <Panel.Body asChild>
           <Layout.Grid grow cols={['30rem', 'fill']} classNames='divide-x divide-separator'>
             <Layout.Grid grow rows={[1, 2]} classNames='divide-y divide-separator-subtle'>
-              <div role='region' aria-label={t('browse-pane.label')} className='dx-expand grid overflow-auto'>
+              <Layout.Grid grow role='region' aria-label={t('browse-pane.label')} classNames='overflow-auto'>
                 <FileTree
                   files={fileEntries}
                   selectedPath={selectedPath}
                   onSelect={setSelectedPath}
                   emptyMessage={t('view.code.empty.placeholder')}
                 />
-              </div>
-              <div role='region' aria-label={t('inspect-pane.label')} className='dx-expand grid'>
+              </Layout.Grid>
+              <Layout.Grid grow role='region' aria-label={t('inspect-pane.label')}>
                 <BuildOutput state={projectState} />
-              </div>
+              </Layout.Grid>
             </Layout.Grid>
-            <div role='region' aria-label={t('output-pane.label')} className='dx-expand grid'>
+            <Layout.Grid grow role='region' aria-label={t('output-pane.label')}>
               {selected ? <FileEditor file={selected} role={role} /> : null}
-            </div>
+            </Layout.Grid>
           </Layout.Grid>
         </Panel.Body>
       </Panel.Root>

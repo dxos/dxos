@@ -7,6 +7,7 @@ import React, { type PropsWithChildren, createContext, useContext, useEffect, us
 import { type Obj } from '@dxos/echo';
 import * as ForceGraph from '@dxos/plugin-explorer/ForceGraph';
 import { Listbox } from '@dxos/react-ui-list';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
@@ -36,32 +37,60 @@ const AgentKnowledgeContext = createContext<AgentKnowledgeView>('memories');
 type AgentKnowledgeRootProps = PropsWithChildren<{
   role?: string;
   defaultView?: AgentKnowledgeView;
+  /** Forgets everything the agent knows; the toolbar shows Reset only when given. */
+  onReset?: () => void;
 }>;
 
 /** What the agent knows, one view at a time: its memories, the facts it read, the goals it serves and its knowledge graph. */
-const AgentKnowledgeRoot = ({ role, defaultView = 'memories', children }: AgentKnowledgeRootProps) => {
+const AgentKnowledgeRoot = ({ role, defaultView = 'memories', onReset, children }: AgentKnowledgeRootProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const [view, setView] = useState<AgentKnowledgeView>(defaultView);
+  const menuActions = useMenuBuilder(
+    () =>
+      (onReset
+        ? MenuBuilder.make()
+            .root({ label: ['agent-knowledge-actions.label', { ns: meta.profile.key }] })
+            .action(
+              'reset',
+              {
+                label: ['agent-knowledge-reset.label', { ns: meta.profile.key }],
+                icon: 'ph--trash--regular',
+                testId: 'agent-knowledge-reset',
+              },
+              () => onReset(),
+            )
+        : MenuBuilder.make().root({ label: ['agent-knowledge-actions.label', { ns: meta.profile.key }] })
+      ).build(),
+    [onReset],
+  );
   return (
     <Tabs.Root asChild orientation='horizontal' value={view} onValueChange={(value) => isView(value) && setView(value)}>
       <Panel.Root role={role}>
         <Panel.Header>
-          <Toolbar.Root>
-            <Tabs.List>
-              <Tabs.Trigger value='memories' data-testid='agent-knowledge-tab-memories'>
-                {t('agent-knowledge-memories.label')}
-              </Tabs.Trigger>
-              <Tabs.Trigger value='facts' data-testid='agent-knowledge-tab-facts'>
-                {t('agent-knowledge-facts.label')}
-              </Tabs.Trigger>
-              <Tabs.Trigger value='goals' data-testid='agent-knowledge-tab-goals'>
-                {t('agent-knowledge-goals.label')}
-              </Tabs.Trigger>
-              <Tabs.Trigger value='graph' data-testid='agent-knowledge-tab-graph'>
-                {t('agent-knowledge-graph.label')}
-              </Tabs.Trigger>
-            </Tabs.List>
-          </Toolbar.Root>
+          <ActionToolbar
+            {...menuActions}
+            alwaysActive
+            // The tabs lead and the gap pushes the actions to the end.
+            start={
+              <>
+                <Tabs.List>
+                  <Tabs.Trigger value='memories' data-testid='agent-knowledge-tab-memories'>
+                    {t('agent-knowledge-memories.label')}
+                  </Tabs.Trigger>
+                  <Tabs.Trigger value='facts' data-testid='agent-knowledge-tab-facts'>
+                    {t('agent-knowledge-facts.label')}
+                  </Tabs.Trigger>
+                  <Tabs.Trigger value='goals' data-testid='agent-knowledge-tab-goals'>
+                    {t('agent-knowledge-goals.label')}
+                  </Tabs.Trigger>
+                  <Tabs.Trigger value='graph' data-testid='agent-knowledge-tab-graph'>
+                    {t('agent-knowledge-graph.label')}
+                  </Tabs.Trigger>
+                </Tabs.List>
+                <Toolbar.Separator variant='gap' />
+              </>
+            }
+          />
         </Panel.Header>
         {/* Views render their own Panel.Body (rather than `Tabs.Content`, whose content mounts hidden for a frame,
             where the force graph would measure zero), so a list's ScrollArea is the body and gets its height. */}
@@ -342,8 +371,8 @@ const AgentKnowledgeGraph = ({ nodes, edges }: AgentKnowledgeGraphProps) => {
       </Layout.Flex>
     </Panel.Body>
   ) : (
-    <Panel.Body>
-      <ForceGraph.Root classNames='h-full' model={model} />
+    <Panel.Body asChild>
+      <ForceGraph.Root model={model} />
     </Panel.Body>
   );
 };

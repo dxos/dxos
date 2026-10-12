@@ -11,9 +11,9 @@ import { useNetworkStatus } from '@dxos/react-client/mesh';
 import * as Button from '@dxos/react-ui/Button';
 
 const styles = {
-  success: 'text-sky-300 dark:text-green-700',
-  warning: 'text-orange-300 dark:text-orange-600',
-  error: 'text-red-300 dark:text-red-600',
+  success: 'text-success-text',
+  warning: 'text-warning-text',
+  error: 'text-error-text',
 };
 
 // TODO(burdon): Move out of debug plugin.

@@ -5,13 +5,29 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
+import * as Capability from '@dxos/app-framework/Capability';
 import { Context } from '@dxos/context';
 import { type EdgeHttpClient, type EdgeRequestArgs } from '@dxos/edge-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import type * as ThreadOperation from '@dxos/plugin-thread/ThreadOperation';
 
 import { DiscordChannel } from '#types';
 
 import { DiscordChannelError } from '../errors.ts';
+
+/** Resolves the EDGE client that signs bot-route requests with the user's identity. */
+export type EdgeClientResolver = Effect.Effect<EdgeHttpClient, DiscordChannelError, Capability.Service>;
+
+/** The app's client; absent on EDGE itself, where the gateway routes are not called. */
+export const appEdgeClient: EdgeClientResolver = Effect.gen(function* () {
+  const [client] = yield* Capability.getAll(ClientCapabilities.Client);
+  if (!client) {
+    return yield* Effect.fail(
+      new DiscordChannelError({ message: 'Reaching the Discord bot needs the app client, which this host lacks.' }),
+    );
+  }
+  return client.edge.http;
+});
 
 /** EDGE route of the gateway host for one bot, keyed by its Discord application id. */
 export const discordBotPath = (applicationId: string) => `/compute/discord/bots/${encodeURIComponent(applicationId)}`;
@@ -52,3 +68,25 @@ export const toConnectionStatus = (
     error: status.lastError,
   };
 };
+
+/** Calls a bot route under {@link discordBotPath} and decodes the `data` EDGE answers with. */
+export const callBotRoute = <A, I>(
+  edge: EdgeHttpClient,
+  applicationId: string,
+  route: string,
+  args: EdgeRequestArgs,
+  schema: Schema.Codec<A, I>,
+): Effect.Effect<A, DiscordChannelError> =>
+  Effect.gen(function* () {
+    const data = yield* Effect.tryPromise({
+      try: () => edge.request(Context.default(), `${discordBotPath(applicationId)}${route}`, args),
+      catch: (cause) =>
+        new DiscordChannelError({
+          message: cause instanceof Error ? cause.message : 'EDGE Discord bot request failed.',
+          cause,
+        }),
+    });
+    return yield* Schema.decodeUnknownEffect(schema)(data).pipe(
+      Effect.mapError((cause) => new DiscordChannelError({ message: `Unexpected answer from ${route}.`, cause })),
+    );
+  });

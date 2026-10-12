@@ -8,6 +8,7 @@ import { invariant } from '@dxos/invariant';
 import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
@@ -214,9 +215,9 @@ const ScheduleRoot = Util.composable<HTMLDivElement, ScheduleRootProps>(
           timezone,
         }}
       >
-        <div {...Util.composableProps(props, { classNames: 'flex flex-col gap-y-3' })} ref={forwardedRef}>
+        <Layout.Flex column {...Util.composableProps(props, { classNames: 'gap-y-3' })} ref={forwardedRef}>
           {children}
-        </div>
+        </Layout.Flex>
       </ScheduleContext.Provider>
     );
   },
@@ -374,7 +375,12 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
 
     case 'weekly':
       return (
-        <div className='@container dx-container-type-inline-size flex justify-between items-center gap-2 overflow-x-auto scrollbar-none'>
+        <Layout.Flex
+          justify='between'
+          align='center'
+          gap='sm'
+          classNames='@container dx-container-type-inline-size overflow-x-auto scrollbar-none'
+        >
           <LabelledRow label={t('schedule.at.label')}>
             <Field.Root>
               <Input.Date
@@ -385,13 +391,13 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
               />
             </Field.Root>
           </LabelledRow>
-          <div className='flex shrink-0 items-center gap-2'>
+          <Layout.Flex align='center' gap='sm' classNames='shrink-0'>
             <span className='shrink-0 text-sm'>{t('schedule.on.label')}</span>
-            <div className='grid w-max shrink-0 grid-cols-7 gap-x-2'>
+            <Layout.Grid cols={7} classNames='w-max shrink-0 gap-x-2'>
               {Days.map(({ value: day, label }) => {
                 const checked = value.days.includes(day);
                 return (
-                  <div key={day} className='flex shrink-0 items-center gap-1'>
+                  <Layout.Flex key={day} align='center' gap='xs' classNames='shrink-0'>
                     <Field.Root>
                       <Input.Checkbox
                         checked={checked}
@@ -408,17 +414,17 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
                       <Field.Label classNames='hidden @min-[32rem]:inline-block text-xs uppercase'>{label}</Field.Label>
                       <Field.Label classNames='inline-block @min-[32rem]:hidden text-xs'>{label.charAt(0)}</Field.Label>
                     </Field.Root>
-                  </div>
+                  </Layout.Flex>
                 );
               })}
-            </div>
-          </div>
-        </div>
+            </Layout.Grid>
+          </Layout.Flex>
+        </Layout.Flex>
       );
 
     case 'monthly':
       return (
-        <div className='flex items-center gap-3'>
+        <Layout.Flex align='center' gap='md'>
           <LabelledRow label={t('schedule.day.label')}>
             <Field.Root>
               <Input.Root
@@ -445,7 +451,7 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
               />
             </Field.Root>
           </LabelledRow>
-        </div>
+        </Layout.Flex>
       );
 
     case 'custom':

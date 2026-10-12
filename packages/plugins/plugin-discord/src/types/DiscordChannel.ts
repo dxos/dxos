@@ -12,6 +12,19 @@ import { AccessToken } from '@dxos/link';
 /** `Channel.backend.kind` of a channel that talks through a Discord bot. */
 export const BACKEND_KIND = 'org.dxos.channel.backend.discord';
 
+/**
+ * Prefix of the thread id of a DM the agent asked for but EDGE's bot has not opened yet (`dm:<Discord user id>`):
+ * opening one is a Discord call only the bot host makes. EDGE's `space-objects.ts` mirrors it.
+ */
+export const PENDING_DM_PREFIX = 'dm:';
+
+/** The thread id of a DM with a Discord user that the bot host opens on its first post. */
+export const pendingDmThread = (userId: string): string => `${PENDING_DM_PREFIX}${userId}`;
+
+/** The Discord user a pending-DM thread id names, or `undefined` for any other thread. */
+export const pendingDmUser = (thread: string): string | undefined =>
+  thread.startsWith(PENDING_DM_PREFIX) ? thread.slice(PENDING_DM_PREFIX.length) : undefined;
+
 /** The bot and the Discord channels it serves; the create-channel form edits these. */
 export const Properties = Schema.Struct({
   accessToken: Ref.Ref(AccessToken.AccessToken).annotate({

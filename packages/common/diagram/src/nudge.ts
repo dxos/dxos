@@ -330,9 +330,11 @@ const separate = (
     }
     const overlaps = pairCount(candidate, changed, shared, true);
     const crossings = pairCount(candidate, changed, crosses);
+    const overlapsBefore = pairCount(lines, changed, shared, true);
+    // A crossing still reads as two lines and a shared run does not, so each overlap resolved may cost one crossing.
     if (
-      overlaps >= pairCount(lines, changed, shared, true) ||
-      crossings > pairCount(lines, changed, crosses) ||
+      overlaps >= overlapsBefore ||
+      crossings - pairCount(lines, changed, crosses) > overlapsBefore - overlaps ||
       obstructed(candidate, changed) > obstructed(lines, changed)
     ) {
       continue;

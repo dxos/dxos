@@ -7,13 +7,13 @@ import type * as Effect from 'effect/Effect';
 import type * as Exit from 'effect/Exit';
 
 import type * as Chat from '@dxos/assistant/Chat';
-import { type ProcessManager } from '@dxos/compute-runtime';
+import type * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import type * as Process from '@dxos/compute/Process';
 import { type Database } from '@dxos/echo';
 
 /**
  * A unit of work the supervisor delegates to a linked child process. `spawn` is an existential over
- * the child operation's input/output types: the strategy constructs it (e.g. via `invokeFiber`)
+ * the child operation's input/output types: the strategy constructs it (e.g. via `Process.spawn`)
  * so {@link AgentProcess} can remain agnostic to the operation type and just track the returned pid.
  */
 export interface Delegation {
@@ -24,9 +24,14 @@ export interface Delegation {
 
   /**
    * Spawns the child for this delegation and returns its process id. Must be linked (non-blocking)
-   * so the child's exit wakes the supervisor's `onChildEvent` — i.e. `ProcessOperationInvoker.invokeFiber`.
+   * so the child's exit wakes the supervisor's `onChildEvent` — i.e. spawned through the supervisor's own
+   * {@link Process.ManagerService}, which links its children by default.
    */
-  readonly spawn: Effect.Effect<Process.ID, never, ProcessManager.ProcessOperationInvoker.Service>;
+  readonly spawn: Effect.Effect<
+    Process.ID,
+    never,
+    Process.ManagerService | OperationHandlerSet.OperationHandlerProvider
+  >;
 }
 
 /**

@@ -30,9 +30,9 @@ const makeMessage = (sender: string, subject: string, text: string, created: str
 const ALICE_FACT: RDF.Fact = {
   id: 'f-alice-1',
   assertion: {
-    subject: { entity: 'alice', label: 'Alice' },
+    subject: { kind: 'entity', entity: 'alice', label: 'Alice' },
     predicate: 'works-at',
-    object: { entity: 'acme', label: 'Acme' },
+    object: { kind: 'entity', entity: 'acme', label: 'Acme' },
   },
   factuality: { value: 'CT+', polarity: '+', confidence: 0.95, nature: 'epistemic' },
   attribution: { source: 'dxn:echo:@:m-1', generatedAtTime: '2026-07-01T00:00:00.000Z' },

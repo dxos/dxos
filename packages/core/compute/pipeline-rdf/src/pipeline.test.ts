@@ -318,11 +318,11 @@ describe('FactPipeline', () => {
             throw new Error(`expected 1 fact, got ${facts.length}`);
           }
           const [fact] = facts;
-          if (!('entity' in fact.assertion.subject) || fact.assertion.subject.entity !== 'alice') {
+          if (fact.assertion.subject.kind !== 'entity' || fact.assertion.subject.entity !== 'alice') {
             throw new Error('subject not linked');
           }
           // The original surface form is preserved as the display label (the entity id is the slug).
-          if (!('entity' in fact.assertion.subject) || fact.assertion.subject.label !== 'Alice') {
+          if (fact.assertion.subject.kind !== 'entity' || fact.assertion.subject.label !== 'Alice') {
             throw new Error(`subject label not preserved: ${JSON.stringify(fact.assertion.subject)}`);
           }
           if (fact.assertion.predicate !== 'travelsTo') {
@@ -376,7 +376,7 @@ describe('FactPipeline', () => {
             throw new Error(`expected 1 grounded fact, got ${facts.length}`);
           }
           const [fact] = facts;
-          if (!('entity' in fact.assertion.subject) || fact.assertion.subject.entity !== 'alice') {
+          if (fact.assertion.subject.kind !== 'entity' || fact.assertion.subject.entity !== 'alice') {
             throw new Error('the grounded fact was dropped');
           }
         });
@@ -456,7 +456,7 @@ describe('FactPipeline', () => {
             throw new Error(`fuzzy predicate query returned ${byFuzzyPredicate.length}, expected ${byEntity.length}`);
           }
           const [fact] = byEntity;
-          if (!('entity' in fact.assertion.subject) || fact.assertion.subject.entity !== 'composer') {
+          if (fact.assertion.subject.kind !== 'entity' || fact.assertion.subject.entity !== 'composer') {
             throw new Error('subject entity not linked');
           }
           if (fact.assertion.predicate !== 'discussedIn') {
@@ -475,9 +475,9 @@ describe('FactPipeline', () => {
 const testFact = (predicate: string): Fact => ({
   id: `test:doc#hash#${predicate}`,
   assertion: {
-    subject: { entity: 'alice', label: 'Alice' },
+    subject: { kind: 'entity', entity: 'alice', label: 'Alice' },
     predicate,
-    object: { entity: 'acme', label: 'Acme' },
+    object: { kind: 'entity', entity: 'acme', label: 'Acme' },
   },
   factuality: { value: 'CT+', polarity: '+' },
   attribution: { source: 'test:doc', generatedAtTime: '2026-01-01T00:00:00.000Z' },

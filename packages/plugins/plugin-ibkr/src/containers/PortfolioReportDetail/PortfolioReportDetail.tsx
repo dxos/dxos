@@ -80,7 +80,7 @@ export const PortfolioReportDetail = ({ role, subject, companionTo }: PortfolioR
           <SystemButton.Clipboard label={t('copy-xml.label')} value={subject.xml} />
         </Toolbar.Root>
       </Panel.Header>
-      <Panel.Body classNames='grid grid-rows-1 min-h-0'>
+      <Panel.Body asChild>
         <ReportSections positions={positions} trades={trades} cash={cash} openLots={openLots} closedLots={closedLots} />
       </Panel.Body>
     </Panel.Root>

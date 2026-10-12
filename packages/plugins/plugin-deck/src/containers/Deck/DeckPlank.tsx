@@ -14,7 +14,7 @@ import { Attention, useAttentionContext } from '@dxos/react-ui-attention';
 import type * as Util from '@dxos/react-ui/Util';
 
 import { Plank } from '#components';
-import { useAncestorBreadcrumbs, useDeckSettings } from '#hooks';
+import { planksBefore, useAncestorBreadcrumbs, useDeckSettings } from '#hooks';
 import { DeckSchema } from '#types';
 
 import { focusPane } from '../../util/index.ts';
@@ -70,10 +70,9 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
     onScrollIntoView,
   } = useDeckPlank({ id, part, active });
 
-  // In flat mode only the current plank renders, so its heading shows where it sits in the tree. Clicking a crumb
-  // goes back to it: an ancestor already open drops the planks after it, any other opens in its place.
   const { flatten } = useDeckSettings();
-  const breadcrumbs = useAncestorBreadcrumbs(flatten && part === 'main' ? id : undefined);
+  const history = useMemo(() => planksBefore(active, id), [active, id]);
+  const breadcrumbs = useAncestorBreadcrumbs(flatten && part === 'main' ? id : undefined, history);
   const onSelectBreadcrumb = useCallback(
     (crumbId: string) => {
       const index = active?.indexOf(crumbId) ?? -1;

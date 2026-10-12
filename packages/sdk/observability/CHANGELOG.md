@@ -1,5 +1,80 @@
 # @dxos/observability
 
+## 0.14.0
+
+### Minor Changes
+
+- 1fe9218: Skill hooks can now run in the background: an end-request `Skill.Hook` with `async: true` no longer holds up the request, and the agent process waits for it before finishing. Composer uses this for an opt-in **Report agent struggles** assistant setting (telemetry must also be on): a small model reviews each turn and, when the agent struggled because of its instructions or tools, the conversation is uploaded and an `agent_struggle` analytics event is emitted. `Observability.support` gains `uploadNdjson(ndjson, kind)` for uploading caller-built NDJSON bundles.
+
+### Patch Changes
+
+- 1819960: Invitation spans are no longer lost to sampling. Tail sampling now keeps every span marked `dxos.sampling.keep`, and both the host's `handleInvitationFlow` span and the guest's `acceptInvitation` span carry that mark, so short invitation flows are no longer dropped 70% of the time. The host span also records `ctx.outcome` when it ends.
+- Updated dependencies [1eed6b1]
+- Updated dependencies [6847fe2]
+- Updated dependencies [1819960]
+- Updated dependencies [eb5d14d]
+  - @dxos/echo@0.14.0
+  - @dxos/effect@0.14.0
+  - @dxos/client@0.14.0
+  - @dxos/client-protocol@0.14.0
+  - @dxos/protocols@0.14.0
+  - @dxos/config@0.14.0
+  - @dxos/async@0.14.0
+  - @dxos/context@0.14.0
+  - @dxos/invariant@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/log-store-idb@0.14.0
+  - @dxos/node-std@0.14.0
+  - @dxos/tracing@0.14.0
+  - @dxos/util@0.14.0
+
+## 0.13.0
+
+### Patch Changes
+
+- Updated dependencies [162fd6d]
+- Updated dependencies [aad3e41]
+- Updated dependencies [bb2b672]
+- Updated dependencies [cb1e218]
+- Updated dependencies [1ef899b]
+- Updated dependencies [32f32a0]
+- Updated dependencies [469e7f7]
+- Updated dependencies [665261a]
+- Updated dependencies [2e96a73]
+- Updated dependencies [945092e]
+- Updated dependencies [c531b05]
+- Updated dependencies [3672aff]
+- Updated dependencies [2f95d25]
+- Updated dependencies [c7cc480]
+- Updated dependencies [8980a93]
+- Updated dependencies [e99ee70]
+- Updated dependencies [161f994]
+- Updated dependencies [1894fc1]
+- Updated dependencies [246ee3c]
+- Updated dependencies [8ebe8d6]
+- Updated dependencies [7715216]
+- Updated dependencies [1737cad]
+- Updated dependencies [6a7bed4]
+- Updated dependencies [3022878]
+- Updated dependencies [c2a300a]
+- Updated dependencies [17008f0]
+- Updated dependencies [4f8e566]
+- Updated dependencies [a449958]
+  - @dxos/echo@0.13.0
+  - @dxos/util@0.13.0
+  - @dxos/client@0.13.0
+  - @dxos/client-protocol@0.13.0
+  - @dxos/async@0.13.0
+  - @dxos/context@0.13.0
+  - @dxos/effect@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/tracing@0.13.0
+  - @dxos/protocols@0.13.0
+  - @dxos/config@0.13.0
+  - @dxos/log-store-idb@0.13.0
+  - @dxos/invariant@0.13.0
+  - @dxos/node-std@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

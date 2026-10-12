@@ -7,7 +7,7 @@ import * as Atom from 'effect/reactivity/Atom';
 import { useMemo } from 'react';
 
 import type * as Agent from '@dxos/assistant/Agent';
-import { Filter, Obj, type Ref, Relation } from '@dxos/echo';
+import { type Database, Filter, Obj, type Ref, Relation } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
 import { HasSubject, Organization, Person } from '@dxos/types';
@@ -18,9 +18,9 @@ import {
   type AgentKnowledgeGoal,
   type AgentKnowledgeNode,
 } from '#components';
-import { FactEntry, Goal, Memory, Profile } from '#types';
+import { Goal, Memory, Profile } from '#types';
 
-import { useFactEntries } from './useFactEntries.ts';
+import { useBrainStore } from './useBrainStore.ts';
 import { useTriggers } from './useTriggers.ts';
 
 /** Live goals first, then the ones that ran their course. */
@@ -36,6 +36,14 @@ export type AgentKnowledgeData = {
   goals: AgentKnowledgeGoal[];
   nodes: AgentKnowledgeNode[];
   edges: AgentKnowledgeEdge[];
+};
+
+/** The name of a fact's source when it is an object in the space (a document); a chat message is a feed item, so has none. */
+const sourceName = (db: Database.Database | undefined, uri: string): string | undefined => {
+  const eid = EID.tryParse(uri);
+  const id = eid && EID.getEntityId(eid);
+  const object = id ? db?.getObjectById(id) : undefined;
+  return object && Obj.getLabel(object);
 };
 
 /** What the agent knows, derived for display: its active memories, the facts it read, its goals and its knowledge graph. */
@@ -118,22 +126,18 @@ export const useAgentKnowledge = (agent: Agent.Agent): AgentKnowledgeData => {
   );
   const { memories: active, nodes, edges, goals: goalItems } = useAtomValue(graphAtom);
 
-  // Feed items are immutable, so the entries query alone tracks every change.
-  const { entries } = useFactEntries(agent);
+  // Facts live only in the agent's brain (EDGE's for an agent whose chats run there), never in the space.
+  const { inspection } = useBrainStore(agent);
   const facts = useMemo(
     () =>
-      entries
-        .flatMap((entry) =>
-          entry.facts.map((fact): AgentKnowledgeFact => ({
-            id: `${entry.id}:${fact.id}`,
-            text: FactEntry.factText(fact),
-            source: entry.name,
-            speaker: fact.attribution.agent,
-            saidAt: fact.attribution.generatedAtTime,
-          })),
-        )
-        .sort((left, right) => right.saidAt.localeCompare(left.saidAt)),
-    [entries],
+      (inspection?.facts ?? []).map(({ id, text, speaker, saidAt, fact }): AgentKnowledgeFact => ({
+        id,
+        text,
+        speaker,
+        saidAt,
+        source: sourceName(db, fact.attribution.source),
+      })),
+    [inspection, db],
   );
 
   return { memories: active, facts, goals: goalItems, nodes, edges };

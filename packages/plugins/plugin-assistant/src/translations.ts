@@ -192,6 +192,8 @@ export const translations: Theme.Resource[] = [
         'options.mcp.title': 'MCP',
         'options.chat-model.title': 'Models',
         'options.environment.title': 'Environment',
+        'options.agent.title': 'Agent',
+        'agent-locked.message': 'The agent is chosen before the first message. Start a new chat to use another.',
         'remove-object.label': 'Remove object',
 
         'chat-view.title': 'View',

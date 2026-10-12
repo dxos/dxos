@@ -119,7 +119,8 @@ Give each subagent its group number and the store path. Prompt template:
 decision model that returns calibrated probabilities for typed questions. It is
 orders of magnitude cheaper than a subagent (input tokens only, $0.042 per
 million) but cannot explore, so each rule's `context` field decides what it is
-shown. Needs `TYPESAFE_API_KEY`, which is `op://CI/Typesafe AI Test Key/credential` in 1Password.
+shown. Needs `TYPESAFE_API_KEY`: use it from the shell when it is already exported, otherwise
+it is `op://CI/Typesafe AI Test Key/credential` in 1Password (see the `1password` skill).
 
 ```sh
 bun .agents/skills/agentic-review/scripts/prepare.ts --pr-only
@@ -230,7 +231,9 @@ Every PR is expected to carry a review of its own change. The author or agent ru
 only checks the committed store, so CI needs no API key and spends nothing.
 
 ```sh
-TYPESAFE_API_KEY='op://CI/Typesafe AI Test Key/credential' op run -- bun .agents/skills/agentic-review/scripts/fast.ts
+[ -n "$(printenv TYPESAFE_API_KEY)" ] && echo exported || echo unset   # check the environment first
+bun .agents/skills/agentic-review/scripts/fast.ts            # key already exported
+TYPESAFE_API_KEY='op://CI/Typesafe AI Test Key/credential' op run -- bun .agents/skills/agentic-review/scripts/fast.ts  # only with OP_SERVICE_ACCOUNT_TOKEN set
 bun .agents/skills/agentic-review/scripts/fast.ts --dry-run  # plan and price only
 ```
 
@@ -242,13 +245,14 @@ review runs the subagent workflow above. Then fix or dismiss each issue, set its
 `resolved` or `ignored`, and commit the store with the fixes.
 
 - **One store per PR.** `fast.ts` reviews the whole PR diff from its merge-base with main, then
-  supersedes every store the PR added before it: an `ignored` row whose rule and location (or
-  rule and file, when that pair is unique) match a row of the new index carries its status over
-  — a `resolved` finding raised again is a regression, so it stays `unresolved` — and the old
-  store directory is deleted. Commit that deletion with the new
-  store. An earlier store whose index does not parse stops the run before it reviews anything,
-  so its dismissals are never dropped unseen. `--base=<ref>` reviews less than the whole PR, so it
-  keeps the earlier stores.
+  deletes every earlier `mode: fast` store the PR added; commit those deletions with the new
+  store. A full or `--pr-only` store stays, because it also judged rules a fast run skips.
+  - An `ignored` row carries into the new index when its rule and location match, or its rule
+    and file when that pair is unique on both sides. A `resolved` finding raised again is a
+    regression, so it stays `unresolved`.
+  - An earlier store whose index does not parse stops the run before it reviews anything, so its
+    dismissals are never dropped unseen.
+  - `--base=<ref>` reviews less than the whole PR, so it keeps every earlier store.
 - **Changed files ignore merges.** `--pr-only` / `--fast` review only files a non-merge commit
   on HEAD's first-parent line touched and that still differ from the base, so a merge from
   main — and the conflict resolution inside it — brings nothing into the review. `--pr-only`

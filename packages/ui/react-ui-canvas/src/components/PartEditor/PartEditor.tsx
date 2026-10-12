@@ -19,7 +19,7 @@ import type * as Util from '@dxos/react-ui/Util';
 import { createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
-import { type PartEditing, type PartKey, isMultiline } from '../../utils/parts.ts';
+import { type PartEditing, type PartKey } from '../../utils/parts.ts';
 
 export type TextPartProps = Util.ThemedClassName<
   PropsWithChildren<{
@@ -36,7 +36,8 @@ export const TextPart = ({ classNames, part, text, editing, children }: TextPart
     <PartEditor classNames={classNames} part={part} text={text} editing={editing} />
   ) : (
     <div className={mx(classNames)} data-part={part}>
-      {children}
+      {/* The text's own box, which a part's layout may pad (its line boxes, not the part's frame). */}
+      <span className='inline-block'>{children}</span>
     </div>
   );
 
@@ -46,7 +47,7 @@ const stop = (event: React.SyntheticEvent) => event.stopPropagation();
 
 const PartEditor = ({ classNames, part, text, editing }: PartEditorProps) => {
   const themeMode = Hooks.useThemeMode();
-  const multiline = isMultiline(part);
+  const multiline = editing.multiline;
   // Commit or cancel once: the editor unmounts on either, and its focus loss must not commit again.
   const done = useRef(false);
   const finish = (action: () => void) => {

@@ -8,6 +8,7 @@ import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import type * as Exit from 'effect/Exit';
+import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
@@ -446,21 +447,15 @@ export interface DurableContext<I, O> {
   setAlarm(timeout?: number): Effect.Effect<void>;
 }
 
-export const DurableTypeId = '~@dxos/operation/Durable' as const;
-export type DurableTypeId = typeof DurableTypeId;
+export const DurableDefinitionTypeId = '~@dxos/operation/DurableDefinition' as const;
+export type DurableDefinitionTypeId = typeof DurableDefinitionTypeId;
 
 /**
- * A durable operation: declaration plus a handler factory, run by a process runtime.
- * Can be instantiated multiple times to produce new process instances with separate state and handlers.
- * `create` is used to instantiate a new process.
- * Can store runtime state in scope of `create` function.
+ * Declaration of a durable operation, without its handler.
+ * Created by {@link makeDurable}; {@link withDurableHandler} attaches the handler factory to produce a {@link Durable}.
  */
-export interface Durable<
-  _Input,
-  _Output,
-  _Requirements = never,
-  _Rpcs extends Rpc.Any = never,
-> extends Durable.Variance<_Input, _Output, _Requirements, _Rpcs> {
+export interface DurableDefinition<_Input, _Output, _Requirements = never, _Rpcs extends Rpc.Any = never>
+  extends Pipeable.Pipeable, DurableDefinition.Variance<_Input, _Output, _Requirements, _Rpcs> {
   /**
    * Unique identifier for the executable in the reverse DNS format.
    */
@@ -490,7 +485,59 @@ export interface Durable<
   // The precise group is carried by the covariant `Variance` phantom and recovered at `spawn`.
   // See design spec §4.4.
   readonly rpcs: RpcGroup.RpcGroup<any>;
+}
 
+export declare namespace DurableDefinition {
+  export interface Variance<_Input, _Output, _Requirements, _Rpcs> {
+    readonly [DurableDefinitionTypeId]: {
+      readonly _Input: Types.Contravariant<_Input>;
+      readonly _Output: Types.Covariant<_Output>;
+      readonly _Requirements: Types.Covariant<_Requirements>;
+
+      // Phantom-covariant: lets `never`-RPC processes stay assignable to `Durable.Any` while
+      // `spawn` still recovers the precise group from this slot. See design spec §4.4.
+      readonly _Rpcs: Types.Covariant<_Rpcs>;
+    };
+  }
+
+  export type Any = DurableDefinition<any, any, any, any>;
+
+  export type Input<T extends Any> = T extends Variance<infer I, infer _O, infer _R, infer _P> ? I : never;
+  export type Output<T extends Any> = T extends Variance<infer _I, infer O, infer _R, infer _P> ? O : never;
+  export type Requirements<T extends Any> = T extends Variance<infer _I, infer _O, infer R, infer _P> ? R : never;
+  export type Rpcs<T extends Any> =
+    T extends Variance<infer _I, infer _O, infer _R, infer P extends Rpc.Any> ? P : never;
+
+  /**
+   * The handler factory {@link withDurableHandler} accepts for a definition: callbacks may be omitted and default to no-ops.
+   */
+  export type Create<T extends Any> = (
+    ctx: DurableContext<Input<T>, Output<T>>,
+  ) => Effect.Effect<
+    Partial<DurableHandler<Input<T>, Output<T>, Requirements<T>, Rpcs<T>>>,
+    never,
+    Requirements<T> | BaseServices | Scope.Scope
+  >;
+
+  /**
+   * The durable operation produced by attaching a handler to a definition.
+   */
+  export type WithHandler<T extends Any> = Durable<Input<T>, Output<T>, Requirements<T>, Rpcs<T>>;
+}
+
+export const DurableTypeId = '~@dxos/operation/Durable' as const;
+export type DurableTypeId = typeof DurableTypeId;
+
+/**
+ * A durable operation: declaration plus a handler factory, run by a process runtime.
+ * Can be instantiated multiple times to produce new process instances with separate state and handlers.
+ * `create` is used to instantiate a new process.
+ * Can store runtime state in scope of `create` function.
+ */
+export interface Durable<_Input, _Output, _Requirements = never, _Rpcs extends Rpc.Any = never>
+  extends
+    DurableDefinition<_Input, _Output, _Requirements, _Rpcs>,
+    Durable.Variance<_Input, _Output, _Requirements, _Rpcs> {
   /**
    * Create a new instance of the process.
    */
@@ -503,6 +550,9 @@ export interface Durable<
   >;
 }
 
+export const isDurableDefinition = (value: unknown): value is DurableDefinition.Any =>
+  typeof value === 'object' && value !== null && DurableDefinitionTypeId in value;
+
 export const isDurable = (executable: unknown): executable is Durable.Any =>
   typeof executable === 'object' && executable !== null && DurableTypeId in executable;
 
@@ -512,9 +562,6 @@ export namespace Durable {
       readonly _Input: Types.Contravariant<_Input>;
       readonly _Output: Types.Covariant<_Output>;
       readonly _Requirements: Types.Covariant<_Requirements>;
-
-      // Phantom-covariant: lets `never`-RPC processes stay assignable to `Durable.Any` while
-      // `spawn` still recovers the precise group from this slot. See design spec §4.4.
       readonly _Rpcs: Types.Covariant<_Rpcs>;
     };
   }
@@ -527,6 +574,11 @@ export interface DurableProps {
    * Unique identifier for the process in the reverse DNS format.
    */
   readonly key: string;
+
+  /**
+   * Human-readable label; `Process.spawn` names the process after it.
+   */
+  readonly name?: string;
 
   readonly input: Schema.Codec<any, any>;
   readonly output: Schema.Codec<any, any>;
@@ -545,25 +597,20 @@ export interface DurableProps {
 }
 
 /**
- * Creates a durable operation from its declaration and a factory for its {@link DurableHandler}.
+ * Declares a durable operation; attach its handler factory with {@link withDurableHandler}.
+ *
+ * @example
+ * ```ts
+ * const Counter = Operation.makeDurable({ key: 'example.counter', input: Schema.Number, output: Schema.Number, services: [] }).pipe(
+ *   Operation.withDurableHandler((ctx) =>
+ *     Effect.succeed({ onInput: (input) => Effect.sync(() => ctx.submitOutput(input + 1)) }),
+ *   ),
+ * );
+ * ```
  */
 export const makeDurable = <const Opts extends Types.NoExcessProperties<DurableProps, Opts>>(
   opts: Opts,
-  create: (
-    ctx: DurableContext<Schema.Schema.Type<Opts['input']>, Schema.Schema.Type<Opts['output']>>,
-  ) => Effect.Effect<
-    Partial<
-      DurableHandler<
-        Schema.Schema.Type<Opts['input']>,
-        Schema.Schema.Type<Opts['output']>,
-        Context.Service.Identifier<NonNullable<Opts['services']>[number]>,
-        RpcGroup.Rpcs<Opts['rpcs']>
-      >
-    >,
-    never,
-    Context.Service.Identifier<NonNullable<Opts['services']>[number]> | BaseServices | Scope.Scope
-  >,
-): Durable<
+): DurableDefinition<
   Schema.Schema.Type<Opts['input']>,
   Schema.Schema.Type<Opts['output']>,
   Context.Service.Identifier<NonNullable<Opts['services']>[number]>,
@@ -571,26 +618,54 @@ export const makeDurable = <const Opts extends Types.NoExcessProperties<DurableP
 > => {
   assertArgument(/^[a-z0-9]([a-z0-9.\-/]*[a-z0-9])?$/i.test(opts.key), 'key', 'Invalid key');
   return {
-    [DurableTypeId]: {} as any,
+    [DurableDefinitionTypeId]: {} as any,
     ...opts,
     rpcs: opts.rpcs ?? RpcGroup.make(),
-    create: (ctx) =>
-      create(ctx).pipe(
-        Effect.map((partial) => ({
-          onSpawn: () => Effect.void,
-          onInput: () => Effect.void,
-          onAlarm: () => Effect.void,
-          onChildEvent: () => Effect.void,
-          ...partial,
-          rpcHandlers: sanitizeRpcs(opts.rpcs, partial.rpcHandlers),
-        })),
-      ),
+    pipe() {
+      // eslint-disable-next-line prefer-rest-params
+      return Pipeable.pipeArguments(this, arguments);
+    },
   };
 };
 
+/**
+ * Attaches the handler factory to a durable operation definition.
+ * Dual API: can be called directly or used in a pipe.
+ */
+export const withDurableHandler: {
+  <Def extends DurableDefinition.Any>(
+    create: DurableDefinition.Create<Def>,
+  ): (def: Def) => DurableDefinition.WithHandler<Def>;
+  <Def extends DurableDefinition.Any>(
+    def: Def,
+    create: DurableDefinition.Create<Def>,
+  ): DurableDefinition.WithHandler<Def>;
+} = Function.dual(2, <Def extends DurableDefinition.Any>(def: Def, create: DurableDefinition.Create<Def>) =>
+  attachDurableHandler(def, create),
+);
+
+const attachDurableHandler = <Def extends DurableDefinition.Any>(
+  def: Def,
+  create: DurableDefinition.Create<Def>,
+): DurableDefinition.WithHandler<Def> => ({
+  ...def,
+  [DurableTypeId]: {} as any,
+  create: (ctx) =>
+    create(ctx).pipe(
+      Effect.map((partial) => ({
+        onSpawn: () => Effect.void,
+        onInput: () => Effect.void,
+        onAlarm: () => Effect.void,
+        onChildEvent: () => Effect.void,
+        ...partial,
+        rpcHandlers: sanitizeRpcs(def.rpcs, partial.rpcHandlers),
+      })),
+    ),
+});
+
 // Returns `Context.Context<any>`: the runtime handler bag is stored untyped because
 // `DurableHandler.rpcHandlers` is contravariant in `_Rpcs` (see design spec §4.4); the precise
-// handler contract is enforced by `makeDurable`'s `create` parameter, not by this internal helper.
+// handler contract is enforced by `withDurableHandler`'s `create` parameter, not by this internal helper.
 const sanitizeRpcs = <Rpcs extends Rpc.Any>(
   defined: RpcGroup.RpcGroup<Rpcs> | undefined,
   provided: Context.Context<Rpc.ToHandler<Rpcs>> | undefined,
@@ -936,9 +1011,9 @@ export interface InvokeOptions {
    */
   conversation?: URI.URI;
   /**
-   * Optional process-runtime tracing metadata (consumed by `@dxos/functions-runtime` when wired).
+   * Tracing metadata stamped on the process that runs the invocation.
    */
-  tracing?: unknown;
+  tracing?: Trace.Meta;
 
   /**
    * Specifies the runtime environment for the operation.

@@ -14,6 +14,7 @@ import * as TemplateEditor from '@dxos/plugin-routine/TemplateEditor';
 import { Editor, type EditorViewProps } from '@dxos/react-ui-editor';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-query';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import {
   type BasicExtensionsOptions,
   createBasicExtensions,
@@ -86,7 +87,7 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
       }
 
       return (
-        <div className='flex flex-col divide-y divide-separator-subtle'>
+        <Layout.Flex column classNames='divide-y divide-separator-subtle'>
           <TypescriptEditor
             id={cell.id}
             role='section'
@@ -101,7 +102,7 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
             }}
           />
           <NotebookCellValue cell={cell} graph={graph} />
-        </div>
+        </Layout.Flex>
       );
 
     case 'query':
@@ -111,7 +112,9 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
 
       // TODO(burdon): Remove app-framework deps (via render prop).
       return (
-        <div className={mx('h-full overflow-hidden grid', explorerGraph && !dragging && 'grid-rows-[min-content_1fr]')}>
+        <Layout.Grid
+          classNames={['h-full overflow-hidden', explorerGraph && !dragging && 'grid-rows-[min-content_1fr]']}
+        >
           <QueryEditor
             id={cell.id}
             classNames={editorStyles}
@@ -126,7 +129,7 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
               data={{ subject: explorerGraph, attendableId: cell.id }}
             />
           )}
-        </div>
+        </Layout.Grid>
       );
 
     // TODO(burdon): Use streaming response from Chat.
@@ -160,7 +163,7 @@ const NotebookCellValue = ({ cell, graph }: NotebookCellProps) => {
   }
 
   return (
-    <div className={mx('flex w-full bg-group-surface text-fg-muted font-mono', valueStyles)}>
+    <Layout.Flex classNames={['w-full bg-group-surface text-fg-muted font-mono', valueStyles]}>
       {name && (
         <>
           <span className='text-success-text'>{name}</span>
@@ -168,7 +171,7 @@ const NotebookCellValue = ({ cell, graph }: NotebookCellProps) => {
         </>
       )}
       <span>{value}</span>
-    </div>
+    </Layout.Flex>
   );
 };
 
@@ -183,9 +186,9 @@ const NotebookPromptResult = ({ cell, promptResults }: NotebookCellProps) => {
   }
 
   return (
-    <div className={mx('flex w-full dx-group-surface text-fg-muted border-y border-separator-subtle', valueStyles)}>
+    <Layout.Flex classNames={['w-full dx-group-surface text-fg-muted border-y border-separator-subtle', valueStyles]}>
       <NotebookTextEditor readOnly value={value} />
-    </div>
+    </Layout.Flex>
   );
 };
 

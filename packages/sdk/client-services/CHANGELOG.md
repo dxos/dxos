@@ -1,5 +1,145 @@
 # @dxos/client-services
 
+## 0.14.0
+
+### Patch Changes
+
+- 1819960: Invitation spans are no longer lost to sampling. Tail sampling now keeps every span marked `dxos.sampling.keep`, and both the host's `handleInvitationFlow` span and the guest's `acceptInvitation` span carry that mark, so short invitation flows are no longer dropped 70% of the time. The host span also records `ctx.outcome` when it ends.
+- Updated dependencies [0715304]
+- Updated dependencies [5528d65]
+- Updated dependencies [ec6da5a]
+- Updated dependencies [a1e64db]
+- Updated dependencies [28bb45b]
+- Updated dependencies [1eed6b1]
+- Updated dependencies [ed52cb7]
+- Updated dependencies [4ea1487]
+- Updated dependencies [ea0f796]
+- Updated dependencies [6847fe2]
+- Updated dependencies [35217f4]
+- Updated dependencies [1819960]
+- Updated dependencies [eb5d14d]
+- Updated dependencies [5324de6]
+  - @dxos/compute-runtime@0.14.0
+  - @dxos/echo-host@0.14.0
+  - @dxos/compute@0.14.0
+  - @dxos/echo@0.14.0
+  - @dxos/echo-client@0.14.0
+  - @dxos/effect@0.14.0
+  - @dxos/echo-doc@0.14.0
+  - @dxos/client-protocol@0.14.0
+  - @dxos/types@0.14.0
+  - @dxos/sql-sqlite@0.14.0
+  - @dxos/echo-protocol@0.14.0
+  - @dxos/feed@0.14.0
+  - @dxos/keyring@0.14.0
+  - @dxos/edge-client@0.14.0
+  - @dxos/network-manager@0.14.0
+  - @dxos/rpc@0.14.0
+  - @dxos/protocols@0.14.0
+  - @dxos/config@0.14.0
+  - @dxos/feed-store@0.14.0
+  - @dxos/credentials@0.14.0
+  - @dxos/teleport-extension-replicator@0.14.0
+  - @dxos/messaging@0.14.0
+  - @dxos/teleport@0.14.0
+  - @dxos/teleport-extension-gossip@0.14.0
+  - @dxos/async@0.14.0
+  - @dxos/context@0.14.0
+  - @dxos/crypto@0.14.0
+  - @dxos/debug@0.14.0
+  - @dxos/errors@0.14.0
+  - @dxos/hypercore@0.14.0
+  - @dxos/invariant@0.14.0
+  - @dxos/keys@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/node-std@0.14.0
+  - @dxos/random-access-storage@0.14.0
+  - @dxos/timeframe@0.14.0
+  - @dxos/tracing@0.14.0
+  - @dxos/util@0.14.0
+
+## 0.13.0
+
+### Patch Changes
+
+- 87785d9: Opening a space now brings this identity's member profile in the space up to date with the identity's own profile. A display name set before joining, or changed while a space was not open, never reached that space, so other members (and the comment thread) showed a generated name such as "cool snake" until the name was edited again.
+- Updated dependencies [bbe9f18]
+- Updated dependencies [162fd6d]
+- Updated dependencies [aad3e41]
+- Updated dependencies [bb2b672]
+- Updated dependencies [cb1e218]
+- Updated dependencies [1ef899b]
+- Updated dependencies [32f32a0]
+- Updated dependencies [dc16fdd]
+- Updated dependencies [469e7f7]
+- Updated dependencies [665261a]
+- Updated dependencies [68dc875]
+- Updated dependencies [2e96a73]
+- Updated dependencies [fe08304]
+- Updated dependencies [945092e]
+- Updated dependencies [c531b05]
+- Updated dependencies [3672aff]
+- Updated dependencies [2f95d25]
+- Updated dependencies [c7cc480]
+- Updated dependencies [e99ee70]
+- Updated dependencies [161f994]
+- Updated dependencies [3e73e53]
+- Updated dependencies [8d0cdd5]
+- Updated dependencies [1894fc1]
+- Updated dependencies [246ee3c]
+- Updated dependencies [8ebe8d6]
+- Updated dependencies [0ee5ecf]
+- Updated dependencies [596728d]
+- Updated dependencies [7715216]
+- Updated dependencies [1737cad]
+- Updated dependencies [a999417]
+- Updated dependencies [6a7bed4]
+- Updated dependencies [3022878]
+- Updated dependencies [c2a300a]
+- Updated dependencies [17008f0]
+- Updated dependencies [dde8f43]
+- Updated dependencies [4f8e566]
+- Updated dependencies [fcbb5c4]
+- Updated dependencies [a449958]
+  - @dxos/compute@0.13.0
+  - @dxos/echo@0.13.0
+  - @dxos/util@0.13.0
+  - @dxos/types@0.13.0
+  - @dxos/edge-client@0.13.0
+  - @dxos/echo-host@0.13.0
+  - @dxos/compute-runtime@0.13.0
+  - @dxos/echo-client@0.13.0
+  - @dxos/echo-doc@0.13.0
+  - @dxos/client-protocol@0.13.0
+  - @dxos/async@0.13.0
+  - @dxos/context@0.13.0
+  - @dxos/effect@0.13.0
+  - @dxos/feed-store@0.13.0
+  - @dxos/hypercore@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/random-access-storage@0.13.0
+  - @dxos/timeframe@0.13.0
+  - @dxos/tracing@0.13.0
+  - @dxos/echo-protocol@0.13.0
+  - @dxos/feed@0.13.0
+  - @dxos/credentials@0.13.0
+  - @dxos/keyring@0.13.0
+  - @dxos/messaging@0.13.0
+  - @dxos/network-manager@0.13.0
+  - @dxos/rpc@0.13.0
+  - @dxos/teleport@0.13.0
+  - @dxos/teleport-extension-gossip@0.13.0
+  - @dxos/teleport-extension-replicator@0.13.0
+  - @dxos/protocols@0.13.0
+  - @dxos/config@0.13.0
+  - @dxos/sql-sqlite@0.13.0
+  - @dxos/crypto@0.13.0
+  - @dxos/debug@0.13.0
+  - @dxos/errors@0.13.0
+  - @dxos/invariant@0.13.0
+  - @dxos/keys@0.13.0
+  - @dxos/node-std@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes
