@@ -3,14 +3,13 @@
 //
 
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useContext, useMemo } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
-import { Filter, Obj, Query, type Ref, Type } from '@dxos/echo';
+import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { useObject, useType } from '@dxos/echo-react';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
@@ -19,6 +18,8 @@ import { getTagFromQuery, getTypeURIFromQuery } from '@dxos/schema';
 import { KanbanBoard } from '#components';
 import { useEchoChangeCallback, useItemsProjection, useProjectionModel } from '#hooks';
 import { Kanban, KanbanOperation } from '#types';
+
+import { makeItemsAtom } from '../../util/index.ts';
 
 export type KanbanArticleProps = AppSurface.ObjectArticleProps<Kanban.Kanban>;
 
@@ -129,27 +130,7 @@ const ItemsKanbanArticle = ({ role, subject: object }: ItemsKanbanArticleProps) 
   //       for items-variant (no pivot-value fallback, since refs don't expose
   //       the pivot field without loading).
   //     - `Mosaic.isItem` to accept the ref wrapper alongside `Obj.isObject`.
-  const itemsAtom = useMemo(
-    () =>
-      Atom.make((get) => {
-        const out: Obj.Unknown[] = [];
-        for (const ref of object.spec.items as ReadonlyArray<Ref.Ref<Obj.Unknown>>) {
-          const target = get(Obj.atom(ref));
-          if (target == null) {
-            continue;
-          }
-          // Drop soft-deleted cards (e.g. Trello-closed cards). The ref
-          // stays in `spec.items` so arrangement is preserved, but the card
-          // shouldn't render.
-          if (Obj.isDeleted(target)) {
-            continue;
-          }
-          out.push(target as unknown as Obj.Unknown);
-        }
-        return out;
-      }),
-    [object.spec.items],
-  );
+  const itemsAtom = useMemo(() => makeItemsAtom(object), [object]);
 
   const handleCardRemove = useCallback(() => undefined, []);
 
