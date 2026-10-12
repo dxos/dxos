@@ -289,6 +289,34 @@ export const getMetaFromConfig = ({ plugin }: Config2.Config): Meta => {
 };
 
 /**
+ * A plugin's identity as a leaf module: its config and its capability tags both derive from it, so
+ * the config can list the tags its modules provide without the tags importing the config.
+ *
+ * @example
+ * ```ts
+ * // src/namespace.ts
+ * export const MarkdownNamespace = Plugin.namespace('org.dxos.plugin.markdown');
+ * // src/types/MarkdownCapabilities.ts
+ * export const Settings = MarkdownNamespace.makeSingleton<Atom.Writable<Settings>>()('settings');
+ * // dx.config.ts
+ * Plugin.config({ plugin: { key: MarkdownNamespace.key, … }, modules: [ … ] });
+ * ```
+ */
+export const namespace = <const K extends string>(key: K) => ({
+  key,
+  /** A multi capability with identifier `<key>.capability.<name>`. */
+  make:
+    <T>() =>
+    <const N extends string>(name: N) =>
+      Capability.makeTag<T, `${K}.capability.${N}`, 'multi'>(`${key}.capability.${name}`, 'multi'),
+  /** A singleton capability with identifier `<key>.capability.<name>`. */
+  makeSingleton:
+    <T>() =>
+    <const N extends string>(name: N) =>
+      Capability.makeTag<T, `${K}.capability.${N}`, 'single'>(`${key}.capability.${name}`, 'single'),
+});
+
+/**
  * Identifier denoting a Plugin.
  */
 export const PluginTypeId: unique symbol = Symbol.for('@dxos/app-framework/Plugin');

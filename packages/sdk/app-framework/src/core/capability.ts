@@ -343,6 +343,13 @@ export const makeSingleton: {
     : buildTag<unknown, string, 'single'>(identifier, 'single')) as any;
 
 /**
+ * Builds a capability tag from an identifier derived at runtime (e.g. a plugin key plus a name),
+ * keeping the identifier's literal type; static identifiers use {@link make} / {@link makeSingleton}.
+ */
+export const makeTag = <T, const S extends string, A extends Arity>(identifier: S, arity: A) =>
+  buildTag<T, S, A>(identifier, arity);
+
+/**
  * A unique string identifier with a Typescript type associated with it.
  * When a capability is contributed to the application an implementation of the interface is provided.
  */
