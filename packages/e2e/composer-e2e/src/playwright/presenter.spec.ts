@@ -28,7 +28,8 @@ test.describe('Presenter', () => {
 
     await Presenter.openCompanion(plank.locator);
     await expect(Presenter.currentSlide(host.page)).toContainText('Alpha');
-    await expect(host.page).toHaveURL(/\/companion\/presenter$/);
+    // Waits for the `?title=` links carry, so the URL compared below is the settled one.
+    await expect(host.page).toHaveURL(/\/companion\/presenter\?title=Alpha$/);
     const url = host.page.url();
 
     await Presenter.togglePresenting(host.getObjectByName('Alpha'));
