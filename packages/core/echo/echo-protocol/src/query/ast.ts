@@ -179,6 +179,11 @@ const FilterFeedCursor_ = Schema.Struct({
   begin: Schema.optional(Schema.String),
   /** Read up to but not including this cursor. */
   end: Schema.optional(Schema.String),
+  /**
+   * `position` (default) reads confirmed blocks in the order the position authority assigned; `local` reads every
+   * block in the order this replica indexed it, unconfirmed ones included, with cursors from `Feed.getLocalCursor`.
+   */
+  order: Schema.optional(Schema.Literals(['position', 'local'])),
 });
 
 export interface FilterFeedCursor extends Schema.Schema.Type<typeof FilterFeedCursor_> {}
