@@ -69,7 +69,7 @@ export type ExtensionsOptions = {
    * Holds session recording back until this settles, so the recorder's DOM snapshot and compression
    * stay off the main thread during app startup. Ignored when `posthog.disable_session_recording` is set.
    */
-  sessionRecordingStart?: Promise<unknown>;
+  sessionRecordingStart?: Effect.Effect<void>;
   /** What the `posthog-node` transport needs; a browser host has posthog-js and reads none of it. */
   node?: NodeOptions;
 };
@@ -151,7 +151,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
 
     return {
       initialize: (context) =>
-        Effect.sync(() => {
+        Effect.gen(function* () {
           // https://posthog.com/docs/libraries/js/config
           posthog.init(apiKey, {
             api_host,
@@ -164,7 +164,9 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
           });
           if (recordingStart) {
             // Without an override this only lifts the local block; remote replay settings and sampling still apply.
-            void recordingStart.then(() => posthog.startSessionRecording());
+            yield* Effect.forkDetach(
+              recordingStart.pipe(Effect.andThen(Effect.sync(() => posthog.startSessionRecording()))),
+            );
           }
           posthog.register({
             sdkVersion: DXOS_VERSION,

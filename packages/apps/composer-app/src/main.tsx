@@ -357,7 +357,7 @@ const main = async () => {
     logStore,
     observabilityDisabled,
     { post: (message) => observabilityWorker.postMessage(message) },
-    startupSettled,
+    Effect.promise(() => startupSettled),
   );
 
   const captureStartupSummary = (): Record<string, string | number | boolean | undefined> => {

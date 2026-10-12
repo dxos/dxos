@@ -95,7 +95,7 @@ export const initializeObservability = async (
   logStore?: IdbLogStore,
   observabilityDisabled = false,
   observabilityWorker?: ObservabilityExtension.Otel.OtelWorkerPort,
-  sessionRecordingStart?: Promise<unknown>,
+  sessionRecordingStart?: Effect.Effect<void>,
 ) =>
   Function.pipe(
     Observability.make(),
