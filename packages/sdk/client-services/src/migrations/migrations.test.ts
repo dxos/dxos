@@ -11,12 +11,15 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { layerMemory } from '@dxos/sql-sqlite/Platform';
 import * as SqlMigrations from '@dxos/sql-sqlite/SqlMigrations';
 
+import blobsInit from './blobs/0001_init.sql?raw';
+import { MIGRATIONS as BLOBS, MIGRATIONS_TABLE as BLOBS_TABLE } from './blobs/index.ts';
 import hypercoreInit from './hypercore/0001_init.sql?raw';
 import { MIGRATIONS as HYPERCORE, MIGRATIONS_TABLE as HYPERCORE_TABLE } from './hypercore/index.ts';
 import metadataInit from './metadata/0001_init.sql?raw';
 import { MIGRATIONS as METADATA, MIGRATIONS_TABLE as METADATA_TABLE } from './metadata/index.ts';
 
 const STORES = [
+  { name: 'blobs', init: blobsInit, manifest: BLOBS, table: BLOBS_TABLE },
   { name: 'hypercore', init: hypercoreInit, manifest: HYPERCORE, table: HYPERCORE_TABLE },
   { name: 'metadata', init: metadataInit, manifest: METADATA, table: METADATA_TABLE },
 ];

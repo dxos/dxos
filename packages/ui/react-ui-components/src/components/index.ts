@@ -5,6 +5,7 @@
 export * from './AnimatedBorder/index.ts';
 export * from './NumericTabs/index.ts';
 export * from './ProgressMeter/index.ts';
+export * from './Section/index.ts';
 export * from './Shimmer/index.ts';
 export * from './Spinner/index.ts';
 export * from './TextBlock/index.ts';
