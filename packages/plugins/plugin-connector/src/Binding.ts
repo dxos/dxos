@@ -431,8 +431,9 @@ export const syncAll = <A, E, R>({
       ),
       Effect.orElseSucceed((): Cursor.ExternalCursor[] => []),
     );
+    const live = yield* Effect.filter(cursors, hasTarget);
 
-    const ordered = priority ? [...cursors].sort((a, b) => rank(a, priority) - rank(b, priority)) : cursors;
+    const ordered = priority ? [...live].sort((a, b) => rank(a, priority) - rank(b, priority)) : live;
 
     // Serialized invocation the reauth toast runs on click — data (operation key + input), not a live
     // callback, since it rides on the error across the process boundary.
@@ -497,10 +498,25 @@ export const syncAll = <A, E, R>({
     }
 
     return {
-      synced: cursors.length,
+      synced: live.length,
       outputs: outcomes.flatMap((outcome) => (outcome.kind === 'output' ? [outcome.output] : [])),
     };
   });
+
+/**
+ * Whether a binding's target still exists. Deleting a target (a Mailbox, a Calendar) leaves its cursor
+ * behind, and one binding that cannot load its target would fail the whole account sync. Tombstones load
+ * too, so a deleted target is answered by the index, not by the fallback that downloads every feed in the
+ * space looking for it.
+ */
+const hasTarget = (cursor: Cursor.ExternalCursor): Effect.Effect<boolean> =>
+  Database.load(cursor.spec.target, { deleted: 'include' }).pipe(
+    Effect.map((target) => !Obj.isDeleted(target)),
+    Effect.orElseSucceed(() => false),
+    Effect.tap((exists) =>
+      exists ? Effect.void : Effect.sync(() => log.warn('sync skipped: binding target is gone', { cursor: cursor.id })),
+    ),
+  );
 
 /** Priority cursor first; otherwise keep query order. */
 const rank = (cursor: Cursor.ExternalCursor, priority: string): number => (cursor.id === priority ? 0 : 1);
