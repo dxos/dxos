@@ -710,12 +710,20 @@ export class IndexQuerySource implements QuerySource {
    * loads; undefined when the row carries none (too large, a branch document) or cannot back it.
    */
   private async _hydrateFromState(result: QueryService.QueryResult): Promise<Entity.Unknown | undefined> {
-    const state = getSnapshotState(result);
-    if (state === undefined) {
+    if (result.state === undefined || result.bytes === undefined) {
       return undefined;
     }
     const database = this._params.graph.getDatabase(SpaceId.make(result.spaceId));
     if (!(database instanceof DatabaseImpl)) {
+      return undefined;
+    }
+    // A core the tab holds on its document, or on a row at least this new, is resolved as held; nothing to decode.
+    const held = database.getObjectCoreById(result.id, { load: false });
+    if (held && (held.snapshot === undefined || (result.version ?? 0) <= held.snapshot.version)) {
+      return undefined;
+    }
+    const state = getSnapshotState(result);
+    if (state === undefined) {
       return undefined;
     }
     const entity = database._upsertSnapshot(EntityId.make(result.id), state);

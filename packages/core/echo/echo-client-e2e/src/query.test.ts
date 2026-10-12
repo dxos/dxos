@@ -4415,32 +4415,12 @@ describe('Query', () => {
       expect(hasDocument(db, object.id)).toBe(true);
     });
 
-    test('a write loads the document from the bytes the object holds and is a real change at once', async () => {
-      const { db, peer } = await openReloaded((db) => [db.add(createTestObject({ value: 1 }))]);
-      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
-      const headsBefore = Obj.version(object).automergeHeads;
-
-      Obj.update(object, (object) => {
-        object.value = 2;
-      });
-      expect(hasDocument(db, object.id)).toBe(true);
-      expect(db.getObjectById(object.id)).toBe(object);
-      expect(object.value).toBe(2);
-      expect(Obj.version(object).automergeHeads).not.toEqual(headsBefore);
-      expect(Obj.getChanges(object).length).toBeGreaterThan(1);
-
-      await db.flush();
-      await peer.reload();
-      const reloaded = await peer.openLastDatabase();
-      const [persisted] = await reloaded.query(Query.select(Filter.id(object.id))).run();
-      expect(persisted.value).toBe(2);
-    });
-
-    test('a write merges with document changes the index had not seen, which then arrive', async () => {
+    test('a write loads the bytes into a real change at once, which merges with changes the index had not seen', async () => {
       const { db, peer, documentIds } = await openReloaded((db) => [
         db.add(Obj.make(TestSchema.Expando, { tags: ['a'] })),
       ]);
       const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
+      const headsBefore = Obj.version(object).automergeHeads;
 
       // A change the tab's bytes do not hold: another writer puts an element ahead of the one the tab removes.
       const documentId = documentIds.get(object.id);
@@ -4455,33 +4435,36 @@ describe('Query', () => {
       Obj.update(object, (object) => {
         object.tags.splice(0, 1);
       });
+      // Applied to the document loaded from the bytes before any sync, so it has heads of its own.
+      expect(hasDocument(db, object.id)).toBe(true);
       expect([...object.tags]).toEqual([]);
+      expect(Obj.version(object).automergeHeads).not.toEqual(headsBefore);
 
+      // Index 0 was `a` in the bytes, so the host's `host` survives the merge, and both sides end level.
       await db.flush();
       await waitForCondition({ condition: () => object.tags.length === 1, timeout: 5_000 });
       expect([...object.tags]).toEqual(['host']);
       expect(A.getHeads(lease.doc())).toEqual(Obj.version(object).automergeHeads);
     });
 
-    test('reading the document loads it from the bytes the object holds', async () => {
-      const { db } = await openReloaded((db) => [db.add(createTestObject({ value: 1 }))]);
-      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
-      const heads = Obj.version(object).automergeHeads;
+    test('reading the document, its history or a branch of it loads it from the bytes', async () => {
+      const { db } = await openReloaded((db) => [
+        db.add(createTestObject({ value: 1 })),
+        db.add(createTestObject({ value: 2 })),
+      ]);
+      const [read, branched] = await db
+        .query(Query.select(Filter.type(TestSchema.Expando)).orderBy(Order.natural()))
+        .run();
 
-      const accessor = getObjectCore(object).getDocAccessor(['value']);
-      expect(A.getHeads(accessor.handle.doc())).toEqual(heads);
-      expect(hasDocument(db, object.id)).toBe(true);
-      expect(Obj.getChanges(object).length).toBeGreaterThan(0);
-    });
+      const heads = Obj.version(read).automergeHeads;
+      expect(A.getHeads(getObjectCore(read).getDocAccessor(['value']).handle.doc())).toEqual(heads);
+      expect(hasDocument(db, read.id)).toBe(true);
+      expect(Obj.getChanges(read).length).toBeGreaterThan(0);
 
-    test('branching loads the document from the bytes first', async () => {
-      const { db } = await openReloaded((db) => [db.add(createTestObject({ value: 1 }))]);
-      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
-
-      await db.createBranch(object.id, 'draft');
-      expect(hasDocument(db, object.id)).toBe(true);
-      await db.switchBranch(object.id, 'draft');
-      expect(object.value).toBe(1);
+      expect(hasDocument(db, branched.id)).toBe(false);
+      await db.createBranch(branched.id, 'draft');
+      await db.switchBranch(branched.id, 'draft');
+      expect(branched.value).toBe(2);
     });
 
     test('an object held after its query has finished keeps up with the index, bytes included', async () => {
@@ -4606,25 +4589,6 @@ describe('Query', () => {
       expect(root.doc().objects![object.id].data.value).toBe(2);
     });
 
-    test('a row from a document the space root does not route the object to backs nothing', async () => {
-      const { db } = await openReloaded((db) => [db.add(createTestObject({ value: 1 }))]);
-      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
-      const row = rowOf(db, object);
-      const withValue = (value: number) => ({ ...row.structure, data: { ...row.structure.data, value } });
-
-      // A newer row read from another document: a branch, or a copy the root no longer links.
-      db._upsertSnapshot(object.id, {
-        ...row,
-        structure: withValue(99),
-        version: row.version + 1,
-        documentId: 'not-the-routed-document',
-      });
-      expect(object.value).toBe(1);
-
-      db._upsertSnapshot(object.id, { ...row, structure: withValue(2), version: row.version + 1 });
-      expect(object.value).toBe(2);
-    });
-
     test('an index row that arrives before the space root backs nothing yet', async () => {
       const { db, peer } = await openReloaded((db) => [db.add(createTestObject({ value: 1 }))]);
       const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
@@ -4633,19 +4597,26 @@ describe('Query', () => {
       expect(early._upsertSnapshot(object.id, rowOf(db, object))).toBe(undefined);
     });
 
-    test('a later index row updates the object in place and notifies; an earlier one is ignored', async () => {
+    test('a row updates a held object in place only when it is newer and from the document the root routes it to', async () => {
       const { db } = await openReloaded((db) => [db.add(createTestObject({ value: 1 }))]);
       const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
       const row = rowOf(db, object);
+      const withValue = (value: number) => ({ ...row.structure, data: { ...row.structure.data, value } });
       let notified = 0;
       onTestFinished(Obj.subscribe(object, () => notified++));
 
-      const withValue = (value: number) => ({ ...row.structure, data: { ...row.structure.data, value } });
-      expect(db._upsertSnapshot(object.id, { ...row, structure: withValue(2), version: row.version + 1 })).toBe(object);
-      expect(object.value).toBe(2);
-      expect(notified).toBe(1);
-
+      // Read from another document (a branch, or a copy the root no longer links), or no newer: ignored.
+      db._upsertSnapshot(object.id, {
+        ...row,
+        structure: withValue(99),
+        version: row.version + 1,
+        documentId: 'not-the-routed-document',
+      });
       db._upsertSnapshot(object.id, { ...row, structure: withValue(3), version: row.version });
+      expect(object.value).toBe(1);
+      expect(notified).toBe(0);
+
+      expect(db._upsertSnapshot(object.id, { ...row, structure: withValue(2), version: row.version + 1 })).toBe(object);
       expect(object.value).toBe(2);
       expect(notified).toBe(1);
     });
