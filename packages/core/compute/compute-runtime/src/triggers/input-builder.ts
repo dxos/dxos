@@ -30,7 +30,11 @@ export const createInvocationPayload = (trigger: Trigger.Trigger, event: Trigger
       }
     }
 
-    payload[key] = valueSubstitution;
+    // A template that resolves to nothing leaves the key out: an operation rebuilt from its serialized
+    // schema rejects an explicit `undefined`, even for an optional field.
+    if (valueSubstitution !== undefined) {
+      payload[key] = valueSubstitution;
+    }
   }
   return payload;
 };
