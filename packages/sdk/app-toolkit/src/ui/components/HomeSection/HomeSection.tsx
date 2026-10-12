@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import React, { type PropsWithChildren, forwardRef } from 'react';
 
 import * as Layout from '@dxos/react-ui/Layout';
@@ -68,9 +70,6 @@ HomeSectionHeader.displayName = 'HomeSection.Header';
 // HomeSection
 //
 
-export const HomeSection = {
-  Root: HomeSectionRoot,
-  Header: HomeSectionHeader,
-};
+export type { HomeSectionHeaderProps as HeaderProps, HomeSectionRootProps as RootProps };
 
-export type { HomeSectionHeaderProps, HomeSectionRootProps };
+export { HomeSectionHeader as Header, HomeSectionRoot as Root };

@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+// @import-as-namespace
+
 import React, {
   type ComponentPropsWithoutRef,
   Fragment,
@@ -22,7 +24,7 @@ import * as Theme from '@dxos/react-ui/Theme';
 import { osTranslations } from '@dxos/ui-theme';
 import { resolveKeyBinding } from '@dxos/util';
 
-export type KeyBinding = {
+type KeyBinding = {
   windows?: string;
   macos?: string;
   ios?: string;
@@ -30,16 +32,16 @@ export type KeyBinding = {
   unknown?: string;
 };
 
-export type AttentionSigilAction = Pick<AppGraphNode.ActionLike, 'id' | 'properties' | 'data'>;
+type AttentionSigilAction = Pick<AppGraphNode.ActionLike, 'id' | 'properties' | 'data'>;
 
-export type AttentionSigilButtonSize = 'md' | 'lg';
+type AttentionSigilButtonSize = 'md' | 'lg';
 
 const sigilSizeClassNames: Record<AttentionSigilButtonSize, string> = {
   md: 'w-(--dx-rail-item) h-(--dx-rail-item)',
   lg: 'w-(--dx-rail-action) h-(--dx-rail-action)',
 };
 
-export type AttentionSigilButtonProps = Omit<ComponentPropsWithoutRef<typeof Button.Root>, 'variant' | 'size'> &
+type AttentionSigilButtonProps = Omit<ComponentPropsWithoutRef<typeof Button.Root>, 'variant' | 'size'> &
   Attention.AttendableId &
   Attention.Related & {
     isMenu?: boolean;
@@ -65,7 +67,7 @@ const MenuSignifierHorizontal = () => (
   </svg>
 );
 
-export const AttentionSigilButton = forwardRef<HTMLButtonElement, AttentionSigilButtonProps>(
+const AttentionSigilButton = forwardRef<HTMLButtonElement, AttentionSigilButtonProps>(
   ({ children, attendableId, classNames, related, isMenu = true, size = 'lg', ...props }, forwardedRef) => {
     const { hasAttention, isAncestor, isRelated } = useAttention(attendableId);
     const variant = (related && isRelated) || hasAttention || isAncestor ? 'primary' : 'ghost';
@@ -84,7 +86,7 @@ export const AttentionSigilButton = forwardRef<HTMLButtonElement, AttentionSigil
   },
 );
 
-export type AttentionSigilProps = PropsWithChildren<
+type AttentionSigilProps = PropsWithChildren<
   {
     attendableId?: string;
     triggerLabel: string;
@@ -100,7 +102,7 @@ export type AttentionSigilProps = PropsWithChildren<
  * Attention-aware sigil button that surfaces an object's actions in a dropdown menu.
  * The button reflects attention state (primary when attended/ancestor/related, ghost otherwise).
  */
-export const AttentionSigil = forwardRef<HTMLButtonElement, AttentionSigilProps>(
+const AttentionSigil = forwardRef<HTMLButtonElement, AttentionSigilProps>(
   ({ actions: actionGroups, onAction, triggerLabel, attendableId, icon, related, size, children }, forwardedRef) => {
     const { t } = Hooks.useTranslation(osTranslations);
 
@@ -181,3 +183,13 @@ export const AttentionSigil = forwardRef<HTMLButtonElement, AttentionSigilProps>
     );
   },
 );
+
+export type {
+  AttentionSigilAction as Action,
+  AttentionSigilButtonProps as ButtonProps,
+  AttentionSigilButtonSize as ButtonSize,
+  KeyBinding,
+  AttentionSigilProps as RootProps,
+};
+
+export { AttentionSigilButton as Button, AttentionSigil as Root };

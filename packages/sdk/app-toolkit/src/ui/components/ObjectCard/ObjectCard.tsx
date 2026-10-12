@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import React, { type ReactNode, forwardRef } from 'react';
 
 import { Entity } from '@dxos/echo';
@@ -12,7 +14,7 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Util from '@dxos/react-ui/Util';
 import { getStyles } from '@dxos/ui-theme';
 
-import { CardIconSlot } from './CardIconSlot.tsx';
+import { CardIconSlot } from '../CardSlot/CardIconSlot.tsx';
 
 const DEFAULT_ICON = 'ph--circle-dashed--regular';
 
@@ -23,7 +25,7 @@ const DEFAULT_ICON = 'ph--circle-dashed--regular';
 type ObjectCardRootProps = Omit<Card.RootProps, 'classNames' | 'grid'>;
 
 /** A grid `Card.Root`, so an object card's header and rows share the card's rails. */
-export const ObjectCardRoot = Util.composable<HTMLDivElement, ObjectCardRootProps>((props, forwardedRef) => (
+const ObjectCardRoot = Util.composable<HTMLDivElement, ObjectCardRootProps>((props, forwardedRef) => (
   <Card.Root {...props} grid ref={forwardedRef} />
 ));
 
@@ -47,7 +49,7 @@ type ObjectCardHeaderProps = {
 };
 
 /** The object's icon (overridable by a `CardIcon` contribution), its title, and an optional menu. */
-export const ObjectCardHeader = forwardRef<HTMLDivElement, ObjectCardHeaderProps>(
+const ObjectCardHeader = forwardRef<HTMLDivElement, ObjectCardHeaderProps>(
   ({ subject, icon: iconProp, children, lines, menu }, forwardedRef) => {
     const entity = Entity.isEntity(subject) || Entity.isSnapshot(subject) ? subject : undefined;
     const iconAnnotation = entity && Entity.getIcon(entity);
@@ -77,10 +79,7 @@ ObjectCardHeader.displayName = 'ObjectCard.Header';
 // ObjectCard
 //
 
-/** An ECHO object as a card: a grid `Card.Root` and a header depicting the object. */
-export const ObjectCard = {
-  Root: ObjectCardRoot,
-  Header: ObjectCardHeader,
-};
+export type { ObjectCardHeaderProps as HeaderProps, ObjectCardRootProps as RootProps };
 
-export type { ObjectCardHeaderProps, ObjectCardRootProps };
+/** An ECHO object as a card: a grid `Card.Root` and a header depicting the object. */
+export { ObjectCardHeader as Header, ObjectCardRoot as Root };

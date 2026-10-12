@@ -7,7 +7,7 @@ import React from 'react';
 import * as Surface from '@dxos/app-framework/Surface';
 import { type MenuActions } from '@dxos/react-ui-menu';
 
-import * as AppSurface from './app-surface.ts';
+import * as AppSurface from '../AppSurface/AppSurface.ts';
 
 export type CardMenuSlotProps = {
   /** The object being depicted. */

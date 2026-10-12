@@ -9,9 +9,9 @@ import { fn } from 'storybook/test';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { AttentionSigil, type AttentionSigilAction } from './AttentionSigil.tsx';
+import * as AttentionSigil from './AttentionSigil.tsx';
 
-const sampleActions: AttentionSigilAction[][] = [
+const sampleActions: AttentionSigil.Action[][] = [
   [
     {
       id: 'edit',
@@ -43,9 +43,9 @@ const sampleActions: AttentionSigilAction[][] = [
   ],
 ];
 
-const meta: Meta<typeof AttentionSigil> = {
+const meta: Meta<typeof AttentionSigil.Root> = {
   title: 'sdk/app-toolkit/components/AttentionSigil',
-  component: AttentionSigil,
+  component: AttentionSigil.Root,
   decorators: [withTheme(), withAttention()],
   parameters: { layout: 'centered' },
   args: {

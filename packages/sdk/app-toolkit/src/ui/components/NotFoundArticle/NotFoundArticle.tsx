@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import React from 'react';
 
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -11,7 +13,7 @@ import { osTranslations } from '@dxos/ui-theme';
 /**
  * Article surface component rendered when navigating to a non-existent object.
  */
-export const NotFoundArticle = () => {
+const NotFoundArticle = () => {
   const { t } = Hooks.useTranslation(osTranslations);
   return (
     <div className='flex flex-col items-center justify-center h-full gap-4 p-8'>
@@ -21,3 +23,5 @@ export const NotFoundArticle = () => {
     </div>
   );
 };
+
+export { NotFoundArticle as Root };

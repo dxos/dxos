@@ -8,7 +8,7 @@ import React from 'react';
 import * as Button from '@dxos/react-ui/Button';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { HomeSection } from './HomeSection.tsx';
+import * as HomeSection from './HomeSection.tsx';
 
 const DefaultStory = () => (
   <HomeSection.Root>

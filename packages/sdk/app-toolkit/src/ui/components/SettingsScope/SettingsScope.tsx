@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import React, { useCallback, useState } from 'react';
 
 import * as AlertDialog from '@dxos/react-ui/AlertDialog';
@@ -9,15 +11,15 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import { osTranslations } from '@dxos/ui-theme';
 
-import { useSettingsScope } from '../hooks/index.ts';
+import { useSettingsScope } from '../../hooks/index.ts';
 
-export type SettingsScopeProps = {
+type SettingsScopeProps = {
   /** Settings prefix the control scopes — a plugin key, or one of the app-level namespaces. */
   prefix: string;
 };
 
 /** Whether a settings panel follows the account or stays on this device. */
-export const SettingsScope = ({ prefix }: SettingsScopeProps) => {
+const SettingsScope = ({ prefix }: SettingsScopeProps) => {
   const { t } = Hooks.useTranslation(osTranslations);
   const { available, synced, takeLocal, rejoinAccount, getConflicts } = useSettingsScope(prefix);
   const [conflicts, setConflicts] = useState<readonly string[]>([]);
@@ -97,3 +99,7 @@ export const SettingsScope = ({ prefix }: SettingsScopeProps) => {
 };
 
 SettingsScope.displayName = 'SettingsScope';
+
+export type { SettingsScopeProps as RootProps };
+
+export { SettingsScope as Root };

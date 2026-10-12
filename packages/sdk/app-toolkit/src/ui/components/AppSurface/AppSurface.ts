@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import type * as Schema from 'effect/Schema';
 import { type ComponentType, type ReactNode } from 'react';
 
@@ -15,7 +17,7 @@ import type { MenuActions } from '@dxos/react-ui-menu';
 import { type ProjectionModel } from '@dxos/schema';
 import { type Actor, SpaceInvitationMessage } from '@dxos/types';
 
-import { AppCapabilities } from '../../app-framework/index.ts';
+import { AppCapabilities } from '../../../app-framework/index.ts';
 
 //
 // Internal type helpers

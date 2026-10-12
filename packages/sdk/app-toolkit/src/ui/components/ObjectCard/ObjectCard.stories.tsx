@@ -13,7 +13,7 @@ import * as Menu from '@dxos/react-ui/Menu';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Organization } from '@dxos/types';
 
-import { ObjectCard } from './ObjectCard.tsx';
+import * as ObjectCard from './ObjectCard.tsx';
 
 type StoryProps = {
   name: string;

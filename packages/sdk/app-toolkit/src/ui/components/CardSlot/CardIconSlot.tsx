@@ -6,7 +6,7 @@ import React, { type PropsWithChildren } from 'react';
 
 import * as Surface from '@dxos/app-framework/Surface';
 
-import * as AppSurface from './app-surface.ts';
+import * as AppSurface from '../AppSurface/AppSurface.ts';
 
 export type CardIconSlotProps = PropsWithChildren<{
   /** The object being depicted. */
