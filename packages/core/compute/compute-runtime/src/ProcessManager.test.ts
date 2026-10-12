@@ -41,6 +41,7 @@ import * as OperationProcess from './OperationProcess.ts';
 import { ProcessStore } from './process-store.ts';
 import * as ProcessManager from './ProcessManager.ts';
 import * as ProcessOperationInvoker from './ProcessOperationInvoker.ts';
+import type * as RemoteOperationInvoker from './RemoteOperationInvoker.ts';
 import * as RemoteProcessManager from './RemoteProcessManager.ts';
 import * as RemoteTraceMonitor from './RemoteTraceMonitor.ts';
 import { TestDatabaseLayer } from './testing/index.ts';
@@ -1367,7 +1368,10 @@ describe('ProcessOperationInvoker edge dispatch', () => {
   const spaceId = Key.SpaceId.random();
 
   // Records where each spawn was sent, then runs it locally so the invocation still completes.
-  const makeRecordingInvoker = Effect.fn(function* (locations: Array<Process.Location | undefined>) {
+  const makeRecordingInvoker = Effect.fn(function* (
+    locations: Array<Process.Location | undefined>,
+    remote?: RemoteOperationInvoker.Invoker,
+  ) {
     const manager = yield* Process.ManagerService;
     const recording: Process.Manager = {
       ...manager,
@@ -1376,8 +1380,86 @@ describe('ProcessOperationInvoker edge dispatch', () => {
         return manager.spawn(definition, options);
       },
     };
-    return ProcessOperationInvoker.make({ manager: recording });
+    return ProcessOperationInvoker.make({
+      manager: recording,
+      ...(remote !== undefined ? { remote: Effect.succeed(remote) } : {}),
+    });
   });
+
+  /** A remote invoker that doubles `value`, recording what it was asked. */
+  const makeRemote = (calls: Array<{ deployedId: string; input: unknown; spaceId?: Key.SpaceId }>) =>
+    ({
+      invoke: (_ctx, deployedId, input, options) =>
+        Effect.sync(() => {
+          calls.push({ deployedId, input, ...(options?.spaceId !== undefined ? { spaceId: options.spaceId } : {}) });
+          return Schema.decodeUnknownSync(Schema.Struct({ value: Schema.Number }))(input).value * 2;
+        }),
+    }) satisfies RemoteOperationInvoker.Invoker;
+
+  it.effect(
+    'runs on:edge invocations as one call to the remote invoker, spawning no process',
+    Effect.fn(function* ({ expect }) {
+      const locations: Array<Process.Location | undefined> = [];
+      const calls: Array<{ deployedId: string; input: unknown; spaceId?: Key.SpaceId }> = [];
+      const invoker = yield* makeRecordingInvoker(locations, makeRemote(calls));
+      expect(yield* invoker.invoke(Double, { value: 21 }, { on: 'edge', spaceId })).toEqual(42);
+      expect(calls).toEqual([{ deployedId: String(Double.meta.key), input: { value: 21 }, spaceId }]);
+      expect(locations).toEqual([]);
+
+      // Without `on: 'edge'` the operation still runs locally, as a process.
+      expect(yield* invoker.invoke(Double, { value: 1 })).toEqual(2);
+      expect(locations).toEqual([undefined]);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'refuses an on:edge invocation whose conversation or notify the remote call cannot carry',
+    Effect.fn(function* ({ expect }) {
+      const locations: Array<Process.Location | undefined> = [];
+      const calls: Array<{ deployedId: string; input: unknown; spaceId?: Key.SpaceId }> = [];
+      const invoker = yield* makeRecordingInvoker(locations, makeRemote(calls));
+      const conversation = Key.URI.make('echo://BBBBBBBBBBBBBBBBBBBBBBBBBB/01JTESTCONVERSATION00000000');
+      const exit = yield* invoker.invoke(Double, { value: 1 }, { on: 'edge', spaceId, conversation }).pipe(Effect.exit);
+      expect(Exit.hasDies(exit)).toEqual(true);
+      // A scheduled call is refused by `schedule` itself, not by the detached run whose failure is only logged.
+      const scheduled = yield* invoker
+        .schedule(Double, { value: 1 }, { on: 'edge', spaceId, conversation })
+        .pipe(Effect.exit);
+      expect(Exit.hasDies(scheduled)).toEqual(true);
+      expect(yield* invoker.pendingFollowups).toEqual(0);
+      expect(calls).toEqual([]);
+      expect(locations).toEqual([]);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'invokes a deployed operation on EDGE by its deployment id',
+    Effect.fn(function* ({ expect }) {
+      const locations: Array<Process.Location | undefined> = [];
+      const calls: Array<{ deployedId: string; input: unknown; spaceId?: Key.SpaceId }> = [];
+      const invoker = yield* makeRecordingInvoker(locations, makeRemote(calls));
+      const Deployed = Operation.make({
+        meta: { key: DXN.make('com.example.operation.test.deployedDouble'), name: 'Deployed', deployedId: 'fn-double' },
+        input: Double.input,
+        output: Double.output,
+      });
+      expect(yield* invoker.invoke(Deployed, { value: 4 }, { on: 'edge', spaceId })).toEqual(8);
+      expect(calls).toEqual([{ deployedId: 'fn-double', input: { value: 4 }, spaceId }]);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'schedules on:edge invocations through the remote invoker too',
+    Effect.fn(function* ({ expect }) {
+      const locations: Array<Process.Location | undefined> = [];
+      const calls: Array<{ deployedId: string; input: unknown; spaceId?: Key.SpaceId }> = [];
+      const invoker = yield* makeRecordingInvoker(locations, makeRemote(calls));
+      yield* invoker.schedule(Double, { value: 2 }, { on: 'edge', spaceId });
+      yield* invoker.awaitFollowups;
+      expect(calls).toEqual([{ deployedId: String(Double.meta.key), input: { value: 2 }, spaceId }]);
+      expect(locations).toEqual([]);
+    }, Effect.provide(TestLayer)),
+  );
 
   it.effect(
     'spawns on:edge invocations on the EDGE runtime hosting the space',

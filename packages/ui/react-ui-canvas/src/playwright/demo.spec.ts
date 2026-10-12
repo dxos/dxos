@@ -14,8 +14,8 @@ import { test } from '@playwright/test';
 import { storybookUrl } from '@dxos/test-utils/playwright';
 
 const PORT = 9006;
-const DEFAULT_URL = storybookUrl('ui-react-ui-canvas-scene-sceneview--default', PORT);
-const FREEHAND_URL = storybookUrl('ui-react-ui-canvas-scene-sceneview--freehand', PORT);
+const DEFAULT_URL = storybookUrl('ui-react-ui-canvas-sceneview--default', PORT);
+const FREEHAND_URL = storybookUrl('ui-react-ui-canvas-sceneview--freehand', PORT);
 
 /** Long enough to read on playback; the recording is for a person, not a machine. */
 const BEAT = 900;

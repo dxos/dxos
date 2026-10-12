@@ -5,8 +5,11 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Stream from 'effect/Stream';
 
+import * as Capability from '@dxos/app-framework/Capability';
+import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as Agent from '@dxos/assistant/Agent';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
@@ -138,3 +141,11 @@ export const testSpaceLayer = makeTestSpaceLayer([
   { did: TEST_MEMBERS.alice, displayName: 'Alice' },
   { did: TEST_MEMBERS.bob, displayName: 'Bob' },
 ]);
+
+/**
+ * A capability registry with no channel backends: relays look a channel's backend up there, so a suite whose agents
+ * have no channels still needs one to deliver into Composer chats.
+ */
+export const noChannelBackends = Layer.sync(Capability.Service, () =>
+  CapabilityManager.make({ registry: Registry.make() }),
+);

@@ -36,7 +36,8 @@ export const TextPart = ({ classNames, part, text, editing, children }: TextPart
     <PartEditor classNames={classNames} part={part} text={text} editing={editing} />
   ) : (
     <div className={mx(classNames)} data-part={part}>
-      {children}
+      {/* The text's own box, which a part's layout may pad (its line boxes, not the part's frame). */}
+      <span className='inline-block'>{children}</span>
     </div>
   );
 

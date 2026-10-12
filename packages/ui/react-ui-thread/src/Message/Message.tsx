@@ -17,6 +17,7 @@ import React, {
 } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import { type UseTextEditorProps, useTextEditor } from '@dxos/react-ui-editor';
 import * as Avatar from '@dxos/react-ui/Avatar';
 import * as Button from '@dxos/react-ui/Button';
@@ -157,18 +158,19 @@ export type MessageBodyProps = {
  */
 const MessageBody = ({ message, isAuthor, editing, onSave }: MessageBodyProps) => {
   const { components } = useThreadContext('Message.Body');
-  const textBlockIndex = message.blocks.findIndex((block) => block._tag === 'text');
-  const textBlock = textBlockIndex !== -1 ? (message.blocks[textBlockIndex] as ContentBlock.Text) : undefined;
-  const proposalBlock = message.blocks.find((block) => block._tag === 'proposal') as ContentBlock.Proposal | undefined;
-  const changeBlock = message.blocks.find((block) => block._tag === 'change') as ContentBlock.Change | undefined;
-  const references = message.blocks
+  const [{ blocks }] = useObject(message);
+  const textBlockIndex = blocks.findIndex((block) => block._tag === 'text');
+  const textBlock = textBlockIndex !== -1 ? (blocks[textBlockIndex] as ContentBlock.Text) : undefined;
+  const proposalBlock = blocks.find((block) => block._tag === 'proposal') as ContentBlock.Proposal | undefined;
+  const changeBlock = blocks.find((block) => block._tag === 'change') as ContentBlock.Change | undefined;
+  const references = blocks
     .filter((block) => block._tag === 'reference')
     .map((block) => (block as ContentBlock.Reference).reference);
   const Object = components.Object;
 
   return (
     <>
-      {textBlock && <TextBlock block={textBlock} isAuthor={isAuthor} editing={editing} onSave={onSave} />}
+      {textBlock && <TextBlock text={textBlock.text} isAuthor={isAuthor} editing={editing} onSave={onSave} />}
       {proposalBlock && <div className='me-4 italic'>{proposalBlock.text}</div>}
       {changeBlock && (
         <p className='me-4 text-sm break-words'>
@@ -188,18 +190,18 @@ const MessageBody = ({ message, isAuthor, editing, onSave }: MessageBodyProps) =
 MessageBody.displayName = 'Message.Body';
 
 const TextBlock = ({
-  block,
+  text,
   isAuthor,
   editing,
   onSave,
 }: {
-  block: ContentBlock.Text;
+  text: string;
   isAuthor?: boolean;
   editing?: boolean;
   onSave?: (text: string) => void;
 }) => {
   const themeMode = Hooks.useThemeMode();
-  const inMemoryContentRef = useRef(block.text);
+  const inMemoryContentRef = useRef(text);
 
   const handleDocumentChange = useCallback((next: string) => {
     inMemoryContentRef.current = next;
@@ -213,7 +215,7 @@ const TextBlock = ({
 
   const { parentRef, focusAttributes, view } = useTextEditor(
     () => ({
-      initialValue: block.text,
+      initialValue: text,
       extensions: [
         // Edit mode is authorisation enough — the control that gets here is already gated on
         // `isAuthor` — and a mid-edit flip to read-only makes the editor drop input silently.
@@ -228,9 +230,9 @@ const TextBlock = ({
       ],
     }),
     // While editing, the editor owns its content and its authorisation: pinning both keeps an incoming
-    // `block.text` update or member-list refresh from rebuilding the view being typed in. `editing` is
+    // `text` update or member-list refresh from rebuilding the view being typed in. `editing` is
     // itself a dep, so the flip still rebuilds.
-    [editing, editing ? undefined : block.text, editing ? undefined : isAuthor, themeMode, handleDocumentChange],
+    [editing, editing ? undefined : text, editing ? undefined : isAuthor, themeMode, handleDocumentChange],
   );
 
   useEffect(() => {
@@ -367,10 +369,11 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
   } = useThreadContext('Message.Tile');
   const [editing, setEditing] = useState(false);
 
+  const [blocks] = useObject(message, 'blocks');
   const metadata = getMetadata(message);
   const isAuthor = !!identityDid && identityDid === metadata.authorId;
-  const hasProposal = message.blocks.some((block) => block._tag === 'proposal');
-  const hasChange = message.blocks.some((block) => block._tag === 'change');
+  const hasProposal = blocks.some((block) => block._tag === 'proposal');
+  const hasChange = blocks.some((block) => block._tag === 'change');
 
   const handleEdit = useCallback(() => setEditing((value) => !value), []);
   const handleDelete = useCallback(() => onMessageDelete?.(message.id), [onMessageDelete, message.id]);
@@ -507,9 +510,10 @@ const MessageGroup = ({ messages, continues = true, classNames }: MessageGroupPr
   const [editing, setEditing] = useState(false);
 
   const first = messages[0];
+  const [blocks] = useObject(first, 'blocks');
   const metadata = getMetadata(first);
   const isAuthor = !!identityDid && identityDid === metadata.authorId;
-  const hasProposal = first.blocks.some((block) => block._tag === 'proposal');
+  const hasProposal = blocks.some((block) => block._tag === 'proposal');
 
   const handleEdit = useCallback(() => setEditing((value) => !value), []);
   const handleDelete = useCallback(() => onMessageDelete?.(first.id), [onMessageDelete, first.id]);

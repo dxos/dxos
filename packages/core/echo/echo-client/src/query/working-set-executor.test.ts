@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Aggregate, Filter, Obj, Order, Query, Ref, Relation, Scope, Type } from '@dxos/echo';
+import { Aggregate, Annotation, Filter, Obj, Order, Query, Ref, Relation, Scope, Type } from '@dxos/echo';
 import { QueryPlanner } from '@dxos/echo-host/query';
 import { TestSchema } from '@dxos/echo/testing';
 import { DXN } from '@dxos/keys';
@@ -252,6 +252,35 @@ describe('WorkingSetQueryExecutor', () => {
     });
     const names = personResults.map((item) => item.structure.data['name']);
     expect(names).toEqual(['Alice', 'Bob', 'Charlie']);
+  });
+
+  test('order by annotation sorts by the scalar at its path, missing values last in either direction', async ({
+    expect,
+  }) => {
+    const Distance = Annotation.make({
+      id: 'org.dxos.annotation.test-distance',
+      schema: Schema.Struct({ meters: Schema.Number }),
+    });
+    for (const [name, meters] of [
+      ['Far', 300],
+      ['Near', 100],
+      ['Unplaced', undefined],
+      ['Mid', 200],
+    ] as const) {
+      const person = db.add(Obj.make(TestSchema.Person, { name }));
+      if (meters !== undefined) {
+        Obj.update(person, (person) => Annotation.set(person, Distance, { meters }));
+      }
+    }
+    await db.flush();
+
+    const namesBy = (direction: 'asc' | 'desc') =>
+      planAndExecute(
+        db,
+        Query.select(Filter.type(TestSchema.Person)).orderBy(Order.annotation(Distance, direction, ['meters'])),
+      ).map((item) => item.structure.data['name']);
+    expect(namesBy('asc')).toEqual(['Near', 'Mid', 'Far', 'Unplaced']);
+    expect(namesBy('desc')).toEqual(['Far', 'Mid', 'Near', 'Unplaced']);
   });
 
   test('limit step caps the result count', async ({ expect }) => {

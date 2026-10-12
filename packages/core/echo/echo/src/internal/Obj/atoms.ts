@@ -14,10 +14,12 @@ import type * as Entity from '../../Entity.ts';
 import type * as Obj from '../../Obj.ts';
 import type * as Ref from '../../Ref.ts';
 import type * as Relation from '../../Relation.ts';
+import type * as Tag from '../../Tag.ts';
 import { getLabel } from '../Annotation/index.ts';
 import { snapshotEquals, snapshotForComparison } from '../common/atom-snapshot.ts';
 import { subscribe } from '../common/proxy/reactive.ts';
 import { ParentId } from '../common/types/index.ts';
+import { getMeta } from '../common/types/meta.ts';
 import { getDatabase, isEntity } from '../Entity/index.ts';
 import { refArrayFamily } from '../Ref/atoms.ts';
 import { RefTypeId } from '../Ref/ref.ts';
@@ -293,6 +295,34 @@ const labelAtomFamily = Atom.family(<T extends Entity.Unknown>(entity: T): Atom.
 export const makeLabelAtom = <T extends Entity.Unknown>(entity: T): Atom.Atom<string | undefined> => {
   assertArgument(isEntity(entity), 'entity', 'Must be a reactive ECHO entity');
   return labelAtomFamily(entity);
+};
+
+const readTags = (entity: Entity.Unknown): readonly Ref.Ref<Tag.Tag>[] => [...getMeta(entity).tags];
+
+const tagsAtomFamily = Atom.family(<T extends Entity.Unknown>(entity: T): Atom.Atom<readonly Ref.Ref<Tag.Tag>[]> => {
+  return Atom.make<readonly Ref.Ref<Tag.Tag>[]>((get) => {
+    let previous = readTags(entity);
+
+    const unsubscribe = subscribe(entity, () => {
+      const next = readTags(entity);
+      if (!snapshotEquals(next, previous)) {
+        previous = next;
+        get.setSelf(next);
+      }
+    });
+
+    get.addFinalizer(() => unsubscribe());
+    return previous;
+  });
+});
+
+/**
+ * Create a read-only atom for the meta tags of a reactive ECHO entity.
+ * Re-reads on entity mutation; only propagates when the tag list changes.
+ */
+export const makeTagsAtom = <T extends Entity.Unknown>(entity: T): Atom.Atom<readonly Ref.Ref<Tag.Tag>[]> => {
+  assertArgument(isEntity(entity), 'entity', 'Must be a reactive ECHO entity');
+  return tagsAtomFamily(entity);
 };
 
 const readParent = (obj: Obj.Unknown): Obj.Unknown | undefined => (obj as any)[ParentId];

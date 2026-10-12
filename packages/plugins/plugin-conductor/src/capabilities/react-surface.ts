@@ -8,7 +8,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { CanvasBoard } from '@dxos/react-ui-canvas-editor';
+import { CanvasBoard } from '@dxos/react-ui-canvas-compute';
 
 import { CanvasArticle } from '#containers';
 

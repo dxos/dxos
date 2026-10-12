@@ -17,7 +17,7 @@ apply, rewrite or reject each intent and then re-emits the scene. Freehand is th
 constrained, dynamic and compute projections own a model of their own and position the scene from it.
 
 Status 2026-09-22: **implemented** through migration milestone M3. Node types are open (`NodeBase` plus
-what a type adds), the editor surface is a superset of `react-ui-canvas-editor` minus auto layout, and
+what a type adds), the editor surface is a superset of the retired canvas editor minus auto layout, and
 `react-ui-canvas-compute` runs its shapes as node definitions over this engine. M4 (ECHO persistence,
 the `layout` intent and the plugin switch) is in flight; what M4 adds is marked below.
 
@@ -225,7 +225,7 @@ type Tool
 
 ## Components
 
-One folder per component under `src/components`, stories beside it, all behind the `src/scene.ts`
+One folder per component under `src/components`, stories beside it, all behind the `src/index.ts`
 barrel. Rendering is DOM with the camera as one CSS transform, SVG for the link and control layers
 (decision 7); no third-party canvas engine, and d3 only as pure functions (decision 8).
 
@@ -639,7 +639,7 @@ rule named-react-imports: Import React members by name, never through a `React.`
   `React.useMemo`, `React.FC`, `React.ReactNode` or `import React from 'react'`. A forwarded ref is
   named `forwardedRef`. Flag any `React.` member access and any default import of react in this
   package's source. Do not flag `import type * as React from 'react'` used solely in a `.d.ts`
-  ambient declaration, nor the archived canvas under `src/archive`.
+  ambient declaration.
   scope: dir
   files:
     - src/**/*.tsx
@@ -728,7 +728,7 @@ test QA-1: The editor surface end to end
   covers: [F-1.1, F-1.2, F-2.1, F-2.2, F-3.1, F-3.2, F-3.3, F-5.1, T-1, T-3, T-4]
   status: partially-automated
   given:
-    - a storybook serving `ui/react-ui-canvas/scene/SceneView`
+    - a storybook serving `ui/react-ui-canvas/SceneView`
   steps:
     - name: Open Freehand
       do: Open the Freehand story at 1400×800.

@@ -133,7 +133,6 @@ export const DEFAULT_PACKAGES = [
   '@dxos/react-ui-calendar',
   '@dxos/react-ui-canvas',
   '@dxos/react-ui-canvas-compute',
-  '@dxos/react-ui-canvas-editor',
   '@dxos/react-ui-chat',
   '@dxos/react-ui-components',
   '@dxos/react-ui-dnd',

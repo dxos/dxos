@@ -6,6 +6,7 @@ import { describe, test } from 'vitest';
 
 import { LogEntry, LogLevel, log, parseFilter, shouldLog } from '@dxos/log';
 
+import { LogBuffer } from './log-buffer.ts';
 import { type LevelName, composeFilter, startLogRecording } from './recorder.ts';
 
 describe('composeFilter', () => {
@@ -66,5 +67,39 @@ describe('startLogRecording', () => {
     expect(log.runtimeConfig.options.filter).toBe('info');
     first.dispose();
     expect(log.runtimeConfig.options.filter).toBe(original);
+  });
+});
+
+describe('LogBuffer', () => {
+  test('caller-provided buffer is fed by append, not by @dxos/log', ({ expect }) => {
+    const buffer = new LogBuffer();
+    let notified = 0;
+    const unsubscribe = buffer.subscribe(() => notified++);
+    buffer.start();
+    expect(buffer.recording).toBe(true);
+
+    log.info('not captured');
+    buffer.append(entry(LogLevel.INFO, 'a.ts'));
+    buffer.append(entry(LogLevel.DEBUG, 'a.ts'));
+    buffer.append(entry(LogLevel.WARN, 'b.ts'));
+    unsubscribe();
+
+    // The debug entry falls below the default `info` filter; the `log.info` call never reaches the buffer.
+    expect(buffer.getRows().map(({ entry }) => entry.level)).toEqual([LogLevel.INFO, LogLevel.WARN]);
+    expect(buffer.getFiles()).toEqual(['a.ts', 'b.ts']);
+    expect(notified).toBeGreaterThan(0);
+  });
+
+  test('append respects capacity and pause', ({ expect }) => {
+    const buffer = new LogBuffer();
+    buffer.setCapacity(2);
+    buffer.append(entry(LogLevel.INFO, 'a.ts'));
+    buffer.append(entry(LogLevel.INFO, 'b.ts'));
+    buffer.append(entry(LogLevel.INFO, 'c.ts'));
+    expect(buffer.getRows().map(({ entry }) => entry.meta?.F)).toEqual(['b.ts', 'c.ts']);
+
+    buffer.setPaused(true);
+    buffer.append(entry(LogLevel.INFO, 'd.ts'));
+    expect(buffer.getRows()).toHaveLength(2);
   });
 });
