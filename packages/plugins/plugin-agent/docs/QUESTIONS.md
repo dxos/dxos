@@ -1,49 +1,121 @@
 # Agent — open questions
 
-Questions raised while building the agent that have no decision yet. Each names what it affects and what is known.
-Move a question into the relevant design doc once it is decided, and delete it here.
+Questions raised while building the agent. The brain questions carry Dmytro's recommendations for Rich to review;
+the rest are open. Move a question into the relevant design doc once it is decided, and delete it here.
 
-## Brain and facts
+## Brain and facts (recommendations)
 
-1. **Should a fact be a named graph instead of a reified node, with predicates as IRIs?** A fact is stored reified
-   (pipeline-rdf `DESIGN.md`, "Reification"): a fact node with `sx:subject`, `sx:predicate` (a string literal, e.g.
-   `"works at"`) and `sx:object`, plus its provenance. The statement itself is never a triple, so standard RDF tooling
-   cannot ask `?s :worksAt ?o`; pipeline-rdf's queries fuzzy-match the predicate string instead.
-   - A **graph per fact** keeps the statement a real triple (`entity:rich-burdon pred:works-at entity:dxos`) in a
-     graph named by the fact IRI, with the provenance as triples about that graph:
-     `GRAPH ?f { ?s pred:works-at ?o } . ?f prov:wasAttributedTo ?who`. This is standard RDF 1.1 (N-Quads, TriG),
-     needs no RDF-star, and the store already has the column for it (`triples.g`, always empty today).
-   - It needs predicate IRIs, minted from the normalized predicate (`Predicate.normalize`) or the brain's canonical
-     vocabulary (`@dxos/brain` `Vocabulary`), and a migration of stored facts.
-   - The design doc weighs reification only against RDF-star; named graphs are not discussed.
-2. **What is the store of record for facts?** `BRAIN.md` says ECHO feeds (one per source, one item per fact), with
-   SQLite as a derived index. The EDGE `BrainObject` writes only to its own SQLite, so facts do not replicate with the
-   space and are lost when EDGE state is wiped.
-3. **Can memories go, leaving only facts? Or should memories move into the brain?** Today there are two
-   representations of what the agent knows, and nothing keeps them in sync (`TASKS.md` asks what facts replace in
-   `MEMORY.md`).
-   - **Memories** (`Memory`, ECHO): a sentence with a kind (fact, preference, goal, commitment, relationship, event),
-     a status (active, superseded, retracted), `HasSubject` links to the `Person`/`Organization` objects it is about,
-     and the message it came from. They replicate with the space, people can read and correct them, and the profile
-     panel is built from them.
-   - **Facts** (`RDF.Fact`, EDGE `BrainObject` SQLite): a reified triple with factuality, quote, extractor and
-     attribution. Append-only (forgetting one is the only change), entities are slugs rather than ECHO references
-     (pipeline-rdf's `Entity.ref`, meant for the ECHO object, is never set), and the rules (watches, goals) run on them.
-   - **Facts only** needs: entities resolved to ECHO objects, a readable rendering for people, supersede and retract
-     (or an append-only equivalent), and the profile rebuilt from facts.
-   - Resolving entities: a resolved entity's IRI is the object's space-qualified ECHO URI
-     (`echo://<spaceId>/<objectId>`), which is already a valid IRI, rather than a slug IRI with a separate
-     `Entity.ref`. A fact about Rich is then a triple about his `Person`, joinable with the space's own objects and
-     relations. Unresolved names keep slug IRIs until resolution (e.g. `resolveEntity`) rewrites them, so the
-     rewrite or an `owl:sameAs` link is part of the migration.
-   - **Memories into the brain** would cost what makes memories useful: replication with the space, space
-     permissions, and people correcting them in Composer. It only makes sense if the brain's record is itself in ECHO
-     (question 2).
-   - Leaning: one representation, facts, with ECHO feeds as the record (`BRAIN.md`) and the brain's SQLite as the
-     index; then `recordMemory` becomes a push of facts and `Memory` is removed. This decides question 2 at the same
-     time.
+### 1. Facts as named graphs, with real IRIs
 
-## Discord
+**Today** a fact is stored reified (pipeline-rdf `DESIGN.md`, "Reification"): a fact node carries `sx:subject`,
+`sx:predicate` and `sx:object`, and the predicate is a string literal. The statement is never a triple itself, so
+standard RDF tooling cannot ask `?s :hasRole ?o`, and pipeline-rdf fuzzy-matches the predicate string instead.
+Entities are slugs (`entity:rich-burdon`) with no link to the ECHO objects they name (`Entity.ref` exists for that but
+is never set). The design doc weighs reification only against RDF-star; named graphs are not discussed.
+
+Current output for one sentence of the roster the Setup story seeds:
+
+```turtle
+fact:https%3A%2F%2Fdxos.org%2Fteam%23e7f0d44f%231
+  sx:subject entity:rich-burdon ;
+  sx:predicate "is-a" ;
+  sx:object entity:founder ;
+  sx:factuality "CT+" ;
+  sx:polarity "+" ;
+  prov:wasDerivedFrom "https://dxos.org/team" ;
+  prov:generatedAtTime "2026-10-13T07:53:53.704Z" ;
+  sx:recordedAt "2026-10-13T07:53:53.704Z" ;
+  sx:sourceHash "e7f0d44f" ;
+  sx:extractorId "default" ;
+  sx:extractorModel "com.anthropic.model.claude-haiku-4-5.default" ;
+  sx:extractorVersion "1" ;
+  sx:quote "Rich Burdon (Rich) is on the DXOS team as Founder" ;
+  sx:subjectLabel "Rich Burdon" ;
+  sx:objectLabel "Founder" .
+```
+
+**Recommendation:**
+
+- **Named graphs replace reification.** The statements are real triples inside a named graph, and the provenance is
+  stated once, about the graph. This is standard RDF 1.1 (TriG, N-Quads, SPARQL `GRAPH`), needs no RDF-star, and the
+  store already has the column for it (`triples.g`, always empty today).
+- **The extractor names the graph, and a graph holds several facts.** Statements that share provenance (the same
+  source, quote, speaker, time, extraction pass and factuality) go in one graph. Where they differ, for example two
+  sentences with different quotes, the extractor starts another graph.
+- **Predicates are real IRIs, from an extensible ontology.** The ontology starts small (`dx:hasRole`, `dx:memberOf`,
+  `dx:knowsAbout`, …) and grows: the extractor may propose a new predicate, which is minted with its label and
+  description. The brain keeps metadata about each predicate (labels, synonyms, domain and range, inverse), so the
+  synonym table in `normalize-predicates` and the brain's canonical `Vocabulary` become one ontology.
+- **Entities are real IRIs wherever the extractor can tell.** An ECHO object by its space-qualified URI
+  (`echo://<spaceId>/<objectId>`), a person by `mailto:` or their Discord account, a page by its URL. When it cannot,
+  it mints a temporary IRI scoped to the graph (or to the extraction context: the message or document) and states what
+  it knows about it: a label, a kind, the surface form. Resolving it later (`resolveEntity`) links the temporary IRI to
+  the real one with `owl:sameAs`, or rewrites it.
+
+The same sentence after:
+
+```trig
+@prefix dx:   <https://dxos.org/ontology/> .
+@prefix sx:   <https://dxos.org/semantic#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix g:    <https://dxos.org/semantic/graph/team-e7f0d44f/> .
+
+# The statements: real triples, about real entities, with ontology predicates.
+g:roles {
+  <echo://BBW5ANOFUMCIHWGKE2W3JFTXJUOATRJKF/01M4Q8RICH0000000000000000> dx:hasRole g:founder ;
+    dx:memberOf <echo://BBW5ANOFUMCIHWGKE2W3JFTXJUOATRJKF/01M4Q8DXOS0000000000000000> .
+  # Not yet resolved to an object, so scoped to this extraction, with what the extractor knows about it.
+  g:founder a dx:Role ;
+    rdfs:label "Founder" .
+}
+
+# The provenance: stated once, for every statement in the graph.
+g:roles
+  prov:wasDerivedFrom <https://dxos.org/team> ;
+  prov:generatedAtTime "2026-10-13T07:53:53.704Z"^^xsd:dateTime ;
+  sx:recordedAt "2026-10-13T07:53:53.704Z"^^xsd:dateTime ;
+  sx:factuality "CT+" ;
+  sx:polarity "+" ;
+  sx:quote "Rich Burdon (Rich) is on the DXOS team as Founder" ;
+  sx:sourceHash "e7f0d44f" ;
+  sx:extractor <https://dxos.org/semantic/extractor/default/1> .
+
+# The ontology: predicates carry their own metadata in the brain.
+dx:hasRole a rdf:Property ;
+  rdfs:label "has role" ;
+  sx:synonym "is a", "works as", "is on the team as" ;
+  rdfs:range dx:Role .
+```
+
+The labels that the reified form stored per fact (`sx:subjectLabel`, `sx:objectLabel`) move onto the entities, and
+`GRAPH ?g { ?who dx:hasRole ?role } . ?g prov:wasDerivedFrom ?source` is now an ordinary query.
+
+**What it costs:** a migration of the stored facts, the extractor prompt and its output schema, `SemanticQuery` and
+`querySqlite` (exact predicates instead of fuzzy matching), and the brain's Datalog encoding (`Encoding.ts`), whose
+`fact(F, S, P, O)` becomes a statement plus its graph.
+
+### 2. ECHO feeds are the store of record; the brain is an index
+
+**Today** the EDGE `BrainObject` writes facts only to its own SQLite, so they do not replicate with the space and are
+lost when EDGE state is wiped. `BRAIN.md` already says the record should be ECHO feeds (one per source).
+
+**Recommendation:** keep that design and build it. The extractor appends its graphs to ECHO feeds; the brain (EDGE and
+in-app) indexes them into SQLite and can rebuild from the feeds at any time.
+
+### 3. Memories become a kind of fact
+
+**Today** there are two representations of what the agent knows: memories (`Memory`, ECHO objects, the Memories tab)
+and facts (the brain, the Facts tab). Nothing keeps them in sync, and both tabs show items labelled "Fact".
+
+**Recommendation:** remove `Memory`. A memory is a fact whose graph says what kind it is (preference, commitment,
+relationship, event, …), attached to the ECHO objects it is about through the entity IRIs (question 1), and stored in
+ECHO feeds like every other fact (question 2). `recordMemory` becomes an extraction that writes a graph;
+superseding or retracting a memory becomes a statement about its graph; the profile panel is built from facts.
+
+## Discord (open)
 
 1. **Replies as a tool?** The bot posts the agent's replies by reading the chat feed. Posting them through a hosted
    Discord send operation (as proactive sends do) needs hosted tool calls to read a managed bot token, which they
@@ -53,7 +125,7 @@ Move a question into the relevant design doc once it is decided, and delete it h
 3. **One bot token, several environments.** Discord delivers every event to every gateway session on a token, so two
    environments running Kai would both receive and answer every message. Does each environment need its own app?
 
-## Stories
+## Stories (open)
 
 1. **Seeded facts vary.** The Setup story seeds facts with a model call (`readSource`), so the facts differ between
    runs. Is a deterministic seed (facts pushed as written) worth an operation that accepts explicit facts?
