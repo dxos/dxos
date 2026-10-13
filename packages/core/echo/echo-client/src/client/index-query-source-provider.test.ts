@@ -20,7 +20,7 @@ import { QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { QueryService } from '@dxos/protocols/rpc';
 
 import { type ObjectUpdate } from './index-query-source-provider.ts';
-import { IndexQuerySource, releaseHeldBacking, restoreSentBacking } from './index-query-source-provider.ts';
+import { IndexQuerySource } from './index-query-source-provider.ts';
 
 // Mock graph - only used for queue items which are not tested here.
 const mockGraph = {} as Hypergraph.Hypergraph;
@@ -424,40 +424,6 @@ describe('IndexQuerySource', () => {
       updateEvent.emit({ spaceId, objectIds: [stalled] });
       await rehydrated;
       expect(source.getResults().map((entry) => entry.id)).toEqual([stalled]);
-    });
-  });
-
-  describe('remembered rows', () => {
-    const spaceId = SpaceId$.random();
-    const backed = (id: string, version: number): QueryService.QueryResult => ({
-      id,
-      spaceId,
-      rank: 0,
-      version,
-      documentJson: `{"version":${version}}`,
-      heads: [`heads-${version}`],
-      bytes: new Uint8Array([version]),
-      createdAt: version,
-      updatedAt: version,
-    });
-    const bare = (id: string, version: number): QueryService.QueryResult => ({ id, spaceId, rank: 0, version });
-
-    test('a row whose object a pass published drops its backing, which the tab now holds', () => {
-      const [kept, held] = [EntityId.random(), EntityId.random()];
-      expect(releaseHeldBacking([backed(kept, 1), backed(held, 1)], new Set([held]))).toEqual([
-        backed(kept, 1),
-        bare(held, 1),
-      ]);
-    });
-
-    test('a row the host sent bare at its version takes back the backing it was sent earlier', () => {
-      const [kept, changed, added] = [EntityId.random(), EntityId.random(), EntityId.random()];
-      const previous = [backed(kept, 1), backed(changed, 1)];
-      expect(restoreSentBacking(previous, [bare(kept, 1), bare(changed, 2), backed(added, 3)])).toEqual([
-        backed(kept, 1),
-        bare(changed, 2),
-        backed(added, 3),
-      ]);
     });
   });
 });

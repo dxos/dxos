@@ -539,7 +539,7 @@ describe('SqlPlanCompiler', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  it.effect('ships each document row its heads and index stamp', () =>
+  it.effect('ships each document row its heads', () =>
     Effect.gen(function* () {
       const fixture = yield* seed;
       const query = Query.select(Filter.type(PERSON)).from([{ _tag: 'space' as const, spaceId: fixture.spaceId }]);
@@ -548,7 +548,6 @@ describe('SqlPlanCompiler', () => {
       expect(rows).toHaveLength(2);
       for (const row of rows) {
         expect(JSON.parse(row.heads ?? 'null')).toEqual([`heads-${row.objectId}`]);
-        expect(row.version).toBeGreaterThan(0);
       }
     }).pipe(Effect.provide(TestLayer)),
   );

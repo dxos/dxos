@@ -57,7 +57,8 @@ export interface ObjectLoader {
    */
   readonly updateEvent: ReadOnlyEvent<ObjectUpdate>;
 
-  heldObjectIds?(spaceIds: readonly SpaceId[]): string[];
+  /** The data subscriptions of the target spaces, whose documents the host leaves unbacked. */
+  subscriptionIds?(spaceIds: readonly SpaceId[]): string[];
 }
 
 export type IndexQueryProviderProps = {
@@ -276,7 +277,7 @@ export class IndexQuerySource implements QuerySource {
         query: JSON.stringify(query),
         queryId: String(queryId),
         reactivity: QueryReactivity.ONE_SHOT,
-        heldIds: this._heldIds(query),
+        subscriptionIds: this._subscriptionIds(query),
       }),
       {
         onData: (response) => {
@@ -343,14 +344,14 @@ export class IndexQuerySource implements QuerySource {
         query: JSON.stringify(query),
         queryId: String(queryId),
         reactivity: QueryReactivity.REACTIVE,
-        heldIds: this._heldIds(query),
+        subscriptionIds: this._subscriptionIds(query),
       }),
       {
         onData: (response) => {
           try {
             this._assertResultSpaces(query, response);
             // Remember the raw host records so a later local object load can re-hydrate them.
-            this._lastRemoteResults = restoreSentBacking(this._lastRemoteResults, response.results ?? []);
+            this._lastRemoteResults = response.results ?? [];
             this._releasedDocumentJsonIds.clear();
             this._scheduleHydrate();
           } catch (err: any) {
@@ -493,8 +494,8 @@ export class IndexQuerySource implements QuerySource {
     const results = processedResults.filter((entry) => entry !== STALLED).filter(isNonNullable);
 
     // Only rewrite the set we just hydrated — a newer host response may have replaced it meanwhile.
-    if (this._lastRemoteResults === records) {
-      this._lastRemoteResults = releaseHeldBacking(records, new Set(results.map((entry) => entry.id))).map((record) => {
+    if (hydratedIntoFeedHandle.size > 0 && this._lastRemoteResults === records) {
+      this._lastRemoteResults = records.map((record) => {
         if (record.documentJson === undefined || !hydratedIntoFeedHandle.has(record.id)) {
           return record;
         }
@@ -588,9 +589,9 @@ export class IndexQuerySource implements QuerySource {
     }
   }
 
-  private _heldIds(query: QueryAST.Query): string[] | undefined {
-    const held = this._params.objectLoader.heldObjectIds?.(getTargetSpacesForQuery(query));
-    return held?.length ? held : undefined;
+  private _subscriptionIds(query: QueryAST.Query): string[] | undefined {
+    const ids = this._params.objectLoader.subscriptionIds?.(getTargetSpacesForQuery(query));
+    return ids?.length ? ids : undefined;
   }
 
   private _assertResultSpaces(query: QueryAST.Query, response: QueryService.QueryResponse): void {
@@ -812,44 +813,6 @@ const _groupFromRemoteResult = (result: QueryService.QueryResult): SourceEntry['
     : undefined;
 
 type PlacedRow = { database: DatabaseImpl; entity: Entity.Unknown };
-
-export const releaseHeldBacking = (
-  records: readonly QueryService.QueryResult[],
-  held: ReadonlySet<string>,
-): QueryService.QueryResult[] =>
-  records.map((row) =>
-    held.has(row.id) && row.bytes !== undefined
-      ? {
-          ...row,
-          documentJson: undefined,
-          heads: undefined,
-          bytes: undefined,
-          createdAt: undefined,
-          updatedAt: undefined,
-        }
-      : row,
-  );
-
-export const restoreSentBacking = (
-  previous: readonly QueryService.QueryResult[] | undefined,
-  results: QueryService.QueryResult[],
-): QueryService.QueryResult[] => {
-  const sent = new Map(previous?.filter((row) => row.bytes !== undefined).map((row) => [row.id, row]));
-  return results.map((row) => {
-    const earlier = row.bytes === undefined ? sent.get(row.id) : undefined;
-    if (earlier === undefined || earlier.version !== row.version) {
-      return row;
-    }
-    return {
-      ...row,
-      documentJson: earlier.documentJson,
-      heads: earlier.heads,
-      bytes: earlier.bytes,
-      createdAt: earlier.createdAt,
-      updatedAt: earlier.updatedAt,
-    };
-  });
-};
 
 /** Whether a hydrated object's local deleted flag satisfies the query's `deleted` option. */
 const matchesDeletedOption = (object: Entity.Unknown, query: QueryAST.Query): boolean => {

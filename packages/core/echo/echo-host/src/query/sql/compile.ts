@@ -73,7 +73,6 @@ export type CompiledRow = {
    */
   aggregates: string | null;
   heads: string | null;
-  version: number | null;
 };
 
 /**
@@ -1152,7 +1151,7 @@ export class SqlPlanCompiler {
       ? sql`w.groupKey AS groupKey, w.groupCount AS groupCount, ${aggregates} AS aggregates`
       : sql`NULL AS groupKey, NULL AS groupCount, NULL AS aggregates`;
     return sql`SELECT w.recordId, w.objectId, w.spaceId, m.documentId, m.queueId, m.queueNamespace, w.rank AS rank,
-      m.createdAt, m.updatedAt, m.version AS version, d.heads AS heads,
+      m.createdAt, m.updatedAt, d.heads AS heads,
       CASE WHEN m.queueId != '' THEN json(d.snapshot) END AS documentJson,
       ${groupColumns}
       FROM ${this.#ref(ws)} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId LEFT JOIN objectSnapshot d ON d.recordId = w.recordId

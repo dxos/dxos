@@ -165,6 +165,10 @@ export class RepoProxy extends Resource {
     return this._handles;
   }
 
+  get subscriptionId(): string {
+    return this._subscriptionId;
+  }
+
   /**
    * Drops a cached handle nothing holds any more and unsubscribes the host from its document. A passive
    * handle (stored changes nothing has loaded) never has an unsent change, so it always goes.
