@@ -904,6 +904,9 @@
       "path": "packages/ui/solid-ui-geo/tsconfig.json"
     },
     {
+      "path": "packages/core/compute/sparql-sqlite/tsconfig.json"
+    },
+    {
       "path": "packages/common/sql-sqlite/tsconfig.json"
     },
     {
