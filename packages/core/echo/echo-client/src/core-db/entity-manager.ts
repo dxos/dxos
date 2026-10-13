@@ -18,7 +18,6 @@ import {
   UpdateScheduler,
   asyncTimeout,
   runInContextAsync,
-  scheduleTask,
   scheduleTaskInterval,
 } from '@dxos/async';
 import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
@@ -32,7 +31,7 @@ import {
   SpaceDocVersion,
   type SpaceState,
 } from '@dxos/echo-protocol';
-import { type RefResolver, type RefResolverRequest, batchEvents } from '@dxos/echo/internal';
+import { type RefResolver, type RefResolverRequest, batchEvents, objectStructureFromJson } from '@dxos/echo/internal';
 import { assertState, invariant } from '@dxos/invariant';
 import { EID, type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -44,6 +43,7 @@ import { ComplexSet, chunkArray, countWork, deepMapValues, markWork } from '@dxo
 
 import {
   type ChangeEvent,
+  type ClientDocHandleEvents,
   type DocHandleProxy,
   RepoProxy,
   type SaveStateChangedEvent,
@@ -305,14 +305,14 @@ export class EntityManager implements IDatabaseBinding {
 
     await this._repoProxy.open();
     ctx.onDispose(() => this._unsubscribeFromHandles());
-    this.#snapshotWatchScheduled = false;
     if (this._eviction) {
       scheduleTaskInterval(ctx, () => this.#evictIdleDocuments(), this._eviction.intervalMs ?? EVICTION_INTERVAL);
     }
     ctx.onDispose(() => {
-      this.#snapshotWatch?.cleanup();
-      this.#snapshotWatch = undefined;
-      this.#snapshotDocuments.clear();
+      for (const { handle, listener } of this.#passiveHandles.values()) {
+        handle.off('passive', listener);
+      }
+      this.#passiveHandles.clear();
     });
     ctx.onDispose(() => {
       for (const request of this._satisfactionRequests.values()) {
@@ -534,9 +534,9 @@ export class EntityManager implements IDatabaseBinding {
 
   /**
    * The entity for an index row of an object whose document the tab has not loaded, backed by the
-   * row's state. A core the tab already holds wins: a bound one is authoritative and ignores the row,
-   * and a snapshot-backed one takes it only when the index stamped it later than the copy it holds.
-   * Undefined when the row cannot back the object, which then loads its document as usual.
+   * row's JSON and stored changes. A core the tab already holds wins and ignores the row: a bound one
+   * follows its document, and a snapshot-backed one its passive subscription, either of which a row can
+   * be behind. Undefined when the row cannot back the object, which then loads its document as usual.
    */
   upsertSnapshot(id: EntityId, state: SnapshotState): Entity.Unknown | undefined {
     // Closing, or not routed here (including before the root arrives): the document path decides instead.
@@ -553,23 +553,20 @@ export class EntityManager implements IDatabaseBinding {
       if (!existing.isBodyAvailable) {
         return undefined;
       }
-      this.#refreshSnapshot(existing, state);
+      // Held already, and kept current by its own subscription, which a row may be behind.
       return existing.rootProxy ?? this._createEntity(existing);
     }
     // Its document is already loading for it, so the load binds the object.
     if (this._objectDocumentHandles.has(id)) {
       return undefined;
     }
+    // A passive handle an earlier core left behind is synced again from this row's heads.
     const handle = this._repoProxy.find<DatabaseDirectory>(state.documentId as DocumentId, {
       passive: { bytes: state.bytes, heads: state.heads },
     });
     // Held subscribed already (another reader loaded it): the document path binds the object.
     if (!handle.passive) {
       return undefined;
-    }
-    // The core shows this row, so its handle holds this row's bytes, even one an earlier core left behind.
-    if (!sameHeads(handle.passive.heads, state.heads)) {
-      handle._setPassive({ bytes: state.bytes, heads: state.heads });
     }
 
     const core = new ObjectCore();
@@ -578,35 +575,27 @@ export class EntityManager implements IDatabaseBinding {
     core.setSnapshot({
       root: { objects: { [id]: state.structure } },
       heads: state.heads,
-      version: state.version,
       updatedAt: state.updatedAt,
       handle,
     });
     this._objects.set(id, core);
     countWork('echo.snapshotObjects');
-    this.#watchSnapshot(id, handle);
+    this.#watchPassive(id, handle);
     return this._createEntity(core);
   }
 
   /**
-   * The entity for an index row: the object the tab holds at the row's version or newer, or one backed by
-   * the row's state, which `decode` is called for only then. Undefined when the document path decides,
-   * as it does before the space root arrives and once a close begins.
+   * The entity for an index row: the object the tab already holds from the index's copy, which its own
+   * subscription keeps current, or one backed by the row, which `decode` is called for only then.
+   * Undefined when the document path decides, as it does before the space root arrives and once a close begins.
    */
-  placeIndexRow(
-    id: EntityId,
-    { version, documentId }: { version: number; documentId: string },
-    decode: () => SnapshotState | undefined,
-  ): Entity.Unknown | undefined {
+  placeIndexRow(id: EntityId, documentId: string, decode: () => SnapshotState | undefined): Entity.Unknown | undefined {
     if (this.#closing || !this.#routesTo(id, documentId)) {
       return undefined;
     }
     const held = this.getObjectCoreById(id, { load: false });
-    if (held && !held.snapshot) {
-      return undefined;
-    }
-    if (held?.snapshot && version <= held.snapshot.version) {
-      return held.rootProxy ?? this._createEntity(held);
+    if (held) {
+      return held.snapshot ? (held.rootProxy ?? this._createEntity(held)) : undefined;
     }
     const state = decode();
     return state && this.upsertSnapshot(id, state);
@@ -621,25 +610,23 @@ export class EntityManager implements IDatabaseBinding {
     return documentId !== undefined && this.getObjectDocumentId(id) === documentId;
   }
 
-  /** Moves a snapshot-backed core and the bytes it holds onto a newer index row. */
-  #refreshSnapshot(core: ObjectCore, state: SnapshotState): void {
+  /** Shows what the host sent a snapshot-backed core's document to, whose handle now holds the change. */
+  #refreshSnapshot(
+    core: ObjectCore,
+    { structure, heads, updatedAt }: Omit<SnapshotState, 'bytes' | 'documentId'>,
+  ): void {
     const { snapshot } = core;
-    // A handle that has loaded its bytes is about to bind the core, and the document is newer than any row.
-    if (!snapshot?.handle.passive || state.version <= snapshot.version) {
-      return;
-    }
-    snapshot.handle._setPassive({ bytes: state.bytes, heads: state.heads });
+    invariant(snapshot);
     const previous = snapshot.root.objects[core.id];
-    const structure = shareStructure(previous, state.structure);
+    const shared = shareStructure(previous, structure);
     core.snapshot = {
-      root: structure === previous ? snapshot.root : { objects: { [core.id]: structure } },
-      heads: state.heads,
-      version: state.version,
-      updatedAt: state.updatedAt,
+      root: shared === previous ? snapshot.root : { objects: { [core.id]: shared } },
+      heads,
+      updatedAt,
       handle: snapshot.handle,
     };
-    // A row that holds what the object already shows changes nothing a reader sees.
-    if (structure !== previous) {
+    // A change that holds what the object already shows changes nothing a reader sees.
+    if (shared !== previous) {
       core.notifyUpdate();
       // Queries over the working set match on what the object shows, as for a change to its document.
       this._scheduleThrottledDbUpdate([core.id], { coalesce: true });
@@ -647,109 +634,52 @@ export class EntityManager implements IDatabaseBinding {
   }
 
   /**
-   * The cores backed by the index's copy, with the documents whose bytes they hold. One reactive lazy
-   * query over them keeps each current while something holds it, since the query that returned it may
-   * since have stopped or filtered it out.
+   * The passive handles of cores backed by the index's copy. Each is subscribed passive, so the host sends
+   * every change to its document with what the object now shows, which keeps the core current while
+   * something holds it.
    */
-  readonly #snapshotDocuments = new Map<string, DocHandleProxy<DatabaseDirectory>>();
-  #snapshotWatch: { ids: string; cleanup: CleanupFn } | undefined = undefined;
-  #snapshotWatchScheduled = false;
+  readonly #passiveHandles = new Map<
+    string,
+    { handle: DocHandleProxy<DatabaseDirectory>; listener: (event: PassiveUpdate) => void }
+  >();
 
-  #watchSnapshot(id: string, handle: DocHandleProxy<DatabaseDirectory>): void {
-    this.#snapshotDocuments.set(id, handle);
-    this.#scheduleSnapshotWatch();
+  #watchPassive(id: string, handle: DocHandleProxy<DatabaseDirectory>): void {
+    this.#unwatchPassive(id);
+    const listener = (event: PassiveUpdate) => this.#onPassiveUpdate(id, event);
+    handle.on('passive', listener);
+    this.#passiveHandles.set(id, { handle, listener });
   }
 
-  /** Stops watching a core that left the index's copy; `released` also drops the bytes it held, if nothing loaded them. */
-  #unwatchSnapshot(id: string, { released = false }: { released?: boolean } = {}): void {
-    const handle = this.#snapshotDocuments.get(id);
-    if (handle === undefined) {
+  /** Stops following a core's passive handle; `released` also releases it, if nothing has loaded it. */
+  #unwatchPassive(id: string, { released = false }: { released?: boolean } = {}): void {
+    const entry = this.#passiveHandles.get(id);
+    if (entry === undefined) {
       return;
     }
-    this.#snapshotDocuments.delete(id);
-    if (released && handle.passive && handle.documentId) {
-      this._repoProxy.release(handle.documentId);
+    this.#passiveHandles.delete(id);
+    entry.handle.off('passive', entry.listener);
+    if (released && entry.handle.passive && entry.handle.documentId) {
+      this._repoProxy.release(entry.handle.documentId);
     }
-    this.#scheduleSnapshotWatch();
   }
 
-  /** Coalesces the id set's changes into one restart of the watch query. */
-  #scheduleSnapshotWatch(): void {
-    if (this.#snapshotWatchScheduled || !this._ctx || this._ctx.disposed) {
+  #onPassiveUpdate(id: string, { handle, heads, json, updatedAt }: PassiveUpdate): void {
+    const core = this._objects.get(id);
+    if (this.#closed || core?.snapshot?.handle !== handle || !handle.passive) {
       return;
     }
-    this.#snapshotWatchScheduled = true;
-    scheduleTask(
-      this._ctx,
-      () => {
-        this.#snapshotWatchScheduled = false;
-        this.#watchSnapshots();
-      },
-      SNAPSHOT_WATCH_DELAY,
-    );
-  }
-
-  #watchSnapshots(): void {
-    const ids = [...this.#snapshotDocuments.keys()].sort();
-    const key = ids.join(',');
-    if (this.#snapshotWatch?.ids === key) {
+    if (json === undefined) {
+      // Only the document can show this change; the handle already holds it.
+      this.activate(core);
       return;
     }
-    this.#snapshotWatch?.cleanup();
-    this.#snapshotWatch = undefined;
-    if (ids.length === 0) {
-      return;
+    const structure = objectStructureFromJson(JSON.parse(json));
+    // The JSON carries no system timestamps; creation does not change.
+    const createdAt = core.snapshot.root.objects[id]?.system?.createdAt;
+    if (createdAt !== undefined) {
+      structure.system = { ...structure.system, createdAt };
     }
-
-    const query = Query.select(Filter.id(...(ids as EntityId[])))
-      .options({ followVersions: true, deleted: 'include' })
-      .from(Scope.space({ id: this._spaceId }));
-    const cleanup = subscribeStream(
-      this._runtime,
-      this._queryService['QueryService.execQuery']({
-        query: JSON.stringify(query.ast),
-        queryId: `snapshot-watch:${this._spaceId}:${++snapshotWatchCount}`,
-        reactivity: QueryReactivity.REACTIVE,
-      }),
-      {
-        onData: (response) => {
-          if (this.#closed) {
-            return;
-          }
-          for (const result of response.results ?? []) {
-            // Rows only refresh cores still held: the watch must not keep an object alive.
-            const core = this._objects.get(result.id);
-            if (
-              !core?.snapshot?.handle.passive ||
-              (result.version ?? 0) <= core.snapshot.version ||
-              !this.#routesTo(core.id, result.documentId)
-            ) {
-              continue;
-            }
-            const state = getSnapshotState(result);
-            if (state) {
-              this.#refreshSnapshot(core, state);
-            } else {
-              // Newer than the bytes the core holds, and shipped without them: only the document can show it.
-              this.activate(core);
-            }
-          }
-        },
-        onError: (err) => {
-          if (this.#snapshotWatch?.cleanup === cleanup) {
-            this.#snapshotWatch = undefined;
-          }
-          if (err instanceof RpcClosedError) {
-            if (this._ctx) {
-              this._reconnected.once(this._ctx, () => this.#scheduleSnapshotWatch());
-            }
-          } else if (err != null) {
-            log.catch(err);
-          }
-        },
-      },
-    );
-    this.#snapshotWatch = { ids: key, cleanup };
+    this.#refreshSnapshot(core, { structure, heads, updatedAt });
   }
 
   #evicting = false;
@@ -782,7 +712,7 @@ export class EntityManager implements IDatabaseBinding {
         this._runtime,
         this._queryService['QueryService.execQuery']({
           query: JSON.stringify(query.ast),
-          queryId: `evict:${this._spaceId}:${++snapshotWatchCount}`,
+          queryId: `evict:${this._spaceId}:${++evictionQueryCount}`,
           reactivity: QueryReactivity.ONE_SHOT,
         }).pipe(Stream.runHead),
         { timeout: RPC_TIMEOUT },
@@ -825,7 +755,7 @@ export class EntityManager implements IDatabaseBinding {
     const handle = core.docHandle;
     const documentId = handle?.documentId;
     invariant(handle && documentId);
-    if (!this._repoProxy.passivate(documentId, { bytes: state.bytes, heads: state.heads })) {
+    if (!this._repoProxy.deactivate(documentId, { bytes: state.bytes, heads: state.heads })) {
       return;
     }
     this._unbindObjectDocument(core.id);
@@ -835,12 +765,11 @@ export class EntityManager implements IDatabaseBinding {
     core.demote({
       root: { objects: { [core.id]: state.structure } },
       heads: state.heads,
-      version: state.version,
       updatedAt: state.updatedAt,
       handle,
     });
     countWork('echo.demotions');
-    this.#watchSnapshot(core.id, handle);
+    this.#watchPassive(core.id, handle);
   }
 
   /** Resolves once the database has opened, and rejects once it has closed, so a closed one is never waited on. */
@@ -2423,7 +2352,7 @@ export class EntityManager implements IDatabaseBinding {
    * object mounted in it, and never the space root), since it is the document that holds the payload.
    */
   private _releaseObject(objectId: string, { releaseDocument = false }: ReleaseObjectOptions = {}): void {
-    this.#unwatchSnapshot(objectId, { released: true });
+    this.#unwatchPassive(objectId, { released: true });
     // Never dropped while still resolving, because aborting one releases its load ops and cancels
     // the IO a reader is waiting on; it is dropped when it settles instead.
     const request = this._satisfactionRequests.get(objectId as EntityId);
@@ -2572,7 +2501,7 @@ export class EntityManager implements IDatabaseBinding {
     const passive = core.snapshot?.handle;
     core.bind({ db: this, docHandle, path: ['objects', core.id], assignFromLocalState: false });
     // Bound elsewhere (the space root inlined it), the bytes it held are not needed.
-    this.#unwatchSnapshot(core.id, { released: passive !== docHandle });
+    this.#unwatchPassive(core.id, { released: passive !== docHandle });
     this._markObjectAvailable(core.id);
     this._onObjectBoundToDocument(docHandle, core.id);
   }
@@ -2755,7 +2684,6 @@ const EVICTION_MAX_DOCUMENTS = 500;
 const sameHeads = (left: readonly string[], right: readonly string[]): boolean =>
   left.length === right.length && left.every((head) => right.includes(head));
 
-/** Coalesces bursts of index-backed cores appearing or going into one restart of the watch query. */
-const SNAPSHOT_WATCH_DELAY = 100;
+let evictionQueryCount = 0;
 
-let snapshotWatchCount = 0;
+type PassiveUpdate = ClientDocHandleEvents<DatabaseDirectory>['passive'];

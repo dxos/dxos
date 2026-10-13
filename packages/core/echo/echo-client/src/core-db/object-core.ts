@@ -70,14 +70,12 @@ export type ObjectCoreOptions = {
 
 /**
  * The index's copy of an object, backing its core until something needs the object's document: the
- * structure mounted as a document would hold it, so the core's paths are unchanged, the heads and
- * index stamp it was read at, and the passive handle holding the document's stored changes, which
- * can be ahead of those heads.
+ * structure mounted as a document would hold it, so the core's paths are unchanged, the heads it was
+ * read at, and the passive handle holding the document's stored changes, which can be ahead of those heads.
  */
 export type ObjectSnapshot = {
   root: { objects: Record<string, EntityStructure> };
   heads: Heads;
-  version: number;
   updatedAt: number | undefined;
   handle: DocHandleProxy<DatabaseDirectory>;
 };

@@ -10,8 +10,10 @@ import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { Trigger, asyncTimeout, waitForCondition } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { type DatabaseDirectory, EntityStructure, SpaceDocVersion } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
+import { DXN, EntityId, PublicKey, SpaceId } from '@dxos/keys';
+import { type DataService } from '@dxos/protocols/rpc';
 import { openAndClose } from '@dxos/test-utils';
 
 import { AutomergeHost } from '../automerge/index.ts';
@@ -95,7 +97,7 @@ describe('DocumentsSynchronizer', () => {
     });
     await openAndClose(synchronizer);
 
-    await synchronizer.addDocuments(handles.map((handle) => handle.documentId));
+    await synchronizer.addDocuments(handles.map(({ documentId }) => ({ documentId })));
     await allDelivered.wait({ timeout: 5_000 });
 
     expect(Math.max(...batches)).toBeLessThanOrEqual(2);
@@ -133,14 +135,11 @@ describe('DocumentsSynchronizer', () => {
     });
     await openAndClose(synchronizer);
 
-    await synchronizer.addDocuments(
-      [handle.documentId, unknown.documentId, current.documentId],
-      new Map([
-        [handle.documentId, heldHeads],
-        [unknown.documentId, heldHeads],
-        [current.documentId, A.getHeads(current.doc()!)],
-      ]),
-    );
+    await synchronizer.addDocuments([
+      { documentId: handle.documentId, heads: heldHeads },
+      { documentId: unknown.documentId, heads: heldHeads },
+      { documentId: current.documentId, heads: A.getHeads(current.doc()!) },
+    ]);
     await delivered.wait({ timeout: 5_000 });
 
     const delta = sent.get(handle.documentId)!;
@@ -150,6 +149,67 @@ describe('DocumentsSynchronizer', () => {
     expect(A.load<{ text: string }>(sent.get(unknown.documentId)!).text).toBe('unknown');
     // Nothing came after them: an empty send still tells the client it is current.
     expect(sent.get(current.documentId)).toHaveLength(0);
+  });
+
+  test("a passive subscription sends each change with the JSON of the document's one object", async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const host = new AutomergeHost({ runtime });
+    await openAndClose(host);
+    const objectId = EntityId.random();
+    const handle = await host.createDoc<DatabaseDirectory>({
+      version: SpaceDocVersion.CURRENT,
+      access: { spaceId: SpaceId.random() },
+      objects: { [objectId]: EntityStructure.makeObject({ type: TEST_TYPE, data: { title: 'shown' } }) },
+      links: {},
+    });
+    await host.flush(Context.default());
+    const shownAt = A.getHeads(handle.doc()!);
+    const shownBytes = A.save(handle.doc()!);
+
+    const updates: DataService.DocumentUpdate[] = [];
+    const synchronizer = new DocumentsSynchronizer({
+      automergeHost: host,
+      sendUpdates: (batch) => updates.push(...(batch.updates ?? [])),
+    });
+    await openAndClose(synchronizer);
+    const next = async () => {
+      const count = updates.length;
+      await waitForCondition({ condition: () => updates.length > count, timeout: 5_000 });
+      return updates[updates.length - 1];
+    };
+    const title = (update: DataService.DocumentUpdate) => JSON.parse(update.passive!.json!).title;
+
+    // The first send confirms what the client shows, from the heads it names.
+    let update = next();
+    await synchronizer.addDocuments([{ documentId: handle.documentId, heads: shownAt, passive: true }]);
+    expect(title(await update)).toBe('shown');
+
+    update = next();
+    handle.change((doc) => {
+      doc.objects![objectId].data.title = 'edited';
+    });
+    await host.flush(Context.default());
+    const edited = await update;
+    expect(title(edited)).toBe('edited');
+    expect(edited.passive?.heads).toEqual(A.getHeads(handle.doc()!));
+    // The mutation applies on top of the stored changes the client holds.
+    const loaded = A.loadIncremental(A.load<DatabaseDirectory>(shownBytes), edited.mutation!);
+    expect(loaded.objects![objectId].data.title).toBe('edited');
+    expect(edited.passive?.updatedAt).toBeGreaterThan(0);
+
+    // A document that no longer holds just the object cannot be shown from JSON.
+    update = next();
+    handle.change((doc) => {
+      doc.objects![EntityId.random()] = EntityStructure.makeObject({ type: TEST_TYPE, data: {} });
+    });
+    await host.flush(Context.default());
+    expect((await update).passive).toEqual(expect.objectContaining({ json: undefined }));
+
+    // Added again without `passive`, it is a loaded document's subscription.
+    update = next();
+    await synchronizer.addDocuments([{ documentId: handle.documentId, heads: A.getHeads(handle.doc()!) }]);
+    expect((await update).passive).toBeUndefined();
   });
 
   test('a client write reaches the other subscriber and the heads store without a lease on the host', async () => {
@@ -167,8 +227,8 @@ describe('DocumentsSynchronizer', () => {
     const synchronizer1 = new DocumentsSynchronizer({ automergeHost: host, sendUpdates: client1.receive });
     const synchronizer2 = new DocumentsSynchronizer({ automergeHost: host, sendUpdates: client2.receive });
     await openAndClose(synchronizer1, synchronizer2);
-    await synchronizer1.addDocuments([documentId]);
-    await synchronizer2.addDocuments([documentId]);
+    await synchronizer1.addDocuments([{ documentId }]);
+    await synchronizer2.addDocuments([{ documentId }]);
     await asyncTimeout(Promise.all([client1.loaded(documentId), client2.loaded(documentId)]), 1_000);
 
     // Subscribed and idle: nothing on the host holds the document.
@@ -206,8 +266,8 @@ describe('DocumentsSynchronizer', () => {
     const synchronizer1 = new DocumentsSynchronizer({ automergeHost: host, sendUpdates: client1.receive });
     const synchronizer2 = new DocumentsSynchronizer({ automergeHost: host, sendUpdates: client2.receive });
     await openAndClose(synchronizer1, synchronizer2);
-    await synchronizer1.addDocuments([documentId]);
-    await synchronizer2.addDocuments([documentId]);
+    await synchronizer1.addDocuments([{ documentId }]);
+    await synchronizer2.addDocuments([{ documentId }]);
     await asyncTimeout(Promise.all([client1.loaded(documentId), client2.loaded(documentId)]), 1_000);
 
     // Holds the first write's import open until the second client's write has been imported.
@@ -260,7 +320,7 @@ describe('DocumentsSynchronizer', () => {
 
     const synchronizer = new DocumentsSynchronizer({ automergeHost: host, sendUpdates: () => {} });
     await openAndClose(synchronizer);
-    await synchronizer.addDocuments([documentId]);
+    await synchronizer.addDocuments([{ documentId }]);
     expect(host.leasedDocsCount).to.equal(1);
 
     synchronizer.removeDocuments([documentId]);
@@ -287,7 +347,7 @@ describe('DocumentsSynchronizer', () => {
     const handle = await host.createDoc<{ text: string }>({ text: 'hello' });
 
     // Add document to synchronizer (simulates updateSubscription with add).
-    await synchronizer.addDocuments([handle.documentId]);
+    await synchronizer.addDocuments([{ documentId: handle.documentId }]);
 
     // Wait for the scheduled job to flush the initial sync.
     await asyncTimeout(sentUpdate.wait(), 1_000);
@@ -318,7 +378,7 @@ describe('DocumentsSynchronizer', () => {
         documentId = handle.documentId;
 
         // Add to synchronizer (simulates updateSubscription with add).
-        await synchronizer.addDocuments([documentId]);
+        await synchronizer.addDocuments([{ documentId }]);
 
         // Wait for the background auto-save to persist the document to disk (no explicit flush).
         await waitForCondition({ condition: () => host.hasDocOnDisk(documentId), timeout: 2_000 });
@@ -346,3 +406,5 @@ describe('DocumentsSynchronizer', () => {
     });
   });
 });
+
+const TEST_TYPE = DXN.make('com.example.type.test', '0.1.0');

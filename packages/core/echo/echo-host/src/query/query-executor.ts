@@ -689,8 +689,6 @@ export class QueryExecutor extends Resource {
   #changeResultSet: ChangeItem[] | undefined;
   readonly #planner: QueryPlanner;
   readonly #mode: QueryExecutorMode;
-  /** A row whose version changed is a changed result (see `QueryOptions.followVersions`). */
-  readonly #followVersions: boolean;
   /** The version each object last shipped its JSON and stored changes at, so a re-emit leaves them off. */
   #sentVersions = new Map<string, number>();
 
@@ -723,7 +721,6 @@ export class QueryExecutor extends Resource {
     this._id = options.queryId;
     this._query = options.query;
     this._reactivity = options.reactivity;
-    this.#followVersions = QueryAST.followsVersions(this._query);
 
     this.#mode = options.executor ?? 'memory';
     this.#planner = new QueryPlanner({ executor: this.#mode, sql: options.sql });
@@ -899,8 +896,7 @@ export class QueryExecutor extends Resource {
     this._trace = trace;
 
     const changed =
-      previous.length !== workingSet.length ||
-      previous.some((item, index) => !_sameResult(workingSet[index], item, this.#followVersions));
+      previous.length !== workingSet.length || previous.some((item, index) => !_sameResult(workingSet[index], item));
 
     // Disabled because concurrent queries don't print hierarchies correctly.
     // ExecutionTrace.putOnPerformanceTimeline(trace);
@@ -2691,7 +2687,7 @@ const compiledRowToItem = (row: CompiledRow): QueryItem => {
  * `SqlStep` item already carries its shipped form, so comparing that is comparing the record; an
  * item the steps built is compared on the fields `getResults` derives the record from.
  */
-const _sameResult = (a: QueryItem, b: QueryItem, followVersions: boolean): boolean => {
+const _sameResult = (a: QueryItem, b: QueryItem): boolean => {
   if (a.result !== undefined || b.result !== undefined) {
     return (
       a.result?.id === b.result?.id &&
@@ -2704,10 +2700,8 @@ const _sameResult = (a: QueryItem, b: QueryItem, followVersions: boolean): boole
       a.result?.aggregates === b.result?.aggregates &&
       a.result?.rank === b.result?.rank &&
       // A feed row ships its indexed body, so an edit to it changes the record without moving the row. A
-      // document row's body backs an object the client keeps current itself.
-      (a.result?.queueId === undefined || a.result?.documentJson === b.result?.documentJson) &&
-      // Every re-index stamps a new version, so only a query that asks re-sends on it.
-      (!followVersions || a.result?.version === b.result?.version)
+      // document row's body backs an object its own subscription keeps current.
+      (a.result?.queueId === undefined || a.result?.documentJson === b.result?.documentJson)
     );
   }
   return (
@@ -2720,8 +2714,7 @@ const _sameResult = (a: QueryItem, b: QueryItem, followVersions: boolean): boole
     // (e.g. the last item of group A becomes the first item of group B at the same index).
     _serializeOptionalGroupKey(a.groupKey) === _serializeOptionalGroupKey(b.groupKey) &&
     // A collapsed group ships only its size and aggregates, so those are what can change.
-    _serializeCollapsed(a) === _serializeCollapsed(b) &&
-    (!followVersions || a.version === b.version)
+    _serializeCollapsed(a) === _serializeCollapsed(b)
   );
 };
 

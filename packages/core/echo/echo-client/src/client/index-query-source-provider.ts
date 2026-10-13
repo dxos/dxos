@@ -524,14 +524,14 @@ export class IndexQuerySource implements QuerySource {
    * Waits for nothing: a row its database cannot place yet takes the document path, under the per-row budget.
    */
   private async _placeRows(records: readonly QueryService.QueryResult[]): Promise<Map<string, PlacedRow>> {
-    const bySpace = new Map<string, { row: QueryService.QueryResult; version: number; documentId: string }[]>();
+    const bySpace = new Map<string, { row: QueryService.QueryResult; documentId: string }[]>();
     for (const row of records) {
       const isDocumentRow = !row.queueId && row.aggregates === undefined && row.recordJson === undefined;
-      if (!isDocumentRow || row.version === undefined || row.documentId === undefined) {
+      if (!isDocumentRow || row.documentId === undefined) {
         continue;
       }
       const rows = bySpace.get(row.spaceId) ?? [];
-      rows.push({ row, version: row.version, documentId: row.documentId });
+      rows.push({ row, documentId: row.documentId });
       bySpace.set(row.spaceId, rows);
     }
 
@@ -543,8 +543,8 @@ export class IndexQuerySource implements QuerySource {
       }
       for (const chunk of chunkArray(rows, HYDRATE_RECORDS_PER_YIELD_CHECK)) {
         await yieldOrContinue('smooth');
-        for (const { row, version, documentId } of chunk) {
-          const entity = database._entityManager.placeIndexRow(EntityId.make(row.id), { version, documentId }, () =>
+        for (const { row, documentId } of chunk) {
+          const entity = database._entityManager.placeIndexRow(EntityId.make(row.id), documentId, () =>
             getSnapshotState(row),
           );
           if (entity) {

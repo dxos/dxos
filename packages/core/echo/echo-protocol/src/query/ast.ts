@@ -711,37 +711,9 @@ export const QueryOptions = Schema.Struct({
    * Diagnostics-only label for logs / tooling (not used by execution semantics).
    */
   debugLabel: Schema.optional(Schema.String),
-
-  /**
-   * A reactive query also re-sends when a row's version changes, not only when its rows or their order
-   * do. Set by the ECHO client on the query that keeps its index-backed objects current.
-   */
-  followVersions: Schema.optional(Schema.Boolean),
 });
 
 export interface QueryOptions extends Schema.Schema.Type<typeof QueryOptions> {}
-
-/**
- * Whether an option is set on the outer clause chain. A subquery's options do not decide what the outer
- * query returns.
- */
-const hasOuterOption = (query: Query, isSet: (options: QueryOptions) => boolean): boolean => {
-  switch (query.type) {
-    case 'options':
-      return isSet(query.options) || hasOuterOption(query.query, isSet);
-    case 'order':
-    case 'limit':
-    case 'skip':
-    case 'from':
-      return hasOuterOption(query.query, isSet);
-    default:
-      return false;
-  }
-};
-
-/** Whether a version change alone re-sends the query's rows (see {@link QueryOptions.followVersions}). */
-export const followsVersions = (query: Query): boolean =>
-  hasOuterOption(query, (options) => options.followVersions === true);
 
 /**
  * Selects from a space (automerge documents).

@@ -33,9 +33,17 @@ export type ClientDocHandleEvents<T> = {
    * promise and has nothing else to wake it.
    */
   available: { handle: DocHandleProxy<T> };
+  /**
+   * A passive handle took a change from the host: what its document's one object now shows, read at
+   * `heads`. No `json` when the object cannot be shown without loading the document.
+   */
+  passive: { handle: DocHandleProxy<T>; heads: A.Heads; json?: string; updatedAt?: number };
 };
 
-/** A document's Automerge bytes held on the JS heap, unloaded, with the heads they are at. */
+/**
+ * A document's stored changes, held on the JS heap unloaded, and the heads the client shows it at. The
+ * changes can be ahead of those heads, never behind.
+ */
 export type PassiveDocument = { bytes: Uint8Array; heads: A.Heads };
 
 export type DocHandleProxyOptions<T> = {
@@ -51,9 +59,9 @@ export type DocHandleProxyOptions<T> = {
 /**
  * Lifecycle of {@link DocHandleProxy}.
  *
- * - `'passive'`  — the client holds the document's bytes but has not loaded them and is not
- *                  subscribed; {@link DocHandleProxy.doc} loads them synchronously, and the handle
- *                  is usable at once and `'ready'` once the host confirms it is current.
+ * - `'passive'`  — the client holds the document's stored changes unloaded, subscribed for the host's
+ *                  changes with its object's JSON; {@link DocHandleProxy.doc} loads them synchronously,
+ *                  and the handle is usable at once and `'ready'` once the host confirms it is current.
  * - `'pending'`  — handle just created; the worker has not yet reported the
  *                  outcome of the local-storage probe.
  * - `'requesting'` — worker confirmed the doc is **not** on disk and is
@@ -229,19 +237,24 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   changeAt(heads: A.Heads, fn: (doc: A.Doc<T>) => void, opts?: A.ChangeOptions<any>): A.Heads | undefined {
     this._activate();
     invariant(this._doc, 'DocHandleProxy.changeAt called on deleted doc');
+    // Made on a fork at `heads` and merged back, rather than with `A.changeAt`, whose returned document
+    // can miss the change in its materialized values (automerge 3.5, depending on actor order).
+    const forked = A.clone(A.view(this._doc, heads));
+    const change = A.getLastLocalChange(opts ? A.change(forked, opts, fn) : A.change(forked, fn));
+    if (!change) {
+      return undefined;
+    }
     const before = this._doc;
     const headsBefore = A.getHeads(this._doc);
-    const { newDoc, newHeads } = opts ? A.changeAt(this._doc, heads, opts, fn) : A.changeAt(this._doc, heads, fn);
-
-    this._doc = newDoc;
+    this._doc = A.loadIncremental(this._doc, change);
     this.emit('change', {
       handle: this,
       doc: this._doc,
       // To the document's heads, not the change's: a change at older heads merges with what came after them.
-      patches: newHeads ? A.diff(this._doc, headsBefore, A.getHeads(this._doc)) : [],
+      patches: A.diff(this._doc, headsBefore, A.getHeads(this._doc)),
       patchInfo: { before, after: this._doc, source: 'change' },
     });
-    return newHeads ?? undefined;
+    return [A.decodeChange(change).hash];
   }
 
   update(updateCallback: (doc: A.Doc<T>) => A.Doc<T>): void {
@@ -422,6 +435,27 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   }
 
   /**
+   * Keeps a host change with the stored changes of a passive handle, and reports what its object now shows.
+   * @internal
+   */
+  _integratePassiveUpdate(
+    mutation: Uint8Array | undefined,
+    passive: { heads: A.Heads; json?: string; updatedAt?: number } | undefined,
+  ): void {
+    const held = this.#passive;
+    invariant(held, 'Not a passive handle.');
+    const bytes = mutation?.length ? concatBytes(held.bytes, mutation) : held.bytes;
+    // A host that sends no JSON leaves the shown heads where they were; the document shows the rest.
+    this.#passive = { bytes, heads: passive?.json !== undefined ? passive.heads : held.heads };
+    this.emit('passive', {
+      handle: this,
+      heads: this.#passive.heads,
+      json: passive?.json,
+      updatedAt: passive?.updatedAt,
+    });
+  }
+
+  /**
    * Update the doc with a foreign mutation from worker.
    * @internal
    */
@@ -458,3 +492,11 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
     });
   }
 }
+
+/** Stored changes and a change after them, in the one buffer `loadIncremental` reads. */
+const concatBytes = (left: Uint8Array, right: Uint8Array): Uint8Array => {
+  const bytes = new Uint8Array(left.length + right.length);
+  bytes.set(left);
+  bytes.set(right, left.length);
+  return bytes;
+};

@@ -50,8 +50,9 @@ export class RepoProxy extends Resource {
   // TODO(mykola): Change to Map<string, DocHandleProxy<unknown>>.
   private _handles: Record<string, DocHandleProxy<any>> = {};
   /**
-   * Handles holding a document's bytes unloaded and unsubscribed; one moves to {@link _handles} when it
-   * loads them. Kept apart so nothing that walks the subscribed handles sees one.
+   * Handles holding a document's stored changes unloaded, subscribed passive (the host sends each change
+   * with the object's JSON); one moves to {@link _handles} when it loads them. Kept apart so nothing
+   * that walks the loaded handles sees one.
    */
   private readonly _passiveHandles = new Map<DocumentId, DocHandleProxy<any>>();
   private readonly _subscriptionId = PublicKey.random().toHex();
@@ -182,6 +183,7 @@ export class RepoProxy extends Resource {
    */
   release(documentId: DocumentId): boolean {
     if (this._passiveHandles.delete(documentId)) {
+      this.#unsubscribe(documentId);
       return true;
     }
     const handle = this._handles[documentId];
@@ -226,21 +228,23 @@ export class RepoProxy extends Resource {
     const documentId = toDocumentId(id);
     if (passive) {
       this.#requireOpen(documentId);
-      return (
-        this._handles[documentId] ??
-        this._passiveHandles.get(documentId) ??
-        this._loadHandle<T>({ documentId, passive })
-      );
+      const held = this._handles[documentId] ?? this._passiveHandles.get(documentId);
+      if (held?.passive && !sameHeads(held.passive.heads, passive.heads)) {
+        // Shown at other heads than the caller's, so it syncs again from the caller's.
+        held._setPassive(passive);
+        this.#subscribePassive(documentId, passive.heads);
+      }
+      return held ?? this._loadHandle<T>({ documentId, passive });
     }
     return this._getOrLoadHandle<T>({ documentId });
   }
 
   /**
-   * Moves a loaded handle back to bytes and unsubscribes it, leaving its document for collection.
-   * Refused while the host has not taken the handle's last change, since the bytes would not hold it.
+   * Moves a loaded handle back to stored changes, subscribed passive, leaving its document for collection.
+   * Refused while the host has not taken the handle's last change, since the stored changes would not hold it.
    * @returns Whether the handle went passive.
    */
-  passivate(documentId: DocumentId, passive: PassiveDocument): boolean {
+  deactivate(documentId: DocumentId, passive: PassiveDocument): boolean {
     const handle = this._handles[documentId];
     if (
       !handle ||
@@ -256,10 +260,7 @@ export class RepoProxy extends Resource {
     delete this._handles[documentId];
     this._passiveHandles.set(documentId, handle);
     this._deferredReleaseIds.delete(documentId);
-    this._pendingAddIds.delete(documentId);
-    this._pendingAddHeads.delete(documentId);
-    this._pendingRemoveIds.add(documentId);
-    this._sendUpdatesJob?.trigger();
+    this.#subscribePassive(documentId, passive.heads);
     return true;
   }
 
@@ -486,6 +487,11 @@ export class RepoProxy extends Resource {
         this._pendingAddIds.add(documentId);
       }
     }
+    // Sent with the heads each shows, so the host resumes their changes and JSON from there.
+    for (const documentId of this._passiveHandles.keys()) {
+      this._pendingRemoveIds.delete(documentId);
+      this._pendingAddIds.add(documentId);
+    }
   }
 
   /**
@@ -596,10 +602,26 @@ export class RepoProxy extends Resource {
     });
     if (passive) {
       this._passiveHandles.set(documentId, handle);
+      this.#subscribePassive(documentId, passive.heads);
     } else {
       this.#subscribeHandle(handle, documentId);
     }
     return handle;
+  }
+
+  /** Subscribes the host to a passive handle's document from the heads it shows, or switches it to passive. */
+  #subscribePassive(documentId: DocumentId, heads: string[]): void {
+    this._pendingRemoveIds.delete(documentId);
+    this._pendingAddIds.add(documentId);
+    this._pendingAddHeads.set(documentId, heads);
+    this._sendUpdatesJob?.trigger();
+  }
+
+  #unsubscribe(documentId: DocumentId): void {
+    this._pendingAddIds.delete(documentId);
+    this._pendingAddHeads.delete(documentId);
+    this._pendingRemoveIds.add(documentId);
+    this._sendUpdatesJob?.trigger();
   }
 
   /** Subscribes the host to a handle's document, from `heads` when the handle loaded bytes it already held. */
@@ -775,7 +797,19 @@ export class RepoProxy extends Resource {
     }
   }
 
-  #integrate({ documentId, mutation, requesting, unavailable }: DataService.DocumentUpdate, bulk: boolean): void {
+  #integrate(
+    { documentId, mutation, requesting, unavailable, passive }: DataService.DocumentUpdate,
+    bulk: boolean,
+  ): void {
+    const passiveHandle = this._passiveHandles.get(documentId as DocumentId);
+    if (passiveHandle) {
+      try {
+        passiveHandle._integratePassiveUpdate(mutation, passive);
+      } catch (err) {
+        log.catch(err, { documentId });
+      }
+      return;
+    }
     const handle = this._handles[documentId];
     if (!handle) {
       log.warn('Received update for unknown document', { documentId });
@@ -829,9 +863,11 @@ export class RepoProxy extends Resource {
     // Save current state of pending updates to avoid race conditions.
     const updateIds = Array.from(this._pendingUpdateIds);
     const addIds = Array.from(this._pendingAddIds);
+    // The mode is the handle's as of this send: a passive one may have loaded since it was queued.
     const add = addIds.map((id) => {
-      const heads = this._pendingAddHeads.get(id);
-      return heads ? { id, heads } : { id };
+      const passive = this._passiveHandles.get(id)?.passive;
+      const heads = this._pendingAddHeads.get(id) ?? passive?.heads;
+      return { id, ...(heads && { heads }), ...(passive && { passive: true }) };
     });
     const removeIds = Array.from(this._pendingRemoveIds);
 
@@ -852,7 +888,12 @@ export class RepoProxy extends Resource {
           }),
           { timeout: RPC_TIMEOUT },
         );
-        add.forEach((entry) => 'heads' in entry && this._pendingAddHeads.delete(entry.id));
+        // Heads queued again while this batch was in flight are the next batch's.
+        add.forEach(({ id, heads }) => {
+          if (heads !== undefined && this._pendingAddHeads.get(id) === heads) {
+            this._pendingAddHeads.delete(id);
+          }
+        });
       }
 
       const updates: DataService.DocumentUpdate[] = [];
@@ -910,7 +951,9 @@ export class RepoProxy extends Resource {
       // Re-queued even for an abandoned task: nothing else re-sends a pending mutation. Adds are
       // restored only for handles still held — a released document's add would re-subscribe the
       // host to a document nothing owns.
-      addIds.filter((id) => this._handles[id]).forEach((id) => this._pendingAddIds.add(id));
+      addIds
+        .filter((id) => this._handles[id] || this._passiveHandles.has(id))
+        .forEach((id) => this._pendingAddIds.add(id));
       removeIds.forEach((id) => this._pendingRemoveIds.add(id));
       updateIds.forEach((id) => this._pendingUpdateIds.add(id));
 
@@ -966,3 +1009,6 @@ export class RepoProxy extends Resource {
 export type SaveStateChangedEvent = {
   unsavedDocuments: DocumentId[];
 };
+
+const sameHeads = (left: readonly string[], right: readonly string[]): boolean =>
+  left.length === right.length && [...left].sort().join() === [...right].sort().join();

@@ -15,7 +15,6 @@ export const getSnapshotState = (result: QueryService.QueryResult): SnapshotStat
   if (
     result.documentJson === undefined ||
     result.heads === undefined ||
-    result.version === undefined ||
     result.bytes === undefined ||
     result.documentId === undefined
   ) {
@@ -29,7 +28,6 @@ export const getSnapshotState = (result: QueryService.QueryResult): SnapshotStat
   return {
     structure,
     heads: result.heads,
-    version: result.version,
     updatedAt: result.updatedAt,
     bytes: result.bytes,
     documentId: result.documentId,

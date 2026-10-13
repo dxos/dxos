@@ -4367,7 +4367,6 @@ describe('Query', () => {
       return {
         structure: snapshot.root.objects[object.id],
         heads: snapshot.heads,
-        version: snapshot.version,
         updatedAt: snapshot.updatedAt,
         bytes: passive.bytes,
         documentId: snapshot.handle.documentId,
@@ -4496,7 +4495,6 @@ describe('Query', () => {
       const object = db._upsertSnapshot(ids[0], {
         structure,
         heads: shownAt,
-        version: 1,
         updatedAt: Date.now(),
         bytes: A.save(lease.doc()),
         documentId,
@@ -4530,7 +4528,7 @@ describe('Query', () => {
       expect(branched.value).toBe(2);
     });
 
-    test('an object held after its query has finished keeps up with the index, bytes included', async () => {
+    test('an object held after its query has finished keeps up through its passive subscription, stored changes included', async () => {
       const { db, peer, documentIds } = await openReloaded((db) => [
         db.add(createTestObject({ value: 1 })),
         db.add(createTestObject({ value: 10 })),
@@ -4557,17 +4555,16 @@ describe('Query', () => {
           doc.objects![object.id].data.value = value;
         });
         await peer.host.automergeHost.flush(Context.default());
-        await db.flush({ secondaryIndexes: true });
         await waitForCondition({ condition: () => object.value === value, timeout: 5_000 });
       };
 
       await setValue(2);
       await waitForCondition({ condition: () => ones.length === 0, timeout: 5_000 });
-      // A second change reaches the running watch, which re-sends the unchanged row without its JSON and stored changes.
+      // A second change arrives the same way, and the object stays unloaded.
       await setValue(3);
       expect(hasDocument(db, object.id)).toBe(false);
       expect(hasDocument(db, unchanged.id)).toBe(false);
-      // The bytes moved with the row, so a write starts from what the tab shows.
+      // The stored changes took the change with the JSON, so a write starts from what the tab shows.
       expect(getObjectCore(object).snapshot?.heads).toEqual(A.getHeads(lease.doc()));
       Obj.update(object, (object) => {
         object.marked = true;
@@ -4767,7 +4764,6 @@ describe('Query', () => {
       const object = db._upsertSnapshot(ids[0], {
         structure: JSON.parse(JSON.stringify(lease.doc().objects![ids[0]])),
         heads: A.getHeads(lease.doc()),
-        version: 2,
         updatedAt: Date.now(),
         bytes: A.save(lease.doc()),
         documentId,
@@ -4803,30 +4799,17 @@ describe('Query', () => {
       await closing;
     });
 
-    test('a row updates a held object in place only when it is newer and from the document the root routes it to', async () => {
+    test('a held object ignores later index rows, which its own subscription keeps it ahead of', async () => {
       const { db } = await openReloaded((db) => [db.add(createTestObject({ value: 1 }))]);
       const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
       const row = rowOf(db, object);
-      const withValue = (value: number) => ({ ...row.structure, data: { ...row.structure.data, value } });
       let notified = 0;
       onTestFinished(Obj.subscribe(object, () => notified++));
 
-      // Read from another document (a branch, or a copy the root no longer links), or not newer: ignored.
-      db._upsertSnapshot(object.id, {
-        ...row,
-        structure: withValue(99),
-        version: row.version + 1,
-        documentId: 'not-the-routed-document',
-      });
-      db._upsertSnapshot(object.id, { ...row, structure: withValue(3), version: row.version });
-      // Newer but holding what the object already shows: nothing for a reader to see.
-      db._upsertSnapshot(object.id, { ...row, structure: withValue(1), version: row.version + 1 });
+      const structure = { ...row.structure, data: { ...row.structure.data, value: 2 } };
+      expect(db._upsertSnapshot(object.id, { ...row, structure })).toBe(object);
       expect(object.value).toBe(1);
       expect(notified).toBe(0);
-
-      expect(db._upsertSnapshot(object.id, { ...row, structure: withValue(2), version: row.version + 2 })).toBe(object);
-      expect(object.value).toBe(2);
-      expect(notified).toBe(1);
     });
   });
 
