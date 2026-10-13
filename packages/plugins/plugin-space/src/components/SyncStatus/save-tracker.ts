@@ -6,7 +6,7 @@ import { type CleanupFn } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
-import { type EchoDatabase } from '@dxos/echo-client';
+import { type EchoDatabase, type SaveStateChangedEvent } from '@dxos/echo-client';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -57,37 +57,37 @@ export const createSpaceSaveTracker = (space: SaveTrackedSpace, cb: (state: 'sav
 
       let hasUnsavedChanges = false;
       let lastFlushPromise: Promise<void> | undefined;
-      // Leaving `saved` is reported at once, so the indicator never reads saved while a reload would lose a change.
-      space.db.saveStateChanged.on(ctx, ({ unsavedDocuments }) => {
+      const reportUnsaved = ({ unsavedDocuments }: SaveStateChangedEvent) => {
         hasUnsavedChanges = unsavedDocuments.length > 0;
         if (hasUnsavedChanges) {
           lastFlushPromise = undefined;
           cb('saving');
         }
-      });
-      space.db.saveStateChanged.debounce(500).on(ctx, () => {
+      };
+      const confirmSavedAfterFlush = () => {
         if (hasUnsavedChanges) {
-          lastFlushPromise = undefined;
-          cb('saving');
-        } else {
-          const flushPromise = space.db.flush();
-          lastFlushPromise = flushPromise;
-          void flushPromise.then(
-            () => {
-              if (lastFlushPromise === flushPromise) {
-                cb('saved');
-              }
-            },
-            (error: unknown) => {
-              // The failed write is logged where it failed; here it only means the space is not saved.
-              log.verbose('space flush failed', { error });
-              if (lastFlushPromise === flushPromise) {
-                cb('saving');
-              }
-            },
-          );
+          return;
         }
-      });
+
+        const flushPromise = space.db.flush();
+        lastFlushPromise = flushPromise;
+        void flushPromise.then(
+          () => {
+            if (lastFlushPromise === flushPromise) {
+              cb('saved');
+            }
+          },
+          (error: unknown) => {
+            // The failed write is logged where it failed; here it only means the space is not saved.
+            log.verbose('space flush failed', { error });
+            if (lastFlushPromise === flushPromise) {
+              cb('saving');
+            }
+          },
+        );
+      };
+      space.db.saveStateChanged.on(ctx, reportUnsaved);
+      space.db.saveStateChanged.debounce(500).on(ctx, confirmSavedAfterFlush);
     })
     .catch((err) => log.catch(err));
 

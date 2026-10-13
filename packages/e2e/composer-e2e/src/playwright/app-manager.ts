@@ -275,7 +275,6 @@ export class AppManager {
       .toBe(true);
   }
 
-  /** Waits until the status bar reports every change saved, which a reload would otherwise lose. */
   async waitForSaved(timeout = 30_000): Promise<void> {
     await expect(this.page.getByTestId('spacePlugin.syncStatus')).toHaveAttribute('data-saved', 'true', { timeout });
   }
