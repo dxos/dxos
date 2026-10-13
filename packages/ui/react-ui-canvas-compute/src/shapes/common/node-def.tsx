@@ -32,7 +32,7 @@ export type ComputeNodeViewProps<S extends ComputeShape> = Omit<NodeViewProps, '
 
 export type ComputeNodeSpec<S extends ComputeShape> = Pick<
   NodeDef,
-  'name' | 'icon' | 'group' | 'resizable' | 'openable'
+  'name' | 'icon' | 'group' | 'resizable' | 'openable' | 'ellipse'
 > & {
   type: S['type'];
   /** The shape's schema with `z` (`withZ`), so the node is checked as the shape before its view or ports read it. */

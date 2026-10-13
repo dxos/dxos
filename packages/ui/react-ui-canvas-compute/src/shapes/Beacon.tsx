@@ -19,7 +19,7 @@ export const BeaconComponent = ({ node: shape }: ComputeNodeViewProps<BeaconShap
   return (
     <div className='flex w-full justify-center items-center'>
       {isTruthy(value) ? (
-        <Icon.Icon icon='ph--sun--duotone' classNames='text-yellow-500 animate-pulse' size='xl' />
+        <Icon.Icon icon='ph--sun--duotone' classNames='text-yellow-500' size='xl' />
       ) : (
         <Icon.Icon icon='ph--sun-dim--regular' classNames='text-fg-subtle' size='xl' />
       )}
