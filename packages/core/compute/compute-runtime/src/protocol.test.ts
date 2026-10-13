@@ -10,7 +10,7 @@ import { describe, onTestFinished, test } from 'vitest';
 
 import * as Operation from '@dxos/compute/Operation';
 import { FibonacciHandler, ReplyHandler } from '@dxos/compute/testing';
-import { Database, Filter, Hypergraph, Query, Ref, Registry, Type } from '@dxos/echo';
+import { Database, Filter, Hypergraph, Obj, Query, Ref, Registry, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN, EntityId, SpaceId } from '@dxos/keys';
@@ -241,6 +241,15 @@ describe('ref decoding through the input schema', () => {
     output: Schema.Struct({ decoded: Schema.Boolean }),
   }).pipe(Operation.withHandler(decodedHandler));
 
+  // `Schema.Union([Obj.Unknown, Ref])` -> a live object in-process, a reference over the wire, as
+  // `space.addRelation` declares its ends.
+  const ObjectOrRef = Operation.make({
+    meta: { key: DXN.make('com.example.operation.objectOrRef'), name: 'Object Or Ref' },
+    services: [Database.Service],
+    input: Schema.Struct({ milestone: Schema.Union([Obj.Unknown, Ref.Ref(Obj.Unknown)]) }),
+    output: Schema.Struct({ decoded: Schema.Boolean }),
+  }).pipe(Operation.withHandler(decodedHandler));
+
   // Conversion is what is under test, not resolution, so the envelope need only be well-formed:
   // `decodeRefsFromSchema` builds the `Ref` from the URI without loading the target.
   const envelope = () => ({ '/': `echo:///${EntityId.random()}` });
@@ -266,6 +275,10 @@ describe('ref decoding through the input schema', () => {
   // `Expected <Declaration>`, so a nullable ref field cannot be SET over the wire at all.
   test('decodes an encoded reference for an optional NULLABLE ref field', async ({ expect }) => {
     await expect(invokeWithEnvelope(OptionalNullable, { milestone: envelope() })).resolves.toEqual({ decoded: true });
+  });
+
+  test('decodes an encoded reference for a field that also accepts a live object', async ({ expect }) => {
+    await expect(invokeWithEnvelope(ObjectOrRef, { milestone: envelope() })).resolves.toEqual({ decoded: true });
   });
 
   // Clearing still works, which is what makes the gap easy to miss: the null branch needs no

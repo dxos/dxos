@@ -37,19 +37,21 @@ export const DeviceList = ({
             return { value: key, label: label ?? key };
           })}
         >
-          <Listbox.Content aria-label={t('device-list.heading')}>
-            {devices.map((device: Device) => {
-              const shellDevice = toShellDevice(device);
-              return (
-                <DeviceListItem
-                  key={shellDevice.key}
-                  device={shellDevice}
-                  onClickEdit={() => onClickEdit?.(device)}
-                  {...{ onClickReset, onClickRecover, onClickJoinExisting, connectionState, onAgentDestroy }}
-                />
-              );
-            })}
-          </Listbox.Content>
+          <Listbox.Viewport>
+            <Listbox.Content aria-label={t('device-list.heading')}>
+              {devices.map((device: Device) => {
+                const shellDevice = toShellDevice(device);
+                return (
+                  <DeviceListItem
+                    key={shellDevice.key}
+                    device={shellDevice}
+                    onClickEdit={() => onClickEdit?.(device)}
+                    {...{ onClickReset, onClickRecover, onClickJoinExisting, connectionState, onAgentDestroy }}
+                  />
+                );
+              })}
+            </Listbox.Content>
+          </Listbox.Viewport>
         </Listbox.Root>
       )}
       <Button.Root

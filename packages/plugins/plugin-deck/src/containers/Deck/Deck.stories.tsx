@@ -158,18 +158,20 @@ const TestLauncher = ({ launcherId }: { launcherId: string }) => {
       onValueChange={handleOpen}
       items={LAUNCHER_MESSAGES.map((message) => ({ value: message.id, label: message.id }))}
     >
-      <Listbox.Content aria-label='Messages' classNames='grid content-start gap-1 p-2' data-testid='story.launcher'>
-        {LAUNCHER_MESSAGES.map((message) => (
-          <Listbox.Item
-            key={message.id}
-            id={message.id}
-            classNames='rounded-sm border border-separator p-3 text-start hover:bg-hover-surface'
-            data-testid='story.launcher.row'
-          >
-            {message.title}
-          </Listbox.Item>
-        ))}
-      </Listbox.Content>
+      <Listbox.Viewport>
+        <Listbox.Content aria-label='Messages' classNames='grid content-start gap-1 p-2' data-testid='story.launcher'>
+          {LAUNCHER_MESSAGES.map((message) => (
+            <Listbox.Item
+              key={message.id}
+              id={message.id}
+              classNames='rounded-sm border border-separator p-3 text-start hover:bg-hover-surface'
+              data-testid='story.launcher.row'
+            >
+              {message.title}
+            </Listbox.Item>
+          ))}
+        </Listbox.Content>
+      </Listbox.Viewport>
     </Listbox.Root>
   );
 };

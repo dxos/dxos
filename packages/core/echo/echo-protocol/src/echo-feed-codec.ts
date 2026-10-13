@@ -37,7 +37,6 @@ export type FeedBlockData = {
  */
 export class EchoFeedCodec {
   static readonly #encoder = new TextEncoder();
-  static readonly #decoder = new TextDecoder();
 
   /**
    * Feed blocks are always whole-object snapshots; the index collapses entries by id to the latest
@@ -53,7 +52,9 @@ export class EchoFeedCodec {
    * If position is provided, injects queue position into the decoded object's metadata.
    */
   static decode(data: Uint8Array, position?: number): Record<string, unknown> {
-    const decoded = JSON.parse(EchoFeedCodec.#decoder.decode(data));
+    // A decoder per block, not one per worker: Safari 18's WebKit makes a decoder that has decoded 2 GiB in total
+    // throw `RangeError: Bad value` on every later call.
+    const decoded = JSON.parse(new TextDecoder().decode(data));
     if (position !== undefined && typeof decoded === 'object' && decoded !== null) {
       EchoFeedCodec.#setKey(decoded, FeedProtocol.KEY_QUEUE_POSITION, position.toString());
     }

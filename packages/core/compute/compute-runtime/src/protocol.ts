@@ -460,6 +460,10 @@ const unavailableOperationServiceLayer = Layer.succeed(Operation.Service, {
   }),
 } as Operation.OperationService);
 
+/** The wire form of a reference, `{ '/': <uri> }`. */
+const isEncodedReference = (value: unknown): value is Parameters<typeof refFromEncodedReference>[0] =>
+  typeof value === 'object' && value !== null && '/' in value && typeof value['/'] === 'string';
+
 const decodeRefsFromSchema = (ast: SchemaAST.AST, value: unknown, db: DatabaseImpl): unknown => {
   if (value == null) {
     return value;
@@ -471,9 +475,9 @@ const decodeRefsFromSchema = (ast: SchemaAST.AST, value: unknown, db: DatabaseIm
       return value;
     }
 
-    if (typeof value === 'object' && value !== null && typeof (value as any)['/'] === 'string') {
+    if (isEncodedReference(value)) {
       const resolver = db.graph.createRefResolver({ context: { space: db.spaceId } });
-      return refFromEncodedReference(value as any, resolver);
+      return refFromEncodedReference(value, resolver);
     }
 
     return value;
@@ -520,6 +524,15 @@ const decodeRefsFromSchema = (ast: SchemaAST.AST, value: unknown, db: DatabaseIm
       );
       if (candidates.length === 1) {
         return decodeRefsFromSchema(candidates[0], value, db);
+      }
+
+      // An envelope can only be meant for a `Ref` branch, so `Obj | Ref` (an operation taking a live
+      // object in-process or a reference over the wire) decodes it there rather than rejecting it.
+      if (isEncodedReference(value)) {
+        const refBranch = candidates.find((type) => Ref.isRefType(SchemaAST.encodedBoundAST(type)));
+        if (refBranch) {
+          return decodeRefsFromSchema(refBranch, value, db);
+        }
       }
 
       // For other unions we can't safely pick a branch without validating.
