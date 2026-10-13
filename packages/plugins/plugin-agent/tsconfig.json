@@ -88,9 +88,6 @@
       "path": "../../sdk/config"
     },
     {
-      "path": "../../sdk/react-client"
-    },
-    {
       "path": "../../sdk/schema"
     },
     {
@@ -107,9 +104,6 @@
     },
     {
       "path": "../../ui/react-ui-menu"
-    },
-    {
-      "path": "../../ui/react-ui-search"
     },
     {
       "path": "../../ui/ui-theme"
