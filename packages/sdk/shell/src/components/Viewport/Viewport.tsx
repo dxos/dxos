@@ -72,14 +72,11 @@ type ViewportViewsProps = Util.ThemedClassName<Omit<ComponentPropsWithRef<'div'>
   children: ReactNode[];
 };
 
-const ViewportViews = ({ classNames, children, ...props }: ViewportViewsProps) => {
-  const size = { inlineSize: `${Math.ceil(children.length) * 100}%` };
-  return (
-    <div style={size} {...props} className={mx('dx-grow flex', classNames)}>
-      {children}
-    </div>
-  );
-};
+const ViewportViews = ({ classNames, children, ...props }: ViewportViewsProps) => (
+  <div {...props} className={mx('dx-grow flex', classNames)}>
+    {children}
+  </div>
+);
 
 ViewportViews.displayName = VIEWS_NAME;
 
@@ -102,7 +99,8 @@ const ViewportView = forwardRef<HTMLDivElement, ViewportViewProps>(
       <section
         {...props}
         {...(!isActive && { 'aria-hidden': true })}
-        className={mx('dx-grow flex flex-col', isActive ? 'order-2' : 'order-4 invisible', classNames)}
+        // Inactive views stay mounted (keeping their state) but take no space, so the dialog sizes to the active one.
+        className={mx('dx-grow flex flex-col', !isActive && 'hidden', classNames)}
         ref={ref}
       >
         {children}

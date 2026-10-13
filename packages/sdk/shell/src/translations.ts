@@ -77,7 +77,7 @@ export const translations = [
         'open-sidebar.label': 'Open sidebar',
         'close-sidebar.label': 'Close sidebar',
         'welcome.message': 'Welcome',
-        'selecting-identity.heading': 'Selecting identity',
+        'selecting-identity.heading': 'Identity',
         'devices.heading': 'Devices',
         'identity.heading': 'Profile settings',
         'choose-add-device.label': 'Add device',

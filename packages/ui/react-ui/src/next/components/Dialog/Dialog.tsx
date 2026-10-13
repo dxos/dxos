@@ -252,6 +252,8 @@ DialogCloseTrigger.displayName = 'Dialog.CloseTrigger';
 
 type DialogBodyProps = ThemedClassName<Pick<ScrollArea.RootProps, 'mode' | 'width' | 'native'>> &
   Pick<ContainerProps, 'gap'> & {
+    /** `center` holds the content in the middle of the Body, both ways, rather than at its start. */
+    align?: 'start' | 'center';
     children?: ReactNode;
   };
 
@@ -261,8 +263,8 @@ type DialogBodyProps = ThemedClassName<Pick<ScrollArea.RootProps, 'mode' | 'widt
  * The element carries ScrollArea's `data-scope`, since parts cannot rescope a composed child (finding 10).
  */
 const DialogBody = forwardRef<HTMLDivElement, DialogBodyProps>(
-  ({ classNames, gap, children, ...props }, forwardedRef) => (
-    <ScrollArea.Root {...props} classNames={mx(recipes.dialogBody(), classNames)} ref={forwardedRef}>
+  ({ classNames, gap, align, children, ...props }, forwardedRef) => (
+    <ScrollArea.Root {...props} data-align={align} classNames={mx(recipes.dialogBody(), classNames)} ref={forwardedRef}>
       <ScrollArea.Viewport asChild>
         <Container gutter='md' gap={gap}>
           {/* Its direct content (a form's Viewport) joins these rails rather than nesting a second inset. */}

@@ -150,7 +150,7 @@ export const translations = [
         'open-sidebar.label': 'Open sidebar',
         'close-sidebar.label': 'Close sidebar',
         'welcome.message': 'Welcome',
-        'selecting-identity.heading': 'Selecting identity',
+        'selecting-identity.heading': 'Identity',
         'toggle-expand.label': 'Toggle expand',
         'expand.label': 'Expand',
         'collapse.label': 'Collapse',

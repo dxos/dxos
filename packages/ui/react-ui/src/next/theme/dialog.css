@@ -92,10 +92,14 @@
     flex: 1 1 auto;
     min-height: 0;
   }
-  /* With no Footer below it, the Body closes the dialog with the same inset the dialog opens with above the Header. */
-  .dx-dialog-body:last-child,
-  .dx-dialog-body:has(+ .dx-dialog-footer:empty) {
-    padding-block-end: var(--dx-gap-size);
+  /* The content stands a gap clear of the Header above and the Footer (or, with none, the dialog's end) below. */
+  .dx-dialog-body > .dx-scroll-viewport {
+    padding-block: var(--dx-gap-size);
+  }
+  /* A centred Body holds its content (a PIN entry, a single control) in the middle of the space it fills. */
+  .dx-dialog-body[data-align='center'] > .dx-scroll-viewport {
+    align-content: center;
+    justify-items: center;
   }
 
   /* The actions sit as far from the content above and the bottom edge below as from the sides. */

@@ -54,7 +54,7 @@ export const InvitationAuthenticator = ({
 
   return (
     <>
-      <Dialog.Body gap='md'>
+      <Dialog.Body gap='md' align='center'>
         <Field.Root {...(failed && { validationValence: 'error' })}>
           {authMethod === Invitation_AuthMethod.SHARED_SECRET ? (
             <Field.Label>{t('auth-code-input.label')}</Field.Label>

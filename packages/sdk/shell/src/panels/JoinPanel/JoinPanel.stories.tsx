@@ -56,7 +56,7 @@ export const AdditionMethodChooser: Story = {
     // The dialog renders in a portal outside the canvas.
     const canvas = within(canvasElement.ownerDocument.body);
     const dialog = (await canvas.findByRole('dialog')).getBoundingClientRect();
-    const heading = canvas.getByRole('heading', { name: 'Selecting identity' });
+    const heading = canvas.getByRole('heading', { name: 'Identity' });
     const title = heading.getBoundingClientRect();
     const headerTop = heading.closest('[data-part=header]')?.getBoundingClientRect().top;
     const options = ['create-identity', 'join-identity', 'recover-identity'].map((id) =>
@@ -108,6 +108,8 @@ export const ResetIdentityConfirmation: Story = {
   args: {
     mode: 'halo-only',
     activeView: 'reset-storage-confirmation',
+    onCancelResetStorage: fn(),
+    onConfirmResetStorage: fn(async () => {}),
   },
 };
 
@@ -195,10 +197,15 @@ export const SpaceInvitationAuthenticator: Story = {
     // The dialog renders in a portal outside the canvas.
     const canvas = within(canvasElement.ownerDocument.body);
     const cells = await canvas.findByTestId('space-auth-code-input');
-    const emoji = canvas.getByText('Be sure the other device shows the following emoji', { exact: false });
-    const inputs = cells.querySelectorAll('input');
-    // The cell row starts on the Body's content edge, as the text around it does.
-    await expect(Math.abs(inputs[0].getBoundingClientRect().left - emoji.getBoundingClientRect().left)).toBeLessThan(2);
+    const body = cells.closest('[data-align="center"]');
+    if (!body) {
+      throw new Error('The PIN is not in a centred Body.');
+    }
+    // The PIN sits in the middle of the Body's width.
+    const middle = (rect: DOMRect) => ({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+    const pin = middle(cells.getBoundingClientRect());
+    const frame = middle(body.getBoundingClientRect());
+    await expect(Math.abs(pin.x - frame.x)).toBeLessThan(2);
   },
 };
 
