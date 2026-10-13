@@ -7,6 +7,13 @@ import * as Ontology from '../../types/Ontology.ts';
 import * as Vocab from '../../types/Vocab.ts';
 import { type SemanticQuery } from './query-builder.ts';
 
+/** Whether one relation key's words occur, in order and whole, in another's: `is a` (key `a`) is not in `work_at`. */
+const contains = (haystack: string, needle: string): boolean => {
+  const words = haystack.split('_');
+  const sought = needle.split('_');
+  return words.some((_, start) => sought.every((word, offset) => words[start + offset] === word));
+};
+
 /**
  * The stored predicates a query's predicate names: those its surface form resolves to through the ontology, and
  * those whose label or synonyms share its relation key, either way round, since a model rarely reproduces the
@@ -25,7 +32,7 @@ export const matchingPredicates = (
   for (const [iri, label] of predicates) {
     const entry = ontology.get(iri);
     const keys = [label, ...(entry ? [entry.name, ...(entry.synonyms ?? [])] : [])].map(Ontology.key);
-    if (keys.some((key) => key === needle || key.includes(needle) || needle.includes(key))) {
+    if (keys.some((key) => contains(key, needle) || contains(needle, key))) {
       matches.add(iri);
     }
   }

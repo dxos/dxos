@@ -31,11 +31,15 @@ export const AgentKnowledge = ({ role, agent }: AgentKnowledgeProps) => {
     if (!db) {
       return;
     }
-    await invokePromise(
+    const { error } = await invokePromise(
       MemoryOperation.Forget,
       { agent: Ref.make(agent) },
       { spaceId: db.spaceId, ...(remote ? { on: 'edge' as const } : {}) },
     );
+    // A reset that could not forget the memories keeps the goals too, rather than half-reset the agent.
+    if (error) {
+      return;
+    }
     const allGoals = await db.query(Filter.type(Goal.Goal)).run();
     allGoals.forEach((goal) => db.remove(goal));
   }, [agent, invokePromise, remote]);

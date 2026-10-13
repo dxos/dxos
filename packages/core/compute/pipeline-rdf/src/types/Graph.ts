@@ -50,7 +50,9 @@ export type AssignOptions = {
 export const assign = (facts: readonly Fact[], { name, ontology = Ontology.DEFAULT }: AssignOptions = {}): Fact[] =>
   facts.map((fact) => {
     const label = name?.(fact) ?? fact.attribution.source;
-    const graph = fact.graph ?? Vocab.graphIri(`${hashText(label)}-${hashText(provenanceKey(fact))}`).value;
+    const key = provenanceKey(fact);
+    // Two independent 32-bit hashes: every memory an agent records shares one label, so 32 bits would collide.
+    const graph = fact.graph ?? Vocab.graphIri(`${hashText(label)}-${hashText(key)}${hashText(`\u0000${key}`)}`).value;
     const placed: Fact = {
       ...fact,
       graph,

@@ -169,6 +169,9 @@ that share their provenance (source, speaker, time, quote, factuality, extractio
   `dx:` IRI from its relation key, with its label stored in the ontology graph.
 - **Entities** are IRIs: an absolute IRI where one is known (`echo://…`, `did:…`, `mailto:…`, a URL),
   otherwise a slug under `entity:`. Labels and kinds are stated inside the graph that mentions them.
+  Facts extracted before this keep the keys they were stored with: an email or URL read earlier is
+  still a slug (`alice-enron-com`), and a source whose text is unchanged is not read again, so both
+  keys can name one entity until the source changes. Facts are append-only, so nothing rewrites them.
 - **Fact ids**: a stored `RDF.Fact` is one statement. A fact without a graph is the only statement of
   the graph named by its fact IRI, so its id is unchanged; a statement in a named graph is identified by
   the graph and the triple.
