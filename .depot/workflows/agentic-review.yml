@@ -30,7 +30,8 @@ jobs:
       (contains(github.event.pull_request.labels.*.name, 'ci') ||
       (!github.event.pull_request.draft && (github.event.action != 'opened' ||
       github.event.pull_request.head.repo.full_name != github.repository ||
-      !(startsWith(github.head_ref, 'claude/') || startsWith(github.head_ref, 'dm/'))))))
+      !(startsWith(github.head_ref, 'claude/') || startsWith(github.head_ref, 'dm/') ||
+      startsWith(github.head_ref, 'changeset-release/'))))))
     runs-on: depot-ubuntu-24.04
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
