@@ -1,8 +1,5 @@
 ---
-'@dxos/plugin-deck': patch
-'@dxos/plugin-illustrator': patch
 '@dxos/plugin-markdown': patch
-'@dxos/plugin-space': patch
 '@dxos/react-ui-editor': patch
 ---
 

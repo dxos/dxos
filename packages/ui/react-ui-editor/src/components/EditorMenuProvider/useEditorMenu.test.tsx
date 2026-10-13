@@ -3,7 +3,7 @@
 //
 
 import { type EditorView } from '@codemirror/view';
-import React, { act } from 'react';
+import React, { act, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { beforeAll, describe, onTestFinished, test, vi } from 'vitest';
 
@@ -22,13 +22,15 @@ type Menu = { view: EditorView; labels: () => EditorMenuItem['label'][]; cancel:
 const MenuEditor = ({ onReady }: { onReady: (menu: Menu) => void }) => {
   const { groupsRef, extension, onCancel } = useEditorMenu({ trigger: '@', multiWordTriggers: ['@'], getMenu });
   const { parentRef, view } = useTextEditor({ extensions: [extension] });
-  if (view) {
-    onReady({
-      view,
-      labels: () => groupsRef.current.flatMap((group) => group.items.map((item) => item.label)),
-      cancel: () => onCancel?.({ view }),
-    });
-  }
+  useEffect(() => {
+    if (view) {
+      onReady({
+        view,
+        labels: () => groupsRef.current.flatMap((group) => group.items.map((item) => item.label)),
+        cancel: () => onCancel?.({ view }),
+      });
+    }
+  }, [view, groupsRef, onCancel, onReady]);
 
   return <div ref={parentRef} />;
 };
