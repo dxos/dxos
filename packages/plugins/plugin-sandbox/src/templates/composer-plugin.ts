@@ -32,7 +32,7 @@ const DXOS_PACKAGES = [
 
 /** Versions the host's import map shares, so the build types what actually runs. */
 const PACKAGES = [
-  'effect@4.0.0',
+  'effect@4.0.4',
   'react@~19.2.7',
   'react-dom@~19.2.7',
   '@types/react@~19.2.17',
