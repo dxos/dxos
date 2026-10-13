@@ -79,6 +79,8 @@ export const AdditionMethodChooser = ({ active, send }: AdditionMethodChooserPro
               key={item.value}
               id={item.value}
               highlightOnHover
+              // The text tracks sit in the middle of the row, so the icon and caret centre on the row itself.
+              classNames='content-center'
               data-testid={isAdditionMethod(item.value) ? TEST_IDS[item.value] : undefined}
             >
               <Listbox.ItemIcon classNames='self-center'>
