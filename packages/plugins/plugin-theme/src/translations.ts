@@ -134,7 +134,7 @@ export const translations = [
         'delete.label': 'Delete',
         'delete-object.description': 'Delete item?',
         'reset.label': 'Start over',
-        'auth-code-input.label': 'Enter the verification code',
+        'auth-code-input.label': 'Enter the verification code.',
         'invitation-input.label': 'Paste an invitation code or URL',
         'create-device-invitation.label': 'Invite',
         'create-space-invitation.label': 'Invite',

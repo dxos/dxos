@@ -60,7 +60,7 @@ export const translations = [
         'cancel.label': 'Cancel',
         'done.label': 'Done',
         'reset.label': 'Start over',
-        'auth-code-input.label': 'Enter the verification code',
+        'auth-code-input.label': 'Enter the verification code.',
         'invitation-input.label': 'Paste an invitation code or URL',
         'create-device-invitation.label': 'Add device',
         'create-space-invitation.label': 'Invite',
