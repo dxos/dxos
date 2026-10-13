@@ -266,15 +266,20 @@ export const steps = [
     run: async ({ demo, page }) => {
       await caption(demo, `6 · Ask ${AGENT} to check its memory: it reads its brain with a tool`);
       await send({ demo, page }, QUESTION);
-      await page.waitForTimeout(BEAT * 2);
+      // The turn's tool row names the tool it called: Recall.
+      await demo.click({ selector: `${PLANK} >> text=/^Ran \\d+ commands?$/ >> nth=-1`, label: 'Tools' });
+      await page.waitForTimeout(BEAT * 3);
     },
   },
   {
     name: `Read ${AGENT}'s brain from "${OTHER}"`,
     run: async ({ demo, page }) => {
       await caption(demo, `7 · ${AGENT}'s brain, seen from "${OTHER}": the facts it learned in "${HOME}"`);
-      await demo.click({ selector: `${PLANK} [data-testid="plankHeading.companion"] >> nth=0`, label: 'Companion' });
-      await demo.click({ selector: '[data-testid="deck.companion.tab.brain"] >> nth=0', label: 'Brain' });
+      const brainTab = '[data-testid="deck.companion.tab.brain"] >> nth=0';
+      if (!(await isVisible(page.locator(brainTab)))) {
+        await demo.click({ selector: `${PLANK} [data-testid="plankHeading.companion"] >> nth=0`, label: 'Companion' });
+      }
+      await demo.click({ selector: brainTab, label: 'Brain' });
       await demo.click({ selector: '[data-testid="agent-knowledge-tab-facts"] >> nth=0', label: 'Facts' });
       // The tab polls the brain; give EDGE's brain a few reads.
       await page.locator('[data-testid="agent-knowledge-fact"]').first().waitFor({ timeout: 30_000 });

@@ -582,7 +582,7 @@ feat F-6: An agent in several spaces
   req F-6.4:
     when: a member opens an agent invited from another space
     then: its article is the member's one private chat with the agent, the same as at home, and its companions show the home agent's knowledge and activity, when the member can reach the home space; otherwise the presence's own
-  req F-6.5: A presence keys its facts to its home's brain (`AgentPresence.brainId`): the end-of-turn read adds to it and op:retrieveMemories reads it, on EDGE as in the app. Triggers stay per agent object.
+  req F-6.5: A presence keys its facts to its home's brain (`AgentPresence.brainId`): the end-of-turn read adds to it and op:retrieveMemories reads it. Triggers stay per agent object. EDGE runs the plugin-agent its catalog pins, so its turns do this once edge takes this version.
   req F-6.6: Inviting writes no conversation: nothing is quoted from any chat into the space.
 ```
 

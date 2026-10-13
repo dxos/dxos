@@ -9,7 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Operation from '@dxos/compute/Operation';
-import { type Database, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { type Database, Filter, Obj, Query } from '@dxos/echo';
 import { type SpaceId, URI } from '@dxos/keys';
 
 import { meta } from '#meta';
@@ -50,9 +50,12 @@ export default Capability.makeModule(() =>
           }));
         }),
       add: (space, key) =>
-        Operation.invoke(AgentOperation.InviteAgent, { agent: Ref.fromURI(URI.make(key)) }, { spaceId: space.id }).pipe(
-          Effect.asVoid,
-        ),
+        // Made on the space's database, whose resolver reaches the agent in its own space.
+        Operation.invoke(
+          AgentOperation.InviteAgent,
+          { agent: space.db.makeRef<Agent.Agent>(URI.make(key)) },
+          { spaceId: space.id },
+        ).pipe(Effect.asVoid),
     }),
   ),
 );
