@@ -17,10 +17,16 @@ import { bufferToArray } from '@dxos/util';
 import { SqliteHeadsStore } from './sqlite-heads-store.ts';
 import { SqliteStorageAdapter, decodeKey, encodeKey } from './sqlite-storage-adapter.ts';
 
-const makeTestLayer = () => {
+const makeTestLayer = ({ transformer }: { transformer?: Statement.Transformer } = {}) => {
   const baseLayer = SqliteClient.layer({ filename: ':memory:' });
   const txLayer = baseLayer;
-  const rt = ManagedRuntime.make(Layer.merge(baseLayer, txLayer).pipe(Layer.orDie));
+  const layer = Layer.merge(baseLayer, txLayer);
+  const rt = ManagedRuntime.make(
+    (transformer
+      ? layer.pipe(Layer.provideMerge(Layer.succeed(Statement.CurrentTransformer, transformer)))
+      : layer
+    ).pipe(Layer.orDie),
+  );
   return { runtime: rt.contextEffect, dispose: () => rt.dispose() };
 };
 
@@ -209,14 +215,7 @@ describe('SqliteStorageAdapter', () => {
 
 describe('SqliteHeadsStore', () => {
   const setup = async () => {
-    const rt = ManagedRuntime.make(
-      SqliteClient.layer({ filename: ':memory:' }).pipe(
-        Layer.provideMerge(Layer.succeed(Statement.CurrentTransformer, refuseWideStatements)),
-        Layer.orDie,
-      ),
-    );
-    const runtime = rt.contextEffect;
-    const dispose = () => rt.dispose();
+    const { runtime, dispose } = makeTestLayer({ transformer: refuseWideStatements });
     const store = new SqliteHeadsStore({ runtime });
     await RuntimeProvider.runPromise(runtime)(store.migrate);
     onTestFinished(() => dispose());

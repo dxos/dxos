@@ -165,7 +165,7 @@ describe('DocumentsSynchronizer', () => {
       ({ documentId, heads }) => documentId === stale.handle.documentId && A.equals(heads, storedAt),
     );
     await host.flush(Context.default());
-    await published;
+    await asyncTimeout(published, 5_000);
 
     const acquired = vi.spyOn(host, 'acquireDoc');
     const atStorage = {
