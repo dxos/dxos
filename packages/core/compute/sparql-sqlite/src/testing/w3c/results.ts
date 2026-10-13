@@ -19,6 +19,14 @@ const RDF_TYPE = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type';
 
 /** Reads an expected-result file: SPARQL XML (`.srx`), SPARQL JSON (`.srj`) or RDF (result-set vocabulary or a graph). */
 export const readExpected = (path: string, iri: string, graphResult: boolean): ResultSet => {
+  try {
+    return readExpectedFile(path, iri, graphResult);
+  } catch (error) {
+    throw new Error(`cannot read expected result: ${path}`, { cause: error });
+  }
+};
+
+const readExpectedFile = (path: string, iri: string, graphResult: boolean): ResultSet => {
   if (path.endsWith('.srx')) {
     return parseSrx(readFileSync(path, 'utf8'));
   }
@@ -29,7 +37,7 @@ export const readExpected = (path: string, iri: string, graphResult: boolean): R
   if (graphResult) {
     return { kind: 'graph', triples: triples.map(({ s, p, o }) => ({ s, p, o })) };
   }
-  return fromResultSetGraph(path, triples.map(({ s, p, o }) => ({ s, p, o })));
+  return fromResultSetGraph(triples.map(({ s, p, o }) => ({ s, p, o })));
 };
 
 //
@@ -147,7 +155,7 @@ export const parseSrj = (json: string): ResultSet => {
 // DAWG result-set vocabulary (SPARQL 1.0 `.ttl` / `.rdf` results).
 //
 
-const fromResultSetGraph = (path: string, triples: Row[]): ResultSet => {
+const fromResultSetGraph = (triples: Row[]): ResultSet => {
   const objects = (subject: Term | undefined, predicate: string): Term[] =>
     triples
       .filter(
@@ -160,7 +168,7 @@ const fromResultSetGraph = (path: string, triples: Row[]): ResultSet => {
       .flatMap((triple) => (triple.o ? [triple.o] : []));
   const resultSet = triples.find((triple) => triple.p?.value === RDF_TYPE && triple.o?.value === `${RS}ResultSet`)?.s;
   if (!resultSet) {
-    throw new Error(`RDF result is neither a result set nor a CONSTRUCT graph: ${path}`);
+    throw new Error('RDF result is neither a result set nor a CONSTRUCT graph');
   }
   const [boolean] = objects(resultSet, `${RS}boolean`);
   if (boolean) {
