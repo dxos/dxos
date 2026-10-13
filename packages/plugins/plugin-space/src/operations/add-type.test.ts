@@ -201,4 +201,34 @@ describe('SpaceOperation.AddType', () => {
       TestHelpers.provideTestContext,
     ),
   );
+
+  it.effect(
+    'a versioned relation end resolves to that version',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        for (const version of ['0.1.0', '0.2.0']) {
+          yield* Operation.invoke(SpaceOperation.AddType, {
+            typename: 'com.example.type.evidence',
+            version,
+            jsonSchema: statementSchema,
+          });
+        }
+        const { object: type } = yield* Operation.invoke(SpaceOperation.AddType, {
+          typename: 'com.example.relation.cites',
+          jsonSchema: {
+            type: 'object',
+            entityKind: 'relation',
+            relationSource: { $ref: 'dxn:com.example.type.evidence:0.1.0' },
+            relationTarget: { $ref: 'dxn:com.example.type.evidence:0.2.0' },
+            properties: {},
+          },
+        });
+
+        expect(type.jsonSchema.relationSource?.$ref).toBe('dxn:com.example.type.evidence:0.1.0');
+        expect(type.jsonSchema.relationTarget?.$ref).toBe('dxn:com.example.type.evidence:0.2.0');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
 });
