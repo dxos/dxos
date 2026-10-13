@@ -126,12 +126,6 @@ export class ObjectCore {
   /** Set while the object is backed by the index's copy instead of a loaded document. */
   public snapshot?: ObjectSnapshot = undefined;
 
-  /** When the core last bound to its document or wrote to it (`performance.now()`), for eviction. */
-  public activeAt = 0;
-
-  /** Change listeners attached through doc accessors: an editor or store adapter holding the document. */
-  #accessorListeners = 0;
-
   /**
    * Key path at where we are mounted in the `doc` or `docHandle`.
    * The value at path must be of type `EntityStructure`.
@@ -295,7 +289,6 @@ export class ObjectCore {
     this.docHandle = options.docHandle;
     this.mountPath = options.path;
     this.snapshot = undefined;
-    this.activeAt = performance.now();
 
     const doc = this.doc;
     this.doc = undefined;
@@ -345,23 +338,6 @@ export class ObjectCore {
     }
 
     throw new Error('Invalid ObjectCore state');
-  }
-
-  /** Whether something holds the document through an accessor (an editor, a store adapter). */
-  get hasAccessorListeners(): boolean {
-    return this.#accessorListeners > 0;
-  }
-
-  /**
-   * Moves a bound core back onto the index's copy, which must describe its document as it is now; the
-   * proxy and its subscribers stay, and the next write or document read loads the document again.
-   */
-  demote(snapshot: ObjectSnapshot): void {
-    invariant(this.docHandle && !this.doc, 'Only a core bound to a document is demoted.');
-    this.docHandle = undefined;
-    this.snapshot = snapshot;
-    // Same values, so the targets are rebuilt from the snapshot without notifying anyone.
-    this.#reportingErrors(() => this.#refresh());
   }
 
   /** Backs this unbound core with the index's copy of the object until it binds to its document. */
@@ -417,7 +393,6 @@ export class ObjectCore {
     } else {
       const docHandle = this.docHandle;
       invariant(docHandle);
-      this.activeAt = performance.now();
       // The index's copy showed the object at `shownAt`, and the stored changes just loaded can be ahead of
       // it: the first write lands there, so it applies to what was shown and merges with what came after.
       const doc = docHandle.doc();
@@ -457,7 +432,6 @@ export class ObjectCore {
     } else {
       const docHandle = this.docHandle;
       invariant(docHandle);
-      this.activeAt = performance.now();
       // No manual notification: the DB already processes the `change` event.
       result = this.#writeAndRefresh(() => docHandle.changeAt(heads, callback, options));
     }
@@ -482,7 +456,6 @@ export class ObjectCore {
             // TODO(dmaretskyi): We probably don't need to subscribe to docHandle here separately.
             this.docHandle?.on('change', listener);
             this.updates.on(listener);
-            this.#accessorListeners++;
           }
         },
         removeListener: (event, listener) => {
@@ -490,7 +463,6 @@ export class ObjectCore {
             // TODO(dmaretskyi): We probably don't need to subscribe to docHandle here separately.
             this.docHandle?.off('change', listener);
             this.updates.off(listener);
-            this.#accessorListeners = Math.max(0, this.#accessorListeners - 1);
           }
         },
       },

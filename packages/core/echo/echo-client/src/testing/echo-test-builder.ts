@@ -28,14 +28,13 @@ import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import { range } from '@dxos/util';
 
 import { EchoClient } from '../client/index.ts';
-import { type BranchStore, type DocumentEvictionOptions } from '../core-db/index.ts';
+import { type BranchStore } from '../core-db/index.ts';
 import { type EchoDatabase } from '../proxy-db/index.ts';
 
 type OpenDatabaseOptions = {
   client?: EchoClient;
   reactiveSchemaQuery?: boolean;
   preloadSchemaOnOpen?: boolean;
-  eviction?: DocumentEvictionOptions;
 };
 
 type PeerOptions = {
@@ -311,7 +310,7 @@ export class EchoTestPeer extends Resource {
   async openDatabase(
     spaceKey: PublicKey,
     rootUrl?: string,
-    { client = this.client, reactiveSchemaQuery, preloadSchemaOnOpen, eviction }: OpenDatabaseOptions = {},
+    { client = this.client, reactiveSchemaQuery, preloadSchemaOnOpen }: OpenDatabaseOptions = {},
     // TODO(burdon): Return Promise<EchoDatabase>
   ) {
     // NOTE: Client closes the database when it is closed.
@@ -330,7 +329,6 @@ export class EchoTestPeer extends Resource {
       reactiveSchemaQuery,
       preloadSchemaOnOpen,
       branchStore: this._branchStoreFor(String(spaceId)),
-      eviction,
     });
     await db.setSpaceRoot(resolvedRootUrl);
     await db.open();
@@ -345,12 +343,7 @@ export class EchoTestPeer extends Resource {
     return db;
   }
 
-  async openLastDatabase({
-    client = this.client,
-    reactiveSchemaQuery,
-    preloadSchemaOnOpen,
-    eviction,
-  }: OpenDatabaseOptions = {}) {
+  async openLastDatabase({ client = this.client, reactiveSchemaQuery, preloadSchemaOnOpen }: OpenDatabaseOptions = {}) {
     if (this._storagePath && (!this._lastDatabaseSpaceKey || !this._lastDatabaseRootUrl)) {
       const storedKeyHex = await this.getStorageMetadata('lastDatabaseSpaceKey');
       const storedUrl = await this.getStorageMetadata('lastDatabaseRootUrl');
@@ -367,7 +360,6 @@ export class EchoTestPeer extends Resource {
       client,
       reactiveSchemaQuery,
       preloadSchemaOnOpen,
-      eviction,
     });
   }
 

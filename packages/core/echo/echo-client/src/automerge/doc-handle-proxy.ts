@@ -306,17 +306,12 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   }
 
   /**
-   * Holds `passive` instead of a loaded document: replaces a passive handle's bytes with newer ones,
-   * or moves a loaded handle the host has fully acknowledged back to bytes, dropping its document.
-   * `onActivate` replaces the hook that subscribes the handle again once it loads.
+   * Replaces a passive handle's stored changes and the heads it shows, for an object shown at other heads.
    * @internal
    */
-  _setPassive(passive: PassiveDocument, onActivate?: (heads: A.Heads) => void): void {
-    invariant(this.#passive || this._isAcknowledged(), 'A document with unsent changes cannot go passive.');
+  _setPassive(passive: PassiveDocument): void {
+    invariant(this.#passive, 'Only a passive handle takes other stored changes.');
     this.#passive = passive;
-    this.#onActivate = onActivate ?? this.#onActivate;
-    this._doc = undefined;
-    this._state = 'passive';
   }
 
   /**
