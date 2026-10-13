@@ -89,7 +89,7 @@ const createSymbol =
     size: { width, height },
     // TODO(burdon): Same as line color.
     className = 'fill-neutral-200 dark:fill-neutral-800 stroke-neutral-500',
-    strokeWidth = 1,
+    strokeWidth = 2,
   }) => {
     const startX = width * 0.25;
     const endX = width * 0.75;
