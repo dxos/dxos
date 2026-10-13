@@ -11,10 +11,15 @@ import { toPublicKey } from '@dxos/protocols/buf';
 import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Identity } from '@dxos/react-client/halo';
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
+import * as Button from '@dxos/react-ui/Button';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Typography from '@dxos/react-ui/Typography';
 import { hexToEmoji, hexToHue } from '@dxos/util';
 
-import { Action, ActionBar, InputLabel, TextInput } from '../../../components/index.ts';
 import { translationKey } from '../../../translations.ts';
 import { profileString } from '../../../util/index.ts';
 import { type IdentityEvent } from '../identityMachine.ts';
@@ -57,19 +62,20 @@ const ProfileFormImpl = ({ active, identity, send, onUpdateProfile, validationMe
   const copied = copiedKey !== undefined && copiedKey === identityKeyHex;
   return (
     <>
-      <div className='grow flex flex-col justify-center'>
-        <TextInput
-          {...{ validationMessage }}
-          label={<InputLabel classNames='m-0'>{t('display-name-input.label')}</InputLabel>}
-          disabled={disabled}
-          data-testid='display-name-input'
-          placeholder={t('display-name-input.placeholder')}
-          value={displayName}
-          onChange={({ target: { value } }) => setDisplayName(value)}
-        />
-
-        <InputLabel classNames='mb-2'>{t('emoji-and-color.label')}</InputLabel>
-        <div className='grid grid-cols-[1fr_min-content] gap-y-2'>
+      <Dialog.Body gap='md'>
+        <Field.Root>
+          <Field.Label>{t('display-name-input.label')}</Field.Label>
+          <Input.Root
+            disabled={disabled}
+            data-testid='display-name-input'
+            placeholder={t('display-name-input.placeholder')}
+            value={displayName}
+            onChange={({ target: { value } }) => setDisplayName(value)}
+          />
+          {validationMessage && <Field.ErrorText>{validationMessage}</Field.ErrorText>}
+        </Field.Root>
+        <Typography.Text tone='muted'>{t('emoji-and-color.label')}</Typography.Text>
+        <Layout.Flex gap='sm' align='center'>
           <EmojiPickerBlock
             emoji={emoji}
             onChangeEmoji={setEmoji}
@@ -77,10 +83,10 @@ const ProfileFormImpl = ({ active, identity, send, onUpdateProfile, validationMe
             onClickClear={() => setEmoji(getEmojiValue(identity))}
           />
           <HuePicker disabled={disabled} value={hue} onChange={setHue} onReset={() => setHue(getHueValue(identity))} />
-        </div>
-      </div>
-      <ActionBar>
-        <Action
+        </Layout.Flex>
+      </Dialog.Body>
+      <Dialog.Footer>
+        <Button.Root
           variant='ghost'
           disabled={disabled}
           onClick={() => {
@@ -94,16 +100,16 @@ const ProfileFormImpl = ({ active, identity, send, onUpdateProfile, validationMe
           data-testid='update-profile-form-copy-key'
         >
           {t(copied ? 'copy-success.label' : 'copy-self-did.label')}
-        </Action>
-        <Action
+        </Button.Root>
+        <Button.Root
           variant='ghost'
           disabled={disabled}
           onClick={() => send?.({ type: 'unchooseAction' })}
           data-testid='update-profile-form-back'
         >
           {t('back.label')}
-        </Action>
-        <Action
+        </Button.Root>
+        <Button.Root
           variant='primary'
           disabled={disabled}
           onClick={() =>
@@ -117,8 +123,8 @@ const ProfileFormImpl = ({ active, identity, send, onUpdateProfile, validationMe
           data-testid='update-profile-form-continue'
         >
           {t('done.label')}
-        </Action>
-      </ActionBar>
+        </Button.Root>
+      </Dialog.Footer>
     </>
   );
 };

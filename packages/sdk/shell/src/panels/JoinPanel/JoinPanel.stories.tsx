@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
-import { expect, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { Invitation_AuthMethod } from '@dxos/react-client/invitations';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -50,6 +50,57 @@ export const AdditionMethodChooser: Story = {
   args: {
     mode: 'halo-only',
     activeView: 'addition-method-chooser',
+    send: fn(),
+  },
+  play: async ({ args, canvasElement }) => {
+    // The dialog renders in a portal outside the canvas.
+    const canvas = within(canvasElement.ownerDocument.body);
+    const dialog = (await canvas.findByRole('dialog')).getBoundingClientRect();
+    const heading = canvas.getByRole('heading', { name: 'Identity' });
+    const title = heading.getBoundingClientRect();
+    const headerTop = heading.closest('[data-part=header]')?.getBoundingClientRect().top;
+    const options = ['create-identity', 'join-identity', 'recover-identity'].map((id) =>
+      canvas.getByTestId(`identity-chooser.${id}`),
+    );
+
+    // Every option spans the Body's content column, at the title's start edge, and the options share one width and
+    // height whatever their descriptions' lengths.
+    const first = options[0].getBoundingClientRect();
+    for (const option of options) {
+      const rect = option.getBoundingClientRect();
+      await expect(Math.abs(rect.left - title.left)).toBeLessThan(1);
+      await expect(Math.abs(rect.width - first.width)).toBeLessThan(1);
+      await expect(Math.abs(rect.height - first.height)).toBeLessThan(1);
+    }
+
+    // With no Footer, the last option is as far from the dialog's end as the Header is from its start.
+    const last = options[options.length - 1].getBoundingClientRect();
+    await expect(Math.abs(dialog.bottom - last.bottom - ((headerTop ?? Infinity) - dialog.top))).toBeLessThan(1);
+
+    // An option's title reads at the body size, its description a step smaller.
+    const text = options[0].querySelector('[data-part=item-text]');
+    const description = options[0].querySelector('[data-part=item-description]');
+    await expect(text && getComputedStyle(text).fontSize).toBe('16px');
+    await expect(description && getComputedStyle(description).fontSize).toBe('14px');
+
+    // The arrow keys move the highlight through the options; Enter picks the highlighted one.
+    const list = canvas.getByRole('listbox');
+    await waitFor(() => expect(list).toHaveFocus());
+    const highlighted = () => options.findIndex((option) => option.hasAttribute('data-highlighted'));
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(() => expect(highlighted()).toBeGreaterThanOrEqual(0));
+    const start = Math.min(highlighted(), options.length - 2);
+    if (highlighted() !== start) {
+      await userEvent.keyboard('{ArrowUp}');
+    }
+    await waitFor(() => expect(highlighted()).toBe(start));
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(() => expect(highlighted()).toBe(start + 1));
+    await userEvent.keyboard('{ArrowUp}');
+    await waitFor(() => expect(highlighted()).toBe(start));
+    await userEvent.keyboard('{Enter}');
+    const methods = ['createIdentity', 'acceptHaloInvitation', 'recoverIdentity'];
+    await expect(args.send).toHaveBeenCalledWith({ type: methods[start] });
   },
 };
 
@@ -57,6 +108,8 @@ export const ResetIdentityConfirmation: Story = {
   args: {
     mode: 'halo-only',
     activeView: 'reset-storage-confirmation',
+    onCancelResetStorage: fn(),
+    onConfirmResetStorage: fn(async () => {}),
   },
 };
 
@@ -105,13 +158,6 @@ export const HaloInvitationAuthenticatorFailed: Story = {
   },
 };
 
-export const HaloInvitationAccepted: Story = {
-  args: {
-    mode: 'halo-only',
-    activeView: 'halo-invitation-accepted',
-  },
-};
-
 export const IdentityAdded: Story = {
   args: {
     mode: 'halo-only',
@@ -144,19 +190,14 @@ export const SpaceInvitationAuthenticator: Story = {
     // The dialog renders in a portal outside the canvas.
     const canvas = within(canvasElement.ownerDocument.body);
     const cells = await canvas.findByTestId('space-auth-code-input');
-    const emoji = canvas.getByText('Be sure the other device shows the following emoji', { exact: false });
-    const inputs = cells.querySelectorAll('input');
-    const rowCentre =
-      (inputs[0].getBoundingClientRect().left + inputs[inputs.length - 1].getBoundingClientRect().right) / 2;
-    const reference = emoji.getBoundingClientRect();
-    // The cell row is centred like the rest of the panel, not pinned to its inline start.
-    await expect(Math.abs(rowCentre - (reference.left + reference.right) / 2)).toBeLessThan(2);
-  },
-};
-
-export const SpaceInvitationAccepted: Story = {
-  args: {
-    mode: 'halo-only',
-    activeView: 'space-invitation-accepted',
+    const body = cells.closest('[data-align="center"]');
+    if (!body) {
+      throw new Error('The PIN is not in a centred Body.');
+    }
+    // The PIN sits in the middle of the Body's width.
+    const middle = (rect: DOMRect) => ({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+    const pin = middle(cells.getBoundingClientRect());
+    const frame = middle(body.getBoundingClientRect());
+    await expect(Math.abs(pin.x - frame.x)).toBeLessThan(2);
   },
 };
