@@ -109,7 +109,7 @@ export const QueryResult = Schema.Struct({
   /**
    * The document's Automerge bytes as storage holds them, which may be ahead of {@link heads}; sent with
    * {@link documentJson} for a document that holds only this object. The client loads them when it first
-   * writes to the object, and makes that write at {@link heads} when the bytes hold them.
+   * writes to the object, and makes every write of that update at {@link heads} when the bytes hold them.
    */
   bytes: Schema.optional(Schema.Uint8Array),
   /** Unix ms of the object's creation, sent with a document row's {@link bytes}. */

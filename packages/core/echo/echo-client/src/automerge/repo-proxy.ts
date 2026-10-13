@@ -92,8 +92,6 @@ export class RepoProxy extends Resource {
    */
   private readonly _pendingAddIds = new Set<DocumentId>();
 
-  private readonly _pendingAddHeads = new Map<DocumentId, string[]>();
-
   /**
    * Document ids that should be unsubscribed from.
    */
@@ -206,7 +204,6 @@ export class RepoProxy extends Resource {
     handle.off('change');
     delete this._handles[documentId];
     this._pendingAddIds.delete(documentId);
-    this._pendingAddHeads.delete(documentId);
     this._pendingRemoveIds.add(documentId);
     this._sendUpdatesJob?.trigger();
     return true;
@@ -231,7 +228,7 @@ export class RepoProxy extends Resource {
       const heldHeads = held?.passiveHeads;
       if (held && heldHeads && !sameHeads(heldHeads, passive.heads)) {
         held._setPassive(passive);
-        this.#subscribePassive(documentId, passive.heads);
+        this.#subscribePassive(documentId);
       }
       return held ?? this._loadHandle<T>({ documentId, passive });
     }
@@ -566,36 +563,39 @@ export class RepoProxy extends Resource {
         // Drop any pending update for this id; the handle is gone and `_sendUpdates`
         // would otherwise see a missing handle for an id it's still trying to send.
         this._pendingUpdateIds.delete(documentId);
+        this._pendingAddIds.delete(documentId);
         this._sendUpdatesJob?.trigger();
         delete this._handles[documentId];
         this._passiveHandles.delete(documentId);
       },
-      onActivate: (heads) => this.#subscribeHandle(handle, documentId, heads),
     });
     if (passive) {
       this._passiveHandles.set(documentId, handle);
-      this.#subscribePassive(documentId, passive.heads);
+      handle.once('activated', () => {
+        if (this._passiveHandles.get(documentId) === handle) {
+          this.#subscribeHandle(handle, documentId);
+        }
+      });
+      this.#subscribePassive(documentId);
     } else {
       this.#subscribeHandle(handle, documentId);
     }
     return handle;
   }
 
-  #subscribePassive(documentId: DocumentId, heads: string[]): void {
+  #subscribePassive(documentId: DocumentId): void {
     this._pendingRemoveIds.delete(documentId);
     this._pendingAddIds.add(documentId);
-    this._pendingAddHeads.set(documentId, heads);
     this._sendUpdatesJob?.trigger();
   }
 
   #unsubscribe(documentId: DocumentId): void {
     this._pendingAddIds.delete(documentId);
-    this._pendingAddHeads.delete(documentId);
     this._pendingRemoveIds.add(documentId);
     this._sendUpdatesJob?.trigger();
   }
 
-  #subscribeHandle(handle: DocHandleProxy<any>, documentId: DocumentId, heads?: string[]): void {
+  #subscribeHandle(handle: DocHandleProxy<any>, documentId: DocumentId): void {
     handle.on('change', this.#onHandleChange);
     this._handles[documentId] = handle;
     this._passiveHandles.delete(documentId);
@@ -604,9 +604,6 @@ export class RepoProxy extends Resource {
     this._pendingRemoveIds.delete(documentId);
     this._deferredReleaseIds.delete(documentId);
     this._pendingAddIds.add(documentId);
-    if (heads) {
-      this._pendingAddHeads.set(documentId, heads);
-    }
     this._sendUpdatesJob?.trigger();
   }
 
@@ -832,11 +829,6 @@ export class RepoProxy extends Resource {
     // Save current state of pending updates to avoid race conditions.
     const updateIds = Array.from(this._pendingUpdateIds);
     const addIds = Array.from(this._pendingAddIds);
-    const add = addIds.map((id) => {
-      const passiveHeads = this._passiveHandles.get(id)?.passiveHeads;
-      const heads = this._pendingAddHeads.get(id) ?? passiveHeads;
-      return { id, ...(heads && { heads }), ...(passiveHeads && { passive: true }) };
-    });
     const removeIds = Array.from(this._pendingRemoveIds);
 
     this._pendingAddIds.clear();
@@ -845,8 +837,13 @@ export class RepoProxy extends Resource {
 
     try {
       await this._subscriptionReady.wait({ timeout: RPC_TIMEOUT });
+      // Read from the handles now, so an add re-queued meanwhile carries what the handle holds.
+      const add = addIds.flatMap((id) => {
+        const handle = this._handles[id] ?? this._passiveHandles.get(id);
+        return handle ? [{ id, ...handle._subscription() }] : [];
+      });
       // A round trip a batch of plain mutations does not need, and one a hiding page cannot afford.
-      if (addIds.length > 0 || removeIds.length > 0) {
+      if (add.length > 0 || removeIds.length > 0) {
         await runServiceCall(
           this._runtime,
           this._dataService['DataService.updateSubscription']({
@@ -856,11 +853,6 @@ export class RepoProxy extends Resource {
           }),
           { timeout: RPC_TIMEOUT },
         );
-        add.forEach(({ id, heads }) => {
-          if (heads !== undefined && this._pendingAddHeads.get(id) === heads) {
-            this._pendingAddHeads.delete(id);
-          }
-        });
       }
 
       const updates: DataService.DocumentUpdate[] = [];

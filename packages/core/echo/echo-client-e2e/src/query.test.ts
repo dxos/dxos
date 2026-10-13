@@ -2185,7 +2185,7 @@ describe('Query', () => {
 
       const object = queryResult.find((obj) => obj.id === assertion.objectId);
       invariant(object, 'object missing after reload');
-      getObjectCore(object).getLoadedDoc();
+      getObjectCore(object).getDoc();
       const objectDocHandle = getObjectCore(object).docHandle;
       invariant(objectDocHandle, 'docHandle missing');
       expect(objectDocHandle.url).to.eq(assertion.documentUrl);

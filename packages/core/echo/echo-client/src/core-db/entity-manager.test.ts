@@ -128,7 +128,7 @@ describe('DatabaseImpl', () => {
       invariant(snapshot && bytes && snapshot.handle.documentId);
       const row: SnapshotState = {
         structure: snapshot.root.objects![object.id],
-        heads: snapshot.heads,
+        heads: snapshot.handle.passiveHeads!,
         updatedAt: snapshot.updatedAt,
         bytes,
         documentId: snapshot.handle.documentId,
@@ -136,8 +136,8 @@ describe('DatabaseImpl', () => {
       return { db, object, row };
     };
 
-    test('the first write applies at the heads the object was shown at', async () => {
-      const object = Obj.make(TestSchema.Expando, { tags: ['a'] });
+    test('every write of an update applies at the heads the object was shown at', async () => {
+      const object = Obj.make(TestSchema.Expando, { tags: ['a', 'b'] });
       let row: SnapshotState | undefined;
       const db = await createClientDbInSpaceWithObject(object, () => {
         const handle = getObjectCore(object).docHandle!;
@@ -156,9 +156,8 @@ describe('DatabaseImpl', () => {
       invariant(Obj.instanceOf(TestSchema.Expando)(shownObject));
       Obj.update(shownObject, (shownObject) => {
         shownObject.tags.splice(0, 1);
+        shownObject.tags.splice(0, 1);
       });
-      expect([...shownObject.tags]).toEqual([]);
-      await waitForCondition({ condition: () => shownObject.tags.length === 1, timeout: 1_000 });
       expect([...shownObject.tags]).toEqual(['host']);
     });
 
@@ -689,7 +688,7 @@ const getDocHandles = (db: DatabaseImpl): DocumentHandles => ({
 
 const getObjectDocHandle = (obj: any) => {
   const core = getObjectCore(obj);
-  core.getLoadedDoc();
+  core.getDoc();
   return core.docHandle!;
 };
 
