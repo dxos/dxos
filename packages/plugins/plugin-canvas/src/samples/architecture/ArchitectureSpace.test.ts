@@ -57,13 +57,19 @@ describe('ArchitectureSpace', () => {
     const composerDrawing = drawings.find((drawing) => drawing.name === 'Composer');
     expect(content).toContain(`React UI, on the [DXOS](echo:///${dxos?.id}) SDK`);
 
-    // Every paragraph is one line: a line break inside one renders as a break in the editor.
+    // Every paragraph is one line: a line break inside one renders as a break in the editor. Fenced code (the sequence
+    // diagram) is lines by nature, so it is left out.
     for (const doc of [composer, dxos, edge]) {
-      const text = (await doc?.content.load())?.content ?? '';
+      const text = ((await doc?.content.load())?.content ?? '').replace(/^```[^\n]*\n[\s\S]*?^```$/gm, '');
       const broken = text.split(/\n{2,}/).filter((paragraph) => paragraph.trim().includes('\n'));
       expect(broken).toEqual([]);
     }
     expect(content).toContain(`[EDGE](echo:///${edge?.id})`);
     expect(content).toContain(`![Composer architecture](echo:///${composerDrawing?.id})`);
+
+    // The DXOS document walks the code and draws an edit's path to another device as a sequence diagram.
+    const dxosContent = (await dxos?.content.load())?.content ?? '';
+    expect(dxosContent).toContain('## Reading the code');
+    expect(dxosContent).toMatch(/^```mermaid\nsequenceDiagram\n/m);
   });
 });
