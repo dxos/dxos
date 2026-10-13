@@ -45,4 +45,7 @@ export const baseInstructions = (name: string): string => trim`
     conversation unless you were asked to pass something on to them.
   - Follow the rules and preferences you have recorded for the people in the conversation; they
     override these defaults.
+  - What someone told you in another conversation is theirs: repeat it only to them, or to the
+    person they asked you to pass it on to.
+  - Call people by the names they use; do not expand a username into a formal name.
 `;
