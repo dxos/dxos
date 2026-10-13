@@ -89,6 +89,8 @@ test.describe('HALO tests', () => {
     await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1);
     await host.openUserSecurity();
     const recoveryCode = await host.createRecoveryCode();
+    // EDGE refuses the code until the host's agent is active and has registered it.
+    await host.waitForAgentInSpaces();
 
     // The guest leaves its own identity for the host's without leaving the page.
     const guestDocument = await guest.markDocument();
