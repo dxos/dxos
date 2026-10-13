@@ -3,8 +3,8 @@
 //
 
 import { syntaxTree } from '@codemirror/language';
-import { type Extension } from '@codemirror/state';
-import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
+import { type EditorState, type Extension, type Range, StateField } from '@codemirror/state';
+import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
 import Mermaid, { type MermaidConfig } from 'mermaid';
 
 export type MermaidOptions = Pick<MermaidConfig, 'theme' | 'themeVariables' | 'themeCSS'>;
@@ -46,115 +46,66 @@ export const mermaid = (options: MermaidOptions = {}): Extension => {
   // One config per colour mode, built once: the widget's identity includes its config, so a fresh
   // object per rebuild would replace (and re-render) every diagram on each selection change.
   const configs = { light: createConfig(options, false), dark: createConfig(options, true) };
+
+  /**
+   * Each mermaid block the cursor is outside of, replaced by its rendered diagram: a block widget over the block's
+   * whole lines, so the lines around it (a blank line above and below) render as they are.
+   */
+  const buildDecorations = (state: EditorState): DecorationSet => {
+    const decorations: Range<Decoration>[] = [];
+    const cursor = state.selection.main.head;
+    const config = state.facet(EditorView.darkTheme) ? configs.dark : configs.light;
+    syntaxTree(state).iterate({
+      enter: (node) => {
+        if (node.name !== 'FencedCode') {
+          return;
+        }
+        // Editing shows the source; a buffer of one position either side handles the block's edges.
+        if (!state.readOnly && cursor >= node.from - 1 && cursor <= node.to + 1) {
+          return;
+        }
+        const info = node.node.getChild('CodeInfo');
+        const text = node.node.getChild('CodeText');
+        if (!info || !text || state.sliceDoc(info.from, info.to) !== 'mermaid') {
+          return;
+        }
+        const content = state.sliceDoc(text.from, text.to).trim();
+        // The diagram type, from its first line that is not a `%%` comment.
+        const label =
+          content
+            .split('\n')
+            .map((line) => line.trim())
+            .find((line) => line.length > 0 && !line.startsWith('%%'))
+            ?.split(/\s/)[0] ?? '';
+        const widget = new MermaidWidget(`mermaid-${node.from}`, content, config, label);
+        const from = state.doc.lineAt(node.from).from;
+        const to = state.doc.lineAt(node.to).to;
+        decorations.push(Decoration.replace({ widget, block: true }).range(from, to));
+      },
+    });
+    return Decoration.set(decorations, true);
+  };
+
   return [
-    ViewPlugin.fromClass(
-      class {
-        decorations: DecorationSet;
-
-        constructor(view: EditorView) {
-          this.decorations = this.buildDecorations(view);
-        }
-
-        update(update: ViewUpdate) {
-          // Always rebuild decorations when selection changes to handle arrow key navigation.
-          // A colour-mode switch arrives as a reconfiguration, so compare the facet as well.
-          const themeChanged =
-            update.state.facet(EditorView.darkTheme) !== update.startState.facet(EditorView.darkTheme);
-          if (
-            update.docChanged ||
-            update.viewportChanged ||
-            update.selectionSet ||
-            update.focusChanged ||
-            themeChanged
-          ) {
-            this.decorations = this.buildDecorations(update.view);
-          }
-        }
-
-        buildDecorations(view: EditorView): DecorationSet {
-          const decorations: Array<{ from: number; to: number; decoration: Decoration }> = [];
-
-          syntaxTree(view.state).iterate({
-            enter: (node) => {
-              if (node.name === 'FencedCode') {
-                const cursor = view.state.selection.main.head;
-                // Show widget when cursor is outside the code block.
-                // Add a buffer of 1 position before and after to handle edge cases.
-                const showWidget = view.state.readOnly || cursor < node.from - 1 || cursor > node.to + 1;
-                if (showWidget) {
-                  const info = node.node.getChild('CodeInfo');
-                  if (info) {
-                    const type = view.state.sliceDoc(info.from, info.to);
-                    const text = node.node.getChild('CodeText');
-                    if (type === 'mermaid' && text) {
-                      const content = view.state.sliceDoc(text.from, text.to).trim();
-                      const label = content.split(' ')[0];
-
-                      // Create widget.
-                      const widget = new MermaidWidget(
-                        `mermaid-${node.from}`,
-                        content,
-                        view.state.facet(EditorView.darkTheme) ? configs.dark : configs.light,
-                        label,
-                      );
-
-                      // Find the line after the code block to place the widget.
-                      const endLine = view.state.doc.lineAt(node.to);
-                      const nextLinePos = endLine.to + 1;
-
-                      // Add widget after the code block.
-                      if (nextLinePos <= view.state.doc.length) {
-                        decorations.push({
-                          from: nextLinePos,
-                          to: nextLinePos,
-                          decoration: Decoration.widget({
-                            widget,
-                          }),
-                        });
-                      } else {
-                        // Check if at the end of the document.
-                        decorations.push({
-                          from: endLine.to,
-                          to: endLine.to,
-                          decoration: Decoration.widget({
-                            widget,
-                            side: 1,
-                          }),
-                        });
-                      }
-
-                      // Hide each line of the code block.
-                      const startLine = view.state.doc.lineAt(node.from);
-                      for (let lineNum = startLine.number; lineNum <= endLine.number; lineNum++) {
-                        const line = view.state.doc.line(lineNum);
-                        decorations.push({
-                          from: line.from,
-                          to: line.from,
-                          decoration: Decoration.line({
-                            class: 'cm-mermaid-hidden',
-                          }),
-                        });
-                      }
-                    }
-                  }
-                }
-              }
-            },
-          });
-
-          return Decoration.set(
-            decorations.sort((a, b) => a.from - b.from || a.to - b.to).map((d) => d.decoration.range(d.from, d.to)),
-          );
-        }
+    // A state field rather than a view plugin: only a state field may provide block decorations.
+    StateField.define<DecorationSet>({
+      create: (state) => buildDecorations(state),
+      update: (decorations, tr) => {
+        // The selection moves the widget out of the way while editing; a colour-mode switch arrives as a
+        // reconfiguration; and the parser fills the tree in over time.
+        const changed =
+          tr.docChanged ||
+          tr.selection !== undefined ||
+          tr.state.facet(EditorView.darkTheme) !== tr.startState.facet(EditorView.darkTheme) ||
+          syntaxTree(tr.state) !== syntaxTree(tr.startState);
+        return changed ? buildDecorations(tr.state) : decorations;
       },
-      {
-        decorations: (v) => v.decorations,
-      },
-    ),
+      provide: (field) => EditorView.decorations.from(field),
+    }),
     EditorView.theme({
       '& .cm-mermaid': {
         position: 'relative',
-        display: 'inline-flex',
+        display: 'flex',
         width: '100%',
         margin: '4px 0',
         padding: '16px',
@@ -169,11 +120,8 @@ export const mermaid = (options: MermaidOptions = {}): Extension => {
         color: 'var(--color-fg-subtle)',
       },
       '& .cm-mermaid-error': {
-        display: 'inline-block',
+        display: 'block',
         color: 'var(--color-error)',
-      },
-      '& .cm-mermaid-hidden': {
-        display: 'none !important',
       },
     }),
   ];
