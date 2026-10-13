@@ -13,9 +13,9 @@ import { invariant } from '@dxos/invariant';
 
 import { Drawing } from '#types';
 
-import { toSvgFile } from '../components/SceneSvgFile.tsx';
 import { SvgBuilder } from './builder.ts';
 import { fromDxSvg, importDxSvg, makeDrawing, toDxSvg, toPayload } from './drawing-file.ts';
+import { toSvgFile } from './svg-markup.ts';
 
 const SOURCE = 'flowchart TB\n  A[Client] --> B[Server]\n  B --> C[(Store)]';
 

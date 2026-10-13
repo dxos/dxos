@@ -21,7 +21,8 @@ import { basename, dirname, join, resolve } from 'node:path';
 import { Appeal, Architecture, Mermaid, MermaidEngine, Rules, type Scene, Score } from '@dxos/diagram';
 import * as EffectEx from '@dxos/effect/EffectEx';
 
-import { toSvgFile } from '../src/components/SceneSvgFile.tsx';
+import { toSvgFile } from '#model';
+
 import { decisionModel, isJudge } from './judges.ts';
 import { toPngs } from './render.tsx';
 

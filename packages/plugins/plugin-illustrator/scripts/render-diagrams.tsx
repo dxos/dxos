@@ -24,9 +24,8 @@ import { Worker } from 'node:worker_threads';
 import { Diagnostics, Dsl, Mermaid, MermaidEngine, type Scene } from '@dxos/diagram';
 import * as EffectEx from '@dxos/effect/EffectEx';
 
-import { DrawingFile } from '#model';
+import { DrawingFile, toSvgFile } from '#model';
 
-import { toSvgFile } from '../src/components/SceneSvgFile.tsx';
 import { type Reply } from './emit-worker.ts';
 
 const DIAGRAMS = join(dirname(fileURLToPath(import.meta.url)), '../docs/diagrams');
