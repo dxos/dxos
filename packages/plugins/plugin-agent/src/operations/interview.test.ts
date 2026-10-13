@@ -6,6 +6,7 @@ import { describe, it } from '@effect/vitest';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as Schema from 'effect/Schema';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import * as Agent from '@dxos/assistant/Agent';
@@ -13,15 +14,16 @@ import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
-import { Database, Feed, Filter, Obj, Query, Relation } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
+import { type RDF } from '@dxos/pipeline-rdf';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 import { HasSubject, Organization, Person, ProfileOf } from '@dxos/types';
 
 import { AgentOperationHandlerSet } from '#operations';
-import { Goal, Memory, MemoryOperation } from '#types';
+import { BrainService, Goal, Memory, MemoryOperation } from '#types';
 
 import { makeTestBrain } from '../brain/testing.ts';
 
@@ -206,4 +208,82 @@ describe('Interview', () => {
       TestHelpers.provideTestContext,
     ),
   );
+
+  it.effect(
+    'resolves a nickname, a handle written as a name, or a unique first name to the person already known',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const dima = yield* Database.add(
+          Person.make({
+            fullName: 'Dmytro Maretskyi',
+            nickname: 'Dima',
+            identities: [{ label: 'discord', value: 'dmaretskyi' }],
+          }),
+        );
+        for (const name of ['Dima', 'dmaretskyi', 'Dmytro', 'dmytro maretskyi']) {
+          const resolved = yield* Operation.invoke(MemoryOperation.ResolveEntity, { name });
+          expect({ name, created: resolved.created, id: resolved.entity.uri }).toEqual({
+            name,
+            created: false,
+            id: Ref.make(dima).uri,
+          });
+        }
+
+        // A first name two people share names neither.
+        yield* Database.add(Person.make({ fullName: 'Dmytro Kovalenko' }));
+        expect((yield* Operation.invoke(MemoryOperation.ResolveEntity, { name: 'Dmytro' })).created).toBe(true);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'recall matches every word of a query, and returns everything about the subject when it matches nothing',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { entity: rich } = yield* Operation.invoke(MemoryOperation.ResolveEntity, { name: 'Rich Burdon' });
+        yield* Operation.invoke(MemoryOperation.Remember, {
+          content: 'Rich is based in New York.',
+          kind: 'fact',
+          subjects: [rich],
+        });
+        yield* Database.flush();
+
+        const words = yield* Operation.invoke(MemoryOperation.Recall, { subject: rich, query: 'york based' });
+        expect(words.queryMatched).toBeUndefined();
+        expect(words.memories.map(({ content }) => content)).toEqual(['Rich is based in New York.']);
+
+        const fallback = yield* Operation.invoke(MemoryOperation.Recall, { subject: rich, query: 'location' });
+        expect(fallback.queryMatched).toBe(false);
+        expect(fallback.memories.map(({ content }) => content)).toEqual(['Rich is based in New York.']);
+
+        // Models pass numbers as strings; the call still succeeds.
+        const limited = yield* Operation.invoke(MemoryOperation.Recall, {
+          subject: rich,
+          limit: Schema.decodeUnknownSync(MemoryOperation.Recall.input)({ limit: '1' }).limit,
+        });
+        expect(limited.memories).toHaveLength(1);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it('a negated fact is marked "not:", so a denial is not recalled as the assertion it denies', ({ expect }) => {
+    const denial = {
+      id: 'fact-1',
+      assertion: {
+        subject: { kind: 'entity', entity: 'kai', label: 'Kai' },
+        predicate: 'has spoken with',
+        object: { kind: 'entity', entity: 'dima', label: 'Dima' },
+      },
+      factuality: { value: 'CT-', polarity: '-' },
+      attribution: { source: 'test', generatedAtTime: '2026-10-13T12:00:00Z' },
+      recordedAt: '2026-10-13T12:00:00Z',
+      extractor: { id: 'test', model: 'none', version: '1' },
+      sourceHash: 'fact-1',
+    } satisfies RDF.Fact;
+    expect(BrainService.factText(denial)).toBe('not: Kai has spoken with Dima');
+  });
 });

@@ -61,6 +61,18 @@ const sourceNames = Effect.fnUntraced(function* (facts: readonly RDF.Fact[]) {
   return names;
 });
 
+/** The words of a query, each matched on its own: a phrase rarely appears verbatim in a fact. */
+const queryWords = (query: string | undefined): string[] =>
+  (query ?? '')
+    .toLowerCase()
+    .split(/[^\p{L}\p{N}#@._-]+/u)
+    .filter((word) => word.length > 0);
+
+const matches = (text: string, words: readonly string[]): boolean => {
+  const haystack = text.toLowerCase();
+  return words.every((word) => haystack.includes(word));
+};
+
 const handler: Operation.WithHandler<typeof MemoryOperation.Recall> = MemoryOperation.Recall.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ subject, query, limit }) {
@@ -70,18 +82,12 @@ const handler: Operation.WithHandler<typeof MemoryOperation.Recall> = MemoryOper
             .map((relation) => Relation.getSource(relation))
             .filter(Obj.instanceOf(Memory.Memory))
         : yield* Database.query(Filter.type(Memory.Memory)).run;
-
-      const needle = query?.trim().toLowerCase();
-      const memories = candidates
-        .filter((memory) => memory.status === 'active')
-        .filter((memory) => !needle || memory.content.toLowerCase().includes(needle))
-        .sort(Profile.byNewest)
-        .slice(0, limit ?? undefined);
+      const activeMemories = candidates.filter((memory) => memory.status === 'active').sort(Profile.byNewest);
 
       // Expired facts stay in the brain as history; recall leaves them out.
       const now = new Date().toISOString();
       const ids = entity ? entityIds(entity) : undefined;
-      const facts = (yield* spaceFacts)
+      const subjectFacts = (yield* spaceFacts)
         .filter((fact) => !fact.assertion.validTo || fact.assertion.validTo > now)
         .filter((fact) => {
           if (!ids) {
@@ -91,12 +97,18 @@ const handler: Operation.WithHandler<typeof MemoryOperation.Recall> = MemoryOper
           const entities = [subject, object].flatMap((term) => (term.kind === 'entity' ? [term.entity] : []));
           return [...entities, fact.attribution.agent].some((id) => id !== undefined && ids.has(id));
         })
-        .filter(
-          (fact) =>
-            !needle || `${BrainService.factText(fact)} ${fact.assertion.quote ?? ''}`.toLowerCase().includes(needle),
-        )
-        .sort((left, right) => right.attribution.generatedAtTime.localeCompare(left.attribution.generatedAtTime))
-        .slice(0, limit ?? undefined);
+        .sort((left, right) => right.attribution.generatedAtTime.localeCompare(left.attribution.generatedAtTime));
+
+      const words = queryWords(query);
+      const matchedMemories = activeMemories.filter((memory) => matches(memory.content, words));
+      const matchedFacts = subjectFacts.filter((fact) =>
+        matches(`${BrainService.factText(fact)} ${fact.assertion.quote ?? ''}`, words),
+      );
+      // A query rarely uses the words a fact was stored with ("location" for "is in Bangkok"): when it matches
+      // nothing, everything about the subject is the better answer than none.
+      const queryMatched = words.length === 0 || matchedMemories.length > 0 || matchedFacts.length > 0;
+      const memories = (queryMatched ? matchedMemories : activeMemories).slice(0, limit ?? undefined);
+      const facts = (queryMatched ? matchedFacts : subjectFacts).slice(0, limit ?? undefined);
       const names = yield* sourceNames(facts);
 
       const goals = (yield* Database.query(Filter.type(Goal.Goal)).run)
@@ -104,6 +116,7 @@ const handler: Operation.WithHandler<typeof MemoryOperation.Recall> = MemoryOper
         .filter((goal) => !entity || goal.owners.some((owner) => Profile.refersTo(owner, entity.id)));
 
       return {
+        ...(queryMatched ? {} : { queryMatched: false }),
         memories: memories.map((memory) => ({
           memory: Ref.make(memory),
           content: memory.content,

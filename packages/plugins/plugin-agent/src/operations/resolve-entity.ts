@@ -35,9 +35,7 @@ const handler: Operation.WithHandler<typeof MemoryOperation.ResolveEntity> = Mem
       // A handle is authoritative; the name only breaks the tie when no handle is known yet.
       const match =
         people.find((person) => handles.some((handle) => hasHandle(person, handle))) ??
-        (trimmed
-          ? people.find((person) => sameName(person.fullName, trimmed) || sameName(person.preferredName, trimmed))
-          : undefined);
+        (trimmed ? byName(people, trimmed) : undefined);
 
       if (match) {
         const missing = handles.filter((handle) => !hasHandle(match, handle));
@@ -63,6 +61,23 @@ export default handler;
 
 const sameName = (candidate: string | undefined, name: string) =>
   candidate !== undefined && candidate.trim().toLowerCase() === name.toLowerCase();
+
+const firstName = (fullName: string | undefined) => fullName?.trim().split(/\s+/)[0];
+
+/**
+ * The person a name refers to: by full, preferred or nick name, or a handle written as a name (a Discord username),
+ * else by first name when exactly one person has it. Creating a person for an alias splits what is known about them.
+ */
+const byName = (people: readonly Person.Person[], name: string): Person.Person | undefined =>
+  people.find(
+    (person) =>
+      sameName(person.fullName, name) ||
+      sameName(person.preferredName, name) ||
+      sameName(person.nickname, name) ||
+      (person.identities ?? []).some((identity) => sameName(identity.value, name)),
+  ) ?? unique(people.filter((person) => sameName(firstName(person.fullName), name)));
+
+const unique = <T>(matches: readonly T[]): T | undefined => (matches.length === 1 ? matches[0] : undefined);
 
 const hasHandle = (person: Person.Person, handle: MemoryOperation.Handle) =>
   (person.identities ?? []).some(
