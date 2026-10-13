@@ -522,42 +522,11 @@ export class EntityManager implements IDatabaseBinding {
     return core.rootProxy ?? this._createEntity(core);
   }
 
-  upsertSnapshot(id: EntityId, state: SnapshotState): Entity.Unknown | undefined {
-    if (!this.#acceptsRow(id, state.documentId)) {
-      return undefined;
-    }
-    const existing = this.getObjectCoreById(id, { load: false });
-    if (existing) {
-      if (!existing.isBodyAvailable) {
-        return undefined;
-      }
-      return existing.rootProxy ?? this._createEntity(existing);
-    }
-    if (this._objectDocumentHandles.has(id)) {
-      return undefined;
-    }
-    const handle = this._repoProxy.find<DatabaseDirectory>(state.documentId as DocumentId, {
-      passive: { bytes: state.bytes, heads: state.heads },
-    });
-    if (!handle.passiveHeads) {
-      return undefined;
-    }
-
-    const core = new ObjectCore();
-    core.id = id;
-    core.entityManager = this;
-    core.setSnapshot({
-      root: { objects: { [id]: state.structure } },
-      heads: state.heads,
-      updatedAt: state.updatedAt,
-      handle,
-    });
-    this._objects.set(id, core);
-    countWork('echo.snapshotObjects');
-    this.#watchPassive(id, handle);
-    return this._createEntity(core);
-  }
-
+  /**
+   * Places an index row as a snapshot core over the row's stored changes, or returns the snapshot core
+   * that already holds the object. A row this database does not take, or one that fails to decode or
+   * place, returns undefined and loads through its document.
+   */
   placeIndexRow(id: EntityId, documentId: string, decode: () => SnapshotState | undefined): Entity.Unknown | undefined {
     if (!this.#acceptsRow(id, documentId)) {
       return undefined;
@@ -566,8 +535,39 @@ export class EntityManager implements IDatabaseBinding {
     if (held) {
       return held.snapshot ? (held.rootProxy ?? this._createEntity(held)) : undefined;
     }
-    const state = decode();
-    return state && this.upsertSnapshot(id, state);
+    if (this._objectDocumentHandles.has(id)) {
+      return undefined;
+    }
+    try {
+      const state = decode();
+      if (!state) {
+        return undefined;
+      }
+      const handle = this._repoProxy.find<DatabaseDirectory>(documentId as DocumentId, {
+        passive: { bytes: state.bytes, heads: state.heads },
+      });
+      if (!handle.passiveHeads) {
+        return undefined;
+      }
+
+      const core = new ObjectCore();
+      core.id = id;
+      core.entityManager = this;
+      core.setSnapshot({
+        root: { objects: { [id]: state.structure } },
+        heads: state.heads,
+        updatedAt: state.updatedAt,
+        handle,
+      });
+      this._objects.set(id, core);
+      countWork('echo.snapshotObjects');
+      this.#watchPassive(id, handle);
+      this._markObjectAvailable(id);
+      return this._createEntity(core);
+    } catch (err) {
+      log.warn('index row not placed, the object loads from its document', { id, err });
+      return undefined;
+    }
   }
 
   #acceptsRow(id: string, documentId: string): boolean {
@@ -640,7 +640,19 @@ export class EntityManager implements IDatabaseBinding {
     this.#refreshSnapshot(core, { structure, heads, updatedAt });
   }
 
-  async waitForStrongDeps(core: ObjectCore): Promise<void> {
+  /**
+   * Waits for a held core's strong dependencies to settle, then hands it out by the same rule as
+   * {@link loadEntityById}.
+   */
+  async settleEntity(
+    core: ObjectCore,
+    { allowDeleted = false }: { allowDeleted?: boolean } = {},
+  ): Promise<Entity.Unknown | undefined> {
+    await this.#waitForStrongDeps(core);
+    return this.#publishable(core, { allowDeleted });
+  }
+
+  async #waitForStrongDeps(core: ObjectCore): Promise<void> {
     if (this.#closed) {
       throw new ContextDisposedError();
     }
@@ -677,7 +689,16 @@ export class EntityManager implements IDatabaseBinding {
     { allowDeleted = false, ...options }: LoadObjectOptions & { allowDeleted?: boolean } = {},
   ): Promise<Entity.Unknown | undefined> {
     const core = await this.loadObjectCoreById(objectId, options);
-    if (!core || !core.isBodyAvailable || (core.isDeleted() && !allowDeleted)) {
+    return (
+      core && this.#publishable(core, { allowDeleted, returnWithUnsatisfiedDeps: options.returnWithUnsatisfiedDeps })
+    );
+  }
+
+  #publishable(
+    core: ObjectCore,
+    { allowDeleted, returnWithUnsatisfiedDeps }: { allowDeleted: boolean; returnWithUnsatisfiedDeps?: boolean },
+  ): Entity.Unknown | undefined {
+    if (!this._coreOrUndefined(core, returnWithUnsatisfiedDeps) || (core.isDeleted() && !allowDeleted)) {
       return undefined;
     }
     return core.rootProxy ?? this._createEntity(core);

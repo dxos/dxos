@@ -152,7 +152,7 @@ describe('DatabaseImpl', () => {
       });
       invariant(row);
 
-      const shownObject = db._entityManager.upsertSnapshot(object.id, row);
+      const shownObject = db._entityManager.placeIndexRow(object.id, row.documentId, () => row);
       invariant(Obj.instanceOf(TestSchema.Expando)(shownObject));
       Obj.update(shownObject, (shownObject) => {
         shownObject.tags.splice(0, 1);
@@ -162,20 +162,32 @@ describe('DatabaseImpl', () => {
       expect([...shownObject.tags]).toEqual(['host']);
     });
 
+    test('a row that fails to decode is left to its document', async () => {
+      const object = Obj.make(TestSchema.Expando, { value: 1 });
+      const db = await createClientDbInSpaceWithObject(object);
+      const documentId = db.getObjectDocumentId(object.id);
+      invariant(documentId);
+      const placed = db._entityManager.placeIndexRow(object.id, documentId, () => {
+        throw new SyntaxError('Unexpected end of JSON input');
+      });
+      expect(placed).toBe(undefined);
+      expect(db._entityManager.getObjectCoreById(object.id, { load: false })).toBe(undefined);
+    });
+
     test('a row that arrives before the space root backs nothing', async () => {
       const { object, row } = await indexBacked();
       const testBuilder = new EchoTestBuilder();
       await openAndClose(testBuilder);
       const peer = await testBuilder.createPeer();
       const early = peer.client.constructDatabase({ spaceId: SpaceId.random(), spaceKey: PublicKey.random() });
-      expect(early._entityManager.upsertSnapshot(object.id, row)).toBe(undefined);
+      expect(early._entityManager.placeIndexRow(object.id, row.documentId, () => row)).toBe(undefined);
     });
 
     test('a row that arrives once a close has begun backs nothing', async () => {
       const { db, object, row } = await indexBacked();
       let placed: unknown = null;
       db['_ctx'].onDispose(() => {
-        placed = db._entityManager.upsertSnapshot(object.id, row);
+        placed = db._entityManager.placeIndexRow(object.id, row.documentId, () => row);
       });
       await db.close();
       expect(placed).toBe(undefined);
