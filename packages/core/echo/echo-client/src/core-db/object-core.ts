@@ -44,7 +44,8 @@ import { type DecodedAutomergePrimaryValue, type GetObjectCoreByIdOptions, Targe
 export interface IDatabaseBinding {
   readonly spaceId: SpaceId;
   getObjectCoreById(id: string, opts?: GetObjectCoreByIdOptions): ObjectCore | undefined;
-  activate(core: ObjectCore, options?: { at?: Heads }): void;
+  /** The snapshot core `id` is now bound to a document: its passive handle is done with unless it is that document. */
+  endSnapshot(id: string): void;
 }
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
@@ -67,15 +68,16 @@ export type ObjectCoreOptions = {
   immutable?: boolean;
 };
 
+/** An object shown from the index, over its document's passive handle, whose heads it shows. */
 export type ObjectSnapshot = {
   root: { objects: Record<string, EntityStructure> };
-  heads: Heads;
   updatedAt: number | undefined;
   handle: DocHandleProxy<DatabaseDirectory>;
 };
 
 export type SnapshotState = Omit<ObjectSnapshot, 'root' | 'handle'> & {
   structure: EntityStructure;
+  heads: Heads;
   bytes: Uint8Array;
   documentId: string;
 };
@@ -114,7 +116,7 @@ export class ObjectCore {
    */
   public docHandle?: DocHandleProxy<DatabaseDirectory> = undefined;
 
-  public snapshot?: ObjectSnapshot = undefined;
+  #snapshot?: ObjectSnapshot = undefined;
 
   /** When the document last loaded or changed (`performance.now()`); the space releases it after a TTL. */
   public activeAt = 0;
@@ -284,7 +286,10 @@ export class ObjectCore {
     this.entityManager = options.db;
     this.docHandle = options.docHandle;
     this.mountPath = options.path;
-    this.snapshot = undefined;
+    if (this.#snapshot) {
+      this.#snapshot = undefined;
+      options.db.endSnapshot(this.id);
+    }
     this.activeAt = performance.now();
 
     const doc = this.doc;
@@ -304,31 +309,24 @@ export class ObjectCore {
     this.notifyUpdate();
   }
 
-  getLoadedDoc(): AutomergeDoc<unknown> {
-    this.#activate();
-    return this.getDoc();
+  get snapshot(): ObjectSnapshot | undefined {
+    return this.#snapshot;
   }
 
-  #activate({ forWrite = false }: { forWrite?: boolean } = {}): void {
-    if (!this.doc && !this.docHandle && this.snapshot) {
-      invariant(this.entityManager, 'A snapshot-backed core belongs to a database.');
-      this.entityManager.activate(this, { at: forWrite ? this.snapshot.heads : undefined });
-    }
+  /** The handle of the document this core reads and writes: the bound one, or its snapshot's passive one. */
+  get handle(): DocHandleProxy<DatabaseDirectory> | undefined {
+    return this.docHandle ?? this.#snapshot?.handle;
   }
 
+  /** The Automerge document; a snapshot core's handle loads it, and the database binds the core to it. */
   getDoc(): AutomergeDoc<unknown> {
     if (this.doc) {
       return this.doc;
     }
-
-    if (this.docHandle) {
-      return this.docHandle.doc();
+    const handle = this.handle;
+    if (handle) {
+      return handle.doc();
     }
-
-    if (this.snapshot) {
-      return this.snapshot.root;
-    }
-
     throw new Error('Invalid ObjectCore state');
   }
 
@@ -344,19 +342,35 @@ export class ObjectCore {
   demote(snapshot: ObjectSnapshot): void {
     invariant(this.docHandle && !this.doc, 'Only a core bound to a document is demoted.');
     this.docHandle = undefined;
-    this.snapshot = snapshot;
+    this.#snapshot = snapshot;
     // Same values, so the targets are rebuilt from the snapshot without notifying anyone.
     this.#reportingErrors(() => this.#refresh());
   }
 
+  /** The record `mountPath` is rooted in, read without loading a snapshot's document. */
+  #root(): AutomergeDoc<unknown> {
+    const root = this.doc ?? this.#snapshot?.root ?? this.docHandle?.doc();
+    if (root === undefined) {
+      throw new Error('Invalid ObjectCore state');
+    }
+    return root;
+  }
+
+  /** Shows the object from the index, or shows newer index state; the core must be unbound. */
   setSnapshot(snapshot: ObjectSnapshot): void {
     invariant(!this.doc && !this.docHandle, 'Only an unbound core is backed by a snapshot.');
-    this.snapshot = snapshot;
+    this.#snapshot = snapshot;
     this.mountPath = ['objects', this.id];
   }
 
+  /** Runs `fn` as one write scope on this core's document; see {@link DocHandleProxy.batch}. */
+  batch<R>(fn: () => R): R {
+    const handle = this.handle;
+    return handle ? handle.batch(fn) : fn();
+  }
+
   get hasDoc(): boolean {
-    return this.doc != null || this.docHandle != null || this.snapshot != null;
+    return this.doc != null || this.docHandle != null || this.#snapshot != null;
   }
 
   /**
@@ -367,23 +381,22 @@ export class ObjectCore {
    * Derived from the document instead of stored, so it cannot disagree with what a read would find.
    */
   get isBodyAvailable(): boolean {
-    return this.hasDoc && getDeep(this.getDoc(), this.mountPath) != null;
+    return this.hasDoc && getDeep(this.#root(), this.mountPath) != null;
   }
 
   /** Undefined until the body arrives — see {@link isBodyAvailable}. */
   getObjectStructure(): EntityStructure | undefined {
-    return getDeep<EntityStructure>(this.getDoc(), this.mountPath);
+    return getDeep<EntityStructure>(this.#root(), this.mountPath);
   }
 
   get #writeLockKey(): object {
-    return this.docHandle ?? this.snapshot?.handle ?? this;
+    return this.handle ?? this;
   }
 
   /**
    * Do not take into account mountPath.
    */
   change(changeFn: ChangeFn<any>, options?: A.ChangeOptions<any>): void {
-    this.#activate({ forWrite: true });
     // Prevent recursive change calls.
     using _ = defer(docChangeSemaphore(this.#writeLockKey));
 
@@ -397,10 +410,10 @@ export class ObjectCore {
       // No change event is emitted here since we are not using the doc handle. Notify listeners manually.
       this.notifyUpdate();
     } else {
-      const docHandle = this.docHandle;
-      invariant(docHandle);
+      const handle = this.handle;
+      invariant(handle);
       // No manual notification: the DB already processes the `change` event.
-      this.#writeAndRefresh(() => docHandle.change(changeFn, options));
+      this.#writeAndRefresh(() => handle.change(changeFn, options));
     }
   }
 
@@ -408,7 +421,6 @@ export class ObjectCore {
    * Do not take into account mountPath.
    */
   changeAt(heads: Heads, callback: ChangeFn<any>, options?: ChangeOptions<any>): Heads | undefined {
-    this.#activate();
     // Prevent recursive change calls.
     using _ = defer(docChangeSemaphore(this.#writeLockKey));
 
@@ -427,10 +439,10 @@ export class ObjectCore {
       // No change event is emitted here since we are not using the doc handle. Notify listeners manually.
       this.notifyUpdate();
     } else {
-      const docHandle = this.docHandle;
-      invariant(docHandle);
+      const handle = this.handle;
+      invariant(handle);
       // No manual notification: the DB already processes the `change` event.
-      result = this.#writeAndRefresh(() => docHandle.changeAt(heads, callback, options));
+      result = this.#writeAndRefresh(() => handle.changeAt(heads, callback, options));
     }
 
     return result;
@@ -441,7 +453,7 @@ export class ObjectCore {
     const self = this;
     return {
       handle: {
-        doc: () => this.getLoadedDoc(),
+        doc: () => this.getDoc(),
         change: (callback, options) => {
           this.change(callback, options);
         },
@@ -451,7 +463,7 @@ export class ObjectCore {
         addListener: (event, listener) => {
           if (event === 'change') {
             // TODO(dmaretskyi): We probably don't need to subscribe to docHandle here separately.
-            this.docHandle?.on('change', listener);
+            this.handle?.on('change', listener);
             this.updates.on(listener);
             this.#accessorListeners++;
           }
@@ -459,7 +471,7 @@ export class ObjectCore {
         removeListener: (event, listener) => {
           if (event === 'change') {
             // TODO(dmaretskyi): We probably don't need to subscribe to docHandle here separately.
-            this.docHandle?.off('change', listener);
+            this.handle?.off('change', listener);
             this.updates.off(listener);
             this.#accessorListeners = Math.max(0, this.#accessorListeners - 1);
           }
@@ -589,7 +601,7 @@ export class ObjectCore {
   getRaw(path: Doc.KeyPath): AutomergeDoc<EntityStructure> | AutomergeDoc<DatabaseDirectory> {
     const fullPath = [...this.mountPath, ...path];
 
-    let value = this.getDoc();
+    let value = this.#root();
     for (const key of fullPath) {
       value = (value as any)?.[key];
     }
@@ -791,8 +803,8 @@ export class ObjectCore {
    * The document's current heads, recorded when the entity is merged away.
    */
   getHeads(): Heads {
-    if (this.snapshot) {
-      return [...this.snapshot.heads];
+    if (this.#snapshot) {
+      return [...(this.#snapshot.handle.passiveHeads ?? [])];
     }
     const doc: AutomergeDoc<unknown> | undefined = this.doc ?? this.docHandle?.doc();
     return doc ? A.getHeads(doc) : [];
@@ -839,8 +851,8 @@ export class ObjectCore {
    * decoded change contents.
    */
   getUpdatedAt(): number | undefined {
-    if (this.snapshot) {
-      return this.snapshot.updatedAt;
+    if (this.#snapshot) {
+      return this.#snapshot.updatedAt;
     }
     const doc: AutomergeDoc<unknown> | undefined = this.doc ?? this.docHandle?.doc();
     if (!doc) {
@@ -904,7 +916,7 @@ export class ObjectCore {
   }
 
   get #dependencyLookup(): GetObjectCoreByIdOptions {
-    return { load: this.snapshot === undefined };
+    return { load: this.#snapshot === undefined };
   }
 
   /**

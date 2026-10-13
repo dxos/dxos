@@ -11,6 +11,7 @@ import { BACKED_OBJECT_LIMIT } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { countWork, markWork } from '@dxos/util';
 
 import { DocumentUnavailableError } from '../errors.ts';
 import * as Doc from './Doc.ts';
@@ -41,6 +42,8 @@ export type ClientDocHandleEvents<T> = {
    * `heads`. No `json` when the object cannot be shown without loading the document.
    */
   passive: { handle: DocHandleProxy<T>; heads: A.Heads; json?: string; updatedAt?: number };
+  /** A passive handle loaded its stored changes; emitted once, before the call that loaded it returns. */
+  activated: { handle: DocHandleProxy<T> };
 };
 
 /**
@@ -55,8 +58,22 @@ export type DocHandleProxyOptions<T> = {
   /** Bytes the client already holds: the handle starts passive and loads them on first use. */
   passive?: PassiveDocument;
   onDelete: () => void;
-  /** Called once a passive handle has loaded its bytes, so it can be subscribed from their heads. */
-  onActivate?: (heads: A.Heads) => void;
+};
+
+/** Stored changes held unloaded, off the wasm heap, which never shrinks. */
+type PassiveBody = { readonly kind: 'passive'; chunks: Uint8Array[]; size: number; heads: A.Heads };
+
+type LoadedBody<T> = {
+  readonly kind: 'loaded';
+  doc: A.Doc<T>;
+  /** Heads of the changes the host holds; written by {@link DocHandleProxy.#hostHolds} once the body exists. */
+  hostHeads: A.Heads;
+  /** Heads of the mutation in flight, which the host's acknowledgement moves into {@link hostHeads}. */
+  sending?: A.Heads;
+  /** Loaded from stored changes the client held, so usable before the host's first send. */
+  readonly fromBytes: boolean;
+  /** Stored changes after the shown heads, folded in when the write scope that loaded the body closes. */
+  catchUp?: { readonly after: Uint8Array; readonly heads: A.Heads };
 };
 
 /**
@@ -104,15 +121,12 @@ export type DiskSettlement = boolean;
 export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> implements Doc.Handle<T> {
   private readonly _ready = new Trigger();
   private readonly _settledOnDisk = new Trigger<DiskSettlement>();
-  private _state: DocHandleProxyState = 'pending';
-  private _doc?: A.Doc<T> = undefined;
-
-  private _lastSentHeads: A.Heads = [];
-  /**
-   * Heads that are currently being synced.
-   * If sync is successful, they will be moved to `_lastSentHeads`.
-   */
-  private _currentlySendingHeads: A.Heads = [];
+  /** The state of a loaded body; a passive body reports `'passive'` through {@link state}. */
+  private _state: Exclude<DocHandleProxyState, 'passive'> = 'pending';
+  /** Undefined once deleted. */
+  #body: PassiveBody | LoadedBody<T> | undefined;
+  /** Open write scopes; see {@link batch}. */
+  #depth = 0;
   /**
    * Identifier for internal usage.
    * @internal
@@ -126,30 +140,19 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   /** {@link url} for {@link _documentId}; the base58check encode behind it hashes twice per call. */
   #url?: { documentId: DocumentId; url: AutomergeUrl } = undefined;
   private readonly _onDelete: () => void;
-  #onActivate?: (heads: A.Heads) => void;
-  /**
-   * Set while passive: the stored changes as received, joined only when read or loaded, kept off the wasm
-   * heap, which never shrinks, until something reads or writes.
-   */
-  #passive?: { chunks: Uint8Array[]; size: number; heads: A.Heads } = undefined;
-  #loadedFromBytes = false;
 
-  constructor({ documentId, initialValue, passive, onDelete, onActivate }: DocHandleProxyOptions<T>) {
+  constructor({ documentId, initialValue, passive, onDelete }: DocHandleProxyOptions<T>) {
     super();
     this._documentId = documentId;
     this._onDelete = onDelete;
-    this.#onActivate = onActivate;
     if (passive) {
-      this.#passive = { chunks: [passive.bytes], size: passive.bytes.length, heads: passive.heads };
-      this._state = 'passive';
-    } else if (initialValue) {
+      this.#body = { kind: 'passive', chunks: [passive.bytes], size: passive.bytes.length, heads: passive.heads };
+    } else {
       // T should really be constrained to extend `Record<string, unknown>` (an automerge doc can't be
       // e.g. a primitive, an array, etc. - it must be an object). But adding that constraint creates
       // a bunch of other problems elsewhere so for now we'll just cast it here to make Automerge happy.
-      this._doc = A.from(initialValue as Record<string, unknown>) as T;
-      this._doc = A.emptyChange<T>(this._doc);
-    } else {
-      this._doc = A.init<T>();
+      const doc = initialValue ? A.emptyChange<T>(A.from(initialValue as Record<string, unknown>) as T) : A.init<T>();
+      this.#body = { kind: 'loaded', doc, hostHeads: [], fromBytes: false };
     }
   }
 
@@ -178,27 +181,24 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   }
 
   get state(): DocHandleProxyState {
-    return this._state;
+    return this.#body?.kind === 'passive' ? 'passive' : this._state;
   }
 
   /** The stored changes and shown heads of a passive handle; undefined once loaded. */
   get passive(): PassiveDocument | undefined {
-    const passive = this.#passive;
-    return passive && { bytes: joinChunks(passive), heads: passive.heads };
+    const body = this.#body;
+    return body?.kind === 'passive' ? { bytes: joinChunks(body), heads: body.heads } : undefined;
   }
 
   /** The heads a passive handle shows, without joining its stored changes; undefined once loaded. */
   get passiveHeads(): A.Heads | undefined {
-    return this.#passive?.heads;
+    const body = this.#body;
+    return body?.kind === 'passive' ? body.heads : undefined;
   }
 
   /** Loads a passive handle's bytes. */
   doc(): A.Doc<T> {
-    this._activate();
-    if (!this._doc) {
-      throw new Error('DocHandleProxy.doc called on deleted doc');
-    }
-    return this._doc;
+    return this.#loaded().doc;
   }
 
   /**
@@ -206,7 +206,7 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
    * Rejects with {@link DocumentUnavailableError} if the host reports it cannot produce the doc.
    */
   async whenReady(): Promise<void> {
-    this._activate();
+    this.#loaded();
     await this._ready.wait();
   }
 
@@ -216,7 +216,8 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
 
   /** Whether the document can be read and written now: ready, or loaded from bytes the client held. */
   isLoaded(): boolean {
-    return this.isReady() || (this.#loadedFromBytes && this.#passive === undefined && this._doc !== undefined);
+    const body = this.#body;
+    return this.isReady() || (body?.kind === 'loaded' && body.fromBytes);
   }
 
   /**
@@ -231,122 +232,179 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
     return this._settledOnDisk.wait();
   }
 
+  /**
+   * Runs `fn` as one write scope. A passive handle that loads inside the scope loads at the heads it
+   * shows, so every write of the scope applies to what the caller saw; its newer stored changes fold in
+   * when the outermost scope closes, before this returns.
+   */
+  batch<R>(fn: () => R): R {
+    this.#depth++;
+    try {
+      return fn();
+    } finally {
+      if (--this.#depth === 0) {
+        this.#settle();
+      }
+    }
+  }
+
   change(fn: (doc: A.Doc<T>) => void, opts?: A.ChangeOptions<any>): void {
-    this._activate();
-    invariant(this._doc, 'DocHandleProxy.change called on deleted doc');
-    const before = this._doc;
-    const headsBefore = A.getHeads(this._doc);
-    this._doc = opts ? A.change(this._doc, opts, fn) : A.change(this._doc, fn);
-    this.emit('change', {
-      handle: this,
-      doc: this._doc,
-      patches: A.diff(this._doc, headsBefore, A.getHeads(this._doc)),
-      patchInfo: { before, after: this._doc, source: 'change' },
+    this.batch(() => {
+      const body = this.#loaded();
+      const before = body.doc;
+      const headsBefore = A.getHeads(before);
+      body.doc = opts ? A.change(before, opts, fn) : A.change(before, fn);
+      this.emit('change', {
+        handle: this,
+        doc: body.doc,
+        patches: A.diff(body.doc, headsBefore, A.getHeads(body.doc)),
+        patchInfo: { before, after: body.doc, source: 'change' },
+      });
     });
   }
 
   changeAt(heads: A.Heads, fn: (doc: A.Doc<T>) => void, opts?: A.ChangeOptions<any>): A.Heads | undefined {
-    this._activate();
-    invariant(this._doc, 'DocHandleProxy.changeAt called on deleted doc');
-    const before = this._doc;
-    const headsBefore = A.getHeads(this._doc);
-    const { newDoc, newHeads } = opts ? A.changeAt(this._doc, heads, opts, fn) : A.changeAt(this._doc, heads, fn);
+    const body = this.#loaded();
+    const before = body.doc;
+    const headsBefore = A.getHeads(before);
+    const { newDoc, newHeads } = opts ? A.changeAt(before, heads, opts, fn) : A.changeAt(before, heads, fn);
 
-    this._doc = newDoc;
+    body.doc = newDoc;
     this.emit('change', {
       handle: this,
-      doc: this._doc,
-      patches: newHeads ? A.diff(this._doc, headsBefore, newHeads) : [],
-      patchInfo: { before, after: this._doc, source: 'change' },
+      doc: body.doc,
+      patches: newHeads ? A.diff(body.doc, headsBefore, newHeads) : [],
+      patchInfo: { before, after: body.doc, source: 'change' },
     });
     return newHeads ?? undefined;
   }
 
   update(updateCallback: (doc: A.Doc<T>) => A.Doc<T>): void {
-    this._activate();
-    invariant(this._doc, 'DocHandleProxy.update called on deleted doc');
-    const before = this._doc;
-    const headsBefore = A.getHeads(this._doc);
-    const newDoc = updateCallback(this._doc);
+    const body = this.#loaded();
+    const before = body.doc;
+    const headsBefore = A.getHeads(before);
+    const newDoc = updateCallback(before);
     invariant(newDoc, 'DocHandleProxy.update returned undefined doc');
-    this._doc = newDoc;
+    body.doc = newDoc;
     this.emit('change', {
       handle: this,
-      doc: this._doc,
-      patches: A.diff(this._doc, headsBefore, A.getHeads(this._doc)),
-      patchInfo: { before, after: this._doc, source: 'change' },
+      doc: body.doc,
+      patches: A.diff(body.doc, headsBefore, A.getHeads(body.doc)),
+      patchInfo: { before, after: body.doc, source: 'change' },
     });
   }
 
   delete(): void {
     this._onDelete();
     this.emit('delete', { handle: this });
-    this._doc = undefined;
+    this.#body = undefined;
   }
 
   /**
+   * Loads a passive handle's stored changes; a no-op on any other.
    * @internal
    */
-  _activate({ at }: { at?: A.Heads } = {}): void {
-    const passive = this.#passive;
-    if (!passive) {
-      return;
+  _activate(): void {
+    if (this.#body?.kind === 'passive') {
+      this.#loaded();
     }
-    this.#passive = undefined;
-    this.#loadedFromBytes = true;
+  }
+
+  #loaded(): LoadedBody<T> {
+    const body = this.#body;
+    invariant(body, 'DocHandleProxy used after delete');
+    return body.kind === 'loaded' ? body : this.#load(body);
+  }
+
+  /** The only step from passive to loaded. A load that throws leaves the handle passive with its changes. */
+  #load(passive: PassiveBody): LoadedBody<T> {
+    const started = performance.now();
     // Stored chunks, a snapshot and the incremental changes after it, which `load` does not take in any order.
     const stored = A.loadIncremental<T>(A.init<T>(), joinChunks(passive));
     const storedHeads = A.getHeads(stored);
-    if (at && A.hasHeads(stored, at) && !sameHeads(at, storedHeads)) {
-      this._doc = A.clone(A.view(stored, at));
-      const after = A.saveSince(stored, at);
+    let body: LoadedBody<T>;
+    if (this.#depth > 0 && A.hasHeads(stored, passive.heads) && !sameHeads(passive.heads, storedHeads)) {
+      const after = A.saveSince(stored, passive.heads);
+      const doc = A.clone(A.view(stored, passive.heads));
       A.free(stored);
-      queueMicrotask(() => this.#catchUp(after, { at, storedHeads }));
+      body = {
+        kind: 'loaded',
+        doc,
+        hostHeads: A.getHeads(doc),
+        fromBytes: true,
+        catchUp: { after, heads: storedHeads },
+      };
     } else {
-      this._doc = stored;
+      if (!A.hasHeads(stored, passive.heads)) {
+        log.warn('stored changes are behind the heads shown', { documentId: this._documentId });
+      }
+      body = { kind: 'loaded', doc: stored, hostHeads: storedHeads, fromBytes: true };
     }
-    this._lastSentHeads = A.getHeads(this._doc);
+    this.#body = body;
     this._state = 'pending';
     if (this._ready.state !== TriggerState.WAITING) {
       this._ready.reset();
     }
-    this.#onActivate?.(storedHeads);
+    const ms = performance.now() - started;
+    countWork('echo.activations');
+    countWork('echo.activationMs', ms);
+    markWork('echo.activation', ms.toFixed(1));
+    this.emit('activated', { handle: this });
+    return body;
   }
 
-  #catchUp(changes: Uint8Array, { at, storedHeads }: { at: A.Heads; storedHeads: A.Heads }): void {
-    if (!this._doc) {
+  /** Folds in the stored changes a write scope held back; the host holds them. */
+  #settle(): void {
+    const body = this.#body;
+    if (body?.kind !== 'loaded' || !body.catchUp) {
       return;
     }
-    const before = this._doc;
-    const headsBefore = A.getHeads(this._doc);
-    this._doc = A.loadIncremental(this._doc, changes);
-    if (sameHeads(this._lastSentHeads, at)) {
-      this._lastSentHeads = storedHeads;
-    }
+    const { after, heads } = body.catchUp;
+    body.catchUp = undefined;
+    const before = body.doc;
+    const headsBefore = A.getHeads(before);
+    body.doc = A.loadIncremental(before, after);
+    this.#hostHolds(body, heads);
     try {
       this.emit('change', {
         handle: this,
-        doc: this._doc,
-        patches: A.diff(this._doc, headsBefore, A.getHeads(this._doc)),
-        patchInfo: { before, after: this._doc, source: 'host' },
+        doc: body.doc,
+        patches: A.diff(body.doc, headsBefore, A.getHeads(body.doc)),
+        patchInfo: { before, after: body.doc, source: 'host' },
       });
     } catch (err) {
       log.catch(err);
     }
   }
 
+  #hostHolds(body: LoadedBody<T>, heads: A.Heads): void {
+    invariant(A.hasHeads(body.doc, heads), 'The host cannot hold a change the document lacks.');
+    body.hostHeads = heads;
+  }
+
+  /**
+   * What a subscription add tells the host: the heads the client holds that the host does too.
+   * @internal
+   */
+  _subscription(): { heads?: A.Heads; passive?: true } {
+    const body = this.#body;
+    if (body?.kind === 'passive') {
+      return { heads: body.heads, passive: true };
+    }
+    return body !== undefined && body.hostHeads.length > 0 ? { heads: body.hostHeads } : {};
+  }
+
   /**
    * Holds `passive` instead of a loaded document: replaces a passive handle's stored changes, or moves a
    * loaded handle the host has taken every change of back to stored changes, dropping its document.
-   * `onActivate` replaces the hook that subscribes the handle again once it loads.
    * @internal
    */
-  _setPassive(passive: PassiveDocument, onActivate?: (heads: A.Heads) => void): void {
-    invariant(this.#passive || this._isAcknowledged(), 'A document with unsent changes cannot go passive.');
-    this.#passive = { chunks: [passive.bytes], size: passive.bytes.length, heads: passive.heads };
-    this.#onActivate = onActivate ?? this.#onActivate;
-    this._doc = undefined;
-    this._state = 'passive';
+  _setPassive(passive: PassiveDocument): void {
+    invariant(
+      this.#body?.kind === 'passive' || (this.#depth === 0 && this._isAcknowledged()),
+      'A document with unsent changes cannot go passive.',
+    );
+    this.#body = { kind: 'passive', chunks: [passive.bytes], size: passive.bytes.length, heads: passive.heads };
   }
 
   /**
@@ -395,7 +453,7 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
    * @internal
    */
   _markRequesting(): void {
-    if (this._state !== 'pending') {
+    if (this.state !== 'pending') {
       return;
     }
     this._state = 'requesting';
@@ -429,16 +487,17 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
    * @internal
    */
   _getPendingChanges(): Uint8Array | undefined {
-    invariant(this._doc, 'Doc is deleted, cannot get last write mutation');
-    if (A.equals(A.getHeads(this._doc), this._lastSentHeads)) {
+    const body = this.#body;
+    invariant(body?.kind === 'loaded', 'Doc is deleted, cannot get last write mutation');
+    if (A.equals(A.getHeads(body.doc), body.hostHeads)) {
       return;
     }
 
-    const mutation = A.saveSince(this._doc, this._lastSentHeads);
+    const mutation = A.saveSince(body.doc, body.hostHeads);
     if (mutation.length === 0) {
       return;
     }
-    this._currentlySendingHeads = A.getHeads(this._doc);
+    body.sending = A.getHeads(body.doc);
     return mutation;
   }
 
@@ -450,7 +509,8 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
    * @internal
    */
   _isAcknowledged(): boolean {
-    return this._doc !== undefined && A.equals(A.getHeads(this._doc), this._lastSentHeads);
+    const body = this.#body;
+    return body?.kind === 'loaded' && A.equals(A.getHeads(body.doc), body.hostHeads);
   }
 
   /**
@@ -458,7 +518,11 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
    * @internal
    */
   _confirmSync(): void {
-    this._lastSentHeads = this._currentlySendingHeads;
+    const body = this.#body;
+    if (body?.kind === 'loaded' && body.sending) {
+      this.#hostHolds(body, body.sending);
+      body.sending = undefined;
+    }
   }
 
   /**
@@ -468,8 +532,8 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
     mutation: Uint8Array | undefined,
     passive: { heads: A.Heads; json?: string; updatedAt?: number } | undefined,
   ): void {
-    const held = this.#passive;
-    invariant(held, 'Not a passive handle.');
+    const held = this.#body;
+    invariant(held?.kind === 'passive', 'Not a passive handle.');
     if (mutation?.length) {
       held.chunks.push(mutation);
       held.size += mutation.length;
@@ -489,13 +553,14 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
     if (!mutation) {
       return;
     }
-    invariant(this._doc, 'Doc is deleted, cannot write mutation');
-    const before = this._doc;
-    const headsBefore = A.getHeads(this._doc);
-    this._doc = A.loadIncremental(this._doc, mutation);
+    const body = this.#body;
+    invariant(body?.kind === 'loaded', 'Doc is deleted, cannot write mutation');
+    const before = body.doc;
+    const headsBefore = A.getHeads(before);
+    body.doc = A.loadIncremental(before, mutation);
 
-    if (A.equals(headsBefore, this._lastSentHeads)) {
-      this._lastSentHeads = A.getHeads(this._doc);
+    if (A.equals(headsBefore, body.hostHeads)) {
+      this.#hostHolds(body, A.getHeads(body.doc));
     }
 
     this._wakeReady();
@@ -505,21 +570,21 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
     // change that did not happen — a listener waiting for the *next* remote edit would be woken by
     // its own. Patches, not heads, are the test: a merge can advance the heads without touching any
     // value.
-    const patches = A.diff(this._doc, headsBefore, A.getHeads(this._doc));
+    const patches = A.diff(body.doc, headsBefore, A.getHeads(body.doc));
     if (patches.length === 0) {
       return;
     }
 
     this.emit('change', {
       handle: this,
-      doc: this._doc,
+      doc: body.doc,
       patches,
-      patchInfo: { before, after: this._doc, source: bulk ? 'bulk' : 'host' },
+      patchInfo: { before, after: body.doc, source: bulk ? 'bulk' : 'host' },
     });
   }
 }
 
-const joinChunks = (passive: { chunks: Uint8Array[]; size: number }): Uint8Array => {
+const joinChunks = (passive: PassiveBody): Uint8Array => {
   if (passive.chunks.length !== 1) {
     const bytes = new Uint8Array(passive.size);
     let offset = 0;

@@ -109,32 +109,30 @@ describe('DocHandleProxy', () => {
     }
   });
 
-  test('a write loads stored changes at the heads shown, and the changes after them merge in', async () => {
-    const base = A.from<{ tags: string[] }>({ tags: ['a'] });
-    const shownAt = A.getHeads(base);
+  test('every write of a scope applies at the heads shown, and the stored changes after them fold in as it closes', () => {
+    const base = A.from<{ tags: string[] }>({ tags: ['a', 'b'] });
     const stored = A.change(A.clone(base), (doc) => {
       doc.tags.unshift('host');
     });
     const handle = new DocHandleProxy<{ tags: string[] }>({
       documentId: DOCUMENT_ID,
-      passive: { bytes: A.save(stored), heads: shownAt },
+      passive: { bytes: A.save(stored), heads: A.getHeads(base) },
       onDelete: () => {},
     });
 
-    handle._activate({ at: shownAt });
-    handle.change((doc) => {
-      doc.tags.splice(0, 1);
+    handle.batch(() => {
+      handle.change((doc) => {
+        doc.tags.splice(0, 1);
+      });
+      handle.change((doc) => {
+        doc.tags.splice(0, 1);
+      });
+      expect([...handle.doc().tags]).toEqual([]);
+      handle.on('change', () => {
+        throw new Error('listener failed');
+      });
     });
-    handle.change((doc) => {
-      doc.tags.push('b');
-    });
-    expect([...handle.doc().tags]).toEqual(['b']);
-    const caughtUp = new Promise((resolve) => handle.once('change', resolve));
-    handle.on('change', () => {
-      throw new Error('listener failed');
-    });
-    await caughtUp;
-    expect([...handle.doc().tags].sort()).toEqual(['b', 'host']);
+    expect([...handle.doc().tags]).toEqual(['host']);
     expect(handle._getPendingChanges()).toEqual(A.saveSince(handle.doc(), A.getHeads(stored)));
   });
 

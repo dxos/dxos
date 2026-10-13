@@ -67,8 +67,8 @@ export const QueryRequest = Schema.Struct({
    * JSON-encoded `QueryAST.Query`.
    */
   query: Schema.String,
-  /** Objects the client already holds, whose rows it does not back: the host leaves their JSON and stored changes off. */
-  heldIds: Schema.optional(mutableArray(Schema.String)),
+  /** The client's data subscriptions: rows of documents they hold ship without their JSON and stored changes. */
+  subscriptionIds: Schema.optional(mutableArray(Schema.String)),
 });
 export interface QueryRequest extends Schema.Schema.Type<typeof QueryRequest> {}
 
@@ -109,14 +109,9 @@ export const QueryResult = Schema.Struct({
   /**
    * The document's Automerge bytes as storage holds them, which may be ahead of {@link heads}; sent with
    * {@link documentJson} for a document that holds only this object. The client loads them when it first
-   * writes to the object, and makes that write at {@link heads} when the bytes hold them.
+   * writes to the object, and makes every write of that update at {@link heads} when the bytes hold them.
    */
   bytes: Schema.optional(Schema.Uint8Array),
-  /**
-   * Index stamp of the row, increasing with every re-index; orders two copies of one object. A
-   * reactive query re-sends a row whose stamp it already shipped with this alone, without its JSON and bytes.
-   */
-  version: Schema.optional(Schema.Number),
   /** Unix ms of the object's creation, sent with a document row's {@link bytes}. */
   createdAt: Schema.optional(Schema.Number),
   /** Unix ms of the object's last change, sent with a document row's {@link bytes}. */

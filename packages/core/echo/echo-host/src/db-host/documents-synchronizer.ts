@@ -220,6 +220,10 @@ export class DocumentsSynchronizer extends Resource {
     });
   }
 
+  holds(documentId: DocumentId): boolean {
+    return this._syncStates.has(documentId);
+  }
+
   /** Drops the documents the client no longer subscribes to. */
   removeDocuments(documentIds: DocumentId[]): void {
     for (const documentId of documentIds) {

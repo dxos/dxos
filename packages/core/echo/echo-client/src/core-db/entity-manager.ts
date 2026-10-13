@@ -46,7 +46,7 @@ import { log } from '@dxos/log';
 import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import type { DataService, QueryService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
-import { ComplexSet, chunkArray, countWork, deepMapValues, markWork } from '@dxos/util';
+import { ComplexSet, chunkArray, countWork, deepMapValues } from '@dxos/util';
 
 import {
   type ChangeEvent,
@@ -315,8 +315,9 @@ export class EntityManager implements IDatabaseBinding {
     ctx.onDispose(() => this._unsubscribeFromHandles());
     scheduleTaskInterval(ctx, async () => this.#expireIdleDocuments(), this._documentTtl / 2);
     ctx.onDispose(() => {
-      for (const { handle, listener } of this.#passiveHandles.values()) {
-        handle.off('passive', listener);
+      for (const { handle, onUpdate, onActivated } of this.#passiveHandles.values()) {
+        handle.off('passive', onUpdate);
+        handle.off('activated', onActivated);
       }
       this.#passiveHandles.clear();
     });
@@ -537,42 +538,11 @@ export class EntityManager implements IDatabaseBinding {
     return core.rootProxy ?? this._createEntity(core);
   }
 
-  upsertSnapshot(id: EntityId, state: SnapshotState): Entity.Unknown | undefined {
-    if (!this.#acceptsRow(id, state.documentId)) {
-      return undefined;
-    }
-    const existing = this.getObjectCoreById(id, { load: false });
-    if (existing) {
-      if (!existing.isBodyAvailable) {
-        return undefined;
-      }
-      return existing.rootProxy ?? this._createEntity(existing);
-    }
-    if (this._objectDocumentHandles.has(id)) {
-      return undefined;
-    }
-    const handle = this._repoProxy.find<DatabaseDirectory>(state.documentId as DocumentId, {
-      passive: { bytes: state.bytes, heads: state.heads },
-    });
-    if (!handle.passiveHeads) {
-      return undefined;
-    }
-
-    const core = new ObjectCore();
-    core.id = id;
-    core.entityManager = this;
-    core.setSnapshot({
-      root: { objects: { [id]: state.structure } },
-      heads: state.heads,
-      updatedAt: state.updatedAt,
-      handle,
-    });
-    this._objects.set(id, core);
-    countWork('echo.snapshotObjects');
-    this.#watchPassive(id, handle);
-    return this._createEntity(core);
-  }
-
+  /**
+   * Places an index row as a snapshot core over the row's stored changes, or returns the snapshot core
+   * that already holds the object. A row this database does not take, or one that fails to decode or
+   * place, returns undefined and loads through its document.
+   */
   placeIndexRow(id: EntityId, documentId: string, decode: () => SnapshotState | undefined): Entity.Unknown | undefined {
     if (!this.#acceptsRow(id, documentId)) {
       return undefined;
@@ -581,8 +551,34 @@ export class EntityManager implements IDatabaseBinding {
     if (held) {
       return held.snapshot ? (held.rootProxy ?? this._createEntity(held)) : undefined;
     }
-    const state = decode();
-    return state && this.upsertSnapshot(id, state);
+    if (this._objectDocumentHandles.has(id)) {
+      return undefined;
+    }
+    try {
+      const state = decode();
+      if (!state) {
+        return undefined;
+      }
+      const handle = this._repoProxy.find<DatabaseDirectory>(documentId as DocumentId, {
+        passive: { bytes: state.bytes, heads: state.heads },
+      });
+      if (!handle.passiveHeads) {
+        return undefined;
+      }
+
+      const core = new ObjectCore();
+      core.id = id;
+      core.entityManager = this;
+      core.setSnapshot({ root: { objects: { [id]: state.structure } }, updatedAt: state.updatedAt, handle });
+      this._objects.set(id, core);
+      countWork('echo.snapshotObjects');
+      this.#watchPassive(id, handle);
+      this._markObjectAvailable(id);
+      return this._createEntity(core);
+    } catch (err) {
+      log.warn('index row not placed, the object loads from its document', { id, err });
+      return undefined;
+    }
   }
 
   #acceptsRow(id: string, documentId: string): boolean {
@@ -596,20 +592,16 @@ export class EntityManager implements IDatabaseBinding {
     return documentId !== undefined && this.getObjectDocumentId(id) === documentId;
   }
 
-  #refreshSnapshot(
-    core: ObjectCore,
-    { structure, heads, updatedAt }: Omit<SnapshotState, 'bytes' | 'documentId'>,
-  ): void {
+  #refreshSnapshot(core: ObjectCore, { structure, updatedAt }: Pick<SnapshotState, 'structure' | 'updatedAt'>): void {
     const { snapshot } = core;
     invariant(snapshot);
     const previous = snapshot.root.objects[core.id];
     const shared = shareStructure(previous, structure);
-    core.snapshot = {
+    core.setSnapshot({
       root: shared === previous ? snapshot.root : { objects: { [core.id]: shared } },
-      heads,
       updatedAt,
       handle: snapshot.handle,
-    };
+    });
     if (shared !== previous) {
       core.notifyUpdate();
       this._scheduleThrottledDbUpdate([core.id], { coalesce: true });
@@ -618,14 +610,20 @@ export class EntityManager implements IDatabaseBinding {
 
   readonly #passiveHandles = new Map<
     string,
-    { handle: DocHandleProxy<DatabaseDirectory>; listener: (event: PassiveUpdate) => void }
+    {
+      handle: DocHandleProxy<DatabaseDirectory>;
+      onUpdate: (event: PassiveUpdate) => void;
+      onActivated: () => void;
+    }
   >();
 
   #watchPassive(id: string, handle: DocHandleProxy<DatabaseDirectory>): void {
     this.#unwatchPassive(id);
-    const listener = (event: PassiveUpdate) => this.#onPassiveUpdate(id, event);
-    handle.on('passive', listener);
-    this.#passiveHandles.set(id, { handle, listener });
+    const onUpdate = (event: PassiveUpdate) => this.#onPassiveUpdate(id, event);
+    const onActivated = () => this.#onActivated(id, handle);
+    handle.on('passive', onUpdate);
+    handle.on('activated', onActivated);
+    this.#passiveHandles.set(id, { handle, onUpdate, onActivated });
   }
 
   #unwatchPassive(id: string, { released = false }: { released?: boolean } = {}): void {
@@ -634,7 +632,8 @@ export class EntityManager implements IDatabaseBinding {
       return;
     }
     this.#passiveHandles.delete(id);
-    entry.handle.off('passive', entry.listener);
+    entry.handle.off('passive', entry.onUpdate);
+    entry.handle.off('activated', entry.onActivated);
     if (released && entry.handle.passiveHeads && entry.handle.documentId) {
       this._repoProxy.release(entry.handle.documentId);
     }
@@ -646,13 +645,13 @@ export class EntityManager implements IDatabaseBinding {
       return;
     }
     if (json === undefined) {
-      this.activate(core);
+      handle._activate();
       return;
     }
     const structure = objectStructureFromJson(JSON.parse(json), {
       createdAt: core.snapshot.root.objects[id]?.system?.createdAt,
     });
-    this.#refreshSnapshot(core, { structure, heads, updatedAt });
+    this.#refreshSnapshot(core, { structure, updatedAt });
   }
 
   /**
@@ -720,7 +719,6 @@ export class EntityManager implements IDatabaseBinding {
           [core.id]: objectStructureFromJson(JSON.parse(json), { createdAt: structure.system?.createdAt }),
         },
       },
-      heads,
       updatedAt,
       handle,
     });
@@ -728,7 +726,31 @@ export class EntityManager implements IDatabaseBinding {
     this.#watchPassive(core.id, handle);
   }
 
-  async waitForStrongDeps(core: ObjectCore): Promise<void> {
+  /** Whoever loaded a snapshot core's document, this binds the core to it. */
+  #onActivated(id: string, handle: DocHandleProxy<DatabaseDirectory>): void {
+    if (this.#closed || this._objects.get(id)?.snapshot?.handle !== handle) {
+      return;
+    }
+    this._onObjectDocumentLoaded({ handle, objectId: id });
+  }
+
+  endSnapshot(id: string): void {
+    this.#unwatchPassive(id, { released: true });
+  }
+
+  /**
+   * Waits for a held core's strong dependencies to settle, then hands it out by the same rule as
+   * {@link loadEntityById}.
+   */
+  async settleEntity(
+    core: ObjectCore,
+    { allowDeleted = false }: { allowDeleted?: boolean } = {},
+  ): Promise<Entity.Unknown | undefined> {
+    await this.#waitForStrongDeps(core);
+    return this.#publishable(core, { allowDeleted });
+  }
+
+  async #waitForStrongDeps(core: ObjectCore): Promise<void> {
     if (this.#closed) {
       throw new ContextDisposedError();
     }
@@ -744,28 +766,22 @@ export class EntityManager implements IDatabaseBinding {
     }
   }
 
-  activate(core: ObjectCore, { at }: { at?: Heads } = {}): void {
-    const snapshot = core.snapshot;
-    if (!snapshot) {
-      return;
-    }
-    const started = performance.now();
-    snapshot.handle._activate({ at });
-    this._bindObjectDocument(core.id, snapshot.handle);
-    this._onObjectDocumentLoaded({ handle: snapshot.handle, objectId: core.id });
-    const ms = performance.now() - started;
-    countWork('echo.activations');
-    countWork('echo.activationMs', ms);
-    markWork('echo.activation', ms.toFixed(1));
-  }
-
   /** Like {@link getEntityById}, but loads the object's document first. */
   async loadEntityById(
     objectId: string,
     { allowDeleted = false, ...options }: LoadObjectOptions & { allowDeleted?: boolean } = {},
   ): Promise<Entity.Unknown | undefined> {
     const core = await this.loadObjectCoreById(objectId, options);
-    if (!core || !core.isBodyAvailable || (core.isDeleted() && !allowDeleted)) {
+    return (
+      core && this.#publishable(core, { allowDeleted, returnWithUnsatisfiedDeps: options.returnWithUnsatisfiedDeps })
+    );
+  }
+
+  #publishable(
+    core: ObjectCore,
+    { allowDeleted, returnWithUnsatisfiedDeps }: { allowDeleted: boolean; returnWithUnsatisfiedDeps?: boolean },
+  ): Entity.Unknown | undefined {
+    if (!this._coreOrUndefined(core, returnWithUnsatisfiedDeps) || (core.isDeleted() && !allowDeleted)) {
       return undefined;
     }
     return core.rootProxy ?? this._createEntity(core);
@@ -1453,7 +1469,6 @@ export class EntityManager implements IDatabaseBinding {
       : (opts?.fromHeads ?? {});
 
     const members = await this._collectSubtree(rootCore);
-    members.forEach((member) => this.activate(member));
     // Validate the whole subtree up front, before importing any documents: a member failing the
     // check mid-loop would otherwise leave already-imported branch docs orphaned in the repo. Fork
     // only from main — the source doc is the member's current core doc, so a subtree switched to
@@ -1658,10 +1673,6 @@ export class EntityManager implements IDatabaseBinding {
 
   /** Resolve the object's main (default-branch) document handle. */
   private async _mainDocHandle(objectId: string): Promise<DocHandleProxy<DatabaseDirectory>> {
-    const core = this._objects.get(objectId);
-    if (core) {
-      this.activate(core);
-    }
     const spaceRoot = this.getSpaceRootDocHandle();
     const url = spaceRoot.doc().links?.[objectId]?.toString();
     if (!url) {
@@ -1727,8 +1738,10 @@ export class EntityManager implements IDatabaseBinding {
     if (!core) {
       return;
     }
-    this.activate(core);
     const url = name !== 'main' ? registry?.[name]?.members[memberId]?.toString() : undefined;
+    if (!url && core.snapshot) {
+      return; // A snapshot core shows its main document.
+    }
     let handle: DocHandleProxy<DatabaseDirectory>;
     if (url) {
       handle = this._repoProxy.find<DatabaseDirectory>(url as DocumentId);
@@ -1803,7 +1816,11 @@ export class EntityManager implements IDatabaseBinding {
     const urlsToLoad: DatabaseDirectory['links'] = {};
     for (const objectId of objectIds) {
       invariant(this._spaceRootDocHandle, 'Database was not initialized with root object.');
-      if (this._objectDocumentHandles.has(objectId) || this._objectsPendingDocumentLoad.has(objectId)) {
+      if (
+        this._objectDocumentHandles.has(objectId) ||
+        this._objectsPendingDocumentLoad.has(objectId) ||
+        this._objects.get(objectId)?.snapshot
+      ) {
         continue;
       }
       const documentUrl = this._getLinkedDocumentUrl(objectId);
@@ -2163,13 +2180,13 @@ export class EntityManager implements IDatabaseBinding {
 
     for (const object of this._objects.values()) {
       if (inlinedObjectIds.has(object.id)) {
-        if (object.docHandle?.url != null && object.docHandle.url === spaceRootUrl) {
+        if (object.handle?.url != null && object.handle.url === spaceRootUrl) {
           continue;
         }
         objectsToRebind.get(spaceRootUrl)!.objectIds.push(object.id);
       } else if (linkedObjectIds.has(object.id)) {
         const newObjectDocUrl = linkedObjectIds.get(object.id)!;
-        if (object.docHandle?.url != null && object.docHandle.url === newObjectDocUrl) {
+        if (object.handle?.url != null && object.handle.url === newObjectDocUrl) {
           continue;
         }
         const existing = objectsToRebind.get(newObjectDocUrl.toString());
@@ -2214,7 +2231,10 @@ export class EntityManager implements IDatabaseBinding {
       }
     }
 
-    objectsToRemove.forEach((oid) => this._objects.delete(oid));
+    for (const oid of objectsToRemove) {
+      this.#unwatchPassive(oid, { released: true });
+      this._objects.delete(oid);
+    }
     this._createInlineObjects(spaceRootDocHandle, objectsToCreate);
     for (const { handle, objectIds } of objectsToRebind.values()) {
       this._rebindObjects(handle, objectIds);
@@ -2371,17 +2391,15 @@ export class EntityManager implements IDatabaseBinding {
       if (!objectCore) {
         createdObjectIds.push(updatedObject);
       } else if (
-        objectCore.docHandle?.url != null &&
+        objectCore.handle?.url != null &&
         event.handle.url != null &&
-        objectCore.docHandle.url !== event.handle.url
+        objectCore.handle.url !== event.handle.url
       ) {
         log.verbose('object bound to incorrect document, going to rebind', {
           updatedObject,
-          documentUrl: objectCore.docHandle.url,
+          documentUrl: objectCore.handle.url,
           actualUrl: event.handle.url,
         });
-        objectsToRebind.push(updatedObject);
-      } else if (objectCore.snapshot && objectCore.snapshot.handle.url !== event.handle.url) {
         objectsToRebind.push(updatedObject);
       }
     }
@@ -2401,12 +2419,14 @@ export class EntityManager implements IDatabaseBinding {
   }
 
   private _onObjectDocumentLoaded({ handle, objectId }: ObjectDocumentLoaded): void {
+    handle.off('change', this._onDocumentUpdate);
     handle.on('change', this._onDocumentUpdate);
     countWork('echo.objectDocumentsLoaded');
 
     const existing = this._objects.get(objectId);
     if (existing?.snapshot) {
-      this._bindSnapshotCore(existing, handle);
+      existing.bind({ db: this, docHandle: handle, path: existing.mountPath, assignFromLocalState: false });
+      this._onObjectBoundToDocument(handle, objectId);
     }
     const core = existing ?? this._createObjectInDocument(handle, objectId);
 
@@ -2430,22 +2450,9 @@ export class EntityManager implements IDatabaseBinding {
 
   private _createInlineObjects(docHandle: DocHandleProxy<DatabaseDirectory>, objectIds: string[]): void {
     for (const id of objectIds) {
-      const existing = this._objects.get(id);
-      if (existing?.snapshot) {
-        this._bindSnapshotCore(existing, docHandle);
-        continue;
-      }
-      invariant(!existing);
+      invariant(!this._objects.has(id));
       this._createObjectInDocument(docHandle, id);
     }
-  }
-
-  private _bindSnapshotCore(core: ObjectCore, docHandle: DocHandleProxy<DatabaseDirectory>): void {
-    const passive = core.snapshot?.handle;
-    core.bind({ db: this, docHandle, path: ['objects', core.id], assignFromLocalState: false });
-    this.#unwatchPassive(core.id, { released: passive !== docHandle });
-    this._markObjectAvailable(core.id);
-    this._onObjectBoundToDocument(docHandle, core.id);
   }
 
   private _createObjectInDocument(docHandle: DocHandleProxy<DatabaseDirectory>, objectId: string): ObjectCore {
@@ -2557,10 +2564,6 @@ export class EntityManager implements IDatabaseBinding {
     for (const objectId of objectIds) {
       const objectCore = this._objects.get(objectId);
       invariant(objectCore);
-      if (objectCore.snapshot) {
-        this._bindSnapshotCore(objectCore, docHandle);
-        continue;
-      }
       objectCore.bind({
         db: this,
         docHandle,

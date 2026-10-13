@@ -57,7 +57,8 @@ export interface ObjectLoader {
    */
   readonly updateEvent: ReadOnlyEvent<ObjectUpdate>;
 
-  heldObjectIds?(spaceIds: readonly SpaceId[]): string[];
+  /** The data subscriptions of the target spaces, whose documents the host leaves unbacked. */
+  subscriptionIds?(spaceIds: readonly SpaceId[]): string[];
 }
 
 export type IndexQueryProviderProps = {
@@ -276,7 +277,7 @@ export class IndexQuerySource implements QuerySource {
         query: JSON.stringify(query),
         queryId: String(queryId),
         reactivity: QueryReactivity.ONE_SHOT,
-        heldIds: this._heldIds(query),
+        subscriptionIds: this._subscriptionIds(query),
       }),
       {
         onData: (response) => {
@@ -343,14 +344,14 @@ export class IndexQuerySource implements QuerySource {
         query: JSON.stringify(query),
         queryId: String(queryId),
         reactivity: QueryReactivity.REACTIVE,
-        heldIds: this._heldIds(query),
+        subscriptionIds: this._subscriptionIds(query),
       }),
       {
         onData: (response) => {
           try {
             this._assertResultSpaces(query, response);
             // Remember the raw host records so a later local object load can re-hydrate them.
-            this._lastRemoteResults = restoreSentBacking(this._lastRemoteResults, response.results ?? []);
+            this._lastRemoteResults = response.results ?? [];
             this._releasedDocumentJsonIds.clear();
             this._scheduleHydrate();
           } catch (err: any) {
@@ -475,7 +476,7 @@ export class IndexQuerySource implements QuerySource {
       length: records.length,
     });
 
-    const placed = await this._placeRows(records);
+    const load = await this._placeRows(ctx, records);
     const hydratedIntoFeedHandle = new Set<string>();
     // Chunked so hydrating a large local result set is not one uninterrupted run of microtasks.
     const processedResults: (SourceEntry | null | typeof STALLED)[] = [];
@@ -483,9 +484,7 @@ export class IndexQuerySource implements QuerySource {
       await yieldOrContinue('smooth');
       processedResults.push(
         ...(await Promise.all(
-          chunk.map((result) =>
-            this._hydrateRecord(ctx, query, start, result, hydratedIntoFeedHandle, placed.get(result.id)),
-          ),
+          chunk.map((result) => this._hydrateRecord(ctx, query, start, result, hydratedIntoFeedHandle, load)),
         )),
       );
     }
@@ -493,8 +492,8 @@ export class IndexQuerySource implements QuerySource {
     const results = processedResults.filter((entry) => entry !== STALLED).filter(isNonNullable);
 
     // Only rewrite the set we just hydrated — a newer host response may have replaced it meanwhile.
-    if (this._lastRemoteResults === records) {
-      this._lastRemoteResults = releaseHeldBacking(records, new Set(results.map((entry) => entry.id))).map((record) => {
+    if (hydratedIntoFeedHandle.size > 0 && this._lastRemoteResults === records) {
+      this._lastRemoteResults = records.map((record) => {
         if (record.documentJson === undefined || !hydratedIntoFeedHandle.has(record.id)) {
           return record;
         }
@@ -522,7 +521,11 @@ export class IndexQuerySource implements QuerySource {
     return { results, stalled };
   }
 
-  private async _placeRows(records: readonly QueryService.QueryResult[]): Promise<Map<string, PlacedRow>> {
+  /**
+   * Places every backed document row of every open database, then returns the loader for document
+   * rows: no row's dependencies resolve before a row that is one of them is placed.
+   */
+  private async _placeRows(ctx: Context, records: readonly QueryService.QueryResult[]): Promise<RowLoader> {
     const bySpace = new Map<string, { row: QueryService.QueryResult; documentId: string }[]>();
     for (const row of records) {
       const isDocumentRow = !row.queueId && row.aggregates === undefined && row.recordJson === undefined;
@@ -534,7 +537,13 @@ export class IndexQuerySource implements QuerySource {
       bySpace.set(row.spaceId, rows);
     }
 
-    const placed = new Map<string, PlacedRow>();
+    const placed = new Map<string, { database: DatabaseImpl; entity: Entity.Unknown }>();
+    const load: RowLoader = (row) => {
+      const hit = placed.get(row.id);
+      return hit
+        ? hit.database._entityManager.settleEntity(getObjectCore(hit.entity), { allowDeleted: true })
+        : this._resolveIndexedObject(row);
+    };
     for (const [spaceId, rows] of bySpace) {
       const database = this._params.graph.getDatabase(SpaceId.make(spaceId));
       if (!(database instanceof DatabaseImpl)) {
@@ -542,6 +551,9 @@ export class IndexQuerySource implements QuerySource {
       }
       for (const chunk of chunkArray(rows, HYDRATE_RECORDS_PER_YIELD_CHECK)) {
         await yieldOrContinue('smooth');
+        if (ctx.disposed) {
+          return load;
+        }
         for (const { row, documentId } of chunk) {
           const entity = database._entityManager.placeIndexRow(EntityId.make(row.id), documentId, () =>
             getSnapshotState(row),
@@ -552,7 +564,7 @@ export class IndexQuerySource implements QuerySource {
         }
       }
     }
-    return placed;
+    return load;
   }
 
   /**
@@ -566,10 +578,10 @@ export class IndexQuerySource implements QuerySource {
     start: number,
     result: QueryService.QueryResult,
     hydratedIntoFeedHandle: Set<string>,
-    placed: PlacedRow | undefined,
+    load: RowLoader,
   ): Promise<SourceEntry | null | typeof STALLED> {
     const timeout = this._params.hydrationTimeout ?? RECORD_HYDRATION_TIMEOUT;
-    const hydration = this._filterMapResult(ctx, query, start, result, hydratedIntoFeedHandle, placed);
+    const hydration = this._filterMapResult(ctx, query, start, result, load, hydratedIntoFeedHandle);
     // The abandoned hydration may still reject after the race has settled, which would surface as an
     // unhandled rejection; the real outcome is already taken below.
     hydration.catch(() => {});
@@ -588,9 +600,9 @@ export class IndexQuerySource implements QuerySource {
     }
   }
 
-  private _heldIds(query: QueryAST.Query): string[] | undefined {
-    const held = this._params.objectLoader.heldObjectIds?.(getTargetSpacesForQuery(query));
-    return held?.length ? held : undefined;
+  private _subscriptionIds(query: QueryAST.Query): string[] | undefined {
+    const ids = this._params.objectLoader.subscriptionIds?.(getTargetSpacesForQuery(query));
+    return ids?.length ? ids : undefined;
   }
 
   private _assertResultSpaces(query: QueryAST.Query, response: QueryService.QueryResponse): void {
@@ -613,8 +625,8 @@ export class IndexQuerySource implements QuerySource {
     query: QueryAST.Query,
     queryStartTimestamp: number,
     result: QueryService.QueryResult,
+    load: RowLoader,
     hydratedIntoFeedHandle?: Set<string>,
-    placed?: PlacedRow,
   ): Promise<SourceEntry | null> {
     // A collapsed group carries no object, so there is nothing to load: pass its values through.
     if (result.aggregates !== undefined) {
@@ -727,10 +739,7 @@ export class IndexQuerySource implements QuerySource {
       return queryResult;
     }
 
-    if (placed) {
-      await placed.database._entityManager.waitForStrongDeps(getObjectCore(placed.entity));
-    }
-    const object = placed?.entity ?? (await this._resolveIndexedObject(result));
+    const object = await load(result);
     if (!object) {
       return null;
     }
@@ -811,45 +820,8 @@ const _groupFromRemoteResult = (result: QueryService.QueryResult): SourceEntry['
       }
     : undefined;
 
-type PlacedRow = { database: DatabaseImpl; entity: Entity.Unknown };
-
-export const releaseHeldBacking = (
-  records: readonly QueryService.QueryResult[],
-  held: ReadonlySet<string>,
-): QueryService.QueryResult[] =>
-  records.map((row) =>
-    held.has(row.id) && row.bytes !== undefined
-      ? {
-          ...row,
-          documentJson: undefined,
-          heads: undefined,
-          bytes: undefined,
-          createdAt: undefined,
-          updatedAt: undefined,
-        }
-      : row,
-  );
-
-export const restoreSentBacking = (
-  previous: readonly QueryService.QueryResult[] | undefined,
-  results: QueryService.QueryResult[],
-): QueryService.QueryResult[] => {
-  const sent = new Map(previous?.filter((row) => row.bytes !== undefined).map((row) => [row.id, row]));
-  return results.map((row) => {
-    const earlier = row.bytes === undefined ? sent.get(row.id) : undefined;
-    if (earlier === undefined || earlier.version !== row.version) {
-      return row;
-    }
-    return {
-      ...row,
-      documentJson: earlier.documentJson,
-      heads: earlier.heads,
-      bytes: earlier.bytes,
-      createdAt: earlier.createdAt,
-      updatedAt: earlier.updatedAt,
-    };
-  });
-};
+/** Loads the object of a document row. */
+type RowLoader = (row: QueryService.QueryResult) => Promise<Entity.Unknown | undefined>;
 
 /** Whether a hydrated object's local deleted flag satisfies the query's `deleted` option. */
 const matchesDeletedOption = (object: Entity.Unknown, query: QueryAST.Query): boolean => {

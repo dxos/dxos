@@ -67,7 +67,8 @@ type QueryExecutorOptions = {
   executor?: QueryExecutorMode;
   /** Builds compiled statements; the planner needs it only under the `sql` executor. */
   sql?: SqlClient.SqlClient;
-  heldIds?: readonly string[];
+  /** Whether the client already holds a document; its rows ship without JSON and stored changes. */
+  holds?: (documentId: DocumentId) => boolean;
 };
 
 type QueryExecutionResult = {
@@ -136,8 +137,6 @@ type QueryItem = {
    * carries no document, data or meta, so it is only ever produced by the plan's last step.
    */
   result?: QueryService.QueryResult;
-
-  version?: number;
 
   recordId?: number;
 
@@ -691,8 +690,7 @@ export class QueryExecutor extends Resource {
   #changeResultSet: ChangeItem[] | undefined;
   readonly #planner: QueryPlanner;
   readonly #mode: QueryExecutorMode;
-  #sentVersions = new Map<string, number>();
-  readonly #heldIds: ReadonlySet<string>;
+  readonly #holds: (documentId: DocumentId) => boolean;
 
   /**
    * Resolved `in-query` (subquery-membership) sets for the current `execQuery` run, keyed by
@@ -724,7 +722,7 @@ export class QueryExecutor extends Resource {
     this._query = options.query;
     this._reactivity = options.reactivity;
 
-    this.#heldIds = new Set(options.heldIds);
+    this.#holds = options.holds ?? (() => false);
     this.#mode = options.executor ?? 'memory';
     this.#planner = new QueryPlanner({ executor: this.#mode, sql: options.sql });
     this._plan = this.#planner.createPlan(this._query);
@@ -800,7 +798,6 @@ export class QueryExecutor extends Resource {
         groupCount: serializedGroupKey !== undefined ? groupCounts.get(serializedGroupKey) : undefined,
 
         heads: item.backing ? [...item.backing.heads] : undefined,
-        version: item.version,
         createdAt: item.backing ? (item.createdAt ?? undefined) : undefined,
         updatedAt: item.backing ? (item.updatedAt ?? undefined) : undefined,
       };
@@ -808,72 +805,88 @@ export class QueryExecutor extends Resource {
     return this.#withBacking(results, this._lastResultSet);
   }
 
+  /**
+   * Backs each document row the client does not hold with its JSON, heads and stored changes. A row
+   * that cannot be backed ships bare, and is tried again on the next emission while the client lacks it.
+   */
   async #withBacking(
     results: QueryService.QueryResult[],
     items: readonly QueryItem[],
   ): Promise<QueryService.QueryResult[]> {
-    const sent = this.#sentVersions;
-    this.#sentVersions = new Map();
-    const unsent = results.flatMap((result, index) =>
-      result.heads !== undefined &&
-      result.version !== undefined &&
-      result.documentId !== undefined &&
-      !this.#heldIds.has(result.id) &&
-      sent.get(result.id) !== result.version
+    const unheld = results.flatMap((result, index) =>
+      result.heads !== undefined && result.documentId !== undefined && !this.#holds(result.documentId as DocumentId)
         ? [index]
         : [],
     );
-    const fromIndex = new Set(
-      unsent.filter((index) => results[index].documentJson === undefined && items[index]?.recordId !== undefined),
+    const sources = await this.#readBackingSources(results, items, unheld);
+    const backings = await this.#readStoredChanges(results, sources);
+    return results.map((result, index) => {
+      if (result.heads === undefined) {
+        return result;
+      }
+      const backing = backings.get(index);
+      return backing
+        ? { ...result, documentJson: backing.json, heads: backing.heads, bytes: backing.bytes }
+        : withoutBacking(result);
+    });
+  }
+
+  /**
+   * The JSON each row is backed with and the heads it was read at: the row's own, or for a compiled row
+   * the index's, both from one read so a pass between the plan and this read cannot pair them wrongly.
+   */
+  async #readBackingSources(
+    results: readonly QueryService.QueryResult[],
+    items: readonly QueryItem[],
+    indices: readonly number[],
+  ): Promise<Map<number, BackingSource>> {
+    const fromIndex = indices.filter(
+      (index) => results[index].documentJson === undefined && items[index]?.recordId !== undefined,
     );
-    const indexed = new Map<number, { json: string; heads: string[] }>();
-    const failed = new Set<number>();
-    if (fromIndex.size > 0) {
-      const recordIds = [...fromIndex].map((index) => items[index].recordId!);
-      const rows = await this._runInRuntime(this._indexEngine.queryBackings(recordIds)).catch((err) => {
-        log.warn('index JSON could not be read for rows', { err });
-        fromIndex.forEach((index) => failed.add(index));
-        return [];
-      });
-      for (const { recordId, json, heads } of rows) {
-        indexed.set(recordId, { json, heads });
+    const indexed =
+      fromIndex.length > 0
+        ? await this._runInRuntime(
+            this._indexEngine.queryBackings(fromIndex.map((index) => items[index].recordId!)),
+          ).catch((err) => {
+            log.warn('index JSON could not be read for rows', { err });
+            return [];
+          })
+        : [];
+    const byRecord = new Map(indexed.map((row) => [row.recordId, row]));
+    const sources = new Map<number, BackingSource>();
+    for (const index of indices) {
+      const row = byRecord.get(items[index]?.recordId ?? -1);
+      const json = results[index].documentJson ?? row?.json;
+      if (json !== undefined) {
+        sources.set(index, { json, heads: row?.heads ?? results[index].heads! });
       }
     }
-    const backing = new Map<number, { json: string; heads: string[]; bytes: Uint8Array } | undefined>();
-    for (const chunk of chunkArray(unsent, STORED_CHANGES_CONCURRENCY)) {
+    return sources;
+  }
+
+  /** Stored changes for each row with a source, {@link STORED_CHANGES_CONCURRENCY} reads at a time. */
+  async #readStoredChanges(
+    results: readonly QueryService.QueryResult[],
+    sources: ReadonlyMap<number, BackingSource>,
+  ): Promise<Map<number, BackingSource & { bytes: Uint8Array }>> {
+    const backings = new Map<number, BackingSource & { bytes: Uint8Array }>();
+    for (const chunk of chunkArray([...sources], STORED_CHANGES_CONCURRENCY)) {
       await Promise.all(
-        chunk.map(async (index) => {
-          const result = results[index];
-          const row = indexed.get(items[index]?.recordId ?? -1);
-          const json = result.documentJson ?? row?.json;
-          const heads = row?.heads ?? result.heads!;
-          const bytes =
-            json === undefined
-              ? undefined
-              : await this._automergeHost
-                  .readStoredChanges(result.documentId as DocumentId, { limit: BACKED_OBJECT_LIMIT })
-                  .catch((err) => {
-                    log.warn('stored changes could not be read for a row', { documentId: result.documentId, err });
-                    failed.add(index);
-                    return undefined;
-                  });
-          backing.set(index, json !== undefined && bytes !== undefined ? { json, heads, bytes } : undefined);
+        chunk.map(async ([index, source]) => {
+          const documentId = results[index].documentId as DocumentId;
+          const bytes = await this._automergeHost
+            .readStoredChanges(documentId, { limit: BACKED_OBJECT_LIMIT })
+            .catch((err) => {
+              log.warn('stored changes could not be read for a row', { documentId, err });
+              return undefined;
+            });
+          if (bytes !== undefined) {
+            backings.set(index, { ...source, bytes });
+          }
         }),
       );
     }
-
-    return results.map((result, index) => {
-      if (result.heads === undefined || result.version === undefined) {
-        return result;
-      }
-      const backed = backing.get(index);
-      if (!failed.has(index)) {
-        this.#sentVersions.set(result.id, result.version);
-      }
-      return backed
-        ? { ...result, documentJson: backed.json, heads: backed.heads, bytes: backed.bytes }
-        : withoutBacking(result);
-    });
+    return backings;
   }
 
   /**
@@ -2287,7 +2300,6 @@ export class QueryExecutor extends Resource {
       rank: 1,
       createdAt: meta.createdAt,
       updatedAt: meta.updatedAt,
-      version: meta.version,
       backing: text !== undefined ? { heads, json: text } : undefined,
     };
   }
@@ -2707,7 +2719,6 @@ const compiledRowToItem = (row: CompiledRow): QueryItem => {
           groupKey: row.groupKey ?? undefined,
           groupCount: row.groupCount ?? undefined,
           heads: row.heads !== null ? JSON.parse(row.heads) : undefined,
-          version: row.version ?? undefined,
           createdAt: row.heads !== null ? (row.createdAt ?? undefined) : undefined,
           updatedAt: row.heads !== null ? (row.updatedAt ?? undefined) : undefined,
         };
@@ -2763,6 +2774,8 @@ const _sameResult = (a: QueryItem, b: QueryItem): boolean => {
 };
 
 const STORED_CHANGES_CONCURRENCY = 16;
+
+type BackingSource = { json: string; heads: string[] };
 
 const withoutBacking = ({
   documentJson: _documentJson,

@@ -128,7 +128,7 @@ describe('DatabaseImpl', () => {
       invariant(snapshot && bytes && snapshot.handle.documentId);
       const row: SnapshotState = {
         structure: snapshot.root.objects![object.id],
-        heads: snapshot.heads,
+        heads: snapshot.handle.passiveHeads!,
         updatedAt: snapshot.updatedAt,
         bytes,
         documentId: snapshot.handle.documentId,
@@ -136,8 +136,8 @@ describe('DatabaseImpl', () => {
       return { db, object, row };
     };
 
-    test('the first write applies at the heads the object was shown at', async () => {
-      const object = Obj.make(TestSchema.Expando, { tags: ['a'] });
+    test('every write of an update applies at the heads the object was shown at', async () => {
+      const object = Obj.make(TestSchema.Expando, { tags: ['a', 'b'] });
       let row: SnapshotState | undefined;
       const db = await createClientDbInSpaceWithObject(object, () => {
         const handle = getObjectCore(object).docHandle!;
@@ -152,14 +152,25 @@ describe('DatabaseImpl', () => {
       });
       invariant(row);
 
-      const shownObject = db._entityManager.upsertSnapshot(object.id, row);
+      const shownObject = db._entityManager.placeIndexRow(object.id, row.documentId, () => row);
       invariant(Obj.instanceOf(TestSchema.Expando)(shownObject));
       Obj.update(shownObject, (shownObject) => {
         shownObject.tags.splice(0, 1);
+        shownObject.tags.splice(0, 1);
       });
-      expect([...shownObject.tags]).toEqual([]);
-      await waitForCondition({ condition: () => shownObject.tags.length === 1, timeout: 1_000 });
       expect([...shownObject.tags]).toEqual(['host']);
+    });
+
+    test('a row that fails to decode is left to its document', async () => {
+      const object = Obj.make(TestSchema.Expando, { value: 1 });
+      const db = await createClientDbInSpaceWithObject(object);
+      const documentId = db.getObjectDocumentId(object.id);
+      invariant(documentId);
+      const placed = db._entityManager.placeIndexRow(object.id, documentId, () => {
+        throw new SyntaxError('Unexpected end of JSON input');
+      });
+      expect(placed).toBe(undefined);
+      expect(db._entityManager.getObjectCoreById(object.id, { load: false })).toBe(undefined);
     });
 
     test('a row that arrives before the space root backs nothing', async () => {
@@ -168,14 +179,14 @@ describe('DatabaseImpl', () => {
       await openAndClose(testBuilder);
       const peer = await testBuilder.createPeer();
       const early = peer.client.constructDatabase({ spaceId: SpaceId.random(), spaceKey: PublicKey.random() });
-      expect(early._entityManager.upsertSnapshot(object.id, row)).toBe(undefined);
+      expect(early._entityManager.placeIndexRow(object.id, row.documentId, () => row)).toBe(undefined);
     });
 
     test('a row that arrives once a close has begun backs nothing', async () => {
       const { db, object, row } = await indexBacked();
       let placed: unknown = null;
       db['_ctx'].onDispose(() => {
-        placed = db._entityManager.upsertSnapshot(object.id, row);
+        placed = db._entityManager.placeIndexRow(object.id, row.documentId, () => row);
       });
       await db.close();
       expect(placed).toBe(undefined);
@@ -710,7 +721,7 @@ const getDocHandles = (db: DatabaseImpl): DocumentHandles => ({
 
 const getObjectDocHandle = (obj: any) => {
   const core = getObjectCore(obj);
-  core.getLoadedDoc();
+  core.getDoc();
   return core.docHandle!;
 };
 

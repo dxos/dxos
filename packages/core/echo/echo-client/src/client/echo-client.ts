@@ -130,7 +130,7 @@ export class EchoClient extends Resource {
       objectLoader: {
         loadObject: this._loadObjectFromDocument.bind(this),
         updateEvent: this._objectsUpdated,
-        heldObjectIds: this._heldObjectIds.bind(this),
+        subscriptionIds: this._subscriptionIds.bind(this),
       },
       graph: this._graph,
     });
@@ -254,12 +254,12 @@ export class EchoClient extends Resource {
     }
   }
 
-  private _heldObjectIds(spaceIds: readonly SpaceId[]): string[] {
+  private _subscriptionIds(spaceIds: readonly SpaceId[]): string[] {
     const databases =
       spaceIds.length > 0
         ? spaceIds.flatMap((spaceId) => this._databases.get(spaceId) ?? [])
         : [...this._databases.values()];
-    return databases.flatMap((db) => db._entityManager.allObjectCores().map((core) => core.id));
+    return databases.map((db) => db._entityManager._repoProxy.subscriptionId);
   }
 
   private async _loadObjectFromDocument({

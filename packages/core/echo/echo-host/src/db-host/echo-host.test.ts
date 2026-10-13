@@ -262,29 +262,6 @@ describe('EchoHost index transactions', () => {
 });
 
 describe('EchoHost index-backed rows', () => {
-  test('rows of objects the client holds ship without JSON or stored changes', async () => {
-    const { host, spaceId, saveObject } = await setup({ queryExecutor: 'sql' });
-    const held = EntityId.random();
-    const other = EntityId.random();
-    await saveObject(held);
-    await saveObject(other);
-    await host.updateIndexes();
-
-    const [response] = await EffectEx.runPromise(
-      Stream.runCollect(
-        host.queryService['QueryService.execQuery']({
-          ...oneShotRequest(spaceId, EntityId.random()),
-          heldIds: [held],
-        }),
-      ),
-    );
-    const row = (id: EntityId) => response?.results?.find((result) => result.id === id);
-    expect(row(held)).toBeDefined();
-    expect(row(held)?.documentJson).toBeUndefined();
-    expect(row(held)?.bytes).toBeUndefined();
-    expect(row(other)?.bytes).toBeDefined();
-  });
-
   test('the memory executor backs a row only at heads storage holds', async () => {
     const { host, spaceId, saveObject } = await setup({ queryExecutor: 'memory' });
     const saved = EntityId.random();
@@ -368,22 +345,31 @@ describe('EchoHost index-backed rows', () => {
     expect(row(emissions.at(-1)!)?.bytes).toBeDefined();
   });
 
-  test('a re-emit ships JSON and stored changes only for rows at a new version', async () => {
+  test('a row ships without JSON or stored changes once a subscription of the client holds its document', async () => {
     const { host, spaceId, saveObject } = await setup({ queryExecutor: 'sql' });
-    const unchanged = EntityId.random();
-    const edited = EntityId.random();
-    await saveObject(unchanged);
-    const editedHandle = await saveObject(edited);
+    const held = EntityId.random();
+    const heldHandle = await saveObject(held);
     await host.updateIndexes();
+
+    const subscriptionId = 'client';
+    const registered = new Trigger();
+    const subscription = Effect.runFork(
+      host.dataService['DataService.subscribe']({ subscriptionId, spaceId }).pipe(
+        Stream.runForEach(() => Effect.sync(() => registered.wake())),
+      ),
+    );
+    onTestFinished(() => EffectEx.runPromise(Fiber.interrupt(subscription)));
+    await registered.wait({ timeout: 5_000 });
 
     const emissions: QueryService.QueryResponse[] = [];
     const firstEmission = new Trigger();
     let added: EntityId | undefined;
     const done = EffectEx.runPromise(
       host.queryService['QueryService.execQuery']({
-        queryId: 'lazy',
+        queryId: 'held',
         reactivity: QueryReactivity.REACTIVE,
         query: JSON.stringify(Query.select(Filter.everything()).from([{ _tag: 'space', spaceId }]).ast),
+        subscriptionIds: [subscriptionId],
       }).pipe(
         Stream.tap((response) =>
           Effect.sync(() => {
@@ -396,34 +382,24 @@ describe('EchoHost index-backed rows', () => {
       ),
     );
     await firstEmission.wait({ timeout: 5_000 });
-
-    editedHandle.change((doc) => {
-      doc.objects![edited].data.title = 'edited';
-    });
-    await host.flush(Context.default());
-    await host.updateIndexes();
+    await EffectEx.runPromise(
+      host.dataService['DataService.updateSubscription']({
+        subscriptionId,
+        add: [{ id: heldHandle.documentId, heads: getHeads(heldHandle.doc()!), passive: true }],
+      }),
+    );
     added = EntityId.random();
     await saveObject(added);
     await host.updateIndexes();
     await asyncTimeout(done, 5_000);
 
-    const [initial, ...later] = emissions;
-    expect(later).toHaveLength(1);
     const row = (response: QueryService.QueryResponse, id: EntityId) => response.results?.find((r) => r.id === id);
-    expect(row(initial, unchanged)?.bytes).toBeDefined();
-    expect(row(later.at(-1)!, added)?.bytes).toBeDefined();
-    const editedVersion = row(initial, edited)!.version!;
-    expect(
-      later.some((response) => {
-        const edit = row(response, edited);
-        return edit?.bytes !== undefined && edit.version! > editedVersion;
-      }),
-    ).toBe(true);
-    for (const response of later) {
-      expect(row(response, unchanged)?.version).toBe(row(initial, unchanged)?.version);
-      expect(row(response, unchanged)?.documentJson).toBeUndefined();
-      expect(row(response, unchanged)?.bytes).toBeUndefined();
-    }
+    const last = emissions.at(-1)!;
+    expect(row(emissions[0], held)?.bytes).toBeDefined();
+    expect(row(last, held)).toBeDefined();
+    expect(row(last, held)?.documentJson).toBeUndefined();
+    expect(row(last, held)?.bytes).toBeUndefined();
+    expect(row(last, added)?.bytes).toBeDefined();
   });
 });
 

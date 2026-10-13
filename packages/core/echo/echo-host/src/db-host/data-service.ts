@@ -238,6 +238,11 @@ export class DataServiceImpl implements DataService.Handlers {
     });
   }
 
+  /** Whether any of the given subscriptions holds the document, passive or loaded. */
+  'holds'(subscriptionIds: readonly string[], documentId: DocumentId): boolean {
+    return subscriptionIds.some((subscriptionId) => this._subscriptions.get(subscriptionId)?.holds(documentId));
+  }
+
   /**
    * Test affordance: pause/resume flushing of document updates on every
    * active subscription. See `DocumentsSynchronizer.setSendUpdatesPaused`.
