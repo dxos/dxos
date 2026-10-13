@@ -60,6 +60,14 @@ export const translations = [
         'activity-start.label': 'Connect channels',
         'activity-stop.label': 'Disconnect channels',
         'create-agent.label': 'Add agent',
+        'agents-panel.label': 'Agents',
+        'agents-panel.description':
+          'The agents you administer. Every agent has a space of its own, and its members are its admins.',
+        'agents-panel-empty.message':
+          "You don't administer any agents yet. Create one in a space, or ask an agent's admin to add you to its space.",
+        'agent-admins.label': 'Admins: {{admins}}',
+        'agent-admin-you.label': '{{name}} (you)',
+        'agent-open-space.label': 'Open space',
         'new-agent.name': 'New agent',
         'profile-graph-empty.message': 'Nothing recorded yet.',
         'profile-graph-goals.heading': 'Goals',

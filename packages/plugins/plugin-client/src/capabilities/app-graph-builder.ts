@@ -93,6 +93,7 @@ export default Capability.makeModule(
               data: Account.path(Account.Profile),
               type: meta.profile.key,
               properties: {
+                position: Account.position[Account.Profile],
                 label: ['profile.label', { ns: meta.profile.key }],
                 icon: 'ph--user--regular',
                 testId: 'clientPlugin.profile',
@@ -117,6 +118,7 @@ export default Capability.makeModule(
               data: Account.path(Account.Account),
               type: meta.profile.key,
               properties: {
+                position: Account.position[Account.Account],
                 label: ['account-panel.label', { ns: meta.profile.key }],
                 icon: 'ph--identification-card--regular',
               },
@@ -137,6 +139,7 @@ export default Capability.makeModule(
               data: Account.path(Account.Security),
               type: meta.profile.key,
               properties: {
+                position: Account.position[Account.Security],
                 label: ['security.label', { ns: meta.profile.key }],
                 icon: 'ph--key--regular',
                 testId: 'clientPlugin.security',
@@ -158,6 +161,7 @@ export default Capability.makeModule(
               data: Account.path(Account.Devices),
               type: meta.profile.key,
               properties: {
+                position: Account.position[Account.Devices],
                 label: ['devices.label', { ns: meta.profile.key }],
                 icon: 'ph--devices--regular',
                 testId: 'clientPlugin.devices',
@@ -178,6 +182,7 @@ export default Capability.makeModule(
             data: Account.path(Account.Contacts),
             type: meta.profile.key,
             properties: {
+              position: Account.position[Account.Contacts],
               label: ['contacts.label', { ns: meta.profile.key }],
               icon: 'ph--address-book--regular',
               testId: 'clientPlugin.contacts',
@@ -201,6 +206,7 @@ export default Capability.makeModule(
               data: Account.path(Account.Invitations),
               type: meta.profile.key,
               properties: {
+                position: Account.position[Account.Invitations],
                 label: ['invitations-panel.label', { ns: meta.profile.key }],
                 icon: 'ph--ticket--regular',
               },
@@ -224,6 +230,7 @@ export default Capability.makeModule(
               data: Account.path(Account.Usage),
               type: meta.profile.key,
               properties: {
+                position: Account.position[Account.Usage],
                 label: ['usage-panel.label', { ns: meta.profile.key }],
                 icon: 'ph--chart-bar--regular',
               },

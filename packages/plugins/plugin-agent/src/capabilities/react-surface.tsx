@@ -12,8 +12,17 @@ import * as Agent from '@dxos/assistant/Agent';
 import { Organization, Person } from '@dxos/types';
 import { Position } from '@dxos/util';
 
-import { AgentActivity, AgentKnowledge, AgentPrivateChat, BrainStore, ProfileProperties } from '#containers';
+import {
+  AgentActivity,
+  AgentKnowledge,
+  AgentPrivateChat,
+  AgentsPanel,
+  BrainStore,
+  ProfileProperties,
+} from '#containers';
 import { AgentCompanion } from '#types';
+
+import { AGENTS_PANEL_PATH } from './agents-panel.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -56,6 +65,11 @@ export default Capability.makeModule(() =>
         ),
         component: BrainStore,
         props: ({ role, data: { companionTo } }) => ({ role, agent: companionTo }),
+      }),
+      Surface.create({
+        id: 'accountAgents',
+        filter: AppSurface.literal(AppSurface.Article, AGENTS_PANEL_PATH),
+        component: AgentsPanel,
       }),
       // Appended to the Person/Organization properties panel; plugin-crm contributes no surface there.
       Surface.create({

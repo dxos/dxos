@@ -420,6 +420,19 @@ node AgentsSection
     Agent entry too (experimental types), plugin-space keeps this one: it belongs to the plugin built on the other.
 ```
 
+```mdl
+node AccountAgents
+  desc: |
+    The account's Agents panel (`dxos:account/agents`, URL key `agents`), one of the account's panels beside
+    plugin-client's. Its `position` lies between Devices' and Contacts' in plugin-client's `Account.position`,
+    so the panel is listed right after Devices.
+  source: dxos:account
+  properties:
+    label: Agents
+    icon: ph--robot--regular
+  article: surface:AccountAgents
+```
+
 ## Components
 
 ```mdl
@@ -478,6 +491,28 @@ component AgentActivityContainer
 ```
 
 ```mdl
+component AgentList
+  desc: |
+    The agents the viewer administers (components/AgentList): one row per agent with a robot avatar in the
+    agent's hue, its name ("Unnamed agent" when it has none), "Admins: …" with the viewer marked "(you)", and
+    "Open space". With none, a line saying how to get one.
+  props:
+    agents: { spaceId: string, name: string, identityKey?: string, admins: { identityKey: string, name: string, you?: boolean }[] }[]
+  emits:
+    onOpen(spaceId: string)
+```
+
+```mdl
+component AgentsPanel
+  desc: |
+    Container (containers/AgentsPanel) wiring AgentList to the client: `AgentSpace.administeredBy` over the
+    client's spaces, re-read whenever the spaces, the identity or an agent space's members change, sorted by name.
+    Each row's name is the agent's own member profile, which its genesis names after the agent.
+  actions:
+    open(spaceId) → org.dxos.operation.appToolkit.switchWorkspace
+```
+
+```mdl
 component ProfileProperties
   desc: |
     ProfileGraph over the subject's live goals (owner refers to the subject; not dropped) and active
@@ -521,6 +556,13 @@ surface OrganizationProfileGraph
   subject: type:Organization
   component: component:ProfileProperties
   position: last
+```
+
+```mdl
+surface AccountAgents
+  desc: Matched on the panel's path literal, `dxos:account/agents`, not a type.
+  role: article
+  component: component:AgentsPanel
 ```
 
 ## Features
@@ -612,6 +654,7 @@ feat F-7: An agent's own space
   req F-7.1: An agent with an identity has a default space its identity owns, minted with it by op:ensureIdentity and tagged `AppSpace.AGENT_SPACE_TAG`; the identity is its owner, named after the agent, and every other current member is one of the agent's admins.
   req F-7.2: `AgentSpace.administeredBy` lists the agents an identity administers: the agent spaces among the client's own spaces, which its HALO holds memberships of, that the identity is a current member of. It asks nothing of EDGE.
   req F-7.3: `AgentSpace.admins` lists an agent's admins, every current member of its space but the agent, and `AgentSpace.agentOf` is the agent.
+  req F-7.4: The account's Agents panel, right after Devices, lists the agents the identity administers (F-7.2): each one's name, its admins with the viewer marked, and Open space, which switches to the agent's space. It stays current as spaces and their members change.
 ```
 
 ## Acceptance
@@ -995,6 +1038,46 @@ test QA-4: An agent invited into another space keeps one conversation and one br
       do: Delete Kai in Offsite team, then in My Space.
       invoke: org.dxos.operation.space.removeObjects { objects: [Obj($presence.agent)] }   # then [Obj($agent.agent)] in $given.space
       expect: neither space lists Kai
+```
+
+```mdl
+test QA-5: Two admins — an agent's space makes its creator and the person added to it its admins
+  desc: |
+    Admins are an agent's space's members. Alice creates an agent, which mints its identity and its own space on
+    EDGE; she adds Bob to that space the way she would add him to any space, and both find the agent in Profile ›
+    Agents. The autocue flow `autocue/agent-admins.mjs` walks it side by side, one browser per person.
+  actors: human
+  covers: [F-7.1, F-7.2, F-7.4]
+  status: passing             # 2026-10-13, recorded by autocue/agent-admins.mjs against a local EDGE (dxos/edge#1293)
+  given:
+    - alice: an identity with the display name "Alice", on one device
+    - bob: an identity with the display name "Bob", on another device
+    - plugin-agent is enabled for both
+    - EDGE with brain identities (`POST /compute/brain`) is reachable — ABORT without it
+  steps:
+    - name: Alice creates an agent named Kai
+      do: In Alice's space click + ("Add to space"), pick Agent, name it "Kai" and click Create.
+      invoke: [op:createAgent] { name: "Kai" }
+      expect: Kai's chat opens, and a space named Kai appears in Alice's space list
+    - name: Alice finds Kai in Profile › Agents
+      do: Open Alice's profile and its Agents panel, listed after Devices.
+      expect: Kai is listed with "Admins: Alice (you)"
+    - name: Alice invites Bob into Kai's space
+      do: Click Open space on Kai's row; in Kai's space open Settings › Members and invite one person.
+      expect: an invitation code is ready to share
+    - name: Bob joins Kai's space
+      do: In Bob's window click + ("Add space"), choose Join, enter the invitation code and then the PIN.
+      expect: Bob's space list shows Kai
+    - name: Bob finds Kai in Profile › Agents
+      do: Open Bob's profile and its Agents panel.
+      expect: Kai is listed with "Admins: Alice, Bob (you)"
+    - name: Alice sees Bob among Kai's admins
+      do: Open Alice's Agents panel again.
+      expect: Kai is listed with "Admins: Alice (you), Bob"
+  after:
+    - name: Remove Bob from Kai's space
+      do: In Kai's space open Settings › Members and remove Bob.
+      expect: Bob's Agents panel no longer lists Kai
 ```
 
 ---
