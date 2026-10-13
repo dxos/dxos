@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import type * as Exit from 'effect/Exit';
+import * as Layer from 'effect/Layer';
 import React, { Fragment, useCallback, useEffect, useMemo } from 'react';
 
 import { AiService } from '@dxos/ai';
@@ -12,6 +13,7 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as OperationRegistry from '@dxos/compute/OperationRegistry';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { ComputeGraphModel } from '@dxos/conductor';
@@ -107,6 +109,7 @@ const Container = (props: Layout.FlexProps) => (
 const useGraphController = (canvas: CanvasBoard.CanvasBoard) => {
   const db = Obj.getDatabase(canvas);
   const processManagerRuntime = Hooks.useCapability(Capabilities.ProcessManagerRuntime);
+  const operationInvoker = Hooks.useOperationInvoker();
   const [computeGraph] = useObject(canvas.computeGraph);
   const controller = useMemo(() => {
     if (!canvas.computeGraph?.target || !db) {
@@ -114,13 +117,16 @@ const useGraphController = (canvas: CanvasBoard.CanvasBoard) => {
     }
     const spaceId = db.spaceId;
     const model = new ComputeGraphModel(canvas.computeGraph?.target);
-    const spaceLayer = ServiceResolver.provide(
-      { space: spaceId },
-      AiService.AiService,
-      Database.Service,
-      Credential.CredentialsService,
-      Operation.Service,
-      OperationRegistry.Service,
+    // No layer spec provides `Operation.Service` or `OperationRegistry.Service` to a space (a process gets its own),
+    // so the app's invoker stands in for the one and the other is built over the space's database and handlers.
+    const spaceLayer = Layer.mergeAll(
+      ServiceResolver.provide({ space: spaceId }, AiService.AiService, Database.Service, Credential.CredentialsService),
+      OperationRegistry.layer.pipe(
+        Layer.provide(
+          ServiceResolver.provide({ space: spaceId }, Database.Service, OperationHandlerSet.OperationHandlerProvider),
+        ),
+      ),
+      Layer.succeed(Operation.Service, operationInvoker),
     );
     const computeGraphRuntime = {
       runPromiseExit: <A, E>(effect: Effect.Effect<A, E, any>): Promise<Exit.Exit<A, E>> =>
@@ -130,7 +136,7 @@ const useGraphController = (canvas: CanvasBoard.CanvasBoard) => {
     };
     const controller = new ComputeGraphController(computeGraphRuntime, model);
     return controller;
-  }, [computeGraph, db, processManagerRuntime]);
+  }, [computeGraph, db, processManagerRuntime, operationInvoker]);
 
   useEffect(() => {
     if (!controller) {
