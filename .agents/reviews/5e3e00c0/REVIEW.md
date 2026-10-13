@@ -263,6 +263,7 @@ System One judges this a likely violation of `no-styling-wrapper-divs` (Boxes co
 - thresholds: violation ≥ 0.8; uncertain ≥ 0.15 and ≥ the rule's median across this run + 0.15 (rules with 20+ verdicts); context fetched when asked with ≥ 0.35
 - verdicts: 47 violations written to fragments, 514 uncertain, 3668 clean, 0 unanswered
 - left for an agentic reviewer: 87 batch(es)
+- not reviewed: five `system-one: off` groups (19, 28, 31, 33, 36) and the uncertain pairs were not sent to subagents; `isFinalized: true` marks the artifact finalized, not complete review coverage
 
 ```text
 requests: 1766 (314 verdicts re-asked with context the model requested)
