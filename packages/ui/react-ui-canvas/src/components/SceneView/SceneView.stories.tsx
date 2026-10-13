@@ -381,9 +381,13 @@ export const Floating: Story = {
     await userEvent.click(canvas.getByTestId('layers-menu'));
     // Picked from the keyboard, as the Layers story does: a synthetic click does not select a menu item. The dock
     // item ends the menu.
-    await waitFor(() =>
-      expect(within(canvasElement.ownerDocument.body).getByTestId('inspector-dock-toggle')).toBeVisible(),
-    );
+    // The keys reach the menu only once it has taken focus, which lags its opening under a loaded run.
+    await waitFor(() => {
+      const menu = within(canvasElement.ownerDocument.body)
+        .getByTestId('inspector-dock-toggle')
+        .closest('[role="menu"]');
+      return expect(menu).toHaveFocus();
+    });
     await userEvent.keyboard('{End}{Enter}');
     await expect(await canvas.findByTestId('scene-view-dock')).toBeVisible();
     await expect(await canvas.findByTestId('about')).toBeVisible();
