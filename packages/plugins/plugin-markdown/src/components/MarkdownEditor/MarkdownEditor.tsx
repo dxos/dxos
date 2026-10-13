@@ -7,6 +7,7 @@ import { type EditorView } from '@codemirror/view';
 import type * as Atom from 'effect/reactivity/Atom';
 import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
 
+import { INITIAL_FOCUS_ATTRIBUTE } from '@dxos/react-focus';
 import { createContext } from '@dxos/react-hooks';
 import {
   type EditorRootProps,
@@ -14,17 +15,22 @@ import {
   createEditorController,
   useEditorContext,
 } from '@dxos/react-ui-editor';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import type * as Util from '@dxos/react-ui/Util';
 import { type WidgetState } from '@dxos/ui-editor';
 import { Merge, isNonNullable } from '@dxos/util';
 
 import {
+  type ContentStatus,
   type DocumentType,
   type ExtensionsOptions,
   type UseEditorMenuOptionsProps,
+  useDocumentContent,
   useEditorMenuOptions,
   useExtensions,
 } from '#hooks';
+import { meta } from '#meta';
 
 import {
   MarkdownEditorContent as NaturalMarkdownEditorContent,
@@ -43,6 +49,7 @@ type MarkdownEditorContextValue = Merge<
   {
     id: string;
     attendableId?: string;
+    contentStatus?: ContentStatus;
   },
   Pick<ExtensionsOptions, 'compact' | 'viewMode' | 'editorStateStore'>,
   Pick<NaturalMarkdownToolbarProps, 'onAction' | 'onFileUpload' | 'onViewModeChange'>
@@ -103,11 +110,15 @@ export const MarkdownEditorProvider = ({
   // Context menu options (Editor.Root calls useEditorMenu with these props).
   const menuOptions = useEditorMenuOptions({ slashCommandGroups, onLinkQuery });
 
+  const content = useDocumentContent(object);
+  const contentStatus = content.status;
+
   // Core markdown extensions (popover/menu extension is added by Editor.Root).
   const coreExtensions = useExtensions({
     id,
     attendableId,
     object,
+    content,
     compact,
     viewMode,
     viewState,
@@ -143,6 +154,7 @@ export const MarkdownEditorProvider = ({
     () => ({
       id,
       attendableId,
+      contentStatus,
       compact,
       viewMode,
       editorStateStore,
@@ -150,7 +162,7 @@ export const MarkdownEditorProvider = ({
       onFileUpload,
       onViewModeChange,
     }),
-    [id, attendableId, compact, viewMode, editorStateStore, onAction, onFileUpload, onViewModeChange],
+    [id, attendableId, contentStatus, compact, viewMode, editorStateStore, onAction, onFileUpload, onViewModeChange],
   );
 
   return (
@@ -171,10 +183,17 @@ type MarkdownEditorContentProps = Omit<
   'id' | 'extensions' | 'toolbarState' | 'editorStateStore'
 >;
 
+const unavailableMessages = {
+  missing: { title: 'content-missing.title', message: 'content-missing.message' },
+  deleted: { title: 'content-deleted.title', message: 'content-deleted.message' },
+} as const;
+
 const MarkdownEditorContent = ({ compact: compactProp, ...props }: MarkdownEditorContentProps) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const {
     id,
     attendableId,
+    contentStatus,
     compact = compactProp,
     viewMode,
     editorStateStore,
@@ -189,6 +208,22 @@ const MarkdownEditorContent = ({ compact: compactProp, ...props }: MarkdownEdito
     [setController],
   );
 
+  // Missing or deleted content has nothing to edit: say why in place of the editor.
+  if (contentStatus === 'missing' || contentStatus === 'deleted') {
+    const { title, message } = unavailableMessages[contentStatus];
+    return (
+      // Entering the article lands on the explanation; the tab stop sits inside the mark, as an editor's does.
+      <div {...{ [INITIAL_FOCUS_ATTRIBUTE]: '' }}>
+        <div tabIndex={0} className='dx-focus-ring'>
+          <Banner.Root valence='warning' data-testid='markdown.content-status' data-status={contentStatus}>
+            <Banner.Title>{t(title)}</Banner.Title>
+            <Banner.Body>{t(message)}</Banner.Body>
+          </Banner.Root>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <NaturalMarkdownEditorContent
       // Spread directly: both sides speak `classNames`; `composableProps` here converted it to a
@@ -198,6 +233,7 @@ const MarkdownEditorContent = ({ compact: compactProp, ...props }: MarkdownEdito
       attendableId={attendableId}
       compact={compact}
       viewMode={viewMode}
+      loading={contentStatus === 'loading'}
       editorStateStore={editorStateStore}
       toolbarState={state as Atom.Writable<EditorToolbarState>}
       extensions={extensions}
