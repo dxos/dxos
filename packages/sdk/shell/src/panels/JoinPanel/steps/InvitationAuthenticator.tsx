@@ -79,12 +79,14 @@ export const InvitationAuthenticator = ({
           )}
           {failed && <Field.ErrorText>{t('failed-to-authenticate.message')}</Field.ErrorText>}
         </Field.Root>
-        {invitationId && authMethod === Invitation_AuthMethod.SHARED_SECRET && (
-          <>
-            <Typography.Text tone='muted'>{t('auth-other-device-emoji.message')}</Typography.Text>
-            <Emoji text={hexToEmoji(invitationId)} />
-          </>
-        )}
+        {invitationId &&
+          authMethod === Invitation_AuthMethod.SHARED_SECRET && (
+            // One block, so the Body's gap sets it apart from the PIN while the message stays close to its emoji.
+            <div className='flex flex-col items-center gap-2'>
+              <Typography.Text tone='muted'>{t('auth-other-device-emoji.message')}</Typography.Text>
+              <Emoji text={hexToEmoji(invitationId)} />
+            </div>
+          )}
       </Dialog.Body>
       <Dialog.Footer>
         <Button.Root
