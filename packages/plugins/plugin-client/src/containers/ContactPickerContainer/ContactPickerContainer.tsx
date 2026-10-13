@@ -2,15 +2,22 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useMemo, useState } from 'react';
+import * as Effect from 'effect/Effect';
+import React, { useEffect, useMemo, useState } from 'react';
 
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as Operation from '@dxos/compute/Operation';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { SpaceMember_Role, useMembers } from '@dxos/react-client/echo';
 import { useContacts, useIdentity } from '@dxos/react-client/halo';
 import * as Field from '@dxos/react-ui/Field';
-import * as Hooks from '@dxos/react-ui/Hooks';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Select from '@dxos/react-ui/Select';
@@ -31,8 +38,10 @@ const roleLabel: Record<AdmitRole, string> = {
 
 export type ContactPickerContainerProps = AppSurface.ContactPickerData;
 
+type SourcedInvitee = AppCapabilities.Invitee & { source: AppCapabilities.InviteeSource };
+
 export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const contacts = useContacts();
   const members = useMembers(space.key);
   const identity = useIdentity();
@@ -40,6 +49,28 @@ export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerP
   const [role, setRole] = useState<AdmitRole>(SpaceMember_Role.EDITOR);
   const [joinUrl, setJoinUrl] = useState<string>();
   const [pending, setPending] = useState(false);
+  const manager = PluginManagerProvider.usePluginManager();
+  const operationInvoker = Hooks.useOperationInvoker();
+  const sources = Hooks.useCapabilities(AppCapabilities.InviteeSource);
+  const [invitees, setInvitees] = useState<SourcedInvitee[]>([]);
+  // Bumped after an invitee is added, so the sources list who is left.
+  const [added, setAdded] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    void EffectEx.runPromise(
+      Effect.forEach(sources, (source) =>
+        source.list(space).pipe(Effect.map((listed) => listed.map((invitee) => ({ ...invitee, source })))),
+      ).pipe(Effect.provideService(Capability.Service, manager.capabilities)),
+    ).then(
+      (listed) => !cancelled && setInvitees(listed.flat()),
+      (err) => log.catch(err),
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [manager, sources, space, added]);
+  const invitee = invitees.find(({ key }) => key === selected);
 
   const memberKeys = useMemo(
     () =>
@@ -61,6 +92,19 @@ export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerP
 
     setPending(true);
     try {
+      if (invitee) {
+        await EffectEx.runPromise(
+          invitee.source
+            .add(space, invitee.key)
+            .pipe(
+              Effect.provideService(Capability.Service, manager.capabilities),
+              Effect.provideService(Operation.Service, operationInvoker),
+            ),
+        );
+        setSelected(undefined);
+        setAdded((count) => count + 1);
+        return;
+      }
       const result = await onAdd([selected], role);
       setJoinUrl(result.joinUrl);
       setSelected(result.failed[0]?.key);
@@ -72,7 +116,7 @@ export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerP
     }
   };
 
-  if (contacts.length === 0) {
+  if (contacts.length === 0 && invitees.length === 0) {
     return <p className='text-fg-muted'>{t('contact-picker-empty.message')}</p>;
   }
 
@@ -81,6 +125,7 @@ export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerP
       <Layout.Flex align='center' gap='sm'>
         <ContactPicker
           contacts={contacts}
+          invitees={invitees}
           excludeKeys={memberKeys}
           value={selected}
           onChange={(key) => {
@@ -96,7 +141,8 @@ export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerP
           }
           items={ROLES.map((value) => ({ value: String(value), label: t(roleLabel[value]) }))}
         >
-          <Select.Trigger classNames='min-w-[6rem]' disabled={!canAdmit} />
+          {/* A role is a member's; an invitee such as an agent joins without one. */}
+          <Select.Trigger classNames='min-w-[6rem]' disabled={!canAdmit || invitee !== undefined} />
           <Select.Content>
             {ROLES.map((value) => (
               <Select.Item key={value} item={{ value: String(value), label: t(roleLabel[value]) }} />

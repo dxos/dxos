@@ -16,6 +16,7 @@ import { meta } from '#meta';
 
 import { useBrainClock } from '../useBrainClock.ts';
 import { usePrivateChat } from '../usePrivateChat.ts';
+import { useSessionAgent } from '../useSessionAgent.ts';
 
 export type AgentPrivateChatProps = {
   role?: string;
@@ -26,12 +27,14 @@ export type AgentPrivateChatProps = {
 /**
  * The Agent's article: the viewing member's own chat with the agent, private to their identity and hosted
  * on EDGE, so a relay from another member's chat can wake it while the app is closed. Each member opening
- * the same agent sees only their own conversation.
+ * the same agent sees only their own conversation, and an agent invited from another space opens the same
+ * conversation as at home: one per member, not one per space.
  */
 export const AgentPrivateChat = ({ role, agent, attendableId }: AgentPrivateChatProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const { chat, failed, retry } = usePrivateChat(agent);
-  useBrainClock(agent);
+  const session = useSessionAgent(agent);
+  const { chat, failed, retry } = usePrivateChat(session);
+  useBrainClock(session);
 
   const data = useMemo(() => (chat ? { subject: chat, attendableId } : undefined), [chat, attendableId]);
   if (data) {

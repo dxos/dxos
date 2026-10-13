@@ -3,6 +3,8 @@
 //
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
@@ -16,6 +18,12 @@ export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'), {
   environments: ['browser', 'node', 'tauri'],
 });
+// The members panel that lists invitees is UI; a headless host has none.
+export const InviteeSource = Capability.lazyModule(
+  'InviteeSource',
+  { provides: [AppCapabilities.InviteeSource], environments: ['browser', 'tauri'] },
+  () => import('./invitee-source.ts'),
+);
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
 });

@@ -26,18 +26,18 @@ export type PrivateChatState = {
 /**
  * Opens (or creates) the viewing member's private chat with the agent, hosted on EDGE.
  */
-export const usePrivateChat = (agent: Agent.Agent): PrivateChatState => {
+export const usePrivateChat = (agent: Agent.Agent | undefined): PrivateChatState => {
   const manager = PluginManagerProvider.usePluginManager();
   const { invokePromise } = Hooks.useOperationInvoker();
   const identity = useIdentity();
-  const db = Obj.getDatabase(agent);
+  const db = agent && Obj.getDatabase(agent);
   const [chat, setChat] = useState<Chat.Chat>();
   const [failed, setFailed] = useState(false);
   // Bumped by the retry button to re-run the effect.
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
-    if (!identity || !db) {
+    if (!agent || !identity || !db) {
       return;
     }
 

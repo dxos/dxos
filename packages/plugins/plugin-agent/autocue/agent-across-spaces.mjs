@@ -3,8 +3,9 @@
 //
 
 /**
- * Mykola makes an agent, tells it about the team offsite, invites it into another space, and asks it there:
- * the agent answers from what it learned in the first space.
+ * Mykola makes an agent, tells it about the team offsite, adds it to another space from that space's Members panel
+ * (as he would a person), and opens it there: the same conversation continues, and the agent reads what it learned
+ * from its brain with a tool call.
  *
  * @mdl packages/plugins/plugin-agent/PLUGIN.mdl test QA-4
  * @app composer-app dev server on 127.0.0.1:4173, talking to EDGE preview (the default in `dx-local.yml`)
@@ -30,10 +31,7 @@ const MESSAGES = [
   `Hi ${AGENT}, I'm ${PERSON}. Our team offsite is in Lisbon on November 14, for 12 people, and Dima is booking the venue.`,
   'The budget is 8,000 euros, and flights are still open.',
 ];
-const QUESTION = 'What do we have so far for the offsite?';
-
-/** The note a chat of an agent in other spaces starts with (`BrainSkill.MEMORY_HEADER`). */
-const MEMORY_HEADER = '[Memory from your other spaces]';
+const QUESTION = 'Check your memory: what do we have so far for the offsite?';
 
 const BEAT = 1_000;
 const TIMEOUT = 60_000;
@@ -47,7 +45,9 @@ const FEED = `${PLANK} [data-testid="feed.message"]`;
 /** Rendered only while a turn runs. */
 const ACTIVITY = `${PLANK} [data-testid="assistant.chat-activity"]`;
 const TOOL_ROW = '[data-testid^="assistant.tool-"]';
-const AGENT_ROW = `[role="treeitem"]:has([data-testid="treeItem.heading"]:text-is("${AGENT}"))`;
+const WORKSPACE = '[data-testid="navtree.workspace.visible"]';
+const row = (heading) => `${WORKSPACE} [role="treeitem"]:has([data-testid="treeItem.heading"]:text-is("${heading}"))`;
+const AGENT_ROW = row(AGENT);
 
 const isVisible = (locator) => locator.isVisible().catch(() => false);
 
@@ -120,6 +120,16 @@ const openSpace = async (page, name) => {
       workspace,
     );
     await page.waitForTimeout(BEAT);
+  }
+};
+
+/** Expands a navtree row unless it is open already. */
+const expand = async ({ demo, page }, selector, label) => {
+  const toggle = page.locator(`${selector} [data-part="branch-trigger"]`).first();
+  await toggle.waitFor({ state: 'attached', timeout: TIMEOUT });
+  if ((await toggle.getAttribute('data-state')) !== 'open') {
+    await page.locator(selector).first().hover();
+    await demo.click({ selector: `${selector} [data-part="branch-trigger"] >> nth=0`, label });
   }
 };
 
@@ -224,56 +234,50 @@ export const steps = [
     },
   },
   {
-    name: `Invite ${AGENT} to the "${OTHER}" space`,
+    name: `Add ${AGENT} to "${OTHER}" from its Members panel`,
     run: async ({ demo, page }) => {
-      await caption(demo, `4 · Invite ${AGENT} into another space: "${OTHER}"`);
-      await page.locator(AGENT_ROW).first().hover();
+      await openSpace(page, OTHER);
+      await caption(demo, `4 · In "${OTHER}", add ${AGENT} from Members, as you would a person`);
+      await expand({ demo, page }, `${WORKSPACE} [data-testid="spacePlugin.settings"]`, 'Settings');
       await demo.click({
-        selector: `${AGENT_ROW} [data-testid^="navtree.treeItem.actionsLevel"] >> nth=0`,
-        label: 'More actions',
+        selector: `${WORKSPACE} [data-testid="spacePlugin.members"] [data-testid="treeItem.heading"] >> nth=0`,
+        label: 'Members',
       });
-      await demo.click({ selector: 'role=menuitem[name="Invite to space"]', label: 'Invite to space' });
-      const dialog = '[data-testid="agent.invite-dialog"]';
-      await page.locator(dialog).waitFor({ state: 'visible', timeout: 10_000 });
-      await page.waitForTimeout(BEAT);
-      await demo.click({ selector: `${dialog} [role="option"]:has-text("${OTHER}")`, label: OTHER });
-      // The other space opens on the agent, whose chat there starts with what it remembers.
-      await page.waitForFunction(
-        (name) =>
-          document.querySelector('[data-testid="navtree.workspace.visible"]')?.innerText.split('\n')[0].trim() === name,
-        OTHER,
-        { timeout: TIMEOUT },
-      );
-      await page.locator(PLANK).getByText(MEMORY_HEADER).first().waitFor({ state: 'visible', timeout: TIMEOUT });
+      await demo.click({ selector: '[data-testid="contact-picker.trigger"] >> nth=0', label: 'Add from contacts' });
+      await demo.click({ selector: `[data-testid="contact-picker.item"]:has-text("${AGENT}")`, label: AGENT });
+      await demo.click({ selector: '[data-testid="contactPicker.add"]', label: 'Add' });
+      // The space lists it under Agents once it is here.
+      await page.locator(row('Agents')).first().waitFor({ state: 'visible', timeout: TIMEOUT });
       await page.waitForTimeout(BEAT * 2);
     },
   },
   {
-    name: `Read what ${AGENT} remembers`,
+    name: `Open ${AGENT} in "${OTHER}": the same conversation`,
     run: async ({ demo, page }) => {
-      await caption(demo, `5 · ${AGENT} arrives remembering "${HOME}"`);
-      const note = page.locator(PLANK).getByText(MEMORY_HEADER).first();
-      await demo.click({ text: MEMORY_HEADER, label: 'Memory' });
-      await page.waitForTimeout(BEAT * 5);
-      if (await isVisible(note)) {
-        await demo.click({ text: MEMORY_HEADER, label: 'Memory' });
-      }
-      await page.waitForTimeout(BEAT);
+      await caption(demo, `5 · Open ${AGENT} there: one conversation, not one per space`);
+      await expand({ demo, page }, row('Agents'), 'Agents');
+      await demo.click({ selector: `${AGENT_ROW} [data-testid="treeItem.heading"] >> nth=0`, label: AGENT });
+      await page.locator(FEED).filter({ hasText: 'Lisbon' }).first().waitFor({ state: 'visible', timeout: TIMEOUT });
+      await page.waitForTimeout(BEAT * 3);
     },
   },
   {
-    name: `Ask ${AGENT} in the other space`,
+    name: `Ask ${AGENT} to check its memory`,
     run: async ({ demo, page }) => {
-      await caption(demo, `6 · Ask ${AGENT} in "${OTHER}", where none of this was said`);
+      await caption(demo, `6 · Ask ${AGENT} to check its memory: it reads its brain with a tool`);
       await send({ demo, page }, QUESTION);
       await page.waitForTimeout(BEAT * 2);
     },
   },
   {
-    name: `Read ${AGENT}'s answer`,
+    name: `Read ${AGENT}'s brain from "${OTHER}"`,
     run: async ({ demo, page }) => {
-      // A chapter of its own, so trimming the still frames keeps the answer on screen.
-      await caption(demo, `7 · ${AGENT} answers from what it learned in "${HOME}"`);
+      await caption(demo, `7 · ${AGENT}'s brain, seen from "${OTHER}": the facts it learned in "${HOME}"`);
+      await demo.click({ selector: `${PLANK} [data-testid="plankHeading.companion"] >> nth=0`, label: 'Companion' });
+      await demo.click({ selector: '[data-testid="deck.companion.tab.brain"] >> nth=0', label: 'Brain' });
+      await demo.click({ selector: '[data-testid="agent-knowledge-tab-facts"] >> nth=0', label: 'Facts' });
+      // The tab polls the brain; give EDGE's brain a few reads.
+      await page.locator('[data-testid="agent-knowledge-fact"]').first().waitFor({ timeout: 30_000 });
       await page.waitForTimeout(BEAT * 4);
     },
   },

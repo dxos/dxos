@@ -13,7 +13,7 @@ import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
-import { Database, Feed, Filter, Hypergraph, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Filter, Hypergraph, Obj, Query, Ref } from '@dxos/echo';
 import { EchoTestBuilder, type EchoTestPeer } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -26,6 +26,7 @@ import { AgentOperationHandlerSet } from '#operations';
 import { AgentPresence, BrainService, Goal, Memory, MemoryOperation, Mode, TriggerOperation } from '#types';
 
 import { makeTestBrain, testSpaceLayer } from '../brain/testing.ts';
+import { invitableAgents } from '../capabilities/invitee-source.ts';
 import { makeAgent } from './create-agent.ts';
 import { pushFacts } from './deliver.ts';
 import { inviteAgent } from './invite-agent.ts';
@@ -130,6 +131,21 @@ describe('Inviting an agent into another space', () => {
     expect(back).toMatchObject({ created: false });
     expect(back.agent.id).toBe(agent.id);
     expect(await inSpace(other)(Database.query(Filter.type(Agent.Agent)).run)).toHaveLength(1);
+  });
+
+  test('the members panel offers an agent only where it is not yet', async ({ expect }) => {
+    const home = await peer.createDatabase();
+    const other = await peer.createDatabase();
+    const agent = await inSpace(home)(makeAgent({ name: 'Kai' }));
+    const all = () =>
+      peer.client.graph.query(Query.select(Filter.type(Agent.Agent)).from('all-accessible-spaces')).run();
+
+    expect(invitableAgents(await all(), other.spaceId).map(({ id }) => id)).toEqual([agent.id]);
+    expect(invitableAgents(await all(), home.spaceId)).toEqual([]);
+
+    // Once it has a presence there, neither it nor the presence is offered again.
+    await inSpace(other)(inviteAgent(agent));
+    expect(invitableAgents(await all(), other.spaceId)).toEqual([]);
   });
 });
 

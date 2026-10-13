@@ -204,17 +204,17 @@ op listAgents
 ```mdl
 op inviteAgent
   key: org.dxos.operation.agent.invite
-  desc: Invites an agent from another space into this one; it keeps its memory of the spaces it is in.
+  desc: Invites an agent from another space into this one; it keeps one brain across the spaces it is in.
   input:
     agent: Ref<Agent>               # in any space it is in
   output: { agent: Ref<Agent>, created: boolean }
   effects: [echo:read, echo:write]
   requires: [Database.Service, Hypergraph.Service]
   note: |
-    Runs in the target space. There the agent's home returns the home agent, and any other space the
-    presence keyed `AgentPresence.homeKey(<home agent URI>)`, created on first invitation with the home's
-    name, DID and instructions (`makeAgent`, so its modes and first chat match op:createAgent). The new
-    presence's first chat starts with the memory note (F-6.4). Customized skills stay home: a presence
+    Runs in the target space; the members panel's contact picker invokes it (F-6.1). There the agent's home
+    returns the home agent, and any other space the presence keyed `AgentPresence.homeKey(<home agent URI>)`,
+    created on first invitation with the home's name, DID and instructions (`makeAgent`, so its modes and
+    first chat match op:createAgent). It writes no conversation. Customized skills stay home: a presence
     binds the compiled ones.
 ```
 
@@ -274,8 +274,9 @@ op retrieveMemories
   requires: [Database.Service]
   note: |
     Live goals are every status but `dropped`; ties in observedAt break on id. As built (`recall`) it also
-    returns the facts the agents here read in the other spaces they are present in, with those spaces'
-    memories and goals, matching the subject there by name (F-6.5).
+    returns the facts in the brains of the space's agents; an agent invited from another space reads its
+    home's brain (`AgentPresence.brainId`), so the facts it learned in every space are one tool call away
+    (F-6.5). Memories and goals are objects in a space, so only this space's are returned.
 ```
 
 ```mdl
@@ -399,28 +400,17 @@ node AgentsSection
     Agent entry too (experimental types), plugin-space keeps this one: it belongs to the plugin built on the other.
 ```
 
-```mdl
-node AgentActions
-  desc: |
-    Each Agent node's menu adds "Invite to space" (testId `agent.invite`), which opens
-    component:InviteAgentDialog for the agent.
-  source: node:AgentsSection
-  subject: type:Agent
-  actions: [op:inviteAgent]
-```
-
 ## Components
 
 ```mdl
-component InviteAgentDialog
+component AgentInvitees
   desc: |
-    Container (containers/InviteAgentDialog): "Invite <name> to a space" over a searchable list of the
-    member's other visible spaces (never the agent's own, nor a settings space). Selecting one invokes
-    op:inviteAgent in that space and opens the agent there; a failure keeps the dialog open and toasts.
-  props:
-    agent: Agent
+    Capability (capabilities/invitee-source.ts), an `AppCapabilities.InviteeSource`: the member's agents in
+    their other spaces, by name, for the contact picker of a space's Members panel ("Add from contacts"),
+    where they are listed after the contacts. Agents already here (home or presence) are left out. Adding
+    one invokes op:inviteAgent in that space; the role select does not apply to an agent.
   actions:
-    select(space) → op:inviteAgent, then org.dxos.operation.layout.open
+    add(agent) → op:inviteAgent
 ```
 
 ```mdl
@@ -478,12 +468,6 @@ component ProfileProperties
 ```
 
 ## Surfaces
-
-```mdl
-surface InviteAgentDialog
-  role: dialog
-  component: component:InviteAgentDialog
-```
 
 ```mdl
 companion AgentActivity
@@ -590,16 +574,16 @@ feat F-5: Interview and profile panel
 ```mdl
 feat F-6: An agent in several spaces
 
-  req F-6.1: "Invite to space" on an Agent brings it into another space the member picks, and opens it there.
+  req F-6.1: A space's Members panel offers the member's agents from other spaces in its "Add from contacts" picker, after the contacts; Add brings the agent into the space.
   req F-6.2:
     when: op:inviteAgent runs for an agent already in the space (its home, or an earlier presence)
     then: that agent is returned and nothing is created
   req F-6.3: A presence carries its home's name, DID and instructions, keyed to the home agent's URI; inviting a presence keys the new one to the same home.
   req F-6.4:
-    when: a chat of an agent present in other spaces is created (a presence's first chat, a member's private chat)
-    then: it starts with a synthetic "[Memory from your other spaces]" note listing the facts, memories and goals there and the member's latest conversation there
-  req F-6.5: op:retrieveMemories also returns what the agents in the space know in the other spaces they are in; a host with no cross-space graph (EDGE) reads its own space only.
-  req F-6.6: A note never quotes a private chat of anyone but the member the new chat is for; a shared chat's note quotes shared chats only.
+    when: a member opens an agent invited from another space
+    then: its article is the member's one private chat with the agent, the same as at home, and its companions show the home agent's knowledge and activity, when the member can reach the home space; otherwise the presence's own
+  req F-6.5: A presence keys its facts to its home's brain (`AgentPresence.brainId`): the end-of-turn read adds to it and op:retrieveMemories reads it, on EDGE as in the app. Triggers stay per agent object.
+  req F-6.6: Inviting writes no conversation: nothing is quoted from any chat into the space.
 ```
 
 ## Acceptance
@@ -680,16 +664,15 @@ scenario T-8: Scripted interview fills the profile panel
 ```
 
 ```mdl
-scenario T-9: An agent keeps its memory across spaces   # invite-agent.test.ts
-  # covers [F-6.2, F-6.3, F-6.4, F-6.5, F-6.6]
-  given: Kai in a home space, with a private chat with Mykola, a fact he stated (attributed to his DID) and a memory about him
-  when: Kai is invited into a second space twice, then as its presence, then back home; Mykola's private chat with the presence opens
+scenario T-9: An invited agent keeps one brain   # invite-agent.test.ts
+  # covers [F-6.2, F-6.3, F-6.5, F-6.6]
+  given: Kai in a home space; a fact Mykola stated in Kai's home brain
+  when: Kai is invited into a second space twice, then as its presence into a third, then back home; the presence recalls and learns
   then:
-    - one presence exists, keyed to Kai's URI, with Kai's name and instructions; back home Kai itself is returned
-    - the presence's first chat starts with a synthetic note naming the fact (said by Mykola) and the memory, and not his private chat
-    - Mykola's new private chat there starts with his home conversation, the agent speaking as "You"
-    - the home's facts and memory are read from the second space through the graph, and the second space from home
-    - without a graph nothing is read elsewhere and no note is composed
+    - one presence exists, keyed to Kai's URI, with Kai's name, DID and instructions; back home Kai itself is returned
+    - every presence names Kai's brain; the presence's chat is empty
+    - op:retrieveMemories in the presence's space returns the home fact, said by Mykola
+    - a fact the presence reads lands in the home brain, and the Brain companion lists both
 ```
 
 ## Not built
@@ -699,16 +682,16 @@ Design items from `docs/DESIGN.md` and `docs/MEMORY.md` that this package does n
 - The EDGE gateway Durable Object and the agent turn on EDGE live outside this package (EDGE repo).
   Until edge step 4 the gateway still reads a `DiscordBinding` and calls `ensureThreadChat`, neither of
   which exists any more, so Discord conversations do not reach the agent.
-- Real per-agent HALO identity: a presence carries its home's DID but is not admitted to the space as
-  itself. On EDGE an agent reads only the space its turn runs in, so a remote chat knows its other spaces
-  through the note it started with, not through op:retrieveMemories; what it learns after that note stays
-  in its own space until a new chat is opened.
-- In a chat hosted on EDGE, the memory note is written by the client, so it has no EDGE position until
-  the feed is read again: after the chat's first turn it renders below that turn until the page reloads.
-  The model reads it either way. Pushing the feed on write (`Feed.sync`) fixes the order but made the
-  thread re-render without end in a live take, so it is left out.
-- What a presence learns stays in its space's annotation feeds: the brain is the union of them, read
-  through the client's graph, not one store (EDGE's BrainObject is meant to be that store).
+- The intended shape: an agent is a member of the spaces it is invited to, people talk to it there as a
+  bot in their chats, and each person has one conversation with it at the top level (L0), not one per space.
+  As built, an agent has no HALO identity, so the contact picker adds a presence (an `Agent` keyed to its
+  home) instead of admitting it; the member's one conversation is their private chat in the agent's home
+  space, which the presence's article opens; and chats in a space do not wake the agent.
+- A member who cannot reach the agent's home space talks to the presence in a chat of its own, which reads
+  the home's brain but not the home conversation.
+- Memories and goals are objects in the space they were recorded in; only facts are shared through the
+  brain. EDGE's brain answers any agent id it is given: it does not yet check that the agent is in the
+  space the call comes from (`brain_spaces` on EDGE is meant to).
 - Runtime-assembled memory context at the start of each turn; consolidation (dedupe, promotion of
   inferred memories); editing or retracting memories in the UI (`retracted` exists as a status only).
 - Required provenance: `Memory.source` is optional as built.
@@ -923,18 +906,19 @@ test QA-3: Two people, one agent — a watch fires across private chats
 ```
 
 ```mdl
-test QA-4: An agent invited into another space keeps the conversation going
+test QA-4: An agent invited into another space keeps one conversation and one brain
   desc: |
-    The cross-space journey: an agent made in one space learns about something in conversation, is invited
-    into a second space, and answers there from what it learned in the first. The autocue flow
-    `autocue/agent-across-spaces.mjs` walks it and records the demo.
+    The cross-space journey: an agent made in one space learns about something in conversation, is added to
+    a second space from its Members panel the way a contact is, and there continues the same conversation and
+    reads what it learned from its brain with a tool call. The autocue flow `autocue/agent-across-spaces.mjs`
+    walks it and records the demo.
   actors: human
-  covers: [F-1.4, F-6.1, F-6.2, F-6.4]
-  status: passing             # 2026-10-10, recorded by autocue/agent-across-spaces.mjs against EDGE preview
+  covers: [F-1.4, F-6.1, F-6.4, F-6.5]
+  status: unverified
   given:
     - an identity exists, with the display name "Mykola"
     - space: "My Space" is open and SPACE_READY, with no agent
-    - other: a second space "Offsite team" exists
+    - other: a second space "Offsite team" exists, which Mykola owns
     - plugin-agent is enabled
     - a live model is available to the assistant (EDGE's AI service) — ABORT without one
   steps:
@@ -951,21 +935,24 @@ test QA-4: An agent invited into another space keeps the conversation going
       do: Send "The budget is 8,000 euros, and flights are still open."
       expect: Kai acknowledges the budget
       note: NO `invoke` — model-driven.
-    - name: Invite Kai to the other space
-      do: Open Kai's menu in the navtree, choose "Invite to space" and pick "Offsite team".
+    - name: Add Kai to the other space from its Members panel
+      do: In Offsite team open Settings › Members; under "Add from contacts" pick Kai and click Add.
       invoke: [op:inviteAgent] { agent: Ref($agent.agent) }   # run in $given.other
       capture: presence
-      expect: |
-        Offsite team opens on Kai, whose chat there starts with a collapsed "[Memory from your other
-        spaces]" note; both spaces now list Kai under Agents
+      expect: Offsite team lists Kai under Assistant › Agents, and the picker no longer offers Kai
       assert: return $result.created === true
-    - name: Read what Kai remembers
-      do: Expand the memory note.
-      expect: it lists what Kai learned in My Space and the conversation Mykola had with it there
-    - name: Ask Kai in the other space
-      do: Send "What do we have so far for the offsite?"
-      expect: Kai answers from My Space's conversation — Lisbon, November 14, 12 people, Dima on the venue, the 8,000 euro budget
-      note: NO `invoke` — model-driven. These words were never said in Offsite team; the note carries them.
+    - name: Open Kai in the other space
+      do: Click Kai under Offsite team's Agents.
+      expect: the same conversation as in My Space opens — Mykola's two messages and Kai's replies; there is one conversation, not one per space
+    - name: Ask Kai to check its memory
+      do: Send "Check your memory: what do we have so far for the offsite?"
+      expect: |
+        Kai calls Recall (shown as a tool row) and answers from its brain — Lisbon, November 14, 12 people,
+        Dima on the venue, the 8,000 euro budget, flights open
+      note: NO `invoke` — model-driven; the facts come from Kai's brain through op:retrieveMemories.
+    - name: Read Kai's brain from the other space
+      do: Open Kai's Brain companion and its Facts tab.
+      expect: the facts Kai read from the My Space conversation are listed, attributed to Mykola
   after:
     - name: Delete Kai in both spaces
       do: Delete Kai in Offsite team, then in My Space.
