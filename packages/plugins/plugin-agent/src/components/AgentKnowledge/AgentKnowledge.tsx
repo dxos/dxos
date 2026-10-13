@@ -22,6 +22,7 @@ import { meta } from '#meta';
 import { type Goal, type Memory } from '#types';
 
 import { MEMORY_ICONS } from '../ProfileGraph/index.ts';
+import { TURTLE_PREFIXES, formatRawFact } from './turtle.ts';
 
 //
 // Root
@@ -198,17 +199,6 @@ type AgentKnowledgeFact = {
   fact?: RDF.Fact;
 };
 
-/** A term as it would appear in a triple: an entity by its id, a literal quoted. */
-const formatTerm = (term: RDF.Fact['assertion']['subject']): string =>
-  term.kind === 'entity' ? `:${term.entity}` : JSON.stringify(term.literal);
-
-/** The fact's subject, predicate and object, then everything else it carries. */
-const formatRawFact = ({ assertion, ...metadata }: RDF.Fact): string => {
-  const { subject, predicate, object, ...qualifiers } = assertion;
-  const rest = Object.keys(qualifiers).length > 0 ? { assertion: qualifiers, ...metadata } : metadata;
-  return `${formatTerm(subject)} :${predicate} ${formatTerm(object)} .\n${JSON.stringify(rest, null, 2)}`;
-};
-
 type AgentKnowledgeFactsProps = {
   /** Newest first. */
   facts: readonly AgentKnowledgeFact[];
@@ -235,6 +225,14 @@ const AgentKnowledgeFacts = ({ facts, now }: AgentKnowledgeFactsProps) => {
       <ScrollArea.Root orientation='vertical'>
         <ScrollArea.Viewport asChild>
           <Layout.Container>
+            {raw && (
+              <pre
+                data-testid='agent-knowledge-fact-prefixes'
+                className='m-0 p-2 overflow-x-auto whitespace-pre text-xs font-mono text-fg-muted select-text'
+              >
+                {TURTLE_PREFIXES}
+              </pre>
+            )}
             <Listbox.Root
               items={facts.map((fact) => ({ value: fact.id, label: fact.text, icon: 'ph--graph--regular' }))}
             >
@@ -251,7 +249,10 @@ const AgentKnowledgeFacts = ({ facts, now }: AgentKnowledgeFactsProps) => {
                       <pre
                         data-place='full'
                         data-testid='agent-knowledge-fact-raw'
-                        className='m-0 p-2 overflow-x-auto whitespace-pre text-xs font-mono text-fg-muted'
+                        className='m-0 p-2 overflow-x-auto whitespace-pre text-xs font-mono text-fg-muted select-text cursor-text'
+                        // The row's own press handlers select the row and cancel the drag that selects text.
+                        onMouseDown={(event) => event.stopPropagation()}
+                        onClick={(event) => event.stopPropagation()}
                       >
                         {formatRawFact(fact.fact)}
                       </pre>
