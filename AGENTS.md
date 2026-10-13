@@ -304,6 +304,9 @@ Deeper conventions:
   `depot ci diagnose --job <job-id>`, `depot ci retry <run-id> --job <job-id>`. The
   `?job=` parameter of the check run's `details_url` is the job id. → `depot-ci` skill.
 - Commit hygiene → see "Commit nothing silently" in Non-negotiables.
+- **Every push to a ready PR runs the full Check suite.** Batch commits into one push. Merge `main`
+  in only to resolve a conflict: the merge queue already tests the PR on top of `main`. To keep
+  iterating on a ready PR, convert it back to a draft (`gh pr ready --undo`) and mark it ready when done.
 - Creating or landing a PR is a procedure — use the `submit-pr` and `land`
   skills. A PR gets a Composer preview only with the `preview` label, added only on request; when it
   has one, surface the preview URL next to the PR link.
