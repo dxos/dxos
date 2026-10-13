@@ -9,3 +9,5 @@ Fixed: adding a node to a conductor circuit logged `No compute function for node
 Circuit look: ports scale with the zoom (never under 3 screen px), a logic gate's body is three minor grid units tall with 2px lines, and the beacon shows a dim sun when off and a pulsing yellow duotone sun when on.
 
 Markdown links: an external link's arrow icon opens the link in a new tab (web URLs only), and the hover tooltip that only repeated the URL, sometimes far from the link, is gone.
+
+Mermaid diagrams in markdown render as block widgets over their fenced source, so a diagram at the end of a document shows (it was hidden with the source) and the blank lines around it stay; the corner label skips leading `%%` comments.

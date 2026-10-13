@@ -70,9 +70,9 @@ describe('ArchitectureSpace', () => {
     // The DXOS document walks the code and draws an edit's path to another device as a sequence diagram.
     const dxosContent = (await dxos?.content.load())?.content ?? '';
     expect(dxosContent).toContain('## Reading the code');
-    expect(dxosContent).toMatch(/^```mermaid\nsequenceDiagram\n/m);
+    expect(dxosContent).toMatch(/^```mermaid\n%%[^\n]*\nsequenceDiagram\n/m);
     // The EDGE document draws a device connecting the same way.
     const edgeContent = (await edge?.content.load())?.content ?? '';
-    expect(edgeContent).toMatch(/^```mermaid\nsequenceDiagram\n/m);
+    expect(edgeContent).toMatch(/^```mermaid\n%%[^\n]*\nsequenceDiagram\n/m);
   });
 });

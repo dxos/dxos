@@ -68,6 +68,7 @@ export const makeDocs = (drawings: DocDrawings): Docs => {
       Every message in the DXOS document's sequence rides one WebSocket per device. Opening it is where EDGE learns who the device is: the client proves its identity with a HALO credential, and the router hands the socket to that identity's Durable Object, which every later message for the identity goes through.
 
       ${FENCE}mermaid
+      %% Enable the Mermaid plugin to view the diagram inline.
       sequenceDiagram
         participant Client as EdgeClient (device)
         participant Router as edge router (Hono API)
@@ -89,6 +90,8 @@ export const makeDocs = (drawings: DocDrawings): Docs => {
         Db->>RouterObj: replies and other devices' changes (ROUTER_MESSENGER)
         RouterObj-->>Client: frames
       ${FENCE}
+
+      Once the socket is open, every service reaches the device the same way: through \`ROUTER_MESSENGER\` to its identity's \`RouterObject\`.
     `,
   });
 
@@ -124,6 +127,7 @@ export const makeDocs = (drawings: DocDrawings): Docs => {
       The path a change takes from one device to another, through the boxes of this diagram and the EDGE one:
 
       ${FENCE}mermaid
+      %% Enable the Mermaid plugin to view the diagram inline.
       sequenceDiagram
         participant App as App (Obj.update)
         participant Client as echo-client (RepoProxy)
@@ -144,6 +148,8 @@ export const makeDocs = (drawings: DocDrawings): Docs => {
         Router->>Peer: frames over that device's WebSocket
         Peer->>Peer: its replicator applies them, and DataService.subscribe updates its app
       ${FENCE}
+
+      A device that is offline when the change lands catches up the next time it connects, because db-service keeps the merged document.
     `,
   });
 
