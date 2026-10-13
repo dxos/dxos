@@ -5,9 +5,11 @@
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import type * as Agent from '@dxos/assistant/Agent';
 import { type Database, Filter, Obj, Ref } from '@dxos/echo';
+import { log } from '@dxos/log';
 import * as AgentOperation from '@dxos/plugin-agent/AgentOperation';
 import * as Memory from '@dxos/plugin-agent/Memory';
 import * as MemoryOperation from '@dxos/plugin-agent/MemoryOperation';
+import * as TriggerOperation from '@dxos/plugin-agent/TriggerOperation';
 import { Organization, Person } from '@dxos/types';
 
 //
@@ -25,6 +27,8 @@ export type SupportTeamMember = {
   expertise: readonly string[];
   /** Their Discord user id, which lets a relay open a DM with them. */
   discordId: string;
+  /** Their Discord username, which is how people name them in a channel. */
+  discordUsername: string;
 };
 
 /** The `Person.identities` label plugin-discord reads a person's Discord user id from. */
@@ -34,6 +38,7 @@ const DISCORD_IDENTITY = 'discord';
 export const SUPPORT_TEAM: readonly SupportTeamMember[] = [
   {
     fullName: 'Rich Burdon',
+    discordUsername: 'richburdon',
     discordId: '242308925523755008',
     preferredName: 'Rich',
     jobTitle: 'Founder; product and UI',
@@ -45,6 +50,7 @@ export const SUPPORT_TEAM: readonly SupportTeamMember[] = [
   },
   {
     fullName: 'Josiah Witt',
+    discordUsername: 'wittjosiah',
     discordId: '332330209858813952',
     preferredName: 'Josiah',
     jobTitle: 'Engineer; Composer app and integrations',
@@ -56,6 +62,7 @@ export const SUPPORT_TEAM: readonly SupportTeamMember[] = [
   },
   {
     fullName: 'Dmytro Maretskyi',
+    discordUsername: 'dmaretskyi',
     discordId: '389106806086959104',
     preferredName: 'Dmytro',
     jobTitle: 'Engineer; ECHO, compute and agents',
@@ -67,6 +74,7 @@ export const SUPPORT_TEAM: readonly SupportTeamMember[] = [
   },
   {
     fullName: 'Mykola Veremchuk',
+    discordUsername: 'mykola_vrmchk',
     discordId: '985848421195862056',
     preferredName: 'Mykola',
     jobTitle: 'Engineer; sync, networking and storage',
@@ -138,4 +146,54 @@ export const seedSupportTeam = async ({
     }
   }
   await db.flush({ indexes: true });
+};
+
+/** Where the roster the facts are read from claims to come from; facts are attributed to it. */
+const ROSTER_URL = 'https://dxos.org/team';
+
+/** The team as prose, for the agent to read into facts: who each member is, their Discord account and what they know. */
+const rosterText = (): string =>
+  [
+    `${SUPPORT_TEAM_NAME} is the support team for the community channel. Its members:`,
+    ...SUPPORT_TEAM.map(
+      ({ fullName, preferredName, jobTitle, expertise, discordUsername, discordId }) =>
+        `${fullName} (${preferredName}) is on the ${SUPPORT_TEAM_NAME} team as ${jobTitle}. ` +
+        `On Discord, ${preferredName} is @${discordUsername} (user id ${discordId}). ` +
+        `${preferredName} knows ${expertise.join('; ')}.`,
+    ),
+  ].join('\n\n');
+
+/**
+ * Reads the team roster into the agent's brain, so its Facts hold the team (with Discord usernames) as well as its
+ * Memories; skipped once the brain holds any fact. A model call on the brain where the agent's chats run, so a
+ * failure leaves the story usable and is only logged.
+ */
+export const seedSupportFacts = async ({
+  db,
+  invoker,
+  agent,
+  remote,
+}: {
+  db: Database.Database;
+  invoker: Capabilities.OperationInvoker;
+  agent: Agent.Agent;
+  remote: boolean;
+}): Promise<void> => {
+  const options = { spaceId: db.spaceId, ...(remote ? { on: 'edge' as const } : {}) };
+  const { data: brain, error: inspectError } = await invoker.invokePromise(
+    TriggerOperation.InspectBrain,
+    { agent: Ref.make(agent) },
+    options,
+  );
+  if (inspectError || (brain?.facts.length ?? 0) > 0) {
+    return;
+  }
+  const { error } = await invoker.invokePromise(
+    AgentOperation.ReadSource,
+    { agent: Ref.make(agent), url: ROSTER_URL, text: rosterText() },
+    options,
+  );
+  if (error) {
+    log.warn('seeding the support facts failed', { error });
+  }
 };

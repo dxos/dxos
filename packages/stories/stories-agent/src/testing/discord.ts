@@ -13,7 +13,7 @@ import * as ModeOperation from '@dxos/plugin-agent/ModeOperation';
 import * as DiscordChannel from '@dxos/plugin-discord/DiscordChannel';
 import { Channel } from '@dxos/types';
 
-import { seedSupportTeam } from './support-team.ts';
+import { seedSupportFacts, seedSupportTeam } from './support-team.ts';
 
 //
 // The Discord stories: one agent (Kai) in Support mode, the DXOS team it escalates to, and the Discord app (bot)
@@ -56,6 +56,10 @@ export type SetupDiscordAgentProps = DiscordBotArgs & SetupAgentProps;
 export const setupAgent = async ({ db, invoker, remote = false }: SetupAgentProps): Promise<Agent.Agent> => {
   const agent = await ensureAgent(db, invoker, remote);
   await seedSupportTeam({ db, invoker, agent });
+  // Facts need a model; only a story on EDGE has one.
+  if (remote) {
+    await seedSupportFacts({ db, invoker, agent, remote });
+  }
   await enableSupport(db, invoker, agent);
   return agent;
 };
