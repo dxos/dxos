@@ -60,7 +60,13 @@ export const AdditionMethodChooser = ({ active, send }: AdditionMethodChooserPro
     <Dialog.Body gap='md'>
       <Typography.Text tone='muted'>{t('addition-method-chooser.title')}</Typography.Text>
       {/* Held at no value, so every pick (even of the same option on a return to this step) reports a change. */}
-      <Listbox.Root items={items} value='' onValueChange={(value) => isAdditionMethod(value) && send({ type: value })}>
+      {/* Large rows, for a wider icon cell and larger icons; the label stays at the dialog's text size. */}
+      <Listbox.Root
+        size='xl'
+        items={items}
+        value=''
+        onValueChange={(value) => isAdditionMethod(value) && send({ type: value })}
+      >
         {/* Equal rows, so every option is as tall as the one whose description wraps. */}
         <Listbox.Content
           gap='sm'
@@ -73,15 +79,15 @@ export const AdditionMethodChooser = ({ active, send }: AdditionMethodChooserPro
               key={item.value}
               id={item.value}
               highlightOnHover
-              // A row stretched to the tallest one keeps its lines, and its icon and caret, in the middle.
-              classNames='content-center'
               data-testid={isAdditionMethod(item.value) ? TEST_IDS[item.value] : undefined}
             >
-              <Listbox.ItemIcon classNames='self-center' />
-              <Listbox.ItemText />
-              {/* A step smaller than the label, and up to two lines rather than one. */}
-              <Listbox.ItemDescription classNames='text-sm whitespace-normal line-clamp-2' />
-              <Icon.Icon icon='ph--caret-right--bold' size='md' classNames='self-center' />
+              <Listbox.ItemIcon classNames='self-center'>
+                {item.icon && <Icon.Icon icon={item.icon} size='xl' />}
+              </Listbox.ItemIcon>
+              <Listbox.ItemText classNames='text-base' />
+              {/* A step smaller than the label, always two lines tall, so every option is the same height. */}
+              <Listbox.ItemDescription classNames='text-sm whitespace-normal line-clamp-2 min-h-[2lh]' />
+              <Icon.Icon icon='ph--caret-right--bold' size='xl' classNames='self-center me-3' />
             </Listbox.Item>
           ))}
         </Listbox.Content>
