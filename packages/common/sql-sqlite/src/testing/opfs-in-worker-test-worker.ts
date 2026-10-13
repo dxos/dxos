@@ -144,11 +144,16 @@ const runTest = (testCase: string, payload?: string | Uint8Array): Effect.Effect
         const sql = yield* SqlClient.SqlClient;
         const inTransaction = yield* Deferred.make<void>();
         const queued = yield* Deferred.make<void>();
-        // Forked outside the transaction, so each statement asks for the connection; detached, so one that
-        // never gets it cannot hold up the case. More statements than the stack could nest one per waiter.
+        // Forked outside the transaction, so each statement asks for the connection; started immediately, so
+        // it is waiting on the permit before `queued` settles; detached, so one that never gets it cannot hold
+        // up the case. More statements than the stack could nest one per waiter.
         yield* Effect.forkChild(
           Deferred.await(inTransaction).pipe(
-            Effect.andThen(Effect.forEach(Array.from({ length: 5_000 }), () => Effect.forkDetach(sql`SELECT 1`))),
+            Effect.andThen(
+              Effect.forEach(Array.from({ length: 5_000 }), () =>
+                Effect.forkDetach(sql`SELECT 1`, { startImmediately: true }),
+              ),
+            ),
             Effect.andThen(Deferred.succeed(queued, undefined)),
           ),
         );
@@ -156,7 +161,6 @@ const runTest = (testCase: string, payload?: string | Uint8Array): Effect.Effect
           Effect.gen(function* () {
             yield* Deferred.succeed(inTransaction, undefined);
             yield* Deferred.await(queued);
-            yield* Effect.sleep('20 millis');
           }),
         );
         const next = yield* sql`SELECT 1`.pipe(Effect.timeoutOption('5 seconds'));
