@@ -3,10 +3,13 @@
 //
 
 import {
+  type ConstructQuery,
+  type Ordering,
   Parser,
   type Pattern,
   type PropertyPath,
   type Quads,
+  type SelectQuery,
   type SparqlParser,
   type Term as SparqlTerm,
   type Triple,
@@ -34,11 +37,22 @@ type QueryPlan = {
 
 const PLAN_CACHE_LIMIT = 500;
 
-const numTerm = (value: number): Term => ({
-  termType: 'Literal',
-  value: String(value),
-  datatype: Number.isInteger(value) ? `${XSD}integer` : `${XSD}decimal`,
-});
+/** Pattern counts for planner hints stop here, so a hint costs at most one bounded index range scan. */
+const COUNT_CAP = 100_000;
+const COUNT_CACHE_LIMIT = 10_000;
+/** Smallest likelihood passed to SQLite; a constant absent from the store matches nothing. */
+const MIN_PROBABILITY = 1e-9;
+
+const quoteName = (name: string) => `"${name.replace(/"/g, '""')}"`;
+
+/**
+ * A computed number as a literal. Arithmetic runs in doubles, so a fraction is rounded to 15
+ * significant digits to read as the xsd:decimal it stands for (0.1 + 0.2 → "0.3", not "0.30000000000000004").
+ */
+const numTerm = (value: number): Term =>
+  Number.isInteger(value)
+    ? { termType: 'Literal', value: String(value), datatype: `${XSD}integer` }
+    : { termType: 'Literal', value: String(Number(value.toPrecision(15))), datatype: `${XSD}decimal` };
 
 /**
  * SPARQL 1.1 engine over SQLite: every query compiles to one SQL statement over an interned quad store.
@@ -46,11 +60,19 @@ const numTerm = (value: number): Term => ({
  */
 export class SqlSparqlEngine {
   readonly store: TermStore;
+  /** Pass per-constant selectivities to SQLite as `likelihood()` hints (see `#selectivity`). */
+  selectivityHints = true;
   /** SQL of the last executed statement (diagnostics). */
   lastSql?: string;
   readonly #parser: SparqlParser = new Parser({ skipUngroupedVariableCheck: true });
   /** Compiled SQL by query text (constants resolved at compile time, so invalidated on writes). */
   readonly #plans = new Map<string, QueryPlan>();
+  /**
+   * Capped quad counts by `p` / `p o` id, for selectivity hints. They only steer SQLite's plan, never the
+   * answer, and are dropped on every write together with the plans they were baked into.
+   */
+  readonly #counts = new Map<string, number>();
+  #countsTotal: number | undefined;
 
   constructor(sql: SqlStorage, options: EngineOptions = {}) {
     this.store = new TermStore(sql, options.indexes);
@@ -64,6 +86,7 @@ export class SqlSparqlEngine {
   /** Drops all data (optionally switching the index set). */
   reset(indexes?: IndexSet): void {
     this.#plans.clear();
+    this.#clearCounts();
     this.store.reset(indexes);
   }
 
@@ -71,6 +94,7 @@ export class SqlSparqlEngine {
   insert(quads: readonly Quad[]): void {
     this.#plans.clear();
     this.store.insert(quads);
+    this.#clearCounts();
   }
 
   /** Number of stored quads. */
@@ -137,6 +161,10 @@ export class SqlSparqlEngine {
     if (parsed.type === 'update') {
       return { kind: 'update', update: parsed };
     }
+    if (parsed.from && (parsed.from.default.length > 0 || parsed.from.named.length > 0)) {
+      // The store is one dataset; silently ignoring a dataset clause would answer over the wrong graphs.
+      throw new UnsupportedSparqlError('FROM / FROM NAMED');
+    }
     const temps = new Map<number, Term>();
     const compiler = this.#compiler(temps);
     let compiled: Compiled;
@@ -146,20 +174,28 @@ export class SqlSparqlEngine {
         compiled = compiler.compileSelect(parsed);
         break;
       case 'ASK':
-        compiled = compiler.compileWhere(parsed.where ?? [], 1);
+        compiled = compiler.compileSelect({
+          where: parsed.where ?? [],
+          values: parsed.values,
+          variables: [{ termType: 'Wildcard' }],
+          limit: 1,
+        });
         break;
       case 'CONSTRUCT':
-        compiled = compiler.compileWhere(
-          parsed.where ?? [],
-          'limit' in parsed && typeof parsed.limit === 'number' ? parsed.limit : undefined,
-        );
+        // Solution modifiers apply to the WHERE solutions before the template is instantiated.
+        compiled = compiler.compileSelect({
+          where: parsed.where ?? [],
+          values: parsed.values,
+          variables: [{ termType: 'Wildcard' }],
+          ...constructModifiers(parsed),
+        });
         template = parsed.template;
         break;
       default:
         throw new UnsupportedSparqlError(`query type ${parsed.queryType}`);
     }
     const plan: QueryPlan = {
-      compiled: { ...compiled, sql: this.#wrap(compiler.ctes, compiled) },
+      compiled: { ...compiled, sql: this.#wrap(compiler.ctes, compiled, temps, compiler.tempTermsUsed) },
       temps,
       kind: parsed.queryType,
       template,
@@ -192,15 +228,67 @@ export class SqlSparqlEngine {
         }
         return String(temp);
       },
+      selectivity: this.selectivityHints
+        ? (p, o) => this.#selectivity(Number(p), o === undefined ? undefined : Number(o))
+        : undefined,
     });
   }
 
+  /** Fractions for `likelihood()` hints: quads with predicate `p`, and of those with object `o`. */
+  #selectivity(p: number, o: number | undefined): { p: number; o?: number } | undefined {
+    this.#countsTotal ??= this.#statTotal();
+    const total = this.#countsTotal;
+    if (!total) {
+      // Without sqlite_stat1 SQLite assumes a default table size, so absolute hints would mislead it.
+      return undefined;
+    }
+    const clamp = (value: number) => Math.min(1, Math.max(MIN_PROBABILITY, value));
+    const pCount = p < 0 ? 0 : this.#count(`p = ${p}`);
+    if (o === undefined) {
+      return { p: clamp(pCount / total) };
+    }
+    const poCount = p < 0 || o < 0 ? 0 : this.#count(`p = ${p} AND o = ${o}`);
+    return { p: clamp(pCount / total), o: clamp(poCount / Math.max(pCount, 1)) };
+  }
+
+  #count(where: string): number {
+    let count = this.#counts.get(where);
+    if (count === undefined) {
+      count = asNumber(
+        this.store.sql
+          .exec(`SELECT COUNT(*) AS n FROM (SELECT 1 FROM quads WHERE ${where} LIMIT ${COUNT_CAP})`)
+          .toArray()[0].n,
+      );
+      if (this.#counts.size >= COUNT_CACHE_LIMIT) {
+        this.#counts.clear();
+      }
+      this.#counts.set(where, count);
+    }
+    return count;
+  }
+
+  /** Quad count as of the last ANALYZE (first number of the quads indexes' sqlite_stat1 row). */
+  #statTotal(): number | undefined {
+    const sql = this.store.sql;
+    if (sql.exec(`SELECT 1 FROM sqlite_master WHERE name = 'sqlite_stat1'`).toArray().length === 0) {
+      return undefined;
+    }
+    const [row] = sql.exec(`SELECT stat FROM sqlite_stat1 WHERE tbl = 'quads' LIMIT 1`).toArray();
+    const total = row ? Number(String(row.stat).split(' ')[0]) : 0;
+    return total > 0 ? total : undefined;
+  }
+
+  #clearCounts(): void {
+    this.#counts.clear();
+    this.#countsTotal = undefined;
+  }
+
   /** Adds the CTEs and the final decode join (term id → kind/lex/dt/lang) around the compiled select. */
-  #wrap(ctes: string[], compiled: Compiled): string {
+  #wrap(ctes: string[], compiled: Compiled, temps: Map<number, Term>, tempTermsUsed: boolean): string {
     const cols: string[] = [];
     const joins: string[] = [];
     compiled.cols.forEach((col, index) => {
-      const ref = `r."${col.name.replace(/"/g, '""')}"`;
+      const ref = `r.${quoteName(col.name)}`;
       cols.push(`${ref} AS c${index}`);
       if (col.type === 'id') {
         cols.push(
@@ -209,11 +297,31 @@ export class SqlSparqlEngine {
           `t${index}.dt AS d${index}`,
           `t${index}.lang AS g${index}`,
         );
-        joins.push(`LEFT JOIN terms t${index} ON t${index}.id = ${ref}`);
+        // `main.` bypasses the temp-terms CTE: temp ids are decoded in JS, and the base table keeps its index.
+        joins.push(`LEFT JOIN main.terms t${index} ON t${index}.id = ${ref}`);
       }
     });
-    const head = ctes.length ? `WITH RECURSIVE ${ctes.join(', ')} ` : '';
-    return `${head}SELECT ${cols.join(', ') || '1'} FROM (${compiled.sql}) r ${joins.join(' ')}`;
+    const all = tempTermsUsed && temps.size > 0 ? [this.#tempTerms(temps), ...ctes] : ctes;
+    const head = all.length ? `WITH RECURSIVE ${all.join(', ')} ` : '';
+    const order = compiled.order?.length
+      ? ` ORDER BY ${compiled.order.map((key) => `r.${quoteName(key.col)}${key.descending ? ' DESC' : ''}`).join(', ')}`
+      : '';
+    return `${head}SELECT ${cols.join(', ') || '1'} FROM (${compiled.sql}) r ${joins.join(' ')}${order}`;
+  }
+
+  /**
+   * Constants absent from the store (negative ids) shadow `terms` for this statement only, so functions
+   * and comparisons over them (`VALUES ?x { "new" } FILTER(STRLEN(?x) > 1)`) see a real term.
+   */
+  #tempTerms(temps: Map<number, Term>): string {
+    const rows = [...temps].map(([id, term]) => {
+      const enc = encodeTerm(term);
+      const dt = enc.dt === null ? 'NULL' : String(this.store.dtIdIfKnown(enc.dt));
+      const text = (value: string | null) => (value === null ? 'NULL' : `'${value.replace(/'/g, "''")}'`);
+      const num = enc.num === null || !Number.isFinite(enc.num) ? 'NULL' : String(enc.num);
+      return `(${id}, 0, ${enc.kind}, ${text(enc.lex)}, ${dt}, ${text(enc.lang)}, ${num})`;
+    });
+    return `terms(id, h, kind, lex, dt, lang, num) AS NOT MATERIALIZED (SELECT id, h, kind, lex, dt, lang, num FROM main.terms UNION ALL VALUES ${rows.join(', ')})`;
   }
 
   #run(plan: Pick<QueryPlan, 'compiled' | 'temps'>): Row[] {
@@ -228,10 +336,10 @@ export class SqlSparqlEngine {
         if (col.type === 'id') {
           const [kind, lex, dt, lang] = raw.slice(index, index + 4);
           index += 4;
-          if (kind !== null) {
-            row[col.name] = this.store.decode(kind, lex, dt, lang);
-          } else if (typeof value === 'number' && value < 0) {
+          if (typeof value === 'number' && value < 0) {
             row[col.name] = plan.temps.get(value);
+          } else if (kind !== null) {
+            row[col.name] = this.store.decode(kind, lex, dt, lang);
           }
         } else if (value !== null) {
           switch (col.type) {
@@ -256,11 +364,12 @@ export class SqlSparqlEngine {
     const seen = new Set<string>();
     const out: Row[] = [];
     for (const row of rows) {
+      const fresh = new Map<string, Term>();
       for (const triple of template) {
         const [s, p, o] = [
-          instantiate(row, triple.subject),
-          instantiate(row, triple.predicate),
-          instantiate(row, triple.object),
+          instantiate(row, triple.subject, fresh),
+          instantiate(row, triple.predicate, fresh),
+          instantiate(row, triple.object, fresh),
         ];
         if (s && p && o) {
           const key = JSON.stringify([s, p, o]);
@@ -280,11 +389,12 @@ export class SqlSparqlEngine {
 
   #update(update: Update): void {
     this.#plans.clear();
+    this.#clearCounts();
     for (const op of update.updates) {
       if ('updateType' in op) {
         switch (op.updateType) {
           case 'insert':
-            this.store.insert(groundQuads(op.insert));
+            this.store.insert(groundQuads(op.insert, new Map()));
             break;
           case 'delete':
             this.store.delete(groundQuads(op.delete));
@@ -312,17 +422,21 @@ export class SqlSparqlEngine {
     const temps = new Map<number, Term>();
     const compiler = this.#compiler(temps);
     const compiled = compiler.compileWhere(where);
-    const rows = this.#run({ compiled: { ...compiled, sql: this.#wrap(compiler.ctes, compiled) }, temps });
-    const instantiateAll = (blocks: Quads[]) => {
+    const rows = this.#run({
+      compiled: { ...compiled, sql: this.#wrap(compiler.ctes, compiled, temps, compiler.tempTermsUsed) },
+      temps,
+    });
+    const instantiateAll = (blocks: Quads[], freshBlanks: boolean) => {
       const quads: Quad[] = [];
       for (const row of rows) {
+        const fresh = freshBlanks ? new Map<string, Term>() : undefined;
         for (const block of blocks) {
           const graph = block.type === 'graph' ? instantiate(row, block.name) : undefined;
           for (const triple of block.triples) {
             const [s, p, o] = [
-              instantiate(row, triple.subject),
-              instantiate(row, triple.predicate),
-              instantiate(row, triple.object),
+              instantiate(row, triple.subject, fresh),
+              instantiate(row, triple.predicate, fresh),
+              instantiate(row, triple.object, fresh),
             ];
             if (s && p && o && (block.type !== 'graph' || graph)) {
               quads.push({ s, p, o, g: graph });
@@ -332,30 +446,55 @@ export class SqlSparqlEngine {
       }
       return quads;
     };
-    const toDelete = instantiateAll(deletes);
-    const toInsert = instantiateAll(inserts);
+    const toDelete = instantiateAll(deletes, false);
+    const toInsert = instantiateAll(inserts, true);
     this.store.delete(toDelete);
     this.store.insert(toInsert);
   }
 }
 
-/** A template position under one solution: variables take the row's binding, constants are themselves. */
-const instantiate = (row: Row, term: SparqlTerm | PropertyPath): Term | undefined => {
+const isOrdering = (item: unknown): item is Ordering =>
+  typeof item === 'object' && item !== null && 'expression' in item;
+
+/** sparqljs parses solution modifiers on CONSTRUCT but types them on SELECT only. */
+const constructModifiers = (query: ConstructQuery): Pick<SelectQuery, 'order' | 'limit' | 'offset'> => ({
+  order: 'order' in query && Array.isArray(query.order) ? query.order.filter(isOrdering) : undefined,
+  limit: 'limit' in query && typeof query.limit === 'number' ? query.limit : undefined,
+  offset: 'offset' in query && typeof query.offset === 'number' ? query.offset : undefined,
+});
+
+/**
+ * A template position under one solution: variables take the row's binding, constants are themselves.
+ * With `fresh`, template blank nodes become new blank nodes per solution (CONSTRUCT, INSERT), so two
+ * solutions — or two updates — never share one.
+ */
+const instantiate = (row: Row, term: SparqlTerm | PropertyPath, fresh?: Map<string, Term>): Term | undefined => {
   if ('type' in term) {
     throw new UnsupportedSparqlError('property path in a template');
   }
-  return term.termType === 'Variable' ? row[term.value] : toTerm(term);
+  if (term.termType === 'Variable') {
+    return row[term.value];
+  }
+  if (term.termType === 'BlankNode' && fresh) {
+    let blank = fresh.get(term.value);
+    if (!blank) {
+      blank = { termType: 'BlankNode', value: `b${crypto.randomUUID().replace(/-/g, '')}` };
+      fresh.set(term.value, blank);
+    }
+    return blank;
+  }
+  return toTerm(term);
 };
 
-const groundQuads = (blocks: Quads[]): Quad[] => {
+const groundQuads = (blocks: Quads[], fresh?: Map<string, Term>): Quad[] => {
   const quads: Quad[] = [];
   for (const block of blocks) {
     const graph = block.type === 'graph' ? toTerm(block.name) : undefined;
     for (const triple of block.triples) {
       const [s, p, o] = [
-        instantiate({}, triple.subject),
-        instantiate({}, triple.predicate),
-        instantiate({}, triple.object),
+        instantiate({}, triple.subject, fresh),
+        instantiate({}, triple.predicate, fresh),
+        instantiate({}, triple.object, fresh),
       ];
       if (!s || !p || !o) {
         throw new UnsupportedSparqlError('variable in a data block');

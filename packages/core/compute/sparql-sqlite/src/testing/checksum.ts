@@ -21,7 +21,8 @@ export const termKey = (term: Term | undefined): string => {
       return '_:b';
     case 'Literal': {
       if (term.datatype && NUMERIC.has(term.datatype)) {
-        return `#${Number(term.value)}`;
+        // 15 significant digits: engines computing decimals in doubles differ beyond that.
+        return `#${Number(Number(term.value).toPrecision(15))}`;
       }
       const dt = term.datatype && term.datatype !== `${XSD}string` ? `^^${term.datatype}` : '';
       return `"${term.value}"${term.language ? `@${term.language}` : ''}${dt}`;

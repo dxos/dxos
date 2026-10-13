@@ -128,7 +128,7 @@
     },
     "agg_having": {
       "rows": 1,
-      "checksum": "4bae9fe9"
+      "checksum": "eda0901d"
     },
     "agg_group_concat": {
       "rows": 1,

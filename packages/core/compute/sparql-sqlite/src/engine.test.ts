@@ -57,6 +57,31 @@ describe('SqlSparqlEngine', () => {
     }
   });
 
+  test('selectivity hints change plans only and are refreshed on writes', ({ expect }) => {
+    const engine = new SqlSparqlEngine(createNodeSqlStorage());
+    engine.init();
+    const typed = (from: number, count: number, type: string) =>
+      Array.from({ length: count }, (_, index) => ({
+        s: iri(`${EX}s${from + index}`),
+        p: iri(`${EX}type`),
+        o: iri(`${EX}${type}`),
+      }));
+    // Enough quads that the store has run ANALYZE, which the hints need as their baseline.
+    engine.insert([...typed(0, 100, 'A'), ...typed(100, 4900, 'B')]);
+    const query = `${PREFIXES} SELECT ?s WHERE { ?s ex:type ex:A }`;
+    const hinted = engine.explain(query).sql;
+    expect(hinted).toContain('likelihood(');
+    const rows = checksumRows(engine.query(query));
+    engine.selectivityHints = false;
+    engine.clearPlans();
+    expect(engine.explain(query).sql).not.toContain('likelihood(');
+    expect(checksumRows(engine.query(query))).toEqual(rows);
+    engine.selectivityHints = true;
+    engine.insert(typed(5000, 2000, 'A'));
+    expect(engine.explain(query).sql).not.toEqual(hinted);
+    expect(engine.query(query)).toHaveLength(2100);
+  });
+
   test('code:10000 transitive path', ({ expect }) => {
     const engine = loadEngine(10_000, generateCode, 2000);
     const rows = engine.query(queryById('Q7_path').sparql);

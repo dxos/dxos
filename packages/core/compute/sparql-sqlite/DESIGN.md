@@ -66,24 +66,24 @@ final `LEFT JOIN terms`) or a computed `num` / `str` / `bool`. SQL NULL stands f
 and for "error" inside expressions. SQL's three-valued AND/OR/NOT matches SPARQL's error logic, so
 FILTER needs no special error handling.
 
-| SPARQL                           | SQL                                                                                                |
-| -------------------------------- | -------------------------------------------------------------------------------------------------- |
-| triple pattern                   | `quads qN`, with constants as `qN.x = <id>` and shared variables as equalities                     |
-| BGP / group                      | inner joins in one `FROM`                                                                          |
-| OPTIONAL                         | `LEFT JOIN`, with the OPTIONAL's FILTER in `ON` (a derived table when the body is not one pattern) |
-| UNION                            | `UNION ALL` derived table                                                                          |
-| MINUS, `FILTER NOT EXISTS`       | correlated `NOT EXISTS`                                                                            |
-| sub-SELECT                       | derived table                                                                                      |
-| variable joins under nullability | `(a IS NULL OR b IS NULL OR a = b)` plus `COALESCE` (compatible mappings)                          |
-| GROUP BY / HAVING / aggregates   | `GROUP BY` / `HAVING`, then a derived table that the projection reads                              |
-| MIN / MAX on terms               | `MIN` / `MAX` of a packed key (`order key ␁ id`) to keep SPARQL term order and return the id       |
-| ORDER BY                         | keys: kind class (blank < IRI < literal), then `num`, then `lex`                                   |
-| paths `/ ^ \| !(…)`              | joins, column swap, `UNION ALL`, `p NOT IN (…)`                                                    |
-| paths `+ * ?`                    | `WITH RECURSIVE` (set semantics), anchored on a constant or an already-bound variable              |
-| GRAPH `<iri>` / `?g`             | `g = <id>` / `g <> 0` bound to `?g`; default-graph patterns get `g = 0` once named graphs exist    |
-| VALUES                           | `(SELECT … FROM (VALUES …))` derived table; UNDEF is NULL                                          |
-| REGEX                            | `LIKE … ESCAPE` (flag `i`) or `GLOB`, for the subset that maps exactly                             |
-| constants not in the store       | negative temp ids that match nothing but still project                                             |
+| SPARQL                           | SQL                                                                                                                                                                                             |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| triple pattern                   | `quads qN`, with constants as `qN.x = <id>` and shared variables as equalities                                                                                                                  |
+| BGP / group                      | inner joins in one `FROM`                                                                                                                                                                       |
+| OPTIONAL                         | `LEFT JOIN`, with the OPTIONAL's FILTER in `ON` (a derived table when the body is not one pattern)                                                                                              |
+| UNION                            | `UNION ALL` derived table                                                                                                                                                                       |
+| MINUS, `FILTER NOT EXISTS`       | correlated `NOT EXISTS`                                                                                                                                                                         |
+| sub-SELECT                       | derived table                                                                                                                                                                                   |
+| variable joins under nullability | `(a IS NULL OR b IS NULL OR a = b)` plus `COALESCE` (compatible mappings)                                                                                                                       |
+| GROUP BY / HAVING / aggregates   | `GROUP BY` / `HAVING`, then a derived table that the projection reads                                                                                                                           |
+| MIN / MAX on terms               | `MIN` / `MAX` of a packed key (`order key ␁ id`) to keep SPARQL term order and return the id                                                                                                    |
+| ORDER BY                         | keys: kind class (blank < IRI < literal), then `num`, then `lex`; carried out as hidden `_oN` columns that the outer decode select sorts by (a derived table's order does not survive the join) |
+| paths `/ ^ \| !(…)`              | joins, column swap, `UNION ALL`, `p NOT IN (…)`                                                                                                                                                 |
+| paths `+ * ?`                    | `WITH RECURSIVE` (set semantics), anchored on a constant or an already-bound variable                                                                                                           |
+| GRAPH `<iri>` / `?g`             | `g = <id>` / `g <> 0` bound to `?g`; default-graph patterns get `g = 0` once named graphs exist                                                                                                 |
+| VALUES                           | `(SELECT … FROM (VALUES …))` derived table; UNDEF is NULL                                                                                                                                       |
+| REGEX                            | `LIKE … ESCAPE` (flag `i`) or `GLOB`, for the subset that maps exactly                                                                                                                          |
+| constants not in the store       | negative temp ids that match nothing but still project; only when VALUES/BIND binds one to a variable does a `terms` CTE shadow the table for that statement                                    |
 
 ASK runs the WHERE with `LIMIT 1`. CONSTRUCT and `DELETE/INSERT … WHERE` compile the WHERE as one
 SELECT and instantiate their templates in JS. Compiled SQL is cached per query text, and the cache is
@@ -119,12 +119,16 @@ These fail silently. A bad plan gives a 100–1000× slower answer, not a wrong 
 
 ## Known gaps
 
+Measured against the W3C test suites and three reference engines in
+[docs/CONFORMANCE.md](docs/CONFORMANCE.md), which lists every known failure by cause.
+
 - REGEX beyond literals, `.`, `.*`, `^`, `$`, escapes and one level of alternation; also REPLACE.
 - Functions that create terms: `DATATYPE`, `IRI`, `BNODE`, `STRDT`, `STRLANG`, `UUID`, hash functions.
 - A computed value joined against a stored term (it throws `UnsupportedSparqlError`).
 - Property paths inside `GRAPH ?g`, SERVICE, DESCRIBE, and RDF-star.
-- `MIN`/`MAX` order negative numbers wrongly among themselves (packed-key encoding).
-- Decimal arithmetic runs in doubles, so SUM and AVG can differ from `xsd:decimal` in the last digit.
+- Decimal arithmetic runs in doubles; computed fractions are rounded to 15 significant digits on output.
+- Computed numbers and strings carry no XSD type or language tag (see [docs/CONFORMANCE.md](docs/CONFORMANCE.md)).
+- `FROM` / `FROM NAMED` throw `UnsupportedSparqlError`: the store is one dataset.
 - CLEAR and DROP of a named graph, LOAD, and COPY/MOVE/ADD.
 - No GC of orphan terms after deletes.
 - Fan-out joins rely on SQLite's nested loops only. Q6 takes 0.6 s at 1M triples. A

@@ -32,13 +32,25 @@ import { XSD } from './terms.ts';
 
 export type VType = 'id' | 'num' | 'str' | 'bool';
 export type VarInfo = { sql: string; type: VType; nullable: boolean };
-export type Compiled = { sql: string; cols: { name: string; type: VType; nullable: boolean }[] };
+export type Compiled = {
+  sql: string;
+  cols: { name: string; type: VType; nullable: boolean }[];
+  /** Hidden ORDER BY key columns of `sql`, which the statement around it must sort by. */
+  order?: { col: string; descending: boolean }[];
+  /** Hidden column holding the graph of a sub-select compiled inside `GRAPH ?var`. */
+  graphCol?: string;
+};
 
 /** Resolves constants against the store while compiling. */
 export interface ConstResolver {
   /** SQL literal for a constant term id (a negative temp id when the term is not stored). */
   constId(term: SparqlTerm): string;
   namedGraphs: boolean;
+  /**
+   * Planner hint for a pattern with constant predicate id `p` (and object id `o`): the fraction of quads
+   * matching `p`, and of those the fraction matching `o`. Undefined leaves SQLite to its averages.
+   */
+  selectivity?(p: string, o: string | undefined): { p: number; o?: number } | undefined;
 }
 
 /** The SELECT fields the compiler reads; `compileWhere` synthesizes one with a wildcard projection. */
@@ -54,7 +66,8 @@ type PatternTerm = SparqlTerm | HiddenVar;
 type Predicate = Triple['predicate'];
 type FromItem = { alias: string; src: string; join: 'inner' | 'left'; on: string[] };
 type Graph = { kind: 'default' } | { kind: 'const'; sql: string } | { kind: 'var'; name: string };
-type Anchor = { side: 's' | 'o'; seed: string };
+/** Closure start nodes: `seed` selects them as `n`; `bound` when they come from a variable's bindings. */
+type Anchor = { side: 's' | 'o'; seed: string; bound?: boolean };
 
 /** A compiled expression: `c` is set for constants (statically known term). */
 type Val = { t: VType; sql: string; c?: Enc };
@@ -65,6 +78,8 @@ class Scope {
   vars = new Map<string, VarInfo>();
   /** References columns outside itself (EXISTS body): cannot be hoisted into a CTE. */
   correlated = false;
+  /** Graph variables every solution of this scope takes from a matched quad. */
+  graphBound = new Set<string>();
 }
 
 const DATE_PARTS: Record<string, readonly [start: number, length: number]> = {
@@ -82,6 +97,40 @@ const and = (conds: string[]) => (conds.length === 0 ? '1' : conds.map((cond) =>
 
 const termCol = (idSql: string, col: string, kindCond?: string) =>
   `(SELECT ${col} FROM terms WHERE id = ${idSql}${kindCond ? ` AND ${kindCond}` : ''})`;
+
+/** Lexical spaces of the numeric cast targets (xsd:float/double also take INF and NaN). */
+const INTEGER_LEX = /^[+-]?\d+$/;
+const DECIMAL_LEX = /^[+-]?(\d+(\.\d*)?|\.\d+)$/;
+const DOUBLE_LEX = /^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$/;
+
+/** SQL test that a string expression is in a numeric lexical space (GLOB has no repetition, so it checks by exclusion). */
+const numericLexSql = (sql: string, lexical: RegExp): string => {
+  const text = `trim(${sql})`;
+  const body = `ltrim(${text}, '+-')`;
+  const base = `length(${text}) - length(${body}) <= 1 AND ${body} GLOB '*[0-9]*'`;
+  if (lexical === INTEGER_LEX) {
+    return `(${base} AND NOT ${body} GLOB '*[^0-9]*')`;
+  }
+  if (lexical === DECIMAL_LEX) {
+    return `(${base} AND NOT ${body} GLOB '*[^0-9.]*' AND NOT ${body} GLOB '*.*.*')`;
+  }
+  const invalid = [
+    '*[^0-9.eE+-]*',
+    '*.*.*',
+    '*[eE]*[eE]*',
+    '*[eE]*.*',
+    '[eE]*',
+    '.[eE]*',
+    '*[eE]',
+    '*[eE][+-]',
+    '*[0-9.][+-]*',
+  ];
+  return `(${base} AND ${invalid.map((glob) => `NOT ${body} GLOB '${glob}'`).join(' AND ')})`;
+};
+
+/** Maps digits 0-9 to letters j-a so a larger magnitude sorts first (negative numbers in a text key). */
+const descendingDigits = (sql: string): string =>
+  [...'0123456789'].reduce((acc, digit) => `replace(${acc}, '${digit}', '${'jihgfedcba'[Number(digit)]}')`, sql);
 
 const isPath = (item: object): item is PropertyPath => 'type' in item && item.type === 'path';
 
@@ -105,9 +154,19 @@ const asExpression = (arg: Expression | Pattern): Expression => {
 /** Compiles sparqljs ASTs to SQL; one instance per statement (it accumulates the statement's CTEs). */
 export class Compiler {
   readonly ctes: string[] = [];
+  /**
+   * A constant absent from the store (negative id) is bound to a variable by VALUES or BIND, so term
+   * lookups on that variable need the temp terms; plain `qN.o = -1` conditions and constants met
+   * directly in expressions (inlined from `Val.c`) do not.
+   */
+  tempTermsUsed = false;
   readonly resolver: ConstResolver;
   #aliases = 0;
   #hidden = 0;
+  /** Grouped select being compiled: aggregates met in expressions become its hidden columns. */
+  #aggregates: { scope: Scope; alias: string; cols: string[] } | undefined;
+  /** Graph of the group being compiled (EXISTS bodies inherit it). */
+  #graph: Graph = { kind: 'default' };
 
   constructor(resolver: ConstResolver) {
     this.resolver = resolver;
@@ -117,12 +176,24 @@ export class Compiler {
   // Queries.
   //
 
-  /** Compiles a SELECT (top level or sub-select) into a statement whose columns are the projected vars. */
-  compileSelect(query: SelectShape): Compiled {
+  /**
+   * Compiles a SELECT (top level or sub-select) into a statement whose columns are the projected vars.
+   * A sub-select inside `GRAPH ?g` is evaluated per graph: the graph travels as an extra hidden column.
+   */
+  compileSelect(query: SelectShape, graph: Graph = { kind: 'default' }): Compiled {
     const scope = new Scope();
-    this.group(query.where ?? [], scope, { kind: 'default' });
-    if (query.values) {
-      this.values(scope, query.values);
+    let inner = graph;
+    let graphCol: string | undefined;
+    if (graph.kind === 'var') {
+      if (query.limit !== undefined || query.offset !== undefined) {
+        throw new UnsupportedSparqlError('LIMIT/OFFSET in a sub-select inside GRAPH ?var');
+      }
+      graphCol = `_sg${this.#hidden++}`;
+      inner = { kind: 'var', name: graphCol };
+    }
+    this.group(query.where ?? [], scope, inner);
+    if (graphCol) {
+      this.#bindGraphNames(scope, graphCol);
     }
     const variables = query.variables;
     const projection = isWildcardProjection(variables) ? undefined : variables;
@@ -130,61 +201,60 @@ export class Compiler {
       !!query.group ||
       !!query.having ||
       (projection ?? []).some((item) => 'expression' in item && containsAggregate(item.expression));
+    // A trailing VALUES joins the grouped solutions when there is grouping, else the WHERE solutions.
+    if (query.values && !hasAgg) {
+      this.values(scope, query.values);
+    }
 
     let base: Scope;
     let projected: { name: string; val: Val; nullable: boolean }[];
+    // Grouped: keys and aggregates are columns of a GROUP BY select; projection, HAVING and ORDER BY
+    // expressions run one level up over those columns, so an aggregate's id can feed a term lookup.
+    let grouped: { alias: string; keys: string[]; cols: string[] } | undefined;
+    const outerAggregates = this.#aggregates;
     if (hasAgg) {
-      const keys: string[] = [];
-      const cols: string[] = [];
-      const aggVars = new Map<string, VarInfo>();
-      const keyNullable = new Map<string, boolean>();
+      const alias = this.#alias('a');
+      grouped = { alias, keys: [], cols: [] };
+      const { keys, cols } = grouped;
+      const derived = new Scope();
+      const addKey = (name: string, info: VarInfo, keySql: string) => {
+        keys.push(keySql);
+        cols.push(`${info.sql} AS ${quoteName(name)}`);
+        derived.vars.set(name, { sql: `${alias}.${quoteName(name)}`, type: info.type, nullable: info.nullable });
+      };
+      const graphInfo = graphCol ? scope.vars.get(graphCol) : undefined;
+      if (graphCol && graphInfo) {
+        addKey(graphCol, { ...graphInfo, nullable: false }, graphInfo.sql);
+      }
       for (const item of query.group ?? []) {
         const expr = item.expression;
         if ('termType' in expr && expr.termType === 'Variable' && !item.variable) {
           const info = scope.vars.get(expr.value) ?? { sql: 'NULL', type: 'id', nullable: true };
-          keys.push(/^-?\d+$/.test(info.sql) ? `(0 + ${info.sql})` : info.sql);
-          cols.push(`${info.sql} AS ${quoteName(expr.value)}`);
-          aggVars.set(expr.value, { ...info });
-          keyNullable.set(expr.value, info.nullable);
+          addKey(expr.value, info, /^-?\d+$/.test(info.sql) ? `(0 + ${info.sql})` : info.sql);
         } else {
           const val = this.expr(expr, scope, false);
-          const name = item.variable?.value ?? `_g${this.#hidden++}`;
-          keys.push(val.sql);
-          cols.push(`${val.sql} AS ${quoteName(name)}`);
-          aggVars.set(name, { sql: val.sql, type: val.t, nullable: true });
+          addKey(item.variable?.value ?? `_g${this.#hidden++}`, { sql: val.sql, type: val.t, nullable: true }, val.sql);
         }
       }
-      const outVars: string[] = [];
+      this.#aggregates = { scope, alias, cols };
+      if (query.values) {
+        this.values(derived, query.values);
+      }
+      const outVars: string[] = graphCol ? [graphCol] : [];
       for (const item of projection ?? []) {
         if ('termType' in item) {
-          if (!aggVars.has(item.value)) {
-            cols.push(`NULL AS ${quoteName(item.value)}`);
-            aggVars.set(item.value, { sql: 'NULL', type: 'id', nullable: true });
+          if (!derived.vars.has(item.value)) {
+            derived.vars.set(item.value, { sql: 'NULL', type: 'id', nullable: true });
           }
           outVars.push(item.value);
         } else {
-          const val = this.expr(item.expression, scope, true, aggVars);
-          cols.push(`${val.sql} AS ${quoteName(item.variable.value)}`);
-          aggVars.set(item.variable.value, { sql: val.sql, type: val.t, nullable: true });
+          const val = this.expr(item.expression, derived, true);
+          derived.vars.set(item.variable.value, { sql: val.sql, type: val.t, nullable: true });
           outVars.push(item.variable.value);
         }
       }
-      let sql = `SELECT ${cols.join(', ')} ${this.fromWhere(scope)}`;
-      if (keys.length > 0) {
-        sql += ` GROUP BY ${keys.join(', ')}`;
-      }
-      if (query.having) {
-        sql += ` HAVING ${and(query.having.map((expr) => this.ebv(this.expr(expr, scope, true, aggVars))))}`;
-      }
-      const derived = new Scope();
-      const alias = this.#alias('a');
-      derived.froms.push({ alias, src: `(${sql})`, join: 'inner', on: [] });
-      for (const [name, info] of aggVars) {
-        derived.vars.set(name, {
-          sql: `${alias}.${quoteName(name)}`,
-          type: info.type,
-          nullable: keyNullable.get(name) ?? true,
-        });
+      for (const expr of query.having ?? []) {
+        derived.where.push(this.ebv(this.expr(expr, derived, true)));
       }
       projected = outVars.map((name) => {
         const info = derived.vars.get(name);
@@ -196,10 +266,14 @@ export class Compiler {
       base = scope;
       if (!projection) {
         projected = [...scope.vars.entries()]
-          .filter(([name]) => !name.startsWith('_'))
+          .filter(([name]) => !name.startsWith('_') || name === graphCol)
           .map(([name, info]) => ({ name, val: { t: info.type, sql: info.sql }, nullable: info.nullable }));
       } else {
         projected = [];
+        const graphInfo = graphCol ? scope.vars.get(graphCol) : undefined;
+        if (graphCol && graphInfo) {
+          projected.push({ name: graphCol, val: { t: graphInfo.type, sql: graphInfo.sql }, nullable: false });
+        }
         for (const item of projection) {
           if ('termType' in item) {
             const info = scope.vars.get(item.value);
@@ -217,27 +291,47 @@ export class Compiler {
       }
     }
 
-    const order: string[] = [];
+    const distinct = !!(query.distinct || query.reduced);
+    const keys: { sql: string; descending: boolean }[] = [];
     for (const item of query.order ?? []) {
-      const val = this.expr(item.expression, base, false);
+      if (distinct && !variablesOf(item.expression).every((name) => projected.some((col) => col.name === name))) {
+        throw new UnsupportedSparqlError('ORDER BY a non-projected expression with DISTINCT');
+      }
+      const val = this.expr(item.expression, base, !!grouped);
       for (const key of this.orderKeys(val)) {
-        order.push(`${key}${item.descending ? ' DESC' : ''}`);
+        keys.push({ sql: key, descending: !!item.descending });
       }
     }
-    const colSql = projected.length
-      ? projected.map(({ name, val }) => `${val.sql} AS ${quoteName(name)}`).join(', ')
-      : '1 AS "_"';
-    let sql = `SELECT ${query.distinct || query.reduced ? 'DISTINCT ' : ''}${colSql} ${this.fromWhere(base)}`;
-    if (order.length > 0) {
-      sql += ` ORDER BY ${order.join(', ')}`;
+    this.#aggregates = outerAggregates;
+    if (grouped) {
+      let groupSql = `SELECT ${grouped.cols.join(', ') || '1 AS "_"'} ${this.fromWhere(scope)}`;
+      if (grouped.keys.length > 0) {
+        groupSql += ` GROUP BY ${grouped.keys.join(', ')}`;
+      }
+      base.froms.push({ alias: grouped.alias, src: `(${groupSql})`, join: 'inner', on: [] });
     }
+    // Order keys travel as hidden columns: a derived table's ORDER BY does not survive the decode join around it.
+    const order = keys.map((key, index) => ({ col: `_o${index}`, descending: key.descending }));
+    const colSql = [
+      ...projected.map(({ name, val }) => `${val.sql} AS ${quoteName(name)}`),
+      ...keys.map((key, index) => `${key.sql} AS ${quoteName(order[index].col)}`),
+    ];
+    let sql = `SELECT ${distinct ? 'DISTINCT ' : ''}${colSql.join(', ') || '1 AS "_"'} ${this.fromWhere(base)}`;
     if (query.limit !== undefined || query.offset !== undefined) {
+      if (keys.length > 0) {
+        sql += ` ORDER BY ${keys.map((key) => `${key.sql}${key.descending ? ' DESC' : ''}`).join(', ')}`;
+      }
       sql += ` LIMIT ${query.limit ?? -1}`;
       if (query.offset) {
         sql += ` OFFSET ${query.offset}`;
       }
     }
-    return { sql, cols: projected.map(({ name, val, nullable }) => ({ name, type: val.t, nullable })) };
+    return {
+      sql,
+      cols: projected.map(({ name, val, nullable }) => ({ name, type: val.t, nullable })),
+      ...(order.length > 0 ? { order } : {}),
+      ...(graphCol ? { graphCol } : {}),
+    };
   }
 
   /** WHERE-only compile (ASK/CONSTRUCT/UPDATE): all non-hidden vars as id columns. */
@@ -250,6 +344,16 @@ export class Compiler {
   //
 
   group(patterns: Pattern[], scope: Scope, graph: Graph): void {
+    const outerGraph = this.#graph;
+    this.#graph = graph;
+    try {
+      this.#group(patterns, scope, graph);
+    } finally {
+      this.#graph = outerGraph;
+    }
+  }
+
+  #group(patterns: Pattern[], scope: Scope, graph: Graph): void {
     const filters: Expression[] = [];
     for (const pattern of patterns) {
       switch (pattern.type) {
@@ -294,6 +398,12 @@ export class Compiler {
             child.vars.set(name.value, outer);
           }
           this.group(pattern.patterns, child, inner);
+          if (inner.kind === 'var') {
+            // A body that binds no graph (empty, nested GRAPH <c>, VALUES …) ranges over every named graph.
+            this.#bindGraphNames(child, inner.name);
+          } else if (child.froms.length === 0) {
+            child.where.push(`EXISTS (SELECT 1 FROM quads WHERE g = ${inner.sql})`);
+          }
           this.mergeInner(scope, child);
           break;
         }
@@ -303,6 +413,9 @@ export class Compiler {
             throw new InvalidSparqlError(`BIND to in-scope variable ?${name}`);
           }
           const val = this.expr(pattern.expression, scope, false);
+          if (val.c && val.sql.startsWith('-')) {
+            this.tempTermsUsed = true;
+          }
           scope.vars.set(name, { sql: val.sql, type: val.t, nullable: true });
           break;
         }
@@ -310,8 +423,15 @@ export class Compiler {
           this.values(scope, pattern.values);
           break;
         case 'query': {
-          const sub = this.compileSelect(pattern);
+          const sub = this.compileSelect(pattern, graph);
           this.joinDerived(scope, sub);
+          const info = sub.graphCol ? scope.vars.get(sub.graphCol) : undefined;
+          if (graph.kind === 'var' && info) {
+            scope.graphBound.add(graph.name);
+            const conds: string[] = [];
+            this.bind(scope, graph.name, info, conds);
+            scope.where.push(...conds);
+          }
           break;
         }
         default:
@@ -362,6 +482,7 @@ export class Compiler {
     ] as const) {
       this.#bindPosition(scope, `${alias}.${col}`, term, conds);
     }
+    this.#hintSelectivity(alias, predicate, object, conds);
     this.#graphConds(alias, graph, scope, conds);
     scope.where.push(...conds);
   }
@@ -466,6 +587,7 @@ export class Compiler {
     }
     scope.froms.push(...child.froms);
     scope.where.push(...child.where);
+    child.graphBound.forEach((name) => scope.graphBound.add(name));
     for (const [name, info] of child.vars) {
       this.bind(scope, name, info, conds);
     }
@@ -549,6 +671,11 @@ export class Compiler {
       }
     }
     const names = [...types.keys()];
+    branches[0]?.graphBound.forEach((name) => {
+      if (branches.every((branch) => branch.graphBound.has(name))) {
+        scope.graphBound.add(name);
+      }
+    });
     const sql = branches
       .map((branch) => {
         const cols = names.length
@@ -586,17 +713,22 @@ export class Compiler {
     const child = this.child(scope);
     this.group(patterns, child, graph);
     const shared: [VarInfo, VarInfo][] = [];
+    const disjointCheck: [VarInfo, VarInfo][] = [];
     for (const [name, inner] of child.vars) {
       const outer = scope.vars.get(name);
       if (outer) {
         shared.push([outer, inner]);
+        // Inside GRAPH ?g both sides are in the same graph, but ?g is not in either side's domain.
+        if (graph.kind !== 'var' || graph.name !== name) {
+          disjointCheck.push([outer, inner]);
+        }
       }
     }
-    if (shared.length === 0) {
+    if (disjointCheck.length === 0) {
       return;
     }
     const conds = shared.map(([outer, inner]) => compat(outer, inner));
-    const overlap = shared
+    const overlap = disjointCheck
       .map((pair) => {
         const parts = pair.filter((info) => info.nullable).map((info) => `${info.sql} IS NOT NULL`);
         return parts.length ? and(parts) : '1';
@@ -616,11 +748,28 @@ export class Compiler {
         `(${names
           .map((key) => {
             const term = row[key];
-            return term ? this.resolver.constId(term) : 'NULL';
+            if (!term) {
+              return 'NULL';
+            }
+            const id = this.resolver.constId(term);
+            if (id.startsWith('-')) {
+              this.tempTermsUsed = true;
+            }
+            return id;
           })
           .join(', ')})`,
     );
     const alias = this.#alias('v');
+    if (names.length === 0) {
+      // Rows without variables still multiply the solutions they join.
+      scope.froms.push({
+        alias,
+        src: `(SELECT 1 FROM (VALUES ${rows.map(() => '(1)').join(', ')}))`,
+        join: 'inner',
+        on: [],
+      });
+      return;
+    }
     const cols = names.map((key, index) => `column${index + 1} AS ${quoteName(key.replace(/^\?/, ''))}`).join(', ');
     scope.froms.push({ alias, src: `(SELECT ${cols} FROM (VALUES ${tuples.join(', ')}))`, join: 'inner', on: [] });
     const conds: string[] = [];
@@ -655,7 +804,7 @@ export class Compiler {
   // Expressions.
   //
 
-  expr(expr: Expression, scope: Scope, agg: boolean, aggVars?: Map<string, VarInfo>): Val {
+  expr(expr: Expression, scope: Scope, agg: boolean): Val {
     if (Array.isArray(expr)) {
       throw new InvalidSparqlError('expression list outside IN');
     }
@@ -667,15 +816,23 @@ export class Compiler {
       return this.#const(expr);
     }
     if (expr.type === 'aggregate') {
-      if (!agg) {
+      const grouped = this.#aggregates;
+      if (!agg || !grouped) {
         throw new InvalidSparqlError('aggregate outside of aggregation');
       }
-      return this.aggregate(expr, scope);
+      const val = this.aggregate(expr, grouped.scope);
+      const name = `_a${this.#hidden++}`;
+      grouped.cols.push(`${val.sql} AS ${quoteName(name)}`);
+      return { t: val.t, sql: `${grouped.alias}.${quoteName(name)}` };
     }
-    const sub = (arg: Expression | Pattern) => this.expr(asExpression(arg), scope, agg, aggVars);
+    const sub = (arg: Expression | Pattern) => this.expr(asExpression(arg), scope, agg);
     if (expr.type === 'functionCall') {
       const fn = expr.function;
-      return this.cast(typeof fn === 'string' ? fn : fn.value, sub(expr.args[0]));
+      const iri = typeof fn === 'string' ? fn : fn.value;
+      if (expr.args.length !== 1) {
+        throw new UnsupportedSparqlError(`function <${iri}>`);
+      }
+      return this.cast(iri, sub(expr.args[0]));
     }
     const op = expr.operator.toLowerCase();
     const args = expr.args;
@@ -729,6 +886,9 @@ export class Compiler {
         };
       }
       case 'coalesce': {
+        if (args.length === 0) {
+          return { t: 'id', sql: 'NULL' };
+        }
         const vals = args.map(sub);
         vals.slice(1).forEach((val) => this.#sameType(vals[0], val));
         return { t: vals[0].t, sql: `COALESCE(${vals.map((val) => val.sql).join(', ')})` };
@@ -800,7 +960,7 @@ export class Compiler {
         };
       }
       case 'concat':
-        return { t: 'str', sql: `(${args.map((arg) => this.str(sub(arg))).join(' || ')})` };
+        return { t: 'str', sql: args.length ? `(${args.map((arg) => this.str(sub(arg))).join(' || ')})` : `''` };
       case 'regex': {
         const text = this.str(sub(args[0]));
         const pattern = asExpression(args[1]);
@@ -845,7 +1005,7 @@ export class Compiler {
         for (const [name, info] of scope.vars) {
           child.vars.set(name, info);
         }
-        this.group(body.type === 'group' ? body.patterns : [body], child, { kind: 'default' });
+        this.group(body.type === 'group' ? body.patterns : [body], child, this.#graph);
         if (child.froms.length > 0 && child.froms[0].join === 'left') {
           child.froms.unshift({ alias: this.#alias('one'), src: '(SELECT 1)', join: 'inner', on: [] });
         }
@@ -872,9 +1032,14 @@ export class Compiler {
       case 'count':
         return { t: 'num', sql: `COUNT(${distinct}${val.sql})` };
       case 'sum':
-        return { t: 'num', sql: `COALESCE(SUM(${distinct}${this.num(val)}), 0)` };
-      case 'avg':
-        return { t: 'num', sql: `COALESCE(AVG(${distinct}${this.num(val)}), 0)` };
+      case 'avg': {
+        // A non-numeric member is an error, which makes the whole aggregate unbound.
+        const value = this.num(val);
+        return {
+          t: 'num',
+          sql: `(CASE WHEN SUM(${value} IS NULL) > 0 THEN NULL ELSE COALESCE(${name.toUpperCase()}(${distinct}${value}), 0) END)`,
+        };
+      }
       case 'min':
       case 'max': {
         if (val.t !== 'id') {
@@ -883,7 +1048,7 @@ export class Compiler {
         // Order key + id packed into text so MIN/MAX picks the term in SPARQL order and returns its id.
         const key = termCol(
           val.sql,
-          `(CASE WHEN kind IN (${Kind.NUM}, ${Kind.DATE}) AND num < 0 THEN '30' || printf('%030.12f', -num) WHEN kind IN (${Kind.NUM}, ${Kind.DATE}) THEN '31' || printf('%030.12f', num) WHEN kind >= ${Kind.STR} THEN '4' || lex WHEN kind = ${Kind.IRI} THEN '2' || lex ELSE '1' || lex END) || char(1) || id`,
+          `(CASE WHEN kind IN (${Kind.NUM}, ${Kind.DATE}) AND num < 0 THEN '30' || ${descendingDigits("printf('%030.12f', -num)")} WHEN kind IN (${Kind.NUM}, ${Kind.DATE}) THEN '31' || printf('%030.12f', num) WHEN kind >= ${Kind.STR} THEN '4' || lex WHEN kind = ${Kind.IRI} THEN '2' || lex ELSE '1' || lex END) || char(1) || id`,
         );
         const packed = `${name.toUpperCase()}(${key})`;
         return { t: 'id', sql: `CAST(substr(${packed}, instr(${packed}, char(1)) + 1) AS INTEGER)` };
@@ -914,26 +1079,69 @@ export class Compiler {
       case `${XSD}float`:
       case `${XSD}integer`: {
         const integer = iri === `${XSD}integer`;
+        // A string casts only from the target type's lexical space: no exponent for decimal, no point for integer.
+        const lexical = integer ? INTEGER_LEX : iri === `${XSD}decimal` ? DECIMAL_LEX : DOUBLE_LEX;
         let sql: string;
         if (val.c) {
-          const number = val.c.kind === Kind.NUM ? val.c.num : val.c.kind === Kind.STR ? Number(val.c.lex) : null;
+          const number =
+            val.c.kind === Kind.NUM
+              ? val.c.num
+              : val.c.kind === Kind.STR && lexical.test(val.c.lex.trim())
+                ? Number(val.c.lex)
+                : null;
           sql = numLit(number === null ? null : integer ? Math.trunc(number) : number);
         } else if (val.t === 'num' || val.t === 'bool') {
           sql = val.sql;
         } else if (val.t === 'str') {
-          sql = `CAST(${val.sql} AS REAL)`;
+          sql = `(CASE WHEN ${numericLexSql(val.sql, lexical)} THEN CAST(trim(${val.sql}) AS REAL) END)`;
         } else {
           sql = termCol(
             val.sql,
-            `CASE kind WHEN ${Kind.NUM} THEN num WHEN ${Kind.BOOL} THEN (lex IN ('true', '1')) WHEN ${Kind.STR} THEN (CASE WHEN trim(lex) GLOB '*[0-9]*' AND NOT trim(lex) GLOB '*[^0-9.eE+-]*' THEN CAST(trim(lex) AS REAL) END) END`,
+            `CASE kind WHEN ${Kind.NUM} THEN num WHEN ${Kind.BOOL} THEN (lex IN ('true', '1')) WHEN ${Kind.STR} THEN (CASE WHEN ${numericLexSql('lex', lexical)} THEN CAST(trim(lex) AS REAL) END) END`,
           );
         }
         return { t: 'num', sql: integer ? `CAST(${sql} AS INTEGER)` : sql };
       }
       case `${XSD}string`:
         return { t: 'str', sql: this.lex(val) };
-      case `${XSD}boolean`:
-        return { t: 'bool', sql: this.ebv(val) };
+      case `${XSD}boolean`: {
+        // Unlike EBV, a cast accepts only boolean lexical forms from strings and errors otherwise.
+        if (val.c) {
+          const { kind, lex, num } = val.c;
+          const sql =
+            kind === Kind.BOOL || kind === Kind.STR
+              ? ['true', '1'].includes(lex.trim())
+                ? '1'
+                : ['false', '0'].includes(lex.trim())
+                  ? '0'
+                  : 'NULL'
+              : kind === Kind.NUM && num !== null
+                ? num !== 0
+                  ? '1'
+                  : '0'
+                : 'NULL';
+          return { t: 'bool', sql };
+        }
+        const fromLex = (lex: string) =>
+          `(CASE WHEN trim(${lex}) IN ('true', '1') THEN 1 WHEN trim(${lex}) IN ('false', '0') THEN 0 END)`;
+        switch (val.t) {
+          case 'bool':
+            return val;
+          case 'num':
+            return { t: 'bool', sql: `(${val.sql} <> 0)` };
+          case 'str':
+            return { t: 'bool', sql: fromLex(val.sql) };
+          case 'id':
+            return {
+              t: 'bool',
+              sql: termCol(
+                val.sql,
+                `CASE kind WHEN ${Kind.NUM} THEN num <> 0 WHEN ${Kind.BOOL} THEN lex IN ('true', '1') WHEN ${Kind.STR} THEN ${fromLex('lex')} END`,
+              ),
+            };
+        }
+        break;
+      }
       default:
         throw new UnsupportedSparqlError(`function <${iri}>`);
     }
@@ -955,6 +1163,14 @@ export class Compiler {
       default:
         return 'NULL';
     }
+  }
+
+  /** Value of a stored numeric, dateTime or boolean term as one comparable key (one lookup per side). */
+  valueKey(val: Val): string {
+    return termCol(
+      val.sql,
+      `CASE kind WHEN ${Kind.NUM} THEN 'n' || num WHEN ${Kind.DATE} THEN 'd' || num WHEN ${Kind.BOOL} THEN 'b' || (lex IN ('true', '1')) END`,
+    );
   }
 
   date(val: Val): string {
@@ -1080,7 +1296,7 @@ export class Compiler {
     }
     if (left.t === 'id' && right.t === 'id') {
       if (equality) {
-        const same = `(${left.sql} = ${right.sql} OR COALESCE(${this.num(left)} = ${this.num(right)}, 0) OR COALESCE(${this.date(left)} = ${this.date(right)}, 0))`;
+        const same = `(${left.sql} = ${right.sql} OR COALESCE(${this.valueKey(left)} = ${this.valueKey(right)}, 0))`;
         return op === '=' ? same : `(NOT ${same})`;
       }
       return `COALESCE(${cmp(this.num(left), this.num(right))}, ${cmp(this.date(left), this.date(right))}, ${cmp(this.str(left), this.str(right))})`;
@@ -1128,6 +1344,28 @@ export class Compiler {
     }
   }
 
+  /**
+   * Wraps constant-position conditions in `likelihood()`: sqlite_stat1 only has per-column averages, so
+   * without this a skewed constant (`rdf:type` of a large class) looks as selective as a rare one.
+   */
+  #hintSelectivity(alias: string, predicate: PatternTerm | IriTerm, object: PatternTerm, conds: string[]): void {
+    if (!this.resolver.selectivity || predicate.termType !== 'NamedNode') {
+      return;
+    }
+    const p = this.resolver.constId(predicate);
+    const o =
+      object.termType === 'NamedNode' || object.termType === 'Literal' ? this.resolver.constId(object) : undefined;
+    const hint = this.resolver.selectivity(p, o);
+    const wrap = (cond: string, probability: number | undefined) => {
+      const index = conds.indexOf(cond);
+      if (index >= 0 && probability !== undefined) {
+        conds[index] = `likelihood(${cond}, ${probability.toExponential(3)})`;
+      }
+    };
+    wrap(`${alias}.p = ${p}`, hint?.p);
+    wrap(`${alias}.o = ${o}`, hint?.o);
+  }
+
   #graphConds(alias: string, graph: Graph, scope: Scope, conds: string[]): void {
     switch (graph.kind) {
       case 'default':
@@ -1139,10 +1377,24 @@ export class Compiler {
         conds.push(`${alias}.g = ${graph.sql}`);
         break;
       case 'var':
+        scope.graphBound.add(graph.name);
         conds.push(`${alias}.g <> 0`);
         this.bind(scope, graph.name, { sql: `${alias}.g`, type: 'id', nullable: false }, conds);
         break;
     }
+  }
+
+  /** Binds `name` to every named graph unless the scope already binds it to a graph column. */
+  #bindGraphNames(scope: Scope, name: string): void {
+    if (scope.graphBound.has(name)) {
+      return;
+    }
+    scope.graphBound.add(name);
+    const alias = this.#alias('gn');
+    scope.froms.push({ alias, src: '(SELECT DISTINCT g FROM quads WHERE g <> 0)', join: 'inner', on: [] });
+    const conds: string[] = [];
+    this.bind(scope, name, { sql: `${alias}.g`, type: 'id', nullable: false }, conds);
+    scope.where.push(...conds);
   }
 
   /** Start-node set for a closure: a constant, or the current bindings of an already-bound variable. */
@@ -1163,7 +1415,7 @@ export class Compiler {
         term.termType === 'Variable' ? term.value : term.termType === 'BlankNode' ? `_b_${term.value}` : undefined;
       const info = name ? scope.vars.get(name) : undefined;
       if (info && info.type === 'id' && !scope.correlated && scope.froms.length > 0) {
-        return { side, seed: `SELECT DISTINCT ${info.sql} AS n ${this.fromWhere(scope)}` };
+        return { side, seed: `SELECT DISTINCT ${info.sql} AS n ${this.fromWhere(scope)}`, bound: true };
       }
     }
     return undefined;
@@ -1187,9 +1439,15 @@ export class Compiler {
   #closure(pathType: '+' | '*' | '?', item: IriTerm | PropertyPath, graph: Graph, anchor?: Anchor): string {
     const step = this.pathSql(item, graph);
     const zero = pathType !== '+';
+    // The zero-length step of an unanchored path only reaches graph nodes, so a variable's bindings
+    // seed it only where they are nodes; a constant end matches itself regardless.
+    const seed =
+      anchor?.bound && zero
+        ? `SELECT n FROM (${anchor.seed}) WHERE EXISTS (SELECT 1 FROM quads WHERE s = n${this.#graphFilter(graph).replace(' WHERE ', ' AND ')}) OR EXISTS (SELECT 1 FROM quads WHERE o = n${this.#graphFilter(graph).replace(' WHERE ', ' AND ')})`
+        : anchor?.seed;
     if (pathType === '?') {
-      const nodes = anchor
-        ? `SELECT n AS s, n AS o FROM (${anchor.seed})`
+      const nodes = seed
+        ? `SELECT n AS s, n AS o FROM (${seed})`
         : `SELECT s, s FROM quads${this.#graphFilter(graph)} UNION SELECT o, o FROM quads${this.#graphFilter(graph)}`;
       return `SELECT s, o FROM (${step}) UNION ${nodes}`;
     }
@@ -1198,7 +1456,7 @@ export class Compiler {
     let init: string;
     if (anchor) {
       init = zero
-        ? `SELECT n AS st, n AS n FROM (${anchor.seed})`
+        ? `SELECT n AS st, n AS n FROM (${seed})`
         : `SELECT a.n AS st, e.${to} AS n FROM (${anchor.seed}) a CROSS JOIN (${step}) e ON e.${from} = a.n`;
     } else {
       init = zero
@@ -1251,6 +1509,23 @@ const compat = (left: VarInfo, right: VarInfo): string => {
   const eq = `${left.sql} = ${right.sql}`;
   const nulls = [left, right].filter((info) => info.nullable).map((info) => `${info.sql} IS NULL`);
   return nulls.length ? `(${[...nulls, eq].join(' OR ')})` : eq;
+};
+
+/** Variables an expression reads (outside EXISTS bodies). */
+const variablesOf = (expr: Expression | Pattern): string[] => {
+  if (Array.isArray(expr)) {
+    return expr.flatMap(variablesOf);
+  }
+  if ('termType' in expr) {
+    return expr.termType === 'Variable' ? [expr.value] : [];
+  }
+  if (expr.type === 'operation' || expr.type === 'functionCall') {
+    return expr.args.flatMap(variablesOf);
+  }
+  if (expr.type === 'aggregate') {
+    return isWildcard(expr.expression) ? [] : variablesOf(expr.expression);
+  }
+  return [];
 };
 
 const containsAggregate = (expr: Expression | Pattern): boolean => {

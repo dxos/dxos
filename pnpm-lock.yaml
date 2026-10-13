@@ -1224,6 +1224,9 @@ catalogs:
     oxc-transform-react:
       specifier: ~0.145.0
       version: 0.145.0
+    oxigraph:
+      specifier: ^0.5.11
+      version: 0.5.11
     oxlint-tsgolint:
       specifier: ^7.0.2001
       version: 7.0.2001
@@ -5678,9 +5681,27 @@ importers:
         specifier: 'catalog:'
         version: 3.7.4
     devDependencies:
+      '@comunica/query-sparql-rdfjs':
+        specifier: 'catalog:'
+        version: 5.2.3
+      '@types/n3':
+        specifier: 'catalog:'
+        version: 1.26.1
       '@types/sparqljs':
         specifier: 'catalog:'
         version: 3.1.12
+      fast-xml-parser:
+        specifier: '>=5.3.6'
+        version: 5.7.1
+      n3:
+        specifier: 'catalog:'
+        version: 2.1.0
+      oxigraph:
+        specifier: 'catalog:'
+        version: 0.5.11
+      tsx:
+        specifier: 'catalog:'
+        version: 4.21.0
       vitest:
         specifier: 'catalog:'
         version: 4.1.10(patch_hash=cd5269e90ad2a4447bb2266e101250c008959a6c1168a57c132f6b50281f651b)(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(esbuild@0.28.2)(happy-dom@20.7.0)(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@1.8.0)(canvas@3.2.0))(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
@@ -41596,6 +41617,9 @@ packages:
       vite-plus:
         optional: true
 
+  oxigraph@0.5.11:
+    resolution: {integrity: sha512-zKdgmp1tsrutGzC1lCCywwZRPpLJKaJnKSDWoY2hIhMiwiCRRXNN1DU7WUyTInBvgPKT8Y5N+RgwTL8qKXpLng==}
+
   oxlint-tsgolint@7.0.2001:
     resolution: {integrity: sha512-KjK/XLcXr1DSyonKhsuFqJRiuKqcyG9j3LJ8nkOsrLzGvodBPqzHOKauy10asLMDI0sUpvb+1sxlzff3udZvfg==}
     hasBin: true
@@ -65801,6 +65825,8 @@ snapshots:
       '@oxfmt/binding-win32-arm64-msvc': 0.63.0
       '@oxfmt/binding-win32-ia32-msvc': 0.63.0
       '@oxfmt/binding-win32-x64-msvc': 0.63.0
+
+  oxigraph@0.5.11: {}
 
   oxlint-tsgolint@7.0.2001:
     optionalDependencies:

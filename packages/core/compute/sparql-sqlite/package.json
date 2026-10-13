@@ -36,7 +36,13 @@
     "sparqljs": "catalog:"
   },
   "devDependencies": {
+    "@comunica/query-sparql-rdfjs": "catalog:",
+    "@types/n3": "catalog:",
     "@types/sparqljs": "catalog:",
+    "fast-xml-parser": "catalog:",
+    "n3": "catalog:",
+    "oxigraph": "catalog:",
+    "tsx": "catalog:",
     "vitest": "catalog:"
   }
 }
