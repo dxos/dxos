@@ -187,6 +187,8 @@ export const steps = [
             .catch(() => 0)) > 0,
         { what: `${AGENT}'s space to open` },
       );
+      // A space's first visit opens the Help companion beside its Home.
+      await clearChrome(alice);
       await expandRow(alice, currentWorkspace(page).getByTestId('spacePlugin.settings').first());
       await alice.click(
         currentWorkspace(page).getByTestId('spacePlugin.members').first().getByTestId('treeItem.heading').first(),
