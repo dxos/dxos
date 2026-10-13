@@ -336,8 +336,8 @@ test.describe('SceneView', () => {
     await expect(page.locator('[data-testid="scene-view"] circle.cursor-crosshair')).toHaveCount(0);
     await page.keyboard.press('Delete');
     expect(await scene.nodeCount()).toBe(before);
-    // Only the select and pan tools remain, and the actions bar, which only edits, is gone.
-    await expect(page.locator('[data-testid="palette"] button')).toHaveCount(2);
+    // Only the select and pan tools remain beside the read-only toggle, and the actions bar, which only edits, is gone.
+    await expect(page.locator('[data-testid="palette"] button:not([data-testid="palette-readonly"])')).toHaveCount(2);
     await expect(page.getByTestId('canvas-actions')).toHaveCount(0);
     // No panel floats over a read-only canvas.
     await expect(page.locator('[data-testid="properties"]')).toHaveCount(0);

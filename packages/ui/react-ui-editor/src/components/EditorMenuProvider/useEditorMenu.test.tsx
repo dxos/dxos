@@ -84,6 +84,15 @@ describe('useEditorMenu', () => {
     expect(isOpen()).toBe(true);
   });
 
+  test('moving the cursor out of a multi-word query ends it', async ({ expect }) => {
+    const { view } = await mountMenuEditor();
+    await act(async () => type(view, 'x @hello world'));
+    expect(view.state.field(popoverStateField)).not.toBeNull();
+
+    await act(async () => view.dispatch({ selection: { anchor: 0 } }));
+    expect(view.state.field(popoverStateField)).toBeNull();
+  });
+
   test('a double or leading space ends the query', async ({ expect }) => {
     const { view } = await mountMenuEditor();
     await act(async () => type(view, '@hello  '));
