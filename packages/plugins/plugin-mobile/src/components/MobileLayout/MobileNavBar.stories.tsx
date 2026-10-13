@@ -114,6 +114,10 @@ export const Default: Story = {
     onAction: fn(),
   } as any,
   render: (args: any) => <DefaultStory onAction={args.onAction} />,
+};
+
+export const TriggerActions: Story = {
+  ...Default,
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
 

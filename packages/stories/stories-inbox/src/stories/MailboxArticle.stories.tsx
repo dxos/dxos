@@ -139,6 +139,10 @@ export const Default: Story = {
     count: 50,
     conversations: false,
   },
+};
+
+export const SelectMessage: Story = {
+  ...Default,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await canvas.findAllByText('Select a message', undefined, { timeout: 12_000 });

@@ -9,7 +9,7 @@ A "composite" is a namespaced React API like `Dialog.Root` / `Dialog.Trigger` / 
 
 ## Exemplars
 
-- **Pure DXOS composite** (no underlying behavioural primitive): [packages/ui/react-ui/src/components/Panel/Panel.tsx](../../../packages/ui/react-ui/src/components/Panel/Panel.tsx).
+- **Pure DXOS composite** (no underlying behavioural primitive): [packages/ui/react-ui/src/next/components/Panel/Panel.tsx](../../../packages/ui/react-ui/src/next/components/Panel/Panel.tsx).
 - **Ark-wrapping composite** (each part wraps an `@ark-ui/react/<component>` part): [packages/ui/react-ui/src/components/Splitter/Splitter.tsx](../../../packages/ui/react-ui/src/components/Splitter/Splitter.tsx).
 - **Radix-wrapping composite** (legacy, being migrated — see `react-ui/docs/MIGRATION.md`): [packages/ui/react-ui/src/components/Dialog/Dialog.tsx](../../../packages/ui/react-ui/src/components/Dialog/Dialog.tsx).
 

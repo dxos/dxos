@@ -87,6 +87,10 @@ export const Default: Story = {
       setDrawerState('closed');
     },
   ],
+};
+
+export const ToggleDrawer: Story = {
+  ...Default,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const button = await canvas.findByRole('button', { name: 'Show debug panel' });

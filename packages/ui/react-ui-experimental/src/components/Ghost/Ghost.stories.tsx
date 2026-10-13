@@ -38,10 +38,14 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
+  args: {},
+};
+
+export const Interaction: Story = {
+  ...Default,
   play: async () => {
     log.info('started');
   },
-  args: {},
 };
 
 export const Variant: Story = {

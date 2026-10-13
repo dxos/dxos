@@ -156,7 +156,9 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /** Ordered by relevance: the open pull request with failing CI (and a task tracking it) leads. */
-export const Default: Story = {
+export const Default: Story = {};
+
+export const RowStatus: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const rows = await canvas.findAllByTestId('pull-requests.row', {}, { timeout: 10_000 });

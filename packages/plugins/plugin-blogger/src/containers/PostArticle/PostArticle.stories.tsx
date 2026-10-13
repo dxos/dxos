@@ -83,7 +83,9 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /** The post form (name) and the single body editor render, showing the seeded body text. */
-export const Default: Story = {
+export const Default: Story = {};
+
+export const ShowsBody: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 

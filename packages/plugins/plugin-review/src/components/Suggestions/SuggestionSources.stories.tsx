@@ -158,6 +158,10 @@ type Story = StoryObj<typeof meta>;
  */
 export const Default: Story = {
   args: { onResolved: fn() },
+};
+
+export const ResolvesBranches: Story = {
+  ...Default,
   play: async ({ args }) => {
     // Order matches branch enumeration order (push order in `seedAgentSuggestions`: Kai then Nova).
     // Matched per field: each resolved branch also carries its fork `base` (and may carry a `hue`).

@@ -48,7 +48,9 @@ export default meta;
 
 type Story = StoryObj;
 
-export const Default: Story = {
+export const Default: Story = {};
+
+export const ClearFolder: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(await canvas.findByText(FOLDER)).toBeInTheDocument();

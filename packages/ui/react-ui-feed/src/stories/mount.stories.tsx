@@ -220,7 +220,9 @@ type Story = StoryObj<MountProfileProps>;
  * per-message renderers and block widgets. `ms/row` is the number that decides whether the first
  * fill is worth optimizing in the item or in the list.
  */
-export const Default: Story = { args: { count: 200 }, play: waitForResults };
+export const Default: Story = { args: { count: 200 } };
+
+export const WaitsForResults: Story = { ...Default, play: waitForResults };
 
 /** The same rows in a shorter feed: anything that changes here scales with the model, not the view. */
 export const Short: Story = { args: { count: 50 }, play: waitForResults };

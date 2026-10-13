@@ -57,6 +57,10 @@ const REAL_PULL_REQUEST: PullRequestOverviewProps = {
 /** dxos/dxos#13348 as GitHub returned it: R2 demo media as pills, footers as cards, every check. */
 export const Default: Story = {
   args: { ...REAL_PULL_REQUEST },
+};
+
+export const ShowsDetails: Story = {
+  ...Default,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     // The first story boots the plugin manager and the masonry reveals its tiles only once measured,

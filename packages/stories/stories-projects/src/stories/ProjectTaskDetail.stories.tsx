@@ -134,7 +134,9 @@ type Story = StoryObj<typeof meta>;
  * Master-detail: the ledger on the left, the selected task's article on the right — what the deck
  * shows as two planks once a row is clicked.
  */
-export const Default: Story = {
+export const Default: Story = {};
+
+export const OpenTask: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await waitFor(() => expect(seededGeneration).toBe(generation), { timeout: 30_000 });

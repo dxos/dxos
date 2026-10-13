@@ -191,6 +191,10 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   decorators: [withPlugins({ files: false })],
   args: { title: WORKED_TASK },
+};
+
+export const RendersWorkedTask: Story = {
+  ...Default,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     // The title is a field, not text: the pane holds exactly this task selected, so it is always editing.

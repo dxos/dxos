@@ -85,7 +85,9 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /** The description reads at document width, inside the article's themed scroll area. */
-export const Default: Story = {
+export const Default: Story = {};
+
+export const DocumentLayout: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const body = await canvas.findByTestId('pull-request.body', {}, { timeout: 10_000 });

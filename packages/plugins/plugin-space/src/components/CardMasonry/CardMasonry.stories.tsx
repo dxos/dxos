@@ -99,6 +99,10 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   decorators: [withPlugins()],
+};
+
+export const RendersCards: Story = {
+  ...Default,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     // One card per ref, labelled from each type's own annotations — the grid is type-agnostic.

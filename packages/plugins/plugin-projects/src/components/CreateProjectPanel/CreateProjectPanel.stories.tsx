@@ -43,7 +43,9 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
+export const Default: Story = {};
+
+export const CreateFromTemplate: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
     await waitFor(async () => expect(canvas.getByText('Default')).toBeInTheDocument());

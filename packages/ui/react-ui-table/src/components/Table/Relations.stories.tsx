@@ -148,6 +148,11 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
+  tags: ['!test'],
+};
+
+export const EditRelation: Story = {
+  ...Default,
   // The play function exercises a deep timing race in dx-grid + React render
   // pipeline (cell focus → keydown → `dispatchEditRequest` → `setEditing` →
   // `FormCellEditor` `useEffect` → `Popover` mount). On chromium browser
