@@ -74,8 +74,8 @@ In the **Setup** story:
 2. On a server without Kai, **Install** (+) opens Discord's consent page; then **Refresh**.
 3. Click a server where Kai is installed, then **Connect** (plug) a channel under **Channels**.
 4. **Activity** toolbar → **Connect channels** (plug) starts the bot; the **Discord bot** panel reaches ready.
-5. Mention `@Kai` in that channel. The conversation appears under **Activity → Conversations**; Kai's reply reaches
-   Discord on the bot's next sweep, which can take a few seconds.
+5. Mention `@Kai` in that channel. Kai replies in a thread once its turn ends, and the conversation appears under
+   **Activity → Conversations**.
 
 ### 5. Check the bot
 
