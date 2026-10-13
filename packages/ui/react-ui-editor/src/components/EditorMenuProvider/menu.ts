@@ -6,11 +6,14 @@ import { type EditorView } from '@codemirror/view';
 
 import type * as Theme from '@dxos/react-ui/Theme';
 import { insertAtCursor } from '@dxos/ui-editor';
+import { type ChromaticPalette } from '@dxos/ui-types';
 import { type MaybePromise } from '@dxos/util';
 
 export type EditorMenuGroup = {
   id: string;
   label?: Theme.Label;
+  /** Offered whatever the query (e.g. "Add object"), so it does not count as a match. */
+  fallback?: boolean;
   items: EditorMenuItem[];
 };
 
@@ -18,6 +21,7 @@ export type EditorMenuItem = {
   id: string;
   label: Theme.Label;
   icon?: string;
+  iconHue?: ChromaticPalette;
   onSelect?: (event: { view: EditorView; head: number }) => MaybePromise<void>;
 };
 

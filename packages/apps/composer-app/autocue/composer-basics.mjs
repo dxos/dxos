@@ -30,8 +30,8 @@ const BEAT = 1_000;
 const COMMENT_ANCHOR = 'What Composer stands for';
 const COMMENT = 'Need to describe Composer';
 
-/** The document the new section links to, created from the link. */
-const DOCUMENT = 'About Composer';
+/** The document the new section links to, created from the link; one word, since a space ends a link query that matches nothing. */
+const DOCUMENT = 'Overview';
 
 /** Two paragraphs typed into the new document. */
 const DESCRIPTION = [
@@ -258,7 +258,7 @@ export const steps = [
 
       // `@` links an object; its menu can create one, named by what was typed.
       await page.keyboard.type('@');
-      await page.getByPlaceholder('Search or create…').waitFor({ state: 'visible', timeout: 10_000 });
+      await page.locator('li:has-text("Add object")').first().waitFor({ state: 'visible', timeout: 10_000 });
       await typeSlowly(page, DOCUMENT);
       await page.waitForTimeout(BEAT / 2);
       await demo.click({ selector: 'li:has-text("Add object") >> nth=0', label: 'Add object' });
