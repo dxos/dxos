@@ -293,18 +293,29 @@ describe('EchoHost index-backed rows', () => {
     expect(row(unsaved)?.bytes).toBeUndefined();
   });
 
-  test('rows a failed index read left bare are backed on the next emission', async () => {
+  test.each([
+    {
+      read: 'index JSON',
+      fail: (host: EchoHost) =>
+        vi.spyOn(host.indexEngine, 'queryBackings').mockReturnValueOnce(
+          Effect.fail(
+            new SqlError.SqlError({
+              reason: new SqlError.UnknownError({ cause: undefined, message: 'database is locked' }),
+            }),
+          ),
+        ),
+    },
+    {
+      read: 'stored changes',
+      fail: (host: EchoHost) =>
+        vi.spyOn(host.automergeHost, 'readStoredChanges').mockRejectedValueOnce(new Error('disk busy')),
+    },
+  ])('a row whose $read read failed is backed on the next emission', async ({ fail }) => {
     const { host, spaceId, saveObject } = await setup({ queryExecutor: 'sql' });
     const first = EntityId.random();
     await saveObject(first);
     await host.updateIndexes();
-    vi.spyOn(host.indexEngine, 'queryBackings').mockReturnValueOnce(
-      Effect.fail(
-        new SqlError.SqlError({
-          reason: new SqlError.UnknownError({ cause: undefined, message: 'database is locked' }),
-        }),
-      ),
-    );
+    fail(host);
 
     const emissions: QueryService.QueryResponse[] = [];
     let added: EntityId | undefined;
