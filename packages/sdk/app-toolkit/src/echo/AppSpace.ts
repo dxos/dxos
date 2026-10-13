@@ -13,8 +13,16 @@ import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { type Client } from '@dxos/client';
 import { type Space, SpaceState } from '@dxos/client/echo';
 import { Annotation, Obj } from '@dxos/echo';
+import { type PublicKey } from '@dxos/keys';
+import { toPublicKey } from '@dxos/protocols/buf';
+import { type SpaceMember } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
-import { type Credential, DefaultSpaceSchema, MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import {
+  type Credential,
+  DefaultSpaceSchema,
+  MembershipPolicy,
+  SpaceMember_Role,
+} from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { AppCapabilities } from '../app-framework/index.ts';
 import { GraphPath } from '../app/index.ts';
@@ -54,6 +62,20 @@ export const hasTag = (space: Space, tag: string): boolean => space.tags.include
 
 /** Check if a space is the settings space. */
 export const isSettingsSpace = (space: Space): boolean => hasTag(space, SETTINGS_SPACE_TAG);
+
+/**
+ * The identities of the agents whose own spaces are among `spaces`: each agent space's owner. An agent joins other
+ * spaces through its plugin's `AppCapabilities.InviteeSource`, not as an admitted member, so these are not contacts
+ * to admit.
+ */
+export const agentIdentityKeys = (
+  spaces: readonly { readonly tags: readonly string[]; readonly members: { get(): SpaceMember[] } }[],
+): PublicKey[] =>
+  spaces
+    .filter((space) => space.tags.includes(AGENT_SPACE_TAG))
+    .flatMap((space) => space.members.get())
+    .filter((member) => member.role === SpaceMember_Role.OWNER)
+    .flatMap((member) => toPublicKey(member.identity?.identityKey) ?? []);
 
 /**
  * All settings-tagged spaces, ordered by id — code-unit comparison, never locale collation, since

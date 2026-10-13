@@ -9,12 +9,13 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Operation from '@dxos/compute/Operation';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import { toPublicKey } from '@dxos/protocols/buf';
-import { SpaceMember_Role, useMembers } from '@dxos/react-client/echo';
+import { SpaceMember_Role, useMembers, useSpaces } from '@dxos/react-client/echo';
 import { useContacts, useIdentity } from '@dxos/react-client/halo';
 import * as Field from '@dxos/react-ui/Field';
 import * as UiHooks from '@dxos/react-ui/Hooks';
@@ -44,6 +45,7 @@ export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerP
   const { t } = UiHooks.useTranslation(meta.profile.key);
   const contacts = useContacts();
   const members = useMembers(space.key);
+  const spaces = useSpaces();
   const identity = useIdentity();
   const [selected, setSelected] = useState<string>();
   const [role, setRole] = useState<AdmitRole>(SpaceMember_Role.EDITOR);
@@ -79,6 +81,8 @@ export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerP
         .filter((key): key is string => key !== undefined),
     [members],
   );
+  // An agent joins through its `InviteeSource`, so its identity, a contact to everyone in its own space, is not one here.
+  const agentKeys = AppSpace.agentIdentityKeys(spaces).map((key) => key.toHex());
   const selfKey = toPublicKey(identity?.identityKey);
   const selfRole = members.find(
     (member) => selfKey && toPublicKey(member.identity?.identityKey)?.equals(selfKey),
@@ -126,7 +130,7 @@ export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerP
         <ContactPicker
           contacts={contacts}
           invitees={invitees}
-          excludeKeys={memberKeys}
+          excludeKeys={[...memberKeys, ...agentKeys]}
           value={selected}
           onChange={(key) => {
             setSelected(key);
