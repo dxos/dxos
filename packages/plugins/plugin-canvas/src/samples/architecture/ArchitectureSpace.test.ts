@@ -71,5 +71,8 @@ describe('ArchitectureSpace', () => {
     const dxosContent = (await dxos?.content.load())?.content ?? '';
     expect(dxosContent).toContain('## Reading the code');
     expect(dxosContent).toMatch(/^```mermaid\nsequenceDiagram\n/m);
+    // The EDGE document draws a device connecting the same way.
+    const edgeContent = (await edge?.content.load())?.content ?? '';
+    expect(edgeContent).toMatch(/^```mermaid\nsequenceDiagram\n/m);
   });
 });

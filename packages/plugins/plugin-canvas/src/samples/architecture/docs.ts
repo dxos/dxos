@@ -62,6 +62,33 @@ export const makeDocs = (drawings: DocDrawings): Docs => {
       ### Compute
 
       \`compute-service\` runs the functions a space deploys. Its \`FunctionInvoker\` runs one when it is called, when a trigger's scheduler fires, or as a workflow step, and hands it the db, ai and kms services. Composer reaches it through the same router, under \`/functions\`.
+
+      ## A device connecting
+
+      Every message in the DXOS document's sequence rides one WebSocket per device. Opening it is where EDGE learns who the device is: the client proves its identity with a HALO credential, and the router hands the socket to that identity's Durable Object, which every later message for the identity goes through.
+
+      ${FENCE}mermaid
+      sequenceDiagram
+        participant Client as EdgeClient (device)
+        participant Router as edge router (Hono API)
+        participant Hub as hub-service
+        participant RouterObj as RouterObject (per identity)
+        participant Db as db-service
+        Client->>Router: GET /auth
+        Router-->>Client: challenge
+        Client->>Client: sign the challenge into a verifiable presentation (HALO)
+        Client->>Router: GET /ws/:identityDid/:peerKey (presentation in the WebSocket subprotocol)
+        Router->>Router: edgeAuth verifies the presentation
+        Router->>Hub: look up the account
+        Hub-->>Router: account
+        Router->>Router: path identity must match the verified one
+        Router->>RouterObj: forward the upgrade (Durable Object named by the identity DID)
+        RouterObj-->>Client: socket accepted
+        Client->>RouterObj: subduction frames for a space
+        RouterObj->>Db: DATABASE_MESSENGER
+        Db->>RouterObj: replies and other devices' changes (ROUTER_MESSENGER)
+        RouterObj-->>Client: frames
+      ${FENCE}
     `,
   });
 
