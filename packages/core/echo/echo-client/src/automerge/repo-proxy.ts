@@ -170,7 +170,8 @@ export class RepoProxy extends Resource {
   }
 
   /**
-   * Drops a cached handle nothing holds any more and unsubscribes the host from its document.
+   * Drops a cached handle nothing holds any more and unsubscribes the host from its document. A passive
+   * handle (bytes nothing has loaded) has no subscription and no unsent change, so it always goes.
    *
    * This is the only way a proxied document leaves memory: handles are otherwise kept for the life
    * of the space, so a client's footprint tracked every document it had ever opened. A handle with
@@ -180,6 +181,9 @@ export class RepoProxy extends Resource {
    * @returns Whether the handle was released.
    */
   release(documentId: DocumentId): boolean {
+    if (this._passiveHandles.delete(documentId)) {
+      return true;
+    }
     const handle = this._handles[documentId];
     if (!handle) {
       return false;
@@ -208,35 +212,27 @@ export class RepoProxy extends Resource {
   }
 
   /**
+   * With `passive`, bytes the client already holds: the subscribed handle if there is one, else a
+   * passive one, which loads the bytes and subscribes from their heads when first used.
+   *
    * @throws {RepoClosedError} If the proxy is closing or closed — the document can never arrive, so
    * a caller whose work is abandonable should treat this as the client going away.
    */
-  find<T>(id: AnyDocumentId): DocHandleProxy<T> {
+  find<T>(id: AnyDocumentId, { passive }: { passive?: PassiveDocument } = {}): DocHandleProxy<T> {
     if (typeof id !== 'string') {
       throw new TypeError(`Invalid documentId ${id}`);
     }
 
     const documentId = toDocumentId(id);
-    return this._getOrLoadHandle<T>({ documentId });
-  }
-
-  /**
-   * The handle for a document whose bytes the client holds: the subscribed handle if there is one,
-   * else a passive one, which loads the bytes and subscribes from their heads when first used.
-   * @throws {RepoClosedError}
-   */
-  findPassive<T>(documentId: DocumentId, passive: PassiveDocument): DocHandleProxy<T> {
-    this.#requireOpen(documentId);
-    const handle = this._handles[documentId] ?? this._passiveHandles.get(documentId);
-    if (handle) {
-      return handle;
+    if (passive) {
+      this.#requireOpen(documentId);
+      return (
+        this._handles[documentId] ??
+        this._passiveHandles.get(documentId) ??
+        this._loadHandle<T>({ documentId, passive })
+      );
     }
-    return this._loadHandle<T>({ documentId, passive });
-  }
-
-  /** Drops a passive handle's bytes; a handle that has loaded them is left alone. */
-  releasePassive(documentId: DocumentId): void {
-    this._passiveHandles.delete(documentId);
+    return this._getOrLoadHandle<T>({ documentId });
   }
 
   /**
@@ -833,9 +829,9 @@ export class RepoProxy extends Resource {
     // Save current state of pending updates to avoid race conditions.
     const updateIds = Array.from(this._pendingUpdateIds);
     const addIds = Array.from(this._pendingAddIds);
-    const addHeads = addIds.flatMap((documentId) => {
-      const heads = this._pendingAddHeads.get(documentId);
-      return heads ? [{ documentId, heads }] : [];
+    const add = addIds.map((id) => {
+      const heads = this._pendingAddHeads.get(id);
+      return heads ? { id, heads } : { id };
     });
     const removeIds = Array.from(this._pendingRemoveIds);
 
@@ -851,13 +847,12 @@ export class RepoProxy extends Resource {
           this._runtime,
           this._dataService['DataService.updateSubscription']({
             subscriptionId: this._subscriptionId,
-            addIds,
-            addHeads,
+            add,
             removeIds,
           }),
           { timeout: RPC_TIMEOUT },
         );
-        addHeads.forEach(({ documentId }) => this._pendingAddHeads.delete(documentId));
+        add.forEach((entry) => 'heads' in entry && this._pendingAddHeads.delete(entry.id));
       }
 
       const updates: DataService.DocumentUpdate[] = [];

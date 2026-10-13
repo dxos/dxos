@@ -4730,7 +4730,7 @@ describe('Query', () => {
       using lease = await peer.host.automergeHost.loadDoc<DatabaseDirectory>(Context.default(), documentId);
       invariant(lease);
       // A passive handle can outlive the core that held it, with that core's bytes.
-      db._repo.findPassive(documentId, { bytes: A.save(lease.doc()), heads: A.getHeads(lease.doc()) });
+      db._repo.find(documentId, { passive: { bytes: A.save(lease.doc()), heads: A.getHeads(lease.doc()) } });
       lease.change((doc) => {
         doc.objects![ids[0]].data.value = 2;
       });

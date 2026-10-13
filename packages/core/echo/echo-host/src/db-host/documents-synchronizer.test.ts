@@ -286,7 +286,7 @@ describe('DocumentsSynchronizer', () => {
     // First create the document on the host (simulates DataService.createDocument).
     const handle = await host.createDoc<{ text: string }>({ text: 'hello' });
 
-    // Add document to synchronizer (simulates updateSubscription with addIds).
+    // Add document to synchronizer (simulates updateSubscription with add).
     await synchronizer.addDocuments([handle.documentId]);
 
     // Wait for the scheduled job to flush the initial sync.
@@ -317,7 +317,7 @@ describe('DocumentsSynchronizer', () => {
         const handle = await host.createDoc<{ text: string }>({ text });
         documentId = handle.documentId;
 
-        // Add to synchronizer (simulates updateSubscription with addIds).
+        // Add to synchronizer (simulates updateSubscription with add).
         await synchronizer.addDocuments([documentId]);
 
         // Wait for the background auto-save to persist the document to disk (no explicit flush).

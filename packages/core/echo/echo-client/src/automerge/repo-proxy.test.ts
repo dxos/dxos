@@ -110,7 +110,7 @@ describe('RepoProxy', () => {
     });
     await host.flush(Context.default());
 
-    const handle = clientRepo.findPassive<{ text: string; extra?: number }>(hostHandle.documentId, { bytes, heads });
+    const handle = clientRepo.find<{ text: string; extra?: number }>(hostHandle.documentId, { passive: { bytes, heads } });
     expect(handle.state).toBe('passive');
     expect(clientRepo.handles[hostHandle.documentId]).toBeUndefined();
 
@@ -888,10 +888,10 @@ class UnavailableDataService extends DataServiceImpl {
   }
 
   override ['DataService.updateSubscription']({
-    addIds,
+    add,
   }: DataService.UpdateSubscriptionRequest): Effect.Effect<void, Error> {
     return Effect.sync(() => {
-      this.#emit?.({ updates: (addIds ?? []).map((documentId) => ({ documentId, unavailable: true })) });
+      this.#emit?.({ updates: (add ?? []).map(({ id }) => ({ documentId: id, unavailable: true })) });
     });
   }
 }

@@ -53,7 +53,7 @@ describe('Query API stalls under paused document synchronizer', () => {
     peer.host.dataService.setAllSubscriptionsSendUpdatesPaused(true);
 
     // 5. Run a query that needs to load the object's linked document. The
-    //    load hits `RepoProxy.find()` which queues addIds through the
+    //    load hits `RepoProxy.find()` which queues an add through the
     //    (paused) synchronizer; no document state ever reaches the client,
     //    so the loader's `_updateEvent` never fires for objId.
     let resolved = false;

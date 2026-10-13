@@ -560,9 +560,8 @@ export class EntityManager implements IDatabaseBinding {
     if (this._objectDocumentHandles.has(id)) {
       return undefined;
     }
-    const handle = this._repoProxy.findPassive<DatabaseDirectory>(state.documentId as DocumentId, {
-      bytes: state.bytes,
-      heads: state.heads,
+    const handle = this._repoProxy.find<DatabaseDirectory>(state.documentId as DocumentId, {
+      passive: { bytes: state.bytes, heads: state.heads },
     });
     // Held subscribed already (another reader loaded it): the document path binds the object.
     if (!handle.passive) {
@@ -585,7 +584,7 @@ export class EntityManager implements IDatabaseBinding {
     });
     this._objects.set(id, core);
     countWork('echo.snapshotObjects');
-    this.#watchSnapshot(id, state.documentId as DocumentId);
+    this.#watchSnapshot(id, handle);
     return this._createEntity(core);
   }
 
@@ -652,24 +651,24 @@ export class EntityManager implements IDatabaseBinding {
    * query over them keeps each current while something holds it, since the query that returned it may
    * since have stopped or filtered it out.
    */
-  readonly #snapshotDocuments = new Map<string, DocumentId>();
+  readonly #snapshotDocuments = new Map<string, DocHandleProxy<DatabaseDirectory>>();
   #snapshotWatch: { ids: string; cleanup: CleanupFn } | undefined = undefined;
   #snapshotWatchScheduled = false;
 
-  #watchSnapshot(id: string, documentId: DocumentId): void {
-    this.#snapshotDocuments.set(id, documentId);
+  #watchSnapshot(id: string, handle: DocHandleProxy<DatabaseDirectory>): void {
+    this.#snapshotDocuments.set(id, handle);
     this.#scheduleSnapshotWatch();
   }
 
-  /** Stops watching a core that left the index's copy; `released` also drops the bytes it held. */
+  /** Stops watching a core that left the index's copy; `released` also drops the bytes it held, if nothing loaded them. */
   #unwatchSnapshot(id: string, { released = false }: { released?: boolean } = {}): void {
-    const documentId = this.#snapshotDocuments.get(id);
-    if (documentId === undefined) {
+    const handle = this.#snapshotDocuments.get(id);
+    if (handle === undefined) {
       return;
     }
     this.#snapshotDocuments.delete(id);
-    if (released) {
-      this._repoProxy.releasePassive(documentId);
+    if (released && handle.passive && handle.documentId) {
+      this._repoProxy.release(handle.documentId);
     }
     this.#scheduleSnapshotWatch();
   }
@@ -843,7 +842,7 @@ export class EntityManager implements IDatabaseBinding {
       handle,
     });
     countWork('echo.demotions');
-    this.#watchSnapshot(core.id, documentId);
+    this.#watchSnapshot(core.id, handle);
   }
 
   /** Resolves once the database has opened, and rejects once it has closed, so a closed one is never waited on. */

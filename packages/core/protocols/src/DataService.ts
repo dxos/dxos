@@ -28,17 +28,13 @@ export const UpdateSubscriptionRequest = Schema.Struct({
    */
   subscriptionId: Schema.String,
   /**
-   * Automerge document ids to subscribe for updates.
+   * Automerge documents to subscribe for updates, with the heads the client already holds for any it
+   * got bytes for with a query result, so the host starts their sync there and sends only what came after.
    * Used for already existing documents.
    * To add new document use `write` rpc.
    */
-  addIds: Schema.optional(mutableArray(Schema.String)),
-  /**
-   * Heads the client already holds for some of `addIds` (bytes it got with a query result), so the
-   * host starts their sync there and sends only what came after.
-   */
-  addHeads: Schema.optional(
-    mutableArray(Schema.Struct({ documentId: Schema.String, heads: mutableArray(Schema.String) })),
+  add: Schema.optional(
+    mutableArray(Schema.Struct({ id: Schema.String, heads: Schema.optional(mutableArray(Schema.String)) })),
   ),
   /**
    * Automerge document ids to unsubscribe from.
