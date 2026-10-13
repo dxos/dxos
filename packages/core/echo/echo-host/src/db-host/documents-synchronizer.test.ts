@@ -145,9 +145,7 @@ describe('DocumentsSynchronizer', () => {
     const delta = sent.get(handle.documentId)!;
     expect(delta).toEqual(A.saveSince(handle.doc()!, heldHeads));
     expect(A.loadIncremental(A.load<{ text: string }>(held), delta).text).toBe('after');
-    // Heads this host does not hold for a document: it sends the whole document.
     expect(A.load<{ text: string }>(sent.get(unknown.documentId)!).text).toBe('unknown');
-    // Nothing came after them: an empty send still tells the client it is current.
     expect(sent.get(current.documentId)).toHaveLength(0);
   });
 
@@ -160,7 +158,6 @@ describe('DocumentsSynchronizer', () => {
       doc.objects![stale.objectId].data.title = 'stored';
     });
     const storedAt = A.getHeads(stale.handle.doc()!);
-    // Published after every earlier save, so the host is done announcing the first document's.
     const published = host.documentHeadsChanged.waitFor(
       ({ documentId, heads }) => documentId === stale.handle.documentId && A.equals(heads, storedAt),
     );
@@ -174,7 +171,6 @@ describe('DocumentsSynchronizer', () => {
       passive: true,
     };
     await synchronizer.addDocuments([atStorage]);
-    // Added again beside one storage has moved past, which is sent; the first is not even loaded.
     await synchronizer.addDocuments([
       atStorage,
       { documentId: stale.handle.documentId, heads: shownAt, passive: true },
@@ -186,7 +182,6 @@ describe('DocumentsSynchronizer', () => {
     expect(loaded).toContain(stale.handle.documentId);
     expect(loaded).not.toContain(current.handle.documentId);
 
-    // Added again from heads storage has moved past, it is sent the difference again.
     const resent = next();
     await synchronizer.addDocuments([{ documentId: stale.handle.documentId, heads: shownAt, passive: true }]);
     expect((await resent).documentId).toBe(stale.handle.documentId);
@@ -212,7 +207,6 @@ describe('DocumentsSynchronizer', () => {
     const loaded = A.loadIncremental(A.load<DatabaseDirectory>(shownBytes), edited.mutation!);
     expect(loaded.objects![objectId].data.title).toBe('edited');
 
-    // A document that holds a second object cannot be shown from JSON.
     update = next();
     handle.change((doc) => {
       doc.objects![EntityId.random()] = EntityStructure.makeObject({ type: TEST_TYPE, data: {} });
@@ -227,12 +221,10 @@ describe('DocumentsSynchronizer', () => {
     const heads = A.getHeads(handle.doc()!);
     await synchronizer.addDocuments([{ documentId: handle.documentId, heads, passive: true }]);
 
-    // Loaded, the client waits to hear it is current, so it is sent even nothing new.
     let update = next();
     await synchronizer.addDocuments([{ documentId: handle.documentId, heads }]);
     expect((await update).passive).toBeUndefined();
 
-    // Naming no heads, the client holds nothing, so it is sent the whole document.
     update = next();
     await synchronizer.addDocuments([{ documentId: handle.documentId }]);
     expect(A.load<DatabaseDirectory>((await update).mutation!).objects![objectId].data.title).toBe('shown');
@@ -372,7 +364,6 @@ describe('DocumentsSynchronizer', () => {
     // First create the document on the host (simulates DataService.createDocument).
     const handle = await host.createDoc<{ text: string }>({ text: 'hello' });
 
-    // Add document to synchronizer (simulates updateSubscription with add).
     await synchronizer.addDocuments([{ documentId: handle.documentId }]);
 
     // Wait for the scheduled job to flush the initial sync.
@@ -403,7 +394,6 @@ describe('DocumentsSynchronizer', () => {
         const handle = await host.createDoc<{ text: string }>({ text });
         documentId = handle.documentId;
 
-        // Add to synchronizer (simulates updateSubscription with add).
         await synchronizer.addDocuments([{ documentId }]);
 
         // Wait for the background auto-save to persist the document to disk (no explicit flush).
@@ -435,7 +425,6 @@ describe('DocumentsSynchronizer', () => {
 
 const TEST_TYPE = DXN.make('com.example.type.test', '0.1.0');
 
-/** A host and a synchronizer that records what it sends, with a way to save one-object directories. */
 const setupPassive = async () => {
   const { runtime, dispose } = createTestSqliteRuntime();
   onTestFinished(() => dispose());
@@ -459,7 +448,6 @@ const setupPassive = async () => {
     await host.flush(Context.default());
     return { handle, objectId };
   };
-  /** The next update the synchronizer sends from now. */
   const next = async () => {
     const count = updates.length;
     await waitForCondition({ condition: () => updates.length > count, timeout: 5_000 });

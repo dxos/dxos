@@ -25,6 +25,7 @@ import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context'
 import { raise, warnAfterTimeout } from '@dxos/debug';
 import { type Database, type Entity, Ref } from '@dxos/echo';
 import {
+  BACKED_OBJECT_LIMIT,
   type BranchRecord,
   DatabaseDirectory,
   EncodedReference,
@@ -236,7 +237,17 @@ export class EntityManager implements IDatabaseBinding {
   /** Set from {@link close} until the next {@link open}: the working set is gone, not merely unloaded. */
   #closed = false;
 
-  /** Whether a close has begun: the database disposes the context before it closes this manager. */
+  #rearmOpened(): void {
+    if (this.opened.state !== TriggerState.WAITING) {
+      this.opened.reset();
+    }
+  }
+
+  #rejectOpenedUntilReopen(): void {
+    this.#rearmOpened();
+    this.opened.throw(new ContextDisposedError());
+  }
+
   get #closing(): boolean {
     return this.#closed || this._ctx?.disposed === true;
   }
@@ -292,10 +303,7 @@ export class EntityManager implements IDatabaseBinding {
     this._ctx = ctx;
     this.#closed = false;
     this.#generation++;
-    // Rejected by the last close; the space root this open loads wakes it again.
-    if (this.opened.state !== TriggerState.WAITING) {
-      this.opened.reset();
-    }
+    this.#rearmOpened();
     // The rate only coalesces a bulk delivery from the host, where every emission re-runs each live
     // query and re-hydrates index results over the whole space; every other trigger skips the delay,
     // so a query reflects a local write, or a peer's single edit, at once.
@@ -424,11 +432,7 @@ export class EntityManager implements IDatabaseBinding {
   }
 
   async close(): Promise<void> {
-    // Stays rejected until the next open, so a wait that starts after the close fails rather than hangs.
-    if (this.opened.state !== TriggerState.WAITING) {
-      this.opened.reset();
-    }
-    this.opened.throw(new ContextDisposedError());
+    this.#rejectOpenedUntilReopen();
     // A closed manager can be reopened (the database re-runs `openWithSpaceState`), and that path
     // creates a core for every inline object in the directory — so cores and handles surviving the
     // close would be re-created over themselves.
@@ -533,39 +537,23 @@ export class EntityManager implements IDatabaseBinding {
     return core.rootProxy ?? this._createEntity(core);
   }
 
-  /**
-   * The entity for an index row of an object whose document the tab has not loaded, backed by the
-   * row's JSON and stored changes. A core the tab already holds wins and ignores the row: a bound one
-   * follows its document, and a snapshot-backed one its passive subscription, either of which a row can
-   * be behind. Undefined when the row cannot back the object, which then loads its document as usual.
-   */
   upsertSnapshot(id: EntityId, state: SnapshotState): Entity.Unknown | undefined {
-    // Closing, or not routed here (including before the root arrives): the document path decides instead.
-    if (this.#closing || !this.#routesTo(id, state.documentId)) {
-      return undefined;
-    }
-    // A selected branch reads and writes another document, which the index row does not describe.
-    if (this.getCurrentBranch(id) !== 'main') {
+    if (!this.#acceptsRow(id, state.documentId)) {
       return undefined;
     }
     const existing = this.getObjectCoreById(id, { load: false });
     if (existing) {
-      // Bound to a document whose body has not arrived: the document path decides, as for any load.
       if (!existing.isBodyAvailable) {
         return undefined;
       }
-      // Held already, and kept current by its own subscription, which a row may be behind.
       return existing.rootProxy ?? this._createEntity(existing);
     }
-    // Its document is already loading for it, so the load binds the object.
     if (this._objectDocumentHandles.has(id)) {
       return undefined;
     }
-    // A passive handle an earlier core left behind is synced again from this row's heads.
     const handle = this._repoProxy.find<DatabaseDirectory>(state.documentId as DocumentId, {
       passive: { bytes: state.bytes, heads: state.heads },
     });
-    // Held subscribed already (another reader loaded it): the document path binds the object.
     if (!handle.passiveHeads) {
       return undefined;
     }
@@ -585,13 +573,8 @@ export class EntityManager implements IDatabaseBinding {
     return this._createEntity(core);
   }
 
-  /**
-   * The entity for an index row: the object the tab already holds from the index's copy, which its own
-   * subscription keeps current, or one backed by the row, which `decode` is called for only then.
-   * Undefined when the document path decides, as it does before the space root arrives and once a close begins.
-   */
   placeIndexRow(id: EntityId, documentId: string, decode: () => SnapshotState | undefined): Entity.Unknown | undefined {
-    if (this.#closing || !this.#routesTo(id, documentId)) {
+    if (!this.#acceptsRow(id, documentId)) {
       return undefined;
     }
     const held = this.getObjectCoreById(id, { load: false });
@@ -602,16 +585,17 @@ export class EntityManager implements IDatabaseBinding {
     return state && this.upsertSnapshot(id, state);
   }
 
-  /** Whether the space root routes the object to the document the row was read from (not a branch or stale copy). */
+  #acceptsRow(id: string, documentId: string): boolean {
+    return !this.#closing && this.#routesTo(id, documentId) && this.getCurrentBranch(id) === 'main';
+  }
+
   #routesTo(id: string, documentId: string | undefined): boolean {
-    // No root mid-swap: nothing can be checked against it yet.
     if (!this._spaceRootDocHandle) {
       return false;
     }
     return documentId !== undefined && this.getObjectDocumentId(id) === documentId;
   }
 
-  /** Shows what the host sent a snapshot-backed core's document to, whose handle now holds the change. */
   #refreshSnapshot(
     core: ObjectCore,
     { structure, heads, updatedAt }: Omit<SnapshotState, 'bytes' | 'documentId'>,
@@ -626,19 +610,12 @@ export class EntityManager implements IDatabaseBinding {
       updatedAt,
       handle: snapshot.handle,
     };
-    // A change that holds what the object already shows changes nothing a reader sees.
     if (shared !== previous) {
       core.notifyUpdate();
-      // Queries over the working set match on what the object shows, as for a change to its document.
       this._scheduleThrottledDbUpdate([core.id], { coalesce: true });
     }
   }
 
-  /**
-   * The passive handles of cores backed by the index's copy. Each is subscribed passive, so the host sends
-   * every change to its document with what the object now shows, which keeps the core current while
-   * something holds it.
-   */
   readonly #passiveHandles = new Map<
     string,
     { handle: DocHandleProxy<DatabaseDirectory>; listener: (event: PassiveUpdate) => void }
@@ -651,7 +628,6 @@ export class EntityManager implements IDatabaseBinding {
     this.#passiveHandles.set(id, { handle, listener });
   }
 
-  /** Stops following a core's passive handle; `released` also releases it, if nothing has loaded it. */
   #unwatchPassive(id: string, { released = false }: { released?: boolean } = {}): void {
     const entry = this.#passiveHandles.get(id);
     if (entry === undefined) {
@@ -670,16 +646,12 @@ export class EntityManager implements IDatabaseBinding {
       return;
     }
     if (json === undefined) {
-      // Only the document can show this change; the handle already holds it.
       this.activate(core);
       return;
     }
-    const structure = objectStructureFromJson(JSON.parse(json));
-    // The JSON carries no system timestamps; creation does not change.
-    const createdAt = core.snapshot.root.objects[id]?.system?.createdAt;
-    if (createdAt !== undefined) {
-      structure.system = { ...structure.system, createdAt };
-    }
+    const structure = objectStructureFromJson(JSON.parse(json), {
+      createdAt: core.snapshot.root.objects[id]?.system?.createdAt,
+    });
     this.#refreshSnapshot(core, { structure, heads, updatedAt });
   }
 
@@ -730,7 +702,7 @@ export class EntityManager implements IDatabaseBinding {
     }
     const json = JSON.stringify(objectStructureToJson(core.id as EntityId, structure));
     const bytes = A.save(doc);
-    if (json.length > PASSIVE_LIMIT || bytes.length > PASSIVE_LIMIT) {
+    if (json.length > BACKED_OBJECT_LIMIT || bytes.length > BACKED_OBJECT_LIMIT) {
       return;
     }
     const heads = A.getHeads(doc);
@@ -743,7 +715,11 @@ export class EntityManager implements IDatabaseBinding {
       this._currentlyLoadingObjects.delete({ url: handle.url, objectId: core.id });
     }
     core.demote({
-      root: { objects: { [core.id]: objectStructureFromJson(JSON.parse(json)) } },
+      root: {
+        objects: {
+          [core.id]: objectStructureFromJson(JSON.parse(json), { createdAt: structure.system?.createdAt }),
+        },
+      },
       heads,
       updatedAt,
       handle,
@@ -752,11 +728,6 @@ export class EntityManager implements IDatabaseBinding {
     this.#watchPassive(core.id, handle);
   }
 
-  /**
-   * Waits until the core's strong dependencies (parent, relation endpoints, stored type) are in the
-   * working set or known to be unavailable on disk, as a document load does, without loading the
-   * core's own document.
-   */
   async waitForStrongDeps(core: ObjectCore): Promise<void> {
     if (this.#closed) {
       throw new ContextDisposedError();
@@ -779,7 +750,6 @@ export class EntityManager implements IDatabaseBinding {
       return;
     }
     const started = performance.now();
-    // Loads the stored changes into a document and subscribes the host from their heads.
     snapshot.handle._activate({ at });
     this._bindObjectDocument(core.id, snapshot.handle);
     this._onObjectDocumentLoaded({ handle: snapshot.handle, objectId: core.id });
@@ -1483,7 +1453,6 @@ export class EntityManager implements IDatabaseBinding {
       : (opts?.fromHeads ?? {});
 
     const members = await this._collectSubtree(rootCore);
-    // Forks read each member's document, so one backed by the index's copy loads it first.
     members.forEach((member) => this.activate(member));
     // Validate the whole subtree up front, before importing any documents: a member failing the
     // check mid-loop would otherwise leave already-imported branch docs orphaned in the repo. Fork
@@ -1689,7 +1658,6 @@ export class EntityManager implements IDatabaseBinding {
 
   /** Resolve the object's main (default-branch) document handle. */
   private async _mainDocHandle(objectId: string): Promise<DocHandleProxy<DatabaseDirectory>> {
-    // Merges read and write the main document, which a core backed by the index's copy loads first.
     const core = this._objects.get(objectId);
     if (core) {
       this.activate(core);
@@ -1759,7 +1727,6 @@ export class EntityManager implements IDatabaseBinding {
     if (!core) {
       return;
     }
-    // Rebinding replaces the core's backing, so a core backed by the index's copy loads its document first.
     this.activate(core);
     const url = name !== 'main' ? registry?.[name]?.members[memberId]?.toString() : undefined;
     let handle: DocHandleProxy<DatabaseDirectory>;
@@ -2415,7 +2382,6 @@ export class EntityManager implements IDatabaseBinding {
         });
         objectsToRebind.push(updatedObject);
       } else if (objectCore.snapshot && objectCore.snapshot.handle.url !== event.handle.url) {
-        // Backed by the bytes of the document it left.
         objectsToRebind.push(updatedObject);
       }
     }
@@ -2464,7 +2430,6 @@ export class EntityManager implements IDatabaseBinding {
 
   private _createInlineObjects(docHandle: DocHandleProxy<DatabaseDirectory>, objectIds: string[]): void {
     for (const id of objectIds) {
-      // An index row can back the object before the root change that adds it arrives.
       const existing = this._objects.get(id);
       if (existing?.snapshot) {
         this._bindSnapshotCore(existing, docHandle);
@@ -2475,11 +2440,9 @@ export class EntityManager implements IDatabaseBinding {
     }
   }
 
-  /** Moves a snapshot-backed core onto a document, keeping the core and its proxy. */
   private _bindSnapshotCore(core: ObjectCore, docHandle: DocHandleProxy<DatabaseDirectory>): void {
     const passive = core.snapshot?.handle;
     core.bind({ db: this, docHandle, path: ['objects', core.id], assignFromLocalState: false });
-    // Bound elsewhere (the space root inlined it), the bytes it held are not needed.
     this.#unwatchPassive(core.id, { released: passive !== docHandle });
     this._markObjectAvailable(core.id);
     this._onObjectBoundToDocument(docHandle, core.id);
@@ -2520,7 +2483,6 @@ export class EntityManager implements IDatabaseBinding {
     return this._areDepsResolved(core);
   }
 
-  /** The index served a snapshot-backed core only with its closure present, so it is not re-resolved from disk. */
   private _areDepsSatisfied(core: ObjectCore): boolean {
     return this._ensureSatisfactionRequest(core).state === 'ready';
   }
@@ -2658,8 +2620,5 @@ const RPC_TIMEOUT = 20_000;
 
 /** How long a loaded document stays in memory once nothing changes or edits it, by default. */
 const DOCUMENT_TTL = 30_000;
-
-/** The host's limits on an index-backed object's JSON and stored changes; past either it loads its document. */
-const PASSIVE_LIMIT = 64 * 1024;
 
 type PassiveUpdate = ClientDocHandleEvents<DatabaseDirectory>['passive'];

@@ -216,8 +216,6 @@ describe('SqlPlanCompiler', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  // A document row's `@meta` is in `objectSnapshot` only once re-indexed, so these predicates are not
-  // evaluated there and the executor sends the plan to the in-memory path instead.
   it.effect('declines plans whose filters read object meta', () =>
     Effect.gen(function* () {
       const fixture = yield* seed;

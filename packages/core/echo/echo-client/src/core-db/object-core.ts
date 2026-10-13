@@ -44,7 +44,6 @@ import { type DecodedAutomergePrimaryValue, type GetObjectCoreByIdOptions, Targe
 export interface IDatabaseBinding {
   readonly spaceId: SpaceId;
   getObjectCoreById(id: string, opts?: GetObjectCoreByIdOptions): ObjectCore | undefined;
-  /** Loads a snapshot-backed core's document from the bytes it holds and binds the core to it. */
   activate(core: ObjectCore, options?: { at?: Heads }): void;
 }
 
@@ -68,11 +67,6 @@ export type ObjectCoreOptions = {
   immutable?: boolean;
 };
 
-/**
- * The index's copy of an object, backing its core until something needs the object's document: the
- * structure mounted as a document would hold it, so the core's paths are unchanged, the heads it was
- * read at, and the passive handle holding the document's stored changes, which can be ahead of those heads.
- */
 export type ObjectSnapshot = {
   root: { objects: Record<string, EntityStructure> };
   heads: Heads;
@@ -80,12 +74,9 @@ export type ObjectSnapshot = {
   handle: DocHandleProxy<DatabaseDirectory>;
 };
 
-/** The state an index row carries for an object, as `EntityManager.upsertSnapshot` takes it. */
 export type SnapshotState = Omit<ObjectSnapshot, 'root' | 'handle'> & {
   structure: EntityStructure;
-  /** The document's stored changes, which can be ahead of {@link ObjectSnapshot.heads}. */
   bytes: Uint8Array;
-  /** The document the row was read from; checked against the space root's routing. */
   documentId: string;
 };
 
@@ -123,7 +114,6 @@ export class ObjectCore {
    */
   public docHandle?: DocHandleProxy<DatabaseDirectory> = undefined;
 
-  /** Set while the object is backed by the index's copy instead of a loaded document. */
   public snapshot?: ObjectSnapshot = undefined;
 
   /** When the document last loaded or changed (`performance.now()`); the space releases it after a TTL. */
@@ -304,7 +294,7 @@ export class ObjectCore {
       invariant(doc, 'assignFromLocalState');
 
       // Prevent recursive change calls.
-      using _ = defer(docChangeSemaphore(this.docHandle ?? this));
+      using _ = defer(docChangeSemaphore(this.#writeLockKey));
 
       this.docHandle.change((newDoc: DatabaseDirectory) => {
         setDeep(newDoc, this.mountPath, doc);
@@ -314,19 +304,11 @@ export class ObjectCore {
     this.notifyUpdate();
   }
 
-  /**
-   * The object's Automerge document, for what reads it as one (history, cursors); a snapshot-backed
-   * core loads it first from the bytes it holds, since its {@link getDoc} is the index's copy.
-   */
   getLoadedDoc(): AutomergeDoc<unknown> {
     this.#activate();
     return this.getDoc();
   }
 
-  /**
-   * Moves a snapshot-backed core onto its document, loaded synchronously from the stored changes it holds.
-   * `forWrite` loads it where the object was shown (see `DocHandleProxy._activate`).
-   */
   #activate({ forWrite = false }: { forWrite?: boolean } = {}): void {
     if (!this.doc && !this.docHandle && this.snapshot) {
       invariant(this.entityManager, 'A snapshot-backed core belongs to a database.');
@@ -367,17 +349,12 @@ export class ObjectCore {
     this.#reportingErrors(() => this.#refresh());
   }
 
-  /** Backs this unbound core with the index's copy of the object until it binds to its document. */
   setSnapshot(snapshot: ObjectSnapshot): void {
     invariant(!this.doc && !this.docHandle, 'Only an unbound core is backed by a snapshot.');
     this.snapshot = snapshot;
     this.mountPath = ['objects', this.id];
   }
 
-  /**
-   * False only between construction and `initNewObject`/`bind`/`setSnapshot`, while {@link getDoc}
-   * would throw.
-   */
   get hasDoc(): boolean {
     return this.doc != null || this.docHandle != null || this.snapshot != null;
   }
@@ -398,14 +375,17 @@ export class ObjectCore {
     return getDeep<EntityStructure>(this.getDoc(), this.mountPath);
   }
 
+  get #writeLockKey(): object {
+    return this.docHandle ?? this.snapshot?.handle ?? this;
+  }
+
   /**
    * Do not take into account mountPath.
    */
   change(changeFn: ChangeFn<any>, options?: A.ChangeOptions<any>): void {
-    // Before the semaphore, which is keyed on the handle activation binds.
     this.#activate({ forWrite: true });
     // Prevent recursive change calls.
-    using _ = defer(docChangeSemaphore(this.docHandle ?? this));
+    using _ = defer(docChangeSemaphore(this.#writeLockKey));
 
     if (this.doc) {
       if (options) {
@@ -430,7 +410,7 @@ export class ObjectCore {
   changeAt(heads: Heads, callback: ChangeFn<any>, options?: ChangeOptions<any>): Heads | undefined {
     this.#activate();
     // Prevent recursive change calls.
-    using _ = defer(docChangeSemaphore(this.docHandle ?? this));
+    using _ = defer(docChangeSemaphore(this.#writeLockKey));
 
     let result: Heads | undefined;
     if (this.doc) {
@@ -923,10 +903,6 @@ export class ObjectCore {
     return false;
   }
 
-  /**
-   * A snapshot-backed core's dependencies are not loaded for it: the index already excluded a row
-   * whose parent or endpoint is deleted, so only a dependency the tab holds is consulted.
-   */
   get #dependencyLookup(): GetObjectCoreByIdOptions {
     return { load: this.snapshot === undefined };
   }

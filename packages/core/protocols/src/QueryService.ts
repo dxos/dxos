@@ -67,6 +67,8 @@ export const QueryRequest = Schema.Struct({
    * JSON-encoded `QueryAST.Query`.
    */
   query: Schema.String,
+  /** Objects the client already holds, whose rows it does not back: the host leaves their JSON and stored changes off. */
+  heldIds: Schema.optional(mutableArray(Schema.String)),
 });
 export interface QueryRequest extends Schema.Schema.Type<typeof QueryRequest> {}
 

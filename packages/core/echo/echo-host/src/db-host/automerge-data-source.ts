@@ -18,7 +18,7 @@ import {
 import { log } from '@dxos/log';
 
 import { type AutomergeHost } from '../automerge/index.ts';
-import { backingJson } from '../query/object-state.ts';
+import { backingJson, isSaved } from '../query/object-state.ts';
 import { toChangeRecord } from './change-record.ts';
 
 const HEADS_DELIMITER = '|';
@@ -192,11 +192,7 @@ export class AutomergeDataSource implements IndexDataSource {
           });
 
           const docObjects = extractObjects ? (doc.objects ?? {}) : {};
-          // A client shows the JSON and makes its first write at these heads, against the document's stored
-          // changes, so they must be the saved heads the JSON was read at.
-          const atSavedHeads =
-            !this.#branchDocumentIds.has(documentId) &&
-            headsCodec.encode(A.getHeads(doc)) === headsCodec.encode(docHeads);
+          const atSavedHeads = !this.#branchDocumentIds.has(documentId) && isSaved(docHeads, A.getHeads(doc));
           for (const [objectId, structure] of Object.entries(docObjects)) {
             if (changedObjectIds && !changedObjectIds.has(objectId)) {
               continue;

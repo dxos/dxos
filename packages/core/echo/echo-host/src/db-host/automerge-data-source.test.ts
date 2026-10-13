@@ -6,7 +6,13 @@ import { RawString, getHeads, hasHeads, init, loadIncremental } from '@automerge
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Context } from '@dxos/context';
-import { type DatabaseDirectory, EntityStructure, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
+import {
+  BACKED_OBJECT_LIMIT,
+  type DatabaseDirectory,
+  EntityStructure,
+  SpaceDocVersion,
+  createIdFromSpaceKey,
+} from '@dxos/echo-protocol';
 import { objectStructureFromJson } from '@dxos/echo/internal';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { type IndexCursor } from '@dxos/index-core';
@@ -114,12 +120,10 @@ describe('AutomergeDataSource', () => {
     });
     await host.flush(Context.default());
     const savedHeads = getHeads(handle.doc()!);
-    // Not flushed, so the heads store the source scans still holds the saved heads.
     handle.change((doc) => {
       doc.objects!['obj-1'].data.title = 'unsaved';
     });
 
-    // A client writes at these heads against the stored changes, so they must be heads storage holds.
     const dataSource = new AutomergeDataSource(host);
     const unsaved = await EffectEx.runAndForwardErrors(dataSource.getChangedObjects(Context.default(), []));
     const unsavedObject = unsaved.objects.find((object) => object.data.id === 'obj-1');
@@ -141,7 +145,6 @@ describe('AutomergeDataSource', () => {
     const stored = loadIncremental(init<DatabaseDirectory>(), (await host.readStoredChanges(handle.documentId))!);
     expect(hasHeads(stored, [...object.heads])).toBe(true);
 
-    // The JSON is the object as the client shows it, raw strings included.
     const structure = objectStructureFromJson(JSON.parse(JSON.stringify(object.data)));
     expect(structure.data.title).toBe('unsaved');
     expect(structure.data.body).toBe('raw text');
@@ -155,7 +158,10 @@ describe('AutomergeDataSource', () => {
       'obj-2': EntityStructure.makeObject({ type: TEST_TYPE, data: { title: 'shared' } }),
     });
     await createDatabaseDirectory(host, spaceId, {
-      'obj-3': EntityStructure.makeObject({ type: TEST_TYPE, data: { body: new RawString('x'.repeat(70_000)) } }),
+      'obj-3': EntityStructure.makeObject({
+        type: TEST_TYPE,
+        data: { body: new RawString('x'.repeat(BACKED_OBJECT_LIMIT + 1)) },
+      }),
     });
     const merged = EntityStructure.makeObject({ type: TEST_TYPE, data: { title: 'merged' } });
     merged.system = { ...merged.system, mergedInto: 'obj-1' as EntityId };

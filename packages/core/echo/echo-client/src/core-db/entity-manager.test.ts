@@ -120,7 +120,6 @@ describe('DatabaseImpl', () => {
   });
 
   describe('index rows', () => {
-    /** An index-backed object and the row it was built from, for feeding variations of it back in. */
     const indexBacked = async () => {
       const db = await createClientDbInSpaceWithObject(Obj.make(TestSchema.Expando, { value: 1 }));
       const object = await db.query(Filter.type(TestSchema.Expando)).first();
@@ -146,7 +145,6 @@ describe('DatabaseImpl', () => {
           structure: JSON.parse(JSON.stringify(handle.doc().objects![object.id])),
           heads: A.getHeads(handle.doc()),
         };
-        // Storage moves past what was shown: another writer puts an element ahead of the one the tab removes.
         Obj.update(object, (object) => {
           object.tags.unshift('host');
         });
@@ -160,7 +158,6 @@ describe('DatabaseImpl', () => {
         shownObject.tags.splice(0, 1);
       });
       expect([...shownObject.tags]).toEqual([]);
-      // Index 0 was `a` where the object was shown, so the later `host` survives the merge.
       await waitForCondition({ condition: () => shownObject.tags.length === 1, timeout: 1_000 });
       expect([...shownObject.tags]).toEqual(['host']);
     });
@@ -176,7 +173,6 @@ describe('DatabaseImpl', () => {
 
     test('a row that arrives once a close has begun backs nothing', async () => {
       const { db, object, row } = await indexBacked();
-      // The database disposes its context before it closes the entity manager.
       let placed: unknown = null;
       db['_ctx'].onDispose(() => {
         placed = db._entityManager.upsertSnapshot(object.id, row);
@@ -712,7 +708,6 @@ const getDocHandles = (db: DatabaseImpl): DocumentHandles => ({
   linkedDocHandles: db.getLinkedDocHandles(),
 });
 
-/** The object's document handle, loading an index-backed object from the stored changes it holds. */
 const getObjectDocHandle = (obj: any) => {
   const core = getObjectCore(obj);
   core.getLoadedDoc();

@@ -311,7 +311,6 @@ const encodeBytes = <T>(value: T): T =>
         ? Object.fromEntries(Object.entries(value).map(([key, item]) => [key, encodeBytes(item)]))
         : value) as T;
 
-/** Keys {@link objectStructureToJson} writes beside the object's data. */
 const STRUCTURE_JSON_KEYS: ReadonlySet<string> = new Set([
   'id',
   ATTR_TYPE,
@@ -324,10 +323,13 @@ const STRUCTURE_JSON_KEYS: ReadonlySet<string> = new Set([
 
 /**
  * Inverse of {@link objectStructureToJson}, for reading an object from the index's JSON. The JSON carries
- * no `system.kind`, so it is inferred from the relation endpoints and the type; nor the system fields
- * outside it (`createdAt`, the merge fields).
+ * no `system.kind`, so it is inferred from the relation endpoints and the type; nor the merge fields, and
+ * `createdAt` comes from the caller.
  */
-export const objectStructureFromJson = (json: Obj.JSON): EntityStructure => {
+export const objectStructureFromJson = (
+  json: Obj.JSON,
+  { createdAt }: { createdAt?: number } = {},
+): EntityStructure => {
   const record = json as Record<string, unknown>;
   const data = Object.fromEntries(
     Object.entries(record)
@@ -359,6 +361,7 @@ export const objectStructureFromJson = (json: Obj.JSON): EntityStructure => {
       ...(source && { source }),
       ...(target && { target }),
       ...(record[ATTR_DELETED] === true && { deleted: true }),
+      ...(createdAt !== undefined && { createdAt }),
     },
     meta: { ...meta, keys: meta?.keys ?? [] },
     data,

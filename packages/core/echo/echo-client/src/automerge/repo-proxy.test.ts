@@ -117,7 +117,6 @@ describe('RepoProxy', () => {
     expect(handle.state).toBe('passive');
     expect(clientRepo.handles[hostHandle.documentId]).toBeUndefined();
 
-    // Loaded synchronously from the bytes; ready once the host has sent what came after them.
     expect(handle.doc().text).toBe('held');
     expect(handle.isLoaded()).toBe(true);
     expect(clientRepo.handles[hostHandle.documentId]).toBe(handle);
@@ -149,7 +148,6 @@ describe('RepoProxy', () => {
     await expect.poll(() => shown).toEqual(['edited']);
     expect(handle.state).toBe('passive');
     expect(handle.passiveHeads).toEqual(A.getHeads(hostHandle.doc()!));
-    // The change it was sent loads with the stored changes it started from.
     expect(handle.doc().objects![objectId].data.title).toBe('edited');
   });
 
@@ -194,7 +192,6 @@ describe('RepoProxy', () => {
     clientRepo.find(documentId, { passive: { bytes, heads } });
     await expect.poll(() => service.requests.flatMap(({ add }) => add ?? []).length).toBe(1);
 
-    // The remove's batch fails, and the document is held again while it is in flight.
     const failing = new Trigger();
     service.failNext = failing;
     clientRepo.release(documentId);
@@ -938,10 +935,6 @@ class FailingUpdateDataService extends DataServiceImpl {
   }
 }
 
-/**
- * Records each subscription update the client sends, can fail the next one after a trigger (a batch in
- * flight when the transport stalls), and can end the first subscription on demand.
- */
 class RecordingDataService extends DataServiceImpl {
   readonly 'requests': DataService.UpdateSubscriptionRequest[] = [];
   readonly 'dropSubscription' = new Trigger();
@@ -972,7 +965,6 @@ class RecordingDataService extends DataServiceImpl {
   }
 }
 
-/** A host whose data service records the client's subscription updates, with a client repo on it. */
 const setupRecording = async () => {
   let recording: RecordingDataService | undefined;
   const { dataService, host } = await setup(undefined, (props) => (recording = new RecordingDataService(props)));
@@ -982,7 +974,6 @@ const setupRecording = async () => {
   return { host, clientRepo, service: recording };
 };
 
-/** A space directory holding one object, saved, with the stored changes and heads a query row would carry. */
 const createDirectory = async (host: AutomergeHost, title: string) => {
   const objectId = EntityId.random();
   const hostHandle = await host.createDoc<DatabaseDirectory>({

@@ -262,6 +262,29 @@ describe('EchoHost index transactions', () => {
 });
 
 describe('EchoHost index-backed rows', () => {
+  test('rows of objects the client holds ship without JSON or stored changes', async () => {
+    const { host, spaceId, saveObject } = await setup({ queryExecutor: 'sql' });
+    const held = EntityId.random();
+    const other = EntityId.random();
+    await saveObject(held);
+    await saveObject(other);
+    await host.updateIndexes();
+
+    const [response] = await EffectEx.runPromise(
+      Stream.runCollect(
+        host.queryService['QueryService.execQuery']({
+          ...oneShotRequest(spaceId, EntityId.random()),
+          heldIds: [held],
+        }),
+      ),
+    );
+    const row = (id: EntityId) => response?.results?.find((result) => result.id === id);
+    expect(row(held)).toBeDefined();
+    expect(row(held)?.documentJson).toBeUndefined();
+    expect(row(held)?.bytes).toBeUndefined();
+    expect(row(other)?.bytes).toBeDefined();
+  });
+
   test('the memory executor backs a row only at heads storage holds', async () => {
     const { host, spaceId, saveObject } = await setup({ queryExecutor: 'memory' });
     const saved = EntityId.random();
@@ -269,7 +292,6 @@ describe('EchoHost index-backed rows', () => {
     const savedHandle = await saveObject(saved);
     const unsavedHandle = await saveObject(unsaved);
     await host.updateIndexes();
-    // Storage still at the heads before this change, whenever the repo's throttled save runs.
     const storedHeads = getHeads(unsavedHandle.doc()!);
     unsavedHandle.change((doc) => {
       doc.objects![unsaved].data.title = 'unsaved';
@@ -288,7 +310,6 @@ describe('EchoHost index-backed rows', () => {
     expect(row(saved)?.heads).toEqual(getHeads(savedHandle.doc()!));
     expect(JSON.parse(row(saved)!.documentJson!).title).toBe(saved);
     expect(row(saved)?.bytes).toBeDefined();
-    // Its lease is ahead of storage, so a client could not load the changes the JSON shows.
     expect(row(unsaved)?.heads).toBeUndefined();
     expect(row(unsaved)?.bytes).toBeUndefined();
   });
@@ -387,12 +408,10 @@ describe('EchoHost index-backed rows', () => {
     await asyncTimeout(done, 5_000);
 
     const [initial, ...later] = emissions;
-    // An edit alone is not a change of rows, so the one re-emit is the one the new object causes.
     expect(later).toHaveLength(1);
     const row = (response: QueryService.QueryResponse, id: EntityId) => response.results?.find((r) => r.id === id);
     expect(row(initial, unchanged)?.bytes).toBeDefined();
     expect(row(later.at(-1)!, added)?.bytes).toBeDefined();
-    // Whichever emission first carries the edited row's new version ships it.
     const editedVersion = row(initial, edited)!.version!;
     expect(
       later.some((response) => {

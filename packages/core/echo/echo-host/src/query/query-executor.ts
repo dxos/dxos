@@ -10,6 +10,7 @@ import * as SqlClient from 'effect/sql/SqlClient';
 import { ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
 import { type Obj, Query } from '@dxos/echo';
 import {
+  BACKED_OBJECT_LIMIT,
   DatabaseDirectory,
   EncodedReference,
   type EntityPropPath,
@@ -49,7 +50,7 @@ import { filterMatchDoc, filterMatchEntityMeta, filterMatchObjectJSON, getEntity
 import { type ChangeItem, changeResults, executeChangesPlan, serializeChangeResults } from './changes-executor.ts';
 import { QueryError } from './errors.ts';
 import { type GroupAggregates, GroupBy, type GroupKeyValue, compareCodeUnits } from './group-by.ts';
-import { OBJECT_BYTES_LIMIT, backingJson, sameHeads } from './object-state.ts';
+import { backingJson, isSaved } from './object-state.ts';
 import { QueryPlan } from './plan.ts';
 import { type QueryExecutorMode, QueryPlanner, filterContainsInQuery } from './query-planner.ts';
 import { type CompiledRow } from './sql/index.ts';
@@ -66,6 +67,7 @@ type QueryExecutorOptions = {
   executor?: QueryExecutorMode;
   /** Builds compiled statements; the planner needs it only under the `sql` executor. */
   sql?: SqlClient.SqlClient;
+  heldIds?: readonly string[];
 };
 
 type QueryExecutionResult = {
@@ -135,13 +137,10 @@ type QueryItem = {
    */
   result?: QueryService.QueryResult;
 
-  /** The object's index stamp (`objectMeta.version`), for a document row. */
   version?: number;
 
-  /** The row's index record, for reading its JSON when it ships. */
   recordId?: number;
 
-  /** For an object a client can back with its document's stored changes: its JSON and the heads it was read at. */
   backing?: { heads: readonly string[]; json: string };
 };
 
@@ -692,8 +691,8 @@ export class QueryExecutor extends Resource {
   #changeResultSet: ChangeItem[] | undefined;
   readonly #planner: QueryPlanner;
   readonly #mode: QueryExecutorMode;
-  /** The version each object last shipped its JSON and stored changes at, so a re-emit leaves them off. */
   #sentVersions = new Map<string, number>();
+  readonly #heldIds: ReadonlySet<string>;
 
   /**
    * Resolved `in-query` (subquery-membership) sets for the current `execQuery` run, keyed by
@@ -725,6 +724,7 @@ export class QueryExecutor extends Resource {
     this._query = options.query;
     this._reactivity = options.reactivity;
 
+    this.#heldIds = new Set(options.heldIds);
     this.#mode = options.executor ?? 'memory';
     this.#planner = new QueryPlanner({ executor: this.#mode, sql: options.sql });
     this._plan = this.#planner.createPlan(this._query);
@@ -808,12 +808,6 @@ export class QueryExecutor extends Resource {
     return this.#withBacking(results, this._lastResultSet);
   }
 
-  /**
-   * Adds what a client backs each row's object with: its JSON and the document's stored changes, read now
-   * rather than kept in the index, and only for rows this query has not shipped at their version. A row
-   * that cannot be backed at its version (no stored changes, or too many) is not read again until its
-   * version moves; one whose read failed is read again on the next emission.
-   */
   async #withBacking(
     results: QueryService.QueryResult[],
     items: readonly QueryItem[],
@@ -824,12 +818,11 @@ export class QueryExecutor extends Resource {
       result.heads !== undefined &&
       result.version !== undefined &&
       result.documentId !== undefined &&
+      !this.#heldIds.has(result.id) &&
       sent.get(result.id) !== result.version
         ? [index]
         : [],
     );
-    // A compiled row carries no JSON, so it ships the index's JSON with the heads stored beside it, which a
-    // pass may have moved since the row was read; one the steps built from a lease carries its own.
     const fromIndex = new Set(
       unsent.filter((index) => results[index].documentJson === undefined && items[index]?.recordId !== undefined),
     );
@@ -858,7 +851,7 @@ export class QueryExecutor extends Resource {
             json === undefined
               ? undefined
               : await this._automergeHost
-                  .readStoredChanges(result.documentId as DocumentId, { limit: OBJECT_BYTES_LIMIT })
+                  .readStoredChanges(result.documentId as DocumentId, { limit: BACKED_OBJECT_LIMIT })
                   .catch((err) => {
                     log.warn('stored changes could not be read for a row', { documentId: result.documentId, err });
                     failed.add(index);
@@ -877,7 +870,6 @@ export class QueryExecutor extends Resource {
       if (!failed.has(index)) {
         this.#sentVersions.set(result.id, result.version);
       }
-      // Shipped at this version already, and kept by the client; or not backable at it.
       return backed
         ? { ...result, documentJson: backed.json, heads: backed.heads, bytes: backed.bytes }
         : withoutBacking(result);
@@ -2283,8 +2275,7 @@ export class QueryExecutor extends Resource {
     }
     const json = objectStructureToJson(meta.objectId, object);
     const heads = A.getHeads(doc);
-    // A client loads storage's changes and writes at these heads, so they must be heads storage holds.
-    const text = storedHeads && sameHeads(storedHeads, heads) ? backingJson(doc, object, json) : undefined;
+    const text = isSaved(storedHeads, heads) ? backingJson(doc, object, json) : undefined;
     return {
       objectId: meta.objectId,
       documentId: meta.documentId as DocumentId,
@@ -2771,10 +2762,8 @@ const _sameResult = (a: QueryItem, b: QueryItem): boolean => {
   );
 };
 
-/** Stored-change reads a result set makes at once, so a large first emission does not swamp storage. */
 const STORED_CHANGES_CONCURRENCY = 16;
 
-/** A document row without what a client backs its object with, which then loads its document. */
 const withoutBacking = ({
   documentJson: _documentJson,
   heads: _heads,

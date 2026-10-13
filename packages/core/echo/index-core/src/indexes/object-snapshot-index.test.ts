@@ -126,10 +126,8 @@ describe('ObjectSnapshotIndex', () => {
       yield* store.update([object]);
       const [backing] = yield* store.queryBackings([object.recordId!]);
       expect(backing.heads).toEqual(['h1', 'h2']);
-      // A client backs the object with the snapshot, so it keeps the object's meta.
       expect(JSON.parse(backing.json)[ATTR_META]).toEqual({ keys: [], tags: ['t'] });
 
-      // An object that grew past the size cap, shares its document, or moved to a branch has no heads.
       yield* store.update([{ ...object, heads: undefined }]);
       expect(yield* store.queryBackings([object.recordId!])).toEqual([]);
     }, Effect.provide(TestLayer)),

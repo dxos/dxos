@@ -130,14 +130,11 @@ describe('DocHandleProxy', () => {
     });
     expect([...handle.doc().tags]).toEqual(['b']);
     const caughtUp = new Promise((resolve) => handle.once('change', resolve));
-    // A failing listener is logged, and the merge stands.
     handle.on('change', () => {
       throw new Error('listener failed');
     });
     await caughtUp;
-    // `b` and `host` are concurrent inserts at the head, ordered by actor.
     expect([...handle.doc().tags].sort()).toEqual(['b', 'host']);
-    // The host holds the stored changes, so only the writes are sent.
     expect(handle._getPendingChanges()).toEqual(A.saveSince(handle.doc(), A.getHeads(stored)));
   });
 

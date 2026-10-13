@@ -1,11 +1,1 @@
---
--- Heads of the document an object's snapshot was read at, set for an object a client can back with the
--- document's bytes (see `IndexerObject.heads`): the client shows the snapshot and makes its first write
--- to the object at these heads. Null for feed rows, branch documents, documents holding more than one
--- object, and objects too large to ship.
---
--- Filled by the reindex `migrations/tracker/0009_reindex_object_state.sql` schedules.
---
--- Immutable: recorded in `object_snapshot_migrations` and never re-run.
---
 ALTER TABLE objectSnapshot ADD COLUMN heads TEXT;

@@ -390,7 +390,6 @@ const getStaticTypeSchemaSlot = (target: ProxyTarget, receiver: any): Schema.Cod
 const getVersion = (target: ProxyTarget): Obj.Version => {
   const core = target[symbolInternals];
   invariant(core.hasDoc);
-  // A snapshot-backed object reports the heads its index copy was read at.
   const heads = core.getHeads();
   return {
     [Obj.VersionTypeId]: Obj.VersionTypeId,
