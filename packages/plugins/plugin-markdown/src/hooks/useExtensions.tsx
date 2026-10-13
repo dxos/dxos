@@ -9,7 +9,6 @@ import { debounceAndThrottle } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
-import { useResolveRef } from '@dxos/echo-react';
 import { type Identity } from '@dxos/halo';
 import { EID } from '@dxos/keys';
 import { getSpace } from '@dxos/react-client/echo';
@@ -48,6 +47,7 @@ import { Markdown } from '#types';
 import { parseEmbedLabel } from '../components/PreviewComponent/parse-embed-label.ts';
 import { PreviewComponent } from '../components/PreviewComponent/PreviewComponent.tsx';
 import { setFallbackName } from '../util.tsx';
+import { type DocumentContent } from './useDocumentContent.ts';
 
 export type DocumentType = Markdown.Document | Text.Text | { id: string; text: string };
 
@@ -56,6 +56,8 @@ export type ExtensionsOptions = {
   /** The editor's attendable id; embeds nest under it so the document stays an attention ancestor. */
   attendableId?: string;
   object?: DocumentType;
+  /** The object's content binding, from `useDocumentContent`. */
+  content: DocumentContent;
   settings?: Markdown.Settings;
   compact?: boolean;
   viewMode?: EditorViewMode;
@@ -86,6 +88,7 @@ export const useExtensions = ({
   id,
   attendableId,
   object,
+  content,
   settings,
   compact,
   viewMode,
@@ -98,10 +101,7 @@ export const useExtensions = ({
   const platform = Hooks.usePlatform();
   const space = getSpace(object);
 
-  // Get the content reference from Document objects.
-  const contentRef = Obj.instanceOf(Markdown.Document, object) ? (object as Markdown.Document).content : undefined;
-  const loadedContent = useResolveRef(contentRef);
-  const target = loadedContent ?? (Obj.instanceOf(Text.Text, object) ? object : undefined);
+  const target = content.target;
 
   // TODO(wittjosiah): Autocomplete is not working and this query is causing performance issues.
   // TODO(burdon): Unsubscribe.
@@ -142,8 +142,8 @@ export const useExtensions = ({
     ],
   );
 
-  // The content ref exists but its target has not loaded: the editor has no persistence binding yet.
-  const contentPending = !!contentRef && !target;
+  // No persistence binding yet (loading, missing or deleted content).
+  const contentPending = content.status !== undefined;
 
   return useMemo<Extension[]>(
     () =>
@@ -194,7 +194,7 @@ const createBaseExtensions = ({
   viewState,
   setWidgets,
   platform,
-}: ExtensionsOptions & { space?: Space }): Extension[] => {
+}: Omit<ExtensionsOptions, 'content'> & { space?: Space }): Extension[] => {
   const extensions: Extension[] = [
     viewState && selectionChange(viewState),
     settings?.editorInputMode && InputModeExtensions[settings.editorInputMode],
