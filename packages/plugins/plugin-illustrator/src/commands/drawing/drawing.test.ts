@@ -86,8 +86,10 @@ describe('dx drawing', () => {
 
       const out = path.join(dir, 'roundtrip.dx.svg');
       yield* exportDrawing({ id: imported.id, out: Option.some(out) }).pipe(inSpace);
+      const exported = yield* fs.readFileString(out);
+      expect(DxSvg.extract(exported)).toMatchObject({ root: imported.id, objects: expect.any(Array) });
       const picture = (svg: string) => svg.replace(/<metadata[\s\S]*?<\/metadata>/, '');
-      expect(picture(yield* fs.readFileString(out))).toEqual(picture(yield* fs.readFileString(report.file)));
+      expect(picture(exported)).toEqual(picture(yield* fs.readFileString(report.file)));
     }).pipe(Effect.provide(CommandTestLayer), Effect.scoped, EffectEx.runPromise);
   });
 });

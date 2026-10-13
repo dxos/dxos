@@ -213,7 +213,7 @@ test QA-3: Render a diagram from the terminal and import it into a space
   given:
     - dx: the `dx` CLI runs from the checkout (`packages/devtools/cli/bin/dx`) with the illustrator plugin enabled
     - an identity exists on the profile `dx` uses, with a space
-    - pipeline.dx: a `.dx` file in the working directory describing `dx drawing` itself (seven nodes, two groups)
+    - pipeline.dx: a `.dx` file in the working directory describing `dx drawing` itself: five boxes in two groups
   steps:
     - name: Show the diagram source
       do: Run `cat pipeline.dx`.
@@ -221,11 +221,11 @@ test QA-3: Render a diagram from the terminal and import it into a space
     - name: Render it
       do: Run `dx drawing render pipeline.dx`.
       expect: |
-        the report prints nodes, connectors, 0 crossings and the output path; `pipeline.dx.svg` is written and opens as
+        the report prints nodes: 7 (the five boxes plus the two group frames), 0 crossings and the output path; `pipeline.dx.svg` is written and opens as
         an image with the two groups laid out and every edge routed
     - name: Edit and re-render
       do: Append the ECHO space, EDGE and Composer nodes with their edges to `pipeline.dx`, then run `dx drawing render pipeline.dx` again.
-      expect: the layout re-flows to ten nodes and still reports 0 crossings
+      expect: the layout re-flows; the report reads nodes: 10 (eight boxes, two frames) and still 0 crossings
     - name: Import it into the space
       do: Run `dx drawing import pipeline.dx.svg`.
       expect: a Drawing named "pipeline" is added to the space and its id prints
