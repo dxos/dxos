@@ -64,7 +64,7 @@ export const useEditorMenuOptions = ({
       },
     };
 
-    // Object names hold spaces, so a link query keeps going past one while it still matches.
+    // Object names hold spaces, so a link query (or a new object's name) runs on past one.
     return { viewRef, getMenu, trigger, placeholder, multiWordTriggers: ['@'] };
   }, [getMenu, onLinkQuery]);
 };

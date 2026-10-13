@@ -12,8 +12,6 @@ import { type MaybePromise } from '@dxos/util';
 export type EditorMenuGroup = {
   id: string;
   label?: Theme.Label;
-  /** Offered whatever the query (e.g. "Add object"), so it does not count as a match. */
-  fallback?: boolean;
   items: EditorMenuItem[];
 };
 

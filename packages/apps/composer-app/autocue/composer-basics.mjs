@@ -30,8 +30,8 @@ const BEAT = 1_000;
 const COMMENT_ANCHOR = 'What Composer stands for';
 const COMMENT = 'Need to describe Composer';
 
-/** The document the new section links to, created from the link; one word, since a space ends a link query that matches nothing. */
-const DOCUMENT = 'Overview';
+/** The document the new section links to, created from the link. */
+const DOCUMENT = 'About Composer';
 
 /** Two paragraphs typed into the new document. */
 const DESCRIPTION = [

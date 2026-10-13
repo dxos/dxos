@@ -39,8 +39,8 @@ export type PopoverOptions = {
   activateOnDelimiters?: string[];
 
   /**
-   * Triggers whose query may contain spaces (e.g. multi-word names); the consumer closes the popover
-   * once such a query stops matching.
+   * Triggers whose query may contain spaces (e.g. multi-word names). A double space, a leading space or a
+   * line break still ends it, and Escape keeps the typed text.
    */
   multiWordTriggers?: string[];
 
@@ -93,8 +93,8 @@ const popoverTriggerListener = (options: PopoverOptions) =>
     const shouldClose =
       // Trigger deleted.
       (trigger ? trigger !== text[0] : false) ||
-      // Whitespace in text; a multi-word query may hold spaces, but not lead with one.
-      (trigger && options.multiWordTriggers?.includes(trigger) ? /^\s|[^\S ]/.test(query) : /\s/.test(query)) ||
+      // Whitespace in text; a multi-word query may hold single spaces between words.
+      (trigger && options.multiWordTriggers?.includes(trigger) ? /^\s|[^\S ]| {2}/.test(query) : /\s/.test(query)) ||
       // Cursor moved before the range.
       selection.head < activeRange.from ||
       // Cursor moved after the range (+1 to handle selection changing before doc).

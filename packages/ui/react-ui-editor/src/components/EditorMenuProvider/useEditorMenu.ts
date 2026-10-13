@@ -42,7 +42,7 @@ type MenuContext = {
   pos: number;
   text: string;
   trigger?: string;
-  /** The trigger's query may hold spaces while it matches; see {@link PopoverOptions.multiWordTriggers}. */
+  /** The trigger's query may hold spaces; see {@link PopoverOptions.multiWordTriggers}. */
   multiWord?: boolean;
 };
 
@@ -156,18 +156,12 @@ export const useEditorMenu = ({
    * Recompute the menu and preselect the first item.
    */
   const updateGroups = useCallback(
-    async ({ view, pos, text, trigger, multiWord }: MenuContext) => {
+    async ({ view, pos, text, trigger }: MenuContext) => {
       const request = ++requestRef.current;
       const groups = (await getMenuOptions({ state: view.state, pos, text, trigger })) ?? [];
       // Queries resolve out of order, so a slower earlier one must not overwrite a newer result
       // (or repopulate the menu after it closed).
       if (request !== requestRef.current) {
-        return;
-      }
-
-      // A multi-word query stays open only while it matches; otherwise the space was the end of a sentence.
-      if (multiWord && /\s/.test(text) && !groups.some((group) => !group.fallback && group.items.length > 0)) {
-        handleOpenChange({ view, open: false });
         return;
       }
 
@@ -185,7 +179,7 @@ export const useEditorMenu = ({
 
       refresh({});
     },
-    [getMenuOptions, handleOpenChange],
+    [getMenuOptions],
   );
 
   const handleActivate = useCallback<NonNullable<UseEditorMenu['onActivate']>>(
@@ -213,9 +207,9 @@ export const useEditorMenu = ({
   }, []);
 
   const handleCancel = useCallback<NonNullable<UseEditorMenu['onCancel']>>(({ view }) => {
-    // Delete trigger.
+    // Delete trigger; a multi-word query may be a sentence the user wants to keep.
     const { range, trigger } = view.state.field(popoverStateField) ?? {};
-    if (range && trigger) {
+    if (range && trigger && !contextRef.current?.multiWord) {
       view.dispatch({
         changes: { ...range, insert: '' },
       });

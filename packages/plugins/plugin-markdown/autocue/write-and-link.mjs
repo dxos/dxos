@@ -23,8 +23,7 @@
 const BEAT = 1_200;
 
 const TITLE = 'Launch plan';
-// One word: once nothing else matches, a space typed after `@` ends the link query.
-const LINKED = 'Checklist';
+const LINKED = 'Release checklist';
 
 /** The phrase the comment is anchored to, and what it says. */
 const COMMENT_ANCHOR = 'Links between pages';

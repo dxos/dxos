@@ -60,7 +60,8 @@ export const useLinkQuery = (db: Database.Database | undefined, current?: Obj.Un
       // A second "@" switches the link query into block-embed mode, so "@@foo" searches for "foo".
       const raw = query ?? '';
       const block = raw.startsWith('@');
-      const text = block ? raw.slice(1) : raw;
+      // The query may end in the space before the next word.
+      const text = (block ? raw.slice(1) : raw).trim();
       const name = text.toLowerCase();
 
       return Effect.gen(function* () {
@@ -109,7 +110,7 @@ export const useLinkQuery = (db: Database.Database | undefined, current?: Obj.Un
         };
 
         return [
-          { id: 'create', fallback: true, items: [createItem] },
+          { id: 'create', items: [createItem] },
           { id: 'echo', items },
         ];
       }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
