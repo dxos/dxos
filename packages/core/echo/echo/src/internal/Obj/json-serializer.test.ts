@@ -17,7 +17,7 @@ import { getMetaChecked } from '../common/api/index.ts';
 import { makeDecodedEntityLive } from '../common/proxy/index.ts';
 import { type AnyEntity, ATTR_TYPE, EntityKind, KindId, TypeId, getSchema } from '../common/types/index.ts';
 import { ATTR_DELETED, MetaId } from '../common/types/model-symbols.ts';
-import { RelationSourceId, RelationTargetId, TypeMetaSchemaDXN, getObjectEchoUri } from '../Entity/index.ts';
+import { RelationSourceId, RelationTargetId, getObjectEchoUri } from '../Entity/index.ts';
 import * as JsonSchema from '../JsonSchema/index.ts';
 import { Ref, type RefResolver, StaticRefResolver } from '../Ref/index.ts';
 import { createObject } from './create-object.ts';
@@ -408,9 +408,8 @@ describe('objectStructureFromJson', () => {
     };
     expect(roundTrip(relation)).toEqual(relation);
 
-    expect(Type.getURI(Type.Type).toString()).toBe(TypeMetaSchemaDXN.toString());
     const persistedType: EntityStructure = {
-      system: { kind: EntityKind.Type, type: { '/': URI.make(TypeMetaSchemaDXN.toString()) } },
+      system: { kind: EntityKind.Type, type: { '/': Type.getURI(Type.Type) } },
       meta: { keys: [], key: 'com.example.type.test', version: '0.1.0' },
       data: { jsonSchema: {} },
     };

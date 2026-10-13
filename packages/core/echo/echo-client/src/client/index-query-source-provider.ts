@@ -346,7 +346,7 @@ export class IndexQuerySource implements QuerySource {
           try {
             this._assertResultSpaces(query, response);
             // Remember the raw host records so a later local object load can re-hydrate them.
-            this._lastRemoteResults = restoreSentStates(this._lastRemoteResults, response.results ?? []);
+            this._lastRemoteResults = restoreSentBacking(this._lastRemoteResults, response.results ?? []);
             this._releasedDocumentJsonIds.clear();
             this._scheduleHydrate();
           } catch (err: any) {
@@ -490,7 +490,7 @@ export class IndexQuerySource implements QuerySource {
 
     // Only rewrite the set we just hydrated — a newer host response may have replaced it meanwhile.
     if (this._lastRemoteResults === records) {
-      this._lastRemoteResults = releaseHeldStates(records, new Set(results.map((entry) => entry.id))).map((record) => {
+      this._lastRemoteResults = releaseHeldBacking(records, new Set(results.map((entry) => entry.id))).map((record) => {
         if (record.documentJson === undefined || !hydratedIntoFeedHandle.has(record.id)) {
           return record;
         }
@@ -813,8 +813,8 @@ const _groupFromRemoteResult = (result: QueryService.QueryResult): SourceEntry['
 /** A row's object, placed on its database before the pass waits for any strong dependency. */
 type PlacedRow = { database: DatabaseImpl; entity: Entity.Unknown };
 
-/** The remembered rows with the state left off each one whose object the pass published, which the tab now holds. */
-export const releaseHeldStates = (
+/** The remembered rows without the backing of each one whose object the pass published, which the tab now holds. */
+export const releaseHeldBacking = (
   records: readonly QueryService.QueryResult[],
   held: ReadonlySet<string>,
 ): QueryService.QueryResult[] =>
@@ -835,7 +835,7 @@ export const releaseHeldStates = (
  * The rows of a reactive query's latest emission, with the JSON and stored changes the host left off a row it already
  * sent at that version restored from the previous emission, since a pass may never have seen that one.
  */
-export const restoreSentStates = (
+export const restoreSentBacking = (
   previous: readonly QueryService.QueryResult[] | undefined,
   results: QueryService.QueryResult[],
 ): QueryService.QueryResult[] => {

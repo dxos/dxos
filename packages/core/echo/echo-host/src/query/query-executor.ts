@@ -828,22 +828,29 @@ export class QueryExecutor extends Resource {
         ? [index]
         : [],
     );
-    // A compiled row carries no JSON; one the steps built from a lease carries its own.
+    // A compiled row carries no JSON, so it ships the index's JSON with the heads stored beside it, which a
+    // pass may have moved since the row was read; one the steps built from a lease carries its own.
     const recordIds = unsent.flatMap((index) =>
       results[index].documentJson === undefined && items[index]?.recordId !== undefined ? [items[index].recordId!] : [],
     );
-    const texts = new Map<number, string>();
+    const indexed = new Map<number, { json: string; heads: string[] }>();
     if (recordIds.length > 0) {
-      for (const { recordId, snapshot } of await this._runInRuntime(this._indexEngine.querySnapshotsJSON(recordIds))) {
-        texts.set(recordId, JSON.stringify(snapshot));
+      const rows = await this._runInRuntime(this._indexEngine.queryBackings(recordIds)).catch((err) => {
+        log.warn('index JSON could not be read for rows', { err });
+        return [];
+      });
+      for (const { recordId, json, heads } of rows) {
+        indexed.set(recordId, { json, heads });
       }
     }
-    const backing = new Map<number, { json: string; bytes: Uint8Array } | undefined>();
+    const backing = new Map<number, { json: string; heads: string[]; bytes: Uint8Array } | undefined>();
     for (const chunk of chunkArray(unsent, STORED_CHANGES_CONCURRENCY)) {
       await Promise.all(
         chunk.map(async (index) => {
           const result = results[index];
-          const json = result.documentJson ?? texts.get(items[index]?.recordId ?? -1);
+          const row = indexed.get(items[index]?.recordId ?? -1);
+          const json = result.documentJson ?? row?.json;
+          const heads = row?.heads ?? result.heads!;
           const bytes =
             json === undefined
               ? undefined
@@ -853,7 +860,7 @@ export class QueryExecutor extends Resource {
                     log.warn('stored changes could not be read for a row', { documentId: result.documentId, err });
                     return undefined;
                   });
-          backing.set(index, json !== undefined && bytes !== undefined ? { json, bytes } : undefined);
+          backing.set(index, json !== undefined && bytes !== undefined ? { json, heads, bytes } : undefined);
         }),
       );
     }
@@ -865,7 +872,9 @@ export class QueryExecutor extends Resource {
       this.#sentVersions.set(result.id, result.version);
       const backed = backing.get(index);
       // Shipped at this version already, and kept by the client; or not backable at it.
-      return backed ? { ...result, documentJson: backed.json, bytes: backed.bytes } : withoutBacking(result);
+      return backed
+        ? { ...result, documentJson: backed.json, heads: backed.heads, bytes: backed.bytes }
+        : withoutBacking(result);
     });
   }
 
@@ -2183,11 +2192,18 @@ export class QueryExecutor extends Resource {
 
   private async _loadDocumentsAfterSqlQuery(metas: readonly EntityMeta[]): Promise<(QueryItem | null)[]> {
     const snapshotMap = await this._loadQueueSnapshotMap(metas);
+    const documentIds = [...new Set(metas.flatMap((meta) => (meta.documentId ? [meta.documentId as DocumentId] : [])))];
+    const storedHeads =
+      documentIds.length > 0
+        ? new Map(
+            (await this._automergeHost.getStoredHeads(documentIds)).map((heads, index) => [documentIds[index], heads]),
+          )
+        : new Map<DocumentId, A.Heads | undefined>();
     return await Promise.all(
       metas.map(async (meta) => {
         // Branch 1: Document-backed object.
         if (meta.documentId) {
-          return this._loadFromAutomerge(meta);
+          return this._loadFromAutomerge(meta, storedHeads.get(meta.documentId as DocumentId));
         }
 
         // Branch 2: Queue-backed object.
@@ -2244,7 +2260,7 @@ export class QueryExecutor extends Resource {
    * Returns `null` if the document can't be loaded, the inline object isn't present, or if the meta does not have a
    * document id (e.g. queue-backed objects).
    */
-  private async _loadFromAutomerge(meta: EntityMeta): Promise<QueryItem | null> {
+  private async _loadFromAutomerge(meta: EntityMeta, storedHeads: A.Heads | undefined): Promise<QueryItem | null> {
     if (!meta.documentId) {
       return null;
     }
@@ -2254,15 +2270,15 @@ export class QueryExecutor extends Resource {
     if (!lease) {
       return null;
     }
-    const object = DatabaseDirectory.getInlineObject(lease.doc(), meta.objectId);
+    const doc = lease.doc();
+    const object = DatabaseDirectory.getInlineObject(doc, meta.objectId);
     if (!object) {
       return null;
     }
     const json = objectStructureToJson(meta.objectId, object);
-    const heads = A.getHeads(lease.doc());
+    const heads = A.getHeads(doc);
     // A client loads storage's changes and writes at these heads, so they must be heads storage holds.
-    const [storedHeads] = await this._automergeHost.getStoredHeads([meta.documentId as DocumentId]);
-    const text = storedHeads && sameHeads(storedHeads, heads) ? backingJson(lease.doc(), object, json) : undefined;
+    const text = storedHeads && sameHeads(storedHeads, heads) ? backingJson(doc, object, json) : undefined;
     return {
       objectId: meta.objectId,
       documentId: meta.documentId as DocumentId,

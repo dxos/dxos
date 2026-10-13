@@ -102,7 +102,7 @@ describe('ObjectSnapshotIndex', () => {
   );
 
   it.effect(
-    'stores a document object with its meta and the heads it was read at, and clears the heads when an update carries none',
+    "stores a document object's meta and heads; an update without heads clears them",
     Effect.fnUntraced(function* () {
       const { store } = yield* migrated();
       const sql = yield* SqlClient.SqlClient;
@@ -124,19 +124,14 @@ describe('ObjectSnapshotIndex', () => {
       yield* metaIndex.update([object]);
       yield* metaIndex.lookupRecordIds([object]);
       yield* store.update([object]);
-      const heads = () =>
-        sql<{ heads: string | null }>`SELECT heads FROM objectSnapshot WHERE recordId = ${object.recordId!}`.pipe(
-          Effect.map(([row]) => (row?.heads ? JSON.parse(row.heads) : null)),
-        );
-
-      expect(yield* heads()).toEqual(['h1', 'h2']);
+      const [backing] = yield* store.queryBackings([object.recordId!]);
+      expect(backing.heads).toEqual(['h1', 'h2']);
       // A client backs the object with the snapshot, so it keeps the object's meta.
-      const [snapshot] = yield* store.querySnapshotsJSON([object.recordId!]);
-      expect((snapshot.snapshot as any)[ATTR_META]).toEqual({ keys: [], tags: ['t'] });
+      expect(JSON.parse(backing.json)[ATTR_META]).toEqual({ keys: [], tags: ['t'] });
 
       // An object that grew past the size cap, shares its document, or moved to a branch has no heads.
       yield* store.update([{ ...object, heads: undefined }]);
-      expect(yield* heads()).toBe(null);
+      expect(yield* store.queryBackings([object.recordId!])).toEqual([]);
     }, Effect.provide(TestLayer)),
   );
 

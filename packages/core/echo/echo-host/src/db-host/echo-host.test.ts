@@ -260,7 +260,7 @@ describe('EchoHost index transactions', () => {
 });
 
 describe('EchoHost index-backed rows', () => {
-  test('a reactive query re-sends on a change of rows, and only what changed carries its JSON and stored changes', async () => {
+  test('a re-emit ships JSON and stored changes only for rows at a new version', async () => {
     const { host, spaceId, saveObject } = await setup({ queryExecutor: 'sql' });
     const unchanged = EntityId.random();
     const edited = EntityId.random();
@@ -270,6 +270,7 @@ describe('EchoHost index-backed rows', () => {
 
     const emissions: QueryService.QueryResponse[] = [];
     const firstEmission = new Trigger();
+    let added: EntityId | undefined;
     const done = EffectEx.runPromise(
       host.queryService['QueryService.execQuery']({
         queryId: 'lazy',
@@ -282,32 +283,39 @@ describe('EchoHost index-backed rows', () => {
             firstEmission.wake();
           }),
         ),
-        Stream.take(2),
+        Stream.takeUntil((response) => response.results?.some((row) => row.id === added) ?? false),
         Stream.runDrain,
       ),
     );
     await firstEmission.wait({ timeout: 5_000 });
 
-    // A new version alone is not a change of rows, so the next send is the one a new object causes.
     editedHandle.change((doc) => {
       doc.objects![edited].data.title = 'edited';
     });
     await host.flush(Context.default());
     await host.updateIndexes();
-    const added = EntityId.random();
+    added = EntityId.random();
     await saveObject(added);
     await host.updateIndexes();
     await asyncTimeout(done, 5_000);
 
-    const [initial, update] = emissions;
+    const [initial, ...later] = emissions;
     const row = (response: QueryService.QueryResponse, id: EntityId) => response.results?.find((r) => r.id === id);
     expect(row(initial, unchanged)?.bytes).toBeDefined();
-    expect(row(update, added)?.bytes).toBeDefined();
-    expect(row(update, edited)?.version).toBeGreaterThan(row(initial, edited)!.version!);
-    expect(row(update, edited)?.bytes).toBeDefined();
-    expect(row(update, unchanged)?.version).toBe(row(initial, unchanged)?.version);
-    expect(row(update, unchanged)?.documentJson).toBeUndefined();
-    expect(row(update, unchanged)?.bytes).toBeUndefined();
+    expect(row(later.at(-1)!, added)?.bytes).toBeDefined();
+    // Whichever emission first carries the edited row's new version ships it.
+    const editedVersion = row(initial, edited)!.version!;
+    expect(
+      later.some((response) => {
+        const edit = row(response, edited);
+        return edit?.bytes !== undefined && edit.version! > editedVersion;
+      }),
+    ).toBe(true);
+    for (const response of later) {
+      expect(row(response, unchanged)?.version).toBe(row(initial, unchanged)?.version);
+      expect(row(response, unchanged)?.documentJson).toBeUndefined();
+      expect(row(response, unchanged)?.bytes).toBeUndefined();
+    }
   });
 });
 

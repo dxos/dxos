@@ -552,7 +552,7 @@ export class EntityManager implements IDatabaseBinding {
       passive: { bytes: state.bytes, heads: state.heads },
     });
     // Held subscribed already (another reader loaded it): the document path binds the object.
-    if (!handle.passive) {
+    if (!handle.passiveHeads) {
       return undefined;
     }
 
@@ -645,14 +645,14 @@ export class EntityManager implements IDatabaseBinding {
     }
     this.#passiveHandles.delete(id);
     entry.handle.off('passive', entry.listener);
-    if (released && entry.handle.passive && entry.handle.documentId) {
+    if (released && entry.handle.passiveHeads && entry.handle.documentId) {
       this._repoProxy.release(entry.handle.documentId);
     }
   }
 
   #onPassiveUpdate(id: string, { handle, heads, json, updatedAt }: PassiveUpdate): void {
     const core = this._objects.get(id);
-    if (this.#closed || core?.snapshot?.handle !== handle || !handle.passive) {
+    if (this.#closed || core?.snapshot?.handle !== handle || !handle.passiveHeads) {
       return;
     }
     if (json === undefined) {

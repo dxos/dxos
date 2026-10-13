@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { next as A } from '@automerge/automerge';
 import { describe, expect, test } from 'vitest';
 
 import { shareStructure } from './share-structure.ts';
@@ -12,13 +11,13 @@ describe('shareStructure', () => {
     const previous = {
       title: 'a',
       tags: ['x', 'y'],
-      nested: { count: 1, bytes: new Uint8Array([1, 2]), body: new A.RawString('long') },
+      nested: { count: 1, bytes: new Uint8Array([1, 2]) },
       owner: { '/': 'echo:///01' },
     };
     const next = {
       title: 'b',
       tags: ['x', 'y'],
-      nested: { count: 1, bytes: new Uint8Array([1, 2]), body: new A.RawString('long') },
+      nested: { count: 1, bytes: new Uint8Array([1, 2]) },
       owner: { '/': 'echo:///01' },
     };
 
@@ -30,7 +29,7 @@ describe('shareStructure', () => {
     expect(shared.owner).toBe(previous.owner);
   });
 
-  test('returns the previous value when nothing changed, and the new one where a key appeared or left', () => {
+  test('returns the previous value when nothing changed, a new one when a key or element is added or removed', () => {
     const previous = { a: 1, list: [1, 2, 3] };
     expect(shareStructure(previous, { a: 1, list: [1, 2, 3] })).toBe(previous);
 

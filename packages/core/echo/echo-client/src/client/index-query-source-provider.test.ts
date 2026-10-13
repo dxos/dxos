@@ -9,7 +9,7 @@ import * as EffectScope from 'effect/Scope';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event } from '@dxos/async';
-import { Context } from '@dxos/context';
+import { Context, ContextDisposedError } from '@dxos/context';
 import { type Entity, type Hypergraph, Scope } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -20,7 +20,7 @@ import { QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { QueryService } from '@dxos/protocols/rpc';
 
 import { type ObjectUpdate } from './index-query-source-provider.ts';
-import { IndexQuerySource, releaseHeldStates, restoreSentStates } from './index-query-source-provider.ts';
+import { IndexQuerySource, releaseHeldBacking, restoreSentBacking } from './index-query-source-provider.ts';
 
 // Mock graph - only used for queue items which are not tested here.
 const mockGraph = {} as Hypergraph.Hypergraph;
@@ -287,6 +287,48 @@ describe('IndexQuerySource', () => {
     expect(results.map((entry) => entry.id)).toEqual([prompt, slow]);
   });
 
+  test('a row whose database closes under its load is dropped', async () => {
+    const spaceId = SpaceId$.random();
+    const [kept, closed] = [EntityId.random(), EntityId.random()];
+
+    const service = await makeQueryClient({
+      'QueryService.setConfig': () => Effect.void,
+      'QueryService.execQuery': (request) =>
+        EffectEx.streamFromEmitter<QueryService.QueryResponse>((emit) => {
+          queueMicrotask(
+            () =>
+              void emit.single({
+                queryId: request.queryId,
+                results: [
+                  { id: kept, spaceId, rank: 0 },
+                  { id: closed, spaceId, rank: 0 },
+                ],
+              }),
+          );
+        }),
+      'QueryService.reindex': () => Effect.void,
+    });
+
+    const source = new IndexQuerySource({
+      service,
+      runtime: EffectContext.empty(),
+      objectLoader: {
+        loadObject: async ({ objectId }) => {
+          if (objectId === closed) {
+            throw new ContextDisposedError();
+          }
+          return { id: objectId } as unknown as Entity.Unknown;
+        },
+        updateEvent: noopUpdateEvent,
+      },
+      graph: mockGraph,
+    });
+    onTestFinished(() => source.close());
+
+    const results = await source.run(Context.default(), makeQuery(spaceId));
+    expect(results.map((entry) => entry.id)).toEqual([kept]);
+  });
+
   // Regression: the one-shot budget covered hydration as well as the host round-trip, so a single
   // document that never arrived held the query open for the whole 20s and then reported itself as
   // an "index query" timeout — naming the index, which had in fact answered in microseconds.
@@ -385,10 +427,9 @@ describe('IndexQuerySource', () => {
     });
   });
 
-  test('a remembered row keeps what the host sent to back its object until a pass publishes it', () => {
+  describe('remembered rows', () => {
     const spaceId = SpaceId$.random();
-    const [kept, changed, added, held] = [EntityId.random(), EntityId.random(), EntityId.random(), EntityId.random()];
-    const sent = (id: string, version: number): QueryService.QueryResult => ({
+    const backed = (id: string, version: number): QueryService.QueryResult => ({
       id,
       spaceId,
       rank: 0,
@@ -399,14 +440,25 @@ describe('IndexQuerySource', () => {
       createdAt: version,
       updatedAt: version,
     });
-    const stripped = (id: string, version: number): QueryService.QueryResult => ({ id, spaceId, rank: 0, version });
-    // The tab holds what a published row carried; one no pass has published keeps it.
-    const first = releaseHeldStates([sent(kept, 1), sent(changed, 1), sent(held, 1)], new Set([held]));
-    expect(first).toEqual([sent(kept, 1), sent(changed, 1), stripped(held, 1)]);
+    const bare = (id: string, version: number): QueryService.QueryResult => ({ id, spaceId, rank: 0, version });
 
-    // The next emission leaves state off every row whose version the host sent, which may never have been hydrated.
-    const next = restoreSentStates(first, [stripped(kept, 1), stripped(changed, 2), sent(added, 3), stripped(held, 1)]);
-    expect(next).toEqual([sent(kept, 1), stripped(changed, 2), sent(added, 3), stripped(held, 1)]);
+    test('a row whose object a pass published drops its backing, which the tab now holds', () => {
+      const [kept, held] = [EntityId.random(), EntityId.random()];
+      expect(releaseHeldBacking([backed(kept, 1), backed(held, 1)], new Set([held]))).toEqual([
+        backed(kept, 1),
+        bare(held, 1),
+      ]);
+    });
+
+    test('a row the host sent bare at its version takes back the backing it was sent earlier', () => {
+      const [kept, changed, added] = [EntityId.random(), EntityId.random(), EntityId.random()];
+      const previous = [backed(kept, 1), backed(changed, 1)];
+      expect(restoreSentBacking(previous, [bare(kept, 1), bare(changed, 2), backed(added, 3)])).toEqual([
+        backed(kept, 1),
+        bare(changed, 2),
+        backed(added, 3),
+      ]);
+    });
   });
 });
 

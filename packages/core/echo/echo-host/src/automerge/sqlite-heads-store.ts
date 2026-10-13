@@ -13,8 +13,12 @@ import type * as SqlError from 'effect/sql/SqlError';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { log } from '@dxos/log';
 import { HeadsSchema } from '@dxos/protocols/buf/dxos/echo/query_pb';
+import { chunkArray } from '@dxos/util';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/heads/index.ts';
+
+/** Document ids per heads read; Durable Object SQLite binds at most 100 variables. */
+const HEADS_QUERY_CHUNK_SIZE = 100;
 
 const encodeHeads = (heads: Heads): Uint8Array => toBinary(HeadsSchema, create(HeadsSchema, { hashes: heads }));
 
@@ -83,12 +87,17 @@ export class SqliteHeadsStore {
     return RuntimeProvider.runPromise(this.#runtime)(
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
-        // Query all at once and map results back to original order.
-        const rows = yield* sql<{ document_id: string; heads: Uint8Array }>`
-          SELECT document_id, heads FROM automerge_heads
-          WHERE document_id IN ${sql.in(documentIds)}
-        `;
-        const headsMap = new Map(rows.map((row) => [row.document_id, decodeHeads(row.heads)]));
+        // In chunks under SQLite's bound-variable limit, mapped back to the original order.
+        const headsMap = new Map<string, Heads>();
+        for (const chunk of chunkArray(documentIds, HEADS_QUERY_CHUNK_SIZE)) {
+          const rows = yield* sql<{ document_id: string; heads: Uint8Array }>`
+            SELECT document_id, heads FROM automerge_heads
+            WHERE document_id IN ${sql.in(chunk)}
+          `;
+          for (const row of rows) {
+            headsMap.set(row.document_id, decodeHeads(row.heads));
+          }
+        }
         return documentIds.map((id) => headsMap.get(id));
       }),
     );

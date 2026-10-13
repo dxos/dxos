@@ -523,10 +523,10 @@ harness already crosses and summed over realms, keyed by name:
 - `echo.*` — host query executions and the result batches and rows sent; client one-shot runs,
   reactive recomputes, the objects they presented, and the subscriber callbacks fired; index
   passes and the objects indexed; object documents the tab loaded (`objectDocumentsLoaded`), objects
-  a query backed by the index and passive document bytes instead (`snapshotObjects`), those it loaded
-  from their bytes on a write or document read, with the summed time (`activations`, `activationMs`),
-  and documents it returned to bytes (`demotions`). Each activation also leaves an `echo.activation`
-  work mark carrying its duration, for percentiles and the first of a session.
+  a query backed by the index and passive document bytes instead (`snapshotObjects`), and those it
+  loaded from their bytes on a write or document read, with the summed time (`activations`,
+  `activationMs`). Each activation also leaves an `echo.activation` work mark carrying its duration,
+  for percentiles and the first of a session.
 
 `rpcCallsByMethod` is the served-call count per Effect RPC method (`rpc._tag`), from the timing
 middleware. It has no byte counts: page↔worker messages are structured-cloned with no

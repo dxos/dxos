@@ -131,19 +131,15 @@ describe('RepoProxy', () => {
     await waitForCondition({ condition: () => hostHandle.doc()?.extra === 1, timeout: 1_000 });
   });
 
-  test("a passive handle gets each host change with its object's JSON, and loads with them", async () => {
-    let recording: RecordingDataService | undefined;
-    const { dataService, host } = await setup(undefined, (props) => (recording = new RecordingDataService(props)));
-    invariant(recording);
-    const [clientRepo] = createProxyRepos(dataService);
-    await openAndClose(clientRepo);
+  test("a passive handle takes a host change with its object's JSON, and keeps it with its stored changes", async () => {
+    const { host, clientRepo, service } = await setupRecording();
     const { hostHandle, objectId, bytes, heads } = await createDirectory(host, 'shown');
 
     const handle = clientRepo.find<DatabaseDirectory>(hostHandle.documentId, { passive: { bytes, heads } });
     const shown: string[] = [];
     handle.on('passive', ({ json }) => json && shown.push(JSON.parse(json).title));
     await expect
-      .poll(() => recording!.requests.flatMap(({ add }) => add ?? []))
+      .poll(() => service.requests.flatMap(({ add }) => add ?? []))
       .toContainEqual({ id: hostHandle.documentId, heads, passive: true });
 
     hostHandle.change((doc) => {
@@ -152,18 +148,27 @@ describe('RepoProxy', () => {
     await host.flush(Context.default());
     await expect.poll(() => shown).toEqual(['edited']);
     expect(handle.state).toBe('passive');
-    expect(handle.passive?.heads).toEqual(A.getHeads(hostHandle.doc()!));
+    expect(handle.passiveHeads).toEqual(A.getHeads(hostHandle.doc()!));
     // The change it was sent loads with the stored changes it started from.
     expect(handle.doc().objects![objectId].data.title).toBe('edited');
   });
 
+  test("find with other heads replaces a passive handle's stored changes", async () => {
+    const { host, clientRepo } = await setupRecording();
+    const { hostHandle, objectId, bytes, heads } = await createDirectory(host, 'shown');
+    const handle = clientRepo.find<DatabaseDirectory>(hostHandle.documentId, { passive: { bytes, heads } });
+    hostHandle.change((doc) => {
+      doc.objects![objectId].data.title = 'edited';
+    });
+
+    const edited = { bytes: A.save(hostHandle.doc()!), heads: A.getHeads(hostHandle.doc()!) };
+    expect(clientRepo.find(hostHandle.documentId, { passive: edited })).toBe(handle);
+    expect(handle.passiveHeads).toEqual(edited.heads);
+    expect(handle.doc().objects![objectId].data.title).toBe('edited');
+  });
+
   test('releasing a passive handle unsubscribes it, and a new subscription adds those still held', async () => {
-    let recording: RecordingDataService | undefined;
-    const { dataService, host } = await setup(undefined, (props) => (recording = new RecordingDataService(props)));
-    invariant(recording);
-    const service = recording;
-    const [clientRepo] = createProxyRepos(dataService);
-    await openAndClose(clientRepo);
+    const { host, clientRepo, service } = await setupRecording();
     const kept = await createDirectory(host, 'kept');
     const released = await createDirectory(host, 'released');
     clientRepo.find(kept.hostHandle.documentId, { passive: { bytes: kept.bytes, heads: kept.heads } });
@@ -183,12 +188,7 @@ describe('RepoProxy', () => {
   });
 
   test('a remove that fails is not sent again for a document held again meanwhile', async () => {
-    let recording: RecordingDataService | undefined;
-    const { dataService, host } = await setup(undefined, (props) => (recording = new RecordingDataService(props)));
-    invariant(recording);
-    const service = recording;
-    const [clientRepo] = createProxyRepos(dataService);
-    await openAndClose(clientRepo);
+    const { host, clientRepo, service } = await setupRecording();
     const { hostHandle, objectId, bytes, heads } = await createDirectory(host, 'shown');
     const documentId = hostHandle.documentId;
     clientRepo.find(documentId, { passive: { bytes, heads } });
@@ -208,7 +208,7 @@ describe('RepoProxy', () => {
       doc.objects![objectId].data.title = 'edited';
     });
     await host.flush(Context.default());
-    await expect.poll(() => handle.passive?.heads).toEqual(A.getHeads(hostHandle.doc()!));
+    await expect.poll(() => handle.passiveHeads).toEqual(A.getHeads(hostHandle.doc()!));
   });
 
   test('two peers exchange document', async () => {
@@ -971,6 +971,16 @@ class RecordingDataService extends DataServiceImpl {
     return super['DataService.updateSubscription'](request);
   }
 }
+
+/** A host whose data service records the client's subscription updates, with a client repo on it. */
+const setupRecording = async () => {
+  let recording: RecordingDataService | undefined;
+  const { dataService, host } = await setup(undefined, (props) => (recording = new RecordingDataService(props)));
+  invariant(recording);
+  const [clientRepo] = createProxyRepos(dataService);
+  await openAndClose(clientRepo);
+  return { host, clientRepo, service: recording };
+};
 
 /** A space directory holding one object, saved, with the stored changes and heads a query row would carry. */
 const createDirectory = async (host: AutomergeHost, title: string) => {

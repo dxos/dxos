@@ -230,7 +230,8 @@ export class RepoProxy extends Resource {
     if (passive) {
       this.#requireOpen(documentId);
       const held = this._handles[documentId] ?? this._passiveHandles.get(documentId);
-      if (held?.passive && !sameHeads(held.passive.heads, passive.heads)) {
+      const heldHeads = held?.passiveHeads;
+      if (held && heldHeads && !sameHeads(heldHeads, passive.heads)) {
         // Shown at other heads than the caller's, so it syncs again from the caller's.
         held._setPassive(passive);
         this.#subscribePassive(documentId, passive.heads);
@@ -841,9 +842,9 @@ export class RepoProxy extends Resource {
     const addIds = Array.from(this._pendingAddIds);
     // The mode is the handle's as of this send: a passive one may have loaded since it was queued.
     const add = addIds.map((id) => {
-      const passive = this._passiveHandles.get(id)?.passive;
-      const heads = this._pendingAddHeads.get(id) ?? passive?.heads;
-      return { id, ...(heads && { heads }), ...(passive && { passive: true }) };
+      const passiveHeads = this._passiveHandles.get(id)?.passiveHeads;
+      const heads = this._pendingAddHeads.get(id) ?? passiveHeads;
+      return { id, ...(heads && { heads }), ...(passiveHeads && { passive: true }) };
     });
     const removeIds = Array.from(this._pendingRemoveIds);
 

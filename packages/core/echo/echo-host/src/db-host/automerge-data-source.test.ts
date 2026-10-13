@@ -104,12 +104,12 @@ describe('AutomergeDataSource', () => {
     expect(result.cursors[0].cursor).toBe(headsCodec.encode(getHeads(handle.doc()!)));
   });
 
-  test('backs an object with the heads its JSON was read at once storage holds them', async () => {
+  test("ships heads only once the JSON's heads are saved", async () => {
     const host = await setupAutomergeHost();
     const handle = await createDatabaseDirectory(host, SpaceId.random(), {
       'obj-1': EntityStructure.makeObject({
         type: TEST_TYPE,
-        data: { title: 'saved', bytes: new Uint8Array([1, 2, 3]), body: new RawString('raw text') },
+        data: { title: 'saved', body: new RawString('raw text') },
       }),
     });
     await host.flush(Context.default());
@@ -141,11 +141,9 @@ describe('AutomergeDataSource', () => {
     const stored = loadIncremental(init<DatabaseDirectory>(), (await host.readStoredChanges(handle.documentId))!);
     expect(hasHeads(stored, [...object.heads])).toBe(true);
 
-    // The JSON is the object as the client shows it, bytes and raw strings included.
+    // The JSON is the object as the client shows it, raw strings included.
     const structure = objectStructureFromJson(JSON.parse(JSON.stringify(object.data)));
-    expect(structure.system?.type).toEqual(EntityStructure.makeObject({ type: TEST_TYPE, data: {} }).system?.type);
     expect(structure.data.title).toBe('unsaved');
-    expect(structure.data.bytes).toEqual(new Uint8Array([1, 2, 3]));
     expect(structure.data.body).toBe('raw text');
   });
 

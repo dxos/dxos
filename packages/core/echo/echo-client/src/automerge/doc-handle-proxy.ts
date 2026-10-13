@@ -9,6 +9,7 @@ import { EventEmitter } from 'eventemitter3';
 import { Trigger, TriggerState } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 
 import { DocumentUnavailableError } from '../errors.ts';
 import * as Doc from './Doc.ts';
@@ -186,6 +187,11 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
     return passive && { bytes: joinChunks(passive), heads: passive.heads };
   }
 
+  /** The heads a passive handle shows, without joining its stored changes; undefined once loaded. */
+  get passiveHeads(): A.Heads | undefined {
+    return this.#passive?.heads;
+  }
+
   /** Loads a passive handle's bytes. */
   doc(): A.Doc<T> {
     this._activate();
@@ -299,13 +305,14 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
     const stored = A.loadIncremental<T>(A.init<T>(), joinChunks(passive));
     const storedHeads = A.getHeads(stored);
     if (at && A.hasHeads(stored, at) && !sameHeads(at, storedHeads)) {
-      // Its own actor: it has no changes past `at`, so the fork's changes continue its sequence.
-      this._doc = A.clone(A.view(stored, at), { actor: A.getActorId(stored) });
-      queueMicrotask(() => this.#catchUp(A.saveSince(stored, at)));
+      this._doc = A.clone(A.view(stored, at));
+      const after = A.saveSince(stored, at);
+      A.free(stored);
+      queueMicrotask(() => this.#catchUp(after, { at, storedHeads }));
     } else {
       this._doc = stored;
     }
-    // Changes made from here on are what the host lacks; any it already holds are sent again harmlessly.
+    // Changes made from here on are what the host lacks.
     this._lastSentHeads = A.getHeads(this._doc);
     // Usable at once, but not `whenReady` until the host's first send says it is current: the bytes
     // can be older than the document, and a reader that waits expects what the host holds.
@@ -317,19 +324,27 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   }
 
   /** Merges changes the handle already held but loaded behind, as a host change it did not have to wait for. */
-  #catchUp(changes: Uint8Array): void {
-    if (!this._doc || changes.length === 0) {
+  #catchUp(changes: Uint8Array, { at, storedHeads }: { at: A.Heads; storedHeads: A.Heads }): void {
+    if (!this._doc) {
       return;
     }
     const before = this._doc;
     const headsBefore = A.getHeads(this._doc);
     this._doc = A.loadIncremental(this._doc, changes);
-    this.emit('change', {
-      handle: this,
-      doc: this._doc,
-      patches: A.diff(this._doc, headsBefore, A.getHeads(this._doc)),
-      patchInfo: { before, after: this._doc, source: 'host' },
-    });
+    // The host holds the stored changes, so only the writes made since need sending.
+    if (sameHeads(this._lastSentHeads, at)) {
+      this._lastSentHeads = storedHeads;
+    }
+    try {
+      this.emit('change', {
+        handle: this,
+        doc: this._doc,
+        patches: A.diff(this._doc, headsBefore, A.getHeads(this._doc)),
+        patchInfo: { before, after: this._doc, source: 'host' },
+      });
+    } catch (err) {
+      log.catch(err);
+    }
   }
 
   /**

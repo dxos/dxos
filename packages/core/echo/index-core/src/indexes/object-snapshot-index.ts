@@ -71,6 +71,28 @@ export class ObjectSnapshotIndex implements Index {
   }
 
   /**
+   * Each document object's JSON text with the heads it was read at, in one read so the two agree.
+   * Objects stored without heads are omitted.
+   */
+  queryBackings(
+    recordIds: readonly number[],
+  ): Effect.Effect<readonly { recordId: number; json: string; heads: string[] }[], SqlError.SqlError> {
+    return Effect.gen({ self: this }, function* () {
+      const sql = this.#sql;
+      const results: { recordId: number; json: string; heads: string[] }[] = [];
+      for (const chunk of chunkArray(recordIds)) {
+        const rows = yield* sql<{ recordId: number; snapshot: string; heads: string }>`
+          SELECT recordId, snapshot, heads FROM objectSnapshot
+          WHERE recordId IN ${sql.in(chunk)} AND heads IS NOT NULL`;
+        for (const row of rows) {
+          results.push({ recordId: row.recordId, json: row.snapshot, heads: JSON.parse(row.heads) });
+        }
+      }
+      return results;
+    });
+  }
+
+  /**
    * How many indexed objects have no snapshot yet. Non-zero only while the store is filling after
    * its introduction; a reader that cannot tolerate a partial store waits for this to reach zero.
    */

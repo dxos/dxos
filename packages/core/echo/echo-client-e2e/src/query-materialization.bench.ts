@@ -127,6 +127,8 @@ const phaseSamples: Record<string, number[]> = {};
 const record = (phase: string, ms: number) => {
   (phaseSamples[phase] ??= []).push(ms);
 };
+/** Mean stored-change bytes an index-backed result holds, per row label. */
+const heldBytes: Record<string, number> = {};
 
 afterAll(async () => {
   blackhole(checksum);
@@ -137,6 +139,9 @@ afterAll(async () => {
   });
   // eslint-disable-next-line no-console
   console.log(`\nPhase timings (measured inside the cold rows):\n${lines.join('\n')}\n`);
+  const held = Object.entries(heldBytes).map(([label, bytes]) => `${label.padEnd(64)} ${bytes.toFixed(0)} bytes`);
+  // eslint-disable-next-line no-console
+  console.log(`Stored changes held per result:\n${held.join('\n')}\n`);
   await narrow.peer.close();
   await wide.peer.close();
   await builder.close();
@@ -226,7 +231,7 @@ const defineRows = (label: string, state: Populated, type: typeof BenchObject | 
           (sum, object) => sum + (getObjectCore(object).snapshot?.handle.passive?.bytes.length ?? 0),
           0,
         );
-        record(`${label}: stored changes held per result (value = bytes)`, held / results.length);
+        heldBytes[label] = held / results.length;
         firstWrite(results[0], 'first write (first of the session)');
         for (let index = 1; index <= STEADY_WRITES; index++) {
           firstWrite(results[index], 'first write (steady state)');

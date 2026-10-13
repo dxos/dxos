@@ -8,7 +8,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
-import { Trigger, asyncTimeout, sleep, waitForCondition } from '@dxos/async';
+import { Trigger, asyncTimeout, waitForCondition } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type DatabaseDirectory, EntityStructure, SpaceDocVersion } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
@@ -151,39 +151,39 @@ describe('DocumentsSynchronizer', () => {
     expect(sent.get(current.documentId)).toHaveLength(0);
   });
 
-  test("a passive subscription sends each change with the JSON of the document's one object", async () => {
-    const { runtime, dispose } = createTestSqliteRuntime();
-    onTestFinished(() => dispose());
-    const host = new AutomergeHost({ runtime });
-    await openAndClose(host);
-    const objectId = EntityId.random();
-    const handle = await host.createDoc<DatabaseDirectory>({
-      version: SpaceDocVersion.CURRENT,
-      access: { spaceId: SpaceId.random() },
-      objects: { [objectId]: EntityStructure.makeObject({ type: TEST_TYPE, data: { title: 'shown' } }) },
-      links: {},
+  test('a passive subscription is sent nothing while storage holds its heads, and the difference once it does not', async () => {
+    const { host, synchronizer, updates, createDirectory } = await setupPassive();
+    const current = await createDirectory('current');
+    const stale = await createDirectory('shown');
+    const shownAt = A.getHeads(stale.handle.doc()!);
+    stale.handle.change((doc) => {
+      doc.objects![stale.objectId].data.title = 'stored';
     });
     await host.flush(Context.default());
-    const shownAt = A.getHeads(handle.doc()!);
-    const shownBytes = A.save(handle.doc()!);
 
-    const updates: DataService.DocumentUpdate[] = [];
-    const synchronizer = new DocumentsSynchronizer({
-      automergeHost: host,
-      sendUpdates: (batch) => updates.push(...(batch.updates ?? [])),
-    });
-    await openAndClose(synchronizer);
-    const next = async () => {
-      const count = updates.length;
-      await waitForCondition({ condition: () => updates.length > count, timeout: 5_000 });
-      return updates[updates.length - 1];
+    const atStorage = {
+      documentId: current.handle.documentId,
+      heads: A.getHeads(current.handle.doc()!),
+      passive: true,
     };
-    const title = (update: DataService.DocumentUpdate) => JSON.parse(update.passive!.json!).title;
+    await synchronizer.addDocuments([atStorage]);
+    // Added again beside one storage has moved past: a send for the first would go out no later.
+    await synchronizer.addDocuments([
+      atStorage,
+      { documentId: stale.handle.documentId, heads: shownAt, passive: true },
+    ]);
+    await waitForCondition({ condition: () => updates.length > 0, timeout: 5_000 });
+    expect(updates.map(({ documentId }) => documentId)).toEqual([stale.handle.documentId]);
+    expect(JSON.parse(updates[0].passive!.json!).title).toBe('stored');
+  });
 
-    // The client shows what storage holds, so nothing is sent until the document changes.
-    await synchronizer.addDocuments([{ documentId: handle.documentId, heads: shownAt, passive: true }]);
-    await sleep(200);
-    expect(updates).toHaveLength(0);
+  test("a passive update carries the change and its object's JSON at the new heads", async () => {
+    const { host, synchronizer, createDirectory, next } = await setupPassive();
+    const { handle, objectId } = await createDirectory('shown');
+    const shownBytes = A.save(handle.doc()!);
+    await synchronizer.addDocuments([
+      { documentId: handle.documentId, heads: A.getHeads(handle.doc()!), passive: true },
+    ]);
 
     let update = next();
     handle.change((doc) => {
@@ -191,60 +191,36 @@ describe('DocumentsSynchronizer', () => {
     });
     await host.flush(Context.default());
     const edited = await update;
-    expect(title(edited)).toBe('edited');
+    expect(JSON.parse(edited.passive!.json!).title).toBe('edited');
     expect(edited.passive?.heads).toEqual(A.getHeads(handle.doc()!));
-    // The mutation applies on top of the stored changes the client holds.
+    expect(edited.passive?.updatedAt).toBeGreaterThan(0);
     const loaded = A.loadIncremental(A.load<DatabaseDirectory>(shownBytes), edited.mutation!);
     expect(loaded.objects![objectId].data.title).toBe('edited');
-    expect(edited.passive?.updatedAt).toBeGreaterThan(0);
 
-    // A document that no longer holds just the object cannot be shown from JSON.
+    // A document that holds a second object cannot be shown from JSON.
     update = next();
     handle.change((doc) => {
       doc.objects![EntityId.random()] = EntityStructure.makeObject({ type: TEST_TYPE, data: {} });
     });
     await host.flush(Context.default());
     expect((await update).passive).toEqual(expect.objectContaining({ json: undefined }));
-
-    // Added again without `passive`, it is a loaded document's subscription, confirmed even with nothing new.
-    update = next();
-    await synchronizer.addDocuments([{ documentId: handle.documentId, heads: A.getHeads(handle.doc()!) }]);
-    expect((await update).passive).toBeUndefined();
-
-    // Added again naming no heads, the client holds nothing, so it gets the whole document.
-    update = next();
-    await synchronizer.addDocuments([{ documentId: handle.documentId }]);
-    expect(A.load<DatabaseDirectory>((await update).mutation!).objects![objectId].data.title).toBe('edited');
   });
 
-  test('a passive subscription from heads storage has moved past sends the difference at once', async () => {
-    const { runtime, dispose } = createTestSqliteRuntime();
-    onTestFinished(() => dispose());
-    const host = new AutomergeHost({ runtime });
-    await openAndClose(host);
-    const objectId = EntityId.random();
-    const handle = await host.createDoc<DatabaseDirectory>({
-      version: SpaceDocVersion.CURRENT,
-      access: { spaceId: SpaceId.random() },
-      objects: { [objectId]: EntityStructure.makeObject({ type: TEST_TYPE, data: { title: 'shown' } }) },
-      links: {},
-    });
-    await host.flush(Context.default());
-    const shownAt = A.getHeads(handle.doc()!);
-    handle.change((doc) => {
-      doc.objects![objectId].data.title = 'stored';
-    });
-    await host.flush(Context.default());
+  test('re-adding a document switches its mode', async () => {
+    const { synchronizer, createDirectory, next } = await setupPassive();
+    const { handle, objectId } = await createDirectory('shown');
+    const heads = A.getHeads(handle.doc()!);
+    await synchronizer.addDocuments([{ documentId: handle.documentId, heads, passive: true }]);
 
-    const updates: DataService.DocumentUpdate[] = [];
-    const synchronizer = new DocumentsSynchronizer({
-      automergeHost: host,
-      sendUpdates: (batch) => updates.push(...(batch.updates ?? [])),
-    });
-    await openAndClose(synchronizer);
-    await synchronizer.addDocuments([{ documentId: handle.documentId, heads: shownAt, passive: true }]);
-    await waitForCondition({ condition: () => updates.length > 0, timeout: 5_000 });
-    expect(JSON.parse(updates[0].passive!.json!).title).toBe('stored');
+    // Loaded, the client waits to hear it is current, so it is sent even nothing new.
+    let update = next();
+    await synchronizer.addDocuments([{ documentId: handle.documentId, heads }]);
+    expect((await update).passive).toBeUndefined();
+
+    // Naming no heads, the client holds nothing, so it is sent the whole document.
+    update = next();
+    await synchronizer.addDocuments([{ documentId: handle.documentId }]);
+    expect(A.load<DatabaseDirectory>((await update).mutation!).objects![objectId].data.title).toBe('shown');
   });
 
   test('a client write reaches the other subscriber and the heads store without a lease on the host', async () => {
@@ -443,3 +419,36 @@ describe('DocumentsSynchronizer', () => {
 });
 
 const TEST_TYPE = DXN.make('com.example.type.test', '0.1.0');
+
+/** A host and a synchronizer that records what it sends, with a way to save one-object directories. */
+const setupPassive = async () => {
+  const { runtime, dispose } = createTestSqliteRuntime();
+  onTestFinished(() => dispose());
+  const host = new AutomergeHost({ runtime });
+  await openAndClose(host);
+  const updates: DataService.DocumentUpdate[] = [];
+  const synchronizer = new DocumentsSynchronizer({
+    automergeHost: host,
+    sendUpdates: (batch) => updates.push(...(batch.updates ?? [])),
+  });
+  await openAndClose(synchronizer);
+
+  const createDirectory = async (title: string) => {
+    const objectId = EntityId.random();
+    const handle = await host.createDoc<DatabaseDirectory>({
+      version: SpaceDocVersion.CURRENT,
+      access: { spaceId: SpaceId.random() },
+      objects: { [objectId]: EntityStructure.makeObject({ type: TEST_TYPE, data: { title } }) },
+      links: {},
+    });
+    await host.flush(Context.default());
+    return { handle, objectId };
+  };
+  /** The next update the synchronizer sends from now. */
+  const next = async () => {
+    const count = updates.length;
+    await waitForCondition({ condition: () => updates.length > count, timeout: 5_000 });
+    return updates[updates.length - 1];
+  };
+  return { host, synchronizer, updates, createDirectory, next };
+};

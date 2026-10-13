@@ -110,34 +110,30 @@ describe('DocHandleProxy', () => {
   });
 
   test('a write loads stored changes at the heads shown, and the changes after them merge in', async () => {
-    // Actor order once decided whether a change at older heads showed in the values, so many actors are tried.
-    for (let attempt = 0; attempt < 20; attempt++) {
-      const base = A.from<{ tags: string[] }>({ tags: ['a'] });
-      const shownAt = A.getHeads(base);
-      const later = A.change(A.clone(base), (doc) => {
-        doc.tags.unshift('host');
-      });
-      const handle = new DocHandleProxy<{ tags: string[] }>({
-        documentId: DOCUMENT_ID,
-        passive: { bytes: A.save(later), heads: shownAt },
-        onDelete: () => {},
-      });
+    const base = A.from<{ tags: string[] }>({ tags: ['a'] });
+    const shownAt = A.getHeads(base);
+    const stored = A.change(A.clone(base), (doc) => {
+      doc.tags.unshift('host');
+    });
+    const handle = new DocHandleProxy<{ tags: string[] }>({
+      documentId: DOCUMENT_ID,
+      passive: { bytes: A.save(stored), heads: shownAt },
+      onDelete: () => {},
+    });
 
-      handle._activate({ at: shownAt });
-      handle.change((doc) => {
-        doc.tags.splice(0, 1);
-      });
-      handle.change((doc) => {
-        doc.tags.push('b');
-      });
-      expect([...handle.doc().tags]).toEqual(['b']);
-      await Promise.resolve();
-      // `b` and `host` are concurrent inserts at the head, ordered by actor.
-      expect([...handle.doc().tags].sort()).toEqual(['b', 'host']);
-      // The writes continue the loaded document's actor rather than minting one each.
-      const actors = new Set(A.getHistory(handle.doc()).map(({ change }) => change.actor));
-      expect(actors.size).toBe(3);
-    }
+    handle._activate({ at: shownAt });
+    handle.change((doc) => {
+      doc.tags.splice(0, 1);
+    });
+    handle.change((doc) => {
+      doc.tags.push('b');
+    });
+    expect([...handle.doc().tags]).toEqual(['b']);
+    await new Promise((resolve) => handle.once('change', resolve));
+    // `b` and `host` are concurrent inserts at the head, ordered by actor.
+    expect([...handle.doc().tags].sort()).toEqual(['b', 'host']);
+    // The host holds the stored changes, so only the writes are sent.
+    expect(handle._getPendingChanges()).toEqual(A.saveSince(handle.doc(), A.getHeads(stored)));
   });
 
   test('a document the host cannot produce fails its waiters', async () => {

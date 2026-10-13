@@ -129,8 +129,12 @@ export class DocumentsSynchronizer extends Resource {
         existing.lastSentHead = heads;
         // A loaded document's client waits to hear it is current; a passive one already shows what it holds.
         existing.confirm = heads !== undefined && !passive;
-        this._pendingUpdates.add(documentId);
-        this._sendUpdatesJob?.trigger();
+        if (passive && heads !== undefined) {
+          waiting.push({ documentId, heads, syncState: existing });
+        } else {
+          this._pendingUpdates.add(documentId);
+          this._sendUpdatesJob?.trigger();
+        }
         continue;
       }
       if (passive && heads !== undefined) {

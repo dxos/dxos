@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { next as A } from '@automerge/automerge';
-
 /**
  * `next`, with every subtree that equals the one at the same place in `previous` replaced by that
  * previous subtree, so unchanged values keep their identity across a new snapshot of an object.
@@ -13,9 +11,6 @@ export const shareStructure = <T>(previous: unknown, next: T): T => share(previo
 const share = (previous: unknown, next: unknown): unknown => {
   if (previous === next) {
     return previous;
-  }
-  if (previous instanceof A.RawString && next instanceof A.RawString) {
-    return previous.toString() === next.toString() ? previous : next;
   }
   if (previous instanceof Uint8Array && next instanceof Uint8Array) {
     return previous.length === next.length && previous.every((byte, index) => byte === next[index]) ? previous : next;
