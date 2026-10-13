@@ -81,8 +81,8 @@ export const InvitationAuthenticator = ({
         </Field.Root>
         {invitationId &&
           authMethod === Invitation_AuthMethod.SHARED_SECRET && (
-            // One block, so the Body's gap sets it apart from the PIN while the message stays close to its emoji.
-            <div className='flex flex-col items-center gap-2'>
+            // One block, so the Body's gap sets it apart from the PIN while the message sits right above its emoji.
+            <div className='flex flex-col items-center'>
               <Typography.Text tone='muted'>{t('auth-other-device-emoji.message')}</Typography.Text>
               <Emoji text={hexToEmoji(invitationId)} />
             </div>
