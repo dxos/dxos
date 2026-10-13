@@ -811,8 +811,8 @@ export class QueryExecutor extends Resource {
   /**
    * Adds what a client backs each row's object with: its JSON and the document's stored changes, read now
    * rather than kept in the index, and only for rows this query has not shipped at their version. A row
-   * that cannot be backed at its version (no stored changes, too many, or a failed read) is not read again
-   * until its version moves.
+   * that cannot be backed at its version (no stored changes, or too many) is not read again until its
+   * version moves; one whose read failed is read again on the next emission.
    */
   async #withBacking(
     results: QueryService.QueryResult[],
@@ -834,12 +834,12 @@ export class QueryExecutor extends Resource {
       unsent.filter((index) => results[index].documentJson === undefined && items[index]?.recordId !== undefined),
     );
     const indexed = new Map<number, { json: string; heads: string[] }>();
-    let indexReadFailed = false;
+    const failed = new Set<number>();
     if (fromIndex.size > 0) {
       const recordIds = [...fromIndex].map((index) => items[index].recordId!);
       const rows = await this._runInRuntime(this._indexEngine.queryBackings(recordIds)).catch((err) => {
         log.warn('index JSON could not be read for rows', { err });
-        indexReadFailed = true;
+        fromIndex.forEach((index) => failed.add(index));
         return [];
       });
       for (const { recordId, json, heads } of rows) {
@@ -861,6 +861,7 @@ export class QueryExecutor extends Resource {
                   .readStoredChanges(result.documentId as DocumentId, { limit: OBJECT_BYTES_LIMIT })
                   .catch((err) => {
                     log.warn('stored changes could not be read for a row', { documentId: result.documentId, err });
+                    failed.add(index);
                     return undefined;
                   });
           backing.set(index, json !== undefined && bytes !== undefined ? { json, heads, bytes } : undefined);
@@ -873,8 +874,7 @@ export class QueryExecutor extends Resource {
         return result;
       }
       const backed = backing.get(index);
-      // A failed index read leaves its rows to be read again on the next emission.
-      if (!(indexReadFailed && fromIndex.has(index))) {
+      if (!failed.has(index)) {
         this.#sentVersions.set(result.id, result.version);
       }
       // Shipped at this version already, and kept by the client; or not backable at it.
