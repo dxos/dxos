@@ -55,24 +55,20 @@ Confirm the worktree is on the right branch with `git branch --show-current`.
 
 ## Step 4 — Sync with base branch
 
-Keep the branch up to date with `main` (or the base branch):
+Merge `main` (or the base branch) in only when the PR conflicts with it (`mergeable` is
+`CONFLICTING`) or a failure traces to a change on `main`. The merge queue tests the PR on top of
+`main`, and every push to a ready PR reruns the full Check suite, so a clean branch stays as it is.
 
 ```bash
 git fetch origin main
 git merge origin/main --no-edit
 ```
 
-If there are merge conflicts, resolve them. After resolving:
+Resolve the conflicts, then commit and push together with any CI fixes from Step 6:
 
 ```bash
 git add -A
 git commit -m "chore: merge main into branch"
-git push -u origin <headRefName>
-```
-
-If `git merge` is clean, push only if there are new commits:
-
-```bash
 git push -u origin <headRefName>
 ```
 
@@ -115,7 +111,8 @@ For each failing check:
    - Format: `pnpm format`
 3. Apply the fix at the **root cause** — no casts, no `// @ts-ignore`, no `--no-verify`.
 4. Run the specific check locally to confirm the fix.
-5. Commit with a `scope: description` message and push.
+5. Commit with a `scope: description` message. Push once, after every failing check has a fix:
+   each push reruns the full suite.
 
 **Prohibited shortcuts:**
 

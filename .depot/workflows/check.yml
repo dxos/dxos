@@ -1,13 +1,13 @@
 name: Check
 
 # Draft PRs run nothing unless labeled `ci`; marking one ready starts the run, and on a labeled draft
-# the next push does. A PR opened ready runs nothing either: `draft-on-open.yml` converts it to a
-# draft when its branch is an agent's (`claude/`, `dm/`). Every PR-triggered job repeats the same gate in its
-# `if:` or inherits it from `plan`. No `labeled` trigger: its run would post skipped check runs over
-# the PR's real results, and branch protection reads skipped as passing.
+# the next push does. Converting a PR to a draft, by hand or by `draft-on-open.yml`, starts a run that
+# skips every job, and the concurrency group cancels the run in flight. Every PR-triggered job repeats
+# the same gate in its `if:` or inherits it from `plan`. No `labeled` trigger: its run would post
+# skipped check runs over the PR's real results, and branch protection reads skipped as passing.
 on:
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
+    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
   merge_group:
 
   push:
@@ -73,9 +73,7 @@ jobs:
     if: >-
       ${{ inputs.only != 'test' && inputs.only != 'e2e' && (
       github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'ci') ||
-      (!github.event.pull_request.draft && (github.event.action != 'opened' ||
-      github.event.pull_request.head.repo.full_name != github.repository ||
-      !(startsWith(github.head_ref, 'claude/') || startsWith(github.head_ref, 'dm/'))))) }}
+      !github.event.pull_request.draft) }}
     permissions:
       contents: read
       packages: read
@@ -214,9 +212,7 @@ jobs:
     if: >-
       ${{ inputs.only != 'test' && inputs.only != 'e2e' && (
       github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'ci') ||
-      (!github.event.pull_request.draft && (github.event.action != 'opened' ||
-      github.event.pull_request.head.repo.full_name != github.repository ||
-      !(startsWith(github.head_ref, 'claude/') || startsWith(github.head_ref, 'dm/'))))) }}
+      !github.event.pull_request.draft) }}
     permissions:
       contents: read
       packages: read
@@ -420,9 +416,7 @@ jobs:
     if: >-
       ${{ inputs.only != 'check' && (
       github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'ci') ||
-      (!github.event.pull_request.draft && (github.event.action != 'opened' ||
-      github.event.pull_request.head.repo.full_name != github.repository ||
-      !(startsWith(github.head_ref, 'claude/') || startsWith(github.head_ref, 'dm/'))))) }}
+      !github.event.pull_request.draft) }}
     runs-on: depot-ubuntu-latest
     timeout-minutes: 5
     outputs:
@@ -791,9 +785,7 @@ jobs:
       startsWith(github.head_ref, 'changeset-release/') ||
       inputs.only == 'all') && (
       github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'ci') ||
-      (!github.event.pull_request.draft && (github.event.action != 'opened' ||
-      github.event.pull_request.head.repo.full_name != github.repository ||
-      !(startsWith(github.head_ref, 'claude/') || startsWith(github.head_ref, 'dm/')))))
+      !github.event.pull_request.draft)
     # 4 vCPU: averages 17% of 8 vCPU and peaks at 9 GB.
     runs-on: depot-ubuntu-24.04-4
     container:
@@ -916,8 +908,7 @@ jobs:
       github.event_name == 'pull_request' &&
       github.event.pull_request.head.repo.full_name == github.repository && (
       contains(github.event.pull_request.labels.*.name, 'ci') ||
-      (!github.event.pull_request.draft && (github.event.action != 'opened' ||
-      !(startsWith(github.head_ref, 'claude/') || startsWith(github.head_ref, 'dm/')))))
+      !github.event.pull_request.draft)
     runs-on: depot-ubuntu-latest
     timeout-minutes: 10
     permissions:
