@@ -7,7 +7,7 @@ Architecture: [DESIGN.md](./DESIGN.md). The EDGE half lives in the `dxos/edge` r
 You need three things running:
 
 1. **A Discord bot** in a test server.
-2. **A local EDGE stack** (edge repo) with plugin-agent linked into it.
+2. **A local EDGE stack** (edge repo).
 3. **A local Composer** (this repo) pointed at that EDGE.
 
 Below, `<dxos>` is a dxos checkout on a branch that includes plugin-agent, and `<edge>` is an
@@ -29,11 +29,15 @@ edge checkout on a branch that includes the compute-service Discord bot.
 6. In Discord, **Settings → Advanced → Developer Mode** on; right-click the test channel →
    **Copy Channel ID**.
 
-## 2. Build dxos and link it into edge
+## 2. Link local dxos into edge (optional)
 
-plugin-agent (and the `AgentInput` change in `@dxos/agent-runtime`) are not published, so EDGE
-uses them through a local link. Link the **whole** workspace: linking a few packages mixes the
-dxos version edge's catalog pins with newer local builds and fails to bundle.
+Edge's catalog pins a published dxos build that already includes plugin-agent, and its
+operation-service registers `ThreadPlugin` and `AgentPlugin`, so a plain edge checkout runs the
+agent with no linking.
+
+Link only to run local changes to dxos code that runs on EDGE (plugin-agent operations,
+`agent-runtime`, `assistant`); Composer-only changes need no link. Link the **whole** workspace:
+linking a few packages mixes the pinned dxos version with newer local builds and fails to bundle.
 
 1. Build everything in `<dxos>` (the link packs each package's `dist/`):
 
@@ -47,18 +51,8 @@ dxos version edge's catalog pins with newer local builds and fails to bundle.
    node scripts/link-packages.mjs <dxos> --all --install
    ```
 
-3. In `<edge>/packages/services/operation-service/src/registry.ts`, add `ThreadPlugin.make()`,
-   `DiscordPlugin.make()` and `AgentPlugin.make()` to `PLUGINS` (imports
-   `@dxos/plugin-thread/ThreadPlugin`, `@dxos/plugin-discord/DiscordPlugin`,
-   `@dxos/plugin-agent/AgentPlugin`). plugin-agent depends on plugin-thread, whose operations carry
-   the agent's posts, and plugin-discord provides the Discord channel backend they dispatch to.
-
-Never commit the `file:` overrides or the registry edit; undo them with
-`git checkout -- package.json pnpm-lock.yaml packages/services/operation-service/src/registry.ts && pnpm install`.
-
-The `<dxos>` branch must contain the dxos commit edge's catalog pins (merge dxos `main` if it does
-not). Rebuild and re-link whenever you change dxos code that runs on EDGE (plugin-agent
-operations, `agent-runtime`, `assistant`); Composer-only changes need no re-link.
+Never commit the `file:` overrides; undo them with
+`git checkout -- package.json pnpm-lock.yaml && pnpm install`.
 
 ## 3. Start EDGE
 
@@ -67,11 +61,11 @@ holds `op://` references, and `pnpm dev:env` resolves them with `op inject` and 
 files. It needs the 1Password desktop app with CLI integration on (Settings → Developer); it prompts
 for approval, so no `op signin` is needed.
 
-1. Store the bot token in 1Password following the key standard: vault `eng-dev`, item named in
-   reverse-DNS form, field `credential` (e.g. `op://eng-dev/com.discord.bot.kai/credential`). Item
-   names must not contain `/`, which `op://` references reject. Point `DISCORD_BOT_TOKEN_DEV` in
-   compute-service's `secrets.jsonc` (top-level block) at that reference. In a dev environment it
-   overrides the token stored in the space, so you can test without managing tokens in Composer.
+1. The bot token is `op://eng/com.discord.bot.kai/credential` (Kai), which compute-service's
+   `secrets.jsonc` already names as `DISCORD_BOT_TOKEN_DEV`. In a dev environment it overrides the
+   token stored in the space, so you can test without managing tokens in Composer. To use another
+   bot, point that entry at its item (vault `eng`, reverse-DNS item name, field `credential`; item
+   names must not contain `/`, which `op://` references reject).
 
 2. From the root of `<edge>` (the script is defined in the root `package.json`), write the `.env`
    files:
@@ -80,7 +74,8 @@ for approval, so no `op signin` is needed.
    pnpm dev:env
    ```
 
-   If it reports "no account found", pin the account: `OP_ACCOUNT=<account>.1password.com pnpm dev:env`.
+   If it reports "not signed in", unlock the 1Password app; if "no account found", pin the account:
+   `OP_ACCOUNT=<account>.1password.com pnpm dev:env`.
 
 3. Start (or restart) the stack, also from the root of `<edge>`. EDGE listens on `:8787`:
 
