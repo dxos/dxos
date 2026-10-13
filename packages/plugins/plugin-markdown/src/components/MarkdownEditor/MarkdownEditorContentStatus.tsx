@@ -18,9 +18,6 @@ import { meta } from '#meta';
 /** Why a document's editor has no content binding (and so is not editable). */
 export type ContentStatus = 'loading' | 'missing' | 'deleted';
 
-// Most content resolves within a frame or two; the notice only appears for a load that lingers.
-const LOADING_NOTICE_DELAY = 1_000;
-
 const notDeleted = Atom.make(() => false);
 
 /**
@@ -77,26 +74,16 @@ export type MarkdownEditorContentStatusProps = {
 
 /**
  * Explains why the editor below cannot be focused: without a content binding it is not editable.
+ * Loading is shown by the editor's placeholder instead.
  */
 export const MarkdownEditorContentStatus = ({ status }: MarkdownEditorContentStatusProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const [showLoading, setShowLoading] = useState(false);
-  useEffect(() => {
-    setShowLoading(false);
-    if (status !== 'loading') {
-      return;
-    }
-
-    const timeout = setTimeout(() => setShowLoading(true), LOADING_NOTICE_DELAY);
-    return () => clearTimeout(timeout);
-  }, [status]);
-
-  if (status === undefined || (status === 'loading' && !showLoading)) {
+  if (status === undefined || status === 'loading') {
     return null;
   }
 
   return (
-    <Banner.Root valence={status === 'loading' ? 'neutral' : 'warning'} data-testid='markdown.content-status'>
+    <Banner.Root valence='warning' data-testid='markdown.content-status'>
       <Banner.Title>{t(`content-${status}.title`)}</Banner.Title>
       <Banner.Body>{t(`content-${status}.message`)}</Banner.Body>
     </Banner.Root>

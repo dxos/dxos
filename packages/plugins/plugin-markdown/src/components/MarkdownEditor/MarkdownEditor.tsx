@@ -182,6 +182,7 @@ const MarkdownEditorContent = ({ compact: compactProp, ...props }: MarkdownEdito
   const {
     id,
     attendableId,
+    contentStatus,
     compact = compactProp,
     viewMode,
     editorStateStore,
@@ -205,6 +206,7 @@ const MarkdownEditorContent = ({ compact: compactProp, ...props }: MarkdownEdito
       attendableId={attendableId}
       compact={compact}
       viewMode={viewMode}
+      contentStatus={contentStatus}
       editorStateStore={editorStateStore}
       toolbarState={state as Atom.Writable<EditorToolbarState>}
       extensions={extensions}
@@ -222,7 +224,7 @@ MarkdownEditorContent.displayName = MARKDOWN_EDITOR_CONTENT_NAME;
 
 const MARKDOWN_EDITOR_CONTENT_STATUS_NAME = 'MarkdownEditor.ContentStatus';
 
-/** Explains a non-editable editor whose document content is loading, missing or deleted. */
+/** Explains a non-editable editor whose document content is missing or deleted. */
 const MarkdownEditorContentStatusPart = () => {
   const { contentStatus } = useMarkdownEditorContext(MARKDOWN_EDITOR_CONTENT_STATUS_NAME);
   return <MarkdownEditorContentStatus status={contentStatus} />;

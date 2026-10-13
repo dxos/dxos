@@ -39,6 +39,7 @@ import { isTruthy } from '@dxos/util';
 
 import { meta } from '#meta';
 
+import { type ContentStatus } from './MarkdownEditorContentStatus.tsx';
 import { type MarkdownEditorToolbarProps } from './MarkdownEditorToolbar.tsx';
 
 export type MarkdownEditorContentProps = Util.ThemedClassName<{
@@ -47,6 +48,8 @@ export type MarkdownEditorContentProps = Util.ThemedClassName<{
   role?: string;
   compact?: boolean;
   viewMode?: EditorViewMode;
+  /** Unbound content: a delayed loading placeholder, or none while the status banner explains why. */
+  contentStatus?: ContentStatus;
   slashCommandGroups?: EditorMenuGroup[];
   editorStateStore?: EditorStateStore;
   toolbarState?: Atom.Writable<EditorToolbarState>;
@@ -55,6 +58,10 @@ export type MarkdownEditorContentProps = Util.ThemedClassName<{
   Pick<UseTextEditorProps, 'initialValue' | 'extensions'> &
   Pick<MarkdownEditorToolbarProps, 'onFileUpload'> &
   Pick<ThemeExtensionsOptions, 'slots'>;
+
+// Fast loads finish before the loading placeholder fades in, so it only shows when loading is slow.
+const loadingPlaceholderClassNames =
+  '[&_.cm-placeholder]:animate-fade-in [&_.cm-placeholder]:[animation-delay:1s] [&_.cm-placeholder]:[animation-fill-mode:both]';
 
 // TODO(burdon): Move controller to Root.
 // One compartment per module is safe: compartments are keyed per EditorState, so concurrent editors
@@ -69,6 +76,7 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
       role,
       compact,
       viewMode,
+      contentStatus,
       initialValue,
       editorStateStore,
       toolbarState,
@@ -109,7 +117,12 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
         [
           createBasicExtensions({
             readOnly: viewMode === 'readonly',
-            placeholder: t('editor.placeholder'),
+            placeholder:
+              contentStatus === undefined
+                ? t('editor.placeholder')
+                : contentStatus === 'loading'
+                  ? t('content-loading.placeholder')
+                  : undefined,
             scrollPastEnd: !compact,
             search: true,
           }),
@@ -135,7 +148,19 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
             }),
           extensions,
         ].filter(isTruthy),
-      [viewMode, themeMode, extensions, compact, slots, role, toolbarState, updateToolbarState, onFileUpload, t],
+      [
+        viewMode,
+        contentStatus,
+        themeMode,
+        extensions,
+        compact,
+        slots,
+        role,
+        toolbarState,
+        updateToolbarState,
+        onFileUpload,
+        t,
+      ],
     );
 
     const {
@@ -171,7 +196,7 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
     return (
       <div
         {...focusAttributes}
-        className={mx(editorClassNames(role), classNames)}
+        className={mx(editorClassNames(role), contentStatus === 'loading' && loadingPlaceholderClassNames, classNames)}
         data-testid='composer.markdownRoot'
         data-popover-collision-boundary={true}
         // Where focus lands when the article is entered as a whole: the document, not the toolbar.
