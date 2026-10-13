@@ -21,7 +21,27 @@ const hoursAgo = (hours: number) => new Date(NOW.getTime() - hours * 3_600_000).
 
 /** Facts as `readSource` records them from the CI-triage transcript, newest first. */
 const FACTS: AgentKnowledgeFact[] = [
-  { id: 'f1', text: 'Dima owns indexer', source: 'CI triage', speaker: 'dima', saidAt: hoursAgo(2) },
+  {
+    id: 'f1',
+    text: 'Dima owns indexer',
+    source: 'CI triage',
+    speaker: 'dima',
+    saidAt: hoursAgo(2),
+    fact: {
+      id: 'f1',
+      assertion: {
+        subject: { kind: 'entity', entity: 'dima', label: 'Dima' },
+        predicate: 'owns',
+        object: { kind: 'entity', entity: 'indexer' },
+        quote: 'I own the indexer',
+      },
+      factuality: { value: 'CT+', polarity: '+', confidence: 0.9 },
+      attribution: { agent: 'dima', agentLabel: 'Dima', source: 'dxn:chat/ci-triage', generatedAtTime: hoursAgo(2) },
+      recordedAt: hoursAgo(2),
+      extractor: { id: 'read-source', model: 'claude-haiku-5-5', version: '1' },
+      sourceHash: '3f2a9c',
+    },
+  },
   { id: 'f2', text: 'race is in v12 index migration', source: 'CI triage', speaker: 'dima', saidAt: hoursAgo(2) },
   { id: 'f3', text: 'Josiah reviews fix', source: 'CI triage', speaker: 'josiah', saidAt: hoursAgo(3) },
   { id: 'f4', text: '0.12 release is on 10 October', source: 'Release notes', saidAt: hoursAgo(26) },

@@ -33,41 +33,43 @@ export const StyleClassList = ({ classes, uses, readonly, onRename, onDelete }: 
       {({ items }) => (
         <>
           <OrderedList.Label>Classes</OrderedList.Label>
-          <OrderedList.Content data-testid='style-classes'>
-            {items.map((styleClass) => {
-              const hue = hueClasses(styleClass.style?.hue, styleClass.style?.tone);
-              const count = uses[styleClass.id] ?? 0;
-              return (
-                <OrderedList.Item
-                  key={styleClass.id}
-                  id={styleClass.id}
-                  canDrag={false}
-                  open={openId === styleClass.id}
-                  onOpenChange={(open) => setOpenId(open ? styleClass.id : undefined)}
-                  data-testid={`style-class-${styleClass.id}`}
-                >
-                  <div
-                    aria-hidden
-                    className={mx('size-4 shrink-0 self-center rounded-sm border', hue.surface, hue.border)}
-                  />
-                  <OrderedList.ItemText />
-                  <OrderedList.ItemDescription>{count === 1 ? '1 use' : `${count} uses`}</OrderedList.ItemDescription>
-                  {!readonly && onDelete && <SystemButton.Remove onClick={() => onDelete(styleClass.id)} />}
-                  <OrderedList.Detail>
-                    <Form.Root
-                      schema={NameSchema}
-                      values={{ name: styleClass.name }}
-                      readonly={readonly}
-                      autoSave
-                      onSave={({ name }) => onRename?.(styleClass.id, name)}
-                    >
-                      <Form.Fields />
-                    </Form.Root>
-                  </OrderedList.Detail>
-                </OrderedList.Item>
-              );
-            })}
-          </OrderedList.Content>
+          <OrderedList.Viewport>
+            <OrderedList.Content data-testid='style-classes'>
+              {items.map((styleClass) => {
+                const hue = hueClasses(styleClass.style?.hue, styleClass.style?.tone);
+                const count = uses[styleClass.id] ?? 0;
+                return (
+                  <OrderedList.Item
+                    key={styleClass.id}
+                    id={styleClass.id}
+                    canDrag={false}
+                    open={openId === styleClass.id}
+                    onOpenChange={(open) => setOpenId(open ? styleClass.id : undefined)}
+                    data-testid={`style-class-${styleClass.id}`}
+                  >
+                    <div
+                      aria-hidden
+                      className={mx('size-4 shrink-0 self-center rounded-sm border', hue.surface, hue.border)}
+                    />
+                    <OrderedList.ItemText />
+                    <OrderedList.ItemDescription>{count === 1 ? '1 use' : `${count} uses`}</OrderedList.ItemDescription>
+                    {!readonly && onDelete && <SystemButton.Remove onClick={() => onDelete(styleClass.id)} />}
+                    <OrderedList.Detail>
+                      <Form.Root
+                        schema={NameSchema}
+                        values={{ name: styleClass.name }}
+                        readonly={readonly}
+                        autoSave
+                        onSave={({ name }) => onRename?.(styleClass.id, name)}
+                      >
+                        <Form.Fields />
+                      </Form.Root>
+                    </OrderedList.Detail>
+                  </OrderedList.Item>
+                );
+              })}
+            </OrderedList.Content>
+          </OrderedList.Viewport>
           <OrderedList.Empty>No classes.</OrderedList.Empty>
         </>
       )}

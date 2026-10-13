@@ -136,6 +136,7 @@ export const useAgentKnowledge = (agent: Agent.Agent): AgentKnowledgeData => {
         speaker,
         saidAt,
         source: sourceName(db, fact.attribution.source),
+        fact,
       })),
     [inspection, db],
   );

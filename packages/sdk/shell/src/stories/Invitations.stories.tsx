@@ -210,16 +210,18 @@ const Invitations = () => {
               },
             ]}
           >
-            <Listbox.Content aria-label='Identity'>
-              <IdentityListItem
-                identity={identity}
-                presence={
-                  networkStatus === ConnectionState.ONLINE
-                    ? SpaceMember_PresenceState.ONLINE
-                    : SpaceMember_PresenceState.OFFLINE
-                }
-              />
-            </Listbox.Content>
+            <Listbox.Viewport>
+              <Listbox.Content aria-label='Identity'>
+                <IdentityListItem
+                  identity={identity}
+                  presence={
+                    networkStatus === ConnectionState.ONLINE
+                      ? SpaceMember_PresenceState.ONLINE
+                      : SpaceMember_PresenceState.OFFLINE
+                  }
+                />
+              </Listbox.Content>
+            </Listbox.Viewport>
           </Listbox.Root>
         ) : (
           <div className='text-center'>No identity</div>

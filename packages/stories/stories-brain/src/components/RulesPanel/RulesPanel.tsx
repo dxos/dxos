@@ -79,15 +79,17 @@ export const RulesPanel = ({ classNames, source, diagnostics, onSourceChange, on
           </Banner.Root>
         ) : (
           <Listbox.Root items={items} selectionMode='none' classNames='max-h-48'>
-            <Listbox.Content>
-              {items.map((item) => (
-                <Listbox.Item key={item.value} item={item}>
-                  <Listbox.ItemIcon icon='ph--warning-circle--regular' valence='error' />
-                  <Listbox.ItemText />
-                  <Listbox.ItemDescription />
-                </Listbox.Item>
-              ))}
-            </Listbox.Content>
+            <Listbox.Viewport>
+              <Listbox.Content>
+                {items.map((item) => (
+                  <Listbox.Item key={item.value} item={item}>
+                    <Listbox.ItemIcon icon='ph--warning-circle--regular' valence='error' />
+                    <Listbox.ItemText />
+                    <Listbox.ItemDescription />
+                  </Listbox.Item>
+                ))}
+              </Listbox.Content>
+            </Listbox.Viewport>
           </Listbox.Root>
         )}
       </Panel.Footer>

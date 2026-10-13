@@ -136,16 +136,18 @@ export type OperationLogProps = {
  */
 export const OperationLog = ({ entries }: OperationLogProps) => (
   <Listbox.Root items={entries.map((entry) => ({ value: String(entry.seq), label: String(entry.seq) }))}>
-    <Listbox.Content aria-label='Operation log'>
-      {entries.map((entry) => (
-        <Listbox.Item key={entry.seq} id={String(entry.seq)}>
-          <Listbox.ItemText classNames='font-mono text-xs'>
-            {entry.operation}
-            {entry.payload !== undefined ? ` ${JSON.stringify(entry.payload)}` : ''}
-          </Listbox.ItemText>
-        </Listbox.Item>
-      ))}
-      {entries.length === 0 && <Status.Empty>No operations dispatched.</Status.Empty>}
-    </Listbox.Content>
+    <Listbox.Viewport>
+      <Listbox.Content aria-label='Operation log'>
+        {entries.map((entry) => (
+          <Listbox.Item key={entry.seq} id={String(entry.seq)}>
+            <Listbox.ItemText classNames='font-mono text-xs'>
+              {entry.operation}
+              {entry.payload !== undefined ? ` ${JSON.stringify(entry.payload)}` : ''}
+            </Listbox.ItemText>
+          </Listbox.Item>
+        ))}
+        {entries.length === 0 && <Status.Empty>No operations dispatched.</Status.Empty>}
+      </Listbox.Content>
+    </Listbox.Viewport>
   </Listbox.Root>
 );
