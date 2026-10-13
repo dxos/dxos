@@ -19,7 +19,7 @@ import { IdentityInputImpl } from './steps/index.ts';
 const DefaultStory = (props: JoinPanelImplProps) => {
   return (
     <StorybookDialog>
-      <JoinPanelImpl {...props} IdentityInput={IdentityInputImpl} ConfirmReset={ConfirmReset} />
+      <JoinPanelImpl IdentityInput={IdentityInputImpl} ConfirmReset={ConfirmReset} {...props} />
     </StorybookDialog>
   );
 };
@@ -124,6 +124,22 @@ export const RecoverIdentityInput: Story = {
   args: {
     mode: 'halo-only',
     activeView: 'recover-identity-input',
+  },
+};
+
+/** A recovery that failed shows why under the field. */
+export const RecoverIdentityInputFailed: Story = {
+  args: {
+    mode: 'halo-only',
+    activeView: 'recover-identity-input',
+    IdentityInput: (props) => <IdentityInputImpl {...props} validationMessage='Recovery failed.' />,
+  },
+  play: async ({ canvasElement }) => {
+    // The dialog renders in a portal outside the canvas.
+    const canvas = within(canvasElement.ownerDocument.body);
+    // Every identity step shares the component; only the active one is shown.
+    const messages = await canvas.findAllByText('Recovery failed.');
+    await expect(messages.filter((message) => message.checkVisibility())).toHaveLength(1);
   },
 };
 
