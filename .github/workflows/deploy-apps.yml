@@ -4,7 +4,7 @@ name: Deploy Apps
 # per app); everything else — Worker name, bundle task, output dir, and which environments it targets — is
 # derived from that app's `wrangler.jsonc`. The app set for an env follows its config's `env.*` sections:
 # preview → all preview-enabled apps (auto, daily); dev → composer; staging → composer + docs;
-# production → all. Fully decoupled from npm publishing.
+# production → all (plus docs alone, auto, daily). Fully decoupled from npm publishing.
 #
 # Production additionally cuts a versioned Composer release (bump composer-app/crx, commit to main, tag
 # composer-v<x>) — the ONLY path that advances Composer's version (Composer is not in Changesets). The other
@@ -22,6 +22,9 @@ on:
   # (cron has no timezone, so the wall-clock hour shifts by one across US DST).
   schedule:
     - cron: '0 7 * * *'
+    # Production docs alone, daily: publishes blog posts whose `date` has arrived (docs/src/utils/blog.ts), so
+    # posts can merge ahead of their publish date. 14:00 UTC = 10:00 EDT / 09:00 EST.
+    - cron: '0 14 * * *'
   workflow_dispatch:
     inputs:
       environment:
@@ -50,8 +53,8 @@ concurrency:
   # One in-flight deploy per environment. Superseding is right everywhere except production, where the
   # `release` job has already pushed a commit and a `composer-v*` tag by the time the artifacts build —
   # cancelling there would strand a tagged release with nothing published against it.
-  group: deploy-${{ inputs.environment || 'preview' }}
-  cancel-in-progress: ${{ inputs.environment != 'production' }}
+  group: deploy-${{ inputs.environment || (github.event.schedule == '0 14 * * *' && 'production') || 'preview' }}
+  cancel-in-progress: ${{ inputs.environment != 'production' && github.event.schedule != '0 14 * * *' }}
 
 permissions:
   contents: read # `deploy` (pointer tags) and `tauri` (build-counter tags) opt in; the bump uses a PAT.
@@ -79,10 +82,16 @@ jobs:
         env:
           IN_ENV: ${{ inputs.environment }}
           IN_APP: ${{ inputs.app }}
+          SCHEDULE: ${{ github.event.schedule }}
         run: |
-          # Resolve the environment: the dispatch input, else `preview` (the scheduled run).
-          env="${IN_ENV:-preview}"
-          app="${IN_APP:-all}"
+          # Resolve the environment: the dispatch input, else the scheduled run's (production docs, or preview).
+          if [ "$SCHEDULE" = '0 14 * * *' ]; then
+            env=production
+            app=docs
+          else
+            env="${IN_ENV:-preview}"
+            app="${IN_APP:-all}"
+          fi
 
           # Does Composer participate? (drives release / bundle / tauri).
           composer=false; if [ "$app" = all ] || [ "$app" = composer ]; then composer=true; fi
