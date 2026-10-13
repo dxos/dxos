@@ -41,3 +41,12 @@ export const administeredBy = <S extends Space>(spaces: readonly S[], identityKe
       isAgentSpace(space) &&
       admins(space).some((member) => toPublicKey(member.identity?.identityKey)?.equals(identityKey) ?? false),
   );
+
+/** The DIDs of the agents `identityKey` administers, which an ECHO `Agent` carries as its `did`. */
+export const administeredDids = (spaces: readonly Space[], identityKey: PublicKey): Set<string> =>
+  new Set(
+    administeredBy(spaces, identityKey).flatMap((space) => {
+      const did = agentOf(space)?.identity?.did;
+      return did ? [did] : [];
+    }),
+  );

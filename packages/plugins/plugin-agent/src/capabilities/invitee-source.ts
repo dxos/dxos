@@ -11,9 +11,11 @@ import * as Agent from '@dxos/assistant/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import { type Database, Filter, Obj, Query } from '@dxos/echo';
 import { type SpaceId, URI } from '@dxos/keys';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import { toPublicKey } from '@dxos/protocols/buf';
 
 import { meta } from '#meta';
-import { AgentOperation, AgentPresence } from '#types';
+import { AgentOperation, AgentPresence, AgentSpace } from '#types';
 
 /** Every agent in the client's spaces; none while the graph cannot answer. */
 const allAgents = (db: Database.Database): Effect.Effect<Agent.Agent[]> =>
@@ -32,8 +34,18 @@ export const invitableAgents = (agents: readonly Agent.Agent[], spaceId: SpaceId
   return agents.filter((agent) => AgentPresence.homeOf(agent) === undefined && !here.has(Obj.getURI(agent)));
 };
 
+/** The DIDs of the agents the client's identity administers; none without a client or an identity. */
+const administeredDids: Effect.Effect<Set<string>, never, Capability.Service> = Effect.gen(function* () {
+  const client = yield* Capability.getOption(ClientCapabilities.Client);
+  const identityKey = Option.isSome(client) ? toPublicKey(client.value.halo.identity.get()?.identityKey) : undefined;
+  return Option.isSome(client) && identityKey
+    ? AgentSpace.administeredDids(client.value.spaces.get(), identityKey)
+    : new Set<string>();
+});
+
 // Agents are added to a space from its members panel, as people are; until they are HALO identities, adding one
-// creates its presence there (`InviteAgent`) rather than admitting it as a member.
+// creates its presence there (`InviteAgent`) rather than admitting it as a member. Only an agent's admins may add it
+// elsewhere, so only the agents the member administers are offered; EDGE enforces it when the presence registers.
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(AppCapabilities.InviteeSource, {
@@ -44,10 +56,13 @@ export default Capability.makeModule(() =>
             onNone: () => 'New agent',
             onSome: ({ t }) => t('new-agent.name', { ns: meta.profile.key }),
           });
-          return invitableAgents(yield* allAgents(space.db), space.id).map((agent) => ({
-            key: Obj.getURI(agent),
-            label: agent.name || unnamed,
-          }));
+          const administered = yield* administeredDids;
+          return invitableAgents(yield* allAgents(space.db), space.id)
+            .filter((agent) => agent.did !== undefined && administered.has(agent.did))
+            .map((agent) => ({
+              key: Obj.getURI(agent),
+              label: agent.name || unnamed,
+            }));
         }),
       add: (space, key) =>
         // Made on the space's database, whose resolver reaches the agent in its own space.

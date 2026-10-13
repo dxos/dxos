@@ -247,10 +247,11 @@ export const InviteAgent = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.agent.invite'),
     name: 'Invite agent',
-    description: 'Invites an agent from another space into this one; it keeps one brain across the spaces it is in.',
+    description:
+      "Invites an agent from another space into this one; it keeps one brain across the spaces it is in. Only the agent's admins may, which EDGE enforces.",
     icon: 'ph--user-plus--regular',
   },
-  services: [Database.Service, Hypergraph.Service],
+  services: [Database.Service, Hypergraph.Service, Capability.Service],
   input: Schema.Struct({
     agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent to invite, in any space it is in.' }),
   }),

@@ -175,10 +175,10 @@ export const steps = [
   },
   {
     name: `Alice invites Bob into ${AGENT}'s space`,
-    subtitle: 'QA-5 step 3: Open space, then Settings › Members',
+    subtitle: "QA-5 step 3: Kai's space from its row, then Settings › Members",
     run: async ({ peers: { alice } }) => {
       const { page } = alice;
-      await alice.click(agentRow(page).getByTestId('agent-list.open'));
+      await alice.click(agentRow(page).getByTestId('agent-list.space'));
       await waitFor(
         async () =>
           (await currentWorkspace(page)

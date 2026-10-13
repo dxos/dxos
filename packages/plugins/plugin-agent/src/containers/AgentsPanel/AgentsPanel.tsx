@@ -12,17 +12,23 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { type SpaceMember } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { Form } from '@dxos/react-ui-form';
+import * as Field from '@dxos/react-ui/Field';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
 
 import { AgentList, type AgentListAdmin, type AgentListEntry } from '#components';
 import { meta } from '#meta';
 import { AgentSpace } from '#types';
 
-/** The agents the identity administers, read from its own agent spaces: nothing is asked of EDGE. */
+/**
+ * The agents the identity administers, read from its own agent spaces (nothing is asked of EDGE), laid out like the
+ * contacts book: a search field once there is more than one, then a row per agent.
+ */
 export const AgentsPanel = () => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const agents = useAdministeredAgents();
+  const [filter, setFilter] = useState('');
 
   const handleOpen = useCallback(
     (spaceId: string) =>
@@ -35,7 +41,17 @@ export const AgentsPanel = () => {
       <Form.Viewport scroll>
         <Form.Content>
           <Form.FieldSet label={t('agents-panel.label')} description={t('agents-panel.description')}>
-            <AgentList agents={agents} onOpen={handleOpen} />
+            {(agents.length > 1 || filter !== '') && (
+              <Field.Root>
+                <Input.Root
+                  placeholder={t('agents-search.placeholder')}
+                  value={filter}
+                  onChange={(event) => setFilter(event.target.value)}
+                  data-testid='agents.search'
+                />
+              </Field.Root>
+            )}
+            <AgentList classNames='mt-3' agents={agents} filter={filter} onOpen={handleOpen} />
           </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
@@ -68,11 +84,7 @@ const useAdministeredAgents = (): AgentListEntry[] => {
 
   return useMemo(() => {
     const viewer = toPublicKey(client.halo.identity.get()?.identityKey);
-    return viewer
-      ? AgentSpace.administeredBy(client.spaces.get(), viewer)
-          .map((space) => entryOf(space, viewer))
-          .sort((left, right) => left.name.localeCompare(right.name))
-      : [];
+    return viewer ? AgentSpace.administeredBy(client.spaces.get(), viewer).map((space) => entryOf(space, viewer)) : [];
   }, [client, revision]);
 };
 
@@ -82,6 +94,7 @@ const entryOf = (space: AgentSpace.Space & { readonly id: string }, viewer: Publ
     spaceId: space.id,
     name: agent?.identity?.profile?.displayName ?? '',
     identityKey: toPublicKey(agent?.identity?.identityKey)?.toHex(),
+    did: agent?.identity?.did || undefined,
     admins: AgentSpace.admins(space).map((member) => adminOf(member, viewer)),
   };
 };

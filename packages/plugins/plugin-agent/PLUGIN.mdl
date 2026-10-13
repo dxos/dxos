@@ -438,10 +438,12 @@ node AccountAgents
 ```mdl
 component AgentInvitees
   desc: |
-    Capability (capabilities/invitee-source.ts), an `AppCapabilities.InviteeSource`: the member's agents in
-    their other spaces, by name, for the contact picker of a space's Members panel ("Add from contacts"),
-    where they are listed after the contacts. Agents already here (home or presence) are left out. Adding
-    one invokes op:inviteAgent in that space; the role select does not apply to an agent.
+    Capability (capabilities/invitee-source.ts), an `AppCapabilities.InviteeSource`: the agents the member
+    administers (`AgentSpace.administeredDids`, matched by the agent's DID) in their other spaces, by name, for the
+    contact picker of a space's Members panel ("Add from contacts"), listed after the contacts. Agents already here
+    (home or presence) are left out. Adding one invokes op:inviteAgent in that space, which first registers the space
+    with EDGE (`POST /compute/brain/:agent/spaces`), refused to anyone but the agent's admins; the role select does not
+    apply to an agent.
   actions:
     add(agent) → op:inviteAgent
 ```
@@ -493,11 +495,13 @@ component AgentActivityContainer
 ```mdl
 component AgentList
   desc: |
-    The agents the viewer administers (components/AgentList): one row per agent with a robot avatar in the
-    agent's hue, its name ("Unnamed agent" when it has none), "Admins: …" with the viewer marked "(you)", and
-    "Open space". With none, a line saying how to get one.
+    The agents the viewer administers (components/AgentList), laid out as the contacts book lays out people: per
+    agent, a robot avatar in the agent's hue, its name ("Unnamed agent" when it has none), its own space as a chip
+    that opens it, "Admins: …" with the viewer marked "(you)", and its DID with a copy button. A filter keeps the
+    agents whose name or DID contains it. With none, a line saying how to get one.
   props:
-    agents: { spaceId: string, name: string, identityKey?: string, admins: { identityKey: string, name: string, you?: boolean }[] }[]
+    agents: { spaceId: string, name: string, identityKey?: string, did?: string, admins: { identityKey: string, name: string, you?: boolean }[] }[]
+    filter?: string
   emits:
     onOpen(spaceId: string)
 ```
@@ -505,9 +509,10 @@ component AgentList
 ```mdl
 component AgentsPanel
   desc: |
-    Container (containers/AgentsPanel) wiring AgentList to the client: `AgentSpace.administeredBy` over the
-    client's spaces, re-read whenever the spaces, the identity or an agent space's members change, sorted by name.
-    Each row's name is the agent's own member profile, which its genesis names after the agent.
+    Container (containers/AgentsPanel) wiring AgentList to the client, as the contacts book's container does: a search
+    field once there is more than one agent, then `AgentSpace.administeredBy` over the client's spaces, re-read
+    whenever the spaces, the identity or an agent space's members change. Each row's name and DID are the agent's own
+    member's, which its genesis names after the agent.
   actions:
     open(spaceId) → org.dxos.operation.appToolkit.switchWorkspace
 ```
@@ -646,6 +651,7 @@ feat F-6: An agent in several spaces
     then: its article is the member's one private chat with the agent, the same as at home, and its companions show the home agent's knowledge and activity, when the member can reach the home space; otherwise the presence's own
   req F-6.5: A presence keys its facts to its home's brain (`AgentPresence.brainId`): the end-of-turn read adds to it and op:retrieveMemories reads it. Triggers stay per agent object. EDGE runs the plugin-agent its catalog pins, so its turns do this once edge takes this version.
   req F-6.6: Inviting writes no conversation: nothing is quoted from any chat into the space.
+  req F-6.7: Only an agent's admins can add it to another space. The picker offers only the agents the member administers, and op:inviteAgent registers the space with EDGE first, which refuses anyone else; EDGE's brain serves only its home and the spaces registered so, so a presence made any other way reads and writes nothing of the brain.
 ```
 
 ```mdl
@@ -1063,7 +1069,7 @@ test QA-5: Two admins — an agent's space makes its creator and the person adde
       do: Open Alice's profile and its Agents panel, listed after Devices.
       expect: Kai is listed with "Admins: Alice (you)"
     - name: Alice invites Bob into Kai's space
-      do: Click Open space on Kai's row; in Kai's space open Settings › Members and invite one person.
+      do: Click Kai's space chip on its row; in Kai's space open Settings › Members and invite one person.
       expect: an invitation code is ready to share
     - name: Bob joins Kai's space
       do: In Bob's window click + ("Add space"), choose Join, enter the invitation code and then the PIN.
