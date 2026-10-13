@@ -57,8 +57,13 @@ export const createSpaceSaveTracker = (space: SaveTrackedSpace, cb: (state: 'sav
 
       let hasUnsavedChanges = false;
       let lastFlushPromise: Promise<void> | undefined;
+      // Leaving `saved` is reported at once, so the indicator never reads saved while a reload would lose a change.
       space.db.saveStateChanged.on(ctx, ({ unsavedDocuments }) => {
         hasUnsavedChanges = unsavedDocuments.length > 0;
+        if (hasUnsavedChanges) {
+          lastFlushPromise = undefined;
+          cb('saving');
+        }
       });
       space.db.saveStateChanged.debounce(500).on(ctx, () => {
         if (hasUnsavedChanges) {
