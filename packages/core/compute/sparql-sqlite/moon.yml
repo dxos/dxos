@@ -3,3 +3,11 @@ language: typescript
 tags:
   - ts-vite-build
   - ts-test
+tasks:
+  # Bundled size of the public entry as a Worker or Vite app ships it (see docs/SIZE.md); fails over budget.
+  size:
+    command: node scripts/size.mjs --max-gzip 40000
+    inputs:
+      - src/**/*
+      - scripts/size.mjs
+      - package.json

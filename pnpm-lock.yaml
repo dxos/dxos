@@ -5690,6 +5690,9 @@ importers:
       '@types/sparqljs':
         specifier: 'catalog:'
         version: 3.1.12
+      esbuild:
+        specifier: '>=0.28.0'
+        version: 0.28.2
       fast-xml-parser:
         specifier: '>=5.3.6'
         version: 5.7.1

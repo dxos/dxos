@@ -5,19 +5,18 @@
 import {
   type ConstructQuery,
   type Ordering,
-  Parser,
   type Pattern,
   type PropertyPath,
   type Quads,
   type SelectQuery,
-  type SparqlParser,
   type Term as SparqlTerm,
   type Triple,
   type Update,
 } from 'sparqljs';
 
-import { type Compiled, Compiler } from './compiler.ts';
+import { type Compiled, Compiler, quoteName } from './compiler.ts';
 import { UnsupportedSparqlError } from './errors.ts';
+import { parseSparql } from './parser.ts';
 import { type SqlStorage, asNumber } from './sql-storage.ts';
 import { type IndexSet, TermStore, encKey, encodeTerm, toTerm } from './store.ts';
 import { type Quad, type Row, type Term, XSD } from './terms.ts';
@@ -43,8 +42,6 @@ const COUNT_CACHE_LIMIT = 10_000;
 /** Smallest likelihood passed to SQLite; a constant absent from the store matches nothing. */
 const MIN_PROBABILITY = 1e-9;
 
-const quoteName = (name: string) => `"${name.replace(/"/g, '""')}"`;
-
 /**
  * A computed number as a literal. Arithmetic runs in doubles, so a fraction is rounded to 15
  * significant digits to read as the xsd:decimal it stands for (0.1 + 0.2 → "0.3", not "0.30000000000000004").
@@ -64,7 +61,6 @@ export class SqlSparqlEngine {
   selectivityHints = true;
   /** SQL of the last executed statement (diagnostics). */
   lastSql?: string;
-  readonly #parser: SparqlParser = new Parser({ skipUngroupedVariableCheck: true });
   /** Compiled SQL by query text (constants resolved at compile time, so invalidated on writes). */
   readonly #plans = new Map<string, QueryPlan>();
   /**
@@ -157,7 +153,7 @@ export class SqlSparqlEngine {
     if (cached) {
       return cached;
     }
-    const parsed = this.#parser.parse(sparql);
+    const parsed = parseSparql(sparql);
     if (parsed.type === 'update') {
       return { kind: 'update', update: parsed };
     }

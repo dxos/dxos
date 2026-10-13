@@ -4,6 +4,7 @@
   "compatibility_date": "2026-08-01",
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": true,
+  "minify": true,
   "limits": { "cpu_ms": 300000 },
   "durable_objects": { "bindings": [{ "name": "BENCH", "class_name": "BenchDO" }] },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["BenchDO"] }],

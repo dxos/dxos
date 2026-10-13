@@ -7,7 +7,8 @@ SQL statement. SQLite runs every join, filter, aggregate, sort and recursive pat
 decodes the result rows.
 
 Why this shape, and how it compares with Comunica and Oxigraph on a deployed DO, is in
-[docs/BENCHMARK.md](docs/BENCHMARK.md).
+[docs/BENCHMARK.md](docs/BENCHMARK.md). Bundle size (37.5 KB gzip, two thirds of it the parser) is in
+[docs/SIZE.md](docs/SIZE.md).
 
 ```
 query:  SPARQL ─sparqljs─▶ AST ─Compiler─▶ ONE SQL stmt ─▶ SQLite: joins / filters / aggregates / CTEs
@@ -25,6 +26,7 @@ ingest: quads ─encode + hash53, dedupe, key→id cache─▶ ① INSERT OR IGN
 | `terms.ts`       | `Term` / `Quad` / `Row` plain-data model.                                            |
 | `sql-storage.ts` | `SqlStorage`: the subset of DO `ctx.storage.sql` used (`exec` → `toArray` / `raw`).  |
 | `store.ts`       | `TermStore`: schema, term encoding and interning, set-oriented insert/delete.        |
+| `parser.ts`      | `parseSparql`: sparqljs's generated parser alone, with a minimal term factory.       |
 | `compiler.ts`    | `Compiler`: sparqljs AST → SQL text.                                                 |
 | `engine.ts`      | `SqlSparqlEngine`: parse, plan cache, run, decode, ASK / CONSTRUCT / UPDATE.         |
 | `testing/`       | `node:sqlite` adapter, deterministic data generator, query set, probes, oracle JSON. |

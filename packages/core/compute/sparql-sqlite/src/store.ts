@@ -107,7 +107,7 @@ export const toTerm = (term: SparqlTerm): Term => {
 export const encKey = (enc: Enc) => `${enc.kind}\u0001${enc.dt ?? ''}\u0001${enc.lang ?? ''}\u0001${enc.lex}`;
 
 /** cyrb53: 53-bit string hash; collisions are resolved by probing with the next seed. */
-export const hash53 = (str: string, seed: number) => {
+const hash53 = (str: string, seed: number) => {
   let h1 = 0xdeadbeef ^ seed;
   let h2 = 0x41c6ce57 ^ seed;
   for (let index = 0; index < str.length; index++) {

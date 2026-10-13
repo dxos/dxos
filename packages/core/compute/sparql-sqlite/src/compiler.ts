@@ -90,7 +90,8 @@ const DATE_PARTS: Record<string, readonly [start: number, length: number]> = {
   minutes: [15, 2],
 };
 
-const quoteName = (name: string) => `"${name.replace(/"/g, '""')}"`;
+/** Quotes a SQL identifier. */
+export const quoteName = (name: string) => `"${name.replace(/"/g, '""')}"`;
 const strLit = (value: string) => `'${value.replace(/'/g, "''")}'`;
 const numLit = (value: number | null) => (value === null || !Number.isFinite(value) ? 'NULL' : String(value));
 const and = (conds: string[]) => (conds.length === 0 ? '1' : conds.map((cond) => `(${cond})`).join(' AND '));
@@ -1551,7 +1552,7 @@ type RegexSeq = { tokens: RegexToken[]; start: boolean; end: boolean };
  * Translates the regex subset that maps onto LIKE (case-insensitive, flag "i") or GLOB (case-sensitive):
  * literals, `.`, `.*`, `^`, `$`, escapes and alternation (top level or one group level).
  */
-export const regexToSql = (text: string, pattern: string, flags: string): string => {
+const regexToSql = (text: string, pattern: string, flags: string): string => {
   const insensitive = flags.includes('i');
   if (flags.replace('i', '') !== '') {
     throw new UnsupportedSparqlError(`REGEX flags ${flags}`);
