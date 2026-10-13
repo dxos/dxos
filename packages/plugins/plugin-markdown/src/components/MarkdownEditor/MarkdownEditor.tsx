@@ -7,7 +7,6 @@ import { type EditorView } from '@codemirror/view';
 import type * as Atom from 'effect/reactivity/Atom';
 import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
 
-import { Obj } from '@dxos/echo';
 import { createContext } from '@dxos/react-hooks';
 import {
   type EditorRootProps,
@@ -20,19 +19,20 @@ import { type WidgetState } from '@dxos/ui-editor';
 import { Merge, isNonNullable } from '@dxos/util';
 
 import {
+  type ContentStatus,
   type DocumentType,
   type ExtensionsOptions,
   type UseEditorMenuOptionsProps,
+  useDocumentContent,
   useEditorMenuOptions,
   useExtensions,
 } from '#hooks';
-import { Markdown } from '#types';
 
 import {
   MarkdownEditorContent as NaturalMarkdownEditorContent,
   type MarkdownEditorContentProps as NaturalMarkdownEditorContentProps,
 } from './MarkdownEditorContent.tsx';
-import { type ContentStatus, MarkdownEditorContentStatus, useContentStatus } from './MarkdownEditorContentStatus.tsx';
+import { MarkdownEditorContentStatus } from './MarkdownEditorContentStatus.tsx';
 import {
   MarkdownEditorToolbar as NaturalMarkdownToolbar,
   type MarkdownEditorToolbarProps as NaturalMarkdownToolbarProps,
@@ -107,11 +107,15 @@ export const MarkdownEditorProvider = ({
   // Context menu options (Editor.Root calls useEditorMenu with these props).
   const menuOptions = useEditorMenuOptions({ slashCommandGroups, onLinkQuery });
 
+  const content = useDocumentContent(object);
+  const contentStatus = content.status;
+
   // Core markdown extensions (popover/menu extension is added by Editor.Root).
   const coreExtensions = useExtensions({
     id,
     attendableId,
     object,
+    content,
     compact,
     viewMode,
     viewState,
@@ -121,8 +125,6 @@ export const MarkdownEditorProvider = ({
     identity,
     onSelectLink,
   });
-
-  const contentStatus = useContentStatus(Obj.instanceOf(Markdown.Document, object) ? object.content : undefined);
 
   const extensions = useMemo(
     () => [coreExtensions, extensionsProp].filter(isNonNullable).flat(),
@@ -197,40 +199,30 @@ const MarkdownEditorContent = ({ compact: compactProp, ...props }: MarkdownEdito
     [setController],
   );
 
+  // The banner travels with the editor, so every host explains a non-editable editor.
   return (
-    <NaturalMarkdownEditorContent
-      // Spread directly: both sides speak `classNames`; `composableProps` here converted it to a
-      // DOM `className` the inner component never reads, dropping the caller's classes.
-      {...props}
-      id={id}
-      attendableId={attendableId}
-      compact={compact}
-      viewMode={viewMode}
-      contentStatus={contentStatus}
-      editorStateStore={editorStateStore}
-      toolbarState={state as Atom.Writable<EditorToolbarState>}
-      extensions={extensions}
-      onFileUpload={onFileUpload}
-      ref={handleRef}
-    />
+    <>
+      <MarkdownEditorContentStatus status={contentStatus} />
+      <NaturalMarkdownEditorContent
+        // Spread directly: both sides speak `classNames`; `composableProps` here converted it to a
+        // DOM `className` the inner component never reads, dropping the caller's classes.
+        {...props}
+        id={id}
+        attendableId={attendableId}
+        compact={compact}
+        viewMode={viewMode}
+        contentStatus={contentStatus}
+        editorStateStore={editorStateStore}
+        toolbarState={state as Atom.Writable<EditorToolbarState>}
+        extensions={extensions}
+        onFileUpload={onFileUpload}
+        ref={handleRef}
+      />
+    </>
   );
 };
 
 MarkdownEditorContent.displayName = MARKDOWN_EDITOR_CONTENT_NAME;
-
-//
-// MarkdownEditor.ContentStatus
-//
-
-const MARKDOWN_EDITOR_CONTENT_STATUS_NAME = 'MarkdownEditor.ContentStatus';
-
-/** Explains a non-editable editor whose document content is missing or deleted. */
-const MarkdownEditorContentStatusPart = () => {
-  const { contentStatus } = useMarkdownEditorContext(MARKDOWN_EDITOR_CONTENT_STATUS_NAME);
-  return <MarkdownEditorContentStatus status={contentStatus} />;
-};
-
-MarkdownEditorContentStatusPart.displayName = MARKDOWN_EDITOR_CONTENT_STATUS_NAME;
 
 //
 // MarkdownEditor.Toolbar
@@ -276,7 +268,6 @@ MarkdownEditorToolbar.displayName = MARKDOWN_EDITOR_TOOLBAR_NAME;
 /** @private */
 export const MarkdownEditor = {
   Content: MarkdownEditorContent,
-  ContentStatus: MarkdownEditorContentStatusPart,
   Toolbar: MarkdownEditorToolbar,
 };
 

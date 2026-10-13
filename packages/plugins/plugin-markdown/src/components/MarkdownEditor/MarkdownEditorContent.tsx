@@ -37,9 +37,9 @@ import { type EditorViewMode } from '@dxos/ui-editor/types';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
+import { type ContentStatus } from '#hooks';
 import { meta } from '#meta';
 
-import { type ContentStatus } from './MarkdownEditorContentStatus.tsx';
 import { type MarkdownEditorToolbarProps } from './MarkdownEditorToolbar.tsx';
 
 export type MarkdownEditorContentProps = Util.ThemedClassName<{

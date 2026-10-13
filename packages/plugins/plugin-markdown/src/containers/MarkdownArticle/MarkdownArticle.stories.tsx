@@ -326,7 +326,7 @@ export const ContentDeleted: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const status = await canvas.findByTestId('markdown.content-status', {}, { timeout: 15_000 });
-    await expect(status).toHaveTextContent('Content deleted');
+    await expect(status).toHaveAttribute('data-status', 'deleted');
     await expect(canvasElement.querySelector('.cm-content')).toHaveAttribute('contenteditable', 'false');
   },
 };
@@ -340,7 +340,7 @@ export const ContentMissing: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await waitFor(
-      async () => expect(canvas.getByTestId('markdown.content-status')).toHaveTextContent('Content unavailable'),
+      async () => expect(canvas.getByTestId('markdown.content-status')).toHaveAttribute('data-status', 'missing'),
       { timeout: 15_000 },
     );
     await expect(canvasElement.querySelector('.cm-content')).toHaveAttribute('contenteditable', 'false');

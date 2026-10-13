@@ -2,71 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useAtomValue } from '@effect/atom-react/Hooks';
-import * as Atom from 'effect/reactivity/Atom';
-import React, { useEffect, useMemo, useState } from 'react';
+import React from 'react';
 
-import { Obj, type Ref } from '@dxos/echo';
-import { useResolveRef } from '@dxos/echo-react';
-import { log } from '@dxos/log';
 import * as Banner from '@dxos/react-ui/Banner';
 import * as Hooks from '@dxos/react-ui/Hooks';
-import { type Text } from '@dxos/schema';
 
+import { type ContentStatus } from '#hooks';
 import { meta } from '#meta';
 
-/** Why a document's editor has no content binding (and so is not editable). */
-export type ContentStatus = 'loading' | 'missing' | 'deleted';
-
-const notDeleted = Atom.make(() => false);
-
-/**
- * The state of a document's content ref while its target is unavailable: still loading, not found
- * locally, or deleted. `undefined` once the target resolves (or when there is no ref).
- */
-export const useContentStatus = (contentRef: Ref.Ref<Text.Text> | undefined): ContentStatus | undefined => {
-  const target = useResolveRef(contentRef);
-
-  // Derived to a boolean so a live target's edits do not re-render the caller.
-  const deletedAtom = useMemo(
-    () =>
-      contentRef
-        ? Atom.make((get) => {
-            const snapshot = get(Obj.atom(contentRef, { deleted: 'include' }));
-            return snapshot !== undefined && Obj.isDeleted(snapshot);
-          })
-        : notDeleted,
-    [contentRef],
-  );
-  const deleted = useAtomValue(deletedAtom);
-
-  const [missing, setMissing] = useState(false);
-  useEffect(() => {
-    setMissing(false);
-    if (!contentRef || target) {
-      return;
-    }
-
-    let cancelled = false;
-    contentRef
-      .tryLoad({ deleted: 'include' })
-      .then((loaded) => {
-        if (!cancelled && loaded === undefined) {
-          setMissing(true);
-        }
-      })
-      .catch((error) => log.catch(error));
-    return () => {
-      cancelled = true;
-    };
-  }, [contentRef, target]);
-
-  if (!contentRef || target) {
-    return undefined;
-  }
-
-  return deleted ? 'deleted' : missing ? 'missing' : 'loading';
-};
+const messages = {
+  missing: { title: 'content-missing.title', message: 'content-missing.message' },
+  deleted: { title: 'content-deleted.title', message: 'content-deleted.message' },
+} as const;
 
 export type MarkdownEditorContentStatusProps = {
   status: ContentStatus | undefined;
@@ -83,9 +30,9 @@ export const MarkdownEditorContentStatus = ({ status }: MarkdownEditorContentSta
   }
 
   return (
-    <Banner.Root valence='warning' data-testid='markdown.content-status'>
-      <Banner.Title>{t(`content-${status}.title`)}</Banner.Title>
-      <Banner.Body>{t(`content-${status}.message`)}</Banner.Body>
+    <Banner.Root valence='warning' data-testid='markdown.content-status' data-status={status}>
+      <Banner.Title>{t(messages[status].title)}</Banner.Title>
+      <Banner.Body>{t(messages[status].message)}</Banner.Body>
     </Banner.Root>
   );
 };

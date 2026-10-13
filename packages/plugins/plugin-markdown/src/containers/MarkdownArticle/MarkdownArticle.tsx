@@ -364,7 +364,6 @@ const MarkdownArticleImpl = forwardRef<
               )}
               <Panel.Body classNames='flex flex-col'>
                 {binding.banner}
-                <MarkdownEditor.ContentStatus />
                 <MarkdownEditor.Content initialValue={binding.initialValue} />
                 <Editor.Blocks />
                 {/* Developer diagnostics panel (live editor state), gated behind the debug setting. */}
