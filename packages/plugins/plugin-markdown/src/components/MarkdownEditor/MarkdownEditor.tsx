@@ -7,6 +7,7 @@ import { type EditorView } from '@codemirror/view';
 import type * as Atom from 'effect/reactivity/Atom';
 import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
 
+import { Obj } from '@dxos/echo';
 import { createContext } from '@dxos/react-hooks';
 import {
   type EditorRootProps,
@@ -25,11 +26,13 @@ import {
   useEditorMenuOptions,
   useExtensions,
 } from '#hooks';
+import { Markdown } from '#types';
 
 import {
   MarkdownEditorContent as NaturalMarkdownEditorContent,
   type MarkdownEditorContentProps as NaturalMarkdownEditorContentProps,
 } from './MarkdownEditorContent.tsx';
+import { type ContentStatus, MarkdownEditorContentStatus, useContentStatus } from './MarkdownEditorContentStatus.tsx';
 import {
   MarkdownEditorToolbar as NaturalMarkdownToolbar,
   type MarkdownEditorToolbarProps as NaturalMarkdownToolbarProps,
@@ -43,6 +46,7 @@ type MarkdownEditorContextValue = Merge<
   {
     id: string;
     attendableId?: string;
+    contentStatus?: ContentStatus;
   },
   Pick<ExtensionsOptions, 'compact' | 'viewMode' | 'editorStateStore'>,
   Pick<NaturalMarkdownToolbarProps, 'onAction' | 'onFileUpload' | 'onViewModeChange'>
@@ -118,6 +122,8 @@ export const MarkdownEditorProvider = ({
     onSelectLink,
   });
 
+  const contentStatus = useContentStatus(Obj.instanceOf(Markdown.Document, object) ? object.content : undefined);
+
   const extensions = useMemo(
     () => [coreExtensions, extensionsProp].filter(isNonNullable).flat(),
     [coreExtensions, extensionsProp],
@@ -143,6 +149,7 @@ export const MarkdownEditorProvider = ({
     () => ({
       id,
       attendableId,
+      contentStatus,
       compact,
       viewMode,
       editorStateStore,
@@ -150,7 +157,7 @@ export const MarkdownEditorProvider = ({
       onFileUpload,
       onViewModeChange,
     }),
-    [id, attendableId, compact, viewMode, editorStateStore, onAction, onFileUpload, onViewModeChange],
+    [id, attendableId, contentStatus, compact, viewMode, editorStateStore, onAction, onFileUpload, onViewModeChange],
   );
 
   return (
@@ -210,6 +217,20 @@ const MarkdownEditorContent = ({ compact: compactProp, ...props }: MarkdownEdito
 MarkdownEditorContent.displayName = MARKDOWN_EDITOR_CONTENT_NAME;
 
 //
+// MarkdownEditor.ContentStatus
+//
+
+const MARKDOWN_EDITOR_CONTENT_STATUS_NAME = 'MarkdownEditor.ContentStatus';
+
+/** Explains a non-editable editor whose document content is loading, missing or deleted. */
+const MarkdownEditorContentStatusPart = () => {
+  const { contentStatus } = useMarkdownEditorContext(MARKDOWN_EDITOR_CONTENT_STATUS_NAME);
+  return <MarkdownEditorContentStatus status={contentStatus} />;
+};
+
+MarkdownEditorContentStatusPart.displayName = MARKDOWN_EDITOR_CONTENT_STATUS_NAME;
+
+//
 // MarkdownEditor.Toolbar
 //
 
@@ -253,6 +274,7 @@ MarkdownEditorToolbar.displayName = MARKDOWN_EDITOR_TOOLBAR_NAME;
 /** @private */
 export const MarkdownEditor = {
   Content: MarkdownEditorContent,
+  ContentStatus: MarkdownEditorContentStatusPart,
   Toolbar: MarkdownEditorToolbar,
 };
 

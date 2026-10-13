@@ -4,6 +4,8 @@
 
 import type * as Atom from 'effect/reactivity/Atom';
 
+import { log } from '@dxos/log';
+
 import { ObjectDeletedId } from '../common/types/model-symbols.ts';
 import type { LoadOptions, Ref } from './ref.ts';
 
@@ -44,8 +46,9 @@ export const loadRefTarget = <T, R>(
     .then((loadedTarget) => {
       get.setSelf(onTargetAvailable(loadedTarget));
     })
-    .catch(() => {
-      // Loading failed; the resolution subscription above will pick up cross-client updates.
+    .catch((error) => {
+      // The resolution subscription above still picks up a target that arrives later.
+      log('ref target did not load', { uri: ref.uri, error });
     });
 
   return undefined;
