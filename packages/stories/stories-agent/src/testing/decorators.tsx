@@ -58,7 +58,7 @@ const TYPES: Type.AnyEntity[] = [
 ];
 
 export type DecoratorsProps = {
-  /** The client config; the live stories use {@link edgeLocalPersistent}. */
+  /** The client config; the live stories use {@link storyConfig}. */
   config?: Config;
   /** Seeds the space through plugin operations once it is available. */
   onReady: (props: { db: Database.Database; invoker: Capabilities.OperationInvoker }) => Promise<void>;

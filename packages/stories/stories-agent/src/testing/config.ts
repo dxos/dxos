@@ -2,25 +2,31 @@
 // Copyright 2026 DXOS.org
 //
 
+import { EDGE_URLS } from '@dxos/config';
 import { Config } from '@dxos/react-client';
 
+import { getEdgeEnvironment, isPersistent } from './story-settings.ts';
+
 /**
- * A local EDGE stack (`node scripts/stack.mjs start` in dxos/edge: every worker behind :8787) on persistent
- * storage, so the test space and what the forms hold survive a reload. See the package README.
+ * The live stories' client: the EDGE and storage the toolbar chose ({@link getEdgeEnvironment}, {@link isPersistent}),
+ * read at boot. Local EDGE is every worker behind :8787; see the package README.
  */
-export const edgeLocalPersistent = new Config({
-  runtime: {
-    client: {
-      storage: { persistent: true },
-      // Without these the client never replicates the space to EDGE, which reads the bot's config from it.
-      edgeFeatures: { signaling: true, subductionReplicator: true, feedReplicator: true },
+export const storyConfig = (): Config => {
+  const edge = EDGE_URLS[getEdgeEnvironment()];
+  return new Config({
+    runtime: {
+      client: {
+        storage: { persistent: isPersistent() },
+        // Without these the client never replicates the space to EDGE, which reads the bot's config from it.
+        edgeFeatures: { signaling: true, subductionReplicator: true, feedReplicator: true },
+      },
+      services: {
+        edge: { url: edge },
+        ai: { server: `${edge}/ai` },
+      },
     },
-    services: {
-      edge: { url: 'http://localhost:8787' },
-      ai: { server: 'http://localhost:8787/ai' },
-    },
-  },
-});
+  });
+};
 
 /**
  * No EDGE at all, but an EDGE URL for the client to address: a scripted story's fake answers the routes it
