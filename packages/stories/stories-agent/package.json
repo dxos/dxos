@@ -25,6 +25,7 @@
     "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-discord": "workspace:*",
     "@dxos/plugin-thread": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-debug": "workspace:*",
