@@ -19,7 +19,7 @@ const CanvasViewStateSchema = Schema.Struct({
   camera: Schema.optional(CameraSchema),
   /** This viewer only looks at the drawing: nothing is selected, and no tool, handle, port or panel edits it. */
   readonly: Schema.optional(Schema.Boolean),
-  /** The properties and layers panels float over the canvas rather than docking beside it. */
+  /** The inspectors (properties, layers, about) float over the canvas rather than docking beside it. */
   floating: Schema.optional(Schema.Boolean),
   /** Moves snap to the grid, which is drawn. */
   grid: Schema.optional(Schema.Boolean),

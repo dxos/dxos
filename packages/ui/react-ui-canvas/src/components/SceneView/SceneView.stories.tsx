@@ -10,7 +10,7 @@ import { translations as formTranslations } from '@dxos/react-ui-form/translatio
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
-import { type PanelMode } from '../../model/atoms.ts';
+import { type InspectorMode } from '../../model/atoms.ts';
 import { createLatticeProjection } from '../../model/projections/lattice.ts';
 import { createMemoryStore } from '../../model/store.ts';
 import { type Box, SceneBuilder } from '../../utils/builder.ts';
@@ -31,7 +31,7 @@ import { SceneView } from './SceneView.tsx';
  * 4. R / E / T / F then drag draws a rectangle, ellipse, text or frame (the UML class is plugin-uml's);
  *    Delete removes the selection (nodes or links).
  * 5. Double-click a frame (or zoom until it fills the view) drills in; Escape, Up or the breadcrumb drills out.
- * 6. G (or the Grid button) toggles the grid; with it off nothing snaps. The floating panel (top right) edits the
+ * 6. G (or the Grid button) toggles the grid; with it off nothing snaps. The floating inspector (top right) edits the
  *    selected element.
  */
 type StoryArgs = {
@@ -39,7 +39,7 @@ type StoryArgs = {
   liveDepth: number;
   readonly?: boolean;
   fixture?: 'elements' | 'model' | 'square' | 'lattice' | 'scenes' | 'frame';
-  panels?: PanelMode;
+  inspectors?: InspectorMode;
 };
 
 type EditorProps = {
@@ -48,19 +48,28 @@ type EditorProps = {
   liveDepth: number;
   readonly?: boolean;
   lattice?: boolean;
-  panels?: PanelMode;
+  inspectors?: InspectorMode;
 };
 
-const Editor = ({ store, root, liveDepth, readonly: initialReadonly = false, lattice, panels }: EditorProps) => {
-  // The arg is where the view starts; the palette's toggle changes it from there.
+const Editor = ({
+  store,
+  root,
+  liveDepth,
+  readonly: initialReadonly = false,
+  lattice,
+  inspectors: initialInspectors = 'docked',
+}: EditorProps) => {
+  // The args are where the view starts; the palette's toggle and the inspectors' menus change it from there.
   const [readonly, setReadonly] = useState(initialReadonly);
+  const [inspectors, setInspectors] = useState(initialInspectors);
   return (
     <SceneView.Root
       store={store}
       root={root}
       readonly={readonly}
       onReadonlyChange={setReadonly}
-      panels={panels}
+      inspectors={inspectors}
+      onInspectorsChange={setInspectors}
       createProjection={lattice ? createLatticeProjection : undefined}
     >
       <SceneView.Canvas liveDepth={liveDepth} />
@@ -219,7 +228,7 @@ const createFrameTree = () => {
     .build();
 };
 
-const DefaultStory = ({ depth, liveDepth, readonly, fixture, panels }: StoryArgs) => {
+const DefaultStory = ({ depth, liveDepth, readonly, fixture, inspectors }: StoryArgs) => {
   const { store, root } = useMemo(() => {
     // The model fixture is a fixed three levels, so `depth` does not apply to it.
     const tree =
@@ -246,7 +255,7 @@ const DefaultStory = ({ depth, liveDepth, readonly, fixture, panels }: StoryArgs
       liveDepth={liveDepth}
       readonly={readonly}
       lattice={fixture === 'lattice'}
-      panels={panels}
+      inspectors={inspectors}
     />
   );
 };
@@ -258,10 +267,10 @@ const meta: Meta<StoryArgs> = {
   // The properties panel is a react-ui-form form; its strings (e.g. "Mixed") and its controls' come from their bundles.
   parameters: { translations: [...uiTranslations, ...formTranslations] },
   argTypes: {
-    panels: {
+    inspectors: {
       control: { type: 'inline-radio' },
       options: ['docked', 'floating'],
-      description: 'Where the properties and layers panels sit',
+      description: 'Where the inspectors (properties, layers, about) sit',
     },
     depth: {
       control: { type: 'range', min: 0, max: 5, step: 1 },
@@ -332,7 +341,10 @@ export const Lattice: Story = {
   args: { depth: 0, liveDepth: 1, fixture: 'lattice' },
 };
 
-/** The panels dock by default: one accordion section each beside the canvas; a section collapses to its header. */
+/**
+ * The inspectors dock by default: one accordion section each beside the canvas; a section collapses to its header, and
+ * the dock's close button floats them.
+ */
 export const Docked: Story = {
   args: { depth: 0, liveDepth: 1, fixture: 'square' },
   play: async ({ canvasElement }) => {
@@ -348,18 +360,27 @@ export const Docked: Story = {
     await waitFor(() =>
       expect(within(dock).getByTestId('dock-section-properties')).toHaveAttribute('data-state', 'closed'),
     );
+    // 3. Closing the dock floats the inspectors: the layers over the canvas while nothing is selected.
+    await userEvent.click(within(dock).getByTestId('dock-close'));
+    await waitFor(() => expect(canvas.queryByTestId('scene-view-dock')).not.toBeInTheDocument());
+    await expect(await canvas.findByTestId('layers')).toBeVisible();
   },
 };
 
-/** Floating panels: no dock, the layers over the canvas until something is selected. */
+/** Floating inspectors: no dock, the layers over the canvas until something is selected; their menu docks them. */
 export const Floating: Story = {
-  args: { depth: 0, liveDepth: 1, fixture: 'square', panels: 'floating' },
+  args: { depth: 0, liveDepth: 1, fixture: 'square', inspectors: 'floating' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(await canvas.findByTestId('layers')).toBeInTheDocument();
     await expect(canvas.queryByTestId('scene-view-dock')).not.toBeInTheDocument();
     // About lives only in the dock.
     await expect(canvas.queryByTestId('about')).not.toBeInTheDocument();
+    // The layers' menu docks the inspectors.
+    await userEvent.click(canvas.getByTestId('layers-menu'));
+    await userEvent.click(await within(canvasElement.ownerDocument.body).findByTestId('inspector-dock-toggle'));
+    await expect(await canvas.findByTestId('scene-view-dock')).toBeVisible();
+    await expect(await canvas.findByTestId('about')).toBeVisible();
   },
 };
 

@@ -77,8 +77,8 @@ export type ControlPointRef = { link: LinkId; index: number };
 /** The text part being edited in place (`parts.ts`). */
 export type EditingPart = { id: NodeId; part: PartKey };
 
-/** Where the properties and layers panels sit: floating over the canvas, or docked in a column beside it. */
-export type PanelMode = 'floating' | 'docked';
+/** Where the inspectors (properties, layers, about) sit: floating over the canvas, or docked in a column beside it. */
+export type InspectorMode = 'floating' | 'docked';
 
 export type SceneViewAtoms = {
   camera: Atom.Writable<Camera>;
