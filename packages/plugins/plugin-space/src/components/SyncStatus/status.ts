@@ -2,7 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type SaveState } from './save-tracker.ts';
+
 export type Status =
+  | 'persistence-error'
   | 'saving-locally'
   | 'downloading'
   | 'uploading'
@@ -13,15 +16,17 @@ export type Status =
 
 export type StatusInput = {
   offline: boolean;
-  saved: boolean;
+  save: SaveState;
   /** Replication is outstanding but making no progress. */
   stalled: boolean;
   needsToUpload: boolean;
   needsToDownload: boolean;
 };
 
-export const getStatus = ({ offline, saved, stalled, needsToUpload, needsToDownload }: StatusInput): Status => {
-  if (!saved) {
+export const getStatus = ({ offline, save, stalled, needsToUpload, needsToDownload }: StatusInput): Status => {
+  if (save === 'failing') {
+    return 'persistence-error';
+  } else if (save === 'saving') {
     return 'saving-locally';
   } else if (offline) {
     // Offline with nothing outstanding is durable; offline with pending work is not.
@@ -39,6 +44,8 @@ export const getStatus = ({ offline, saved, stalled, needsToUpload, needsToDownl
 
 export const getIcon = (status: Status) => {
   switch (status) {
+    case 'persistence-error':
+      return 'ph--warning--regular';
     case 'saving-locally':
       return 'ph--download--regular';
     case 'downloading':

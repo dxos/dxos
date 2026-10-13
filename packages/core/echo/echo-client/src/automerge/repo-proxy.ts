@@ -77,6 +77,13 @@ export class RepoProxy extends Resource {
   private readonly _pendingUpdateIds = new Set<DocumentId>();
 
   /**
+   * Documents in a batch the host has not acknowledged yet, counted per batch since a reconnect can
+   * start a pass while an abandoned one is still in flight. With `_pendingUpdateIds`, every document
+   * whose changes exist only in this client.
+   */
+  private readonly _inFlightUpdateIds = new Map<DocumentId, number>();
+
+  /**
    * Documents the host has taken a write for since a disk flush last took them: the only ones a disk
    * flush can find unsaved on this client's behalf.
    */
@@ -219,6 +226,16 @@ export class RepoProxy extends Resource {
 
   create<T>(initialValue?: T): DocHandleProxy<T> {
     return this._createHandle<T>({ initialValue });
+  }
+
+  /** Whether a change or a new document exists only in this client, so losing the page would lose it. */
+  hasUnsavedChanges(): boolean {
+    return (
+      this._pendingUpdateIds.size > 0 ||
+      this._inFlightUpdateIds.size > 0 ||
+      this._pendingCreations.size > 0 ||
+      this._failedCreations.size > 0
+    );
   }
 
   /**
@@ -629,15 +646,18 @@ export class RepoProxy extends Resource {
               return;
             }
             this._failedCreations.set(handle._internalId, { handle, error: err, retry: request });
+            this._emitSaveStateEvent();
           },
         )
         .catch((err) => log.catch(err))
         .finally(() => {
           if (this._pendingCreations.get(handle._internalId) === creation) {
             this._pendingCreations.delete(handle._internalId);
+            this._emitSaveStateEvent();
           }
         });
       this._pendingCreations.set(handle._internalId, creation);
+      this._emitSaveStateEvent();
     };
     request();
 
@@ -753,6 +773,9 @@ export class RepoProxy extends Resource {
     this._pendingAddIds.clear();
     this._pendingRemoveIds.clear();
     this._pendingUpdateIds.clear();
+    for (const documentId of updateIds) {
+      this._inFlightUpdateIds.set(documentId, (this._inFlightUpdateIds.get(documentId) ?? 0) + 1);
+    }
 
     try {
       await this._subscriptionReady.wait({ timeout: RPC_TIMEOUT });
@@ -814,7 +837,6 @@ export class RepoProxy extends Resource {
 
       this._sendRetryAttempts = 0;
       this._releaseDeferred();
-      this._emitSaveStateEvent();
     } catch (err) {
       // A reconnect replaced the subscription under this task, so its failure is not raised below.
       const isAbandoned = generation !== this._generation;
@@ -846,6 +868,17 @@ export class RepoProxy extends Resource {
         });
         this._scheduleSendRetry();
       }
+    } finally {
+      // Settled either way: acknowledged, or re-queued into `_pendingUpdateIds` by the catch above.
+      for (const documentId of updateIds) {
+        const count = (this._inFlightUpdateIds.get(documentId) ?? 0) - 1;
+        if (count > 0) {
+          this._inFlightUpdateIds.set(documentId, count);
+        } else {
+          this._inFlightUpdateIds.delete(documentId);
+        }
+      }
+      this._emitSaveStateEvent();
     }
   }
 
@@ -867,16 +900,24 @@ export class RepoProxy extends Resource {
   }
 
   private _emitSaveStateEvent(): void {
-    const unsavedDocuments = Array.from(this._pendingUpdateIds);
-    const key = unsavedDocuments.join(',');
+    const unsavedDocuments = Array.from(new Set([...this._pendingUpdateIds, ...this._inFlightUpdateIds.keys()]));
+    const pendingCreations = this._pendingCreations.size + this._failedCreations.size;
+    // A retry is scheduled only after a send failed outright, and a failed creation waits for the next flush.
+    const failing = this._sendRetryAttempts > 0 || this._failedCreations.size > 0;
+    const key = `${unsavedDocuments.join(',')}|${pendingCreations}|${failing}`;
     if (key === this._lastSaveStateKey) {
       return;
     }
     this._lastSaveStateKey = key;
-    this.saveStateChanged.emit({ unsavedDocuments });
+    this.saveStateChanged.emit({ unsavedDocuments, pendingCreations, failing });
   }
 }
 
 export type SaveStateChangedEvent = {
+  /** Documents with changes the host has not acknowledged. */
   unsavedDocuments: DocumentId[];
+  /** New documents the host has not created yet. */
+  pendingCreations: number;
+  /** Whether the last attempt to hand changes to the host failed. */
+  failing: boolean;
 };

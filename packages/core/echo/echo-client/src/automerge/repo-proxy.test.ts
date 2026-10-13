@@ -26,7 +26,7 @@ import { openAndClose } from '@dxos/test-utils';
 import { DocumentUnavailableError, EchoClientError, RepoClosedError } from '../errors.ts';
 import { createTmpPath } from '../testing/index.ts';
 import { type DocHandleProxy } from './doc-handle-proxy.ts';
-import { RepoProxy } from './repo-proxy.ts';
+import { RepoProxy, type SaveStateChangedEvent } from './repo-proxy.ts';
 
 /** True once the handle's current heads have been written to the host's on-disk heads store. */
 const documentHeadsPersisted = async <T>(host: AutomergeHost, handle: DocHandleProxy<T>): Promise<boolean> => {
@@ -774,6 +774,42 @@ describe('RepoProxy', () => {
     await expect.poll(hostText, { timeout: 4_000 }).toEqual('retried');
     await next.whenReady();
   });
+
+  test('a change the host has not taken stays unsaved, and a failed send is reported', { timeout: 5_000 }, async () => {
+    let failing: FailingUpdateDataService | undefined;
+    const { dataService } = await setup(undefined, (props) => (failing = new FailingUpdateDataService(props)));
+    invariant(failing);
+    const service = failing;
+    const [clientRepo] = createProxyRepos(dataService);
+    await openAndClose(clientRepo);
+    const handle = clientRepo.create<{ text: string }>();
+    await handle.whenReady();
+    await clientRepo.flush();
+    const states: SaveStateChangedEvent[] = [];
+    clientRepo.saveStateChanged.on((state) => {
+      states.push(state);
+    });
+
+    const hold = new Trigger();
+    service.hold = hold;
+    handle.change((doc: { text: string }) => {
+      doc.text = 'unsaved';
+    });
+    await expect.poll(() => service.held).toBe(1);
+    // In flight: the batch has left the pending set, but the host has not acknowledged it.
+    expect(clientRepo.hasUnsavedChanges()).toBe(true);
+    expect(states.at(-1)).toEqual({ unsavedDocuments: [handle.documentId], pendingCreations: 0, failing: false });
+
+    service.hold = undefined;
+    service.fail = true;
+    hold.wake();
+    await expect.poll(() => states.at(-1)?.failing).toBe(true);
+    expect(clientRepo.hasUnsavedChanges()).toBe(true);
+
+    service.fail = false;
+    await expect.poll(() => clientRepo.hasUnsavedChanges(), { timeout: 4_000 }).toBe(false);
+    expect(states.at(-1)).toEqual({ unsavedDocuments: [], pendingCreations: 0, failing: false });
+  });
 });
 
 /**
@@ -810,12 +846,26 @@ class RefusingDataService extends DataServiceImpl {
   }
 }
 
-/** Fails every update batch while {@link fail} is set, as a host that times out the call does. */
+/**
+ * Fails every update batch while {@link fail} is set, as a host that times out the call does; while
+ * {@link hold} is set, an update waits on it first, as one whose write cannot reach disk does.
+ */
 class FailingUpdateDataService extends DataServiceImpl {
   'fail' = false;
   'failures' = 0;
+  'hold': Trigger | undefined = undefined;
+  'held' = 0;
 
   override ['DataService.update'](request: DataService.UpdateRequest): Effect.Effect<void, Error> {
+    const hold = this.hold;
+    if (hold) {
+      this.held++;
+      return Effect.promise(() => hold.wait()).pipe(Effect.andThen(() => this.#update(request)));
+    }
+    return this.#update(request);
+  }
+
+  #update(request: DataService.UpdateRequest): Effect.Effect<void, Error> {
     if (this.fail) {
       this.failures++;
       return Effect.fail(new EchoClientError({ message: 'update timed out' }));

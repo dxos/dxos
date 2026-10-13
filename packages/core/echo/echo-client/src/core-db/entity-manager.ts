@@ -865,6 +865,11 @@ export class EntityManager implements IDatabaseBinding {
     core.setDecoded([], newStruct);
   }
 
+  /** Whether a change or a new object exists only in this client, so losing the page would lose it. */
+  hasUnsavedChanges(): boolean {
+    return this._pendingDocumentCreations.size > 0 || this._repoProxy.hasUnsavedChanges();
+  }
+
   async flush({
     disk = true,
     indexes = true,
