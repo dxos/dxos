@@ -5,10 +5,17 @@ Move a question into the relevant design doc once it is decided, and delete it h
 
 ## Brain and facts
 
-1. **Should predicates be IRIs?** A fact is stored reified (pipeline-rdf `DESIGN.md`, "Reification"), and its
-   predicate is a string literal (`sx:predicate "works at"`), not an IRI. Standard RDF tooling cannot query by
-   predicate (`?s :worksAt ?o`); joins rely on the normalized string. Minting an IRI from the normalized predicate
-   would fix that at the cost of a vocabulary to manage.
+1. **Should a fact be a named graph instead of a reified node, with predicates as IRIs?** A fact is stored reified
+   (pipeline-rdf `DESIGN.md`, "Reification"): a fact node with `sx:subject`, `sx:predicate` (a string literal, e.g.
+   `"works at"`) and `sx:object`, plus its provenance. The statement itself is never a triple, so standard RDF tooling
+   cannot ask `?s :worksAt ?o`; pipeline-rdf's queries fuzzy-match the predicate string instead.
+   - A **graph per fact** keeps the statement a real triple (`entity:rich-burdon pred:works-at entity:dxos`) in a
+     graph named by the fact IRI, with the provenance as triples about that graph:
+     `GRAPH ?f { ?s pred:works-at ?o } . ?f prov:wasAttributedTo ?who`. This is standard RDF 1.1 (N-Quads, TriG),
+     needs no RDF-star, and the store already has the column for it (`triples.g`, always empty today).
+   - It needs predicate IRIs, minted from the normalized predicate (`Predicate.normalize`) or the brain's canonical
+     vocabulary (`@dxos/brain` `Vocabulary`), and a migration of stored facts.
+   - The design doc weighs reification only against RDF-star; named graphs are not discussed.
 2. **What is the store of record for facts?** `BRAIN.md` says ECHO feeds (one per source, one item per fact), with
    SQLite as a derived index. The EDGE `BrainObject` writes only to its own SQLite, so facts do not replicate with the
    space and are lost when EDGE state is wiped.
