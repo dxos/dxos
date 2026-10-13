@@ -138,7 +138,7 @@ describe('AutomergeDataSource', () => {
     const object = objects.find((object) => object.data.id === 'obj-1');
     invariant(object?.heads);
     expect(object.heads).toEqual(getHeads(handle.doc()!));
-    const stored = loadIncremental(init<DatabaseDirectory>(), await host.readStoredChanges(handle.documentId));
+    const stored = loadIncremental(init<DatabaseDirectory>(), (await host.readStoredChanges(handle.documentId))!);
     expect(hasHeads(stored, [...object.heads])).toBe(true);
 
     // The JSON is the object as the client shows it, bytes and raw strings included.

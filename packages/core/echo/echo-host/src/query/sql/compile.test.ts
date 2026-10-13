@@ -24,7 +24,7 @@ import { EntityMetaIndex, type IndexerObject, ObjectSnapshotIndex, ReverseRefInd
 import { DXN, EID, EntityId, SpaceId, type URI } from '@dxos/keys';
 
 import { QueryPlanner } from '../query-planner.ts';
-import { type CompileOptions, compilePlan, planDeclinedByCompiler } from './compile.ts';
+import { compilePlan, planDeclinedByCompiler } from './compile.ts';
 
 const TestLayer = SqliteClient.layer({ filename: ':memory:' }).pipe(Layer.provideMerge(Reactivity.layer));
 
@@ -132,11 +132,11 @@ const seed = Effect.gen(function* () {
   return { spaceId, ids } satisfies Fixture;
 });
 
-const run = (fixture: Fixture, query: Query.Any, options?: CompileOptions) =>
+const run = (fixture: Fixture, query: Query.Any) =>
   Effect.gen(function* () {
     const sql = yield* SqlClient.SqlClient;
     const plan = new QueryPlanner().createPlan(query.ast);
-    const compiled = compilePlan(sql, plan, planSubquery, options);
+    const compiled = compilePlan(sql, plan, planSubquery);
     if (process.env.DX_DEBUG_SQL) {
       // eslint-disable-next-line no-console
       console.log(compiled.sql);
@@ -529,11 +529,9 @@ describe('SqlPlanCompiler', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  it.effect('ships a document row no body when a client cannot back it', () =>
+  it.effect('ships a body only for feed rows', () =>
     Effect.gen(function* () {
       const fixture = yield* seed;
-      const sql = yield* SqlClient.SqlClient;
-      yield* sql`UPDATE objectSnapshot SET heads = NULL`;
       const { rows } = yield* run(
         fixture,
         Query.select(Filter.type(PERSON)).from([{ _tag: 'space' as const, spaceId: fixture.spaceId }]),
@@ -543,7 +541,7 @@ describe('SqlPlanCompiler', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  it.effect('ships each document row its JSON, heads and index stamp', () =>
+  it.effect('ships each document row its heads and index stamp', () =>
     Effect.gen(function* () {
       const fixture = yield* seed;
       const query = Query.select(Filter.type(PERSON)).from([{ _tag: 'space' as const, spaceId: fixture.spaceId }]);
@@ -557,7 +555,6 @@ describe('SqlPlanCompiler', () => {
       ).toEqual(['alice', 'bob']);
       for (const row of rows) {
         expect(JSON.parse(row.heads ?? 'null')).toEqual([`heads-${row.objectId}`]);
-        expect(JSON.parse(row.documentJson ?? 'null').name).toBe(row.objectId === fixture.ids.alice ? 'alice' : 'bob');
         expect(row.version).toBeGreaterThan(0);
       }
     }).pipe(Effect.provide(TestLayer)),

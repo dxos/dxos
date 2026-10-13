@@ -690,14 +690,14 @@ export class EntityManager implements IDatabaseBinding {
     }
   }
 
-  activate(core: ObjectCore): void {
+  activate(core: ObjectCore, { at }: { at?: Heads } = {}): void {
     const snapshot = core.snapshot;
     if (!snapshot) {
       return;
     }
     const started = performance.now();
-    // Loads the bytes into a document and subscribes the host from their heads.
-    snapshot.handle._activate();
+    // Loads the stored changes into a document and subscribes the host from their heads.
+    snapshot.handle._activate({ at });
     this._bindObjectDocument(core.id, snapshot.handle);
     this._onObjectDocumentLoaded({ handle: snapshot.handle, objectId: core.id });
     const ms = performance.now() - started;
@@ -2565,8 +2565,5 @@ export class EntityManager implements IDatabaseBinding {
 }
 
 const RPC_TIMEOUT = 20_000;
-
-const sameHeads = (left: readonly string[], right: readonly string[]): boolean =>
-  left.length === right.length && left.every((head) => right.includes(head));
 
 type PassiveUpdate = ClientDocHandleEvents<DatabaseDirectory>['passive'];

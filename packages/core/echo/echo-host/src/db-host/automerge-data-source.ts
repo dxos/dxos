@@ -18,7 +18,7 @@ import {
 import { log } from '@dxos/log';
 
 import { type AutomergeHost } from '../automerge/index.ts';
-import { canBackObject } from '../query/object-state.ts';
+import { backingJson } from '../query/object-state.ts';
 import { toChangeRecord } from './change-record.ts';
 
 const HEADS_DELIMITER = '|';
@@ -213,7 +213,7 @@ export class AutomergeDataSource implements IndexDataSource {
               data,
               createdAt: typeof storedCreatedAt === 'number' ? storedCreatedAt : null,
               updatedAt,
-              heads: atSavedHeads && canBackObject(doc, structure, data) ? docHeads : undefined,
+              heads: atSavedHeads && backingJson(doc, structure, data) !== undefined ? docHeads : undefined,
             });
           }
 

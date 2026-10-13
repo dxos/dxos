@@ -16,7 +16,7 @@ import { type DataService } from '@dxos/protocols/rpc';
 import { countWork } from '@dxos/util';
 
 import { type AutomergeHost, type DocumentLease } from '../automerge/index.ts';
-import { canBackObject } from '../query/object-state.ts';
+import { backingJson, sameHeads } from '../query/object-state.ts';
 
 const MAX_UPDATE_FREQ = 10; // [updates/sec]
 
@@ -114,9 +114,11 @@ export class DocumentsSynchronizer extends Resource {
 
   /**
    * Subscribes the client to each document, from the heads it names so the first send is only what came
-   * after. A document already subscribed switches to the given mode, and is sent from the heads it names.
+   * after. A document already subscribed switches to the given mode, and is sent from the heads it names,
+   * or whole when it names none. A passive document is not loaded until storage moves past its heads.
    */
   async addDocuments(documents: readonly SubscribedDocument[]): Promise<void> {
+    const waiting: { documentId: DocumentId; heads: Heads; syncState: DocSyncState }[] = [];
     for (const { documentId, heads, passive = false } of documents) {
       if (this._lifecycleState === LifecycleState.CLOSED) {
         continue;
@@ -124,12 +126,17 @@ export class DocumentsSynchronizer extends Resource {
       const existing = this._syncStates.get(documentId);
       if (existing) {
         existing.passive = passive;
-        if (heads !== undefined) {
-          existing.lastSentHead = heads;
-          existing.confirm = true;
-          this._pendingUpdates.add(documentId);
-          this._sendUpdatesJob?.trigger();
-        }
+        existing.lastSentHead = heads;
+        // A loaded document's client waits to hear it is current; a passive one already shows what it holds.
+        existing.confirm = heads !== undefined && !passive;
+        this._pendingUpdates.add(documentId);
+        this._sendUpdatesJob?.trigger();
+        continue;
+      }
+      if (passive && heads !== undefined) {
+        const syncState: DocSyncState = { passive, lastSentHead: heads };
+        this._syncStates.set(documentId, syncState);
+        waiting.push({ documentId, heads, syncState });
         continue;
       }
       log('loading document', { documentId });
@@ -146,6 +153,18 @@ export class DocumentsSynchronizer extends Resource {
       // Fire-and-forget; the result feeds `_pendingRequesting`.
       this._scheduleDiskProbe(documentId);
       void this._sendWhenLoaded(documentId, syncState);
+    }
+
+    if (waiting.length > 0) {
+      const stored = await this._params.automergeHost.getStoredHeads(waiting.map(({ documentId }) => documentId));
+      waiting.forEach(({ documentId, heads, syncState }, index) => {
+        const storedHeads = stored[index];
+        // Storage already past what the client shows: send the difference now rather than at the next save.
+        if (this._syncStates.get(documentId) === syncState && (!storedHeads || !sameHeads(storedHeads, heads))) {
+          this._pendingUpdates.add(documentId);
+          this._sendUpdatesJob?.trigger();
+        }
+      });
     }
   }
 
@@ -375,10 +394,9 @@ export class DocumentsSynchronizer extends Resource {
 const passiveObject = (doc: A.Doc<DatabaseDirectory>): DataService.DocumentUpdate['passive'] => {
   const heads = A.getHeads(doc);
   const [entry] = Object.entries(doc.objects ?? {});
-  const json = entry && objectStructureToJson(entry[0] as EntityId, entry[1]);
   return {
     heads,
-    json: entry && json && canBackObject(doc, entry[1], json) ? JSON.stringify(json) : undefined,
+    json: entry && backingJson(doc, entry[1], objectStructureToJson(entry[0] as EntityId, entry[1])),
     updatedAt: lastChangeTime(doc, heads),
   };
 };

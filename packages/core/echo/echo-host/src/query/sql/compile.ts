@@ -62,7 +62,7 @@ export type CompiledRow = {
   rank: number;
   createdAt: number | null;
   updatedAt: number | null;
-  /** JSON text of the body; present for feed rows, and for document rows that have {@link heads}. */
+  /** JSON text of the body; present for feed rows only, since a document row's is read only when it ships. */
   documentJson: string | null;
   /** JSON text of the group key; present iff the plan aggregates. */
   groupKey: string | null;
@@ -1156,7 +1156,7 @@ export class SqlPlanCompiler {
       : sql`NULL AS groupKey, NULL AS groupCount, NULL AS aggregates`;
     return sql`SELECT w.recordId, w.objectId, w.spaceId, m.documentId, m.queueId, m.queueNamespace, w.rank AS rank,
       m.createdAt, m.updatedAt, m.version AS version, d.heads AS heads,
-      CASE WHEN m.queueId != '' OR d.heads IS NOT NULL THEN json(d.snapshot) END AS documentJson,
+      CASE WHEN m.queueId != '' THEN json(d.snapshot) END AS documentJson,
       ${groupColumns}
       FROM ${this.#ref(ws)} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId LEFT JOIN objectSnapshot d ON d.recordId = w.recordId
       ORDER BY w.ord`;

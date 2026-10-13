@@ -40,7 +40,7 @@ import { EID, EntityId, SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { type QueryService } from '@dxos/protocols/rpc';
-import { compositeKey, getDeep, isNonNullable } from '@dxos/util';
+import { chunkArray, compositeKey, getDeep, isNonNullable } from '@dxos/util';
 
 import type { AutomergeHost } from '../automerge/index.ts';
 import type { SpaceStateManager } from '../db-host/index.ts';
@@ -49,7 +49,7 @@ import { filterMatchDoc, filterMatchEntityMeta, filterMatchObjectJSON, getEntity
 import { type ChangeItem, changeResults, executeChangesPlan, serializeChangeResults } from './changes-executor.ts';
 import { QueryError } from './errors.ts';
 import { type GroupAggregates, GroupBy, type GroupKeyValue, compareCodeUnits } from './group-by.ts';
-import { OBJECT_BYTES_LIMIT, canBackObject } from './object-state.ts';
+import { OBJECT_BYTES_LIMIT, backingJson, sameHeads } from './object-state.ts';
 import { QueryPlan } from './plan.ts';
 import { type QueryExecutorMode, QueryPlanner, filterContainsInQuery } from './query-planner.ts';
 import { type CompiledRow } from './sql/index.ts';
@@ -137,6 +137,9 @@ type QueryItem = {
 
   /** The object's index stamp (`objectMeta.version`), for a document row. */
   version?: number;
+
+  /** The row's index record, for reading its JSON when it ships. */
+  recordId?: number;
 
   /** For an object a client can back with its document's stored changes: its JSON and the heads it was read at. */
   backing?: { heads: readonly string[]; json: string };
@@ -802,40 +805,67 @@ export class QueryExecutor extends Resource {
         updatedAt: item.backing ? (item.updatedAt ?? undefined) : undefined,
       };
     });
-    return this.#withStoredChanges(results);
+    return this.#withBacking(results, this._lastResultSet);
   }
 
   /**
-   * Adds the document's stored changes to each row a client can back, read now rather than kept in the
-   * index, and leaves a row's JSON and changes off once this query has shipped them at its version.
+   * Adds what a client backs each row's object with: its JSON and the document's stored changes, read now
+   * rather than kept in the index, and only for rows this query has not shipped at their version. A row
+   * that cannot be backed at its version (no stored changes, too many, or a failed read) is not read again
+   * until its version moves.
    */
-  async #withStoredChanges(results: QueryService.QueryResult[]): Promise<QueryService.QueryResult[]> {
+  async #withBacking(
+    results: QueryService.QueryResult[],
+    items: readonly QueryItem[],
+  ): Promise<QueryService.QueryResult[]> {
     const sent = this.#sentVersions;
     this.#sentVersions = new Map();
-    const unsent = (result: QueryService.QueryResult) =>
-      result.heads !== undefined && result.version !== undefined && sent.get(result.id) !== result.version;
-    const changes = await Promise.all(
-      results.map((result) =>
-        unsent(result) && result.documentId !== undefined
-          ? this._automergeHost.readStoredChanges(result.documentId as DocumentId)
-          : undefined,
-      ),
+    const unsent = results.flatMap((result, index) =>
+      result.heads !== undefined &&
+      result.version !== undefined &&
+      result.documentId !== undefined &&
+      sent.get(result.id) !== result.version
+        ? [index]
+        : [],
     );
+    // A compiled row carries no JSON; one the steps built from a lease carries its own.
+    const recordIds = unsent.flatMap((index) =>
+      results[index].documentJson === undefined && items[index]?.recordId !== undefined ? [items[index].recordId!] : [],
+    );
+    const texts = new Map<number, string>();
+    if (recordIds.length > 0) {
+      for (const { recordId, snapshot } of await this._runInRuntime(this._indexEngine.querySnapshotsJSON(recordIds))) {
+        texts.set(recordId, JSON.stringify(snapshot));
+      }
+    }
+    const backing = new Map<number, { json: string; bytes: Uint8Array } | undefined>();
+    for (const chunk of chunkArray(unsent, STORED_CHANGES_CONCURRENCY)) {
+      await Promise.all(
+        chunk.map(async (index) => {
+          const result = results[index];
+          const json = result.documentJson ?? texts.get(items[index]?.recordId ?? -1);
+          const bytes =
+            json === undefined
+              ? undefined
+              : await this._automergeHost
+                  .readStoredChanges(result.documentId as DocumentId, { limit: OBJECT_BYTES_LIMIT })
+                  .catch((err) => {
+                    log.warn('stored changes could not be read for a row', { documentId: result.documentId, err });
+                    return undefined;
+                  });
+          backing.set(index, json !== undefined && bytes !== undefined ? { json, bytes } : undefined);
+        }),
+      );
+    }
+
     return results.map((result, index) => {
       if (result.heads === undefined || result.version === undefined) {
         return result;
       }
-      const bytes = changes[index];
-      if (bytes === undefined) {
-        // Shipped at this version already, and the client keeps what it was sent.
-        this.#sentVersions.set(result.id, result.version);
-        return withoutBacking(result);
-      }
-      if (bytes.length === 0 || bytes.length > OBJECT_BYTES_LIMIT) {
-        return withoutBacking(result);
-      }
       this.#sentVersions.set(result.id, result.version);
-      return { ...result, bytes };
+      const backed = backing.get(index);
+      // Shipped at this version already, and kept by the client; or not backable at it.
+      return backed ? { ...result, documentJson: backed.json, bytes: backed.bytes } : withoutBacking(result);
     });
   }
 
@@ -2229,6 +2259,10 @@ export class QueryExecutor extends Resource {
       return null;
     }
     const json = objectStructureToJson(meta.objectId, object);
+    const heads = A.getHeads(lease.doc());
+    // A client loads storage's changes and writes at these heads, so they must be heads storage holds.
+    const [storedHeads] = await this._automergeHost.getStoredHeads([meta.documentId as DocumentId]);
+    const text = storedHeads && sameHeads(storedHeads, heads) ? backingJson(lease.doc(), object, json) : undefined;
     return {
       objectId: meta.objectId,
       documentId: meta.documentId as DocumentId,
@@ -2241,10 +2275,7 @@ export class QueryExecutor extends Resource {
       createdAt: meta.createdAt,
       updatedAt: meta.updatedAt,
       version: meta.version,
-      // The lease may be ahead of storage, whose changes a client loads; its first write then lands at the latest heads.
-      backing: canBackObject(lease.doc(), object, json)
-        ? { heads: A.getHeads(lease.doc()), json: JSON.stringify(json) }
-        : undefined,
+      backing: text !== undefined ? { heads, json: text } : undefined,
     };
   }
 
@@ -2678,6 +2709,7 @@ const compiledRowToItem = (row: CompiledRow): QueryItem => {
     rank: row.rank,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
+    recordId: row.recordId,
     result,
   };
 };
@@ -2699,9 +2731,8 @@ const _sameResult = (a: QueryItem, b: QueryItem): boolean => {
       a.result?.groupCount === b.result?.groupCount &&
       a.result?.aggregates === b.result?.aggregates &&
       a.result?.rank === b.result?.rank &&
-      // A feed row ships its indexed body, so an edit to it changes the record without moving the row. A
-      // document row's body backs an object its own subscription keeps current.
-      (a.result?.queueId === undefined || a.result?.documentJson === b.result?.documentJson)
+      // A feed row ships its indexed body, so an edit to it changes the record without moving the row.
+      a.result?.documentJson === b.result?.documentJson
     );
   }
   return (
@@ -2717,6 +2748,9 @@ const _sameResult = (a: QueryItem, b: QueryItem): boolean => {
     _serializeCollapsed(a) === _serializeCollapsed(b)
   );
 };
+
+/** Stored-change reads a result set makes at once, so a large first emission does not swamp storage. */
+const STORED_CHANGES_CONCURRENCY = 16;
 
 /** A document row without what a client backs its object with, which then loads its document. */
 const withoutBacking = ({

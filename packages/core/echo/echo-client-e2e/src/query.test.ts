@@ -4474,7 +4474,7 @@ describe('Query', () => {
       expect(A.getHeads(lease.doc())).toEqual(Obj.version(object).automergeHeads);
     });
 
-    test('the first write lands at the heads the object was shown at, when its stored changes are ahead of them', async () => {
+    test('the writes of the first update land at the heads the object was shown at, when its stored changes are ahead of them', async () => {
       const { db, peer, ids, documentIds } = await openReloaded((db) => [
         db.add(Obj.make(TestSchema.Expando, { tags: ['a'] })),
       ]);
@@ -4500,9 +4500,14 @@ describe('Query', () => {
       expect([...object.tags]).toEqual(['a']);
       Obj.update(object, (object) => {
         object.tags.splice(0, 1);
+        // Every write of the update applies to what was shown.
+        object.tags.push('b');
       });
-      // Index 0 was `a` where the object was shown, so the later `host` survives.
-      expect([...object.tags]).toEqual(['host']);
+      expect([...object.tags]).toEqual(['b']);
+      // Index 0 was `a` where the object was shown, so the later `host` survives once it merges in.
+      await waitForCondition({ condition: () => object.tags.length === 2, timeout: 1_000 });
+      // `b` and `host` are concurrent inserts at the head, ordered by actor.
+      expect([...object.tags].sort()).toEqual(['b', 'host']);
     });
 
     test('reading the document, its history or a branch of it loads it from the bytes', async () => {

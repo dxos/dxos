@@ -16,6 +16,7 @@ import { type DataService } from '@dxos/protocols/rpc';
 import { RepoClosedError } from '../errors.ts';
 import { type ChangeEvent, DocHandleProxy, type PassiveDocument } from './doc-handle-proxy.ts';
 import { toDocumentId } from './document-id.ts';
+import { sameHeads } from './heads.ts';
 
 const MAX_UPDATE_FREQ = 10; // [updates/sec]
 const RPC_TIMEOUT = 30_000;
@@ -172,7 +173,7 @@ export class RepoProxy extends Resource {
 
   /**
    * Drops a cached handle nothing holds any more and unsubscribes the host from its document. A passive
-   * handle (bytes nothing has loaded) has no subscription and no unsent change, so it always goes.
+   * handle (stored changes nothing has loaded) never has an unsent change, so it always goes.
    *
    * This is the only way a proxied document leaves memory: handles are otherwise kept for the life
    * of the space, so a client's footprint tracked every document it had ever opened. A handle with
@@ -929,7 +930,10 @@ export class RepoProxy extends Resource {
       addIds
         .filter((id) => this._handles[id] || this._passiveHandles.has(id))
         .forEach((id) => this._pendingAddIds.add(id));
-      removeIds.forEach((id) => this._pendingRemoveIds.add(id));
+      // A remove is restored only for a document nothing holds again: one re-held since would be unsubscribed.
+      removeIds
+        .filter((id) => !this._handles[id] && !this._passiveHandles.has(id))
+        .forEach((id) => this._pendingRemoveIds.add(id));
       updateIds.forEach((id) => this._pendingUpdateIds.add(id));
 
       // Closing, reconnecting, an abandoned pass and a closed RPC connection each have their own path
@@ -984,6 +988,3 @@ export class RepoProxy extends Resource {
 export type SaveStateChangedEvent = {
   unsavedDocuments: DocumentId[];
 };
-
-const sameHeads = (left: readonly string[], right: readonly string[]): boolean =>
-  left.length === right.length && [...left].sort().join() === [...right].sort().join();

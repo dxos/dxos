@@ -12,6 +12,7 @@ import { PublicKey } from '@dxos/keys';
 
 import { DocumentUnavailableError } from '../errors.ts';
 import * as Doc from './Doc.ts';
+import { sameHeads } from './heads.ts';
 
 export type ChangeEvent<T> = {
   handle: DocHandleProxy<T>;
@@ -124,8 +125,11 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   #url?: { documentId: DocumentId; url: AutomergeUrl } = undefined;
   private readonly _onDelete: () => void;
   #onActivate?: (heads: A.Heads) => void;
-  /** Set while passive: kept off the wasm heap, which never shrinks, until something reads or writes. */
-  #passive?: PassiveDocument = undefined;
+  /**
+   * Set while passive: the stored changes as received, joined only when read or loaded, kept off the wasm
+   * heap, which never shrinks, until something reads or writes.
+   */
+  #passive?: { chunks: Uint8Array[]; size: number; heads: A.Heads } = undefined;
   /** Loaded from bytes the client held, so usable before the host's first send confirms it. */
   #loadedFromBytes = false;
 
@@ -135,7 +139,7 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
     this._onDelete = onDelete;
     this.#onActivate = onActivate;
     if (passive) {
-      this.#passive = passive;
+      this.#passive = { chunks: [passive.bytes], size: passive.bytes.length, heads: passive.heads };
       this._state = 'passive';
     } else if (initialValue) {
       // T should really be constrained to extend `Record<string, unknown>` (an automerge doc can't be
@@ -176,9 +180,10 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
     return this._state;
   }
 
-  /** The bytes and heads of a passive handle; undefined once loaded. */
+  /** The stored changes and shown heads of a passive handle; undefined once loaded. */
   get passive(): PassiveDocument | undefined {
-    return this.#passive;
+    const passive = this.#passive;
+    return passive && { bytes: joinChunks(passive), heads: passive.heads };
   }
 
   /** Loads a passive handle's bytes. */
@@ -237,24 +242,18 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   changeAt(heads: A.Heads, fn: (doc: A.Doc<T>) => void, opts?: A.ChangeOptions<any>): A.Heads | undefined {
     this._activate();
     invariant(this._doc, 'DocHandleProxy.changeAt called on deleted doc');
-    // Made on a fork at `heads` and merged back, rather than with `A.changeAt`, whose returned document
-    // can miss the change in its materialized values (automerge 3.5, depending on actor order).
-    const forked = A.clone(A.view(this._doc, heads));
-    const change = A.getLastLocalChange(opts ? A.change(forked, opts, fn) : A.change(forked, fn));
-    if (!change) {
-      return undefined;
-    }
     const before = this._doc;
     const headsBefore = A.getHeads(this._doc);
-    this._doc = A.loadIncremental(this._doc, change);
+    const { newDoc, newHeads } = opts ? A.changeAt(this._doc, heads, opts, fn) : A.changeAt(this._doc, heads, fn);
+
+    this._doc = newDoc;
     this.emit('change', {
       handle: this,
       doc: this._doc,
-      // To the document's heads, not the change's: a change at older heads merges with what came after them.
-      patches: A.diff(this._doc, headsBefore, A.getHeads(this._doc)),
+      patches: newHeads ? A.diff(this._doc, headsBefore, newHeads) : [],
       patchInfo: { before, after: this._doc, source: 'change' },
     });
-    return [A.decodeChange(change).hash];
+    return newHeads ?? undefined;
   }
 
   update(updateCallback: (doc: A.Doc<T>) => A.Doc<T>): void {
@@ -280,12 +279,16 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   }
 
   /**
-   * Loads a passive handle's bytes and hands its heads to the repo, which subscribes it from there;
-   * a no-op for a handle that is not passive. The document is usable at once; `whenReady` waits for the
-   * host to confirm it is current.
+   * Loads a passive handle's stored changes and hands their heads to the repo, which subscribes it from
+   * there; a no-op for a handle that is not passive. The document is usable at once; `whenReady` waits for
+   * the host to confirm it is current.
+   *
+   * With `at`, for a write: when the stored changes are ahead of the heads the object was shown at, the
+   * document loads at those heads, so the writes of the current task apply to what was shown, and the
+   * changes after them merge in once those writes are made.
    * @internal
    */
-  _activate(): void {
+  _activate({ at }: { at?: A.Heads } = {}): void {
     const passive = this.#passive;
     if (!passive) {
       return;
@@ -293,8 +296,16 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
     this.#passive = undefined;
     this.#loadedFromBytes = true;
     // Stored chunks, a snapshot and the incremental changes after it, which `load` does not take in any order.
-    this._doc = A.loadIncremental<T>(A.init<T>(), passive.bytes);
-    // The host holds these heads, so only changes made from here on are sent.
+    const stored = A.loadIncremental<T>(A.init<T>(), joinChunks(passive));
+    const storedHeads = A.getHeads(stored);
+    if (at && A.hasHeads(stored, at) && !sameHeads(at, storedHeads)) {
+      // Its own actor: it has no changes past `at`, so the fork's changes continue its sequence.
+      this._doc = A.clone(A.view(stored, at), { actor: A.getActorId(stored) });
+      queueMicrotask(() => this.#catchUp(A.saveSince(stored, at)));
+    } else {
+      this._doc = stored;
+    }
+    // Changes made from here on are what the host lacks; any it already holds are sent again harmlessly.
     this._lastSentHeads = A.getHeads(this._doc);
     // Usable at once, but not `whenReady` until the host's first send says it is current: the bytes
     // can be older than the document, and a reader that waits expects what the host holds.
@@ -302,7 +313,23 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
     if (this._ready.state !== TriggerState.WAITING) {
       this._ready.reset();
     }
-    this.#onActivate?.(this._lastSentHeads);
+    this.#onActivate?.(storedHeads);
+  }
+
+  /** Merges changes the handle already held but loaded behind, as a host change it did not have to wait for. */
+  #catchUp(changes: Uint8Array): void {
+    if (!this._doc || changes.length === 0) {
+      return;
+    }
+    const before = this._doc;
+    const headsBefore = A.getHeads(this._doc);
+    this._doc = A.loadIncremental(this._doc, changes);
+    this.emit('change', {
+      handle: this,
+      doc: this._doc,
+      patches: A.diff(this._doc, headsBefore, A.getHeads(this._doc)),
+      patchInfo: { before, after: this._doc, source: 'host' },
+    });
   }
 
   /**
@@ -311,7 +338,7 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
    */
   _setPassive(passive: PassiveDocument): void {
     invariant(this.#passive, 'Only a passive handle takes other stored changes.');
-    this.#passive = passive;
+    this.#passive = { chunks: [passive.bytes], size: passive.bytes.length, heads: passive.heads };
   }
 
   /**
@@ -439,15 +466,16 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   ): void {
     const held = this.#passive;
     invariant(held, 'Not a passive handle.');
-    const bytes = mutation?.length ? concatBytes(held.bytes, mutation) : held.bytes;
-    // A host that sends no JSON leaves the shown heads where they were; the document shows the rest.
-    this.#passive = { bytes, heads: passive?.json !== undefined ? passive.heads : held.heads };
-    this.emit('passive', {
-      handle: this,
-      heads: this.#passive.heads,
-      json: passive?.json,
-      updatedAt: passive?.updatedAt,
-    });
+    if (mutation?.length) {
+      held.chunks.push(mutation);
+      held.size += mutation.length;
+    }
+    // Past the limit the stored changes cost more held than loaded; without JSON only the document can show it.
+    const json = held.size <= PASSIVE_BYTES_LIMIT ? passive?.json : undefined;
+    if (json !== undefined) {
+      held.heads = passive!.heads;
+    }
+    this.emit('passive', { handle: this, heads: held.heads, json, updatedAt: passive?.updatedAt });
   }
 
   /**
@@ -488,10 +516,19 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   }
 }
 
-/** Stored changes and a change after them, in the one buffer `loadIncremental` reads. */
-const concatBytes = (left: Uint8Array, right: Uint8Array): Uint8Array => {
-  const bytes = new Uint8Array(left.length + right.length);
-  bytes.set(left);
-  bytes.set(right, left.length);
-  return bytes;
+/** Stored changes held passive past which the handle loads its document instead (as the index's limit). */
+const PASSIVE_BYTES_LIMIT = 64 * 1024;
+
+/** The held chunks as the one buffer `loadIncremental` reads, joined once and kept that way. */
+const joinChunks = (passive: { chunks: Uint8Array[]; size: number }): Uint8Array => {
+  if (passive.chunks.length !== 1) {
+    const bytes = new Uint8Array(passive.size);
+    let offset = 0;
+    for (const chunk of passive.chunks) {
+      bytes.set(chunk, offset);
+      offset += chunk.length;
+    }
+    passive.chunks = [bytes];
+  }
+  return passive.chunks[0];
 };

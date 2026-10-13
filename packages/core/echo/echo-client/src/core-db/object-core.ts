@@ -45,7 +45,7 @@ export interface IDatabaseBinding {
   readonly spaceId: SpaceId;
   getObjectCoreById(id: string, opts?: GetObjectCoreByIdOptions): ObjectCore | undefined;
   /** Loads a snapshot-backed core's document from the bytes it holds and binds the core to it. */
-  activate(core: ObjectCore): void;
+  activate(core: ObjectCore, options?: { at?: Heads }): void;
 }
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
@@ -316,11 +316,14 @@ export class ObjectCore {
     return this.getDoc();
   }
 
-  /** Moves a snapshot-backed core onto its document, loaded synchronously from the bytes it holds. */
-  #activate(): void {
+  /**
+   * Moves a snapshot-backed core onto its document, loaded synchronously from the stored changes it holds.
+   * `forWrite` loads it where the object was shown (see `DocHandleProxy._activate`).
+   */
+  #activate({ forWrite = false }: { forWrite?: boolean } = {}): void {
     if (!this.doc && !this.docHandle && this.snapshot) {
       invariant(this.entityManager, 'A snapshot-backed core belongs to a database.');
-      this.entityManager.activate(this);
+      this.entityManager.activate(this, { at: forWrite ? this.snapshot.heads : undefined });
     }
   }
 
@@ -375,9 +378,8 @@ export class ObjectCore {
    * Do not take into account mountPath.
    */
   change(changeFn: ChangeFn<any>, options?: A.ChangeOptions<any>): void {
-    const shownAt = !this.doc && !this.docHandle ? this.snapshot?.heads : undefined;
     // Before the semaphore, which is keyed on the handle activation binds.
-    this.#activate();
+    this.#activate({ forWrite: true });
     // Prevent recursive change calls.
     using _ = defer(docChangeSemaphore(this.docHandle ?? this));
 
@@ -393,17 +395,8 @@ export class ObjectCore {
     } else {
       const docHandle = this.docHandle;
       invariant(docHandle);
-      // The index's copy showed the object at `shownAt`, and the stored changes just loaded can be ahead of
-      // it: the first write lands there, so it applies to what was shown and merges with what came after.
-      const doc = docHandle.doc();
-      const at =
-        shownAt && A.hasHeads(doc, [...shownAt]) && A.getHeads(doc).join() !== [...shownAt].sort().join()
-          ? [...shownAt]
-          : undefined;
       // No manual notification: the DB already processes the `change` event.
-      this.#writeAndRefresh(() =>
-        at ? docHandle.changeAt(at, changeFn, options) : docHandle.change(changeFn, options),
-      );
+      this.#writeAndRefresh(() => docHandle.change(changeFn, options));
     }
   }
 
