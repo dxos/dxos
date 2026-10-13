@@ -119,8 +119,13 @@ export class EchoClient extends Resource {
   protected override async _open(ctx: Context): Promise<void> {
     invariant(this._dataService && this._queryService, 'Invalid state: not connected');
 
-    this._indexQuerySourceProvider = new IndexQuerySourceProvider({
-      service: this._queryService,
+    this._indexQuerySourceProvider = this.#createIndexQuerySourceProvider(this._queryService);
+    this._graph.registerQuerySourceProvider(this._indexQuerySourceProvider);
+  }
+
+  #createIndexQuerySourceProvider(service: QueryService.Client): IndexQuerySourceProvider {
+    return new IndexQuerySourceProvider({
+      service,
       runtime: this._runtime,
       objectLoader: {
         loadObject: this._loadObjectFromDocument.bind(this),
@@ -129,7 +134,6 @@ export class EchoClient extends Resource {
       },
       graph: this._graph,
     });
-    this._graph.registerQuerySourceProvider(this._indexQuerySourceProvider);
   }
 
   protected override async _close(ctx: Context): Promise<void> {
@@ -229,15 +233,7 @@ export class EchoClient extends Resource {
     // Update IndexQuerySourceProvider with new service.
     if (this._indexQuerySourceProvider) {
       this._graph.unregisterQuerySourceProvider(this._indexQuerySourceProvider);
-      this._indexQuerySourceProvider = new IndexQuerySourceProvider({
-        service: this._queryService,
-        runtime: this._runtime,
-        objectLoader: {
-          loadObject: this._loadObjectFromDocument.bind(this),
-          updateEvent: this._objectsUpdated,
-        },
-        graph: this._graph,
-      });
+      this._indexQuerySourceProvider = this.#createIndexQuerySourceProvider(queryService);
       this._graph.registerQuerySourceProvider(this._indexQuerySourceProvider);
     }
 
