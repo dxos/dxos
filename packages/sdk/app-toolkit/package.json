@@ -1,6 +1,6 @@
 {
   "name": "@dxos/app-toolkit",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "description": "Composer-specific capabilities, plugin helpers, and playground for building Composer plugins.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -72,9 +72,9 @@
       "import": "./dist/lib/echo/AppSpace.mjs"
     },
     "./AppSurface": {
-      "source": "./src/AppSurface.ts",
-      "types": "./dist/types/src/AppSurface.d.ts",
-      "import": "./dist/lib/ns/AppSurface.mjs"
+      "source": "./src/ui/components/AppSurface/AppSurface.ts",
+      "types": "./dist/types/src/ui/components/AppSurface/AppSurface.d.ts",
+      "import": "./dist/lib/AppSurface.mjs"
     },
     "./AppUpdate": {
       "source": "./src/app/AppUpdate.ts",
@@ -82,14 +82,14 @@
       "import": "./dist/lib/app/AppUpdate.mjs"
     },
     "./AttentionSigil": {
-      "source": "./src/AttentionSigil.ts",
-      "types": "./dist/types/src/AttentionSigil.d.ts",
-      "import": "./dist/lib/ns/AttentionSigil.mjs"
+      "source": "./src/ui/components/AttentionSigil/AttentionSigil.tsx",
+      "types": "./dist/types/src/ui/components/AttentionSigil/AttentionSigil.d.ts",
+      "import": "./dist/lib/AttentionSigil.mjs"
     },
     "./CardSlot": {
-      "source": "./src/CardSlot.ts",
-      "types": "./dist/types/src/CardSlot.d.ts",
-      "import": "./dist/lib/ns/CardSlot.mjs"
+      "source": "./src/ui/components/CardSlot/CardSlot.ts",
+      "types": "./dist/types/src/ui/components/CardSlot/CardSlot.d.ts",
+      "import": "./dist/lib/CardSlot.mjs"
     },
     "./CollaborationOperation": {
       "source": "./src/operations/CollaborationOperation.ts",
@@ -122,14 +122,14 @@
       "import": "./dist/lib/app/GraphPath.mjs"
     },
     "./HomeSection": {
-      "source": "./src/HomeSection.ts",
-      "types": "./dist/types/src/HomeSection.d.ts",
-      "import": "./dist/lib/ns/HomeSection.mjs"
+      "source": "./src/ui/components/HomeSection/HomeSection.tsx",
+      "types": "./dist/types/src/ui/components/HomeSection/HomeSection.d.ts",
+      "import": "./dist/lib/HomeSection.mjs"
     },
     "./Hooks": {
-      "source": "./src/Hooks.ts",
-      "types": "./dist/types/src/Hooks.d.ts",
-      "import": "./dist/lib/ns/Hooks.mjs"
+      "source": "./src/ui/hooks/index.ts",
+      "types": "./dist/types/src/ui/hooks/index.d.ts",
+      "import": "./dist/lib/Hooks.mjs"
     },
     "./LayoutOperation": {
       "source": "./src/operations/LayoutOperation.ts",
@@ -137,9 +137,9 @@
       "import": "./dist/lib/operations/LayoutOperation.mjs"
     },
     "./NamePopover": {
-      "source": "./src/NamePopover.ts",
-      "types": "./dist/types/src/NamePopover.d.ts",
-      "import": "./dist/lib/ns/NamePopover.mjs"
+      "source": "./src/ui/components/NamePopover/NamePopover.tsx",
+      "types": "./dist/types/src/ui/components/NamePopover/NamePopover.d.ts",
+      "import": "./dist/lib/NamePopover.mjs"
     },
     "./NativeOAuth": {
       "source": "./src/app/NativeOAuth.ts",
@@ -167,9 +167,9 @@
       "import": "./dist/lib/app/NotFound.mjs"
     },
     "./NotFoundArticle": {
-      "source": "./src/NotFoundArticle.ts",
-      "types": "./dist/types/src/NotFoundArticle.d.ts",
-      "import": "./dist/lib/ns/NotFoundArticle.mjs"
+      "source": "./src/ui/components/NotFoundArticle/NotFoundArticle.tsx",
+      "types": "./dist/types/src/ui/components/NotFoundArticle/NotFoundArticle.d.ts",
+      "import": "./dist/lib/NotFoundArticle.mjs"
     },
     "./ObjectAction": {
       "source": "./src/app-framework/ObjectAction.ts",
@@ -177,9 +177,14 @@
       "import": "./dist/lib/app-framework/ObjectAction.mjs"
     },
     "./ObjectCard": {
-      "source": "./src/ObjectCard.ts",
-      "types": "./dist/types/src/ObjectCard.d.ts",
-      "import": "./dist/lib/ns/ObjectCard.mjs"
+      "source": "./src/ui/components/ObjectCard/ObjectCard.tsx",
+      "types": "./dist/types/src/ui/components/ObjectCard/ObjectCard.d.ts",
+      "import": "./dist/lib/ObjectCard.mjs"
+    },
+    "./ObjectCombobox": {
+      "source": "./src/ui/components/ObjectCombobox/ObjectCombobox.tsx",
+      "types": "./dist/types/src/ui/components/ObjectCombobox/ObjectCombobox.d.ts",
+      "import": "./dist/lib/ObjectCombobox.mjs"
     },
     "./ObservabilityMapping": {
       "source": "./src/app-framework/ObservabilityMapping.ts",
@@ -188,9 +193,9 @@
     },
     "./package.json": "./package.json",
     "./PluginRegistryButton": {
-      "source": "./src/PluginRegistryButton.ts",
-      "types": "./dist/types/src/PluginRegistryButton.d.ts",
-      "import": "./dist/lib/ns/PluginRegistryButton.mjs"
+      "source": "./src/ui/components/PluginRegistryButton/PluginRegistryButton.tsx",
+      "types": "./dist/types/src/ui/components/PluginRegistryButton/PluginRegistryButton.d.ts",
+      "import": "./dist/lib/PluginRegistryButton.mjs"
     },
     "./Progress": {
       "source": "./src/app-framework/Progress.ts",
@@ -213,9 +218,9 @@
       "import": "./dist/lib/operations/SettingsOperation.mjs"
     },
     "./SettingsScope": {
-      "source": "./src/SettingsScope.ts",
-      "types": "./dist/types/src/SettingsScope.d.ts",
-      "import": "./dist/lib/ns/SettingsScope.mjs"
+      "source": "./src/ui/components/SettingsScope/SettingsScope.tsx",
+      "types": "./dist/types/src/ui/components/SettingsScope/SettingsScope.d.ts",
+      "import": "./dist/lib/SettingsScope.mjs"
     },
     "./SpaceInvitationOperation": {
       "source": "./src/operations/SpaceInvitationOperation.ts",

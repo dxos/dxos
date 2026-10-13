@@ -59,8 +59,11 @@ const run = (name: string, args: string[]): void => {
 };
 
 const mainBase = values.base ? null : mainMergeBase(values.main ? [values.main, 'origin/main', 'main'] : undefined);
-// Only a review of the whole PR can stand in for the stores before it.
-const priors = mainBase ? findPrReviews(mainBase, root).filter((review) => review.slug !== slug) : [];
+// Only a review of the whole PR can stand in for the stores before it, and only for fast ones: a
+// full review also judged `system-one: off` rules, whose findings a fast run would never re-raise.
+const priors = mainBase
+  ? findPrReviews(mainBase, root).filter((review) => review.slug !== slug && review.mode === 'fast')
+  : [];
 // Deleting a store whose index did not parse would drop its dismissals unseen.
 const unreadable = priors.filter((review) => review.error);
 if (unreadable.length > 0) {

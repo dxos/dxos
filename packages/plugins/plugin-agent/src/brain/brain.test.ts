@@ -22,22 +22,12 @@ import { HasSubject, Message, Organization, Person } from '@dxos/types';
 
 import { AgentOperationHandlerSet } from '#operations';
 import { BrainSkill, ConversationSkill, GoalsSkill, ModesSkill, RelaySkill } from '#skills';
-import {
-  AgentOperation,
-  ChatParticipant,
-  FactEntry,
-  Goal,
-  Memory,
-  Mode,
-  Relay,
-  type Trigger,
-  TriggerOperation,
-} from '#types';
+import { AgentOperation, ChatParticipant, Goal, Memory, Mode, Relay, type Trigger, TriggerOperation } from '#types';
 
 import { loadChats } from '../operations/agent-skills.ts';
 import { COMPOSE_PROMPT } from '../operations/compose-update.ts';
 import { BRAIN_SCENARIO as SCENARIO } from './scenario.ts';
-import { makeTestBrain } from './testing.ts';
+import { createLocalAgent, makeTestBrain, makeTestSpaceLayer, noChannelBackends } from './testing.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -110,12 +100,16 @@ const makeScript =
 
 const refs: Refs = {};
 const brain = makeTestBrain();
+const testSpaceLayer = makeTestSpaceLayer([
+  { did: SCENARIO.alice.did, displayName: 'Alice' },
+  { did: SCENARIO.bob.did, displayName: 'Bob' },
+]);
 
-const TestLayer = brain.layer.pipe(
+const TestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
   Layer.provideMerge(
     AssistantTestLayer({
       operationHandlers: AgentOperationHandlerSet,
-      extraServices: brain.layer,
+      extraServices: Layer.mergeAll(brain.layer, testSpaceLayer, noChannelBackends),
       types: [
         Agent.Agent,
         Chat.Chat,
@@ -131,8 +125,6 @@ const TestLayer = brain.layer.pipe(
         Mode.Mode,
         Relay.Relay,
         Message.Message,
-        FactEntry.FactEntry,
-        FactEntry.ExtractionPass,
       ],
       skills: [ConversationSkill.make(), RelaySkill.make(), ModesSkill.make(), GoalsSkill.make(), BrainSkill.make()],
       aiService: ScriptedLanguageModel.scriptedAiService(makeScript(refs)),
@@ -142,7 +134,7 @@ const TestLayer = brain.layer.pipe(
 
 /** Kai, with a private chat for Alice and one for Bob. */
 const setup = Effect.fnUntraced(function* () {
-  const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: SCENARIO.agent });
+  const { agent: agentRef } = yield* createLocalAgent(SCENARIO.agent);
   const agent = yield* Database.load(agentRef);
   const open = (identityDid: string, name: string) =>
     Operation.invoke(AgentOperation.OpenPrivateChat, { agent: agentRef, identityDid, name }).pipe(
@@ -198,7 +190,7 @@ describe('agent brain (local)', () => {
         expect(ChatParticipant.getOwner(bob.chat)).toBe(SCENARIO.bob.did);
 
         yield* say(alice.chat, 'Alice', SCENARIO.alice.ask);
-        expect(watchesOn(brain.triggers.list(agent.id), 'Bob')).toHaveLength(1);
+        expect(watchesOn(brain.triggers.list(agent.id), SCENARIO.bob.did)).toHaveLength(1);
 
         yield* say(bob.chat, 'Bob', SCENARIO.bob.working);
         yield* settle(alice.chat);
@@ -229,16 +221,16 @@ describe('agent brain (local)', () => {
 
         const store = brain.facts(agent.id);
         expect(store).toBeDefined();
-        const facts = store ? yield* store.query({ subjectEntity: 'bob' }) : [];
+        const facts = store ? yield* store.query({ subjectEntity: SCENARIO.bob.did }) : [];
         expect(facts.map(({ assertion, attribution }) => ({ assertion, speaker: attribution.agent }))).toEqual([
           {
             assertion: expect.objectContaining({
-              subject: expect.objectContaining({ entity: 'bob' }),
+              subject: expect.objectContaining({ entity: SCENARIO.bob.did }),
               predicate: 'works on',
               object: expect.objectContaining({ entity: SCENARIO.workEntity }),
               quote: SCENARIO.bob.working,
             }),
-            speaker: 'bob',
+            speaker: SCENARIO.bob.did,
           },
         ]);
       },
@@ -261,7 +253,7 @@ describe('agent brain (local)', () => {
         ]);
         expect(goals[0].owners.map((owner) => owner.target?.id)).toEqual([bob.person.id]);
 
-        const [watch, ...others] = watchesOn(brain.triggers.list(agent.id), 'Alice');
+        const [watch, ...others] = watchesOn(brain.triggers.list(agent.id), SCENARIO.alice.did);
         expect(others).toHaveLength(0);
         expect(watch.goal?.target?.id).toBe(goals[0].id);
       },
@@ -316,7 +308,7 @@ describe('agent brain (local)', () => {
     'keeps a private chat apart from a shared chat with the same person',
     Effect.fnUntraced(
       function* ({ expect }) {
-        const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: SCENARIO.agent });
+        const { agent: agentRef } = yield* createLocalAgent(SCENARIO.agent);
         const carol = yield* Database.add(
           Person.make({
             fullName: 'Carol',

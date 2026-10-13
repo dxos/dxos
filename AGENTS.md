@@ -227,7 +227,8 @@ is invisible there until something publishes it.
   trip, depends on no external service, and picks up an export or subpath that does not exist in any
   published build yet — which is exactly the inner loop for a feature spanning both repos.
 - Do not dispatch `.github/workflows/pkg-pr-new.yml` to unblock local work. A pinned build is for a
-  commit someone else consumes (a catalog bump, edge CI), not for iterating.
+  commit someone else consumes (a catalog bump, edge CI), not for iterating. It publishes `main` once a
+  day (06:00 UTC); to bump edge to a commit that landed since, dispatch it first.
 - The `file:` overrides live in edge's root `package.json` and must not be committed there; edge's
   `CLAUDE.md` covers the undo.
 
@@ -282,6 +283,10 @@ Deeper conventions:
 - Prose a human reads — PR bodies, commit messages, walkthroughs, design docs, review
   comments, long chat replies → `readable-prose` skill. Review is the bottleneck; write for
   one pass.
+- Text that must be parsed with no help — procedures, runbooks, error messages, prompts,
+  tool descriptions, or anything the user asks for in STE / ASD-STE100 →
+  `simplified-technical-english` skill (controlled vocabulary, 20/25-word sentence caps,
+  and a check script).
 
 ## Git & PR workflow
 
@@ -299,8 +304,12 @@ Deeper conventions:
   `depot ci diagnose --job <job-id>`, `depot ci retry <run-id> --job <job-id>`. The
   `?job=` parameter of the check run's `details_url` is the job id. → `depot-ci` skill.
 - Commit hygiene → see "Commit nothing silently" in Non-negotiables.
+- **Every push to a ready PR runs the full Check suite.** Batch commits into one push. Merge `main`
+  in only to resolve a conflict: the merge queue already tests the PR on top of `main`. To keep
+  iterating on a ready PR, convert it back to a draft (`gh pr ready --undo`) and mark it ready when done.
 - Creating or landing a PR is a procedure — use the `submit-pr` and `land`
-  skills. Always surface the Composer preview URL next to the PR link.
+  skills. A PR gets a Composer preview only with the `preview` label, added only on request; when it
+  has one, surface the preview URL next to the PR link.
 - **Every PR body is built from the `pr-description` skill's templates.** Summary
   and Safety always; Bugfix, Architecture (diagrams, new cross-component
   dependencies) and UI (screenshots, Autocue videos) whenever they apply, and
@@ -367,6 +376,9 @@ Do not paste real credential values into any shell command, and do not paste the
 - **Skills** (`.agents/skills/*`) — deep, task-specific how-to. Follow the
   relevant skill for the area you're working in (echo, effect, composer-ui,
   operations, testing, code-style, submit-pr, pr-description, land, …).
+- **Writing in Simplified Technical English (ASD-STE100)** — the rules, the approved word
+  list, and `scripts/ste_check.py` → `simplified-technical-english` skill
+  (`.agents/skills/simplified-technical-english/SKILL.md`).
 - **Reading a red `Check` run** — CI logs, failed test lists, failure diagnoses and
   job retries via the `depot` CLI and `DEPOT_TOKEN` → `depot-ci` skill
   (`.agents/skills/depot-ci/SKILL.md`).

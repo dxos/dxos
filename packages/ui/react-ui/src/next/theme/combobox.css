@@ -89,11 +89,29 @@
     color: var(--color-fg-muted);
   }
 
-  /* The popup's search field stays above the options as they scroll, which the viewport's scroll padding keeps clear. */
+  /*
+   * A popup with a search field: a dialog framing the field above a ScrollArea of the options, so they never scroll
+   * beneath it; sized as a scrolling popup is.
+   */
+  .dx-combobox-frame {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    max-width: var(--available-width, none);
+    max-height: min(var(--available-height, 20rem), 20rem);
+    padding-block: 0;
+    overflow: hidden;
+    --scroll-thumb-inset: var(--dx-focus-ring-width);
+  }
+  .dx-combobox-frame > .dx-scroll-root > .dx-scroll-viewport {
+    padding: var(--dx-control-inset);
+    scroll-padding-block: var(--dx-control-inset);
+  }
+  .dx-combobox-frame > .dx-scroll-root[data-overflow-y] > .dx-scroll-viewport {
+    padding-inline-end: calc(var(--dx-scroll-width) + 2 * var(--scroll-thumb-inset));
+  }
+
+  /* The popup's search field, above the scrolling options. */
   .dx-combobox-search {
-    position: sticky;
-    top: 0;
-    z-index: 1;
     display: block;
     width: 100%;
     height: var(--dx-block-size);
@@ -105,9 +123,6 @@
     background: var(--surface-bg);
     font: inherit;
     color: inherit;
-  }
-  .dx-scroll-viewport:has(> .dx-combobox-search) {
-    scroll-padding-block-start: var(--dx-block-size);
   }
 
   /*

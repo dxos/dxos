@@ -4,6 +4,7 @@
 
 import { describe, test } from 'vitest';
 
+import * as Scene from '../scene.ts';
 import { parse, read } from './parse.ts';
 import { formatId } from './print.ts';
 
@@ -94,6 +95,21 @@ describe('semantic statements', () => {
       { x: 1.5, y: undefined, unit: 'cell' },
       { x: undefined, y: 40, unit: 'scene' },
     ]);
+  });
+
+  test('edges: `tail=arrow` is one connector headed at both ends', ({ expect }) => {
+    const { diagram, problems } = read(`
+      node A  node B
+      edge A -> B "syncs" tail=arrow
+    `);
+    expect(problems).toEqual([]);
+    expect(diagram?.edges).toHaveLength(1);
+    expect(diagram?.edges[0]).toMatchObject({ label: 'syncs', tail: 'arrow' });
+    expect(Scene.markersOf({ tail: 'arrow' })).toEqual({
+      start: 'arrow',
+      end: 'arrow',
+      dashed: false,
+    });
   });
 
   test('buses: a fan with `bus`, and named buses across statements', ({ expect }) => {

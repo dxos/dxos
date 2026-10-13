@@ -82,11 +82,13 @@ export const ConnectionSettingsArticle = (_props: ConnectionSettingsArticleProps
                   label: connection.name ?? connection.connectorId ?? connection.id,
                 }))}
               >
-                <Listbox.Content aria-label={t('connections.label')}>
-                  {connections.map((connection) => (
-                    <ConnectionRow key={connection.id} connection={connection} onSelect={handleSelect} />
-                  ))}
-                </Listbox.Content>
+                <Listbox.Viewport>
+                  <Listbox.Content aria-label={t('connections.label')}>
+                    {connections.map((connection) => (
+                      <ConnectionRow key={connection.id} connection={connection} onSelect={handleSelect} />
+                    ))}
+                  </Listbox.Content>
+                </Listbox.Viewport>
               </Listbox.Root>
             </Form.FieldSet>
           )}

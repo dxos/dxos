@@ -5,10 +5,9 @@
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
-import { type ShapeDef, createAnchorMap } from '@dxos/react-ui-canvas-editor';
-
 import { BeaconComponent } from './Beacon.tsx';
-import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs.ts';
+import { createPorts, defineComputeNode } from './common/index.ts';
+import { ComputeShape, type CreateShapeProps, createAnchorId, createShape, withZ } from './defs.ts';
 
 // Kept out of `Beacon.tsx`: react-refresh only fast-refreshes a module whose
 // exports are all components, so values exported beside them force a full page reload on every edit.
@@ -26,14 +25,16 @@ export type CreateBeaconProps = CreateShapeProps<BeaconShape>;
 export const createBeacon = (props: CreateBeaconProps) =>
   createShape<BeaconShape>({ type: 'beacon', size: { width: 64, height: 64 }, ...props });
 
-export const beaconShape: ShapeDef<BeaconShape> = {
+export const beaconNodeDef = defineComputeNode<BeaconShape>({
   type: 'beacon',
   name: 'Beacon',
   icon: 'ph--sun--regular',
+  group: 'Outputs',
+  schema: withZ(BeaconShape),
   component: BeaconComponent,
-  createShape: createBeacon,
-  getAnchors: (shape) =>
-    createAnchorMap(shape, {
+  create: createBeacon,
+  ports: (shape) =>
+    createPorts(shape.size, {
       [createAnchorId('input')]: { x: -1, y: 0 },
     }),
-};
+});

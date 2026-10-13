@@ -7,9 +7,9 @@ import { type Page, expect, test } from '@playwright/test';
 import { setupPage, storybookUrl } from '@dxos/test-utils/playwright';
 
 const PORT = 9007;
-const TRANSFORM_URL = storybookUrl('ui-react-ui-canvas-compute-scene--transform', PORT);
-const LOGIC_URL = storybookUrl('ui-react-ui-canvas-compute-scene--logic', PORT);
-const TEMPLATE_URL = storybookUrl('ui-react-ui-canvas-compute-scene--template', PORT);
+const TRANSFORM_URL = storybookUrl('ui-react-ui-canvas-compute-circuits--transform', PORT);
+const LOGIC_URL = storybookUrl('ui-react-ui-canvas-compute-circuits--logic', PORT);
+const TEMPLATE_URL = storybookUrl('ui-react-ui-canvas-compute-circuits--template', PORT);
 
 /** The die a `random` shape draws; its icon name changes as it spins, so match the family. */
 const DICE = 'svg:has(use[href*="dice"])';

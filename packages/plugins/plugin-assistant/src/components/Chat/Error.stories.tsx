@@ -12,7 +12,7 @@ import * as Toast from '@dxos/react-ui/Toast';
 import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
 
-import { AiUsageQuotaError, parseError } from '../../processor/index.ts';
+import { AiUsageQuotaError, parseError } from '../../chat-model/index.ts';
 
 type FailureToastProps = {
   /**

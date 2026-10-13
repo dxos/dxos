@@ -80,6 +80,9 @@ export const factToTriples = (fact: Fact): Quad[] => {
   if (fact.assertion.object.kind === 'entity' && fact.assertion.object.label) {
     triples.push(quad(node, Vocab.sx('objectLabel'), Vocab.str(fact.assertion.object.label), g));
   }
+  if (fact.attribution.agentLabel) {
+    triples.push(quad(node, Vocab.sx('agentLabel'), Vocab.str(fact.attribution.agentLabel), g));
+  }
   if (fact.attribution.wasDerivedFrom) {
     for (const derived of fact.attribution.wasDerivedFrom) {
       triples.push(quad(node, Vocab.sx('derivedFrom'), Vocab.str(derived), g));
@@ -161,6 +164,7 @@ export const triplesToFacts = (quads: Quad[]): Fact[] => {
         : {}),
       attribution: {
         ...(agentTerm !== undefined ? { agent: Vocab.entityIdFromIri(agentTerm.value) } : {}),
+        ...(one('agentLabel') !== undefined ? { agentLabel: one('agentLabel') } : {}),
         source: one('wasDerivedFrom'),
         generatedAtTime: one('generatedAtTime'),
         ...(derivedFrom.length > 0 ? { wasDerivedFrom: derivedFrom } : {}),

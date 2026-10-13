@@ -30,10 +30,10 @@ session can see everything in flight and resume the right one.
 
 **Registry** — one entry per project, recording where its docs and PRs live. Its
 location is **not** fixed by this skill: the `/dxos:project` directive ends with a
-`BACKEND:` line naming the store (by default the file
-`.agents/projects/registry.yml`, overridable via `DX_PROJECT_REGISTRY`). Obey
-that line; a future backend is a service rather than a file, and the schema below
-is the shape either way.
+`BACKEND:` line naming the store (by default the Composer MCP server; with
+`DX_PROJECT_BACKEND=file`, the file `.agents/projects/registry.yml`, overridable
+via `DX_PROJECT_REGISTRY`). Obey that line; the schema below is the shape either
+way.
 
 ```yaml
 projects:

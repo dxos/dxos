@@ -15,6 +15,7 @@ import { IconsPlugin, iconSymbolPattern } from '@dxos/vite-plugin-icons';
 import importSource from '@dxos/vite-plugin-import-source';
 import { ModuleUrlPlugin } from '@dxos/vite-plugin-module-url';
 
+import { reactCompilerOptions } from '../../../react-compiler.config.ts';
 import { isPerfBundle, perfBundlePlugin } from './perf-bundle.ts';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -500,8 +501,9 @@ export const createConfig = ({
           // https://www.npmjs.com/package/@vitejs/plugin-react
           // The oxc-based plugin (not SWC) keeps the React/JSX transform within rolldown's
           // pipeline, aligning with composer-app and composer-crx; this drops storybook-react as a
-          // consumer of `@vitejs/plugin-react-swc`.
-          react(),
+          // consumer of `@vitejs/plugin-react-swc`. `.jsx`/`.tsx` only, as in composer-app: over plain
+          // script modules it emits Fast Refresh registrations that throw in the client's SharedWorker.
+          react({ compiler: reactCompilerOptions, include: /\.[jt]sx$/ }),
 
           // https://www.npmjs.com/package/vite-plugin-turbosnap
           turbosnap({
@@ -549,8 +551,12 @@ export const createConfig = ({
             contentPaths: content,
             // Keeps every `PxIcons` entry in the sprite so stories paint without a round trip.
             scanPaths: [resolve(rootDir, 'packages/ui/ui-icons/src/index.ts')],
-            // Only `px` is served: the Phosphor catalog is ~9,000 files, too many to hand to a story.
-            assets: [{ route: '/px-icons', dir: extendedIconsDir }],
+            // Phosphor is served but never copied (~9,000 files): a story module loaded after the
+            // iframe fetched the sprite misses its icons there, and the registry fetches them instead.
+            assets: [
+              { route: '/phosphor', dir: iconsDir, copy: false },
+              { route: '/px-icons', dir: extendedIconsDir },
+            ],
             spriteFile: 'icons.svg',
           }),
 

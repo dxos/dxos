@@ -12,9 +12,10 @@ import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, DXN, Feed, Hypergraph, Obj, Ref } from '@dxos/echo';
+import { Space } from '@dxos/halo';
 import { Channel } from '@dxos/types';
 
-import * as FactEntry from './FactEntry.ts';
+import * as BrainService from './BrainService.ts';
 
 /** Creates an agent (instructions, feed and companion chat) in the space. */
 export const CreateAgent = Operation.make({
@@ -167,8 +168,7 @@ export const EnsureParticipantChat = Operation.make({
     description: "Returns the agent's Composer chat with a person, creating it if absent.",
     icon: 'ph--user-circle-plus--regular',
   },
-  // The graph reaches the agent's other spaces, whose memory a new chat starts with.
-  services: [Database.Service, Hypergraph.Service],
+  services: [Database.Service],
   input: Schema.Struct({
     agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent.' }),
     person: Ref.Ref(Obj.Unknown).annotate({ description: 'The person the chat is with.' }),
@@ -195,11 +195,13 @@ export const OpenPrivateChat = Operation.make({
     description: "Returns the member's private chat with the agent, creating it (and their person) if absent.",
     icon: 'ph--lock-key--regular',
   },
-  services: [Database.Service, Hypergraph.Service],
+  services: [Database.Service],
   input: Schema.Struct({
     agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent.' }),
     identityDid: Schema.String.annotate({ description: "The member's identity DID; the chat is private to it." }),
-    name: Schema.String.annotate({ description: "The member's display name, for a person created on first use." }),
+    name: Schema.optional(
+      Schema.String.annotate({ description: "The member's display name, for a person created on first use." }),
+    ),
     remote: Schema.optional(
       Schema.Boolean.annotate({
         description: 'Run the chat on EDGE, so it continues (and can be woken) with the app closed.',
@@ -213,16 +215,15 @@ export const OpenPrivateChat = Operation.make({
 });
 
 /**
- * Brings an agent into the space the operation runs in: the agent joins it as a presence of itself — its
- * name, DID and instructions, linked to its home by `AgentPresence.homeKey` — and keeps one memory across
- * every space it is in. Idempotent: the agent's existing presence in the space (or the agent itself, in its
- * home) is returned.
+ * Brings an agent into the space the operation runs in, as a presence of itself: its name, DID and instructions,
+ * linked to its home by `AgentPresence.homeKey`, so it reads and writes its home's brain. Idempotent: the
+ * agent's existing presence in the space (or the agent itself, in its home) is returned.
  */
 export const InviteAgent = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.agent.invite'),
     name: 'Invite agent',
-    description: 'Invites an agent from another space into this one; it keeps its memory of the spaces it is in.',
+    description: 'Invites an agent from another space into this one; it keeps one brain across the spaces it is in.',
     icon: 'ph--user-plus--regular',
   },
   services: [Database.Service, Hypergraph.Service],
@@ -236,8 +237,8 @@ export const InviteAgent = Operation.make({
 });
 
 /**
- * Reads a source — a markdown document, text, chat transcript or web page — and appends the RDF facts
- * it states to that source's annotation feed in the agent's space. A direct model call: no chat is created.
+ * Reads a source — a markdown document, text, chat transcript or web page — and pushes the RDF facts it
+ * states to the agent's brain, delivering any watch they wake. A direct model call: no chat is created.
  * A chat is read incrementally: only the messages after the last read.
  */
 export const ReadSource = Operation.make({
@@ -248,7 +249,7 @@ export const ReadSource = Operation.make({
       'Reads a document, chat transcript or web page and records the facts it states, with who said them and when.',
     icon: 'ph--book-open-text--regular',
   },
-  services: [Database.Service, AiService.AiService],
+  services: [Database.Service, AiService.AiService, BrainService.BrainService, Space.Service],
   input: Schema.Struct({
     agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent that reads.' }),
     source: Schema.optional(
@@ -260,11 +261,10 @@ export const ReadSource = Operation.make({
     ),
   }),
   output: Schema.Struct({
-    pass: Schema.optional(
-      Ref.Ref(FactEntry.ExtractionPass).annotate({
-        description: 'The extraction pass recorded; absent when a chat has no messages since the last read.',
-      }),
-    ),
-    facts: Schema.Number.annotate({ description: 'Facts recorded.' }),
+    facts: Schema.Number.annotate({
+      description: 'Facts recorded; none when a chat has no messages since the last read.',
+    }),
+    fired: Schema.Array(Schema.String).annotate({ description: 'The ids of the triggers that fired.' }),
+    undelivered: Schema.Array(Schema.String).annotate({ description: 'Why a fired notification was not delivered.' }),
   }),
 });

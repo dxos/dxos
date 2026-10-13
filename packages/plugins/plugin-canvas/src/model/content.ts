@@ -12,14 +12,21 @@ import * as Schema from 'effect/Schema';
 
 import { type ContentMap } from '@dxos/diagram';
 import {
+  DEFAULT_LAYER,
+  type FrameNode,
+  Layer,
+  LINE_STYLES,
   Link,
   type Node,
   NodeBase,
-  type PortalNode,
   type Scene,
   type SceneId,
   type SceneMap,
-  isPortalNode,
+  StyleClass,
+  type StyleMap,
+  elementLayer,
+  isFrameNode,
+  sortByZ,
 } from '@dxos/react-ui-canvas/scene';
 
 /**
@@ -43,6 +50,8 @@ export const CanvasRecord = Schema.Struct({
   lattice: Schema.optional(Schema.Boolean),
   /** Minor grid spacing in scene px; the engine's default when unset. */
   grid: Schema.optional(Schema.Number),
+  /** Opens read-only for a viewer who has not chosen otherwise (their view state's `readonly` wins). */
+  readonly: Schema.optional(Schema.Boolean),
 });
 export type CanvasRecord = Schema.Schema.Type<typeof CanvasRecord>;
 
@@ -51,6 +60,8 @@ export const SceneRecord = Schema.Struct({
   kind: Schema.Literal('scene'),
   id: Schema.String,
   name: Schema.optional(Schema.String),
+  /** The scene's layers, kept with it since they are few and change together. */
+  layers: Schema.optional(Schema.Record(Schema.String, Layer)),
 });
 export type SceneRecord = Schema.Schema.Type<typeof SceneRecord>;
 
@@ -102,7 +113,7 @@ export const isElementRecord = Schema.is(ElementRecord);
 /** Plain data from a record that may be an ECHO proxy: records must not alias live content. */
 export const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value));
 
-const toRoot = (node: PortalNode): PortalNode => ({ ...node, scene: ROOT_SCENE_ID });
+const toRoot = (node: FrameNode): FrameNode => ({ ...node, scene: ROOT_SCENE_ID });
 
 /** Whether the content was saved with the legacy root scene id, so `migrateContent` would change it. */
 export const hasLegacyRoot = (content: ContentMap): boolean => {
@@ -135,9 +146,9 @@ export const migrateContent = (content: ContentMap): boolean => {
     const record: unknown = value;
     if (isNodeRecord(record)) {
       const node = clone(record.node);
-      const portal = isPortalNode(node) && node.scene === LEGACY_ROOT_SCENE_ID;
+      const portal = isFrameNode(node) && node.scene === LEGACY_ROOT_SCENE_ID;
       if (record.scene === LEGACY_ROOT_SCENE_ID || portal) {
-        const next: Node = isPortalNode(node) && portal ? toRoot(node) : node;
+        const next: Node = isFrameNode(node) && portal ? toRoot(node) : node;
         content[key] = {
           ...clone(record),
           scene: record.scene === LEGACY_ROOT_SCENE_ID ? ROOT_SCENE_ID : record.scene,
@@ -146,6 +157,76 @@ export const migrateContent = (content: ContentMap): boolean => {
       }
     } else if (isLinkRecord(record) && record.scene === LEGACY_ROOT_SCENE_ID) {
       content[key] = { ...clone(record), scene: ROOT_SCENE_ID } satisfies LinkRecord;
+    }
+  }
+  return true;
+};
+
+/** Each scene's layers, bottom first, as the engine reads them: a scene record naming none has the default one. */
+const layersByScene = (content: ContentMap): Map<SceneId, Layer[]> => {
+  const layers = new Map<SceneId, Layer[]>();
+  for (const value of Object.values(content)) {
+    const record: unknown = value;
+    if (isSceneRecord(record)) {
+      const named = sortByZ(Object.values(record.layers ?? {}));
+      layers.set(record.id, named.length > 0 ? named : [DEFAULT_LAYER]);
+    }
+  }
+  return layers;
+};
+
+/** The element record's element with its layer named: the one it is drawn on (`elementLayer`). */
+const placed = (record: ElementRecord, layers: readonly Layer[]): ElementRecord | undefined => {
+  const element = record.kind === 'node' ? record.node : record.link;
+  const layer = elementLayer(element, layers);
+  if (element.layer === layer) {
+    return undefined;
+  }
+  return record.kind === 'node'
+    ? { ...clone(record), node: { ...clone(record.node), layer } }
+    : { ...clone(record), link: { ...clone(record.link), layer } };
+};
+
+/**
+ * Whether the content was saved before layers, or has an element on a layer its scene does not have, so
+ * `migrateLayers` would change it.
+ */
+export const hasUnplacedLayers = (content: ContentMap): boolean => {
+  const layers = layersByScene(content);
+  return Object.values(content).some((value) => {
+    const record: unknown = value;
+    if (isSceneRecord(record)) {
+      return Object.keys(record.layers ?? {}).length === 0;
+    }
+    if (isElementRecord(record)) {
+      const scene = layers.get(record.scene);
+      return scene !== undefined && placed(record, scene) !== undefined;
+    }
+    return false;
+  });
+};
+
+/**
+ * Names every scene's layers and every element's layer in place, so what the panels show is what is stored: a scene
+ * with none gets the default layer, and an element with none (or one its scene lacks) the layer it is drawn on, the
+ * bottom one. Without it an element naming no layer follows whichever layer is at the bottom, so adding a layer there
+ * would take it. Returns whether anything changed.
+ */
+export const migrateLayers = (content: ContentMap): boolean => {
+  if (!hasUnplacedLayers(content)) {
+    return false;
+  }
+  const layers = layersByScene(content);
+  for (const [key, value] of Object.entries(content)) {
+    const record: unknown = value;
+    if (isSceneRecord(record) && Object.keys(record.layers ?? {}).length === 0) {
+      content[key] = { ...clone(record), layers: { [DEFAULT_LAYER.id]: DEFAULT_LAYER } } satisfies SceneRecord;
+    } else if (isElementRecord(record)) {
+      const scene = layers.get(record.scene);
+      const next = scene && placed(record, scene);
+      if (next) {
+        content[key] = next;
+      }
     }
   }
   return true;
@@ -193,6 +274,113 @@ export const rootOf = (content: ContentMap): SceneId | undefined => {
   return isCanvasRecord(canvas) ? canvas.root : undefined;
 };
 
+/**
+ * A link saved with the retired `directed: true` reads as an arrow at its end; the next write stores it as
+ * `ends`, since the record then differs from the link. Takes a fresh clone, which it edits in place.
+ */
+const withLegacyDirection = (link: Link): Link => {
+  const legacy: unknown = Reflect.get(link, 'directed');
+  if (legacy === undefined) {
+    return link;
+  }
+  Reflect.deleteProperty(link, 'directed');
+  return legacy === true && !link.ends ? { ...link, ends: { end: 'arrow' } } : link;
+};
+
+/** The drawing's style classes; a record that is not one (written by a newer host) is left out. */
+export const readStyles = (styles: Record<string, unknown> | undefined): StyleMap => {
+  const result: Record<string, StyleClass> = {};
+  for (const [id, record] of Object.entries(clone(styles ?? {}))) {
+    if (Schema.is(StyleClass)(record)) {
+      result[id] = record;
+    }
+  }
+  return result;
+};
+
+/**
+ * Writes `styles` over the canvas's classes record by record, so ECHO merges concurrent edits per class. A record
+ * `readStyles` left out (written by a newer host) is kept, since this host never saw it to delete it.
+ */
+export const writeStyles = (target: Record<string, unknown>, styles: StyleMap): void => {
+  for (const id of Object.keys(target)) {
+    if (!(id in styles) && Schema.is(StyleClass)(target[id])) {
+      delete target[id];
+    }
+  }
+  for (const [id, styleClass] of Object.entries(styles)) {
+    if (JSON.stringify(target[id]) !== JSON.stringify(styleClass)) {
+      target[id] = clone(styleClass);
+    }
+  }
+};
+
+/** The style class a node or link record names. */
+const elementClass = (record: unknown): string | undefined => {
+  if (isNodeRecord(record)) {
+    return record.node.class;
+  }
+  return isLinkRecord(record) ? record.link.class : undefined;
+};
+
+/** How many nodes and links name each style class. */
+export const styleClassUses = (content: ContentMap): Record<string, number> => {
+  const uses: Record<string, number> = {};
+  for (const record of Object.values(content)) {
+    const id = elementClass(record);
+    if (id) {
+      uses[id] = (uses[id] ?? 0) + 1;
+    }
+  }
+  return uses;
+};
+
+/**
+ * Removes a style class, in place. The elements that took it keep its look as their own (under anything they set
+ * themselves), so deleting a class changes how nothing looks, only what restyles together.
+ */
+export const deleteStyleClass = (content: ContentMap, styles: Record<string, unknown>, id: string): void => {
+  const [styleClass] = Object.values(readStyles({ [id]: styles[id] }));
+  delete styles[id];
+  for (const [key, record] of Object.entries(content)) {
+    if (isNodeRecord(record) && record.node.class === id) {
+      const { class: _, ...node } = record.node;
+      const style = { ...styleClass?.style, ...node.style };
+      content[key] = { ...record, node: { ...node, ...(Object.keys(style).length > 0 ? { style } : {}) } };
+    } else if (isLinkRecord(record) && record.link.class === id) {
+      const { class: _, ...link } = record.link;
+      // A link keeps the common base of the class's style, all it ever drew.
+      const base = styleClass?.style;
+      const style = {
+        ...(base?.hue ? { hue: base.hue } : {}),
+        ...(base?.lineStyle ? { lineStyle: base.lineStyle } : {}),
+        ...link.style,
+      };
+      content[key] = { ...record, link: { ...link, ...(Object.keys(style).length > 0 ? { style } : {}) } };
+    }
+  }
+};
+
+/**
+ * A link saved with the retired `line` (`{ hue, dash }`) reads as its `style`; the next write stores it so. Takes a
+ * fresh clone, which it edits in place.
+ */
+const withLegacyLine = (link: Link): Link => {
+  const legacy: unknown = Reflect.get(link, 'line');
+  if (legacy === undefined) {
+    return link;
+  }
+  Reflect.deleteProperty(link, 'line');
+  if (typeof legacy !== 'object' || legacy === null || link.style) {
+    return link;
+  }
+  const hue: unknown = Reflect.get(legacy, 'hue');
+  const dash: unknown = Reflect.get(legacy, 'dash');
+  const lineStyle = LINE_STYLES.find((candidate) => candidate === dash);
+  const style = { ...(typeof hue === 'string' ? { hue } : {}), ...(lineStyle ? { lineStyle } : {}) };
+  return Object.keys(style).length > 0 ? { ...link, style } : link;
+};
+
 /** Scenes assembled from the records; nodes and links of an unknown scene are dropped. */
 export const readScenes = (content: ContentMap): SceneMap => {
   const headers: Record<SceneId, SceneRecord> = {};
@@ -209,12 +397,18 @@ export const readScenes = (content: ContentMap): SceneMap => {
     if (isNodeRecord(record) && nodes[record.scene]) {
       nodes[record.scene][record.node.id] = clone(record.node);
     } else if (isLinkRecord(record) && links[record.scene]) {
-      links[record.scene][record.link.id] = clone(record.link);
+      links[record.scene][record.link.id] = withLegacyLine(withLegacyDirection(clone(record.link)));
     }
   }
   const scenes: Record<SceneId, Scene> = {};
   for (const header of Object.values(headers)) {
-    scenes[header.id] = { id: header.id, name: header.name, nodes: nodes[header.id], links: links[header.id] };
+    scenes[header.id] = {
+      id: header.id,
+      name: header.name,
+      nodes: nodes[header.id],
+      links: links[header.id],
+      ...(header.layers ? { layers: clone(header.layers) } : {}),
+    };
   }
   return scenes;
 };
@@ -230,7 +424,12 @@ export const writeScenes = (content: ContentMap, scenes: SceneMap): boolean => {
 
   for (const scene of Object.values(scenes)) {
     const key = sceneKey(scene.id);
-    const record: SceneRecord = { kind: 'scene', id: scene.id, ...(scene.name ? { name: scene.name } : {}) };
+    const record: SceneRecord = {
+      kind: 'scene',
+      id: scene.id,
+      ...(scene.name ? { name: scene.name } : {}),
+      ...(scene.layers ? { layers: clone(scene.layers) } : {}),
+    };
     if (!same(content[key], record)) {
       content[key] = record;
       changed = true;

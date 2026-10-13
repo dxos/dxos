@@ -64,47 +64,61 @@ export type EvalToolkitOptions = {
   readonly timeout?: Duration.Input;
 };
 
+/** One evaluation, as {@link evaluate} runs it: the program, plus everything that binds it to a workspace. */
+export type EvaluateOptions = EvalToolkitOptions & {
+  /** The program, in the dialect's own syntax, before the dialect wraps it. */
+  readonly code: string;
+};
+
 /**
- * The toolkit a code-mode turn hands the model: one `eval` tool over the turn's dialect and
- * sandbox. Rebuilt per turn, since a skill enabled mid-request changes what the operations are.
+ * Runs one program exactly as the `eval` tool does, so any other caller (e.g. `dx eval`) answers
+ * with the same text the model would have seen: what the code printed, or — failing — what it printed
+ * before the throw with the error as the last line.
  */
-export const makeEvalToolkit = ({
+export const evaluate = Effect.fnUntraced(function* ({
+  code,
   dialect,
   sandbox,
   runtime,
   operations,
   maxOutput = DEFAULT_MAX_OUTPUT,
   timeout,
-}: EvalToolkitOptions): OpaqueToolkit.OpaqueToolkit =>
+}: EvaluateOptions) {
+  const printer = makePrinter(maxOutput);
+  const result = yield* sandbox
+    .evaluate({
+      code: dialect.wrap(code),
+      dialect,
+      context: { runtime, operations, print: printer.print },
+      timeout,
+    })
+    .pipe(Effect.result);
+
+  if (Result.isFailure(result)) {
+    // A tool failure reaches the model as a failed result, not a failed turn, so it can still
+    // read the message and write different code.
+    log.info('code-mode evaluation failed', { dialect: dialect.name, message: result.failure.message });
+    printer.fail(`Error: ${conciseError(result.failure.message)}${hintFor(result.failure.message)}`);
+    return yield* Effect.fail(printer.output());
+  }
+
+  if (result.success !== undefined && printer.isEmpty()) {
+    // A program that printed nothing but produced a value: show the value rather than nothing.
+    printer.print(result.success);
+  }
+
+  return printer.output();
+});
+
+/**
+ * The toolkit a code-mode turn hands the model: one `eval` tool over the turn's dialect and
+ * sandbox. Rebuilt per turn, since a skill enabled mid-request changes what the operations are.
+ */
+export const makeEvalToolkit = (options: EvalToolkitOptions): OpaqueToolkit.OpaqueToolkit =>
   OpaqueToolkit.make(
     EvalToolkitDefinition,
     EvalToolkitDefinition.toLayer({
-      [EVAL_TOOL_NAME]: Effect.fnUntraced(function* ({ code }: { code: string }) {
-        const printer = makePrinter(maxOutput);
-        const result = yield* sandbox
-          .evaluate({
-            code: dialect.wrap(code),
-            dialect,
-            context: { runtime, operations, print: printer.print },
-            timeout,
-          })
-          .pipe(Effect.result);
-
-        if (Result.isFailure(result)) {
-          // A tool failure reaches the model as a failed result, not a failed turn, so it can still
-          // read the message and write different code.
-          log.info('code-mode evaluation failed', { dialect: dialect.name, message: result.failure.message });
-          printer.fail(`Error: ${conciseError(result.failure.message)}${hintFor(result.failure.message)}`);
-          return yield* Effect.fail(printer.output());
-        }
-
-        if (result.success !== undefined && printer.isEmpty()) {
-          // A program that printed nothing but produced a value: show the value rather than nothing.
-          printer.print(result.success);
-        }
-
-        return printer.output();
-      }),
+      [EVAL_TOOL_NAME]: ({ code }: { code: string }) => evaluate({ ...options, code }),
     }),
   );
 

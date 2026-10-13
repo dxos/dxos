@@ -81,6 +81,60 @@ describe('AiContext.Binder', () => {
       .pipe(Effect.runPromise);
   });
 
+  test('a holding binder writes its bindings only when flushed', async ({ expect }) => {
+    await Effect.gen(function* () {
+      const feed = Feed.make();
+      const runtime = yield* Effect.context<Database.Service>();
+      const a = yield* Database.add(Obj.make(TypeA, {}));
+      const b = yield* Database.add(Obj.make(TypeB, {}));
+
+      const binder = new AiContext.Binder({ feed, runtime, hold: true });
+      yield* Effect.promise(() => binder.open());
+      yield* Effect.promise(() => binder.bind({ objects: [Ref.make(a), Ref.make(b)] }));
+      yield* Effect.promise(() => binder.unbind({ objects: [Ref.make(b)] }));
+      const held = binder.getObjects();
+
+      yield* Database.add(feed);
+      const beforeFlush = yield* Feed.query(feed, Query.type(AiContext.Binding)).run;
+      yield* Effect.promise(() => binder.flush());
+      yield* Effect.promise(() => binder.close());
+
+      const reader = new AiContext.Binder({ feed, runtime });
+      yield* Effect.promise(() => reader.open());
+      const reopened = reader.getObjects();
+      yield* Effect.promise(() => reader.close());
+
+      expect(held.map((obj) => Obj.getURI(obj))).toEqual([Obj.getURI(a)]);
+      expect(beforeFlush).toHaveLength(0);
+      expect(reopened.map((obj) => Obj.getURI(obj))).toEqual([Obj.getURI(a)]);
+    })
+      .pipe(Effect.provide(TestLayer))
+      .pipe(Effect.runPromise);
+  });
+
+  test('a holding binder resolves a registry skill bound by URI', async ({ expect }) => {
+    const registered = Skill.make({ key: 'org.dxos.skill.registered', name: 'Registered' });
+    await Effect.gen(function* () {
+      const runtime = yield* Effect.context<Database.Service>();
+
+      const binder = new AiContext.Binder({ feed: Feed.make(), runtime, hold: true });
+      yield* Effect.promise(() => binder.open());
+      yield* Effect.promise(() =>
+        binder.bind({ skills: [Ref.fromURI(Skill.registryURI('org.dxos.skill.registered'))] }),
+      );
+      const skills = binder.getSkills();
+      yield* Effect.promise(() => binder.close());
+
+      expect(skills.map((skill) => Skill.getKey(skill))).toEqual(['org.dxos.skill.registered']);
+    })
+      .pipe(
+        Effect.provide(
+          TestDatabaseLayer({ types: [Feed.Feed, TypeA, TypeB, Skill.Skill, Text.Text], registry: [registered] }),
+        ),
+      )
+      .pipe(Effect.runPromise);
+  });
+
   // Run between agent turns: a rejected re-read used to fail the whole agent process.
   test('a sync whose query fails keeps the current bindings', async ({ expect }) => {
     await Effect.gen(function* () {

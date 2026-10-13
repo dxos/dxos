@@ -133,4 +133,14 @@ describe('constrained projection', () => {
     const after = registry.get(projection.scene).nodes.K;
     expect(isNoteNode(after) && after.text).toBe('Renamed');
   });
+
+  test('update records style alongside the label', ({ expect }) => {
+    const registry = Registry.make();
+    const atom = Atom.keepAlive(Atom.make<ConstrainedModel>(model));
+    const projection = createConstrainedProjection({ registry, model: atom });
+    projection.apply({ kind: 'update', id: 'A', values: { style: { hue: 'teal', rounded: true } } });
+    expect(registry.get(projection.scene).nodes.A.style).toEqual({ hue: 'teal', rounded: true });
+    projection.apply({ kind: 'update', id: 'A', values: { label: 'Alpha' } });
+    expect(registry.get(projection.scene).nodes.A.style).toEqual({ hue: 'teal', rounded: true });
+  });
 });

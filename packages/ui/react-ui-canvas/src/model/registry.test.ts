@@ -26,7 +26,7 @@ const functionDef: NodeDef = {
   type: 'function',
   name: 'Function',
   icon: 'ph--function--regular',
-  key: 'F',
+  key: 'U',
   group: 'compute',
   schema: FunctionNode,
   component: UnknownNodeView,
@@ -78,13 +78,13 @@ describe('registry', () => {
 });
 
 describe('node registry', () => {
-  test('rectangle and scene share the box prototype and differ only where they say so', ({ expect }) => {
-    const { rect, scene } = defaultNodeRegistry;
+  test('rectangle and frame share the box prototype and differ only where they say so', ({ expect }) => {
+    const { rect, frame } = defaultNodeRegistry;
     expect(rect.component).toBe(boxPrototype.component);
     expect(rect.resizable).toBe(true);
-    expect(scene.resizable).toBe(rect.resizable);
-    expect(scene.portsPerSide).toBe(rect.portsPerSide);
-    expect(scene.openable).toBe(true);
+    expect(frame.resizable).toBe(rect.resizable);
+    expect(frame.portsPerSide).toBe(rect.portsPerSide);
+    expect(frame.openable).toBe(true);
     expect(rect.openable).toBeUndefined();
     // A prototype is not a type: the palette and the scene schema never see it.
     expect(Object.keys(defaultNodeRegistry)).not.toContain('box');

@@ -32,6 +32,7 @@ import * as Button from '@dxos/react-ui/Button';
 import * as DragHandle from '@dxos/react-ui/DragHandle';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Main from '@dxos/react-ui/Main';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Tabs from '@dxos/react-ui/Tabs';
@@ -233,19 +234,20 @@ const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L
 
   return (
     <L0ItemRoot ref={itemElement} item={item} parent={parent} path={path} onMouseEnter={handleMouseEnter}>
-      <div
+      <Layout.Flex
         data-frame={true}
         {...(pending && { 'data-pending': true, 'aria-busy': true })}
         {...(hue && { style: { background: `var(--color-${hue}-surface)` } })}
-        className={mx(
-          'flex justify-center items-center dx-focus-ring-group-indicator transition-colors rounded-sm',
+        center
+        classNames={[
+          'dx-focus-ring-group-indicator transition-colors rounded-sm',
           pinned
             ? 'p-2 group-hover/l0item:bg-current-surface'
             : 'w-(--dx-l0-avatar-size) h-(--dx-l0-avatar-size) bg-current-surface',
-        )}
+        ]}
       >
         <ItemAvatar item={item} />
-      </div>
+      </Layout.Flex>
       <L0ItemActiveTabIndicator />
       <span id={`${item.id}__label`} className='sr-only'>
         {localizedString}
@@ -341,7 +343,7 @@ export const L0Menu = ({
       {...landmark}
       data-tauri-drag-region='deep'
       classNames={[
-        'group/l0 absolute z-[1] inset-y-0 start-0 rounded-is',
+        'group/l0 absolute z-[1] inset-y-0 start-0 rounded-s',
         'grid grid-cols-[var(--dx-l0-size)] grid-rows-[var(--dx-rail-size)_1fr_min-content_var(--dx-l0-size)] dx-contain-layout',
         'w-(--dx-l0-size) dx-l0-surface dx-app-drag pb-[env(safe-area-inset-bottom)]',
         '[body[data-platform="macos"]_&]:pt-[30px]',
@@ -380,13 +382,13 @@ export const L0Menu = ({
       </ScrollArea.Root>
 
       {/* Actions. */}
-      <div className='grid grid-cols-1 auto-rows-(--dx-rail-action) pt-2'>
+      <Layout.Grid cols={1} classNames='auto-rows-(--dx-rail-action) pt-2'>
         {pinnedItems.map((item) => (
           <L0Item key={item.id} item={item} parent={parent} path={path} pinned />
         ))}
-      </div>
+      </Layout.Grid>
 
-      <div className='grid dx-app-no-drag'>
+      <Layout.Grid classNames='dx-app-no-drag'>
         {userAccountItem ? (
           <L0ItemRoot key={userAccountItem.id} item={userAccountItem} parent={parent} path={path}>
             <UserAccountAvatar
@@ -399,11 +401,11 @@ export const L0Menu = ({
             />
           </L0ItemRoot>
         ) : (
-          <div className='flex w-full justify-center items-center'>
+          <Layout.Flex center classNames='w-full'>
             <UserAccountAvatar size='lg' />
-          </div>
+          </Layout.Flex>
         )}
-      </div>
+      </Layout.Grid>
     </Tabs.List>
   );
 };

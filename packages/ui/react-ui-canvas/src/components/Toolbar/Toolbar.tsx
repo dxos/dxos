@@ -28,7 +28,10 @@ export type ToolbarActions = {
   path: SceneId[];
   nameOf: (id: SceneId) => string;
   onPath: (index: number) => void;
+  /** Frames the scene and keeps it framed (fit mode) until the user pans or zooms. */
   fit: () => void;
+  /** The view is in fit mode. */
+  fitting?: boolean;
   /** Back to true size (100%), about the view's centre. */
   zoomReset: () => void;
   zoomIn: () => void;
@@ -77,12 +80,13 @@ export const NavigationToolbar = ({ classNames, actions, children }: NavigationT
     <Toolbar.Root size='sm' classNames={mx(barClasses, classNames)} data-testid='canvas-toolbar'>
       <Button.Root
         variant='ghost'
+        iconOnly
+        icon='ph--arrow-up--regular'
+        label='Up'
         disabled={path.length < 2}
         data-testid='toolbar-up'
         onClick={() => actions.onPath(path.length - 2)}
-      >
-        Up
-      </Button.Root>
+      />
       <Breadcrumbs path={path} nameOf={actions.nameOf} onSelect={actions.onPath} />
       {children && (
         <>
@@ -104,7 +108,8 @@ export const CameraToolbar = ({ classNames, actions, children }: CameraToolbarPr
         variant='ghost'
         iconOnly
         icon='ph--arrows-out--regular'
-        label={`Fit (${shortcutFor('fit')})`}
+        label={`Fit (${shortcutFor('fit')}): keep the scene framed until you pan or zoom`}
+        classNames={mx(actions.fitting && 'bg-primary-500/20')}
         data-testid='toolbar-fit'
         onClick={actions.fit}
       />

@@ -8,6 +8,7 @@ import { Alarm } from '@dxos/assistant';
 import { ChatStatus as NaturalChatStatus, formatElapsed } from '@dxos/react-ui-chat';
 import { Matrix } from '@dxos/react-ui-experimental';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import type * as Util from '@dxos/react-ui/Util';
 import { type ContentBlock } from '@dxos/types';
 import { Unit } from '@dxos/util';
@@ -52,8 +53,8 @@ export type ChatStatusViewProps = ChatStreamStatusProps & {
  * - cumulative session total tokens across all `stats` content blocks
  */
 export const ChatStatus = ({ classNames, icon }: ChatStreamStatusProps) => {
-  // Read `messages` from the chat context (combines `useQuery(queue)` + the processor's
-  // pending atom) rather than `processor.messages` directly — the latter only contains
+  // Read `messages` from the chat context (combines `useQuery(queue)` + the chat model's
+  // pending atom) rather than `chatModel.messages` directly — the latter only contains
   // blocks streamed via the ephemeral `PartialBlock` channel, while finalized blocks
   // (including the per-turn `stats` block we read for token counts) are submitted to the
   // feed via `_submitMessage` and only show up through `useQuery`.
@@ -92,7 +93,7 @@ export const ChatStatus = ({ classNames, icon }: ChatStreamStatusProps) => {
 
 /**
  * The pill itself, given resolved values. Split from {@link ChatStatus} so each slot — elapsed,
- * tokens, the next alarm — can be mounted and asserted in a story without a live processor.
+ * tokens, the next alarm — can be mounted and asserted in a story without a live chat model.
  */
 export const ChatStatusView = ({
   classNames,
@@ -115,7 +116,7 @@ export const ChatStatusView = ({
         <NaturalChatStatus.Icon>
           <Matrix
             classNames='size-5'
-            dotClassNames='bg-primary-500'
+            dotClassNames='bg-primary-bg'
             dim={4}
             dotSize={3}
             count={10}
@@ -125,9 +126,9 @@ export const ChatStatusView = ({
         </NaturalChatStatus.Icon>
       )}
       {show && (
-        <div className='flex items-center'>
+        <Layout.Flex align='center'>
           {requestTiming && (
-            <NaturalChatStatus.Text classNames={isRunning && 'text-sky-500'}>
+            <NaturalChatStatus.Text classNames={isRunning && 'text-sky-text'}>
               <Elapsed timing={requestTiming} />
             </NaturalChatStatus.Text>
           )}
@@ -163,7 +164,7 @@ export const ChatStatusView = ({
               </NaturalChatStatus.Text>
             </>
           )}
-        </div>
+        </Layout.Flex>
       )}
     </NaturalChatStatus.Root>
   );

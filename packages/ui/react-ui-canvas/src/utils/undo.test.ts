@@ -9,8 +9,9 @@ import { describe, test } from 'vitest';
 import { createFreehandProjection } from '../model/projection.ts';
 import { type ConstrainedModel, createConstrainedProjection } from '../model/projections/constrained.ts';
 import { createMemoryStore } from '../model/store.ts';
+import { groupIntoScene } from './group.ts';
 import { createSceneTree } from './testing.ts';
-import { type UndoState, emptyUndo, redo, undo, withUndo } from './undo.ts';
+import { type UndoState, emptyUndo, recordScenes, redo, undo, withUndo } from './undo.ts';
 
 const setup = () => {
   const registry = Registry.make();
@@ -19,7 +20,7 @@ const setup = () => {
   const atom = Atom.keepAlive(Atom.make<UndoState>(emptyUndo()));
   const projection = withUndo(createFreehandProjection({ registry, store, sceneId: root }), registry, atom, root);
   const centerOf = (id: string) => registry.get(projection.scene).nodes[id]?.center;
-  return { registry, root, atom, projection, centerOf };
+  return { registry, root, store, atom, projection, centerOf };
 };
 
 describe('undo', () => {
@@ -53,6 +54,28 @@ describe('undo', () => {
     expect(registry.get(atom).past.length).toBe(1);
     expect(undo(projection, registry, atom, 'other')).toBe(false);
     expect(undo(projection, registry, atom, root)).toBe(true);
+  });
+
+  test('grouping into a new scene is one step: undo takes the scene away, redo returns it', ({ expect }) => {
+    const { registry, root, store, atom, projection } = setup();
+    const group = groupIntoScene(registry.get(projection.scene), ['scene:r/a'], 'g');
+    expect(group).toBeDefined();
+    if (!group) {
+      return;
+    }
+    const before = registry.get(store.scenes);
+    registry.set(store.scenes, { ...before, g: group.child });
+    projection.apply({ kind: 'batch', intents: group.intents });
+    recordScenes(registry, atom, root, before);
+    expect(registry.get(projection.scene).nodes.g).toBeDefined();
+
+    expect(undo(projection, registry, atom, root, store)).toBe(true);
+    expect(registry.get(store.scenes).g).toBeUndefined();
+    expect(registry.get(projection.scene).nodes['scene:r/a']).toBeDefined();
+
+    expect(redo(projection, registry, atom, root, store)).toBe(true);
+    expect(registry.get(store.scenes).g).toEqual(group.child);
+    expect(registry.get(projection.scene).nodes.g).toBeDefined();
   });
 
   test('a constrained projection restores its constraint model', ({ expect }) => {

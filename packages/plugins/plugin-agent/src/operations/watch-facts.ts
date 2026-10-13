@@ -7,11 +7,14 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
+import { type Space } from '@dxos/halo';
 import { Organization, Person } from '@dxos/types';
 
-import { BrainService, Goal, Trigger, TriggerOperation } from '#types';
+import { BrainService, Goal, Profile, Trigger, TriggerOperation } from '#types';
 
+import { compileGoal } from './compile-goal.ts';
 import { AgentOperationError } from './errors.ts';
+import { loadMembers, memberByDid, memberByName, membersNamed, personDid } from './members.ts';
 
 const handler: Operation.WithHandler<typeof TriggerOperation.WatchFacts> = TriggerOperation.WatchFacts.pipe(
   Operation.withHandler(
@@ -39,6 +42,23 @@ const handler: Operation.WithHandler<typeof TriggerOperation.WatchFacts> = Trigg
         );
       }
 
+      const members = yield* loadMembers;
+      const resolved = resolvePattern(members, when);
+      if (typeof resolved === 'string') {
+        return yield* Effect.fail(new AgentOperationError({ message: resolved }));
+      }
+
+      // Telling someone what they say themselves is never the ask: the requester was mixed up with the watched person.
+      const told = recipient ? yield* Database.load(recipient) : requester;
+      const toldDid = personDid(told);
+      if (toldDid !== undefined && resolved.speaker === toldDid) {
+        return yield* Effect.fail(
+          new AgentOperationError({
+            message: `${Profile.displayName(told)} would be told what they say themselves; the requester is the person asking you, not the person to watch.`,
+          }),
+        );
+      }
+
       const goal = goalRef
         ? yield* Database.load(goalRef)
         : outcome
@@ -58,15 +78,27 @@ const handler: Operation.WithHandler<typeof TriggerOperation.WatchFacts> = Trigg
         );
       }
 
+      const createdAt = DateTime.formatIso(yield* DateTime.now);
+      // The goal's text compiled to rules is the authority; the pattern, translated, is the fallback.
+      const compiled = yield* compileGoal({
+        goal: request ?? goal.title,
+        owner: personDid(requester) ?? Profile.displayName(requester),
+        people: members.flatMap(({ did, displayName }) =>
+          did !== undefined && displayName !== undefined ? [{ name: displayName, id: did }] : [],
+        ),
+        now: createdAt,
+      });
+      const rules = compiled?.rules ?? Trigger.toRules(resolved, { createdAt });
       const trigger: Trigger.Trigger = {
         id: Trigger.makeId(agent.id),
         agent: agent.id,
         goal: Ref.make(goal),
         ...(request ? { request } : {}),
-        when,
+        when: resolved,
         then: { _tag: 'notify', recipient: recipient ?? requesterRef, message },
         ...(ongoing ? { ongoing } : {}),
-        createdAt: DateTime.formatIso(yield* DateTime.now),
+        rules,
+        createdAt,
       };
       if (!(yield* brain.subscribe(trigger))) {
         return yield* Effect.fail(registryFull());
@@ -78,6 +110,27 @@ const handler: Operation.WithHandler<typeof TriggerOperation.WatchFacts> = Trigg
 );
 
 export default handler;
+
+/** A member named by DID or by name. */
+const memberOf = (members: readonly Space.Member[], name: string): Space.Member | undefined =>
+  memberByDid(members, name) ?? memberByName(members, name);
+
+/**
+ * The pattern with its speaker (and a subject that names someone) replaced by the member's id, which is what
+ * facts are attributed to. A speaker who is no member stays a bare name, as `readSource` attributes their words;
+ * a name several members go by is a message for the model, since matching it as words would fire on any of them.
+ */
+const resolvePattern = (members: readonly Space.Member[], when: Trigger.FactPattern): Trigger.FactPattern | string => {
+  const ambiguous = [when.speaker, when.subject].find(
+    (name) => name !== undefined && membersNamed(members, name) > 1 && !memberByDid(members, name),
+  );
+  if (ambiguous !== undefined) {
+    return `More than one member of the space goes by "${ambiguous}"; use the name they are listed under in the space.`;
+  }
+  const speaker = when.speaker === undefined ? undefined : memberOf(members, when.speaker)?.did;
+  const subject = when.subject === undefined ? undefined : memberOf(members, when.subject)?.did;
+  return { ...when, ...(speaker ? { speaker } : {}), ...(subject ? { subject } : {}) };
+};
 
 const registryFull = () =>
   new AgentOperationError({

@@ -31,9 +31,6 @@
       "path": "../../common/keys"
     },
     {
-      "path": "../../common/log"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -44,6 +41,9 @@
     },
     {
       "path": "../../core/compute/assistant"
+    },
+    {
+      "path": "../../core/compute/brain"
     },
     {
       "path": "../../core/compute/compute"
@@ -65,6 +65,9 @@
     },
     {
       "path": "../../core/echo/echo-react"
+    },
+    {
+      "path": "../../core/halo/halo"
     },
     {
       "path": "../../core/halo/halo-react"
@@ -95,6 +98,9 @@
     },
     {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-components"
     },
     {
       "path": "../../ui/react-ui-form"

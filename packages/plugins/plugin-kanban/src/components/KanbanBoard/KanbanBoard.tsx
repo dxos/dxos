@@ -10,6 +10,7 @@ import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Board, useBoard } from '@dxos/react-ui-mosaic';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Util from '@dxos/react-ui/Util';
 import type { ProjectionModel } from '@dxos/schema';
 
@@ -92,9 +93,9 @@ export const KanbanBoardRoot = ({
 
   if (columns.length === 0) {
     return (
-      <div className='flex flex-1 items-center justify-center p-8 text-center text-fg-muted'>
+      <Layout.Flex center classNames='flex-1 p-8 text-center text-fg-muted'>
         {t('select-pivot.placeholder')}
-      </div>
+      </Layout.Flex>
     );
   }
 

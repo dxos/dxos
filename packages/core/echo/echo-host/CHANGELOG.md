@@ -1,5 +1,39 @@
 # @dxos/echo-host
 
+## 0.14.0
+
+### Patch Changes
+
+- 5528d65: Update `@automerge/automerge-subduction` to 0.19.0, which adds `Subduction.getHeads(id)` for reading one tree's heads without loading the whole space.
+- 4ea1487: A one-shot query's stream now ends after its first result, so the query no longer stays registered and re-runs on invalidations until the client's interrupt arrives. Queries that register while the snapshot store is still filling share one completeness check instead of each running a full scan.
+- ea0f796: The worker now logs a warning, above its default log filter, when an index pass, a query batch, full-text catch-up or a storage-only document load takes 1 s or more. A slow query batch names its slowest query.
+- Updated dependencies [1eed6b1]
+- Updated dependencies [6847fe2]
+- Updated dependencies [1819960]
+- Updated dependencies [eb5d14d]
+  - @dxos/echo@0.14.0
+  - @dxos/effect@0.14.0
+  - @dxos/index-core@0.14.0
+  - @dxos/sql-sqlite@0.14.0
+  - @dxos/echo-protocol@0.14.0
+  - @dxos/feed@0.14.0
+  - @dxos/edge-client@0.14.0
+  - @dxos/protocols@0.14.0
+  - @dxos/teleport@0.14.0
+  - @dxos/teleport-extension-automerge-replicator@0.14.0
+  - @dxos/async@0.14.0
+  - @dxos/context@0.14.0
+  - @dxos/crypto@0.14.0
+  - @dxos/debug@0.14.0
+  - @dxos/errors@0.14.0
+  - @dxos/invariant@0.14.0
+  - @dxos/keys@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/node-std@0.14.0
+  - @dxos/tracing@0.14.0
+  - @dxos/typings@0.14.0
+  - @dxos/util@0.14.0
+
 ## 0.13.0
 
 ### Patch Changes

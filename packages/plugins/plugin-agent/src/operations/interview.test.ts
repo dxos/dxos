@@ -23,9 +23,13 @@ import { HasSubject, Organization, Person, ProfileOf } from '@dxos/types';
 import { AgentOperationHandlerSet } from '#operations';
 import { Goal, Memory, MemoryOperation } from '#types';
 
+import { makeTestBrain } from '../brain/testing.ts';
+
 EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
+  // Recall reads facts from the agents' brains.
+  extraServices: makeTestBrain().layer,
   operationHandlers: AgentOperationHandlerSet,
   types: [
     Agent.Agent,

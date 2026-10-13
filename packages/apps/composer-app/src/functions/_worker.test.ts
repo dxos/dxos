@@ -81,7 +81,7 @@ describe('link previews', () => {
 });
 
 describe('feedback logs', () => {
-  const upload = async (body: string, contentType: string) => {
+  const upload = async (body: string, contentType: string, query = '') => {
     const puts: { key: string; contentType?: string }[] = [];
     const bucket = {
       put: async (key: string, _body: ReadableStream, options?: { httpMetadata?: { contentType?: string } }) => {
@@ -89,7 +89,7 @@ describe('feedback logs', () => {
       },
     };
     const response = await fetch(
-      new Request('https://composer.test/api/feedback-logs', {
+      new Request(`https://composer.test/api/feedback-logs${query}`, {
         method: 'POST',
         headers: {
           'Origin': 'https://composer.test',
@@ -118,6 +118,21 @@ describe('feedback logs', () => {
     const { key } = await response.json();
     expect(key).toMatch(/\.ndjson$/);
     expect(puts).toEqual([{ key, contentType: 'application/x-ndjson' }]);
+  });
+
+  test('a trajectory upload is filed under trajectories/', async () => {
+    const { response } = await upload('gz', 'application/gzip', '?kind=trajectory');
+    expect(response.status).toBe(200);
+    const { key } = await response.json();
+    expect(key).toMatch(/^trajectories\/\d{4}-\d{2}-\d{2}\/[\w-]+\.ndjson\.gz$/);
+  });
+
+  test('an unknown kind cannot pick its own prefix', async () => {
+    for (const kind of ['../secrets', 'constructor']) {
+      const { response } = await upload('gz', 'application/gzip', `?kind=${kind}`);
+      const { key } = await response.json();
+      expect(key).toMatch(/^logs\//);
+    }
   });
 });
 

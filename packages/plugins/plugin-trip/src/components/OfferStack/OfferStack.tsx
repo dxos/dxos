@@ -60,12 +60,12 @@ const OfferTile = forwardRef<HTMLDivElement, OfferTileProps>(({ data, location, 
             <Layout.Block>
               <Icon.Icon icon='ph--airplane--regular' />
             </Layout.Block>
-            <div className='flex items-baseline justify-between gap-2 min-w-0'>
+            <Layout.Flex align='baseline' justify='between' gap='sm' classNames='min-w-0'>
               <Card.Title truncate>{offer.operator.name}</Card.Title>
               <Card.Text classNames='font-mono shrink-0'>
                 {offer.totalAmount} {offer.currency}
               </Card.Text>
-            </div>
+            </Layout.Flex>
           </Card.Header>
           <Card.Body>
             {(origin || destination) && (

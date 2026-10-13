@@ -14,6 +14,7 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Field from '@dxos/react-ui/Field';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 
 import { RunRow } from '#components';
@@ -106,7 +107,7 @@ export const TestPlanArticle = ({ role, subject }: TestPlanArticleProps) => {
 
         <section>
           <Field.Label>Cases</Field.Label>
-          <div className='flex gap-2 py-2'>
+          <Layout.Flex gap='sm' classNames='py-2'>
             <Input.Root
               classNames='w-24'
               placeholder='Key'
@@ -125,7 +126,7 @@ export const TestPlanArticle = ({ role, subject }: TestPlanArticleProps) => {
               <Icon.Icon icon='ph--plus--regular' size='md' />
               <span>Add case</span>
             </Button.Root>
-          </div>
+          </Layout.Flex>
           {cases.length === 0 ? (
             <p className='text-fg-subtle' data-testid='qa.plan.no-cases'>
               No cases yet.

@@ -24,7 +24,7 @@ import {
   presetsForProvider,
   providerForModel,
   resolveProvider,
-} from '../processor/index.ts';
+} from '../chat-model/index.ts';
 
 export type UsePresets = {
   preset: AiServicePreset | undefined;
@@ -38,7 +38,7 @@ export type UsePresets = {
 export const usePresets = (settings: Assistant.Settings, chat?: Chat.Chat): UsePresets => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
   // Subscribed rather than read: the picker has to follow a selection made on another mount of the
-  // same chat, and the stamp the processor writes before the first request.
+  // same chat, and the stamp the chat model writes before the first request.
   const [session] = useObject(chat, 'session');
   const chatModel = session?.model;
 

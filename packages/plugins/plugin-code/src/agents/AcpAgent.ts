@@ -26,6 +26,8 @@ import * as AcpSession from './AcpSession.ts';
 import * as Projection from './Projection.ts';
 import * as Protocol from './Protocol.ts';
 
+export { AgentError };
+
 /** The environment variable an agent reads Composer's tools token from, which its MCP config names. */
 export const TOOLS_TOKEN_ENV = Protocol.MCP_TOKEN_ENV;
 

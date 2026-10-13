@@ -1,5 +1,17 @@
 # @dxos/brand
 
+## 0.14.0
+
+### Minor Changes
+
+- c6e9fd9: Export `composerRingPaths` (and the `ComposerRing` type) so each ring of the Composer mark can be rendered and animated on its own.
+
+### Patch Changes
+
+- 085dcb1: `@dxos/brand` ships Poiret One (`assets/fonts/poiret-one`), the face of the Composer wordmark. The Markdown, Sheet, Tables and Projects plugins' details now include a narrated demo video, opening on the Composer ident.
+- Updated dependencies [b07f49f]
+  - @dxos/ui-theme@0.14.0
+
 ## 0.13.0
 
 ### Patch Changes

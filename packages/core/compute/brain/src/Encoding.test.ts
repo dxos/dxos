@@ -76,4 +76,18 @@ describe('Encoding', () => {
       ['fact', 'factuality', 'force', 'polarity', 'recordedAt', 'saidAt', 'source', 'surface'].sort(),
     );
   });
+
+  test('formats a fact as ground Datalog facts in the rules dialect', ({ expect }) => {
+    expect(Encoding.format(MINIMAL)).toEqual([
+      'fact("fact-2", release, shipped, npm).',
+      'surface("fact-2", shipped).',
+      'force("fact-2", assertive).',
+      'polarity("fact-2", "+").',
+      'factuality("fact-2", "CT+").',
+      'source("fact-2", "dxn:queue:chat:msg-2").',
+      'saidAt("fact-2", "2027-01-07T16:00:00.000Z").',
+      'recordedAt("fact-2", "2027-01-07T16:00:01.000Z").',
+    ]);
+    expect(Encoding.formatEntry({ relation: 'confidence', tuple: ['fact-1', 0.8] })).toBe('confidence("fact-1", 0.8).');
+  });
 });

@@ -112,7 +112,7 @@ const EdgeConnectionPopover = ({ status }: { status: EdgeStatus }) => {
 
           {/* Upload Speed */}
           <Layout.Grid cols='subgrid' gap='sm' align='center' classNames='text-sm'>
-            <Icon.Icon icon='ph--arrow-up--regular' classNames='text-green-500' />
+            <Icon.Icon icon='ph--arrow-up--regular' classNames='text-green-text' />
             <span className='text-fg-muted'>{t('sync-upload.label')}</span>
             <UnitValue value={status.messagesSent} format={Unit.Thousand} />
             <UnitValue value={status.rateBytesUp} format={Unit.Kilobyte} suffix='/s' />
@@ -120,7 +120,7 @@ const EdgeConnectionPopover = ({ status }: { status: EdgeStatus }) => {
 
           {/* Download Speed */}
           <Layout.Grid cols='subgrid' gap='sm' align='center' classNames='text-sm'>
-            <Icon.Icon icon='ph--arrow-down--regular' classNames='text-orange-500' />
+            <Icon.Icon icon='ph--arrow-down--regular' classNames='text-orange-text' />
             <span className='text-fg-muted'>{t('sync-download.label')}</span>
             <UnitValue value={status.messagesReceived} format={Unit.Thousand} />
             <UnitValue value={status.rateBytesDown} format={Unit.Kilobyte} suffix='/s' />

@@ -107,14 +107,13 @@ type AgentStep = Schema.Schema.Type<typeof AgentStep>;
  * it one step, so the caller can interleave the agent's own trace events with the child operation
  * processes that {@link runScenario} spawns beneath it.
  */
-export const SimulatedAgent = Operation.makeDurable(
-  {
-    key: 'org.dxos.testing.process.agent',
-    input: AgentStep,
-    output: Schema.Void,
-    services: [Trace.TraceService],
-  },
-  (ctx) =>
+export const SimulatedAgent = Operation.makeDurable({
+  key: 'org.dxos.testing.process.agent',
+  input: AgentStep,
+  output: Schema.Void,
+  services: [Trace.TraceService],
+}).pipe(
+  Operation.withDurableHandler((ctx) =>
     Effect.gen(function* () {
       // One message id spans the whole turn, so every block groups under a single message.
       const messageId = EntityId.random();
@@ -177,6 +176,7 @@ export const SimulatedAgent = Operation.makeDurable(
         onChildEvent: () => Effect.void,
       };
     }),
+  ),
 );
 
 //
@@ -197,14 +197,13 @@ type OperationInput = Schema.Schema.Type<typeof OperationInput>;
  * Storybook fixture: a {@link Process} that emits the `operation.start`/`operation.end` pair a real
  * operation process emits, with a simulated execution time in between.
  */
-export const SimulatedOperation = Operation.makeDurable(
-  {
-    key: 'org.dxos.testing.process.operation',
-    input: OperationInput,
-    output: Schema.Void,
-    services: [Trace.TraceService],
-  },
-  (ctx) =>
+export const SimulatedOperation = Operation.makeDurable({
+  key: 'org.dxos.testing.process.operation',
+  input: OperationInput,
+  output: Schema.Void,
+  services: [Trace.TraceService],
+}).pipe(
+  Operation.withDurableHandler((ctx) =>
     Effect.succeed({
       onInput: ({ key, name, icon, durationMs, fail }: OperationInput) =>
         Effect.gen(function* () {
@@ -227,6 +226,7 @@ export const SimulatedOperation = Operation.makeDurable(
       onAlarm: () => Effect.void,
       onChildEvent: () => Effect.void,
     }),
+  ),
 );
 
 //

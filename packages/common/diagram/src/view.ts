@@ -162,7 +162,7 @@ const HEADS: Record<string, string> = {
   crowsfoot: "crow's foot head",
   none: 'no head',
 };
-const TAILS: Record<string, string> = { circle: 'dot at the start' };
+const TAILS: Record<string, string> = { circle: 'dot at the start', arrow: 'arrowhead at the start' };
 
 /** A path's markers in words, e.g. "dashed, hollow triangle head", or undefined for a plain arrow. */
 const describe = (style?: Path['style']) => {

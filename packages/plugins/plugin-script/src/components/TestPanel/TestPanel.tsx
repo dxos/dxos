@@ -115,8 +115,9 @@ export const TestPanel = Util.composable<HTMLDivElement, TestPanelProps>(
     };
 
     return (
-      <div
-        {...Util.composableProps(props, { classNames: ['flex flex-col h-full overflow-hidden', classNames] })}
+      <Layout.Flex
+        column
+        {...Util.composableProps(props, { classNames: ['h-full overflow-hidden', classNames] })}
         ref={forwardedRef}
       >
         {/* TODO(burdon): Replace with Thread. */}
@@ -136,7 +137,7 @@ export const TestPanel = Util.composable<HTMLDivElement, TestPanelProps>(
           <Button.Root icon='ph--play--regular' label='Execute' iconOnly onClick={() => handleRequest(input)} />
           <Button.Root icon='ph--trash--regular' label='Clear' iconOnly onClick={handleClear} />
         </Toolbar.Root>
-      </div>
+      </Layout.Flex>
     );
   },
 );
@@ -181,17 +182,15 @@ const MessageItem = ({ classNames, message }: Util.ThemedClassName<{ message: Me
   const { type, text, data, error } = message;
   const wrapper = 'p-1 px-2 rounded-md bg-hover-surface';
   return (
-    <div className={mx('flex', type === 'request' ? 'ml-[1rem] justify-end' : 'mr-[1rem]', classNames)}>
+    <Layout.Flex classNames={[type === 'request' ? 'ml-[1rem] justify-end' : 'mr-[1rem]', classNames]}>
       {error && <div className={mx(wrapper, 'whitespace-pre text-error-text')}>{String(error)}</div>}
 
       {text !== undefined && (
-        <div className={mx(wrapper, type === 'request' && 'bg-primary-500 dark:bg-primary-600')}>
-          {text || '\u00D8'}
-        </div>
+        <div className={mx(wrapper, type === 'request' && 'bg-primary-bg')}>{text || '\u00D8'}</div>
       )}
 
       {data && <JsonHighlighter data={data} classNames={mx(wrapper, 'text-xs')} />}
-    </div>
+    </Layout.Flex>
   );
 };
 

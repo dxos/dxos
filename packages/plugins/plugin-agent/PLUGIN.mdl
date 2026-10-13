@@ -95,7 +95,7 @@ type Memory
     (source = memory, target = entity). Never overwritten: a contradiction supersedes. Label: `content`.
   fields:
     content: string
-    kind: fact | preference | goal | commitment | relationship | event
+    kind: fact | preference | goal | commitment | relationship | event | note | directive
     origin: stated | inferred       # default stated
     confidence?: number             # 0..1, checked by recordMemory
     observedAt: DateTime            # default now
@@ -245,7 +245,7 @@ op recordMemory
   desc: Records one atomic third-person claim about the given subjects.
   input:
     content: string
-    kind: fact | preference | goal | commitment | relationship | event
+    kind: fact | preference | goal | commitment | relationship | event | note | directive
     origin?: stated | inferred
     subjects: Ref<Obj>[]            # at least one
     confidence?: number             # 0..1
@@ -357,8 +357,29 @@ skill InterviewSkill
     answer's status (dropped for rejections), update the person's and any team's profile, summarise.
 ```
 
+```mdl
+skill SupportSkill
+  key: org.dxos.skill.agentSupport
+  desc: Community support in a public channel; bound by the built-in Support mode.
+  contributes:
+    - op:resolveEntity
+    - op:retrieveMemories
+    - op:recordMemory
+    - op:sendMessage
+  instructions: >
+    Authored in `src/skills/SupportSkill.ts`; also binds the relay operations (create, update). Resolve the
+    asker and recall their setup and earlier answers first. A question gets the shortest correct answer, never
+    an invented command, API or link. A bug report gets the missing details asked for once, a summary, and an
+    "event" memory. A feature request gets a "note" memory and no promise. What it cannot answer it offers to
+    the team member whose expertise fits — the team and each member's areas are memories it recalls ("support
+    team"), not part of the skill — and relays only once the person agrees (security, data loss, billing and
+    account access go at once), with the thread as the reply channel; with no fitting member, or an
+    undelivered message, it says so rather than claim a handoff. Never asks for secrets, tells anyone who
+    posts one to rotate it, shares of the team only a first name and an area.
+```
+
 Both are contributed as `SkillDefinition`s; createAgent puts the Interview skill in every new agent's
-Instructions.
+Instructions. The Support skill is bound by the built-in Support mode.
 
 ## App graph
 
@@ -851,7 +872,58 @@ test QA-2: Interview a person and confirm their goals
 ```
 
 ```mdl
-test QA-3: An agent invited into another space keeps the conversation going
+test QA-3: Two people, one agent — a watch fires across private chats
+  desc: |
+    Two members, each on their own device and HALO identity, talk to the same agent in their own
+    private chats. One asks to be kept posted on the other's work; when the other says what they are
+    working on, the agent reads it into its brain, the watch wakes, and the update reaches the first
+    member's chat. Facts live only in the agent's brain (BrainService), never in ECHO, so the Brain
+    companion's Facts tab is the only place they show. Recorded side by side by autocue's `pair.mjs`
+    (`autocue/two-people-one-agent.mjs`).
+  actors: human
+  covers: [F-1.1]
+  status: unverified         # needs a live model and an EDGE that hosts the agent's chats and brain
+  given:
+    - two devices, each with its own identity: Alice (host) and Bob (guest), display names set
+    - plugin-agent is enabled on both (it is tagged labs)
+    - Composer points at an EDGE that runs agent chats (`Agent.chatLocation` is `edge` for an agent's chat)
+      and serves a live model — ABORT without one
+  steps:
+    - name: Alice creates a space and an agent
+      do: Alice creates a space "Launch room", then clicks + on the AI group's Agents section.
+      invoke: [op:createAgent] { name: "" }
+      capture: agent
+      expect: the agent appears under Agents and its article opens Alice's private chat
+    - name: Alice invites Bob; Bob joins
+      do: Alice opens Members, creates a single-use invitation; Bob joins with the code and the auth code.
+      expect: Bob's navtree shows "Launch room" with the same agent under Agents
+    - name: Each opens a private chat with the agent
+      do: Both click the agent under Agents.
+      expect: |
+        each sees an empty chat ready for input; neither sees the other's conversation (each chat is the
+        member's own participant chat, hosted on EDGE)
+      note: NO `invoke` — the article opens the viewer's chat through op OpenPrivateChat with their identity DID.
+    - name: Alice asks to be kept posted on Bob
+      do: Alice sends "Keep me posted on what Bob is working on."
+      expect: the agent acknowledges; the Brain companion's Goals tab lists Alice's goal with a watch on Bob
+      note: NO `invoke` — the model chooses watchFacts.
+    - name: Bob says what he is working on
+      do: Bob sends "I'm working on the indexer migration this week."
+      expect: the agent replies to Bob
+      note: NO `invoke` — model-driven; the end-request hook (runTriggers) reads the turn into the brain.
+    - name: Alice receives the update
+      do: Watch Alice's chat, without sending anything.
+      expect: a message from the agent appears in Alice's chat telling her Bob is working on the indexer migration
+      note: A watch whose update never reaches Alice's chat is a failure of this step, not of the model.
+    - name: The facts are in the brain
+      do: Open the agent's Brain companion and its Facts tab.
+      expect: |
+        the Facts tab lists a fact that Bob works on the indexer migration, attributed to Bob; no Memory
+        or annotation object holds it in the space
+```
+
+```mdl
+test QA-4: An agent invited into another space keeps the conversation going
   desc: |
     The cross-space journey: an agent made in one space learns about something in conversation, is invited
     into a second space, and answers there from what it learned in the first. The autocue flow

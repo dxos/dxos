@@ -16,7 +16,6 @@ import { AgentOperation, ChatParticipant, Mode } from '#types';
 import { loadAgentBindings } from './ensure-channel-chat.ts';
 import { AgentOperationError } from './errors.ts';
 import { BASE_SKILL_KEYS, skillRef } from './modes.ts';
-import { seedBrief } from './presence.ts';
 
 /** Loaded on demand: the context runtime is heavy and only needed when a chat is first created. */
 const aiContextRuntime = () => import('@dxos/assistant/AiContext');
@@ -28,7 +27,7 @@ const aiContextRuntime = () => import('@dxos/assistant/AiContext');
 export type ParticipantChatOptions = {
   /** The DID of the identity the chat is private to. */
   owner?: string;
-  /** Whether a chat created here runs on EDGE. */
+  /** Whether a chat created here runs on EDGE; unset, it runs where the agent's own chat does. */
   remote?: boolean;
 };
 
@@ -61,6 +60,7 @@ export const ensureParticipantChat = Effect.fnUntraced(function* (
   const skills = yield* Effect.forEach(BASE_SKILL_KEYS, (key) => skillRef(agent, key));
 
   const primary = yield* Agent.loadChat(agent);
+  const location = remote ?? primary?.remote;
   const feed = yield* Database.add(Feed.make());
   const draft = Chat.make({
     [Obj.Meta]: { keys: [key] },
@@ -68,7 +68,7 @@ export const ensureParticipantChat = Effect.fnUntraced(function* (
     name: person.preferredName ?? person.fullName,
     feed: Ref.make(feed),
     instructions: agent.instructions,
-    ...(remote ? { remote } : {}),
+    ...(location !== undefined ? { remote: location } : {}),
   });
   // Runs on the same model as the agent's own conversation.
   Chat.seedSession(draft, primary?.session);
@@ -89,8 +89,6 @@ export const ensureParticipantChat = Effect.fnUntraced(function* (
   const agentBound = bindings.objects.some((ref) => ref.uri === Obj.getURI(agent));
   const objects = [...bindings.objects, ...(agentBound ? [] : [Ref.make<Obj.Unknown>(agent)]), Ref.make(chat)];
   yield* Effect.promise(() => binder.bind({ skills, objects }));
-  // An agent in other spaces too begins the conversation remembering them.
-  yield* seedBrief(agent, feed, { owner });
   return chat;
 }, Effect.scoped);
 

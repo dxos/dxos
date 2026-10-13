@@ -137,7 +137,7 @@ export const DebugPanelStatus = ({ controller = getDebugPortController() }: Debu
             role='status'
             aria-label={t('debug-port-status.running.label')}
             data-testid='debugPlugin.portIndicator'
-            className='absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-red-500 pointer-events-none'
+            className='absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-error-text pointer-events-none'
           />
         )}
       </StatusBar.Item>

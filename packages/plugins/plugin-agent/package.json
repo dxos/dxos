@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-agent",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "description": "Autonomous agents that converse in channels (Discord, freeq, local feeds) and Composer chats.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -128,11 +128,6 @@
       "types": "./dist/types/src/skills/ConversationSkill.d.ts",
       "import": "./dist/lib/ConversationSkill.mjs"
     },
-    "./FactEntry": {
-      "source": "./src/types/FactEntry.ts",
-      "types": "./dist/types/src/types/FactEntry.d.ts",
-      "import": "./dist/lib/FactEntry.mjs"
-    },
     "./Goal": {
       "source": "./src/types/Goal.ts",
       "types": "./dist/types/src/types/Goal.d.ts",
@@ -198,6 +193,11 @@
       "types": "./dist/types/src/skills/RelaySkill.d.ts",
       "import": "./dist/lib/RelaySkill.mjs"
     },
+    "./SupportSkill": {
+      "source": "./src/skills/SupportSkill.ts",
+      "types": "./dist/types/src/skills/SupportSkill.d.ts",
+      "import": "./dist/lib/SupportSkill.mjs"
+    },
     "./Trigger": {
       "source": "./src/types/Trigger.ts",
       "types": "./dist/types/src/types/Trigger.d.ts",
@@ -235,9 +235,6 @@
       ],
       "ConversationSkill": [
         "dist/types/src/skills/ConversationSkill.d.ts"
-      ],
-      "FactEntry": [
-        "dist/types/src/types/FactEntry.d.ts"
       ],
       "Goal": [
         "dist/types/src/types/Goal.d.ts"
@@ -277,6 +274,9 @@
       ],
       "RelaySkill": [
         "dist/types/src/skills/RelaySkill.d.ts"
+      ],
+      "SupportSkill": [
+        "dist/types/src/skills/SupportSkill.d.ts"
       ]
     }
   },
@@ -291,19 +291,21 @@
     "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant": "workspace:*",
+    "@dxos/brain": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
+    "@dxos/halo": "workspace:*",
     "@dxos/halo-react": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/log": "workspace:*",
     "@dxos/pipeline-rdf": "workspace:*",
     "@dxos/plugin-explorer": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-thread": "workspace:*",
+    "@dxos/react-ui-components": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",

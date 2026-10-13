@@ -21,7 +21,7 @@ import * as Trigger from '@dxos/compute/Trigger';
  */
 export interface Manager {
   readonly triggers: Atom.Atom<readonly Trigger.State[]>;
-  readonly invokeTrigger: (options: Trigger.InvokeOptions) => Effect.Effect<void>;
+  readonly invokeTrigger: (options: Trigger.InvokeOptions) => Effect.Effect<void, Trigger.TriggerDisabledError>;
 }
 
 export class Service extends Context.Service<Service, Manager>()('@dxos/compute-runtime/RemoteTriggerManager') {}

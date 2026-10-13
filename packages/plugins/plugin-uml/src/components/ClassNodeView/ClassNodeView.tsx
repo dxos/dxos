@@ -20,8 +20,8 @@ export const ClassNodeView = ({ node, editing }: NodeViewProps) => {
   }
   return (
     <div className={mx('dx-cover flex flex-col font-mono divide-y divide-separator', sizeClass(node, 'text-sm'))}>
-      <TextPart part='name' text={node.name} editing={editing} classNames='px-2 py-1 text-center font-bold'>
-        {node.name}
+      <TextPart part='label' text={node.label} editing={editing} classNames='px-2 py-1 text-center font-bold'>
+        {node.label}
       </TextPart>
       <TextPart
         part='attributes'

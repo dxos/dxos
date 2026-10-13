@@ -21,6 +21,7 @@ export default defineConfig({
     'Process': 'src/Process.ts',
     'Runnable': 'src/Runnable.ts',
     'ServiceResolver': 'src/ServiceResolver.ts',
+    'ShellService': 'src/ShellService.ts',
     'SqlService': 'src/SqlService.ts',
     'StorageService': 'src/StorageService.ts',
     'Trace': 'src/Trace.ts',

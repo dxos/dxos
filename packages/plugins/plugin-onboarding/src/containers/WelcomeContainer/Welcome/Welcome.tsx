@@ -377,13 +377,14 @@ export const Welcome = ({
   );
 
   return (
-    <div
+    <Layout.Grid
       ref={rootRef}
-      className={mx(
-        'relative grid grid-cols-1 md:w-[37rem] max-w-[37rem] h-full md:h-[675px] overflow-hidden',
+      cols={1}
+      classNames={[
+        'relative md:w-[37rem] max-w-[37rem] h-full md:h-[675px] overflow-hidden',
         'border-2 border-sky-950 rounded-xl lg:translate-x-[-40%]',
         '[--dx-control-inset:0px] [--dx-control-size:var(--dx-block-size)]',
-      )}
+      ]}
       style={{
         backgroundImage: 'radial-gradient(circle farthest-corner at 50% 50%, #2d6fff80, var(--color-neutral-950))',
       }}
@@ -568,7 +569,7 @@ export const Welcome = ({
           </a>
         </Layout.Flex>
       </Layout.Flex>
-    </div>
+    </Layout.Grid>
   );
 };
 

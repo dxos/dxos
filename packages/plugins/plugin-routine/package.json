@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-routine",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "description": "Prompt chain plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -212,7 +212,9 @@
   },
   "devDependencies": {
     "@dxos/assistant": "workspace:*",
+    "@dxos/credentials": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@effect/atom-react": "catalog:",

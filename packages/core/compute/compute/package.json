@@ -1,6 +1,6 @@
 {
   "name": "@dxos/compute",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "description": "Umbrella package for AI-aware DXOS compute primitives.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -113,6 +113,11 @@
       "source": "./src/types/Skill.ts",
       "types": "./dist/types/src/types/Skill.d.ts",
       "import": "./dist/lib/types/Skill.mjs"
+    },
+    "./ShellService": {
+      "source": "./src/ShellService.ts",
+      "types": "./dist/types/src/ShellService.d.ts",
+      "import": "./dist/lib/ShellService.mjs"
     },
     "./SqlService": {
       "source": "./src/SqlService.ts",

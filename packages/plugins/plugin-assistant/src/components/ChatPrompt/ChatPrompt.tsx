@@ -8,10 +8,11 @@ import * as Option from 'effect/Option';
 import type * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 
+import { type AiContext } from '@dxos/assistant';
 import type * as Chat from '@dxos/assistant/Chat';
 import { type Event } from '@dxos/async';
 import * as Project from '@dxos/compute/Project';
-import { type Database, Obj } from '@dxos/echo';
+import { type Database, Obj, type Registry } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import {
   ChatEditor,
@@ -22,17 +23,17 @@ import {
 } from '@dxos/react-ui-chat';
 import type { ActionGraphProps } from '@dxos/react-ui-menu';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import type * as Util from '@dxos/react-ui/Util';
 import { pendingText } from '@dxos/ui-editor';
-import { mx } from '@dxos/ui-theme';
 import { type Merge } from '@dxos/util';
 
 import { useChatKeymapExtensions } from '#hooks';
 import { meta } from '#meta';
 import { AssistantPreset } from '#types';
 
+import { type ChatModel, getChatModelState } from '../../chat-model/index.ts';
 import { TaskSlashCommands } from '../../commands/index.ts';
-import { type AiChatProcessor, getProcessorState } from '../../processor/index.ts';
 import { type ChatEvent } from '../Chat/index.ts';
 import { ChatActions, type ChatActionsProps } from './ChatActions.tsx';
 import { ChatMcpErrors } from './ChatMcpErrors.tsx';
@@ -50,8 +51,15 @@ export type ChatPromptProps = Merge<
     expandable?: boolean;
     db?: Database.Database;
     chat?: Chat.Chat;
-    /** Undefined while the processor is still opening: the prompt takes text but holds it until then. */
-    processor?: AiChatProcessor;
+    /** Undefined while the chat model is still opening: the prompt takes text but holds it until then. */
+    chatModel?: ChatModel;
+    /**
+     * Bindings for a draft with no chat model, whose caller handles the submit event: backs the context
+     * controls and lets the prompt send.
+     */
+    context?: AiContext.Binder;
+    /** Skill registry for the context controls when there is no chat model. */
+    registry?: Registry.Registry;
     event: Event<ChatEvent>;
     /** Whether the checklist beside the prompt is shown; the toggle renders only when provided. */
     tasksVisible?: boolean;
@@ -71,6 +79,8 @@ export type ChatPromptProps = Merge<
     queueSize?: number;
     /** The most prompts that may wait behind a running turn; past it the prompt takes no more until one is taken up. */
     maxQueue?: number;
+    /** Whether the conversation has begun, which fixes its agent. */
+    started?: boolean;
     /** Object the chat is attached to; its project instructions (if any) supply sentinel-command completion. */
     companionTo?: Obj.Unknown;
   }>,
@@ -82,7 +92,9 @@ export const ChatPrompt = ({
   outline,
   db,
   chat,
-  processor,
+  chatModel,
+  context: draftContext,
+  registry: draftRegistry,
   event,
   tasksVisible,
   attendableId,
@@ -96,13 +108,16 @@ export const ChatPrompt = ({
   presets,
   preset,
   companionTo,
+  started,
   onPresetChange,
 }: ChatPromptProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const processorState = getProcessorState(processor);
-  const error = useAtomValue(processorState.error).pipe(Option.getOrUndefined);
-  const streaming = useAtomValue(processorState.streaming);
-  const active = useAtomValue(processorState.active);
+  const chatModelState = getChatModelState(chatModel);
+  const error = useAtomValue(chatModelState.error).pipe(Option.getOrUndefined);
+  const streaming = useAtomValue(chatModelState.streaming);
+  const active = useAtomValue(chatModelState.active);
+  const context = chatModel?.context ?? draftContext;
+  const registry = chatModel?.registry ?? draftRegistry;
 
   const editorRef = useRef<ChatEditorController>(null);
   useEffect(() => {
@@ -157,7 +172,7 @@ export const ChatPrompt = ({
 
   // A full queue stops taking prompts: what is typed stays in the editor until the agent takes one up.
   const queueFull = active && queueSize >= maxQueue;
-  const canSend = hasText && processor != null && !queueFull;
+  const canSend = hasText && context != null && !queueFull;
 
   const extensions = useMemo(
     () => [keymapExtensions, pendingText(), commandsExtension, emptinessExtension],
@@ -165,17 +180,17 @@ export const ChatPrompt = ({
   );
 
   // Submits while a turn is running too: the agent's input queue is feed state, so the prompt is
-  // queued behind the running turn rather than dropped (`Chat.Root` sends it through the processor's
+  // queued behind the running turn rather than dropped (`Chat.Root` sends it through the chat model's
   // outbox, which queues it while the agent is busy).
   const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
     (text) => {
-      if (!processor || queueFull) {
+      if (!context || queueFull) {
         return false;
       }
       event.emit({ type: 'submit', text });
       return true;
     },
-    [event, processor, queueFull],
+    [event, context, queueFull],
   );
 
   // Routed through `handleSubmit` so the button and the Enter keybinding share one submit path;
@@ -198,19 +213,20 @@ export const ChatPrompt = ({
   );
 
   return (
-    <div
+    <Layout.Flex
+      column
       data-testid='assistant.prompt'
       role='group'
-      className={mx(
-        'flex flex-col w-full dx-density-md',
+      classNames={[
+        'w-full dx-density-md',
         outline &&
           'dx-group-surface rounded-sm border border-separator-subtle transition transition-border [&:has(.cm-content:focus)]:border-separator',
         classNames,
-      )}
+      ]}
     >
-      {processor && <ChatMcpErrors processor={processor} />}
+      {chatModel && <ChatMcpErrors chatModel={chatModel} />}
 
-      <div className='flex p-2 gap-2'>
+      <Layout.Flex gap='sm' classNames='p-2'>
         <ChatStatusIndicator classNames='p-1' preset={preset} error={error} processing={streaming} />
         <ChatEditor
           ref={editorRef}
@@ -222,7 +238,7 @@ export const ChatPrompt = ({
           extensions={extensions}
           onSubmit={handleSubmit}
         />
-      </div>
+      </Layout.Flex>
 
       {db &&
         settings && (
@@ -243,20 +259,21 @@ export const ChatPrompt = ({
                 <ChatOptions
                   db={db}
                   chat={chat}
-                  registry={processor?.registry}
-                  context={processor?.context}
+                  registry={registry}
+                  context={context}
+                  started={started}
                   preset={preset}
                   presets={presets}
                   onPresetChange={onPresetChange}
                 />
-                <div className='flex h-6 grow overflow-x-auto scrollbar-none'>
-                  {processor && <ChatReferences db={db} context={processor.context} />}
-                </div>
+                <Layout.Flex classNames='h-6 grow overflow-x-auto scrollbar-none'>
+                  {context && <ChatReferences db={db} context={context} />}
+                </Layout.Flex>
               </>
             }
           />
         )}
-    </div>
+    </Layout.Flex>
   );
 };
 

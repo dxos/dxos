@@ -157,7 +157,7 @@ export const make = () =>
           keeps it near-square, so a group pulled sideways does not become a long strip. Groups do not
           nest; keep to three or fewer.
         - \`edge A -> B ["label"]\`: \`<->\` draws two arrows, \`--\` a line with no head. Optional
-          \`head=arrow|triangle|crowsfoot|none\`, \`tail=circle\`, \`stroke=dashed|dotted\`, \`color=…\`.
+          \`head=arrow|triangle|crowsfoot|none\`, \`tail=circle|arrow\`, \`stroke=dashed|dotted\`, \`color=…\`.
         - Relationships: put a word in place of \`->\` to say what the edge MEANS; the markers follow
           from it, so never pick heads yourself. The LEFT end is always the child, the whole, the owner
           or the "one" side:

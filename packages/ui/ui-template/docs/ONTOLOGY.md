@@ -74,7 +74,7 @@ chrome and slots, an `Arrangement` owns where its children sit.
 | `navigation`        | **Navigation**        | Moves between places rather than acting on the current one.                                   | `react-ui › Breadcrumb`, `Steps`, `Main.NavigationSidebar`; `react-ui-tabs › Tabs`; `react-ui-components › NumericTabs`; `react-ui-list › Tree` (navtree)                                                                                             | Container, Overlay      |
 | `overlay`           | **Overlay**           | Escapes the layout: positioned against an anchor or the viewport, above everything.           | `react-ui › Dialog`, `Popover`, `Tooltip`, `Toast`; `react-ui-chat › ChatDialog`                                                                                                                                                                      | Anchoring, Elevation    |
 | `text_surface`      | **Text surface**      | A document. Owns a text model, a cursor, and its own keymap.                                  | `react-ui-editor › Editor`; `react-ui-markdown › MarkdownView`, `MarkdownStream`; `react-ui-syntax-highlighter › SyntaxHighlighter`, `JsonHighlighter`; `react-ui-terminal › Terminal`; `react-ui-components › TextBlock`; `react-ui-html › Html`     | Container, Command      |
-| `spatial_surface`   | **Spatial surface**   | A coordinate space. Children have positions in that space, not in document flow.              | `react-ui-canvas › Canvas`, `CellGrid`, `Grid`; `react-ui-canvas-editor › Editor`; `react-ui-diagram › Diagram`; `react-ui-graph › Graph`, `Mesh`, `Tree`; `react-ui-geo › Globe`, `Map`; `react-ui-gameboard › Gameboard`, `Chessboard`              | Container, Selection    |
+| `spatial_surface`   | **Spatial surface**   | A coordinate space. Children have positions in that space, not in document flow.              | `react-ui-canvas › SceneView`; `plugin-sequencer › CellGrid`; `react-ui-diagram › Diagram`; `react-ui-graph › Graph`, `Mesh`, `Tree`; `react-ui-geo › Globe`, `Map`; `react-ui-gameboard › Gameboard`, `Chessboard`                                   | Container, Selection    |
 | `conversation`      | **Conversation**      | An append-mostly sequence of authored messages, with composition at one end.                  | `react-ui-thread › Thread`, `Message`; `react-ui-assistant › ChatThread`, `MessageChrome`; `react-ui-chat › ChatEditor`, `ChatStatus`; `react-ui-feed › MessageList`, `Block`, `Minimap`, `Outline`                                                   | Scroll, Text surface    |
 | `time_based`        | **Time-based**        | State advances on its own; the UI reflects a stream or a clock.                               | `react-ui › MediaPlayer`; `react-ui-transcription › Transcription`, `MicSettings`, `PipelineStatus`; `react-ui-audio › Oscilloscope`; `react-ui-components › Waveform`, `Timeline`                                                                    | Container, Display      |
 | `provider`          | **Provider**          | Renders no DOM of its own. Supplies context that aspects below read.                          | `react-ui › ThemeProvider`, `DensityProvider`, `ElevationProvider`, `Clipboard`, `Deferred`, `ErrorFallback`, `Focus`; `react-ui-attention › AttentionProvider`, `ViewStateProvider`; `react-ui-editor › EditorMenuProvider`, `EditorPreviewProvider` | Wraps anything          |
@@ -237,18 +237,8 @@ component that fits nowhere means the taxonomy is short a row. Findings follow t
 | `react-ui-board`              | `Board`                 | `arrangement`       |
 |                               | `Chain`                 | `spatial_surface`   |
 | `react-ui-calendar`           | `Calendar`              | `collection`        |
-| `react-ui-canvas`             | `Canvas`                | `spatial_surface`   |
-|                               | `CellGrid`              | `spatial_surface`   |
-|                               | `FPS`                   | `display`           |
-|                               | `Grid`                  | `spatial_surface`   |
+| `react-ui-canvas`             | `SceneView`             | `spatial_surface`   |
 | `react-ui-canvas-compute`     | `DiagnosticOverlay`     | `display`           |
-| `react-ui-canvas-editor`      | `Canvas`                | `spatial_surface`   |
-|                               | `Editor`                | `spatial_surface`   |
-|                               | `GraphCanvas`           | `spatial_surface`   |
-|                               | `KeyboardContainer`     | `provider`          |
-|                               | `TextBox`               | `control`           |
-|                               | `Toolbar`               | `command`           |
-|                               | `UI`                    | `command`           |
 | `react-ui-card`               | `Avatar`                | `display`           |
 |                               | `CardTile`              | `container`         |
 |                               | `Row`                   | `container`         |

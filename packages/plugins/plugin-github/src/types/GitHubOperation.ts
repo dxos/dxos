@@ -278,6 +278,32 @@ export const SyncPullRequest = Operation.make({
   types: [PullRequest.PullRequest],
 }).pipe(Operation.mutation('write'));
 
+/**
+ * Refresh every pull request in the space that is still in flight (open or draft) from GitHub.
+ *
+ * Run on a schedule by the space's refresh trigger (see `ensureRefreshTrigger`), so pull requests the
+ * user is not looking at still track their state; one unreachable pull request does not fail the rest.
+ */
+export const RefreshPullRequests = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.github.refreshPullRequests'),
+    name: 'Refresh Pull Requests',
+    description: 'Refresh every open pull request in the space from GitHub.',
+    icon: 'ph--arrows-clockwise--regular',
+  },
+  services: [Database.Service],
+  input: Schema.Struct({}),
+  output: Schema.Struct({
+    /** Open pull requests read from GitHub. */
+    checked: Schema.Number,
+    /** Of those, the ones whose stored fields changed. */
+    updated: Schema.Number,
+    /** Of those, the ones GitHub could not be read for. */
+    failed: Schema.Number,
+  }),
+  types: [PullRequest.PullRequest],
+}).pipe(Operation.mutation('write'));
+
 /** Aggregate outcome of a commit's check runs; `none` when the commit has no checks at all. */
 export const CiState = Schema.Literals(['success', 'failure', 'pending', 'none']);
 export type CiState = Schema.Schema.Type<typeof CiState>;
@@ -303,6 +329,8 @@ export type CheckOutcome = Schema.Schema.Type<typeof CheckOutcome>;
 
 /** One check run on the head commit, as the article lists it. */
 export const CheckRun = Schema.Struct({
+  /** GitHub's id for the run; two runs can share a name and a URL. */
+  id: Schema.Number.pipe(Schema.optional),
   name: Schema.String,
   outcome: CheckOutcome,
   /** GitHub's own `conclusion` (`timed_out`, `cancelled`, …), kept for the label when it says more than the outcome. */

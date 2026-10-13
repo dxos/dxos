@@ -1,0 +1,30 @@
+diagram @ -128,-64 flow=down box=256x128 grid=384x192
+group plugin "Plugin" {
+  node PAssist "plugin-assistant" ref="packages/plugins/plugin-assistant"
+}
+group agents "Agents" {
+  node Toolkit "assistant-toolkit" ref="packages/core/compute/assistant-toolkit"
+  node Assistant "assistant" ref="packages/core/compute/assistant"
+  node Conductor "conductor" ref="packages/core/compute/conductor"
+  node AgentRt "agent-runtime" ref="packages/core/compute/agent-runtime"
+  node Ai "ai" ref="packages/core/compute/ai"
+  node Mcp "mcp-client" ref="packages/core/compute/mcp-client"
+}
+group runtime "Runtime" {
+  node Runtime "compute-runtime" ref="packages/core/compute/compute-runtime"
+  node Compute "compute" ref="packages/core/compute/compute"
+  node Operation "operation" ref="packages/core/compute/operation"
+  node EdgeCompute "edge-compute" ref="packages/core/compute/edge-compute"
+  node EchoClient "echo-client" ref="packages/core/echo/echo-client"
+}
+edge PAssist -> Toolkit
+edge PAssist -> Assistant
+edge PAssist -> Conductor
+edge Toolkit -> AgentRt
+edge Assistant -> Ai "LLM"
+edge Assistant -> Mcp "tools"
+edge AgentRt -> Runtime
+edge Runtime -> Compute
+edge Operation -> Compute
+edge Runtime -> EchoClient
+edge EdgeCompute -> Runtime "remote functions"

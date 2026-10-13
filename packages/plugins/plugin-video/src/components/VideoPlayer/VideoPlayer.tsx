@@ -6,6 +6,7 @@ import React from 'react';
 
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Util from '@dxos/react-ui/Util';
 
 import { meta } from '#meta';
@@ -30,15 +31,16 @@ export const VideoPlayer = Util.composable<HTMLDivElement, VideoPlayerProps>(
 
     if (!embedUrl) {
       return (
-        <div
-          {...Util.composableProps(props, {
-            classNames: 'flex flex-col items-center justify-center gap-2 text-fg-muted aspect-video',
-          })}
+        <Layout.Flex
+          column
+          center
+          gap='sm'
+          {...Util.composableProps(props, { classNames: 'text-fg-muted aspect-video' })}
           ref={forwardedRef}
         >
           <Icon.Icon icon='ph--video-camera-slash--regular' size='xl' />
           <span>{t('player.empty.label')}</span>
-        </div>
+        </Layout.Flex>
       );
     }
 

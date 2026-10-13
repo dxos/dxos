@@ -63,7 +63,7 @@ export const TemplateForm = ({ id, template, onChange }: TemplateFormProps) => {
   );
 
   return (
-    <div className='flex flex-col w-full overflow-hidden gap-4'>
+    <Layout.Flex column gap='lg' classNames='w-full overflow-hidden'>
       <TemplateEditor id={id} source={template.source} classNames='dx-base-surface min-h-[120px]' />
 
       {(template.inputs?.length ?? 0) > 0 && (
@@ -103,7 +103,7 @@ export const TemplateForm = ({ id, template, onChange }: TemplateFormProps) => {
           ))}
         </Layout.Grid>
       )}
-    </div>
+    </Layout.Flex>
   );
 };
 

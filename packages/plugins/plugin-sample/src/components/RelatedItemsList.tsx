@@ -21,21 +21,23 @@ export const RelatedItemsList = ({ items, onNavigate }: RelatedItemsListProps) =
   // row-level click, since plain `Listbox.Item`s are `role=listitem` (not focusable options).
   return (
     <Listbox.Root items={items.map((item) => ({ value: item.id, label: item.id }))}>
-      <Listbox.Content classNames='gap-1'>
-        {items.map((item) => (
-          <Listbox.Item key={item.id} id={item.id} classNames='p-0'>
-            <button
-              type='button'
-              onClick={() => onNavigate?.(item.id)}
-              className='flex w-full items-center gap-2 px-3 py-2 text-start dx-focus-ring'
-            >
-              <Icon.Icon icon='ph--book-open--regular' size='md' />
-              <Listbox.ItemText>{item.name ?? 'Untitled'}</Listbox.ItemText>
-              <Icon.Icon icon='ph--caret-right--regular' size='md' />
-            </button>
-          </Listbox.Item>
-        ))}
-      </Listbox.Content>
+      <Listbox.Viewport>
+        <Listbox.Content classNames='gap-1'>
+          {items.map((item) => (
+            <Listbox.Item key={item.id} id={item.id} classNames='p-0'>
+              <button
+                type='button'
+                onClick={() => onNavigate?.(item.id)}
+                className='flex w-full items-center gap-2 px-3 py-2 text-start dx-focus-ring'
+              >
+                <Icon.Icon icon='ph--book-open--regular' size='md' />
+                <Listbox.ItemText>{item.name ?? 'Untitled'}</Listbox.ItemText>
+                <Icon.Icon icon='ph--caret-right--regular' size='md' />
+              </button>
+            </Listbox.Item>
+          ))}
+        </Listbox.Content>
+      </Listbox.Viewport>
     </Listbox.Root>
   );
 };

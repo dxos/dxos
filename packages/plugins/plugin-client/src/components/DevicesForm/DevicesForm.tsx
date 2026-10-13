@@ -48,7 +48,7 @@ export const DevicesForm = ({
           >
             <Form.FieldSet label={t('devices.label', { ns: meta.profile.key })}>
               <Listbox.Root items={devices.map((device) => ({ value: device.key, label: device.label ?? device.key }))}>
-                <Listbox.Content scroll={false} aria-label={t('devices.label', { ns: meta.profile.key })}>
+                <Listbox.Content aria-label={t('devices.label', { ns: meta.profile.key })}>
                   {devices.map((device) => (
                     <DeviceListItem key={device.key} device={device} connectionState={connectionState} />
                   ))}

@@ -10,8 +10,10 @@ import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { DEFAULT_GRID } from '@dxos/react-ui-canvas/scene';
 import { Form } from '@dxos/react-ui-form';
 
-import { canvasRecordOf, updateCanvasRecord } from '#model';
+import { canvasRecordOf, deleteStyleClass, readStyles, styleClassUses, updateCanvasRecord, writeStyles } from '#model';
 import { Canvas } from '#types';
+
+import { StyleClassList } from './StyleClassList.tsx';
 
 const CanvasPropertiesSchema = Schema.Struct({
   lattice: Schema.optional(
@@ -50,14 +52,41 @@ export const CanvasProperties = ({ drawing }: CanvasPropertiesProps) => {
     [updateCanvas],
   );
 
+  // The drawing's style classes: renamed in place; deleting one leaves its look on the elements that took it.
+  const classes = useMemo(() => Object.values(readStyles(canvas?.styles)), [canvas]);
+  const uses = useMemo(() => (canvas ? styleClassUses(canvas.content) : {}), [canvas]);
+  const handleRename = useCallback(
+    (id: string, name: string) =>
+      updateCanvas((canvas) => {
+        const styles = readStyles(canvas.styles);
+        const styleClass = styles[id];
+        if (styleClass && styleClass.name !== name) {
+          canvas.styles ??= {};
+          writeStyles(canvas.styles, { ...styles, [id]: { ...styleClass, name } });
+        }
+      }),
+    [updateCanvas],
+  );
+  const handleDelete = useCallback(
+    (id: string) =>
+      updateCanvas((canvas) => {
+        canvas.styles ??= {};
+        deleteStyleClass(canvas.content, canvas.styles, id);
+      }),
+    [updateCanvas],
+  );
+
   if (!canvas || canvas.schema !== Canvas.SCENE_SCHEMA) {
     return null;
   }
 
   return (
-    <Form.Root schema={CanvasPropertiesSchema} values={values} autoSave onSave={handleSave}>
-      <Form.Fields />
-    </Form.Root>
+    <>
+      <Form.Root schema={CanvasPropertiesSchema} values={values} autoSave onSave={handleSave}>
+        <Form.Fields />
+      </Form.Root>
+      <StyleClassList classes={classes} uses={uses} onRename={handleRename} onDelete={handleDelete} />
+    </>
   );
 };
 

@@ -15,7 +15,7 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import { meta } from '#meta';
 import { Assistant, AssistantCapabilities, Ollama } from '#types';
 
-import { presetsForProvider, resolveProvider } from '../../processor/index.ts';
+import { presetsForProvider, resolveProvider } from '../../chat-model/index.ts';
 import { OllamaModels } from './OllamaModels.tsx';
 
 export type AssistantSettingsProps = AppSurface.SettingsProps<Assistant.Settings>;

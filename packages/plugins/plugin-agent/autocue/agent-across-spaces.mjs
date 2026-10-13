@@ -6,7 +6,7 @@
  * Mykola makes an agent, tells it about the team offsite, invites it into another space, and asks it there:
  * the agent answers from what it learned in the first space.
  *
- * @mdl packages/plugins/plugin-agent/PLUGIN.mdl test QA-3
+ * @mdl packages/plugins/plugin-agent/PLUGIN.mdl test QA-4
  * @app composer-app dev server on 127.0.0.1:4173, talking to EDGE preview (the default in `dx-local.yml`)
  *
  * Served from the repository root, then driven on a fresh profile so the take starts in a new identity's
@@ -20,7 +20,7 @@
  * Keep the file free of imports: it is loaded from outside the workspace.
  */
 
-const SUBTITLE = 'plugin-agent/PLUGIN.mdl › QA-3';
+const SUBTITLE = 'plugin-agent/PLUGIN.mdl › QA-4';
 const HOME = 'My Space';
 const OTHER = 'Offsite team';
 const AGENT = 'Kai';

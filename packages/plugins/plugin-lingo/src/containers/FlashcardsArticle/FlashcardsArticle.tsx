@@ -9,6 +9,7 @@ import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Ref } from '@dxos/echo';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 
 import { Flashcard } from '#components';
@@ -109,10 +110,10 @@ export const FlashcardsArticle = ({ role, subject: deck, attendableId }: Flashca
             onAnswer={handleAnswer}
           />
         ) : (
-          <div className='flex flex-col items-center gap-2 p-8 text-fg-muted'>
+          <Layout.Flex column align='center' gap='sm' classNames='p-8 text-fg-muted'>
             <span>{queue.length === 0 ? t('empty-deck.message') : t('session-complete.message')}</span>
             {session.answered > 0 && <span>{t('session-score.message', session)}</span>}
-          </div>
+          </Layout.Flex>
         )}
       </Panel.Body>
     </Panel.Root>

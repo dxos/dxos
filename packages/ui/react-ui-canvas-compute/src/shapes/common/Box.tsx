@@ -11,7 +11,7 @@ import * as Icon from '@dxos/react-ui/Icon';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { useComputeContext } from '../../hooks/compute-context.ts';
+import { useComputeContext, useComputeNodeDef } from '../../hooks/compute-context.ts';
 import { type ComputeShape } from '../defs.ts';
 
 export type BoxActionHandler = (action: 'open' | 'close') => void;
@@ -29,9 +29,12 @@ export type BoxProps = PropsWithChildren<
 export const Box = forwardRef<HTMLDivElement, BoxProps>(
   ({ children, classNames, shape, title, status, open, onAction }, forwardedRef) => {
     invariant(shape.type);
-    // The chrome comes from the host's registry, whichever surface the shape is mounted in.
-    const { controller, registry, debug = false } = useComputeContext();
-    const { icon, name, openable } = registry?.getShapeDef(shape.type) ?? { icon: 'ph--circle-dashed--regular' };
+    // The chrome comes from the node registry the scene renders with.
+    const { controller, debug = false } = useComputeContext();
+    const def = useComputeNodeDef();
+    const icon = def?.icon ?? 'ph--circle-dashed--regular';
+    const name = def?.name;
+    const openable = def?.openable;
 
     // Running a node propagates to everything downstream of it, which is what the button means; a shape
     // with no compute node behind it has nothing to run, so it does not get one.

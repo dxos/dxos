@@ -22,11 +22,20 @@ const handler: Operation.WithHandler<typeof AgentOperation.OpenPrivateChat> = Ag
           (identity) => identity.label === ChatParticipant.IDENTITY_LABEL && identity.value === identityDid,
         ),
       );
+      // Unnamed until the member sets a display name: facts key them by DID, so no placeholder name is needed.
       const person =
         known ??
         (yield* Database.add(
-          Person.make({ fullName: name, identities: [{ label: ChatParticipant.IDENTITY_LABEL, value: identityDid }] }),
+          Person.make({
+            ...(name ? { fullName: name } : {}),
+            identities: [{ label: ChatParticipant.IDENTITY_LABEL, value: identityDid }],
+          }),
         ));
+      if (name && !person.fullName && !person.preferredName) {
+        Obj.update(person, (person) => {
+          person.fullName = name;
+        });
+      }
       const chat = yield* ensureParticipantChat(agent, person, { owner: identityDid, remote });
       return { chat: Ref.make(chat), person: Ref.make<Obj.Unknown>(person) };
     }),

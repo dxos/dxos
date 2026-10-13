@@ -44,8 +44,10 @@ import { type DataService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 import { ComplexSet, bufferToArray, countWork, defaultMap } from '@dxos/util';
 
+import { SLOW_WORK_MS } from '../util.ts';
 import {
   type CollectionState,
+  type CollectionStateDiff,
   CollectionSynchronizer,
   diffCollectionStateForPeer,
   subsetRemoteToLocal,
@@ -58,6 +60,7 @@ import { type HandleQueryState, getHandleState, isDocumentLoaded, isLoaded } fro
 import { tryGetSpaceIdFromCollectionId } from './space-collection.ts';
 import { SqliteHeadsStore } from './sqlite-heads-store.ts';
 import { SqliteStorageAdapter, SUBDUCTION_KEY_FAMILIES, SUBDUCTION_PREFIX } from './sqlite-storage-adapter.ts';
+import { repairSelfCheckpointedFragments } from './subduction-migrations/0002_self_checkpointed_fragments.ts';
 import { runMigrations } from './subduction-migrations/index.ts';
 
 export type PeerIdProvider = () => string | undefined;
@@ -617,15 +620,25 @@ export class AutomergeHost extends Resource {
   }
 
   /**
-   * Runs the data migrations in `./subduction-migrations` over the stored Subduction records.
-   * Contained: a failed migration is logged and the host opens on the records as stored, since
-   * every migration is a repair of data the host can already read. Only stored records are
-   * migrated: a peer on `@automerge/automerge` 3.5 re-signs a fragment in the valid shape when it
-   * pushes it, so nothing arriving from an upgraded peer needs a rewrite.
+   * Runs the data migrations in `./subduction-migrations` over the stored Subduction records, then
+   * repairs the self-checkpointed fragments stored since the last open. Contained: a failed
+   * migration is logged and the host opens on the records as stored, since every migration is a
+   * repair of data the host can already read.
+   *
+   * The repair runs on every open, not once: a peer forwards a fragment with the signature it
+   * received it with and clients on `@automerge/automerge` < 3.5 still write the shape, so one
+   * kept as received would be uploaded to the next empty EDGE store and hide the document's head.
    */
   private async _runSubductionMigrations(): Promise<void> {
     try {
-      await runMigrations({ storage: this._storage, subduction: await this._repo.subduction });
+      const subduction = await this._repo.subduction;
+      await runMigrations({ storage: this._storage, subduction });
+      // TODO(mykola): Delete this every-open repair in the next release, once EDGE refuses the SDKs that write the old
+      //   fragment shape (`MIN_CLIENT_SDK_VERSION`) and repairs any that still reach it.
+      const repaired = await repairSelfCheckpointedFragments(subduction, this._storage);
+      if (repaired.rewritten + repaired.skipped + repaired.failed > 0) {
+        log.info('repaired self-checkpointed fragments stored since the last open', repaired);
+      }
     } catch (err) {
       log.error('subduction migrations failed; continuing on the stored records', { err });
     }
@@ -819,6 +832,7 @@ export class AutomergeHost extends Resource {
     if (lease.loaded) {
       return lease;
     }
+    const startedAt = performance.now();
     // Readiness lives on the `DocumentQuery`, not the `DocHandle` — see {@link getHandleState}. The
     // query is read from the repo rather than through the lease, which does not hand it out.
     const progress = this._repo.findWithProgress<T>(lease.documentId);
@@ -874,6 +888,11 @@ export class AutomergeHost extends Resource {
     // to one retry, so an evict/re-fault oscillation cannot re-arm the caller's timeout forever.
     if (getHandleState(this._repo, lease.documentId) !== 'ready' && !opts?.retried) {
       return await this._loadLeasedDoc(ctx, lease, { ...opts, retried: true });
+    }
+    // A network load may legitimately wait on replication; a storage-only one should not.
+    const durationMs = performance.now() - startedAt;
+    if (opts?.fetchFromNetwork === false && durationMs >= SLOW_WORK_MS) {
+      log.warn('slow document load from storage', { documentId: lease.documentId, durationMs });
     }
     return lease;
   }
@@ -1585,60 +1604,36 @@ export class AutomergeHost extends Resource {
       return;
     }
 
-    const { different, missingOnLocal, missingOnRemote } = diffCollectionStateForPeer(localState, remoteState, {
-      isEdgePeer: isEdgePeerId(peerId),
-      hasLocalChange: (documentId, changeHash) => this._hasLocalChange(documentId, changeHash),
-    });
+    const { different, missingOnLocal, missingOnRemote, advertised } = diffCollectionStateForPeer(
+      localState,
+      remoteState,
+      {
+        isEdgePeer: isEdgePeerId(peerId),
+        hasLocalChange: (documentId, changeHash) => this._hasLocalChange(documentId, changeHash),
+      },
+    );
 
     const syncKey = `${collectionId}:${peerId}`;
     if (different.length === 0 && missingOnLocal.length === 0 && missingOnRemote.length === 0) {
       this._nonConvergingSyncPasses.delete(syncKey);
+      // An advertised document keeps its entry, so the same heads kick one sync round, not one per pass.
+      const kicked = new Set<string>(advertised);
       for (const [resyncKey, entry] of this._divergedResyncHeads) {
-        if (entry.collectionId === collectionId && entry.peerId === peerId) {
+        if (entry.collectionId === collectionId && entry.peerId === peerId && !kicked.has(entry.documentId)) {
           this._divergedResyncHeads.delete(resyncKey);
         }
       }
-      return;
-    }
-
-    // Both sides' heads, so a stuck document is diagnosable from a log bundle alone.
-    const passes = (this._nonConvergingSyncPasses.get(syncKey) ?? 0) + 1;
-    this._nonConvergingSyncPasses.set(syncKey, passes);
-    const overThreshold = passes - NON_CONVERGENCE_WARN_THRESHOLD;
-    if (overThreshold >= 0 && overThreshold % NON_CONVERGENCE_WARN_INTERVAL === 0) {
-      // Reported for the undelivered documents as well as the diverged ones: a pair stuck on a
-      // permanent `missingOnRemote` otherwise logs every detail field empty, which reads as "never
-      // got a handle" when the document is resident and the remote holds a headless fragment for it.
-      const stuck = [...different, ...missingOnRemote];
-      const context = {
-        collectionId,
-        peerId,
-        passes,
+    } else {
+      this._reportNonConvergence(collectionId, peerId, localState, remoteState, {
+        different,
         missingOnLocal,
         missingOnRemote,
-        different,
-        localHeads: Object.fromEntries(stuck.map((documentId) => [documentId, localState.documents[documentId]])),
-        remoteHeads: Object.fromEntries(stuck.map((documentId) => [documentId, remoteState.documents[documentId]])),
-        // Subduction addresses documents by sedimentree id, so without this a log bundle cannot be
-        // searched for the stuck document's storage or policy activity.
-        sedimentreeIds: Object.fromEntries(
-          stuck.map((documentId) => [documentId, documentIdToSedimentreeIdHex(documentId)]),
-        ),
-        handleStates: Object.fromEntries(
-          stuck.map((documentId) => [documentId, getHandleState(this._repo, documentId)]),
-        ),
-      };
-      // Two call sites rather than an aliased log function: `@dxos/log` injects call metadata at
-      // the call site, so an alias loses its file and line.
-      if (passes >= NON_CONVERGENCE_ERROR_THRESHOLD) {
-        log.error('collection sync not converging', context);
-      } else {
-        log.warn('collection sync not converging', context);
-      }
+      });
     }
 
-    const toReplicate = [...different, ...missingOnRemote, ...missingOnLocal];
-    const differentSet = new Set(different);
+    // An advertised document is in sync, but a sync round costs little and delivers the change if it is new.
+    const toReplicate = [...different, ...advertised, ...missingOnRemote, ...missingOnLocal];
+    const differentSet = new Set([...different, ...advertised]);
 
     if (toReplicate.length === 0) {
       return;
@@ -1723,6 +1718,51 @@ export class AutomergeHost extends Resource {
 
     if (sharePolicyCanHelp) {
       this._sharePolicyChangedTask!.schedule();
+    }
+  }
+
+  /** Counts a pass that left the pair diverged, with both sides' heads so a stuck document is diagnosable from logs. */
+  private _reportNonConvergence(
+    collectionId: string,
+    peerId: PeerId,
+    localState: CollectionState,
+    remoteState: CollectionState,
+    { different, missingOnLocal, missingOnRemote }: Omit<CollectionStateDiff, 'advertised'>,
+  ): void {
+    const syncKey = `${collectionId}:${peerId}`;
+    const passes = (this._nonConvergingSyncPasses.get(syncKey) ?? 0) + 1;
+    this._nonConvergingSyncPasses.set(syncKey, passes);
+    const overThreshold = passes - NON_CONVERGENCE_WARN_THRESHOLD;
+    if (overThreshold >= 0 && overThreshold % NON_CONVERGENCE_WARN_INTERVAL === 0) {
+      // Reported for the undelivered documents as well as the diverged ones: a pair stuck on a
+      // permanent `missingOnRemote` otherwise logs every detail field empty, which reads as "never
+      // got a handle" when the document is resident and the remote holds a headless fragment for it.
+      const stuck = [...different, ...missingOnRemote];
+      const context = {
+        collectionId,
+        peerId,
+        passes,
+        missingOnLocal,
+        missingOnRemote,
+        different,
+        localHeads: Object.fromEntries(stuck.map((documentId) => [documentId, localState.documents[documentId]])),
+        remoteHeads: Object.fromEntries(stuck.map((documentId) => [documentId, remoteState.documents[documentId]])),
+        // Subduction addresses documents by sedimentree id, so without this a log bundle cannot be
+        // searched for the stuck document's storage or policy activity.
+        sedimentreeIds: Object.fromEntries(
+          stuck.map((documentId) => [documentId, documentIdToSedimentreeIdHex(documentId)]),
+        ),
+        handleStates: Object.fromEntries(
+          stuck.map((documentId) => [documentId, getHandleState(this._repo, documentId)]),
+        ),
+      };
+      // Two call sites rather than an aliased log function: `@dxos/log` injects call metadata at
+      // the call site, so an alias loses its file and line.
+      if (passes >= NON_CONVERGENCE_ERROR_THRESHOLD) {
+        log.error('collection sync not converging', context);
+      } else {
+        log.warn('collection sync not converging', context);
+      }
     }
   }
 

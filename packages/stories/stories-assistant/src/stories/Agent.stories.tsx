@@ -250,7 +250,7 @@ export const WithClaudeAgent: Story = {
     const space = await waitForSpace('withClaudeAgent');
     await waitForChat(space);
 
-    // Submitted through the assistant's own chat input: the processor requests a session from
+    // Submitted through the assistant's own chat input: the chat model requests a session from
     // AgentService, whose process runs the turn on the contributed Claude producer, which appends
     // the projected messages to the feed the thread renders.
     await submitPrompt(canvasElement, `Read agent-fixture.md and state the MAGIC_TOKEN. Do not run any other tools.`);

@@ -309,9 +309,13 @@ const initialState = (): MandelbrotState => {
  * creating it afresh (an EDGE Durable Object after eviction or a deploy), and a closure would restart it
  * at frame 0 with no credit, leaving the client waiting for frames that never come.
  */
-export const MandelbrotProcess = Operation.makeDurable(
-  { key: MANDELBROT_PROCESS_KEY, input: MandelbrotInput, output: MandelbrotOutput, services: [] },
-  (ctx) =>
+export const MandelbrotProcess = Operation.makeDurable({
+  key: MANDELBROT_PROCESS_KEY,
+  input: MandelbrotInput,
+  output: MandelbrotOutput,
+  services: [],
+}).pipe(
+  Operation.withDurableHandler((ctx) =>
     Effect.gen(function* () {
       let state = Option.getOrElse(yield* StateCell.get, initialState);
       const save = (next: MandelbrotState) =>
@@ -377,4 +381,5 @@ export const MandelbrotProcess = Operation.makeDurable(
         }),
       };
     }),
+  ),
 );

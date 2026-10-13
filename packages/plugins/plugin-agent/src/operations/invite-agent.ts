@@ -11,11 +11,10 @@ import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { AgentOperation, AgentPresence } from '#types';
 
 import { makeAgent } from './create-agent.ts';
-import { seedBrief } from './presence.ts';
 
 /**
  * The agent's presence in the space this runs against, created on first invitation: its name, DID and
- * instructions, keyed to its home, with a first chat that starts with what it knows from its other spaces.
+ * instructions, keyed to its home, whose brain it reads and writes (`AgentPresence.brainId`).
  */
 export const inviteAgent = Effect.fnUntraced(function* (agent: Agent.Agent) {
   const { db } = yield* Database.Service;
@@ -49,11 +48,6 @@ export const inviteAgent = Effect.fnUntraced(function* (agent: Agent.Agent) {
     did: agent.did,
     keys: [AgentPresence.homeKey(brain)],
   });
-
-  const chat = yield* Agent.loadChat(presence);
-  if (chat) {
-    yield* seedBrief(presence, yield* Database.load(chat.feed));
-  }
   yield* Database.flush();
   return { agent: presence, created: true };
 });

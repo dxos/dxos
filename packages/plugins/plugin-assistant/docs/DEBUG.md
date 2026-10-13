@@ -6,7 +6,7 @@ AiSession (packages/core/assistant/src/conversation/session.ts)
 │ PartialBlock { messageId, role, block: ContentBlock.Any }
 │ via AgentService.Session.subscribeEphemeral(): Stream<Trace.Message>
 ▼
-AiChatProcessor (packages/plugins/plugin-assistant/src/processor/processor.ts)
+ChatModel (packages/plugins/plugin-assistant/src/chat-model/chat-model.ts)
 │
 │ Stream.runForEach → if Trace.isOfType(PartialBlock) →
 │ #handleEphemeralMessage(event.data)
@@ -15,7 +15,7 @@ AiChatProcessor (packages/plugins/plugin-assistant/src/processor/processor.ts)
 ▼
 Chat.tsx (packages/plugins/plugin-assistant/src/components/Chat/Chat.tsx)
 │
-│ reads processor.messages + processor.streaming atoms,
+│ reads chatModel.messages + chatModel.streaming atoms,
 │ passes flat Message[] down to ChatThread
 ▼
 ChatThread.tsx (packages/plugins/plugin-assistant/src/components/ChatThread/ChatThread.tsx)
@@ -56,9 +56,8 @@ EphemeralDebugModule (storybook debug panel)
 │ each subscribe forks, closing the scope and interrupting scoped forks before
 │ live events arrive. forkDaemon survives until explicit Fiber.interrupt on dispose.
 │
-│ Same pattern as ProcessOperationInvoker.fiberFromProcess (output collector).
 ▼
 resolveEphemeralStatusUpdate → TaskList activity line
 
-**Contrast:** processor.ts uses Effect.fork because its parent Effect.gen continues
+**Contrast:** chat-model.ts uses Effect.fork because its parent Effect.gen continues
 through submitPrompt + waitForCompletion, keeping the scope open for the whole turn.

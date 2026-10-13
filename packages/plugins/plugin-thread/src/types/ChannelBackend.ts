@@ -45,6 +45,16 @@ export const getProvider: (
     return provider;
   });
 
+/**
+ * Whether a host posts what an agent writes into its conversation chats on this channel
+ * ({@link ThreadCapabilities.ChannelBackendProvider.mirrored}); a channel with no provider is not.
+ */
+export const isMirrored: (channel: Channel.Channel) => Effect.Effect<boolean, never, Capability.Service> =
+  Effect.fnUntraced(function* (channel) {
+    const providers = yield* Capability.getAll(ThreadCapabilities.ChannelBackend);
+    return resolveProvider(providers, channel.backend.kind)?.mirrored === true;
+  });
+
 /** Narrows a provider to one that has the optional member `name`, or fails naming what is missing. */
 export const requireMember = <K extends 'openDirect' | 'threads' | 'connection'>(
   provider: ThreadCapabilities.ChannelBackendProvider,

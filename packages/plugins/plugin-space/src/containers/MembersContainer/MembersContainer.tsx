@@ -27,6 +27,7 @@ import { Form } from '@dxos/react-ui-form';
 import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as QrCode from '@dxos/react-ui/QrCode';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 import {
@@ -296,7 +297,7 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
   return (
     <>
       <p className='text-fg-muted'>{t('qr-code.description', { ns: meta.profile.key })}</p>
-      <div role='group' className='grid grid-cols-[1fr_min-content] my-2 gap-2'>
+      <Layout.Grid role='group' cols={['fill', 'min']} gap='sm' classNames='my-2'>
         <div className='w-full aspect-square relative text-fg-muted'>
           <QrCode.QrCode aria-labelledby={qrLabel} errorCorrection='Q' value={url ?? 'never'} />
           <Centered>
@@ -307,7 +308,7 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
           {t('qr.label')}
         </span>
         <SystemButton.Clipboard value={url ?? 'never'} />
-      </div>
+      </Layout.Grid>
       <Button.Root variant='ghost' onClick={onCancel}>
         {t('cancel.label')}
       </Button.Root>

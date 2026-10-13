@@ -34,3 +34,9 @@ export const locate = (uri: string): Location | undefined => {
   const agentId = eid && EID.getEntityId(eid);
   return spaceId && agentId ? { spaceId, agentId } : undefined;
 };
+
+/** The id `BrainService` keys the agent's facts by: its home agent's, so every space it is in shares them. */
+export const brainId = (agent: Agent.Agent): string => {
+  const home = homeOf(agent);
+  return (home && locate(home)?.agentId) ?? agent.id;
+};

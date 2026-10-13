@@ -37,7 +37,7 @@ export type ChatActionsProps = Util.ThemedClassName<
     customActions?: Atom.Atom<ActionGraphProps>;
     processing?: boolean;
     debug?: boolean;
-    /** Whether the prompt holds text and the processor would accept it; drives the send control's enablement. */
+    /** Whether the prompt holds text and the chat model would accept it; drives the send control's enablement. */
     canSend?: boolean;
     /** Whether the checklist beside the prompt is shown; the toggle renders only when provided. */
     tasksVisible?: boolean;

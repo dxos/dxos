@@ -24,14 +24,12 @@ import {
   RemoteTraceMonitor,
   RemoteTriggerManager,
   TriggerDispatcher,
-  TriggerMonitor,
+  TriggerManager,
   TriggerStateStore,
-  UnifiedProcessManager,
 } from '@dxos/compute-runtime';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
-import * as Process from '@dxos/compute/Process';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Registry } from '@dxos/echo';
 import { EdgeOperationInvoker, EdgeProcessManager, EdgeTriggerManager } from '@dxos/edge-compute';
@@ -210,33 +208,29 @@ const FeedTraceSinkSpec = LayerSpec.make(
 );
 
 /**
- * Space-scoped remote operation invoker (EDGE). When edge agents are enabled
- * (`runtime.client.edgeFeatures.agents`) operations are invoked without a space
- * binding (the edge routes them); otherwise they are scoped to the space. The
- * config is read inside the factory — at slice-materialisation time, once
- * `ClientService` is available — so the owning module does not need the client
- * at activation time.
+ * Application-scoped remote operation invoker (EDGE): what an `on: 'edge'` invocation runs through, one request to
+ * EDGE's operation host rather than a spawned process. Each call names its space, so one instance serves every
+ * space. Uses EDGE whenever an edge service is configured, otherwise a no-op that refuses the call.
  */
 const RemoteOperationInvokerSpec = LayerSpec.make(
   {
-    affinity: 'space',
+    affinity: 'application',
     requires: [ClientService],
     provides: [RemoteOperationInvoker.Service],
   },
-  (context) =>
+  () =>
     Layer.unwrap(
       Effect.gen(function* () {
-        invariant(context.space, 'space context required for RemoteOperationInvoker');
         const client = yield* ClientService;
-        const edgeAgents = client.config.get('runtime.client.edgeFeatures.agents');
-        return EdgeOperationInvoker.fromClient(client, edgeAgents ? undefined : context.space);
+        const edgeUrl = client.config.values.runtime?.services?.edge?.url;
+        return edgeUrl ? EdgeOperationInvoker.fromClient(client) : RemoteOperationInvoker.layerNoop;
       }),
     ),
 );
 
 /**
  * Space-scoped remote (EDGE) trigger manager, consumed by the aggregate
- * {@link TriggerMonitor}. Uses the EDGE implementation whenever an edge service
+ * {@link TriggerManager}. Uses the EDGE implementation whenever an edge service
  * is configured (a trigger is routed here by its own `remote` flag, so the
  * manager should exist wherever edge is reachable), otherwise a no-op.
  */
@@ -321,24 +315,6 @@ const RemoteTraceMonitorSpec = LayerSpec.make(
     ),
 );
 
-/**
- * Application-scoped {@link Process.ManagerService}: one surface over the local process manager and the
- * remote one, so a consumer such as `AgentService` names where a process runs instead of holding both.
- */
-const ProcessManagerSpec = LayerSpec.make(
-  {
-    affinity: 'application',
-    requires: [
-      ProcessManager.ProcessManagerService,
-      RemoteProcessManager.Service,
-      RemoteTraceMonitor.Service,
-      AtomRegistry.AtomRegistry,
-    ],
-    provides: [Process.ManagerService],
-  },
-  () => UnifiedProcessManager.layer,
-);
-
 const TriggerDispatcherSpec = LayerSpec.make(
   {
     affinity: 'space',
@@ -349,17 +325,17 @@ const TriggerDispatcherSpec = LayerSpec.make(
 );
 
 /**
- * Aggregate {@link Trigger.TriggerMonitorService} over the local
+ * Aggregate {@link Trigger.ManagerService} over the local
  * {@link TriggerDispatcher} and the remote {@link RemoteTriggerManager.Service}.
  * Provides a unified view of trigger state across local and edge environments.
  */
-const TriggerMonitorSpec = LayerSpec.make(
+const TriggerManagerSpec = LayerSpec.make(
   {
     affinity: 'space',
     requires: [TriggerDispatcher, Database.Service, AtomRegistry.AtomRegistry, RemoteTriggerManager.Service],
-    provides: [Trigger.TriggerMonitorService],
+    provides: [Trigger.ManagerService],
   },
-  () => TriggerMonitor.layer,
+  () => TriggerManager.layer,
 );
 
 export default Capability.makeModule(() =>
@@ -373,11 +349,10 @@ export default Capability.makeModule(() =>
       FeedTraceSinkSpec,
       TriggerDispatcherSpec,
       RemoteTriggerManagerSpec,
-      TriggerMonitorSpec,
+      TriggerManagerSpec,
       RemoteOperationInvokerSpec,
       RemoteTraceMonitorSpec,
       RemoteProcessManagerSpec,
-      ProcessManagerSpec,
     ]),
     Capability.contribute(Capabilities.TraceSink, ({ resolver }) => FeedTraceSink.makeRoutingSink({ resolver })),
   ]),

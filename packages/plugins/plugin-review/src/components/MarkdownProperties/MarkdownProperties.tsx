@@ -9,6 +9,7 @@ import type * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Form } from '@dxos/react-ui-form';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import { Version } from '@dxos/versioning';
 
 import { useVersioning } from '#hooks';
@@ -52,13 +53,13 @@ export const MarkdownProperties = ({ subject }: MarkdownPropertiesProps) => {
           </span>
         }
       >
-        <div className='flex gap-1'>
+        <Layout.Flex gap='xs'>
           <Button.Root
             icon='ph--bookmark-simple--regular'
             label={t('create-checkpoint.label')}
             onClick={handleCheckpoint}
           />
-        </div>
+        </Layout.Flex>
       </Form.Field>
     </Form.FieldSet>
   );

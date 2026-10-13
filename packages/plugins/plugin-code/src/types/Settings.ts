@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
 /** Claude Code's permission modes, which other ACP agents accept by the same ids. */
-export const AgentPermissionMode = Schema.Literals(['default', 'acceptEdits', 'auto']);
+export const AgentPermissionMode = Schema.Literals(['default', 'acceptEdits', 'auto', 'bypassPermissions']);
 export type AgentPermissionMode = Schema.Schema.Type<typeof AgentPermissionMode>;
 
 /** The agent judges which actions need a person; Claude Code drops to `acceptEdits` for a model without it. */
@@ -26,7 +26,7 @@ export const Settings = Schema.Struct({
     AgentPermissionMode.annotate({
       title: 'Coding agent permissions',
       description:
-        'How freely coding agents act without asking: auto (the default) lets the agent decide and asks only for risky actions, acceptEdits allows file edits but asks before commands, default asks before edits and commands.',
+        'How freely coding agents act without asking: auto (the default) lets the agent decide and asks only for risky actions, acceptEdits allows file edits but asks before commands, default asks before edits and commands, bypassPermissions never asks and runs everything.',
     }),
   ).pipe(Schema.withConstructorDefault(Effect.succeed(DEFAULT_AGENT_PERMISSION_MODE))),
 }).mapFields(Struct.map(Schema.mutableKey));

@@ -195,7 +195,6 @@ export type ProcessManagerRuntimeServices =
   | Plugin$.Service
   | ProcessManager$.ProcessManagerService
   | Operation.Service
-  | ProcessManager$.ProcessOperationInvoker.Service
   | ComputeServiceResolver.ServiceResolver;
 
 /**
@@ -264,7 +263,7 @@ export const UndoMapping = Capability$.make<UndoMapping[]>()('org.dxos.app-frame
 
 /**
  * Operation invoker backed by the process manager. Spawns a process per
- * operation invocation; see {@link ProcessManager$.ProcessOperationInvoker}.
+ * operation invocation; see `ProcessOperationInvoker` in `@dxos/compute-runtime`.
  */
 export type OperationInvoker = OperationInvoker$.OperationInvoker;
 

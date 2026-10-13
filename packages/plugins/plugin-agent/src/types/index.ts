@@ -8,7 +8,6 @@ export * as AgentOperation from './AgentOperation.ts';
 export * as AgentPresence from './AgentPresence.ts';
 export * as BrainService from './BrainService.ts';
 export * as ChatParticipant from './ChatParticipant.ts';
-export * as FactEntry from './FactEntry.ts';
 export * as Goal from './Goal.ts';
 export * as Memory from './Memory.ts';
 export * as MemoryOperation from './MemoryOperation.ts';

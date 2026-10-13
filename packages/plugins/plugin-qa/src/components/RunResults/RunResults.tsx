@@ -9,6 +9,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as Button from '@dxos/react-ui/Button';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { QaOperation, type TestCase, TestRun } from '#types';
 
@@ -57,9 +58,9 @@ export const RunResults = ({ run }: RunResultsProps) => {
   }, [invokePromise, run, completing]);
 
   return (
-    <div className='flex flex-col gap-1 ps-6' data-testid='qa.run.results'>
+    <Layout.Flex column gap='xs' classNames='ps-6' data-testid='qa.run.results'>
       {snapshot.results.map((result) => (
-        <div key={result.caseKey} className='flex items-center gap-2' data-testid='qa.run.result'>
+        <Layout.Flex key={result.caseKey} align='center' gap='sm' data-testid='qa.run.result'>
           <span className='font-mono text-sm w-20 shrink-0'>{result.caseKey}</span>
           <StatusBadge status={result.status} />
           <span className='grow text-fg-subtle text-sm'>{result.note ?? ''}</span>
@@ -69,11 +70,11 @@ export const RunResults = ({ run }: RunResultsProps) => {
               {result.artifacts.length}
             </span>
           )}
-        </div>
+        </Layout.Flex>
       ))}
 
       {unreported.map((caseKey) => (
-        <div key={caseKey} className='flex items-center gap-2' data-testid='qa.run.unreported'>
+        <Layout.Flex key={caseKey} align='center' gap='sm' data-testid='qa.run.unreported'>
           <span className='font-mono text-sm w-20 shrink-0'>{caseKey}</span>
           {/* `skipped` is a terminal outcome, and a case can still report while the run is open. */}
           {snapshot.status === 'running' ? (
@@ -95,16 +96,16 @@ export const RunResults = ({ run }: RunResultsProps) => {
               </Button.Root>
             </>
           )}
-        </div>
+        </Layout.Flex>
       ))}
 
       {snapshot.status === 'running' && (
-        <div className='flex justify-end pt-1'>
+        <Layout.Flex justify='end' classNames='pt-1'>
           <Button.Root disabled={completing} onClick={handleComplete} data-testid='qa.run.complete'>
             <Icon.Icon icon='ph--flag-checkered--regular' size='md' />
             <span>Finish run</span>
           </Button.Root>
-        </div>
+        </Layout.Flex>
       )}
 
       {snapshot.summary && <p className='text-fg-subtle text-sm'>{snapshot.summary}</p>}
@@ -114,7 +115,7 @@ export const RunResults = ({ run }: RunResultsProps) => {
           {error}
         </p>
       )}
-    </div>
+    </Layout.Flex>
   );
 };
 

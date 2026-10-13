@@ -476,15 +476,31 @@ export class AppManager {
     // The baseline counts rendered rail rows, so it is taken once one exists.
     await this.getSpaceItems().first().waitFor({ state: 'attached', timeout });
     const initialCount = await this.getSpaceItems().count();
+    const initialWorkspace = this.#workspaceId();
 
     await this.#submitCreateSpaceForm(name, { typingDelay, holdMs });
 
-    // The new rail item is the first condition pre-existing state cannot satisfy: a closed dialog
-    // does not prove a space was created, and `waitForSpaceReady()` is already satisfied by the
-    // space the app is in on entry.
+    // The new rail item is the first condition pre-existing state cannot satisfy: the dialog closes
+    // before the space is created, and `waitForSpaceReady()` is already satisfied by the space the
+    // app is in on entry.
     await expect(this.getSpaceItems()).toHaveCount(initialCount + 1, { timeout });
+    // The space opens once it is ready, after it shows in the rail, so wait to leave the entry space.
+    await this.page.waitForFunction(
+      ([anchorKey, initial]) => {
+        const [anchor, workspaceId] = window.location.pathname.split('/').filter(Boolean);
+        return anchor === anchorKey && !!workspaceId && workspaceId !== initial;
+      },
+      [WORKSPACE_KEY, initialWorkspace] as const,
+      { timeout },
+    );
 
     await this.waitForSpaceReady(timeout);
+  }
+
+  /** The workspace segment of the current URL, as `waitForSpaceReady` reads it. */
+  #workspaceId(): string | undefined {
+    const [anchor, workspaceId] = new URL(this.page.url()).pathname.split('/').filter(Boolean);
+    return anchor === WORKSPACE_KEY ? workspaceId : undefined;
   }
 
   /** Opens the add-space dialog, submits it, and waits for it to close. */
@@ -520,9 +536,8 @@ export class AppManager {
     }
     await save.click();
 
-    // Closing the dialog waits on the space actually being created, so this is sized to the
-    // operation rather than to an interaction. It is not the test's assertion — the caller's count
-    // check is — so a generous bound only delays a genuine "dialog never closed" failure.
+    // The dialog closes on submit, before the space is created; a failed create is a toast, which the
+    // caller's count check then surfaces. Generous only so a stalled submit still reports below.
     try {
       await form.waitFor({ state: 'detached', timeout: 30_000 });
     } catch (err) {

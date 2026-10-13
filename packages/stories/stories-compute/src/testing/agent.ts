@@ -305,9 +305,13 @@ const StateCell = StorageService.cell(Schema.fromJsonString(AgentDemoState), 'ag
  * Its state lives in the process's storage rather than in the closure, so a host that revives it (an
  * EDGE Durable Object after eviction) continues the transcript instead of going silent.
  */
-export const AgentDemoProcess = Operation.makeDurable(
-  { key: AGENT_DEMO_PROCESS_KEY, input: AgentDemoInput, output: TranscriptEntry, services: [] },
-  (ctx) =>
+export const AgentDemoProcess = Operation.makeDurable({
+  key: AGENT_DEMO_PROCESS_KEY,
+  input: AgentDemoInput,
+  output: TranscriptEntry,
+  services: [],
+}).pipe(
+  Operation.withDurableHandler((ctx) =>
     Effect.gen(function* () {
       let state = yield* StateCell.get;
       const save = (next: AgentDemoState) =>
@@ -353,4 +357,5 @@ export const AgentDemoProcess = Operation.makeDurable(
         }),
       };
     }),
+  ),
 );
