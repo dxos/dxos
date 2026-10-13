@@ -50,7 +50,10 @@ export const pushFacts: (
     return { fired: [], undelivered: [] };
   }
   // The id `readSource` attributes the agent's own messages to.
-  const queued = yield* brain.push(AgentPresence.brainId(agent), facts, { quiet: [agentId(agent)], ...(read ? { read } : {}) });
+  const queued = yield* brain.push(AgentPresence.brainId(agent), facts, {
+    quiet: [agentId(agent)],
+    ...(read ? { read } : {}),
+  });
   if (queued === 0) {
     return { fired: [], undelivered: [] };
   }
