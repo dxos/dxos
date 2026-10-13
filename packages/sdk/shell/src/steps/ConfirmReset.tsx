@@ -87,7 +87,8 @@ export const ConfirmReset = ({
           <Banner.Title>{resolvedTitle}</Banner.Title>
           <Banner.Body>{resolvedMessage}</Banner.Body>
         </Banner.Root>
-        <Field.Root>
+        {/* An error shows only on an invalid field. */}
+        <Field.Root {...(validationMessage && { validationValence: 'error' })}>
           <Field.Label srOnly>{t('confirmation.placeholder', { confirmationValue })}</Field.Label>
           <Input.Root
             disabled={disabled}

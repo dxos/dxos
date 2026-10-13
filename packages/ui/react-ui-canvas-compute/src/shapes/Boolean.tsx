@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
-import React, { type FC } from 'react';
+import React, { type CSSProperties, type FC } from 'react';
 
 import { type NodeDef } from '@dxos/react-ui-canvas/scene';
 
@@ -58,13 +58,7 @@ const defineGate = ({
     schema: withZ(GateShape),
     // NOTE: Preact interprets captitalized properties as React components.
     // Be careful not to name component factories with a capital letter.
-    component: () => {
-      return (
-        <div className='flex w-full justify-center items-center'>
-          <Symbol />
-        </div>
-      );
-    },
+    component: ({ node }) => <Symbol size={node.size} />,
     create,
     ports: (shape) => createRowPorts({ size: shape.size, inputs, outputs }),
   });
@@ -75,19 +69,24 @@ const defineGate = ({
 
 type PathConstructor = (props: { startX: number; endX: number; height: number }) => string[];
 
+const OUTER_BOX: CSSProperties = {
+  top: 'calc(-1 * var(--scene-frame-border, 2px))',
+  left: 'calc(-1 * var(--scene-frame-border, 2px))',
+  width: 'calc(100% + 2 * var(--scene-frame-border, 2px))',
+  height: 'calc(100% + 2 * var(--scene-frame-border, 2px))',
+};
+
 type GateSymbolProps = {
-  width?: number;
-  height?: number;
+  /** The node's size in scene px; the symbol is drawn in the node's own coordinates, so its lines meet the ports. */
+  size: { width: number; height: number };
   className?: string;
   strokeWidth?: number;
 };
 
-// TODO(burdon): Note inputs should line up with anchors.
 const createSymbol =
   (pathConstructor: PathConstructor, inputs: number): FC<GateSymbolProps> =>
   ({
-    width = 64,
-    height = 32,
+    size: { width, height },
     // TODO(burdon): Same as line color.
     className = 'fill-neutral-200 dark:fill-neutral-800 stroke-neutral-500',
     strokeWidth = 1,
@@ -98,8 +97,10 @@ const createSymbol =
     const paths = pathConstructor({ startX, endX, height });
 
     return (
-      <svg viewBox={`0 0 ${width} ${height}`} className='dx-fill'>
-        {/* Input line. */}
+      // Over the node's outer box rather than inside its border, so the viewBox is the node's own coordinates and the
+      // input lines meet the ports exactly.
+      <svg viewBox={`0 0 ${width} ${height}`} className='absolute' style={OUTER_BOX}>
+        {/* Input lines, at the rows `createRowPorts` puts the input ports on. */}
         {getRowPoints({ x: 0, y: centerY }, inputs).map(({ x, y }, i) => (
           <line key={i} x1={x} y1={y} x2={startX * 1.3} y2={y} strokeWidth={strokeWidth} className={className} />
         ))}

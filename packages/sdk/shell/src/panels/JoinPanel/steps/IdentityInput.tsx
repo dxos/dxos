@@ -82,7 +82,8 @@ export const IdentityInputImpl = ({ method, active, validationMessage, onConfirm
   return (
     <>
       <Dialog.Body>
-        <Field.Root>
+        {/* An error shows only on an invalid field. */}
+        <Field.Root {...(validationMessage && { validationValence: 'error' })}>
           <Field.Label>{t(isRecover ? 'recover-identity-input.label' : 'new-identity-input.label')}</Field.Label>
           <Input.Root
             disabled={disabled}
