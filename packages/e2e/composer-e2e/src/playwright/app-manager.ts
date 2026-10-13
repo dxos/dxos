@@ -255,6 +255,26 @@ export class AppManager {
     return tag;
   }
 
+  /** Waits until every device of this identity, its EDGE agent included, holds a control feed in every space. */
+  async waitForAgentInSpaces(): Promise<void> {
+    await expect
+      .poll(
+        () =>
+          this.page.evaluate(() => {
+            const devices = globalThis.dxos?.client?.halo.devices.get() ?? [];
+            const spaces = globalThis.dxos?.spaces?.() ?? [];
+            const agentJoined = devices.length > 1;
+            return (
+              agentJoined &&
+              spaces.length > 0 &&
+              spaces.every((space) => (space.pipeline.get().controlFeeds?.length ?? 0) >= devices.length)
+            );
+          }),
+        { timeout: 60_000, message: 'the EDGE agent was not admitted to every space' },
+      )
+      .toBe(true);
+  }
+
   /** Fails unless the page still holds the document {@link markDocument} tagged. */
   async expectSameDocument(tag: string): Promise<void> {
     expect(await this.page.evaluate(() => globalThis.e2eDocumentTag), 'the page reloaded').toBe(tag);
