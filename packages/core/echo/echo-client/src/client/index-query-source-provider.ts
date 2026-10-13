@@ -56,6 +56,8 @@ export interface ObjectLoader {
    * index hits that previously failed to load (e.g. timed out before their document arrived).
    */
   readonly updateEvent: ReadOnlyEvent<ObjectUpdate>;
+
+  heldObjectIds?(spaceIds: readonly SpaceId[]): string[];
 }
 
 export type IndexQueryProviderProps = {
@@ -274,6 +276,7 @@ export class IndexQuerySource implements QuerySource {
         query: JSON.stringify(query),
         queryId: String(queryId),
         reactivity: QueryReactivity.ONE_SHOT,
+        heldIds: this._heldIds(query),
       }),
       {
         onData: (response) => {
@@ -340,6 +343,7 @@ export class IndexQuerySource implements QuerySource {
         query: JSON.stringify(query),
         queryId: String(queryId),
         reactivity: QueryReactivity.REACTIVE,
+        heldIds: this._heldIds(query),
       }),
       {
         onData: (response) => {
@@ -518,11 +522,6 @@ export class IndexQuerySource implements QuerySource {
     return { results, stalled };
   }
 
-  /**
-   * Places every document row its database can back before any row waits for its strong dependencies, so
-   * a dependency later in the set is placed from its own row rather than loaded as an earlier one's.
-   * Waits for nothing: a row its database cannot place yet takes the document path, under the per-row budget.
-   */
   private async _placeRows(records: readonly QueryService.QueryResult[]): Promise<Map<string, PlacedRow>> {
     const bySpace = new Map<string, { row: QueryService.QueryResult; documentId: string }[]>();
     for (const row of records) {
@@ -582,12 +581,16 @@ export class IndexQuerySource implements QuerySource {
       if (err === expired) {
         return STALLED;
       }
-      // Its database closed under it, whichever wait the row was in.
       if (err instanceof ContextDisposedError) {
         return null;
       }
       throw err;
     }
+  }
+
+  private _heldIds(query: QueryAST.Query): string[] | undefined {
+    const held = this._params.objectLoader.heldObjectIds?.(getTargetSpacesForQuery(query));
+    return held?.length ? held : undefined;
   }
 
   private _assertResultSpaces(query: QueryAST.Query, response: QueryService.QueryResponse): void {
@@ -724,8 +727,6 @@ export class IndexQuerySource implements QuerySource {
       return queryResult;
     }
 
-    // A placed object's parent, relation endpoints and stored type are read synchronously, so they join the
-    // working set before it is returned.
     if (placed) {
       await placed.database._entityManager.waitForStrongDeps(getObjectCore(placed.entity));
     }
@@ -810,10 +811,8 @@ const _groupFromRemoteResult = (result: QueryService.QueryResult): SourceEntry['
       }
     : undefined;
 
-/** A row's object, placed on its database before the pass waits for any strong dependency. */
 type PlacedRow = { database: DatabaseImpl; entity: Entity.Unknown };
 
-/** The remembered rows without the backing of each one whose object the pass published, which the tab now holds. */
 export const releaseHeldBacking = (
   records: readonly QueryService.QueryResult[],
   held: ReadonlySet<string>,
@@ -831,10 +830,6 @@ export const releaseHeldBacking = (
       : row,
   );
 
-/**
- * The rows of a reactive query's latest emission, with the JSON and stored changes the host left off a row it already
- * sent at that version restored from the previous emission, since a pass may never have seen that one.
- */
 export const restoreSentBacking = (
   previous: readonly QueryService.QueryResult[] | undefined,
   results: QueryService.QueryResult[],

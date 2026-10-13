@@ -6,6 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
 import { Filter, Obj } from '@dxos/echo';
+import { BACKED_OBJECT_LIMIT } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { openAndClose } from '@dxos/test-utils';
 
@@ -29,8 +30,7 @@ describe('Query API stalls under paused document synchronizer', () => {
     // 1. Add an object normally so it ends up persisted on disk and
     //    discoverable via space root links.
     const db1 = await peer.createDatabase();
-    // Over the size the index backs an object at, so queries take the document path rather than the index's copy.
-    const obj = db1.add(Obj.make(TestSchema.Expando, { title: 'subject', body: 'x'.repeat(70_000) }));
+    const obj = db1.add(Obj.make(TestSchema.Expando, { title: 'subject', body: 'x'.repeat(BACKED_OBJECT_LIMIT + 1) }));
     await db1.flush();
     const objId = obj.id;
 

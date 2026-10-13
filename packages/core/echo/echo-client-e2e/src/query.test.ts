@@ -4,7 +4,7 @@
 
 import * as A from '@automerge/automerge';
 import * as Schema from 'effect/Schema';
-import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { Trigger, asyncTimeout, sleep, waitForCondition } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -29,7 +29,7 @@ import {
 } from '@dxos/echo';
 import { DatabaseImpl, type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder, type EchoTestPeer, createTmpPath, getObjectCore } from '@dxos/echo-client/testing';
-import { type DatabaseDirectory } from '@dxos/echo-protocol';
+import { BACKED_OBJECT_LIMIT, type DatabaseDirectory } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId, PublicKey, URI } from '@dxos/keys';
@@ -2185,7 +2185,6 @@ describe('Query', () => {
 
       const object = queryResult.find((obj) => obj.id === assertion.objectId);
       invariant(object, 'object missing after reload');
-      // Loaded from the bytes it holds, so it is bound to its document.
       getObjectCore(object).getLoadedDoc();
       const objectDocHandle = getObjectCore(object).docHandle;
       invariant(objectDocHandle, 'docHandle missing');
@@ -4333,7 +4332,6 @@ describe('Query', () => {
   });
 
   describe('Lazy queries', () => {
-    /** A database reopened from storage, so the tab holds none of these objects' documents. */
     const openReloaded = async (populate: (db: EchoDatabase) => { id: string }[] | Promise<{ id: string }[]>) => {
       const reloadBuilder = new EchoTestBuilder();
       onTestFinished(async () => {
@@ -4350,7 +4348,6 @@ describe('Query', () => {
       const db = await peer.openLastDatabase();
       invariant(db instanceof DatabaseImpl);
 
-      /** Changes an object's data on the host and saves it, as another writer would. */
       const changeOnHost = async (id: string, change: (data: Record<string, any>) => void) => {
         const documentId = documentIds.get(id);
         invariant(documentId);
@@ -4363,7 +4360,6 @@ describe('Query', () => {
       return { db, ids, peer, documentIds, changeOnHost };
     };
 
-    /** Whether the tab holds the object's document loaded, as opposed to an index-backed core or nothing. */
     const hasDocument = (db: DatabaseImpl, id: string) =>
       db.getObjectCoreById(id, { load: false })?.docHandle !== undefined;
 
@@ -4388,6 +4384,16 @@ describe('Query', () => {
       invariant(tagged);
       expect(Obj.getMeta(tagged).keys.map((key) => ({ ...key }))).toEqual([{ id: 'key-1', source: 'test' }]);
       expect(tagged.blob).toEqual(new Uint8Array([1, 2, 3]));
+    });
+
+    test('a query over objects the tab holds reads none of their stored changes', async () => {
+      const { db, peer } = await builder.createDatabase();
+      db.add(createTestObject({ value: 1 }));
+      await db.flush({ indexes: true });
+      const reads = vi.spyOn(peer.host.automergeHost, 'readStoredChanges');
+
+      expect(await db.query(Query.select(Filter.type(TestSchema.Expando))).run()).toHaveLength(1);
+      expect(reads).not.toHaveBeenCalled();
     });
 
     test('a parent that follows its child in the results is backed by the index too', async () => {
@@ -4455,7 +4461,6 @@ describe('Query', () => {
       await waitForCondition({ condition: () => object.value === 2, timeout: 5_000 });
       await waitForCondition({ condition: () => ones.length === 0, timeout: 5_000 });
       expect(hasDocument(db, object.id)).toBe(false);
-      // A write starts from what the update showed.
       expect(Obj.version(object).automergeHeads).toEqual(hostHeads);
       Obj.update(object, (object) => {
         object.value = object.value + 1;
@@ -4468,9 +4473,9 @@ describe('Query', () => {
       const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
 
       await changeOnHost(object.id, (data) => {
-        data.body = 'x'.repeat(70_000);
+        data.body = 'x'.repeat(BACKED_OBJECT_LIMIT + 1);
       });
-      await waitForCondition({ condition: () => object.body?.length === 70_000, timeout: 5_000 });
+      await waitForCondition({ condition: () => object.body?.length === BACKED_OBJECT_LIMIT + 1, timeout: 5_000 });
       expect(hasDocument(db, object.id)).toBe(true);
     });
 

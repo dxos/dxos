@@ -7,10 +7,6 @@ import { type QueryService } from '@dxos/protocols/rpc';
 
 import { type SnapshotState } from './object-core.ts';
 
-/**
- * The index's copy of the object a document row describes; undefined when the row carries no JSON and
- * stored changes to back it with (the object is too large, shares its document, or lives in a branch).
- */
 export const getSnapshotState = (result: QueryService.QueryResult): SnapshotState | undefined => {
   if (
     result.documentJson === undefined ||
@@ -20,13 +16,8 @@ export const getSnapshotState = (result: QueryService.QueryResult): SnapshotStat
   ) {
     return undefined;
   }
-  const structure = objectStructureFromJson(JSON.parse(result.documentJson));
-  // The JSON carries the object's data and meta; its creation time comes with the row.
-  if (result.createdAt !== undefined) {
-    structure.system = { ...structure.system, createdAt: result.createdAt };
-  }
   return {
-    structure,
+    structure: objectStructureFromJson(JSON.parse(result.documentJson), { createdAt: result.createdAt }),
     heads: result.heads,
     updatedAt: result.updatedAt,
     bytes: result.bytes,

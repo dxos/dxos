@@ -85,7 +85,6 @@ export class SqliteHeadsStore {
     return RuntimeProvider.runPromise(this.#runtime)(
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
-        // In chunks under SQLite's bound-variable limit, mapped back to the original order.
         const headsMap = new Map<string, Heads>();
         for (const chunk of chunkArray(documentIds, SQL_MAX_BOUND_VARIABLES)) {
           const rows = yield* sql<{ document_id: string; heads: Uint8Array }>`

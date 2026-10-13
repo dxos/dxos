@@ -62,7 +62,6 @@ export type CompiledRow = {
   rank: number;
   createdAt: number | null;
   updatedAt: number | null;
-  /** JSON text of the body; present for feed rows only, since a document row's is read only when it ships. */
   documentJson: string | null;
   /** JSON text of the group key; present iff the plan aggregates. */
   groupKey: string | null;
@@ -73,9 +72,7 @@ export type CompiledRow = {
    * serialized key rather than an object.
    */
   aggregates: string | null;
-  /** JSON array of the heads a document row's {@link documentJson} was read at, when a client can back it. */
   heads: string | null;
-  /** The row's `objectMeta.version` stamp. */
   version: number | null;
 };
 
@@ -1204,20 +1201,6 @@ const planIncludesAllFeeds = (plan: QueryPlan.Plan): boolean =>
     }
   });
 
-/**
- * Whether any filter in the plan reads `@meta` — foreign keys, a registry key/version, or tags.
- *
- * A document row's `objectSnapshot` holds `@meta` only once re-indexed (tracker migration 0009), so
- * those predicates cannot be evaluated in SQL and the plan has to take the in-memory path instead. Queue rows do keep their meta, but a space-scoped query
- * sees both, so this declines the plan wholesale rather than by scope.
- */
-/**
- * Whether the compiler declines this plan, leaving it for the in-memory executor.
- *
- * Two reasons would need the store read before the statement is built: a document row's `@meta`
- * is in `objectSnapshot` only once re-indexed, and a `metaVersion` semver range has to be resolved to the versions
- * actually present. Declining them keeps compilation pure — steps in, SQL out — and the plan correct.
- */
 export const planDeclinedByCompiler = (plan: QueryPlan.Plan, planSubquery: PlanSubquery): boolean =>
   planSelectsChanges(plan) ||
   planReadsObjectMeta(plan, planSubquery) ||

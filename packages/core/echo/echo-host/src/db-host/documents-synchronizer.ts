@@ -47,11 +47,8 @@ export type DocumentsSynchronizerProps = {
 export type SubscribedDocument = { documentId: DocumentId; heads?: Heads; passive?: boolean };
 
 interface DocSyncState {
-  /** The client holds the document unloaded, so each send carries its object's JSON. */
   passive: boolean;
-  /** Heads the client holds as of the last send; unset until the initial send unless the client named its own. */
   lastSentHead?: Heads;
-  /** The client named heads it holds and waits to hear it is current, so the first send goes out even if empty. */
   confirm?: boolean;
   /**
    * Held only until the document is loaded for its initial send. Nothing pins the document after
@@ -127,7 +124,6 @@ export class DocumentsSynchronizer extends Resource {
       if (existing) {
         existing.passive = passive;
         existing.lastSentHead = heads;
-        // A loaded document's client waits to hear it is current; a passive one already shows what it holds.
         existing.confirm = heads !== undefined && !passive;
         if (passive && heads !== undefined) {
           waiting.push({ documentId, heads, syncState: existing });
@@ -163,7 +159,6 @@ export class DocumentsSynchronizer extends Resource {
       const stored = await this._params.automergeHost.getStoredHeads(waiting.map(({ documentId }) => documentId));
       waiting.forEach(({ documentId, heads, syncState }, index) => {
         const storedHeads = stored[index];
-        // Storage already past what the client shows: send the difference now rather than at the next save.
         if (this._syncStates.get(documentId) === syncState && (!storedHeads || !sameHeads(storedHeads, heads))) {
           this._pendingUpdates.add(documentId);
           this._sendUpdatesJob?.trigger();
@@ -350,7 +345,6 @@ export class DocumentsSynchronizer extends Resource {
       return;
     }
     const doc = lease.doc();
-    // Heads the client named that this host does not hold cannot be diffed against; it gets the whole document.
     const since =
       syncState.lastSentHead && A.hasHeads(doc, syncState.lastSentHead) ? syncState.lastSentHead : undefined;
     const mutation = since ? A.saveSince(doc, since) : A.save(doc);
@@ -394,7 +388,6 @@ export class DocumentsSynchronizer extends Resource {
   }
 }
 
-/** What a client holding the document unloaded shows of its one object, read at the document's heads. */
 const passiveObject = (doc: A.Doc<DatabaseDirectory>): DataService.DocumentUpdate['passive'] => {
   const heads = A.getHeads(doc);
   const [entry] = Object.entries(doc.objects ?? {});
@@ -405,7 +398,6 @@ const passiveObject = (doc: A.Doc<DatabaseDirectory>): DataService.DocumentUpdat
   };
 };
 
-/** Unix ms of the latest change at `heads`, read from change metadata rather than decoded changes. */
 const lastChangeTime = (doc: A.Doc<unknown>, heads: A.Heads): number | undefined => {
   const backend = A.getBackend(doc);
   const time = Math.max(0, ...heads.map((hash) => backend.getChangeMetaByHash(hash)?.time ?? 0));

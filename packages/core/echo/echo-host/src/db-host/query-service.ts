@@ -324,6 +324,7 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
         executor: this._params.executor,
         sql: this._params.sql(),
         spaceStateManager: this._params.spaceStateManager,
+        heldIds: request.heldIds,
       }),
       dirty: true,
       open: false,

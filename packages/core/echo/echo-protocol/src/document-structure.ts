@@ -12,6 +12,9 @@ import { type EncodedReference, isEncodedReference } from './reference.ts';
 import { type SpaceDocVersion } from './space-doc-version.ts';
 import { createIdFromSpaceKey } from './space-id.ts';
 
+/** Largest JSON (characters) and stored changes (bytes) a client backs an object with instead of its document. */
+export const BACKED_OBJECT_LIMIT = 64 * 1024;
+
 export type SpaceState = {
   // Url of the root automerge document.
   rootUrl?: string;

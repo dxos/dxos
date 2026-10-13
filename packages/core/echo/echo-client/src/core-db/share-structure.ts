@@ -2,10 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-/**
- * `next`, with every subtree that equals the one at the same place in `previous` replaced by that
- * previous subtree, so unchanged values keep their identity across a new snapshot of an object.
- */
 export const shareStructure = <T>(previous: unknown, next: T): T => share(previous, next) as T;
 
 const share = (previous: unknown, next: unknown): unknown => {

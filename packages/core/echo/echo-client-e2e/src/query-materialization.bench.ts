@@ -24,10 +24,6 @@ import { blackhole } from './testing/bench-util.ts';
 //                                     full result set)
 //   + read one field per result       the first read of each object, where the object's data is materialized
 //
-// Each result is backed by the index's copy and its document's stored changes. The write row then
-// prices the first write: loading one result's changes into a document, in the tab, with no round
-// trip. The first of a session is reported apart from the steady state.
-//
 // The warm rows run the same query against a peer that already holds every object, so the difference
 // between a cold and a warm query is the load itself. Property-access costs are the other file's
 // business; this one exists to price materialization, which `property-access.bench.ts` never sees
@@ -51,7 +47,6 @@ const WIDE_OBJECT_COUNT = 100;
 const COLD_OPTIONS = { iterations: 3, time: 0, warmupIterations: 1, warmupTime: 0 };
 const WARM_OPTIONS = { time: 300 };
 const SHORT_RESULT_RETRIES = 10;
-// Writes timed one at a time after the first, per cold sample.
 const STEADY_WRITES = 20;
 
 class BenchObject extends Type.makeObject<BenchObject>(DXN.make('com.example.type.benchObject', '0.1.0'))(
@@ -127,7 +122,6 @@ const phaseSamples: Record<string, number[]> = {};
 const record = (phase: string, ms: number) => {
   (phaseSamples[phase] ??= []).push(ms);
 };
-/** Mean stored-change bytes an index-backed result holds, per row label. */
 const heldBytes: Record<string, number> = {};
 
 afterAll(async () => {
