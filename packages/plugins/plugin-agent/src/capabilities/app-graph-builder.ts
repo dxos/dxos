@@ -12,10 +12,11 @@ import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as TypeSection from '@dxos/app-toolkit/TypeSection';
 import * as Agent from '@dxos/assistant/Agent';
-import * as Operation from '@dxos/compute/Operation';
 
 import { meta } from '#meta';
-import { AgentCompanion, AgentOperation } from '#types';
+import { AgentCompanion } from '#types';
+
+import { createAgentWithIdentity } from './create-agent.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -26,8 +27,7 @@ export default Capability.makeModule(
         urlKey: 'agent',
         match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.ai),
         groupSegment: GraphPath.GroupSegments.ai,
-        createObject: (space) =>
-          Operation.invoke(AgentOperation.CreateAgent, { name: '' }, { spaceId: space.db.spaceId }),
+        createObject: (space) => createAgentWithIdentity(space.db, { name: '' }),
       }),
       // Beside the agent's article (the viewer's private chat): what it knows and what it is doing.
       AppGraphBuilder.createExtension({

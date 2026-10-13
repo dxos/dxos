@@ -7,11 +7,10 @@ import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Agent from '@dxos/assistant/Agent';
-import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 
-import { AgentOperation } from '#types';
+import { createAgentWithIdentity } from './create-agent.ts';
 
 /** The create form: an agent is named when it is created, and introduces itself by that name. */
 const CreateAgentForm = Schema.Struct({
@@ -25,16 +24,9 @@ export default Capability.makeModule(
       id: Type.getTypename(Agent.Agent),
       inputSchema: CreateAgentForm,
       createObject: (props: Partial<Schema.Schema.Type<typeof CreateAgentForm>>, options) =>
-        Effect.gen(function* () {
-          const { agent } = yield* Operation.invoke(
-            AgentOperation.CreateAgent,
-            { name: props.name?.trim() ?? '' },
-            { spaceId: options.db.spaceId },
-          );
-          // The returned ref crossed the operation boundary without a resolver, so it is re-made on the database.
-          const object = yield* Effect.promise(() => options.db.makeRef<Agent.Agent>(agent.uri).load());
-          return { id: object.id, object };
-        }),
+        createAgentWithIdentity(options.db, { name: props.name?.trim() ?? '' }).pipe(
+          Effect.map((object) => ({ id: object.id, object })),
+        ),
     });
   }),
 );

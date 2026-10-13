@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
+import * as Capability from '@dxos/app-framework/Capability';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
@@ -211,6 +212,28 @@ export const OpenPrivateChat = Operation.make({
   output: Schema.Struct({
     chat: Ref.Ref(Chat.Chat),
     person: Ref.Ref(Obj.Unknown),
+  }),
+});
+
+/**
+ * Gives an agent its own identity on EDGE: a brain with a self-owned HALO identity, whose `AgentAdmin` credential
+ * makes the caller its owner. The agent takes the brain's DID. An agent that has a DID already, or a client that
+ * cannot reach EDGE, is left as it is.
+ */
+export const EnsureIdentity = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.agent.ensureIdentity'),
+    name: 'Ensure agent identity',
+    description: 'Gives the agent its own identity on EDGE and makes the caller its owner.',
+    icon: 'ph--identification-card--regular',
+  },
+  services: [Database.Service, Capability.Service],
+  input: Schema.Struct({
+    agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent, in the space the operation runs in.' }),
+  }),
+  output: Schema.Struct({
+    provisioned: Schema.Boolean.annotate({ description: 'True when EDGE minted an identity for the agent now.' }),
+    identityDid: Schema.optional(Schema.String.annotate({ description: "The agent's DID, when it has one." })),
   }),
 });
 
