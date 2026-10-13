@@ -97,15 +97,7 @@ The labels that the reified form stored per fact (`sx:subjectLabel`, `sx:objectL
 `querySqlite` (exact predicates instead of fuzzy matching), and the brain's Datalog encoding (`Encoding.ts`), whose
 `fact(F, S, P, O)` becomes a statement plus its graph.
 
-### 2. ECHO feeds are the store of record; the brain is an index
-
-**Today** the EDGE `BrainObject` writes facts only to its own SQLite, so they do not replicate with the space and are
-lost when EDGE state is wiped. `BRAIN.md` already says the record should be ECHO feeds (one per source).
-
-**Recommendation:** keep that design and build it. The extractor appends its graphs to ECHO feeds; the brain (EDGE and
-in-app) indexes them into SQLite and can rebuild from the feeds at any time.
-
-### 3. Memories become a kind of fact
+### 2. Memories become a kind of fact
 
 **Today** there are two representations of what the agent knows: memories (`Memory`, ECHO objects, the Memories tab)
 and facts (the brain, the Facts tab). Nothing keeps them in sync, and both tabs show items labelled "Fact".
@@ -114,18 +106,3 @@ and facts (the brain, the Facts tab). Nothing keeps them in sync, and both tabs 
 relationship, event, …), attached to the ECHO objects it is about through the entity IRIs (question 1), and stored in
 ECHO feeds like every other fact (question 2). `recordMemory` becomes an extraction that writes a graph;
 superseding or retracting a memory becomes a statement about its graph; the profile panel is built from facts.
-
-## Discord (open)
-
-1. **Replies as a tool?** The bot posts the agent's replies by reading the chat feed. Posting them through a hosted
-   Discord send operation (as proactive sends do) needs hosted tool calls to read a managed bot token, which they
-   cannot today (edge interlocutor `DESIGN.md`, follow-up 2).
-2. **Should a feed append wake a process?** The bot no longer needs it (it reaches processes through compute-service's
-   `AgentProcessEntrypoint`); keep it only if other callers want feed-driven wakes.
-3. **One bot token, several environments.** Discord delivers every event to every gateway session on a token, so two
-   environments running Kai would both receive and answer every message. Does each environment need its own app?
-
-## Stories (open)
-
-1. **Seeded facts vary.** The Setup story seeds facts with a model call (`readSource`), so the facts differ between
-   runs. Is a deterministic seed (facts pushed as written) worth an operation that accepts explicit facts?
