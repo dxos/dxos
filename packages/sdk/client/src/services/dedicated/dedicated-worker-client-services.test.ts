@@ -3,13 +3,18 @@
 //
 
 import { create } from '@bufbuild/protobuf';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
+import { Config } from '@dxos/config';
 import { Filter, Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
 import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { isNode } from '@dxos/util';
 
 import { Client } from '../../client/index.ts';
 import { TestBuilder } from '../../testing/index.ts';
@@ -164,6 +169,53 @@ describe('DedicatedWorkerClientServices', { timeout: 1_000, retry: 0 }, () => {
 
     expect(client2.halo.identity.get()).toEqual(identity);
     log.break();
+  });
+
+  // Persistent storage, so the replacement worker opens the space its predecessor saved.
+  test.runIf(isNode())('a write after a leader handover reaches the new worker', { timeout: 15_000 }, async () => {
+    const dataRoot = mkdtempSync(join(tmpdir(), 'dxos-handover-'));
+    onTestFinished(() => rmSync(dataRoot, { recursive: true, force: true }));
+    const testBuilder = new TestBuilder(
+      new Config({ runtime: { client: { storage: { persistent: true, dataRoot } } } }),
+    );
+    onTestFinished(() => testBuilder.destroy());
+
+    await using services1 = await testBuilder.createDedicatedWorkerClientServices().open();
+    const client1 = await new Client({ services: services1 }).initialize();
+    await client1.halo.createIdentity();
+    await client1.addTypes([TestSchema.Expando]);
+    const space1 = await client1.spaces.create();
+    await space1.waitUntilReady();
+
+    await using services2 = await testBuilder.createDedicatedWorkerClientServices().open();
+    await using client2 = await new Client({ services: services2 }).initialize();
+    await client2.addTypes([TestSchema.Expando]);
+    await expect.poll(() => client2.spaces.get(space1.id), { timeout: 3_000 }).toBeTruthy();
+    const space2 = client2.spaces.get(space1.id)!;
+    await asyncTimeout(space2.waitUntilReady(), 3_000);
+
+    const reconnected = new Trigger();
+    services2.reconnected.on(() => {
+      reconnected.wake();
+    });
+    await client1.destroy();
+    await asyncTimeout(reconnected.wait(), 5_000);
+
+    space2.db.add(Obj.make(TestSchema.Expando, { name: 'after handover' }));
+    await space2.db.flush({ disk: true });
+
+    // A third tab reads through the new worker, not through client2's own replica.
+    await using services3 = await testBuilder.createDedicatedWorkerClientServices().open();
+    await using client3 = await new Client({ services: services3 }).initialize();
+    await client3.addTypes([TestSchema.Expando]);
+    await expect.poll(() => client3.spaces.get(space1.id), { timeout: 3_000 }).toBeTruthy();
+    const space3 = client3.spaces.get(space1.id)!;
+    await asyncTimeout(space3.waitUntilReady(), 3_000);
+    await expect
+      .poll(async () => (await space3.db.query(Filter.type(TestSchema.Expando)).run()).map((obj) => obj.name), {
+        timeout: 3_000,
+      })
+      .toContain('after handover');
   });
 
   // TODO(wittjosiah): Using shared storage fixes this test but that doesn't seem like a realistic solution.
