@@ -6,10 +6,13 @@
 
 import * as HashMap from 'effect/HashMap';
 import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
+import * as SchemaTransformation from 'effect/SchemaTransformation';
 
-import { type ContentBlock } from '@dxos/types';
+import { type Obj, type Ref } from '@dxos/echo';
+import { ContentBlock } from '@dxos/types';
 
-import type * as Trajectory from './Trajectory.ts';
+import * as Trajectory from './Trajectory.ts';
 
 /**
  * A left fold over events in feed order; every view of a trajectory is one of these, so state after `n + k` events
@@ -18,6 +21,11 @@ import type * as Trajectory from './Trajectory.ts';
 export interface Reducer<S> {
   readonly initial: S;
   readonly step: (state: S, event: Trajectory.Event) => S;
+  /**
+   * Folds a batch at once, equal to stepping each event; lets a reducer copy its state once per batch rather than once
+   * per event, which keeps a long fold linear. The state passed in is never modified.
+   */
+  readonly fold?: (state: S, events: readonly Trajectory.Event[]) => S;
 }
 
 /**
@@ -41,16 +49,12 @@ export const run = <S>(
   events: Iterable<Trajectory.Event>,
   from?: Checkpoint<S>,
 ): Checkpoint<S> => {
-  let state = from?.state ?? reducer.initial;
-  let head = from?.head;
-  let count = from?.count ?? 0;
-  for (const event of events) {
-    state = reducer.step(state, event);
-    head = event.id;
-    count++;
-  }
-
-  return { state, head, count };
+  const batch = [...events];
+  const initial = from?.state ?? reducer.initial;
+  const state = reducer.fold
+    ? reducer.fold(initial, batch)
+    : batch.reduce((next, event) => reducer.step(next, event), initial);
+  return { state, head: batch.at(-1)?.id ?? from?.head, count: (from?.count ?? 0) + batch.length };
 };
 
 //
@@ -103,7 +107,7 @@ const unbind = <T extends { uri: string }>(current: readonly T[], removed: reado
 const setThreadStatus = (threads: readonly ThreadInfo[], id: Trajectory.EventId, status: ThreadStatus) =>
   threads.map((thread) => (thread.id === id ? { ...thread, status } : thread));
 
-export const session: Reducer<SessionState> = {
+const sessionFold: Reducer<SessionState> = {
   initial: { queue: [], alarms: [], skills: [], objects: [], background: [], threads: [], turns: [], rejected: [] },
   step: (state, event) => {
     const payload = event.payload;
@@ -183,15 +187,58 @@ const resolveRequest = (
       : block,
   );
 
-const setItemStatus = (items: readonly ThreadItem[], id: Trajectory.EventId, status: ItemStatus) =>
-  items.map((item) => (item.id === id ? { ...item, status } : item));
-
-const consume = (items: readonly ThreadItem[], id: Trajectory.EventId, thread?: Trajectory.EventId) => {
-  // A second consume of the same message lost the claim, so the message stays where the first one put it.
-  const item = items.find((candidate) => candidate.id === id && candidate.status === 'queued');
-  return item
-    ? [...items.filter((candidate) => candidate.id !== id), { ...item, thread, status: 'consumed' as const }]
-    : items;
+/** Applies one event to `items`, in place; `false` when the event leaves the view as it was. */
+const applyThread = (items: ThreadItem[], event: Trajectory.Event): boolean => {
+  const payload = event.payload;
+  switch (payload._tag) {
+    case 'message':
+      items.push({
+        id: event.id,
+        sender: event.sender,
+        blocks: payload.blocks,
+        created: event.created,
+        thread: event.thread,
+        status: event.sender.role === 'user' ? 'queued' : 'sent',
+      });
+      return true;
+    case 'promptConsume': {
+      // A second consume of the same message lost the claim, so the message stays where the first one put it.
+      const index = items.findLastIndex((item) => item.id === payload.message && item.status === 'queued');
+      if (index === -1) {
+        return false;
+      }
+      const [item] = items.splice(index, 1);
+      items.push({ ...item, thread: event.thread, status: 'consumed' });
+      return true;
+    }
+    case 'requestResolve': {
+      const index = items.findLastIndex((item) => item.id === payload.message);
+      if (index === -1) {
+        return false;
+      }
+      items[index] = { ...items[index], blocks: resolveRequest(items[index].blocks, payload) };
+      return true;
+    }
+    case 'rewind': {
+      const from = event.thread === undefined ? items.findIndex((item) => item.id === payload.from) : -1;
+      for (let index = Math.max(from, 0); from !== -1 && index < items.length; index++) {
+        if (items[index].status !== 'queued') {
+          items[index] = { ...items[index], status: 'rewound' };
+        }
+      }
+      return from !== -1;
+    }
+    case 'promptCancel': {
+      const index = items.findLastIndex((item) => item.id === payload.message && item.status === 'queued');
+      if (index === -1) {
+        return false;
+      }
+      items[index] = { ...items[index], status: 'cancelled' };
+      return true;
+    }
+    default:
+      return false;
+  }
 };
 
 /**
@@ -199,50 +246,19 @@ const consume = (items: readonly ThreadItem[], id: Trajectory.EventId, thread?: 
  * the model sees it at, and joins the consuming turn's thread. A consume or cancel whose message lies outside the loaded window is ignored, so the UI can
  * fold just the tail of a long conversation.
  */
-export const thread: Reducer<ThreadView> = {
+const threadFold: Reducer<ThreadView> = {
   initial: { items: [] },
   step: (state, event) => {
-    const payload = event.payload;
-    switch (payload._tag) {
-      case 'message':
-        return {
-          items: [
-            ...state.items,
-            {
-              id: event.id,
-              sender: event.sender,
-              blocks: payload.blocks,
-              created: event.created,
-              thread: event.thread,
-              status: event.sender.role === 'user' ? 'queued' : 'sent',
-            },
-          ],
-        };
-      case 'promptConsume':
-        return { items: consume(state.items, payload.message, event.thread) };
-      case 'requestResolve':
-        return {
-          items: state.items.map((item) =>
-            item.id === payload.message ? { ...item, blocks: resolveRequest(item.blocks, payload) } : item,
-          ),
-        };
-      case 'rewind': {
-        const from = state.items.findIndex((item) => item.id === payload.from);
-        return event.thread === undefined && from !== -1
-          ? {
-              items: state.items.map((item, index) =>
-                index >= from && item.status !== 'queued' ? { ...item, status: 'rewound' as const } : item,
-              ),
-            }
-          : state;
-      }
-      case 'promptCancel':
-        return state.items.some((item) => item.id === payload.message && item.status === 'queued')
-          ? { items: setItemStatus(state.items, payload.message, 'cancelled') }
-          : state;
-      default:
-        return state;
+    const items = [...state.items];
+    return applyThread(items, event) ? { items } : state;
+  },
+  fold: (state, events) => {
+    const items = [...state.items];
+    let changed = false;
+    for (const event of events) {
+      changed = applyThread(items, event) || changed;
     }
+    return changed ? { items } : state;
   },
 };
 
@@ -300,6 +316,23 @@ export type PromptState = {
 const omit = <V>(record: Readonly<Record<string, V>>, key: string): Readonly<Record<string, V>> =>
   Object.fromEntries(Object.entries(record).filter(([other]) => other !== key));
 
+/**
+ * Entry arrays the running `fold` created, which nothing outside it holds yet, so it may push to them instead of
+ * copying; `undefined` outside a fold, where every append copies.
+ */
+let owned: WeakMap<readonly PromptEntry[], PromptEntry[]> | undefined;
+
+const grow = (entries: readonly PromptEntry[], entry: PromptEntry): readonly PromptEntry[] => {
+  const mutable = owned?.get(entries);
+  if (mutable) {
+    mutable.push(entry);
+    return mutable;
+  }
+  const copy = [...entries, entry];
+  owned?.set(copy, copy);
+  return copy;
+};
+
 const append = (
   state: PromptState,
   threadId: Trajectory.EventId | undefined,
@@ -307,11 +340,11 @@ const append = (
 ): PromptState => {
   const entry: PromptEntry = { ...placed, at: state.position };
   if (threadId === undefined) {
-    return { ...state, entries: [...state.entries, entry] };
+    return { ...state, entries: grow(state.entries, entry) };
   }
 
   const buffer = state.threads[threadId] ?? { fresh: false, seen: state.position, entries: [] };
-  return { ...state, threads: { ...state.threads, [threadId]: { ...buffer, entries: [...buffer.entries, entry] } } };
+  return { ...state, threads: { ...state.threads, [threadId]: { ...buffer, entries: grow(buffer.entries, entry) } } };
 };
 
 /**
@@ -322,17 +355,24 @@ const mergeInto = (state: PromptState, threadId: Trajectory.EventId, entries: re
   const buffer = live(state, threadId);
   const parent = buffer?.parent;
   const target = parent !== undefined && live(state, parent) ? parent : undefined;
-  const unseen =
-    buffer && !buffer.fresh
-      ? promptFor(state, target)
-          .filter((entry) => entry.at > buffer.seen)
-          .flatMap((entry) => entry.source)
-      : [];
+  const unseen = buffer && !buffer.fresh ? placedAfter(promptFor(state, target), buffer.seen) : [];
   return entries.reduce<PromptState>((next, entry) => append(next, target, entry), {
     ...state,
     threads: end(state.threads, threadId),
     stale: unseen.length > 0 ? { ...state.stale, [threadId]: unseen } : state.stale,
   });
+};
+
+/**
+ * Source events of the entries placed after `position`. A prompt's entries are in placement order (a compaction
+ * summary takes its range's earliest position), so the scan stops at the first entry placed at or before it.
+ */
+const placedAfter = (entries: readonly PromptEntry[], position: number): Trajectory.EventId[] => {
+  let first = entries.length;
+  while (first > 0 && entries[first - 1].at > position) {
+    first--;
+  }
+  return entries.slice(first).flatMap((entry) => entry.source);
 };
 
 /** A thread that is open and has not been merged or closed. */
@@ -410,11 +450,21 @@ const compact = (state: PromptState, payload: Trajectory.Compact, id: Trajectory
  * Builds the model prompt. Apart from `compact` and `rewind`, every event leaves `entries` as a prefix of what it was, which is
  * what keeps the provider's prompt cache valid from one request to the next.
  */
-export const prompt: Reducer<PromptState> = {
+const stepPrompt = (state: PromptState, event: Trajectory.Event): PromptState => {
+  const next = place(state, event);
+  return { ...next, position: state.position + 1, positions: HashMap.set(next.positions, event.id, state.position) };
+};
+
+const promptFold: Reducer<PromptState> = {
   initial: { entries: [], held: {}, threads: {}, position: 0, positions: HashMap.empty(), stale: {} },
-  step: (state, event) => {
-    const next = place(state, event);
-    return { ...next, position: state.position + 1, positions: HashMap.set(next.positions, event.id, state.position) };
+  step: stepPrompt,
+  fold: (state, events) => {
+    owned = new WeakMap();
+    try {
+      return events.reduce(stepPrompt, state);
+    } finally {
+      owned = undefined;
+    }
   },
 };
 
@@ -508,4 +558,112 @@ const place = (state: PromptState, event: Trajectory.Event): PromptState => {
     default:
       return state;
   }
+};
+
+//
+// Durable: the reducers above, with a codec so a checkpoint can be stored and resumed.
+//
+
+/**
+ * A reducer whose state can be stored, so a reader resumes from a saved checkpoint instead of refolding the feed.
+ */
+export interface Durable<S> extends Reducer<S> {
+  /** Names the reducer and its state shape; a stored checkpoint under a different id is never read back. */
+  readonly id: string;
+  readonly schema: Schema.Codec<S, unknown>;
+  /** Points decoded refs at a database, since a stored ref keeps its URI but not what resolves it. */
+  readonly rebind?: (state: S, makeRef: MakeRef) => S;
+}
+
+export type MakeRef = <T extends Obj.Unknown>(ref: Ref.Ref<T>) => Ref.Ref<T>;
+
+const EventIds = Schema.Array(Trajectory.EventId);
+
+const SessionStateSchema = Schema.Struct({
+  queue: EventIds,
+  alarms: Schema.Array(
+    Schema.Struct({ id: Trajectory.EventId, wakeAt: Schema.Number, message: Schema.optional(Schema.String) }),
+  ),
+  skills: Trajectory.ContextBind.fields.skills,
+  objects: Trajectory.ContextBind.fields.objects,
+  background: Schema.Array(Schema.Struct({ toolCallId: Schema.String, pid: Schema.optional(Schema.String) })),
+  threads: Schema.Array(
+    Schema.Struct({
+      id: Trajectory.EventId,
+      mode: Trajectory.ThreadMode,
+      status: Schema.Literals(['open', 'merged', 'completed', 'failed', 'cancelled']),
+    }),
+  ),
+  model: Schema.optional(Trajectory.ModelChange.fields.model),
+  turns: EventIds,
+  rejected: EventIds,
+});
+
+const ThreadViewSchema = Schema.Struct({
+  items: Schema.Array(
+    Schema.Struct({
+      id: Trajectory.EventId,
+      sender: Trajectory.Sender,
+      blocks: Schema.Array(ContentBlock.Any),
+      created: Schema.String,
+      thread: Schema.optional(Trajectory.EventId),
+      status: Schema.Literals(['queued', 'consumed', 'cancelled', 'sent', 'rewound']),
+    }),
+  ),
+});
+
+const PromptEntrySchema = Schema.Struct({
+  role: Trajectory.Role,
+  name: Schema.optional(Schema.String),
+  blocks: Schema.Array(ContentBlock.Any),
+  source: EventIds,
+  at: Schema.Number,
+});
+
+const PromptStateSchema = Schema.Struct({
+  entries: Schema.Array(PromptEntrySchema),
+  held: Schema.Record(Schema.String, PromptEntrySchema),
+  threads: Schema.Record(
+    Schema.String,
+    Schema.Struct({
+      parent: Schema.optional(Trajectory.EventId),
+      fresh: Schema.Boolean,
+      seen: Schema.Number,
+      closed: Schema.optional(Schema.Boolean),
+      entries: Schema.Array(PromptEntrySchema),
+    }),
+  ),
+  position: Schema.Number,
+  positions: Schema.Record(Trajectory.EventId, Schema.Number).pipe(
+    Schema.decodeTo(
+      Schema.HashMap(Trajectory.EventId, Schema.Number),
+      SchemaTransformation.transform({
+        decode: (record) => HashMap.fromIterable(Object.entries(record)),
+        encode: (positions) => Object.fromEntries(positions),
+      }),
+    ),
+  ),
+  stale: Schema.Record(Schema.String, EventIds),
+  origin: Schema.optional(Trajectory.ThreadOrigin),
+});
+
+export const session: Durable<SessionState> = {
+  ...sessionFold,
+  id: 'session@1',
+  schema: SessionStateSchema,
+  rebind: (state, makeRef) => ({
+    ...state,
+    skills: state.skills.map((ref) => makeRef(ref)),
+    objects: state.objects.map((ref) => makeRef(ref)),
+  }),
+};
+
+export const thread: Durable<ThreadView> = { ...threadFold, id: 'thread@1', schema: ThreadViewSchema };
+
+export const prompt: Durable<PromptState> = {
+  ...promptFold,
+  id: 'prompt@1',
+  schema: PromptStateSchema,
+  rebind: (state, makeRef) =>
+    state.origin?.feed ? { ...state, origin: { ...state.origin, feed: makeRef(state.origin.feed) } } : state,
 };

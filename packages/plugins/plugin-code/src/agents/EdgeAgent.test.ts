@@ -19,7 +19,7 @@ import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { AccessToken } from '@dxos/link';
 import { MANAGED_ACCESS_TOKEN } from '@dxos/protocols';
-import { Durable } from '@dxos/trajectory';
+import { Reducer } from '@dxos/trajectory';
 import { type ContentBlock, Outline, Repo, TaskSet } from '@dxos/types';
 
 import { AgentError } from '../errors.ts';
@@ -143,7 +143,7 @@ const setup = Effect.fn(function* (script: Script, mode?: string) {
 
 /** The conversation as the thread shows it, answers to requests included. */
 const transcript = (feed: Feed.Feed) =>
-  TrajectoryStore.load(feed, Durable.thread).pipe(
+  TrajectoryStore.load(feed, Reducer.thread).pipe(
     Effect.map(({ state }) =>
       state.items
         .filter((item) => item.status !== 'cancelled' && item.status !== 'rewound')

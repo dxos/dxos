@@ -1,8 +1,9 @@
 -- Copyright 2026 DXOS.org
 
--- One row per (feed, reducer): the reducer's state after the item at `cursor`, a cache rebuilt by refolding the feed.
+-- One row per (trajectory, reducer): the reducer's state after the item at `cursor`, a cache rebuilt by refolding.
 CREATE TABLE IF NOT EXISTS trajectory_checkpoint (
-  feed TEXT NOT NULL,
+  -- Id of the trajectory the state was folded from.
+  trajectory TEXT NOT NULL,
   reducer TEXT NOT NULL,
   -- Local cursor (`Feed.getLocalCursor`) of the last item folded.
   cursor TEXT NOT NULL,
@@ -10,5 +11,5 @@ CREATE TABLE IF NOT EXISTS trajectory_checkpoint (
   head TEXT NOT NULL,
   count INTEGER NOT NULL,
   state TEXT NOT NULL,
-  PRIMARY KEY (feed, reducer)
+  PRIMARY KEY (trajectory, reducer)
 );

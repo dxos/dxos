@@ -30,7 +30,7 @@ import { initializeIdentity } from '@dxos/plugin-client/testing';
 import * as RegistryPlugin from '@dxos/plugin-registry/RegistryPlugin';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as Harness from '@dxos/plugin-testing/Harness';
-import { Durable } from '@dxos/trajectory';
+import { Reducer } from '@dxos/trajectory';
 
 import { meta } from '#meta';
 import { AssistantPlugin } from '#plugin';
@@ -122,7 +122,7 @@ describe('AssistantPlugin', () => {
           yield* Database.flush();
 
           const feed = yield* Database.load(chat.feed);
-          const { state } = yield* TrajectoryStore.load(feed, Durable.session);
+          const { state } = yield* TrajectoryStore.load(feed, Reducer.session);
           return state.skills.map((ref) => ref.uri);
         }).pipe(Effect.provide(ServiceResolver.provide({ space: defaultSpace.id }, Database.Service))),
       );

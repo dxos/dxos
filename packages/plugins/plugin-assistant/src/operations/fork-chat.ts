@@ -15,7 +15,7 @@ import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Durable, Trajectory } from '@dxos/trajectory';
+import { Reducer, Trajectory } from '@dxos/trajectory';
 
 import { AssistantOperation } from '#types';
 
@@ -32,8 +32,8 @@ const handler: Operation.WithHandler<typeof AssistantOperation.ForkChat> = Assis
       const dbLayer = Database.layer(space.db);
 
       // The fork continues from the source's last entry, and starts with the skills and objects bound there.
-      const { state: prompt } = yield* TrajectoryStore.load(sourceFeed, Durable.prompt).pipe(Effect.provide(dbLayer));
-      const { state: session } = yield* TrajectoryStore.load(sourceFeed, Durable.session).pipe(Effect.provide(dbLayer));
+      const { state: prompt } = yield* TrajectoryStore.load(sourceFeed, Reducer.prompt).pipe(Effect.provide(dbLayer));
+      const { state: session } = yield* TrajectoryStore.load(sourceFeed, Reducer.session).pipe(Effect.provide(dbLayer));
       const point = prompt.entries.at(-1)?.source[0];
 
       // Create a new chat, then record where it forks from and what it binds.

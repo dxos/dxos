@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import { Annotation, Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { DXN } from '@dxos/keys';
-import { Durable, Trajectory } from '@dxos/trajectory';
+import { Reducer, Trajectory } from '@dxos/trajectory';
 import { Message } from '@dxos/types';
 
 import * as AiContext from './AiContext.ts';
@@ -51,7 +51,7 @@ describe('TrajectoryStore', () => {
       const history = yield* TrajectoryStore.history(feed);
       expect(texts(history)).toEqual(['hello', 'hi', 'queued then answered', 'answer']);
 
-      const { state } = yield* TrajectoryStore.load(feed, Durable.session);
+      const { state } = yield* TrajectoryStore.load(feed, Reducer.session);
       expect(state.queue).toEqual([pending.id]);
     }).pipe(Effect.provide(TestLayer)),
   );
@@ -85,7 +85,7 @@ describe('TrajectoryStore', () => {
         pending,
       ]);
 
-      const { state } = yield* TrajectoryStore.load(feed, Durable.session);
+      const { state } = yield* TrajectoryStore.load(feed, Reducer.session);
       expect(state.objects.map((ref) => ref.uri)).toEqual([Ref.make(target).uri]);
       expect(state.alarms.map((alarm) => alarm.id)).toEqual([pending.id]);
     }).pipe(Effect.provide(TestLayer)),

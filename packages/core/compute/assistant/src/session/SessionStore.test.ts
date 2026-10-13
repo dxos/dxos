@@ -8,7 +8,7 @@ import * as Exit from 'effect/Exit';
 
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
-import { Durable, Trajectory } from '@dxos/trajectory';
+import { Reducer, Trajectory } from '@dxos/trajectory';
 import { Message } from '@dxos/types';
 
 import * as Alarm from './Alarm.ts';
@@ -132,7 +132,7 @@ describe('SessionStore', () => {
         yield* store.ack(feed, queued);
 
         expect((yield* store.loadPending(feed)).pendingMessages).toEqual([]);
-        const { state } = yield* TrajectoryStore.load(feed, Durable.session);
+        const { state } = yield* TrajectoryStore.load(feed, Reducer.session);
         expect(state.turns).toEqual([]);
       }).pipe(Effect.provide(TestLayer)),
     );

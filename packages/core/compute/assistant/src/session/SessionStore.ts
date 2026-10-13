@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { type Database, type Feed, Obj } from '@dxos/echo';
-import { Durable, type Reducer, Trajectory } from '@dxos/trajectory';
+import { Reducer, Trajectory } from '@dxos/trajectory';
 import { Message } from '@dxos/types';
 
 import * as Alarm from './Alarm.ts';
@@ -45,8 +45,8 @@ export class SessionStore {
    */
   loadPending(feed: Feed.Feed): Effect.Effect<PendingState, never, Database.Service> {
     return Effect.gen(function* () {
-      const { state: session } = yield* TrajectoryStore.load(feed, Durable.session);
-      const { state: thread } = yield* TrajectoryStore.load(feed, Durable.thread);
+      const { state: session } = yield* TrajectoryStore.load(feed, Reducer.session);
+      const { state: thread } = yield* TrajectoryStore.load(feed, Reducer.thread);
       const queued = new Map(thread.items.map((item) => [item.id, item]));
       // A message whose turn never ended (its process died mid-turn) is owed a reply, so it stays pending.
       const open = new Set(session.turns);
@@ -106,7 +106,7 @@ export class SessionStore {
    */
   ack(feed: Feed.Feed, item: Message.Message | Alarm.Alarm): Effect.Effect<void, never, Database.Service> {
     return Effect.gen(function* () {
-      const { state } = yield* TrajectoryStore.load(feed, Durable.session);
+      const { state } = yield* TrajectoryStore.load(feed, Reducer.session);
       if (Obj.instanceOf(Alarm.Alarm, item)) {
         if (state.alarms.some((alarm) => alarm.id === item.id)) {
           yield* TrajectoryStore.append(feed, [

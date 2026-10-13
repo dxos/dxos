@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 
 import { type Database, Feed } from '@dxos/echo';
-import { Durable, Reducer, Trajectory } from '@dxos/trajectory';
+import { Reducer, Trajectory } from '@dxos/trajectory';
 import { Message } from '@dxos/types';
 
 import * as Legacy from './Legacy.ts';
@@ -57,7 +57,7 @@ export const messages = (feed: Feed.Feed): Effect.Effect<Message.Message[], neve
  * rewound items left out, a queued prompt where it waits.
  */
 export const threadMessages = (feed: Feed.Feed): Effect.Effect<Message.Message[], never, Database.Service> =>
-  Effect.map(load(feed, Durable.thread), ({ state }) =>
+  Effect.map(load(feed, Reducer.thread), ({ state }) =>
     state.items
       .filter((item) => item.status !== 'cancelled' && item.status !== 'rewound')
       .map((item) =>
@@ -78,7 +78,7 @@ export const toActor = (sender: Trajectory.Sender): Message.Message['sender'] =>
  */
 export const load = <S>(
   feed: Feed.Feed,
-  reducer: Durable.Durable<S>,
+  reducer: Reducer.Durable<S>,
 ): Effect.Effect<Reducer.Checkpoint<S>, never, Database.Service> => TrajectoryCache.load(feed, reducer);
 
 /**
@@ -89,7 +89,7 @@ export const history = Effect.fnUntraced(function* (
   feed: Feed.Feed,
   thread?: Trajectory.EventId,
 ): Effect.fn.Return<Message.Message[], never, Database.Service> {
-  const { state } = yield* load(feed, Durable.prompt);
+  const { state } = yield* load(feed, Reducer.prompt);
   const origin = state.origin ? yield* originHistory(state.origin) : [];
   return [...origin, ...Reducer.promptFor(state, thread).map(toMessage)];
 });
@@ -111,16 +111,26 @@ const originHistory = Effect.fnUntraced(function* (
   return cutoff === -1 ? [] : messages.slice(0, cutoff + 1);
 });
 
+/** Messages already made for prompt entries: entries are immutable and keep their identity across loads. */
+const entryMessages = new WeakMap<Reducer.PromptEntry, Message.Message>();
+
 /**
  * A prompt entry as the message the model layer takes; its id is the first source event, so a reference to that
  * event (a fork point, a rewind) still names it.
  */
-export const toMessage = (entry: Reducer.PromptEntry): Message.Message =>
-  Message.make({
+export const toMessage = (entry: Reducer.PromptEntry): Message.Message => {
+  const cached = entryMessages.get(entry);
+  if (cached) {
+    return cached;
+  }
+  const message = Message.make({
     id: entry.source[0],
     sender: { role: entry.role === 'event' ? 'user' : entry.role, ...(entry.name ? { name: entry.name } : {}) },
     blocks: [...entry.blocks],
   });
+  entryMessages.set(entry, message);
+  return message;
+};
 
 /**
  * Appends events in one batch: the feed splits it into a few transactions instead of one per event.
@@ -220,7 +230,7 @@ export const beginTurn = Effect.fnUntraced(function* (
   feed: Feed.Feed,
   { id, model }: { id?: Trajectory.EventId; model?: Trajectory.TurnBegin['model'] } = {},
 ): Effect.fn.Return<Trajectory.EventId, never, Database.Service> {
-  const { head } = yield* load(feed, Durable.prompt);
+  const { head } = yield* load(feed, Reducer.prompt);
   const begin = Trajectory.make({
     // Set when the turn already has an id elsewhere (a hosted agent's turn key), so a resumed turn is the same one.
     id,
@@ -279,8 +289,8 @@ export const interruptedTurn = Effect.fnUntraced(function* (
   feed: Feed.Feed,
   message: Trajectory.EventId,
 ): Effect.fn.Return<Trajectory.EventId | undefined, never, Database.Service> {
-  const { state: session } = yield* load(feed, Durable.session);
-  const { state: thread } = yield* load(feed, Durable.thread);
+  const { state: session } = yield* load(feed, Reducer.session);
+  const { state: thread } = yield* load(feed, Reducer.thread);
   const item = thread.items.find((item) => item.id === message);
   return item?.status === 'consumed' && item.thread !== undefined && session.turns.includes(item.thread)
     ? item.thread

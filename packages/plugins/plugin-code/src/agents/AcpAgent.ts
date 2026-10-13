@@ -17,7 +17,7 @@ import { type MakeTurnProducer, type TurnRequest } from '@dxos/agent-runtime';
 import { AiAssistantError, type Chat, TrajectoryStore } from '@dxos/assistant';
 import * as Trace from '@dxos/compute/Trace';
 import { type Database, type Feed, Obj } from '@dxos/echo';
-import { Durable, Trajectory } from '@dxos/trajectory';
+import { Reducer, Trajectory } from '@dxos/trajectory';
 import { type ContentBlock, Message } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -359,7 +359,7 @@ export const respond = (
 /** Marks requests nobody answered as cancelled: the turn that asked them is over. */
 const cancelOpenRequests = (feed: Feed.Feed, produced: Message.Message[]) =>
   Effect.gen(function* () {
-    const { state } = yield* TrajectoryStore.load(feed, Durable.thread);
+    const { state } = yield* TrajectoryStore.load(feed, Reducer.thread);
     const items = new Map(state.items.map((item) => [item.id, item]));
     // Answered requests are settled in the thread, not in the message the agent wrote, so that is where to look.
     const open = produced.flatMap((message) =>

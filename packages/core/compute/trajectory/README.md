@@ -41,10 +41,14 @@ turn's prompt does not change under it.
   message becomes a `message` plus the `promptConsume` that took it, a binding becomes `contextBind`/`contextUnbind`,
   an alarm becomes `alarmSet` (and `alarmFire` once consumed), and a link becomes a `fork`. Rewound lineage is dropped
   with `Feed.history`. Nothing writes legacy records any more, and nothing rewrites old feeds.
-- **Checkpoints are cached in SQLite.** `TrajectoryCache.load(feed, durable)` keeps one row per feed and reducer
+- **Checkpoints are cached in SQLite.** `TrajectoryCache.load(feed, reducer)` keeps one row per trajectory and reducer
   (`trajectory_checkpoint`), holding the encoded state, the head event and the event count. A load reads only the
   events after the head in local order and folds them onto the stored state. If the head is gone or the state no
-  longer decodes, it refolds the whole feed.
+  longer decodes, it refolds the whole feed. The process also keeps the last checkpoint it folded, so a load reads
+  only the new events and decodes nothing. Saving encodes the whole state, so it is batched: a checkpoint is saved
+  once 64 events have been folded since the last save, and a restarted process refolds at most those.
+- **Reducers fold a batch in one pass.** `Reducer.run` hands the batch to a reducer's `fold`, which copies the state
+  once and updates the copy in place, so a long fold stays linear while the state passed in is left as it was.
 - **An interrupted turn is redelivered.** A turn consumes its queued prompt when it begins. If the turn is
   interrupted (its process stops or restarts), it writes no `turnEnd` and stays open, and
   `SessionStore.loadPending` lists the prompt as pending again. A rehydrated process redelivers it:
@@ -55,18 +59,23 @@ turn's prompt does not change under it.
   `beginTurn` → `promptEvents` → `appendMessages` → `endTurn`. Each call is a single `Feed.append`, so a turn costs a
   handful of writes however many events it holds.
 
-Measured with `DX_BENCH=1` (`TrajectoryStore.bench.test.ts`, in-memory database, 1,000 turns of 5 events):
+Measured with `DX_BENCH=1` (`TrajectoryStore.bench.test.ts`, in-memory database, 5 events per turn). "Turn reads"
+is what a turn does before calling the model: `SessionStore.loadState`, which loads all three reducers and builds the
+history.
 
-| Step                                     | Time   |
-| ---------------------------------------- | ------ |
-| Cold load (no checkpoint; read and fold) | 642 ms |
-| Warm load (checkpoint, no new events)    | 64 ms  |
-| Load after one more turn                 | 91 ms  |
-| `Reducer.prompt` fold of all 5,000       | 55 ms  |
-| Writing one turn                         | 4.5 ms |
+| Turn reads                                    | 100 turns | 1,000 turns | 5,000 turns |
+| --------------------------------------------- | --------- | ----------- | ----------- |
+| First open on a device (no checkpoint)        | 210 ms    | 1.30 s      | 8.9 s       |
+| Reopen after a restart (stored checkpoints)   | 71 ms     | 351 ms      | 1.53 s      |
+| Next turn, nothing new                        | 38 ms     | 34 ms       | 44 ms       |
+| Next turn, one new turn folded                | 46 ms     | 47 ms       | 52 ms       |
+| Legacy chat, first open                       | 351 ms    | 2.63 s      | 14.8 s      |
+| Legacy chat, next turn                        | 40 ms     | 37 ms       | 39 ms       |
+| Writing one turn                              | 4.4 ms    | 3.9 ms      | 3.6 ms      |
+| Folding every event (`prompt`/`thread`/`session`) | 3 / 0.4 / 0.3 ms | 14 / 2 / 2 ms | 136 / 24 / 30 ms |
 
-A cold load is dominated by reading the feed, and happens once per feed and device; after that, each turn folds only
-its own events.
+A first open is dominated by reading the feed (1.9 s for 25,000 events) and happens once per conversation and device.
+After that a turn costs about the same at any length.
 
 ## Sample trajectories
 

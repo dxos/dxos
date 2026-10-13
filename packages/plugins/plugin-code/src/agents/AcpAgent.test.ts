@@ -12,7 +12,7 @@ import { Chat, TrajectoryStore } from '@dxos/assistant';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
-import { Durable, Trajectory } from '@dxos/trajectory';
+import { Reducer, Trajectory } from '@dxos/trajectory';
 import { type ContentBlock, Message } from '@dxos/types';
 
 import * as AcpAgent from './AcpAgent.ts';
@@ -60,7 +60,7 @@ const setup = Effect.fn(function* () {
 
 /** The conversation as the thread shows it, answers to requests included. */
 const transcript = (feed: Feed.Feed) =>
-  TrajectoryStore.load(feed, Durable.thread).pipe(
+  TrajectoryStore.load(feed, Reducer.thread).pipe(
     Effect.map(({ state }) =>
       state.items
         .filter((item) => item.status !== 'cancelled' && item.status !== 'rewound')

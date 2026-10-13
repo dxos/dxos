@@ -507,6 +507,25 @@ describe('Reducer', () => {
       }
     });
 
+    test('folding a batch matches stepping each event, and leaves the state it started from as it was', ({
+      expect,
+    }) => {
+      const check = <S>(reducer: Reducer.Reducer<S>, events: readonly Trajectory.Event[], seed: number) => {
+        const stepped = events.reduce(reducer.step, reducer.initial);
+        const middle = Reducer.run(reducer, events.slice(0, 30));
+        expect(Reducer.run(reducer, events.slice(30), middle).state, `seed ${seed}`).to.deep.eq(stepped);
+        expect(Reducer.run(reducer, events.slice(30), middle).state, `seed ${seed}`).to.deep.eq(stepped);
+        expect(middle.state, `seed ${seed}`).to.deep.eq(Reducer.run(reducer, events.slice(0, 30)).state);
+      };
+
+      for (let seed = 1; seed <= 20; seed++) {
+        const events = sequence(seed, 60);
+        check(Reducer.session, events, seed);
+        check(Reducer.thread, events, seed);
+        check(Reducer.prompt, events, seed);
+      }
+    });
+
     test('resuming from a checkpoint matches a full replay', ({ expect }) => {
       const check = <S>(reducer: Reducer.Reducer<S>, events: readonly Trajectory.Event[], seed: number) => {
         const full = Reducer.run(reducer, events);
