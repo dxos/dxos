@@ -111,7 +111,13 @@ const resolveEndType = (types: Type.AnyEntity[], uri: string | undefined): Type.
 
   // A registered declaration wins over a copy persisted in the space, which is matched otherwise.
   const typename = DXN.isDXN(uri) ? DXN.getName(uri) : undefined;
-  const candidates = types.filter((candidate) => Type.isObject(candidate) && Type.getTypename(candidate) === typename);
+  const version = DXN.isDXN(uri) ? DXN.getVersion(uri) : undefined;
+  const candidates = types.filter(
+    (candidate) =>
+      Type.isObject(candidate) &&
+      Type.getTypename(candidate) === typename &&
+      (version == null || Type.getMeta(candidate).version === version),
+  );
   const type = candidates.find((candidate) => Type.getDatabase(candidate) == null) ?? candidates[0];
   invariant(
     type && Type.isObject(type),
