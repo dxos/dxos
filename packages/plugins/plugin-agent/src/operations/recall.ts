@@ -15,7 +15,7 @@ import { BrainService, Goal, Memory, MemoryOperation, Profile } from '#types';
 
 import { personDid } from './members.ts';
 
-/** pipeline-rdf's entity id for a surface form (`normalizeEntityId`), restated to keep its query engine out of this module. */
+/** pipeline-rdf's slug for a surface form (`normalizeEntityId`), restated to keep its query engine out of this module. */
 const slug = (label: string): string =>
   label
     .trim()
@@ -23,7 +23,10 @@ const slug = (label: string): string =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '');
 
-/** The entity ids a fact about the subject may use: a person's member id, and its names for facts no roster resolved. */
+/**
+ * The entity keys a fact about the subject may use: its object URI, a person's member id, and its names for facts
+ * read before it existed.
+ */
 const entityIds = (entity: Obj.Unknown): Set<string> => {
   const name = (field: string): string | undefined => {
     const value = Reflect.get(entity, field);
@@ -35,7 +38,7 @@ const entityIds = (entity: Obj.Unknown): Set<string> => {
     .map(slug)
     .filter((value) => value.length > 0);
   const did = personDid(entity);
-  return new Set(did ? [did, ...names] : names);
+  return new Set([Obj.getURI(entity), ...(did ? [did] : []), ...names]);
 };
 
 /** Every fact in the brains of the space's agents, each once: two agents reading one document store the same facts. */

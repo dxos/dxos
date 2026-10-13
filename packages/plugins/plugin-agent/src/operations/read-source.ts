@@ -12,7 +12,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj } from '@dxos/echo';
 import { type EntityNotFoundError } from '@dxos/echo/Error';
 import { type Space } from '@dxos/halo';
-import { type RDF, type SemanticIndexError, extractDocFacts } from '@dxos/pipeline-rdf';
+import { RDF, type SemanticIndexError, extractDocFacts } from '@dxos/pipeline-rdf';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 import { Message } from '@dxos/types';
@@ -21,7 +21,16 @@ import { AgentOperation, BrainService, ChatParticipant } from '#types';
 
 import { pushFacts } from './deliver.ts';
 import { AgentOperationError } from './errors.ts';
-import { agentId, loadMembers, memberByDid, memberByName, personDid, resolveTerms } from './members.ts';
+import {
+  type EntityIndex,
+  agentId,
+  loadEntities,
+  loadMembers,
+  memberByDid,
+  memberByName,
+  personDid,
+  resolveTerms,
+} from './members.ts';
 
 /** One utterance of a source, so a fact quoting it can be attributed to its speaker and time. */
 type Segment = {
@@ -317,7 +326,7 @@ export const readSource: (
     if (through === undefined || through === cursor) {
       return NOTHING_READ;
     }
-    const facts = yield* extract(members, read, uri);
+    const facts = yield* extract(members, yield* loadEntities, read, uri);
     const fresh = cursor === undefined ? facts : facts.filter((fact) => quotesAny(fact, read.segments));
     return {
       facts: fresh,
@@ -331,16 +340,30 @@ export const readSource: (
     ? { uri: Obj.getURI(source), ...(yield* readObject(members, agent, source)) }
     : { uri: url ?? '', text: '', segments: [] };
   const body = text === undefined ? read : { ...read, text, segments: segmentMarkdown(members, text) };
-  const facts = yield* extract(members, body, body.uri);
+  const facts = yield* extract(members, yield* loadEntities, body, body.uri);
   return { facts, ...(yield* pushFacts(agent, facts)) };
 });
 
-// A direct model call rather than a chat turn: extraction is a pure derivation of the text.
-const extract = (members: readonly Space.Member[], body: Pick<SourceText, 'text' | 'segments'>, uri: string) =>
+/**
+ * A direct model call rather than a chat turn: extraction is a pure derivation of the text. Attribution gives each
+ * fact its own speaker and time, so the facts are grouped into graphs again once it has.
+ */
+const extract = (
+  members: readonly Space.Member[],
+  entities: EntityIndex,
+  body: Pick<SourceText, 'text' | 'segments'>,
+  uri: string,
+) =>
   body.segments.length === 0 && body.text.trim().length === 0
     ? Effect.succeed([])
     : extractDocFacts({ text: body.text, source: uri }).pipe(
-        Effect.map((facts) => distinct(facts.map((fact) => attribute(resolveTerms(members, fact), body.segments)))),
+        Effect.map((facts) =>
+          RDF.Graph.assign(
+            distinct(facts.map((fact) => attribute(resolveTerms(members, fact, entities), body.segments))).map(
+              ({ graph: _, ...fact }) => fact,
+            ),
+          ),
+        ),
       );
 
 /** The statement a fact makes, whoever said it: what two facts must share to be the same piece of knowledge. */

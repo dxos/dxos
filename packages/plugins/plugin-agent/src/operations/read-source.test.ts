@@ -151,7 +151,14 @@ describe('ReadSource', () => {
           source: Obj.getURI(document),
         });
         // A member named in a fact is keyed by their DID; the name stays the label.
-        expect(owns?.assertion.subject).toEqual({ kind: 'entity', entity: TEST_MEMBERS.dima, label: 'Dima' });
+        expect(owns?.assertion.subject).toEqual({
+          kind: 'entity',
+          entity: TEST_MEMBERS.dima,
+          label: 'Dima',
+          type: 'person',
+        });
+        // Each statement lives in a named graph that carries its speaker's provenance.
+        expect(owns?.graph).toMatch(/^https:\/\/dxos\.org\/semantic\/graph\//);
         expect(owns?.attribution.generatedAtTime).toBeTypeOf('string');
         expect(facts.find((fact) => fact.assertion.predicate === 'reviews')?.illocution?.force).toBe('commissive');
 

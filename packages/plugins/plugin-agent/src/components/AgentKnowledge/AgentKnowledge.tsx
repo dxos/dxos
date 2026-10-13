@@ -22,7 +22,7 @@ import { meta } from '#meta';
 import { type Goal, type Memory } from '#types';
 
 import { MEMORY_ICONS } from '../ProfileGraph/index.ts';
-import { TURTLE_PREFIXES, formatRawFact } from './turtle.ts';
+import { TRIG_PREFIXES, formatRawFact } from './trig.ts';
 
 //
 // Root
@@ -230,7 +230,7 @@ const AgentKnowledgeFacts = ({ facts, now }: AgentKnowledgeFactsProps) => {
                 data-testid='agent-knowledge-fact-prefixes'
                 className='m-0 p-2 overflow-x-auto whitespace-pre text-xs font-mono text-fg-muted select-text'
               >
-                {TURTLE_PREFIXES}
+                {TRIG_PREFIXES}
               </pre>
             )}
             <Listbox.Root
