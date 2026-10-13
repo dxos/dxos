@@ -6,8 +6,7 @@ import * as Option from 'effect/Option';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
-import { ANY_OBJECT_TYPENAME } from '@dxos/echo/internal';
+import { Annotation, Database, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
@@ -106,7 +105,7 @@ const describedType = async (
  * end left unnamed, or naming the any-object type, admits every object.
  */
 const resolveEndType = (types: Type.AnyEntity[], uri: string | undefined): Type.AnyObj | typeof Obj.Unknown => {
-  if (uri == null || (DXN.isDXN(uri) && DXN.getName(uri) === ANY_OBJECT_TYPENAME)) {
+  if (uri == null || (DXN.isDXN(uri) && DXN.getName(uri) === Annotation.getTypeAnnotation(Obj.Unknown)?.typename)) {
     return Obj.Unknown;
   }
 
