@@ -3,11 +3,14 @@
 //
 
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
+import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as Statement from 'effect/sql/Statement';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
+import { SQL_MAX_BOUND_VARIABLES } from '@dxos/index-core';
 import { PublicKey } from '@dxos/keys';
 import { bufferToArray } from '@dxos/util';
 
@@ -20,6 +23,12 @@ const makeTestLayer = () => {
   const rt = ManagedRuntime.make(Layer.merge(baseLayer, txLayer).pipe(Layer.orDie));
   return { runtime: rt.contextEffect, dispose: () => rt.dispose() };
 };
+
+/** Refuses a statement binding more variables than Durable Object SQLite does; node's SQLite takes 32766. */
+const refuseWideStatements: Statement.Transformer = (statement) =>
+  statement.compile()[1].length > SQL_MAX_BOUND_VARIABLES
+    ? Effect.die(new Error(`statement binds more than ${SQL_MAX_BOUND_VARIABLES} variables`))
+    : Effect.succeed(statement);
 
 describe('encodeKey / decodeKey', () => {
   test('round-trips simple keys', () => {
@@ -200,7 +209,14 @@ describe('SqliteStorageAdapter', () => {
 
 describe('SqliteHeadsStore', () => {
   const setup = async () => {
-    const { runtime, dispose } = makeTestLayer();
+    const rt = ManagedRuntime.make(
+      SqliteClient.layer({ filename: ':memory:' }).pipe(
+        Layer.provideMerge(Layer.succeed(Statement.CurrentTransformer, refuseWideStatements)),
+        Layer.orDie,
+      ),
+    );
+    const runtime = rt.contextEffect;
+    const dispose = () => rt.dispose();
     const store = new SqliteHeadsStore({ runtime });
     await RuntimeProvider.runPromise(runtime)(store.migrate);
     onTestFinished(() => dispose());

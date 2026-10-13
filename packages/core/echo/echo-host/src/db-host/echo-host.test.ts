@@ -6,6 +6,7 @@ import { getHeads } from '@automerge/automerge';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as SqlClient from 'effect/sql/SqlClient';
+import * as SqlError from 'effect/sql/SqlError';
 import * as Stream from 'effect/Stream';
 import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
@@ -268,9 +269,17 @@ describe('EchoHost index-backed rows', () => {
     const savedHandle = await saveObject(saved);
     const unsavedHandle = await saveObject(unsaved);
     await host.updateIndexes();
+    // Storage still at the heads before this change, whenever the repo's throttled save runs.
+    const storedHeads = getHeads(unsavedHandle.doc()!);
     unsavedHandle.change((doc) => {
       doc.objects![unsaved].data.title = 'unsaved';
     });
+    const readStoredHeads = host.automergeHost.getStoredHeads.bind(host.automergeHost);
+    vi.spyOn(host.automergeHost, 'getStoredHeads').mockImplementation(async (documentIds) =>
+      (await readStoredHeads(documentIds)).map((heads, index) =>
+        documentIds[index] === unsavedHandle.documentId ? storedHeads : heads,
+      ),
+    );
 
     const [response] = await EffectEx.runPromise(
       Stream.runCollect(host.queryService['QueryService.execQuery'](oneShotRequest(spaceId, EntityId.random()))),
@@ -282,6 +291,49 @@ describe('EchoHost index-backed rows', () => {
     // Its lease is ahead of storage, so a client could not load the changes the JSON shows.
     expect(row(unsaved)?.heads).toBeUndefined();
     expect(row(unsaved)?.bytes).toBeUndefined();
+  });
+
+  test('rows a failed index read left bare are backed on the next emission', async () => {
+    const { host, spaceId, saveObject } = await setup({ queryExecutor: 'sql' });
+    const first = EntityId.random();
+    await saveObject(first);
+    await host.updateIndexes();
+    vi.spyOn(host.indexEngine, 'queryBackings').mockReturnValueOnce(
+      Effect.fail(
+        new SqlError.SqlError({
+          reason: new SqlError.UnknownError({ cause: undefined, message: 'database is locked' }),
+        }),
+      ),
+    );
+
+    const emissions: QueryService.QueryResponse[] = [];
+    let added: EntityId | undefined;
+    const firstEmission = new Trigger();
+    const done = EffectEx.runPromise(
+      host.queryService['QueryService.execQuery']({
+        queryId: 'retry',
+        reactivity: QueryReactivity.REACTIVE,
+        query: JSON.stringify(Query.select(Filter.everything()).from([{ _tag: 'space', spaceId }]).ast),
+      }).pipe(
+        Stream.tap((response) =>
+          Effect.sync(() => {
+            emissions.push(response);
+            firstEmission.wake();
+          }),
+        ),
+        Stream.takeUntil((response) => response.results?.some((row) => row.id === added) ?? false),
+        Stream.runDrain,
+      ),
+    );
+    await firstEmission.wait({ timeout: 5_000 });
+    added = EntityId.random();
+    await saveObject(added);
+    await host.updateIndexes();
+    await asyncTimeout(done, 5_000);
+
+    const row = (response: QueryService.QueryResponse) => response.results?.find((result) => result.id === first);
+    expect(row(emissions[0])?.bytes).toBeUndefined();
+    expect(row(emissions.at(-1)!)?.bytes).toBeDefined();
   });
 
   test('a re-emit ships JSON and stored changes only for rows at a new version', async () => {

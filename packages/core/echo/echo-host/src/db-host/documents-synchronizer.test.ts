@@ -159,7 +159,13 @@ describe('DocumentsSynchronizer', () => {
     stale.handle.change((doc) => {
       doc.objects![stale.objectId].data.title = 'stored';
     });
+    const storedAt = A.getHeads(stale.handle.doc()!);
+    // Published after every earlier save, so the host is done announcing the first document's.
+    const published = host.documentHeadsChanged.waitFor(
+      ({ documentId, heads }) => documentId === stale.handle.documentId && A.equals(heads, storedAt),
+    );
     await host.flush(Context.default());
+    await published;
 
     const acquired = vi.spyOn(host, 'acquireDoc');
     const atStorage = {
@@ -176,7 +182,9 @@ describe('DocumentsSynchronizer', () => {
     await waitForCondition({ condition: () => updates.length > 0, timeout: 5_000 });
     expect(updates.map(({ documentId }) => documentId)).toEqual([stale.handle.documentId]);
     expect(JSON.parse(updates[0].passive!.json!).title).toBe('stored');
-    expect(acquired.mock.calls.map(([documentId]) => documentId)).not.toContain(current.handle.documentId);
+    const loaded = acquired.mock.calls.map(([documentId]) => documentId);
+    expect(loaded).toContain(stale.handle.documentId);
+    expect(loaded).not.toContain(current.handle.documentId);
 
     // Added again from heads storage has moved past, it is sent the difference again.
     const resent = next();
