@@ -27,12 +27,9 @@ const handler: Operation.WithHandler<typeof MeetingRecorderOperation.HandleDetec
         const settings = registry.get(yield* Capability.get(MeetingRecorderCapabilities.Settings));
         const stateAtom = yield* Capability.get(MeetingRecorderCapabilities.State);
         const current = registry.get(stateAtom);
-        if (!(settings.detectMeetings ?? true)) {
-          return;
-        }
-
         if (type === 'micStarted') {
-          if (current.phase !== 'idle') {
+          // The setting gates offers only; stop events still end a recording or a pending prompt.
+          if (!(settings.detectMeetings ?? true) || current.phase !== 'idle') {
             return;
           }
           const app = selectMeetingApp(apps, [...DEFAULT_IGNORED_APPS, ...(settings.ignoredApps ?? [])]);
