@@ -61,7 +61,11 @@ export const steps = [
             () => false,
           )
       ) {
-        await notice.first().click();
+        // The notice slides in; a click that loses that race leaves it open, which costs the take nothing.
+        await notice
+          .first()
+          .click({ timeout: 10_000 })
+          .catch(() => {});
       }
 
       // A fresh identity has no name, and the transcript's bylines would read as a DID.
@@ -76,8 +80,9 @@ export const steps = [
       });
       const { execFileSync } = await import('node:child_process');
       // curl, not fetch: it honours the sandbox's HTTPS proxy.
+      // Not `-f`: a re-run binds an identity that already has an account, which the hub refuses.
       execFileSync('curl', [
-        '-sSf',
+        '-sS',
         '-X',
         'POST',
         '-H',
@@ -87,7 +92,7 @@ export const steps = [
         `${HUB_URL}account/invitation-code/redeem`,
       ]);
       // The client caches its EDGE credential from before the binding.
-      await page.reload();
+      await page.reload({ timeout: 120_000 });
       await page.locator('[data-testid="deck.plank"]').first().waitFor({ state: 'visible', timeout: 180_000 });
 
       // EDGE takes a few minutes to serve a newly bound identity, and a summary started before then never
@@ -109,7 +114,7 @@ export const steps = [
         if (answered) {
           // EDGE can refuse a newly bound identity's later model calls within one page load; start the
           // take on a fresh load so the meeting's summary is its first.
-          await page.reload();
+          await page.reload({ timeout: 120_000 });
           await page.locator('[data-testid="deck.plank"]').first().waitFor({ state: 'visible', timeout: 180_000 });
           break;
         }
@@ -117,7 +122,7 @@ export const steps = [
           // The take still shows detection and transcription; step 6 copes with a silent model.
           break;
         }
-        await page.reload();
+        await page.reload({ timeout: 120_000 });
         await page.locator('[data-testid="deck.plank"]').first().waitFor({ state: 'visible', timeout: 180_000 });
       }
 
