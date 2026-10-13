@@ -1137,7 +1137,7 @@ rule todo-has-owner: Every new TODO names its owner
     - tools/**/*.ts
     - .github/**/*.yml
     - .depot/**/*.yml
-  grep: TODO(?!\([a-z0-9-]+\))
+  grep: TODO(?!\([A-Za-z0-9_-]+\))
   unit: file
   context: diff
   severity: warn
