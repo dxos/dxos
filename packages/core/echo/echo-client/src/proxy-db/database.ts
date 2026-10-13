@@ -838,7 +838,11 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   }
 
   hasUnsavedChanges(): boolean {
-    return this._entityManager.hasUnsavedChanges();
+    return (
+      this._entityManager.hasUnsavedChanges() ||
+      this.#retiredFeeds.size > 0 ||
+      [...this.#feeds.values()].some((handle) => handle.hasPendingWrites())
+    );
   }
 
   async flush(opts?: Database.FlushOptions): Promise<void> {

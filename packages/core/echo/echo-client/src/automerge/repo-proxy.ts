@@ -185,8 +185,7 @@ export class RepoProxy extends Resource {
     if (
       this._pendingUpdateIds.has(documentId) ||
       this._pendingCreations.has(handle._internalId) ||
-      // The pending-id sets are cleared at the start of a send, so they go quiet while a mutation is
-      // still in flight; the handle's own acknowledgement is what actually settles it.
+      // What the host has confirmed is what the handle's heads say; a handle still loading has confirmed nothing.
       !handle._isAcknowledged()
     ) {
       this._deferredReleaseIds.add(documentId);
@@ -229,6 +228,10 @@ export class RepoProxy extends Resource {
 
   /** Whether a change or a new document exists only in this client, so losing the page would lose it. */
   hasUnsavedChanges(): boolean {
+    // A closed proxy has dropped its handles: whatever it never sent is already gone, and no save can bring it back.
+    if (this._lifecycleState === LifecycleState.CLOSED) {
+      return false;
+    }
     return (
       this._pendingUpdateIds.size > 0 ||
       this._inFlightUpdateIds.size > 0 ||
@@ -308,10 +311,7 @@ export class RepoProxy extends Resource {
    */
   async flushCreations(): Promise<void> {
     for (let attempt = 1; ; attempt++) {
-      for (const [id, { retry }] of this._failedCreations) {
-        this._failedCreations.delete(id);
-        retry();
-      }
+      this._retryFailedCreations();
       await Promise.all([...this._pendingCreations.values()]);
       const failed = this._failedCreations.values().next().value;
       if (!failed || this._lifecycleState === LifecycleState.CLOSED) {
@@ -321,6 +321,13 @@ export class RepoProxy extends Resource {
         throw failed.error;
       }
       await sleep(FLUSH_RETRY_DELAY_MS * attempt);
+    }
+  }
+
+  private _retryFailedCreations(): void {
+    for (const [id, { retry }] of this._failedCreations) {
+      this._failedCreations.delete(id);
+      retry();
     }
   }
 
@@ -352,6 +359,10 @@ export class RepoProxy extends Resource {
       handle._failReady(error);
     }
     this._failedCreations.clear();
+    this._pendingUpdateIds.clear();
+    this._inFlightUpdateIds.clear();
+    this._pendingCreations.clear();
+    this._emitSaveStateEvent();
     this._subscriptionCleanup?.();
     this._subscriptionCleanup = undefined;
   }
@@ -658,6 +669,7 @@ export class RepoProxy extends Resource {
               return;
             }
             this._failedCreations.set(handle._internalId, { handle, error: err, retry: request });
+            this._scheduleSendRetry();
             this._emitSaveStateEvent();
           },
         )
@@ -903,6 +915,7 @@ export class RepoProxy extends Resource {
       this._ctx,
       () => {
         this._sendRetryScheduled = false;
+        this._retryFailedCreations();
         this._sendUpdatesJob?.trigger();
       },
       delay,
@@ -910,10 +923,13 @@ export class RepoProxy extends Resource {
   }
 
   private _emitSaveStateEvent(): void {
-    const unsavedDocuments = Array.from(new Set([...this._pendingUpdateIds, ...this._inFlightUpdateIds]));
+    if (this._lifecycleState === LifecycleState.CLOSED) {
+      return;
+    }
+    const unsavedDocuments = Array.from(new Set([...this._pendingUpdateIds, ...this._inFlightUpdateIds])).sort();
     const pendingCreations = this._pendingCreations.size + this._failedCreations.size;
-    // A retry is scheduled only after a send failed outright, and a failed creation waits for the next flush.
-    const failing = this._sendRetryAttempts > 0 || this._failedCreations.size > 0;
+    // Retries back off only after a send failed outright; a failed pass with no changes in it loses nothing.
+    const failing = (this._sendRetryAttempts > 0 && unsavedDocuments.length > 0) || this._failedCreations.size > 0;
     const key = `${unsavedDocuments.join(',')}|${pendingCreations}|${failing}`;
     if (key === this._lastSaveStateKey) {
       return;

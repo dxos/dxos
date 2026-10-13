@@ -74,7 +74,8 @@ export const createSpaceSaveTracker = (space: SaveTrackedSpace, cb: (state: Save
           lastFlushPromise = undefined;
           cb('saving');
         } else {
-          const flushPromise = space.db.flush();
+          // Indexing is not saving: a lagging index must not read as changes failing to reach disk.
+          const flushPromise = space.db.flush({ indexes: false });
           lastFlushPromise = flushPromise;
           void flushPromise.then(
             () => {

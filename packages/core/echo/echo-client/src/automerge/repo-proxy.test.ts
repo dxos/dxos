@@ -330,19 +330,25 @@ describe('RepoProxy', () => {
     await expect(handle.whenReady()).rejects.toThrow('document creation refused');
   });
 
-  test('a document the host failed to create is created by the next flush', { timeout: 5_000 }, async () => {
+  test('a document the host failed to create is requested again without a flush', { timeout: 5_000 }, async () => {
     let refusing: RefusingDataService | undefined;
     const { dataService, host } = await setup(undefined, (props) => (refusing = new RefusingDataService(props)));
     invariant(refusing);
+    const service = refusing;
     const [clientRepo] = createProxyRepos(dataService);
     await openAndClose(clientRepo);
+    const states: SaveStateChangedEvent[] = [];
+    clientRepo.saveStateChanged.on((state) => {
+      states.push(state);
+    });
 
     const handle = clientRepo.create<{ text: string }>({ text: 'retried' });
-    await expect(clientRepo.flush()).rejects.toThrow('document creation refused');
+    await expect.poll(() => states.at(-1)?.failing).toBe(true);
 
-    refusing.refuse = false;
-    await clientRepo.flush();
+    service.refuse = false;
     await handle.whenReady();
+    await expect.poll(() => clientRepo.hasUnsavedChanges()).toBe(false);
+    expect(states.at(-1)?.failing).toBe(false);
     const hostHandle = await host.loadDoc<{ text: string }>(Context.default(), handle.url!);
     invariant(hostHandle);
     expect(hostHandle.doc()?.text).toEqual('retried');
@@ -810,6 +816,51 @@ describe('RepoProxy', () => {
     expect(clientRepo.hasUnsavedChanges()).toBe(false);
   });
 
+  test('a failed pass that carried no changes is not reported as failing', { timeout: 5_000 }, async () => {
+    let failing: FailingUpdateDataService | undefined;
+    const { dataService } = await setup(undefined, (props) => (failing = new FailingUpdateDataService(props)));
+    invariant(failing);
+    const service = failing;
+    const [clientRepo] = createProxyRepos(dataService);
+    await openAndClose(clientRepo);
+    const handle = clientRepo.create<{ text: string }>();
+    await handle.whenReady();
+    await clientRepo.flush();
+    const states: SaveStateChangedEvent[] = [];
+    clientRepo.saveStateChanged.on((state) => {
+      states.push(state);
+    });
+
+    service.failSubscription = true;
+    invariant(handle.documentId);
+    clientRepo.release(handle.documentId);
+    await expect.poll(() => service.subscriptionFailures).toBeGreaterThan(0);
+    expect(states.some((state) => state.failing)).toBe(false);
+    expect(clientRepo.hasUnsavedChanges()).toBe(false);
+  });
+
+  test('a closed proxy has nothing unsaved', { timeout: 5_000 }, async () => {
+    let failing: FailingUpdateDataService | undefined;
+    const { dataService } = await setup(undefined, (props) => (failing = new FailingUpdateDataService(props)));
+    invariant(failing);
+    const service = failing;
+    const [clientRepo] = createProxyRepos(dataService);
+    await clientRepo.open();
+    const handle = clientRepo.create<{ text: string }>();
+    await handle.whenReady();
+    await clientRepo.flush();
+
+    service.fail = true;
+    handle.change((doc: { text: string }) => {
+      doc.text = 'never sent';
+    });
+    await expect.poll(() => service.failures).toBeGreaterThan(0);
+    expect(clientRepo.hasUnsavedChanges()).toBe(true);
+
+    await clientRepo.close();
+    expect(clientRepo.hasUnsavedChanges()).toBe(false);
+  });
+
   test('a change the host has not taken stays unsaved, and a failed send is reported', { timeout: 5_000 }, async () => {
     let failing: FailingUpdateDataService | undefined;
     const { dataService } = await setup(undefined, (props) => (failing = new FailingUpdateDataService(props)));
@@ -884,12 +935,25 @@ class RefusingDataService extends DataServiceImpl {
 /**
  * Fails every update batch while {@link fail} is set, as a host that times out the call does; while
  * {@link hold} is set, an update waits on it first, as one whose write cannot reach disk does.
+ * {@link failSubscription} fails subscription changes the same way.
  */
 class FailingUpdateDataService extends DataServiceImpl {
   'fail' = false;
   'failures' = 0;
   'hold': Trigger | undefined = undefined;
   'held' = 0;
+  'failSubscription' = false;
+  'subscriptionFailures' = 0;
+
+  override ['DataService.updateSubscription'](
+    request: DataService.UpdateSubscriptionRequest,
+  ): Effect.Effect<void, Error> {
+    if (this.failSubscription) {
+      this.subscriptionFailures++;
+      return Effect.fail(new EchoClientError({ message: 'subscription update timed out' }));
+    }
+    return super['DataService.updateSubscription'](request);
+  }
 
   override ['DataService.update'](request: DataService.UpdateRequest): Effect.Effect<void, Error> {
     const hold = this.hold;
