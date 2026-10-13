@@ -65,17 +65,26 @@ const sameName = (candidate: string | undefined, name: string) =>
 const firstName = (fullName: string | undefined) => fullName?.trim().split(/\s+/)[0];
 
 /**
- * The person a name refers to: by full, preferred or nick name, or a handle written as a name (a Discord username),
- * else by first name when exactly one person has it. Creating a person for an alias splits what is known about them.
+ * The person a name refers to, most specific first: a full or preferred name, then a nickname or a handle written as
+ * a name (a Discord username), then a first name. An alias that matches two people names neither, so it never
+ * silently picks the wrong person; creating a person for an alias would split what is known about them.
  */
-const byName = (people: readonly Person.Person[], name: string): Person.Person | undefined =>
-  people.find(
+const byName = (people: readonly Person.Person[], name: string): Person.Person | undefined => {
+  const tiers: ((person: Person.Person) => boolean)[] = [
+    (person) => sameName(person.fullName, name) || sameName(person.preferredName, name),
     (person) =>
-      sameName(person.fullName, name) ||
-      sameName(person.preferredName, name) ||
-      sameName(person.nickname, name) ||
-      (person.identities ?? []).some((identity) => sameName(identity.value, name)),
-  ) ?? unique(people.filter((person) => sameName(firstName(person.fullName), name)));
+      sameName(person.nickname, name) || (person.identities ?? []).some((identity) => sameName(identity.value, name)),
+    (person) => sameName(firstName(person.fullName), name),
+  ];
+  for (const [index, tier] of tiers.entries()) {
+    const matched = people.filter(tier);
+    if (matched.length > 0) {
+      // Two people with one full name are already a duplicate; adding a third would not help.
+      return index === 0 ? matched[0] : unique(matched);
+    }
+  }
+  return undefined;
+};
 
 const unique = <T>(matches: readonly T[]): T | undefined => (matches.length === 1 ? matches[0] : undefined);
 

@@ -127,6 +127,7 @@ const isEcho = (messages: readonly Message.Message[], index: number): boolean =>
     previous.sender.role === message.sender.role &&
     previous.sender.name === message.sender.name &&
     previous.sender.identityDid === message.sender.identityDid &&
+    previous.sender.contact?.uri === message.sender.contact?.uri &&
     spokenText(previous) === spokenText(message)
   );
 };
@@ -351,7 +352,8 @@ const statementKey = ({ assertion, factuality }: RDF.Fact): string =>
     factuality.polarity,
   ]);
 
-const termKey = (term: RDF.Term): string => (term.kind === 'entity' ? term.entity : normalize(term.literal));
+const termKey = (term: RDF.Term): string =>
+  `${term.kind}:${term.kind === 'entity' ? term.entity : normalize(term.literal)}`;
 
 /** One fact per statement in a pass: an extractor reading a repeated sentence states it once per repetition. */
 const distinct = (facts: readonly RDF.Fact[]): RDF.Fact[] => {
