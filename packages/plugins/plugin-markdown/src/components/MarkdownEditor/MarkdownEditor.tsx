@@ -14,6 +14,8 @@ import {
   createEditorController,
   useEditorContext,
 } from '@dxos/react-ui-editor';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import type * as Util from '@dxos/react-ui/Util';
 import { type WidgetState } from '@dxos/ui-editor';
 import { Merge, isNonNullable } from '@dxos/util';
@@ -27,12 +29,12 @@ import {
   useEditorMenuOptions,
   useExtensions,
 } from '#hooks';
+import { meta } from '#meta';
 
 import {
   MarkdownEditorContent as NaturalMarkdownEditorContent,
   type MarkdownEditorContentProps as NaturalMarkdownEditorContentProps,
 } from './MarkdownEditorContent.tsx';
-import { MarkdownEditorContentStatus } from './MarkdownEditorContentStatus.tsx';
 import {
   MarkdownEditorToolbar as NaturalMarkdownToolbar,
   type MarkdownEditorToolbarProps as NaturalMarkdownToolbarProps,
@@ -180,7 +182,13 @@ type MarkdownEditorContentProps = Omit<
   'id' | 'extensions' | 'toolbarState' | 'editorStateStore'
 >;
 
+const unavailableMessages = {
+  missing: { title: 'content-missing.title', message: 'content-missing.message' },
+  deleted: { title: 'content-deleted.title', message: 'content-deleted.message' },
+} as const;
+
 const MarkdownEditorContent = ({ compact: compactProp, ...props }: MarkdownEditorContentProps) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const {
     id,
     attendableId,
@@ -199,26 +207,33 @@ const MarkdownEditorContent = ({ compact: compactProp, ...props }: MarkdownEdito
     [setController],
   );
 
-  // The banner travels with the editor, so every host explains a non-editable editor.
+  // Missing or deleted content has nothing to edit: say why in place of the editor.
+  if (contentStatus === 'missing' || contentStatus === 'deleted') {
+    const { title, message } = unavailableMessages[contentStatus];
+    return (
+      <Banner.Root valence='warning' data-testid='markdown.content-status' data-status={contentStatus}>
+        <Banner.Title>{t(title)}</Banner.Title>
+        <Banner.Body>{t(message)}</Banner.Body>
+      </Banner.Root>
+    );
+  }
+
   return (
-    <>
-      <MarkdownEditorContentStatus status={contentStatus} />
-      <NaturalMarkdownEditorContent
-        // Spread directly: both sides speak `classNames`; `composableProps` here converted it to a
-        // DOM `className` the inner component never reads, dropping the caller's classes.
-        {...props}
-        id={id}
-        attendableId={attendableId}
-        compact={compact}
-        viewMode={viewMode}
-        contentStatus={contentStatus}
-        editorStateStore={editorStateStore}
-        toolbarState={state as Atom.Writable<EditorToolbarState>}
-        extensions={extensions}
-        onFileUpload={onFileUpload}
-        ref={handleRef}
-      />
-    </>
+    <NaturalMarkdownEditorContent
+      // Spread directly: both sides speak `classNames`; `composableProps` here converted it to a
+      // DOM `className` the inner component never reads, dropping the caller's classes.
+      {...props}
+      id={id}
+      attendableId={attendableId}
+      compact={compact}
+      viewMode={viewMode}
+      loading={contentStatus === 'loading'}
+      editorStateStore={editorStateStore}
+      toolbarState={state as Atom.Writable<EditorToolbarState>}
+      extensions={extensions}
+      onFileUpload={onFileUpload}
+      ref={handleRef}
+    />
   );
 };
 

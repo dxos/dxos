@@ -316,7 +316,7 @@ export const EmbedFocus: Story = {
   },
 };
 
-/** The document's Text was deleted: the editor is not editable, and the banner says why. */
+/** The document's Text was deleted: a message stands in for the editor. */
 export const ContentDeleted: Story = {
   args: {
     title: 'Testing with deleted content',
@@ -327,7 +327,7 @@ export const ContentDeleted: Story = {
     const canvas = within(canvasElement);
     const status = await canvas.findByTestId('markdown.content-status', {}, { timeout: 15_000 });
     await expect(status).toHaveAttribute('data-status', 'deleted');
-    await expect(canvasElement.querySelector('.cm-content')).toHaveAttribute('contenteditable', 'false');
+    await expect(canvasElement.querySelector('.cm-content')).toBeNull();
   },
 };
 
@@ -343,6 +343,6 @@ export const ContentMissing: Story = {
       async () => expect(canvas.getByTestId('markdown.content-status')).toHaveAttribute('data-status', 'missing'),
       { timeout: 15_000 },
     );
-    await expect(canvasElement.querySelector('.cm-content')).toHaveAttribute('contenteditable', 'false');
+    await expect(canvasElement.querySelector('.cm-content')).toBeNull();
   },
 };

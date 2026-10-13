@@ -37,7 +37,6 @@ import { type EditorViewMode } from '@dxos/ui-editor/types';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
-import { type ContentStatus } from '#hooks';
 import { meta } from '#meta';
 
 import { type MarkdownEditorToolbarProps } from './MarkdownEditorToolbar.tsx';
@@ -48,8 +47,8 @@ export type MarkdownEditorContentProps = Util.ThemedClassName<{
   role?: string;
   compact?: boolean;
   viewMode?: EditorViewMode;
-  /** Unbound content: a delayed loading placeholder, or none while the status banner explains why. */
-  contentStatus?: ContentStatus;
+  /** Content still loading: the placeholder says so, after a delay. */
+  loading?: boolean;
   slashCommandGroups?: EditorMenuGroup[];
   editorStateStore?: EditorStateStore;
   toolbarState?: Atom.Writable<EditorToolbarState>;
@@ -76,7 +75,7 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
       role,
       compact,
       viewMode,
-      contentStatus,
+      loading,
       initialValue,
       editorStateStore,
       toolbarState,
@@ -117,12 +116,7 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
         [
           createBasicExtensions({
             readOnly: viewMode === 'readonly',
-            placeholder:
-              contentStatus === undefined
-                ? t('editor.placeholder')
-                : contentStatus === 'loading'
-                  ? t('content-loading.placeholder')
-                  : undefined,
+            placeholder: loading ? t('content-loading.placeholder') : t('editor.placeholder'),
             scrollPastEnd: !compact,
             search: true,
           }),
@@ -150,7 +144,7 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
         ].filter(isTruthy),
       [
         viewMode,
-        contentStatus,
+        loading,
         themeMode,
         extensions,
         compact,
@@ -196,7 +190,7 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
     return (
       <div
         {...focusAttributes}
-        className={mx(editorClassNames(role), contentStatus === 'loading' && loadingPlaceholderClassNames, classNames)}
+        className={mx(editorClassNames(role), loading && loadingPlaceholderClassNames, classNames)}
         data-testid='composer.markdownRoot'
         data-popover-collision-boundary={true}
         // Where focus lands when the article is entered as a whole: the document, not the toolbar.
