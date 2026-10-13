@@ -31,6 +31,11 @@ Move a question into the relevant design doc once it is decided, and delete it h
      (pipeline-rdf's `Entity.ref`, meant for the ECHO object, is never set), and the rules (watches, goals) run on them.
    - **Facts only** needs: entities resolved to ECHO objects, a readable rendering for people, supersede and retract
      (or an append-only equivalent), and the profile rebuilt from facts.
+   - Resolving entities: a resolved entity's IRI is the object's space-qualified ECHO URI
+     (`echo://<spaceId>/<objectId>`), which is already a valid IRI, rather than a slug IRI with a separate
+     `Entity.ref`. A fact about Rich is then a triple about his `Person`, joinable with the space's own objects and
+     relations. Unresolved names keep slug IRIs until resolution (e.g. `resolveEntity`) rewrites them, so the
+     rewrite or an `owl:sameAs` link is part of the migration.
    - **Memories into the brain** would cost what makes memories useful: replication with the space, space
      permissions, and people correcting them in Composer. It only makes sense if the brain's record is itself in ECHO
      (question 2).
