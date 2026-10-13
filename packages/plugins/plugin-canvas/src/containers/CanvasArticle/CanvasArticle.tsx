@@ -9,7 +9,7 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
+import * as ObjectCombobox from '@dxos/app-toolkit/ObjectCombobox';
 import { Entity, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
@@ -29,6 +29,7 @@ import {
   isLink,
   useRegistry,
 } from '@dxos/react-ui-canvas/scene';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 
 import { canvasRecordOf, isCanvasDrawing, objectRef, objectUri, parseLinkedSceneId } from '#model';
@@ -97,18 +98,15 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   // A shape opens a scene of this drawing, never one bound from a linked drawing.
   const isLocalScene = useCallback((id: SceneId) => !parseLinkedSceneId(id), []);
 
-  // A frame may show any object listed in the navtree but this drawing itself.
+  // A frame may show any object listed in the navigator but this drawing itself.
+  const { t } = UiHooks.useTranslation();
   const getOptions = useCallback<NonNullable<SceneViewPropertiesProps['getOptions']>>(
     (results) =>
-      results
-        // System objects (space properties, canvases, traces) have no place in the navtree, so none here either.
-        .filter((result) => Obj.isObject(result) && TypeOptions.isUserObject(result))
-        .filter((result) => !(Obj.instanceOf(Drawing.Drawing, result) && result.canvas.target === canvas))
-        .map((result) => {
-          const id = Entity.getURI(result, { prefer: 'named' });
-          return { id, label: Entity.getLabel(result) ?? id };
-        }),
-    [canvas],
+      ObjectCombobox.toOptions(results, {
+        t,
+        filter: (object) => !(Obj.instanceOf(Drawing.Drawing, object) && object.canvas.target === canvas),
+      }),
+    [canvas, t],
   );
 
   // A frame holds its own scene or an object, never both: it may take an object only while its own child scene is

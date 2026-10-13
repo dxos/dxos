@@ -67,6 +67,7 @@ export const recipes = {
   combobox: () => 'dx-combobox',
   comboboxControl: () => 'dx-control dx-combobox-control',
   comboboxEmpty: () => 'dx-combobox-empty',
+  comboboxFrame: () => 'dx-combobox-frame',
   comboboxInput: () => 'dx-combobox-input',
   comboboxItem: () => 'dx-select-item dx-combobox-item',
   comboboxItemDescription: () => 'dx-combobox-item-description',

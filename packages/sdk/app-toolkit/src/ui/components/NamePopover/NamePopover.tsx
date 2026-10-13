@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import React, { type PropsWithChildren, useState } from 'react';
 
 import * as Button from '@dxos/react-ui/Button';
@@ -9,7 +11,7 @@ import * as Field from '@dxos/react-ui/Field';
 import * as Input from '@dxos/react-ui/Input';
 import * as Popover from '@dxos/react-ui/Popover';
 
-export type NamePopoverProps = PropsWithChildren<{
+type NamePopoverProps = PropsWithChildren<{
   open: boolean;
   placeholder: string;
   /** Translated label for the submit button (e.g. "Create"). */
@@ -22,7 +24,7 @@ export type NamePopoverProps = PropsWithChildren<{
  * Name-entry popover anchored to its trigger (mirrors the object rename popover UX).
  * Enter or the submit button commits — an empty name is allowed; Escape or dismissal cancels.
  */
-export const NamePopover = ({ children, open, placeholder, submitLabel, onSubmit, onCancel }: NamePopoverProps) => {
+const NamePopover = ({ children, open, placeholder, submitLabel, onSubmit, onCancel }: NamePopoverProps) => {
   const [value, setValue] = useState('');
 
   const submit = () => {
@@ -68,3 +70,7 @@ export const NamePopover = ({ children, open, placeholder, submitLabel, onSubmit
 };
 
 NamePopover.displayName = 'NamePopover';
+
+export type { NamePopoverProps as RootProps };
+
+export { NamePopover as Root };

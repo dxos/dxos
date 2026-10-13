@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
@@ -9,10 +11,10 @@ import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import { osTranslations } from '@dxos/ui-theme';
 
-import { SettingsOperation } from '../../operations/index.ts';
-import { usePluginRegistryAvailable } from '../hooks/index.ts';
+import { SettingsOperation } from '../../../operations/index.ts';
+import { usePluginRegistryAvailable } from '../../hooks/index.ts';
 
-export type PluginRegistryButtonProps = Pick<
+type PluginRegistryButtonProps = Pick<
   ComponentPropsWithoutRef<typeof Button.Root>,
   'onClick' | 'variant' | 'size' | 'disabled' | 'classNames'
 >;
@@ -24,7 +26,7 @@ export type PluginRegistryButtonProps = Pick<
  * Renders nothing in a build without the registry. A `Slot` parent needs an element child, so a
  * caller wrapping this in `asChild` must gate on {@link usePluginRegistryAvailable} itself.
  */
-export const PluginRegistryButton = forwardRef<HTMLButtonElement, PluginRegistryButtonProps>(
+const PluginRegistryButton = forwardRef<HTMLButtonElement, PluginRegistryButtonProps>(
   ({ onClick, ...props }, forwardedRef) => {
     const { t } = UiHooks.useTranslation(osTranslations);
     const { invokePromise } = Hooks.useOperationInvoker();
@@ -49,3 +51,7 @@ export const PluginRegistryButton = forwardRef<HTMLButtonElement, PluginRegistry
 );
 
 PluginRegistryButton.displayName = 'PluginRegistryButton';
+
+export type { PluginRegistryButtonProps as RootProps };
+
+export { PluginRegistryButton as Root };
