@@ -3,9 +3,10 @@
 //
 
 import * as Schema from 'effect/Schema';
-import { describe, test } from 'vitest';
+import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Annotation, Collection, Obj, Ref, Type } from '@dxos/echo';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { DXN } from '@dxos/keys';
 import { ArchivedAnnotation } from '@dxos/schema';
 
@@ -102,5 +103,26 @@ describe('filterListedObjects', () => {
       Annotation.set(properties, AppAnnotation.RootCollectionAnnotation, Ref.make(root));
     });
     expect(TypeOptions.filterListedObjects([properties, root, named])).toEqual([named]);
+  });
+});
+
+describe('filterListedObjects in a space', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  test('keeps an object of a type persisted in the space', async ({ expect }) => {
+    const { db } = await builder.createDatabase();
+    const Persisted = await db.addType(
+      Type.makeObject(DXN.make('com.example.type.persisted', '0.1.0'))(Schema.Struct({ name: Schema.String })),
+    );
+    const object = db.add(Obj.make(Persisted, { name: 'persisted' }));
+    expect(TypeOptions.filterListedObjects([object])).toEqual([object]);
   });
 });
