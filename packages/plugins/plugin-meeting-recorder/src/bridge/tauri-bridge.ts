@@ -13,7 +13,11 @@ const PLUGIN = 'plugin:meeting-capture';
 export const createTauriBridge = (): MeetingRecorderCapabilities.CaptureBridge => ({
   getSupport: async () => {
     const { invoke } = await import('@tauri-apps/api/core');
-    return invoke<MeetingRecorderCapabilities.Support>(`${PLUGIN}|get_support`);
+    // The native plugin is desktop-only; on a mobile build the command is unregistered and rejects.
+    return invoke<MeetingRecorderCapabilities.Support>(`${PLUGIN}|get_support`).catch(() => ({
+      detection: false,
+      systemAudio: false,
+    }));
   },
   listMicApps: async () => {
     const { invoke } = await import('@tauri-apps/api/core');

@@ -32,18 +32,21 @@ const handler: Operation.WithHandler<typeof MeetingRecorderOperation.Start> = Me
         return { object: current.meeting };
       }
       invariant(current.phase === 'idle' || current.phase === 'detected', `cannot start while ${current.phase}`);
+      // Claimed before the first yield, so a second Start (a double click, the toast and the status bar
+      // together) fails the check above instead of recording the same meeting twice.
+      registry.set(stateAtom, { phase: 'starting', app });
+      const resetOnFailure = Effect.onError(() => Effect.sync(() => registry.set(stateAtom, { phase: 'idle' })));
 
-      let db = targetDb;
-      if (!db) {
+      const db = yield* Effect.gen(function* () {
+        if (targetDb) {
+          return targetDb;
+        }
         const client = yield* Capability.get(ClientCapabilities.Client);
         const space = AppSpace.getActiveSpace(client, capabilities) ?? AppSpace.getDefaultSpace(client);
         invariant(space, 'no space to record the meeting into');
         yield* Effect.promise(() => space.waitUntilReady());
-        db = space.db;
-      }
-
-      registry.set(stateAtom, { phase: 'starting', app });
-      const resetOnFailure = Effect.onError(() => Effect.sync(() => registry.set(stateAtom, { phase: 'idle' })));
+        return space.db;
+      }).pipe(resetOnFailure);
 
       const { object: meeting } = yield* Operation.invoke(MeetingOperation.Create, {
         name: name ?? defaultMeetingName(app, new Date()),
@@ -56,11 +59,19 @@ const handler: Operation.WithHandler<typeof MeetingRecorderOperation.Start> = Me
       );
 
       const recorder = yield* Capability.get(MeetingRecorderCapabilities.Recorder);
-      const recordingDb = db;
-      const { systemAudio } = yield* Effect.promise(() => recorder.start({ db: recordingDb, meeting, app })).pipe(
+      const { systemAudio } = yield* Effect.promise(() => recorder.start({ db, meeting, app })).pipe(
+        // Nothing was recorded (e.g. the microphone was refused), so leave no empty meeting behind.
+        Effect.onError(() => Effect.sync(() => db.remove(meeting))),
         resetOnFailure,
       );
+      const latest = registry.get(stateAtom);
+      const stopRequested = latest.phase === 'starting' && latest.stopRequested === true;
       registry.set(stateAtom, { phase: 'recording', meeting, app, startedAt: Date.now(), systemAudio });
+      if (stopRequested) {
+        // The meeting app let go of the microphone while capture was starting.
+        yield* Operation.invoke(MeetingRecorderOperation.Stop, {});
+        return { object: meeting };
+      }
 
       yield* Operation.invoke(LayoutOperation.AddToast, {
         id: DETECTED_TOAST_ID,

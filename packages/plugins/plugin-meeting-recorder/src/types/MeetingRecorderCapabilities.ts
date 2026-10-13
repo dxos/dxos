@@ -50,7 +50,12 @@ export type RecorderState =
   | { phase: 'idle' }
   /** A meeting app took the microphone and the user has not answered the prompt yet. */
   | { phase: 'detected'; app: MicApp }
-  | { phase: 'starting'; app?: MicApp }
+  | {
+      phase: 'starting';
+      app?: MicApp;
+      /** The app released the microphone before capture was up; stop as soon as it is. */
+      stopRequested?: boolean;
+    }
   | {
       phase: 'recording';
       meeting: Meeting.Meeting;

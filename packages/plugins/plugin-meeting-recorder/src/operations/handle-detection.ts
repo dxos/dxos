@@ -35,7 +35,7 @@ const handler: Operation.WithHandler<typeof MeetingRecorderOperation.HandleDetec
           if (current.phase !== 'idle') {
             return;
           }
-          const app = selectMeetingApp(apps, settings.ignoredApps ?? DEFAULT_IGNORED_APPS);
+          const app = selectMeetingApp(apps, [...DEFAULT_IGNORED_APPS, ...(settings.ignoredApps ?? [])]);
           if (!app) {
             return;
           }
@@ -58,6 +58,12 @@ const handler: Operation.WithHandler<typeof MeetingRecorderOperation.HandleDetec
             actionLabel: ['take-notes.label', { ns: meta.profile.key }],
             actionAlt: ['take-notes.alt', { ns: meta.profile.key }],
             onAction: () => {
+              // The toast outlives the prompt; once the app has released the microphone there is no
+              // meeting left to record.
+              const latest = registry.get(stateAtom);
+              if (latest.phase !== 'detected' || latest.app.id !== app.id) {
+                return;
+              }
               void invokePromise(MeetingRecorderOperation.Start, { app }).catch((err) => log.catch(err));
             },
           });
@@ -65,14 +71,13 @@ const handler: Operation.WithHandler<typeof MeetingRecorderOperation.HandleDetec
         }
 
         const stoppedIds = new Set(apps.map((app) => app.id));
+        const autoStop = settings.autoStop ?? true;
         if (current.phase === 'detected' && stoppedIds.has(current.app.id)) {
           registry.set(stateAtom, { phase: 'idle' });
-        } else if (
-          current.phase === 'recording' &&
-          current.app &&
-          stoppedIds.has(current.app.id) &&
-          (settings.autoStop ?? true)
-        ) {
+        } else if (current.phase === 'starting' && current.app && stoppedIds.has(current.app.id) && autoStop) {
+          // Start applies it once capture is up; dropping the event would leave the recording running.
+          registry.set(stateAtom, { ...current, stopRequested: true });
+        } else if (current.phase === 'recording' && current.app && stoppedIds.has(current.app.id) && autoStop) {
           log.info('meeting ended', { app: current.app });
           yield* Operation.invoke(MeetingRecorderOperation.Stop, {});
         }

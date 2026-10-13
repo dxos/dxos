@@ -78,15 +78,24 @@ export class MeetingSession {
   /** Stops capture, transcribing the audio still buffered before the managers close. */
   async stop(): Promise<void> {
     const channels = this.#channels.splice(0);
-    await Promise.all(
+    const results = await Promise.allSettled(
       channels.map(async ({ manager, monitor, release }) => {
-        await monitor.close();
-        manager.setRecording(false);
-        await manager.flush().catch((err) => log.warn('final transcription failed', { err }));
-        await manager.close();
-        await release();
+        try {
+          await monitor.close();
+          manager.setRecording(false);
+          await manager.flush().catch((err) => log.warn('final transcription failed', { err }));
+          await manager.close();
+        } finally {
+          // Always let go of the device, or a failed close would leave the microphone (or tap) live.
+          await release();
+        }
       }),
     );
+    for (const result of results) {
+      if (result.status === 'rejected') {
+        log.warn('failed to stop a recording channel', { err: result.reason });
+      }
+    }
   }
 
   async #startSystemAudio(feed: Feed.Feed, othersLabel: string): Promise<void> {
@@ -96,6 +105,7 @@ export class MeetingSession {
       // Chunks arriving before the sample rate is known (a few ms) are dropped.
       const { sampleRate } = await bridge.startSystemAudio((samples) => source?.push(samples));
       source = new PcmTrackSource(sampleRate);
+      await source.resume();
       const pcmSource = source;
       await this.#addChannel(
         feed,
@@ -130,14 +140,21 @@ export class MeetingSession {
   ): Promise<void> {
     const { provider, db } = this.#options;
     const manager = provider(props);
-    manager.setFeed(db, feed);
-    await manager.open();
-    await manager.setEnabled(true);
-    await manager.setAudioTrack(track);
-
     const monitor = new SpeakingMonitor(track);
-    monitor.speakingChanged.on((speaking) => manager.setRecording(speaking));
-    await monitor.open();
+    try {
+      manager.setFeed(db, feed);
+      await manager.open();
+      await manager.setEnabled(true);
+      await manager.setAudioTrack(track);
+      monitor.speakingChanged.on((speaking) => manager.setRecording(speaking));
+      await monitor.open();
+    } catch (err) {
+      // Not yet in `#channels`, so `stop` would never release it.
+      await monitor.close().catch(() => {});
+      await manager.close().catch(() => {});
+      await release();
+      throw err;
+    }
     this.#channels.push({ manager, monitor, release });
   }
 }

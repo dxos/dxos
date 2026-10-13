@@ -44,17 +44,38 @@ pub fn list_mic_apps() -> Result<Vec<MicApp>, String> {
         let Ok(pid) = process.pid() else {
             continue;
         };
-        apps.push(resolve_app(
-            pid,
-            process.bundle_id().ok().map(|id| id.to_string()),
-        ));
+        // Attribute helpers (WebKit's GPU process, Chrome's audio service) to the app they work for, so
+        // Safari's helper reads as Safari and Composer's own as Composer.
+        let owner = responsible_pid(pid);
+        let bundle_id = if owner == pid {
+            process.bundle_id().ok().map(|id| id.to_string())
+        } else {
+            None
+        };
+        apps.push(resolve_app(owner, bundle_id));
     }
-    apps.dedup_by(|left, right| left.id == right.id);
+    let mut seen = std::collections::HashSet::new();
+    apps.retain(|app| seen.insert(app.id.clone()));
     Ok(apps)
 }
 
-/// Names the app behind `pid`; helper processes (e.g. Chrome's audio service) resolve to the app
-/// that launched them when AppKit knows it.
+extern "C" {
+    /// libsystem's attribution of XPC helpers to the process that spawned them (the TCC "responsible
+    /// process"); not in a public header, but stable since macOS 10.14 and what Activity Monitor uses.
+    fn responsibility_get_pid_responsible_for_pid(pid: i32) -> i32;
+}
+
+fn responsible_pid(pid: i32) -> i32 {
+    // SAFETY: takes and returns a plain pid; answers -1 for an unknown pid.
+    let owner = unsafe { responsibility_get_pid_responsible_for_pid(pid) };
+    if owner > 0 {
+        owner
+    } else {
+        pid
+    }
+}
+
+/// Names the app behind `pid`.
 fn resolve_app(pid: i32, bundle_id: Option<String>) -> MicApp {
     let running = ns::RunningApp::with_pid(pid);
     let name = running
@@ -145,17 +166,26 @@ impl Drop for SystemAudioHandle {
     }
 }
 
-/// The CoreAudio objects of one capture. Fields drop in declaration order, which is the order
-/// teardown needs: stop the device before freeing the context its IO proc writes to, and destroy
-/// the tap last.
+/// The CoreAudio objects of one capture. The IO proc holds a raw pointer to `context`, so the
+/// context is owned as a raw pointer too (a live `Box` would alias it) and freed only once the device
+/// has stopped calling the proc; the tap is destroyed last.
 struct TapSession {
-    _device: ca::hardware::StartedDevice<ca::AggregateDevice>,
-    _context: Box<IoContext>,
+    device: Option<ca::hardware::StartedDevice<ca::AggregateDevice>>,
+    context: *mut IoContext,
     _tap: ca::TapGuard,
 }
 
+impl Drop for TapSession {
+    fn drop(&mut self) {
+        // Stops the device and destroys the aggregate device, and with it the IO proc.
+        self.device.take();
+        // SAFETY: `context` came from `Box::into_raw` in `open_tap`, and nothing calls the IO proc any more.
+        drop(unsafe { Box::from_raw(self.context) });
+    }
+}
+
 fn open_tap() -> Result<(SystemAudioFormat, HeapCons<f32>, TapSession), String> {
-    // Excluding nothing: Composer plays no audio of its own during a recording.
+    // Excluding nothing, so a sound Composer itself plays during the call is transcribed too.
     let tap_desc = ca::TapDesc::with_mono_global_tap_excluding_processes(&ns::Array::new());
     let tap = tap_desc.create_process_tap().map_err(|err| {
         format!("create process tap (is screen & system audio recording allowed?): {err:?}")
@@ -187,18 +217,29 @@ fn open_tap() -> Result<(SystemAudioFormat, HeapCons<f32>, TapSession), String> 
         );
 
     let (producer, consumer) = HeapRb::<f32>::new(RING_CAPACITY).split();
-    let mut context = Box::new(IoContext {
+    let context = Box::into_raw(Box::new(IoContext {
         format: common_format,
         producer,
-    });
+    }));
 
-    let device = ca::AggregateDevice::with_desc(&aggregate_desc)
-        .map_err(|err| format!("aggregate device: {err:?}"))?;
-    let proc_id = device
-        .create_io_proc_id(io_proc, Some(&mut *context))
-        .map_err(|err| format!("io proc: {err:?}"))?;
-    let started =
-        ca::device_start(device, Some(proc_id)).map_err(|err| format!("start device: {err:?}"))?;
+    let started = (|| {
+        let device = ca::AggregateDevice::with_desc(&aggregate_desc)
+            .map_err(|err| format!("aggregate device: {err:?}"))?;
+        // SAFETY: `context` stays valid until `TapSession::drop`, which stops the device first.
+        let proc_id = device
+            .create_io_proc_id(io_proc, Some(unsafe { &mut *context }))
+            .map_err(|err| format!("io proc: {err:?}"))?;
+        ca::device_start(device, Some(proc_id)).map_err(|err| format!("start device: {err:?}"))
+    })();
+    let started = match started {
+        Ok(started) => started,
+        Err(err) => {
+            // SAFETY: the device that held the IO proc was destroyed when it failed to start (or never
+            // existed), so nothing else points at `context`.
+            drop(unsafe { Box::from_raw(context) });
+            return Err(err);
+        }
+    };
 
     let format = SystemAudioFormat {
         sample_rate: asbd.sample_rate as u32,
@@ -208,8 +249,8 @@ fn open_tap() -> Result<(SystemAudioFormat, HeapCons<f32>, TapSession), String> 
         format,
         consumer,
         TapSession {
-            _device: started,
-            _context: context,
+            device: Some(started),
+            context,
             _tap: tap,
         },
     ))

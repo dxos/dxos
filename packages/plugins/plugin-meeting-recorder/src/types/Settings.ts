@@ -48,7 +48,8 @@ export const Settings = Schema.Struct({
   ignoredApps: Schema.optional(
     Schema.Array(Schema.String).annotate({
       title: 'Ignored apps',
-      description: 'Bundle ids of apps whose microphone use is not a meeting (dictation, screen recorders, …).',
+      description:
+        'Bundle ids of further apps whose microphone use is not a meeting; dictation apps, IDEs and screen recorders are ignored already.',
     }),
   ),
 }).mapFields(Struct.map(Schema.mutableKey));

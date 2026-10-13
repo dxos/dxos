@@ -6,8 +6,7 @@
 //! "apps holding the microphone" into started/stopped events.
 
 use std::collections::HashSet;
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Arc;
+use std::sync::mpsc;
 use std::thread::JoinHandle;
 use std::time::Duration;
 
@@ -34,11 +33,12 @@ pub enum DetectionEvent {
     MicStopped { apps: Vec<MicApp> },
 }
 
-/// Bundle id prefixes of this app and of the WebKit helpers that capture the microphone on its
-/// behalf; without them Composer's own recording would read as a meeting in another app.
-const SELF_ID_PREFIXES: &[&str] = &["org.dxos.composer", "com.apple.WebKit"];
+/// Bundle id prefix of every Composer channel. The WebKit helper that captures the microphone for the
+/// web view is attributed to Composer by the platform layer, so it matches this too; without it
+/// Composer's own recording would read as a meeting in another app.
+const SELF_ID_PREFIXES: &[&str] = &["org.dxos.composer"];
 
-/// Drops this app (and the processes recording on its behalf) from a snapshot.
+/// Drops this app from a snapshot.
 pub fn without_self(apps: Vec<MicApp>) -> Vec<MicApp> {
     let own_pid = format!("pid:{}", std::process::id());
     apps.into_iter()
@@ -78,7 +78,8 @@ pub fn diff(previous: &[MicApp], current: &[MicApp]) -> Vec<DetectionEvent> {
 
 /// A running poller; dropping it stops and joins the thread.
 pub struct DetectionHandle {
-    stop: Arc<AtomicBool>,
+    /// Dropping the sender wakes the poller out of its sleep, so stopping never waits a full interval.
+    stop: Option<mpsc::Sender<()>>,
     thread: Option<JoinHandle<()>>,
 }
 
@@ -88,14 +89,13 @@ impl DetectionHandle {
         L: Fn() -> Result<Vec<MicApp>, String> + Send + 'static,
         E: Fn(DetectionEvent) + Send + 'static,
     {
-        let stop = Arc::new(AtomicBool::new(false));
-        let thread_stop = stop.clone();
+        let (stop, stopped) = mpsc::channel::<()>();
         let thread = std::thread::Builder::new()
             .name("meeting-capture-detect".into())
             .spawn(move || {
                 // Starts empty so an app already in a call when detection begins is reported too.
                 let mut previous: Vec<MicApp> = Vec::new();
-                while !thread_stop.load(Ordering::SeqCst) {
+                loop {
                     match list() {
                         Ok(current) => {
                             for event in diff(&previous, &current) {
@@ -107,17 +107,22 @@ impl DetectionHandle {
                             log::warn!("meeting-capture: listing microphone apps failed: {err}")
                         }
                     }
-                    std::thread::sleep(POLL_INTERVAL);
+                    if stopped.recv_timeout(POLL_INTERVAL) != Err(mpsc::RecvTimeoutError::Timeout) {
+                        break;
+                    }
                 }
             })
             .ok();
-        Self { stop, thread }
+        Self {
+            stop: Some(stop),
+            thread,
+        }
     }
 }
 
 impl Drop for DetectionHandle {
     fn drop(&mut self) {
-        self.stop.store(true, Ordering::SeqCst);
+        self.stop.take();
         if let Some(thread) = self.thread.take() {
             let _ = thread.join();
         }
@@ -162,15 +167,18 @@ mod tests {
     }
 
     #[test]
-    fn without_self_drops_composer_and_webkit() {
+    fn without_self_drops_composer() {
         let own = format!("pid:{}", std::process::id());
         let apps = vec![
             app("org.dxos.composer.dev"),
-            app("com.apple.WebKit.GPU"),
             app(&own),
+            app("com.apple.Safari"),
             app("us.zoom.xos"),
         ];
-        assert_eq!(without_self(apps), vec![app("us.zoom.xos")]);
+        assert_eq!(
+            without_self(apps),
+            vec![app("com.apple.Safari"), app("us.zoom.xos")]
+        );
     }
 
     #[test]

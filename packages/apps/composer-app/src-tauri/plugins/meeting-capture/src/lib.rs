@@ -54,14 +54,14 @@ fn get_support() -> Support {
 }
 
 #[tauri::command]
-fn list_mic_apps() -> Result<Vec<MicApp>, String> {
+async fn list_mic_apps() -> Result<Vec<MicApp>, String> {
     platform::list_mic_apps().map(detector::without_self)
 }
 
 /// Starts (or restarts) the background poller; each change in the set of apps holding the
 /// microphone is sent on `on_event`.
 #[tauri::command]
-fn start_detection(
+async fn start_detection(
     state: State<'_, CaptureState>,
     on_event: Channel<DetectionEvent>,
 ) -> Result<(), String> {
@@ -80,7 +80,7 @@ fn start_detection(
 }
 
 #[tauri::command]
-fn stop_detection(state: State<'_, CaptureState>) -> Result<(), String> {
+async fn stop_detection(state: State<'_, CaptureState>) -> Result<(), String> {
     state
         .detection
         .lock()
@@ -89,9 +89,11 @@ fn stop_detection(state: State<'_, CaptureState>) -> Result<(), String> {
     Ok(())
 }
 
-/// Starts capturing the system audio output; raw `f32` chunks are sent on `on_audio`.
+/// Starts capturing the system audio output; raw `f32` chunks are sent on `on_audio`. The commands are
+/// `async` so Tauri runs them off the main thread: opening a tap can wait on the permission prompt, and
+/// stopping joins a capture thread.
 #[tauri::command]
-fn start_system_audio(
+async fn start_system_audio(
     state: State<'_, CaptureState>,
     on_audio: Channel<InvokeResponseBody>,
 ) -> Result<SystemAudioFormat, String> {
@@ -110,7 +112,7 @@ fn start_system_audio(
 }
 
 #[tauri::command]
-fn stop_system_audio(state: State<'_, CaptureState>) -> Result<(), String> {
+async fn stop_system_audio(state: State<'_, CaptureState>) -> Result<(), String> {
     state
         .system_audio
         .lock()

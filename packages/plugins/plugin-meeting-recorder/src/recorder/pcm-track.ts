@@ -7,6 +7,9 @@
  * the same `TranscriptionManager.setAudioTrack` path as a microphone. Each chunk is scheduled back to
  * back on the context clock; no worklet module is needed, which the desktop CSP would not load.
  */
+/** How far ahead of the context clock pushed audio may be scheduled. */
+const MAX_QUEUED_SECONDS = 2;
+
 export class PcmTrackSource {
   readonly #context: AudioContext;
   readonly #destination: MediaStreamAudioDestinationNode;
@@ -15,6 +18,16 @@ export class PcmTrackSource {
   constructor(sampleRate: number) {
     this.#context = new AudioContext({ sampleRate });
     this.#destination = this.#context.createMediaStreamDestination();
+  }
+
+  /**
+   * A context created outside a user gesture (an auto-started recording) starts suspended, and a
+   * suspended context's clock stands still, so nothing would ever play into the track.
+   */
+  async resume(): Promise<void> {
+    if (this.#context.state === 'suspended') {
+      await this.#context.resume();
+    }
   }
 
   get track(): MediaStreamTrack {
@@ -31,6 +44,10 @@ export class PcmTrackSource {
     const source = this.#context.createBufferSource();
     source.buffer = buffer;
     source.connect(this.#destination);
+    // A stall that lets the queue run this far ahead of the clock is dropped rather than buffered.
+    if (this.#nextStartTime - this.#context.currentTime > MAX_QUEUED_SECONDS) {
+      return;
+    }
     // A late chunk starts now rather than in the past, so a stall shifts audio instead of dropping it.
     const startTime = Math.max(this.#nextStartTime, this.#context.currentTime);
     source.start(startTime);

@@ -78,10 +78,11 @@ export const RecorderStatus = () => {
     case 'detected':
       return (
         <StatusBar.Item>
-          <Layout.Flex align='center' gap='xs'>
+          <Layout.Flex column align='center'>
             <Button.Root
               variant='ghost'
               icon='ph--record--fill'
+              iconOnly
               iconClassNames='text-error-text animate-pulse'
               label={t('take-notes-for.label', { app: appDisplayName(state.app) })}
               onClick={handleStart}
@@ -106,6 +107,7 @@ export const RecorderStatus = () => {
           <Button.Root
             variant='ghost'
             icon='ph--spinner--regular'
+            iconOnly
             spin
             disabled
             label={t(state.phase === 'starting' ? 'starting.label' : 'stopping.label')}
@@ -117,17 +119,22 @@ export const RecorderStatus = () => {
     case 'recording':
       return (
         <StatusBar.Item>
-          <Button.Root
-            variant='ghost'
-            icon='ph--stop-circle--fill'
-            iconClassNames='text-error-text'
-            label={t('recording.label', {
-              elapsed: formatElapsed(elapsed),
-              source: state.app ? appDisplayName(state.app) : t('microphone.label'),
-            })}
-            onClick={handleStop}
-            data-testid='meetingRecorder.stop'
-          />
+          {/* The status rail is one icon wide, so the timer sits under the button rather than in its label. */}
+          <Layout.Flex column align='center'>
+            <Button.Root
+              variant='ghost'
+              icon='ph--stop-circle--fill'
+              iconOnly
+              iconClassNames='text-error-text animate-pulse'
+              label={t('recording.label', {
+                elapsed: formatElapsed(elapsed),
+                source: state.app ? appDisplayName(state.app) : t('microphone.label'),
+              })}
+              onClick={handleStop}
+              data-testid='meetingRecorder.stop'
+            />
+            <StatusBar.Text classNames='text-xs text-error-text tabular-nums'>{formatElapsed(elapsed)}</StatusBar.Text>
+          </Layout.Flex>
         </StatusBar.Item>
       );
   }
