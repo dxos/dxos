@@ -165,8 +165,8 @@ const rosterText = (): string =>
 
 /**
  * Reads the team roster into the agent's brain, so its Facts hold the team (with Discord usernames) as well as its
- * Memories; skipped once the brain holds any fact. A model call on the brain where the agent's chats run, so a
- * failure leaves the story usable and is only logged.
+ * Memories; skipped once the brain holds any fact. A model call on the brain where the agent's chats run, so the
+ * caller does not wait for it, and a failure is only logged.
  */
 export const seedSupportFacts = async ({
   db,
@@ -185,15 +185,21 @@ export const seedSupportFacts = async ({
     { agent: Ref.make(agent) },
     options,
   );
-  if (inspectError || (brain?.facts.length ?? 0) > 0) {
+  if (inspectError) {
+    log.warn('reading the brain before seeding the support facts failed', { error: inspectError });
     return;
   }
-  const { error } = await invoker.invokePromise(
+  if ((brain?.facts.length ?? 0) > 0) {
+    return;
+  }
+  const { data, error } = await invoker.invokePromise(
     AgentOperation.ReadSource,
     { agent: Ref.make(agent), url: ROSTER_URL, text: rosterText() },
     options,
   );
   if (error) {
     log.warn('seeding the support facts failed', { error });
+    return;
   }
+  log.info('seeded the support facts', { facts: data?.facts });
 };

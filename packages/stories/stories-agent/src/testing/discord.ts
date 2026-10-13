@@ -56,11 +56,12 @@ export type SetupDiscordAgentProps = DiscordBotArgs & SetupAgentProps;
 export const setupAgent = async ({ db, invoker, remote = false }: SetupAgentProps): Promise<Agent.Agent> => {
   const agent = await ensureAgent(db, invoker, remote);
   await seedSupportTeam({ db, invoker, agent });
-  // Facts need a model; only a story on EDGE has one.
-  if (remote) {
-    await seedSupportFacts({ db, invoker, agent, remote });
-  }
   await enableSupport(db, invoker, agent);
+  // Facts need a model, which only a story on EDGE has. Not awaited: the model call outlasts the setup plugin's
+  // activation timeout, and the Facts panel picks the facts up when they land.
+  if (remote) {
+    void seedSupportFacts({ db, invoker, agent, remote });
+  }
   return agent;
 };
 
