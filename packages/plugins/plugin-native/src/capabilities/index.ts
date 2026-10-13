@@ -16,6 +16,11 @@ import { NativeCapabilities, NativeEvents } from '#types';
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
 
+export const ExitGuard = Capability.lazyModule(
+  'ExitGuard',
+  { requires: [Capabilities.OperationInvoker], provides: [], activatesOn: NativeEvents.Start },
+  () => import('./exit-guard.ts'),
+);
 export const NativeSettings = AppCapability.settings(() => import('./settings.ts'), {
   activatesOn: ActivationEvents.Idle,
   provides: [NativeCapabilities.Settings],

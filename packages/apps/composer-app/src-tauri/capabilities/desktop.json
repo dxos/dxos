@@ -86,6 +86,9 @@
     "allow-remove-xattr",
     "allow-hide-spotlight",
     "allow-take-web-process-terminations",
+    "allow-defer-exit",
+    "allow-confirm-exit",
+    "allow-cancel-exit",
     {
       "identifier": "http:default",
       "allow": [
