@@ -8,11 +8,13 @@ import { generateName } from '@dxos/display-name';
 import { toPublicKey } from '@dxos/protocols/buf';
 import type { Identity } from '@dxos/react-client/halo';
 import * as Avatar from '@dxos/react-ui/Avatar';
+import * as Button from '@dxos/react-ui/Button';
+import * as Dialog from '@dxos/react-ui/Dialog';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import { mx } from '@dxos/ui-theme';
 import { hexToFallback } from '@dxos/util';
 
-import { Action, ActionBar, InputLabel } from '../../../components/index.ts';
+import { InputLabel } from '../../../components/index.ts';
 import { translationKey } from '../../../translations.ts';
 import { profileString } from '../../../util/index.ts';
 import { type JoinPanelMode, type JoinStepProps } from '../JoinPanelProps.ts';
@@ -33,14 +35,14 @@ export const IdentityAdded = (props: IdentityAddedProps) => {
   const displayName = addedIdentity?.profile?.displayName ?? (addedIdentity && generateName(addedIdentityHex));
 
   const doneAction = (
-    <Action
+    <Button.Root
       {...(onDone && { onClick: () => onDone(null) })}
       disabled={disabled}
       data-autofocus='confirmingAddedIdentity'
       data-testid='identity-added-done'
     >
       <span>{t('done.label')}</span>
-    </Action>
+    </Button.Root>
   );
 
   return (
@@ -57,7 +59,7 @@ export const IdentityAdded = (props: IdentityAddedProps) => {
           {displayName}
         </span>
       </div>
-      <ActionBar>
+      <Dialog.Footer>
         {mode === 'halo-only' ? (
           doneActionParent ? (
             cloneElement(doneActionParent, {}, doneAction)
@@ -65,16 +67,16 @@ export const IdentityAdded = (props: IdentityAddedProps) => {
             doneAction
           )
         ) : (
-          <Action
+          <Button.Root
             variant='primary'
             disabled={disabled || !addedIdentity}
             onClick={() => addedIdentity && send({ type: 'selectIdentity', identity: addedIdentity })}
             data-autofocus='confirmingAddedIdentity'
           >
             {t('continue.label')}
-          </Action>
+          </Button.Root>
         )}
-      </ActionBar>
+      </Dialog.Footer>
     </>
   );
 };

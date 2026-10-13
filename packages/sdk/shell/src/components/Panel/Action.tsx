@@ -2,21 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, {
-  type ComponentProps,
-  type ComponentPropsWithoutRef,
-  type Dispatch,
-  type ReactNode,
-  type SetStateAction,
-  forwardRef,
-} from 'react';
+import React, { type ComponentProps, type Dispatch, type SetStateAction, forwardRef } from 'react';
 
 import { useControllableState } from '@dxos/react-hooks';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Menu from '@dxos/react-ui/Menu';
-import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations.ts';
@@ -155,34 +147,3 @@ export const Action = forwardRef<HTMLButtonElement, LargeButtonProps>((props, fo
     </Button.Root>
   );
 });
-
-//
-// Actions
-//
-
-type ActionBarProps = Omit<Util.ThemedClassName<ComponentPropsWithoutRef<'div'>>, 'children'> & {
-  children: ReactNode | ReactNode[];
-};
-
-/**
- * @deprecated Use Dialog.ActionBar
- */
-const ActionBar = forwardRef<HTMLDivElement, ActionBarProps>(({ classNames, children, ...props }, forwardedRef) => {
-  return (
-    <div
-      {...props}
-      className={mx(
-        'flex flex-col gap-2 mt-2',
-        Array.isArray(children) && children.length > 1 ? 'justify-between' : 'justify-center',
-        classNames,
-      )}
-      ref={forwardedRef}
-    >
-      {children}
-    </div>
-  );
-});
-
-export { ActionBar };
-
-export type { ActionBarProps };

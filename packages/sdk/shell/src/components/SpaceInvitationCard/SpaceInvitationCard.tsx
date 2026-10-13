@@ -11,10 +11,10 @@ import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Contact } from '@dxos/react-client/halo';
 import * as Avatar from '@dxos/react-ui/Avatar';
 import * as Button from '@dxos/react-ui/Button';
+import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import type * as Util from '@dxos/react-ui/Util';
-import { mx } from '@dxos/ui-theme';
 import { keyToFallback } from '@dxos/util';
 
 import { translationKey } from '../../translations.ts';
@@ -54,6 +54,8 @@ const roleLabelKey = (role: SpaceMember_Role): string => {
 
 /**
  * An invitation from a contact to a space this identity has been admitted to, with Join (or Open once joined).
+ * A `Card.Section`, so inside a `grid` card its rows keep the card's rails: the avatar in the start rail, the sender
+ * and description on the content edge, and the action trailing.
  */
 export const SpaceInvitationCard = ({
   classNames,
@@ -75,53 +77,52 @@ export const SpaceInvitationCard = ({
   const description = t('space-invitation.description', { space, role: t(roleLabelKey(role)) });
 
   return (
-    <div
-      role='group'
-      aria-labelledby={labelId}
-      className={mx('flex flex-wrap items-center gap-2 p-2 min-w-0', classNames)}
-      data-testid='space-invitation-card'
-    >
-      {sender && fallback ? (
-        <Avatar.Root
-          aria-labelledby={labelId}
-          size='md'
-          hue={Avatar.toAvatarHue(profileString(sender, 'hue') ?? fallback.hue)}
-          fallback={profileString(sender, 'emoji') ?? fallback.emoji}
-        />
-      ) : (
-        <Icon.Icon icon='ph--envelope-simple--regular' size='lg' tone='muted' />
-      )}
-      {/* The sender over the space and role; its minimum width is where the button wraps under it in a narrow host. */}
-      <div className='flex flex-col gap-1 min-w-24 basis-0 grow'>
-        <span id={labelId} className='truncate'>
+    <Card.Section classNames={classNames} data-testid='space-invitation-card'>
+      <Card.Row
+        leading={
+          sender && fallback ? (
+            <Avatar.Root
+              size='sm'
+              aria-labelledby={labelId}
+              hue={Avatar.toAvatarHue(profileString(sender, 'hue') ?? fallback.hue)}
+              fallback={profileString(sender, 'emoji') ?? fallback.emoji}
+            />
+          ) : (
+            <Icon.Icon icon='ph--envelope-simple--regular' tone='muted' />
+          )
+        }
+        trailing={
+          joined ? (
+            <Button.Root
+              size='sm'
+              disabled={pending}
+              onClick={() => onOpen?.()}
+              data-testid='space-invitation-card.open'
+            >
+              {t('open-space-invitation.label')}
+            </Button.Root>
+          ) : (
+            <Button.Root
+              size='sm'
+              variant='primary'
+              disabled={pending}
+              onClick={() => onJoin?.()}
+              data-testid='space-invitation-card.join'
+            >
+              {t('join-space-invitation.label')}
+            </Button.Root>
+          )
+        }
+      >
+        <Card.Text id={labelId} truncate>
           {sender ? contactDisplayName(sender) : (senderName ?? t('unknown-sender.label'))}
-        </span>
-        <span className='text-sm text-fg-muted break-words'>
+        </Card.Text>
+      </Card.Row>
+      <Card.Row>
+        <Card.Text variant='muted' lines={3}>
           {sentAt ? `${description} · ${formatDistanceToNow(sentAt, { addSuffix: true })}` : description}
-        </span>
-      </div>
-      {joined ? (
-        <Button.Root
-          size='sm'
-          classNames='ms-auto'
-          disabled={pending}
-          onClick={() => onOpen?.()}
-          data-testid='space-invitation-card.open'
-        >
-          {t('open-space-invitation.label')}
-        </Button.Root>
-      ) : (
-        <Button.Root
-          size='sm'
-          variant='primary'
-          classNames='ms-auto'
-          disabled={pending}
-          onClick={() => onJoin?.()}
-          data-testid='space-invitation-card.join'
-        >
-          {t('join-space-invitation.label')}
-        </Button.Root>
-      )}
-    </div>
+        </Card.Text>
+      </Card.Row>
+    </Card.Section>
   );
 };

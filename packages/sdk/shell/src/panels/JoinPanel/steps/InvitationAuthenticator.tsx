@@ -5,12 +5,14 @@
 import React, { useState } from 'react';
 
 import { Invitation_AuthMethod } from '@dxos/react-client/invitations';
+import * as Button from '@dxos/react-ui/Button';
+import * as Dialog from '@dxos/react-ui/Dialog';
 import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
 import { hexToEmoji } from '@dxos/util';
 
-import { Action, ActionBar, Emoji, InputLabel, Label } from '../../../components/index.ts';
+import { Emoji, InputLabel, Label } from '../../../components/index.ts';
 import { translationKey } from '../../../translations.ts';
 import { type JoinStepProps } from '../JoinPanelProps.ts';
 
@@ -99,16 +101,16 @@ export const InvitationAuthenticator = ({
           </>
         )}
       </div>
-      <ActionBar>
-        <Action
+      <Dialog.Footer>
+        <Button.Root
           variant='ghost'
           disabled={disabled}
           onClick={() => onInvitationCancel?.()}
           data-testid={`${invitationType}-invitation-authenticator-cancel`}
         >
           {t('cancel.label')}
-        </Action>
-        <Action
+        </Button.Root>
+        <Button.Root
           variant='primary'
           disabled={disabled}
           onClick={() => onInvitationAuthenticate?.(authCode)}
@@ -116,8 +118,8 @@ export const InvitationAuthenticator = ({
           data-testid={`${invitationType}-invitation-authenticator-next`}
         >
           {t('next.label')}
-        </Action>
-      </ActionBar>
+        </Button.Root>
+      </Dialog.Footer>
     </>
   );
 };

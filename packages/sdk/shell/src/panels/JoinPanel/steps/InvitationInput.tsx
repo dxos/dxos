@@ -5,9 +5,11 @@
 import React, { cloneElement, useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
+import * as Button from '@dxos/react-ui/Button';
+import * as Dialog from '@dxos/react-ui/Dialog';
 import * as Hooks from '@dxos/react-ui/Hooks';
 
-import { Action, ActionBar, InputLabel, TextInput } from '../../../components/index.ts';
+import { InputLabel, TextInput } from '../../../components/index.ts';
 import { translationKey } from '../../../translations.ts';
 import { type JoinPanelProps, type JoinStepProps } from '../JoinPanelProps.ts';
 
@@ -53,14 +55,14 @@ export const InvitationInput = (props: InvitationInputProps) => {
   };
 
   const exitAction = (
-    <Action
+    <Button.Root
       variant='ghost'
       disabled={disabled}
       {...(onExit ? { onClick: () => onExit() } : { onClick: () => onDone?.(null) })}
       data-testid='join-exit'
     >
       {t('cancel.label')}
-    </Action>
+    </Button.Root>
   );
 
   return (
@@ -77,7 +79,7 @@ export const InvitationInput = (props: InvitationInputProps) => {
           onKeyUp={({ key }) => key === 'Enter' && handleNext()}
         />
       </div>
-      <ActionBar>
+      <Dialog.Footer>
         {/* TODO(wittjosiah): This disables returning to deprecated identity creation flow. */}
         {Kind === 'Halo'
           ? null
@@ -86,15 +88,15 @@ export const InvitationInput = (props: InvitationInputProps) => {
             : doneActionParent
               ? cloneElement(doneActionParent, {}, exitAction)
               : exitAction}
-        <Action
+        <Button.Root
           variant='primary'
           disabled={disabled || inputValue.trim().length === 0}
           onClick={handleNext}
           data-testid={`${Kind.toLowerCase()}-invitation-input-continue`}
         >
           {t('continue.label')}
-        </Action>
-      </ActionBar>
+        </Button.Root>
+      </Dialog.Footer>
     </>
   );
 };

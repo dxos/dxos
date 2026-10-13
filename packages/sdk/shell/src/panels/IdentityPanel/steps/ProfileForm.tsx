@@ -11,10 +11,12 @@ import { toPublicKey } from '@dxos/protocols/buf';
 import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Identity } from '@dxos/react-client/halo';
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
+import * as Button from '@dxos/react-ui/Button';
+import * as Dialog from '@dxos/react-ui/Dialog';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import { hexToEmoji, hexToHue } from '@dxos/util';
 
-import { Action, ActionBar, InputLabel, TextInput } from '../../../components/index.ts';
+import { InputLabel, TextInput } from '../../../components/index.ts';
 import { translationKey } from '../../../translations.ts';
 import { profileString } from '../../../util/index.ts';
 import { type IdentityEvent } from '../identityMachine.ts';
@@ -79,8 +81,8 @@ const ProfileFormImpl = ({ active, identity, send, onUpdateProfile, validationMe
           <HuePicker disabled={disabled} value={hue} onChange={setHue} onReset={() => setHue(getHueValue(identity))} />
         </div>
       </div>
-      <ActionBar>
-        <Action
+      <Dialog.Footer>
+        <Button.Root
           variant='ghost'
           disabled={disabled}
           onClick={() => {
@@ -94,16 +96,16 @@ const ProfileFormImpl = ({ active, identity, send, onUpdateProfile, validationMe
           data-testid='update-profile-form-copy-key'
         >
           {t(copied ? 'copy-success.label' : 'copy-self-did.label')}
-        </Action>
-        <Action
+        </Button.Root>
+        <Button.Root
           variant='ghost'
           disabled={disabled}
           onClick={() => send?.({ type: 'unchooseAction' })}
           data-testid='update-profile-form-back'
         >
           {t('back.label')}
-        </Action>
-        <Action
+        </Button.Root>
+        <Button.Root
           variant='primary'
           disabled={disabled}
           onClick={() =>
@@ -117,8 +119,8 @@ const ProfileFormImpl = ({ active, identity, send, onUpdateProfile, validationMe
           data-testid='update-profile-form-continue'
         >
           {t('done.label')}
-        </Action>
-      </ActionBar>
+        </Button.Root>
+      </Dialog.Footer>
     </>
   );
 };

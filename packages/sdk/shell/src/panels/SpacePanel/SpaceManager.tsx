@@ -15,12 +15,12 @@ import {
   Invitation_Type,
   InvitationEncoder,
 } from '@dxos/react-client/invitations';
+import * as Dialog from '@dxos/react-ui/Dialog';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { mx } from '@dxos/ui-theme';
 
 import {
-  ActionBar,
   type ActionMenuItem,
   BifurcatedAction,
   InvitationList,
@@ -161,7 +161,7 @@ export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
           <SpaceMemberListComponent spaceKey={space.key} includeSelf />
         </ScrollArea.Viewport>
       </ScrollArea.Root>
-      <ActionBar>
+      <Dialog.Footer>
         <BifurcatedAction
           disabled={!active}
           actions={inviteActions}
@@ -169,7 +169,7 @@ export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
           onChangeActiveAction={setActiveAction as Dispatch<SetStateAction<string>>}
           data-testid='spaces-panel.create-invitation'
         />
-      </ActionBar>
+      </Dialog.Footer>
     </>
   );
 };

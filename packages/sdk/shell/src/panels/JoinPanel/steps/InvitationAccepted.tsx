@@ -4,9 +4,10 @@
 
 import React, { cloneElement } from 'react';
 
+import * as Button from '@dxos/react-ui/Button';
+import * as Dialog from '@dxos/react-ui/Dialog';
 import * as Hooks from '@dxos/react-ui/Hooks';
 
-import { Action, ActionBar } from '../../../components/index.ts';
 import { translationKey } from '../../../translations.ts';
 import { type JoinStepProps } from '../JoinPanelProps.ts';
 
@@ -22,7 +23,7 @@ export const InvitationAccepted = (props: InvitationAcceptedProps) => {
   const { t } = Hooks.useTranslation(translationKey);
 
   const doneAction = (
-    <Action
+    <Button.Root
       variant='primary'
       onClick={onDone}
       disabled={disabled}
@@ -30,7 +31,7 @@ export const InvitationAccepted = (props: InvitationAcceptedProps) => {
       data-testid={`${Kind.toLowerCase()}-invitation-accepted-done`}
     >
       {t('done.label')}
-    </Action>
+    </Button.Root>
   );
 
   return (
@@ -38,7 +39,7 @@ export const InvitationAccepted = (props: InvitationAcceptedProps) => {
       <div className='grow flex flex-col justify-center'>
         <p className='text-center text-sm font-normal'>{t('welcome.message')}</p>
       </div>
-      <ActionBar>{doneActionParent ? cloneElement(doneActionParent, {}, doneAction) : doneAction}</ActionBar>
+      <Dialog.Footer>{doneActionParent ? cloneElement(doneActionParent, {}, doneAction) : doneAction}</Dialog.Footer>
     </>
   );
 };

@@ -8,10 +8,12 @@ import React, { useCallback, useState } from 'react';
 import { log } from '@dxos/log';
 import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { useClient } from '@dxos/react-client';
+import * as Button from '@dxos/react-ui/Button';
+import * as Dialog from '@dxos/react-ui/Dialog';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import { type MaybePromise } from '@dxos/util';
 
-import { Action, ActionBar, InputLabel, TextInput } from '../../../components/index.ts';
+import { InputLabel, TextInput } from '../../../components/index.ts';
 import { translationKey } from '../../../translations.ts';
 import { type JoinStepProps } from '../JoinPanelProps.ts';
 
@@ -88,25 +90,25 @@ export const IdentityInputImpl = ({ method, active, validationMessage, onConfirm
           onChange={({ target: { value } }) => setInputValue(value)}
         />
       </div>
-      <ActionBar>
+      <Dialog.Footer>
         {/* TODO(wittjosiah): This disables returning to deprecated identity creation flow.
-        <Action
+        <Button.Root
           variant='ghost'
           disabled={disabled}
           onClick={() => send?.({ type: 'deselectAuthMethod' })}
           data-testid={`${method === 'recover identity' ? 'recover' : 'create'}-identity-input-back`}
         >
           {t('back.label')}
-        </Action> */}
-        <Action
+        </Button.Root> */}
+        <Button.Root
           variant='primary'
           disabled={disabled || inputValue.trim().length === 0}
           onClick={handleConfirm}
           data-testid={`${method === 'recover identity' ? 'recover' : 'create'}-identity-input-continue`}
         >
           {pending ? t('pending.label') : t('continue.label')}
-        </Action>
-      </ActionBar>
+        </Button.Root>
+      </Dialog.Footer>
     </>
   );
 };

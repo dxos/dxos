@@ -5,9 +5,11 @@
 import React from 'react';
 
 import { Invitation_State } from '@dxos/react-client/invitations';
+import * as Button from '@dxos/react-ui/Button';
+import * as Dialog from '@dxos/react-ui/Dialog';
 import * as Hooks from '@dxos/react-ui/Hooks';
 
-import { Action, ActionBar, InputLabel } from '../../../components/index.ts';
+import { InputLabel } from '../../../components/index.ts';
 import { translationKey } from '../../../translations.ts';
 import { type FailReason } from '../../../types/index.ts';
 import { type JoinStepProps } from '../JoinPanelProps.ts';
@@ -44,15 +46,15 @@ const InvitationActions = ({
           )}
         </InputLabel>
         <div className='grow' />
-        <ActionBar>
-          <Action
+        <Dialog.Footer>
+          <Button.Root
             disabled={!active}
             onClick={() => send({ type: `reset${Kind}Invitation` })}
             data-testid='invitation-rescuer-reset'
           >
             {t('reset.label')}
-          </Action>
-        </ActionBar>
+          </Button.Root>
+        </Dialog.Footer>
       </>
     );
   } else {
@@ -60,14 +62,19 @@ const InvitationActions = ({
       <>
         <InputLabel classNames='text-fg-muted'>{t('connecting-status.label')}</InputLabel>
         <div className='grow' />
-        <ActionBar>
-          <Action disabled classNames='order-2' data-testid='next'>
-            {t('next.label')}
-          </Action>
-          <Action disabled={!active} onClick={onInvitationCancel} data-testid='invitation-rescuer-cancel'>
+        <Dialog.Footer>
+          <Button.Root
+            variant='ghost'
+            disabled={!active}
+            onClick={onInvitationCancel}
+            data-testid='invitation-rescuer-cancel'
+          >
             {t('cancel.label')}
-          </Action>
-        </ActionBar>
+          </Button.Root>
+          <Button.Root variant='primary' disabled data-testid='next'>
+            {t('next.label')}
+          </Button.Root>
+        </Dialog.Footer>
       </>
     );
   }
@@ -84,15 +91,15 @@ export const InvitationRescuer = (props: InvitationRescuerProps) => {
           <div className='grow flex flex-col justify-center'>
             <InputLabel classNames='text-fg-muted'>There was a problem joining the space</InputLabel>
           </div>
-          <ActionBar>
-            <Action
+          <Dialog.Footer>
+            <Button.Root
               disabled={!active}
               data-testid='invitation-rescuer-blank-reset'
               onClick={() => send({ type: `reset${Kind}Invitation` })}
             >
               {t('reset.label')}
-            </Action>
-          </ActionBar>
+            </Button.Root>
+          </Dialog.Footer>
         </>
       ) : (
         <InvitationActions {...props} />

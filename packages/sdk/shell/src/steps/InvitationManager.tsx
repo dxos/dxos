@@ -5,6 +5,8 @@
 import React, { useMemo } from 'react';
 
 import { type InvitationStatus } from '@dxos/react-client/invitations';
+import * as Button from '@dxos/react-ui/Button';
+import * as Dialog from '@dxos/react-ui/Dialog';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as QrCode from '@dxos/react-ui/QrCode';
@@ -12,16 +14,7 @@ import * as SystemButton from '@dxos/react-ui/SystemButton';
 import { getSize, mx } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
-import {
-  Action,
-  ActionBar,
-  AuthCode,
-  Centered,
-  Emoji,
-  Label,
-  Viewport,
-  type ViewportViewProps,
-} from '../components/index.ts';
+import { AuthCode, Centered, Emoji, Label, Viewport, type ViewportViewProps } from '../components/index.ts';
 import { translationKey } from '../translations.ts';
 import { invitationStatusValue } from '../util/index.ts';
 import { type StepProps } from './StepProps.ts';
@@ -99,11 +92,11 @@ export const InvitationManager = ({
           </InvitationManagerView>
         </Viewport.Views>
       </Viewport.Root>
-      <ActionBar classNames='mt-4'>
-        <Action disabled={!active} onClick={() => send?.({ type: 'deselectInvitation' })}>
+      <Dialog.Footer>
+        <Button.Root disabled={!active} onClick={() => send?.({ type: 'deselectInvitation' })}>
           {t('back.label')}
-        </Action>
-      </ActionBar>
+        </Button.Root>
+      </Dialog.Footer>
     </>
   );
 };
