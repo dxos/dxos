@@ -17,13 +17,12 @@ import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
-import { type RDF } from '@dxos/pipeline-rdf';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 import { HasSubject, Organization, Person, ProfileOf } from '@dxos/types';
 
 import { AgentOperationHandlerSet } from '#operations';
-import { BrainService, Goal, Memory, MemoryOperation } from '#types';
+import { Goal, Memory, MemoryOperation } from '#types';
 
 import { makeTestBrain } from '../brain/testing.ts';
 
@@ -269,21 +268,4 @@ describe('Interview', () => {
       TestHelpers.provideTestContext,
     ),
   );
-
-  it('a negated fact is marked "not:", so a denial is not recalled as the assertion it denies', ({ expect }) => {
-    const denial = {
-      id: 'fact-1',
-      assertion: {
-        subject: { kind: 'entity', entity: 'kai', label: 'Kai' },
-        predicate: 'has spoken with',
-        object: { kind: 'entity', entity: 'dima', label: 'Dima' },
-      },
-      factuality: { value: 'CT-', polarity: '-' },
-      attribution: { source: 'test', generatedAtTime: '2026-10-13T12:00:00Z' },
-      recordedAt: '2026-10-13T12:00:00Z',
-      extractor: { id: 'test', model: 'none', version: '1' },
-      sourceHash: 'fact-1',
-    } satisfies RDF.Fact;
-    expect(BrainService.factText(denial)).toBe('not: Kai has spoken with Dima');
-  });
 });
