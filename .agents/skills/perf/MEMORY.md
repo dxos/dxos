@@ -14,6 +14,14 @@ pnpm perf compare --base main --metric 'run > peak app footprint'
 The flow reads footprint per stage, so this is the verdict for both size and a growth that shows
 within one flow. Its numbers carry Playwright's own cost; compare them only with each other.
 
+## On a real profile
+
+A user's profile holds private keys and syncs with production. Load one only behind a partition:
+`DX_PERF_PROFILE_ARCHIVE=<file> pnpm perf run --scenario memory-profile --offline` (or `--edge` with a
+non-production EDGE). Read sizes and constructor names from it, never string contents, and keep its
+heap snapshots out of PRs, tasks and chat. `memory-synthetic` is the same soak on generated data, the
+control for what being offline costs.
+
 ## Size: what does the tab hold?
 
 Measure with nothing attached to the page while it loads. A Playwright page costs this app over

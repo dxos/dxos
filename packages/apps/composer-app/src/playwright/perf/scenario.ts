@@ -3,22 +3,29 @@
 //
 
 import { type Page, expect, test } from '@playwright/test';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 
 import { log } from '@dxos/log';
 import {
   type Comparability,
+  type DeniedRequest,
   type Mode,
+  type PartitionProxy,
   StageRunner,
   type TargetFilter,
   appendRows,
   attachAll,
   countersLabel,
   flowConditions,
+  insidePartition,
   installProbes,
   installReactProbe,
   launchInstrumentedBrowser,
+  launchInstrumentedContext,
   parseCounters,
+  partitionAllow,
   publishPosthogBatch,
   startProfiling,
   trackNetwork,
@@ -26,7 +33,10 @@ import {
   writeRunReport,
 } from '@dxos/perf-harness';
 
+import { waitForReady } from './page.ts';
 import { PERF_ORIGIN } from './server.ts';
+
+export { invokeInPage, waitForReady } from './page.ts';
 
 const WORKSPACE_ROOT = path.resolve(import.meta.dirname, '../../../../../..');
 
@@ -53,23 +63,6 @@ const INJECT = ((spec) => {
   const duration = Number.parseInt(ms ?? '', 10);
   return stage && Number.isFinite(duration) ? { stage, ms: duration } : undefined;
 })(process.env.DX_PERF_INJECT ?? '');
-
-export const waitForReady = async (page: Page, timeout = 120_000): Promise<void> => {
-  await page.getByTestId('treeView.userAccount').waitFor({ timeout });
-};
-
-/** Invokes one operation in the page's own realm, the path a user's gesture takes. */
-export const invokeInPage = (page: Page, key: string, input: unknown): Promise<unknown> =>
-  page.evaluate(
-    ({ key, input }) => {
-      const composer = globalThis.composer;
-      if (!composer?.invoke) {
-        throw new Error('composer.invoke is unavailable');
-      }
-      return composer.invoke(key, input);
-    },
-    { key, input },
-  );
 
 export type ScenarioContext = {
   page: Page;
@@ -98,6 +91,15 @@ export type Scenario = {
    * inspector session keeps it alive through the navigation, and the reloaded tab never starts.
    */
   navigates?: boolean;
+  /**
+   * The flow loads someone's real data. It refuses to run unless `--offline` partitions the
+   * browser, takes no screenshots, and fails if any response arrives from off the machine.
+   */
+  privateData?: boolean;
+  /** Storage on disk in a throwaway profile directory, as installed; Playwright's contexts keep it in memory. */
+  persistentProfile?: boolean;
+  /** Runs before the app's first boot, e.g. to import a profile through `/recovery.html`. */
+  prepare?: (page: Page) => Promise<void>;
 };
 
 const skipSharedWorkers: TargetFilter = (target) => target.type !== 'shared_worker';
@@ -106,11 +108,24 @@ const runScenario = async (scenario: Scenario, mode: Mode, iteration: number): P
   const runId = Date.now().toString(36);
   const artifactDir = path.join(WORKSPACE_ROOT, 'test-results', 'perf', 'artifacts', `${mode}-${runId}`);
   const budget = mode === 'diagnose' ? 300_000 : 60_000;
-  const instrumented = await launchInstrumentedBrowser();
-  const { browser, browserCdp, debugPort } = instrumented;
+  const allow = partitionAllow();
+  if (scenario.privateData && !allow) {
+    throw new Error(`${scenario.flow} loads private data and runs only partitioned: pass --offline or --edge`);
+  }
+  const profileDir = scenario.persistentProfile ? mkdtempSync(path.join(tmpdir(), 'dx-perf-profile-')) : undefined;
+  const instrumented = profileDir ? await launchInstrumentedContext(profileDir) : await launchInstrumentedBrowser();
+  const { browserCdp, debugPort } = instrumented;
+  const offsite: string[] = [];
   try {
-    const context = await browser.newContext();
-    const page = await context.newPage();
+    const context = 'context' in instrumented ? instrumented.context : await instrumented.browser.newContext();
+    const page = context.pages()[0] ?? (await context.newPage());
+    if (allow) {
+      context.on('response', (response) => {
+        if (!insidePartition(response.url(), allow)) {
+          offsite.push(new URL(response.url()).host);
+        }
+      });
+    }
     const include = scenario.navigates ? skipSharedWorkers : undefined;
     const comparability: Comparability = {
       ...flowConditions(),
@@ -131,7 +146,7 @@ const runScenario = async (scenario: Scenario, mode: Mode, iteration: number): P
       debugPort,
       network: trackNetwork(page),
       comparability,
-      screenshotDir: path.join(artifactDir, 'stages'),
+      ...(scenario.privateData ? {} : { screenshotDir: path.join(artifactDir, 'stages') }),
       snapshotStages: new Set(),
       snapshotDir: path.join(artifactDir, 'snapshots'),
       counters: COUNTERS,
@@ -143,6 +158,7 @@ const runScenario = async (scenario: Scenario, mode: Mode, iteration: number): P
       await installReactProbe(page);
     }
 
+    await scenario.prepare?.(page);
     await runner.stage('boot', async () => {
       await page.goto(`${BASE_URL}/?profiler=1&model=scripted`, { timeout: 120_000 });
       await waitForReady(page);
@@ -188,11 +204,35 @@ const runScenario = async (scenario: Scenario, mode: Mode, iteration: number): P
       }
     }
     runner.dispose();
+    expect(offsite, 'responses from off the machine while partitioned').toEqual([]);
     const failed = rows.filter((row) => !row.ok);
     expect(failed.map((row) => `${row.stage}: ${row.error}`)).toEqual([]);
   } finally {
+    // Written whatever happened: a failed run is where the proof that nothing left the machine matters most.
+    if (instrumented.partition) {
+      writePartitionReport(artifactDir, instrumented.partition, offsite);
+    }
     await instrumented.close();
+    if (profileDir) {
+      rmSync(profileDir, { recursive: true, force: true });
+    }
   }
+};
+
+/** Which hosts the partition refused or tunnelled to, and how often: the proof of what a run reached. */
+const writePartitionReport = (artifactDir: string, partition: PartitionProxy, offsite: string[]): void => {
+  const counts = (requests: ReadonlyArray<DeniedRequest>) => {
+    const byHost = new Map<string, number>();
+    for (const { host, port } of requests) {
+      byHost.set(`${host}:${port}`, (byHost.get(`${host}:${port}`) ?? 0) + 1);
+    }
+    return Object.fromEntries([...byHost].sort(([, left], [, right]) => right - left));
+  };
+  mkdirSync(artifactDir, { recursive: true });
+  writeFileSync(
+    path.join(artifactDir, 'partition.json'),
+    JSON.stringify({ denied: counts(partition.denied()), tunnelled: counts(partition.tunnelled()), offsite }, null, 2),
+  );
 };
 
 /**

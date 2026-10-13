@@ -63,6 +63,10 @@ export type Comparability = {
   serviceWorker?: boolean;
   /** The page's CPU slowed by this factor; absent means unthrottled. */
   cpuThrottle?: number;
+  /** The browser reached nothing but loopback; absent means connected to EDGE. */
+  offline?: boolean;
+  /** The one non-production EDGE host a partitioned browser could reach. */
+  edge?: string;
 };
 
 /** A CDP target the harness measures. Shared workers matter most: ECHO and automerge live there. */

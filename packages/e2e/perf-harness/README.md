@@ -196,6 +196,25 @@ pnpm perf compare --base main --cpu-throttle 4          # the page 4x slower
 - `--cpu-throttle` sends `Emulation.setCPUThrottlingRate` through the page's session. The factor is
   not calibrated to a device yet, so pick one and keep it for the whole comparison.
 
+### Measuring a real profile without syncing it
+
+A production bundle points at production EDGE, so a real profile loaded into a run would sync with
+live data. `--offline` partitions the browser: every request goes to a loopback proxy that refuses
+and logs it, host resolution covers loopback only, WebRTC gets no direct UDP, and the bundle's EDGE
+URL is a closed loopback port. `--edge <url>` is the same partition except for TLS tunnels to that
+one non-production EDGE (production is refused). Each partitioned scenario run writes
+`partition.json` with what was refused and tunnelled, and fails on any response from outside.
+
+```bash
+DX_PERF_PROFILE_ARCHIVE=<file.dxprofile> pnpm perf run --scenario memory-profile --offline -n 1
+pnpm perf run --scenario memory-synthetic --offline -n 1      # the same soak on generated data
+```
+
+`memory-profile` imports a `.dxprofile` (exported from `/recovery.html`) into a throwaway
+disk-backed profile and soaks it: idle, visit every space, idle, revisit, idle. It refuses to run
+unpartitioned and takes no screenshots. An archive holds private keys: keep it outside the repo,
+and keep what a run derives from it (heap snapshots, page text) out of PRs and chat.
+
 ### Guardrails for an optimization loop
 
 An agent asked to make a number smaller will, sooner or later, make the measurement smaller instead.

@@ -83,6 +83,11 @@ declare global {
   var dxos:
     | {
         spaces?: () => DebugSpace[];
+        /** `/recovery.html`'s helpers; the memory scenario imports a profile archive with them. */
+        recovery?: {
+          /** Opens a file picker and writes the chosen `.dxprofile` into OPFS. */
+          importSqlite?: () => Promise<{ byteLength: number; opfsFilename: string }>;
+        };
       }
     | undefined;
 

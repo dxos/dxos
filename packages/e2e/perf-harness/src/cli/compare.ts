@@ -66,6 +66,8 @@ const COMPARABILITY = [
   'http2',
   'serviceWorker',
   'cpuThrottle',
+  'offline',
+  'edge',
 ] as const;
 
 /** Where two arms' rows disagree on what they measured under, as `field base vs candidate`. */

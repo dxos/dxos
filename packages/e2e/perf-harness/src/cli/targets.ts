@@ -53,7 +53,17 @@ export type Conditions = {
   serviceWorker?: boolean;
   /** Slow the page's CPU by this factor. */
   cpuThrottle?: number;
+  /** Reach nothing but loopback; the bundle's EDGE URL points at a closed loopback port too. */
+  offline?: boolean;
+  /** Reach a non-production EDGE and nothing else off the machine; the bundle points at it. */
+  edge?: string;
 };
+
+/** Production EDGE, which a partitioned run may never reach whatever `--edge` says. */
+const PRODUCTION_EDGE_HOST = 'dxos.network';
+
+/** Nothing listens on the discard port, so an offline bundle's EDGE connections fail at once, locally. */
+const OFFLINE_EDGE_URL = 'http://127.0.0.1:9/';
 
 export const TARGETS: Readonly<Record<string, Target>> = {
   composer: {
@@ -116,30 +126,72 @@ export const readBudgets = (root: string, target: Target): Record<string, Budget
 };
 
 /** The flow's environment for each condition; the harness reads them back (`flowConditions`, `StageRunner`). */
-export const conditionsEnv = ({ until, http2, serviceWorker, cpuThrottle }: Conditions): Record<string, string> => ({
+export const conditionsEnv = ({
+  until,
+  http2,
+  serviceWorker,
+  cpuThrottle,
+  offline,
+  edge,
+}: Conditions): Record<string, string> => ({
   ...(until ? { DX_PERF_UNTIL: until } : {}),
   ...(http2 ? { DX_PERF_HTTP2: '1' } : {}),
   ...(serviceWorker ? { DX_PERF_SERVICE_WORKER: '1' } : {}),
   ...(cpuThrottle && cpuThrottle > 1 ? { DX_PERF_CPU_THROTTLE: String(cpuThrottle) } : {}),
+  ...(offline ? { DX_PERF_OFFLINE: '1' } : {}),
+  ...(edge ? { DX_PERF_EDGE: edge } : {}),
 });
 
 /** A target measured under `conditions`: the build, the server and the flow all follow them. */
-export const withConditions = (target: Target, conditions: Conditions = {}): Target => ({
-  ...target,
-  conditions,
-  build: conditions.serviceWorker
-    ? { ...target.build, env: { ...target.build.env, DX_PWA: 'true' }, variant: 'sw' }
-    : target.build,
-  env: { ...target.env, ...conditionsEnv(conditions) },
-});
+export const withConditions = (target: Target, conditions: Conditions = {}): Target => {
+  const edgeHost = conditions.edge && URL.canParse(conditions.edge) ? new URL(conditions.edge).hostname : undefined;
+  if (conditions.edge && !edgeHost) {
+    throw new HarnessError(`--edge takes a URL, not "${conditions.edge}"`);
+  }
+  if (edgeHost === PRODUCTION_EDGE_HOST) {
+    throw new HarnessError('--edge must name a non-production EDGE; production syncs live data');
+  }
+  if (edgeHost && conditions.offline) {
+    throw new HarnessError('--offline and --edge are exclusive: one partition at a time');
+  }
+  const variant = [conditions.serviceWorker && 'sw', conditions.offline && 'offline', edgeHost && `edge-${edgeHost}`]
+    .filter(Boolean)
+    .join('-');
+  return {
+    ...target,
+    conditions,
+    build: {
+      ...target.build,
+      env: {
+        ...target.build.env,
+        ...(conditions.serviceWorker ? { DX_PWA: 'true' } : {}),
+        ...(conditions.offline ? { DX_EDGE_BASE_URL: OFFLINE_EDGE_URL } : {}),
+        ...(conditions.edge
+          ? { DX_EDGE_BASE_URL: conditions.edge, DX_HUB_URL: new URL('hub/', conditions.edge).href }
+          : {}),
+      },
+      ...(variant ? { variant } : {}),
+    },
+    env: { ...target.env, ...conditionsEnv(conditions) },
+  };
+};
 
 /** One line for a run's header, or nothing when every condition is the default. */
-export const describeConditions = ({ until, http2, serviceWorker, cpuThrottle }: Conditions): string | undefined => {
+export const describeConditions = ({
+  until,
+  http2,
+  serviceWorker,
+  cpuThrottle,
+  offline,
+  edge,
+}: Conditions): string | undefined => {
   const parts = [
     until && `until ${until}`,
     http2 && 'HTTP/2',
     serviceWorker && 'service worker',
     cpuThrottle && cpuThrottle > 1 && `CPU ${cpuThrottle}x slower`,
+    offline && 'offline',
+    edge && `EDGE ${edge} only`,
   ].filter((part): part is string => Boolean(part));
   return parts.length > 0 ? parts.join(', ') : undefined;
 };
