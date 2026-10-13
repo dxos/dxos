@@ -23,29 +23,43 @@ const allAgents = (db: Database.Database): Effect.Effect<Agent.Agent[]> =>
     db.graph.query(Query.select(Filter.type(Agent.Agent)).from('all-accessible-spaces')).run(),
   ).pipe(Effect.orElseSucceed((): Agent.Agent[] => []));
 
+/** An agent a space can add: the URI of its home agent, which names its brain, and its name. */
+export type Invitee = { home: string; name?: string };
+
 /**
- * The home agents, among `agents`, that the space can add: neither living there nor present there already. An agent
- * is here when it lives here or has a presence here; either names its home's brain.
+ * The agents, among those the member administers, that the space can add: not the agent the space belongs to, and
+ * none living or present there already. An agent's own space records its home; for a space minted before EDGE
+ * recorded it, the home agent with the agent's DID among `agents`, the ones the member can see, stands in.
  */
-export const invitableAgents = (agents: readonly Agent.Agent[], spaceId: SpaceId): Agent.Agent[] => {
+export const invitees = (
+  administered: readonly AgentSpace.Summary[],
+  agents: readonly Agent.Agent[],
+  spaceId: SpaceId,
+): Invitee[] => {
   const here = new Set(
     agents.filter((agent) => Obj.getDatabase(agent)?.spaceId === spaceId).map(AgentPresence.brainOf),
   );
-  return agents.filter((agent) => AgentPresence.homeOf(agent) === undefined && !here.has(Obj.getURI(agent)));
+  const homes = agents.filter((agent) => AgentPresence.homeOf(agent) === undefined);
+  return administered.flatMap(({ spaceId: own, name, did, home }) => {
+    const visible = did === undefined ? undefined : homes.find((agent) => agent.did === did);
+    const uri = home ?? (visible && Obj.getURI(visible));
+    return own !== spaceId && uri !== undefined && !here.has(uri) ? [{ home: uri, name: name ?? visible?.name }] : [];
+  });
 };
 
-/** The DIDs of the agents the client's identity administers; none without a client or an identity. */
-const administeredDids: Effect.Effect<Set<string>, never, Capability.Service> = Effect.gen(function* () {
+/** The agents the client's identity administers; none without a client or an identity. */
+const administeredAgents: Effect.Effect<AgentSpace.Summary[], never, Capability.Service> = Effect.gen(function* () {
   const client = yield* Capability.getOption(ClientCapabilities.Client);
   const identityKey = Option.isSome(client) ? toPublicKey(client.value.halo.identity.get()?.identityKey) : undefined;
   return Option.isSome(client) && identityKey
-    ? AgentSpace.administeredDids(client.value.spaces.get(), identityKey)
-    : new Set<string>();
+    ? AgentSpace.administeredAgents(client.value.spaces.get(), identityKey)
+    : [];
 });
 
 // Agents are added to a space from its members panel, as people are; until they are HALO identities, adding one
 // creates its presence there (`InviteAgent`) rather than admitting it as a member. Only an agent's admins may add it
-// elsewhere, so only the agents the member administers are offered; EDGE enforces it when the presence registers.
+// elsewhere, so only the agents the member administers are offered, found through their own spaces, which an admin
+// is a member of even when the agent lives in someone else's space; EDGE enforces it when the presence registers.
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(AppCapabilities.InviteeSource, {
@@ -56,16 +70,13 @@ export default Capability.makeModule(() =>
             onNone: () => 'New agent',
             onSome: ({ t }) => t('new-agent.name', { ns: meta.profile.key }),
           });
-          const administered = yield* administeredDids;
-          return invitableAgents(yield* allAgents(space.db), space.id)
-            .filter((agent) => agent.did !== undefined && administered.has(agent.did))
-            .map((agent) => ({
-              key: Obj.getURI(agent),
-              label: agent.name || unnamed,
-            }));
+          return invitees(yield* administeredAgents, yield* allAgents(space.db), space.id).map(({ home, name }) => ({
+            key: home,
+            label: name || unnamed,
+          }));
         }),
       add: (space, key) =>
-        // Made on the space's database, whose resolver reaches the agent in its own space.
+        // The key is the home agent's URI, which `InviteAgent` resolves to the agent or, out of reach, its space.
         Operation.invoke(
           AgentOperation.InviteAgent,
           { agent: space.db.makeRef<Agent.Agent>(URI.make(key)) },

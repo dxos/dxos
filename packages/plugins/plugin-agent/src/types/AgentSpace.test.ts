@@ -5,19 +5,28 @@
 import { describe, test } from 'vitest';
 
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
-import { PublicKey } from '@dxos/keys';
+import { SpaceProperties } from '@dxos/client/echo';
+import { Obj } from '@dxos/echo';
+import { EID, EntityId, IdentityDid, PublicKey, SpaceId } from '@dxos/keys';
 import { createBuf, fromPublicKey } from '@dxos/protocols/buf';
 import { SpaceMemberSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { AgentSpace } from '#types';
+import { AgentPresence, AgentSpace } from '#types';
 
 const member = (key: PublicKey, role: SpaceMember_Role, did = '') =>
   createBuf(SpaceMemberSchema, { identity: { identityKey: fromPublicKey(key), did }, role });
 
-const space = (tags: string[], members: ReturnType<typeof member>[]): AgentSpace.Space => ({
+const space = (
+  tags: string[],
+  members: ReturnType<typeof member>[],
+  properties?: AgentSpace.Space['properties'],
+): AgentSpace.Space => ({
+  id: SpaceId.random(),
   tags,
   members: { get: () => members },
+  isOpen: properties !== undefined,
+  properties,
 });
 
 describe('AgentSpace', () => {
@@ -56,18 +65,23 @@ describe('AgentSpace', () => {
     expect(AgentSpace.administeredBy([kai, left, plain], other)).toEqual([]);
   });
 
-  test("the agents an identity may invite elsewhere are those whose space it is in, by the agent's DID", ({
-    expect,
-  }) => {
+  test("an agent's space records the agent's name, its DID and the URI of its home agent", ({ expect }) => {
+    const did = IdentityDid.random();
+    const home = EID.make({ spaceId: SpaceId.random(), entityId: EntityId.random() });
     const kai = space(
       [AppSpace.AGENT_SPACE_TAG],
-      [member(agent, SpaceMember_Role.OWNER, 'did:halo:kai'), member(me, SpaceMember_Role.EDITOR)],
+      [member(agent, SpaceMember_Role.OWNER, did), member(me, SpaceMember_Role.EDITOR)],
+      Obj.make(SpaceProperties, { name: 'Kai', [Obj.Meta]: { keys: [AgentPresence.homeKey(home)] } }),
     );
-    const scout = space(
+    // Its properties are read only once it is open.
+    const opening = space(
       [AppSpace.AGENT_SPACE_TAG],
-      [member(PublicKey.random(), SpaceMember_Role.OWNER, 'did:halo:scout'), member(other, SpaceMember_Role.ADMIN)],
+      [member(PublicKey.random(), SpaceMember_Role.OWNER, did), member(me, SpaceMember_Role.ADMIN)],
     );
-    expect([...AgentSpace.administeredDids([kai, scout], me)]).toEqual(['did:halo:kai']);
-    expect([...AgentSpace.administeredDids([kai, scout], other)]).toEqual(['did:halo:scout']);
+    expect(AgentSpace.administeredAgents([kai, opening], me)).toEqual([
+      { spaceId: kai.id, name: 'Kai', did, home },
+      { spaceId: opening.id, name: undefined, did, home: undefined },
+    ]);
+    expect(AgentSpace.administeredAgents([kai, opening], other)).toEqual([]);
   });
 });

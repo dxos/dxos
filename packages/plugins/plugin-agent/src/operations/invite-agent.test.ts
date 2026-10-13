@@ -17,19 +17,29 @@ import { Database, Feed, Filter, Hypergraph, Obj, Query, Ref } from '@dxos/echo'
 import { EchoTestBuilder, type EchoTestPeer } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { TestHelpers } from '@dxos/effect/testing';
-import { EID, EntityId, SpaceId } from '@dxos/keys';
+import { EID, EntityId, IdentityDid, SpaceId } from '@dxos/keys';
 import { type RDF, normalizeEntityId } from '@dxos/pipeline-rdf';
 import { Text } from '@dxos/schema';
 import { HasSubject, Message, Organization, Person } from '@dxos/types';
 
 import { AgentOperationHandlerSet } from '#operations';
-import { AgentPresence, BrainService, Goal, Memory, MemoryOperation, Mode, TriggerOperation } from '#types';
+import {
+  AgentPresence,
+  type AgentSpace,
+  BrainService,
+  Goal,
+  Memory,
+  MemoryOperation,
+  Mode,
+  TriggerOperation,
+} from '#types';
 
 import { makeTestBrain, testSpaceLayer } from '../brain/testing.ts';
-import { invitableAgents } from '../capabilities/invitee-source.ts';
+import { invitees } from '../capabilities/invitee-source.ts';
+import { baseInstructions } from '../instructions.ts';
 import { makeAgent } from './create-agent.ts';
 import { pushFacts } from './deliver.ts';
-import { inviteAgent } from './invite-agent.ts';
+import { inviteAgent, inviteeOf } from './invite-agent.ts';
 
 const TYPES = [
   Agent.Agent,
@@ -93,13 +103,17 @@ describe('Inviting an agent into another space', () => {
         ),
       );
 
+  /** Invites the agent into `db`'s space as a member who reaches the agent's own space. */
+  const invite = (db: Database.Database, agent: Agent.Agent) =>
+    inSpace(db)(inviteeOf(agent).pipe(Effect.flatMap(inviteAgent)));
+
   test('joins once, keyed to its home, with its name, DID and instructions and one brain', async ({ expect }) => {
     const home = await peer.createDatabase();
     const other = await peer.createDatabase();
     const third = await peer.createDatabase();
     const agent = await inSpace(home)(makeAgent({ name: 'Kai', instructions: 'You are Kai, a careful planner.' }));
 
-    const first = await inSpace(other)(inviteAgent(agent));
+    const first = await invite(other, agent);
     expect(first.created).toBe(true);
     const presence = first.agent;
     expect(Obj.getDatabase(presence)?.spaceId).toBe(other.spaceId);
@@ -121,31 +135,64 @@ describe('Inviting an agent into another space', () => {
     expect(messages).toHaveLength(0);
 
     // Inviting again, or inviting the presence elsewhere, finds the same home.
-    const again = await inSpace(other)(inviteAgent(agent));
+    const again = await invite(other, agent);
     expect(again).toMatchObject({ created: false });
     expect(again.agent.id).toBe(presence.id);
-    const onward = await inSpace(third)(inviteAgent(presence));
+    const onward = await invite(third, presence);
     expect(AgentPresence.homeOf(onward.agent)).toBe(Obj.getURI(agent));
     expect(AgentPresence.brainId(onward.agent)).toBe(agent.id);
-    const back = await inSpace(home)(inviteAgent(presence));
+    const back = await invite(home, presence);
     expect(back).toMatchObject({ created: false });
     expect(back.agent.id).toBe(agent.id);
     expect(await inSpace(other)(Database.query(Filter.type(Agent.Agent)).run)).toHaveLength(1);
   });
 
-  test('the members panel offers an agent only where it is not yet', async ({ expect }) => {
+  test('the members panel offers the agents the member administers, only where they are not yet', async ({
+    expect,
+  }) => {
     const home = await peer.createDatabase();
     const other = await peer.createDatabase();
-    const agent = await inSpace(home)(makeAgent({ name: 'Kai' }));
+    const did = IdentityDid.random();
+    const agent = await inSpace(home)(makeAgent({ name: 'Kai', did }));
+    const uri = Obj.getURI(agent);
+    /** The agent's own space, whose members are its admins. */
+    const own = SpaceId.random();
+    const administered: AgentSpace.Summary[] = [{ spaceId: own, name: 'Kai', did, home: uri }];
     const all = () =>
       peer.client.graph.query(Query.select(Filter.type(Agent.Agent)).from('all-accessible-spaces')).run();
 
-    expect(invitableAgents(await all(), other.spaceId).map(({ id }) => id)).toEqual([agent.id]);
-    expect(invitableAgents(await all(), home.spaceId)).toEqual([]);
+    expect(invitees(administered, await all(), other.spaceId)).toEqual([{ home: uri, name: 'Kai' }]);
+    expect(invitees([], await all(), other.spaceId)).toEqual([]);
+    // Neither where it lives nor in its own space.
+    expect(invitees(administered, await all(), home.spaceId)).toEqual([]);
+    expect(invitees(administered, await all(), own)).toEqual([]);
+    // A space minted before EDGE recorded the home: the home agent with the agent's DID stands in for the record.
+    expect(invitees([{ spaceId: own, did }], await all(), other.spaceId)).toEqual([{ home: uri, name: 'Kai' }]);
 
     // Once it has a presence there, neither it nor the presence is offered again.
-    await inSpace(other)(inviteAgent(agent));
-    expect(invitableAgents(await all(), other.spaceId)).toEqual([]);
+    await invite(other, agent);
+    expect(invitees(administered, await all(), other.spaceId)).toEqual([]);
+  });
+
+  test("an admin who cannot reach the agent's home adds it from what the agent's own space records", async ({
+    expect,
+  }) => {
+    const other = await peer.createDatabase();
+    const homeId = EntityId.random();
+    const home = EID.make({ spaceId: SpaceId.random(), entityId: homeId });
+    const did = IdentityDid.random();
+
+    const first = await inSpace(other)(inviteAgent({ home, name: 'Kai', did }));
+    expect(first.created).toBe(true);
+    expect(first.agent).toMatchObject({ name: 'Kai', did });
+    expect(AgentPresence.homeOf(first.agent)).toBe(home);
+    expect(AgentPresence.brainId(first.agent)).toBe(homeId);
+    // The home's instructions are out of reach, so the presence starts from the base instructions for its name.
+    expect((await inSpace(other)(Agent.loadInstructions(first.agent))).text).toBe(baseInstructions('Kai'));
+
+    const again = await inSpace(other)(inviteAgent({ home, name: 'Kai', did }));
+    expect(again).toMatchObject({ created: false });
+    expect(again.agent.id).toBe(first.agent.id);
   });
 });
 

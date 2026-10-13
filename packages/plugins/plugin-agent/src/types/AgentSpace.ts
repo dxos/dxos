@@ -5,10 +5,13 @@
 // @import-as-namespace
 
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
-import { type PublicKey } from '@dxos/keys';
+import { Obj } from '@dxos/echo';
+import { IdentityDid, type PublicKey, type SpaceId } from '@dxos/keys';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { type SpaceMember } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+
+import * as AgentPresence from './AgentPresence.ts';
 
 /**
  * An agent's default space: the space its own identity owns, minted with that identity on EDGE and tagged
@@ -17,8 +20,16 @@ import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
  * and finding them needs nothing from EDGE.
  */
 export type Space = {
+  readonly id: SpaceId;
   readonly tags: readonly string[];
   readonly members: { get(): SpaceMember[] };
+  /** Whether `properties` can be read. */
+  readonly isOpen?: boolean;
+  /**
+   * EDGE names the space after the agent and keys it to the agent's URI (`AgentPresence.HOME_SOURCE`), so its admins
+   * reach the agent through it even without its home space.
+   */
+  readonly properties?: Obj.Unknown & { readonly name?: string };
 };
 
 /** Whether the space is an agent's default space. */
@@ -42,11 +53,25 @@ export const administeredBy = <S extends Space>(spaces: readonly S[], identityKe
       admins(space).some((member) => toPublicKey(member.identity?.identityKey)?.equals(identityKey) ?? false),
   );
 
-/** The DIDs of the agents `identityKey` administers, which an ECHO `Agent` carries as its `did`. */
-export const administeredDids = (spaces: readonly Space[], identityKey: PublicKey): Set<string> =>
-  new Set(
-    administeredBy(spaces, identityKey).flatMap((space) => {
-      const did = agentOf(space)?.identity?.did;
-      return did ? [did] : [];
-    }),
-  );
+/** An agent `identityKey` administers, as its space records it. */
+export type Summary = {
+  /** The agent's own space. */
+  spaceId: SpaceId;
+  name?: string;
+  did?: IdentityDid;
+  /** The URI of the agent in its home space, which names its brain; absent until the space is open. */
+  home?: string;
+};
+
+/** The agents `identityKey` administers, read from their spaces. */
+export const administeredAgents = (spaces: readonly Space[], identityKey: PublicKey): Summary[] =>
+  administeredBy(spaces, identityKey).map((space) => {
+    const did = agentOf(space)?.identity?.did;
+    const properties = space.isOpen ? space.properties : undefined;
+    return {
+      spaceId: space.id,
+      name: properties?.name,
+      did: IdentityDid.isValid(did) ? did : undefined,
+      home: properties && Obj.getKeys(properties, AgentPresence.HOME_SOURCE).at(0)?.id,
+    };
+  });

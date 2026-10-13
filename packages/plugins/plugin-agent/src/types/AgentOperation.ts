@@ -253,7 +253,10 @@ export const InviteAgent = Operation.make({
   },
   services: [Database.Service, Hypergraph.Service, Capability.Service],
   input: Schema.Struct({
-    agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent to invite, in any space it is in.' }),
+    agent: Ref.Ref(Agent.Agent).annotate({
+      description:
+        "The agent to invite, in any space it is in; one whose home the caller cannot reach is read from the agent's own space.",
+    }),
   }),
   output: Schema.Struct({
     agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent in this space.' }),
