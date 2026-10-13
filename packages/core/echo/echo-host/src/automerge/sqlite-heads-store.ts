@@ -11,14 +11,12 @@ import * as SqlClient from 'effect/sql/SqlClient';
 import type * as SqlError from 'effect/sql/SqlError';
 
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
+import { SQL_MAX_BOUND_VARIABLES } from '@dxos/index-core';
 import { log } from '@dxos/log';
 import { HeadsSchema } from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { chunkArray } from '@dxos/util';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/heads/index.ts';
-
-/** Document ids per heads read; Durable Object SQLite binds at most 100 variables. */
-const HEADS_QUERY_CHUNK_SIZE = 100;
 
 const encodeHeads = (heads: Heads): Uint8Array => toBinary(HeadsSchema, create(HeadsSchema, { hashes: heads }));
 
@@ -89,7 +87,7 @@ export class SqliteHeadsStore {
         const sql = yield* SqlClient.SqlClient;
         // In chunks under SQLite's bound-variable limit, mapped back to the original order.
         const headsMap = new Map<string, Heads>();
-        for (const chunk of chunkArray(documentIds, HEADS_QUERY_CHUNK_SIZE)) {
+        for (const chunk of chunkArray(documentIds, SQL_MAX_BOUND_VARIABLES)) {
           const rows = yield* sql<{ document_id: string; heads: Uint8Array }>`
             SELECT document_id, heads FROM automerge_heads
             WHERE document_id IN ${sql.in(chunk)}

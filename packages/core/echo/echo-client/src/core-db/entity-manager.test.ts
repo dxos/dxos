@@ -190,8 +190,13 @@ describe('DatabaseImpl', () => {
       let notified = 0;
       onTestFinished(Obj.subscribe(object, () => notified++));
 
-      const structure = { ...row.structure, data: { ...row.structure.data, value: 2 } };
-      expect(db._entityManager.upsertSnapshot(object.id, { ...row, structure })).toBe(object);
+      let decoded = false;
+      const placed = db._entityManager.placeIndexRow(object.id, row.documentId, () => {
+        decoded = true;
+        return { ...row, structure: { ...row.structure, data: { ...row.structure.data, value: 2 } } };
+      });
+      expect(placed).toBe(object);
+      expect(decoded).toBe(false);
       expect(object.value).toBe(1);
       expect(notified).toBe(0);
     });

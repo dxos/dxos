@@ -222,6 +222,16 @@ describe('SqliteHeadsStore', () => {
     expect(result[0]).toBeUndefined();
   });
 
+  test('getHeads reads more documents than one statement binds, in the order asked', async () => {
+    const { store, runtime } = await setup();
+    const ids = Array.from({ length: 250 }, (_, index) => `doc-${index}` as any);
+    for (const id of ids) {
+      await RuntimeProvider.runPromise(runtime)(store.setHeads(id, [`h-${id}`]));
+    }
+    const reversed = [...ids].reverse();
+    expect(await store.getHeads(reversed)).toEqual(reversed.map((id) => [`h-${id}`]));
+  });
+
   test('getHeads handles empty array', async () => {
     const { store } = await setup();
     expect(await store.getHeads([])).toEqual([]);

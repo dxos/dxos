@@ -44,7 +44,7 @@ export type ClientDocHandleEvents<T> = {
 
 /**
  * A document's stored changes, held on the JS heap unloaded, and the heads the client shows it at. The
- * changes can be ahead of those heads, never behind.
+ * changes can be ahead of those heads, never behind, and all came from the host, so the host holds them.
  */
 export type PassiveDocument = { bytes: Uint8Array; heads: A.Heads };
 
@@ -457,9 +457,9 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
    * @internal
    */
   _isAcknowledged(): boolean {
-    // `_lastSentHeads` advances only on a confirmed send or on integrating a host update, and a send
-    // in flight leaves it behind the doc's heads — so heads equality alone means the host holds
-    // everything this handle does, with nothing outstanding.
+    // `_lastSentHeads` advances only on a confirmed send, on integrating a host update, or on merging
+    // stored changes the host sent (`#catchUp`), and a send in flight leaves it behind the doc's heads —
+    // so heads equality alone means the host holds everything this handle does, with nothing outstanding.
     return this._doc !== undefined && A.equals(A.getHeads(this._doc), this._lastSentHeads);
   }
 
