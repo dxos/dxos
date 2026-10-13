@@ -14,11 +14,12 @@ import {
   EncodedReference,
   type EntityPropPath,
   EntityStructure,
+  EscapedPropPath,
   PROPERTY_ID,
   QueryAST,
   isEncodedReference,
+  referenceIndexKey,
 } from '@dxos/echo-protocol';
-import { EscapedPropPath, referenceIndexKey } from '@dxos/index-core/query';
 import { EID, type EntityId, type SpaceId, type URI } from '@dxos/keys';
 import { getDeep, visitValues } from '@dxos/util';
 

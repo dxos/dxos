@@ -5775,9 +5775,6 @@ importers:
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../../common/errors
-      '@dxos/index-core':
-        specifier: workspace:*
-        version: link:../index-core
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
