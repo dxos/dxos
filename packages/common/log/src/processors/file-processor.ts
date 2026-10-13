@@ -32,13 +32,14 @@ export const createFileProcessor = ({
     if (levels.length > 0 && !levels.includes(entry.level)) {
       return;
     }
-    if (!shouldLog(entry, filters)) {
+    // `shouldLog` rejects everything without filters, so it applies only when some were given.
+    if (filters !== undefined && !shouldLog(entry, filters)) {
       return;
     }
 
     if (typeof pathOrFd === 'number') {
       fd = pathOrFd;
-    } else {
+    } else if (fd === undefined) {
       try {
         mkdirSync(dirname(pathOrFd));
       } catch {}
