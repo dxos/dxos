@@ -212,12 +212,14 @@ const MarkdownEditorContent = ({ compact: compactProp, ...props }: MarkdownEdito
   if (contentStatus === 'missing' || contentStatus === 'deleted') {
     const { title, message } = unavailableMessages[contentStatus];
     return (
-      // Entering the article lands on the explanation, where the editor would otherwise be.
-      <div tabIndex={0} className='dx-focus-ring' {...{ [INITIAL_FOCUS_ATTRIBUTE]: '' }}>
-        <Banner.Root valence='warning' data-testid='markdown.content-status' data-status={contentStatus}>
-          <Banner.Title>{t(title)}</Banner.Title>
-          <Banner.Body>{t(message)}</Banner.Body>
-        </Banner.Root>
+      // Entering the article lands on the explanation; the tab stop sits inside the mark, as an editor's does.
+      <div {...{ [INITIAL_FOCUS_ATTRIBUTE]: '' }}>
+        <div tabIndex={0} className='dx-focus-ring'>
+          <Banner.Root valence='warning' data-testid='markdown.content-status' data-status={contentStatus}>
+            <Banner.Title>{t(title)}</Banner.Title>
+            <Banner.Body>{t(message)}</Banner.Body>
+          </Banner.Root>
+        </div>
       </div>
     );
   }
