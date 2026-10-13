@@ -65,6 +65,7 @@ export const InvitationAuthenticator = ({
             <Input.Pin
               {...{
                 disabled,
+                'size': 'lg',
                 'length': pinLength,
                 'inputMode': 'numeric',
                 'autoComplete': 'off',
@@ -77,7 +78,7 @@ export const InvitationAuthenticator = ({
               }}
             />
           )}
-          {failed && <Field.ErrorText>{t('failed-to-authenticate.message')}</Field.ErrorText>}
+          {failed && <Field.ErrorText classNames='text-center'>{t('failed-to-authenticate.message')}</Field.ErrorText>}
         </Field.Root>
         {invitationId &&
           authMethod === Invitation_AuthMethod.SHARED_SECRET && (
