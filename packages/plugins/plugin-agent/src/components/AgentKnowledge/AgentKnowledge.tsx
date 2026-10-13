@@ -5,6 +5,7 @@
 import React, { type PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
 
 import { type Obj } from '@dxos/echo';
+import { type RDF } from '@dxos/pipeline-rdf';
 import * as ForceGraph from '@dxos/plugin-explorer/ForceGraph';
 import { Listbox } from '@dxos/react-ui-list';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -32,7 +33,13 @@ type AgentKnowledgeView = (typeof VIEWS)[number];
 
 const isView = (value: string): value is AgentKnowledgeView => VIEWS.some((view) => view === value);
 
-const AgentKnowledgeContext = createContext<AgentKnowledgeView>('memories');
+type AgentKnowledgeContextValue = {
+  view: AgentKnowledgeView;
+  /** Whether the Facts view shows each fact's triple and metadata under it. */
+  raw: boolean;
+};
+
+const AgentKnowledgeContext = createContext<AgentKnowledgeContextValue>({ view: 'memories', raw: false });
 
 type AgentKnowledgeRootProps = PropsWithChildren<{
   role?: string;
@@ -45,24 +52,36 @@ type AgentKnowledgeRootProps = PropsWithChildren<{
 const AgentKnowledgeRoot = ({ role, defaultView = 'memories', onReset, children }: AgentKnowledgeRootProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const [view, setView] = useState<AgentKnowledgeView>(defaultView);
-  const menuActions = useMenuBuilder(
-    () =>
-      (onReset
-        ? MenuBuilder.make()
-            .root({ label: ['agent-knowledge-actions.label', { ns: meta.profile.key }] })
-            .action(
-              'reset',
-              {
-                label: ['agent-knowledge-reset.label', { ns: meta.profile.key }],
-                icon: 'ph--trash--regular',
-                testId: 'agent-knowledge-reset',
-              },
-              () => onReset(),
-            )
-        : MenuBuilder.make().root({ label: ['agent-knowledge-actions.label', { ns: meta.profile.key }] })
-      ).build(),
-    [onReset],
-  );
+  const [raw, setRaw] = useState(false);
+  const menuActions = useMenuBuilder(() => {
+    const builder = MenuBuilder.make().root({ label: ['agent-knowledge-actions.label', { ns: meta.profile.key }] });
+    if (view === 'facts') {
+      builder.action(
+        'raw',
+        {
+          label: ['agent-knowledge-raw-facts.label', { ns: meta.profile.key }],
+          icon: 'ph--brackets-curly--regular',
+          iconOnly: true,
+          checked: raw,
+          testId: 'agent-knowledge-raw-facts',
+        },
+        () => setRaw((value) => !value),
+      );
+    }
+    if (onReset) {
+      builder.action(
+        'reset',
+        {
+          label: ['agent-knowledge-reset.label', { ns: meta.profile.key }],
+          icon: 'ph--trash--regular',
+          testId: 'agent-knowledge-reset',
+        },
+        () => onReset(),
+      );
+    }
+    return builder.build();
+  }, [view, raw, onReset]);
+  const context = useMemo(() => ({ view, raw }), [view, raw]);
   return (
     <Tabs.Root asChild orientation='horizontal' value={view} onValueChange={(value) => isView(value) && setView(value)}>
       <Panel.Root role={role}>
@@ -94,7 +113,7 @@ const AgentKnowledgeRoot = ({ role, defaultView = 'memories', onReset, children 
         </Panel.Header>
         {/* Views render their own Panel.Body (rather than `Tabs.Content`, whose content mounts hidden for a frame,
             where the force graph would measure zero), so a list's ScrollArea is the body and gets its height. */}
-        <AgentKnowledgeContext.Provider value={view}>{children}</AgentKnowledgeContext.Provider>
+        <AgentKnowledgeContext.Provider value={context}>{children}</AgentKnowledgeContext.Provider>
       </Panel.Root>
     </Tabs.Root>
   );
@@ -118,7 +137,7 @@ type AgentKnowledgeMemoriesProps = {
 /** The agent's active memories, newest first. */
 const AgentKnowledgeMemories = ({ memories, now }: AgentKnowledgeMemoriesProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  if (useContext(AgentKnowledgeContext) !== 'memories') {
+  if (useContext(AgentKnowledgeContext).view !== 'memories') {
     return null;
   }
 
@@ -175,6 +194,19 @@ type AgentKnowledgeFact = {
   /** Who said it, when known. */
   speaker?: string;
   saidAt: string;
+  /** The fact as stored, shown as its triple and metadata when the view asks for it. */
+  fact?: RDF.Fact;
+};
+
+/** A term as it would appear in a triple: an entity by its id, a literal quoted. */
+const formatTerm = (term: RDF.Fact['assertion']['subject']): string =>
+  term.kind === 'entity' ? `:${term.entity}` : JSON.stringify(term.literal);
+
+/** The fact's subject, predicate and object, then everything else it carries. */
+const formatRawFact = ({ assertion, ...metadata }: RDF.Fact): string => {
+  const { subject, predicate, object, ...qualifiers } = assertion;
+  const rest = Object.keys(qualifiers).length > 0 ? { assertion: qualifiers, ...metadata } : metadata;
+  return `${formatTerm(subject)} :${predicate} ${formatTerm(object)} .\n${JSON.stringify(rest, null, 2)}`;
 };
 
 type AgentKnowledgeFactsProps = {
@@ -187,7 +219,8 @@ type AgentKnowledgeFactsProps = {
 /** The facts the agent read from documents, pages and conversations, newest first. */
 const AgentKnowledgeFacts = ({ facts, now }: AgentKnowledgeFactsProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  if (useContext(AgentKnowledgeContext) !== 'facts') {
+  const { view, raw } = useContext(AgentKnowledgeContext);
+  if (view !== 'facts') {
     return null;
   }
 
@@ -214,6 +247,15 @@ const AgentKnowledgeFacts = ({ facts, now }: AgentKnowledgeFactsProps) => {
                       {[fact.source, fact.speaker].flatMap((part) => (part ? [`${part} · `] : []))}
                       <Typography.Timestamp date={fact.saidAt} now={now} />
                     </Listbox.ItemDescription>
+                    {raw && fact.fact && (
+                      <pre
+                        data-place='full'
+                        data-testid='agent-knowledge-fact-raw'
+                        className='m-0 p-2 overflow-x-auto whitespace-pre text-xs font-mono text-fg-muted'
+                      >
+                        {formatRawFact(fact.fact)}
+                      </pre>
+                    )}
                   </Listbox.Item>
                 ))}
               </Listbox.Content>
@@ -257,7 +299,7 @@ type AgentKnowledgeGoalsProps = {
 /** The goals the agent serves, each followed by the facts it is watching for. */
 const AgentKnowledgeGoals = ({ goals }: AgentKnowledgeGoalsProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  if (useContext(AgentKnowledgeContext) !== 'goals') {
+  if (useContext(AgentKnowledgeContext).view !== 'goals') {
     return null;
   }
 
@@ -342,7 +384,7 @@ type AgentKnowledgeGraphProps = {
 /** The agent's knowledge as a force-directed graph of people, organizations, goals and memories. */
 const AgentKnowledgeGraph = ({ nodes, edges }: AgentKnowledgeGraphProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const active = useContext(AgentKnowledgeContext) === 'graph';
+  const active = useContext(AgentKnowledgeContext).view === 'graph';
   // One model for the component's life, so the layout keeps its positions as the knowledge grows.
   const model = useMemo(() => new SpaceGraphModel(), []);
   useEffect(() => {
