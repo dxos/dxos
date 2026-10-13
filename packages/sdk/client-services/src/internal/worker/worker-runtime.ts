@@ -168,6 +168,8 @@ export const makeWorkerRuntime = ({
       SqliteStorage.wipeSqliteStorage.pipe(Effect.provide(sqlite), Effect.orDie),
     );
     yield* Hook.on(Events.Reset, () => requestShutdown);
+    // The tabs hold every change this process has not saved, and reconnect to a replacement with them.
+    yield* Hook.on(Events.StorageStuck, () => requestShutdown);
     yield* Hook.on(
       SessionClosed,
       Effect.fn('WorkerRuntime.onSessionClosed')(function* ({ session }) {

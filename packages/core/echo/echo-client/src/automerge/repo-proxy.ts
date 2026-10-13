@@ -77,11 +77,10 @@ export class RepoProxy extends Resource {
   private readonly _pendingUpdateIds = new Set<DocumentId>();
 
   /**
-   * Documents in a batch the host has not acknowledged yet, counted per batch since a reconnect can
-   * start a pass while an abandoned one is still in flight. With `_pendingUpdateIds`, every document
-   * whose changes exist only in this client.
+   * Documents in this generation's batch that the host has not acknowledged yet. With
+   * `_pendingUpdateIds`, every document whose changes exist only in this client.
    */
-  private readonly _inFlightUpdateIds = new Map<DocumentId, number>();
+  private readonly _inFlightUpdateIds = new Set<DocumentId>();
 
   /**
    * Documents the host has taken a write for since a disk flush last took them: the only ones a disk
@@ -392,7 +391,7 @@ export class RepoProxy extends Resource {
     this._isReconnecting = true;
 
     // Increment generation so old tasks know they're abandoned.
-    this._generation++;
+    this._abandonGeneration();
 
     // Abandon the old scheduler - don't wait for it since it may be blocked on dead RPC.
     // Create a fresh scheduler that will use the new data service.
@@ -404,6 +403,19 @@ export class RepoProxy extends Resource {
     // Hands the documents `_subscribe` re-queued to the fresh subscription, raising if they cannot
     // be registered — the caller resumes replication on the strength of this call returning.
     await this.flush();
+  }
+
+  /**
+   * Starts a new generation, handing back the documents the old one had in flight: they went to a
+   * subscription or host being replaced, which may never answer, and the replacement applies a
+   * duplicate idempotently.
+   */
+  private _abandonGeneration(): void {
+    this._generation++;
+    for (const documentId of this._inFlightUpdateIds) {
+      this._pendingUpdateIds.add(documentId);
+    }
+    this._inFlightUpdateIds.clear();
   }
 
   private _createSendUpdatesJob(): UpdateScheduler {
@@ -467,7 +479,7 @@ export class RepoProxy extends Resource {
     // Keeps the scheduler idle until the replacement is in place.
     this._isReconnecting = true;
     // Abandons the batch racing the dead subscription, so it re-queues quietly instead of raising.
-    this._generation++;
+    this._abandonGeneration();
     const generation = this._generation;
     this._resubscribeDelay = Math.min(
       RESUBSCRIBE_DELAY_MS * 2 ** this._resubscribeAttempts++,
@@ -774,7 +786,7 @@ export class RepoProxy extends Resource {
     this._pendingRemoveIds.clear();
     this._pendingUpdateIds.clear();
     for (const documentId of updateIds) {
-      this._inFlightUpdateIds.set(documentId, (this._inFlightUpdateIds.get(documentId) ?? 0) + 1);
+      this._inFlightUpdateIds.add(documentId);
     }
 
     try {
@@ -870,11 +882,9 @@ export class RepoProxy extends Resource {
       }
     } finally {
       // Settled either way: acknowledged, or re-queued into `_pendingUpdateIds` by the catch above.
-      for (const documentId of updateIds) {
-        const count = (this._inFlightUpdateIds.get(documentId) ?? 0) - 1;
-        if (count > 0) {
-          this._inFlightUpdateIds.set(documentId, count);
-        } else {
+      // An abandoned pass's ids were handed back when its generation was.
+      if (generation === this._generation) {
+        for (const documentId of updateIds) {
           this._inFlightUpdateIds.delete(documentId);
         }
       }
@@ -900,7 +910,7 @@ export class RepoProxy extends Resource {
   }
 
   private _emitSaveStateEvent(): void {
-    const unsavedDocuments = Array.from(new Set([...this._pendingUpdateIds, ...this._inFlightUpdateIds.keys()]));
+    const unsavedDocuments = Array.from(new Set([...this._pendingUpdateIds, ...this._inFlightUpdateIds]));
     const pendingCreations = this._pendingCreations.size + this._failedCreations.size;
     // A retry is scheduled only after a send failed outright, and a failed creation waits for the next flush.
     const failing = this._sendRetryAttempts > 0 || this._failedCreations.size > 0;

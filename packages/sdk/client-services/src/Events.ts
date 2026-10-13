@@ -71,5 +71,8 @@ export const WipingStorage = Hook.make<void>()('client-services/WipingStorage');
 /** Storage is wiped; the embedder typically reloads. */
 export const Reset = Hook.make<void>()('client-services/Reset');
 
+/** Storage stopped answering, so nothing more will be saved; the embedder replaces the process. */
+export const StorageStuck = Hook.make<void>()('client-services/StorageStuck');
+
 /** The local profile changed and should be broadcast to every open space. */
 export const ProfileUpdated = Hook.make<{ profile: ProfileDocument }>()('client-services/ProfileUpdated');

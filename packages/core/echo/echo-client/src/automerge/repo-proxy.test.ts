@@ -775,6 +775,41 @@ describe('RepoProxy', () => {
     await next.whenReady();
   });
 
+  test('a change the old host never took reaches the host that replaces it', { timeout: 5_000 }, async () => {
+    const storage = createTestSqliteRuntime();
+    onTestFinished(() => storage.dispose());
+    let stuck: FailingUpdateDataService | undefined;
+    const first = await setup(storage.runtime, (props) => (stuck = new FailingUpdateDataService(props)));
+    invariant(stuck);
+    const service = stuck;
+    const [clientRepo] = createProxyRepos(first.dataService);
+    await openAndClose(clientRepo);
+    const handle = clientRepo.create<{ text: string }>();
+    await handle.whenReady();
+    await clientRepo.flush();
+
+    const hold = new Trigger();
+    service.hold = hold;
+    onTestFinished(() => {
+      hold.wake();
+    });
+    handle.change((doc: { text: string }) => {
+      doc.text = 'kept';
+    });
+    await expect.poll(() => service.held).toBe(1);
+
+    // A restarted worker opens the same storage and serves a fresh subscription.
+    const second = await setup(storage.runtime);
+    clientRepo._updateDataService(second.dataService);
+    await clientRepo._onReconnect();
+
+    const hostHandle = await second.host.loadDoc<{ text: string }>(Context.default(), handle.url!);
+    invariant(hostHandle);
+    await hostHandle.waitUntilReady();
+    expect(hostHandle.doc()?.text).toEqual('kept');
+    expect(clientRepo.hasUnsavedChanges()).toBe(false);
+  });
+
   test('a change the host has not taken stays unsaved, and a failed send is reported', { timeout: 5_000 }, async () => {
     let failing: FailingUpdateDataService | undefined;
     const { dataService } = await setup(undefined, (props) => (failing = new FailingUpdateDataService(props)));
