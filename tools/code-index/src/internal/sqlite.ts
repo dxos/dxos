@@ -15,7 +15,7 @@ import type * as SqlError from 'effect/sql/SqlError';
 export const clientLayer = (
   filename: string,
   options?: { readonly readonly?: boolean },
-): Layer.Layer<SqlClient.SqlClient> =>
+): Layer.Layer<SqlClient.SqlClient, SqlError.SqlError> =>
   Layer.unwrap(
     Effect.promise(async (): Promise<Layer.Layer<SqlClient.SqlClient, SqlError.SqlError>> => {
       if (typeof globalThis.Bun !== 'undefined') {
@@ -24,8 +24,5 @@ export const clientLayer = (
       }
       const { SqliteClient } = await import('@effect/sql-sqlite-node');
       return SqliteClient.layer({ filename, readonly: options?.readonly });
-    }).pipe(
-      // An index that cannot be opened leaves nothing to fall back to.
-      Effect.map(Layer.orDie),
-    ),
+    }),
   );
