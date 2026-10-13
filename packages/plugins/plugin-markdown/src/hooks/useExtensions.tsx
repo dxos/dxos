@@ -31,7 +31,6 @@ import {
   documentId,
   folding,
   formattingKeymap,
-  linkTooltip,
   listener,
   objectLinks,
   selectionState,
@@ -214,7 +213,6 @@ const createBaseExtensions = ({
           // TODO(wittjosiah): For internal links render the label of the object.
           renderLinkButton: onSelectLink && createRenderLink(onSelectLink),
         }),
-        linkTooltip({ render: renderLinkTooltip }),
         widgetHost({ setWidgets }),
         objectLinks({
           link: {
@@ -301,9 +299,16 @@ const createRenderLink =
   (el, { url }) => {
     // TODO(burdon): Formalize/document internal link format.
     const isInternal = url.startsWith('/') || url.startsWith(window.location.origin);
-    const icon = Domino.of('span')
+    // An external link's icon is itself a link, since a click on the link text only places the caret in the editor;
+    // only a web URL, so document text cannot plant a `javascript:` href.
+    const href = isInternal ? undefined : safeUrl(url);
+    const web = href?.protocol === 'http:' || href?.protocol === 'https:';
+    const icon = Domino.of(web ? 'a' : 'span')
       .classNames('dx-link-accent ms-1 inline-block align-[-0.125em]')
       .append(Domino.svg(isInternal ? 'ph--arrow-square-down--regular' : 'ph--arrow-square-out--regular'));
+    if (web) {
+      icon.attributes({ 'href': href.toString(), 'target': '_blank', 'rel': 'noreferrer', 'aria-label': 'Open link' });
+    }
 
     if (isInternal) {
       const pathname = new URL(url, window.location.origin).pathname;
@@ -328,15 +333,3 @@ const createRenderLink =
 
     el.appendChild(icon.root);
   };
-
-const renderLinkTooltip: RenderCallback<{ url: string }> = (el, { url }) => {
-  el.appendChild(
-    Domino.of('a')
-      .attributes({ href: url, target: '_blank', rel: 'noreferrer' })
-      // Not `dx-link-accent`: the tooltip sits on the inverse surface, where the accent link color has no
-      // contrast — inherit the tooltip's own `text-inverse-fg` instead.
-      .classNames('flex items-center gap-2 cursor-pointer underline underline-offset-2')
-      .text(safeUrl(url)?.toString() ?? url)
-      .append(Domino.svg('ph--arrow-square-out--regular')).root,
-  );
-};
