@@ -17,13 +17,14 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as OperationRegistry from '@dxos/compute/OperationRegistry';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { ComputeGraphModel } from '@dxos/conductor';
-import { Database, Obj } from '@dxos/echo';
+import { Database, Obj, Registry } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import {
   Bullets,
   type CanvasBoard,
   ComputeContext,
   ComputeGraphController,
+  type ComputeServices,
   boardSceneId,
   computeNodeRegistry,
   createComputeProjection,
@@ -110,6 +111,7 @@ const useGraphController = (canvas: CanvasBoard.CanvasBoard) => {
   const db = Obj.getDatabase(canvas);
   const processManagerRuntime = Hooks.useCapability(Capabilities.ProcessManagerRuntime);
   const operationInvoker = Hooks.useOperationInvoker();
+  const operationHandlers = Hooks.useCapability(Capabilities.OperationHandlers);
   const [computeGraph] = useObject(canvas.computeGraph);
   const controller = useMemo(() => {
     if (!canvas.computeGraph?.target || !db) {
@@ -118,25 +120,34 @@ const useGraphController = (canvas: CanvasBoard.CanvasBoard) => {
     const spaceId = db.spaceId;
     const model = new ComputeGraphModel(canvas.computeGraph?.target);
     // No layer spec provides `Operation.Service` or `OperationRegistry.Service` to a space (a process gets its own),
-    // so the app's invoker stands in for the one and the other is built over the space's database and handlers.
+    // so the app's invoker stands in for the one and the other is built over the space's database and the app's
+    // handlers, the same set the invoker resolves against.
     const spaceLayer = Layer.mergeAll(
-      ServiceResolver.provide({ space: spaceId }, AiService.AiService, Database.Service, Credential.CredentialsService),
+      ServiceResolver.provide(
+        { space: spaceId },
+        AiService.AiService,
+        Database.Service,
+        Credential.CredentialsService,
+        Registry.Service,
+      ),
       OperationRegistry.layer.pipe(
         Layer.provide(
-          ServiceResolver.provide({ space: spaceId }, Database.Service, OperationHandlerSet.OperationHandlerProvider),
+          Layer.merge(
+            ServiceResolver.provide({ space: spaceId }, Database.Service),
+            OperationHandlerSet.provide(operationHandlers),
+          ),
         ),
       ),
       Layer.succeed(Operation.Service, operationInvoker),
     );
     const computeGraphRuntime = {
-      runPromiseExit: <A, E>(effect: Effect.Effect<A, E, any>): Promise<Exit.Exit<A, E>> =>
-        processManagerRuntime.runPromiseExit(effect.pipe(Effect.provide(spaceLayer)) as any) as Promise<
-          Exit.Exit<A, E>
-        >,
+      // A service the space cannot resolve is a wiring defect, not a failure the graph can handle.
+      runPromiseExit: <A, E>(effect: Effect.Effect<A, E, ComputeServices>): Promise<Exit.Exit<A, E>> =>
+        processManagerRuntime.runPromiseExit(effect.pipe(Effect.provide(Layer.orDie(spaceLayer)))),
     };
     const controller = new ComputeGraphController(computeGraphRuntime, model);
     return controller;
-  }, [computeGraph, db, processManagerRuntime, operationInvoker]);
+  }, [computeGraph, db, processManagerRuntime, operationInvoker, operationHandlers]);
 
   useEffect(() => {
     if (!controller) {
