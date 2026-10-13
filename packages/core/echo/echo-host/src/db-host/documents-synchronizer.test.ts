@@ -152,7 +152,7 @@ describe('DocumentsSynchronizer', () => {
   });
 
   test('a passive subscription is sent nothing while storage holds its heads, and the difference once it does not', async () => {
-    const { host, synchronizer, updates, createDirectory } = await setupPassive();
+    const { host, synchronizer, updates, createDirectory, next } = await setupPassive();
     const current = await createDirectory('current');
     const stale = await createDirectory('shown');
     const shownAt = A.getHeads(stale.handle.doc()!);
@@ -161,13 +161,14 @@ describe('DocumentsSynchronizer', () => {
     });
     await host.flush(Context.default());
 
+    const acquired = vi.spyOn(host, 'acquireDoc');
     const atStorage = {
       documentId: current.handle.documentId,
       heads: A.getHeads(current.handle.doc()!),
       passive: true,
     };
     await synchronizer.addDocuments([atStorage]);
-    // Added again beside one storage has moved past: a send for the first would go out no later.
+    // Added again beside one storage has moved past, which is sent; the first is not even loaded.
     await synchronizer.addDocuments([
       atStorage,
       { documentId: stale.handle.documentId, heads: shownAt, passive: true },
@@ -175,6 +176,12 @@ describe('DocumentsSynchronizer', () => {
     await waitForCondition({ condition: () => updates.length > 0, timeout: 5_000 });
     expect(updates.map(({ documentId }) => documentId)).toEqual([stale.handle.documentId]);
     expect(JSON.parse(updates[0].passive!.json!).title).toBe('stored');
+    expect(acquired.mock.calls.map(([documentId]) => documentId)).not.toContain(current.handle.documentId);
+
+    // Added again from heads storage has moved past, it is sent the difference again.
+    const resent = next();
+    await synchronizer.addDocuments([{ documentId: stale.handle.documentId, heads: shownAt, passive: true }]);
+    expect((await resent).documentId).toBe(stale.handle.documentId);
   });
 
   test("a passive update carries the change and its object's JSON at the new heads", async () => {

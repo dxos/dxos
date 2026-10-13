@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { getHeads } from '@automerge/automerge';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as SqlClient from 'effect/sql/SqlClient';
@@ -260,6 +261,29 @@ describe('EchoHost index transactions', () => {
 });
 
 describe('EchoHost index-backed rows', () => {
+  test('the memory executor backs a row only at heads storage holds', async () => {
+    const { host, spaceId, saveObject } = await setup({ queryExecutor: 'memory' });
+    const saved = EntityId.random();
+    const unsaved = EntityId.random();
+    const savedHandle = await saveObject(saved);
+    const unsavedHandle = await saveObject(unsaved);
+    await host.updateIndexes();
+    unsavedHandle.change((doc) => {
+      doc.objects![unsaved].data.title = 'unsaved';
+    });
+
+    const [response] = await EffectEx.runPromise(
+      Stream.runCollect(host.queryService['QueryService.execQuery'](oneShotRequest(spaceId, EntityId.random()))),
+    );
+    const row = (id: EntityId) => response?.results?.find((result) => result.id === id);
+    expect(row(saved)?.heads).toEqual(getHeads(savedHandle.doc()!));
+    expect(JSON.parse(row(saved)!.documentJson!).title).toBe(saved);
+    expect(row(saved)?.bytes).toBeDefined();
+    // Its lease is ahead of storage, so a client could not load the changes the JSON shows.
+    expect(row(unsaved)?.heads).toBeUndefined();
+    expect(row(unsaved)?.bytes).toBeUndefined();
+  });
+
   test('a re-emit ships JSON and stored changes only for rows at a new version', async () => {
     const { host, spaceId, saveObject } = await setup({ queryExecutor: 'sql' });
     const unchanged = EntityId.random();
@@ -300,6 +324,8 @@ describe('EchoHost index-backed rows', () => {
     await asyncTimeout(done, 5_000);
 
     const [initial, ...later] = emissions;
+    // An edit alone is not a change of rows, so the one re-emit is the one the new object causes.
+    expect(later).toHaveLength(1);
     const row = (response: QueryService.QueryResponse, id: EntityId) => response.results?.find((r) => r.id === id);
     expect(row(initial, unchanged)?.bytes).toBeDefined();
     expect(row(later.at(-1)!, added)?.bytes).toBeDefined();

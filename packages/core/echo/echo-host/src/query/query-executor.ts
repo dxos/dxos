@@ -830,13 +830,16 @@ export class QueryExecutor extends Resource {
     );
     // A compiled row carries no JSON, so it ships the index's JSON with the heads stored beside it, which a
     // pass may have moved since the row was read; one the steps built from a lease carries its own.
-    const recordIds = unsent.flatMap((index) =>
-      results[index].documentJson === undefined && items[index]?.recordId !== undefined ? [items[index].recordId!] : [],
+    const fromIndex = new Set(
+      unsent.filter((index) => results[index].documentJson === undefined && items[index]?.recordId !== undefined),
     );
     const indexed = new Map<number, { json: string; heads: string[] }>();
-    if (recordIds.length > 0) {
+    let indexReadFailed = false;
+    if (fromIndex.size > 0) {
+      const recordIds = [...fromIndex].map((index) => items[index].recordId!);
       const rows = await this._runInRuntime(this._indexEngine.queryBackings(recordIds)).catch((err) => {
         log.warn('index JSON could not be read for rows', { err });
+        indexReadFailed = true;
         return [];
       });
       for (const { recordId, json, heads } of rows) {
@@ -869,8 +872,11 @@ export class QueryExecutor extends Resource {
       if (result.heads === undefined || result.version === undefined) {
         return result;
       }
-      this.#sentVersions.set(result.id, result.version);
       const backed = backing.get(index);
+      // A failed index read leaves its rows to be read again on the next emission.
+      if (!(indexReadFailed && fromIndex.has(index))) {
+        this.#sentVersions.set(result.id, result.version);
+      }
       // Shipped at this version already, and kept by the client; or not backable at it.
       return backed
         ? { ...result, documentJson: backed.json, heads: backed.heads, bytes: backed.bytes }

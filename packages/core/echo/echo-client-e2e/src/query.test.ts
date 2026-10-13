@@ -4358,6 +4358,7 @@ describe('Query', () => {
         invariant(lease);
         lease.change((doc) => change(doc.objects![id].data));
         await peer.host.automergeHost.flush(Context.default());
+        return A.getHeads(lease.doc());
       };
       return { db, ids, peer, documentIds, changeOnHost };
     };
@@ -4429,9 +4430,12 @@ describe('Query', () => {
       const { db } = await openReloaded((db) => [db.add(createTestObject({ value: 1 }))]);
       const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
 
+      const shownAt = Obj.version(object).automergeHeads;
+
       const doc = getObjectCore(object).getDocAccessor(['value']).handle.doc();
-      expect(A.getHeads(doc)).toEqual(Obj.version(object).automergeHeads);
       expect(hasDocument(db, object.id)).toBe(true);
+      expect(A.getHeads(doc)).toEqual(shownAt);
+      expect(object.value).toBe(1);
     });
 
     test('an index-backed object takes host changes through its passive subscription', async () => {
@@ -4445,12 +4449,18 @@ describe('Query', () => {
       );
       await waitForCondition({ condition: () => ones.length === 1, timeout: 5_000 });
 
-      await changeOnHost(object.id, (data) => {
+      const hostHeads = await changeOnHost(object.id, (data) => {
         data.value = 2;
       });
       await waitForCondition({ condition: () => object.value === 2, timeout: 5_000 });
       await waitForCondition({ condition: () => ones.length === 0, timeout: 5_000 });
       expect(hasDocument(db, object.id)).toBe(false);
+      // A write starts from what the update showed.
+      expect(Obj.version(object).automergeHeads).toEqual(hostHeads);
+      Obj.update(object, (object) => {
+        object.value = object.value + 1;
+      });
+      expect(object.value).toBe(3);
     });
 
     test('a host change the JSON cannot show loads the document', async () => {
