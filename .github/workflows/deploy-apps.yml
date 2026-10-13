@@ -23,8 +23,8 @@ on:
   schedule:
     - cron: '0 7 * * *'
     # Production docs alone, daily: publishes blog posts whose `date` has arrived (docs/src/utils/blog.ts), so
-    # posts can merge ahead of their publish date. 14:00 UTC = 10:00 EDT / 09:00 EST.
-    - cron: '0 14 * * *'
+    # posts can merge ahead of their publish date. 13:00 UTC = 09:00 EDT / 08:00 EST.
+    - cron: '0 13 * * *'
   workflow_dispatch:
     inputs:
       environment:
@@ -53,8 +53,8 @@ concurrency:
   # One in-flight deploy per environment. Superseding is right everywhere except production, where the
   # `release` job has already pushed a commit and a `composer-v*` tag by the time the artifacts build —
   # cancelling there would strand a tagged release with nothing published against it.
-  group: deploy-${{ inputs.environment || (github.event.schedule == '0 14 * * *' && 'production') || 'preview' }}
-  cancel-in-progress: ${{ inputs.environment != 'production' && github.event.schedule != '0 14 * * *' }}
+  group: deploy-${{ inputs.environment || (github.event.schedule == '0 13 * * *' && 'production') || 'preview' }}
+  cancel-in-progress: ${{ inputs.environment != 'production' && github.event.schedule != '0 13 * * *' }}
 
 permissions:
   contents: read # `deploy` (pointer tags) and `tauri` (build-counter tags) opt in; the bump uses a PAT.
@@ -85,7 +85,7 @@ jobs:
           SCHEDULE: ${{ github.event.schedule }}
         run: |
           # Resolve the environment: the dispatch input, else the scheduled run's (production docs, or preview).
-          if [ "$SCHEDULE" = '0 14 * * *' ]; then
+          if [ "$SCHEDULE" = '0 13 * * *' ]; then
             env=production
             app=docs
           else
