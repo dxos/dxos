@@ -21,7 +21,7 @@ Move a question into the relevant design doc once it is decided, and delete it h
      panel is built from them.
    - **Facts** (`RDF.Fact`, EDGE `BrainObject` SQLite): a reified triple with factuality, quote, extractor and
      attribution. Append-only (forgetting one is the only change), entities are slugs rather than ECHO references
-     (pipeline-rdf's `entities` table has an unused `ref` column), and the rules (watches, goals) run on them.
+     (pipeline-rdf's `Entity.ref`, meant for the ECHO object, is never set), and the rules (watches, goals) run on them.
    - **Facts only** needs: entities resolved to ECHO objects, a readable rendering for people, supersede and retract
      (or an append-only equivalent), and the profile rebuilt from facts.
    - **Memories into the brain** would cost what makes memories useful: replication with the space, space
