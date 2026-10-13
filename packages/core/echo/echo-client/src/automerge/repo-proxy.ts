@@ -241,6 +241,31 @@ export class RepoProxy extends Resource {
     return this._getOrLoadHandle<T>({ documentId });
   }
 
+  /**
+   * Moves a loaded handle back to stored changes, subscribed passive, leaving its document for collection.
+   * Refused while the host has not taken the handle's last change, since the stored changes would not hold it.
+   * @returns Whether the handle went passive.
+   */
+  deactivate(documentId: DocumentId, passive: PassiveDocument): boolean {
+    const handle = this._handles[documentId];
+    if (
+      !handle ||
+      this._pendingUpdateIds.has(documentId) ||
+      this._pendingCreations.has(handle._internalId) ||
+      !handle._isAcknowledged()
+    ) {
+      return false;
+    }
+    // Every listener, as in `release`: the entity manager attaches its own again when the document loads.
+    handle.off('change');
+    handle._setPassive(passive, (heads) => this.#subscribeHandle(handle, documentId, heads));
+    delete this._handles[documentId];
+    this._passiveHandles.set(documentId, handle);
+    this._deferredReleaseIds.delete(documentId);
+    this.#subscribePassive(documentId, passive.heads);
+    return true;
+  }
+
   import<T>(dump: Uint8Array): DocHandleProxy<T> {
     const handle = this.create<T>();
     handle.update(() => A.load(dump));

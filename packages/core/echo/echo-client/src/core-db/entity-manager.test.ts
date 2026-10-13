@@ -6,7 +6,7 @@ import { next as A } from '@automerge/automerge';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, waitForCondition } from '@dxos/async';
-import { ContextDisposedError } from '@dxos/context';
+import { Context, ContextDisposedError } from '@dxos/context';
 import { type Entity, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
@@ -194,6 +194,39 @@ describe('DatabaseImpl', () => {
       expect(db._entityManager.upsertSnapshot(object.id, { ...row, structure })).toBe(object);
       expect(object.value).toBe(1);
       expect(notified).toBe(0);
+    });
+  });
+
+  describe('document TTL', () => {
+    test('a document nothing changes or edits for its TTL goes back to its stored changes, and a write loads it again', async () => {
+      const testBuilder = new EchoTestBuilder();
+      await openAndClose(testBuilder);
+      const peer = await testBuilder.createPeer();
+      const db = await peer.createDatabase(PublicKey.random(), { documentTtl: 200 });
+      // Bound first, so it is idle at least as long as the other.
+      const edited = db.add(Obj.make(TestSchema.Expando, { value: 1 }));
+      const idle = db.add(Obj.make(TestSchema.Expando, { value: 1 }));
+      await db.flush();
+      const documentId = getObjectCore(idle).docHandle?.documentId;
+      invariant(documentId);
+
+      // An editor's listener holds its document.
+      getObjectCore(edited)
+        .getDocAccessor(['value'])
+        .handle.addListener('change', () => {});
+      await waitForCondition({ condition: () => getObjectCore(idle).docHandle === undefined, timeout: 5_000 });
+      expect(getObjectCore(edited).docHandle).toBeDefined();
+      expect(getObjectCore(idle).snapshot?.handle.state).toBe('passive');
+      expect(idle.value).toBe(1);
+
+      Obj.update(idle, (idle) => {
+        idle.value = 2;
+      });
+      expect(getObjectCore(idle).docHandle).toBeDefined();
+      await db.flush();
+      using lease = await peer.host.automergeHost.loadDoc<DatabaseDirectory>(Context.default(), documentId);
+      invariant(lease);
+      await waitForCondition({ condition: () => lease.doc().objects![idle.id].data.value === 2, timeout: 5_000 });
     });
   });
 

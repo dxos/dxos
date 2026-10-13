@@ -199,6 +199,9 @@ export type EchoDatabaseProps = {
   /** Device-local persistence for the current-branch selection (non-synced). In-memory if omitted. */
   branchStore?: BranchStore;
 
+  /** How long, in ms, a loaded document stays in memory once nothing changes or edits it. */
+  documentTtl?: number;
+
   /**
    * Run a reactive query for dynamic schemas.
    * @default true
@@ -337,6 +340,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       spaceId: params.spaceId,
       spaceKey: params.spaceKey,
       branchStore: params.branchStore,
+      documentTtl: params.documentTtl,
       createEntity: (core) => initEchoReactiveObjectRootProxy(core, this),
     });
 

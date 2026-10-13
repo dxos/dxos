@@ -35,6 +35,7 @@ type OpenDatabaseOptions = {
   client?: EchoClient;
   reactiveSchemaQuery?: boolean;
   preloadSchemaOnOpen?: boolean;
+  documentTtl?: number;
 };
 
 type PeerOptions = {
@@ -281,7 +282,7 @@ export class EchoTestPeer extends Resource {
 
   async createDatabase(
     spaceKey: PublicKey = PublicKey.random(),
-    { client = this.client, reactiveSchemaQuery, preloadSchemaOnOpen }: OpenDatabaseOptions = {},
+    { client = this.client, reactiveSchemaQuery, preloadSchemaOnOpen, documentTtl }: OpenDatabaseOptions = {},
     // TODO(burdon): Return Promise<EchoDatabase>
   ) {
     // NOTE: Client closes the database when it is closed.
@@ -293,6 +294,7 @@ export class EchoTestPeer extends Resource {
       reactiveSchemaQuery,
       preloadSchemaOnOpen,
       branchStore: this._branchStoreFor(String(spaceId)),
+      documentTtl,
     });
     await db.setSpaceRoot(root.url);
     await db.open();
@@ -310,7 +312,7 @@ export class EchoTestPeer extends Resource {
   async openDatabase(
     spaceKey: PublicKey,
     rootUrl?: string,
-    { client = this.client, reactiveSchemaQuery, preloadSchemaOnOpen }: OpenDatabaseOptions = {},
+    { client = this.client, reactiveSchemaQuery, preloadSchemaOnOpen, documentTtl }: OpenDatabaseOptions = {},
     // TODO(burdon): Return Promise<EchoDatabase>
   ) {
     // NOTE: Client closes the database when it is closed.
@@ -329,6 +331,7 @@ export class EchoTestPeer extends Resource {
       reactiveSchemaQuery,
       preloadSchemaOnOpen,
       branchStore: this._branchStoreFor(String(spaceId)),
+      documentTtl,
     });
     await db.setSpaceRoot(resolvedRootUrl);
     await db.open();
@@ -343,7 +346,12 @@ export class EchoTestPeer extends Resource {
     return db;
   }
 
-  async openLastDatabase({ client = this.client, reactiveSchemaQuery, preloadSchemaOnOpen }: OpenDatabaseOptions = {}) {
+  async openLastDatabase({
+    client = this.client,
+    reactiveSchemaQuery,
+    preloadSchemaOnOpen,
+    documentTtl,
+  }: OpenDatabaseOptions = {}) {
     if (this._storagePath && (!this._lastDatabaseSpaceKey || !this._lastDatabaseRootUrl)) {
       const storedKeyHex = await this.getStorageMetadata('lastDatabaseSpaceKey');
       const storedUrl = await this.getStorageMetadata('lastDatabaseRootUrl');
@@ -360,6 +368,7 @@ export class EchoTestPeer extends Resource {
       client,
       reactiveSchemaQuery,
       preloadSchemaOnOpen,
+      documentTtl,
     });
   }
 

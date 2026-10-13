@@ -57,6 +57,9 @@ export type ConstructDatabaseProps = {
 
   /** Device-local persistence for the current-branch selection (non-synced). In-memory if omitted. */
   branchStore?: BranchStore;
+
+  /** How long, in ms, a loaded document stays in memory once nothing changes or edits it. */
+  documentTtl?: number;
 };
 
 /**
@@ -151,6 +154,7 @@ export class EchoClient extends Resource {
     preloadSchemaOnOpen,
     spaceKey,
     branchStore,
+    documentTtl,
   }: ConstructDatabaseProps): DatabaseImpl {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     invariant(!this._databases.has(spaceId), 'Database already exists.');
@@ -165,6 +169,7 @@ export class EchoClient extends Resource {
       preloadSchemaOnOpen,
       spaceKey,
       branchStore,
+      documentTtl,
     });
     this._graph._registerDatabase(spaceId, db, owningObject);
     this._databases.set(spaceId, db);
