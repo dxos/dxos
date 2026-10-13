@@ -399,11 +399,6 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return this._entityManager.opened;
   }
 
-  /** Resolves once the database has opened, and rejects with `ContextDisposedError` once it has closed. */
-  whenOpened(): Promise<void> {
-    return this._entityManager.whenOpened();
-  }
-
   get rootChanged() {
     return this._entityManager.rootChanged;
   }

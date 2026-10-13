@@ -15,6 +15,7 @@ import {
   type ReadOnlyEvent,
   TimeoutError,
   Trigger,
+  TriggerState,
   UpdateScheduler,
   asyncTimeout,
   runInContextAsync,
@@ -296,6 +297,10 @@ export class EntityManager implements IDatabaseBinding {
     this._ctx = ctx;
     this.#closed = false;
     this.#generation++;
+    // Rejected by the last close; the space root this open loads wakes it again.
+    if (this.opened.state !== TriggerState.WAITING) {
+      this.opened.reset();
+    }
     // The rate only coalesces a bulk delivery from the host, where every emission re-runs each live
     // query and re-hydrates index results over the whole space; every other trigger skips the delay,
     // so a query reflects a local write, or a peer's single edit, at once.
@@ -426,8 +431,11 @@ export class EntityManager implements IDatabaseBinding {
   }
 
   async close(): Promise<void> {
+    // Stays rejected until the next open, so a wait that starts after the close fails rather than hangs.
+    if (this.opened.state !== TriggerState.WAITING) {
+      this.opened.reset();
+    }
     this.opened.throw(new ContextDisposedError());
-    this.opened.reset();
     // A closed manager can be reopened (the database re-runs `openWithSpaceState`), and that path
     // creates a core for every inline object in the directory — so cores and handles surviving the
     // close would be re-created over themselves.
@@ -770,14 +778,6 @@ export class EntityManager implements IDatabaseBinding {
     });
     countWork('echo.demotions');
     this.#watchPassive(core.id, handle);
-  }
-
-  /** Resolves once the database has opened, and rejects once it has closed, so a closed one is never waited on. */
-  async whenOpened(): Promise<void> {
-    if (this.#closed) {
-      throw new ContextDisposedError();
-    }
-    await this.opened.wait();
   }
 
   /**
