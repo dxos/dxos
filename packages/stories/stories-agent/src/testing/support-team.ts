@@ -128,7 +128,7 @@ export const seedSupportTeam = async ({
     // A space seeded before the team had Discord ids gets them now.
     if (existing && !existing.identities?.some(({ label }) => label === DISCORD_IDENTITY)) {
       Obj.update(existing, (existing) => {
-        existing.identities = [...(existing.identities ?? []), identity];
+        (existing.identities ??= []).push(identity);
       });
     }
     // One memory per person, so the list shows each member once with every area they cover.
