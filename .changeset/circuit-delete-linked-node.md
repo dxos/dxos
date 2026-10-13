@@ -7,3 +7,5 @@ Fixed: deleting a linked node from a conductor circuit crashed the plank with `i
 Fixed: adding a node to a conductor circuit logged `No compute function for node type: switch` and reset every switch. The circuit built a new graph controller on every edit (it keyed on the graph's snapshot), which dropped the switches' values and reran the whole graph; it now keeps one controller per graph object.
 
 Circuit look: ports scale with the zoom (never under 3 screen px), a logic gate's body is three minor grid units tall with 2px lines, and the beacon shows a dim sun when off and a pulsing yellow duotone sun when on.
+
+Markdown links: an external link's arrow icon opens the link in a new tab (web URLs only), and the hover tooltip that only repeated the URL, sometimes far from the link, is gone.
