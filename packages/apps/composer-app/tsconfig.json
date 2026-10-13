@@ -298,6 +298,9 @@
       "path": "../../plugins/plugin-meeting"
     },
     {
+      "path": "../../plugins/plugin-meeting-recorder"
+    },
+    {
       "path": "../../plugins/plugin-mermaid"
     },
     {

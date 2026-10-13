@@ -547,6 +547,9 @@
       "path": "packages/plugins/plugin-meeting/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-meeting-recorder/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-mermaid/tsconfig.json"
     },
     {
