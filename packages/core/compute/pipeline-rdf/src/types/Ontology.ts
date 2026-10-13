@@ -141,6 +141,7 @@ export const DEFAULT_ENTRIES: ReadonlyArray<Entry> = [
   }),
   entry('is_a', { label: 'is a', synonyms: ['is kind of', 'is type of'], description: 'A class the subject is in.' }),
   entry('claim', { description: 'A remembered statement about the subject, in the agent’s words.' }),
+  entry('has_note', { label: 'has note', description: 'Notes about the subject, in markdown.' }),
   entry('helps_with', { synonyms: ['will help with', 'helping with'] }),
   entry('works_on', { synonyms: ['working on', 'will work on'] }),
   entry('completed', { synonyms: ['finished', 'done'] }),
