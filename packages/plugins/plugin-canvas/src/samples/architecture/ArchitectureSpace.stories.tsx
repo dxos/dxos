@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
-import { expect, within } from 'storybook/test';
+import { expect, waitFor, within } from 'storybook/test';
 
 import { Filter, Obj } from '@dxos/echo';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
@@ -56,10 +56,12 @@ type Story = StoryObj<typeof meta>;
 
 /** The Composer document, which links DXOS and EDGE and embeds the Composer architecture. */
 export const Default: Story = {
+  // The editor draws headings as lines rather than heading elements, so the document is recognised by its text.
   play: async ({ canvasElement }) => {
-    await expect(
-      await within(canvasElement).findByRole('heading', { name: 'Composer' }, { timeout: 60_000 }),
-    ).toBeVisible();
+    await expect(await within(canvasElement).findByTestId('scene-view', undefined, { timeout: 60_000 })).toBeVisible();
+    await waitFor(() => expect(canvasElement.textContent).toContain('A local-first workspace of plugins'), {
+      timeout: 10_000,
+    });
   },
 };
 
