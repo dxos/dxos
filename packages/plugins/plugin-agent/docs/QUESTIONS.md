@@ -12,9 +12,24 @@ Move a question into the relevant design doc once it is decided, and delete it h
 2. **What is the store of record for facts?** `BRAIN.md` says ECHO feeds (one per source, one item per fact), with
    SQLite as a derived index. The EDGE `BrainObject` writes only to its own SQLite, so facts do not replicate with the
    space and are lost when EDGE state is wiped.
-3. **How do memories and facts relate?** Memories are ECHO objects people read and correct; facts are triples the
-   rules run on. Nothing keeps the two in sync, and the Memories tab labels factual memories "Fact", next to a Facts
-   tab of triples. `TASKS.md` already asks what facts replace in `MEMORY.md`.
+3. **Can memories go, leaving only facts? Or should memories move into the brain?** Today there are two
+   representations of what the agent knows, and nothing keeps them in sync (`TASKS.md` asks what facts replace in
+   `MEMORY.md`).
+   - **Memories** (`Memory`, ECHO): a sentence with a kind (fact, preference, goal, commitment, relationship, event),
+     a status (active, superseded, retracted), `HasSubject` links to the `Person`/`Organization` objects it is about,
+     and the message it came from. They replicate with the space, people can read and correct them, and the profile
+     panel is built from them.
+   - **Facts** (`RDF.Fact`, EDGE `BrainObject` SQLite): a reified triple with factuality, quote, extractor and
+     attribution. Append-only (forgetting one is the only change), entities are slugs rather than ECHO references
+     (pipeline-rdf's `entities` table has an unused `ref` column), and the rules (watches, goals) run on them.
+   - **Facts only** needs: entities resolved to ECHO objects, a readable rendering for people, supersede and retract
+     (or an append-only equivalent), and the profile rebuilt from facts.
+   - **Memories into the brain** would cost what makes memories useful: replication with the space, space
+     permissions, and people correcting them in Composer. It only makes sense if the brain's record is itself in ECHO
+     (question 2).
+   - Leaning: one representation, facts, with ECHO feeds as the record (`BRAIN.md`) and the brain's SQLite as the
+     index; then `recordMemory` becomes a push of facts and `Memory` is removed. This decides question 2 at the same
+     time.
 
 ## Discord
 
