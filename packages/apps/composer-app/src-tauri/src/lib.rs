@@ -452,6 +452,19 @@ pub fn run() {
                     });
                 }
 
+                // Closing the window ends the page and then the app, so the page is asked first, as on Cmd+Q.
+                {
+                    let window = main_window.clone();
+                    main_window.on_window_event(move |event| {
+                        if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                            use tauri::Manager;
+                            if exit_guard::on_exit_requested(window.app_handle(), MAIN_WINDOW_LABEL) {
+                                api.prevent_close();
+                            }
+                        }
+                    });
+                }
+
                 #[cfg(target_os = "macos")]
                 {
                     let window = main_window.clone();

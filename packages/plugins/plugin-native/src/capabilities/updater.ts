@@ -78,7 +78,7 @@ export default Capability.makeModule(
       } else {
         await invokePromise(
           LayoutOperation.AddToast,
-          unsavedChangesToast(() => void relaunch()),
+          unsavedChangesToast('restart', () => void relaunch()),
         );
       }
     };

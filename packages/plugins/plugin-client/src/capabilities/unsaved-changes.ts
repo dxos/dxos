@@ -38,6 +38,8 @@ export const guardUnload = (client: UnsavedChangesClient): (() => void) => {
   const onBeforeUnload = (event: BeforeUnloadEvent) => {
     if (hasUnsavedChanges(client)) {
       event.preventDefault();
+      // WebKit asks only when `returnValue` is set.
+      event.returnValue = '';
     }
   };
   globalThis.addEventListener?.('beforeunload', onBeforeUnload);

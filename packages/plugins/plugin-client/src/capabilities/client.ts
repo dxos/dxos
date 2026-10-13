@@ -112,18 +112,19 @@ export default Capability.makeModule(
       //
       // A reload drops every change only this page holds. The reconnect hands those to the new worker,
       // so the reload waits until it has them, and is skipped while it does not: a broken session the
-      // user can still save from beats a clean one without their changes.
+      // user can still save from beats a clean one without their changes. A reset discards them anyway.
       client.services.reconnected?.on(async () => {
+        if (client.resetting) {
+          log.info('client reset, reloading to the app root');
+          window.location.href = window.location.origin;
+          return;
+        }
         if (!(await saveUnsavedChanges(client))) {
           log.warn('client reconnected with unsaved changes, not reloading');
           return;
         }
         log.info('client reconnected, reloading to re-establish session');
-        if (client.resetting) {
-          window.location.href = window.location.origin;
-        } else {
-          window.location.reload();
-        }
+        window.location.reload();
       });
 
       removeUnloadGuard = guardUnload(client);
