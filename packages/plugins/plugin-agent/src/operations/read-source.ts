@@ -108,6 +108,30 @@ const speakerOf = Effect.fnUntraced(function* (
 const inAppendOrder = <T extends Obj.Unknown>(items: readonly T[]): T[] =>
   [...items].sort(Order.mapInput(Order.Number, Feed.getPosition));
 
+/** What a message says aloud; synthetic text (a woken chat's relay, system notes) is not something anyone said. */
+const spokenText = (message: Message.Message): string =>
+  message.blocks
+    .flatMap((block) => (block._tag === 'text' && block.disposition !== 'synthetic' ? [block.text] : []))
+    .join('\n')
+    .trim();
+
+/**
+ * Whether the message repeats the one before it from the same sender: a prompt queued for a running agent is in the
+ * feed once as queued and again as the turn's own copy, and reading both stores every fact twice.
+ */
+const isEcho = (messages: readonly Message.Message[], index: number): boolean => {
+  const previous = messages[index - 1];
+  const message = messages[index];
+  return (
+    previous !== undefined &&
+    previous.sender.role === message.sender.role &&
+    previous.sender.name === message.sender.name &&
+    previous.sender.identityDid === message.sender.identityDid &&
+    previous.sender.contact?.uri === message.sender.contact?.uri &&
+    spokenText(previous) === spokenText(message)
+  );
+};
+
 /** How many messages before the cursor an incremental read shows the extractor, so references in new messages resolve. */
 const CONTEXT_MESSAGES = 8;
 
@@ -134,11 +158,7 @@ const readChat = Effect.fnUntraced(function* (
   const participantId = ChatParticipant.get(chat);
   const participant = participantId ? (yield* Database.query(Filter.id(participantId)).run).at(0) : undefined;
   const toSegment = Effect.fnUntraced(function* (message: Message.Message) {
-    // Synthetic text (a woken chat's relay, system notes) is not something anyone said.
-    const text = message.blocks
-      .flatMap((block) => (block._tag === 'text' && block.disposition !== 'synthetic' ? [block.text] : []))
-      .join('\n')
-      .trim();
+    const text = spokenText(message);
     if (message.sender.role === 'tool' || text.length === 0) {
       return undefined;
     }
@@ -151,7 +171,12 @@ const readChat = Effect.fnUntraced(function* (
   });
 
   const segments: Segment[] = [];
-  for (const message of messages.slice(start)) {
+  for (const [offset, message] of messages.slice(start).entries()) {
+    // The agent's replies are context, not knowledge: extracting them filled the brain with its own explanations
+    // and turned its denials into evidence.
+    if (message.sender.role === 'assistant' || isEcho(messages, start + offset)) {
+      continue;
+    }
     const segment = yield* toSegment(message);
     if (segment) {
       segments.push(segment);
@@ -159,6 +184,9 @@ const readChat = Effect.fnUntraced(function* (
   }
   const context: Segment[] = [];
   for (let position = start - 1; position >= 0 && context.length < CONTEXT_MESSAGES; position--) {
+    if (isEcho(messages, position)) {
+      continue;
+    }
     const segment = yield* toSegment(messages[position]);
     if (segment) {
       context.unshift(segment);
@@ -312,8 +340,33 @@ const extract = (members: readonly Space.Member[], body: Pick<SourceText, 'text'
   body.segments.length === 0 && body.text.trim().length === 0
     ? Effect.succeed([])
     : extractDocFacts({ text: body.text, source: uri }).pipe(
-        Effect.map((facts) => facts.map((fact) => attribute(resolveTerms(members, fact), body.segments))),
+        Effect.map((facts) => distinct(facts.map((fact) => attribute(resolveTerms(members, fact), body.segments)))),
       );
+
+/** The statement a fact makes, whoever said it: what two facts must share to be the same piece of knowledge. */
+const statementKey = ({ assertion, factuality }: RDF.Fact): string =>
+  JSON.stringify([
+    termKey(assertion.subject),
+    normalize(assertion.predicate).replace(/[\s_-]+/g, ' '),
+    termKey(assertion.object),
+    factuality.polarity,
+  ]);
+
+const termKey = (term: RDF.Term): string =>
+  `${term.kind}:${term.kind === 'entity' ? term.entity : normalize(term.literal)}`;
+
+/** One fact per statement in a pass: an extractor reading a repeated sentence states it once per repetition. */
+const distinct = (facts: readonly RDF.Fact[]): RDF.Fact[] => {
+  const seen = new Set<string>();
+  return facts.filter((fact) => {
+    const key = statementKey(fact);
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
+};
 
 const handler: Operation.WithHandler<typeof AgentOperation.ReadSource> = AgentOperation.ReadSource.pipe(
   Operation.withHandler(

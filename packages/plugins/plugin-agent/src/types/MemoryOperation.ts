@@ -119,10 +119,22 @@ export const Recall = Operation.make({
   services: [Database.Service, BrainService.BrainService],
   input: Schema.Struct({
     subject: Schema.optional(Ref.Ref(Obj.Unknown).annotate({ description: 'The entity to recall; all if omitted.' })),
-    query: Schema.optional(Schema.String.annotate({ description: 'Only memories and facts containing this text.' })),
-    limit: Schema.optional(Schema.Number.annotate({ description: 'Maximum number of memories, and of facts.' })),
+    query: Schema.optional(
+      Schema.String.annotate({ description: 'Only memories and facts containing every word of this text.' }),
+    ),
+    // Models often pass a number as a string; refusing it fails the whole call with a schema error.
+    limit: Schema.optional(
+      Schema.Union([Schema.Number, Schema.NumberFromString]).annotate({
+        description: 'Maximum number of memories, and of facts.',
+      }),
+    ),
   }),
   output: Schema.Struct({
+    queryMatched: Schema.optional(
+      Schema.Boolean.annotate({
+        description: 'False when the query matched nothing and everything about the subject is returned instead.',
+      }),
+    ),
     memories: Schema.Array(RecalledMemory),
     facts: Schema.Array(RecalledFact),
     goals: Schema.Array(RecalledGoal),
