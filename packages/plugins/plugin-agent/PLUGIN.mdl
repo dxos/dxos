@@ -914,7 +914,7 @@ test QA-4: An agent invited into another space keeps one conversation and one br
     walks it and records the demo.
   actors: human
   covers: [F-1.4, F-6.1, F-6.4, F-6.5]
-  status: unverified
+  status: passing             # 2026-10-13, recorded by autocue/agent-across-spaces.mjs against EDGE preview
   given:
     - an identity exists, with the display name "Mykola"
     - space: "My Space" is open and SPACE_READY, with no agent
