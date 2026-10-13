@@ -85,6 +85,8 @@ export type NodeDef = {
   maxSize?: Size;
   /** Double-click opens the node (a frame drills in; a text node edits, later). */
   openable?: boolean;
+  /** The frame is the ellipse inscribed in the node's bounds, as the engine's own ellipse is (a circle when square). */
+  ellipse?: boolean;
   /**
    * The host's own way to open this node, when it has one (a frame showing an object rather than a scene):
    * opening calls it instead of drilling in, and auto-drill passes the node by.

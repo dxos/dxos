@@ -112,13 +112,16 @@ const useGraphController = (canvas: CanvasBoard.CanvasBoard) => {
   const processManagerRuntime = Hooks.useCapability(Capabilities.ProcessManagerRuntime);
   const operationInvoker = Hooks.useOperationInvoker();
   const operationHandlers = Hooks.useCapability(Capabilities.OperationHandlers);
-  const [computeGraph] = useObject(canvas.computeGraph);
+  // Subscribed so the article renders once the reference loads; the controller keys on the graph object, not its
+  // snapshot, since a new controller per edit would lose every switch's value and rerun the whole graph.
+  useObject(canvas.computeGraph);
+  const graph = canvas.computeGraph?.target;
   const controller = useMemo(() => {
-    if (!canvas.computeGraph?.target || !db) {
+    if (!graph || !db) {
       return null;
     }
     const spaceId = db.spaceId;
-    const model = new ComputeGraphModel(canvas.computeGraph?.target);
+    const model = new ComputeGraphModel(graph);
     // No layer spec provides `Operation.Service` or `OperationRegistry.Service` to a space (a process gets its own),
     // so the app's invoker stands in for the one and the other is built over the space's database and the app's
     // handlers, the same set the invoker resolves against.
@@ -147,7 +150,7 @@ const useGraphController = (canvas: CanvasBoard.CanvasBoard) => {
     };
     const controller = new ComputeGraphController(computeGraphRuntime, model);
     return controller;
-  }, [computeGraph, db, processManagerRuntime, operationInvoker, operationHandlers]);
+  }, [graph, db, processManagerRuntime, operationInvoker, operationHandlers]);
 
   useEffect(() => {
     if (!controller) {

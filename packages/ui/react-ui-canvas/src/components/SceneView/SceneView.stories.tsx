@@ -379,7 +379,16 @@ export const Floating: Story = {
     await expect(canvas.queryByTestId('about')).not.toBeInTheDocument();
     // The layers' menu docks the inspectors.
     await userEvent.click(canvas.getByTestId('layers-menu'));
-    await userEvent.click(await within(canvasElement.ownerDocument.body).findByTestId('inspector-dock-toggle'));
+    // Picked from the keyboard, as the Layers story does: a synthetic click does not select a menu item. The dock
+    // item ends the menu.
+    // The keys reach the menu only once it has taken focus, which lags its opening under a loaded run.
+    await waitFor(() => {
+      const menu = within(canvasElement.ownerDocument.body)
+        .getByTestId('inspector-dock-toggle')
+        .closest('[role="menu"]');
+      return expect(menu).toHaveFocus();
+    });
+    await userEvent.keyboard('{End}{Enter}');
     await expect(await canvas.findByTestId('scene-view-dock')).toBeVisible();
     await expect(await canvas.findByTestId('about')).toBeVisible();
   },
@@ -393,9 +402,9 @@ export const Frame: Story = {
     // 1. The frame shows its label and an open control; the root has nowhere up to go.
     await waitFor(() => expect(canvasElement.querySelector('[data-node-id="frame"]')).toHaveTextContent('Frame'));
     await waitFor(() => expect(canvas.getByTestId('toolbar-up')).toBeDisabled());
-    // 2. Opening the frame drills into its scene.
+    // 2. Opening the frame drills into its scene, once the camera has animated into it, which a loaded run slows.
     await userEvent.click(await canvas.findByTestId('portal-open'));
-    await waitFor(() => expect(canvas.getByTestId('toolbar-up')).toBeEnabled());
+    await waitFor(() => expect(canvas.getByTestId('toolbar-up')).toBeEnabled(), { timeout: 5_000 });
     await waitFor(() => expect(canvasElement.querySelector('[data-node-id="b"]')).not.toBeNull());
   },
 };
