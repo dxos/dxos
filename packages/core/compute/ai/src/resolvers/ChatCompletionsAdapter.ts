@@ -285,9 +285,9 @@ export type ChatCompletionsClientConfig = {
   /**
    * The serving product, reported as `gen_ai.provider.name`. Distinct from {@link ApiFormat}, which is the
    * wire dialect: LM Studio and any other OpenAI-compatible endpoint speak `'openai'` without being
-   * OpenAI, and consumers price on this field. Defaults to the API format.
+   * OpenAI, and consumers price on this field.
    */
-  readonly provider?: string;
+  readonly provider: string;
   /**
    * Request `stream_options.include_usage` on streamed OpenAI-format calls. Providers that meter on
    * reported usage (DeepSeek via EDGE) need it; local servers that reject unknown fields do not.
@@ -1144,7 +1144,7 @@ const annotateRequest = (
   config: ChatCompletionsClientConfig,
 ): void =>
   Telemetry.addGenAIAnnotations(span, {
-    provider: { name: config.provider ?? config.apiFormat },
+    provider: { name: config.provider },
     operation: { name: 'chat' },
     request: { model },
   });
