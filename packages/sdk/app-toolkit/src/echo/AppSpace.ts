@@ -37,6 +37,12 @@ export const SETTINGS_SPACE_TAG = 'org.dxos.space.settings';
  */
 const LEGACY_ONBOARDING_SPACE_TAG = 'org.dxos.space.exemplar';
 
+/**
+ * Space tag for an agent's default space: the space an agent's own identity owns, minted with that identity on
+ * EDGE. Its members are the agent's admins.
+ */
+export const AGENT_SPACE_TAG = 'org.dxos.space.agent';
+
 /** Name given to the first space created for a profile. The user is free to rename it. */
 export const DEFAULT_SPACE_NAME = 'My Space';
 

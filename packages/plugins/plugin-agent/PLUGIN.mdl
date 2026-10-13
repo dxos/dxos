@@ -153,19 +153,20 @@ op createAgent
 ```mdl
 op ensureIdentity
   key: org.dxos.operation.agent.ensureIdentity
-  desc: Gives the agent its own identity and default space on EDGE, makes the caller its owner and puts them in that space.
+  desc: Gives the agent its own identity and default space on EDGE and puts the caller in that space.
   input:
     agent: Ref<Agent>
   output: { provisioned: boolean, identityDid?: string }
   effects: [echo:write, net:edge, halo:write]
   requires: [Database.Service, Capability.Service]
   note: |
-    `POST /compute/brain { agent, homeSpaceId, label }`: EDGE mints the brain's self-owned HALO identity, its
-    default space (owned by that identity, named after the agent), an `AgentAdmin` credential (role OWNER) for the
-    caller and a `SpaceMember` credential (role ADMIN) admitting the caller to the default space. The agent takes
-    the brain's DID, and both credentials are written to the caller's HALO; the `SpaceMember` there is what makes
-    the client join the space. An agent with a DID already is left alone; without an EDGE client (a headless
-    host) or when EDGE refuses, nothing changes and the agent works as one without an identity.
+    `POST /compute/brain { agent, homeSpaceId, label }`: EDGE mints the brain's self-owned HALO identity and its
+    default space (owned by that identity, named after the agent, tagged `org.dxos.space.agent`), and admits the
+    caller to that space as ADMIN. The members of the default space are the agent's admins and the caller, its
+    creator, is the owner; admins come and go through the space's Members panel like any space's members. The
+    agent takes the brain's DID, and the caller's `SpaceMember` credential is written to their HALO, which is what
+    makes the client join the space. An agent with a DID already is left alone; without an EDGE client (a
+    headless host) or when EDGE refuses, nothing changes and the agent works as one without an identity.
 ```
 
 ```mdl
@@ -605,6 +606,14 @@ feat F-6: An agent in several spaces
   req F-6.6: Inviting writes no conversation: nothing is quoted from any chat into the space.
 ```
 
+```mdl
+feat F-7: An agent's own space
+
+  req F-7.1: An agent with an identity has a default space its identity owns, minted with it by op:ensureIdentity and tagged `AppSpace.AGENT_SPACE_TAG`; the identity is its owner, named after the agent, and every other current member is one of the agent's admins.
+  req F-7.2: `AgentSpace.administeredBy` lists the agents an identity administers: the agent spaces among the client's own spaces, which its HALO holds memberships of, that the identity is a current member of. It asks nothing of EDGE.
+  req F-7.3: `AgentSpace.admins` lists an agent's admins, every current member of its space but the agent, and `AgentSpace.agentOf` is the agent.
+```
+
 ## Acceptance
 
 Derived criteria, each executed by a vitest case or a storybook play function.
@@ -692,6 +701,15 @@ scenario T-9: An invited agent keeps one brain   # invite-agent.test.ts
     - every presence names Kai's brain; the presence's chat is empty
     - op:retrieveMemories in the presence's space returns the home fact, said by Mykola
     - a fact the presence reads lands in the home brain, and the Brain companion lists both
+```
+
+```mdl
+scenario T-10: Agent spaces list their admins   # AgentSpace.test.ts
+  # covers [F-7.2, F-7.3]
+  given: an agent space owned by the agent, with an admin and an editor; an agent space the identity was removed from; an untagged space
+  then:
+    - agentOf is the owner, and the admins are the admin and the editor
+    - the identity administers only the first space, and another identity none
 ```
 
 ## Not built

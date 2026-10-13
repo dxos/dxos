@@ -19,13 +19,12 @@ import { CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { AgentOperation } from '#types';
 
 /**
- * EDGE's answer to `POST /compute/brain`: the brain's identity, the owner's `AgentAdmin` credential and their
- * membership of the agent's default space, each base64 protobuf. An EDGE that mints no default space omits it.
+ * EDGE's answer to `POST /compute/brain`: the brain's identity and the caller's membership of the agent's default
+ * space, as base64 protobuf.
  */
 const ProvisionedBrain = Schema.Struct({
   identity: Schema.Struct({ identityDid: IdentityDid }),
-  credential: Schema.String,
-  membership: Schema.optional(Schema.String),
+  membership: Schema.String,
 });
 
 const handler: Operation.WithHandler<typeof AgentOperation.EnsureIdentity> = AgentOperation.EnsureIdentity.pipe(
@@ -57,20 +56,17 @@ const handler: Operation.WithHandler<typeof AgentOperation.EnsureIdentity> = Age
         return { provisioned: false };
       }
 
-      const { identity, credential, membership } = provisioned.value;
+      const { identity, membership } = provisioned.value;
       Obj.update(agent, (agent) => {
         agent.did = identity.identityDid;
       });
 
-      // The owner keeps their `AgentAdmin` credential in their HALO to present it, and a `SpaceMember` there is
-      // what makes their client join the agent's default space.
+      // A `SpaceMember` in the caller's HALO is what makes their client join the agent's default space.
       const client = yield* Capability.getOption(ClientCapabilities.Client);
       if (Option.isSome(client)) {
-        const credentials = [credential, ...(membership ? [membership] : [])].map((encoded) =>
-          buf.fromBinary(CredentialSchema, Buffer.from(encoded, 'base64')),
-        );
-        yield* Effect.tryPromise(() => client.value.halo.writeCredentials(credentials)).pipe(
-          Effect.catch((error) => Effect.sync(() => log.warn('owner credentials not written to HALO', { error }))),
+        const credential = buf.fromBinary(CredentialSchema, Buffer.from(membership, 'base64'));
+        yield* Effect.tryPromise(() => client.value.halo.writeCredentials([credential])).pipe(
+          Effect.catch((error) => Effect.sync(() => log.warn('membership not written to HALO', { error }))),
         );
       }
       return { provisioned: true, identityDid: identity.identityDid };

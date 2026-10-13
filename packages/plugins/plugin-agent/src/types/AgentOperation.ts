@@ -216,15 +216,16 @@ export const OpenPrivateChat = Operation.make({
 });
 
 /**
- * Gives an agent its own identity on EDGE: a brain with a self-owned HALO identity, whose `AgentAdmin` credential
- * makes the caller its owner. The agent takes the brain's DID. An agent that has a DID already, or a client that
- * cannot reach EDGE, is left as it is.
+ * Gives an agent its own identity on EDGE: a brain with a self-owned HALO identity and a default space it owns,
+ * which the caller joins; the members of that space are the agent's admins, and its creator is the owner. The
+ * agent takes the brain's DID. An agent that has a DID already, or a client that cannot reach EDGE, is left as
+ * it is.
  */
 export const EnsureIdentity = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.agent.ensureIdentity'),
     name: 'Ensure agent identity',
-    description: 'Gives the agent its own identity on EDGE and makes the caller its owner.',
+    description: "Gives the agent its own identity and space on EDGE and puts the caller in the agent's space.",
     icon: 'ph--identification-card--regular',
   },
   services: [Database.Service, Capability.Service],
