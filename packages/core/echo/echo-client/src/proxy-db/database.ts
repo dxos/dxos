@@ -469,13 +469,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     if (Type.isType(schemaInput)) {
       const entity = schemaInput;
       schema = Type.getSchema(entity).annotate({ [TypeIdentifierAnnotationId]: undefined });
-      meta =
-        getTypeAnnotation(schema) ??
-        ({
-          kind: Type.isRelation(entity) ? EntityKind.Relation : EntityKind.Object,
-          typename: Type.getTypename(entity),
-          version: Type.getVersion(entity),
-        } satisfies TypeAnnotation);
+      meta = getTypeAnnotation(schema) ?? describedTypeAnnotation(entity);
     } else {
       schema = schemaInput;
       meta = getTypeAnnotation(schema);
@@ -497,6 +491,8 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
           kind: meta.kind,
           typename: meta.typename,
           version: meta.version,
+          relationSource: meta.sourceSchema,
+          relationTarget: meta.targetSchema,
         }),
       }),
     );
@@ -1269,4 +1265,22 @@ const bindOwningSpaceScopes = (ast: QueryAST.Query, spaceId: SpaceId): QueryAST.
     return value;
   };
   return transform(ast) as QueryAST.Query;
+};
+
+/**
+ * The annotation of a type entity built from JSON Schema, whose rebuilt schema carries none because
+ * its typename and version live in meta; the kind and relation ends come from the JSON Schema.
+ */
+const describedTypeAnnotation = (entity: Type.AnyEntity): TypeAnnotation => {
+  const { entityKind, relationSource, relationTarget } = entity.jsonSchema;
+  const isRelation = Type.isRelation(entity) || entityKind === EntityKind.Relation;
+  return {
+    kind: isRelation ? EntityKind.Relation : EntityKind.Object,
+    typename: Type.getTypename(entity),
+    version: Type.getVersion(entity),
+    ...(isRelation && {
+      sourceSchema: DXN.tryMake(relationSource?.$ref ?? ''),
+      targetSchema: DXN.tryMake(relationTarget?.$ref ?? ''),
+    }),
+  };
 };
