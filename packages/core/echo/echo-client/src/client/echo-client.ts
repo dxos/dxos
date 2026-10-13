@@ -5,7 +5,7 @@
 import * as EffectContext from 'effect/Context';
 
 import { type CleanupFn, Event } from '@dxos/async';
-import { type Context, ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
+import { type Context, LifecycleState, Resource } from '@dxos/context';
 import type { Entity } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
@@ -279,16 +279,8 @@ export class EchoClient extends Resource {
       return undefined;
     }
 
-    // Waiting for the database to open since the query can run before the database is ready.
-    // TODO(dmaretskyi): Refactor this.
-    try {
-      await db.opened.wait();
-    } catch (err) {
-      if (err instanceof ContextDisposedError) {
-        return undefined;
-      }
-      throw err;
-    }
+    // The query can run before the database is ready; a close rejects, which drops the row.
+    await db.whenOpened();
 
     const objectDocId = db.getObjectDocumentId(objectId) ?? (await this._waitForObjectLink(db, objectId));
     if (objectDocId !== documentId) {

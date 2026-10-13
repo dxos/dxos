@@ -20,7 +20,7 @@ import { QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { QueryService } from '@dxos/protocols/rpc';
 
 import { type ObjectUpdate } from './index-query-source-provider.ts';
-import { IndexQuerySource } from './index-query-source-provider.ts';
+import { IndexQuerySource, releaseHeldStates, restoreSentStates } from './index-query-source-provider.ts';
 
 // Mock graph - only used for queue items which are not tested here.
 const mockGraph = {} as Hypergraph.Hypergraph;
@@ -383,6 +383,29 @@ describe('IndexQuerySource', () => {
       await rehydrated;
       expect(source.getResults().map((entry) => entry.id)).toEqual([stalled]);
     });
+  });
+
+  test('a remembered row keeps the state the host sent until a pass publishes its object', () => {
+    const spaceId = SpaceId$.random();
+    const [kept, changed, added, held] = [EntityId.random(), EntityId.random(), EntityId.random(), EntityId.random()];
+    const sent = (id: string, version: number): QueryService.QueryResult => ({
+      id,
+      spaceId,
+      rank: 0,
+      version,
+      state: `state-${version}`,
+      heads: [`heads-${version}`],
+      bytes: new Uint8Array([version]),
+      updatedAt: version,
+    });
+    const stripped = (id: string, version: number): QueryService.QueryResult => ({ id, spaceId, rank: 0, version });
+    // The tab holds what a published row carried; one no pass has published keeps its state.
+    const first = releaseHeldStates([sent(kept, 1), sent(changed, 1), sent(held, 1)], new Set([held]));
+    expect(first).toEqual([sent(kept, 1), sent(changed, 1), stripped(held, 1)]);
+
+    // The next emission leaves state off every row whose version the host sent, which may never have been hydrated.
+    const next = restoreSentStates(first, [stripped(kept, 1), stripped(changed, 2), sent(added, 3), stripped(held, 1)]);
+    expect(next).toEqual([sent(kept, 1), stripped(changed, 2), sent(added, 3), stripped(held, 1)]);
   });
 });
 

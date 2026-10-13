@@ -12,22 +12,23 @@ import { SNAPSHOT_JSON_LIMIT } from './sql/index.ts';
 export const OBJECT_BYTES_LIMIT = 64 * 1024;
 
 /**
- * An object's document state as the index ships it, or nothing over {@link SNAPSHOT_JSON_LIMIT}; `save`
- * runs only for a state that is kept, since serializing the document is the costly part.
+ * An object's document state as the index ships it, with the document's bytes a client backs it from;
+ * nothing when either is over its limit, since a client cannot use one without the other. `save` runs
+ * only for a state that is kept, since serializing the document is the costly part.
  */
 export const encodeObjectState = (
   structure: EntityStructure,
   heads: A.Heads,
-  save?: () => Uint8Array | undefined,
-): { heads: A.Heads; structure: string; bytes?: Uint8Array } | undefined => {
+  save: () => Uint8Array | undefined,
+): { heads: A.Heads; structure: string; bytes: Uint8Array } | undefined => {
   const encoded = encodeEntityStructure(structure, {
     readRawString: (value) => (value instanceof A.RawString ? value.toString() : undefined),
   });
   if (encoded.length > SNAPSHOT_JSON_LIMIT) {
     return undefined;
   }
-  const bytes = save?.();
-  return bytes !== undefined ? { heads, structure: encoded, bytes } : { heads, structure: encoded };
+  const bytes = save();
+  return bytes && { heads, structure: encoded, bytes };
 };
 
 /**

@@ -192,8 +192,12 @@ export class AutomergeDataSource implements IndexDataSource {
           });
 
           const docObjects = extractObjects ? (doc.objects ?? {}) : {};
-          // The heads the structures below are read at; the scanned `docHeads` can be older.
-          const stateHeads = this.#branchDocumentIds.has(documentId) ? undefined : A.getHeads(doc);
+          // Bytes back an object only from a saved document that holds just it: a client writes on top of
+          // them, so they must not carry changes storage could still lose.
+          const backsObject =
+            !this.#branchDocumentIds.has(documentId) &&
+            Object.keys(docObjects).length === 1 &&
+            headsCodec.encode(A.getHeads(doc)) === headsCodec.encode(docHeads);
           for (const [objectId, structure] of Object.entries(docObjects)) {
             if (changedObjectIds && !changedObjectIds.has(objectId)) {
               continue;
@@ -209,7 +213,7 @@ export class AutomergeDataSource implements IndexDataSource {
               data: objectStructureToJson(objectId, structure),
               createdAt: typeof storedCreatedAt === 'number' ? storedCreatedAt : null,
               updatedAt,
-              state: stateHeads && encodeObjectState(structure, stateHeads, () => saveObjectDocument(doc)),
+              state: backsObject ? encodeObjectState(structure, docHeads, () => saveObjectDocument(doc)) : undefined,
             });
           }
 

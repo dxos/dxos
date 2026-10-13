@@ -535,7 +535,7 @@ export class EntityManager implements IDatabaseBinding {
    */
   upsertSnapshot(id: EntityId, state: SnapshotState): Entity.Unknown | undefined {
     // Closed, or not routed here (including before the root arrives): the document path decides instead.
-    if (this.#closed || !this.#routesTo(id, state)) {
+    if (this.#closed || !this.#routesTo(id, state.documentId)) {
       return undefined;
     }
     // A selected branch reads and writes another document, which the index row does not describe.
@@ -563,6 +563,10 @@ export class EntityManager implements IDatabaseBinding {
     if (!handle.passive) {
       return undefined;
     }
+    // The core shows this row, so its handle holds this row's bytes, even one an earlier core left behind.
+    if (!sameHeads(handle.passive.heads, state.heads)) {
+      handle._setPassive({ bytes: state.bytes, heads: state.heads });
+    }
 
     const core = new ObjectCore();
     core.id = id;
@@ -580,13 +584,36 @@ export class EntityManager implements IDatabaseBinding {
     return this._createEntity(core);
   }
 
+  /**
+   * The entity for an index row: the object the tab holds at the row's version or newer, or one backed by
+   * the row's state, which `decode` is called for only then. Undefined when the document path decides.
+   */
+  placeIndexRow(
+    id: EntityId,
+    { version, documentId }: { version: number; documentId: string },
+    decode: () => SnapshotState | undefined,
+  ): Entity.Unknown | undefined {
+    if (this.#closed || !this.#routesTo(id, documentId)) {
+      return undefined;
+    }
+    const held = this.getObjectCoreById(id, { load: false });
+    if (held && !held.snapshot) {
+      return undefined;
+    }
+    if (held?.snapshot && version <= held.snapshot.version) {
+      return held.rootProxy ?? this._createEntity(held);
+    }
+    const state = decode();
+    return state && this.upsertSnapshot(id, state);
+  }
+
   /** Whether the space root routes the object to the document the row was read from (not a branch or stale copy). */
-  #routesTo(id: string, state: SnapshotState): boolean {
+  #routesTo(id: string, documentId: string | undefined): boolean {
     // No root mid-swap: nothing can be checked against it yet.
     if (!this._spaceRootDocHandle) {
       return false;
     }
-    return state.documentId === undefined || this.getObjectDocumentId(id) === state.documentId;
+    return documentId !== undefined && this.getObjectDocumentId(id) === documentId;
   }
 
   /** Moves a snapshot-backed core and the bytes it holds onto a newer index row. */
@@ -609,6 +636,8 @@ export class EntityManager implements IDatabaseBinding {
     // A row that holds what the object already shows changes nothing a reader sees.
     if (structure !== previous) {
       core.notifyUpdate();
+      // Queries over the working set match on what the object shows, as for a change to its document.
+      this._scheduleThrottledDbUpdate([core.id], { coalesce: true });
     }
   }
 
@@ -685,9 +714,19 @@ export class EntityManager implements IDatabaseBinding {
           for (const result of response.results ?? []) {
             // Rows only refresh cores still held: the watch must not keep an object alive.
             const core = this._objects.get(result.id);
-            const state = core?.snapshot && getSnapshotState(result);
-            if (core && state && this.#routesTo(core.id, state)) {
+            if (
+              !core?.snapshot?.handle.passive ||
+              (result.version ?? 0) <= core.snapshot.version ||
+              !this.#routesTo(core.id, result.documentId)
+            ) {
+              continue;
+            }
+            const state = getSnapshotState(result);
+            if (state) {
               this.#refreshSnapshot(core, state);
+            } else {
+              // Newer than the bytes the core holds, and shipped without them: only the document can show it.
+              this.activate(core);
             }
           }
         },
@@ -801,12 +840,23 @@ export class EntityManager implements IDatabaseBinding {
     this.#watchSnapshot(core.id, documentId);
   }
 
+  /** Resolves once the database has opened, and rejects once it has closed, so a closed one is never waited on. */
+  async whenOpened(): Promise<void> {
+    if (this.#closed) {
+      throw new ContextDisposedError();
+    }
+    await this.opened.wait();
+  }
+
   /**
    * Waits until the core's strong dependencies (parent, relation endpoints, stored type) are in the
    * working set or known to be unavailable on disk, as a document load does, without loading the
    * core's own document.
    */
   async waitForStrongDeps(core: ObjectCore): Promise<void> {
+    if (this.#closed) {
+      throw new ContextDisposedError();
+    }
     const generation = this.#generation;
     const request = this._ensureSatisfactionRequest(core);
     if (request.state !== 'ready' && request.state !== 'unavailable') {
@@ -2452,6 +2502,9 @@ export class EntityManager implements IDatabaseBinding {
           documentUrl: objectCore.docHandle.url,
           actualUrl: event.handle.url,
         });
+        objectsToRebind.push(updatedObject);
+      } else if (objectCore.snapshot && objectCore.snapshot.handle.url !== event.handle.url) {
+        // Backed by the bytes of the document it left.
         objectsToRebind.push(updatedObject);
       }
     }

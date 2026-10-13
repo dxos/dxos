@@ -6,7 +6,7 @@ import * as Array from 'effect/Array';
 import * as EffectContext from 'effect/Context';
 
 import { type CleanupFn, Event, type ReadOnlyEvent, TimeoutError, asyncTimeout, yieldOrContinue } from '@dxos/async';
-import { Context } from '@dxos/context';
+import { Context, ContextDisposedError } from '@dxos/context';
 import { Entity, Feed, type Hypergraph, Obj, Query } from '@dxos/echo';
 import { QueryAST } from '@dxos/echo-protocol';
 import { ATTR_TYPE, makeDecodedEntityLive } from '@dxos/echo/internal';
@@ -351,7 +351,7 @@ export class IndexQuerySource implements QuerySource {
           try {
             this._assertResultSpaces(query, response);
             // Remember the raw host records so a later local object load can re-hydrate them.
-            this._lastRemoteResults = response.results ?? [];
+            this._lastRemoteResults = restoreSentStates(this._lastRemoteResults, response.results ?? []);
             this._releasedDocumentJsonIds.clear();
             this._scheduleHydrate();
           } catch (err: any) {
@@ -476,6 +476,7 @@ export class IndexQuerySource implements QuerySource {
       length: records.length,
     });
 
+    const placed = await this._placeRows(records);
     const hydratedIntoFeedHandle = new Set<string>();
     // Chunked so hydrating a large local result set is not one uninterrupted run of microtasks.
     const processedResults: (SourceEntry | null | typeof STALLED)[] = [];
@@ -483,7 +484,9 @@ export class IndexQuerySource implements QuerySource {
       await yieldOrContinue('smooth');
       processedResults.push(
         ...(await Promise.all(
-          chunk.map((result) => this._hydrateRecord(ctx, query, start, result, hydratedIntoFeedHandle)),
+          chunk.map((result) =>
+            this._hydrateRecord(ctx, query, start, result, hydratedIntoFeedHandle, placed.get(result.id)),
+          ),
         )),
       );
     }
@@ -491,8 +494,8 @@ export class IndexQuerySource implements QuerySource {
     const results = processedResults.filter((entry) => entry !== STALLED).filter(isNonNullable);
 
     // Only rewrite the set we just hydrated — a newer host response may have replaced it meanwhile.
-    if (hydratedIntoFeedHandle.size > 0 && this._lastRemoteResults === records) {
-      this._lastRemoteResults = records.map((record) => {
+    if (this._lastRemoteResults === records) {
+      this._lastRemoteResults = releaseHeldStates(records, new Set(results.map((entry) => entry.id))).map((record) => {
         if (record.documentJson === undefined || !hydratedIntoFeedHandle.has(record.id)) {
           return record;
         }
@@ -521,6 +524,45 @@ export class IndexQuerySource implements QuerySource {
   }
 
   /**
+   * Places every document row of an open database before any row waits for its strong dependencies, so
+   * a dependency later in the set is placed from its own row rather than loaded as an earlier one's.
+   */
+  private async _placeRows(records: readonly QueryService.QueryResult[]): Promise<Map<string, PlacedRow>> {
+    const bySpace = new Map<string, { row: QueryService.QueryResult; version: number; documentId: string }[]>();
+    for (const row of records) {
+      const isDocumentRow = !row.queueId && row.aggregates === undefined && row.recordJson === undefined;
+      if (!isDocumentRow || row.version === undefined || row.documentId === undefined) {
+        continue;
+      }
+      const rows = bySpace.get(row.spaceId) ?? [];
+      rows.push({ row, version: row.version, documentId: row.documentId });
+      bySpace.set(row.spaceId, rows);
+    }
+
+    const placed = new Map<string, PlacedRow>();
+    for (const [spaceId, rows] of bySpace) {
+      // Only an open database places rows; the others' go to the document path, which waits for it under
+      // the per-row budget.
+      const database = this._params.graph.getDatabase(SpaceId.make(spaceId));
+      if (!(database instanceof DatabaseImpl) || !database.isOpen) {
+        continue;
+      }
+      for (const chunk of chunkArray(rows, HYDRATE_RECORDS_PER_YIELD_CHECK)) {
+        await yieldOrContinue('smooth');
+        for (const { row, version, documentId } of chunk) {
+          const entity = database._entityManager.placeIndexRow(EntityId.make(row.id), { version, documentId }, () =>
+            getSnapshotState(row),
+          );
+          if (entity) {
+            placed.set(row.id, { database, entity });
+          }
+        }
+      }
+    }
+    return placed;
+  }
+
+  /**
    * Hydrate one record under a bounded budget. Hydration reaches document loading, which waits on
    * replication and never settles while a document is unavailable; left unbounded it held the
    * caller's whole query open for as long as the index-query budget allowed.
@@ -531,9 +573,10 @@ export class IndexQuerySource implements QuerySource {
     start: number,
     result: QueryService.QueryResult,
     hydratedIntoFeedHandle: Set<string>,
+    placed: PlacedRow | undefined,
   ): Promise<SourceEntry | null | typeof STALLED> {
     const timeout = this._params.hydrationTimeout ?? RECORD_HYDRATION_TIMEOUT;
-    const hydration = this._filterMapResult(ctx, query, start, result, hydratedIntoFeedHandle);
+    const hydration = this._filterMapResult(ctx, query, start, result, hydratedIntoFeedHandle, placed);
     // The abandoned hydration may still reject after the race has settled, which would surface as an
     // unhandled rejection; the real outcome is already taken below.
     hydration.catch(() => {});
@@ -544,6 +587,10 @@ export class IndexQuerySource implements QuerySource {
     } catch (err) {
       if (err === expired) {
         return STALLED;
+      }
+      // Its database closed under it, whichever wait the row was in.
+      if (err instanceof ContextDisposedError) {
+        return null;
       }
       throw err;
     }
@@ -570,6 +617,7 @@ export class IndexQuerySource implements QuerySource {
     queryStartTimestamp: number,
     result: QueryService.QueryResult,
     hydratedIntoFeedHandle?: Set<string>,
+    placed?: PlacedRow,
   ): Promise<SourceEntry | null> {
     // A collapsed group carries no object, so there is nothing to load: pass its values through.
     if (result.aggregates !== undefined) {
@@ -682,7 +730,12 @@ export class IndexQuerySource implements QuerySource {
       return queryResult;
     }
 
-    const object = (await this._hydrateFromState(result)) ?? (await this._resolveIndexedObject(result));
+    // A placed object's parent, relation endpoints and stored type are read synchronously, so they join the
+    // working set before it is returned.
+    if (placed) {
+      await placed.database._entityManager.waitForStrongDeps(getObjectCore(placed.entity));
+    }
+    const object = placed?.entity ?? (await this._resolveIndexedObject(result));
     if (!object) {
       return null;
     }
@@ -706,36 +759,6 @@ export class IndexQuerySource implements QuerySource {
       group: _groupFromRemoteResult(result),
     };
     return queryResult;
-  }
-
-  /**
-   * A lazy query's row as an object backed by the state the host shipped with it, so no document
-   * loads; undefined when the row carries none (too large, a branch document) or cannot back it.
-   */
-  private async _hydrateFromState(result: QueryService.QueryResult): Promise<Entity.Unknown | undefined> {
-    if (result.state === undefined || result.bytes === undefined) {
-      return undefined;
-    }
-    const database = this._params.graph.getDatabase(SpaceId.make(result.spaceId));
-    if (!(database instanceof DatabaseImpl)) {
-      return undefined;
-    }
-    // A core the tab holds on its document, or on a row at least this new, is resolved as held; nothing to decode.
-    const held = database.getObjectCoreById(result.id, { load: false });
-    if (held && (held.snapshot === undefined || (result.version ?? 0) <= held.snapshot.version)) {
-      return undefined;
-    }
-    const state = getSnapshotState(result);
-    if (state === undefined) {
-      return undefined;
-    }
-    const entity = database._upsertSnapshot(EntityId.make(result.id), state);
-    if (entity === undefined) {
-      return undefined;
-    }
-    // Its parent, relation endpoints and stored type are read synchronously, so they join the working set first.
-    await database._entityManager.waitForStrongDeps(getObjectCore(entity));
-    return entity;
   }
 
   /** The query as sent to the host: with lazy queries on, every document row ships its state. */
@@ -800,6 +823,38 @@ const _groupFromRemoteResult = (result: QueryService.QueryResult): SourceEntry['
         ...(result.aggregates !== undefined ? { aggregates: JSON.parse(result.aggregates) } : {}),
       }
     : undefined;
+
+/** A row's object, placed on its database before the pass waits for any strong dependency. */
+type PlacedRow = { database: DatabaseImpl; entity: Entity.Unknown };
+
+/** The remembered rows with the state left off each one whose object the pass published, which the tab now holds. */
+export const releaseHeldStates = (
+  records: readonly QueryService.QueryResult[],
+  held: ReadonlySet<string>,
+): QueryService.QueryResult[] =>
+  records.map((row) =>
+    held.has(row.id) && row.state !== undefined
+      ? { ...row, state: undefined, heads: undefined, bytes: undefined, updatedAt: undefined }
+      : row,
+  );
+
+/**
+ * The rows of a reactive query's latest emission, with the state the host left off a row it already
+ * sent at that version restored from the previous emission, since a pass may never have seen that one.
+ */
+export const restoreSentStates = (
+  previous: readonly QueryService.QueryResult[] | undefined,
+  results: QueryService.QueryResult[],
+): QueryService.QueryResult[] => {
+  const sent = new Map(previous?.filter((row) => row.state !== undefined).map((row) => [row.id, row]));
+  return results.map((row) => {
+    const earlier = row.state === undefined ? sent.get(row.id) : undefined;
+    if (earlier === undefined || earlier.version !== row.version) {
+      return row;
+    }
+    return { ...row, state: earlier.state, heads: earlier.heads, bytes: earlier.bytes, updatedAt: earlier.updatedAt };
+  });
+};
 
 /** Whether a hydrated object's local deleted flag satisfies the query's `deleted` option. */
 const matchesDeletedOption = (object: Entity.Unknown, query: QueryAST.Query): boolean => {
