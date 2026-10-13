@@ -118,7 +118,8 @@ export const SpaceInvitationCard = ({
           {sender ? contactDisplayName(sender) : (senderName ?? t('unknown-sender.label'))}
         </Card.Text>
       </Card.Row>
-      <Card.Row>
+      {/* No trailing control, so the details run into the end rail. */}
+      <Card.Row span='end'>
         <Card.Text variant='muted' lines={3}>
           {sentAt ? `${description} · ${formatDistanceToNow(sentAt, { addSuffix: true })}` : description}
         </Card.Text>
