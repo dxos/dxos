@@ -2,43 +2,22 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as A from '@automerge/automerge';
+import type { Obj } from '@dxos/echo';
+import { type DatabaseDirectory, type EntityStructure } from '@dxos/echo-protocol';
 
-import { type DatabaseDirectory, type EntityStructure, encodeEntityStructure } from '@dxos/echo-protocol';
+/** Largest object JSON, in characters, a client backs a live object with; a larger object loads its document. */
+export const SNAPSHOT_JSON_LIMIT = 64 * 1024;
 
-import { SNAPSHOT_JSON_LIMIT } from './sql/index.ts';
-
-/** Largest document, in Automerge bytes, whose bytes ship with its object's state. */
+/** Largest stored document, in bytes, that ships with its object's row; a larger one loads in full instead. */
 export const OBJECT_BYTES_LIMIT = 64 * 1024;
 
 /**
- * An object's document state as the index ships it, with the document's bytes a client backs it from;
- * nothing when either is over its limit, since a client cannot use one without the other. `save` runs
- * only for a state that is kept, since serializing the document is the costly part.
+ * Whether a client can back the object with its document's stored changes, showing `json` until it first
+ * writes: the document holds only this object and no links (as the space root does), the object was not
+ * merged away (the JSON carries no redirect), and the JSON is within {@link SNAPSHOT_JSON_LIMIT}.
  */
-export const encodeObjectState = (
-  structure: EntityStructure,
-  heads: A.Heads,
-  save: () => Uint8Array | undefined,
-): { heads: A.Heads; structure: string; bytes: Uint8Array } | undefined => {
-  const encoded = encodeEntityStructure(structure, {
-    readRawString: (value) => (value instanceof A.RawString ? value.toString() : undefined),
-  });
-  if (encoded.length > SNAPSHOT_JSON_LIMIT) {
-    return undefined;
-  }
-  const bytes = save();
-  return bytes && { heads, structure: encoded, bytes };
-};
-
-/**
- * The document's bytes, which a client loads to write to its one object, or undefined when the
- * document holds more than one object or links (the space root) or is over {@link OBJECT_BYTES_LIMIT}.
- */
-export const saveObjectDocument = (doc: A.Doc<DatabaseDirectory>): Uint8Array | undefined => {
-  if (Object.keys(doc.objects ?? {}).length !== 1 || Object.keys(doc.links ?? {}).length > 0) {
-    return undefined;
-  }
-  const bytes = A.save(doc);
-  return bytes.length <= OBJECT_BYTES_LIMIT ? bytes : undefined;
-};
+export const canBackObject = (doc: DatabaseDirectory, structure: EntityStructure, json: Obj.JSON): boolean =>
+  Object.keys(doc.objects ?? {}).length === 1 &&
+  Object.keys(doc.links ?? {}).length === 0 &&
+  structure.system?.mergedInto === undefined &&
+  JSON.stringify(json).length <= SNAPSHOT_JSON_LIMIT;

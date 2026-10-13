@@ -74,7 +74,7 @@ const seed = Effect.gen(function* () {
     createdAt: 1000,
     updatedAt: 2000,
     data: { id, [ATTR_TYPE]: type, [ATTR_DELETED]: false, ...extra, ...data },
-    state: { heads: [`heads-${id}`], structure: JSON.stringify({ data }), bytes: new TextEncoder().encode(id) },
+    heads: [`heads-${id}`],
   });
   const objects: IndexerObject[] = [
     doc(ids.project, PROJECT, { name: 'live' }),
@@ -216,8 +216,8 @@ describe('SqlPlanCompiler', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  // `objectSnapshot` strips `@meta` from document rows, so these predicates have nothing to read
-  // there and the executor sends the plan to the in-memory path instead.
+  // A document row's `@meta` is in `objectSnapshot` only once re-indexed, so these predicates are not
+  // evaluated there and the executor sends the plan to the in-memory path instead.
   it.effect('declines plans whose filters read object meta', () =>
     Effect.gen(function* () {
       const fixture = yield* seed;
@@ -529,9 +529,11 @@ describe('SqlPlanCompiler', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  it.effect('ships a body only for feed rows', () =>
+  it.effect('ships a document row no body when a client cannot back it', () =>
     Effect.gen(function* () {
       const fixture = yield* seed;
+      const sql = yield* SqlClient.SqlClient;
+      yield* sql`UPDATE objectSnapshot SET heads = NULL`;
       const { rows } = yield* run(
         fixture,
         Query.select(Filter.type(PERSON)).from([{ _tag: 'space' as const, spaceId: fixture.spaceId }]),
@@ -541,19 +543,12 @@ describe('SqlPlanCompiler', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  it.effect('ships each document row its state, heads, bytes and index stamp only in a lazy query', () =>
+  it.effect('ships each document row its JSON, heads and index stamp', () =>
     Effect.gen(function* () {
       const fixture = yield* seed;
       const query = Query.select(Filter.type(PERSON)).from([{ _tag: 'space' as const, spaceId: fixture.spaceId }]);
 
-      const plain = yield* run(fixture, query);
-      expect(
-        plain.rows.every(
-          (row) => row.state === null && row.heads === null && row.version === null && row.bytes === null,
-        ),
-      ).toBe(true);
-
-      const { rows } = yield* run(fixture, query, { lazy: true });
+      const { rows } = yield* run(fixture, query);
       expect(
         names(
           fixture,
@@ -562,9 +557,8 @@ describe('SqlPlanCompiler', () => {
       ).toEqual(['alice', 'bob']);
       for (const row of rows) {
         expect(JSON.parse(row.heads ?? 'null')).toEqual([`heads-${row.objectId}`]);
-        expect(JSON.parse(row.state ?? 'null').data.name).toBe(row.objectId === fixture.ids.alice ? 'alice' : 'bob');
+        expect(JSON.parse(row.documentJson ?? 'null').name).toBe(row.objectId === fixture.ids.alice ? 'alice' : 'bob');
         expect(row.version).toBeGreaterThan(0);
-        expect(new TextDecoder().decode(row.bytes ?? undefined)).toBe(row.objectId);
       }
     }).pipe(Effect.provide(TestLayer)),
   );

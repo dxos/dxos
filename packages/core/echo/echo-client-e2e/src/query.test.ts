@@ -4394,6 +4394,20 @@ describe('Query', () => {
       }
     });
 
+    test('an index-backed object reads its meta, creation time and bytes from the row', async () => {
+      const { db } = await openReloaded((db) => {
+        const object = Obj.make(TestSchema.Expando, { blob: new Uint8Array([1, 2, 3]) });
+        Obj.update(object, (object) => Obj.getMeta(object).keys.push({ id: 'key-1', source: 'test' }));
+        return [db.add(object)];
+      });
+
+      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
+      expect(hasDocument(db, object.id)).toBe(false);
+      expect(Obj.getMeta(object).keys.map((key) => ({ ...key }))).toEqual([{ id: 'key-1', source: 'test' }]);
+      expect(Obj.getMeta(object).createdAt).toBeTypeOf('number');
+      expect(object.blob).toEqual(new Uint8Array([1, 2, 3]));
+    });
+
     test('a parent that follows its child in the results is backed by the index too', async () => {
       const { db, ids } = await openReloaded((db) => {
         const parent = db.add(createTestObject({ value: 2 }));
@@ -4464,6 +4478,38 @@ describe('Query', () => {
       expect(A.getHeads(lease.doc())).toEqual(Obj.version(object).automergeHeads);
     });
 
+    test('the first write lands at the heads the object was shown at, when its stored changes are ahead of them', async () => {
+      const { db, peer, ids, documentIds } = await openReloaded((db) => [
+        db.add(Obj.make(TestSchema.Expando, { tags: ['a'] })),
+      ]);
+      const documentId = documentIds.get(ids[0]);
+      invariant(documentId);
+      using lease = await peer.host.automergeHost.loadDoc<DatabaseDirectory>(Context.default(), documentId);
+      invariant(lease);
+      const shownAt = A.getHeads(lease.doc());
+      const structure = JSON.parse(JSON.stringify(lease.doc().objects![ids[0]]));
+      // Storage moves past what the index showed: another writer puts an element ahead of the one the tab removes.
+      lease.change((doc) => {
+        doc.objects![ids[0]].data.tags.unshift('host');
+      });
+
+      const object = db._upsertSnapshot(ids[0], {
+        structure,
+        heads: shownAt,
+        version: 1,
+        updatedAt: Date.now(),
+        bytes: A.save(lease.doc()),
+        documentId,
+      });
+      invariant(Obj.instanceOf(TestSchema.Expando)(object));
+      expect([...object.tags]).toEqual(['a']);
+      Obj.update(object, (object) => {
+        object.tags.splice(0, 1);
+      });
+      // Index 0 was `a` where the object was shown, so the later `host` survives.
+      expect([...object.tags]).toEqual(['host']);
+    });
+
     test('reading the document, its history or a branch of it loads it from the bytes', async () => {
       const { db } = await openReloaded((db) => [
         db.add(createTestObject({ value: 1 })),
@@ -4517,7 +4563,7 @@ describe('Query', () => {
 
       await setValue(2);
       await waitForCondition({ condition: () => ones.length === 0, timeout: 5_000 });
-      // A second change reaches the running watch, which re-sends the unchanged row without its state.
+      // A second change reaches the running watch, which re-sends the unchanged row without its JSON and stored changes.
       await setValue(3);
       expect(hasDocument(db, object.id)).toBe(false);
       expect(hasDocument(db, unchanged.id)).toBe(false);
@@ -4600,23 +4646,6 @@ describe('Query', () => {
 
       await waitForCondition({ condition: () => !hasDocument(db, older.id), timeout: 5_000 });
       expect(hasDocument(db, newer.id)).toBe(true);
-    });
-
-    test('with lazy queries off, a query loads each result document', async () => {
-      const builder = new EchoTestBuilder();
-      onTestFinished(async () => {
-        await builder.close();
-      });
-      const { peer, db: initialDb } = await builder.createDatabase({ lazyQueries: false });
-      initialDb.add(createTestObject({ value: 1 }));
-      await initialDb.flush({ secondaryIndexes: true });
-      await peer.reload();
-      const db = await peer.openLastDatabase();
-      invariant(db instanceof DatabaseImpl);
-
-      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
-      expect(object.value).toBe(1);
-      expect(hasDocument(db, object.id)).toBe(true);
     });
 
     test('a space root that inlines the object, the current one or a new one, binds it there', async () => {

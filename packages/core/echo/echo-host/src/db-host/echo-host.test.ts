@@ -259,8 +259,8 @@ describe('EchoHost index transactions', () => {
   });
 });
 
-describe('EchoHost lazy queries', () => {
-  test('a reactive lazy query re-sends on a change of rows, and only what changed carries its state', async () => {
+describe('EchoHost index-backed rows', () => {
+  test('a reactive query re-sends on a change of rows, and only what changed carries its JSON and stored changes', async () => {
     const { host, spaceId, saveObject } = await setup({ queryExecutor: 'sql' });
     const unchanged = EntityId.random();
     const edited = EntityId.random();
@@ -274,11 +274,7 @@ describe('EchoHost lazy queries', () => {
       host.queryService['QueryService.execQuery']({
         queryId: 'lazy',
         reactivity: QueryReactivity.REACTIVE,
-        query: JSON.stringify(
-          Query.select(Filter.everything())
-            .from([{ _tag: 'space', spaceId }])
-            .options({ lazy: true }).ast,
-        ),
+        query: JSON.stringify(Query.select(Filter.everything()).from([{ _tag: 'space', spaceId }]).ast),
       }).pipe(
         Stream.tap((response) =>
           Effect.sync(() => {
@@ -310,7 +306,7 @@ describe('EchoHost lazy queries', () => {
     expect(row(update, edited)?.version).toBeGreaterThan(row(initial, edited)!.version!);
     expect(row(update, edited)?.bytes).toBeDefined();
     expect(row(update, unchanged)?.version).toBe(row(initial, unchanged)?.version);
-    expect(row(update, unchanged)?.state).toBeUndefined();
+    expect(row(update, unchanged)?.documentJson).toBeUndefined();
     expect(row(update, unchanged)?.bytes).toBeUndefined();
   });
 });

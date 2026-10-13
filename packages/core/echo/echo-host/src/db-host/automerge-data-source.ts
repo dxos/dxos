@@ -18,7 +18,7 @@ import {
 import { log } from '@dxos/log';
 
 import { type AutomergeHost } from '../automerge/index.ts';
-import { encodeObjectState, saveObjectDocument } from '../query/object-state.ts';
+import { canBackObject } from '../query/object-state.ts';
 import { toChangeRecord } from './change-record.ts';
 
 const HEADS_DELIMITER = '|';
@@ -192,17 +192,17 @@ export class AutomergeDataSource implements IndexDataSource {
           });
 
           const docObjects = extractObjects ? (doc.objects ?? {}) : {};
-          // Bytes back an object only from a saved document that holds just it: a client writes on top of
-          // them, so they must not carry changes storage could still lose.
-          const backsObject =
+          // A client shows the JSON and makes its first write at these heads, against the document's stored
+          // changes, so they must be the saved heads the JSON was read at.
+          const atSavedHeads =
             !this.#branchDocumentIds.has(documentId) &&
-            Object.keys(docObjects).length === 1 &&
             headsCodec.encode(A.getHeads(doc)) === headsCodec.encode(docHeads);
           for (const [objectId, structure] of Object.entries(docObjects)) {
             if (changedObjectIds && !changedObjectIds.has(objectId)) {
               continue;
             }
             const storedCreatedAt = structure.system?.createdAt;
+            const data = objectStructureToJson(objectId, structure);
             objects.push({
               spaceId,
               documentId,
@@ -210,10 +210,10 @@ export class AutomergeDataSource implements IndexDataSource {
               queueNamespace: null,
               queuePosition: null,
               recordId: null,
-              data: objectStructureToJson(objectId, structure),
+              data,
               createdAt: typeof storedCreatedAt === 'number' ? storedCreatedAt : null,
               updatedAt,
-              state: backsObject ? encodeObjectState(structure, docHeads, () => saveObjectDocument(doc)) : undefined,
+              heads: atSavedHeads && canBackObject(doc, structure, data) ? docHeads : undefined,
             });
           }
 

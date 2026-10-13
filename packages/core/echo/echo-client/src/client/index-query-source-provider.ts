@@ -67,8 +67,6 @@ export type IndexQueryProviderProps = {
   queryTimeout?: number;
   /** Overrides {@link RECORD_HYDRATION_TIMEOUT}; tests drive the budget rather than waiting it out. */
   hydrationTimeout?: number;
-  /** Asks the host for each document row's state, so results are backed by the index's copy (see `EchoClientProps`). */
-  lazyQueries?: boolean;
 };
 
 /**
@@ -99,7 +97,6 @@ export class IndexQuerySourceProvider implements QuerySourceProvider {
       graph: this._params.graph,
       queryTimeout: this._params.queryTimeout,
       hydrationTimeout: this._params.hydrationTimeout,
-      lazyQueries: this._params.lazyQueries,
     });
   }
 }
@@ -113,8 +110,6 @@ export type IndexQuerySourceProps = {
   queryTimeout?: number;
   /** Overrides {@link RECORD_HYDRATION_TIMEOUT}; tests drive the budget rather than waiting it out. */
   hydrationTimeout?: number;
-  /** Asks the host for each document row's state, so results are backed by the index's copy (see `EchoClientProps`). */
-  lazyQueries?: boolean;
 };
 
 /**
@@ -276,7 +271,7 @@ export class IndexQuerySource implements QuerySource {
     cleanup = subscribeStream(
       this._params.runtime,
       this._params.service['QueryService.execQuery']({
-        query: JSON.stringify(this._requestedQuery(query)),
+        query: JSON.stringify(query),
         queryId: String(queryId),
         reactivity: QueryReactivity.ONE_SHOT,
       }),
@@ -342,7 +337,7 @@ export class IndexQuerySource implements QuerySource {
     this._streamCleanup = subscribeStream(
       this._params.runtime,
       this._params.service['QueryService.execQuery']({
-        query: JSON.stringify(this._requestedQuery(query)),
+        query: JSON.stringify(query),
         queryId: String(queryId),
         reactivity: QueryReactivity.REACTIVE,
       }),
@@ -760,14 +755,6 @@ export class IndexQuerySource implements QuerySource {
     return queryResult;
   }
 
-  /** The query as sent to the host: with lazy queries on, every document row ships its state. */
-  private _requestedQuery(query: QueryAST.Query): QueryAST.Query {
-    if (!this._params.lazyQueries || QueryAST.isLazyQuery(query)) {
-      return query;
-    }
-    return { type: 'options', query, options: { lazy: true } };
-  }
-
   /**
    * Hydrate an index hit via disk-only load; skip objects whose strong deps
    * are permanently unavailable.
@@ -832,26 +819,40 @@ export const releaseHeldStates = (
   held: ReadonlySet<string>,
 ): QueryService.QueryResult[] =>
   records.map((row) =>
-    held.has(row.id) && row.state !== undefined
-      ? { ...row, state: undefined, heads: undefined, bytes: undefined, updatedAt: undefined }
+    held.has(row.id) && row.bytes !== undefined
+      ? {
+          ...row,
+          documentJson: undefined,
+          heads: undefined,
+          bytes: undefined,
+          createdAt: undefined,
+          updatedAt: undefined,
+        }
       : row,
   );
 
 /**
- * The rows of a reactive query's latest emission, with the state the host left off a row it already
+ * The rows of a reactive query's latest emission, with the JSON and stored changes the host left off a row it already
  * sent at that version restored from the previous emission, since a pass may never have seen that one.
  */
 export const restoreSentStates = (
   previous: readonly QueryService.QueryResult[] | undefined,
   results: QueryService.QueryResult[],
 ): QueryService.QueryResult[] => {
-  const sent = new Map(previous?.filter((row) => row.state !== undefined).map((row) => [row.id, row]));
+  const sent = new Map(previous?.filter((row) => row.bytes !== undefined).map((row) => [row.id, row]));
   return results.map((row) => {
-    const earlier = row.state === undefined ? sent.get(row.id) : undefined;
+    const earlier = row.bytes === undefined ? sent.get(row.id) : undefined;
     if (earlier === undefined || earlier.version !== row.version) {
       return row;
     }
-    return { ...row, state: earlier.state, heads: earlier.heads, bytes: earlier.bytes, updatedAt: earlier.updatedAt };
+    return {
+      ...row,
+      documentJson: earlier.documentJson,
+      heads: earlier.heads,
+      bytes: earlier.bytes,
+      createdAt: earlier.createdAt,
+      updatedAt: earlier.updatedAt,
+    };
   });
 };
 

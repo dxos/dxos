@@ -78,7 +78,8 @@ export const QueryResult = Schema.Struct({
   queueNamespace: Schema.optional(Schema.String),
   rank: Schema.Number,
   /**
-   * In the ECHO JSON object format.
+   * In the ECHO JSON object format. Sent for a feed row, and for a document row the client can back
+   * with {@link heads} and {@link bytes}.
    */
   documentJson: Schema.optional(Schema.String),
   /**
@@ -101,24 +102,22 @@ export const QueryResult = Schema.Struct({
    * `Filter.changes`); no object fields are sent, and `id` is the record's own identity.
    */
   recordJson: Schema.optional(Schema.String),
-  /**
-   * The object as its document holds it (`encodeEntityStructure`), sent to a lazy query for a
-   * document row the index has a state for; the client backs a live object with it.
-   */
-  state: Schema.optional(Schema.String),
-  /** Heads of the document {@link state} and {@link bytes} were read at. */
+  /** Heads of the document the index read a document row's {@link documentJson} at. */
   heads: Schema.optional(mutableArray(Schema.String)),
   /**
-   * The document's Automerge bytes at {@link heads}, sent with {@link state} for a document that holds
-   * only this object; the client loads them when it first writes to the object.
+   * The document's Automerge bytes as storage holds them, which may be ahead of {@link heads}; sent with
+   * {@link documentJson} for a document that holds only this object. The client loads them when it first
+   * writes to the object, and makes that write at {@link heads} when the bytes hold them.
    */
   bytes: Schema.optional(Schema.Uint8Array),
   /**
-   * Index stamp of the row, increasing with every re-index; orders two states of one object. A
-   * reactive query re-sends a row whose stamp it already shipped with this alone, without the state.
+   * Index stamp of the row, increasing with every re-index; orders two copies of one object. A
+   * reactive query re-sends a row whose stamp it already shipped with this alone, without its JSON and bytes.
    */
   version: Schema.optional(Schema.Number),
-  /** Unix ms of the object's last change, sent with {@link state}. */
+  /** Unix ms of the object's creation, sent with a document row's {@link bytes}. */
+  createdAt: Schema.optional(Schema.Number),
+  /** Unix ms of the object's last change, sent with a document row's {@link bytes}. */
   updatedAt: Schema.optional(Schema.Number),
 });
 export interface QueryResult extends Schema.Schema.Type<typeof QueryResult> {}

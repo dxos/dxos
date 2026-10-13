@@ -1,12 +1,11 @@
 --
--- The object as its document holds it, beside the JSON snapshot: `state` is the raw entity structure
--- (encoded by `encodeEntityStructure`, so bytes and raw strings survive), and `heads` the document
--- heads it was read at. A client backs a live object with them and replays a write at those heads.
--- Null for feed rows, branch documents, and objects too large to ship.
+-- Heads of the document an object's snapshot was read at, set for an object a client can back with the
+-- document's bytes (see `IndexerObject.heads`): the client shows the snapshot and makes its first write
+-- to the object at these heads. Null for feed rows, branch documents, documents holding more than one
+-- object, and objects too large to ship.
 --
 -- Filled by the reindex `migrations/tracker/0009_reindex_object_state.sql` schedules.
 --
 -- Immutable: recorded in `object_snapshot_migrations` and never re-run.
 --
 ALTER TABLE objectSnapshot ADD COLUMN heads TEXT;
-ALTER TABLE objectSnapshot ADD COLUMN state TEXT;

@@ -939,6 +939,19 @@ export class AutomergeHost extends Resource {
   }
 
   /**
+   * The document's saved changes as storage holds them, without loading the document: its snapshot and
+   * incremental chunks, concatenated in the form `A.loadIncremental` reads. Empty when storage holds none.
+   */
+  async readStoredChanges(id: DocumentId): Promise<Uint8Array> {
+    invariant(this.isOpen, 'AutomergeHost is not open');
+    const chunks = await this._storage.loadRange([id]);
+    const changes = chunks.filter(
+      ({ key, data }) => (key[1] === 'snapshot' || key[1] === 'incremental') && data != null && data.length > 0,
+    );
+    return bufferToArray(Buffer.concat(changes.map(({ data }) => data!)));
+  }
+
+  /**
    * Probe local storage to determine whether the document has any persisted
    * chunks. Does not request the document from the network and does not
    * touch the in-memory `Repo`. Returns `true` iff at least one non-empty

@@ -62,7 +62,7 @@ export type CompiledRow = {
   rank: number;
   createdAt: number | null;
   updatedAt: number | null;
-  /** JSON text of the body; present for feed rows only, since the client re-loads documents. */
+  /** JSON text of the body; present for feed rows, and for document rows that have {@link heads}. */
   documentJson: string | null;
   /** JSON text of the group key; present iff the plan aggregates. */
   groupKey: string | null;
@@ -73,14 +73,10 @@ export type CompiledRow = {
    * serialized key rather than an object.
    */
   aggregates: string | null;
-  /** The document row's stored state (`encodeEntityStructure`), in a lazy query only. */
-  state: string | null;
-  /** JSON array of the heads {@link state} was read at, in a lazy query only. */
+  /** JSON array of the heads a document row's {@link documentJson} was read at, when a client can back it. */
   heads: string | null;
-  /** The row's `objectMeta.version` stamp, in a lazy query only. */
+  /** The row's `objectMeta.version` stamp. */
   version: number | null;
-  /** The document's Automerge bytes at {@link heads}, in a lazy query only. */
-  bytes: Uint8Array | null;
 };
 
 /**
@@ -149,7 +145,7 @@ export class SqlPlanCompiler {
     if (options.strongDependencyFilter !== false) {
       root = this.#compileStrongDependencyFilter(root);
     }
-    const final = this.#final(root, { lazy: options.lazy === true });
+    const final = this.#final(root);
     const withClause = sql.join(', ', false)(this.#ctes);
     const statement = sql<CompiledRow>`WITH RECURSIVE ${withClause} ${final}`;
     const [text, params] = statement.compile();
@@ -1147,11 +1143,8 @@ export class SqlPlanCompiler {
   // Final projection.
   //
 
-  #final(ws: Relation, { lazy }: { lazy: boolean }): Fragment {
+  #final(ws: Relation): Fragment {
     const sql = this.#sql;
-    const stateColumns = lazy
-      ? sql`d.state AS state, d.heads AS heads, m.version AS version, d.bytes AS bytes`
-      : sql`NULL AS state, NULL AS heads, NULL AS version, NULL AS bytes`;
     const aggregates =
       ws.grouped?.collapsed && ws.grouped.aggregateNames.length > 0
         ? sql`json_object(${sql.join(', ', false)(ws.grouped.aggregateNames.map((name) => sql`${name}, w.${sql.literal(aggregateColumn(name))}`))})`
@@ -1162,9 +1155,8 @@ export class SqlPlanCompiler {
       ? sql`w.groupKey AS groupKey, w.groupCount AS groupCount, ${aggregates} AS aggregates`
       : sql`NULL AS groupKey, NULL AS groupCount, NULL AS aggregates`;
     return sql`SELECT w.recordId, w.objectId, w.spaceId, m.documentId, m.queueId, m.queueNamespace, w.rank AS rank,
-      m.createdAt, m.updatedAt,
-      CASE WHEN m.queueId != '' THEN json(d.snapshot) END AS documentJson,
-      ${stateColumns},
+      m.createdAt, m.updatedAt, m.version AS version, d.heads AS heads,
+      CASE WHEN m.queueId != '' OR d.heads IS NOT NULL THEN json(d.snapshot) END AS documentJson,
       ${groupColumns}
       FROM ${this.#ref(ws)} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId LEFT JOIN objectSnapshot d ON d.recordId = w.recordId
       ORDER BY w.ord`;
@@ -1177,16 +1169,7 @@ export type CompileOptions = {
    * executor mirrors the client-side gate so dependency-broken objects never reach it.
    */
   strongDependencyFilter?: boolean;
-
-  /** Ship every document row's stored state, heads and version, for a lazy query (`QueryOptions.lazy`). */
-  lazy?: boolean;
 };
-
-/**
- * Largest object state, in characters of encoded JSON, that the index stores for a lazy query; a larger
- * object goes without, and the client loads its document instead.
- */
-export const SNAPSHOT_JSON_LIMIT = 64 * 1024;
 
 /**
  * Compiles a plan, first resolving every `metaVersion` filter to the literal versions present
@@ -1224,16 +1207,15 @@ const planIncludesAllFeeds = (plan: QueryPlan.Plan): boolean =>
 /**
  * Whether any filter in the plan reads `@meta` — foreign keys, a registry key/version, or tags.
  *
- * `objectSnapshot` strips `@meta` from document rows (it exists there only so the entity-meta index
- * can lift the convergence key out), so those predicates cannot be evaluated in SQL and the plan
- * has to take the in-memory path instead. Queue rows do keep their meta, but a space-scoped query
+ * A document row's `objectSnapshot` holds `@meta` only once re-indexed (tracker migration 0009), so
+ * those predicates cannot be evaluated in SQL and the plan has to take the in-memory path instead. Queue rows do keep their meta, but a space-scoped query
  * sees both, so this declines the plan wholesale rather than by scope.
  */
 /**
  * Whether the compiler declines this plan, leaving it for the in-memory executor.
  *
- * Two reasons would need the store read before the statement is built: `objectSnapshot` drops
- * `@meta` for document rows, and a `metaVersion` semver range has to be resolved to the versions
+ * Two reasons would need the store read before the statement is built: a document row's `@meta`
+ * is in `objectSnapshot` only once re-indexed, and a `metaVersion` semver range has to be resolved to the versions
  * actually present. Declining them keeps compilation pure — steps in, SQL out — and the plan correct.
  */
 export const planDeclinedByCompiler = (plan: QueryPlan.Plan, planSubquery: PlanSubquery): boolean =>

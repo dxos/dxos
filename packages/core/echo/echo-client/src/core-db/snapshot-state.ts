@@ -2,20 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
-import { next as A } from '@automerge/automerge';
-
-import { decodeEntityStructure } from '@dxos/echo-protocol';
+import { objectStructureFromJson } from '@dxos/echo/internal';
 import { type QueryService } from '@dxos/protocols/rpc';
 
 import { type SnapshotState } from './object-core.ts';
 
 /**
- * The index's copy of the object a lazy query row describes; undefined when the row carries no state
- * and bytes (the object is too large, shares its document, or lives in a branch document).
+ * The index's copy of the object a document row describes; undefined when the row carries no JSON and
+ * stored changes to back it with (the object is too large, shares its document, or lives in a branch).
  */
 export const getSnapshotState = (result: QueryService.QueryResult): SnapshotState | undefined => {
   if (
-    result.state === undefined ||
+    result.documentJson === undefined ||
     result.heads === undefined ||
     result.version === undefined ||
     result.bytes === undefined ||
@@ -23,8 +21,13 @@ export const getSnapshotState = (result: QueryService.QueryResult): SnapshotStat
   ) {
     return undefined;
   }
+  const structure = objectStructureFromJson(JSON.parse(result.documentJson));
+  // The JSON carries the object's data and meta; its creation time comes with the row.
+  if (result.createdAt !== undefined) {
+    structure.system = { ...structure.system, createdAt: result.createdAt };
+  }
   return {
-    structure: decodeEntityStructure(result.state, { makeRawString: (value) => new A.RawString(value) }),
+    structure,
     heads: result.heads,
     version: result.version,
     updatedAt: result.updatedAt,

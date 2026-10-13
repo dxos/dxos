@@ -24,10 +24,9 @@ import { blackhole } from './testing/bench-util.ts';
 //                                     full result set)
 //   + read one field per result       the first read of each object, where the object's data is materialized
 //
-// The plain rows run with lazy queries off, so every result loads its document. The lazy rows run the
-// same cold query with them on (the default), which backs each result with the index's copy and its
-// document's bytes, and then price the first write: loading one result's bytes into a document, in
-// the tab, with no round trip. The first of a session is reported apart from the steady state.
+// Each result is backed by the index's copy and its document's stored changes. The write row then
+// prices the first write: loading one result's changes into a document, in the tab, with no round
+// trip. The first of a session is reported apart from the steady state.
 //
 // The warm rows run the same query against a peer that already holds every object, so the difference
 // between a cold and a warm query is the load itself. Property-access costs are the other file's
@@ -145,9 +144,9 @@ afterAll(async () => {
 
 const defineRows = (label: string, state: Populated, type: typeof BenchObject | typeof WideBenchObject) => {
   describe(label, () => {
-    const reopen = async ({ lazyQueries = false }: { lazyQueries?: boolean } = {}): Promise<EchoDatabase> => {
+    const reopen = async (): Promise<EchoDatabase> => {
       const started = performance.now();
-      await state.peer.reload({ lazyQueries });
+      await state.peer.reload();
       const db = await state.peer.openLastDatabase();
       record(`${label}: reload + open`, performance.now() - started);
       state.db = db;
@@ -168,21 +167,6 @@ const defineRows = (label: string, state: Populated, type: typeof BenchObject | 
       if (results.length !== state.count) {
         throw new Error(`Expected ${state.count} results, got ${results.length} after ${SHORT_RESULT_RETRIES} re-runs`);
       }
-      return results;
-    };
-
-    const lazyQuery = async (db: EchoDatabase, phase: string): Promise<(BenchObject | WideBenchObject)[]> => {
-      const started = performance.now();
-      const results = await db.query(Query.select(Filter.type(type))).run();
-      record(`${label}: ${phase}`, performance.now() - started);
-      if (results.length !== state.count) {
-        throw new Error(`Expected ${state.count} results, got ${results.length}`);
-      }
-      const held = results.reduce(
-        (sum, object) => sum + (getObjectCore(object).snapshot?.handle.passive?.bytes.length ?? 0),
-        0,
-      );
-      record(`${label}: document bytes held per lazy result (value = bytes)`, held / results.length);
       return results;
     };
 
@@ -234,28 +218,15 @@ const defineRows = (label: string, state: Populated, type: typeof BenchObject | 
     );
 
     bench(
-      'reload + open + lazy query',
+      'reload + open + query + write one, then more one at a time',
       async () => {
-        const db = await reopen({ lazyQueries: true });
-        blackhole(await lazyQuery(db, 'lazy query (cold)'));
-      },
-      COLD_OPTIONS,
-    );
-
-    bench(
-      'reload + open + lazy query + read one field per result',
-      async () => {
-        const db = await reopen({ lazyQueries: true });
-        readAll(await lazyQuery(db, 'lazy query (cold, before read)'), 'read one field per lazy result (cold)');
-      },
-      COLD_OPTIONS,
-    );
-
-    bench(
-      'reload + open + lazy query + write one, then more one at a time',
-      async () => {
-        const db = await reopen({ lazyQueries: true });
-        const results = await lazyQuery(db, 'lazy query (cold, before writes)');
+        const db = await reopen();
+        const results = await query(db, 'query (cold, before writes)');
+        const held = results.reduce(
+          (sum, object) => sum + (getObjectCore(object).snapshot?.handle.passive?.bytes.length ?? 0),
+          0,
+        );
+        record(`${label}: stored changes held per result (value = bytes)`, held / results.length);
         firstWrite(results[0], 'first write (first of the session)');
         for (let index = 1; index <= STEADY_WRITES; index++) {
           firstWrite(results[index], 'first write (steady state)');

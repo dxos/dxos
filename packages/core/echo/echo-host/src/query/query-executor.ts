@@ -18,7 +18,14 @@ import {
   QueryAST,
   isEncodedReference,
 } from '@dxos/echo-protocol';
-import { ATTR_META, ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
+import {
+  ATTR_META,
+  ATTR_PARENT,
+  ATTR_RELATION_SOURCE,
+  ATTR_RELATION_TARGET,
+  ATTR_TYPE,
+  objectStructureToJson,
+} from '@dxos/echo/internal';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import {
   type EntityMeta,
@@ -42,7 +49,7 @@ import { filterMatchDoc, filterMatchEntityMeta, filterMatchObjectJSON, getEntity
 import { type ChangeItem, changeResults, executeChangesPlan, serializeChangeResults } from './changes-executor.ts';
 import { QueryError } from './errors.ts';
 import { type GroupAggregates, GroupBy, type GroupKeyValue, compareCodeUnits } from './group-by.ts';
-import { encodeObjectState, saveObjectDocument } from './object-state.ts';
+import { OBJECT_BYTES_LIMIT, canBackObject } from './object-state.ts';
 import { QueryPlan } from './plan.ts';
 import { type QueryExecutorMode, QueryPlanner, filterContainsInQuery } from './query-planner.ts';
 import { type CompiledRow } from './sql/index.ts';
@@ -128,8 +135,11 @@ type QueryItem = {
    */
   result?: QueryService.QueryResult;
 
-  /** In a lazy query: the object's document state and bytes, the heads they were read at, and its index stamp. */
-  state?: { heads: readonly string[]; structure: string; bytes?: Uint8Array; version: number };
+  /** The object's index stamp (`objectMeta.version`), for a document row. */
+  version?: number;
+
+  /** For an object a client can back with its document's stored changes: its JSON and the heads it was read at. */
+  backing?: { heads: readonly string[]; json: string };
 };
 
 /** Parsed once per index row: an order step reads it on every comparison. */
@@ -679,11 +689,9 @@ export class QueryExecutor extends Resource {
   #changeResultSet: ChangeItem[] | undefined;
   readonly #planner: QueryPlanner;
   readonly #mode: QueryExecutorMode;
-  /** The query returns index-backed live objects, so document rows ship their state. */
-  readonly #lazy: boolean;
   /** A row whose version changed is a changed result (see `QueryOptions.followVersions`). */
   readonly #followVersions: boolean;
-  /** The state version each object last shipped with, so a re-emit leaves unchanged state and bytes off. */
+  /** The version each object last shipped its JSON and stored changes at, so a re-emit leaves them off. */
   #sentVersions = new Map<string, number>();
 
   /**
@@ -715,7 +723,6 @@ export class QueryExecutor extends Resource {
     this._id = options.queryId;
     this._query = options.query;
     this._reactivity = options.reactivity;
-    this.#lazy = QueryAST.isLazyQuery(this._query);
     this.#followVersions = QueryAST.followsVersions(this._query);
 
     this.#mode = options.executor ?? 'memory';
@@ -749,7 +756,7 @@ export class QueryExecutor extends Resource {
     return this.#scopes.isSimple && this.#scopes.objectIds !== null;
   }
 
-  getResults(): QueryService.QueryResult[] {
+  async getResults(): Promise<QueryService.QueryResult[]> {
     if (this.#changeResultSet) {
       return changeResults(this.#changeResultSet);
     }
@@ -787,35 +794,51 @@ export class QueryExecutor extends Resource {
 
         rank: item.rank,
 
-        documentJson: item.doc ? JSON.stringify(item.doc) : item.data ? JSON.stringify(item.data) : undefined,
+        documentJson: item.backing?.json ?? (item.data ? JSON.stringify(item.data) : undefined),
 
         groupKey: serializedGroupKey,
         groupCount: serializedGroupKey !== undefined ? groupCounts.get(serializedGroupKey) : undefined,
 
-        state: item.state?.structure,
-        heads: item.state ? [...item.state.heads] : undefined,
-        bytes: item.state?.bytes,
-        version: item.state?.version,
-        updatedAt: item.state ? (item.updatedAt ?? undefined) : undefined,
+        heads: item.backing ? [...item.backing.heads] : undefined,
+        version: item.version,
+        createdAt: item.backing ? (item.createdAt ?? undefined) : undefined,
+        updatedAt: item.backing ? (item.updatedAt ?? undefined) : undefined,
       };
     });
-    return this.#lazy ? this.#omitSentStates(results) : results;
+    return this.#withStoredChanges(results);
   }
 
-  /** Strips the state a client already holds from the rows whose version this query has shipped. */
-  #omitSentStates(results: QueryService.QueryResult[]): QueryService.QueryResult[] {
+  /**
+   * Adds the document's stored changes to each row a client can back, read now rather than kept in the
+   * index, and leaves a row's JSON and changes off once this query has shipped them at its version.
+   */
+  async #withStoredChanges(results: QueryService.QueryResult[]): Promise<QueryService.QueryResult[]> {
     const sent = this.#sentVersions;
     this.#sentVersions = new Map();
-    return results.map((result) => {
-      if (result.version === undefined || result.state === undefined) {
+    const unsent = (result: QueryService.QueryResult) =>
+      result.heads !== undefined && result.version !== undefined && sent.get(result.id) !== result.version;
+    const changes = await Promise.all(
+      results.map((result) =>
+        unsent(result) && result.documentId !== undefined
+          ? this._automergeHost.readStoredChanges(result.documentId as DocumentId)
+          : undefined,
+      ),
+    );
+    return results.map((result, index) => {
+      if (result.heads === undefined || result.version === undefined) {
         return result;
+      }
+      const bytes = changes[index];
+      if (bytes === undefined) {
+        // Shipped at this version already, and the client keeps what it was sent.
+        this.#sentVersions.set(result.id, result.version);
+        return withoutBacking(result);
+      }
+      if (bytes.length === 0 || bytes.length > OBJECT_BYTES_LIMIT) {
+        return withoutBacking(result);
       }
       this.#sentVersions.set(result.id, result.version);
-      if (sent.get(result.id) !== result.version) {
-        return result;
-      }
-      const { state: _state, heads: _heads, bytes: _bytes, updatedAt: _updatedAt, ...unchanged } = result;
-      return unchanged;
+      return { ...result, bytes };
     });
   }
 
@@ -2209,9 +2232,7 @@ export class QueryExecutor extends Resource {
     if (!object) {
       return null;
     }
-    const state = this.#lazy
-      ? encodeObjectState(object, A.getHeads(lease.doc()), () => saveObjectDocument(lease.doc()))
-      : undefined;
+    const json = objectStructureToJson(meta.objectId, object);
     return {
       objectId: meta.objectId,
       documentId: meta.documentId as DocumentId,
@@ -2223,7 +2244,11 @@ export class QueryExecutor extends Resource {
       rank: 1,
       createdAt: meta.createdAt,
       updatedAt: meta.updatedAt,
-      state: state && { ...state, version: meta.version },
+      version: meta.version,
+      // The lease may be ahead of storage, whose changes a client loads; its first write then lands at the latest heads.
+      backing: canBackObject(lease.doc(), object, json)
+        ? { heads: A.getHeads(lease.doc()), json: JSON.stringify(json) }
+        : undefined,
     };
   }
 
@@ -2641,11 +2666,10 @@ const compiledRowToItem = (row: CompiledRow): QueryItem => {
           documentJson: row.documentJson ?? undefined,
           groupKey: row.groupKey ?? undefined,
           groupCount: row.groupCount ?? undefined,
-          state: row.state ?? undefined,
           heads: row.heads !== null ? JSON.parse(row.heads) : undefined,
-          bytes: row.bytes !== null ? new Uint8Array(row.bytes) : undefined,
           version: row.version ?? undefined,
-          updatedAt: row.state !== null ? (row.updatedAt ?? undefined) : undefined,
+          createdAt: row.heads !== null ? (row.createdAt ?? undefined) : undefined,
+          updatedAt: row.heads !== null ? (row.updatedAt ?? undefined) : undefined,
         };
   return {
     objectId: row.objectId,
@@ -2679,8 +2703,9 @@ const _sameResult = (a: QueryItem, b: QueryItem, followVersions: boolean): boole
       a.result?.groupCount === b.result?.groupCount &&
       a.result?.aggregates === b.result?.aggregates &&
       a.result?.rank === b.result?.rank &&
-      // A feed row ships its indexed body, so an edit to it changes the record without moving the row.
-      a.result?.documentJson === b.result?.documentJson &&
+      // A feed row ships its indexed body, so an edit to it changes the record without moving the row. A
+      // document row's body backs an object the client keeps current itself.
+      (a.result?.queueId === undefined || a.result?.documentJson === b.result?.documentJson) &&
       // Every re-index stamps a new version, so only a query that asks re-sends on it.
       (!followVersions || a.result?.version === b.result?.version)
     );
@@ -2696,6 +2721,16 @@ const _sameResult = (a: QueryItem, b: QueryItem, followVersions: boolean): boole
     _serializeOptionalGroupKey(a.groupKey) === _serializeOptionalGroupKey(b.groupKey) &&
     // A collapsed group ships only its size and aggregates, so those are what can change.
     _serializeCollapsed(a) === _serializeCollapsed(b) &&
-    (!followVersions || a.state?.version === b.state?.version)
+    (!followVersions || a.version === b.version)
   );
 };
+
+/** A document row without what a client backs its object with, which then loads its document. */
+const withoutBacking = ({
+  documentJson: _documentJson,
+  heads: _heads,
+  bytes: _bytes,
+  createdAt: _createdAt,
+  updatedAt: _updatedAt,
+  ...row
+}: QueryService.QueryResult): QueryService.QueryResult => row;

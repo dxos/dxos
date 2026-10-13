@@ -24,13 +24,13 @@ describe('Query API stalls under paused document synchronizer', () => {
     const testBuilder = new EchoTestBuilder();
     await openAndClose(testBuilder);
     const tmpPath = createTmpPath();
-    // The document path: a lazy query is answered from the index and never waits on the document.
-    const peer = await testBuilder.createPeer({ storagePath: tmpPath, lazyQueries: false });
+    const peer = await testBuilder.createPeer({ storagePath: tmpPath });
 
     // 1. Add an object normally so it ends up persisted on disk and
     //    discoverable via space root links.
     const db1 = await peer.createDatabase();
-    const obj = db1.add(Obj.make(TestSchema.Expando, { title: 'subject' }));
+    // Over the size the index backs an object at, so queries take the document path rather than the index's copy.
+    const obj = db1.add(Obj.make(TestSchema.Expando, { title: 'subject', body: 'x'.repeat(70_000) }));
     await db1.flush();
     const objId = obj.id;
 

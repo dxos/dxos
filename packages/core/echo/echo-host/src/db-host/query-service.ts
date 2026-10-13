@@ -445,7 +445,7 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
       query.dirty = false;
       if (changed || query.firstResult) {
         query.firstResult = false;
-        const results = query.executor.getResults();
+        const results = await query.executor.getResults();
         countWork('echo.queryResultsSent');
         countWork('echo.queryResultRows', results.length);
         query.sendResults(results);

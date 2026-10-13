@@ -385,7 +385,7 @@ describe('IndexQuerySource', () => {
     });
   });
 
-  test('a remembered row keeps the state the host sent until a pass publishes its object', () => {
+  test('a remembered row keeps what the host sent to back its object until a pass publishes it', () => {
     const spaceId = SpaceId$.random();
     const [kept, changed, added, held] = [EntityId.random(), EntityId.random(), EntityId.random(), EntityId.random()];
     const sent = (id: string, version: number): QueryService.QueryResult => ({
@@ -393,13 +393,14 @@ describe('IndexQuerySource', () => {
       spaceId,
       rank: 0,
       version,
-      state: `state-${version}`,
+      documentJson: `{"version":${version}}`,
       heads: [`heads-${version}`],
       bytes: new Uint8Array([version]),
+      createdAt: version,
       updatedAt: version,
     });
     const stripped = (id: string, version: number): QueryService.QueryResult => ({ id, spaceId, rank: 0, version });
-    // The tab holds what a published row carried; one no pass has published keeps its state.
+    // The tab holds what a published row carried; one no pass has published keeps it.
     const first = releaseHeldStates([sent(kept, 1), sent(changed, 1), sent(held, 1)], new Set([held]));
     expect(first).toEqual([sent(kept, 1), sent(changed, 1), stripped(held, 1)]);
 

@@ -13,7 +13,6 @@ import retireReverseRef2Cursors from './0006_retire_reverse_ref2_cursors.sql?raw
 import restampFeedSnapshots from './0007_restamp_feed_snapshots.sql?raw';
 import reindexObjectMetaAnnotations from './0008_reindex_object_meta_annotations.sql?raw';
 import reindexObjectState from './0009_reindex_object_state.sql?raw';
-import reindexObjectBytes from './0010_reindex_object_bytes.sql?raw';
 
 export const MIGRATIONS = {
   '0001_init': SqlMigrations.apply(init),
@@ -25,7 +24,6 @@ export const MIGRATIONS = {
   '0007_restamp_feed_snapshots': SqlMigrations.apply(restampFeedSnapshots),
   '0008_reindex_object_meta_annotations': SqlMigrations.apply(reindexObjectMetaAnnotations),
   '0009_reindex_object_state': SqlMigrations.apply(reindexObjectState),
-  '0010_reindex_object_bytes': SqlMigrations.apply(reindexObjectBytes),
 };
 
 /** Own history table per store, since many stores share the client database. */

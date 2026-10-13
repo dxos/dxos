@@ -5,7 +5,8 @@
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
-import { DXN, EID } from '@dxos/keys';
+import { type EntityStructure } from '@dxos/echo-protocol';
+import { DXN, EID, EntityId, URI } from '@dxos/keys';
 
 import * as Obj from '../../Obj.ts';
 import * as Relation from '../../Relation.ts';
@@ -16,11 +17,11 @@ import { getMetaChecked } from '../common/api/index.ts';
 import { makeDecodedEntityLive } from '../common/proxy/index.ts';
 import { type AnyEntity, ATTR_TYPE, EntityKind, KindId, TypeId, getSchema } from '../common/types/index.ts';
 import { ATTR_DELETED, MetaId } from '../common/types/model-symbols.ts';
-import { RelationSourceId, RelationTargetId, getObjectEchoUri } from '../Entity/index.ts';
+import { RelationSourceId, RelationTargetId, TypeMetaSchemaDXN, getObjectEchoUri } from '../Entity/index.ts';
 import * as JsonSchema from '../JsonSchema/index.ts';
 import { Ref, type RefResolver, StaticRefResolver } from '../Ref/index.ts';
 import { createObject } from './create-object.ts';
-import { objectFromJSON, objectToJSON } from './json-serializer.ts';
+import { objectFromJSON, objectStructureFromJson, objectStructureToJson, objectToJSON } from './json-serializer.ts';
 
 /**
  * Decode JSON and rewrap as a live reactive proxy — mirrors the feed hydration path
@@ -381,5 +382,38 @@ describe('Object JSON serializer', () => {
       const reDecoded = (await objectFromJSON(objectToJSON(decoded), { refResolver })) as TestSchema.Person;
       expect(Obj.isDeleted(reDecoded)).toBe(true);
     });
+  });
+});
+
+describe('objectStructureFromJson', () => {
+  const roundTrip = (structure: EntityStructure) =>
+    objectStructureFromJson(JSON.parse(JSON.stringify(objectStructureToJson(EntityId.random(), structure))));
+  const type = { '/': URI.make(DXN.make('com.example.type.test', '0.1.0').toString()) };
+  const ref = () => ({ '/': EID.make({ entityId: EntityId.random() }) });
+
+  test('reads back the structure objectStructureToJson wrote, bytes and meta included', () => {
+    const structure: EntityStructure = {
+      system: { kind: EntityKind.Object, type, parent: ref() },
+      meta: { keys: [{ source: 'test', id: '1' }], tags: ['t'] },
+      data: { title: 'a', blob: new Uint8Array([1, 2, 3]), nested: { link: ref(), list: [new Uint8Array([4])] } },
+    };
+    expect(roundTrip(structure)).toEqual(structure);
+  });
+
+  test('infers a relation from its endpoints and a type from the meta-schema', () => {
+    const relation: EntityStructure = {
+      system: { kind: EntityKind.Relation, type, source: ref(), target: ref(), deleted: true },
+      meta: { keys: [] },
+      data: {},
+    };
+    expect(roundTrip(relation)).toEqual(relation);
+
+    expect(Type.getURI(Type.Type).toString()).toBe(TypeMetaSchemaDXN.toString());
+    const persistedType: EntityStructure = {
+      system: { kind: EntityKind.Type, type: { '/': URI.make(TypeMetaSchemaDXN.toString()) } },
+      meta: { keys: [], key: 'com.example.type.test', version: '0.1.0' },
+      data: { jsonSchema: {} },
+    };
+    expect(roundTrip(persistedType)).toEqual(persistedType);
   });
 });

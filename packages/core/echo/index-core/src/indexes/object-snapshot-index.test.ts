@@ -6,7 +6,7 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as SqlClient from 'effect/sql/SqlClient';
 
-import { ATTR_TYPE } from '@dxos/echo/internal';
+import { ATTR_META, ATTR_TYPE } from '@dxos/echo/internal';
 import { DXN, EntityId, SpaceId } from '@dxos/keys';
 
 import { TestSqliteLayer as TestLayer } from '../testing/index.ts';
@@ -102,10 +102,11 @@ describe('ObjectSnapshotIndex', () => {
   );
 
   it.effect(
-    'stores the document state with a record and clears it when an update carries none',
+    'stores a document object with its meta and the heads it was read at, and clears the heads when an update carries none',
     Effect.fnUntraced(function* () {
       const { store } = yield* migrated();
-      const metaIndex = new EntityMetaIndex(yield* SqlClient.SqlClient);
+      const sql = yield* SqlClient.SqlClient;
+      const metaIndex = new EntityMetaIndex(sql);
       yield* metaIndex.migrate();
 
       const id = EntityId.random();
@@ -117,31 +118,25 @@ describe('ObjectSnapshotIndex', () => {
         recordId: null,
         createdAt: null,
         updatedAt: Date.now(),
-        data: { id, [ATTR_TYPE]: TYPE_PERSON, value: 'alpha' },
-        state: { heads: ['h1', 'h2'], structure: '{"data":{"value":"alpha"}}', bytes: new Uint8Array([1, 2, 3]) },
+        data: { id, [ATTR_TYPE]: TYPE_PERSON, [ATTR_META]: { keys: [], tags: ['t'] }, value: 'alpha' },
+        heads: ['h1', 'h2'],
       };
       yield* metaIndex.update([object]);
       yield* metaIndex.lookupRecordIds([object]);
       yield* store.update([object]);
+      const heads = () =>
+        sql<{ heads: string | null }>`SELECT heads FROM objectSnapshot WHERE recordId = ${object.recordId!}`.pipe(
+          Effect.map(([row]) => (row?.heads ? JSON.parse(row.heads) : null)),
+        );
 
-      expect(yield* store.queryStates([object.recordId!])).toEqual([
-        {
-          recordId: object.recordId!,
-          heads: ['h1', 'h2'],
-          structure: '{"data":{"value":"alpha"}}',
-          bytes: new Uint8Array([1, 2, 3]),
-        },
-      ]);
+      expect(yield* heads()).toEqual(['h1', 'h2']);
+      // A client backs the object with the snapshot, so it keeps the object's meta.
+      const [snapshot] = yield* store.querySnapshotsJSON([object.recordId!]);
+      expect((snapshot.snapshot as any)[ATTR_META]).toEqual({ keys: [], tags: ['t'] });
 
-      // A document that now holds another object ships its state without bytes.
-      yield* store.update([{ ...object, state: { heads: ['h3'], structure: '{"data":{"value":"beta"}}' } }]);
-      expect(yield* store.queryStates([object.recordId!])).toEqual([
-        { recordId: object.recordId!, heads: ['h3'], structure: '{"data":{"value":"beta"}}' },
-      ]);
-
-      // An object that grew past the size cap, or moved to a branch document, ships no state.
-      yield* store.update([{ ...object, state: undefined }]);
-      expect(yield* store.queryStates([object.recordId!])).toEqual([]);
+      // An object that grew past the size cap, shares its document, or moved to a branch has no heads.
+      yield* store.update([{ ...object, heads: undefined }]);
+      expect(yield* heads()).toBe(null);
     }, Effect.provide(TestLayer)),
   );
 

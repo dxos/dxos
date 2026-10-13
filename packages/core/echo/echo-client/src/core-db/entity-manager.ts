@@ -702,7 +702,7 @@ export class EntityManager implements IDatabaseBinding {
     }
 
     const query = Query.select(Filter.id(...(ids as EntityId[])))
-      .options({ lazy: true, followVersions: true, deleted: 'include' })
+      .options({ followVersions: true, deleted: 'include' })
       .from(Scope.space({ id: this._spaceId }));
     const cleanup = subscribeStream(
       this._runtime,
@@ -777,9 +777,7 @@ export class EntityManager implements IDatabaseBinding {
         return;
       }
 
-      const query = Query.select(Filter.id(...evict.map((core) => core.id)))
-        .options({ lazy: true })
-        .from(Scope.space({ id: this._spaceId }));
+      const query = Query.select(Filter.id(...evict.map((core) => core.id))).from(Scope.space({ id: this._spaceId }));
       const response = await runServiceCall(
         this._runtime,
         this._queryService['QueryService.execQuery']({

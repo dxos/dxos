@@ -2,21 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import { RawString, getHeads, load } from '@automerge/automerge';
+import { RawString, getHeads, hasHeads, init, loadIncremental } from '@automerge/automerge';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Context } from '@dxos/context';
-import {
-  type DatabaseDirectory,
-  EntityStructure,
-  SpaceDocVersion,
-  createIdFromSpaceKey,
-  decodeEntityStructure,
-} from '@dxos/echo-protocol';
+import { type DatabaseDirectory, EntityStructure, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
+import { objectStructureFromJson } from '@dxos/echo/internal';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { type IndexCursor } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
-import { DXN, PublicKey, SpaceId } from '@dxos/keys';
+import { DXN, type EntityId, PublicKey, SpaceId } from '@dxos/keys';
 
 import { AutomergeHost } from '../automerge/index.ts';
 import { createTestSqliteRuntime } from '../testing/index.ts';
@@ -109,7 +104,7 @@ describe('AutomergeDataSource', () => {
     expect(result.cursors[0].cursor).toBe(headsCodec.encode(getHeads(handle.doc()!)));
   });
 
-  test("ships an object with its document's bytes once storage holds the heads they were read at", async () => {
+  test('backs an object with the heads its JSON was read at once storage holds them', async () => {
     const host = await setupAutomergeHost();
     const handle = await createDatabaseDirectory(host, SpaceId.random(), {
       'obj-1': EntityStructure.makeObject({
@@ -124,12 +119,12 @@ describe('AutomergeDataSource', () => {
       doc.objects!['obj-1'].data.title = 'unsaved';
     });
 
-    // A client writes on top of the bytes, so they must not carry a change storage could still lose.
+    // A client writes at these heads against the stored changes, so they must be heads storage holds.
     const dataSource = new AutomergeDataSource(host);
     const unsaved = await EffectEx.runAndForwardErrors(dataSource.getChangedObjects(Context.default(), []));
     const unsavedObject = unsaved.objects.find((object) => object.data.id === 'obj-1');
     expect(unsavedObject).toBeDefined();
-    expect(unsavedObject?.state).toBeUndefined();
+    expect(unsavedObject?.heads).toBeUndefined();
 
     await host.flush(Context.default());
     const cursor: IndexCursor = {
@@ -141,21 +136,20 @@ describe('AutomergeDataSource', () => {
     };
     const { objects } = await EffectEx.runAndForwardErrors(dataSource.getChangedObjects(Context.default(), [cursor]));
     const object = objects.find((object) => object.data.id === 'obj-1');
-    invariant(object?.state?.bytes);
-    expect(object.state.heads).toEqual(getHeads(handle.doc()!));
-    const loaded = load<DatabaseDirectory>(object.state.bytes);
-    expect(getHeads(loaded)).toEqual(object.state.heads);
-    expect(loaded.objects?.['obj-1'].data.title).toBe('unsaved');
+    invariant(object?.heads);
+    expect(object.heads).toEqual(getHeads(handle.doc()!));
+    const stored = loadIncremental(init<DatabaseDirectory>(), await host.readStoredChanges(handle.documentId));
+    expect(hasHeads(stored, [...object.heads])).toBe(true);
 
-    const structure = decodeEntityStructure(object.state.structure, { makeRawString: (value) => new RawString(value) });
+    // The JSON is the object as the client shows it, bytes and raw strings included.
+    const structure = objectStructureFromJson(JSON.parse(JSON.stringify(object.data)));
     expect(structure.system?.type).toEqual(EntityStructure.makeObject({ type: TEST_TYPE, data: {} }).system?.type);
     expect(structure.data.title).toBe('unsaved');
     expect(structure.data.bytes).toEqual(new Uint8Array([1, 2, 3]));
-    expect(structure.data.body).toBeInstanceOf(RawString);
-    expect(structure.data.body.toString()).toBe('raw text');
+    expect(structure.data.body).toBe('raw text');
   });
 
-  test('ships no state for an object that shares its document or is over the size limits', async () => {
+  test('backs no object that shares its document, was merged away, or is over the size limit', async () => {
     const host = await setupAutomergeHost();
     const spaceId = SpaceId.random();
     await createDatabaseDirectory(host, spaceId, {
@@ -165,12 +159,15 @@ describe('AutomergeDataSource', () => {
     await createDatabaseDirectory(host, spaceId, {
       'obj-3': EntityStructure.makeObject({ type: TEST_TYPE, data: { body: new RawString('x'.repeat(70_000)) } }),
     });
+    const merged = EntityStructure.makeObject({ type: TEST_TYPE, data: { title: 'merged' } });
+    merged.system = { ...merged.system, mergedInto: 'obj-1' as EntityId };
+    await createDatabaseDirectory(host, spaceId, { 'obj-4': merged });
     await host.flush(Context.default());
 
     const dataSource = new AutomergeDataSource(host);
     const { objects } = await EffectEx.runAndForwardErrors(dataSource.getChangedObjects(Context.default(), []));
-    expect(objects).toHaveLength(3);
-    expect(objects.every((object) => object.state === undefined)).toBe(true);
+    expect(objects).toHaveLength(4);
+    expect(objects.every((object) => object.heads === undefined)).toBe(true);
   });
 
   test('returns documents with changed heads', async () => {

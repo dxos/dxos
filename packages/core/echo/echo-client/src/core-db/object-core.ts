@@ -71,7 +71,8 @@ export type ObjectCoreOptions = {
 /**
  * The index's copy of an object, backing its core until something needs the object's document: the
  * structure mounted as a document would hold it, so the core's paths are unchanged, the heads and
- * index stamp it was read at, and the passive handle holding the document's bytes at those heads.
+ * index stamp it was read at, and the passive handle holding the document's stored changes, which
+ * can be ahead of those heads.
  */
 export type ObjectSnapshot = {
   root: { objects: Record<string, EntityStructure> };
@@ -84,7 +85,7 @@ export type ObjectSnapshot = {
 /** The state an index row carries for an object, as `EntityManager.upsertSnapshot` takes it. */
 export type SnapshotState = Omit<ObjectSnapshot, 'root' | 'handle'> & {
   structure: EntityStructure;
-  /** The document's Automerge bytes at {@link ObjectSnapshot.heads}. */
+  /** The document's stored changes, which can be ahead of {@link ObjectSnapshot.heads}. */
   bytes: Uint8Array;
   /** The document the row was read from; checked against the space root's routing. */
   documentId: string;
@@ -400,6 +401,7 @@ export class ObjectCore {
    * Do not take into account mountPath.
    */
   change(changeFn: ChangeFn<any>, options?: A.ChangeOptions<any>): void {
+    const shownAt = !this.doc && !this.docHandle ? this.snapshot?.heads : undefined;
     // Before the semaphore, which is keyed on the handle activation binds.
     this.#activate();
     // Prevent recursive change calls.
@@ -418,8 +420,17 @@ export class ObjectCore {
       const docHandle = this.docHandle;
       invariant(docHandle);
       this.activeAt = performance.now();
+      // The index's copy showed the object at `shownAt`, and the stored changes just loaded can be ahead of
+      // it: the first write lands there, so it applies to what was shown and merges with what came after.
+      const doc = docHandle.doc();
+      const at =
+        shownAt && A.hasHeads(doc, [...shownAt]) && A.getHeads(doc).join() !== [...shownAt].sort().join()
+          ? [...shownAt]
+          : undefined;
       // No manual notification: the DB already processes the `change` event.
-      this.#writeAndRefresh(() => docHandle.change(changeFn, options));
+      this.#writeAndRefresh(() =>
+        at ? docHandle.changeAt(at, changeFn, options) : docHandle.change(changeFn, options),
+      );
     }
   }
 

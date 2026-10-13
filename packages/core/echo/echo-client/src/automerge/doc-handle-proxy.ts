@@ -237,7 +237,8 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
     this.emit('change', {
       handle: this,
       doc: this._doc,
-      patches: newHeads ? A.diff(this._doc, headsBefore, newHeads) : [],
+      // To the document's heads, not the change's: a change at older heads merges with what came after them.
+      patches: newHeads ? A.diff(this._doc, headsBefore, A.getHeads(this._doc)) : [],
       patchInfo: { before, after: this._doc, source: 'change' },
     });
     return newHeads ?? undefined;
@@ -278,7 +279,8 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
     }
     this.#passive = undefined;
     this.#loadedFromBytes = true;
-    this._doc = A.load<T>(passive.bytes);
+    // Stored chunks, a snapshot and the incremental changes after it, which `load` does not take in any order.
+    this._doc = A.loadIncremental<T>(A.init<T>(), passive.bytes);
     // The host holds these heads, so only changes made from here on are sent.
     this._lastSentHeads = A.getHeads(this._doc);
     // Usable at once, but not `whenReady` until the host's first send says it is current: the bytes

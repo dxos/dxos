@@ -713,15 +713,8 @@ export const QueryOptions = Schema.Struct({
   debugLabel: Schema.optional(Schema.String),
 
   /**
-   * Ship each document row's state, heads and version (`QueryResult.state`), so the client can back the
-   * result with the index's copy instead of loading its document. Set by the ECHO client on the queries it
-   * sends (see `EchoClientProps.lazyQueries`), not by callers.
-   */
-  lazy: Schema.optional(Schema.Boolean),
-
-  /**
-   * With `lazy`: a reactive query also re-sends when a row's version changes, not only when its rows or
-   * their order do. Set by the ECHO client on the query that keeps its index-backed objects current.
+   * A reactive query also re-sends when a row's version changes, not only when its rows or their order
+   * do. Set by the ECHO client on the query that keeps its index-backed objects current.
    */
   followVersions: Schema.optional(Schema.Boolean),
 });
@@ -745,9 +738,6 @@ const hasOuterOption = (query: Query, isSet: (options: QueryOptions) => boolean)
       return false;
   }
 };
-
-/** Whether the query returns index-backed live objects (see {@link QueryOptions.lazy}). */
-export const isLazyQuery = (query: Query): boolean => hasOuterOption(query, (options) => options.lazy === true);
 
 /** Whether a version change alone re-sends the query's rows (see {@link QueryOptions.followVersions}). */
 export const followsVersions = (query: Query): boolean =>
