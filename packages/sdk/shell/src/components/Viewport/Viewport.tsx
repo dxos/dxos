@@ -53,7 +53,13 @@ const ViewportRoot = ({
   });
   return (
     <ViewportProvider focusManaged={focusManaged} activeView={activeView} setActiveView={setActiveView}>
-      <div role='region' aria-live='polite' {...props} className={mx('w-full overflow-hidden', classNames)}>
+      {/* A flex column, so a view's Dialog.Body can take the height left over by its Footer and scroll. */}
+      <div
+        role='region'
+        aria-live='polite'
+        {...props}
+        className={mx('dx-grow flex flex-col w-full overflow-hidden', classNames)}
+      >
         {children}
       </div>
     </ViewportProvider>
@@ -69,7 +75,7 @@ type ViewportViewsProps = Util.ThemedClassName<Omit<ComponentPropsWithRef<'div'>
 const ViewportViews = ({ classNames, children, ...props }: ViewportViewsProps) => {
   const size = { inlineSize: `${Math.ceil(children.length) * 100}%` };
   return (
-    <div style={size} {...props} className={mx('flex', classNames)}>
+    <div style={size} {...props} className={mx('dx-grow flex', classNames)}>
       {children}
     </div>
   );
@@ -96,7 +102,7 @@ const ViewportView = forwardRef<HTMLDivElement, ViewportViewProps>(
       <section
         {...props}
         {...(!isActive && { 'aria-hidden': true })}
-        className={mx('min-w-0 flex-1 flex flex-col', isActive ? 'order-2' : 'order-4 invisible', classNames)}
+        className={mx('dx-grow flex flex-col', isActive ? 'order-2' : 'order-4 invisible', classNames)}
         ref={ref}
       >
         {children}

@@ -17,8 +17,7 @@ import {
 } from '@dxos/react-client/invitations';
 import * as Dialog from '@dxos/react-ui/Dialog';
 import * as Hooks from '@dxos/react-ui/Hooks';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import { mx } from '@dxos/ui-theme';
+import * as Typography from '@dxos/react-ui/Typography';
 
 import {
   type ActionMenuItem,
@@ -103,8 +102,6 @@ export const SpaceManager = (props: SpaceManagerProps) => {
   return <SpaceManagerImpl {...props} invitations={invitations} inviteActions={inviteActions} />;
 };
 
-const headingFragment = 'ps-3 pe-1 py-1 mb-1 font-medium';
-
 export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
   const {
     active,
@@ -114,6 +111,7 @@ export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
     inviteActions: propsInviteActions,
     invitations,
     showInactiveInvitations,
+    heading,
     SpaceMemberList: SpaceMemberListComponent = SpaceMemberList,
     InvitationList: InvitationListComponent = InvitationList,
   } = props;
@@ -143,24 +141,22 @@ export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
 
   return (
     <>
-      <ScrollArea.Root orientation='vertical' classNames='grow shrink basis-28 -mx-2'>
-        <ScrollArea.Viewport>
-          {!!visibleInvitations?.length && (
-            <>
-              <h3 className={mx(headingFragment, 'text-fg-muted')}>{t('invitation-list.heading')}</h3>
-              <InvitationListComponent
-                className='mb-2'
-                send={send}
-                invitations={visibleInvitations ?? []}
-                onClickRemove={(invitation) => invitation.cancel()}
-                createInvitationUrl={createInvitationUrl}
-              />
-              <h3 className={mx(headingFragment, 'text-fg-muted', 'mt-2')}>{t('space-member-list.heading')}</h3>
-            </>
-          )}
-          <SpaceMemberListComponent spaceKey={space.key} includeSelf />
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
+      <Dialog.Body gap='md'>
+        {heading}
+        {!!visibleInvitations?.length && (
+          <>
+            <Typography.Text tone='muted'>{t('invitation-list.heading')}</Typography.Text>
+            <InvitationListComponent
+              send={send}
+              invitations={visibleInvitations ?? []}
+              onClickRemove={(invitation) => invitation.cancel()}
+              createInvitationUrl={createInvitationUrl}
+            />
+            <Typography.Text tone='muted'>{t('space-member-list.heading')}</Typography.Text>
+          </>
+        )}
+        <SpaceMemberListComponent spaceKey={space.key} includeSelf />
+      </Dialog.Body>
       <Dialog.Footer>
         <BifurcatedAction
           disabled={!active}

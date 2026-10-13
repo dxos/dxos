@@ -8,6 +8,7 @@ import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { DeviceType, useHaloInvitations } from '@dxos/react-client/halo';
 import { type Invitation, Invitation_State, InvitationEncoder } from '@dxos/react-client/invitations';
+import * as Dialog from '@dxos/react-ui/Dialog';
 
 import { AgentConfig, type AgentFormProps, DeviceList, type DeviceListProps } from '../../../components/index.ts';
 import { type IdentityPanelStepProps } from '../IdentityPanelProps.ts';
@@ -52,6 +53,7 @@ export type IdentityActionChooserImplProps = IdentityActionChooserProps &
 export const IdentityActionChooserImpl = ({
   devices,
   connectionState,
+  heading,
   agentHostingEnabled,
   onClickAdd,
   onClickJoinExisting,
@@ -63,7 +65,8 @@ export const IdentityActionChooserImpl = ({
     (device) => device.profile?.type === DeviceType.AGENT_MANAGED && device.profile?.os?.toUpperCase() === 'EDGE',
   );
   return (
-    <div className='h-40 w-full overflow-y-auto'>
+    <Dialog.Body gap='md'>
+      {heading}
       <DeviceList
         devices={devices}
         connectionState={connectionState}
@@ -74,6 +77,6 @@ export const IdentityActionChooserImpl = ({
         onAgentDestroy={agentProps.onAgentDestroy!}
       />
       {!edgeDeviceAvailable && agentHostingEnabled && <AgentConfig {...(agentProps as AgentFormProps)} />}
-    </div>
+    </Dialog.Body>
   );
 };

@@ -92,6 +92,11 @@
     flex: 1 1 auto;
     min-height: 0;
   }
+  /* With no Footer below it, the Body closes the dialog with the same inset the dialog opens with above the Header. */
+  .dx-dialog-body:last-child,
+  .dx-dialog-body:has(+ .dx-dialog-footer:empty) {
+    padding-block-end: var(--dx-gap-size);
+  }
 
   /* The actions sit as far from the content above and the bottom edge below as from the sides. */
   .dx-dialog-footer {

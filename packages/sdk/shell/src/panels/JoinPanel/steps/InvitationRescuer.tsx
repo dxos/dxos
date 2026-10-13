@@ -8,8 +8,8 @@ import { Invitation_State } from '@dxos/react-client/invitations';
 import * as Button from '@dxos/react-ui/Button';
 import * as Dialog from '@dxos/react-ui/Dialog';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Typography from '@dxos/react-ui/Typography';
 
-import { InputLabel } from '../../../components/index.ts';
 import { translationKey } from '../../../translations.ts';
 import { type FailReason } from '../../../types/index.ts';
 import { type JoinStepProps } from '../JoinPanelProps.ts';
@@ -36,16 +36,17 @@ const InvitationActions = ({
   if (failReason) {
     return (
       <>
-        <InputLabel classNames='text-fg-muted'>
-          {t(
-            failReason === 'timeout'
-              ? 'timeout status label'
-              : failReason === 'cancelled'
-                ? 'cancelled status label'
-                : 'error status label',
-          )}
-        </InputLabel>
-        <div className='grow' />
+        <Dialog.Body>
+          <Typography.Text tone='muted'>
+            {t(
+              failReason === 'timeout'
+                ? 'timeout status label'
+                : failReason === 'cancelled'
+                  ? 'cancelled status label'
+                  : 'error status label',
+            )}
+          </Typography.Text>
+        </Dialog.Body>
         <Dialog.Footer>
           <Button.Root
             disabled={!active}
@@ -60,8 +61,9 @@ const InvitationActions = ({
   } else {
     return (
       <>
-        <InputLabel classNames='text-fg-muted'>{t('connecting-status.label')}</InputLabel>
-        <div className='grow' />
+        <Dialog.Body>
+          <Typography.Text tone='muted'>{t('connecting-status.label')}</Typography.Text>
+        </Dialog.Body>
         <Dialog.Footer>
           <Button.Root
             variant='ghost'
@@ -88,9 +90,9 @@ export const InvitationRescuer = (props: InvitationRescuerProps) => {
     <>
       {typeof invitationState === 'undefined' ? (
         <>
-          <div className='grow flex flex-col justify-center'>
-            <InputLabel classNames='text-fg-muted'>There was a problem joining the space</InputLabel>
-          </div>
+          <Dialog.Body>
+            <Typography.Text tone='muted'>There was a problem joining the space</Typography.Text>
+          </Dialog.Body>
           <Dialog.Footer>
             <Button.Root
               disabled={!active}

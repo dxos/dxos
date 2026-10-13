@@ -17,6 +17,7 @@ import { InvitationList, InvitationListItemImpl, SpaceMemberListImpl } from '../
 import { InvitationManager, type InvitationManagerProps } from '../../steps/index.ts';
 import { StorybookDialog } from '../../story-components/index.ts';
 import { inviteWithState } from '../../testing/fixtures/index.ts';
+import { translations } from '../../translations.ts';
 import { SpaceManagerImpl } from './SpaceManager.tsx';
 import { SpacePanelImpl } from './SpacePanel.tsx';
 import { type SpacePanelImplProps } from './SpacePanelProps.ts';
@@ -33,6 +34,9 @@ const meta = {
   title: 'sdk/shell/SpacePanel',
   component: SpacePanelImpl,
   decorators: [withTheme()],
+  parameters: {
+    translations,
+  },
 } satisfies Meta<typeof SpacePanelImpl>;
 
 export default meta;

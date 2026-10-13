@@ -11,10 +11,10 @@ import * as Avatar from '@dxos/react-ui/Avatar';
 import * as Button from '@dxos/react-ui/Button';
 import * as Dialog from '@dxos/react-ui/Dialog';
 import * as Hooks from '@dxos/react-ui/Hooks';
-import { mx } from '@dxos/ui-theme';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Typography from '@dxos/react-ui/Typography';
 import { hexToFallback } from '@dxos/util';
 
-import { InputLabel } from '../../../components/index.ts';
 import { translationKey } from '../../../translations.ts';
 import { profileString } from '../../../util/index.ts';
 import { type JoinPanelMode, type JoinStepProps } from '../JoinPanelProps.ts';
@@ -47,18 +47,20 @@ export const IdentityAdded = (props: IdentityAddedProps) => {
 
   return (
     <>
-      <InputLabel>{t('identity-added.label')}</InputLabel>
-      <div className='grow flex flex-col items-center justify-center text-center gap-2'>
-        <Avatar.Root
-          aria-labelledby={labelId}
-          status='active'
-          hue={Avatar.toAvatarHue(profileString(addedIdentity, 'hue') || fallbackValue.hue)}
-          fallback={profileString(addedIdentity, 'emoji') || fallbackValue.emoji}
-        />
-        <span id={labelId} className={mx('text-lg truncate', !addedIdentity?.profile?.displayName && 'font-mono')}>
-          {displayName}
-        </span>
-      </div>
+      <Dialog.Body gap='md'>
+        <Typography.Text tone='muted'>{t('identity-added.label')}</Typography.Text>
+        <Layout.Flex gap='sm' align='center'>
+          <Avatar.Root
+            aria-labelledby={labelId}
+            status='active'
+            hue={Avatar.toAvatarHue(profileString(addedIdentity, 'hue') || fallbackValue.hue)}
+            fallback={profileString(addedIdentity, 'emoji') || fallbackValue.emoji}
+          />
+          <Typography.Text asChild truncate mono={!addedIdentity?.profile?.displayName}>
+            <span id={labelId}>{displayName}</span>
+          </Typography.Text>
+        </Layout.Flex>
+      </Dialog.Body>
       <Dialog.Footer>
         {mode === 'halo-only' ? (
           doneActionParent ? (

@@ -10,9 +10,10 @@ import * as Dialog from '@dxos/react-ui/Dialog';
 import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
+import * as Typography from '@dxos/react-ui/Typography';
 import { hexToEmoji } from '@dxos/util';
 
-import { Emoji, InputLabel, Label } from '../../../components/index.ts';
+import { Emoji } from '../../../components/index.ts';
 import { translationKey } from '../../../translations.ts';
 import { type JoinStepProps } from '../JoinPanelProps.ts';
 
@@ -53,29 +54,16 @@ export const InvitationAuthenticator = ({
 
   return (
     <>
-      <div className='grow flex flex-col justify-center gap-4'>
-        <Field.Root
-          {...(failed && {
-            validationValence: 'error',
-          })}
-        >
+      <Dialog.Body gap='md'>
+        <Field.Root {...(failed && { validationValence: 'error' })}>
           {authMethod === Invitation_AuthMethod.SHARED_SECRET ? (
-            <Field.Label asChild>
-              <InputLabel>{t('auth-code-input.label')}</InputLabel>
-            </Field.Label>
+            <Field.Label>{t('auth-code-input.label')}</Field.Label>
           ) : (
-            <>
-              <Field.Label>
-                <InputLabel classNames='text-fg-muted'>{t('authenticating.label')}</InputLabel>
-              </Field.Label>
-              <div className='grow' />
-            </>
+            <Typography.Text tone='muted'>{t('authenticating.label')}</Typography.Text>
           )}
           {authMethod === Invitation_AuthMethod.SHARED_SECRET && (
             <Input.Pin
               {...{
-                // The panel centres its content; the pin input's cell row otherwise starts at the inline start.
-                'classNames': 'justify-center',
                 disabled,
                 'length': pinLength,
                 'inputMode': 'numeric',
@@ -89,18 +77,15 @@ export const InvitationAuthenticator = ({
               }}
             />
           )}
-          {failed && <Field.ErrorText classNames='text-center'>{t('failed-to-authenticate.message')}</Field.ErrorText>}
+          {failed && <Field.ErrorText>{t('failed-to-authenticate.message')}</Field.ErrorText>}
         </Field.Root>
-
         {invitationId && authMethod === Invitation_AuthMethod.SHARED_SECRET && (
           <>
-            <Label>{t('auth-other-device-emoji.message')}</Label>
-            <div className='flex justify-center'>
-              <Emoji text={hexToEmoji(invitationId)} />
-            </div>
+            <Typography.Text tone='muted'>{t('auth-other-device-emoji.message')}</Typography.Text>
+            <Emoji text={hexToEmoji(invitationId)} />
           </>
         )}
-      </div>
+      </Dialog.Body>
       <Dialog.Footer>
         <Button.Root
           variant='ghost'

@@ -15,7 +15,7 @@ import { translationKey } from '../../translations.ts';
 
 // TODO(burdon): Move to react-ui.
 
-export type LargeButtonProps = ComponentProps<typeof Button.Root> & {
+type LargeButtonProps = ComponentProps<typeof Button.Root> & {
   isFull?: boolean;
 };
 
@@ -73,7 +73,7 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
   const { t } = Hooks.useTranslation(translationKey);
 
   return (
-    <div className={mx('mt-2 flex gap-px items-center', isFull && 'w-full')}>
+    <div className={mx('flex gap-px items-center', isFull && 'w-full')}>
       <Button.Root
         {...rest}
         classNames={['h-11 flex-1 min-w-0 flex gap-2 rounded-ie-none', classNames]}
@@ -129,21 +129,5 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
         </Menu.Content>
       </Menu.Root>
     </div>
-  );
-});
-
-//
-// Action
-//
-
-/**
- * @deprecated Use Button directly.
- */
-export const Action = forwardRef<HTMLButtonElement, LargeButtonProps>((props, forwardedRef) => {
-  const { children, classNames, variant, isFull = true, ...rest } = props;
-  return (
-    <Button.Root {...rest} classNames={[isFull && 'w-full', classNames]} variant={variant} ref={forwardedRef}>
-      {children}
-    </Button.Root>
   );
 });

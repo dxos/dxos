@@ -10,10 +10,11 @@ import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials
 import { useClient } from '@dxos/react-client';
 import * as Button from '@dxos/react-ui/Button';
 import * as Dialog from '@dxos/react-ui/Dialog';
+import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
 import { type MaybePromise } from '@dxos/util';
 
-import { InputLabel, TextInput } from '../../../components/index.ts';
 import { translationKey } from '../../../translations.ts';
 import { type JoinStepProps } from '../JoinPanelProps.ts';
 
@@ -80,16 +81,18 @@ export const IdentityInputImpl = ({ method, active, validationMessage, onConfirm
 
   return (
     <>
-      <div className='grow flex flex-col justify-center'>
-        <TextInput
-          {...{ validationMessage }}
-          label={<InputLabel>{t(isRecover ? 'recover-identity-input.label' : 'new-identity-input.label')}</InputLabel>}
-          disabled={disabled}
-          data-testid='identity-input'
-          placeholder={isRecover ? t('recovery-code.placeholder') : t('display-name.placeholder')}
-          onChange={({ target: { value } }) => setInputValue(value)}
-        />
-      </div>
+      <Dialog.Body>
+        <Field.Root>
+          <Field.Label>{t(isRecover ? 'recover-identity-input.label' : 'new-identity-input.label')}</Field.Label>
+          <Input.Root
+            disabled={disabled}
+            data-testid='identity-input'
+            placeholder={isRecover ? t('recovery-code.placeholder') : t('display-name.placeholder')}
+            onChange={({ target: { value } }) => setInputValue(value)}
+          />
+          {validationMessage && <Field.ErrorText>{validationMessage}</Field.ErrorText>}
+        </Field.Root>
+      </Dialog.Body>
       <Dialog.Footer>
         {/* TODO(wittjosiah): This disables returning to deprecated identity creation flow.
         <Button.Root

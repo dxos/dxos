@@ -7,9 +7,10 @@ import React, { cloneElement, useEffect, useState } from 'react';
 import { log } from '@dxos/log';
 import * as Button from '@dxos/react-ui/Button';
 import * as Dialog from '@dxos/react-ui/Dialog';
+import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
 
-import { InputLabel, TextInput } from '../../../components/index.ts';
 import { translationKey } from '../../../translations.ts';
 import { type JoinPanelProps, type JoinStepProps } from '../JoinPanelProps.ts';
 
@@ -67,18 +68,20 @@ export const InvitationInput = (props: InvitationInputProps) => {
 
   return (
     <>
-      <div className='grow flex flex-col justify-center'>
-        <TextInput
-          label={<InputLabel>{t('invitation-input.label')}</InputLabel>}
-          placeholder={t('invitation-input.placeholder')}
-          disabled={disabled}
-          value={inputValue}
-          onChange={({ target: { value } }) => setInputValue(value)}
-          data-autofocus={`inputting${Kind}InvitationCode`}
-          data-testid={`${Kind.toLowerCase()}-invitation-input`}
-          onKeyUp={({ key }) => key === 'Enter' && handleNext()}
-        />
-      </div>
+      <Dialog.Body>
+        <Field.Root>
+          <Field.Label>{t('invitation-input.label')}</Field.Label>
+          <Input.Root
+            placeholder={t('invitation-input.placeholder')}
+            disabled={disabled}
+            value={inputValue}
+            onChange={({ target: { value } }) => setInputValue(value)}
+            data-autofocus={`inputting${Kind}InvitationCode`}
+            data-testid={`${Kind.toLowerCase()}-invitation-input`}
+            onKeyUp={({ key }) => key === 'Enter' && handleNext()}
+          />
+        </Field.Root>
+      </Dialog.Body>
       <Dialog.Footer>
         {/* TODO(wittjosiah): This disables returning to deprecated identity creation flow. */}
         {Kind === 'Halo'

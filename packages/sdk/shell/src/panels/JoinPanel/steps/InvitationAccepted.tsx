@@ -7,6 +7,7 @@ import React, { cloneElement } from 'react';
 import * as Button from '@dxos/react-ui/Button';
 import * as Dialog from '@dxos/react-ui/Dialog';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Typography from '@dxos/react-ui/Typography';
 
 import { translationKey } from '../../../translations.ts';
 import { type JoinStepProps } from '../JoinPanelProps.ts';
@@ -36,9 +37,9 @@ export const InvitationAccepted = (props: InvitationAcceptedProps) => {
 
   return (
     <>
-      <div className='grow flex flex-col justify-center'>
-        <p className='text-center text-sm font-normal'>{t('welcome.message')}</p>
-      </div>
+      <Dialog.Body>
+        <Typography.Text>{t('welcome.message')}</Typography.Text>
+      </Dialog.Body>
       <Dialog.Footer>{doneActionParent ? cloneElement(doneActionParent, {}, doneAction) : doneAction}</Dialog.Footer>
     </>
   );
