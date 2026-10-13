@@ -231,6 +231,12 @@ describe('Interview', () => {
         // A first name two people share names neither.
         yield* Database.add(Person.make({ fullName: 'Dmytro Kovalenko' }));
         expect((yield* Operation.invoke(MemoryOperation.ResolveEntity, { name: 'Dmytro' })).created).toBe(true);
+
+        // A full name outranks someone else's nickname.
+        const otherDima = yield* Database.add(Person.make({ fullName: 'Dima' }));
+        expect((yield* Operation.invoke(MemoryOperation.ResolveEntity, { name: 'Dima' })).entity.uri).toBe(
+          Ref.make(otherDima).uri,
+        );
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -252,6 +258,16 @@ describe('Interview', () => {
         const words = yield* Operation.invoke(MemoryOperation.Recall, { subject: rich, query: 'york based' });
         expect(words.queryMatched).toBeUndefined();
         expect(words.memories.map(({ content }) => content)).toEqual(['Rich is based in New York.']);
+
+        // Words split the same way on both sides, and a query word may start a longer word but not sit inside one.
+        for (const query of ['new-york', 'NEW YORK', 'bas']) {
+          expect(
+            (yield* Operation.invoke(MemoryOperation.Recall, { subject: rich, query })).queryMatched,
+          ).toBeUndefined();
+        }
+        expect((yield* Operation.invoke(MemoryOperation.Recall, { subject: rich, query: 'ork' })).queryMatched).toBe(
+          false,
+        );
 
         const fallback = yield* Operation.invoke(MemoryOperation.Recall, { subject: rich, query: 'location' });
         expect(fallback.queryMatched).toBe(false);

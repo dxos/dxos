@@ -61,16 +61,17 @@ const sourceNames = Effect.fnUntraced(function* (facts: readonly RDF.Fact[]) {
   return names;
 });
 
-/** The words of a query, each matched on its own: a phrase rarely appears verbatim in a fact. */
-const queryWords = (query: string | undefined): string[] =>
-  (query ?? '')
+/** Words, split the same way for a query and the text it searches; `#` and `@` stay, so handles and refs match. */
+const words = (text: string | undefined): string[] =>
+  (text ?? '')
     .toLowerCase()
-    .split(/[^\p{L}\p{N}#@._-]+/u)
+    .split(/[^\p{L}\p{N}#@]+/u)
     .filter((word) => word.length > 0);
 
-const matches = (text: string, words: readonly string[]): boolean => {
-  const haystack = text.toLowerCase();
-  return words.every((word) => haystack.includes(word));
+/** Whether every query word starts a word of the text: "migration" finds "migrations", "Ann" does not find "Joanne". */
+const matches = (text: string, query: readonly string[]): boolean => {
+  const textWords = words(text);
+  return query.every((word) => textWords.some((textWord) => textWord.startsWith(word)));
 };
 
 const handler: Operation.WithHandler<typeof MemoryOperation.Recall> = MemoryOperation.Recall.pipe(
@@ -99,14 +100,14 @@ const handler: Operation.WithHandler<typeof MemoryOperation.Recall> = MemoryOper
         })
         .sort((left, right) => right.attribution.generatedAtTime.localeCompare(left.attribution.generatedAtTime));
 
-      const words = queryWords(query);
-      const matchedMemories = activeMemories.filter((memory) => matches(memory.content, words));
+      const queryWords = words(query);
+      const matchedMemories = activeMemories.filter((memory) => matches(memory.content, queryWords));
       const matchedFacts = subjectFacts.filter((fact) =>
-        matches(`${BrainService.factText(fact)} ${fact.assertion.quote ?? ''}`, words),
+        matches(`${BrainService.factText(fact)} ${fact.assertion.quote ?? ''}`, queryWords),
       );
       // A query rarely uses the words a fact was stored with ("location" for "is in Bangkok"): when it matches
       // nothing, everything about the subject is the better answer than none.
-      const queryMatched = words.length === 0 || matchedMemories.length > 0 || matchedFacts.length > 0;
+      const queryMatched = queryWords.length === 0 || matchedMemories.length > 0 || matchedFacts.length > 0;
       const memories = (queryMatched ? matchedMemories : activeMemories).slice(0, limit ?? undefined);
       const facts = (queryMatched ? matchedFacts : subjectFacts).slice(0, limit ?? undefined);
       const names = yield* sourceNames(facts);
