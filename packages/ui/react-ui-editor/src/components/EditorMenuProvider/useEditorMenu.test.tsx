@@ -64,6 +64,9 @@ const type = (view: EditorView, text: string) => {
   }
 };
 
+const press = (view: EditorView, key: string) =>
+  view.contentDOM.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+
 describe('useEditorMenu', () => {
   beforeAll(() => {
     Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', true);
@@ -82,6 +85,17 @@ describe('useEditorMenu', () => {
     await act(async () => type(view, 'x and more'));
     await vi.waitFor(() => expect(labels()).toEqual(['Add object']));
     expect(isOpen()).toBe(true);
+  });
+
+  test('Enter picks the highlighted row in place of a multi-word query', async ({ expect }) => {
+    const { view, labels } = await mountMenuEditor();
+    await act(async () => type(view, '@hello w'));
+    await vi.waitFor(() => expect(labels()).toEqual(['Add object', 'Hello world']));
+
+    await act(async () => press(view, 'ArrowDown'));
+    await act(async () => press(view, 'Enter'));
+    expect(view.state.doc.toString()).toBe('Hello world');
+    expect(view.state.field(popoverStateField)).toBeNull();
   });
 
   test('moving the cursor out of a multi-word query ends it', async ({ expect }) => {
