@@ -158,13 +158,6 @@ export const HaloInvitationAuthenticatorFailed: Story = {
   },
 };
 
-export const HaloInvitationAccepted: Story = {
-  args: {
-    mode: 'halo-only',
-    activeView: 'halo-invitation-accepted',
-  },
-};
-
 export const IdentityAdded: Story = {
   args: {
     mode: 'halo-only',
@@ -206,12 +199,5 @@ export const SpaceInvitationAuthenticator: Story = {
     const pin = middle(cells.getBoundingClientRect());
     const frame = middle(body.getBoundingClientRect());
     await expect(Math.abs(pin.x - frame.x)).toBeLessThan(2);
-  },
-};
-
-export const SpaceInvitationAccepted: Story = {
-  args: {
-    mode: 'halo-only',
-    activeView: 'space-invitation-accepted',
   },
 };

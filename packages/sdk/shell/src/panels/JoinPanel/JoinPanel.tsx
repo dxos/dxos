@@ -41,7 +41,6 @@ export const JoinPanelImpl = ({
   send,
   onExit,
   onHaloDone,
-  // onSpaceDone,
   exitActionParent,
   doneActionParent,
   onHaloInvitationCancel,
@@ -114,17 +113,6 @@ export const JoinPanelImpl = ({
               {...(failed.has('Halo') && { failed: true })}
             />
           </Viewport.View>
-          {/* <Viewport.View id='halo-invitation-accepted'>
-            <InvitationAccepted
-              {...{
-                send,
-                Kind: 'Halo',
-                active: activeView === 'halo-invitation-accepted',
-                doneActionParent,
-                onDone: onHaloDone,
-              }}
-            />
-          </Viewport.View> */}
           <Viewport.View id='identity-added'>
             <IdentityAdded
               {...{ send, mode, active: activeView === 'identity-added', doneActionParent, onDone: onHaloDone }}
@@ -163,17 +151,6 @@ export const JoinPanelImpl = ({
               {...(failed.has('Space') && { failed: true })}
             />
           </Viewport.View>
-          {/* <Viewport.View id='space-invitation-accepted'>
-            <InvitationAccepted
-              {...{
-                send,
-                Kind: 'Space',
-                active: activeView === 'space-invitation-accepted',
-                doneActionParent,
-                onDone: onSpaceDone,
-              }}
-            />
-          </Viewport.View> */}
         </Viewport.Views>
       </Viewport.Root>
     </>
