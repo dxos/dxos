@@ -153,16 +153,18 @@ op createAgent
 ```mdl
 op ensureIdentity
   key: org.dxos.operation.agent.ensureIdentity
-  desc: Gives the agent its own identity on EDGE and makes the caller its owner.
+  desc: Gives the agent its own identity and default space on EDGE, makes the caller its owner and puts them in that space.
   input:
     agent: Ref<Agent>
   output: { provisioned: boolean, identityDid?: string }
-  effects: [echo:write, net:edge]
+  effects: [echo:write, net:edge, halo:write]
   requires: [Database.Service, Capability.Service]
   note: |
-    `POST /compute/brain { agent, homeSpaceId, label }`: EDGE mints the brain's self-owned HALO identity and an
-    `AgentAdmin` credential (role OWNER) for the caller. The agent takes the brain's DID, and the credential is
-    written to the caller's HALO. An agent with a DID already is left alone; without an EDGE client (a headless
+    `POST /compute/brain { agent, homeSpaceId, label }`: EDGE mints the brain's self-owned HALO identity, its
+    default space (owned by that identity, named after the agent), an `AgentAdmin` credential (role OWNER) for the
+    caller and a `SpaceMember` credential (role ADMIN) admitting the caller to the default space. The agent takes
+    the brain's DID, and both credentials are written to the caller's HALO; the `SpaceMember` there is what makes
+    the client join the space. An agent with a DID already is left alone; without an EDGE client (a headless
     host) or when EDGE refuses, nothing changes and the agent works as one without an identity.
 ```
 
