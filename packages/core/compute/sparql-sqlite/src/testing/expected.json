@@ -1,0 +1,174 @@
+{
+  "facts:1000": {
+    "Q1_lookup": {
+      "rows": 10,
+      "checksum": "42549c7a"
+    },
+    "Q2_entity": {
+      "rows": 10,
+      "checksum": "7e2477f9"
+    },
+    "Q3_filtered": {
+      "rows": 0,
+      "checksum": "811c9dc5"
+    },
+    "Q4_asof": {
+      "rows": 8,
+      "checksum": "917afd3a"
+    },
+    "Q5_aggregate": {
+      "rows": 10,
+      "checksum": "68fdf386"
+    },
+    "Q6_join": {
+      "rows": 9,
+      "checksum": "7d10706c"
+    },
+    "Q8_text": {
+      "rows": 11,
+      "checksum": "88bb2934"
+    },
+    "Q9_optional": {
+      "rows": 4,
+      "checksum": "922dd06a"
+    },
+    "Q10_count": {
+      "rows": 1,
+      "checksum": "6f2c3e45"
+    }
+  },
+  "facts:10000": {
+    "Q1_lookup": {
+      "rows": 10,
+      "checksum": "42549c7a"
+    },
+    "Q2_entity": {
+      "rows": 163,
+      "checksum": "ee2e2aa7"
+    },
+    "Q3_filtered": {
+      "rows": 114,
+      "checksum": "e6dc6eaf"
+    },
+    "Q4_asof": {
+      "rows": 10,
+      "checksum": "ba487f6a"
+    },
+    "Q5_aggregate": {
+      "rows": 10,
+      "checksum": "0392dde8"
+    },
+    "Q6_join": {
+      "rows": 351,
+      "checksum": "3d68f645"
+    },
+    "Q8_text": {
+      "rows": 116,
+      "checksum": "78012a5f"
+    },
+    "Q9_optional": {
+      "rows": 40,
+      "checksum": "b54aca3b"
+    },
+    "Q10_count": {
+      "rows": 1,
+      "checksum": "b9443bd0"
+    }
+  },
+  "code:10000": {
+    "Q7_path": {
+      "rows": 1,
+      "checksum": "b5ad06ba"
+    }
+  },
+  "probes": {
+    "bgp_star": {
+      "rows": 28,
+      "checksum": "e0bb2ce1"
+    },
+    "optional": {
+      "rows": 28,
+      "checksum": "413d31db"
+    },
+    "union": {
+      "rows": 13,
+      "checksum": "a0ea9959"
+    },
+    "minus": {
+      "rows": 24,
+      "checksum": "f85e12a8"
+    },
+    "not_exists": {
+      "rows": 24,
+      "checksum": "f85e12a8"
+    },
+    "filter_regex": {
+      "rows": 1,
+      "checksum": "6adab46f"
+    },
+    "filter_lang_str": {
+      "rows": 98,
+      "checksum": "0ff3d75c"
+    },
+    "filter_numeric": {
+      "rows": 91,
+      "checksum": "7b18eac0"
+    },
+    "filter_date": {
+      "rows": 288,
+      "checksum": "3f6b7961"
+    },
+    "bind_concat": {
+      "rows": 8,
+      "checksum": "e389b4df"
+    },
+    "values": {
+      "rows": 36,
+      "checksum": "ab2aeef4"
+    },
+    "agg_having": {
+      "rows": 1,
+      "checksum": "4bae9fe9"
+    },
+    "agg_group_concat": {
+      "rows": 1,
+      "checksum": "9e547fdc"
+    },
+    "subquery_limit": {
+      "rows": 3,
+      "checksum": "2d6bc32d"
+    },
+    "order_offset": {
+      "rows": 5,
+      "checksum": "369a2884"
+    },
+    "path_seq": {
+      "rows": 1,
+      "checksum": "b77c60e6"
+    },
+    "path_alt_star": {
+      "rows": 86,
+      "checksum": "ba5f1fbb"
+    },
+    "graph_named": {
+      "rows": 0,
+      "checksum": "811c9dc5"
+    },
+    "var_predicate": {
+      "rows": 1,
+      "checksum": "aee9020c"
+    },
+    "exists_count": {
+      "rows": 1,
+      "checksum": "a62e6aae"
+    },
+    "file_path_unused": {
+      "rows": 0,
+      "checksum": "811c9dc5"
+    },
+    "unbound_iri": {
+      "rows": 0,
+      "checksum": "811c9dc5"
+    }
+  }
+}
