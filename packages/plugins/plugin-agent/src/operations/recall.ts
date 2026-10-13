@@ -90,6 +90,7 @@ const handler: Operation.WithHandler<typeof MemoryOperation.Recall> = MemoryOper
           kind: memory.kind,
           origin: memory.origin,
           observedAt: memory.observedAt,
+          ...(memory.source ? { source: memory.source } : {}),
         })),
         facts: facts.map((fact) => ({
           fact: BrainService.factText(fact),

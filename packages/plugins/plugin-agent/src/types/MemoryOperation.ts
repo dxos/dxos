@@ -117,6 +117,7 @@ export const RecalledMemory = Schema.Struct({
   kind: Knowledge.Kind,
   origin: Knowledge.Origin,
   observedAt: Schema.String,
+  source: Schema.optional(Schema.String.annotate({ description: 'URI of the message or chat it came from.' })),
 });
 
 export const RecalledGoal = Schema.Struct({
