@@ -158,13 +158,15 @@ describe('compute projection', () => {
     expect(model.edges.length).toBe(edges - 1);
   });
 
-  test('a shape whose compute node is gone keeps drawing, as while a delete is in flight', ({ expect }) => {
-    const { model, update, scene, nodeOf, computeIdOf } = setup();
+  test('a shape whose compute node is gone keeps drawing, and still deletes', ({ expect }) => {
+    const { model, update, projection, scene, nodeOf, computeIdOf } = setup();
     const gpt = nodeOf('gpt');
     // A peer's delete (or the projection's own, before the shape goes) removes the compute node first.
     model.removeNodes([computeIdOf('gpt')]);
     update.emit();
     expect(scene().nodes[gpt.id]?.type).toBe('gpt');
+    projection.apply({ kind: 'delete', ids: [gpt.id] });
+    expect(scene().nodes[gpt.id]).toBeUndefined();
   });
 
   test('restoring a snapshot brings the compute graph back with it', ({ expect }) => {
