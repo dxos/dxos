@@ -49,6 +49,8 @@ export type SceneViewContextValue = {
   capabilities: Capabilities;
   /** The scene is only looked at: the parts that edit it (selection frame, ports, actions, properties) hide. */
   readonly: boolean;
+  /** Toggles `readonly`; absent when the host does not offer the toggle. */
+  onReadonlyChange?: (readonly: boolean) => void;
   nodeRegistry: NodeRegistry;
   linkRegistry: LinkRegistry;
 

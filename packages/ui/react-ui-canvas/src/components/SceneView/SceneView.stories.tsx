@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
@@ -51,24 +51,29 @@ type EditorProps = {
   panels?: PanelMode;
 };
 
-const Editor = ({ store, root, liveDepth, readonly, lattice, panels }: EditorProps) => (
-  <SceneView.Root
-    store={store}
-    root={root}
-    readonly={readonly}
-    panels={panels}
-    createProjection={lattice ? createLatticeProjection : undefined}
-  >
-    <SceneView.Canvas liveDepth={liveDepth} />
-    <SceneView.Navigation />
-    <SceneView.Actions />
-    <SceneView.Debug />
-    <SceneView.Palette />
-    <SceneView.Properties />
-    <SceneView.Layers />
-    <SceneView.About />
-  </SceneView.Root>
-);
+const Editor = ({ store, root, liveDepth, readonly: initialReadonly = false, lattice, panels }: EditorProps) => {
+  // The arg is where the view starts; the palette's toggle changes it from there.
+  const [readonly, setReadonly] = useState(initialReadonly);
+  return (
+    <SceneView.Root
+      store={store}
+      root={root}
+      readonly={readonly}
+      onReadonlyChange={setReadonly}
+      panels={panels}
+      createProjection={lattice ? createLatticeProjection : undefined}
+    >
+      <SceneView.Canvas liveDepth={liveDepth} />
+      <SceneView.Navigation />
+      <SceneView.Actions />
+      <SceneView.Debug />
+      <SceneView.Palette />
+      <SceneView.Properties />
+      <SceneView.Layers />
+      <SceneView.About />
+    </SceneView.Root>
+  );
+};
 
 /** One square centred on the origin: something to select and style straight away. */
 const createSquareTree = () => {
@@ -291,6 +296,22 @@ export const Nested: Story = {
 /** The same scene to look at: select, pan, zoom and drill, but no handle, port, tool or key changes it. */
 export const Readonly: Story = {
   args: { depth: 1, liveDepth: 1, readonly: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // 1. Read-only, the palette offers only select and pan, and there is no action bar.
+    const toggle = await canvas.findByTestId('palette-readonly');
+    await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+    await expect(canvas.queryByTestId('canvas-actions')).toBeNull();
+
+    // 2. The toggle turns editing on: the action bar appears.
+    await userEvent.click(toggle);
+    await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+    await expect(await canvas.findByTestId('canvas-actions')).toBeVisible();
+
+    // 3. And back to read-only.
+    await userEvent.click(toggle);
+    await waitFor(() => expect(canvas.queryByTestId('canvas-actions')).toBeNull());
+  },
 };
 
 /** A three-level model, a box per class: drill into a subsystem's portal to open its own. */

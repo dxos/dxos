@@ -89,6 +89,10 @@ export type PaletteProps = {
   collapse?: 'auto' | boolean;
   /** How a folded group lists its tools: one per row with its name (the default), or a grid of icons. */
   flyout?: 'list' | 'grid';
+  /** The view is only looked at; shown on the toggle when `onReadonlyChange` is given. */
+  readonly?: boolean;
+  /** Offered, the rail ends with a toggle between looking at the scene and editing it. */
+  onReadonlyChange?: (readonly: boolean) => void;
   onToolChange: (tool: Tool) => void;
 };
 
@@ -137,6 +141,8 @@ export const Palette = ({
   capabilities,
   collapse = 'auto',
   flyout = 'list',
+  readonly = false,
+  onReadonlyChange,
   onToolChange,
 }: PaletteProps) => {
   const ref = useRef<HTMLDivElement>(null);
@@ -167,6 +173,20 @@ export const Palette = ({
             ))}
           </div>
         ),
+      )}
+      {onReadonlyChange && (
+        <div className='flex flex-col p-1'>
+          <Button.Root
+            variant='ghost'
+            iconOnly
+            icon={readonly ? 'ph--lock-simple--regular' : 'ph--lock-simple-open--regular'}
+            label={readonly ? 'Read-only: click to edit' : 'Editing: click to make read-only'}
+            classNames={mx(readonly && 'bg-primary-500/20')}
+            aria-pressed={readonly}
+            data-testid='palette-readonly'
+            onClick={() => onReadonlyChange(!readonly)}
+          />
+        </div>
       )}
     </div>
   );

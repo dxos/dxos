@@ -85,6 +85,10 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   // and shows the drawing alone: no palette and no panels.
   const section = role === AppSurface.Section.role;
   const readonly = (viewReadonly ?? record?.readonly ?? false) || section;
+  const handleReadonlyChange = useCallback(
+    (readonly: boolean) => updateViewState((state) => ({ ...state, readonly })),
+    [updateViewState],
+  );
   const handleCameraChange = useCallback(
     (camera: Camera) => updateViewState((state) => ({ ...state, camera })),
     [updateViewState],
@@ -155,6 +159,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
               createProjection={lattice ? createLatticeProjection : undefined}
               grid={record?.grid}
               readonly={readonly}
+              onReadonlyChange={section ? undefined : handleReadonlyChange}
               initialCamera={savedCamera}
               onCameraChange={handleCameraChange}
               initialDisplay={{ snap, guides, fit }}

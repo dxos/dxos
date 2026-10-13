@@ -158,6 +158,8 @@ export type SceneViewRootProps = Util.ThemedClassName<{
    * whatever the projection would allow.
    */
   readonly?: boolean;
+  /** Called when the palette's read-only toggle is pressed; the toggle shows only when given, as the host owns `readonly`. */
+  onReadonlyChange?: (readonly: boolean) => void;
   /** Where the properties and layers panels sit: docked in a column beside the canvas, or floating over it. */
   panels?: PanelMode;
   children?: ReactNode;
@@ -179,6 +181,7 @@ const SceneViewRoot = ({
   grid = DEFAULT_GRID,
   margin = DEFAULT_MARGIN,
   readonly = false,
+  onReadonlyChange,
   panels = 'docked',
   children,
 }: SceneViewRootProps) => {
@@ -487,12 +490,16 @@ const SceneViewRoot = ({
     snapMinor,
   });
 
-  // A gesture begun before the view turned read-only is dropped, not committed on release.
+  // A gesture begun before the view turned read-only is dropped, not committed on release, and a drawing tool gives way
+  // to select, since read-only offers only select and pan.
   useEffect(() => {
     if (readonly) {
       cancelDrag();
+      if (registry.get(atoms.tool).kind !== 'hand') {
+        setTool({ kind: 'select' });
+      }
     }
-  }, [readonly, cancelDrag]);
+  }, [readonly, cancelDrag, registry, atoms.tool, setTool]);
 
   //
   // Clipboard.
@@ -952,6 +959,7 @@ const SceneViewRoot = ({
       projection={projection}
       capabilities={capabilities}
       readonly={readonly}
+      onReadonlyChange={onReadonlyChange}
       nodeRegistry={nodeRegistry}
       linkRegistry={linkRegistry}
       scene={scene}
@@ -1314,7 +1322,8 @@ SceneViewDebug.displayName = 'SceneView.Debug';
 
 /** The tool rail: what the next gesture will draw. */
 const SceneViewPalette = ({ classNames = 'absolute top-14 bottom-14 left-2' }: SceneViewBarProps) => {
-  const { tool, nodeRegistry, linkRegistry, capabilities, setTool } = useSceneViewContext('SceneView.Palette');
+  const { tool, nodeRegistry, linkRegistry, capabilities, readonly, onReadonlyChange, setTool } =
+    useSceneViewContext('SceneView.Palette');
   return (
     // Spans the room the rail may take, so it can fold its groups to fit; the canvas below the rail keeps the pointer.
     <div className={mx('pointer-events-none', classNames)}>
@@ -1323,6 +1332,8 @@ const SceneViewPalette = ({ classNames = 'absolute top-14 bottom-14 left-2' }: S
         nodes={nodeRegistry}
         links={linkRegistry}
         capabilities={capabilities}
+        readonly={readonly}
+        onReadonlyChange={onReadonlyChange}
         onToolChange={setTool}
       />
     </div>
