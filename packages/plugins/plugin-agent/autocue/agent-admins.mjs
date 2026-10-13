@@ -5,26 +5,48 @@
 /**
  * An agent's admins are the members of its own space. Alice creates Kai, finds it in Profile › Agents, and
  * invites Bob into Kai's space from its Members panel; Bob joins with the code and finds Kai in his own Agents
- * panel, and Alice's panel now lists Bob beside her — recorded side by side, one browser per person.
+ * panel, and Alice's panel now lists Bob beside her. Alice then tells Kai about the team offsite in Lisbon, and Bob,
+ * as Kai's admin, adds Kai to his own space from its Members panel, as he would a person, and asks it what is planned:
+ * Kai answers there from what Alice told it — recorded side by side, one browser per person.
  *
  * @mdl packages/plugins/plugin-agent/PLUGIN.mdl test QA-5
- * @app composer-app dev server on 127.0.0.1:4173 against a local EDGE with brain identities (dxos/edge#1293):
+ * @app composer-app dev server on 127.0.0.1:4173 against a local EDGE with brain identities (dxos/edge#1293),
+ * whose AI service has a model key:
  *
  *   DX_EDGE_BASE_URL=http://localhost:8787 DX_STRICT=false DX_PWA=false VITE_DX_DISABLE_ANIMATIONS=true \
  *     moon run composer-app:serve -- --port 4173 --host 127.0.0.1
  *   node .agents/skills/autocue/scripts/pair.mjs \
  *     --flow packages/plugins/plugin-agent/autocue/agent-admins.mjs --out /tmp/pair --mp4 on
  *
- * Setup and the invitation follow `two-people-one-agent.mjs`. Keep the file free of imports, since it is loaded
- * from outside the workspace.
+ * Setup and the invitation follow `two-people-one-agent.mjs`, the conversation `agent-across-spaces.mjs`. The
+ * replies come from a live model, so the steps wait for each reply to settle rather than for its words. Keep the
+ * file free of imports, since it is loaded from outside the workspace.
  */
 
 const AGENT = 'Kai';
+/** Bob's own space, which he adds Kai to. */
+const OTHER = 'Offsite team';
+const MESSAGES = [
+  `Hi ${AGENT}, I'm Alice. Our team offsite is in Lisbon on November 14, for 12 people, and Dima is booking the venue.`,
+  'The budget is 8,000 euros, and flights are still open.',
+];
+const QUESTION = 'Check your memory: what do we have so far for the offsite?';
 const TIMEOUT = 60_000;
 /** Creating an agent provisions its identity and space on EDGE before the space reaches the client. */
 const PROVISION_TIMEOUT = 120_000;
+/** A live agent turn on EDGE (spawn, tools, model) took 15–90 s when probed. */
+const REPLY_TIMEOUT = 240_000;
+/** How long a reply must stay unchanged to count as finished: a turn streams, then runs its tools. */
+const SETTLED_MS = 4_000;
 const ORIGIN = 'http://127.0.0.1:4173';
 const AGENT_PLUGIN = 'org.dxos.plugin.agent';
+
+const PLANK = '[data-testid="deck.plank"]';
+const PROMPT = `${PLANK} [data-testid="assistant.prompt"] .cm-content`;
+const FEED = `${PLANK} [data-testid="feed.message"]`;
+/** Rendered only while a turn runs. */
+const ACTIVITY = `${PLANK} [data-testid="assistant.chat-activity"]`;
+const TOOL_ROW = '[data-testid^="assistant.tool-"]';
 
 const waitFor = async (predicate, { timeout = TIMEOUT, what }) => {
   const deadline = Date.now() + timeout;
@@ -76,6 +98,94 @@ const clearChrome = async ({ page }) => {
   if ((await sidebar.getAttribute('data-state').catch(() => null)) === 'expanded') {
     await sidebar.getByTestId('deck.toggleComplementarySidebar').click();
   }
+};
+
+/** A navtree row of the current workspace, by its heading. */
+const treeRow = (page, heading) =>
+  currentWorkspace(page)
+    .locator(`[role="treeitem"]:has([data-testid="treeItem.heading"]:text-is("${heading}"))`)
+    .first();
+
+/** The name of the space the navtree shows: its header. */
+const currentSpace = (page) =>
+  currentWorkspace(page)
+    .first()
+    .innerText()
+    .then((text) => text.split('\n')[0].trim())
+    .catch(() => undefined);
+
+/**
+ * Opens a space by name, through the layout's switch-workspace operation: the rail's tab is a tooltip trigger whose
+ * click Playwright cannot land reliably while a space is still opening. The tab's value is the workspace id.
+ */
+const openSpace = async ({ page }, name) => {
+  const tab = spaceTab(page, name);
+  await tab.waitFor({ state: 'attached', timeout: TIMEOUT });
+  const workspace = await tab.getAttribute('data-value');
+  await waitFor(
+    async () => {
+      if ((await currentSpace(page)) === name) {
+        return true;
+      }
+      await page.evaluate(
+        (subject) => globalThis.composer.invoke('org.dxos.operation.appToolkit.switchWorkspace', { subject }),
+        workspace,
+      );
+      return false;
+    },
+    { what: `the space "${name}" to open` },
+  );
+};
+
+/** Opens the agent's chat from the current space's navtree, under its Agents row when there is one. */
+const openAgent = async (peer) => {
+  const { page } = peer;
+  const agents = treeRow(page, 'Agents');
+  if ((await agents.count()) > 0) {
+    await expandRow(peer, agents);
+  }
+  await peer.click(treeRow(page, AGENT).getByTestId('treeItem.heading').first());
+  await page.locator(PROMPT).first().waitFor({ timeout: TIMEOUT });
+};
+
+/**
+ * Waits for the turn a message started to finish: the chat's activity indicator (shown only while a turn runs) is
+ * gone, the last message is words rather than a tool row, and nothing has changed for a while.
+ */
+const waitForReply = async (page, before) => {
+  const deadline = Date.now() + REPLY_TIMEOUT;
+  const feed = page.locator(FEED);
+  let previous = '';
+  let changedAt = Date.now();
+  for (;;) {
+    const texts = await feed.allInnerTexts();
+    const snapshot = texts.join('\n');
+    if (snapshot !== previous) {
+      previous = snapshot;
+      changedAt = Date.now();
+    }
+    const busy = (await page.locator(ACTIVITY).count()) > 0;
+    const last = texts.length >= before + 2 ? feed.nth(texts.length - 1) : undefined;
+    const words = last && (await last.locator(TOOL_ROW).count()) === 0 && texts.at(-1).trim().length > 0;
+    if (!busy && words && Date.now() - changedAt > SETTLED_MS) {
+      return texts.at(-1).trim();
+    }
+    if (Date.now() > deadline) {
+      throw new Error(`no finished reply within ${REPLY_TIMEOUT / 1_000}s`);
+    }
+    await page.waitForTimeout(500);
+  }
+};
+
+/** Types a message into the open chat as a person would, sends it, and waits for the reply. */
+const send = async (peer, text) => {
+  const { page } = peer;
+  const before = await page.locator(FEED).count();
+  await peer.click(page.locator(PROMPT).first());
+  await peer.type(text, { delay: 20 });
+  await page.waitForTimeout(500);
+  await page.keyboard.press('Enter');
+  return waitForReply(page, before);
 };
 
 /** Kai's row in the account's Agents panel. */
@@ -132,6 +242,13 @@ export const steps = [
         await page.getByTestId('spacePlugin.space').first().click();
         await page.getByTestId('deck.plank').first().waitFor({ timeout: TIMEOUT });
       }
+      // Bob's own space, which he later adds Kai to.
+      const { bob } = peers;
+      await bob.page.getByTestId('spacePlugin.addSpace').first().click();
+      await bob.page.getByRole('menuitem', { name: 'Create space' }).click();
+      await bob.page.locator('[data-testid="create-space-dialog"] input[placeholder="Name"]').fill(OTHER);
+      await bob.page.locator('[data-testid="create-space-dialog"] button:has-text("Create")').last().click();
+      await spaceTab(bob.page, OTHER).waitFor({ timeout: TIMEOUT });
       await peers.alice.page.waitForTimeout(2_000);
       await Promise.all([clearChrome(peers.alice), clearChrome(peers.bob)]);
       await Promise.all([peers.alice.page.mouse.move(500, 500), peers.bob.page.mouse.move(500, 500)]);
@@ -235,12 +352,69 @@ export const steps = [
   },
   {
     name: `Alice's Agents panel now lists Bob among ${AGENT}'s admins`,
-    subtitle: 'QA-5 step 6',
-    narration:
-      "Each browser lists Kai from its own replica of Kai's space, kept in sync through EDGE: being Kai's admin is being a member of that space.",
+    subtitle: "QA-5 step 6: being Kai's admin is being a member of Kai's space",
     run: async ({ peers: { alice } }) => {
       await openAgentsPanel(alice, 'Alice (you), Bob');
-      await alice.page.waitForTimeout(10_000);
+      await alice.page.waitForTimeout(3_000);
+    },
+  },
+  {
+    name: `Alice tells ${AGENT} about the team offsite in Lisbon`,
+    subtitle: "QA-5 step 7: Kai's turns run on EDGE, which keeps what it learns in Kai's brain",
+    run: async ({ peers: { alice } }) => {
+      const { page } = alice;
+      // Kai lives in Alice's own space, first on the rail.
+      await alice.click(page.getByTestId('spacePlugin.space').first());
+      await openAgent(alice);
+      await clearChrome(alice);
+      await send(alice, MESSAGES[0]);
+    },
+  },
+  {
+    name: 'Alice adds the budget',
+    subtitle: 'QA-5 step 8',
+    run: async ({ peers: { alice } }) => {
+      await send(alice, MESSAGES[1]);
+      await alice.page.waitForTimeout(2_000);
+    },
+  },
+  {
+    name: `Bob adds ${AGENT} to "${OTHER}" from Members › Add from contacts`,
+    subtitle: "QA-5 step 9: as Kai's admin he can, as he would add a person; EDGE checks it",
+    run: async ({ peers: { bob } }) => {
+      const { page } = bob;
+      await openSpace(bob, OTHER);
+      await clearChrome(bob);
+      await expandRow(bob, currentWorkspace(page).getByTestId('spacePlugin.settings').first());
+      await bob.click(
+        currentWorkspace(page).getByTestId('spacePlugin.members').first().getByTestId('treeItem.heading').first(),
+      );
+      await bob.click(page.getByTestId('contact-picker.trigger').first());
+      await bob.click(page.getByTestId('contact-picker.item').filter({ hasText: AGENT }).first());
+      await bob.click(page.getByTestId('contactPicker.add'));
+      // The space lists it under Agents once it is here.
+      await treeRow(page, 'Agents').waitFor({ timeout: TIMEOUT });
+    },
+  },
+  {
+    name: `Bob opens ${AGENT} in "${OTHER}"`,
+    subtitle: 'QA-5 step 10: his own conversation with Kai, which Alice cannot read',
+    run: async ({ peers: { bob } }) => {
+      await openAgent(bob);
+      await clearChrome(bob);
+    },
+  },
+  {
+    name: `Bob asks ${AGENT} what is planned for the offsite`,
+    subtitle: 'QA-5 step 11: Kai answers from its brain, with what Alice told it in her space',
+    narration:
+      "Kai keeps one brain across its spaces: Bob's question in Offsite team is answered from Alice's conversation in her own space.",
+    run: async ({ peers: { bob } }) => {
+      const reply = await send(bob, QUESTION);
+      if (!/lisbon/i.test(reply)) {
+        throw new Error(`Kai's reply does not mention Lisbon: ${reply}`);
+      }
+      await bob.page.waitForTimeout(10_000);
     },
   },
 ];

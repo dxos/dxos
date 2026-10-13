@@ -641,11 +641,11 @@ feat F-5: Interview and profile panel
 ```mdl
 feat F-6: An agent in several spaces
 
-  req F-6.1: A space's Members panel offers the member's agents from other spaces in its "Add from contacts" picker, after the contacts; Add brings the agent into the space.
+  req F-6.1: A space's Members panel offers, in its "Add from contacts" picker after the contacts, the agents the member administers that are not in the space yet, including those whose home space the member cannot reach; Add brings the agent into the space. An agent's identity, a contact to everyone in the agent's own space, is not offered as a contact (`AppSpace.agentIdentityKeys`), so the picker lists each agent once.
   req F-6.2:
     when: op:inviteAgent runs for an agent already in the space (its home, or an earlier presence)
     then: that agent is returned and nothing is created
-  req F-6.3: A presence carries its home's name, DID and instructions, keyed to the home agent's URI; inviting a presence keys the new one to the same home.
+  req F-6.3: A presence carries its home's name, DID and instructions, keyed to the home agent's URI; inviting a presence keys the new one to the same home. An admin who cannot reach the home invites from the agent's own space instead (F-7.5), and the presence starts from the base instructions for its name.
   req F-6.4:
     when: a member opens an agent invited from another space
     then: its article is the member's one private chat with the agent, the same as at home, and its companions show the home agent's knowledge and activity, when the member can reach the home space; otherwise the presence's own
@@ -661,6 +661,7 @@ feat F-7: An agent's own space
   req F-7.2: `AgentSpace.administeredBy` lists the agents an identity administers: the agent spaces among the client's own spaces, which its HALO holds memberships of, that the identity is a current member of. It asks nothing of EDGE.
   req F-7.3: `AgentSpace.admins` lists an agent's admins, every current member of its space but the agent, and `AgentSpace.agentOf` is the agent.
   req F-7.4: The account's Agents panel, right after Devices, lists the agents the identity administers (F-7.2): each one's name, its admins with the viewer marked, and Open space, which switches to the agent's space. It stays current as spaces and their members change.
+  req F-7.5: EDGE keys an agent space's properties to the agent's URI (`AgentPresence.HOME_SOURCE`) when it mints the space. `AgentSpace.administeredAgents` reads each administered agent's name, DID and home from its space, so an admin who is not a member of the agent's home space can still add the agent to other spaces (F-6.1).
 ```
 
 ## Acceptance
@@ -742,7 +743,7 @@ scenario T-8: Scripted interview fills the profile panel
 
 ```mdl
 scenario T-9: An invited agent keeps one brain   # invite-agent.test.ts
-  # covers [F-6.2, F-6.3, F-6.5, F-6.6]
+  # covers [F-6.1, F-6.2, F-6.3, F-6.5, F-6.6]
   given: Kai in a home space; a fact Mykola stated in Kai's home brain
   when: Kai is invited into a second space twice, then as its presence into a third, then back home; the presence recalls and learns
   then:
@@ -750,15 +751,18 @@ scenario T-9: An invited agent keeps one brain   # invite-agent.test.ts
     - every presence names Kai's brain; the presence's chat is empty
     - op:retrieveMemories in the presence's space returns the home fact, said by Mykola
     - a fact the presence reads lands in the home brain, and the Brain companion lists both
+    - the picker offers Kai by its URI only where it is not yet: not in its home, nor its own space, nor where it has a presence; for an agent space minted before EDGE recorded the home, by its DID
+    - an admin who cannot reach Kai's home invites it from what Kai's space records: a presence keyed to Kai's URI with its name, its DID and the base instructions; inviting again returns it
 ```
 
 ```mdl
 scenario T-10: Agent spaces list their admins   # AgentSpace.test.ts
-  # covers [F-7.2, F-7.3]
+  # covers [F-7.2, F-7.3, F-7.5]
   given: an agent space owned by the agent, with an admin and an editor; an agent space the identity was removed from; an untagged space
   then:
     - agentOf is the owner, and the admins are the admin and the editor
     - the identity administers only the first space, and another identity none
+    - administeredAgents reads the name, DID and home URI an open agent space records, and only the DID of one still opening
 ```
 
 ## Not built
@@ -776,8 +780,7 @@ Design items from `docs/DESIGN.md` and `docs/MEMORY.md` that this package does n
 - A member who cannot reach the agent's home space talks to the presence in a chat of its own, which reads
   the home's brain but not the home conversation.
 - Memories and goals are objects in the space they were recorded in; only facts are shared through the
-  brain. EDGE's brain answers any agent id it is given: it does not yet check that the agent is in the
-  space the call comes from (`brain_spaces` on EDGE is meant to).
+  brain.
 - Runtime-assembled memory context at the start of each turn; consolidation (dedupe, promotion of
   inferred memories); editing or retracting memories in the UI (`retracted` exists as a status only).
 - Required provenance: `Memory.source` is optional as built.
@@ -1047,23 +1050,28 @@ test QA-4: An agent invited into another space keeps one conversation and one br
 ```
 
 ```mdl
-test QA-5: Two admins — an agent's space makes its creator and the person added to it its admins
+test QA-5: Two admins — Bob, made Kai's admin by Alice, adds Kai to his own space, where it recalls what Alice told it
   desc: |
     Admins are an agent's space's members. Alice creates an agent, which mints its identity and its own space on
     EDGE; she adds Bob to that space the way she would add him to any space, and both find the agent in Profile ›
-    Agents. The autocue flow `autocue/agent-admins.mjs` walks it side by side, one browser per person.
+    Agents. Alice then tells the agent about the team offsite, and Bob, who cannot reach Alice's space, adds the agent
+    to his own space from its Members panel and asks it what is planned: it answers from its brain. The autocue flow
+    `autocue/agent-admins.mjs` walks it side by side, one browser per person.
   actors: human
-  covers: [F-7.1, F-7.2, F-7.4]
+  covers: [F-6.1, F-6.5, F-6.7, F-7.1, F-7.2, F-7.4, F-7.5]
   status: passing             # 2026-10-13, recorded by autocue/agent-admins.mjs against a local EDGE (dxos/edge#1293)
   given:
     - alice: an identity with the display name "Alice", on one device
     - bob: an identity with the display name "Bob", on another device
+    - other: Bob's own space "Offsite team"
     - plugin-agent is enabled for both
     - EDGE with brain identities (`POST /compute/brain`) is reachable — ABORT without it
+    - a live model is available to the assistant (EDGE's AI service) — ABORT without one
   steps:
     - name: Alice creates an agent named Kai
       do: In Alice's space click + ("Add to space"), pick Agent, name it "Kai" and click Create.
       invoke: [op:createAgent] { name: "Kai" }
+      capture: agent
       expect: Kai's chat opens, and a space named Kai appears in Alice's space list
     - name: Alice finds Kai in Profile › Agents
       do: Open Alice's profile and its Agents panel, listed after Devices.
@@ -1080,10 +1088,32 @@ test QA-5: Two admins — an agent's space makes its creator and the person adde
     - name: Alice sees Bob among Kai's admins
       do: Open Alice's Agents panel again.
       expect: Kai is listed with "Admins: Alice (you), Bob"
+    - name: Alice tells Kai about the team offsite
+      do: In Alice's space open Kai and send "Hi Kai, I'm Alice. Our team offsite is in Lisbon on November 14, for 12 people, and Dima is booking the venue."
+      expect: Kai acknowledges the place, the date and the headcount in a short reply
+      note: NO `invoke` — the model replies on EDGE; the turn's facts are read into Kai's brain after it.
+    - name: Alice adds the budget
+      do: Send "The budget is 8,000 euros, and flights are still open."
+      expect: Kai acknowledges the budget
+      note: NO `invoke` — model-driven.
+    - name: Bob adds Kai to his own space from its Members panel
+      do: In Bob's window open Offsite team, then Settings › Members; under "Add from contacts" pick Kai and click Add.
+      invoke: [op:inviteAgent] { agent: Ref($agent.agent) }   # run in $given.other, as Bob
+      expect: the picker lists Alice and Kai, each once; after Add, Offsite team lists Kai under Agents, not among its members
+      note: Bob is not a member of Alice's space, where Kai lives; the picker finds Kai through Kai's own space, which records its home (F-7.5), and EDGE accepts the space because Bob is Kai's admin (F-6.7).
+    - name: Bob opens Kai in Offsite team
+      do: Click Kai under Offsite team's Agents.
+      expect: Bob's own chat with Kai opens, empty; Alice's conversation stays in her space
+    - name: Bob asks Kai about the offsite
+      do: Send "Check your memory: what do we have so far for the offsite?"
+      expect: |
+        Kai calls Recall and answers from its brain with what Alice told it, naming her: at least Lisbon,
+        November 14, 12 people and the 8,000 euro budget
+      note: NO `invoke` — model-driven; these words were never said in Offsite team. On 2026-10-13 Kai answered "So far for the offsite: Lisbon, November 14, for 12 people, with a budget of €8,000 — all per Alice."
   after:
-    - name: Remove Bob from Kai's space
-      do: In Kai's space open Settings › Members and remove Bob.
-      expect: Bob's Agents panel no longer lists Kai
+    - name: Remove Kai from Offsite team and Bob from Kai's space
+      do: In Offsite team delete Kai; in Kai's space open Settings › Members and remove Bob.
+      expect: Offsite team no longer lists Kai, and Bob's Agents panel no longer lists Kai
 ```
 
 ---
