@@ -29,7 +29,7 @@ export const readExpected = (path: string, iri: string, graphResult: boolean): R
   if (graphResult) {
     return { kind: 'graph', triples: triples.map(({ s, p, o }) => ({ s, p, o })) };
   }
-  return fromResultSetGraph(triples.map(({ s, p, o }) => ({ s, p, o })));
+  return fromResultSetGraph(path, triples.map(({ s, p, o }) => ({ s, p, o })));
 };
 
 //
@@ -147,7 +147,7 @@ export const parseSrj = (json: string): ResultSet => {
 // DAWG result-set vocabulary (SPARQL 1.0 `.ttl` / `.rdf` results).
 //
 
-const fromResultSetGraph = (triples: Row[]): ResultSet => {
+const fromResultSetGraph = (path: string, triples: Row[]): ResultSet => {
   const objects = (subject: Term | undefined, predicate: string): Term[] =>
     triples
       .filter(
@@ -160,7 +160,7 @@ const fromResultSetGraph = (triples: Row[]): ResultSet => {
       .flatMap((triple) => (triple.o ? [triple.o] : []));
   const resultSet = triples.find((triple) => triple.p?.value === RDF_TYPE && triple.o?.value === `${RS}ResultSet`)?.s;
   if (!resultSet) {
-    throw new Error('RDF result is neither a result set nor a CONSTRUCT graph');
+    throw new Error(`RDF result is neither a result set nor a CONSTRUCT graph: ${path}`);
   }
   const [boolean] = objects(resultSet, `${RS}boolean`);
   if (boolean) {

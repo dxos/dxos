@@ -4,13 +4,15 @@
 
 import { DurableObject } from 'cloudflare:workers';
 
-import { INDEX_SETS, SqlSparqlEngine } from '../src/index.ts';
+import { INDEX_SETS, type Quad, SqlSparqlEngine } from '../src/index.ts';
 import { checksumRows } from '../src/testing/checksum.ts';
 import { generateCode, generateFacts } from '../src/testing/gen.ts';
 import { PROBES } from '../src/testing/probes.ts';
 import { QUERIES, queryById } from '../src/testing/queries.ts';
+import { parseNTriples } from './ntriples.ts';
 
-type Env = { BENCH: DurableObjectNamespace };
+/** `BUILD` is set per deploy (`--var BUILD:<stamp>`) so the runner can tell when DOs run the new code. */
+type Env = { BENCH: DurableObjectNamespace; BUILD?: string };
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
@@ -22,15 +24,19 @@ const json = (body: unknown, status = 200) =>
  *   POST /reset
  *   POST /ingest?kind=facts|code&start=N&count=M   (generated in-DO; `gen=only` skips insert, for calibration)
  *   GET  /query?q=<id>&iters=K                       (runs the named query K times; returns rows + checksum)
- *   POST /sparql   body = query text                 (ad hoc, for capability probing)
+ *   POST /sparql?iters=K body = query text           (ad hoc; runs K times, returns rows + checksum)
+ *   POST /load?format=nt|json[&gzip=1][&dry=1]       (body: N-Triples/N-Quads text, or a JSON Quad[];
+ *                                                     `dry=1` decodes and parses without inserting)
  *   GET  /stats
  *   POST /abort                                      (ctx.abort(): next request hits a fresh instance)
- *   POST /explain  body = query text                 (compiled SQL + EXPLAIN QUERY PLAN)
+ *   POST /sql?iters=K  body = one read-only SELECT     (hand-written plan variants)
+ *   POST /explain  body = query text                 (compiled SQL + EXPLAIN QUERY PLAN + sqlite_stat1)
  *   POST /analyze                                    (ANALYZE, returns sqlite_stat1)
  *   POST /config?indexes=spo,pos[,osp][,gspo]       (drops data, recreates with that index set)
  *   POST /plancache?on=0|1
  *   POST /textingest?start=N&count=M                 (storage baseline: pipeline-rdf's text `triples` table)
- *   GET  /ping
+ *   GET  /ping                                       (returns the deploy's BUILD stamp)
+ *   any route accepts `hints=0|1`                     (toggles the engine's likelihood() selectivity hints)
  */
 export class BenchDO extends DurableObject<Env> {
   readonly #engine: SqlSparqlEngine;
@@ -46,7 +52,7 @@ export class BenchDO extends DurableObject<Env> {
     const url = new URL(request.url);
     try {
       if (url.pathname === '/ping') {
-        return json({ ok: true });
+        return json({ ok: true, build: this.env.BUILD });
       }
       if (url.pathname === '/abort') {
         this.ctx.abort('bench: force cold start');
@@ -65,6 +71,11 @@ export class BenchDO extends DurableObject<Env> {
     const engine = this.#engine;
     const sql = this.ctx.storage.sql;
     const param = (name: string, fallback: string) => url.searchParams.get(name) ?? fallback;
+    const hints = url.searchParams.get('hints');
+    if (hints !== null && engine.selectivityHints !== (hints === '1')) {
+      engine.selectivityHints = hints === '1';
+      engine.clearPlans();
+    }
     switch (url.pathname) {
       case '/reset':
         engine.reset();
@@ -89,8 +100,47 @@ export class BenchDO extends DurableObject<Env> {
       }
       case '/sparql': {
         const text = await request.text();
-        const rows = this.ctx.storage.transactionSync(() => this.#query(text));
+        const iters = Math.max(1, Number(param('iters', '1')));
+        const rows = this.ctx.storage.transactionSync(() => {
+          let result = this.#query(text);
+          for (let index = 1; index < iters; index++) {
+            result = this.#query(text);
+          }
+          return result;
+        });
         return json({ rows: rows.length, checksum: checksumRows(rows), sample: rows.slice(0, 5) });
+      }
+      case '/sql': {
+        // Hand-written plan variants for the perf write-up; read-only by construction of the allowed shapes.
+        const text = await request.text();
+        if (
+          !/^\s*(SELECT|WITH|EXPLAIN)\b/i.test(text) ||
+          /;|\b(INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|REPLACE|PRAGMA|ATTACH|VACUUM)\b/i.test(text)
+        ) {
+          return json({ error: 'only a single read-only SELECT is allowed' }, 400);
+        }
+        const iters = Math.max(1, Number(param('iters', '1')));
+        let rows = sql.exec(text).toArray();
+        for (let index = 1; index < iters; index++) {
+          rows = sql.exec(text).toArray();
+        }
+        return json({ rows: rows.length, sample: rows.slice(0, 5) });
+      }
+      case '/load': {
+        const body =
+          param('gzip', '') === '1' ? request.body?.pipeThrough(new DecompressionStream('gzip')) : request.body;
+        const text = await new Response(body).text();
+        const quads: Quad[] = param('format', 'nt') === 'json' ? JSON.parse(text) : parseNTriples(text);
+        if (param('dry', '') === '1') {
+          return json({ quads: quads.length, bytes: text.length });
+        }
+        const chunks = chunkByText(quads);
+        this.ctx.storage.transactionSync(() => {
+          for (const chunk of chunks) {
+            engine.insert(chunk);
+          }
+        });
+        return json({ quads: quads.length, bytes: text.length, chunks: chunks.length });
       }
       case '/stats':
         return json({ triples: engine.count(), dbBytes: sql.databaseSize, ...engine.stats() });
@@ -99,7 +149,10 @@ export class BenchDO extends DurableObject<Env> {
       case '/probes':
         return json(PROBES);
       case '/explain':
-        return json(engine.explain(await request.text()));
+        return json({
+          ...engine.explain(await request.text()),
+          stat1: sql.exec(`SELECT idx, stat FROM sqlite_stat1 WHERE tbl = 'quads'`).toArray(),
+        });
       case '/analyze':
         sql.exec('ANALYZE');
         return json(sql.exec('SELECT * FROM sqlite_stat1').toArray());
@@ -157,6 +210,30 @@ export class BenchDO extends DurableObject<Env> {
     };
   }
 }
+
+/** Bound strings are capped at about 2 MB on DO SQLite, so each insert carries at most ~1 MB of term text. */
+const CHUNK_TEXT = 1_000_000;
+const CHUNK_QUADS = 10_000;
+
+const chunkByText = (quads: Quad[]): Quad[][] => {
+  const chunks: Quad[][] = [];
+  let current: Quad[] = [];
+  let size = 0;
+  for (const quad of quads) {
+    const quadSize = quad.s.value.length + quad.p.value.length + quad.o.value.length + (quad.g?.value.length ?? 0);
+    if (current.length > 0 && (size + quadSize > CHUNK_TEXT || current.length >= CHUNK_QUADS)) {
+      chunks.push(current);
+      current = [];
+      size = 0;
+    }
+    current.push(quad);
+    size += quadSize;
+  }
+  if (current.length > 0) {
+    chunks.push(current);
+  }
+  return chunks;
+};
 
 /** Routes `/<path>?db=<name>` to the named DO instance. */
 export default {

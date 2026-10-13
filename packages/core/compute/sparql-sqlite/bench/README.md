@@ -43,3 +43,18 @@ npm install --prefix /tmp/oxigraph oxigraph
 node --experimental-strip-types bench/oracle.ts /tmp/oxigraph > /tmp/oracle.json
 node bench/run.mjs --url <url> --expected /tmp/oracle.json
 ```
+
+## Real datasets (BSBM, LUBM, WatDiv, DBLP)
+
+[docs/PERF.md](../docs/PERF.md) is the write-up. The scripts:
+
+- `datasets/prepare.sh [bsbm|lubm|watdiv|dblp|all]` fetches and builds the generators, generates the N-Triples and
+  instantiates the query templates into `.cache/` (gitignored, about 3.5 GB). `datasets/BsbmParams.java` drives the
+  BSBM test driver's parameter pool. `datasets/queries.mjs` holds the fixed LUBM and DBLP queries.
+- `real.mjs load|calibrate|query` uploads gzipped N-Triples to `POST /load`, compares parsing in the DO with
+  client-parsed JSON, and times query mixes. `query --prefix` also captures the SQL, `EXPLAIN QUERY PLAN` and
+  join-prefix row counts from the DO, and `--hints 0|1` toggles the engine's selectivity hints.
+- `run-all.sh <BUILD>` runs every loaded dataset with and without hints. Deploy with
+  `pnpm exec wrangler deploy --var BUILD:<stamp>`, so the runner can wait until the DOs run the new code.
+- `oxigraph-local.ts` is the LOCAL Oxigraph oracle and fallback measurement. `report.mjs` renders the tables and
+  `docs/results/perf/`.
