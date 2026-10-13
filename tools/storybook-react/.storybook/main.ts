@@ -501,8 +501,9 @@ export const createConfig = ({
           // https://www.npmjs.com/package/@vitejs/plugin-react
           // The oxc-based plugin (not SWC) keeps the React/JSX transform within rolldown's
           // pipeline, aligning with composer-app and composer-crx; this drops storybook-react as a
-          // consumer of `@vitejs/plugin-react-swc`.
-          react({ compiler: reactCompilerOptions }),
+          // consumer of `@vitejs/plugin-react-swc`. `.jsx`/`.tsx` only, as in composer-app: over plain
+          // script modules it emits Fast Refresh registrations that throw in the client's SharedWorker.
+          react({ compiler: reactCompilerOptions, include: /\.[jt]sx$/ }),
 
           // https://www.npmjs.com/package/vite-plugin-turbosnap
           turbosnap({
