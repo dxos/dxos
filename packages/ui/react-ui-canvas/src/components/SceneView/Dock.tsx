@@ -3,8 +3,8 @@
 //
 
 //
-// The dock: a column beside the canvas that panels move into when the view's panels are docked, one accordion
-// section per panel. A panel registers its section and portals itself into the section's slot.
+// The dock: a column beside the canvas that the inspectors move into when docked, one accordion section per
+// inspector. An inspector registers its section and portals itself into the section's slot.
 //
 
 import React, {
@@ -21,7 +21,10 @@ import React, {
 import { createPortal } from 'react-dom';
 
 import * as Accordion from '@dxos/react-ui/Accordion';
+import * as Button from '@dxos/react-ui/Button';
+import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 /** A panel's section in the dock. */
 export type DockSection = {
@@ -76,50 +79,76 @@ const DockSlot = ({ id, setSlot }: { id: string; setSlot: DockContextValue['setS
 /** Stops a docked panel's events at the dock: through the portal they would reach the canvas root (hover, menus). */
 const stop = (event: SyntheticEvent) => event.stopPropagation();
 
+export type DockProps = {
+  /** Offered, the dock's toolbar closes it, floating the inspectors over the canvas. */
+  onClose?: () => void;
+};
+
 /**
- * The dock column: an accordion of the registered sections, any number open, each as tall as its panel, the column
- * scrolling them together. Nothing (and no space) while no panel is docked.
+ * The dock column: a toolbar above an accordion of the registered sections, any number open, each as tall as its
+ * panel, the column scrolling them together. Nothing (and no space) while no inspector is docked.
  */
-export const Dock = () => {
+export const Dock = ({ onClose }: DockProps) => {
   const dock = useContext(DockContext);
   if (!dock || dock.sections.length === 0) {
     return null;
   }
   const { sections, closed, setSlot, setClosed } = dock;
   return (
-    // The column is the scroll area itself: each section is as tall as its panel, and it scrolls them together.
-    <ScrollArea.Root
+    <Panel.Root
       classNames='w-80 shrink-0 border-l border-separator-subtle bg-base-surface'
       data-testid='scene-view-dock'
     >
-      <ScrollArea.Viewport>
-        <Accordion.Root
-          border={false}
-          onPointerDown={stop}
-          onPointerMove={stop}
-          onPointerUp={stop}
-          onDoubleClick={stop}
-          onContextMenu={stop}
-          onKeyDown={stop}
-          value={sections.filter((section) => !closed.has(section.id)).map((section) => section.id)}
-          onValueChange={(open) =>
-            setClosed(new Set(sections.filter((section) => !open.includes(section.id)).map((section) => section.id)))
-          }
-        >
-          {sections.map((section) => (
-            <Accordion.Item key={section.id} value={section.id} data-testid={`dock-section-${section.id}`}>
-              {/* A distinct surface, so a section's header reads apart from its panel's own toolbar. */}
-              <Accordion.ItemTrigger icon={section.icon} classNames='bg-group-surface'>
-                {section.title}
-              </Accordion.ItemTrigger>
-              <Accordion.ItemContent>
-                <DockSlot id={section.id} setSlot={setSlot} />
-              </Accordion.ItemContent>
-            </Accordion.Item>
-          ))}
-        </Accordion.Root>
-      </ScrollArea.Viewport>
-    </ScrollArea.Root>
+      {onClose && (
+        <Panel.Header asChild>
+          <Toolbar.Root data-testid='dock-toolbar'>
+            <Toolbar.Separator variant='gap' />
+            <Button.Root
+              variant='ghost'
+              iconOnly
+              icon='ph--x--regular'
+              label='Close the dock (float the inspectors)'
+              data-testid='dock-close'
+              onClick={onClose}
+            />
+          </Toolbar.Root>
+        </Panel.Header>
+      )}
+      {/* The body is the scroll area itself: each section is as tall as its panel, and it scrolls them together. */}
+      <Panel.Body asChild>
+        <ScrollArea.Root>
+          <ScrollArea.Viewport>
+            <Accordion.Root
+              border={false}
+              onPointerDown={stop}
+              onPointerMove={stop}
+              onPointerUp={stop}
+              onDoubleClick={stop}
+              onContextMenu={stop}
+              onKeyDown={stop}
+              value={sections.filter((section) => !closed.has(section.id)).map((section) => section.id)}
+              onValueChange={(open) =>
+                setClosed(
+                  new Set(sections.filter((section) => !open.includes(section.id)).map((section) => section.id)),
+                )
+              }
+            >
+              {sections.map((section) => (
+                <Accordion.Item key={section.id} value={section.id} data-testid={`dock-section-${section.id}`}>
+                  {/* A distinct surface, so a section's header reads apart from its panel's own toolbar. */}
+                  <Accordion.ItemTrigger icon={section.icon} classNames='bg-group-surface'>
+                    {section.title}
+                  </Accordion.ItemTrigger>
+                  <Accordion.ItemContent>
+                    <DockSlot id={section.id} setSlot={setSlot} />
+                  </Accordion.ItemContent>
+                </Accordion.Item>
+              ))}
+            </Accordion.Root>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 
