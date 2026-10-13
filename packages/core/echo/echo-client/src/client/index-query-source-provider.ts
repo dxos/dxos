@@ -524,8 +524,9 @@ export class IndexQuerySource implements QuerySource {
   }
 
   /**
-   * Places every document row of an open database before any row waits for its strong dependencies, so
+   * Places every document row its database can back before any row waits for its strong dependencies, so
    * a dependency later in the set is placed from its own row rather than loaded as an earlier one's.
+   * Waits for nothing: a row its database cannot place yet takes the document path, under the per-row budget.
    */
   private async _placeRows(records: readonly QueryService.QueryResult[]): Promise<Map<string, PlacedRow>> {
     const bySpace = new Map<string, { row: QueryService.QueryResult; version: number; documentId: string }[]>();
@@ -541,10 +542,8 @@ export class IndexQuerySource implements QuerySource {
 
     const placed = new Map<string, PlacedRow>();
     for (const [spaceId, rows] of bySpace) {
-      // Only an open database places rows; the others' go to the document path, which waits for it under
-      // the per-row budget.
       const database = this._params.graph.getDatabase(SpaceId.make(spaceId));
-      if (!(database instanceof DatabaseImpl) || !database.isOpen) {
+      if (!(database instanceof DatabaseImpl)) {
         continue;
       }
       for (const chunk of chunkArray(rows, HYDRATE_RECORDS_PER_YIELD_CHECK)) {

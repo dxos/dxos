@@ -4334,7 +4334,7 @@ describe('Query', () => {
 
   /** A database reopened from storage, so the tab holds none of these objects' documents. */
   const openReloaded = async (
-    populate: (db: EchoDatabase) => Entity.Any[],
+    populate: (db: EchoDatabase) => { id: string }[] | Promise<{ id: string }[]>,
     options?: Parameters<EchoTestPeer['openLastDatabase']>[0],
   ) => {
     const reloadBuilder = new EchoTestBuilder();
@@ -4343,7 +4343,7 @@ describe('Query', () => {
     });
     const { peer, db: initialDb } = await reloadBuilder.createDatabase();
     invariant(initialDb instanceof DatabaseImpl);
-    const ids = populate(initialDb).map((object) => object.id);
+    const ids = (await populate(initialDb)).map((object) => object.id);
     await initialDb.flush({ secondaryIndexes: true });
     const documentIds = new Map(
       ids.map((id) => [id, initialDb.getObjectCoreById(id, { load: false })?.docHandle?.documentId]),
@@ -4695,6 +4695,12 @@ describe('Query', () => {
       expect((await results).map((result) => result.id)).toEqual([object.id]);
     });
 
+    test('the schema query a database runs while it opens is backed by the index', async () => {
+      const { db, ids } = await openReloaded(async (db) => [await db.addType(TestSchema.Person)]);
+      expect(db.getObjectCoreById(ids[0], { load: false })?.snapshot).toBeDefined();
+      expect(hasDocument(db, ids[0])).toBe(false);
+    });
+
     test(
       'a query over a database that never opens stalls on the per-row budget rather than hanging',
       { timeout: 30_000 },
@@ -4751,6 +4757,21 @@ describe('Query', () => {
 
       const early = peer.client.constructDatabase({ spaceId: SpaceId.random(), spaceKey: PublicKey.random() });
       expect(early._upsertSnapshot(object.id, rowOf(db, object))).toBe(undefined);
+    });
+
+    test('a row that arrives once a close has begun backs nothing', async () => {
+      const { db } = await openReloaded((db) => [db.add(createTestObject({ value: 1 }))]);
+      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
+      const row = rowOf(db, object);
+
+      // The database disposes its context first and closes the entity manager only after its feeds.
+      const ctx = db['_ctx'];
+      const closing = db.close();
+      while (!ctx.disposed) {
+        await Promise.resolve();
+      }
+      expect(db._upsertSnapshot(object.id, row)).toBe(undefined);
+      await closing;
     });
 
     test('a row updates a held object in place only when it is newer and from the document the root routes it to', async () => {

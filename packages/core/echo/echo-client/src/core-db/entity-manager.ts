@@ -240,6 +240,11 @@ export class EntityManager implements IDatabaseBinding {
   /** Set from {@link close} until the next {@link open}: the working set is gone, not merely unloaded. */
   #closed = false;
 
+  /** Whether a close has begun: the database disposes the context before it closes this manager. */
+  get #closing(): boolean {
+    return this.#closed || this._ctx?.disposed === true;
+  }
+
   /**
    * Bumped by every {@link open}. A load captures it and revalidates after each await: re-reading
    * {@link #closed} alone cannot distinguish a live lifetime from a close-and-reopen that happened
@@ -534,8 +539,8 @@ export class EntityManager implements IDatabaseBinding {
    * Undefined when the row cannot back the object, which then loads its document as usual.
    */
   upsertSnapshot(id: EntityId, state: SnapshotState): Entity.Unknown | undefined {
-    // Closed, or not routed here (including before the root arrives): the document path decides instead.
-    if (this.#closed || !this.#routesTo(id, state.documentId)) {
+    // Closing, or not routed here (including before the root arrives): the document path decides instead.
+    if (this.#closing || !this.#routesTo(id, state.documentId)) {
       return undefined;
     }
     // A selected branch reads and writes another document, which the index row does not describe.
@@ -586,14 +591,15 @@ export class EntityManager implements IDatabaseBinding {
 
   /**
    * The entity for an index row: the object the tab holds at the row's version or newer, or one backed by
-   * the row's state, which `decode` is called for only then. Undefined when the document path decides.
+   * the row's state, which `decode` is called for only then. Undefined when the document path decides,
+   * as it does before the space root arrives and once a close begins.
    */
   placeIndexRow(
     id: EntityId,
     { version, documentId }: { version: number; documentId: string },
     decode: () => SnapshotState | undefined,
   ): Entity.Unknown | undefined {
-    if (this.#closed || !this.#routesTo(id, documentId)) {
+    if (this.#closing || !this.#routesTo(id, documentId)) {
       return undefined;
     }
     const held = this.getObjectCoreById(id, { load: false });
