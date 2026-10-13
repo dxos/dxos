@@ -9,7 +9,7 @@ import { trim } from '@dxos/util';
  * agent's Instructions document, which people edit in Composer; skills add what each mode does.
  *
  * The channel header (`[<backend> #<channel>; addressed: <facts>]`) is produced by whatever relays the
- * message — today EDGE's compute-service Discord bot, which writes `discord` as the backend — so the
+ * message — today EDGE's discord-service Discord bot, which writes `discord` as the backend — so the
  * two must change together.
  */
 export const baseInstructions = (name: string): string => trim`

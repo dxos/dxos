@@ -17,7 +17,7 @@ the 1Password item `op://eng/com.discord.bot.kai`, and edge's `secrets.jsonc` fi
 
 | Field | What | Used by |
 | --- | --- | --- |
-| `credential` | bot token | compute-service (`DISCORD_BOT_TOKEN_DEV`), the EDGE bot |
+| `credential` | bot token | discord-service (`DISCORD_BOT_TOKEN_DEV`), the EDGE bot |
 | `CLIENT_SECRET` | OAuth2 client secret | kms-service (`DISCORD_CLIENT_SECRET`), for **Connect Discord** |
 | `APPLICATION_ID` | application id | `.env.tpl` (`DISCORD_KAI_APPLICATION_ID`) |
 
@@ -103,5 +103,5 @@ The first must show `message_content_intent: true`; the second lists the servers
 | **Connect Discord** fails at Discord | The redirect URL (§1.1) is missing, or `pnpm dev:env` has not run (§2.1). |
 | **Connect channels** is greyed out | No channel is connected yet (§4.3). |
 | Agent messages fail with "No process is hosted by this object" | The space outlived the EDGE state its agent ran on; clear the site data for `localhost:9009` and reload. |
-| The bot never reaches ready | compute-service has no bot token: re-run `pnpm dev:env` (§2.1). |
+| The bot never reaches ready | discord-service has no bot token: re-run `pnpm dev:env` (§2.1). |
 | Messages arrive with no text | Message Content Intent is off (§1.2). |

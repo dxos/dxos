@@ -210,7 +210,7 @@ export type FakeDiscordBot = {
   restore: () => void;
 };
 
-const BOT_PATH = /\/compute\/discord\/bots\/([^/?]+)/;
+const BOT_PATH = /\/discord\/bots\/([^/?]+)/;
 
 /**
  * How long a started gateway reports `connecting` before `ready`: longer than the monitor's poll interval, so the
@@ -222,7 +222,7 @@ const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify({ success: true, data }), { status, headers: { 'Content-Type': 'application/json' } });
 
 /**
- * Stands in for EDGE's Discord bot routes (`/compute/discord/bots/<applicationId>`) by wrapping `fetch`:
+ * Stands in for EDGE's Discord bot routes (`/discord/bots/<applicationId>`) by wrapping `fetch`:
  * PUT starts the bot (connecting for {@link CONNECTING_MS}, then ready), DELETE stops it, GET reports. EDGE's
  * `/auth` challenge answers 404 so the client proceeds unauthenticated instead of reaching a real EDGE.
  */
