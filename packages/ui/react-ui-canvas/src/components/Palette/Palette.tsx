@@ -22,6 +22,8 @@ const BASE: Entry[] = [
   { tool: { kind: 'hand' }, icon: 'ph--hand--regular', label: 'Pan', key: 'H' },
 ];
 
+const TOOLS_GROUP = 'Tools';
+
 /** A run of palette entries; a group of node types may fold into one flyout button when the rail runs out of room. */
 export type PaletteGroup = { name: string; entries: Entry[]; collapsible: boolean };
 
@@ -44,7 +46,7 @@ const nodeGroups = (nodes: NodeRegistry): PaletteGroup[] => {
  */
 export const paletteGroups = (nodes: NodeRegistry, links: LinkRegistry, capabilities: Capabilities): PaletteGroup[] =>
   [
-    { name: 'Tools', entries: BASE, collapsible: false },
+    { name: TOOLS_GROUP, entries: BASE, collapsible: false },
     ...(capabilities.create ? nodeGroups(nodes) : []),
     {
       name: 'Links',
@@ -89,6 +91,10 @@ export type PaletteProps = {
   collapse?: 'auto' | boolean;
   /** How a folded group lists its tools: one per row with its name (the default), or a grid of icons. */
   flyout?: 'list' | 'grid';
+  /** The view is only looked at; shown on the toggle when `onReadonlyChange` is given. */
+  readonly?: boolean;
+  /** Offered, the tools group ends with a toggle between looking at the scene and editing it. */
+  onReadonlyChange?: (readonly: boolean) => void;
   onToolChange: (tool: Tool) => void;
 };
 
@@ -137,6 +143,8 @@ export const Palette = ({
   capabilities,
   collapse = 'auto',
   flyout = 'list',
+  readonly = false,
+  onReadonlyChange,
   onToolChange,
 }: PaletteProps) => {
   const ref = useRef<HTMLDivElement>(null);
@@ -165,6 +173,19 @@ export const Palette = ({
                 onToolChange={onToolChange}
               />
             ))}
+            {/* Read-only leaves only select and pan, so the toggle sits with them. */}
+            {group.name === TOOLS_GROUP && onReadonlyChange && (
+              <Button.Root
+                variant='ghost'
+                iconOnly
+                icon={readonly ? 'ph--lock-simple--regular' : 'ph--lock-simple-open--regular'}
+                label={readonly ? 'Read-only: click to edit' : 'Editing: click to make read-only'}
+                classNames={mx(readonly && 'bg-primary-500/20')}
+                aria-pressed={readonly}
+                data-testid='palette-readonly'
+                onClick={() => onReadonlyChange(!readonly)}
+              />
+            )}
           </div>
         ),
       )}

@@ -63,7 +63,8 @@ const ProfileFormImpl = ({ active, identity, send, onUpdateProfile, validationMe
   return (
     <>
       <Dialog.Body gap='md'>
-        <Field.Root>
+        {/* An error shows only on an invalid field. */}
+        <Field.Root {...(validationMessage && { validationValence: 'error' })}>
           <Field.Label>{t('display-name-input.label')}</Field.Label>
           <Input.Root
             disabled={disabled}

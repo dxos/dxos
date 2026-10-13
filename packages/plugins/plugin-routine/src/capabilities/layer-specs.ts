@@ -57,7 +57,9 @@ import { log } from '@dxos/log';
 const OperationHandlerProviderSpec = LayerSpec.make(
   {
     affinity: 'application',
-    requires: [Capability.Service, Capabilities.AtomRegistry],
+    // The layer service, not `Capabilities.AtomRegistry`: a capability is no service the stack provides, so naming it
+    // here pruned this spec and every space spec built on the provider.
+    requires: [Capability.Service, AtomRegistry.AtomRegistry],
     provides: [OperationHandlerSet.OperationHandlerProvider],
   },
   () =>
@@ -66,8 +68,7 @@ const OperationHandlerProviderSpec = LayerSpec.make(
         // Live view (not a one-shot snapshot): handlers contributed after materialization — e.g. by
         // a plugin enabled later — still reach subsequent reads. The manager memoizes one atom per
         // capability, so `reactive` reads the current contributions and re-merges when they change.
-        // Declared in `requires`, so absence is a wiring bug rather than a recoverable error.
-        const registry = yield* Capability.get(Capabilities.AtomRegistry).pipe(Effect.orDie);
+        const registry = yield* AtomRegistry.AtomRegistry;
         const sets = yield* Capability.atom(Capabilities.OperationHandler);
         return OperationHandlerSet.provide(OperationHandlerSet.reactive(registry, sets));
       }),

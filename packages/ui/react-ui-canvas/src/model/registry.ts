@@ -224,9 +224,10 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
 
 export const defaultNodeRegistry: NodeRegistry = createNodeRegistry(defaultNodeTypes, defaultNodePrototypes);
 
+// The palette lists link types in this order, so the default (smart) leads.
 export const defaultLinkRegistry: LinkRegistry = {
+  smart: { type: 'smart', name: 'Smart line', icon: 'ph--flow-arrow--regular', key: 'O' },
   line: { type: 'line', name: 'Line', icon: 'ph--line-segment--regular', key: 'L' },
   curve: { type: 'curve', name: 'Curve', icon: 'ph--bezier-curve--regular', key: 'K' },
   spline: { type: 'spline', name: 'Spline', icon: 'ph--wave-sine--regular', key: 'P' },
-  smart: { type: 'smart', name: 'Smart line', icon: 'ph--flow-arrow--regular', key: 'O' },
 };
