@@ -1307,7 +1307,8 @@ const SceneViewActions = ({ classNames = 'bottom-2 left-1/2 -translate-x-1/2' }:
     return null;
   }
   return (
-    <div className={mx(barFrame, classNames)}>
+    // Centred, it keeps clear of the camera bar (about 15rem with its inset) on both sides, scrolling beyond that.
+    <div className={mx(barFrame, 'max-w-[calc(100%-30rem)]', classNames)}>
       <ActionToolbar actions={toolbarActions} nodes={nodeRegistry} capabilities={capabilities} />
     </div>
   );

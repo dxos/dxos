@@ -24,8 +24,9 @@ import { SceneView } from './SceneView.tsx';
  * Test:
  * 1. Ctrl/cmd+wheel zooms about the cursor; wheel or hand-tool drag pans; drag on empty canvas draws a marquee.
  * 2. Click selects, shift-click toggles; drag moves the selection (snapped); handles resize a single node.
- *    Hovering a node shows its ports; drag from a port onto a node or port links (with the last link type picked).
- * 3. L / K / P pick the line, curve or spline link tool: every port shows; dropping onto empty canvas creates a
+ *    Hovering a node shows its ports; drag from a port onto a node or port links (a smart line, or the last link type
+ *    picked).
+ * 3. O / L / K / P pick the smart line, line, curve or spline link tool: every port shows; dropping onto empty canvas creates a
  *    rectangle and links to it. A selected spline shows a diamond per control point and a dot per span midpoint:
  *    drag a diamond to move a point, drag a dot to add one there, alt-click a diamond to remove one.
  * 4. R / E / T / F then drag draws a rectangle, ellipse, text or frame (the UML class is plugin-uml's);
