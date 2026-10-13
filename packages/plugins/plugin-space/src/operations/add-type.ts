@@ -110,14 +110,13 @@ const resolveEndType = (types: Type.AnyEntity[], uri: string | undefined): Type.
     return Obj.Unknown;
   }
 
-  // A stored relation type names its ends by `dxn:` typename, which only a registered type has.
+  // A registered declaration wins over a copy persisted in the space, which is matched otherwise.
   const typename = DXN.isDXN(uri) ? DXN.getName(uri) : undefined;
-  const type = types.find(
-    (candidate) => Type.getDatabase(candidate) == null && Type.getTypename(candidate) === typename,
-  );
+  const candidates = types.filter((candidate) => Type.isObject(candidate) && Type.getTypename(candidate) === typename);
+  const type = candidates.find((candidate) => Type.getDatabase(candidate) == null) ?? candidates[0];
   invariant(
     type && Type.isObject(type),
-    `Relation end must name a registered object type as \`dxn:<typename>\`: ${uri}`,
+    `Relation end must name an object type the space knows as \`dxn:<typename>\`: ${uri}`,
   );
   return type;
 };

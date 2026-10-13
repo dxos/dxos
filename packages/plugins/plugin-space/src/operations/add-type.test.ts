@@ -160,4 +160,45 @@ describe('SpaceOperation.AddType', () => {
       TestHelpers.provideTestContext,
     ),
   );
+
+  it.effect(
+    'a relation type can join types defined at runtime',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        yield* Operation.invoke(SpaceOperation.AddType, {
+          typename: 'com.example.type.claim',
+          jsonSchema: statementSchema,
+        });
+        const { object: type } = yield* Operation.invoke(SpaceOperation.AddType, {
+          typename: 'com.example.relation.supports',
+          jsonSchema: {
+            type: 'object',
+            entityKind: 'relation',
+            relationSource: { $ref: 'dxn:com.example.type.claim' },
+            relationTarget: { $ref: 'dxn:com.example.type.claim' },
+            properties: {},
+          },
+        });
+        expect(Type.isRelation(type)).toBe(true);
+
+        const { object: source } = yield* Operation.invoke(SpaceOperation.AddObject, {
+          object: { '@type': 'com.example.type.claim', 'text': 'premise' },
+        });
+        const { object: target } = yield* Operation.invoke(SpaceOperation.AddObject, {
+          object: { '@type': 'com.example.type.claim', 'text': 'conclusion' },
+        });
+        yield* Database.flush();
+        yield* Operation.invoke(SpaceOperation.AddRelation, {
+          typename: 'com.example.relation.supports',
+          source,
+          target,
+        });
+
+        const relations = yield* Database.query(Query.select(Filter.type(type))).run;
+        expect(relations).toHaveLength(1);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
 });
