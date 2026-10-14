@@ -9,7 +9,6 @@ import { type EdgeStatus, EdgeStatus_ConnectionState } from '@dxos/protocols/buf
 import { useClient } from '@dxos/react-client';
 import * as Button from '@dxos/react-ui/Button';
 import * as Icon from '@dxos/react-ui/Icon';
-import * as Input from '@dxos/react-ui/Input';
 import * as Select from '@dxos/react-ui/Select';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
@@ -17,13 +16,11 @@ import {
   EDGE_ENVIRONMENTS,
   type EdgeEnvironment,
   getEdgeEnvironment,
-  isPersistent,
   setEdgeEnvironment,
-  setPersistent,
 } from '../testing/story-settings.ts';
 
 const EDGE_LABELS: Record<EdgeEnvironment, string> = {
-  local: 'Local EDGE',
+  local: 'Local',
   dev: 'Dev',
   preview: 'Preview',
   production: 'Production',
@@ -66,12 +63,12 @@ const EdgeStatusIndicator = () => {
 };
 
 /**
- * Story chrome: which EDGE the client talks to, whether its profile persists, and a reset. Each takes effect on
- * reload, since the client has already booted with the previous choice.
+ * Story chrome: which EDGE the client talks to and a reset; both take effect on reload, since the client has already
+ * booted with the previous choice. Whether the profile persists is the story's `persistent` arg.
  */
 export const StorySettingsToolbar = () => {
   const client = useClient();
-  const persistent = isPersistent();
+  const persistent = client.config.values.runtime?.client?.storage?.persistent === true;
 
   /** A persistent profile is registered with the EDGE it booted against, so moving to another starts a new one. */
   const handleEdgeChange = useCallback(
@@ -87,12 +84,6 @@ export const StorySettingsToolbar = () => {
     },
     [client, persistent],
   );
-
-  const handlePersistentChange = useCallback((checked: boolean) => {
-    if (setPersistent(checked)) {
-      window.location.reload();
-    }
-  }, []);
 
   /** Wipes the profile and reloads, so setup seeds a fresh space. */
   const handleReset = useCallback(async () => {
@@ -116,11 +107,6 @@ export const StorySettingsToolbar = () => {
       </Select.Root>
       <EdgeStatusIndicator />
       <Toolbar.Separator variant='gap' />
-      <Input.Checkbox
-        checked={persistent}
-        onCheckedChange={({ checked }) => handlePersistentChange(checked === true)}
-        label='Persistent'
-      />
       <Button.Root icon='ph--trash--regular' label='Reset' onClick={() => void handleReset()} />
     </Toolbar.Root>
   );

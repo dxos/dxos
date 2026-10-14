@@ -25,7 +25,11 @@ import {
   storyParameters,
 } from '../testing/index.ts';
 
-type StoryArgs = DiscordBotArgs & { layout?: ModuleLayout };
+type StoryArgs = DiscordBotArgs & {
+  layout?: ModuleLayout;
+  /** Keeps the profile (space, bindings, conversations) across reloads; a change reboots the story. */
+  persistent?: boolean;
+};
 
 const meta: Meta<StoryArgs> = {
   title: 'stories/stories-agent/AgentDiscord',
@@ -67,18 +71,20 @@ export const Setup: Story = {
       </div>
     </div>
   ),
-  decorators: createDecorators({
-    config: storyConfig(),
+  decorators: createDecorators<StoryArgs>(({ args }) => ({
+    config: storyConfig({ persistent: args.persistent }),
     onReady: async ({ db, invoker }) => {
       await setupAgent({ db, invoker, remote: true });
       await ensureBotRecord(db, KAI_APPLICATION_ID);
     },
-  }),
+  })),
+  argTypes: { persistent: { control: 'boolean' } },
   args: {
+    persistent: true,
     layout: [
-      [companion('discord'), companion('activity'), StoryRole.DiscordBot],
+      [companion('discord'), StoryRole.DiscordBot],
       [StoryRole.AgentProperties, StoryRole.EmailChannel],
-      [StoryRole.Conversation],
+      [companion('activity'), StoryRole.Conversation],
       [companion('brain')],
     ],
   },

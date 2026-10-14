@@ -265,7 +265,13 @@ const SubgraphsStory = () => {
 const ENTITY_CARDS = toEntityCards([...PROFILE_FACTS, ...RDF_FACTS], { ...CARD_OPTIONS, objects: true });
 
 /** Finder-style columns over the same graph. */
-const BrowserStory = () => <EntityBrowser cards={ENTITY_CARDS} icons={CARD_ICONS} hues={CARD_HUES} />;
+const BrowserStory = () => (
+  <Panel.Root>
+    <Panel.Body asChild>
+      <EntityBrowser cards={ENTITY_CARDS} icons={CARD_ICONS} hues={CARD_HUES} />
+    </Panel.Body>
+  </Panel.Root>
+);
 
 type StoryProps = {
   /** Named rather than passed as objects, because storybook clones args and ECHO objects reject the writes. */

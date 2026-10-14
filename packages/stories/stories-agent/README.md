@@ -62,13 +62,14 @@ From `<dxos>`:
 moon run storybook-react:serve
 ```
 
-Open the stories in **Chrome** at `http://localhost:9009/?path=/story/stories-stories-agent-…`. The stories use
-persistent storage, which runs the client in a SharedWorker; the Claude desktop app's built-in browser blocks
-SharedWorker requests, so they cannot boot there.
+Open the stories in **Chrome** at `http://localhost:9009/?path=/story/stories-stories-agent-…`. By default the
+stories use persistent storage, which runs the client in a SharedWorker; the Claude desktop app's built-in browser
+blocks SharedWorker requests, so they cannot boot there unless the `persistent` arg is off.
 
-The **Setup** story's toolbar picks the EDGE the client talks to (local, dev, preview or production), whether its
-profile persists across reloads, and **Reset**, which wipes the profile so setup seeds a fresh space. Each takes
-effect on reload; moving a persistent profile to another EDGE resets it, since it is registered with the old one.
+The **Setup** story's `persistent` arg (Controls) keeps the profile across reloads; changing it reboots the story. Its
+toolbar picks the EDGE the client talks to (local, dev, preview or production) and has **Reset**, which wipes the
+profile so setup seeds a fresh space. Both take effect on reload; moving a persistent profile to another EDGE resets
+it, since it is registered with the old one.
 
 ### 4. Try it
 

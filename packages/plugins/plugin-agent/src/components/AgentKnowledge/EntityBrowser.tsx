@@ -13,6 +13,7 @@ import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Util from '@dxos/react-ui/Util';
 
 import { meta } from '#meta';
 
@@ -156,68 +157,67 @@ EntityBrowserColumn.displayName = 'EntityBrowser.Column';
  * The fact graph as Finder-style columns: the first holds every entity, and choosing a card, one of its property rows,
  * or one chip in a column opens the next column on what that choice relates to. Each column filters its own stack.
  */
-export const EntityBrowser = ({ cards, icons, hues }: EntityBrowserProps) => {
-  const byId = useMemo(() => new Map(cards.map((card) => [card.id, card])), [cards]);
-  // One entry per column that has chosen something; choosing in a column drops every choice after it.
-  const [path, setPath] = useState<BrowseSelection[]>([]);
-  const viewportRef = useRef<HTMLDivElement>(null);
-  const stackRefs = useRef<(HTMLDivElement | null)[]>([]);
+// Composable, so a host's `Panel.Body asChild` makes the scroll frame its growing row.
+export const EntityBrowser = Util.composable<HTMLDivElement, EntityBrowserProps>(
+  ({ cards, icons, hues, ...props }, forwardedRef) => {
+    const byId = useMemo(() => new Map(cards.map((card) => [card.id, card])), [cards]);
+    // One entry per column that has chosen something; choosing in a column drops every choice after it.
+    const [path, setPath] = useState<BrowseSelection[]>([]);
+    const viewportRef = useRef<HTMLDivElement>(null);
+    const stackRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  // Into the next column at its first card, or back to the card chosen in the previous one.
-  const navigate = (column: number, direction: 'left' | 'right') => {
-    const target = stackRefs.current[direction === 'left' ? column - 1 : column + 1];
-    const card =
-      (direction === 'left' && target?.querySelector<HTMLElement>(`${CARD_SELECTOR}[aria-current="true"]`)) ||
-      target?.querySelector<HTMLElement>(CARD_SELECTOR);
-    card?.focus();
-  };
+    // Into the next column at its first card, or back to the card chosen in the previous one.
+    const navigate = (column: number, direction: 'left' | 'right') => {
+      const target = stackRefs.current[direction === 'left' ? column - 1 : column + 1];
+      const card =
+        (direction === 'left' && target?.querySelector<HTMLElement>(`${CARD_SELECTOR}[aria-current="true"]`)) ||
+        target?.querySelector<HTMLElement>(CARD_SELECTOR);
+      card?.focus();
+    };
 
-  const columns = useMemo(() => {
-    const result: EntityCardModel[][] = [[...cards]];
-    for (const selection of path) {
-      const card = byId.get(selection.cardId);
-      const next = card ? related(card, selection).flatMap((id) => byId.get(id) ?? []) : [];
-      if (next.length === 0) {
-        break;
+    const columns = useMemo(() => {
+      const result: EntityCardModel[][] = [[...cards]];
+      for (const selection of path) {
+        const card = byId.get(selection.cardId);
+        const next = card ? related(card, selection).flatMap((id) => byId.get(id) ?? []) : [];
+        if (next.length === 0) {
+          break;
+        }
+        result.push(next);
       }
-      result.push(next);
-    }
-    return result;
-  }, [cards, byId, path]);
+      return result;
+    }, [cards, byId, path]);
 
-  // Like Finder, the column a choice opens scrolls into view.
-  useEffect(() => {
-    viewportRef.current?.scrollTo({ left: viewportRef.current.scrollWidth, behavior: 'smooth' });
-  }, [columns.length]);
+    // Like Finder, the column a choice opens scrolls into view.
+    useEffect(() => {
+      viewportRef.current?.scrollTo({ left: viewportRef.current.scrollWidth, behavior: 'smooth' });
+    }, [columns.length]);
 
-  return (
-    <Panel.Root>
-      <Panel.Body asChild>
-        <ScrollArea.Root orientation='horizontal' autoHide={false}>
-          <ScrollArea.Viewport ref={viewportRef}>
-            <Layout.Grid cols={columns.map(() => '24rem')} rows={['fill']} classNames='h-full'>
-              {columns.map((stack, column) => (
-                <EntityBrowserColumn
-                  ref={(element) => {
-                    stackRefs.current[column] = element;
-                  }}
-                  onNavigate={(direction) => navigate(column, direction)}
-                  // Keyed by what opened the column, so its filter resets when a new choice replaces it.
-                  key={column === 0 ? 'root' : JSON.stringify(path[column - 1])}
-                  stack={stack}
-                  selection={path[column]}
-                  icons={icons}
-                  hues={hues}
-                  onChoose={(selection) => setPath((current) => [...current.slice(0, column), selection])}
-                  onClose={column === 0 ? undefined : () => setPath((current) => current.slice(0, column - 1))}
-                />
-              ))}
-            </Layout.Grid>
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </Panel.Body>
-    </Panel.Root>
-  );
-};
+    return (
+      <ScrollArea.Root {...props} orientation='horizontal' autoHide={false} ref={forwardedRef}>
+        <ScrollArea.Viewport ref={viewportRef}>
+          <Layout.Grid cols={columns.map(() => '24rem')} rows={['fill']} classNames='h-full'>
+            {columns.map((stack, column) => (
+              <EntityBrowserColumn
+                ref={(element) => {
+                  stackRefs.current[column] = element;
+                }}
+                onNavigate={(direction) => navigate(column, direction)}
+                // Keyed by what opened the column, so its filter resets when a new choice replaces it.
+                key={column === 0 ? 'root' : JSON.stringify(path[column - 1])}
+                stack={stack}
+                selection={path[column]}
+                icons={icons}
+                hues={hues}
+                onChoose={(selection) => setPath((current) => [...current.slice(0, column), selection])}
+                onClose={column === 0 ? undefined : () => setPath((current) => current.slice(0, column - 1))}
+              />
+            ))}
+          </Layout.Grid>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
+    );
+  },
+);
 
 EntityBrowser.displayName = 'EntityBrowser';
