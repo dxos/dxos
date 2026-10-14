@@ -838,6 +838,7 @@ def describeName (dir : Text) (ns : Map Text Entry) (name : Text) : {IO, Throw T
         let decl := View.theoremDecl full name types prop proof
         let stop := Text.indexOf decl " := " 0
         [("statement", Text.trim (Text.drop (Text.length ("theorem " ++ name)) (if stop < 0 then decl else Text.take stop decl)))]
+      | some (Sexp.list [Sexp.sym "term", core]) => if Resolve.isStub core then [("implemented", "false")] else []
       | _ => []
     [("kind", Entry.kind e), ("hash", h), ("view", snd (viewParts (Print.printer ns []) dir ns name e "deus"))] ++ typed ++ statement ++ verdict
 
@@ -1094,7 +1095,7 @@ def buildImage (args : Args) (dir : Text) (ns : Map Text Entry) : {IO, Throw Tex
   | _ => throw "usage: deus build <term> -o <file>"
 
 /--
-  Writes the JS module of `roots` (export name, hash) to `out` (D94), its source map to
+  Writes the JS module of `roots` (export name, hash) to `out` (D96), its source map to
   `<out>.map`, and the runtime beside it as `deus-runtime.mjs`.
 -/
 def writeJs (dir : Text) (ns : Map Text Entry) (fetch : Text -> {IO} Option Sexp) (meta : Text -> {IO} Option Sexp) (roots : List (Text, Text)) (out : Text) : {IO, Throw Text} Unit :=
@@ -1120,7 +1121,7 @@ def writeJs (dir : Text) (ns : Map Text Entry) (fetch : Text -> {IO} Option Sexp
 
 /--
   The value of `def it := <source>` on this kernel and on the js target, each printed as `deus eval`
-  prints it (D94). The module runs under `$DEUS_NODE`.
+  prints it (D96). The module runs under `$DEUS_NODE`.
 -/
 def jsCompare (dir : Text) (ns : Map Text Entry) (source : Text) : {IO} Result Text (Text, Text) :=
   match try (fun _ =>
@@ -1495,7 +1496,7 @@ def usage : Text :=
     "  update <files…> --closes <id>        mark a task done, linked to the change that fixed it",
     "  task import <tasks.sexp>             restore tasks from an export",
     "  export <dir>                         the codebase as text for git: code/<Namespace>.deus, tasks, history",
-    "  build <name…> -o <file.js> --js      compile to an ES module with a source map, no kernel (D94)",
+    "  build <name…> -o <file.js> --js      compile to an ES module with a source map, no kernel (D96)",
     "  build <fn> -o <file.wasm> --wasm     compile a first-order Int/Bool function (and its callees) to wasm",
     "  build <fn> -o <file> --c             the same subset to C, compiled to an executable by $CC (default cc); -o x.c writes the source",
     "  bindings <prefix|name…> -o <dir>     a JS module + .d.ts that calls those functions on the wasm kernel",

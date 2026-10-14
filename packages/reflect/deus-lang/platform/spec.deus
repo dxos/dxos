@@ -27,7 +27,8 @@
     requirement without evidence names the task that will add it in `gap:`; `deus mdl` reports
     it as a known gap, which does not fail the document.
   - `api`: `signatures:` lines `Name : Type`; the type is compared with the one the codebase
-    displays, spaces ignored. A line without `: Type` only checks that the name exists.
+    displays, spaces ignored. A line without `: Type` only checks that the name exists. A name
+    declared without a body (D93) is a known gap.
   - `law`: `theorem:` one theorem (or test); `statement:` its binders and proposition, every
     name in full and `=` read as `==`, compared with what the codebase prints; `evidence:` the least evidence accepted, `test` (default) or `proof`
     (a tactic proof, `decide` or `rfl`, with no lemma that is only tested).
@@ -83,8 +84,9 @@ def signatureProblems (line : Text) : {MdlHost} List Text :=
     | Result.err message => [message]
     | Result.ok facts =>
       let actual := prop0 facts "type"
-      if Text.isEmpty stated || squash stated == squash actual then []
-      else [name ++ " has type " ++ actual ++ ", the spec says " ++ stated]
+      if not (Text.isEmpty stated || squash stated == squash actual) then [name ++ " has type " ++ actual ++ ", the spec says " ++ stated]
+      else if prop0 facts "implemented" == "false" then ["gap: " ++ name ++ " is declared but not implemented"]
+      else []
 
 /-- The `api` block type. -/
 @[ext "org.dxos.deus.api@1.0"]

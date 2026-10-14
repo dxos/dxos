@@ -313,6 +313,8 @@ how much of .mdl are you dogfooding? the general process should be mdl spec > ap
 
 ---
 
+I think deus should allow declaring a definition with a type but no impl
+
 - js as compilation target: without wasm, source-mapped, doesnt need to be super legible, but at least clear stacks -- good for iterop with dom and existing js libs (what wasm struggles with)
 - find way to introp with external js libs: like react and effect, how do we express those bindings in the language
 - react bindings with ability for hooks access that compoennts get + example react web app in deus

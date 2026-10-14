@@ -182,7 +182,13 @@ def decl (p : Parser) : {Throw Text} Decl :=
           skip p
           some (withStop p 0 (fun _ => ty p))
         else none
+      let after := peek p
       if is p "|" then Decl.defn name bs type none (some (arms p)) doc attributes pos
+      else if after.kind == Kind.eof || (after.bol && after.col == 0) then
+        -- A declaration (D93): the signature must be complete, since nothing else gives the type.
+        if Option.isNone type then errorAt t ("declaration " ++ name ++ " has no body, so it needs a result type")
+        else if List.any (fun b => Option.isNone b.annot) bs then errorAt t ("declaration " ++ name ++ " has no body, so every parameter needs a type")
+        else Decl.defn name bs type none none doc attributes pos
       else
         let _ := expect p ":="
         Decl.defn name bs type (some (body p)) none doc attributes pos
@@ -429,25 +435,23 @@ def statement (p : Parser) (col : Int) : {Throw Text} Expr :=
       let name := ident p
       let rec params acc := if is p ":=" || is p ":" then List.reverse acc else params (patAtom p :: acc)
       let ps := params []
-      if is p ":" then
-        skip p
-        let _ := ty p
-        ()
-      else ()
+      let result := if is p ":" then
+          skip p
+          some (ty p)
+        else none
       let _ := expect p ":="
-      let value := body p
+      let value := ascribed (body p) result
       if not (continues p col) then errorAt letTok "a let needs a body on the next line"
       else Expr.letFun name ps value (stmts p col) isRec
     else if isRec then error p "let rec needs a function"
     else
       let pat := patt p
-      if is p ":" then
-        skip p
-        let _ := ty p
-        ()
-      else ()
+      let annotation := if is p ":" then
+          skip p
+          some (ty p)
+        else none
       let _ := expect p ":="
-      let value := body p
+      let value := ascribed (body p) annotation
       if not (continues p col) then errorAt letTok "a let needs a body on the next line"
       else Expr.letPat pat value (stmts p col)
   else
@@ -498,6 +502,12 @@ def app (p : Parser) : {Throw Text} Expr :=
   let rec go acc := if startsArg p then go (atom p :: acc) else List.reverse acc
   let args := go []
   if List.isEmpty args then f else Expr.app f args
+
+/-- `e`, checked against the type a `let` writes (D95). -/
+def ascribed (e : Expr) (annotation : Option Ty) : Expr :=
+  match annotation with
+  | some t => Expr.ann e t
+  | none => e
 
 def intOf (t : Token) : Int := Option.getOr (Int.fromText t.value) 0
 
@@ -755,12 +765,11 @@ def patAtom (p : Parser) : {Throw Text} Pat :=
     else
       withStop p (-1) (fun _ =>
         let first := patt p
-        if is p ":" then
-          -- `(x : T)`: an ascribed binder; the type is erased.
-          skip p
-          let _ := ty p
-          ()
-        else ()
+        -- `(x : T)`: an ascribed binder, checked (D95).
+        let first := if is p ":" then
+            skip p
+            Pat.ann first (ty p)
+          else first
         if is p "," then
           let rec go acc :=
             if is p "," then

@@ -3,7 +3,7 @@
 //
 
 import { createHash } from 'node:crypto';
-import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { type ExpectStatic, afterAll, afterEach, beforeEach, describe, test, vi } from 'vitest';
@@ -115,7 +115,7 @@ describe('explorer worker', () => {
     call(path, {
       method: 'POST',
       headers: { 'cookie': session, 'x-deus': '1', origin, 'content-type': 'application/json', ...headers },
-      body: typeof body === 'string' || body instanceof Uint8Array ? body : JSON.stringify(body),
+      body: typeof body === 'string' ? body : body instanceof Uint8Array ? new Uint8Array(body) : JSON.stringify(body),
     });
 
   test('is read-only without sign-in settings', async ({ expect }) => {

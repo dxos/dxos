@@ -42,8 +42,48 @@ law L-4: printed source compiles back to the same hashes
 ```
 
 ```mdl
+law L-5: a declaration's hash covers its name, so two declarations alias only when they share name and type
+  theorem: Compile.Spec.declarationsHashTheirName
+```
+
+```mdl
 req R-1: comments, doc comments and layout never change a hash (D66)
   by: Compile.Spec.commentsDoNotChangeHashes
+```
+
+```mdl
+req R-10: a declaration with a full signature and no body compiles, and its callers are checked against the signature
+  by: Compile.Spec.declarationsCheckCallers
+```
+
+```mdl
+req R-11: a declaration needs a result type and a type on every parameter
+  by: Compile.Spec.refusesIncompleteDeclarations
+```
+
+```mdl
+req R-12: calling a declaration raises the defect "not implemented: <name>"
+  by: Compile.Spec.declarationsRaiseADefect
+```
+
+```mdl
+req R-13: a declaration's hash covers its type, and differs from any implementation
+  by: Compile.Spec.declarationsHashTheirType
+```
+
+```mdl
+req R-14: a declaration prints without a body and compiles back to its hash, also after it is renamed
+  by: Compile.Spec.printedSourceCompilesBack | Compile.Spec.renamedDeclarationsRoundTrip
+```
+
+```mdl
+req R-15: an api block reports a declared name as a known gap, not a failure
+  by: Compile.Spec.apiReportsDeclarationsAsGaps
+```
+
+```mdl
+req R-16: updating a declaration with an implementation rehashes its callers, which then run it
+  by: Compile.Spec.implementingRehashesCallers
 ```
 
 ```mdl

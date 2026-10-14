@@ -1,5 +1,5 @@
 /-
-  JavaScript interop for the js target (D94, docs/spec/JS.mdl#foreign-imports).
+  JavaScript interop for the js target (D96, docs/spec/JS.mdl#foreign-imports).
 
   A binding is a definition whose body is `Js.import "<module>" "<path>"` and whose signature
   gives its type; values cross through codecs chosen from that type:

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-// The runtime of modules written by `deus build --js` (D94, docs/spec/JS.mdl). `deus build`
+// The runtime of modules written by `deus build --js` (D96, docs/spec/JS.mdl). `deus build`
 // copies this file next to the module it writes, so it has no imports and runs in Node and in
 // browsers as it is. Value equality, order and `show` follow the TypeScript kernel
 // (src/kernel/machine.ts), so a program prints the same on both.

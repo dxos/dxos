@@ -7,7 +7,7 @@ version: 1.0
 # The JavaScript back end
 
 `deus build <name…> -o <file.js> --js` compiles definitions, and everything they reach, from
-[Core](./CORE.md) to one ES module ([D94](../DECISIONS.md)). There is no wasm and no kernel: each
+[Core](./CORE.md) to one ES module ([D96](../DECISIONS.md)). There is no wasm and no kernel: each
 DEUS definition is a JavaScript function named after it, so a defect or a JavaScript exception has
 a stack trace of DEUS names, and a source map points each function at its definition's source.
 The target is for programs that live next to JavaScript: the DOM, React, Effect, Composer. The
@@ -94,7 +94,7 @@ law L-1: every name mangles to a JavaScript identifier
 
 The module runs in direct style: there are no generators and no continuations in the output. A
 handler is a frame on a stack the runtime keeps, and each operation clause is compiled by how it
-uses its continuation `k` ([D94](../DECISIONS.md)):
+uses its continuation `k` ([D96](../DECISIONS.md)):
 
 | Clause                                       | Compiled as                                                         |
 | -------------------------------------------- | ------------------------------------------------------------------- |

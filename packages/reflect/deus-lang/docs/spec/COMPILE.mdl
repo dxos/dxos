@@ -105,6 +105,51 @@ req R-8: every definition of the toolchain prints back to its own hash
   gap: task a2da28e2; the vitest "adds the compiler to a codebase…" in src/cli.test.ts covers it
 ```
 
+## Declarations without a body
+
+`def parse (t : Text) : Int` with no `:=` declares a definition before it has an implementation
+(D93). Callers compile against the signature; running it is a defect.
+
+```mdl
+req R-10: a declaration with a full signature and no body compiles, and its callers are checked against the signature
+  by: Compile.Spec.declarationsCheckCallers
+```
+
+```mdl
+req R-11: a declaration needs a result type and a type on every parameter
+  by: Compile.Spec.refusesIncompleteDeclarations
+```
+
+```mdl
+req R-12: calling a declaration raises the defect "not implemented: <name>"
+  by: Compile.Spec.declarationsRaiseADefect
+```
+
+```mdl
+law L-5: a declaration's hash covers its name, so two declarations alias only when they share name and type
+  theorem: Compile.Spec.declarationsHashTheirName
+```
+
+```mdl
+req R-13: a declaration's hash covers its type, and differs from any implementation
+  by: Compile.Spec.declarationsHashTheirType
+```
+
+```mdl
+req R-14: a declaration prints without a body and compiles back to its hash, also after it is renamed
+  by: Compile.Spec.printedSourceCompilesBack | Compile.Spec.renamedDeclarationsRoundTrip
+```
+
+```mdl
+req R-15: an api block reports a declared name as a known gap, not a failure
+  by: Compile.Spec.apiReportsDeclarationsAsGaps
+```
+
+```mdl
+req R-16: updating a declaration with an implementation rehashes its callers, which then run it
+  by: Compile.Spec.implementingRehashesCallers
+```
+
 ## Laws
 
 The sources compile against a small prelude of builtin types, so they need no codebase.
@@ -190,7 +235,8 @@ def roundTrips : List Text :=
     "ability Ask where\n  ask : Int -> Int\ndef twice (u : Unit) : {Ask} Int := Ask.ask 1 + Ask.ask 2\ndef answered (u : Unit) : Int :=\n  handle twice () with\n  | return v => v\n  | Ask.ask n -> k => k (n * 10)\n",
     "def even (n : Int) : Bool := if n == 0 then true else odd (n - 1)\ndef odd (n : Int) : Bool := if n == 0 then false else even (n - 1)\n",
     "def s : Text := \"tab\\tquote\\\"\\u{1F600}\"\ndef g (a : Int) : Int :=\n  let h := fun (b : Int) => b + a\n  h (h a)\n",
-    "test t := 1 + 1 == 2\ntheorem th (b : Bool) : (if b then b else b) = b := by decide\n"]
+    "test t := 1 + 1 == 2\ntheorem th (b : Bool) : (if b then b else b) = b := by decide\n",
+    "/-- Parses a number. -/\ndef parse (t : Text) : Int\ndef k : Int\ndef twice (t : Text) : Int := parse t * k\n"]
 
 theorem printedSourceCompilesBack (i : Int) :
     Codebase.Spec.inStore (fun dir =>
@@ -200,7 +246,73 @@ theorem printedSourceCompilesBack (i : Int) :
       let ns := Map.fromList first.entries
       let printed := Text.join "\n\n" (List.map (fun pair => Cli.viewEntry dir ns (fst pair) (snd pair) false) first.entries)
       let again := Compile.batch Map.empty (fun h => Codebase.readObject dir h) (fun h => Codebase.readMeta dir h) "strict" [Compile.parseFile "b.deus" printed]
-      Map.toList (Map.fromList again.entries) == Map.toList ns) = true := by test 21
+      Map.toList (Map.fromList again.entries) == Map.toList ns) = true := by test 24
+
+test declarationsCheckCallers :=
+  let parse := "def parse (t : Text) : Int\n"
+  not (refused (parse ++ "def twice (t : Text) : Int := parse t * 2\n")) &&
+    refused (parse ++ "def wrong (t : Text) : Text := parse t\n") && refused (parse ++ "def wrong (n : Int) : Int := parse n\n")
+
+test refusesIncompleteDeclarations :=
+  refused "def f (a) : Int\n" && refused "def f (a : Int)\n" && refused "def f\n" &&
+    not (refused "def f (a : Int) : Int\n") && not (refused "def k : Int\n") && not (refused "def f (a b : Int) : {} Int\ndef g : Int := 1\n")
+
+/-- Adds `source` after the prelude to the simulated codebase `cb`. -/
+def addSource (source : Text) (isUpdate : Bool) : {IO, Throw Text} Unit :=
+  IO.mkdirp "src"
+  IO.writeFile "src/a.deus" (if isUpdate then source else prelude ++ source)
+  Export.Spec.deus "cb" ["src"] (fun a => Cli.addOrUpdate a isUpdate)
+
+def verdictText (name : Text) : {IO, Throw Text} Text :=
+  let ns := Codebase.current "cb"
+  match Map.lookup name ns with
+  | some e =>
+    match Check.verdictOf "cb" ns e with
+    | some (Verdict.pass _ _) => "pass"
+    | some (Verdict.fail reason) => reason
+    | _ => "none"
+  | none => "none"
+
+test declarationsRaiseADefect :=
+  Codebase.Spec.inStore (fun _ =>
+    addSource "def parse (t : Text) : Int\ntest usesParse := parse \"1\" == 1\n" false
+    Text.startsWith "defect: not implemented: parse" (verdictText "usesParse"))
+
+theorem declarationsHashTheirName (i : Int) (j : Int) :
+    (hashOf ("def " ++ local i ++ " (a : Int) : Int\n") (local i) == hashOf ("def " ++ local j ++ " (a : Int) : Int\n") (local j)) = (local i == local j) := by test 64
+
+test declarationsHashTheirType :=
+  let declared := hashOf "def f (a : Int) : Int\n" "f"
+  Option.isSome declared && declared != hashOf "def f (a : Int) : Text\n" "f" && declared != hashOf "def f (a : Text) : Int\n" "f" &&
+    declared != hashOf "def f (a : Int) : Int := a\n" "f" && declared == hashOf "def f (b : Int) : Int\n" "f"
+
+test renamedDeclarationsRoundTrip :=
+  Codebase.Spec.inStore (fun dir =>
+    addSource "def parse (t : Text) : Int\n" false
+    Export.Spec.deus "cb" ["parse", "read"] (fun a => Cli.mv a false)
+    let ns := Codebase.current "cb"
+    match Map.lookup "read" ns with
+    | some e =>
+      let printed := Cli.viewEntry "cb" ns "read" e false
+      let again := Compile.batch ns (fun h => Codebase.readObject "cb" h) (fun h => Codebase.readMeta "cb" h) "strict" [Compile.parseFile "b.deus" printed]
+      not (Text.contains "def read (t : Text) : Int\n" (printed ++ "\n")) && List.lookup "read" again.entries == some e
+    | none => false)
+
+test apiReportsDeclarationsAsGaps :=
+  Codebase.Spec.inStore (fun _ =>
+    addSource "def parse (t : Text) : Int\ndef twice (t : Text) : Int := parse t * 2\n" false
+    let ns := Codebase.current "cb"
+    let api := fun (line : Text) => Cli.withHost "cb" ns (fun _ => Spec.checkApi (Block.mk "api" "A-1" "t" [("signatures", line)] 0))
+    api "parse : Text -> Int" == ["gap: parse is declared but not implemented"] && api "twice : Text -> Int" == [] &&
+      api "parse : Text -> Text" == ["parse has type Text -> Int, the spec says Text -> Text"])
+
+test implementingRehashesCallers :=
+  Codebase.Spec.inStore (fun _ =>
+    addSource "def parse (t : Text) : Int\ndef twice (t : Text) : Int := parse t * 2\ntest usesParse := twice \"1\" == 4\n" false
+    let before := Map.lookup "twice" (Codebase.current "cb")
+    let failed := verdictText "usesParse"
+    addSource "def parse (t : Text) : Int := 2\n" true
+    before != Map.lookup "twice" (Codebase.current "cb") && Text.contains "not implemented" failed && verdictText "usesParse" == "pass")
 
 end Compile.Spec
 ```

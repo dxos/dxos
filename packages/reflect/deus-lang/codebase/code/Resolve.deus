@@ -125,7 +125,9 @@ def Resolve.expr (ctx : Ctx) (e : Expr) (locals : List (Option Text)) : {Throw T
   | Expr.tuple items => Resolve.tuple (List.map go items)
   | Expr.list items => List.foldr (fun x acc => Resolve.app consCon [go x, acc]) nilCon items
   | Expr.record base fields pos => Resolve.record ctx base fields pos locals
-  | Expr.ann x _ => go x
+  | Expr.ann x t =>
+      -- Checked (D95), then removed before hashing by `unnote`.
+      Compile.node "ann" [tyCore ctx.names ctx.scope [] t, go x]
   | Expr.proj x field pos => Resolve.app (fieldAccessor ctx pos field) [go x]
   | Expr.note text x => Compile.node "note" [Sexp.s text, go x]
   | Expr.spelled text x => Compile.node "spelled" [Sexp.s text, go x]
@@ -156,13 +158,26 @@ def Resolve.hashFor (iri : Text) (form : Sexp) : Text := if startsWith "#" iri t
 /-- A type IRI: explicit, or derived from the fully qualified name. -/
 def Resolve.iriFor (fqn : Text) (iri : Option Text) : Text := getOr iri ("urn:deus:" ++ fqn)
 
+/-- Whether stripped Core is a declaration without a body. -/
+def Resolve.isStub (core : Sexp) : Bool :=
+  match core with
+  | Sexp.list (Sexp.sym "lam" :: b :: []) => Resolve.isStub b
+  | _ => isSome (stubOf core)
+
 /-- `fun p1 p2 => body`: plain names bind directly; other patterns match on the argument. -/
 def Resolve.lambda (ctx : Ctx) (params : List Pat) (body : List (Option Text) -> {Throw Text} Sexp) (locals : List (Option Text)) : {Throw Text} Sexp :=
   match params with
   | [] => body locals
   | first :: rest =>
       match simpleBinder ctx first with
-      | Option.some name => Compile.node "lam" [Sexp.s (getOr name ""), Resolve.lambda ctx rest body (name :: locals)]
+      | Option.some name =>
+          let inner := Resolve.lambda ctx rest body (name :: locals)
+          -- A binder's ascription types local 0 for the checker (D95); `unnote` removes it.
+          let checked :=
+            match first with
+            | Pat.ann _ t => Compile.node "annlocal" [tyCore ctx.names ctx.scope [] t, inner]
+            | _ => inner
+          Compile.node "lam" [Sexp.s (getOr name ""), checked]
       | Option.none =>
           match pat ctx first [] with
           | (core, binds) => Compile.node "lam" [Compile.node "match" [Compile.node "var" [i 0], Compile.node
@@ -215,6 +230,9 @@ def Resolve.pat (ctx : Ctx) (p : Pat) (binds : List (Option Text)) : {Throw Text
   match p with
   | Pat.wild => (Compile.node "pany" [], binds)
   | Pat.int v => (Compile.node "pint" [i v], binds)
+  | Pat.ann q t =>
+      match Resolve.pat ctx q binds with
+      | (core, binds2) => (Compile.node "ann" [tyCore ctx.names ctx.scope [] t, core], binds2)
   | Pat.spelled text q =>
       match Resolve.pat ctx q binds with
       | (core, binds2) => (Compile.node "spelled" [Sexp.s text, core], binds2)
@@ -294,6 +312,7 @@ def Resolve.simpleBinder (ctx : Ctx) (p : Pat) : {Throw Text} Option (Option Tex
   match p with
   | Pat.wild => Option.some Option.none
   | Pat.unit => Option.some Option.none
+  | Pat.ann q _ => Resolve.simpleBinder ctx q
   | Pat.id name [] _ => if Text.contains "." name then Option.none else if isSome (ctorOf ctx name false) then Option.none else Option.some (Option.some name)
   | _ => Option.none
 
@@ -305,7 +324,7 @@ def Resolve.simpleBinder (ctx : Ctx) (p : Pat) : {Throw Text} Option (Option Tex
 /-- Canonical Core and the binder names in pre-order; every binder contributes exactly one name. -/
 def Resolve.strip (form : Sexp) : (Sexp, List Text) :=
   match stripNoted form with
-  | (core, names, _, _) => (core, names)
+  | (core, names, _, _, _) => (core, names)
 
 def Resolve.stripAcc (form : Sexp) (acc : List Text) : (Sexp, List Text) :=
   let rebuild := fun head prefix children names =>
@@ -348,12 +367,13 @@ def Resolve.stripList (items : List Sexp) (acc : List Text) : (List Sexp, List T
         | (y, a2) => go more (y :: out) a2
   go items [] acc
 
-/-- `strip`, also returning the comments (D66) and number spellings (D88) it removed. -/
-def Resolve.stripNoted (form : Sexp) : (Sexp, (List Text, (List (Int, Text), List (Int, Text)))) :=
+/-- `strip`, also returning the comments (D66) and number spellings (D88) it removed, and the Core the
+  checker reads: the same, with its ascriptions still in place as `(ann T e)` (D95). -/
+def Resolve.stripNoted (form : Sexp) : (Sexp, (List Text, (List (Int, Text), (List (Int, Text), Sexp)))) :=
   match stripAcc form [] with
   | (named, names) =>
       match unnote named with
-      | (core, notes, spellings) => (core, reverse names, notes, spellings)
+      | (core, notes, spellings) => (core, reverse names, notes, spellings, unmark named)
 
 def Resolve.structFields (ctx : Ctx) (fqn : Text) : List Text :=
   match Dict.lookup fqn (ctx.names).index with
@@ -364,6 +384,18 @@ def Resolve.structHash (ctx : Ctx) (fqn : Text) : Text :=
   match Dict.lookup fqn (ctx.names).index with
   | Option.some (Entry.type h _ _) => h
   | _ => ""
+
+/-- The body of a declaration without one (D93): the defect `not implemented: <name>`, under a lambda
+  applied to the printed signature, so the hash covers the name and the type. -/
+def Resolve.stub (fqn : Text) (signature : Sexp) : Sexp := Resolve.app (Compile.node "lam" [Sexp.s "", Resolve.app
+  (Compile.node "prim" [Sexp.s "defect"])
+  [Compile.node "text" [Sexp.s ("not implemented: " ++ fqn)]]]) [Compile.node "text" [Sexp.s (Sexp.print signature)]]
+
+/-- The name and printed signature of a stripped `stub` body, after its parameters' lambdas. -/
+def Resolve.stubOf (body : Sexp) : Option (Text, Text) :=
+  match body with
+  | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "lam" :: Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "prim" :: Sexp.str "defect" :: []) :: Sexp.list (Sexp.sym "text" :: Sexp.str message :: []) :: []) :: []) :: Sexp.list (Sexp.sym "text" :: Sexp.str signature :: []) :: []) => if startsWith "not implemented: " message then Option.some (Text.drop 17 message, signature) else Option.none
+  | _ => Option.none
 
 def Resolve.trueCore : Sexp := Compile.node "con" [Sexp.s "#Bool", i 1, i 0]
 
@@ -403,9 +435,17 @@ def Resolve.tyCore (names : Names) (scope : Scope) (params : List Text) (t : Ty)
 
 def Resolve.unitCore : Sexp := Compile.node "con" [Sexp.s "#Unit", i 0, i 0]
 
+/-- Removes comments and number spellings, keeping ascriptions: the Core the checker reads (D95). -/
+def Resolve.unmark (form : Sexp) : Sexp :=
+  match form with
+  | Sexp.list (Sexp.sym "note" :: Sexp.str _ :: inner :: []) => Resolve.unmark inner
+  | Sexp.list (Sexp.sym "spelled" :: Sexp.str _ :: inner :: []) => Resolve.unmark inner
+  | Sexp.list items => Sexp.list (List.map (fun x => Resolve.unmark x) items)
+  | _ => form
+
 /-- Removes `(note "text" e)` and `(spelled "text" e)` nodes. Each is returned with the pre-order
   index of `e` among the list nodes of the result, the position `Print.restore` puts it back at
-  (D66, D88): comments first, then spellings. -/
+  (D66, D88): comments first, then spellings. Ascriptions `(ann T e)` go without a trace (D95). -/
 def Resolve.unnote (form : Sexp) : (Sexp, (List (Int, Text), List (Int, Text))) :=
   let rec go x count acc spellings :=
     match x with
@@ -414,6 +454,8 @@ def Resolve.unnote (form : Sexp) : (Sexp, (List (Int, Text), List (Int, Text))) 
         | (at, earlier) :: rest => if at == count then go inner count ((at, earlier ++ "\n" ++ text) :: rest) spellings else go inner count ((count, text) :: acc) spellings
         | [] => go inner count [(count, text)] spellings
     | Sexp.list (Sexp.sym "spelled" :: Sexp.str text :: inner :: []) => go inner count acc ((count, text) :: spellings)
+    | Sexp.list (Sexp.sym "ann" :: _ :: inner :: []) => go inner count acc spellings
+    | Sexp.list (Sexp.sym "annlocal" :: _ :: inner :: []) => go inner count acc spellings
     | Sexp.list items =>
         let rec each rest out c a sp :=
           match rest with

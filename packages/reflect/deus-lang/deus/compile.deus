@@ -199,6 +199,8 @@ structure Pending where
   name : Text
   wrap : Text
   core : Sexp
+  -- What the checker reads: `core` with its ascriptions in place (D95).
+  checked : Sexp
 
 /-- Wraps Core in its object form: `(term c)`, `(test c)`, or a theorem's full form. -/
 def objectOf (p : Pending) (core : Sexp) : Sexp := if p.wrap == "theorem" then core else node p.wrap [core]
@@ -311,7 +313,7 @@ def batch (base : Map Text Entry) (store : Text -> {Throw Text | r} Option Sexp)
       let accessors := List.mapIndexed (fun index field =>
         let name := fqn ++ "." ++ fst field
         claim name
-        Ref.set pending (Pending.mk name "term" (accessorCore h count index) :: Ref.get pending)
+        Ref.set pending (Pending.mk name "term" (accessorCore h count index) (accessorCore h count index) :: Ref.get pending)
         (name, Entry.term ("@" ++ name))) fields
       (fqn, Entry.type h i (List.map fst fields)) :: (fqn ++ ".mk", Entry.ctor h 0 count) :: accessors
     | Decl.effect _ params iri ops doc _ =>
@@ -349,19 +351,20 @@ def batch (base : Map Text Entry) (store : Text -> {Throw Text | r} Option Sexp)
     match item.decl with
     | Decl.defn _ binders type body arms doc attributes pos =>
       let params := List.map (fun b => Pat.id b.binder [] pos) binders
+      let sig := signature names (bodyScope item) binders type
       let named := Resolve.lambda ctx params (fun locals =>
         match (body, arms) with
         | (some e, _) => Resolve.expr ctx e locals
         | (_, some list) => Resolve.equations ctx list locals
-        | _ => Resolve.fail ctx "definition has no body") []
+        | _ => Resolve.stub fqn sig) []
       match Resolve.stripNoted named with
-      | (core, locals, notes, spellings) =>
-        Ref.set pending (Pending.mk fqn "term" core :: Ref.get pending)
-        addMetaWith ("@" ++ fqn) doc (some (signature names (bodyScope item) binders type)) locals attributes (commentMeta item.lead notes spellings)
+      | (core, locals, notes, spellings, checked) =>
+        Ref.set pending (Pending.mk fqn "term" core checked :: Ref.get pending)
+        addMetaWith ("@" ++ fqn) doc (some sig) locals attributes (commentMeta item.lead notes spellings)
     | Decl.check _ body doc attributes _ =>
       match Resolve.stripNoted (Resolve.expr ctx body []) with
-      | (core, locals, notes, spellings) =>
-        Ref.set pending (Pending.mk fqn "test" core :: Ref.get pending)
+      | (core, locals, notes, spellings, checked) =>
+        Ref.set pending (Pending.mk fqn "test" core checked :: Ref.get pending)
         addMetaWith ("@" ++ fqn) doc none locals attributes (commentMeta item.lead notes spellings)
     | Decl.thm _ binders prop proof doc _ pos =>
       let params := List.map (fun b => Pat.id b.binder [] pos) binders
@@ -372,7 +375,7 @@ def batch (base : Map Text Entry) (store : Text -> {Throw Text | r} Option Sexp)
       match Resolve.strip (Resolve.lambda ctx params (fun locals => Resolve.expr ctx prop locals) []) with
       | (core, locals) =>
         let form := node "theorem" [Sexp.list (Sexp.sym "binders" :: types), core, node "proof" (proofTokens names (bodyScope item) proof)]
-        Ref.set pending (Pending.mk fqn "theorem" form :: Ref.get pending)
+        Ref.set pending (Pending.mk fqn "theorem" form form :: Ref.get pending)
         addMeta ("@" ++ fqn) doc none locals (commentMeta item.lead [] [])
     | _ => ())
   -- Pass 2½: infer types, group by group, and check signatures; schemes join the metadata.
@@ -439,11 +442,19 @@ def typecheck (objectOf : Text -> {Throw Text | r} Option Sexp) (metaOf : Text -
     List.forEach members (fun p =>
       let key := "@" ++ p.name
       catch (fun _ =>
-        let core := match p.core with
+        let core := match p.checked with
           | Sexp.list (Sexp.sym "theorem" :: _ :: prop :: _) => prop
           | c => c
         let t := Option.getOr (Map.lookup key vars) (Types.freshType u)
         match Codebase.metaField (metaOf key) "sig" with
+        | some (Sexp.list [Sexp.sym "teff", Sexp.list (Sexp.sym "eff" :: effs), result]) =>
+          -- A definition with no binders: its row bounds the body itself (D95).
+          let sigVars := Ref.new Map.empty
+          let sigRows := Ref.new Map.empty
+          let declared := Types.signatureType u result sigVars sigRows
+          Types.unify u t declared
+          Types.checkAgainst u env core declared [] (Types.signatureRow u effs sigVars sigRows)
+          Types.checkRigid u sigVars sigRows
         | some sig =>
           -- Checked against its signature, so parameters have their declared types and rows.
           let sigVars := Ref.new Map.empty
