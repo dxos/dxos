@@ -17,6 +17,7 @@ export default defineConfig({
     'platform/bun': 'src/platform/bun.ts',
     'platform/node': 'src/platform/node.ts',
     'platform/sql-storage-browser': 'src/platform/sql-storage-browser.ts',
+    'platform/sql-storage-bun': 'src/platform/sql-storage-bun.ts',
     'platform/sql-storage-node': 'src/platform/sql-storage-node.ts',
   },
   // Undeclared dep, reached only through this package — inlined rather than left for
