@@ -7,6 +7,8 @@ import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 import { Context, TRACE_SPAN_ATTRIBUTE, type TraceContextData } from '@dxos/context';
 
 import { trace } from './api.ts';
+import { DiagnosticsManager } from './diagnostic.ts';
+import { DiagnosticsChannel } from './diagnostics-channel.ts';
 import { TRACE_PROCESSOR } from './trace-processor.ts';
 import type { RemoteSpan, StartSpanOptions, TracingBackend } from './tracing-types.ts';
 
@@ -433,5 +435,27 @@ describe('span attributes', () => {
     const span = spans.find((record) => record.options.name === 'Svc.work')!;
     expect(span.error).toBeUndefined();
     expect(span.ended).toBe(true);
+  });
+});
+
+describe('diagnostics channel', () => {
+  test('fetch is answered only by the instance holding the diagnostic', async ({ expect }) => {
+    const channelName = `diagnostics-test-${Math.random()}`;
+    const holder = new DiagnosticsManager();
+    holder.registerDiagnostic({ id: 'stats', fetch: () => 42 });
+    const holderChannel = new DiagnosticsChannel(channelName);
+    holderChannel.serve(holder);
+    const otherChannel = new DiagnosticsChannel(channelName);
+    otherChannel.serve(new DiagnosticsManager());
+    const client = new DiagnosticsChannel(channelName);
+
+    try {
+      const response = await client.fetch({ id: 'stats' });
+      expect(response).toMatchObject({ id: 'stats', instanceId: holder.instanceId, data: 42 });
+    } finally {
+      for (const channel of [holderChannel, otherChannel, client]) {
+        channel.destroy();
+      }
+    }
   });
 });
