@@ -14,11 +14,12 @@ import {
   EncodedReference,
   type EntityPropPath,
   EntityStructure,
+  EscapedPropPath,
   PROPERTY_ID,
   QueryAST,
   isEncodedReference,
+  referenceIndexKey,
 } from '@dxos/echo-protocol';
-import { EscapedPropPath, referenceIndexKey } from '@dxos/index-core';
 import { EID, type EntityId, type SpaceId, type URI } from '@dxos/keys';
 import { getDeep, visitValues } from '@dxos/util';
 
@@ -575,7 +576,7 @@ export class WorkingSetQueryExecutor {
           itemB.aggregates && order.property in itemB.aggregates
             ? itemB.aggregates[order.property]
             : WorkingSetItem.getProperty(itemB, [order.property]);
-        const cmp = _compareValues(aVal, bVal);
+        const cmp = compareOrderValues(aVal, bVal);
         return order.direction === 'desc' ? -cmp : cmp;
       }
       default:
@@ -623,7 +624,8 @@ const _isGroupedWorkingSet = (ws: WorkingSetItem[]): boolean => ws.length > 0 &&
 // working set already partitioned by AggregateStep (guarded by `_isGroupedWorkingSet`).
 const _serializeItemGroupKey = (item: WorkingSetItem): string => GroupBy.serializeGroupKey(item.groupKey!);
 
-const _compareValues = (valueA: unknown, valueB: unknown): number => {
+/** Orders two property values as the host's SQLite sort does: nulls last, code-unit strings, numeric numbers. */
+export const compareOrderValues = (valueA: unknown, valueB: unknown): number => {
   if (valueA == null && valueB == null) {
     return 0;
   }

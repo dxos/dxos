@@ -81,14 +81,14 @@ describe('EdgeHttpClient.request', () => {
     vi.stubGlobal('fetch', fetchMock);
 
     const client = new EdgeHttpClient('https://edge.example.com');
-    const data = await client.request(Context.default(), '/compute/discord/bots/app-1', {
+    const data = await client.request(Context.default(), '/discord/bots/app-1', {
       method: 'PUT',
       body: { spaceId: 'space' },
     });
 
     expect(data).toEqual({ running: true });
     const targetCall = fetchMock.mock.calls.find((call) => !String(call[0]).endsWith('/auth'));
-    expect(String(targetCall?.[0])).toBe('https://edge.example.com/compute/discord/bots/app-1');
+    expect(String(targetCall?.[0])).toBe('https://edge.example.com/discord/bots/app-1');
     expect(targetCall?.[1]?.method).toBe('PUT');
     expect(targetCall?.[1]?.body).toBe(JSON.stringify({ spaceId: 'space' }));
   });

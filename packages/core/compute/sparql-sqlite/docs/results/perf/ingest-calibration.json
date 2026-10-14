@@ -1,0 +1,142 @@
+{
+  "cal-bsbm": {
+    "db": "cal-bsbm",
+    "file": "bsbm-2785.nt",
+    "url": "https://rdf-bench-sql-compiler.dxos.workers.dev",
+    "build": "1791872891",
+    "pingMs": 30.52434100000005,
+    "rows": [
+      {
+        "quads": 20000,
+        "ntBytes": 4810371,
+        "jsonBytes": 7046253,
+        "ntGz": 838538,
+        "jsonGz": 857992,
+        "clientParseMs": 66.3570729999999,
+        "ntDryMs": 209.5508080000002,
+        "jsonDryMs": 298.94058799999993,
+        "ntLoadMs": 647.459026,
+        "jsonLoadMs": 965.0694960000001
+      },
+      {
+        "quads": 20000,
+        "ntBytes": 5144869,
+        "jsonBytes": 7308044,
+        "ntGz": 589050,
+        "jsonGz": 607043,
+        "clientParseMs": 34.954091999999946,
+        "ntDryMs": 155.23628000000008,
+        "jsonDryMs": 208.30362100000002,
+        "ntLoadMs": 475.0908789999994,
+        "jsonLoadMs": 615.5270359999995
+      },
+      {
+        "quads": 20000,
+        "ntBytes": 5253537,
+        "jsonBytes": 7396494,
+        "ntGz": 505208,
+        "jsonGz": 523027,
+        "clientParseMs": 47.012996999999814,
+        "ntDryMs": 128.57826400000067,
+        "jsonDryMs": 196.00764499999968,
+        "ntLoadMs": 419.5579289999996,
+        "jsonLoadMs": 732.0081929999997
+      },
+      {
+        "quads": 20000,
+        "ntBytes": 5280598,
+        "jsonBytes": 7420816,
+        "ntGz": 511876,
+        "jsonGz": 529869,
+        "clientParseMs": 26.24451500000032,
+        "ntDryMs": 139.0531719999999,
+        "jsonDryMs": 266.90373400000044,
+        "ntLoadMs": 450.0530740000004,
+        "jsonLoadMs": 556.4010429999998
+      }
+    ],
+    "median_clientParseMs": 47.012996999999814,
+    "median_ntDryMs": 155.23628000000008,
+    "median_jsonDryMs": 266.90373400000044,
+    "median_ntLoadMs": 475.0908789999994,
+    "median_jsonLoadMs": 732.0081929999997,
+    "median_ntGz": 589050,
+    "median_jsonGz": 607043
+  },
+  "cal-watdiv": {
+    "db": "cal-watdiv",
+    "file": "watdiv10.nt",
+    "url": "https://rdf-bench-sql-compiler.dxos.workers.dev",
+    "build": "1791873867",
+    "pingMs": 29.963662000000113,
+    "rows": [
+      {
+        "quads": 20000,
+        "ntBytes": 2538500,
+        "jsonBytes": 4718502,
+        "ntGz": 510871,
+        "jsonGz": 539140,
+        "clientParseMs": 39.690982000000076,
+        "ntDryMs": 186.51605100000006,
+        "jsonDryMs": 203.26001699999983,
+        "ntLoadMs": 660.5733369999998,
+        "jsonLoadMs": 647.9099660000002
+      },
+      {
+        "quads": 20000,
+        "ntBytes": 2383494,
+        "jsonBytes": 4563496,
+        "ntGz": 393498,
+        "jsonGz": 416359,
+        "clientParseMs": 41.0944300000001,
+        "ntDryMs": 128.65012000000024,
+        "jsonDryMs": 147.52214000000004,
+        "ntLoadMs": 664.9256809999997,
+        "jsonLoadMs": 507.58324600000014
+      },
+      {
+        "quads": 20000,
+        "ntBytes": 2528676,
+        "jsonBytes": 4708678,
+        "ntGz": 494358,
+        "jsonGz": 521971,
+        "clientParseMs": 21.603344000000106,
+        "ntDryMs": 154.48540400000002,
+        "jsonDryMs": 167.70844299999953,
+        "ntLoadMs": 590.8286079999998,
+        "jsonLoadMs": 536.5478739999999
+      },
+      {
+        "quads": 20000,
+        "ntBytes": 2399017,
+        "jsonBytes": 4579019,
+        "ntGz": 407162,
+        "jsonGz": 432075,
+        "clientParseMs": 18.896560000000136,
+        "ntDryMs": 132.87467500000002,
+        "jsonDryMs": 153.3595089999999,
+        "ntLoadMs": 623.6219119999996,
+        "jsonLoadMs": 588.6004049999992
+      },
+      {
+        "quads": 20000,
+        "ntBytes": 2525194,
+        "jsonBytes": 4705196,
+        "ntGz": 482004,
+        "jsonGz": 509713,
+        "clientParseMs": 22.617527000000337,
+        "ntDryMs": 132.05794400000013,
+        "jsonDryMs": 158.32667200000105,
+        "ntLoadMs": 674.1285829999997,
+        "jsonLoadMs": 621.989302
+      }
+    ],
+    "median_clientParseMs": 22.617527000000337,
+    "median_ntDryMs": 132.87467500000002,
+    "median_jsonDryMs": 158.32667200000105,
+    "median_ntLoadMs": 660.5733369999998,
+    "median_jsonLoadMs": 588.6004049999992,
+    "median_ntGz": 482004,
+    "median_jsonGz": 509713
+  }
+}

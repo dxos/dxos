@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as A from '@automerge/automerge';
 import type { AutomergeUrl, DocumentId } from '@automerge/automerge-repo';
 import * as Effect from 'effect/Effect';
 import * as SqlClient from 'effect/sql/SqlClient';
@@ -9,30 +10,33 @@ import * as SqlClient from 'effect/sql/SqlClient';
 import { ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
 import { type Obj, Query } from '@dxos/echo';
 import {
+  BACKED_OBJECT_LIMIT,
   DatabaseDirectory,
   EncodedReference,
   type EntityPropPath,
   EntityStructure,
+  EscapedPropPath,
   PROPERTY_ID,
   QueryAST,
+  backingJson,
   isEncodedReference,
 } from '@dxos/echo-protocol';
-import { ATTR_META, ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
-import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import {
-  type EntityMeta,
-  EscapedPropPath,
-  type IndexEngine,
-  type QueueRef,
-  type QueueWindow,
-  type ReverseRef,
-} from '@dxos/index-core';
+  ATTR_META,
+  ATTR_PARENT,
+  ATTR_RELATION_SOURCE,
+  ATTR_RELATION_TARGET,
+  ATTR_TYPE,
+  objectStructureToJson,
+} from '@dxos/echo/internal';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
+import { type EntityMeta, type IndexEngine, type QueueRef, type QueueWindow, type ReverseRef } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId, SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { type QueryService } from '@dxos/protocols/rpc';
-import { compositeKey, getDeep, isNonNullable } from '@dxos/util';
+import { chunkArray, compositeKey, getDeep, isNonNullable } from '@dxos/util';
 
 import type { AutomergeHost } from '../automerge/index.ts';
 import type { SpaceStateManager } from '../db-host/index.ts';
@@ -41,9 +45,17 @@ import { filterMatchDoc, filterMatchEntityMeta, filterMatchObjectJSON, getEntity
 import { type ChangeItem, changeResults, executeChangesPlan, serializeChangeResults } from './changes-executor.ts';
 import { QueryError } from './errors.ts';
 import { type GroupAggregates, GroupBy, type GroupKeyValue, compareCodeUnits } from './group-by.ts';
+import { isSaved } from './object-state.ts';
 import { QueryPlan } from './plan.ts';
-import { type QueryExecutorMode, QueryPlanner, filterContainsInQuery } from './query-planner.ts';
-import { type CompiledRow } from './sql/index.ts';
+import { QueryPlanner, filterContainsInQuery } from './query-planner.ts';
+import { type CompiledRow, compilePlan, planDeclinedByCompiler } from './sql/index.ts';
+
+/**
+ * Which evaluation path a plan targets: `memory` leaves every step for the executor to evaluate in
+ * JS over loaded objects; `sql` compiles the steps into a single {@link QueryPlan.SqlStep} over the
+ * index tables. `memory` is the default; the host resolves where the choice comes from.
+ */
+export type QueryExecutorMode = 'sql' | 'memory';
 
 type QueryExecutorOptions = {
   indexEngine: IndexEngine;
@@ -55,8 +67,10 @@ type QueryExecutorOptions = {
   query: QueryAST.Query;
   reactivity: QueryReactivity;
   executor?: QueryExecutorMode;
-  /** Builds compiled statements; the planner needs it only under the `sql` executor. */
+  /** Builds compiled statements; needed only under the `sql` executor. */
   sql?: SqlClient.SqlClient;
+  /** Whether the client already holds a document; its rows ship without JSON and stored changes. */
+  holds?: (documentId: DocumentId) => boolean;
 };
 
 type QueryExecutionResult = {
@@ -125,6 +139,10 @@ type QueryItem = {
    * carries no document, data or meta, so it is only ever produced by the plan's last step.
    */
   result?: QueryService.QueryResult;
+
+  recordId?: number;
+
+  backing?: { heads: readonly string[]; json: string };
 };
 
 /** Parsed once per index row: an order step reads it on every comparison. */
@@ -674,6 +692,7 @@ export class QueryExecutor extends Resource {
   #changeResultSet: ChangeItem[] | undefined;
   readonly #planner: QueryPlanner;
   readonly #mode: QueryExecutorMode;
+  readonly #holds: (documentId: DocumentId) => boolean;
 
   /**
    * Resolved `in-query` (subquery-membership) sets for the current `execQuery` run, keyed by
@@ -705,9 +724,15 @@ export class QueryExecutor extends Resource {
     this._query = options.query;
     this._reactivity = options.reactivity;
 
+    this.#holds = options.holds ?? (() => false);
     this.#mode = options.executor ?? 'memory';
-    this.#planner = new QueryPlanner({ executor: this.#mode, sql: options.sql });
-    this._plan = this.#planner.createPlan(this._query);
+    this.#planner = new QueryPlanner();
+    const plan = this.#planner.createPlan(this._query);
+    const planSubquery = (query: QueryAST.Query) => this.#planner.createPlan(query);
+    this._plan =
+      this.#mode === 'sql' && options.sql !== undefined && !planDeclinedByCompiler(plan, planSubquery)
+        ? compilePlan(options.sql, plan, planSubquery).plan
+        : plan;
     this.#scopes = extractScopes(this._plan);
     this.#includeAllFeeds = extractIncludeAllFeeds(this._plan);
   }
@@ -736,7 +761,7 @@ export class QueryExecutor extends Resource {
     return this.#scopes.isSimple && this.#scopes.objectIds !== null;
   }
 
-  getResults(): QueryService.QueryResult[] {
+  async getResults(): Promise<QueryService.QueryResult[]> {
     if (this.#changeResultSet) {
       return changeResults(this.#changeResultSet);
     }
@@ -750,7 +775,7 @@ export class QueryExecutor extends Resource {
       groupCounts.set(serialized, (groupCounts.get(serialized) ?? 0) + 1);
     }
 
-    return this._lastResultSet.map((item): QueryService.QueryResult => {
+    const results = this._lastResultSet.map((item): QueryService.QueryResult => {
       if (item.result !== undefined) {
         return item.result;
       }
@@ -774,12 +799,101 @@ export class QueryExecutor extends Resource {
 
         rank: item.rank,
 
-        documentJson: item.doc ? JSON.stringify(item.doc) : item.data ? JSON.stringify(item.data) : undefined,
+        documentJson: item.backing?.json ?? (item.data ? JSON.stringify(item.data) : undefined),
 
         groupKey: serializedGroupKey,
         groupCount: serializedGroupKey !== undefined ? groupCounts.get(serializedGroupKey) : undefined,
+
+        heads: item.backing ? [...item.backing.heads] : undefined,
+        createdAt: item.backing ? (item.createdAt ?? undefined) : undefined,
+        updatedAt: item.backing ? (item.updatedAt ?? undefined) : undefined,
       };
     });
+    return this.#withBacking(results, this._lastResultSet);
+  }
+
+  /**
+   * Backs each document row the client does not hold with its JSON, heads and stored changes. A row
+   * that cannot be backed ships bare, and is tried again on the next emission while the client lacks it.
+   */
+  async #withBacking(
+    results: QueryService.QueryResult[],
+    items: readonly QueryItem[],
+  ): Promise<QueryService.QueryResult[]> {
+    const unheld = results.flatMap((result, index) =>
+      result.heads !== undefined && result.documentId !== undefined && !this.#holds(result.documentId as DocumentId)
+        ? [index]
+        : [],
+    );
+    const sources = await this.#readBackingSources(results, items, unheld);
+    const backings = await this.#readStoredChanges(results, sources);
+    return results.map((result, index) => {
+      if (result.heads === undefined) {
+        return result;
+      }
+      const backing = backings.get(index);
+      return backing
+        ? { ...result, documentJson: backing.json, heads: backing.heads, bytes: backing.bytes }
+        : withoutBacking(result);
+    });
+  }
+
+  /**
+   * The JSON each row is backed with and the heads it was read at: the row's own, or for a compiled row
+   * the index's, both from one read so a pass between the plan and this read cannot pair them wrongly.
+   */
+  async #readBackingSources(
+    results: readonly QueryService.QueryResult[],
+    items: readonly QueryItem[],
+    indices: readonly number[],
+  ): Promise<Map<number, BackingSource>> {
+    const fromIndex = indices.filter(
+      (index) => results[index].documentJson === undefined && items[index]?.recordId !== undefined,
+    );
+    const indexed =
+      fromIndex.length > 0
+        ? await this._runInRuntime(
+            this._indexEngine.queryBackings(fromIndex.map((index) => items[index].recordId!)),
+          ).catch((err) => {
+            log.warn('index JSON could not be read for rows', { err });
+            return [];
+          })
+        : [];
+    const byRecord = new Map(indexed.map((row) => [row.recordId, row]));
+    const sources = new Map<number, BackingSource>();
+    for (const index of indices) {
+      const row = byRecord.get(items[index]?.recordId ?? -1);
+      const json = results[index].documentJson ?? row?.json;
+      if (json !== undefined) {
+        sources.set(index, { json, heads: row?.heads ?? results[index].heads! });
+      }
+    }
+    return sources;
+  }
+
+  /** Stored changes for each row with a source, {@link STORED_CHANGES_CONCURRENCY} reads at a time. */
+  async #readStoredChanges(
+    results: readonly QueryService.QueryResult[],
+    sources: ReadonlyMap<number, BackingSource>,
+  ): Promise<Map<number, BackingSource & { bytes: Uint8Array }>> {
+    const backings = new Map<number, BackingSource & { bytes: Uint8Array }>();
+    for (const chunk of chunkArray([...sources], STORED_CHANGES_CONCURRENCY)) {
+      await Promise.all(
+        chunk.map(async ([index, source]) => {
+          const documentId = results[index].documentId as DocumentId;
+          const bytes = await this._automergeHost
+            .readStoredChanges(documentId, { limit: BACKED_OBJECT_LIMIT })
+            .catch((err) => {
+              log.warn('stored changes could not be read for a row', { documentId, err });
+              return undefined;
+            });
+          if (bytes !== undefined) {
+            backings.set(index, { ...source, bytes });
+          }
+        }),
+      );
+    }
+    return backings;
   }
 
   /**
@@ -2096,11 +2210,18 @@ export class QueryExecutor extends Resource {
 
   private async _loadDocumentsAfterSqlQuery(metas: readonly EntityMeta[]): Promise<(QueryItem | null)[]> {
     const snapshotMap = await this._loadQueueSnapshotMap(metas);
+    const documentIds = [...new Set(metas.flatMap((meta) => (meta.documentId ? [meta.documentId as DocumentId] : [])))];
+    const storedHeads =
+      documentIds.length > 0
+        ? new Map(
+            (await this._automergeHost.getStoredHeads(documentIds)).map((heads, index) => [documentIds[index], heads]),
+          )
+        : new Map<DocumentId, A.Heads | undefined>();
     return await Promise.all(
       metas.map(async (meta) => {
         // Branch 1: Document-backed object.
         if (meta.documentId) {
-          return this._loadFromAutomerge(meta);
+          return this._loadFromAutomerge(meta, storedHeads.get(meta.documentId as DocumentId));
         }
 
         // Branch 2: Queue-backed object.
@@ -2157,7 +2278,7 @@ export class QueryExecutor extends Resource {
    * Returns `null` if the document can't be loaded, the inline object isn't present, or if the meta does not have a
    * document id (e.g. queue-backed objects).
    */
-  private async _loadFromAutomerge(meta: EntityMeta): Promise<QueryItem | null> {
+  private async _loadFromAutomerge(meta: EntityMeta, storedHeads: A.Heads | undefined): Promise<QueryItem | null> {
     if (!meta.documentId) {
       return null;
     }
@@ -2167,10 +2288,14 @@ export class QueryExecutor extends Resource {
     if (!lease) {
       return null;
     }
-    const object = DatabaseDirectory.getInlineObject(lease.doc(), meta.objectId);
+    const doc = lease.doc();
+    const object = DatabaseDirectory.getInlineObject(doc, meta.objectId);
     if (!object) {
       return null;
     }
+    const json = objectStructureToJson(meta.objectId, object);
+    const heads = A.getHeads(doc);
+    const text = isSaved(storedHeads, heads) ? backingJson(doc, object, json) : undefined;
     return {
       objectId: meta.objectId,
       documentId: meta.documentId as DocumentId,
@@ -2182,6 +2307,7 @@ export class QueryExecutor extends Resource {
       rank: 1,
       createdAt: meta.createdAt,
       updatedAt: meta.updatedAt,
+      backing: text !== undefined ? { heads, json: text } : undefined,
     };
   }
 
@@ -2599,6 +2725,9 @@ const compiledRowToItem = (row: CompiledRow): QueryItem => {
           documentJson: row.documentJson ?? undefined,
           groupKey: row.groupKey ?? undefined,
           groupCount: row.groupCount ?? undefined,
+          heads: row.heads !== null ? JSON.parse(row.heads) : undefined,
+          createdAt: row.heads !== null ? (row.createdAt ?? undefined) : undefined,
+          updatedAt: row.heads !== null ? (row.updatedAt ?? undefined) : undefined,
         };
   return {
     objectId: row.objectId,
@@ -2611,6 +2740,7 @@ const compiledRowToItem = (row: CompiledRow): QueryItem => {
     rank: row.rank,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
+    recordId: row.recordId,
     result,
   };
 };
@@ -2649,3 +2779,16 @@ const _sameResult = (a: QueryItem, b: QueryItem): boolean => {
     _serializeCollapsed(a) === _serializeCollapsed(b)
   );
 };
+
+const STORED_CHANGES_CONCURRENCY = 16;
+
+type BackingSource = { json: string; heads: string[] };
+
+const withoutBacking = ({
+  documentJson: _documentJson,
+  heads: _heads,
+  bytes: _bytes,
+  createdAt: _createdAt,
+  updatedAt: _updatedAt,
+  ...row
+}: QueryService.QueryResult): QueryService.QueryResult => row;

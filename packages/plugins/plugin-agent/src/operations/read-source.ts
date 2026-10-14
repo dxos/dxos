@@ -12,7 +12,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj } from '@dxos/echo';
 import { type EntityNotFoundError } from '@dxos/echo/Error';
 import { type Space } from '@dxos/halo';
-import { type RDF, type SemanticIndexError, extractDocFacts } from '@dxos/pipeline-rdf';
+import { RDF, type SemanticIndexError, extractDocFacts } from '@dxos/pipeline-rdf';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 import { Message } from '@dxos/types';
@@ -21,7 +21,17 @@ import { AgentOperation, BrainService, ChatParticipant } from '#types';
 
 import { pushFacts } from './deliver.ts';
 import { AgentOperationError } from './errors.ts';
-import { agentId, loadMembers, memberByDid, memberByName, personDid, resolveTerms } from './members.ts';
+import {
+  type EntityIndex,
+  agentId,
+  knownEntities,
+  loadEntities,
+  loadMembers,
+  memberByDid,
+  memberByName,
+  personDid,
+  resolveTerms,
+} from './members.ts';
 
 /** One utterance of a source, so a fact quoting it can be attributed to its speaker and time. */
 type Segment = {
@@ -108,6 +118,30 @@ const speakerOf = Effect.fnUntraced(function* (
 const inAppendOrder = <T extends Obj.Unknown>(items: readonly T[]): T[] =>
   [...items].sort(Order.mapInput(Order.Number, Feed.getPosition));
 
+/** What a message says aloud; synthetic text (a woken chat's relay, system notes) is not something anyone said. */
+const spokenText = (message: Message.Message): string =>
+  message.blocks
+    .flatMap((block) => (block._tag === 'text' && block.disposition !== 'synthetic' ? [block.text] : []))
+    .join('\n')
+    .trim();
+
+/**
+ * Whether the message repeats the one before it from the same sender: a prompt queued for a running agent is in the
+ * feed once as queued and again as the turn's own copy, and reading both stores every fact twice.
+ */
+const isEcho = (messages: readonly Message.Message[], index: number): boolean => {
+  const previous = messages[index - 1];
+  const message = messages[index];
+  return (
+    previous !== undefined &&
+    previous.sender.role === message.sender.role &&
+    previous.sender.name === message.sender.name &&
+    previous.sender.identityDid === message.sender.identityDid &&
+    previous.sender.contact?.uri === message.sender.contact?.uri &&
+    spokenText(previous) === spokenText(message)
+  );
+};
+
 /** How many messages before the cursor an incremental read shows the extractor, so references in new messages resolve. */
 const CONTEXT_MESSAGES = 8;
 
@@ -134,11 +168,7 @@ const readChat = Effect.fnUntraced(function* (
   const participantId = ChatParticipant.get(chat);
   const participant = participantId ? (yield* Database.query(Filter.id(participantId)).run).at(0) : undefined;
   const toSegment = Effect.fnUntraced(function* (message: Message.Message) {
-    // Synthetic text (a woken chat's relay, system notes) is not something anyone said.
-    const text = message.blocks
-      .flatMap((block) => (block._tag === 'text' && block.disposition !== 'synthetic' ? [block.text] : []))
-      .join('\n')
-      .trim();
+    const text = spokenText(message);
     if (message.sender.role === 'tool' || text.length === 0) {
       return undefined;
     }
@@ -151,7 +181,12 @@ const readChat = Effect.fnUntraced(function* (
   });
 
   const segments: Segment[] = [];
-  for (const message of messages.slice(start)) {
+  for (const [offset, message] of messages.slice(start).entries()) {
+    // The agent's replies are context, not knowledge: extracting them filled the brain with its own explanations
+    // and turned its denials into evidence.
+    if (message.sender.role === 'assistant' || isEcho(messages, start + offset)) {
+      continue;
+    }
     const segment = yield* toSegment(message);
     if (segment) {
       segments.push(segment);
@@ -159,6 +194,9 @@ const readChat = Effect.fnUntraced(function* (
   }
   const context: Segment[] = [];
   for (let position = start - 1; position >= 0 && context.length < CONTEXT_MESSAGES; position--) {
+    if (isEcho(messages, position)) {
+      continue;
+    }
     const segment = yield* toSegment(messages[position]);
     if (segment) {
       context.unshift(segment);
@@ -289,7 +327,7 @@ export const readSource: (
     if (through === undefined || through === cursor) {
       return NOTHING_READ;
     }
-    const facts = yield* extract(members, read, uri);
+    const facts = yield* extract(agent, members, yield* loadEntities, read, uri);
     const fresh = cursor === undefined ? facts : facts.filter((fact) => quotesAny(fact, read.segments));
     return {
       facts: fresh,
@@ -303,17 +341,65 @@ export const readSource: (
     ? { uri: Obj.getURI(source), ...(yield* readObject(members, agent, source)) }
     : { uri: url ?? '', text: '', segments: [] };
   const body = text === undefined ? read : { ...read, text, segments: segmentMarkdown(members, text) };
-  const facts = yield* extract(members, body, body.uri);
+  const facts = yield* extract(agent, members, yield* loadEntities, body, body.uri);
   return { facts, ...(yield* pushFacts(agent, facts)) };
 });
 
-// A direct model call rather than a chat turn: extraction is a pure derivation of the text.
-const extract = (members: readonly Space.Member[], body: Pick<SourceText, 'text' | 'segments'>, uri: string) =>
+/**
+ * A direct model call rather than a chat turn: extraction is a pure derivation of the text. Attribution gives each
+ * fact its own speaker and time, so the facts are grouped into graphs again once it has. The extractor is shown the
+ * seed predicates (a predicate it invents is minted in the agent's brain namespace) and the members, people and
+ * organizations by name, so mentions of them resolve to their stable IRIs.
+ */
+const extract = (
+  agent: Agent.Agent,
+  members: readonly Space.Member[],
+  entities: EntityIndex,
+  body: Pick<SourceText, 'text' | 'segments'>,
+  uri: string,
+) =>
   body.segments.length === 0 && body.text.trim().length === 0
     ? Effect.succeed([])
-    : extractDocFacts({ text: body.text, source: uri }).pipe(
-        Effect.map((facts) => facts.map((fact) => attribute(resolveTerms(members, fact), body.segments))),
+    : extractDocFacts(
+        { text: body.text, source: uri },
+        {
+          ontology: RDF.Ontology.DEFAULT.withNamespace(RDF.Vocab.brainNamespace(agent.id)),
+          entities: knownEntities(members, entities),
+        },
+      ).pipe(
+        Effect.map((facts) =>
+          RDF.Graph.assign(
+            distinct(facts.map((fact) => attribute(resolveTerms(members, fact, entities), body.segments))).map(
+              ({ graph: _, ...fact }) => fact,
+            ),
+          ),
+        ),
       );
+
+/** The statement a fact makes, whoever said it: what two facts must share to be the same piece of knowledge. */
+const statementKey = ({ assertion, factuality }: RDF.Fact): string =>
+  JSON.stringify([
+    termKey(assertion.subject),
+    normalize(assertion.predicate).replace(/[\s_-]+/g, ' '),
+    termKey(assertion.object),
+    factuality.polarity,
+  ]);
+
+const termKey = (term: RDF.Term): string =>
+  `${term.kind}:${term.kind === 'entity' ? term.entity : normalize(term.literal)}`;
+
+/** One fact per statement in a pass: an extractor reading a repeated sentence states it once per repetition. */
+const distinct = (facts: readonly RDF.Fact[]): RDF.Fact[] => {
+  const seen = new Set<string>();
+  return facts.filter((fact) => {
+    const key = statementKey(fact);
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
+};
 
 const handler: Operation.WithHandler<typeof AgentOperation.ReadSource> = AgentOperation.ReadSource.pipe(
   Operation.withHandler(

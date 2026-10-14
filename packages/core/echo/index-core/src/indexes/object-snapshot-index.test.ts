@@ -6,7 +6,8 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as SqlClient from 'effect/sql/SqlClient';
 
-import { ATTR_TYPE } from '@dxos/echo/internal';
+import { ATTR_META, ATTR_TYPE } from '@dxos/echo/internal';
+import { invariant } from '@dxos/invariant';
 import { DXN, EntityId, SpaceId } from '@dxos/keys';
 
 import { TestSqliteLayer as TestLayer } from '../testing/index.ts';
@@ -98,6 +99,75 @@ describe('ObjectSnapshotIndex', () => {
       expect(snapshots).toHaveLength(1);
       expect(snapshots[0].recordId).toBe(object.recordId!);
       expect((snapshots[0].snapshot as any).value).toBe('present');
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    "stores a document object's meta and heads; an update without heads clears them",
+    Effect.fnUntraced(function* () {
+      const { store } = yield* migrated();
+      const sql = yield* SqlClient.SqlClient;
+      const metaIndex = new EntityMetaIndex(sql);
+      yield* metaIndex.migrate();
+
+      const id = EntityId.random();
+      const object: IndexerObject = {
+        spaceId: SpaceId.random(),
+        queueId: null,
+        queueNamespace: null,
+        documentId: 'doc-1',
+        recordId: null,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: { id, [ATTR_TYPE]: TYPE_PERSON, [ATTR_META]: { keys: [], tags: ['t'] }, value: 'alpha' },
+        heads: ['h1', 'h2'],
+      };
+      yield* metaIndex.update([object]);
+      yield* metaIndex.lookupRecordIds([object]);
+      yield* store.update([object]);
+      const [backing] = yield* store.queryBackings([object.recordId!]);
+      expect(backing.heads).toEqual(['h1', 'h2']);
+      expect(JSON.parse(backing.json)[ATTR_META]).toEqual({ keys: [], tags: ['t'] });
+
+      yield* store.update([{ ...object, heads: undefined }]);
+      expect(yield* store.queryBackings([object.recordId!])).toEqual([]);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'stores the document bytes a host passes with heads, and drops them with the heads',
+    Effect.fnUntraced(function* () {
+      const { store } = yield* migrated();
+      const metaIndex = new EntityMetaIndex(yield* SqlClient.SqlClient);
+      yield* metaIndex.migrate();
+
+      const object: IndexerObject = {
+        spaceId: SpaceId.random(),
+        queueId: null,
+        queueNamespace: null,
+        documentId: 'doc-1',
+        recordId: null,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_PERSON, value: 'alpha' },
+        heads: ['h1'],
+        bytes: new Uint8Array([1, 2, 3]),
+      };
+      yield* metaIndex.update([object]);
+      yield* metaIndex.lookupRecordIds([object]);
+      const { recordId } = object;
+      invariant(recordId !== null);
+      yield* store.update([object]);
+      const [backing] = yield* store.queryBackings([recordId]);
+      expect(backing.bytes).toEqual(new Uint8Array([1, 2, 3]));
+
+      yield* store.update([{ ...object, bytes: undefined }]);
+      const [withoutBytes] = yield* store.queryBackings([recordId]);
+      expect(withoutBytes.heads).toEqual(['h1']);
+      expect(withoutBytes.bytes).toBeUndefined();
+
+      yield* store.update([{ ...object, heads: undefined }]);
+      expect(yield* store.queryBackings([recordId])).toEqual([]);
     }, Effect.provide(TestLayer)),
   );
 

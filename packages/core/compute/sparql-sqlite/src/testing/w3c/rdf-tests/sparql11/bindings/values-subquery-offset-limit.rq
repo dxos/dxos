@@ -1,0 +1,13 @@
+PREFIX : <http://example.org/>
+
+SELECT ?s {
+  {
+    SELECT ?s {
+      ?s :p ?o
+    }
+    ORDER BY ?s
+    OFFSET 1
+    LIMIT 1
+    VALUES ?s { :b :c }
+  }
+}

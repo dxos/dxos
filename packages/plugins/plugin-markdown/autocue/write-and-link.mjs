@@ -158,7 +158,7 @@ export const steps = [
     run: async ({ demo, page }) => {
       await typeSlowly(page, 'Next: ');
       await page.keyboard.type('@');
-      await page.getByPlaceholder('Search or create…').waitFor({ state: 'visible', timeout: 10_000 });
+      await page.locator('li:has-text("Add object")').first().waitFor({ state: 'visible', timeout: 10_000 });
       await typeSlowly(page, LINKED);
       await page.waitForTimeout(BEAT / 2);
       await demo.click({ selector: 'li:has-text("Add object") >> nth=0', label: 'Add object' });

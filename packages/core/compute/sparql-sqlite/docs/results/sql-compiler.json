@@ -1,0 +1,440 @@
+{
+  "variant": "sql-compiler",
+  "url": "https://rdf-bench-sql-compiler.dxos.workers.dev",
+  "db": "run-1791829875875",
+  "startedAt": "2026-10-12T18:31:15.875Z",
+  "scales": [
+    {
+      "facts": 1000,
+      "batchQuads": 10128,
+      "ingestMs": 233.49516300000005,
+      "ingestQuadsPerSec": 55621.267147364466,
+      "medianBatchMs": 233.49516300000005,
+      "stats": {
+        "triples": 10128,
+        "dbBytes": 901120,
+        "terms": 5512,
+        "termLexBytes": 174008,
+        "indexes": "spo,pos,osp",
+        "dbstat": "Error: no such table: dbstat: SQLITE_ERROR"
+      },
+      "queries": [
+        {
+          "id": "Q1_lookup",
+          "correct": true,
+          "rows": 10,
+          "checksum": "42549c7a",
+          "firstMs": 57.75094900000022,
+          "wallMs": 53.35279899999978,
+          "serverMs": 0
+        },
+        {
+          "id": "Q2_entity",
+          "correct": true,
+          "rows": 10,
+          "checksum": "7e2477f9",
+          "firstMs": 59.297011999999995,
+          "wallMs": 49.08975599999985,
+          "serverMs": 0.42516250000005584
+        },
+        {
+          "id": "Q3_filtered",
+          "correct": true,
+          "rows": 0,
+          "checksum": "811c9dc5",
+          "firstMs": 54.11486100000002,
+          "wallMs": 49.144352000000254,
+          "serverMs": 0
+        },
+        {
+          "id": "Q4_asof",
+          "correct": true,
+          "rows": 8,
+          "checksum": "917afd3a",
+          "firstMs": 43.82734400000027,
+          "wallMs": 55.35440699999981,
+          "serverMs": 0
+        },
+        {
+          "id": "Q5_aggregate",
+          "correct": true,
+          "rows": 10,
+          "checksum": "68fdf386",
+          "firstMs": 64.84843000000001,
+          "wallMs": 51.31816299999991,
+          "serverMs": 1.0843247499999507
+        },
+        {
+          "id": "Q6_join",
+          "correct": true,
+          "rows": 9,
+          "checksum": "7d10706c",
+          "firstMs": 53.50435000000016,
+          "wallMs": 50.92986000000019,
+          "serverMs": 0.08268500000008316
+        },
+        {
+          "id": "Q8_text",
+          "correct": true,
+          "rows": 11,
+          "checksum": "88bb2934",
+          "firstMs": 54.02983700000004,
+          "wallMs": 50.54778900000019,
+          "serverMs": 0
+        },
+        {
+          "id": "Q9_optional",
+          "correct": true,
+          "rows": 4,
+          "checksum": "922dd06a",
+          "firstMs": 53.32474000000002,
+          "wallMs": 46.824946999999156,
+          "serverMs": 0
+        },
+        {
+          "id": "Q10_count",
+          "correct": true,
+          "rows": 1,
+          "checksum": "6f2c3e45",
+          "firstMs": 45.5965470000001,
+          "wallMs": 46.11491799999931,
+          "serverMs": 0.3039737500000683
+        }
+      ],
+      "coldStartMs": 224.1806770000003,
+      "afterColdQ2Ms": 59.12973899999997
+    },
+    {
+      "facts": 10000,
+      "batchQuads": 91313,
+      "ingestMs": 2351.568961000001,
+      "ingestQuadsPerSec": 48341.633366555485,
+      "medianBatchMs": 256.3583600000002,
+      "stats": {
+        "triples": 101441,
+        "dbBytes": 7897088,
+        "terms": 43339,
+        "termLexBytes": 1501632,
+        "indexes": "spo,pos,osp",
+        "dbstat": "Error: no such table: dbstat: SQLITE_ERROR"
+      },
+      "queries": [
+        {
+          "id": "Q1_lookup",
+          "correct": true,
+          "rows": 10,
+          "checksum": "42549c7a",
+          "firstMs": 62.70013900000049,
+          "wallMs": 46.74677399999928,
+          "serverMs": 0.9480917500000032
+        },
+        {
+          "id": "Q2_entity",
+          "correct": true,
+          "rows": 163,
+          "checksum": "ee2e2aa7",
+          "firstMs": 50.51838999999927,
+          "wallMs": 50.225673000000825,
+          "serverMs": 0
+        },
+        {
+          "id": "Q3_filtered",
+          "correct": true,
+          "rows": 114,
+          "checksum": "e6dc6eaf",
+          "firstMs": 53.91295499999978,
+          "wallMs": 50.2809670000006,
+          "serverMs": 0.6530320000001666
+        },
+        {
+          "id": "Q4_asof",
+          "correct": true,
+          "rows": 10,
+          "checksum": "ba487f6a",
+          "firstMs": 65.45723400000134,
+          "wallMs": 55.2759070000011,
+          "serverMs": 0
+        },
+        {
+          "id": "Q5_aggregate",
+          "correct": true,
+          "rows": 10,
+          "checksum": "0392dde8",
+          "firstMs": 50.209343000000445,
+          "wallMs": 47.63963599999988,
+          "serverMs": 1.7778769999999895
+        },
+        {
+          "id": "Q6_join",
+          "correct": true,
+          "rows": 351,
+          "checksum": "3d68f645",
+          "firstMs": 52.46509299999889,
+          "wallMs": 51.45415099999991,
+          "serverMs": 3.6180155000001832
+        },
+        {
+          "id": "Q8_text",
+          "correct": true,
+          "rows": 116,
+          "checksum": "78012a5f",
+          "firstMs": 47.27135300000009,
+          "wallMs": 49.24706800000058,
+          "serverMs": 2.5073607499998616
+        },
+        {
+          "id": "Q9_optional",
+          "correct": true,
+          "rows": 40,
+          "checksum": "b54aca3b",
+          "firstMs": 49.47515000000021,
+          "wallMs": 45.12610700000005,
+          "serverMs": 0.406680999999935
+        },
+        {
+          "id": "Q10_count",
+          "correct": true,
+          "rows": 1,
+          "checksum": "b9443bd0",
+          "firstMs": 48.729817999999796,
+          "wallMs": 45.34317899999951,
+          "serverMs": 0.42708950000042023
+        }
+      ],
+      "coldStartMs": 250.45013499999914,
+      "afterColdQ2Ms": 49.84444799999983
+    },
+    {
+      "facts": 100000,
+      "batchQuads": 913482,
+      "ingestMs": 39404.811515,
+      "ingestQuadsPerSec": 26265.919333160597,
+      "medianBatchMs": 426.2783220000056,
+      "stats": {
+        "triples": 1014923,
+        "dbBytes": 76951552,
+        "terms": 346742,
+        "termLexBytes": 12986260,
+        "indexes": "spo,pos,osp",
+        "dbstat": "Error: no such table: dbstat: SQLITE_ERROR"
+      },
+      "queries": [
+        {
+          "id": "Q1_lookup",
+          "correct": true,
+          "rows": 10,
+          "checksum": "42549c7a",
+          "firstMs": 51.08446799999365,
+          "wallMs": 47.48079800000414,
+          "serverMs": 0
+        },
+        {
+          "id": "Q2_entity",
+          "correct": true,
+          "rows": 1821,
+          "checksum": "f6a541b6",
+          "firstMs": 67.16946100000496,
+          "wallMs": 63.243976000005205,
+          "serverMs": 11.007900749997134
+        },
+        {
+          "id": "Q3_filtered",
+          "correct": true,
+          "rows": 975,
+          "checksum": "785e44e1",
+          "firstMs": 70.70454400000017,
+          "wallMs": 65.09362600000168,
+          "serverMs": 3.908730999999534
+        },
+        {
+          "id": "Q4_asof",
+          "correct": true,
+          "rows": 10,
+          "checksum": "2d39a630",
+          "firstMs": 60.98328500000207,
+          "wallMs": 57.25597299999936,
+          "serverMs": 5.741912499999671
+        },
+        {
+          "id": "Q5_aggregate",
+          "correct": true,
+          "rows": 10,
+          "checksum": "15f4cbdc",
+          "firstMs": 60.426479999994626,
+          "wallMs": 58.75666600000113,
+          "serverMs": 9.65668849999929
+        },
+        {
+          "id": "Q6_join",
+          "correct": true,
+          "rows": 499,
+          "checksum": "7df96e96",
+          "firstMs": 563.4198140000008,
+          "wallMs": 566.5062350000007,
+          "serverMs": 597.3251792499996
+        },
+        {
+          "id": "Q8_text",
+          "correct": true,
+          "rows": 1102,
+          "checksum": "925ef4de",
+          "firstMs": 82.38137199998891,
+          "wallMs": 77.8491980000108,
+          "serverMs": 26.50624274999791
+        },
+        {
+          "id": "Q9_optional",
+          "correct": true,
+          "rows": 301,
+          "checksum": "bf29c580",
+          "firstMs": 54.517299000013736,
+          "wallMs": 50.772712999998475,
+          "serverMs": 3.573326999998244
+        },
+        {
+          "id": "Q10_count",
+          "correct": true,
+          "rows": 1,
+          "checksum": "1f91b017",
+          "firstMs": 59.76107800001046,
+          "wallMs": 59.605876000001444,
+          "serverMs": 11.392326249999314
+        }
+      ],
+      "coldStartMs": 294.16233700000157,
+      "afterColdQ2Ms": 76.40278699999908
+    }
+  ],
+  "pingMs": 51.406539000000066,
+  "genOnlyMsPerBatch": 61.961308000000145,
+  "probes": {
+    "bgp_star": {
+      "pass": true,
+      "rows": 28,
+      "want": 28
+    },
+    "optional": {
+      "pass": true,
+      "rows": 28,
+      "want": 28
+    },
+    "union": {
+      "pass": true,
+      "rows": 13,
+      "want": 13
+    },
+    "minus": {
+      "pass": true,
+      "rows": 24,
+      "want": 24
+    },
+    "not_exists": {
+      "pass": true,
+      "rows": 24,
+      "want": 24
+    },
+    "filter_regex": {
+      "pass": true,
+      "rows": 1,
+      "want": 1
+    },
+    "filter_lang_str": {
+      "pass": true,
+      "rows": 98,
+      "want": 98
+    },
+    "filter_numeric": {
+      "pass": true,
+      "rows": 91,
+      "want": 91
+    },
+    "filter_date": {
+      "pass": true,
+      "rows": 288,
+      "want": 288
+    },
+    "bind_concat": {
+      "pass": true,
+      "rows": 8,
+      "want": 8
+    },
+    "values": {
+      "pass": true,
+      "rows": 36,
+      "want": 36
+    },
+    "agg_having": {
+      "pass": true,
+      "rows": 1,
+      "want": 1
+    },
+    "agg_group_concat": {
+      "pass": true,
+      "rows": 1,
+      "want": 1
+    },
+    "subquery_limit": {
+      "pass": true,
+      "rows": 3,
+      "want": 3
+    },
+    "order_offset": {
+      "pass": true,
+      "rows": 5,
+      "want": 5
+    },
+    "path_seq": {
+      "pass": true,
+      "rows": 1,
+      "want": 1
+    },
+    "path_alt_star": {
+      "pass": true,
+      "rows": 86,
+      "want": 86
+    },
+    "graph_named": {
+      "pass": true,
+      "rows": 0,
+      "want": 0
+    },
+    "var_predicate": {
+      "pass": true,
+      "rows": 1,
+      "want": 1
+    },
+    "exists_count": {
+      "pass": true,
+      "rows": 1,
+      "want": 1
+    },
+    "file_path_unused": {
+      "pass": true,
+      "rows": 0,
+      "want": 0
+    },
+    "unbound_iri": {
+      "pass": true,
+      "rows": 0,
+      "want": 0
+    }
+  },
+  "code": {
+    "files": 10000,
+    "ingestMs": 1267.9257519999956,
+    "rows": 1,
+    "correct": true,
+    "checksum": "b5ad06ba",
+    "sample": [
+      {
+        "n": {
+          "termType": "Literal",
+          "value": "1318",
+          "datatype": "http://www.w3.org/2001/XMLSchema#integer"
+        }
+      }
+    ],
+    "wallMs": 53.52574399999867
+  },
+  "finishedAt": "2026-10-12T18:32:30.192Z"
+}

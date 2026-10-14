@@ -6,6 +6,7 @@ import { type EditorView } from '@codemirror/view';
 
 import type * as Theme from '@dxos/react-ui/Theme';
 import { insertAtCursor } from '@dxos/ui-editor';
+import { type ChromaticPalette } from '@dxos/ui-types';
 import { type MaybePromise } from '@dxos/util';
 
 export type EditorMenuGroup = {
@@ -18,6 +19,7 @@ export type EditorMenuItem = {
   id: string;
   label: Theme.Label;
   icon?: string;
+  iconHue?: ChromaticPalette;
   onSelect?: (event: { view: EditorView; head: number }) => MaybePromise<void>;
 };
 
