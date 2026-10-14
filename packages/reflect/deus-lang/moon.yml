@@ -4,7 +4,7 @@ tags:
   - ts-vite-build
   - ts-test
 tasks:
-  # Regenerates seed/deus.seed with the current seed. Run it twice after changing deus/: the
+  # Regenerates seed/deus.image with the current seed. Run it twice after changing deus/: the
   # second run must leave the seed unchanged (the self-hosting fixpoint, checked by src/seed.test.ts).
   self-build:
     command: node
@@ -15,6 +15,6 @@ tasks:
       - --main
       - Cli.main
       - -o
-      - seed/deus.seed
+      - seed/deus.image
     options:
       cache: false

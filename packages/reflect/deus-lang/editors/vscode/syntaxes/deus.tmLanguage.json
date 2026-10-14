@@ -1,0 +1,130 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "DEUS",
+  "scopeName": "source.deus",
+  "fileTypes": ["deus"],
+  "patterns": [{ "include": "#comments" }, { "include": "#declarations" }, { "include": "#expressions" }],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.block.documentation.deus",
+          "begin": "/--(?!/)",
+          "end": "-/",
+          "patterns": [{ "include": "#nestedComment" }, { "name": "markup.inline.raw.deus", "match": "`[^`]*`" }]
+        },
+        { "include": "#nestedComment" },
+        { "name": "comment.line.double-dash.deus", "match": "--.*$" }
+      ]
+    },
+    "nestedComment": {
+      "name": "comment.block.deus",
+      "begin": "/-",
+      "end": "-/",
+      "patterns": [{ "include": "#nestedComment" }]
+    },
+    "declarations": {
+      "patterns": [
+        {
+          "match": "^(def|theorem|test)\\s+([A-Za-z_\\u0370-\\u03ff][A-Za-z0-9_'?!.\\u0370-\\u03ff]*)",
+          "captures": {
+            "1": { "name": "keyword.declaration.deus" },
+            "2": { "name": "entity.name.function.deus" }
+          }
+        },
+        {
+          "match": "^(inductive|structure|ability)\\s+([A-Za-z_][A-Za-z0-9_'.]*)",
+          "captures": {
+            "1": { "name": "keyword.declaration.deus" },
+            "2": { "name": "entity.name.type.deus" }
+          }
+        },
+        {
+          "match": "^(namespace|end|open)\\b([^-]*)",
+          "captures": {
+            "1": { "name": "keyword.other.namespace.deus" },
+            "2": { "name": "entity.name.namespace.deus" }
+          }
+        },
+        {
+          "name": "meta.attribute.deus",
+          "begin": "@\\[",
+          "end": "\\]",
+          "patterns": [{ "include": "#strings" }]
+        },
+        {
+          "name": "meta.proof.deus",
+          "begin": "\\b(by)\\b",
+          "beginCaptures": { "1": { "name": "keyword.other.by.deus" } },
+          "end": "(?=^\\S)",
+          "patterns": [
+            { "include": "#comments" },
+            {
+              "name": "support.function.tactic.deus",
+              "match": "\\b(intro|induction|cases|simp|split|auto|rfl|decide|test|exact|rw|apply|unfold|constructor|trivial|all_goals)\\b"
+            },
+            { "name": "keyword.operator.combinator.deus", "match": "<;>|;" },
+            { "include": "#expressions" }
+          ]
+        },
+        { "name": "keyword.other.sorry.deus", "match": "\\bsorry\\b" }
+      ]
+    },
+    "expressions": {
+      "patterns": [
+        { "include": "#comments" },
+        { "include": "#strings" },
+        {
+          "name": "string.other.link.iri.deus",
+          "match": "@\"[^\"]*\""
+        },
+        {
+          "name": "keyword.control.deus",
+          "match": "\\b(match|with|if|then|else|handle|return|let|rec|fun|do|where)\\b"
+        },
+        { "name": "keyword.other.deus", "match": "\\b(prim|perf|ext)\\b" },
+        { "name": "keyword.control.lambda.deus", "match": "λ" },
+        { "name": "constant.language.boolean.deus", "match": "\\b(true|false)\\b" },
+        { "name": "constant.language.unit.deus", "match": "\\(\\)" },
+        { "name": "constant.numeric.hex.deus", "match": "\\b0x[0-9a-fA-F_]+\\b" },
+        { "name": "constant.numeric.integer.deus", "match": "\\b[0-9][0-9_]*\\b" },
+        {
+          "name": "constant.character.deus",
+          "match": "'(\\\\.|[^'\\\\])'"
+        },
+        {
+          "name": "meta.effect-row.deus",
+          "match": "(->|→)\\s*(\\{)([^}]*)(\\})",
+          "captures": {
+            "1": { "name": "keyword.operator.arrow.deus" },
+            "2": { "name": "punctuation.definition.effects.begin.deus" },
+            "3": { "name": "entity.name.type.ability.deus" },
+            "4": { "name": "punctuation.definition.effects.end.deus" }
+          }
+        },
+        { "name": "keyword.operator.arrow.deus", "match": "->|=>|→|⇒|<-" },
+        { "name": "keyword.operator.definition.deus", "match": ":=" },
+        {
+          "name": "keyword.operator.deus",
+          "match": "::|\\+\\+|==|!=|<=|>=|&&|\\|\\||\\|>|<\\||[+\\-*/%<>=!]|≠|≤|≥"
+        },
+        { "name": "punctuation.separator.arm.deus", "match": "\\|" },
+        {
+          "name": "entity.name.type.deus",
+          "match": "\\b[A-Z][A-Za-z0-9_']*(?=\\.|\\b)"
+        },
+        {
+          "name": "variable.other.constructor.deus",
+          "match": "(?<=\\.)[a-z][A-Za-z0-9_'?!]*"
+        },
+        { "name": "variable.other.deus", "match": "\\b[a-z_\\u0370-\\u03ff][A-Za-z0-9_'?!\\u0370-\\u03ff]*" }
+      ]
+    },
+    "strings": {
+      "name": "string.quoted.double.deus",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [{ "name": "constant.character.escape.deus", "match": "\\\\(u\\{[0-9a-fA-F]+\\}|.)" }]
+    }
+  }
+}

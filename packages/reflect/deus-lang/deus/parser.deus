@@ -146,7 +146,16 @@ def decl (p : Parser) : {Throw Text} Decl :=
       let name := ident p
       let bs := binders p
       let _ := expect p ":"
-      let prop := expr p
+      -- `P -> Q -> R`: hypotheses then the conclusion.
+      let rec props acc :=
+        if is p "->" then
+          skip p
+          props (expr p :: acc)
+        else acc
+      let reversed := props [expr p]
+      let prop := match reversed with
+        | conclusion :: hyps => List.foldl (fun acc h => Expr.binop "->" h acc pos) conclusion hyps
+        | [] => Expr.unit
       let _ := expect p ":="
       if is p "sorry" then
         skip p

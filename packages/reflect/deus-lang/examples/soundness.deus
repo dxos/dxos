@@ -1,0 +1,28 @@
+/-
+  Claims the prover must refuse (src/cli.test.ts checks that `deus check` rejects every
+  `Unsound.wrong*` theorem and proves every `Unsound.right*` one).
+-/
+
+namespace Unsound
+
+def loop (n : Int) : Int := loop n + 1
+
+def len : List Int -> Int
+  | [] => 0
+  | _ :: rest => 1 + len rest
+
+/-- False: `Int` wraps at 2³¹ - 1. -/
+theorem wrongSuccGreater (x : Int) : x < x + 1 = true := by auto
+
+/-- `loop` is not structurally recursive, so it is never unfolded (it would "prove" 0 = 1). -/
+theorem wrongLoop (n : Int) : loop n = loop n + 1 := by auto
+
+theorem wrongAllEmpty (xs : List Int) : xs = [] := by induction xs; auto
+
+theorem wrongLenPositive (xs : List Int) : len xs > 0 = true := by induction xs; auto
+
+theorem rightAddComm (a : Int) (b : Int) (c : Int) : a + (b + c) = (c + a) + b := by simp
+
+theorem rightLenAppend (xs : List Int) (ys : List Int) : len (xs ++ ys) = len xs + len ys := by induction xs; simp
+
+end Unsound

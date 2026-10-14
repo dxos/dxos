@@ -8,7 +8,7 @@ import { join } from 'node:path';
 import { runImage } from './run.ts';
 
 /** The checked-in compiler image; `DEUS_SEED` overrides it (used by self-build). */
-export const SEED_PATH = join(import.meta.dirname, '../../seed/deus.seed');
+export const SEED_PATH = join(import.meta.dirname, '../../seed/deus.image');
 
 /** `deus [args…]`: runs the DEUS CLI (the seed) on the command line. */
 export const main = (argv: string[]): number => {

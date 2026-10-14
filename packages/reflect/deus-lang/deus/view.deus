@@ -63,8 +63,11 @@ def theoremDecl (p : Printer) (name : Text) (types : List Sexp) (prop : Sexp) (p
     let binders := Text.concat (List.map (fun pair =>
       match pair with
       | (x, t) => " (" ++ x ++ " : " ++ Print.ty p t 0 ++ ")") (List.zip names types))
-    let tactic := List.map Sexp.asText (Sexp.args proof)
-    let proofText := if tactic == ["sorry"] then "sorry" else "by " ++ Text.join " " tactic
+    let tactic := List.map (fun x =>
+      match x with
+      | Sexp.list [Sexp.sym "ref", Sexp.str l] => Print.nameFor p l
+      | _ => Sexp.asText x) (Sexp.args proof)
+    let proofText := if tactic == ["sorry"] then "sorry" else "by " ++ Text.replace " ," "," (Text.replace "[ " "[" (Text.replace " ]" "]" (Text.join " " tactic)))
     "theorem " ++ name ++ binders ++ " : " ++ Print.expr p b env 2 0 ++ " := " ++ proofText
 
 end View

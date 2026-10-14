@@ -48,6 +48,28 @@ describe('deus CLI', () => {
     expect(theorems.code).toBe(0);
   });
 
+  test('proves the sorting example and refuses unsound claims', ({ expect }) => {
+    const c = ['--codebase', join(scratch, 'proofs')];
+    deus('init', ...c);
+    deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
+    expect(deus('add', join(root, 'examples/sort.deus'), join(root, 'examples/soundness.deus'), ...c).code).toBe(0);
+
+    const sort = deus('check', 'Sort', '--json', ...c);
+    const verdicts = Object.fromEntries(
+      JSON.parse(sort.stdout).map((row: { name: string; status: string; evidence?: string }) => [row.name, row]),
+    );
+    for (const name of ['insertSorted', 'isortSorted', 'insertCount', 'isortCount', 'insertLength', 'isortLength']) {
+      expect(verdicts[`Sort.${name}`]).toMatchObject({ status: 'pass', evidence: 'proof' });
+    }
+    expect(verdicts['Sort.agreesWithMergeSort']).toMatchObject({ status: 'pass', evidence: 'test' });
+    expect(verdicts['Sort.wrongClaim'].status).toBe('fail');
+
+    const probes = JSON.parse(deus('check', 'Unsound', '--json', ...c).stdout);
+    for (const row of probes) {
+      expect([row.name, row.status]).toEqual([row.name, row.name.startsWith('Unsound.right') ? 'pass' : 'fail']);
+    }
+  });
+
   test('update propagates to dependents; branches merge three-way', ({ expect }) => {
     const codebase = join(scratch, 'demo');
     const file = (name: string, text: string) => {

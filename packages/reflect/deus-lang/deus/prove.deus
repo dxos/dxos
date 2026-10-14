@@ -1,0 +1,874 @@
+/-
+  The prover: Lean-style tactic proofs over DEUS definitions.
+
+  A theorem's proposition is a `Bool` expression over its binders; `P -> Q` is `implies P Q`.
+  Proving it means showing it evaluates to `true` for every value of the binders.
+
+  Trusted base (what a "proved" verdict relies on):
+
+  - Symbolic evaluation of Core. A definition is unfolded only if it is pure (no abilities,
+    no mutable or reflective primitives) and every recursive call is on a strict subterm of a
+    matched parameter (structural recursion), so the equations used hold for all inputs.
+    A `match` whose scrutinee is not yet a constructor blocks the unfolding instead of guessing.
+  - Structural induction over finite data (DEUS values are finite).
+  - Case splits on `Bool` conditions (excluded middle for terminating computations).
+  - `Int` is arithmetic modulo 2³² (D9), so + and * form a commutative ring; `<=` is a total
+    order: `not (a <= b)` gives `b <= a`, and `<=` is transitive.
+  - Rewriting with hypotheses and with lemmas that are themselves proved. A lemma that is
+    only tested downgrades the verdict and says so.
+
+  Tactics (applied to every open goal, separated by `;` or `<;>`):
+
+    intro              move `P ->` hypotheses into the context (also done implicitly)
+    induction x        structural induction on a binder of an inductive type
+    cases x            case analysis on a binder
+    simp [l₁, …]       evaluate and rewrite with hypotheses and the given lemmas
+    split              case split on the first undecided `if` condition
+    auto [l₁, …]       simp, then split / case on stuck variables, recursively (bounded)
+    rfl, decide        as before: closed evaluation, exhaustive enumeration
+-/
+
+/-- Symbolic values: data, free variables, and terms evaluation could not reduce. -/
+inductive Sym where
+  | int (value : Int)
+  | text (value : Text)
+  | data (type : Text) (tag : Int) (fields : List Sym)
+  | fv (name : Text)
+  | pv (name : Text)
+  | call (hash : Text) (args : List Sym)
+  | fn (hash : Text) (args : List Sym)
+  | ctorFn (type : Text) (tag : Int) (arity : Int) (args : List Sym)
+  | primFn (name : Text) (args : List Sym)
+  | prim (name : Text) (args : List Sym)
+  | ite (cond : Sym) (yes : Sym) (no : Sym)
+  | clo (env : List Sym) (body : Sexp)
+  | app (f : Sym) (args : List Sym)
+
+/-- Evaluation that cannot proceed without knowing more (a match on an unknown value). -/
+ability Stuck where
+  stuck : Text -> a
+
+/-- A rewrite rule: `lhs` (with pattern variables) becomes `rhs` when every condition is `true`. -/
+structure Rule where
+  lhs : Sym
+  rhs : Sym
+  conds : List Sym
+
+/-- An open goal: hypotheses known to be true, the proposition, and the types of free variables. -/
+structure Goal where
+  hyps : List Sym
+  prop : Sym
+  vars : List (Text, Sexp)
+
+/-- Shared prover state for one theorem. -/
+structure Prover where
+  store : Text
+  nsMap : Map Text Entry
+  bodies : Ref (Map Text (Option (Int, Sexp)))
+  fuel : Ref Int
+  stuckOn : Ref (List Text)
+  counter : Ref Int
+  lemmaRules : Ref (List Rule)
+  assumptions : Ref (List Text)
+
+namespace Prove
+
+def trueSym : Sym := Sym.data "#Bool" 1 []
+
+def falseSym : Sym := Sym.data "#Bool" 0 []
+
+def boolSym (b : Bool) : Sym := if b then trueSym else falseSym
+
+def isTrue (s : Sym) : Bool := s == trueSym
+
+def isFalse (s : Sym) : Bool := s == falseSym
+
+--
+-- Which definitions may be unfolded.
+--
+
+/-- Strips `n` leading lambdas: (arity, body). -/
+def lambdas (core : Sexp) : (Int, Sexp) :=
+  match core with
+  | Sexp.list [Sexp.sym "lam", b] =>
+    match lambdas b with
+    | (n, body) => (n + 1, body)
+  | _ => (0, core)
+
+/-- Primitives with no effects and a meaning the prover models or can compute. -/
+def purePrims : Map Text Unit :=
+  Set.fromList ["Int.add", "Int.sub", "Int.mul", "Int.div", "Int.mod", "Int.neg", "Int.and", "Int.or", "Int.xor", "Int.shl", "Int.shr", "Int.ushr", "Int.toText", "eq", "neq", "compare", "lt", "le", "gt", "ge", "append", "implies", "Text.length", "Text.code", "Text.slice", "Text.fromCode", "Text.concat", "Text.join", "Text.indexOf", "Text.trim", "Text.sha256"]
+
+/-- No ability operations, handlers or impure primitives anywhere in a body. -/
+def pure (core : Sexp) : Bool :=
+  match core with
+  | Sexp.list (Sexp.sym "op" :: _) => false
+  | Sexp.list (Sexp.sym "handle" :: _) => false
+  | Sexp.list [Sexp.sym "prim", Sexp.str name] => Set.contains name purePrims
+  | Sexp.list items => List.all pure items
+  | _ => true
+
+/-- How a de Bruijn variable relates to the parameters: a parameter, or a strict part of one. -/
+inductive Origin where
+  | param (index : Int)
+  | part (index : Int)
+  | other
+
+/-- Parameter positions at which every recursive call passes a strict part of that parameter. -/
+def decreasing (self : Text) (body : Sexp) (arity : Int) : Option (List Int) :=
+  let initial := List.map (fun i => Origin.param (arity - 1 - i)) (List.range 0 arity)
+  let originOf := fun (env : List Origin) (s : Sexp) =>
+    match s with
+    | Sexp.list [Sexp.sym "var", Sexp.int i] => Option.getOr (List.get? env i) Origin.other
+    | _ => Origin.other
+  let rec patBinds pat env self inside :=
+    -- A variable binding the scrutinee itself has its origin; under a constructor it is a strict part.
+    match pat with
+    | Sexp.list [Sexp.sym "pvar"] => self :: env
+    | Sexp.list [Sexp.sym "pas", p] => patBinds p (self :: env) self inside
+    | Sexp.list (Sexp.sym "pcon" :: _ :: _ :: subs) => List.foldl (fun e p => patBinds p e inside inside) env subs
+    | _ => env
+  -- Collects, for each recursive call, the set of positions where it decreases.
+  let rec walk s env :=
+    match s with
+    | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "ref", Sexp.str h] :: args) =>
+      let inner := List.concatMap (fun a => walk a env) args
+      if h == self then
+        let good := List.filterMap (fun pair =>
+          match pair with
+          | (i, a) =>
+            match originOf env a with
+            | Origin.part j => if j == i then some i else none
+            | _ => none) (List.mapIndexed (fun i a => (i, a)) args)
+        good :: inner
+      else inner
+    | Sexp.list [Sexp.sym "ref", Sexp.str h] => if h == self then [[]] else []
+    | Sexp.list [Sexp.sym "lam", b] => walk b (Origin.other :: env)
+    | Sexp.list [Sexp.sym "let", v, b] => walk v env ++ walk b (Origin.other :: env)
+    | Sexp.list [Sexp.sym "letrec", Sexp.list fns, b] =>
+      let inner := List.replicate (List.length fns) Origin.other ++ env
+      List.concatMap (fun f => walk f inner) fns ++ walk b inner
+    | Sexp.list (Sexp.sym "match" :: scrut :: cases) =>
+      let self := originOf env scrut
+      let inside := match self with
+        | Origin.param j => Origin.part j
+        | Origin.part j => Origin.part j
+        | Origin.other => Origin.other
+      walk scrut env ++ List.concatMap (fun c =>
+        match c with
+        | Sexp.list [Sexp.sym "case", pat, b] => walk b (patBinds pat env self inside)
+        | _ => []) cases
+    | Sexp.list (Sexp.sym "handle" :: _) => [[]]
+    | Sexp.list items => List.concatMap (fun x => walk x env) items
+    | _ => []
+  let calls := walk body initial
+  if List.isEmpty calls then some []
+  else
+    let common := List.filter (fun i => List.all (fun c => List.contains i c) calls) (List.range 0 arity)
+    if List.isEmpty common then none else some common
+
+/-- The body of an unfoldable definition: (arity, body), or `none` with the reason recorded. -/
+def definitionOf (pr : Prover) (h : Text) : {IO} Option (Int, Sexp) :=
+  match Map.lookup h (Ref.get pr.bodies) with
+  | some cached => cached
+  | none =>
+    let result := match Codebase.readObject pr.store h with
+      | some (Sexp.list [Sexp.sym "term", core]) =>
+        match lambdas core with
+        | (arity, body) =>
+          if not (pure body) then none
+          else
+            match decreasing h body arity with
+            | some _ => some (arity, body)
+            | none => none
+      | _ => none
+    Ref.set pr.bodies (Map.insert h result (Ref.get pr.bodies))
+    result
+
+--
+-- Arithmetic: linear normal form over Int (a commutative ring modulo 2³²).
+--
+
+def key (s : Sym) : Text := show s
+
+/-- (constant, [(atom, coefficient)]) of an Int expression. -/
+def linear (s : Sym) : (Int, List (Sym, Int)) :=
+  let add := fun (a : (Int, List (Sym, Int))) (b : (Int, List (Sym, Int))) =>
+    match (a, b) with
+    | ((ka, ta), (kb, tb)) => (ka + kb, ta ++ tb)
+  let scale := fun (c : Int) (a : (Int, List (Sym, Int))) =>
+    match a with
+    | (k, ts) => (c * k, List.map (fun t => (fst t, c * snd t)) ts)
+  match s with
+  | Sym.int n => (n, [])
+  | Sym.prim "Int.add" [a, b] => add (linear a) (linear b)
+  | Sym.prim "Int.sub" [a, b] => add (linear a) (scale (-1) (linear b))
+  | Sym.prim "Int.neg" [a] => scale (-1) (linear a)
+  | Sym.prim "Int.mul" [Sym.int c, b] => scale c (linear b)
+  | Sym.prim "Int.mul" [a, Sym.int c] => scale c (linear a)
+  | _ => (0, [(s, 1)])
+
+/-- Rebuilds a canonical sum: atoms sorted, coefficients collected, the constant last. -/
+def canonical (s : Sym) : Sym :=
+  match linear s with
+  | (k, terms) =>
+    let collected := List.foldl (fun m t => Map.update (key (fst t)) (fun old =>
+      match old with
+      | some (atom, c) => (atom, c + snd t)
+      | none => (fst t, snd t)) m) Map.empty terms
+    let atoms := List.filter (fun t => snd t != 0) (Map.values collected)
+    let termOf := fun (t : (Sym, Int)) =>
+      match t with
+      | (atom, 1) => atom
+      | (atom, -1) => Sym.prim "Int.neg" [atom]
+      | (atom, c) => Sym.prim "Int.mul" [Sym.int c, atom]
+    match atoms with
+    | [] => Sym.int k
+    | first :: rest =>
+      let sum := List.foldl (fun acc t => Sym.prim "Int.add" [acc, termOf t]) (termOf first) rest
+      if k == 0 then sum else Sym.prim "Int.add" [sum, Sym.int k]
+
+--
+-- Evaluation.
+--
+
+def isNeutral (s : Sym) : Bool :=
+  match s with
+  | Sym.int _ => false
+  | Sym.text _ => false
+  | Sym.data _ _ _ => false
+  | Sym.fn _ _ => false
+  | Sym.ctorFn _ _ _ _ => false
+  | Sym.primFn _ _ => false
+  | Sym.clo _ _ => false
+  | _ => true
+
+/-- Structural equality when it is decided: `some b`, or `none` if it depends on unknowns. -/
+def decideEq (a : Sym) (b : Sym) : Option Bool :=
+  if a == b then some true
+  else
+    match (a, b) with
+    | (Sym.int x, Sym.int y) => some (x == y)
+    | (Sym.text x, Sym.text y) => some (x == y)
+    | (Sym.data t1 g1 f1, Sym.data t2 g2 f2) =>
+      if t1 != t2 || g1 != g2 || List.length f1 != List.length f2 then some false
+      else
+        List.foldl (fun acc pair =>
+          match acc with
+          | some false => some false
+          | _ =>
+            match decideEq (fst pair) (snd pair) with
+            | some true => acc
+            | some false => some false
+            | none => none) (some true) (List.zip f1 f2)
+    | (Sym.data _ _ _, Sym.int _) => some false
+    | (Sym.int _, Sym.data _ _ _) => some false
+    | _ => none
+
+def ordered (a : Sym) (b : Sym) : (Sym, Sym) := if compare (key a) (key b) <= 0 then (a, b) else (b, a)
+
+/-- The first argument that is an undecided `if`, split into the two argument lists. -/
+def liftIf (args : List Sym) : Option (Sym, List Sym, List Sym) :=
+  let rec go before rest :=
+    match rest with
+    | [] => none
+    | Sym.ite c y n :: after => some (c, List.reverse before ++ (y :: after), List.reverse before ++ (n :: after))
+    | x :: after => go (x :: before) after
+  go [] args
+
+def isArithmetic (name : Text) : Bool := name == "Int.add" || name == "Int.sub" || name == "Int.neg" || name == "Int.mul"
+
+/-- A saturated primitive on symbolic arguments; a non-arithmetic one distributes over `if`. -/
+def primitive (name : Text) (args : List Sym) : Sym :=
+  match (if isArithmetic name || name == "implies" then none else liftIf args) with
+  | some (c, yes, no) => Sym.ite c (primitive name yes) (primitive name no)
+  | none => primitiveDirect name args
+
+def primitiveDirect (name : Text) (args : List Sym) : Sym :=
+  match (name, args) with
+  | ("Int.add", _) => canonical (Sym.prim name args)
+  | ("Int.sub", _) => canonical (Sym.prim name args)
+  | ("Int.neg", _) => canonical (Sym.prim name args)
+  | ("Int.mul", [Sym.int a, Sym.int b]) => Sym.int (a * b)
+  | ("Int.mul", [Sym.int _, _]) => canonical (Sym.prim name args)
+  | ("Int.mul", [_, Sym.int _]) => canonical (Sym.prim name args)
+  | ("Int.mul", [a, b]) =>
+    match ordered a b with
+    | (x, y) => Sym.prim name [x, y]
+  | ("Int.div", [Sym.int a, Sym.int b]) => if b == 0 then Sym.prim name args else Sym.int (a / b)
+  | ("Int.mod", [Sym.int a, Sym.int b]) => if b == 0 then Sym.prim name args else Sym.int (a % b)
+  | ("eq", [a, b]) =>
+    match decideEq a b with
+    | some v => boolSym v
+    | none => Sym.prim "eq" [a, b]
+  | ("neq", [a, b]) =>
+    match decideEq a b with
+    | some v => boolSym (not v)
+    | none => Sym.ite (primitive "eq" [a, b]) falseSym trueSym
+  | ("le", [Sym.int a, Sym.int b]) => boolSym (a <= b)
+  | ("lt", [Sym.int a, Sym.int b]) => boolSym (a < b)
+  | ("le", [Sym.text a, Sym.text b]) => boolSym (a <= b)
+  | ("lt", [Sym.text a, Sym.text b]) => boolSym (a < b)
+  | ("le", [a, b]) => if a == b then trueSym else Sym.prim "le" [a, b]
+  | ("lt", [a, b]) => if a == b then falseSym else Sym.prim "lt" [a, b]
+  | ("ge", [a, b]) => primitive "le" [b, a]
+  | ("gt", [a, b]) => primitive "lt" [b, a]
+  | ("append", [Sym.text a, Sym.text b]) => Sym.text (a ++ b)
+  | ("append", [Sym.data "#List" 0 [], b]) => b
+  | ("append", [a, Sym.data "#List" 0 []]) => a
+  | ("append", [Sym.data "#List" 1 [h, t], b]) => Sym.data "#List" 1 [h, primitive "append" [t, b]]
+  | ("implies", [a, b]) =>
+    if isTrue a then b else if isFalse a then trueSym else if isTrue b then trueSym else Sym.prim "implies" [a, b]
+  | ("Text.length", [Sym.text a]) => Sym.int (Text.length a)
+  | ("Int.toText", [Sym.int a]) => Sym.text (Int.toText a)
+  | _ => Sym.prim name args
+
+def fuelLeft (pr : Prover) : Bool :=
+  let f := Ref.get pr.fuel
+  Ref.set pr.fuel (f - 1)
+  f > 0
+
+/-- Match a Core pattern against a symbolic value: bindings (innermost first), no, or unknown. -/
+def matchPat (pat : Sexp) (v : Sym) (binds : List Sym) : Option (Option (List Sym)) :=
+  -- Outer option: `none` when undecided. Inner: `none` when it definitely does not match.
+  match pat with
+  | Sexp.list [Sexp.sym "pany"] => some (some binds)
+  | Sexp.list [Sexp.sym "pvar"] => some (some (v :: binds))
+  | Sexp.list [Sexp.sym "pas", p] => matchPat p v (v :: binds)
+  | Sexp.list [Sexp.sym "pint", Sexp.int n] =>
+    match v with
+    | Sym.int m => some (if n == m then some binds else none)
+    | _ => if isNeutral v then none else some none
+  | Sexp.list [Sexp.sym "ptext", Sexp.str t] =>
+    match v with
+    | Sym.text u => some (if t == u then some binds else none)
+    | _ => if isNeutral v then none else some none
+  | Sexp.list (Sexp.sym "pcon" :: Sexp.str t :: Sexp.int tag :: subs) =>
+    match v with
+    | Sym.data t2 tag2 fields =>
+      if t != t2 || tag != tag2 then some none
+      else
+        List.foldl (fun acc pair =>
+          match acc with
+          | some (some b) => matchPat (fst pair) (snd pair) b
+          | other => other) (some (some binds)) (List.zip subs fields)
+    | _ => if isNeutral v then none else some none
+  | _ => none
+
+def evalCore (pr : Prover) (t : Sexp) (env : List Sym) : {Stuck, IO} Sym :=
+  match t with
+  | Sexp.list [Sexp.sym "var", Sexp.int i] =>
+    match List.get? env i with
+    | some v => v
+    | none => Stuck.stuck ("unbound " ++ Int.toText i ++ " in env of " ++ Int.toText (List.length env))
+  | Sexp.list [Sexp.sym "ref", Sexp.str h] => global pr h
+  | Sexp.list [Sexp.sym "int", Sexp.int n] => Sym.int n
+  | Sexp.list [Sexp.sym "text", Sexp.str s] => Sym.text s
+  | Sexp.list [Sexp.sym "con", Sexp.str ty, Sexp.int tag, Sexp.int 0] => Sym.data ty tag []
+  | Sexp.list [Sexp.sym "con", Sexp.str ty, Sexp.int tag, Sexp.int n] => Sym.ctorFn ty tag n []
+  | Sexp.list [Sexp.sym "prim", Sexp.str name] => if Set.contains name purePrims then Sym.primFn name [] else Stuck.stuck ("impure primitive " ++ name)
+  | Sexp.list [Sexp.sym "lam", b] => Sym.clo env b
+  | Sexp.list (Sexp.sym "app" :: f :: args) => apply pr (evalCore pr f env) (List.map (fun a => evalCore pr a env) args)
+  | Sexp.list [Sexp.sym "let", v, b] => evalCore pr b (evalCore pr v env :: env)
+  | Sexp.list [Sexp.sym "seq", _, b] => evalCore pr b env
+  | Sexp.list [Sexp.sym "if", c, yes, no] =>
+    let cv := evalCore pr c env
+    if isTrue cv then evalCore pr yes env
+    else if isFalse cv then evalCore pr no env
+    else Sym.ite cv (evalCore pr yes env) (evalCore pr no env)
+  | Sexp.list (Sexp.sym "match" :: scrut :: cases) =>
+    let sv := evalCore pr scrut env
+    let rec pick cs :=
+      match cs with
+      | [] => Stuck.stuck "no case matches"
+      | Sexp.list [Sexp.sym "case", pat, body] :: rest =>
+        match matchPat pat sv [] with
+        | some (some binds) => evalCore pr body (binds ++ env)
+        | some none => pick rest
+        | none =>
+          match sv with
+          | Sym.fv name => Ref.set pr.stuckOn (name :: Ref.get pr.stuckOn)
+          | _ => ()
+          Stuck.stuck "match on an unknown value"
+      | _ :: rest => pick rest
+    pick cases
+  | _ => Stuck.stuck ("cannot evaluate " ++ Sexp.head t)
+
+/-- A reference to a global: a function value, or a constant's value. -/
+def global (pr : Prover) (h : Text) : {Stuck, IO} Sym :=
+  match definitionOf pr h with
+  | some (0, body) => evalCore pr body []
+  | some (_, _) => Sym.fn h []
+  | none => Sym.call h []
+
+def apply (pr : Prover) (f : Sym) (args : List Sym) : {Stuck, IO} Sym :=
+  if List.isEmpty args then f
+  else
+    match f with
+    | Sym.clo env body =>
+      match args with
+      | a :: rest => apply pr (evalCore pr body (a :: env)) rest
+      | [] => f
+    | Sym.fn h prev =>
+      let all := prev ++ args
+      match definitionOf pr h with
+      | some (arity, _) =>
+        if List.length all < arity then Sym.fn h all
+        else apply pr (unfold pr h (List.take arity all)) (List.drop arity all)
+      | none => Sym.call h all
+    | Sym.ctorFn ty tag arity prev =>
+      let all := prev ++ args
+      if List.length all < arity then Sym.ctorFn ty tag arity all
+      else Sym.data ty tag all
+    | Sym.primFn name prev =>
+      let all := prev ++ args
+      let arity := if name == "Int.neg" || name == "Text.length" || name == "Int.toText" || name == "Text.trim" || name == "Text.sha256" || name == "Text.fromCode" || name == "Text.concat" then 1 else if name == "Text.slice" || name == "Text.indexOf" then 3 else 2
+      if List.length all < arity then Sym.primFn name all
+      else apply pr (primitive name (List.take arity all)) (List.drop arity all)
+    | Sym.call h prev => Sym.call h (prev ++ args)
+    | _ => Sym.app f args
+
+/-- Unfolds a definition, or leaves the call folded when its evaluation gets stuck. -/
+def unfold (pr : Prover) (h : Text) (args : List Sym) : {IO} Sym :=
+  match definitionOf pr h with
+  | some (arity, body) =>
+    if not (fuelLeft pr) then Sym.call h args
+    else
+      handle evalCore pr body (List.reverse args) with
+      | Stuck.stuck _ -> _ =>
+        -- A total function distributes over an undecided `if` in its arguments.
+        match liftIf args with
+        | some (c, yes, no) => Sym.ite c (unfold pr h yes) (unfold pr h no)
+        | none => Sym.call h args
+  | none => Sym.call h args
+
+/-- Re-reduces a symbolic value after a substitution or a rewrite. -/
+def norm (pr : Prover) (s : Sym) : {IO} Sym :=
+  match s with
+  | Sym.data ty tag fields => Sym.data ty tag (List.map (fun f => norm pr f) fields)
+  | Sym.call h args =>
+    let normed := List.map (fun a => norm pr a) args
+    match definitionOf pr h with
+    | some (arity, _) =>
+      if List.length normed >= arity then
+        handle apply pr (Sym.fn h []) normed with
+        | Stuck.stuck _ -> _ => Sym.call h normed
+      else Sym.call h normed
+    | none => Sym.call h normed
+  | Sym.prim name args => primitive name (List.map (fun a => norm pr a) args)
+  | Sym.ite c yes no =>
+    let cv := norm pr c
+    if isTrue cv then norm pr yes
+    else if isFalse cv then norm pr no
+    else
+      let y := norm pr yes
+      let n2 := norm pr no
+      if y == n2 then y
+      else if isTrue y && isFalse n2 then cv
+      else Sym.ite cv y n2
+  | Sym.app f args =>
+    handle apply pr (norm pr f) (List.map (fun a => norm pr a) args) with
+    | Stuck.stuck _ -> _ => Sym.app f args
+  | Sym.fn h args => Sym.fn h (List.map (fun a => norm pr a) args)
+  | Sym.ctorFn ty tag n args => Sym.ctorFn ty tag n (List.map (fun a => norm pr a) args)
+  | Sym.primFn name args => Sym.primFn name (List.map (fun a => norm pr a) args)
+  | other => other
+
+--
+-- Rewriting.
+--
+
+/-- First-order matching of a rule side against a term; pattern variables bind consistently. -/
+def unify (pat : Sym) (s : Sym) (binds : Map Text Sym) : Option (Map Text Sym) :=
+  match pat with
+  | Sym.pv name =>
+    match Map.lookup name binds with
+    | some bound => if bound == s then some binds else none
+    | none => some (Map.insert name s binds)
+  | _ =>
+    match (pat, s) with
+    | (Sym.data t1 g1 f1, Sym.data t2 g2 f2) => if t1 == t2 && g1 == g2 then unifyAll f1 f2 binds else none
+    | (Sym.call h1 a1, Sym.call h2 a2) => if h1 == h2 then unifyAll a1 a2 binds else none
+    | (Sym.prim n1 a1, Sym.prim n2 a2) => if n1 == n2 then unifyAll a1 a2 binds else none
+    | (Sym.ite c1 y1 n1, Sym.ite c2 y2 n2) => unifyAll [c1, y1, n1] [c2, y2, n2] binds
+    | (Sym.app f1 a1, Sym.app f2 a2) => unifyAll (f1 :: a1) (f2 :: a2) binds
+    | _ => if pat == s then some binds else none
+
+def unifyAll (ps : List Sym) (ss : List Sym) (binds : Map Text Sym) : Option (Map Text Sym) :=
+  if List.length ps != List.length ss then none
+  else List.foldl (fun acc pair => Option.bind acc (fun b => unify (fst pair) (snd pair) b)) (some binds) (List.zip ps ss)
+
+def instantiate (s : Sym) (binds : Map Text Sym) : Sym :=
+  match s with
+  | Sym.pv name => Option.getOr (Map.lookup name binds) s
+  | Sym.data ty tag fs => Sym.data ty tag (List.map (fun x => instantiate x binds) fs)
+  | Sym.call h args => Sym.call h (List.map (fun x => instantiate x binds) args)
+  | Sym.prim n args => Sym.prim n (List.map (fun x => instantiate x binds) args)
+  | Sym.ite c y n => Sym.ite (instantiate c binds) (instantiate y binds) (instantiate n binds)
+  | Sym.app f args => Sym.app (instantiate f binds) (List.map (fun x => instantiate x binds) args)
+  | Sym.fn h args => Sym.fn h (List.map (fun x => instantiate x binds) args)
+  | other => other
+
+/-- Replaces a free variable everywhere. -/
+def substitute (s : Sym) (name : Text) (v : Sym) : Sym :=
+  match s with
+  | Sym.fv x => if x == name then v else s
+  | Sym.data ty tag fs => Sym.data ty tag (List.map (fun x => substitute x name v) fs)
+  | Sym.call h args => Sym.call h (List.map (fun x => substitute x name v) args)
+  | Sym.prim n args => Sym.prim n (List.map (fun x => substitute x name v) args)
+  | Sym.ite c y n => Sym.ite (substitute c name v) (substitute y name v) (substitute n name v)
+  | Sym.app f args => Sym.app (substitute f name v) (List.map (fun x => substitute x name v) args)
+  | Sym.fn h args => Sym.fn h (List.map (fun x => substitute x name v) args)
+  | Sym.ctorFn ty tag n args => Sym.ctorFn ty tag n (List.map (fun x => substitute x name v) args)
+  | Sym.primFn n args => Sym.primFn n (List.map (fun x => substitute x name v) args)
+  | Sym.clo env body => Sym.clo (List.map (fun x => substitute x name v) env) body
+  | other => other
+
+def mentions (s : Sym) (name : Text) : Bool := substitute s name (Sym.fv (name ++ "'")) != s
+
+/-- Facts a true hypothesis yields, as rules. A false one closes the goal (returned as `none`). -/
+def factsOf (h : Sym) : Option (List Rule) :=
+  if isTrue h then some []
+  else if isFalse h then none
+  else
+    match h with
+    | Sym.ite a b c =>
+      if isFalse c then
+        -- a && b
+        Option.bind (factsOf a) (fun fa => Option.map (fun fb => fa ++ fb) (factsOf b))
+      else if isFalse b && isTrue c then negated a
+      else some [Rule.mk h trueSym []]
+    | Sym.prim "implies" [a, b] =>
+      let unwrap := fun (c : Sym) =>
+        match c with
+        | Sym.prim "eq" [l, r] => if isTrue l then r else if isTrue r then l else c
+        | _ => c
+      some [Rule.mk (unwrap b) trueSym [unwrap a]]
+    | Sym.prim "eq" [l, r] =>
+      -- `X = true` and `X = false` say what X is: use X's own facts.
+      if isTrue l then factsOf r
+      else if isTrue r then factsOf l
+      else if isFalse l then negated r
+      else if isFalse r then negated l
+      else some (Rule.mk h trueSym [] :: orient l r)
+    | Sym.prim "le" [a, b] => some [Rule.mk h trueSym [], Rule.mk (Sym.prim "lt" [b, a]) falseSym []]
+    | Sym.prim "lt" [a, b] => some [Rule.mk h trueSym [], Rule.mk (Sym.prim "le" [b, a]) falseSym [], Rule.mk (Sym.prim "le" [a, b]) trueSym []]
+    | _ => some [Rule.mk h trueSym []]
+
+/-- Orients an equation as a rewrite rule; a value (data, a literal) is never the left side. -/
+def orient (l : Sym) (r : Sym) : List Rule :=
+  let isValue := fun (x : Sym) =>
+    match x with
+    | Sym.int _ => true
+    | Sym.text _ => true
+    | Sym.data _ _ [] => true
+    | _ => false
+  if isValue l && isValue r then []
+  else if isValue l then [Rule.mk r l []]
+  else if isValue r then [Rule.mk l r []]
+  else
+    -- As written, as Lean's `simp` uses an equation; a variable is never rewritten into a term containing it.
+    match l with
+    | Sym.fv x => if mentions r x then [] else [Rule.mk l r []]
+    | _ => [Rule.mk l r []]
+
+/-- Facts from a false condition; `<=` is total, so `not (a <= b)` gives `b <= a`. -/
+def negated (a : Sym) : Option (List Rule) :=
+  if isTrue a then none
+  else if isFalse a then some []
+  else
+    match a with
+    | Sym.prim "le" [x, y] => some [Rule.mk a falseSym [], Rule.mk (Sym.prim "lt" [y, x]) trueSym [], Rule.mk (Sym.prim "le" [y, x]) trueSym []]
+    | Sym.prim "lt" [x, y] => some [Rule.mk a falseSym [], Rule.mk (Sym.prim "le" [y, x]) trueSym []]
+    | Sym.ite p q r =>
+      -- not (p || q) gives not p and not q.
+      if isTrue q then Option.bind (negated p) (fun fp => Option.map (fun fq => fp ++ fq) (negated r))
+      else some [Rule.mk a falseSym []]
+    | _ => some [Rule.mk a falseSym []]
+
+/-- `a <= c` from a chain of `<=` facts (transitivity). -/
+def chain (rules : List Rule) (a : Sym) (c : Sym) : Bool :=
+  let edges := List.filterMap (fun r =>
+    match (r.lhs, r.rhs, r.conds) with
+    | (Sym.prim "le" [x, y], rhs, []) => if isTrue rhs then some (x, y) else none
+    | _ => none) rules
+  let rec reach frontier seen fuel :=
+    if fuel <= 0 then false
+    else if List.contains c frontier then true
+    else
+      let next := List.filter (fun y => not (List.contains y seen)) (List.filterMap (fun e => if List.contains (fst e) frontier then some (snd e) else none) edges)
+      if List.isEmpty next then false else reach next (seen ++ next) (fuel - 1)
+  reach [a] [a] 8
+
+/-- Rewrites bottom-up with rules (conditions proved recursively, bounded), then re-normalizes. -/
+def rewrite (pr : Prover) (rules : List Rule) (s : Sym) (depth : Int) : {IO} Sym :=
+  let children := match s with
+    | Sym.data ty tag fs => Sym.data ty tag (List.map (fun x => rewrite pr rules x depth) fs)
+    | Sym.call h args => Sym.call h (List.map (fun x => rewrite pr rules x depth) args)
+    | Sym.prim n args => Sym.prim n (List.map (fun x => rewrite pr rules x depth) args)
+    | Sym.ite c y n =>
+      let c2 := rewrite pr rules c depth
+      -- Inside a branch the condition's value is known.
+      let yes := rewrite pr (Option.getOr (factsOf c2) [] ++ rules) y depth
+      let no := rewrite pr (Option.getOr (negated c2) [] ++ rules) n depth
+      Sym.ite c2 yes no
+    | Sym.app f args => Sym.app (rewrite pr rules f depth) (List.map (fun x => rewrite pr rules x depth) args)
+    | other => other
+  let reduced := norm pr children
+  let rec tryRules rs :=
+    match rs with
+    | [] =>
+      match reduced with
+      | Sym.prim "le" [a, c] => if chain rules a c then trueSym else reduced
+      | _ => reduced
+    | r :: rest =>
+      match unify r.lhs reduced Map.empty with
+      | some binds =>
+        let ok := List.all (fun cond => depth > 0 && isTrue (simplify pr rules (instantiate cond binds) (depth - 1))) r.conds
+        if ok then norm pr (instantiate r.rhs binds) else tryRules rest
+      | none => tryRules rest
+  tryRules rules
+
+/-- Rewrites to a fixpoint (bounded). -/
+def simplify (pr : Prover) (rules : List Rule) (s : Sym) (depth : Int) : {IO} Sym :=
+  let rec loop current k :=
+    let next := rewrite pr rules current depth
+    if next == current || k <= 0 then next else loop next (k - 1)
+  loop (norm pr s) 12
+
+--
+-- Goals and tactics.
+--
+
+/-- Rules from a goal's hypotheses and the lemmas in scope; `none` if the hypotheses contradict. -/
+def rulesOf (pr : Prover) (g : Goal) : Option (List Rule) :=
+  List.foldl (fun acc h => Option.bind acc (fun rs => Option.map (fun fs => fs ++ rs) (factsOf h))) (some (Ref.get pr.lemmaRules)) g.hyps
+
+/-- Moves `P -> Q` hypotheses into the context, simplifying each with the ones before. -/
+def intro (pr : Prover) (g : Goal) : {IO} Goal :=
+  match g.prop with
+  | Sym.prim "implies" [a, b] =>
+    let rules := Option.getOr (rulesOf pr g) []
+    let hyp := simplify pr rules a 3
+    intro pr (Goal.mk (g.hyps ++ [hyp]) b g.vars)
+  | _ => g
+
+/-- Simplifies a goal: `[]` when it is closed. -/
+def simp (pr : Prover) (g : Goal) : {IO} List Goal :=
+  let g2 := intro pr g
+  match rulesOf pr g2 with
+  | none => []
+  | some rules =>
+    -- Re-simplify each hypothesis with the others (never itself, which would make it `true`).
+    let hyps := List.mapIndexed (fun i h =>
+      let others := List.filterMap (fun pair => if fst pair == i then none else some (snd pair)) (List.mapIndexed (fun j x => (j, x)) g2.hyps)
+      match rulesOf pr (Goal.mk others g2.prop g2.vars) with
+      | some rs => simplify pr rs h 3
+      | none => h) g2.hyps
+    match rulesOf pr (Goal.mk hyps g2.prop g2.vars) with
+    | none => []
+    | some rules2 =>
+      let prop := simplify pr rules2 g2.prop 3
+      if isTrue prop then [] else [Goal.mk hyps prop g2.vars]
+
+/-- The first undecided `if` condition in a term. -/
+def firstCondition (s : Sym) : Option Sym :=
+  match s with
+  | Sym.ite c y n =>
+    match firstCondition c with
+    | some inner => some inner
+    | none => some c
+  | Sym.data _ _ fs => List.foldl (fun acc x => Option.orElse acc (fun _ => firstCondition x)) none fs
+  | Sym.call _ args => List.foldl (fun acc x => Option.orElse acc (fun _ => firstCondition x)) none args
+  | Sym.prim _ args => List.foldl (fun acc x => Option.orElse acc (fun _ => firstCondition x)) none args
+  | Sym.app f args => List.foldl (fun acc x => Option.orElse acc (fun _ => firstCondition x)) (firstCondition f) args
+  | _ => none
+
+def split (pr : Prover) (g : Goal) : {IO} Option (List Goal) :=
+  match firstCondition g.prop with
+  | some c => some [Goal.mk (g.hyps ++ [c]) g.prop g.vars, Goal.mk (g.hyps ++ [Sym.ite c falseSym trueSym]) g.prop g.vars]
+  | none => none
+
+/-- Constructors of a type: (tag, field types) with the type's arguments substituted. -/
+def constructors (pr : Prover) (type : Sexp) : {IO} Option (Text, List (Int, List Sexp)) :=
+  match Check.headAndArgs type with
+  | (Sexp.list [Sexp.sym "tref", Sexp.str iri], args) =>
+    if iri == "#List" then
+      let elem := Option.getOr (List.head? args) (Sexp.node "tref" [Sexp.str "#Int"])
+      some ("#List", [(0, []), (1, [elem, type])])
+    else if iri == "#Option" then some ("#Option", [(0, []), (1, [Option.getOr (List.head? args) type])])
+    else if iri == "#Bool" then some ("#Bool", [(0, []), (1, [])])
+    else
+      match Map.lookup iri (Check.typesByIri pr.store pr.nsMap) with
+      | some decl =>
+        let hash := Resolve.hashFor iri decl
+        some (hash, List.mapIndexed (fun i c => (i, List.map (fun ft => Check.substVars ft args) (List.drop 1 (Sexp.args c)))) (View.typeArgs decl))
+      | none => none
+  | _ => none
+
+def freshName (pr : Prover) (base : Text) : Text :=
+  let k := Ref.get pr.counter
+  Ref.set pr.counter (k + 1)
+  base ++ Int.toText k
+
+/-- Structural induction (`withIh`) or case analysis on a variable. -/
+def induct (pr : Prover) (g : Goal) (name : Text) (withIh : Bool) : {IO} Option (List Goal) :=
+  match List.lookup name g.vars with
+  | none => none
+  | some type =>
+    match constructors pr type with
+    | none => none
+    | some (typeHash, ctors) =>
+      -- The induction predicate generalizes over the hypotheses that mention the variable.
+      let mentioning := List.filter (fun h => mentions h name) g.hyps
+      let others := List.filter (fun h => not (mentions h name)) g.hyps
+      let predicate := List.foldr (fun h acc => Sym.prim "implies" [h, acc]) g.prop mentioning
+      let otherVars := List.filter (fun v => fst v != name) g.vars
+      some (List.map (fun ctor =>
+        match ctor with
+        | (tag, fieldTypes) =>
+          let fields := List.map (fun t => (freshName pr name, t)) fieldTypes
+          let value := Sym.data typeHash tag (List.map (fun f => Sym.fv (fst f)) fields)
+          let ihs := if withIh then List.filterMap (fun f => if snd f == type then some (norm pr (substitute predicate name (Sym.fv (fst f)))) else none) fields else []
+          Goal.mk (others ++ ihs) (norm pr (substitute predicate name value)) (otherVars ++ fields)) ctors)
+
+/-- simp, then split on a condition or case on a stuck variable, recursively. -/
+def auto (pr : Prover) (g : Goal) (depth : Int) : {IO} List Goal :=
+  Ref.set pr.stuckOn []
+  match simp pr g with
+  | [] => []
+  | [g2] =>
+    if depth <= 0 then [g2]
+    else
+      match split pr g2 with
+      | some goals => List.concatMap (fun x => auto pr x (depth - 1)) goals
+      | none =>
+        let candidates := List.filter (fun v => Option.isSome (List.lookup v g2.vars)) (List.dedup (List.sort (Ref.get pr.stuckOn)))
+        match candidates with
+        | v :: _ =>
+          match induct pr g2 v false with
+          | some goals => List.concatMap (fun x => auto pr x (depth - 1)) goals
+          | none => [g2]
+        | [] => [g2]
+  | goals => goals
+
+/-- A tactic step parsed from the proof tokens. -/
+structure Step where
+  tactic : Text
+  stepArgs : List Text
+  lemmas : List Text
+
+def parseSteps (tokens : List Sexp) : List Step :=
+  let rec go rest current acc inBrackets lemmas :=
+    let flush := fun (u : Unit) =>
+      match current with
+      | [] => acc
+      | t :: args => Step.mk t args (List.reverse lemmas) :: acc
+    match rest with
+    | [] => List.reverse (flush ())
+    | Sexp.str "[" :: more => go more current acc true lemmas
+    | Sexp.str "]" :: more => go more current acc false lemmas
+    | Sexp.str "," :: more => go more current acc inBrackets lemmas
+    | Sexp.list [Sexp.sym "ref", Sexp.str h] :: more => go more current acc inBrackets (h :: lemmas)
+    | Sexp.str ";" :: more => go more [] (flush ()) false []
+    | Sexp.str "<" :: Sexp.str ";" :: Sexp.str ">" :: more => go more [] (flush ()) false []
+    | Sexp.str "·" :: more => go more current acc inBrackets lemmas
+    | Sexp.str t :: more =>
+      if inBrackets then go more current acc inBrackets (t :: lemmas)
+      else
+        match current with
+        | [] => go more [t] acc inBrackets lemmas
+        | _ => go more (current ++ [t]) acc inBrackets lemmas
+    | _ :: more => go more current acc inBrackets lemmas
+  go tokens [] [] false []
+
+/-- Rewrite rules from a proved lemma: its conclusion, conditioned on its hypotheses. -/
+def lemmaRules (pr : Prover) (h : Text) : {IO} List Rule :=
+  match Codebase.readObject pr.store h with
+  | some (Sexp.list (Sexp.sym "theorem" :: Sexp.list (Sexp.sym "binders" :: types) :: prop :: _)) =>
+    let names := List.mapIndexed (fun i _ => "?" ++ Int.toText i) types
+    let body := handle evalCore pr prop [] with
+      | Stuck.stuck _ -> _ => trueSym
+    let applied := handle apply pr body (List.map (fun x => Sym.pv x) names) with
+      | Stuck.stuck _ -> _ => trueSym
+    let rec split2 s conds :=
+      match s with
+      | Sym.prim "implies" [a, b] => split2 b (conds ++ [a])
+      | _ => (s, conds)
+    let unwrap := fun (c : Sym) =>
+      match c with
+      | Sym.prim "eq" [l, r] => if isTrue l then r else if isTrue r then l else c
+      | _ => c
+    match split2 (norm pr applied) [] with
+    | (conclusion, conds) =>
+      let cs := List.map unwrap conds
+      match unwrap conclusion with
+      | Sym.prim "eq" [l, r] => Rule.mk (Sym.prim "eq" [l, r]) trueSym cs :: List.map (fun rule => Rule.mk rule.lhs rule.rhs cs) (orient l r)
+      | c => if isTrue c then [] else [Rule.mk c trueSym cs]
+  | _ => []
+
+/-- Runs a tactic script on a theorem; `ok` with the steps used, or the goals left. -/
+def proveTheorem (pr : Prover) (names : List Text) (types : List Sexp) (prop : Sexp) (proof : List Sexp) : {IO} Result Text Text :=
+  let start := handle apply pr (evalCore pr prop []) (List.map Sym.fv names) with
+    | Stuck.stuck why -> _ => defect ("cannot state the theorem: " ++ why)
+  let goal := Goal.mk [] (norm pr start) (List.zip names types)
+  let steps := parseSteps proof
+  let rec run remaining goals :=
+    match remaining with
+    | [] => goals
+    | step :: rest =>
+      List.forEach step.lemmas (fun h => Ref.set pr.lemmaRules (lemmaRules pr h ++ Ref.get pr.lemmaRules))
+      let tactic := step.tactic
+      let target := Option.getOr (List.head? step.stepArgs) ""
+      let apply1 := fun (g : Goal) =>
+        if tactic == "simp" then simp pr g
+        else if tactic == "intro" then [intro pr g]
+        else if tactic == "split" then Option.getOr (split pr g) [g]
+        else if tactic == "auto" then auto pr g 8
+        else if tactic == "induction" then Option.getOr (induct pr g target true) [g]
+        else if tactic == "cases" then Option.getOr (induct pr g target false) [g]
+        else if tactic == "trace" then
+          eprintln (goalText pr g)
+          [g]
+        else [g]
+      run rest (List.concatMap apply1 goals)
+  let left := run steps [goal]
+  if List.isEmpty left then Result.ok (Text.join " " (List.dedup (List.sort (List.map (fun s => s.tactic) steps))))
+  else
+    match left with
+    | g :: _ => Result.err (Int.toText (List.length left) ++ " goal(s) left; first:\n" ++ goalText pr g)
+    | [] => Result.err "no goals"
+
+/-- A goal as Lean prints one: hypotheses, then `⊢` and the proposition. -/
+def goalText (pr : Prover) (g : Goal) : Text :=
+  let p := Print.printer pr.nsMap []
+  let hyps := List.mapIndexed (fun i h => "      h" ++ Int.toText i ++ " : " ++ symText p h 0) g.hyps
+  Text.join "\n" (hyps ++ ["      ⊢ " ++ symText p g.prop 0])
+
+/-- A symbolic value as DEUS-like text, for reporting open goals. -/
+def symText (p : Printer) (s : Sym) (prec : Int) : Text :=
+  let args := fun (xs : List Sym) => Text.concat (List.map (fun x => " " ++ symText p x 100) xs)
+  match s with
+  | Sym.int n => if n < 0 then Print.paren 99 prec (Int.toText n) else Int.toText n
+  | Sym.text t => Print.quoteText t
+  | Sym.fv name => name
+  | Sym.pv name => name
+  | Sym.data "#List" 1 [h, t] => Print.paren 67 prec (symText p h 68 ++ " :: " ++ symText p t 67)
+  | Sym.data ty tag [] => Print.conName p ty tag
+  | Sym.data ty tag fields => Print.paren 90 prec (Print.conName p ty tag ++ args fields)
+  | Sym.call h xs => if List.isEmpty xs then Print.nameFor p h else Print.paren 90 prec (Print.nameFor p h ++ args xs)
+  | Sym.fn h xs => if List.isEmpty xs then Print.nameFor p h else Print.paren 90 prec (Print.nameFor p h ++ args xs)
+  | Sym.prim "implies" [a, b] => Print.paren 5 prec (symText p a 6 ++ " -> " ++ symText p b 5)
+  | Sym.prim name [a, b] =>
+    match Print.infixOf name with
+    | some (op, level) => Print.paren level prec (symText p a level ++ " " ++ op ++ " " ++ symText p b (level + 1))
+    | none => Print.paren 90 prec (name ++ args [a, b])
+  | Sym.prim "Int.neg" [a] => Print.paren 95 prec ("-" ++ symText p a 100)
+  | Sym.prim name xs => Print.paren 90 prec (name ++ args xs)
+  | Sym.ite c y n => Print.paren 1 prec ("if " ++ symText p c 0 ++ " then " ++ symText p y 0 ++ " else " ++ symText p n 0)
+  | Sym.app f xs => Print.paren 90 prec (symText p f 90 ++ args xs)
+  | Sym.ctorFn ty tag _ xs => Print.paren 90 prec (Print.conName p ty tag ++ args xs)
+  | Sym.primFn name xs => Print.paren 90 prec (name ++ args xs)
+  | Sym.clo _ _ => "<function>"
+
+end Prove

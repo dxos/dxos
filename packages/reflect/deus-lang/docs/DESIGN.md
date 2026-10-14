@@ -80,7 +80,7 @@ IRI names a type's lineage and a hash names one version of it.
 ## The toolchain
 
 ```text
-               seed/deus.seed (Core image of Cli.main)
+               seed/deus.image (Core image of Cli.main)
                          │ runs on
                          ▼
   src/kernel ── CEK machine · primitives · IO host · Code.load/run
@@ -132,14 +132,34 @@ error positions pointing into the document. Two extensions are in progress:
 
 ## Proofs
 
-A `theorem` states a proposition over typed binders and names its evidence:
+A `theorem` states a proposition over typed binders (`P -> Q` for hypotheses) and names its
+evidence:
 
-| Evidence    | Meaning                                                                                 |
-| ----------- | --------------------------------------------------------------------------------------- |
-| `sorry`     | stated, not checked                                                                     |
-| `by test n` | `n` generated cases passed (property-based; deterministic seed from the theorem's hash) |
-| `by decide` | every case of finite binder types checked                                               |
-| `by rfl`    | closed proposition, evaluated to `true`                                                 |
+| Evidence       | Meaning                                                                                 |
+| -------------- | --------------------------------------------------------------------------------------- |
+| `sorry`        | stated, not checked                                                                     |
+| `by test n`    | `n` generated cases passed (property-based; deterministic seed from the theorem's hash) |
+| `by decide`    | every case of finite binder types checked                                               |
+| `by rfl`       | closed proposition, evaluated to `true`                                                 |
+| `by <tactics>` | a formal proof: `induction x`, `cases x`, `simp [lemmas]`, `split`, `auto`, `trace`     |
 
-The ladder is honest: the CLI reports the level each theorem reached. Induction and rewriting
-are the next rung.
+```deus
+theorem insertSorted (x : Int) (xs : List Int) : sorted xs = true -> sorted (insert x xs) = true := by
+  induction xs; auto
+
+theorem isortSorted (xs : List Int) : sorted (isort xs) = true := by
+  induction xs; simp [insertSorted]
+```
+
+The prover ([`deus/prove.deus`](../deus/prove.deus)) evaluates Core symbolically. Its trusted
+base is written at the top of that file. A definition is unfolded only if it is pure and
+structurally recursive, so every equation it uses holds for all inputs. A `match` on an unknown
+value blocks evaluation rather than guessing. Induction is structural, and case splits are on
+`Bool` conditions. `Int` is treated as a ring modulo 2³², and `<=` as a total order. Lemmas
+are used in their written direction, as Lean's `simp` uses them. A proof that relies on a
+lemma that is only tested is reported as "proof assuming tested lemmas".
+
+Lemma names in a proof are resolved to hashes when the theorem is compiled, so changing a
+lemma changes the theorem's hash and invalidates its cached verdict.
+[`examples/soundness.deus`](../examples/soundness.deus) lists claims the prover must refuse;
+the test suite checks them.

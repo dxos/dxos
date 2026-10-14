@@ -114,6 +114,7 @@ export const createPrims = (): Map<string, Prim> => {
   def('gt', 2, ([a, b]) => (typeof a === 'number' && typeof b === 'number' ? a > b : compare(a, b) > 0));
   def('ge', 2, ([a, b]) => (typeof a === 'number' && typeof b === 'number' ? a >= b : compare(a, b) >= 0));
   def('append', 2, ([a, b]) => append(a, b));
+  def('implies', 2, ([a, b]) => a !== true || b === true);
 
   def('Text.length', 1, ([s]) => text(s).length);
   def('Text.code', 2, ([s, i]) => {

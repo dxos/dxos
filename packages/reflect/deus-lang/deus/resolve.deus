@@ -199,6 +199,7 @@ def binopPrim (op : Text) : Text :=
   else if op == ">" then "gt"
   else if op == ">=" then "ge"
   else if op == "++" then "append"
+  else if op == "->" then "implies"
   else defect ("unknown operator " ++ op)
 
 /-- Right-nested pairs: `(a, b, c)` is `(a, (b, c))`, as in Unison. -/

@@ -68,4 +68,4 @@ the binders appear.
 ## Images
 
 An image is the closure of one definition: `(def "h" core)` forms sorted by hash, then
-`(main "h")`. The kernel calls `main` with `()`. `seed/deus.seed` is the image of `Cli.main`.
+`(main "h")`. The kernel calls `main` with `()`. `seed/deus.image` is the image of `Cli.main`.

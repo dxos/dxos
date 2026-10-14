@@ -71,3 +71,11 @@ proposals are ideas to solve things, you need to evaluate and choose the best ap
 ---
 
 - syntax for deus so vscode can render it
+
+---
+
+- we should have layers for code-base defintions: spec, code, proofs, tests, artifacts, llm codegent, cache, test-results, etc...
+
+---
+
+- ability to represent docker containers in mdl

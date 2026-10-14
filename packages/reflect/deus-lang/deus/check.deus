@@ -188,7 +188,10 @@ def runCases (prop : Sexp) (cases : List (List Sexp)) (describe : List Sexp -> T
 def checkTheorem (dir : Text) (ns : Map Text Entry) (h : Text) (obj : Sexp) : {IO} Verdict :=
   match obj with
   | Sexp.list (Sexp.sym "theorem" :: Sexp.list (Sexp.sym "binders" :: types) :: prop :: proof :: _) =>
-    let tactic := List.map Sexp.asText (Sexp.args proof)
+    let tactic := List.map (fun x =>
+      match x with
+      | Sexp.list [Sexp.sym "ref", Sexp.str l] => "#" ++ l
+      | _ => Sexp.asText x) (Sexp.args proof)
     let printer := Print.printer ns []
     let describe := fun (args : List Sexp) => Text.join ", " (List.map (fun a => Print.expr printer a [] 0 100) args)
     let typeDecls := typesByIri dir ns
@@ -215,8 +218,42 @@ def checkTheorem (dir : Text) (ns : Map Text Entry) (h : Text) (obj : Sexp) : {I
       match runCases prop cases describe with
       | none => Verdict.pass "test" count
       | some reason => Verdict.fail reason
-    | _ => Verdict.fail ("unknown tactic: " ++ Text.join " " tactic)
+    | _ =>
+      -- A tactic proof. Binder names come from metadata (the author's names, in order).
+      let locals := List.map Sexp.asText (Codebase.metaList (Codebase.readMeta dir h) "locals")
+      let names := List.mapIndexed (fun i _ => Option.getOr (List.get? locals i) ("x" ++ Int.toText i)) types
+      let pr := Prover.mk dir ns (Ref.new Map.empty) (Ref.new 20000) (Ref.new []) (Ref.new 0) (Ref.new []) (Ref.new [])
+      -- Lemmas must be checked first; one that is only tested weakens this verdict.
+      let lemmas := List.filterMap (fun x =>
+        match x with
+        | Sexp.list [Sexp.sym "ref", Sexp.str l] => some l
+        | _ => none) (Sexp.args proof)
+      let weak := List.filter (fun l =>
+        match lemmaVerdict dir ns l with
+        | Verdict.pass evidence _ => evidence == "test"
+        | _ => true) lemmas
+      if List.any (fun l =>
+        match lemmaVerdict dir ns l with
+        | Verdict.fail _ => true
+        | _ => false) lemmas then Verdict.fail "a lemma it uses does not hold"
+      else
+        match Prove.proveTheorem pr names types prop (Sexp.args proof) with
+        | Result.ok used => Verdict.pass (if List.isEmpty weak then "proof" else "proof assuming tested lemmas") 1
+        | Result.err reason => Verdict.fail reason
   | _ => Verdict.fail "not a theorem"
+
+/-- A lemma's verdict, checking (and caching) it first if needed. -/
+def lemmaVerdict (dir : Text) (ns : Map Text Entry) (h : Text) : {IO} Verdict :=
+  match cached dir h with
+  | some v => v
+  | none =>
+    match Codebase.readObject dir h with
+    | some obj =>
+      Image.load (fun x => Codebase.readObject dir x) [h]
+      let v := checkTheorem dir ns h obj
+      remember dir h v
+      v
+    | none => Verdict.fail "missing lemma"
 
 def checkTest (h : Text) : Verdict :=
   match guarded h with
@@ -260,7 +297,7 @@ def run (args : Args) (wantTheorems : Bool) : {IO, Throw Text} Unit :=
       let suffix := if wasCached then "  (cached)" else ""
       match v with
       | Verdict.pass evidence cases =>
-        if wantTheorems then "  ✓ " ++ name ++ "  " ++ (if evidence == "test" then "tested, " ++ Int.toText cases ++ " cases" else "proved by " ++ evidence ++ (if cases > 1 then ", " ++ Int.toText cases ++ " cases" else "")) ++ suffix
+        if wantTheorems then "  ✓ " ++ name ++ "  " ++ (if evidence == "test" then "tested, " ++ Int.toText cases ++ " cases" else if Text.startsWith "proof" evidence then "proved (" ++ evidence ++ ")" else "proved by " ++ evidence ++ (if cases > 1 then ", " ++ Int.toText cases ++ " cases" else "")) ++ suffix
         else "  ✓ " ++ name ++ suffix
       | Verdict.fail reason => "  ✗ " ++ name ++ "  " ++ reason ++ suffix
       | Verdict.unchecked => "  ? " ++ name ++ "  sorry (unchecked)"
