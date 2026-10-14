@@ -234,10 +234,8 @@ can only come from that library.
 `deus pull` and `deus compact` (D50). Each push writes one immutable bundle, named by its hash,
 and nothing is overwritten. A pull imports new bundles and sets `origin.<branch>` to the
 remote's heads, which are merged as local branches are. Compaction is deterministic, so two
-clients compacting the same history write the same bundles. `deus compact --keep n` collects
-garbage: n generations from each head survive, and older history becomes shallow (D54). What
-survives is sorted by age: live definitions older than the window settle into hash-bucketed
-bedrock, and the window keeps its strata (D66). Namespace snapshots are trees, so each commit
+clients compacting the same history write the same bundles. Compaction never trims history: the
+remote keeps every change, as git does (D66). Namespace snapshots are trees, so each commit
 adds only the nodes on the changed names' paths (D65); `deus migrate` rewrites older history.
 
 ## Exploring

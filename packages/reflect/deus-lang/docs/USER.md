@@ -192,3 +192,19 @@ perhaps add an alarm to remind you of that every 30 minutes
 ---
 
 - 1
+
+---
+
+- how does the compaction work -- normal subduction sedimetree chunks the graph, but our graph doesn't grow the same way, automerge grows vertically (each commit builds on previous one), but ours is more horizontal: new definitions added, old ones replaced
+
+---
+
+wouldn't columnar format benefit from being binary and following what parquet or automerge or duckdb do: interning hashes, column copression formats, etc..
+
+I might be wrong though
+
+---
+
+> Retention GC (level 99)
+
+as git, we should be able to keep entire code history without trimming, artifacts and caches might get deleted though. lets make sure compaction allows that

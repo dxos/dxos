@@ -654,20 +654,14 @@ def pull (args : Args) : {IO, Throw Text} Unit :=
 
 /--
   `deus compact [remote] [--level k]`: rewrites history into level-k strata and drops covered
-  bundles. With `--keep n`, collects garbage instead: only n generations from each head survive,
-  as bedrock buckets, level-k strata and a tail (D66).
+  bundles. It never drops history: a bundle goes only once strata hold all its objects (D66).
 -/
 def compact (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let name := remoteName args
   let level := Option.getOr (Option.bind (option args "level") Int.fromText) 1
-  match Option.bind (option args "keep") Int.fromText with
-  | some keep =>
-    match withRemote dir name (fun _ => Replicate.collect dir name keep level) with
-    | (bundles, written, deleted, dropped) =>
-      output args (fun _ => Json.obj [("bundles", Json.arr (List.map Json.str bundles)), ("written", Json.arr (List.map Json.str written)), ("deleted", Json.arr (List.map Json.str deleted)), ("dropped", Json.num dropped)])
-        (fun _ => "Kept " ++ Int.toText keep ++ " generations in " ++ Int.toText (List.length bundles) ++ " bundles (" ++ Int.toText (List.length written) ++ " written); deleted " ++ Int.toText (List.length deleted) ++ " bundles and " ++ Int.toText dropped ++ " unreachable objects.")
-  | none =>
+  if Map.contains "keep" args.options then throw "compact keeps the whole history (D66); there is no --keep"
+  else
     match withRemote dir name (fun _ => Replicate.compact dir name level) with
     | (written, deleted) =>
       output args (fun _ => Json.obj [("written", Json.arr (List.map Json.str written)), ("deleted", Json.arr (List.map Json.str deleted))])
@@ -1152,7 +1146,6 @@ def usage : Text :=
     "  push [remote] [--branch b]           upload one immutable bundle of what the remote lacks",
     "  pull [remote]                        import new bundles; <remote>.<branch> tracks its heads",
     "  compact [remote] [--level k]         sedimentree compaction into level-k strata",
-    "  compact [remote] --keep n            garbage-collect: keep n generations from each head",
     "",
     "running",
     "  run [--codebase c] <name> [args…]    run name () with IO.args = args (options go before the name)",

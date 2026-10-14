@@ -321,8 +321,8 @@ def init (dir : Text) : {IO, Throw Text} Unit :=
     IO.writeFile (dir ++ "/HEAD") "main\n"
 
 /--
-  The parents of a causal node that the store has. History pruned by replication's retention
-  (D54) is shallow: its oldest kept nodes have parents nobody keeps, and they act as roots.
+  The parents of a causal node that the store has. History a remote trimmed before D66 is
+  shallow: its oldest nodes have parents nobody keeps, and they act as roots.
 -/
 def parentsOf (dir : Text) (h : Text) : {IO, Throw Text} List Text :=
   List.filter (fun p => IO.exists (objectPath dir p)) (readCausal dir h).parents

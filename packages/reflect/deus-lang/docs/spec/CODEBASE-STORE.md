@@ -236,8 +236,8 @@ A commit writes a new snapshot and a new node only when something changed: a cha
 equals the parent's leaves the branch where it was. A code change keeps the parent's tasks hash; a task
 change keeps the parent's namespace hash.
 
-History may be shallow. After retention GC ([D54](../DECISIONS.md)) a node can name parents the store
-does not have; readers MUST treat those parents as absent, so such a node acts as a root. "First-parent
+History may be shallow. A remote collected by the retention GC that D66 removed ([D54](../DECISIONS.md)),
+or a pull cut short, leaves nodes that name parents the store does not have; readers MUST treat those parents as absent, so such a node acts as a root. "First-parent
 history" (`deus log`, `HISTORY.md`) follows the first parent the store has.
 
 ## Branches and HEAD

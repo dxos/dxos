@@ -7,8 +7,8 @@ reads this format can replicate a codebase without a server. The implementation 
 [`deus/replicate.deus`](../../deus/replicate.deus) (bundles, remotes, heads, compaction, GC),
 [`deus/columnar.deus`](../../deus/columnar.deus) (the DEUSCOL1 encoding) and
 [`deus/cli.deus`](../../deus/cli.deus) (`withRemote`, the commands). Decisions:
-[D50](../DECISIONS.md) (bundles, heads, sedimentree), [D54](../DECISIONS.md) and
-[D66](../DECISIONS.md) (retention GC), [D60](../DECISIONS.md) and [D67](../DECISIONS.md) (columnar
+[D50](../DECISIONS.md) (bundles, heads, sedimentree), [D66](../DECISIONS.md) (no history is
+trimmed), [D60](../DECISIONS.md) and [D67](../DECISIONS.md) (columnar
 text, gzip).
 
 Objects and their hashes are defined in [CODEBASE-STORE.md](CODEBASE-STORE.md). The canonical
@@ -18,7 +18,7 @@ S-expression text that both hashes and dictionaries use is defined in [CORE.md](
 
 ```text
 name   = level "-" sha256
-level  = decimal integer, no sign, no leading zeros   ; 0 push or GC tail, k >= 1 strata, 99 GC bedrock
+level  = decimal integer, no sign, no leading zeros   ; 0 push, k >= 1 compaction
 sha256 = 64 lowercase hex digits
 ```
 
@@ -307,28 +307,12 @@ bundles are canonical, so clients compacting the same history write byte-identic
 Observed: 30 level-0 bundles whose head `01786a06…` starts with one zero compact at level 1 into one
 `1-192de339…` bundle and a claims-only `0-013c20ea…` bundle holding `(branch "main" "01786a06…")`.
 
-## Retention GC
+## History is never trimmed
 
-`deus compact [remote] --keep n [--level k]` (default `k = 1`, [D54](../DECISIONS.md),
-[D66](../DECISIONS.md)) keeps recent history and sorts what it keeps by age:
+A remote keeps every causal node and everything it reaches, as git does ([D66](../DECISIONS.md)).
+The only deletion is step 6 of compaction, of bundles whose objects strata already hold. There is no
+retention GC: `deus compact --keep` exits with an error. Artifacts and the cache are local layers and
+are never uploaded, so deleting them never touches a remote.
 
-1. Collect the head claims of all branches.
-2. The window is the causal nodes at most `n` parent links from any head (breadth first, depth 0 is
-   the heads). The live set is the window, its snapshots, and everything their named entries reach.
-3. The frontier is the window's nodes with a recorded parent outside the window. The parents are read
-   from the node, not from the store, so a shallow clone finds the same frontier as a full one.
-4. Bedrock is the closure of the frontier minus the window: what was already live before the window.
-   Group it by the first `d` hex digits of each hash, where `d` is the least digit count with
-   `count <= 2048 * 16^d`, and write each group as a bundle named `99-<sha256>`.
-5. A boundary is a window node whose hash starts with `k` zeros. Each boundary's stratum is the closure
-   of its ancestors inside the window, minus that closure for the boundaries that are its proper
-   ancestors, minus bedrock. Write each non-empty stratum as a bundle named `<k>-<sha256>`.
-6. The tail is the rest of the live set. Write it with the head claims as one bundle named
-   `0-<sha256>`.
-7. Write each bundle unless its name is already listed, then delete every other listed bundle.
-
-The result depends only on the heads, `n` and `k`, so clients with the same policy write the same
-bundles, and a bundle whose objects did not change keeps its name and is not uploaded again.
-Definitions that outlive the window settle into bedrock, which changes only where a definition dies
-or settles, one bucket at a time. Older causal nodes are gone from the remote, and their children's
-`parents` point at hashes no store has.
+Note: a remote collected by the GC that D54 described has shallow history. Readers treat parents that
+no store has as roots.

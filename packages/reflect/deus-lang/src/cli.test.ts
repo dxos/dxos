@@ -380,25 +380,13 @@ describe('deus CLI', () => {
       deus('merge', 'origin.main', ...fresh);
       expect(deus('eval', 'v70 + v3 + x + y', ...fresh).stdout).toBe('76\n');
 
-      // Retention: only recent generations survive, as bedrock buckets, strata and a tail; the
-      // history left is shallow.
-      const collected = JSON.parse(deus('compact', '--keep', '3', '--json', ...a).stdout);
-      expect(readdirSync(join(remote, 'bundles')).sort()).toEqual(collected.bundles);
-      expect(collected.bundles.some((name: string) => name.startsWith('99-'))).toBe(true);
-      expect(collected.dropped).toBeGreaterThan(0);
-      deus('pull', ...b);
-      expect(JSON.parse(deus('compact', '--keep', '3', '--json', ...b).stdout)).toMatchObject({
-        bundles: collected.bundles,
-        written: [],
-        deleted: [],
-        dropped: 0,
-      });
-      const shallow = ['--codebase', join(scratch, 'replica-d')];
-      deus('init', '--empty', ...shallow);
-      deus('remote', 'add', 'origin', remote, ...shallow);
-      deus('pull', ...shallow);
-      deus('merge', 'origin.main', ...shallow);
-      expect(deus('eval', 'v70 + v3 + x + y', ...shallow).stdout).toBe('76\n');
+      // Compaction never trims history: a clone of the compacted remote has every change, as git does.
+      const history = (c: string[]) => deus('log', '--n', '1000', ...c).stdout;
+      expect(history(fresh)).toBe(history(a));
+      expect(history(a).split('\n').length).toBeGreaterThan(70);
+      const refused = deus('compact', '--keep', '3', ...a);
+      expect(refused.code).toBe(1);
+      expect(refused.stderr).toContain('compact keeps the whole history');
     },
   );
 
