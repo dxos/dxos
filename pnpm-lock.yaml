@@ -5818,9 +5818,6 @@ importers:
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../../common/errors
-      '@dxos/index-core':
-        specifier: workspace:*
-        version: link:../index-core
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -6334,6 +6331,9 @@ importers:
       '@dxos/sql-sqlite':
         specifier: workspace:*
         version: link:../../../common/sql-sqlite
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
       effect:
         specifier: 4.0.4
         version: 4.0.4

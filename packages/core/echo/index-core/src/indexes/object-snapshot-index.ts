@@ -8,7 +8,7 @@ import * as SqlClient from 'effect/sql/SqlClient';
 import type * as SqlError from 'effect/sql/SqlError';
 
 import type { Obj } from '@dxos/echo';
-import { ATTR_META, ATTR_TYPE } from '@dxos/echo/internal';
+import { ATTR_TYPE } from '@dxos/echo/internal';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/object-snapshot/index.ts';
 import { chunkArray, chunkRows } from '../utils.ts';
@@ -66,6 +66,28 @@ export class ObjectSnapshotIndex implements Index {
         }
       }
 
+      return results;
+    });
+  }
+
+  /**
+   * Each document object's JSON text with the heads it was read at, in one read so the two agree.
+   * Objects stored without heads are omitted.
+   */
+  queryBackings(
+    recordIds: readonly number[],
+  ): Effect.Effect<readonly { recordId: number; json: string; heads: string[] }[], SqlError.SqlError> {
+    return Effect.gen({ self: this }, function* () {
+      const sql = this.#sql;
+      const results: { recordId: number; json: string; heads: string[] }[] = [];
+      for (const chunk of chunkArray(recordIds)) {
+        const rows = yield* sql<{ recordId: number; snapshot: string; heads: string }>`
+          SELECT recordId, snapshot, heads FROM objectSnapshot
+          WHERE recordId IN ${sql.in(chunk)} AND heads IS NOT NULL`;
+        for (const row of rows) {
+          results.push({ recordId: row.recordId, json: row.snapshot, heads: JSON.parse(row.heads) });
+        }
+      }
       return results;
     });
   }
@@ -138,21 +160,17 @@ export class ObjectSnapshotIndex implements Index {
           isPartialBlock({ object }) && existing !== undefined
             ? { ...(JSON.parse(existing) as Record<string, unknown>), ...object.data }
             : object.data;
-        // Document objects carry `@meta` only so the entity-meta index can extract the
-        // convergence key, and this store is what the full-text index is built from — so
-        // keeping it would let a search match on foreign keys and identity strings the
-        // visible content never contains. Queue blocks always carried meta in their snapshot
-        // (clients hydrate from it), so theirs stays.
-        const stored = object.documentId
-          ? Object.fromEntries(Object.entries(merged).filter(([key]) => key !== ATTR_META))
-          : merged;
-        return { recordId, snapshot: JSON.stringify(stored) };
+        return {
+          recordId,
+          snapshot: JSON.stringify(merged),
+          heads: object.heads ? JSON.stringify(object.heads) : null,
+        };
       });
 
       for (const chunk of chunkRows(rows)) {
         yield* sql`
             INSERT INTO objectSnapshot ${sql.insert(chunk)}
-            ON CONFLICT (recordId) DO UPDATE SET snapshot = excluded.snapshot
+            ON CONFLICT (recordId) DO UPDATE SET snapshot = excluded.snapshot, heads = excluded.heads
           `;
       }
     }),
