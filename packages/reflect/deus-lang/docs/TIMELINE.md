@@ -82,6 +82,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 74  | 10-14 18:45 | 6m 00s         | `6a834107`  | merge the TypeScript-like dialect into this branch, renumbered D70, and fold everything into #13952                                                                                     |
 | 75  | 10-14 18:51 | 6m 00s         | `57793c59`  | unknown tactic names fail the proof instead of being skipped (D71)                                                                                                                      |
 | 76  | 10-14 19:05 | 20m 00s        | `34324b58`  | namespace-tree snapshots and `deus migrate` (D72), full history kept on the remote, `--keep` removed (D73), bundles stay text (D74)                                                     |
-| 77  | 10-14 19:20 | 9m 00s         | this commit | a Unison-style codebase UI: finder by name and type, namespace pages, hover previews, change diffs; builtin pages and bucket content types fixed (D75, task dfaad231)                   |
+| 77  | 10-14 19:20 | 9m 00s         | `e1990e1f`  | a Unison-style codebase UI: finder by name and type, namespace pages, hover previews, change diffs; builtin pages and bucket content types fixed (D75, task dfaad231)                   |
+| 78  | 10-14 19:35 | 12m 00s        | this commit | the codebase catches up with the toolchain sources: stale references that exported as raw hashes renamed, codebase UI added (task b2166fc8)                                             |
 
-Total from stage 1 to stage 77: 9h 52m.
+Total from stage 1 to stage 78: 10h 04m.

@@ -127,6 +127,16 @@ deus export: source per namespace, tasks and history as text, committed to the r
 
 > claude: deus export packages/reflect/deus-lang/codebase writes code/, tasks.sexp, TASKS.md and HISTORY.md; a restore into an empty codebase gives the same 1380 names and hashes.
 
+## Bring the codebase up to date with the toolchain sources; the export had raw hashes (`b2166fc8`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: codebase, dogfood
+- links change #21fbd2e94f
+
+Dmytro: track tasks in codebase and make sure its up to date. The export on #13952 could not be restored: Cli and Replicate referred to old versions of Update.propagate, Project.reachable and five others, which print as raw hashes. Restored by naming them, then updated with every source under deus/ and platform/, including the codebase UI (dfaad231).
+
 ## Codebase UI on par with Unison Share: finder, namespaces, hover previews, diffs (`7ff351a9`)
 
 - state: done

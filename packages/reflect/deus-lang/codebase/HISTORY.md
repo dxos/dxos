@@ -1,5 +1,13 @@
 # History of main
 
+- `3f2d90ae51` close b2166fc8 by #21fbd2e94f (by claude)
+- `21fbd2e94f` codebase: catch up with the toolchain sources, including the codebase UI (by claude)
+- `e11ebf252d` task: set b2166fc8 priority assignee labels details
+- `3f860ada05` task: open b2166fc8 Bring the codebase up to date with the toolchain sources; the export had raw hashes (by claude)
+- `3475042833` history: import 126 changes
+- `be0842c2ee` task: import 41 tasks
+- `2ab0189bcb` add /tmp/claude-0/-home-claude-dxos/9f10d708-cc29-559d-a814-8f86a4793dbc/scratchpad/code4 /home/claude/dxos/packages/reflect/deus-lang/codebase/specs
+- `67c7d5a614` init
 - `d2411251ec` task: set a7a44f7d details (by claude)
 - `aeb5c2cd43` delete Replicate.collect Replicate.recent Codebase.nsFromSexp Codebase.nsToSexp
 - `dccc4c2683` close a7a44f7d by #a37df20cc0 (by claude)

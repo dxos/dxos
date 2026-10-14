@@ -42,7 +42,7 @@ def Cli.addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
     let subst := Map.fromList (List.map (fun c =>
       match c with
       | (_, old, new) => (hash old, hash new)) replaced)
-    let propagated := #ebad142960 dir ns2 subst (Set.fromList (List.map fst entries))
+    let propagated := propagate dir ns2 subst (Set.fromList (List.map fst entries))
     let ns3 := fst propagated
     let message := getOr
       (option args "message")
@@ -270,7 +270,7 @@ def Cli.deps (args : Args) (reverse : Bool) : {IO, Throw Text} Unit :=
       let h := hash e
       let index := nameIndex ns
       let display := fun x => getOr (Map.lookup x index) (short x)
-      let found := if reverse then #d5b7f9c680 dir ns h else
+      let found := if reverse then dependentsOf dir ns h else
         match readObject dir h with
         | Option.some obj => Codebase.dependencies obj
         | Option.none => []
@@ -291,7 +291,7 @@ def Cli.dispatch (argv : List Text) : {IO, Throw Text} Unit :=
       if command == "compile" then Cli.compile args else if command == "init" then Cli.init args else if command == "add" then addOrUpdate args false else if command == "update" then addOrUpdate args true else if command == "ls" then ls args else if command == "find" then Cli.find args else if command == "view" then view args else if command == "names" then Cli.names args else if command == "deps" then deps args false else if command == "dependents" then deps args true else if command == "mv" then mv args false else if command == "alias" then mv args true else if command == "rm" then rm args else if command == "branch" then branch args else if command == "switch" then switch args else if command == "merge" then Cli.merge args else if command == "log" then Cli.log args else if command == "layers" then Cli.layers args else if command == "migrate" then Cli.migrate args else if command == "project" then project args else if command == "lib" then lib args else if command == "remote" then remote args else if command == "push" then Cli.push args else if command == "pull" then Cli.pull args else if command == "compact" then Cli.compact args else if command == "undo" then undo args else if command == "run" then
         match leadingOptions rest with
         | (options, program) => Cli.run (parseArgs options) program
-      else if command == "eval" then eval args else if command == "mdl" then mdl args else if command == "test" then #cfdee2d567 args else if command == "check" then #3f3fe41a88 args else if command == "image" then Cli.image args else if command == "build" then Cli.build args else if command == "serve" then Cli.serve args else if command == "explore" then explore args else if command == "task" then task args else if command == "export" then export args else if command == "history" then Cli.history args else if command == "help" then IO.print usage else die ("unknown command " ++ command ++ "\n" ++ usage)
+      else if command == "eval" then eval args else if command == "mdl" then mdl args else if command == "test" then tests args else if command == "check" then theorems args else if command == "image" then Cli.image args else if command == "build" then Cli.build args else if command == "serve" then Cli.serve args else if command == "explore" then explore args else if command == "task" then task args else if command == "export" then export args else if command == "history" then Cli.history args else if command == "help" then IO.print usage else die ("unknown command " ++ command ++ "\n" ++ usage)
 
 def Cli.entryJson (name : Text) (e : Entry) : Json := Json.obj [("name", Json.str name), ("kind", Json.str (Entry.kind e)), ("hash", Json.str (hash e))]
 
@@ -351,7 +351,7 @@ def Cli.export (args : Args) : {IO, Throw Text} Unit :=
   match head? args.positional with
   | Option.none => Throw.throw "usage: deus export <dir>"
   | Option.some out =>
-      match #520ec7d65d dir out with
+      match Export.write dir out with
       | (files, definitions, tasks) => Cli.output
           args
           (fun _ => Json.obj [("files", Json.num files), ("definitions", Json.num definitions), ("tasks", Json.num tasks)])
@@ -517,7 +517,7 @@ def Cli.lib (args : Args) : {IO, Throw Text} Unit :=
         match Project.read dir with
         | Option.some p => p
         | Option.none => Throw.throw "this codebase has no project; run `deus project init <iri>`"
-      let installed := #9405d9d539 dir (Codebase.current dir) name from (getOr (option args "branch") "main")
+      let installed := install dir (Codebase.current dir) name from (getOr (option args "branch") "main")
       match installed with
       | (l, ns) =>
           Project.write dir (match p with
@@ -762,7 +762,7 @@ def Cli.project (args : Args) : {IO, Throw Text} Unit :=
       match Project.read dir with
       | Option.none => Throw.throw "this codebase has no project; run `deus project init <iri>`"
       | Option.some p =>
-          let parts := #4f37e28a0d dir (Codebase.current dir)
+          let parts := subgraph dir (Codebase.current dir)
           Cli.output
             args
             (fun _ => Json.obj [("project", Json.str p.projectIri), ("authority", Json.str (authority p.projectIri)), ("owned", Json.num (List.length (fst parts))), ("fromLibs", Json.num (List.length (snd parts))), ("libs", Json.arr (List.map
