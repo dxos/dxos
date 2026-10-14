@@ -1,5 +1,7 @@
 # History of main
 
+- `536bd782ef` history: import 668 changes
+- `58480b86c8` export: merge 5 changes from codebase
 - `8f9856ca45` task: set a99bf01d state
 - `28273fc62b` task: comment on a99bf01d (by claude)
 - `a1c034c828` task: set 1854b55d state
@@ -29,7 +31,7 @@
 - `2b21b1d6f7` task: open f264430b devex: the dogfood test takes 124 s
 - `5f7d5f1997` task: open 7f677d04 devex: deus mdl over all specs takes 34 s
 - `dded1cf89e` task: open 44892ca0 devex: update of printed (deus view) source is 9x slower than the same code as source (82 s vs 9 s); typecheck re-checks group members ~50x
-- `892406fc07` export: merge 9 changes from codebase (by claude)
+- `892406fc07` export: merge 9 changes from codebase
 - `a6a09e7efc` export: merge tasks from codebase
 - `d3ac71beee` merge #13952's branch (by claude)
 - `5305c4a8cc` import #13952's export (Parquet statistics) (by claude)
@@ -184,6 +186,11 @@
 - `7453b3a1b7` task: import 18 tasks
 - `bff1b8d98b` add code
 - `67c7d5a614` init
+- `f84f1e8092` history: import 702 changes
+- `2b352668f1` task: import from tasks.sexp
+- `753edf4687` history: import 646 changes
+- `c892328cc0` task: import from tasks.sexp
+- `fc7658bcb6` merge #13952's branch: JsGen.Spec refusals (22d58083) (by claude)
 - `7e4e80fa01` task: set 05658284 state
 - `c12e0556c6` task: comment on 05658284 (by claude)
 - `518cddbd4f` task: set 508d9443 state

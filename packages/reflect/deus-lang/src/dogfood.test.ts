@@ -9,10 +9,10 @@ import { cliHarness } from './cli-harness.ts';
 
 const { root, scratch, file, deus } = cliHarness('deus-dogfood-');
 
-// A file of its own: the slowest CLI test, run in parallel with the others.
+// A file of its own: the slowest CLI test, run in parallel with the others, which slows it past 180 s on CI.
 describe('deus CLI dogfooding', () => {
   // Dogfooding: the toolchain's own sources go into a codebase, and its tests and theorems run there.
-  test('adds the compiler to a codebase and passes its own tests and theorems', { timeout: 180_000 }, ({ expect }) => {
+  test('adds the compiler to a codebase and passes its own tests and theorems', { timeout: 360_000 }, ({ expect }) => {
     const codebase = join(scratch, 'self');
     expect(deus('init', '--empty', '--codebase', codebase).code).toBe(0);
     const add = deus('add', join(root, 'deus'), '--codebase', codebase);
