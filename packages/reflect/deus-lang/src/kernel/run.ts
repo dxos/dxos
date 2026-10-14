@@ -47,7 +47,7 @@ export const runImage = (image: string, options: HostOptions): RunResult => {
       return { code: err.code, steps: machine.steps };
     }
     if (err instanceof DeusDefect) {
-      stderr(`defect: ${err.message}\n`);
+      stderr(`defect: ${err.message}\n${machine.defectTrace.map((hash) => `  at #${hash}\n`).join('')}`);
       if (machine.trace) {
         stderr(`recent definitions:\n  ${machine.trace.join('\n  ')}\n`);
       }

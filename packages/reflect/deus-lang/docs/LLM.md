@@ -47,6 +47,18 @@ export DEUS_CODEBASE=$PWD/.deus     # or pass --codebase <dir>
    deus check --json                # theorems: evidence level and any counterexample
    ```
 
+   A defect, in a test or under `deus run` (exit 70), names the definitions it passed through,
+   innermost first; a tail call leaves no line:
+
+   ```text
+   ✗ Oops.fails  defect: division by zero
+       at Oops.inner
+       at Oops.middle
+       at Oops.fails
+   ```
+
+   `DEUS_MAX_STEPS=<n>` turns a runaway program into a defect, so a hang shows a trace too.
+
 5. **Undo** if the change was wrong: `deus undo` steps the branch back one change; the old
    definitions are still in the store.
 

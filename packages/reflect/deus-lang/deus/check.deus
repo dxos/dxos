@@ -43,7 +43,7 @@ def remember (dir : Text) (h : Text) (v : Verdict) : {IO} Unit :=
 /-- Runs a loaded definition; a defect becomes `Result.err`. -/
 def guarded (h : Text) : Result Text a :=
   handle Result.ok (Code.run h) with
-  | Defect.raise message -> _ => Result.err message
+  | Defect.raise message -> _ => Result.err (message ++ Cli.defectTrace ())
 
 /-- Evaluates a Core term (built by the checker) in the running machine. -/
 def evalCore (core : Sexp) : Result Text a :=
@@ -308,6 +308,7 @@ def run (args : Args) (wantTheorems : Bool) : {IO, Throw Text} Unit :=
     match r with
     | (_, Verdict.fail _, _) => true
     | _ => false) results
+  let index := Codebase.nameIndex ns
   let line := fun (r : (Text, Verdict, Bool)) =>
     match r with
     | (name, v, wasCached) =>
@@ -316,7 +317,7 @@ def run (args : Args) (wantTheorems : Bool) : {IO, Throw Text} Unit :=
       | Verdict.pass evidence cases =>
         if wantTheorems then "  ✓ " ++ name ++ "  " ++ (if evidence == "test" then "tested, " ++ Int.toText cases ++ " cases" else if Text.startsWith "proof" evidence then "proved (" ++ evidence ++ ")" else "proved by " ++ evidence ++ (if cases > 1 then ", " ++ Int.toText cases ++ " cases" else "")) ++ suffix
         else "  ✓ " ++ name ++ suffix
-      | Verdict.fail reason => "  ✗ " ++ name ++ "  " ++ reason ++ suffix
+      | Verdict.fail reason => "  ✗ " ++ name ++ "  " ++ Cli.nameTrace index reason ++ suffix
       | Verdict.unchecked => "  ? " ++ name ++ "  sorry (unchecked)"
   Cli.output args
     (fun _ => Json.arr (List.map (fun r =>
@@ -324,7 +325,7 @@ def run (args : Args) (wantTheorems : Bool) : {IO, Throw Text} Unit :=
       | (name, v, wasCached) =>
         let status := match v with
           | Verdict.pass evidence cases => [("status", Json.str "pass"), ("evidence", Json.str evidence), ("cases", Json.num cases)]
-          | Verdict.fail reason => [("status", Json.str "fail"), ("reason", Json.str reason)]
+          | Verdict.fail reason => [("status", Json.str "fail"), ("reason", Json.str (Cli.nameTrace index reason))]
           | Verdict.unchecked => [("status", Json.str "unchecked")]
         Json.obj ([("name", Json.str name), ("cached", Json.bool wasCached)] ++ status)) results))
     (fun _ =>

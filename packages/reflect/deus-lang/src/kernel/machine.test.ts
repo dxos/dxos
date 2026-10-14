@@ -69,6 +69,16 @@ describe('kernel', () => {
     expect(run('(def "main"').code).toBe(71);
   });
 
+  test('an unhandled defect lists the definitions on the stack, innermost first', ({ expect }) => {
+    const { stderr, code } = run(`
+      (def "inner" (lam (app (prim "Int.div") (int 1) (var 0))))
+      (def "outer" (lam (app (prim "Int.add") (app (ref "inner") (var 0)) (int 1))))
+      (def "main" (lam ${print('(app (ref "outer") (int 0))')}))
+      (main "main")`);
+    expect(code).toBe(70);
+    expect(stderr).toBe('defect: division by zero\n  at #inner\n  at #outer\n  at #main\n');
+  });
+
   test('a global whose evaluation was aborted is evaluated again, not reported as a cycle', ({ expect }) => {
     const caught = '(handle (ref "bad") (on "#Defect" 0 1 (var 1)))';
     const { stdout } = run(`

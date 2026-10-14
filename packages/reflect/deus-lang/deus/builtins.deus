@@ -78,6 +78,7 @@ def slice : Text -> Int -> Int -> Text := prim "Text.slice"
 def fromCode : Int -> Text := prim "Text.fromCode"
 def concat : List Text -> Text := prim "Text.concat"
 def join : Text -> List Text -> Text := prim "Text.join"
+/-- `split t sep`: the text first, then the separator. -/
 def split : Text -> Text -> List Text := prim "Text.split"
 /-- First index of a substring at or after a position, or -1. -/
 def indexOf : Text -> Text -> Int -> Int := prim "Text.indexOf"
@@ -145,4 +146,6 @@ def quote : a -> Text := prim "Code.quote"
 def run : Text -> a := prim "Code.run"
 /-- Machine steps so far: the deterministic cost model for performance requirements. -/
 def steps : Unit -> Int := prim "Code.steps"
+/-- Hashes of the definitions on the stack when the last defect was raised, innermost first. -/
+def defectTrace : Unit -> List Text := prim "Code.defectTrace"
 end Code

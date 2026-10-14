@@ -152,6 +152,9 @@ export const listTo = (list: Value): Value[] => {
  */
 export class DeusDefect extends Error {}
 
+/** How many definitions a defect's stack trace lists. */
+const TRACE_DEPTH = 32;
+
 /** A panic: the kernel itself is broken (an invariant of the image or the machine failed). */
 export class DeusPanic extends Error {}
 
@@ -177,11 +180,13 @@ const HANDLE = 10;
 
 /** A loaded definition: its Core form, compiled lazily, and its value once evaluated. */
 export class Global {
+  readonly hash: string;
   readonly form: Sexp;
   term: Term | null = null;
   value: Value | undefined = undefined;
 
-  constructor(form: Sexp) {
+  constructor(hash: string, form: Sexp) {
+    this.hash = hash;
     this.form = form;
   }
 }
@@ -209,6 +214,8 @@ export class Term {
   clauses: Map<string, Clause> | null = null;
   /** APP: a saturated primitive or constructor call on quick operands. */
   q = false;
+  /** The definition this term belongs to, for stack traces. */
+  owner = '';
 
   constructor(t: number) {
     this.t = t;
@@ -371,8 +378,14 @@ const compilePat = (form: Sexp): Pattern => {
 };
 
 /** Compiles one canonical Core term (see docs/CORE.md) into the machine's representation. */
-export const compileTerm = (form: Sexp, prims: Map<string, Prim>): Term => {
-  const go = (form: Sexp): Term => compileTerm(form, prims);
+export const compileTerm = (form: Sexp, prims: Map<string, Prim>, owner = ''): Term => {
+  const node = compileNode(form, prims, owner);
+  node.owner = owner;
+  return node;
+};
+
+const compileNode = (form: Sexp, prims: Map<string, Prim>, owner: string): Term => {
+  const go = (form: Sexp): Term => compileTerm(form, prims, owner);
   const parts = list(form);
   switch (parts[0]) {
     case 'var': {
@@ -494,7 +507,7 @@ const F_GLOBAL = 6;
 const F_REST = 7;
 const F_GUARD = 8;
 
-const NO_GLOBAL = new Global(0);
+const NO_GLOBAL = new Global('', 0);
 
 export class Frame {
   readonly k: number;
@@ -576,6 +589,8 @@ export class Machine {
   steps = 0;
   /** Recently referenced definitions, kept when `DEUS_TRACE` is set, for diagnosing defects. */
   trace: string[] | undefined = process.env.DEUS_TRACE ? [] : undefined;
+  /** The definitions on the stack when the last defect was raised, innermost first. */
+  defectTrace: string[] = [];
   /** A defect is raised past this many steps (`DEUS_MAX_STEPS`), so a runaway program cannot hang. */
   maxSteps: number = Number(process.env.DEUS_MAX_STEPS ?? Infinity);
   /** Entries per definition, kept when `DEUS_PROFILE` is set. */
@@ -595,7 +610,7 @@ export class Machine {
       if (Array.isArray(form) && form[0] === 'def') {
         const hash = str(form[1]);
         if (!this.globals.has(hash)) {
-          this.globals.set(hash, new Global(form[2]));
+          this.globals.set(hash, new Global(hash, form[2]));
         }
       }
     }
@@ -633,7 +648,7 @@ export class Machine {
       return global.value;
     }
     if (!global.term) {
-      global.term = compileTerm(global.form, this.prims);
+      global.term = compileTerm(global.form, this.prims, global.hash);
     }
     if (global.term.t === LAM) {
       global.value = new Closure(global.term, null);
@@ -792,6 +807,17 @@ export class Machine {
     };
 
     // Transfers control to the innermost handler clause for `key`; false if none is installed.
+    // The index of the innermost frame that handles `key`, or -1.
+    const handlerOf = (key: string): number => {
+      for (let i = stack.length - 1; i >= 0; i--) {
+        const frame = stack[i];
+        if (frame.k === F_HANDLE && frame.term.clauses?.has(key)) {
+          return i;
+        }
+      }
+      return -1;
+    };
+
     const handleRequest = (key: string, args: Value[]): boolean => {
       for (let i = stack.length - 1; i >= 0; i--) {
         const frame = stack[i];
@@ -1054,6 +1080,11 @@ export class Machine {
         return loop();
       } catch (err) {
         // A defect becomes a `#Defect` request so a boundary handler (e.g. the test runner) sees it.
+        if (err instanceof DeusDefect) {
+          // Only the frames the handler discards: the boundary's own callers are not part of the failure.
+          const handler = handlerOf(`${DEFECT}/0`);
+          this.defectTrace = stackTrace(node, stack, handler + 1, handler >= 0 ? stack[handler].term.owner : '');
+        }
         if (err instanceof DeusDefect && handleRequest(`${DEFECT}/0`, [err.message])) {
           evaluating = true;
           continue;
@@ -1064,6 +1095,24 @@ export class Machine {
     }
   }
 }
+
+/**
+ * The definitions a defect passed through, innermost first, stopping at the handling definition.
+ * A tail call leaves no frame, so it leaves no line either, as in any tail-calling language.
+ */
+const stackTrace = (current: Term, stack: Frame[], bottom: number, boundary: string): string[] => {
+  const trace: string[] = [];
+  const add = (owner: string) => {
+    if (owner && owner !== boundary && trace[trace.length - 1] !== owner && trace.length < TRACE_DEPTH) {
+      trace.push(owner);
+    }
+  };
+  add(current.owner);
+  for (let index = stack.length - 1; index >= bottom; index--) {
+    add(stack[index].term.owner);
+  }
+  return trace;
+};
 
 /** Structural equality over data; functions are never equal. */
 export const equal = (a: Value, b: Value): boolean => {

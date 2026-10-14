@@ -39,6 +39,8 @@ test parserTypeApplicationField := parses "inductive W where\n  | wrap (List Int
 
 test maximumOfNegatives := List.maximum [0 - 3, 0 - 5] == 0 - 3 && List.maximum [] == 0
 
+test textSplitJoin := Text.split "a, b, c" ", " == ["a", "b", "c"] && Text.join ", " (Text.split "a, b" ", ") == "a, b"
+
 test parserOffside := parses "def f (x : Int) : Int :=\n  let y := x + 1\n  y * 2\n"
 
 test parserRejectsIndentedDecl := not (parses "  def f := 1\n")

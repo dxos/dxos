@@ -226,6 +226,7 @@ export const createPrims = (): Map<string, Prim> => {
   def('Code.quote', 1, ([v]) => print(quoteValue(v)));
   def('Code.has', 1, ([hash], machine) => machine.globals.has(text(hash)));
   def('Code.steps', 1, (_args, machine) => machine.steps);
+  def('Code.defectTrace', 1, (_args, machine) => listFrom(machine.defectTrace));
   prims.set(
     'Code.run',
     new Prim(

@@ -362,6 +362,18 @@ def undo (args : Args) : {IO, Throw Text} Unit :=
 
 def fetcher (dir : Text) : Text -> {IO} Option Sexp := fun h => Codebase.readObject dir h
 
+/-- The last defect's stack as `    at <hash>` lines, stable enough to cache with a verdict. -/
+def defectTrace (u : Unit) : Text :=
+  Text.join "" (List.map (fun h => "\n    at " ++ h) (Code.defectTrace ()))
+
+/-- Replaces the hashes in `    at <hash>` lines with names from the codebase. -/
+def nameTrace (index : Map Text Text) (text : Text) : Text :=
+  Text.join "\n" (List.map (fun l =>
+    if Text.startsWith "    at " l then
+      let h := Text.drop 7 l
+      "    at " ++ Option.getOr (Map.lookup h index) ("#" ++ Text.take 10 h)
+    else l) (Text.split text "\n"))
+
 /-- `deus run <name> [args…]`: runs `name ()` with `IO.args` answering the remaining arguments. -/
 def run (args : Args) (rest : List Text) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
@@ -375,6 +387,9 @@ def run (args : Args) (rest : List Text) : {IO, Throw Text} Unit :=
       let f := Code.run h
       handle f () with
       | IO.args _ -> k => k programArgs
+      | Defect.raise message -> _ =>
+        IO.eprint ("defect: " ++ nameTrace (Codebase.nameIndex ns) (message ++ defectTrace ()) ++ "\n")
+        IO.exit 70
     | _ => throw (name ++ " is not a term")
 
 /-- `deus eval "<expr>"`: evaluates an expression against the codebase and prints it. -/
