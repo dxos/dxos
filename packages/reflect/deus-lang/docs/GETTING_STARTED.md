@@ -126,7 +126,7 @@ def oops (u : Unit) : {IO} Unit := println (Int.toText (Tour.total []))
 ```
 
 ```text
-deus: oops: unhandled ability Prices (calling #d9318af380)
+deus: oops: unhandled ability Prices (calling Tour.total)
 ```
 
 Run the program. `main` gets the command-line arguments from `IO.args`:

@@ -197,11 +197,24 @@ def specEntries (dir : Text) (paths : List Text) : {IO, Throw Text} List (Text, 
           let uri := Option.getOr (List.lookup b.blockType declared) ""
           some (prefix ++ "." ++ b.blockId, Entry.spec (Codebase.put dir (Mdl.toSexp uri b)))) doc.blocks) (expandPaths paths)
 
+/-- A type error's `(calling #<hash prefix>)` with the definition's name, since the checker sees only hashes. -/
+def nameCallee (ns : Map Text Entry) (message : Text) : Text :=
+  let marker := " (calling #"
+  let found := Text.indexOf message marker 0
+  if found < 0 then message
+  else
+    let start := found + Text.length marker
+    let prefix := Text.slice message start (start + 10)
+    match List.find (fun pair => Text.startsWith prefix (Entry.hash (snd pair))) (Map.toList ns) with
+    | some (name, _) => Text.take (start - 1) message ++ name ++ Text.drop (start + 10) message
+    | none => message
+
 /-- `add`: new names only; `update`: may replace names, then propagates to dependents. -/
 def addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let ns := Codebase.current dir
-  let batch := Compile.batch ns (fun h => Codebase.readObject dir h) (fun h => Codebase.readMeta dir h) (checkTypes ()) (parseFiles args.positional)
+  let batch := catch (fun _ => Compile.batch ns (fun h => Codebase.readObject dir h) (fun h => Codebase.readMeta dir h) (checkTypes ()) (parseFiles args.positional))
+    (fun e => throw (nameCallee ns e))
   warn batch
   let entries := batch.entries ++ specEntries dir args.positional
   let replaced := changes ns entries

@@ -480,7 +480,7 @@ describe('deus CLI', () => {
         file('unhandled.deus', 'def oops (u : Unit) : {IO} Unit := println (Int.toText (Tour.total []))\n'),
         ...c,
       );
-      expect(unhandled.stderr).toContain('unhandled ability Prices');
+      expect(unhandled.stderr).toContain('unhandled ability Prices (calling Tour.total)');
     },
   );
 
