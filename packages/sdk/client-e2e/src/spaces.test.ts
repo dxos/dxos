@@ -22,6 +22,7 @@ import {
   waitForSpace,
 } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
+import { getCredentialAssertion } from '@dxos/credentials';
 import { Feed, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { DatabaseImpl, Serializer } from '@dxos/echo-client';
 import { getObjectCore } from '@dxos/echo-client/testing';
@@ -1029,6 +1030,21 @@ describe('Spaces', () => {
     await expect
       .poll(() => space.members.get().find((member) => toPublicKey(member.identity?.identityKey)?.equals(agent))?.role)
       .toEqual(SpaceMember_Role.REMOVED);
+
+    // The membership carries the marker only where the space needs it, since older peers cannot verify it.
+    const shared = await client.spaces.create();
+    await shared.waitUntilReady();
+    await shared.admitContact(contact(agent, 'Kai'), SpaceMember_Role.EDITOR, { agent: true });
+    const markers = async (target: Space) =>
+      (await target.internal.getCredentials()).flatMap((credential) => {
+        const assertion = getCredentialAssertion(credential);
+        return assertion.$typeName === 'dxos.halo.credentials.SpaceMember' &&
+          toPublicKey(credential.subject?.id)?.equals(agent)
+          ? [assertion.agent ?? false]
+          : [];
+      });
+    await expect.poll(() => markers(shared)).toEqual([false]);
+    expect(await markers(space)).toEqual([true, true]);
   });
 
   test('space membership policy defaults to INVITE', async () => {

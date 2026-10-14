@@ -76,7 +76,7 @@ export type AdmitMemberOptions = {
   /** Successor to `genesisFeedKey`: what lets the admitted member replicate from this credential alone. */
   spaceRootUrl?: string;
 
-  /** Admits an AI agent's identity, which a locked space's owner may. */
+  /** Admits an AI agent's identity, which a locked space's owner may; the membership is marked as one only there. */
   agent?: boolean;
 };
 

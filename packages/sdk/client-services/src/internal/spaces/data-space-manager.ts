@@ -75,6 +75,7 @@ import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_p
 import { type SpaceMetadata, SpaceMetadataSchema } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import {
   type Credential,
+  MembershipPolicy,
   type ProfileDocument,
   SpaceDeletedSchema,
   SpaceMember_Role as SpaceMemberRole,
@@ -771,7 +772,8 @@ export class DataSpaceManager extends Resource {
       invitationCredentialId: options.delegationCredentialId,
       tags: space.spaceState.tags,
       spaceRootUrl,
-      agent: options.agent,
+      // Marked only where it is needed: a peer on protocols that predate the field cannot verify it.
+      agent: options.agent && space.spaceState.membershipPolicy === MembershipPolicy.LOCKED,
     });
 
     // TODO(dmaretskyi): Refactor.
