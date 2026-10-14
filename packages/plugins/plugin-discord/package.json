@@ -163,6 +163,7 @@
     "@dxos/plugin-connector": "workspace:*",
     "@dxos/plugin-thread": "workspace:*",
     "@dxos/protocols": "workspace:*",
+    "@dxos/react-client": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
@@ -177,7 +178,6 @@
   "devDependencies": {
     "@dxos/effect": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
-    "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@effect/sql-sqlite-node": "catalog:",
