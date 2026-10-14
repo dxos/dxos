@@ -59,6 +59,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 51  | 10-14 16:12 | 0m 16s         | `806b0b0f`  | record the getting-started review comments                                                              |
 | 52  | 10-14 16:20 | 8m 16s         | `88851bcb`  | act on the getting-started review                                                                       |
 | 53  | 10-14 16:31 | 11m 07s        | `8db50b86`  | the explorer as a single-page app with a task board                                                     |
-| 54  | 10-14 16:40 | 9m 13s         | this commit | D63: deus view breaks long lines and round-trips the toolchain's printed source to the same hashes      |
+| 54  | 10-14 16:42 | 10m 52s        | `215d6fa6`  | deus view breaks long lines and round-trips to the same hashes                                          |
+| 55  | 10-14 17:01 | 19m 28s        | this commit | D63: the whole toolchain round-trips through deus view (types, abilities, self references, accessors)   |
 
-Total from stage 1 to stage 54: 6h 57m.
+Total from stage 1 to stage 55: 7h 18m.

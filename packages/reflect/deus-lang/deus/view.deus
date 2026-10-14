@@ -9,20 +9,47 @@ def typeArgs (form : Sexp) : List Sexp :=
 
 def iriClause (iri : Text) (name : Text) : Text := if iri == "urn:deus:" ++ name then "" else " @" ++ Print.quoteText iri
 
-def params (count : Int) : Text := Text.concat (List.map (fun i => " " ++ Text.fromCode ('a' + i)) (List.range 0 count))
+/-- Type variables a declaration names itself, such as an operation's own `a` in `throw : e -> a`. -/
+def namedVars (t : Sexp) : List Text :=
+  match t with
+  | Sexp.list [Sexp.sym "tvar", Sexp.str n] => [n]
+  | Sexp.list items => List.concatMap namedVars items
+  | _ => []
+
+/-- Names for a declaration's `count` parameters: letters in order, skipping the names already used in it. -/
+def paramNames (count : Int) (used : List Text) : List Text :=
+  let rec pick k acc :=
+    if List.length acc >= count then List.reverse acc
+    else
+      let candidate := Text.fromCode ('a' + k)
+      if List.contains candidate used then pick (k + 1) acc else pick (k + 1) (candidate :: acc)
+  pick 0 []
+
+/-- A type with its parameters (stored by index) under their chosen names. -/
+def nameParams (names : List Text) (t : Sexp) : Sexp :=
+  match t with
+  | Sexp.list [Sexp.sym "tvar", Sexp.int i] =>
+    match List.get? names i with
+    | some n => Sexp.node "tvar" [Sexp.str n]
+    | none => t
+  | Sexp.list items => Sexp.list (List.map (nameParams names) items)
+  | _ => t
+
+def params (names : List Text) : Text := Text.concat (List.map (fun n => " " ++ n) names)
 
 /-- `inductive T where | c (F) …` or `structure T where f : F …`. -/
 def typeDecl (p : Printer) (ns : Map Text Entry) (name : Text) (e : Entry) (obj : Sexp) : Text :=
   match (e, Sexp.args obj) with
   | (Entry.type h iri fields, _ :: Sexp.int count :: _) =>
-    let ctors := typeArgs obj
+    let names := paramNames count (namedVars obj)
+    let ctors := List.map (nameParams names) (typeArgs obj)
     let display := name
     if not (List.isEmpty fields) then
       let types := Option.getOr (Option.map Sexp.args (List.head? ctors)) []
       let lines := List.map (fun pair =>
         match pair with
         | (f, t) => "  " ++ f ++ " : " ++ Print.ty p t 0) (List.zip fields (List.drop 1 types))
-      "structure " ++ display ++ params count ++ iriClause iri name ++ " where\n" ++ Text.join "\n" lines
+      "structure " ++ display ++ params names ++ iriClause iri name ++ " where\n" ++ Text.join "\n" lines
     else
       let ctorNames := List.filterMap (fun pair =>
         match pair with
@@ -32,12 +59,14 @@ def typeDecl (p : Printer) (ns : Map Text Entry) (name : Text) (e : Entry) (obj 
         let cname := Option.getOr (List.lookup tag ctorNames) ("ctor" ++ Int.toText tag)
         let fieldTypes := List.drop 1 (Sexp.args c)
         "  | " ++ cname ++ Text.concat (List.map (fun t => " " ++ Print.ty p t 100) fieldTypes)) ctors
-      "inductive " ++ display ++ params count ++ iriClause iri name ++ " where" ++ (if List.isEmpty lines then "" else "\n" ++ Text.join "\n" lines)
+      "inductive " ++ display ++ params names ++ iriClause iri name ++ " where" ++ (if List.isEmpty lines then "" else "\n" ++ Text.join "\n" lines)
   | _ => Sexp.print obj
 
 def abilityDecl (p : Printer) (ns : Map Text Entry) (name : Text) (e : Entry) (obj : Sexp) : Text :=
   match (e, Sexp.args obj) with
-  | (Entry.ability h iri, _ :: Sexp.int count :: ops) =>
+  | (Entry.ability h iri, _ :: Sexp.int count :: rawOps) =>
+    let names := paramNames count (namedVars obj)
+    let ops := List.map (nameParams names) rawOps
     let opNames := List.filterMap (fun pair =>
       match pair with
       | (n, Entry.op a index _) => if a == h then some (index, Names.lastSegment n) else none
@@ -47,7 +76,7 @@ def abilityDecl (p : Printer) (ns : Map Text Entry) (name : Text) (e : Entry) (o
       match Sexp.args op with
       | [_, t] => "  " ++ oname ++ " : " ++ Print.ty p t 0
       | _ => "  " ++ oname) ops
-    "ability " ++ name ++ params count ++ iriClause iri name ++ " where\n" ++ Text.join "\n" lines
+    "ability " ++ name ++ params names ++ iriClause iri name ++ " where\n" ++ Text.join "\n" lines
   | _ => Sexp.print obj
 
 /-- `theorem t (x : T) : prop := by tactic`. -/

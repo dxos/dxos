@@ -180,3 +180,7 @@ perhaps add an alarm to remind you of that every 30 minutes
 ---
 
 - add task viewer to codebase explorer
+
+---
+
+- - important that model dogfoods it -- work manually in codebase -- push to r2, I'll still see you progress in explorer. please do use github for backups for codebase -- you can expore right layers (no cache, etc..) to some text format and commit. but work mainly through codebase and track tasks there. your feedback from dogfooding is good source for improvements and you can file and take tasks in codebase

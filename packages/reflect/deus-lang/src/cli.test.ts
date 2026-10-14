@@ -56,13 +56,15 @@ describe('deus CLI', () => {
     expect(theorems.stdout).toMatch(/proved by decide/);
     expect(theorems.code).toBe(0);
 
-    // `view` prints source that compiles back to the same hashes: the printer, the CLI, the explorer
-    // and tasks, printed together so that mutually recursive definitions are re-added as one group.
-    const names: { name: string; kind: string }[] = JSON.parse(deus('ls', '--json', '--codebase', codebase).stdout);
+    // `view` prints source that compiles back to the same hashes: every definition, test, type and
+    // ability of the toolchain, printed together so that mutually recursive ones are re-added as a group.
+    const names: { name: string; kind: string; hash: string }[] = JSON.parse(
+      deus('ls', '--json', '--codebase', codebase).stdout,
+    );
     const printed = names
-      .filter((entry) => entry.kind === 'term' && /^(Print|Cli|Explorer|Tasks)\./.test(entry.name))
+      .filter((entry) => ['term', 'test', 'type', 'ability'].includes(entry.kind) && !entry.hash.startsWith('#'))
       .map((entry) => entry.name);
-    expect(printed.length).toBeGreaterThan(100);
+    expect(printed.length).toBeGreaterThan(1000);
     const source = deus('view', ...printed, '--codebase', codebase)
       .stdout.split('\n')
       .filter((line) => !line.startsWith('-- '))
