@@ -13,6 +13,7 @@ import { gzip, isNode } from '@dxos/util';
 import * as ObservabilityExtension from '../../ObservabilityExtension.ts';
 import { DXOS_VERSION } from '../../version.ts';
 import { stubExtension } from '../stub.ts';
+import { dropBenignExceptions } from './before-send.ts';
 import {
   AI_GENERATION_EVENT,
   AI_SPAN_EVENT,
@@ -160,6 +161,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
             // Cookies stay scoped to the exact host; the cross-subdomain dmn_chk_* probe fails on public-suffix hosts (e.g. *.pages.dev) and spams the console.
             cross_subdomain_cookie: false,
             ...posthogConfig,
+            before_send: [dropBenignExceptions, ...[posthogConfig?.before_send ?? []].flat()],
             ...(recordingStart ? { disable_session_recording: true } : {}),
           });
           if (recordingStart) {
