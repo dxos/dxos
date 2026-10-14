@@ -291,7 +291,6 @@ const AgentKnowledgeFacts = ({ facts, now }: AgentKnowledgeFactsProps) => {
           icon='ph--graph--regular'
           title={fact.text}
           testId='agent-knowledge-fact'
-          separator={false}
           rows={[
             ...(fact.source
               ? [{ label: t('agent-knowledge-source.label'), value: <Card.Text truncate>{fact.source}</Card.Text> }]
