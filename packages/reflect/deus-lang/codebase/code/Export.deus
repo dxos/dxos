@@ -54,7 +54,7 @@ def Export.importHistory (dir : Text) (path : Text) : {IO, Throw Text} Int :=
         ("history: import " ++ toText (List.length entries) ++ " changes")
       List.length entries
 
-/-- Merges tasks from an export's `tasks.sexp` as one change (D78); returns how many the file has. -/
+/-- Merges tasks from an export's `tasks.sexp` as one change (D79); returns how many the file has. -/
 def Export.importTasks (dir : Text) (path : Text) : {IO, Throw Text} Int :=
   match IO.readFile path with
   | Option.none => Throw.throw ("cannot read " ++ path)
@@ -93,20 +93,29 @@ def Export.mergeExisting (dir : Text) (out : Text) : {IO, Throw Text} Unit :=
   | Option.none => ()
 
 /-- Merges a `tasks.sexp` into the branch's tasks, three-way against what this codebase last
-  exchanged with that export, so a task another codebase changed is not reverted. A field both
-  sides changed keeps this codebase's value and is returned as a conflict. Returns (tasks in the
-  file, conflicts). -/
+  exchanged with that export, so a task another codebase changed is not reverted. A task the file
+  lacks, or holds at a version this branch has had, counts as unchanged there. A field both sides
+  changed keeps this codebase's value and is returned as a conflict. Returns (tasks in the file,
+  conflicts). -/
 def Export.mergeTasksFile (dir : Text) (out : Text) (text : Text) (message : Text) : {IO, Throw Text} (Int, List Text) :=
-  let theirs := fileSnapshot dir text
+  let file := fileSnapshot dir text
   let ours := snapshotOf dir (readCausal dir (headOf dir (currentBranch dir)))
+  -- A writer that never saw a task, or saw an older version of it, wrote no change to it: tasks are never deleted.
+  let past := pastVersions dir
+  let theirs := foldl (fun m pair =>
+    match pair with
+    | (id, h) =>
+        match Map.lookup id file with
+        | Option.none => Map.insert id h m
+        | Option.some th => if th != h && Set.contains th past then Map.insert id h m else m) file (Map.toList ours)
   match Tasks.merge dir (readBase dir out) ours theirs with
   | (merged, conflicts) =>
       if Map.toList merged == Map.toList ours then "" else commitTasks dir (putSnapshot dir merged) message
-      recordBase dir out theirs
-      (Map.size theirs, conflicts)
+      recordBase dir out file
+      (Map.size file, conflicts)
 
 --
--- Merging an export that other codebases also write (D78).
+-- Merging an export that other codebases also write (D79).
 --
 /-- `path` with `.` and `..` segments resolved. -/
 def Export.normalize (path : Text) : Text :=

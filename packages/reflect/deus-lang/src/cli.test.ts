@@ -752,6 +752,7 @@ describe('deus CLI', () => {
       // An export restores the same names, hashes and tasks in an empty codebase.
       const exported = join(scratch, 'tasks-export');
       expect(JSON.parse(deus('export', exported, '--json', ...c).stdout)).toMatchObject({ tasks: 2 });
+      const staleTasks = readFileSync(join(exported, 'tasks.sexp'), 'utf8');
       expect(readFileSync(join(exported, 'TASKS.md'), 'utf8')).toContain(`## Square overflows (\`${bug.id}\`)`);
       const restored = ['--codebase', join(scratch, 'tasks-restored')];
       deus('init', '--empty', ...restored);
@@ -763,7 +764,7 @@ describe('deus CLI', () => {
         deus('task', 'list', '--all', '--json', ...c).stdout,
       );
 
-      // Two codebases exporting to one directory merge what the other wrote there (D78).
+      // Two codebases exporting to one directory merge what the other wrote there (D79).
       deus('task', 'set', docs.id, '--state', 'done', '--json', ...restored);
       expect(deus('export', exported, ...restored).code).toBe(0);
       task('set', docs.id, '--assignee', 'carol');
@@ -780,6 +781,18 @@ describe('deus CLI', () => {
         state: 'done',
         assignee: 'carol',
       });
+
+      // A writer that never merged leaves old versions and drops tasks; neither reverts or deletes anything.
+      const tasksBefore = deus('task', 'list', '--all', '--json', ...c).stdout;
+      writeFileSync(
+        join(exported, 'tasks.sexp'),
+        staleTasks
+          .split('\n')
+          .filter((line) => !line.includes(bug.id))
+          .join('\n'),
+      );
+      expect(deus('export', exported, ...c).code).toBe(0);
+      expect(deus('task', 'list', '--all', '--json', ...c).stdout).toBe(tasksBefore);
     },
   );
 

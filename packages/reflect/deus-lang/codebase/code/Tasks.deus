@@ -204,6 +204,16 @@ def Tasks.parseState (t : Text) : {Throw Text} TaskState :=
   | Option.some s => s
   | Option.none => Throw.throw ("unknown task state " ++ t ++ " (todo, doing, done, canceled)")
 
+/-- Every task object the branch's first-parent history has held, the current ones included. -/
+def Tasks.pastVersions (dir : Text) : {IO, Throw Text} Map Text Unit :=
+  let rec walk h seen acc :=
+    let node := readCausal dir h
+    let acc2 := if Set.contains node.tasks seen then acc else foldl (fun a pair => Set.insert (snd pair) a) acc (Map.toList (snapshotOf dir node))
+    match parentsOf dir h with
+    | [] => acc2
+    | p :: _ => walk p (Set.insert node.tasks seen) acc2
+  walk (headOf dir (currentBranch dir)) Map.empty Map.empty
+
 def Tasks.priorities : List Text := ["none", "urgent", "high", "medium", "low"]
 
 def Tasks.priorityText (n : Int) : Text := getOr (head? (List.drop n priorities)) (toText n)

@@ -281,6 +281,16 @@ def histories (dir : Text) (limit : Int) : {IO, Throw Text} Map Text (List (Text
     List.foldl (fun m2 id => Map.insert id (fst change :: Option.getOr (Map.lookup id m2) []) m2) m (snd change)) Map.empty
     (walk (Codebase.headOf dir (Codebase.currentBranch dir)) limit [])
 
+/-- Every task object the branch's first-parent history has held, the current ones included. -/
+def pastVersions (dir : Text) : {IO, Throw Text} Map Text Unit :=
+  let rec walk h seen acc :=
+    let node := Codebase.readCausal dir h
+    let acc2 := if Set.contains node.tasks seen then acc else List.foldl (fun a pair => Set.insert (snd pair) a) acc (Map.toList (snapshotOf dir node))
+    match Codebase.parentsOf dir h with
+    | [] => acc2
+    | p :: _ => walk p (Set.insert node.tasks seen) acc2
+  walk (Codebase.headOf dir (Codebase.currentBranch dir)) Set.empty Set.empty
+
 /-- Changes that rebound a name. -/
 def historyOfName (dir : Text) (name : Text) (limit : Int) : {IO, Throw Text} List (Text, Causal) :=
   changesWhere dir limit (fun parent node => parent.snapshot != node.snapshot && Codebase.lookupName dir parent.snapshot name != Codebase.lookupName dir node.snapshot name)

@@ -61,6 +61,22 @@ From Dmytro. A Codebase ability (find, view, add, update, mv, task ops) handled 
 
 Lexer turns a character literal into an int token; keep the form as a note-like metadata entry so view prints it back.
 
+## Embedding kernel re-reads the whole image on every deus_start (about 60 ms for the seed): keep a loaded image and call entries on it (`d780de91`)
+
+- state: todo
+- priority: medium
+- assignee: claude
+- labels: wasm, perf, embedding
+
+## Explorer: a live console that runs eval, view and test against the site's codebase in the page (wasm kernel + seed + codebase snapshot, about 900 KB gzipped) (`d2328509`)
+
+- state: todo
+- priority: medium
+- assignee: claude
+- labels: explorer, browser, wasm
+
+deus explore could ship deus_kernel.wasm, the seed and a JSON snapshot of the codebase directory; platform/browser/playground.mjs --codebase shows the shape. A definition card could get Run and Eval.
+
 ## Readers do not verify hashes of bundles and objects; a stray file under bundles/ fails a pull (`7afeaa0c`)
 
 - state: todo
@@ -88,6 +104,13 @@ From docs/spec/README.md, Known divergences.
 
 D69 refuses == on data; generate per-type compare functions from the type objects so it compiles.
 
+## Browser page: keep the in-memory file system in IndexedDB so a playground codebase survives a reload (`62be7dc4`)
+
+- state: todo
+- priority: low
+- assignee: claude
+- labels: browser
+
 ## Docs disagree with the code in eight places listed in docs/spec/README.md (`11a42afd`)
 
 - state: todo
@@ -105,6 +128,13 @@ From docs/spec/README.md, Known divergences.
 - links `Ts.definition` (#e5f668ab9e)
 
 > claude: Filed by the TS-like dialect thread (D70).
+
+## TypeScript kernel in the browser: its JIT runs eval about 1.4x faster than the wasm kernel; needs a synchronous sha256 and an injectable host (no node: imports) (`6e4360bd`)
+
+- state: todo
+- priority: low
+- assignee: claude
+- labels: browser, perf, kernel
 
 ## Back up the codebase to GitHub as text (`0c53d3bd`)
 
@@ -148,6 +178,16 @@ Dmytro: one of the most impactful things you can do rn is a really good codebase
 
 Dmytro: one of the most impactful things you can do rn is a really good codebase ui, take unison as gold standard, check your work yourself. Also fixes builtin pages (#Bool) returning 404 and bucket uploads sending .js/.css as text/plain.
 
+## Embed DEUS in browser apps on the wasm kernel: deus build --browser, an in-memory IO host, the toolchain as a playground (`3b617154`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: wasm, browser, embedding
+- links change #96cf462d73
+
+Dmytro: explore embedding deus into browser apps via wasm (like codebase viewer for example)
+
 ## Explorer as an SPA showing several definitions at once (`84014a86`)
 
 - state: done
@@ -189,6 +229,7 @@ Only doc comments survive add; the -- comments that explain why are lost, so deu
 - priority: high
 - assignee: claude
 - labels: replication, design
+- links change #a37df20cc0
 
 Namespace snapshots are trees (D72), deus migrate rewrites flat history, the remote keeps the whole history and --keep is gone (D73), bundles stay columnar text (D74). Merged into #13952.
 

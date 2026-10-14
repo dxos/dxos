@@ -1,5 +1,12 @@
 # History of main
 
+- `a70f6a17ad` export: a task missing from the file or at a past version is unchanged there (D79) (by claude)
+- `334f503cf8` task: link 2bbc3445 to #fa20112443 (by claude)
+- `f157773921` task: set 2bbc3445 state (by claude)
+- `a9a106ca2d` task: import from /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/repair/tasks.sexp
+- `ae6d9689f5` export: merge 11 changes from codebase
+- `78780510c3` export: merge tasks from codebase
+- `0b6f989667` merge #13952's branch: deus build --browser (D78) with the export merge (D79) (by claude)
 - `e630b09568` log: a change shared by several records keeps its oldest position (D78) (by claude)
 - `1b03a289c4` task: set a7a44f7d state details (by claude)
 - `b8e5ff6f29` export: merge 14 changes from codebase
@@ -62,6 +69,17 @@
 - `7453b3a1b7` task: import 18 tasks
 - `bff1b8d98b` add code
 - `67c7d5a614` init
+- `e2e0fc6622` task: open 62be7dc4 Browser page: keep the in-memory file system in IndexedDB so a playground codebase survives a reload (by claude)
+- `18416c6fa0` task: open 6e4360bd TypeScript kernel in the browser: its JIT runs eval about 1.4x faster than the wasm kernel; needs a synchronous sha256 and an injectable host (no node: imports) (by claude)
+- `4831107b4d` task: open d780de91 Embedding kernel re-reads the whole image on every deus_start (about 60 ms for the seed): keep a loaded image and call entries on it (by claude)
+- `e9736e3585` task: open d2328509 Explorer: a live console that runs eval, view and test against the site's codebase in the page (wasm kernel + seed + codebase snapshot, about 900 KB gzipped) (by claude)
+- `5ffb35ed9a` close 3b617154 by #96cf462d73 (by claude)
+- `96cf462d73` deus build --browser: a static page running an image on the wasm kernel with an in-memory file system (D78) (by claude)
+- `86f256e943` task: set 3b617154 state (by claude)
+- `a476baf0f1` task: open 3b617154 Embed DEUS in browser apps on the wasm kernel: deus build --browser, an in-memory IO host, the toolchain as a playground (by claude)
+- `24bf075943` history: import 134 changes
+- `a1aac3aaba` task: import 42 tasks
+- `a613239c2d` add code specs
 - `3f2d90ae51` close b2166fc8 by #21fbd2e94f (by claude)
 - `21fbd2e94f` codebase: catch up with the toolchain sources, including the codebase UI (by claude)
 - `e11ebf252d` task: set b2166fc8 priority assignee labels details
