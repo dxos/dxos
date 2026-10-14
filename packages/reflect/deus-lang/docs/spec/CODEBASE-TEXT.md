@@ -193,6 +193,9 @@ An export directory is often shared: each container restores from it, works, and
   the history it writes includes the other codebase's changes. `deus log` lists a causal hash once,
   even when several records hold it.
 - After writing, the export records the branch's tasks snapshot as the base.
+- In git, `history.sexp`, `tasks.sexp` and `HISTORY.md` merge with `merge=union`
+  ([D89](../DECISIONS.md)). A union can leave a task on two lines; the reader keeps the version the
+  branch has never had, else the later line.
 
 Code is not merged: `code/` is the exporting branch's, as before. Share code through a remote; the
 export directory merges only tasks and history.
@@ -300,20 +303,11 @@ any order. The result:
 
 ## What does not round-trip
 
-Hashes do not depend on any of these, so they do not break the guarantee above, but a restored codebase
-lacks them:
+Attributes, doc comments, ordinary comments (D66), spec blocks and string literals with control
+characters all come back: the laws in [CODEBASE-TEXT.mdl](CODEBASE-TEXT.mdl) restore an export in the
+simulation and compare (D92). Hashes do not depend on the rest, so it does not break the guarantee
+above, but a restored codebase lacks it:
 
-- Ordinary `--` comments: they are not stored at all.
-- Doc comments of types, abilities, tests and theorems: only a term's `/-- … -/` is printed.
-- Attributes (`@[ext "<uri>"]`, `@[integration]`): they live in metadata and the printer does not print
-  them, so after a restore `deus mdl` finds no extensions and integration tests run as ordinary tests.
-- Spec entries (`.mdl` blocks): they are not exported.
 - The `project` file: the project IRI appears only as the README title, and library pins are lost.
   `lib.<name>.` names are restored as ordinary names under that prefix.
 - Verdicts, provenance, branches other than the current one, and remotes.
-
-Note: [`deus/print.deus`](../../deus/print.deus) writes a control character other than `\n`, `\t` and `\r`
-as `\u{` and its code in decimal, but the lexer reads the digits inside `\u{…}` as hexadecimal. A string
-literal holding such a character (ESC, code 27, prints `\u{27}`, which reads back as `'`) therefore
-compiles back to a different hash. Codes 0 to 9 are unaffected. Until the printer writes hex, a definition
-with such a literal does not round-trip.

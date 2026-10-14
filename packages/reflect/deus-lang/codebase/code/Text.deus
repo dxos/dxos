@@ -19,13 +19,13 @@ def Text.fromCodes : List Int -> Text := prim "Text.fromCodes"
 /-- First index of a substring at or after a position, or -1. -/
 def Text.indexOf : Text -> Text -> Int -> Int := prim "Text.indexOf"
 
-def Text.isAlpha (c : Int) : Bool := c >= 97 && c <= 122 || c >= 65 && c <= 90
+def Text.isAlpha (c : Int) : Bool := c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z'
 
-def Text.isDigit (c : Int) : Bool := c >= 48 && c <= 57
+def Text.isDigit (c : Int) : Bool := c >= '0' && c <= '9'
 
 def Text.isEmpty (t : Text) : Bool := Text.length t == 0
 
-def Text.isSpace (c : Int) : Bool := c == 32 || c == 10 || c == 9 || c == 13
+def Text.isSpace (c : Int) : Bool := c == ' ' || c == '\n' || c == '\t' || c == '\r'
 
 def Text.join : Text -> List Text -> Text := prim "Text.join"
 
@@ -56,7 +56,7 @@ def Text.take (n : Int) (t : Text) : Text := slice t 0 n
 /-- ASCII letters to lower case; every other character is unchanged. -/
 def Text.toLower (t : Text) : Text := fromCodes (List.map (fun i =>
   let c := code t i
-  if c >= 65 && c <= 90 then c + 32 else c) (range 0 (Text.length t)))
+  if c >= 'A' && c <= 'Z' then c + 32 else c) (range 0 (Text.length t)))
 
 def Text.trim : Text -> Text := prim "Text.trim"
 

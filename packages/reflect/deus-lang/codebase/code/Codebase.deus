@@ -15,6 +15,107 @@ inductive Codebase.MergeResult where
   | merged (head : Text) (changed : List Text)
   | conflicts (names : List Text)
 
+test Codebase.Spec.builtinsAreNotDependencies := Codebase.dependencies (Sexp.node
+  "term"
+  [Sexp.node "con" [Sexp.str "#Bool", Sexp.int 0], Sexp.node "con" [Sexp.str "abc", Sexp.int 1], Sexp.node "ref" [Sexp.str "def"], Sexp.node "op" [Sexp.str "#IO", Sexp.int 0]]) == ["abc", "def"]
+
+theorem Codebase.Spec.causalRoundTrip (c : Causal) : causalFromSexp (causalToSexp c) == c := by test 200
+
+/-- Names with dots in every position the tree splits at, from generated words. -/
+def Codebase.Spec.dotted (words : List Text) : List Text := concatMap (fun w => [w, "A." ++ w, "A.B." ++ w, w ++ ".x", "." ++ w, w ++ "."]) words
+
+test Codebase.Spec.emptyNamespaceHash := inStore (fun dir => putNamespace dir Map.empty == "f126eadc463e81d2636be4aa0384edbe2aee5690395678593e789ce423bda595")
+
+/-- Two branches from one commit: `main` changes `a`, `side` changes `b`; then `side` merges into `main`. -/
+def Codebase.Spec.forked (sideChanges : Map Text Entry -> Map Text Entry) (mainChanges : Map Text Entry -> Map Text Entry) (dir : Text) : {IO, Throw Text} (MergeResult, Map Text Entry) :=
+  let base := Spec.namespaceOf ["a", "b", "c"]
+  let root := commit dir base "base"
+  setBranch dir "side" root
+  commit dir (mainChanges base) "main"
+  IO.writeFile (dir ++ "/HEAD") "side\n"
+  commit dir (sideChanges base) "side"
+  IO.writeFile (dir ++ "/HEAD") "main\n"
+  let result := Codebase.merge dir "side"
+  (result, Codebase.current dir)
+
+/-- Runs a store action in a fresh simulated codebase; a thrown error is `false`. -/
+def Codebase.Spec.inStore (body : Text -> {IO, Throw Text} Bool) : Bool :=
+  match Sim.run 7 (fun _ =>
+    match try (fun _ =>
+      Codebase.init "cb"
+      body "cb") with
+    | Result.ok held => held
+    | Result.err _ => false) with
+  | (held, _) => held
+
+test Codebase.Spec.initIsAlwaysTheSame := inStore (fun dir => readCausal dir (headOf dir "main") ==
+  Causal.mk "f126eadc463e81d2636be4aa0384edbe2aee5690395678593e789ce423bda595" [] "init" "" "" "")
+
+test Codebase.Spec.layersFollowTheTable := List.map
+  (fun kind => (kind, mayDependOn (layerOf (Sexp.node kind []))))
+  ["term", "cycle", "type", "ability", "spec", "test", "theorem", "ns", "causal", "tasks", "task"] == [("term", ["code"]), ("cycle", ["code"]), ("type", ["code"]), ("ability", ["code"]), ("spec", ["spec"]), ("test", ["code", "tests"]), ("theorem", ["code", "proofs"]), ("ns", ["code", "tests", "proofs", "history"]), ("causal", ["code", "tests", "proofs", "history"]), ("tasks", ["code", "tests", "proofs", "history"]), ("task", ["code", "tests", "proofs", "history"])]
+
+test Codebase.Spec.mergeFastForwards := inStore (fun dir =>
+  let root := commit dir (Spec.namespaceOf ["a"]) "base"
+  setBranch dir "side" root
+  IO.writeFile (dir ++ "/HEAD") "side\n"
+  let ahead := commit dir (Spec.namespaceOf ["a", "b"]) "ahead"
+  IO.writeFile (dir ++ "/HEAD") "main\n"
+  Codebase.merge dir "side" == MergeResult.fastForward ahead && headOf dir "main" == ahead)
+
+test Codebase.Spec.mergeReportsConflicts := inStore (fun dir =>
+  match forked
+    (fun ns => Map.insert "a" (Entry.term "theirs") ns)
+    (fun ns => Map.insert "a" (Entry.term "ours") ns)
+    dir with
+  | (MergeResult.conflicts names, ns) => names == ["a"] && Map.lookup "a" ns == Option.some (Entry.term "ours")
+  | _ => false)
+
+test Codebase.Spec.mergeTakesEachSidesChange := inStore (fun dir =>
+  match forked
+    (fun ns => Map.insert "b" (Entry.term "theirs") ns)
+    (fun ns => Map.insert "a" (Entry.term "ours") ns)
+    dir with
+  | (MergeResult.merged _ changed, ns) => changed == ["b"] && Map.lookup "a" ns == Option.some (Entry.term "ours") && Map.lookup "b" ns == Option.some (Entry.term "theirs")
+  | _ => false)
+
+test Codebase.Spec.mergeTakesTheirRemoval := inStore (fun dir =>
+  match forked (fun ns => Map.remove "c" ns) (fun ns => Map.insert "a" (Entry.term "ours") ns) dir with
+  | (MergeResult.merged _ _, ns) => Map.lookup "c" ns == Option.none
+  | _ => false)
+
+/-- A namespace whose entries are terms named by the hash of their name. -/
+def Codebase.Spec.namespaceOf (names : List Text) : Map Text Entry := Map.fromList (List.map (fun n => (n, Entry.term (Text.sha256 n))) names)
+
+theorem Codebase.Spec.namespaceRoundTrip (words : List Text) : readsBack (Spec.namespaceOf (dotted words)) == true := by test 30
+
+theorem Codebase.Spec.putNamesByHash (t : Text) (u : Text) : inStore (fun dir =>
+    let form := Sexp.node "x" [Sexp.str t, Sexp.list [Sexp.sym "y", Sexp.str u]]
+    let h := Codebase.put dir form
+    h == Text.sha256 (Sexp.print form) && IO.readFile (objectPath dir h) == Option.some (Sexp.print form ++ "\n")) == true := by test 50
+
+/-- Whether a snapshot reads back as the namespace it was written from, as a whole and name by name. -/
+def Codebase.Spec.readsBack (ns : Map Text Entry) : Bool := inStore (fun dir =>
+  let h := putNamespace dir ns
+  Map.toList (readNamespace dir h) == Map.toList ns && List.all
+    (fun pair => Codebase.lookupName dir h (fst pair) == Option.some (snd pair))
+    (Map.toList ns))
+
+theorem Codebase.Spec.snapshotIgnoresOrder (words : List Text) : inStore (fun dir => putNamespace dir (Spec.namespaceOf (dotted words)) ==
+    putNamespace dir (Spec.namespaceOf (reverse (dotted words)))) == true := by test 30
+
+test Codebase.Spec.unchangedCommitWritesNothing := inStore (fun dir =>
+  let first := commit dir (Spec.namespaceOf ["a", "B.c"]) "one"
+  commit dir (Spec.namespaceOf ["B.c", "a"]) "again" == first)
+
+/-- Three hundred names at the root and three hundred under `N`: both nodes split into parts. -/
+def Codebase.Spec.wide : List Text := concatMap (fun i => ["name" ++ toText i, "N.name" ++ toText i]) (range 0 300)
+
+test Codebase.Spec.wideNamespaceRoundTrip := readsBack (Spec.namespaceOf wide) && inStore (fun dir =>
+  match readObject dir (putNamespace dir (Spec.namespaceOf wide)) with
+  | Option.some (Sexp.list (_ :: Sexp.list (Sexp.sym "part" :: _ :: []) :: _)) => true
+  | _ => false)
+
 /-- Hashes of every object in the store. -/
 def Codebase.allObjects (dir : Text) : {IO} List Text := concatMap (fun shard => IO.listDir (dir ++ "/objects/" ++ shard)) (IO.listDir (dir ++ "/objects"))
 
@@ -114,7 +215,7 @@ def Codebase.commitTasks (dir : Text) (tasks : Text) (message : Text) : {IO, Thr
     c
 
 /-- The current branch's namespace. -/
-def Codebase.current (dir : Text) : {IO, Throw Text} Map Text Entry := namespaceOf dir (currentBranch dir)
+def Codebase.current (dir : Text) : {IO, Throw Text} Map Text Entry := Codebase.namespaceOf dir (currentBranch dir)
 
 def Codebase.currentBranch (dir : Text) : {IO} Text := trim (getOr (IO.readFile (dir ++ "/HEAD")) "main")
 
@@ -551,7 +652,7 @@ def Codebase.store (dir : Text) (b : Batch) : {IO} Unit :=
 --
 -- Branches.
 --
-def Codebase.validBranch (name : Text) : Bool := not (Text.isEmpty name) && List.all (fun c => isAlpha c || isDigit c || c == 45 || c == 95 || c == 46) (utf8 name)
+def Codebase.validBranch (name : Text) : Bool := not (Text.isEmpty name) && List.all (fun c => isAlpha c || isDigit c || c == '-' || c == '_' || c == '.') (utf8 name)
 
 def Codebase.writeMeta (dir : Text) (h : Text) (form : Sexp) : {IO} Unit := IO.writeFile (dir ++ "/meta/" ++ h) (Sexp.print form ++ "\n")
 

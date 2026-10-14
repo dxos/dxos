@@ -162,11 +162,15 @@ def isBlock (t : Sexp) : Bool :=
   let h := Sexp.head t
   h == "let" || h == "seq" || h == "letrec" || h == "match" || h == "handle" || h == "note"
 
-/-- Core with its comments put back as `(note "text" e)` at the pre-order indices `Resolve.unnote` recorded (D66). -/
-def restore (notes : List (Int, Text)) (core : Sexp) : Sexp :=
-  if List.isEmpty notes then core
+/--
+  Core with its comments put back as `(note "text" e)`, and number spellings as `(spelled "text" e)`,
+  at the pre-order indices `Resolve.unnote` recorded (D66, D88).
+-/
+def restore (notes : List (Int, Text)) (spellings : List (Int, Text)) (core : Sexp) : Sexp :=
+  if List.isEmpty notes && List.isEmpty spellings then core
   else
     let byIndex := Map.fromList notes
+    let spelledAt := Map.fromList spellings
     let rec go x count :=
       match x with
       | Sexp.list items =>
@@ -178,19 +182,25 @@ def restore (notes : List (Int, Text)) (core : Sexp) : Sexp :=
             | (y2, c2) => each more (y2 :: out) c2
         match each items [] (count + 1) with
         | (children, next) =>
-          let rebuilt := Sexp.list children
+          let rebuilt := match Map.lookup count spelledAt with
+            | some text => Sexp.node "spelled" [Sexp.str text, Sexp.list children]
+            | none => Sexp.list children
           match Map.lookup count byIndex with
           | some text => (Sexp.node "note" [Sexp.str text, rebuilt], next)
           | none => (rebuilt, next)
       | _ => (x, count)
     fst (go core 0)
 
-/-- Notes from metadata: `(notes (n i "text") …)`. -/
-def notesOf (meta : Option Sexp) : List (Int, Text) :=
+/-- Indexed metadata: `(<field> (n i "text") …)`, as notes (D66) and spellings (D88) are stored. -/
+def indexedOf (meta : Option Sexp) (field : Text) : List (Int, Text) :=
   List.filterMap (fun x =>
     match x with
     | Sexp.list [Sexp.sym "n", Sexp.int i, Sexp.str text] => some (i, text)
-    | _ => none) (Codebase.metaList meta "notes")
+    | _ => none) (Codebase.metaList meta field)
+
+def notesOf (meta : Option Sexp) : List (Int, Text) := indexedOf meta "notes"
+
+def spellingsOf (meta : Option Sexp) : List (Int, Text) := indexedOf meta "spellings"
 
 /-- A comment's lines at indentation `ind`, each followed by a new line at `ind`. -/
 def commentLines (text : Text) (ind : Int) : Text :=
@@ -235,6 +245,7 @@ def expr (p : Printer) (t : Sexp) (env : List Text) (ind : Int) (prec : Int) : T
   match t with
   -- Only statements and arms carry comments, and those print through `stmts`.
   | Sexp.list [Sexp.sym "note", _, inner] => expr p inner env ind prec
+  | Sexp.list [Sexp.sym "spelled", Sexp.str text, _] => text
   | Sexp.list [Sexp.sym "var", Sexp.int i] => Option.getOr (List.get? env i) ("$" ++ Int.toText i)
   | Sexp.list [Sexp.sym "ref", Sexp.str h] => refName p h env
   | Sexp.list [Sexp.sym "int", Sexp.int v] => if v < 0 then paren 99 prec (Int.toText v) else Int.toText v
@@ -367,6 +378,7 @@ def patternAt (p : Printer) (pat : Sexp) (env : List Text) (prec : Int) : (Text,
     match patternAt p inner (name :: env) 100 with
     | (text, env2) => (name ++ "@" ++ text, env2)
   | Sexp.list [Sexp.sym "pint", Sexp.int v] => (Int.toText v, env)
+  | Sexp.list [Sexp.sym "spelled", Sexp.str text, _] => (text, env)
   | Sexp.list [Sexp.sym "ptext", Sexp.str v] => (quoteText v, env)
   | Sexp.list (Sexp.sym "pcon" :: Sexp.str ty :: Sexp.int tag :: subs) =>
     if ty == "#List" && tag == 1 then

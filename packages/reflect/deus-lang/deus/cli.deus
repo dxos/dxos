@@ -13,7 +13,7 @@ structure Args where
   options : Map Text Text
 
 /-- Options that never take a value. -/
-def booleanFlags : Map Text Unit := Set.fromList ["json", "core", "all", "force", "empty", "help", "integration", "wasm", "c", "native", "worker", "server", "browser"]
+def booleanFlags : Map Text Unit := Set.fromList ["json", "core", "all", "force", "empty", "help", "integration", "wasm", "c", "native", "worker", "server", "browser", "console"]
 
 def parseArgs (args : List Text) : Args :=
   let rec go rest pos opts :=
@@ -379,6 +379,7 @@ def viewParts (base : Printer) (dir : Text) (ns : Map Text Entry) (name : Text) 
               | some text => Print.commentLines (Sexp.asText text) 0
               | none => ""
             let notes := Print.notesOf meta
+            let spellings := Print.spellingsOf meta
             -- Doc comment and attributes go above every kind of declaration, as the parser reads them.
             let docText := match doc with
               | some d => "/-- " ++ d ++ " -/\n"
@@ -389,8 +390,8 @@ def viewParts (base : Printer) (dir : Text) (ns : Map Text Entry) (name : Text) 
               | [] => "") (Codebase.metaList meta "attrs")
             let attrText := if List.isEmpty attrs then "" else "@[" ++ Text.join ", " attrs ++ "]\n"
             (header, lead ++ docText ++ attrText ++ (match obj with
-              | Sexp.list [Sexp.sym "term", c] => Print.definition p name (Print.restore notes c) (Codebase.metaField meta "sig") none
-              | Sexp.list [Sexp.sym "test", c] => "test " ++ name ++ " :=" ++ Print.body p (Print.restore notes c) [] 0
+              | Sexp.list [Sexp.sym "term", c] => Print.definition p name (Print.restore notes spellings c) (Codebase.metaField meta "sig") none
+              | Sexp.list [Sexp.sym "test", c] => "test " ++ name ++ " :=" ++ Print.body p (Print.restore notes spellings c) [] 0
               | Sexp.list (Sexp.sym "theorem" :: Sexp.list (Sexp.sym "binders" :: types) :: prop :: proof :: _) =>
                 View.theoremDecl p name types prop proof
               | Sexp.list (Sexp.sym "type" :: _) => View.typeDecl p ns name e obj meta
@@ -691,6 +692,8 @@ def push (args : Args) : {IO, Throw Text} Unit :=
   -- A remote that hosts the explorer (`explore --publish`) gets it refreshed with each push of the current branch.
   let site := if IO.exists (siteManifest dir name) && branch == Codebase.currentBranch dir then
       let out := dir ++ "/cache/site-" ++ name
+      -- A site published with its console keeps it, on the codebase as pushed (D84).
+      let _ := if Text.contains " console/codebase.json\n" (Option.getOr (IO.readFile (siteManifest dir name)) "") then Explorer.console dir out else 0
       let _ := Explorer.generate dir out
       some (snd (publishSite dir name out false))
     else none
@@ -805,6 +808,39 @@ def guardDefect (f : Unit -> {IO} a) : {IO} Result Text a :=
   handle Result.ok (f ()) with
   | Defect.raise message -> _ => Result.err message
 
+/--
+  What `MdlHost.describe` reports about a name: its kind, hash, displayed type, declaration as
+  source, and for a test or a theorem its verdict (checked now unless a result is cached).
+-/
+def describeName (dir : Text) (ns : Map Text Entry) (name : Text) : {IO, Throw Text} List (Text, Text) :=
+  match Map.lookup name ns with
+  | none => throw (name ++ " is not in the codebase")
+  | some e =>
+    let h := Entry.hash e
+    let meta := Codebase.readMeta dir h
+    let typed := match Codebase.metaField meta "scheme" with
+      | some scheme => [("type", Types.displayScheme scheme)]
+      | none => []
+    let verdict := match Check.verdictOf dir ns e with
+      | some (Verdict.pass evidence cases) => [("verdict", "pass"), ("evidence", evidence), ("cases", Int.toText cases)]
+      | some (Verdict.fail reason) => [("verdict", "fail"), ("reason", reason)]
+      | some Verdict.unchecked => [("verdict", "unchecked")]
+      | none => []
+    -- Specs name things in full, so the statement prints every reference by its full name.
+    let statement := match Codebase.readObject dir h with
+      | some (Sexp.list (Sexp.sym "theorem" :: Sexp.list (Sexp.sym "binders" :: types) :: prop :: proof :: _)) =>
+        let base := Print.printer ns (List.map Sexp.asText (Codebase.metaList meta "locals"))
+        let full := Printer.mk base.fullNames base.fullNames (Map.fromList (List.filterMap (fun pair =>
+          match pair with
+          | (n, Entry.type _ iri _) => some (iri, n)
+          | (n, Entry.ability _ iri) => some (iri, n)
+          | _ => none) (Map.toList ns))) Map.empty base.supply base.fresh
+        let decl := View.theoremDecl full name types prop proof
+        let stop := Text.indexOf decl " := " 0
+        [("statement", Text.trim (Text.drop (Text.length ("theorem " ++ name)) (if stop < 0 then decl else Text.take stop decl)))]
+      | _ => []
+    [("kind", Entry.kind e), ("hash", h), ("view", snd (viewParts (Print.printer ns []) dir ns name e "deus"))] ++ typed ++ statement ++ verdict
+
 /-- Answers `MdlHost` against the codebase: expressions are compiled the way `eval` compiles them. -/
 def withHost (dir : Text) (ns : Map Text Entry) (body : Unit -> {MdlHost, IO} a) : {IO} a :=
   let compiled := fun (source : Text) => try (fun _ => compileExpr dir ns source)
@@ -822,6 +858,10 @@ def withHost (dir : Text) (ns : Map Text Entry) (body : Unit -> {MdlHost, IO} a)
       | Result.ok h => guardDefect (fun _ => Code.run h)
       | Result.err message => Result.err message)
   | MdlHost.js source -> k => k (jsCompare dir ns source)
+  | MdlHost.describe name -> k =>
+    k (match guardDefect (fun _ => try (fun _ => describeName dir ns name)) with
+      | Result.ok r => r
+      | Result.err message => Result.err message)
 
 /-- Extensions in the codebase by URI: the terms carrying `@[ext "<uri>"]`. -/
 def extensions (dir : Text) (ns : Map Text Entry) : {IO} Map Text Text :=
@@ -834,7 +874,7 @@ def extensions (dir : Text) (ns : Map Text Entry) : {IO} Map Text Text :=
         | _ => none) (Codebase.metaList (Codebase.readMeta dir h) "attrs")
     | _ => []) (Map.toList ns))
 
-/-- One block's outcome: `ok`, `fail` with its problems, or `unchecked` when no extension is found. -/
+/-- One block's outcome: `ok`, `fail` with its problems, `gap` when every problem is a known gap, or `unchecked` when no extension is found. -/
 structure Outcome where
   place : Text
   verdict : Text
@@ -849,7 +889,8 @@ def checkBlock (dir : Text) (ns : Map Text Entry) (byUri : Map Text Text) (place
     let check := Code.run h
     match withHost dir ns (fun _ => guardDefect (fun _ => check b)) with
     | Result.ok [] => Outcome.mk place "ok" []
-    | Result.ok problems => Outcome.mk place "fail" problems
+    -- A known gap (each problem starting `gap: `) is reported but does not fail the document.
+    | Result.ok problems => Outcome.mk place (if List.all (fun p => Text.startsWith "gap: " p) problems then "gap" else "fail") problems
     | Result.err message => Outcome.mk place "fail" ["defect: " ++ message]
 
 /-- Checks one document: the core rules, then each block through its extension. -/
@@ -888,7 +929,8 @@ def mdl (args : Args) : {IO, Throw Text} Unit :=
     (fun _ => Json.arr (List.map (fun o => Json.obj [("block", Json.str o.place), ("status", Json.str o.verdict), ("problems", Json.arr (List.map Json.str o.problems))]) outcomes))
     (fun _ => Text.join "\n" (List.map (fun o =>
       Text.padRight 10 o.verdict ++ o.place ++ Text.concat (List.map (fun p => "\n          " ++ p) o.problems)) outcomes ++
-      [Int.toText (count "ok") ++ " ok, " ++ Int.toText (count "fail") ++ " failed, " ++ Int.toText (count "unchecked") ++ " unchecked"]))
+      [Int.toText (count "ok") ++ " ok, " ++ Int.toText (count "fail") ++ " failed, " ++ Int.toText (count "unchecked") ++ " unchecked" ++
+        (if count "gap" > 0 then ", " ++ Int.toText (count "gap") ++ " known gaps" else "")]))
   if count "fail" > 0 then IO.exit 1 else ()
 
 /-- `deus image <name> -o <file>`: the kernel image of a definition. -/
@@ -975,13 +1017,16 @@ def publishSite (dir : Text) (name : Text) (out : Text) (force : Bool) : {IO, Th
   (List.length sums, List.length changed)
 
 /--
-  `deus explore [--out dir] [--port n] [--publish remote]` (D58): writes the codebase explorer
-  for the current branch, then serves it locally, or uploads it next to a remote's bundles
-  (`<prefix>/site/`), where a public bucket serves it.
+  `deus explore [--out dir] [--port n] [--publish remote] [--console]` (D58): writes the codebase
+  explorer for the current branch, then serves it locally, or uploads it next to a remote's bundles
+  (`<prefix>/site/`), where a public bucket serves it. `--console` adds a console that runs `deus`
+  in the page (D84); a site that has one keeps it.
 -/
 def explore (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let out := Option.getOr (option args "out") (dir ++ "/cache/site")
+  -- The console goes first, so meta.json can say whether the site has one.
+  let _ := if flag args "console" || IO.exists (out ++ "/console/codebase.json") then Explorer.console dir out else 0
   let pages := Explorer.generate dir out
   match (option args "publish", option args "out") with
   | (some name, _) =>
@@ -1049,7 +1094,7 @@ def buildImage (args : Args) (dir : Text) (ns : Map Text Entry) : {IO, Throw Tex
   | _ => throw "usage: deus build <term> -o <file>"
 
 /--
-  Writes the JS module of `roots` (export name, hash) to `out` (D84), its source map to
+  Writes the JS module of `roots` (export name, hash) to `out` (D94), its source map to
   `<out>.map`, and the runtime beside it as `deus-runtime.mjs`.
 -/
 def writeJs (dir : Text) (ns : Map Text Entry) (fetch : Text -> {IO} Option Sexp) (meta : Text -> {IO} Option Sexp) (roots : List (Text, Text)) (out : Text) : {IO, Throw Text} Unit :=
@@ -1075,7 +1120,7 @@ def writeJs (dir : Text) (ns : Map Text Entry) (fetch : Text -> {IO} Option Sexp
 
 /--
   The value of `def it := <source>` on this kernel and on the js target, each printed as `deus eval`
-  prints it (D84). The module runs under `$DEUS_NODE`.
+  prints it (D94). The module runs under `$DEUS_NODE`.
 -/
 def jsCompare (dir : Text) (ns : Map Text Entry) (source : Text) : {IO} Result Text (Text, Text) :=
   match try (fun _ =>
@@ -1108,8 +1153,9 @@ def jsCompare (dir : Text) (ns : Map Text Entry) (source : Text) : {IO} Result T
   | Result.err message => Result.err message
 
 /--
-  `deus bindings <prefix|name…> -o <dir> [--name stem]` (D81): a TypeScript module for the
-  functions under the prefixes, `<dir>/<stem>.ts`, with the runtime and the wasm kernel it loads.
+  `deus bindings <prefix|name…> -o <dir> [--name stem]` (D81, D87): a JavaScript module and its
+  declarations for the functions under the prefixes, `<dir>/<stem>.js` and `<dir>/<stem>.d.ts`,
+  with the runtime and the wasm kernel it loads.
 -/
 def bindings (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
@@ -1118,23 +1164,25 @@ def bindings (args : Args) : {IO, Throw Text} Unit :=
     let stem := Option.getOr (option args "name") (Text.toLower (Names.lastSegment first))
     let command := "deus bindings " ++ Text.join " " args.positional
     match Bindings.generate dir args.positional command with
-    | (text, exported, skipped) =>
+    | (js, dts, exported, skipped) =>
+      let path := out ++ "/" ++ stem ++ ".js"
+      let types := out ++ "/" ++ stem ++ ".d.ts"
       let copied := try (fun _ =>
         let home := Build.require "DEUS_HOME"
         IO.mkdirp out
-        IO.writeFile (out ++ "/" ++ stem ++ ".ts") text
-        let _ := Build.tool "cp" [home ++ "/src/bindings/runtime.ts", out ++ "/deus-runtime.ts"]
+        IO.writeFile path js
+        IO.writeFile types dts
+        let _ := Build.tool "cp" [home ++ "/src/bindings/deus-runtime.js", home ++ "/src/bindings/deus-runtime.d.ts", out ++ "/"]
         let _ := Build.tool "cp" [Build.wasmKernel (), out ++ "/deus_kernel.wasm"]
         ())
       match copied with
       | Result.err f => throw (Failure.render f)
       | Result.ok _ =>
         List.forEach skipped (fun s => eprintln ("warning: not exported: " ++ fst s ++ ": " ++ snd s))
-        let path := out ++ "/" ++ stem ++ ".ts"
         output args
-          (fun _ => Json.obj [("module", Json.str path), ("exported", Json.arr (List.map Json.str exported)),
+          (fun _ => Json.obj [("module", Json.str path), ("types", Json.str types), ("exported", Json.arr (List.map Json.str exported)),
             ("skipped", Json.arr (List.map (fun s => Json.obj [("name", Json.str (fst s)), ("reason", Json.str (snd s))]) skipped))])
-          (fun _ => "Wrote " ++ path ++ " with " ++ Int.toText (List.length exported) ++ " functions.")
+          (fun _ => "Wrote " ++ path ++ " and " ++ types ++ " with " ++ Int.toText (List.length exported) ++ " functions.")
   | _ => throw "usage: deus bindings <prefix|name…> -o <dir> [--name stem]"
 
 --
@@ -1431,7 +1479,7 @@ def usage : Text :=
     "  build <name> -o <dir> --browser      write a static web page that runs name in the browser on the wasm kernel",
     "  build <handler> -o <file> --server   write a standalone native web server for a handler",
     "  serve <handler> [--port n]           serve a web handler locally (storage in ./deus-data)",
-    "  explore [--out d|--port n|--publish r]  the codebase explorer: write, serve, or host it on a remote",
+    "  explore [--out d|--port n|--publish r|--console]  the codebase explorer: write, serve, or host it on a remote",
     "",
     "tasks",
     "  task new <title…> [--priority p --labels a,b --assignee a --parent id --details d --link name]",
@@ -1447,10 +1495,10 @@ def usage : Text :=
     "  update <files…> --closes <id>        mark a task done, linked to the change that fixed it",
     "  task import <tasks.sexp>             restore tasks from an export",
     "  export <dir>                         the codebase as text for git: code/<Namespace>.deus, tasks, history",
-    "  build <name…> -o <file.js> --js      compile to an ES module with a source map, no kernel (D84)",
+    "  build <name…> -o <file.js> --js      compile to an ES module with a source map, no kernel (D94)",
     "  build <fn> -o <file.wasm> --wasm     compile a first-order Int/Bool function (and its callees) to wasm",
     "  build <fn> -o <file> --c             the same subset to C, compiled to an executable by $CC (default cc); -o x.c writes the source",
-    "  bindings <prefix|name…> -o <dir>     a TypeScript module that calls those functions on the wasm kernel",
+    "  bindings <prefix|name…> -o <dir>     a JS module + .d.ts that calls those functions on the wasm kernel",
     "  compile <files|dirs…> --main <name>  compile files without a codebase",
     ""]
 

@@ -70,7 +70,7 @@ def Replicate.bucket (endpoint : Text) (name : Text) (prefix : Text) (config : T
         let path := fst pair
         let file := staged ++ "/" ++ toText i
         IO.writeFile file (snd pair)
-        let kind := siteType path
+        let kind := contentType path
         user ++
           "aws-sigv4 = \"aws:amz:auto:s3\"\nfail-with-body\noutput = \"/dev/null\"\nheader = \"content-type: " ++ kind ++ "\"\nupload-file = \"" ++ file ++ "\"\nurl = \"" ++ base ++ "/" ++ prefix ++ "/" ++ path ++ "\"\n") files
       IO.writeFile batch (join "next\n" groups)
@@ -241,11 +241,25 @@ def Replicate.import (dir : Text) (name : Text) (text : Text) : {IO} Seen :=
     match item with
     | Sexp.list (Sexp.sym "branch" :: Sexp.str branch :: Sexp.str causal :: []) => Option.some (branch, causal)
     | _ => Option.none) items
+  let carried := Map.fromList (filterMap (fun item =>
+    match item with
+    | Sexp.list (Sexp.sym "obj" :: Sexp.str h :: form :: []) => Option.some (h, form)
+    | _ => Option.none) items)
+  let lookup := fun h =>
+    match Map.lookup h carried with
+    | Option.some form => Option.some form
+    | Option.none => readObject dir h
   let hashes := filterMap (fun item =>
     match item with
     | Sexp.list (Sexp.sym "obj" :: Sexp.str h :: form :: []) =>
-        writeObject dir h form
-        Option.some h
+        -- An object that is not what its name says would corrupt the store (D91).
+        if verified h form lookup then
+          writeObject dir h form
+          Option.some h
+        else
+          IO.eprint ("deus: skipped object #" ++ Text.take 10 h ++ " in bundle " ++ name ++
+            ": its text does not hash to its name\n")
+          Option.none
     | Sexp.list (Sexp.sym "meta" :: Sexp.str h :: form :: []) =>
         if IO.exists (dir ++ "/meta/" ++ h) then () else writeMeta dir h form
         Option.none
@@ -253,6 +267,11 @@ def Replicate.import (dir : Text) (name : Text) (text : Text) : {IO} Seen :=
   Seen.mk name claims hashes
 
 def Replicate.isBoundary (level : Int) (h : Text) : Bool := startsWith (repeat level "0") h
+
+/-- Whether `name` is `<level>-<sha256>`; anything else under `bundles/` is not a bundle (D91). -/
+def Replicate.isBundleName (name : Text) : Bool :=
+  let dash := indexOf name "-" 0
+  dash > 0 && isSome (fromText (Text.take dash name)) && isSha256 (Text.drop (dash + 1) name)
 
 def Replicate.levelOf (name : Text) : Int := getOr (fromText (Text.take (indexOf name "-" 0) name)) 0
 
@@ -336,11 +355,15 @@ def Replicate.seenToText (s : Seen) : Text := Sexp.print (Sexp.node
 /-- The content type a site file is served with, by the bundled server (`Site.contentType`) and by a
   bucket the explorer is uploaded to: a browser refuses a module script or a stylesheet sent as
   `text/plain`. -/
-def Replicate.siteType (path : Text) : Text := if endsWith ".html" path then "text/html; charset=utf-8" else if endsWith ".json" path then "application/json" else if endsWith ".css" path then "text/css" else if endsWith ".js" path then "text/javascript" else if endsWith ".svg" path then "image/svg+xml" else "text/plain; charset=utf-8"
+def Replicate.siteType (path : Text) : Text := if endsWith ".html" path then "text/html; charset=utf-8" else if endsWith ".json" path then "application/json" else if endsWith ".css" path then "text/css" else if endsWith ".js" path || endsWith ".mjs" path then "text/javascript" else if endsWith ".svg" path then "image/svg+xml" else "text/plain; charset=utf-8"
 
 /-- Every bundle on the remote, importing the ones not seen before. -/
 def Replicate.sync (dir : Text) (remote : Text) : {Remote, IO} List Seen :=
-  let names := List.filter (fun n => not (Text.isEmpty n)) (Remote.list ())
+  let listed := List.filter (fun n => not (Text.isEmpty n)) (Remote.list ())
+  let names := List.filter isBundleName listed
+  forEach
+    (List.filter (fun n => not (isBundleName n)) listed)
+    (fun n => IO.eprint ("deus: ignored bundles/" ++ n ++ " on " ++ remote ++ ": not a bundle name\n"))
   filterMap (fun name =>
     let path := seenDir dir remote ++ "/" ++ name
     match IO.readFile path with
@@ -349,11 +372,42 @@ def Replicate.sync (dir : Text) (remote : Text) : {Remote, IO} List Seen :=
         match Remote.get name with
         | Option.none => Option.none
         | Option.some text =>
-            let s := import dir name text
-            IO.writeFile path (seenToText s)
-            Option.some s) names
+            -- A bundle whose text does not hash to its name is not read, and stays unseen so a repaired copy is (D91).
+            if Text.sha256 text != Text.drop (indexOf name "-" 0 + 1) name then
+              IO.eprint ("deus: skipped bundle " ++ name ++ " on " ++ remote ++
+                ": its text does not hash to its name\n")
+              Option.none
+            else
+              let s := import dir name text
+              IO.writeFile path (seenToText s)
+              Option.some s) names
 
 def Replicate.union (a : Map Text Unit) (b : Map Text Unit) : Map Text Unit := foldl (fun m key => Map.insert key () m) a (Map.keys b)
+
+/-- A member reference of recursive group `g` back to `(self i)`, as the group was hashed (CORE.md). -/
+def Replicate.unself (g : Text) (form : Sexp) : Sexp :=
+  match form with
+  | Sexp.list (Sexp.sym "ref" :: Sexp.str r :: []) => if r == g then Sexp.node "self" [Sexp.int 0] else if startsWith (g ++ ".") r then
+      match fromText (Text.drop (Text.length g + 1) r) with
+      | Option.some i => Sexp.node "self" [Sexp.int i]
+      | Option.none => form
+    else form
+  | Sexp.list items => Sexp.list (List.map (fun x => Replicate.unself g x) items)
+  | _ => form
+
+/-- Whether `form` is the object named `h` (D91): its text hashes to `h`, or `h` names a member of a
+  recursive group whose `cycle` form, rebuilt from the members `lookup` finds, hashes to the group. -/
+def Replicate.verified (h : Text) (form : Sexp) (lookup : Text -> {IO} Option Sexp) : {IO} Bool := if Text.sha256 (Sexp.print form) == h then true else
+  let dot := indexOf h "." 0
+  let g := if dot < 0 then h else Text.take dot h
+  let member := fun name => if name == h then Option.some form else lookup name
+  let rec gather i acc :=
+    match member (g ++ "." ++ toText i) with
+    | Option.some m => gather (i + 1) (m :: acc)
+    | Option.none => reverse acc
+  let members := if dot < 0 then [form] else gather 0 []
+  not (List.isEmpty members) && Text.sha256 (Sexp.print (Sexp.node "cycle" (List.map (fun m => Replicate.unself g m) members))) ==
+    g
 
 /-- The `<Key>` values of an S3 ListObjectsV2 response. -/
 def Replicate.xmlValues (tag : Text) (xml : Text) : List Text := filterMap (fun part =>

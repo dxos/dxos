@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-// The runtime of modules written by `deus build --js` (D84, docs/spec/JS.mdl). `deus build`
+// The runtime of modules written by `deus build --js` (D94, docs/spec/JS.mdl). `deus build`
 // copies this file next to the module it writes, so it has no imports and runs in Node and in
 // browsers as it is. Value equality, order and `show` follow the TypeScript kernel
 // (src/kernel/machine.ts), so a program prints the same on both.
@@ -492,7 +492,7 @@ export const mod = (a, b) => {
   if (b === 0) {
     throw new DeusDefect('division by zero');
   }
-  return a % b | 0;
+  return (a % b) | 0;
 };
 
 export const nomatch = (value) => {
@@ -646,15 +646,15 @@ export const prims = {
   'Int.ushr': prim(2, (a, b) => (int(a) >>> int(b)) | 0),
   'Int.toText': prim(1, (a) => String(int(a))),
   'Int.fromText': prim(1, (a) => (/^-?[0-9]+$/.test(text(a)) ? some(Number(a) | 0) : NONE)),
-  eq: prim(2, (a, b) => equal(a, b)),
-  neq: prim(2, (a, b) => !equal(a, b)),
-  compare: prim(2, (a, b) => compare(a, b)),
-  lt: prim(2, (a, b) => (typeof a === 'number' && typeof b === 'number' ? a < b : compare(a, b) < 0)),
-  le: prim(2, (a, b) => (typeof a === 'number' && typeof b === 'number' ? a <= b : compare(a, b) <= 0)),
-  gt: prim(2, (a, b) => (typeof a === 'number' && typeof b === 'number' ? a > b : compare(a, b) > 0)),
-  ge: prim(2, (a, b) => (typeof a === 'number' && typeof b === 'number' ? a >= b : compare(a, b) >= 0)),
-  append: prim(2, append),
-  implies: prim(2, (a, b) => a !== true || b === true),
+  'eq': prim(2, (a, b) => equal(a, b)),
+  'neq': prim(2, (a, b) => !equal(a, b)),
+  'compare': prim(2, (a, b) => compare(a, b)),
+  'lt': prim(2, (a, b) => (typeof a === 'number' && typeof b === 'number' ? a < b : compare(a, b) < 0)),
+  'le': prim(2, (a, b) => (typeof a === 'number' && typeof b === 'number' ? a <= b : compare(a, b) <= 0)),
+  'gt': prim(2, (a, b) => (typeof a === 'number' && typeof b === 'number' ? a > b : compare(a, b) > 0)),
+  'ge': prim(2, (a, b) => (typeof a === 'number' && typeof b === 'number' ? a >= b : compare(a, b) >= 0)),
+  'append': prim(2, append),
+  'implies': prim(2, (a, b) => a !== true || b === true),
   'Text.length': prim(1, (s) => text(s).length),
   'Text.code': prim(2, (s, i) => (int(i) >= 0 && i < text(s).length ? s.charCodeAt(i) : -1)),
   'Text.slice': prim(3, (s, i, j) => text(s).slice(int(i), int(j))),
@@ -667,12 +667,12 @@ export const prims = {
   'Text.trim': prim(1, (s) => text(s).trim()),
   'Text.sha256': prim(1, (s) => sha256(text(s))),
   'Text.utf8': prim(1, (s) => list(utf8(text(s)))),
-  show: prim(1, show),
-  trace: prim(2, (label, value) => {
+  'show': prim(1, show),
+  'trace': prim(2, (label, value) => {
     write('stderr', `trace ${text(label)}: ${show(value)}\n`);
     return value;
   }),
-  defect: prim(1, (message) => {
+  'defect': prim(1, (message) => {
     throw new DeusDefect(text(message));
   }),
   'Ref.new': prim(1, (value) => new Cell(value)),
@@ -839,7 +839,13 @@ export const importFn = (module, path, params, result, name) =>
       if (typeof value !== 'function') {
         throw new DeusDefect(`${path} is not a JavaScript function`);
       }
-      return fromJs(result, value.apply(owner, params.map((param, i) => toJs(param, args[i]))));
+      return fromJs(
+        result,
+        value.apply(
+          owner,
+          params.map((param, i) => toJs(param, args[i])),
+        ),
+      );
     }),
     name,
   );

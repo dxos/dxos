@@ -47,7 +47,7 @@ def Parser.atomBase (p : Parser) : {Throw Text} Expr :=
     Expr.dot t.value pos
   else if t.kind == Kind.int then
     skip p
-    Expr.int (intOf t)
+    intExpr t
   else if t.kind == Kind.text then
     skip p
     Expr.text t.value
@@ -58,7 +58,7 @@ def Parser.atomBase (p : Parser) : {Throw Text} Expr :=
     skip p
     let name := Parser.next p
     if name.kind == Kind.text then Expr.prim name.value else errorAt name "expected primitive name"
-  else if t.value == "fun" then funExpr p else if t.value == "if" then ifExpr p else if t.value == "match" then matchExpr p else if t.value == "handle" then handleExpr p else if t.value == "do" then
+  else if t.value == "fun" then funExpr p else if t.value == "if" then ifExpr p else if t.value == "match" then matchExpr p else if t.value == "handle" then Parser.handleExpr p else if t.value == "do" then
     skip p
     Parser.body p
   else if t.value == "let" then Parser.stmts p t.col else Parser.error p "expected an expression" else if isTok t "(" then
@@ -200,7 +200,7 @@ def Parser.decl (p : Parser) : {Throw Text} Decl :=
     if word == "def" then
       skip p
       let name := Parser.ident p
-      let bs := binders p
+      let bs := Parser.binders p
       let type := if is p ":" then
         skip p
         Option.some (withStop p 0 (fun _ => Parser.ty p))
@@ -211,7 +211,7 @@ def Parser.decl (p : Parser) : {Throw Text} Decl :=
     else if word == "theorem" then
       skip p
       let name := Parser.ident p
-      let bs := binders p
+      let bs := Parser.binders p
       expect p ":"
       -- `P -> Q -> R`: hypotheses then the conclusion.
       let rec props acc := if is p "->" then
@@ -286,17 +286,17 @@ def Parser.dedent (t : Token) : Text :=
   match lines t.value with
   | [] => ""
   | first :: rest => join "\n" (first :: List.map (fun l =>
-      let rec lead i := if i < t.col && i < Text.length l && code l i == 32 then lead (i + 1) else i
+      let rec lead i := if i < t.col && i < Text.length l && code l i == ' ' then lead (i + 1) else i
       Text.drop (lead 0) l) rest)
 
 -- Comments not yet attached, in source order; `notesBefore` hands them to the next statement.
-def Parser.eofToken : Token := Token.mk Kind.eof "" 0 0 true
+def Parser.eofToken : Token := Token.mk Kind.eof "" 0 0 true ""
 
 def Parser.error (p : Parser) (message : Text) : {Throw Text} a := errorAt (peek p) message
 
 def Parser.errorAt (t : Token) (message : Text) : {Throw Text} a :=
   match t with
-  | Token.mk kind value line col _ => Throw.throw (toText line ++ ":" ++ toText col ++ ": " ++ message ++ " (at " ++ kindName kind ++ " " ++
+  | Token.mk kind value line col _ _ => Throw.throw (toText line ++ ":" ++ toText col ++ ": " ++ message ++ " (at " ++ kindName kind ++ " " ++
       show value ++ ")")
 
 def Parser.expect (p : Parser) (value : Text) : {Throw Text} Token := if is p value then Parser.next p else Parser.error p ("expected '" ++ value ++ "'")
@@ -372,7 +372,12 @@ def Parser.ifExpr (p : Parser) : {Throw Text} Expr :=
   expect p "else"
   Expr.ite cond yes (Parser.body p)
 
+/-- An integer literal, keeping how the source wrote it for `view` (it never reaches Core). -/
+def Parser.intExpr (t : Token) : Expr := if Text.isEmpty t.spelling then Expr.int (intOf t) else Expr.spelled t.spelling (Expr.int (intOf t))
+
 def Parser.intOf (t : Token) : Int := getOr (fromText t.value) 0
+
+def Parser.intPat (t : Token) : Pat := if Text.isEmpty t.spelling then Pat.int (intOf t) else Pat.spelled t.spelling (Pat.int (intOf t))
 
 def Parser.iriOf (p : Parser) : {Throw Text} Option Text := if is p "@" then
   skip p
@@ -490,7 +495,7 @@ def Parser.patAtom (p : Parser) : {Throw Text} Pat :=
   if t.kind == Kind.ident then if is p "@" then
     skip p
     Pat.as t.value (Parser.patAtom p)
-  else Pat.id t.value [] pos else if t.kind == Kind.dot then Pat.dot t.value [] pos else if t.kind == Kind.int then Pat.int (intOf t) else if t.kind == Kind.text then Pat.text t.value else if isTok t "true" then Pat.bool true else if isTok t "false" then Pat.bool false else if isTok t "_" then Pat.wild else if isTok t "-" then
+  else Pat.id t.value [] pos else if t.kind == Kind.dot then Pat.dot t.value [] pos else if t.kind == Kind.int then intPat t else if t.kind == Kind.text then Pat.text t.value else if isTok t "true" then Pat.bool true else if isTok t "false" then Pat.bool false else if isTok t "_" then Pat.wild else if isTok t "-" then
     let number := Parser.next p
     if number.kind == Kind.int then Pat.int (Int.neg (intOf number)) else errorAt number "expected a number"
   else if isTok t "(" then if is p ")" then

@@ -4,6 +4,111 @@ structure Compile.Pending where
   wrap : Text
   core : Sexp
 
+test Compile.Spec.batchShadowsBase :=
+  match try (fun _ =>
+    let first := batch
+      Map.empty
+      (fun _ => Option.none)
+      (fun _ => Option.none)
+      "strict"
+      [parseFile "a.deus" (Spec.prelude ++ "def k : Int := 1\ndef user : Int := k\n")]
+    let base := Map.fromList first.entries
+    let second := batch
+      base
+      (fun h => List.lookup h first.objects)
+      (fun h => List.lookup h first.metas)
+      "strict"
+      [parseFile "b.deus" "def k : Int := 2\ndef user : Int := k\n"]
+    (List.lookup "user" first.entries, List.lookup "user" second.entries, hashOf "def k : Int := 2\ndef user : Int := k\n" "user")) with
+  | Result.ok (before, after, expected) => before != after && after == expected
+  | Result.err _ => false
+
+theorem Compile.Spec.bodiesChangeHashes (k : Int) : hashOf ("def f (a : Int) : Int := a + " ++ toText k ++ "\n") "f" ==
+    hashOf "def f (a : Int) : Int := a + 7\n" "f" == (k == 7) := by test 64
+
+test Compile.Spec.commentsDoNotChangeHashes :=
+  let plain := hashOf "def f (a : Int) : Int :=\n  let b := a + 1\n  b * 2\n" "f"
+  isSome plain && plain == hashOf
+    "-- lead\n/-- Doubles one more. -/\ndef f (a : Int) : Int :=\n  -- a note\n  let b := a + 1\n  b * 2 -- trailing\n"
+    "f" && plain == hashOf "def f (a : Int) : Int :=\n    let b := a + 1\n    b * 2\n" "f"
+
+/-- Compiles files after the prelude; the entries in name order, or the error. -/
+def Compile.Spec.compileFiles (files : List Text) : Result Text (List (Text, Entry)) :=
+  match try (fun _ => batch
+    Map.empty
+    (fun _ => Option.none)
+    (fun _ => Option.none)
+    "strict"
+    (mapIndexed (fun i f => parseFile ("f" ++ toText i ++ ".deus") f) (Spec.prelude :: files))) with
+  | Result.ok b => Result.ok (Map.toList (Map.fromList b.entries))
+  | Result.err message => Result.err message
+
+def Compile.Spec.hashOf (source : Text) (name : Text) : Option Entry :=
+  match compileFiles [source] with
+  | Result.ok entries => List.lookup name entries
+  | Result.err _ => Option.none
+
+/-- Identifiers to rename with, chosen by a generated number, since generated text is rarely an identifier. -/
+def Compile.Spec.local (i : Int) : Text := getOr (get? ["x", "y", "n", "value", "acc", "x2", "fooBar", "k_1"] (i % 8)) "x"
+
+theorem Compile.Spec.localNamesDoNotChangeHashes (i : Int) (j : Int) : hashOf
+    ("def f (" ++ Spec.local i ++ " : Int) (" ++ Spec.local j ++ "z : Int) : Int := " ++ Spec.local i ++
+      " + " ++
+      Spec.local j ++
+      "z\n")
+    "f" == hashOf "def f (a : Int) (b : Int) : Int := a + b\n" "f" := by test 64
+
+test Compile.Spec.namesResolveInTheirNamespace :=
+  match compileFiles ["def one : Int := 1\nnamespace N\ndef one : Int := 2\ndef two : Int := one + one\nend N\ndef three : Int := one + N.two\n"] with
+  | Result.ok entries =>
+      let inner := hashOf "def one : Int := 2\ndef two : Int := one + one\n" "two"
+      isSome inner && List.lookup "N.two" entries == inner
+  | Result.err _ => false
+
+/-- Two definitions, one using the other, compiled in every order and split. -/
+def Compile.Spec.orderAgnostic (k : Int) : Bool :=
+  let a := "def a (n : Int) : Int := b n + " ++ toText k ++ "\n"
+  let b := "def b (n : Int) : Int := n * 2\n"
+  compileFiles [a ++ b] == compileFiles [b ++ a] && compileFiles [a, b] == compileFiles [b, a] && compileFiles [a ++ b] == compileFiles [b, a]
+
+theorem Compile.Spec.orderDoesNotChangeHashes (k : Int) : orderAgnostic k == true := by test 16
+
+def Compile.Spec.prelude : Text := "inductive Int @\"#Int\" where\ninductive Text @\"#Text\" where\ninductive Unit @\"#Unit\" where\n  | unit\ninductive Bool @\"#Bool\" where\n  | false\n  | true\n"
+
+theorem Compile.Spec.printedSourceCompilesBack (i : Int) : inStore (fun dir =>
+    let source := getOr (get? Spec.roundTrips (i % List.length Spec.roundTrips)) ""
+    let first := batch
+      Map.empty
+      (fun h => readObject dir h)
+      (fun h => readMeta dir h)
+      "strict"
+      [parseFile "a.deus" (Spec.prelude ++ source)]
+    Codebase.store dir first
+    let ns := Map.fromList first.entries
+    let printed := join "\n\n" (List.map (fun pair => viewEntry dir ns (fst pair) (snd pair) false) first.entries)
+    let again := batch
+      Map.empty
+      (fun h => readObject dir h)
+      (fun h => readMeta dir h)
+      "strict"
+      [parseFile "b.deus" printed]
+    Map.toList (Map.fromList again.entries) == Map.toList ns) == true := by test 21
+
+def Compile.Spec.refused (source : Text) : Bool :=
+  match compileFiles [source] with
+  | Result.ok _ => false
+  | Result.err _ => true
+
+test Compile.Spec.refusesIllTyped := refused "def f : Int := \"x\"\n" && refused "def g (a : Int) : Text := a\n" && not (refused "def h (a : Int) : Int := a\n")
+
+/-- A written row is closed (`{}` is pure); an arrow without braces has a fresh row and constrains nothing. -/
+test Compile.Spec.refusesUndeclaredAbility :=
+  let abilities := "ability A where\n  op : Int -> Int\nability B where\n  other : Int -> Int\n"
+  refused (abilities ++ "def f (u : Unit) : {} Int := A.op 1\n") && refused (abilities ++ "def f (u : Unit) : {B} Int := A.op 1\n") && not (refused (abilities ++ "def f (u : Unit) : {A} Int := A.op 1\n")) && not (refused (abilities ++ "def f (u : Unit) : Int := A.op 1\n"))
+
+/-- Every program here prints back to the hashes it compiled to. -/
+def Compile.Spec.roundTrips : List Text := ["def f (a : Int) : Int := if a == 0 then 1 else a * 2\n", "inductive Shape @\"urn:spec:Shape\" where\n  | circle (r : Int)\n  | rect (w : Int) (h : Int)\ndef area (s : Shape) : Int :=\n  match s with\n  | Shape.circle r => 3 * r * r\n  | Shape.rect w h => w * h\n", "structure P @\"urn:spec:P\" where\n  x : Int\n  y : Int\ndef moved (p : P) : P := { p with x := p.x + 1 }\n", "ability Ask where\n  ask : Int -> Int\ndef twice (u : Unit) : {Ask} Int := Ask.ask 1 + Ask.ask 2\ndef answered (u : Unit) : Int :=\n  handle twice () with\n  | return v => v\n  | Ask.ask n -> k => k (n * 10)\n", "def even (n : Int) : Bool := if n == 0 then true else odd (n - 1)\ndef odd (n : Int) : Bool := if n == 0 then false else even (n - 1)\n", "def s : Text := \"tab\\tquote\\\"\\u{1F600}\"\ndef g (a : Int) : Int :=\n  let h := fun (b : Int) => b + a\n  h (h a)\n", "test t := 1 + 1 == 2\ntheorem th (b : Bool) : (if b then b else b) = b := by decide\n"]
+
 def Compile.accessorCore (hash : Text) (count : Int) (index : Int) : Sexp := Compile.node "lam" [Compile.node "match" [Compile.node "var" [i 0], Compile.node
   "case"
   [Compile.node "pcon" ([Sexp.s hash, i 0] ++ replicate count (Compile.node "pvar" [])), Compile.node "var" [i (count - 1 - index)]]]]
@@ -40,7 +145,7 @@ def Compile.batch (base : Map Text Entry) (store : Text -> {Throw Text | r} Opti
     let fieldsPart := if List.all (fun names => List.all Text.isEmpty names) fieldNames then [] else [Compile.node
       "fields"
       (List.map (fun names => Compile.node "c" (List.map Sexp.s names)) fieldNames)]
-    match docPart ++ paramsPart ++ fieldsPart ++ commentMeta lead [] with
+    match docPart ++ paramsPart ++ fieldsPart ++ commentMeta lead [] [] with
     | [] => ()
     | parts => Ref.set metas ((h, Compile.node "meta" parts) :: Ref.get metas)
   let entries := concatMap (fun item =>
@@ -116,7 +221,7 @@ def Compile.batch (base : Map Text Entry) (store : Text -> {Throw Text | r} Opti
           | (_, Option.some list) => equations ctx list locals
           | _ => Resolve.fail ctx "definition has no body") []
         match stripNoted named with
-        | (core, locals, notes) =>
+        | (core, locals, notes, spellings) =>
             Ref.set pending (Pending.mk fqn "term" core :: Ref.get pending)
             addMetaWith
               ("@" ++ fqn)
@@ -124,12 +229,18 @@ def Compile.batch (base : Map Text Entry) (store : Text -> {Throw Text | r} Opti
               (Option.some (Compile.signature names (bodyScope item) binders type))
               locals
               attributes
-              (commentMeta item.lead notes)
+              (commentMeta item.lead notes spellings)
     | Decl.check _ body doc attributes _ =>
         match stripNoted (Resolve.expr ctx body []) with
-        | (core, locals, notes) =>
+        | (core, locals, notes, spellings) =>
             Ref.set pending (Pending.mk fqn "test" core :: Ref.get pending)
-            addMetaWith ("@" ++ fqn) doc Option.none locals attributes (commentMeta item.lead notes)
+            addMetaWith
+              ("@" ++ fqn)
+              doc
+              Option.none
+              locals
+              attributes
+              (commentMeta item.lead notes spellings)
     | Decl.thm _ binders prop proof doc _ pos =>
         let params := List.map (fun b => Pat.id b.binder [] pos) binders
         let types := List.map (fun b =>
@@ -142,7 +253,7 @@ def Compile.batch (base : Map Text Entry) (store : Text -> {Throw Text | r} Opti
               "theorem"
               [Sexp.list (Sexp.sym "binders" :: types), core, Compile.node "proof" (proofTokens names (bodyScope item) proof)]
             Ref.set pending (Pending.mk fqn "theorem" form :: Ref.get pending)
-            addMeta ("@" ++ fqn) doc Option.none locals (commentMeta item.lead [])
+            addMeta ("@" ++ fqn) doc Option.none locals (commentMeta item.lead [] [])
     | _ => ())
   -- Pass 2½: infer types, group by group, and check signatures; schemes join the metadata.
   let typeObjectMap := Map.fromList (Ref.get typeObjects)
@@ -214,11 +325,12 @@ def Compile.collect (files : List (Text, List Decl)) : List Item :=
     match file with
     | (path, decls) => walk path decls [] [["Option"]] "" acc) [] files)
 
-/-- Comment metadata (D66): `(lead "…")` before the declaration, `(notes (n i "…") …)` inside it. -/
-def Compile.commentMeta (lead : Text) (notes : List (Int, Text)) : List Sexp := (if Text.isEmpty lead then [] else [Compile.node "lead" [Sexp.s lead]]) ++
-  (if List.isEmpty notes then [] else [Compile.node
-    "notes"
-    (List.map (fun pair => Compile.node "n" [i (fst pair), Sexp.s (snd pair)]) notes)])
+/-- Comment metadata (D66): `(lead "…")` before the declaration, `(notes (n i "…") …)` inside it;
+  `(spellings (n i "…") …)` for number literals the source wrote another way (D88). -/
+def Compile.commentMeta (lead : Text) (notes : List (Int, Text)) (spellings : List (Int, Text)) : List Sexp :=
+  let indexed := fun head list => if List.isEmpty list then [] else [Compile.node head (List.map (fun pair => Compile.node "n" [i (fst pair), Sexp.s (snd pair)]) list)]
+  (if Text.isEmpty lead then [] else [Compile.node "lead" [Sexp.s lead]]) ++ indexed "notes" notes ++
+    indexed "spellings" spellings
 
 /-- Tarjan's strongly connected components, emitted dependencies first. -/
 def Compile.components (nodes : List Text) (deps : Text -> List Text) : List (List Text) :=
@@ -291,7 +403,7 @@ def Compile.hashCycle (members : List Pending) (hashes : Map Text Text) (objects
     | (p, h) => Map.insert p.name h m) hashes (zip ordered memberHashes)
   let objs := List.map (fun pair =>
     match pair with
-    | (form, h) => (h, unself form memberHashes)) (zip forms memberHashes)
+    | (form, h) => (h, Compile.unself form memberHashes)) (zip forms memberHashes)
   (named, reverse objs ++ objects)
 
 /-- Hashes term-like definitions in dependency order; returns name to hash and the objects. -/

@@ -1,13 +1,13 @@
 ---
 id: org.dxos.deus.spec.js
-name: JsSpec
+name: JsGen.Spec
 version: 1.0
 ---
 
 # The JavaScript back end
 
 `deus build <name…> -o <file.js> --js` compiles definitions, and everything they reach, from
-[Core](./CORE.md) to one ES module ([D84](../DECISIONS.md)). There is no wasm and no kernel: each
+[Core](./CORE.md) to one ES module ([D94](../DECISIONS.md)). There is no wasm and no kernel: each
 DEUS definition is a JavaScript function named after it, so a defect or a JavaScript exception has
 a stack trace of DEUS names, and a source map points each function at its definition's source.
 The target is for programs that live next to JavaScript: the DOM, React, Effect, Composer. The
@@ -15,16 +15,30 @@ compiler is [`deus/jsgen.deus`](../../deus/jsgen.deus); the runtime the module i
 [`platform/js/runtime.mjs`](../../platform/js/runtime.mjs); the libraries for writing bindings are
 [`platform/js/js.deus`](../../platform/js/js.deus) and [`platform/js/react.deus`](../../platform/js/react.deus).
 
-This document is the spec in the order the work follows: the API a program sees, the rules the
-compiler keeps, then executable requirements. Every `js` block below compiles an expression with
-the JS back end, runs it in Node, and requires the value to print exactly as the kernel prints it.
-`deus mdl docs/spec/JS.mdl` checks them.
+The spec follows the process of D92: requirements, then the APIs and laws, then the evidence. Every
+`js` block compiles an expression with the JS back end, runs it in Node, and requires the value to
+print exactly as the kernel prints it; `req`, `api` and `law` blocks are checked against the
+codebase. `deus mdl docs/spec/JS.mdl` checks them all.
 
 ## Extensions
 
-| Term | URI                    |
-| ---- | ---------------------- |
-| `js` | `org.dxos.deus.js@1.0` |
+| Term  | URI                     |
+| ----- | ----------------------- |
+| `req` | `org.dxos.deus.req@1.0` |
+| `api` | `org.dxos.deus.api@1.0` |
+| `law` | `org.dxos.deus.law@1.0` |
+| `js`  | `org.dxos.deus.js@1.0`  |
+
+## APIs
+
+```mdl
+api A-1: the compiler and its text helpers
+  signatures:
+  - JsGen.compile : (Text -> {Throw Text | e} Option Sexp) -> (Text -> {Throw Text | e} Option Sexp) -> (Text -> {Throw Text | e} Text -> {Throw Text | e} Text) -> Map Text Entry -> Text -> List (Text, Text) -> Text -> Text -> {Throw Text | e} (Text, Text)
+  - JsGen.mangle : Text -> Text
+  - JsGen.vlq : Int -> Text
+  - JsGen.unvlq : Text -> Int
+```
 
 ## Output
 
@@ -56,6 +70,16 @@ Equality, ordering and `show` are the kernel's: structural on data, never on fun
 
 ## Definitions and calls
 
+```mdl
+req R-1: each definition is a JavaScript function named after it, so stacks read as DEUS
+  by: JsGen.Spec.namesAreIdentifiers
+```
+
+```mdl
+law L-1: every name mangles to a JavaScript identifier
+  theorem: JsGen.Spec.mangleIsIdent
+```
+
 - A definition `(lam … (lam b))` with `n` lambdas is a JavaScript function of `n` parameters.
   Parameters and locals take the author's names from the `locals` metadata.
 - A call of a definition with exactly its arity is a direct call. Anything else (a local function,
@@ -70,13 +94,18 @@ Equality, ordering and `show` are the kernel's: structural on data, never on fun
 
 The module runs in direct style: there are no generators and no continuations in the output. A
 handler is a frame on a stack the runtime keeps, and each operation clause is compiled by how it
-uses its continuation `k` ([D84](../DECISIONS.md)):
+uses its continuation `k` ([D94](../DECISIONS.md)):
 
 | Clause                                       | Compiled as                                                         |
 | -------------------------------------------- | ------------------------------------------------------------------- |
 | `k e`, with `k` not free in `e` (resumptive)  | a call at the request: `e` runs outside the handler, its value returns |
 | `k` not used (abortive)                       | an exception the `handle` catches; the clause's value is the result |
 | anything else                                 | refused: `the handler for <op> uses its continuation in a way the js target does not support` |
+
+```mdl
+req R-2: a handler whose clause resumes twice, or after more work, is refused by name
+  gap: task 508d9443
+```
 
 That covers `Throw`, `Defect`, readers, writers, logging and every host-style ability. Handlers that
 resume twice or after more work (generators, backtracking) run on the kernels instead.
@@ -121,6 +150,11 @@ Each definition is one source, `deus:<Name>`, whose content is its `deus view` t
 a definition's function maps to the first line of its source, so a stack frame names the DEUS
 definition and the source map opens its text. Mapping is per definition, not per expression.
 
+```mdl
+law L-2: source map numbers decode to what was encoded
+  theorem: JsGen.Spec.vlqRoundTrip
+```
+
 ## Refusals
 
 The compiler stops at the first form it cannot compile and names it: a handler clause above,
@@ -132,18 +166,26 @@ codebase does not hold.
 Small programs whose value on the JS target must print as the kernel prints it.
 
 ```deus
-namespace JsSpec
+namespace JsGen.Spec
+
+theorem mangleIsIdent (s : Text) : JsGen.isIdent (JsGen.mangle s) = true := by test 200
+
+theorem vlqRoundTrip (n : Int) : n > -100000000 -> n < 100000000 -> JsGen.unvlq (JsGen.vlq n) = n := by test 200
+
+test namesAreIdentifiers :=
+  JsGen.mangle "App.main" == "App$main" && JsGen.mangle "class" != "class" && JsGen.isIdent (JsGen.mangle "List.map'")
+
 
 def sumTo (n : Int) (acc : Int) : Int := if n == 0 then acc else sumTo (n - 1) (acc + n)
 
-inductive Shape where
+inductive Figure where
   | circle (r : Int)
   | rect (w : Int) (h : Int)
 
-def area (s : Shape) : Int :=
+def figureArea (s : Figure) : Int :=
   match s with
-  | Shape.circle r => 3 * r * r
-  | Shape.rect w h => w * h
+  | Figure.circle r => 3 * r * r
+  | Figure.rect w h => w * h
 
 ability Ask where
   ask : Unit -> Int
@@ -161,7 +203,7 @@ def counter (n : Int) : Int :=
   List.forEach (List.range 0 n) (fun i => Ref.set cell (Ref.get cell + i))
   Ref.get cell
 
-end JsSpec
+end JsGen.Spec
 ```
 
 ```mdl
@@ -171,12 +213,12 @@ js JS-1: arithmetic wraps at 32 bits
 
 ```mdl
 js JS-2: a self tail call loops in constant stack
-  run: JsSpec.sumTo 100000 0
+  run: JsGen.Spec.sumTo 100000 0
 ```
 
 ```mdl
 js JS-3: data, matching and the prelude
-  run: List.map JsSpec.area [JsSpec.Shape.circle 2, JsSpec.Shape.rect 3 4]
+  run: List.map JsGen.Spec.figureArea [JsGen.Spec.Figure.circle 2, JsGen.Spec.Figure.rect 3 4]
 ```
 
 ```mdl
@@ -186,12 +228,12 @@ js JS-4: text is UTF-16 code units
 
 ```mdl
 js JS-5: a resumptive handler answers the request where it is made
-  run: JsSpec.answer JsSpec.twice
+  run: JsGen.Spec.answer JsGen.Spec.twice
 ```
 
 ```mdl
 js JS-6: an abortive handler is the result of the handle
-  run: (try (fun _ => JsSpec.safeDiv 1 0), try (fun _ => JsSpec.safeDiv 9 3))
+  run: (try (fun _ => JsGen.Spec.safeDiv 1 0), try (fun _ => JsGen.Spec.safeDiv 9 3))
 ```
 
 ```mdl
@@ -201,7 +243,7 @@ js JS-7: partial application and closures
 
 ```mdl
 js JS-8: mutable cells
-  run: JsSpec.counter 10
+  run: JsGen.Spec.counter 10
 ```
 
 ```mdl

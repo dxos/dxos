@@ -1,5 +1,5 @@
 /-
-  A React web app written in DEUS (D84): a counter and a todo list. Components are DEUS functions
+  A React web app written in DEUS (D94): a counter and a todo list. Components are DEUS functions
   that perform `Hooks`; `React.component` runs them under React. Build and serve it with
   `examples/react/build.sh`, which compiles `TodoApp.main` with `deus build --js` and bundles
   React with esbuild.

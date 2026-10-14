@@ -40,6 +40,7 @@ export type InboxRequest = {
   title?: string;
   details?: string;
   link?: string;
+  labels?: string;
   task?: string;
   assets: InboxAsset[];
 };

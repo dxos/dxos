@@ -11,14 +11,19 @@ independent implementation. Where a spec and the code disagree, the code in [`de
 | [CORE.md](./CORE.md)                   | Core IR: canonical S-expressions, terms, patterns, objects, hashing                    |
 | [IMAGE.md](./IMAGE.md)                 | Images (`seed/deus.image`) and the executables that carry one                          |
 | [CODEBASE-STORE.md](./CODEBASE-STORE.md) | The codebase directory (`~/.deus`): objects, metadata, branches, layers, tasks        |
+| [CODEBASE-STORE.mdl](./CODEBASE-STORE.mdl) | Checked spec of the store: requirements, APIs and laws, with their evidence     |
 | [CODEBASE-TEXT.md](./CODEBASE-TEXT.md) | The text export written by `deus export` and kept in git                               |
+| [CODEBASE-TEXT.mdl](./CODEBASE-TEXT.mdl) | Checked spec of the export: restoring gives back the same codebase                |
+| [COMPILE.mdl](./COMPILE.mdl)           | Checked spec of the compiler: hashes follow meaning, printing compiles back          |
 | [CODEBASE-BINARY.md](./CODEBASE-BINARY.md) | Replication bundles: naming, contents, the `DEUSCOL1` columnar encoding, gzip      |
 | [MDL.md](./MDL.md)                     | `.mdl` documents as DEUS reads them: spec blocks and extensions                        |
 | [EMBEDDING.md](./EMBEDDING.md)         | The embeddable wasm kernel's ABI and its JSON protocol                                 |
-| [BINDINGS.md](./BINDINGS.md)           | TypeScript modules written by `deus bindings`: the type and value mapping              |
+| [BINDINGS.mdl](./BINDINGS.mdl)         | `deus bindings`: requirements, the TypeScript API, the mapping, and theorems           |
+| [JS.mdl](./JS.mdl)                     | The JavaScript back end: values, handlers, `Js.import` bindings, source maps     |
 | [WASM.md](./WASM.md)                   | Modules emitted by the DEUS wasm compiler                                              |
 | [NATIVE.md](./NATIVE.md)               | C emitted by the DEUS C compiler, benchmarks of every back end, and the native roadmap |
 | [EXPLORER.md](./EXPLORER.md)           | The explorer's JSON data files and site layout                                         |
+| [EXPLORER.mdl](./EXPLORER.mdl)         | Checked spec of the explorer's files                                                   |
 | [CLI-JSON.md](./CLI-JSON.md)           | `deus … --json` output and exit codes                                                  |
 | [OBSERVABILITY.md](./OBSERVABILITY.md) | Log, trace and metric output: NDJSON and OTLP JSON lines                               |
 
@@ -35,9 +40,6 @@ Bugs:
 
 - Type ascriptions (`(e : T)`, `let x : T := …`) are erased before checking, and a row written on a
   definition with no binders is not checked ([LANGUAGE.md](./LANGUAGE.md#static-semantics)).
-- Readers do not verify hashes: a bundle's name against its content, or an object's hash against its form.
-  A file under `bundles/` whose name is not `<level>-<sha256>` makes a pull fail
-  ([CODEBASE-BINARY.md](./CODEBASE-BINARY.md)).
 
 Docs that disagree with the code:
 

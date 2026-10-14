@@ -282,3 +282,46 @@ as git, we should be able to keep entire code history without trimming, artifact
 ---
 
 - explore if functional style of writing programs (specifically immutability leads to fundamentally inneficient code and whether we need to add mutable memory. case study: writing a sorting algorithm
+
+---
+
+- we need generated pretty ts apis with .d.ts
+
+---
+
+how much of .mdl are you dogfooding? the general process should be mdl spec > apis + theorems > impls and proofs and tests. maybe backfill this for existing code and keep using this process as you go, eval it
+
+---
+
+can you confirm that all codebase changes are stil backed-up to git
+
+---
+
+make sure the thread that's picking up open tasks doesnt stop and picks up next task when its done with prev
+
+---
+
+how much of .mdl are you dogfooding? the general process should be mdl spec > apis + theorems > impls and proofs and tests. maybe backfill this for existing code and keep using this process as you go, eval it
+
+---
+
+- codebase ui -- when authed should have a report tool that takes screenshot and files a task --- typically something about improbing codebase explorer
+
+---
+
+- those should be clickable
+
+---
+
+- js as compilation target: without wasm, source-mapped, doesnt need to be super legible, but at least clear stacks -- good for iterop with dom and existing js libs (what wasm struggles with)
+- find way to introp with external js libs: like react and effect, how do we express those bindings in the language
+- react bindings with ability for hooks access that compoennts get + example react web app in deus
+- build a full composer plugin (at least surfaces + echo access) and dynamically load it in composer -- autocue demo
+
+---
+
+for composer thread -> can we have some smaller version of explorer as composer plugin, also matching composer design system + skills so composer assistant can program in deus and use codebase
+
+---
+
+about mdl-first approach --- I want agents to record specs in codebase, not in github. and overall, most development at this point should be happening via-codebase

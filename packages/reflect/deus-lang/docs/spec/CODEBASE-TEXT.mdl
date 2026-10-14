@@ -1,0 +1,160 @@
+---
+id: org.dxos.deus.spec.codebase-text
+name: Export.Spec
+version: 1.0
+---
+
+# Text export and restore: checked spec
+
+The checkable half of [CODEBASE-TEXT.md](CODEBASE-TEXT.md). The export is the codebase's backup in
+git, so its one promise is that restoring it gives back the same codebase: the same names bound to
+the same hashes, with the metadata people read. Written in the order of the process (D92);
+`deus mdl docs/spec/CODEBASE-TEXT.mdl` checks it against the evidence in [Laws](#laws).
+
+## Extensions
+
+| Term  | URI                     |
+| ----- | ----------------------- |
+| `req` | `org.dxos.deus.req@1.0` |
+| `api` | `org.dxos.deus.api@1.0` |
+| `law` | `org.dxos.deus.law@1.0` |
+
+## APIs
+
+```mdl
+api A-1: writing and restoring an export
+  signatures:
+  - Export.write : Text -> Text -> {IO, Throw Text} (Int, (Int, Int))
+  - Export.importTasks : Text -> Text -> {IO, Throw Text} Int
+  - Export.importHistory : Text -> Text -> {IO, Throw Text} Int
+  - Export.withUnnamed : Text -> Map Text Entry -> {IO} Map Text Entry
+```
+
+## Round trip
+
+```mdl
+law L-1: restoring an export gives the same namespace snapshot, whatever the program holds
+  theorem: Export.Spec.restoresTheSnapshot
+```
+
+```mdl
+req R-1: attributes, doc comments and ordinary comments come back as metadata
+  by: Export.Spec.restoresMetadata
+```
+
+```mdl
+req R-2: spec blocks are exported to specs/ and come back under the same names
+  by: Export.Spec.restoresSpecs
+```
+
+```mdl
+req R-3: a term that is still called but has no name is exported under Unnamed.h<hash> (D77)
+  by: Export.Spec.namesUnnamedCallees
+```
+
+```mdl
+req R-4: tasks come back as the same task objects
+  by: Export.Spec.restoresTasks
+```
+
+```mdl
+req R-5: exporting twice writes the same files
+  by: Export.Spec.exportIsStable
+```
+
+## Laws
+
+Each law builds a codebase in the deterministic simulation, exports it, restores the export into a
+second codebase through the same `add` the CLI runs, and compares.
+
+```deus
+namespace Export.Spec
+
+/-- Runs a CLI command against a simulated codebase; its output is discarded. -/
+def deus (dir : Text) (words : List Text) (command : Args -> {IO, Throw Text} Unit) : {IO, Throw Text} Unit :=
+  command (Cli.parseArgs (words ++ ["--codebase", dir, "--quiet"]))
+
+def snapshotOf (dir : Text) : {IO, Throw Text} Text := (Codebase.readCausal dir (Codebase.headOf dir (Codebase.currentBranch dir))).snapshot
+
+/-- Adds `src/` to `cb`, exports it to `out`, and restores `out` into `cb2`. -/
+def roundTrip (source : Text) (spec : Text) : {IO, Throw Text} Unit :=
+  IO.mkdirp "src"
+  IO.writeFile "src/a.deus" (Compile.Spec.prelude ++ source)
+  IO.writeFile "src/s.mdl" spec
+  deus "cb" ["src"] (fun a => Cli.addOrUpdate a false)
+  let _ := Export.write "cb" "out"
+  Codebase.init "cb2"
+  deus "cb2" (if IO.exists "out/specs" then ["out/code", "out/specs"] else ["out/code"]) (fun a => Cli.addOrUpdate a false)
+
+def sample : Text :=
+  "-- A lead comment.\n/-- A shape. -/\ninductive Shape @\"urn:x:Shape\" where\n  | circle (r : Int)\n  | square (s : Int)\n" ++
+    "/-- An ability. -/\nability Ask where\n  ask : Int -> Int\n" ++
+    "/-- Area, roughly. -/\ndef area (s : Shape) : Int :=\n  -- A note inside.\n  match s with\n  | Shape.circle r => 3 * r * r\n  | Shape.square w => w * w\n" ++
+    "def escape : Text := \"esc \\u{1b} del \\u{7f} tab \\t\"\n" ++
+    "/-- Asks twice. -/\ndef twice (u : Unit) : {Ask} Int := Ask.ask 1 + Ask.ask 2\n" ++
+    "/-- A test. -/\n@[integration]\ntest areaOfSquare := area (Shape.square 3) == 9\n" ++
+    "/-- A theorem. -/\ntheorem notNot (b : Bool) : (if b then true else false) = b := by decide\n"
+
+def specSample : Text :=
+  "---\nname: S\n---\n## Extensions\n\n| Term | URI |\n| --- | --- |\n| `note` | `org.example.note@1.0` |\n\n```mdl\nnote N-1: a note\n  text: hello\n  more:\n  - one\n  - two\n```\n"
+
+/-- Generated programs: definitions whose bodies hold generated text and numbers. -/
+def program (t : Text) (k : Int) : Text :=
+  sample ++ "def word : Text := " ++ Print.quoteText t ++ "\ndef number : Int := " ++ Int.toText k ++ "\ndef both (n : Int) : Text := if n == number then word else " ++ Print.quoteText (t ++ t) ++ "\n"
+
+theorem restoresTheSnapshot (t : Text) (k : Int) :
+    Codebase.Spec.inStore (fun _ =>
+      roundTrip (program t k) specSample
+      snapshotOf "cb" == snapshotOf "cb2") = true := by test 20
+
+test restoresMetadata :=
+  Codebase.Spec.inStore (fun _ =>
+    roundTrip sample specSample
+    let ns := Codebase.current "cb2"
+    let metaOf := fun (name : Text) => Option.map (fun e => Codebase.readMeta "cb2" (Entry.hash e)) (Map.lookup name ns)
+    let field := fun (name : Text) (key : Text) =>
+      match metaOf name with
+      | some m => Codebase.metaField m key
+      | none => none
+    field "areaOfSquare" "attrs" == some (Sexp.list [Sexp.str "integration"]) &&
+      field "areaOfSquare" "doc" == some (Sexp.str "A test.") &&
+      field "notNot" "doc" == some (Sexp.str "A theorem.") &&
+      field "Shape" "doc" == some (Sexp.str "A shape.") &&
+      field "area" "doc" == some (Sexp.str "Area, roughly.") &&
+      Option.isSome (field "area" "notes") && Option.isSome (field "Shape" "lead"))
+
+test restoresSpecs :=
+  Codebase.Spec.inStore (fun _ =>
+    roundTrip sample specSample
+    let before := Map.lookup "S.N-1" (Codebase.current "cb")
+    Option.isSome before && before == Map.lookup "S.N-1" (Codebase.current "cb2"))
+
+test namesUnnamedCallees :=
+  Codebase.Spec.inStore (fun _ =>
+    IO.mkdirp "src"
+    IO.writeFile "src/a.deus" (Compile.Spec.prelude ++ "def helper (n : Int) : Int := n + 1\ndef user (n : Int) : Int := helper n * 2\n")
+    deus "cb" ["src"] (fun a => Cli.addOrUpdate a false)
+    deus "cb" ["helper"] Cli.rm
+    let _ := Export.write "cb" "out"
+    Codebase.init "cb2"
+    deus "cb2" ["out/code"] (fun a => Cli.addOrUpdate a false)
+    Map.lookup "user" (Codebase.current "cb") == Map.lookup "user" (Codebase.current "cb2"))
+
+test restoresTasks :=
+  Codebase.Spec.inStore (fun _ =>
+    roundTrip sample specSample
+    deus "cb" ["new", "Write", "laws", "--labels", "spec,dogfood", "--details", "line one\nline two"] Cli.task
+    let _ := Export.write "cb" "out"
+    let _ := Export.importTasks "cb2" "out/tasks.sexp"
+    Map.toList (Tasks.current "cb") == Map.toList (Tasks.current "cb2"))
+
+test exportIsStable :=
+  Codebase.Spec.inStore (fun _ =>
+    roundTrip sample specSample
+    let files := fun (u : Unit) => List.map (fun f => (f, IO.readFile ("out/code/" ++ f))) (IO.listDir "out/code")
+    let first := files ()
+    let _ := Export.write "cb" "out"
+    first == files () && not (List.isEmpty first))
+
+end Export.Spec
+```

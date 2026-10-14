@@ -16,6 +16,7 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { gzipSync } from 'node:zlib';
 import { afterAll, describe, test } from 'vitest';
 
 import { SEED_PATH } from './kernel/main.ts';
@@ -58,12 +59,21 @@ describe('deus CLI', () => {
     const add = deus('add', join(root, 'deus'), '--codebase', codebase);
     expect(add.stderr).toBe('');
     expect(add.code).toBe(0);
+    // The checked specs (D92): their laws compile next to the code, and `deus mdl` checks every block.
+    const specs = deus('add', join(root, 'platform/spec.deus'), join(root, 'docs/spec'), '--codebase', codebase);
+    expect(specs.stderr).toBe('');
+    expect(specs.code).toBe(0);
     const tests = deus('test', '--codebase', codebase);
     expect(tests.stdout).toMatch(/ 0 failed/);
     expect(tests.code).toBe(0);
     const theorems = deus('check', '--codebase', codebase);
     expect(theorems.stdout).toMatch(/proved by decide/);
     expect(theorems.code).toBe(0);
+    // JS.mdl's blocks compile with the js target, which copies $DEUS_HOME/platform/js/runtime.mjs.
+    process.env.DEUS_HOME = root;
+    const checked = deus('mdl', join(root, 'docs/spec'), '--codebase', codebase);
+    expect(checked.stdout).toMatch(/ 0 failed, 0 unchecked/);
+    expect(checked.code).toBe(0);
 
     // `view` prints source that compiles back to the same hashes: every definition, test, type and
     // ability of the toolchain, printed together so that mutually recursive ones are re-added as a group.
@@ -384,6 +394,17 @@ describe('deus CLI', () => {
       deus('pull', ...b);
       expect(deus('merge', 'origin.main', ...b).stdout).toMatch(/^Fast-forwarded/);
 
+      // A pull ignores files that are not bundles and skips a bundle whose text does not hash to its name (D91).
+      const fake = `0-${createHash('sha256').update('real').digest('hex')}`;
+      writeFileSync(join(remote, 'bundles', 'README'), 'notes');
+      writeFileSync(join(remote, 'bundles', fake), gzipSync('forged'));
+      const guarded = deus('pull', ...b);
+      expect(guarded.code).toBe(0);
+      expect(guarded.stderr).toContain('ignored bundles/README on origin: not a bundle name');
+      expect(guarded.stderr).toContain(`skipped bundle ${fake} on origin: its text does not hash to its name`);
+      rmSync(join(remote, 'bundles', 'README'));
+      rmSync(join(remote, 'bundles', fake));
+
       // Concurrent pushes to one branch leave two heads, merged like local branches.
       deus('add', file('x.deus', 'def x : Int := 1\n'), '--message', 'x', ...a);
       deus('push', ...a);
@@ -423,6 +444,25 @@ describe('deus CLI', () => {
       const refused = deus('compact', '--keep', '3', ...a);
       expect(refused.code).toBe(1);
       expect(refused.stderr).toContain('compact keeps the whole history');
+
+      // An object whose text is not what its name says is not taken in (D91).
+      const forger = ['--codebase', join(scratch, 'forger')];
+      const victim = ['--codebase', join(scratch, 'victim')];
+      for (const c of [forger, victim]) {
+        deus('init', '--empty', ...c);
+        deus('remote', 'add', 'origin', join(scratch, 'forged-remote'), ...c);
+      }
+      deus('add', join(root, 'deus/builtins.deus'), ...forger);
+      deus('add', file('w.deus', 'def w : Int := 41\n'), ...forger);
+      const wHash: string = JSON.parse(deus('ls', '--json', ...forger).stdout).find(
+        (row: { name: string }) => row.name === 'w',
+      ).hash;
+      const objectFile = join(scratch, 'forger', 'objects', wHash.slice(0, 2), wHash);
+      writeFileSync(objectFile, readFileSync(objectFile, 'utf8').replace('41', '42'));
+      deus('push', ...forger);
+      const pulled = deus('pull', ...victim);
+      expect(pulled.stderr).toContain(`skipped object #${wHash.slice(0, 10)}`);
+      expect(existsSync(join(scratch, 'victim', 'objects', wHash.slice(0, 2), wHash))).toBe(false);
     },
   );
 
@@ -568,18 +608,28 @@ describe('deus CLI', () => {
       const c = ['--codebase', join(scratch, 'c')];
       deus('init', '--empty', ...c);
       deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
-      deus('add', join(root, 'examples/bench.deus'), ...c);
-      // Mutual recursion, tail loops, data on the heap, nullary constructors and 32-bit wrapping.
-      for (const [name, arg] of [
-        ['Bench.fib', 20],
-        ['Bench.collatz', 1000],
-        ['Bench.trees', 2],
-        ['Bench.queens', 6],
+      deus('add', join(root, 'examples/bench.deus'), join(root, 'examples/sorting.deus'), ...c);
+      // Mutual recursion, tail loops, data on the heap, nullary constructors, 32-bit wrapping,
+      // arrays and refs. Reference counting frees every block by the end of the run (D86).
+      for (const [name, args] of [
+        ['Bench.fib', [20]],
+        ['Bench.collatz', [1000]],
+        ['Bench.trees', [2]],
+        ['Bench.queens', [6]],
+        ['Sorting.benchMerge', [300, 7]],
+        ['Sorting.benchQuick', [300, 7]],
+        ['Sorting.benchHeap', [300, 7]],
+        ['Sorting.benchArray', [300, 7]],
+        ['Sorting.benchPersistent', [300, 7]],
       ] as const) {
         const out = join(scratch, name);
         expect(deus('build', name, '-o', out, '--c', ...c).code).toBe(0);
-        const run = spawnSync(out, [String(arg)], { encoding: 'utf8' });
-        expect(run.stdout).toBe(deus('eval', `${name} ${arg}`, ...c).stdout);
+        const run = spawnSync(out, args.map(String), {
+          encoding: 'utf8',
+          env: { ...process.env, DEUS_HEAP_STATS: '1' },
+        });
+        expect(run.stdout).toBe(deus('eval', `${name} ${args.join(' ')}`, ...c).stdout);
+        expect(run.stderr).toContain(', 0 live,');
       }
       deus('add', file('wrap.deus', 'def wrap (n : Int) : Int := n * 65536 * 65536 + n * 2147483647\n'), ...c);
       expect(deus('build', 'wrap', '-o', join(scratch, 'wrap'), '--c', ...c).code).toBe(0);
@@ -598,6 +648,34 @@ describe('deus CLI', () => {
 
       const refused = deus('build', 'Text.length', '-o', join(scratch, 'length'), '--c', ...c);
       expect(refused.code).toBe(1);
+    },
+  );
+
+  test.skipIf(spawnSync('clang', ['--target=wasm32', '-print-prog-name=wasm-ld']).status !== 0)(
+    'compiles the C back end to wasm with reference counting',
+    { timeout: 120_000 },
+    ({ expect }) => {
+      const c = ['--codebase', join(scratch, 'c-wasm')];
+      deus('init', '--empty', ...c);
+      deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
+      deus('add', join(root, 'examples/bench.deus'), join(root, 'examples/sorting.deus'), ...c);
+      for (const [name, args] of [
+        ['Bench.trees', [2]],
+        ['Bench.queens', [6]],
+        ['Sorting.benchMerge', [300, 7]],
+        ['Sorting.benchArray', [300, 7]],
+      ] as const) {
+        const out = join(scratch, `${name}.wasm`);
+        expect(deus('build', name, '-o', out, '--c', ...c).code).toBe(0);
+        const instance = new WebAssembly.Instance(new WebAssembly.Module(new Uint8Array(readFileSync(out))));
+        const run = instance.exports[name.split('.')[1]];
+        const live = instance.exports.deus_live;
+        if (typeof run !== 'function' || typeof live !== 'function') {
+          throw new Error(`${name}.wasm does not export ${name} and deus_live`);
+        }
+        expect(`${run(...args)}\n`).toBe(deus('eval', `${name} ${args.join(' ')}`, ...c).stdout);
+        expect(live()).toBe(0);
+      }
     },
   );
 
@@ -833,6 +911,11 @@ describe('deus CLI', () => {
       );
       expect(deus('export', exported, ...c).code).toBe(0);
       expect(deus('task', 'list', '--all', '--json', ...c).stdout).toBe(tasksBefore);
+      // A git union merge leaves both versions of a task; the one this codebase has not had wins (D89).
+      const current = readFileSync(join(exported, 'tasks.sexp'), 'utf8');
+      writeFileSync(join(exported, 'tasks.sexp'), current + staleTasks);
+      expect(deus('export', exported, ...c).code).toBe(0);
+      expect(deus('task', 'list', '--all', '--json', ...c).stdout).toBe(tasksBefore);
     },
   );
 
@@ -853,6 +936,8 @@ describe('deus CLI', () => {
       '  | n => n * n',
       '',
       'def plain (side : Int) : Int := side * side',
+      '',
+      "def quoted (c : Int) : Bool := c == '\"' || c == 0x60 || c == 1_000",
     ].join('\n');
     deus('add', file('comments.deus', source), ...c);
     // Comments are metadata: the definition hashes as it does without them.
@@ -862,9 +947,15 @@ describe('deus CLI', () => {
     const uncommented = source
       .split('\n')
       .filter((line) => !line.trim().startsWith('--'))
-      .join('\n');
+      .join('\n')
+      .replace(`'"'`, '34')
+      .replace('0x60', '96')
+      .replace('1_000', '1000');
     deus('add', file('uncommented.deus', uncommented), ...bare);
     expect(deus('names', 'area', '--json', ...bare).stdout).toBe(deus('names', 'area', '--json', ...c).stdout);
+    // So are number spellings (D88): `'"'` hashes as `34`, and view prints it as written.
+    expect(deus('names', 'quoted', '--json', ...bare).stdout).toBe(deus('names', 'quoted', '--json', ...c).stdout);
+    expect(deus('view', 'quoted', ...c).stdout).toContain(`c == '"' || c == 0x60 || c == 1_000`);
     const viewed = deus('view', 'area', ...c).stdout;
     expect(viewed).toContain('-- Shapes measured in whole units.\n\n-- Squares only, for now.\ndef area');
     expect(viewed).toContain('  -- Negative sides are measured as positive.\n  let s :=');
@@ -881,6 +972,7 @@ describe('deus CLI', () => {
     const text = (dir: string) => readFileSync(join(dir, 'code', '_root.deus'), 'utf8');
     expect(text(second)).toBe(text(first));
     expect(text(first)).toContain('-- A point has no area.');
+    expect(text(first)).toContain(`c == '"' || c == 0x60`);
     const hashOf = (args: string[]) =>
       JSON.parse(deus('ls', '--json', ...args).stdout).find((row: { name: string }) => row.name === 'area').hash;
     expect(hashOf(restored)).toBe(hashOf(c));
@@ -917,6 +1009,54 @@ describe('deus CLI', () => {
     expect(readFileSync(join(third, 'HISTORY.md'), 'utf8')).toContain(
       readFileSync(join(first, 'HISTORY.md'), 'utf8').split('\n\n')[1],
     );
+  });
+
+  // The console is the toolchain itself on the wasm kernel: run here through the same files the page loads.
+  test('explore --console runs deus against a snapshot of the codebase', { timeout: 300_000 }, async ({ expect }) => {
+    const c = ['--codebase', join(scratch, 'console')];
+    deus('init', '--empty', ...c);
+    deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
+    deus(
+      'add',
+      file('console.deus', 'namespace Shapes\ndef square (side : Int) : Int := side * side\nend Shapes\n'),
+      ...c,
+    );
+    process.env.DEUS_HOME = root;
+    const out = join(scratch, 'console-site');
+    expect(deus('explore', '--out', out, '--console', ...c)).toMatchObject({ stderr: '', code: 0 });
+    const snapshot: Record<string, string> = JSON.parse(readFileSync(join(out, 'console', 'codebase.json'), 'utf8'));
+    expect(Object.keys(snapshot)).toContain('HEAD');
+    expect(Object.keys(snapshot).some((path) => path.startsWith('cache/'))).toBe(false);
+    expect(JSON.parse(readFileSync(join(out, 'console', 'info.json'), 'utf8'))).toEqual({
+      files: Object.keys(snapshot).length,
+      branch: 'main',
+    });
+
+    const host = await import(join(out, 'console', 'host.mjs'));
+    const wasm = Buffer.from(readFileSync(join(out, 'console', 'deus_kernel.wasm.b64'), 'utf8'), 'base64');
+    const files = Object.fromEntries(Object.entries(snapshot).map(([path, text]) => [`/codebase/${path}`, text]));
+    const page = await host.createDeus({
+      wasm: new Uint8Array(wasm),
+      fs: host.createFiles(files),
+      env: { HOME: '/home', DEUS_HOME: '/deus', DEUS_CODEBASE: '/codebase' },
+    });
+    const image = readFileSync(join(out, 'console', 'deus.image'), 'utf8');
+    expect(await page.run(image, { args: ['view', 'Shapes.square'], cwd: '/work' })).toMatchObject({
+      code: 0,
+      stdout: expect.stringContaining('side * side'),
+    });
+    expect(await page.run(image, { args: ['eval', 'Shapes.square 7'], cwd: '/work' })).toMatchObject({
+      code: 0,
+      stdout: '49\n',
+    });
+
+    // A site that has a console keeps it, refreshed with the codebase each push.
+    deus('remote', 'add', 'origin', join(scratch, 'console-remote'), ...c);
+    deus('explore', '--out', out, '--publish', 'origin', ...c);
+    deus('add', file('console-more.deus', 'def Shapes.unit : Int := 1\n'), ...c);
+    expect(deus('push', 'origin', ...c).code).toBe(0);
+    const published = readFileSync(join(scratch, 'console-remote', 'site', 'console', 'codebase.json'), 'utf8');
+    expect(Object.keys(JSON.parse(published)).length).toBeGreaterThan(Object.keys(snapshot).length);
   });
 
   test('writes the codebase explorer and publishes it beside a remote', { timeout: 120_000 }, ({ expect }) => {

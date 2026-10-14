@@ -1,0 +1,124 @@
+---
+name: Codebase.Spec
+---
+
+## Extensions
+
+| Term | URI |
+| --- | --- |
+| `api` | `org.dxos.deus.api@1.0` |
+| `law` | `org.dxos.deus.law@1.0` |
+| `req` | `org.dxos.deus.req@1.0` |
+
+## Blocks
+
+```mdl
+api A-1: the object store
+  signatures:
+  - Codebase.put : Text -> Sexp -> {IO} Text
+  - Codebase.readObject : Text -> Text -> {IO} Option Sexp
+  - Codebase.objectPath : Text -> Text -> Text
+  - Codebase.dependencies : Sexp -> List Text
+  - Codebase.layerOf : Sexp -> Text
+  - Codebase.mayDependOn : Text -> List Text
+```
+
+```mdl
+api A-2: namespace snapshots
+  signatures:
+  - Codebase.putNamespace : Text -> Map Text Entry -> {IO} Text
+  - Codebase.readNamespace : Text -> Text -> {IO, Throw Text} Map Text Entry
+  - Codebase.lookupName : Text -> Text -> Text -> {IO, Throw Text} Option Entry
+```
+
+```mdl
+api A-3: history and branches
+  signatures:
+  - Codebase.init : Text -> {IO, Throw Text} Unit
+  - Codebase.commit : Text -> Map Text Entry -> Text -> {IO, Throw Text} Text
+  - Codebase.causalToSexp : Causal -> Sexp
+  - Codebase.causalFromSexp : Sexp -> Causal
+  - Codebase.merge : Text -> Text -> {IO, Throw Text} MergeResult
+```
+
+```mdl
+law L-1: an object is stored under the SHA-256 of its canonical text
+  theorem: Codebase.Spec.putNamesByHash
+  evidence: test
+```
+
+```mdl
+law L-2: a namespace reads back as written, as a whole and name by name
+  theorem: Codebase.Spec.namespaceRoundTrip
+  statement: (words : List Text) : Codebase.Spec.readsBack (Codebase.Spec.namespaceOf (Codebase.Spec.dotted words)) = true
+```
+
+```mdl
+law L-3: a snapshot's hash depends only on its names and entries
+  theorem: Codebase.Spec.snapshotIgnoresOrder
+```
+
+```mdl
+law L-4: a history node reads back as written
+  theorem: Codebase.Spec.causalRoundTrip
+```
+
+```mdl
+req R-1: a file under objects/ is the canonical text and a new line, at objects/<first two>/<hash>
+  by: Codebase.Spec.putNamesByHash
+```
+
+```mdl
+req R-10: tasks merge field by field; labels and links merge as sets
+  gap: task 823f7b83
+```
+
+```mdl
+req R-11: each layer depends only on the layers the table allows
+  by: Codebase.Spec.layersFollowTheTable
+```
+
+```mdl
+req R-12: add and update refuse a batch that crosses layers
+  gap: task 823f7b83
+```
+
+```mdl
+req R-2: builtin hashes (starting with #) are never dependencies
+  by: Codebase.Spec.builtinsAreNotDependencies
+```
+
+```mdl
+req R-3: nodes past 64 items split into parts, and still read back
+  by: Codebase.Spec.wideNamespaceRoundTrip
+```
+
+```mdl
+req R-4: the empty namespace hashes to f126eadc…
+  by: Codebase.Spec.emptyNamespaceHash
+```
+
+```mdl
+req R-5: deus init always writes the same first node
+  by: Codebase.Spec.initIsAlwaysTheSame
+```
+
+```mdl
+req R-6: a commit whose snapshot equals its parent's leaves the branch where it was
+  by: Codebase.Spec.unchangedCommitWritesNothing
+```
+
+```mdl
+req R-7: a name changed on one side takes that side, a removal included
+  by: Codebase.Spec.mergeTakesEachSidesChange | Codebase.Spec.mergeTakesTheirRemoval
+```
+
+```mdl
+req R-8: a name changed differently on both sides is a conflict, and nothing is written
+  by: Codebase.Spec.mergeReportsConflicts
+```
+
+```mdl
+req R-9: when ours is an ancestor of theirs, the merge fast-forwards
+  by: Codebase.Spec.mergeFastForwards
+```

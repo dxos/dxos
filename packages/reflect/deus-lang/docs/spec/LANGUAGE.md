@@ -41,6 +41,10 @@ node. A comment anywhere else (inside an expression, between a type's constructo
 goes to the next statement or declaration that takes comments. A blank line between two comments is
 kept. Identical definitions share one hash, so they share their comments.
 
+A number literal written other than in decimal (`'"'`, `0x60`, `1_000`) is the same integer in Core,
+and its spelling is kept beside it as `spellings` metadata (D88), so `view` and `deus export` print it
+as written. Theorems and the TypeScript-like dialect print the decimal value.
+
 A doc comment is only accepted directly before a declaration (and its attributes). Anywhere else the
 parser rejects it. A doc comment before `namespace`, `end` or `open` is accepted and dropped.
 
@@ -71,12 +75,12 @@ it is a projection (`(e).field`); otherwise it is a constructor shorthand (`.red
 
 ### Literals
 
-| Literal   | Form                                                | Token                                     |
-| --------- | --------------------------------------------------- | ----------------------------------------- |
-| Decimal   | `0`–`9` then digits and `_`: `1_000`                | integer                                   |
-| Hex       | `0x` then hex digits and `_`: `0x1F`, `0xFFFF_FFFF` | integer                                   |
-| String    | `"…"`; may span lines                               | text                                      |
-| Character | `'a'`, `'\n'`, `'\''`                               | integer: the UTF-16 code unit of the char |
+| Literal   | Form                                                | Token                                                                        |
+| --------- | --------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Decimal   | `0`–`9` then digits and `_`: `1_000`                | integer                                                                      |
+| Hex       | `0x` then hex digits and `_`: `0x1F`, `0xFFFF_FFFF` | integer                                                                      |
+| String    | `"…"`; may span lines                               | text                                                                         |
+| Character | `'a'`, `'\n'`, `'\''`                               | integer: the UTF-16 code unit of the char; `view` prints it as written (D88) |
 
 There are no negative literals in the lexer; `-` before an integer is handled by the parser. There are no
 floating-point literals. An integer literal is reduced to 32 bits: `3000000000` is `-1294967296` and

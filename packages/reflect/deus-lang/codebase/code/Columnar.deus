@@ -24,14 +24,14 @@ def Columnar.decode (t : Text) : List Sexp :=
         | _ => defect "columnar: unbalanced ("
       else
         let c := code shape i
-        if c == 40 then go (i + 1) ([] :: stack) done else if c == 41 then
+        if c == '(' then go (i + 1) ([] :: stack) done else if c == ')' then
           match stack with
           | [] => defect "columnar: unbalanced )"
           | top :: rest =>
               match Sexp.push (Sexp.list (reverse top)) rest done with
               | (stack2, done2) => go (i + 1) stack2 done2
         else
-          let form := if c == 115 then Sexp.sym (entry symbols (next symbolRefs)) else if c == 116 then Sexp.str (entry strings (next stringRefs)) else if c == 104 then
+          let form := if c == 's' then Sexp.sym (entry symbols (next symbolRefs)) else if c == 't' then Sexp.str (entry strings (next stringRefs)) else if c == 'h' then
             let h := next hashRefs
             Sexp.str (slice hashes (h * 64) (h * 64 + 64))
           else Sexp.int (next ints)
@@ -104,7 +104,7 @@ def Columnar.intern (index : MutMap Text Int) (values : Ref (List Text)) (x : Te
 def Columnar.isHash (t : Text) : Bool :=
   let rec hex i := if i >= 64 then true else
     let c := code t i
-    (c >= 48 && c <= 57 || c >= 97 && c <= 102) && hex (i + 1)
+    (c >= '0' && c <= '9' || c >= 'a' && c <= 'f') && hex (i + 1)
   Text.length t == 64 && hex 0
 
 def Columnar.numbers (refs : Ref (List Int)) : Text := join " " (List.map toText (reverse (Ref.get refs)))

@@ -157,7 +157,7 @@ type of their argument's type, so a comparison of an element of an `Array Int` c
 
 `alloc(n)` returns the current heap pointer and advances it by `n` bytes. When the new pointer passes the
 end of memory (`memory.size × 65536`), memory grows by the larger of the pages still missing and the
-current size, so a growing heap doubles and grows a logarithmic number of times. Nothing is freed. The
+current size, so a growing heap doubles and grows a logarithmic number of times. Nothing is freed; `deus build -o <file>.wasm --c` builds wasm through the [C back end](./NATIVE.md#wasm-through-c) instead, which frees by reference counting (D90). The
 heap starts at address 8, so no block has address 0.
 
 The compiled code calls `alloc` with `4 + 4 × fields`. A host may call it too, to build arguments: allocate

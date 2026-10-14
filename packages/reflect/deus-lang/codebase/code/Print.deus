@@ -84,6 +84,7 @@ def Print.expr (p : Printer) (t : Sexp) (env : List Text) (ind : Int) (prec : In
   | Sexp.list (Sexp.sym "note" :: _ :: inner :: []) =>
       -- Only statements and arms carry comments, and those print through `stmts`.
       Print.expr p inner env ind prec
+  | Sexp.list (Sexp.sym "spelled" :: Sexp.str text :: _ :: []) => text
   | Sexp.list (Sexp.sym "var" :: Sexp.int i :: []) => getOr (get? env i) ("$" ++ toText i)
   | Sexp.list (Sexp.sym "ref" :: Sexp.str h :: []) => refName p h env
   | Sexp.list (Sexp.sym "int" :: Sexp.int v :: []) => if v < 0 then paren 99 prec (toText v) else toText v
@@ -188,6 +189,12 @@ def Print.ifThenElse (p : Printer) (c : Sexp) (yes : Sexp) (no : Sexp) (env : Li
     (if isBlock yes then "\n" ++ spaces ind else " ") ++ "else" ++ Print.body p no env ind
   paren 1 prec text
 
+/-- Indexed metadata: `(<field> (n i "text") …)`, as notes (D66) and spellings (D88) are stored. -/
+def Print.indexedOf (meta : Option Sexp) (field : Text) : List (Int, Text) := filterMap (fun x =>
+  match x with
+  | Sexp.list (Sexp.sym "n" :: Sexp.int i :: Sexp.str text :: []) => Option.some (i, text)
+  | _ => Option.none) (metaList meta field)
+
 def Print.infixOf (name : Text) : Option (Text, Int) := if name == "Int.add" then Option.some ("+", 65) else if name == "Int.sub" then Option.some ("-", 65) else if name == "Int.mul" then Option.some ("*", 70) else if name == "Int.div" then Option.some ("/", 70) else if name == "Int.mod" then Option.some ("%", 70) else if name == "eq" then Option.some ("==", 50) else if name == "neq" then Option.some ("!=", 50) else if name == "lt" then Option.some ("<", 50) else if name == "le" then Option.some ("<=", 50) else if name == "gt" then Option.some (">", 50) else if name == "ge" then Option.some (">=", 50) else if name == "append" then Option.some ("++", 65) else Option.none
 
 /-- Whether a term prints as several lines (so it needs a block). -/
@@ -219,7 +226,7 @@ def Print.listItems (t : Sexp) : Option (List Sexp) :=
 /-- Whether `name` occurs in `text` as a whole word. -/
 def Print.mentions (name : Text) (text : Text) : Bool :=
   let n := Text.length name
-  let isWord := fun c => isAlpha c || isDigit c || c == 95 || c == 46 || c == 39
+  let isWord := fun c => isAlpha c || isDigit c || c == '_' || c == '.' || c == 39
   let rec scan i :=
     let found := indexOf text name i
     if found < 0 then false else (found == 0 || not (isWord (code text (found - 1)))) && not (isWord (code text (found + n))) || scan (found + 1)
@@ -230,11 +237,7 @@ def Print.nameFor (p : Printer) (key : Text) : Text :=
   | Option.some name => name
   | Option.none => "#" ++ Text.take 10 key
 
-/-- Notes from metadata: `(notes (n i "text") …)`. -/
-def Print.notesOf (meta : Option Sexp) : List (Int, Text) := filterMap (fun x =>
-  match x with
-  | Sexp.list (Sexp.sym "n" :: Sexp.int i :: Sexp.str text :: []) => Option.some (i, text)
-  | _ => Option.none) (metaList meta "notes")
+def Print.notesOf (meta : Option Sexp) : List (Int, Text) := indexedOf meta "notes"
 
 /-- Parenthesizes text of precedence `level` printed in a context that binds tighter (`ctx`). -/
 def Print.paren (level : Int) (ctx : Int) (t : Text) : Text := if level < ctx then "(" ++ t ++ ")" else t
@@ -253,6 +256,7 @@ def Print.patternAt (p : Printer) (pat : Sexp) (env : List Text) (prec : Int) : 
       match Print.patternAt p inner (name :: env) 100 with
       | (text, env2) => (name ++ "@" ++ text, env2)
   | Sexp.list (Sexp.sym "pint" :: Sexp.int v :: []) => (toText v, env)
+  | Sexp.list (Sexp.sym "spelled" :: Sexp.str text :: _ :: []) => (text, env)
   | Sexp.list (Sexp.sym "ptext" :: Sexp.str v :: []) => (quoteText v, env)
   | Sexp.list (Sexp.sym "pcon" :: Sexp.str ty :: Sexp.int tag :: subs) => if ty == "#List" && tag == 1 then
       match subs with
@@ -336,7 +340,7 @@ def Print.quoteText (t : Text) : Text :=
   let n := Text.length t
   let rec go i acc := if i >= n then Text.concat (reverse acc) else
     let c := code t i
-    let piece := if c == 34 then "\\\"" else if c == 92 then "\\\\" else if c == 10 then "\\n" else if c == 9 then "\\t" else if c == 13 then "\\r" else if c < 32 || c == 127 then "\\u{" ++ hexDigit (c / 16) ++ hexDigit (mod c 16) ++ "}" else fromCode c
+    let piece := if c == '"' then "\\\"" else if c == '\\' then "\\\\" else if c == 10 then "\\n" else if c == 9 then "\\t" else if c == 13 then "\\r" else if c < 32 || c == 127 then "\\u{" ++ hexDigit (c / 16) ++ hexDigit (mod c 16) ++ "}" else fromCode c
     -- The lexer reads `\u{…}` as hex, so the printer must write hex.
     go (i + 1) (piece :: acc)
   "\"" ++ go 0 [] ++ "\""
@@ -346,9 +350,11 @@ def Print.refName (p : Printer) (key : Text) (env : List Text) : Text :=
   let name := nameFor p key
   if List.contains name env then getOr (Map.lookup key p.fullNames) name else name
 
-/-- Core with its comments put back as `(note "text" e)` at the pre-order indices `Resolve.unnote` recorded (D66). -/
-def Print.restore (notes : List (Int, Text)) (core : Sexp) : Sexp := if List.isEmpty notes then core else
+/-- Core with its comments put back as `(note "text" e)`, and number spellings as `(spelled "text" e)`,
+  at the pre-order indices `Resolve.unnote` recorded (D66, D88). -/
+def Print.restore (notes : List (Int, Text)) (spellings : List (Int, Text)) (core : Sexp) : Sexp := if List.isEmpty notes && List.isEmpty spellings then core else
   let byIndex := Map.fromList notes
+  let spelledAt := Map.fromList spellings
   let rec go x count :=
     match x with
     | Sexp.list items =>
@@ -360,7 +366,10 @@ def Print.restore (notes : List (Int, Text)) (core : Sexp) : Sexp := if List.isE
               | (y2, c2) => each more (y2 :: out) c2
         match each items [] (count + 1) with
         | (children, next) =>
-            let rebuilt := Sexp.list children
+            let rebuilt :=
+              match Map.lookup count spelledAt with
+              | Option.some text => Sexp.node "spelled" [Sexp.str text, Sexp.list children]
+              | Option.none => Sexp.list children
             match Map.lookup count byIndex with
             | Option.some text => (Sexp.node "note" [Sexp.str text, rebuilt], next)
             | Option.none => (rebuilt, next)
@@ -368,6 +377,8 @@ def Print.restore (notes : List (Int, Text)) (core : Sexp) : Sexp := if List.isE
   fst (go core 0)
 
 def Print.spaces (n : Int) : Text := repeat n " "
+
+def Print.spellingsOf (meta : Option Sexp) : List (Int, Text) := indexedOf meta "spellings"
 
 /-- Splits a signature into its first `n` argument types and the rest; the last arrow's row stays on the rest (`{E} B`). -/
 def Print.splitSig (sig : Sexp) (n : Int) : (List Sexp, Option Sexp) := if n == 0 then ([], Option.some sig) else
@@ -424,7 +435,7 @@ def Print.ty (p : Printer) (t : Sexp) (prec : Int) : Text :=
   match t with
   | Sexp.list (Sexp.sym "tref" :: Sexp.str iri :: []) => if startsWith "#" iri then Text.drop 1 iri else getOr (Map.lookup iri p.typeNames) iri
   | Sexp.list (Sexp.sym "tvar" :: Sexp.str name :: []) => if name == "?" then "_" else name
-  | Sexp.list (Sexp.sym "tvar" :: Sexp.int i :: []) => fromCode (97 + i)
+  | Sexp.list (Sexp.sym "tvar" :: Sexp.int i :: []) => fromCode ('a' + i)
   | Sexp.list (Sexp.sym "tapp" :: Sexp.list (Sexp.sym "tref" :: Sexp.str "#Pair" :: []) :: args) => "(" ++ join ", " (List.map (fun x => Print.ty p x 0) args) ++ ")"
   | Sexp.list (Sexp.sym "tapp" :: f :: args) => paren
       90

@@ -34,8 +34,17 @@
       <button id="find" class="finder-trigger" title="Find a definition (/ or ⌘K)">
         <span>Find definitions, types and tasks</span><kbd>/</kbd>
       </button>
+      <button
+        id="report"
+        class="plain-button"
+        title="Report something about this page: files a task with a screenshot (r)"
+        hidden
+      >
+        Report
+      </button>
       <button id="new-task" class="primary-button" title="File a task (n)" hidden>New task</button>
       <div id="account" hidden></div>
+      <button id="console-toggle" class="plain-button" title="Run deus in this page (`)" hidden>Console</button>
       <button id="help" class="icon-button" title="Keyboard shortcuts (?)" aria-label="Keyboard shortcuts">?</button>
     </header>
     <div id="layout">
@@ -49,6 +58,28 @@
         <section id="history-view" hidden></section>
       </main>
     </div>
+    <section id="console" aria-label="Console" hidden>
+      <header>
+        <strong>Console</strong>
+        <span id="console-status" class="muted"></span>
+        <span class="muted wide-only"
+          >Runs <code>deus</code> in this page against a snapshot of this codebase; changes stay in this tab.</span
+        >
+        <button id="console-close" class="icon-button" title="Close the console (`)" aria-label="Close the console">
+          ✕
+        </button>
+      </header>
+      <pre id="console-output"></pre>
+      <form id="console-prompt">
+        <label for="console-input">deus</label>
+        <input
+          id="console-input"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="view List.map · eval List.sum [1, 2, 3] · test List · log"
+        />
+      </form>
+    </section>
     <div id="finder" class="overlay" hidden>
       <div class="modal finder" role="dialog" aria-label="Find">
         <input
@@ -118,6 +149,10 @@
           <dd>Comment on the focused card (members)</dd>
           <dt><kbd>n</kbd></dt>
           <dd>File a new task (members)</dd>
+          <dt><kbd>r</kbd></dt>
+          <dd>Report this page: a task with a screenshot (members)</dd>
+          <dt><kbd>`</kbd></dt>
+          <dd>Open or close the console</dd>
           <dt><kbd>esc</kbd></dt>
           <dd>Close this dialog or the finder</dd>
         </dl>

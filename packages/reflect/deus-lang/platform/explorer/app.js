@@ -155,6 +155,7 @@ const renderAccount = () => {
   const node = element('account');
   node.hidden = !account.signIn;
   element('new-task').hidden = !canWrite();
+  element('report').hidden = !canWrite();
   if (!account.signIn) {
     return;
   }
@@ -326,11 +327,13 @@ const submit = async (form) => {
         title: form.title.value,
         details: form.details.value,
         link: form.link.value.trim(),
+        labels: form.dataset.labels ?? '',
         assets,
       });
       pending.push(entry);
       closeOverlays();
       form.reset();
+      delete form.dataset.labels;
       form.querySelector('.attachments').innerHTML = '';
       attached.delete(form);
       notify('Filed. The task joins the codebase when the inbox is next applied.');
@@ -356,10 +359,17 @@ const submit = async (form) => {
   }
 };
 
-const openTaskForm = () => {
+const openTaskForm = ({ report = false } = {}) => {
   if (!canWrite()) {
     return;
   }
+  const form = element('task-form');
+  if (report) {
+    form.dataset.labels = 'explorer,report';
+  } else if (form.dataset.labels) {
+    delete form.dataset.labels;
+  }
+  form.querySelector('h2').textContent = report ? 'Report' : 'New task';
   const focused = ui.focus?.startsWith('d:') ? index.byHash.get(ui.focus.slice(2))?.name : undefined;
   if (focused && !element('task-link').value) {
     element('task-link').value = focused;
@@ -431,7 +441,8 @@ const onWriteEvents = () => {
       closeOverlays();
     }
   });
-  element('new-task').addEventListener('click', openTaskForm);
+  element('new-task').addEventListener('click', () => openTaskForm());
+  element('report').addEventListener('click', () => void report());
   element('tasks-view').addEventListener('click', (event) => event.target.closest('[data-new-task]') && openTaskForm());
 };
 
@@ -451,7 +462,7 @@ try {
 const parseFragment = () => {
   const keys = decodeURIComponent(location.hash.slice(1))
     .split(',')
-    .filter((key) => /^[dtcnv]:./.test(key));
+    .filter((key) => /^[dtcnvk]:./.test(key));
   const view = keys.find((key) => key.startsWith('v:'))?.slice(2) ?? 'code';
   return { view, keys: keys.filter((key) => !key.startsWith('v:')) };
 };
@@ -613,9 +624,9 @@ const breadcrumbs = (name, isNamespace) => {
   return crumbs.join('<span class="crumb-dot">.</span>');
 };
 
-const card = (key, { iconHtml, title, meta = '', body, tag = '', prose = false }) =>
+const card = (key, { iconHtml, title, meta = '', body, tag = '', prose = false, actions = '' }) =>
   `<article class="card${ui.folded.has(key) ? ' folded' : ''}" data-key="${escape(key)}" tabindex="-1">` +
-  `<header>${iconHtml}<h2${prose ? ' class="prose"' : ''}>${title}</h2>${tag}<span class="card-meta">${meta}</span>` +
+  `<header>${iconHtml}<h2${prose ? ' class="prose"' : ''}>${title}</h2>${tag}<span class="card-meta">${meta}</span>${actions}` +
   `<button class="icon-button" data-fold="${escape(key)}" title="Fold (c)" aria-label="Fold">▾</button>` +
   `<button class="icon-button" data-close="${escape(key)}" title="Close (x)" aria-label="Close">✕</button></header>` +
   `<div class="content">${body}</div></article>`;
@@ -656,6 +667,7 @@ const definitionCard = (key, def) => {
     title: breadcrumbs(def.name, false),
     tag: kindTag,
     meta: hashChip(def.hash),
+    actions: consoleButton(def),
     body:
       (def.doc ? `<div class="doc">${docHtml(def.doc, namespace)}</div>` : '') +
       verdictHtml(def) +
@@ -739,9 +751,30 @@ const changeRows = (changes) =>
     : `<ul class="rows">${changes
         .map(
           (change) =>
-            `<li class="entry-row">${changeLink(change.causal)}<span>${escape(change.message)}</span>${change.by ? `<span class="by">${escape(change.by)}</span>` : ''}</li>`,
+            `<li class="entry-row">${changeLink(change.causal)}<a class="change-message" data-open="c:${escape(change.causal)}">${escape(change.message)}</a>${change.by ? `<span class="by">${escape(change.by)}</span>` : ''}</li>`,
         )
         .join('')}</ul>`;
+
+/** Every definition of one kind, or every check (`k:checks`, failing first): what an overview tile opens. */
+const kindCard = (key, kind) => {
+  const isChecks = kind === 'checks';
+  if (!isChecks && !KINDS[kind]) {
+    return missingCard(key, `No kind ${kind}`);
+  }
+  const rank = { fail: 0, pass: 2 };
+  const entries = index.names
+    .filter((entry) => (isChecks ? Boolean(entry.status) : entry.kind === kind))
+    .sort((a, b) => (isChecks ? (rank[a.status] ?? 1) - (rank[b.status] ?? 1) : 0) || a.name.localeCompare(b.name));
+  const failing = entries.filter((entry) => entry.status === 'fail').length;
+  return card(key, {
+    iconHtml: isChecks
+      ? `<span class="icon ${failing > 0 ? 'k-fail' : 'k-test'}">${failing > 0 ? '✗' : '✓'}</span>`
+      : icon(kind),
+    title: isChecks ? 'Checks' : escape(KINDS[kind].plural),
+    meta: `<span class="count">${isChecks ? `${entries.length - failing} of ${entries.length} pass` : entries.length}</span>`,
+    body: rowList(entries.map((entry) => entryRow(entry))),
+  });
+};
 
 const taskCard = (key, task) => {
   const parent = index.tasks.find((other) => other.id === task.parent);
@@ -977,6 +1010,8 @@ const buildCard = async (key) => {
       const change = await load(`change/${value}.json`);
       return change ? changeCard(key, change) : missingCard(key, `No change ${short(value)}`);
     }
+    case 'k':
+      return kindCard(key, value);
     default:
       return missingCard(key, key);
   }
@@ -1025,12 +1060,12 @@ const homeHtml = () => {
     '<article class="home">' +
     `<header class="home-header"><h1>${escape(meta.project)}</h1><p class="muted">Branch <span class="chip">${escape(meta.branch)}</span>${
       meta.branches.length > 1 ? ` of ${meta.branches.length}` : ''
-    } · ${meta.definitions} definitions · ${meta.tasks} tasks</p></header>` +
-    `<ul class="stats">${counts.map(([kind, count]) => `<li>${icon(kind)}<b>${count}</b><span>${escape(KINDS[kind].plural.toLowerCase())}</span></li>`).join('')}` +
+    } · ${meta.definitions} definitions · <a data-view="tasks">${meta.tasks} tasks</a></p></header>` +
+    `<ul class="stats">${counts.map(([kind, count]) => `<li><a data-open="k:${kind}" title="List every ${escape(KINDS[kind].label)}">${icon(kind)}<b>${count}</b><span>${escape(KINDS[kind].plural.toLowerCase())}</span></a></li>`).join('')}` +
     (checked.length > 0
-      ? `<li><span class="icon ${failing.length > 0 ? 'k-fail' : 'k-test'}">${failing.length > 0 ? '✗' : '✓'}</span><b>${checked.length - failing.length}/${checked.length}</b><span>checks pass</span></li>`
+      ? `<li><a data-open="k:checks" title="List every check, failing first"><span class="icon ${failing.length > 0 ? 'k-fail' : 'k-test'}">${failing.length > 0 ? '✗' : '✓'}</span><b>${checked.length - failing.length}/${checked.length}</b><span>checks pass</span></a></li>`
       : '') +
-    `<li><span class="icon k-task">◎</span><b>${open.length}</b><span>open task${open.length === 1 ? '' : 's'}</span></li></ul>` +
+    `<li><a data-view="tasks" title="Open the task board"><span class="icon k-task">◎</span><b>${open.length}</b><span>open task${open.length === 1 ? '' : 's'}</span></a></li></ul>` +
     `<div class="home-columns"><div>${section('Recent changes', meta.history.length, changeRows(meta.history.slice(0, 6)))}<a class="more-link" data-view="history">All history →</a></div>` +
     `<div>${section(
       'Open tasks',
@@ -1282,6 +1317,9 @@ const titleOf = (key) => {
   }
   if (key.startsWith('t:')) {
     return index.tasks.find((task) => task.id === value)?.title ?? value;
+  }
+  if (key.startsWith('k:')) {
+    return value === 'checks' ? 'Checks' : (KINDS[value]?.plural ?? value);
   }
   return key.startsWith('n:') ? value : short(value);
 };
@@ -1603,6 +1641,16 @@ const onKey = (event) => {
       event.preventDefault();
       openTaskForm();
       break;
+    case 'r':
+      event.preventDefault();
+      void report();
+      break;
+    case '`':
+      if (shell.info) {
+        event.preventDefault();
+        showShell();
+      }
+      break;
     default:
   }
 };
@@ -1634,7 +1682,7 @@ const setDialect = (dialect) => {
 
 const onClick = (event) => {
   const target = event.target.closest(
-    '[data-open], [data-close], [data-fold], [data-view], [data-toggle], [data-copy], [data-more], [data-home], [data-index], [data-dialect], [data-unfold]',
+    '[data-open], [data-close], [data-fold], [data-view], [data-toggle], [data-copy], [data-more], [data-home], [data-index], [data-dialect], [data-unfold], [data-run]',
   );
   if (!target) {
     const cardNode = event.target.closest('.card');
@@ -1680,6 +1728,299 @@ const onClick = (event) => {
     setDialect(data.dialect);
   } else if (data.home !== undefined) {
     writeFragment('code', []);
+  } else if (data.run) {
+    shellCommand(data.run, data.next);
+  }
+};
+
+//
+// Console (D84): `deus` itself, on the wasm kernel in this page, against a snapshot of the codebase.
+//
+
+const shell = { info: null, session: null, history: [], position: 0, busy: false };
+
+/** Splits a command line into words as a POSIX shell does: '…' is literal, "…" honours backslash escapes. */
+const splitWords = (line) => {
+  const words = [];
+  let word;
+  for (let at = 0; at < line.length; at++) {
+    const char = line[at];
+    if (/\s/.test(char)) {
+      if (word !== undefined) {
+        words.push(word);
+      }
+      word = undefined;
+    } else if (char === "'") {
+      const end = line.indexOf("'", at + 1);
+      word = (word ?? '') + line.slice(at + 1, end < 0 ? line.length : end);
+      at = end < 0 ? line.length : end;
+    } else if (char === '"') {
+      word ??= '';
+      for (at++; at < line.length && line[at] !== '"'; at++) {
+        word += line[at] === '\\' && at + 1 < line.length ? line[++at] : line[at];
+      }
+    } else {
+      word = (word ?? '') + (char === '\\' && at + 1 < line.length ? line[++at] : char);
+    }
+  }
+  if (word !== undefined) {
+    words.push(word);
+  }
+  return words;
+};
+
+const shellPrint = (text, className) => {
+  if (!text) {
+    return;
+  }
+  const output = element('console-output');
+  const span = document.createElement('span');
+  span.textContent = text;
+  if (className) {
+    span.className = className;
+  }
+  output.append(span);
+  output.scrollTop = output.scrollHeight;
+};
+
+const fetchText = async (path) => {
+  const response = await fetch(path);
+  if (!response.ok) {
+    throw new Error(`${path}: ${response.status}`);
+  }
+  return response.text();
+};
+
+/** Loads the kernel, the toolchain image and the codebase snapshot once, on first use: about a megabyte compressed. */
+const startShell = () =>
+  (shell.session ??= (async () => {
+    const started = performance.now();
+    const [host, kernelText, image, snapshot] = await Promise.all([
+      import('./console/host.mjs'),
+      fetchText('console/deus_kernel.wasm.b64'),
+      fetchText('console/deus.image'),
+      fetchText('console/codebase.json').then(JSON.parse),
+    ]);
+    // `atob` drops the line breaks `openssl base64` writes.
+    const wasm = Uint8Array.from(atob(kernelText), (char) => char.charCodeAt(0));
+    const files = Object.fromEntries(Object.entries(snapshot).map(([path, text]) => [`/codebase/${path}`, text]));
+    const fs = host.createFiles(files);
+    const deus = await host.createDeus({
+      wasm,
+      fs,
+      env: { HOME: '/home', DEUS_HOME: '/deus', DEUS_CODEBASE: '/codebase' },
+    });
+    element('console-status').textContent =
+      `${Object.keys(snapshot).length} codebase files · ready in ${Math.round(performance.now() - started)} ms`;
+    return { deus, image };
+  })());
+
+const runShell = async (line) => {
+  shell.busy = true;
+  element('console-input').disabled = true;
+  shellPrint(`$ deus ${line}\n`, 'cmd');
+  try {
+    const { deus, image } = await startShell();
+    const begin = performance.now();
+    const result = await deus.run(image, { args: splitWords(line), cwd: '/work' });
+    shellPrint(result.stdout);
+    shellPrint(result.stderr, 'err');
+    shellPrint(`exit ${result.code} · ${Math.round(performance.now() - begin)} ms\n`, 'meta');
+  } catch (error) {
+    shell.session = null;
+    shellPrint(`The console could not start: ${error.message}\n`, 'err');
+  }
+  shell.busy = false;
+  element('console-input').disabled = false;
+  element('console-input').focus();
+};
+
+const showShell = (visible = element('console').hidden) => {
+  element('console').hidden = !visible;
+  document.body.classList.toggle('with-console', visible);
+  element('console-toggle').classList.toggle('active', visible);
+  if (visible) {
+    if (!shell.session) {
+      element('console-status').textContent = 'Loading the kernel, the toolchain and the codebase…';
+      void startShell().catch(() => {});
+    }
+    element('console-input').focus();
+  }
+};
+
+/** Opens the console, runs `line` there, and leaves `next` in the prompt for the reader to finish. */
+const shellCommand = (line, next = '') => {
+  showShell(true);
+  element('console-input').value = next;
+  if (line && !shell.busy) {
+    void runShell(line);
+  }
+};
+
+const consoleButton = (def) =>
+  shell.info
+    ? `<button class="icon-button" data-run="${escape(def.kind === 'test' ? `test ${def.name}` : `view ${def.name}`)}" data-next="${escape(def.kind === 'term' ? `eval ${def.name} ` : '')}" title="${def.kind === 'test' ? 'Run this test' : 'Open'} in the console" aria-label="Open in the console">›_</button>`
+    : '';
+
+const onShellEvents = async () => {
+  // meta.json says whether the site has a console, so a site without one requests nothing for it.
+  shell.info = index.meta.console ? await load('console/info.json') : undefined;
+  if (!shell.info) {
+    return;
+  }
+  element('console-toggle').hidden = false;
+  element('console-toggle').addEventListener('click', () => showShell());
+  element('console-close').addEventListener('click', () => showShell(false));
+  const input = element('console-input');
+  element('console-prompt').addEventListener('submit', (event) => {
+    event.preventDefault();
+    const line = input.value.trim();
+    input.value = '';
+    if (!line || shell.busy) {
+      return;
+    }
+    if (line === 'clear') {
+      element('console-output').replaceChildren();
+      return;
+    }
+    shell.history.push(line);
+    shell.position = shell.history.length;
+    void runShell(line);
+  });
+  input.addEventListener('keydown', (event) => {
+    if (event.key === 'ArrowUp' && shell.position > 0) {
+      event.preventDefault();
+      input.value = shell.history[--shell.position];
+    } else if (event.key === 'ArrowDown' && shell.position < shell.history.length) {
+      event.preventDefault();
+      input.value = shell.history[++shell.position] ?? '';
+    } else if (event.key === 'Escape') {
+      event.stopPropagation();
+      input.blur();
+    }
+  });
+};
+
+//
+// Report (D93): a screenshot of what the reader sees, filed as a task about the explorer.
+//
+
+let styleText;
+
+/** Moves a clone's children by its original's scroll offsets, which serialization drops. */
+const keepScroll = (original, copy) => {
+  if (original.scrollTop || original.scrollLeft) {
+    copy.style.overflow = 'hidden';
+    for (const child of copy.children) {
+      child.style.transform = `translate(${-original.scrollLeft}px, ${-original.scrollTop}px)`;
+    }
+  }
+  [...original.children].forEach((child, at) => copy.children[at] && keepScroll(child, copy.children[at]));
+};
+
+/** Draws the page as it is now: the DOM, styled, inside an SVG `foreignObject`, onto a canvas. No permission is asked. */
+const drawPage = async () => {
+  styleText ??= await fetchText('app.css');
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+  const copy = document.body.cloneNode(true);
+  keepScroll(document.body, copy);
+  for (const node of copy.querySelectorAll('script, #toast, .toast')) {
+    node.remove();
+  }
+  // Typed text lives in properties, not attributes, so it is copied across by hand.
+  const fields = document.body.querySelectorAll('input, textarea');
+  copy.querySelectorAll('input, textarea').forEach((field, at) => {
+    const value = fields[at]?.value ?? '';
+    field instanceof HTMLTextAreaElement ? (field.textContent = value) : field.setAttribute('value', value);
+  });
+  // The image is drawn outside this document, so the theme's tokens are resolved here and pinned.
+  const computed = getComputedStyle(document.documentElement);
+  const tokens = [...new Set(styleText.match(/--[a-z0-9-]+(?=\s*:)/g) ?? [])]
+    .map((name) => `${name}:${computed.getPropertyValue(name)}`)
+    .join(';');
+  const root = document.createElement('div');
+  root.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+  root.setAttribute('class', document.body.className);
+  root.setAttribute(
+    'style',
+    `${tokens};width:${width}px;height:${height}px;overflow:hidden;background:var(--bg);color:var(--fg)`,
+  );
+  root.append(...copy.childNodes);
+  const markup = new XMLSerializer().serializeToString(root);
+  const style = styleText.replace(/\bbody\b/g, '.page-shot').replace(/:root/g, '.page-shot');
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">` +
+    `<foreignObject width="100%" height="100%"><style xmlns="http://www.w3.org/1999/xhtml">${style.replace(/</g, '\\3c ')}</style>` +
+    markup.replace('class="', 'class="page-shot ') +
+    '</foreignObject></svg>';
+  const image = new Image();
+  image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+  await image.decode();
+  const scale = Math.min(window.devicePixelRatio || 1, 2);
+  const canvas = document.createElement('canvas');
+  canvas.width = width * scale;
+  canvas.height = height * scale;
+  const context = canvas.getContext('2d');
+  context.scale(scale, scale);
+  context.drawImage(image, 0, 0);
+  return new Promise((done, fail) =>
+    canvas.toBlob((blob) => (blob ? done(blob) : fail(new Error('empty capture'))), 'image/png'),
+  );
+};
+
+/** Asks the browser to share this tab and keeps one frame: the fallback when the page cannot draw itself. */
+const grabTab = async () => {
+  const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, preferCurrentTab: true });
+  try {
+    const video = document.createElement('video');
+    video.srcObject = stream;
+    video.muted = true;
+    await video.play();
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    return await new Promise((done, fail) =>
+      canvas.toBlob((blob) => (blob ? done(blob) : fail(new Error('empty capture'))), 'image/png'),
+    );
+  } finally {
+    stream.getTracks().forEach((track) => track.stop());
+  }
+};
+
+/** What the reader was looking at, in words, for the report's details. */
+const placeOf = () => {
+  const { keys } = parseFragment();
+  const what =
+    ui.view === 'code' ? (keys.length > 0 ? keys.map(titleOf).join(', ') : 'the overview') : `the ${ui.view} view`;
+  return `Reported from ${what}: ${location.href}\n${window.innerWidth}×${window.innerHeight}, ${navigator.userAgent}\n\n`;
+};
+
+/** `r`: capture the view, then open the task form with the screenshot attached. */
+const report = async () => {
+  if (!canWrite()) {
+    return;
+  }
+  closeOverlays();
+  hideTooltip();
+  let shot;
+  try {
+    shot = await drawPage();
+  } catch {
+    shot = await grabTab().catch(() => undefined);
+  }
+  const form = element('task-form');
+  openTaskForm({ report: true });
+  if (!form.details.value) {
+    form.details.value = placeOf();
+  }
+  if (shot) {
+    await attach(form, [
+      new File([shot], `explorer-${new Date().toISOString().replace(/[:.]/g, '-')}.png`, { type: 'image/png' }),
+    ]);
+  } else {
+    notify('Could not capture the page; attach a screenshot yourself');
   }
 };
 
@@ -1713,6 +2054,7 @@ const main = async () => {
   showDialect();
   await loadWriting();
   onWriteEvents();
+  await onShellEvents();
 
   document.addEventListener('click', onClick);
   document.addEventListener('keydown', onKey);

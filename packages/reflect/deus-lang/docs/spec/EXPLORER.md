@@ -22,6 +22,7 @@ published to a remote. The codebase it is generated from is described in [CODEBA
   change/<causal>.json            one per history node the app links to
   comments.json                   comments on definitions and changes, by subject (D82)
   assets/<sha256>                 the files comments and tasks attach
+  console/                        with --console: the console's kernel, toolchain and codebase (D84)
 ```
 
 A definition's `<page>` is its hash, except that a builtin's `#` becomes `_` (`#Bool` is `def/_Bool.json`),
@@ -61,10 +62,11 @@ change  = {"causal": string, "message": string, "by"?: string}
 | `definitions` | number   | how many visible names                                            |
 | `tasks`       | number   | how many tasks                                                    |
 | `open`        | number   | how many tasks are `todo` or `doing`                              |
+| `console`     | boolean  | whether the site has a [console](#console) (D84)                  |
 | `history`     | change[] | the branch's 30 most recent history nodes, newest first           |
 
 ```json
-{"project":"codebase","branch":"main","branches":["main"],"definitions":246,"tasks":1,"open":1,"history":[{"causal":"01702deda26c0eafc3175496093fb0cc829422fa99d08e2cbd9b4de750d5c0b9","message":"task: open e0757e4e Double overflows","by":"agent-x"},…]}
+{"project":"codebase","branch":"main","branches":["main"],"definitions":246,"tasks":1,"open":1,"console":false,"history":[{"causal":"01702deda26c0eafc3175496093fb0cc829422fa99d08e2cbd9b4de750d5c0b9","message":"task: open e0757e4e Double overflows","by":"agent-x"},…]}
 ```
 
 ## names.json
@@ -110,7 +112,7 @@ In `deps` and `users`, `name` is the hash's name in the namespace, or `#` and it
 it has none.
 
 `html` uses `<span class=K>` around each run of kind `K`: `kw` (keyword), `ty` (a capitalized name), `str`
-(a string literal) and `cm` (a comment). Plain text is unwrapped. `&`, `<`, `>` and `"` are escaped. A name
+(a string literal) and `cm` (a comment). Plain text is unwrapped. `&`, `<` and `>` are escaped; `"` is not, since it is safe in text and the app inserts the HTML as content. A name
 that refers to one of `deps` is wrapped in `<a class=ref data-open="d:<hash>">…</a>`.
 
 `verdict` is the text of `<codebase>/results/<hash>` with surrounding whitespace removed: an S-expression
@@ -271,6 +273,41 @@ secrets `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` (a GitHub OAuth app whose cal
 `https://<host>/auth/callback`) and `SESSION_SECRET`. Without the three secrets, sign-in is off and
 `api/me` says so.
 
+## Report
+
+A signed-in member's Report button (or `r`) files a task about what they are looking at ([D93](../DECISIONS.md)).
+The app first draws the page as it is into a PNG with no permission prompt: it clones the DOM, keeps each
+scrolled element's offset and each field's typed text, pins the current theme's tokens, and renders the
+clone with `app.css` inside an SVG `foreignObject` onto a canvas (at most 2× device pixels). Where the
+browser refuses to export that canvas, it asks to share the tab (`getDisplayMedia` with
+`preferCurrentTab`) and keeps one frame instead. The task form then opens titled Report, with the
+screenshot attached, the details prefilled with the open cards, the URL, the viewport and the user agent,
+and the labels `explorer,report`. Images inside the page (attachment thumbnails) are left out of the
+drawing, since an SVG image loads nothing external.
+
+## Console
+
+`deus explore --console` adds a console to the site ([D84](../DECISIONS.md)): the toolchain itself, running
+in the page on the embeddable wasm kernel ([EMBEDDING.md](./EMBEDDING.md)) against a snapshot of the
+codebase, so a reader can `view`, `eval`, `test` or `log` with no server. It writes:
+
+| File                             | Contents                                                                                                                    |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `console/info.json`              | `{"files": n, "branch": b}`; the app offers the console when it is present                                                  |
+| `console/deus_kernel.wasm.b64`   | the wasm kernel, base64 (wrapped lines), so every site file is text                                                         |
+| `console/kernel.mjs`, `host.mjs` | the kernel's driver and the in-memory `IO` host from `deus-kernel/embed/`                                                   |
+| `console/deus.image`             | the toolchain image, `$DEUS_HOME/seed/deus.image`                                                                           |
+| `console/codebase.json`          | every file of the codebase directory as `{path: text}`, except `cache/`, `artifacts/`, `assets/`, `remotes/` and `exports/` |
+
+The app loads nothing for the console until `meta.json` says there is one, and nothing but `info.json`
+until the console is first opened (the top bar's Console button,
+`` ` ``, or a definition card's `›_` button, which runs `view <name>`, or `test <name>` for a test, and
+leaves `eval <name> ` in the prompt for a term). It then mounts the snapshot at `/codebase` with
+`DEUS_CODEBASE=/codebase` and runs each command line as the image's arguments, split as a POSIX shell
+would. Commands that change the codebase change only the page's copy, which a reload discards. A site
+published with a console keeps it: `deus push` regenerates it when the remote's manifest lists
+`console/codebase.json`.
+
 ## App state in the URL
 
 The app keeps its open cards in the URL fragment as a comma-separated list, in the order they are shown, and
@@ -278,11 +315,12 @@ the view when it is not the code workspace:
 
 ```text
 fragment = key ("," key)*
-key      = "d:" hash | "n:" namespace | "t:" task-id | "c:" causal | "v:" ("tasks" | "history")
+key      = "d:" hash | "n:" namespace | "t:" task-id | "c:" causal | "k:" (kind | "checks") | "v:" ("tasks" | "history")
 ```
 
 For example `index.html#d:595ca8a5…,n:List,t:e0757e4e`. A card opened from another card goes right after it;
-one opened from the tree or the finder goes after the focused card. Keys that do not match `^[dtcnv]:.` are
+one opened from the tree or the finder goes after the focused card. A `k:` card lists every definition of one kind, or every test and theorem with a verdict, failing first;
+the overview's count tiles open them. Keys that do not match `^[dtcnvk]:.` are
 ignored, and an empty fragment shows the overview. Which card has focus, which are folded, and the tree's
 open namespaces are not kept; the source dialect (DEUS or TS) is kept per viewer in `localStorage`.
 
@@ -290,7 +328,7 @@ open namespaces are not kept; the source dialect (DEUS or TS) is kept per viewer
 
 Any static file server works if it maps `/` to `index.html`, serves the files under their paths and
 percent-decodes request paths. The bundled server gives `.html` `text/html; charset=utf-8`, `.json`
-`application/json`, `.css` `text/css`, `.js` `text/javascript`, `.svg`
+`application/json`, `.css` `text/css`, `.js` and `.mjs` `text/javascript`, `.svg`
 `image/svg+xml`, and other files `text/plain; charset=utf-8`. With no `--out` or `--publish`, `deus explore` starts it on `--port` (default
 8080).
 

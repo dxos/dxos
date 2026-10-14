@@ -1,3 +1,86 @@
+test Explorer.Spec.aliasesShareAPage := inSite (fun _ =>
+  deus "cb" ["area", "zArea"] (fun a => mv a true)
+  regenerate ()
+  match Map.lookup "area" (Codebase.current "cb") with
+  | Option.some e =>
+      let page := Spec.file ("def/" ++ pageOf (Entry.hash e) ++ ".json")
+      startsWith "{\"name\":\"zArea\"" page && Text.contains "\"aliases\":[\"area\"]" page
+  | Option.none => false)
+
+theorem Explorer.Spec.builtinPagesHaveNoHash (t : Text) : pageOf ("#" ++ t) == "_" ++ t := by test 100
+
+test Explorer.Spec.everyDefinitionHasAPage := inSite (fun _ =>
+  let entries := List.filter visible (Map.toList (Codebase.current "cb"))
+  List.all
+    (fun pair => IO.exists ("site/def/" ++ pageOf (Entry.hash (snd pair)) ++ ".json"))
+    entries && IO.exists "site/def/_Bool.json" && Text.contains ("\"definitions\":" ++ toText (List.length entries) ++ ",") (Spec.file "meta.json"))
+
+def Explorer.Spec.file (path : Text) : {IO} Text := getOr (IO.readFile ("site/" ++ path)) ""
+
+test Explorer.Spec.generationIsStable := inSite (fun _ =>
+  let snapshot := fun u => List.map (fun f => (f, Spec.file ("def/" ++ f))) (IO.listDir "site/def") ++
+    [("names", Spec.file "names.json"), ("meta", Spec.file "meta.json")]
+  let first := snapshot ()
+  regenerate ()
+  first == snapshot ())
+
+test Explorer.Spec.htmlIsEscaped :=
+  let html := htmlLinked Map.empty "def f (a : Int) : Bool := a < 2 && a > 0 -- \"q\" & r"
+  Text.contains "&lt;" html && Text.contains "&gt;" html && Text.contains "&amp;&amp;" html && Text.contains "&amp; r" html && not (Text.contains " < " html) && not (Text.contains " > " html)
+
+def Explorer.Spec.inSite (body : Unit -> {IO, Throw Text} Bool) : Bool := inStore (fun _ =>
+  site Spec.sample
+  body ())
+
+test Explorer.Spec.namesAreTheVisibleNames := inSite (fun _ =>
+  let listed := namesIn (Spec.file "names.json")
+  listed == visibleNames () && listed == sort listed && List.contains "Shape" listed && not (List.contains "Shape.circle" listed) && not (List.contains "Ask.ask" listed))
+
+/-- The `name` fields of a JSON array of objects, in order. -/
+def Explorer.Spec.namesIn (json : Text) : List Text := List.map
+  (fun piece => Text.take (indexOf piece "\"" 0) piece)
+  (List.drop 1 (Text.split json "{\"name\":\""))
+
+theorem Explorer.Spec.otherPagesAreTheHash (t : Text) : prim "implies" (startsWith "#" t == false) (pageOf t == t) := by test 100
+
+def Explorer.Spec.regenerate (u : Unit) : {IO, Throw Text} Int := withHome (fun _ => Explorer.generate "cb" "site")
+
+/-- A codebase from `source` and its site in `site/`. -/
+def Explorer.Spec.site (source : Text) : {IO, Throw Text} Int :=
+  forEach appFiles (fun f => IO.writeFile ("home/platform/explorer/" ++ f) ("app " ++ f))
+  IO.mkdirp "src"
+  IO.writeFile "src/a.deus" (Spec.prelude ++ source)
+  deus "cb" ["src"] (fun a => addOrUpdate a false)
+  regenerate ()
+
+test Explorer.Spec.usersInvertDependencies := inSite (fun _ =>
+  let ns := Codebase.current "cb"
+  match (Map.lookup "area" ns, Map.lookup "Shape" ns) with
+  | (Option.some area, Option.some shape) =>
+      let areaPage := Spec.file ("def/" ++ Entry.hash area ++ ".json")
+      let shapePage := Spec.file ("def/" ++ Entry.hash shape ++ ".json")
+      let ref := "{\"name\":\"area\",\"hash\":\"" ++ Entry.hash area ++ "\"}"
+      Text.contains ("\"hash\":\"" ++ Entry.hash shape ++ "\"") areaPage && Text.contains ref shapePage
+  | _ => false)
+
+test Explorer.Spec.verdictsAreShown := inSite (fun _ =>
+  deus "cb" [] theorems
+  regenerate ()
+  match Map.lookup "notNot" (Codebase.current "cb") with
+  | Option.some e => Text.contains
+      "\"verdict\":\"(pass \\\"decide\\\" 2)\""
+      (Spec.file ("def/" ++ Entry.hash e ++ ".json")) && Text.contains
+      ("\"name\":\"notNot\",\"kind\":\"theorem\",\"hash\":\"" ++ Entry.hash e ++ "\"")
+      (Spec.file "names.json") && Text.contains "\"summary\":\"A theorem.\",\"status\":\"pass\"" (Spec.file "names.json")
+  | Option.none => false)
+
+def Explorer.Spec.visibleNames (u : Unit) : {IO, Throw Text} List Text := List.map fst (List.filter visible (Map.toList (Codebase.current "cb")))
+
+/-- Answers `$DEUS_HOME` with a simulated directory; the rest of `IO` passes through. -/
+def Explorer.Spec.withHome (body : Unit -> {IO, Throw Text} a) : {IO, Throw Text} a :=
+  handle body () with
+  | IO.getEnv name -> k => k (if name == "DEUS_HOME" then Option.some "home" else IO.getEnv name)
+
 /-- The app's files, from the toolchain's sources. -/
 def Explorer.appFiles : List Text := ["index.html", "app.js", "app.css"]
 
@@ -44,6 +127,39 @@ def Explorer.changePage (dir : Text) (causal : Text) : {IO, Throw Text} Json :=
 /-- Whether a definition has a verdict: tests and theorems are checked, other kinds never are. -/
 def Explorer.checked (e : Entry) : Bool := Entry.kind e == "test" || Entry.kind e == "theorem"
 
+/-- Writes `out/console/` (D84): the wasm kernel (base64) and its drivers, the toolchain image, and the
+  codebase directory as `codebase.json` (path to text), so the explorer can run `deus` against
+  the codebase it shows. The page loads it only when the console opens. Returns the files in the
+  snapshot. -/
+def Explorer.console (dir : Text) (out : Text) : {IO, Throw Text} Int :=
+  let copied := try (fun _ =>
+    let home := require "DEUS_HOME"
+    let crate := home ++ "/../deus-kernel"
+    IO.mkdirp (out ++ "/console")
+    -- The site is text end to end (the bundled server and `Remote.writeAll`), so the kernel ships as base64.
+    IO.writeFile
+      (out ++ "/console/deus_kernel.wasm.b64")
+      (Build.tool "openssl" ["base64", "-in", wasmKernel ()])
+    Build.tool "cp" [crate ++ "/embed/kernel.mjs", crate ++ "/embed/host.mjs", out ++ "/console/"]
+    Build.tool "cp" [home ++ "/seed/deus.image", out ++ "/console/deus.image"])
+  match copied with
+  | Result.err f => Throw.throw (Failure.render f)
+  | Result.ok _ =>
+      let files := List.filter
+        (fun f => not (any (fun skip => startsWith (skip ++ "/") f) consoleSkips))
+        (filesUnder dir "")
+      IO.writeFile
+        (out ++ "/console/codebase.json")
+        (Json.render (Json.obj (List.map (fun f => (f, Json.str (getOr (IO.readFile (dir ++ "/" ++ f)) ""))) files)))
+      -- The app offers the console when this small file is there, before loading anything large.
+      IO.writeFile
+        (out ++ "/console/info.json")
+        (Json.render (Json.obj [("files", Json.num (List.length files)), ("branch", Json.str (currentBranch dir))]))
+      List.length files
+
+/-- Directories a console snapshot leaves out: local state, binary files and remote bookkeeping. -/
+def Explorer.consoleSkips : List Text := ["cache", "artifacts", "assets", "remotes", "exports"]
+
 def Explorer.docOf (meta : Option Sexp) : Option Text := Option.map asText (metaField meta "doc")
 
 /-- Writes the explorer for the current branch to `out`; returns the number of definitions. -/
@@ -55,7 +171,7 @@ def Explorer.generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
   let ns := Codebase.current dir
   let entries := List.filter visible (Map.toList ns)
   let index := nameIndex ns
-  let namesByHash := namesByHash ns
+  let namesByHash := Codebase.namesByHash ns
   let printer := printer ns []
   let project :=
     match Project.read dir with
@@ -85,11 +201,11 @@ def Explorer.generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
   let branch := currentBranch dir
   IO.writeFile
     (out ++ "/meta.json")
-    (Json.render (Json.obj [("project", Json.str project), ("branch", Json.str branch), ("branches", Json.arr (List.map Json.str (branches dir))), ("definitions", Json.num (List.length entries)), ("tasks", Json.num (List.length tasks)), ("open", Json.num (List.length (List.filter isOpen tasks))), ("history", Json.arr (List.map (Cli.changeJson dir) (Codebase.history dir branch 30)))]))
+    (Json.render (Json.obj [("project", Json.str project), ("branch", Json.str branch), ("branches", Json.arr (List.map Json.str (branches dir))), ("definitions", Json.num (List.length entries)), ("tasks", Json.num (List.length tasks)), ("open", Json.num (List.length (List.filter isOpen tasks))), ("console", Json.bool (IO.exists (out ++ "/console/info.json"))), ("history", Json.arr (List.map (Cli.changeJson dir) (Codebase.history dir branch 30)))]))
   -- The signature and doc summary let the app list, search and preview names without opening their pages.
   IO.writeFile (out ++ "/names.json") (Json.render (Json.arr (List.map (fun pair =>
     let h := Entry.hash (snd pair)
-    Json.obj [("name", Json.str (fst pair)), ("kind", Json.str (Entry.kind (snd pair))), ("hash", Json.str h), ("sig", Json.str (Explorer.signature (metaFor h))), ("summary", Json.str (summaryOf (Explorer.docOf (metaFor h)))), ("status", Json.str (if checked (snd pair) then statusOf (verdictOf dir h) else ""))]) entries)))
+    Json.obj [("name", Json.str (fst pair)), ("kind", Json.str (Entry.kind (snd pair))), ("hash", Json.str h), ("sig", Json.str (Explorer.signature (metaFor h))), ("summary", Json.str (summaryOf (Explorer.docOf (metaFor h)))), ("status", Json.str (if checked (snd pair) then statusOf (Explorer.verdictOf dir h) else ""))]) entries)))
   IO.writeFile
     (out ++ "/tasks.json")
     (Json.render (Json.arr (List.map (fun t => Explorer.taskJson dir ns (historyOf t) t) tasks)))
@@ -135,7 +251,7 @@ def Explorer.generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
           (out ++ "/def/" ++ pageOf h ++ ".json")
           (Json.render (Json.obj [("name", Json.str name), ("kind", Json.str (Entry.kind e)), ("hash", Json.str h), ("aliases", Json.arr (List.map
             Json.str
-            (List.filter (fun other => other != name) (getOr (Map.lookup h namesByHash) [])))), ("signature", Json.str (if Text.isEmpty sig then "" else lastOf name ++ " : " ++ sig)), ("doc", getOr (Option.map Json.str (Explorer.docOf meta)) Json.null), ("html", Json.str (htmlLinked links source)), ("ts", Json.str (htmlLinkedIn "ts" links tsSource)), ("deps", named deps), ("users", named users), ("verdict", Json.str (verdictOf dir h)), ("tasks", Json.arr (List.map
+            (List.filter (fun other => other != name) (getOr (Map.lookup h namesByHash) [])))), ("signature", Json.str (if Text.isEmpty sig then "" else lastOf name ++ " : " ++ sig)), ("doc", getOr (Option.map Json.str (Explorer.docOf meta)) Json.null), ("html", Json.str (htmlLinked links source)), ("ts", Json.str (htmlLinkedIn "ts" links tsSource)), ("deps", named deps), ("users", named users), ("verdict", Json.str (Explorer.verdictOf dir h)), ("tasks", Json.arr (List.map
             (fun t => Json.obj [("id", Json.str t.id), ("title", Json.str t.title), ("state", Json.str (stateText t.state))])
             (about taskMap name h)))])))
   List.length entries
@@ -175,6 +291,9 @@ def Explorer.refJson (name : Text) (h : Text) : Json := Json.obj [("name", Json.
     tasks.json                    every task, with its links resolved and its history
     comments.json                 comments on definitions and changes, by subject (D82)
     assets/<sha256>               the files comments and tasks attach
+    console/                      with `--console` (D84): the wasm kernel (as base64), its
+                                  drivers, the toolchain image and `codebase.json`, so the page
+                                  runs `deus` against this codebase with no server
 -/
 def Explorer.signature (meta : Option Sexp) : Text := getOr (Option.map (fun s => displayScheme s) (metaField meta "scheme")) ""
 
