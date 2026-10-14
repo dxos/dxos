@@ -93,6 +93,8 @@ declare global {
         recovery?: {
           /** Opens a file picker and writes the chosen `.dxprofile` into OPFS. */
           importSqlite?: () => Promise<{ byteLength: number; opfsFilename: string }>;
+          /** Downloads the profile as a `.dxprofile`. */
+          exportProfile?: () => Promise<{ byteLength: number; saved: boolean }>;
         };
       }
     | undefined;

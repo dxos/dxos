@@ -7,11 +7,11 @@
  * Playwright's WebKit build, which differs in what it frees. A small WKWebView host (`--host`, built with
  * `swiftc -O scripts/memory/wkapp.swift -o ../../../.perf/wkapp`) loads the bundle behind the same
  * partition as `webkit-soak.ts`: every connection goes through the CONNECT proxy, which tunnels only to
- * the non-production EDGE in `--edge`.
+ * the non-production EDGE in `--edge`, or to nothing with `--offline`.
  *
  * Usage: node scripts/memory/system-webkit-soak.ts --host <wkapp> --archive <file.dxprofile> --dist <bundle>
- *        --edge <non-production EDGE URL> [--telemetry <sink port>] [--port 4498] [--passes 8]
- *        [--idle-ms 60000] [--drive <calls per round>] [--drive-rounds 3] [--drive-via client]
+ *        (--edge <non-production EDGE URL> | --offline) [--telemetry <sink port>] [--port 4498] [--passes 8]
+ *        [--idle-ms 60000] [--warmup-ms 0] [--drive <calls per round>] [--drive-rounds 3] [--drive-via client]
  *        [--devtools] [--watch <readings>]
  *
  * `--drive` ends with rounds of that many calls to a loopback route answering EDGE's JSON envelope
@@ -48,6 +48,7 @@ const { values } = parseArgs({
     'archive': { type: 'string' },
     'dist': { type: 'string' },
     'edge': { type: 'string' },
+    'offline': { type: 'boolean', default: false },
     'telemetry': { type: 'string' },
     'port': { type: 'string', default: '4498' },
     'passes': { type: 'string', default: '8' },
@@ -57,13 +58,18 @@ const { values } = parseArgs({
     'drive-via': { type: 'string', default: 'client' },
     'devtools': { type: 'boolean', default: false },
     'watch': { type: 'string', default: '0' },
+    'warmup-ms': { type: 'string', default: '0' },
   },
 });
-if (!values.host || !values.archive || !values.dist || !values.edge) {
-  throw new Error('usage: system-webkit-soak.ts --host <wkapp> --archive <file> --dist <bundle> --edge <url>');
+if (!values.host || !values.archive || !values.dist || values.offline === Boolean(values.edge)) {
+  throw new Error(
+    'usage: system-webkit-soak.ts --host <wkapp> --archive <file> --dist <bundle> (--edge <url> | --offline)',
+  );
 }
-const edgeHost = URL.canParse(values.edge) ? new URL(values.edge).hostname : undefined;
-if (!edgeHost || isProductionEdgeHost(edgeHost)) {
+// An `--offline` bundle points EDGE at a closed loopback port (`OFFLINE_EDGE_URL` in the perf CLI).
+const edgeUrl = values.offline ? 'http://127.0.0.1:9/' : values.edge!;
+const edgeHost = values.offline ? undefined : URL.canParse(edgeUrl) ? new URL(edgeUrl).hostname : undefined;
+if (!values.offline && (!edgeHost || isProductionEdgeHost(edgeHost))) {
   throw new Error(`--edge must name a non-production EDGE URL, not "${values.edge}"`);
 }
 const dist = path.resolve(values.dist);
@@ -74,8 +80,8 @@ const bundleMentions = (text: string): boolean => {
     return false;
   }
 };
-if (!bundleMentions(values.edge)) {
-  throw new Error(`${dist} is not an --edge ${values.edge} build`);
+if (!bundleMentions(edgeUrl)) {
+  throw new Error(`${dist} is not an ${values.offline ? '--offline' : `--edge ${edgeUrl}`} build`);
 }
 const telemetryPort = values.telemetry ? Number(values.telemetry) : undefined;
 if (telemetryPort && !bundleMentions(`http://127.0.0.1:${telemetryPort}`)) {
@@ -201,6 +207,31 @@ const collect = async () => {
 
 const mib = (bytes: number) => Math.round(bytes / 1048576);
 
+/**
+ * Totals over every space of `db.stats()`, counts only. Read once, after every stage: counting objects
+ * loads every document of every space, which would perturb whatever is measured after it.
+ */
+const STATS_PROBE = `
+  const total = { spaces: 0, ready: 0, objects: 0, documents: 0, maxSpaceDocuments: 0, feedBlocks: 0, pageDocuments: 0, pageObjects: 0, workerDocuments: 0, workerLeases: 0, workerQueries: 0 };
+  for (const space of globalThis.__DXOS__?.client?.spaces?.get?.() ?? []) {
+    total.spaces++;
+    try {
+      const stats = await Promise.race([space.db.stats(), new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 60_000))]);
+      total.ready++;
+      total.objects += stats.objects.alive;
+      total.documents += stats.documents;
+      total.maxSpaceDocuments = Math.max(total.maxSpaceDocuments, stats.documents);
+      total.feedBlocks += Number(stats.feedBlocks);
+      total.pageDocuments += stats.loaded.client.documents;
+      total.pageObjects += stats.loaded.client.objects;
+      total.workerDocuments = stats.loaded.host.documentsTotal;
+      total.workerLeases = stats.loaded.host.leases;
+      total.workerQueries = stats.loaded.host.queriesTotal;
+    } catch {}
+  }
+  return total;
+`;
+
 /** EDGE's success envelope around generated rows, as a busy API route answers. */
 const startEnvelopeServer = async (port: number, allowOrigin: string) => {
   const rows = Array.from({ length: 4_000 }, (_, index) => ({
@@ -238,7 +269,7 @@ const main = async (): Promise<number> => {
   const store = randomUUID();
 
   const preview = await servePreview(dist, port);
-  const proxy = await startPartitionProxy({ allow: [edgeHost] });
+  const proxy = await startPartitionProxy({ allow: edgeHost ? [edgeHost] : [] });
   const sink = telemetryPort
     ? await startTelemetrySink({
         port: telemetryPort,
@@ -254,6 +285,7 @@ const main = async (): Promise<number> => {
     : undefined;
   const envelope = driveCalls > 0 ? await startEnvelopeServer(port + 1, origin) : undefined;
   const readings: unknown[] = [];
+  let shape: Record<string, number> | undefined;
   const before = webkitPids();
   let host = startHost(proxy.port, store);
   try {
@@ -279,12 +311,19 @@ const main = async (): Promise<number> => {
       const pids = ours();
       const processes = pids.map((pid) => footprintOf(pid, scratch)).filter((reading) => reading !== undefined);
       const dom = await host.evaluate<number>(`return document.getElementsByTagName('*').length;`).catch(() => -1);
+      // The page realm's wasm linear memory per module, from `@dxos/util`'s probe; the worker's is out of reach here.
+      const pageWasm = await host
+        .evaluate<{ bytes: number; byModule: Record<string, number> } | null>(
+          `return globalThis.__dxosWasmMemory?.() ?? null;`,
+        )
+        .catch(() => null);
       const sockets = offMachineSockets(pids);
       readings.push({
         stage: id,
         wallMs: Date.now() - started,
         processes,
         dom,
+        pageWasm,
         result,
         offMachineSockets: sockets.length,
       });
@@ -292,7 +331,7 @@ const main = async (): Promise<number> => {
       process.stdout.write(
         `${id.padEnd(14)} ${String(Math.round((Date.now() - started) / 1000)).padStart(4)} s  content ${String(mib(page?.bytes ?? 0)).padStart(5)} MiB` +
           `  gigacage ${String(mib(page?.regions['JS VM Gigacage'] ?? 0)).padStart(5)}  malloc ${String(mib(page?.regions['WebKit malloc'] ?? 0)).padStart(5)}` +
-          `  elements ${dom}${result === undefined ? '' : `  ${JSON.stringify(result)}`}\n`,
+          `  page wasm ${String(mib(pageWasm?.bytes ?? 0)).padStart(4)}  elements ${dom}${result === undefined ? '' : `  ${JSON.stringify(result)}`}\n`,
       );
       if (sockets.length > 0) {
         throw new Error(`sockets off the machine after ${id}: ${sockets.length}`);
@@ -328,6 +367,19 @@ const main = async (): Promise<number> => {
     await sleep(3_000);
     host = startHost(proxy.port, store);
     await host.ready;
+
+    // A returning user's boot: the first boot after an import (or an upgrade whose migration resets
+    // index cursors) reindexes every document, which a warm-up boot pays here instead.
+    if (Number(values['warmup-ms']) > 0) {
+      await host.load(`${origin}/`);
+      await waitForReady();
+      await sleep(Number(values['warmup-ms']));
+      host.proc.kill();
+      await new Promise((resolve) => host.proc.once('exit', resolve));
+      await sleep(3_000);
+      host = startHost(proxy.port, store);
+      await host.ready;
+    }
 
     await stage('boot', async () => {
       await host.load(`${origin}/`);
@@ -385,6 +437,9 @@ const main = async (): Promise<number> => {
       });
       await stage(`idle-${pass}`, () => sleep(idleMs));
     }
+
+    shape = await host.evaluate<Record<string, number>>(STATS_PROBE).catch(() => undefined);
+    process.stdout.write(`shape ${JSON.stringify(shape)}\n`);
 
     if (driveVia === 'probe' && envelope) {
       // Which body and stream methods each path calls, counted per path; no values are recorded.
@@ -481,6 +536,7 @@ const main = async (): Promise<number> => {
         {
           engine: 'system-webkit',
           readings,
+          shape,
           partition: { denied: proxy.denied(), tunnelled: proxy.tunnelled() },
           ...(sink ? { telemetry: sink.traffic() } : {}),
         },
