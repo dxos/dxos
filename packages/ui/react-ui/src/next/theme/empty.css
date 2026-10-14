@@ -12,8 +12,9 @@
     padding: var(--dx-block-size) var(--dx-gap-size);
     text-align: center;
     color: var(--color-fg-muted);
-    font-size: var(--dx-font-size);
-    line-height: var(--dx-line-height);
+    /* Secondary text at the label's size (as a Section's empty line is), so every empty state reads alike. */
+    font-size: var(--dx-label-font-size);
+    line-height: var(--dx-label-line-height);
   }
   /* The icon reads as an illustration, so it takes the next block size up rather than the text's icon size. */
   .dx-empty > .dx-icon {
