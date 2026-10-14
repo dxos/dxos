@@ -13,8 +13,6 @@ This guide installs the toolchain, walks through the language, and ends with fiv
 4. [The same service on Cloudflare](#recipe-4-the-same-service-on-cloudflare), with Durable Objects.
 5. [Tasks and the explorer](#recipe-5-tasks-and-the-explorer): issues attached to code, and a browsable site.
 
-
-
 ## Install
 
 You need Node 24 or newer. Rust (`cargo`) is optional; you need it only for native binaries and
@@ -31,8 +29,6 @@ that `--codebase <dir>` names. Start one with the standard library:
 
 ```bash
 deus init
-
-// Shouldn't builtins come by default?
 deus add deus/builtins.deus deus/prelude.deus
 ```
 
@@ -40,12 +36,11 @@ To get a standalone `deus` executable of about 1.6 MB, add the toolchain's own s
 The toolchain is written in DEUS:
 
 ```bash
-// How is "deus" resolved here?
 deus add deus
 deus build Cli.main -o ~/.local/bin/deus --native      # needs cargo
 ```
 
-Editor support for VS Code is in `[editors/vscode/](../editors/vscode)`.
+Editor support for VS Code is in [`editors/vscode/`](../editors/vscode).
 
 ## The language in five minutes
 
@@ -67,37 +62,33 @@ end Geometry
 
 These are the parts to know:
 
-
 | Construct    | Example                                                                   | Note                                                                |
 | ------------ | ------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| Data types   | `inductive Shape where                                                    | circle (r : Int)                                                    |
+| Data types   | `inductive Shape where \| circle (r : Int) \| rect (w : Int) (h : Int)`   | Constructors are `Shape.circle`, `Shape.rect`.                      |
 | Records      | `structure Line where`, then one `field : Type` per line                  | Built with `Line.mk "tea" 2`, read with `line.item`.                |
-| Matching     | `match s with                                                             | Shape.circle r => …                                                 |
+| Matching     | `match s with \| Shape.circle r => … \| Shape.rect w h => …`              | Must cover every case.                                              |
 | Lambdas      | `fun x => x + 1`                                                          | `List.map (fun x => x + 1) xs`                                      |
 | Local values | `let total := a + b`                                                      | One per line, then the result.                                      |
 | Abilities    | `ability Prices where priceOf : Text -> Int`                              | Effects a function may perform, listed in its type: `{Prices} Int`. |
-| Handlers     | `handle body () with                                                      | Prices.priceOf item -> resume => resume 3`                          |
+| Handlers     | `handle body () with \| Prices.priceOf item -> resume => resume 3`        | Give an ability its meaning.                                        |
 | Errors       | `throw "bad input"` has type `{Throw Text} a`                             | `try` turns them into `Result.ok` or `Result.err`.                  |
 | Tests        | `test areas := area (Shape.rect 3 4) == 12`                               | Run by `deus test`.                                                 |
 | Theorems     | `theorem t (xs : List Int) : len xs >= 0 = true := by induction xs; auto` | Checked by `deus check`.                                            |
 
-
 Two ideas set DEUS apart from most languages:
 
 - **Effects are in the type.** A function that reads files has `{IO}` in its type. A function
-that can fail has `{Throw Text}`. When a signature names its abilities, the type checker
-rejects any call that needs another one, unless a handler inside provides it. `IO` is the
-ability `main` gets from the runtime.
+  that can fail has `{Throw Text}`. When a signature names its abilities, the type checker
+  rejects any call that needs another one, unless a handler inside provides it. `IO` is the
+  ability `main` gets from the runtime.
 - **Code is stored by hash.** `deus update` replaces a definition. Every definition that depends on
-it is rehashed and updated in the same step, so the codebase never holds a broken build.
-Renaming (`deus mv`) never changes a hash, so it cannot break a caller. `deus undo` steps back
-one change.
-
-
+  it is rehashed and updated in the same step, so the codebase never holds a broken build.
+  Renaming (`deus mv`) never changes a hash, so it cannot break a caller. `deus undo` steps back
+  one change.
 
 ## Recipe 1: A tour of the language
 
-`[examples/tour.deus](../examples/tour.deus)` defines a shape type, a record, an ability with a
+[`examples/tour.deus`](../examples/tour.deus) defines a shape type, a record, an ability with a
 handler, and a checked error, with a test for each:
 
 ```bash
@@ -154,17 +145,14 @@ Then look around the codebase:
 
 ```bash
 deus ls Tour                 # the names under Tour
-// not formatted correcly, also would be good to have colors in terminals that support them
 deus view Tour.total         # the source, printed back from the stored definition
 deus dependents Tour.total   # what would be rehashed if it changed
 deus log                     # the history of changes
 ```
 
-
-
 ## Recipe 2: Proving a sort correct
 
-`[examples/sort.deus](../examples/sort.deus)` specifies insertion sort with two properties: the
+[`examples/sort.deus`](../examples/sort.deus) specifies insertion sort with two properties: the
 output is sorted, and it is a permutation of the input. It then proves both by induction:
 
 ```lean
@@ -194,7 +182,7 @@ deus check Sort
 `wrongClaim` is false on purpose, and the prover shows the goal it could not close. The tactics
 are `induction`, `simp [lemmas]`, `auto` and `decide`. `by test n` checks a claim on n generated
 inputs instead of proving it, and the report says which kind of evidence each theorem has.
-`[examples/soundness.deus](../examples/soundness.deus)` lists claims the prover must refuse,
+[`examples/soundness.deus`](../examples/soundness.deus) lists claims the prover must refuse,
 such as `x < x + 1`, which is false because `Int` wraps.
 
 Verdicts are cached by hash. Re-running `deus check` after an unrelated change checks nothing
@@ -204,7 +192,7 @@ again.
 
 A web handler is a function from `Request` to `Response`. It names the abilities it uses:
 `Storage` for its own key-value store, `Http` for outbound requests, `Actors` to call other
-objects, and `Alarm` to wake later. `[examples/notes.deus](../examples/notes.deus)` is a notes
+objects, and `Alarm` to wake later. [`examples/notes.deus`](../examples/notes.deus) is a notes
 service with one notebook per object:
 
 ```lean
@@ -245,7 +233,6 @@ The same definition runs as a Cloudflare Worker. Each `?actor=` name is a Durabl
 `Storage` is the object's transactional storage:
 
 ```bash
-// got "deus: $DEUS_HOME is not set; run deus through bin/deus.mjs"
 deus build Notes.serve -o notes-worker --worker
 cd notes-worker
 npx wrangler dev          # serves it locally on workerd
@@ -256,8 +243,8 @@ The output directory holds the kernel compiled to WebAssembly, the program image
 JavaScript Durable Object around them, and `wrangler.toml`. Nothing in `notes.deus` changes
 between the three runtimes.
 
-`[examples/tally.deus](../examples/tally.deus)` goes further: objects call each other with
-`Actors.call`, and alarms deliver a request later. `[scripts/worker-test.sh](../scripts/worker-test.sh)`
+[`examples/tally.deus`](../examples/tally.deus) goes further: objects call each other with
+`Actors.call`, and alarms deliver a request later. [`scripts/worker-test.sh`](../scripts/worker-test.sh)
 runs all three examples on local workerd.
 
 ## Recipe 5: Tasks and the explorer
@@ -317,7 +304,6 @@ definition and task, with highlighted source, links between definitions and thei
 and a search box:
 
 ```bash
-// great start, but unison had much better UI, I think it needs to be an SPA, and we will develop it into proper editing env, but for now I at least wanna be able to view multiple definitions on screen.
 deus explore                        # serves it on http://127.0.0.1:8080
 deus explore --out site             # or writes the static pages
 deus explore --publish origin       # or uploads them beside a remote's bundles
@@ -326,21 +312,12 @@ deus explore --publish origin       # or uploads them beside a remote's bundles
 A remote can be a directory or an R2 bucket (`deus remote add origin r2://bucket/prefix`). With a
 public bucket, `--publish` hosts the site, and a republish uploads only the pages that changed.
 The toolchain's own codebase is published at
-
-// do temp wrangler deplloy of a worker to a specific url, so that it stays updated as the codebase get synced to r2 -- I'll give it a proper home later
-
- [https://pub-39066a86073446d7b77b1c157b660bb5.r2.dev/deus/explorer-demo/site/index.html](https://pub-39066a86073446d7b77b1c157b660bb5.r2.dev/deus/explorer-demo/site/index.html).
+<https://pub-39066a86073446d7b77b1c157b660bb5.r2.dev/deus/explorer-demo/site/index.html>.
 
 ## Where to go next
 
 - `deus help` lists every command.
-- `[docs/LLM.md](./LLM.md)` is the guide for coding agents, who use the same CLI with `--json`.
-- `[docs/DESIGN.md](./DESIGN.md)` explains how the pieces fit, and
-`[docs/DECISIONS.md](./DECISIONS.md)` records why each one is the way it is.
-- `[deus/](../deus)` is the compiler, type checker, prover and CLI, all written in DEUS.
-
-More:  
-
-.deus dit not gitignored
-
-it should prob go into user's home dir by default too, no reason to have multiple
+- [`docs/LLM.md`](./LLM.md) is the guide for coding agents, who use the same CLI with `--json`.
+- [`docs/DESIGN.md`](./DESIGN.md) explains how the pieces fit, and
+  [`docs/DECISIONS.md`](./DECISIONS.md) records why each one is the way it is.
+- [`deus/`](../deus) is the compiler, type checker, prover and CLI, all written in DEUS.
