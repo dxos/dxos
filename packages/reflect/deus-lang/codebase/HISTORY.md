@@ -1,15 +1,15 @@
 # History of main
 
-- `c58a476f13` close dfaad231 by #cf0f719d6e (by claude)
-- `cf0f719d6e` explorer: a Unison-style codebase UI; builtin pages and bucket content types fixed (D72) (by claude)
-- `5ed69c23c8` task: set dfaad231 state
-- `28ca458c20` task: set dfaad231 details
-- `63d82046a6` task: set dfaad231 priority assignee labels
-- `9c2b9f89b4` task: open dfaad231 Codebase UI on par with Unison Share: finder, namespaces, hover previews, diffs (by claude)
-- `cdef7f9a58` history: import 108 changes
-- `89c5f19d03` task: import 37 tasks
-- `b646385392` add code specs
-- `67c7d5a614` init
+- `d5df8ec2b7` task: comment on be4c4645 (by claude)
+- `3153eb0b41` task: comment on 9428f054 (by claude)
+- `4c3293900d` task: comment on 861438d2 (by claude)
+- `2080975ba9` task: set 861438d2 state (by claude)
+- `612c223e35` task: set a7a44f7d state (by claude)
+- `11651e3bd9` task: set 279f2266 state (by claude)
+- `7993ab6e7f` task: set 1a316e76 state (by claude)
+- `a9ba98d033` task: open a7a44f7d Namespace trees, deus migrate and full-history compaction (by claude)
+- `a7b6854939` task: open 279f2266 Builtins are URIs at the embedding boundary (urn:deus:builtin:IO) (by claude)
+- `c94273b927` task: open 1a316e76 One specification per format under docs/spec (by claude)
 - `9210ebb09b` close bf5681bf by #e7f95e998b (by claude)
 - `e7f95e998b` prover: unknown tactics fail the proof (D71) (by claude)
 - `4e18596be8` merge the TypeScript-like dialect (D70) from #13952 (by claude)
