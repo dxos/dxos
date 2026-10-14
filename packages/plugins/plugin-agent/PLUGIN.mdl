@@ -5,8 +5,8 @@ version: 0.1.0
 ---
 
 Manages autonomous agents in a space: assistant `Agent` objects that converse with
-people in channels (Discord, freeq, local feeds) and Composer chats, interview them, and keep what they learn as ECHO
-objects — `Memory` claims and `Goal`s linked to the `Person` or `Organization` they are about.
+people in channels (Discord, freeq, local feeds) and Composer chats, interview them, and keep what they learn: memories
+as named graphs in the agent's brain, about the `Person` or `Organization` they name, and `Goal`s as ECHO objects.
 
 This document records what is built. Design intent lives in [`docs/DESIGN.md`](./docs/DESIGN.md)
 (architecture, EDGE gateway, identity) and [`docs/MEMORY.md`](./docs/MEMORY.md) (the memory graph and
@@ -90,18 +90,22 @@ type Relay
 ```mdl
 type Memory
   desc: |
-    One atomic, third-person claim about one or more entities. Typename
-    `org.dxos.type.agent.memory@0.1.0`. Linked to each subject by a `HasSubject` relation
-    (source = memory, target = entity). Never overwritten: a contradiction supersedes. Label: `content`.
+    Not a stored ECHO type: one atomic, third-person claim about one or more entities, kept as a named
+    graph in the agent's brain (`Knowledge.toFacts` / `Knowledge.fromFacts`). The graph states
+    `<subject> dx:claim "content"` for each subject (keyed by its object URI), and a note's body as
+    `dx:hasNote`; its provenance carries kind, origin, confidence and time. Never overwritten: a
+    contradiction is a new graph that supersedes it, a mistake a graph that retracts it.
   fields:
+    id: string                      # the graph IRI
     content: string
     kind: fact | preference | goal | commitment | relationship | event | note | directive
     origin: stated | inferred       # default stated
     confidence?: number             # 0..1, checked by recordMemory
     observedAt: DateTime            # default now
-    status: active | superseded | retracted   # default active
-    supersedes?: Ref<Obj>           # the memory this one replaces
-    source?: Ref<Obj>               # the message or chat it came from (optional as built)
+    status: active | superseded | retracted   # from the graphs that supersede or retract it
+    subjects: string[]              # entity keys: object URIs
+    source?: string                 # URI of the message or chat it came from
+    body?: string                   # a note's markdown
 ```
 
 ```mdl
@@ -225,21 +229,36 @@ op resolveEntity
 ```mdl
 op recordMemory
   key: org.dxos.operation.agent.recordMemory
-  desc: Records one atomic third-person claim about the given subjects.
+  desc: Records one atomic third-person claim about the given subjects, as a named graph in the agent's brain.
   input:
+    agent?: Ref<Agent>              # default: the space's only agent
     content: string
     kind: fact | preference | goal | commitment | relationship | event | note | directive
     origin?: stated | inferred
     subjects: Ref<Obj>[]            # at least one
     confidence?: number             # 0..1
     source?: Ref<Obj>
-    supersedes?: Ref<Memory>
-  output: { memory: Ref<Memory> }
+    supersedes?: string             # the id of the memory this one corrects
+    body?: string                   # a note's markdown
+  output: { memory: string }        # the graph IRI
   errors:
-    AgentOperationError: no subjects, or confidence outside 0..1
-  effects: [echo:write]
-  requires: [Database.Service]
-  note: One `HasSubject` per subject; a superseded memory's status becomes `superseded`.
+    AgentOperationError: no subjects, confidence outside 0..1, or no agent given in a space with several
+  effects: [echo:read, brain:write]
+  requires: [Database.Service, BrainService]
+  note: Pushed as the agent's own words, so it wakes no watch.
+```
+
+```mdl
+op revokeMemories
+  key: org.dxos.operation.agent.revokeMemories
+  desc: Withdraws memories that were wrong, or all of the agent's memories.
+  input:
+    agent?: Ref<Agent>              # default: the space's only agent
+    memories?: string[]             # ids; all active memories if omitted
+  output: { forgotten: number }
+  effects: [echo:read, brain:write]
+  requires: [Database.Service, BrainService]
+  note: Each memory is retracted by a new graph, never deleted; Reset in the Knowledge panel calls it.
 ```
 
 ```mdl
@@ -251,10 +270,11 @@ op retrieveMemories
     query?: string                  # case-insensitive substring of content
     limit?: number
   output: |
-    { memories: { memory: Ref<Memory>, content, kind, origin, observedAt }[],
+    { memories: { memory: string, content, kind, origin, observedAt }[],
+      facts: { fact, quote?, speaker?, source, sourceName?, saidAt }[],
       goals: { goal: Ref<Goal>, title, horizon, status }[] }
-  effects: [echo:read]
-  requires: [Database.Service]
+  effects: [echo:read, brain:read]
+  requires: [Database.Service, BrainService]
   note: Live goals are every status but `dropped`; ties in observedAt break on id.
 ```
 
@@ -295,8 +315,8 @@ op updateProfile
   input:
     subject: Ref<Obj>               # Person or Organization
   output: { document: Ref<Obj> }
-  effects: [echo:read, echo:write]
-  requires: [Database.Service]
+  effects: [echo:read, echo:write, brain:read]
+  requires: [Database.Service, BrainService]
   note: |
     Updates the existing `ProfileOf` document's text in place (and its `lastResearchedAt`);
     otherwise creates a `Markdown.Document` parented to the subject plus a `ProfileOf` relation.
@@ -425,8 +445,9 @@ component AgentActivityContainer
 component ProfileProperties
   desc: |
     ProfileGraph over the subject's live goals (owner refers to the subject; not dropped) and active
-    memories (HasSubject targets the subject), newest first. Subscribes to every Memory and Goal atom
-    so status changes (confirmed, superseded) re-render without a membership change.
+    memories (a claim's subject is the subject's object URI), newest first. Memories are read from the
+    brains of the space's agents every 3s (EDGE's for an agent with a chat there); every Goal atom is
+    subscribed, so status changes re-render without a membership change.
   props:
     subject: Person | Organization
 ```
@@ -514,10 +535,10 @@ feat F-3: Agent channels and delivery
 feat F-4: Memory graph
 
   req F-4.1: op:resolveEntity matches a Person by handle first, then case-insensitively by name, and creates one only when nothing matches.
-  req F-4.2: op:recordMemory links the memory to every subject by HasSubject and rejects an empty subject list.
+  req F-4.2: op:recordMemory writes one named graph claiming the content about every subject, and rejects an empty subject list.
   req F-4.3:
-    when: a memory is recorded with supersedes
-    then: the old memory becomes superseded and is no longer recalled
+    when: a memory is recorded with supersedes, or withdrawn by op:revokeMemories
+    then: the old memory becomes superseded (or retracted) and is no longer recalled
   req F-4.4: op:retrieveMemories returns active memories only, filtered by subject and query, and the subject's live goals.
   req F-4.5: op:suggestGoal creates a proposed goal and rejects owners that are not people or organizations.
   req F-4.6: op:setGoalStatus confirms a goal by default.
@@ -575,7 +596,7 @@ scenario T-4: An interview builds the graph   # interview.test.ts
     one memory; recall; update the profile twice
   then:
     - the first resolve creates a Person; the other two return it
-    - the superseded memory is superseded; recall returns the three active claims and both goals (confirmed, proposed)
+    - recall returns the three active claims, not the superseded one, and both goals (confirmed, proposed)
     - recall with query "STANDUPS" returns only the matching memory; the team recalls only the shared memory and no goals
     - both updateProfile calls return the same document, with exactly one ProfileOf
     - the profile contains the name, the confirmed goal and the new claim, and not the superseded one
@@ -586,7 +607,7 @@ scenario T-5: Invalid memory and goal input is rejected   # interview.test.ts
   # covers [F-4.2, F-4.5]
   then:
     - recordMemory with no subjects fails with "at least one subject"
-    - suggestGoal owned by a Memory fails with "people or organizations"
+    - suggestGoal owned by a Text object fails with "people or organizations"
 ```
 
 ```mdl
@@ -608,7 +629,7 @@ scenario T-8: Scripted interview fills the profile panel
   then:
     - the Goals region lists both goals and reads "Confirmed" twice
     - the Memories region lists the three recorded claims
-    - the space holds one Person, two confirmed goals and at least three memories
+    - the space holds one Person and two confirmed goals, and the agent's brain at least three memories
 ```
 
 ## Not built
@@ -620,8 +641,10 @@ Design items from `docs/DESIGN.md` and `docs/MEMORY.md` that this package does n
   which exists any more, so Discord conversations do not reach the agent.
 - Real per-agent HALO identity and joined spaces.
 - Runtime-assembled memory context at the start of each turn; consolidation (dedupe, promotion of
-  inferred memories); editing or retracting memories in the UI (`retracted` exists as a status only).
-- Required provenance: `Memory.source` is optional as built.
+  inferred memories); editing or retracting single memories in the UI (Reset retracts them all).
+- Required provenance: a memory's `source` is optional as built.
+- Linking an entity the extractor could not resolve to the object it names later (`owl:sameAs`):
+  facts read before a Person existed keep their slug, which recall still matches by name.
 - The interview checklist on `Chat.tasks`: the skill uses a checklist only if a tool for it is bound.
 
 ## QA
@@ -767,10 +790,12 @@ test QA-2: Interview a person and confirm their goals
       note: The panel must update in place (F-5.3); a refresh only after reopening is a failure of this step.
   after:
     - name: Delete the interview's goals and memories
-      do: Delete the goals and memories listed in Quinn's properties.
-      invoke: org.dxos.operation.space.removeObjects { objects: [...$final.goals.map((row) => Obj(row.goal)), ...$final.memories.map((row) => Obj(row.memory))] }
+      do: Delete the goals listed in Quinn's properties, and forget the memories.
+      invoke: |
+        org.dxos.operation.space.removeObjects { objects: $final.goals.map((row) => Obj(row.goal)) };
+        [op:revokeMemories] { agent: Ref($agent.agent), memories: $final.memories.map((row) => row.memory) }
       expect: Quinn's properties read "Nothing recorded yet."
-      note: Superseded memories are not recalled; the runner also removes any Memory whose HasSubject targets `$given.person`.
+      note: Memories are graphs in the agent's brain, so they are retracted rather than removed from the space.
     - name: Delete the person
       do: Delete Quinn.
       invoke: org.dxos.operation.space.removeObjects { objects: [Obj($given.person)] }
@@ -828,8 +853,8 @@ test QA-3: Two people, one agent — a watch fires across private chats
     - name: The facts are in the brain
       do: Open the agent's Brain companion and its Facts tab.
       expect: |
-        the Facts tab lists a fact that Bob works on the indexer migration, attributed to Bob; no Memory
-        or annotation object holds it in the space
+        the Facts tab lists a fact that Bob works on the indexer migration, attributed to Bob; no
+        annotation object holds it in the space
 ```
 
 ---

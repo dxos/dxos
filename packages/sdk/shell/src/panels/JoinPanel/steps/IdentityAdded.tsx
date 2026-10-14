@@ -8,11 +8,13 @@ import { generateName } from '@dxos/display-name';
 import { toPublicKey } from '@dxos/protocols/buf';
 import type { Identity } from '@dxos/react-client/halo';
 import * as Avatar from '@dxos/react-ui/Avatar';
+import * as Button from '@dxos/react-ui/Button';
+import * as Dialog from '@dxos/react-ui/Dialog';
 import * as Hooks from '@dxos/react-ui/Hooks';
-import { mx } from '@dxos/ui-theme';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Typography from '@dxos/react-ui/Typography';
 import { hexToFallback } from '@dxos/util';
 
-import { Action, ActionBar, InputLabel } from '../../../components/index.ts';
 import { translationKey } from '../../../translations.ts';
 import { profileString } from '../../../util/index.ts';
 import { type JoinPanelMode, type JoinStepProps } from '../JoinPanelProps.ts';
@@ -33,31 +35,33 @@ export const IdentityAdded = (props: IdentityAddedProps) => {
   const displayName = addedIdentity?.profile?.displayName ?? (addedIdentity && generateName(addedIdentityHex));
 
   const doneAction = (
-    <Action
+    <Button.Root
       {...(onDone && { onClick: () => onDone(null) })}
       disabled={disabled}
       data-autofocus='confirmingAddedIdentity'
       data-testid='identity-added-done'
     >
       <span>{t('done.label')}</span>
-    </Action>
+    </Button.Root>
   );
 
   return (
     <>
-      <InputLabel>{t('identity-added.label')}</InputLabel>
-      <div className='grow flex flex-col items-center justify-center text-center gap-2'>
-        <Avatar.Root
-          aria-labelledby={labelId}
-          status='active'
-          hue={Avatar.toAvatarHue(profileString(addedIdentity, 'hue') || fallbackValue.hue)}
-          fallback={profileString(addedIdentity, 'emoji') || fallbackValue.emoji}
-        />
-        <span id={labelId} className={mx('text-lg truncate', !addedIdentity?.profile?.displayName && 'font-mono')}>
-          {displayName}
-        </span>
-      </div>
-      <ActionBar>
+      <Dialog.Body gap='md'>
+        <Typography.Text tone='muted'>{t('identity-added.label')}</Typography.Text>
+        <Layout.Flex gap='sm' align='center'>
+          <Avatar.Root
+            aria-labelledby={labelId}
+            status='active'
+            hue={Avatar.toAvatarHue(profileString(addedIdentity, 'hue') || fallbackValue.hue)}
+            fallback={profileString(addedIdentity, 'emoji') || fallbackValue.emoji}
+          />
+          <Typography.Text asChild truncate mono={!addedIdentity?.profile?.displayName}>
+            <span id={labelId}>{displayName}</span>
+          </Typography.Text>
+        </Layout.Flex>
+      </Dialog.Body>
+      <Dialog.Footer>
         {mode === 'halo-only' ? (
           doneActionParent ? (
             cloneElement(doneActionParent, {}, doneAction)
@@ -65,16 +69,16 @@ export const IdentityAdded = (props: IdentityAddedProps) => {
             doneAction
           )
         ) : (
-          <Action
+          <Button.Root
             variant='primary'
             disabled={disabled || !addedIdentity}
             onClick={() => addedIdentity && send({ type: 'selectIdentity', identity: addedIdentity })}
             data-autofocus='confirmingAddedIdentity'
           >
             {t('continue.label')}
-          </Action>
+          </Button.Root>
         )}
-      </ActionBar>
+      </Dialog.Footer>
     </>
   );
 };

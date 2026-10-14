@@ -8,10 +8,13 @@ import React, { useCallback, useState } from 'react';
 import { log } from '@dxos/log';
 import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { useClient } from '@dxos/react-client';
+import * as Button from '@dxos/react-ui/Button';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
 import { type MaybePromise } from '@dxos/util';
 
-import { Action, ActionBar, InputLabel, TextInput } from '../../../components/index.ts';
 import { translationKey } from '../../../translations.ts';
 import { type JoinStepProps } from '../JoinPanelProps.ts';
 
@@ -78,35 +81,38 @@ export const IdentityInputImpl = ({ method, active, validationMessage, onConfirm
 
   return (
     <>
-      <div className='grow flex flex-col justify-center'>
-        <TextInput
-          {...{ validationMessage }}
-          label={<InputLabel>{t(isRecover ? 'recover-identity-input.label' : 'new-identity-input.label')}</InputLabel>}
-          disabled={disabled}
-          data-testid='identity-input'
-          placeholder={isRecover ? t('recovery-code.placeholder') : t('display-name.placeholder')}
-          onChange={({ target: { value } }) => setInputValue(value)}
-        />
-      </div>
-      <ActionBar>
+      <Dialog.Body>
+        {/* An error shows only on an invalid field. */}
+        <Field.Root {...(validationMessage && { validationValence: 'error' })}>
+          <Field.Label>{t(isRecover ? 'recover-identity-input.label' : 'new-identity-input.label')}</Field.Label>
+          <Input.Root
+            disabled={disabled}
+            data-testid='identity-input'
+            placeholder={isRecover ? t('recovery-code.placeholder') : t('display-name.placeholder')}
+            onChange={({ target: { value } }) => setInputValue(value)}
+          />
+          {validationMessage && <Field.ErrorText>{validationMessage}</Field.ErrorText>}
+        </Field.Root>
+      </Dialog.Body>
+      <Dialog.Footer>
         {/* TODO(wittjosiah): This disables returning to deprecated identity creation flow.
-        <Action
+        <Button.Root
           variant='ghost'
           disabled={disabled}
           onClick={() => send?.({ type: 'deselectAuthMethod' })}
           data-testid={`${method === 'recover identity' ? 'recover' : 'create'}-identity-input-back`}
         >
           {t('back.label')}
-        </Action> */}
-        <Action
+        </Button.Root> */}
+        <Button.Root
           variant='primary'
           disabled={disabled || inputValue.trim().length === 0}
           onClick={handleConfirm}
           data-testid={`${method === 'recover identity' ? 'recover' : 'create'}-identity-input-continue`}
         >
           {pending ? t('pending.label') : t('continue.label')}
-        </Action>
-      </ActionBar>
+        </Button.Root>
+      </Dialog.Footer>
     </>
   );
 };

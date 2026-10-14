@@ -939,6 +939,24 @@ export class AutomergeHost extends Resource {
   }
 
   /**
+   * The document's saved changes as storage holds them, without loading the document: its snapshot and
+   * incremental chunks, concatenated in the form `A.loadIncremental` reads. Undefined when storage holds
+   * none, or more than `limit` bytes.
+   */
+  async readStoredChanges(id: DocumentId, { limit }: { limit?: number } = {}): Promise<Uint8Array | undefined> {
+    invariant(this.isOpen, 'AutomergeHost is not open');
+    const chunks = await this._storage.loadRange([id]);
+    const changes = chunks.flatMap(({ key, data }) =>
+      (key[1] === 'snapshot' || key[1] === 'incremental') && data != null && data.length > 0 ? [data] : [],
+    );
+    const size = changes.reduce((sum, data) => sum + data.length, 0);
+    if (size === 0 || (limit !== undefined && size > limit)) {
+      return undefined;
+    }
+    return bufferToArray(Buffer.concat(changes));
+  }
+
+  /**
    * Probe local storage to determine whether the document has any persisted
    * chunks. Does not request the document from the network and does not
    * touch the in-memory `Repo`. Returns `true` iff at least one non-empty
@@ -1409,6 +1427,11 @@ export class AutomergeHost extends Resource {
       }
     }
     return result;
+  }
+
+  /** The heads each document's saved changes reach, from the heads store, whatever is loaded and unsaved. */
+  async getStoredHeads(documentIds: DocumentId[]): Promise<(Heads | undefined)[]> {
+    return this._headsStore.getHeads(documentIds);
   }
 
   /**

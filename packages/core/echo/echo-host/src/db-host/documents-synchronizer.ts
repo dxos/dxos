@@ -7,13 +7,16 @@ import { type DocumentId } from '@automerge/automerge-repo';
 
 import { UpdateScheduler, asyncTimeout } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
-import { type DatabaseDirectory } from '@dxos/echo-protocol';
+import { type DatabaseDirectory, backingJson } from '@dxos/echo-protocol';
+import { objectStructureToJson } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
+import { type EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type DataService } from '@dxos/protocols/rpc';
 import { countWork } from '@dxos/util';
 
 import { type AutomergeHost, type DocumentLease } from '../automerge/index.ts';
+import { sameHeads } from '../query/object-state.ts';
 
 const MAX_UPDATE_FREQ = 10; // [updates/sec]
 
@@ -40,9 +43,13 @@ export type DocumentsSynchronizerProps = {
   maxBatchDocuments?: number;
 };
 
+/** A document a client subscribes to, with the heads it already holds and whether it holds it unloaded. */
+export type SubscribedDocument = { documentId: DocumentId; heads?: Heads; passive?: boolean };
+
 interface DocSyncState {
-  /** Heads the client holds as of the last send; unset until the initial send. */
+  passive: boolean;
   lastSentHead?: Heads;
+  confirm?: boolean;
   /**
    * Held only until the document is loaded for its initial send. Nothing pins the document after
    * that: the host's residency policy decides, and each send re-leases it for the duration of a read.
@@ -102,20 +109,61 @@ export class DocumentsSynchronizer extends Resource {
     }
   }
 
-  async addDocuments(documentIds: DocumentId[]): Promise<void> {
-    for (const documentId of documentIds) {
-      if (this._syncStates.has(documentId) || this._lifecycleState === LifecycleState.CLOSED) {
+  /**
+   * Subscribes the client to each document, from the heads it names so the first send is only what came
+   * after. A document already subscribed switches to the given mode, and is sent from the heads it names,
+   * or whole when it names none. A passive document is not loaded until storage moves past its heads.
+   */
+  async addDocuments(documents: readonly SubscribedDocument[]): Promise<void> {
+    const waiting: { documentId: DocumentId; heads: Heads; syncState: DocSyncState }[] = [];
+    for (const { documentId, heads, passive = false } of documents) {
+      if (this._lifecycleState === LifecycleState.CLOSED) {
+        continue;
+      }
+      const existing = this._syncStates.get(documentId);
+      if (existing) {
+        existing.passive = passive;
+        existing.lastSentHead = heads;
+        existing.confirm = heads !== undefined && !passive;
+        if (passive && heads !== undefined) {
+          waiting.push({ documentId, heads, syncState: existing });
+        } else {
+          this._pendingUpdates.add(documentId);
+          this._sendUpdatesJob?.trigger();
+        }
+        continue;
+      }
+      if (passive && heads !== undefined) {
+        const syncState: DocSyncState = { passive, lastSentHead: heads };
+        this._syncStates.set(documentId, syncState);
+        waiting.push({ documentId, heads, syncState });
         continue;
       }
       log('loading document', { documentId });
       const lease = this._params.automergeHost.acquireDoc<DatabaseDirectory>(documentId);
-      const syncState: DocSyncState = { initialLease: lease };
+      const syncState: DocSyncState = {
+        passive,
+        initialLease: lease,
+        lastSentHead: heads,
+        confirm: heads !== undefined,
+      };
       this._syncStates.set(documentId, syncState);
       // Background disk probe so the client can distinguish
       // "not on disk, waiting for network" from "still loading".
       // Fire-and-forget; the result feeds `_pendingRequesting`.
       this._scheduleDiskProbe(documentId);
       void this._sendWhenLoaded(documentId, syncState);
+    }
+
+    if (waiting.length > 0) {
+      const stored = await this._params.automergeHost.getStoredHeads(waiting.map(({ documentId }) => documentId));
+      waiting.forEach(({ documentId, heads, syncState }, index) => {
+        const storedHeads = stored[index];
+        if (this._syncStates.get(documentId) === syncState && (!storedHeads || !sameHeads(storedHeads, heads))) {
+          this._pendingUpdates.add(documentId);
+          this._sendUpdatesJob?.trigger();
+        }
+      });
     }
   }
 
@@ -170,6 +218,10 @@ export class DocumentsSynchronizer extends Resource {
         log.warn('disk probe failed', { documentId, err });
       }
     });
+  }
+
+  holds(documentId: DocumentId): boolean {
+    return this._syncStates.has(documentId);
   }
 
   /** Drops the documents the client no longer subscribes to. */
@@ -240,11 +292,8 @@ export class DocumentsSynchronizer extends Resource {
       this._pendingUpdates.delete(documentId);
       const update = await this._getPendingChanges(documentId);
       if (update) {
-        updates.push({
-          documentId,
-          mutation: update,
-        });
-        bytes += update.byteLength;
+        updates.push(update);
+        bytes += (update.mutation?.byteLength ?? 0) + (update.passive?.json?.length ?? 0);
       }
     }
     if (this._pendingUpdates.size > 0) {
@@ -273,7 +322,7 @@ export class DocumentsSynchronizer extends Resource {
     }
   }
 
-  private async _getPendingChanges(documentId: DocumentId): Promise<Uint8Array | undefined> {
+  private async _getPendingChanges(documentId: DocumentId): Promise<DataService.DocumentUpdate | undefined> {
     const syncState = this._syncStates.get(documentId);
     // Still loading for its initial send, which queues the document again once it is ready.
     if (!syncState || syncState.initialLease) {
@@ -300,14 +349,17 @@ export class DocumentsSynchronizer extends Resource {
       return;
     }
     const doc = lease.doc();
-    const mutation = syncState.lastSentHead ? A.saveSince(doc, syncState.lastSentHead) : A.save(doc);
-    if (mutation.length === 0) {
+    const since =
+      syncState.lastSentHead && A.hasHeads(doc, syncState.lastSentHead) ? syncState.lastSentHead : undefined;
+    const mutation = since ? A.saveSince(doc, since) : A.save(doc);
+    if (mutation.length === 0 && !syncState.confirm) {
       return;
     }
+    syncState.confirm = false;
     syncState.lastSentHead = A.getHeads(doc);
     countWork('automerge.mutationsSent');
     countWork('automerge.mutationSentBytes', mutation.length);
-    return mutation;
+    return { documentId, mutation, passive: syncState.passive ? passiveObject(doc) : undefined };
   }
 
   private async _writeMutation(ctx: Context, documentId: DocumentId, mutation: Uint8Array): Promise<void> {
@@ -339,3 +391,19 @@ export class DocumentsSynchronizer extends Resource {
     }
   }
 }
+
+const passiveObject = (doc: A.Doc<DatabaseDirectory>): DataService.DocumentUpdate['passive'] => {
+  const heads = A.getHeads(doc);
+  const [entry] = Object.entries(doc.objects ?? {});
+  return {
+    heads,
+    json: entry && backingJson(doc, entry[1], objectStructureToJson(entry[0] as EntityId, entry[1])),
+    updatedAt: lastChangeTime(doc, heads),
+  };
+};
+
+const lastChangeTime = (doc: A.Doc<unknown>, heads: A.Heads): number | undefined => {
+  const backend = A.getBackend(doc);
+  const time = Math.max(0, ...heads.map((hash) => backend.getChangeMetaByHash(hash)?.time ?? 0));
+  return time > 0 ? time * 1000 : undefined;
+};

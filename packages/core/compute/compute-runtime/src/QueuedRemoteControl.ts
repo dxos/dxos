@@ -20,7 +20,7 @@ import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ErrorCodec } from '@dxos/protocols';
 
-import { RemoteCommandRejectedError } from './errors.ts';
+import { ProcessNotFoundError, RemoteCommandRejectedError } from './errors.ts';
 import { type Command, RemoteCommandQueue } from './remote-command-queue.ts';
 import type * as RemoteProcessManager from './RemoteProcessManager.ts';
 
@@ -43,7 +43,13 @@ const MAX_REJECTED = 64;
 /** The host's refusal carried by `cause`, as opposed to a failure to reach it. */
 const rejectionOf = (cause: Cause.Cause<unknown>): Error | undefined => {
   const defect = Cause.squash(cause);
-  return RemoteCommandRejectedError.is(defect) ? defect : undefined;
+  return RemoteCommandRejectedError.is(defect) || ProcessNotFoundError.is(defect) ? defect : undefined;
+};
+
+/** The host's answer that it no longer has the process, carried by `cause`. */
+const lostOf = (cause: Cause.Cause<unknown>): Error | undefined => {
+  const defect = Cause.squash(cause);
+  return ProcessNotFoundError.is(defect) ? defect : undefined;
 };
 
 /**
@@ -133,11 +139,13 @@ export const make = (options: Options): Effect.Effect<Queued, never, Scope.Scope
     /** Local pid -> host pid, mirrored from the durable alias map so reads can resolve synchronously. */
     const aliases = new Map<Process.ID, Process.ID>();
     const localPids = new Map<Process.ID, Process.ID>();
-    /** Processes whose spawn the host refused, by local pid: a FAILED snapshot and the host's reason. */
+    /** Processes whose spawn the host refused, or that it lost, by local pid: a FAILED snapshot and the reason. */
     const rejected = new Map<Process.ID, { readonly snapshot: RemoteProcessManager.Snapshot; readonly error: Error }>();
+    /** The last snapshot the host reported for each live process, so one the host loses is failed in place. */
+    const lastKnown = new Map<Process.ID, RemoteProcessManager.Snapshot>();
     /**
-     * Inputs queued for each process (by local pid) that the host has not acknowledged. The host answers
-     * an input only once the turn it starts has settled, so this also spans the turn itself.
+     * Inputs queued for each process (by local pid) that the host has not acknowledged. Until it does, a host
+     * snapshot of the process cannot show the turn the input starts.
      */
     const pendingInputs = new Map<Process.ID, number>();
     const countInput = (localPid: Process.ID, delta: number) => {
@@ -188,6 +196,7 @@ export const make = (options: Options): Effect.Effect<Queued, never, Scope.Scope
     const forget = (localPid: Process.ID): Effect.Effect<void> =>
       Effect.sync(() => {
         overlay.delete(localPid);
+        lastKnown.delete(localPid);
         pendingInputs.delete(localPid);
         const remote = aliases.get(localPid);
         aliases.delete(localPid);
@@ -214,6 +223,7 @@ export const make = (options: Options): Effect.Effect<Queued, never, Scope.Scope
         }
         // An input the host has not acknowledged is work in flight: reported idle or hybernating, a
         // caller waiting for the turn to settle would return before the turn has even started.
+        lastKnown.set(localPid, snapshot);
         if (
           pendingInputs.has(localPid) &&
           (snapshot.state === Process.State.IDLE || snapshot.state === Process.State.HYBERNATING)
@@ -221,6 +231,34 @@ export const make = (options: Options): Effect.Effect<Queued, never, Scope.Scope
           return { ...snapshot, state: Process.State.RUNNING };
         }
         return snapshot;
+      });
+
+    /** Keeps a process's failure for reads after it is forgotten, bounded since nothing else evicts it. */
+    const recordFailure = (base: RemoteProcessManager.Snapshot, error: Error): RemoteProcessManager.Snapshot => {
+      const snapshot = {
+        ...base,
+        state: Process.State.FAILED,
+        error: ErrorCodec.encode(error),
+        completedAt: Option.some(Date.now()),
+      };
+      rejected.set(base.pid, { snapshot, error });
+      if (rejected.size > MAX_REJECTED) {
+        const [oldest] = rejected.keys();
+        rejected.delete(oldest);
+      }
+      return snapshot;
+    };
+
+    /**
+     * Fails a process the host no longer has (its state is gone): every read then reports it ended, so a caller
+     * starts another instead of retrying commands that can never apply. `undefined` when it was never seen.
+     */
+    const lose = (localPid: Process.ID, error: Error): Effect.Effect<RemoteProcessManager.Snapshot | undefined> =>
+      Effect.gen(function* () {
+        const known = lastKnown.get(localPid) ?? overlay.get(localPid);
+        log.warn('remote host lost the process', { pid: localPid, error });
+        yield* forget(localPid);
+        return known !== undefined ? recordFailure({ ...known, pid: localPid }, error) : undefined;
       });
 
     const startingSnapshot = (
@@ -340,22 +378,15 @@ export const make = (options: Options): Effect.Effect<Queued, never, Scope.Scope
               overlay.get(command.localPid) ??
               startingSnapshot(command.localPid, { spaceId: toSpaceId(payload.spaceId), key: payload.key });
             yield* forget(command.localPid);
-            rejected.set(command.localPid, {
-              snapshot: {
-                ...starting,
-                state: Process.State.FAILED,
-                error: ErrorCodec.encode(error),
-                completedAt: Option.some(Date.now()),
-              },
-              error,
-            });
-            if (rejected.size > MAX_REJECTED) {
-              const [oldest] = rejected.keys();
-              rejected.delete(oldest);
-            }
+            recordFailure(starting, error);
             return;
           }
           case 'submitInput':
+            if (ProcessNotFoundError.is(error)) {
+              // Forgetting purges this command with the rest of the process's queue.
+              yield* lose(command.localPid, error);
+              return;
+            }
             countInput(command.localPid, -1);
             return yield* queue.complete(command.id);
           case 'terminate':
@@ -516,7 +547,16 @@ export const make = (options: Options): Effect.Effect<Queued, never, Scope.Scope
           }
           return yield* control.status({ spaceId, pid: remotePidOf(localPid) }).pipe(
             Effect.flatMap(reconcile),
-            Effect.catchCause((cause) => (local !== undefined ? Effect.succeed(local) : Effect.failCause(cause))),
+            Effect.catchCause((cause) =>
+              Effect.gen(function* () {
+                const lost = lostOf(cause);
+                const failed = lost !== undefined ? yield* lose(localPid, lost) : undefined;
+                if (failed !== undefined) {
+                  return failed;
+                }
+                return local !== undefined ? local : yield* Effect.failCause(cause);
+              }),
+            ),
           );
         }),
 
@@ -552,9 +592,13 @@ export const make = (options: Options): Effect.Effect<Queued, never, Scope.Scope
           return yield* control.readEvents({ spaceId, pid: remotePidOf(localPid), cursor }).pipe(
             Effect.flatMap((page) => reconcile(page.snapshot).pipe(Effect.map((snapshot) => ({ ...page, snapshot })))),
             Effect.catchCause((cause) =>
-              local !== undefined
-                ? Effect.succeed({ events: [], cursor, truncated: false, snapshot: local })
-                : Effect.failCause(cause),
+              Effect.gen(function* () {
+                const lost = lostOf(cause);
+                const snapshot = (lost !== undefined ? yield* lose(localPid, lost) : undefined) ?? local;
+                return snapshot !== undefined
+                  ? { events: [], cursor, truncated: false, snapshot }
+                  : yield* Effect.failCause(cause);
+              }),
             ),
           );
         }),

@@ -82,7 +82,7 @@ export const BotConfig = Schema.Struct({
   binding: Schema.optional(Schema.String),
 });
 
-/** Mirrors the EDGE compute-service `DiscordBotStatus`, which every bot route answers with. */
+/** Mirrors the EDGE discord-service `DiscordBotStatus`, which every bot route answers with. */
 export const BotStatus = Schema.Struct({
   running: Schema.Boolean,
   gateway: GatewayState,

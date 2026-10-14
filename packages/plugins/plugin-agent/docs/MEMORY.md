@@ -4,11 +4,11 @@ Status: draft 2 (2026-10-03). Companion to "Interlocutor — design".
 
 ## Principle
 
-The agent's knowledge graph **is its ECHO space**. People, teams, goals and what the agent has
-learned about them are ordinary ECHO objects and relations, so they replicate, show up in Composer,
-can be queried by other agents and plugins, and can be inspected, corrected or deleted by the
-people they describe. There is no separate vector store or triple store that is the source of truth;
-any index (full-text, embeddings, RDF projection for plugin-brain) is derived from the space.
+People, teams and goals are ordinary ECHO objects, so they replicate, show up in Composer and can be
+corrected by the people they describe. What the agent has learned about them, memories as much as the
+facts it reads, lives in its **brain**: named graphs in an RDF store (pipeline-rdf), whose statements
+name those ECHO objects by their URIs. A memory is a kind of fact, so the Memories and Facts tabs read
+one store and nothing has to keep two representations in sync.
 
 ## The graph
 
@@ -17,18 +17,18 @@ any index (full-text, embeddings, RDF projection for plugin-brain) is derived fr
 | Person           | `Person` (@dxos/types)                | One per human. `identities` carries every handle the agent has seen: `discord:<id>`, `did:halo:…`, email. Resolution merges on any shared handle.         |
 | Team / group     | `Organization` (@dxos/types)          | A team, a Discord server or a community. Membership is the `Employer`-style relation, or a `memberOf` relation for non-employment groups.                 |
 | Goal             | `Goal` (new)                          | `{ title, description?, horizon, status, owners: Ref<Person \| Organization>[], parent?: Ref<Goal> }`. Shared when it has several owners or a team owner. |
-| Memory           | `Memory` (new)                        | One atomic statement the agent learned: `{ content, kind, origin, confidence?, observedAt, status, supersedes? }`.                                        |
+| Memory           | a named graph in the brain            | One atomic statement the agent learned: `<subject> dx:claim "content"`, with kind, origin, confidence and time stated about the graph (`Knowledge`).      |
 | Profile          | `Document` + `ProfileOf` (plugin-crm) | A readable summary of a Person or team, **derived** from its memories and goals; regenerated, never edited as the source of truth.                        |
 | Conversation     | `Chat` + `Message`                    | Where every memory comes from (provenance).                                                                                                               |
 | Any other entity | any ECHO object                       | Projects, documents, places: a memory can be about anything in the space.                                                                                 |
 
 Edges:
 
-- `HasSubject` (existing relation): Memory → each entity it is about. A memory about Rich and his team
-  has two edges; that's how "shared" knowledge is modelled, not by copying.
-- `Memory.source`: ref to the `Message` (or Chat) it was learned from.
-- `Goal.owners`, `Goal.parent` (sub-goals), and `Memory(kind: 'goal')` → Goal via `HasSubject` for
-  the evidence behind a goal.
+- A memory's graph claims its content about each entity it is about, keyed by the entity's object URI.
+  A memory about Rich and his team has two statements in one graph; that's how "shared" knowledge is
+  modelled, not by copying.
+- The graph's `prov:wasDerivedFrom`: the URI of the `Message` (or Chat) it was learned from.
+- `Goal.owners` and `Goal.parent` (sub-goals).
 
 ### Memory
 
@@ -40,8 +40,9 @@ status: 'active' | 'superseded' | 'retracted';
 
 - **Atomic and third-person**: "Rich wants the interlocutor demo working by end of October", not a
   transcript excerpt. One claim per object so it can be corrected or retracted on its own.
-- **Never overwritten**: a contradicting statement creates a new memory with `supersedes`, and the
-  old one becomes `superseded`. History is kept; recall only reads `active`.
+- **Never overwritten**: a contradicting statement is a new graph that `supersedes` the old one, and a
+  mistake a graph that `retracts` it (`revokeMemories`). The brain is append-only, so history is kept;
+  recall only reads `active`.
 - **Provenance is required**: every memory cites its source message. "Why do you think that?" is
   always answerable.
 

@@ -59,6 +59,18 @@ export interface IndexerObject {
    * Timestamp of the last update of the object.
    */
   updatedAt: number;
+
+  /**
+   * Heads of the document {@link data} was read at, for an object a client can back with the document's
+   * bytes: the document's only object, not a branch, and small enough to ship. Absent otherwise.
+   */
+  heads?: readonly string[];
+
+  /**
+   * The document's Automerge bytes, kept with {@link heads} by a host whose document store is too slow
+   * to read on every query; a host that reads its own store per row leaves this out.
+   */
+  bytes?: Uint8Array;
 }
 
 export interface ChangeSummary {

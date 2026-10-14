@@ -30,7 +30,7 @@ interface BrainService {
   `wake` = `AgentService.getSession(chat).submitPrompt(...)`, forked so the waking turn is not blocked.
   Not persistent (stated limitation).
 - **edge** (`dxos/edge` compute-service): `BrainObject` Durable Object per agent with SQLite —
-  pipeline-rdf `FactStoreLive.layer` over `@effect/sql-sqlite-do`, a `triggers` table and a `wakes`
+  pipeline-rdf `FactStoreLive.layer(ctx.storage.sql)` (`@dxos/sparql-sqlite`), a `triggers` table and a `wakes`
   outbox drained by an alarm (spawn the chat's `AgentProcess`, `submitInput`) so a relay never blocks
   the turn that sent it. Reached from operation-service through `BrainServiceEntrypoint` (service
   binding), and from clients through `GET /brain/:spaceId/:agentId`.

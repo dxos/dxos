@@ -5,7 +5,7 @@ group discord "Discord" {
   node DChannel "Discord Channel"
 }
 group cloud "EDGE" {
-  node Service "Discord Service" ref="packages/services/compute-service/src/discord/discord-bot.ts"
+  node Service "Discord Service" ref="packages/services/discord-service/src/agent-bot/discord-bot.ts"
   node Install "Installation"
   node Binding "Binding"
   node Process "Agent Process"
