@@ -1,5 +1,9 @@
 # History of main
 
+- `90521a638a` task: comment on 72207dc1 (by claude)
+- `77856573c6` history: import 515 changes
+- `397db919a9` task: import from tasks.sexp
+- `661910e409` add code specs
 - `6ad8d8e787` analytics decisions renumbered D102, D103 (by claude)
 - `731819a207` task: set 87707577 state (by claude)
 - `5e0af148e7` task: set 87707577 details (by claude)
@@ -8,6 +12,9 @@
 - `d3d028011c` Analytics.Spec: the analytics store's checked spec (D101) (by claude)
 - `d09aae3945` analytics store: @[event] structures, Parquet writer and reader, a push-only event store, deus event; reference forms in lookupName (D101, D102) (by claude)
 - `d75c424c9d` task: import from /tmp/claude-0/-home-user-dxos/fbb00151-1bb8-59fb-8bcb-7088de0f6fa7/scratchpad/oldexp/tasks.sexp
+- `880640eb13` task: set e76e36b0 state (by claude)
+- `ea44281ed7` task: set e76e36b0 details (by claude)
+- `7be4505616` task: open e76e36b0 Catch the R2 remote up with the git export and push it, so threads can start from deus pull (by claude)
 - `77337bc6cf` history: import 501 changes
 - `1e220da057` task: import from tasks.sexp
 - `3c07f87183` add code specs

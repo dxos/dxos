@@ -38,7 +38,11 @@ const get = (path) => {
 };
 
 /** A string as a DEUS s-expression string; control characters become spaces. */
-const str = (text) => `"${String(text ?? '').replace(/[\u0000-\u001f]/g, ' ').replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
+const str = (text) =>
+  `"${String(text ?? '')
+    .replace(/[\u0000-\u001f]/g, ' ')
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')}"`;
 
 const commits = [];
 for (let page = 1; ; page++) {

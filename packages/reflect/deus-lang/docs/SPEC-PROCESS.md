@@ -23,6 +23,23 @@ Write it in this order:
 5. **Code.** Then write or change the implementation until `deus mdl <Subsystem>.Spec` reports no
    failure.
 
+The codebase is the primary version control and git is its backup (D100). Dmytro: "threads MUST
+use the codebase as primary VCS, and git as backup". Start every task from the remote, not from the
+git export:
+
+```sh
+export DEUS_R2_ENDPOINT=https://<account>.r2.cloudflarestorage.com   # the DXOS account's R2 endpoint
+deus init --empty
+deus remote add origin r2://agent-artifacts/deus/explorer-demo
+deus pull origin && deus merge origin.main                          # the latest codebase
+```
+
+Make every change with the CLI (`deus update … --by <agent>`, `deus task …`), run `deus push origin`
+when a change lands, and only then `deus export codebase` and commit the export to git. If the
+remote is behind the git export (a change that was committed without a push), catch it up once
+after the pull: `deus update codebase/code codebase/specs --by <agent>`,
+`deus task import codebase/tasks.sexp`, `deus history import codebase/history.sexp`, then push.
+
 The steps, for a new spec or a change to one:
 
 ````sh
@@ -30,7 +47,8 @@ deus view Compile.Spec > /tmp/compile.mdl   # the document as stored (skip for a
 $EDITOR /tmp/compile.mdl                    # blocks and prose; a ```deus fence holds new laws
 deus update /tmp/compile.mdl                # stores the blocks, their prose, and the fence's code
 deus mdl Compile.Spec                       # checks it from the codebase
-deus export codebase                        # the git copy: codebase/specs/Compile.Spec.mdl
+deus push origin                            # the change lands in the primary
+deus export codebase                        # the git backup: codebase/specs/Compile.Spec.mdl
 ````
 
 A ```deus fence in the edited file compiles into the codebase like any source; the stored document
