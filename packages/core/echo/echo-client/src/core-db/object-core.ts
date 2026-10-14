@@ -121,6 +121,9 @@ export class ObjectCore {
   /** When the document last loaded or changed (`performance.now()`); the space releases it after a TTL. */
   public activeAt = 0;
 
+  /** When this client last wrote to the document (`performance.now()`), or 0. */
+  public editedAt = 0;
+
   /** Change listeners attached through doc accessors: an editor or store adapter holding the document. */
   #accessorListeners = 0;
 

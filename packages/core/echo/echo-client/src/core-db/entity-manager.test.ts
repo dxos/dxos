@@ -214,7 +214,7 @@ describe('DatabaseImpl', () => {
       const testBuilder = new EchoTestBuilder();
       await openAndClose(testBuilder);
       const peer = await testBuilder.createPeer();
-      const db = await peer.createDatabase(PublicKey.random(), { documentTtl: 200 });
+      const db = await peer.createDatabase(PublicKey.random(), { documentRetention: { ttl: 200, budget: 0 } });
       // Bound first, so it is idle at least as long as the other.
       const edited = db.add(Obj.make(TestSchema.Expando, { value: 1 }));
       const idle = db.add(Obj.make(TestSchema.Expando, { value: 1 }));
@@ -239,6 +239,22 @@ describe('DatabaseImpl', () => {
       using lease = await peer.host.automergeHost.loadDoc<DatabaseDirectory>(Context.default(), documentId);
       invariant(lease);
       await waitForCondition({ condition: () => lease.doc().objects![idle.id].data.value === 2, timeout: 5_000 });
+    });
+
+    test('the most recently edited documents stay loaded past their TTL', async () => {
+      const testBuilder = new EchoTestBuilder();
+      await openAndClose(testBuilder);
+      const peer = await testBuilder.createPeer();
+      const db = await peer.createDatabase(PublicKey.random(), { documentRetention: { ttl: 200, budget: 1 } });
+      const older = db.add(Obj.make(TestSchema.Expando, { value: 1 }));
+      const newer = db.add(Obj.make(TestSchema.Expando, { value: 1 }));
+      await db.flush();
+      Obj.update(newer, (newer) => {
+        newer.value = 2;
+      });
+
+      await waitForCondition({ condition: () => getObjectCore(older).docHandle === undefined, timeout: 5_000 });
+      expect(getObjectCore(newer).docHandle).toBeDefined();
     });
   });
 

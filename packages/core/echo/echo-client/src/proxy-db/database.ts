@@ -61,7 +61,13 @@ import { type EventAttributes, trace } from '@dxos/tracing';
 
 import type { SaveStateChangedEvent } from '../automerge/index.ts';
 import { type DocHandleProxy, type RepoProxy } from '../automerge/index.ts';
-import { type BranchStore, EntityManager, type LoadObjectOptions, type SpaceDocumentHeads } from '../core-db/index.ts';
+import {
+  type BranchStore,
+  type DocumentRetention,
+  EntityManager,
+  type LoadObjectOptions,
+  type SpaceDocumentHeads,
+} from '../core-db/index.ts';
 import {
   EchoReactiveHandler,
   type ProxyTarget,
@@ -199,8 +205,8 @@ export type EchoDatabaseProps = {
   /** Device-local persistence for the current-branch selection (non-synced). In-memory if omitted. */
   branchStore?: BranchStore;
 
-  /** How long, in ms, a loaded document stays in memory once nothing changes or edits it. */
-  documentTtl?: number;
+  /** Which loaded object documents the database keeps in memory. */
+  documentRetention?: DocumentRetention;
 
   /**
    * Run a reactive query for dynamic schemas.
@@ -340,7 +346,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       spaceId: params.spaceId,
       spaceKey: params.spaceKey,
       branchStore: params.branchStore,
-      documentTtl: params.documentTtl,
+      documentRetention: params.documentRetention,
       createEntity: (core) => initEchoReactiveObjectRootProxy(core, this),
     });
 

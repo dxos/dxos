@@ -102,6 +102,14 @@ interface ObjectUnavailable {
 
 type SpaceDocumentLinks = DatabaseDirectory['links'];
 
+/** Which loaded object documents a space keeps in memory. */
+export type DocumentRetention = {
+  /** How long, in ms, a document stays loaded once nothing changes it. */
+  ttl?: number;
+  /** How many of the most recently edited documents stay loaded whatever their idle time. */
+  budget?: number;
+};
+
 export type EntityManagerProps = {
   graph: HypergraphImpl;
   dataService: DataService.Client;
@@ -112,8 +120,8 @@ export type EntityManagerProps = {
   /** Device-local persistence for the current-branch selection (non-synced). In-memory if omitted. */
   branchStore?: BranchStore;
 
-  /** How long, in ms, a loaded document stays in memory once nothing changes or edits it; see {@link DOCUMENT_TTL}. */
-  documentTtl?: number;
+  /** Which loaded documents go back to their stored changes; see {@link DocumentRetention}. */
+  documentRetention?: DocumentRetention;
 
   /** Mints the caller-facing proxy for a core, injected because the proxy layer is built on this one. */
   createEntity: (core: ObjectCore) => Entity.Unknown;
@@ -153,7 +161,7 @@ export class EntityManager implements IDatabaseBinding {
 
   private readonly _createEntity: (core: ObjectCore) => Entity.Unknown;
 
-  private readonly _documentTtl: number;
+  private readonly _documentRetention: Required<DocumentRetention>;
 
   /**
    * Object ids whose backing document was determined to be not on local disk
@@ -271,7 +279,7 @@ export class EntityManager implements IDatabaseBinding {
     this._queryService = options.queryService;
     this._runtime = options.runtime;
     this._branchStore = options.branchStore;
-    this._documentTtl = options.documentTtl ?? DOCUMENT_TTL;
+    this._documentRetention = { ...DOCUMENT_RETENTION, ...options.documentRetention };
     this._repoProxy = new RepoProxy(this._dataService, this._runtime, this._spaceId);
     this.saveStateChanged = this._repoProxy.saveStateChanged;
   }
@@ -313,7 +321,7 @@ export class EntityManager implements IDatabaseBinding {
 
     await this._repoProxy.open();
     ctx.onDispose(() => this._unsubscribeFromHandles());
-    scheduleTaskInterval(ctx, async () => this.#expireIdleDocuments(), this._documentTtl / 2);
+    scheduleTaskInterval(ctx, async () => this.#expireIdleDocuments(), this._documentRetention.ttl / 2);
     ctx.onDispose(() => {
       for (const { handle, onUpdate, onActivated } of this.#passiveHandles.values()) {
         handle.off('passive', onUpdate);
@@ -655,14 +663,25 @@ export class EntityManager implements IDatabaseBinding {
   }
 
   /**
-   * Moves each object whose document has not changed for {@link _documentTtl}, and that no editor holds,
-   * back onto its document's stored changes, subscribed passive, so the document leaves memory. The next
-   * write or document read loads it again.
+   * Moves each object whose document has not changed for the retention TTL, that no editor holds and that
+   * is not among the most recently edited, back onto its document's stored changes, subscribed passive, so
+   * the document leaves memory. The next write or document read loads it again.
    */
   #expireIdleDocuments(): void {
+    const { ttl, budget } = this._documentRetention;
     const now = performance.now();
-    for (const core of this.allObjectCores()) {
-      if (now - core.activeAt >= this._documentTtl && this.#isExpirable(core)) {
+    const cores = this.allObjectCores();
+    // Wasm memory never shrinks, so a release only makes room for a later load, and a document edited
+    // again would load right back.
+    // TODO(wittjosiah): Consider ranking by how often a document is edited or loaded instead of when.
+    const kept = new Set(
+      cores
+        .filter((core) => core.editedAt > 0 && this.#isExpirable(core))
+        .sort((a, b) => b.editedAt - a.editedAt)
+        .slice(0, budget),
+    );
+    for (const core of cores) {
+      if (!kept.has(core) && now - core.activeAt >= ttl && this.#isExpirable(core)) {
         this.#expire(core);
       }
     }
@@ -2267,10 +2286,14 @@ export class EntityManager implements IDatabaseBinding {
     this._evictRemovedObjects(event);
     const documentChanges = this._processDocumentUpdate(event);
     const now = performance.now();
+    const edited = event.patchInfo.source === 'change';
     for (const objectId of documentChanges.updatedObjectIds) {
       const core = this._objects.get(objectId);
       if (core) {
         core.activeAt = now;
+        if (edited) {
+          core.editedAt = now;
+        }
       }
     }
     this._rebindObjects(event.handle, documentChanges.objectsToRebind);
@@ -2621,7 +2644,6 @@ export class EntityManager implements IDatabaseBinding {
 
 const RPC_TIMEOUT = 20_000;
 
-/** How long a loaded document stays in memory once nothing changes or edits it, by default. */
-const DOCUMENT_TTL = 30_000;
+const DOCUMENT_RETENTION: Required<DocumentRetention> = { ttl: 30_000, budget: 50 };
 
 type PassiveUpdate = ClientDocHandleEvents<DatabaseDirectory>['passive'];
