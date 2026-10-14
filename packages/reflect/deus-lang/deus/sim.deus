@@ -91,6 +91,7 @@ def run (seed : Int) (body : Unit -> {IO, Random | r} a) : {r} (a, Text) :=
     | IO.wallClock _ -> k =>
       Ref.set w.clock (Ref.get w.clock + 1)
       k (Int.toText (Ref.get w.clock))
+    | IO.exec program _ -> k => k (127, "", program ++ ": processes are not simulated")
     | IO.appendFile p t -> k =>
       mkdirs w (parent p)
       Ref.set w.files (Map.insert p (Option.getOr (Map.lookup p (Ref.get w.files)) "" ++ t) (Ref.get w.files))

@@ -47,6 +47,8 @@ ability IO @"#IO" where
   isDir : Text -> Bool
   wallClock : Unit -> Text
   appendFile : Text -> Text -> Unit
+  -- Runs a program with arguments: (exit code, stdout, stderr); 127 if it cannot start.
+  exec : Text -> List Text -> (Int, Text, Text)
 
 /--
   Defects: the program is wrong. The kernel raises failed matches, division by zero and

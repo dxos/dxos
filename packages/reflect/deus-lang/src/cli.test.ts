@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -139,5 +140,22 @@ describe('deus CLI', () => {
 
     const view = JSON.parse(deus('view', 'quadruple', '--json', ...c).stdout);
     expect(view[0].source).toContain('def quadruple (n : Int) : Int :=');
+  });
+
+  test('builds a standalone executable', { timeout: 180_000 }, ({ expect }) => {
+    process.env.DEUS_HOME = root;
+    process.env.DEUS_NODE = process.execPath;
+    const c = ['--codebase', join(scratch, 'binary')];
+    deus('init', ...c);
+    deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
+    const source = join(scratch, 'hello.deus');
+    writeFileSync(source, 'def main (u : Unit) : {IO} Unit := IO.print ("hello " ++ Text.join "," (IO.args ()))\n');
+    deus('add', source, ...c);
+    const binary = join(scratch, 'hello');
+    const build = deus('build', 'main', '-o', binary, ...c);
+    expect(build.stderr).toBe('');
+    expect(build.code).toBe(0);
+    const run = spawnSync(binary, ['a', 'b'], { cwd: tmpdir(), encoding: 'utf8' });
+    expect([run.status, run.stdout]).toEqual([0, 'hello a,b']);
   });
 });

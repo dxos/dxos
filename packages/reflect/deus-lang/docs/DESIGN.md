@@ -7,18 +7,22 @@ and the toolchain; [`DECISIONS.md`](./DECISIONS.md) records why each choice was 
 
 ## Status
 
-| Area                                                                                         | State                                                            |
-| -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| Kernel: Core CEK machine, deep multi-shot handlers, primitives, IO                           | done                                                             |
-| Lexer, parser (Lean syntax, offside rule), resolver, Unison-style hashing — in DEUS          | done                                                             |
-| Self-hosting: the seed compiles the compiler to itself                                       | done (`src/seed.test.ts`)                                        |
-| Failure tiers: `Throw` errors, `#Defect` defects, kernel panics                              | done (runtime); type checking pending                            |
-| Codebase store: objects, namespaces, history, branches, merge                                | in progress                                                      |
-| CLI: `add`, `update`, `view`, `ls`, `find`, `branch`, `merge`, `log`, `run`, `test`, `check` | in progress                                                      |
-| Type checker: Hindley–Milner with ability rows                                               | planned                                                          |
-| Theorems: `rfl`, `decide`, `test` evidence levels                                            | planned                                                          |
-| `.mdl`: ```deus fences                                                                       | done; extensions defined in DEUS and `perf` requirements planned |
-| wasm backend; standalone binaries                                                            | planned                                                          |
+| Area                                                                               | State                                                            |
+| ---------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Kernel: Core CEK machine, deep multi-shot handlers, primitives, IO                 | done                                                             |
+| Lexer, parser (Lean syntax, offside rule), resolver, Unison-style hashing in DEUS  | done                                                             |
+| Self-hosting: the seed compiles the compiler to itself                             | done (`src/seed.test.ts`)                                        |
+| Failure tiers: `Throw` errors, `#Defect` defects, kernel panics                    | done; defects carry named stack traces; `Failure` context chains |
+| Codebase store: objects, namespaces, history, branches, three-way merge, undo      | done                                                             |
+| CLI: codebase, history, `run`, `eval`, `test`, `check`, `image`, `build`, `--json` | done                                                             |
+| Type checker: Hindley–Milner with Koka-style ability rows                          | done ([D28](./DECISIONS.md), [D36](./DECISIONS.md)); gap D29     |
+| Theorems: `test`, `decide`, `rfl` evidence and tactic proofs                       | done ([D21](./DECISIONS.md))                                     |
+| Deterministic simulation for tests; `@[integration]` tests                         | done ([D32](./DECISIONS.md))                                     |
+| Observability: `Log`, `Trace`, `Metrics` abilities; NDJSON and OTLP sinks          | done ([D31](./DECISIONS.md), [D35](./DECISIONS.md))              |
+| Standalone executables (`deus build`)                                              | done ([D38](./DECISIONS.md))                                     |
+| `.mdl`: ```deus fences                                                             | done; extensions defined in DEUS and `perf` requirements planned |
+| wasm backend                                                                       | planned                                                          |
+| Projects/subgraphs, external requirements, replication, layers, containers         | designed ([PROPOSALS.md](./PROPOSALS.md)); not built             |
 
 ## The language
 

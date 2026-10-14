@@ -429,6 +429,18 @@ def image (args : Args) : {IO, Throw Text} Unit :=
     | none => IO.print text
   | _ => throw "usage: deus image <term> -o <file>"
 
+/-- `deus build <term> -o <file>`: a standalone executable that runs `term ()`. -/
+def build (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let ns := Codebase.current dir
+  match (lookupName ns (Option.getOr (List.head? args.positional) ""), option args "out") with
+  | ((_, Entry.term h), some out) =>
+    let image := Image.build (fetcher dir) h
+    match try (fun _ => Build.executable image out) with
+    | Result.ok _ => output args (fun _ => Json.obj [("binary", Json.str out)]) (fun _ => "Built " ++ out ++ ".")
+    | Result.err f => throw (Failure.render f)
+  | _ => throw "usage: deus build <term> -o <file>"
+
 def usage : Text :=
   Text.join "\n" [
     "usage: deus <command> [args] [--json] [--codebase <dir>]",
@@ -459,6 +471,7 @@ def usage : Text :=
     "                                       --integration also runs @[integration] tests for real",
     "  check [prefix]                       check theorems and report their evidence",
     "  image <name> -o <file>               write a kernel image",
+    "  build <name> -o <file>               write a standalone executable that runs name ()",
     "  compile <files|dirs…> --main <name>  compile files without a codebase",
     ""]
 
@@ -490,6 +503,7 @@ def dispatch (argv : List Text) : {IO, Throw Text} Unit :=
     else if command == "test" then Check.tests args
     else if command == "check" then Check.theorems args
     else if command == "image" then image args
+    else if command == "build" then build args
     else if command == "help" then IO.print usage
     else die ("unknown command " ++ command ++ "\n" ++ usage)
 

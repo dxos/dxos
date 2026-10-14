@@ -1,0 +1,54 @@
+/-
+  `deus build`: a standalone executable for a term (D38).
+
+  The executable is a Node single-executable application: the kernel, bundled into one script,
+  plus the term's image as an asset. The tools are pinned by version and run through `npx`, so
+  a build needs only Node and the registry.
+-/
+
+namespace Build
+
+def esbuild : Text := "esbuild@0.28.2"
+
+def postject : Text := "postject@1.0.0-alpha.6"
+
+/--
+  The sentinel Node looks for to know it carries an application. Split, so an image of this code
+  (the CLI building itself) does not contain the sentinel postject must find exactly once.
+-/
+def fuse : Text := "NODE_SEA_FUSE_" ++ "fce680ab2cc467b6e072b8b5df1996b2"
+
+/-- Runs a tool and returns its stdout; a non-zero exit is a failure carrying its output. -/
+def tool (program : Text) (arguments : List Text) : {IO, Throw Failure} Text :=
+  match IO.exec program arguments with
+  | (0, out, _) => out
+  | (code, out, err) =>
+    throw (Failure.of (program ++ " exited with " ++ Int.toText code) [("args", Text.join " " arguments), ("stderr", Text.trim err), ("stdout", Text.trim out)])
+
+def require (name : Text) : {IO, Throw Failure} Text :=
+  match IO.getEnv name with
+  | some value => value
+  | none => throw (Failure.of ("$" ++ name ++ " is not set; run deus through bin/deus.mjs") [])
+
+/-- Writes `out`, an executable that runs the image's main with its command-line arguments. -/
+def executable (image : Text) (out : Text) : {IO, Throw Failure} Unit :=
+  let home := require "DEUS_HOME"
+  let node := require "DEUS_NODE"
+  let work := out ++ ".build"
+  IO.mkdirp work
+  IO.writeFile (work ++ "/deus.image") image
+  let _ := Failure.context "bundling the kernel" [] (fun _ =>
+    tool "npx" ["--yes", esbuild, home ++ "/src/bin/standalone.ts", "--bundle", "--platform=node", "--format=cjs", "--log-level=warning", "--outfile=" ++ work ++ "/main.cjs"])
+  let config := Json.obj [("main", Json.str (work ++ "/main.cjs")), ("output", Json.str (work ++ "/sea.blob")), ("disableExperimentalSEAWarning", Json.bool true), ("assets", Json.obj [("image", Json.str (work ++ "/deus.image"))])]
+  IO.writeFile (work ++ "/sea.json") (Json.render config)
+  let _ := Failure.context "preparing the application blob" [] (fun _ => tool node ["--experimental-sea-config", work ++ "/sea.json"])
+  let _ := tool "cp" [node, out]
+  let mac := Text.trim (tool "uname" []) == "Darwin"
+  let _ := if mac then tool "codesign" ["--remove-signature", out] else ""
+  let macho := if mac then ["--macho-segment-name", "NODE_SEA"] else []
+  let _ := Failure.context "injecting the application blob" [] (fun _ =>
+    tool "npx" (["--yes", postject, out, "NODE_SEA_BLOB", work ++ "/sea.blob", "--sentinel-fuse", fuse] ++ macho))
+  let _ := if mac then tool "codesign" ["--sign", "-", out] else ""
+  IO.remove work
+
+end Build

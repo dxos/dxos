@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { spawnSync } from 'node:child_process';
 import {
   appendFileSync,
   existsSync,
@@ -15,7 +16,7 @@ import {
 } from 'node:fs';
 import { dirname } from 'node:path';
 
-import { DeusDefect, type HostHandler, NONE, UNIT, type Value, listFrom, listTo, show, some } from './machine.ts';
+import { DeusDefect, type HostHandler, NONE, UNIT, type Value, listFrom, listTo, pair, show, some } from './machine.ts';
 
 /** Thrown by `IO.exit` to unwind the machine. */
 export class ExitSignal extends Error {
@@ -56,6 +57,7 @@ export const IO_OPS = [
   'isDir',
   'wallClock',
   'appendFile',
+  'exec',
 ] as const;
 
 export type HostOptions = {
@@ -138,6 +140,12 @@ export const createHost = ({ args, stdout, stderr }: HostOptions): HostHandler =
         mkdirSync(dirname(text(a)), { recursive: true });
         appendFileSync(text(a), text(b));
         return UNIT;
+      case 'exec': {
+        const result = spawnSync(text(a), listTo(b).map(text), { encoding: 'utf8', maxBuffer: 1 << 28 });
+        const code = result.error ? 127 : (result.status ?? 1);
+        const stderr = result.error ? result.error.message : result.stderr;
+        return pair(code, pair(result.stdout ?? '', stderr));
+      }
       default:
         throw new DeusDefect(`unknown IO operation ${index}`);
     }

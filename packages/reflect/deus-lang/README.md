@@ -18,6 +18,7 @@ deus/*.deus  ──compile (the seed runs the compiler)──▶  seed/deus.imag
 
 ```bash
 node bin/deus.mjs compile deus --main Cli.main -o out.seed   # the compiler compiling itself
+node bin/deus.mjs build Cli.main -o deus                     # the CLI as a standalone executable
 ```
 
 ## Examples
