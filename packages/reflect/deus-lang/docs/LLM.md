@@ -85,6 +85,23 @@ deus switch main && deus merge try-merge-sort --json
 A merge that changed the same name differently on both sides returns `"result":"conflicts"` with
 the names, and writes nothing.
 
+## Tasks
+
+Issues live in the codebase beside the code (D59), so they branch and merge with it:
+
+```bash
+deus task --json                                  # open tasks, most urgent first
+deus task list --about List.sort --json           # tasks attached to a definition
+deus task new Sort is not stable --priority high --labels bug --link List.sort --by agent-x
+deus task set 3f2a --state doing --assignee agent-x
+deus task comment 3f2a "Delegating to sortBy keeps equal keys in order." --by agent-x
+deus update /tmp/patch.deus --closes 3f2a --by agent-x   # done, linked to this change
+deus task show 3f2a --json                        # links (and how they changed since), history
+```
+
+An id prefix is enough. A merge combines a task's fields; a field changed differently on both
+sides is a conflict named `task:<id>.<field>`.
+
 ## Things that are different from files
 
 - A definition's identity is its hash. Renaming (`mv`) never changes a hash and never breaks a

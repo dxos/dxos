@@ -449,6 +449,140 @@ describe('deus CLI', () => {
     ]);
   });
 
+  // The first recipe in docs/GETTING_STARTED.md, as a reader would run it.
+  test(
+    'runs the getting-started tour and prints definitions with their effect rows',
+    { timeout: 120_000 },
+    ({ expect, onTestFinished }) => {
+      const c = ['--codebase', join(scratch, 'tour')];
+      // `deus run` hands every argument after the name to the program, so it finds the codebase in the environment.
+      process.env.DEUS_CODEBASE = join(scratch, 'tour');
+      onTestFinished(() => {
+        delete process.env.DEUS_CODEBASE;
+      });
+      deus('init', ...c);
+      deus(
+        'add',
+        join(root, 'deus/builtins.deus'),
+        join(root, 'deus/prelude.deus'),
+        join(root, 'examples/tour.deus'),
+        ...c,
+      );
+      expect(deus('test', 'Tour', ...c).stdout).toMatch(/3 passed, 0 failed/);
+      expect(deus('run', 'Tour.main', '12', '-3', 'tea').stdout).toBe(
+        '12 cups of tea cost 36\nerror: negative quantity -3\nerror: not a number: tea\n',
+      );
+      const view = deus('view', 'Tour.fromTable', 'Tour.total', ...c).stdout;
+      expect(view).toContain('def Tour.fromTable (table : Map Text Int) (body : Unit -> {Prices | r} a) : {r} a :=');
+      expect(view).toContain('def Tour.total (lines : List Line) : {Prices} Int :=');
+      const unhandled = deus(
+        'add',
+        file('unhandled.deus', 'def oops (u : Unit) : {IO} Unit := println (Int.toText (Tour.total []))\n'),
+        ...c,
+      );
+      expect(unhandled.stderr).toContain('unhandled ability Prices');
+    },
+  );
+
+  test(
+    'tracks tasks attached to definitions and changes, merged and replicated with the code',
+    { timeout: 120_000 },
+    ({ expect }) => {
+      const c = ['--codebase', join(scratch, 'tasks')];
+      deus('init', ...c);
+      deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
+      const shapes = file(
+        'tasks-shapes.deus',
+        'namespace Shapes\ndef square (side : Int) : Int := side * side\nend Shapes\n',
+      );
+      deus('add', shapes, ...c);
+      type TaskRow = {
+        id: string;
+        title: string;
+        state: string;
+        priority: number;
+        assignee: string;
+        comments: { note: string }[];
+      };
+      const task = (...args: string[]): TaskRow => JSON.parse(deus('task', ...args, '--json', ...c).stdout);
+      const bug = task(
+        'new',
+        'Square',
+        'overflows',
+        '--priority',
+        'high',
+        '--labels',
+        'bug,math',
+        '--link',
+        'Shapes.square',
+      );
+      expect(bug).toMatchObject({ title: 'Square overflows', state: 'todo', priority: 2 });
+      const docs = task('new', 'Document', 'shapes');
+      task('set', bug.id, '--state', 'doing', '--assignee', 'agent-x');
+      task('comment', bug.id, 'Use', 'a', 'checked', 'multiply.', '--by', 'agent-x');
+      const listed = (...args: string[]): string[] =>
+        JSON.parse(deus('task', 'list', ...args, '--json', ...c).stdout).map((row: TaskRow) => row.id);
+      expect(listed('--about', 'Shapes.square')).toEqual([bug.id]);
+      expect(listed()).toEqual([bug.id, docs.id]);
+
+      // The change that fixes a task closes it and is linked from it.
+      writeFileSync(shapes, 'namespace Shapes\ndef square (side : Int) : Int := side * side + 0\nend Shapes\n');
+      const update = JSON.parse(deus('update', shapes, '--closes', bug.id.slice(0, 4), '--json', ...c).stdout);
+      expect(listed()).toEqual([docs.id]);
+      const shown = JSON.parse(deus('task', 'show', bug.id, '--json', ...c).stdout);
+      expect(shown.task).toMatchObject({
+        state: 'done',
+        assignee: 'agent-x',
+        comments: [{ author: 'agent-x', note: 'Use a checked multiply.' }],
+      });
+      expect(shown.links[0].current).not.toBe(shown.links[0].hash);
+      expect(shown.links[0].changes[0].causal).toBe(update.causal);
+      expect(shown.links[1]).toMatchObject({ change: update.causal });
+      expect(shown.history.map((row: { message: string }) => row.message)).toEqual([
+        `close ${bug.id} by #${update.causal.slice(0, 10)}`,
+        `task: comment on ${bug.id}`,
+        `task: set ${bug.id} state assignee`,
+        `task: open ${bug.id} Square overflows`,
+      ]);
+
+      // Tasks merge field by field; a field changed differently on both sides is a conflict.
+      deus('branch', 'side', ...c);
+      deus('switch', 'side', ...c);
+      task('set', docs.id, '--priority', 'low');
+      task('comment', docs.id, 'from', 'side');
+      deus('switch', 'main', ...c);
+      task('set', docs.id, '--assignee', 'bob');
+      task('comment', docs.id, 'from', 'main');
+      expect(deus('merge', 'side', ...c).code).toBe(0);
+      const merged = JSON.parse(deus('task', 'show', docs.id, '--json', ...c).stdout).task;
+      expect(merged).toMatchObject({ priority: 4, assignee: 'bob' });
+      expect(merged.comments.map((comment: { note: string }) => comment.note)).toEqual(['from main', 'from side']);
+      deus('branch', 'rename', ...c);
+      deus('switch', 'rename', ...c);
+      task('set', docs.id, '--title', 'Doc A');
+      deus('switch', 'main', ...c);
+      task('set', docs.id, '--title', 'Doc B');
+      expect(JSON.parse(deus('merge', 'rename', '--json', ...c).stdout).names).toEqual([`task:${docs.id}.title`]);
+
+      // Tasks travel in bundles.
+      const copy = ['--codebase', join(scratch, 'tasks-copy')];
+      deus('remote', 'add', 'origin', join(scratch, 'tasks-remote'), ...c);
+      deus('push', ...c);
+      deus('init', ...copy);
+      deus('remote', 'add', 'origin', join(scratch, 'tasks-remote'), ...copy);
+      deus('pull', ...copy);
+      deus('merge', 'origin.main', ...copy);
+      expect(
+        JSON.parse(deus('task', 'list', '--all', '--json', ...copy).stdout).map((row: TaskRow) => row.title),
+      ).toEqual(['Doc B', 'Square overflows']);
+
+      const site = join(scratch, 'tasks-site');
+      deus('explore', '--out', site, ...c);
+      expect(readFileSync(join(site, 'task', `${bug.id}.html`), 'utf8')).toContain('changed since linked');
+      expect(readFileSync(join(site, 'index.html'), 'utf8')).toContain(`task/${docs.id}.html`);
+    },
+  );
+
   test('writes the codebase explorer and publishes it beside a remote', { timeout: 120_000 }, ({ expect }) => {
     const c = ['--codebase', join(scratch, 'explore')];
     deus('init', ...c);
@@ -486,8 +620,11 @@ describe('deus CLI', () => {
     const remote = join(scratch, 'explore-remote');
     deus('remote', 'add', 'origin', remote, ...c);
     const published = JSON.parse(deus('explore', '--out', out, '--publish', 'origin', '--json', ...c).stdout);
-    expect(published.files).toBe(readdirSync(join(out, 'def')).length + readdirSync(join(out, 'ns')).length + 2);
+    expect(published.files).toBe(readdirSync(join(out, 'def')).length + readdirSync(join(out, 'ns')).length + 3);
+    expect(published.uploaded).toBe(published.files);
     expect(readFileSync(join(remote, 'site', 'def', `${area?.hash}.html`), 'utf8')).toBe(page);
+    // Republishing sends only what changed.
+    expect(JSON.parse(deus('explore', '--out', out, '--publish', 'origin', '--json', ...c).stdout).uploaded).toBe(0);
   });
 
   test(

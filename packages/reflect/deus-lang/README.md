@@ -34,14 +34,20 @@ deus add src/ --by agent-x                                   # .deus files and .
 deus test && deus check && deus mdl                          # tests, theorems, spec blocks
 deus remote add origin r2://agent-artifacts/deus/app         # or a directory
 deus push && deus pull && deus compact                       # immutable bundles, compacted
+deus task new Sort is not stable --link List.sort            # issues attached to definitions
+deus update fix.deus --closes 3f2a                           # …closed by the change that fixes them
 deus explore                                                 # browse the codebase on :8080
 deus explore --publish origin                                # …or host it beside the bundles
 ```
 
-`deus help` lists every command; [`docs/LLM.md`](./docs/LLM.md) is the agent's guide.
+New here? [`docs/GETTING_STARTED.md`](./docs/GETTING_STARTED.md) installs the toolchain and walks through
+recipes for the language, proofs, HTTP and Cloudflare. `deus help` lists every command;
+[`docs/LLM.md`](./docs/LLM.md) is the agent's guide.
 
 ## Examples
 
+- [`examples/tour.deus`](./examples/tour.deus) — a tour of the language: data, records, abilities
+  and handlers, checked errors, tests.
 - [`examples/sort.deus`](./examples/sort.deus) — insertion sort with a specification and formal
   proofs that it sorts and permutes.
 - [`examples/soundness.deus`](./examples/soundness.deus) — claims the prover must refuse.

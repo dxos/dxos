@@ -22,15 +22,15 @@
 -/
 
 /--
-  An object store holding bundles by name; `put` never overwrites. `write` stores a file beside
-  the bundles (the explorer's site), replacing what was there.
+  An object store holding bundles by name; `put` never overwrites. `writeAll` stores files beside
+  the bundles (the explorer's site) as (path, content) pairs, replacing what was there.
 -/
 ability Remote @"urn:deus:replicate:Remote" where
   list : Unit -> List Text
   get : Text -> Option Text
   put : Text -> Text -> Unit
   delete : Text -> Unit
-  write : Text -> Text -> Unit
+  writeAll : List (Text, Text) -> Unit
 
 /-- A seen bundle: its claims (branch, causal) and the hashes of its objects. -/
 structure Seen @"urn:deus:replicate:Seen" where
@@ -104,9 +104,10 @@ def sync (dir : Text) (remote : Text) : {Remote, IO} List Seen :=
 /-- Causal nodes, snapshots, and everything their entries reach, from the given heads. -/
 def closureOf (dir : Text) (heads : List Text) : {IO, Throw Text} Map Text Unit :=
   let nodes := List.foldl (fun acc h => union acc (Codebase.ancestors dir h)) Map.empty heads
-  let snapshots := List.map (fun c => (Codebase.readCausal dir c).snapshot) (Map.keys nodes)
+  let causals := List.map (fun c => Codebase.readCausal dir c) (Map.keys nodes)
+  let snapshots := List.map (fun c => c.snapshot) causals
   let entryRoots := List.concatMap (fun s => Project.rootsOf (Map.toList (Codebase.readNamespace dir s))) snapshots
-  union nodes (Project.reachable dir (snapshots ++ entryRoots))
+  union nodes (Project.reachable dir (List.concatMap Codebase.snapshotsOf causals ++ entryRoots))
 
 /-- The claimed causal nodes for `branch` that no other claim descends from, sorted. -/
 def headsOf (dir : Text) (seen : List Seen) (branch : Text) : {IO, Throw Text} List Text :=
@@ -201,9 +202,10 @@ def collect (dir : Text) (remote : Text) (keep : Int) : {Remote, IO, Throw Text}
   let seen := sync dir remote
   let claims := List.concatMap (fun b => List.map (fun h => (b, h)) (headsOf dir seen b)) (branchesOf seen)
   let kept := recent dir (List.map snd claims) keep
-  let snapshots := List.map (fun c => (Codebase.readCausal dir c).snapshot) kept
+  let causals := List.map (fun c => Codebase.readCausal dir c) kept
+  let snapshots := List.map (fun c => c.snapshot) causals
   let entryRoots := List.concatMap (fun s => Project.rootsOf (Map.toList (Codebase.readNamespace dir s))) snapshots
-  let live := union (Set.fromList kept) (Project.reachable dir (snapshots ++ entryRoots))
+  let live := union (Set.fromList kept) (Project.reachable dir (List.concatMap Codebase.snapshotsOf causals ++ entryRoots))
   let text := bundle dir claims (Map.keys live)
   let name := nameOf 99 text
   let existing := List.map (fun s => s.bundleName) seen
@@ -234,8 +236,8 @@ def directory (root : Text) (body : Unit -> {Remote, IO | r} a) : {IO | r} a :=
   | Remote.delete name -> k =>
     IO.remove (root ++ "/bundles/" ++ name)
     k ()
-  | Remote.write path text -> k =>
-    IO.writeFile (root ++ "/" ++ path) text
+  | Remote.writeAll files -> k =>
+    List.forEach files (fun pair => IO.writeFile (root ++ "/" ++ fst pair) (snd pair))
     k ()
 
 /-- The `<Key>` values of an S3 ListObjectsV2 response. -/
@@ -281,14 +283,26 @@ def bucket (endpoint : Text) (name : Text) (prefix : Text) (config : Text) (body
   | Remote.delete key -> k =>
     curl ["-X", "DELETE", base ++ "/" ++ folder ++ key]
     k ()
-  | Remote.write path text -> k =>
-    let staged := config ++ ".write"
-    IO.writeFile staged text
-    let kind := if Text.endsWith ".html" path then "text/html; charset=utf-8" else if Text.endsWith ".json" path then "application/json" else "text/plain; charset=utf-8"
-    let result := curl ["-X", "PUT", "-H", "content-type: " ++ kind, "--data-binary", "@" ++ staged, base ++ "/" ++ prefix ++ "/" ++ path]
-    IO.remove staged
+  | Remote.writeAll files -> k =>
+    -- One curl run uploads every file, 16 at a time; each transfer is its own config group, so
+    -- each repeats the credentials, and the batch config is as private as the remote's.
+    let staged := config ++ ".d"
+    let batch := config ++ ".batch"
+    IO.mkdirp staged
+    IO.exec "install" ["-m", "600", "/dev/null", batch]
+    let user := Option.getOr (IO.readFile config) ""
+    let groups := List.mapIndexed (fun i pair =>
+      let path := fst pair
+      let file := staged ++ "/" ++ Int.toText i
+      IO.writeFile file (snd pair)
+      let kind := if Text.endsWith ".html" path then "text/html; charset=utf-8" else if Text.endsWith ".json" path then "application/json" else "text/plain; charset=utf-8"
+      user ++ "aws-sigv4 = \"aws:amz:auto:s3\"\nfail-with-body\noutput = \"/dev/null\"\nheader = \"content-type: " ++ kind ++ "\"\nupload-file = \"" ++ file ++ "\"\nurl = \"" ++ base ++ "/" ++ prefix ++ "/" ++ path ++ "\"\n") files
+    IO.writeFile batch (Text.join "next\n" groups)
+    let result := if List.isEmpty files then (0, "", "") else IO.exec "curl" ["-sS", "--parallel", "--parallel-max", "16", "-K", batch]
+    IO.remove batch
+    IO.exec "rm" ["-rf", staged]
     match result with
     | (0, _, _) => k ()
-    | (_, out, err) => defect ("writing " ++ path ++ " failed: " ++ Text.trim err ++ " " ++ Text.trim out)
+    | (_, out, err) => defect ("writing the site failed: " ++ Text.trim err ++ " " ++ Text.trim out)
 
 end Replicate

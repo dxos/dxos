@@ -244,7 +244,22 @@ Each definition has a page named by its hash, with its signature, highlighted so
 results, and links to its dependencies and dependents; a search box covers every name. Without
 flags it serves the pages on the native server (`--port`, default 8080). `--out dir` only writes
 them. `--publish origin` uploads them under the remote's `site/`, so a public bucket hosts them
-at `<bucket URL>/<prefix>/site/index.html`.
+at `<bucket URL>/<prefix>/site/index.html`. A republish uploads only the pages whose content
+changed.
+
+## Tasks
+
+Issues are part of the codebase (D59, [`deus/tasks.deus`](../deus/tasks.deus)). A `Task`
+(`urn:deus:task:Task`) has a title, a state (todo, doing, done, canceled), a priority, an
+assignee, labels, a parent, details, comments and links. A link attaches a definition, by name
+and by the hash it had when linked, or a change, by causal hash. Tasks are hashed objects in
+the `tasks` layer. Each history node points at a tasks snapshot beside its namespace snapshot,
+so tasks branch, merge and replicate with the code, and a task closed on a fix branch is closed
+where the branch merges. Merges are per field, as Linear's are: comments and links from both
+sides are kept, and a field both sides changed differently is a conflict. A task's history,
+and the changes to what it links since then, come from the branch's history. `deus task`
+manages tasks, `deus update --closes <id>` closes one with the change that fixed it, and the
+explorer shows tasks on their own pages and on the definitions they are about.
 
 ## The outside world
 

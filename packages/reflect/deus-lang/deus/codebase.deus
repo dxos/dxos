@@ -8,6 +8,7 @@
     HEAD                    the current branch name
     results/<h>             test and proof verdicts, keyed by the hash of what was checked
     provenance/<causal>     who or what produced a change (an agent, a prompt digest)
+    tasks                   issues, as hashed objects beside the code (D59, `deus/tasks.deus`)
     artifacts/<h>           built executables, by the hash of their inputs; local only
     cache/                  re-computable data (fetched artifacts); never replicated
 
@@ -18,7 +19,7 @@
   policy (replicate, delete) is a directory. Code may depend only on code.
 
   A namespace snapshot maps names to entries. A causal node records a snapshot, its
-  parents and a message; a branch is a pointer to a causal node, so history is a DAG and
+  parents, a message and, once there are tasks, a tasks snapshot; a branch is a pointer to a causal node, so history is a DAG and
   merging two branches is a three-way merge of their snapshots.
 -/
 
@@ -81,7 +82,8 @@ def layerOf (form : Sexp) : Text :=
   if kind == "spec" then "spec"
   else if kind == "test" then "tests"
   else if kind == "theorem" then "proofs"
-  else if kind == "ns" || kind == "causal" then "history"
+  else if kind == "task" then "tasks"
+  else if kind == "ns" || kind == "causal" || kind == "tasks" then "history"
   else "code"
 
 /-- Layers a layer may depend on; the rest are refused when adding. -/
@@ -94,7 +96,7 @@ def mayDependOn (layer : Text) : List Text :=
 
 /-- Every layer with where it lives and whether it is replicated. -/
 def layers : List (Text, Text, Bool) :=
-  [("spec", "objects/", true), ("code", "objects/", true), ("tests", "objects/", true), ("proofs", "objects/", true), ("history", "objects/", true),
+  [("spec", "objects/", true), ("code", "objects/", true), ("tests", "objects/", true), ("proofs", "objects/", true), ("history", "objects/", true), ("tasks", "objects/", true),
     ("results", "results/", true), ("provenance", "provenance/", true), ("artifacts", "artifacts/", false), ("cache", "cache/", false)]
 
 /-- Hashes of every object in the store. -/
@@ -114,18 +116,25 @@ def nsFromSexp (form : Sexp) : Map Text Entry :=
     | [name, entry] => (Sexp.asText name, Entry.fromSexp entry)
     | _ => defect "bad namespace entry") (Sexp.args form))
 
-/-- A history node: a namespace snapshot, its parents, and why it was made. -/
+/-- A history node: a namespace snapshot, its parents, why it was made, and its tasks snapshot (`""` for none). -/
 structure Causal where
   snapshot : Text
   parents : List Text
   message : Text
+  tasks : Text
 
+/-- A node without tasks prints as it did before tasks existed, so its hash is unchanged. -/
 def causalToSexp (c : Causal) : Sexp :=
-  Sexp.node "causal" [Sexp.node "ns" [Sexp.str c.snapshot], Sexp.node "parents" (List.map Sexp.str c.parents), Sexp.node "msg" [Sexp.str c.message]]
+  let tasks := if Text.isEmpty c.tasks then [] else [Sexp.node "tasks" [Sexp.str c.tasks]]
+  Sexp.node "causal" ([Sexp.node "ns" [Sexp.str c.snapshot], Sexp.node "parents" (List.map Sexp.str c.parents), Sexp.node "msg" [Sexp.str c.message]] ++ tasks)
 
 def causalFromSexp (form : Sexp) : Causal :=
   let field := fun key => Option.getOr (List.find (fun x => Sexp.head x == key) (Sexp.args form)) (Sexp.list [])
-  Causal.mk (Sexp.asText (Option.getOr (List.head? (Sexp.args (field "ns"))) (Sexp.str ""))) (List.map Sexp.asText (Sexp.args (field "parents"))) (Sexp.asText (Option.getOr (List.head? (Sexp.args (field "msg"))) (Sexp.str "")))
+  let first := fun key => Sexp.asText (Option.getOr (List.head? (Sexp.args (field key))) (Sexp.str ""))
+  Causal.mk (first "ns") (List.map Sexp.asText (Sexp.args (field "parents"))) (first "msg") (first "tasks")
+
+/-- The snapshots a history node points at: its namespace and its tasks. -/
+def snapshotsOf (c : Causal) : List Text := if Text.isEmpty c.tasks then [c.snapshot] else [c.snapshot, c.tasks]
 
 def readCausal (dir : Text) (h : Text) : {IO, Throw Text} Causal :=
   match readObject dir h with
@@ -164,14 +173,26 @@ def namespaceOf (dir : Text) (branch : Text) : {IO, Throw Text} Map Text Entry :
 /-- The current branch's namespace. -/
 def current (dir : Text) : {IO, Throw Text} Map Text Entry := namespaceOf dir (currentBranch dir)
 
-/-- Records a new snapshot on the current branch. Returns the new causal hash. -/
+/-- Records a new snapshot on the current branch, keeping its tasks. Returns the new causal hash. -/
 def commit (dir : Text) (ns : Map Text Entry) (message : Text) : {IO, Throw Text} Text :=
   let branch := currentBranch dir
   let parent := headOf dir branch
+  let previous := readCausal dir parent
   let snapshot := put dir (nsToSexp ns)
-  if snapshot == (readCausal dir parent).snapshot then parent
+  if snapshot == previous.snapshot then parent
   else
-    let c := put dir (causalToSexp (Causal.mk snapshot [parent] message))
+    let c := put dir (causalToSexp (Causal.mk snapshot [parent] message previous.tasks))
+    setBranch dir branch c
+    c
+
+/-- Records a new tasks snapshot on the current branch, keeping its namespace. -/
+def commitTasks (dir : Text) (tasks : Text) (message : Text) : {IO, Throw Text} Text :=
+  let branch := currentBranch dir
+  let parent := headOf dir branch
+  let previous := readCausal dir parent
+  if tasks == previous.tasks then parent
+  else
+    let c := put dir (causalToSexp (Causal.mk previous.snapshot [parent] message tasks))
     setBranch dir branch c
     c
 
@@ -185,7 +206,7 @@ def init (dir : Text) : {IO, Throw Text} Unit :=
     IO.mkdirp (dir ++ "/provenance")
     IO.mkdirp (dir ++ "/cache")
     let snapshot := put dir (nsToSexp Map.empty)
-    let c := put dir (causalToSexp (Causal.mk snapshot [] "init"))
+    let c := put dir (causalToSexp (Causal.mk snapshot [] "init" ""))
     setBranch dir "main" c
     IO.writeFile (dir ++ "/HEAD") "main\n"
 
@@ -237,7 +258,9 @@ inductive MergeResult where
 
 /--
   Merges `other` into the current branch. Names changed on one side only take that side;
-  names changed differently on both sides are conflicts, and nothing is written.
+  names changed differently on both sides are conflicts, and nothing is written. Tasks merge
+  field by field (`Tasks.merge`); a field both sides changed differently is a conflict named
+  `task:<id>.<field>`.
 -/
 def merge (dir : Text) (other : Text) : {IO, Throw Text} MergeResult :=
   let branch := currentBranch dir
@@ -248,11 +271,18 @@ def merge (dir : Text) (other : Text) : {IO, Throw Text} MergeResult :=
     setBranch dir branch theirs
     MergeResult.fastForward theirs
   else
-    let baseNs := match mergeBase dir ours theirs with
-      | some b => readNamespace dir (readCausal dir b).snapshot
+    let base := Option.map (fun b => readCausal dir b) (mergeBase dir ours theirs)
+    let baseNs := match base with
+      | some b => readNamespace dir b.snapshot
       | none => Map.empty
-    let oursNs := readNamespace dir (readCausal dir ours).snapshot
-    let theirsNs := readNamespace dir (readCausal dir theirs).snapshot
+    let oursNode := readCausal dir ours
+    let theirsNode := readCausal dir theirs
+    let oursNs := readNamespace dir oursNode.snapshot
+    let theirsNs := readNamespace dir theirsNode.snapshot
+    let baseTasks := match base with
+      | some b => Tasks.snapshotOf dir b
+      | none => Map.empty
+    let tasks := Tasks.merge dir baseTasks (Tasks.snapshotOf dir oursNode) (Tasks.snapshotOf dir theirsNode)
     let names := Set.toList (Set.fromList (Map.keys baseNs ++ Map.keys oursNs ++ Map.keys theirsNs))
     let step := fun (state : (Map Text Entry, List Text, List Text)) (name : Text) =>
       match state with
@@ -269,13 +299,13 @@ def merge (dir : Text) (other : Text) : {IO, Throw Text} MergeResult :=
           (ns2, name :: changed, conflicts)
         else if b == t then state
         else (ns, changed, name :: conflicts)
-    match List.foldl step (oursNs, [], []) names with
-    | (ns, changed, []) =>
+    match (List.foldl step (oursNs, [], []) names, tasks) with
+    | ((ns, changed, []), (merged, [])) =>
       let snapshot := put dir (nsToSexp ns)
-      let c := put dir (causalToSexp (Causal.mk snapshot [ours, theirs] ("merge " ++ other ++ " into " ++ branch)))
+      let c := put dir (causalToSexp (Causal.mk snapshot [ours, theirs] ("merge " ++ other ++ " into " ++ branch) (Tasks.putSnapshot dir merged)))
       setBranch dir branch c
       MergeResult.merged c (List.reverse changed)
-    | (_, _, conflicts) => MergeResult.conflicts (List.reverse conflicts)
+    | ((_, _, conflicts), (_, taskConflicts)) => MergeResult.conflicts (List.reverse conflicts ++ taskConflicts)
 
 --
 -- Reading definitions.

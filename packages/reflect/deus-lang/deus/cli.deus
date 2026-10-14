@@ -227,6 +227,12 @@ def addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
     let message := Option.getOr (option args "message") ((if isUpdate then "update " else "add ") ++ Text.join " " args.positional)
     let causal := Codebase.commit dir ns3 message
     recordProvenance dir args causal (List.map fst batch.objects ++ List.map (fun pair => Entry.hash (snd pair)) (List.filter (fun pair => Entry.kind (snd pair) == "spec") entries))
+    match option args "closes" with
+    | some id =>
+      let t := Tasks.find (Tasks.current dir) id
+      Tasks.save dir [Tasks.link (Tasks.setField t "state" "done") (Attachment.change causal)] ("close " ++ t.id ++ " by " ++ short causal)
+      ()
+    | none => ()
     output args
       (fun _ => Json.obj [("added", Json.arr (List.map (fun p => entryJson (fst p) (snd p)) added)), ("updated", Json.arr (List.map (fun c =>
         match c with
@@ -814,10 +820,19 @@ def explore (args : Args) : {IO, Throw Text} Unit :=
   let pages := Explorer.generate dir out
   match (option args "publish", option args "out") with
   | (some name, _) =>
-    let files := filesUnder out ""
-    withRemote dir name (fun _ => List.forEach files (fun f => Remote.write ("site/" ++ f) (Option.getOr (IO.readFile (out ++ "/" ++ f)) "")))
-    output args (fun _ => Json.obj [("pages", Json.num pages), ("remote", Json.str name), ("files", Json.num (List.length files))])
-      (fun _ => "Published " ++ Int.toText (List.length files) ++ " files to " ++ name ++ " under site/ (open site/index.html at the bucket's public URL).")
+    -- What was uploaded before, by content hash, so a republish sends only changed pages (`--force` sends all).
+    let manifest := dir ++ "/cache/site-" ++ name ++ ".sums"
+    let previous := if flag args "force" then Map.empty else
+      Map.fromList (List.filterMap (fun line =>
+        match Text.split line " " with
+        | [sum, path] => some (path, sum)
+        | _ => none) (Text.lines (Option.getOr (IO.readFile manifest) "")))
+    let sums := List.map (fun f => (f, Text.sha256 (Option.getOr (IO.readFile (out ++ "/" ++ f)) ""))) (filesUnder out "")
+    let changed := List.filter (fun pair => Map.lookup (fst pair) previous != some (snd pair)) sums
+    withRemote dir name (fun _ => Remote.writeAll (List.map (fun pair => ("site/" ++ fst pair, Option.getOr (IO.readFile (out ++ "/" ++ fst pair)) "")) changed))
+    IO.writeFile manifest (Text.concat (List.map (fun pair => snd pair ++ " " ++ fst pair ++ "\n") sums))
+    output args (fun _ => Json.obj [("pages", Json.num pages), ("remote", Json.str name), ("files", Json.num (List.length sums)), ("uploaded", Json.num (List.length changed))])
+      (fun _ => "Published " ++ Int.toText (List.length changed) ++ " changed of " ++ Int.toText (List.length sums) ++ " files to " ++ name ++ " under site/ (open site/index.html at the bucket's public URL).")
   | (none, some _) =>
     output args (fun _ => Json.obj [("pages", Json.num pages), ("out", Json.str out)]) (fun _ => "Wrote " ++ Int.toText pages ++ " pages to " ++ out ++ ".")
   | (none, none) =>
@@ -856,6 +871,143 @@ def build (args : Args) : {IO, Throw Text} Unit :=
     | Result.ok _ => output args (fun _ => Json.obj [("binary", Json.str out)]) (fun _ => "Built " ++ out ++ ".")
     | Result.err f => throw (Failure.render f)
   | _ => throw "usage: deus build <term> -o <file>"
+
+--
+-- Commands: tasks (D59).
+--
+
+def attachmentJson (a : Attachment) : Json :=
+  match a with
+  | Attachment.definition name h => Json.obj [("definition", Json.str name), ("hash", Json.str h)]
+  | Attachment.change h => Json.obj [("change", Json.str h)]
+
+def taskJson (t : Task) : Json :=
+  Json.obj [("id", Json.str t.id), ("title", Json.str t.title), ("state", Json.str (Tasks.stateText t.state)), ("priority", Json.num t.priority),
+    ("assignee", Json.str t.assignee), ("labels", Json.arr (List.map Json.str t.labels)), ("parent", Json.str t.parent), ("details", Json.str t.details),
+    ("links", Json.arr (List.map attachmentJson t.links)), ("comments", Json.arr (List.map (fun c => Json.obj [("author", Json.str c.author), ("note", Json.str c.note)]) t.comments))]
+
+def taskLine (t : Task) : Text :=
+  let labels := if List.isEmpty t.labels then "" else "  [" ++ Text.join ", " t.labels ++ "]"
+  let assignee := if Text.isEmpty t.assignee then "" else "  @" ++ t.assignee
+  let pad := fun (n : Int) (x : Text) => x ++ Text.repeat (n - Text.length x) " "
+  t.id ++ "  " ++ pad 8 (Tasks.stateText t.state) ++ " " ++ pad 6 (Tasks.priorityText t.priority) ++ " " ++ t.title ++ labels ++ assignee
+
+def changeJson (dir : Text) (pair : (Text, Causal)) : {IO} Json :=
+  Json.obj ([("causal", Json.str (fst pair)), ("message", Json.str (snd pair).message)] ++
+    Option.getOr (Option.map (fun agent => [("by", Json.str agent)]) (producedBy dir (fst pair))) [])
+
+def changeLine (dir : Text) (pair : (Text, Causal)) : {IO} Text :=
+  "  " ++ short (fst pair) ++ "  " ++ (snd pair).message ++ Option.getOr (Option.map (fun agent => "  (" ++ agent ++ ")") (producedBy dir (fst pair))) ""
+
+/-- A linked definition: its name, the hash it was linked at, its current hash, and the changes that rebound it. -/
+def linkReport (dir : Text) (ns : Map Text Entry) (a : Attachment) : {IO, Throw Text} (Json, List Text) :=
+  match a with
+  | Attachment.change h =>
+    let message := match Codebase.readObject dir h with
+      | some form => (Codebase.causalFromSexp form).message
+      | none => "(not in this store)"
+    (Json.obj [("change", Json.str h), ("message", Json.str message)], ["  change " ++ short h ++ "  " ++ message])
+  | Attachment.definition name h =>
+    let now := Option.map Entry.hash (Map.lookup name ns)
+    let changes := Tasks.historyOfName dir name 200
+    let state := match now with
+      | none => "  (no longer named)"
+      | some n => if n == h then "" else "  (now " ++ short n ++ ")"
+    (Json.obj [("definition", Json.str name), ("hash", Json.str h), ("current", Option.getOr (Option.map Json.str now) Json.null), ("changes", Json.arr (List.map (changeJson dir) changes))],
+      ("  " ++ name ++ "  " ++ short h ++ state) :: List.map (fun c => "  " ++ changeLine dir c) changes)
+
+/-- The options of `task new` / `task set` that name task fields, applied in order. -/
+def applyFields (args : Args) (t : Task) : {Throw Text} Task :=
+  List.foldl (fun acc field =>
+    match option args field with
+    | some value => Tasks.setField acc field value
+    | none => acc) t Tasks.fields
+
+/--
+  `deus task …` (D59): issues kept in the codebase, attached to definitions and changes.
+  `new <title…>`, `list` (open tasks; `--all`, `--state s`, `--label l`, `--about <name>`),
+  `show <id>`, `set <id> --state doing …`, `comment <id> <text…>`, `link <id> <name>|--change <causal>`
+  and `unlink <id> <name>`. `deus update … --closes <id>` closes a task with the change that fixed it.
+-/
+def task (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let author := Option.getOr (option args "by") (Option.getOr (IO.getEnv "USER") "someone")
+  let tasks := Tasks.current dir
+  let saved := fun (t : Task) (message : Text) =>
+    Tasks.save dir [t] message
+    output args (fun _ => taskJson t) (fun _ => taskLine t)
+  match args.positional with
+  | "new" :: words =>
+    let title := Text.join " " words
+    if Text.isEmpty title then throw "usage: deus task new <title…>"
+    else
+      let t := applyFields args (Tasks.blank (Tasks.freshId dir title author) title)
+      let linked := match option args "link" with
+        | some name =>
+          match lookupName (Codebase.current dir) name with
+          | (full, e) => Tasks.link t (Attachment.definition full (Entry.hash e))
+        | none => t
+      saved linked ("task: open " ++ t.id ++ " " ++ title)
+  | [] => task (Args.mk ["list"] args.options)
+  | ["list"] =>
+    let about := Option.map (fun name =>
+      match lookupName (Codebase.current dir) name with
+      | (full, e) => Set.fromList (List.map (fun t => t.id) (Tasks.about tasks full (Entry.hash e)))) (option args "about")
+    let keep := fun (t : Task) =>
+      let byState := match option args "state" with
+        | some s => Tasks.stateText t.state == s
+        | none => flag args "all" || Tasks.isOpen t
+      let byLabel := match option args "label" with
+        | some l => List.any (fun x => x == l) t.labels
+        | none => true
+      let byLink := match about with
+        | some ids => Set.contains t.id ids
+        | none => true
+      byState && byLabel && byLink
+    let rows := List.sortBy Tasks.order (List.filter keep (Map.values tasks))
+    output args (fun _ => Json.arr (List.map taskJson rows)) (fun _ => if List.isEmpty rows then "No tasks." else Text.join "
+" (List.map taskLine rows))
+  | ["show", id] =>
+    let t := Tasks.find tasks id
+    let ns := Codebase.current dir
+    let links := List.map (linkReport dir ns) t.links
+    let history := Tasks.historyOf dir t.id 200
+    let children := List.filter (fun c => c.parent == t.id) (Map.values tasks)
+    output args
+      (fun _ => Json.obj [("task", taskJson t), ("links", Json.arr (List.map fst links)), ("history", Json.arr (List.map (changeJson dir) history)), ("children", Json.arr (List.map taskJson children))])
+      (fun _ =>
+        let head := [t.id ++ "  " ++ t.title, Tasks.stateText t.state ++ " · " ++ Tasks.priorityText t.priority ++
+          (if Text.isEmpty t.assignee then "" else " · @" ++ t.assignee) ++ (if List.isEmpty t.labels then "" else " · " ++ Text.join ", " t.labels) ++
+          (if Text.isEmpty t.parent then "" else " · parent " ++ t.parent)]
+        let section := fun (title : Text) (lines : List Text) => if List.isEmpty lines then [] else ["", title] ++ lines
+        Text.join "\n" (head ++ (if Text.isEmpty t.details then [] else ["", t.details]) ++
+          section "Links" (List.concatMap snd links) ++
+          section "Subtasks" (List.map (fun c => "  " ++ taskLine c) children) ++
+          section "Comments" (List.map (fun c => "  " ++ c.author ++ ": " ++ c.note) t.comments) ++
+          section "History" (List.map (changeLine dir) history)))
+  | ["set", id] =>
+    let t := applyFields args (Tasks.find tasks id)
+    saved t ("task: set " ++ t.id ++ " " ++ Text.join " " (List.filter (fun f => flag args f) Tasks.fields))
+  | "comment" :: id :: words =>
+    let t := Tasks.find tasks id
+    saved (Tasks.comment t (Comment.mk author (Text.join " " words))) ("task: comment on " ++ t.id)
+  | ["link", id] =>
+    let t := Tasks.find tasks id
+    match option args "change" with
+    | some h =>
+      let full := match List.filter (fun c => Text.startsWith h (fst c)) (Codebase.history dir (Codebase.currentBranch dir) 100000) with
+        | c :: _ => fst c
+        | [] => throw ("no change " ++ h ++ " on this branch")
+      saved (Tasks.link t (Attachment.change full)) ("task: link " ++ t.id ++ " to " ++ short full)
+    | none => throw "usage: deus task link <id> <name> | --change <causal>"
+  | ["link", id, name] =>
+    let t := Tasks.find tasks id
+    match lookupName (Codebase.current dir) name with
+    | (full, e) => saved (Tasks.link t (Attachment.definition full (Entry.hash e))) ("task: link " ++ t.id ++ " to " ++ full)
+  | ["unlink", id, name] =>
+    let t := Tasks.find tasks id
+    saved (Tasks.unlink t name) ("task: unlink " ++ t.id ++ " from " ++ name)
+  | _ => throw "usage: deus task [new <title…> | list | show <id> | set <id> --<field> v | comment <id> <text…> | link <id> <name> | unlink <id> <name>]"
 
 def usage : Text :=
   Text.join "\n" [
@@ -908,6 +1060,15 @@ def usage : Text :=
     "  build <handler> -o <file> --server   write a standalone native web server for a handler",
     "  serve <handler> [--port n]           serve a web handler locally (storage in ./deus-data)",
     "  explore [--out d|--port n|--publish r]  the codebase explorer: write, serve, or host it on a remote",
+    "",
+    "tasks",
+    "  task new <title…> [--priority p --labels a,b --assignee a --parent id --details d --link name]",
+    "  task [list] [--all|--state s|--label l|--about name]   open tasks, most urgent first",
+    "  task show <id>                       a task, what it links (and how that changed since), its history",
+    "  task set <id> --state doing|done|canceled …   change fields (title, state, priority, assignee, labels, parent, details)",
+    "  task comment <id> <text…>            add a comment (--by <agent>)",
+    "  task link <id> <name>|--change <h>   attach a definition or a change; unlink <id> <name> detaches",
+    "  update <files…> --closes <id>        mark a task done, linked to the change that fixed it",
     "  build <fn> -o <file.wasm> --wasm     compile a first-order Int/Bool function (and its callees) to wasm",
     "  compile <files|dirs…> --main <name>  compile files without a codebase",
     ""]
@@ -951,6 +1112,7 @@ def dispatch (argv : List Text) : {IO, Throw Text} Unit :=
     else if command == "build" then build args
     else if command == "serve" then serve args
     else if command == "explore" then explore args
+    else if command == "task" then task args
     else if command == "help" then IO.print usage
     else die ("unknown command " ++ command ++ "\n" ++ usage)
 

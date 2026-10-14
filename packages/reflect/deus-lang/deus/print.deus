@@ -307,14 +307,25 @@ def ty (p : Printer) (t : Sexp) (prec : Int) : Text :=
   | Sexp.list (Sexp.sym "tapp" :: f :: args) => paren 90 prec (ty p f 90 ++ Text.concat (List.map (fun x => " " ++ ty p x 100) args))
   | Sexp.list [Sexp.sym "tfun", a, b] => paren 10 prec (ty p a 11 ++ " -> " ++ ty p b 10)
   | Sexp.list [Sexp.sym "tfun", a, b, Sexp.list (Sexp.sym "eff" :: effs)] =>
-    paren 10 prec (ty p a 11 ++ " -> {" ++ Text.join ", " (List.map (fun x => ty p x 0) effs) ++ "} " ++ ty p b 10)
+    paren 10 prec (ty p a 11 ++ " -> " ++ effRow p effs ++ " " ++ ty p b 10)
+  | Sexp.list [Sexp.sym "teff", Sexp.list (Sexp.sym "eff" :: effs), b] =>
+    paren 10 prec (effRow p effs ++ " " ++ ty p b 10)
   | _ => Sexp.print t
 
-/-- Splits a signature into its first `n` argument types and the rest. -/
+/-- An effect row as written: abilities, then a row variable after `|` (`{Prices | r}`). -/
+def effRow (p : Printer) (effs : List Sexp) : Text :=
+  let tails := List.filter (fun x => Sexp.head x == "tvar") effs
+  let named := List.filter (fun x => Sexp.head x != "tvar") effs
+  let shown := Text.join ", " (List.map (fun x => ty p x 0) named)
+  let tail := Text.join ", " (List.map (fun x => ty p x 0) tails)
+  "{" ++ (if Text.isEmpty tail then shown else if Text.isEmpty shown then tail else shown ++ " | " ++ tail) ++ "}"
+
+/-- Splits a signature into its first `n` argument types and the rest; the last arrow's row stays on the rest (`{E} B`). -/
 def splitSig (sig : Sexp) (n : Int) : (List Sexp, Option Sexp) :=
   if n == 0 then ([], some sig)
   else
     match sig with
+    | Sexp.list [Sexp.sym "tfun", a, b, row] => if n == 1 then ([a], some (Sexp.node "teff" [row, b])) else splitSig (Sexp.node "tfun" [a, b]) n
     | Sexp.list (Sexp.sym "tfun" :: a :: b :: _) =>
       match splitSig b (n - 1) with
       | (args, rest) => (a :: args, rest)
