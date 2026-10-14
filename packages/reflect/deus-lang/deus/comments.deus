@@ -1,5 +1,5 @@
 /-
-  Comments (D80): notes on definitions and changes, kept in the codebase as tasks are (D59), so
+  Comments (D81): notes on definitions and changes, kept in the codebase as tasks are (D59), so
   they branch, merge and replicate with the code. A task keeps its own comments; this holds the
   rest, one thread per subject.
 
@@ -80,7 +80,7 @@ def merge (dir : Text) (base : Map Text Text) (ours : Map Text Text) (theirs : M
 end Comments
 
 /-
-  Assets (D80): files attached to comments, such as screenshots. A store keeps each one at
+  Assets (D81): files attached to comments, such as screenshots. A store keeps each one at
   `assets/<sha256>`, named by the SHA-256 of its bytes, and a remote at `<prefix>/assets/<sha256>`;
   objects name an asset by that hash, so bundles and the git export never carry its bytes.
 -/
@@ -145,7 +145,7 @@ def named (dir : Text) : {IO, Throw Text} List Text :=
 end Assets
 
 /-
-  The explorer's inbox (D80): the hosted explorer cannot run DEUS, so a signed-in member's
+  The explorer's inbox (D81): the hosted explorer cannot run DEUS, so a signed-in member's
   comment or new task is stored on the remote as a request, `<prefix>/inbox/<name>.sexp`, and its
   images under `assets/`. `deus inbox` applies the requests to the current branch, each as its
   own change by `github:<login>`, and deletes them; the next push publishes them.

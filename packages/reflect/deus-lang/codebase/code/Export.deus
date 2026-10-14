@@ -227,7 +227,7 @@ def Export.write (dir : Text) (out : Text) : {IO, Throw Text} (Int, (Int, Int)) 
     (fun t => Sexp.print (Tasks.toSexp t) ++ "\n")
     (sortBy (fun a b => compare a.id b.id) tasks)))
   IO.writeFile (out ++ "/TASKS.md") ("# Tasks\n\n" ++ Text.concat (List.map taskMarkdown tasks))
-  -- Comments (D80) are written only when there are some, so an export without them is unchanged.
+  -- Comments (D81) are written only when there are some, so an export without them is unchanged.
   let threads := Map.toList (Comments.current dir)
   if List.isEmpty threads then () else IO.writeFile (out ++ "/comments.sexp") (Text.concat (List.map
     (fun pair => Sexp.print (Sexp.node "subject" [Sexp.str (fst pair), threadToSexp (snd pair)]) ++ "\n")

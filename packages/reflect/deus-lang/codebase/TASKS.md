@@ -9,6 +9,12 @@
 
 From Dmytro: an artifact is a constant whose value is cached, e.g. deusCli := Deus.toBinary Cli.main; evaluating it once caches the result in the artifacts layer by the hash of the expression.
 
+## Native: Perceus reference counting with reuse for the C back end, so compiled programs free memory (`62d1bdda`)
+
+- state: todo
+- priority: high
+- labels: native, perf
+
 ## QA flows for web apps: scripted user journeys checked in simulation, on a real server and in a browser (`9428f054`)
 
 - state: doing
@@ -76,6 +82,24 @@ Lexer turns a character literal into an int token; keep the form as a note-like 
 - labels: explorer, browser, wasm
 
 deus explore could ship deus_kernel.wasm, the seed and a JSON snapshot of the codebase directory; platform/browser/playground.mjs --codebase shows the shape. A definition card could get Run and Eval.
+
+## Native: a C runtime for Text, maps and the other primitives, ported from the Rust kernel (`72a1f2fb`)
+
+- state: todo
+- priority: medium
+- labels: native, perf
+
+## Native: closure conversion and partial application in the C back end (`610b2785`)
+
+- state: todo
+- priority: medium
+- labels: native, perf
+
+## Native: effect handlers in the C back end by evidence passing, with stack switching for general resumptions (`e1cf2c6c`)
+
+- state: todo
+- priority: medium
+- labels: native, perf
 
 ## Readers do not verify hashes of bundles and objects; a stray file under bundles/ fails a pull (`7afeaa0c`)
 
@@ -188,14 +212,14 @@ Dmytro: one of the most impactful things you can do rn is a really good codebase
 
 Dmytro: explore embedding deus into browser apps via wasm (like codebase viewer for example)
 
-## Explorer accounts: GitHub sign-in, writes limited to active dxos org members, read-only when signed out (`a00fa56e`)
+## Explorer accounts: GitHub sign-in, writes limited to active dxos org members, read-only when signed out (`3bb7f0f7`)
 
 - state: done
 - priority: high
 - assignee: claude
 - labels: explorer, writing
 - parent: 861438d2
-- links change #c432032637
+- links change #c3aa27a438
 
 ## Explorer as an SPA showing several definitions at once (`84014a86`)
 
@@ -205,14 +229,14 @@ Dmytro: explore embedding deus into browser apps via wasm (like codebase viewer 
 - labels: review, explorer
 - links `Explorer.generate` (#c3e00dc212)
 
-## Explorer comments on definitions, changes and tasks, stored in the codebase (`d1534a34`)
+## Explorer comments on definitions, changes and tasks, stored in the codebase (`b827edb2`)
 
 - state: done
 - priority: high
 - assignee: claude
 - labels: explorer, writing
 - parent: 861438d2
-- links change #c432032637
+- links change #c3aa27a438
 
 ## Exports from several containers overwrite each other's history and tasks (`a93aee73`)
 
@@ -224,14 +248,14 @@ Dmytro: explore embedding deus into browser apps via wasm (like codebase viewer 
 
 Each thread exports codebase/ from its own ~/.deus, so the last export wins: history.sexp loses the other containers' entries, and tasks.sexp reverts tasks another container changed. Needed: fullLog dedup by causal hash plus importing codebase/history.sexp before export, and a field-wise task merge on import (Tasks.merge exists for branches).
 
-## File tasks from the explorer with image attachments stored as codebase assets (`d2d4e786`)
+## File tasks from the explorer with image attachments stored as codebase assets (`16d433b5`)
 
 - state: done
 - priority: high
 - assignee: claude
 - labels: explorer, writing
 - parent: 861438d2
-- links change #c432032637
+- links change #c3aa27a438
 
 ## Keep ordinary comments, so the codebase can be the source of truth for the toolchain (`b09507db`)
 
@@ -259,6 +283,15 @@ Only doc comments survive add; the -- comments that explain why are lost, so deu
 - links change #a37df20cc0
 
 Namespace snapshots are trees (D72), deus migrate rewrites flat history, the remote keeps the whole history and --keep is gone (D73), bundles stay columnar text (D74). Merged into #13952.
+
+## Native compilation: a C back end compiled by clang/LLVM, and benchmarks of every back end (`7ca05fc5`)
+
+- state: done
+- priority: high
+- labels: native, perf
+- links change #9aa115afc5
+
+deus build --c compiles the wasm subset to C (deus/cgen.deus); clang -O2 is within 1.4x of or faster than wasm in V8 and 12-26x faster than the JIT. Numbers and roadmap in docs/spec/NATIVE.md (D80).
 
 ## Native deus fails with DEUS_HOME is not set (`0f23f671`)
 

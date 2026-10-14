@@ -56,7 +56,7 @@ def Inbox.applyOne (dir : Text) (form : Sexp) : {IO, Throw Text} Text :=
     else Throw.throw ("unknown request kind " ++ kind)
 
 /-
-  The explorer's inbox (D80): the hosted explorer cannot run DEUS, so a signed-in member's
+  The explorer's inbox (D81): the hosted explorer cannot run DEUS, so a signed-in member's
   comment or new task is stored on the remote as a request, `<prefix>/inbox/<name>.sexp`, and its
   images under `assets/`. `deus inbox` applies the requests to the current branch, each as its
   own change by `github:<login>`, and deletes them; the next push publishes them.

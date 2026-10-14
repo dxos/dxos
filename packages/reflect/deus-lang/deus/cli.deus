@@ -13,7 +13,7 @@ structure Args where
   options : Map Text Text
 
 /-- Options that never take a value. -/
-def booleanFlags : Map Text Unit := Set.fromList ["json", "core", "all", "force", "empty", "help", "integration", "wasm", "native", "worker", "server", "browser"]
+def booleanFlags : Map Text Unit := Set.fromList ["json", "core", "all", "force", "empty", "help", "integration", "wasm", "c", "native", "worker", "server", "browser"]
 
 def parseArgs (args : List Text) : Args :=
   let rec go rest pos opts :=
@@ -963,7 +963,7 @@ def publishSite (dir : Text) (name : Text) (out : Text) (force : Bool) : {IO, Th
       match Text.split line " " with
       | [sum, path] => some (path, sum)
       | _ => none) (Text.lines (Option.getOr (IO.readFile manifest) "")))
-  -- Attached files are binary and already on the remote under `assets/`, where the Worker serves them (D80).
+  -- Attached files are binary and already on the remote under `assets/`, where the Worker serves them (D81).
   let files := List.filter (fun f => not (Text.startsWith "assets/" f)) (filesUnder out "")
   let sums := List.map (fun f => (f, Text.sha256 (Option.getOr (IO.readFile (out ++ "/" ++ f)) ""))) files
   let changed := List.filter (fun pair => Map.lookup (fst pair) previous != some (snd pair)) sums
@@ -1017,6 +1017,10 @@ def build (args : Args) : {IO, Throw Text} Unit :=
       if flag args "wasm" then
         match try (fun _ => Wasm.compile (fun x => Codebase.readObject dir x) (fun x => Codebase.readMeta dir x) h (Names.lastSegment (Option.getOr (List.head? args.positional) "main"))) with
         | Result.ok bytes => IO.writeBytes out bytes
+        | Result.err message => throw (Failure.of message [])
+      else if flag args "c" then
+        match try (fun _ => CGen.compile (fun x => Codebase.readObject dir x) (fun x => Codebase.readMeta dir x) h (Names.lastSegment (Option.getOr (List.head? args.positional) "main"))) with
+        | Result.ok source => Build.cExecutable source out
         | Result.err message => throw (Failure.of message [])
       else if flag args "worker" then Build.worker image (Text.replace "." "-" (Text.toLower (Option.getOr (List.head? args.positional) "actor"))) out
       else if flag args "browser" then Build.browser image out
@@ -1177,7 +1181,7 @@ def task (args : Args) : {IO, Throw Text} Unit :=
     output args (fun _ => Json.obj [("imported", Json.num n)]) (fun _ => "Imported " ++ Int.toText n ++ " tasks.")
   | _ => throw "usage: deus task [new <title…> | list | show <id> | set <id> --<field> v | comment <id> <text…> | link <id> <name> | unlink <id> <name>]"
 
-/-- `--attach <file>` copied into the asset store (D80); none without the option. -/
+/-- `--attach <file>` copied into the asset store (D81); none without the option. -/
 def attachments (dir : Text) (args : Args) : {IO, Throw Text} List Asset :=
   match option args "attach" with
   | some file => [Assets.add dir file]
@@ -1197,7 +1201,7 @@ def subjectOf (dir : Text) (given : Text) : {IO, Throw Text} Text :=
     match lookupName (Codebase.current dir) (if Text.startsWith "def:" given then Text.drop 4 given else given) with
     | (full, _) => Comments.definition full
 
-/-- `deus comment <name|change:h> <text…>` (D80): a comment on a definition or a change, kept in the codebase. -/
+/-- `deus comment <name|change:h> <text…>` (D81): a comment on a definition or a change, kept in the codebase. -/
 def comment (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let author := Option.getOr (option args "by") (Option.getOr (IO.getEnv "USER") "someone")
@@ -1229,7 +1233,7 @@ def comments (args : Args) : {IO, Throw Text} Unit :=
       (fun _ => if List.all (fun pair => List.isEmpty (snd pair)) shown then "No comments."
         else Text.join "\n" (List.concatMap (fun pair => [fst pair] ++ List.map commentLine (snd pair)) shown))
 
-/-- `deus asset add <file>` (D80): stores a file in the asset store by its SHA-256. -/
+/-- `deus asset add <file>` (D81): stores a file in the asset store by its SHA-256. -/
 def asset (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   match args.positional with
@@ -1238,7 +1242,7 @@ def asset (args : Args) : {IO, Throw Text} Unit :=
     output args (fun _ => assetJson a) (fun _ => a.hash ++ "  " ++ a.mediaType ++ "  " ++ a.fileName)
   | _ => throw "usage: deus asset add <file>"
 
-/-- `deus inbox [remote]` (D80): applies the comments and tasks members filed in the hosted explorer. -/
+/-- `deus inbox [remote]` (D81): applies the comments and tasks members filed in the hosted explorer. -/
 def inbox (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let name := remoteName args
@@ -1339,6 +1343,7 @@ def usage : Text :=
     "  task import <tasks.sexp>             restore tasks from an export",
     "  export <dir>                         the codebase as text for git: code/<Namespace>.deus, tasks, history",
     "  build <fn> -o <file.wasm> --wasm     compile a first-order Int/Bool function (and its callees) to wasm",
+    "  build <fn> -o <file> --c             the same subset to C, compiled to an executable by $CC (default cc); -o x.c writes the source",
     "  compile <files|dirs…> --main <name>  compile files without a codebase",
     ""]
 
