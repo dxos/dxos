@@ -241,3 +241,7 @@ perhaps add an alarm to remind you of that every 30 minutes
 ---
 
 - standing instructions: all sessions should be merging changes directly into https://github.com/dxos/dxos/pull/13952 ; close all extra PRs that were openend
+
+---
+
+- standing instructions: track tasks in codebase and make sure its up to date
