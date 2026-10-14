@@ -20,7 +20,9 @@ import {
   type AgentKnowledgeGoal,
   type AgentKnowledgeNode,
   type AgentKnowledgePredicate,
+  type EntityCardModel,
   curie,
+  toEntityCards,
 } from '#components';
 import { Goal, Knowledge, Profile } from '#types';
 
@@ -33,6 +35,8 @@ const GOAL_ORDER: readonly Goal.Status[] = ['active', 'confirmed', 'proposed', '
 export type AgentKnowledgeData = {
   memories: Knowledge.Memory[];
   facts: AgentKnowledgeFact[];
+  /** One card per entity the brain's facts and active memories mention. */
+  cards: EntityCardModel[];
   predicates: AgentKnowledgePredicate[];
   /** The brain's ontology graph as TriG. */
   ontology: string;
@@ -150,6 +154,18 @@ export const useAgentKnowledge = (agent: Agent.Agent): AgentKnowledgeData => {
     [inspection, db],
   );
 
+  // Retracted and replaced memories drop out, as they do from Memories; a retraction marker states nothing itself.
+  const cards = useMemo(() => {
+    const active = new Set(memories.map((memory) => memory.id));
+    const statements = (inspection?.facts ?? [])
+      .map(({ fact }) => fact)
+      .filter(
+        (fact) =>
+          fact.kind === undefined || (fact.graph !== undefined && active.has(fact.graph) && !fact.retracts?.length),
+      );
+    return toEntityCards(statements, { objects: true });
+  }, [inspection, memories]);
+
   // The brain starts with the seed vocabulary; the predicates its extractor minted are read off the facts that use
   // them, which carry the definition the brain stored.
   const { predicates, ontology } = useMemo(() => {
@@ -186,5 +202,5 @@ export const useAgentKnowledge = (agent: Agent.Agent): AgentKnowledgeData => {
     [inspection, error],
   );
 
-  return { memories, facts, predicates, ontology, goals: goalItems, nodes, edges, brain, refresh };
+  return { memories, facts, cards, predicates, ontology, goals: goalItems, nodes, edges, brain, refresh };
 };

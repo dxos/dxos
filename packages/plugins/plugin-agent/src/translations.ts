@@ -122,6 +122,8 @@ export const translations = [
         'agent-state-channel-mode.label': 'Mode: {{mode}}',
         'agent-knowledge-facts.label': 'Facts',
         'agent-knowledge-facts-empty.message': 'Nothing read yet.',
+        'agent-knowledge-entities.label': 'Entities',
+        'agent-knowledge-entities-empty.message': 'No entities known yet.',
         'agent-knowledge-predicates.label': 'Predicates',
         'agent-knowledge-predicate-minted.label': 'minted',
         'agent-knowledge-predicate-count.label_one': '{{count}} fact',

@@ -261,11 +261,11 @@ const SubgraphsStory = () => {
   );
 };
 
-/** Finder-style columns over the same graph; objects (an employer, a paper) get cards too, so every chip opens one. */
-const BrowserStory = () => {
-  const cards = useMemo(() => toEntityCards([...PROFILE_FACTS, ...RDF_FACTS], { ...CARD_OPTIONS, objects: true }), []);
-  return <EntityBrowser cards={cards} icons={CARD_ICONS} hues={CARD_HUES} />;
-};
+/** The story's graph as cards; objects (an employer, a paper) get cards too, so every chip opens one. */
+const ENTITY_CARDS = toEntityCards([...PROFILE_FACTS, ...RDF_FACTS], { ...CARD_OPTIONS, objects: true });
+
+/** Finder-style columns over the same graph. */
+const BrowserStory = () => <EntityBrowser cards={ENTITY_CARDS} icons={CARD_ICONS} hues={CARD_HUES} />;
 
 type StoryProps = {
   /** Named rather than passed as objects, because storybook clones args and ECHO objects reject the writes. */
@@ -293,6 +293,7 @@ const DefaultStory = ({ scenario, defaultView, brain }: StoryProps) => {
     <AgentKnowledge.Root defaultView={defaultView} brain={brain}>
       <AgentKnowledge.Memories memories={knowledge.memories.map(({ memory }) => memory)} now={NOW} />
       <AgentKnowledge.Facts facts={scenario === 'empty' ? [] : FACTS} now={NOW} />
+      <AgentKnowledge.Entities cards={scenario === 'empty' ? [] : ENTITY_CARDS} />
       <AgentKnowledge.Predicates predicates={PREDICATES} trig={RDF.Graph.ontologyToTriG(SEED)} />
       <AgentKnowledge.Goals goals={scenario === 'empty' ? [] : GOALS} />
       <AgentKnowledge.Graph nodes={nodes} edges={edges} />
@@ -341,6 +342,14 @@ export const Facts: Story = {
   args: {
     scenario: 'default',
     defaultView: 'facts',
+  },
+};
+
+export const Entities: Story = {
+  decorators: [withLayout({ layout: 'column' })],
+  args: {
+    scenario: 'default',
+    defaultView: 'entities',
   },
 };
 
