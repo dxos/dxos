@@ -86,7 +86,7 @@ const escapeHtml = (value) =>
 const options = parseArgs();
 if (!options.in || !existsSync(options.in)) {
   console.error(
-    'usage: node trim-static.mjs --in <video> [--out <video>] [--max-static 1.5] [--fps 15] [--mp4] [--ident | --intro <video> --outro <video>] [--voiceover steps|<cues.json>] [--voice <name>] [--intro-line <text>|off] [--upload off] [--name <name>] [--screenshot]',
+    'usage: node trim-static.mjs --in <video> [--out <video>] [--max-static 1.5] [--fps 15] [--mp4] [--ident | --intro <video> --outro <video>] [--voiceover steps|<cues.json>] [--voice <name>] [--intro-line <text>|off] [--upload off] [--name <name>] [--folder <folder>] [--screenshot]',
   );
   process.exit(1);
 }
@@ -717,13 +717,14 @@ const voiceover = async () => {
 const voiced = options.voiceover ? await voiceover() : undefined;
 
 /**
- * The Composer media bucket, served from its custom domain: demos land under `demos/<yyyy-mm-dd>-<name>.<ext>`,
- * named after the package the flow exercises (`plugin-markdown`) unless `--name` says otherwise.
+ * The Composer media bucket, served from its custom domain: demos land under `<folder>/<yyyy-mm-dd>-<name>.<ext>`,
+ * in `demos/` unless `--folder` says otherwise (blog videos use `blog/`), named after the package the flow
+ * exercises (`plugin-markdown`) unless `--name` says otherwise.
  */
 const MEDIA = {
   bucket: process.env.AUTOCUE_R2_BUCKET || 'composer',
   publicBase: 'https://assets.composer.space',
-  folder: 'demos',
+  folder: typeof options.folder === 'string' ? options.folder.replace(/^\/+|\/+$/g, '') : 'demos',
 };
 
 /** The package a flow lives in, from its path (`packages/plugins/plugin-markdown/autocue/…`). */
