@@ -1,3 +1,10 @@
+/-- Whether a builtin object (`#List`) may enter the store: builtins are named by identity, not by
+  hash, so one is accepted only as a declaration of that identity and only where none is held. -/
+def Replicate.acceptsBuiltin (dir : Text) (h : Text) (form : Sexp) : {IO} Bool :=
+  match form with
+  | Sexp.list (Sexp.sym head :: Sexp.str iri :: _) => (head == "type" || head == "ability") && iri == h && isNone (readObject dir h)
+  | _ => false
+
 def Replicate.branchesOf (seen : List Seen) : List Text := dedup (sort (List.map fst (concatMap (fun s => s.claims) seen)))
 
 /-- A remote in an S3-compatible bucket (Cloudflare R2): `endpoint` is the account's S3 endpoint,
@@ -81,6 +88,9 @@ def Replicate.bucket (endpoint : Text) (name : Text) (prefix : Text) (config : T
       | (0, _, _) => k ()
       | (_, out, err) => defect ("writing the site failed: " ++ trim err ++ " " ++ trim out)
 
+/-- The builtin objects the store holds; the checker reads constructor and operation types from them. -/
+def Replicate.builtinsOf (dir : Text) : {IO} Map Text Unit := Set.fromList (List.filter (fun h => startsWith "#" h) (allObjects dir))
+
 /-- The canonical bundle text for branch claims and objects (with their metadata), in columns (D60). -/
 def Replicate.bundle (dir : Text) (claims : List (Text, Text)) (hashes : List Text) : {IO} Text :=
   let sorted := dedup (sort hashes)
@@ -98,7 +108,8 @@ def Replicate.closureOf (dir : Text) (heads : List Text) : {IO, Throw Text} Map 
   let nodes := foldl (fun acc h => union acc (ancestors dir h)) Map.empty heads
   let causals := List.map (fun c => readCausal dir c) (Map.keys nodes)
   let entryRoots := concatMap (fun c => rootsOf (Map.toList (readNamespace dir c.snapshot))) causals
-  union nodes (reachable dir (concatMap snapshotsOf causals ++ entryRoots))
+  -- Builtins travel too: a store pulled without them types every constructor pattern as unknown.
+  union (union nodes (reachable dir (concatMap snapshotsOf causals ++ entryRoots))) (builtinsOf dir)
 
 /-- Garbage collection under a retention policy (D54): keeps the history within `keep` generations
   of every head, with everything its snapshots reach, as one bundle, and deletes every other
@@ -253,7 +264,10 @@ def Replicate.import (dir : Text) (name : Text) (text : Text) : {IO} Seen :=
     match item with
     | Sexp.list (Sexp.sym "obj" :: Sexp.str h :: form :: []) =>
         -- An object that is not what its name says would corrupt the store (D91).
-        if verified h form lookup then
+        if startsWith "#" h then if acceptsBuiltin dir h form then
+          writeObject dir h form
+          Option.some h
+        else Option.none else if verified h form lookup then
           writeObject dir h form
           Option.some h
         else

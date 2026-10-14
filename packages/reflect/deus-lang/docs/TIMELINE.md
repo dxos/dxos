@@ -123,6 +123,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 114 | 10-14 22:50 | 5m 00s | `159dbea9` | the codebase is on R2: `r2://agent-artifacts/deus/toolchain` seeded from the export and checked against a fresh pull; `origin` and the R2 endpoint default for the toolchain codebase (D109, task 4b1eb1a9) |
 | 115 | 10-14 22:45 | 25m 00s | `2adf5fe6` | the explorer shows events: `events.json` and a count in `meta.json`, an Events card with the latest rows per type, and counts on definition and change cards; spec first in the codebase (Explorer.Spec R-14, R-15, D110) |
 | 116 | 10-14 22:48 | 1h 00m | `d3d4e44b` | C back end compiles higher-order code: flat closures, partial and over-application, unknown calls, lambda-lifted `letrec`, so the prelude list functions compile; 7–19× faster than the JIT, 0 live words (D111, task 610b2785); filed c62198a1, the R2 codebase mistypes pattern variables |
-| 117 | 10-14 23:02 | 14m 00s | this commit | devex: the test suite runs in 151 s instead of 315 s; the dogfood and restore tests run in files of their own, so vitest runs them in parallel with the rest (shared `cliHarness`); six devex tasks filed from measured agent wall time |
+| 117 | 10-14 23:10 | 0h 40m | `20c2676f` | R2 toolchain codebase fixed: pulls lacked builtin objects, so constructor patterns were mistyped; bundles now carry builtins, unknown constructors still bind every pattern variable, R2 remote updated (D112, task c62198a1) |
+| 118 | 10-14 23:02 | 14m 00s | `9fb29946` | devex: the test suite runs in 151 s instead of 315 s; the dogfood and restore tests run in files of their own, so vitest runs them in parallel with the rest (shared `cliHarness`); six devex tasks filed from measured agent wall time |
 
-Total from stage 1 to stage 117: 20h 53m.
+Total from stage 1 to stage 118: 21h 33m.

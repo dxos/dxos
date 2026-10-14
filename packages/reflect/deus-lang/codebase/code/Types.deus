@@ -399,10 +399,12 @@ def Types.pattern (u : Unifier) (env : TypeEnv {r}) (pat : Sexp) (t : TType) (bi
       match Types.ctorFields u env ty tag with
       | (result, fields) =>
           Types.unify u t result
+          -- An unknown constructor still binds every subpattern, or later variables would take earlier slots' types.
+          let padded := fields ++ List.map (fun _ => freshType u) (List.drop (List.length fields) subs)
           foldl
             (fun acc pair => Types.pattern u env (fst pair) (snd pair) acc)
             binds
-            (zip subs fields)
+            (zip subs padded)
   | _ => binds
 
 /-- Follows bound variables at the top of a type. -/

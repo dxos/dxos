@@ -98,6 +98,19 @@ def verified (h : Text) (form : Sexp) (lookup : Text -> {IO} Option Sexp) : {IO}
     let members := if dot < 0 then [form] else gather 0 []
     not (List.isEmpty members) && Text.sha256 (Sexp.print (Sexp.node "cycle" (List.map (fun m => unself g m) members))) == g
 
+/--
+  Whether a builtin object (`#List`) may enter the store: builtins are named by identity, not by
+  hash, so one is accepted only as a declaration of that identity and only where none is held.
+-/
+def acceptsBuiltin (dir : Text) (h : Text) (form : Sexp) : {IO} Bool :=
+  match form with
+  | Sexp.list (Sexp.sym head :: Sexp.str iri :: _) => (head == "type" || head == "ability") && iri == h && Option.isNone (Codebase.readObject dir h)
+  | _ => false
+
+/-- The builtin objects the store holds; the checker reads constructor and operation types from them. -/
+def builtinsOf (dir : Text) : {IO} Map Text Unit :=
+  Set.fromList (List.filter (fun h => Text.startsWith "#" h) (Codebase.allObjects dir))
+
 /-- Writes a bundle's objects and metadata into the store; returns what it holds. -/
 def import (dir : Text) (name : Text) (text : Text) : {IO} Seen :=
   let items := match Columnar.read text with
@@ -118,7 +131,12 @@ def import (dir : Text) (name : Text) (text : Text) : {IO} Seen :=
     match item with
     | Sexp.list [Sexp.sym "obj", Sexp.str h, form] =>
       -- An object that is not what its name says would corrupt the store (D91).
-      if verified h form lookup then
+      if Text.startsWith "#" h then
+        if acceptsBuiltin dir h form then
+          Codebase.writeObject dir h form
+          some h
+        else none
+      else if verified h form lookup then
         Codebase.writeObject dir h form
         some h
       else
@@ -171,7 +189,8 @@ def closureOf (dir : Text) (heads : List Text) : {IO, Throw Text} Map Text Unit 
   let nodes := List.foldl (fun acc h => union acc (Codebase.ancestors dir h)) Map.empty heads
   let causals := List.map (fun c => Codebase.readCausal dir c) (Map.keys nodes)
   let entryRoots := List.concatMap (fun c => Project.rootsOf (Map.toList (Codebase.readNamespace dir c.snapshot))) causals
-  union nodes (Project.reachable dir (List.concatMap Codebase.snapshotsOf causals ++ entryRoots))
+  -- Builtins travel too: a store pulled without them types every constructor pattern as unknown.
+  union (union nodes (Project.reachable dir (List.concatMap Codebase.snapshotsOf causals ++ entryRoots))) (builtinsOf dir)
 
 /-- The claimed causal nodes for `branch` that no other claim descends from, sorted. -/
 def headsOf (dir : Text) (seen : List Seen) (branch : Text) : {IO, Throw Text} List Text :=
