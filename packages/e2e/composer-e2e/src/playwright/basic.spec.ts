@@ -55,6 +55,7 @@ test.describe('Basic tests', () => {
     });
     await expect.poll(() => host.getWorkspaceOrder()).toEqual([second, first]);
 
+    await host.waitForSaved();
     await host.page.reload();
     await expect(host.getWorkspaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1, { timeout: 30_000 });
     await expect.poll(() => host.getWorkspaceOrder()).toEqual([second, first]);
