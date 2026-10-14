@@ -1,3 +1,7 @@
+(entry "9d20d6564fce252b6cfe0bc9111ed01edbebd874e632ccf9d7d20d04c8411722" "task: set 381f55f3 state details" "claude")
+(entry "b28f47c0ce348d883d2f57d1a935609fbc685c6d767125d13d70ca48c0753318" "history: import 623 changes" "")
+(entry "d77982c14174c6710caf6d36ebacb6c20559ce654c92b8bcae909ac93f8d7f0d" "task: import from tasks.sexp" "")
+(entry "fa2371ce09a249f1414c33086068455b9d8e997518803fc3ed1398fddae0d1a8" "add code specs" "")
 (entry "072f91e16815618b660fab85fcf6ef072644a9287c20e22f515eb1a85b29c61a" "task: set ca75d545 state" "claude")
 (entry "086d4e68280d0e504358e91e5d0d6a79c43d86326057b674468d487d6ed9ec9f" "task: comment on ca75d545" "claude")
 (entry "2935873e9bca3d785e85c60d9c3a2183a9be22f2f4052ff8205c716eab452d07" "task: open ca75d545 Explorer shows events: events.json, an Events card, and counts on definition and change cards" "claude")

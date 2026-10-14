@@ -1,5 +1,9 @@
 # History of main
 
+- `9d20d6564f` task: set 381f55f3 state details (by claude)
+- `b28f47c0ce` history: import 623 changes
+- `d77982c141` task: import from tasks.sexp
+- `fa2371ce09` add code specs
 - `072f91e168` task: set ca75d545 state (by claude)
 - `086d4e6828` task: comment on ca75d545 (by claude)
 - `2935873e9b` task: open ca75d545 Explorer shows events: events.json, an Events card, and counts on definition and change cards (by claude)

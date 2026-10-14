@@ -29,13 +29,6 @@ From Dmytro: threads MUST use the codebase as primary VCS, and git as backup. D1
 
 From Dmytro: an artifact is a constant whose value is cached, e.g. deusCli := Deus.toBinary Cli.main; evaluating it once caches the result in the artifacts layer by the hash of the expression.
 
-## Explorer: show events and their counts per definition from events.json (Analytics.siteJson) (`381f55f3`)
-
-- state: todo
-- priority: high
-- assignee: claude
-- labels: explorer, analytics
-
 ## Publish pushed events to Basin Catalog on the R2 bucket and query them with Basin SQL (needs Dmytro's go-ahead to create Cloudflare resources) (`c5955f97`)
 
 - state: todo
@@ -543,6 +536,15 @@ Dmytro: explore embedding deus into browser apps via wasm (like codebase viewer 
 - labels: explorer, writing
 - parent: 861438d2
 - links change #c432032637
+
+## Explorer: show events and their counts per definition from events.json (Analytics.siteJson) (`381f55f3`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: explorer, analytics
+
+Done as task ca75d545 (D110, e98a2e51) by the explorer thread: events.json, an Events card, and tallies on definition and change cards.
 
 ## Exports from several containers overwrite each other's history and tasks (`a93aee73`)
 
