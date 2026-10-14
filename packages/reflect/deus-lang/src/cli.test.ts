@@ -706,6 +706,27 @@ describe('deus CLI', () => {
         deus('eval', 'wrap 3', ...c).stdout,
       );
 
+      // A freed block over 256 words is reused, so a loop over fresh 1000-item arrays allocates one.
+      deus(
+        'add',
+        file(
+          'big.deus',
+          [
+            'def fill (a : Array Int) (i : Int) : Array Int := if i == Array.length a then a else fill (Array.set a i i) (i + 1)',
+            'def big (i : Int) (acc : Int) : Int := if i == 0 then acc else big (i - 1) (acc + Array.get (fill (Array.make 1000 0) 0) 999)',
+            '',
+          ].join('\n'),
+        ),
+        ...c,
+      );
+      expect(deus('build', 'big', '-o', join(scratch, 'big'), '--c', ...c).code).toBe(0);
+      const big = spawnSync(join(scratch, 'big'), ['100', '0'], {
+        encoding: 'utf8',
+        env: { ...process.env, DEUS_HEAP_STATS: '1' },
+      });
+      expect(big.stdout).toBe(deus('eval', 'big 100 0', ...c).stdout);
+      expect(big.stderr).toContain('heap: 1002 words bumped, 0 live');
+
       // A self tail call is a jump, so a million-deep loop runs in constant stack.
       deus(
         'add',

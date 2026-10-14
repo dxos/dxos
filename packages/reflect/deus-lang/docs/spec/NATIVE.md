@@ -61,8 +61,10 @@ Blocks are reference counted with reuse, as in Perceus (Koka, Lean 4) ([D86](../
   a block with the same number of fields, it builds it in the old block's memory. If it is shared,
   the case counts the fields it uses and decrements the block.
 - **Freeing** is iterative, with an explicit stack, so dropping a long list does not overflow the
-  C stack. Freed blocks of up to 256 words go to a free list per size; larger ones (long arrays)
-  are not reused yet. `Ref` cycles are never freed.
+  C stack. Freed blocks of up to 256 words go to a free list per size. Larger ones (long arrays)
+  go to one list, and an allocation of that size takes the first exact fit among its first 16
+  entries, so a loop that makes a fresh 1000-item array each time allocates one ([D102](../DECISIONS.md)).
+  `Ref` cycles are never freed.
 
 `DEUS_HEAP_STATS=1` makes a built executable print the words bumped, live at exit and at peak. Every
 benchmark ends with 0 live words.
@@ -119,8 +121,8 @@ Times in Node 22, best of three, and the module's memory after one run, against 
 Memory falls 8–64× wherever lists are built, and the integer and tree programs get faster. The
 list sorts are 1.1–1.8× slower: their blocks are twice as wide as the `--wasm` back end's 32-bit
 words, and a bump allocator that never frees is the cheapest allocator there is while memory lasts.
-`benchArray` uses more memory for the same reason. A 32-bit value with a tag bit would halve both
-(task in the codebase). `--wasm` stays the default: it needs no clang and is what the browser
+`benchArray` uses more memory for the same reason. A 32-bit value with a tag bit cannot win this
+back: `Int` wraps at 32 bits, so a tag needs a 33rd ([D102](../DECISIONS.md)). `--wasm` stays the default: it needs no clang and is what the browser
 build uses.
 
 ## Benchmarks
