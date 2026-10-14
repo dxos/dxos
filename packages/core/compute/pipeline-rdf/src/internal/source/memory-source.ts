@@ -10,7 +10,7 @@ import { type Quad, Store } from 'n3';
  */
 export const makeMemorySource = (): Store => new Store();
 
-/** Append reified fact triples to the in-memory store (duplicates are de-duplicated by the Store). */
+/** Append fact quads to the in-memory store (duplicates are de-duplicated by the Store). */
 export const insertQuadsMemory = (store: Store, quads: readonly Quad[]): void => {
   store.addQuads([...quads]);
 };

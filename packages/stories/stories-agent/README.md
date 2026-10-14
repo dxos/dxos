@@ -6,20 +6,20 @@ locally running EDGE stack. Design: [plugin-agent `docs/DISCORD.md`](../../plugi
 
 ## Setup
 
-You need a dxos checkout (this repo, `<dxos>` below), an edge checkout on a branch with the Discord bot bindings
-(`claude/discord-bot-channel-refs`, `<edge>` below), Chrome, and access to the `eng` and `eng-dev` 1Password vaults.
+You need a dxos checkout (this repo, `<dxos>` below), an edge checkout (`<edge>` below), Chrome, and access to the
+`eng` 1Password vault with the 1Password app's CLI integration on (Settings → Developer).
 
 ### 1. The Discord app (Kai)
 
 Kai is application `1555777706459660288`
 ([Developer Portal](https://discord.com/developers/applications/1555777706459660288/information)). Its secrets are in
-two 1Password items named `com.discord.bot.kai`:
+the 1Password item `op://eng/com.discord.bot.kai`, and edge's `secrets.jsonc` files already refer to them:
 
-| Reference | What | Used by |
+| Field | What | Used by |
 | --- | --- | --- |
-| `op://eng-dev/com.discord.bot.kai/credential` | bot token | the EDGE bot (`DISCORD_BOT_TOKEN_DEV`, via `pnpm dev:env`) |
-| `op://eng/com.discord.bot.kai/APPLICATION_ID` | application id | `.env.tpl` (`DISCORD_KAI_APPLICATION_ID`) |
-| `op://eng/com.discord.bot.kai/CLIENT_SECRET` | OAuth2 client secret | `.env.tpl` (`DISCORD_KAI_CLIENT_SECRET`), for **Connect Discord** |
+| `credential` | bot token | discord-service (`DISCORD_BOT_TOKEN_DEV`), the EDGE bot |
+| `CLIENT_SECRET` | OAuth2 client secret | kms-service (`DISCORD_CLIENT_SECRET`), for **Connect Discord** |
+| `APPLICATION_ID` | application id | `.env.tpl` (`DISCORD_KAI_APPLICATION_ID`) |
 
 In the portal, once:
 
@@ -35,63 +35,24 @@ In the portal, once:
 
 From `<edge>`:
 
-1. Link this dxos workspace (build it first: `moon exec --on-failure continue --quiet :build` in `<dxos>`):
+1. Write every worker's `.env`, including Kai's bot token and client secret. 1Password asks you to unlock:
 
    ```bash
-   node scripts/link-packages.mjs <dxos> --all --install
+   pnpm dev:env
    ```
 
-2. Point kms-service's **local** Discord OAuth at Kai:
-   - `packages/services/kms-service/wrangler.jsonc`, top-level `vars`: `"DISCORD_CLIENT_ID": "1555777706459660288"`.
-   - `packages/services/kms-service/secrets.jsonc`, `env[""].secrets`:
-     `"DISCORD_CLIENT_SECRET": "op://eng/com.discord.bot.kai/CLIENT_SECRET"`.
-
-3. Write the secrets (1Password asks you to approve each command):
-   - Every worker's `.env`, including the bot token (`DISCORD_BOT_TOKEN_DEV`):
-
-     ```bash
-     pnpm dev:env
-     ```
-
-   - Kai's OAuth values, from the repo's `.env.tpl` into `<edge>/.env` (gitignored):
-
-     ```bash
-     op inject -i .env.tpl -o .env --force
-     ```
-
-     then copy the client secret into kms-service's local `.env` as `DISCORD_CLIENT_SECRET` (the value is never
-     printed):
-
-     ```bash
-     node -e "const fs=require('node:fs');const v=fs.readFileSync('.env','utf8').match(/DISCORD_KAI_CLIENT_SECRET=\"?([^\"\n]+)/)[1];const p='packages/services/kms-service/.env';const l=(fs.existsSync(p)?fs.readFileSync(p,'utf8'):'').split('\n').filter(x=>x&&!x.startsWith('DISCORD_CLIENT_SECRET='));l.push('DISCORD_CLIENT_SECRET='+v);fs.writeFileSync(p,l.join('\n')+'\n',{mode:0o600})"
-     ```
-
-   - kms-service builds its ATPROTO handler for every OAuth flow, so it also needs `ATPROTO_CLIENT_JWK_BASE64`.
-     `pnpm dev:env` does not write one locally; any P-256 key pair will do for Discord:
-
-     ```bash
-     node -e "const c=require('node:crypto');const k=c.generateKeyPairSync('ec',{namedCurve:'P-256'});const v=Buffer.from(JSON.stringify({publicKey:k.publicKey.export({format:'jwk'}),privateKey:k.privateKey.export({format:'jwk'})})).toString('base64');const fs=require('node:fs');const p='packages/services/kms-service/.env';const l=(fs.existsSync(p)?fs.readFileSync(p,'utf8'):'').split('\n').filter(x=>x&&!x.startsWith('ATPROTO_CLIENT_JWK_BASE64='));l.push('ATPROTO_CLIENT_JWK_BASE64='+v);fs.writeFileSync(p,l.join('\n')+'\n',{mode:0o600})"
-     ```
-
-     Run these after `pnpm dev:env`, which rewrites the `.env` files.
-
-4. Give the stack its own state directory, so story spaces never mix with your everyday local world, then migrate and
-   start it (EDGE listens on `:8787`):
+2. Start the stack (EDGE listens on `:8787`):
 
    ```bash
-   export DX_DEV_STATE_DIR=~/.local/state/dxos/edge/dev-state-agent-discord
+   node scripts/stack.mjs start
    ```
 
-   ```bash
-   node scripts/stack.mjs migrate && node scripts/stack.mjs start
-   ```
+   Re-run `pnpm dev:env` and restart the stack after pulling `secrets.jsonc` changes.
 
-   Use the same `DX_DEV_STATE_DIR` for every `stack.mjs` command (`restart`, `stop`).
-
-Steps 1–2 are local-only: never commit the `file:` overrides in `package.json`/`pnpm-lock.yaml` or the kms-service
-edits. Undo them with `git checkout -- package.json pnpm-lock.yaml packages/services/kms-service && pnpm install`.
-Re-link (step 1) after changing dxos code that runs on EDGE (plugin-agent operations and skills, `agent-runtime`,
-`assistant`); Composer-only changes need no re-link.
+EDGE runs the `@dxos/*` build edge's catalog pins. To run local changes to dxos code that runs on EDGE (plugin-agent
+operations and skills, `agent-runtime`, `assistant`), build `<dxos>` and link it into edge with
+`node scripts/link-packages.mjs <dxos> --all --install`; never commit the resulting `file:` overrides. Composer-only
+changes need no link.
 
 ### 3. Storybook
 
@@ -105,9 +66,24 @@ Open the stories in **Chrome** at `http://localhost:9009/?path=/story/stories-st
 persistent storage, which runs the client in a SharedWorker; the Claude desktop app's built-in browser blocks
 SharedWorker requests, so they cannot boot there.
 
-### 4. Check the bot
+The **Setup** story's toolbar picks the EDGE the client talks to (local, dev, preview or production), whether its
+profile persists across reloads, and **Reset**, which wipes the profile so setup seeds a fresh space. Each takes
+effect on reload; moving a persistent profile to another EDGE resets it, since it is registered with the old one.
 
-With the bot token in your shell (`export DISCORD_BOT_TOKEN="$(op read -n op://eng-dev/com.discord.bot.kai/credential)"`),
+### 4. Try it
+
+In the **Setup** story:
+
+1. **Discord** panel → **Connect Discord** (toolbar) signs you in; the servers you administer appear.
+2. On a server without Kai, **Install** (+) opens Discord's consent page; then **Refresh**.
+3. Click a server where Kai is installed, then **Connect** (plug) a channel under **Channels**.
+4. **Activity** toolbar → **Connect channels** (plug) starts the bot; the **Discord bot** panel reaches ready.
+5. Mention `@Kai` in that channel. Kai replies in a thread once its turn ends, and the conversation appears under
+   **Activity → Conversations**.
+
+### 5. Check the bot
+
+With the bot token in your shell (`export DISCORD_BOT_TOKEN="$(op read -n op://eng/com.discord.bot.kai/credential)"`),
 each of these prints without revealing the token:
 
 ```bash
@@ -124,9 +100,12 @@ The first must show `message_content_intent: true`; the second lists the servers
 
 | Symptom | Cause |
 | --- | --- |
+| `pnpm dev:env`: "account is not signed in" | The 1Password app is locked or its CLI integration is off. |
 | **Could not reach EDGE** with a 403 | Another space owns the bot (the last tab to bind or start it). |
-| **Could not reach EDGE**, every request failing | The stack is down: `node scripts/stack.mjs status`, then `start` (with the same `DX_DEV_STATE_DIR`). |
+| **Could not reach EDGE**, every request failing | The stack is down: `node scripts/stack.mjs status`, then `start`. |
 | The story never finishes loading, "coordinator worker error" | Opened in the Claude desktop app's browser; use Chrome. |
-| **Connect Discord** fails at Discord | The redirect URL (§1.1) is missing, or kms-service has no client secret (§2.3). |
-| **Discord setup failed** on **Connect Discord**, `MissingBindingError` in the EDGE log | kms-service's `.env` lacks a value it reads (§2.3), e.g. `ATPROTO_CLIENT_JWK_BASE64`. |
+| **Connect Discord** fails at Discord | The redirect URL (§1.1) is missing, or `pnpm dev:env` has not run (§2.1). |
+| **Connect channels** is greyed out | No channel is connected yet (§4.3). |
+| Agent messages fail with "No process is hosted by this object" | The space outlived the EDGE state its agent ran on; clear the site data for `localhost:9009` and reload. |
+| The bot never reaches ready | discord-service has no bot token: re-run `pnpm dev:env` (§2.1). |
 | Messages arrive with no text | Message Content Intent is off (§1.2). |

@@ -8,12 +8,15 @@ import { createListCollection } from '@ark-ui/react/collection';
 import { Combobox as ComboboxPrimitive, useComboboxContext } from '@ark-ui/react/combobox';
 import { Portal } from '@ark-ui/react/portal';
 import React, {
+  Children,
   type ComponentPropsWithoutRef,
+  Fragment,
   type PointerEvent,
   type ReactNode,
   type RefObject,
   createContext,
   forwardRef,
+  isValidElement,
   useContext,
   useEffect,
   useId,
@@ -35,6 +38,7 @@ import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
 import * as Icon from '../Icon/Icon.tsx';
 import { PopupScroll, popupPositioning, usePopupSize } from '../ScrollArea/PopupScroll.tsx';
+import * as ScrollArea from '../ScrollArea/ScrollArea.tsx';
 import type * as Select from '../Select/Select.tsx';
 
 /** Gap between control and popup, in px (positioning takes a number, not a CSS variable). */
@@ -116,6 +120,8 @@ const ComboboxRoot = forwardRef<HTMLDivElement, ComboboxRootProps>(
       defaultValue,
       onValueChange,
       onInputValueChange,
+      highlightedValue: highlightedValueProp,
+      onHighlightChange,
       children,
       ...props
     },
@@ -140,6 +146,18 @@ const ComboboxRoot = forwardRef<HTMLDivElement, ComboboxRootProps>(
       return createListCollection<ComboboxOption>({ items: create ? [...matches, create] : matches });
     }, [items, filter, query, create]);
 
+    // zag moves the highlight off an option the filter removed only in a passive effect, which an Enter typed in the same
+    // frame beats (selecting nothing); so a filtered-out highlight is replaced here, as the collection itself narrows.
+    const [highlight, setHighlight] = useState<string | null>(null);
+    const highlightedValue =
+      highlightedValueProp !== undefined
+        ? highlightedValueProp
+        : highlight !== null && !collection.has(highlight)
+          ? inputBehavior === 'autohighlight' && query
+            ? collection.firstValue
+            : null
+          : highlight;
+
     // Controlled, so choosing the create row never becomes the value.
     const [uncontrolled, setUncontrolled] = useState<string[]>(defaultValue ?? []);
     const value = valueProp ?? uncontrolled;
@@ -155,6 +173,9 @@ const ComboboxRoot = forwardRef<HTMLDivElement, ComboboxRootProps>(
         positioning={popupPositioning(POPUP_GUTTER, { sameWidth: false, placement: 'bottom-start', ...positioning })}
         // Typing highlights the first match, so Enter picks it without an arrow key first.
         inputBehavior={inputBehavior}
+        // The options scroll in the content itself or, under a search field, in a ScrollArea inside it; zag scrolls only
+        // a scrolling content, so the highlighted option is scrolled into whichever viewport holds it.
+        scrollToIndexFn={({ getElement }) => getElement()?.scrollIntoView({ block: 'nearest' })}
         // Arrow keys stop at the first and last option rather than wrapping, as in Select and Listbox.
         loopFocus={loopFocus}
         // A popup holding the search field is a dialog around a `List` listbox, since a listbox cannot hold an input.
@@ -162,6 +183,11 @@ const ComboboxRoot = forwardRef<HTMLDivElement, ComboboxRootProps>(
         // The search field starts empty each time; the button trigger shows the value.
         selectionBehavior={selectionBehavior ?? (search ? 'clear' : 'replace')}
         collection={collection}
+        highlightedValue={highlightedValue}
+        onHighlightChange={(details) => {
+          setHighlight(details.highlightedValue);
+          onHighlightChange?.(details);
+        }}
         value={value}
         onValueChange={(details) => {
           if (details.value.includes(CREATE_VALUE)) {
@@ -444,48 +470,87 @@ const focusComposedField = (event: PointerEvent<HTMLDivElement>) => {
   }
 };
 
+/** The top-level children, with fragments opened, so a caller's `<>Input, List</>` reads as two parts. */
+const flattenChildren = (node: ReactNode): ReactNode[] =>
+  Children.toArray(node).flatMap((child) =>
+    isValidElement<{ children?: ReactNode }>(child) && child.type === Fragment
+      ? flattenChildren(child.props.children)
+      : [child],
+  );
+
+/** Splits a Content's parts into its search `Input`, which the frame pins above the scrolling options, and the rest. */
+const splitSearch = (node: ReactNode): [ReactNode[], ReactNode[]] => {
+  const parts = flattenChildren(node);
+  const isSearch = (part: ReactNode) => isValidElement(part) && part.type === ComboboxInput;
+  return [parts.filter(isSearch), parts.filter((part) => !isSearch(part))];
+};
+
 /**
- * Portalled popup at `level='popup'`, scrolling in a thin ScrollArea whose viewport is the popup itself. Without
- * children it lists the options that match the typed text, then the create row, loading row and `Empty`; with a button
- * `Trigger` it first holds the search `Input` and lists them in a `List`. Anchor it to a caret or any other rect with
- * the Root's `positioning.getAnchorRect` (Ark has no virtual-trigger part).
+ * Portalled popup at `level='popup'`. Without children it lists the options that match the typed text, then the create
+ * row, loading row and `Empty`; with a button `Trigger` it first holds the search `Input` and lists them in a `List`.
+ * Without a search field the popup is itself the viewport of a thin ScrollArea; with one (the default for a button
+ * `Trigger`, or an `Input` among the children) it is a dialog framing the field above a ScrollArea of the rest, so the
+ * options never scroll beneath the field. Anchor it to a caret or any other rect with the Root's
+ * `positioning.getAnchorRect` (Ark has no virtual-trigger part).
  */
 const ComboboxContent = forwardRef<HTMLDivElement, ComboboxContentProps>(
   ({ classNames, size, container, children, ...props }, forwardedRef) => {
     const combobox = useComboboxContext();
-    const { loading, search } = useComboboxRootContext('Combobox.Content');
+    const { loading, search: searchField } = useComboboxRootContext('Combobox.Content');
     const popupSize = usePopupSize(
       size,
       combobox.open,
       [combobox.getControlProps().id, combobox.getTriggerProps().id],
       'md',
     );
+    const [search, items] = splitSearch(
+      children ??
+        (searchField ? (
+          <>
+            <ComboboxInput />
+            <ComboboxList />
+          </>
+        ) : (
+          <ComboboxOptions />
+        )),
+    );
+    // Once framed, the popup stays framed until it closes: children that swap the search for a create form must not
+    // remount the content mid-interaction.
+    const framed = useRef(false);
+    framed.current = combobox.open && (framed.current || search.length > 0 || searchField);
+    const contentProps = {
+      ...props,
+      'aria-busy': loading || undefined,
+      'onPointerDown': (event: PointerEvent<HTMLDivElement>) => {
+        props.onPointerDown?.(event);
+        focusComposedField(event);
+      },
+      'ref': forwardedRef,
+    };
     return (
       <Portal container={container}>
         <ComboboxPrimitive.Positioner>
-          <PopupScroll size={popupSize} classNames={mx(classNames)}>
+          {!framed.current ? (
+            <PopupScroll size={popupSize} classNames={mx(classNames)}>
+              <ComboboxViewport {...contentProps}>
+                <ContentContext.Provider value={true}>{items}</ContentContext.Provider>
+              </ComboboxViewport>
+            </PopupScroll>
+          ) : (
             <ComboboxViewport
-              {...props}
-              aria-busy={loading || undefined}
-              onPointerDown={(event) => {
-                props.onPointerDown?.(event);
-                focusComposedField(event);
-              }}
-              ref={forwardedRef}
+              {...contentProps}
+              data-surface='popup'
+              data-size={popupSize}
+              classNames={mx(recipes.popup(), recipes.comboboxFrame(), classNames)}
             >
               <ContentContext.Provider value={true}>
-                {children ??
-                  (search ? (
-                    <>
-                      <ComboboxInput />
-                      <ComboboxList />
-                    </>
-                  ) : (
-                    <ComboboxOptions />
-                  ))}
+                {search}
+                <ScrollArea.Root width='thin'>
+                  <ScrollArea.Viewport>{items}</ScrollArea.Viewport>
+                </ScrollArea.Root>
               </ContentContext.Provider>
             </ComboboxViewport>
-          </PopupScroll>
+          )}
         </ComboboxPrimitive.Positioner>
       </Portal>
     );

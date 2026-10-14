@@ -2,7 +2,7 @@
 
 Status: draft 4 (2026-10-03) — goals, home space and workspaces; architecture as built for the first
 spike. Memory model:
-[MEMORY.md](./MEMORY.md). EDGE half: dxos/edge `compute-service/src/discord/` and that repo's
+[MEMORY.md](./MEMORY.md). EDGE half: dxos/edge `discord-service/src/agent-bot/` and that repo's
 `.agents/projects/interlocutor/DESIGN.md`.
 
 ## Goals
@@ -44,7 +44,7 @@ Discord threads and Composer chats see the same knowledge.
  Composer (browser)                    EDGE (Cloudflare)                                  Discord
  ──────────────────                    ─────────────────                                  ───────
  Agent → AgentChannels → Channel (Discord backend: DiscordChannel config)
-   │ Start ─ thread.connectChannel ─ PUT /compute/discord/bots/:appId ─▶ compute-service
+   │ Start ─ thread.connectChannel ─ PUT /discord/bots/:appId ─▶ discord-service
    │   (EdgeHttpClient.request, signed with the user's identity)  ├ edgeAuth + space membership
    │                                                              └▶ DiscordBot DO (one per bot)
    │                                                                  ├ reads the bot config + AccessToken (DataService)
@@ -69,7 +69,7 @@ Discord threads and Composer chats see the same knowledge.
   `AccessToken` object), the bot status and Start / Stop / Refresh.
 - Start / Stop / Refresh invoke plugin-thread's `connectChannel` / `disconnectChannel` /
   `getChannelStatus`, which dispatch to the Discord backend's `connection`: `PUT` / `DELETE` / `GET
-/compute/discord/bots/:appId` through `EdgeHttpClient.request`, a generic call signed with the
+/discord/bots/:appId` through `EdgeHttpClient.request`, a generic call signed with the
   identity's verifiable presentation. `PUT` sends `{ spaceId, binding: "echo://<space>/<configId>",
 channel: "echo://<space>/<channelId>" }`; the status (`running`, gateway state, thread count, last
   error) is shown under the form and polled every 5 s. The companion lists the agent's channel
@@ -81,7 +81,7 @@ channel: "echo://<space>/<channelId>" }`; the status (`running`, gateway state, 
 > calls `ensureThreadChat`; plugin-agent no longer provides either, so Discord messages do not reach
 > the agent in between. Step 4 resolves the agent from the channel and calls `ensureChannelChat`.
 
-1. compute-service routes to the `DiscordBot` Durable Object keyed by application id. It reads the
+1. discord-service routes to the `DiscordBot` Durable Object keyed by application id. It reads the
    binding and the token from the space with DataService (a managed token resolves through KMS) and
    caches them in SQLite with the gateway session and the thread map. The ECHO binding is the source
    of truth; `DELETE` stops the gateway but keeps that cache.
@@ -179,9 +179,9 @@ it spawns) runs against, and the browser and EDGE invokers both honour it. What 
 
 ## Decisions
 
-1. **The gateway runs in an EDGE Durable Object**, one per bot, hosted in **compute-service** (not
-   discord-service): compute-service already has every binding the bot needs (process objects,
-   DataService, queues, KMS, operation-service) plus edgeAuth. The outbound websocket keeps the DO
+1. **The gateway runs in an EDGE Durable Object**, one per bot, hosted in **discord-service**, which
+   reaches the agent processes through compute-service's `AgentProcessEntrypoint` and DataService,
+   queues, KMS and operation-service through their own bindings, plus edgeAuth. The outbound websocket keeps the DO
    awake; that cost is accepted.
 2. **The agent turn runs on EDGE**, spawned by the DO; hosted agents get tools from operation-service's
    plugin registry.
@@ -285,7 +285,7 @@ in every runtime, so EDGE posts through the same provider the app starts the bot
   channel id, both over Discord REST with the pasted token (split past 2000 characters, mentions
   never echoed). The receipt's `properties.discord.messageId` keeps EDGE's mirror from re-posting.
 - **DMs.** `openDirect` reads the person's `discord` identity and opens the bot's DM channel.
-- **Connection.** `start/stop/status` call `PUT/DELETE/GET /compute/discord/bots/:applicationId`
+- **Connection.** `start/stop/status` call `PUT/DELETE/GET /discord/bots/:applicationId`
   through the app client's EDGE HTTP client. `PUT` sends `{ spaceId, binding: <config URI>,
 channel: <channel URI> }`; until step 4 EDGE still expects a binding with an `agent` field, so a bot
   started from a channel cannot resolve its agent there yet.
@@ -362,7 +362,7 @@ plugin-agent no longer names a backend:
 ### What stays per backend
 
 Receiving on the server. `subscribe` is an in-page callback and cannot drive agent turns on EDGE;
-the Discord gateway Durable Object (compute-service) stays Discord's, but it resolves Discord ids to
+the Discord gateway Durable Object (discord-service) stays Discord's, but it resolves Discord ids to
 `Channel` refs and calls `ensureChannelChat` instead of `ensureThreadChat`. A future backend that
 needs server-side receiving brings its own EDGE worker the same way.
 

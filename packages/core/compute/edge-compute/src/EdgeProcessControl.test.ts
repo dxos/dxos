@@ -5,9 +5,11 @@
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as Schema from 'effect/Schema';
 import { describe, test, vi } from 'vitest';
 
-import { RemoteCommandRejectedError } from '@dxos/compute-runtime';
+import { ProcessNotFoundError, RemoteCommandRejectedError } from '@dxos/compute-runtime';
+import * as Process from '@dxos/compute/Process';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { SpaceId } from '@dxos/keys';
@@ -45,6 +47,22 @@ describe('EdgeProcessControl', () => {
     const defect = await spawnDefect(failure(400, 'Unknown process key: org.dxos.operation.agent.inspectBrain'));
     expect(RemoteCommandRejectedError.is(defect)).toBe(true);
     expect(String(defect)).toContain('Unknown process key: org.dxos.operation.agent.inspectBrain');
+  });
+
+  test('a 404 for one process dies as ProcessNotFoundError; for a spawn it stays a plain rejection', async ({
+    expect,
+  }) => {
+    const edgeClient = new EdgeHttpClient('https://edge.example.com');
+    vi.spyOn(edgeClient, 'submitProcessInput').mockRejectedValue(failure(404, 'Process not found'));
+    const exit = await EffectEx.runPromise(
+      EdgeProcessControl.make(() => edgeClient)
+        .submitInput({ spaceId: SPACE, pid: Schema.decodeUnknownSync(Process.ID)('pid-1'), input: 'hi' })
+        .pipe(Effect.exit),
+    );
+    expect(Exit.isFailure(exit) && ProcessNotFoundError.is(Cause.squash(exit.cause))).toBe(true);
+
+    const defect = await spawnDefect(failure(404, 'Not found'));
+    expect(RemoteCommandRejectedError.is(defect)).toBe(true);
   });
 
   test('a failure EDGE may recover from is not a rejection', async ({ expect }) => {

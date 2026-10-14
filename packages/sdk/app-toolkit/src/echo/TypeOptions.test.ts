@@ -3,11 +3,14 @@
 //
 
 import * as Schema from 'effect/Schema';
-import { describe, test } from 'vitest';
+import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Annotation, Obj, Type } from '@dxos/echo';
+import { Annotation, Collection, Obj, Ref, Type } from '@dxos/echo';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { DXN } from '@dxos/keys';
+import { ArchivedAnnotation } from '@dxos/schema';
 
+import * as AppAnnotation from './AppAnnotation.ts';
 import * as TypeOptions from './TypeOptions.ts';
 
 const UserType = Type.makeObject(DXN.make('com.example.type.user', '0.1.0'))(
@@ -78,5 +81,48 @@ describe('isUserType', () => {
 
   test('a relation is never user-facing', ({ expect }) => {
     expect(TypeOptions.isUserType(Relation, { includeHidden: true })).toBe(false);
+  });
+});
+
+describe('filterListedObjects', () => {
+  test('keeps unarchived objects of user types', ({ expect }) => {
+    const listed = Obj.make(UserType, { name: 'listed' });
+    const hidden = Obj.make(HiddenType, { name: 'hidden' });
+    const archived = Obj.make(UserType, { name: 'archived' });
+    Obj.update(archived, (archived) => {
+      Annotation.set(archived, ArchivedAnnotation, true);
+    });
+    expect(TypeOptions.filterListedObjects([listed, hidden, archived])).toEqual([listed]);
+  });
+
+  test("drops the root collection named by the set's space properties, not other collections", ({ expect }) => {
+    const root = Collection.make();
+    const named = Collection.make({ name: 'Projects' });
+    const properties = Obj.make(HiddenType, { name: 'properties' });
+    Obj.update(properties, (properties) => {
+      Annotation.set(properties, AppAnnotation.RootCollectionAnnotation, Ref.make(root));
+    });
+    expect(TypeOptions.filterListedObjects([properties, root, named])).toEqual([named]);
+  });
+});
+
+describe('filterListedObjects in a space', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  test('keeps an object of a type persisted in the space', async ({ expect }) => {
+    const { db } = await builder.createDatabase();
+    const Persisted = await db.addType(
+      Type.makeObject(DXN.make('com.example.type.persisted', '0.1.0'))(Schema.Struct({ name: Schema.String })),
+    );
+    const object = db.add(Obj.make(Persisted, { name: 'persisted' }));
+    expect(TypeOptions.filterListedObjects([object])).toEqual([object]);
   });
 });
