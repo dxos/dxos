@@ -32,6 +32,12 @@ test Explorer.Spec.edgesAgree := inStore (fun _ =>
     let page := pageFor h
     List.all (fun u => u != h && List.contains h (refsIn "deps" (pageFor u))) (refsIn "users" page) && List.all (fun d => List.contains h (refsIn "users" (pageFor d))) (refsIn "deps" page)) hashes && any (fun h => not (List.isEmpty (refsIn "users" (pageFor h)))) hashes)
 
+test Explorer.Spec.eventsAreListed := inStore (fun _ =>
+  site withEvents
+  let h := seeArea ()
+  let events := Spec.file "events.json"
+  Text.contains "{\"name\":\"Seen\"" events && Text.contains "\"count\":1," events && Text.contains ("\"" ++ h ++ "\":{\"names\":[\"area\"],\"count\":1,") events)
+
 test Explorer.Spec.everyDefinitionHasAPage := inSite (fun _ =>
   let entries := List.filter visible (Map.toList (Codebase.current "cb"))
   List.all
@@ -66,6 +72,12 @@ test Explorer.Spec.inboxRefusesStrangers := inSite (fun _ =>
   | Result.ok _ => false
   | Result.err _ => not (any (fun t => t.title == "Wrap long lines") (Map.values (Tasks.current "cb"))))
 
+test Explorer.Spec.metaCountsEvents := inStore (fun _ =>
+  site withEvents
+  let before := Text.contains "\"events\":0," (Spec.file "meta.json")
+  seeArea ()
+  before && Text.contains "\"events\":1," (Spec.file "meta.json"))
+
 test Explorer.Spec.metaNamesTheConsole := inSite (fun _ =>
   let without := Text.contains "\"console\":false" (Spec.file "meta.json")
   IO.mkdirp "site/console"
@@ -99,6 +111,20 @@ def Explorer.Spec.regenerate (u : Unit) : {IO, Throw Text} Int := withHome (fun 
 
 def Explorer.Spec.request (author : Text) : Sexp := Sexp.read ("(request (kind \"task\") (by \"" ++ author ++
   "\") (at \"t\") (title \"Wrap long lines\") (details \"\") (link \"area\") (labels \"explorer,report\") (assets))")
+
+/-- Records one `Seen` event about `area` and regenerates the site; returns `area`'s hash. -/
+def Explorer.Spec.seeArea (u : Unit) : {IO, Throw Text} Text :=
+  let ns := Codebase.current "cb"
+  match Map.lookup "area" ns with
+  | Option.some e =>
+      Analytics.record
+        "cb"
+        (Analytics.find "cb" ns "Seen")
+        "claude"
+        [("subject", Cell.text ("#" ++ Entry.hash e)), ("note", Cell.text "x")]
+      regenerate ()
+      Entry.hash e
+  | Option.none => Throw.throw "no area"
 
 /-- A codebase from `source` and its site in `site/`. -/
 def Explorer.Spec.site (source : Text) : {IO, Throw Text} Int :=
@@ -139,6 +165,10 @@ test Explorer.Spec.verdictsAreShown := inSite (fun _ =>
   | Option.none => false)
 
 def Explorer.Spec.visibleNames (u : Unit) : {IO, Throw Text} List Text := List.map fst (List.filter visible (Map.toList (Codebase.current "cb")))
+
+/-- The sample codebase with an event type whose `subject` column refers to a definition. -/
+def Explorer.Spec.withEvents : Text := Spec.sample ++
+  "\nstructure CodeRef @\"urn:deus:analytics:CodeRef\" where\n  target : Text\n\n@[event]\nstructure Seen @\"urn:test:Seen\" where\n  subject : CodeRef\n  note : Text\n"
 
 /-- Answers `$DEUS_HOME` with a simulated directory; the rest of `IO` passes through. -/
 def Explorer.Spec.withHome (body : Unit -> {IO, Throw Text} a) : {IO, Throw Text} a :=
@@ -261,9 +291,20 @@ def Explorer.generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
     | Option.some text => IO.writeFile (out ++ "/" ++ f) text
     | Option.none => Throw.throw ("missing " ++ home ++ "/platform/explorer/" ++ f))
   let branch := currentBranch dir
+  -- Events about the codebase (D104), for the Events card and per-definition counts; a codebase
+  -- whose event types cannot be read still gets a site, with no events.
+  let events :=
+    match try (fun _ =>
+      let ts := Analytics.types dir ns
+      (siteJson dir project ns 20, sum (List.map (fun c =>
+        match c with
+        | (_, pending, pushed) => pending + pushed) (counts dir ts)))) with
+    | Result.ok pair => pair
+    | Result.err _ => (Json.obj [("project", Json.str project), ("types", Json.arr []), ("byDefinition", Json.obj [])], 0)
+  IO.writeFile (out ++ "/events.json") (Json.render (fst events))
   IO.writeFile
     (out ++ "/meta.json")
-    (Json.render (Json.obj [("project", Json.str project), ("branch", Json.str branch), ("branches", Json.arr (List.map Json.str (branches dir))), ("definitions", Json.num (List.length entries)), ("tasks", Json.num (List.length tasks)), ("open", Json.num (List.length (List.filter isOpen tasks))), ("console", Json.bool (IO.exists (out ++ "/console/info.json"))), ("history", Json.arr (List.map (logJson dir) (fullLog dir historyLimit)))]))
+    (Json.render (Json.obj [("project", Json.str project), ("branch", Json.str branch), ("branches", Json.arr (List.map Json.str (branches dir))), ("definitions", Json.num (List.length entries)), ("tasks", Json.num (List.length tasks)), ("open", Json.num (List.length (List.filter isOpen tasks))), ("console", Json.bool (IO.exists (out ++ "/console/info.json"))), ("events", Json.num (snd events)), ("history", Json.arr (List.map (logJson dir) (fullLog dir historyLimit)))]))
   -- The signature and doc summary let the app list, search and preview names without opening their pages.
   IO.writeFile (out ++ "/names.json") (Json.render (Json.arr (List.map (fun pair =>
     let h := Entry.hash (snd pair)

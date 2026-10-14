@@ -1,5 +1,19 @@
 # History of main
 
+- `e5816f8806` task: open c62198a1 Toolchain R2 codebase mistypes pattern variables: deus update of a match on some g fails there (by claude)
+- `d4da286202` close 610b2785 by #0ab73f8ca1 (by claude)
+- `0ab73f8ca1` C back end: closures, partial application and lambda-lifted letrec (D111) (by claude)
+- `d2791171c6` history: import 627 changes
+- `671c6d2637` task: import from tasks.sexp
+- `9d20d6564f` task: set 381f55f3 state details (by claude)
+- `b28f47c0ce` history: import 623 changes
+- `d77982c141` task: import from tasks.sexp
+- `fa2371ce09` add code specs
+- `072f91e168` task: set ca75d545 state (by claude)
+- `086d4e6828` task: comment on ca75d545 (by claude)
+- `2935873e9b` task: open ca75d545 Explorer shows events: events.json, an Events card, and counts on definition and change cards (by claude)
+- `5af5f624f5` the explorer writes events.json and meta.events (R-14, R-15) (by claude)
+- `c77c21729f` Explorer.Spec R-14, R-15: events.json and the meta count, spec first (by claude)
 - `102beac5d7` merge #13952's branch: View.Spec and the specs as exported (by claude)
 - `400cb8ebc9` history: import 698 changes
 - `5dab22c540` task: import from codebase/tasks.sexp

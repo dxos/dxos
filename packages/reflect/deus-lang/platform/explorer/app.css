@@ -2097,3 +2097,83 @@ body.with-console #sidebar {
   gap: 4px;
   margin-left: auto;
 }
+
+/* Events (D104): the analytics store's rows, as a table per event type. */
+
+.k-event {
+  --k: var(--k-theorem);
+  font-size: 9px;
+}
+
+.event-split {
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.event-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+
+.event-table th,
+.event-table td {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+.event-table th {
+  background: var(--code);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.event-table tr:last-child td {
+  border-bottom: none;
+}
+
+.event-table time {
+  color: var(--muted);
+}
+
+.event-table .num {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.event-table .cell-text {
+  display: inline-block;
+  max-width: 28ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: bottom;
+}
+
+.event-table .status {
+  margin-left: 0;
+  font-size: 12px;
+}
+
+.table-note {
+  margin: 6px 0 0;
+  font-size: 12px;
+}
+
+.card[data-key='k:events'] .section h3 {
+  color: var(--fg);
+  font-size: 13.5px;
+  letter-spacing: 0;
+  text-transform: none;
+}

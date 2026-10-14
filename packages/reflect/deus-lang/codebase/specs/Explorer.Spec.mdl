@@ -136,6 +136,21 @@ req R-11: meta.json says whether the site has a console
   by: Explorer.Spec.metaNamesTheConsole
 ```
 
+## Events
+
+The analytics store (D104) records events about the codebase; the site shows them so a reader sees
+how often a definition is tested, changed or written without querying the store.
+
+```mdl
+req R-14: events.json lists every event type with its count, and counts each definition's events under its hash with its names
+  by: Explorer.Spec.eventsAreListed
+```
+
+```mdl
+req R-15: meta.json counts the codebase's events, 0 when it records none
+  by: Explorer.Spec.metaCountsEvents
+```
+
 ## Laws
 
 Each law builds a codebase in the deterministic simulation and generates its site there, with
