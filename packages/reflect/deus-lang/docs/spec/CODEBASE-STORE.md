@@ -151,7 +151,7 @@ metadata.
 ## Namespace snapshots
 
 A namespace maps full names (dot-separated, such as `Demo.Shape.circle`) to entries. A snapshot is a
-tree of `ns` nodes, and its hash is the root's hash ([D65](../DECISIONS.md)). A changed name rewrites
+tree of `ns` nodes, and its hash is the root's hash ([D70](../DECISIONS.md)). A changed name rewrites
 only the nodes on its path, so a one-definition commit adds about 6 KB to history in the toolchain's
 codebase of 1,392 names, where a flat snapshot added 133 KB.
 
@@ -170,7 +170,7 @@ A node is written from (key, item) pairs:
 
 A reader expands `part` items in place and prefixes the names under a `sub` item with its segment and a
 dot. A reader MUST also accept a flat snapshot, one `ns` node holding full names, which codebases wrote
-before D65; `deus migrate` rewrites such history into trees.
+before D70; `deus migrate` rewrites such history into trees.
 
 ```text
 node     = "(ns" { " (n " string " " entry ")" } { " (sub " string " " hash ")" } ")"
@@ -236,7 +236,7 @@ A commit writes a new snapshot and a new node only when something changed: a cha
 equals the parent's leaves the branch where it was. A code change keeps the parent's tasks hash; a task
 change keeps the parent's namespace hash.
 
-History may be shallow. A remote collected by the retention GC that D66 removed ([D54](../DECISIONS.md)),
+History may be shallow. A remote collected by the retention GC that D71 removed ([D54](../DECISIONS.md)),
 or a pull cut short, leaves nodes that name parents the store does not have; readers MUST treat those parents as absent, so such a node acts as a root. "First-parent
 history" (`deus log`, `HISTORY.md`) follows the first parent the store has.
 

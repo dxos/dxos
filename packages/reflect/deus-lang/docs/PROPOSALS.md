@@ -98,8 +98,8 @@ work against a directory or `r2://<bucket>/<prefix>`. Uploads are conditional
 (`If-None-Match: *`), so an existing bundle is never replaced. One push and pull round trip was
 run against the `agent-artifacts` bucket and then deleted. Garbage collection under a retention
 policy came next (D54): `deus compact --keep n`. Snapshots then became trees, so history grows by
-the change rather than by the whole namespace (D65), and history is never trimmed, so `--keep` is
-gone (D66).
+the change rather than by the whole namespace (D70), and history is never trimmed, so `--keep` is
+gone (D71).
 
 ## P4. Layers of the codebase
 

@@ -7,8 +7,8 @@ reads this format can replicate a codebase without a server. The implementation 
 [`deus/replicate.deus`](../../deus/replicate.deus) (bundles, remotes, heads, compaction, GC),
 [`deus/columnar.deus`](../../deus/columnar.deus) (the DEUSCOL1 encoding) and
 [`deus/cli.deus`](../../deus/cli.deus) (`withRemote`, the commands). Decisions:
-[D50](../DECISIONS.md) (bundles, heads, sedimentree), [D66](../DECISIONS.md) (no history is
-trimmed), [D60](../DECISIONS.md) and [D67](../DECISIONS.md) (columnar
+[D50](../DECISIONS.md) (bundles, heads, sedimentree), [D71](../DECISIONS.md) (no history is
+trimmed), [D60](../DECISIONS.md) and [D72](../DECISIONS.md) (columnar
 text, gzip).
 
 Objects and their hashes are defined in [CODEBASE-STORE.md](CODEBASE-STORE.md). The canonical
@@ -309,7 +309,7 @@ Observed: 30 level-0 bundles whose head `01786a06…` starts with one zero compa
 
 ## History is never trimmed
 
-A remote keeps every causal node and everything it reaches, as git does ([D66](../DECISIONS.md)).
+A remote keeps every causal node and everything it reaches, as git does ([D71](../DECISIONS.md)).
 The only deletion is step 6 of compaction, of bundles whose objects strata already hold. There is no
 retention GC: `deus compact --keep` exits with an error. Artifacts and the cache are local layers and
 are never uploaded, so deleting them never touches a remote.
