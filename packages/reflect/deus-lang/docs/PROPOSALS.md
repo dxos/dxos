@@ -143,5 +143,6 @@ carries enough context for an agent to find the bug.
 
 **Status.** Implemented: kernel stack traces printed with names (`deus run`, `deus test`);
 `Log`, `Trace` and `Metrics` in `deus/observe.deus` with three handlers (`collect`, `ndjson`,
-`otlp`). OTLP goes to JSON-lines files rather than HTTP ([D35](./DECISIONS.md)). Not yet: the
-structured `Failure` type for `throw`, and spans tagged with definition hashes.
+`otlp`). OTLP goes to JSON-lines files rather than HTTP ([D35](./DECISIONS.md)). `Failure`
+with `Failure.context` chains ([D37](./DECISIONS.md)). Not yet: spans tagged with definition
+hashes.

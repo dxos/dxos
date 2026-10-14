@@ -46,6 +46,30 @@ def catch (body : Unit -> {Throw e | r} a) (onError : e -> {r} a) : {r} a :=
   handle body () with
   | throw e -> _ => onError e
 
+/-- A checked error with context: what failed, the facts that locate it, and what it wraps. -/
+structure Failure where
+  reason : Text
+  facts : List (Text, Text)
+  cause : Option Failure
+
+namespace Failure
+
+def of (reason : Text) (facts : List (Text, Text)) : Failure := Failure.mk reason facts none
+
+/-- Runs `body`; a `Failure` it throws is wrapped in one more layer of context. -/
+def context (reason : Text) (facts : List (Text, Text)) (body : Unit -> {Throw Failure | r} a) : {Throw Failure | r} a :=
+  handle body () with
+  | throw inner -> _ => throw (Failure.mk reason facts (some inner))
+
+/-- Outermost context first, each cause on its own line. -/
+def render (f : Failure) : Text :=
+  let shown := if List.isEmpty f.facts then "" else " (" ++ Text.join ", " (List.map (fun pair => fst pair ++ "=" ++ snd pair) f.facts) ++ ")"
+  f.reason ++ shown ++ (match f.cause with
+    | some inner => "\n  caused by: " ++ render inner
+    | none => "")
+
+end Failure
+
 namespace Option
 
 def map (f : a -> b) : Option a -> Option b

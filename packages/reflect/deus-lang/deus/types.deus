@@ -104,6 +104,24 @@ def labelIri (t : TType) : Text :=
   | TType.con iri _ => iri
   | _ => ""
 
+def rowTailVar (u : Unifier) (r : TRow) : Option Int :=
+  match resolveRow u r with
+  | TRow.extend _ rest => rowTailVar u rest
+  | TRow.var id => some id
+  | TRow.empty => none
+
+def hasLabel (u : Unifier) (r : TRow) (label : TType) : Bool :=
+  match resolveRow u r with
+  | TRow.extend l rest => labelIri (resolve u l) == labelIri (resolve u label) || hasLabel u rest label
+  | _ => false
+
+/--
+  Leijen's side condition: moving `label` out of `other` would extend a tail that `rest` shares,
+  which can never terminate, so the rows differ.
+-/
+def sharedTailMissing (u : Unifier) (label : TType) (rest : TRow) (other : TRow) : Bool :=
+  not (hasLabel u other label) && Option.isSome (rowTailVar u rest) && rowTailVar u rest == rowTailVar u other
+
 --
 -- Printing (for errors and `view`).
 --
@@ -194,10 +212,12 @@ def unifyRow (u : Unifier) (a : TRow) (b : TRow) : {Throw Text} Unit :=
   | (TRow.var x, r) => if rowTailIs u x r then rowMismatch u a b else MutMap.set u.rows x r
   | (r, TRow.var y) => if rowTailIs u y r then rowMismatch u a b else MutMap.set u.rows y r
   | (TRow.extend l rest, other) =>
-    match rewriteRow u other l with
-    | (found, other2) =>
-      unify u l found
-      unifyRow u rest other2
+    if sharedTailMissing u l rest other then rowMismatch u a b
+    else
+      match rewriteRow u other l with
+      | (found, other2) =>
+        unify u l found
+        unifyRow u rest other2
   | (TRow.empty, TRow.extend l _) => throw ("unexpected ability " ++ showType (zonk u l) (Ref.new Map.empty) 0)
 
 --
@@ -392,8 +412,9 @@ def infer (u : Unifier) (env : TypeEnv) (t : Sexp) (locals : List TType) (row : 
 /-- An application `f a₁ … aₙ`. -/
 def application (u : Unifier) (env : TypeEnv) (f : Sexp) (args : List Sexp) (locals : List TType) (row : TRow) : {Throw Text} TType :=
   let tf := infer u env f locals row
-  -- Bidirectional: when the callee's arrows are known, link their rows to the context first,
-  -- then check lambda arguments against the expected parameter types.
+  -- Bidirectional: when the callee's arrows are known, check plain arguments (they may bind the
+  -- callee's row variables), link the rows to the context, then check lambdas against the
+  -- parameter types so a callback runs in its caller's row.
   let rec peel t n acc :=
     if n == 0 then some (List.reverse acc, t)
     else
@@ -402,8 +423,11 @@ def application (u : Unifier) (env : TypeEnv) (f : Sexp) (args : List Sexp) (loc
       | _ => none
   match peel tf (List.length args) [] with
   | some (params, result) =>
+    let pairs := List.zip params args
+    let isLambda := fun (pair : ((TType, TRow), Sexp)) => Sexp.head (snd pair) == "lam"
+    List.forEach (List.filter (fun pair => not (isLambda pair)) pairs) (fun pair => checkAgainst u env (snd pair) (fst (fst pair)) locals row)
     List.forEach params (fun pair => subRow u (snd pair) row)
-    List.forEach (List.zip params args) (fun pair => checkAgainst u env (snd pair) (fst (fst pair)) locals row)
+    List.forEach (List.filter isLambda pairs) (fun pair => checkAgainst u env (snd pair) (fst (fst pair)) locals row)
     result
   | none =>
     List.foldl (fun acc arg =>
@@ -436,10 +460,12 @@ def subRow (u : Unifier) (small : TRow) (big : TRow) : {Throw Text} Unit :=
   match resolveRow u small with
   | TRow.empty => ()
   | TRow.extend l rest =>
-    match rewriteRow u big l with
-    | (found, big2) =>
-      unify u l found
-      subRow u rest big2
+    if sharedTailMissing u l rest big then rowMismatch u small big
+    else
+      match rewriteRow u big l with
+      | (found, big2) =>
+        unify u l found
+        subRow u rest big2
   | TRow.var t => if rowTailIs u t big then () else unifyRow u (TRow.var t) big
 
 /-- Binds a pattern against a type; returns the bound variables' types, innermost first. -/
@@ -528,8 +554,25 @@ def signatureType (u : Unifier) (s : Sexp) (vars : Ref (Map Text TType)) (rowVar
   | Sexp.list (Sexp.sym "tapp" :: Sexp.list [Sexp.sym "tref", Sexp.str iri] :: args) => TType.con iri (List.map (fun x => signatureType u x vars rowVars) args)
   | _ => fromSexp u s vars rowVars [] true
 
-/-- The signature's type variables must still be distinct variables (the definition is as general as declared). -/
-def checkRigid (u : Unifier) (vars : Ref (Map Text TType)) : {Throw Text} Unit :=
+/--
+  The signature's type and row variables must still be distinct variables: the definition is as
+  general as declared, and performs no ability its written rows leave out.
+-/
+def checkRigid (u : Unifier) (vars : Ref (Map Text TType)) (rows : Ref (Map Text TRow)) : {Throw Text} Unit :=
+  checkRigidTypes u vars
+  let bound := List.map (fun pair => (fst pair, resolveRow u (snd pair))) (Map.toList (Ref.get rows))
+  let ids := List.filterMap (fun pair =>
+    match snd pair with
+    | TRow.var id => some id
+    | _ => none) bound
+  match List.find (fun pair =>
+    match snd pair with
+    | TRow.var _ => false
+    | _ => true) bound with
+  | some (name, r) => throw ("ability row " ++ name ++ " is declared as the caller's but the body performs " ++ showRow (zonkRow u r) (Ref.new Map.empty))
+  | none => if List.length (List.dedup (List.sort ids)) != List.length ids then throw "two ability rows of the signature must be the same row" else ()
+
+def checkRigidTypes (u : Unifier) (vars : Ref (Map Text TType)) : {Throw Text} Unit :=
   let bound := List.map (fun pair => (fst pair, resolve u (snd pair))) (List.filter (fun pair => fst pair != "?") (Map.toList (Ref.get vars)))
   let ids := List.filterMap (fun pair =>
     match snd pair with

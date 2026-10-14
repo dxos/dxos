@@ -70,6 +70,37 @@ describe('deus CLI', () => {
     }
   });
 
+  test(
+    'checks effect rows: a body may not perform what its signature leaves out',
+    { timeout: 120_000 },
+    ({ expect }) => {
+      const c = ['--codebase', join(scratch, 'effects')];
+      deus('init', ...c);
+      deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
+      const check = (name: string, body: string) => {
+        const path = join(scratch, `${name}.deus`);
+        writeFileSync(path, `namespace Rows\ndef ${name} (body : Unit -> {Throw Text | r} Int) : ${body}\nend Rows\n`);
+        return deus('add', path, ...c);
+      };
+      // A handled `Throw` may be rethrown in a row that still has it.
+      expect(
+        check(
+          'rethrows',
+          '{Throw Text | r} Int :=\n  match try body with\n  | Result.ok x => x\n  | Result.err m => throw m',
+        ).code,
+      ).toBe(0);
+      expect(
+        check('handles', '{r} Int :=\n  match try body with\n  | Result.ok x => x\n  | Result.err _ => 0').code,
+      ).toBe(0);
+      // Leaking `Throw` into `{r}` is rejected, whether by a call or a throw.
+      expect(check('leaksByCall', '{r} Int := body ()').stderr).toMatch(/ability mismatch/);
+      expect(
+        check('leaksByThrow', '{r} Int :=\n  match try body with\n  | Result.ok x => x\n  | Result.err m => throw m')
+          .stderr,
+      ).toMatch(/ability row r is declared as the caller's/);
+    },
+  );
+
   test('update propagates to dependents; branches merge three-way', { timeout: 120_000 }, ({ expect }) => {
     const codebase = join(scratch, 'demo');
     const file = (name: string, text: string) => {

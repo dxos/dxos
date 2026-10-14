@@ -53,6 +53,13 @@ test simulatedAppend :=
     IO.readFile "log/a.txt") with
   | (result, _) => result == some "xy"
 
+test failureContextChains :=
+  let load := fun (u : Unit) => Failure.context "loading config" [("path", "a.toml")] (fun _ =>
+    Failure.context "parsing" [("line", "3")] (fun _ => throw (Failure.of "unexpected '='" [])))
+  match try load with
+  | Result.err f => Failure.render f == "loading config (path=a.toml)\n  caused by: parsing (line=3)\n  caused by: unexpected '='"
+  | Result.ok _ => false
+
 test parserOffside := parses "def f (x : Int) : Int :=\n  let y := x + 1\n  y * 2\n"
 
 test parserRejectsIndentedDecl := not (parses "  def f := 1\n")

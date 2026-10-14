@@ -423,10 +423,11 @@ def typecheck (objectOf : Text -> {Throw Text | r} Option Sexp) (metaOf : Text -
         | some sig =>
           -- Checked against its signature, so parameters have their declared types and rows.
           let sigVars := Ref.new Map.empty
-          let declared := Types.signatureType u sig sigVars (Ref.new Map.empty)
+          let sigRows := Ref.new Map.empty
+          let declared := Types.signatureType u sig sigVars sigRows
           Types.unify u t declared
           Types.checkAgainst u env core declared [] (Types.freshRow u)
-          Types.checkRigid u sigVars
+          Types.checkRigid u sigVars sigRows
         | none =>
           Types.unify u t (Types.infer u env core [] (Types.freshRow u))
           if p.wrap == "test" then Types.unify u t Types.bool else ()) (fun e =>
