@@ -10,8 +10,10 @@ import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { Trigger, asyncTimeout, waitForCondition } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { type DatabaseDirectory, EntityStructure, SpaceDocVersion } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
+import { DXN, EntityId, PublicKey, SpaceId } from '@dxos/keys';
+import { type DataService } from '@dxos/protocols/rpc';
 import { openAndClose } from '@dxos/test-utils';
 
 import { AutomergeHost } from '../automerge/index.ts';
@@ -95,11 +97,137 @@ describe('DocumentsSynchronizer', () => {
     });
     await openAndClose(synchronizer);
 
-    await synchronizer.addDocuments(handles.map((handle) => handle.documentId));
+    await synchronizer.addDocuments(handles.map(({ documentId }) => ({ documentId })));
     await allDelivered.wait({ timeout: 5_000 });
 
     expect(Math.max(...batches)).toBeLessThanOrEqual(2);
     expect(batches.filter((size) => size > 0).length).toBeGreaterThanOrEqual(3);
+  });
+
+  test('a subscription from heads the client holds sends only what came after them', async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const host = new AutomergeHost({ runtime });
+    await openAndClose(host);
+    const handle = await host.createDoc<{ text: string }>({ text: 'held' });
+    const held = A.save(handle.doc()!);
+    const heldHeads = A.getHeads(handle.doc()!);
+    handle.change((doc) => {
+      doc.text = 'after';
+    });
+    const unknown = await host.createDoc<{ text: string }>({ text: 'unknown' });
+    const current = await host.createDoc<{ text: string }>({ text: 'current' });
+
+    const sent = new Map<string, Uint8Array>();
+    const delivered = new Trigger();
+    const synchronizer = new DocumentsSynchronizer({
+      automergeHost: host,
+      sendUpdates: (batch) => {
+        for (const { documentId, mutation } of batch.updates ?? []) {
+          if (mutation) {
+            sent.set(documentId, mutation);
+          }
+        }
+        if (sent.size === 3) {
+          delivered.wake();
+        }
+      },
+    });
+    await openAndClose(synchronizer);
+
+    await synchronizer.addDocuments([
+      { documentId: handle.documentId, heads: heldHeads },
+      { documentId: unknown.documentId, heads: heldHeads },
+      { documentId: current.documentId, heads: A.getHeads(current.doc()!) },
+    ]);
+    await delivered.wait({ timeout: 5_000 });
+
+    const delta = sent.get(handle.documentId)!;
+    expect(delta).toEqual(A.saveSince(handle.doc()!, heldHeads));
+    expect(A.loadIncremental(A.load<{ text: string }>(held), delta).text).toBe('after');
+    expect(A.load<{ text: string }>(sent.get(unknown.documentId)!).text).toBe('unknown');
+    expect(sent.get(current.documentId)).toHaveLength(0);
+  });
+
+  test('a passive subscription is sent nothing while storage holds its heads, and the difference once it does not', async () => {
+    const { host, synchronizer, updates, createDirectory, next } = await setupPassive();
+    const current = await createDirectory('current');
+    const stale = await createDirectory('shown');
+    const shownAt = A.getHeads(stale.handle.doc()!);
+    stale.handle.change((doc) => {
+      doc.objects![stale.objectId].data.title = 'stored';
+    });
+    const storedAt = A.getHeads(stale.handle.doc()!);
+    const published = host.documentHeadsChanged.waitFor(
+      ({ documentId, heads }) => documentId === stale.handle.documentId && A.equals(heads, storedAt),
+    );
+    await host.flush(Context.default());
+    await asyncTimeout(published, 5_000);
+
+    const acquired = vi.spyOn(host, 'acquireDoc');
+    const atStorage = {
+      documentId: current.handle.documentId,
+      heads: A.getHeads(current.handle.doc()!),
+      passive: true,
+    };
+    await synchronizer.addDocuments([atStorage]);
+    await synchronizer.addDocuments([
+      atStorage,
+      { documentId: stale.handle.documentId, heads: shownAt, passive: true },
+    ]);
+    await waitForCondition({ condition: () => updates.length > 0, timeout: 5_000 });
+    expect(updates.map(({ documentId }) => documentId)).toEqual([stale.handle.documentId]);
+    expect(JSON.parse(updates[0].passive!.json!).title).toBe('stored');
+    const loaded = acquired.mock.calls.map(([documentId]) => documentId);
+    expect(loaded).toContain(stale.handle.documentId);
+    expect(loaded).not.toContain(current.handle.documentId);
+
+    const resent = next();
+    await synchronizer.addDocuments([{ documentId: stale.handle.documentId, heads: shownAt, passive: true }]);
+    expect((await resent).documentId).toBe(stale.handle.documentId);
+  });
+
+  test("a passive update carries the change and its object's JSON at the new heads", async () => {
+    const { host, synchronizer, createDirectory, next } = await setupPassive();
+    const { handle, objectId } = await createDirectory('shown');
+    const shownBytes = A.save(handle.doc()!);
+    await synchronizer.addDocuments([
+      { documentId: handle.documentId, heads: A.getHeads(handle.doc()!), passive: true },
+    ]);
+
+    let update = next();
+    handle.change((doc) => {
+      doc.objects![objectId].data.title = 'edited';
+    });
+    await host.flush(Context.default());
+    const edited = await update;
+    expect(JSON.parse(edited.passive!.json!).title).toBe('edited');
+    expect(edited.passive?.heads).toEqual(A.getHeads(handle.doc()!));
+    expect(edited.passive?.updatedAt).toBeGreaterThan(0);
+    const loaded = A.loadIncremental(A.load<DatabaseDirectory>(shownBytes), edited.mutation!);
+    expect(loaded.objects![objectId].data.title).toBe('edited');
+
+    update = next();
+    handle.change((doc) => {
+      doc.objects![EntityId.random()] = EntityStructure.makeObject({ type: TEST_TYPE, data: {} });
+    });
+    await host.flush(Context.default());
+    expect((await update).passive).toEqual(expect.objectContaining({ json: undefined }));
+  });
+
+  test('re-adding a document switches its mode', async () => {
+    const { synchronizer, createDirectory, next } = await setupPassive();
+    const { handle, objectId } = await createDirectory('shown');
+    const heads = A.getHeads(handle.doc()!);
+    await synchronizer.addDocuments([{ documentId: handle.documentId, heads, passive: true }]);
+
+    let update = next();
+    await synchronizer.addDocuments([{ documentId: handle.documentId, heads }]);
+    expect((await update).passive).toBeUndefined();
+
+    update = next();
+    await synchronizer.addDocuments([{ documentId: handle.documentId }]);
+    expect(A.load<DatabaseDirectory>((await update).mutation!).objects![objectId].data.title).toBe('shown');
   });
 
   test('a client write reaches the other subscriber and the heads store without a lease on the host', async () => {
@@ -117,8 +245,8 @@ describe('DocumentsSynchronizer', () => {
     const synchronizer1 = new DocumentsSynchronizer({ automergeHost: host, sendUpdates: client1.receive });
     const synchronizer2 = new DocumentsSynchronizer({ automergeHost: host, sendUpdates: client2.receive });
     await openAndClose(synchronizer1, synchronizer2);
-    await synchronizer1.addDocuments([documentId]);
-    await synchronizer2.addDocuments([documentId]);
+    await synchronizer1.addDocuments([{ documentId }]);
+    await synchronizer2.addDocuments([{ documentId }]);
     await asyncTimeout(Promise.all([client1.loaded(documentId), client2.loaded(documentId)]), 1_000);
 
     // Subscribed and idle: nothing on the host holds the document.
@@ -156,8 +284,8 @@ describe('DocumentsSynchronizer', () => {
     const synchronizer1 = new DocumentsSynchronizer({ automergeHost: host, sendUpdates: client1.receive });
     const synchronizer2 = new DocumentsSynchronizer({ automergeHost: host, sendUpdates: client2.receive });
     await openAndClose(synchronizer1, synchronizer2);
-    await synchronizer1.addDocuments([documentId]);
-    await synchronizer2.addDocuments([documentId]);
+    await synchronizer1.addDocuments([{ documentId }]);
+    await synchronizer2.addDocuments([{ documentId }]);
     await asyncTimeout(Promise.all([client1.loaded(documentId), client2.loaded(documentId)]), 1_000);
 
     // Holds the first write's import open until the second client's write has been imported.
@@ -210,7 +338,7 @@ describe('DocumentsSynchronizer', () => {
 
     const synchronizer = new DocumentsSynchronizer({ automergeHost: host, sendUpdates: () => {} });
     await openAndClose(synchronizer);
-    await synchronizer.addDocuments([documentId]);
+    await synchronizer.addDocuments([{ documentId }]);
     expect(host.leasedDocsCount).to.equal(1);
 
     synchronizer.removeDocuments([documentId]);
@@ -236,8 +364,7 @@ describe('DocumentsSynchronizer', () => {
     // First create the document on the host (simulates DataService.createDocument).
     const handle = await host.createDoc<{ text: string }>({ text: 'hello' });
 
-    // Add document to synchronizer (simulates updateSubscription with addIds).
-    await synchronizer.addDocuments([handle.documentId]);
+    await synchronizer.addDocuments([{ documentId: handle.documentId }]);
 
     // Wait for the scheduled job to flush the initial sync.
     await asyncTimeout(sentUpdate.wait(), 1_000);
@@ -267,8 +394,7 @@ describe('DocumentsSynchronizer', () => {
         const handle = await host.createDoc<{ text: string }>({ text });
         documentId = handle.documentId;
 
-        // Add to synchronizer (simulates updateSubscription with addIds).
-        await synchronizer.addDocuments([documentId]);
+        await synchronizer.addDocuments([{ documentId }]);
 
         // Wait for the background auto-save to persist the document to disk (no explicit flush).
         await waitForCondition({ condition: () => host.hasDocOnDisk(documentId), timeout: 2_000 });
@@ -296,3 +422,36 @@ describe('DocumentsSynchronizer', () => {
     });
   });
 });
+
+const TEST_TYPE = DXN.make('com.example.type.test', '0.1.0');
+
+const setupPassive = async () => {
+  const { runtime, dispose } = createTestSqliteRuntime();
+  onTestFinished(() => dispose());
+  const host = new AutomergeHost({ runtime });
+  await openAndClose(host);
+  const updates: DataService.DocumentUpdate[] = [];
+  const synchronizer = new DocumentsSynchronizer({
+    automergeHost: host,
+    sendUpdates: (batch) => updates.push(...(batch.updates ?? [])),
+  });
+  await openAndClose(synchronizer);
+
+  const createDirectory = async (title: string) => {
+    const objectId = EntityId.random();
+    const handle = await host.createDoc<DatabaseDirectory>({
+      version: SpaceDocVersion.CURRENT,
+      access: { spaceId: SpaceId.random() },
+      objects: { [objectId]: EntityStructure.makeObject({ type: TEST_TYPE, data: { title } }) },
+      links: {},
+    });
+    await host.flush(Context.default());
+    return { handle, objectId };
+  };
+  const next = async () => {
+    const count = updates.length;
+    await waitForCondition({ condition: () => updates.length > count, timeout: 5_000 });
+    return updates[updates.length - 1];
+  };
+  return { host, synchronizer, updates, createDirectory, next };
+};

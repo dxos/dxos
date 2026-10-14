@@ -50,7 +50,7 @@ export class DataServiceImpl implements DataService.Handlers {
   }
 
   ['DataService.updateSubscription'](request: DataService.UpdateSubscriptionRequest): Effect.Effect<void, BaseError> {
-    const addIds = request.addIds ?? [];
+    const addIds = (request.add ?? []).map(({ id }) => id);
     const self = this;
     return Effect.gen(function* () {
       const sub =

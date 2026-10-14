@@ -15,9 +15,10 @@ import { Trigger, asyncTimeout, latch, sleep, waitForCondition, yieldToEventLoop
 import { Context } from '@dxos/context';
 import { AutomergeHost, DataServiceImpl, type DataServiceProps, SpaceStateManager } from '@dxos/echo-host';
 import { TestReplicationNetwork, createTestSqliteRuntime } from '@dxos/echo-host/testing';
+import { type DatabaseDirectory, EntityStructure, SpaceDocVersion } from '@dxos/echo-protocol';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
-import { SpaceId } from '@dxos/keys';
+import { DXN, EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { makeInProcessClient } from '@dxos/protocols';
 import { DataService } from '@dxos/protocols/rpc';
@@ -95,6 +96,116 @@ describe('RepoProxy', () => {
     const clientHandle = clientRepo.find<{ text: string }>(hostHandle.url);
     await asyncTimeout(clientHandle.whenReady(), 1000);
     expect(clientHandle.doc()?.text).to.equal(text);
+  });
+
+  test('a passive handle loads the bytes it holds on first use and catches up from their heads', async () => {
+    const { host, dataService } = await setup();
+    const [clientRepo] = createProxyRepos(dataService);
+    await openAndClose(clientRepo);
+
+    const hostHandle = await host.createDoc<{ text: string; extra?: number }>({ text: 'held' });
+    const bytes = A.save(hostHandle.doc()!);
+    const heads = A.getHeads(hostHandle.doc()!);
+    hostHandle.change((doc) => {
+      doc.text = 'after';
+    });
+    await host.flush(Context.default());
+
+    const handle = clientRepo.find<{ text: string; extra?: number }>(hostHandle.documentId, {
+      passive: { bytes, heads },
+    });
+    expect(handle.state).toBe('passive');
+    expect(clientRepo.handles[hostHandle.documentId]).toBeUndefined();
+
+    expect(handle.doc().text).toBe('held');
+    expect(handle.isLoaded()).toBe(true);
+    expect(clientRepo.handles[hostHandle.documentId]).toBe(handle);
+    await asyncTimeout(handle.whenReady(), 1_000);
+    expect(handle.doc().text).toBe('after');
+
+    handle.change((doc: { text: string; extra?: number }) => {
+      doc.extra = 1;
+    });
+    await clientRepo.flush();
+    await waitForCondition({ condition: () => hostHandle.doc()?.extra === 1, timeout: 1_000 });
+  });
+
+  test("a passive handle takes a host change with its object's JSON, and keeps it with its stored changes", async () => {
+    const { host, clientRepo, service } = await setupRecording();
+    const { hostHandle, objectId, bytes, heads } = await createDirectory(host, 'shown');
+
+    const handle = clientRepo.find<DatabaseDirectory>(hostHandle.documentId, { passive: { bytes, heads } });
+    const shown: string[] = [];
+    handle.on('passive', ({ json }) => json && shown.push(JSON.parse(json).title));
+    await expect
+      .poll(() => service.requests.flatMap(({ add }) => add ?? []))
+      .toContainEqual({ id: hostHandle.documentId, heads, passive: true });
+
+    hostHandle.change((doc) => {
+      doc.objects![objectId].data.title = 'edited';
+    });
+    await host.flush(Context.default());
+    await expect.poll(() => shown).toEqual(['edited']);
+    expect(handle.state).toBe('passive');
+    expect(handle.passiveHeads).toEqual(A.getHeads(hostHandle.doc()!));
+    expect(handle.doc().objects![objectId].data.title).toBe('edited');
+  });
+
+  test("find with other heads replaces a passive handle's stored changes", async () => {
+    const { host, clientRepo } = await setupRecording();
+    const { hostHandle, objectId, bytes, heads } = await createDirectory(host, 'shown');
+    const handle = clientRepo.find<DatabaseDirectory>(hostHandle.documentId, { passive: { bytes, heads } });
+    hostHandle.change((doc) => {
+      doc.objects![objectId].data.title = 'edited';
+    });
+
+    const edited = { bytes: A.save(hostHandle.doc()!), heads: A.getHeads(hostHandle.doc()!) };
+    expect(clientRepo.find(hostHandle.documentId, { passive: edited })).toBe(handle);
+    expect(handle.passiveHeads).toEqual(edited.heads);
+    expect(handle.doc().objects![objectId].data.title).toBe('edited');
+  });
+
+  test('releasing a passive handle unsubscribes it, and a new subscription adds those still held', async () => {
+    const { host, clientRepo, service } = await setupRecording();
+    const kept = await createDirectory(host, 'kept');
+    const released = await createDirectory(host, 'released');
+    clientRepo.find(kept.hostHandle.documentId, { passive: { bytes: kept.bytes, heads: kept.heads } });
+    clientRepo.find(released.hostHandle.documentId, { passive: { bytes: released.bytes, heads: released.heads } });
+    await expect.poll(() => service.requests.flatMap(({ add }) => add ?? []).length).toBe(2);
+
+    expect(clientRepo.release(released.hostHandle.documentId)).toBe(true);
+    await expect
+      .poll(() => service.requests.flatMap(({ removeIds }) => removeIds ?? []))
+      .toEqual([released.hostHandle.documentId]);
+
+    const before = service.requests.length;
+    service.dropSubscription.wake();
+    await expect
+      .poll(() => service.requests.slice(before).flatMap(({ add }) => add ?? []))
+      .toEqual([{ id: kept.hostHandle.documentId, heads: kept.heads, passive: true }]);
+  });
+
+  test('a remove that fails is not sent again for a document held again meanwhile', async () => {
+    const { host, clientRepo, service } = await setupRecording();
+    const { hostHandle, objectId, bytes, heads } = await createDirectory(host, 'shown');
+    const documentId = hostHandle.documentId;
+    clientRepo.find(documentId, { passive: { bytes, heads } });
+    await expect.poll(() => service.requests.flatMap(({ add }) => add ?? []).length).toBe(1);
+
+    const failing = new Trigger();
+    service.failNext = failing;
+    clientRepo.release(documentId);
+    await expect.poll(() => service.inFlightFailure).toBe(true);
+    const handle = clientRepo.find<DatabaseDirectory>(documentId, { passive: { bytes, heads } });
+    failing.wake();
+    await expect.poll(() => service.requests.at(-1)?.add?.map(({ id }) => id)).toEqual([documentId]);
+    expect(service.requests.at(-1)?.removeIds).toEqual([]);
+
+    hostHandle.change((doc) => {
+      doc.objects![objectId].data.title = 'edited';
+    });
+    await host.flush(Context.default());
+    await expect.poll(() => handle.passiveHeads).toEqual(A.getHeads(hostHandle.doc()!));
   });
 
   test('two peers exchange document', async () => {
@@ -824,6 +935,59 @@ class FailingUpdateDataService extends DataServiceImpl {
   }
 }
 
+class RecordingDataService extends DataServiceImpl {
+  readonly 'requests': DataService.UpdateSubscriptionRequest[] = [];
+  readonly 'dropSubscription' = new Trigger();
+  'failNext': Trigger | undefined = undefined;
+  'inFlightFailure' = false;
+  #subscribeCount = 0;
+
+  override ['DataService.subscribe'](request: DataService.SubscribeRequest) {
+    const stream = super['DataService.subscribe'](request);
+    return this.#subscribeCount++ === 0
+      ? stream.pipe(EffectStream.interruptWhen(Effect.promise(() => this.dropSubscription.wait())))
+      : stream;
+  }
+
+  override ['DataService.updateSubscription'](
+    request: DataService.UpdateSubscriptionRequest,
+  ): Effect.Effect<void, Error> {
+    const fail = this.failNext;
+    if (fail) {
+      this.failNext = undefined;
+      this.inFlightFailure = true;
+      return Effect.promise(() => fail.wait()).pipe(
+        Effect.andThen(Effect.fail(new EchoClientError({ message: 'update timed out' }))),
+      );
+    }
+    this.requests.push(request);
+    return super['DataService.updateSubscription'](request);
+  }
+}
+
+const setupRecording = async () => {
+  let recording: RecordingDataService | undefined;
+  const { dataService, host } = await setup(undefined, (props) => (recording = new RecordingDataService(props)));
+  invariant(recording);
+  const [clientRepo] = createProxyRepos(dataService);
+  await openAndClose(clientRepo);
+  return { host, clientRepo, service: recording };
+};
+
+const createDirectory = async (host: AutomergeHost, title: string) => {
+  const objectId = EntityId.random();
+  const hostHandle = await host.createDoc<DatabaseDirectory>({
+    version: SpaceDocVersion.CURRENT,
+    access: { spaceId: SpaceId.random() },
+    objects: {
+      [objectId]: EntityStructure.makeObject({ type: DXN.make('com.example.type.test', '0.1.0'), data: { title } }),
+    },
+    links: {},
+  });
+  await host.flush(Context.default());
+  return { hostHandle, objectId, bytes: A.save(hostHandle.doc()!), heads: A.getHeads(hostHandle.doc()!) };
+};
+
 /** Records the documents each disk flush asks the host to save. */
 class FlushRecordingDataService extends DataServiceImpl {
   readonly 'flushed': string[][] = [];
@@ -857,10 +1021,10 @@ class UnavailableDataService extends DataServiceImpl {
   }
 
   override ['DataService.updateSubscription']({
-    addIds,
+    add,
   }: DataService.UpdateSubscriptionRequest): Effect.Effect<void, Error> {
     return Effect.sync(() => {
-      this.#emit?.({ updates: (addIds ?? []).map((documentId) => ({ documentId, unavailable: true })) });
+      this.#emit?.({ updates: (add ?? []).map(({ id }) => ({ documentId: id, unavailable: true })) });
     });
   }
 }
