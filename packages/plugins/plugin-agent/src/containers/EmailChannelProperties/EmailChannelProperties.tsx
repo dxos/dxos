@@ -11,14 +11,9 @@ import { useObject, useResolveRef } from '@dxos/echo-react';
 import { type SpaceId } from '@dxos/keys';
 import * as ThreadOperation from '@dxos/plugin-thread/ThreadOperation';
 import { useInterval } from '@dxos/react-hooks';
-import { Form } from '@dxos/react-ui-form';
-import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
-import * as Banner from '@dxos/react-ui/Banner';
-import * as UiHooks from '@dxos/react-ui/Hooks';
-import * as Layout from '@dxos/react-ui/Layout';
 import { type Channel } from '@dxos/types';
 
-import { meta } from '#meta';
+import { EmailChannelSettings } from '#components';
 import { AgentEmail } from '#types';
 
 /** How often the mailbox status is re-read; mail arrives on EDGE without notifying Composer. */
@@ -29,16 +24,14 @@ export type EmailChannelPropertiesProps = AppSurface.ObjectPropertiesProps<Chann
 };
 
 /**
- * The address and sender allowlist of an email-backed channel, with the mailbox's EDGE status. Edits apply to EDGE
- * when the channel is (re)connected, since the mailbox there holds its own copy of the config.
+ * The settings of an email-backed channel, saved to its config and applied to EDGE when the channel is (re)connected:
+ * the mailbox there holds its own copy.
  */
 export const EmailChannelProperties = ({ subject: channel, attendableId }: EmailChannelPropertiesProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
-  const db = Obj.getDatabase(channel);
   const config = useResolveRef(channel.backend.config);
   const email = AgentEmail.instanceOf(config) ? config : undefined;
   const [values] = useObject(email);
-  const mailbox = useConnection(channel, db?.spaceId);
+  const mailbox = useConnection(channel, Obj.getDatabase(channel)?.spaceId);
 
   const handleSave = useCallback(
     (properties: AgentEmail.Properties) => {
@@ -53,87 +46,25 @@ export const EmailChannelProperties = ({ subject: channel, attendableId }: Email
     [email],
   );
 
-  const menuActions = useMenuBuilder(
-    () =>
-      MenuBuilder.make()
-        .root({ label: ['email-mailbox-actions.label', { ns: meta.profile.key }] })
-        .action(
-          'connect',
-          {
-            // Reconnecting pushes edited settings to EDGE, so the label follows the state.
-            label: [
-              mailbox.status?.running ? 'email-mailbox-update.label' : 'email-mailbox-connect.label',
-              { ns: meta.profile.key },
-            ],
-            icon: mailbox.status?.running ? 'ph--arrow-clockwise--regular' : 'ph--play--regular',
-            disabled: mailbox.busy,
-          },
-          () => mailbox.connect(),
-        )
-        .action(
-          'disconnect',
-          {
-            label: ['email-mailbox-disconnect.label', { ns: meta.profile.key }],
-            icon: 'ph--stop--regular',
-            disabled: mailbox.busy || !mailbox.status?.running,
-          },
-          () => mailbox.disconnect(),
-        )
-        .build(),
-    [mailbox.status?.running, mailbox.busy, mailbox.connect, mailbox.disconnect],
-  );
-
   if (!email) {
     return null;
   }
 
   return (
-    <Layout.Flex column>
-      <ActionToolbar {...menuActions} attendableId={attendableId} alwaysActive={attendableId === undefined} />
-      <Form.Root<AgentEmail.Properties>
-        schema={AgentEmail.Properties}
-        db={db}
-        values={values}
-        autoSave
-        onSave={handleSave}
-      >
-        <Form.Viewport>
-          <Form.Content>
-            <Form.FieldSet label={t('email-channel.label')} description={t('email-channel.description')}>
-              <Form.Fields />
-            </Form.FieldSet>
-            <MailboxBanner status={mailbox.status} error={mailbox.error} />
-          </Form.Content>
-        </Form.Viewport>
-      </Form.Root>
-    </Layout.Flex>
+    <EmailChannelSettings
+      attendableId={attendableId}
+      values={values}
+      status={mailbox.status}
+      error={mailbox.error}
+      busy={mailbox.busy}
+      onSave={handleSave}
+      onConnect={mailbox.connect}
+      onDisconnect={mailbox.disconnect}
+    />
   );
 };
 
 EmailChannelProperties.displayName = 'EmailChannelProperties';
-
-const MailboxBanner = ({ status, error }: { status?: ThreadOperation.ConnectionStatus; error?: string }) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
-  if (error || status?.error) {
-    return (
-      <Banner.Root valence='error'>
-        <Banner.Title>{t('email-mailbox-error.label')}</Banner.Title>
-        <Banner.Body>{error ?? status?.error}</Banner.Body>
-      </Banner.Root>
-    );
-  }
-  if (!status) {
-    return null;
-  }
-  return (
-    <Banner.Root valence={status.running ? 'success' : 'neutral'}>
-      <Banner.Title>
-        {t(status.running ? 'email-mailbox-connected.label' : 'email-mailbox-disconnected.label')}
-      </Banner.Title>
-      {status.detail && <Banner.Body>{status.detail}</Banner.Body>}
-    </Banner.Root>
-  );
-};
 
 /** Connect/disconnect for the channel's mailbox, polling its status while mounted. */
 const useConnection = (channel: Channel.Channel, spaceId: SpaceId | undefined) => {
