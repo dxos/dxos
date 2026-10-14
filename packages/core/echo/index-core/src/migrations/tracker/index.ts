@@ -12,6 +12,7 @@ import rebuildFtsText from './0005_rebuild_fts_text.sql?raw';
 import retireReverseRef2Cursors from './0006_retire_reverse_ref2_cursors.sql?raw';
 import restampFeedSnapshots from './0007_restamp_feed_snapshots.sql?raw';
 import reindexObjectMetaAnnotations from './0008_reindex_object_meta_annotations.sql?raw';
+import reindexObjectState from './0009_reindex_object_state.sql?raw';
 
 export const MIGRATIONS = {
   '0001_init': SqlMigrations.apply(init),
@@ -22,6 +23,7 @@ export const MIGRATIONS = {
   '0006_retire_reverse_ref2_cursors': SqlMigrations.apply(retireReverseRef2Cursors),
   '0007_restamp_feed_snapshots': SqlMigrations.apply(restampFeedSnapshots),
   '0008_reindex_object_meta_annotations': SqlMigrations.apply(reindexObjectMetaAnnotations),
+  '0009_reindex_object_state': SqlMigrations.apply(reindexObjectState),
 };
 
 /** Own history table per store, since many stores share the client database. */

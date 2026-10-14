@@ -8,17 +8,18 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
-import { HasSubject, ProfileOf } from '@dxos/types';
+import { ProfileOf } from '@dxos/types';
 
-import { Goal, Memory, MemoryOperation, Profile } from '#types';
+import { Goal, Knowledge, MemoryOperation, Profile } from '#types';
+
+import { entityKeys, spaceMemories } from './knowledge.ts';
 
 const handler: Operation.WithHandler<typeof MemoryOperation.UpdateProfile> = MemoryOperation.UpdateProfile.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ subject: subjectRef }) {
       const subject = yield* Database.load(subjectRef);
-      const memories = (yield* Database.query(Query.select(Filter.id(subject.id)).targetOf(HasSubject.HasSubject)).run)
-        .map((relation) => Relation.getSource(relation))
-        .filter(Obj.instanceOf(Memory.Memory));
+      const keys = entityKeys(subject);
+      const memories = (yield* spaceMemories).filter((memory) => Knowledge.isAbout(memory, keys));
       const goals = (yield* Database.query(Filter.type(Goal.Goal)).run).filter(
         (goal) => Profile.isLiveGoal(goal) && goal.owners.some((owner) => Profile.refersTo(owner, subject.id)),
       );

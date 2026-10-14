@@ -135,6 +135,9 @@ export const prettyQuery = (query: QueryAST.Query): string => {
         } else if (o.kind === 'timestamp') {
           const fn = o.field === 'updatedAt' ? 'updated' : 'created';
           return `Order.${fn}(${JSON.stringify(o.direction)})`;
+        } else if (o.kind === 'annotation') {
+          const path = o.path !== undefined ? `, ${JSON.stringify(o.path)}` : '';
+          return `Order.annotation(${JSON.stringify(o.key)}, ${JSON.stringify(o.direction)}${path})`;
         } else {
           return `Order.property(${JSON.stringify(o.property)}, ${JSON.stringify(o.direction)})`;
         }

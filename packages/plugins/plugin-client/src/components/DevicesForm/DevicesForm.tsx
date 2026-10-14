@@ -6,16 +6,15 @@ import React, { type ReactNode } from 'react';
 
 import { type Identity } from '@dxos/halo';
 import { Form } from '@dxos/react-ui-form';
-import { Listbox } from '@dxos/react-ui-list';
 import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
-import { DeviceListItem, type DeviceListItemProps } from '@dxos/shell/react';
+import { DeviceList, type DeviceListProps } from '@dxos/shell/react';
 
 import { meta } from '#meta';
 
 export type DevicesFormProps = {
   devices: readonly Identity.DeviceInfo[];
-  connectionState?: DeviceListItemProps['connectionState'];
+  connectionState?: DeviceListProps['connectionState'];
   /** The add-device flow; omitted where the host cannot mint invitation URLs. */
   invitation?: ReactNode;
   onLogout?: () => void;
@@ -47,13 +46,7 @@ export const DevicesForm = ({
             description={t('devices.description', { ns: meta.profile.key })}
           >
             <Form.FieldSet label={t('devices.label', { ns: meta.profile.key })}>
-              <Listbox.Root items={devices.map((device) => ({ value: device.key, label: device.label ?? device.key }))}>
-                <Listbox.Content scroll={false} aria-label={t('devices.label', { ns: meta.profile.key })}>
-                  {devices.map((device) => (
-                    <DeviceListItem key={device.key} device={device} connectionState={connectionState} />
-                  ))}
-                </Listbox.Content>
-              </Listbox.Root>
+              <DeviceList devices={devices} connectionState={connectionState} />
             </Form.FieldSet>
             {invitation && <Form.FieldSet label={t('add-device.label')}>{invitation}</Form.FieldSet>}
           </Form.FieldSet>

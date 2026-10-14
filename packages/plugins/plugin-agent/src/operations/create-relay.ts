@@ -4,11 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
+import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Obj, Ref } from '@dxos/echo';
-import { Person, TaskSet } from '@dxos/types';
+import * as Process from '@dxos/compute/Process';
+import { Database, Filter, Obj, Ref } from '@dxos/echo';
+import { EID } from '@dxos/keys';
+import { Channel, Person, TaskSet } from '@dxos/types';
 
-import { Relay, RelayOperation } from '#types';
+import { AgentChannels, Relay, RelayOperation } from '#types';
 
 import { AgentOperationError } from './errors.ts';
 import { asParty, ensureAgentTaskSet, partyName } from './relay.ts';
@@ -23,8 +26,6 @@ const handler: Operation.WithHandler<typeof RelayOperation.CreateRelay> = RelayO
       recipient: recipientRef,
       requester: requesterRef,
       message,
-      replyChannel,
-      replyThread,
       dueInHours,
     }) {
       const text = message.trim();
@@ -42,6 +43,7 @@ const handler: Operation.WithHandler<typeof RelayOperation.CreateRelay> = RelayO
       }
 
       const { db } = yield* Database.Service;
+      const { replyChannel, replyThread } = yield* currentConversation;
       const taskSet = yield* ensureAgentTaskSet(agent);
       const title = `Tell ${partyName(recipient)}: ${text}`;
       const task = TaskSet.addTask(
@@ -73,3 +75,36 @@ const handler: Operation.WithHandler<typeof RelayOperation.CreateRelay> = RelayO
 );
 
 export default handler;
+
+/**
+ * The channel and thread of the conversation the agent is running in, so the report goes back where the requester
+ * asked; read from the process rather than asked of the model, which only sees the channel's name.
+ */
+const currentConversation = Effect.gen(function* () {
+  const { conversation } = yield* Process.currentEnvironment;
+  const id = conversation ? entityIdOf(conversation) : undefined;
+  if (!id) {
+    return {};
+  }
+  const { db } = yield* Database.Service;
+  // The environment names the conversation's chat (EDGE's agent turn) or its feed.
+  const object = db.getObjectById(id);
+  const chat = Obj.instanceOf(Chat.Chat, object)
+    ? object
+    : (yield* Database.query(Filter.type(Chat.Chat)).run.pipe(Effect.orDie)).find(
+        (chat) => entityIdOf(chat.feed.uri) === id,
+      );
+  const where = chat && AgentChannels.conversationOf(chat);
+  if (!where) {
+    return {};
+  }
+  const channels = yield* Database.query(Filter.type(Channel.Channel)).run.pipe(Effect.orDie);
+  const channel = channels.find((channel) => channel.id === where.channelId);
+  return channel ? { replyChannel: Ref.make(channel), replyThread: where.thread } : {};
+});
+
+/** The object id a URI names, whatever its space qualification. */
+const entityIdOf = (uri: string): string | undefined => {
+  const eid = EID.tryParse(uri);
+  return eid ? EID.getEntityId(eid) : undefined;
+};

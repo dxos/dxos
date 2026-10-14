@@ -22,10 +22,18 @@ import { Text } from '@dxos/schema';
 import { HasSubject, Message, Organization, Person, ProfileOf, Task, TaskSet } from '@dxos/types';
 
 import { AgentOperationHandlerSet } from '#operations';
-import { ConversationSkill, GoalsSkill, InterviewSkill, ModesSkill, NoteTakerSkill, RelaySkill } from '#skills';
-import { AgentOperation, ChatParticipant, Goal, Memory, MemoryOperation, Mode, ModeOperation, Relay } from '#types';
+import {
+  ConversationSkill,
+  GoalsSkill,
+  InterviewSkill,
+  ModesSkill,
+  NoteTakerSkill,
+  RelaySkill,
+  SupportSkill,
+} from '#skills';
+import { AgentOperation, ChatParticipant, Goal, Knowledge, MemoryOperation, Mode, ModeOperation, Relay } from '#types';
 
-import { testSpaceLayer } from '../brain/testing.ts';
+import { makeTestBrain, testSpaceLayer } from '../brain/testing.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -43,7 +51,6 @@ const TYPES = [
   Person.Person,
   Organization.Organization,
   HasSubject.HasSubject,
-  Memory.Memory,
   Goal.Goal,
   Mode.Mode,
   Relay.Relay,
@@ -61,10 +68,13 @@ const SKILLS = [
   ModesSkill.make(),
   NoteTakerSkill.make(),
   GoalsSkill.make(),
+  SupportSkill.make(),
 ];
 
+const brain = makeTestBrain();
+
 const TestLayer = AssistantTestLayer({
-  extraServices: testSpaceLayer,
+  extraServices: Layer.merge(testSpaceLayer, brain.layer),
   operationHandlers: AgentOperationHandlerSet,
   types: TYPES,
   skills: SKILLS,
@@ -93,7 +103,13 @@ describe('Modes', () => {
 
         const listed = yield* Operation.invoke(ModeOperation.ListModes, { chat: Ref.make(chat) });
         expect(listed.current).toBe(Mode.DEFAULT);
-        expect(listed.modes.map(({ name }) => name)).toEqual(['Conversation', 'Note-taker', 'Interviewer', 'Relay']);
+        expect(listed.modes.map(({ name }) => name)).toEqual([
+          'Conversation',
+          'Note-taker',
+          'Interviewer',
+          'Relay',
+          'Support',
+        ]);
         expect(listed.modes.find(({ name }) => name === 'Note-taker')?.skills).toEqual([NoteTakerSkill.key]);
         expect(yield* boundKeys(agentRef, chat)).toEqual(
           expect.arrayContaining([ConversationSkill.key, ModesSkill.key, RelaySkill.key]),
@@ -102,7 +118,7 @@ describe('Modes', () => {
 
         // Idempotent: listing again creates no second set of modes.
         yield* Operation.invoke(ModeOperation.ListModes, { chat: Ref.make(chat) });
-        expect((yield* Database.query(Filter.type(Mode.Mode)).run).length).toBe(4);
+        expect((yield* Database.query(Filter.type(Mode.Mode)).run).length).toBe(5);
 
         const switched = yield* Operation.invoke(ModeOperation.SwitchMode, {
           chat: Ref.make(chat),
@@ -125,6 +141,14 @@ describe('Modes', () => {
         expect(interviewing).toEqual(expect.arrayContaining([ConversationSkill.key, ModesSkill.key, RelaySkill.key]));
         expect(new Set(interviewing).size).toBe(interviewing.length);
 
+        // Support binds the community-support skill in place of the interviewer's.
+        const supporting = yield* Operation.invoke(ModeOperation.SwitchMode, { chat: Ref.make(chat), mode: 'support' });
+        expect(supporting).toEqual({ mode: 'Support', skills: [SupportSkill.key] });
+        yield* Database.flush();
+        const supportKeys = yield* boundKeys(agentRef, chat);
+        expect(supportKeys).toContain(SupportSkill.key);
+        expect(supportKeys).not.toContain(InterviewSkill.key);
+
         const unknown = yield* Operation.invoke(ModeOperation.SwitchMode, {
           chat: Ref.make(chat),
           mode: 'Juggler',
@@ -140,20 +164,21 @@ describe('Modes', () => {
     'records a note with a markdown body attached to its subject',
     Effect.fnUntraced(
       function* ({ expect }) {
+        const { agent } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Kai' });
         const rich = yield* Database.add(Person.make({ fullName: 'Rich Burdon' }));
         const body = '- The migration must take the write lock first.\n- Dima owns the fix.';
-        const { memory: memoryRef } = yield* Operation.invoke(MemoryOperation.Remember, {
+        const { memory: id } = yield* Operation.invoke(MemoryOperation.Remember, {
+          agent,
           content: 'Notes on the indexer migration race.',
           kind: 'note',
           subjects: [Ref.make<Obj.Unknown>(rich)],
           body,
         });
-        const memory = yield* Database.load(memoryRef);
-        expect(memory.kind).toBe('note');
-        expect(memory.body).toBeDefined();
-        if (memory.body) {
-          expect((yield* Database.load(memory.body)).content).toBe(body);
-        }
+        const { memories } = yield* Operation.invoke(MemoryOperation.Recall, { subject: Ref.make<Obj.Unknown>(rich) });
+        expect(memories).toEqual([expect.objectContaining({ memory: id, kind: 'note' })]);
+        const store = brain.facts((yield* Database.load(agent)).id);
+        const facts = store ? yield* store.query({}) : [];
+        expect(Knowledge.fromFacts(facts).find((memory) => memory.id === id)?.body).toBe(body);
       },
       Effect.provide(Layer.merge(TestLayer, testSpaceLayer)),
       TestHelpers.provideTestContext,

@@ -17,6 +17,7 @@ import {
   LayerStack,
   ProcessManager,
   ProcessOperationInvoker,
+  RemoteOperationInvoker,
   RemoteProcessManager,
   RemoteTraceMonitor,
   UnifiedProcessManager,
@@ -205,18 +206,21 @@ export default Capability.makeModule(
         ),
     );
 
-    // Fallbacks for a host with no remote runtime; a plugin spec providing either tag (e.g. EDGE's) wins.
+    // Fallbacks for a host with no remote runtime; a plugin spec providing any of these tags (e.g. EDGE's) wins.
     const fallbacks = Effect.runSync(
       Effect.gen(function* () {
         const remoteProcessManager = yield* RemoteProcessManager.Service;
+        const remoteOperationInvoker = yield* RemoteOperationInvoker.Service;
         const remoteTraceMonitor = yield* RemoteTraceMonitor.Service;
         return Context.make(RemoteProcessManager.Service, remoteProcessManager).pipe(
+          Context.add(RemoteOperationInvoker.Service, remoteOperationInvoker),
           Context.add(RemoteTraceMonitor.Service, remoteTraceMonitor),
         );
       }).pipe(
         Effect.provide(
           Layer.mergeAll(
             RemoteProcessManager.layerNoop,
+            RemoteOperationInvoker.layerNoop,
             // Remote ephemeral trace (DX-1125): the first contributed swarm-backed monitor, else no-op.
             remoteTraceMonitors.length > 0
               ? Layer.succeed(RemoteTraceMonitor.Service, remoteTraceMonitors[0])
@@ -287,9 +291,25 @@ export default Capability.makeModule(
     yield* Effect.addFinalizer(() => Scope.close(stackScope, Exit.void));
     const unifiedProcessManager = fromStack(serviceResolver, stackScope, atomRegistry);
     const unifiedProcessManagerLayer = Layer.succeed(Process.ManagerService, unifiedProcessManager);
+    // The stack's remote invoker, resolved per call for the same reason as the manager: it may need the client.
+    const remoteOperationInvoker: RemoteOperationInvoker.Invoker = {
+      invoke: (ctx, deployedId, input, options) =>
+        serviceResolver.resolve(RemoteOperationInvoker.Service, {}).pipe(
+          Scope.provide(stackScope),
+          Effect.orDie,
+          Effect.flatMap((remote) => remote.invoke(ctx, deployedId, input, options)),
+        ),
+    };
     const operationInvokerLayer = ProcessOperationInvoker.layer.pipe(
       // Operations invoked through the app's own invoker are the person's actions, from a menu, dialog or shortcut.
-      Layer.provide(Layer.mergeAll(unifiedProcessManagerLayer, baseLayer, Layer.succeed(Database.Origin, 'user'))),
+      Layer.provide(
+        Layer.mergeAll(
+          unifiedProcessManagerLayer,
+          baseLayer,
+          Layer.succeed(Database.Origin, 'user'),
+          Layer.succeed(RemoteOperationInvoker.Service, remoteOperationInvoker),
+        ),
+      ),
     );
 
     const runtimeLayer = Layer.mergeAll(

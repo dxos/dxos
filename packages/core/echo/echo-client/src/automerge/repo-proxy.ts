@@ -14,8 +14,9 @@ import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols
 import { type DataService } from '@dxos/protocols/rpc';
 
 import { RepoClosedError } from '../errors.ts';
-import { type ChangeEvent, DocHandleProxy } from './doc-handle-proxy.ts';
+import { type ChangeEvent, DocHandleProxy, type PassiveDocument } from './doc-handle-proxy.ts';
 import { toDocumentId } from './document-id.ts';
+import { sameHeads } from './heads.ts';
 
 const MAX_UPDATE_FREQ = 10; // [updates/sec]
 const RPC_TIMEOUT = 30_000;
@@ -49,6 +50,7 @@ const RESUBSCRIBE_MAX_DELAY_MS = 10_000;
 export class RepoProxy extends Resource {
   // TODO(mykola): Change to Map<string, DocHandleProxy<unknown>>.
   private _handles: Record<string, DocHandleProxy<any>> = {};
+  private readonly _passiveHandles = new Map<DocumentId, DocHandleProxy<any>>();
   private readonly _subscriptionId = PublicKey.random().toHex();
   /**
    * Cleanup for the active document-updates subscription (identified inside the DataService by
@@ -161,8 +163,13 @@ export class RepoProxy extends Resource {
     return this._handles;
   }
 
+  get subscriptionId(): string {
+    return this._subscriptionId;
+  }
+
   /**
-   * Drops a cached handle nothing holds any more and unsubscribes the host from its document.
+   * Drops a cached handle nothing holds any more and unsubscribes the host from its document. A passive
+   * handle (stored changes nothing has loaded) never has an unsent change, so it always goes.
    *
    * This is the only way a proxied document leaves memory: handles are otherwise kept for the life
    * of the space, so a client's footprint tracked every document it had ever opened. A handle with
@@ -172,6 +179,10 @@ export class RepoProxy extends Resource {
    * @returns Whether the handle was released.
    */
   release(documentId: DocumentId): boolean {
+    if (this._passiveHandles.delete(documentId)) {
+      this.#unsubscribe(documentId);
+      return true;
+    }
     const handle = this._handles[documentId];
     if (!handle) {
       return false;
@@ -199,15 +210,28 @@ export class RepoProxy extends Resource {
   }
 
   /**
+   * With `passive`, bytes the client already holds: the subscribed handle if there is one, else a
+   * passive one, which loads the bytes and subscribes from their heads when first used.
+   *
    * @throws {RepoClosedError} If the proxy is closing or closed — the document can never arrive, so
    * a caller whose work is abandonable should treat this as the client going away.
    */
-  find<T>(id: AnyDocumentId): DocHandleProxy<T> {
+  find<T>(id: AnyDocumentId, { passive }: { passive?: PassiveDocument } = {}): DocHandleProxy<T> {
     if (typeof id !== 'string') {
       throw new TypeError(`Invalid documentId ${id}`);
     }
 
     const documentId = toDocumentId(id);
+    if (passive) {
+      this.#requireOpen(documentId);
+      const held = this._handles[documentId] ?? this._passiveHandles.get(documentId);
+      const heldHeads = held?.passiveHeads;
+      if (held && heldHeads && !sameHeads(heldHeads, passive.heads)) {
+        held._setPassive(passive);
+        this.#subscribePassive(documentId);
+      }
+      return held ?? this._loadHandle<T>({ documentId, passive });
+    }
     return this._getOrLoadHandle<T>({ documentId });
   }
 
@@ -331,6 +355,7 @@ export class RepoProxy extends Resource {
     }
 
     this._handles = {};
+    this._passiveHandles.clear();
     for (const { handle, error } of this._failedCreations.values()) {
       handle.off('change');
       handle._failReady(error);
@@ -433,6 +458,10 @@ export class RepoProxy extends Resource {
         this._pendingAddIds.add(documentId);
       }
     }
+    for (const documentId of this._passiveHandles.keys()) {
+      this._pendingRemoveIds.delete(documentId);
+      this._pendingAddIds.add(documentId);
+    }
   }
 
   /**
@@ -488,6 +517,11 @@ export class RepoProxy extends Resource {
       this._deferredReleaseIds.delete(documentId);
       return cached;
     }
+    const passive = this._passiveHandles.get(documentId);
+    if (passive) {
+      passive._activate();
+      return passive;
+    }
     // If not, create a new handle, cache it, and return it.
     if (!documentId) {
       throw new Error(`Invalid documentId ${documentId}`);
@@ -511,43 +545,78 @@ export class RepoProxy extends Resource {
   }
 
   /** @throws {RepoClosedError} */
-  private _loadHandle<T>({ documentId }: { documentId: DocumentId }): DocHandleProxy<T> {
-    const sendUpdatesJob = this.#requireOpen(documentId);
+  private _loadHandle<T>({
+    documentId,
+    passive,
+  }: {
+    documentId: DocumentId;
+    passive?: PassiveDocument;
+  }): DocHandleProxy<T> {
+    this.#requireOpen(documentId);
+    const handle: DocHandleProxy<T> = new DocHandleProxy<T>({
+      documentId,
+      passive,
+      onDelete: () => {
+        log('onDelete', { documentId });
+        handle.off('change', this.#onHandleChange);
+        this._pendingRemoveIds.add(documentId);
+        // Drop any pending update for this id; the handle is gone and `_sendUpdates`
+        // would otherwise see a missing handle for an id it's still trying to send.
+        this._pendingUpdateIds.delete(documentId);
+        this._pendingAddIds.delete(documentId);
+        this._sendUpdatesJob?.trigger();
+        delete this._handles[documentId];
+        this._passiveHandles.delete(documentId);
+      },
+    });
+    if (passive) {
+      this._passiveHandles.set(documentId, handle);
+      handle.once('activated', () => {
+        if (this._passiveHandles.get(documentId) === handle) {
+          this.#subscribeHandle(handle, documentId);
+        }
+      });
+      this.#subscribePassive(documentId);
+    } else {
+      this.#subscribeHandle(handle, documentId);
+    }
+    return handle;
+  }
 
-    const onChange = ({ patchInfo }: ChangeEvent<T>) => {
-      if (patchInfo.source !== 'change') {
-        return;
-      }
-      log('onChange', { documentId });
-      this._pendingUpdateIds.add(documentId);
-      this._sendUpdatesJob?.trigger();
-      this._emitSaveStateEvent();
-    };
+  #subscribePassive(documentId: DocumentId): void {
+    this._pendingRemoveIds.delete(documentId);
+    this._pendingAddIds.add(documentId);
+    this._sendUpdatesJob?.trigger();
+  }
 
-    const cleanup = () => {
-      log('onDelete', { documentId });
-      handle.off('change', onChange);
-      this._pendingRemoveIds.add(documentId);
-      // Drop any pending update for this id; the handle is gone and `_sendUpdates`
-      // would otherwise see a missing handle for an id it's still trying to send.
-      this._pendingUpdateIds.delete(documentId);
-      this._sendUpdatesJob?.trigger();
-      delete this._handles[documentId];
-    };
+  #unsubscribe(documentId: DocumentId): void {
+    this._pendingAddIds.delete(documentId);
+    this._pendingRemoveIds.add(documentId);
+    this._sendUpdatesJob?.trigger();
+  }
 
-    const handle = new DocHandleProxy<T>({ documentId, onDelete: cleanup });
-    handle.on('change', onChange);
+  #subscribeHandle(handle: DocHandleProxy<any>, documentId: DocumentId): void {
+    handle.on('change', this.#onHandleChange);
     this._handles[documentId] = handle;
-
+    this._passiveHandles.delete(documentId);
     // A queued unsubscribe for this id would otherwise travel in the same batch as this subscribe,
     // leaving the host unsubscribed from a document someone is now waiting for.
     this._pendingRemoveIds.delete(documentId);
     this._deferredReleaseIds.delete(documentId);
     this._pendingAddIds.add(documentId);
-    sendUpdatesJob.trigger();
-
-    return handle;
+    this._sendUpdatesJob?.trigger();
   }
+
+  readonly #onHandleChange = ({ handle, patchInfo }: ChangeEvent<any>) => {
+    const documentId = handle.documentId;
+    if (patchInfo.source !== 'change' || !documentId) {
+      return;
+    }
+    log('onChange', { documentId });
+    this._pendingUpdateIds.add(documentId);
+    this._sendUpdatesJob?.trigger();
+    this._emitSaveStateEvent();
+  };
 
   /** @throws {RepoClosedError} */
   private _createHandle<T>({ initialValue }: { initialValue?: T }): DocHandleProxy<T> {
@@ -694,7 +763,19 @@ export class RepoProxy extends Resource {
     }
   }
 
-  #integrate({ documentId, mutation, requesting, unavailable }: DataService.DocumentUpdate, bulk: boolean): void {
+  #integrate(
+    { documentId, mutation, requesting, unavailable, passive }: DataService.DocumentUpdate,
+    bulk: boolean,
+  ): void {
+    const passiveHandle = this._passiveHandles.get(documentId as DocumentId);
+    if (passiveHandle) {
+      try {
+        passiveHandle._integratePassiveUpdate(mutation, passive);
+      } catch (err) {
+        log.catch(err, { documentId });
+      }
+      return;
+    }
     const handle = this._handles[documentId];
     if (!handle) {
       log.warn('Received update for unknown document', { documentId });
@@ -756,13 +837,18 @@ export class RepoProxy extends Resource {
 
     try {
       await this._subscriptionReady.wait({ timeout: RPC_TIMEOUT });
+      // Read from the handles now, so an add re-queued meanwhile carries what the handle holds.
+      const add = addIds.flatMap((id) => {
+        const handle = this._handles[id] ?? this._passiveHandles.get(id);
+        return handle ? [{ id, ...handle._subscription() }] : [];
+      });
       // A round trip a batch of plain mutations does not need, and one a hiding page cannot afford.
-      if (addIds.length > 0 || removeIds.length > 0) {
+      if (add.length > 0 || removeIds.length > 0) {
         await runServiceCall(
           this._runtime,
           this._dataService['DataService.updateSubscription']({
             subscriptionId: this._subscriptionId,
-            addIds,
+            add,
             removeIds,
           }),
           { timeout: RPC_TIMEOUT },
@@ -824,8 +910,12 @@ export class RepoProxy extends Resource {
       // Re-queued even for an abandoned task: nothing else re-sends a pending mutation. Adds are
       // restored only for handles still held — a released document's add would re-subscribe the
       // host to a document nothing owns.
-      addIds.filter((id) => this._handles[id]).forEach((id) => this._pendingAddIds.add(id));
-      removeIds.forEach((id) => this._pendingRemoveIds.add(id));
+      addIds
+        .filter((id) => this._handles[id] || this._passiveHandles.has(id))
+        .forEach((id) => this._pendingAddIds.add(id));
+      removeIds
+        .filter((id) => !this._handles[id] && !this._passiveHandles.has(id))
+        .forEach((id) => this._pendingRemoveIds.add(id));
       updateIds.forEach((id) => this._pendingUpdateIds.add(id));
 
       // Closing, reconnecting, an abandoned pass and a closed RPC connection each have their own path

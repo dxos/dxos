@@ -79,13 +79,15 @@ export const FACT_RELATION_DOCS: Readonly<Record<keyof typeof Encoding.FACT_RELA
     'source(F, Src)           the message or conversation, e.g. "chat:general", "mailbox:rich", "session:s42", "goal"',
   saidAt: 'saidAt(F, T)             when it was said (ISO timestamp)',
   surface: 'surface(F, P)            the predicate as extracted, before mapping to the canonical one',
-  supersedes: 'supersedes(F, Older)     F corrects the fact Older',
+  supersedes: 'supersedes(F, Older)     F corrects the fact or graph Older',
   validFrom: 'validFrom(F, T)          when the statement starts to hold',
   validTo: 'validTo(F, T)            when the statement stops holding',
   confidence: 'confidence(F, N)         extractor confidence 0..1',
   nature: 'nature(F, X)             epistemic | aleatory',
   recordedAt: 'recordedAt(F, T)         when it was extracted',
   pass: 'pass(F, Id)              the extraction pass that produced it',
+  graph: 'graph(F, G)              the named graph holding it; statements stated together share one',
+  kind: 'kind(F, K)               what a remembered statement records: preference | commitment | relationship | …',
 };
 
 /** One line per goal-state relation the runtime maintains. */

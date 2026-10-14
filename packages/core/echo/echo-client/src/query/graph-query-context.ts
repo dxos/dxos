@@ -8,7 +8,7 @@ import { Obj, Query, type QueryResult } from '@dxos/echo';
 import { filterMatchDoc } from '@dxos/echo-host/filter';
 import { GroupBy, QueryPlanner, queryContainsChanges } from '@dxos/echo-host/query';
 import { type EntityStructure, QueryAST } from '@dxos/echo-protocol';
-import { type SpaceId } from '@dxos/keys';
+import { type EntityId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type ItemsUpdatedEvent, type ObjectCore } from '../core-db/index.ts';
@@ -218,7 +218,32 @@ export class GraphQueryContext implements QueryContext {
     query: QueryAST.Query,
     { timeout = 30_000 }: QueryResult.RunOptions = {},
   ): Promise<SourceEntry[]> {
-    const runTasks = [...this._sources.values()].map(async (s) => {
+    const sources = [...this._sources];
+    const ids = getSelectedIds(query);
+    if (ids === undefined) {
+      return this.#runSources(ctx, sources, query, timeout);
+    }
+
+    const deadline = performance.now() + timeout;
+    const local = sources.filter((source) => source.isSynchronous());
+    const results = await this.#runSources(ctx, local, query, timeout);
+    const found = new Set(results.map((entry) => entry.id));
+    const missing = ids.filter((id) => !found.has(id));
+    if (missing.length === 0) {
+      return results;
+    }
+    const remote = sources.filter((source) => !local.includes(source));
+    const remaining = Math.max(0, deadline - performance.now());
+    return [...results, ...(await this.#runSources(ctx, remote, selectIds(query, missing), remaining))];
+  }
+
+  async #runSources(
+    ctx: Context,
+    sources: QuerySource[],
+    query: QueryAST.Query,
+    timeout: number,
+  ): Promise<SourceEntry[]> {
+    const runTasks = sources.map(async (s) => {
       try {
         log('run query', {
           resolver: Object.getPrototypeOf(s).constructor.name,
@@ -570,11 +595,10 @@ export class SpaceQuerySource implements QuerySource {
    * executor cannot await. Feed-scoped by-id lookups are served by the index source, not the working set.
    */
   private async _preloadQueryIds(query: QueryAST.Query): Promise<void> {
-    const simple = isSimpleSelectionQuery(query);
-    if (!simple || simple.hasQueues || simple.filter.type !== 'object' || !simple.filter.id?.length) {
-      return;
+    const ids = getSelectedIds(query);
+    if (ids !== undefined) {
+      await this._database.batchLoadObjectCores([...ids]);
     }
-    await this._database.batchLoadObjectCores([...simple.filter.id]);
   }
 
   isSynchronous(): boolean {
@@ -805,5 +829,23 @@ const filterCoreByDeletedFlag = (core: ObjectCore, options: QueryAST.QueryOption
       return true;
     case 'only':
       return core.isDeleted();
+  }
+};
+
+const getSelectedIds = (query: QueryAST.Query) => {
+  const simple = isSimpleSelectionQuery(query);
+  return simple?.filter.type === 'object' && simple.filter.id?.length ? simple.filter.id : undefined;
+};
+
+// Walks the shape `getSelectedIds` accepts, so a nested `from` query keeps its own filter.
+const selectIds = (query: QueryAST.Query, ids: readonly EntityId[]): QueryAST.Query => {
+  switch (query.type) {
+    case 'options':
+    case 'from':
+      return { ...query, query: selectIds(query.query, ids) };
+    case 'select':
+      return query.filter.type === 'object' ? { ...query, filter: { ...query.filter, id: ids } } : query;
+    default:
+      return query;
   }
 };

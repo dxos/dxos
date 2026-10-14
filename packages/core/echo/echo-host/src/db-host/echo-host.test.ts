@@ -2,10 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
+import { getHeads } from '@automerge/automerge';
 import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
+import * as SqlClient from 'effect/sql/SqlClient';
+import * as SqlError from 'effect/sql/SqlError';
 import * as Stream from 'effect/Stream';
 import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
+import { Trigger, asyncTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Filter, Query } from '@dxos/echo';
 import { type DatabaseDirectory, EntityStructure, SpaceDocVersion } from '@dxos/echo-protocol';
@@ -16,6 +21,7 @@ import { FeedProtocol } from '@dxos/protocols';
 import { QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { type QueryService } from '@dxos/protocols/rpc';
 
+import { QueryExecutor } from '../query/index.ts';
 import { createTestSqliteRuntime } from '../testing/index.ts';
 import { EchoHost, type EchoHostProps } from './echo-host.ts';
 
@@ -112,9 +118,299 @@ describe('EchoHost query service', () => {
     );
     expect(check).toHaveBeenCalledTimes(1);
   });
+
+  test('a one-shot id lookup answers while a query batch is still running', async () => {
+    const { host, spaceId, saveObject } = await setup();
+    const objectId = EntityId.random();
+    await saveObject(objectId);
+    await host.updateIndexes();
+
+    const batchStarted = new Trigger();
+    const releaseBatch = new Trigger();
+    onTestFinished(() => {
+      releaseBatch.wake();
+    });
+    const execQuery = QueryExecutor.prototype.execQuery;
+    const spy = vi.spyOn(QueryExecutor.prototype, 'execQuery').mockImplementation(async function (this: QueryExecutor) {
+      if (this.queryId === 'batch') {
+        batchStarted.wake();
+        await releaseBatch.wait();
+      }
+      return execQuery.call(this);
+    });
+    onTestFinished(() => spy.mockRestore());
+
+    const batch = EffectEx.runPromise(
+      Stream.runHead(host.queryService['QueryService.execQuery'](oneShotRequest(spaceId, 'batch'))),
+    );
+    await batchStarted.wait();
+
+    const responses = await asyncTimeout(
+      EffectEx.runPromise(
+        Stream.runCollect(host.queryService['QueryService.execQuery'](idLookupRequest(spaceId, 'lookup', objectId))),
+      ),
+      1_000,
+    );
+    expect(responses.flatMap((response) => response.results ?? []).map((result) => result.id)).toEqual([objectId]);
+
+    releaseBatch.wake();
+    await batch;
+  });
+
+  test('a one-shot id lookup cancelled before it runs is never executed', async () => {
+    const { host, spaceId } = await setup({ queryExecutor: 'sql' });
+    const checkStarted = new Trigger();
+    const releaseCheck = new Trigger();
+    onTestFinished(() => {
+      releaseCheck.wake();
+    });
+    vi.spyOn(host.indexEngine, 'hasCompleteSnapshots').mockImplementation(() =>
+      Effect.promise(async () => {
+        checkStarted.wake();
+        await releaseCheck.wait();
+        return true;
+      }),
+    );
+    const executed: string[] = [];
+    const execQuery = QueryExecutor.prototype.execQuery;
+    const spy = vi.spyOn(QueryExecutor.prototype, 'execQuery').mockImplementation(function (this: QueryExecutor) {
+      executed.push(this.queryId);
+      return execQuery.call(this);
+    });
+    onTestFinished(() => spy.mockRestore());
+
+    const lookup = (queryId: string) => host.queryService['QueryService.execQuery'](idLookupRequest(spaceId, queryId));
+    const cancelled = Effect.runFork(Stream.runDrain(lookup('cancelled')));
+    await checkStarted.wait();
+    const answered = EffectEx.runPromise(Stream.runCollect(lookup('answered')));
+    await EffectEx.runPromise(Fiber.interrupt(cancelled));
+    releaseCheck.wake();
+    await answered;
+
+    expect(executed).toEqual(['answered']);
+  });
+});
+
+// The worker runs every statement over one SQLite connection, so a query waited out the whole of an
+// unbounded index transaction.
+describe('EchoHost index transactions', () => {
+  test('a query issued during an index pass answers before the pass has written every object', async () => {
+    const { host, runtime, spaceId, saveObjects } = await setup({ indexTransactionLimits: { maxObjects: 2 } });
+    const sql = await RuntimeProvider.runPromise(runtime)(SqlClient.SqlClient);
+
+    // Armed only while a pass indexes documents, so the storage writes behind a save are ignored.
+    let indexing = false;
+    const update = host.indexEngine.update.bind(host.indexEngine);
+    vi.spyOn(host.indexEngine, 'update').mockImplementation((ctx, source, opts) =>
+      Effect.suspend(() => {
+        indexing = source.sourceName === 'automerge';
+        return update(ctx, source, opts);
+      }).pipe(
+        Effect.ensuring(
+          Effect.sync(() => {
+            indexing = false;
+          }),
+        ),
+      ),
+    );
+    let answer: Promise<number> | undefined;
+    const withTransaction = sql.withTransaction;
+    vi.spyOn(sql, 'withTransaction').mockImplementation((effect) => {
+      if (indexing) {
+        answer ??= countQueryResults(host, spaceId);
+      }
+      return withTransaction(effect);
+    });
+
+    await saveObjects(12);
+    await host.updateIndexes();
+
+    // The query ran between two of the pass's transactions, so it saw the document partly indexed.
+    expect(answer).toBeDefined();
+    expect(await answer).toBeLessThan(12);
+    const rows = await RuntimeProvider.runPromise(runtime)(host.indexEngine.queryAll({ spaceIds: [spaceId] }));
+    expect(rows).toHaveLength(12);
+  });
+
+  test('a query issued during full-text catch-up answers before the catch-up finishes', async () => {
+    const { host, runtime, spaceId, saveObjects } = await setup({ indexTransactionLimits: { maxObjects: 2 } });
+    await saveObjects(12);
+    await host.updateIndexes();
+    const sql = await RuntimeProvider.runPromise(runtime)(SqlClient.SqlClient);
+
+    const events: string[] = [];
+    let answer: Promise<void> | undefined;
+    const withTransaction = sql.withTransaction;
+    vi.spyOn(sql, 'withTransaction').mockImplementation((effect) => {
+      answer ??= countQueryResults(host, spaceId).then(() => {
+        events.push('answer');
+      });
+      return withTransaction(effect).pipe(
+        Effect.tap(() =>
+          Effect.sync(() => {
+            events.push('commit');
+          }),
+        ),
+      );
+    });
+
+    await host.updateSecondaryIndexes();
+    await answer;
+    expect(events.indexOf('answer')).toBeGreaterThan(-1);
+    expect(events.indexOf('answer')).toBeLessThan(events.lastIndexOf('commit'));
+  });
+});
+
+describe('EchoHost index-backed rows', () => {
+  test('the memory executor backs a row only at heads storage holds', async () => {
+    const { host, spaceId, saveObject } = await setup({ queryExecutor: 'memory' });
+    const saved = EntityId.random();
+    const unsaved = EntityId.random();
+    const savedHandle = await saveObject(saved);
+    const unsavedHandle = await saveObject(unsaved);
+    await host.updateIndexes();
+    const storedHeads = getHeads(unsavedHandle.doc()!);
+    unsavedHandle.change((doc) => {
+      doc.objects![unsaved].data.title = 'unsaved';
+    });
+    const readStoredHeads = host.automergeHost.getStoredHeads.bind(host.automergeHost);
+    vi.spyOn(host.automergeHost, 'getStoredHeads').mockImplementation(async (documentIds) =>
+      (await readStoredHeads(documentIds)).map((heads, index) =>
+        documentIds[index] === unsavedHandle.documentId ? storedHeads : heads,
+      ),
+    );
+
+    const [response] = await EffectEx.runPromise(
+      Stream.runCollect(host.queryService['QueryService.execQuery'](oneShotRequest(spaceId, EntityId.random()))),
+    );
+    const row = (id: EntityId) => response?.results?.find((result) => result.id === id);
+    expect(row(saved)?.heads).toEqual(getHeads(savedHandle.doc()!));
+    expect(JSON.parse(row(saved)!.documentJson!).title).toBe(saved);
+    expect(row(saved)?.bytes).toBeDefined();
+    expect(row(unsaved)?.heads).toBeUndefined();
+    expect(row(unsaved)?.bytes).toBeUndefined();
+  });
+
+  test.each([
+    {
+      read: 'index JSON',
+      fail: (host: EchoHost) =>
+        vi.spyOn(host.indexEngine, 'queryBackings').mockReturnValueOnce(
+          Effect.fail(
+            new SqlError.SqlError({
+              reason: new SqlError.UnknownError({ cause: undefined, message: 'database is locked' }),
+            }),
+          ),
+        ),
+    },
+    {
+      read: 'stored changes',
+      fail: (host: EchoHost) =>
+        vi.spyOn(host.automergeHost, 'readStoredChanges').mockRejectedValueOnce(new Error('disk busy')),
+    },
+  ])('a row whose $read read failed is backed on the next emission', async ({ fail }) => {
+    const { host, spaceId, saveObject } = await setup({ queryExecutor: 'sql' });
+    const first = EntityId.random();
+    await saveObject(first);
+    await host.updateIndexes();
+    fail(host);
+
+    const emissions: QueryService.QueryResponse[] = [];
+    let added: EntityId | undefined;
+    const firstEmission = new Trigger();
+    const done = EffectEx.runPromise(
+      host.queryService['QueryService.execQuery']({
+        queryId: 'retry',
+        reactivity: QueryReactivity.REACTIVE,
+        query: JSON.stringify(Query.select(Filter.everything()).from([{ _tag: 'space', spaceId }]).ast),
+      }).pipe(
+        Stream.tap((response) =>
+          Effect.sync(() => {
+            emissions.push(response);
+            firstEmission.wake();
+          }),
+        ),
+        Stream.takeUntil((response) => response.results?.some((row) => row.id === added) ?? false),
+        Stream.runDrain,
+      ),
+    );
+    await firstEmission.wait({ timeout: 5_000 });
+    added = EntityId.random();
+    await saveObject(added);
+    await host.updateIndexes();
+    await asyncTimeout(done, 5_000);
+
+    const row = (response: QueryService.QueryResponse) => response.results?.find((result) => result.id === first);
+    expect(row(emissions[0])?.bytes).toBeUndefined();
+    expect(row(emissions.at(-1)!)?.bytes).toBeDefined();
+  });
+
+  test('a row ships without JSON or stored changes once a subscription of the client holds its document', async () => {
+    const { host, spaceId, saveObject } = await setup({ queryExecutor: 'sql' });
+    const held = EntityId.random();
+    const heldHandle = await saveObject(held);
+    await host.updateIndexes();
+
+    const subscriptionId = 'client';
+    const registered = new Trigger();
+    const subscription = Effect.runFork(
+      host.dataService['DataService.subscribe']({ subscriptionId, spaceId }).pipe(
+        Stream.runForEach(() => Effect.sync(() => registered.wake())),
+      ),
+    );
+    onTestFinished(() => EffectEx.runPromise(Fiber.interrupt(subscription)));
+    await registered.wait({ timeout: 5_000 });
+
+    const emissions: QueryService.QueryResponse[] = [];
+    const firstEmission = new Trigger();
+    let added: EntityId | undefined;
+    const done = EffectEx.runPromise(
+      host.queryService['QueryService.execQuery']({
+        queryId: 'held',
+        reactivity: QueryReactivity.REACTIVE,
+        query: JSON.stringify(Query.select(Filter.everything()).from([{ _tag: 'space', spaceId }]).ast),
+        subscriptionIds: [subscriptionId],
+      }).pipe(
+        Stream.tap((response) =>
+          Effect.sync(() => {
+            emissions.push(response);
+            firstEmission.wake();
+          }),
+        ),
+        Stream.takeUntil((response) => response.results?.some((row) => row.id === added) ?? false),
+        Stream.runDrain,
+      ),
+    );
+    await firstEmission.wait({ timeout: 5_000 });
+    await EffectEx.runPromise(
+      host.dataService['DataService.updateSubscription']({
+        subscriptionId,
+        add: [{ id: heldHandle.documentId, heads: getHeads(heldHandle.doc()!), passive: true }],
+      }),
+    );
+    added = EntityId.random();
+    await saveObject(added);
+    await host.updateIndexes();
+    await asyncTimeout(done, 5_000);
+
+    const row = (response: QueryService.QueryResponse, id: EntityId) => response.results?.find((r) => r.id === id);
+    const last = emissions.at(-1)!;
+    expect(row(emissions[0], held)?.bytes).toBeDefined();
+    expect(row(last, held)).toBeDefined();
+    expect(row(last, held)?.documentJson).toBeUndefined();
+    expect(row(last, held)?.bytes).toBeUndefined();
+    expect(row(last, added)?.bytes).toBeDefined();
+  });
 });
 
 const TEST_TYPE = DXN.make('com.example.type.test', '0.1.0');
+
+const countQueryResults = async (host: EchoHost, spaceId: SpaceId): Promise<number> => {
+  const responses = await EffectEx.runPromise(
+    Stream.runCollect(host.queryService['QueryService.execQuery'](oneShotRequest(spaceId, EntityId.random()))),
+  );
+  return responses[0]?.results?.length ?? 0;
+};
 
 const oneShotRequest = (spaceId: SpaceId, queryId: string): QueryService.QueryRequest => ({
   queryId,
@@ -122,7 +418,16 @@ const oneShotRequest = (spaceId: SpaceId, queryId: string): QueryService.QueryRe
   query: JSON.stringify(Query.select(Filter.everything()).from([{ _tag: 'space', spaceId }]).ast),
 });
 
-const setup = async (options: Pick<EchoHostProps, 'queryExecutor'> = {}) => {
+const idLookupRequest = (
+  spaceId: SpaceId,
+  queryId: string,
+  objectId: EntityId = EntityId.random(),
+): QueryService.QueryRequest => ({
+  ...oneShotRequest(spaceId, queryId),
+  query: JSON.stringify(Query.select(Filter.id(objectId)).from([{ _tag: 'space', spaceId }]).ast),
+});
+
+const setup = async (options: Pick<EchoHostProps, 'indexTransactionLimits' | 'queryExecutor'> = {}) => {
   const { runtime, dispose } = createTestSqliteRuntime();
   const host = new EchoHost({ runtime, ...options });
   await host.open(Context.default());
@@ -146,14 +451,32 @@ const setup = async (options: Pick<EchoHostProps, 'queryExecutor'> = {}) => {
 
   // One document per object, as a stream of writes would produce: each save is a new index input.
   const saveObject = async (objectId: EntityId) => {
-    await host.createDoc<DatabaseDirectory>({
+    const handle = await host.createDoc<DatabaseDirectory>({
       version: SpaceDocVersion.CURRENT,
       access: { spaceId },
       objects: { [objectId]: EntityStructure.makeObject({ type: TEST_TYPE, data: { title: objectId } }) },
       links: {},
     });
     await host.flush(Context.default());
+    return handle;
   };
 
-  return { host, runtime, spaceId, saveDocs, saveObject };
+  // One document holding every object, as a document's first index presents all of them at once.
+  const saveObjects = async (count: number) => {
+    const objects = Object.fromEntries(
+      Array.from({ length: count }, () => {
+        const objectId = EntityId.random();
+        return [objectId, EntityStructure.makeObject({ type: TEST_TYPE, data: { title: objectId } })];
+      }),
+    );
+    await host.createDoc<DatabaseDirectory>({
+      version: SpaceDocVersion.CURRENT,
+      access: { spaceId },
+      objects,
+      links: {},
+    });
+    await host.flush(Context.default());
+  };
+
+  return { host, runtime, spaceId, saveDocs, saveObject, saveObjects };
 };

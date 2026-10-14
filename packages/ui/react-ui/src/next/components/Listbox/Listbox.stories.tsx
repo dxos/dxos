@@ -78,47 +78,53 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
     <>
       <Listbox.Root items={PEOPLE} value={person} onValueChange={setPerson} data-testid={`people-${size}`}>
         <Listbox.Label>People</Listbox.Label>
-        <Listbox.Content>
-          {PEOPLE.map((item) => (
-            <Listbox.Item key={item.value} item={item} data-testid={`person-${item.value}-${size}`}>
-              {item.value === 'alice' ? undefined : (
-                <>
-                  <Listbox.ItemIcon />
-                  <Listbox.ItemText />
-                  {item.description && <Listbox.ItemDescription />}
-                  {item.value === 'carol' && (
-                    <Button icon='ph--envelope--regular' label='Message Carol' iconOnly variant='ghost' />
-                  )}
-                  <Listbox.ItemIndicator />
-                </>
-              )}
-            </Listbox.Item>
-          ))}
-        </Listbox.Content>
+        <Listbox.Viewport>
+          <Listbox.Content>
+            {PEOPLE.map((item) => (
+              <Listbox.Item key={item.value} item={item} data-testid={`person-${item.value}-${size}`}>
+                {item.value === 'alice' ? undefined : (
+                  <>
+                    <Listbox.ItemIcon />
+                    <Listbox.ItemText />
+                    {item.description && <Listbox.ItemDescription />}
+                    {item.value === 'carol' && (
+                      <Button icon='ph--envelope--regular' label='Message Carol' iconOnly variant='ghost' />
+                    )}
+                    <Listbox.ItemIndicator />
+                  </>
+                )}
+              </Listbox.Item>
+            ))}
+          </Listbox.Content>
+        </Listbox.Viewport>
       </Listbox.Root>
       <Typography.Text data-testid={`people-${size}-value`}>{person.join(', ') || 'None'}</Typography.Text>
       <Listbox.Root items={TAGS} selectionMode='multiple' value={tags} onValueChange={setTags}>
         <Listbox.Label>Tags</Listbox.Label>
-        <Listbox.Content>
-          <Listbox.ItemGroup>
-            <Listbox.ItemGroupLabel>Status</Listbox.ItemGroupLabel>
-            {TAGS.map((item) => (
-              <Listbox.Item key={item.value} item={item}>
-                <Listbox.ItemText />
-                <Listbox.ItemIndicator />
-              </Listbox.Item>
-            ))}
-          </Listbox.ItemGroup>
-        </Listbox.Content>
+        <Listbox.Viewport>
+          <Listbox.Content>
+            <Listbox.ItemGroup>
+              <Listbox.ItemGroupLabel>Status</Listbox.ItemGroupLabel>
+              {TAGS.map((item) => (
+                <Listbox.Item key={item.value} item={item}>
+                  <Listbox.ItemText />
+                  <Listbox.ItemIndicator />
+                </Listbox.Item>
+              ))}
+            </Listbox.ItemGroup>
+          </Listbox.Content>
+        </Listbox.Viewport>
       </Listbox.Root>
       <Typography.Text data-testid={`tags-${size}-value`}>{tags.join(', ') || 'None'}</Typography.Text>
       <div className='h-40'>
         <Listbox.Root items={LONG} data-testid={`long-${size}`}>
-          <Listbox.Content aria-label='Long'>
-            {LONG.map((item) => (
-              <Listbox.Item key={item.value} item={item} />
-            ))}
-          </Listbox.Content>
+          <Listbox.Viewport>
+            <Listbox.Content aria-label='Long'>
+              {LONG.map((item) => (
+                <Listbox.Item key={item.value} item={item} />
+              ))}
+            </Listbox.Content>
+          </Listbox.Viewport>
         </Listbox.Root>
       </div>
       <div data-place='full' className='h-40'>
@@ -129,7 +135,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
                 <Container gutter='rail'>
                   <Typography.Text data-testid={`panel-heading-${size}`}>In a panel</Typography.Text>
                   <Listbox.Root items={LONG}>
-                    <Listbox.Content aria-label='In panel' scroll={false}>
+                    <Listbox.Content aria-label='In panel'>
                       {LONG.map((item) => (
                         <Listbox.Item key={item.value} item={item} />
                       ))}
@@ -142,62 +148,74 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
         </Panel.Root>
       </div>
       <Listbox.Root items={RECENT} selectionMode='none'>
-        <Listbox.Content aria-label='Recent' data-testid={`recent-${size}`}>
-          {RECENT.map((item) => (
-            <Listbox.Item key={item.value} item={item} current={item.value === 'tasks'}>
-              <Listbox.ItemIcon hue='amber' />
-              <Listbox.ItemText />
-            </Listbox.Item>
-          ))}
-        </Listbox.Content>
+        <Listbox.Viewport>
+          <Listbox.Content aria-label='Recent' data-testid={`recent-${size}`}>
+            {RECENT.map((item) => (
+              <Listbox.Item key={item.value} item={item} current={item.value === 'tasks'}>
+                <Listbox.ItemIcon hue='amber' />
+                <Listbox.ItemText />
+              </Listbox.Item>
+            ))}
+          </Listbox.Content>
+        </Listbox.Viewport>
       </Listbox.Root>
       <Listbox.Root items={tasks} selectionMode='none'>
         <Listbox.Label>Tasks</Listbox.Label>
-        <Listbox.Content data-testid={`tasks-${size}`}>
-          {tasks.map((item) => (
-            <Listbox.Item key={item.value} item={item} data-testid={`task-${item.value}-${size}`}>
-              <Checkbox aria-label={`Done ${item.label}`} />
-              <Listbox.ItemText />
-              <Button icon='ph--pen--regular' label={`Edit ${item.label}`} iconOnly variant='ghost' />
-              <SystemButton.Remove
-                onClick={() => setTasks((tasks) => tasks.filter((task) => task.value !== item.value))}
-              />
-            </Listbox.Item>
-          ))}
-        </Listbox.Content>
+        <Listbox.Viewport>
+          <Listbox.Content data-testid={`tasks-${size}`}>
+            {tasks.map((item) => (
+              <Listbox.Item key={item.value} item={item} data-testid={`task-${item.value}-${size}`}>
+                <Checkbox aria-label={`Done ${item.label}`} />
+                <Listbox.ItemText />
+                <Button icon='ph--pen--regular' label={`Edit ${item.label}`} iconOnly variant='ghost' />
+                <SystemButton.Remove
+                  onClick={() => setTasks((tasks) => tasks.filter((task) => task.value !== item.value))}
+                />
+              </Listbox.Item>
+            ))}
+          </Listbox.Content>
+        </Listbox.Viewport>
         <Listbox.Empty icon='ph--check-circle--regular'>All done</Listbox.Empty>
       </Listbox.Root>
       <div className='h-40'>
         <Listbox.Root items={MANY} virtual='fixed'>
-          <Listbox.Content aria-label='Many' data-testid={`many-${size}`}>
-            {MANY.map((item) => (
-              <Listbox.Item key={item.value} item={item} />
-            ))}
-          </Listbox.Content>
+          <Listbox.Viewport>
+            <Listbox.Content aria-label='Many' data-testid={`many-${size}`}>
+              {MANY.map((item) => (
+                <Listbox.Item key={item.value} item={item} />
+              ))}
+            </Listbox.Content>
+          </Listbox.Viewport>
         </Listbox.Root>
       </div>
       <div className='h-40'>
         <Listbox.Root items={LONG} virtual='variable'>
-          <Listbox.Content aria-label='Variable' data-testid={`variable-${size}`}>
-            {LONG.map((item) => (
-              <Listbox.Item key={item.value} item={item} />
-            ))}
-          </Listbox.Content>
+          <Listbox.Viewport>
+            <Listbox.Content aria-label='Variable' data-testid={`variable-${size}`}>
+              {LONG.map((item) => (
+                <Listbox.Item key={item.value} item={item} />
+              ))}
+            </Listbox.Content>
+          </Listbox.Viewport>
         </Listbox.Root>
       </div>
       <Listbox.Root items={FILES} columns='var(--dx-block-size) minmax(0, 1fr) 5rem'>
-        <Listbox.Content aria-label='Files'>
-          {FILES.map((item) => (
-            <Listbox.Item key={item.value} item={item} data-testid={`file-${item.value}-${size}`}>
-              <Listbox.ItemIcon />
-              <Listbox.ItemText />
-              <Listbox.ItemDescription />
-            </Listbox.Item>
-          ))}
-        </Listbox.Content>
+        <Listbox.Viewport>
+          <Listbox.Content aria-label='Files'>
+            {FILES.map((item) => (
+              <Listbox.Item key={item.value} item={item} data-testid={`file-${item.value}-${size}`}>
+                <Listbox.ItemIcon />
+                <Listbox.ItemText />
+                <Listbox.ItemDescription />
+              </Listbox.Item>
+            ))}
+          </Listbox.Content>
+        </Listbox.Viewport>
       </Listbox.Root>
       <Listbox.Root items={NONE}>
-        <Listbox.Content aria-label='Nothing' />
+        <Listbox.Viewport>
+          <Listbox.Content aria-label='Nothing' />
+        </Listbox.Viewport>
         <Listbox.Empty data-testid={`empty-${size}`} />
       </Listbox.Root>
     </>
@@ -323,7 +341,7 @@ export const Test: Story = {
       await expect(itemRect.bottom).toBeLessThanOrEqual(viewRect.bottom + 0.5);
     });
 
-    // In a scrolling Panel with `scroll={false}`: no ScrollArea of its own, rows on the panel's rails, and the panel
+    // In a scrolling Panel without a Viewport: no ScrollArea of its own, rows on the panel's rails, and the panel
     // scrolls to keep the highlight in view.
     const inPanel = md.getByRole('listbox', { name: 'In panel' });
     await expect(inPanel.closest('.dx-listbox')?.querySelector('.dx-scroll-root')).toBeNull();

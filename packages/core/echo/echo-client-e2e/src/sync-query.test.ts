@@ -5,9 +5,10 @@
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Aggregate, type Entity, Filter, Obj, Order, Query, type QueryResult, Scope } from '@dxos/echo';
-import { type EchoDatabase } from '@dxos/echo-client';
+import { DatabaseImpl, type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
+import { invariant } from '@dxos/invariant';
 import { EID, EntityId } from '@dxos/keys';
 
 // Exercises `packages/core/echo/echo-client/docs/SYNC_QUERIES.md`: a local write reaches a live query's
@@ -329,6 +330,99 @@ describe('synchronous query propagation', () => {
 
       await waitForIndexAnswer(db, query);
       expect(updates).toHaveLength(baseline);
+    });
+  });
+
+  describe('index-backed objects', () => {
+    // Reopened from disk, so query results are backed by the index's JSON and hold no document.
+    const openReloaded = async (populate: (db: EchoDatabase) => void) => {
+      const peer = await builder.createPeer({ types: [TestSchema.Person, TestSchema.Task] });
+      const initialDb = await peer.createDatabase();
+      populate(initialDb);
+      await initialDb.flush({ indexes: true, secondaryIndexes: true });
+      await peer.reload();
+      const db = await peer.openLastDatabase();
+      invariant(db instanceof DatabaseImpl);
+      return db;
+    };
+
+    const hasDocument = (db: DatabaseImpl, id: string): boolean =>
+      db.getObjectCoreById(id, { load: false })?.docHandle !== undefined;
+
+    test('an edit that disqualifies an index-backed object removes it before the edit returns', async () => {
+      const db = await openReloaded((db) => {
+        db.add(person({ name: 'alice' }));
+        db.add(person({ name: 'bob' }));
+      });
+      const query = db.query(Filter.type(TestSchema.Person, { name: 'alice' }));
+      const updates = recordUpdates(query);
+      await waitForCompleteness(query, 'complete');
+      const [alice] = query.results;
+      expect(alice?.name).toBe('alice');
+      expect(hasDocument(db, alice.id)).toBe(false);
+      const baseline = updates.length;
+
+      Obj.update(alice, (alice) => {
+        alice.name = 'alicia';
+      });
+      expect(hasDocument(db, alice.id)).toBe(true);
+      expect(query.results).toEqual([]);
+      expect(updates).toHaveLength(baseline + 1);
+
+      await waitForIndexAnswer(db, query);
+      expect(query.results).toEqual([]);
+      expect(updates).toHaveLength(baseline + 1);
+    });
+
+    test('an edit that qualifies an index-backed object adds it before the edit returns', async () => {
+      const db = await openReloaded((db) => {
+        db.add(person({ name: 'bob' }));
+      });
+      const [bob] = await db.query(Filter.type(TestSchema.Person)).run();
+      expect(hasDocument(db, bob.id)).toBe(false);
+      const query = db.query(Filter.type(TestSchema.Person, { name: 'alice' }));
+      const updates = recordUpdates(query);
+      await waitForCompleteness(query, 'complete');
+      expect(query.results).toEqual([]);
+      const baseline = updates.length;
+
+      Obj.update(bob, (bob) => {
+        bob.name = 'alice';
+      });
+      expect(ids(query.results)).toEqual([bob.id]);
+      expect(updates).toHaveLength(baseline + 1);
+
+      await waitForIndexAnswer(db, query);
+      expect(ids(query.results)).toEqual([bob.id]);
+      expect(updates).toHaveLength(baseline + 1);
+    });
+
+    test('a window of index-backed objects drops a disqualified member before the edit returns', async () => {
+      const db = await openReloaded((db) => {
+        for (const name of ['a', 'b', 'c', 'd']) {
+          db.add(person({ name, username: 'member' }));
+        }
+      });
+      const query = db.query(
+        Query.select(Filter.type(TestSchema.Person, { username: 'member' }))
+          .orderBy(Order.property('name', 'asc'))
+          .limit(3),
+      );
+      const updates = recordUpdates(query);
+      await waitForCompleteness(query, 'complete');
+      const [first, second, third] = query.results;
+      expect([first, second, third].map((member) => member?.name)).toEqual(['a', 'b', 'c']);
+      const baseline = updates.length;
+
+      Obj.update(second, (member) => {
+        member.username = 'former';
+      });
+      expect(ids(query.results)).toEqual([first.id, third.id]);
+      expect(updates).toHaveLength(baseline + 1);
+
+      await waitForIndexAnswer(db, query);
+      expect(query.results.map((member) => member.name)).toEqual(['a', 'c', 'd']);
+      expect(updates).toHaveLength(baseline + 2);
     });
   });
 

@@ -67,6 +67,8 @@ export const QueryRequest = Schema.Struct({
    * JSON-encoded `QueryAST.Query`.
    */
   query: Schema.String,
+  /** The client's data subscriptions: rows of documents they hold ship without their JSON and stored changes. */
+  subscriptionIds: Schema.optional(mutableArray(Schema.String)),
 });
 export interface QueryRequest extends Schema.Schema.Type<typeof QueryRequest> {}
 
@@ -78,7 +80,8 @@ export const QueryResult = Schema.Struct({
   queueNamespace: Schema.optional(Schema.String),
   rank: Schema.Number,
   /**
-   * In the ECHO JSON object format.
+   * In the ECHO JSON object format. Sent for a feed row, and for a document row the client can back
+   * with {@link heads} and {@link bytes}.
    */
   documentJson: Schema.optional(Schema.String),
   /**
@@ -101,6 +104,18 @@ export const QueryResult = Schema.Struct({
    * `Filter.changes`); no object fields are sent, and `id` is the record's own identity.
    */
   recordJson: Schema.optional(Schema.String),
+  /** Heads of the document the index read a document row's {@link documentJson} at. */
+  heads: Schema.optional(mutableArray(Schema.String)),
+  /**
+   * The document's Automerge bytes as storage holds them, which may be ahead of {@link heads}; sent with
+   * {@link documentJson} for a document that holds only this object. The client loads them when it first
+   * writes to the object, and makes every write of that update at {@link heads} when the bytes hold them.
+   */
+  bytes: Schema.optional(Schema.Uint8Array),
+  /** Unix ms of the object's creation, sent with a document row's {@link bytes}. */
+  createdAt: Schema.optional(Schema.Number),
+  /** Unix ms of the object's last change, sent with a document row's {@link bytes}. */
+  updatedAt: Schema.optional(Schema.Number),
 });
 export interface QueryResult extends Schema.Schema.Type<typeof QueryResult> {}
 

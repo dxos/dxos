@@ -3,7 +3,7 @@
 //
 
 import { next as A } from '@automerge/automerge';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, waitForCondition } from '@dxos/async';
 import { ContextDisposedError } from '@dxos/context';
@@ -11,7 +11,7 @@ import { type Entity, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
-import { DXN, EntityId, PublicKey } from '@dxos/keys';
+import { DXN, EntityId, PublicKey, SpaceId } from '@dxos/keys';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
@@ -19,6 +19,7 @@ import { type DocHandleProxy, type RepoProxy } from '../automerge/index.ts';
 import { getObjectCore } from '../echo-handler/index.ts';
 import { type DatabaseImpl } from '../proxy-db/index.ts';
 import { EchoTestBuilder, createTmpPath } from '../testing/index.ts';
+import { type SnapshotState } from './object-core.ts';
 
 describe('DatabaseImpl', () => {
   describe('space fragmentation', () => {
@@ -115,10 +116,96 @@ describe('DatabaseImpl', () => {
       // open itself started, so a space that opened its links would hold five handles here.
       await db.loadObjectCoreById(objectIds[0]);
       expect(db.getLinkedDocHandles()).toHaveLength(1);
+    });
+  });
 
-      const objects = await db.query(Filter.type(TestSchema.Expando)).run();
-      expect(objects).toHaveLength(5);
-      expect(db.getLinkedDocHandles()).toHaveLength(5);
+  describe('index rows', () => {
+    const indexBacked = async () => {
+      const db = await createClientDbInSpaceWithObject(Obj.make(TestSchema.Expando, { value: 1 }));
+      const object = await db.query(Filter.type(TestSchema.Expando)).first();
+      const snapshot = getObjectCore(object).snapshot;
+      const bytes = snapshot?.handle.passive?.bytes;
+      invariant(snapshot && bytes && snapshot.handle.documentId);
+      const row: SnapshotState = {
+        structure: snapshot.root.objects![object.id],
+        heads: snapshot.handle.passiveHeads!,
+        updatedAt: snapshot.updatedAt,
+        bytes,
+        documentId: snapshot.handle.documentId,
+      };
+      return { db, object, row };
+    };
+
+    test('every write of an update applies at the heads the object was shown at', async () => {
+      const object = Obj.make(TestSchema.Expando, { tags: ['a', 'b'] });
+      let row: SnapshotState | undefined;
+      const db = await createClientDbInSpaceWithObject(object, () => {
+        const handle = getObjectCore(object).docHandle!;
+        const shown = {
+          structure: JSON.parse(JSON.stringify(handle.doc().objects![object.id])),
+          heads: A.getHeads(handle.doc()),
+        };
+        Obj.update(object, (object) => {
+          object.tags.unshift('host');
+        });
+        row = { ...shown, updatedAt: Date.now(), bytes: A.save(handle.doc()), documentId: handle.documentId! };
+      });
+      invariant(row);
+
+      const shownObject = db._entityManager.placeIndexRow(object.id, row.documentId, () => row);
+      invariant(Obj.instanceOf(TestSchema.Expando)(shownObject));
+      Obj.update(shownObject, (shownObject) => {
+        shownObject.tags.splice(0, 1);
+        shownObject.tags.splice(0, 1);
+      });
+      expect([...shownObject.tags]).toEqual(['host']);
+    });
+
+    test('a row that fails to decode is left to its document', async () => {
+      const object = Obj.make(TestSchema.Expando, { value: 1 });
+      const db = await createClientDbInSpaceWithObject(object);
+      const documentId = db.getObjectDocumentId(object.id);
+      invariant(documentId);
+      const placed = db._entityManager.placeIndexRow(object.id, documentId, () => {
+        throw new SyntaxError('Unexpected end of JSON input');
+      });
+      expect(placed).toBe(undefined);
+      expect(db._entityManager.getObjectCoreById(object.id, { load: false })).toBe(undefined);
+    });
+
+    test('a row that arrives before the space root backs nothing', async () => {
+      const { object, row } = await indexBacked();
+      const testBuilder = new EchoTestBuilder();
+      await openAndClose(testBuilder);
+      const peer = await testBuilder.createPeer();
+      const early = peer.client.constructDatabase({ spaceId: SpaceId.random(), spaceKey: PublicKey.random() });
+      expect(early._entityManager.placeIndexRow(object.id, row.documentId, () => row)).toBe(undefined);
+    });
+
+    test('a row that arrives once a close has begun backs nothing', async () => {
+      const { db, object, row } = await indexBacked();
+      let placed: unknown = null;
+      db['_ctx'].onDispose(() => {
+        placed = db._entityManager.placeIndexRow(object.id, row.documentId, () => row);
+      });
+      await db.close();
+      expect(placed).toBe(undefined);
+    });
+
+    test('a held object ignores later rows', async () => {
+      const { db, object, row } = await indexBacked();
+      let notified = 0;
+      onTestFinished(Obj.subscribe(object, () => notified++));
+
+      let decoded = false;
+      const placed = db._entityManager.placeIndexRow(object.id, row.documentId, () => {
+        decoded = true;
+        return { ...row, structure: { ...row.structure, data: { ...row.structure.data, value: 2 } } };
+      });
+      expect(placed).toBe(object);
+      expect(decoded).toBe(false);
+      expect(object.value).toBe(1);
+      expect(notified).toBe(0);
     });
   });
 
@@ -199,7 +286,7 @@ describe('DatabaseImpl', () => {
       const newRootDocHandle = await createTestRootDoc(db._repo);
 
       for (const id of ids) {
-        await db.query(Query.type(TestSchema.Expando, { id })).run();
+        getObjectDocHandle(await db.query(Query.type(TestSchema.Expando, { id })).first());
       }
 
       newRootDocHandle.change((newDoc: any) => {
@@ -315,6 +402,39 @@ describe('DatabaseImpl', () => {
       for (const obj of partiallyLoadedLinks) {
         await db.query(Query.type(TestSchema.Expando, { id: obj.id })).first();
       }
+    });
+
+    test('an index-backed object inlined by the current or a new root is bound there', async () => {
+      const db = await createClientDbInSpaceWithObject([
+        Obj.make(TestSchema.Expando, { value: 1 }),
+        Obj.make(TestSchema.Expando, { value: 2 }),
+      ]);
+      const results = await db.query(Filter.type(TestSchema.Expando)).run();
+      const moved = results.find((object) => object.value === 1);
+      const swapped = results.find((object) => object.value === 2);
+      invariant(moved && swapped);
+      const structureOf = (object: Entity.Any) =>
+        JSON.parse(JSON.stringify(getObjectCore(object).snapshot!.root.objects![object.id]));
+      const movedStructure = structureOf(moved);
+      const swappedStructure = structureOf(swapped);
+
+      const current = db.getSpaceRootDocHandle();
+      current.change((doc: DatabaseDirectory) => {
+        doc.objects ??= {};
+        doc.objects[moved.id] = movedStructure;
+      });
+      expect(getObjectCore(moved).docHandle).toBe(current);
+
+      const root = await createTestRootDoc(db._repo);
+      root.change((doc: DatabaseDirectory) => {
+        doc.objects = { [moved.id]: movedStructure, [swapped.id]: swappedStructure };
+      });
+      await db.setSpaceRoot(root.url!);
+      expect(getObjectCore(swapped).docHandle).toBe(root);
+      Obj.update(swapped, (swapped) => {
+        swapped.value = 3;
+      });
+      expect(root.doc().objects![swapped.id].data.value).toBe(3);
     });
 
     test('reload objects', async () => {
@@ -451,6 +571,17 @@ describe('DatabaseImpl', () => {
       expect(db.getObjectById(id)).to.not.be.undefined;
     });
 
+    test('opened rejects after close until the next open', async () => {
+      const testBuilder = new EchoTestBuilder();
+      await openAndClose(testBuilder);
+      const { db } = await testBuilder.createDatabase();
+
+      await db.close();
+      await expect(db._entityManager.opened.wait()).rejects.toThrow(ContextDisposedError);
+      await db.open();
+      await asyncTimeout(db._entityManager.opened.wait(), 1_000);
+    });
+
     test('a synchronous core lookup after close resolves to undefined rather than throwing', async () => {
       const testBuilder = new EchoTestBuilder();
       await openAndClose(testBuilder);
@@ -555,10 +686,14 @@ const getDocHandles = (db: DatabaseImpl): DocumentHandles => ({
   linkedDocHandles: db.getLinkedDocHandles(),
 });
 
-const getObjectDocHandle = (obj: any) => getObjectCore(obj).docHandle!;
+const getObjectDocHandle = (obj: any) => {
+  const core = getObjectCore(obj);
+  core.getDoc();
+  return core.docHandle!;
+};
 
 const createClientDbInSpaceWithObject = async (
-  object: Entity.Any,
+  objects: Entity.Any | Entity.Any[],
   onDocumentSavedInSpace?: (handles: DocumentHandles) => void,
 ): Promise<DatabaseImpl> => {
   const tmpPath = createTmpPath();
@@ -568,7 +703,9 @@ const createClientDbInSpaceWithObject = async (
   const peer1 = await testBuilder.createPeer({ storagePath: tmpPath });
   const spaceKey = PublicKey.random();
   const db1 = await peer1.createDatabase(spaceKey);
-  db1.add(object);
+  for (const object of [objects].flat()) {
+    db1.add(object);
+  }
   // Wait for document creation to complete before calling callback.
   await db1.flush();
   onDocumentSavedInSpace?.(getDocHandles(db1));

@@ -48,7 +48,7 @@ describe('DataServiceImpl', () => {
     );
     await registered.wait({ timeout: 1000 });
 
-    await EffectEx.runPromise(impl['DataService.updateSubscription']({ subscriptionId, addIds: [documentId] }));
+    await EffectEx.runPromise(impl['DataService.updateSubscription']({ subscriptionId, add: [{ id: documentId }] }));
     await reported.wait({ timeout: 1000 });
 
     // Without this the subscriber is told nothing at all and its handle waits for bytes no one is

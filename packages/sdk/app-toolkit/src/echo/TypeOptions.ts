@@ -7,8 +7,11 @@
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
+import { Annotation, type Entity, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { type URI } from '@dxos/keys';
+import { ArchivedAnnotation } from '@dxos/schema';
+
+import * as AppAnnotation from './AppAnnotation.ts';
 
 export const TypeInputOptions = Schema.Struct({
   location: Schema.Array(Schema.Literals(['database', 'runtime'])),
@@ -57,6 +60,46 @@ export const isUserType = (type: Type.AnyEntity, options?: { includeHidden?: boo
 export const isUserObject = (object: Obj.Unknown): boolean => {
   const type = Obj.getType(object);
   return type === undefined || isUserType(type);
+};
+
+/**
+ * The object's type, falling back to the database registry's entry for its typename: a type persisted in the space
+ * is stored under its EID, which an id-based lookup can miss.
+ */
+const resolveType = (object: Obj.Unknown): Type.AnyEntity | undefined => {
+  const type = Obj.getType(object);
+  if (type) {
+    return type;
+  }
+  const typename = Obj.getTypename(object);
+  return Obj.getDatabase(object)
+    ?.graph.registry.list()
+    .filter(Type.isType)
+    .find((candidate) => Type.getTypename(candidate) === typename);
+};
+
+/**
+ * The objects among `objects` a user finds in the navigator or a Database section, so a picker of objects offers
+ * only these: a registered user-facing type, not archived, and not a space's root collection (the navigator's own
+ * scaffolding, shown as its Collections branch). Unlike {@link isUserObject}, an unresolved type is refused.
+ */
+export const filterListedObjects = (objects: readonly (Entity.Any | Entity.Unknown)[]): Obj.Unknown[] => {
+  const roots = new Set(
+    objects.flatMap((object) =>
+      Annotation.get(object, AppAnnotation.RootCollectionAnnotation).pipe(
+        Option.flatMap((ref) => Option.fromNullishOr(ref.target?.id)),
+        Option.toArray,
+      ),
+    ),
+  );
+  return objects.flatMap((object) => {
+    if (!Obj.isObject(object) || roots.has(object.id)) {
+      return [];
+    }
+    const type = resolveType(object);
+    const archived = Option.getOrElse(Annotation.get(object, ArchivedAnnotation), () => false);
+    return type !== undefined && isUserType(type) && !archived ? [object] : [];
+  });
 };
 
 /**

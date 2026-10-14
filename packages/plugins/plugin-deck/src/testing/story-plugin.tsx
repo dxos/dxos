@@ -342,13 +342,15 @@ const ItemComponent = ({ id }: ItemComponentProps) => {
 
   return (
     <Listbox.Root items={items.map(toOption)}>
-      <Listbox.Content aria-label='Items'>
-        {items.map((node) => {
-          const open = () =>
-            void invokePromise(LayoutOperation.Open, { subject: [node.id], pivotId: id, navigation: 'immediate' });
-          return <Listbox.Item key={node.id} id={node.id} highlightOnHover onClick={open} />;
-        })}
-      </Listbox.Content>
+      <Listbox.Viewport>
+        <Listbox.Content aria-label='Items'>
+          {items.map((node) => {
+            const open = () =>
+              void invokePromise(LayoutOperation.Open, { subject: [node.id], pivotId: id, navigation: 'immediate' });
+            return <Listbox.Item key={node.id} id={node.id} highlightOnHover onClick={open} />;
+          })}
+        </Listbox.Content>
+      </Listbox.Viewport>
     </Listbox.Root>
   );
 };

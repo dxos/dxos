@@ -38,12 +38,14 @@ export const useQuery: UseQueryFn = (
   resource: Database.Queryable | undefined,
   queryOrFilter: Query.Any | Filter.Any,
 ): any[] => {
-  const query = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
+  // Keyed by the AST and rebuilt from it, so a caller's inline filter (a new object every render) reuses
+  // the query; the memo reads only its key, which the React Compiler requires to honor it.
+  const astKey = JSON.stringify((Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter).ast);
 
   const { getObjects, subscribe } = useMemo(() => {
     let queryResult = undefined;
     if (resource) {
-      queryResult = resource.query(query);
+      queryResult = resource.query(Query.fromAst(JSON.parse(astKey)));
     }
 
     let subscribed = false;
@@ -58,7 +60,7 @@ export const useQuery: UseQueryFn = (
         };
       },
     };
-  }, [resource, JSON.stringify(query.ast)]);
+  }, [resource, astKey]);
 
   // https://beta.reactjs.org/reference/react/useSyncExternalStore
   // NOTE: This hook will resubscribe whenever the callback passed to the first argument changes; make sure it is stable.

@@ -5,7 +5,7 @@
 import * as EffectContext from 'effect/Context';
 import { inspect } from 'node:util';
 
-import { type CleanupFn, Event, MulticastObservable, Trigger, asyncTimeout, synchronized } from '@dxos/async';
+import { Event, MulticastObservable, Trigger, asyncTimeout, synchronized } from '@dxos/async';
 import { createEdgeBlobBackend } from '@dxos/blob/hosted';
 import {
   type ClientServicesProvider,
@@ -44,6 +44,7 @@ import { type MeshProxy } from '../mesh/mesh-proxy.ts';
 import type { IFrameManager, Shell, ShellManager } from '../services/index.ts';
 import { DXOS_VERSION } from '../version.ts';
 import { ClientRuntime } from './client-runtime.ts';
+import { createRpcBlobStore } from './rpc-blob-store.ts';
 
 /** Longest a destroy waits for a database's pending writes to reach the host. */
 const DESTROY_FLUSH_TIMEOUT = 5_000;
@@ -128,7 +129,7 @@ export class Client {
   private _edgeHttpClient?: EdgeHttpClient = undefined;
   private _edgeApi?: ClientEdgeAPI = undefined;
   private _edgeIdentitySubscription?: { unsubscribe: () => void };
-  private _edgeBlobBackendCleanup?: CleanupFn;
+  private _blobBackendCleanup?: () => void;
 
   constructor(options: ClientOptions = {}) {
     if (
@@ -458,13 +459,6 @@ export class Client {
   private async _open(ctx: Context): Promise<void> {
     log('opening...');
     invariant(this._services);
-    log('client._open: importing proxy modules');
-    const { SpaceList } = await import('../echo/space-list.ts');
-    const { HaloProxy } = await import('../halo/halo-proxy.ts');
-    const { MeshProxy } = await import('../mesh/mesh-proxy.ts');
-    const { Shell } = await import('../services/index.ts');
-    log('client._open: proxy modules loaded');
-
     const trigger = new Trigger<Error | undefined>();
     this._services.closed?.on(async (error) => {
       log('terminated', { resetting: this._resetting });
@@ -484,13 +478,23 @@ export class Client {
         this.reloaded.emit();
       }
     });
-    log('client._open: opening services...');
-    await this._services.open();
+    // The services open alongside the proxy imports rather than after them: the worker handshake is
+    // the long pole, and each sequential import waits out a main thread busy with plugin activation.
+    log('client._open: importing proxy modules and opening services...');
+    invariant(this._config, 'Client not initialized.');
+    const edgeUrl = this._config.get('runtime.services.edge.url');
+    const [{ SpaceList }, { HaloProxy }, { MeshProxy }, { Shell }, edgeClientModule] = await Promise.all([
+      import('../echo/space-list.ts'),
+      import('../halo/halo-proxy.ts'),
+      import('../mesh/mesh-proxy.ts'),
+      import('../services/index.ts'),
+      edgeUrl ? import('@dxos/edge-client') : undefined,
+      this._services.open(),
+    ]);
     log('client._open: services opened');
 
-    const edgeUrl = this._config!.get('runtime.services.edge.url');
-    if (edgeUrl) {
-      const { EdgeHttpClient } = await import('@dxos/edge-client');
+    if (edgeUrl && edgeClientModule) {
+      const { EdgeHttpClient } = edgeClientModule;
       const clientTag = resolveTelemetryTag(this._config);
       this._edgeHttpClient = new EdgeHttpClient(edgeUrl, { clientTag });
       this._edgeApi = createClientEdgeAPI({ client: this, edgeClient: this._edgeHttpClient });
@@ -550,23 +554,22 @@ export class Client {
           deviceSubscription.unsubscribe();
         },
       };
-
-      this._edgeBlobBackendCleanup = this._echoClient.graph.registerBlobBackend(
-        Blob.Storage.edge,
-        // Adapted rather than passed: the backend takes the four operations it needs, so it does not
-        // depend on the other twenty-nine methods of `EdgeHttpClient`, and `Context` stays here.
-        createEdgeBlobBackend({
-          transport: {
-            url: (key) => edgeHttpClient.getBlobUrl(key),
-            put: (key, data, options) => edgeHttpClient.putBlob(Context.default(), key, data, options),
-            get: (key) => edgeHttpClient.getBlob(Context.default(), key),
-            has: (key) => edgeHttpClient.hasBlob(Context.default(), key),
-            finalizeUpload: (uploadId) => edgeHttpClient.finalizeBlobUpload(Context.default(), uploadId),
-          },
-        }),
-        { default: true },
-      );
     }
+
+    // Registered with or without an edge endpoint: a write is confirmed once the host stores it
+    // locally, and the host replicates to the edge, when configured, on its own.
+    const edgeHttpClient = this._edgeHttpClient;
+    const blobBackend = createEdgeBlobBackend({
+      store: createRpcBlobStore(this._services.rpc, this._effectRuntime),
+      finalizeUpload: edgeHttpClient && ((uploadId) => edgeHttpClient.finalizeBlobUpload(Context.default(), uploadId)),
+    });
+    const unregisterBlobBackend = this._echoClient.graph.registerBlobBackend(Blob.Storage.edge, blobBackend, {
+      default: true,
+    });
+    this._blobBackendCleanup = () => {
+      unregisterBlobBackend();
+      blobBackend.close();
+    };
 
     log('client._open: subscribing to system status...');
     this._fatalErrorUpdate.emit(null);
@@ -705,12 +708,12 @@ export class Client {
     await this._echoClient.close(this._ctx);
     await this._shellClientServer?.close();
     this._shellClientServer = undefined;
+    this._blobBackendCleanup?.();
+    this._blobBackendCleanup = undefined;
     log.verbose('client._close: closing services...');
     await this._services?.close();
     this._edgeIdentitySubscription?.unsubscribe();
     this._edgeIdentitySubscription = undefined;
-    this._edgeBlobBackendCleanup?.();
-    this._edgeBlobBackendCleanup = undefined;
     this._edgeHttpClient = undefined;
     this._edgeApi = undefined;
     log('closed');

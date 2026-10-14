@@ -1,0 +1,2072 @@
+{
+  "q-bsbm1m-h0": {
+    "build": "1791873400",
+    "at": "2026-10-13T06:37:52.007Z",
+    "queries": [
+      { "id": "B-Q1a", "rows": 1, "serverMs": 0, "wallMs": 45.10946899999999 },
+      { "id": "B-Q1b", "rows": 2, "serverMs": 0.19575625000004493, "wallMs": 42.46530099999973 },
+      { "id": "B-Q1c", "rows": 7, "serverMs": 0.125974000000042, "wallMs": 42.450558 },
+      { "id": "B-Q2a", "rows": 20, "serverMs": 0, "wallMs": 48.833066000000144 },
+      { "id": "B-Q2b", "rows": 18, "serverMs": 0.3288724999999886, "wallMs": 42.94888400000036 },
+      { "id": "B-Q2c", "rows": 13, "serverMs": 0, "wallMs": 44.364212999999836 },
+      { "id": "B-Q3a", "rows": 0, "serverMs": 0, "wallMs": 43.9777239999994 },
+      { "id": "B-Q3b", "rows": 2, "serverMs": 0, "wallMs": 43.77854800000023 },
+      { "id": "B-Q3c", "rows": 1, "serverMs": 1.2492080000001806, "wallMs": 42.55903799999942 },
+      { "id": "B-Q4a", "rows": 0, "serverMs": 0.31415575000005447, "wallMs": 42.5280759999996 },
+      { "id": "B-Q4b", "rows": 0, "serverMs": 0, "wallMs": 42.87088700000004 },
+      { "id": "B-Q4c", "rows": 0, "serverMs": 0.539002999999866, "wallMs": 43.4684670000006 },
+      { "id": "B-Q5a", "rows": 5, "serverMs": 7.624423750000005, "wallMs": 56.05343399999947 },
+      { "id": "B-Q5b", "rows": 5, "serverMs": 3.1410799999998744, "wallMs": 50.50470400000086 },
+      { "id": "B-Q5c", "rows": 5, "serverMs": 7.708982249999735, "wallMs": 59.2865010000005 },
+      { "id": "B-Q6a", "rows": 1, "serverMs": 7.5334077499996965, "wallMs": 49.526458000000275 },
+      { "id": "B-Q6b", "rows": 1, "serverMs": 6.163883749999968, "wallMs": 58.58325499999955 },
+      { "id": "B-Q6c", "rows": 1, "serverMs": 12.138913750000029, "wallMs": 50.4761610000005 },
+      { "id": "B-Q7a", "rows": 10, "serverMs": 0.9664727499998662, "wallMs": 42.55712200000016 },
+      { "id": "B-Q7b", "rows": 4, "serverMs": 0.26348649999999907, "wallMs": 45.71035200000006 },
+      { "id": "B-Q7c", "rows": 8, "serverMs": 0.3119022500000028, "wallMs": 44.00270900000032 },
+      {
+        "id": "B-Q8a",
+        "error": "non-json 500: <!DOCTYPE html>\n<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 7]> "
+      },
+      {
+        "id": "B-Q8b",
+        "error": "non-json 500: <!DOCTYPE html>\n<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 7]> "
+      },
+      { "id": "B-Q8c", "rows": 0, "serverMs": 575.0198137500001, "wallMs": 465.89476099999956 },
+      { "id": "B-Q9a", "error": "UnsupportedSparqlError: Unsupported SPARQL construct: query type DESCRIBE" },
+      { "id": "B-Q9b", "error": "UnsupportedSparqlError: Unsupported SPARQL construct: query type DESCRIBE" },
+      { "id": "B-Q9c", "error": "UnsupportedSparqlError: Unsupported SPARQL construct: query type DESCRIBE" },
+      { "id": "B-Q10a", "rows": 4, "serverMs": 2.1840069999998377, "wallMs": 43.377307000002475 },
+      { "id": "B-Q10b", "rows": 2, "serverMs": 0, "wallMs": 42.65470999999525 },
+      { "id": "B-Q10c", "rows": 5, "serverMs": 0.6743760000008479, "wallMs": 46.03320399999939 },
+      { "id": "B-Q11a", "rows": 10, "serverMs": 0.9854772500002582, "wallMs": 41.90837299999839 },
+      { "id": "B-Q11b", "rows": 10, "serverMs": 0.9798350000000937, "wallMs": 41.516889999998966 },
+      { "id": "B-Q11c", "rows": 10, "serverMs": 0, "wallMs": 44.45866599999863 },
+      { "id": "B-Q12a", "rows": 8, "serverMs": 0.47918599999866274, "wallMs": 43.85923200000252 },
+      { "id": "B-Q12b", "rows": 8, "serverMs": 0.024119250001604087, "wallMs": 42.332353999998304 },
+      { "id": "B-Q12c", "rows": 8, "serverMs": 0.751812250002331, "wallMs": 43.67155799999455 }
+    ]
+  },
+  "q-bsbm1m-h1": {
+    "build": "1791873400",
+    "at": "2026-10-13T06:38:40.277Z",
+    "queries": [
+      { "id": "B-Q1a", "rows": 1, "serverMs": 0.14390874999998005, "wallMs": 44.99198200000001 },
+      { "id": "B-Q1b", "rows": 2, "serverMs": 0.3156222499999899, "wallMs": 44.39475500000003 },
+      { "id": "B-Q1c", "rows": 7, "serverMs": 0.5057967500000586, "wallMs": 44.08183999999983 },
+      { "id": "B-Q2a", "rows": 20, "serverMs": 0.1945642499999849, "wallMs": 50.76370300000008 },
+      { "id": "B-Q2b", "rows": 18, "serverMs": 0, "wallMs": 46.456627000000026 },
+      { "id": "B-Q2c", "rows": 13, "serverMs": 0.3991265000001931, "wallMs": 45.55721199999971 },
+      { "id": "B-Q3a", "rows": 0, "serverMs": 0, "wallMs": 44.73770700000023 },
+      { "id": "B-Q3b", "rows": 2, "serverMs": 0.10216700000023593, "wallMs": 48.599787999999535 },
+      { "id": "B-Q3c", "rows": 1, "serverMs": 0, "wallMs": 44.567221999999674 },
+      { "id": "B-Q4a", "rows": 0, "serverMs": 0, "wallMs": 44.63829900000019 },
+      { "id": "B-Q4b", "rows": 0, "serverMs": 0, "wallMs": 44.70878900000025 },
+      { "id": "B-Q4c", "rows": 0, "serverMs": 0.06853374999991502, "wallMs": 45.22838899999988 },
+      { "id": "B-Q5a", "rows": 5, "serverMs": 8.871850499999937, "wallMs": 54.455636000000595 },
+      { "id": "B-Q5b", "rows": 5, "serverMs": 5.099056499999733, "wallMs": 51.08670300000085 },
+      { "id": "B-Q5c", "rows": 5, "serverMs": 17.273767999999563, "wallMs": 57.18195100000048 },
+      { "id": "B-Q6a", "rows": 1, "serverMs": 7.998771500000203, "wallMs": 56.48889599999893 },
+      { "id": "B-Q6b", "rows": 1, "serverMs": 6.62870225000006, "wallMs": 54.30975000000035 },
+      { "id": "B-Q6c", "rows": 1, "serverMs": 8.15146175000018, "wallMs": 52.83588400000008 },
+      { "id": "B-Q7a", "rows": 10, "serverMs": 1.1760254999999233, "wallMs": 47.09814000000006 },
+      { "id": "B-Q7b", "rows": 4, "serverMs": 0.44291225000006307, "wallMs": 43.983893000000535 },
+      { "id": "B-Q7c", "rows": 8, "serverMs": 0.031182250000256317, "wallMs": 45.630568000000494 },
+      {
+        "id": "B-Q8a",
+        "error": "non-json 500: <!DOCTYPE html>\n<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 7]> "
+      },
+      {
+        "id": "B-Q8b",
+        "error": "non-json 500: <!DOCTYPE html>\n<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 7]> "
+      },
+      { "id": "B-Q8c", "rows": 0, "serverMs": 1062.7184647500007, "wallMs": 811.9784209999998 },
+      { "id": "B-Q9a", "error": "UnsupportedSparqlError: Unsupported SPARQL construct: query type DESCRIBE" },
+      { "id": "B-Q9b", "error": "UnsupportedSparqlError: Unsupported SPARQL construct: query type DESCRIBE" },
+      { "id": "B-Q9c", "error": "UnsupportedSparqlError: Unsupported SPARQL construct: query type DESCRIBE" },
+      { "id": "B-Q10a", "rows": 4, "serverMs": 0, "wallMs": 44.76508000000467 },
+      { "id": "B-Q10b", "rows": 2, "serverMs": 0.32388499999979103, "wallMs": 43.023536000000604 },
+      { "id": "B-Q10c", "rows": 5, "serverMs": 0, "wallMs": 43.13442999999825 },
+      { "id": "B-Q11a", "rows": 10, "serverMs": 1.0689484999984415, "wallMs": 44.08412800000224 },
+      { "id": "B-Q11b", "rows": 10, "serverMs": 0.1060364999993908, "wallMs": 43.723329000000376 },
+      { "id": "B-Q11c", "rows": 10, "serverMs": 0.25792400000136695, "wallMs": 44.26842200000101 },
+      { "id": "B-Q12a", "rows": 8, "serverMs": 0, "wallMs": 45.34633599999506 },
+      { "id": "B-Q12b", "rows": 8, "serverMs": 0.10541975000160164, "wallMs": 45.34070299999439 },
+      { "id": "B-Q12c", "rows": 8, "serverMs": 0, "wallMs": 47.98453600000357 }
+    ]
+  },
+  "q-bsbm5m-h0": {
+    "build": "1791873400",
+    "at": "2026-10-13T06:42:49.234Z",
+    "queries": [
+      { "id": "B-Q1a", "rows": 6, "serverMs": 0.3180525000000216, "wallMs": 42.207618999999795 },
+      { "id": "B-Q1b", "rows": 1, "serverMs": 0, "wallMs": 41.17077900000004 },
+      { "id": "B-Q1c", "rows": 3, "serverMs": 0.4383857499997248, "wallMs": 41.40493200000037 },
+      { "id": "B-Q2a", "rows": 31, "serverMs": 0, "wallMs": 46.82593200000065 },
+      { "id": "B-Q2b", "rows": 22, "serverMs": 0.3003249999999298, "wallMs": 44.701116000000184 },
+      { "id": "B-Q2c", "rows": 27, "serverMs": 0.18294574999981705, "wallMs": 43.629079000000274 },
+      { "id": "B-Q3a", "rows": 0, "serverMs": 0, "wallMs": 50.49157500000001 },
+      { "id": "B-Q3b", "rows": 1, "serverMs": 0.0017370000000482833, "wallMs": 43.419096999999965 },
+      { "id": "B-Q3c", "rows": 0, "serverMs": 0, "wallMs": 42.28633499999887 },
+      { "id": "B-Q4a", "rows": 0, "serverMs": 0.5248477499999353, "wallMs": 41.745671000000584 },
+      { "id": "B-Q4b", "rows": 0, "serverMs": 0, "wallMs": 42.253310000000056 },
+      { "id": "B-Q4c", "rows": 1, "serverMs": 0, "wallMs": 44.36442700000043 },
+      { "id": "B-Q5a", "rows": 5, "serverMs": 9.453800499999943, "wallMs": 52.9031759999998 },
+      { "id": "B-Q5b", "rows": 5, "serverMs": 15.27247824999995, "wallMs": 59.015244000000166 },
+      { "id": "B-Q5c", "rows": 0, "serverMs": 12.557577499999752, "wallMs": 55.86746900000071 },
+      { "id": "B-Q6a", "rows": 1, "serverMs": 31.840902500000084, "wallMs": 90.44687299999896 },
+      { "id": "B-Q6b", "rows": 1, "serverMs": 32.924199000000044, "wallMs": 78.58207500000026 },
+      { "id": "B-Q6c", "rows": 1, "serverMs": 45.69467624999925, "wallMs": 85.81829700000162 },
+      { "id": "B-Q7a", "rows": 7, "serverMs": 0.4572517499991591, "wallMs": 42.67838300000221 },
+      { "id": "B-Q7b", "rows": 1, "serverMs": 0, "wallMs": 42.7519769999999 },
+      { "id": "B-Q7c", "rows": 5, "serverMs": 0, "wallMs": 42.585009999998874 },
+      {
+        "id": "B-Q8a",
+        "error": "non-json 500: <!DOCTYPE html>\n<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 7]> "
+      },
+      {
+        "id": "B-Q8b",
+        "error": "non-json 500: <!DOCTYPE html>\n<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 7]> "
+      },
+      {
+        "id": "B-Q8c",
+        "error": "non-json 500: <!DOCTYPE html>\n<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 7]> "
+      },
+      { "id": "B-Q9a", "error": "UnsupportedSparqlError: Unsupported SPARQL construct: query type DESCRIBE" },
+      { "id": "B-Q9b", "error": "UnsupportedSparqlError: Unsupported SPARQL construct: query type DESCRIBE" },
+      { "id": "B-Q9c", "error": "UnsupportedSparqlError: Unsupported SPARQL construct: query type DESCRIBE" },
+      { "id": "B-Q10a", "rows": 1, "serverMs": 0.07017199999972945, "wallMs": 41.31676800000059 },
+      { "id": "B-Q10b", "rows": 0, "serverMs": 0, "wallMs": 40.19272600000113 },
+      { "id": "B-Q10c", "rows": 5, "serverMs": 0.04788525000003574, "wallMs": 42.88507899999968 },
+      { "id": "B-Q11a", "rows": 10, "serverMs": 0, "wallMs": 42.19746299999679 },
+      { "id": "B-Q11b", "rows": 10, "serverMs": 0.3739517499998328, "wallMs": 41.466105999999854 },
+      { "id": "B-Q11c", "rows": 10, "serverMs": 0.47617874999923515, "wallMs": 41.12369100000069 },
+      { "id": "B-Q12a", "rows": 8, "serverMs": 0.23465799999939918, "wallMs": 41.35980700000073 },
+      { "id": "B-Q12b", "rows": 8, "serverMs": 0, "wallMs": 41.51286799999798 },
+      { "id": "B-Q12c", "rows": 8, "serverMs": 0, "wallMs": 45.6741800000018 }
+    ]
+  },
+  "q-bsbm5m-h1": {
+    "build": "1791873400",
+    "at": "2026-10-13T06:43:35.054Z",
+    "queries": [
+      { "id": "B-Q1a", "rows": 6, "serverMs": 0, "wallMs": 45.091936999999916 },
+      { "id": "B-Q1b", "rows": 1, "serverMs": 0.6850464999999986, "wallMs": 43.77733900000021 },
+      { "id": "B-Q1c", "rows": 3, "serverMs": 0.3764352500000996, "wallMs": 43.230131999999685 },
+      { "id": "B-Q2a", "rows": 31, "serverMs": 0.34735299999999825, "wallMs": 44.943541000000096 },
+      { "id": "B-Q2b", "rows": 22, "serverMs": 0.5612717499998325, "wallMs": 44.75724600000012 },
+      { "id": "B-Q2c", "rows": 27, "serverMs": 0.13063824999994722, "wallMs": 45.101614000000154 },
+      { "id": "B-Q3a", "rows": 0, "serverMs": 0.08051024999986112, "wallMs": 42.90090500000042 },
+      { "id": "B-Q3b", "rows": 1, "serverMs": 0.6548649999999725, "wallMs": 43.94048800000019 },
+      { "id": "B-Q3c", "rows": 0, "serverMs": 0.26546574999997574, "wallMs": 41.429465000000164 },
+      { "id": "B-Q4a", "rows": 0, "serverMs": 0.3624867500000164, "wallMs": 42.02761499999997 },
+      { "id": "B-Q4b", "rows": 0, "serverMs": 0.11271024999996371, "wallMs": 42.41786299999967 },
+      { "id": "B-Q4c", "rows": 1, "serverMs": 0, "wallMs": 45.18716500000028 },
+      { "id": "B-Q5a", "rows": 5, "serverMs": 6.215083249999907, "wallMs": 60.54966999999942 },
+      { "id": "B-Q5b", "rows": 5, "serverMs": 14.45728175000022, "wallMs": 59.90946999999869 },
+      { "id": "B-Q5c", "rows": 0, "serverMs": 15.235321999999996, "wallMs": 57.758544000000256 },
+      { "id": "B-Q6a", "rows": 1, "serverMs": 27.62519675000067, "wallMs": 84.82159799999863 },
+      { "id": "B-Q6b", "rows": 1, "serverMs": 30.210892249999688, "wallMs": 74.41615000000093 },
+      { "id": "B-Q6c", "rows": 1, "serverMs": 43.503487750000204, "wallMs": 75.77750399999968 },
+      { "id": "B-Q7a", "rows": 7, "serverMs": 0, "wallMs": 44.16284599999926 },
+      { "id": "B-Q7b", "rows": 1, "serverMs": 0.46662225000000035, "wallMs": 43.85084100000131 },
+      { "id": "B-Q7c", "rows": 5, "serverMs": 0, "wallMs": 45.937324000000444 },
+      {
+        "id": "B-Q8a",
+        "error": "non-json 500: <!DOCTYPE html>\n<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 7]> "
+      },
+      {
+        "id": "B-Q8b",
+        "error": "non-json 500: <!DOCTYPE html>\n<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 7]> "
+      },
+      {
+        "id": "B-Q8c",
+        "error": "non-json 500: <!DOCTYPE html>\n<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 7]> "
+      },
+      { "id": "B-Q9a", "error": "UnsupportedSparqlError: Unsupported SPARQL construct: query type DESCRIBE" },
+      { "id": "B-Q9b", "error": "UnsupportedSparqlError: Unsupported SPARQL construct: query type DESCRIBE" },
+      { "id": "B-Q9c", "error": "UnsupportedSparqlError: Unsupported SPARQL construct: query type DESCRIBE" },
+      { "id": "B-Q10a", "rows": 1, "serverMs": 0, "wallMs": 49.548532000000705 },
+      { "id": "B-Q10b", "rows": 0, "serverMs": 0, "wallMs": 43.16161899999861 },
+      { "id": "B-Q10c", "rows": 5, "serverMs": 0, "wallMs": 46.68134000000282 },
+      { "id": "B-Q11a", "rows": 10, "serverMs": 0.17676699999901757, "wallMs": 47.430177000002004 },
+      { "id": "B-Q11b", "rows": 10, "serverMs": 0.6888087499992253, "wallMs": 43.39076000000205 },
+      { "id": "B-Q11c", "rows": 10, "serverMs": 0, "wallMs": 45.80286799999885 },
+      { "id": "B-Q12a", "rows": 8, "serverMs": 0.6076745000009396, "wallMs": 45.02305899999919 },
+      { "id": "B-Q12b", "rows": 8, "serverMs": 0, "wallMs": 45.457300999994914 },
+      { "id": "B-Q12c", "rows": 8, "serverMs": 0.0024490000014338875, "wallMs": 44.350407999998424 }
+    ]
+  },
+  "q-dblp6m-h0": {
+    "build": "1791873400",
+    "at": "2026-10-13T06:40:26.236Z",
+    "queries": [
+      { "id": "D1-lookup", "rows": 1, "serverMs": 0, "wallMs": 35.76685399999997 },
+      { "id": "D2-star", "rows": 1, "serverMs": 0.07097550000003139, "wallMs": 34.327643999999964 },
+      { "id": "D3-authors-of-pub", "rows": 5, "serverMs": 0.07447550000000547, "wallMs": 34.41280699999993 },
+      { "id": "D4-pubs-of-author", "rows": 560, "serverMs": 8.777777249999986, "wallMs": 48.95237300000008 },
+      { "id": "D5-coauthors", "rows": 20, "serverMs": 3.3252959999999803, "wallMs": 38.79039199999988 },
+      { "id": "D6-per-year", "rows": 65, "serverMs": 11.639830000000075, "wallMs": 48.84413699999959 },
+      { "id": "D7-per-type-venue", "rows": 20, "serverMs": 167.8518015000002, "wallMs": 215.8849479999999 },
+      { "id": "D8-text", "rows": 100, "serverMs": 2952.4591145, "wallMs": 2974.8448679999983 },
+      {
+        "id": "D9-text-year",
+        "error": "non-json 500: <!DOCTYPE html>\n<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 7]> "
+      },
+      { "id": "D10-prolific", "rows": 10, "serverMs": 3026.3940462500013, "wallMs": 2990.498308000002 },
+      { "id": "D11-no-doi", "rows": 1, "serverMs": 33.08378024999911, "wallMs": 66.19080499999109 },
+      { "id": "D12-path", "rows": 37, "serverMs": 0.45878849999644444, "wallMs": 33.828467000013916 },
+      { "id": "D13-versions", "rows": 100, "serverMs": 8.956272000003082, "wallMs": 42.20337099999597 },
+      { "id": "D14-sameAs-count", "rows": 1, "serverMs": 9.121494250000978, "wallMs": 45.05878500000108 },
+      { "id": "D10r-prolific-const", "rows": 10, "serverMs": 23.182710249999218, "wallMs": 61.82659199999762 },
+      { "id": "D15-describe", "error": "UnsupportedSparqlError: Unsupported SPARQL construct: query type DESCRIBE" },
+      {
+        "id": "D16-regex-quantified",
+        "error": "UnsupportedSparqlError: Unsupported SPARQL construct: REGEX metachar ["
+      },
+      { "id": "D17-datatype", "error": "UnsupportedSparqlError: Unsupported SPARQL construct: function datatype" }
+    ]
+  },
+  "q-dblp6m-h1": {
+    "build": "1791873400",
+    "at": "2026-10-13T06:42:11.888Z",
+    "queries": [
+      { "id": "D1-lookup", "rows": 1, "serverMs": 0, "wallMs": 35.01890400000002 },
+      { "id": "D2-star", "rows": 1, "serverMs": 3.2984595000000354, "wallMs": 36.12857599999984 },
+      { "id": "D3-authors-of-pub", "rows": 5, "serverMs": 0, "wallMs": 34.60982799999988 },
+      { "id": "D4-pubs-of-author", "rows": 560, "serverMs": 10.539603250000027, "wallMs": 44.682550999999876 },
+      { "id": "D5-coauthors", "rows": 20, "serverMs": 3.439468250000118, "wallMs": 36.586031999999705 },
+      { "id": "D6-per-year", "rows": 65, "serverMs": 10.512923249999972, "wallMs": 47.08382500000016 },
+      { "id": "D7-per-type-venue", "rows": 20, "serverMs": 154.24007125000003, "wallMs": 174.54131999999936 },
+      { "id": "D8-text", "rows": 100, "serverMs": 2965.8536347499994, "wallMs": 2713.016762000003 },
+      {
+        "id": "D9-text-year",
+        "error": "non-json 500: <!DOCTYPE html>\n<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 7]> "
+      },
+      { "id": "D10-prolific", "rows": 10, "serverMs": 3339.7109815000003, "wallMs": 3118.7541539999947 },
+      { "id": "D11-no-doi", "rows": 1, "serverMs": 31.014276249999966, "wallMs": 67.68580099999963 },
+      { "id": "D12-path", "rows": 37, "serverMs": 0, "wallMs": 36.58679200000188 },
+      { "id": "D13-versions", "rows": 100, "serverMs": 8.561998249999306, "wallMs": 44.693364999999176 },
+      { "id": "D14-sameAs-count", "rows": 1, "serverMs": 10.617570750000596, "wallMs": 46.29586899999413 },
+      { "id": "D10r-prolific-const", "rows": 10, "serverMs": 31.937321249999513, "wallMs": 64.47394799999893 },
+      { "id": "D15-describe", "error": "UnsupportedSparqlError: Unsupported SPARQL construct: query type DESCRIBE" },
+      {
+        "id": "D16-regex-quantified",
+        "error": "UnsupportedSparqlError: Unsupported SPARQL construct: REGEX metachar ["
+      },
+      { "id": "D17-datatype", "error": "UnsupportedSparqlError: Unsupported SPARQL construct: function datatype" }
+    ]
+  },
+  "q-lubm10-h0": {
+    "build": "1791873400",
+    "at": "2026-10-13T06:37:30.860Z",
+    "queries": [
+      { "id": "L-Q1", "rows": 4, "serverMs": 5.672751000000034, "wallMs": 34.07891899999993 },
+      { "id": "L-Q2", "rows": 28, "serverMs": 40.601256000000035, "wallMs": 74.34077699999989 },
+      { "id": "L-Q3", "rows": 6, "serverMs": 16.626572750000037, "wallMs": 45.14385799999991 },
+      { "id": "L-Q4", "rows": 0, "serverMs": 62.152372249999985, "wallMs": 93.61720800000012 },
+      { "id": "L-Q5", "rows": 0, "serverMs": 0.021661250000079235, "wallMs": 28.815058000000136 },
+      { "id": "L-Q6", "rows": 0, "serverMs": 0.10225900000000365, "wallMs": 27.28701799999999 },
+      { "id": "L-Q7", "rows": 0, "serverMs": 69.35178825000003, "wallMs": 94.07710800000041 },
+      { "id": "L-Q8", "rows": 0, "serverMs": 60.352820500000234, "wallMs": 96.57533199999853 },
+      { "id": "L-Q9", "rows": 0, "serverMs": 64.6262714999998, "wallMs": 95.08600900000056 },
+      { "id": "L-Q10", "rows": 0, "serverMs": 0, "wallMs": 28.992142000000968 },
+      { "id": "L-Q11", "rows": 0, "serverMs": 0.13936250000006112, "wallMs": 30.01067200000034 },
+      { "id": "L-Q12", "rows": 0, "serverMs": 76.64918149999994, "wallMs": 93.89804100000038 },
+      { "id": "L-Q13", "rows": 0, "serverMs": 0, "wallMs": 28.105915000000095 },
+      { "id": "L-Q14", "rows": 75547, "serverMs": 86.2230770000001, "wallMs": 256.8019370000002 }
+    ]
+  },
+  "q-lubm10-h1": {
+    "build": "1791873400",
+    "at": "2026-10-13T06:37:47.481Z",
+    "queries": [
+      { "id": "L-Q1", "rows": 4, "serverMs": 0.37523250000000985, "wallMs": 28.84787700000004 },
+      { "id": "L-Q2", "rows": 28, "serverMs": 4.803327749999994, "wallMs": 32.945920000000115 },
+      { "id": "L-Q3", "rows": 6, "serverMs": 0, "wallMs": 28.415647000000035 },
+      { "id": "L-Q4", "rows": 0, "serverMs": 64.37884799999995, "wallMs": 100.46134900000015 },
+      { "id": "L-Q5", "rows": 0, "serverMs": 0.21249524999996083, "wallMs": 29.120454000000336 },
+      { "id": "L-Q6", "rows": 0, "serverMs": 0, "wallMs": 30.155972999999904 },
+      { "id": "L-Q7", "rows": 0, "serverMs": 64.93604649999997, "wallMs": 101.58743099999992 },
+      { "id": "L-Q8", "rows": 0, "serverMs": 64.56665099999987, "wallMs": 102.80375100000037 },
+      { "id": "L-Q9", "rows": 0, "serverMs": 70.98199299999987, "wallMs": 95.42328500000076 },
+      { "id": "L-Q10", "rows": 0, "serverMs": 0, "wallMs": 30.133536000001186 },
+      { "id": "L-Q11", "rows": 0, "serverMs": 0.8350697499995476, "wallMs": 29.203019000000495 },
+      { "id": "L-Q12", "rows": 0, "serverMs": 60.1765927499996, "wallMs": 96.34776000000056 },
+      { "id": "L-Q13", "rows": 0, "serverMs": 0.012862749999840162, "wallMs": 29.690910999999687 },
+      { "id": "L-Q14", "rows": 75547, "serverMs": 87.4105454999999, "wallMs": 265.01756000000023 }
+    ]
+  },
+  "q-lubm10rdfs-h0": {
+    "build": "1791873400",
+    "at": "2026-10-13T06:38:13.213Z",
+    "queries": [
+      { "id": "L-Q1", "rows": 4, "serverMs": 6.605076999999994, "wallMs": 37.62706400000002 },
+      { "id": "L-Q2", "rows": 28, "serverMs": 77.56421725000001, "wallMs": 106.76028699999983 },
+      { "id": "L-Q3", "rows": 6, "serverMs": 22.999118000000067, "wallMs": 52.28967599999987 },
+      { "id": "L-Q4", "rows": 34, "serverMs": 1.6493292499997096, "wallMs": 32.85209300000042 },
+      { "id": "L-Q5", "rows": 719, "serverMs": 32.325960749999695, "wallMs": 67.31837700000051 },
+      { "id": "L-Q6", "rows": 75547, "serverMs": 126.7130715000003, "wallMs": 290.039487 },
+      { "id": "L-Q7", "rows": 59, "serverMs": 0.2062940000000708, "wallMs": 29.61684299999979 },
+      { "id": "L-Q8", "rows": 5916, "serverMs": 113.4065955000001, "wallMs": 151.21227699999872 },
+      { "id": "L-Q9", "rows": 1233, "serverMs": 104.15210275000027, "wallMs": 147.11261000000013 },
+      { "id": "L-Q10", "rows": 0, "serverMs": 21.832112250000137, "wallMs": 50.834835000001476 },
+      { "id": "L-Q11", "rows": 0, "serverMs": 0.8212017499990907, "wallMs": 31.01696300000185 },
+      { "id": "L-Q12", "rows": 0, "serverMs": 110.38610475000041, "wallMs": 140.7806789999995 },
+      { "id": "L-Q13", "rows": 0, "serverMs": 0.18038274999980786, "wallMs": 28.892048999998224 },
+      { "id": "L-Q14", "rows": 75547, "serverMs": 128.97530174999974, "wallMs": 274.70698300000004 }
+    ]
+  },
+  "q-lubm10rdfs-h1": {
+    "build": "1791873400",
+    "at": "2026-10-13T06:38:33.915Z",
+    "queries": [
+      { "id": "L-Q1", "rows": 4, "serverMs": 0.2722147500000176, "wallMs": 31.31596599999989 },
+      { "id": "L-Q2", "rows": 28, "serverMs": 7.981011999999964, "wallMs": 40.66679700000009 },
+      { "id": "L-Q3", "rows": 6, "serverMs": 0, "wallMs": 34.05784100000005 },
+      { "id": "L-Q4", "rows": 34, "serverMs": 0, "wallMs": 31.399607999999716 },
+      { "id": "L-Q5", "rows": 719, "serverMs": 1.6605557499999577, "wallMs": 33.020198000000164 },
+      { "id": "L-Q6", "rows": 75547, "serverMs": 124.77452999999991, "wallMs": 271.1329370000003 },
+      { "id": "L-Q7", "rows": 59, "serverMs": 0, "wallMs": 33.042404999999235 },
+      { "id": "L-Q8", "rows": 5916, "serverMs": 26.085509000000002, "wallMs": 64.05209099999956 },
+      { "id": "L-Q9", "rows": 1233, "serverMs": 114.19165649999968, "wallMs": 150.14380300000084 },
+      { "id": "L-Q10", "rows": 0, "serverMs": 0, "wallMs": 29.908157999998366 },
+      { "id": "L-Q11", "rows": 0, "serverMs": 0, "wallMs": 30.12510199999997 },
+      { "id": "L-Q12", "rows": 0, "serverMs": 107.99207200000001, "wallMs": 140.3924619999998 },
+      { "id": "L-Q13", "rows": 0, "serverMs": 0, "wallMs": 30.757402000001093 },
+      { "id": "L-Q14", "rows": 75547, "serverMs": 158.81076800000028, "wallMs": 294.33331700000053 }
+    ]
+  },
+  "q-watdiv10-h0": {
+    "build": "1791873400",
+    "at": "2026-10-13T06:39:14.255Z",
+    "queries": [
+      { "id": "W-L1a", "rows": 2, "serverMs": 0, "wallMs": 30.919388000000026 },
+      { "id": "W-L1b", "rows": 2, "serverMs": 0.2996372499999893, "wallMs": 29.312419999999975 },
+      { "id": "W-L2a", "rows": 31, "serverMs": 0.7378252499999576, "wallMs": 31.59276399999999 },
+      { "id": "W-L2b", "rows": 7, "serverMs": 0.6425980000000777, "wallMs": 29.403311999999687 },
+      { "id": "W-L3a", "rows": 33, "serverMs": 0, "wallMs": 33.93853100000024 },
+      { "id": "W-L4a", "rows": 5, "serverMs": 0.19528524999998353, "wallMs": 30.491695000000163 },
+      { "id": "W-L5a", "rows": 22, "serverMs": 1.8143110000000888, "wallMs": 33.312566999999945 },
+      { "id": "W-L5b", "rows": 6, "serverMs": 0.5903215000000728, "wallMs": 30.869480999999723 },
+      { "id": "W-S1a", "rows": 9, "serverMs": 0.709422499999846, "wallMs": 29.327691000000414 },
+      { "id": "W-S1b", "rows": 0, "serverMs": 0, "wallMs": 30.562474999999722 },
+      { "id": "W-S1c", "rows": 15, "serverMs": 0.36311974999989616, "wallMs": 31.928209000000606 },
+      { "id": "W-S2a", "rows": 0, "serverMs": 0.4073969999999463, "wallMs": 28.161090999999942 },
+      { "id": "W-S2b", "rows": 1, "serverMs": 0, "wallMs": 31.448064999999588 },
+      { "id": "W-S3a", "rows": 0, "serverMs": 0.16954324999983328, "wallMs": 28.34913300000062 },
+      { "id": "W-S3b", "rows": 0, "serverMs": 0, "wallMs": 29.45251499999995 },
+      { "id": "W-S4a", "rows": 0, "serverMs": 0.08941800000002331, "wallMs": 30.398537000000033 },
+      { "id": "W-S5a", "rows": 0, "serverMs": 0.18510700000024372, "wallMs": 28.444009999999253 },
+      { "id": "W-S5b", "rows": 0, "serverMs": 0, "wallMs": 30.278599999999642 },
+      { "id": "W-S6a", "rows": 1, "serverMs": 0, "wallMs": 30.97088199999962 },
+      { "id": "W-S6b", "rows": 1, "serverMs": 0.2700097500000993, "wallMs": 30.16556599999967 },
+      { "id": "W-S7a", "rows": 0, "serverMs": 0.21531575000017256, "wallMs": 30.023087999999916 },
+      { "id": "W-S7b", "rows": 0, "serverMs": 0, "wallMs": 29.58509199999935 },
+      { "id": "W-F1a", "rows": 0, "serverMs": 0.6055317499999546, "wallMs": 29.31040899999971 },
+      { "id": "W-F1b", "rows": 0, "serverMs": 0.10628200000019206, "wallMs": 30.131741999999576 },
+      { "id": "W-F2a", "rows": 1, "serverMs": 0.7904082499999276, "wallMs": 29.723653999999442 },
+      { "id": "W-F3a", "rows": 6, "serverMs": 0.5451889999999366, "wallMs": 31.082212999999683 },
+      { "id": "W-F3b", "rows": 0, "serverMs": 0.04379625000046872, "wallMs": 29.769866999999067 },
+      { "id": "W-F4a", "rows": 0, "serverMs": 0.4019547500001863, "wallMs": 29.77596799999992 },
+      { "id": "W-F4b", "rows": 0, "serverMs": 0.29559000000017477, "wallMs": 28.324665000000095 },
+      { "id": "W-F4c", "rows": 27, "serverMs": 0.8299287499999082, "wallMs": 30.859644000000117 },
+      { "id": "W-F5a", "rows": 27, "serverMs": 0.13361649999978908, "wallMs": 32.757376999999906 },
+      { "id": "W-F5b", "rows": 37, "serverMs": 0.7102385000002869, "wallMs": 32.09570100000019 },
+      { "id": "W-F5c", "rows": 31, "serverMs": 0.10601599999927203, "wallMs": 34.53782500000125 },
+      { "id": "W-C1a", "rows": 0, "serverMs": 156.65428775000055, "wallMs": 197.41385699999955 },
+      { "id": "W-C2a", "rows": 0, "serverMs": 145.54844500000036, "wallMs": 173.71485299999767 },
+      { "id": "W-C3a", "rows": 51852, "serverMs": 583.0379442499989, "wallMs": 739.0866040000001 }
+    ]
+  },
+  "q-watdiv10-h1": {
+    "build": "1791873400",
+    "at": "2026-10-13T06:39:37.206Z",
+    "queries": [
+      { "id": "W-L1a", "rows": 2, "serverMs": 0, "wallMs": 31.327719000000002 },
+      { "id": "W-L1b", "rows": 2, "serverMs": 0, "wallMs": 30.09495599999991 },
+      { "id": "W-L2a", "rows": 31, "serverMs": 2.801106250000032, "wallMs": 31.354888999999957 },
+      { "id": "W-L2b", "rows": 7, "serverMs": 0, "wallMs": 28.93829800000003 },
+      { "id": "W-L3a", "rows": 33, "serverMs": 0, "wallMs": 29.072657000000163 },
+      { "id": "W-L4a", "rows": 5, "serverMs": 0.22963924999999108, "wallMs": 27.931180999999924 },
+      { "id": "W-L5a", "rows": 22, "serverMs": 2.2257242500000984, "wallMs": 31.909043999999994 },
+      { "id": "W-L5b", "rows": 6, "serverMs": 0.7936712499999885, "wallMs": 29.48143600000003 },
+      { "id": "W-S1a", "rows": 9, "serverMs": 0, "wallMs": 29.92842499999915 },
+      { "id": "W-S1b", "rows": 0, "serverMs": 0, "wallMs": 28.700254000000314 },
+      { "id": "W-S1c", "rows": 15, "serverMs": 1.3379527499998858, "wallMs": 30.508303000000524 },
+      { "id": "W-S2a", "rows": 0, "serverMs": 0.20610225000018545, "wallMs": 27.920428999999785 },
+      { "id": "W-S2b", "rows": 1, "serverMs": 0.13879824999980883, "wallMs": 28.073954000000413 },
+      { "id": "W-S3a", "rows": 0, "serverMs": 0, "wallMs": 29.17782399999942 },
+      { "id": "W-S3b", "rows": 0, "serverMs": 0.07166525000002366, "wallMs": 28.792113999999856 },
+      { "id": "W-S4a", "rows": 0, "serverMs": 0, "wallMs": 29.153612999999496 },
+      { "id": "W-S5a", "rows": 0, "serverMs": 0.03270625000027394, "wallMs": 28.105826999999408 },
+      { "id": "W-S5b", "rows": 0, "serverMs": 0, "wallMs": 29.56342500000028 },
+      { "id": "W-S6a", "rows": 1, "serverMs": 0, "wallMs": 29.340667000000394 },
+      { "id": "W-S6b", "rows": 1, "serverMs": 0, "wallMs": 29.687387000001763 },
+      { "id": "W-S7a", "rows": 0, "serverMs": 0, "wallMs": 29.172390999998242 },
+      { "id": "W-S7b", "rows": 0, "serverMs": 0.21300550000023577, "wallMs": 27.599997999999687 },
+      { "id": "W-F1a", "rows": 0, "serverMs": 0.2756672499999695, "wallMs": 27.543123999999807 },
+      { "id": "W-F1b", "rows": 0, "serverMs": 0.5055680000000393, "wallMs": 28.489471000000776 },
+      { "id": "W-F2a", "rows": 1, "serverMs": 0.05979849999994258, "wallMs": 29.806880000000092 },
+      { "id": "W-F3a", "rows": 6, "serverMs": 0.652772499999628, "wallMs": 28.445824000000357 },
+      { "id": "W-F3b", "rows": 0, "serverMs": 0, "wallMs": 29.915576000001238 },
+      { "id": "W-F4a", "rows": 0, "serverMs": 0.30349775000013324, "wallMs": 27.83555499999966 },
+      { "id": "W-F4b", "rows": 0, "serverMs": 0, "wallMs": 28.246949999998833 },
+      { "id": "W-F4c", "rows": 27, "serverMs": 0.6172575000000506, "wallMs": 28.84870299999966 },
+      { "id": "W-F5a", "rows": 27, "serverMs": 0.3647812500003056, "wallMs": 28.866031999999905 },
+      { "id": "W-F5b", "rows": 37, "serverMs": 0.7127540000001318, "wallMs": 29.168244000000414 },
+      { "id": "W-F5c", "rows": 31, "serverMs": 0.6718240000000151, "wallMs": 28.6792089999999 },
+      { "id": "W-C1a", "rows": 0, "serverMs": 0.36322824999979275, "wallMs": 30.314786000000822 },
+      { "id": "W-C2a", "rows": 0, "serverMs": 41.79829450000034, "wallMs": 69.68702499999927 },
+      { "id": "W-C3a", "rows": 51852, "serverMs": 169.74496374999944, "wallMs": 244.6111720000008 }
+    ]
+  },
+  "q-watdiv50-h0": {
+    "build": "1791873400",
+    "at": "2026-10-13T06:41:19.507Z",
+    "queries": [
+      { "id": "W-L1a", "rows": 3, "serverMs": 0, "wallMs": 34.095560999999975 },
+      { "id": "W-L1b", "rows": 3, "serverMs": 0.5419165000000135, "wallMs": 31.893311999999924 },
+      { "id": "W-L1c", "rows": 2, "serverMs": 0.7007222499998988, "wallMs": 32.73822000000018 },
+      { "id": "W-L2a", "rows": 2, "serverMs": 0.6375767500001075, "wallMs": 33.209899999999834 },
+      { "id": "W-L2b", "rows": 9, "serverMs": 1.4853297499998916, "wallMs": 32.61711000000014 },
+      { "id": "W-L2c", "rows": 116, "serverMs": 3.195769999999925, "wallMs": 33.28040899999996 },
+      { "id": "W-L3a", "rows": 15, "serverMs": 0, "wallMs": 32.66366400000015 },
+      { "id": "W-L3b", "rows": 29, "serverMs": 0.7959534999997686, "wallMs": 31.654897000000346 },
+      { "id": "W-L4a", "rows": 32, "serverMs": 0.21951100000001134, "wallMs": 34.43503199999941 },
+      { "id": "W-L4b", "rows": 29, "serverMs": 0, "wallMs": 34.430113999999776 },
+      { "id": "W-L5a", "rows": 3, "serverMs": 0, "wallMs": 33.26927099999921 },
+      { "id": "W-L5b", "rows": 8, "serverMs": 0.1108512499997687, "wallMs": 31.932913000000553 },
+      { "id": "W-L5c", "rows": 127, "serverMs": 10.575389000000314, "wallMs": 43.56880899999942 },
+      { "id": "W-S1a", "rows": 12, "serverMs": 0.5380777499999567, "wallMs": 32.28069599999981 },
+      { "id": "W-S1b", "rows": 5, "serverMs": 0, "wallMs": 31.18109100000038 },
+      { "id": "W-S1c", "rows": 0, "serverMs": 0.25839274999952977, "wallMs": 31.000873000000865 },
+      { "id": "W-S2a", "rows": 8, "serverMs": 0.11590175000037561, "wallMs": 33.63584699999956 },
+      { "id": "W-S3a", "rows": 0, "serverMs": 3.344959750000271, "wallMs": 31.31670800000029 },
+      { "id": "W-S4a", "rows": 1, "serverMs": 3.7595647499992992, "wallMs": 35.49994500000139 },
+      { "id": "W-S5a", "rows": 0, "serverMs": 0, "wallMs": 31.73968000000059 },
+      { "id": "W-S6a", "rows": 8, "serverMs": 0.5784647499999664, "wallMs": 31.829311999999845 },
+      { "id": "W-S6b", "rows": 0, "serverMs": 0.6343510000001515, "wallMs": 29.039416999999958 },
+      { "id": "W-S6c", "rows": 0, "serverMs": 0.08121024999991278, "wallMs": 29.978659000000334 },
+      { "id": "W-S7a", "rows": 1, "serverMs": 0, "wallMs": 32.214842999999746 },
+      { "id": "W-S7b", "rows": 1, "serverMs": 0, "wallMs": 33.69795900000099 },
+      { "id": "W-S7c", "rows": 0, "serverMs": 0.14186649999965084, "wallMs": 30.623060000001715 },
+      { "id": "W-F1a", "rows": 0, "serverMs": 4.108289000000241, "wallMs": 33.450628999999026 },
+      { "id": "W-F1b", "rows": 0, "serverMs": 3.0635769999998956, "wallMs": 32.67844399999922 },
+      { "id": "W-F1c", "rows": 0, "serverMs": 2.8427977499995905, "wallMs": 33.5026510000007 },
+      { "id": "W-F2a", "rows": 6, "serverMs": 2.0228377500002352, "wallMs": 34.27456799999891 },
+      { "id": "W-F2b", "rows": 0, "serverMs": 0, "wallMs": 29.988729000000603 },
+      { "id": "W-F3a", "rows": 8, "serverMs": 1.9477784999990035, "wallMs": 36.85290900000109 },
+      { "id": "W-F3b", "rows": 0, "serverMs": 0, "wallMs": 32.04881899999964 },
+      { "id": "W-F3c", "rows": 0, "serverMs": 0, "wallMs": 29.916755999998713 },
+      { "id": "W-F4a", "rows": 0, "serverMs": 0.4707132499997897, "wallMs": 31.336787000000186 },
+      { "id": "W-F4b", "rows": 56, "serverMs": 1.0437377500002185, "wallMs": 32.927231999998185 },
+      { "id": "W-F4c", "rows": 65, "serverMs": 0.6823749999994106, "wallMs": 33.02207400000043 },
+      { "id": "W-F5a", "rows": 66, "serverMs": 0.8735139999998864, "wallMs": 34.735051999999996 },
+      { "id": "W-F5b", "rows": 48, "serverMs": 0.7999827499997991, "wallMs": 32.27977000000101 },
+      { "id": "W-F5c", "rows": 63, "serverMs": 1.2767874999990454, "wallMs": 32.53435400000308 },
+      { "id": "W-C1a", "rows": 0, "serverMs": 1196.9801487500008, "wallMs": 1207.1459570000006 },
+      { "id": "W-C2a", "rows": 2, "serverMs": 605.924543000001, "wallMs": 520.5063630000004 },
+      { "id": "W-C3a", "rows": 213730, "serverMs": 3115.6184974999996, "wallMs": 4464.632157999993 }
+    ]
+  },
+  "q-watdiv50-h1": {
+    "build": "1791873400",
+    "at": "2026-10-13T06:41:57.206Z",
+    "queries": [
+      { "id": "W-L1a", "rows": 3, "serverMs": 0, "wallMs": 30.10389799999996 },
+      { "id": "W-L1b", "rows": 3, "serverMs": 0, "wallMs": 29.392798999999968 },
+      { "id": "W-L1c", "rows": 2, "serverMs": 0, "wallMs": 29.263091999999915 },
+      { "id": "W-L2a", "rows": 2, "serverMs": 0, "wallMs": 30.18778199999997 },
+      { "id": "W-L2b", "rows": 9, "serverMs": 0.1755200000000059, "wallMs": 29.58942799999977 },
+      { "id": "W-L2c", "rows": 116, "serverMs": 10.169546999999966, "wallMs": 37.630447000000004 },
+      { "id": "W-L3a", "rows": 15, "serverMs": 0.2619957499998691, "wallMs": 28.332794000000376 },
+      { "id": "W-L3b", "rows": 29, "serverMs": 0.6878672499999539, "wallMs": 27.796770999999808 },
+      { "id": "W-L4a", "rows": 32, "serverMs": 0.6720605000000432, "wallMs": 29.50355899999977 },
+      { "id": "W-L4b", "rows": 29, "serverMs": 3.689917499999865, "wallMs": 32.46412700000019 },
+      { "id": "W-L5a", "rows": 3, "serverMs": 1.4481725000000552, "wallMs": 33.83709499999986 },
+      { "id": "W-L5b", "rows": 8, "serverMs": 0, "wallMs": 32.72037700000055 },
+      { "id": "W-L5c", "rows": 127, "serverMs": 11.077265249999982, "wallMs": 41.810309999999845 },
+      { "id": "W-S1a", "rows": 12, "serverMs": 0.005027250000011918, "wallMs": 29.93818899999951 },
+      { "id": "W-S1b", "rows": 5, "serverMs": 0.13256300000011834, "wallMs": 29.22567799999979 },
+      { "id": "W-S1c", "rows": 0, "serverMs": 0.1704592500000217, "wallMs": 28.062541000000238 },
+      { "id": "W-S2a", "rows": 8, "serverMs": 0.5196415000000343, "wallMs": 28.149013000000195 },
+      { "id": "W-S3a", "rows": 0, "serverMs": 1.6487185000000864, "wallMs": 31.31267999999909 },
+      { "id": "W-S4a", "rows": 1, "serverMs": 1.4109745000000657, "wallMs": 30.70262299999922 },
+      { "id": "W-S5a", "rows": 0, "serverMs": 0.9337354999997842, "wallMs": 29.32997400000022 },
+      { "id": "W-S6a", "rows": 8, "serverMs": 0.23769224999978178, "wallMs": 29.28735400000005 },
+      { "id": "W-S6b", "rows": 0, "serverMs": 0, "wallMs": 28.453198999999586 },
+      { "id": "W-S6c", "rows": 0, "serverMs": 0.11957275000031586, "wallMs": 27.91864799999894 },
+      { "id": "W-S7a", "rows": 1, "serverMs": 0.07432125000013912, "wallMs": 28.574963999999454 },
+      { "id": "W-S7b", "rows": 1, "serverMs": 0, "wallMs": 29.714222000000518 },
+      { "id": "W-S7c", "rows": 0, "serverMs": 0.18726849999984552, "wallMs": 27.048361000001023 },
+      { "id": "W-F1a", "rows": 0, "serverMs": 0.16983600000003207, "wallMs": 27.813254999999117 },
+      { "id": "W-F1b", "rows": 0, "serverMs": 0, "wallMs": 28.444478999999774 },
+      { "id": "W-F1c", "rows": 0, "serverMs": 0.05298349999975471, "wallMs": 28.19760900000074 },
+      { "id": "W-F2a", "rows": 6, "serverMs": 0.9600917500001742, "wallMs": 28.415811999999278 },
+      { "id": "W-F2b", "rows": 0, "serverMs": 0.027166749999651074, "wallMs": 27.432898000000932 },
+      { "id": "W-F3a", "rows": 8, "serverMs": 2.126224000000093, "wallMs": 30.586902999999438 },
+      { "id": "W-F3b", "rows": 0, "serverMs": 0, "wallMs": 27.983249999999316 },
+      { "id": "W-F3c", "rows": 0, "serverMs": 0.020133250000071712, "wallMs": 28.39967599999909 },
+      { "id": "W-F4a", "rows": 0, "serverMs": 0.49032600000055027, "wallMs": 27.426187999999456 },
+      { "id": "W-F4b", "rows": 56, "serverMs": 1.0422522500002742, "wallMs": 28.673604999999952 },
+      { "id": "W-F4c", "rows": 65, "serverMs": 0.8134652499993535, "wallMs": 31.774891000000935 },
+      { "id": "W-F5a", "rows": 66, "serverMs": 0.988540749999629, "wallMs": 29.60586300000068 },
+      { "id": "W-F5b", "rows": 48, "serverMs": 0.8367517500009853, "wallMs": 28.439567999997962 },
+      { "id": "W-F5c", "rows": 63, "serverMs": 0.8675912499993501, "wallMs": 29.467616000001726 },
+      { "id": "W-C1a", "rows": 0, "serverMs": 6.389951999999539, "wallMs": 34.92171900000176 },
+      { "id": "W-C2a", "rows": 2, "serverMs": 29.551001499999984, "wallMs": 65.47720499999923 },
+      { "id": "W-C3a", "rows": 213730, "serverMs": 592.7691327500015, "wallMs": 864.049450999999 }
+    ]
+  },
+  "q-lubm10-baseline": {
+    "build": "1791872891",
+    "at": "2026-10-13T06:30:40.263Z",
+    "queries": [
+      {
+        "id": "L-Q1",
+        "rows": 4,
+        "serverMs": 3.8419847499999378,
+        "wallMs": 39.84146400000009,
+        "prefix": [
+          {
+            "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+            "estimate": 7,
+            "actual": 24019,
+            "ms": 41
+          },
+          {
+            "step": "SEARCH q1 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 7,
+            "actual": 4,
+            "ms": 44
+          }
+        ]
+      },
+      {
+        "id": "L-Q2",
+        "rows": 28,
+        "serverMs": 39.655315500000086,
+        "wallMs": 86.670703,
+        "prefix": [
+          {
+            "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+            "estimate": 7,
+            "actual": 24019,
+            "ms": 34
+          },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 14, "actual": 24019, "ms": 41 },
+          {
+            "step": "SEARCH q2 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 14,
+            "actual": 24019,
+            "ms": 53
+          },
+          { "step": "SEARCH q5 USING PRIMARY KEY (s=? AND p=?)", "estimate": 28, "actual": 24019, "ms": 57 },
+          {
+            "step": "SEARCH q1 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 28,
+            "actual": 24019,
+            "ms": 79
+          },
+          {
+            "step": "SEARCH q4 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 28,
+            "actual": 28,
+            "ms": 91
+          }
+        ]
+      },
+      {
+        "id": "L-Q3",
+        "rows": 6,
+        "serverMs": 14.959611750000022,
+        "wallMs": 52.829087999999956,
+        "prefix": [
+          {
+            "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+            "estimate": 7,
+            "actual": 76529,
+            "ms": 35
+          },
+          {
+            "step": "SEARCH q1 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 7,
+            "actual": 6,
+            "ms": 61
+          }
+        ]
+      },
+      {
+        "id": "L-Q4",
+        "rows": 0,
+        "serverMs": 0.08139299999993455,
+        "wallMs": 33.38781300000028,
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 7, "actual": 0, "ms": 35 },
+          {
+            "step": "SEARCH q1 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 7,
+            "actual": 0,
+            "ms": 32
+          },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 14, "actual": 0, "ms": 32 },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 28, "actual": 0, "ms": 31 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 56, "actual": 0, "ms": 31 }
+        ]
+      },
+      {
+        "id": "L-Q5",
+        "rows": 0,
+        "serverMs": 0,
+        "wallMs": 33.618749999999636,
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 7, "actual": 0, "ms": 47 },
+          {
+            "step": "SEARCH q1 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 7,
+            "actual": 0,
+            "ms": 37
+          }
+        ]
+      },
+      {
+        "id": "L-Q6",
+        "rows": 0,
+        "serverMs": 0.37022924999996576,
+        "wallMs": 31.893888999999945,
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 7, "actual": 0, "ms": 35 }
+        ]
+      },
+      {
+        "id": "L-Q7",
+        "rows": 0,
+        "serverMs": 0,
+        "wallMs": 33.36243800000011,
+        "prefix": [
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 2, "actual": 4, "ms": 35 },
+          {
+            "step": "SEARCH q1 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 2,
+            "actual": 2,
+            "ms": 39
+          },
+          { "step": "SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 14, "actual": 59, "ms": 35 },
+          {
+            "step": "SEARCH q0 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 14,
+            "actual": 0,
+            "ms": 35
+          }
+        ]
+      },
+      {
+        "id": "L-Q8",
+        "rows": 0,
+        "serverMs": 0,
+        "wallMs": 37.906307999999626,
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 7, "actual": 0, "ms": 30 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 14, "actual": 0, "ms": 35 },
+          {
+            "step": "SEARCH q1 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 14,
+            "actual": 0,
+            "ms": 40
+          },
+          {
+            "step": "SEARCH q3 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 14,
+            "actual": 0,
+            "ms": 37
+          },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 28, "actual": 0, "ms": 37 }
+        ]
+      },
+      {
+        "id": "L-Q9",
+        "rows": 0,
+        "serverMs": 0.3245830000000751,
+        "wallMs": 31.95504399999936,
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 7, "actual": 0, "ms": 33 },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 14, "actual": 0, "ms": 33 },
+          {
+            "step": "SEARCH q1 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 14,
+            "actual": 0,
+            "ms": 40
+          },
+          { "step": "SEARCH q5 USING PRIMARY KEY (s=? AND p=?)", "estimate": 28, "actual": 0, "ms": 39 },
+          {
+            "step": "SEARCH q2 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 28,
+            "actual": 0,
+            "ms": 41
+          },
+          {
+            "step": "SEARCH q4 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 28,
+            "actual": 0,
+            "ms": 35
+          }
+        ]
+      },
+      {
+        "id": "L-Q10",
+        "rows": 0,
+        "serverMs": 0.063248749999957,
+        "wallMs": 31.768804000000273,
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 7, "actual": 0, "ms": 33 },
+          {
+            "step": "SEARCH q1 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 7,
+            "actual": 0,
+            "ms": 34
+          }
+        ]
+      },
+      {
+        "id": "L-Q11",
+        "rows": 0,
+        "serverMs": 0,
+        "wallMs": 33.31237400000009,
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 7, "actual": 2827, "ms": 31 },
+          {
+            "step": "SEARCH q1 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 7,
+            "actual": 0,
+            "ms": 33
+          }
+        ]
+      },
+      {
+        "id": "L-Q12",
+        "rows": 0,
+        "serverMs": 0.30911399999990863,
+        "wallMs": 31.969285000000127,
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 7, "actual": 0, "ms": 31 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 14, "actual": 0, "ms": 30 },
+          {
+            "step": "SEARCH q1 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 14,
+            "actual": 0,
+            "ms": 30
+          },
+          {
+            "step": "SEARCH q3 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 14,
+            "actual": 0,
+            "ms": 31
+          }
+        ]
+      },
+      {
+        "id": "L-Q13",
+        "rows": 0,
+        "serverMs": 0,
+        "wallMs": 31.28933600000164,
+        "prefix": [
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 2, "actual": 0, "ms": 32 },
+          {
+            "step": "SEARCH q0 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 2,
+            "actual": 0,
+            "ms": 31
+          }
+        ]
+      },
+      {
+        "id": "L-Q14",
+        "rows": 75547,
+        "serverMs": 87.57066350000014,
+        "wallMs": 273.05593000000044,
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 7, "actual": 75547, "ms": 41 }
+        ]
+      }
+    ]
+  },
+  "q-lubm10rdfs-baseline": {
+    "build": "1791872891",
+    "at": "2026-10-13T06:31:53.531Z",
+    "queries": [
+      {
+        "id": "L-Q1",
+        "rows": 4,
+        "serverMs": 6.604692999999941,
+        "wallMs": 38.74710700000014,
+        "prefix": [
+          {
+            "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+            "estimate": 9,
+            "actual": 24019,
+            "ms": 34
+          },
+          {
+            "step": "SEARCH q1 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 9,
+            "actual": 4,
+            "ms": 38
+          }
+        ]
+      },
+      {
+        "id": "L-Q2",
+        "rows": 28,
+        "serverMs": 79.42696200000006,
+        "wallMs": 111.36080599999991,
+        "prefix": [
+          {
+            "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+            "estimate": 9,
+            "actual": 24019,
+            "ms": 31
+          },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 18, "actual": 24019, "ms": 46 },
+          {
+            "step": "SEARCH q2 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 18,
+            "actual": 24019,
+            "ms": 53
+          },
+          { "step": "SEARCH q5 USING PRIMARY KEY (s=? AND p=?)", "estimate": 36, "actual": 24019, "ms": 66 },
+          {
+            "step": "SEARCH q1 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 36,
+            "actual": 24019,
+            "ms": 82
+          },
+          {
+            "step": "SEARCH q4 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 36,
+            "actual": 28,
+            "ms": 112
+          }
+        ]
+      },
+      {
+        "id": "L-Q3",
+        "rows": 6,
+        "serverMs": 22.468100250000134,
+        "wallMs": 55.04370699999981,
+        "prefix": [
+          {
+            "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+            "estimate": 9,
+            "actual": 76529,
+            "ms": 33
+          },
+          {
+            "step": "SEARCH q1 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 9,
+            "actual": 6,
+            "ms": 52
+          }
+        ]
+      },
+      {
+        "id": "L-Q4",
+        "rows": 34,
+        "serverMs": 1.9207874999999603,
+        "wallMs": 32.91833299999962,
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 9, "actual": 5715, "ms": 30 },
+          {
+            "step": "SEARCH q1 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 9,
+            "actual": 34,
+            "ms": 39
+          },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 18, "actual": 34, "ms": 34 },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 36, "actual": 34, "ms": 38 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 72, "actual": 34, "ms": 30 }
+        ]
+      },
+      {
+        "id": "L-Q5",
+        "rows": 719,
+        "serverMs": 29.39862825000023,
+        "wallMs": 71.70185499999934,
+        "prefix": [
+          {
+            "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+            "estimate": 9,
+            "actual": 106409,
+            "ms": 36
+          },
+          {
+            "step": "SEARCH q1 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 9,
+            "actual": 719,
+            "ms": 62
+          }
+        ]
+      },
+      {
+        "id": "L-Q6",
+        "rows": 75547,
+        "serverMs": 131.31328225000016,
+        "wallMs": 291.3225309999998,
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 9, "actual": 75547, "ms": 40 }
+        ]
+      },
+      {
+        "id": "L-Q7",
+        "rows": 59,
+        "serverMs": 0,
+        "wallMs": 30.004343000000517,
+        "prefix": [
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 2, "actual": 4, "ms": 32 },
+          {
+            "step": "SEARCH q1 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 2,
+            "actual": 4,
+            "ms": 34
+          },
+          { "step": "SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 18, "actual": 67, "ms": 32 },
+          {
+            "step": "SEARCH q0 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 18,
+            "actual": 59,
+            "ms": 36
+          }
+        ]
+      },
+      {
+        "id": "L-Q8",
+        "rows": 5916,
+        "serverMs": 102.83688500000017,
+        "wallMs": 159.1348739999994,
+        "prefix": [
+          {
+            "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+            "estimate": 9,
+            "actual": 75547,
+            "ms": 33
+          },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 18, "actual": 75547, "ms": 68 },
+          {
+            "step": "SEARCH q1 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 18,
+            "actual": 75547,
+            "ms": 104
+          },
+          {
+            "step": "SEARCH q3 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 18,
+            "actual": 5916,
+            "ms": 114
+          },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 36, "actual": 5916, "ms": 127 }
+        ]
+      },
+      {
+        "id": "L-Q9",
+        "rows": 1233,
+        "serverMs": 100.82955175000006,
+        "wallMs": 140.40068799999972,
+        "prefix": [
+          {
+            "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+            "estimate": 9,
+            "actual": 75547,
+            "ms": 34
+          },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 18, "actual": 15236, "ms": 66 },
+          {
+            "step": "SEARCH q1 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 18,
+            "actual": 15236,
+            "ms": 75
+          },
+          { "step": "SEARCH q5 USING PRIMARY KEY (s=? AND p=?)", "estimate": 36, "actual": 45849, "ms": 88 },
+          {
+            "step": "SEARCH q2 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 36,
+            "actual": 45849,
+            "ms": 110
+          },
+          {
+            "step": "SEARCH q4 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 36,
+            "actual": 1233,
+            "ms": 125
+          }
+        ]
+      },
+      {
+        "id": "L-Q10",
+        "rows": 0,
+        "serverMs": 19.47952350000014,
+        "wallMs": 56.34153399999923,
+        "prefix": [
+          {
+            "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+            "estimate": 9,
+            "actual": 75547,
+            "ms": 33
+          },
+          {
+            "step": "SEARCH q1 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 9,
+            "actual": 0,
+            "ms": 58
+          }
+        ]
+      },
+      {
+        "id": "L-Q11",
+        "rows": 0,
+        "serverMs": 1.2427742499994565,
+        "wallMs": 29.98715699999957,
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 9, "actual": 2827, "ms": 28 },
+          {
+            "step": "SEARCH q1 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 9,
+            "actual": 0,
+            "ms": 29
+          }
+        ]
+      },
+      {
+        "id": "L-Q12",
+        "rows": 0,
+        "serverMs": 0,
+        "wallMs": 30.07707400000072,
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 9, "actual": 0, "ms": 34 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 18, "actual": 0, "ms": 34 },
+          {
+            "step": "SEARCH q1 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 18,
+            "actual": 0,
+            "ms": 33
+          },
+          {
+            "step": "SEARCH q3 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 18,
+            "actual": 0,
+            "ms": 29
+          }
+        ]
+      },
+      {
+        "id": "L-Q13",
+        "rows": 0,
+        "serverMs": 0,
+        "wallMs": 30.1068039999991,
+        "prefix": [
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 2, "actual": 0, "ms": 31 },
+          {
+            "step": "SEARCH q0 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 2,
+            "actual": 0,
+            "ms": 29
+          }
+        ]
+      },
+      {
+        "id": "L-Q14",
+        "rows": 75547,
+        "serverMs": 174.1962202499999,
+        "wallMs": 398.3053179999988,
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 9, "actual": 75547, "ms": 35 }
+        ]
+      }
+    ]
+  },
+  "q-watdiv10-baseline": {
+    "build": "1791872891",
+    "at": "2026-10-13T06:32:10.612Z",
+    "queries": [
+      {
+        "id": "W-L1a",
+        "rows": 2,
+        "serverMs": 0.7734535000000164,
+        "wallMs": 32.84420900000009,
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 9, "actual": 29, "ms": 35 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 45, "actual": 33, "ms": 36 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 225, "actual": 2, "ms": 32 }
+        ]
+      },
+      {
+        "id": "W-L1b",
+        "rows": 2,
+        "serverMs": 0,
+        "wallMs": 30.759865999999874,
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 9, "actual": 24, "ms": 31 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 45, "actual": 24, "ms": 31 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 225, "actual": 2, "ms": 37 }
+        ]
+      },
+      {
+        "id": "W-L2a",
+        "rows": 31,
+        "serverMs": 0.0034560000000283253,
+        "wallMs": 32.76884599999994,
+        "prefix": [
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 1, "ms": 35 },
+          { "step": "SEARCH q1 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 45, "actual": 537, "ms": 35 },
+          {
+            "step": "SEARCH q2 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 45,
+            "actual": 31,
+            "ms": 33
+          }
+        ]
+      },
+      {
+        "id": "W-L2b",
+        "rows": 7,
+        "serverMs": 1.0768317499999966,
+        "wallMs": 30.214973999999984,
+        "prefix": [
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 1, "ms": 35 },
+          { "step": "SEARCH q1 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 45, "actual": 537, "ms": 34 },
+          {
+            "step": "SEARCH q2 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 45,
+            "actual": 7,
+            "ms": 35
+          }
+        ]
+      },
+      {
+        "id": "W-L3a",
+        "rows": 33,
+        "serverMs": 0,
+        "wallMs": 33.55756199999996,
+        "prefix": [
+          { "step": "SEARCH q1 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 9, "actual": 29, "ms": 30 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 45, "actual": 33, "ms": 33 }
+        ]
+      },
+      {
+        "id": "W-L4a",
+        "rows": 5,
+        "serverMs": 0.1342499999999518,
+        "wallMs": 31.810731000000033,
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 9, "actual": 52, "ms": 31 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 45, "actual": 5, "ms": 31 }
+        ]
+      },
+      {
+        "id": "W-L5a",
+        "rows": 22,
+        "serverMs": 2.0379940000001397,
+        "wallMs": 34.589072999999644,
+        "prefix": [
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 1, "ms": 33 },
+          { "step": "SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 45, "actual": 517, "ms": 31 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 225, "actual": 22, "ms": 34 }
+        ]
+      },
+      {
+        "id": "W-L5b",
+        "rows": 6,
+        "serverMs": 0,
+        "wallMs": 31.43851799999993,
+        "prefix": [
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 1, "ms": 30 },
+          { "step": "SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 45, "actual": 113, "ms": 36 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 225, "actual": 6, "ms": 31 }
+        ]
+      },
+      {
+        "id": "W-S1a",
+        "rows": 9,
+        "serverMs": 3.842628249999734,
+        "wallMs": 29.4425310000006,
+        "prefix": [
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 103, "ms": 30 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 25, "actual": 103, "ms": 33 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 125, "actual": 103, "ms": 33 },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 625, "actual": 103, "ms": 34 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 3125, "actual": 45, "ms": 34 },
+          { "step": "SEARCH q5 USING PRIMARY KEY (s=? AND p=?)", "estimate": 15625, "actual": 19, "ms": 31 },
+          { "step": "SEARCH q6 USING PRIMARY KEY (s=? AND p=?)", "estimate": 78125, "actual": 19, "ms": 34 },
+          { "step": "SEARCH q7 USING PRIMARY KEY (s=? AND p=?)", "estimate": 390625, "actual": 36, "ms": 34 },
+          { "step": "SEARCH q8 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1953125, "actual": 9, "ms": 34 }
+        ]
+      },
+      {
+        "id": "W-S1b",
+        "rows": 0,
+        "serverMs": 0,
+        "wallMs": 30.631601000000046,
+        "prefix": [
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 47, "ms": 32 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 25, "actual": 47, "ms": 33 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 125, "actual": 47, "ms": 30 },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 625, "actual": 47, "ms": 30 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 3125, "actual": 26, "ms": 31 },
+          { "step": "SEARCH q5 USING PRIMARY KEY (s=? AND p=?)", "estimate": 15625, "actual": 11, "ms": 30 },
+          { "step": "SEARCH q6 USING PRIMARY KEY (s=? AND p=?)", "estimate": 78125, "actual": 11, "ms": 34 },
+          { "step": "SEARCH q7 USING PRIMARY KEY (s=? AND p=?)", "estimate": 390625, "actual": 31, "ms": 30 },
+          { "step": "SEARCH q8 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1953125, "actual": 0, "ms": 33 }
+        ]
+      },
+      {
+        "id": "W-S1c",
+        "rows": 15,
+        "serverMs": 1.7638954999999896,
+        "wallMs": 31.86203800000021,
+        "prefix": [
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 126, "ms": 34 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 25, "actual": 126, "ms": 31 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 125, "actual": 126, "ms": 30 },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 625, "actual": 126, "ms": 33 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 3125, "actual": 56, "ms": 31 },
+          { "step": "SEARCH q5 USING PRIMARY KEY (s=? AND p=?)", "estimate": 15625, "actual": 24, "ms": 34 },
+          { "step": "SEARCH q6 USING PRIMARY KEY (s=? AND p=?)", "estimate": 78125, "actual": 24, "ms": 34 },
+          { "step": "SEARCH q7 USING PRIMARY KEY (s=? AND p=?)", "estimate": 390625, "actual": 55, "ms": 37 },
+          { "step": "SEARCH q8 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1953125, "actual": 15, "ms": 34 }
+        ]
+      },
+      {
+        "id": "W-S2a",
+        "rows": 0,
+        "serverMs": 0.04478949999997894,
+        "wallMs": 31.01328099999955,
+        "prefix": [
+          { "step": "SEARCH q1 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 9, "actual": 37, "ms": 29 },
+          {
+            "step": "SEARCH q3 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 9,
+            "actual": 9,
+            "ms": 29
+          },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 45, "actual": 4, "ms": 32 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 225, "actual": 0, "ms": 29 }
+        ]
+      },
+      {
+        "id": "W-S2b",
+        "rows": 1,
+        "serverMs": 0.36611025000001973,
+        "wallMs": 28.78429899999992,
+        "prefix": [
+          { "step": "SEARCH q1 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 9, "actual": 40, "ms": 29 },
+          {
+            "step": "SEARCH q3 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 9,
+            "actual": 9,
+            "ms": 30
+          },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 45, "actual": 2, "ms": 30 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 225, "actual": 1, "ms": 29 }
+        ]
+      },
+      {
+        "id": "W-S3a",
+        "rows": 0,
+        "serverMs": 0.44883225000012317,
+        "wallMs": 29.465979999999945,
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 9, "actual": 161, "ms": 31 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 45, "actual": 18, "ms": 30 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 225, "actual": 49, "ms": 29 },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1125, "actual": 0, "ms": 29 }
+        ]
+      },
+      {
+        "id": "W-S3b",
+        "rows": 0,
+        "serverMs": 0.13624849999996513,
+        "wallMs": 30.215734999999768,
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 9, "actual": 169, "ms": 33 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 45, "actual": 12, "ms": 30 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 225, "actual": 30, "ms": 31 },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1125, "actual": 0, "ms": 33 }
+        ]
+      },
+      {
+        "id": "W-S4a",
+        "rows": 0,
+        "serverMs": 0.08864124999990963,
+        "wallMs": 31.157702000000427,
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 9, "actual": 1169, "ms": 31 },
+          {
+            "step": "SEARCH q3 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 9,
+            "actual": 26,
+            "ms": 32
+          },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 45, "actual": 20, "ms": 33 },
+          { "step": "SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 405, "actual": 0, "ms": 32 }
+        ]
+      },
+      {
+        "id": "W-S5a",
+        "rows": 0,
+        "serverMs": 0,
+        "wallMs": 32.43359899999996,
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 9, "actual": 161, "ms": 33 },
+          {
+            "step": "SEARCH q3 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 9,
+            "actual": 0,
+            "ms": 31
+          },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 45, "actual": 0, "ms": 30 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 225, "actual": 0, "ms": 33 }
+        ]
+      },
+      {
+        "id": "W-S5b",
+        "rows": 0,
+        "serverMs": 0,
+        "wallMs": 31.131758999999875,
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 9, "actual": 169, "ms": 32 },
+          {
+            "step": "SEARCH q3 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 9,
+            "actual": 0,
+            "ms": 29
+          },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 45, "actual": 0, "ms": 31 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 225, "actual": 0, "ms": 32 }
+        ]
+      },
+      {
+        "id": "W-S6a",
+        "rows": 1,
+        "serverMs": 0.42068425000024945,
+        "wallMs": 29.57694999999876,
+        "prefix": [
+          { "step": "SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 9, "actual": 83, "ms": 32 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 45, "actual": 1, "ms": 31 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 225, "actual": 1, "ms": 31 }
+        ]
+      },
+      {
+        "id": "W-S6b",
+        "rows": 1,
+        "serverMs": 0,
+        "wallMs": 31.807635000001028,
+        "prefix": [
+          { "step": "SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 9, "actual": 27, "ms": 33 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 45, "actual": 1, "ms": 29 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 225, "actual": 1, "ms": 35 }
+        ]
+      },
+      {
+        "id": "W-S7a",
+        "rows": 0,
+        "serverMs": 0,
+        "wallMs": 32.330181999999695,
+        "prefix": [
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 0, "ms": 29 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 25, "actual": 0, "ms": 52 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 125, "actual": 0, "ms": 30 }
+        ]
+      },
+      {
+        "id": "W-S7b",
+        "rows": 0,
+        "serverMs": 0,
+        "wallMs": 30.014541999998983,
+        "prefix": [
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 0, "ms": 31 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 25, "actual": 0, "ms": 32 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 125, "actual": 0, "ms": 33 }
+        ]
+      },
+      {
+        "id": "W-F1a",
+        "rows": 0,
+        "serverMs": 0.41952725000010105,
+        "wallMs": 31.98783199999889,
+        "prefix": [
+          { "step": "SEARCH q5 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 9, "actual": 165, "ms": 33 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 45, "actual": 393, "ms": 33 },
+          {
+            "step": "SEARCH q0 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 45,
+            "actual": 0,
+            "ms": 33
+          },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 225, "actual": 0, "ms": 35 },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1125, "actual": 0, "ms": 46 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5625, "actual": 0, "ms": 31 }
+        ]
+      },
+      {
+        "id": "W-F1b",
+        "rows": 0,
+        "serverMs": 0.055248499999834166,
+        "wallMs": 32.851699000000735,
+        "prefix": [
+          { "step": "SEARCH q5 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 9, "actual": 165, "ms": 29 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 45, "actual": 393, "ms": 31 },
+          {
+            "step": "SEARCH q0 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 45,
+            "actual": 0,
+            "ms": 48
+          },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 225, "actual": 0, "ms": 53 },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1125, "actual": 0, "ms": 33 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5625, "actual": 0, "ms": 30 }
+        ]
+      },
+      {
+        "id": "W-F2a",
+        "rows": 1,
+        "serverMs": 1.3285100000002785,
+        "wallMs": 30.79409399999895,
+        "prefix": [
+          { "step": "SEARCH q7 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 9, "actual": 83, "ms": 33 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 45, "actual": 30, "ms": 41 },
+          { "step": "SEARCH q6 USING PRIMARY KEY (s=? AND p=?)", "estimate": 225, "actual": 30, "ms": 42 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1125, "actual": 30, "ms": 31 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5625, "actual": 30, "ms": 58 },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 28125, "actual": 2, "ms": 32 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 140625, "actual": 1, "ms": 35 },
+          { "step": "SEARCH q5 USING PRIMARY KEY (s=? AND p=?)", "estimate": 703125, "actual": 1, "ms": 33 }
+        ]
+      },
+      {
+        "id": "W-F3a",
+        "rows": 6,
+        "serverMs": 0.39216575000000375,
+        "wallMs": 31.522947999999815,
+        "prefix": [
+          { "step": "SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 9, "actual": 83, "ms": 31 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 45, "actual": 34, "ms": 65 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 225, "actual": 3, "ms": 35 },
+          {
+            "step": "SEARCH q5 USING COVERING INDEX quads_pos (p=? AND o=?)",
+            "estimate": 2025,
+            "actual": 18,
+            "ms": 32
+          },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 10125, "actual": 6, "ms": 34 },
+          { "step": "SEARCH q3 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 91125, "actual": 6, "ms": 34 }
+        ]
+      },
+      {
+        "id": "W-F3b",
+        "rows": 0,
+        "serverMs": 0,
+        "wallMs": 32.61777299999994,
+        "prefix": [
+          { "step": "SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 9, "actual": 56, "ms": 30 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 45, "actual": 15, "ms": 30 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 225, "actual": 1, "ms": 31 },
+          { "step": "SEARCH q5 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 2025, "actual": 2, "ms": 35 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 10125, "actual": 0, "ms": 36 },
+          { "step": "SEARCH q3 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 91125, "actual": 0, "ms": 31 }
+        ]
+      },
+      {
+        "id": "W-F4a",
+        "rows": 0,
+        "serverMs": 0,
+        "wallMs": 32.4584679999989,
+        "prefix": [
+          { "step": "SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 9, "actual": 65, "ms": 34 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 45, "actual": 11, "ms": 33 },
+          {
+            "step": "SEARCH q7 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 45,
+            "actual": 3,
+            "ms": 32
+          },
+          { "step": "SEARCH q5 USING PRIMARY KEY (s=? AND p=?)", "estimate": 225, "actual": 3, "ms": 31 },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1125, "actual": 2, "ms": 31 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5625, "actual": 0, "ms": 33 },
+          { "step": "SEARCH q6 USING PRIMARY KEY (s=? AND p=?)", "estimate": 28125, "actual": 0, "ms": 30 },
+          {
+            "step": "SEARCH q1 USING COVERING INDEX quads_pos (p=? AND o=?)",
+            "estimate": 253125,
+            "actual": 0,
+            "ms": 31
+          },
+          {
+            "step": "SEARCH q8 USING COVERING INDEX quads_pos (p=? AND o=?)",
+            "estimate": 2278125,
+            "actual": 0,
+            "ms": 32
+          }
+        ]
+      },
+      {
+        "id": "W-F4b",
+        "rows": 0,
+        "serverMs": 0,
+        "wallMs": 30.937544000000344,
+        "prefix": [
+          { "step": "SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 9, "actual": 43, "ms": 30 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 45, "actual": 8, "ms": 32 },
+          {
+            "step": "SEARCH q7 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 45,
+            "actual": 2,
+            "ms": 32
+          },
+          { "step": "SEARCH q5 USING PRIMARY KEY (s=? AND p=?)", "estimate": 225, "actual": 2, "ms": 44 },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1125, "actual": 2, "ms": 34 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5625, "actual": 0, "ms": 32 },
+          { "step": "SEARCH q6 USING PRIMARY KEY (s=? AND p=?)", "estimate": 28125, "actual": 0, "ms": 31 },
+          {
+            "step": "SEARCH q1 USING COVERING INDEX quads_pos (p=? AND o=?)",
+            "estimate": 253125,
+            "actual": 0,
+            "ms": 32
+          },
+          {
+            "step": "SEARCH q8 USING COVERING INDEX quads_pos (p=? AND o=?)",
+            "estimate": 2278125,
+            "actual": 0,
+            "ms": 44
+          }
+        ]
+      },
+      {
+        "id": "W-F4c",
+        "rows": 27,
+        "serverMs": 0.7274152500003765,
+        "wallMs": 30.998003999999128,
+        "prefix": [
+          { "step": "SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 9, "actual": 64, "ms": 32 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 45, "actual": 16, "ms": 34 },
+          {
+            "step": "SEARCH q7 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 45,
+            "actual": 3,
+            "ms": 33
+          },
+          { "step": "SEARCH q5 USING PRIMARY KEY (s=? AND p=?)", "estimate": 225, "actual": 3, "ms": 32 },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1125, "actual": 2, "ms": 37 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5625, "actual": 1, "ms": 30 },
+          { "step": "SEARCH q6 USING PRIMARY KEY (s=? AND p=?)", "estimate": 28125, "actual": 1, "ms": 32 },
+          {
+            "step": "SEARCH q1 USING COVERING INDEX quads_pos (p=? AND o=?)",
+            "estimate": 253125,
+            "actual": 9,
+            "ms": 29
+          },
+          {
+            "step": "SEARCH q8 USING COVERING INDEX quads_pos (p=? AND o=?)",
+            "estimate": 2278125,
+            "actual": 27,
+            "ms": 35
+          }
+        ]
+      },
+      {
+        "id": "W-F5a",
+        "rows": 27,
+        "serverMs": 0.31128175000003466,
+        "wallMs": 31.041994999999588,
+        "prefix": [
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 74, "ms": 29 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 25, "actual": 74, "ms": 30 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 125, "actual": 74, "ms": 30 },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 625, "actual": 27, "ms": 30 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 3125, "actual": 27, "ms": 34 },
+          { "step": "SEARCH q5 USING PRIMARY KEY (s=? AND p=?)", "estimate": 15625, "actual": 27, "ms": 33 }
+        ]
+      },
+      {
+        "id": "W-F5b",
+        "rows": 37,
+        "serverMs": 1.5467429999998785,
+        "wallMs": 31.500280000000203,
+        "prefix": [
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 101, "ms": 32 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 25, "actual": 101, "ms": 32 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 125, "actual": 101, "ms": 30 },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 625, "actual": 37, "ms": 29 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 3125, "actual": 37, "ms": 32 },
+          { "step": "SEARCH q5 USING PRIMARY KEY (s=? AND p=?)", "estimate": 15625, "actual": 37, "ms": 31 }
+        ]
+      },
+      {
+        "id": "W-F5c",
+        "rows": 31,
+        "serverMs": 0.7965512499995384,
+        "wallMs": 31.439329000000726,
+        "prefix": [
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 83, "ms": 237 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 25, "actual": 83, "ms": 34 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 125, "actual": 83, "ms": 30 },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 625, "actual": 31, "ms": 30 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 3125, "actual": 31, "ms": 38 },
+          { "step": "SEARCH q5 USING PRIMARY KEY (s=? AND p=?)", "estimate": 15625, "actual": 31, "ms": 31 }
+        ]
+      },
+      {
+        "id": "W-C1a",
+        "rows": 0,
+        "serverMs": 160.02617949999876,
+        "wallMs": 203.7197780000024,
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=?)", "estimate": 14441, "actual": 272, "ms": 35 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 72205, "actual": 75, "ms": 36 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 361025, "actual": 16, "ms": 35 },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1805125, "actual": 81, "ms": 35 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 9025625, "actual": 22, "ms": 92 },
+          { "step": "SEARCH q5 USING PRIMARY KEY (s=? AND p=?)", "estimate": 45128125, "actual": 22, "ms": 157 },
+          { "step": "SEARCH q6 USING INDEX quads_pos (p=? AND o=?)", "estimate": 406153125, "actual": 0, "ms": 214 },
+          { "step": "SEARCH q7 USING PRIMARY KEY (s=? AND p=?)", "estimate": 2030765625, "actual": 0, "ms": 192 }
+        ]
+      },
+      {
+        "id": "W-C2a",
+        "rows": 0,
+        "serverMs": 137.4110329999994,
+        "wallMs": 170.13756099999955,
+        "prefix": [
+          { "step": "SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 9, "actual": 912, "ms": 31 },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 45, "actual": 912, "ms": 39 },
+          { "step": "SEARCH q8 USING PRIMARY KEY (s=? AND p=?)", "estimate": 225, "actual": 5500, "ms": 33 },
+          {
+            "step": "SEARCH q7 USING COVERING INDEX quads_pos (p=? AND o=?)",
+            "estimate": 2025,
+            "actual": 26188,
+            "ms": 38
+          },
+          {
+            "step": "SEARCH q6 USING COVERING INDEX quads_pos (p=? AND o=?)",
+            "estimate": 18225,
+            "actual": 26188,
+            "ms": 47
+          },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 91125, "actual": 1218, "ms": 63 },
+          { "step": "SEARCH q5 USING PRIMARY KEY (s=? AND p=?)", "estimate": 455625, "actual": 249, "ms": 73 },
+          { "step": "SEARCH q9 USING PRIMARY KEY (s=? AND p=?)", "estimate": 2278125, "actual": 9, "ms": 64 },
+          { "step": "SEARCH q1 USING INDEX quads_pos (p=? AND o=?)", "estimate": 20503125, "actual": 2, "ms": 117 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 102515625, "actual": 0, "ms": 163 }
+        ]
+      },
+      {
+        "id": "W-C3a",
+        "rows": 51852,
+        "serverMs": 640.4997107500003,
+        "wallMs": 740.0530030000009,
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=?)", "estimate": 14441, "actual": 10966, "ms": 38 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 72205, "actual": 483209, "ms": 87 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 361025, "actual": 197892, "ms": 294 },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1805125, "actual": 105167, "ms": 288 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 9025625, "actual": 68262, "ms": 420 },
+          { "step": "SEARCH q5 USING PRIMARY KEY (s=? AND p=?)", "estimate": 45128125, "actual": 51852, "ms": 474 }
+        ]
+      }
+    ]
+  },
+  "q-bsbm1m-baseline": {
+    "build": "1791872891",
+    "at": "2026-10-13T06:31:58.786Z",
+    "queries": [
+      {
+        "id": "B-Q1a",
+        "rows": 1,
+        "serverMs": 0,
+        "wallMs": 73.84232299999985,
+        "prefix": [
+          { "step": "SEARCH q1 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 5, "actual": 46, "ms": 81 },
+          {
+            "step": "SEARCH q2 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 5,
+            "actual": 8,
+            "ms": 53
+          },
+          {
+            "step": "SEARCH q3 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 5,
+            "actual": 1,
+            "ms": 60
+          },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 1, "ms": 59 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 1, "ms": 62 }
+        ]
+      },
+      {
+        "id": "B-Q1b",
+        "rows": 2,
+        "serverMs": 0,
+        "wallMs": 53.49228700000003,
+        "prefix": [
+          { "step": "SEARCH q1 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 5, "actual": 28, "ms": 58 },
+          {
+            "step": "SEARCH q2 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 5,
+            "actual": 8,
+            "ms": 50
+          },
+          {
+            "step": "SEARCH q3 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 5,
+            "actual": 3,
+            "ms": 53
+          },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 3, "ms": 53 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 2, "ms": 67 }
+        ]
+      },
+      {
+        "id": "B-Q1c",
+        "rows": 7,
+        "serverMs": 0,
+        "wallMs": 62.75736800000004,
+        "prefix": [
+          { "step": "SEARCH q1 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 5, "actual": 59, "ms": 67 },
+          {
+            "step": "SEARCH q2 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 5,
+            "actual": 19,
+            "ms": 55
+          },
+          {
+            "step": "SEARCH q3 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 5,
+            "actual": 8,
+            "ms": 65
+          },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 8, "ms": 66 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 7, "ms": 61 }
+        ]
+      },
+      { "id": "B-Q2a", "rows": 20, "serverMs": 0.857304749999912, "wallMs": 55.89989700000024 },
+      { "id": "B-Q2b", "rows": 18, "serverMs": 0.7913062500001615, "wallMs": 58.29029799999989 },
+      { "id": "B-Q2c", "rows": 13, "serverMs": 0.5231947499999023, "wallMs": 51.99674700000014 },
+      { "id": "B-Q3a", "rows": 0, "serverMs": 0, "wallMs": 61.434753999999884 },
+      { "id": "B-Q3b", "rows": 2, "serverMs": 1.689223500000253, "wallMs": 49.59721999999965 },
+      { "id": "B-Q3c", "rows": 1, "serverMs": 0, "wallMs": 53.4109269999999 },
+      { "id": "B-Q4a", "rows": 0, "serverMs": 1.4181585000001178, "wallMs": 50.99751600000036 },
+      { "id": "B-Q4b", "rows": 0, "serverMs": 0, "wallMs": 52.73677300000054 },
+      { "id": "B-Q4c", "rows": 0, "serverMs": 0.7327247500002159, "wallMs": 52.57918199999949 },
+      {
+        "id": "B-Q5a",
+        "rows": 5,
+        "serverMs": 11.4933352500002,
+        "wallMs": 68.13567899999907,
+        "prefix": [
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1, "actual": 1, "ms": 50 },
+          { "step": "SEARCH q5 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1, "actual": 1, "ms": 68 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1, "actual": 26, "ms": 56 },
+          { "step": "SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 5, "actual": 1902, "ms": 62 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 1902, "ms": 57 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 185, "ms": 72 },
+          { "step": "SEARCH q6 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 20, "ms": 63 }
+        ]
+      },
+      {
+        "id": "B-Q5b",
+        "rows": 5,
+        "serverMs": 1.6664004999997815,
+        "wallMs": 67.9950800000006,
+        "prefix": [
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1, "actual": 1, "ms": 48 },
+          { "step": "SEARCH q5 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1, "actual": 1, "ms": 48 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1, "actual": 13, "ms": 63 },
+          { "step": "SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 5, "actual": 787, "ms": 71 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 787, "ms": 87 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 87, "ms": 85 },
+          { "step": "SEARCH q6 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 15, "ms": 64 }
+        ]
+      },
+      {
+        "id": "B-Q5c",
+        "rows": 5,
+        "serverMs": 14.015098249999937,
+        "wallMs": 83.94439299999976,
+        "prefix": [
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1, "actual": 1, "ms": 77 },
+          { "step": "SEARCH q5 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1, "actual": 1, "ms": 69 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1, "actual": 24, "ms": 72 },
+          { "step": "SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 5, "actual": 1950, "ms": 52 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 1950, "ms": 60 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 373, "ms": 75 },
+          { "step": "SEARCH q6 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 78, "ms": 68 }
+        ]
+      },
+      {
+        "id": "B-Q6a",
+        "rows": 1,
+        "serverMs": 10.73172650000015,
+        "wallMs": 69.83361999999943,
+        "prefix": [
+          { "step": "SEARCH q1 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 5, "actual": 2785, "ms": 47 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 1, "ms": 61 }
+        ]
+      },
+      {
+        "id": "B-Q6b",
+        "rows": 1,
+        "serverMs": 8.738241500000186,
+        "wallMs": 62.564148999999816,
+        "prefix": [
+          { "step": "SEARCH q1 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 5, "actual": 2785, "ms": 54 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 1, "ms": 78 }
+        ]
+      },
+      {
+        "id": "B-Q6c",
+        "rows": 1,
+        "serverMs": 7.30784924999989,
+        "wallMs": 77.06548400000065,
+        "prefix": [
+          { "step": "SEARCH q1 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 5, "actual": 2785, "ms": 88 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 1, "ms": 75 }
+        ]
+      },
+      { "id": "B-Q7a", "rows": 10, "serverMs": 0, "wallMs": 79.87448099999892 },
+      { "id": "B-Q7b", "rows": 4, "serverMs": 0, "wallMs": 70.41556499999933 },
+      { "id": "B-Q7c", "rows": 8, "serverMs": 0, "wallMs": 63.39055500000177 },
+      { "id": "B-Q8a", "rows": 10, "serverMs": 2.1964414999993096, "wallMs": 71.74860900000203 },
+      { "id": "B-Q8b", "rows": 2, "serverMs": 1.2834872500006895, "wallMs": 48.19125100000019 },
+      { "id": "B-Q8c", "rows": 0, "serverMs": 3.0155310000009194, "wallMs": 55.97333599999911 },
+      { "id": "B-Q9a", "error": "UnsupportedSparqlError: Unsupported SPARQL construct: query type DESCRIBE" },
+      { "id": "B-Q9b", "error": "UnsupportedSparqlError: Unsupported SPARQL construct: query type DESCRIBE" },
+      { "id": "B-Q9c", "error": "UnsupportedSparqlError: Unsupported SPARQL construct: query type DESCRIBE" },
+      {
+        "id": "B-Q10a",
+        "rows": 4,
+        "serverMs": 1.6430952500004423,
+        "wallMs": 49.003209999998944,
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 5, "actual": 36, "ms": 59 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 18, "ms": 68 },
+          { "step": "SEARCH q6 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 10, "ms": 55 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 10, "ms": 84 },
+          {
+            "step": "SEARCH q1 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 5,
+            "actual": 10,
+            "ms": 97
+          },
+          {
+            "step": "SEARCH q3 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 5,
+            "actual": 4,
+            "ms": 59
+          },
+          { "step": "SEARCH q5 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 4, "ms": 74 }
+        ]
+      },
+      {
+        "id": "B-Q10b",
+        "rows": 2,
+        "serverMs": 2.1334577500001615,
+        "wallMs": 63.60150799999974,
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 5, "actual": 7, "ms": 78 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 5, "ms": 72 },
+          { "step": "SEARCH q6 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 2, "ms": 74 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 2, "ms": 59 },
+          {
+            "step": "SEARCH q1 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 5,
+            "actual": 2,
+            "ms": 58
+          },
+          {
+            "step": "SEARCH q3 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 5,
+            "actual": 2,
+            "ms": 87
+          },
+          { "step": "SEARCH q5 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 2, "ms": 53 }
+        ]
+      },
+      {
+        "id": "B-Q10c",
+        "rows": 5,
+        "serverMs": 0,
+        "wallMs": 81.24999000000025,
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 5, "actual": 10, "ms": 88 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 7, "ms": 56 },
+          { "step": "SEARCH q6 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 6, "ms": 54 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 6, "ms": 59 },
+          {
+            "step": "SEARCH q1 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 5,
+            "actual": 6,
+            "ms": 59
+          },
+          {
+            "step": "SEARCH q3 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 5,
+            "actual": 5,
+            "ms": 56
+          },
+          { "step": "SEARCH q5 USING PRIMARY KEY (s=? AND p=?)", "estimate": 5, "actual": 5, "ms": 52 }
+        ]
+      },
+      { "id": "B-Q11a", "rows": 10, "serverMs": 0, "wallMs": 58.104269999999815 },
+      { "id": "B-Q11b", "rows": 10, "serverMs": 1.5704299999997602, "wallMs": 52.93412399999943 },
+      { "id": "B-Q11c", "rows": 10, "serverMs": 0, "wallMs": 139.28380999999717 },
+      {
+        "id": "B-Q12a",
+        "rows": 8,
+        "serverMs": 0.8510169999999562,
+        "wallMs": 73.82842600000004,
+        "prefix": [
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1, "actual": 1, "ms": 67 },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1, "actual": 1, "ms": 81 },
+          { "step": "SEARCH q6 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1, "actual": 1, "ms": 69 },
+          { "step": "SEARCH q8 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1, "actual": 1, "ms": 71 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1, "actual": 1, "ms": 93 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1, "actual": 1, "ms": 69 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1, "actual": 1, "ms": 75 },
+          { "step": "SEARCH q5 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1, "actual": 1, "ms": 95 },
+          { "step": "SEARCH q7 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1, "actual": 1, "ms": 68 }
+        ]
+      },
+      {
+        "id": "B-Q12b",
+        "rows": 8,
+        "serverMs": 2.1587447499996415,
+        "wallMs": 63.99407699999938,
+        "prefix": [
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1, "actual": 1, "ms": 57 },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1, "actual": 1, "ms": 71 },
+          { "step": "SEARCH q6 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1, "actual": 1, "ms": 136 },
+          { "step": "SEARCH q8 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1, "actual": 1, "ms": 57 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1, "actual": 1, "ms": 55 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1, "actual": 1, "ms": 59 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1, "actual": 1, "ms": 73 },
+          { "step": "SEARCH q5 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1, "actual": 1, "ms": 88 },
+          { "step": "SEARCH q7 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1, "actual": 1, "ms": 122 }
+        ]
+      },
+      {
+        "id": "B-Q12c",
+        "rows": 8,
+        "serverMs": 0,
+        "wallMs": 63.967232999999396,
+        "prefix": [
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1, "actual": 1, "ms": 56 },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1, "actual": 1, "ms": 57 },
+          { "step": "SEARCH q6 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1, "actual": 1, "ms": 59 },
+          { "step": "SEARCH q8 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1, "actual": 1, "ms": 51 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1, "actual": 1, "ms": 66 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1, "actual": 1, "ms": 53 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1, "actual": 1, "ms": 64 },
+          { "step": "SEARCH q5 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1, "actual": 1, "ms": 54 },
+          { "step": "SEARCH q7 USING PRIMARY KEY (s=? AND p=?)", "estimate": 1, "actual": 1, "ms": 62 }
+        ]
+      }
+    ]
+  },
+  "q-dblp6m-baseline": {
+    "build": "1791872891",
+    "at": "2026-10-13T06:34:05.784Z",
+    "queries": [
+      {
+        "id": "D1-lookup",
+        "rows": 1,
+        "serverMs": 0.15324125000000777,
+        "wallMs": 29.613616000000093,
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 3, "actual": 1, "ms": 38 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 6, "actual": 1, "ms": 30 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 12, "actual": 1, "ms": 32 }
+        ]
+      },
+      { "id": "D2-star", "rows": 1, "serverMs": 0.16450824999998304, "wallMs": 30.407989999999927 },
+      { "id": "D3-authors-of-pub", "rows": 5, "serverMs": 0.033646250000003874, "wallMs": 30.14415699999995 },
+      {
+        "id": "D4-pubs-of-author",
+        "rows": 560,
+        "serverMs": 5.9207519999998794,
+        "wallMs": 44.391225000000304,
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 3, "actual": 560, "ms": 33 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 6, "actual": 560, "ms": 33 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 12, "actual": 560, "ms": 33 }
+        ]
+      },
+      {
+        "id": "D5-coauthors",
+        "rows": 20,
+        "serverMs": 3.766287250000005,
+        "wallMs": 33.461795000000166,
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 3, "actual": 560, "ms": 29 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 6, "actual": 2308, "ms": 38 }
+        ]
+      },
+      {
+        "id": "D6-per-year",
+        "rows": 65,
+        "serverMs": 10.209448249999923,
+        "wallMs": 39.326884000000064,
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=?)", "estimate": 108937, "actual": 98940, "ms": 35 }
+        ]
+      },
+      {
+        "id": "D7-per-type-venue",
+        "rows": 20,
+        "serverMs": 179.02999025000008,
+        "wallMs": 205.47838599999977,
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=?)", "estimate": 108937, "actual": 101659, "ms": 35 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 217874, "actual": 72777, "ms": 146 }
+        ]
+      },
+      {
+        "id": "D8-text",
+        "rows": 100,
+        "serverMs": 48.077917000000525,
+        "wallMs": 71.19727799999964,
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=?)", "estimate": 108937, "actual": 1234, "ms": 197 }
+        ]
+      },
+      {
+        "id": "D9-text-year",
+        "rows": 50,
+        "serverMs": 124.61609649999991,
+        "wallMs": 149.62913000000117,
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=?)", "estimate": 108937, "actual": 98947, "ms": 36 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 217874, "actual": 176, "ms": 146 }
+        ]
+      },
+      {
+        "id": "D10-prolific",
+        "rows": 10,
+        "serverMs": 761.4418299999998,
+        "wallMs": 747.5763250000018,
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=?)", "estimate": 108937, "actual": 303261, "ms": 44 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 217874, "actual": 15847, "ms": 83 }
+        ]
+      },
+      { "id": "D11-no-doi", "rows": 1, "serverMs": 40.643724999999904, "wallMs": 67.64160400000037 },
+      { "id": "D12-path", "rows": 37, "serverMs": 0.3063990000000558, "wallMs": 30.124046000000817 },
+      { "id": "D13-versions", "rows": 100, "serverMs": 11.241138749999664, "wallMs": 41.82856199999878 },
+      {
+        "id": "D14-sameAs-count",
+        "rows": 1,
+        "serverMs": 11.046564999999646,
+        "wallMs": 42.91123399999924,
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=?)", "estimate": 108937, "actual": 208636, "ms": 41 }
+        ]
+      }
+    ]
+  }
+}

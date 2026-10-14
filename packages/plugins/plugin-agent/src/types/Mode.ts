@@ -11,7 +11,7 @@ import type * as Chat from '@dxos/assistant/Chat';
 import * as Skill from '@dxos/compute/Skill';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 
-import * as Memory from './Memory.ts';
+import * as Knowledge from './Knowledge.ts';
 
 /**
  * A reusable bundle of skills the agent works in — interviewer, note-taker, relay (docs/ONTOLOGY.md
@@ -26,7 +26,7 @@ export class Mode extends Type.makeObject<Mode>(DXN.make('org.dxos.type.agent.mo
       description: 'The skills bound to a conversation while it is in this mode.',
     }),
     records: Schema.optional(
-      Schema.Array(Memory.Kind).annotate({ title: 'Records', description: 'The kinds of memory this mode writes.' }),
+      Schema.Array(Knowledge.Kind).annotate({ title: 'Records', description: 'The kinds of memory this mode writes.' }),
     ),
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),

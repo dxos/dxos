@@ -8,7 +8,14 @@ import { raise } from '@dxos/debug';
 import { type EncodedReference, EntityStructure, isEncodedReference } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { EID, EntityId, URI } from '@dxos/keys';
-import { assumeType, decodeUint8ArrayFromJson, deepMapValues, isEncodedUint8Array, visitValues } from '@dxos/util';
+import {
+  assumeType,
+  decodeUint8ArrayFromJson,
+  deepMapValues,
+  encodeUint8ArrayToJson,
+  isEncodedUint8Array,
+  visitValues,
+} from '@dxos/util';
 
 import type * as Database from '../../Database.ts';
 import type * as Obj from '../../Obj.ts';
@@ -40,6 +47,7 @@ import {
   RelationTargetDXNId,
   RelationTargetId,
   SelfURIId,
+  TypeMetaSchemaDXN,
   assertObjectModel,
 } from '../Entity/index.ts';
 import { Ref, type RefResolver, refFromEncodedReference, setRefResolver } from '../Ref/index.ts';
@@ -279,7 +287,7 @@ export const objectStructureToJson = (objectId: EntityId, structure: EntityStruc
       (meta.annotations !== undefined && Object.keys(meta.annotations).length > 0) ||
       SCALAR_META_FIELDS.some((field) => (meta as Record<string, unknown>)[field] !== undefined));
   return {
-    ...structure.data,
+    ...encodeBytes(structure.data),
     id: objectId,
     [ATTR_META]: metaNotEmpty ? (meta as Obj.JSON[typeof ATTR_META]) : undefined,
     [ATTR_TYPE]: typeRef ? URI.make(typeRef) : undefined,
@@ -287,5 +295,75 @@ export const objectStructureToJson = (objectId: EntityId, structure: EntityStruc
     [ATTR_PARENT]: parent !== undefined ? EID.tryParse(parent) : undefined,
     [ATTR_RELATION_SOURCE]: source !== undefined ? EID.tryParse(source) : undefined,
     [ATTR_RELATION_TARGET]: target !== undefined ? EID.tryParse(target) : undefined,
+  };
+};
+
+/**
+ * Bytes in the DAG-JSON `{ '/': { bytes } }` form the feed serializer writes, which plain JSON would flatten.
+ * Only arrays and plain objects are walked, so a document's raw strings keep the `toJSON` that writes them as text.
+ */
+const encodeBytes = <T>(value: T): T =>
+  (value instanceof Uint8Array
+    ? encodeUint8ArrayToJson(value)
+    : Array.isArray(value)
+      ? value.map(encodeBytes)
+      : typeof value === 'object' && value !== null && Object.getPrototypeOf(value) === Object.prototype
+        ? Object.fromEntries(Object.entries(value).map(([key, item]) => [key, encodeBytes(item)]))
+        : value) as T;
+
+const STRUCTURE_JSON_KEYS: ReadonlySet<string> = new Set([
+  'id',
+  ATTR_TYPE,
+  ATTR_META,
+  ATTR_DELETED,
+  ATTR_PARENT,
+  ATTR_RELATION_SOURCE,
+  ATTR_RELATION_TARGET,
+]);
+
+/**
+ * Inverse of {@link objectStructureToJson}, for reading an object from the index's JSON. The JSON carries
+ * no `system.kind`, so it is inferred from the relation endpoints and the type; nor the merge fields, and
+ * `createdAt` comes from the caller.
+ */
+export const objectStructureFromJson = (
+  json: Obj.JSON,
+  { createdAt }: { createdAt?: number } = {},
+): EntityStructure => {
+  const record = json as Record<string, unknown>;
+  const data = Object.fromEntries(
+    Object.entries(record)
+      .filter(([key]) => !STRUCTURE_JSON_KEYS.has(key))
+      .map(([key, value]) => [
+        key,
+        deepMapValues(value, (value, recurse) =>
+          isEncodedUint8Array(value) ? decodeUint8ArrayFromJson(value) : recurse(value),
+        ),
+      ]),
+  );
+  const reference = (value: unknown): EncodedReference | undefined =>
+    typeof value === 'string' ? { '/': URI.make(value) } : undefined;
+  const type = reference(record[ATTR_TYPE]);
+  const source = reference(record[ATTR_RELATION_SOURCE]);
+  const target = reference(record[ATTR_RELATION_TARGET]);
+  const parent = reference(record[ATTR_PARENT]);
+  const meta = record[ATTR_META] as Partial<EntityStructure['meta']> | undefined;
+  return {
+    system: {
+      kind:
+        source || target
+          ? EntityKind.Relation
+          : type?.['/'] === TypeMetaSchemaDXN.toString()
+            ? EntityKind.Type
+            : EntityKind.Object,
+      ...(type && { type }),
+      ...(parent && { parent }),
+      ...(source && { source }),
+      ...(target && { target }),
+      ...(record[ATTR_DELETED] === true && { deleted: true }),
+      ...(createdAt !== undefined && { createdAt }),
+    },
+    meta: { ...meta, keys: meta?.keys ?? [] },
+    data,
   };
 };

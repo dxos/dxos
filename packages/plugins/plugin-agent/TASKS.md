@@ -4,7 +4,8 @@ _Resume: Phase 3 — approve M0 (child feed per private thread, THREADS.md), the
 
 Composer project: **Agents** (DXOS space). Design: [docs/DESIGN.md](./docs/DESIGN.md), brain: [docs/BRAIN.md](./docs/BRAIN.md), ontology:
 [docs/ONTOLOGY.md](./docs/ONTOLOGY.md), memory: [docs/MEMORY.md](./docs/MEMORY.md), testing:
-[docs/TESTING.md](./docs/TESTING.md), Discord setup: [docs/SETUP.md](./docs/SETUP.md).
+[docs/TESTING.md](./docs/TESTING.md), Discord setup: [docs/SETUP.md](./docs/SETUP.md), Discord product design:
+[docs/DISCORD.md](./docs/DISCORD.md), open questions: [docs/QUESTIONS.md](./docs/QUESTIONS.md).
 
 ## Phase 1: Discord ↔ agent ↔ Composer spike
 

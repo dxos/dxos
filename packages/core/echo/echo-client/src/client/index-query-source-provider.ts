@@ -6,9 +6,9 @@ import * as Array from 'effect/Array';
 import * as EffectContext from 'effect/Context';
 
 import { type CleanupFn, Event, type ReadOnlyEvent, TimeoutError, asyncTimeout, yieldOrContinue } from '@dxos/async';
-import { Context } from '@dxos/context';
+import { Context, ContextDisposedError } from '@dxos/context';
 import { Entity, Feed, type Hypergraph, Obj, Query } from '@dxos/echo';
-import { type QueryAST } from '@dxos/echo-protocol';
+import { QueryAST } from '@dxos/echo-protocol';
 import { ATTR_TYPE, makeDecodedEntityLive } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId, SpaceId } from '@dxos/keys';
@@ -18,6 +18,8 @@ import { QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { QueryService } from '@dxos/protocols/rpc';
 import { chunkArray, isNonNullable } from '@dxos/util';
 
+import { getSnapshotState } from '../core-db/snapshot-state.ts';
+import { getObjectCore } from '../echo-handler/index.ts';
 import { type FeedHandle } from '../feed/feed-handle.ts';
 import { type QuerySourceProvider, recordObjectDiagnostic } from '../hypergraph.ts';
 import { DatabaseImpl } from '../proxy-db/index.ts';
@@ -54,6 +56,9 @@ export interface ObjectLoader {
    * index hits that previously failed to load (e.g. timed out before their document arrived).
    */
   readonly updateEvent: ReadOnlyEvent<ObjectUpdate>;
+
+  /** The data subscriptions of the target spaces, whose documents the host leaves unbacked. */
+  subscriptionIds?(spaceIds: readonly SpaceId[]): string[];
 }
 
 export type IndexQueryProviderProps = {
@@ -228,7 +233,6 @@ export class IndexQuerySource implements QuerySource {
   }
 
   async run(_ctx: Context, query: QueryAST.Query): Promise<SourceEntry[]> {
-    this._query = query;
     // The index serves spaces and feeds; a query whose explicit scopes target neither
     // (e.g. registry-only) is answered entirely by other sources. Forwarding it anyway
     // made the whole query fail on edge — the query host rejects space-less queries, and
@@ -308,6 +312,7 @@ export class IndexQuerySource implements QuerySource {
         query: JSON.stringify(query),
         queryId: String(queryId),
         reactivity: QueryReactivity.ONE_SHOT,
+        subscriptionIds: this._subscriptionIds(query),
       }),
       {
         onData: (response) => {
@@ -375,6 +380,7 @@ export class IndexQuerySource implements QuerySource {
         query: JSON.stringify(query),
         queryId: String(queryId),
         reactivity: QueryReactivity.REACTIVE,
+        subscriptionIds: this._subscriptionIds(query),
       }),
       {
         onData: (response) => {
@@ -528,13 +534,16 @@ export class IndexQuerySource implements QuerySource {
       length: records.length,
     });
 
+    const load = await this._placeRows(ctx, records);
     const hydratedIntoFeedHandle = new Set<string>();
     // Chunked so hydrating a large local result set is not one uninterrupted run of microtasks.
     const processedResults: (SourceEntry | null | typeof STALLED)[] = [];
     for (const chunk of chunkArray([...records], HYDRATE_RECORDS_PER_YIELD_CHECK)) {
       await yieldOrContinue('smooth');
       processedResults.push(
-        ...(await Promise.all(chunk.map((result) => this._hydrateRecord(ctx, start, result, hydratedIntoFeedHandle)))),
+        ...(await Promise.all(
+          chunk.map((result) => this._hydrateRecord(ctx, query, start, result, hydratedIntoFeedHandle, load)),
+        )),
       );
     }
     const stalled = records.filter((_, index) => processedResults[index] === STALLED).map((record) => record.id);
@@ -571,18 +580,66 @@ export class IndexQuerySource implements QuerySource {
   }
 
   /**
+   * Places every backed document row of every open database, then returns the loader for document
+   * rows: no row's dependencies resolve before a row that is one of them is placed.
+   */
+  private async _placeRows(ctx: Context, records: readonly QueryService.QueryResult[]): Promise<RowLoader> {
+    const bySpace = new Map<string, { row: QueryService.QueryResult; documentId: string }[]>();
+    for (const row of records) {
+      const isDocumentRow = !row.queueId && row.aggregates === undefined && row.recordJson === undefined;
+      if (!isDocumentRow || row.documentId === undefined) {
+        continue;
+      }
+      const rows = bySpace.get(row.spaceId) ?? [];
+      rows.push({ row, documentId: row.documentId });
+      bySpace.set(row.spaceId, rows);
+    }
+
+    const placed = new Map<string, { database: DatabaseImpl; entity: Entity.Unknown }>();
+    const load: RowLoader = (row) => {
+      const hit = placed.get(row.id);
+      return hit
+        ? hit.database._entityManager.settleEntity(getObjectCore(hit.entity), { allowDeleted: true })
+        : this._resolveIndexedObject(row);
+    };
+    for (const [spaceId, rows] of bySpace) {
+      const database = this._params.graph.getDatabase(SpaceId.make(spaceId));
+      if (!(database instanceof DatabaseImpl)) {
+        continue;
+      }
+      for (const chunk of chunkArray(rows, HYDRATE_RECORDS_PER_YIELD_CHECK)) {
+        await yieldOrContinue('smooth');
+        if (ctx.disposed) {
+          return load;
+        }
+        for (const { row, documentId } of chunk) {
+          const entity = database._entityManager.placeIndexRow(EntityId.make(row.id), documentId, () =>
+            getSnapshotState(row),
+          );
+          if (entity) {
+            placed.set(row.id, { database, entity });
+          }
+        }
+      }
+    }
+    return load;
+  }
+
+  /**
    * Hydrate one record under a bounded budget. Hydration reaches document loading, which waits on
    * replication and never settles while a document is unavailable; left unbounded it held the
    * caller's whole query open for as long as the index-query budget allowed.
    */
   private async _hydrateRecord(
     ctx: Context,
+    query: QueryAST.Query,
     start: number,
     result: QueryService.QueryResult,
     hydratedIntoFeedHandle: Set<string>,
+    load: RowLoader,
   ): Promise<SourceEntry | null | typeof STALLED> {
     const timeout = this._params.hydrationTimeout ?? RECORD_HYDRATION_TIMEOUT;
-    const hydration = this._filterMapResult(ctx, start, result, hydratedIntoFeedHandle);
+    const hydration = this._filterMapResult(ctx, query, start, result, load, hydratedIntoFeedHandle);
     // The abandoned hydration may still reject after the race has settled, which would surface as an
     // unhandled rejection; the real outcome is already taken below.
     hydration.catch(() => {});
@@ -594,8 +651,16 @@ export class IndexQuerySource implements QuerySource {
       if (err === expired) {
         return STALLED;
       }
+      if (err instanceof ContextDisposedError) {
+        return null;
+      }
       throw err;
     }
+  }
+
+  private _subscriptionIds(query: QueryAST.Query): string[] | undefined {
+    const ids = this._params.objectLoader.subscriptionIds?.(getTargetSpacesForQuery(query));
+    return ids?.length ? ids : undefined;
   }
 
   private _assertResultSpaces(query: QueryAST.Query, response: QueryService.QueryResponse): void {
@@ -615,8 +680,10 @@ export class IndexQuerySource implements QuerySource {
    */
   private async _filterMapResult(
     ctx: Context,
+    query: QueryAST.Query,
     queryStartTimestamp: number,
     result: QueryService.QueryResult,
+    load: RowLoader,
     hydratedIntoFeedHandle?: Set<string>,
   ): Promise<SourceEntry | null> {
     // A collapsed group carries no object, so there is nothing to load: pass its values through.
@@ -642,7 +709,7 @@ export class IndexQuerySource implements QuerySource {
       objectId: result.id,
       spaceId: result.spaceId,
       loadReason: 'query',
-      query: JSON.stringify(this._query ?? null),
+      query: JSON.stringify(query),
     }));
 
     invariant(SpaceId.isValid(result.spaceId), 'Invalid spaceId');
@@ -730,7 +797,7 @@ export class IndexQuerySource implements QuerySource {
       return queryResult;
     }
 
-    const object = await this._resolveIndexedObject(result);
+    const object = await load(result);
     if (!object) {
       return null;
     }
@@ -742,7 +809,7 @@ export class IndexQuerySource implements QuerySource {
     // The host's index lags a local delete: its in-flight response still lists the object, and
     // because results are a union across sources any stale entry resurfaces it after the working
     // set has already dropped it. The local flag is authoritative here.
-    if (!this._matchesDeletedOption(object)) {
+    if (!matchesDeletedOption(object, query)) {
       return null;
     }
 
@@ -754,19 +821,6 @@ export class IndexQuerySource implements QuerySource {
       group: _groupFromRemoteResult(result),
     };
     return queryResult;
-  }
-
-  /** Whether a hydrated object's local deleted flag satisfies the query's `deleted` option. */
-  private _matchesDeletedOption(object: Entity.Unknown): boolean {
-    const deleted = Entity.isDeleted(object);
-    switch (this._query === undefined ? 'exclude' : getQueryDeletedOption(this._query)) {
-      case 'exclude':
-        return !deleted;
-      case 'only':
-        return deleted;
-      case 'include':
-        return true;
-    }
   }
 
   /**
@@ -825,3 +879,19 @@ const _groupFromRemoteResult = (result: QueryService.QueryResult): SourceEntry['
     : undefined;
 
 const recordKey = (spaceId: string, objectId: string): string => `${spaceId}:${objectId}`;
+
+/** Loads the object of a document row. */
+type RowLoader = (row: QueryService.QueryResult) => Promise<Entity.Unknown | undefined>;
+
+/** Whether a hydrated object's local deleted flag satisfies the query's `deleted` option. */
+const matchesDeletedOption = (object: Entity.Unknown, query: QueryAST.Query): boolean => {
+  const deleted = Entity.isDeleted(object);
+  switch (getQueryDeletedOption(query)) {
+    case 'exclude':
+      return !deleted;
+    case 'only':
+      return deleted;
+    case 'include':
+      return true;
+  }
+};

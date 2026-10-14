@@ -59,6 +59,12 @@ export interface IndexerObject {
    * Timestamp of the last update of the object.
    */
   updatedAt: number;
+
+  /**
+   * Heads of the document {@link data} was read at, for an object a client can back with the document's
+   * bytes: the document's only object, not a branch, and small enough to ship. Absent otherwise.
+   */
+  heads?: readonly string[];
 }
 
 export interface ChangeSummary {

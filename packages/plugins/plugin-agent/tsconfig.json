@@ -94,7 +94,16 @@
       "path": "../../sdk/types"
     },
     {
+      "path": "../../ui/react-primitives/react-hooks"
+    },
+    {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-components"
+    },
+    {
+      "path": "../../ui/react-ui-editor"
     },
     {
       "path": "../../ui/react-ui-form"
@@ -103,7 +112,13 @@
       "path": "../../ui/react-ui-list"
     },
     {
+      "path": "../../ui/react-ui-masonry"
+    },
+    {
       "path": "../../ui/react-ui-menu"
+    },
+    {
+      "path": "../../ui/ui-editor"
     },
     {
       "path": "../../ui/ui-theme"

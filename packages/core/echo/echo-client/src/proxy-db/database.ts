@@ -473,13 +473,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     if (Type.isType(schemaInput)) {
       const entity = schemaInput;
       schema = Type.getSchema(entity).annotate({ [TypeIdentifierAnnotationId]: undefined });
-      meta =
-        getTypeAnnotation(schema) ??
-        ({
-          kind: Type.isRelation(entity) ? EntityKind.Relation : EntityKind.Object,
-          typename: Type.getTypename(entity),
-          version: Type.getVersion(entity),
-        } satisfies TypeAnnotation);
+      meta = getTypeAnnotation(schema) ?? this.#describedTypeAnnotation(entity);
     } else {
       schema = schemaInput;
       meta = getTypeAnnotation(schema);
@@ -501,6 +495,8 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
           kind: meta.kind,
           typename: meta.typename,
           version: meta.version,
+          relationSource: meta.sourceSchema,
+          relationTarget: meta.targetSchema,
         }),
       }),
     );
@@ -508,6 +504,40 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     const persistentSchema = this._addObject(schemaToStore, { origin });
     invariant(Type.isType(persistentSchema), 'persisted schema must materialize as a Type entity (kind=type)');
     return persistentSchema;
+  }
+
+  /**
+   * The annotation of a type entity built from JSON Schema, whose rebuilt schema carries none because
+   * its typename and version live in meta; the kind and relation ends come from the JSON Schema.
+   */
+  #describedTypeAnnotation(entity: Type.AnyEntity): TypeAnnotation {
+    const { entityKind, relationSource, relationTarget } = entity.jsonSchema;
+    const isRelation = Type.isRelation(entity) || entityKind === EntityKind.Relation;
+    return {
+      kind: isRelation ? EntityKind.Relation : EntityKind.Object,
+      typename: Type.getTypename(entity),
+      version: Type.getVersion(entity),
+      ...(isRelation && {
+        sourceSchema: this.#relationEndDXN(relationSource?.$ref),
+        targetSchema: this.#relationEndDXN(relationTarget?.$ref),
+      }),
+    };
+  }
+
+  /**
+   * A relation end as the `dxn:` the stored annotation requires; an end naming a type persisted in
+   * this space by its `echo:` id is recorded under that type's typename and version.
+   */
+  #relationEndDXN(uri: string | undefined): DXN.DXN | undefined {
+    if (uri == null || !EID.isEID(uri)) {
+      return uri == null ? undefined : DXN.tryMake(uri);
+    }
+    const entityId = EID.getEntityId(EID.parse(uri));
+    const type = entityId ? this._entityManager.getEntityById(entityId) : undefined;
+    if (!Type.isType(type)) {
+      return undefined;
+    }
+    return DXN.tryMake(`dxn:${Type.getTypename(type)}:${Type.getMeta(type).version}`);
   }
 
   // TODO(burdon): Type check.

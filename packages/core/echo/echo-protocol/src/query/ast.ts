@@ -462,10 +462,60 @@ const Order_ = Schema.Union([
     field: Schema.Literals(['createdAt', 'updatedAt']),
     direction: OrderDirection,
   }),
+  Schema.Struct({
+    // Order by a scalar in an entity annotation (`meta.annotations[key]`), at `path` inside a
+    // struct-valued annotation; without `path` the annotation value itself is the scalar.
+    kind: Schema.Literal('annotation'),
+    key: Schema.String,
+    path: Schema.optional(Schema.Array(Schema.String)),
+    direction: OrderDirection,
+  }),
 ]);
 
 export type Order = Schema.Schema.Type<typeof Order_>;
 export const Order: Schema.Codec<Order> = Order_;
+
+export type OrderAnnotation = Extract<Order, { kind: 'annotation' }>;
+
+/**
+ * The value an annotation order sorts by, in the domain SQLite's JSON functions sort in: booleans
+ * as 0/1, and anything but a number or string (absent, null, object, array) as null.
+ */
+export const getAnnotationOrderValue = (
+  annotations: Readonly<Record<string, unknown>> | undefined,
+  order: OrderAnnotation,
+): string | number | null => {
+  if (annotations === undefined || !Object.hasOwn(annotations, order.key)) {
+    return null;
+  }
+  let value: unknown = annotations[order.key];
+  for (const key of order.path ?? []) {
+    if (typeof value !== 'object' || value === null || Array.isArray(value) || !Object.hasOwn(value, key)) {
+      return null;
+    }
+    value = Reflect.get(value, key);
+  }
+  if (typeof value === 'boolean') {
+    return value ? 1 : 0;
+  }
+  return typeof value === 'number' || typeof value === 'string' ? value : null;
+};
+
+/**
+ * Compares two {@link getAnnotationOrderValue} results as the SQL executor's `ORDER BY` does: nulls
+ * last in either direction, numbers before strings, strings by code unit.
+ */
+export const compareAnnotationOrderValues = (
+  a: string | number | null,
+  b: string | number | null,
+  direction: OrderDirection,
+): number => {
+  if (a === null || b === null) {
+    return a === b ? 0 : a === null ? 1 : -1;
+  }
+  const comparison = typeof a === typeof b ? (a < b ? -1 : a > b ? 1 : 0) : typeof a === 'number' ? -1 : 1;
+  return direction === 'desc' ? -comparison : comparison;
+};
 
 /**
  * Order the query results.
