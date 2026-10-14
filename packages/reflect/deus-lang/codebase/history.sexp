@@ -1,3 +1,8 @@
+(entry "3796ba0f063484719a0d9a2f1e503c09d39d350ef02278ff3311385e30531b6e" "task: set 38603468 state details" "claude")
+(entry "569730f40a36c9e4cdc5996ed7337ded02cd3879d1f538a165c285486b8237a9" "close f7d39ad6 by #eddca32cd2" "claude")
+(entry "eddca32cd2e9255268b5f13b75b4d973e1fe32abe55ec8158a9786a95204faff" "C back end: reuse freed blocks over 256 words by exact fit (D102)" "claude")
+(entry "26b25952c48bcc831919a171ca9788cf8e694f01bf822e7212044d52f15fa477" "history: import 507 changes" "")
+(entry "ce1b500e791b90a95ca3eb761f72cf9f3b08588a8fd9daf8597fece16987022f" "task: import from tasks.sexp" "")
 (entry "880640eb1386388c2ab4dd431e7127cb5a2479322ec1c67934f6a06ce6c2fd00" "task: set e76e36b0 state" "claude")
 (entry "ea44281ed7a765aed231b1027324a7c6d3ab30cb2e17a4a9ac223b9d7c459256" "task: set e76e36b0 details" "claude")
 (entry "7be4505616a3e6368d4ca52a813ad96c0b6ec3a58ac4c338d5a5fdcb84f92085" "task: open e76e36b0 Catch the R2 remote up with the git export and push it, so threads can start from deus pull" "claude")
