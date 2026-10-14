@@ -95,3 +95,19 @@ proposals are ideas to solve things, you need to evaluate and choose the best ap
 ---
 
 - can you keep a timeline for me in md file in docs -- I wanna see how this evolves -- record real wall time since last stage in each stage
+
+---
+
+what about rewriting the interpretor to from typescript rust? isn't it tiny and the whole bottleneck?
+
+---
+
+do 1
+
+but you missed your most core instruction: dont block on me
+
+can you re-read all my prompts from the session transcript file
+
+---
+
+- I wanna explore cloudflare as potential deployment target -- their durable object model is nice. we'd need language ontology to support that. we can deploy wasm kernel there. also they have temp account and local workerd to test

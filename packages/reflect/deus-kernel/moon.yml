@@ -1,0 +1,29 @@
+# A Rust crate with no package.json; CI's setup action installs the toolchain `rust-toolchain.toml` pins.
+layer: library
+language: rust
+
+tasks:
+  cargo-build:
+    command: cargo build --release
+    inputs:
+      - src/**/*.rs
+      - Cargo.toml
+      - Cargo.lock
+      - rust-toolchain.toml
+    outputs:
+      - target/release/deus-kernel
+  cargo-test:
+    command: cargo test
+    inputs:
+      - src/**/*.rs
+      - tests/**/*.rs
+      - Cargo.toml
+      - Cargo.lock
+      - rust-toolchain.toml
+      - /packages/reflect/deus-lang/deus/**/*.deus
+      - /packages/reflect/deus-lang/seed/deus.image
+  # What CI's `:test` sweep selects; the crate's tests are `cargo-test`.
+  test:
+    command: noop
+    deps:
+      - cargo-test

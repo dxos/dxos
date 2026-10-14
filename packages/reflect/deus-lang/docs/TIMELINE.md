@@ -25,6 +25,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 17  | 10-14 11:55 | 10m 25s        | `fc077d42`  | JIT-compile handler-free lambdas to JavaScript                                              |
 | 18  | 10-14 11:58 | 3m 14s         | `beb703a9`  | charge JIT deoptimizations to the innermost call                                            |
 | 19  | 10-14 11:59 | 0m 52s         | `3052ae66`  | sort JIT imports                                                                            |
-| 20  | 10-14 12:03 | 3m 37s         | this commit | Agentic review worked; step budget enforced under the JIT                                   |
+| 20  | 10-14 12:03 | 3m 38s         | `6dd9c38d`  | work the agentic review; enforce the step budget under the JIT                              |
+| 21  | 10-14 12:14 | 11m 42s        | this commit | Rust kernel: self-compiles the seed byte-identically                                        |
 
-Total from stage 1 to stage 20: 2h 20m.
+Total from stage 1 to stage 21: 2h 31m.
