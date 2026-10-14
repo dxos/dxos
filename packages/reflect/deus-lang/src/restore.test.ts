@@ -19,6 +19,8 @@ describe('deus CLI export restore', () => {
     const add = deus('add', join(root, 'codebase/code'), join(root, 'codebase/specs'), '--codebase', restored);
     expect(add.stderr).toBe('');
     expect(add.code).toBe(0);
+    // Feature maps link tasks by id (D115), so the restore brings the tasks too.
+    expect(deus('task', 'import', join(root, 'codebase/tasks.sexp'), '--codebase', restored).code).toBe(0);
 
     const self = join(scratch, 'export-self');
     expect(deus('init', '--empty', '--codebase', self).code).toBe(0);
@@ -39,5 +41,14 @@ describe('deus CLI export restore', () => {
     const checked = deus('mdl', '--codebase', restored);
     expect(checked.stdout).toMatch(/ 0 failed, 0 unchecked/);
     expect(checked.code).toBe(0);
+
+    // The toolchain's own feature map prints, and no shipped feature has a problem.
+    const maps = JSON.parse(deus('features', '--json', '--codebase', restored).stdout) as {
+      document: string;
+      features: { id: string; status: string; problems: string[] }[];
+    }[];
+    const toolchain = maps.find((map) => map.document === 'Toolchain.Features');
+    expect(toolchain?.features.length).toBeGreaterThan(10);
+    expect(toolchain?.features.filter((f) => f.status === 'shipped' && f.problems.length > 0)).toEqual([]);
   });
 });

@@ -67,7 +67,7 @@ theorem WasmEquality.Spec.orderRefused : compiles "def less (x : Int) : Bool := 
 def WasmEquality.Spec.prelude : Text := "inductive Int @\"#Int\" where\ninductive Bool @\"#Bool\" where\n  | false\n  | true\ninductive Option (a : Type) @\"#Option\" where\n  | none\n  | some (value : a)\ndef eq : a -> a -> Bool := prim \"eq\"\ndef neq : a -> a -> Bool := prim \"neq\"\ndef lt : a -> a -> Bool := prim \"lt\"\n"
 
 /-- R-3: `Tree Int` calls itself for its subtrees. -/
-theorem WasmEquality.Spec.recursiveTypeOneFunction : functions (tree ++ "def same (t : Tree Int) : Bool := t == t\n") "same" == 3 := by rfl
+theorem WasmEquality.Spec.recursiveTypeOneFunction : functions (Spec.tree ++ "def same (t : Tree Int) : Bool := t == t\n") "same" == 3 := by rfl
 
 /-- L-1: an `Int` comparison adds nothing: the definition and `alloc`. -/
 theorem WasmEquality.Spec.scalarAddsNothing : functions "def same (x : Int) : Bool := x == x\n" "same" == 2 := by rfl
@@ -75,7 +75,7 @@ theorem WasmEquality.Spec.scalarAddsNothing : functions "def same (x : Int) : Bo
 def WasmEquality.Spec.tree : Text := "inductive Tree (a : Type) where\n  | leaf\n  | node (l : Tree a) (v : a) (r : Tree a)\n"
 
 /-- R-1: a user type seen only through a parameter's signature, which names it by IRI. -/
-theorem WasmEquality.Spec.userTypeParameter : compiles (tree ++ "def same (t : Tree Int) : Bool := t == t\n") "same" == true := by rfl
+theorem WasmEquality.Spec.userTypeParameter : compiles (Spec.tree ++ "def same (t : Tree Int) : Bool := t == t\n") "same" == true := by rfl
 
 /-- R-4: `Option a` names no layout for its field. -/
 theorem WasmEquality.Spec.variableRefused : compiles "def same (x : Option a) : Bool := x == x\n" "same" == false := by rfl

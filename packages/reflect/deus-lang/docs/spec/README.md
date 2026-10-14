@@ -23,6 +23,8 @@ independent implementation. Where a spec and the code disagree, the code in [`de
 | [JsGen.Spec](../../codebase/specs/JsGen.Spec.mdl)                  | The JavaScript back end: values, handlers, `Js.import` bindings, source maps     |
 | [View.Spec](../../codebase/specs/View.Spec.mdl) | What `deus view` prints for theorems and header types |
 | [WasmEquality.Spec](../../codebase/specs/WasmEquality.Spec.mdl) | `==` on data in the wasm back end: requirements, layout of the equality functions, theorems |
+| [Features.Spec](../../codebase/specs/Features.Spec.mdl) | Feature maps: `feature` blocks, what `deus mdl` checks in them, and the tree `deus features` prints |
+| [Toolchain.Features](../../codebase/specs/Toolchain.Features.mdl) | The toolchain's own feature map |
 | [WASM.md](./WASM.md)                   | Modules emitted by the DEUS wasm compiler                                              |
 | [NATIVE.md](./NATIVE.md)               | C emitted by the DEUS C compiler, benchmarks of every back end, and the native roadmap |
 | [EXPLORER.md](./EXPLORER.md)           | The explorer's JSON data files and site layout                                         |

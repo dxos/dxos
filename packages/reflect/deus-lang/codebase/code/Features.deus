@@ -1,0 +1,142 @@
+def Features.Spec.block (id : Text) (props : List (Text, Text)) : Block := Block.mk "feature" id ("feature " ++ id) props 0
+
+def Features.Spec.facts (name : Text) : Result Text (List (Text, Text)) := if name == "Lib.done" then Result.ok [("kind", "term")] else if name == "Lib.stub" then Result.ok [("kind", "term"), ("implemented", "false")] else if name == "task:open1" then Result.ok [("kind", "task"), ("state", "todo"), ("title", "finish it")] else if name == "task:done1" then Result.ok [("kind", "task"), ("state", "done"), ("title", "did it")] else if name == "spec:Lib.Spec" then Result.ok [("kind", "spec")] else Result.err (name ++ " is not in the codebase")
+
+def Features.Spec.family : List Feature := [feature "F-1" [("status", "building")], feature "F-2" [("status", "shipped"), ("parent", "F-1")], feature "F-4" [("status", "planned")], feature "F-3" [("status", "building"), ("parent", "F-2"), ("tasks", "open1 | done1")]]
+
+def Features.Spec.feature (id : Text) (props : List (Text, Text)) : Feature :=
+  match fromBlock (Spec.block id props) with
+  | Result.ok f => f
+  | Result.err _ => Feature.mk id "" "planned" "" [] [] []
+
+def Features.Spec.lost : List Feature := [feature "F-1" [("status", "planned")], feature "F-5" [("status", "planned"), ("parent", "F-9")]]
+
+theorem Features.Spec.missingLinksReported : Spec.problemsOf [("status", "building"), ("defs", "Lib.gone"), ("specs", "Lib.Spec | Gone.Spec"), ("tasks", "open1 | nope")] ==
+    ["Lib.gone is not in the codebase", "spec:Gone.Spec is not in the codebase", "task:nope is not in the codebase"] := by rfl
+
+theorem Features.Spec.orphansPrintAsRoots : List.map (fun pair => (fst pair, (snd pair).featureId)) (Features.tree lost) ==
+    [(0, "F-1"), (0, "F-5")] := by rfl
+
+theorem Features.Spec.orphansReported : orphans lost == ["F-5: no parent F-9"] := by rfl
+
+def Features.Spec.problemsOf (props : List (Text, Text)) : List Text :=
+  match fromBlock (Spec.block "F-1" props) with
+  | Result.ok f => Features.problems f Spec.facts
+  | Result.err found => found
+
+theorem Features.Spec.renderShowsStatusAndOpenTasks : Features.render family Spec.facts ==
+    "building  F-1  feature F-1\nshipped     F-2  feature F-2\nbuilding      F-3  feature F-3  (1 of 2 tasks open)\nplanned   F-4  feature F-4" := by rfl
+
+theorem Features.Spec.shippedNeedsClosedTasks : Spec.problemsOf [("status", "shipped"), ("tasks", "done1 | open1")] ==
+    ["shipped, but task open1 is open: finish it"] := by rfl
+
+theorem Features.Spec.shippedNeedsImplementedDefs : Spec.problemsOf [("status", "shipped"), ("defs", "Lib.done | Lib.stub")] ==
+    ["shipped, but Lib.stub is declared and not implemented"] := by rfl
+
+theorem Features.Spec.statusIsChecked : Spec.problemsOf [("status", "done"), ("tasks", "done1")] ==
+    ["status: done is not one of planned, building, shipped, dropped"] := by rfl
+
+theorem Features.Spec.statusIsRequired : Spec.problemsOf [("tasks", "done1")] ==
+    ["status: missing (planned, building, shipped or dropped)"] := by rfl
+
+theorem Features.Spec.treeNestsChildren : List.map (fun pair => (fst pair, (snd pair).featureId)) (Features.tree family) ==
+    [(0, "F-1"), (1, "F-2"), (2, "F-3"), (0, "F-4")] := by rfl
+
+theorem Features.Spec.unfinishedWithTaskIsFine : Spec.problemsOf [("status", "planned"), ("tasks", "open1")] == [] := by rfl
+
+theorem Features.Spec.unfinishedWithoutTaskIsGap : Spec.problemsOf [("status", "building"), ("defs", "Lib.done"), ("tasks", "done1")] ==
+    ["gap: building, but no open task tracks the rest"] := by rfl
+
+theorem Features.Spec.unlinkedIsGap : Spec.problemsOf [("status", "shipped")] ==
+    ["gap: nothing links this feature to specs, definitions or tasks"] := by rfl
+
+/-- The `feature` block type. -/
+@[ext "org.dxos.deus.feature@1.0"]
+def Features.check (b : Block) : {MdlHost} List Text :=
+  match fromBlock b with
+  | Result.err found => found
+  | Result.ok f => Features.problems f (fun name => MdlHost.describe name)
+
+def Features.fact (facts : List (Text, Text)) (key : Text) : Text := getOr (List.lookup key facts) ""
+
+/-- A `feature` block as data, or what is wrong with its status. -/
+def Features.fromBlock (b : Block) : Result (List Text) Feature :=
+  let status := Features.prop b "status"
+  if Text.isEmpty status then Result.err ["status: missing (planned, building, shipped or dropped)"] else if not (List.contains status statuses) then Result.err ["status: " ++ status ++ " is not one of " ++ join ", " statuses] else Result.ok (Feature.mk
+    b.blockId
+    b.blockTitle
+    status
+    (Features.prop b "parent")
+    (Features.items (Features.prop b "specs"))
+    (Features.items (Features.prop b "defs"))
+    (Features.items (Features.prop b "tasks")))
+
+def Features.isOpenState (state : Text) : Bool := state == "todo" || state == "doing"
+
+/-- Items of a list property, separated by `|` or by lines; a leading `- ` is a list bullet. -/
+def Features.items (t : Text) : List Text :=
+  let unbullet := fun w => if startsWith "- " w then trim (Text.drop 2 w) else w
+  List.filter
+    (fun w => not (Text.isEmpty w))
+    (List.map (fun w => unbullet (trim w)) (Text.split (replace "\n" "|" t) "|"))
+
+/-- Features whose parent the document does not have. -/
+def Features.orphans (features : List Feature) : List Text :=
+  let ids := List.map (fun f => f.featureId) features
+  filterMap
+    (fun f => if Text.isEmpty f.parentId || List.contains f.parentId ids then Option.none else Option.some (f.featureId ++ ": no parent " ++ f.parentId))
+    features
+
+/-- What is wrong with a feature, given what the codebase knows about each name (`facts` answers as
+  `MdlHost.describe` does, with `spec:<Doc>` and `task:<id>` for documents and tasks). Problems that
+  start with `gap: ` are known gaps, which `deus mdl` reports without failing. -/
+def Features.problems (f : Feature) (facts : Text -> Result Text (List (Text, Text))) : List Text :=
+  let shipped := f.featureStatus == "shipped"
+  let defProblems := concatMap (fun name =>
+    match facts name with
+    | Result.err message => [message]
+    | Result.ok known => if shipped && prop0 known "implemented" == "false" then ["shipped, but " ++ name ++ " is declared and not implemented"] else []) f.definitions
+  let specProblems := concatMap (fun d =>
+    match facts ("spec:" ++ d) with
+    | Result.err message => [message]
+    | Result.ok _ => []) f.specDocs
+  let tasks := List.map (fun id => (id, facts ("task:" ++ id))) f.taskIds
+  let taskProblems := concatMap (fun pair =>
+    match pair with
+    | (id, Result.err message) => [message]
+    | (id, Result.ok known) => if shipped && isOpenState (prop0 known "state") then ["shipped, but task " ++ id ++ " is open: " ++ prop0 known "title"] else []) tasks
+  let anyOpen := any (fun pair =>
+    match pair with
+    | (_, Result.ok known) => isOpenState (prop0 known "state")
+    | _ => false) tasks
+  let linked := not (List.isEmpty f.definitions && List.isEmpty f.specDocs && List.isEmpty f.taskIds)
+  let found := defProblems ++ specProblems ++ taskProblems
+  if not (List.isEmpty found) then found else if f.featureStatus == "dropped" then [] else if not linked then ["gap: nothing links this feature to specs, definitions or tasks"] else if (f.featureStatus == "planned" || f.featureStatus == "building") && not anyOpen then ["gap: " ++ f.featureStatus ++ ", but no open task tracks the rest"] else []
+
+/-- A block property, or `""`. -/
+def Features.prop (b : Block) (key : Text) : Text := trim (getOr (List.lookup key b.props) "")
+
+/-- The tree as text: status, indented id and title, and how many of its tasks are open. -/
+def Features.render (features : List Feature) (facts : Text -> Result Text (List (Text, Text))) : Text := join "\n" (List.map (fun pair =>
+  match pair with
+  | (depth, f) =>
+      let opened := List.length (List.filter (fun id =>
+        match facts ("task:" ++ id) with
+        | Result.ok known => isOpenState (prop0 known "state")
+        | Result.err _ => false) f.taskIds)
+      let count := List.length f.taskIds
+      let suffix := if opened > 0 then "  (" ++ toText opened ++ " of " ++ toText count ++ " task" ++
+        (if count == 1 then "" else "s") ++ " open)" else ""
+      padRight 10 f.featureStatus ++ repeat (2 * depth) " " ++ f.featureId ++ "  " ++ f.featureTitle ++
+        suffix) (Features.tree features))
+
+def Features.statuses : List Text := ["planned", "building", "shipped", "dropped"]
+
+/-- Features depth first, children under their parent in document order; a feature whose parent is missing is a root. -/
+def Features.tree (features : List Feature) : List (Int, Feature) :=
+  let ids := List.map (fun f => f.featureId) features
+  let isRoot := fun f => Text.isEmpty f.parentId || not (List.contains f.parentId ids)
+  let rec under depth parent seen := concatMap
+    (fun f => if f.parentId == parent && not (List.contains f.featureId seen) then (depth, f) :: under (depth + 1) f.featureId (f.featureId :: seen) else [])
+    features
+  concatMap (fun f => (0, f) :: under 1 f.featureId [f.featureId]) (List.filter isRoot features)

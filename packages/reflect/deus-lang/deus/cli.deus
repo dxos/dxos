@@ -901,6 +901,7 @@ def describeName (dir : Text) (ns : Map Text Entry) (printer : Printer) (name : 
   `printer` is `ns`'s, built once per run: its name tables cost more than describing a name.
 -/
 def withHost (dir : Text) (ns : Map Text Entry) (printer : Printer) (body : Unit -> {MdlHost, IO} a) : {IO} a :=
+  let tasks := Ref.new none
   let compiled := fun (source : Text) => try (fun _ => compileExpr dir ns source)
   handle body () with
   | MdlHost.cost source -> k =>
@@ -917,9 +918,12 @@ def withHost (dir : Text) (ns : Map Text Entry) (printer : Printer) (body : Unit
       | Result.err message => Result.err message)
   | MdlHost.js source -> k => k (jsCompare dir ns source)
   | MdlHost.describe name -> k =>
-    k (match guardDefect (fun _ => try (fun _ => describeName dir ns printer name)) with
-      | Result.ok r => r
-      | Result.err message => Result.err message)
+    k (match featureFact dir ns tasks name with
+      | some answer => answer
+      | none =>
+        match guardDefect (fun _ => try (fun _ => describeName dir ns printer name)) with
+        | Result.ok r => r
+        | Result.err message => Result.err message)
 
 /-- Extensions in the codebase by URI: the terms carrying `@[ext "<uri>"]`. -/
 def extensions (dir : Text) (ns : Map Text Entry) : {IO} Map Text Text :=
@@ -982,6 +986,94 @@ def checkSpecs (dir : Text) (ns : Map Text Entry) (printer : Printer) (byUri : M
       (List.sortBy (fun a b =>
         match (a, b) with
         | ((oa, na, _), (ob, nb, _)) => if oa == ob then compare na nb else compare oa ob) mine)) wanted
+
+/--
+  What `MdlHost.describe` says about `task:<id>` (its state and title) and `spec:<Doc>` names, which
+  feature blocks link (D115); `none` for any other name. `tasks` caches the branch's tasks, read on
+  first use.
+-/
+def featureFact (dir : Text) (ns : Map Text Entry) (tasks : Ref (Option (Map Text Task))) (name : Text) : {IO} Option (Result Text (List (Text, Text))) :=
+  if Text.startsWith "task:" name then
+    let all := match Ref.get tasks with
+      | some known => known
+      | none =>
+        let known := match try (fun _ => Tasks.current dir) with
+          | Result.ok found => found
+          | Result.err _ => Map.empty
+        Ref.set tasks (some known)
+        known
+    some (match Map.lookup (Text.drop 5 name) all with
+      | some t => Result.ok [("kind", "task"), ("state", Tasks.stateText t.state), ("title", t.title)]
+      | none => Result.err (name ++ " is not in the codebase"))
+  else if Text.startsWith "spec:" name then
+    some (if List.contains (Text.drop 5 name) (Export.specDocuments ns) then Result.ok [("kind", "spec")] else Result.err (name ++ " is not in the codebase"))
+  else none
+
+/-- A document's `feature` blocks as features, in document order, with the blocks that do not parse. -/
+def featuresOf (dir : Text) (ns : Map Text Entry) (d : Text) : {IO, Throw Text} (List Feature, List Text) :=
+  let orderOf := fun (h : Text) =>
+    match Codebase.metaField (Codebase.readMeta dir h) "order" with
+    | some (Sexp.int k) => k
+    | _ => 1000000
+  let blocks := List.filterMap (fun pair =>
+    match pair with
+    | (name, Entry.spec h) =>
+      if Export.documentOf name != d then none
+      else Option.bind (Codebase.readObject dir h) (fun form =>
+        match Mdl.fromSexp form with
+        | (_, b) => if b.blockType == "feature" then some (orderOf h, b) else none)
+    | _ => none) (Map.toList ns)
+  let sorted := List.map snd (List.sortBy (fun a b => compare (fst a) (fst b)) blocks)
+  List.foldl (fun acc b =>
+    match (acc, Features.fromBlock b) with
+    | ((fs, bad), Result.ok f) => (fs ++ [f], bad)
+    | ((fs, bad), Result.err found) => (fs, bad ++ List.map (fun p => b.blockId ++ ": " ++ p) found)) ([], []) sorted
+
+/--
+  `deus features [documents…]`: the feature maps (D115), each a tree of features with their status
+  and open tasks, then what is wrong or missing. With no arguments, every document with a
+  `feature` block.
+-/
+def features (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let ns := Codebase.current dir
+  let tasks := Ref.new none
+  let facts := fun (name : Text) =>
+    match featureFact dir ns tasks name with
+    | some answer => answer
+    | none =>
+      match Map.lookup name ns with
+      | none => Result.err (name ++ " is not in the codebase")
+      | some e =>
+        let stub := match Codebase.readObject dir (Entry.hash e) with
+          | some (Sexp.list [Sexp.sym "term", core]) => Resolve.isStub core
+          | _ => false
+        Result.ok ([("kind", Entry.kind e)] ++ (if stub then [("implemented", "false")] else []))
+  let docs := if List.isEmpty args.positional then List.filter (fun d => not (List.isEmpty (fst (featuresOf dir ns d)))) (Export.specDocuments ns) else args.positional
+  let maps := List.map (fun d => (d, featuresOf dir ns d)) docs
+  let notes := fun (fs : List Feature) (bad : List Text) =>
+    bad ++ Features.orphans fs ++ List.concatMap (fun f => List.map (fun p => f.featureId ++ ": " ++ p) (Features.problems f facts)) fs
+  output args
+    (fun _ => Json.arr (List.map (fun m =>
+      match m with
+      | (d, (fs, bad)) =>
+        Json.obj [("document", Json.str d), ("features", Json.arr (List.map (fun pair =>
+          match pair with
+          | (depth, f) =>
+            let opened := List.filter (fun id =>
+              match facts ("task:" ++ id) with
+              | Result.ok known => Features.isOpenState (Features.fact known "state")
+              | Result.err _ => false) f.taskIds
+            Json.obj [("id", Json.str f.featureId), ("title", Json.str f.featureTitle), ("status", Json.str f.featureStatus), ("parent", Json.str f.parentId),
+              ("depth", Json.num depth), ("specs", Json.arr (List.map Json.str f.specDocs)), ("defs", Json.arr (List.map Json.str f.definitions)),
+              ("tasks", Json.arr (List.map Json.str f.taskIds)), ("openTasks", Json.arr (List.map Json.str opened)),
+              ("problems", Json.arr (List.map Json.str (Features.problems f facts)))]) (Features.tree fs))),
+          ("notes", Json.arr (List.map Json.str (notes fs bad)))]) maps))
+    (fun _ => Text.join "\n\n" (List.map (fun m =>
+      match m with
+      | (d, (fs, bad)) =>
+        let found := notes fs bad
+        d ++ "\n" ++ Features.render fs facts ++ (if List.isEmpty found then "" else "\n" ++ Text.join "\n" (List.map (fun n => "  " ++ n) found))) maps))
 
 /--
   `deus mdl [documents|files|dirs…]`: checks spec documents in the codebase by name (D99), MDL
@@ -1560,6 +1652,7 @@ def usage : Text :=
     "  eval <expr>                          evaluate an expression",
     "  mdl [files|dirs…]                    check .mdl documents (or the codebase's specs): each block runs through the",
     "                                       @[ext \"<uri>\"] term its Extensions table names",
+    "  features [documents…]                feature maps: each feature's status, open tasks, and what is missing (D115)",
     "  test [prefix] [--integration]        run tests in a deterministic simulation (cached by hash);",
     "                                       --integration also runs @[integration] tests for real",
     "  check [prefix]                       check theorems and report their evidence",
@@ -1629,6 +1722,7 @@ def dispatch (argv : List Text) : {IO, Throw Text} Unit :=
       | (options, program) => run (parseArgs options) program
     else if command == "eval" then eval args
     else if command == "mdl" then mdl args
+    else if command == "features" then features args
     else if command == "test" then Check.tests args
     else if command == "check" then Check.theorems args
     else if command == "image" then image args

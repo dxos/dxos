@@ -5,11 +5,11 @@ def External.andThen (result : Result e a) (f : a -> {r} Result e b) : {r} Resul
 
 /-- The `container` block type. -/
 @[ext "org.dxos.deus.container@1.0"]
-def External.checkContainer (b : Block) : {MdlHost} List Text := problemsOf (containerOf b)
+def External.checkContainer (b : Block) : {MdlHost} List Text := External.problemsOf (containerOf b)
 
 /-- The `requirement` block type. -/
 @[ext "org.dxos.deus.requirement@1.0"]
-def External.checkRequirement (b : Block) : {MdlHost} List Text := problemsOf (requirementOf b)
+def External.checkRequirement (b : Block) : {MdlHost} List Text := External.problemsOf (requirementOf b)
 
 /-- A `container` block as data. -/
 def External.containerOf (b : Block) : Result (List Text) Container :=
@@ -20,7 +20,7 @@ def External.containerOf (b : Block) : Result (List Text) Container :=
       match imageProblems image with
       | [] => Result.ok (Container.mk image command env ports)
       | found => Result.err found
-  | (envResult, portResult) => Result.err (problemsOf envResult ++ problemsOf portResult)
+  | (envResult, portResult) => Result.err (External.problemsOf envResult ++ External.problemsOf portResult)
 
 def External.crates : Registry := Registry.mk "crates" "https://static.crates.io/crates/{package}/{package}-{version}.crate"
 

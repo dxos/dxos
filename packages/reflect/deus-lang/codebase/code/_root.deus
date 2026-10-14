@@ -221,6 +221,22 @@ structure Failure where
   facts : List (Text, Text)
   cause : Option Failure
 
+/-
+  Feature maps (D115): what the product is, beside tasks, which say what to do next. A feature map
+  is an MDL document of `feature` blocks, stored in the codebase like a spec (D99); each feature has
+  a status and links the spec documents, definitions and tasks that make it up.
+-/
+/-- One `feature` block. `featureStatus` is planned, building, shipped or dropped; `parentId` is another
+  block id or `""`. Field names carry the type's name because field names are global (task 31d3c1cd). -/
+structure Feature @"urn:deus:feature:Feature" where
+  featureId : Text
+  featureTitle : Text
+  featureStatus : Text
+  parentId : Text
+  specDocs : List Text
+  definitions : List Text
+  taskIds : List Text
+
 /-- Resolves a requirement to a local path, or says why it cannot. -/
 ability Fetch @"urn:deus:external:Fetch" where
   fetch : Requirement -> Result Text Text

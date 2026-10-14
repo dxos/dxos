@@ -73,6 +73,15 @@ Laws about pure functions are theorems over generated values. Laws about the sto
 explorer run inside `Codebase.Spec.inStore`, a fresh codebase in the deterministic simulation, so a
 theorem can still state them (`inStore (fun dir => …) = true`) and `by test n` still generates inputs.
 
+## Feature maps
+
+A spec says what one subsystem promises; a feature map says what the product is made of (D115). Dmytro:
+"we need feature-maps in codebase in addition to tasks". [`Toolchain.Features`](../codebase/specs/Toolchain.Features.mdl)
+maps the toolchain: each `feature` block has a status and links its spec documents, definitions and
+tasks. Edit it like a spec (`deus view Toolchain.Features > f.mdl`, `deus update f.mdl`), and when a task
+starts or ends, keep the feature that owns it current. `deus features` prints the tree with open tasks,
+and `deus mdl` fails a shipped feature with open work.
+
 ## Before and after
 
 | Measure                                  | Before                   | After                                                            |

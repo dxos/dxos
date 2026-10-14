@@ -512,7 +512,7 @@ def Cli.dispatch (argv : List Text) : {IO, Throw Text} Unit :=
       if command == "compile" then Cli.compile args else if command == "init" then Cli.init args else if command == "add" then addOrUpdate args false else if command == "update" then addOrUpdate args true else if command == "ls" then ls args else if command == "find" then Cli.find args else if command == "view" then Cli.view args else if command == "names" then Cli.names args else if command == "deps" then deps args false else if command == "dependents" then deps args true else if command == "mv" then mv args false else if command == "alias" then mv args true else if command == "rm" then rm args else if command == "branch" then branch args else if command == "switch" then switch args else if command == "merge" then Cli.merge args else if command == "log" then Cli.log args else if command == "layers" then Cli.layers args else if command == "migrate" then Cli.migrate args else if command == "project" then project args else if command == "lib" then lib args else if command == "remote" then remote args else if command == "push" then Cli.push args else if command == "pull" then Cli.pull args else if command == "compact" then Cli.compact args else if command == "undo" then undo args else if command == "run" then
         match leadingOptions rest with
         | (options, program) => Cli.run (parseArgs options) program
-      else if command == "eval" then eval args else if command == "mdl" then mdl args else if command == "test" then tests args else if command == "check" then theorems args else if command == "image" then Cli.image args else if command == "build" then Cli.build args else if command == "bindings" then bindings args else if command == "serve" then Cli.serve args else if command == "explore" then explore args else if command == "task" then task args else if command == "comment" then Cli.comment args else if command == "comments" then Cli.comments args else if command == "asset" then asset args else if command == "inbox" then inbox args else if command == "export" then export args else if command == "history" then Cli.history args else if command == "event" then Analytics.command args else if command == "help" then IO.print Cli.usage else die ("unknown command " ++ command ++ "\n" ++ Cli.usage)
+      else if command == "eval" then eval args else if command == "mdl" then mdl args else if command == "features" then features args else if command == "test" then tests args else if command == "check" then theorems args else if command == "image" then Cli.image args else if command == "build" then Cli.build args else if command == "bindings" then bindings args else if command == "serve" then Cli.serve args else if command == "explore" then explore args else if command == "task" then task args else if command == "comment" then Cli.comment args else if command == "comments" then Cli.comments args else if command == "asset" then asset args else if command == "inbox" then inbox args else if command == "export" then export args else if command == "history" then Cli.history args else if command == "event" then Analytics.command args else if command == "help" then IO.print Cli.usage else die ("unknown command " ++ command ++ "\n" ++ Cli.usage)
 
 def Cli.entryJson (name : Text) (e : Entry) : Json := Json.obj [("name", Json.str name), ("kind", Json.str (Entry.kind e)), ("hash", Json.str (Entry.hash e))]
 
@@ -593,6 +593,82 @@ def Cli.extensions (dir : Text) (ns : Map Text Entry) : {IO} Map Text Text := Ma
       | Sexp.list (Sexp.str "ext" :: Sexp.str uri :: []) => Option.some (uri, h)
       | _ => Option.none) (metaList (readMeta dir h) "attrs")
   | _ => []) (Map.toList ns))
+
+/-- What `MdlHost.describe` says about `task:<id>` (its state and title) and `spec:<Doc>` names, which
+  feature blocks link (D115); `none` for any other name. `tasks` caches the branch's tasks, read on
+  first use. -/
+def Cli.featureFact (dir : Text) (ns : Map Text Entry) (tasks : Ref (Option (Map Text Task))) (name : Text) : {IO} Option (Result Text (List (Text, Text))) := if startsWith "task:" name then
+  let all :=
+    match Ref.get tasks with
+    | Option.some known => known
+    | Option.none =>
+        let known :=
+          match try (fun _ => Tasks.current dir) with
+          | Result.ok found => found
+          | Result.err _ => Map.empty
+        Ref.set tasks (Option.some known)
+        known
+  Option.some (match Map.lookup (Text.drop 5 name) all with
+  | Option.some t => Result.ok [("kind", "task"), ("state", stateText t.state), ("title", t.title)]
+  | Option.none => Result.err (name ++ " is not in the codebase"))
+else if startsWith "spec:" name then Option.some (if List.contains (Text.drop 5 name) (specDocuments ns) then Result.ok [("kind", "spec")] else Result.err (name ++ " is not in the codebase")) else Option.none
+
+/-- `deus features [documents…]`: the feature maps (D115), each a tree of features with their status
+  and open tasks, then what is wrong or missing. With no arguments, every document with a
+  `feature` block. -/
+def Cli.features (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let ns := Codebase.current dir
+  let tasks := Ref.new Option.none
+  let facts := fun name =>
+    match featureFact dir ns tasks name with
+    | Option.some answer => answer
+    | Option.none =>
+        match Map.lookup name ns with
+        | Option.none => Result.err (name ++ " is not in the codebase")
+        | Option.some e =>
+            let stub :=
+              match readObject dir (Entry.hash e) with
+              | Option.some (Sexp.list (Sexp.sym "term" :: core :: [])) => isStub core
+              | _ => false
+            Result.ok ([("kind", Entry.kind e)] ++ (if stub then [("implemented", "false")] else []))
+  let docs := if List.isEmpty args.positional then List.filter (fun d => not (List.isEmpty (fst (featuresOf dir ns d)))) (specDocuments ns) else args.positional
+  let maps := List.map (fun d => (d, featuresOf dir ns d)) docs
+  let notes := fun fs bad => bad ++ orphans fs ++
+    concatMap (fun f => List.map (fun p => f.featureId ++ ": " ++ p) (Features.problems f facts)) fs
+  Cli.output args (fun _ => Json.arr (List.map (fun m =>
+    match m with
+    | (d, fs, bad) => Json.obj [("document", Json.str d), ("features", Json.arr (List.map (fun pair =>
+        match pair with
+        | (depth, f) =>
+            let opened := List.filter (fun id =>
+              match facts ("task:" ++ id) with
+              | Result.ok known => isOpenState (prop0 known "state")
+              | Result.err _ => false) f.taskIds
+            Json.obj [("id", Json.str f.featureId), ("title", Json.str f.featureTitle), ("status", Json.str f.featureStatus), ("parent", Json.str f.parentId), ("depth", Json.num depth), ("specs", Json.arr (List.map Json.str f.specDocs)), ("defs", Json.arr (List.map Json.str f.definitions)), ("tasks", Json.arr (List.map Json.str f.taskIds)), ("openTasks", Json.arr (List.map Json.str opened)), ("problems", Json.arr (List.map Json.str (Features.problems f facts)))]) (Features.tree fs))), ("notes", Json.arr (List.map Json.str (notes fs bad)))]) maps)) (fun _ => join "\n\n" (List.map (fun m =>
+    match m with
+    | (d, fs, bad) =>
+        let found := notes fs bad
+        d ++ "\n" ++ Features.render fs facts ++
+          (if List.isEmpty found then "" else "\n" ++ join "\n" (List.map (fun n => "  " ++ n) found))) maps))
+
+/-- A document's `feature` blocks as features, in document order, with the blocks that do not parse. -/
+def Cli.featuresOf (dir : Text) (ns : Map Text Entry) (d : Text) : {IO, Throw Text} (List Feature, List Text) :=
+  let orderOf := fun h =>
+    match metaField (readMeta dir h) "order" with
+    | Option.some (Sexp.int k) => k
+    | _ => 1000000
+  let blocks := filterMap (fun pair =>
+    match pair with
+    | (name, Entry.spec h) => if documentOf name != d then Option.none else Option.bind (readObject dir h) (fun form =>
+        match Mdl.fromSexp form with
+        | (_, b) => if b.blockType == "feature" then Option.some (orderOf h, b) else Option.none)
+    | _ => Option.none) (Map.toList ns)
+  let sorted := List.map snd (sortBy (fun a b => compare (fst a) (fst b)) blocks)
+  foldl (fun acc b =>
+    match (acc, fromBlock b) with
+    | ((fs, bad), Result.ok f) => (fs ++ [f], bad)
+    | ((fs, bad), Result.err found) => (fs, bad ++ List.map (fun p => b.blockId ++ ": " ++ p) found)) ([], []) sorted
 
 --
 -- Commands: running.
@@ -1465,7 +1541,7 @@ def Cli.undo (args : Args) : {IO, Throw Text} Unit :=
 
 def Cli.usage : Text := join
   "\n"
-  ["usage: deus <command> [args] [--json] [--codebase <dir>]", "", "codebase", "  init [--empty]                       create a codebase with the builtins and prelude (~/.deus, $DEUS_CODEBASE or --codebase)", "  add <files|dirs…>                    add new definitions (.deus, or ```deus fences in .mdl)", "  update <files|dirs…>                 add or replace definitions; dependents are rehashed", "                                       (both take --message <why> for the history, and", "                                       --by <agent> [--prompt <file>] to record provenance)", "  ls [prefix]                          list names", "  find <text>                          names containing text", "  view <name|#hash…> [--core]          print definitions as source (or as Core)", "       [--dialect deus|ts]              … in DEUS (default) or TypeScript-like syntax", "  names <name|#hash>                   every name of a hash", "  deps <name> / dependents <name>      what a definition uses / what uses it", "  mv <from> <to> / alias <name> <new>  rename (with everything under it) / add a name", "  rm <names…>                          remove names", "", "history", "  branch [name]                        list branches, or create one and switch to it", "  switch <branch>                      change branch", "  merge <branch>                       three-way merge into the current branch", "  log [--n N] / undo                   history / step the branch back", "  history import <history.sexp>        keep an export's history under a restored codebase", "  layers                               objects per layer (code, tests, proofs, history, results, …)", "  migrate                              rewrite history with namespace-tree snapshots", "", "analytics (events about the codebase, in @[event] structures; push-only, D104)", "  event types                          event types with their columns and counts", "  event record <Type> field=value…     record an event (a ref field takes a name, an IRI or #hash)", "  event import <file>                  record (event \"Type\" (field value)…) forms", "  event backfill history|timeline <f>  AgentChange events from history.sexp, AgentStage from TIMELINE.md", "  event list [Type] [--about name]     the latest events, of a type or about a definition", "  event stats                          counts per type and per definition (--json: the explorer's events.json)", "  event push [remote]                  write pending events to the remote as Parquet; never pulls", "", "projects", "  project [init <iri>]                 the project's IRI, libraries and owned subgraph", "  lib install <name> <codebase>        mount that project's head under lib.<name> (--branch b)", "", "replication", "  remote add <name> <dir|r2://b/p>     a remote: a directory, or an R2 bucket and prefix", "  push [remote] [--branch b]           upload one immutable bundle of what the remote lacks", "  pull [remote]                        import new bundles; <remote>.<branch> tracks its heads", "  compact [remote] [--level k]         sedimentree compaction into level-k strata", "  inbox [remote]                       apply comments and tasks members filed in the hosted explorer", "", "running", "  run [--codebase c] <name> [args…]    run name () with IO.args = args (options go before the name)", "  eval <expr>                          evaluate an expression", "  mdl [files|dirs…]                    check .mdl documents (or the codebase's specs): each block runs through the", "                                       @[ext \"<uri>\"] term its Extensions table names", "  test [prefix] [--integration]        run tests in a deterministic simulation (cached by hash);", "                                       --integration also runs @[integration] tests for real", "  check [prefix]                       check theorems and report their evidence", "  image <name> -o <file>               write a kernel image", "  build <name> -o <file> [--native]    write a standalone executable that runs name ()", "                                       (--native: Rust kernel + image, ~1 MB; default: Node SEA)", "  build <actor> -o <dir> --worker      write a Cloudflare Worker serving the actor from a Durable Object", "  build <name> -o <dir> --browser      write a static web page that runs name in the browser on the wasm kernel", "  build <handler> -o <file> --server   write a standalone native web server for a handler", "  serve <handler> [--port n]           serve a web handler locally (storage in ./deus-data)", "  explore [--out d|--port n|--publish r|--console]  the codebase explorer: write, serve, or host it on a remote", "", "tasks", "  task new <title…> [--priority p --labels a,b --assignee a --parent id --details d --link name]", "  task [list] [--all|--state s|--label l|--about name]   open tasks, most urgent first", "  task show <id>                       a task, what it links (and how that changed since), its history", "  task set <id> --state doing|done|canceled …   change fields (title, state, priority, assignee, labels, parent, details)", "  task comment <id> <text…>            add a comment (--by <agent>; --attach <file> adds an image)", "  comment <name|change:h> <text…>      comment on a definition or a change (--by, --attach <file>)", "  comments [<name|change:h>]           comments on one subject, or every subject with comments", "  comments import <comments.sexp>      restore comments from an export", "  asset add <file>                     store a file in the codebase's asset store; prints its SHA-256", "  task link <id> <name>|--change <h>   attach a definition or a change; unlink <id> <name> detaches", "  update <files…> --closes <id>        mark a task done, linked to the change that fixed it", "  task import <tasks.sexp>             restore tasks from an export", "  export <dir>                         the codebase as text for git: code/<Namespace>.deus, tasks, history", "  build <name…> -o <file.js> --js      compile to an ES module with a source map, no kernel (D97)", "  build <fn> -o <file.wasm> --wasm     compile a first-order function on Int, Bool and data (and its callees) to wasm", "  build <fn> -o <file> --c             the same subset to C, compiled to an executable by $CC (default cc); -o x.c writes the source", "  bindings <prefix|name…> -o <dir>     a JS module + .d.ts that calls those functions on the wasm kernel", "  compile <files|dirs…> --main <name>  compile files without a codebase", ""]
+  ["usage: deus <command> [args] [--json] [--codebase <dir>]", "", "codebase", "  init [--empty]                       create a codebase with the builtins and prelude (~/.deus, $DEUS_CODEBASE or --codebase)", "  add <files|dirs…>                    add new definitions (.deus, or ```deus fences in .mdl)", "  update <files|dirs…>                 add or replace definitions; dependents are rehashed", "                                       (both take --message <why> for the history, and", "                                       --by <agent> [--prompt <file>] to record provenance)", "  ls [prefix]                          list names", "  find <text>                          names containing text", "  view <name|#hash…> [--core]          print definitions as source (or as Core)", "       [--dialect deus|ts]              … in DEUS (default) or TypeScript-like syntax", "  names <name|#hash>                   every name of a hash", "  deps <name> / dependents <name>      what a definition uses / what uses it", "  mv <from> <to> / alias <name> <new>  rename (with everything under it) / add a name", "  rm <names…>                          remove names", "", "history", "  branch [name]                        list branches, or create one and switch to it", "  switch <branch>                      change branch", "  merge <branch>                       three-way merge into the current branch", "  log [--n N] / undo                   history / step the branch back", "  history import <history.sexp>        keep an export's history under a restored codebase", "  layers                               objects per layer (code, tests, proofs, history, results, …)", "  migrate                              rewrite history with namespace-tree snapshots", "", "analytics (events about the codebase, in @[event] structures; push-only, D104)", "  event types                          event types with their columns and counts", "  event record <Type> field=value…     record an event (a ref field takes a name, an IRI or #hash)", "  event import <file>                  record (event \"Type\" (field value)…) forms", "  event backfill history|timeline <f>  AgentChange events from history.sexp, AgentStage from TIMELINE.md", "  event list [Type] [--about name]     the latest events, of a type or about a definition", "  event stats                          counts per type and per definition (--json: the explorer's events.json)", "  event push [remote]                  write pending events to the remote as Parquet; never pulls", "", "projects", "  project [init <iri>]                 the project's IRI, libraries and owned subgraph", "  lib install <name> <codebase>        mount that project's head under lib.<name> (--branch b)", "", "replication", "  remote add <name> <dir|r2://b/p>     a remote: a directory, or an R2 bucket and prefix", "  push [remote] [--branch b]           upload one immutable bundle of what the remote lacks", "  pull [remote]                        import new bundles; <remote>.<branch> tracks its heads", "  compact [remote] [--level k]         sedimentree compaction into level-k strata", "  inbox [remote]                       apply comments and tasks members filed in the hosted explorer", "", "running", "  run [--codebase c] <name> [args…]    run name () with IO.args = args (options go before the name)", "  eval <expr>                          evaluate an expression", "  mdl [files|dirs…]                    check .mdl documents (or the codebase's specs): each block runs through the", "                                       @[ext \"<uri>\"] term its Extensions table names", "  features [documents…]                feature maps: each feature's status, open tasks, and what is missing (D115)", "  test [prefix] [--integration]        run tests in a deterministic simulation (cached by hash);", "                                       --integration also runs @[integration] tests for real", "  check [prefix]                       check theorems and report their evidence", "  image <name> -o <file>               write a kernel image", "  build <name> -o <file> [--native]    write a standalone executable that runs name ()", "                                       (--native: Rust kernel + image, ~1 MB; default: Node SEA)", "  build <actor> -o <dir> --worker      write a Cloudflare Worker serving the actor from a Durable Object", "  build <name> -o <dir> --browser      write a static web page that runs name in the browser on the wasm kernel", "  build <handler> -o <file> --server   write a standalone native web server for a handler", "  serve <handler> [--port n]           serve a web handler locally (storage in ./deus-data)", "  explore [--out d|--port n|--publish r|--console]  the codebase explorer: write, serve, or host it on a remote", "", "tasks", "  task new <title…> [--priority p --labels a,b --assignee a --parent id --details d --link name]", "  task [list] [--all|--state s|--label l|--about name]   open tasks, most urgent first", "  task show <id>                       a task, what it links (and how that changed since), its history", "  task set <id> --state doing|done|canceled …   change fields (title, state, priority, assignee, labels, parent, details)", "  task comment <id> <text…>            add a comment (--by <agent>; --attach <file> adds an image)", "  comment <name|change:h> <text…>      comment on a definition or a change (--by, --attach <file>)", "  comments [<name|change:h>]           comments on one subject, or every subject with comments", "  comments import <comments.sexp>      restore comments from an export", "  asset add <file>                     store a file in the codebase's asset store; prints its SHA-256", "  task link <id> <name>|--change <h>   attach a definition or a change; unlink <id> <name> detaches", "  update <files…> --closes <id>        mark a task done, linked to the change that fixed it", "  task import <tasks.sexp>             restore tasks from an export", "  export <dir>                         the codebase as text for git: code/<Namespace>.deus, tasks, history", "  build <name…> -o <file.js> --js      compile to an ES module with a source map, no kernel (D97)", "  build <fn> -o <file.wasm> --wasm     compile a first-order function on Int, Bool and data (and its callees) to wasm", "  build <fn> -o <file> --c             the same subset to C, compiled to an executable by $CC (default cc); -o x.c writes the source", "  bindings <prefix|name…> -o <dir>     a JS module + .d.ts that calls those functions on the wasm kernel", "  compile <files|dirs…> --main <name>  compile files without a codebase", ""]
 
 def Cli.view (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
@@ -1574,6 +1650,7 @@ def Cli.warn (b : Batch) : {IO} Unit := forEach b.warnings (fun w => eprintln ("
 /-- Answers `MdlHost` against the codebase: expressions are compiled the way `eval` compiles them.
   `printer` is `ns`'s, built once per run: its name tables cost more than describing a name. -/
 def Cli.withHost (dir : Text) (ns : Map Text Entry) (printer : Printer) (body : Unit -> {MdlHost, IO} a) : {IO} a :=
+  let tasks := Ref.new Option.none
   let compiled := fun source => try (fun _ => compileExpr dir ns source)
   handle body () with
   | MdlHost.cost source -> k => k (match compiled ("fun (u : Unit) => " ++ source) with
@@ -1586,9 +1663,12 @@ def Cli.withHost (dir : Text) (ns : Map Text Entry) (printer : Printer) (body : 
     | Result.ok h => guardDefect (fun _ => Code.run h)
     | Result.err message => Result.err message)
   | MdlHost.js source -> k => k (jsCompare dir ns source)
-  | MdlHost.describe name -> k => k (match guardDefect (fun _ => try (fun _ => describeName dir ns printer name)) with
-    | Result.ok r => r
-    | Result.err message => Result.err message)
+  | MdlHost.describe name -> k => k (match featureFact dir ns tasks name with
+    | Option.some answer => answer
+    | Option.none =>
+        match guardDefect (fun _ => try (fun _ => describeName dir ns printer name)) with
+        | Result.ok r => r
+        | Result.err message => Result.err message)
 
 /-- Runs `body` against the remote `name`: a directory, or `r2://<bucket>/<prefix>` (an
   S3-compatible bucket at `$DEUS_R2_ENDPOINT`, by default the DXOS account's, with `$R2_ACCESS_KEY_ID`

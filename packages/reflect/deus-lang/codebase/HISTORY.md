@@ -1,5 +1,21 @@
 # History of main
 
+- `9f1796bfc9` task: set 8a24ab99 state
+- `449b8e61d6` task: comment on 8a24ab99 (by claude)
+- `081c6f5fc4` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/feat/Toolchain.Features.mdl (by claude)
+- `97c163ea5c` task: open 381a725d Explorer: show feature maps from deus features --json: the tree with status, open tasks and problems, each feature linking its specs, definitions and tasks
+- `84f69a69f0` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/feat/Toolchain.Features.mdl (by claude)
+- `dea8e1e128` add /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/feat/Toolchain.Features.mdl (by claude)
+- `e412ea4c7f` update deus (by claude)
+- `7ebe0892d0` delete Feature.defs Feature.id Feature.parent Feature.specs Feature.status Feature.tasks Feature.title
+- `cc970bd692` task: open ab1ed867 Type headers print an ability by its IRI's last segment, so MdlHost (urn:deus:mdl:Host) prints as Host; print the ability's own name
+- `e453d2fac0` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/feat/Features.Spec.mdl (by claude)
+- `b222da0c51` update deus/features.deus (by claude)
+- `fc5115e0a2` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/feat/Features.Spec.mdl (by claude)
+- `d7fd728b5b` add /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/feat/Features.Spec.mdl (by claude)
+- `eb43607e8f` update deus/features.deus (by claude)
+- `6e164a75f4` add deus/features.deus (by claude)
+- `aedec61ade` task: comment on e76e36b0 (by claude)
 - `536bd782ef` history: import 668 changes
 - `58480b86c8` export: merge 5 changes from codebase
 - `8f9856ca45` task: set a99bf01d state

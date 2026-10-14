@@ -1,0 +1,121 @@
+---
+id: org.dxos.deus.spec.features
+name: Features.Spec
+version: 1.0
+---
+
+# Feature maps
+
+Dmytro: "we need feature-maps in codebase in addition to tasks". A task says what to do next; a
+feature map says what the product is: a tree of features, each with a status, linked to the specs,
+definitions and tasks that make it up, so a reader sees what exists and what is missing
+([D115](../../docs/DECISIONS.md)).
+
+A feature map is an MDL document in the codebase, like a spec. Each `feature` block is one feature:
+
+    feature F-2: Feature maps
+      status: building
+      parent: F-1
+      specs: Features.Spec
+      defs: Features.problems | Features.render
+      tasks: 8a24ab99
+
+`status` is `planned`, `building`, `shipped` or `dropped`; `parent` names another feature of the same
+document; `specs`, `defs` and `tasks` list spec documents, definitions and task ids, separated by
+`|` or one per line. Blocks are stored as `<Document>.<id>` (D99), so features branch, merge, replicate
+and export with the code. `deus mdl` checks every feature block, and `deus features` prints the tree.
+
+Written in the order of the process ([D92](../../docs/DECISIONS.md)): requirements, then the APIs and
+laws, then the implementation.
+
+## Extensions
+
+| Term | URI |
+| --- | --- |
+| `api` | `org.dxos.deus.api@1.0` |
+| `req` | `org.dxos.deus.req@1.0` |
+
+## APIs
+
+```mdl
+api A-1: reading and checking features
+  signatures:
+  - Features.fromBlock : Block -> Result (List Text) Feature
+  - Features.problems : Feature -> (Text -> {e} Result Text (List (Text, Text))) -> {e} List Text
+  - Features.check : Block -> {Host} List Text
+```
+
+```mdl
+api A-2: the tree
+  signatures:
+  - Features.tree : List Feature -> List (Int, Feature)
+  - Features.orphans : List Feature -> List Text
+  - Features.render : List Feature -> (Text -> {e} Result Text (List (Text, Text))) -> {e} Text
+```
+
+## What a feature block must say
+
+A status outside the four is a mistake, not a fifth status. Every link must resolve: a definition by
+name, a spec document by name, a task by id.
+
+```mdl
+req R-1: a feature's status is planned, building, shipped or dropped
+  by: Features.Spec.statusIsChecked | Features.Spec.statusIsRequired
+```
+
+```mdl
+req R-2: every linked definition, spec document and task exists
+  by: Features.Spec.missingLinksReported
+```
+
+## What shipped means
+
+A shipped feature is finished: nothing it links is still to do. An open task or a definition declared
+without a body (D94) contradicts the status, so `deus mdl` fails until one of them changes.
+
+```mdl
+req R-3: a shipped feature has no open task
+  by: Features.Spec.shippedNeedsClosedTasks
+```
+
+```mdl
+req R-4: a shipped feature has no unimplemented definition
+  by: Features.Spec.shippedNeedsImplementedDefs
+```
+
+## What is missing
+
+A feature map is most useful for what it shows is missing. Two things are reported as known gaps,
+which do not fail the document: a feature linked to nothing, and a planned or building feature with no
+open task, since nobody is on the hook for the rest of it.
+
+```mdl
+req R-5: a feature linked to nothing is a known gap
+  by: Features.Spec.unlinkedIsGap
+```
+
+```mdl
+req R-6: unfinished work with no open task is a known gap
+  by: Features.Spec.unfinishedWithoutTaskIsGap | Features.Spec.unfinishedWithTaskIsFine
+```
+
+## The tree
+
+`deus features` prints each document's features depth first, children under their parent in the
+order the document gives them, each with its status and how many of its tasks are open. A parent
+the document does not have is reported, and its children print as roots so nothing is hidden.
+
+```mdl
+req R-7: features print depth first under their parents
+  by: Features.Spec.treeNestsChildren | Features.Spec.renderShowsStatusAndOpenTasks
+```
+
+```mdl
+req R-8: a feature whose parent is missing is reported and still printed
+  by: Features.Spec.orphansReported | Features.Spec.orphansPrintAsRoots
+```
+
+## Laws
+
+The laws run against a made-up codebase: `facts` answers `MdlHost.describe` the way the CLI does for
+two definitions, two tasks and one spec document.

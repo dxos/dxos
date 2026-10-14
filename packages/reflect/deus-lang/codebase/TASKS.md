@@ -20,6 +20,8 @@ From Dmytro: threads MUST use the codebase as primary VCS, and git as backup. D1
 
 > claude: The explorer graph-view thread (claude/project-thread-oixvu2) has no DEUS_R2_ENDPOINT, so it cannot deus pull or push either; it works on the git export (restore, update, export) until this lands.
 
+> claude: The 'Continue DEUS pending work' thread has no R2 keys. It worked on the git export: D113/D114 and the task restore are on #13952's branch (fb40e15a), ready for the next deus pull/push from a thread that has the keys.
+
 ## Embed files in the codebase, never in git, and make artifacts cached constants (`88004c30`)
 
 - state: todo
@@ -29,12 +31,13 @@ From Dmytro: threads MUST use the codebase as primary VCS, and git as backup. D1
 
 From Dmytro: an artifact is a constant whose value is cached, e.g. deusCli := Deus.toBinary Cli.main; evaluating it once caches the result in the artifacts layer by the hash of the expression.
 
-## Feature maps in the codebase alongside tasks: a tree of features with status, linking specs, requirements, definitions and tasks; CLI, a backfilled map of the toolchain, shown in the explorer (`8a24ab99`)
+## Explorer: show feature maps from deus features --json: the tree with status, open tasks and problems, each feature linking its specs, definitions and tasks (`381a725d`)
 
 - state: todo
 - priority: high
-- assignee: claude
-- labels: features, codebase
+- labels: explorer, features
+
+D115. deus features --json gives [{document, features: [{id, title, status, parent, depth, specs, defs, tasks, openTasks, problems}], notes}]. Toolchain.Features is the first map.
 
 ## Publish pushed events to Basin Catalog on the R2 bucket and query them with Basin SQL (needs Dmytro's go-ahead to create Cloudflare resources) (`c5955f97`)
 
@@ -260,6 +263,14 @@ The tools searchDefinitions and viewDefinition were checked with composer.invoke
 - labels: types, devex
 
 Found when D114 added a printer parameter to Cli.withHost: the spec failed at run time, not at update.
+
+## Type headers print an ability by its IRI's last segment, so MdlHost (urn:deus:mdl:Host) prints as Host; print the ability's own name (`ab1ed867`)
+
+- state: todo
+- priority: medium
+- labels: view, types
+
+Since D108. Features.Spec's api block has to say {Host}.
 
 ## TypeScript bindings: export polymorphic functions with codec parameters (`b6907aeb`)
 
@@ -573,6 +584,15 @@ Done as task ca75d545 (D110, e98a2e51) by the explorer thread: events.json, an E
 - links change #8159bef4fa
 
 Each thread exports codebase/ from its own ~/.deus, so the last export wins: history.sexp loses the other containers' entries, and tasks.sexp reverts tasks another container changed. Needed: fullLog dedup by causal hash plus importing codebase/history.sexp before export, and a field-wise task merge on import (Tasks.merge exists for branches).
+
+## Feature maps in the codebase alongside tasks: a tree of features with status, linking specs, requirements, definitions and tasks; CLI, a backfilled map of the toolchain, shown in the explorer (`8a24ab99`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: features, codebase
+
+> claude: Done as D115: Features.Spec, the feature extension, deus features [--json], and Toolchain.Features (25 features). Showing it in the explorer is task 381a725d.
 
 ## File tasks from the explorer with image attachments stored as codebase assets (`16d433b5`)
 

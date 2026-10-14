@@ -1,0 +1,110 @@
+/-
+  Feature maps (D115): what the product is, beside tasks, which say what to do next. A feature map
+  is an MDL document of `feature` blocks, stored in the codebase like a spec (D99); each feature has
+  a status and links the spec documents, definitions and tasks that make it up.
+-/
+
+/--
+  One `feature` block. `featureStatus` is planned, building, shipped or dropped; `parentId` is another
+  block id or `""`. Field names carry the type's name because field names are global (task 31d3c1cd).
+-/
+structure Feature @"urn:deus:feature:Feature" where
+  featureId : Text
+  featureTitle : Text
+  featureStatus : Text
+  parentId : Text
+  specDocs : List Text
+  definitions : List Text
+  taskIds : List Text
+
+namespace Features
+
+def statuses : List Text := ["planned", "building", "shipped", "dropped"]
+
+/-- A block property, or `""`. -/
+def prop (b : Block) (key : Text) : Text := Text.trim (Option.getOr (List.lookup key b.props) "")
+
+/-- Items of a list property, separated by `|` or by lines; a leading `- ` is a list bullet. -/
+def items (t : Text) : List Text :=
+  let unbullet := fun (w : Text) => if Text.startsWith "- " w then Text.trim (Text.drop 2 w) else w
+  List.filter (fun w => not (Text.isEmpty w)) (List.map (fun w => unbullet (Text.trim w)) (Text.split (Text.replace "\n" "|" t) "|"))
+
+/-- A `feature` block as data, or what is wrong with its status. -/
+def fromBlock (b : Block) : Result (List Text) Feature :=
+  let status := prop b "status"
+  if Text.isEmpty status then Result.err ["status: missing (planned, building, shipped or dropped)"]
+  else if not (List.contains status statuses) then Result.err ["status: " ++ status ++ " is not one of " ++ Text.join ", " statuses]
+  else Result.ok (Feature.mk b.blockId b.blockTitle status (prop b "parent") (items (prop b "specs")) (items (prop b "defs")) (items (prop b "tasks")))
+
+def fact (facts : List (Text, Text)) (key : Text) : Text := Option.getOr (List.lookup key facts) ""
+
+def isOpenState (state : Text) : Bool := state == "todo" || state == "doing"
+
+/--
+  What is wrong with a feature, given what the codebase knows about each name (`facts` answers as
+  `MdlHost.describe` does, with `spec:<Doc>` and `task:<id>` for documents and tasks). Problems that
+  start with `gap: ` are known gaps, which `deus mdl` reports without failing.
+-/
+def problems (f : Feature) (facts : Text -> Result Text (List (Text, Text))) : List Text :=
+  let shipped := f.featureStatus == "shipped"
+  let defProblems := List.concatMap (fun name =>
+    match facts name with
+    | Result.err message => [message]
+    | Result.ok known => if shipped && fact known "implemented" == "false" then ["shipped, but " ++ name ++ " is declared and not implemented"] else []) f.definitions
+  let specProblems := List.concatMap (fun d =>
+    match facts ("spec:" ++ d) with
+    | Result.err message => [message]
+    | Result.ok _ => []) f.specDocs
+  let tasks := List.map (fun id => (id, facts ("task:" ++ id))) f.taskIds
+  let taskProblems := List.concatMap (fun pair =>
+    match pair with
+    | (id, Result.err message) => [message]
+    | (id, Result.ok known) => if shipped && isOpenState (fact known "state") then ["shipped, but task " ++ id ++ " is open: " ++ fact known "title"] else []) tasks
+  let anyOpen := List.any (fun pair =>
+    match pair with
+    | (_, Result.ok known) => isOpenState (fact known "state")
+    | _ => false) tasks
+  let linked := not (List.isEmpty f.definitions && List.isEmpty f.specDocs && List.isEmpty f.taskIds)
+  let found := defProblems ++ specProblems ++ taskProblems
+  if not (List.isEmpty found) then found
+  else if f.featureStatus == "dropped" then []
+  else if not linked then ["gap: nothing links this feature to specs, definitions or tasks"]
+  else if (f.featureStatus == "planned" || f.featureStatus == "building") && not anyOpen then ["gap: " ++ f.featureStatus ++ ", but no open task tracks the rest"]
+  else []
+
+/-- The `feature` block type. -/
+@[ext "org.dxos.deus.feature@1.0"]
+def check (b : Block) : {MdlHost} List Text :=
+  match fromBlock b with
+  | Result.err found => found
+  | Result.ok f => problems f (fun name => MdlHost.describe name)
+
+/-- Features depth first, children under their parent in document order; a feature whose parent is missing is a root. -/
+def tree (features : List Feature) : List (Int, Feature) :=
+  let ids := List.map (fun f => f.featureId) features
+  let isRoot := fun (f : Feature) => Text.isEmpty f.parentId || not (List.contains f.parentId ids)
+  let rec under depth parent seen :=
+    List.concatMap (fun f =>
+      if f.parentId == parent && not (List.contains f.featureId seen) then (depth, f) :: under (depth + 1) f.featureId (f.featureId :: seen) else []) features
+  List.concatMap (fun f => (0, f) :: under 1 f.featureId [f.featureId]) (List.filter isRoot features)
+
+/-- Features whose parent the document does not have. -/
+def orphans (features : List Feature) : List Text :=
+  let ids := List.map (fun f => f.featureId) features
+  List.filterMap (fun f =>
+    if Text.isEmpty f.parentId || List.contains f.parentId ids then none else some (f.featureId ++ ": no parent " ++ f.parentId)) features
+
+/-- The tree as text: status, indented id and title, and how many of its tasks are open. -/
+def render (features : List Feature) (facts : Text -> Result Text (List (Text, Text))) : Text :=
+  Text.join "\n" (List.map (fun pair =>
+    match pair with
+    | (depth, f) =>
+      let opened := List.length (List.filter (fun id =>
+        match facts ("task:" ++ id) with
+        | Result.ok known => isOpenState (fact known "state")
+        | Result.err _ => false) f.taskIds)
+      let count := List.length f.taskIds
+      let suffix := if opened > 0 then "  (" ++ Int.toText opened ++ " of " ++ Int.toText count ++ " task" ++ (if count == 1 then "" else "s") ++ " open)" else ""
+      Text.padRight 10 f.featureStatus ++ Text.repeat (2 * depth) " " ++ f.featureId ++ "  " ++ f.featureTitle ++ suffix) (tree features))
+
+end Features

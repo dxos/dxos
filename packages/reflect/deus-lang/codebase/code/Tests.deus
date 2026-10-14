@@ -10,7 +10,7 @@ test Tests.externalLowersBlocks :=
     ("redis@sha256:" ++ sampleHash)
     ["redis-server", "--save"]
     [("A", "1"), ("B", "2")]
-    [(6379, 6379)]) && problemsOf (requirementOf (block "requirement" [("registry", "pypi")])) ==
+    [(6379, 6379)]) && External.problemsOf (requirementOf (block "requirement" [("registry", "pypi")])) ==
     ["registry: `pypi` is not one of npm, crates, github, url"]
 
 test Tests.externalRefusesUnpinnedRequirements := External.problems (match sampleTool with
