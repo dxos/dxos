@@ -10,14 +10,6 @@ Only doc comments survive add; the -- comments that explain why are lost, so deu
 
 > claude: Design question before building: storing each definition's source text in its metadata keeps comments, but that text depends on its file's namespace and open lines, and goes stale when a dependency is renamed. A workable rule: print the stored text only while every name in it still resolves to the hash it had when added, and keep namespace and opens with it; otherwise print from Core as now.
 
-## Explorer: show the source of a change, not only its message (`1ce541ac`)
-
-- state: todo
-- priority: none
-- labels: dogfood, explorer
-
-History rows link nowhere; a change page could list the definitions it added or replaced.
-
 ## Back up the codebase to GitHub as text (`0c53d3bd`)
 
 - state: done
@@ -110,6 +102,16 @@ view of 1061 definitions plus update of all of them; profile which half dominate
 - priority: none
 - assignee: claude
 - labels: review, docs
+
+## Explorer: show the source of a change, not only its message (`1ce541ac`)
+
+- state: done
+- priority: none
+- assignee: claude
+- labels: dogfood, explorer
+- links change #e48cf63f71
+
+History rows link nowhere; a change page could list the definitions it added or replaced.
 
 ## Gitignore .deus and keep one codebase in the home directory (`57a25668`)
 

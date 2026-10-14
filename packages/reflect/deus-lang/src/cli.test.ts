@@ -666,13 +666,17 @@ describe('deus CLI', () => {
       { name: 'Shapes.area', hash: area?.hash },
     ]);
     expect(readFileSync(join(out, 'index.html'), 'utf8')).toContain('<script type="module" src="app.js">');
+    // Each change in the history has a page with what it did.
+    const latest = JSON.parse(readFileSync(join(out, 'meta.json'), 'utf8')).history[0].causal;
+    const change = JSON.parse(readFileSync(join(out, 'change', `${latest}.json`), 'utf8'));
+    expect(change.added.map((ref: { name: string }) => ref.name).sort()).toEqual(['Shapes.area', 'Shapes.square']);
     expect(map?.kind).toBe('term');
 
     const remote = join(scratch, 'explore-remote');
     deus('remote', 'add', 'origin', remote, ...c);
     const published = JSON.parse(deus('explore', '--out', out, '--publish', 'origin', '--json', ...c).stdout);
-    // The app's three files, meta, names and tasks, and one file per definition.
-    expect(published.files).toBe(readdirSync(join(out, 'def')).length + 6);
+    // The app's three files, meta, names and tasks, and one file per definition and per change.
+    expect(published.files).toBe(readdirSync(join(out, 'def')).length + readdirSync(join(out, 'change')).length + 6);
     expect(published.uploaded).toBe(published.files);
     expect(readFileSync(join(remote, 'site', 'def', `${area?.hash}.json`), 'utf8')).toBe(page);
     // Republishing sends only what changed.

@@ -52,6 +52,36 @@ def taskJson (dir : Text) (ns : Map Text Entry) (t : Task) : {IO, Throw Text} Js
     ("links", Json.arr (List.map link t.links)), ("comments", Json.arr (List.map (fun c => Json.obj [("author", Json.str c.author), ("note", Json.str c.note)]) t.comments)),
     ("history", Json.arr (List.map (changeJson dir) (Tasks.historyOf dir t.id 200)))]
 
+/--
+  What a change did, against its first parent: names added, rebound or removed, and tasks it
+  touched. A root change compares with an empty namespace.
+-/
+def changePage (dir : Text) (causal : Text) : {IO, Throw Text} Json :=
+  let node := Codebase.readCausal dir causal
+  let before := match Codebase.parentsOf dir causal with
+    | p :: _ => Codebase.readCausal dir p
+    | [] => Causal.mk "" [] "" ""
+  let nsAfter := Codebase.readNamespace dir node.snapshot
+  let nsBefore := if Text.isEmpty before.snapshot then Map.empty else Codebase.readNamespace dir before.snapshot
+  let visibleNames := fun (ns : Map Text Entry) => List.filter visible (Map.toList ns)
+  let added := List.filter (fun pair => Option.isNone (Map.lookup (fst pair) nsBefore)) (visibleNames nsAfter)
+  let changed := List.filterMap (fun pair =>
+    match Map.lookup (fst pair) nsBefore with
+    | some old => if Entry.hash old == Entry.hash (snd pair) then none else some (fst pair, Entry.hash old, Entry.hash (snd pair))
+    | none => none) (visibleNames nsAfter)
+  let removed := List.filter (fun pair => Option.isNone (Map.lookup (fst pair) nsAfter)) (visibleNames nsBefore)
+  let tasksAfter := Tasks.snapshotOf dir node
+  let tasksBefore := Tasks.snapshotOf dir before
+  let touched := List.filter (fun id => Map.lookup id tasksAfter != Map.lookup id tasksBefore) (Set.toList (Set.fromList (Map.keys tasksAfter ++ Map.keys tasksBefore)))
+  Json.obj ([("causal", Json.str causal), ("message", Json.str node.message), ("parents", Json.arr (List.map Json.str node.parents)),
+    ("added", Json.arr (List.map (fun pair => refJson (fst pair) (Entry.hash (snd pair))) added)),
+    ("changed", Json.arr (List.map (fun c =>
+      match c with
+      | (name, old, new) => Json.obj [("name", Json.str name), ("from", Json.str old), ("hash", Json.str new)]) changed)),
+    ("removed", Json.arr (List.map (fun pair => Json.str (fst pair)) removed)),
+    ("tasks", Json.arr (List.map Json.str touched))] ++
+    Option.getOr (Option.map (fun agent => [("by", Json.str agent)]) (Cli.producedBy dir causal)) [])
+
 /-- The app's files, from the toolchain's sources. -/
 def appFiles : List Text := ["index.html", "app.js", "app.css"]
 
@@ -88,6 +118,14 @@ def generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
   IO.writeFile (out ++ "/names.json") (Json.render (Json.arr (List.map (fun pair =>
     Json.obj [("name", Json.str (fst pair)), ("kind", Json.str (Entry.kind (snd pair))), ("hash", Json.str (Entry.hash (snd pair)))]) entries)))
   IO.writeFile (out ++ "/tasks.json") (Json.render (Json.arr (List.map (taskJson dir ns) tasks)))
+  -- A page per change the app links to: recent history, and every change in a task's history.
+  IO.mkdirp (out ++ "/change")
+  let linked := List.concatMap (fun t => List.map fst (Tasks.historyOf dir t.id 200)) tasks
+  let shown := Set.toList (Set.fromList (List.map fst (Codebase.history dir branch 30) ++ linked))
+  List.forEach shown (fun c =>
+    let path := out ++ "/change/" ++ c ++ ".json"
+    -- A change never changes, so a page written once stays right.
+    if IO.exists path then () else IO.writeFile path (Json.render (changePage dir c)))
   List.forEach entries (fun pair =>
     match pair with
     | (name, e) =>

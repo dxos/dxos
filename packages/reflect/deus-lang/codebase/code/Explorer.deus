@@ -4,6 +4,33 @@ def Explorer.appFiles : List Text := ["index.html", "app.js", "app.css"]
 def Explorer.changeJson (dir : Text) (pair : (Text, Causal)) : {IO} Json := Json.obj ([("causal", Json.str (fst pair)), ("message", Json.str (snd pair).message)] ++
   getOr (Option.map (fun agent => [("by", Json.str agent)]) (producedBy dir (fst pair))) [])
 
+/-- What a change did, against its first parent: names added, rebound or removed, and tasks it
+  touched. A root change compares with an empty namespace. -/
+def Explorer.changePage (dir : Text) (causal : Text) : {IO, Throw Text} Json :=
+  let node := readCausal dir causal
+  let before :=
+    match parentsOf dir causal with
+    | p :: _ => readCausal dir p
+    | [] => Causal.mk "" [] "" ""
+  let nsAfter := readNamespace dir node.snapshot
+  let nsBefore := if Text.isEmpty before.snapshot then Map.empty else readNamespace dir before.snapshot
+  let visibleNames := fun ns => List.filter visible (Map.toList ns)
+  let added := List.filter (fun pair => isNone (Map.lookup (fst pair) nsBefore)) (visibleNames nsAfter)
+  let changed := filterMap (fun pair =>
+    match Map.lookup (fst pair) nsBefore with
+    | Option.some old => if hash old == hash (snd pair) then Option.none else Option.some (fst pair, hash old, hash (snd pair))
+    | Option.none => Option.none) (visibleNames nsAfter)
+  let removed := List.filter (fun pair => isNone (Map.lookup (fst pair) nsAfter)) (visibleNames nsBefore)
+  let tasksAfter := snapshotOf dir node
+  let tasksBefore := snapshotOf dir before
+  let touched := List.filter
+    (fun id => Map.lookup id tasksAfter != Map.lookup id tasksBefore)
+    (Set.toList (Set.fromList (Map.keys tasksAfter ++ Map.keys tasksBefore)))
+  Json.obj ([("causal", Json.str causal), ("message", Json.str node.message), ("parents", Json.arr (List.map Json.str node.parents)), ("added", Json.arr (List.map (fun pair => refJson (fst pair) (hash (snd pair))) added)), ("changed", Json.arr (List.map (fun c =>
+    match c with
+    | (name, old, new) => Json.obj [("name", Json.str name), ("from", Json.str old), ("hash", Json.str new)]) changed)), ("removed", Json.arr (List.map (fun pair => Json.str (fst pair)) removed)), ("tasks", Json.arr (List.map Json.str touched))] ++
+    getOr (Option.map (fun agent => [("by", Json.str agent)]) (producedBy dir causal)) [])
+
 def Explorer.docOf (dir : Text) (h : Text) : {IO} Option Text := Option.map asText (metaField (readMeta dir h) "doc")
 
 /-- Writes the explorer for the current branch to `out`; returns the number of definitions. -/
@@ -45,6 +72,12 @@ def Explorer.generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
   IO.writeFile
     (out ++ "/tasks.json")
     (Json.render (Json.arr (List.map (Explorer.taskJson dir ns) tasks)))
+  IO.mkdirp (out ++ "/change")
+  let linked := concatMap (fun t => List.map fst (historyOf dir t.id 200)) tasks
+  let shown := Set.toList (Set.fromList (List.map fst (history dir branch 30) ++ linked))
+  forEach shown (fun c =>
+    let path := out ++ "/change/" ++ c ++ ".json"
+    if IO.exists path then () else IO.writeFile path (Json.render (changePage dir c)))
   forEach entries (fun pair =>
     match pair with
     | (name, e) =>

@@ -23,11 +23,11 @@ const load = async (path) => {
 
 const element = (id) => document.getElementById(id);
 
-/** Open cards as `d:<hash>` and `t:<task id>`, newest first; the URL hash is the source of truth. */
+/** Open cards as `d:<hash>`, `t:<task id>` and `c:<change>`, newest first; the URL hash is the source of truth. */
 const openKeys = () =>
   decodeURIComponent(location.hash.slice(1))
     .split(',')
-    .filter((key) => /^[dt]:./.test(key));
+    .filter((key) => /^[dtc]:./.test(key));
 
 const setOpen = (keys) => {
   const next = keys.join(',');
@@ -50,7 +50,7 @@ const changeRows = (changes) =>
     : `<table>${changes
         .map(
           (change) =>
-            `<tr><td class="hash">#${escape(change.causal.slice(0, 10))}</td><td>${escape(change.message)}${
+            `<tr><td class="hash"><a data-open="c:${escape(change.causal)}">#${escape(change.causal.slice(0, 10))}</a></td><td>${escape(change.message)}${
               change.by ? ` <span class="muted">by ${escape(change.by)}</span>` : ''
             }</td></tr>`,
         )
@@ -108,6 +108,34 @@ const taskCard = (task, tasks) => {
         ? `<h3>Comments</h3>${task.comments.map((comment) => `<p><b>${escape(comment.author)}</b>: ${escape(comment.note)}</p>`).join('')}`
         : '') +
       `<h3>History</h3>${changeRows(task.history)}`,
+  );
+};
+
+/** A change names definitions by the hashes they had then; pages exist for the current ones. */
+const changeCard = (change, tasks, names) => {
+  const current = (name, hash) => names.find((entry) => entry.name === name)?.hash ?? hash;
+  const taskRefs = change.tasks
+    .map((id) => tasks.find((task) => task.id === id))
+    .filter(Boolean)
+    .map(taskLink);
+  return card(
+    `c:${change.causal}`,
+    escape(change.message),
+    `change · #${escape(change.causal.slice(0, 10))}${change.by ? ` · by ${escape(change.by)}` : ''}`,
+    `<h3>Added</h3>${linkList(change.added.map((ref) => ({ name: ref.name, hash: current(ref.name, ref.hash) })))}` +
+      `<h3>Changed</h3>${
+        change.changed.length === 0
+          ? '<p class="muted">none</p>'
+          : `<ul>${change.changed
+              .map(
+                (entry) =>
+                  `<li>${defLink(entry.name, current(entry.name, entry.hash))} <span class="hash">#${escape(entry.from.slice(0, 10))} → #${escape(entry.hash.slice(0, 10))}</span></li>`,
+              )
+              .join('')}</ul>`
+      }` +
+      (change.removed.length > 0 ? `<h3>Removed</h3><p>${change.removed.map(escape).join(', ')}</p>` : '') +
+      (taskRefs.length > 0 ? `<h3>Tasks</h3><p class="links">${taskRefs.join('')}</p>` : '') +
+      `<h3>Parents</h3><p class="hash">${change.parents.map((parent) => `<a data-open="c:${escape(parent)}">#${escape(parent.slice(0, 10))}</a>`).join(' ') || 'none'}</p>`,
   );
 };
 
@@ -185,6 +213,10 @@ const main = async () => {
         if (key.startsWith('t:')) {
           const task = tasks.find((other) => other.id === key.slice(2));
           return task ? taskCard(task, tasks) : '';
+        }
+        if (key.startsWith('c:')) {
+          const change = await load(`change/${key.slice(2)}.json`);
+          return change ? changeCard(change, tasks, names) : '';
         }
         const def = await definition(key.slice(2));
         return def ? definitionCard(def) : '';

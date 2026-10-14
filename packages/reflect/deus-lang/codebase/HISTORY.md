@@ -1,5 +1,8 @@
 # History of main
 
+- `2c28274f3c` close 1ce541ac by #e48cf63f71 (by claude)
+- `e48cf63f71` toolchain: explorer pages for changes (by claude)
+- `4f1469095a` task: set 1ce541ac state assignee (by claude)
 - `ab617e698f` task: comment on 5d370204 (by claude)
 - `1024936895` close 5d370204 by #69a3390756 (by claude)
 - `69a3390756` toolchain: view shares one printer (45 s to 2 s for 1000 definitions) (by claude)
