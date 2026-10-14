@@ -50,6 +50,8 @@ export const SKOS_EXAMPLE = `${SKOS}example`;
 export const DCTERMS_CREATED = `${DCTERMS}created`;
 export const DCTERMS_CREATOR = `${DCTERMS}creator`;
 export const DCTERMS_IS_REPLACED_BY = `${DCTERMS}isReplacedBy`;
+/** The version of the seed vocabulary a store holds, stated about the ontology graph. */
+export const SX_SEED = `${SX}seed`;
 /** The shorthand rules use for a predicate (`member_of`). */
 export const SX_SHORTHAND = `${SX}shorthand`;
 /** The class of every stored graph, so an unconstrained query can enumerate them. */

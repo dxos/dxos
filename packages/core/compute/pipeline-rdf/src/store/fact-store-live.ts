@@ -14,6 +14,7 @@ import type * as Engine from '../internal/sparql/engine.ts';
 import { graphQuads, queryMemory } from '../internal/sparql/query-memory.ts';
 import { querySqlite } from '../internal/sparql/query-sqlite.ts';
 import { migrate } from '../internal/sqlite/schema.ts';
+import { hashText } from '../internal/stages/reconcile.ts';
 import { type Fact, Graph, Ontology } from '../types/index.ts';
 import * as Mapping from '../types/Mapping.ts';
 import * as Vocab from '../types/Vocab.ts';
@@ -24,6 +25,21 @@ import { FactStore, type FactStoreApi } from './fact-store.ts';
 // (which reference the tag in `services:`) never pull the SPARQL/SQLite machinery into their
 // import closure — see `@dxos/pipeline-rdf/fact-store`.
 //
+
+/**
+ * The seed vocabulary every store starts with (and starts with again once cleared): `Ontology.DEFAULT` described in
+ * the ontology graph, plus a marker naming its version, so a store written by an older seed is brought up to date.
+ */
+const SEED_QUADS = Ontology.ontologyQuads(Ontology.DEFAULT);
+const SEED_IRIS = [...new Set(SEED_QUADS.map((quad) => quad.subject.value))];
+const SEED_VERSION = hashText(
+  SEED_QUADS.map((quad) => `${quad.subject.value} ${quad.predicate.value} ${quad.object.value}`).join('\n'),
+);
+const SEED_MARKER = DataFactory.quad(
+  DataFactory.namedNode(Vocab.ONTOLOGY_GRAPH),
+  DataFactory.namedNode(Vocab.SX_SEED),
+  DataFactory.literal(SEED_VERSION),
+);
 
 /**
  * The quads persisting the facts, plus the provenance of each predicate they mint that the store has not described
@@ -80,6 +96,24 @@ export const layer: Layer.Layer<FactStore, never, SqlClient.SqlClient> = Layer.e
     yield* migrate().pipe(Effect.orDie);
     const source = makeSqliteSource(sql);
 
+    // A store whose seed is current holds the marker; one written by another seed has its seed predicates rewritten.
+    const seed = Effect.gen(function* () {
+      const [marker] = yield* sql<{ o: string }>`
+        SELECT o FROM triples WHERE g = '' AND s = ${Vocab.ONTOLOGY_GRAPH} AND p = ${Vocab.SX_SEED}`;
+      if (marker?.o === SEED_VERSION) {
+        return;
+      }
+      yield* sql.withTransaction(
+        Effect.gen(function* () {
+          yield* sql`DELETE FROM triples WHERE g = ${Vocab.ONTOLOGY_GRAPH} AND ${sql.in('s', SEED_IRIS)}`;
+          yield* sql`DELETE FROM triples WHERE g = '' AND s = ${Vocab.ONTOLOGY_GRAPH} AND p = ${Vocab.SX_SEED}`;
+          yield* insertQuads(sql, [...SEED_QUADS, SEED_MARKER]);
+        }),
+      );
+    });
+    // Like the schema, a store that cannot be seeded is a construction failure.
+    yield* seed.pipe(Effect.orDie);
+
     const putFacts: FactStoreApi['putFacts'] = (facts) =>
       Effect.gen(function* () {
         const iris = Graph.mintedPredicates(facts).map(({ iri }) => iri);
@@ -120,6 +154,7 @@ export const layer: Layer.Layer<FactStore, never, SqlClient.SqlClient> = Layer.e
         yield* sql`DELETE FROM triples`;
         yield* sql`DELETE FROM entities`;
         yield* sql`DELETE FROM cursors`;
+        yield* seed;
       }).pipe(
         Effect.asVoid,
         Effect.mapError((cause) => new SemanticIndexError({ message: 'Failed to clear store', cause })),
@@ -151,6 +186,8 @@ export const layer: Layer.Layer<FactStore, never, SqlClient.SqlClient> = Layer.e
 export const makeMemory = (): FactStoreApi => {
   const source = makeMemorySource();
   const cursors = new Map<string, string>();
+  const seed = () => insertQuadsMemory(source, [...SEED_QUADS, SEED_MARKER]);
+  seed();
 
   const ontologyGraph = DataFactory.namedNode(Vocab.ONTOLOGY_GRAPH);
   const putFacts: FactStoreApi['putFacts'] = (facts) =>
@@ -193,6 +230,7 @@ export const makeMemory = (): FactStoreApi => {
     Effect.sync(() => {
       source.removeQuads(source.getQuads(null, null, null, null));
       cursors.clear();
+      seed();
     });
 
   const load = (graphs: string[]) =>

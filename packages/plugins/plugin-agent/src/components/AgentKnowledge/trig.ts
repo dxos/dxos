@@ -174,3 +174,12 @@ export const formatNamedGraphs = (facts: readonly RDF.Fact[], options: NamedGrap
 
   return [prefixes.join('\n'), ...blocks, ...ontology].join('\n\n');
 };
+
+/** The prefixed name an IRI reads as (`schema:worksFor`; a predicate the brain minted as `brain:…`). */
+export const curie = (iri: string, namespace: string): string => {
+  const [prefix, base] =
+    [['brain', namespace] as const, ...Object.entries(RDF.Graph.PREFIXES)]
+      .filter(([, base]) => iri.startsWith(base))
+      .sort(([, left], [, right]) => right.length - left.length)[0] ?? [];
+  return prefix !== undefined && base !== undefined ? `${prefix}:${iri.slice(base.length)}` : `<${iri}>`;
+};

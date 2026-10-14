@@ -19,8 +19,9 @@ export interface FactStoreApi {
   /** Persist facts as statements in their named graphs (idempotent appends; no write-time merge). */
   readonly putFacts: (facts: readonly Fact[]) => Effect.Effect<void, SemanticIndexError>;
   /**
-   * The predicates the store's facts introduced, as described in its ontology graph (outside every statement's
-   * graph): label, definition, defining namespace, and when, by what and from which quote each was minted.
+   * The predicates the store knows, as described in its ontology graph (outside every statement's graph): the seed
+   * vocabulary every store starts with, then those its facts minted, with label, definition, defining namespace, and
+   * when, by what and from which quote each was minted.
    */
   readonly predicates: () => Effect.Effect<Ontology.Entry[], SemanticIndexError>;
   /** Run a structured query over the stored statements and reassemble the matching Facts. */
@@ -31,7 +32,7 @@ export interface FactStoreApi {
   readonly cursor: (source: string) => Effect.Effect<string | undefined, SemanticIndexError>;
   /** Upsert the ingest cursor for the given source DXN. */
   readonly setCursor: (source: string, hash: string) => Effect.Effect<void, SemanticIndexError>;
-  /** Remove all facts, entities, and cursors from the store. */
+  /** Remove all facts, entities, and cursors from the store; the seed vocabulary is restored. */
   readonly clear: () => Effect.Effect<void, SemanticIndexError>;
 }
 

@@ -6,8 +6,9 @@ import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as SqlClient from 'effect/sql/SqlClient';
 
-import { type Fact, Vocab } from '../types/index.ts';
+import { type Fact, Ontology, Vocab } from '../types/index.ts';
 import * as FactStoreLive from './fact-store-live.ts';
 import { FactStore } from './fact-store.ts';
 
@@ -226,7 +227,9 @@ describe('FactStore', () => {
           });
         yield* store.putFacts([minted('f1', 'Alice is off to Paris.')]);
         yield* store.putFacts([minted('f2', 'Alice flies to Paris on Monday.')]);
-        const predicates = yield* store.predicates();
+        const predicates = (yield* store.predicates()).filter(
+          ({ definedBy }) => definedBy === Vocab.brainNamespace('agent-1'),
+        );
         expect(predicates).toEqual([
           {
             iri: `${Vocab.brainNamespace('agent-1')}travelTo`,
@@ -241,6 +244,30 @@ describe('FactStore', () => {
         ]);
         const [fact] = yield* store.query({ predicate: 'travels to' });
         expect(fact.assertion.predicateDescription).toBe('A place the subject is going to.');
+      }, Effect.provide(layer)),
+    );
+
+    it.effect(
+      'starts with the seed vocabulary, and restores it when cleared',
+      Effect.fnUntraced(function* () {
+        const store = yield* FactStore;
+        const seeds = () =>
+          store
+            .predicates()
+            .pipe(
+              Effect.map((entries) =>
+                entries.filter(({ iri }) => Ontology.DEFAULT.get(iri)?.iri === iri).map(({ iri }) => iri),
+              ),
+            );
+        const expected = Ontology.DEFAULT.entries.map(({ iri }) => iri).sort();
+        expect((yield* seeds()).sort()).toEqual(expected);
+        expect((yield* store.predicates()).find(({ iri }) => iri === Vocab.RDF_TYPE)).toEqual(
+          Ontology.DEFAULT.get(Vocab.RDF_TYPE),
+        );
+        yield* store.putFacts([mk({ id: 'f1' })]);
+        yield* store.clear();
+        expect(yield* store.query({})).toEqual([]);
+        expect((yield* seeds()).sort()).toEqual(expected);
       }, Effect.provide(layer)),
     );
 
@@ -276,4 +303,20 @@ describe('FactStore', () => {
       }, Effect.provide(layer)),
     );
   });
+
+  it.effect(
+    'rewrites the seed vocabulary of a store written by another seed',
+    Effect.fnUntraced(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      // A store an older seed wrote: a stale synonym, and the marker of another version.
+      yield* sql`INSERT INTO triples (s, p, o, oType, g)
+        VALUES (${Vocab.RDF_TYPE}, ${Vocab.SKOS_ALT_LABEL}, 'is kind of', 'literal', ${Vocab.ONTOLOGY_GRAPH})`;
+      yield* sql`UPDATE triples SET o = 'stale' WHERE g = '' AND p = ${Vocab.SX_SEED}`;
+      const entries = yield* Effect.gen(function* () {
+        return yield* (yield* FactStore).predicates();
+        // A fresh build: the store is seeded when the layer is constructed.
+      }).pipe(Effect.provide(Layer.fresh(FactStoreLive.layer)));
+      expect(entries.find(({ iri }) => iri === Vocab.RDF_TYPE)).toEqual(Ontology.DEFAULT.get(Vocab.RDF_TYPE));
+    }, Effect.provide(TestLayer)),
+  );
 });

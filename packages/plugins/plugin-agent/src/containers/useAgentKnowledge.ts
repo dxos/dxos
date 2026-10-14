@@ -10,6 +10,7 @@ import type * as Agent from '@dxos/assistant/Agent';
 import { type Database, Filter, Obj, type Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
+import { RDF } from '@dxos/pipeline-rdf';
 import { Organization, Person } from '@dxos/types';
 
 import {
@@ -17,6 +18,8 @@ import {
   type AgentKnowledgeFact,
   type AgentKnowledgeGoal,
   type AgentKnowledgeNode,
+  type AgentKnowledgePredicate,
+  curie,
 } from '#components';
 import { Goal, Knowledge, Profile } from '#types';
 
@@ -29,6 +32,9 @@ const GOAL_ORDER: readonly Goal.Status[] = ['active', 'confirmed', 'proposed', '
 export type AgentKnowledgeData = {
   memories: Knowledge.Memory[];
   facts: AgentKnowledgeFact[];
+  predicates: AgentKnowledgePredicate[];
+  /** The brain's ontology graph as Turtle. */
+  ontology: string;
   goals: AgentKnowledgeGoal[];
   nodes: AgentKnowledgeNode[];
   edges: AgentKnowledgeEdge[];
@@ -140,5 +146,34 @@ export const useAgentKnowledge = (agent: Agent.Agent): AgentKnowledgeData => {
     [inspection, db],
   );
 
-  return { memories, facts, goals: goalItems, nodes, edges };
+  // The brain starts with the seed vocabulary; the predicates its extractor minted are read off the facts that use
+  // them, which carry the definition the brain stored.
+  const { predicates, ontology } = useMemo(() => {
+    const all = (inspection?.facts ?? []).map(({ fact }) => fact);
+    const seeded = RDF.Ontology.DEFAULT.withNamespace(RDF.Vocab.brainNamespace(agent.id));
+    const known = seeded.include(RDF.Graph.mintedPredicates(all, seeded));
+    const counts = new Map<string, number>();
+    for (const fact of all) {
+      const iri = RDF.Mapping.predicateOf(fact, known);
+      const canonical = known.get(iri)?.iri ?? iri;
+      counts.set(canonical, (counts.get(canonical) ?? 0) + 1);
+    }
+    const items = known.entries
+      .map((entry): AgentKnowledgePredicate => {
+        const name = curie(entry.iri, known.namespace);
+        return {
+          iri: entry.iri,
+          curie: name,
+          label: entry.label,
+          vocabulary: entry.definedBy === known.namespace ? 'brain' : name.split(':')[0],
+          ...(entry.description ? { description: entry.description } : {}),
+          ...(entry.synonyms?.length ? { synonyms: entry.synonyms } : {}),
+          count: counts.get(entry.iri) ?? 0,
+        };
+      })
+      .sort((left, right) => right.count - left.count || left.label.localeCompare(right.label));
+    return { predicates: items, ontology: RDF.Graph.ontologyToTriG(known) };
+  }, [inspection, agent.id]);
+
+  return { memories, facts, predicates, ontology, goals: goalItems, nodes, edges };
 };
