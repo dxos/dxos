@@ -773,6 +773,16 @@ From Dmytro: about mdl-first approach --- I want agents to record specs in codeb
 - assignee: claude
 - labels: explorer
 
+## The CLI defaults origin and the R2 endpoint for the toolchain codebase (`4b1eb1a9`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: replication, cli
+- links change #7886bef5ce
+
+Dmytro: push the toolchain codebase to r2://agent-artifacts/deus/toolchain and make it the CLI default. Seeded the remote from the export; origin and the endpoint default for the toolchain project.
+
 ## The explorer History view hides the history imported from an export (`12663f55`)
 
 - state: done

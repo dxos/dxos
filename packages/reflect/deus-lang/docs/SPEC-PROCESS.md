@@ -28,11 +28,17 @@ use the codebase as primary VCS, and git as backup". Start every task from the r
 git export:
 
 ```sh
-export DEUS_R2_ENDPOINT=https://<account>.r2.cloudflarestorage.com   # the DXOS account's R2 endpoint
+export DEUS_CODEBASE=$(mktemp -d)/tc                  # a fresh codebase per task
 deus init --empty
-deus remote add origin r2://agent-artifacts/deus/toolchain
-deus pull origin && deus merge origin.main                          # the latest codebase
+deus project init https://dxos.org/deus/toolchain    # origin is now the shared remote (D108)
+deus pull origin && deus merge origin.main           # the latest codebase
 ```
+
+Only `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY` are needed: for the toolchain project, `origin`
+defaults to `r2://agent-artifacts/deus/toolchain` and the endpoint to the DXOS account's R2
+(`$DEUS_R2_ENDPOINT` and `deus remote add origin …` still override them). A 403 on push while
+pulls work means the environment's network policy does not allow writes to
+`950816f3f59b079880a1ae33fb0ec320.r2.cloudflarestorage.com`; it must be in Allowed domains.
 
 Make every change with the CLI (`deus update … --by <agent>`, `deus task …`), run `deus push origin`
 when a change lands, and only then `deus export codebase` and commit the export to git. If the

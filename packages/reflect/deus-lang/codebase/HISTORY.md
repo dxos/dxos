@@ -1,10 +1,17 @@
 # History of main
 
+- `1e5d40d2d6` cli: bring Cli.dispatch and Cli.main up to date with deus/ (by claude)
+- `87e96d9f73` close 4b1eb1a9 by #7886bef5ce (by claude)
+- `7886bef5ce` cli: origin and the R2 endpoint default for the toolchain codebase (D108) (by claude)
+- `a00feaab57` task: set 4b1eb1a9 state priority assignee labels details (by claude)
+- `6a48195085` task: open 4b1eb1a9 The CLI defaults origin and the R2 endpoint for the toolchain codebase (by claude)
+- `f06a7a09f3` history: import 577 changes
+- `8637e168f4` task: import from tasks.sexp
+- `8fb40df7ae` add code specs
 - `6814434615` Explorer.Spec R-13: deps and users agree both ways, for the graph view (D101) (by claude)
 - `c1094317db` users exclude the definition itself (D101) (by claude)
 - `6ca942925a` history: import 586 changes
 - `b2dd88f2c9` task: import from tasks.sexp
-- `3c07f87183` add code specs
 - `9d9673a128` merge: the explorer's graph view (D99) (by claude)
 - `219688316c` history: import 448 changes
 - `dcd5501500` task: import from tasks.sexp

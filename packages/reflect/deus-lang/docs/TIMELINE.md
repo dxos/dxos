@@ -118,5 +118,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 110 | 10-14 22:12 | 3m 00s         | this commit | CI: lint warned on the control-character regex in scripts/analytics-ci.mjs, which is intended; it now carries the same suppression as the explorer worker                                                                                                                                                                 |
 
 | 111 | 10-14 22:20 | 15m 00s | this commit | the explorer's graph view: open definitions as code cards in a force-directed graph with their neighbours, toggled with the list (`v`); Explorer.Spec R-13 found recursive definitions listed as their own users (D107) |
+| 112 | 10-14 22:16 | 4m 00s | this commit | the codebase is on R2: `r2://agent-artifacts/deus/toolchain` seeded from the export and checked against a fresh pull; `origin` and the R2 endpoint default for the toolchain codebase (D108, task 4b1eb1a9) |
 
-Total from stage 1 to stage 111: 18h 44m.
+Total from stage 1 to stage 112: 18h 48m.
