@@ -83,6 +83,12 @@ declare global {
   var dxos:
     | {
         spaces?: () => DebugSpace[];
+        /** `scripts/memory/peer-lanes.ts` asks the worker's SQLite connection whether it still answers. */
+        client?: {
+          services?: {
+            services?: { DevtoolsHost?: { runSqliteQuery?: (request: { query: string }) => Promise<unknown> } };
+          };
+        };
         /** `/recovery.html`'s helpers; the memory scenario imports a profile archive with them. */
         recovery?: {
           /** Opens a file picker and writes the chosen `.dxprofile` into OPFS. */
