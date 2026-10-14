@@ -1,14 +1,5 @@
 # Tasks
 
-## The R2 codebase remote (r2://agent-artifacts/deus/explorer-demo, main) and the git export are separate lineages: deus merge origin.main reports 373 conflicting names, so threads cannot pull, merge and push main as the primary VCS yet (`72207dc1`)
-
-- state: todo
-- priority: urgent
-- assignee: claude
-- labels: dogfood, codebase
-
-> claude: Also: from this container (claude/project-thread-abg4l3) the network policy refused uploads to the R2 host, so the analytics work went to git only; deus pull worked earlier in the same session.
-
 ## A Js.import binding's hash does not cover its type, so two bindings with the same body share one codec (`1e8dee8b`)
 
 - state: todo
@@ -26,6 +17,8 @@ Js.text and Js.list with body Js.import "js" "id" collapsed into one definition,
 From Dmytro: threads MUST use the codebase as primary VCS, and git as backup. D101. The remote r2://agent-artifacts/deus/explorer-demo was at #5ed10805c0 (stage 65). Pulling it, then update codebase/code codebase/specs, task import and history import gives exactly the export (1727 definitions, 0 differ); the push failed with 403 from this session's network policy for <account>.r2.cloudflarestorage.com. Run that catch-up from a session that can reach R2.
 
 > claude: The JS target thread could not reach R2 either: its deus pull origin was refused by the session's permission policy before any request. It restored from the git export and exported back (D102).
+
+> claude: The explorer graph-view thread (claude/project-thread-oixvu2) has no DEUS_R2_ENDPOINT, so it cannot deus pull or push either; it works on the git export (restore, update, export) until this lands.
 
 ## Embed files in the codebase, never in git, and make artifacts cached constants (`88004c30`)
 
@@ -221,13 +214,6 @@ Known gaps R-10 and R-12 in docs/spec/CODEBASE-STORE.mdl.
 - priority: medium
 - labels: native, perf
 
-## Parquet writer: min/max column statistics, so Basin SQL can prune files (pyiceberg warns they are missing) (`821dd13d`)
-
-- state: todo
-- priority: medium
-- assignee: claude
-- labels: analytics, perf
-
 ## Run the DEUS skill through the Composer assistant with a live model (`91b838f4`)
 
 - state: todo
@@ -351,6 +337,17 @@ Follow-up to 50e58574 (D96): deus view <Doc> renders a document from block metad
 - labels: cli, bug
 
 Found while closing cf5e187f: deus task set <id> --status done printed the task unchanged. It should name the known fields (title, state, priority, assignee, labels, parent, details).
+
+## The R2 codebase remote (r2://agent-artifacts/deus/explorer-demo, main) and the git export are separate lineages: deus merge origin.main reports 373 conflicting names, so threads cannot pull, merge and push main as the primary VCS yet (`72207dc1`)
+
+- state: canceled
+- priority: urgent
+- assignee: claude
+- labels: dogfood, codebase
+
+Wrong premise: explorer-demo is the explorer site's remote, not the codebase's. The shared codebase remote is r2://agent-artifacts/deus/toolchain (D101), seeded by the explorer-publish thread.
+
+> claude: Also: from this container (claude/project-thread-abg4l3) the network policy refused uploads to the R2 host, so the analytics work went to git only; deus pull worked earlier in the same session.
 
 ## Analytics store: event types defined in the codebase, flat event rows (scalars and pinned refs), push-only sync as Parquet beside the codebase, queryable with Basin SQL (`87707577`)
 
@@ -972,6 +969,14 @@ Canceled (D102): DEUS Int is 32 bits with wrapping, so a tag bit would need 33; 
 - labels: docs, spec
 
 Done by the Format spec docs thread in b0a392d6: CORE, CODEBASE-STORE, CODEBASE-BINARY, CODEBASE-TEXT, EMBEDDING, WASM, MDL, LANGUAGE and more, with the known divergences in docs/spec/README.md.
+
+## Parquet writer: min/max column statistics, so Basin SQL can prune files (pyiceberg warns they are missing) (`821dd13d`)
+
+- state: done
+- priority: medium
+- assignee: claude
+- labels: analytics, perf
+- links change #f49a4c7913
 
 ## Readers do not verify hashes of bundles and objects; a stray file under bundles/ fails a pull (`7afeaa0c`)
 

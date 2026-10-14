@@ -117,7 +117,8 @@ stage. The table is regenerated from `git log` with every commit.
 | 109 | 10-14 22:20 | 15m 00s        | `6f3b1b73` | a Composer plugin written in DEUS (D106): `platform/js/composer.deus` bindings and `examples/composer`, a small explorer with ECHO pins and assistant tools, loaded by URL; jsgen refuses `Js.import` inside an expression; autocue demo                                                                                  |
 | 110 | 10-14 22:12 | 3m 00s         | `33d44d37` | CI: lint warned on the control-character regex in scripts/analytics-ci.mjs, which is intended; it now carries the same suppression as the explorer worker                                                                                                                                                                 |
 
-| 111 | 10-14 22:20 | 15m 00s | `33d44d37` | the explorer's graph view: open definitions as code cards in a force-directed graph with their neighbours, toggled with the list (`v`); Explorer.Spec R-13 found recursive definitions listed as their own users (D107) |
-| 112 | 10-14 21:55 | 23m 00s | this commit | spec-first View.Spec: theorem hypotheses print as `P -> Q` and header types by their name, not their IRI path (D108, tasks 4f7f9e40, f6a2c2ff) |
+| 111 | 10-14 22:20 | 15m 00s | `a57f4f60` | the explorer's graph view: open definitions as code cards in a force-directed graph with their neighbours, toggled with the list (`v`); Explorer.Spec R-13 found recursive definitions listed as their own users (D107) |
+| 112 | 10-14 22:40 | 25m 00s | `a57f4f60` | Parquet files carry min/max statistics and column orders for every column, so pyarrow and Iceberg see bounds on all 42 columns and Basin SQL can prune files (task 821dd13d); task 72207dc1 canceled, the codebase remote is deus/toolchain (D101) |
+| 113 | 10-14 21:55 | 23m 00s | this commit | spec-first View.Spec: theorem hypotheses print as `P -> Q` and header types by their name, not their IRI path (D108, tasks 4f7f9e40, f6a2c2ff) |
 
-Total from stage 1 to stage 112: 18h 44m.
+Total from stage 1 to stage 113: 19h 9m.

@@ -1,5 +1,9 @@
 # History of main
 
+- `892406fc07` export: merge 9 changes from codebase
+- `a6a09e7efc` export: merge tasks from codebase
+- `d3ac71beee` merge #13952's branch (by claude)
+- `5305c4a8cc` import #13952's export (Parquet statistics) (by claude)
 - `1cf702b82d` export: merge 32 changes from codebase
 - `f599a785ab` export: merge tasks from codebase
 - `b7051d6a4f` merge #13952's branch; View fix renumbered D108 (by claude)
@@ -151,6 +155,15 @@
 - `7453b3a1b7` task: import 18 tasks
 - `bff1b8d98b` add code
 - `67c7d5a614` init
+- `97932915fc` task: set 72207dc1 state details (by claude)
+- `85011af15d` close 821dd13d by #f49a4c7913 (by claude)
+- `f49a4c7913` Parquet writer: min/max statistics and column_orders on every column (by claude)
+- `5f3ee9bd61` history: import 580 changes
+- `bdbadcd847` task: import from tasks.sexp
+- `6e64e08bbb` task: comment on e76e36b0 (by claude)
+- `f06a7a09f3` history: import 577 changes
+- `8637e168f4` task: import from tasks.sexp
+- `8fb40df7ae` add code specs
 - `6814434615` Explorer.Spec R-13: deps and users agree both ways, for the graph view (D101) (by claude)
 - `c1094317db` users exclude the definition itself (D101) (by claude)
 - `6ca942925a` history: import 586 changes
