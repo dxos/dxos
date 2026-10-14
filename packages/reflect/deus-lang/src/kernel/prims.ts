@@ -17,6 +17,7 @@ import {
   NONE,
   Prim,
   UNIT,
+  Vector,
   type Value,
   compare,
   equal,
@@ -177,6 +178,43 @@ export const createPrims = (): Map<string, Prim> => {
     }
     cell.value = v;
     return new Con('#Unit', 0, []);
+  });
+
+  const vector = (value: Value, index: Value, name: string): Value[] => {
+    if (!(value instanceof Vector)) {
+      throw new DeusDefect(`expected Array, got ${show(value)}`);
+    }
+    const i = int(index);
+    if (i < 0 || i >= value.items.length) {
+      throw new DeusDefect(`${name}: index ${i} out of bounds 0 .. ${value.items.length}`);
+    }
+    return value.items;
+  };
+  def('Array.make', 2, ([n, v]) => {
+    if (int(n) < 0) {
+      throw new DeusDefect(`Array.make: negative length ${int(n)}`);
+    }
+    return new Vector(new Array<Value>(int(n)).fill(v));
+  });
+  def('Array.length', 1, ([a]) => {
+    if (!(a instanceof Vector)) {
+      throw new DeusDefect(`expected Array, got ${show(a)}`);
+    }
+    return a.items.length;
+  });
+  def('Array.get', 2, ([a, i]) => vector(a, i, 'Array.get')[int(i)]);
+  def('Array.set', 3, ([a, i, v], machine) => {
+    const items = vector(a, i, 'Array.set');
+    const index = int(i);
+    if (machine.jitDepth > 0) {
+      // Compiled code may be replayed by the machine, which must see the array as it was.
+      const old = items[index];
+      machine.journal.push(() => {
+        items[index] = old;
+      });
+    }
+    items[index] = v;
+    return UNIT;
   });
 
   const key = (value: Value): string | number => {

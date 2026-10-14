@@ -99,6 +99,15 @@ export class Cell {
   }
 }
 
+/** A mutable fixed-length array (`Array.make`, D79); compared by identity. */
+export class Vector {
+  readonly items: Value[];
+
+  constructor(items: Value[]) {
+    this.items = items;
+  }
+}
+
 /** A hash map from primitive keys (Text or Int): `Dict` (built once, immutable) and `MutMap`. */
 export class HashTable {
   readonly map: Map<string | number, Value>;
@@ -119,7 +128,7 @@ export class Continuation {
   }
 }
 
-export type Value = number | string | boolean | Con | Closure | Callable | Pap | Continuation | Cell | HashTable;
+export type Value = number | string | boolean | Con | Closure | Callable | Pap | Continuation | Cell | HashTable | Vector;
 
 export const UNIT = new Con('#Unit', 0, []);
 export const NIL = new Con('#List', 0, []);

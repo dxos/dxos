@@ -40,14 +40,22 @@ impl Drop for EnvNode {
 }
 
 impl Drop for Con {
-    /// Drops the spine of a long list (or any right-nested data) iteratively, as above.
+    /// Drops the spine of a long list (or any right-nested data, through `Ref` cells too, as in a
+    /// chain of persistent-array versions) iteratively, as above.
     fn drop(&mut self) {
         let mut next = self.fields.pop();
-        while let Some(Value::Con(con)) = next {
-            match Rc::try_unwrap(con) {
-                Ok(mut con) => next = con.fields.pop(),
-                Err(_) => break,
-            }
+        loop {
+            next = match next {
+                Some(Value::Con(con)) => match Rc::try_unwrap(con) {
+                    Ok(mut con) => con.fields.pop(),
+                    Err(_) => break,
+                },
+                Some(Value::Cell(cell)) => match Rc::try_unwrap(cell) {
+                    Ok(cell) => Some(cell.into_inner()),
+                    Err(_) => break,
+                },
+                _ => break,
+            };
         }
     }
 }
@@ -182,6 +190,8 @@ pub enum Value {
     Cont(Rc<Vec<Frame>>),
     Cell(Rc<RefCell<Value>>),
     Table(Rc<RefCell<Table>>),
+    /// A mutable fixed-length array (`Array.make`, D79).
+    Array(Rc<RefCell<Vec<Value>>>),
 }
 
 /// How a run fails: the three tiers below `Throw` (D14) plus an orderly exit.
@@ -301,6 +311,7 @@ fn same(a: &Value, b: &Value) -> bool {
         (Value::Cont(x), Value::Cont(y)) => Rc::ptr_eq(x, y),
         (Value::Cell(x), Value::Cell(y)) => Rc::ptr_eq(x, y),
         (Value::Table(x), Value::Table(y)) => Rc::ptr_eq(x, y),
+        (Value::Array(x), Value::Array(y)) => Rc::ptr_eq(x, y),
         _ => false,
     }
 }

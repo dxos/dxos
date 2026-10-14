@@ -168,6 +168,17 @@ def typeOf (scope : Scope) (env : List Int) (e : Sexp) : Sexp :=
     | some local => typeOfLocal scope local
     | none => unknown
   | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str "Int.neg"], _] => tref "#Int"
+  | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str "Array.length"], _] => tref "#Int"
+  | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str "Array.make"], _, x] => arrayOf (typeOf scope env x)
+  | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str "Array.get"], a, _] =>
+    match typeArgs (typeOf scope env a) with
+    | [t] => t
+    | _ => unknown
+  | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str "Array.set"], _, _, _] => tref "#Unit"
+  | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str "Ref.get"], r] =>
+    match typeArgs (typeOf scope env r) with
+    | [t] => t
+    | _ => unknown
   | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str p], _, _] => if isComparison p then tref "#Bool" else tref "#Int"
   | Sexp.list [Sexp.sym "if", _, t, f] =>
     let left := typeOf scope env t
@@ -181,6 +192,9 @@ def typeOf (scope : Scope) (env : List Int) (e : Sexp) : Sexp :=
         substitute (fun v => List.lookup v bound) result
     | none => unknown
   | _ => unknown
+
+/-- `Array t`, or unknown when `t` is. -/
+def arrayOf (t : Sexp) : Sexp := if t == unknown then unknown else Sexp.list [Sexp.sym "tapp", tref "#Array", t]
 
 def refsOf (form : Sexp) : List Text :=
   match form with
@@ -201,21 +215,33 @@ def storedType (meta : Option Sexp) : Sexp :=
   | some t => t
   | none => Option.getOr (Codebase.metaField meta "sig") unknown
 
-/-- The functions `main` reaches, `main` first; a definition that is not a function is refused. -/
+/-- `form` with each `(ref h)` that `prims` names replaced by its `(prim p)`. -/
+def inlinePrims (prims : List (Text, Sexp)) (form : Sexp) : Sexp :=
+  match form with
+  | Sexp.list [Sexp.sym "ref", Sexp.str h] => Option.getOr (List.lookup h prims) form
+  | Sexp.list items => Sexp.list (List.map (inlinePrims prims) items)
+  | _ => form
+
+/--
+  The functions `main` reaches, `main` first; a definition that is not a function is refused.
+  A definition that is only a primitive (`def Int.ushr := prim "Int.ushr"`) is inlined at its
+  calls, so `Int.and x y` compiles as `x &&& y` would.
+-/
 def gather (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {Throw Text | r} Option Sexp) (main : Text) : {Throw Text | r} List Fn :=
-  let rec go pending seen acc :=
+  let rec go pending seen acc prims :=
     match pending with
-    | [] => List.reverse acc
+    | [] => List.map (fun f => Fn.mk f.fnHash f.fnArity (inlinePrims prims f.fnBody) f.fnType) (List.reverse acc)
     | h :: rest =>
-      if List.any (fun x => x == h) seen then go rest seen acc
+      if List.any (fun x => x == h) seen then go rest seen acc prims
       else
         match fetch h with
+        | some (Sexp.list [Sexp.sym "term", Sexp.list [Sexp.sym "prim", p]]) => go rest (h :: seen) acc ((h, Sexp.list [Sexp.sym "prim", p]) :: prims)
         | some (Sexp.list [Sexp.sym "term", core]) =>
           match unlam core with
           | (0, _) => throw ("#" ++ Text.take 10 h ++ " is not a function, so it is outside the wasm subset")
-          | (n, b) => go (rest ++ refsOf b) (h :: seen) (Fn.mk h n b (storedType (meta h)) :: acc)
+          | (n, b) => go (rest ++ refsOf b) (h :: seen) (Fn.mk h n b (storedType (meta h)) :: acc) prims
         | _ => throw ("#" ++ Text.take 10 h ++ " is not a term the wasm back end can compile")
-  go [main] [] []
+  go [main] [] [] []
 
 def fresh (next : Ref Int) : Int :=
   let local := Ref.get next
@@ -291,13 +317,9 @@ def expr (scope : Scope) (env : List Int) (next : Ref Int) (tail : Bool) (e : Se
     let _ := setType scope local (typeOf scope env v)
     sub v ++ (33 :: uleb local) ++ expr scope (local :: env) next tail b
   | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str "Int.neg"], a] => [65, 0] ++ sub a ++ [107]
-  | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str p], a, b] =>
-    match binary p with
-    | some op =>
-      if isComparison p && not (isScalar (typeOf scope env a) || isScalar (typeOf scope env b)) then
-        throw (p ++ " on values that are not known to be Int or Bool is outside the wasm subset, since it would compare addresses: " ++ Text.take 120 (Sexp.print e))
-      else sub a ++ sub b ++ [op]
-    | none => throw ("the primitive " ++ p ++ " is outside the wasm subset")
+  | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "prim", Sexp.str p] :: args) =>
+    if Text.startsWith "Array." p || Text.startsWith "Ref." p then array scope next p (List.map sub args)
+    else primitive scope env next e p args
   | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "ref", Sexp.str h] :: args) =>
     let index := indexOf h
     match List.find (fun f => f.fnHash == h) fns with
@@ -306,6 +328,58 @@ def expr (scope : Scope) (env : List Int) (next : Ref Int) (tail : Bool) (e : Se
       else List.concatMap sub args ++ ((if tail then 18 else 16) :: uleb index)
     | none => throw ("unknown function #" ++ Text.take 10 h)
   | other => throw ("outside the wasm subset: " ++ Text.take 120 (Sexp.print other))
+
+/-- A binary integer or comparison primitive applied to `args`. -/
+def primitive (scope : Scope) (env : List Int) (next : Ref Int) (e : Sexp) (p : Text) (args : List Sexp) : {Throw Text} List Int :=
+  match (binary p, args) with
+  | (some op, [a, b]) =>
+    if isComparison p && not (isScalar (typeOf scope env a) || isScalar (typeOf scope env b)) then
+      throw (p ++ " on values that are not known to be Int or Bool is outside the wasm subset, since it would compare addresses: " ++ Text.take 120 (Sexp.print e))
+    else expr scope env next false a ++ expr scope env next false b ++ [op]
+  | _ => throw ("the primitive " ++ p ++ " is outside the wasm subset")
+
+/--
+  `Array` primitives (D79) on a block `[length, item…]`, and `Ref` on a block `[value]`; `args`
+  is the code for each argument. An index outside the array, or a negative length, traps.
+  `Array.set` and `Ref.set` return address 0, whose word is 0, so it reads as `()`.
+-/
+def array (scope : Scope) (next : Ref Int) (p : Text) (args : List (List Int)) : {Throw Text} List Int :=
+  let unreachableIf := fun (cond : List Int) => cond ++ [4, 64, 0, 11]
+  let address := fun (a : Int) (i : Int) => localGet a ++ localGet i ++ [65, 2, 116, 106]
+  let checked := fun (a : Int) (i : Int) => unreachableIf (localGet i ++ localGet a ++ load 0 ++ [79])
+  match (p, args) with
+  | ("Ref.new", [v]) =>
+    let lr := fresh next
+    [65, 4] ++ (16 :: uleb (List.length scope.fns)) ++ localSet lr ++ localGet lr ++ v ++ store 0 ++ localGet lr
+  | ("Ref.get", [r]) => r ++ load 0
+  | ("Ref.set", [r, v]) => r ++ v ++ store 0 ++ [65, 0]
+  | ("Array.length", [a]) => a ++ load 0
+  | ("Array.get", [a, i]) =>
+    let la := fresh next
+    let li := fresh next
+    a ++ localSet la ++ i ++ localSet li ++ checked la li ++ address la li ++ load 4
+  | ("Array.set", [a, i, v]) =>
+    let la := fresh next
+    let li := fresh next
+    a ++ localSet la ++ i ++ localSet li ++ checked la li ++ address la li ++ v ++ store 4 ++ [65, 0]
+  | ("Array.make", [n, x]) =>
+    let ln := fresh next
+    let lx := fresh next
+    let lp := fresh next
+    let li := fresh next
+    List.concat [
+      n ++ localSet ln ++ x ++ localSet lx,
+      unreachableIf (localGet ln ++ [65, 0, 72]),
+      localGet ln ++ [65, 2, 116, 65, 4, 106] ++ (16 :: uleb (List.length scope.fns)) ++ localSet lp,
+      localGet lp ++ localGet ln ++ store 0,
+      [65, 0] ++ localSet li,
+      [2, 64, 3, 64],
+      localGet li ++ localGet ln ++ [78, 13, 1],
+      address lp li ++ localGet lx ++ store 4,
+      localGet li ++ [65, 1, 106] ++ localSet li,
+      [12, 0, 11, 11],
+      localGet lp]
+  | _ => throw ("the primitive " ++ p ++ " is outside the wasm subset")
 
 /-- A constructed value: `alloc` a block, store the tag and each field, and leave its address. -/
 def construct (scope : Scope) (env : List Int) (next : Ref Int) (tag : Int) (args : List Sexp) : {Throw Text} List Int :=

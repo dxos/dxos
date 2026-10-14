@@ -81,7 +81,7 @@ A kernel works with these values:
 | data         | a saturated constructor: type hash, tag, fields                                                     |
 | function     | `(lam …)`, a partial application, a constructor or operation that is not yet saturated, a primitive |
 | continuation | a handler clause's last binder                                                                      |
-| cell, map    | `Ref.new`, `Dict.fromList`, `MutMap.new`; compared by identity                                      |
+| cell, map    | `Ref.new`, `Array.make`, `Dict.fromList`, `MutMap.new`; compared by identity                        |
 
 `Bool` is data of `#Bool` (`false` tag 0, `true` tag 1), so `(con "#Bool" 1 0)` is `true`.
 
@@ -188,7 +188,7 @@ A `pcon` lists one sub-pattern per field. `true` is `(pcon "#Bool" 1)`, the empt
   ability is a defect (`unhandled ability <A> operation <index>`) under the command-line kernels. An embedder
   instead suspends the run and answers the request itself ([EMBEDDING.md](./EMBEDDING.md)).
 
-Mutable cells (`Ref`, `MutMap`) are not rolled back when a continuation is resumed more than once.
+Mutable cells (`Ref`, `Array`, `MutMap`) are not rolled back when a continuation is resumed more than once.
 
 ## Builtin identities
 
@@ -204,7 +204,7 @@ a builtin `#Name` is written `urn:deus:builtin:Name` ([D68](../DECISIONS.md)).
 | `#Option`                  | type    | 0 `none`, 1 `some value`                   |
 | `#Pair`                    | type    | 0 `mk fst snd`                             |
 | `#Int`, `#Text`            | type    | none; primitive values                     |
-| `#Ref`, `#Dict`, `#MutMap` | type    | none; opaque values made by primitives     |
+| `#Ref`, `#Array`, `#Dict`, `#MutMap` | type | none; opaque values made by primitives |
 | `#IO`                      | ability | see below                                  |
 | `#Defect`                  | ability | 0 `raise : Text -> a`                      |
 
@@ -262,6 +262,8 @@ binds each to a DEUS name and gives its type. A wrong argument type is a defect.
 | `trace`                                     | 2       | writes `trace <label>: <value>` to stderr, returns the value                                                              |
 | `defect`                                    | 1       | raises a defect with the message                                                                                          |
 | `Ref.new`, `Ref.get`, `Ref.set`             | 1, 1, 2 | a mutable cell                                                                                                            |
+| `Array.make`, `Array.length`                | 2, 1    | a mutable array of `n` copies of a value (D79); its length                                                                |
+| `Array.get`, `Array.set`                    | 2, 3    | array, index (and value); an index outside `0 .. length` is a defect                                                      |
 | `Dict.fromList`                             | 1       | an immutable map from a list of pairs; later keys win                                                                     |
 | `Dict.lookup`, `Dict.contains`              | 2       | key first, then the map                                                                                                   |
 | `Dict.size`, `Dict.keys`                    | 1       | size; keys in insertion order                                                                                             |
