@@ -35,11 +35,11 @@ api A-1: generating a site
 api A-2: writing from the explorer (D82)
   signatures:
   - Comments.isSubject : Text -> Bool
-  - Comments.add : Text -> List (Text, task:Comment) -> Text -> {IO, Throw Text} Text
-  - Comments.current : Text -> {IO, Throw Text} Map Text (List task:Comment)
+  - Comments.add : Text -> List (Text, Comment) -> Text -> {IO, Throw Text} Text
+  - Comments.current : Text -> {IO, Throw Text} Map Text (List Comment)
   - Assets.isHash : Text -> Bool
   - Inbox.applyOne : Text -> Sexp -> {IO, Throw Text} Text
-  - Inbox.apply : Text -> {replicate:Remote, IO, Throw Text} List Text
+  - Inbox.apply : Text -> {Remote, IO, Throw Text} List Text
 ```
 
 ## Files

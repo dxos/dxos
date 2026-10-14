@@ -5,6 +5,44 @@
 - `2935873e9b` task: open ca75d545 Explorer shows events: events.json, an Events card, and counts on definition and change cards (by claude)
 - `5af5f624f5` the explorer writes events.json and meta.events (R-14, R-15) (by claude)
 - `c77c21729f` Explorer.Spec R-14, R-15: events.json and the meta count, spec first (by claude)
+- `102beac5d7` merge #13952's branch: View.Spec and the specs as exported (by claude)
+- `400cb8ebc9` history: import 698 changes
+- `5dab22c540` task: import from codebase/tasks.sexp
+- `3885974323` merge #13952's branch: View fix (D108) (by claude)
+- `dfc08c5d11` history: import 590 changes
+- `9aa61666e1` task: import from codebase/tasks.sexp
+- `c37c95c07d` merge #13952's branch: Parquet column statistics (by claude)
+- `892406fc07` export: merge 9 changes from codebase
+- `a6a09e7efc` export: merge tasks from codebase
+- `d3ac71beee` merge #13952's branch (by claude)
+- `5305c4a8cc` import #13952's export (Parquet statistics) (by claude)
+- `1cf702b82d` export: merge 32 changes from codebase
+- `f599a785ab` export: merge tasks from codebase
+- `b7051d6a4f` merge #13952's branch; View fix renumbered D108 (by claude)
+- `c7a47c3993` import #13952's export (analytics, Composer plugin, graph view) (by claude)
+- `ef3734357f` export: merge 21 changes from codebase
+- `14e27c9c0a` export: merge tasks from codebase
+- `3de400a062` merge #13952's branch; View fix renumbered D106 (by claude)
+- `c7ed4d5991` export: merge 9 changes from codebase
+- `a99a99e525` export: merge tasks from codebase
+- `74838b1914` merge #13952's branch (D102, D103); View fix renumbered D104 (by claude)
+- `7093a34ef8` export: merge 13 changes from codebase
+- `eef27fdc12` export: merge tasks from codebase
+- `eb47c4209c` merge #13952's branch (D101, D102); View fix renumbered D103 (by claude)
+- `5c0e49121c` Explorer.Spec: api signatures name types as the header now prints them (D101) (by claude)
+- `f8d7887d0d` task: set f6a2c2ff state (by claude)
+- `7e1fcbca9a` close 4f7f9e40 by #8cb84289e1 (by claude)
+- `8cb84289e1` update deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/specs/VIEW.mdl (by claude)
+- `1e5d40d2d6` cli: bring Cli.dispatch and Cli.main up to date with deus/ (by claude)
+- `87e96d9f73` close 4b1eb1a9 by #7886bef5ce (by claude)
+- `7886bef5ce` cli: origin and the R2 endpoint default for the toolchain codebase (D108) (by claude)
+- `a00feaab57` task: set 4b1eb1a9 state priority assignee labels details (by claude)
+- `6a48195085` task: open 4b1eb1a9 The CLI defaults origin and the R2 endpoint for the toolchain codebase (by claude)
+- `97932915fc` task: set 72207dc1 state details (by claude)
+- `85011af15d` close 821dd13d by #f49a4c7913 (by claude)
+- `f49a4c7913` Parquet writer: min/max statistics and column_orders on every column (by claude)
+- `5f3ee9bd61` history: import 580 changes
+- `bdbadcd847` task: import from tasks.sexp
 - `6e64e08bbb` task: comment on e76e36b0 (by claude)
 - `f06a7a09f3` history: import 577 changes
 - `8637e168f4` task: import from tasks.sexp

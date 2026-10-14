@@ -35,7 +35,7 @@ def Checking.Spec.compiled (source : Text) : Option (List (Text, Entry)) :=
     (fun _ => Option.none)
     (fun _ => Option.none)
     "strict"
-    [parseFile "t.deus" (Checking.Spec.prelude ++ source)]) with
+    [parseFile "t.deus" (View.Spec.prelude ++ source)]) with
   | Result.ok b => Option.some b.entries
   | Result.err _ => Option.none
 

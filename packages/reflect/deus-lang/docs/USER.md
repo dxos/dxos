@@ -361,3 +361,7 @@ are woktrees not pushing the codebase, or is this explorer not getting updated
 ---
 
 this displays code as list, but there might be another view: a force-graph with code-cards as nodes
+
+---
+
+push the toolchain codebase to r2://agent-artifacts/deus/toolchain and make it the CLI default

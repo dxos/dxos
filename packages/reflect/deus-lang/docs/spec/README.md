@@ -21,6 +21,7 @@ independent implementation. Where a spec and the code disagree, the code in [`de
 | [Bindings.Spec](../../codebase/specs/Bindings.Spec.mdl)         | `deus bindings`: requirements, the TypeScript API, the mapping, and theorems           |
 | [Checking.Spec](../../codebase/specs/Checking.Spec.mdl)         | checked ascriptions and rows: requirements, checker rules, and theorems                |
 | [JsGen.Spec](../../codebase/specs/JsGen.Spec.mdl)                  | The JavaScript back end: values, handlers, `Js.import` bindings, source maps     |
+| [View.Spec](../../codebase/specs/View.Spec.mdl) | What `deus view` prints for theorems and header types |
 | [WasmEquality.Spec](../../codebase/specs/WasmEquality.Spec.mdl) | `==` on data in the wasm back end: requirements, layout of the equality functions, theorems |
 | [WASM.md](./WASM.md)                   | Modules emitted by the DEUS wasm compiler                                              |
 | [NATIVE.md](./NATIVE.md)               | C emitted by the DEUS C compiler, benchmarks of every back end, and the native roadmap |

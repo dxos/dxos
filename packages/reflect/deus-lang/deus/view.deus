@@ -112,6 +112,11 @@ def theoremDecl (p : Printer) (name : Text) (types : List Sexp) (prop : Sexp) (p
       | Sexp.list [Sexp.sym "ref", Sexp.str l] => Print.nameFor p l
       | _ => Sexp.asText x) (Sexp.args proof)
     let proofText := if tactic == ["sorry"] then "sorry" else "by " ++ Text.replace " ," "," (Text.replace "[ " "[" (Text.replace " ]" "]" (Text.join " " tactic)))
-    "theorem " ++ name ++ binders ++ " : " ++ Print.expr p b env 2 0 ++ " := " ++ proofText
+    -- The parser reads `P -> Q` only at the top of a statement, as `implies`, so only there is it written back.
+    let rec parts prop :=
+      match prop with
+      | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str "implies"], hyp, rest] => hyp :: parts rest
+      | _ => [prop]
+    "theorem " ++ name ++ binders ++ " : " ++ Text.join " -> " (List.map (fun part => Print.expr p part env 2 0) (parts b)) ++ " := " ++ proofText
 
 end View

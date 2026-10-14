@@ -63,7 +63,7 @@ change  = {"causal": string, "message": string, "by"?: string}
 | `tasks`       | number   | how many tasks                                                    |
 | `open`        | number   | how many tasks are `todo` or `doing`                              |
 | `console`     | boolean  | whether the site has a [console](#console) (D84)                  |
-| `events`      | number   | how many [events](#eventsjson) the codebase recorded (D108)       |
+| `events`      | number   | how many [events](#eventsjson) the codebase recorded (D110)       |
 | `history`     | change[] | the branch's 30 most recent history nodes, newest first           |
 
 ```json
@@ -227,7 +227,7 @@ opens a name's current page.
 ## events.json
 
 What the analytics store ([D104](../DECISIONS.md)) recorded about the codebase, as
-`Analytics.siteJson` writes it (the JSON `deus event stats --json --limit 20` prints), D108:
+`Analytics.siteJson` writes it (the JSON `deus event stats --json --limit 20` prints), D110:
 
 | Field          | Type     | Content                                                                                                |
 | -------------- | -------- | ------------------------------------------------------------------------------------------------------ |

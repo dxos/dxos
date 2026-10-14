@@ -12,6 +12,14 @@ def Parquet.asList (t : Option Thrift) : List Thrift :=
   | Option.some (Thrift.items _ values) => values
   | _ => []
 
+/-- Byte lists in Parquet's order for statistics: unsigned, lexicographic. -/
+def Parquet.bytesBefore (a : List Int) (b : List Int) : Bool :=
+  match (a, b) with
+  | ([], []) => false
+  | ([], _) => true
+  | (_, []) => false
+  | (x :: xs, y :: ys) => if x != y then x < y else Parquet.bytesBefore xs ys
+
 /-- The column type a schema element was written with. -/
 def Parquet.columnTypeOf (e : Thrift) : Text :=
   let kind := Parquet.asInt (Parquet.field e 1)
@@ -257,6 +265,30 @@ def Parquet.schemaElement (c : Column) : Thrift :=
 
 def Parquet.slice (bytes : Array Int) (start : Int) (stop : Int) : List Int := List.map (fun i => Array.get bytes i) (range start stop)
 
+/-- A cell's sort key as Parquet compares it: signed for INT64, the bytes for text, 0 or 1 for a boolean. -/
+def Parquet.sortKey (columnType : Text) (c : Cell) : List Int :=
+  match c with
+  | Cell.int v => [if v < 0 then 0 else 1, and (ushr v 24) 255, and (shr v 16) 255, and (shr v 8) 255, and v 255]
+  | Cell.bool v => [if v then 1 else 0]
+  | Cell.text t => if columnType == "time" then Text.length (trimZeros t) :: utf8 (trimZeros t) else utf8 t
+
+/-- ColumnMetaData field 12: the column's min and max as PLAIN values with no nulls, so a reader
+  (Basin SQL, through Iceberg) can skip files a filter excludes. -/
+def Parquet.statistics (columnType : Text) (values : List Cell) : List (Int, Thrift) :=
+  match values with
+  | [] => []
+  | first :: rest =>
+      let pick := fun wantLess => foldl
+        (fun best c => if bytesBefore (sortKey columnType c) (sortKey columnType best) == wantLess && sortKey columnType c != sortKey columnType best then c else best)
+        first
+        rest
+      let encoded := fun c => if columnType == "text" || columnType == "ref" then
+        match c with
+        | Cell.text t => utf8 t
+        | _ => []
+      else Parquet.plain columnType [c]
+      [(12, Thrift.fields [(3, Thrift.i64 0), (5, Thrift.bin (encoded (pick false))), (6, Thrift.bin (encoded (pick true)))])]
+
 /-- The columns every event table starts with, before the type's own fields. -/
 def Parquet.systemColumns : List Column := [Column.mk "event_id" "text", Column.mk "recorded_at" "time", Column.mk "recorded_by" "text"]
 
@@ -293,7 +325,7 @@ def Parquet.varint (v : Int) : List Int :=
     if rest == 0 then reverse (low :: acc) else go rest (or low 128 :: acc)
   go v []
 
-/-- A Parquet file holding `rows` of an event type: one row group, one uncompressed PLAIN page per column. -/
+/-- A Parquet file holding `rows` of an event type: one row group, one uncompressed PLAIN page per column; column_orders lets readers trust the min/max statistics. -/
 def Parquet.write (t : EventType) (rows : List Row) : List Int :=
   let columns := systemColumns ++ t.columns
   let n := List.length rows
@@ -306,7 +338,8 @@ def Parquet.write (t : EventType) (rows : List Row) : List Int :=
         let data := Parquet.plain c.columnType values
         let header := Parquet.encode (Thrift.fields [(1, Thrift.i32 0), (2, Thrift.i32 (List.length data)), (3, Thrift.i32 (List.length data)), (5, Thrift.fields [(1, Thrift.i32 n), (2, Thrift.i32 0), (3, Thrift.i32 3), (4, Thrift.i32 3)])])
         let size := List.length header + List.length data
-        let meta := Thrift.fields [(2, Thrift.i64 offset), (3, Thrift.fields [(1, Thrift.i32 (physical c.columnType)), (2, Thrift.items 5 [Thrift.i32 0]), (3, Thrift.items 8 [Thrift.bin (utf8 c.columnName)]), (4, Thrift.i32 0), (5, Thrift.i64 n), (6, Thrift.i64 size), (7, Thrift.i64 size), (9, Thrift.i64 offset)])]
+        let meta := Thrift.fields [(2, Thrift.i64 offset), (3, Thrift.fields ([(1, Thrift.i32 (physical c.columnType)), (2, Thrift.items 5 [Thrift.i32 0]), (3, Thrift.items 8 [Thrift.bin (utf8 c.columnName)]), (4, Thrift.i32 0), (5, Thrift.i64 n), (6, Thrift.i64 size), (7, Thrift.i64 size), (9, Thrift.i64 offset)] ++
+          statistics c.columnType values))]
         chunks rest (index + 1) (offset + size) ((header ++ data, meta, size) :: acc)
   match chunks columns 0 4 [] with
   | (parts, _) =>
@@ -319,7 +352,7 @@ def Parquet.write (t : EventType) (rows : List Row) : List Int :=
         match p with
         | (_, meta, _) => meta) parts)), (2, Thrift.i64 total), (3, Thrift.i64 n)]]), (5, Thrift.items 12 [kv "deus.event.type" t.typeName, kv "deus.event.hash" t.typeHash, kv
         "deus.event.columns"
-        (join "," (List.map (fun c => c.columnName ++ ":" ++ c.columnType) t.columns))]), (6, Thrift.bin (utf8 "deus analytics"))])
+        (join "," (List.map (fun c => c.columnName ++ ":" ++ c.columnType) t.columns))]), (6, Thrift.bin (utf8 "deus analytics")), (7, Thrift.items 12 (List.map (fun _ => Thrift.fields [(1, Thrift.fields [])]) columns))])
       magic ++ concatMap (fun p =>
         match p with
         | (bytes, _, _) => bytes) parts ++ footer ++ le32 (List.length footer) ++ magic

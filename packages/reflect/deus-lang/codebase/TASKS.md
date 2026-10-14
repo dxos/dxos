@@ -1,14 +1,5 @@
 # Tasks
 
-## The R2 codebase remote (r2://agent-artifacts/deus/explorer-demo, main) and the git export are separate lineages: deus merge origin.main reports 373 conflicting names, so threads cannot pull, merge and push main as the primary VCS yet (`72207dc1`)
-
-- state: todo
-- priority: urgent
-- assignee: claude
-- labels: dogfood, codebase
-
-> claude: Also: from this container (claude/project-thread-abg4l3) the network policy refused uploads to the R2 host, so the analytics work went to git only; deus pull worked earlier in the same session.
-
 ## A Js.import binding's hash does not cover its type, so two bindings with the same body share one codec (`1e8dee8b`)
 
 - state: todo
@@ -205,14 +196,6 @@ Known gaps R-10 and R-12 in docs/spec/CODEBASE-STORE.mdl.
 - assignee: claude
 - labels: mdl, spec
 
-## Native: 32-bit values with a tag bit in wasm built through C (halve block size) (`38603468`)
-
-- state: todo
-- priority: medium
-- labels: native, perf, wasm
-
-D90 widens values to 64 bits so blocks and integers can be told apart in wasm32; this doubles block size and makes list sorts 1.1-1.8x slower than the never-freeing --wasm back end (docs/spec/NATIVE.md#wasm-through-c). A low tag bit on Int (or on pointers) keeps 32-bit words but changes every arithmetic op in both back ends.
-
 ## Native: a C runtime for Text, maps and the other primitives, ported from the Rust kernel (`72a1f2fb`)
 
 - state: todo
@@ -230,13 +213,6 @@ D90 widens values to 64 bits so blocks and integers can be told apart in wasm32;
 - state: todo
 - priority: medium
 - labels: native, perf
-
-## Parquet writer: min/max column statistics, so Basin SQL can prune files (pyiceberg warns they are missing) (`821dd13d`)
-
-- state: todo
-- priority: medium
-- assignee: claude
-- labels: analytics, perf
 
 ## Run the DEUS skill through the Composer assistant with a live model (`91b838f4`)
 
@@ -273,15 +249,6 @@ JsGen.gather throws '<name> uses Js.import inside an expression'. Add a test bes
 - priority: medium
 - labels: prover
 - links `Check.generate` (#ba17124ee9)
-
-## Theorem view prints P -> Q as prim "implies" (P) (Q) (`4f7f9e40`)
-
-- state: todo
-- priority: medium
-- assignee: claude
-- labels: bug, print
-
-Found writing law statements (D91): deus view Sort.insertSorted.
 
 ## TypeScript bindings: export polymorphic functions with codec parameters (`b6907aeb`)
 
@@ -323,15 +290,6 @@ Follow-up of 17d50ae5: a parameter or result of function type is skipped. A TS c
 - links `Ts.definition` (#e5f668ab9e)
 
 > claude: Filed by the TS-like dialect thread (D70).
-
-## Type display names a type by its IRI's tail (task:Task) instead of its name (Task) (`f6a2c2ff`)
-
-- state: todo
-- priority: low
-- assignee: claude
-- labels: bug, types
-
-Found writing api blocks (D91): deus view Export.taskMarkdown shows task:Task -> Text.
 
 ## TypeScript bindings: run in-process on the TypeScript kernel too (`353444f7`)
 
@@ -379,6 +337,17 @@ Follow-up to 50e58574 (D96): deus view <Doc> renders a document from block metad
 - labels: cli, bug
 
 Found while closing cf5e187f: deus task set <id> --status done printed the task unchanged. It should name the known fields (title, state, priority, assignee, labels, parent, details).
+
+## The R2 codebase remote (r2://agent-artifacts/deus/explorer-demo, main) and the git export are separate lineages: deus merge origin.main reports 373 conflicting names, so threads cannot pull, merge and push main as the primary VCS yet (`72207dc1`)
+
+- state: canceled
+- priority: urgent
+- assignee: claude
+- labels: dogfood, codebase
+
+Wrong premise: explorer-demo is the explorer site's remote, not the codebase's. The shared codebase remote is r2://agent-artifacts/deus/toolchain (D101), seeded by the explorer-publish thread.
+
+> claude: Also: from this container (claude/project-thread-abg4l3) the network policy refused uploads to the R2 host, so the analytics work went to git only; deus pull worked earlier in the same session.
 
 ## Analytics store: event types defined in the codebase, flat event rows (scalars and pinned refs), push-only sync as Parquet beside the codebase, queryable with Basin SQL (`87707577`)
 
@@ -775,6 +744,16 @@ From Dmytro: about mdl-first approach --- I want agents to record specs in codeb
 - assignee: claude
 - labels: explorer
 
+## The CLI defaults origin and the R2 endpoint for the toolchain codebase (`4b1eb1a9`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: replication, cli
+- links change #7886bef5ce
+
+Dmytro: push the toolchain codebase to r2://agent-artifacts/deus/toolchain and make it the CLI default. Seeded the remote from the export; origin and the endpoint default for the toolchain project.
+
 ## The explorer History view hides the history imported from an export (`12663f55`)
 
 - state: done
@@ -970,6 +949,14 @@ Dmytro: those should be clickable. Tiles open k:<kind> lists (k:checks failing f
 
 deus explore could ship deus_kernel.wasm, the seed and a JSON snapshot of the codebase directory; platform/browser/playground.mjs --codebase shows the shape. A definition card could get Run and Eval.
 
+## Native: 32-bit values with a tag bit in wasm built through C (halve block size) (`38603468`)
+
+- state: canceled
+- priority: medium
+- labels: native, perf, wasm
+
+Canceled (D102): DEUS Int is 32 bits with wrapping, so a tag bit would need 33; 64-bit values in wasm stay.
+
 ## Native: a C runtime for Text, maps and the other primitives, ported from the Rust kernel (`434a6dbc`)
 
 - state: canceled
@@ -1002,6 +989,14 @@ deus explore could ship deus_kernel.wasm, the seed and a JSON snapshot of the co
 - labels: docs, spec
 
 Done by the Format spec docs thread in b0a392d6: CORE, CODEBASE-STORE, CODEBASE-BINARY, CODEBASE-TEXT, EMBEDDING, WASM, MDL, LANGUAGE and more, with the known divergences in docs/spec/README.md.
+
+## Parquet writer: min/max column statistics, so Basin SQL can prune files (pyiceberg warns they are missing) (`821dd13d`)
+
+- state: done
+- priority: medium
+- assignee: claude
+- labels: analytics, perf
+- links change #f49a4c7913
 
 ## Readers do not verify hashes of bundles and objects; a stray file under bundles/ fails a pull (`7afeaa0c`)
 
@@ -1043,6 +1038,16 @@ view of 1061 definitions plus update of all of them; profile which half dominate
 - links change #fa20112443
 
 From docs/spec/README.md, Known divergences.
+
+## Theorem view prints P -> Q as prim "implies" (P) (Q) (`4f7f9e40`)
+
+- state: done
+- priority: medium
+- assignee: claude
+- labels: bug, print
+- links change #8cb84289e1
+
+Found writing law statements (D91): deus view Sort.insertSorted.
 
 ## Type ascriptions are erased before checking; a row on a definition without binders is not checked (`a03fdfb6`)
 
@@ -1142,6 +1147,15 @@ From docs/spec/README.md, Known divergences.
 - priority: low
 - labels: native, perf
 - links change #eddca32cd2
+
+## Type display names a type by its IRI's tail (task:Task) instead of its name (Task) (`f6a2c2ff`)
+
+- state: done
+- priority: low
+- assignee: claude
+- labels: bug, types
+
+Found writing api blocks (D91): deus view Export.taskMarkdown shows task:Task -> Text.
 
 ## TypeScript bindings: run in-process on the TypeScript kernel too (`e69b5384`)
 
