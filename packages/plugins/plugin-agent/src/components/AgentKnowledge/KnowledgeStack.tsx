@@ -91,17 +91,19 @@ export type KnowledgeCardProps = {
   /** After the rows, the card's full width (e.g. the raw TriG). */
   children?: ReactNode;
   testId?: string;
+  /** A rule between the title and the rows; off where the rows only qualify the title (a fact's source and time). */
+  separator?: boolean;
   /** Data attributes a test reads (e.g. a goal's status). */
   data?: Readonly<Record<`data-${string}`, string>>;
 };
 
 /** One item as a read-only form: an icon and title head the card, its key/value rows follow under a rule. */
-export const KnowledgeCard = ({ icon, title, rows, children, testId, data }: KnowledgeCardProps) => (
+export const KnowledgeCard = ({ icon, title, rows, children, testId, separator = true, data }: KnowledgeCardProps) => (
   <Card.Root grid data-testid={testId} {...data}>
     <Card.Row icon={icon} align='start'>
       <Card.Text lines={3}>{title}</Card.Text>
     </Card.Row>
-    {rows.length > 0 && <Layout.Separator />}
+    {separator && rows.length > 0 && <Layout.Separator />}
     {rows.map(({ label, value }, index) => (
       // A key can repeat (a goal's several watches), so the position keeps rows distinct.
       <Card.Row key={`${label}:${index}`}>
