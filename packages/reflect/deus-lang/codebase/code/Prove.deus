@@ -1,6 +1,6 @@
 inductive Prove.Origin where
-  | param Int
-  | part Int
+  | param (index : Int)
+  | part (index : Int)
   | other
 
 structure Prove.Step where

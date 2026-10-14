@@ -1,7 +1,7 @@
-def View.abilityDecl (p : Printer) (ns : Map Text Entry) (name : Text) (e : Entry) (obj : Sexp) : Text :=
+def View.abilityDecl (p : Printer) (ns : Map Text Entry) (name : Text) (e : Entry) (obj : Sexp) (meta : Option Sexp) : Text :=
   match (e, Sexp.args obj) with
   | (Entry.ability h iri, _ :: Sexp.int count :: rawOps) =>
-      let names := paramNames count (namedVars obj)
+      let names := paramsFor meta count obj
       let ops := List.map (nameParams names) rawOps
       let opNames := filterMap (fun pair =>
         match pair with
@@ -14,6 +14,9 @@ def View.abilityDecl (p : Printer) (ns : Map Text Entry) (name : Text) (e : Entr
         | _ => "  " ++ oname) ops
       "ability " ++ name ++ params names ++ iriClause iri name ++ " where\n" ++ join "\n" lines
   | _ => Sexp.print obj
+
+/-- Constructor field names from a type's metadata, one list per constructor (`""` for unnamed). -/
+def View.fieldNamesFor (meta : Option Sexp) : List (List Text) := List.map (fun c => List.map asText (Sexp.args c)) (metaList meta "fields")
 
 def View.iriClause (iri : Text) (name : Text) : Text := if iri == "urn:deus:" ++ name then "" else " @" ++ quoteText iri
 
@@ -43,6 +46,11 @@ def View.paramNames (count : Int) (used : List Text) : List Text :=
 
 def View.params (names : List Text) : Text := Text.concat (List.map (fun n => " " ++ n) names)
 
+/-- The author's parameter names from a type's metadata, or names chosen to avoid the ones in use. -/
+def View.paramsFor (meta : Option Sexp) (count : Int) (obj : Sexp) : List Text :=
+  let stored := List.map asText (metaList meta "params")
+  if List.length stored == count then stored else paramNames count (namedVars obj)
+
 /-- `theorem t (x : T) : prop := by tactic`. -/
 def View.theoremDecl (p : Printer) (name : Text) (types : List Sexp) (prop : Sexp) (proof : Sexp) : Text :=
   let rec params t env acc :=
@@ -66,10 +74,11 @@ def View.theoremDecl (p : Printer) (name : Text) (types : List Sexp) (prop : Sex
 def View.typeArgs (form : Sexp) : List Sexp := List.filter (fun x => head x == "ctor") (Sexp.args form)
 
 /-- `inductive T where | c (F) …` or `structure T where f : F …`. -/
-def View.typeDecl (p : Printer) (ns : Map Text Entry) (name : Text) (e : Entry) (obj : Sexp) : Text :=
+def View.typeDecl (p : Printer) (ns : Map Text Entry) (name : Text) (e : Entry) (obj : Sexp) (meta : Option Sexp) : Text :=
   match (e, Sexp.args obj) with
   | (Entry.type h iri fields, _ :: Sexp.int count :: _) =>
-      let names := paramNames count (namedVars obj)
+      let names := paramsFor meta count obj
+      let fieldNames := fieldNamesFor meta
       let ctors := List.map (nameParams names) (typeArgs obj)
       let display := name
       if not (List.isEmpty fields) then
@@ -87,7 +96,13 @@ def View.typeDecl (p : Printer) (ns : Map Text Entry) (name : Text) (e : Entry) 
         let lines := mapIndexed (fun tag c =>
           let cname := getOr (List.lookup tag ctorNames) ("ctor" ++ toText tag)
           let fieldTypes := List.drop 1 (Sexp.args c)
-          "  | " ++ cname ++ Text.concat (List.map (fun t => " " ++ Print.ty p t 100) fieldTypes)) ctors
+          let named := getOr (get? fieldNames tag) []
+          let field := fun pair =>
+            match getOr (get? named (fst pair)) "" with
+            | "" => " " ++ Print.ty p (snd pair) 100
+            | fieldName => " (" ++ fieldName ++ " : " ++ Print.ty p (snd pair) 0 ++ ")"
+          "  | " ++ cname ++
+            Text.concat (List.map field (mapIndexed (fun i t => (i, t)) fieldTypes))) ctors
         "inductive " ++ display ++ params names ++ iriClause iri name ++ " where" ++
           (if List.isEmpty lines then "" else "\n" ++ join "\n" lines)
   | _ => Sexp.print obj

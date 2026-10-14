@@ -24,15 +24,6 @@ view of 1061 definitions plus update of all of them; profile which half dominate
 
 History rows link nowhere; a change page could list the definitions it added or replaced.
 
-## Inductive constructors lose their field names when printed (`4bf3eed4`)
-
-- state: todo
-- priority: none
-- labels: dogfood, cli
-- links `View.typeDecl` (#dab6051210)
-
-inductive Result (e a : Type) where | ok (value : a) prints as | ok a.
-
 ## Back up the codebase to GitHub as text (`0c53d3bd`)
 
 - state: done
@@ -131,6 +122,17 @@ Viewing about 1000 definitions into a pipe stopped after about 1150 lines; into 
 - links `Cli.push` (#69ccb8bb8b)
 
 > claude: Deployed platform/explorer-worker to a temporary account; deus push refreshes the bucket it reads.
+
+## Inductive constructors lose their field names when printed (`4bf3eed4`)
+
+- state: done
+- priority: none
+- assignee: claude
+- labels: dogfood, cli
+- links `View.typeDecl` (#dab6051210)
+- links change #e2a4045a8a
+
+inductive Result (e a : Type) where | ok (value : a) prints as | ok a.
 
 ## Task changes do not record who made them as provenance (`3d6508e4`)
 

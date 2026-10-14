@@ -9,8 +9,8 @@ structure Arm where
   body : Expr
 
 inductive Attachment @"urn:deus:task:Attachment" where
-  | definition Text Text
-  | change Text
+  | definition (name : Text) (hash : Text)
+  | change (hash : Text)
 
 structure Attr where
   attr : Text
@@ -52,20 +52,20 @@ ability Containers @"urn:deus:external:Containers" where
   stop : Text -> Unit
 
 inductive Decl where
-  | defn Text (List Binder) (Option Ty) (Option Expr) (Option (List Arm)) (Option Text) (List Attr) Pos
-  | thm Text (List Binder) Expr (List Text) (Option Text) (List Attr) Pos
-  | check Text Expr (Option Text) (List Attr) Pos
-  | data Text (List Text) (Option Text) (List (Text, List Ty)) (Option Text) Pos
-  | record Text (List Text) (Option Text) (List (Text, Ty)) (Option Text) Pos
-  | effect Text (List Text) (Option Text) (List (Text, Ty)) (Option Text) Pos
-  | ns Text
-  | endNs (Option Text)
-  | openNs (List Text)
+  | defn (name : Text) (binders : List Binder) (type : Option Ty) (body : Option Expr) (arms : Option (List Arm)) (doc : Option Text) (attrs : List Attr) (pos : Pos)
+  | thm (name : Text) (binders : List Binder) (prop : Expr) (proof : List Text) (doc : Option Text) (attrs : List Attr) (pos : Pos)
+  | check (name : Text) (body : Expr) (doc : Option Text) (attrs : List Attr) (pos : Pos)
+  | data (name : Text) (params : List Text) (iri : Option Text) (ctors : List (Text, List (Text, Ty))) (doc : Option Text) (pos : Pos)
+  | record (name : Text) (params : List Text) (iri : Option Text) (fields : List (Text, Ty)) (doc : Option Text) (pos : Pos)
+  | effect (name : Text) (params : List Text) (iri : Option Text) (ops : List (Text, Ty)) (doc : Option Text) (pos : Pos)
+  | ns (name : Text)
+  | endNs (name : Option Text)
+  | openNs (names : List Text)
 
 ability Defect @"#Defect" where
   raise : Text -> a
 
-inductive Dict a b @"#Dict" where
+inductive Dict k v @"#Dict" where
 
 structure Doc @"urn:deus:mdl:Doc" where
   front : List (Text, Text)
@@ -73,45 +73,45 @@ structure Doc @"urn:deus:mdl:Doc" where
   blocks : List Block
 
 inductive Entry where
-  | term Text
-  | ctor Text Int Int
-  | type Text Text (List Text)
-  | ability Text Text
-  | op Text Int Int
-  | test Text
-  | theorem Text
-  | spec Text
+  | term (hash : Text)
+  | ctor (type : Text) (tag : Int) (arity : Int)
+  | type (hash : Text) (iri : Text) (fields : List Text)
+  | ability (hash : Text) (iri : Text)
+  | op (owner : Text) (index : Int) (arity : Int)
+  | test (hash : Text)
+  | theorem (hash : Text)
+  | spec (hash : Text)
 
 inductive Event where
-  | log Text Text (List (Text, Text)) Int Text
-  | span Int Int Text (List (Text, Text)) Text Text
-  | metric Text Text Int Text
+  | log (level : Text) (message : Text) (fields : List (Text, Text)) (within : Int) (time : Text)
+  | span (id : Int) (parent : Int) (name : Text) (attrs : List (Text, Text)) (begin : Text) (finished : Text)
+  | metric (kind : Text) (name : Text) (value : Int) (time : Text)
 
 inductive Expr where
-  | var Text Pos
-  | dot Text Pos
-  | int Int
-  | text Text
-  | bool Bool
+  | var (name : Text) (pos : Pos)
+  | dot (name : Text) (pos : Pos)
+  | int (value : Int)
+  | text (value : Text)
+  | bool (value : Bool)
   | unit
-  | app Expr (List Expr)
-  | lam (List Pat) Expr
-  | lamMatch (List Arm)
-  | letPat Pat Expr Expr
-  | letFun Text (List Pat) Expr Expr Bool
-  | seq Expr Expr
-  | ite Expr Expr Expr
-  | matchOn (List Expr) (List Arm)
-  | handleWith Expr (Option (Pat, Expr)) (List OpArm)
-  | binop Text Expr Expr Pos
-  | neg Expr
-  | not Expr
-  | tuple (List Expr)
-  | list (List Expr)
-  | prim Text
-  | record (Option Expr) (List (Text, Expr)) Pos
-  | ann Expr Ty
-  | proj Expr Text Pos
+  | app (f : Expr) (args : List Expr)
+  | lam (params : List Pat) (body : Expr)
+  | lamMatch (arms : List Arm)
+  | letPat (pat : Pat) (value : Expr) (body : Expr)
+  | letFun (name : Text) (params : List Pat) (value : Expr) (body : Expr) (isRec : Bool)
+  | seq (first : Expr) (rest : Expr)
+  | ite (cond : Expr) (yes : Expr) (no : Expr)
+  | matchOn (scruts : List Expr) (arms : List Arm)
+  | handleWith (body : Expr) (ret : Option (Pat, Expr)) (ops : List OpArm)
+  | binop (op : Text) (left : Expr) (right : Expr) (pos : Pos)
+  | neg (e : Expr)
+  | not (e : Expr)
+  | tuple (items : List Expr)
+  | list (items : List Expr)
+  | prim (name : Text)
+  | record (base : Option Expr) (fields : List (Text, Expr)) (pos : Pos)
+  | ann (e : Expr) (type : Ty)
+  | proj (e : Expr) (field : Text) (pos : Pos)
 
 structure Failure where
   reason : Text
@@ -159,11 +159,11 @@ structure Item where
 
 inductive Json where
   | null
-  | bool Bool
-  | num Int
-  | str Text
-  | arr (List Json)
-  | obj (List (Text, Json))
+  | bool (value : Bool)
+  | num (value : Int)
+  | str (value : Text)
+  | arr (items : List Json)
+  | obj (fields : List (Text, Json))
 
 inductive Kind where
   | ident
@@ -183,14 +183,14 @@ structure Lib @"urn:deus:project:Lib" where
 
 inductive List a @"#List" where
   | nil
-  | cons a (List a)
+  | cons (head : a) (tail : List a)
 
 ability Log where
   emit : Text -> Text -> List (Text, Text) -> Unit
 
-inductive Map a b where
+inductive Map k v where
   | tip
-  | node Int (Map a b) a b (Map a b)
+  | node (height : Int) (left : Map k v) (key : k) (value : v) (right : Map k v)
 
 ability MdlHost @"urn:deus:mdl:Host" where
   cost : Text -> Result Text Int
@@ -200,7 +200,7 @@ ability Metrics where
   counter : Text -> Int -> Unit
   gauge : Text -> Int -> Unit
 
-inductive MutMap a b @"#MutMap" where
+inductive MutMap k v @"#MutMap" where
 
 structure Names where
   table : Map Text Entry
@@ -217,7 +217,7 @@ structure OpArm where
 
 inductive Option a @"#Option" where
   | none
-  | some a
+  | some (value : a)
 
 structure Pair a b @"#Pair" where
   fst : a
@@ -229,16 +229,16 @@ structure Parser where
 
 inductive Pat where
   | wild
-  | id Text (List Pat) Pos
-  | dot Text (List Pat) Pos
-  | int Int
-  | text Text
-  | bool Bool
-  | cons Pat Pat
-  | tuple (List Pat)
-  | list (List Pat)
+  | id (name : Text) (args : List Pat) (pos : Pos)
+  | dot (name : Text) (args : List Pat) (pos : Pos)
+  | int (value : Int)
+  | text (value : Text)
+  | bool (value : Bool)
+  | cons (head : Pat) (tail : Pat)
+  | tuple (items : List Pat)
+  | list (items : List Pat)
   | unit
-  | as Text Pat
+  | as (name : Text) (pat : Pat)
 
 structure Pos where
   atLine : Int
@@ -300,9 +300,9 @@ structure Response @"urn:deus:web:Response" where
   content : Text
   headers : List (Text, Text)
 
-inductive Result a b where
-  | ok b
-  | err a
+inductive Result e a where
+  | ok (value : a)
+  | err (error : e)
 
 structure Rule where
   lhs : Sym
@@ -319,10 +319,10 @@ structure Seen @"urn:deus:replicate:Seen" where
   hashes : List Text
 
 inductive Sexp where
-  | int Int
-  | sym Text
-  | str Text
-  | list (List Sexp)
+  | int (value : Int)
+  | sym (name : Text)
+  | str (value : Text)
+  | list (items : List Sexp)
 
 ability Storage @"urn:deus:web:Storage" where
   get : Text -> Option Text
@@ -333,30 +333,30 @@ ability Stuck where
   stuck : Text -> a
 
 inductive Sym where
-  | int Int
-  | text Text
-  | data Text Int (List Sym)
-  | fv Text
-  | pv Text
-  | call Text (List Sym)
-  | fn Text (List Sym)
-  | ctorFn Text Int Int (List Sym)
-  | primFn Text (List Sym)
-  | prim Text (List Sym)
-  | ite Sym Sym Sym
-  | clo (List Sym) Sexp
-  | app Sym (List Sym)
+  | int (value : Int)
+  | text (value : Text)
+  | data (type : Text) (tag : Int) (fields : List Sym)
+  | fv (name : Text)
+  | pv (name : Text)
+  | call (hash : Text) (args : List Sym)
+  | fn (hash : Text) (args : List Sym)
+  | ctorFn (type : Text) (tag : Int) (arity : Int) (args : List Sym)
+  | primFn (name : Text) (args : List Sym)
+  | prim (name : Text) (args : List Sym)
+  | ite (cond : Sym) (yes : Sym) (no : Sym)
+  | clo (env : List Sym) (body : Sexp)
+  | app (f : Sym) (args : List Sym)
 
 inductive TRow where
   | empty
-  | extend TType TRow
-  | var Int
+  | extend (label : TType) (rest : TRow)
+  | var (id : Int)
 
 inductive TType where
-  | con Text (List TType)
-  | fn TType TRow TType
-  | var Int
-  | row TRow
+  | con (iri : Text) (args : List TType)
+  | fn (from : TType) (row : TRow) (to : TType)
+  | var (id : Int)
+  | row (r : TRow)
 
 structure Task @"urn:deus:task:Task" where
   id : Text
@@ -378,8 +378,8 @@ inductive TaskState @"urn:deus:task:State" where
 
 inductive Text @"#Text" where
 
-ability Throw b where
-  throw : b -> a
+ability Throw e where
+  throw : e -> a
 
 structure Token where
   kind : Kind
@@ -393,12 +393,12 @@ ability Trace where
   finish : Int -> Unit
 
 inductive Ty where
-  | named Text (List Ty)
-  | arrow Ty Ty (Option (List Ty))
-  | tuple (List Ty)
+  | named (name : Text) (args : List Ty)
+  | arrow (from : Ty) (to : Ty) (effects : Option (List Ty))
+  | tuple (items : List Ty)
   | unit
-  | effects (List Ty) Ty
-  | row (List Ty)
+  | effects (row : List Ty) (result : Ty)
+  | row (items : List Ty)
 
 structure Unifier where
   types : MutMap Int TType
@@ -409,8 +409,8 @@ inductive Unit @"#Unit" where
   | unit
 
 inductive Verdict where
-  | pass Text Int
-  | fail Text
+  | pass (evidence : Text) (cases : Int)
+  | fail (reason : Text)
   | unchecked
 
 structure World where

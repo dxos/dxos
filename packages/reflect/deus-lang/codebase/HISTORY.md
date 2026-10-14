@@ -1,5 +1,8 @@
 # History of main
 
+- `65dc35b0b4` close 4bf3eed4 by #e2a4045a8a (by claude)
+- `e2a4045a8a` toolchain: declarations keep parameter and field names (by claude)
+- `0d02b98851` task: set 4bf3eed4 state assignee (by claude)
 - `0f63a1ecdd` close 9caae4c1 by #ed7e98a85a (by claude)
 - `ed7e98a85a` toolchain: deus run takes options before the name (by claude)
 - `4c9083f657` task: set 9caae4c1 state assignee (by claude)

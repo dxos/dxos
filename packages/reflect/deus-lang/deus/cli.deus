@@ -356,8 +356,8 @@ def viewEntryWith (base : Printer) (dir : Text) (ns : Map Text Entry) (name : Te
           | Sexp.list [Sexp.sym "test", c] => header ++ "test " ++ name ++ " :=" ++ Print.body p c [] 0
           | Sexp.list (Sexp.sym "theorem" :: Sexp.list (Sexp.sym "binders" :: types) :: prop :: proof :: _) =>
             header ++ View.theoremDecl p name types prop proof
-          | Sexp.list (Sexp.sym "type" :: _) => header ++ View.typeDecl p ns name e obj
-          | Sexp.list (Sexp.sym "ability" :: _) => header ++ View.abilityDecl p ns name e obj
+          | Sexp.list (Sexp.sym "type" :: _) => header ++ View.typeDecl p ns name e obj meta
+          | Sexp.list (Sexp.sym "ability" :: _) => header ++ View.abilityDecl p ns name e obj meta
           | Sexp.list (Sexp.sym "spec" :: _) => header ++ Mdl.render (snd (Mdl.fromSexp obj))
           | _ => header ++ Sexp.print obj
 

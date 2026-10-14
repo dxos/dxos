@@ -169,18 +169,18 @@ else
   let t := peek p
   t.bol && t.col == col && t.kind != Kind.eof
 
-/-- Constructor fields: `(x : T)` binders, bare type atoms, or a `: A -> B -> T` signature. -/
-def Parser.ctorFields (p : Parser) : {Throw Text} List Ty :=
+/-- Constructor fields as (name, type): `(x : T)` binders, bare type atoms or a `: A -> B -> T` signature, which are unnamed (`""`). -/
+def Parser.ctorFields (p : Parser) : {Throw Text} List (Text, Ty) :=
   let rec go acc := if offside p || is p "|" || is p ":" then reverse acc else if is p "(" && (peekAt p 1).kind == Kind.ident && namesThenColon p 2 then go (reverse (List.map (fun b =>
     match b.annot with
-    | Option.some t => t
-    | Option.none => Parser.error p "constructor field needs a type") (Parser.binder p)) ++ acc) else go (tyAtom p :: acc)
+    | Option.some t => (b.binder, t)
+    | Option.none => Parser.error p "constructor field needs a type") (Parser.binder p)) ++ acc) else go (("", tyAtom p) :: acc)
   let fields := go []
   if is p ":" then
     skip p
     let rec args t acc :=
       match t with
-      | Ty.arrow a b _ => args b (a :: acc)
+      | Ty.arrow a b _ => args b (("", a) :: acc)
       | _ => reverse acc
     fields ++ args (Parser.ty p) []
   else fields

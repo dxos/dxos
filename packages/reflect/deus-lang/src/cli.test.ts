@@ -495,6 +495,11 @@ describe('deus CLI', () => {
       expect(main).toContain('| Result.ok n => ');
       expect(main).toContain('| Result.err message => println ("error: " ++ message)');
       expect(deus('view', 'Tour.area', ...c).stdout).toContain('| Shape.circle r => 3 * r * r');
+      // Declarations keep the author's parameter and field names.
+      expect(deus('view', 'Tour.Shape', ...c).stdout).toContain(
+        '  | circle (radius : Int)\n  | rect (width : Int) (height : Int)',
+      );
+      expect(deus('view', 'Result', ...c).stdout).toContain('inductive Result e a where\n  | ok (value : a)');
       const unhandled = deus(
         'add',
         file('unhandled.deus', 'def oops (u : Unit) : {IO} Unit := println (Int.toText (Tour.total []))\n'),

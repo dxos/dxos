@@ -224,21 +224,21 @@ def namesThenColon (p : Parser) (k : Int) : Bool :=
   let t := peekAt p k
   if isTok t ":" then true else if t.kind == Kind.ident then namesThenColon p (k + 1) else false
 
-/-- Constructor fields: `(x : T)` binders, bare type atoms, or a `: A -> B -> T` signature. -/
-def ctorFields (p : Parser) : {Throw Text} List Ty :=
+/-- Constructor fields as (name, type): `(x : T)` binders, bare type atoms or a `: A -> B -> T` signature, which are unnamed (`""`). -/
+def ctorFields (p : Parser) : {Throw Text} List (Text, Ty) :=
   let rec go acc :=
     if offside p || is p "|" || is p ":" then List.reverse acc
     else if is p "(" && (peekAt p 1).kind == Kind.ident && namesThenColon p 2 then
       go (List.reverse (List.map (fun b => match b.annot with
-        | some t => t
+        | some t => (b.binder, t)
         | none => error p "constructor field needs a type") (binder p)) ++ acc)
-    else go (tyAtom p :: acc)
+    else go (("", tyAtom p) :: acc)
   let fields := go []
   if is p ":" then
     skip p
     let rec args t acc :=
       match t with
-      | Ty.arrow a b _ => args b (a :: acc)
+      | Ty.arrow a b _ => args b (("", a) :: acc)
       | _ => List.reverse acc
     fields ++ args (ty p) []
   else fields

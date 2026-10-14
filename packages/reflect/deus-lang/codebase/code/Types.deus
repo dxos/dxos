@@ -1,9 +1,9 @@
-structure Types.TypeEnv a where
-  object : Text -> {Throw Text | a} Option Sexp
-  meta : Text -> {Throw Text | a} Option Sexp
+structure Types.TypeEnv r where
+  object : Text -> {Throw Text | r} Option Sexp
+  meta : Text -> {Throw Text | r} Option Sexp
   group : Ref (Map Text TType)
   schemes : Ref (Map Text Sexp)
-  prims : Text -> {Throw Text | a} Option Sexp
+  prims : Text -> {Throw Text | r} Option Sexp
 
 /-- An application `f a₁ … aₙ`. -/
 def Types.application (u : Unifier) (env : TypeEnv {r}) (f : Sexp) (args : List Sexp) (locals : List TType) (row : TRow) : {Throw Text | r} TType :=

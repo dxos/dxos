@@ -6,9 +6,9 @@ structure Codebase.Causal where
 
 inductive Codebase.MergeResult where
   | upToDate
-  | fastForward Text
-  | merged Text (List Text)
-  | conflicts (List Text)
+  | fastForward (head : Text)
+  | merged (head : Text) (changed : List Text)
+  | conflicts (names : List Text)
 
 /-- Hashes of every object in the store. -/
 def Codebase.allObjects (dir : Text) : {IO} List Text := concatMap (fun shard => IO.listDir (dir ++ "/objects/" ++ shard)) (IO.listDir (dir ++ "/objects"))

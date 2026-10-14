@@ -35,13 +35,23 @@ def nameParams (names : List Text) (t : Sexp) : Sexp :=
   | Sexp.list items => Sexp.list (List.map (nameParams names) items)
   | _ => t
 
+/-- The author's parameter names from a type's metadata, or names chosen to avoid the ones in use. -/
+def paramsFor (meta : Option Sexp) (count : Int) (obj : Sexp) : List Text :=
+  let stored := List.map Sexp.asText (Codebase.metaList meta "params")
+  if List.length stored == count then stored else paramNames count (namedVars obj)
+
+/-- Constructor field names from a type's metadata, one list per constructor (`""` for unnamed). -/
+def fieldNamesFor (meta : Option Sexp) : List (List Text) :=
+  List.map (fun c => List.map Sexp.asText (Sexp.args c)) (Codebase.metaList meta "fields")
+
 def params (names : List Text) : Text := Text.concat (List.map (fun n => " " ++ n) names)
 
 /-- `inductive T where | c (F) …` or `structure T where f : F …`. -/
-def typeDecl (p : Printer) (ns : Map Text Entry) (name : Text) (e : Entry) (obj : Sexp) : Text :=
+def typeDecl (p : Printer) (ns : Map Text Entry) (name : Text) (e : Entry) (obj : Sexp) (meta : Option Sexp) : Text :=
   match (e, Sexp.args obj) with
   | (Entry.type h iri fields, _ :: Sexp.int count :: _) =>
-    let names := paramNames count (namedVars obj)
+    let names := paramsFor meta count obj
+    let fieldNames := fieldNamesFor meta
     let ctors := List.map (nameParams names) (typeArgs obj)
     let display := name
     if not (List.isEmpty fields) then
@@ -58,14 +68,19 @@ def typeDecl (p : Printer) (ns : Map Text Entry) (name : Text) (e : Entry) (obj 
       let lines := List.mapIndexed (fun tag c =>
         let cname := Option.getOr (List.lookup tag ctorNames) ("ctor" ++ Int.toText tag)
         let fieldTypes := List.drop 1 (Sexp.args c)
-        "  | " ++ cname ++ Text.concat (List.map (fun t => " " ++ Print.ty p t 100) fieldTypes)) ctors
+        let named := Option.getOr (List.get? fieldNames tag) []
+        let field := fun (pair : (Int, Sexp)) =>
+          match Option.getOr (List.get? named (fst pair)) "" with
+          | "" => " " ++ Print.ty p (snd pair) 100
+          | fieldName => " (" ++ fieldName ++ " : " ++ Print.ty p (snd pair) 0 ++ ")"
+        "  | " ++ cname ++ Text.concat (List.map field (List.mapIndexed (fun i t => (i, t)) fieldTypes))) ctors
       "inductive " ++ display ++ params names ++ iriClause iri name ++ " where" ++ (if List.isEmpty lines then "" else "\n" ++ Text.join "\n" lines)
   | _ => Sexp.print obj
 
-def abilityDecl (p : Printer) (ns : Map Text Entry) (name : Text) (e : Entry) (obj : Sexp) : Text :=
+def abilityDecl (p : Printer) (ns : Map Text Entry) (name : Text) (e : Entry) (obj : Sexp) (meta : Option Sexp) : Text :=
   match (e, Sexp.args obj) with
   | (Entry.ability h iri, _ :: Sexp.int count :: rawOps) =>
-    let names := paramNames count (namedVars obj)
+    let names := paramsFor meta count obj
     let ops := List.map (nameParams names) rawOps
     let opNames := List.filterMap (fun pair =>
       match pair with

@@ -27,16 +27,28 @@ def Compile.batch (base : Map Text Entry) (store : Text -> {Throw Text | r} Opti
     | (Option.none, Option.none, [], []) => ()
     | _ => Ref.set metas ((h, metaForm doc sig locals attrs) :: Ref.get metas)
   let addMeta := fun h doc sig locals => addMetaWith h doc sig locals []
+  let addTypeMeta := fun h doc params fieldNames =>
+    let docPart :=
+      match doc with
+      | Option.some d => [Compile.node "doc" [Sexp.s d]]
+      | Option.none => []
+    let paramsPart := if List.isEmpty params then [] else [Compile.node "params" (List.map Sexp.s params)]
+    let fieldsPart := if all (fun names => all Text.isEmpty names) fieldNames then [] else [Compile.node
+      "fields"
+      (List.map (fun names => Compile.node "c" (List.map Sexp.s names)) fieldNames)]
+    match docPart ++ paramsPart ++ fieldsPart with
+    | [] => ()
+    | parts => Ref.set metas ((h, Compile.node "meta" parts) :: Ref.get metas)
   let entries := concatMap (fun item =>
     let fqn := item.fqn
     match item.decl with
     | Decl.data _ params iri ctors doc _ =>
         claim fqn
         let i := iriFor fqn iri
-        let form := typeForm typeNames item i params (List.map snd ctors)
+        let form := typeForm typeNames item i params (List.map (fun c => List.map snd (snd c)) ctors)
         let h := hashFor i form
         Ref.set typeObjects ((h, form) :: Ref.get typeObjects)
-        addMeta h doc Option.none []
+        addTypeMeta h doc params (List.map (fun c => List.map fst (snd c)) ctors)
         (fqn, Entry.type h i []) :: mapIndexed (fun tag ctor =>
           match ctor with
           | (name, fields) =>
@@ -48,7 +60,7 @@ def Compile.batch (base : Map Text Entry) (store : Text -> {Throw Text | r} Opti
         let form := typeForm typeNames item i params [List.map snd fields]
         let h := hashFor i form
         Ref.set typeObjects ((h, form) :: Ref.get typeObjects)
-        addMeta h doc Option.none []
+        addTypeMeta h doc params []
         let count := List.length fields
         claim (fqn ++ ".mk")
         let accessors := mapIndexed (fun index field =>
@@ -66,7 +78,7 @@ def Compile.batch (base : Map Text Entry) (store : Text -> {Throw Text | r} Opti
           ops)
         let h := hashFor i form
         Ref.set typeObjects ((h, form) :: Ref.get typeObjects)
-        addMeta h doc Option.none []
+        addTypeMeta h doc params []
         (fqn, Entry.ability h i) :: mapIndexed (fun index op =>
           match op with
           | (name, type) =>
