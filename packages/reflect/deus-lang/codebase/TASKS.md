@@ -1,13 +1,5 @@
 # Tasks
 
-## Catch the R2 remote up with the git export and push it, so threads can start from deus pull (`e76e36b0`)
-
-- state: doing
-- priority: high
-- labels: vcs, codebase
-
-From Dmytro: threads MUST use the codebase as primary VCS, and git as backup. D101. The remote r2://agent-artifacts/deus/explorer-demo was at #5ed10805c0 (stage 65). Pulling it, then update codebase/code codebase/specs, task import and history import gives exactly the export (1727 definitions, 0 differ); the push failed with 403 from this session's network policy for <account>.r2.cloudflarestorage.com. Run that catch-up from a session that can reach R2.
-
 ## Composer assistant skills for writing DEUS and using the codebase (`5d6c67b4`)
 
 - state: todo
@@ -346,6 +338,14 @@ Dmytro: 'we need generated pretty ts apis with .d.ts'. Top-level functions, cons
 - links change #21fbd2e94f
 
 Dmytro: track tasks in codebase and make sure its up to date. The export on #13952 could not be restored: Cli and Replicate referred to old versions of Update.propagate, Project.reachable and five others, which print as raw hashes. Restored by naming them, then updated with every source under deus/ and platform/, including the codebase UI (dfaad231).
+
+## Catch the R2 remote up with the git export and push it, so threads can start from deus pull (`e76e36b0`)
+
+- state: canceled
+- priority: high
+- labels: vcs, codebase
+
+Canceled: it targeted r2://agent-artifacts/deus/explorer-demo, which is a demo codebase. The toolchain's remote is r2://agent-artifacts/deus/toolchain, which the publish thread seeds from codebase/ (D101).
 
 ## Codebase UI on par with Unison Share: finder, namespaces, hover previews, diffs (`7ff351a9`)
 

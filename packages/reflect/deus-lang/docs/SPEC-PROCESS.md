@@ -30,7 +30,7 @@ git export:
 ```sh
 export DEUS_R2_ENDPOINT=https://<account>.r2.cloudflarestorage.com   # the DXOS account's R2 endpoint
 deus init --empty
-deus remote add origin r2://agent-artifacts/deus/explorer-demo
+deus remote add origin r2://agent-artifacts/deus/toolchain
 deus pull origin && deus merge origin.main                          # the latest codebase
 ```
 
