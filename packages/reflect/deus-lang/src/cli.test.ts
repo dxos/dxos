@@ -60,16 +60,7 @@ describe('deus CLI', () => {
     expect(add.stderr).toBe('');
     expect(add.code).toBe(0);
     // The checked specs (D92): their laws compile next to the code, and `deus mdl` checks every block.
-    // ARRAY.mdl also cites the aliasing example and a `perf` block (D96).
-    const specs = deus(
-      'add',
-      join(root, 'platform/spec.deus'),
-      join(root, 'platform/perf.deus'),
-      join(root, 'examples/aliasing.deus'),
-      join(root, 'docs/spec'),
-      '--codebase',
-      codebase,
-    );
+    const specs = deus('add', join(root, 'platform/spec.deus'), join(root, 'docs/spec'), '--codebase', codebase);
     expect(specs.stderr).toBe('');
     expect(specs.code).toBe(0);
     const tests = deus('test', '--codebase', codebase);
@@ -95,6 +86,17 @@ describe('deus CLI', () => {
       .filter((line) => !line.startsWith('-- '))
       .join('\n');
     expect(deus('update', file('printed.deus', source), '--codebase', codebase).stdout).toBe('Nothing changed.\n');
+  });
+
+  // Specs live in the codebase, not in git files: the Array spec is checked from the codebase's own export.
+  test('checks the Array spec stored in the codebase', { timeout: 180_000 }, ({ expect }) => {
+    const codebase = join(scratch, 'exported');
+    expect(deus('init', '--empty', '--codebase', codebase).code).toBe(0);
+    const add = deus('add', join(root, 'codebase/code'), join(root, 'codebase/specs'), '--codebase', codebase);
+    expect(add.code).toBe(0);
+    const checked = deus('mdl', join(root, 'codebase/specs/Array.Spec.mdl'), '--codebase', codebase);
+    expect(checked.stdout).toMatch(/14 ok, 0 failed, 0 unchecked/);
+    expect(checked.code).toBe(0);
   });
 
   test('proves the sorting example and refuses unsound claims', { timeout: 120_000 }, ({ expect }) => {

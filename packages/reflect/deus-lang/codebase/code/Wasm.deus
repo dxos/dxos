@@ -393,12 +393,15 @@ def Wasm.uleb (n : Int) : List Int :=
 
 def Wasm.unknown : Sexp := Sexp.list []
 
-/-- `(lam (lam … b))` as (parameter count, b). -/
+--
+-- Which definitions may be unfolded.
+--
+/-- Strips `n` leading lambdas: (arity, body). -/
 def Wasm.unlam (core : Sexp) : (Int, Sexp) :=
   match core with
   | Sexp.list (Sexp.sym "lam" :: b :: []) =>
       match Wasm.unlam b with
-      | (n, inner) => (n + 1, inner)
+      | (n, body) => (n + 1, body)
   | _ => (0, core)
 
 def Wasm.vec (items : List (List Int)) : List Int := uleb (List.length items) ++ List.concat items

@@ -1,5 +1,18 @@
 # History of main
 
+- `32032ea1fa` task: open 2a2b87a2 Specs in the codebase: the Codebase, Compile, Explorer and Export specs fail 'deus mdl' from the codebase export (32 of 76 blocks pass) because their test helpers (Codebase.Spec.inStore, Compile.Spec.prelude, Export.Spec.deus) are not in it; Array.Spec and Checking.Spec pass (by claude)
+- `4840de1a1a` the explorer's writing and console in its checked spec (from #13952's branch) (by claude)
+- `916dd946a8` history: import 408 changes
+- `b85fb6bdf9` task: import from /tmp/claude-0/-home-user-dxos/7218d591-3085-5d07-8746-c4ab5dbc3b34/scratchpad/theirs/codebase/tasks.sexp
+- `724f14b2e7` history: import 382 changes
+- `2d3f491949` task: import from tasks.sexp
+- `ac74022d77` add code specs
+- `d90027cba3` close c50cd76e by #9cee717581 (by claude)
+- `9cee717581` the explorer's writing and console in its checked spec (EXPLORER.mdl R-8 to R-12, L-3, L-4) (by claude)
+- `e01abbcbd9` task: open c50cd76e Backfill the explorer's writing and console into EXPLORER.mdl (APIs, requirements, laws) (by claude)
+- `99b512f359` history: import 359 changes
+- `7b6f241c41` task: import from tasks.sexp
+- `b878c25ce1` add code specs
 - `66bce7945c` task: open 7ef8bf45 Tested theorems: 'by test' evaluates the conclusion even when a hypothesis is false, because implies is strict; skip (and count) cases whose hypotheses fail, so 'by test' works on bounded statements like the Array laws (D96) (by claude)
 - `99e026a5cf` task: set a1b73fb8 title (by claude)
 - `afaebd5eba` delete Sorting.benchPersistent Sorting.copyGo Sorting.lomutoV Sorting.persistentKeepsOld Sorting.persistentSort Sorting.persistentSorts Sorting.quickV Sorting.toListV Sorting.vget Sorting.vlength Sorting.vset Sorting.vswap Sorting.Node.current Sorting.Node.diff Sorting.Node

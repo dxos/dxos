@@ -167,6 +167,12 @@ D90 widens values to 64 bits so blocks and integers can be told apart in wasm32;
 - priority: medium
 - labels: native, perf
 
+## Specs in the codebase: the Codebase, Compile, Explorer and Export specs fail 'deus mdl' from the codebase export (32 of 76 blocks pass) because their test helpers (Codebase.Spec.inStore, Compile.Spec.prelude, Export.Spec.deus) are not in it; Array.Spec and Checking.Spec pass (`2a2b87a2`)
+
+- state: todo
+- priority: medium
+- labels: spec
+
 ## TS kernel JIT: Ref.set journals a closure on every write; journal only when a deoptimisation can replay the entry (Array.set no longer journals, D96) (`a1b73fb8`)
 
 - state: todo
@@ -776,6 +782,15 @@ From docs/spec/README.md, Known divergences.
 - links change #c08af3d400
 
 From docs/spec/README.md, Known divergences.
+
+## Backfill the explorer's writing and console into EXPLORER.mdl (APIs, requirements, laws) (`c50cd76e`)
+
+- state: done
+- priority: medium
+- assignee: claude
+- labels: explorer, spec
+- parent: 861438d2
+- links change #9cee717581
 
 ## Builtins are URIs at the embedding boundary (urn:deus:builtin:IO) (`279f2266`)
 

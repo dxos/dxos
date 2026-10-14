@@ -226,6 +226,10 @@ def generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
 /-- Directories a console snapshot leaves out: local state, binary files and remote bookkeeping. -/
 def consoleSkips : List Text := ["cache", "artifacts", "assets", "remotes", "exports"]
 
+/-- The codebase files a console snapshot holds: all of them but those under `consoleSkips`. -/
+def snapshotFiles (dir : Text) : {IO} List Text :=
+  List.filter (fun f => not (List.any (fun skip => Text.startsWith (skip ++ "/") f) consoleSkips)) (Cli.filesUnder dir "")
+
 /--
   Writes `out/console/` (D84): the wasm kernel (base64) and its drivers, the toolchain image, and the
   codebase directory as `codebase.json` (path to text), so the explorer can run `deus` against
@@ -244,7 +248,7 @@ def console (dir : Text) (out : Text) : {IO, Throw Text} Int :=
   match copied with
   | Result.err f => throw (Failure.render f)
   | Result.ok _ =>
-    let files := List.filter (fun f => not (List.any (fun skip => Text.startsWith (skip ++ "/") f) consoleSkips)) (Cli.filesUnder dir "")
+    let files := snapshotFiles dir
     IO.writeFile (out ++ "/console/codebase.json") (Json.render (Json.obj (List.map (fun f => (f, Json.str (Option.getOr (IO.readFile (dir ++ "/" ++ f)) ""))) files)))
     -- The app offers the console when this small file is there, before loading anything large.
     IO.writeFile (out ++ "/console/info.json") (Json.render (Json.obj [("files", Json.num (List.length files)), ("branch", Json.str (Codebase.currentBranch dir))]))

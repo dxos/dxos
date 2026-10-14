@@ -62,9 +62,7 @@ def Explorer.console (dir : Text) (out : Text) : {IO, Throw Text} Int :=
   match copied with
   | Result.err f => Throw.throw (Failure.render f)
   | Result.ok _ =>
-      let files := List.filter
-        (fun f => not (any (fun skip => startsWith (skip ++ "/") f) consoleSkips))
-        (filesUnder dir "")
+      let files := snapshotFiles dir
       IO.writeFile
         (out ++ "/console/codebase.json")
         (Json.render (Json.obj (List.map (fun f => (f, Json.str (getOr (IO.readFile (dir ++ "/" ++ f)) ""))) files)))
@@ -213,6 +211,11 @@ def Explorer.refJson (name : Text) (h : Text) : Json := Json.obj [("name", Json.
                                   runs `deus` against this codebase with no server
 -/
 def Explorer.signature (meta : Option Sexp) : Text := getOr (Option.map (fun s => displayScheme s) (metaField meta "scheme")) ""
+
+/-- The codebase files a console snapshot holds: all of them but those under `consoleSkips`. -/
+def Explorer.snapshotFiles (dir : Text) : {IO} List Text := List.filter
+  (fun f => not (any (fun skip => startsWith (skip ++ "/") f) consoleSkips))
+  (filesUnder dir "")
 
 /-- A definition's source as `deus view` prints it, without its `-- ` header lines. -/
 def Explorer.sourceOf (printer : Printer) (dir : Text) (ns : Map Text Entry) (name : Text) (e : Entry) : {IO} Text :=

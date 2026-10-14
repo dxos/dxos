@@ -318,3 +318,7 @@ I think deus should allow declaring a definition with a type but no impl
 ---
 
 impl recomendation
+
+---
+
+about mdl-first approach --- I want agents to record specs in codebase, not in github. and overall, most development at this point should be happening via-codebase

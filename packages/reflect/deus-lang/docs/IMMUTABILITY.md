@@ -23,8 +23,9 @@ Dmytro asked for the recommendation to be built. It is: the `--wasm` back end fi
 statically, and the C back end by the reference counts it gained in D86.
 
 - **The language.** `Array.set : Array a -> Int -> a -> Array a` returns a new array; the old one
-  is unchanged. Arrays compare by their items. The spec, with the laws as theorems, is
-  [`docs/spec/ARRAY.mdl`](./spec/ARRAY.mdl): seven laws are proved, three are tested.
+  is unchanged. Arrays compare by their items. The spec lives in the codebase as `Array.Spec`
+  ([export](../codebase/specs/Array.Spec.mdl), laws in [`code/Array.deus`](../codebase/code/Array.deus)):
+  seven laws are proved, three are tested, and `deus mdl` checks all 14 blocks.
 - **The kernels** keep versions (Baker's persistent arrays with Conchon and Filliâtre's rerooting):
   the newest version owns the items, each older one is a diff. A program that only writes to the
   newest array pays O(1) per operation; one that reads an old version pays to move back to it.
