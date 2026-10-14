@@ -1,5 +1,6 @@
 # History of main
 
+- `71eb24530c` export: merge 10 changes from codebase
 - `86db7b80c4` task: open e1cf2c6c Native: effect handlers in the C back end by evidence passing, with stack switching for general resumptions (by claude)
 - `259f06882e` task: open 72a1f2fb Native: a C runtime for Text, maps and the other primitives, ported from the Rust kernel (by claude)
 - `336d93ba48` task: open 610b2785 Native: closure conversion and partial application in the C back end (by claude)
@@ -10,6 +11,16 @@
 - `4e8f52cb61` history: import 163 changes
 - `be6879448e` task: import from tasks.sexp
 - `47072308f5` add code specs
+- `b8fc2ca902` history: import 9 changes
+- `c58a476f13` close dfaad231 by #cf0f719d6e (by claude)
+- `cf0f719d6e` explorer: a Unison-style codebase UI; builtin pages and bucket content types fixed (D72) (by claude)
+- `5ed69c23c8` task: set dfaad231 state
+- `28ca458c20` task: set dfaad231 details
+- `63d82046a6` task: set dfaad231 priority assignee labels
+- `9c2b9f89b4` task: open dfaad231 Codebase UI on par with Unison Share: finder, namespaces, hover previews, diffs (by claude)
+- `cdef7f9a58` history: import 108 changes
+- `89c5f19d03` task: import 37 tasks
+- `b646385392` add code specs
 - `a70f6a17ad` export: a task missing from the file or at a past version is unchanged there (D79) (by claude)
 - `334f503cf8` task: link 2bbc3445 to #fa20112443 (by claude)
 - `f157773921` task: set 2bbc3445 state (by claude)
