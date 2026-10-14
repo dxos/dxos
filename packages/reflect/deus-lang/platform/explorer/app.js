@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-// The codebase explorer (D58, D65): a single page over the JSON that `deus explore` writes, modelled on
+// The codebase explorer (D58, D66): a single page over the JSON that `deus explore` writes, modelled on
 // Unison Share. A namespace tree, a finder (`/`), and a workspace of cards: definitions, namespaces, tasks
 // and changes. The open cards are kept in the URL fragment, in display order, so a view can be shared.
 

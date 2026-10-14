@@ -7,6 +7,7 @@ independent implementation. Where a spec and the code disagree, the code in [`de
 | Spec                                   | Format                                                                                 |
 | -------------------------------------- | -------------------------------------------------------------------------------------- |
 | [LANGUAGE.md](./LANGUAGE.md)           | `.deus` source: lexical structure, layout, grammar, static and dynamic semantics       |
+| [DIALECT-TS.md](./DIALECT-TS.md)       | The TypeScript-like dialect `deus view --dialect ts` and the explorer print            |
 | [CORE.md](./CORE.md)                   | Core IR: canonical S-expressions, terms, patterns, objects, hashing                    |
 | [IMAGE.md](./IMAGE.md)                 | Images (`seed/deus.image`) and the executables that carry one                          |
 | [CODEBASE-STORE.md](./CODEBASE-STORE.md) | The codebase directory (`~/.deus`): objects, metadata, branches, layers, tasks        |

@@ -83,7 +83,7 @@ def Print.expr (p : Printer) (t : Sexp) (env : List Text) (ind : Int) (prec : In
   | Sexp.list (Sexp.sym "int" :: Sexp.int v :: []) => if v < 0 then paren 99 prec (toText v) else toText v
   | Sexp.list (Sexp.sym "text" :: Sexp.str v :: []) => quoteText v
   | Sexp.list (Sexp.sym "prim" :: Sexp.str name :: []) => paren 90 prec ("prim " ++ quoteText name)
-  | Sexp.list (Sexp.sym "con" :: Sexp.str ty :: Sexp.int tag :: _ :: []) => conName p ty tag
+  | Sexp.list (Sexp.sym "con" :: Sexp.str ty :: Sexp.int tag :: _ :: []) => Print.conName p ty tag
   | Sexp.list (Sexp.sym "op" :: Sexp.str a :: Sexp.int index :: _ :: []) => nameFor p (a ++ "!" ++ toText index)
   | Sexp.list (Sexp.sym "if" :: a :: b :: Sexp.list (Sexp.sym "con" :: Sexp.str "#Bool" :: Sexp.int 0 :: _ :: []) :: []) => if isBlock a || isBlock b then ifThenElse p a b (Sexp.node "con" [Sexp.str "#Bool", Sexp.int 0, Sexp.int 0]) env ind prec else paren 35 prec (Print.expr p a env ind 36 ++ " && " ++ Print.expr p b env ind 35)
   | Sexp.list (Sexp.sym "if" :: a :: Sexp.list (Sexp.sym "con" :: Sexp.str "#Bool" :: Sexp.int 1 :: _ :: []) :: b :: []) => if isBlock a || isBlock b then ifThenElse p a (Sexp.node "con" [Sexp.str "#Bool", Sexp.int 1, Sexp.int 0]) b env ind prec else paren 30 prec (Print.expr p a env ind 31 ++ " || " ++ Print.expr p b env ind 30)
@@ -144,7 +144,7 @@ def Print.expr (p : Printer) (t : Sexp) (env : List Text) (ind : Int) (prec : In
               | _ => "(" ++ Print.expr p a env ind 0 ++ ")." ++ field
           | Option.none => Print.application p f args env ind prec
       | (Sexp.list (Sexp.sym "prim" :: Sexp.str name :: []), a :: b :: []) =>
-          match infixOf name with
+          match Print.infixOf name with
           | Option.some (op, level) =>
               let supply := Ref.get p.supply
               let fresh := Ref.get p.fresh
@@ -264,7 +264,7 @@ def Print.patternAt (p : Printer) (pat : Sexp) (env : List Text) (prec : Int) : 
             | (text, env3) => go more env3 (text :: acc)
       match go subs env [] with
       | (texts, env2) =>
-          let name := conName p ty tag
+          let name := Print.conName p ty tag
           if List.isEmpty texts then (name, env2) else (paren 90 prec (name ++ " " ++ join " " texts), env2)
   | _ => (Sexp.print pat, env)
 

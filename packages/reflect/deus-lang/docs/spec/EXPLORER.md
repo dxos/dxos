@@ -1,7 +1,7 @@
 # Explorer site format
 
 `deus explore` writes the current branch of a codebase as a static site: a single-page app and the JSON
-files it reads ([D58](../DECISIONS.md), [D62](../DECISIONS.md), [D69](../DECISIONS.md)). The writer is
+files it reads ([D58](../DECISIONS.md), [D62](../DECISIONS.md), [D66](../DECISIONS.md)). The writer is
 [`deus/explorer.deus`](../../deus/explorer.deus); the uploader is `publishSite` in
 [`deus/cli.deus`](../../deus/cli.deus). Readers are the app in [`platform/explorer/`](../../platform/explorer)
 (`app.js`), which any static file server can host: the native server running
@@ -98,6 +98,7 @@ same file in name order, so the file carries the alphabetically last of them in 
 | `signature` | string       | `<last name segment> : <type scheme>`, or `""` when the metadata has no scheme                                         |
 | `doc`       | string\|null | the doc comment                                                                                                        |
 | `html`      | string       | the source as `deus view` prints it, without its `-- ` header lines, as highlighted HTML                               |
+| `ts`        | string       | the same in the TypeScript-like dialect ([DIALECT-TS.md](./DIALECT-TS.md)), highlighted                                |
 | `deps`      | ref[]        | what the definition refers to, types in its signature included, limited to hashes the namespace names, itself excluded |
 | `users`     | ref[]        | visible definitions that refer to it, sorted by hash                                                                   |
 | `verdict`   | string       | the cached test or theorem verdict, or `""`; see below                                                                 |

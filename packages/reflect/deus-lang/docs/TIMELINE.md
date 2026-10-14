@@ -72,6 +72,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 64  | 10-14 17:44 | 7m 54s         | `0f5e5e14`  | faster explorer generation (8.1 s to 7.1 s)                                                                                                                                             |
 | 65  | 10-14 17:45 | 0m 58s         | `244a0438`  | Explorer generation 8.1 s to 7.1 s: one alias index, one history walk, objects and metadata read once, Json.escape by runs (codebase task a75452c4); codebase pushed to R2 and exported |
 | 66  | 10-14 18:11 | 25m 37s        | `b0a392d6`  | one specification per format under docs/spec                                                                                                                                            |
-| 67  | 10-14 18:40 | 29m 09s        | this commit | a Unison-style codebase UI: finder by name and type, namespace pages, hover previews, change diffs; builtin pages and bucket content types fixed (D69, task 7ff351a9)                   |
+| 67  | 10-14 18:26 | 14m 46s        | `a85a6973`  | dialects: the codebase rendered in a TypeScript-like dialect (`deus view --dialect ts`, explorer DEUS/TS switch, D65)                                                                   |
+| 68  | 10-14 18:48 | 21m 30s        | this commit | a Unison-style codebase UI: finder by name and type, namespace pages, hover previews, change diffs; builtin pages and bucket content types fixed (D66, task 7ff351a9)                   |
 
-Total from stage 1 to stage 67: 8h 56m.
+Total from stage 1 to stage 68: 9h 05m.

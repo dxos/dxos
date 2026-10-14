@@ -341,7 +341,7 @@ def Cli.export (args : Args) : {IO, Throw Text} Unit :=
   match head? args.positional with
   | Option.none => Throw.throw "usage: deus export <dir>"
   | Option.some out =>
-      match Export.write dir out with
+      match #9ea12939ae dir out with
       | (files, definitions, tasks) => Cli.output
           args
           (fun _ => Json.obj [("files", Json.num files), ("definitions", Json.num definitions), ("tasks", Json.num tasks)])
@@ -1046,17 +1046,17 @@ def Cli.undo (args : Args) : {IO, Throw Text} Unit :=
 
 def Cli.usage : Text := join
   "\n"
-  ["usage: deus <command> [args] [--json] [--codebase <dir>]", "", "codebase", "  init [--empty]                       create a codebase with the builtins and prelude (~/.deus, $DEUS_CODEBASE or --codebase)", "  add <files|dirs…>                    add new definitions (.deus, or ```deus fences in .mdl)", "  update <files|dirs…>                 add or replace definitions; dependents are rehashed", "                                       (both take --message <why> for the history, and", "                                       --by <agent> [--prompt <file>] to record provenance)", "  ls [prefix]                          list names", "  find <text>                          names containing text", "  view <name|#hash…> [--core]          print definitions as source (or as Core)", "  names <name|#hash>                   every name of a hash", "  deps <name> / dependents <name>      what a definition uses / what uses it", "  mv <from> <to> / alias <name> <new>  rename (with everything under it) / add a name", "  rm <names…>                          remove names", "", "history", "  branch [name]                        list branches, or create one and switch to it", "  switch <branch>                      change branch", "  merge <branch>                       three-way merge into the current branch", "  log [--n N] / undo                   history / step the branch back", "  layers                               objects per layer (code, tests, proofs, history, results, …)", "", "projects", "  project [init <iri>]                 the project's IRI, libraries and owned subgraph", "  lib install <name> <codebase>        mount that project's head under lib.<name> (--branch b)", "", "replication", "  remote add <name> <dir|r2://b/p>     a remote: a directory, or an R2 bucket and prefix", "  push [remote] [--branch b]           upload one immutable bundle of what the remote lacks", "  pull [remote]                        import new bundles; <remote>.<branch> tracks its heads", "  compact [remote] [--level k]         sedimentree compaction into level-k strata", "  compact [remote] --keep n            garbage-collect: keep n generations from each head", "", "running", "  run [--codebase c] <name> [args…]    run name () with IO.args = args (options go before the name)", "  eval <expr>                          evaluate an expression", "  mdl [files|dirs…]                    check .mdl documents (or the codebase's specs): each block runs through the", "                                       @[ext \"<uri>\"] term its Extensions table names", "  test [prefix] [--integration]        run tests in a deterministic simulation (cached by hash);", "                                       --integration also runs @[integration] tests for real", "  check [prefix]                       check theorems and report their evidence", "  image <name> -o <file>               write a kernel image", "  build <name> -o <file> [--native]    write a standalone executable that runs name ()", "                                       (--native: Rust kernel + image, ~1 MB; default: Node SEA)", "  build <actor> -o <dir> --worker      write a Cloudflare Worker serving the actor from a Durable Object", "  build <handler> -o <file> --server   write a standalone native web server for a handler", "  serve <handler> [--port n]           serve a web handler locally (storage in ./deus-data)", "  explore [--out d|--port n|--publish r]  the codebase explorer: write, serve, or host it on a remote", "", "tasks", "  task new <title…> [--priority p --labels a,b --assignee a --parent id --details d --link name]", "  task [list] [--all|--state s|--label l|--about name]   open tasks, most urgent first", "  task show <id>                       a task, what it links (and how that changed since), its history", "  task set <id> --state doing|done|canceled …   change fields (title, state, priority, assignee, labels, parent, details)", "  task comment <id> <text…>            add a comment (--by <agent>)", "  task link <id> <name>|--change <h>   attach a definition or a change; unlink <id> <name> detaches", "  update <files…> --closes <id>        mark a task done, linked to the change that fixed it", "  task import <tasks.sexp>             restore tasks from an export", "  export <dir>                         the codebase as text for git: code/<Namespace>.deus, tasks, history", "  build <fn> -o <file.wasm> --wasm     compile a first-order Int/Bool function (and its callees) to wasm", "  compile <files|dirs…> --main <name>  compile files without a codebase", ""]
+  ["usage: deus <command> [args] [--json] [--codebase <dir>]", "", "codebase", "  init [--empty]                       create a codebase with the builtins and prelude (~/.deus, $DEUS_CODEBASE or --codebase)", "  add <files|dirs…>                    add new definitions (.deus, or ```deus fences in .mdl)", "  update <files|dirs…>                 add or replace definitions; dependents are rehashed", "                                       (both take --message <why> for the history, and", "                                       --by <agent> [--prompt <file>] to record provenance)", "  ls [prefix]                          list names", "  find <text>                          names containing text", "  view <name|#hash…> [--core]          print definitions as source (or as Core)", "       [--dialect deus|ts]              … in DEUS (default) or TypeScript-like syntax", "  names <name|#hash>                   every name of a hash", "  deps <name> / dependents <name>      what a definition uses / what uses it", "  mv <from> <to> / alias <name> <new>  rename (with everything under it) / add a name", "  rm <names…>                          remove names", "", "history", "  branch [name]                        list branches, or create one and switch to it", "  switch <branch>                      change branch", "  merge <branch>                       three-way merge into the current branch", "  log [--n N] / undo                   history / step the branch back", "  layers                               objects per layer (code, tests, proofs, history, results, …)", "", "projects", "  project [init <iri>]                 the project's IRI, libraries and owned subgraph", "  lib install <name> <codebase>        mount that project's head under lib.<name> (--branch b)", "", "replication", "  remote add <name> <dir|r2://b/p>     a remote: a directory, or an R2 bucket and prefix", "  push [remote] [--branch b]           upload one immutable bundle of what the remote lacks", "  pull [remote]                        import new bundles; <remote>.<branch> tracks its heads", "  compact [remote] [--level k]         sedimentree compaction into level-k strata", "  compact [remote] --keep n            garbage-collect: keep n generations from each head", "", "running", "  run [--codebase c] <name> [args…]    run name () with IO.args = args (options go before the name)", "  eval <expr>                          evaluate an expression", "  mdl [files|dirs…]                    check .mdl documents (or the codebase's specs): each block runs through the", "                                       @[ext \"<uri>\"] term its Extensions table names", "  test [prefix] [--integration]        run tests in a deterministic simulation (cached by hash);", "                                       --integration also runs @[integration] tests for real", "  check [prefix]                       check theorems and report their evidence", "  image <name> -o <file>               write a kernel image", "  build <name> -o <file> [--native]    write a standalone executable that runs name ()", "                                       (--native: Rust kernel + image, ~1 MB; default: Node SEA)", "  build <actor> -o <dir> --worker      write a Cloudflare Worker serving the actor from a Durable Object", "  build <handler> -o <file> --server   write a standalone native web server for a handler", "  serve <handler> [--port n]           serve a web handler locally (storage in ./deus-data)", "  explore [--out d|--port n|--publish r]  the codebase explorer: write, serve, or host it on a remote", "", "tasks", "  task new <title…> [--priority p --labels a,b --assignee a --parent id --details d --link name]", "  task [list] [--all|--state s|--label l|--about name]   open tasks, most urgent first", "  task show <id>                       a task, what it links (and how that changed since), its history", "  task set <id> --state doing|done|canceled …   change fields (title, state, priority, assignee, labels, parent, details)", "  task comment <id> <text…>            add a comment (--by <agent>)", "  task link <id> <name>|--change <h>   attach a definition or a change; unlink <id> <name> detaches", "  update <files…> --closes <id>        mark a task done, linked to the change that fixed it", "  task import <tasks.sexp>             restore tasks from an export", "  export <dir>                         the codebase as text for git: code/<Namespace>.deus, tasks, history", "  build <fn> -o <file.wasm> --wasm     compile a first-order Int/Bool function (and its callees) to wasm", "  compile <files|dirs…> --main <name>  compile files without a codebase", ""]
 
 def Cli.view (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let ns := Codebase.current dir
   let entries := List.map (fun name => lookupName ns name) args.positional
   let printer := printer ns []
-  let texts := List.map
-    (fun pair => viewEntryWith printer dir ns (fst pair) (snd pair) (flag args "core"))
-    entries
-  let shown := forTerminal (join "\n\n" texts)
+  let dialect := if flag args "core" then "core" else getOr (option args "dialect") "deus"
+  if dialect == "deus" || dialect == "ts" || dialect == "core" then () else Throw.throw ("unknown dialect " ++ dialect ++ "; expected deus or ts")
+  let texts := List.map (fun pair => viewEntryIn printer dir ns (fst pair) (snd pair) dialect) entries
+  let shown := forTerminalIn dialect (join "\n\n" texts)
   Cli.output args (fun _ => Json.arr (List.map (fun pair =>
     match pair with
     | ((name, e), text) => Json.obj [("name", Json.str name), ("kind", Json.str (Entry.kind e)), ("hash", Json.str (hash e)), ("source", Json.str text)]) (zip entries texts))) (fun _ => shown)
@@ -1064,40 +1064,47 @@ def Cli.view (args : Args) : {IO, Throw Text} Unit :=
 /-- Source text of one entry (a definition, a type, an ability). -/
 def Cli.viewEntry (dir : Text) (ns : Map Text Entry) (name : Text) (e : Entry) (core : Bool) : {IO, Throw Text} Text := viewEntryWith (printer ns []) dir ns name e core
 
-/-- `viewEntry` with a printer whose name tables are already built (one per namespace, not per entry). -/
-def Cli.viewEntryWith (base : Printer) (dir : Text) (ns : Map Text Entry) (name : Text) (e : Entry) (core : Bool) : {IO, Throw Text} Text :=
+/-- One entry in a dialect (D65): `deus` (the primary syntax), `ts` (TypeScript-like) or `core`. -/
+def Cli.viewEntryIn (base : Printer) (dir : Text) (ns : Map Text Entry) (name : Text) (e : Entry) (dialect : Text) : {IO, Throw Text} Text :=
+  let core := dialect == "core"
+  let ts := dialect == "ts"
   let h := hash e
   let meta := readMeta dir h
+  let comment := if ts then "// " else "-- "
   let typeLine :=
     match metaField meta "scheme" with
-    | Option.some scheme => "-- : " ++ displayScheme scheme ++ "\n"
+    | Option.some scheme => comment ++ ": " ++ displayScheme scheme ++ "\n"
     | Option.none => ""
-  let header := "-- " ++ name ++ " " ++ short h ++ "\n" ++ typeLine
+  let header := comment ++ name ++ " " ++ short h ++ "\n" ++ typeLine
   match e with
-  | Entry.ctor _ _ _ => header ++ "-- a constructor of " ++ join ", " (namesOf ns h)
-  | Entry.op _ _ _ => header ++ "-- an operation of " ++ join ", " (namesOf ns h)
+  | Entry.ctor _ _ _ => header ++ comment ++ "a constructor of " ++ join ", " (namesOf ns h)
+  | Entry.op _ _ _ => header ++ comment ++ "an operation of " ++ join ", " (namesOf ns h)
   | _ =>
       let owner := join "." (List.take (List.length (Text.split name ".") - 1) (Text.split name "."))
       let isField :=
         match Map.lookup owner ns with
         | Option.some (Entry.type _ _ fields) => List.contains (lastSegment name) fields
         | _ => false
-      if isField then header ++ "-- a field of structure " ++ owner else
+      if isField then header ++ comment ++ "a field of structure " ++ owner else
         match readObject dir h with
-        | Option.none => if startsWith "#" h then header ++ "-- builtin" else Throw.throw ("missing object " ++ h)
+        | Option.none => if startsWith "#" h then header ++ comment ++ "builtin" else Throw.throw ("missing object " ++ h)
         | Option.some obj => if core then header ++ Sexp.print obj else
             let locals := List.map asText (metaList meta "locals")
             let p := withSelf (withLocals base locals) h name
             let doc := Option.map asText (metaField meta "doc")
             let display := lastSegment name
             match obj with
-            | Sexp.list (Sexp.sym "term" :: c :: []) => header ++ Print.definition p name c (metaField meta "sig") doc
-            | Sexp.list (Sexp.sym "test" :: c :: []) => header ++ "test " ++ name ++ " :=" ++ Print.body p c [] 0
-            | Sexp.list (Sexp.sym "theorem" :: Sexp.list (Sexp.sym "binders" :: types) :: prop :: proof :: _) => header ++ theoremDecl p name types prop proof
-            | Sexp.list (Sexp.sym "type" :: _) => header ++ typeDecl p ns name e obj meta
-            | Sexp.list (Sexp.sym "ability" :: _) => header ++ abilityDecl p ns name e obj meta
+            | Sexp.list (Sexp.sym "term" :: c :: []) => header ++
+                (if ts then Ts.definition else Print.definition) p name c (metaField meta "sig") doc
+            | Sexp.list (Sexp.sym "test" :: c :: []) => if ts then header ++ testDecl p name c else header ++ "test " ++ name ++ " :=" ++ Print.body p c [] 0
+            | Sexp.list (Sexp.sym "theorem" :: Sexp.list (Sexp.sym "binders" :: types) :: prop :: proof :: _) => header ++ (if ts then Ts.theoremDecl else View.theoremDecl) p name types prop proof
+            | Sexp.list (Sexp.sym "type" :: _) => header ++ (if ts then Ts.typeDecl else View.typeDecl) p ns name e obj meta
+            | Sexp.list (Sexp.sym "ability" :: _) => header ++ (if ts then Ts.abilityDecl else View.abilityDecl) p ns name e obj meta
             | Sexp.list (Sexp.sym "spec" :: _) => header ++ Mdl.render (snd (Mdl.fromSexp obj))
             | _ => header ++ Sexp.print obj
+
+/-- `viewEntry` with a printer whose name tables are already built (one per namespace, not per entry). -/
+def Cli.viewEntryWith (base : Printer) (dir : Text) (ns : Map Text Entry) (name : Text) (e : Entry) (core : Bool) : {IO, Throw Text} Text := viewEntryIn base dir ns name e (if core then "core" else "deus")
 
 def Cli.warn (b : Batch) : {IO} Unit := forEach b.warnings (fun w => eprintln ("warning: " ++ w))
 
