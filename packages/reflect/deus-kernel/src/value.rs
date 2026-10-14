@@ -62,6 +62,9 @@ pub fn push(env: &Env, value: Value) -> Env {
 /// Constructor fields; up to two live inside the constructor's own allocation.
 pub type Fields = SmallVec<[Value; 2]>;
 
+/// Arguments of an application; up to four need no allocation of their own.
+pub type Args = SmallVec<[Value; 4]>;
+
 pub struct Con {
     pub ty: Sym,
     pub tag: u32,
@@ -100,7 +103,7 @@ pub struct OpFn {
 
 pub struct Pap {
     pub func: Value,
-    pub args: Vec<Value>,
+    pub args: Args,
 }
 
 #[derive(Clone, PartialEq, Eq, Hash)]

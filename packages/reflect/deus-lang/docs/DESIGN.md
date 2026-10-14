@@ -176,6 +176,26 @@ perf P-1: insertion sort is quadratic on reversed input
   budget: 100000
 ```
 
+## Performance
+
+Iteration speed is what the toolchain is tuned for. As of D51, on a 4-core container:
+
+| Workload                              | TypeScript kernel with JIT (D37) | Rust kernel (D40) |
+| ------------------------------------- | -------------------------------- | ----------------- |
+| self-compile (`compile deus`)         | 4.1 s                            | 11.6 s            |
+| `deus add deus` (type-checked, store) | 4.4 s                            | —                 |
+| `deus test` (32 tests, simulated)     | 1.8 s                            | —                 |
+
+To find where time goes:
+
+- `node --cpu-prof bin/deus.mjs …`. Each JIT-compiled function is named
+  `deus_<hash prefix>` after its definition, and `deus names '#<hash>'` names it.
+- `DEUS_PROFILE=1` counts entries per definition, with the JIT off.
+- For the Rust kernel, `valgrind --tool=callgrind` gives deterministic instruction counts.
+  About a quarter of them are allocation, which a faster allocator did not reduce (mimalloc was
+  slower).
+- For code, `Code.cost` and `perf` blocks state budgets in machine steps.
+
 ## Projects
 
 A codebase is one project, named by an IRI (`deus project init https://dxos.org/deus/std`).

@@ -344,8 +344,10 @@ export const createCompiler = (machine: Machine) => {
     const generator = new Generator(lam);
     const params = Array.from({ length: lam.i }, (_, i) => `a${i}`);
     generator.stmt(lam.a, params, RETURN);
+    // Named after the definition it belongs to, so CPU profiles attribute time to DEUS code.
+    const name = `deus_${lam.owner.replace(/[^0-9a-zA-Z]/g, '_').slice(0, 16)}`;
     const source = [
-      'return function (env, args) {',
+      `return function ${name}(env, args) {`,
       ...params.map((param, i) => `let ${param} = args[${i}];`),
       'for (;;) {',
       'if (++M.steps > M.maxSteps) throw exhaustBudget(M);',

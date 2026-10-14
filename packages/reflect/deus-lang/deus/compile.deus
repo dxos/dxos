@@ -193,19 +193,22 @@ def objectOf (p : Pending) (core : Sexp) : Sexp := if p.wrap == "theorem" then c
 /-- The form whose references are hashed: a theorem's whole form, so its proof's lemmas count. -/
 def coreOf (p : Pending) : Sexp := p.core
 
+/-- Each pending definition's references to others in the batch, sorted; computed once per batch. -/
+def dependencies (byName : Map Text Pending) : Map Text (List Text) :=
+  Map.fromList (List.map (fun pair =>
+    (fst pair, List.dedup (List.sort (List.filter (fun d => Map.contains d byName) (placeholders (coreOf (snd pair)) []))))) (Map.toList byName))
+
 /-- Hashes term-like definitions in dependency order; returns name to hash and the objects. -/
 def hashTerms (pending : List Pending) (known : Map Text Text) : (Map Text Text, List (Text, Sexp)) :=
   let byName := Map.fromList (List.map (fun p => (p.name, p)) pending)
-  let deps := fun name =>
-    match Map.lookup name byName with
-    | some p => List.dedup (List.sort (List.filter (fun d => Map.contains d byName) (placeholders (coreOf p) [])))
-    | none => []
+  let depMap := dependencies byName
+  let deps := fun name => Option.getOr (Map.lookup name depMap) []
   let groups := components (List.sort (Map.keys byName)) deps
   List.foldl (fun state group =>
     match state with
     | (hashes, objects) =>
       let members := List.filterMap (fun name => Map.lookup name byName) group
-      let selfRef := fun p => List.any (fun d => List.contains d group) (placeholders (coreOf p) [])
+      let selfRef := fun p => List.any (fun d => List.contains d group) (deps p.name)
       match members with
       | [p] =>
         if not (selfRef p) then
@@ -396,10 +399,8 @@ def primTypes (pending : List Pending) (metaMap : Map Text Sexp) (base : Map Tex
 /-- Infers every pending definition's type, dependencies first; returns "@name" to scheme. -/
 def typecheck (objectOf : Text -> {Throw Text | r} Option Sexp) (metaOf : Text -> {Throw Text | r} Option Sexp) (prims : Text -> {Throw Text | r} Option Sexp) (pending : List Pending) (warnOnly : Bool) (warnings : Ref (List Text)) : {Throw Text | r} Map Text Sexp :=
   let byName := Map.fromList (List.map (fun p => (p.name, p)) pending)
-  let deps := fun name =>
-    match Map.lookup name byName with
-    | some p => List.dedup (List.sort (List.filter (fun d => Map.contains d byName) (placeholders (coreOf p) [])))
-    | none => []
+  let depMap := dependencies byName
+  let deps := fun name => Option.getOr (Map.lookup name depMap) []
   let schemes := Ref.new Map.empty
   List.forEach (components (List.sort (Map.keys byName)) deps) (fun group =>
     let u := Types.newUnifier ()

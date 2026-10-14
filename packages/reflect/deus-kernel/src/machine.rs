@@ -90,7 +90,7 @@ pub enum Frame {
         term: TermId,
         env: Env,
         func: Option<Value>,
-        args: Vec<Value>,
+        args: Args,
     },
     Let {
         term: TermId,
@@ -125,7 +125,7 @@ pub enum Frame {
     },
     Rest {
         term: TermId,
-        args: Vec<Value>,
+        args: Args,
     },
 }
 
@@ -684,7 +684,7 @@ impl Machine {
             }
             APP if node.q => {
                 let callee = self.consts[self.nodes[node.a as usize].i as usize].clone();
-                let mut args = Vec::with_capacity(node.len as usize);
+                let mut args = Args::new();
                 for k in 0..node.len {
                     let operand = self.kids[(node.lo + k) as usize];
                     match self.quick(operand, env)? {
@@ -697,7 +697,7 @@ impl Machine {
                     Value::ConFn(con) => Ok(Quick::Value(crate::value::con(
                         con.ty,
                         con.tag,
-                        Fields::from_vec(args),
+                        args.into_iter().collect(),
                     ))),
                     _ => Ok(Quick::Slow),
                 }
@@ -731,7 +731,7 @@ impl Machine {
     //
 
     /// Sets up the application of `func` to `args`; true when the result is in `run.value`.
-    fn apply(&mut self, run: &mut Run, func: Value, args: Vec<Value>) -> Result<bool, Fail> {
+    fn apply(&mut self, run: &mut Run, func: Value, args: Args) -> Result<bool, Fail> {
         let mut func = func;
         let mut args = args;
         loop {
@@ -753,7 +753,7 @@ impl Machine {
                     if args.len() > n {
                         run.stack.push(Frame::Rest {
                             term: closure.lam,
-                            args: args[n..].to_vec(),
+                            args: args[n..].iter().cloned().collect(),
                         });
                     }
                     run.node = lam.a;
@@ -774,7 +774,8 @@ impl Machine {
                         }));
                         return Ok(true);
                     }
-                    let rest = (args.len() > prim.arity).then(|| args[prim.arity..].to_vec());
+                    let rest: Option<Args> = (args.len() > prim.arity)
+                        .then(|| args[prim.arity..].iter().cloned().collect());
                     let own = &args[..prim.arity];
                     if let Some(control) = prim.control {
                         if let Some(rest) = rest {
@@ -810,7 +811,7 @@ impl Machine {
                     if args.len() > con.arity {
                         return defect("constructor applied to too many arguments");
                     }
-                    run.value = crate::value::con(con.ty, con.tag, Fields::from_vec(args));
+                    run.value = crate::value::con(con.ty, con.tag, args.into_iter().collect());
                     return Ok(true);
                 }
                 Value::OpFn(op) => {
@@ -824,7 +825,7 @@ impl Machine {
                     if args.len() > op.arity {
                         run.stack.push(Frame::Rest {
                             term: run.start,
-                            args: args[op.arity..].to_vec(),
+                            args: args[op.arity..].iter().cloned().collect(),
                         });
                     }
                     let own = args[..op.arity].to_vec();
@@ -834,7 +835,7 @@ impl Machine {
                     if args.len() > 1 {
                         run.stack.push(Frame::Rest {
                             term: run.start,
-                            args: args[1..].to_vec(),
+                            args: args[1..].iter().cloned().collect(),
                         });
                     }
                     run.stack.extend(frames.iter().cloned());
@@ -1048,7 +1049,7 @@ impl Machine {
                     let callee = self.nodes[node.a as usize];
                     if callee.t == VAR || callee.t == CONST || callee.t == REF || callee.q {
                         if let Quick::Value(func) = self.quick(node.a, &run.env.clone())? {
-                            let mut args = Vec::with_capacity(node.len as usize);
+                            let mut args = Args::new();
                             let mut ok = true;
                             for k in 0..node.len {
                                 let operand_id = self.operand(&node, k);
@@ -1081,7 +1082,7 @@ impl Machine {
                         term: id,
                         env: run.env.clone(),
                         func: None,
-                        args: Vec::new(),
+                        args: Args::new(),
                     });
                     run.node = node.a;
                 }
