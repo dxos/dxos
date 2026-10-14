@@ -771,6 +771,7 @@ export class DataSpaceManager extends Resource {
       invitationCredentialId: options.delegationCredentialId,
       tags: space.spaceState.tags,
       spaceRootUrl,
+      agent: options.agent,
     });
 
     // TODO(dmaretskyi): Refactor.

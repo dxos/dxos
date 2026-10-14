@@ -150,6 +150,8 @@ export const AdmitContactRequest = Schema.Struct({
   contact: bufMessage(ContactSchema),
   role: SpaceMemberRole,
   spaceKey: publicKey,
+  /** The contact is an AI agent's identity, which a locked space's owner may admit. */
+  agent: Schema.optional(Schema.Boolean),
 });
 export interface AdmitContactRequest extends Schema.Schema.Type<typeof AdmitContactRequest> {}
 

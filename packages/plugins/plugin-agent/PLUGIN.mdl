@@ -651,7 +651,7 @@ feat F-6: An agent in several spaces
     then: its article is the member's one private chat with the agent, the same as at home, and its companions show the home agent's knowledge and activity, when the member can reach the home space; otherwise the presence's own
   req F-6.5: A presence keys its facts to its home's brain (`AgentPresence.brainId`): the end-of-turn read adds to it and op:retrieveMemories reads it. Triggers stay per agent object. EDGE runs the plugin-agent its catalog pins, so its turns do this once edge takes this version.
   req F-6.6: Inviting writes no conversation: nothing is quoted from any chat into the space.
-  req F-6.7: Only an agent's admins can add it to another space. The picker offers only the agents the member administers, and op:inviteAgent registers the space with EDGE first, which refuses anyone else; EDGE's brain serves only its home and the spaces registered so, so a presence made any other way reads and writes nothing of the brain.
+  req F-6.7: Only an agent's admins can add it to another space. The picker offers only the agents the member administers, and op:inviteAgent registers the space with EDGE first, which refuses anyone else; EDGE's brain serves only its home and the spaces registered so, so a presence made any other way reads and writes nothing of the brain, and EDGE runs no turn of its chats.
 ```
 
 ```mdl
@@ -662,7 +662,7 @@ feat F-7: An agent's own space
   req F-7.3: `AgentSpace.admins` lists an agent's admins, every current member of its space but the agent, and `AgentSpace.agentOf` is the agent.
   req F-7.4: The account's Agents panel, right after Devices, lists the agents the identity administers (F-7.2): each one's name, its admins with the viewer marked, and Open space, which switches to the agent's space. It stays current as spaces and their members change.
   req F-7.5: EDGE keys an agent space's properties to the agent's URI (`AgentPresence.HOME_SOURCE`) when it mints the space. `AgentSpace.administeredAgents` reads each administered agent's name, DID and home from its space, so an admin who is not a member of the agent's home space can still add the agent to other spaces (F-6.1).
-  req F-7.6: An agent with an identity is a member of the shared spaces it is in. op:ensureIdentity admits its identity to the space the agent is created in, and op:inviteAgent to the space it joins, as an editor named after the agent. A locked space (a personal or private one, `MembershipPolicy.LOCKED`) takes no members after its genesis, so the agent works there without being one. Only a space's admins can admit members: the agent is created without the membership for anyone else, and the invitation fails.
+  req F-7.6: An agent with an identity is a member of the shared spaces it is in. op:ensureIdentity admits its identity to the space the agent is created in, and op:inviteAgent to the space it joins, as an editor named after the agent and marked as an agent (`SpaceMember.agent`). A locked space (a personal or private one, `MembershipPolicy.LOCKED`) takes no other members after its genesis, but its owner admits an agent and manages its role, short of admin. Only a space's admins can admit members: the agent is created without the membership for anyone else, and the invitation fails.
   req F-7.7: Creating an agent opens it at once. op:ensureIdentity runs in the background (its identity, its own space, its membership), and the agent's chat takes messages meanwhile: it runs on EDGE without an identity, and a message sent before EDGE has the new chat is delivered once it does.
 ```
 
@@ -772,9 +772,8 @@ scenario T-11: An agent is admitted to a space as a member   # admit-agent.test.
   # covers [F-7.6]
   given: a space owned by someone else
   then:
-    - the agent's identity is admitted as an editor, named after the agent
+    - the agent's identity is admitted as an editor, named after the agent and marked as one
     - a current member is left as it is, and one that was removed is admitted again
-    - a locked space is left as it is, since it takes no members after its genesis
     - a space that refuses the admission fails it with AdmitAgentError
 ```
 
@@ -1088,7 +1087,7 @@ test QA-5: Two admins — Bob, made Kai's admin by Alice, adds Kai to his own sp
       invoke: [op:createAgent] { name: "Kai" }
       capture: agent
       expect: Kai's chat opens at once, and a space named Kai appears in Alice's space list once EDGE has minted it
-      note: Alice's space is her personal one, which is locked, so Kai works there without being among its members (F-7.6).
+      note: Alice's space is her personal one, which is locked; its owner still admits Kai as a member (F-7.6).
     - name: Alice finds Kai in Profile › Agents
       do: Open Alice's profile and its Agents panel, listed after Devices.
       expect: Kai is listed with "Admins: Alice (you)"

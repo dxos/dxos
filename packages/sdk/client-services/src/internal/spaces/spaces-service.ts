@@ -148,7 +148,15 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
         if (space == null) {
           throw new SpaceNotFoundError(request.spaceKey);
         }
-        if (!space.spaceState.hasMembershipManagementPermission(identity.identityKey)) {
+        // An agent's membership keeps its marker, by which a locked space's owner manages it.
+        const agent = space.spaceState.members.get(request.memberKey)?.assertion.agent;
+        if (
+          !space.spaceState.canWriteMember(identity.identityKey, {
+            key: request.memberKey,
+            role: request.newRole,
+            agent,
+          })
+        ) {
           throw new AuthorizationError({
             message: 'No member management permission.',
             context: {
@@ -164,6 +172,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
           genesisFeedKey: space.genesisFeedKey,
           role: request.newRole,
           membershipChainHeads: space.spaceState.membershipChainHeads,
+          agent,
         });
         const spaceMemberCredential = credentialOfPayload(credentials[0]);
         invariant(
@@ -364,6 +373,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
           role: request.role,
           // Record the profile the host already knows, so the member is named before they first join.
           profile: request.contact?.profile,
+          agent: request.agent,
         });
       },
       catch: toServiceError,

@@ -8,13 +8,12 @@ import { BaseError } from '@dxos/errors';
 import { type PublicKey } from '@dxos/keys';
 import { createBuf, fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { type Contact, ContactSchema, type SpaceMember } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { MembershipPolicy, SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 /** What admitting an agent needs of a space; the client's `Space` has it. */
 export type MemberSpace = {
   readonly members: { get(): SpaceMember[] };
-  readonly membershipPolicy?: MembershipPolicy;
-  admitContact(contact: Contact, role?: SpaceMember_Role): Promise<void>;
+  admitContact(contact: Contact, role?: SpaceMember_Role, options?: { agent?: boolean }): Promise<void>;
 };
 
 /** The space would not admit the agent's identity: only a space's admins can admit members. */
@@ -25,15 +24,14 @@ export class AdmitAgentError extends BaseError.extend(
 
 /**
  * Admits the agent's identity to the space as an editor, named after the agent, so the space's members include it.
- * Nothing when it is a current member already, or when the space is locked: a personal or private space takes no
- * members after its genesis and drops the admission without an error, so the agent works there without being one.
+ * Admitted as an agent, which a locked (personal or private) space's owner may still do though the space takes no
+ * other members after its genesis. Nothing when it is a current member already.
  */
 export const admitAgent = (
   space: MemberSpace,
   identityKey: PublicKey,
   name: string | undefined,
 ): Effect.Effect<void, AdmitAgentError> =>
-  space.membershipPolicy === MembershipPolicy.LOCKED ||
   space.members
     .get()
     .some(
@@ -50,6 +48,7 @@ export const admitAgent = (
               ...(name ? { profile: { displayName: name } } : {}),
             }),
             SpaceMember_Role.EDITOR,
+            { agent: true },
           ),
         catch: (cause) => new AdmitAgentError({ cause }),
       });

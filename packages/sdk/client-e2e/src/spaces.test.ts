@@ -30,10 +30,11 @@ import { TestSchema as TestSchema$ } from '@dxos/echo/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { HypercoreStoreService } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
-import { DXN, SpaceId } from '@dxos/keys';
+import { DXN, PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { toPublicKey, unpackJson } from '@dxos/protocols/buf';
-import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { fromPublicKey, toPublicKey, unpackJson } from '@dxos/protocols/buf';
+import { ContactSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { MembershipPolicy, SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type GossipMessage } from '@dxos/protocols/buf/dxos/mesh/teleport/gossip_pb';
 import { range } from '@dxos/util';
@@ -1002,6 +1003,32 @@ describe('Spaces', () => {
     const space = await client.spaces.create({}, { membershipPolicy: MembershipPolicy.LOCKED });
     expect(space.membershipPolicy).toEqual(MembershipPolicy.LOCKED);
     expect(space.members.get()).to.have.length(1);
+  });
+
+  test("a locked space's owner admits an agent's identity, and no one else", async () => {
+    const [client] = await createInitializedClients(1, { storage: true });
+    const space = await client.spaces.create({}, { membershipPolicy: MembershipPolicy.LOCKED });
+    await space.waitUntilReady();
+    const contact = (identityKey: PublicKey, displayName: string) =>
+      create(ContactSchema, { identityKey: fromPublicKey(identityKey), profile: { displayName } });
+    const memberKeys = () => space.members.get().map((member) => toPublicKey(member.identity?.identityKey)?.toHex());
+
+    const person = PublicKey.random();
+    const agent = PublicKey.random();
+    // Written in order, so once the agent is a member the person's admission has been refused.
+    await space.admitContact(contact(person, 'Bob'), SpaceMember_Role.EDITOR);
+    await space.admitContact(contact(agent, 'Kai'), SpaceMember_Role.EDITOR, { agent: true });
+    await expect.poll(memberKeys).toContain(agent.toHex());
+    expect(memberKeys()).not.toContain(person.toHex());
+    expect(
+      space.members.get().find((member) => toPublicKey(member.identity?.identityKey)?.equals(agent)),
+    ).toMatchObject({ role: SpaceMember_Role.EDITOR, identity: { profile: { displayName: 'Kai' } } });
+
+    // Its owner removes it again.
+    await space.updateMemberRole({ memberKey: agent, newRole: SpaceMember_Role.REMOVED });
+    await expect
+      .poll(() => space.members.get().find((member) => toPublicKey(member.identity?.identityKey)?.equals(agent))?.role)
+      .toEqual(SpaceMember_Role.REMOVED);
   });
 
   test('space membership policy defaults to INVITE', async () => {

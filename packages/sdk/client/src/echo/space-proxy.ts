@@ -648,13 +648,18 @@ export class SpaceProxy implements Space, CustomInspectable {
     return this._invitationsProxy.share({ ...options, spaceKey: fromPublicKey(this.key), spaceId: this.id });
   }
 
-  async admitContact(contact: Contact, role: SpaceMember_Role = SpaceMember_Role.EDITOR): Promise<void> {
+  async admitContact(
+    contact: Contact,
+    role: SpaceMember_Role = SpaceMember_Role.EDITOR,
+    { agent }: { agent?: boolean } = {},
+  ): Promise<void> {
     await runServiceCall(
       this._runtime,
       this._clientServices.rpc['SpacesService.admitContact']({
         spaceKey: this.key,
         role,
         contact,
+        ...(agent ? { agent } : {}),
       }),
       { label: 'SpacesService.admitContact' },
     );
