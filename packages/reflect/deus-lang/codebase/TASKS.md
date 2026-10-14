@@ -39,6 +39,26 @@ From Dmytro: an artifact is a constant whose value is cached, e.g. deusCli := De
 
 D115. deus features --json gives [{document, features: [{id, title, status, parent, depth, specs, defs, tasks, openTasks, problems}], notes}]. Toolchain.Features is the first map.
 
+## Metadata changes on known hashes never replicate: push sends meta only with missing objects, import keeps the first (`f4afc2c0`)
+
+- state: todo
+- priority: high
+- labels: replication, spec, codebase, bug
+- links `Replicate.import` (#cbbdb9bbaa)
+
+Follow-up to D96: spec prose is block metadata; Replicate writes meta only when absent.
+
+> claude: Seen 2026-10-14 by the native thread: a fresh clone of r2://agent-artifacts/deus/toolchain (origin.main #9db52bfe04) exports specs/JsGen.Spec.mdl with R-3's prose under the wrong blocks; the long-lived store and the git export are right. Cause: Replicate.push bundles meta only for objects the remote lacks, and Replicate.import writes meta only where none exists, so a meta-only change (spec prose, docs, D116 schemes) never reaches the remote, and a clone keeps whichever bundle it imports first. A local deus update cannot repair R2. Proposed fix: make a metadata change a content-addressed object (metaset hash form) that the causal node of the change references, so it replicates and compacts like any object, and apply metasets in causal order on merge (descendant wins; concurrent ones merge as Codebase.mergeMeta does). Subsumes 4c9147ce. Until then, export only from a long-lived store and diff codebase/specs against git before committing an export.
+
+## Names that share a hash keep only the last name's doc, comments and parameter names (`62f3f4d0`)
+
+- state: todo
+- priority: high
+- labels: codebase, bug
+- links `Codebase.mergeMeta` (#20fb7353e5)
+
+Core has no types or names, so two definitions with the same body share a hash and one metadata file. Codebase.store keeps the newest doc, lead comments and locals (D116 merges only the scheme), so updating deus/wasm.deus gives Prove.lambdas the doc of Wasm.unlam, and view, export and the explorer print it under both names. Workaround: deus update deus/prove.deus afterwards. Proposed fix: keep name-specific fields per name when they differ, as (for "<fqn>" doc lead locals…) entries in the shared meta, written by mergeMeta from the batch's fqn, and read through one Codebase.metaFor meta name used by view, export, the explorer and bindings. Found by the native thread, 2026-10-14.
+
 ## Publish pushed events to Basin Catalog on the R2 bucket and query them with Basin SQL (needs Dmytro's go-ahead to create Cloudflare resources) (`c5955f97`)
 
 - state: todo
@@ -222,11 +242,31 @@ Known gaps R-10 and R-12 in docs/spec/CODEBASE-STORE.mdl.
 - priority: medium
 - labels: native, perf
 
+> claude: Text done in D113: literals, ++ on texts and lists (in place when unique), slice, split, join, indexOf, trim, Int.toText/fromText, text patterns, ordering; 4-6x faster than the JIT. Remaining: Dict and MutMap, show, Text.sha256, Text.utf8, Text.fromCodes, structural equality of data.
+
+> claude: The Text work above landed as D115 (renumbered from D113 after a concurrent decision).
+
 ## Native: effect handlers in the C back end by evidence passing, with stack switching for general resumptions (`e1cf2c6c`)
 
 - state: todo
 - priority: medium
 - labels: native, perf
+
+## Native: structural equality and ordering of data in the C back end (`f9cd5624`)
+
+- state: todo
+- priority: medium
+- labels: native, perf
+
+eq, compare and < on constructed values are refused in C (and wasm compares only some data types); the runtime can walk blocks by kind as the kernels' equal and compare do.
+
+## Replication keeps the first scheme of a shared hash; merge schemes as the store does since D116 (`4c9147ce`)
+
+- state: todo
+- priority: medium
+- labels: codebase, bug
+
+Replicate.import writes metadata only when none exists (D91), so a pulled codebase can hold a narrower scheme for a hash two names share than the pusher's store does after D116. Merge the scheme with Codebase.mergeMeta on import.
 
 ## Run the DEUS skill through the Composer assistant with a live model (`91b838f4`)
 
@@ -335,14 +375,6 @@ Follow-up of 17d50ae5: bindings run on the wasm kernel only. The TS kernel (src/
 - priority: low
 - assignee: claude
 - labels: mdl, spec
-
-## A pull keeps existing metadata, so spec prose edited in two codebases does not merge (`f4afc2c0`)
-
-- state: todo
-- priority: none
-- labels: replication, spec
-
-Follow-up to D96: spec prose is block metadata; Replicate writes meta only when absent.
 
 ## Explorer: show spec documents (prose, blocks in order, verdicts) from the codebase (`3e686896`)
 

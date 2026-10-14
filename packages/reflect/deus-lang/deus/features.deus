@@ -1,5 +1,5 @@
 /-
-  Feature maps (D115): what the product is, beside tasks, which say what to do next. A feature map
+  Feature maps (D117): what the product is, beside tasks, which say what to do next. A feature map
   is an MDL document of `feature` blocks, stored in the codebase like a spec (D99); each feature has
   a status and links the spec documents, definitions and tasks that make it up.
 -/

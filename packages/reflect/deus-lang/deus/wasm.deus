@@ -248,7 +248,15 @@ def typeOf (scope : Scope) (env : List Int) (e : Sexp) : Sexp :=
     match typeArgs (typeOf scope env r) with
     | [t] => t
     | _ => unknown
-  | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str p], _, _] => if isComparison p then tref "#Bool" else tref "#Int"
+  | Sexp.list [Sexp.sym "text", _] => tref "#Text"
+  | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str "append"], a, b] =>
+    let left := typeOf scope env a
+    if left == unknown then typeOf scope env b else left
+  | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "prim", Sexp.str p] :: rest) =>
+    let known := textPrimType p
+    if known != unknown then known
+    else if List.length rest == 2 then (if isComparison p then tref "#Bool" else tref "#Int")
+    else unknown
   | Sexp.list [Sexp.sym "if", _, t, f] =>
     let left := typeOf scope env t
     if left == unknown then typeOf scope env f else left
@@ -261,6 +269,14 @@ def typeOf (scope : Scope) (env : List Int) (e : Sexp) : Sexp :=
         substitute (fun v => List.lookup v bound) result
     | none => unknown
   | _ => unknown
+
+/-- The result type of a primitive on `Text` (the C back end's runtime, D115), or unknown. -/
+def textPrimType (p : Text) : Sexp :=
+  if List.any (fun x => x == p) ["Text.slice", "Text.fromCode", "Text.concat", "Text.join", "Text.trim", "Int.toText"] then tref "#Text"
+  else if List.any (fun x => x == p) ["Text.length", "Text.code", "Text.indexOf", "compare"] then tref "#Int"
+  else if p == "Text.split" then Sexp.list [Sexp.sym "tapp", tref "#List", tref "#Text"]
+  else if p == "Int.fromText" then Sexp.list [Sexp.sym "tapp", tref "#Option", tref "#Int"]
+  else unknown
 
 /-- `Array t`, or unknown when `t` is. -/
 def arrayOf (t : Sexp) : Sexp := if t == unknown then unknown else Sexp.list [Sexp.sym "tapp", tref "#Array", t]

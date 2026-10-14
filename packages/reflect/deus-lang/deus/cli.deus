@@ -989,7 +989,7 @@ def checkSpecs (dir : Text) (ns : Map Text Entry) (printer : Printer) (byUri : M
 
 /--
   What `MdlHost.describe` says about `task:<id>` (its state and title) and `spec:<Doc>` names, which
-  feature blocks link (D115); `none` for any other name. `tasks` caches the branch's tasks, read on
+  feature blocks link (D117); `none` for any other name. `tasks` caches the branch's tasks, read on
   first use.
 -/
 def featureFact (dir : Text) (ns : Map Text Entry) (tasks : Ref (Option (Map Text Task))) (name : Text) : {IO} Option (Result Text (List (Text, Text))) :=
@@ -1030,7 +1030,7 @@ def featuresOf (dir : Text) (ns : Map Text Entry) (d : Text) : {IO, Throw Text} 
     | ((fs, bad), Result.err found) => (fs, bad ++ List.map (fun p => b.blockId ++ ": " ++ p) found)) ([], []) sorted
 
 /--
-  `deus features [documents…]`: the feature maps (D115), each a tree of features with their status
+  `deus features [documents…]`: the feature maps (D117), each a tree of features with their status
   and open tasks, then what is wrong or missing. With no arguments, every document with a
   `feature` block.
 -/
@@ -1652,7 +1652,7 @@ def usage : Text :=
     "  eval <expr>                          evaluate an expression",
     "  mdl [files|dirs…]                    check .mdl documents (or the codebase's specs): each block runs through the",
     "                                       @[ext \"<uri>\"] term its Extensions table names",
-    "  features [documents…]                feature maps: each feature's status, open tasks, and what is missing (D115)",
+    "  features [documents…]                feature maps: each feature's status, open tasks, and what is missing (D117)",
     "  test [prefix] [--integration]        run tests in a deterministic simulation (cached by hash);",
     "                                       --integration also runs @[integration] tests for real",
     "  check [prefix]                       check theorems and report their evidence",

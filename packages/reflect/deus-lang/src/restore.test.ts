@@ -19,7 +19,7 @@ describe('deus CLI export restore', () => {
     const add = deus('add', join(root, 'codebase/code'), join(root, 'codebase/specs'), '--codebase', restored);
     expect(add.stderr).toBe('');
     expect(add.code).toBe(0);
-    // Feature maps link tasks by id (D115), so the restore brings the tasks too.
+    // Feature maps link tasks by id (D117), so the restore brings the tasks too.
     expect(deus('task', 'import', join(root, 'codebase/tasks.sexp'), '--codebase', restored).code).toBe(0);
 
     const self = join(scratch, 'export-self');

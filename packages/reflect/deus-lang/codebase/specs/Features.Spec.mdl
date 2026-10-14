@@ -9,7 +9,7 @@ version: 1.0
 Dmytro: "we need feature-maps in codebase in addition to tasks". A task says what to do next; a
 feature map says what the product is: a tree of features, each with a status, linked to the specs,
 definitions and tasks that make it up, so a reader sees what exists and what is missing
-([D115](../../docs/DECISIONS.md)).
+([D117](../../docs/DECISIONS.md)).
 
 A feature map is an MDL document in the codebase, like a spec. Each `feature` block is one feature:
 
