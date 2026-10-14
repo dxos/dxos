@@ -280,12 +280,12 @@ def Types.infer (u : Unifier) (env : TypeEnv {r}) (t : Sexp) (locals : List TTyp
         (fun pair => Types.unify u (snd pair) (Types.infer u env (fst pair) inner row))
       Types.infer u env b inner row
   | Sexp.list (Sexp.sym "ann" :: ty :: e :: []) =>
-      -- An ascription (D92): its variables are its own and flexible, and `e` is checked against it.
+      -- An ascription (D95): its variables are its own and flexible, and `e` is checked against it.
       let declared := signatureType u ty (Ref.new Map.empty) (Ref.new Map.empty)
       checkAgainst u env e declared locals row
       declared
   | Sexp.list (Sexp.sym "annlocal" :: ty :: e :: []) =>
-      -- A lambda binder's ascription (D92): local 0 has the written type.
+      -- A lambda binder's ascription (D95): local 0 has the written type.
       Types.unify
         u
         (getOr (get? locals 0) (freshType u))

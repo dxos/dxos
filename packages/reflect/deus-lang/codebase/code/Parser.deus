@@ -26,7 +26,7 @@ def Parser.arms (p : Parser) : {Throw Text} List Arm :=
   let result := go []
   if List.isEmpty result then Parser.error p "expected '|'" else result
 
-/-- `e`, checked against the type a `let` writes (D92). -/
+/-- `e`, checked against the type a `let` writes (D95). -/
 def Parser.ascribed (e : Expr) (annotation : Option Ty) : Expr :=
   match annotation with
   | Option.some t => Expr.ann e t
@@ -211,7 +211,11 @@ def Parser.decl (p : Parser) : {Throw Text} Decl :=
         skip p
         Option.some (withStop p 0 (fun _ => Parser.ty p))
       else Option.none
-      if is p "|" then Decl.defn name bs type Option.none (Option.some (Parser.arms p)) doc attributes pos else
+      let after := peek p
+      if is p "|" then Decl.defn name bs type Option.none (Option.some (Parser.arms p)) doc attributes pos else if after.kind == Kind.eof || after.bol && after.col == 0 then
+        -- A declaration (D93): the signature must be complete, since nothing else gives the type.
+        if isNone type then errorAt t ("declaration " ++ name ++ " has no body, so it needs a result type") else if any (fun b => isNone b.annot) bs then errorAt t ("declaration " ++ name ++ " has no body, so every parameter needs a type") else Decl.defn name bs type Option.none Option.none doc attributes pos
+      else
         expect p ":="
         Decl.defn name bs type (Option.some (Parser.body p)) Option.none doc attributes pos
     else if word == "theorem" then
@@ -509,7 +513,7 @@ def Parser.patAtom (p : Parser) : {Throw Text} Pat :=
     Pat.unit
   else withStop p (-1) (fun _ =>
     let first := patt p
-    -- `(x : T)`: an ascribed binder, checked (D92).
+    -- `(x : T)`: an ascribed binder, checked (D95).
     let first1 := if is p ":" then
       skip p
       Pat.ann first (Parser.ty p)

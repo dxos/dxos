@@ -692,9 +692,9 @@ def push (args : Args) : {IO, Throw Text} Unit :=
   -- A remote that hosts the explorer (`explore --publish`) gets it refreshed with each push of the current branch.
   let site := if IO.exists (siteManifest dir name) && branch == Codebase.currentBranch dir then
       let out := dir ++ "/cache/site-" ++ name
-      let _ := Explorer.generate dir out
-      -- A site published with its console keeps it, on the codebase as pushed (D87).
+      -- A site published with its console keeps it, on the codebase as pushed (D84).
       let _ := if Text.contains " console/codebase.json\n" (Option.getOr (IO.readFile (siteManifest dir name)) "") then Explorer.console dir out else 0
+      let _ := Explorer.generate dir out
       some (snd (publishSite dir name out false))
     else none
   let siteJson := Option.getOr (Option.map (fun n => [("site", Json.num n)]) site) []
@@ -808,6 +808,40 @@ def guardDefect (f : Unit -> {IO} a) : {IO} Result Text a :=
   handle Result.ok (f ()) with
   | Defect.raise message -> _ => Result.err message
 
+/--
+  What `MdlHost.describe` reports about a name: its kind, hash, displayed type, declaration as
+  source, and for a test or a theorem its verdict (checked now unless a result is cached).
+-/
+def describeName (dir : Text) (ns : Map Text Entry) (name : Text) : {IO, Throw Text} List (Text, Text) :=
+  match Map.lookup name ns with
+  | none => throw (name ++ " is not in the codebase")
+  | some e =>
+    let h := Entry.hash e
+    let meta := Codebase.readMeta dir h
+    let typed := match Codebase.metaField meta "scheme" with
+      | some scheme => [("type", Types.displayScheme scheme)]
+      | none => []
+    let verdict := match Check.verdictOf dir ns e with
+      | some (Verdict.pass evidence cases) => [("verdict", "pass"), ("evidence", evidence), ("cases", Int.toText cases)]
+      | some (Verdict.fail reason) => [("verdict", "fail"), ("reason", reason)]
+      | some Verdict.unchecked => [("verdict", "unchecked")]
+      | none => []
+    -- Specs name things in full, so the statement prints every reference by its full name.
+    let statement := match Codebase.readObject dir h with
+      | some (Sexp.list (Sexp.sym "theorem" :: Sexp.list (Sexp.sym "binders" :: types) :: prop :: proof :: _)) =>
+        let base := Print.printer ns (List.map Sexp.asText (Codebase.metaList meta "locals"))
+        let full := Printer.mk base.fullNames base.fullNames (Map.fromList (List.filterMap (fun pair =>
+          match pair with
+          | (n, Entry.type _ iri _) => some (iri, n)
+          | (n, Entry.ability _ iri) => some (iri, n)
+          | _ => none) (Map.toList ns))) Map.empty base.supply base.fresh
+        let decl := View.theoremDecl full name types prop proof
+        let stop := Text.indexOf decl " := " 0
+        [("statement", Text.trim (Text.drop (Text.length ("theorem " ++ name)) (if stop < 0 then decl else Text.take stop decl)))]
+      | some (Sexp.list [Sexp.sym "term", core]) => if Resolve.isStub core then [("implemented", "false")] else []
+      | _ => []
+    [("kind", Entry.kind e), ("hash", h), ("view", snd (viewParts (Print.printer ns []) dir ns name e "deus"))] ++ typed ++ statement ++ verdict
+
 /-- Answers `MdlHost` against the codebase: expressions are compiled the way `eval` compiles them. -/
 def withHost (dir : Text) (ns : Map Text Entry) (body : Unit -> {MdlHost, IO} a) : {IO} a :=
   let compiled := fun (source : Text) => try (fun _ => compileExpr dir ns source)
@@ -824,6 +858,10 @@ def withHost (dir : Text) (ns : Map Text Entry) (body : Unit -> {MdlHost, IO} a)
     k (match compiled source with
       | Result.ok h => guardDefect (fun _ => Code.run h)
       | Result.err message => Result.err message)
+  | MdlHost.describe name -> k =>
+    k (match guardDefect (fun _ => try (fun _ => describeName dir ns name)) with
+      | Result.ok r => r
+      | Result.err message => Result.err message)
 
 /-- Extensions in the codebase by URI: the terms carrying `@[ext "<uri>"]`. -/
 def extensions (dir : Text) (ns : Map Text Entry) : {IO} Map Text Text :=
@@ -836,7 +874,7 @@ def extensions (dir : Text) (ns : Map Text Entry) : {IO} Map Text Text :=
         | _ => none) (Codebase.metaList (Codebase.readMeta dir h) "attrs")
     | _ => []) (Map.toList ns))
 
-/-- One block's outcome: `ok`, `fail` with its problems, or `unchecked` when no extension is found. -/
+/-- One block's outcome: `ok`, `fail` with its problems, `gap` when every problem is a known gap, or `unchecked` when no extension is found. -/
 structure Outcome where
   place : Text
   verdict : Text
@@ -851,7 +889,8 @@ def checkBlock (dir : Text) (ns : Map Text Entry) (byUri : Map Text Text) (place
     let check := Code.run h
     match withHost dir ns (fun _ => guardDefect (fun _ => check b)) with
     | Result.ok [] => Outcome.mk place "ok" []
-    | Result.ok problems => Outcome.mk place "fail" problems
+    -- A known gap (each problem starting `gap: `) is reported but does not fail the document.
+    | Result.ok problems => Outcome.mk place (if List.all (fun p => Text.startsWith "gap: " p) problems then "gap" else "fail") problems
     | Result.err message => Outcome.mk place "fail" ["defect: " ++ message]
 
 /-- Checks one document: the core rules, then each block through its extension. -/
@@ -890,7 +929,8 @@ def mdl (args : Args) : {IO, Throw Text} Unit :=
     (fun _ => Json.arr (List.map (fun o => Json.obj [("block", Json.str o.place), ("status", Json.str o.verdict), ("problems", Json.arr (List.map Json.str o.problems))]) outcomes))
     (fun _ => Text.join "\n" (List.map (fun o =>
       Text.padRight 10 o.verdict ++ o.place ++ Text.concat (List.map (fun p => "\n          " ++ p) o.problems)) outcomes ++
-      [Int.toText (count "ok") ++ " ok, " ++ Int.toText (count "fail") ++ " failed, " ++ Int.toText (count "unchecked") ++ " unchecked"]))
+      [Int.toText (count "ok") ++ " ok, " ++ Int.toText (count "fail") ++ " failed, " ++ Int.toText (count "unchecked") ++ " unchecked" ++
+        (if count "gap" > 0 then ", " ++ Int.toText (count "gap") ++ " known gaps" else "")]))
   if count "fail" > 0 then IO.exit 1 else ()
 
 /-- `deus image <name> -o <file>`: the kernel image of a definition. -/
@@ -980,13 +1020,14 @@ def publishSite (dir : Text) (name : Text) (out : Text) (force : Bool) : {IO, Th
   `deus explore [--out dir] [--port n] [--publish remote] [--console]` (D58): writes the codebase
   explorer for the current branch, then serves it locally, or uploads it next to a remote's bundles
   (`<prefix>/site/`), where a public bucket serves it. `--console` adds a console that runs `deus`
-  in the page (D87); a site that has one keeps it.
+  in the page (D84); a site that has one keeps it.
 -/
 def explore (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let out := Option.getOr (option args "out") (dir ++ "/cache/site")
-  let pages := Explorer.generate dir out
+  -- The console goes first, so meta.json can say whether the site has one.
   let _ := if flag args "console" || IO.exists (out ++ "/console/codebase.json") then Explorer.console dir out else 0
+  let pages := Explorer.generate dir out
   match (option args "publish", option args "out") with
   | (some name, _) =>
     match publishSite dir name out (flag args "force") with

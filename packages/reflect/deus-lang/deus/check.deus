@@ -274,6 +274,22 @@ def hasAttr (dir : Text) (h : Text) (name : Text) : {IO} Bool :=
     | Sexp.list (Sexp.str n :: _) => n == name
     | _ => false)) (Codebase.metaList (Codebase.readMeta dir h) "attrs")
 
+/-- A test's or a theorem's verdict, from the cache or checked now and cached; `none` for other entries. -/
+def verdictOf (dir : Text) (ns : Map Text Entry) (e : Entry) : {IO} Option Verdict :=
+  match e with
+  | Entry.theorem h => some (lemmaVerdict dir ns h)
+  | Entry.test h =>
+    let integration := hasAttr dir h "integration"
+    match (if integration then none else cached dir h) with
+    | some v => some v
+    | none =>
+      let v := match try (fun _ => Image.load (Cli.fetcher dir) [h]) with
+        | Result.err message => Verdict.fail message
+        | Result.ok _ => checkTest h integration
+      if integration then () else remember dir h v
+      some v
+  | _ => none
+
 /-- Runs every test or theorem under a prefix; prints a report; exits 1 on failure. -/
 def run (args : Args) (wantTheorems : Bool) : {IO, Throw Text} Unit :=
   let dir := Cli.openCodebase args

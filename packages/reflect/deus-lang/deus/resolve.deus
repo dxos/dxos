@@ -201,6 +201,26 @@ def nilCon : Sexp := node "con" [s "#List", n 0, n 0]
 
 def app (f : Sexp) (args : List Sexp) : Sexp := node "app" (f :: args)
 
+/--
+  The body of a declaration without one (D93): the defect `not implemented: <name>`, under a lambda
+  applied to the printed signature, so the hash covers the name and the type.
+-/
+def stub (fqn : Text) (signature : Sexp) : Sexp :=
+  app (node "lam" [s "", app (node "prim" [s "defect"]) [node "text" [s ("not implemented: " ++ fqn)]]]) [node "text" [s (Sexp.print signature)]]
+
+/-- The name and printed signature of a stripped `stub` body, after its parameters' lambdas. -/
+def stubOf (body : Sexp) : Option (Text, Text) :=
+  match body with
+  | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "lam", Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str "defect"], Sexp.list [Sexp.sym "text", Sexp.str message]]], Sexp.list [Sexp.sym "text", Sexp.str signature]] =>
+    if Text.startsWith "not implemented: " message then some (Text.drop 17 message, signature) else none
+  | _ => none
+
+/-- Whether stripped Core is a declaration without a body. -/
+def isStub (core : Sexp) : Bool :=
+  match core with
+  | Sexp.list [Sexp.sym "lam", b] => isStub b
+  | _ => Option.isSome (stubOf core)
+
 def binopPrim (op : Text) : Text :=
   if op == "+" then "Int.add"
   else if op == "-" then "Int.sub"
@@ -390,7 +410,7 @@ def lambda (ctx : Ctx) (params : List Pat) (body : List (Option Text) -> {Throw 
     match simpleBinder ctx first with
     | some name =>
       let inner := lambda ctx rest body (name :: locals)
-      -- A binder's ascription types local 0 for the checker (D92); `unnote` removes it.
+      -- A binder's ascription types local 0 for the checker (D95); `unnote` removes it.
       let checked := match first with
         | Pat.ann _ t => node "annlocal" [tyCore ctx.names ctx.scope [] t, inner]
         | _ => inner
@@ -523,7 +543,7 @@ def expr (ctx : Ctx) (e : Expr) (locals : List (Option Text)) : {Throw Text} Sex
   | Expr.tuple items => tuple (List.map go items)
   | Expr.list items => List.foldr (fun x acc => app consCon [go x, acc]) nilCon items
   | Expr.record base fields pos => record ctx base fields pos locals
-  -- Checked (D92), then removed before hashing by `unnote`.
+  -- Checked (D95), then removed before hashing by `unnote`.
   | Expr.ann x t => node "ann" [tyCore ctx.names ctx.scope [] t, go x]
   | Expr.proj x field pos => app (fieldAccessor ctx pos field) [go x]
   | Expr.note text x => node "note" [s text, go x]
@@ -565,7 +585,7 @@ def strip (form : Sexp) : (Sexp, List Text) :=
 
 /--
   `strip`, also returning the comments (D66) and number spellings (D88) it removed, and the Core the
-  checker reads: the same, with its ascriptions still in place as `(ann T e)` (D92).
+  checker reads: the same, with its ascriptions still in place as `(ann T e)` (D95).
 -/
 def stripNoted (form : Sexp) : (Sexp, List Text, List (Int, Text), List (Int, Text), Sexp) :=
   match stripAcc form [] with
@@ -573,7 +593,7 @@ def stripNoted (form : Sexp) : (Sexp, List Text, List (Int, Text), List (Int, Te
     match unnote named with
     | (core, notes, spellings) => (core, List.reverse names, notes, spellings, unmark named)
 
-/-- Removes comments and number spellings, keeping ascriptions: the Core the checker reads (D92). -/
+/-- Removes comments and number spellings, keeping ascriptions: the Core the checker reads (D95). -/
 def unmark (form : Sexp) : Sexp :=
   match form with
   | Sexp.list [Sexp.sym "note", Sexp.str _, inner] => unmark inner
@@ -584,7 +604,7 @@ def unmark (form : Sexp) : Sexp :=
 /--
   Removes `(note "text" e)` and `(spelled "text" e)` nodes. Each is returned with the pre-order
   index of `e` among the list nodes of the result, the position `Print.restore` puts it back at
-  (D66, D88): comments first, then spellings. Ascriptions `(ann T e)` go without a trace (D92).
+  (D66, D88): comments first, then spellings. Ascriptions `(ann T e)` go without a trace (D95).
 -/
 def unnote (form : Sexp) : (Sexp, List (Int, Text), List (Int, Text)) :=
   let rec go x count acc spellings :=

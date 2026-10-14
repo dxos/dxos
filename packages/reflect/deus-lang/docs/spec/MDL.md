@@ -176,13 +176,15 @@ is used is not specified. For each block:
 3. If there is none, the block is `unchecked`. That is not a failure.
 4. Otherwise load the term, apply it to the block under a `MdlHost` handler, and catch defects.
 
-| Outcome     | When                                                           |
-| ----------- | -------------------------------------------------------------- |
-| `ok`        | the extension returned `[]`                                    |
-| `fail`      | it returned problems, or raised a defect (`defect: <message>`) |
-| `unchecked` | no URI, or no term in the codebase has it                      |
+| Outcome     | When                                                                       |
+| ----------- | -------------------------------------------------------------------------- |
+| `ok`        | the extension returned `[]`                                                |
+| `gap`       | every problem it returned starts with `gap: `: a known gap, reported as is |
+| `fail`      | it returned other problems, or raised a defect (`defect: <message>`)       |
+| `unchecked` | no URI, or no term in the codebase has it                                  |
 
-`deus mdl` exits with status 1 when any block fails. The extension's type is not checked when it
+`deus mdl` exits with status 1 when any block fails; a gap does not fail. The summary line adds
+`, <n> known gaps` when there are any. The extension's type is not checked when it
 is run; a term with the attribute but a different type fails at run time. The `--json` output is
 described in [CLI-JSON.md](CLI-JSON.md).
 
@@ -192,16 +194,35 @@ described in [CLI-JSON.md](CLI-JSON.md).
 ability MdlHost @"urn:deus:mdl:Host" where
   cost : Text -> Result Text Int
   holds : Text -> Result Text Bool
+  run : Text -> Result Text Text
+  describe : Text -> Result Text (List (Text, Text))
 ```
 
-Both operations take DEUS expression source and compile it against the current branch's namespace
-as `def it := <source>`, the way `deus eval` does. A compile error or a defect is `Result.err` with
-its message.
+`cost`, `holds` and `run` take DEUS expression source and compile it against the current branch's
+namespace as `def it := <source>`, the way `deus eval` does. `describe` takes a name. A compile
+error, a name the namespace lacks, or a defect is `Result.err` with its message.
 
-| Op          | Meaning                                                                                               |
-| ----------- | ----------------------------------------------------------------------------------------------------- |
-| `cost src`  | compiles `fun (u : Unit) => src` and returns the machine steps `Code.cost` counts to apply it to `()` |
-| `holds src` | compiles and evaluates `src`; the value is returned as is                                             |
+| Op              | Meaning                                                                                               |
+| --------------- | ----------------------------------------------------------------------------------------------------- |
+| `cost src`      | compiles `fun (u : Unit) => src` and returns the machine steps `Code.cost` counts to apply it to `()` |
+| `holds src`     | compiles and evaluates `src`; the value is returned as is                                             |
+| `run src`       | compiles and evaluates `src`, a `Text` expression                                                     |
+| `describe name` | what the codebase knows about `name`, as properties (below)                                           |
+
+`describe` returns, in this order and only when they apply:
+
+| Property      | Value                                                                                                  |
+| ------------- | ------------------------------------------------------------------------------------------------------ |
+| `kind`        | the entry's kind: `term`, `type`, `ability`, `test`, `theorem`, `spec`, `ctor` or `op`                 |
+| `hash`        | its hash                                                                                               |
+| `view`        | its declaration as `deus view` prints it, without the header lines                                     |
+| `type`        | its inferred type as `deus view` displays it (`Text -> Sexp -> {IO} Text`)                             |
+| `statement`   | a theorem's binders and proposition with every reference by its full name                              |
+| `implemented` | `false` for a term declared with a signature and no body (D93)                                         |
+| `verdict`     | `pass`, `fail` or `unchecked`, for a test or a theorem: the cached result, else checked now and cached |
+| `evidence`    | with `pass`: `test`, `integration`, `rfl`, `decide`, `proof` or `proof assuming tested lemmas`         |
+| `cases`       | with `pass`: how many cases ran                                                                        |
+| `reason`      | with `fail`: why                                                                                       |
 
 `Code.cost` runs the thunk on the machine with the JIT off, so steps are deterministic and equal on
 both kernels ([D46](../DECISIONS.md)). An operation the thunk performs and does not handle itself is
@@ -211,6 +232,30 @@ a defect (`Code.cost: the measured function performs an operation it does not ha
 Other built-in extensions: `requirement` (`org.dxos.deus.requirement@1.0`) and `container`
 (`org.dxos.deus.container@1.0`) in [`deus/external.deus`](../../deus/external.deus). They follow the
 same contract and are not described here.
+
+## The `req`, `api` and `law` extensions
+
+[`platform/spec.deus`](../../platform/spec.deus) checks a spec written in the order of the process
+(D92): requirements, then the APIs and laws they rest on, then tests and theorems. A spec document
+keeps its laws in ` ```deus ` fences, so `deus add` compiles them next to the code they are about.
+[CODEBASE-STORE.mdl](CODEBASE-STORE.mdl) is a full example.
+
+| Term  | URI                     | Term            | Properties                         |
+| ----- | ----------------------- | --------------- | ---------------------------------- |
+| `req` | `org.dxos.deus.req@1.0` | `Spec.checkReq` | `by`, `gap`                        |
+| `api` | `org.dxos.deus.api@1.0` | `Spec.checkApi` | `signatures`                       |
+| `law` | `org.dxos.deus.law@1.0` | `Spec.checkLaw` | `theorem`, `statement`, `evidence` |
+
+- `req`: `by` names tests or theorems, separated by `|` or one per `- ` line; each must pass. A
+  `req` with no `by` must say in `gap` what will add its evidence; it is then the outcome `gap`.
+  With neither, the problem is `no evidence: …`.
+- `api`: `signatures` holds one `Name : Type` per line. The name must be in the codebase, and its
+  `describe` type must equal the stated one after runs of spaces and new lines are collapsed. A
+  line with no `:` only checks that the name exists. A name declared without a body (D93) is
+  reported as the gap `<name> is declared but not implemented`.
+- `law`: `theorem` names one theorem. It must pass, and with `evidence: proof` its evidence must be
+  `proof`, `decide` or `rfl` (the default, `test`, accepts any pass). `statement`, when given, must
+  equal the theorem's `describe` statement, with `=` read as `==` and spaces collapsed.
 
 ## The `perf` extension
 

@@ -174,6 +174,25 @@ replaced (an update).
 **Binders.** `def` and `theorem` take binders: a bare name, `(a b : T)`, or `{a : T}`. Implicit `{…}`
 binders name type variables and are erased. A binder without a type has an unknown type.
 
+**Declarations.** A `def` whose signature is followed by the next declaration, with no `:=` or
+arms, declares a term that has no implementation yet ([D93](../DECISIONS.md)):
+
+```deus
+/-- Parses a decimal number. -/
+def parse (t : Text) : Int
+
+def twice (t : Text) : Int := parse t * 2
+```
+
+The signature must be complete, a type on every binder and a result type, since nothing else gives
+the type; otherwise the parse error is `declaration parse has no body, so …`. Callers type-check
+against it. Calling it is the defect `not implemented: parse`. Its Core is that defect under a
+lambda applied to the printed signature, so the hash covers the name it was declared under and its
+type: two declarations alias only when both match. `deus view` prints it as written; after `deus mv`
+the name no longer matches, so it prints that Core instead, which compiles back to the same hash.
+Implementing it is an ordinary `deus update`, which rehashes its callers. An `api` block in a spec
+reports a declared name as a known gap ([MDL.md](MDL.md#the-req-api-and-law-extensions)).
+
 **Constructors.** A constructor's fields are `(x y : T)` groups, bare type atoms (unnamed fields), or a
 signature `: A -> B -> T` whose arguments become unnamed fields. A constructor name may be a keyword
 (`| true`). Field names are kept in metadata, not in the type's hash.
@@ -238,7 +257,7 @@ the error `unknown type`.
 | `{ p with y := 3 }`             | A copy of `p` with fields replaced.                                                   |
 | `p.x.y`, `(e).field`            | Field access on a local name, or on a parenthesised expression.                       |
 | `.red`                          | A constructor found by suffix.                                                        |
-| `(e : T)`                       | An ascription: `e` is checked against `T` (D92); it is not part of Core.              |
+| `(e : T)`                       | An ascription: `e` is checked against `T` (D95); it is not part of Core.              |
 | `prim "Int.add"`                | A kernel primitive by name.                                                           |
 | `-e`, `!e`                      | Negation, Boolean not. `-` followed by an integer literal is a negative literal.      |
 
@@ -313,7 +332,7 @@ decl        = [ DOC ] [ attrs ] declBody ;              (* declBody starts a lin
 attrs       = "@[" { IDENT { TOKEN } [ "," ] } "]" ;    (* TOKEN: any token but "," and "]" *)
 declBody    = def | theorem | test | inductive | record | ability
             | "namespace" IDENT | "end" [ IDENT ] | "open" { IDENT } ;
-def         = "def" IDENT binders [ ":" type ] ( ":=" body | arms ) ;
+def         = "def" IDENT binders [ ":" type ] [ ":=" body | arms ] ;   (* no body: a declaration *)
 theorem     = "theorem" IDENT binders ":" expr { "->" expr } ":=" ( "sorry" | "by" { TOKEN } ) ;
 test        = "test" IDENT ":=" body ;
 inductive   = "inductive" IDENT typeParams [ iri ] "where" { "|" ( IDENT | KEYWORD ) ctorFields } ;
@@ -464,7 +483,7 @@ The checker is Hindley–Milner with Koka-style ability rows, run over Core ([D2
 Inferred types are stored as `(scheme …)` metadata. `DEUS_TYPECHECK=warn` reports type errors as warnings
 and `DEUS_TYPECHECK=0` skips checking (only for bootstrapping the checker).
 
-- Ascriptions are checked ([D92](../DECISIONS.md), [CHECKING.mdl](./CHECKING.mdl)): `(e : T)`, `let x : T := v`,
+- Ascriptions are checked ([D95](../DECISIONS.md), [CHECKING.mdl](./CHECKING.mdl)): `(e : T)`, `let x : T := v`,
   a local function's result type and a binder written `(x : T)` in a lambda or a pattern. A type variable
   in an ascription is flexible. Ascriptions are not part of Core, so they do not change a hash.
 - A row written on a definition with no binders (`def x : {} Int := …`) bounds what its body performs.

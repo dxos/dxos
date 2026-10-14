@@ -113,18 +113,19 @@ def Compile.batch (base : Map Text Entry) (store : Text -> {Throw Text | r} Opti
     match item.decl with
     | Decl.defn _ binders type body arms doc attributes pos =>
         let params := List.map (fun b => Pat.id b.binder [] pos) binders
+        let sig := Compile.signature names (bodyScope item) binders type
         let named := lambda ctx params (fun locals =>
           match (body, arms) with
           | (Option.some e, _) => Resolve.expr ctx e locals
           | (_, Option.some list) => equations ctx list locals
-          | _ => Resolve.fail ctx "definition has no body") []
+          | _ => stub fqn sig) []
         match stripNoted named with
         | (core, locals, notes, spellings, checked) =>
             Ref.set pending (Pending.mk fqn "term" core checked :: Ref.get pending)
             addMetaWith
               ("@" ++ fqn)
               doc
-              (Option.some (Compile.signature names (bodyScope item) binders type))
+              (Option.some sig)
               locals
               attributes
               (commentMeta item.lead notes spellings)
@@ -343,7 +344,7 @@ def Compile.n (k : Int) : Sexp := Sexp.int k
 
 def Compile.node (head : Text) (items : List Sexp) : Sexp := Sexp.node head items
 
--- What the checker reads: `core` with its ascriptions in place (D92).
+-- What the checker reads: `core` with its ascriptions in place (D95).
 /-- Wraps Core in its object form: `(term c)`, `(test c)`, or a theorem's full form. -/
 def Compile.objectOf (p : Pending) (core : Sexp) : Sexp := if p.wrap == "theorem" then core else Compile.node p.wrap [core]
 
@@ -469,7 +470,7 @@ def Compile.typecheck (objectOf : Text -> {Throw Text | r} Option Sexp) (metaOf 
         let t := getOr (Map.lookup key vars) (freshType u)
         match metaField (metaOf key) "sig" with
         | Option.some (Sexp.list (Sexp.sym "teff" :: Sexp.list (Sexp.sym "eff" :: effs) :: result :: [])) =>
-            -- A definition with no binders: its row bounds the body itself (D92).
+            -- A definition with no binders: its row bounds the body itself (D95).
             let sigVars := Ref.new Map.empty
             let sigRows := Ref.new Map.empty
             let declared := signatureType u result sigVars sigRows

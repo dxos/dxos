@@ -151,7 +151,7 @@ end Assets
   own change by `github:<login>`, and deletes them; the next push publishes them.
 
     (request (kind "comment") (by "github:octocat") (at "2026-10-14T19:30:00Z") (subject "def:List.map") (note "…") (assets (asset "<sha256>" "image/png" "shot.png")))
-    (request (kind "task") (by …) (at …) (title "…") (details "…") (link "List.map") (assets …))
+    (request (kind "task") (by …) (at …) (title "…") (details "…") (link "List.map") (labels "a,b") (assets …))
     (request (kind "task-comment") (by …) (at …) (task "<id>") (note "…") (assets …))
 -/
 namespace Inbox
@@ -185,7 +185,7 @@ def applyOne (dir : Text) (form : Sexp) : {IO, Throw Text} Text :=
       let title := Text.trim (field form "title")
       if Text.isEmpty title then throw "a task needs a title"
       else
-        let t := Tasks.setField (Tasks.blank (Tasks.freshId dir title author) title) "details" (field form "details")
+        let t := Tasks.setField (Tasks.setField (Tasks.blank (Tasks.freshId dir title author) title) "details" (field form "details")) "labels" (field form "labels")
         let ns := Codebase.current dir
         let linked := match Map.lookup (field form "link") ns with
           | some e => Tasks.link t (Attachment.definition (field form "link") (Entry.hash e))

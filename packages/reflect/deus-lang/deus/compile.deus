@@ -199,7 +199,7 @@ structure Pending where
   name : Text
   wrap : Text
   core : Sexp
-  -- What the checker reads: `core` with its ascriptions in place (D92).
+  -- What the checker reads: `core` with its ascriptions in place (D95).
   checked : Sexp
 
 /-- Wraps Core in its object form: `(term c)`, `(test c)`, or a theorem's full form. -/
@@ -351,15 +351,16 @@ def batch (base : Map Text Entry) (store : Text -> {Throw Text | r} Option Sexp)
     match item.decl with
     | Decl.defn _ binders type body arms doc attributes pos =>
       let params := List.map (fun b => Pat.id b.binder [] pos) binders
+      let sig := signature names (bodyScope item) binders type
       let named := Resolve.lambda ctx params (fun locals =>
         match (body, arms) with
         | (some e, _) => Resolve.expr ctx e locals
         | (_, some list) => Resolve.equations ctx list locals
-        | _ => Resolve.fail ctx "definition has no body") []
+        | _ => Resolve.stub fqn sig) []
       match Resolve.stripNoted named with
       | (core, locals, notes, spellings, checked) =>
         Ref.set pending (Pending.mk fqn "term" core checked :: Ref.get pending)
-        addMetaWith ("@" ++ fqn) doc (some (signature names (bodyScope item) binders type)) locals attributes (commentMeta item.lead notes spellings)
+        addMetaWith ("@" ++ fqn) doc (some sig) locals attributes (commentMeta item.lead notes spellings)
     | Decl.check _ body doc attributes _ =>
       match Resolve.stripNoted (Resolve.expr ctx body []) with
       | (core, locals, notes, spellings, checked) =>
@@ -447,7 +448,7 @@ def typecheck (objectOf : Text -> {Throw Text | r} Option Sexp) (metaOf : Text -
         let t := Option.getOr (Map.lookup key vars) (Types.freshType u)
         match Codebase.metaField (metaOf key) "sig" with
         | some (Sexp.list [Sexp.sym "teff", Sexp.list (Sexp.sym "eff" :: effs), result]) =>
-          -- A definition with no binders: its row bounds the body itself (D92).
+          -- A definition with no binders: its row bounds the body itself (D95).
           let sigVars := Ref.new Map.empty
           let sigRows := Ref.new Map.empty
           let declared := Types.signatureType u result sigVars sigRows

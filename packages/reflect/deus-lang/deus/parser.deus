@@ -182,7 +182,13 @@ def decl (p : Parser) : {Throw Text} Decl :=
           skip p
           some (withStop p 0 (fun _ => ty p))
         else none
+      let after := peek p
       if is p "|" then Decl.defn name bs type none (some (arms p)) doc attributes pos
+      else if after.kind == Kind.eof || (after.bol && after.col == 0) then
+        -- A declaration (D93): the signature must be complete, since nothing else gives the type.
+        if Option.isNone type then errorAt t ("declaration " ++ name ++ " has no body, so it needs a result type")
+        else if List.any (fun b => Option.isNone b.annot) bs then errorAt t ("declaration " ++ name ++ " has no body, so every parameter needs a type")
+        else Decl.defn name bs type none none doc attributes pos
       else
         let _ := expect p ":="
         Decl.defn name bs type (some (body p)) none doc attributes pos
@@ -497,7 +503,7 @@ def app (p : Parser) : {Throw Text} Expr :=
   let args := go []
   if List.isEmpty args then f else Expr.app f args
 
-/-- `e`, checked against the type a `let` writes (D92). -/
+/-- `e`, checked against the type a `let` writes (D95). -/
 def ascribed (e : Expr) (annotation : Option Ty) : Expr :=
   match annotation with
   | some t => Expr.ann e t
@@ -759,7 +765,7 @@ def patAtom (p : Parser) : {Throw Text} Pat :=
     else
       withStop p (-1) (fun _ =>
         let first := patt p
-        -- `(x : T)`: an ascribed binder, checked (D92).
+        -- `(x : T)`: an ascribed binder, checked (D95).
         let first := if is p ":" then
             skip p
             Pat.ann first (ty p)

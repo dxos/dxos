@@ -30,7 +30,7 @@ inductive Pat where
   | as (name : Text) (pat : Pat)
   -- A number literal as the source wrote it (`'a'`, `0xFF`); metadata, never Core (D88).
   | spelled (text : Text) (pat : Pat)
-  -- `(p : T)`: checked against `T`, never Core (D92).
+  -- `(p : T)`: checked against `T`, never Core (D95).
   | ann (pat : Pat) (type : Ty)
 
 inductive Expr where
