@@ -10,13 +10,13 @@ import * as Hooks from '@dxos/app-toolkit/Hooks';
 import * as Agent from '@dxos/assistant/Agent';
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
+import { ObjectProperties } from '@dxos/react-ui-form';
 import * as Panel from '@dxos/react-ui/Panel';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 /**
- * The space's first agent's configuration, through the plugin surfaces that contribute the Agent's object
- * properties (plugin-assistant's `AgentProperties`), as Composer's Properties panel shows them.
+ * The space's first agent's configuration as Composer's Properties panel shows it: the Agent schema's fields
+ * (name, instructions, model…), then the plugin surfaces contributing to the Agent's object properties.
  */
 export const AgentPropertiesModule = (_props: Surface.ComponentProps<Record<string, unknown>>) => {
   const space = Hooks.useActiveSpace();
@@ -34,11 +34,9 @@ export const AgentPropertiesModule = (_props: Surface.ComponentProps<Record<stri
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body asChild>
-        <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport>
-            <Surface.Surface type={AppSurface.ObjectProperties} data={data} />
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
+        <ObjectProperties object={data.subject}>
+          <Surface.Surface type={AppSurface.ObjectProperties} data={data} />
+        </ObjectProperties>
       </Panel.Body>
     </Panel.Root>
   );
