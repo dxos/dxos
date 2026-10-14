@@ -85,7 +85,9 @@ Fact {                          // pipeline-rdf
   one when it fits; a predicate it invents ("is blocked by") is minted in the agent's brain namespace
   (`https://dxos.org/semantic/brain/<agent id>/`) with a definition, described in the brain's ontology
   graph. Members, people and organizations are shown to it by name, so mentions resolve to their DIDs and
-  object URIs; any other mention is local to the graph that mentions it. The full declaration is EDGE's
+  object URIs; any other mention is local to the graph that mentions it. The predicate vocabulary, and how
+  its wordings and labels relate to its IRIs, is pipeline-rdf's
+  [docs/ONTOLOGY.md](../../../core/compute/pipeline-rdf/docs/ONTOLOGY.md); the full declaration is EDGE's
   `docs/ONTOLOGY.mdl`. Anything that must behave reliably (triggers, rules) matches on `illocution.force`
   and `factuality.polarity`, which the extractor always fills, not on the predicate string.
 - **Recall** (v1, as built) reads the brain of every agent in the space (`BrainService.query`) and
