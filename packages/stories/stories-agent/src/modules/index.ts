@@ -9,6 +9,7 @@ import { AgentCompanionModule, type AgentCompanionModuleData } from './AgentComp
 import { AgentPropertiesModule } from './AgentPropertiesModule.tsx';
 import { ConversationModule } from './ConversationModule.tsx';
 import { DiscordBotModule } from './DiscordBotModule.tsx';
+import { EmailChannelModule } from './EmailChannelModule.tsx';
 
 export { StorySettingsToolbar } from './StorySettingsToolbar.tsx';
 
@@ -17,6 +18,7 @@ export const StoryRole = {
   AgentCompanion: Role.make<AgentCompanionModuleData>('org.dxos.storybook.role.agentCompanion'),
   AgentProperties: Role.make<Record<string, unknown>>('org.dxos.storybook.role.agentProperties'),
   DiscordBot: Role.make<Record<string, unknown>>('org.dxos.storybook.role.discordBot'),
+  EmailChannel: Role.make<Record<string, unknown>>('org.dxos.storybook.role.emailChannel'),
   Conversation: Role.make<Record<string, unknown>>('org.dxos.storybook.role.conversation'),
 };
 
@@ -35,6 +37,11 @@ export const moduleSurfaces: Surface.Definition[] = [
     id: 'role.discordBot',
     filter: Surface.makeFilter(StoryRole.DiscordBot),
     component: DiscordBotModule,
+  }),
+  Surface.create({
+    id: 'role.emailChannel',
+    filter: Surface.makeFilter(StoryRole.EmailChannel),
+    component: EmailChannelModule,
   }),
   Surface.create({
     id: 'role.conversation',
