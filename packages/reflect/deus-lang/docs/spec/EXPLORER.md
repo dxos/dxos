@@ -315,11 +315,12 @@ the view when it is not the code workspace:
 
 ```text
 fragment = key ("," key)*
-key      = "d:" hash | "n:" namespace | "t:" task-id | "c:" causal | "v:" ("tasks" | "history")
+key      = "d:" hash | "n:" namespace | "t:" task-id | "c:" causal | "k:" (kind | "checks") | "v:" ("tasks" | "history")
 ```
 
 For example `index.html#d:595ca8a5…,n:List,t:e0757e4e`. A card opened from another card goes right after it;
-one opened from the tree or the finder goes after the focused card. Keys that do not match `^[dtcnv]:.` are
+one opened from the tree or the finder goes after the focused card. A `k:` card lists every definition of one kind, or every test and theorem with a verdict, failing first;
+the overview's count tiles open them. Keys that do not match `^[dtcnvk]:.` are
 ignored, and an empty fragment shows the overview. Which card has focus, which are folded, and the tree's
 open namespaces are not kept; the source dialect (DEUS or TS) is kept per viewer in `localStorage`.
 

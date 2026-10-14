@@ -309,4 +309,8 @@ how much of .mdl are you dogfooding? the general process should be mdl spec > ap
 
 ---
 
+- those should be clickable
+
+---
+
 I think deus should allow declaring a definition with a type but no impl

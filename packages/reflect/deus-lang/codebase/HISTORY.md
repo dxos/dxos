@@ -6,6 +6,8 @@
 - `d26316a767` declarations without a body (D94, task cf5e187f) (by claude)
 - `135f9abba9` task: set cf5e187f assignee
 - `8dbb3e7b5b` task: open cf5e187f Declarations without a body: def f with a full signature and no implementation
+- `32d6c2d287` task: set 20dbe121 state (by claude)
+- `2a43b7dc42` task: open 20dbe121 Explorer overview: count tiles and recent changes should be clickable (by claude)
 - `7829722c1b` history: import 351 changes
 - `ae69cbd311` task: import from tasks.sexp
 - `08e90dab62` add code specs

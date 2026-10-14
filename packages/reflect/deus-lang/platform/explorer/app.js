@@ -462,7 +462,7 @@ try {
 const parseFragment = () => {
   const keys = decodeURIComponent(location.hash.slice(1))
     .split(',')
-    .filter((key) => /^[dtcnv]:./.test(key));
+    .filter((key) => /^[dtcnvk]:./.test(key));
   const view = keys.find((key) => key.startsWith('v:'))?.slice(2) ?? 'code';
   return { view, keys: keys.filter((key) => !key.startsWith('v:')) };
 };
@@ -751,9 +751,30 @@ const changeRows = (changes) =>
     : `<ul class="rows">${changes
         .map(
           (change) =>
-            `<li class="entry-row">${changeLink(change.causal)}<span>${escape(change.message)}</span>${change.by ? `<span class="by">${escape(change.by)}</span>` : ''}</li>`,
+            `<li class="entry-row">${changeLink(change.causal)}<a class="change-message" data-open="c:${escape(change.causal)}">${escape(change.message)}</a>${change.by ? `<span class="by">${escape(change.by)}</span>` : ''}</li>`,
         )
         .join('')}</ul>`;
+
+/** Every definition of one kind, or every check (`k:checks`, failing first): what an overview tile opens. */
+const kindCard = (key, kind) => {
+  const isChecks = kind === 'checks';
+  if (!isChecks && !KINDS[kind]) {
+    return missingCard(key, `No kind ${kind}`);
+  }
+  const rank = { fail: 0, pass: 2 };
+  const entries = index.names
+    .filter((entry) => (isChecks ? Boolean(entry.status) : entry.kind === kind))
+    .sort((a, b) => (isChecks ? (rank[a.status] ?? 1) - (rank[b.status] ?? 1) : 0) || a.name.localeCompare(b.name));
+  const failing = entries.filter((entry) => entry.status === 'fail').length;
+  return card(key, {
+    iconHtml: isChecks
+      ? `<span class="icon ${failing > 0 ? 'k-fail' : 'k-test'}">${failing > 0 ? '✗' : '✓'}</span>`
+      : icon(kind),
+    title: isChecks ? 'Checks' : escape(KINDS[kind].plural),
+    meta: `<span class="count">${isChecks ? `${entries.length - failing} of ${entries.length} pass` : entries.length}</span>`,
+    body: rowList(entries.map((entry) => entryRow(entry))),
+  });
+};
 
 const taskCard = (key, task) => {
   const parent = index.tasks.find((other) => other.id === task.parent);
@@ -989,6 +1010,8 @@ const buildCard = async (key) => {
       const change = await load(`change/${value}.json`);
       return change ? changeCard(key, change) : missingCard(key, `No change ${short(value)}`);
     }
+    case 'k':
+      return kindCard(key, value);
     default:
       return missingCard(key, key);
   }
@@ -1037,12 +1060,12 @@ const homeHtml = () => {
     '<article class="home">' +
     `<header class="home-header"><h1>${escape(meta.project)}</h1><p class="muted">Branch <span class="chip">${escape(meta.branch)}</span>${
       meta.branches.length > 1 ? ` of ${meta.branches.length}` : ''
-    } · ${meta.definitions} definitions · ${meta.tasks} tasks</p></header>` +
-    `<ul class="stats">${counts.map(([kind, count]) => `<li>${icon(kind)}<b>${count}</b><span>${escape(KINDS[kind].plural.toLowerCase())}</span></li>`).join('')}` +
+    } · ${meta.definitions} definitions · <a data-view="tasks">${meta.tasks} tasks</a></p></header>` +
+    `<ul class="stats">${counts.map(([kind, count]) => `<li><a data-open="k:${kind}" title="List every ${escape(KINDS[kind].label)}">${icon(kind)}<b>${count}</b><span>${escape(KINDS[kind].plural.toLowerCase())}</span></a></li>`).join('')}` +
     (checked.length > 0
-      ? `<li><span class="icon ${failing.length > 0 ? 'k-fail' : 'k-test'}">${failing.length > 0 ? '✗' : '✓'}</span><b>${checked.length - failing.length}/${checked.length}</b><span>checks pass</span></li>`
+      ? `<li><a data-open="k:checks" title="List every check, failing first"><span class="icon ${failing.length > 0 ? 'k-fail' : 'k-test'}">${failing.length > 0 ? '✗' : '✓'}</span><b>${checked.length - failing.length}/${checked.length}</b><span>checks pass</span></a></li>`
       : '') +
-    `<li><span class="icon k-task">◎</span><b>${open.length}</b><span>open task${open.length === 1 ? '' : 's'}</span></li></ul>` +
+    `<li><a data-view="tasks" title="Open the task board"><span class="icon k-task">◎</span><b>${open.length}</b><span>open task${open.length === 1 ? '' : 's'}</span></a></li></ul>` +
     `<div class="home-columns"><div>${section('Recent changes', meta.history.length, changeRows(meta.history.slice(0, 6)))}<a class="more-link" data-view="history">All history →</a></div>` +
     `<div>${section(
       'Open tasks',
@@ -1294,6 +1317,9 @@ const titleOf = (key) => {
   }
   if (key.startsWith('t:')) {
     return index.tasks.find((task) => task.id === value)?.title ?? value;
+  }
+  if (key.startsWith('k:')) {
+    return value === 'checks' ? 'Checks' : (KINDS[value]?.plural ?? value);
   }
   return key.startsWith('n:') ? value : short(value);
 };

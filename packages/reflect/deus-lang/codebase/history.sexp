@@ -4,6 +4,8 @@
 (entry "d26316a76797610dbfa90b3321322847d41040e5a7aae08c792e1ad6e332fa43" "declarations without a body (D94, task cf5e187f)" "claude")
 (entry "135f9abba9dd2d8de15eafec12b884bc2870ffd0e2bffde3955731df7cae5b5f" "task: set cf5e187f assignee" "")
 (entry "8dbb3e7b5b35943f6696befffa2e56c61704c6a13c54eb3ec3544f21f4237da0" "task: open cf5e187f Declarations without a body: def f with a full signature and no implementation" "")
+(entry "32d6c2d2872a0e236c18ad0d8911fef276728175a6470baad7b72eab6bd62746" "task: set 20dbe121 state" "claude")
+(entry "2a43b7dc425dbba85f53d63d48c39a88a511b7f5feff2c28da63c02eceb63d56" "task: open 20dbe121 Explorer overview: count tiles and recent changes should be clickable" "claude")
 (entry "7829722c1b89edeac085a24e529d20316c7e4406dcbaf8c1689d1e0d8a32fc4a" "history: import 351 changes" "")
 (entry "ae69cbd311fc5ce13b4c18c2f35150c90371abff60fd118f8e6156e91ddcd6aa" "task: import from tasks.sexp" "")
 (entry "08e90dab6235a4707bd29489b85ab49cac576109cc2b25513efc78da96020083" "add code specs" "")
