@@ -426,6 +426,18 @@ def Cli.compileExpr (dir : Text) (ns : Map Text Entry) (source : Text) : {IO, Th
       h
   | _ => Throw.throw ("cannot compile " ++ source)
 
+--
+-- Commands: replication.
+--
+/-- The DXOS account's R2 endpoint, so a thread needs only the access keys. -/
+def Cli.defaultEndpoint : Text := "https://950816f3f59b079880a1ae33fb0ec320.r2.cloudflarestorage.com"
+
+/-- `origin` of the toolchain's own codebase when none is configured: the shared remote every thread pulls and pushes. -/
+def Cli.defaultRemote (dir : Text) (name : Text) : {IO} Option Text :=
+  match Project.read dir with
+  | Option.some p => if name == "origin" && p.projectIri == "https://dxos.org/deus/toolchain" then Option.some "r2://agent-artifacts/deus/toolchain" else Option.none
+  | Option.none => Option.none
+
 /-- The last defect's stack as `    at <hash>` lines, stable enough to cache with a verdict. -/
 def Cli.defectTrace (u : Unit) : Text := join "" (List.map (fun h => "\n    at " ++ h) (Code.defectTrace ()))
 
@@ -1574,16 +1586,17 @@ def Cli.withHost (dir : Text) (ns : Map Text Entry) (body : Unit -> {MdlHost, IO
     | Result.ok r => r
     | Result.err message => Result.err message)
 
---
--- Commands: replication.
---
 /-- Runs `body` against the remote `name`: a directory, or `r2://<bucket>/<prefix>` (an
-  S3-compatible bucket at `$DEUS_R2_ENDPOINT`, with `$R2_ACCESS_KEY_ID` and `$R2_SECRET_ACCESS_KEY`). -/
+  S3-compatible bucket at `$DEUS_R2_ENDPOINT`, by default the DXOS account's, with `$R2_ACCESS_KEY_ID`
+  and `$R2_SECRET_ACCESS_KEY`). -/
 def Cli.withRemote (dir : Text) (name : Text) (body : Unit -> {Remote, IO, Throw Text} a) : {IO, Throw Text} a :=
   let url :=
     match IO.readFile (dir ++ "/remotes/" ++ name ++ "/url") with
     | Option.some text => trim text
-    | Option.none => Throw.throw ("no remote " ++ name ++ "; run `deus remote add " ++ name ++ " <dir|r2://bucket/prefix>`")
+    | Option.none =>
+        match defaultRemote dir name with
+        | Option.some known => known
+        | Option.none => Throw.throw ("no remote " ++ name ++ "; run `deus remote add " ++ name ++ " <dir|r2://bucket/prefix>`")
   if startsWith "r2://" url then
     let path := Text.drop 5 url
     let slash := indexOf path "/" 0
@@ -1593,7 +1606,7 @@ def Cli.withRemote (dir : Text) (name : Text) (body : Unit -> {Remote, IO, Throw
       match IO.getEnv key with
       | Option.some value => value
       | Option.none => Throw.throw ("$" ++ key ++ " is not set")
-    let endpoint := need "DEUS_R2_ENDPOINT"
+    let endpoint := getOr (IO.getEnv "DEUS_R2_ENDPOINT") defaultEndpoint
     let user := need "R2_ACCESS_KEY_ID" ++ ":" ++ need "R2_SECRET_ACCESS_KEY"
     -- The file is made private before the secret is written to it.
     let config := dir ++ "/cache/remote-" ++ name ++ ".curl"

@@ -8,28 +8,35 @@ also the LLVM path.
 
 ## The subset
 
-The C back end accepts exactly the first-order subset of the [wasm compiler](./WASM.md#the-subset)
-and reuses its gathering and type tracking, so a program compiles to both or to neither: literals,
-locals, `let`, `seq`, `if`, `match`, constructors, the integer and comparison primitives, and
-saturated calls of other such definitions. Error messages for refused forms name the C subset, except
-the ones raised while gathering definitions, which name the wasm subset they share.
+The C back end reuses the [wasm compiler](./WASM.md#the-subset)'s gathering and type tracking and
+accepts its first-order subset: literals, locals, `let`, `seq`, `if`, `match`, constructors, the
+integer and comparison primitives, `Array` and `Ref`, and calls of other such definitions. On top of
+that it compiles higher-order code ([D111](../DECISIONS.md)): lambdas, partial and over-application,
+definitions used as values, calls of unknown functions, and `letrec`, so the prelude's `List.map`,
+`List.filter`, `List.foldl`, `List.zip`, `Option.map` and the like compile. Primitives outside the
+list above (`append`, `Text`, maps) are refused. Error messages for refused forms name the C subset,
+except the ones raised while gathering definitions, which name the wasm subset.
 
 ## The C it writes
 
-| Core                             | C                                                                                                  |
-| -------------------------------- | -------------------------------------------------------------------------------------------------- |
-| a definition of arity n          | `static V fᵢ(V l0, …, V lₙ₋₁)`; `V` is `intptr_t`                                                  |
-| `(int n)`                        | `(V)n`                                                                                             |
-| `Int.add`, `sub`, `mul`          | `ADD(a, b)` …: computed in `uint32_t`, sign-extended back, so arithmetic wraps at 32 bits          |
-| `Int.div`, `Int.mod`             | `DIV`, `MOD`: trap on zero; `x / -1` is `0 - x`, as in the interpreter                             |
-| comparisons, `and`/`or`/`xor`    | the C operator on `V`s, cast back to `V`                                                           |
-| `(con "T" tag 0)`                | `(V)&deus_nullary[tag]`: one static block per tag, never allocated                                 |
-| `(app (con "T" tag n) a…)`       | a counted block `[tag, a…]` (see [Memory](#memory)), or a dead block's memory reused               |
-| `match`                          | one `do { tests; body } while (0)` per case; a failed test `break`s to the next case               |
-| `let`, `seq`, `match` (non-tail) | GNU statement expressions `({ … })` (clang and gcc)                                                |
-| call to itself in tail position  | arguments into temporaries, then the parameters, then `goto top`                                   |
-| other tail call, same arity      | `MUSTTAIL return fⱼ(…)`: `__attribute__((musttail))`, a guaranteed jump, where the compiler has it |
-| other call                       | `fⱼ(…)`                                                                                            |
+| Core                              | C                                                                                                  |
+| --------------------------------- | -------------------------------------------------------------------------------------------------- |
+| a definition of arity n           | `static V fᵢ(V l0, …, V lₙ₋₁)`; `V` is `intptr_t`                                                  |
+| `(int n)`                         | `(V)n`                                                                                             |
+| `Int.add`, `sub`, `mul`           | `ADD(a, b)` …: computed in `uint32_t`, sign-extended back, so arithmetic wraps at 32 bits          |
+| `Int.div`, `Int.mod`              | `DIV`, `MOD`: trap on zero; `x / -1` is `0 - x`, as in the interpreter                             |
+| comparisons, `and`/`or`/`xor`     | the C operator on `V`s, cast back to `V`                                                           |
+| `(con "T" tag 0)`                 | `(V)&deus_nullary[tag]`: one static block per tag, never allocated                                 |
+| `(app (con "T" tag n) a…)`        | a counted block `[tag, a…]` (see [Memory](#memory)), or a dead block's memory reused               |
+| `match`                           | one `do { tests; body } while (0)` per case; a failed test `break`s to the next case               |
+| `let`, `seq`, `match` (non-tail)  | GNU statement expressions `({ … })` (clang and gcc)                                                |
+| call to itself in tail position   | arguments into temporaries, then the parameters, then `goto top`                                   |
+| other tail call, same arity       | `MUSTTAIL return fⱼ(…)`: `__attribute__((musttail))`, a guaranteed jump, where the compiler has it |
+| other call                        | `fⱼ(…)`                                                                                            |
+| `(lam b)`                         | a closure: a counted block `[code, captured…]`; `b` is lifted to `static V cₖ(V self, V arg)`      |
+| call of an unknown function       | `deus_apply(f, x)`: the code borrows the closure, which reads its captures without counting them   |
+| `fⱼ` applied to too few arguments | the arguments bound, then one lambda per missing parameter around the full call                    |
+| `(letrec (f…) b)`                 | each `f` lifted to a top-level function taking its captures first; uses become direct calls        |
 
 The named definition is also exported as `int32_t <name>(int32_t …)`, and `-DDEUS_MAIN` (which
 `deus build` passes) adds a `main` that reads each argument as an integer and prints the result as
@@ -125,6 +132,27 @@ words, and a bump allocator that never frees is the cheapest allocator there is 
 back: `Int` wraps at 32 bits, so a tag needs a 33rd ([D102](../DECISIONS.md)). `--wasm` stays the default: it needs no clang and is what the browser
 build uses.
 
+## Higher-order code
+
+[`examples/closures.deus`](../../examples/closures.deus) maps, folds and composes over cons lists
+with lambdas that capture locals, partial application (`mapInts (times k) ys`), a function returned as
+a value (`after`), and the prelude's `List.filter`, `List.range`, `List.zip`, `List.any`,
+`List.reverse` and `Option.map`. Every program agrees with the interpreter and ends with 0 live
+words, natively and in wasm built through C.
+
+| Program (best of three)        | TS kernel with JIT | C, clang -O2 |
+| ------------------------------ | -----------------: | -----------: |
+| `Closures.closureLoop 20000 0` |           1,430 ms |        75 ms |
+| `Closures.hofLoop 1000 1000 0` |             450 ms |        62 ms |
+
+JIT times are a `deus eval` of a tenth of the iterations (2,000 and 100) minus a 1-iteration run,
+times ten. A call of an unknown function costs an indirect call; a lambda costs one block for its
+captures. Both are 7–19× faster than the JIT here.
+
+`letrec` functions are lambda-lifted, so their parameters have no stored type. A comparison of two
+values the compiler cannot type checks at run time that neither is a block (and traps if one is)
+rather than compare addresses.
+
 ## Benchmarks
 
 [`examples/bench.deus`](../../examples/bench.deus) has four first-order programs: `fib` (doubly
@@ -181,8 +209,9 @@ it now. The rest of the language needs these, in order of how much code they unl
 1. **Memory: precise reference counting with reuse** (Perceus, as in Koka and Lean 4): done in the
    C back end (D86) and in wasm built through it (D90). The same uniqueness check makes the pure
    `Array.set` write in place (D96): an array whose count is one is written, a shared one copied.
-2. **Closures and partial application:** closure conversion to flat closures; known calls stay
-   direct C calls.
+2. **Closures and partial application:** done (D111). Lambdas are flat closures, known calls
+   stay direct C calls, and `letrec` is lambda-lifted, so recursion never builds a closure that
+   holds itself.
 3. **Text and the other primitives:** a C runtime with the kernels' semantics (UTF-16 text,
    insertion-ordered maps), ported from the Rust kernel's `text.rs` and `prims.rs`.
 4. **Effects.** Types carry effect rows, so the compiler knows which functions can perform an

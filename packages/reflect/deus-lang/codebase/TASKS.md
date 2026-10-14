@@ -29,13 +29,6 @@ From Dmytro: threads MUST use the codebase as primary VCS, and git as backup. D1
 
 From Dmytro: an artifact is a constant whose value is cached, e.g. deusCli := Deus.toBinary Cli.main; evaluating it once caches the result in the artifacts layer by the hash of the expression.
 
-## Explorer: show events and their counts per definition from events.json (Analytics.siteJson) (`381f55f3`)
-
-- state: todo
-- priority: high
-- assignee: claude
-- labels: explorer, analytics
-
 ## Publish pushed events to Basin Catalog on the R2 bucket and query them with Basin SQL (needs Dmytro's go-ahead to create Cloudflare resources) (`c5955f97`)
 
 - state: todo
@@ -75,6 +68,14 @@ The hosted explorer stays at its last manual publish (the 19:18 one) because not
 From Dmytro. Measure it against share.unison-lang.org: search, navigation, dependency links, history.
 
 > claude: The Codebase explorer UI thread built a Unison-style UI (finder, namespace pages, definition and change cards, keyboard), verified with Playwright; merging into #13952 from PR #13975. It also fixes the builtin page 404 and the content types.
+
+## Toolchain R2 codebase mistypes pattern variables: deus update of a match on some g fails there (`c62198a1`)
+
+- state: todo
+- priority: high
+- labels: codebase, bug
+
+In a codebase pulled from origin.main #102beac5d7, deus add of 'def tt (h : Text) (xs : List Int) : Int := match List.head? xs with | some g => g + 1 | none => 0' fails with 'type mismatch: Int vs List Int'; it adds cleanly to a fresh init and to a restore of the git export. Updating deus/cgen.deus fails the same way at CGen.binders. Until fixed, threads update from the git export and cannot push to R2.
 
 ## Type checker hangs on a type error in a large recursive group or a closed-row callback instead of reporting it (`1854b55d`)
 
@@ -245,12 +246,6 @@ Known gaps R-10 and R-12 in docs/spec/CODEBASE-STORE.mdl.
 - labels: mdl, spec
 
 ## Native: a C runtime for Text, maps and the other primitives, ported from the Rust kernel (`72a1f2fb`)
-
-- state: todo
-- priority: medium
-- labels: native, perf
-
-## Native: closure conversion and partial application in the C back end (`610b2785`)
 
 - state: todo
 - priority: medium
@@ -592,6 +587,15 @@ Dmytro: explore embedding deus into browser apps via wasm (like codebase viewer 
 - parent: 861438d2
 - links change #c432032637
 
+## Explorer: show events and their counts per definition from events.json (Analytics.siteJson) (`381f55f3`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: explorer, analytics
+
+Done as task ca75d545 (D110, e98a2e51) by the explorer thread: events.json, an Events card, and tallies on definition and change cards.
+
 ## Exports from several containers overwrite each other's history and tasks (`a93aee73`)
 
 - state: done
@@ -792,6 +796,16 @@ From Dmytro: about mdl-first approach --- I want agents to record specs in codeb
 - assignee: claude
 - labels: explorer
 
+## The CLI defaults origin and the R2 endpoint for the toolchain codebase (`4b1eb1a9`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: replication, cli
+- links change #7886bef5ce
+
+Dmytro: push the toolchain codebase to r2://agent-artifacts/deus/toolchain and make it the CLI default. Seeded the remote from the export; origin and the endpoint default for the toolchain project.
+
 ## The explorer History view hides the history imported from an export (`12663f55`)
 
 - state: done
@@ -967,6 +981,16 @@ Dmytro: those should be clickable. Tiles open k:<kind> lists (k:checks failing f
 - parent: 861438d2
 - links change #458d0633bd
 
+## Explorer shows events: events.json, an Events card, and counts on definition and change cards (`ca75d545`)
+
+- state: done
+- priority: medium
+- assignee: claude
+- labels: explorer, analytics
+- parent: 861438d2
+
+> claude: Done (D108): spec Explorer.Spec R-14, R-15; Explorer.generate writes events.json and meta.events; the app's Events card and per-card counts, checked in a browser on desktop and phone.
+
 ## Explorer: a live console that runs eval, view and test against the site's codebase in the page (wasm kernel + seed + codebase snapshot, about 900 KB gzipped) (`d2328509`)
 
 - state: done
@@ -992,6 +1016,13 @@ Canceled (D102): DEUS Int is 32 bits with wrapping, so a tag bit would need 33; 
 - labels: native, perf
 
 > claude: Duplicate of 72a1f2fb: an export overwrite dropped this task, its thread filed it again, and the D89 restore brought both back.
+
+## Native: closure conversion and partial application in the C back end (`610b2785`)
+
+- state: done
+- priority: medium
+- labels: native, perf
+- links change #0ab73f8ca1
 
 ## Native: closure conversion and partial application in the C back end (`d807958c`)
 

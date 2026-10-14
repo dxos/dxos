@@ -89,8 +89,10 @@ the names, and writes nothing.
 ## Working through the codebase
 
 The codebase is the primary version control; git is its backup (D101). Start each task with
-`deus pull origin` and `deus merge origin.main` from the R2 remote (`r2://agent-artifacts/deus/toolchain`,
-with `DEUS_R2_ENDPOINT` set), and push each change when it lands, before exporting it to git.
+`deus pull origin` and `deus merge origin.main` from the R2 remote, and push each change when it
+lands, before exporting it to git. In a codebase whose project is `https://dxos.org/deus/toolchain`,
+`origin` defaults to `r2://agent-artifacts/deus/toolchain` on the DXOS account's R2 (D109), so only
+the R2 access keys are needed.
 
 Make changes in the codebase, not only in files: `deus update <file> --by <agent>` records who
 made them, and the task they close goes in with `--closes <id>`. File what you notice while

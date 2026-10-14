@@ -638,6 +638,135 @@ const hashChip = (hash) =>
   `<button class="hash-chip" data-copy="${escape(hash)}" title="Copy the full hash">${escape(short(hash))}</button>`;
 
 //
+// Events (D104): what the analytics store recorded about definitions and changes, from `events.json`.
+//
+
+/** `events.json`, fetched only when `meta.json` counts events. */
+const loadEvents = () => (index.meta.events > 0 ? load('events.json') : Promise.resolve(undefined));
+
+/** A row's time: `recorded_at` is microseconds since the epoch, as decimal text. */
+const eventTime = (at) => {
+  const date = new Date(Number(String(at).slice(0, -3)));
+  return Number.isNaN(date.getTime())
+    ? ''
+    : `<time datetime="${escape(date.toISOString())}" title="${escape(date.toLocaleString())}">${escape(date.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }))}</time>`;
+};
+
+/** A `CodeRef` value as a link: pinned `<project>/<name>#<hash>`, a name IRI, or `#<hash>` (a change's may be a 10-digit prefix). */
+const codeRefHtml = (ref) => {
+  const text = String(ref);
+  const at = text.lastIndexOf('#');
+  const fragment = at >= 0 ? text.slice(at + 1) : '';
+  const name = at >= 0 ? text.slice(0, at) : text;
+  const tail = name.includes('/') ? name.slice(name.lastIndexOf('/') + 1) : name;
+  const isHex = /^[0-9a-f]+$/.test(fragment);
+  const hash = fragment && !isHex ? `#${fragment}` : fragment;
+  const entry =
+    (hash && index.byHash.get(hash)) ||
+    (isHex && fragment.length >= 8 && fragment.length < 64
+      ? index.names.find((other) => other.hash.startsWith(fragment))
+      : undefined) ||
+    (!fragment && tail ? index.byName.get(tail) : undefined);
+  if (entry) {
+    return defLink(entry.name, entry.hash);
+  }
+  const change = isHex && index.meta.history.find((node) => node.causal.startsWith(fragment));
+  if (change) {
+    return changeLink(change.causal, escape(change.message || short(change.causal)));
+  }
+  return `<code title="${escape(text)}">${escape(tail || text)}</code>`;
+};
+
+const cellHtml = (value, type) => {
+  if (value === undefined || value === null || value === '') {
+    return '<span class="muted">·</span>';
+  }
+  if (type === 'ref') {
+    return codeRefHtml(value);
+  }
+  if (type === 'bool') {
+    return value === true || value === 'true'
+      ? '<span class="status pass">✓</span>'
+      : '<span class="status fail">✗</span>';
+  }
+  const text = String(value);
+  return type === 'int'
+    ? `<span class="num">${escape(text)}</span>`
+    : `<span class="cell-text" title="${escape(text)}">${escape(text)}</span>`;
+};
+
+const eventTable = (type) =>
+  type.latest.length === 0
+    ? '<p class="muted">No events yet.</p>'
+    : `<div class="table-wrap"><table class="event-table"><thead><tr><th>When</th><th>By</th>${type.columns.map((column) => `<th>${escape(column.name)}</th>`).join('')}</tr></thead><tbody>` +
+      type.latest
+        .map(
+          (row) =>
+            `<tr><td>${eventTime(row.recorded_at)}</td><td>${escape(row.recorded_by)}</td>${type.columns.map((column) => `<td>${cellHtml(row[column.name], column.type)}</td>`).join('')}</tr>`,
+        )
+        .join('') +
+      '</tbody></table></div>' +
+      (type.count > type.latest.length
+        ? `<p class="muted table-note">The latest ${type.latest.length} of ${type.count}.</p>`
+        : '');
+
+const eventsCard = (key, events) => {
+  if (!events) {
+    return missingCard(key, 'This site has no events');
+  }
+  const total = events.types.reduce((sum, type) => sum + type.count, 0);
+  return card(key, {
+    iconHtml: '<span class="icon k-event" title="events">◆</span>',
+    title: 'Events',
+    meta: `<span class="count">${total} in ${events.types.length} type${events.types.length === 1 ? '' : 's'}</span>`,
+    body:
+      '<p class="muted">What the analytics store recorded about this codebase: test runs, CI checks and changes. A definition or change lists its own count.</p>' +
+      events.types
+        .map((type) => {
+          const entry = index.byName.get(type.name);
+          const title = entry ? defLink(type.name, entry.hash) : escape(type.name);
+          return section(
+            `${title} <span class="muted event-split">${type.pushed} pushed · ${type.pending} pending</span>`,
+            type.count,
+            eventTable(type),
+            type.count > 0,
+          );
+        })
+        .join(''),
+  });
+};
+
+/** The tallies for a definition or change hash, adding those filed under a prefix of it. */
+const tallyFor = (events, hash) => {
+  const tallies = new Map();
+  for (const [key, entry] of Object.entries(events?.byDefinition ?? {})) {
+    if (key === hash || (key.length >= 8 && key.length < hash.length && hash.startsWith(key))) {
+      for (const tally of entry.events) {
+        const id = `${tally.type} ${tally.column}`;
+        tallies.set(id, { ...tally, count: (tallies.get(id)?.count ?? 0) + tally.count });
+      }
+    }
+  }
+  return [...tallies.values()];
+};
+
+const eventsSection = (events, hash) => {
+  const tallies = tallyFor(events, hash);
+  return tallies.length === 0
+    ? ''
+    : section(
+        'Events',
+        tallies.reduce((sum, tally) => sum + tally.count, 0),
+        `<ul class="rows">${tallies
+          .map(
+            (tally) =>
+              `<li class="entry-row"><span class="icon k-event">◆</span><a data-open="k:events">${escape(tally.type)}</a><span class="muted">as ${escape(tally.column)}</span><span class="count">${tally.count}</span></li>`,
+          )
+          .join('')}</ul>`,
+      );
+};
+
+//
 // Cards.
 //
 
@@ -661,7 +790,7 @@ const sourceHtml = (def) => {
   return def.doc ? html.replace(/^<span class=cm>(?:\/--[\s\S]*?-\/|\/\*\*[\s\S]*?\*\/)<\/span>\n?/, '') : html;
 };
 
-const definitionCard = (key, def) => {
+const definitionCard = (key, def, events) => {
   const namespace = namespaceOf(def.name);
   const entry = index.byHash.get(def.hash);
   const kindTag = `<span class="tag">${escape(KINDS[def.kind]?.label ?? def.kind)}</span>`;
@@ -692,6 +821,7 @@ const definitionCard = (key, def) => {
           )
         : '') +
       subjectThread(`def:${def.name}`) +
+      eventsSection(events, def.hash) +
       `<div class="relations">${section('Depends on', def.deps.length, rowList(def.deps.map(refRow), 'Nothing in this codebase.'), def.deps.length <= LIST_LIMIT)}` +
       `${section('Used by', def.users.length, rowList(def.users.map(refRow), 'Nothing yet.'), def.users.length <= LIST_LIMIT)}</div>` +
       (entry ? '' : '<p class="muted">This hash no longer has a name on this branch.</p>'),
@@ -825,7 +955,7 @@ const taskCard = (key, task) => {
 };
 
 /** A change names definitions by the hashes they had then; pages exist for the current ones. */
-const changeCard = (key, change) => {
+const changeCard = (key, change, events) => {
   const current = (name, hash) => index.byName.get(name)?.hash ?? hash;
   const added = change.added.map((ref) => refRow({ name: ref.name, hash: current(ref.name, ref.hash) }));
   // A dependent rehashed by `deus update` prints the same as before; edited names come first, with their diffs.
@@ -864,6 +994,7 @@ const changeCard = (key, change) => {
       (added.length + changed.length + removed.length + tasks.length === 0
         ? '<p class="muted">No visible names or tasks changed.</p>'
         : '') +
+      eventsSection(events, change.causal) +
       `<p class="parents"><span class="label">Parents</span> ${change.parents.map((parent) => changeLink(parent)).join(' ') || '<span class="muted">none: the first change</span>'}</p>` +
       subjectThread(`change:${change.causal}`),
   });
@@ -998,11 +1129,11 @@ const buildCard = async (key) => {
   const value = key.slice(2);
   switch (key[0]) {
     case 'd': {
-      const def = await load(pagePath(value));
+      const [def, events] = await Promise.all([load(pagePath(value)), loadEvents()]);
       if (def?.ts !== undefined) {
         element('dialects').hidden = false;
       }
-      return def ? definitionCard(key, def) : missingCard(key, `No definition ${short(value)}`);
+      return def ? definitionCard(key, def, events) : missingCard(key, `No definition ${short(value)}`);
     }
     case 'n':
       return namespaceCard(key, value);
@@ -1011,11 +1142,11 @@ const buildCard = async (key) => {
       return task ? taskCard(key, task) : missingCard(key, `No task ${value}`);
     }
     case 'c': {
-      const change = await load(`change/${value}.json`);
-      return change ? changeCard(key, change) : missingCard(key, `No change ${short(value)}`);
+      const [change, events] = await Promise.all([load(`change/${value}.json`), loadEvents()]);
+      return change ? changeCard(key, change, events) : missingCard(key, `No change ${short(value)}`);
     }
     case 'k':
-      return kindCard(key, value);
+      return value === 'events' ? eventsCard(key, await loadEvents()) : kindCard(key, value);
     default:
       return missingCard(key, key);
   }
@@ -1068,6 +1199,9 @@ const homeHtml = () => {
     `<ul class="stats">${counts.map(([kind, count]) => `<li><a data-open="k:${kind}" title="List every ${escape(KINDS[kind].label)}">${icon(kind)}<b>${count}</b><span>${escape(KINDS[kind].plural.toLowerCase())}</span></a></li>`).join('')}` +
     (checked.length > 0
       ? `<li><a data-open="k:checks" title="List every check, failing first"><span class="icon ${failing.length > 0 ? 'k-fail' : 'k-test'}">${failing.length > 0 ? '✗' : '✓'}</span><b>${checked.length - failing.length}/${checked.length}</b><span>checks pass</span></a></li>`
+      : '') +
+    (meta.events > 0
+      ? `<li><a data-open="k:events" title="What the analytics store recorded"><span class="icon k-event">◆</span><b>${meta.events}</b><span>events</span></a></li>`
       : '') +
     `<li><a data-view="tasks" title="Open the task board"><span class="icon k-task">◎</span><b>${open.length}</b><span>open task${open.length === 1 ? '' : 's'}</span></a></li></ul>` +
     `<div class="home-columns"><div>${section('Recent changes', meta.history.length, changeRows(meta.history.slice(0, 6)))}<a class="more-link" data-view="history">All history →</a></div>` +
@@ -1337,7 +1471,7 @@ const titleOf = (key) => {
     return index.tasks.find((task) => task.id === value)?.title ?? value;
   }
   if (key.startsWith('k:')) {
-    return value === 'checks' ? 'Checks' : (KINDS[value]?.plural ?? value);
+    return value === 'checks' ? 'Checks' : value === 'events' ? 'Events' : (KINDS[value]?.plural ?? value);
   }
   return key.startsWith('n:') ? value : short(value);
 };

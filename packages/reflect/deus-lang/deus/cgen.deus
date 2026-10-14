@@ -102,6 +102,10 @@ def prelude (nullary : Int) : Text :=
     "static inline void deus_drop(V v) { if (IS_PTR(v)) { if (!UNIQUE(v)) HDR(v) -= 256; else deus_free(UNBOX(v)); } }",
     "/* A constructor block, in the memory of a dead block of the same size when there is one. */",
     "static inline V *deus_con(V *token, V fields) { if (token) { token[-1] = 256 | fields; return token; } return deus_block(fields, fields + 1); }",
+    "/* A closure is a block [code, captured…]; the code borrows it and owns its argument. */",
+    "typedef V (*deus_code)(V, V);",
+    "static inline V deus_apply(V c, V x) { return ((deus_code)(uintptr_t)UNBOX(c)[0])(c, x); }",
+    "static inline V deus_apply_drop(V c, V x) { V r = deus_apply(c, x); deus_drop(c); return r; }",
     "static inline void deus_unused(V *token) { if (token) deus_release(token); }",
     "static V deus_array(V n, V x) { if (n < 0) __builtin_trap(); V *p = deus_block(K_ARRAY, n + 1); p[0] = n; if (n == 0) deus_drop(x); else if (IS_PTR(x)) HDR(x) += 256 * (n - 1); for (V i = 1; i <= n; i++) p[i] = x; return BOX(p); }",
     "/* A pure `Array.set` (D96) writes into a unique array and copies a shared one, counting each item again. */",
@@ -160,6 +164,7 @@ structure FnCtx @"urn:deus:cgen:FnCtx" where
   cArity : Int
   cNext : Ref Int
   cBorrow : List (Int, List Bool)
+  cLifted : Ref (List Text)
 
 /-- Which parameters of function `index` are borrowed: the caller keeps ownership (D86). -/
 def borrowsOf (ctx : FnCtx) (index : Int) : List Bool := Option.getOr (List.lookup index ctx.cBorrow) []
@@ -169,6 +174,11 @@ def borrowsAt (flags : List Bool) (k : Int) : Bool := Option.getOr (List.get? fl
 def fresh (ctx : FnCtx) : Int := Wasm.fresh ctx.cNext
 
 /-- The index and definition of the function `h`. -/
+def arityOf (ctx : FnCtx) (h : Text) : {Throw Text} Int :=
+  let found := List.find (fun f => f.fnHash == h) ctx.cScope.fns
+  if Option.isNone found then throw ("unknown function #" ++ Text.take 10 h)
+  else Option.getOr (Option.map (fun f => f.fnArity) found) 0
+
 def callee (ctx : FnCtx) (h : Text) (argc : Int) : {Throw Text} (Int, Wasm.Fn) :=
   match List.find (fun f => f.fnHash == h) ctx.cScope.fns with
   | some f =>
@@ -197,6 +207,7 @@ def freeLocals (env : List Int) (e : Sexp) : List Int :=
     | some l => if l >= 0 then [l] else []
     | none => []
   | Sexp.list [Sexp.sym "let", v, b] => freeLocals env v ++ freeLocals (-1 :: env) b
+  | Sexp.list [Sexp.sym "lam", b] => freeLocals (-1 :: env) b
   | Sexp.list (Sexp.sym "match" :: scrutinee :: cases) =>
     freeLocals env scrutinee ++ List.concatMap (fun c =>
       match c with
@@ -212,6 +223,7 @@ def wants (n : Int) (e : Sexp) : Bool :=
   match e with
   | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "con", Sexp.str t, Sexp.int _, Sexp.int k] :: rest) =>
     (k == n && t != "#Bool") || List.any (wants n) rest
+  | Sexp.list [Sexp.sym "lam", _] => false
   | Sexp.list items => List.any (wants n) items
   | _ => false
 
@@ -240,6 +252,7 @@ def consumes (borrow : List (Int, List Bool)) (fns : List Wasm.Fn) (self : Int) 
   match e with
   | Sexp.list [Sexp.sym "var", Sexp.int i] => List.get? env i == some l
   | Sexp.list [Sexp.sym "let", v, b] => again v || consumes borrow fns self param (-1 :: env) l b
+  | Sexp.list [Sexp.sym "lam", b] => isIn (freeLocals (-1 :: env) b) l
   | Sexp.list (Sexp.sym "match" :: scrutinee :: cases) =>
     again scrutinee || List.any (fun c =>
       match c with
@@ -380,6 +393,61 @@ def sequence (ctx : FnCtx) (env : List Int) (owned : List Int) (token : Option T
     | (_, v, _) => v) parts, Text.concat (List.map (fun t => match t with
     | (_, _, a) => a) parts))
 
+/-- `e` with its variables from index `cut` up moved `amount` further out, as under `amount` more binders. -/
+def shift (amount : Int) (cut : Int) (e : Sexp) : Sexp :=
+  match e with
+  | Sexp.list [Sexp.sym "var", Sexp.int i] => if i >= cut then Sexp.list [Sexp.sym "var", Sexp.int (i + amount)] else e
+  | Sexp.list [Sexp.sym "lam", b] => Sexp.list [Sexp.sym "lam", shift amount (cut + 1) b]
+  | Sexp.list [Sexp.sym "let", v, b] => Sexp.list [Sexp.sym "let", shift amount cut v, shift amount (cut + 1) b]
+  | Sexp.list [Sexp.sym "letrec", Sexp.list fs, b] =>
+    let n := List.length fs
+    Sexp.list [Sexp.sym "letrec", Sexp.list (List.map (shift amount (cut + n)) fs), shift amount (cut + n) b]
+  | Sexp.list (Sexp.sym "match" :: scrutinee :: cases) =>
+    Sexp.list (Sexp.sym "match" :: shift amount cut scrutinee :: List.map (fun c =>
+      match c with
+      | Sexp.list [Sexp.sym "case", pat, b] => Sexp.list [Sexp.sym "case", pat, shift amount (cut + binders pat) b]
+      | other => other) cases)
+  | Sexp.list items => Sexp.list (List.map (shift amount cut) items)
+  | _ => e
+
+/--
+  `h`, of arity `arity`, applied to fewer arguments: the arguments bound in order, then a lambda
+  for each missing parameter around the saturated call.
+-/
+def partial (h : Text) (arity : Int) (xs : List Sexp) : Sexp :=
+  let given := List.length xs
+  let call := Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "ref", Sexp.str h] :: List.map (fun i => Sexp.list [Sexp.sym "var", Sexp.int (arity - 1 - i)]) (List.range 0 arity))
+  let lams := List.foldl (fun body _ => Sexp.list [Sexp.sym "lam", body]) call (List.range given arity)
+  List.foldr (fun pair body =>
+    match pair with
+    | (i, x) => Sexp.list [Sexp.sym "let", shift i 0 x, body]) lams (List.mapIndexed (fun i x => (i, x)) xs)
+
+/--
+  A lambda as a closure: its code is lifted to `static V c<k>(V self, V arg)`, which reads the
+  captured locals from `self` without counting them, and the block holds the code and captures.
+-/
+def lambdaClosure (ctx : FnCtx) (env : List Int) (owned : List Int) (b : Sexp) : {Throw Text} Text :=
+  let free := List.dedup (freeLocals (-1 :: env) b)
+  if List.length free > 253 then throw "a lambda that captures more than 253 locals is outside the C subset"
+  else
+    let k := List.length (Ref.get ctx.cLifted)
+    let captures := List.mapIndexed (fun i l => (l, i + 2)) free
+    let typed := List.map (fun pair => (snd pair, Wasm.typeOfLocal ctx.cScope (fst pair))) captures
+    let scope := Wasm.Scope.mk ctx.cScope.fns ctx.cScope.datatypes (Ref.new typed) ctx.cScope.eqs
+    let inner := FnCtx.mk scope (-1) 2 (Ref.new (2 + List.length free)) ctx.cBorrow ctx.cLifted
+    -- Reserve the slot first, so closures nested in `b` take the next numbers.
+    let _ := Ref.set ctx.cLifted (Ref.get ctx.cLifted ++ [""])
+    let innerEnv := 1 :: List.map (fun l => Option.getOr (List.lookup l captures) (-1)) env
+    let loads := Text.concat (List.map (fun pair => "V " ++ local (snd pair) ++ " = UNBOX(l0)[" ++ Int.toText (snd pair - 1) ++ "]; ") captures)
+    let code := "static V c" ++ Int.toText k ++ "(V l0, V l1) {\n  " ++ loads ++ expr inner innerEnv true [1] none b ++ "\n}"
+    let _ := Ref.set ctx.cLifted (List.mapIndexed (fun i t => if i == k then code else t) (Ref.get ctx.cLifted))
+    let vars := List.map (fun l => Sexp.list [Sexp.sym "var", Sexp.int (List.findIndex (fun x => x == l) env)]) free
+    match sequence ctx env owned none [] vars with
+    | (decls, values, _) =>
+      let p := fresh ctx
+      let stores := List.mapIndexed (fun i v => local p ++ "[" ++ Int.toText (i + 1) ++ "] = " ++ v ++ "; ") values
+      "({ " ++ decls ++ "V *" ++ local p ++ " = deus_con(0, " ++ Int.toText (List.length free) ++ "); " ++ local p ++ "[0] = (V)(uintptr_t)&c" ++ Int.toText k ++ "; " ++ Text.concat stores ++ "BOX(" ++ local p ++ "); })"
+
 /-- `e` once `expr` has dropped what it does not use: `owned` are exactly the locals it consumes. -/
 def form (ctx : FnCtx) (env : List Int) (tail : Bool) (owned : List Int) (token : Option Token) (e : Sexp) : {Throw Text} Text :=
   let ret := fun (x : Text) => if tail then "return " ++ x ++ ";" else x
@@ -437,18 +505,35 @@ def form (ctx : FnCtx) (env : List Int) (tail : Bool) (owned : List Int) (token 
     before tail ("V " ++ local l ++ " = " ++ expr ctx env false mine first v ++ "; ") (expr ctx (l :: env) tail (l :: rest) second b)
   | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str "Int.neg"], a] => ret ("SUB(0, " ++ expr ctx env false owned none a ++ ")")
   | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "prim", Sexp.str p] :: xs) => ret (primitive ctx env owned token e p xs)
+  | Sexp.list [Sexp.sym "lam", b] => ret (lambdaClosure ctx env owned b)
+  | Sexp.list [Sexp.sym "ref", Sexp.str h] => form ctx env tail owned token (partial h (arityOf ctx h) [])
   | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "ref", Sexp.str h] :: xs) =>
-    match callee ctx h (List.length xs) with
-    | (index, f) =>
-      match sequence ctx env owned token (borrowsOf ctx index) xs with
-      | (decls, values, after) =>
-        if tail && index == ctx.cSelf && after == "" then
-          "{ " ++ decls ++ Text.concat (List.mapIndexed (fun i v => local i ++ " = " ++ v ++ "; ") values) ++ "goto top; }"
-        else
-          let call := fnName index ++ args values
-          if after != "" then ret ("({ " ++ decls ++ "V r = " ++ call ++ "; " ++ after ++ "r; })")
-          else if tail && f.fnArity == ctx.cArity then "{ " ++ decls ++ "MUSTTAIL return " ++ call ++ "; }"
-          else ret (if decls == "" then call else "({ " ++ decls ++ call ++ "; })")
+    let arity := arityOf ctx h
+    if List.length xs < arity then form ctx env tail owned token (partial h arity xs)
+    else if List.length xs > arity then form ctx env tail owned token (Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "ref", Sexp.str h] :: List.take arity xs) :: List.drop arity xs))
+    else
+      match callee ctx h (List.length xs) with
+      | (index, f) =>
+        match sequence ctx env owned token (borrowsOf ctx index) xs with
+        | (decls, values, after) =>
+          if tail && index == ctx.cSelf && after == "" then
+            "{ " ++ decls ++ Text.concat (List.mapIndexed (fun i v => local i ++ " = " ++ v ++ "; ") values) ++ "goto top; }"
+          else
+            let call := fnName index ++ args values
+            if after != "" then ret ("({ " ++ decls ++ "V r = " ++ call ++ "; " ++ after ++ "r; })")
+            else if tail && f.fnArity == ctx.cArity then "{ " ++ decls ++ "MUSTTAIL return " ++ call ++ "; }"
+            else ret (if decls == "" then call else "({ " ++ decls ++ call ++ "; })")
+  | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "ref", Sexp.str h] :: ys) :: xs) =>
+    form ctx env tail owned token (Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "ref", Sexp.str h] :: ys ++ xs))
+  | Sexp.list (Sexp.sym "app" :: f :: x :: rest) =>
+    -- An unknown function: the closure is borrowed by the first call; each later one consumes the closure before it.
+    match sequence ctx env owned token [true] (f :: x :: rest) with
+    | (decls, values, after) =>
+      match values with
+      | fv :: xv :: more =>
+        let call := List.foldl (fun c v => "deus_apply_drop(" ++ c ++ ", " ++ v ++ ")") ("deus_apply(" ++ fv ++ ", " ++ xv ++ ")") more
+        ret ("({ " ++ decls ++ "V r = " ++ call ++ "; " ++ after ++ "r; })")
+      | _ => throw "an application without arguments"
   | other => throw ("outside the C subset: " ++ Text.take 120 (Sexp.print other))
 
 /--
@@ -499,7 +584,14 @@ def primitive (ctx : FnCtx) (env : List Int) (owned : List Int) (token : Option 
     | ("Ref.get", [r], _) => block ("V v = " ++ share ++ "(UNBOX(" ++ r ++ ")[0]); " ++ release ++ "v")
     | ("Ref.set", [r, x], _) => block ("V old = UNBOX(" ++ r ++ ")[0]; UNBOX(" ++ r ++ ")[0] = " ++ x ++ "; " ++ dropOld ++ release ++ unit)
     | (_, [ca, cb], [a, b]) =>
-      if Wasm.isComparison p && not (Wasm.isScalar (Wasm.typeOf ctx.cScope env a) || Wasm.isScalar (Wasm.typeOf ctx.cScope env b)) then
+      let ta := Wasm.typeOf ctx.cScope env a
+      let tb := Wasm.typeOf ctx.cScope env b
+      if Wasm.isComparison p && ta == Wasm.unknown && tb == Wasm.unknown then
+        -- Untyped (a lifted function's parameters): integers compare; a block traps rather than compare addresses.
+        match infix p with
+        | some op => block ("V x = " ++ ca ++ ", y = " ++ cb ++ "; if (IS_PTR(x) || IS_PTR(y)) __builtin_trap(); (V)(x " ++ op ++ " y)")
+        | none => throw ("the primitive " ++ p ++ " is outside the C subset")
+      else if Wasm.isComparison p && not (Wasm.isScalar ta || Wasm.isScalar tb) then
         throw (p ++ " on values that are not known to be Int or Bool is outside the C subset, since it would compare addresses: " ++ Text.take 120 (Sexp.print e))
       else
         match (macro p, infix p) with
@@ -587,10 +679,11 @@ def params (n : Int) : Text := args (List.map (fun i => "V " ++ local i) (List.r
 /-- The C translation unit: every function, and `export` as an `int32_t` entry point. -/
 def unit (fns : List Wasm.Fn) (datatypes : List (Text, Sexp)) (export : Text) : {Throw Text} Text :=
   let borrow := inferBorrow fns
+  let lifted := Ref.new []
   let decls := List.mapIndexed (fun i f => "static V " ++ fnName i ++ params f.fnArity ++ ";") fns
   let bodies := List.mapIndexed (fun i f =>
     let scope := Wasm.Scope.mk fns datatypes (Ref.new (List.mapIndexed (fun j t => (j, t)) (fst (Wasm.peel f.fnArity f.fnType)))) (Ref.new [])
-    let ctx := FnCtx.mk scope i f.fnArity (Ref.new f.fnArity) borrow
+    let ctx := FnCtx.mk scope i f.fnArity (Ref.new f.fnArity) borrow lifted
     let env := List.reverse (List.range 0 f.fnArity)
     "/* #" ++ Text.take 10 f.fnHash ++ " */\nstatic V " ++ fnName i ++ params f.fnArity ++ " {\ntop:;\n  " ++ expr ctx env true (List.filter (fun k => not (borrowsAt (borrowsOf ctx i) k)) (List.range 0 f.fnArity)) none f.fnBody ++ "\n}") fns
   let arity := Option.getOr (Option.map (fun f => f.fnArity) (List.head? fns)) 0
@@ -609,11 +702,100 @@ def unit (fns : List Wasm.Fn) (datatypes : List (Text, Sexp)) (export : Text) : 
     "}",
     "#endif"]
   let nullary := List.foldl (fun acc f => larger acc (nullaryCount f.fnBody)) 0 fns
-  Text.join "\n" ([prelude nullary] ++ decls ++ [""] ++ bodies ++ ["", entry, main, ""])
+  let codes := Ref.get lifted
+  let codeDecls := List.mapIndexed (fun k _ => "static V c" ++ Int.toText k ++ "(V, V);") codes
+  Text.join "\n" ([prelude nullary] ++ decls ++ codeDecls ++ [""] ++ bodies ++ codes ++ ["", entry, main, ""])
+
+--
+-- Lambda lifting. A `letrec` function becomes a top-level function that takes the locals it
+-- captures as extra leading parameters, so recursion is a direct call and never a closure
+-- that holds itself (a cycle reference counting could not free).
+--
+
+/-- The variables of `e` bound outside it, below `depth` binders, as indices outside them. -/
+def freeVars (depth : Int) (e : Sexp) : List Int :=
+  match e with
+  | Sexp.list [Sexp.sym "var", Sexp.int i] => if i >= depth then [i - depth] else []
+  | Sexp.list [Sexp.sym "lam", b] => freeVars (depth + 1) b
+  | Sexp.list [Sexp.sym "let", v, b] => freeVars depth v ++ freeVars (depth + 1) b
+  | Sexp.list [Sexp.sym "letrec", Sexp.list fs, b] =>
+    let n := List.length fs
+    List.concatMap (freeVars (depth + n)) fs ++ freeVars (depth + n) b
+  | Sexp.list (Sexp.sym "match" :: scrutinee :: cases) =>
+    freeVars depth scrutinee ++ List.concatMap (fun c =>
+      match c with
+      | Sexp.list [Sexp.sym "case", pat, b] => freeVars (depth + binders pat) b
+      | _ => []) cases
+  | Sexp.list items => List.concatMap (freeVars depth) items
+  | _ => []
+
+/-- `e` with each variable `i` bound outside it replaced by `sub i`, a term outside `e`'s binders. -/
+def subst (depth : Int) (sub : Int -> Sexp) (e : Sexp) : Sexp :=
+  let again := fun (d : Int) (x : Sexp) => subst d sub x
+  match e with
+  | Sexp.list [Sexp.sym "var", Sexp.int i] => if i < depth then e else shift depth 0 (sub (i - depth))
+  | Sexp.list [Sexp.sym "lam", b] => Sexp.list [Sexp.sym "lam", again (depth + 1) b]
+  | Sexp.list [Sexp.sym "let", v, b] => Sexp.list [Sexp.sym "let", again depth v, again (depth + 1) b]
+  | Sexp.list [Sexp.sym "letrec", Sexp.list fs, b] =>
+    let n := List.length fs
+    Sexp.list [Sexp.sym "letrec", Sexp.list (List.map (again (depth + n)) fs), again (depth + n) b]
+  | Sexp.list (Sexp.sym "match" :: scrutinee :: cases) =>
+    Sexp.list (Sexp.sym "match" :: again depth scrutinee :: List.map (fun c =>
+      match c with
+      | Sexp.list [Sexp.sym "case", pat, b] => Sexp.list [Sexp.sym "case", pat, again (depth + binders pat) b]
+      | other => other) cases)
+  | Sexp.list items => Sexp.list (List.map (again depth) items)
+  | _ => e
+
+def var (i : Int) : Sexp := Sexp.list [Sexp.sym "var", Sexp.int i]
+
+/-- `h` applied to the captures, where capture `t` is the term `at t`. -/
+def lifted (h : Text) (count : Int) (at : Int -> Sexp) : Sexp :=
+  if count == 0 then Sexp.list [Sexp.sym "ref", Sexp.str h]
+  else Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "ref", Sexp.str h] :: List.map at (List.range 0 count))
+
+/-- `e` with every `letrec` lifted out; the lifted functions are added to `out`. -/
+def liftExpr (parent : Text) (next : Ref Int) (out : Ref (List Wasm.Fn)) (e : Sexp) : {Throw Text} Sexp :=
+  let again := fun (x : Sexp) => liftExpr parent next out x
+  match e with
+  | Sexp.list [Sexp.sym "letrec", Sexp.list fs, b] =>
+    let n := List.length fs
+    let caps := List.dedup (List.concatMap (freeVars n) fs)
+    let count := List.length caps
+    let names := List.map (fun _ =>
+      let k := Ref.get next
+      let _ := Ref.set next (k + 1)
+      parent ++ "/rec" ++ Int.toText k) fs
+    let capAt := fun (o : Int) => count - 1 - List.findIndex (fun c => c == o) caps
+    -- Inside a lifted function, outside its own parameters, capture t is (var count-1-t).
+    let inside := fun (o : Int) =>
+      if o < n then lifted (Option.getOr (List.get? names (n - 1 - o)) "") count (fun t => var (count - 1 - t))
+      else var (capAt (o - n))
+    let _ := List.map (fun pair =>
+      match pair with
+      | (name, f) =>
+        match Wasm.unlam f with
+        | (0, _) => throw "a letrec binding that is not a lambda is outside the C subset"
+        | (arity, body) =>
+          let lifted := liftExpr parent next out (subst arity inside body)
+          Ref.set out (Ref.get out ++ [Wasm.Fn.mk name (count + arity) lifted Wasm.unknown])) (List.zip names fs)
+    let outside := fun (o : Int) =>
+      if o < n then lifted (Option.getOr (List.get? names (n - 1 - o)) "") count (fun t => var (Option.getOr (List.get? caps t) 0))
+      else var (o - n)
+    again (subst 0 outside b)
+  | Sexp.list items => Sexp.list (List.map again items)
+  | _ => e
+
+/-- Every function with its `letrec`s lifted into new functions after the originals. -/
+def liftAll (fns : List Wasm.Fn) : {Throw Text} List Wasm.Fn :=
+  let out := Ref.new []
+  let next := Ref.new 0
+  let done := List.map (fun f => Wasm.Fn.mk f.fnHash f.fnArity (liftExpr f.fnHash next out f.fnBody) f.fnType) fns
+  done ++ Ref.get out
 
 /-- Compiles `main` and what it calls to C exporting it as `export`. -/
 def compile (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {Throw Text | r} Option Sexp) (main : Text) (export : Text) : {Throw Text | r} Text :=
-  let fns := Wasm.gather fetch meta main
+  let fns := liftAll (Wasm.gather fetch meta main)
   let names := List.dedup (List.concatMap (fun f => Wasm.patternTypes f.fnBody) fns)
   unit fns (List.filterMap (fun t => Option.map (fun form => (t, form)) (fetch t)) names) export
 

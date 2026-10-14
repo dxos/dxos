@@ -182,10 +182,18 @@ def generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
     | some text => IO.writeFile (out ++ "/" ++ f) text
     | none => throw ("missing " ++ home ++ "/platform/explorer/" ++ f))
   let branch := Codebase.currentBranch dir
+  -- Events about the codebase (D104), for the Events card and per-definition counts; a codebase
+  -- whose event types cannot be read still gets a site, with no events.
+  let events := match try (fun _ =>
+      let ts := Analytics.types dir ns
+      (Analytics.siteJson dir project ns 20, List.sum (List.map (fun c => match c with | (_, pending, pushed) => pending + pushed) (Analytics.counts dir ts)))) with
+    | Result.ok pair => pair
+    | Result.err _ => (Json.obj [("project", Json.str project), ("types", Json.arr []), ("byDefinition", Json.obj [])], 0)
+  IO.writeFile (out ++ "/events.json") (Json.render (fst events))
   IO.writeFile (out ++ "/meta.json") (Json.render (Json.obj [("project", Json.str project), ("branch", Json.str branch),
     ("branches", Json.arr (List.map Json.str (Codebase.branches dir))), ("definitions", Json.num (List.length entries)),
     ("tasks", Json.num (List.length tasks)), ("open", Json.num (List.length (List.filter Tasks.isOpen tasks))),
-    ("console", Json.bool (IO.exists (out ++ "/console/info.json"))),
+    ("console", Json.bool (IO.exists (out ++ "/console/info.json"))), ("events", Json.num (snd events)),
     ("history", Json.arr (List.map (logJson dir) (Cli.fullLog dir historyLimit)))]))
   -- The signature and doc summary let the app list, search and preview names without opening their pages.
   IO.writeFile (out ++ "/names.json") (Json.render (Json.arr (List.map (fun pair =>

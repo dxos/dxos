@@ -63,10 +63,11 @@ change  = {"causal": string, "message": string, "by"?: string}
 | `tasks`       | number   | how many tasks                                                    |
 | `open`        | number   | how many tasks are `todo` or `doing`                              |
 | `console`     | boolean  | whether the site has a [console](#console) (D84)                  |
+| `events`      | number   | how many [events](#eventsjson) the codebase recorded (D110)       |
 | `history`     | change[] | the branch's 30 most recent history nodes, newest first           |
 
 ```json
-{"project":"codebase","branch":"main","branches":["main"],"definitions":246,"tasks":1,"open":1,"console":false,"history":[{"causal":"01702deda26c0eafc3175496093fb0cc829422fa99d08e2cbd9b4de750d5c0b9","message":"task: open e0757e4e Double overflows","by":"agent-x"},…]}
+{"project":"codebase","branch":"main","branches":["main"],"definitions":246,"tasks":1,"open":1,"console":false,"events":0,"history":[{"causal":"01702deda26c0eafc3175496093fb0cc829422fa99d08e2cbd9b4de750d5c0b9","message":"task: open e0757e4e Double overflows","by":"agent-x"},…]}
 ```
 
 ## names.json
@@ -223,6 +224,27 @@ and the app then shows only the two hashes.
 Hashes in a change page are those of that moment; `def/` files exist only for current hashes, so the app
 opens a name's current page.
 
+## events.json
+
+What the analytics store ([D104](../DECISIONS.md)) recorded about the codebase, as
+`Analytics.siteJson` writes it (the JSON `deus event stats --json --limit 20` prints), D110:
+
+| Field          | Type     | Content                                                                                                |
+| -------------- | -------- | ------------------------------------------------------------------------------------------------------ |
+| `project`      | string   | the project IRI                                                                                        |
+| `types`        | object[] | each event type: `name`, `hash`, `columns` (`{"name","type"}`), `count`, `pending`, `pushed`, `latest` |
+| `byDefinition` | object   | per definition or change hash (or a 10-digit prefix of one): `{"names","count","events"}`              |
+
+A `latest` row has `event_id`, `recorded_at` (microseconds since the epoch, as decimal text),
+`recorded_by` and one value per column, newest first, at most 20. Each `events` entry of
+`byDefinition` is `{"type","column","count"}`. A codebase whose event types cannot be read gets
+`{"types":[],"byDefinition":{}}` and `meta.json` counts 0, so analytics never stops a site.
+
+The app loads `events.json` only when `meta.json` counts events. The overview then has an Events tile,
+which opens the `k:events` card: a table of the latest rows per type, with `CodeRef` values linked to
+their definitions or changes. A definition or change card lists its events by type and column, adding
+those filed under a prefix of its hash.
+
 ## comments.json
 
 An object from subject to its comments, oldest first. A subject is `def:<name>` or `change:<causal>`
@@ -338,7 +360,7 @@ the view when it is not the code workspace:
 
 ```text
 fragment = key ("," key)*
-key      = "d:" hash | "n:" namespace | "t:" task-id | "c:" causal | "k:" (kind | "checks") | "v:" ("tasks" | "history" | "graph")
+key      = "d:" hash | "n:" namespace | "t:" task-id | "c:" causal | "k:" (kind | "checks" | "events") | "v:" ("tasks" | "history" | "graph")
 ```
 
 For example `index.html#d:595ca8a5…,n:List,t:e0757e4e`. A card opened from another card goes right after it;
