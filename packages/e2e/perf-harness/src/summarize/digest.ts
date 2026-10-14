@@ -45,10 +45,16 @@ const addInto = (target: Map<string, number>, source: Map<string, number>, scale
   }
 };
 
-/** Each function's cost averaged over profiles of one stage and realm, counting absence as zero. */
-export const meanCosts = (profiles: ReadonlyArray<Map<string, FunctionCost>>): Map<string, FunctionCost> => {
+/**
+ * Each function's cost averaged over `runs` runs of one stage and realm, counting absence as zero:
+ * a function missing from a profile, or a run with no profile for the realm.
+ */
+export const meanCosts = (
+  profiles: ReadonlyArray<Map<string, FunctionCost>>,
+  runs = profiles.length,
+): Map<string, FunctionCost> => {
   const mean = new Map<string, FunctionCost>();
-  const scale = 1 / Math.max(1, profiles.length);
+  const scale = 1 / Math.max(1, runs);
   for (const costs of profiles) {
     for (const cost of costs.values()) {
       const entry = mean.get(cost.key) ?? { ...cost, selfMs: 0, totalMs: 0, callers: new Map(), callees: new Map() };
@@ -88,15 +94,18 @@ export const groupCosts = (
 ): Group[] => {
   const collect = (dirs: ReadonlyArray<string>, resolve: Resolve) => {
     const byGroup = new Map<string, Array<Map<string, FunctionCost>>>();
+    // Each group divides by every run (`artifacts/<run>`), so a realm missing from a run reads as zero there.
+    const runs = new Set<string>();
     for (const dir of dirs) {
       for (const { stage, realm, file } of findProfiles(dir, stages)) {
+        runs.add(path.dirname(file));
         if (filter(stage, realm)) {
           const group = `${stage}\0${realm}`;
           byGroup.set(group, [...(byGroup.get(group) ?? []), readCosts(file, resolve)]);
         }
       }
     }
-    return new Map([...byGroup].map(([group, profiles]) => [group, meanCosts(profiles)]));
+    return new Map([...byGroup].map(([group, profiles]) => [group, meanCosts(profiles, runs.size)]));
   };
   const candidate = collect(arms.candidate.dirs, arms.candidate.resolve);
   const base = arms.base ? collect(arms.base.dirs, arms.base.resolve) : new Map<string, Map<string, FunctionCost>>();
