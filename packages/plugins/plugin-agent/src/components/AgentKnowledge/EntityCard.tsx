@@ -49,7 +49,8 @@ export type EntityCardFieldProps = { label: string; children: React.ReactNode };
  * every knowledge card (entities, predicates) is built from.
  */
 export const EntityCardField = ({ label, children }: EntityCardFieldProps) => (
-  <Layout.Grid cols={['6rem', 'fill']} gap='sm' align='center'>
+  // Top-aligned, so a key stays on its value's first line when the value wraps (a description, a run of chips).
+  <Layout.Grid cols={['6rem', 'fill']} gap='sm' align='start'>
     <Card.Text variant='muted' truncate>
       {label}
     </Card.Text>
