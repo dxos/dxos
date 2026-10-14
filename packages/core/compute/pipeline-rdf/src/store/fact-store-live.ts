@@ -9,7 +9,14 @@ import { DataFactory, type Quad } from 'n3';
 
 import { SemanticIndexError } from '../errors.ts';
 import { insertQuadsMemory, makeMemorySource } from '../internal/source/memory-source.ts';
-import { type Row, insertQuads, makeSqliteSource, rowToQuad } from '../internal/source/sqlite-source.ts';
+import {
+  type Row,
+  insertQuads,
+  loadGraphRows,
+  makeSqliteSource,
+  rowToQuad,
+  selectChunked,
+} from '../internal/source/sqlite-source.ts';
 import type * as Engine from '../internal/sparql/engine.ts';
 import { graphQuads, queryMemory } from '../internal/sparql/query-memory.ts';
 import { querySqlite } from '../internal/sparql/query-sqlite.ts';
@@ -117,12 +124,12 @@ export const layer: Layer.Layer<FactStore, never, SqlClient.SqlClient> = Layer.e
     const putFacts: FactStoreApi['putFacts'] = (facts) =>
       Effect.gen(function* () {
         const iris = Graph.mintedPredicates(facts).map(({ iri }) => iri);
-        const rows =
-          iris.length === 0
-            ? []
-            : yield* sql<{ s: string }>`
-                SELECT s FROM triples WHERE g = ${Vocab.ONTOLOGY_GRAPH} AND p = ${Vocab.RDF_TYPE}
-                  AND o = ${Vocab.RDF_PROPERTY} AND ${sql.in('s', iris)}`;
+        const rows = yield* selectChunked(
+          iris,
+          (chunk) => sql<{ s: string }>`
+            SELECT s FROM triples WHERE g = ${Vocab.ONTOLOGY_GRAPH} AND p = ${Vocab.RDF_TYPE}
+              AND o = ${Vocab.RDF_PROPERTY} AND ${sql.in('s', chunk)}`,
+        );
         const described = new Set(rows.map(({ s }) => s));
         yield* insertQuads(
           sql,
@@ -168,9 +175,7 @@ export const layer: Layer.Layer<FactStore, never, SqlClient.SqlClient> = Layer.e
     const load = (graphs: string[]): Effect.Effect<Quad[], SemanticIndexError> =>
       graphs.length === 0
         ? Effect.succeed([])
-        : sql<Row>`
-            SELECT s, p, o, oType, g FROM triples
-            WHERE ${sql.in('g', graphs)} OR (g = '' AND ${sql.in('s', graphs)}) OR g = ${Vocab.ONTOLOGY_GRAPH}`.pipe(
+        : loadGraphRows(sql, graphs).pipe(
             Effect.map((rows) => rows.map(rowToQuad)),
             Effect.mapError((cause) => new SemanticIndexError({ message: 'Failed to load graphs', cause })),
           );

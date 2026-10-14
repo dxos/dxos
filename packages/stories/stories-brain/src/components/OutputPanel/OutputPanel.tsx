@@ -4,13 +4,16 @@
 
 import React, { type ReactNode, useMemo, useState } from 'react';
 
-import { type RDF } from '@dxos/pipeline-rdf';
+import { RDF } from '@dxos/pipeline-rdf';
+import { Editor } from '@dxos/react-ui-editor';
 import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Status from '@dxos/react-ui/Status';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import * as Util from '@dxos/react-ui/Util';
+import { createBasicExtensions, createThemeExtensions, turtle } from '@dxos/ui-editor';
 
 import { type EchoObjectItem, EchoObjectsList } from '../EchoObjectsList/index.ts';
 import { FactPanel } from '../FactPanel/index.ts';
@@ -36,12 +39,12 @@ export type OutputPanelProps = Util.ThemedClassName<{
 /**
  * Output column: a toolbar of button tabs selecting the view — the {@link FactPanel} (facts +
  * entities + predicates), the {@link OntologyPanel} (every predicate the brain knows, its metadata, and the ontology
- * and facts as Turtle/TriG), the {@link EchoObjectsList} of materialized ECHO objects, a Stats tab of
- * per-pipeline metrics, and any pipeline-specific detail views (messages / threads / transcript).
+ * and facts as Turtle/TriG), the {@link EchoObjectsList} of materialized ECHO objects, the facts as TriG (read-only),
+ * a Stats tab of per-pipeline metrics, and any pipeline-specific detail views (messages / threads / transcript).
  */
 export const OutputPanel = ({ classNames, facts, ontology, objects, stats = [], details = [] }: OutputPanelProps) => {
   const tabs = useMemo(
-    () => ['facts', 'predicates', 'objects', 'stats', ...details.map((detail) => detail.id)],
+    () => ['facts', 'predicates', 'objects', 'turtle', 'stats', ...details.map((detail) => detail.id)],
     [details],
   );
   const [tab, setTab] = useState<string>('facts');
@@ -60,6 +63,9 @@ export const OutputPanel = ({ classNames, facts, ontology, objects, stats = [], 
           </Button.Root>
           <Button.Root variant={active === 'objects' ? 'primary' : 'ghost'} onClick={() => setTab('objects')}>
             Objects
+          </Button.Root>
+          <Button.Root variant={active === 'turtle' ? 'primary' : 'ghost'} onClick={() => setTab('turtle')}>
+            Turtle
           </Button.Root>
           <Button.Root variant={active === 'stats' ? 'primary' : 'ghost'} onClick={() => setTab('stats')}>
             Stats
@@ -86,6 +92,11 @@ export const OutputPanel = ({ classNames, facts, ontology, objects, stats = [], 
       {active === 'objects' && (
         <Panel.Body>
           <EchoObjectsList objects={objects} />
+        </Panel.Body>
+      )}
+      {active === 'turtle' && (
+        <Panel.Body>
+          <TurtleView facts={facts} />
         </Panel.Body>
       )}
       {active === 'stats' && (
@@ -115,3 +126,26 @@ const StatsView = Util.composable<HTMLDivElement, { stats: StatItem[] }>(({ stat
 ));
 
 StatsView.displayName = 'StatsView';
+
+/** The facts serialised as the brain stores them: TriG, each named graph's statements followed by its provenance. */
+const TurtleView = ({ facts }: { facts: RDF.Fact[] }) => {
+  const themeMode = Hooks.useThemeMode();
+  const extensions = useMemo(
+    () => [
+      createBasicExtensions({ readOnly: true, lineNumbers: true, lineWrapping: false }),
+      createThemeExtensions({ themeMode, monospace: true, syntaxHighlighting: true }),
+      turtle(),
+    ],
+    [themeMode],
+  );
+  const source = useMemo(() => RDF.Graph.toTriG(facts), [facts]);
+  if (facts.length === 0) {
+    return <Status.Empty>No facts.</Status.Empty>;
+  }
+
+  return (
+    <Editor.Root>
+      <Editor.View classNames='dx-fill' value={source} extensions={extensions} />
+    </Editor.Root>
+  );
+};

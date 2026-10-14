@@ -7,6 +7,7 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as SqlClient from 'effect/sql/SqlClient';
+import * as Statement from 'effect/sql/Statement';
 
 import { type Fact, Ontology, Vocab } from '../types/index.ts';
 import * as FactStoreLive from './fact-store-live.ts';
@@ -27,6 +28,16 @@ const mk = (over: Partial<Fact> & Pick<Fact, 'id'>): Fact => ({
 });
 
 const TestLayer = FactStoreLive.layer.pipe(Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })));
+
+/** Cloudflare Durable Object SQLite binds at most 100 parameters per statement; local SQLite allows far more. */
+const DO_MAX_PARAMS = 100;
+
+const withDurableObjectParamLimit = Effect.provideService(Statement.CurrentTransformer, (statement) => {
+  const [, params] = statement.compile();
+  return params.length > DO_MAX_PARAMS
+    ? Effect.die(new Error(`too many SQL variables: ${params.length}`))
+    : Effect.succeed(statement);
+});
 
 describe('FactStore', () => {
   it.effect(
@@ -317,6 +328,21 @@ describe('FactStore', () => {
         // A fresh build: the store is seeded when the layer is constructed.
       }).pipe(Effect.provide(Layer.fresh(FactStoreLive.layer)));
       expect(entries.find(({ iri }) => iri === Vocab.RDF_TYPE)).toEqual(Ontology.DEFAULT.get(Vocab.RDF_TYPE));
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'reads back more facts than one statement may bind parameters for',
+    Effect.fnUntraced(function* () {
+      const store = yield* FactStore;
+      const count = DO_MAX_PARAMS + 20;
+      yield* store.putFacts(
+        Array.from({ length: count }, (_, index) => mk({ id: `f${index}`, sourceHash: `h${index}` })),
+      );
+      const all = yield* store.query({}).pipe(withDurableObjectParamLimit);
+      const bySubject = yield* store.query({ subjectEntity: 'alice' }).pipe(withDurableObjectParamLimit);
+      expect(all).toHaveLength(count);
+      expect(bySubject).toHaveLength(count);
     }, Effect.provide(TestLayer)),
   );
 });

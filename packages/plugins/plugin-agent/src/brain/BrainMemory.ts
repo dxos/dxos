@@ -154,6 +154,16 @@ export const make = (
           Effect.map((found): RDF.Fact[] => found),
           Effect.mapError(toError),
         ),
+    reset: Effect.fnUntraced(function* (agent) {
+      yield* facts(agent).clear().pipe(Effect.mapError(toError));
+      // A fresh evaluator holds no facts; the subscriptions are added back so they keep waking.
+      evaluators.delete(agent);
+      for (const trigger of triggers.list(agent)) {
+        outboxes.delete(trigger.id);
+        queued.delete(trigger.id);
+        yield* Effect.try({ try: () => evaluator(agent).add(BrainService.toSubscription(trigger)), catch: toError });
+      }
+    }),
     readThrough: (agent, source) => facts(agent).cursor(source).pipe(Effect.mapError(toError)),
     subscribe: Effect.fnUntraced(function* (trigger) {
       const held = triggers.list(trigger.agent).filter(({ id }) => id !== trigger.id);

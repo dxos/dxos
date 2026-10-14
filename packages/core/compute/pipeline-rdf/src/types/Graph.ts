@@ -133,9 +133,12 @@ export const toTriG = (facts: readonly Fact[], ontology: Ontology.Ontology = Ont
       graph !== Vocab.ONTOLOGY_GRAPH &&
       quads.some((quad) => quad.subject.value.startsWith(`${graph}#`) || quad.object.value.startsWith(`${graph}#`)),
   );
+  const usesBrain = quads.some((quad) =>
+    [quad.subject, quad.predicate, quad.object].some((term) => term.value.startsWith(ontology.namespace)),
+  );
   return write(quads, {
     ...PREFIXES,
-    brain: ontology.namespace,
+    ...(usesBrain ? { brain: ontology.namespace } : {}),
     ...Object.fromEntries(locals.map((graph, index) => [`g${index + 1}`, `${graph}#`])),
   });
 };
