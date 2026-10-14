@@ -100,7 +100,10 @@ export const make = (
       return client.edge.http;
     });
 
-    const options: Options = { definition, control, accessTokens };
+    // Lent to every turn so the agent reaches the space through Composer's MCP server, as the signed-in identity.
+    const composerMcp = composerMcpCredentials(() => manager.getAll(ClientCapabilities.IdentityService).at(0));
+
+    const options: Options = { definition, control, accessTokens, composerMcp };
     return {
       id: definition.id,
       label: definition.label,
@@ -138,6 +141,8 @@ export type Options = {
   control: () => ProcessControl | undefined;
   /** Resolves the space's server-custodied tokens; without it, only tokens the space holds are lent. */
   accessTokens?: Layer.Layer<Credential.AccessTokenResolver>;
+  /** The variables that authorize the agent against Composer's MCP server; without it, the agent has no Composer tools. */
+  composerMcp?: Effect.Effect<Record<string, string>>;
 };
 
 /** The chat's process, and where to reach it. */
@@ -147,7 +152,7 @@ const makeTurnProducer =
   (options: Options): MakeTurnProducer =>
   ({ chat, feed }) =>
     Effect.succeed({
-      // The agent's tools are its own, in the container.
+      // The agent's tools are its own, in the container, and those of the Composer MCP server EDGE connects it to.
       getSkills: () => [],
       runTurn: (request: TurnRequest) =>
         runTurn(options, { chat, feed }, request).pipe(
@@ -165,9 +170,12 @@ export const runTurn = (
     const started = Date.now();
     const target = yield* ensureProcess(options, chat);
     const rpc = yield* target.control.rpc(target);
-    const env = yield* options.definition.credentials.pipe(
-      Effect.provide(options.accessTokens ?? Credential.AccessTokenResolver.notAvailable),
-    );
+    const env = {
+      ...(yield* options.composerMcp ?? Effect.succeed(NO_CREDENTIALS)),
+      ...(yield* options.definition.credentials.pipe(
+        Effect.provide(options.accessTokens ?? Credential.AccessTokenResolver.notAvailable),
+      )),
+    };
     yield* rpc
       .provideCredentials({ env })
       .pipe(
@@ -434,6 +442,48 @@ export const checkoutsOf = (
 const GITHUB_HOST = 'github.com';
 
 const NO_CREDENTIALS: Record<string, string> = {};
+
+/** How long a minted Composer MCP token lives; long enough to outlast a working session, short enough to lapse unused. */
+const COMPOSER_MCP_TOKEN_LIFETIME = Duration.days(1);
+
+/** A token this close to expiry is replaced before it is lent, so it cannot lapse mid-turn. */
+const COMPOSER_MCP_TOKEN_MARGIN = Duration.hours(1);
+
+/** The part of the identity service that mints API tokens. */
+export type ApiTokenMinter = {
+  createApiToken: (options: { label: string; expiresAt?: number }) => Effect.Effect<{ token: string }, unknown>;
+};
+
+/**
+ * The variable ({@link EdgeProtocol.COMPOSER_MCP_TOKEN_ENV}) holding an API token minted for the signed-in
+ * identity, which EDGE presents to its Composer MCP server for the agent. One token is kept per identity and
+ * replaced as it nears expiry; with no identity, or when minting fails, the agent goes without.
+ */
+export const composerMcpCredentials = (
+  identity: () => ApiTokenMinter | undefined,
+  now: () => number = Date.now,
+): Effect.Effect<Record<string, string>> => {
+  let cached: { identity: ApiTokenMinter; token: string; expiresAt: number } | undefined;
+  return Effect.gen(function* () {
+    const service = identity();
+    if (!service) {
+      return NO_CREDENTIALS;
+    }
+    if (cached?.identity !== service || cached.expiresAt - now() < Duration.toMillis(COMPOSER_MCP_TOKEN_MARGIN)) {
+      const expiresAt = now() + Duration.toMillis(COMPOSER_MCP_TOKEN_LIFETIME);
+      const minted = yield* service.createApiToken({ label: 'Claude Code (cloud)', expiresAt });
+      cached = { identity: service, token: minted.token, expiresAt };
+    }
+    return { [EdgeProtocol.COMPOSER_MCP_TOKEN_ENV]: cached.token };
+  }).pipe(
+    Effect.catchCause((cause) =>
+      Effect.sync(() => {
+        log.warn('no Composer MCP credential', { cause });
+        return NO_CREDENTIALS;
+      }),
+    ),
+  );
+};
 
 /**
  * The space's GitHub connection as the environment the agent's `git` and `gh` read: a token EDGE custodies
