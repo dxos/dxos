@@ -75,10 +75,21 @@ conditions (run, compare, scenario check; every arm shares them, and rows record
                           bundle points at; production EDGE is refused
   --telemetry             PostHog (events, exceptions, session replay) and OTel export on, as shipped,
                           delivered to a loopback sink that counts and drops them (a separate bundle)
+  --channel <name>        build as a release channel (dev, preview, staging), e.g. to match a user's app
 
 compare exits 0 improved, 1 regressed, 2 no change, 3 inconclusive, 4 could not measure.
 HEAD must be committed: each attempt is a commit, so the ledger can name what was measured.
 `;
+
+const CHANNELS = ['dev', 'preview', 'staging'] as const;
+
+const channelOf = (value: string): (typeof CHANNELS)[number] => {
+  const channel = CHANNELS.find((known) => known === value);
+  if (!channel) {
+    throw new HarnessError(`--channel is one of ${CHANNELS.join(', ')}, not "${value}"`);
+  }
+  return channel;
+};
 
 const integer = (value: string | undefined, fallback: number, name: string): number => {
   if (value === undefined) {
@@ -130,6 +141,7 @@ const main = async (): Promise<number> => {
       'offline': { type: 'boolean', default: false },
       'edge': { type: 'string' },
       'telemetry': { type: 'boolean', default: false },
+      'channel': { type: 'string' },
       'help': { type: 'boolean', short: 'h', default: false },
     },
   });
@@ -144,6 +156,7 @@ const main = async (): Promise<number> => {
     ...(values.offline ? { offline: true } : {}),
     ...(values.edge ? { edge: values.edge } : {}),
     ...(values.telemetry ? { telemetry: derivePorts(workspaceRoot()).telemetry } : {}),
+    ...(values.channel ? { channel: channelOf(values.channel) } : {}),
   };
   const common = {
     target: values.target,

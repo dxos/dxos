@@ -7,13 +7,15 @@
  * the same partition as `pnpm perf --offline` and records each WebKit process's footprint, by region,
  * at the end of every stage.
  *
- * Usage: node scripts/memory/webkit-soak.ts --archive <file.dxprofile> --dist <offline bundle> [--port 4497]
- *        [--telemetry <sink port>]
+ * Usage: node scripts/memory/webkit-soak.ts --archive <file.dxprofile> --dist <bundle> [--port 4497]
+ *        [--telemetry <sink port>] [--edge <non-production EDGE URL>]
  *
  * `--dist` must be an `--offline` build (`.perf/arms/composer-offline-*`), whose EDGE URL is a closed
- * loopback port; any other is refused. WebKit has no host-resolver rules, so every stage also checks
- * the WebKit processes for sockets to anything but loopback, and the run fails on one. With
- * `--telemetry`, the bundle must be a `--telemetry` build for that port; the sink runs alongside.
+ * loopback port, or an `--edge` build for the same URL as `--edge`; any other is refused. Only that
+ * EDGE host is tunnelled to. WebKit has no host-resolver rules, so every stage also checks the
+ * WebKit processes for sockets to anything but loopback (the proxy, not WebKit, holds the tunnel),
+ * and the run fails on one. With `--telemetry`, the bundle must be a `--telemetry` build for that
+ * port; the sink runs alongside.
  */
 
 import { webkit } from '@playwright/test';
@@ -52,6 +54,7 @@ const { values } = parseArgs({
     dist: { type: 'string' },
     port: { type: 'string', default: '4497' },
     telemetry: { type: 'string' },
+    edge: { type: 'string' },
   },
 });
 if (!values.archive || !values.dist) {
@@ -69,9 +72,13 @@ const bundleMentions = (text: string): boolean => {
     return false;
   }
 };
-const offlineBuild = bundleMentions(OFFLINE_EDGE_URL);
-if (!offlineBuild) {
-  throw new Error(`${dist} is not an --offline build: its EDGE URL is not ${OFFLINE_EDGE_URL}`);
+/** The one non-production EDGE the partition may tunnel to; production is refused outright. */
+const edgeHost = values.edge && URL.canParse(values.edge) ? new URL(values.edge).hostname : undefined;
+if (values.edge && (!edgeHost || edgeHost === 'dxos.network')) {
+  throw new Error(`--edge must name a non-production EDGE URL, not "${values.edge}"`);
+}
+if (!bundleMentions(values.edge ?? OFFLINE_EDGE_URL)) {
+  throw new Error(`${dist} is not an ${values.edge ? `--edge ${values.edge}` : '--offline'} build`);
 }
 const telemetryPort = values.telemetry ? Number(values.telemetry) : undefined;
 if (telemetryPort && !bundleMentions(`http://127.0.0.1:${telemetryPort}`)) {
@@ -152,7 +159,8 @@ const main = async (): Promise<number> => {
     ['exec', 'vite', 'preview', '--configLoader', 'native', '--port', String(port), '--strictPort', '--outDir', dist],
     { cwd: APP_DIR, detached: true, stdio: 'ignore' },
   );
-  const proxy = await startPartitionProxy();
+  const allow = edgeHost ? [edgeHost] : [];
+  const proxy = await startPartitionProxy({ allow });
   const sink = telemetryPort
     ? await startTelemetrySink({
         port: telemetryPort,
@@ -187,7 +195,7 @@ const main = async (): Promise<number> => {
     });
     try {
       context.on('response', (response) => {
-        if (!insidePartition(response.url())) {
+        if (!insidePartition(response.url(), allow)) {
           offsite.push(new URL(response.url()).host);
         }
       });

@@ -69,6 +69,8 @@ export type Comparability = {
   edge?: string;
   /** PostHog (events, exceptions, replay) and OTel export on, delivered to a loopback sink. */
   telemetry?: boolean;
+  /** The release channel the bundle was built as; absent means none was set. */
+  channel?: string;
 };
 
 /** A CDP target the harness measures. Shared workers matter most: ECHO and automerge live there. */

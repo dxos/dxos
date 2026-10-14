@@ -6,7 +6,10 @@ import { type Page } from '@playwright/test';
 
 import { invokeInPage, waitForReady } from '../perf/page.ts';
 
-const IDLE_MS = 60_000;
+/** Passes over the spaces (`DX_PERF_SOAK_PASSES`); more of them separate retention from a cache filling once. */
+const PASSES = Math.max(1, Number.parseInt(process.env.DX_PERF_SOAK_PASSES ?? '', 10) || 2);
+
+const IDLE_MS = Number.parseInt(process.env.DX_PERF_SOAK_IDLE_MS ?? '', 10) || 60_000;
 
 /** Visited in order, twice: enough to page in what a day of switching does without walking every space. */
 const MAX_SPACES = 12;
@@ -31,8 +34,8 @@ export const importProfileArchive = async (page: Page, origin: string, file: str
 };
 
 /**
- * Idle, visit every space, idle, visit them again, idle: each stage's footprint is a point on the
- * curve, so growth that survives a second pass over the same spaces reads as retention.
+ * Idle, then visit every space and idle again, once per pass: each stage's footprint is a point on
+ * the curve, so growth that survives later passes over the same spaces reads as retention.
  */
 export const soakStages = async ({ page, stage, budget }: SoakContext): Promise<void> => {
   await stage('idle', () => page.waitForTimeout(IDLE_MS));
@@ -50,8 +53,8 @@ export const soakStages = async ({ page, stage, budget }: SoakContext): Promise<
     }
   };
 
-  await stage('visit-spaces', visit);
-  await stage('idle-after-visit', () => page.waitForTimeout(IDLE_MS));
-  await stage('revisit-spaces', visit);
-  await stage('idle-after-revisit', () => page.waitForTimeout(IDLE_MS));
+  for (let pass = 1; pass <= PASSES; pass++) {
+    await stage(`visit-${pass}`, visit);
+    await stage(`idle-${pass}`, () => page.waitForTimeout(IDLE_MS));
+  }
 };

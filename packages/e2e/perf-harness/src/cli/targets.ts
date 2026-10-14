@@ -59,6 +59,8 @@ export type Conditions = {
   edge?: string;
   /** The port of a loopback telemetry sink the bundle's PostHog and OTel export point at. */
   telemetry?: number;
+  /** Build as this release channel (`DX_ENVIRONMENT`): branding and channel-specific behaviour. */
+  channel?: 'dev' | 'preview' | 'staging';
 };
 
 /** Not a real project's key: whatever the SDK sends with it goes only to the loopback sink. */
@@ -139,6 +141,7 @@ export const conditionsEnv = ({
   offline,
   edge,
   telemetry,
+  channel,
 }: Conditions): Record<string, string> => ({
   ...(until ? { DX_PERF_UNTIL: until } : {}),
   ...(http2 ? { DX_PERF_HTTP2: '1' } : {}),
@@ -147,6 +150,7 @@ export const conditionsEnv = ({
   ...(offline ? { DX_PERF_OFFLINE: '1' } : {}),
   ...(edge ? { DX_PERF_EDGE: edge } : {}),
   ...(telemetry ? { DX_PERF_TELEMETRY: '1' } : {}),
+  ...(channel ? { DX_PERF_CHANNEL: channel } : {}),
 });
 
 /** A target measured under `conditions`: the build, the server and the flow all follow them. */
@@ -166,6 +170,7 @@ export const withConditions = (target: Target, conditions: Conditions = {}): Tar
     conditions.offline && 'offline',
     edgeHost && `edge-${edgeHost}`,
     conditions.telemetry && 'telemetry',
+    conditions.channel,
   ]
     .filter(Boolean)
     .join('-');
@@ -179,6 +184,7 @@ export const withConditions = (target: Target, conditions: Conditions = {}): Tar
         ...target.build.env,
         ...(conditions.serviceWorker ? { DX_PWA: 'true' } : {}),
         ...(conditions.offline ? { DX_EDGE_BASE_URL: OFFLINE_EDGE_URL } : {}),
+        ...(conditions.channel ? { DX_ENVIRONMENT: conditions.channel } : {}),
         ...(conditions.edge
           ? { DX_EDGE_BASE_URL: conditions.edge, DX_HUB_URL: new URL('hub/', conditions.edge).href }
           : {}),
@@ -206,6 +212,7 @@ export const describeConditions = ({
   offline,
   edge,
   telemetry,
+  channel,
 }: Conditions): string | undefined => {
   const parts = [
     until && `until ${until}`,
@@ -215,6 +222,7 @@ export const describeConditions = ({
     offline && 'offline',
     edge && `EDGE ${edge} only`,
     telemetry && `telemetry to a loopback sink on :${telemetry}`,
+    channel && `${channel} channel`,
   ].filter((part): part is string => Boolean(part));
   return parts.length > 0 ? parts.join(', ') : undefined;
 };
