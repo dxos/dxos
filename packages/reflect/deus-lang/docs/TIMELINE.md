@@ -79,6 +79,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 71  | 10-14 18:32 | 4m 00s         | `eaafb41d`  | builtins are URIs at the embedding boundary: urn:deus:builtin:IO (D68, the user's question)                                                                                             |
 | 72  | 10-14 18:39 | 7m 00s         | `757d74c8`  | wasm compares by type and refuses address compares (D69); Dmytro: merge everything into #13952                                                                                          |
 | 73  | 10-14 18:26 | 14m 46s        | `a85a6973`  | dialects: the codebase rendered in a TypeScript-like dialect (D70, `deus view --dialect ts`, explorer DEUS/TS switch, D65)                                                              |
-| 74  | 10-14 18:45 | 6m 00s         | this commit | merge the TypeScript-like dialect into this branch, renumbered D70, and fold everything into #13952                                                                                     |
+| 74  | 10-14 18:45 | 6m 00s         | `6a834107`  | merge the TypeScript-like dialect into this branch, renumbered D70, and fold everything into #13952                                                                                     |
+| 75  | 10-14 18:51 | 6m 00s         | this commit | unknown tactic names fail the proof instead of being skipped (D71)                                                                                                                      |
 
-Total from stage 1 to stage 74: 9h 17m.
+Total from stage 1 to stage 75: 9h 23m.

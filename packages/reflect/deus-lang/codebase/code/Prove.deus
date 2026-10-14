@@ -569,25 +569,30 @@ def Prove.proveTheorem (pr : Prover) (names : List Text) (types : List Sexp) (pr
     | Stuck.stuck why -> x0 => defect ("cannot state the theorem: " ++ why)
   let goal := Goal.mk [] (norm pr start) (zip names types)
   let steps := parseSteps proof
-  let rec run remaining goals :=
-    match remaining with
-    | [] => goals
-    | step :: rest =>
-        forEach
-          step.lemmas
-          (fun h => Ref.set pr.lemmaRules (Prove.lemmaRules pr h ++ Ref.get pr.lemmaRules))
-        let tactic := step.tactic
-        let target := getOr (head? step.stepArgs) ""
-        let apply1 := fun g => if tactic == "simp" then simp pr g else if tactic == "intro" then [intro pr g] else if tactic == "split" then getOr (Prove.split pr g) [g] else if tactic == "auto" then auto pr g 8 else if tactic == "induction" then getOr (induct pr g target true) [g] else if tactic == "cases" then getOr (induct pr g target false) [g] else if tactic == "trace" then
-          eprintln (goalText pr g)
-          [g]
-        else [g]
-        run rest (concatMap apply1 goals)
-  let left := run steps [goal]
-  if List.isEmpty left then Result.ok (join " " (dedup (sort (List.map (fun s => s.tactic) steps)))) else
-    match left with
-    | g :: _ => Result.err (toText (List.length left) ++ " goal(s) left; first:\n" ++ goalText pr g)
-    | [] => Result.err "no goals"
+  -- A misspelled tactic would otherwise do nothing, and the proof could still pass on the others.
+  match List.find (fun step => not (List.contains step.tactic tactics)) steps with
+  | Option.some step => Result.err ("unknown tactic " ++ step.tactic ++ "; the tactics are " ++ join ", " tactics ++
+      ", and a whole proof can be rfl, decide, test n or sorry")
+  | Option.none =>
+      let rec run remaining goals :=
+        match remaining with
+        | [] => goals
+        | step :: rest =>
+            forEach
+              step.lemmas
+              (fun h => Ref.set pr.lemmaRules (Prove.lemmaRules pr h ++ Ref.get pr.lemmaRules))
+            let tactic := step.tactic
+            let target := getOr (head? step.stepArgs) ""
+            let apply1 := fun g => if tactic == "simp" then simp pr g else if tactic == "intro" then [intro pr g] else if tactic == "split" then getOr (Prove.split pr g) [g] else if tactic == "auto" then auto pr g 8 else if tactic == "induction" then getOr (induct pr g target true) [g] else if tactic == "cases" then getOr (induct pr g target false) [g] else if tactic == "trace" then
+              eprintln (goalText pr g)
+              [g]
+            else [g]
+            run rest (concatMap apply1 goals)
+      let left := run steps [goal]
+      if List.isEmpty left then Result.ok (join " " (dedup (sort (List.map (fun s => s.tactic) steps)))) else
+        match left with
+        | g :: _ => Result.err (toText (List.length left) ++ " goal(s) left; first:\n" ++ goalText pr g)
+        | [] => Result.err "no goals"
 
 /-- No ability operations, handlers or impure primitives anywhere in a body. -/
 def Prove.pure (core : Sexp) : Bool :=
@@ -720,6 +725,9 @@ def Prove.symText (p : Printer) (s : Sym) (prec : Int) : Text :=
   | Sym.ctorFn ty tag _ xs => paren 90 prec (Print.conName p ty tag ++ args xs)
   | Sym.primFn name xs => paren 90 prec (name ++ args xs)
   | Sym.clo _ _ => "<function>"
+
+/-- The tactics `proveTheorem` runs. -/
+def Prove.tactics : List Text := ["simp", "intro", "split", "auto", "induction", "cases", "trace"]
 
 def Prove.trueSym : Sym := Sym.data "#Bool" 1 []
 

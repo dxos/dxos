@@ -1,3 +1,5 @@
+(entry "9210ebb09bd76473d642e272f2ef14d3ef69401e7e22c952e462a9996a496470" "close bf5681bf by #e7f95e998b" "claude")
+(entry "e7f95e998b329c62fae8ebccc3d27e4e4404e34f92265fa21ee335b01e8044a0" "prover: unknown tactics fail the proof (D71)" "claude")
 (entry "4e18596be8589cf60e13b2c8348a646ff4061b92d74ca8aa295d0e52ee9771ca" "merge the TypeScript-like dialect (D70) from #13952" "claude")
 (entry "2d1240fb3407ceead9de5954604066fe354df4ddd67d80365db5d4cc35d95bb3" "task: import 2 tasks" "")
 (entry "2aa065727b912dcfd5c84a1f4ed918a1930d5b4403d3f392545caadeb924bb5a" "task: open 186feaf2 wasm: structural equality on constructed values" "claude")

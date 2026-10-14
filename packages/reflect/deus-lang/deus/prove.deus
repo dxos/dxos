@@ -25,7 +25,10 @@
     simp [l₁, …]       evaluate and rewrite with hypotheses and the given lemmas
     split              case split on the first undecided `if` condition
     auto [l₁, …]       simp, then split / case on stuck variables, recursively (bounded)
-    rfl, decide        as before: closed evaluation, exhaustive enumeration
+    trace              print the open goals
+
+  Any other name fails the proof (D71). `rfl`, `decide`, `test n` and `sorry` are whole proofs,
+  checked by `deus/check.deus`, not steps of a script.
 -/
 
 /-- Symbolic values: data, free variables, and terms evaluation could not reduce. -/
@@ -807,37 +810,44 @@ def lemmaRules (pr : Prover) (h : Text) : {IO} List Rule :=
       | c => if isTrue c then [] else [Rule.mk c trueSym cs]
   | _ => []
 
+/-- The tactics `proveTheorem` runs. -/
+def tactics : List Text := ["simp", "intro", "split", "auto", "induction", "cases", "trace"]
+
 /-- Runs a tactic script on a theorem; `ok` with the steps used, or the goals left. -/
 def proveTheorem (pr : Prover) (names : List Text) (types : List Sexp) (prop : Sexp) (proof : List Sexp) : {IO} Result Text Text :=
   let start := handle apply pr (evalCore pr prop []) (List.map Sym.fv names) with
     | Stuck.stuck why -> _ => defect ("cannot state the theorem: " ++ why)
   let goal := Goal.mk [] (norm pr start) (List.zip names types)
   let steps := parseSteps proof
-  let rec run remaining goals :=
-    match remaining with
-    | [] => goals
-    | step :: rest =>
-      List.forEach step.lemmas (fun h => Ref.set pr.lemmaRules (lemmaRules pr h ++ Ref.get pr.lemmaRules))
-      let tactic := step.tactic
-      let target := Option.getOr (List.head? step.stepArgs) ""
-      let apply1 := fun (g : Goal) =>
-        if tactic == "simp" then simp pr g
-        else if tactic == "intro" then [intro pr g]
-        else if tactic == "split" then Option.getOr (split pr g) [g]
-        else if tactic == "auto" then auto pr g 8
-        else if tactic == "induction" then Option.getOr (induct pr g target true) [g]
-        else if tactic == "cases" then Option.getOr (induct pr g target false) [g]
-        else if tactic == "trace" then
-          eprintln (goalText pr g)
-          [g]
-        else [g]
-      run rest (List.concatMap apply1 goals)
-  let left := run steps [goal]
-  if List.isEmpty left then Result.ok (Text.join " " (List.dedup (List.sort (List.map (fun s => s.tactic) steps))))
-  else
-    match left with
-    | g :: _ => Result.err (Int.toText (List.length left) ++ " goal(s) left; first:\n" ++ goalText pr g)
-    | [] => Result.err "no goals"
+  -- A misspelled tactic would otherwise do nothing, and the proof could still pass on the others.
+  match List.find (fun step => not (List.contains step.tactic tactics)) steps with
+  | some step => Result.err ("unknown tactic " ++ step.tactic ++ "; the tactics are " ++ Text.join ", " tactics ++ ", and a whole proof can be rfl, decide, test n or sorry")
+  | none =>
+    let rec run remaining goals :=
+      match remaining with
+      | [] => goals
+      | step :: rest =>
+        List.forEach step.lemmas (fun h => Ref.set pr.lemmaRules (lemmaRules pr h ++ Ref.get pr.lemmaRules))
+        let tactic := step.tactic
+        let target := Option.getOr (List.head? step.stepArgs) ""
+        let apply1 := fun (g : Goal) =>
+          if tactic == "simp" then simp pr g
+          else if tactic == "intro" then [intro pr g]
+          else if tactic == "split" then Option.getOr (split pr g) [g]
+          else if tactic == "auto" then auto pr g 8
+          else if tactic == "induction" then Option.getOr (induct pr g target true) [g]
+          else if tactic == "cases" then Option.getOr (induct pr g target false) [g]
+          else if tactic == "trace" then
+            eprintln (goalText pr g)
+            [g]
+          else [g]
+        run rest (List.concatMap apply1 goals)
+    let left := run steps [goal]
+    if List.isEmpty left then Result.ok (Text.join " " (List.dedup (List.sort (List.map (fun s => s.tactic) steps))))
+    else
+      match left with
+      | g :: _ => Result.err (Int.toText (List.length left) ++ " goal(s) left; first:\n" ++ goalText pr g)
+      | [] => Result.err "no goals"
 
 /-- A goal as Lean prints one: hypotheses, then `⊢` and the proposition. -/
 def goalText (pr : Prover) (g : Goal) : Text :=

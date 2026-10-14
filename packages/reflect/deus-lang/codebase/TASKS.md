@@ -30,15 +30,6 @@ From Dmytro: figure out QA flows for web apps, using what dxos does (.mdl QA tes
 
 From Dmytro. Measure it against share.unison-lang.org: search, navigation, dependency links, history.
 
-## The prover ignores tactic names it does not know (`bf5681bf`)
-
-- state: todo
-- priority: high
-- assignee: claude
-- labels: bug, proofs, spec
-
-From docs/spec/README.md, Known divergences.
-
 ## Work without git: the codebase is where the toolchain is developed, git only backs it up (`86d7b02a`)
 
 - state: todo
@@ -179,6 +170,16 @@ A fresh container restored codebase/ (deus add code; task import) and got one ne
 - priority: high
 - assignee: claude
 - labels: explorer
+
+## The prover ignores tactic names it does not know (`bf5681bf`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: bug, proofs, spec
+- links change #e7f95e998b
+
+From docs/spec/README.md, Known divergences.
 
 ## deus export drops attributes, .mdl specs, the project file and some doc comments (`5fe4c8b1`)
 

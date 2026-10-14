@@ -1,5 +1,7 @@
 # History of main
 
+- `9210ebb09b` close bf5681bf by #e7f95e998b (by claude)
+- `e7f95e998b` prover: unknown tactics fail the proof (D71) (by claude)
 - `4e18596be8` merge the TypeScript-like dialect (D70) from #13952 (by claude)
 - `2d1240fb34` task: import 2 tasks
 - `2aa065727b` task: open 186feaf2 wasm: structural equality on constructed values (by claude)
