@@ -61,6 +61,7 @@ import { commonSchema, mergeValues, patchValues } from '../../utils/properties.t
 import { type SceneOption } from '../../utils/scenes.ts';
 import { flipLink } from '../../utils/shapes.ts';
 import { classedLink, classedNode, resolveStyle, splitClassEdit } from '../../utils/style.ts';
+import { InspectorMenu } from '../InspectorMenu/index.ts';
 import { AlignField } from './AlignField.tsx';
 import { StyleClassesContext } from './ClassField.tsx';
 import { FontField } from './FontField.tsx';
@@ -189,6 +190,8 @@ export type PropertiesProps = Util.ThemedClassName<{
   onGroup?: () => void;
   /** Whether the panel is docked beside the canvas. */
   docked?: boolean;
+  /** Docks or floats the inspectors, from the panel's menu; the item shows only when given. */
+  onDockedChange?: (docked: boolean) => void;
 }>;
 
 export const Properties = ({
@@ -205,6 +208,7 @@ export const Properties = ({
   styles,
   onGroup,
   docked = false,
+  onDockedChange,
 }: PropertiesProps) => {
   const registry = useRegistry();
   const scene = useAtomValue(projection.scene);
@@ -311,6 +315,14 @@ export const Properties = ({
   if (elements.length === 0) {
     return (
       <Panel.Root classNames={classNames} data-testid='properties' {...{ [SCENE_OVERLAY_ATTRIBUTE]: true }}>
+        {onDockedChange && (
+          <Panel.Header asChild>
+            <Toolbar.Root data-testid='properties-toolbar'>
+              <Toolbar.Separator variant='gap' />
+              <InspectorMenu docked={docked} onDockedChange={onDockedChange} data-testid='properties-menu' />
+            </Toolbar.Root>
+          </Panel.Header>
+        )}
         <Panel.Body>
           <p className='p-2 text-sm text-fg-muted'>Select a node or link to edit its properties.</p>
         </Panel.Body>
@@ -356,6 +368,8 @@ export const Properties = ({
               onClick={onFlip}
             />
           )}
+          <Toolbar.Separator variant='gap' />
+          <InspectorMenu docked={docked} onDockedChange={onDockedChange} data-testid='properties-menu' />
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body>

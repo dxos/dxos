@@ -20,7 +20,7 @@ export type CSSVariables = Record<`--${string}`, string>;
 export type Gutter = 'rail' | 'inset' | 'sm' | 'md' | 'lg' | 'none' | 'inherit';
 
 /** Space between the container's rows; the current `ColumnGap` steps (0.25, 0.5, 0.75rem). */
-export type ContainerGap = 'none' | 'sm' | 'md' | 'lg';
+export type ContainerGap = 'none' | 'sm' | 'md' | 'lg' | 'xl';
 
 /** Tracks a child spans in its parent Container: a count, or `full` for every track of the content area. */
 export type Span = number | 'full';

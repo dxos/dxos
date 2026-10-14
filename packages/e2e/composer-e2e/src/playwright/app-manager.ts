@@ -255,6 +255,26 @@ export class AppManager {
     return tag;
   }
 
+  /** Waits until every device of this identity, its EDGE agent included, holds a control feed in every space. */
+  async waitForAgentInSpaces(): Promise<void> {
+    await expect
+      .poll(
+        () =>
+          this.page.evaluate(() => {
+            const devices = globalThis.dxos?.client?.halo.devices.get() ?? [];
+            const spaces = globalThis.dxos?.spaces?.() ?? [];
+            const agentJoined = devices.length > 1;
+            return (
+              agentJoined &&
+              spaces.length > 0 &&
+              spaces.every((space) => (space.pipeline.get().controlFeeds?.length ?? 0) >= devices.length)
+            );
+          }),
+        { timeout: 60_000, message: 'the EDGE agent was not admitted to every space' },
+      )
+      .toBe(true);
+  }
+
   /** Fails unless the page still holds the document {@link markDocument} tagged. */
   async expectSameDocument(tag: string): Promise<void> {
     expect(await this.page.evaluate(() => globalThis.e2eDocumentTag), 'the page reloaded').toBe(tag);
@@ -738,6 +758,18 @@ export class AppManager {
     return this.page.getByTestId('spacePlugin.space');
   }
 
+  getWorkspaceItems(): Locator {
+    return this.page.getByTestId('navtree.workspaces').locator('[data-object-id]');
+  }
+
+  async getWorkspaceOrder(): Promise<(string | null)[]> {
+    return Promise.all((await this.getWorkspaceItems().all()).map((item) => item.getAttribute('data-object-id')));
+  }
+
+  getWorkspaceItem(id: string): Locator {
+    return this.getWorkspaceItems().and(this.page.locator(`[data-object-id="${id}"]`));
+  }
+
   getObjectLinks(): Locator {
     return this.currentWorkspace.getByTestId('spacePlugin.object');
   }
@@ -770,10 +802,16 @@ export class AppManager {
     const startY = start.y + start.height / 2;
     await active.hover();
     await this.page.mouse.down();
-    // Past the drag threshold, still inside the source row, and toward the target: a nudge away from
-    // it leaves the pointer over the row that slides into the dragged row's place.
-    await this.page.mouse.move(startX, startY + (initial.y < start.y ? -6 : 6), { steps: 2 });
-    await expect(active).toHaveAttribute('data-dragging');
+    // WebKit starts a native drag only once the pointer leaves the source element.
+    const towardTarget = initial.y < start.y ? -1 : 1;
+    let distance = 0;
+    await expect
+      .poll(async () => {
+        distance = Math.min(distance + 6, start.height);
+        await this.page.mouse.move(startX, startY + towardTarget * distance, { steps: 2 });
+        return active.getAttribute('data-dragging');
+      })
+      .not.toBeNull();
 
     const box = await over.boundingBox();
     if (!box) {

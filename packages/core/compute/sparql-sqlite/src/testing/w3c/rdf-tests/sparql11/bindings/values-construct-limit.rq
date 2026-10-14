@@ -1,0 +1,8 @@
+PREFIX : <http://example.org/>
+
+CONSTRUCT { ?s :rank ?rank } WHERE {
+  ?s :p ?o
+}
+ORDER BY ?s
+LIMIT 1
+VALUES (?s ?rank) { (:b 2) (:c 3) }

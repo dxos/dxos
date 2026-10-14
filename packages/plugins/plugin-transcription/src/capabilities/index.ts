@@ -2,9 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
@@ -13,9 +15,6 @@ import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { TranscriptionCapabilities, TranscriptionEvents } from '#types';
-
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../../PLUGIN.mdl?raw';
 
 // RecordingSession / PipelineStatus / TranscriptionSettings stay eager with the driver
 // (ReactContext): its components read them via strict useAtomCapability hooks, so deferring
@@ -72,15 +71,20 @@ export const Transcriber = Capability.lazyModule(
 export const TranscriptionSettings = AppCapability.settings(() => import('./settings.ts'), {
   provides: [TranscriptionCapabilities.Settings],
 });
+// The fragment targets dictatable types (markdown documents and chats), so it is only useful once either has started.
 export const TourFragment = Capability.lazyModule(
   'TourFragment',
-  { provides: [AppCapabilities.TourFragment], environments: ['browser', 'tauri'] },
+  {
+    provides: [AppCapabilities.TourFragment],
+    activatesOn: ActivationEvent.oneOf(MarkdownEvents.Start, AppActivationEvents.AssistantStart),
+    environments: ['browser', 'tauri'],
+  },
   () => import('./tour-fragment.ts'),
 );
 export const Translations = AppCapability.translations(translations);
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
   path: 'PLUGIN.mdl',
-  content: pluginSpec,
+  content: () => import('../../PLUGIN.mdl?raw'),
   mimeType: 'application/x-mdl',
 });

@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { expect, within } from 'storybook/test';
+import { expect, userEvent, within } from 'storybook/test';
 
 import { type Identity } from '@dxos/halo';
 import { PublicKey } from '@dxos/keys';
@@ -58,5 +58,49 @@ export const TestLongListScrollsWithForm: Story = {
     );
     await expect(scrollers).toHaveLength(1);
     await expect(scrollers[0].contains(items[29])).toBe(true);
+  },
+};
+
+/** The value, or a failure naming what is missing. */
+const required = <T,>(value: T | null | undefined, name: string): T => {
+  if (value === null || value === undefined) {
+    throw new Error(`Missing ${name}.`);
+  }
+  return value;
+};
+
+const highlighted = (content: HTMLElement) =>
+  required(content.querySelector<HTMLElement>('[role="option"][data-highlighted]'), 'highlighted row');
+
+/**
+ * The devices are Listbox rows: the arrow keys move the highlight, and the ring is drawn over the whole row, so the
+ * device tile at its start and the tag at its end sit inside it rather than covering it.
+ */
+export const TestRows: Story = {
+  args: { devices: makeDevices(3) },
+  play: async ({ canvasElement }) => {
+    const content = await within(canvasElement).findByRole('listbox');
+    const rows = within(content).getAllByRole('option');
+    await expect(rows).toHaveLength(3);
+
+    content.focus();
+    await userEvent.keyboard('{ArrowDown}');
+    const first = highlighted(content);
+    await userEvent.keyboard('{ArrowDown}');
+    await expect(rows.indexOf(highlighted(content))).toBe(rows.indexOf(first) + 1);
+    await userEvent.keyboard('{ArrowUp}');
+    await expect(highlighted(content)).toBe(first);
+
+    const row = first.getBoundingClientRect();
+    const ring = getComputedStyle(first, '::before');
+    await expect(ring.boxShadow).not.toBe('none');
+    await expect(Number.parseFloat(ring.width)).toBeCloseTo(row.width, 0);
+    // Above the row's parts, so the tile flush with the row's start cannot hide the ring's edge.
+    await expect(Number(ring.zIndex)).toBeGreaterThan(0);
+    const tile = required(first.querySelector('[data-part="item-icon"]'), 'tile').getBoundingClientRect();
+    const label = required(first.querySelector('[data-part="item-text"]'), 'label').getBoundingClientRect();
+    await expect(tile.left).toBeGreaterThanOrEqual(row.left);
+    await expect(tile.right).toBeLessThanOrEqual(label.left + 1);
+    await expect(label.right).toBeLessThanOrEqual(row.right);
   },
 };
