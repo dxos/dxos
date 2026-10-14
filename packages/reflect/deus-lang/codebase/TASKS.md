@@ -147,14 +147,6 @@ Known gaps R-10 and R-12 in docs/spec/CODEBASE-STORE.mdl.
 - assignee: claude
 - labels: mdl, spec
 
-## Native: 32-bit values with a tag bit in wasm built through C (halve block size) (`38603468`)
-
-- state: todo
-- priority: medium
-- labels: native, perf, wasm
-
-D90 widens values to 64 bits so blocks and integers can be told apart in wasm32; this doubles block size and makes list sorts 1.1-1.8x slower than the never-freeing --wasm back end (docs/spec/NATIVE.md#wasm-through-c). A low tag bit on Int (or on pointers) keeps 32-bit words but changes every arithmetic op in both back ends.
-
 ## Native: a C runtime for Text, maps and the other primitives, ported from the Rust kernel (`72a1f2fb`)
 
 - state: todo
@@ -224,12 +216,6 @@ Follow-up of 17d50ae5: a parameter or result of function type is skipped. A TS c
 - priority: low
 - assignee: claude
 - labels: browser
-
-## Native: reuse freed blocks over 256 words (long arrays) in the C back end (`f7d39ad6`)
-
-- state: todo
-- priority: low
-- labels: native, perf
 
 ## Parse the TypeScript-like dialect back into Core (`be4c4645`)
 
@@ -320,6 +306,14 @@ Dmytro: 'we need generated pretty ts apis with .d.ts'. Top-level functions, cons
 - links change #21fbd2e94f
 
 Dmytro: track tasks in codebase and make sure its up to date. The export on #13952 could not be restored: Cli and Replicate referred to old versions of Update.propagate, Project.reachable and five others, which print as raw hashes. Restored by naming them, then updated with every source under deus/ and platform/, including the codebase UI (dfaad231).
+
+## Catch the R2 remote up with the git export and push it, so threads can start from deus pull (`e76e36b0`)
+
+- state: canceled
+- priority: high
+- labels: vcs, codebase
+
+Canceled: it targeted r2://agent-artifacts/deus/explorer-demo, which is a demo codebase. The toolchain's remote is r2://agent-artifacts/deus/toolchain, which the publish thread seeds from codebase/ (D101).
 
 ## Codebase UI on par with Unison Share: finder, namespaces, hover previews, diffs (`7ff351a9`)
 
@@ -807,6 +801,14 @@ Dmytro: those should be clickable. Tiles open k:<kind> lists (k:checks failing f
 
 deus explore could ship deus_kernel.wasm, the seed and a JSON snapshot of the codebase directory; platform/browser/playground.mjs --codebase shows the shape. A definition card could get Run and Eval.
 
+## Native: 32-bit values with a tag bit in wasm built through C (halve block size) (`38603468`)
+
+- state: canceled
+- priority: medium
+- labels: native, perf, wasm
+
+Canceled (D102): DEUS Int is 32 bits with wrapping, so a tag bit would need 33; 64-bit values in wasm stay.
+
 ## Native: a C runtime for Text, maps and the other primitives, ported from the Rust kernel (`434a6dbc`)
 
 - state: canceled
@@ -982,6 +984,13 @@ D69 refuses == on data; generate per-type compare functions from the type object
 - links change #387eb2652a
 
 From docs/spec/README.md, Known divergences.
+
+## Native: reuse freed blocks over 256 words (long arrays) in the C back end (`f7d39ad6`)
+
+- state: done
+- priority: low
+- labels: native, perf
+- links change #eddca32cd2
 
 ## Type display names a type by its IRI's tail (task:Task) instead of its name (Task) (`f6a2c2ff`)
 

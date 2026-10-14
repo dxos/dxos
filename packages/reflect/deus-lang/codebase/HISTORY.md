@@ -1,5 +1,8 @@
 # History of main
 
+- `7093a34ef8` export: merge 13 changes from codebase
+- `eef27fdc12` export: merge tasks from codebase
+- `eb47c4209c` merge #13952's branch (D101, D102); View fix renumbered D103 (by claude)
 - `5c0e49121c` Explorer.Spec: api signatures name types as the header now prints them (D101) (by claude)
 - `f8d7887d0d` task: set f6a2c2ff state (by claude)
 - `7e1fcbca9a` close 4f7f9e40 by #8cb84289e1 (by claude)
@@ -138,6 +141,19 @@
 - `7453b3a1b7` task: import 18 tasks
 - `bff1b8d98b` add code
 - `67c7d5a614` init
+- `3796ba0f06` task: set 38603468 state details (by claude)
+- `569730f40a` close f7d39ad6 by #eddca32cd2 (by claude)
+- `eddca32cd2` C back end: reuse freed blocks over 256 words by exact fit (D102) (by claude)
+- `3d4d7adba4` task: set e76e36b0 state (by claude)
+- `fa3a704b26` task: set e76e36b0 details (by claude)
+- `26b25952c4` history: import 507 changes
+- `ce1b500e79` task: import from tasks.sexp
+- `880640eb13` task: set e76e36b0 state (by claude)
+- `ea44281ed7` task: set e76e36b0 details (by claude)
+- `7be4505616` task: open e76e36b0 Catch the R2 remote up with the git export and push it, so threads can start from deus pull (by claude)
+- `77337bc6cf` history: import 501 changes
+- `1e220da057` task: import from tasks.sexp
+- `3c07f87183` add code specs
 - `0833dc37cb` task: set 50e58574 details
 - `8755200a57` history: import 459 changes (by claude)
 - `d435c5cfa7` task: import from tasks.sexp
