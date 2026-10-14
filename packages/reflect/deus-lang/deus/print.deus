@@ -6,6 +6,7 @@
 
 structure Printer where
   display : Map Text Text
+  fullNames : Map Text Text
   typeNames : Map Text Text
   fieldNames : Map Text Text
   supply : Ref (List Text)
@@ -50,11 +51,11 @@ def printer (ns : Map Text Entry) (locals : List Text) : Printer :=
         | (some (Entry.term h), some [_]) => Map.insert h f m2
         | _ => m2) m fields
     | _ => m) Map.empty (Map.toList ns)
-  Printer.mk display typeNames fieldNames (Ref.new locals) (Ref.new 0)
+  Printer.mk display index typeNames fieldNames (Ref.new locals) (Ref.new 0)
 
 /-- A printer sharing `base`'s name tables (built once per namespace) with its own locals. -/
 def withLocals (base : Printer) (locals : List Text) : Printer :=
-  Printer.mk base.display base.typeNames base.fieldNames (Ref.new locals) (Ref.new 0)
+  Printer.mk base.display base.fullNames base.typeNames base.fieldNames (Ref.new locals) (Ref.new 0)
 
 def nameFor (p : Printer) (key : Text) : Text :=
   match Map.lookup key p.display with
@@ -75,6 +76,11 @@ def mentions (name : Text) (text : Text) : Bool :=
     else if (found == 0 || not (isWord (Text.code text (found - 1)))) && not (isWord (Text.code text (found + n))) then true
     else scan (found + 1)
   scan 0
+
+/-- A reference's name where `env` is in scope: its display name, or its full name when a local shadows that. -/
+def refName (p : Printer) (key : Text) (env : List Text) : Text :=
+  let name := nameFor p key
+  if List.contains name env then Option.getOr (Map.lookup key p.fullNames) name else name
 
 /-- The next binder name: the author's, made unique against the names in scope. -/
 def bind (p : Printer) (env : List Text) : Text :=
@@ -188,7 +194,7 @@ def lambdaHead (p : Printer) (fn : Sexp) (env : List Text) (ind : Int) : Text :=
 def expr (p : Printer) (t : Sexp) (env : List Text) (ind : Int) (prec : Int) : Text :=
   match t with
   | Sexp.list [Sexp.sym "var", Sexp.int i] => Option.getOr (List.get? env i) ("$" ++ Int.toText i)
-  | Sexp.list [Sexp.sym "ref", Sexp.str h] => nameFor p h
+  | Sexp.list [Sexp.sym "ref", Sexp.str h] => refName p h env
   | Sexp.list [Sexp.sym "int", Sexp.int v] => if v < 0 then paren 99 prec (Int.toText v) else Int.toText v
   | Sexp.list [Sexp.sym "text", Sexp.str v] => quoteText v
   | Sexp.list [Sexp.sym "prim", Sexp.str name] => paren 90 prec ("prim " ++ quoteText name)
@@ -256,7 +262,17 @@ def expr (p : Printer) (t : Sexp) (env : List Text) (ind : Int) (prec : Int) : T
       | none => application p f args env ind prec
     | (Sexp.list [Sexp.sym "prim", Sexp.str name], [a, b]) =>
       match infixOf name with
-      | some (op, level) => paren level prec (expr p a env ind level ++ " " ++ op ++ " " ++ expr p b env ind (level + 1))
+      | some (op, level) =>
+        let supply := Ref.get p.supply
+        let fresh := Ref.get p.fresh
+        let flat := expr p a env ind level ++ " " ++ op ++ " " ++ expr p b env ind (level + 1)
+        if fits ind flat then paren level prec flat
+        else
+          -- Too long: break after the operator; a chain of one operator breaks at each.
+          Ref.set p.supply supply
+          Ref.set p.fresh fresh
+          let left := expr p a env ind level
+          paren level prec (left ++ " " ++ op ++ "\n" ++ spaces (ind + 2) ++ expr p b env (ind + 2) (level + 1))
       | none => application p f args env ind prec
     | (Sexp.list [Sexp.sym "prim", Sexp.str "Int.neg"], [a]) => paren 95 prec ("-" ++ expr p a env ind 100)
     | (Sexp.list [Sexp.sym "con", Sexp.str "#Pair", Sexp.int 0, Sexp.int 2], [_, _]) =>
@@ -268,8 +284,28 @@ def expr (p : Printer) (t : Sexp) (env : List Text) (ind : Int) (prec : Int) : T
     | _ => application p f args env ind prec
   | _ => paren 100 prec (Sexp.print t)
 
+/-- Columns a printed line may take before an application breaks its arguments onto lines of their own. -/
+def width : Int := 100
+
+/-- Whether text starting at indentation `ind` keeps its first line within `width`; later lines made their own choice. -/
+def fits (ind : Int) (text : Text) : Bool :=
+  let first := Option.getOr (List.head? (Text.lines text)) text
+  ind + Text.length first <= width
+
+/--
+  `f a b` on one line when it fits, else `f` then one argument per line, indented. Binder names
+  are drawn as text is made, so the one-line attempt is undone before the second.
+-/
 def application (p : Printer) (f : Sexp) (args : List Sexp) (env : List Text) (ind : Int) (prec : Int) : Text :=
-  paren 90 prec (expr p f env ind 90 ++ Text.concat (List.map (fun a => " " ++ expr p a env ind 100) args))
+  let supply := Ref.get p.supply
+  let fresh := Ref.get p.fresh
+  let flat := expr p f env ind 90 ++ Text.concat (List.map (fun a => " " ++ expr p a env ind 100) args)
+  if fits ind flat || List.length args < 2 then paren 90 prec flat
+  else
+    Ref.set p.supply supply
+    Ref.set p.fresh fresh
+    let head := expr p f env ind 90
+    paren 90 prec (head ++ Text.concat (List.map (fun a => "\n" ++ spaces (ind + 2) ++ expr p a env (ind + 2) 100) args))
 
 /-- A pattern and the environment it extends (binders in order). -/
 def pattern (p : Printer) (pat : Sexp) (env : List Text) : (Text, List Text) :=
