@@ -1,5 +1,8 @@
 # History of main
 
+- `83474d34b9` export: merge 19 changes from codebase
+- `aabff4cf3c` export: merge tasks from codebase
+- `63e3914ad2` merge #13952's branch (C refcounting D86, TS bindings D87); spellings and union merge renumbered D88, D89 (by claude)
 - `374b38babb` export: merge 4 changes from codebase
 - `bd6bedcbc4` export: merge tasks from codebase
 - `cb1f41b30f` merge #13952's branch: explorer console (D84, D85); spellings and union merge renumbered D86, D87 (by claude)
@@ -80,6 +83,25 @@
 - `7453b3a1b7` task: import 18 tasks
 - `bff1b8d98b` add code
 - `67c7d5a614` init
+- `8fefe275fc` task: comment on 27d2d190 (by claude)
+- `3e65353735` delete Bindings.handlerDecl Bindings.member Bindings.typeDecl
+- `acdf257ca5` close 27d2d190 by #a1cc2bcbf9 (by claude)
+- `a1cc2bcbf9` Bindings emit a .js module and a hand-written-looking .d.ts; spec-first in BINDINGS.mdl, whose theorems found a distinct() collision bug (D87) (by claude)
+- `5f721fc110` task: set 27d2d190 state (by claude)
+- `03e8b7f152` task: open 27d2d190 Bindings: pretty TypeScript API (.js + .d.ts), spec-first in BINDINGS.mdl
+- `44071e35f6` history: import 223 changes
+- `6a9d543900` task: import from tasks.sexp
+- `a050870707` add code specs
+- `18b3ef016c` C back end: MUSTTAIL only where the C compiler has it (D86) (by claude)
+- `22f3b808cf` task: open f7d39ad6 Native: reuse freed blocks over 256 words (long arrays) in the C back end (by claude)
+- `5f3fbc3f4d` task: open ef46861c Native: reference counting with reuse in the wasm back end (D86's scheme) (by claude)
+- `06539159c6` task: set 62d1bdda details (by claude)
+- `a6a923b3cb` close 62d1bdda by #dbf6867c1b (by claude)
+- `dbf6867c1b` C back end: reference counting with reuse, borrowed parameters, in-place matches (D86) (by claude)
+- `a39946d067` task: set 62d1bdda state (by claude)
+- `07c79505a1` history: import 213 changes
+- `42c39f5638` task: import from tasks.sexp
+- `14b39bdcec` add code specs
 - `c3fa452f17` task: open 729ad2b4 Apply the explorer inbox every 15 minutes once the Worker is deployed with its GitHub secrets (D85) (by claude)
 - `44e512757f` close d2328509 by #0f3089d483 (by claude)
 - `0f3089d483` the explorer's live console, deus explore --console (D84) (by claude)

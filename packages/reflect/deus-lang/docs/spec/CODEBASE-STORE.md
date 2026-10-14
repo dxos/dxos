@@ -143,7 +143,7 @@ new hash). The fields:
 | `fields`    | `(fields (c "name" …) …)`      | types                  | constructor field names, one `c` per constructor, `""` unnamed                                                                    |
 | `lead`      | `(lead "text")`                | any definition         | the ordinary comments written before the declaration (D66)                                                                        |
 | `notes`     | `(notes (n i "text") …)`       | terms, tests           | comments before a statement or an arm; `i` is the pre-order index of that node among the list nodes of the Core (D66)             |
-| `spellings` | `(spellings (n i "text") …)`   | terms, tests           | number literals written other than in decimal (`'a'`, `0xFF`, `1_000`); `i` indexes the `int` or `pint` node as for `notes` (D86) |
+| `spellings` | `(spellings (n i "text") …)`   | terms, tests           | number literals written other than in decimal (`'a'`, `0xFF`, `1_000`); `i` indexes the `int` or `pint` node as for `notes` (D88) |
 
 Sample (`meta/595ca8…`, the term above):
 

@@ -146,16 +146,16 @@ pushes. Bundle names are described in [CODEBASE-BINARY.md](./CODEBASE-BINARY.md)
 
 ### Running and checking
 
-| Command                       | Document                                                                          |
-| ----------------------------- | --------------------------------------------------------------------------------- |
-| `eval <expr>`                 | `{"value": string}`: the value printed as source                                  |
-| `test [prefix]`               | `result[]`, sorted by name                                                        |
-| `check [prefix]`              | `result[]`, sorted by name                                                        |
-| `mdl [files…]`                | `[{"block": place, "status": "ok"\|"fail"\|"unchecked", "problems": string[]}]`   |
-| `build <name> -o <out>`       | `{"binary": out}`, with or without `--native`, `--server`, `--worker` or `--wasm` |
-| `bindings <prefix…> -o <dir>` | `{"module": path, "exported": name[], "skipped": [{"name", "reason"}]}`           |
-| `explore --out <dir>`         | `{"definitions": number, "out": dir}`                                             |
-| `explore --publish <r>`       | `{"definitions": number, "remote": r, "files": number, "uploaded": number}`       |
+| Command                       | Document                                                                               |
+| ----------------------------- | -------------------------------------------------------------------------------------- |
+| `eval <expr>`                 | `{"value": string}`: the value printed as source                                       |
+| `test [prefix]`               | `result[]`, sorted by name                                                             |
+| `check [prefix]`              | `result[]`, sorted by name                                                             |
+| `mdl [files…]`                | `[{"block": place, "status": "ok"\|"fail"\|"unchecked", "problems": string[]}]`        |
+| `build <name> -o <out>`       | `{"binary": out}`, with or without `--native`, `--server`, `--worker` or `--wasm`      |
+| `bindings <prefix…> -o <dir>` | `{"module": path, "types": path, "exported": name[], "skipped": [{"name", "reason"}]}` |
+| `explore --out <dir>`         | `{"definitions": number, "out": dir}`                                                  |
+| `explore --publish <r>`       | `{"definitions": number, "remote": r, "files": number, "uploaded": number}`            |
 
 A `test` or `check` result is one of:
 

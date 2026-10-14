@@ -552,7 +552,7 @@ def strip (form : Sexp) : (Sexp, List Text) :=
   match stripNoted form with
   | (core, names, _, _) => (core, names)
 
-/-- `strip`, also returning the comments (D66) and number spellings (D86) it removed. -/
+/-- `strip`, also returning the comments (D66) and number spellings (D88) it removed. -/
 def stripNoted (form : Sexp) : (Sexp, List Text, List (Int, Text), List (Int, Text)) :=
   match stripAcc form [] with
   | (named, names) =>
@@ -562,7 +562,7 @@ def stripNoted (form : Sexp) : (Sexp, List Text, List (Int, Text), List (Int, Te
 /--
   Removes `(note "text" e)` and `(spelled "text" e)` nodes. Each is returned with the pre-order
   index of `e` among the list nodes of the result, the position `Print.restore` puts it back at
-  (D66, D86): comments first, then spellings.
+  (D66, D88): comments first, then spellings.
 -/
 def unnote (form : Sexp) : (Sexp, List (Int, Text), List (Int, Text)) :=
   let rec go x count acc spellings :=

@@ -178,7 +178,7 @@ def readBase (dir : Text) (out : Text) : {IO, Throw Text} Map Text Text :=
   | none => Map.empty
 
 /--
-  The tasks of a `tasks.sexp`, stored, as id -> task object hash. A git union merge (D87) can leave
+  The tasks of a `tasks.sexp`, stored, as id -> task object hash. A git union merge (D89) can leave
   two versions of a task; the one that is not a version `past` holds wins, else the later line.
 -/
 def fileSnapshot (dir : Text) (text : Text) (past : Map Text Unit) : {IO} Map Text Text :=

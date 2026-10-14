@@ -285,6 +285,14 @@ as git, we should be able to keep entire code history without trimming, artifact
 
 ---
 
+- we need generated pretty ts apis with .d.ts
+
+---
+
+how much of .mdl are you dogfooding? the general process should be mdl spec > apis + theorems > impls and proofs and tests. maybe backfill this for existing code and keep using this process as you go, eval it
+
+---
+
 can you confirm that all codebase changes are stil backed-up to git
 
 ---

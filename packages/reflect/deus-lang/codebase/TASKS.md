@@ -9,17 +9,17 @@
 
 From Dmytro: an artifact is a constant whose value is cached, e.g. deusCli := Deus.toBinary Cli.main; evaluating it once caches the result in the artifacts layer by the hash of the expression.
 
-## Native: Perceus reference counting with reuse for the C back end, so compiled programs free memory (`62d1bdda`)
-
-- state: todo
-- priority: high
-- labels: native, perf
-
 ## Native: Perceus reference counting with reuse for the C back end, so compiled programs free memory (`932f4034`)
 
 - state: todo
 - priority: high
 - labels: native, perf
+
+## Native: reference counting with reuse in the wasm back end (D86's scheme) (`ef46861c`)
+
+- state: todo
+- priority: high
+- labels: native, perf, wasm
 
 ## Pure Array.set that writes in place when the array is unique (Lean 4 / Koka FBIP): Rc::get_mut in the Rust kernel, the reference count in compiled code, a copy on the TypeScript kernel (D83) (`95ca184f`)
 
@@ -235,6 +235,12 @@ D69 refuses == on data; generate per-type compare functions from the type object
 
 From docs/spec/README.md, Known divergences.
 
+## Native: reuse freed blocks over 256 words (long arrays) in the C back end (`f7d39ad6`)
+
+- state: todo
+- priority: low
+- labels: native, perf
+
 ## Parse the TypeScript-like dialect back into Core (`be4c4645`)
 
 - state: todo
@@ -289,6 +295,18 @@ Follow-up of db71c327: bindings run on the wasm kernel only. The TS kernel (src/
 deus export: source per namespace, tasks and history as text, committed to the repo.
 
 > claude: deus export packages/reflect/deus-lang/codebase writes code/, tasks.sexp, TASKS.md and HISTORY.md; a restore into an empty codebase gives the same 1380 names and hashes.
+
+## Bindings: pretty TypeScript API (.js + .d.ts), spec-first in BINDINGS.mdl (`27d2d190`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: interop, typescript
+- links change #a1cc2bcbf9
+
+Dmytro: 'we need generated pretty ts apis with .d.ts'. Top-level functions, constructor objects, handler interfaces, configure/load, Throw -> DeusThrow by default. Written spec-first per Dmytro's process: docs/spec/BINDINGS.mdl (requirements, API, theorems), then implementation and tests (D87).
+
+> claude: Done: docs/spec/BINDINGS.mdl first (R-1..R-11, ten theorems), then the generator. The first deus check found distinct() colliding on (text, text, text1, text2); fixed. Tests: strict tsc on a consumer with @ts-expect-error probes, every export run, theorems checked in CI.
 
 ## Bring the codebase up to date with the toolchain sources; the export had raw hashes (`b2166fc8`)
 
@@ -508,6 +526,15 @@ deus build --c compiles the wasm subset to C (deus/cgen.deus); clang -O2 is with
 - assignee: claude
 - labels: review, bug
 - links `Build.kernel` (#3a3356fef8)
+
+## Native: Perceus reference counting with reuse for the C back end, so compiled programs free memory (`62d1bdda`)
+
+- state: done
+- priority: high
+- labels: native, perf
+- links change #dbf6867c1b
+
+Done for the C back end (D86, docs/spec/NATIVE.md#memory). The wasm back end follows as its own task.
 
 ## Restoring the git export loses history, so the next export rewrites HISTORY.md (`5a02d566`)
 

@@ -37,7 +37,7 @@ def Export.exported (e : Entry) : Bool :=
   | Entry.ability _ _ => true
   | _ => false
 
-/-- The tasks of a `tasks.sexp`, stored, as id -> task object hash. A git union merge (D87) can leave
+/-- The tasks of a `tasks.sexp`, stored, as id -> task object hash. A git union merge (D89) can leave
   two versions of a task; the one that is not a version `past` holds wins, else the later line. -/
 def Export.fileSnapshot (dir : Text) (text : Text) (past : Map Text Unit) : {IO} Map Text Text := foldl (fun m form =>
   let t := Tasks.fromSexp form

@@ -221,7 +221,7 @@ def Compile.collect (files : List (Text, List Decl)) : List Item :=
     | (path, decls) => walk path decls [] [["Option"]] "" acc) [] files)
 
 /-- Comment metadata (D66): `(lead "…")` before the declaration, `(notes (n i "…") …)` inside it;
-  `(spellings (n i "…") …)` for number literals the source wrote another way (D86). -/
+  `(spellings (n i "…") …)` for number literals the source wrote another way (D88). -/
 def Compile.commentMeta (lead : Text) (notes : List (Int, Text)) (spellings : List (Int, Text)) : List Sexp :=
   let indexed := fun head list => if List.isEmpty list then [] else [Compile.node head (List.map (fun pair => Compile.node "n" [i (fst pair), Sexp.s (snd pair)]) list)]
   (if Text.isEmpty lead then [] else [Compile.node "lead" [Sexp.s lead]]) ++ indexed "notes" notes ++

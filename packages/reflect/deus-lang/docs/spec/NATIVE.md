@@ -16,24 +16,71 @@ the ones raised while gathering definitions, which name the wasm subset they sha
 
 ## The C it writes
 
-| Core                             | C                                                                                         |
-| -------------------------------- | ----------------------------------------------------------------------------------------- |
-| a definition of arity n          | `static V fᵢ(V l0, …, V lₙ₋₁)`; `V` is `intptr_t`                                         |
-| `(int n)`                        | `(V)n`                                                                                    |
-| `Int.add`, `sub`, `mul`          | `ADD(a, b)` …: computed in `uint32_t`, sign-extended back, so arithmetic wraps at 32 bits |
-| `Int.div`, `Int.mod`             | `DIV`, `MOD`: trap on zero; `x / -1` is `0 - x`, as in the interpreter                    |
-| comparisons, `and`/`or`/`xor`    | the C operator on `V`s, cast back to `V`                                                  |
-| `(con "T" tag 0)`                | `(V)&deus_nullary[tag]`: one static block per tag, never allocated                        |
-| `(app (con "T" tag n) a…)`       | a block `[tag, a…]` of `n + 1` words from a bump allocator that never frees               |
-| `match`                          | one `do { tests; body } while (0)` per case; a failed test `break`s to the next case      |
-| `let`, `seq`, `match` (non-tail) | GNU statement expressions `({ … })` (clang and gcc)                                       |
-| call to itself in tail position  | arguments into temporaries, then the parameters, then `goto top`                          |
-| other tail call, same arity      | `__attribute__((musttail)) return fⱼ(…)`, a guaranteed jump under clang                   |
-| other call                       | `fⱼ(…)`                                                                                   |
+| Core                             | C                                                                                                  |
+| -------------------------------- | -------------------------------------------------------------------------------------------------- |
+| a definition of arity n          | `static V fᵢ(V l0, …, V lₙ₋₁)`; `V` is `intptr_t`                                                  |
+| `(int n)`                        | `(V)n`                                                                                             |
+| `Int.add`, `sub`, `mul`          | `ADD(a, b)` …: computed in `uint32_t`, sign-extended back, so arithmetic wraps at 32 bits          |
+| `Int.div`, `Int.mod`             | `DIV`, `MOD`: trap on zero; `x / -1` is `0 - x`, as in the interpreter                             |
+| comparisons, `and`/`or`/`xor`    | the C operator on `V`s, cast back to `V`                                                           |
+| `(con "T" tag 0)`                | `(V)&deus_nullary[tag]`: one static block per tag, never allocated                                 |
+| `(app (con "T" tag n) a…)`       | a counted block `[tag, a…]` (see [Memory](#memory)), or a dead block's memory reused               |
+| `match`                          | one `do { tests; body } while (0)` per case; a failed test `break`s to the next case               |
+| `let`, `seq`, `match` (non-tail) | GNU statement expressions `({ … })` (clang and gcc)                                                |
+| call to itself in tail position  | arguments into temporaries, then the parameters, then `goto top`                                   |
+| other tail call, same arity      | `MUSTTAIL return fⱼ(…)`: `__attribute__((musttail))`, a guaranteed jump, where the compiler has it |
+| other call                       | `fⱼ(…)`                                                                                            |
 
 The named definition is also exported as `int32_t <name>(int32_t …)`, and `-DDEUS_MAIN` (which
 `deus build` passes) adds a `main` that reads each argument as an integer and prints the result as
 one. A constructed result prints as its address.
+
+## Memory
+
+Blocks are reference counted with reuse, as in Perceus (Koka, Lean 4) ([D86](../DECISIONS.md)).
+
+- **Layout.** A block is preceded by a header word: its count times 256 plus its kind. The kind is
+  the field count for a constructor, 254 for a `Ref` `[value]` and 255 for an `Array`
+  `[length, item…]`. Nullary constructors and `()` are static and never counted.
+- **Telling blocks from integers.** Every block lives in one 64 GiB region reserved with `mmap`
+  (`MAP_NORESERVE`), so a word is a block exactly when it points into that region. Sign-extended
+  `Int`s never do. Code whose types say `Int`, `Bool` or `Unit` skips the check.
+- **Ownership.** A function owns its parameters and every local it binds, and consumes each exactly
+  once: the last use moves it, earlier uses `deus_dup` it, and a path that never uses it drops it
+  first. Arguments are evaluated left to right into locals, so a drop can never run before an
+  earlier argument's use.
+- **Borrowing.** A parameter that a function only reads through (as the container of an `Array` or
+  `Ref` access, or as an argument its callee borrows) is borrowed: the caller keeps ownership and
+  passes it without counting. The borrowed set is the largest one no body consumes, found by
+  iterating from "every non-scalar parameter". A matched local is borrowed by the match itself,
+  so matching does not touch the count.
+- **Reuse.** A case that takes apart a block the code owns and does not use again checks whether
+  the block is unique. If it is, the fields' references pass to the case and, when the case builds
+  a block with the same number of fields, it builds it in the old block's memory. If it is shared,
+  the case counts the fields it uses and decrements the block.
+- **Freeing** is iterative, with an explicit stack, so dropping a long list does not overflow the
+  C stack. Freed blocks of up to 256 words go to a free list per size; larger ones (long arrays)
+  are not reused yet. `Ref` cycles are never freed.
+
+`DEUS_HEAP_STATS=1` makes a built executable print the words bumped, live at exit and at peak. Every
+benchmark ends with 0 live words.
+
+| Program (clang -O2)           | Time before (no freeing) | Time with RC and reuse | Peak RSS before | Peak RSS after |
+| ----------------------------- | -----------------------: | ---------------------: | --------------: | -------------: |
+| `fib 35`                      |                    57 ms |                  50 ms |                 |                |
+| `collatz 100000`              |                    48 ms |                  29 ms |                 |                |
+| `trees 200`                   |                   278 ms |                 163 ms |          301 MB |          10 MB |
+| `queens 11`                   |                    29 ms |                  36 ms |           10 MB |          10 MB |
+| `Sorting.benchMerge 10⁶`      |                   726 ms |                 842 ms |          949 MB |          62 MB |
+| `Sorting.benchQuick 10⁶`      |                   602 ms |                 473 ms |          597 MB |          32 MB |
+| `Sorting.benchHeap 10⁶`       |                 1,765 ms |               1,700 ms |        1,292 MB |          78 MB |
+| `Sorting.benchArray 10⁶`      |                   162 ms |                 174 ms |           55 MB |          39 MB |
+| `Sorting.benchPersistent 10⁶` |                 2,095 ms |               1,337 ms |        1,610 MB |          39 MB |
+
+Peak RSS is the process's maximum resident set; 10 MB is the floor of an empty run. The sorts'
+peaks after are the input list and the sorted output, which are alive together. `queens` and
+`benchMerge` pay for counting shared cons cells; everything else is as fast or faster, because a
+reused block is already in cache and the heap stays small.
 
 ## Benchmarks
 
@@ -78,19 +125,19 @@ All back ends agree on every result (`fib 35` = 9227465, `collatz 100000` = 1075
   untagged words and nullary constructors are not allocated.
 - **The Rust kernel interpreter is slower than the TypeScript one** on three of four programs,
   without the JIT. Its value is size and portability (D40), not speed.
-- **What remains on the compiled path is memory.** `trees 200` allocates 26 million blocks and
-  frees none: 630 MB in C, where a word is 8 bytes, and half that in wasm. Nothing is reclaimed
-  yet, so long-running programs need a memory manager before anything else.
+- **Memory was the next limit, and the C back end now frees.** Without it, `trees 200` allocated
+  13 million blocks and freed none (301 MB resident). With reference counting and reuse it peaks
+  at 2 MB of heap
+  ([Memory](#memory)). The wasm back end still never frees.
 
 ## Toward the whole language
 
 The best achievable speed for first-order DEUS is what C compilers give, and the back end reaches
 it now. The rest of the language needs these, in order of how much code they unlock:
 
-1. **Memory: precise reference counting with reuse** (Perceus, as in Koka and Lean 4). DEUS values
-   are immutable and cycles arise only through `letrec` and `Ref`, so counts are exact and a
-   unique block can be updated in place (`List.map` on an unshared list reuses its cells). A
-   tracing collector (Boehm) is a stop-gap that needs no compiler work.
+1. **Memory: precise reference counting with reuse** (Perceus, as in Koka and Lean 4): done in the
+   C back end (D86); the wasm back end is next. The same uniqueness check is what a pure `Array`
+   needs to update in place (D83).
 2. **Closures and partial application:** closure conversion to flat closures; known calls stay
    direct C calls.
 3. **Text and the other primitives:** a C runtime with the kernels' semantics (UTF-16 text,

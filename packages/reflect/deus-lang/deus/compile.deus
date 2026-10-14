@@ -102,7 +102,7 @@ def metaForm (doc : Option Text) (sig : Option Sexp) (locals : List Text) (attrs
 
 /--
   Comment metadata (D66): `(lead "…")` before the declaration, `(notes (n i "…") …)` inside it;
-  `(spellings (n i "…") …)` for number literals the source wrote another way (D86).
+  `(spellings (n i "…") …)` for number literals the source wrote another way (D88).
 -/
 def commentMeta (lead : Text) (notes : List (Int, Text)) (spellings : List (Int, Text)) : List Sexp :=
   let indexed := fun (head : Text) (list : List (Int, Text)) =>
