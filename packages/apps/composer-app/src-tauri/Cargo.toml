@@ -72,6 +72,8 @@ hyper-util = { version = "0.1", features = ["tokio"] }
 http-body-util = "0.1"
 tauri-plugin-updater = "2"
 tauri-plugin-global-shortcut = "2"
+# Meeting detection and system-audio capture (plugin-meeting-recorder).
+tauri-plugin-meeting-capture = { path = "plugins/meeting-capture" }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 # The same versions wry links; see src/webkit_features.rs.
