@@ -49,6 +49,22 @@ describe('identityGroups', () => {
     expect(expandKeys(['dmytro@braneframe.com'], groups)).toContain('dmaretskyi');
   });
 
+  test('a denied, uncertain or lapsed account link ties nothing', ({ expect }) => {
+    const denied = fact(PERSON, 'has-account', entity('dmaretskyi'));
+    const lapsed = fact(PERSON, 'has account', entity('old-handle'));
+    const uncertain = fact(PERSON, 'has-account', entity('maybe-handle'));
+    const groups = identityGroups(
+      [
+        { ...denied, factuality: { value: 'CT-', polarity: '-' } },
+        { ...lapsed, assertion: { ...lapsed.assertion, validTo: '2026-01-01T00:00:00Z' } },
+        { ...uncertain, factuality: { value: 'Uu', polarity: '?' } },
+      ],
+      [],
+      '2026-10-14T00:00:00Z',
+    );
+    expect([...expandKeys([PERSON], groups)]).toEqual([PERSON]);
+  });
+
   test('names and ordinary relations never merge entities', ({ expect }) => {
     const facts = [
       fact('dmytro', 'works at', entity('dxos')),

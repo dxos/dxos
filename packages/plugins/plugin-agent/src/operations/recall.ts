@@ -12,7 +12,7 @@ import { type RDF } from '@dxos/pipeline-rdf';
 import { BrainService, Goal, Knowledge, MemoryOperation, Profile } from '#types';
 
 import { canonicalKey, expandKeys, identityGroups } from './identity.ts';
-import { entityKeys, knownIdentities, spaceFacts } from './knowledge.ts';
+import { entityKeys, knownIdentities, spaceFacts, strongEntityKeys } from './knowledge.ts';
 
 /** The names of the facts' sources that are objects in the space (documents); a chat message is a feed item, so has none. */
 const sourceNames = Effect.fnUntraced(function* (facts: readonly RDF.Fact[]) {
@@ -51,7 +51,9 @@ const handler: Operation.WithHandler<typeof MemoryOperation.Recall> = MemoryOper
       // address), which facts from other sources were minted under.
       const groups = identityGroups(allFacts, yield* knownIdentities);
       const ownKeys = entity ? entityKeys(entity) : undefined;
-      const ids = ownKeys ? new Set([...ownKeys, ...expandKeys(ownKeys, groups)]) : undefined;
+      // Only strong keys widen: a name of the subject's that happens to be someone else's handle must not pull them in.
+      const ids =
+        entity && ownKeys ? new Set([...ownKeys, ...expandKeys(strongEntityKeys(entity), groups)]) : undefined;
       const isSubjectKey = (key: string): boolean => ids !== undefined && (ids.has(key) || ids.has(canonicalKey(key)));
       const activeMemories = Knowledge.fromFacts(allFacts)
         .filter((memory) => memory.status === 'active' && (!ids || Knowledge.isAbout(memory, ids)))
