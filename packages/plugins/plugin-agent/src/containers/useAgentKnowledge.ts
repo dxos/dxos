@@ -18,6 +18,8 @@ import {
   type AgentKnowledgeFact,
   type AgentKnowledgeGoal,
   type AgentKnowledgeNode,
+  type EntityCardModel,
+  toEntityCards,
 } from '#components';
 import { Goal, Knowledge, Profile } from '#types';
 
@@ -30,6 +32,8 @@ const GOAL_ORDER: readonly Goal.Status[] = ['active', 'confirmed', 'proposed', '
 export type AgentKnowledgeData = {
   memories: Knowledge.Memory[];
   facts: AgentKnowledgeFact[];
+  /** One card per entity the brain's facts and active memories mention. */
+  cards: EntityCardModel[];
   goals: AgentKnowledgeGoal[];
   nodes: AgentKnowledgeNode[];
   edges: AgentKnowledgeEdge[];
@@ -144,6 +148,18 @@ export const useAgentKnowledge = (agent: Agent.Agent): AgentKnowledgeData => {
     [inspection, db],
   );
 
+  // Retracted and replaced memories drop out, as they do from Memories; a retraction marker states nothing itself.
+  const cards = useMemo(() => {
+    const active = new Set(memories.map((memory) => memory.id));
+    const statements = (inspection?.facts ?? [])
+      .map(({ fact }) => fact)
+      .filter(
+        (fact) =>
+          fact.kind === undefined || (fact.graph !== undefined && active.has(fact.graph) && !fact.retracts?.length),
+      );
+    return toEntityCards(statements, { objects: true });
+  }, [inspection, memories]);
+
   // A failed re-read keeps the last snapshot on screen, so an error stands in only before anything was read.
   const brain = useMemo(
     (): AgentKnowledgeBrainStatus =>
@@ -151,5 +167,5 @@ export const useAgentKnowledge = (agent: Agent.Agent): AgentKnowledgeData => {
     [inspection, error],
   );
 
-  return { memories, facts, goals: goalItems, nodes, edges, brain, refresh };
+  return { memories, facts, cards, goals: goalItems, nodes, edges, brain, refresh };
 };
