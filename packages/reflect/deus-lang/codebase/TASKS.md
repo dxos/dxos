@@ -37,6 +37,14 @@ From Dmytro: figure out QA flows for web apps, using what dxos does (.mdl QA tes
 
 > claude: Simulation is done (D65, qa blocks run by deus mdl). Left: run the same flows against deus serve and in a browser.
 
+## Republish the hosted explorer on every push to the PR branch (`696086fe`)
+
+- state: todo
+- priority: high
+- labels: explorer, ci
+
+The hosted explorer stays at its last manual publish (the 19:18 one) because nothing republishes it. Once threads push to r2://agent-artifacts/deus/toolchain (D101), a CI job, or deus push itself, should run deus explore --publish for the explorer URL. A CI job needs Dmytro's go-ahead and an R2 token that can write agent-artifacts; the existing CI R2 token covers only the Composer asset buckets.
+
 ## The codebase explorer app needs to be much better (`861438d2`)
 
 - state: doing
@@ -636,6 +644,18 @@ From Dmytro: about mdl-first approach --- I want agents to record specs in codeb
 - priority: high
 - assignee: claude
 - labels: explorer
+
+## The explorer History view hides the history imported from an export (`12663f55`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: explorer, bug
+- links change #112a8df7a8
+
+After a restore, History showed only init, add code specs, task import and history import N changes, so the hosted explorer looked as if nobody updated the codebase. List the full log, as deus log does.
+
+> claude: meta.json now carries the full log (up to 1000); a change with no causal node in the store is marked imported and shown greyed without a page. A restored toolchain codebase lists about 500 changes instead of 4.
 
 ## The prover ignores tactic names it does not know (`bf5681bf`)
 

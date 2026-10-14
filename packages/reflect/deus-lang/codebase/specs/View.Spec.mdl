@@ -8,7 +8,7 @@ version: 1.0
 
 `deus view` prints a stored object as source that compiles back to the same hash
 ([CODEBASE-TEXT.md](../../docs/spec/CODEBASE-TEXT.md), D63), under a header naming its type. Two places printed what the
-author never wrote ([D103](../../docs/DECISIONS.md)): a theorem's hypotheses came out as `prim "implies" (P) (Q)`,
+author never wrote ([D104](../../docs/DECISIONS.md)): a theorem's hypotheses came out as `prim "implies" (P) (Q)`,
 which is Core, not source, and a type named by an IRI with a path (`urn:deus:task:Task`) came out as its
 path (`task:Task`) in the type header.
 

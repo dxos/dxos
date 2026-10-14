@@ -1,5 +1,8 @@
 # History of main
 
+- `c7ed4d5991` export: merge 9 changes from codebase
+- `a99a99e525` export: merge tasks from codebase
+- `74838b1914` merge #13952's branch (D102, D103); View fix renumbered D104 (by claude)
 - `7093a34ef8` export: merge 13 changes from codebase
 - `eef27fdc12` export: merge tasks from codebase
 - `eb47c4209c` merge #13952's branch (D101, D102); View fix renumbered D103 (by claude)
@@ -141,6 +144,15 @@
 - `7453b3a1b7` task: import 18 tasks
 - `bff1b8d98b` add code
 - `67c7d5a614` init
+- `0b6f2c560e` task: set 696086fe priority labels details (by claude)
+- `f2471f33c4` task: open 696086fe Republish the hosted explorer on every push to the PR branch (by claude)
+- `e468baa69b` task: comment on 12663f55 (by claude)
+- `8ea41a78ca` close 12663f55 by #112a8df7a8 (by claude)
+- `112a8df7a8` explorer: History lists the changes imported from an export (D103) (by claude)
+- `5a6de8245c` task: set 12663f55 state priority assignee labels details (by claude)
+- `da0eb964e9` task: open 12663f55 The explorer History view hides the history imported from an export (by claude)
+- `616c10e45e` history: import 511 changes
+- `a5ec773714` task: import from tasks.sexp
 - `3796ba0f06` task: set 38603468 state details (by claude)
 - `569730f40a` close f7d39ad6 by #eddca32cd2 (by claude)
 - `eddca32cd2` C back end: reuse freed blocks over 256 words by exact fit (D102) (by claude)
