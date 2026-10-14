@@ -75,7 +75,7 @@ theorem can still state them (`inStore (fun dir => …) = true`) and `by test n`
 
 ## Feature maps
 
-A spec says what one subsystem promises; a feature map says what the product is made of (D117). Dmytro:
+A spec says what one subsystem promises; a feature map says what the product is made of (D118). Dmytro:
 "we need feature-maps in codebase in addition to tasks". [`Toolchain.Features`](../codebase/specs/Toolchain.Features.mdl)
 maps the toolchain: each `feature` block has a status and links its spec documents, definitions and
 tasks. Edit it like a spec (`deus view Toolchain.Features > f.mdl`, `deus update f.mdl`), and when a task

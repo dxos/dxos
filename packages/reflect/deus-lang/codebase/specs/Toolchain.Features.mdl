@@ -7,7 +7,7 @@ version: 1.0
 # The DEUS toolchain: feature map
 
 What the toolchain is, feature by feature, and what each one is made of: its spec documents, its main
-definitions and its tasks ([Features.Spec](Features.Spec.mdl), D117). `deus features Toolchain.Features`
+definitions and its tasks ([Features.Spec](Features.Spec.mdl), D118). `deus features Toolchain.Features`
 prints the tree with open tasks; `deus mdl Toolchain.Features` fails when a shipped feature still has
 open work, and reports as known gaps a feature linked to nothing and unfinished work that no task tracks.
 

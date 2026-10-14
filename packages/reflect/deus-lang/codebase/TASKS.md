@@ -252,14 +252,6 @@ Known gaps R-10 and R-12 in docs/spec/CODEBASE-STORE.mdl.
 - priority: medium
 - labels: native, perf
 
-## Native: structural equality and ordering of data in the C back end (`f9cd5624`)
-
-- state: todo
-- priority: medium
-- labels: native, perf
-
-eq, compare and < on constructed values are refused in C (and wasm compares only some data types); the runtime can walk blocks by kind as the kernels' equal and compare do.
-
 ## Replication keeps the first scheme of a shared hash; merge schemes as the store does since D116 (`4c9147ce`)
 
 - state: todo
@@ -1120,6 +1112,15 @@ Canceled (D102): DEUS Int is 32 bits with wrapping, so a tag bit would need 33; 
 - labels: native, perf
 
 > claude: Duplicate of e1cf2c6c: an export overwrite dropped this task, its thread filed it again, and the D89 restore brought both back.
+
+## Native: structural equality and ordering of data in the C back end (`f9cd5624`)
+
+- state: done
+- priority: medium
+- labels: native, perf
+- links change #c9c3e09be7
+
+eq, compare and < on constructed values are refused in C (and wasm compares only some data types); the runtime can walk blocks by kind as the kernels' equal and compare do.
 
 ## One specification per format under docs/spec (`1a316e76`)
 

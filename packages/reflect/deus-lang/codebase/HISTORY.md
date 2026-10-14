@@ -1,5 +1,8 @@
 # History of main
 
+- `3cfdea41af` history: import 707 changes
+- `9b6f2fc529` task: import from /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/tasks.sexp
+- `6b10820fac` update deus (by claude)
 - `1621f4b14c` update deus (by claude)
 - `7b4964032d` history: import 702 changes
 - `e687b6f7d0` task: import from /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/tasks.sexp
@@ -19,6 +22,11 @@
 - `eb43607e8f` update deus/features.deus (by claude)
 - `6e164a75f4` add deus/features.deus (by claude)
 - `aedec61ade` task: comment on e76e36b0 (by claude)
+- `4341bed77f` close f9cd5624 by #c9c3e09be7 (by claude)
+- `c9c3e09be7` C and wasm back ends compare data by per-type functions (D117) (by claude)
+- `ef951547a1` history: import 702 changes
+- `872dcf4a93` task: import from codebase/tasks.sexp
+- `f255972bcc` add codebase/code codebase/specs
 - `922cec2bc5` task: link 62f3f4d0 to Codebase.mergeMeta
 - `2ee07a4da0` task: link f4afc2c0 to Replicate.import
 - `bbdf5cd081` task: open 62f3f4d0 Names that share a hash keep only the last name's doc, comments and parameter names (by claude)

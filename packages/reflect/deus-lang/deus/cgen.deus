@@ -607,6 +607,55 @@ def textFunction (p : Text) : Option Text :=
     ("Text.split", "deus_text_split"), ("Text.indexOf", "deus_text_index"), ("Text.trim", "deus_text_trim"),
     ("Int.toText", "deus_int_text"), ("Int.fromText", "deus_text_int")]
 
+/-- The index of the equality and order functions of data type `t`, registering them on first use. -/
+def structIndex (scope : Wasm.Scope) (t : Sexp) : Int :=
+  let known := Ref.get scope.eqs
+  let i := List.findIndex (fun x => x == t) known
+  if i >= 0 then i else registerStruct scope t
+
+def registerStruct (scope : Wasm.Scope) (t : Sexp) : Int :=
+  let known := Ref.get scope.eqs
+  let _ := Ref.set scope.eqs (known ++ [t])
+  List.length known
+
+/-- `x` and `y`, of type `field`, compared for equality (a C truth value) or, with `order`, as -1, 0 or 1. -/
+def fieldTest (scope : Wasm.Scope) (order : Bool) (field : Sexp) (x : Text) (y : Text) : {Throw Text} Text :=
+  let both := "(" ++ x ++ ", " ++ y ++ ")"
+  if Wasm.isScalar field then (if order then "deus_int_cmp" ++ both else "(" ++ x ++ " == " ++ y ++ ")")
+  else if field == Wasm.tref "#Text" then (if order then "deus_text_cmp" else "deus_text_eq") ++ both
+  else if Wasm.isData scope field then (if order then "deus_cmp" else "deus_eq") ++ Int.toText (structIndex scope field) ++ both
+  else if field == Wasm.unknown || Sexp.head field == "tvar" then (if order then "deus_cmp_any" else "deus_eq_any") ++ both
+  else throw ("comparing values of type " ++ Sexp.print field ++ " is outside the C subset")
+
+/--
+  The structural equality (or, with `order`, the order) of data type `t`, as both kernels define
+  it: the tags first, then the fields in order. The last field, when it is `t` again (a list's
+  tail), is a loop rather than a call, so a long list takes no stack.
+-/
+def structFunction (scope : Wasm.Scope) (order : Bool) (k : Int) (t : Sexp) : {Throw Text} Text :=
+  let form := Option.getOr (Option.bind (Wasm.headName t) (Wasm.typeObject scope)) Wasm.unknown
+  let typeArgs := Wasm.typeArgs t
+  let same := if order then "0" else "1"
+  let cases := List.mapIndexed (fun tag fields =>
+    let typed := List.map (Wasm.instantiate typeArgs) fields
+    let n := List.length typed
+    let field := fun (i : Int) (f : Sexp) =>
+      let x := "UNBOX(a)[" ++ Int.toText (i + 1) ++ "]"
+      let y := "UNBOX(b)[" ++ Int.toText (i + 1) ++ "]"
+      if i == n - 1 && f == t then "a = " ++ x ++ "; b = " ++ y ++ "; continue; "
+      else if i == n - 1 then "return " ++ fieldTest scope order f x y ++ "; "
+      else if order then "{ V c = " ++ fieldTest scope order f x y ++ "; if (c) return c; } "
+      else "if (!" ++ fieldTest scope order f x y ++ ") return 0; "
+    if n == 0 then "" else "case " ++ Int.toText tag ++ ": " ++ Text.concat (List.mapIndexed field typed)) (Wasm.ctorFields form)
+  let differ := if order then "ta < tb ? -1 : 1" else "0"
+  "static V " ++ (if order then "deus_cmp" else "deus_eq") ++ Int.toText k ++ "(V a, V b) { for (;;) { if (a == b) return " ++ same ++ "; V ta = UNBOX(a)[0], tb = UNBOX(b)[0]; if (ta != tb) return " ++ differ ++ "; switch (ta) { " ++ Text.concat cases ++ "default: return " ++ same ++ "; } } }"
+
+/-- The comparison functions of every data type registered from index `k`, registering what they compare in turn. -/
+def structFunctions (scope : Wasm.Scope) (k : Int) (acc : List Text) : {Throw Text} List Text :=
+  match List.get? (Ref.get scope.eqs) k with
+  | some t => structFunctions scope (k + 1) (acc ++ [structFunction scope false k t, structFunction scope true k t])
+  | none => acc
+
 /-- How many arguments a primitive the C back end compiles takes, or 0. -/
 def primArity (p : Text) : Int :=
   if List.any (fun x => x == p) ["Text.length", "Text.fromCode", "Text.concat", "Text.trim", "Int.toText", "Int.fromText"] then 1
@@ -624,6 +673,7 @@ def runtime (ctx : FnCtx) (env : List Int) (owned : List Int) (token : Option To
   let isList := List.any (fun t => Wasm.headName t == some "#List") types
   -- Unknown (a lifted function's parameter) or a type variable (a hash whose names differ in type, D116).
   let isDynamic := not (List.isEmpty types) && List.all (fun t => t == Wasm.unknown || Sexp.head t == "tvar") types
+  let data := List.find (fun t => Wasm.isData ctx.cScope t) types
   let lend := fun (call : List Text -> Text) => some (lending ctx env owned token (List.map (fun _ => true) xs) call xs)
   match textFunction p with
   | some f => lend (fun vs => f ++ args vs)
@@ -640,6 +690,15 @@ def runtime (ctx : FnCtx) (env : List Int) (owned : List Int) (token : Option To
     else if p == "compare" && List.all Wasm.isScalar types then lend (fun vs => "deus_int_cmp" ++ args vs)
     else if p == "eq" && isText then lend (fun vs => "deus_text_eq" ++ args vs)
     else if p == "neq" && isText then lend (fun vs => "!deus_text_eq" ++ args vs)
+    else if Option.isSome data && (Wasm.isComparison p || p == "compare") then
+      let k := Int.toText (structIndex ctx.cScope (Option.getOr data Wasm.unknown))
+      if p == "eq" then lend (fun vs => "deus_eq" ++ k ++ args vs)
+      else if p == "neq" then lend (fun vs => "!deus_eq" ++ k ++ args vs)
+      else if p == "compare" then lend (fun vs => "deus_cmp" ++ k ++ args vs)
+      else
+        match infix p with
+        | some op => lend (fun vs => "(V)(deus_cmp" ++ k ++ args vs ++ " " ++ op ++ " 0)")
+        | none => none
     else if p == "compare" && isDynamic then lend (fun vs => "deus_cmp_any" ++ args vs)
     else if p == "eq" && isDynamic then lend (fun vs => "deus_eq_any" ++ args vs)
     else if p == "neq" && isDynamic then lend (fun vs => "!deus_eq_any" ++ args vs)
@@ -792,9 +851,10 @@ def params (n : Int) : Text := args (List.map (fun i => "V " ++ local i) (List.r
 def unit (fns : List Wasm.Fn) (datatypes : List (Text, Sexp)) (export : Text) : {Throw Text} Text :=
   let borrow := inferBorrow fns
   let lifted := Ref.new []
+  let structs := Ref.new []
   let decls := List.mapIndexed (fun i f => "static V " ++ fnName i ++ params f.fnArity ++ ";") fns
   let bodies := List.mapIndexed (fun i f =>
-    let scope := Wasm.Scope.mk fns datatypes (Ref.new (List.mapIndexed (fun j t => (j, t)) (fst (Wasm.peel f.fnArity f.fnType)))) (Ref.new [])
+    let scope := Wasm.Scope.mk fns datatypes (Ref.new (List.mapIndexed (fun j t => (j, t)) (fst (Wasm.peel f.fnArity f.fnType)))) structs
     let ctx := FnCtx.mk scope i f.fnArity (Ref.new f.fnArity) borrow lifted
     let env := List.reverse (List.range 0 f.fnArity)
     "/* #" ++ Text.take 10 f.fnHash ++ " */\nstatic V " ++ fnName i ++ params f.fnArity ++ " {\ntop:;\n  " ++ expr ctx env true (List.filter (fun k => not (borrowsAt (borrowsOf ctx i) k)) (List.range 0 f.fnArity)) none f.fnBody ++ "\n}") fns
@@ -825,7 +885,9 @@ def unit (fns : List Wasm.Fn) (datatypes : List (Text, Sexp)) (export : Text) : 
   let nullary := List.foldl (fun acc f => larger acc (nullaryCount f.fnBody)) 0 fns
   let codes := Ref.get lifted
   let codeDecls := List.mapIndexed (fun k _ => "static V c" ++ Int.toText k ++ "(V, V);") codes
-  Text.join "\n" ([prelude nullary] ++ decls ++ codeDecls ++ [""] ++ bodies ++ codes ++ ["", entry, main, ""])
+  let comparisons := structFunctions (Wasm.Scope.mk fns datatypes (Ref.new []) structs) 0 []
+  let comparisonDecls := List.mapIndexed (fun k _ => "static V deus_eq" ++ Int.toText k ++ "(V, V); static V deus_cmp" ++ Int.toText k ++ "(V, V);") (Ref.get structs)
+  Text.join "\n" ([prelude nullary] ++ decls ++ codeDecls ++ comparisonDecls ++ [""] ++ bodies ++ codes ++ comparisons ++ ["", entry, main, ""])
 
 --
 -- Lambda lifting. A `letrec` function becomes a top-level function that takes the locals it
@@ -914,10 +976,18 @@ def liftAll (fns : List Wasm.Fn) : {Throw Text} List Wasm.Fn :=
   let done := List.map (fun f => Wasm.Fn.mk f.fnHash f.fnArity (liftExpr f.fnHash next out f.fnBody) f.fnType) fns
   done ++ Ref.get out
 
+/-- The data types whose constructors `form` applies. -/
+def builtTypes (form : Sexp) : List Text :=
+  match form with
+  | Sexp.list (Sexp.sym "con" :: Sexp.str t :: _) => if t == "#Bool" then [] else [t]
+  | Sexp.list items => List.concatMap builtTypes items
+  | _ => []
+
 /-- Compiles `main` and what it calls to C exporting it as `export`. -/
 def compile (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {Throw Text | r} Option Sexp) (main : Text) (export : Text) : {Throw Text | r} Text :=
   let fns := liftAll (Wasm.gather fetch meta main)
-  let names := List.dedup (List.concatMap (fun f => Wasm.patternTypes f.fnBody) fns)
+  -- The types the code builds as well as the ones it matches, so comparisons know their constructors.
+  let names := List.dedup (List.concatMap (fun f => Wasm.patternTypes f.fnBody ++ builtTypes f.fnBody) fns)
   -- A definition that is only a primitive is inlined at its calls and gathers to nothing.
   if List.isEmpty fns then throw (export ++ " is a primitive, not a definition the C back end compiles")
   else unit fns (List.filterMap (fun t => Option.map (fun form => (t, form)) (fetch t)) names) export
