@@ -33,6 +33,7 @@ const { values } = parseArgs({
     'edge': { type: 'string' },
     'port': { type: 'string', default: '4510' },
     'idle-ms': { type: 'string', default: '180000' },
+    'devtools': { type: 'boolean', default: false },
   },
 });
 if (!values.archive || !values.dist || !values.edge) {
@@ -62,7 +63,7 @@ const route = (url: string): string => {
     .join('/');
 };
 
-type Row = { requests: number; bytes: number; statuses: Record<number, number>; realms: Set<string> };
+type Row = { requests: number; bytes: number; statuses: Record<number, number>; realms: Set<string>; times: number[] };
 
 const main = async () => {
   const preview = await servePreview(dist, port);
@@ -81,6 +82,34 @@ const main = async () => {
       await importProfileArchive(page, origin, path.resolve(values.archive!));
       await page.goto(`${origin}/`, { timeout: 120_000 });
       await waitForReady(page);
+
+      if (values.devtools) {
+        // The devtools overview, as a developer keeps it open: its EDGE card polls the status report.
+        // Off by default outside dev builds and enabled per device, so it is enabled and the app reloaded.
+        const devtools = await page.evaluate(() =>
+          (globalThis.composer?.plugins?.() ?? [])
+            .filter(({ id }) => id === 'org.dxos.plugin.devtools')
+            .map(({ id }) => id),
+        );
+        await invokeInPage(page, 'org.dxos.operation.registry.enablePlugins', { ids: devtools });
+        await page.waitForTimeout(3_000);
+        await page.goto(`${origin}/`, { timeout: 120_000 });
+        await waitForReady(page);
+        // As the native app keeps it: the devtools overview in the complementary sidebar, expanded.
+        await invokeInPage(page, 'org.dxos.operation.appToolkit.updateComplementary', {
+          subject: 'devtoolsOverview',
+          state: 'expanded',
+        });
+        const mounted = await page
+          .getByText('Websocket', { exact: true })
+          .first()
+          .waitFor({ timeout: 30_000 })
+          .then(
+            () => true,
+            () => false,
+          );
+        process.stdout.write(`devtools EDGE card mounted: ${mounted}\n`);
+      }
 
       attached = await attachAll(DEBUG_PORT);
       for (const target of attached) {
@@ -103,7 +132,8 @@ const main = async () => {
           }
           pending.delete(requestId);
           const key = `${phase}\t${route(entry.url)}`;
-          const row = rows.get(key) ?? { requests: 0, bytes: 0, statuses: {}, realms: new Set() };
+          const row = rows.get(key) ?? { requests: 0, bytes: 0, statuses: {}, realms: new Set(), times: [] };
+          row.times.push(Date.now());
           row.requests += 1;
           row.bytes += encodedDataLength;
           row.statuses[entry.status ?? 0] = (row.statuses[entry.status ?? 0] ?? 0) + 1;
@@ -133,10 +163,15 @@ const main = async () => {
     rmSync(profileDir, { recursive: true, force: true });
   }
 
-  process.stdout.write('phase\troute\trequests\tKiB\tstatuses\trealms\n');
+  process.stdout.write('phase\troute\trequests\tKiB\tmedian gap s\tstatuses\trealms\n');
   for (const [key, row] of [...rows].sort(([, left], [, right]) => right.bytes - left.bytes)) {
+    const gaps = row.times
+      .slice(1)
+      .map((time, index) => time - row.times[index])
+      .sort((left, right) => left - right);
+    const gap = gaps.length > 0 ? (gaps[Math.floor(gaps.length / 2)] / 1000).toFixed(1) : '-';
     process.stdout.write(
-      `${key}\t${row.requests}\t${Math.round(row.bytes / 1024)}\t${JSON.stringify(row.statuses)}\t${[...row.realms].join(',')}\n`,
+      `${key}\t${row.requests}\t${Math.round(row.bytes / 1024)}\t${gap}\t${JSON.stringify(row.statuses)}\t${[...row.realms].join(',')}\n`,
     );
   }
   process.stdout.write(`partition: ${proxy.denied().length} refused\n`);

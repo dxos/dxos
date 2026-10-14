@@ -121,10 +121,6 @@ const runScenario = async (scenario: Scenario, mode: Mode, iteration: number): P
   if (scenario.privateData && !allow) {
     throw new Error(`${scenario.flow} loads private data and runs only partitioned: pass --offline or --edge`);
   }
-  // A heap snapshot holds every string the realm does.
-  if (scenario.privateData && SNAPSHOTS.size > 0) {
-    throw new Error(`${scenario.flow} loads private data, so it takes no memory snapshots`);
-  }
   if (scenario.prepare && !scenario.persistentProfile) {
     throw new Error(`${scenario.flow} prepares a profile, so it needs persistentProfile`);
   }
@@ -184,6 +180,8 @@ const runScenario = async (scenario: Scenario, mode: Mode, iteration: number): P
       comparability,
       ...(scenario.privateData ? {} : { screenshotDir: path.join(artifactDir, 'stages') }),
       snapshotStages: SNAPSHOTS,
+      // A heap snapshot holds every string the realm does; the allocator dumps hold only sizes.
+      heapSnapshots: !scenario.privateData,
       snapshotDir: path.join(artifactDir, 'snapshots'),
       counters: COUNTERS,
       counterDir: path.join(artifactDir, 'counters'),
