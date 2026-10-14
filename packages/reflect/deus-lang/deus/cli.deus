@@ -542,7 +542,7 @@ def undo (args : Args) : {IO, Throw Text} Unit :=
   | [] => throw "nothing to undo"
 
 /--
-  `deus migrate`: rewrites history so every snapshot is a namespace tree (D71). Causal hashes
+  `deus migrate`: rewrites history so every snapshot is a namespace tree (D72). Causal hashes
   change, so a remote that already holds the old history should be replaced by a new one.
 -/
 def migrate (args : Args) : {IO, Throw Text} Unit :=
@@ -704,13 +704,13 @@ def pull (args : Args) : {IO, Throw Text} Unit :=
 
 /--
   `deus compact [remote] [--level k]`: rewrites history into level-k strata and drops covered
-  bundles. It never drops history: a bundle goes only once strata hold all its objects (D72).
+  bundles. It never drops history: a bundle goes only once strata hold all its objects (D73).
 -/
 def compact (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let name := remoteName args
   let level := Option.getOr (Option.bind (option args "level") Int.fromText) 1
-  if Map.contains "keep" args.options then throw "compact keeps the whole history (D72); there is no --keep"
+  if Map.contains "keep" args.options then throw "compact keeps the whole history (D73); there is no --keep"
   else
     match withRemote dir name (fun _ => Replicate.compact dir name level) with
     | (written, deleted) =>

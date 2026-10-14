@@ -522,9 +522,12 @@ A script that closes every goal gives the verdict `proof`, or `proof assuming te
 is only tested. A lemma that fails fails the theorem. The trusted base is written at the top of
 [`deus/prove.deus`](../../deus/prove.deus).
 
-Note: an unknown tactic name is a no-op, and so are `rfl` and `decide` inside a script. The header of
-`deus/prove.deus` lists them as script tactics, and the editor grammar highlights tactics the prover does
-not have (`exact`, `rw`, `apply`, `unfold`, `constructor`, `trivial`, `all_goals`). The prover also
+A step whose name is not one of `simp`, `intro`, `split`, `auto`, `induction`, `cases` and `trace` fails
+the theorem with `unknown tactic <name>` ([D71](../DECISIONS.md)), so a misspelled step cannot pass
+silently. `rfl` and `decide` are whole proofs, so inside a script they fail the same way.
+
+Note: the editor grammar highlights tactics the prover does not have (`exact`, `rw`, `apply`, `unfold`,
+`constructor`, `trivial`, `all_goals`). The prover also
 skips a `·` token, but the lexer rejects `·`.
 
 ## Errors

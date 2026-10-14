@@ -9,6 +9,15 @@
 
 From Dmytro: an artifact is a constant whose value is cached, e.g. deusCli := Deus.toBinary Cli.main; evaluating it once caches the result in the artifacts layer by the hash of the expression.
 
+## Namespace trees, deus migrate and full-history compaction (`a7a44f7d`)
+
+- state: doing
+- priority: high
+- assignee: claude
+- labels: replication, design
+
+Owned by the Codebase compaction design thread; merging into #13952.
+
 ## QA flows for web apps: scripted user journeys checked in simulation, on a real server and in a browser (`9428f054`)
 
 - state: doing
@@ -21,23 +30,18 @@ From Dmytro: figure out QA flows for web apps, using what dxos does (.mdl QA tes
 
 > claude: First arm built (D65): qa blocks in MDL with do/expect/send/assert steps, run by deus mdl in Web.simulateMany; examples/notes.mdl has two flows. Next: the same steps against deus serve (--integration) and in a browser.
 
+> claude: Simulation is done (D65, qa blocks run by deus mdl). Left: run the same flows against deus serve and in a browser.
+
 ## The codebase explorer app needs to be much better (`861438d2`)
 
-- state: todo
+- state: doing
 - priority: high
 - assignee: claude
 - labels: explorer
 
 From Dmytro. Measure it against share.unison-lang.org: search, navigation, dependency links, history.
 
-## The prover ignores tactic names it does not know (`bf5681bf`)
-
-- state: todo
-- priority: high
-- assignee: claude
-- labels: bug, proofs, spec
-
-From docs/spec/README.md, Known divergences.
+> claude: The Codebase explorer UI thread built a Unison-style UI (finder, namespace pages, definition and change cards, keyboard), verified with Playwright; merging into #13952 from PR #13975. It also fixes the builtin page 404 and the content types.
 
 ## Work without git: the codebase is where the toolchain is developed, git only backs it up (`86d7b02a`)
 
@@ -118,6 +122,8 @@ From docs/spec/README.md, Known divergences.
 - labels: dialects
 - links `Ts.definition` (#e5f668ab9e)
 
+> claude: Filed by the TS-like dialect thread (D70).
+
 ## Back up the codebase to GitHub as text (`0c53d3bd`)
 
 - state: done
@@ -180,6 +186,16 @@ A fresh container restored codebase/ (deus add code; task import) and got one ne
 - assignee: claude
 - labels: explorer
 
+## The prover ignores tactic names it does not know (`bf5681bf`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: bug, proofs, spec
+- links change #e7f95e998b
+
+From docs/spec/README.md, Known divergences.
+
 ## deus export drops attributes, .mdl specs, the project file and some doc comments (`5fe4c8b1`)
 
 - state: done
@@ -229,6 +245,24 @@ From docs/spec/README.md, Known divergences.
 - links change #c08af3d400
 
 From docs/spec/README.md, Known divergences.
+
+## Builtins are URIs at the embedding boundary (urn:deus:builtin:IO) (`279f2266`)
+
+- state: done
+- priority: medium
+- assignee: claude
+- labels: kernel, embedding
+
+Dmytro asked whether builtins should be proper URIs. D68, eaafb41d.
+
+## One specification per format under docs/spec (`1a316e76`)
+
+- state: done
+- priority: medium
+- assignee: claude
+- labels: docs, spec
+
+Done by the Format spec docs thread in b0a392d6: CORE, CODEBASE-STORE, CODEBASE-BINARY, CODEBASE-TEXT, EMBEDDING, WASM, MDL, LANGUAGE and more, with the known divergences in docs/spec/README.md.
 
 ## Render the codebase in a TypeScript-like dialect (`655b148a`)
 

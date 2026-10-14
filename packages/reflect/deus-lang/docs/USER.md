@@ -257,3 +257,7 @@ as git, we should be able to keep entire code history without trimming, artifact
 ---
 
 - standing instructions: all sessions should be merging changes directly into https://github.com/dxos/dxos/pull/13952 ; close all extra PRs that were openend
+
+---
+
+- standing instructions: track tasks in codebase and make sure its up to date

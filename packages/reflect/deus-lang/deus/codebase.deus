@@ -19,7 +19,7 @@
   policy (replicate, delete) is a directory. Code may depend only on code.
 
   A namespace snapshot maps names to entries, stored as a tree split at the first dot of each
-  name (D71). A causal node records a snapshot, its parents, a message and, once there are tasks,
+  name (D72). A causal node records a snapshot, its parents, a message and, once there are tasks,
   a tasks snapshot; a branch is a pointer to a causal node, so history is a DAG and merging two
   branches is a three-way merge of their snapshots.
 -/
@@ -131,7 +131,7 @@ def putNode (dir : Text) (items : List (Text, Sexp)) (depth : Int) : {IO} Text :
     put dir (Sexp.node "ns" (List.map (fun bucket => Sexp.node "part" [Sexp.str (putNode dir (snd bucket) (depth + 1))]) (Map.toList buckets)))
 
 /--
-  Stores a namespace as a tree split at each name's first dot (D71): `List.map` is `map` in the
+  Stores a namespace as a tree split at each name's first dot (D72): `List.map` is `map` in the
   `List` node, which its parent names by hash, and wide nodes split into parts. Changing one
   definition rewrites only the nodes on its path, so history grows by the change rather than by
   the whole namespace. Returns the root hash.
@@ -348,7 +348,7 @@ def init (dir : Text) : {IO, Throw Text} Unit :=
     IO.writeFile (dir ++ "/HEAD") "main\n"
 
 /--
-  The parents of a causal node that the store has. History a remote trimmed before D72 is
+  The parents of a causal node that the store has. History a remote trimmed before D73 is
   shallow: its oldest nodes have parents nobody keeps, and they act as roots.
 -/
 def parentsOf (dir : Text) (h : Text) : {IO, Throw Text} List Text :=
@@ -452,7 +452,7 @@ def changeLinks (form : Sexp) : List Text :=
   | _ => []
 
 /--
-  Rewrites history so every snapshot is a namespace tree (D71). Each causal node is rebuilt after
+  Rewrites history so every snapshot is a namespace tree (D72). Each causal node is rebuilt after
   its parents and the changes its tasks link, so links follow the rewrite; branches and provenance
   follow too. A node already in tree form keeps its hash, so a second run changes nothing. Parents
   that shallow history lacks stay as they are. Returns (nodes rewritten, branches moved).

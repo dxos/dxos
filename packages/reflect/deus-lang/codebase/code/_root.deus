@@ -554,7 +554,10 @@ ability Stuck where
     simp [l₁, …]       evaluate and rewrite with hypotheses and the given lemmas
     split              case split on the first undecided `if` condition
     auto [l₁, …]       simp, then split / case on stuck variables, recursively (bounded)
-    rfl, decide        as before: closed evaluation, exhaustive enumeration
+    trace              print the open goals
+
+  Any other name fails the proof (D71). `rfl`, `decide`, `test n` and `sorry` are whole proofs,
+  checked by `deus/check.deus`, not steps of a script.
 -/
 /-- Symbolic values: data, free variables, and terms evaluation could not reduce. -/
 inductive Sym where
