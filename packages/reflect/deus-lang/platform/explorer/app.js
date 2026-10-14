@@ -1764,7 +1764,11 @@ const startShell = () =>
     const wasm = Uint8Array.from(atob(kernelText), (char) => char.charCodeAt(0));
     const files = Object.fromEntries(Object.entries(snapshot).map(([path, text]) => [`/codebase/${path}`, text]));
     const fs = host.createFiles(files);
-    const deus = await host.createDeus({ wasm, fs, env: { HOME: '/home', DEUS_HOME: '/deus', DEUS_CODEBASE: '/codebase' } });
+    const deus = await host.createDeus({
+      wasm,
+      fs,
+      env: { HOME: '/home', DEUS_HOME: '/deus', DEUS_CODEBASE: '/codebase' },
+    });
     element('console-status').textContent =
       `${Object.keys(snapshot).length} codebase files · ready in ${Math.round(performance.now() - started)} ms`;
     return { deus, image };

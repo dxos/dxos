@@ -1,5 +1,12 @@
 # History of main
 
+- `c3fa452f17` task: open 729ad2b4 Apply the explorer inbox every 15 minutes once the Worker is deployed with its GitHub secrets (D85) (by claude)
+- `44e512757f` close d2328509 by #0f3089d483 (by claude)
+- `0f3089d483` the explorer's live console, deus explore --console (D84) (by claude)
+- `78c160790e` history: import 209 changes
+- `17d48b3b3e` history: import 206 changes (by claude)
+- `cad965875a` task: import from tasks.sexp
+- `3b25b5f78f` add code specs
 - `32d2bffc00` task: set 747a4182 state (by claude)
 - `f75fd70e74` task: link 747a4182 to #68dcd2f5f1 (by claude)
 - `213c2a9ed5` task: set 81438cac state (by claude)

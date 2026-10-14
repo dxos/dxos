@@ -15,6 +15,13 @@ From Dmytro: an artifact is a constant whose value is cached, e.g. deusCli := De
 - priority: high
 - labels: native, perf
 
+## Pure Array.set that writes in place when the array is unique (Lean 4 / Koka FBIP): Rc::get_mut in the Rust kernel, the reference count in compiled code, a copy on the TypeScript kernel (D83) (`95ca184f`)
+
+- state: todo
+- priority: high
+- labels: perf
+- links `Array.set` (#b3d7fa0dc1)
+
 ## QA flows for web apps: scripted user journeys checked in simulation, on a real server and in a browser (`9428f054`)
 
 - state: doing
@@ -40,6 +47,13 @@ From Dmytro. Measure it against share.unison-lang.org: search, navigation, depen
 
 > claude: The Codebase explorer UI thread built a Unison-style UI (finder, namespace pages, definition and change cards, keyboard), verified with Playwright; merging into #13952 from PR #13975. It also fixes the builtin page 404 and the content types.
 
+## Wasm back end: Perceus reference counting with reuse, sharing one ownership analysis with the C back end's task 62d1bdda; pure sorts allocate 470 MiB for 10^6 numbers today (D83) (`cf0e3937`)
+
+- state: todo
+- priority: high
+- labels: perf
+- links `Array.set` (#b3d7fa0dc1)
+
 ## Work without git: the codebase is where the toolchain is developed, git only backs it up (`86d7b02a`)
 
 - state: todo
@@ -58,6 +72,16 @@ From Dmytro. Depends on P8 (b09507db): files must be regenerable from the codeba
 
 From Dmytro. A Codebase ability (find, view, add, update, mv, task ops) handled by the CLI under eval, so an agent scripts edits in DEUS instead of chaining CLI calls.
 
+## Apply the explorer inbox every 15 minutes once the Worker is deployed with its GitHub secrets (D85) (`729ad2b4`)
+
+- state: todo
+- priority: medium
+- assignee: claude
+- labels: explorer, writing
+- parent: 861438d2
+
+Routine: deus inbox, then deus push, which refreshes the site. Waits on Dmytro's OAuth app and wrangler secrets; publishing to the public bucket needs his named approval.
+
 ## Character literals print as numbers ('"' becomes 34) (`0d21d8d5`)
 
 - state: todo
@@ -73,15 +97,6 @@ Lexer turns a character literal into an int token; keep the form as a note-like 
 - priority: medium
 - assignee: claude
 - labels: wasm, perf, embedding
-
-## Explorer: a live console that runs eval, view and test against the site's codebase in the page (wasm kernel + seed + codebase snapshot, about 900 KB gzipped) (`d2328509`)
-
-- state: todo
-- priority: medium
-- assignee: claude
-- labels: explorer, browser, wasm
-
-deus explore could ship deus_kernel.wasm, the seed and a JSON snapshot of the codebase directory; platform/browser/playground.mjs --codebase shows the shape. A definition card could get Run and Eval.
 
 ## Native: a C runtime for Text, maps and the other primitives, ported from the Rust kernel (`72a1f2fb`)
 
@@ -109,6 +124,13 @@ deus explore could ship deus_kernel.wasm, the seed and a JSON snapshot of the co
 - labels: bug, replication, spec
 
 From docs/spec/README.md, Known divergences.
+
+## TS kernel JIT: Array.set and Ref.set journal a closure on every write; journal only when a deoptimisation can replay the entry (D83) (`a1b73fb8`)
+
+- state: todo
+- priority: medium
+- labels: perf
+- links `Array.set` (#b3d7fa0dc1)
 
 ## Type ascriptions are erased before checking; a row on a definition without binders is not checked (`a03fdfb6`)
 
@@ -338,6 +360,16 @@ deus build --c compiles the wasm subset to C (deus/cgen.deus); clang -O2 is with
 
 A fresh container restored codebase/ (deus add code; task import) and got one new history; R2 credentials were absent, so pull was not an option. Export history as a restorable chain (causal nodes plus the namespace snapshot each names, as text), or append to HISTORY.md instead of replacing it.
 
+## Sorting case study: does immutability make DEUS slow, and does it need mutable memory (`8aa78a39`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: research
+- links change #448eda5928
+
+Measured in docs/IMMUTABILITY.md (D83): seven sorts on both kernels, wasm, C and JS. Adds a mutable Array primitive (both kernels, wasm, C), Ref in the compiled back ends, and fixes a Rust-kernel stack overflow when dropping long Ref chains.
+
 ## Task viewer in the codebase explorer (`553faf09`)
 
 - state: done
@@ -436,6 +468,16 @@ From docs/spec/README.md, Known divergences.
 - labels: kernel, embedding
 
 Dmytro asked whether builtins should be proper URIs. D68, eaafb41d.
+
+## Explorer: a live console that runs eval, view and test against the site's codebase in the page (wasm kernel + seed + codebase snapshot, about 900 KB gzipped) (`d2328509`)
+
+- state: done
+- priority: medium
+- assignee: claude
+- labels: explorer, browser, wasm
+- links change #0f3089d483
+
+deus explore could ship deus_kernel.wasm, the seed and a JSON snapshot of the codebase directory; platform/browser/playground.mjs --codebase shows the shape. A definition card could get Run and Eval.
 
 ## One specification per format under docs/spec (`1a316e76`)
 

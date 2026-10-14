@@ -48,7 +48,7 @@ def Bench.safe (col : Int) (dist : Int) (placed : Cells) : Bool :=
 /-- Builds and walks `n` complete trees of depth 16: allocation and matching. -/
 def Bench.trees (n : Int) : Int := treesFrom n 16 0
 
-def Bench.treesFrom (i : Int) (depth : Int) (acc : Int) : Int := if i == 0 then acc else Bench.treesFrom (i - 1) depth (acc + Bench.count (make depth))
+def Bench.treesFrom (i : Int) (depth : Int) (acc : Int) : Int := if i == 0 then acc else Bench.treesFrom (i - 1) depth (acc + Bench.count (Bench.make depth))
 
 test Bench.treesSmall := treesFrom 2 3 0 == 30
 

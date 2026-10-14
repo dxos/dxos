@@ -924,7 +924,11 @@ describe('deus CLI', () => {
     const c = ['--codebase', join(scratch, 'console')];
     deus('init', '--empty', ...c);
     deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
-    deus('add', file('console.deus', 'namespace Shapes\ndef square (side : Int) : Int := side * side\nend Shapes\n'), ...c);
+    deus(
+      'add',
+      file('console.deus', 'namespace Shapes\ndef square (side : Int) : Int := side * side\nend Shapes\n'),
+      ...c,
+    );
     process.env.DEUS_HOME = root;
     const out = join(scratch, 'console-site');
     expect(deus('explore', '--out', out, '--console', ...c)).toMatchObject({ stderr: '', code: 0 });
@@ -949,7 +953,10 @@ describe('deus CLI', () => {
       code: 0,
       stdout: expect.stringContaining('side * side'),
     });
-    expect(await page.run(image, { args: ['eval', 'Shapes.square 7'], cwd: '/work' })).toMatchObject({ code: 0, stdout: '49\n' });
+    expect(await page.run(image, { args: ['eval', 'Shapes.square 7'], cwd: '/work' })).toMatchObject({
+      code: 0,
+      stdout: '49\n',
+    });
 
     // A site that has a console keeps it, refreshed with the codebase each push.
     deus('remote', 'add', 'origin', join(scratch, 'console-remote'), ...c);

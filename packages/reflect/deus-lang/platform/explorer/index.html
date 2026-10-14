@@ -54,13 +54,22 @@
       <header>
         <strong>Console</strong>
         <span id="console-status" class="muted"></span>
-        <span class="muted wide-only">Runs <code>deus</code> in this page against a snapshot of this codebase; changes stay in this tab.</span>
-        <button id="console-close" class="icon-button" title="Close the console (`)" aria-label="Close the console">✕</button>
+        <span class="muted wide-only"
+          >Runs <code>deus</code> in this page against a snapshot of this codebase; changes stay in this tab.</span
+        >
+        <button id="console-close" class="icon-button" title="Close the console (`)" aria-label="Close the console">
+          ✕
+        </button>
       </header>
       <pre id="console-output"></pre>
       <form id="console-prompt">
         <label for="console-input">deus</label>
-        <input id="console-input" autocomplete="off" spellcheck="false" placeholder="view List.map · eval List.sum [1, 2, 3] · test List · log" />
+        <input
+          id="console-input"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="view List.map · eval List.sum [1, 2, 3] · test List · log"
+        />
       </form>
     </section>
     <div id="finder" class="overlay" hidden>

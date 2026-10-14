@@ -65,11 +65,29 @@ def CGen.expr (ctx : FnCtx) (env : List Int) (tail : Bool) (e : Sexp) : {Throw T
       let bind := "V " ++ local l ++ " = " ++ sub v ++ "; "
       if tail then "{ " ++ bind ++ CGen.expr ctx (l :: env) true b ++ " }" else "({ " ++ bind ++ CGen.expr ctx (l :: env) false b ++ "; })"
   | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "prim" :: Sexp.str "Int.neg" :: []) :: a :: []) => ret ("SUB(0, " ++ sub a ++ ")")
-  | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "prim" :: Sexp.str p :: []) :: a :: b :: []) => if isComparison p && not (isScalar (typeOf ctx.cScope env a) || isScalar (typeOf ctx.cScope env b)) then Throw.throw (p ++
-      " on values that are not known to be Int or Bool is outside the C subset, since it would compare addresses: " ++ Text.take 120 (Sexp.print e)) else
-      match (macro p, infix p) with
-      | (Option.some m, _) => ret (m ++ "(" ++ sub a ++ ", " ++ sub b ++ ")")
-      | (_, Option.some op) => ret ("(V)(" ++ sub a ++ " " ++ op ++ " " ++ sub b ++ ")")
+  | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "prim" :: Sexp.str p :: []) :: xs) =>
+      match (p, List.map sub xs) with
+      | ("Array.make", n :: x :: []) =>
+          -- `Array` is a block `[length, item…]` and `Ref` a block `[value]` (D83); the writes return `()`.
+          ret ("deus_array(" ++ n ++ ", " ++ x ++ ")")
+      | ("Array.length", a :: []) => ret ("((V *)(" ++ a ++ "))[0]")
+      | ("Array.get", a :: i :: []) => ret ("(*AT(" ++ a ++ ", " ++ i ++ "))")
+      | ("Array.set", a :: i :: x :: []) => ret ("({ *AT(" ++ a ++ ", " ++ i ++ ") = " ++ x ++ "; (V)&deus_nullary[0]; })")
+      | ("Ref.new", x :: []) =>
+          let l := CGen.fresh ctx
+          ret ("({ V *" ++ local l ++ " = deus_alloc(1); " ++ local l ++ "[0] = " ++ x ++ "; (V)" ++
+            local l ++ "; })")
+      | ("Ref.get", r :: []) => ret ("((V *)(" ++ r ++ "))[0]")
+      | ("Ref.set", r :: x :: []) => ret ("({ ((V *)(" ++ r ++ "))[0] = " ++ x ++ "; (V)&deus_nullary[0]; })")
+      | (_, ca :: cb :: []) =>
+          match xs with
+          | a :: b :: [] => if isComparison p && not (isScalar (typeOf ctx.cScope env a) || isScalar (typeOf ctx.cScope env b)) then Throw.throw (p ++
+              " on values that are not known to be Int or Bool is outside the C subset, since it would compare addresses: " ++ Text.take 120 (Sexp.print e)) else
+              match (macro p, infix p) with
+              | (Option.some m, _) => ret (m ++ "(" ++ ca ++ ", " ++ cb ++ ")")
+              | (_, Option.some op) => ret ("(V)(" ++ ca ++ " " ++ op ++ " " ++ cb ++ ")")
+              | _ => Throw.throw ("the primitive " ++ p ++ " is outside the C subset")
+          | _ => Throw.throw ("the primitive " ++ p ++ " is outside the C subset")
       | _ => Throw.throw ("the primitive " ++ p ++ " is outside the C subset")
   | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "ref" :: Sexp.str h :: []) :: xs) =>
       match callee ctx h (List.length xs) with
@@ -150,7 +168,7 @@ def CGen.pattern (ctx : FnCtx) (v : Int) (env : List Int) (pat : Sexp) : {Throw 
 /-- The C every unit starts with; `nullary` static blocks serve the nullary constructors' tags. -/
 def CGen.prelude (nullary : Int) : Text := join
   "\n"
-  ["#include <stdint.h>", "#include <stdlib.h>", "typedef intptr_t V;", "#define W(x) ((V)(int32_t)(uint32_t)(x))", "#define ADD(a, b) W((uint32_t)(a) + (uint32_t)(b))", "#define SUB(a, b) W((uint32_t)(a) - (uint32_t)(b))", "#define MUL(a, b) W((uint32_t)(a) * (uint32_t)(b))", "#define SHL(a, b) W((uint32_t)(a) << ((b) & 31))", "#define SHR(a, b) ((V)((int32_t)(a) >> ((b) & 31)))", "#define USHR(a, b) W((uint32_t)(a) >> ((b) & 31))", "static inline V DIV(V a, V b) { if (b == 0) __builtin_trap(); return b == -1 ? SUB(0, a) : (V)((int32_t)a / (int32_t)b); }", "static inline V MOD(V a, V b) { if (b == 0) __builtin_trap(); return b == -1 ? 0 : (V)((int32_t)a % (int32_t)b); }", "static V *deus_hp, *deus_hl;", "static V *deus_refill(V n) { V size = n > (1 << 22) ? n : (1 << 22); deus_hp = malloc(size * sizeof(V)); if (!deus_hp) abort(); deus_hl = deus_hp + size; V *p = deus_hp; deus_hp += n; return p; }", "static inline V *deus_alloc(V n) { if (deus_hl - deus_hp < n) return deus_refill(n); V *p = deus_hp; deus_hp += n; return p; }", "static V deus_nullary[" ++ toText (larger nullary 1) ++ "] = {" ++
+  ["#include <stdint.h>", "#include <stdlib.h>", "typedef intptr_t V;", "#define W(x) ((V)(int32_t)(uint32_t)(x))", "#define ADD(a, b) W((uint32_t)(a) + (uint32_t)(b))", "#define SUB(a, b) W((uint32_t)(a) - (uint32_t)(b))", "#define MUL(a, b) W((uint32_t)(a) * (uint32_t)(b))", "#define SHL(a, b) W((uint32_t)(a) << ((b) & 31))", "#define SHR(a, b) ((V)((int32_t)(a) >> ((b) & 31)))", "#define USHR(a, b) W((uint32_t)(a) >> ((b) & 31))", "static inline V DIV(V a, V b) { if (b == 0) __builtin_trap(); return b == -1 ? SUB(0, a) : (V)((int32_t)a / (int32_t)b); }", "static inline V MOD(V a, V b) { if (b == 0) __builtin_trap(); return b == -1 ? 0 : (V)((int32_t)a % (int32_t)b); }", "static V *deus_hp, *deus_hl;", "static V *deus_refill(V n) { V size = n > (1 << 22) ? n : (1 << 22); deus_hp = malloc(size * sizeof(V)); if (!deus_hp) abort(); deus_hl = deus_hp + size; V *p = deus_hp; deus_hp += n; return p; }", "static inline V *deus_alloc(V n) { if (deus_hl - deus_hp < n) return deus_refill(n); V *p = deus_hp; deus_hp += n; return p; }", "static V deus_array(V n, V x) { if (n < 0) __builtin_trap(); V *p = deus_alloc(n + 1); p[0] = n; for (V i = 1; i <= n; i++) p[i] = x; return (V)p; }", "#define AT(a, i) ({ V *a_ = (V *)(a); V i_ = (i); if ((uint32_t)i_ >= (uint32_t)a_[0]) __builtin_trap(); &a_[i_ + 1]; })", "static V deus_nullary[" ++ toText (larger nullary 1) ++ "] = {" ++
     join ", " (List.map toText (range 0 (larger nullary 1))) ++ "};", ""]
 
 /-- The C translation unit: every function, and `export` as an `int32_t` entry point. -/

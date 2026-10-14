@@ -278,3 +278,7 @@ as git, we should be able to keep entire code history without trimming, artifact
 ---
 
 - have thread chew through other open tasks
+
+---
+
+- explore if functional style of writing programs (specifically immutability leads to fundamentally inneficient code and whether we need to add mutable memory. case study: writing a sorting algorithm
