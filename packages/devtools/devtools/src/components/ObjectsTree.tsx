@@ -445,8 +445,8 @@ export class ObjectsTreeModel {
   #openPathsState = Atom.family((_id: string) => Atom.make<ReadonlySet<string>>(new Set<string>()));
 
   /**
-   * The top level. A text filter has to see every label, so only then is the list unpaged; an `ids`
-   * filter queries a page of the ids themselves rather than the space.
+   * The top level, paged as the user scrolls. A text filter has to see every label, so only then is
+   * the list unpaged.
    */
   #list = Atom.make((get): ObjectsTreeList => {
     if (this.#root !== null) {
@@ -455,19 +455,13 @@ export class ObjectsTreeModel {
     const filtered = get(this.filter).trim().length > 0;
     const limit = get(this.#limit);
     const ids = get(this.ids);
-    if (ids !== undefined) {
-      const valid = [...ids].filter((id) => EntityId.isValid(id));
-      const page = filtered ? valid : valid.slice(0, limit);
-      const order = new Map(page.map((id, index) => [id, index]));
-      const entities = page.length > 0 ? get(this.#idsQueryFamily(page.join(','))) : [];
-      return {
-        entities: entities
-          .filter((entity) => Obj.isObject(entity))
-          .sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0)),
-        complete: page.length === valid.length,
-      };
-    }
-    const objects = get(this.#spaceQuery).filter((entity) => Obj.isObject(entity));
+    // The `ids` set is queried whole and paged like the space: paging the ids themselves stalls when a
+    // page resolves to relations or missing entities, since no row of it mounts to ask for the next.
+    const entities =
+      ids === undefined
+        ? get(this.#spaceQuery)
+        : get(this.#idsQueryFamily([...ids].filter((id) => EntityId.isValid(id)).join(',')));
+    const objects = entities.filter((entity) => Obj.isObject(entity));
     return {
       entities: filtered ? objects : objects.slice(0, limit),
       complete: filtered || objects.length <= limit,
@@ -480,9 +474,12 @@ export class ObjectsTreeModel {
    */
   #spaceQuery: Atom.Atom<Entity.Unknown[]>;
 
-  #idsQueryFamily = Atom.family((key: string) =>
-    this.#queryAtom(Query.select(Filter.id(...validIds(key))).options({ deleted: 'include' })),
-  );
+  #idsQueryFamily = Atom.family((key: string): Atom.Atom<Entity.Unknown[]> => {
+    const ids = validIds(key);
+    return ids.length > 0
+      ? this.#queryAtom(Query.select(Filter.id(...ids)).options({ deleted: 'include' }))
+      : Atom.make<Entity.Unknown[]>([]);
+  });
 
   #queryAtom(query: Query.Any): Atom.Atom<Entity.Unknown[]> {
     return this.#database.query(query.from(this.#database)).atom;
