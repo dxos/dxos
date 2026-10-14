@@ -22,6 +22,7 @@ import {
   type AgentKnowledgeGoal,
   type AgentKnowledgeView,
 } from './AgentKnowledge.tsx';
+import { EntityBrowser } from './EntityBrowser.tsx';
 import { EntityCard } from './EntityCard.tsx';
 import { type EntityCardModel, toEntityCards } from './subgraph.ts';
 import { formatNamedGraphs } from './trig.ts';
@@ -52,9 +53,26 @@ const FACTS: AgentKnowledgeFact[] = [
       sourceHash: '3f2a9c',
     },
   },
-  { id: 'f2', text: 'race is in v12 index migration', source: 'CI triage', speaker: 'dima', saidAt: hoursAgo(2) },
-  { id: 'f3', text: 'Josiah reviews fix', source: 'CI triage', speaker: 'josiah', saidAt: hoursAgo(3) },
-  { id: 'f4', text: '0.12 release is on 10 October', source: 'Release notes', saidAt: hoursAgo(26) },
+  {
+    id: 'f2',
+    text: 'race is in v12 index migration',
+    source: 'CI triage',
+    speaker: 'dima',
+    saidAt: hoursAgo(2),
+  },
+  {
+    id: 'f3',
+    text: 'Josiah reviews fix',
+    source: 'CI triage',
+    speaker: 'josiah',
+    saidAt: hoursAgo(3),
+  },
+  {
+    id: 'f4',
+    text: '0.12 release is on 10 October',
+    source: 'Release notes',
+    saidAt: hoursAgo(26),
+  },
 ];
 
 /** A goal Rich is waiting on, with the watch that will tell him, and one already achieved. */
@@ -179,11 +197,11 @@ const CARD_OPTIONS = {
     'dima': 'Person',
   },
   inverses: {
-    'know': 'Known by',
-    'author': 'Authored by',
-    'work at': 'Employs',
-    'own': 'Owned by',
-    'member of': 'Members',
+    'know': 'known-by',
+    'author': 'authored-by',
+    'work at': 'employs',
+    'own': 'owned-by',
+    'member of': 'members',
   },
 };
 
@@ -212,6 +230,12 @@ const SubgraphsStory = () => {
       </Panel.Body>
     </Panel.Root>
   );
+};
+
+/** Finder-style columns over the same graph; objects (an employer, a paper) get cards too, so every chip opens one. */
+const BrowserStory = () => {
+  const cards = useMemo(() => toEntityCards([...PROFILE_FACTS, ...RDF_FACTS], { ...CARD_OPTIONS, objects: true }), []);
+  return <EntityBrowser cards={cards} icons={CARD_ICONS} />;
 };
 
 type StoryProps = {
@@ -249,37 +273,60 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   decorators: [withLayout({ layout: 'column' })],
-  args: { scenario: 'default' },
+  args: {
+    scenario: 'default',
+  },
 };
 
 export const Empty: Story = {
   decorators: [withLayout({ layout: 'column' })],
-  args: { scenario: 'empty' },
+  args: {
+    scenario: 'empty',
+  },
 };
 
 export const Facts: Story = {
   decorators: [withLayout({ layout: 'column' })],
-  args: { scenario: 'default', defaultView: 'facts' },
+  args: {
+    scenario: 'default',
+    defaultView: 'facts',
+  },
 };
 
 export const Goals: Story = {
   decorators: [withLayout({ layout: 'column' })],
-  args: { scenario: 'default', defaultView: 'goals' },
+  args: {
+    scenario: 'default',
+    defaultView: 'goals',
+  },
 };
 
 export const LargeGraph: Story = {
   decorators: [withLayout({ layout: 'column' })],
-  args: { scenario: 'large', defaultView: 'graph' },
+  args: {
+    scenario: 'large',
+    defaultView: 'graph',
+  },
 };
 
 export const NamedGraphs: Story = {
   decorators: [withLayout({ layout: 'fullscreen' })],
-  args: { scenario: 'default' },
+  args: {
+    scenario: 'default',
+  },
   render: () => <NamedGraphsStory />,
 };
 
 export const Subgraphs: Story = {
   decorators: [withLayout({ layout: 'fullscreen' })],
-  args: { scenario: 'default' },
+  args: {
+    scenario: 'default',
+  },
   render: () => <SubgraphsStory />,
+};
+
+export const Browser: Story = {
+  decorators: [withLayout({ layout: 'fullscreen' })],
+  args: { scenario: 'default' },
+  render: () => <BrowserStory />,
 };

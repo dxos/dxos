@@ -30,8 +30,10 @@ export type EntityCardOptions = {
   types?: Readonly<Record<string, string>>;
   /** Labels by normalized predicate; the predicate as said otherwise. */
   labels?: Readonly<Record<string, string>>;
-  /** Inverse labels by normalized predicate (`knows` → `Known by`); `<label> (of)` otherwise. */
+  /** Inverse labels by normalized predicate (`knows` → `known-by`); `<label>-of` otherwise. Labels are `Predicate.label`. */
   inverses?: Readonly<Record<string, string>>;
+  /** Also give a card to entities that are only ever objects (an employer, a paper), as browsing needs. */
+  objects?: boolean;
 };
 
 const valueOf = (term: RDF.Term): EntityCardValue =>
@@ -78,13 +80,13 @@ export const toEntityCards = (facts: readonly RDF.Fact[], options: EntityCardOpt
       continue;
     }
     const predicate = RDF.Predicate.normalize(assertion.predicate);
-    const label = options.labels?.[predicate] ?? assertion.predicate;
+    const label = RDF.Predicate.label(options.labels?.[predicate] ?? assertion.predicate);
     const subject = card(assertion.subject.entity, assertion.subject.label);
     add(subject.properties, predicate, label, valueOf(assertion.object));
 
     if (assertion.object.kind === 'entity') {
-      // Collected for every object, but an object gets a card only if it is also a subject (filtered below).
-      const inverseLabel = options.inverses?.[predicate] ?? `${label} (of)`;
+      // Collected for every object; without `objects`, an object gets a card only if it is also a subject.
+      const inverseLabel = RDF.Predicate.label(options.inverses?.[predicate] ?? `${label}-of`);
       add(
         card(assertion.object.entity, assertion.object.label).inverse,
         predicate,
@@ -98,7 +100,7 @@ export const toEntityCards = (facts: readonly RDF.Fact[], options: EntityCardOpt
     facts.flatMap(({ assertion }) => (assertion.subject.kind === 'entity' ? [assertion.subject.entity] : [])),
   );
   return [...cards]
-    .filter(([id]) => subjects.has(id))
+    .filter(([id]) => options.objects || subjects.has(id))
     .map(([id, { label, properties, inverse }]) => ({
       id,
       label,
@@ -106,4 +108,34 @@ export const toEntityCards = (facts: readonly RDF.Fact[], options: EntityCardOpt
       properties: [...properties.values()],
       inverse: [...inverse.values()],
     }));
+};
+
+/** Identifies a property row across both directions: `out:<predicate>` or `in:<predicate>`. */
+export const propertyKey = (direction: 'out' | 'in', predicate: string): string => `${direction}:${predicate}`;
+
+/** What a column of the entity browser has chosen: a card, and within it optionally a property row or one chip. */
+export type BrowseSelection = {
+  cardId: string;
+  /** A {@link propertyKey}. */
+  property?: string;
+  /** One entity named by a chip. */
+  entity?: string;
+};
+
+/**
+ * The ids the next column shows for a selection: the chip's entity, else the property's entity values, else every
+ * entity the card relates to in either direction — in order, without repeats.
+ */
+export const related = (card: EntityCardModel, selection: BrowseSelection): string[] => {
+  if (selection.entity) {
+    return [selection.entity];
+  }
+  const rows = [
+    ...card.properties.map((property) => ({ key: propertyKey('out', property.predicate), property })),
+    ...card.inverse.map((property) => ({ key: propertyKey('in', property.predicate), property })),
+  ].filter(({ key }) => !selection.property || key === selection.property);
+  const ids = rows.flatMap(({ property }) =>
+    property.values.flatMap((value) => (value.kind === 'entity' ? [value.id] : [])),
+  );
+  return [...new Set(ids)];
 };

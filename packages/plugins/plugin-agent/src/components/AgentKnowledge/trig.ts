@@ -142,7 +142,7 @@ export const formatNamedGraphs = (facts: readonly RDF.Fact[], options: NamedGrap
   const ontology = [...predicates].map(([name, forms]) =>
     [
       `dx:${name} a rdf:Property ;`,
-      `  rdfs:label ${quote(name.replace(/([A-Z])/g, ' $1').toLowerCase())} ;`,
+      `  rdfs:label ${quote(RDF.Predicate.label(name))} ;`,
       `  sx:synonym ${[...forms].map(quote).join(', ')} .`,
     ].join('\n'),
   );

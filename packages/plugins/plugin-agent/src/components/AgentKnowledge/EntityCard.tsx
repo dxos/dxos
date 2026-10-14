@@ -11,7 +11,7 @@ import * as Tag from '@dxos/react-ui/Tag';
 
 import { meta } from '#meta';
 
-import { type EntityCardModel, type EntityCardProperty, type EntityCardValue } from './subgraph.ts';
+import { type EntityCardModel, type EntityCardProperty, type EntityCardValue, propertyKey } from './subgraph.ts';
 
 const TYPE_ICON = 'ph--shapes--regular';
 const NAME_ICON = 'ph--identification-card--regular';
@@ -25,8 +25,16 @@ export type EntityCardProps = {
   card: EntityCardModel;
   /** Icons by normalized predicate; an arrow otherwise. */
   icons?: Readonly<Record<string, string>>;
-  /** Opens the card for an entity a chip names. */
-  onSelect?: (id: string) => void;
+  /** The card is the chosen one of its set. */
+  selected?: boolean;
+  /** The property row (a `propertyKey`) that is the current one. */
+  currentProperty?: string;
+  /** Makes the card itself selectable. */
+  onClick?: () => void;
+  /** Makes each property row selectable. */
+  onSelectProperty?: (key: string) => void;
+  /** Opens the entity a chip names; `key` is the row it sits in. */
+  onSelect?: (id: string, key: string) => void;
   onClose?: () => void;
 };
 
@@ -49,7 +57,19 @@ const Values = ({ values, onSelect }: { values: readonly EntityCardValue[]; onSe
     <>
       {values.slice(0, MAX_VALUES).map((value) =>
         value.kind === 'entity' ? (
-          <Tag.Tag key={value.id} hue='sky' onClick={onSelect ? () => onSelect(value.id) : undefined}>
+          <Tag.Tag
+            key={value.id}
+            hue='sky'
+            onClick={
+              onSelect
+                ? (event) => {
+                    // The chip sits in a selectable row in a selectable card; only the chip's selection applies.
+                    event.stopPropagation();
+                    onSelect(value.id);
+                  }
+                : undefined
+            }
+          >
             {value.label}
           </Tag.Tag>
         ) : (
@@ -68,32 +88,60 @@ const Values = ({ values, onSelect }: { values: readonly EntityCardValue[]; onSe
 };
 
 const PropertyRows = ({
+  direction,
   properties,
   icon,
   icons,
+  currentProperty,
+  onSelectProperty,
   onSelect,
-}: {
+}: Pick<EntityCardProps, 'icons' | 'currentProperty' | 'onSelectProperty' | 'onSelect'> & {
+  direction: 'out' | 'in';
   properties: readonly EntityCardProperty[];
   icon: string;
-  icons?: Readonly<Record<string, string>>;
-  onSelect?: (id: string) => void;
 }) =>
-  properties.map((property) => (
-    <Card.Row key={property.predicate} icon={icons?.[property.predicate] ?? icon} data-testid='entity-card-property'>
-      <KeyValue label={property.label}>
-        <Values values={property.values} onSelect={onSelect} />
-      </KeyValue>
-    </Card.Row>
-  ));
+  properties.map((property) => {
+    const key = propertyKey(direction, property.predicate);
+    return (
+      <Card.Row
+        key={key}
+        icon={icons?.[property.predicate] ?? icon}
+        current={currentProperty === key}
+        onClick={
+          onSelectProperty
+            ? (event) => {
+                event.stopPropagation();
+                onSelectProperty(key);
+              }
+            : undefined
+        }
+        data-testid='entity-card-property'
+      >
+        <KeyValue label={property.label}>
+          <Values values={property.values} onSelect={onSelect ? (id) => onSelect(id, key) : undefined} />
+        </KeyValue>
+      </Card.Row>
+    );
+  });
 
 /**
  * One entity of the graph as a card: its class, its name, what it states about others, and below a rule what others
  * state about it.
  */
-export const EntityCard = ({ card, icons, onSelect, onClose }: EntityCardProps) => {
+export const EntityCard = ({
+  card,
+  icons,
+  selected,
+  currentProperty,
+  onClick,
+  onSelectProperty,
+  onSelect,
+  onClose,
+}: EntityCardProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
+  const rows = { icons, currentProperty, onSelectProperty, onSelect };
   return (
-    <Card.Root grid data-testid='entity-card'>
+    <Card.Root grid selected={selected} onClick={onClick} data-testid='entity-card'>
       <Card.Row icon={TYPE_ICON} end={onClose && <Card.Action system='close' onClick={onClose} />}>
         <KeyValue label={t('entity-card-type.label')}>
           <Card.Text truncate>{card.type ?? '—'}</Card.Text>
@@ -105,11 +153,11 @@ export const EntityCard = ({ card, icons, onSelect, onClose }: EntityCardProps) 
           <Card.Text truncate>{card.label}</Card.Text>
         </KeyValue>
       </Card.Row>
-      <PropertyRows properties={card.properties} icon={PROPERTY_ICON} icons={icons} onSelect={onSelect} />
+      <PropertyRows direction='out' properties={card.properties} icon={PROPERTY_ICON} {...rows} />
       {card.inverse.length > 0 && (
         <>
           <Layout.Separator />
-          <PropertyRows properties={card.inverse} icon={INVERSE_ICON} onSelect={onSelect} />
+          <PropertyRows direction='in' properties={card.inverse} icon={INVERSE_ICON} {...rows} icons={undefined} />
         </>
       )}
     </Card.Root>
