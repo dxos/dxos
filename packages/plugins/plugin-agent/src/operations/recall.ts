@@ -11,7 +11,8 @@ import { type RDF } from '@dxos/pipeline-rdf';
 
 import { BrainService, Goal, Knowledge, MemoryOperation, Profile } from '#types';
 
-import { entityKeys, spaceFacts } from './knowledge.ts';
+import { canonicalKey, expandKeys, identityGroups } from './identity.ts';
+import { entityKeys, knownIdentities, spaceFacts } from './knowledge.ts';
 
 /** The names of the facts' sources that are objects in the space (documents); a chat message is a feed item, so has none. */
 const sourceNames = Effect.fnUntraced(function* (facts: readonly RDF.Fact[]) {
@@ -45,8 +46,13 @@ const handler: Operation.WithHandler<typeof MemoryOperation.Recall> = MemoryOper
   Operation.withHandler(
     Effect.fnUntraced(function* ({ subject, query, limit }) {
       const entity = subject ? yield* Database.load(subject) : undefined;
-      const ids = entity ? entityKeys(entity) : undefined;
       const allFacts = yield* spaceFacts;
+      // The subject's own keys, widened to the entities strong identifiers tie it to (its Discord account, its email
+      // address), which facts from other sources were minted under.
+      const groups = identityGroups(allFacts, yield* knownIdentities);
+      const ownKeys = entity ? entityKeys(entity) : undefined;
+      const ids = ownKeys ? new Set([...ownKeys, ...expandKeys(ownKeys, groups)]) : undefined;
+      const isSubjectKey = (key: string): boolean => ids !== undefined && (ids.has(key) || ids.has(canonicalKey(key)));
       const activeMemories = Knowledge.fromFacts(allFacts)
         .filter((memory) => memory.status === 'active' && (!ids || Knowledge.isAbout(memory, ids)))
         .sort(Knowledge.byNewest);
@@ -62,7 +68,7 @@ const handler: Operation.WithHandler<typeof MemoryOperation.Recall> = MemoryOper
           }
           const { subject, object } = fact.assertion;
           const entities = [subject, object].flatMap((term) => (term.kind === 'entity' ? [term.entity] : []));
-          return [...entities, fact.attribution.agent].some((id) => id !== undefined && ids.has(id));
+          return [...entities, fact.attribution.agent].some((id) => id !== undefined && isSubjectKey(id));
         })
         .sort((left, right) => right.attribution.generatedAtTime.localeCompare(left.attribution.generatedAtTime));
 
