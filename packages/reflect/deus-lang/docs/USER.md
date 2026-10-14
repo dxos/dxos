@@ -314,3 +314,7 @@ how much of .mdl are you dogfooding? the general process should be mdl spec > ap
 ---
 
 I think deus should allow declaring a definition with a type but no impl
+
+---
+
+about mdl-first approach --- I want agents to record specs in codebase, not in github. and overall, most development at this point should be happening via-codebase

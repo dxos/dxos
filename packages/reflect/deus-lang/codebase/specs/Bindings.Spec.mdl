@@ -5,31 +5,78 @@ name: Bindings.Spec
 # TypeScript bindings
 
 `deus bindings` turns DEUS functions into a JavaScript module with a `.d.ts` that reads like a hand-written
-library ([D81](../DECISIONS.md), [D87](../DECISIONS.md)). TypeScript calls DEUS through ordinary async
+library ([D81](../../docs/DECISIONS.md), [D87](../../docs/DECISIONS.md)). TypeScript calls DEUS through ordinary async
 functions; DEUS calls TypeScript by performing an ability whose handler TypeScript supplies. The functions run
-on the embeddable wasm kernel ([EMBEDDING.md](./EMBEDDING.md)) in Node, a browser or a Worker.
+on the embeddable wasm kernel ([EMBEDDING.md](../../docs/spec/EMBEDDING.md)) in Node, a browser or a Worker.
 
 This document is the spec, written first: requirements, then the API, then the mapping, then the theorems
-that state the generator's laws. `deus add docs/spec/BINDINGS.mdl` compiles the theorems next to
+that state the generator's laws. The theorems compile next to
 [`deus/bindings.deus`](../../deus/bindings.deus), and `deus check Bindings.Spec` checks them. The end-to-end
 test is [`src/bindings/bindings.test.ts`](../../src/bindings/bindings.test.ts), over
 [`examples/geometry.deus`](../../examples/geometry.deus). Each requirement names what checks it.
 
+## Extensions
+
+| Term | URI |
+| --- | --- |
+| `req` | `org.dxos.deus.req@1.0` |
+
 ## Requirements
 
-| Id   | Requirement                                                                                               | Checked by                                       |
-| ---- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| R-1  | Each exported DEUS function is a top-level `export declare function f(…): Promise<R>` in the `.d.ts`.     | test: strict `tsc` on a consumer                 |
-| R-2  | Every name the module emits is a valid JavaScript identifier or property name, whatever the DEUS name.   | `identIsIdentifier`, `identIsIdempotent`, `propKeyIsPropertyName`, `propKeyKeepsReserved` |
-| R-3  | Parameters keep their DEUS names; operation parameters, which have none, get distinct names by type.     | `distinctIsUnique`, `distinctKeepsUnique`        |
-| R-4  | A prefix selects every term under it; the rest of the name decides the TypeScript path.                  | `relativeNameStripsPrefix`, `relativeNameSkipsOthers` |
-| R-5  | The kernel applies an entry to one value, so only a function of exactly one parameter needs no adapter. | `adapterOnlyWhenNeeded`, `adapterTakesNestedPairs` |
-| R-6  | A variant type with fields gets a constructor object: `Shape.circle(2)` builds a `Shape`.                | test                                             |
-| R-7  | Values round-trip: what TypeScript passes decodes in DEUS as the same value, and back.                   | test: every export of the example                |
-| R-8  | The module works with no setup; `configure` sets module-level options, `load` makes a separate instance. | test                                             |
-| R-9  | `Throw` needs no handler: an unhandled `throw` rejects with `DeusThrow`, a defect with `DeusDefect`.     | test                                             |
-| R-10 | A function that cannot be exported is listed with its reason, on stderr, in JSON and in the module.     | test                                             |
-| R-11 | The output needs nothing from this package: the runtime and the kernel are copied next to the module.   | test: the module is imported from a scratch directory |
+```mdl
+req R-1: each exported DEUS function is a top-level `export declare function f(…): Promise<R>` in the `.d.ts`
+  gap: task a2da28e2, strict tsc on a consumer in src/bindings/bindings.test.ts checks it
+```
+
+```mdl
+req R-2: every name the module emits is a valid JavaScript identifier or property name, whatever the DEUS name
+  by: Bindings.Spec.identIsIdentifier | Bindings.Spec.identIsIdempotent | Bindings.Spec.propKeyIsPropertyName | Bindings.Spec.propKeyKeepsReserved
+```
+
+```mdl
+req R-3: parameters keep their DEUS names; operation parameters, which have none, get distinct names by type
+  by: Bindings.Spec.distinctIsUnique | Bindings.Spec.distinctKeepsUnique
+```
+
+```mdl
+req R-4: a prefix selects every term under it; the rest of the name decides the TypeScript path
+  by: Bindings.Spec.relativeNameStripsPrefix | Bindings.Spec.relativeNameSkipsOthers
+```
+
+```mdl
+req R-5: the kernel applies an entry to one value, so only a function of exactly one parameter needs no adapter
+  by: Bindings.Spec.adapterOnlyWhenNeeded | Bindings.Spec.entryIsFunctionWithoutAdapter | Bindings.adapterTakesNestedPairs
+```
+
+```mdl
+req R-6: a variant type with fields gets a constructor object: `Shape.circle(2)` builds a `Shape`
+  gap: task a2da28e2, a vitest in src/bindings/bindings.test.ts checks it
+```
+
+```mdl
+req R-7: values round-trip: what TypeScript passes decodes in DEUS as the same value, and back
+  gap: task a2da28e2, every export of the example in src/bindings/bindings.test.ts checks it
+```
+
+```mdl
+req R-8: the module works with no setup; `configure` sets module-level options, `load` makes a separate instance
+  gap: task a2da28e2, a vitest in src/bindings/bindings.test.ts checks it
+```
+
+```mdl
+req R-9: `Throw` needs no handler: an unhandled `throw` rejects with `DeusThrow`, a defect with `DeusDefect`
+  gap: task a2da28e2, a vitest in src/bindings/bindings.test.ts checks it
+```
+
+```mdl
+req R-10: a function that cannot be exported is listed with its reason, on stderr, in JSON and in the module
+  gap: task a2da28e2, a vitest in src/bindings/bindings.test.ts checks it
+```
+
+```mdl
+req R-11: the output needs nothing from this package: the runtime and the kernel are copied next to the module
+  gap: task a2da28e2, importing the module from a scratch directory in src/bindings/bindings.test.ts checks it
+```
 
 ## API
 
@@ -49,7 +96,7 @@ deus bindings <prefix|name…> -o <dir> [--name <stem>]
 
 `<stem>` defaults to the first argument's last segment in lower case. A prefix selects every term under it;
 a full name selects that term. Field accessors are not exported. The JSON document is in
-[CLI-JSON.md](./CLI-JSON.md).
+[CLI-JSON.md](../../docs/spec/CLI-JSON.md).
 
 In DEUS, the writer is `Bindings.generate : Text -> List Text -> Text -> {IO, Throw Text} (Text, Text, List Text, List (Text, Text))`:
 the codebase directory, the prefixes and the command line give the `.js` text, the `.d.ts` text, the exported
@@ -199,62 +246,6 @@ abilities they use and a `(main …)` naming the first export's entry.
 The laws of the generator, stated over `deus/bindings.deus`. The oracles here are written apart from the
 implementation, so a theorem cannot pass by restating the code.
 
-```deus
-namespace Bindings.Spec
-
-def identChar (c : Int) : Bool := Text.isAlpha c || Text.isDigit c || c == '_' || c == '$'
-
-/-- A JavaScript identifier that is not a reserved word. -/
-def isIdentifier (t : Text) : Bool :=
-  not (Text.isEmpty t) && not (Text.isDigit (Text.code t 0)) && not (List.contains t Bindings.reserved) &&
-    List.all (fun i => identChar (Text.code t i)) (List.range 0 (Text.length t))
-
-/-- A name usable after `.` and before `:` in an object: an identifier, or a reserved word. -/
-def isPropertyName (t : Text) : Bool := isIdentifier t || List.contains t Bindings.reserved
-
-/-- R-2: any DEUS name becomes an identifier. -/
-theorem identIsIdentifier (t : Text) : isIdentifier (Bindings.ident t) = true := by test 300
-
-/-- R-2: an identifier is left alone, so names that are already good survive. -/
-theorem identIsIdempotent (t : Text) : Bindings.ident (Bindings.ident t) = Bindings.ident t := by test 300
-
-/-- R-2: operation and constructor names become property names. -/
-theorem propKeyIsPropertyName (t : Text) : isPropertyName (Bindings.propKey t) = true := by test 300
-
-/-- R-2: `Throw.throw` stays `throw`. -/
-theorem propKeyKeepsReserved : List.all (fun w => Bindings.propKey w == w) Bindings.reserved = true := by rfl
-
-def unique (xs : List Text) : Bool :=
-  match xs with
-  | [] => true
-  | x :: rest => not (List.contains x rest) && unique rest
-
-/-- Names that collide often, including with the numbered forms `distinct` makes. -/
-def crowded (i : Int) : Text := if i % 2 == 0 then "text" else "text" ++ Int.toText (i % 5)
-
-/-- R-3: numbered names never collide, even with a name that already ends in a number. -/
-theorem distinctIsUnique (xs : List Int) : unique (Bindings.distinct (List.map crowded xs)) = true := by test 300
-
-/-- R-3: names that are already distinct are kept. -/
-theorem distinctKeepsUnique (xs : List Text) : unique xs = true -> Bindings.distinct xs = xs := by test 200
-
-/-- R-4: a name under a prefix is selected, relative to it. -/
-theorem relativeNameStripsPrefix (p : Text) (n : Text) : Bindings.relativeName [p] (p ++ "." ++ n) = some n := by test 200
-
-/-- R-4: a name outside every prefix is not selected. -/
-theorem relativeNameSkipsOthers (p : Text) (n : Text) : not (Text.startsWith p n) -> Bindings.relativeName [p] n = none := by test 200
-
-def ints (n : Int) : List (Text, Sexp) := List.map (fun i => ("x" ++ Int.toText i, Sexp.read "(tref \"#Int\")")) (List.range 0 n)
-
-def exportOf (n : Int) : Bindings.Export := Bindings.Export.mk "f" "f" "" "h" (ints n) (Sexp.read "(tref \"#Int\")") [] "" ""
-
-/-- R-5: an adapter exactly when the function does not take one value. -/
-theorem adapterOnlyWhenNeeded (k : Int) : Option.isSome (Bindings.adapter (exportOf (k % 6))) = not (k % 6 == 1) := by test 200
-
-/-- R-5: the entry is the function itself exactly when it needs no adapter. -/
-theorem entryIsFunctionWithoutAdapter (k : Int) : (Bindings.entryOf (exportOf (k % 6)) == "h") = (k % 6 == 1) := by test 200
-
-end Bindings.Spec
-```
+The laws are the definitions under `Bindings.Spec`: `deus ls Bindings.Spec.` lists them and `deus view` prints them.
 
 `adapterTakesNestedPairs` in `deus/bindings.deus` pins the exact adapter for three parameters.

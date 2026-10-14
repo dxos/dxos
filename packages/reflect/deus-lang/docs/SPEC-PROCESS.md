@@ -6,24 +6,44 @@ how the process works in DEUS, what the backfill covered, and what it found and 
 
 ## How to write a spec
 
-A spec is an `.mdl` document in `docs/spec/`, next to the prose `.md` that explains the subsystem.
+A spec is a document in the codebase, named `<Subsystem>.Spec` (D96). Dmytro: "I want agents to
+record specs in codebase, not in github. and overall, most development at this point should be
+happening via-codebase". Nothing under `docs/spec/` holds a checked spec any more; the copies in
+[`codebase/specs/`](../codebase/specs) are the export, written by `deus export codebase`.
+
 Write it in this order:
 
 1. **Requirements.** One `req` block per promise, in a sentence a reviewer can check. Each names its
    evidence in `by:`; until the evidence exists, `gap:` names the task that adds it.
 2. **APIs.** One `api` block per group of entry points, `Name : Type` per line, the type as
-   `deus view` shows it.
+   `deus view` shows it. A name declared without a body (D94) is reported as a known gap.
 3. **Laws.** One `law` block per property that must hold for all inputs, naming its theorem, with
    `statement:` when the exact claim matters and `evidence: proof` when testing is not enough.
-4. **Evidence.** Theorems and tests in a ` ```deus ` fence at the end of the same document, in the
-   namespace `<Subsystem>.Spec`. `deus add docs/spec` compiles them next to the code.
-5. **Code.** Then write or change the implementation until `deus mdl docs/spec` reports no failure.
+4. **Evidence.** Theorems and tests in the namespace `<Subsystem>.Spec`.
+5. **Code.** Then write or change the implementation until `deus mdl <Subsystem>.Spec` reports no
+   failure.
 
-`deus mdl docs/spec` checks every block: names exist with the stated types, every test and theorem
-named passes (checked now or from the cached verdict), and each law's theorem states what the spec
-says. A requirement with only a `gap:` is reported but does not fail. CI runs it in the toolchain
-self-test (`src/cli.test.ts`). The block types are in [MDL.md](spec/MDL.md#the-req-api-and-law-extensions);
-[CODEBASE-STORE.mdl](spec/CODEBASE-STORE.mdl) is the reference example.
+The steps, for a new spec or a change to one:
+
+````sh
+deus view Compile.Spec > /tmp/compile.mdl   # the document as stored (skip for a new one)
+$EDITOR /tmp/compile.mdl                    # blocks and prose; a ```deus fence holds new laws
+deus update /tmp/compile.mdl                # stores the blocks, their prose, and the fence's code
+deus mdl Compile.Spec                       # checks it from the codebase
+deus export codebase                        # the git copy: codebase/specs/Compile.Spec.mdl
+````
+
+A ```deus fence in the edited file compiles into the codebase like any source; the stored document
+keeps a line saying where its laws are, and `deus view Compile.Spec.someLaw` prints one. To change an
+existing law, edit it from `deus view` into a `.deus` file and `deus update` that. A block deleted
+from the file stays in the codebase until `deus rm Compile.Spec.R-3`.
+
+`deus mdl` checks every block of every document: names exist with the stated types, every test and
+theorem named passes (checked now or from the cached verdict), and each law's theorem states what the
+spec says. A requirement with only a `gap:` is reported but does not fail. CI restores the export and
+runs `deus mdl` on it (`src/cli.test.ts`), and fails when the export no longer matches `deus/`. The
+block types are in [MDL.md](spec/MDL.md#the-req-api-and-law-extensions);
+[Codebase.Spec](../codebase/specs/Codebase.Spec.mdl) is the reference example.
 
 Laws about pure functions are theorems over generated values. Laws about the store, the CLI or the
 explorer run inside `Codebase.Spec.inStore`, a fresh codebase in the deterministic simulation, so a
@@ -36,7 +56,7 @@ theorem can still state them (`inStore (fun dir => …) = true`) and `by test n`
 | Toolchain subsystems with a checked spec | 0                        | 5 (store, compile, export, explorer; bindings by its own thread) |
 | Requirements with checked evidence links | 0                        | 29, plus 4 known gaps                                            |
 | API signatures checked against the code  | 0                        | 26                                                               |
-| Theorems about the toolchain             | 7, all about the prelude | 28 (11 from these specs, 10 from BINDINGS.mdl)                   |
+| Theorems about the toolchain             | 7, all about the prelude | 28 (11 from these specs, 10 from Bindings.Spec)                  |
 | Toolchain tests                          | 35                       | 62 (27 added by these specs)                                     |
 | `deus mdl docs/spec`, cold / cached      | n/a                      | 14 s / 7 s                                                       |
 
@@ -96,5 +116,5 @@ Each is a codebase task (ids in brackets):
 
 New work follows the process: a spec change comes first in the same commit as the code. The rest of
 the toolchain (lexer and parser, types, prover, tasks, replication, update, image, the wasm and C back
-ends) gets checked specs as it is touched (`1ab6c044`), and BINDINGS.mdl's requirements table becomes
-`req` blocks (`b4d7a440`).
+ends) gets checked specs as it is touched (`1ab6c044`), and Bindings.Spec's requirements table became `req`
+blocks with the move into the codebase (D96).

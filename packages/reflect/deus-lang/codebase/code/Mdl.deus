@@ -110,6 +110,51 @@ def Mdl.parse (doc : Text) : Doc :=
                 blocks else go more section Option.none terms blocks
       go lines "" Option.none [] []
 
+/-- A document's prose as the codebase keeps it with the blocks (D96): the text before each stored
+  block, in order, and the text after the last. A ```deus fence is left out, since its code is
+  stored as definitions; one opening with `namespace N` leaves a line naming `N`. The Extensions
+  table's rows are left out too, since the export writes them from the blocks' URIs. Everything
+  else is kept as written, `ext` blocks and other fences included, except that runs of blank lines
+  outside fences become one, so the text survives a round trip unchanged. -/
+def Mdl.prose (doc : Text) : (List Text, Text) :=
+  match frontmatter (mapIndexed (fun i l => (i + 1, l)) (lines doc)) with
+  | (_, lines) =>
+      -- fence: none outside; some (kind, its lines reversed, the opening line last).
+      let rec go rest section fence acc leads :=
+        match rest with
+        | [] => (reverse leads, trimLines (reverse acc))
+        | (_, line) :: more =>
+            let t := trim line
+            match fence with
+            | Option.some (kind, held) => if t != "```" then go more section (Option.some (kind, line :: held)) acc leads else if kind == "deus" then
+                -- The code is stored as definitions; a line says where, so the document still points at its laws.
+                let code := List.filter (fun l => not (Text.isEmpty (trim l))) (List.drop 1 (reverse held))
+                match code with
+                | first :: _ => if startsWith "namespace " (trim first) then
+                    let ns := trim (Text.drop 10 (trim first))
+                    go
+                      more
+                      section
+                      Option.none
+                      (("The laws are the definitions under `" ++ ns ++ "`: `deus ls " ++ ns ++
+                        ".` lists them and `deus view` prints them.") :: acc)
+                      leads
+                  else go more section Option.none acc leads
+                | [] => go more section Option.none acc leads
+              else if kind == "mdl" && stored (Mdl.block 0 (List.drop 1 (reverse held))) then go more section Option.none [] (trimLines (reverse acc) :: leads) else go more section Option.none (line :: held ++ acc) leads
+            | Option.none =>
+                let afterBlank :=
+                  match acc with
+                  | prev :: _ => Text.isEmpty (trim prev)
+                  | [] => true
+                if startsWith "```" t then go
+                  more
+                  section
+                  (Option.some (if t == "```mdl" then "mdl" else if t == "```deus" then "deus" else "other", [line]))
+                  acc
+                  leads else if startsWith "#" t then go more (headingOf t) Option.none (line :: acc) leads else if section == "Extensions" && startsWith "|" t then go more section Option.none acc leads else if Text.isEmpty t && afterBlank then go more section Option.none acc leads else go more section Option.none (line :: acc) leads
+      go lines "" Option.none [] []
+
 /-- A block printed back as MDL. -/
 def Mdl.render (b : Block) : Text :=
   let head := b.blockType ++ (if Text.isEmpty b.blockId then "" else " " ++ b.blockId) ++
@@ -119,6 +164,9 @@ def Mdl.render (b : Block) : Text :=
       (fun l => if startsWith "  " l then "\n    " ++ trim l else "\n  - " ++ l)
       (lines (snd kv))) else " " ++ snd kv))
     b.props) ++ "\n```"
+
+/-- Whether a block is stored as a spec object: it has an id and is not an `ext` declaration. -/
+def Mdl.stored (b : Block) : Bool := not (Text.isEmpty b.blockId) && b.blockType != "ext"
 
 /-- A `| term | uri |` row of the Extensions table; none for its header and separator. -/
 def Mdl.termRow (line : Text) : Option (Text, Text) :=
@@ -130,6 +178,14 @@ def Mdl.termRow (line : Text) : Option (Text, Text) :=
   Extensions table). The line is left out, so moving a block does not change its hash. -/
 def Mdl.toSexp (uri : Text) (b : Block) : Sexp := Sexp.node "spec" ([Sexp.str b.blockType, Sexp.str uri, Sexp.str b.blockId, Sexp.str b.blockTitle] ++
   List.map (fun kv => Sexp.list [Sexp.str (fst kv), Sexp.str (snd kv)]) b.props)
+
+/-- Lines joined, without the blank lines at either end. -/
+def Mdl.trimLines (lines : List Text) : Text :=
+  let rec leading xs :=
+    match xs with
+    | l :: more => if Text.isEmpty (trim l) then leading more else xs
+    | [] => []
+  join "\n" (reverse (leading (reverse (leading lines))))
 
 /-- Drops a trailing ` # comment`. -/
 def Mdl.uncomment (t : Text) : Text :=

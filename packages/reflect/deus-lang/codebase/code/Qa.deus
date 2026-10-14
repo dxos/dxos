@@ -2,7 +2,7 @@
 @[ext "org.dxos.deus.qa@1.0"]
 def Qa.check (b : Block) : {MdlHost} List Text :=
   let id := if Text.isEmpty b.blockId then "qa" else b.blockId
-  let steps := items (getOr (List.lookup "steps" b.props) "")
+  let steps := Qa.items (getOr (List.lookup "steps" b.props) "")
   let places := mapIndexed (fun i fields => (id ++ "." ++ toText (i + 1), fields)) steps
   let problems := concatMap (fun p => stepProblems (fst p) (snd p)) places
   match List.lookup "handler" b.props with

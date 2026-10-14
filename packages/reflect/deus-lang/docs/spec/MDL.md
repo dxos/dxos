@@ -238,7 +238,7 @@ same contract and are not described here.
 [`platform/spec.deus`](../../platform/spec.deus) checks a spec written in the order of the process
 (D92): requirements, then the APIs and laws they rest on, then tests and theorems. A spec document
 keeps its laws in ` ```deus ` fences, so `deus add` compiles them next to the code they are about.
-[CODEBASE-STORE.mdl](CODEBASE-STORE.mdl) is a full example.
+[Codebase.Spec](../../codebase/specs/Codebase.Spec.mdl) is a full example.
 
 | Term  | URI                     | Term            | Properties                         |
 | ----- | ----------------------- | --------------- | ---------------------------------- |
@@ -345,3 +345,36 @@ are not two-element lists are ignored. A form with fewer than four arguments rea
 block with URI `""`. `deus mdl` with no files checks every spec the current branch names, by its
 stored URI, and reports it under its name. `deus view` prints a spec back as an ` ```mdl ` block: a
 property whose value has newlines prints as `- ` lines.
+
+## Spec documents in the codebase
+
+A spec document lives in the codebase, not as a file ([D96](../DECISIONS.md)). Its blocks are spec
+objects as above; its prose is kept in each block's metadata, which is not hashed, so editing prose
+never changes a block's hash:
+
+| Field      | On              | Value                                                                  |
+| ---------- | --------------- | ---------------------------------------------------------------------- |
+| `document` | every block     | the document name                                                      |
+| `order`    | every block     | the block's index among the document's stored blocks                   |
+| `lead`     | every block     | the text between the previous stored block (or the start) and this one |
+| `front`    | the first block | the frontmatter, as `("key" "value")` pairs                            |
+| `tail`     | the last block  | the text after the last stored block, when there is any                |
+
+The prose leaves out three things. A ` ```deus ` fence is dropped, since `deus add` stores its code
+as definitions; a fence whose first line is `namespace N` leaves the line ``The laws are the
+definitions under `N`: …``. The Extensions table's rows are dropped, since the export writes the
+table from the blocks' URIs under the document's `## Extensions` heading (or at the top when the
+document has none). Runs of blank lines outside fences become one blank line. Everything else stays
+as written, ` ```ext ` blocks and other fences included.
+
+| Command                  | What it does                                                                              |
+| ------------------------ | ----------------------------------------------------------------------------------------- |
+| `deus view <Document>`   | prints the whole document: frontmatter, Extensions table, then each block after its prose |
+| `deus mdl <Document>`    | checks the document's blocks from the codebase, in document order                         |
+| `deus mdl`               | checks every spec document the codebase holds                                             |
+| `deus update <file.mdl>` | stores a document's blocks and prose; a block removed from the file stays until `deus rm` |
+| `deus export <dir>`      | writes each document to `specs/<Document>.mdl`, as `deus view` prints it                  |
+
+Exporting, then restoring with `deus add code specs`, gives back the same documents byte for byte.
+Metadata replicates like other metadata: a pull keeps a block's existing metadata, so prose edited on
+two codebases does not merge.

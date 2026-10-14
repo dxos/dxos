@@ -253,13 +253,31 @@ def Cli.checkDoc (dir : Text) (ns : Map Text Entry) (byUri : Map Text Text) (pat
     b) (List.filter (fun b => b.blockType != "ext") doc.blocks)
   if List.isEmpty core then outcomes else Outcome.mk path "fail" core :: outcomes
 
-/-- Checks the spec objects the codebase names. -/
-def Cli.checkSpecs (dir : Text) (ns : Map Text Entry) (byUri : Map Text Text) : {IO, Throw Text} List Outcome := filterMap (fun pair =>
-  match pair with
-  | (name, Entry.spec h) => Option.map (fun form =>
-      match Mdl.fromSexp form with
-      | (uri, b) => checkBlock dir ns byUri name (if Text.isEmpty uri then Option.none else Option.some uri) b) (readObject dir h)
-  | _ => Option.none) (Map.toList ns)
+/-- Checks the spec objects the codebase names: all of them, or those of the named documents in document order. -/
+def Cli.checkSpecs (dir : Text) (ns : Map Text Entry) (byUri : Map Text Text) (documents : List Text) : {IO, Throw Text} List Outcome :=
+  let wanted := if List.isEmpty documents then specDocuments ns else documents
+  let orderOf := fun h =>
+    match metaField (readMeta dir h) "order" with
+    | Option.some (Sexp.int k) => k
+    | _ => 1000000
+  concatMap (fun d =>
+    let mine := filterMap (fun pair =>
+      match pair with
+      | (name, Entry.spec h) => if documentOf name == d then Option.some (orderOf h, name, h) else Option.none
+      | _ => Option.none) (Map.toList ns)
+    filterMap (fun x =>
+      match x with
+      | (_, name, h) => Option.map (fun form =>
+          match Mdl.fromSexp form with
+          | (uri, b) => checkBlock
+              dir
+              ns
+              byUri
+              name
+              (if Text.isEmpty uri then Option.none else Option.some uri)
+              b) (readObject dir h)) (sortBy (fun a b =>
+      match (a, b) with
+      | ((oa, na, _), ob, nb, _) => if oa == ob then compare na nb else compare oa ob) mine)) wanted
 
 /-- `DEUS_TYPECHECK=0` skips type checking (only to bootstrap a change to the checker itself);
   `DEUS_TYPECHECK=warn` reports type errors as warnings. -/
@@ -772,15 +790,20 @@ def Cli.main (u : Unit) : {IO} Unit :=
   | Result.ok _ => ()
   | Result.err message => die message
 
-/-- `deus mdl [files|dirs…]`: checks MDL documents, or with no files the spec objects the codebase
-  names. Each block goes to the extension its term's URI names in the codebase; a block whose
-  extension the codebase lacks is reported unchecked. -/
+/-- `deus mdl [documents|files|dirs…]`: checks spec documents in the codebase by name (D96), MDL
+  files, or with no arguments every spec document the codebase holds. Each block goes to the
+  extension its term's URI names in the codebase; a block whose extension the codebase lacks is
+  reported unchecked. -/
 def Cli.mdl (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let ns := Codebase.current dir
   let byUri := extensions dir ns
-  let paths := List.filter (fun p => endsWith ".mdl" p) (expandPaths args.positional)
-  let outcomes := if List.isEmpty args.positional then checkSpecs dir ns byUri else concatMap (fun path => checkDoc dir ns byUri path) paths
+  let stored := specDocuments ns
+  let documents := List.filter (fun a => List.contains a stored && not (IO.exists a)) args.positional
+  let files := List.filter (fun a => not (List.contains a documents)) args.positional
+  let paths := List.filter (fun p => endsWith ".mdl" p) (expandPaths files)
+  let fromCodebase := if List.isEmpty args.positional || not (List.isEmpty documents) then checkSpecs dir ns byUri documents else []
+  let outcomes := fromCodebase ++ concatMap (fun path => checkDoc dir ns byUri path) paths
   let count := fun v => List.length (List.filter (fun o => o.verdict == v) outcomes)
   Cli.output args (fun _ => Json.arr (List.map
     (fun o => Json.obj [("block", Json.str o.place), ("status", Json.str o.verdict), ("problems", Json.arr (List.map Json.str o.problems))])
@@ -1152,14 +1175,31 @@ def Cli.siteImage (u : Unit) : {IO, Throw Text} Text :=
 def Cli.siteManifest (dir : Text) (name : Text) : Text := dir ++ "/cache/site-" ++ name ++ ".sums"
 
 /-- The identified ```mdl blocks of `.mdl` files, stored as spec objects and named
-  `<document>.<block id>`; the document is its frontmatter `name`, or the file's base name. -/
+  `<document>.<block id>`; the document is its frontmatter `name`, or the file's base name.
+  The document's prose is kept in each block's metadata (D96): its order, the text before it,
+  and on the first block the frontmatter and on the last the text after it, so the codebase holds
+  the whole document and the export writes it back. -/
 def Cli.specEntries (dir : Text) (paths : List Text) : {IO, Throw Text} List (Text, Entry) := concatMap (fun path => if not (endsWith ".mdl" path) then [] else
-  let doc := Mdl.parse (readSource path)
+  let text := readSource path
+  let doc := Mdl.parse text
   let prefix := getOr (List.lookup "name" doc.front) (Cli.baseName path)
   let declared := declared doc
-  filterMap (fun b => if Text.isEmpty b.blockId || b.blockType == "ext" then Option.none else
-    let uri := getOr (List.lookup b.blockType declared) ""
-    Option.some (prefix ++ "." ++ b.blockId, Entry.spec (Codebase.put dir (Mdl.toSexp uri b)))) doc.blocks) (expandPaths paths)
+  let blocks := List.filter stored doc.blocks
+  let last := List.length blocks - 1
+  match prose text with
+  | (leads, tail) => mapIndexed (fun i b =>
+      let uri := getOr (List.lookup b.blockType declared) ""
+      let h := Codebase.put dir (Mdl.toSexp uri b)
+      let front := if i == 0 then [Sexp.node
+        "front"
+        (List.map (fun kv => Sexp.list [Sexp.str (fst kv), Sexp.str (snd kv)]) doc.front)] else []
+      let after := if i == last && not (Text.isEmpty tail) then [Sexp.node "tail" [Sexp.str tail]] else []
+      writeMeta dir h (Sexp.node
+        "meta"
+        ([Sexp.node "document" [Sexp.str prefix], Sexp.node "order" [Sexp.int i], Sexp.node "lead" [Sexp.str (getOr (get? leads i) "")]] ++
+          front ++
+          after))
+      (prefix ++ "." ++ b.blockId, Entry.spec h)) blocks) (expandPaths paths)
 
 /-- A comment's subject from what a command was given: a definition's name, `change:<causal>`, or `def:<name>`. -/
 def Cli.subjectOf (dir : Text) (given : Text) : {IO, Throw Text} Text := if startsWith "change:" given then
@@ -1321,16 +1361,24 @@ def Cli.usage : Text := join
 def Cli.view (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let ns := Codebase.current dir
-  let entries := List.map (fun name => Cli.lookupName ns name) args.positional
   -- One printer for all entries: its name tables cost more to build than printing one definition.
   let printer := printer ns []
   let dialect := if flag args "core" then "core" else getOr (option args "dialect") "deus"
   if dialect == "deus" || dialect == "ts" || dialect == "core" then () else Throw.throw ("unknown dialect " ++ dialect ++ "; expected deus or ts")
-  let texts := List.map (fun pair => viewEntryIn printer dir ns (fst pair) (snd pair) dialect) entries
-  let shown := forTerminalIn dialect (join "\n\n" texts)
-  Cli.output args (fun _ => Json.arr (List.map (fun pair =>
-    match pair with
-    | ((name, e), text) => Json.obj [("name", Json.str name), ("kind", Json.str (Entry.kind e)), ("hash", Json.str (Entry.hash e)), ("source", Json.str text)]) (zip entries texts))) (fun _ => shown)
+  -- A spec document's name prints the whole document from its blocks (D96).
+  let documents := specDocuments ns
+  -- (name, kind, hash, text); a document has no hash.
+  let shownFor := fun name => if not (Map.contains name ns) && List.contains name documents then (name, "document", "", document dir ns name) else
+    match Cli.lookupName ns name with
+    | (full, e) => (full, Entry.kind e, Entry.hash e, viewEntryIn printer dir ns full e dialect)
+  let views := List.map shownFor args.positional
+  let shown := join "\n\n" (List.map (fun v =>
+    match v with
+    | (_, kind, _, text) => if kind == "document" then text else forTerminalIn dialect text) views)
+  Cli.output args (fun _ => Json.arr (List.map (fun v =>
+    match v with
+    | (name, kind, h, text) => Json.obj ([("name", Json.str name), ("kind", Json.str kind)] ++
+        (if Text.isEmpty h then [] else [("hash", Json.str h)]) ++ [("source", Json.str text)])) views)) (fun _ => shown)
 
 /-- Source text of one entry (a definition, a type, an ability). -/
 def Cli.viewEntry (dir : Text) (ns : Map Text Entry) (name : Text) (e : Entry) (core : Bool) : {IO, Throw Text} Text := viewEntryWith (printer ns []) dir ns name e core

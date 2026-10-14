@@ -1,46 +1,20 @@
 # History of main
 
+- `82b26f3b0b` task: open f4afc2c0 A pull keeps existing metadata, so spec prose edited in two codebases does not merge
+- `643c8e815d` task: open 3e686896 Explorer: show spec documents (prose, blocks in order, verdicts) from the codebase
+- `1f094af5f5` task: set b4d7a440 state assignee
+- `254574a07f` task: set 50e58574 state assignee
+- `361dc8fcd7` task: open 50e58574 Specs live in the codebase: documents keep their prose, deus view and deus mdl take a document, docs/spec/*.mdl removed
+- `a4d50c65e3` specs live in the codebase: documents keep their prose and order (D96) (by claude)
+- `6c113461a6` history: import 408 changes
+- `e565d47432` task: import from tasks.sexp
+- `a44472206d` add code specs
 - `d90027cba3` close c50cd76e by #9cee717581 (by claude)
 - `9cee717581` the explorer's writing and console in its checked spec (EXPLORER.mdl R-8 to R-12, L-3, L-4) (by claude)
 - `e01abbcbd9` task: open c50cd76e Backfill the explorer's writing and console into EXPLORER.mdl (APIs, requirements, laws) (by claude)
 - `99b512f359` history: import 359 changes
 - `7b6f241c41` task: import from tasks.sexp
 - `b878c25ce1` add code specs
-- `74a8e8247f` task: open cb6c9a43 deus task set ignores an unknown field (--status) instead of refusing it
-- `aad1732770` task: link cf5e187f to Resolve.stub
-- `c52516022a` task: set cf5e187f state
-- `d26316a767` declarations without a body (D94, task cf5e187f) (by claude)
-- `135f9abba9` task: set cf5e187f assignee
-- `8dbb3e7b5b` task: open cf5e187f Declarations without a body: def f with a full signature and no implementation
-- `32d6c2d287` task: set 20dbe121 state (by claude)
-- `2a43b7dc42` task: open 20dbe121 Explorer overview: count tiles and recent changes should be clickable (by claude)
-- `7829722c1b` history: import 351 changes
-- `ae69cbd311` task: import from tasks.sexp
-- `08e90dab62` add code specs
-- `438184d11a` close e4a19978 by #458d0633bd (by claude)
-- `458d0633bd` the explorer's report tool: a screenshot filed as a labelled task (D90) (by claude)
-- `993938b5c3` task: open e4a19978 Explorer report tool: signed-in members file a screenshot of the current view as a task (by claude)
-- `089232a06c` task: set 6ffdc230 details (by claude)
-- `b1615b9a4a` history: import 347 changes (by claude)
-- `4d335b2648` task: import from tasks.sexp
-- `e373ff3964` add code specs
-- `74b97aebd0` close 6ffdc230 by #10e77371ec (by claude)
-- `10e77371ec` checked specs for the codebase store, compile, export and explorer; req, api and law blocks (D91) (by claude)
-- `3f7d3447c4` task: open 1ab6c044 Checked specs for the remaining subsystems: lexer and parser, types, prover and check, tasks, replicate, update, image, wasm and C back ends (by claude)
-- `6ed8a2b666` task: open b4d7a440 BINDINGS.mdl: turn the requirements table into req blocks so deus mdl checks its evidence links (by claude)
-- `22fa7745e5` task: open 908495a0 deus mdl --coverage: public definitions no api block names, and tests or theorems no req names (by claude)
-- `165385e432` task: open 0d7b0142 law statement: compare compiled propositions instead of printed text, so any spelling of the claim is accepted (by claude)
-- `83f2d1149c` task: open 1cbfdd30 Custom generators for by test laws, declared next to the law, instead of hand-built inputs (Codebase.Spec.dotted, Bindings.Spec.crowded) (by claude)
-- `fc3b0088f4` task: open 6a3b0ebe MDL extensions see the document's name, so tests can point back at requirements (@[req "Doc.R-1"]) and deus mdl can list tests no requirement names (by claude)
-- `33a1f4c824` task: open f6a2c2ff Type display names a type by its IRI's tail (task:Task) instead of its name (Task) (by claude)
-- `c4d35b8416` task: open 4f7f9e40 Theorem view prints P -> Q as prim "implies" (P) (Q) (by claude)
-- `c36de0222a` task: open a2da28e2 A req can name TypeScript tests as evidence (vitest file and test name), so the toolchain-wide view round trip stops being a gap (by claude)
-- `ef4bb40a88` task: open 823f7b83 Laws for task, comment and history-record merges, and for add/update refusing layer crossings (by claude)
-- `6370cf7401` task: open 6ffdc230 Dogfood the spec process: .mdl spec, then APIs and laws, then code, proofs and tests; backfill the toolchain's subsystems (by claude)
-- `192a0b9794` toolchain sources at #13952's head (by claude)
-- `41879b7d7e` history: import 319 changes
-- `ffc6ea6551` task: import from tasks.sexp
-- `3b48b9e68d` add code specs
 - `4fa0ad8131` export: merge 35 changes from codebase
 - `e8b6a8fb9d` export: merge tasks from codebase
 - `2c40570335` update docs/spec/CHECKING.mdl (by claude)

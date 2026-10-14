@@ -192,7 +192,8 @@ describe('deus bindings', () => {
   test('the generator satisfies the theorems in its spec', { timeout: 180_000 }, ({ expect }) => {
     const c = ['--codebase', join(scratch, 'spec')];
     expect(deus('init', '--empty', ...c).code).toBe(0);
-    expect(deus('add', join(root, 'deus'), join(root, 'docs/spec/BINDINGS.mdl'), ...c).code).toBe(0);
+    // The spec and its theorems live in the codebase (D96); its export in git carries them.
+    expect(deus('add', join(root, 'codebase/code'), join(root, 'codebase/specs'), ...c).code).toBe(0);
     const checked = deus('check', 'Bindings.Spec', ...c);
     expect(checked.stdout).toMatch(/10 passed, 0 failed/);
     expect(checked.code).toBe(0);

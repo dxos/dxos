@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 test Explorer.Spec.aliasesShareAPage := inSite (fun _ =>
   deus "cb" ["area", "zArea"] (fun a => mv a true)
   regenerate ()
@@ -85,7 +84,7 @@ def Explorer.Spec.request (author : Text) : Sexp := Sexp.read ("(request (kind \
 def Explorer.Spec.site (source : Text) : {IO, Throw Text} Int :=
   forEach appFiles (fun f => IO.writeFile ("home/platform/explorer/" ++ f) ("app " ++ f))
   IO.mkdirp "src"
-  IO.writeFile "src/a.deus" (Spec.prelude ++ source)
+  IO.writeFile "src/a.deus" (Compile.Spec.prelude ++ source)
   deus "cb" ["src"] (fun a => addOrUpdate a false)
   regenerate ()
 
@@ -126,8 +125,6 @@ def Explorer.Spec.withHome (body : Unit -> {IO, Throw Text} a) : {IO, Throw Text
   handle body () with
   | IO.getEnv name -> k => k (if name == "DEUS_HOME" then Option.some "home" else IO.getEnv name)
 
-=======
->>>>>>> origin/dm/agent-13-oct-x8ehi8-0y35ai
 /-- The app's files, from the toolchain's sources. -/
 def Explorer.appFiles : List Text := ["index.html", "app.js", "app.css"]
 
