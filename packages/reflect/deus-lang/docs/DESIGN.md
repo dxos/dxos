@@ -22,7 +22,7 @@ and the toolchain; [`DECISIONS.md`](./DECISIONS.md) records why each choice was 
 | Standalone executables (`deus build`)                                              | done ([D38](./DECISIONS.md))                                                    |
 | `.mdl`: ```deus fences                                                             | done; extensions defined in DEUS (`@[ext]`), `perf` requirements, `deus mdl`    |
 | Rust kernel (native, byte-identical) and wasm kernel (`wasm32-wasip1`)             | done ([D40](./DECISIONS.md), [D41](./DECISIONS.md))                             |
-| Cloudflare Workers / Durable Objects target (`deus build --worker`)                | done ([D45](./DECISIONS.md)); actor-to-actor calls planned                      |
+| Cloudflare Workers / Durable Objects target (`deus build --worker`)                | done ([D45](./DECISIONS.md), [D52](./DECISIONS.md)): actor calls and alarms     |
 | Wasm compiler for first-order `Int`/`Bool` code (`deus build --wasm`)              | done ([D51](./DECISIONS.md)); closures, data and effects run on the wasm kernel |
 | Projects/subgraphs, external requirements, replication, layers, containers         | done (D47–D50); retention GC and artifact storage not built                     |
 

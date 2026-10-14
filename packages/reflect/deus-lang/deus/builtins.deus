@@ -94,6 +94,14 @@ end Text
 
 /-- Structural equality; functions are never equal. -/
 def eq : a -> a -> Bool := prim "eq"
+def neq : a -> a -> Bool := prim "neq"
+/-- Structural order (`<`, `<=`, `>`, `>=`), as `compare`. -/
+def lt : a -> a -> Bool := prim "lt"
+def le : a -> a -> Bool := prim "le"
+def gt : a -> a -> Bool := prim "gt"
+def ge : a -> a -> Bool := prim "ge"
+/-- `++`: concatenates two texts or two lists. -/
+def append : a -> a -> a := prim "append"
 /-- `a -> b` in a theorem's statement. -/
 def implies : Bool -> Bool -> Bool := prim "implies"
 /-- Structural order: -1, 0 or 1. -/

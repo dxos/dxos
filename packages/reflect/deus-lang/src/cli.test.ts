@@ -107,6 +107,14 @@ describe('deus CLI', () => {
         check('leaksByThrow', '{r} Int :=\n  match try body with\n  | Result.ok x => x\n  | Result.err m => throw m')
           .stderr,
       ).toMatch(/ability row r is declared as the caller's/);
+      // Operators are typed: `::` binds tighter than `++` (as in Lean), so this appends a list to a text.
+      expect(
+        deus('add', file('ops.deus', 'def ops (h : Text) (xs : List Text) : List Text := h ++ "x" :: xs\n'), ...c)
+          .stderr,
+      ).toBe('deus: ops: type mismatch: Text vs List Text\n');
+      expect(deus('add', file('cmp.deus', 'def cmp (a : Int) (b : Text) : Bool := a < b\n'), ...c).stderr).toBe(
+        'deus: cmp: type mismatch: Int vs Text\n',
+      );
     },
   );
 

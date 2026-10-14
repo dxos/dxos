@@ -31,10 +31,34 @@ def require (name : Text) : {IO, Throw Failure} Text :=
   | some value => value
   | none => throw (Failure.of ("$" ++ name ++ " is not set; run deus through bin/deus.mjs") [])
 
-/-- Writes `out`, an executable that runs the image's main with its command-line arguments. -/
-def executable (image : Text) (out : Text) : {IO, Throw Failure} Unit :=
+/--
+  What an executable's bytes depend on besides its image: the Node binary and the kernel sources
+  bundled into it.
+-/
+def executableInputs (home : Text) (node : Text) : {IO, Throw Failure} Text :=
+  let kernel := List.map (fun f => home ++ "/src/kernel/" ++ f) (List.filter (fun f => Text.endsWith ".ts" f && not (Text.endsWith ".test.ts" f)) (IO.listDir (home ++ "/src/kernel")))
+  tool node ["--version"] ++ tool "sha256sum" ((home ++ "/src/bin/standalone.ts") :: kernel)
+
+/--
+  Writes `out`, an executable that runs the image's main with its command-line arguments. The
+  result is kept in the artifacts layer under the hash of its inputs, so rebuilding unchanged code
+  is a copy.
+-/
+def executable (image : Text) (out : Text) (artifacts : Text) : {IO, Throw Failure} Unit :=
   let home := require "DEUS_HOME"
   let node := require "DEUS_NODE"
+  let key := Text.sha256 (image ++ "\n" ++ executableInputs home node)
+  let cached := artifacts ++ "/" ++ key
+  if IO.exists cached then
+    let _ := tool "cp" [cached, out]
+    ()
+  else
+    buildExecutable image out home node
+    IO.mkdirp artifacts
+    let _ := tool "cp" [out, cached]
+    ()
+
+def buildExecutable (image : Text) (out : Text) (home : Text) (node : Text) : {IO, Throw Failure} Unit :=
   let work := out ++ ".build"
   IO.mkdirp work
   IO.writeFile (work ++ "/deus.image") image

@@ -38,6 +38,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 30  | 10-14 14:12 | 6m 42s         | `e1a252f4`  | wasm compiler for first-order code, written in DEUS                                         |
 | 31  | 10-14 14:26 | 13m 32s        | `aaf0728a`  | perf — profiling by definition, fewer allocations, memoized dependencies                    |
 | 32  | 10-14 14:26 | 0m 33s         | `46dff492`  | README and LLM guide cover projects, specs, replication and wasm                            |
-| 33  | 10-14 14:30 | 4m 05s         | this commit | Durable Objects: actor calls, alarms, multi-object simulation                               |
+| 33  | 10-14 14:30 | 4m 06s         | `cb7fd584`  | Durable Objects — actor calls, alarms, multi-object simulation                              |
+| 34  | 10-14 14:35 | 4m 47s         | this commit | artifacts layer caches builds; operators get types                                          |
 
-Total from stage 1 to stage 33: 4h 47m.
+Total from stage 1 to stage 34: 4h 52m.

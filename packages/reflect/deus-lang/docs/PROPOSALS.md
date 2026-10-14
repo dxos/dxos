@@ -130,8 +130,8 @@ hashed layers (spec, code, tests, proofs, history) share `objects/` because thei
 same. `results/`, `provenance/` and `cache/` are directories of their own, so each policy is a
 directory. `deus add doc.mdl` stores each identified ```mdl block as a spec object named
 `<document>.<id>`, and `deus mdl` with no files checks them. `--by <agent> [--prompt <file>]`
-records provenance, which `deus log` shows. `deus layers` counts objects per layer. Artifacts
-(images, binaries) are not stored yet.
+records provenance, which `deus log` shows. `deus layers` counts objects per layer. `deus build`
+caches executables in `artifacts/` by the hash of their inputs (D53).
 
 ## P5. Docker containers in MDL
 

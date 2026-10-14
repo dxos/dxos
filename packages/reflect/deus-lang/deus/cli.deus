@@ -13,7 +13,7 @@ structure Args where
   options : Map Text Text
 
 /-- Options that never take a value. -/
-def booleanFlags : Map Text Unit := Set.fromList ["json", "core", "all", "force", "help", "integration", "wasm"]
+def booleanFlags : Map Text Unit := Set.fromList ["json", "core", "all", "force", "help", "integration", "wasm", "native", "worker"]
 
 def parseArgs (args : List Text) : Args :=
   let rec go rest pos opts :=
@@ -757,7 +757,7 @@ def build (args : Args) : {IO, Throw Text} Unit :=
         | Result.err message => throw (Failure.of message [])
       else if flag args "worker" then Build.worker image (Text.replace "." "-" (Text.toLower (Option.getOr (List.head? args.positional) "actor"))) out
       else if flag args "native" then Build.native image out
-      else Build.executable image out
+      else Build.executable image out (dir ++ "/artifacts")
     match try target with
     | Result.ok _ => output args (fun _ => Json.obj [("binary", Json.str out)]) (fun _ => "Built " ++ out ++ ".")
     | Result.err f => throw (Failure.render f)
