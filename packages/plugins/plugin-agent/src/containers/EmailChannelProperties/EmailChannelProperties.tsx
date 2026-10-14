@@ -101,8 +101,11 @@ const useConnection = (channel: Channel.Channel, spaceId: SpaceId | undefined) =
   const withBusy = useCallback(
     async (operation: typeof ThreadOperation.ConnectChannel | typeof ThreadOperation.DisconnectChannel) => {
       setBusy(true);
-      await run(operation);
-      setBusy(false);
+      try {
+        await run(operation);
+      } finally {
+        setBusy(false);
+      }
     },
     [run],
   );

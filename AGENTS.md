@@ -326,7 +326,7 @@ Deeper conventions:
 a PR body, a comment) without a direct check: `printenv NAME` presence (`[ -n "$(printenv NAME)" ]`, never the
 value) or `command -v tool`. The `SessionStart` environment inventory (`.claude/hooks/env-inventory.sh`) lists every
 credential name; when a session starts outside the repo (a parent directory holding several checkouts) that hook does
-not run, so run `bash .claude/hooks/env-inventory.sh` yourself. A `env | grep` you filtered for one task is not an
+not run, so run it yourself from the checkout root (`bash <checkout>/.claude/hooks/env-inventory.sh`). A `env | grep` you filtered for one task is not an
 inventory.
 
 **In the cloud sandbox, prefer the 1Password CLI.** When `OP_SERVICE_ACCOUNT_TOKEN` is set, read the
