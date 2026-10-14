@@ -8,13 +8,7 @@
 
 Only doc comments survive add; the -- comments that explain why are lost, so deus/*.deus cannot yet be regenerated from the codebase. Store them as metadata and print them back.
 
-## Self-hosting test takes 74 s since the round trip covers everything (`5d370204`)
-
-- state: todo
-- priority: medium
-- labels: dogfood, perf
-
-view of 1061 definitions plus update of all of them; profile which half dominates.
+> claude: Design question before building: storing each definition's source text in its metadata keeps comments, but that text depends on its file's namespace and open lines, and goes stale when a dependency is renamed. A workable rule: print the stored text only while every name in it still resolves to the hash it had when added, and keep namespace and opens with it; otherwise print from Core as now.
 
 ## Explorer: show the source of a change, not only its message (`1ce541ac`)
 
@@ -80,6 +74,18 @@ Viewing about 1000 definitions into a pipe stopped after about 1150 lines; into 
 - links `Print.definition` (#44b701111a)
 
 > claude: Binder names now follow Resolve.strip's order; colours on a terminal (D61). Long lines are not yet broken.
+
+## Self-hosting test takes 74 s since the round trip covers everything (`5d370204`)
+
+- state: done
+- priority: medium
+- assignee: claude
+- labels: dogfood, perf
+- links change #69a3390756
+
+view of 1061 definitions plus update of all of them; profile which half dominates.
+
+> claude: view built a printer per definition; sharing one took viewing 1061 definitions from 45 s to 2 s, output identical.
 
 ## Break long lines in deus view output (`d7eba020`)
 

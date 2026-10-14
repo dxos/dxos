@@ -65,6 +65,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 57  | 10-14 17:16 | 5m 43s         | `9ab8338e`  | write all of stdout into a pipe                                                                         |
 | 58  | 10-14 17:20 | 3m 24s         | `6e0756a0`  | task changes record who made them                                                                       |
 | 59  | 10-14 17:24 | 4m 30s         | `6a64aea4`  | deus run takes CLI options before the name                                                              |
-| 60  | 10-14 17:26 | 2m 14s         | this commit | Declarations keep parameter and constructor field names (codebase task 4bf3eed4)                        |
+| 60  | 10-14 17:27 | 2m 48s         | `b5d8368a`  | declarations keep parameter and constructor field names                                                 |
+| 61  | 10-14 17:30 | 2m 28s         | this commit | deus view shares one printer: 45 s to 2 s (codebase task 5d370204)                                      |
 
-Total from stage 1 to stage 60: 7h 43m.
+Total from stage 1 to stage 61: 7h 46m.

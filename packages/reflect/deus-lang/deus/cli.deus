@@ -365,7 +365,9 @@ def view (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let ns := Codebase.current dir
   let entries := List.map (fun name => lookupName ns name) args.positional
-  let texts := List.map (fun pair => viewEntry dir ns (fst pair) (snd pair) (flag args "core")) entries
+  -- One printer for all entries: its name tables cost more to build than printing one definition.
+  let printer := Print.printer ns []
+  let texts := List.map (fun pair => viewEntryWith printer dir ns (fst pair) (snd pair) (flag args "core")) entries
   let shown := Highlight.forTerminal (Text.join "\n\n" texts)
   output args
     (fun _ => Json.arr (List.map (fun pair =>
