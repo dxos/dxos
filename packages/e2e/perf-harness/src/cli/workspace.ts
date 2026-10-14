@@ -19,7 +19,7 @@ export const workspaceRoot = (cwd = process.cwd()): string => git(cwd, ['rev-par
 /** Untracked by design: the per-worktree home of arms, runs and the ledger. */
 export const perfDir = (root: string): string => path.join(root, '.perf');
 
-export type Ports = { slot: number; http: number; debug: number };
+export type Ports = { slot: number; http: number; debug: number; telemetry: number };
 
 /** Ports derived from the worktree path, so two worktrees on one machine never serve or attach to each other's. */
 export const derivePorts = (root: string, env: NodeJS.ProcessEnv = process.env): Ports => {
@@ -28,6 +28,7 @@ export const derivePorts = (root: string, env: NodeJS.ProcessEnv = process.env):
     slot,
     http: Number.parseInt(env.DX_PERF_PORT ?? '', 10) || 4400 + slot,
     debug: Number.parseInt(env.DX_PERF_DEBUG_PORT ?? '', 10) || 9500 + slot,
+    telemetry: 4300 + slot,
   };
 };
 

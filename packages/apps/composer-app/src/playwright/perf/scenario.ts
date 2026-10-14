@@ -2,31 +2,46 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Page, expect, test } from '@playwright/test';
+import { type BrowserContext, type Page, expect, test } from '@playwright/test';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 
 import { log } from '@dxos/log';
 import {
+  type AllocationSampling,
+  type Attached,
   type Comparability,
+  type DeniedRequest,
   type Mode,
+  type PartitionProxy,
   StageRunner,
   type TargetFilter,
   appendRows,
   attachAll,
   countersLabel,
+  detachAll,
   flowConditions,
+  insidePartition,
   installProbes,
   installReactProbe,
   launchInstrumentedBrowser,
+  launchInstrumentedContext,
   parseCounters,
+  partitionAllow,
+  presentAsPersonsBrowser,
   publishPosthogBatch,
+  startAllocationSampling,
   startProfiling,
   trackNetwork,
   writePosthogBatch,
   writeRunReport,
 } from '@dxos/perf-harness';
 
+import { waitForReady } from './page.ts';
 import { PERF_ORIGIN } from './server.ts';
+
+export { invokeInPage, waitForReady } from './page.ts';
 
 const WORKSPACE_ROOT = path.resolve(import.meta.dirname, '../../../../../..');
 
@@ -38,11 +53,29 @@ export const SETTLE_MS = 20_000;
 
 const COUNTERS = parseCounters(process.env.DX_PERF_COUNTERS);
 
+/** Stages to take a memory snapshot after (`DX_PERF_SNAPSHOTS`, comma-separated stage ids). */
+const SNAPSHOTS = new Set(
+  (process.env.DX_PERF_SNAPSHOTS ?? '')
+    .split(',')
+    .map((name) => name.trim())
+    .filter(Boolean),
+);
+
 const isMode = (value: string): value is Mode => value === 'measure' || value === 'diagnose';
 
 const MODES: Mode[] = (process.env.DX_PERF_MODES ?? 'measure').split(',').filter(isMode);
 
 const ITERATIONS = Math.max(1, Number.parseInt(process.env.DX_PERF_ITERATIONS ?? '1', 10) || 1);
+
+/**
+ * `DX_PERF_RETAINED_SAMPLE=<from>:<to>` samples allocations from the end of stage `from` to the end of
+ * stage `to`, keeping only what is still alive, written to `retained/`: what that window left behind
+ * by allocation site. Call frames and sizes only, so it runs on private data too.
+ */
+const RETAINED_SAMPLE = ((spec) => {
+  const [from, to] = spec.split(':');
+  return from && to ? { from, to } : undefined;
+})(process.env.DX_PERF_RETAINED_SAMPLE ?? '');
 
 /**
  * `DX_PERF_INJECT=<stage>:<ms>` busy-waits the page's main thread for that long at the end of the
@@ -53,23 +86,6 @@ const INJECT = ((spec) => {
   const duration = Number.parseInt(ms ?? '', 10);
   return stage && Number.isFinite(duration) ? { stage, ms: duration } : undefined;
 })(process.env.DX_PERF_INJECT ?? '');
-
-export const waitForReady = async (page: Page, timeout = 120_000): Promise<void> => {
-  await page.getByTestId('treeView.userAccount').waitFor({ timeout });
-};
-
-/** Invokes one operation in the page's own realm, the path a user's gesture takes. */
-export const invokeInPage = (page: Page, key: string, input: unknown): Promise<unknown> =>
-  page.evaluate(
-    ({ key, input }) => {
-      const composer = globalThis.composer;
-      if (!composer?.invoke) {
-        throw new Error('composer.invoke is unavailable');
-      }
-      return composer.invoke(key, input);
-    },
-    { key, input },
-  );
 
 export type ScenarioContext = {
   page: Page;
@@ -98,6 +114,15 @@ export type Scenario = {
    * inspector session keeps it alive through the navigation, and the reloaded tab never starts.
    */
   navigates?: boolean;
+  /**
+   * The flow loads someone's real data. It refuses to run unless `--offline` partitions the
+   * browser, takes no screenshots, and fails if any response arrives from off the machine.
+   */
+  privateData?: boolean;
+  /** Storage on disk in a throwaway profile directory, as installed; Playwright's contexts keep it in memory. */
+  persistentProfile?: boolean;
+  /** Runs in a browser of its own before the measured one boots the app, e.g. to import a profile through `/recovery.html`. */
+  prepare?: (page: Page) => Promise<void>;
 };
 
 const skipSharedWorkers: TargetFilter = (target) => target.type !== 'shared_worker';
@@ -106,11 +131,46 @@ const runScenario = async (scenario: Scenario, mode: Mode, iteration: number): P
   const runId = Date.now().toString(36);
   const artifactDir = path.join(WORKSPACE_ROOT, 'test-results', 'perf', 'artifacts', `${mode}-${runId}`);
   const budget = mode === 'diagnose' ? 300_000 : 60_000;
-  const instrumented = await launchInstrumentedBrowser();
-  const { browser, browserCdp, debugPort } = instrumented;
+  const allow = partitionAllow();
+  if (scenario.privateData && !allow) {
+    throw new Error(`${scenario.flow} loads private data and runs only partitioned: pass --offline or --edge`);
+  }
+  if (scenario.prepare && !scenario.persistentProfile) {
+    throw new Error(`${scenario.flow} prepares a profile, so it needs persistentProfile`);
+  }
+  const profileDir = scenario.persistentProfile ? mkdtempSync(path.join(tmpdir(), 'dx-perf-profile-')) : undefined;
+  const offsite: string[] = [];
+  const guard = (context: BrowserContext) => {
+    if (allow) {
+      context.on('response', (response) => {
+        if (!insidePartition(response.url(), allow)) {
+          offsite.push(new URL(response.url()).host);
+        }
+      });
+    }
+  };
+  // The preparing page can outlive the navigation away from it (an imported archive is hundreds of
+  // megabytes), so the measured browser starts fresh on the prepared profile, as an installed app does.
+  if (scenario.prepare && profileDir) {
+    try {
+      const preparing = await launchInstrumentedContext(profileDir);
+      try {
+        guard(preparing.context);
+        await scenario.prepare(preparing.context.pages()[0] ?? (await preparing.context.newPage()));
+      } finally {
+        await preparing.close();
+      }
+    } catch (error) {
+      rmSync(profileDir, { recursive: true, force: true });
+      throw error;
+    }
+  }
+  const instrumented = profileDir ? await launchInstrumentedContext(profileDir) : await launchInstrumentedBrowser();
+  const { browserCdp, debugPort } = instrumented;
   try {
-    const context = await browser.newContext();
-    const page = await context.newPage();
+    const context = 'context' in instrumented ? instrumented.context : await instrumented.browser.newContext();
+    const page = context.pages()[0] ?? (await context.newPage());
+    guard(context);
     const include = scenario.navigates ? skipSharedWorkers : undefined;
     const comparability: Comparability = {
       ...flowConditions(),
@@ -119,6 +179,7 @@ const runScenario = async (scenario: Scenario, mode: Mode, iteration: number): P
       profileState: 'first-run',
       settleMs: SETTLE_MS,
       instruments: 'profiler',
+      ...(SNAPSHOTS.size > 0 ? { snapshotStages: [...SNAPSHOTS] } : {}),
       counters: countersLabel(COUNTERS),
     };
     const runner = new StageRunner({
@@ -131,8 +192,10 @@ const runScenario = async (scenario: Scenario, mode: Mode, iteration: number): P
       debugPort,
       network: trackNetwork(page),
       comparability,
-      screenshotDir: path.join(artifactDir, 'stages'),
-      snapshotStages: new Set(),
+      ...(scenario.privateData ? {} : { screenshotDir: path.join(artifactDir, 'stages') }),
+      snapshotStages: SNAPSHOTS,
+      // A heap snapshot holds every string the realm does; the allocator dumps hold only sizes.
+      heapSnapshots: !scenario.privateData,
       snapshotDir: path.join(artifactDir, 'snapshots'),
       counters: COUNTERS,
       counterDir: path.join(artifactDir, 'counters'),
@@ -143,6 +206,9 @@ const runScenario = async (scenario: Scenario, mode: Mode, iteration: number): P
       await installReactProbe(page);
     }
 
+    if (comparability.telemetry) {
+      await presentAsPersonsBrowser(context, page);
+    }
     await runner.stage('boot', async () => {
       await page.goto(`${BASE_URL}/?profiler=1&model=scripted`, { timeout: 120_000 });
       await waitForReady(page);
@@ -152,6 +218,14 @@ const runScenario = async (scenario: Scenario, mode: Mode, iteration: number): P
     await scenario.fixture({ page, mode, runId, budget });
     runner.adopt(await attachAll(debugPort, include));
     runner.attachInstruments({ profiler: startProfiling(artifactDir) });
+    let retained: { targets: Attached[]; sampling: AllocationSampling } | undefined;
+    const closeRetained = async () => {
+      if (retained) {
+        await retained.sampling.stop(path.join(artifactDir, 'retained'));
+        detachAll(retained.targets);
+        retained = undefined;
+      }
+    };
 
     await scenario.stages({
       page,
@@ -159,7 +233,7 @@ const runScenario = async (scenario: Scenario, mode: Mode, iteration: number): P
       runId,
       budget,
       stage: async (id, body) => {
-        await runner.stage(id, async () => {
+        const row = await runner.stage(id, async () => {
           await body();
           if (INJECT?.stage === id) {
             await page.evaluate((ms) => {
@@ -172,8 +246,21 @@ const runScenario = async (scenario: Scenario, mode: Mode, iteration: number): P
             }, INJECT.ms);
           }
         });
+        // A stage past `--until` did not run, so it neither opens nor closes the window.
+        if (!row) {
+          return;
+        }
+        if (RETAINED_SAMPLE?.from === id) {
+          const targets = await attachAll(debugPort, include);
+          retained = { targets, sampling: await startAllocationSampling(targets, { retainedOnly: true }) };
+        }
+        if (RETAINED_SAMPLE?.to === id) {
+          await closeRetained();
+        }
       },
     });
+    // A window whose last stage never ran ends with the last stage that did.
+    await closeRetained();
 
     const rows = runner.rows;
     const name = `${scenario.flow}-${mode}`;
@@ -188,11 +275,35 @@ const runScenario = async (scenario: Scenario, mode: Mode, iteration: number): P
       }
     }
     runner.dispose();
+    expect(offsite, 'responses from off the machine while partitioned').toEqual([]);
     const failed = rows.filter((row) => !row.ok);
     expect(failed.map((row) => `${row.stage}: ${row.error}`)).toEqual([]);
   } finally {
+    // Written whatever happened: a failed run is where the proof that nothing left the machine matters most.
+    if (instrumented.partition) {
+      writePartitionReport(artifactDir, instrumented.partition, offsite);
+    }
     await instrumented.close();
+    if (profileDir) {
+      rmSync(profileDir, { recursive: true, force: true });
+    }
   }
+};
+
+/** Which hosts the partition refused or tunnelled to, and how often: the proof of what a run reached. */
+const writePartitionReport = (artifactDir: string, partition: PartitionProxy, offsite: string[]): void => {
+  const counts = (requests: ReadonlyArray<DeniedRequest>) => {
+    const byHost = new Map<string, number>();
+    for (const { host, port } of requests) {
+      byHost.set(`${host}:${port}`, (byHost.get(`${host}:${port}`) ?? 0) + 1);
+    }
+    return Object.fromEntries([...byHost].sort(([, left], [, right]) => right - left));
+  };
+  mkdirSync(artifactDir, { recursive: true });
+  writeFileSync(
+    path.join(artifactDir, 'partition.json'),
+    JSON.stringify({ denied: counts(partition.denied()), tunnelled: counts(partition.tunnelled()), offsite }, null, 2),
+  );
 };
 
 /**

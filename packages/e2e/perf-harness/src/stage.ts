@@ -76,6 +76,8 @@ export type RunnerOptions = {
    */
   snapshotStages?: ReadonlySet<string>;
   snapshotDir?: string;
+  /** Off, a snapshot holds only the allocator dumps; see {@link takeMemorySnapshot}. */
+  heapSnapshots?: boolean;
   /**
    * The costed work counters to run (`parseCounters(process.env.DX_PERF_COUNTERS)`); defaults to
    * {@link DEFAULT_COUNTERS}. The React counter also needs `installReactProbe` before navigation.
@@ -372,6 +374,7 @@ export class StageRunner {
           dir: path.join(snapshotDir, id),
           preGc,
           preGcHeap,
+          heapSnapshots: this.#options.heapSnapshots,
         })
       : undefined;
 

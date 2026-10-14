@@ -5,9 +5,11 @@
 import { writeFileSync } from 'node:fs';
 import path from 'node:path';
 
+import { median } from '../compare/stats.ts';
 import { formatValue } from '../score/render.ts';
 import { scoreMeasurements } from '../score/score.ts';
 import { STAGE_CPU_GROUP, STAGE_WALL_GROUP, WORK_GROUP, groupOfId, toMeasurements } from '../score/stages.ts';
+import { type TelemetryTraffic } from '../telemetry-sink.ts';
 import { buildWorkingTree, keepArms, pruneArms, runFlow, serveArm } from './arms.ts';
 import { appendLedger } from './ledger.ts';
 import { elapsedMinutes, openSession, settle } from './session.ts';
@@ -25,6 +27,14 @@ export type RunOptions = {
   snapshots?: string;
   conditions?: Conditions;
 };
+
+/** The sink's traffic in one line, largest first: what replay, events and OTel each cost on the wire. */
+const describeTraffic = (traffic: TelemetryTraffic): string =>
+  Object.entries(traffic)
+    .sort(([, left], [, right]) => right.bytes - left.bytes)
+    .slice(0, 6)
+    .map(([endpoint, { requests, bytes }]) => `${endpoint} ${requests}x ${formatValue(bytes, 'bytes')}`)
+    .join(', ');
 
 /**
  * Measures the working tree as it stands and scores it against the target's budgets. Budgets are
@@ -88,12 +98,24 @@ export const runCommand = async ({
         await server.stop();
       }
     })();
+    const telemetry = server.telemetry?.();
+    if (telemetry) {
+      writeFileSync(path.join(dir, 'telemetry.json'), JSON.stringify(telemetry, null, 2));
+    }
     if (result.events.length === 0) {
       throw new HarnessError(`the flow produced no rows (exit ${result.exitCode}); log: ${path.join(dir, 'flow.log')}`);
     }
 
     const measurements = toMeasurements(result.events);
     const value = (id: string) => measurements.find((measurement) => measurement.id === id)?.value;
+    // The renderers' private footprint at each stage's end, so a soak reads as a curve.
+    const footprint = (stage: unknown): number | undefined => {
+      const values = result.events
+        .filter(({ properties }) => properties.stage === stage)
+        .map(({ properties }) => properties.appFootprintBytes)
+        .filter((bytes): bytes is number => typeof bytes === 'number' && bytes > 0);
+      return values.length > 0 ? median(values) : undefined;
+    };
     const stages = [
       ...new Set(result.events.map(({ properties }) => properties.stage).filter((stage) => typeof stage === 'string')),
     ];
@@ -108,12 +130,19 @@ export const runCommand = async ({
     const lines = [
       `perf run ${target.name}${target.scenario ? ` scenario ${target.scenario}` : ''}  ${arm.ref} ${arm.commit.slice(0, 9)}  harness ${session.harness}`,
       ...(conditions ? [`under ${conditions}`] : []),
+      ...(telemetry ? [`telemetry sent: ${describeTraffic(telemetry)}`] : []),
       `${iterations} iteration${iterations === 1 ? '' : 's'}, ${elapsedMinutes(session)} min, flow exit ${result.exitCode}  ${path.relative(root, result.dir)}`,
-      'stage                 wall        cpu',
+      'stage                 wall        cpu         footprint',
       ...stages.map((stage) => {
         const wall = value(`wall > ${stage}`);
         const cpu = value(`cpu > ${stage}`);
-        return `${String(stage).padEnd(20)}  ${(wall === undefined ? '-' : formatValue(wall, 'ms')).padEnd(10)}  ${cpu === undefined ? '-' : formatValue(cpu, 'ms')}`;
+        const bytes = footprint(stage);
+        return [
+          String(stage).padEnd(20),
+          (wall === undefined ? '-' : formatValue(wall, 'ms')).padEnd(10),
+          (cpu === undefined ? '-' : formatValue(cpu, 'ms')).padEnd(10),
+          bytes === undefined ? '-' : formatValue(bytes, 'bytes'),
+        ].join('  ');
       }),
       ...(report.metrics.length === 0
         ? [`no budgets at ${target.budgets} yet: calibrate them from nightly runs once the scenario is registered`]

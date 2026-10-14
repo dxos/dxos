@@ -2,10 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Browser, chromium } from '@playwright/test';
+import { type Browser, type BrowserContext, type Page, chromium } from '@playwright/test';
 
 import { Cdp, browserEndpoint } from './cdp.ts';
-import { PERF_HTTP2 } from './conditions.ts';
+import { PERF_HTTP2, partitionAllow } from './conditions.ts';
+import { type PartitionProxy, partitionArgs, startPartitionProxy } from './partition.ts';
 
 /**
  * Fixed rather than ephemeral, matching `scripts/memory/measure.mjs`: the port is also how that
@@ -19,7 +20,77 @@ export type InstrumentedBrowser = {
   browserCdp: Cdp;
   browserPid: number;
   debugPort: number;
+  /** Set when `--offline` or `--edge` partitioned the browser: what it was refused, and what it tunnelled. */
+  partition?: PartitionProxy;
   close: () => Promise<void>;
+};
+
+/** One disk-backed context instead of a browser, for a flow whose storage has to sit on disk as installed. */
+export type InstrumentedContext = Omit<InstrumentedBrowser, 'browser'> & { context: BrowserContext };
+
+const startPartition = async (): Promise<PartitionProxy | undefined> => {
+  const allow = partitionAllow();
+  return allow ? startPartitionProxy({ allow }) : undefined;
+};
+
+const sandboxProxy = (): string | undefined => (process.env.CLAUDE_CODE_REMOTE ? process.env.HTTPS_PROXY : undefined);
+
+const launchArgs = (partition: PartitionProxy | undefined): string[] => {
+  // A partition replaces the sandbox's egress proxy: the flow needs no egress at all.
+  const egress = partition ? undefined : sandboxProxy();
+  return [
+    `--remote-debugging-port=${DEBUG_PORT}`,
+    // Stamps trace events with the instructions their thread retired, which the counter trace
+    // sums per realm. A no-op where the kernel exposes no PMU (a VM without a perf driver), and
+    // the rows say so with `instructionThreads: 0` rather than a misleading zero.
+    '--enable-thread-instruction-count',
+    // The HTTP/2 preview serves a self-signed certificate.
+    ...(PERF_HTTP2 ? ['--ignore-certificate-errors'] : []),
+    // V8 flags for an experiment (`DX_PERF_JS_FLAGS='--max-semi-space-size=1'`); a run with them is
+    // not comparable to one without.
+    ...(process.env.DX_PERF_JS_FLAGS ? [`--js-flags=${process.env.DX_PERF_JS_FLAGS}`] : []),
+    ...(partition ? partitionArgs(partition.port) : []),
+    ...(egress
+      ? [
+          '--no-sandbox',
+          `--proxy-server=${egress}`,
+          '--proxy-bypass-list=127.0.0.1;localhost',
+          '--ssl-version-max=tls1.2',
+        ]
+      : []),
+  ];
+};
+
+/**
+ * Connects the browser-level CDP session and finds the browser pid, closing what was launched if
+ * either fails: the caller only gets a handle it can close once this resolves, and a leaked browser
+ * holds the fixed debug port the nightly's next serial tier would then fail to bind.
+ */
+const instrument = async (
+  closeBrowser: () => Promise<void>,
+  partition: PartitionProxy | undefined,
+): Promise<Omit<InstrumentedBrowser, 'browser'>> => {
+  try {
+    const browserCdp = await Cdp.connect(await browserEndpoint(DEBUG_PORT));
+    // Playwright does not expose the browser pid, and the RSS reading needs the root of the process
+    // tree. The debug-port flag is unique to this launch, so the command line identifies it.
+    const browserPid = await resolveBrowserPid();
+    return {
+      browserCdp,
+      browserPid,
+      debugPort: DEBUG_PORT,
+      ...(partition ? { partition } : {}),
+      close: async () => {
+        browserCdp.close();
+        await closeBrowser();
+        await partition?.close();
+      },
+    };
+  } catch (error) {
+    await closeBrowser().catch(() => {});
+    await partition?.close();
+    throw error;
+  }
 };
 
 /**
@@ -35,57 +106,27 @@ export type InstrumentedBrowser = {
  * fixture, which this deliberately bypasses.
  */
 export const launchInstrumentedBrowser = async (): Promise<InstrumentedBrowser> => {
-  const sandboxProxy = process.env.CLAUDE_CODE_REMOTE ? process.env.HTTPS_PROXY : undefined;
+  const partition = await startPartition();
   const browser = await chromium.launch({
     headless: true,
-    ...(sandboxProxy ? { executablePath: '/opt/pw-browsers/chromium' } : {}),
-    args: [
-      `--remote-debugging-port=${DEBUG_PORT}`,
-      // Stamps trace events with the instructions their thread retired, which the counter trace
-      // sums per realm. A no-op where the kernel exposes no PMU (a VM without a perf driver), and
-      // the rows say so with `instructionThreads: 0` rather than a misleading zero.
-      '--enable-thread-instruction-count',
-      // The HTTP/2 preview serves a self-signed certificate.
-      ...(PERF_HTTP2 ? ['--ignore-certificate-errors'] : []),
-      // V8 flags for an experiment (`DX_PERF_JS_FLAGS='--max-semi-space-size=1'`); a run with them is
-      // not comparable to one without.
-      ...(process.env.DX_PERF_JS_FLAGS ? [`--js-flags=${process.env.DX_PERF_JS_FLAGS}`] : []),
-      ...(sandboxProxy
-        ? [
-            '--no-sandbox',
-            `--proxy-server=${sandboxProxy}`,
-            '--proxy-bypass-list=127.0.0.1;localhost',
-            '--ssl-version-max=tls1.2',
-          ]
-        : []),
-    ],
+    ...(sandboxProxy() ? { executablePath: '/opt/pw-browsers/chromium' } : {}),
+    args: launchArgs(partition),
   });
+  return { browser, ...(await instrument(() => browser.close(), partition)) };
+};
 
-  // Everything between the launch and the return is wrapped: the caller only gets a handle it can
-  // close once this resolves, so a throw here would leak the browser — and it holds the fixed debug
-  // port, which the nightly's NEXT serial tier would then fail to bind.
-  let browserCdp: Cdp;
-  let browserPid: number;
-  try {
-    browserCdp = await Cdp.connect(await browserEndpoint(DEBUG_PORT));
-    // Playwright does not expose the browser pid, and the RSS reading needs the root of the process
-    // tree. The debug-port flag is unique to this launch, so the command line identifies it.
-    browserPid = await resolveBrowserPid();
-  } catch (error) {
-    await browser.close().catch(() => {});
-    throw error;
-  }
-
-  return {
-    browser,
-    browserCdp,
-    browserPid,
-    debugPort: DEBUG_PORT,
-    close: async () => {
-      browserCdp.close();
-      await browser.close();
-    },
-  };
+/**
+ * The same instrumented chromium with one persistent context in `userDataDir`. Playwright's other
+ * contexts keep storage in memory, which would count a large OPFS database as renderer memory.
+ */
+export const launchInstrumentedContext = async (userDataDir: string): Promise<InstrumentedContext> => {
+  const partition = await startPartition();
+  const context = await chromium.launchPersistentContext(userDataDir, {
+    headless: true,
+    ...(sandboxProxy() ? { executablePath: '/opt/pw-browsers/chromium' } : {}),
+    args: launchArgs(partition),
+  });
+  return { context, ...(await instrument(() => context.close(), partition)) };
 };
 
 const resolveBrowserPid = async (): Promise<number> => {
@@ -98,4 +139,40 @@ const resolveBrowserPid = async (): Promise<number> => {
   }
   // Zero reads as "no RSS measured" downstream rather than silently attributing the whole machine.
   return 0;
+};
+
+/**
+ * PostHog captures nothing from a browser it takes for a bot: an automated `navigator.webdriver`, or
+ * "HeadlessChrome" in the user agent or its brands. A `--telemetry` run presents as the browser a
+ * person runs, so analytics, exception capture and replay behave as shipped; the sink is its only
+ * destination. Call before the first navigation.
+ */
+export const presentAsPersonsBrowser = async (context: BrowserContext, page: Page): Promise<void> => {
+  await context.addInitScript(() => {
+    Object.defineProperty(Navigator.prototype, 'webdriver', { get: () => false });
+  });
+  // The user agent override goes through CDP, which only Chromium speaks.
+  const session = await context.newCDPSession(page).catch(() => undefined);
+  if (!session) {
+    return;
+  }
+  const { product, userAgent } = await session.send('Browser.getVersion');
+  const fullVersion = product.split('/')[1] ?? '';
+  const major = fullVersion.split('.')[0] ?? '';
+  await session.send('Emulation.setUserAgentOverride', {
+    userAgent: userAgent.replace('HeadlessChrome', 'Chrome'),
+    userAgentMetadata: {
+      brands: [
+        { brand: 'Google Chrome', version: major },
+        { brand: 'Chromium', version: major },
+        { brand: 'Not=A?Brand', version: '24' },
+      ],
+      fullVersion,
+      platform: 'macOS',
+      platformVersion: '',
+      architecture: 'arm',
+      model: '',
+      mobile: false,
+    },
+  });
 };

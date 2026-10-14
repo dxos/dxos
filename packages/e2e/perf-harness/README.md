@@ -9,6 +9,26 @@ A flow is described once, in a `.mdl` QA test, and executed once, as a Playwrigh
 - Specs: `composer-app/src/playwright/perf-*.spec.ts`, task `composer-app:e2e-perf`
 - Nightly: [`.depot/workflows/perf-nightly.yml`](../../../.depot/workflows/perf-nightly.yml)
 
+## Where to start
+
+`pnpm perf` builds, serves and drives the app, and says whether a change helped. Run
+`pnpm perf --help` for every command and flag.
+
+| The question                                                 | Start with                                                        |
+| ------------------------------------------------------------ | ----------------------------------------------------------------- |
+| Did my change make it faster or slower?                      | `pnpm perf compare --base main`                                   |
+| How does the working tree score against the CI budgets?      | `pnpm perf run -n 3`                                              |
+| Can this machine measure right now?                          | `pnpm perf doctor`                                                |
+| Where did the CPU go?                                        | `pnpm perf summarize`, then `pnpm perf expand <handle>`           |
+| A user says X is slow; how do I reproduce it?                | `pnpm perf capture`, then `pnpm perf scenario new`                |
+| Does a real profile, or the preview app, behave differently? | `--offline` or `--edge <url>`, with `--channel` and `--telemetry` |
+
+[Did a change help?](#did-a-change-help-pnpm-perf) below covers the CLI in depth. Agents start from
+the [`perf` skill](../../../.agents/skills/perf/SKILL.md), which routes each question to a playbook.
+The memory tools outside the CLI (soaks in Playwright's and the system's WebKit, EDGE traffic,
+Subduction's sync gates) are in [`composer-app/scripts/memory/`](../../apps/composer-app/scripts/memory/README.md).
+The rest of this file explains what the harness measures and why.
+
 ## Two modes, never mixed
 
 | Mode       | Instrumentation                   | Authoritative for            | Trended |
@@ -183,6 +203,8 @@ pnpm perf compare --base main --until open-space       # skip the stages after o
 pnpm perf compare --base main --http2                   # HTTP/2, as production's CDN serves
 pnpm perf compare --base main --service-worker          # the PWA build, its own cached bundle
 pnpm perf compare --base main --cpu-throttle 4          # the page 4x slower
+pnpm perf compare --base main --channel preview         # built as the preview release channel
+pnpm perf compare --base main --telemetry               # observability on, as shipped
 ```
 
 - `--until` skips every stage after the one named, which shortens an experiment on an early stage.
@@ -195,6 +217,36 @@ pnpm perf compare --base main --cpu-throttle 4          # the page 4x slower
   it does on a user's first visit.
 - `--cpu-throttle` sends `Emulation.setCPUThrottlingRate` through the page's session. The factor is
   not calibrated to a device yet, so pick one and keep it for the whole comparison.
+- `--channel` builds as a release channel (`DX_ENVIRONMENT`: `dev`, `preview` or `staging`), with
+  that channel's branding and behaviour, to match the app a user runs.
+- `--telemetry` builds with PostHog (events, exceptions, session replay) and the OTel export on, as
+  shipped. Every other bundle runs with them off, since PostHog starts only when a build carries a
+  key and a host. Here they point at a loopback sink, which answers as PostHog would (remote config
+  with replay on, its extension scripts) and counts requests and bytes per endpoint without keeping
+  a body; nothing reaches production telemetry. The browser presents as a person's, because PostHog
+  captures nothing from one it takes for a bot. It is a separate cached bundle.
+
+### Measuring a real profile without syncing it
+
+A production bundle points at production EDGE, so a real profile loaded into a run would sync with
+live data. `--offline` partitions the browser: every request goes to a loopback proxy that refuses
+and logs it, host resolution covers loopback only, WebRTC gets no direct UDP, and the bundle's EDGE
+URL is a closed loopback port. `--edge <url>` is the same partition except for TLS tunnels to that
+one non-production EDGE (production is refused). Each partitioned scenario run writes
+`partition.json` with what was refused and tunnelled, and fails on any response from outside.
+
+```bash
+DX_PERF_PROFILE_ARCHIVE=<file.dxprofile> pnpm perf run --scenario memory-profile --offline -n 1
+pnpm perf run --scenario memory-synthetic --offline -n 1      # the same soak on generated data
+# Closest to a preview user's app: a non-production EDGE, the preview channel, observability on.
+DX_PERF_PROFILE_ARCHIVE=<file.dxprofile> pnpm perf run --scenario memory-profile \
+  --edge https://dev.dxos.network/ --channel preview --telemetry -n 1
+```
+
+`memory-profile` imports a `.dxprofile` (exported from `/recovery.html`) into a throwaway
+disk-backed profile and soaks it: idle, visit every space, idle, revisit, idle. It refuses to run
+unpartitioned and takes no screenshots. An archive holds private keys: keep it outside the repo,
+and keep what a run derives from it (heap snapshots, page text) out of PRs and chat.
 
 ### Guardrails for an optimization loop
 

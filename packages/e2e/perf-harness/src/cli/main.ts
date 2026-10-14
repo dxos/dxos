@@ -16,7 +16,7 @@ import { scenarioCheck, scenarioNew } from './scenario.ts';
 import { installInterruptHandlers } from './session.ts';
 import { expand, summarize } from './summarize.ts';
 import { type Conditions } from './targets.ts';
-import { HarnessError, errorCode, workspaceRoot } from './workspace.ts';
+import { HarnessError, derivePorts, errorCode, workspaceRoot } from './workspace.ts';
 
 const HELP = `perf: build, serve and measure the app, and say whether a change helped.
 
@@ -69,10 +69,27 @@ conditions (run, compare, scenario check; every arm shares them, and rows record
   --http2                 serve over HTTP/2 with a self-signed certificate, as production's CDN does
   --service-worker        build with the PWA service worker on (a separate cached bundle)
   --cpu-throttle <n>      slow the page n times (Emulation.setCPUThrottlingRate)
+  --offline               reach nothing but loopback: every other request goes to a proxy that refuses
+                          and logs it, and the bundle's EDGE URL is a closed loopback port
+  --edge <url>            the same partition, except TLS to this non-production EDGE, which the
+                          bundle points at; production EDGE is refused
+  --telemetry             PostHog (events, exceptions, session replay) and OTel export on, as shipped,
+                          delivered to a loopback sink that counts and drops them (a separate bundle)
+  --channel <name>        build as a release channel (dev, preview, staging), e.g. to match a user's app
 
 compare exits 0 improved, 1 regressed, 2 no change, 3 inconclusive, 4 could not measure.
 HEAD must be committed: each attempt is a commit, so the ledger can name what was measured.
 `;
+
+const CHANNELS = ['dev', 'preview', 'staging'] as const;
+
+const channelOf = (value: string): (typeof CHANNELS)[number] => {
+  const channel = CHANNELS.find((known) => known === value);
+  if (!channel) {
+    throw new HarnessError(`--channel is one of ${CHANNELS.join(', ')}, not "${value}"`);
+  }
+  return channel;
+};
 
 const integer = (value: string | undefined, fallback: number, name: string): number => {
   if (value === undefined) {
@@ -121,6 +138,10 @@ const main = async (): Promise<number> => {
       'http2': { type: 'boolean', default: false },
       'service-worker': { type: 'boolean', default: false },
       'cpu-throttle': { type: 'string' },
+      'offline': { type: 'boolean', default: false },
+      'edge': { type: 'string' },
+      'telemetry': { type: 'boolean', default: false },
+      'channel': { type: 'string' },
       'help': { type: 'boolean', short: 'h', default: false },
     },
   });
@@ -132,6 +153,10 @@ const main = async (): Promise<number> => {
     ...(values.http2 ? { http2: true } : {}),
     ...(values['service-worker'] ? { serviceWorker: true } : {}),
     ...(cpuThrottle && cpuThrottle > 1 ? { cpuThrottle } : {}),
+    ...(values.offline ? { offline: true } : {}),
+    ...(values.edge ? { edge: values.edge } : {}),
+    ...(values.telemetry ? { telemetry: derivePorts(workspaceRoot()).telemetry } : {}),
+    ...(values.channel ? { channel: channelOf(values.channel) } : {}),
   };
   const common = {
     target: values.target,

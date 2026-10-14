@@ -63,6 +63,14 @@ export type Comparability = {
   serviceWorker?: boolean;
   /** The page's CPU slowed by this factor; absent means unthrottled. */
   cpuThrottle?: number;
+  /** The browser reached nothing but loopback; absent means connected to EDGE. */
+  offline?: boolean;
+  /** The one non-production EDGE host a partitioned browser could reach. */
+  edge?: string;
+  /** PostHog (events, exceptions, replay) and OTel export on, delivered to a loopback sink. */
+  telemetry?: boolean;
+  /** The release channel the bundle was built as; absent means none was set. */
+  channel?: string;
 };
 
 /** A CDP target the harness measures. Shared workers matter most: ECHO and automerge live there. */

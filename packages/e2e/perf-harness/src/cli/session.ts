@@ -95,7 +95,8 @@ export const openSession = async ({
   });
   const id = runId();
   const dir = path.join(perfDir(root), 'runs', id);
-  mkdirSync(dir, { recursive: true });
+  // Owner-only: a run's profiles and artifacts can carry what the measured profile holds.
+  mkdirSync(dir, { recursive: true, mode: 0o700 });
   // Spotlight indexing a freshly copied 300 MB bundle is load the next rounds would measure.
   writeFileSync(path.join(perfDir(root), '.metadata_never_index'), '');
   return {
