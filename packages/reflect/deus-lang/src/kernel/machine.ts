@@ -305,21 +305,21 @@ const str = (form: Sexp): string => {
   if (form instanceof Str) {
     return form.value;
   }
-  throw new Error(`core: expected string, got ${print(form)}`);
+  throw new DeusPanic(`core: expected string, got ${print(form)}`);
 };
 
 const int = (form: Sexp): number => {
   if (typeof form === 'number') {
     return form;
   }
-  throw new Error(`core: expected int, got ${print(form)}`);
+  throw new DeusPanic(`core: expected int, got ${print(form)}`);
 };
 
 const list = (form: Sexp): Sexp[] => {
   if (Array.isArray(form)) {
     return form;
   }
-  throw new Error(`core: expected list, got ${print(form)}`);
+  throw new DeusPanic(`core: expected list, got ${print(form)}`);
 };
 
 const conValue = (type: string, tag: number, arity: number): Value => {
@@ -367,7 +367,7 @@ const compilePat = (form: Sexp): Pattern => {
       return pat;
     }
     default:
-      throw new Error(`core: unknown pattern ${print(form)}`);
+      throw new DeusPanic(`core: unknown pattern ${print(form)}`);
   }
 };
 
@@ -424,7 +424,7 @@ export const compileTerm = (form: Sexp, prims: Map<string, Prim>): Term => {
       node.args = list(parts[1]).map((binding) => {
         const fn = go(binding);
         if (fn.t !== LAM) {
-          throw new Error('core: letrec binds lambdas only');
+          throw new DeusPanic('core: letrec binds lambdas only');
         }
         return fn;
       });
@@ -446,7 +446,7 @@ export const compileTerm = (form: Sexp, prims: Map<string, Prim>): Term => {
       const name = str(parts[1]);
       const prim = prims.get(name);
       if (!prim) {
-        throw new Error(`core: unknown primitive ${name}`);
+        throw new DeusPanic(`core: unknown primitive ${name}`);
       }
       return constTerm(prim);
     }
@@ -477,7 +477,7 @@ export const compileTerm = (form: Sexp, prims: Map<string, Prim>): Term => {
       return node;
     }
     default:
-      throw new Error(`core: unknown term ${print(form).slice(0, 80)}`);
+      throw new DeusPanic(`core: unknown term ${print(form).slice(0, 80)}`);
   }
 };
 
@@ -577,6 +577,8 @@ export class Machine {
   steps = 0;
   /** Recently referenced definitions, kept when `DEUS_TRACE` is set, for diagnosing defects. */
   trace: string[] | undefined = process.env.DEUS_TRACE ? [] : undefined;
+  /** A defect is raised past this many steps (`DEUS_MAX_STEPS`), so a runaway program cannot hang. */
+  maxSteps: number = Number(process.env.DEUS_MAX_STEPS ?? Infinity);
   /** Entries per definition, kept when `DEUS_PROFILE` is set. */
   profile: Map<string, number> | undefined = process.env.DEUS_PROFILE ? new Map() : undefined;
 
@@ -839,7 +841,10 @@ export class Machine {
     const loop = (): Value => {
       while (true) {
         if (evaluating) {
-          steps++;
+          if (++steps > this.maxSteps) {
+            this.maxSteps = Infinity;
+            throw new DeusDefect(`step budget of ${steps - 1} exhausted`);
+          }
           switch (node.t) {
             case VAR:
               value = lookupIn(env, node.i);

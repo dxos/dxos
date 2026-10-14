@@ -14,7 +14,15 @@ export type RunResult = { code: number; steps: number };
  * Returns the process exit code instead of exiting, so tests can run images in-process.
  */
 export const runImage = (image: string, options: HostOptions): RunResult => {
-  const forms = readAll(image);
+  const stderrOf = options.stderr ?? ((chunk: string) => process.stderr.write(chunk));
+  let forms;
+  try {
+    forms = readAll(image);
+  } catch (err) {
+    // A malformed image is a broken toolchain artifact, reported without a JS stack trace.
+    stderrOf(`panic: malformed image: ${err instanceof Error ? err.message : String(err)}\n`);
+    return { code: 71, steps: 0 };
+  }
   const machine = new Machine(createPrims(), createHost(options));
   machine.load(forms);
   const entry = forms.find((form) => Array.isArray(form) && form[0] === 'main');

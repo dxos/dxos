@@ -73,6 +73,17 @@ test realFileSystem :=
   IO.writeFile "/tmp/deus-integration-probe.txt" "ok"
   IO.readFile "/tmp/deus-integration-probe.txt" == some "ok"
 
+/-- A program touching most syntax; every prefix of it must parse or fail, never hang. -/
+def sample : Text :=
+  "namespace N\n@[req \"F-1\"]\n/-- doc -/\ninductive T @\"urn:t\" where\n  | a\n  | b (x : Int)\nstructure P where\n  x : Int\nability A where\n  op : Int -> {A | r} Int\ndef f (p : P) : {Throw Text | r} Int :=\n  let q := { p with x := 1 }\n  match q.x, [1, 2] with\n  | 0, x :: _ => handle op x with\n    | return y => y\n    | op v -> k => k (v + 1)\n  | _, _ => if true then (fun (z : Int) => z) 3 else -1\ntheorem t (n : Int) : n = n -> f (P.mk n) = n := by induction n; simp [t]\ntest u := \"s\\n\" ++ 'c' == \"x\"\nend N\n"
+
+test truncatedSourcesTerminate :=
+  let n := Text.length sample
+  List.all (fun k =>
+    match try (fun _ => Parser.parse (Text.take k sample)) with
+    | Result.ok _ => true
+    | Result.err _ => true) (List.range 0 (n + 1))
+
 theorem reverseInvolutive (xs : List Int) : List.reverse (List.reverse xs) = xs := by test 100
 
 theorem sortIsSorted (xs : List Int) : List.sort (List.sort xs) = List.sort xs := by test 100

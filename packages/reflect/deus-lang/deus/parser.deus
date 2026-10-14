@@ -112,9 +112,13 @@ def attrs (p : Parser) : {Throw Text} List Attr :=
       if is p "]" then
         skip p
         List.reverse acc
+      else if (peek p).kind == Kind.eof then error p "unterminated attribute list"
       else
         let name := ident p
-        let rec values vs := if is p "," || is p "]" then List.reverse vs else values ((next p).value :: vs)
+        let rec values vs :=
+          if is p "," || is p "]" then List.reverse vs
+          else if (peek p).kind == Kind.eof then error p "unterminated attribute list"
+          else values ((next p).value :: vs)
         let vs := values []
         if is p "," then skip p else ()
         go (Attr.mk name vs :: acc)
