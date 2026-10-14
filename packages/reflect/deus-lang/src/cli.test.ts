@@ -4,113 +4,17 @@
 
 import { spawn, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import {
-  chmodSync,
-  existsSync,
-  mkdirSync,
-  mkdtempSync,
-  readdirSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { gzipSync } from 'node:zlib';
-import { afterAll, describe, test } from 'vitest';
+import { describe, test } from 'vitest';
 
-import { SEED_PATH } from './kernel/main.ts';
-import { runImage } from './kernel/run.ts';
+import { cliHarness } from './cli-harness.ts';
 
-const root = join(import.meta.dirname, '..');
-const seed = readFileSync(SEED_PATH, 'utf8');
-const scratch = mkdtempSync(join(tmpdir(), 'deus-cli-'));
-
-/** Writes a source file into the scratch directory and returns its path. */
-const file = (name: string, text: string) => {
-  const path = join(scratch, name);
-  writeFileSync(path, text);
-  return path;
-};
-
-/** Runs the seed (the DEUS CLI) in-process. */
-const deus = (...args: string[]) => {
-  let stdout = '';
-  let stderr = '';
-  const { code } = runImage(seed, {
-    args,
-    stdout: (chunk) => {
-      stdout += chunk;
-    },
-    stderr: (chunk) => {
-      stderr += chunk;
-    },
-  });
-  return { code, stdout, stderr };
-};
-
-afterAll(() => rmSync(scratch, { recursive: true, force: true }));
+const { root, scratch, file, deus } = cliHarness('deus-cli-');
 
 describe('deus CLI', () => {
-  // Dogfooding: the toolchain's own sources go into a codebase, and its tests and theorems run there.
-  test('adds the compiler to a codebase and passes its own tests and theorems', { timeout: 180_000 }, ({ expect }) => {
-    const codebase = join(scratch, 'self');
-    expect(deus('init', '--empty', '--codebase', codebase).code).toBe(0);
-    const add = deus('add', join(root, 'deus'), '--codebase', codebase);
-    expect(add.stderr).toBe('');
-    expect(add.code).toBe(0);
-    const tests = deus('test', '--codebase', codebase);
-    expect(tests.stdout).toMatch(/ 0 failed/);
-    expect(tests.code).toBe(0);
-    const theorems = deus('check', '--codebase', codebase);
-    expect(theorems.stdout).toMatch(/proved by decide/);
-    expect(theorems.code).toBe(0);
-
-    // `view` prints source that compiles back to the same hashes: every definition, test, type and
-    // ability of the toolchain, printed together so that mutually recursive ones are re-added as a group.
-    const names: { name: string; kind: string; hash: string; sig: string; summary: string; status: string }[] =
-      JSON.parse(deus('ls', '--json', '--codebase', codebase).stdout);
-    const printed = names
-      .filter((entry) => ['term', 'test', 'type', 'ability'].includes(entry.kind) && !entry.hash.startsWith('#'))
-      .map((entry) => entry.name);
-    expect(printed.length).toBeGreaterThan(1000);
-    const source = deus('view', ...printed, '--codebase', codebase)
-      .stdout.split('\n')
-      .filter((line) => !line.startsWith('-- '))
-      .join('\n');
-    expect(deus('update', file('printed.deus', source), '--codebase', codebase).stdout).toBe('Nothing changed.\n');
-  });
-
-  // The specs live in the codebase (D99), so its export in git is where CI finds them: restoring it
-  // must give the toolchain as `deus/` compiles it, and every spec document must hold.
-  test('restores the codebase export, which matches deus/ and whose specs hold', { timeout: 180_000 }, ({ expect }) => {
-    const restored = join(scratch, 'restored');
-    expect(deus('init', '--empty', '--codebase', restored).code).toBe(0);
-    const add = deus('add', join(root, 'codebase/code'), join(root, 'codebase/specs'), '--codebase', restored);
-    expect(add.stderr).toBe('');
-    expect(add.code).toBe(0);
-
-    const self = join(scratch, 'export-self');
-    expect(deus('init', '--empty', '--codebase', self).code).toBe(0);
-    expect(deus('add', join(root, 'deus'), '--codebase', self).code).toBe(0);
-    const hashes = (codebase: string): Map<string, string> =>
-      new Map(
-        JSON.parse(deus('ls', '--json', '--codebase', codebase).stdout).map((entry: { name: string; hash: string }) => [
-          entry.name,
-          entry.hash,
-        ]),
-      );
-    const exported = hashes(restored);
-    const stale = [...hashes(self)].filter(([name, hash]) => exported.get(name) !== hash).map(([name]) => name);
-    expect(stale, 'run `deus export codebase` after changing deus/').toEqual([]);
-
-    // JS.Spec's blocks compile with the js target, which copies $DEUS_HOME/platform/js/runtime.mjs.
-    process.env.DEUS_HOME = root;
-    const checked = deus('mdl', '--codebase', restored);
-    expect(checked.stdout).toMatch(/ 0 failed, 0 unchecked/);
-    expect(checked.code).toBe(0);
-  });
-
   test('proves the sorting example and refuses unsound claims', { timeout: 120_000 }, ({ expect }) => {
     const c = ['--codebase', join(scratch, 'proofs')];
     deus('init', '--empty', ...c);

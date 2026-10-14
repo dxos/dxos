@@ -119,6 +119,7 @@ stage. The table is regenerated from `git log` with every commit.
 
 | 111 | 10-14 22:20 | 15m 00s | `a57f4f60` | the explorer's graph view: open definitions as code cards in a force-directed graph with their neighbours, toggled with the list (`v`); Explorer.Spec R-13 found recursive definitions listed as their own users (D107) |
 | 112 | 10-14 22:40 | 25m 00s | `a57f4f60` | Parquet files carry min/max statistics and column orders for every column, so pyarrow and Iceberg see bounds on all 42 columns and Basin SQL can prune files (task 821dd13d); task 72207dc1 canceled, the codebase remote is deus/toolchain (D101) |
-| 113 | 10-14 21:55 | 23m 00s | this commit | spec-first View.Spec: theorem hypotheses print as `P -> Q` and header types by their name, not their IRI path (D108, tasks 4f7f9e40, f6a2c2ff) |
+| 113 | 10-14 22:22 | 2m 00s | `87cbcfb2` | spec-first View.Spec: theorem hypotheses print as `P -> Q` and header types by their name, not their IRI path (D108, tasks 4f7f9e40, f6a2c2ff) |
+| 114 | 10-14 23:02 | 40m 00s | this commit | devex: the test suite runs in 151 s instead of 315 s; the dogfood and restore tests run in files of their own, so vitest runs them in parallel with the rest (shared `cliHarness`) |
 
-Total from stage 1 to stage 113: 19h 9m.
+Total from stage 1 to stage 114: 19h 49m.

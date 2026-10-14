@@ -116,6 +116,54 @@ From Dmytro. Depends on P8 (b09507db): files must be regenerable from the codeba
 
 From Dmytro. A Codebase ability (find, view, add, update, mv, task ops) handled by the CLI under eval, so an agent scripts edits in DEUS instead of chaining CLI calls.
 
+## devex: deus mdl over all specs takes 34 s (`7f677d04`)
+
+- state: todo
+- priority: high
+- labels: devex, perf
+
+Every agent runs it before each commit; cache unchanged specs by hash.
+
+## devex: merges into #13952 race and D-numbers collide (`602f4557`)
+
+- state: todo
+- priority: high
+- labels: devex, perf
+
+Every thread renumbers DECISIONS and TIMELINE on each merge; check a merge script into the repo and give decisions collision-free ids.
+
+## devex: the dogfood test takes 124 s (`f264430b`)
+
+- state: todo
+- priority: high
+- labels: devex, perf
+
+Its view round-trip re-adds the whole printed toolchain; blocked on the printed-source typecheck task.
+
+## devex: the restore test takes 89 s and compiles deus/ twice (`b4e12f14`)
+
+- state: todo
+- priority: high
+- labels: devex, perf
+
+Restore once into a shared codebase, or reuse the dogfood codebase.
+
+## devex: the seed fixpoint compiles the toolchain twice (17 s) (`9e2f6916`)
+
+- state: todo
+- priority: high
+- labels: devex, perf
+
+Compile s2 with the s1 image only when sources changed since the last fixpoint, or check the fixpoint in CI only.
+
+## devex: update of printed (deus view) source is 9x slower than the same code as source (82 s vs 9 s); typecheck re-checks group members ~50x (`44892ca0`)
+
+- state: todo
+- priority: high
+- labels: devex, perf
+
+Compile.typecheck checks members 82745 times for 1616 members on printed source vs 1625 on cat.deus. Found while measuring agent wall time.
+
 ## A req can name TypeScript tests as evidence (vitest file and test name), so the toolchain-wide view round trip stops being a gap (`a2da28e2`)
 
 - state: todo

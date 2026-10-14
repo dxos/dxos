@@ -1,6 +1,12 @@
 # History of main
 
-- `892406fc07` export: merge 9 changes from codebase
+- `7dfe60f632` task: open 9e2f6916 devex: the seed fixpoint compiles the toolchain twice (17 s)
+- `38aa3e8f21` task: open 602f4557 devex: merges into #13952 race and D-numbers collide
+- `c7ab32eac8` task: open b4e12f14 devex: the restore test takes 89 s and compiles deus/ twice
+- `2b21b1d6f7` task: open f264430b devex: the dogfood test takes 124 s
+- `5f7d5f1997` task: open 7f677d04 devex: deus mdl over all specs takes 34 s
+- `dded1cf89e` task: open 44892ca0 devex: update of printed (deus view) source is 9x slower than the same code as source (82 s vs 9 s); typecheck re-checks group members ~50x
+- `892406fc07` export: merge 9 changes from codebase (by claude)
 - `a6a09e7efc` export: merge tasks from codebase
 - `d3ac71beee` merge #13952's branch (by claude)
 - `5305c4a8cc` import #13952's export (Parquet statistics) (by claude)
