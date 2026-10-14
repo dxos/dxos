@@ -99,7 +99,7 @@ def Check.enumerate (types : Map Text Sexp) (t : Sexp) : Option (List Sexp) :=
     else
       match Map.lookup iri types with
       | Option.some decl =>
-          let ctors := typeArgs decl
+          let ctors := View.typeArgs decl
           if all (fun c => List.length (Sexp.args c) == 1) ctors then
             let hash := hashFor iri decl
             Option.some (mapIndexed (fun i _ => Check.con hash i []) ctors)
@@ -151,7 +151,7 @@ def Check.generate (types : Map Text Sexp) (state : Ref Int) (t : Sexp) (depth :
       match Map.lookup iri types with
       | Option.some decl =>
           let hash := hashFor iri decl
-          let ctors := typeArgs decl
+          let ctors := View.typeArgs decl
           let nullary := List.filter
             (fun pair => List.length (Sexp.args (snd pair)) == 1)
             (mapIndexed (fun i c => (i, c)) ctors)

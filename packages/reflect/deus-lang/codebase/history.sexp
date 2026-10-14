@@ -1,3 +1,6 @@
+(entry "2aa065727b912dcfd5c84a1f4ed918a1930d5b4403d3f392545caadeb924bb5a" "task: open 186feaf2 wasm: structural equality on constructed values" "claude")
+(entry "e4901e522a80acc2656629d45c0eee7624f78f2f70b77ea3bd4e0e7911c9eadf" "close 40cb2f16 by #c08af3d400" "claude")
+(entry "c08af3d4007a2edae40965c3cb9ac3761512a84a9a17f5edb7555688b910d591" "wasm: compare by type, refuse address compares (D69)" "claude")
 (entry "5d148858db72bd19fccb58e43d233f639991e6121d4e4e4ea3f29c2cf423cb50" "task: set 5fe4c8b1 state" "claude")
 (entry "404c368e6055fd2f577800c7e44cf7aaa9d7cd15759b32932437a3296f7caf3b" "task: set 11b93dc9 state" "claude")
 (entry "501bf19fea8999e33773b263c7c273b1d7d1775d115ddb0bca27fa801ed0ca6e" "close 5a02d566 by #1778b66c03" "claude")

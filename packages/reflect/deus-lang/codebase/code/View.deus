@@ -82,7 +82,7 @@ def View.typeDecl (p : Printer) (ns : Map Text Entry) (name : Text) (e : Entry) 
   | (Entry.type h iri fields, _ :: Sexp.int count :: _) =>
       let names := paramsFor meta count obj
       let fieldNames := fieldNamesFor meta
-      let ctors := List.map (nameParams names) (typeArgs obj)
+      let ctors := List.map (nameParams names) (View.typeArgs obj)
       let display := name
       if not (List.isEmpty fields) then
         let types := getOr (Option.map Sexp.args (head? ctors)) []

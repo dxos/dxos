@@ -30,8 +30,6 @@ is fixed, the spec describes what the code does.
 
 Bugs:
 
-- The wasm compiler compiles `==`, `<` and the other comparisons on constructed values to `i32` compares of
-  addresses: `some x == some x` is `0` in wasm and `true` in `deus eval` ([WASM.md](./WASM.md)).
 - The explorer writes builtin definitions as `def/#Bool.json`, but the app requests `def/%23Bool.json`,
   which the local server does not decode; the bucket upload puts a raw `#` in the URL. Bucket uploads also
   send `.js` and `.css` as `text/plain` ([EXPLORER.md](./EXPLORER.md)).

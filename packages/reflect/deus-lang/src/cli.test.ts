@@ -480,6 +480,12 @@ describe('deus CLI', () => {
 
     const refused = deus('build', 'shout', '-o', join(scratch, 'shout.wasm'), '--wasm', ...c);
     expect([refused.code, refused.stderr]).toEqual([1, 'deus: the primitive append is outside the wasm subset\n']);
+
+    // `==` on constructed values would compare addresses (D69): refused rather than answered wrong.
+    deus('add', file('same.deus', 'def same (x : Int) : Bool := some x == some x\n'), ...c);
+    const compared = deus('build', 'same', '-o', join(scratch, 'same.wasm'), '--wasm', ...c);
+    expect(compared.code).toBe(1);
+    expect(compared.stderr).toContain('eq on values that are not known to be Int or Bool is outside the wasm subset');
   });
 
   test('simulates Durable Objects that call each other and set alarms', { timeout: 120_000 }, ({ expect }) => {

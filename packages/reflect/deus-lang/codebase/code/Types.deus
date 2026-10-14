@@ -194,7 +194,7 @@ def Types.globalType (u : Unifier) (env : TypeEnv {r}) (h : Text) : TType :=
   | Option.none =>
       match Map.lookup h (Ref.get env.schemes) with
       | Option.some scheme => Types.instantiate u scheme
-      | Option.none => storedType u env h
+      | Option.none => Types.storedType u env h
 
 /-- A deep handler: the body runs with the handled abilities added to the outer row; each clause
   gets the operation's arguments and a continuation that returns the handler's result. -/

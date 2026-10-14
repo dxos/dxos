@@ -233,3 +233,7 @@ perhaps add an alarm to remind you of that every 30 minutes
 
 - > defect trace holds definition hashes (or the #… names of builtins),
   > sgould builtins also be proper uris?
+
+---
+
+- standing instructions: all sessions should be merging changes directly into https://github.com/dxos/dxos/pull/13952 ; close all extra PRs that were openend

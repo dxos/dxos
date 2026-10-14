@@ -970,7 +970,7 @@ def build (args : Args) : {IO, Throw Text} Unit :=
     let image := Image.build (fetcher dir) h
     let target := fun (u : Unit) =>
       if flag args "wasm" then
-        match try (fun _ => Wasm.compile (fun x => Codebase.readObject dir x) h (Names.lastSegment (Option.getOr (List.head? args.positional) "main"))) with
+        match try (fun _ => Wasm.compile (fun x => Codebase.readObject dir x) (fun x => Codebase.readMeta dir x) h (Names.lastSegment (Option.getOr (List.head? args.positional) "main"))) with
         | Result.ok bytes => IO.writeBytes out bytes
         | Result.err message => throw (Failure.of message [])
       else if flag args "worker" then Build.worker image (Text.replace "." "-" (Text.toLower (Option.getOr (List.head? args.positional) "actor"))) out

@@ -96,7 +96,7 @@ def Prove.constructors (pr : Prover) (type : Sexp) : {IO} Option (Text, List (In
           let hash := hashFor iri decl
           Option.some (hash, mapIndexed
             (fun i c => (i, List.map (fun ft => substVars ft args) (List.drop 1 (Sexp.args c))))
-            (typeArgs decl))
+            (View.typeArgs decl))
       | Option.none => Option.none
   | _ => Option.none
 

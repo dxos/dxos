@@ -57,15 +57,6 @@ From Dmytro. Depends on P8 (b09507db): files must be regenerable from the codeba
 
 From Dmytro. A Codebase ability (find, view, add, update, mv, task ops) handled by the CLI under eval, so an agent scripts edits in DEUS instead of chaining CLI calls.
 
-## wasm compares constructed values by address: some x == some x is 0 (`40cb2f16`)
-
-- state: todo
-- priority: high
-- assignee: claude
-- labels: bug, wasm, spec
-
-From docs/spec/README.md, Known divergences.
-
 ## Character literals print as numbers ('"' becomes 34) (`0d21d8d5`)
 
 - state: todo
@@ -101,6 +92,15 @@ From docs/spec/README.md, Known divergences.
 - labels: bug, types, spec
 
 From docs/spec/README.md, Known divergences.
+
+## wasm: structural equality on constructed values (`186feaf2`)
+
+- state: todo
+- priority: medium
+- assignee: claude
+- labels: wasm
+
+D69 refuses == on data; generate per-type compare functions from the type objects so it compiles.
 
 ## Docs disagree with the code in eight places listed in docs/spec/README.md (`11a42afd`)
 
@@ -210,6 +210,16 @@ Viewing about 1000 definitions into a pipe stopped after about 1150 lines; into 
 - priority: high
 - assignee: claude
 - labels: bug, spec
+
+From docs/spec/README.md, Known divergences.
+
+## wasm compares constructed values by address: some x == some x is 0 (`40cb2f16`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: bug, wasm, spec
+- links change #c08af3d400
 
 From docs/spec/README.md, Known divergences.
 

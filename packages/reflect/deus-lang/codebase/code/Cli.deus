@@ -128,6 +128,7 @@ def Cli.build (args : Args) : {IO, Throw Text} Unit :=
       let target := fun u => if flag args "wasm" then
         match try (fun _ => Wasm.compile
           (fun x => readObject dir x)
+          (fun x => readMeta dir x)
           h
           (lastSegment (getOr (head? args.positional) "main"))) with
         | Result.ok bytes => IO.writeBytes out bytes

@@ -1,5 +1,8 @@
 # History of main
 
+- `2aa065727b` task: open 186feaf2 wasm: structural equality on constructed values (by claude)
+- `e4901e522a` close 40cb2f16 by #c08af3d400 (by claude)
+- `c08af3d400` wasm: compare by type, refuse address compares (D69) (by claude)
 - `5d148858db` task: set 5fe4c8b1 state (by claude)
 - `404c368e60` task: set 11b93dc9 state (by claude)
 - `501bf19fea` close 5a02d566 by #1778b66c03 (by claude)
