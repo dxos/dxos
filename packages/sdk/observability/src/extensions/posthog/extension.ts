@@ -115,6 +115,12 @@ const uploadLogs = async (
   }
 };
 
+/**
+ * Class on an iframe that session replay records with its content. Only for a same-origin iframe the
+ * recorder can read: it never releases an opaque one removed with an ancestor, which replays empty anyway.
+ */
+export const REPLAY_IFRAME_CLASS = 'dx-replay-iframe';
+
 /** Create a PostHog-backed observability extension for events, errors, and support tickets. */
 export const extensions: (options: ExtensionsOptions) => Effect.Effect<ObservabilityExtension.Extension> = Effect.fn(
   function* ({
@@ -164,7 +170,8 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
             session_recording: {
               // The recorder never releases a cross-origin iframe removed with an ancestor, and that
               // iframe pins the whole detached tree; children of a blocked element are never recorded.
-              blockSelector: ':has(> iframe)',
+              // `<body>` is exempt, or a hidden iframe appended to it would blank the whole replay.
+              blockSelector: `:not(body):has(> iframe:not(.${REPLAY_IFRAME_CLASS}))`,
               ...posthogConfig?.session_recording,
             },
             before_send: [dropBenignExceptions, ...[posthogConfig?.before_send ?? []].flat()],
