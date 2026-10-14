@@ -4,7 +4,16 @@
 
 import { spawn, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { chmodSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  chmodSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, describe, test } from 'vitest';
@@ -400,6 +409,7 @@ describe('deus CLI', () => {
       const dir = join(scratch, 'migrate');
       const c = ['--codebase', dir];
       deus('init', '--empty', ...c);
+      deus('add', join(root, 'deus/builtins.deus'), ...c);
       deus(
         'add',
         file('m1.deus', 'def A.x : Int := 1\ndef A.y : Int := 2\ndef z : Int := 3\n'),
@@ -416,13 +426,14 @@ describe('deus CLI', () => {
       const path = (h: string) => join(dir, 'objects', h.slice(0, 2), h);
       const put = (text: string) => {
         const h = createHash('sha256').update(text.trimEnd()).digest('hex');
+        mkdirSync(join(dir, 'objects', h.slice(0, 2)), { recursive: true });
         writeFileSync(path(h), text);
         return h;
       };
       const items = (h: string): string[] =>
         [
           ...readFileSync(path(h), 'utf8').matchAll(
-            /\((n "[^"]*" \([^()]*\))|\(sub "([^"]*)" "([0-9a-f]{64})"\)|\(part "([0-9a-f]{64})"\)/g,
+            /\((n "[^"]*" \((?:[^()]|\([^()]*\))*\))\)|\(sub "([^"]*)" "([0-9a-f]{64})"\)|\(part "([0-9a-f]{64})"\)/g,
           ),
         ].flatMap((m) =>
           m[1] ? [m[1]] : m[2] ? items(m[3]).map((item) => item.replace(/^n "/, `n "${m[2]}.`)) : items(m[4]),
@@ -454,7 +465,7 @@ describe('deus CLI', () => {
       const names = deus('ls', ...c).stdout;
 
       const migrated = JSON.parse(deus('migrate', '--json', ...c).stdout);
-      expect(migrated).toEqual({ rewritten: 4, branches: 1 });
+      expect(migrated).toEqual({ rewritten: 6, branches: 1 });
       // Tree snapshots are canonical, so the migrated history is exactly the one first written.
       expect(readFileSync(join(dir, 'branches/main'), 'utf8').trim()).toBe(head);
       expect(deus('ls', ...c).stdout).toBe(names);
