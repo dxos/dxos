@@ -39,6 +39,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 31  | 10-14 14:26 | 13m 32s        | `aaf0728a`  | perf — profiling by definition, fewer allocations, memoized dependencies                    |
 | 32  | 10-14 14:26 | 0m 33s         | `46dff492`  | README and LLM guide cover projects, specs, replication and wasm                            |
 | 33  | 10-14 14:30 | 4m 06s         | `cb7fd584`  | Durable Objects — actor calls, alarms, multi-object simulation                              |
-| 34  | 10-14 14:35 | 4m 47s         | this commit | artifacts layer caches builds; operators get types                                          |
+| 34  | 10-14 14:35 | 4m 49s         | `75b49f19`  | artifacts layer caches builds; operators get types                                          |
+| 35  | 10-14 14:39 | 4m 02s         | this commit | replication: retention GC with shallow history                                              |
 
-Total from stage 1 to stage 34: 4h 52m.
+Total from stage 1 to stage 35: 4h 56m.

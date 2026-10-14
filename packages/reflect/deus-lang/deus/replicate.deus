@@ -177,6 +177,43 @@ def compact (dir : Text) (remote : Text) (level : Int) : {Remote, IO, Throw Text
     IO.remove (seenDir dir remote ++ "/" ++ s.bundleName))
   (written, List.map (fun s => s.bundleName) removable)
 
+/-- Causal nodes at most `depth` parent links from `heads`. -/
+def recent (dir : Text) (heads : List Text) (depth : Int) : {IO, Throw Text} List Text :=
+  let rec go frontier d seen :=
+    let fresh := List.filter (fun h => not (Map.contains h seen)) (List.dedup (List.sort frontier))
+    let seen2 := List.foldl (fun m h => Map.insert h () m) seen fresh
+    if d >= depth || List.isEmpty fresh then Map.keys seen2
+    else go (List.concatMap (fun h => Codebase.parentsOf dir h) fresh) (d + 1) seen2
+  go heads 0 Map.empty
+
+/--
+  Garbage collection under a retention policy (D54): keeps the history within `keep` generations
+  of every head, with everything its snapshots reach, as one bundle, and deletes every other
+  bundle. Older history becomes shallow. The result depends only on the heads and `keep`, so
+  clients collecting with the same policy write the same bundle. Returns (bundle, deleted,
+  objects dropped).
+-/
+def collect (dir : Text) (remote : Text) (keep : Int) : {Remote, IO, Throw Text} (Text, List Text, Int) :=
+  let seen := sync dir remote
+  let claims := List.concatMap (fun b => List.map (fun h => (b, h)) (headsOf dir seen b)) (branchesOf seen)
+  let kept := recent dir (List.map snd claims) keep
+  let snapshots := List.map (fun c => (Codebase.readCausal dir c).snapshot) kept
+  let entryRoots := List.concatMap (fun s => Project.rootsOf (Map.toList (Codebase.readNamespace dir s))) snapshots
+  let live := union (Set.fromList kept) (Project.reachable dir (snapshots ++ entryRoots))
+  let text := bundle dir claims (Map.keys live)
+  let name := nameOf 99 text
+  let existing := List.map (fun s => s.bundleName) seen
+  if List.any (fun n => n == name) existing then ()
+  else
+    Remote.put name text
+    IO.writeFile (seenDir dir remote ++ "/" ++ name) (seenToText (Seen.mk name claims (Map.keys live)))
+  let stale := List.filter (fun s => s.bundleName != name) seen
+  List.forEach stale (fun s =>
+    Remote.delete s.bundleName
+    IO.remove (seenDir dir remote ++ "/" ++ s.bundleName))
+  let before := Set.fromList (List.concatMap (fun s => s.hashes) seen)
+  (name, List.map (fun s => s.bundleName) stale, List.length (List.filter (fun h => not (Map.contains h live)) (Map.keys before)))
+
 --
 -- Remotes.
 --

@@ -565,15 +565,25 @@ def pull (args : Args) : {IO, Throw Text} Unit :=
       | (branch, [h]) => name ++ "." ++ branch ++ "  " ++ short h
       | (branch, hs) => name ++ "." ++ branch ++ "  " ++ Int.toText (List.length hs) ++ " heads (concurrent pushes); merge " ++ name ++ "." ++ branch ++ ".2 to join them") branches))
 
-/-- `deus compact [remote] [--level k]`: rewrites history into level-k strata and drops covered bundles. -/
+/--
+  `deus compact [remote] [--level k]`: rewrites history into level-k strata and drops covered
+  bundles. With `--keep n`, collects garbage instead: only n generations from each head survive.
+-/
 def compact (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let name := remoteName args
   let level := Option.getOr (Option.bind (option args "level") Int.fromText) 1
-  match withRemote dir name (fun _ => Replicate.compact dir name level) with
-  | (written, deleted) =>
-    output args (fun _ => Json.obj [("written", Json.arr (List.map Json.str written)), ("deleted", Json.arr (List.map Json.str deleted))])
-      (fun _ => "Wrote " ++ Int.toText (List.length written) ++ " level-" ++ Int.toText level ++ " bundles; deleted " ++ Int.toText (List.length deleted) ++ ".")
+  match Option.bind (option args "keep") Int.fromText with
+  | some keep =>
+    match withRemote dir name (fun _ => Replicate.collect dir name keep) with
+    | (bundle, deleted, dropped) =>
+      output args (fun _ => Json.obj [("bundle", Json.str bundle), ("deleted", Json.arr (List.map Json.str deleted)), ("dropped", Json.num dropped)])
+        (fun _ => "Kept " ++ Int.toText keep ++ " generations in " ++ bundle ++ "; deleted " ++ Int.toText (List.length deleted) ++ " bundles and " ++ Int.toText dropped ++ " unreachable objects.")
+  | none =>
+    match withRemote dir name (fun _ => Replicate.compact dir name level) with
+    | (written, deleted) =>
+      output args (fun _ => Json.obj [("written", Json.arr (List.map Json.str written)), ("deleted", Json.arr (List.map Json.str deleted))])
+        (fun _ => "Wrote " ++ Int.toText (List.length written) ++ " level-" ++ Int.toText level ++ " bundles; deleted " ++ Int.toText (List.length deleted) ++ ".")
 
 --
 -- Commands: running.
@@ -797,6 +807,7 @@ def usage : Text :=
     "  push [remote] [--branch b]           upload one immutable bundle of what the remote lacks",
     "  pull [remote]                        import new bundles; <remote>.<branch> tracks its heads",
     "  compact [remote] [--level k]         sedimentree compaction into level-k strata",
+    "  compact [remote] --keep n            garbage-collect: keep n generations from each head",
     "",
     "running",
     "  run <name> [args…]                   run name () with IO.args = args",

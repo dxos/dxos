@@ -24,7 +24,7 @@ and the toolchain; [`DECISIONS.md`](./DECISIONS.md) records why each choice was 
 | Rust kernel (native, byte-identical) and wasm kernel (`wasm32-wasip1`)             | done ([D40](./DECISIONS.md), [D41](./DECISIONS.md))                             |
 | Cloudflare Workers / Durable Objects target (`deus build --worker`)                | done ([D45](./DECISIONS.md), [D52](./DECISIONS.md)): actor calls and alarms     |
 | Wasm compiler for first-order `Int`/`Bool` code (`deus build --wasm`)              | done ([D51](./DECISIONS.md)); closures, data and effects run on the wasm kernel |
-| Projects/subgraphs, external requirements, replication, layers, containers         | done (D47–D50); retention GC and artifact storage not built                     |
+| Projects/subgraphs, external requirements, replication, layers, containers         | done (D47–D50, D53, D54)                                                        |
 
 ## The language
 
@@ -210,7 +210,8 @@ can only come from that library.
 `deus pull` and `deus compact` (D50). Each push writes one immutable bundle, named by its hash,
 and nothing is overwritten. A pull imports new bundles and sets `origin.<branch>` to the
 remote's heads, which are merged as local branches are. Compaction is deterministic, so two
-clients compacting the same history write the same bundles.
+clients compacting the same history write the same bundles. `deus compact --keep n` collects
+garbage: n generations from each head survive, and older history becomes shallow (D54).
 
 ## The outside world
 

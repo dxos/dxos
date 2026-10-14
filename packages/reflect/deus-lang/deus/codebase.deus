@@ -189,13 +189,20 @@ def init (dir : Text) : {IO, Throw Text} Unit :=
     setBranch dir "main" c
     IO.writeFile (dir ++ "/HEAD") "main\n"
 
+/--
+  The parents of a causal node that the store has. History pruned by replication's retention
+  (D54) is shallow: its oldest kept nodes have parents nobody keeps, and they act as roots.
+-/
+def parentsOf (dir : Text) (h : Text) : {IO, Throw Text} List Text :=
+  List.filter (fun p => IO.exists (objectPath dir p)) (readCausal dir h).parents
+
 /-- First-parent history of a branch, newest first. -/
 def history (dir : Text) (branch : Text) (limit : Int) : {IO, Throw Text} List (Text, Causal) :=
   let rec go h k acc :=
     if k <= 0 then List.reverse acc
     else
       let c := readCausal dir h
-      match c.parents with
+      match parentsOf dir h with
       | [] => List.reverse ((h, c) :: acc)
       | p :: _ => go p (k - 1) ((h, c) :: acc)
   go (headOf dir branch) limit []
@@ -207,7 +214,7 @@ def ancestors (dir : Text) (h : Text) : {IO, Throw Text} Map Text Unit :=
     | [] => seen
     | x :: rest =>
       if Set.contains x seen then go rest seen
-      else go ((readCausal dir x).parents ++ rest) (Set.insert x seen)
+      else go (parentsOf dir x ++ rest) (Set.insert x seen)
   go [h] Set.empty
 
 /-- A common ancestor of two causal nodes: the first of `b`'s ancestors (breadth first) that `a` also has. -/
@@ -219,7 +226,7 @@ def mergeBase (dir : Text) (a : Text) (b : Text) : {IO, Throw Text} Option Text 
     | x :: rest =>
       if Set.contains x mine then some x
       else if Set.contains x seen then go rest seen
-      else go (rest ++ (readCausal dir x).parents) (Set.insert x seen)
+      else go (rest ++ parentsOf dir x) (Set.insert x seen)
   go [b] Set.empty
 
 inductive MergeResult where

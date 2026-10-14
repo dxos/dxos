@@ -330,6 +330,23 @@ describe('deus CLI', () => {
       deus('pull', ...fresh);
       deus('merge', 'origin.main', ...fresh);
       expect(deus('eval', 'v70 + v3 + x + y', ...fresh).stdout).toBe('76\n');
+
+      // Retention: only recent generations survive, in one bundle; the history left is shallow.
+      const collected = JSON.parse(deus('compact', '--keep', '3', '--json', ...a).stdout);
+      expect(readdirSync(join(remote, 'bundles'))).toEqual([collected.bundle]);
+      expect(collected.dropped).toBeGreaterThan(0);
+      deus('pull', ...b);
+      expect(JSON.parse(deus('compact', '--keep', '3', '--json', ...b).stdout)).toMatchObject({
+        bundle: collected.bundle,
+        deleted: [],
+        dropped: 0,
+      });
+      const shallow = ['--codebase', join(scratch, 'replica-d')];
+      deus('init', ...shallow);
+      deus('remote', 'add', 'origin', remote, ...shallow);
+      deus('pull', ...shallow);
+      deus('merge', 'origin.main', ...shallow);
+      expect(deus('eval', 'v70 + v3 + x + y', ...shallow).stdout).toBe('76\n');
     },
   );
 

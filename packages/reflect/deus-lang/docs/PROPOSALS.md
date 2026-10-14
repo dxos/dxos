@@ -97,7 +97,7 @@ requests, so neither kernel gains an operation. `deus remote add`, `push`, `pull
 work against a directory or `r2://<bucket>/<prefix>`. Uploads are conditional
 (`If-None-Match: *`), so an existing bundle is never replaced. One push and pull round trip was
 run against the `agent-artifacts` bucket and then deleted. Garbage collection under a retention
-policy is not built yet.
+policy came next (D54): `deus compact --keep n`.
 
 ## P4. Layers of the codebase
 
