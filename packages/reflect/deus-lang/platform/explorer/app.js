@@ -1876,7 +1876,7 @@ const onShellEvents = async () => {
 };
 
 //
-// Report (D90): a screenshot of what the reader sees, filed as a task about the explorer.
+// Report (D92): a screenshot of what the reader sees, filed as a task about the explorer.
 //
 
 let styleText;

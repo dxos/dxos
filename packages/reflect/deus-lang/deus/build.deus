@@ -97,12 +97,14 @@ def native (image : Text) (out : Text) : {IO, Throw Failure} Unit := appended im
 /--
   Writes C from the C back end (D80): to `out` itself when it ends in `.c`, else beside it as
   `out.c`, compiled with `$CC` (default `cc`) at `-O2` to an executable that prints its result.
+  For `out` ending in `.wasm`, `$WASM_CC` (default `clang`) compiles it to a wasm32 module instead.
 -/
 def cExecutable (source : Text) (out : Text) : {IO, Throw Failure} Unit :=
   if Text.endsWith ".c" out then IO.writeFile out source
   else
     IO.writeFile (out ++ ".c") source
-    let _ := tool (Option.getOr (IO.getEnv "CC") "cc") ["-O2", "-DDEUS_MAIN", "-o", out, out ++ ".c"]
+    let _ := if Text.endsWith ".wasm" out then tool (Option.getOr (IO.getEnv "WASM_CC") "clang") ["--target=wasm32", "-O2", "-mtail-call", "-nostdlib", "-Wl,--no-entry", "-o", out, out ++ ".c"]
+      else tool (Option.getOr (IO.getEnv "CC") "cc") ["-O2", "-DDEUS_MAIN", "-o", out, out ++ ".c"]
     ()
 
 /--

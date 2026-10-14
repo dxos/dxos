@@ -82,6 +82,42 @@ peaks after are the input list and the sorted output, which are alive together. 
 `benchMerge` pay for counting shared cons cells; everything else is as fast or faster, because a
 reused block is already in cache and the heap stays small.
 
+## Wasm through C
+
+`deus build <fn> -o <file>.wasm --c` compiles the same C with clang for `wasm32`
+(`--target=wasm32 -O2 -mtail-call -nostdlib -Wl,--no-entry`; `$WASM_CC` overrides `clang`), so
+wasm gets the C back end's reference counting and reuse ([D90](../DECISIONS.md)). The module
+exports the function as `<name>(i32…) → i32`, its `memory`, and `deus_live()`, the words still
+allocated. It imports nothing.
+
+- **Values are 64 bits.** wasm32 addresses and `Int`s are both 32 bits, so a word cannot be told
+  apart by range. A value is an `i64`: an `Int` sign-extended as before, a block its address with
+  bit 32 set. The exported function's arguments and result stay `i32`.
+- **The heap** starts at `__heap_base` and grows by doubling with `memory.grow`. `memset` and
+  `memcpy`, which clang emits for some loops even with `-nostdlib`, are defined in the prelude.
+
+Times in Node 22, best of three, and the module's memory after one run, against the existing
+`--wasm` back end ([WASM.md](./WASM.md)), which never frees:
+
+| Program                       | `--wasm` time | through C, RC | `--wasm` memory | through C memory |
+| ----------------------------- | ------------: | ------------: | --------------: | ---------------: |
+| `fib 35`                      |         82 ms |         76 ms |                 |                  |
+| `collatz 100000`              |         34 ms |         26 ms |                 |                  |
+| `trees 200`                   |        304 ms |        235 ms |          256 MB |             4 MB |
+| `queens 11`                   |         38 ms |         42 ms |            2 MB |           < 1 MB |
+| `Sorting.benchMerge 10⁶`      |        607 ms |      1,093 ms |          512 MB |            64 MB |
+| `Sorting.benchQuick 10⁶`      |        443 ms |        670 ms |          512 MB |            32 MB |
+| `Sorting.benchHeap 10⁶`       |      1,943 ms |      2,230 ms |        1,024 MB |           128 MB |
+| `Sorting.benchArray 10⁶`      |        202 ms |        178 ms |           32 MB |            64 MB |
+| `Sorting.benchPersistent 10⁶` |        985 ms |      1,482 ms |        1,024 MB |            64 MB |
+
+Memory falls 8–64× wherever lists are built, and the integer and tree programs get faster. The
+list sorts are 1.1–1.8× slower: their blocks are twice as wide as the `--wasm` back end's 32-bit
+words, and a bump allocator that never frees is the cheapest allocator there is while memory lasts.
+`benchArray` uses more memory for the same reason. A 32-bit value with a tag bit would halve both
+(task in the codebase). `--wasm` stays the default: it needs no clang and is what the browser
+build uses.
+
 ## Benchmarks
 
 [`examples/bench.deus`](../../examples/bench.deus) has four first-order programs: `fib` (doubly
@@ -128,7 +164,7 @@ All back ends agree on every result (`fib 35` = 9227465, `collatz 100000` = 1075
 - **Memory was the next limit, and the C back end now frees.** Without it, `trees 200` allocated
   13 million blocks and freed none (301 MB resident). With reference counting and reuse it peaks
   at 2 MB of heap
-  ([Memory](#memory)). The wasm back end still never frees.
+  ([Memory](#memory)), and wasm built through C does the same ([Wasm through C](#wasm-through-c)).
 
 ## Toward the whole language
 
@@ -136,7 +172,7 @@ The best achievable speed for first-order DEUS is what C compilers give, and the
 it now. The rest of the language needs these, in order of how much code they unlock:
 
 1. **Memory: precise reference counting with reuse** (Perceus, as in Koka and Lean 4): done in the
-   C back end (D86); the wasm back end is next. The same uniqueness check is what a pure `Array`
+   C back end (D86) and in wasm built through it (D90). The same uniqueness check is what a pure `Array`
    needs to update in place (D83).
 2. **Closures and partial application:** closure conversion to flat closures; known calls stay
    direct C calls.

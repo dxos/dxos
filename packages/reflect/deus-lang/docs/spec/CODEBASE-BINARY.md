@@ -27,8 +27,9 @@ of [Columnar encoding](#columnar-encoding-deuscol1), with no trailing newline. T
 hashed. A writer MUST name a bundle this way, because equal content then gives equal names and
 concurrent writers never conflict.
 
-The level is the text before the first `-`. The implementation reads a name whose prefix is not an
-integer as level 0. It does not check the hash of a bundle it reads.
+The level is the text before the first `-`. A reader ignores, with a warning, a file under `bundles/`
+whose name is not `<level>-<sha256>`, and skips a bundle whose text does not hash to its name
+([D91](../DECISIONS.md)). A skipped bundle gets no `seen` record, so a repaired copy is read later.
 
 Real sample: `0-a86b65c302098f3ddcb8dc11e7b496bce75bb2b7231a9267724f9d293808340f`.
 
@@ -63,9 +64,10 @@ A bundle can hold claims only (no objects), objects only (compaction strata), or
 
 A reader takes the arguments of the single top-level form. It ignores items whose shape it does not
 know. For `obj` it writes the object unless the store already has that hash. For `meta` it writes
-the metadata only when the store has none for that hash, so the first metadata seen wins. The
-implementation does not check that `sha256(print(form))` equals the claimed hash; an independent
-reader SHOULD check it.
+the metadata only when the store has none for that hash, so the first metadata seen wins. It writes
+an object only when `sha256(print(form))` is its hash or, for a member `g.i` of a recursive group, when
+the `cycle` form rebuilt from the members in the bundle and the store hashes to `g`
+([CORE.md](./CORE.md#hashing), [D91](../DECISIONS.md)); it skips any other object with a warning.
 
 Only `objects/` and `meta/` travel in bundles. Note: `deus layers` reports the `results` and
 `provenance` layers as replicated, but no bundle carries them (`Codebase.layers` in
@@ -242,7 +244,7 @@ field   = "kind" | "by" | "at" | "subject" | "note" | "title" | "details" | "lin
 | `kind`         | Fields used                                  | Applied as                                                                                                                            |
 | -------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | `comment`      | `subject`, `note`, assets                    | a comment on `def:<name>` or `change:<causal>`                                                                                        |
-| `task`         | `title`, `details`, `link`, `labels`, assets | a new task linked to the definition `link` names, if it exists, with the comma-separated `labels` (D90); assets go in a first comment |
+| `task`         | `title`, `details`, `link`, `labels`, assets | a new task linked to the definition `link` names, if it exists, with the comma-separated `labels` (D92); assets go in a first comment |
 | `task-comment` | `task`, `note`, assets                       | a comment on the task with that id or unique id prefix                                                                                |
 
 `by` must be `github:<login>`, and it is recorded as the change's provenance; `at` is the time filed, in

@@ -15,12 +15,6 @@ From Dmytro: an artifact is a constant whose value is cached, e.g. deusCli := De
 - priority: high
 - labels: native, perf
 
-## Native: reference counting with reuse in the wasm back end (D86's scheme) (`ef46861c`)
-
-- state: todo
-- priority: high
-- labels: native, perf, wasm
-
 ## Pure Array.set that writes in place when the array is unique (Lean 4 / Koka FBIP): Rc::get_mut in the Rust kernel, the reference count in compiled code, a copy on the TypeScript kernel (D83) (`95ca184f`)
 
 - state: todo
@@ -95,6 +89,14 @@ Routine: deus inbox, then deus push, which refreshes the site. Waits on Dmytro's
 - assignee: claude
 - labels: wasm, perf, embedding
 
+## Native: 32-bit values with a tag bit in wasm built through C (halve block size) (`38603468`)
+
+- state: todo
+- priority: medium
+- labels: native, perf, wasm
+
+D90 widens values to 64 bits so blocks and integers can be told apart in wasm32; this doubles block size and makes list sorts 1.1-1.8x slower than the never-freeing --wasm back end (docs/spec/NATIVE.md#wasm-through-c). A low tag bit on Int (or on pointers) keeps 32-bit words but changes every arithmetic op in both back ends.
+
 ## Native: a C runtime for Text, maps and the other primitives, ported from the Rust kernel (`434a6dbc`)
 
 - state: todo
@@ -130,15 +132,6 @@ Routine: deus inbox, then deus push, which refreshes the site. Waits on Dmytro's
 - state: todo
 - priority: medium
 - labels: native, perf
-
-## Readers do not verify hashes of bundles and objects; a stray file under bundles/ fails a pull (`7afeaa0c`)
-
-- state: todo
-- priority: medium
-- assignee: claude
-- labels: bug, replication, spec
-
-From docs/spec/README.md, Known divergences.
 
 ## TS kernel JIT: Array.set and Ref.set journal a closure on every write; journal only when a deoptimisation can replay the entry (D83) (`a1b73fb8`)
 
@@ -536,6 +529,13 @@ deus build --c compiles the wasm subset to C (deus/cgen.deus); clang -O2 is with
 
 Done for the C back end (D86, docs/spec/NATIVE.md#memory). The wasm back end follows as its own task.
 
+## Native: reference counting with reuse in the wasm back end (D86's scheme) (`ef46861c`)
+
+- state: done
+- priority: high
+- labels: native, perf, wasm
+- links change #9081760a10
+
 ## Restoring the git export loses history, so the next export rewrites HISTORY.md (`5a02d566`)
 
 - state: done
@@ -716,6 +716,16 @@ deus explore could ship deus_kernel.wasm, the seed and a JSON snapshot of the co
 - labels: docs, spec
 
 Done by the Format spec docs thread in b0a392d6: CORE, CODEBASE-STORE, CODEBASE-BINARY, CODEBASE-TEXT, EMBEDDING, WASM, MDL, LANGUAGE and more, with the known divergences in docs/spec/README.md.
+
+## Readers do not verify hashes of bundles and objects; a stray file under bundles/ fails a pull (`7afeaa0c`)
+
+- state: done
+- priority: medium
+- assignee: claude
+- labels: bug, replication, spec
+- links change #1efeb3fb7d
+
+From docs/spec/README.md, Known divergences.
 
 ## Render the codebase in a TypeScript-like dialect (`655b148a`)
 

@@ -29,14 +29,41 @@ namespace CGen
 def prelude (nullary : Int) : Text :=
   Text.join "\n" [
     "#include <stdint.h>",
-    "#include <stdlib.h>",
-    "#include <sys/mman.h>",
-    "typedef intptr_t V;",
     "#if defined(__has_attribute) && __has_attribute(musttail)",
     "#define MUSTTAIL __attribute__((musttail))",
     "#else",
     "#define MUSTTAIL",
     "#endif",
+    "#ifdef __wasm__",
+    "/* wasm32: a value is 64 bits; a block is its address with bit 32 set, so integers need no tag (D86). */",
+    "typedef int64_t V;",
+    "#define BOX(p) ((V)(uintptr_t)(p) | ((V)1 << 32))",
+    "#define UNBOX(v) ((V *)(uintptr_t)(uint32_t)(v))",
+    "#define IS_PTR(v) ((uint64_t)(v) >> 32 == 1)",
+    "#define EXPORT(name) __attribute__((export_name(name)))",
+    "extern unsigned char __heap_base;",
+    "/* With -nostdlib, clang still lowers fill and copy loops to these calls. */",
+    "void *memset(void *d, int c, unsigned long n) { unsigned char *p = d; while (n--) *p++ = (unsigned char)c; return d; }",
+    "void *memcpy(void *d, const void *s, unsigned long n) { unsigned char *p = d; const unsigned char *q = s; while (n--) *p++ = *q++; return d; }",
+    "static V *deus_base, *deus_hp, *deus_hl;",
+    "static void deus_init(void) { deus_base = deus_hp = (V *)(((uintptr_t)&__heap_base + 7) & ~(uintptr_t)7); deus_hl = (V *)(__builtin_wasm_memory_size(0) * 65536); }",
+    "static V *deus_raw(V words) { V *p = deus_hp; deus_hp += words; while (deus_hp > deus_hl) { uintptr_t pages = __builtin_wasm_memory_size(0); if (__builtin_wasm_memory_grow(0, pages) == (uintptr_t)-1) __builtin_trap(); deus_hl = (V *)((pages * 2) * 65536); } return p; }",
+    "#else",
+    "#include <stdlib.h>",
+    "#include <sys/mman.h>",
+    "/* The heap is one reserved region, so a word is a block exactly when it points into it (D86). */",
+    "typedef intptr_t V;",
+    "#define BOX(p) ((V)(p))",
+    "#define UNBOX(v) ((V *)(v))",
+    "#define DEUS_HEAP ((V)1 << 36)",
+    "#define EXPORT(name)",
+    "static V *deus_base, *deus_hp, *deus_hl;",
+    "#define IS_PTR(v) ((uintptr_t)(v) - (uintptr_t)deus_base < (uintptr_t)DEUS_HEAP)",
+    "static void deus_init(void) { void *m = mmap(0, DEUS_HEAP, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE, -1, 0); if (m == MAP_FAILED) __builtin_trap(); deus_base = deus_hp = m; deus_hl = deus_base + DEUS_HEAP / (V)sizeof(V); }",
+    "static V *deus_raw(V words) { V *p = deus_hp; deus_hp += words; if (deus_hp > deus_hl) __builtin_trap(); return p; }",
+    "#endif",
+    "/* Nullary constructors and () are static blocks, never counted. */",
+    "#define STATIC(p) ((V)(uintptr_t)(p))",
     "#define W(x) ((V)(int32_t)(uint32_t)(x))",
     "#define ADD(a, b) W((uint32_t)(a) + (uint32_t)(b))",
     "#define SUB(a, b) W((uint32_t)(a) - (uint32_t)(b))",
@@ -46,37 +73,35 @@ def prelude (nullary : Int) : Text :=
     "#define USHR(a, b) W((uint32_t)(a) >> ((b) & 31))",
     "static inline V DIV(V a, V b) { if (b == 0) __builtin_trap(); return b == -1 ? SUB(0, a) : (V)((int32_t)a / (int32_t)b); }",
     "static inline V MOD(V a, V b) { if (b == 0) __builtin_trap(); return b == -1 ? 0 : (V)((int32_t)a % (int32_t)b); }",
-    "/* The heap is one reserved region, so a word is a block exactly when it points into it (D86). */",
-    "#define DEUS_HEAP ((V)1 << 36)",
-    "static V *deus_base, *deus_hp, *deus_hl, deus_live, deus_peak;",
+    "static V deus_live, deus_peak;",
     "static V *deus_free_lists[257];",
-    "static void deus_init(void) { void *m = mmap(0, DEUS_HEAP, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE, -1, 0); if (m == MAP_FAILED) abort(); deus_base = deus_hp = m; deus_hl = deus_base + DEUS_HEAP / (V)sizeof(V); }",
-    "#define IS_PTR(v) ((uintptr_t)(v) - (uintptr_t)deus_base < (uintptr_t)DEUS_HEAP)",
     "/* A block's header, the word before it: its count times 256, plus its kind. */",
-    "#define HDR(v) (((V *)(v))[-1])",
+    "#define PHDR(p) ((p)[-1])",
+    "#define HDR(v) PHDR(UNBOX(v))",
     "#define K_REF 254",
     "#define K_ARRAY 255",
     "#define UNIQUE(v) (HDR(v) < 512)",
-    "static inline V *deus_block(V kind, V body) { V words = body + 1; V *h; deus_live += words; if (deus_live > deus_peak) deus_peak = deus_live; if (words <= 256 && (h = deus_free_lists[words])) deus_free_lists[words] = (V *)h[0]; else { h = deus_hp; deus_hp += words; if (deus_hp > deus_hl) abort(); } h[0] = 256 | kind; return h + 1; }",
-    "static inline V deus_body(V *p) { V k = HDR(p) & 255; return k == K_ARRAY ? p[0] + 1 : k == K_REF ? 1 : k + 1; }",
-    "static inline void deus_release(V *p) { V words = deus_body(p) + 1; deus_live -= words; if (words <= 256) { p[-1] = (V)deus_free_lists[words]; deus_free_lists[words] = p - 1; } }",
+    "static inline V *deus_block(V kind, V body) { V words = body + 1; V *h; deus_live += words; if (deus_live > deus_peak) deus_peak = deus_live; if (words <= 256 && (h = deus_free_lists[words])) deus_free_lists[words] = (V *)(uintptr_t)h[0]; else h = deus_raw(words); h[0] = 256 | kind; return h + 1; }",
+    "static inline V deus_body(V *p) { V k = PHDR(p) & 255; return k == K_ARRAY ? p[0] + 1 : k == K_REF ? 1 : k + 1; }",
+    "static inline void deus_release(V *p) { V words = deus_body(p) + 1; deus_live -= words; if (words <= 256) { p[-1] = (V)(uintptr_t)deus_free_lists[words]; deus_free_lists[words] = p - 1; } }",
     "static V *deus_stack, deus_sp, deus_cap;",
+    "static void deus_push(V v) { if (deus_sp == deus_cap) { V cap = deus_cap ? 2 * deus_cap : 1024; V *bigger = deus_raw(cap); for (V i = 0; i < deus_sp; i++) bigger[i] = deus_stack[i]; deus_stack = bigger; deus_cap = cap; } deus_stack[deus_sp++] = v; }",
     "static void deus_free(V *p) {",
     "  for (;;) {",
-    "    V k = HDR(p) & 255; V *from = k == K_REF ? p : p + 1; V n = k == K_ARRAY ? p[0] : k == K_REF ? 1 : k;",
-    "    for (V i = 0; i < n; i++) { V c = from[i]; if (IS_PTR(c)) { if (!UNIQUE(c)) HDR(c) -= 256; else { if (deus_sp == deus_cap) { deus_cap = deus_cap ? 2 * deus_cap : 1024; deus_stack = realloc(deus_stack, deus_cap * sizeof(V)); if (!deus_stack) abort(); } deus_stack[deus_sp++] = c; } } }",
+    "    V k = PHDR(p) & 255; V *from = k == K_REF ? p : p + 1; V n = k == K_ARRAY ? p[0] : k == K_REF ? 1 : k;",
+    "    for (V i = 0; i < n; i++) { V c = from[i]; if (IS_PTR(c)) { if (!UNIQUE(c)) HDR(c) -= 256; else deus_push(c); } }",
     "    deus_release(p);",
     "    if (deus_sp == 0) return;",
-    "    p = (V *)deus_stack[--deus_sp];",
+    "    p = UNBOX(deus_stack[--deus_sp]);",
     "  }",
     "}",
     "static inline V deus_dup(V v) { if (IS_PTR(v)) HDR(v) += 256; return v; }",
-    "static inline void deus_drop(V v) { if (IS_PTR(v)) { if (!UNIQUE(v)) HDR(v) -= 256; else deus_free((V *)v); } }",
+    "static inline void deus_drop(V v) { if (IS_PTR(v)) { if (!UNIQUE(v)) HDR(v) -= 256; else deus_free(UNBOX(v)); } }",
     "/* A constructor block, in the memory of a dead block of the same size when there is one. */",
     "static inline V *deus_con(V *token, V fields) { if (token) { token[-1] = 256 | fields; return token; } return deus_block(fields, fields + 1); }",
     "static inline void deus_unused(V *token) { if (token) deus_release(token); }",
-    "static V deus_array(V n, V x) { if (n < 0) __builtin_trap(); V *p = deus_block(K_ARRAY, n + 1); p[0] = n; if (n == 0) deus_drop(x); else if (IS_PTR(x)) HDR(x) += 256 * (n - 1); for (V i = 1; i <= n; i++) p[i] = x; return (V)p; }",
-    "#define AT(a, i) ({ V *a_ = (V *)(a); V i_ = (i); if ((uint32_t)i_ >= (uint32_t)a_[0]) __builtin_trap(); &a_[i_ + 1]; })",
+    "static V deus_array(V n, V x) { if (n < 0) __builtin_trap(); V *p = deus_block(K_ARRAY, n + 1); p[0] = n; if (n == 0) deus_drop(x); else if (IS_PTR(x)) HDR(x) += 256 * (n - 1); for (V i = 1; i <= n; i++) p[i] = x; return BOX(p); }",
+    "#define AT(a, i) ({ V *a_ = UNBOX(a); V i_ = (i); if ((uint32_t)i_ >= (uint32_t)a_[0]) __builtin_trap(); &a_[i_ + 1]; })",
     "static V deus_nullary[" ++ Int.toText (larger nullary 1) ++ "] = {"
       ++ Text.join ", " (List.map Int.toText (List.range 0 (larger nullary 1))) ++ "};",
     ""]
@@ -270,7 +295,7 @@ def pattern (ctx : FnCtx) (v : Int) (env : List Int) (pat : Sexp) : {Throw Text}
   | Sexp.list [Sexp.sym "pint", Sexp.int n] => ("if (" ++ local v ++ " != " ++ lit n ++ ") break; ", env, [])
   | Sexp.list [Sexp.sym "pcon", Sexp.str "#Bool", Sexp.int tag] => ("if (" ++ local v ++ " != " ++ Int.toText tag ++ ") break; ", env, [])
   | Sexp.list (Sexp.sym "pcon" :: Sexp.str t :: Sexp.int tag :: subs) =>
-    let tagTest := "if (((V *)" ++ local v ++ ")[0] != " ++ Int.toText tag ++ ") break; "
+    let tagTest := "if (UNBOX(" ++ local v ++ ")[0] != " ++ Int.toText tag ++ ") break; "
     List.foldl (fun acc pair =>
       match (acc, pair) with
       | ((code, bound, loads), (i, Sexp.list [Sexp.sym "pany"])) => (code, bound, loads)
@@ -278,7 +303,7 @@ def pattern (ctx : FnCtx) (v : Int) (env : List Int) (pat : Sexp) : {Throw Text}
         let f := fresh ctx
         let _ := Wasm.setType ctx.cScope f (Wasm.fieldType ctx.cScope t tag i (Wasm.typeOfLocal ctx.cScope v))
         match pattern ctx f bound sub with
-        | (subCode, bound2, subLoads) => (code ++ "V " ++ local f ++ " = ((V *)" ++ local v ++ ")[" ++ Int.toText (i + 1) ++ "]; " ++ subCode, bound2, loads ++ ((f, v, i) :: subLoads))) (tagTest, env, []) (List.mapIndexed (fun i x => (i, x)) subs)
+        | (subCode, bound2, subLoads) => (code ++ "V " ++ local f ++ " = UNBOX(" ++ local v ++ ")[" ++ Int.toText (i + 1) ++ "]; " ++ subCode, bound2, loads ++ ((f, v, i) :: subLoads))) (tagTest, env, []) (List.mapIndexed (fun i x => (i, x)) subs)
   | other => throw ("the pattern " ++ Sexp.print other ++ " is outside the C subset")
 
 /-- The field count of a pattern that takes apart a heap block, or 0. -/
@@ -337,7 +362,7 @@ def form (ctx : FnCtx) (env : List Int) (tail : Bool) (owned : List Int) (token 
   match e with
   | Sexp.list [Sexp.sym "int", Sexp.int n] => ret (lit n)
   | Sexp.list [Sexp.sym "con", Sexp.str "#Bool", Sexp.int tag, Sexp.int 0] => ret ("(V)" ++ Int.toText tag)
-  | Sexp.list [Sexp.sym "con", Sexp.str _, Sexp.int tag, Sexp.int 0] => ret ("(V)&deus_nullary[" ++ Int.toText tag ++ "]")
+  | Sexp.list [Sexp.sym "con", Sexp.str _, Sexp.int tag, Sexp.int 0] => ret ("STATIC(&deus_nullary[" ++ Int.toText tag ++ "])")
   | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "con", Sexp.str t, Sexp.int tag, Sexp.int n] :: xs) =>
     if n != List.length xs || t == "#Bool" then throw ("partial application of a constructor of " ++ t ++ " is outside the C subset")
     else
@@ -351,7 +376,7 @@ def form (ctx : FnCtx) (env : List Int) (tail : Bool) (owned : List Int) (token 
           | some tok => if mine then tokenName tok else "0"
           | none => "0"
         let stores := List.mapIndexed (fun i v => local p ++ "[" ++ Int.toText (i + 1) ++ "] = " ++ v ++ "; ") values
-        ret ("({ " ++ decls ++ "V *" ++ local p ++ " = deus_con(" ++ memory ++ ", " ++ Int.toText n ++ "); " ++ local p ++ "[0] = " ++ Int.toText tag ++ "; " ++ Text.concat stores ++ "(V)" ++ local p ++ "; })")
+        ret ("({ " ++ decls ++ "V *" ++ local p ++ " = deus_con(" ++ memory ++ ", " ++ Int.toText n ++ "); " ++ local p ++ "[0] = " ++ Int.toText tag ++ "; " ++ Text.concat stores ++ "BOX(" ++ local p ++ "); })")
   | Sexp.list (Sexp.sym "match" :: scrutinee :: cases) => matchForm ctx env tail owned token scrutinee cases
   | Sexp.list [Sexp.sym "var", Sexp.int i] =>
     match List.get? env i with
@@ -435,16 +460,16 @@ def primitive (ctx : FnCtx) (env : List Int) (owned : List Int) (token : Option 
     let release := match List.head? vs with
       | some c => if isBorrowed then "" else "deus_drop(" ++ c ++ "); "
       | none => ""
-    let unit := "(V)&deus_nullary[0]"
+    let unit := "STATIC(&deus_nullary[0])"
     let block := fun (code : Text) => "({ " ++ decls ++ code ++ "; })"
     match (p, vs, xs) with
     | ("Array.make", [n, x], _) => block ("deus_array(" ++ n ++ ", " ++ x ++ ")")
-    | ("Array.length", [a], _) => block ("V r = ((V *)" ++ a ++ ")[0]; " ++ release ++ "r")
+    | ("Array.length", [a], _) => block ("V r = UNBOX(" ++ a ++ ")[0]; " ++ release ++ "r")
     | ("Array.get", [a, i], _) => block ("V r = " ++ share ++ "(*AT(" ++ a ++ ", " ++ i ++ ")); " ++ release ++ "r")
     | ("Array.set", [a, i, x], _) => block ("V *s = AT(" ++ a ++ ", " ++ i ++ "); V old = *s; *s = " ++ x ++ "; " ++ dropOld ++ release ++ unit)
-    | ("Ref.new", [x], _) => block ("V *r = deus_block(K_REF, 1); r[0] = " ++ x ++ "; (V)r")
-    | ("Ref.get", [r], _) => block ("V v = " ++ share ++ "(((V *)" ++ r ++ ")[0]); " ++ release ++ "v")
-    | ("Ref.set", [r, x], _) => block ("V old = ((V *)" ++ r ++ ")[0]; ((V *)" ++ r ++ ")[0] = " ++ x ++ "; " ++ dropOld ++ release ++ unit)
+    | ("Ref.new", [x], _) => block ("V *r = deus_block(K_REF, 1); r[0] = " ++ x ++ "; BOX(r)")
+    | ("Ref.get", [r], _) => block ("V v = " ++ share ++ "(UNBOX(" ++ r ++ ")[0]); " ++ release ++ "v")
+    | ("Ref.set", [r, x], _) => block ("V old = UNBOX(" ++ r ++ ")[0]; UNBOX(" ++ r ++ ")[0] = " ++ x ++ "; " ++ dropOld ++ release ++ unit)
     | (_, [ca, cb], [a, b]) =>
       if Wasm.isComparison p && not (Wasm.isScalar (Wasm.typeOf ctx.cScope env a) || Wasm.isScalar (Wasm.typeOf ctx.cScope env b)) then
         throw (p ++ " on values that are not known to be Int or Bool is outside the C subset, since it would compare addresses: " ++ Text.take 120 (Sexp.print e))
@@ -509,14 +534,14 @@ def matchForm (ctx : FnCtx) (env : List Int) (tail : Bool) (owned : List Int) (t
             let dropUnused := Text.concat (List.map (fun i =>
               match directAt i with
               | some (l, _, _) => if isIn usedInBody l then "" else dropLocal ctx l
-              | none => "deus_drop(((V *)" ++ local v ++ ")[" ++ Int.toText (i + 1) ++ "]); ") (List.range 0 n))
+              | none => "deus_drop(UNBOX(" ++ local v ++ ")[" ++ Int.toText (i + 1) ++ "]); ") (List.range 0 n))
             match token with
             | none =>
               if wants n body then
                 let t := Token.mk (fresh ctx) n
-                ("V *" ++ tokenName t ++ "; if (UNIQUE(" ++ local v ++ ")) { " ++ keepNested ++ dropUnused ++ tokenName t ++ " = (V *)" ++ local v ++ "; } else { " ++ shareFields ++ "HDR(" ++ local v ++ ") -= 256; " ++ tokenName t ++ " = 0; } ", some t)
-              else ("if (UNIQUE(" ++ local v ++ ")) { " ++ keepNested ++ dropUnused ++ "deus_release((V *)" ++ local v ++ "); } else { " ++ shareFields ++ "HDR(" ++ local v ++ ") -= 256; } ", none)
-            | some _ => ("if (UNIQUE(" ++ local v ++ ")) { " ++ keepNested ++ dropUnused ++ "deus_release((V *)" ++ local v ++ "); } else { " ++ shareFields ++ "HDR(" ++ local v ++ ") -= 256; } ", token)
+                ("V *" ++ tokenName t ++ "; if (UNIQUE(" ++ local v ++ ")) { " ++ keepNested ++ dropUnused ++ tokenName t ++ " = UNBOX(" ++ local v ++ "); } else { " ++ shareFields ++ "HDR(" ++ local v ++ ") -= 256; " ++ tokenName t ++ " = 0; } ", some t)
+              else ("if (UNIQUE(" ++ local v ++ ")) { " ++ keepNested ++ dropUnused ++ "deus_release(UNBOX(" ++ local v ++ ")); } else { " ++ shareFields ++ "HDR(" ++ local v ++ ") -= 256; } ", none)
+            | some _ => ("if (UNIQUE(" ++ local v ++ ")) { " ++ keepNested ++ dropUnused ++ "deus_release(UNBOX(" ++ local v ++ ")); } else { " ++ shareFields ++ "HDR(" ++ local v ++ ") -= 256; } ", token)
           else (shareFields ++ (if vUsed || not vOwned then "" else dropLocal ctx v), token)
         match ownership with
         | (rc, caseToken) =>
@@ -542,9 +567,11 @@ def unit (fns : List Wasm.Fn) (datatypes : List (Text, Sexp)) (export : Text) : 
     "/* #" ++ Text.take 10 f.fnHash ++ " */\nstatic V " ++ fnName i ++ params f.fnArity ++ " {\ntop:;\n  " ++ expr ctx env true (List.filter (fun k => not (borrowsAt (borrowsOf ctx i) k)) (List.range 0 f.fnArity)) none f.fnBody ++ "\n}") fns
   let arity := Option.getOr (Option.map (fun f => f.fnArity) (List.head? fns)) 0
   let inputs := List.range 0 arity
-  let entry := "int32_t " ++ export ++ args (List.map (fun i => "int32_t a" ++ Int.toText i) inputs) ++ " { if (!deus_base) deus_init(); return (int32_t)f0" ++ args (List.map (fun i => "(V)a" ++ Int.toText i) inputs) ++ "; }"
+  let entry := "EXPORT(\"" ++ export ++ "\") int32_t " ++ export ++ args (List.map (fun i => "int32_t a" ++ Int.toText i) inputs) ++ " { if (!deus_base) deus_init(); return (int32_t)f0" ++ args (List.map (fun i => "(V)a" ++ Int.toText i) inputs) ++ "; }"
   let main := Text.join "\n" [
-    "#ifdef DEUS_MAIN",
+    "#ifdef __wasm__",
+    "EXPORT(\"deus_live\") int32_t deus_live_words(void) { return (int32_t)deus_live; }",
+    "#elif defined(DEUS_MAIN)",
     "#include <stdio.h>",
     "int main(int argc, char **argv) {",
     "  if (argc != " ++ Int.toText (arity + 1) ++ ") { fprintf(stderr, \"usage: %s" ++ Text.concat (List.map (fun _ => " <int>") inputs) ++ "\\n\", argv[0]); return 2; }",
