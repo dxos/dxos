@@ -1,17 +1,90 @@
 # History of main
 
+- `9d9673a128` merge: the explorer's graph view (D99) (by claude)
+- `219688316c` history: import 448 changes
+- `dcd5501500` task: import from tasks.sexp
+- `e95740510c` add code specs
 - `2efffdfa02` close 55a3e9d5 by #3899aa8081 (by claude)
 - `3899aa8081` the explorer's graph view; users exclude the definition itself (D96) (by claude)
 - `bd968a8e7b` task: open 55a3e9d5 Explorer graph view: open definitions as code cards in a force-directed graph, beside the list (by claude)
 - `68fd7c720d` history: import 408 changes
 - `817e132bb0` task: import from tasks.sexp
 - `09cc7dae97` add code specs
+- `211fc54767` C back end: a local passed as an argument moves there when later arguments only read it (D98) (by claude)
+- `5abc62eac7` history: import 438 changes
+- `5460cc4043` task: import from tasks.sexp
+- `dd19da2a63` add code specs
+- `c53158568a` Merge #13952's branch (pure Array, D96) into the JS target, renumbered D97 (by claude)
+- `65aa9a06c5` history: import 434 changes
+- `fc3475b4c1` task: import from tasks.sexp
+- `3f2af1b29d` add code specs
+- `efb62b2ac7` Merge #13952's branch (explorer spec backfill) into the JS target (by claude)
+- `31a71813bc` history: import 410 changes
+- `3487bc898b` history: import 442 changes
+- `797c4cd451` task: import from tasks.sexp
+- `cedb78ea51` add code specs
+- `280dd114dc` Merge #13952's branch into the JS target (D96) (by claude)
+- `c8547225d9` history: import 426 changes
+- `bdfda4a33d` task: import from tasks.sexp
+- `dd81587487` add code specs
+- `489553f1e8` delete JsGen.Spec.Shape.circle JsGen.Spec.Shape.rect
+- `0c44e5f6ba` delete JsGen.Spec.Shape JsGen.Spec.area
+- `0f628d8efe` JsGen.Spec: names that do not clash with the tour (by claude)
+- `a76744d439` task: set c06f5905 state (by claude)
+- `91e117df73` task: set 78c17e2d state (by claude)
+- `1593c56b87` close 86ef7d80 by #a3b91d88c1 (by claude)
+- `a3b91d88c1` JS back end: deus build --js, direct style, source-mapped, spec-first in JS.mdl (D94) (by claude)
+- `d899edd608` task: set 5d6c67b4 priority labels (by claude)
+- `cc9f3cc6b1` task: open 5d6c67b4 Composer assistant skills for writing DEUS and using the codebase
+- `16dd2a7243` task: set 771e6f9e state (by claude)
+- `8d0b1cf442` task: set 771e6f9e details (by claude)
+- `2372949034` task: set 771e6f9e priority labels (by claude)
+- `1bb9f66932` task: open 771e6f9e Composer plugin in DEUS: a mini codebase explorer with ECHO access, loaded by URL
+- `abb86679f0` task: set 1854b55d details (by claude)
+- `b79db127bf` task: set 1854b55d priority labels (by claude)
+- `f10a720bbc` task: open 1854b55d Type checker hangs on a type error in a large recursive group or a closed-row callback instead of reporting it
+- `7f4e2ad7d6` task: set 508d9443 details (by claude)
+- `ce83aa6993` task: set 508d9443 priority labels (by claude)
+- `882f13afdd` task: open 508d9443 JS back end refuses multi-shot handlers by name: a test for the refusal
+- `92835e5e18` task: set c06f5905 details (by claude)
+- `555e0b0b80` task: set c06f5905 priority labels (by claude)
+- `2952318075` task: open c06f5905 React bindings: hooks as an ability, a todo app in DEUS (D94)
+- `e710870ece` task: set 78c17e2d details (by claude)
+- `26c4a3df9d` task: set 78c17e2d priority labels (by claude)
+- `3d882093bf` task: open 78c17e2d JS interop: Js.import bindings with codecs from the signature (D94)
+- `9440cb0c70` task: set 86ef7d80 details (by claude)
+- `01bdc803df` task: set 86ef7d80 priority labels (by claude)
+- `6c41a3a2d6` task: open 86ef7d80 JS back end: deus build --js, direct style, source maps (D94)
+- `ccf54ad86f` history: import 353 changes
+- `f13276e40e` task: import from tasks.sexp
+- `32032ea1fa` task: open 2a2b87a2 Specs in the codebase: the Codebase, Compile, Explorer and Export specs fail 'deus mdl' from the codebase export (32 of 76 blocks pass) because their test helpers (Codebase.Spec.inStore, Compile.Spec.prelude, Export.Spec.deus) are not in it; Array.Spec and Checking.Spec pass (by claude)
+- `4840de1a1a` the explorer's writing and console in its checked spec (from #13952's branch) (by claude)
+- `916dd946a8` history: import 408 changes
+- `b85fb6bdf9` task: import from /tmp/claude-0/-home-user-dxos/7218d591-3085-5d07-8746-c4ab5dbc3b34/scratchpad/theirs/codebase/tasks.sexp
+- `724f14b2e7` history: import 382 changes
+- `2d3f491949` task: import from tasks.sexp
+- `ac74022d77` add code specs
 - `d90027cba3` close c50cd76e by #9cee717581 (by claude)
 - `9cee717581` the explorer's writing and console in its checked spec (EXPLORER.mdl R-8 to R-12, L-3, L-4) (by claude)
 - `e01abbcbd9` task: open c50cd76e Backfill the explorer's writing and console into EXPLORER.mdl (APIs, requirements, laws) (by claude)
 - `99b512f359` history: import 359 changes
 - `7b6f241c41` task: import from tasks.sexp
 - `b878c25ce1` add code specs
+- `66bce7945c` task: open 7ef8bf45 Tested theorems: 'by test' evaluates the conclusion even when a hypothesis is false, because implies is strict; skip (and count) cases whose hypotheses fail, so 'by test' works on bounded statements like the Array laws (D96) (by claude)
+- `99e026a5cf` task: set a1b73fb8 title (by claude)
+- `afaebd5eba` delete Sorting.benchPersistent Sorting.copyGo Sorting.lomutoV Sorting.persistentKeepsOld Sorting.persistentSort Sorting.persistentSorts Sorting.quickV Sorting.toListV Sorting.vget Sorting.vlength Sorting.vset Sorting.vswap Sorting.Node.current Sorting.Node.diff Sorting.Node
+- `a1a75cd968` Pure Array (D96): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `96333fa979` Pure Array (D96): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `758744e3a8` Pure Array (D96): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `616fe2a423` Pure Array (D96): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `ab1c356e8d` Pure Array (D96): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `99ac1e29bb` Pure Array (D96): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `a2774f99ed` Pure Array (D96): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `0e439a4fad` Pure Array (D96): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `4916079850` close 95ca184f by #034fda7dc8 (by claude)
+- `034fda7dc8` history: import 367 changes (by claude)
+- `ab089e6fd9` task: import from tasks.sexp
+- `4589165e18` add code specs
 - `4fa0ad8131` export: merge 35 changes from codebase
 - `e8b6a8fb9d` export: merge tasks from codebase
 - `2c40570335` update docs/spec/CHECKING.mdl (by claude)

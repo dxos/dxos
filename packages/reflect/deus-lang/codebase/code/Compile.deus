@@ -655,7 +655,7 @@ def Compile.typecheck (objectOf : Text -> {Throw Text | r} Option Sexp) (metaOf 
             checkAgainst u env core declared [] (freshRow u)
             checkRigid u sigVars sigRows
         | Option.none =>
-            Types.unify u t (infer u env core [] (freshRow u))
+            Types.unify u t (Types.infer u env core [] (freshRow u))
             if p.wrap == "test" then Types.unify u t Types.bool else ()) (fun e => if warnOnly then Ref.set warnings ((p.name ++ ": " ++ e) :: Ref.get warnings) else Throw.throw (p.name ++ ": " ++ e)))
     forEach members (fun p =>
       let key := "@" ++ p.name

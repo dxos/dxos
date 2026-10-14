@@ -111,7 +111,7 @@ same file in name order, so the file carries the alphabetically last of them in 
 In `deps` and `users`, `name` is the hash's name in the namespace, or `#` and its first 10 characters when
 it has none. The two agree: `B` is among `A`'s `users` exactly when `A` is among `B`'s `deps`, so the graph
 view draws an edge from either page ([EXPLORER.mdl](./EXPLORER.mdl) R-13). A recursive definition refers to
-itself, but is not its own user (D96).
+itself, but is not its own user (D99).
 
 `html` uses `<span class=K>` around each run of kind `K`: `kw` (keyword), `ty` (a capitalized name), `str`
 (a string literal) and `cm` (a comment). Plain text is unwrapped. `&`, `<` and `>` are escaped; `"` is not, since it is safe in text and the app inserts the HTML as content. A name
@@ -312,7 +312,7 @@ published with a console keeps it: `deus push` regenerates it when the remote's 
 
 ## Graph view
 
-The open cards can be shown as a list (the default) or as a graph ([D96](../DECISIONS.md)): the top bar's
+The open cards can be shown as a list (the default) or as a graph ([D99](../DECISIONS.md)): the top bar's
 List / Graph switch, or `v`, toggles them, and the URL keeps `v:graph`. The graph is drawn from the same
 `def/<page>.json` files; it needs no file of its own.
 

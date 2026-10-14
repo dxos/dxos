@@ -6,28 +6,21 @@ inductive Sorting.Heap where
   | leaf
   | node (rank : Int) (x : Int) (l : Heap) (r : Heap)
 
---
--- 6. The in-place quicksort again, through a pure interface: a persistent array.
---
-/-- A version of a persistent array (Baker's trick). The newest version owns the mutable `Array`;
-  each older version records the one write that separates it from a newer version. Code that
-  threads versions linearly pays O(1) per `get` and `set`; reading an old version walks its
-  diffs, and writing one copies. Callers see values that never change, so the type stays pure
-  and a resumed continuation sees its own version. -/
-inductive Sorting.Node where
-  | current (data : Array Int)
-  | diff (i : Int) (x : Int) (newer : Ref Node)
-
 test Sorting.agreeOnRandom :=
   let xs := random 500 7
   let expected := sort xs
   mergeSort xs == expected && quickSort xs == expected && heapSort xs == expected && arraySort xs == expected
 
-/-- The same algorithm, but the caller sees a pure function of lists. -/
+/-- An old version stays as it was, however the new ones are used. -/
+test Sorting.arrayKeepsOld :=
+  let a := Sorting.fromList [3, 1, 2]
+  let b := swap a 0 1
+  let c := Array.set b 2 9
+  Sorting.toList a == [3, 1, 2] && Sorting.toList b == [1, 3, 2] && Sorting.toList c == [1, 3, 9] && Sorting.toList (Array.set a 0 7) == [7, 1, 2]
+
 def Sorting.arraySort (xs : List Int) : List Int :=
   let a := Sorting.fromList xs
-  quickArray a 0 (Array.length a)
-  Sorting.toList a
+  Sorting.toList (quickArray a 0 (Array.length a))
 
 test Sorting.arraySorts := arraySort Sorting.sample == sort Sorting.sample
 
@@ -49,8 +42,6 @@ def Sorting.benchMap (n : Int) (seed : Int) : Int := Sorting.check (mapSort (ran
 
 def Sorting.benchMerge (n : Int) (seed : Int) : Int := Sorting.check (mergeSort (random n seed))
 
-def Sorting.benchPersistent (n : Int) (seed : Int) : Int := Sorting.check (persistentSort (random n seed))
-
 def Sorting.benchPrelude (n : Int) (seed : Int) : Int := Sorting.check (sort (random n seed))
 
 def Sorting.benchQuick (n : Int) (seed : Int) : Int := Sorting.check (quickSort (random n seed))
@@ -68,10 +59,6 @@ def Sorting.checkGo (prev : Int) (n : Int) (xs : List Int) : Int :=
   | [] => n
   | x :: rest => if x < prev then -1 else Sorting.checkGo x (n + 1) rest
 
-def Sorting.copyGo (v : Ref Node) (out : Array Int) (i : Int) : Array Int := if i < 0 then out else
-  Array.set out i (vget v i)
-  Sorting.copyGo v out (i - 1)
-
 /-- Pops the maximum onto `acc` until the heap is empty, so `acc` ends ascending. -/
 def Sorting.drainGo (acc : List Int) (h : Heap) : List Int :=
   match h with
@@ -83,11 +70,9 @@ test Sorting.emptyAndOne := mergeSort [] == [] && quickSort [4] == [4] && heapSo
 def Sorting.fillGo (a : Array Int) (i : Int) (xs : List Int) : Array Int :=
   match xs with
   | [] => a
-  | x :: rest =>
-      Array.set a i x
-      Sorting.fillGo a (i + 1) rest
+  | x :: rest => Sorting.fillGo (Array.set a i x) (i + 1) rest
 
-def Sorting.fromList (xs : List Int) : Array Int := fillGo (Array.make (lengthGo 0 xs) 0) 0 xs
+def Sorting.fromList (xs : List Int) : Array Int := Sorting.fillGo (Array.make (lengthGo 0 xs) 0) 0 xs
 
 def Sorting.heapGo (h : Heap) (xs : List Int) : Heap :=
   match xs with
@@ -103,19 +88,13 @@ def Sorting.lengthGo (n : Int) (xs : List Int) : Int :=
   | [] => n
   | _ :: rest => Sorting.lengthGo (n + 1) rest
 
-/-- Lomuto partition of `[j, hi)` around `pivot`; returns where the pivot belongs. -/
-def Sorting.lomuto (a : Array Int) (pivot : Int) (i : Int) (j : Int) (hi : Int) : Int := if j >= hi then i else if Array.get a j < pivot then
-  swap a i j
-  Sorting.lomuto a pivot (i + 1) (j + 1) hi
-else Sorting.lomuto a pivot i (j + 1) hi
+/-- Lomuto partition of `[j, hi)` around `pivot`: the new array and where the pivot belongs. -/
+def Sorting.lomuto (a : Array Int) (pivot : Int) (i : Int) (j : Int) (hi : Int) : (Array Int, Int) := if j >= hi then (a, i) else if Array.get a j < pivot then Sorting.lomuto (swap a i j) pivot (i + 1) (j + 1) hi else Sorting.lomuto a pivot i (j + 1) hi
 
 def Sorting.lomutoM (m : MutMap Int Int) (pivot : Int) (i : Int) (j : Int) (hi : Int) : Int := if j >= hi then i else if Sorting.at m j < pivot then
   swapM m i j
   Sorting.lomutoM m pivot (i + 1) (j + 1) hi
 else Sorting.lomutoM m pivot i (j + 1) hi
-
-/-- Lomuto partition returning the new version and where the pivot belongs. -/
-def Sorting.lomutoV (v : Ref Node) (pivot : Int) (i : Int) (j : Int) (hi : Int) : (Ref Node, Int) := if j >= hi then (v, i) else if vget v j < pivot then Sorting.lomutoV (vswap v i j) pivot (i + 1) (j + 1) hi else Sorting.lomutoV v pivot i (j + 1) hi
 
 def Sorting.make (x : Int) (a : Heap) (b : Heap) : Heap := if rank a >= rank b then Heap.node (rank b + 1) x a b else Heap.node (rank a + 1) x b a
 
@@ -161,7 +140,7 @@ def Sorting.mergeSort (xs : List Int) : List Int := mergeAll (runsGo [] xs)
 test Sorting.mergeSorts := mergeSort Sorting.sample == sort Sorting.sample
 
 /-
-  Sorting with and without mutable memory: the case study behind D83
+  Sorting with and without mutable memory: the case study behind D83 and D96
   (docs/IMMUTABILITY.md).
 
   Every sort here is first-order and specialised to `Int`, so the same definitions run on the
@@ -175,7 +154,7 @@ test Sorting.mergeSorts := mergeSort Sorting.sample == sort Sorting.sample
 -- Input and checks.
 --
 /-- A linear congruential generator, so every back end sorts the same numbers. -/
-def Sorting.next (s : Int) : Int := and (s * 1103515245 + 12345) 2147483647
+def Sorting.next (s : Int) : Int := and (s * 1103515245 + 12345) 0x7FFFFFFF
 
 /-- One pass: merges neighbouring runs. -/
 def Sorting.pairsGo (acc : List (List Int)) (runs : List (List Int)) : List (List Int) :=
@@ -189,19 +168,6 @@ def Sorting.partitionGo (p : Int) (xs : List Int) (lo : List Int) (hi : List Int
   | [] => quickAcc lo (p :: quickAcc hi rest)
   | x :: t => if x < p then Sorting.partitionGo p t (x :: lo) hi rest else Sorting.partitionGo p t lo (x :: hi) rest
 
-test Sorting.persistentKeepsOld :=
-  let v0 := Ref.new (Node.current (Sorting.fromList [1, 2, 3]))
-  let v1 := vset v0 1 20
-  let v2 := vset v1 2 30
-  let v1b := vset v1 0 10
-  vget v0 1 == 2 && vget v1 1 == 20 && vget v1 2 == 3 && vget v2 2 == 30 && vget v1b 0 == 10 && vget v2 0 == 1
-
-def Sorting.persistentSort (xs : List Int) : List Int :=
-  let v := quickV (Ref.new (Node.current (Sorting.fromList xs))) 0 (lengthGo 0 xs)
-  toListV v (vlength v - 1) []
-
-test Sorting.persistentSorts := persistentSort Sorting.sample == sort Sorting.sample && persistentSort (random 500 3) == sort (random 500 3)
-
 --
 -- 2. Quicksort on immutable lists.
 --
@@ -211,13 +177,11 @@ def Sorting.quickAcc (xs : List Int) (rest : List Int) : List Int :=
   | [] => rest
   | p :: tl => partitionGo p tl [] [] rest
 
-/-- Sorts `[lo, hi)` in place, pivoting on the middle element. -/
-def Sorting.quickArray (a : Array Int) (lo : Int) (hi : Int) : Unit := if hi - lo <= 1 then () else
-  swap a (lo + (hi - lo) / 2) (hi - 1)
-  let p := lomuto a (Array.get a (hi - 1)) lo lo (hi - 1)
-  swap a p (hi - 1)
-  Sorting.quickArray a lo p
-  Sorting.quickArray a (p + 1) hi
+/-- `a` with `[lo, hi)` sorted, pivoting on the middle element. -/
+def Sorting.quickArray (a : Array Int) (lo : Int) (hi : Int) : Array Int := if hi - lo <= 1 then a else
+  let b := swap a (lo + (hi - lo) / 2) (hi - 1)
+  match lomuto b (Array.get b (hi - 1)) lo lo (hi - 1) with
+  | (c, p) => Sorting.quickArray (Sorting.quickArray (swap c p (hi - 1)) lo p) (p + 1) hi
 
 def Sorting.quickMap (m : MutMap Int Int) (lo : Int) (hi : Int) : Unit := if hi - lo <= 1 then () else
   swapM m (lo + (hi - lo) / 2) (hi - 1)
@@ -229,11 +193,6 @@ def Sorting.quickMap (m : MutMap Int Int) (lo : Int) (hi : Int) : Unit := if hi 
 def Sorting.quickSort (xs : List Int) : List Int := quickAcc xs []
 
 test Sorting.quickSorts := quickSort Sorting.sample == sort Sorting.sample
-
-def Sorting.quickV (v : Ref Node) (lo : Int) (hi : Int) : Ref Node := if hi - lo <= 1 then v else
-  let v1 := vswap v (lo + (hi - lo) / 2) (hi - 1)
-  match lomutoV v1 (vget v1 (hi - 1)) lo lo (hi - 1) with
-  | (v2, p) => Sorting.quickV (Sorting.quickV (vswap v2 p (hi - 1)) lo p) (p + 1) hi
 
 /-- `n` pseudo-random numbers in 0 .. 2^23. -/
 def Sorting.random (n : Int) (seed : Int) : List Int := randomGo [] n (Sorting.next seed)
@@ -264,12 +223,12 @@ def Sorting.runsGo (acc : List (List Int)) (xs : List Int) : List (List Int) :=
 def Sorting.sample : List Int := [5, 3, 9, 1, 5, 0, -2, 7, 3, 3]
 
 --
--- 4. In-place quicksort over a mutable `Array` (D83).
+-- 4. Quicksort over the immutable `Array` (D96), threading each new version: written purely, it
+--    runs in place because no old version is used again.
 --
-def Sorting.swap (a : Array Int) (i : Int) (j : Int) : Unit :=
-  let t := Array.get a i
-  Array.set a i (Array.get a j)
-  Array.set a j t
+def Sorting.swap (a : Array Int) (i : Int) (j : Int) : Array Int :=
+  let x := Array.get a i
+  Array.set (Array.set a i (Array.get a j)) j x
 
 def Sorting.swapM (m : MutMap Int Int) (i : Int) (j : Int) : Unit :=
   let t := Sorting.at m i
@@ -278,35 +237,5 @@ def Sorting.swapM (m : MutMap Int Int) (i : Int) (j : Int) : Unit :=
 
 def Sorting.toList (a : Array Int) : List Int := toListGo a (Array.length a - 1) []
 
+/-- The items of `a` from `i` down to 0, onto `acc`. -/
 def Sorting.toListGo (a : Array Int) (i : Int) (acc : List Int) : List Int := if i < 0 then acc else Sorting.toListGo a (i - 1) (Array.get a i :: acc)
-
-def Sorting.toListV (v : Ref Node) (i : Int) (acc : List Int) : List Int := if i < 0 then acc else Sorting.toListV v (i - 1) (vget v i :: acc)
-
-def Sorting.vget (v : Ref Node) (i : Int) : Int :=
-  match Ref.get v with
-  | Node.current data => Array.get data i
-  | Node.diff j x newer => if i == j then x else Sorting.vget newer i
-
-def Sorting.vlength (v : Ref Node) : Int :=
-  match Ref.get v with
-  | Node.current data => Array.length data
-  | Node.diff _ _ newer => Sorting.vlength newer
-
-/-- A new version with `x` at `i`; `v` stays readable as it was. -/
-def Sorting.vset (v : Ref Node) (i : Int) (x : Int) : Ref Node :=
-  match Ref.get v with
-  | Node.current data =>
-      let old := Array.get data i
-      Array.set data i x
-      let newer := Ref.new (Node.current data)
-      Ref.set v (Node.diff i old newer)
-      newer
-  | Node.diff _ _ _ =>
-      let n := vlength v
-      let data := copyGo v (Array.make n 0) (n - 1)
-      Array.set data i x
-      Ref.new (Node.current data)
-
-def Sorting.vswap (v : Ref Node) (i : Int) (j : Int) : Ref Node :=
-  let x := vget v i
-  vset (vset v i (vget v j)) j x
