@@ -5,7 +5,7 @@
 import React, { type PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
 
 import { type Obj } from '@dxos/echo';
-import { type RDF } from '@dxos/pipeline-rdf';
+import { RDF } from '@dxos/pipeline-rdf';
 import * as ForceGraph from '@dxos/plugin-explorer/ForceGraph';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import * as Card from '@dxos/react-ui/Card';
@@ -398,7 +398,13 @@ const AgentKnowledgePredicates = ({ predicates, trig }: AgentKnowledgePredicates
       items={raw && trig ? [] : predicates}
       getId={(predicate) => predicate.iri}
       getText={(predicate) =>
-        [predicate.label, predicate.curie, predicate.description, ...(predicate.synonyms ?? [])]
+        [
+          predicate.label,
+          RDF.Predicate.label(predicate.label),
+          predicate.curie,
+          predicate.description,
+          ...(predicate.synonyms ?? []),
+        ]
           .filter(Boolean)
           .join(' ')
       }
@@ -426,7 +432,7 @@ const PredicateCard = ({ predicate }: { predicate: AgentKnowledgePredicate }) =>
   return (
     <KnowledgeCard
       icon='ph--arrow-right--regular'
-      title={predicate.label}
+      title={RDF.Predicate.label(predicate.label)}
       testId='agent-knowledge-predicate'
       rows={[
         {
