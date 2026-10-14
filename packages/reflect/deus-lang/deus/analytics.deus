@@ -1,5 +1,5 @@
 /-
-  The analytics store (D96, task d70cd8c1): events about the codebase, kept beside it.
+  The analytics store (D101): events about the codebase, kept beside it.
 
   - An event type is a `structure` marked `@[event]`, so it lives in the codebase like any
     definition. Its fields are flat: `Int`, `Bool`, `Text` or `CodeRef`, a reference into the
@@ -14,7 +14,7 @@
   `events/pushed/…` the rows already pushed, one `(row id at by value…)` per line, so counts
   never need the remote.
 
-  A `CodeRef` holds one of three forms (D97): a name IRI `<project>/<name>` (follows the name),
+  A `CodeRef` holds one of three forms (D102): a name IRI `<project>/<name>` (follows the name),
   a pinned `<project>/<name>#<hash>` (fixed, and names the definition), or a bare `#<hash>`.
   Recorders write the pinned form; a builtin's fragment is its name (`…/Bool#Bool`).
 -/
@@ -74,10 +74,10 @@ structure TestRun @"urn:deus:event:TestRun" where
 /-- One CI check run on a commit of the pull request that carries the codebase. -/
 @[event]
 structure CiRun @"urn:deus:event:CiRun" where
-  check : Text
+  checkName : Text
   conclusion : Text
   passed : Bool
-  commit : Text
+  commitSha : Text
   pr : Int
   seconds : Int
   runUrl : Text
@@ -101,7 +101,7 @@ structure AgentWrote @"urn:deus:event:AgentWrote" where
 @[event]
 structure AgentStage @"urn:deus:event:AgentStage" where
   stage : Int
-  commit : Text
+  commitSha : Text
   seconds : Int
   summary : Text
 
@@ -380,8 +380,9 @@ def write (t : EventType) (rows : List Row) : List Int :=
     let footer := encode (Thrift.fields [(1, Thrift.i32 1), (2, Thrift.items 12 schema), (3, Thrift.i64 n),
       (4, Thrift.items 12 [Thrift.fields [(1, Thrift.items 12 (List.map (fun p => match p with
         | (_, meta, _) => meta) parts)), (2, Thrift.i64 total), (3, Thrift.i64 n)]]),
-      (5, Thrift.items 12 [kv "deus.event.type" t.typeName, kv "deus.event.hash" t.typeHash]),
-      (6, Thrift.bin (Text.utf8 "deus analytics (D96)"))])
+      (5, Thrift.items 12 [kv "deus.event.type" t.typeName, kv "deus.event.hash" t.typeHash,
+        kv "deus.event.columns" (Text.join "," (List.map (fun c => c.columnName ++ ":" ++ c.columnType) t.columns))]),
+      (6, Thrift.bin (Text.utf8 "deus analytics"))])
     magic ++ List.concatMap (fun p => match p with
       | (bytes, _, _) => bytes) parts ++ footer ++ le32 (List.length footer) ++ magic
 
@@ -422,9 +423,19 @@ def read (file : List Int) : (List Column, List Row) :=
   | (meta, _) =>
     let n := asInt (field meta 3)
     let elements := List.drop 1 (asList (field meta 2))
-    let columns := List.map (fun e => Column.mk (match field e 4 with
-      | some (Thrift.bin b) => fromUtf8 b
-      | _ => "") (columnTypeOf e)) elements
+    -- Parquet has no type for a reference, so the event's own column types travel in the metadata.
+    let declared := List.filterMap (fun kv => match (field kv 1, field kv 2) with
+      | (some (Thrift.bin key), some (Thrift.bin value)) => if fromUtf8 key == "deus.event.columns" then some (fromUtf8 value) else none
+      | _ => none) (asList (field meta 5))
+    let declaredType := fun (name : Text) => List.find (fun pair => fst pair == name) (List.filterMap (fun item =>
+      match Text.split item ":" with
+      | [n, kind] => some (n, kind)
+      | _ => none) (Text.split (Option.getOr (List.head? declared) "") ","))
+    let columns := List.map (fun e =>
+      let name := match field e 4 with
+        | some (Thrift.bin b) => fromUtf8 b
+        | _ => ""
+      Column.mk name (Option.getOr (Option.map snd (declaredType name)) (columnTypeOf e))) elements
     let chunks := match asList (field meta 4) with
       | group :: _ => asList (field group 1)
       | [] => []
@@ -493,7 +504,7 @@ def find (dir : Text) (ns : Map Text Entry) (name : Text) : {IO, Throw Text} Eve
     | more => throw ("ambiguous event type " ++ name ++ ": " ++ Text.join ", " (List.map (fun t => t.typeName) more))
 
 --
--- References (D97).
+-- References (D102).
 --
 
 /-- The name IRI of a definition: `<project>/<name>`, or the bare name in a codebase without a project. -/
@@ -509,11 +520,14 @@ def parts (ref : Text) : (Text, Text) :=
   let mark := lastHash (Text.length ref - 1)
   if mark < 0 then (ref, "") else (Text.take mark ref, Text.drop (mark + 1) ref)
 
-/-- The hash a reference pins: the fragment, with `#` again for a builtin; `""` for a name IRI. -/
+/-- Whether a fragment is a hash or a hash prefix: lowercase hex digits; a builtin's name is not. -/
+def isHex (t : Text) : Bool := not (Text.isEmpty t) && List.all (fun c => (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f')) (Text.utf8 t)
+
+/-- The hash (or hash prefix) a reference pins: the fragment, with `#` again for a builtin; `""` for a name IRI. -/
 def hashOf (ref : Text) : Text :=
   match parts ref with
   | (_, "") => ""
-  | (_, fragment) => if Columnar.isHash fragment then fragment else "#" ++ fragment
+  | (_, fragment) => if isHex fragment then fragment else "#" ++ fragment
 
 /-- The dotted name a name IRI or pinned reference carries, given the project IRI. -/
 def nameOf (project : Text) (ref : Text) : Text :=
@@ -708,7 +722,7 @@ def definitionJson (index : Map Text (List Text)) (h : Text) (tallies : List (Te
     ("count", Json.num (List.sum (List.map tallyCount tallies))), ("events", Json.arr (List.map tallyJson tallies))]
 
 /--
-  The explorer's `events.json` (D96): every event type with its columns, counts and latest rows
+  The explorer's `events.json` (D101): every event type with its columns, counts and latest rows
   (at most `limit`), and the counts per definition hash.
 -/
 def siteJson (dir : Text) (project : Text) (ns : Map Text Entry) (limit : Int) : {IO, Throw Text} Json :=
@@ -807,7 +821,7 @@ def backfillTimeline (dir : Text) (t : EventType) (path : Text) : {IO, Throw Tex
   List.forEach stages (fun s =>
     match s with
     | (n, commit, secs, summary) =>
-      record dir t "unknown" [("stage", Cell.int n), ("commit", Cell.text commit), ("seconds", Cell.int secs), ("summary", Cell.text summary)]
+      record dir t "unknown" [("stage", Cell.int n), ("commitSha", Cell.text commit), ("seconds", Cell.int secs), ("summary", Cell.text summary)]
       ())
   List.length stages
 
@@ -924,7 +938,7 @@ def command (args : Args) : {IO, Throw Text} Unit :=
     let site := if Cli.flag args "json" then siteJson dir project ns limit else Json.null
     Cli.output args (fun _ => site)
       (fun _ =>
-        let byHash := Map.toList (byDefinition dir project ns ts)
+        let byHash := List.sortBy (fun a b => List.sum (List.map tallyCount (snd b)) - List.sum (List.map tallyCount (snd a))) (Map.toList (byDefinition dir project ns ts))
         let index := Codebase.nameIndex ns
         Text.join "\n" (List.map typeLine (counts dir ts) ++ ["", Int.toText (List.length byHash) ++ " definitions have events"] ++
           List.map (fun pair => "  " ++ Option.getOr (Map.lookup (fst pair) index) ("#" ++ Text.take 10 (fst pair)) ++ "  " ++ Int.toText (List.sum (List.map tallyCount (snd pair)))) (List.take limit byHash)))

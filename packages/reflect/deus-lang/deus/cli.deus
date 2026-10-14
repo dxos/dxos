@@ -113,13 +113,30 @@ def output (args : Args) (json : Unit -> Json) (text : Unit -> Text) : {IO} Unit
 def entryJson (name : Text) (e : Entry) : Json :=
   Json.obj [("name", Json.str name), ("kind", Json.str (Entry.kind e)), ("hash", Json.str (Entry.hash e))]
 
-/-- Resolves a name (or `#hashprefix`) in a namespace to its full name and entry. -/
+/--
+  Resolves a reference in a namespace to its full name and entry (D102): a name, a `#hashprefix`,
+  a name IRI `<project>/<name>`, or a pinned `<project>/<name>#<hash>`. A prefix that matches
+  more than one hash is an error; a pinned hash whose name moved resolves to another name of it.
+-/
 def lookupName (ns : Map Text Entry) (name : Text) : {Throw Text} (Text, Entry) :=
   if Text.startsWith "#" name then
     let prefix := Text.drop 1 name
     match List.filter (fun pair => Text.startsWith prefix (Entry.hash (snd pair))) (Map.toList ns) with
     | [] => throw ("no definition with hash " ++ name)
-    | pair :: _ => pair
+    | pair :: rest =>
+      match List.filter (fun other => Entry.hash (snd other) != Entry.hash (snd pair)) rest with
+      | [] => pair
+      | others => throw ("ambiguous hash " ++ name ++ ": " ++ Text.join ", " (List.map (fun p => fst p ++ " " ++ short (Entry.hash (snd p))) (List.take 5 (pair :: others))))
+  else if Text.contains "://" name then
+    match Analytics.parts name with
+    | (iri, fragment) =>
+      let bare := List.foldl (fun acc piece => piece) "" (Text.split iri "/")
+      if not (Analytics.isHex fragment) then lookupName ns bare
+      else
+        let h := Analytics.hashOf name
+        match Map.lookup bare ns with
+        | some e => if Entry.hash e == h then (bare, e) else lookupName ns ("#" ++ fragment)
+        | none => lookupName ns ("#" ++ fragment)
   else
     match Map.lookup name ns with
     | some e => (name, e)
@@ -1495,7 +1512,7 @@ def usage : Text :=
     "  layers                               objects per layer (code, tests, proofs, history, results, …)",
     "  migrate                              rewrite history with namespace-tree snapshots",
     "",
-    "analytics (events about the codebase, in @[event] structures; push-only, D96)",
+    "analytics (events about the codebase, in @[event] structures; push-only, D101)",
     "  event types                          event types with their columns and counts",
     "  event record <Type> field=value…     record an event (a ref field takes a name, an IRI or #hash)",
     "  event import <file>                  record (event \"Type\" (field value)…) forms",
