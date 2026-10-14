@@ -4,21 +4,15 @@
 
 import React, { Children, type PropsWithChildren, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
-import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Layout from '@dxos/react-ui/Layout';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import * as Util from '@dxos/react-ui/Util';
+import * as ScrollArea from '../../next/components/ScrollArea/ScrollArea.tsx';
+import { composable } from '../../util/slots.ts';
+import { usePx } from '../../util/usePx.ts';
+import { Grid, type GridLength } from '../Grid/Grid.tsx';
 
 // A horizontal run of columns sized to the space it has: as many as fit at their minimum width, each an exact share of
 // the width, so the visible columns always fill it; past that the run scrolls a column at a time.
 
-//
-// Root
-//
-
-const ROOT_NAME = 'Columns.Root';
-
-type RootProps = PropsWithChildren<{
+export type ColumnsProps = PropsWithChildren<{
   /** The narrowest a column may be, in rem; the count is however many fit at this width. */
   minColumnWidth?: number;
   /** The most columns shown at once, however wide the space. */
@@ -30,17 +24,17 @@ type RootProps = PropsWithChildren<{
 }>;
 
 /** How many columns of at least `minPx` (with `gapPx` between) fit in `widthPx`, and how wide each is then. */
-const fit = (widthPx: number, minPx: number, gapPx: number, maxColumns?: number) => {
+export const fitColumns = (widthPx: number, minPx: number, gapPx: number, maxColumns?: number) => {
   const fits = Math.max(1, Math.floor((widthPx + gapPx) / (minPx + gapPx)));
   const count = maxColumns === undefined ? fits : Math.max(1, Math.min(fits, maxColumns));
   return { count, width: (widthPx - (count - 1) * gapPx) / count };
 };
 
 // Composable, so a host's `Panel.Body asChild` makes the scroll frame its growing row.
-const Root = Util.composable<HTMLDivElement, RootProps>(
+export const Columns = composable<HTMLDivElement, ColumnsProps>(
   ({ minColumnWidth = 24, maxColumns, gap = 0, follow = true, children, ...props }, forwardedRef) => {
-    const minPx = Hooks.usePx(minColumnWidth);
-    const gapPx = Hooks.usePx(gap);
+    const minPx = usePx(minColumnWidth);
+    const gapPx = usePx(gap);
     const viewportRef = useRef<HTMLDivElement>(null);
     const [widthPx, setWidthPx] = useState(0);
     const columns = Children.toArray(children).length;
@@ -64,12 +58,12 @@ const Root = Util.composable<HTMLDivElement, RootProps>(
       }
     }, [follow, columns]);
 
-    const { width } = fit(widthPx, minPx, gapPx, maxColumns);
-    const track: Layout.GridLength = widthPx > 0 ? `${width}px` : `${minColumnWidth}rem`;
+    const { width } = fitColumns(widthPx, minPx, gapPx, maxColumns);
+    const track: GridLength = widthPx > 0 ? `${width}px` : `${minColumnWidth}rem`;
     return (
       <ScrollArea.Root {...props} orientation='horizontal' snap autoHide={false} ref={forwardedRef}>
         <ScrollArea.Viewport ref={viewportRef}>
-          <Layout.Grid
+          <Grid
             cols={Children.map(children, () => track) ?? []}
             rows={['fill']}
             style={{ columnGap: gapPx }}
@@ -77,23 +71,11 @@ const Root = Util.composable<HTMLDivElement, RootProps>(
             classNames='h-full [&>*]:snap-start'
           >
             {children}
-          </Layout.Grid>
+          </Grid>
         </ScrollArea.Viewport>
       </ScrollArea.Root>
     );
   },
 );
 
-Root.displayName = ROOT_NAME;
-
-//
-// Columns
-//
-
-export const Columns = {
-  Root,
-};
-
-export { fit as fitColumns };
-
-export type { RootProps as ColumnsRootProps };
+Columns.displayName = 'Columns';

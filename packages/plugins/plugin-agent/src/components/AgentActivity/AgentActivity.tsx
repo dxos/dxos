@@ -4,12 +4,12 @@
 
 import React, { type MouseEvent, type PropsWithChildren, type ReactNode } from 'react';
 
-import { Section } from '@dxos/react-ui-components';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import * as Banner from '@dxos/react-ui/Banner';
 import * as Button from '@dxos/react-ui/Button';
+import * as Fieldset from '@dxos/react-ui/Fieldset';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
@@ -140,17 +140,17 @@ type AgentActivityListProps = PropsWithChildren<{
 
 /** A labelled list of rows; Channels, Skills and Conversations share it so their headings and rows align. */
 const AgentActivityList = ({ label, ids, empty, children }: AgentActivityListProps) => (
-  <Section.Root>
-    <Section.Label>{label}</Section.Label>
+  <Fieldset.Root>
+    <Fieldset.Legend>{label}</Fieldset.Legend>
     {ids.length === 0 ? (
-      <Section.Empty>{empty}</Section.Empty>
+      <Typography.Text tone='muted'>{empty}</Typography.Text>
     ) : (
       // Rows render their own text, so an option carries only the id Ark keys it by.
       <Listbox.Root items={ids.map((id) => ({ value: id, label: id }))}>
         <Listbox.Content>{children}</Listbox.Content>
       </Listbox.Root>
     )}
-  </Section.Root>
+  </Fieldset.Root>
 );
 
 AgentActivityList.displayName = 'AgentActivity.List';

@@ -10,9 +10,9 @@ import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { Columns, type ColumnsRootProps } from './Columns.tsx';
+import { Columns, type ColumnsProps } from './Columns.tsx';
 
-type StoryProps = Pick<ColumnsRootProps, 'minColumnWidth' | 'maxColumns' | 'gap'> & { initial: number };
+type StoryProps = Pick<ColumnsProps, 'minColumnWidth' | 'maxColumns' | 'gap'> & { initial: number };
 
 /** Columns fill the space in exact shares; adding one past what fits scrolls it into view. */
 const DefaultStory = ({ initial, ...props }: StoryProps) => {
@@ -26,7 +26,7 @@ const DefaultStory = ({ initial, ...props }: StoryProps) => {
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body asChild>
-        <Columns.Root {...props}>
+        <Columns {...props}>
           {Array.from({ length: count }, (_, index) => (
             <Panel.Root key={index} data-testid='column'>
               <Panel.Header>
@@ -36,14 +36,14 @@ const DefaultStory = ({ initial, ...props }: StoryProps) => {
               </Panel.Header>
             </Panel.Root>
           ))}
-        </Columns.Root>
+        </Columns>
       </Panel.Body>
     </Panel.Root>
   );
 };
 
 const meta = {
-  title: 'ui/react-ui-components/Columns',
+  title: 'ui/react-ui-core/layout/Columns',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
 } satisfies Meta<typeof DefaultStory>;

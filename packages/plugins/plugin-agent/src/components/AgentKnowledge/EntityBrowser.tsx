@@ -5,7 +5,6 @@
 import React, { type KeyboardEvent, forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useComposedRefs } from '@dxos/react-hooks';
-import { Columns } from '@dxos/react-ui-components';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import * as Field from '@dxos/react-ui/Field';
 import * as Focus from '@dxos/react-ui/Focus';
@@ -211,7 +210,7 @@ export const EntityBrowser = Util.composable<HTMLDivElement, EntityBrowserProps>
 
     return (
       // Columns sizes them to whole shares of the width and, like Finder, scrolls the one a choice opens into view.
-      <Columns.Root {...props} minColumnWidth={24} ref={forwardedRef}>
+      <Layout.Columns {...props} minColumnWidth={24} ref={forwardedRef}>
         {columns.map((stack, column) => (
           <EntityBrowserColumn
             ref={(element) => {
@@ -228,7 +227,7 @@ export const EntityBrowser = Util.composable<HTMLDivElement, EntityBrowserProps>
             onClose={column === 0 ? undefined : () => setPath((current) => current.slice(0, column - 1))}
           />
         ))}
-      </Columns.Root>
+      </Layout.Columns>
     );
   },
 );
