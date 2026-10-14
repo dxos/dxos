@@ -747,8 +747,16 @@ export class SpaceQuerySource implements QuerySource {
   ): SourceEntry<Obj.Unknown>[] {
     const type = declaredResultType(query, this._database.graph.registry);
     return entries.flatMap((entry) => {
-      const result = entry.result && peekDeclaredVersion(entry.result, type, () => this._invalidate());
-      return entry.result === undefined ? [entry] : Obj.isObject(result) ? [{ ...entry, result }] : [];
+      if (entry.result === undefined) {
+        return [entry];
+      }
+      // Undefined only while a version is being bound; a relation, or an object read as it is, comes back unchanged.
+      const result = peekDeclaredVersion(entry.result, type, () => this._invalidate());
+      return result === undefined
+        ? []
+        : Obj.isObject(result) && result !== entry.result
+          ? [{ ...entry, result }]
+          : [entry];
     });
   }
 
