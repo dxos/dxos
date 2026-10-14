@@ -866,7 +866,7 @@ def guardDefect (f : Unit -> {IO} a) : {IO} Result Text a :=
   What `MdlHost.describe` reports about a name: its kind, hash, displayed type, declaration as
   source, and for a test or a theorem its verdict (checked now unless a result is cached).
 -/
-def describeName (dir : Text) (ns : Map Text Entry) (name : Text) : {IO, Throw Text} List (Text, Text) :=
+def describeName (dir : Text) (ns : Map Text Entry) (printer : Printer) (name : Text) : {IO, Throw Text} List (Text, Text) :=
   match Map.lookup name ns with
   | none => throw (name ++ " is not in the codebase")
   | some e =>
@@ -883,7 +883,7 @@ def describeName (dir : Text) (ns : Map Text Entry) (name : Text) : {IO, Throw T
     -- Specs name things in full, so the statement prints every reference by its full name.
     let statement := match Codebase.readObject dir h with
       | some (Sexp.list (Sexp.sym "theorem" :: Sexp.list (Sexp.sym "binders" :: types) :: prop :: proof :: _)) =>
-        let base := Print.printer ns (List.map Sexp.asText (Codebase.metaList meta "locals"))
+        let base := Print.withLocals printer (List.map Sexp.asText (Codebase.metaList meta "locals"))
         let full := Printer.mk base.fullNames base.fullNames (Map.fromList (List.filterMap (fun pair =>
           match pair with
           | (n, Entry.type _ iri _) => some (iri, n)
@@ -894,10 +894,13 @@ def describeName (dir : Text) (ns : Map Text Entry) (name : Text) : {IO, Throw T
         [("statement", Text.trim (Text.drop (Text.length ("theorem " ++ name)) (if stop < 0 then decl else Text.take stop decl)))]
       | some (Sexp.list [Sexp.sym "term", core]) => if Resolve.isStub core then [("implemented", "false")] else []
       | _ => []
-    [("kind", Entry.kind e), ("hash", h), ("view", snd (viewParts (Print.printer ns []) dir ns name e "deus"))] ++ typed ++ statement ++ verdict
+    [("kind", Entry.kind e), ("hash", h), ("view", snd (viewParts (Print.withLocals printer []) dir ns name e "deus"))] ++ typed ++ statement ++ verdict
 
-/-- Answers `MdlHost` against the codebase: expressions are compiled the way `eval` compiles them. -/
-def withHost (dir : Text) (ns : Map Text Entry) (body : Unit -> {MdlHost, IO} a) : {IO} a :=
+/--
+  Answers `MdlHost` against the codebase: expressions are compiled the way `eval` compiles them.
+  `printer` is `ns`'s, built once per run: its name tables cost more than describing a name.
+-/
+def withHost (dir : Text) (ns : Map Text Entry) (printer : Printer) (body : Unit -> {MdlHost, IO} a) : {IO} a :=
   let compiled := fun (source : Text) => try (fun _ => compileExpr dir ns source)
   handle body () with
   | MdlHost.cost source -> k =>
@@ -914,7 +917,7 @@ def withHost (dir : Text) (ns : Map Text Entry) (body : Unit -> {MdlHost, IO} a)
       | Result.err message => Result.err message)
   | MdlHost.js source -> k => k (jsCompare dir ns source)
   | MdlHost.describe name -> k =>
-    k (match guardDefect (fun _ => try (fun _ => describeName dir ns name)) with
+    k (match guardDefect (fun _ => try (fun _ => describeName dir ns printer name)) with
       | Result.ok r => r
       | Result.err message => Result.err message)
 
@@ -936,30 +939,30 @@ structure Outcome where
   problems : List Text
 
 /-- Runs one block through the extension `uri` names in the codebase; unchecked when there is none. -/
-def checkBlock (dir : Text) (ns : Map Text Entry) (byUri : Map Text Text) (place : Text) (uri : Option Text) (b : Block) : {IO, Throw Text} Outcome :=
+def checkBlock (dir : Text) (ns : Map Text Entry) (printer : Printer) (byUri : Map Text Text) (place : Text) (uri : Option Text) (b : Block) : {IO, Throw Text} Outcome :=
   match Option.bind uri (fun u => Map.lookup u byUri) with
   | none => Outcome.mk place "unchecked" []
   | some h =>
     Image.load (fetcher dir) [h]
     let check := Code.run h
-    match withHost dir ns (fun _ => guardDefect (fun _ => check b)) with
+    match withHost dir ns printer (fun _ => guardDefect (fun _ => check b)) with
     | Result.ok [] => Outcome.mk place "ok" []
     -- A known gap (each problem starting `gap: `) is reported but does not fail the document.
     | Result.ok problems => Outcome.mk place (if List.all (fun p => Text.startsWith "gap: " p) problems then "gap" else "fail") problems
     | Result.err message => Outcome.mk place "fail" ["defect: " ++ message]
 
 /-- Checks one document: the core rules, then each block through its extension. -/
-def checkDoc (dir : Text) (ns : Map Text Entry) (byUri : Map Text Text) (path : Text) : {IO, Throw Text} List Outcome :=
+def checkDoc (dir : Text) (ns : Map Text Entry) (printer : Printer) (byUri : Map Text Text) (path : Text) : {IO, Throw Text} List Outcome :=
   let doc := Mdl.parse (readSource path)
   let core := Mdl.validate doc
   let declared := Mdl.declared doc
   let outcomes := List.map (fun b =>
-    checkBlock dir ns byUri (path ++ ":" ++ Int.toText b.lineNo ++ " " ++ Mdl.describe b) (List.lookup b.blockType declared) b)
+    checkBlock dir ns printer byUri (path ++ ":" ++ Int.toText b.lineNo ++ " " ++ Mdl.describe b) (List.lookup b.blockType declared) b)
     (List.filter (fun b => b.blockType != "ext") doc.blocks)
   if List.isEmpty core then outcomes else Outcome.mk path "fail" core :: outcomes
 
 /-- Checks the spec objects the codebase names: all of them, or those of the named documents in document order. -/
-def checkSpecs (dir : Text) (ns : Map Text Entry) (byUri : Map Text Text) (documents : List Text) : {IO, Throw Text} List Outcome :=
+def checkSpecs (dir : Text) (ns : Map Text Entry) (printer : Printer) (byUri : Map Text Text) (documents : List Text) : {IO, Throw Text} List Outcome :=
   let wanted := if List.isEmpty documents then Export.specDocuments ns else documents
   let orderOf := fun (h : Text) =>
     match Codebase.metaField (Codebase.readMeta dir h) "order" with
@@ -975,7 +978,7 @@ def checkSpecs (dir : Text) (ns : Map Text Entry) (byUri : Map Text Text) (docum
       | (_, name, h) =>
         Option.map (fun form =>
           match Mdl.fromSexp form with
-          | (uri, b) => checkBlock dir ns byUri name (if Text.isEmpty uri then none else some uri) b) (Codebase.readObject dir h))
+          | (uri, b) => checkBlock dir ns printer byUri name (if Text.isEmpty uri then none else some uri) b) (Codebase.readObject dir h))
       (List.sortBy (fun a b =>
         match (a, b) with
         | ((oa, na, _), (ob, nb, _)) => if oa == ob then compare na nb else compare oa ob) mine)) wanted
@@ -990,12 +993,13 @@ def mdl (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let ns := Codebase.current dir
   let byUri := extensions dir ns
+  let printer := Print.printer ns []
   let stored := Export.specDocuments ns
   let documents := List.filter (fun a => List.contains a stored && not (IO.exists a)) args.positional
   let files := List.filter (fun a => not (List.contains a documents)) args.positional
   let paths := List.filter (fun p => Text.endsWith ".mdl" p) (expandPaths files)
-  let fromCodebase := if List.isEmpty args.positional || not (List.isEmpty documents) then checkSpecs dir ns byUri documents else []
-  let outcomes := fromCodebase ++ List.concatMap (fun path => checkDoc dir ns byUri path) paths
+  let fromCodebase := if List.isEmpty args.positional || not (List.isEmpty documents) then checkSpecs dir ns printer byUri documents else []
+  let outcomes := fromCodebase ++ List.concatMap (fun path => checkDoc dir ns printer byUri path) paths
   let count := fun (v : Text) => List.length (List.filter (fun o => o.verdict == v) outcomes)
   output args
     (fun _ => Json.arr (List.map (fun o => Json.obj [("block", Json.str o.place), ("status", Json.str o.verdict), ("problems", Json.arr (List.map Json.str o.problems))]) outcomes))

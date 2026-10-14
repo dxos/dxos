@@ -115,6 +115,27 @@ describe('kernel', () => {
     expect([code, stdout]).toEqual([0, '"boom"']);
   });
 
+  test('a callback that deoptimizes late does not replay its higher-order caller every time', ({ expect }) => {
+    // `late` computes, then calls `ask`, which performs; `each` is entered once per round.
+    const { code, replays } = runImage(
+      `
+      (def "spin" (lam (if (app (prim "eq") (var 0) (int 0)) (int 0) (app (ref "spin") (app (prim "Int.sub") (var 0) (int 1))))))
+      (def "each" (lam (lam (if (app (prim "eq") (var 0) (int 0)) (con "#Unit" 0 0) (seq (app (var 1) (var 0)) (app (ref "each") (var 1) (app (prim "Int.sub") (var 0) (int 1))))))))
+      (def "ask" (lam (app (op "Ask" 0 1) (var 0))))
+      (def "late" (lam (seq (app (ref "spin") (int 1000)) (app (ref "ask") (var 0)))))
+      (def "pure" (lam (var 0)))
+      (def "rounds" (lam (if (app (prim "eq") (var 0) (int 0)) (con "#Unit" 0 0)
+        (handle (seq (app (ref "each") (ref "late") (int 3)) (seq (app (ref "each") (ref "pure") (int 3)) (app (ref "rounds") (app (prim "Int.sub") (var 0) (int 1)))))
+          (on "Never" 0 1 (var 1))))))
+      (def "main" (lam (handle (app (ref "rounds") (int 200)) (on "Ask" 0 1 (app (var 0) (var 1))))))
+      (main "main")`,
+      { args: [], stdout: () => {}, stderr: () => {} },
+    );
+    // Before callbacks were tracked, `each` was compiled and replayed in nearly every round (313).
+    expect(code).toBe(0);
+    expect(replays).toBeLessThan(30);
+  });
+
   test('a compiled self tail call that swaps its arguments', ({ expect }) => {
     const { stdout } = run(`
       (def "swap" (lam (lam (lam (if (app (prim "eq") (var 0) (int 0)) (app (con "#Pair" 0 2) (var 2) (var 1)) (app (ref "swap") (var 1) (var 2) (app (prim "Int.sub") (var 0) (int 1))))))))

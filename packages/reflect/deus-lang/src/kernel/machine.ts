@@ -265,6 +265,13 @@ export type Compiler = { compile: (lam: Term) => JitFn | null };
 /** After this many deoptimizations a lambda stays on the machine. */
 const DEOPT_LIMIT = 8;
 
+/**
+ * After this many deoptimized calls that took a lambda as an argument, calls passing it stay on
+ * the machine: a replay restarts the whole higher-order call, so a callback that deoptimizes late
+ * would make `List.forEach` redo every element before it.
+ */
+const CALLBACK_LIMIT = 2;
+
 /** The longest run of entries a lambda skips after deoptimizing. */
 const BACKOFF_LIMIT = 1 << 16;
 
@@ -341,6 +348,8 @@ export class Term {
   /** LAM: its compiled JavaScript once tried (null: it needs the machine), and how often it deoptimized. */
   jit: JitFn | null | undefined = undefined;
   deopts = 0;
+  /** LAM: how many compiled calls that took it as an argument deoptimized. */
+  callbackDeopts = 0;
   /** LAM: entries still to skip after a deoptimization, and the current backoff window. */
   skip = 0;
   backoff = 0;
@@ -746,6 +755,8 @@ export class Machine {
   readonly journal: (() => void)[] = [];
   /** Set once the deoptimization in flight is counted against the innermost lambda it left. */
   charged = false;
+  /** How many compiled calls deoptimized, each replayed on the machine. */
+  replays = 0;
 
   readonly prims: Map<string, Prim>;
   readonly host: HostHandler;
@@ -879,7 +890,7 @@ export class Machine {
     }
     // A callback already known to need the machine would make this call deoptimize too.
     for (const arg of args) {
-      if (arg instanceof Closure && arg.lam.jit === null) {
+      if (arg instanceof Closure && (arg.lam.jit === null || arg.lam.callbackDeopts >= CALLBACK_LIMIT)) {
         return DEOPTED;
       }
     }
@@ -891,8 +902,14 @@ export class Machine {
       return result;
     } catch (err) {
       if (isDeopt(err)) {
+        this.replays++;
         this.rollback(mark);
         this.charge(lam);
+        for (const arg of args) {
+          if (arg instanceof Closure) {
+            arg.lam.callbackDeopts++;
+          }
+        }
         this.charged = false;
         lam.backoff = Math.min(lam.backoff * 2 || 1, BACKOFF_LIMIT);
         lam.skip = lam.backoff;

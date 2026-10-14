@@ -127,6 +127,7 @@ stage. The table is regenerated from `git log` with every commit.
 
 | 118 | 10-14 23:11 | 0h 01m | `22d58083` | JsGen.Spec has no gaps: tests that the js target refuses multi-shot handlers (R-2) and `Js.import` inside an expression (R-3); written in the codebase, whose R2 push was refused (403) from this session, so git carries it |
 | 119 | 10-14 23:02 | 14m 00s | `9fb29946` | devex: the test suite runs in 151 s instead of 315 s; the dogfood and restore tests run in files of their own, so vitest runs them in parallel with the rest (shared `cliHarness`); six devex tasks filed from measured agent wall time |
-| 120 | 10-14 23:30 | 28m 00s | this commit | task audit against every exported `tasks.sexp` in git: one done task (82d2d7a2, D95) had been dropped by an export at `b2023784` and is restored; container devex task filed |
+| 120 | 10-14 23:30 | 28m 00s | `5780b059` | task audit against every exported `tasks.sexp` in git: one done task (82d2d7a2, D95) had been dropped by an export at `b2023784` and is restored; container devex task filed |
+| 121 | 10-14 23:45 | 15m 00s | this commit | devex: JIT callbacks that deoptimize stop replaying their higher-order caller, so `update` of the printed toolchain takes 10.5 s instead of 85 s and `deus compile` reports a type error in 6 s instead of 78 s (D113); `deus mdl` takes 7 s instead of 36 s with one printer per run (D114) |
 
-Total from stage 1 to stage 120: 21h 47m.
+Total from stage 1 to stage 121: 22h 2m.

@@ -1,5 +1,17 @@
 # History of main
 
+- `8f9856ca45` task: set a99bf01d state
+- `28273fc62b` task: comment on a99bf01d (by claude)
+- `a1c034c828` task: set 1854b55d state
+- `8f2b9ee56e` task: comment on 1854b55d (by claude)
+- `607b0ae966` task: open 8a24ab99 Feature maps in the codebase alongside tasks: a tree of features with status, linking specs, requirements, definitions and tasks; CLI, a backfilled map of the toolchain, shown in the explorer
+- `b8773f11e9` task: open 84ec6ef7 Type checker: a test comparing a partial application with == passes the checker and returns false (Compile.Spec.apiReportsDeclarationsAsGaps after withHost gained a parameter); updates should reject it
+- `328f1ddb76` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/edit-api.deus (by claude)
+- `cee7a31873` task: comment on 7f677d04 (by claude)
+- `e598ded948` task: comment on 44892ca0 (by claude)
+- `638043f48f` task: set 44892ca0 state
+- `95fa9e2cc1` close 7f677d04 by #93f3e01096 (by claude)
+- `93f3e01096` update deus (by claude)
 - `e7cadb3cf0` export: merge 7 changes from codebase
 - `f5bf3f0de8` task: import from /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/tasks.sexp
 - `adbe79e87a` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/code/JsGen.deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/theirs/packages/reflect/deus-lang/codebase/specs/JsGen.Spec.mdl

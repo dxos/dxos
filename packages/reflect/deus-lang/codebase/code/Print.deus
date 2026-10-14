@@ -316,7 +316,8 @@ def Print.plainDefinition (p : Printer) (name : Text) (docText : Text) (names : 
 
 /-- A printer for a namespace: hash (or `type#tag`, `ability!index`) to display name. -/
 def Print.printer (ns : Map Text Entry) (locals : List Text) : Printer :=
-  let bySegment := (Names.build ns).bySegment
+  let names := Names.build ns
+  let bySegment := names.bySegment
   let index := nameIndex ns
   -- Constructors and operations keep their owner (`Result.ok`, `Prices.priceOf`): a bare `ok` reads as a variable in a pattern.
   let display := Map.fromList (List.map (fun pair =>
@@ -331,7 +332,6 @@ def Print.printer (ns : Map Text Entry) (locals : List Text) : Printer :=
     | (name, Entry.ability _ iri) => Map.insert iri (suffixify bySegment name) m
     | _ => m) Map.empty (Map.toList ns)
   -- Accessors print as `e.field` when the field name is unique among structures.
-  let names := Names.build ns
   let fieldNames := foldl (fun m pair =>
     match pair with
     | (owner, Entry.type _ _ fields) => foldl (fun m2 f =>
