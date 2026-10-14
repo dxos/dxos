@@ -33,6 +33,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 25  | 10-14 13:34 | 11m 53s        | `082c450c`  | MDL extensions as DEUS definitions; perf requirements in machine steps                      |
 | 26  | 10-14 13:48 | 13m 31s        | `bd139e99`  | external requirements and containers as pinned data and abilities                           |
 | 27  | 10-14 13:54 | 6m 39s         | `28abe17e`  | codebase layers — spec objects, results, provenance                                         |
-| 28  | 10-14 13:57 | 2m 57s         | this commit | projects: IRI identity, pinned libraries, inferred subgraphs                                |
+| 28  | 10-14 13:57 | 2m 59s         | `65420c8e`  | projects — IRI identity, pinned libraries, inferred subgraphs                               |
+| 29  | 10-14 14:04 | 6m 32s         | this commit | replication: immutable bundles on R2, concurrent heads, sedimentree compaction              |
 
-Total from stage 1 to stage 28: 4h 14m.
+Total from stage 1 to stage 29: 4h 21m.

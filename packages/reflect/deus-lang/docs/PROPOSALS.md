@@ -92,6 +92,13 @@ left out of the next compaction.
 
 The host gains `http` and `hmacSha256` operations. SigV4 request signing is written in DEUS.
 
+**Status.** Implemented (D50) in `deus/replicate.deus`, with one change: `curl --aws-sigv4` signs
+requests, so neither kernel gains an operation. `deus remote add`, `push`, `pull` and `compact`
+work against a directory or `r2://<bucket>/<prefix>`. Uploads are conditional
+(`If-None-Match: *`), so an existing bundle is never replaced. One push and pull round trip was
+run against the `agent-artifacts` bucket and then deleted. Garbage collection under a retention
+policy is not built yet.
+
 ## P4. Layers of the codebase
 
 **Proposal:** layers for spec, code, proofs, tests, artifacts, LLM codegen, cache, test results…

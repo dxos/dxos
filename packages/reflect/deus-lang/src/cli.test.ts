@@ -4,7 +4,7 @@
 
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { chmodSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, describe, test } from 'vitest';
@@ -273,6 +273,57 @@ describe('deus CLI', () => {
     expect(minted.code).toBe(1);
     expect(minted.stderr).toContain('Fake has IRI https://dxos.org/deus/std/Fake, which belongs to lib.std');
   });
+
+  test(
+    'replicates through immutable bundles, surfaces concurrent heads, and compacts deterministically',
+    { timeout: 240_000 },
+    ({ expect }) => {
+      const remote = join(scratch, 'remote');
+      const a = ['--codebase', join(scratch, 'replica-a')];
+      const b = ['--codebase', join(scratch, 'replica-b')];
+      for (const c of [a, b]) {
+        deus('init', ...c);
+        deus('remote', 'add', 'origin', remote, ...c);
+      }
+      deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...a);
+      expect(deus('push', ...a).stdout).toMatch(/^Pushed main to origin as 0-[0-9a-f]{64}\.\n$/);
+      expect(deus('push', ...a).stdout).toBe('origin already has main.\n');
+      deus('pull', ...b);
+      expect(deus('merge', 'origin.main', ...b).stdout).toMatch(/^Fast-forwarded/);
+
+      // Concurrent pushes to one branch leave two heads, merged like local branches.
+      deus('add', file('x.deus', 'def x : Int := 1\n'), ...a);
+      deus('push', ...a);
+      deus('add', file('y.deus', 'def y : Int := 2\n'), ...b);
+      deus('push', ...b);
+      expect(deus('pull', ...a).stdout).toContain('2 heads (concurrent pushes)');
+      deus('merge', 'origin.main', ...a);
+      deus('merge', 'origin.main.2', ...a);
+
+      // Enough history for level-1 boundaries (causal hashes starting with 0).
+      for (let i = 1; i <= 70; i++) {
+        deus('add', file('v.deus', `def v${i} : Int := ${i}\n`), ...a);
+        if (i % 10 === 0) {
+          deus('push', ...a);
+        }
+      }
+      const before = readdirSync(join(remote, 'bundles')).length;
+      const first = JSON.parse(deus('compact', '--json', ...a).stdout);
+      expect(first.written.length).toBeGreaterThan(0);
+      expect(first.deleted.length).toBeGreaterThan(0);
+      expect(readdirSync(join(remote, 'bundles')).length).toBeLessThan(before);
+      // Strata come from hashes and bundles are canonical: another client's compaction writes nothing new.
+      deus('pull', ...b);
+      expect(JSON.parse(deus('compact', '--json', ...b).stdout)).toEqual({ written: [], deleted: [] });
+
+      const fresh = ['--codebase', join(scratch, 'replica-c')];
+      deus('init', ...fresh);
+      deus('remote', 'add', 'origin', remote, ...fresh);
+      deus('pull', ...fresh);
+      deus('merge', 'origin.main', ...fresh);
+      expect(deus('eval', 'v70 + v3 + x + y', ...fresh).stdout).toBe('76\n');
+    },
+  );
 
   test('fetches a pinned tool by hash, caches it, and refuses a mismatch', { timeout: 120_000 }, ({ expect }) => {
     const c = ['--codebase', join(scratch, 'external')];

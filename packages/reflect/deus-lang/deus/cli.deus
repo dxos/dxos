@@ -493,6 +493,89 @@ def lib (args : Args) : {IO, Throw Text} Unit :=
   | _ => throw "usage: deus lib install <name> <codebase> [--branch <branch>]"
 
 --
+-- Commands: replication.
+--
+
+/--
+  Runs `body` against the remote `name`: a directory, or `r2://<bucket>/<prefix>` (an
+  S3-compatible bucket at `$DEUS_R2_ENDPOINT`, with `$R2_ACCESS_KEY_ID` and `$R2_SECRET_ACCESS_KEY`).
+-/
+def withRemote (dir : Text) (name : Text) (body : Unit -> {Remote, IO, Throw Text} a) : {IO, Throw Text} a :=
+  let url := match IO.readFile (dir ++ "/remotes/" ++ name ++ "/url") with
+    | some text => Text.trim text
+    | none => throw ("no remote " ++ name ++ "; run `deus remote add " ++ name ++ " <dir|r2://bucket/prefix>`")
+  if Text.startsWith "r2://" url then
+    let path := Text.drop 5 url
+    let slash := Text.indexOf path "/" 0
+    let bucketName := if slash < 0 then path else Text.take slash path
+    let prefix := if slash < 0 then "deus" else Text.drop (slash + 1) path
+    let need := fun (key : Text) => match IO.getEnv key with
+      | some value => value
+      | none => throw ("$" ++ key ++ " is not set")
+    let endpoint := need "DEUS_R2_ENDPOINT"
+    let user := need "R2_ACCESS_KEY_ID" ++ ":" ++ need "R2_SECRET_ACCESS_KEY"
+    -- The file is made private before the secret is written to it.
+    let config := dir ++ "/cache/remote-" ++ name ++ ".curl"
+    IO.mkdirp (dir ++ "/cache")
+    IO.exec "install" ["-m", "600", "/dev/null", config]
+    IO.writeFile config ("user = \"" ++ user ++ "\"\n")
+    let result := try (fun _ => Replicate.bucket endpoint bucketName prefix config body)
+    IO.remove config
+    match result with
+    | Result.ok value => value
+    | Result.err message => throw message
+  else Replicate.directory url body
+
+/-- `deus remote add <name> <dir|r2://bucket/prefix>` / `deus remote`: configure remotes. -/
+def remote (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  match args.positional with
+  | ["add", name, url] =>
+    if not (Codebase.validBranch name) then throw ("invalid remote name " ++ name)
+    else
+      IO.writeFile (dir ++ "/remotes/" ++ name ++ "/url") (url ++ "\n")
+      output args (fun _ => Json.obj [("remote", Json.str name), ("url", Json.str url)]) (fun _ => "Added remote " ++ name ++ " = " ++ url ++ ".")
+  | [] =>
+    let names := if IO.isDir (dir ++ "/remotes") then IO.listDir (dir ++ "/remotes") else []
+    let urls := List.map (fun n => (n, Text.trim (Option.getOr (IO.readFile (dir ++ "/remotes/" ++ n ++ "/url")) ""))) names
+    output args (fun _ => Json.arr (List.map (fun p => Json.obj [("remote", Json.str (fst p)), ("url", Json.str (snd p))]) urls))
+      (fun _ => Text.join "\n" (List.map (fun p => fst p ++ "  " ++ snd p) urls))
+  | _ => throw "usage: deus remote [add <name> <dir|r2://bucket/prefix>]"
+
+def remoteName (args : Args) : Text := Option.getOr (List.head? args.positional) "origin"
+
+/-- `deus push [remote] [--branch b]`: uploads one bundle with what the remote lacks. -/
+def push (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let name := remoteName args
+  let branch := Option.getOr (option args "branch") (Codebase.currentBranch dir)
+  match withRemote dir name (fun _ => Replicate.push dir name branch) with
+  | some bundle => output args (fun _ => Json.obj [("bundle", Json.str bundle)]) (fun _ => "Pushed " ++ branch ++ " to " ++ name ++ " as " ++ bundle ++ ".")
+  | none => output args (fun _ => Json.obj [("bundle", Json.null)]) (fun _ => name ++ " already has " ++ branch ++ ".")
+
+/-- `deus pull [remote]`: imports new bundles and moves `<remote>.<branch>` to the remote's heads. -/
+def pull (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let name := remoteName args
+  let branches := withRemote dir name (fun _ => Replicate.pull dir name)
+  output args
+    (fun _ => Json.arr (List.map (fun b => Json.obj [("branch", Json.str (fst b)), ("heads", Json.arr (List.map Json.str (snd b)))]) branches))
+    (fun _ => Text.join "\n" (List.map (fun b =>
+      match b with
+      | (branch, [h]) => name ++ "." ++ branch ++ "  " ++ short h
+      | (branch, hs) => name ++ "." ++ branch ++ "  " ++ Int.toText (List.length hs) ++ " heads (concurrent pushes); merge " ++ name ++ "." ++ branch ++ ".2 to join them") branches))
+
+/-- `deus compact [remote] [--level k]`: rewrites history into level-k strata and drops covered bundles. -/
+def compact (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let name := remoteName args
+  let level := Option.getOr (Option.bind (option args "level") Int.fromText) 1
+  match withRemote dir name (fun _ => Replicate.compact dir name level) with
+  | (written, deleted) =>
+    output args (fun _ => Json.obj [("written", Json.arr (List.map Json.str written)), ("deleted", Json.arr (List.map Json.str deleted))])
+      (fun _ => "Wrote " ++ Int.toText (List.length written) ++ " level-" ++ Int.toText level ++ " bundles; deleted " ++ Int.toText (List.length deleted) ++ ".")
+
+--
 -- Commands: running.
 --
 
@@ -705,6 +788,12 @@ def usage : Text :=
     "  project [init <iri>]                 the project's IRI, libraries and owned subgraph",
     "  lib install <name> <codebase>        mount that project's head under lib.<name> (--branch b)",
     "",
+    "replication",
+    "  remote add <name> <dir|r2://b/p>     a remote: a directory, or an R2 bucket and prefix",
+    "  push [remote] [--branch b]           upload one immutable bundle of what the remote lacks",
+    "  pull [remote]                        import new bundles; <remote>.<branch> tracks its heads",
+    "  compact [remote] [--level k]         sedimentree compaction into level-k strata",
+    "",
     "running",
     "  run <name> [args…]                   run name () with IO.args = args",
     "  eval <expr>                          evaluate an expression",
@@ -745,6 +834,10 @@ def dispatch (argv : List Text) : {IO, Throw Text} Unit :=
     else if command == "layers" then layers args
     else if command == "project" then project args
     else if command == "lib" then lib args
+    else if command == "remote" then remote args
+    else if command == "push" then push args
+    else if command == "pull" then pull args
+    else if command == "compact" then compact args
     else if command == "undo" then undo args
     else if command == "run" then run (parseArgs (List.take 0 rest)) rest
     else if command == "eval" then eval args

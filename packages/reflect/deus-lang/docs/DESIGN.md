@@ -183,6 +183,14 @@ Dependencies are releases of other projects, pinned by causal hash and mounted u
 `lib.std.area`. The project's subgraph is inferred (D49), and a type IRI under a library's IRI
 can only come from that library.
 
+## Replication
+
+`deus remote add origin r2://agent-artifacts/deus/std` (or a directory), then `deus push`,
+`deus pull` and `deus compact` (D50). Each push writes one immutable bundle, named by its hash,
+and nothing is overwritten. A pull imports new bundles and sets `origin.<branch>` to the
+remote's heads, which are merged as local branches are. Compaction is deterministic, so two
+clients compacting the same history write the same bundles.
+
 ## The outside world
 
 Code that needs something outside the codebase says so in its effect row (D47):
