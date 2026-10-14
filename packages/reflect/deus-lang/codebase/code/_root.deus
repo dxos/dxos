@@ -769,8 +769,13 @@ def ge : a -> a -> Bool := prim "ge"
 
 def gt : a -> a -> Bool := prim "gt"
 
-/-- Through a generic function, which may return what it was given. -/
-def id (x : t) : t := x
+/-
+  Prelude: lists, options, results, maps and text helpers.
+
+  There are no type classes yet, so equality and ordering are the structural primitives
+  `eq` and `compare` (see docs/DECISIONS.md D10).
+-/
+def id (x : a) : a := x
 
 /-- `a -> b` in a theorem's statement. -/
 def implies : Bool -> Bool -> Bool := prim "implies"

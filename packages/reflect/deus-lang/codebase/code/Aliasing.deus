@@ -4,8 +4,13 @@ def Aliasing.all (n : Int) : Int := keepOld n + earlierArgument n + laterArgumen
 
 test Aliasing.allAgree := keepOld 3 == 105 && earlierArgument 3 == 1115 && laterArgument 3 == 9002 && letAlias 3 == 39 && inStructure 3 == 1049 && matchAlias 3 == 59 && sharedItem 3 == 69 && twoNew 3 == 12 && sameTwice 3 == 89 && ifAlias 3 == 39 && inRef 3 == 49 && throughGeneric 3 == 5795 && returned 3 == 69 && Aliasing.chain 3 == 3
 
-/-- Through a generic function, which may return what it was given. -/
-def Aliasing.back (x : t) : t := x
+/-
+  Prelude: lists, options, results, maps and text helpers.
+
+  There are no type classes yet, so equality and ordering are the structural primitives
+  `eq` and `compare` (see docs/DECISIONS.md D10).
+-/
+def Aliasing.back (x : a) : a := x
 
 def Aliasing.chain (n : Int) : Int :=
   let a := Aliasing.fillGo (Array.make n 0) 0 n
@@ -84,8 +89,13 @@ def Aliasing.returned (n : Int) : Int :=
   let b := Array.set (id a) 0 9
   first a * 10 + first b
 
-/-- Through a generic function, which may return what it was given. -/
-def Aliasing.same (x : t) : t := x
+/-
+  Prelude: lists, options, results, maps and text helpers.
+
+  There are no type classes yet, so equality and ordering are the structural primitives
+  `eq` and `compare` (see docs/DECISIONS.md D10).
+-/
+def Aliasing.same (x : a) : a := x
 
 def Aliasing.sameTwice (n : Int) : Int :=
   let a := Array.make n 8

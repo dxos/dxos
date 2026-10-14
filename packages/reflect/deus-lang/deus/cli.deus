@@ -1077,7 +1077,7 @@ def buildImage (args : Args) (dir : Text) (ns : Map Text Entry) : {IO, Throw Tex
     let image := Image.build (fetcher dir) h
     let target := fun (u : Unit) =>
       if flag args "wasm" then
-        -- A signature names a type by IRI; the back end reads the type's object to compare its values (D98).
+        -- A signature names a type by IRI; the back end reads the type's object to compare its values (D99).
         let byIri := Map.fromList (List.filterMap (fun pair =>
           match snd pair with
           | Entry.type th iri _ => some (iri, th)

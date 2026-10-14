@@ -10,7 +10,7 @@ version: 1.0
 value is the address of a block, so comparing the two `i32`s compares addresses, and D69 refused every
 comparison the compiler could not see was on an `Int` or a `Bool`. Now `==` and `!=` on a data type whose
 type the compiler can see compile to a call of an equality function the compiler generates for that type
-([D98](../DECISIONS.md)). The order comparisons (`<`, `<=`, `>`, `>=`) on data stay refused.
+([D99](../DECISIONS.md)). The order comparisons (`<`, `<=`, `>`, `>=`) on data stay refused.
 
 Written in the order of the process ([D92](../DECISIONS.md)): requirements, then the APIs and laws, then
 the implementation. `deus mdl docs/spec/WASM-EQUALITY.mdl` checks the blocks; `deus check WasmEquality.Spec`

@@ -611,7 +611,7 @@ describe('deus CLI', () => {
     const refused = deus('build', 'shout', '-o', join(scratch, 'shout.wasm'), '--wasm', ...c);
     expect([refused.code, refused.stderr]).toEqual([1, 'deus: the primitive append is outside the wasm subset\n']);
 
-    // `==` on data calls a generated equality function per type (D98), not an address compare; a long
+    // `==` on data calls a generated equality function per type (D99), not an address compare; a long
     // list compares in constant stack.
     deus(
       'add',

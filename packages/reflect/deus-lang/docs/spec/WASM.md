@@ -73,7 +73,7 @@ from the definition's signature.
 `eq`, `neq`, `lt`, `gt`, `le` and `ge` compare the `i32`s when the compiler can see that one side is an
 `Int` or a `Bool`. On a constructed value that would compare addresses, while the interpreter compares
 structure, so `eq` and `neq` on a data type the compiler can see call that type's generated equality
-function instead ([Equality](#equality), [D98](../DECISIONS.md)), and the order comparisons are refused.
+function instead ([Equality](#equality), [D99](../DECISIONS.md)), and the order comparisons are refused.
 The compiler sees types from each definition's stored scheme (or signature) for its parameters, from call
 results, from `let` values, from a constructor's arguments, and from the data type's constructor fields
 for what a pattern binds. `some x < some x` is refused with

@@ -62,7 +62,7 @@ structure Fn @"urn:deus:wasm:Fn" where
 /--
   What compiling one definition sees: the module's functions, the data types it names (`(type …)`
   objects by hash or IRI), the type known for each local so far, and the types whose equality
-  function the module needs, in function order (D98).
+  function the module needs, in function order (D99).
 -/
 structure Scope @"urn:deus:wasm:Scope" where
   fns : List Fn
@@ -400,7 +400,7 @@ def expr (scope : Scope) (env : List Int) (next : Ref Int) (tail : Bool) (e : Se
 
 /--
   A binary integer or comparison primitive applied to `args`. `==` and `!=` on a data type call
-  its generated equality function (D98); other comparisons need an `Int` or a `Bool`.
+  its generated equality function (D99); other comparisons need an `Int` or a `Bool`.
 -/
 def primitive (scope : Scope) (env : List Int) (next : Ref Int) (e : Sexp) (p : Text) (args : List Sexp) : {Throw Text} List Int :=
   match (binary p, args) with
@@ -531,7 +531,7 @@ def allocBody : List Int :=
 
 /--
   The module: one type and one function per definition, then `alloc`, then an equality function
-  per data type compared (D98); `main` is exported as `export`.
+  per data type compared (D99); `main` is exported as `export`.
 -/
 def module (fns : List Fn) (datatypes : List (Text, Sexp)) (export : Text) : {Throw Text} List Int :=
   let eqs := Ref.new []
