@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 /** Workspace-relative; written by `pnpm perf freeze`, read by the CLI, the edit hook and the budget writers. */
@@ -28,6 +28,31 @@ export const readFreeze = (workspaceRoot: string): Freeze | undefined => {
     throw new Error(`malformed ${FREEZE_FILE}; remove it with \`pnpm perf thaw\``);
   }
   return freeze;
+};
+
+/** Renamed into place from a temporary file, so the hook and the CLI never read half a record. */
+export const writeFreeze = (workspaceRoot: string, freeze: Freeze): void => {
+  const file = path.join(workspaceRoot, FREEZE_FILE);
+  mkdirSync(path.dirname(file), { recursive: true });
+  const temporary = `${file}.${process.pid}.tmp`;
+  writeFileSync(temporary, JSON.stringify(freeze, null, 2) + '\n');
+  renameSync(temporary, file);
+};
+
+/** Removes the record, malformed or not, with what it held when it could be read. */
+export const removeFreeze = (workspaceRoot: string): { removed: boolean; freeze?: Freeze } => {
+  const file = path.join(workspaceRoot, FREEZE_FILE);
+  if (!existsSync(file)) {
+    return { removed: false };
+  }
+  let freeze: Freeze | undefined;
+  try {
+    freeze = readFreeze(workspaceRoot);
+  } catch {
+    // Malformed: the error that reports it tells the user to thaw, so thaw removes it all the same.
+  }
+  rmSync(file, { force: true });
+  return { removed: true, ...(freeze ? { freeze } : {}) };
 };
 
 /** Refuses `action` while the harness is frozen, so a loop cannot rewrite the targets it is scored against. */

@@ -2,10 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
-import path from 'node:path';
-
-import { type Freeze, FREEZE_FILE, readFreeze } from '../score/freeze.ts';
+import { type Freeze, readFreeze, removeFreeze, writeFreeze } from '../score/freeze.ts';
 import { TARGETS } from './targets.ts';
 import { HarnessError, harnessHash, workspaceRoot } from './workspace.ts';
 
@@ -29,8 +26,7 @@ export const freeze = ({ target: name }: { target: string }): number => {
     paths: target.harness,
     since: new Date().toISOString(),
   };
-  mkdirSync(path.dirname(path.join(root, FREEZE_FILE)), { recursive: true });
-  writeFileSync(path.join(root, FREEZE_FILE), JSON.stringify(state, null, 2) + '\n');
+  writeFreeze(root, state);
   process.stdout.write(
     `froze harness ${state.hash}: ${state.paths.length} paths are read-only until \`pnpm perf thaw\`\n`,
   );
@@ -38,9 +34,13 @@ export const freeze = ({ target: name }: { target: string }): number => {
 };
 
 export const thaw = (): number => {
-  const root = workspaceRoot();
-  const current = readFreeze(root);
-  rmSync(path.join(root, FREEZE_FILE), { force: true });
-  process.stdout.write(current ? `thawed harness ${current.hash} (frozen since ${current.since})\n` : 'not frozen\n');
+  const { removed, freeze } = removeFreeze(workspaceRoot());
+  process.stdout.write(
+    freeze
+      ? `thawed harness ${freeze.hash} (frozen since ${freeze.since})\n`
+      : removed
+        ? 'removed a malformed freeze record\n'
+        : 'not frozen\n',
+  );
   return 0;
 };
