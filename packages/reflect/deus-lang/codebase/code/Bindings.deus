@@ -36,7 +36,7 @@ def Bindings.Spec.crowded (i : Int) : Text := if i % 2 == 0 then "text" else "te
 theorem Bindings.Spec.distinctIsUnique (xs : List Int) : unique (distinct (List.map crowded xs)) == true := by test 300
 
 /-- R-3: names that are already distinct are kept. -/
-theorem Bindings.Spec.distinctKeepsUnique (xs : List Text) : prim "implies" (unique xs == true) (distinct xs == xs) := by test 200
+theorem Bindings.Spec.distinctKeepsUnique (xs : List Text) : unique xs == true -> distinct xs == xs := by test 200
 
 /-- R-5: the entry is the function itself exactly when it needs no adapter. -/
 theorem Bindings.Spec.entryIsFunctionWithoutAdapter (k : Int) : entryOf (exportOf (k % 6)) == "h" == (k % 6 == 1) := by test 200
@@ -66,7 +66,7 @@ theorem Bindings.Spec.propKeyIsPropertyName (t : Text) : isPropertyName (propKey
 theorem Bindings.Spec.propKeyKeepsReserved : List.all (fun w => propKey w == w) Bindings.reserved == true := by rfl
 
 /-- R-4: a name outside every prefix is not selected. -/
-theorem Bindings.Spec.relativeNameSkipsOthers (p : Text) (n : Text) : prim "implies" (not (startsWith p n)) (relativeName [p] n == Option.none) := by test 200
+theorem Bindings.Spec.relativeNameSkipsOthers (p : Text) (n : Text) : not (startsWith p n) -> relativeName [p] n == Option.none := by test 200
 
 /-- R-4: a name under a prefix is selected, relative to it. -/
 theorem Bindings.Spec.relativeNameStripsPrefix (p : Text) (n : Text) : relativeName [p] (p ++ "." ++ n) == Option.some n := by test 200

@@ -144,10 +144,12 @@ def varName (seen : Ref (Map Text Text)) (key : Text) (row : Bool) : Text :=
     Ref.set seen (Map.insert key name (Ref.get seen))
     name
 
+/-- A type's display name from its IRI: the last segment after `/`, `:` and `.`, or a builtin without its `#`. -/
 def iriName (iri : Text) : Text :=
   if Text.startsWith "#" iri then Text.drop 1 iri
-  else if Text.startsWith "urn:deus:" iri then Names.lastSegment (Text.drop 9 iri)
-  else Names.lastSegment (Option.getOr (List.last? (Text.split iri "/")) iri)
+  else
+    let afterSlash := Option.getOr (List.last? (Text.split iri "/")) iri
+    Names.lastSegment (Option.getOr (List.last? (Text.split afterSlash ":")) afterSlash)
 
 def showType (t : TType) (seen : Ref (Map Text Text)) (prec : Int) : Text :=
   match t with

@@ -76,7 +76,7 @@ def JsGen.Spec.sumTo (n : Int) (acc : Int) : Int := if n == 0 then acc else JsGe
 
 def JsGen.Spec.twice (u : Unit) : {Ask} Int := Ask.ask () + Ask.ask ()
 
-theorem JsGen.Spec.vlqRoundTrip (n : Int) : prim "implies" (n > -100000000) (prim "implies" (n < 100000000) (unvlq (vlq n) == n)) := by test 200
+theorem JsGen.Spec.vlqRoundTrip (n : Int) : n > -100000000 -> n < 100000000 -> unvlq (vlq n) == n := by test 200
 
 /-- The hashes of the abilities a body requests or handles. -/
 def JsGen.abilitiesOf (form : Sexp) : List Text :=

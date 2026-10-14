@@ -1,5 +1,9 @@
 # History of main
 
+- `5c0e49121c` Explorer.Spec: api signatures name types as the header now prints them (D101) (by claude)
+- `f8d7887d0d` task: set f6a2c2ff state (by claude)
+- `7e1fcbca9a` close 4f7f9e40 by #8cb84289e1 (by claude)
+- `8cb84289e1` update deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/specs/VIEW.mdl (by claude)
 - `dbfeb70ff7` export: merge 21 changes from codebase
 - `1ec8ae9075` export: merge tasks from codebase
 - `d2758d5ca1` specs: documents with prose, as #13952 keeps them; WasmEquality.Spec moved in (by claude)

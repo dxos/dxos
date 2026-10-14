@@ -317,7 +317,10 @@ def Types.instantiate (u : Unifier) (scheme : Sexp) : TType := Types.fromSexp u 
 
 def Types.int : TType := TType.con "#Int" []
 
-def Types.iriName (iri : Text) : Text := if startsWith "#" iri then Text.drop 1 iri else if startsWith "urn:deus:" iri then lastSegment (Text.drop 9 iri) else lastSegment (getOr (last? (Text.split iri "/")) iri)
+/-- A type's display name from its IRI: the last segment after `/`, `:` and `.`, or a builtin without its `#`. -/
+def Types.iriName (iri : Text) : Text := if startsWith "#" iri then Text.drop 1 iri else
+  let afterSlash := getOr (last? (Text.split iri "/")) iri
+  lastSegment (getOr (last? (Text.split afterSlash ":")) afterSlash)
 
 def Types.labelIri (t : TType) : Text :=
   match t with

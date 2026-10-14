@@ -193,15 +193,6 @@ D90 widens values to 64 bits so blocks and integers can be told apart in wasm32;
 - labels: prover
 - links `Check.generate` (#ba17124ee9)
 
-## Theorem view prints P -> Q as prim "implies" (P) (Q) (`4f7f9e40`)
-
-- state: todo
-- priority: medium
-- assignee: claude
-- labels: bug, print
-
-Found writing law statements (D91): deus view Sort.insertSorted.
-
 ## TypeScript bindings: export polymorphic functions with codec parameters (`b6907aeb`)
 
 - state: todo
@@ -248,15 +239,6 @@ Follow-up of 17d50ae5: a parameter or result of function type is skipped. A TS c
 - links `Ts.definition` (#e5f668ab9e)
 
 > claude: Filed by the TS-like dialect thread (D70).
-
-## Type display names a type by its IRI's tail (task:Task) instead of its name (Task) (`f6a2c2ff`)
-
-- state: todo
-- priority: low
-- assignee: claude
-- labels: bug, types
-
-Found writing api blocks (D91): deus view Export.taskMarkdown shows task:Task -> Text.
 
 ## TypeScript bindings: run in-process on the TypeScript kernel too (`353444f7`)
 
@@ -899,6 +881,16 @@ view of 1061 definitions plus update of all of them; profile which half dominate
 
 From docs/spec/README.md, Known divergences.
 
+## Theorem view prints P -> Q as prim "implies" (P) (Q) (`4f7f9e40`)
+
+- state: done
+- priority: medium
+- assignee: claude
+- labels: bug, print
+- links change #8cb84289e1
+
+Found writing law statements (D91): deus view Sort.insertSorted.
+
 ## Type ascriptions are erased before checking; a row on a definition without binders is not checked (`a03fdfb6`)
 
 - state: done
@@ -990,6 +982,15 @@ D69 refuses == on data; generate per-type compare functions from the type object
 - links change #387eb2652a
 
 From docs/spec/README.md, Known divergences.
+
+## Type display names a type by its IRI's tail (task:Task) instead of its name (Task) (`f6a2c2ff`)
+
+- state: done
+- priority: low
+- assignee: claude
+- labels: bug, types
+
+Found writing api blocks (D91): deus view Export.taskMarkdown shows task:Task -> Text.
 
 ## TypeScript bindings: run in-process on the TypeScript kernel too (`e69b5384`)
 

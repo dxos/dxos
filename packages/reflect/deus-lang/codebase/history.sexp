@@ -1,3 +1,7 @@
+(entry "5c0e49121cd07cebd5c20ae43d3fea01c182b4a411e2cdda6bf2b770b5c2737a" "Explorer.Spec: api signatures name types as the header now prints them (D101)" "claude")
+(entry "f8d7887d0dbd13ff0c7fd72a1f9e399b44df9f66e78b925b18162ccb59f70eb5" "task: set f6a2c2ff state" "claude")
+(entry "7e1fcbca9a5558fc578cfe932e0c192ec23668923f8ce1f1cb842c49e8dca572" "close 4f7f9e40 by #8cb84289e1" "claude")
+(entry "8cb84289e16e7113100c56699635dffb06bc7004c7db0ee9635fcafa8379495e" "update deus /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/specs/VIEW.mdl" "claude")
 (entry "dbfeb70ff7c5ab923c0d34866a9d6e48aea2e3193c1114cabf91028712c73fde" "export: merge 21 changes from codebase" "")
 (entry "1ec8ae907578318d6abad43b80a3df6439863e923e632033804f720e87e7b540" "export: merge tasks from codebase" "")
 (entry "d2758d5ca1c08c6fbbdcbe761d18b0af3fae9e2f345bd4c6dc0128943086273a" "specs: documents with prose, as #13952 keeps them; WasmEquality.Spec moved in" "claude")

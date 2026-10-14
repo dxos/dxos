@@ -7,7 +7,7 @@ test Explorer.Spec.aliasesShareAPage := inSite (fun _ =>
       startsWith "{\"name\":\"zArea\"" page && Text.contains "\"aliases\":[\"area\"]" page
   | Option.none => false)
 
-theorem Explorer.Spec.assetNamesAreLong (t : Text) : prim "implies" (Assets.isHash t == true) (Text.length t == 64) := by test 100
+theorem Explorer.Spec.assetNamesAreLong (t : Text) : Assets.isHash t == true -> Text.length t == 64 := by test 100
 
 theorem Explorer.Spec.builtinPagesHaveNoHash (t : Text) : pageOf ("#" ++ t) == "_" ++ t := by test 100
 
@@ -73,7 +73,7 @@ def Explorer.Spec.namesIn (json : Text) : List Text := List.map
   (fun piece => Text.take (indexOf piece "\"" 0) piece)
   (List.drop 1 (Text.split json "{\"name\":\""))
 
-theorem Explorer.Spec.otherPagesAreTheHash (t : Text) : prim "implies" (startsWith "#" t == false) (pageOf t == t) := by test 100
+theorem Explorer.Spec.otherPagesAreTheHash (t : Text) : startsWith "#" t == false -> pageOf t == t := by test 100
 
 def Explorer.Spec.regenerate (u : Unit) : {IO, Throw Text} Int := withHome (fun _ => Explorer.generate "cb" "site")
 

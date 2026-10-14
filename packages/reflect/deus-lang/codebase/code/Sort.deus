@@ -16,7 +16,7 @@ theorem Sort.insertCount (y : Int) (x : Int) (xs : List Int) : Sort.count y (Sor
 
 theorem Sort.insertLength (x : Int) (xs : List Int) : Sort.len (Sort.insert x xs) == 1 + Sort.len xs := by induction xs ; auto
 
-theorem Sort.insertSorted (x : Int) (xs : List Int) : prim "implies" (sorted xs == true) (sorted (Sort.insert x xs) == true) := by induction xs ; auto
+theorem Sort.insertSorted (x : Int) (xs : List Int) : sorted xs == true -> sorted (Sort.insert x xs) == true := by induction xs ; auto
 
 /-- Implementation: insertion sort. -/
 def Sort.isort : List Int -> List Int

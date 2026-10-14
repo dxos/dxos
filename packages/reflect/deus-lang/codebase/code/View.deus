@@ -1,3 +1,52 @@
+/-- R-2: a builtin drops its `#`. -/
+theorem View.Spec.builtinIri : iriName "#Int" == "Int" := by rfl
+
+/-- L-1: the printed text compiles to the hash it was printed from. -/
+theorem View.Spec.hypothesesRoundTrip : (match printed twoSource "u" with
+  | Option.some (h, text) => Option.map fst (printed (text ++ "\n") "u") == Option.some h
+  | Option.none => false) == true := by rfl
+
+/-- R-1: one hypothesis. The printer is given no local names, so binders print as `x0`, `x1`. -/
+theorem View.Spec.oneHypothesis : Spec.view oneSource "t" == "theorem t (x0 : Int) : x0 == 1 -> x0 + 1 == 2 := sorry" := by rfl
+
+def View.Spec.oneSource : Text := "theorem t (x : Int) : x == 1 -> x + 1 == 2 := by sorry\n"
+
+/-- R-2: an IRI with a path prints its last segment. -/
+theorem View.Spec.pathIri : iriName "urn:deus:task:Task" == "Task" := by rfl
+
+/-- R-2: a plain `urn:deus:` IRI is its name. -/
+theorem View.Spec.plainIri : iriName "urn:deus:Tree" == "Tree" := by rfl
+
+def View.Spec.prelude : Text := "inductive Int @\"#Int\" where\ninductive Bool @\"#Bool\" where\n  | false\n  | true\n"
+
+/-- The theorem `name` in `source`, compiled alone: its hash and its printed declaration. -/
+def View.Spec.printed (source : Text) (name : Text) : Option (Text, Text) :=
+  match try (fun _ => batch
+    Map.empty
+    (fun _ => Option.none)
+    (fun _ => Option.none)
+    "strict"
+    [parseFile "t.deus" (View.Spec.prelude ++ source)]) with
+  | Result.ok b =>
+      match List.lookup name b.entries with
+      | Option.some (Entry.theorem h) =>
+          match List.lookup h b.objects with
+          | Option.some (Sexp.list (Sexp.sym "theorem" :: Sexp.list (Sexp.sym "binders" :: types) :: prop :: proof :: _)) => Option.some (h, View.theoremDecl (printer (Map.fromList b.entries) []) name types prop proof)
+          | _ => Option.none
+      | _ => Option.none
+  | Result.err _ => Option.none
+
+/-- R-1: hypotheses keep their order. -/
+theorem View.Spec.twoHypotheses : Spec.view twoSource "u" ==
+    "theorem u (x0 : Int) (x1 : Int) : x0 == 1 -> x1 == x0 -> x1 == 1 := sorry" := by rfl
+
+def View.Spec.twoSource : Text := "theorem u (x : Int) (y : Int) : x == 1 -> y == x -> y == 1 := by sorry\n"
+
+def View.Spec.view (source : Text) (name : Text) : Text := getOr (Option.map snd (printed source name)) ""
+
+/-- R-2: a web IRI prints its last path segment. -/
+theorem View.Spec.webIri : iriName "https://dxos.org/deus/std/Shape" == "Shape" := by rfl
+
 def View.abilityDecl (p : Printer) (ns : Map Text Entry) (name : Text) (e : Entry) (obj : Sexp) (meta : Option Sexp) : Text :=
   match (e, Sexp.args obj) with
   | (Entry.ability h iri, _ :: Sexp.int count :: rawOps) =>
@@ -69,7 +118,13 @@ def View.theoremDecl (p : Printer) (name : Text) (types : List Sexp) (prop : Sex
         | Sexp.list (Sexp.sym "ref" :: Sexp.str l :: []) => nameFor p l
         | _ => asText x) (Sexp.args proof)
       let proofText := if tactic == ["sorry"] then "sorry" else "by " ++ replace " ," "," (replace "[ " "[" (replace " ]" "]" (join " " tactic)))
-      "theorem " ++ name ++ binders ++ " : " ++ Print.expr p b env 2 0 ++ " := " ++ proofText
+      -- The parser reads `P -> Q` only at the top of a statement, as `implies`, so only there is it written back.
+      let rec parts prop1 :=
+        match prop1 with
+        | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "prim" :: Sexp.str "implies" :: []) :: hyp :: rest :: []) => hyp :: parts rest
+        | _ => [prop1]
+      "theorem " ++ name ++ binders ++ " : " ++
+        join " -> " (List.map (fun part => Print.expr p part env 2 0) (parts b)) ++ " := " ++ proofText
 
 /-
   Printing declarations that are not plain definitions: types, abilities and theorems.
