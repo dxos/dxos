@@ -79,7 +79,12 @@ export class DeusActor {
       // Another object of this class, by name; the request goes to its `fetch`.
       const [method, url, payload] = args[1].fields;
       const stub = this.env.ACTOR.get(this.env.ACTOR.idFromName(args[0]));
-      const response = await stub.fetch(new Request(`https://actor${url}`, { method, body: method === 'GET' || method === 'HEAD' ? undefined : payload }));
+      const response = await stub.fetch(
+        new Request(`https://actor${url}`, {
+          method,
+          body: method === 'GET' || method === 'HEAD' ? undefined : payload,
+        }),
+      );
       return { $: RESPONSE, tag: 0, fields: [response.status, await response.text()] };
     }
     if (ability === ALARM && op === 0) {

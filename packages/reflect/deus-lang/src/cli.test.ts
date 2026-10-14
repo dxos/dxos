@@ -393,7 +393,7 @@ describe('deus CLI', () => {
     const call = (name: string, ...args: number[]) => {
       const out = join(scratch, `${name}.wasm`);
       expect(deus('build', name, '-o', out, '--wasm', ...c).code).toBe(0);
-      const exports = new WebAssembly.Instance(new WebAssembly.Module(readFileSync(out))).exports;
+      const exports = new WebAssembly.Instance(new WebAssembly.Module(new Uint8Array(readFileSync(out)))).exports;
       const fn = exports[name];
       return typeof fn === 'function' ? fn(...args) : undefined;
     };
