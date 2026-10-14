@@ -141,8 +141,9 @@ jobs:
           - name: Check public packages don't depend on private packages
             run: pnpm run check-public-dependencies
 
-          - name: Check public packages are published
-            run: pnpm run check-packages-published
+          # Disabled: edge consumes new packages from pkg.pr.new builds, so a first npm publish is not a merge prerequisite.
+          # - name: Check public packages are published
+          #   run: pnpm run check-packages-published
 
           # Both sides of the spec <-> `.mdl` QA binding. In stage 1 because it needs no build and
           # because the failure it catches — a renamed test leaving a flow claiming coverage it no

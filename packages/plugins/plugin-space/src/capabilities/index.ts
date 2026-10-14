@@ -18,8 +18,6 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 import { SpaceCapabilities, SpaceCapability, SpaceSchema } from '#types';
 
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../../PLUGIN.mdl?raw';
 import { SpaceOperationConfig } from '../operations/helpers.ts';
 import { makeCreateInvitationUrl, makeCreateJoinUrl } from './helpers.ts';
 
@@ -150,6 +148,6 @@ export const Translations = AppCapability.translations([
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
   path: 'PLUGIN.mdl',
-  content: pluginSpec,
+  content: () => import('../../PLUGIN.mdl?raw'),
   mimeType: 'application/x-mdl',
 });

@@ -95,6 +95,7 @@ export const initializeObservability = async (
   logStore?: IdbLogStore,
   observabilityDisabled = false,
   observabilityWorker?: ObservabilityExtension.Otel.OtelWorkerPort,
+  sessionRecordingStart?: Effect.Effect<void>,
 ) =>
   Function.pipe(
     Observability.make(),
@@ -122,6 +123,7 @@ export const initializeObservability = async (
         feedbackLogMaxSize: LOG_STORE_MAX_BYTES,
         feedbackLogsEndpoint: feedbackLogsEndpoint(config, isTauri),
         posthog: observabilityDisabled ? POSTHOG_DISABLED_CONFIG : undefined,
+        sessionRecordingStart,
       }),
     ),
     Observability.addDataProvider(ObservabilityProvider.IPData.provider(config)),

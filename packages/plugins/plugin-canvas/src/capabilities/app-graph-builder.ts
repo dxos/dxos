@@ -21,8 +21,6 @@ import { canvasViewAspect } from '../containers/CanvasArticle/view-state.ts';
 
 // Module-level: the graph dedupes action properties by reference, so a tuple rebuilt per evaluation re-emits the node.
 type LabelTuple = [string, { ns: string }];
-const DOCK_PANELS_LABEL: LabelTuple = ['dock-panels.label', { ns: meta.profile.key }];
-const FLOAT_PANELS_LABEL: LabelTuple = ['float-panels.label', { ns: meta.profile.key }];
 const LOCK_LABEL: LabelTuple = ['lock-drawing.label', { ns: meta.profile.key }];
 const UNLOCK_LABEL: LabelTuple = ['unlock-drawing.label', { ns: meta.profile.key }];
 
@@ -39,8 +37,8 @@ export default Capability.makeModule(
           (drawing) => get(Obj.atom(drawing.canvas))?.schema === Canvas.SCENE_SCHEMA,
         ),
       actions: (drawing, get) => {
-        // Both modes are this viewer's, kept in the canvas's view state where the article reads them; each item flips
-        // its mode, so it names the one it switches to.
+        // The mode is this viewer's, kept in the canvas's view state where the article reads it; the item flips it, so
+        // it names the one it switches to.
         const [viewState] = get(viewStateCapabilityAtom);
         const canvas = drawing.canvas.target;
         const contextId = canvas && Entity.getURI(canvas);
@@ -51,32 +49,24 @@ export default Capability.makeModule(
         const readonlyDefault =
           typeof record === 'object' && record !== null && Reflect.get(record, 'readonly') === true;
         const readonly = state.readonly ?? readonlyDefault;
-        const floating = state.floating === true;
-        const toggle = (key: 'readonly' | 'floating', current: boolean) =>
+        const toggle = () =>
           Effect.sync(() => {
             if (viewState && contextId) {
-              viewState.update(canvasViewAspect, contextId, (state) => ({ ...state, [key]: !(state[key] ?? current) }));
+              viewState.update(canvasViewAspect, contextId, (state) => ({
+                ...state,
+                readonly: !(state.readonly ?? readonlyDefault),
+              }));
             }
           });
         return Effect.succeed([
           AppGraphNode.makeAction({
             id: `${drawing.id}.readonly`,
-            data: () => toggle('readonly', readonlyDefault),
+            data: toggle,
             properties: {
               label: readonly ? UNLOCK_LABEL : LOCK_LABEL,
               icon: readonly ? 'ph--pencil-simple--regular' : 'ph--lock-simple--regular',
               disposition: 'list-item',
               testId: 'canvas.readonly',
-            },
-          }),
-          AppGraphNode.makeAction({
-            id: `${drawing.id}.floating`,
-            data: () => toggle('floating', false),
-            properties: {
-              label: floating ? DOCK_PANELS_LABEL : FLOAT_PANELS_LABEL,
-              icon: floating ? 'ph--sidebar-simple--regular' : 'ph--arrow-square-out--regular',
-              disposition: 'list-item',
-              testId: 'canvas.floating',
             },
           }),
         ]);

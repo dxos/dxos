@@ -85,8 +85,8 @@ so the runner is in the trace — that's the tradeoff for needing zero code).
 - Browser/storybook/workerd suites — this is node-only (`createNodeProject`). The same
   moon-passthrough gap exists on `test-browser`/`test-workerd` but the instrumentation is
   not wired there.
-- Profiling the running Composer **app** (not tests): use the `perf` skill
-  (`.agents/skills/perf/SKILL.md`). App memory growth is its `MEMORY.md` workflow.
+- Profiling the running Composer **app** (not tests): use the `perf` skill,
+  whose memory workflow covers app memory growth.
 
 ## Reference
 

@@ -155,6 +155,11 @@
   .dx-card[data-selected] {
     border-color: var(--color-accent-bg);
   }
+  /* In a stack the focus ring already marks the keyboard's card, so the chosen one reads as current, not a second edge. */
+  .dx-focus-item.dx-card[data-selected] {
+    border-color: var(--color-separator);
+    background: var(--color-current-surface);
+  }
 
   /* A clickable card or row: the hover surface, and the shared inset ring on keyboard focus. */
   .dx-card-clickable {

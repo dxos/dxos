@@ -9,16 +9,12 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 import { type InvitationResult } from '@dxos/react-client/invitations';
 import * as Dialog from '@dxos/react-ui/Dialog';
-import * as UiHooks from '@dxos/react-ui/Hooks';
 import { JoinPanel, type JoinPanelProps } from '@dxos/shell/react';
-import { osTranslations } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
 import { ClientOperation } from '#operations';
 
 export const JoinDialog = (props: JoinPanelProps) => {
   const { invokePromise } = Hooks.useOperationInvoker();
-  const { t } = UiHooks.useTranslation(meta.profile.key);
 
   const handleCancelResetStorage = useCallback(() => invokePromise(ClientOperation.ShareIdentity), [invokePromise]);
 
@@ -36,22 +32,17 @@ export const JoinDialog = (props: JoinPanelProps) => {
     [invokePromise],
   );
 
-  // TODO(burdon): Move JoinHeading into Dialog.Heading.
+  // The panel supplies the Header (and its Title), then each step's Body and Footer.
   return (
     <Dialog.Content>
-      <Dialog.Header>
-        <Dialog.Title classNames='sr-only'>{t('join-space.label', { ns: osTranslations })}</Dialog.Title>
-      </Dialog.Header>
-      <Dialog.Body>
-        <JoinPanel
-          {...props}
-          mode='halo-only'
-          exitActionParent={<Dialog.CloseTrigger asChild />}
-          doneActionParent={<Dialog.CloseTrigger asChild />}
-          onCancelResetStorage={handleCancelResetStorage}
-          onDone={handleDone}
-        />
-      </Dialog.Body>
+      <JoinPanel
+        {...props}
+        mode='halo-only'
+        exitActionParent={<Dialog.CloseTrigger asChild />}
+        doneActionParent={<Dialog.CloseTrigger asChild />}
+        onCancelResetStorage={handleCancelResetStorage}
+        onDone={handleDone}
+      />
     </Dialog.Content>
   );
 };

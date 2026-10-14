@@ -10,9 +10,8 @@ import type { MaybePromise } from '@dxos/util';
 import { WorkerProtocol } from '@dxos/worker-framework';
 import * as Client from '@dxos/worker-framework/Client';
 
+import { LEADER_LOCK_KEY } from '../../lock-key.ts';
 import { ClientServicesProxy } from '../service-proxy.ts';
-
-export const LEADER_LOCK_KEY = '@dxos/client/DedicatedWorkerClientServices/LeaderLock';
 
 export type LeaderTimeoutOptions = Client.LeaderTimeouts;
 

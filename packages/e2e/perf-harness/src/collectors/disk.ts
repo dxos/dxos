@@ -27,7 +27,8 @@ const EXPRESSION = `(() => {
   return typeof read === 'function' ? JSON.stringify(read()) : null;
 })()`;
 
-const EMPTY: DiskMetrics = {
+/** No I/O and no realms: the opening reading of a stage that starts every realm over. */
+export const EMPTY_DISK: DiskMetrics = {
   readBytes: 0,
   writeBytes: 0,
   reads: 0,
@@ -46,7 +47,7 @@ type RemoteResult = { result?: { value?: unknown } };
  * so every byte below is absence rather than measurement.
  */
 export const readDisk = async (targets: Attached[]): Promise<DiskMetrics> => {
-  const totals: DiskMetrics = { ...EMPTY };
+  const totals: DiskMetrics = { ...EMPTY_DISK };
   for (const target of targets) {
     const response = await target.cdp.trySend<RemoteResult>('Runtime.evaluate', {
       expression: EXPRESSION,

@@ -25,11 +25,16 @@ type VariantSelection = Schema.Schema.Type<typeof VariantSelection>;
 
 /**
  * Variant picker for drawings (SearchList over contributed `IllustratorCapabilities.DrawingVariant[]`).
- * Picking a variant selects it (the first is selected initially); Save calls `onCreateObject({ variantId })`,
- * which plugin-illustrator's CreateObjectEntry.createObject resolves to build the canvas via
- * variant.createCanvas, then wraps it in a Drawing.
+ * Picking a variant selects it (the first is selected initially); Save calls `onCreateObject({ variantId, input })`
+ * with the caller's `initialFormValues` (a name typed into a link, say) as `input`, which plugin-illustrator's
+ * CreateObjectEntry.createObject resolves to build the canvas via variant.createCanvas, then wraps it in a Drawing.
  */
-export const CreateDrawingPanel = ({ onCreateObject, onCancel, variants: variantsProp }: CreateDrawingPanelProps) => {
+export const CreateDrawingPanel = ({
+  initialFormValues,
+  onCreateObject,
+  onCancel,
+  variants: variantsProp,
+}: CreateDrawingPanelProps) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
   const capabilityVariants = Hooks.useCapabilities(IllustratorCapabilities.VariantProvider);
   const variants = variantsProp ?? capabilityVariants;
@@ -46,8 +51,8 @@ export const CreateDrawingPanel = ({ onCreateObject, onCancel, variants: variant
 
   // Returned so the form's `saving` guard keeps Save disabled until creation settles.
   const handleSave = useCallback(
-    async ({ variantId }: VariantSelection) => onCreateObject({ variantId }),
-    [onCreateObject],
+    async ({ variantId }: VariantSelection) => onCreateObject({ variantId, input: initialFormValues }),
+    [onCreateObject, initialFormValues],
   );
 
   return (

@@ -10,6 +10,7 @@ import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
+import { type Size } from '../../sizes.ts';
 import * as Field from '../Field/Field.tsx';
 
 export type PinInputProps = ThemedClassName<
@@ -39,6 +40,8 @@ export type PinInputProps = ThemedClassName<
   'onValueChange'?: (value: string) => void;
   /** Called once every cell is filled. */
   'onValueComplete'?: (value: string) => void;
+  /** The cells' size, as any control's (a code entered on its own reads larger than a form's fields). */
+  'size'?: Size;
   /** Names the cells' group when there is no enclosing `Field.Label`. */
   'aria-label'?: string;
   'data-testid'?: string;
@@ -63,6 +66,7 @@ export const PinInput = forwardRef<HTMLDivElement, PinInputProps>(
       onValueChange,
       onValueComplete,
       placeholder = '',
+      size,
       'aria-label': ariaLabel,
       'data-testid': testId,
       ...props
@@ -88,6 +92,7 @@ export const PinInput = forwardRef<HTMLDivElement, PinInputProps>(
           aria-labelledby={ariaLabel ? undefined : field?.ids.label}
           aria-describedby={field?.ariaDescribedby}
           data-testid={testId}
+          data-size={size}
           className={mx(recipes.pinInputControl(), classNames)}
           ref={forwardedRef}
         >

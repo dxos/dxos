@@ -29,19 +29,17 @@ export const JoinDialog = (joinPanelProps: JoinDialogProps) => {
       }
     >
       <AlertDialog.Content aria-labelledby={titleId}>
-        <AlertDialog.Body>
-          <AlertDialog.Description srOnly>
-            {t(joinPanelProps.mode === 'halo-only' ? 'selecting-identity.heading' : 'joining-space.heading')}
-          </AlertDialog.Description>
-          <JoinPanel
-            {...{
-              ...joinPanelProps,
-              titleId,
-              exitActionParent: <Dialog.CloseTrigger asChild />,
-              doneActionParent: <Dialog.CloseTrigger asChild />,
-            }}
-          />
-        </AlertDialog.Body>
+        <AlertDialog.Description srOnly>
+          {t(joinPanelProps.mode === 'halo-only' ? 'selecting-identity.heading' : 'joining-space.heading')}
+        </AlertDialog.Description>
+        <JoinPanel
+          {...{
+            ...joinPanelProps,
+            titleId,
+            exitActionParent: <Dialog.CloseTrigger asChild />,
+            doneActionParent: <Dialog.CloseTrigger asChild />,
+          }}
+        />
       </AlertDialog.Content>
     </AlertDialog.Root>
   );

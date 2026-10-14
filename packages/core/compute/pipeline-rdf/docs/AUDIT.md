@@ -5,11 +5,11 @@ triples, persisting them, and querying/reasoning over them, in both Node and the
 
 ## In use today
 
-- **N3.js** (`n3`) — RDF/JS parser, serializer, and in-memory quad store (the `layerMemory` backend).
-- **Comunica** (`@comunica/query-sparql-rdfjs`) — the SPARQL engine run over the memory and SQLite
-  sources. Note: the SQLite path is Node/worker-only — Comunica does not run on the browser main thread.
+- **N3.js** (`n3`) — RDF/JS data model and serializer for the fact ↔ triple mapping.
+- **`@dxos/sparql-sqlite`** — the SPARQL engine and quad store: each query compiles to one SQL statement
+  over synchronous SQLite (Durable Object, `node:sqlite`, or in-memory wa-sqlite in the browser).
 - **sparqljs** — SPARQL 1.1 parser/generator (AST), used to build and parse queries.
-- **`@dxos/sql-sqlite`** — the SQLite-backed triple store.
+- **`@dxos/sql-sqlite`** — the synchronous SQLite drivers (`SqlStorage`) for node and the browser.
 
 The recurring constraint below is the **browser gap**: a first-class SPARQL/reasoning story that runs in
 the browser main thread (not just Node or a worker) — which is why several WASM candidates appear.
@@ -23,12 +23,12 @@ the browser main thread (not just Node or a worker) — which is why several WAS
   schema-defined, typed data access over SPARQL endpoints or in-memory quads via a query builder; built
   on Comunica + RDF/JS.
 - **Comunica** — <https://comunica.dev>. A modular, extensible SPARQL 1.1 engine for JS (Node + browser)
-  that federates queries across heterogeneous RDF sources (files, endpoints, RDF/JS stores). In use here.
+  that federates queries across heterogeneous RDF sources (files, endpoints, RDF/JS stores).
 
 ## Candidates to evaluate
 
 RDF/query/reasoning/graph libraries (JS or WASM), each with why it is worth a look for `pipeline-rdf`.
-Excludes what is already in use (N3.js, Comunica, sparqljs).
+Excludes what is already in use (N3.js, sparql-sqlite, sparqljs).
 
 1. **Oxigraph** — <https://github.com/oxigraph/oxigraph> (`oxigraph` npm). Rust SPARQL 1.1 triple store
    compiled to **WASM**; runs in the browser and Node. Directly addresses the browser-SPARQL gap that

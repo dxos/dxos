@@ -14,6 +14,7 @@ import { MemoryOperation } from '#types';
 const operations = [
   MemoryOperation.ResolveEntity,
   MemoryOperation.Remember,
+  MemoryOperation.Forget,
   MemoryOperation.Recall,
   MemoryOperation.ProposeGoal,
   MemoryOperation.ConfirmGoal,
@@ -55,8 +56,9 @@ export const make = (): Skill.Skill =>
         - Before leaving the topic of goals, ask whether there is anything else they are working toward; people rarely list every goal unprompted.
         - As you go, call ${tool(MemoryOperation.Remember)} once per atomic third-person claim (e.g. "Rich leads the Composer team.").
           Use origin "stated" for what they told you and "inferred" for your own conclusions.
-          List every entity the claim is about as a subject; resolve other people and teams with ${tool(MemoryOperation.ResolveEntity)} first.
-        - When something contradicts an earlier memory, remember the new claim with supersedes set to the old memory.
+          Pass yourself as the agent, and list every entity the claim is about as a subject; resolve other people and teams with ${tool(MemoryOperation.ResolveEntity)} first.
+        - When something contradicts an earlier memory, remember the new claim with supersedes set to the old memory's id (from ${tool(MemoryOperation.Recall)}).
+        - When a memory turns out to be wrong rather than out of date, withdraw it with ${tool(MemoryOperation.Forget)}.
         - Call ${tool(MemoryOperation.ProposeGoal)} for each goal they describe, owned by the people or teams who hold it.
 
         End of the interview:

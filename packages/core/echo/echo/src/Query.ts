@@ -7,7 +7,7 @@
 import type * as EffectArray from 'effect/Array';
 import type * as Schema from 'effect/Schema';
 
-import { type QueryAST } from '@dxos/echo-protocol';
+import { QueryAST } from '@dxos/echo-protocol';
 import { EID, type URI } from '@dxos/keys';
 
 import type * as Aggregate from './Aggregate.ts';
@@ -811,3 +811,14 @@ const _isRawScope = (value: unknown): value is QueryAST.Scope => {
  * @performance O(AST size) string build; meant for logs and tooling, not hot paths.
  */
 export const pretty = (query: Any): string => internal.prettyQuery(query.ast);
+
+/** Static classification of a query; see {@link QueryAST.Characteristics}. */
+export type Characteristics = QueryAST.Characteristics;
+
+/**
+ * Classifies a query from its AST alone: which branches the in-process sources answer before any remote,
+ * and what a remote entry must carry for local evidence to overrule it.
+ *
+ * @performance O(AST size); pure, no database access.
+ */
+export const characteristics = (query: Any): Characteristics => QueryAST.characteristics(query.ast);
