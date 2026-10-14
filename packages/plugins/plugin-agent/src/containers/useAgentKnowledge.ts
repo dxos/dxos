@@ -10,6 +10,7 @@ import type * as Agent from '@dxos/assistant/Agent';
 import { type Database, Filter, Obj, type Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
+import { RDF } from '@dxos/pipeline-rdf';
 import { Organization, Person } from '@dxos/types';
 
 import {
@@ -18,7 +19,9 @@ import {
   type AgentKnowledgeFact,
   type AgentKnowledgeGoal,
   type AgentKnowledgeNode,
+  type AgentKnowledgePredicate,
   type EntityCardModel,
+  curie,
   toEntityCards,
 } from '#components';
 import { Goal, Knowledge, Profile } from '#types';
@@ -34,6 +37,9 @@ export type AgentKnowledgeData = {
   facts: AgentKnowledgeFact[];
   /** One card per entity the brain's facts and active memories mention. */
   cards: EntityCardModel[];
+  predicates: AgentKnowledgePredicate[];
+  /** The brain's ontology graph as TriG. */
+  ontology: string;
   goals: AgentKnowledgeGoal[];
   nodes: AgentKnowledgeNode[];
   edges: AgentKnowledgeEdge[];
@@ -160,6 +166,35 @@ export const useAgentKnowledge = (agent: Agent.Agent): AgentKnowledgeData => {
     return toEntityCards(statements, { objects: true });
   }, [inspection, memories]);
 
+  // The brain starts with the seed vocabulary; the predicates its extractor minted are read off the facts that use
+  // them, which carry the definition the brain stored.
+  const { predicates, ontology } = useMemo(() => {
+    const all = (inspection?.facts ?? []).map(({ fact }) => fact);
+    const seeded = RDF.Ontology.DEFAULT.withNamespace(RDF.Vocab.brainNamespace(agent.id));
+    const known = seeded.include(RDF.Graph.mintedPredicates(all, seeded));
+    const counts = new Map<string, number>();
+    for (const fact of all) {
+      const iri = RDF.Mapping.predicateOf(fact, known);
+      const canonical = known.canonical(iri)?.iri ?? iri;
+      counts.set(canonical, (counts.get(canonical) ?? 0) + 1);
+    }
+    const items = known.entries
+      .map((entry): AgentKnowledgePredicate => {
+        const name = curie(entry.iri, known.namespace);
+        return {
+          iri: entry.iri,
+          curie: name,
+          label: entry.label,
+          vocabulary: entry.definedBy === known.namespace ? 'brain' : name.split(':')[0],
+          ...(entry.description ? { description: entry.description } : {}),
+          ...(entry.synonyms?.length ? { synonyms: entry.synonyms } : {}),
+          count: counts.get(entry.iri) ?? 0,
+        };
+      })
+      .sort((left, right) => right.count - left.count || left.label.localeCompare(right.label));
+    return { predicates: items, ontology: RDF.Graph.ontologyToTriG(known) };
+  }, [inspection, agent.id]);
+
   // A failed re-read keeps the last snapshot on screen, so an error stands in only before anything was read.
   const brain = useMemo(
     (): AgentKnowledgeBrainStatus =>
@@ -167,5 +202,5 @@ export const useAgentKnowledge = (agent: Agent.Agent): AgentKnowledgeData => {
     [inspection, error],
   );
 
-  return { memories, facts, cards, goals: goalItems, nodes, edges, brain, refresh };
+  return { memories, facts, cards, predicates, ontology, goals: goalItems, nodes, edges, brain, refresh };
 };

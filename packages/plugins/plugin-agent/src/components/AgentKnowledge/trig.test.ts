@@ -76,17 +76,22 @@ const STORED_FACT: RDF.Fact = {
 describe('formatRawFact', () => {
   test('writes the statement as a triple inside its graph, with an ontology predicate', ({ expect }) => {
     const trig = formatRawFact(STORED_FACT);
-    expect(trig).toMatch(/^fact:f1 \{/);
-    expect(trig).toContain('entity:rich-burdon dx:hasRole entity:founder');
+    expect(trig).toMatch(/^fact:f1 \{/m);
+    // Unresolved entities are local to the fact's graph, under a prefix of their own.
+    expect(trig).toContain('@prefix g1: <https://dxos.org/semantic/fact/f1#>.');
+    expect(trig).toContain('g1:rich-burdon schema:jobTitle g1:founder');
     expect(trig).toContain('prov:wasDerivedFrom "https://dxos.org/team"');
-    expect(trig).not.toContain('@prefix');
+    expect(trig).not.toContain('@prefix dx:');
     expect(TRIG_PREFIXES).toContain('@prefix dx: <https://dxos.org/ontology/>.');
   });
 
   test('indents graph bodies, spaces terminators and separates blocks', ({ expect }) => {
     const trig = formatRawFact(STORED_FACT);
     const lines = trig.split('\n');
-    const body = lines.slice(1, lines.indexOf('}'));
+    // The fact's own prefixes (its graph-local entities) come first, as one block.
+    const start = lines.findIndex((line) => line.endsWith('{'));
+    expect(lines.slice(0, start - 1).every((line) => line.startsWith('@prefix'))).toBe(true);
+    const body = lines.slice(start + 1, lines.indexOf('}'));
     expect(body.length).toBeGreaterThan(0);
     expect(body.every((line) => line.startsWith('  '))).toBe(true);
     expect(body.at(-1)).toMatch(/ \.$/);
