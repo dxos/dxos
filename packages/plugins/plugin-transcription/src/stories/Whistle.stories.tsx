@@ -6,7 +6,8 @@
  * Lowest-latency streaming transcription with Whistle (https://cactuscompute.com/blog/whistle), a
  * 17 MB on-device speech model run as WASM in a worker. Unlike the `Transcription` story, nothing
  * is sent to a service: each pass re-decodes the buffered audio, words two consecutive passes agree
- * on are committed, and the unconfirmed tail is shown (italic) as soon as the first pass returns.
+ * on are committed, and the unconfirmed tail is shown (italic) as soon as the first pass returns. A
+ * noise gate passes only speech, since the model decodes silence and room noise into phantom phrases.
  *
  * - `Microphone` streams the default input; `File` plays the same hosted m4a as `Transcription`.
  * - The model downloads on the first press and is cached by the browser afterwards.
@@ -93,7 +94,7 @@ const formatMs = (value?: number) => (value === undefined ? '–' : `${Math.roun
 
 const formatSeconds = (value?: number) => (value === undefined ? '–' : `${value.toFixed(2)} s`);
 
-const Stats = ({ status, error, progress, stats }: UseWhistleResult) => {
+const Stats = ({ status, error, progress, speaking, stats }: UseWhistleResult) => {
   if (status === 'error') {
     return <span className='text-error-text text-sm truncate'>{error}</span>;
   }
@@ -102,6 +103,9 @@ const Stats = ({ status, error, progress, stats }: UseWhistleResult) => {
   }
   return (
     <span className='text-description text-sm font-mono tabular-nums whitespace-nowrap'>
+      <span className={speaking ? 'text-success-text' : undefined} title={speaking ? 'Speech' : 'Gated'}>
+        ●
+      </span>{' '}
       load {formatMs(stats.loadMs)} · pass {formatMs(stats.passMs)} · lag {formatSeconds(stats.commitLag)} · backlog{' '}
       {formatSeconds(stats.backlog)}
     </span>

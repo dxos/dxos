@@ -62,10 +62,10 @@ let keywordsPtr = 0;
 let pcmPtr = 0;
 let pcmCapacity = 0;
 
-let queue: Float32Array[] = [];
+/** Audio in arrival order, with markers where the caller ended an utterance or the stream. */
+let queue: Array<Float32Array | 'flush' | 'stop'> = [];
 let queued = 0;
 let draining = false;
-let stopRequested = false;
 
 /** Seconds of audio in streams already ended, so word times stay absolute across segments. */
 let segmentOffset = 0;
@@ -158,17 +158,26 @@ const init = async (assets: WhistleAssets, language?: string, keywords?: string[
   post({ type: 'ready', loadMs: performance.now() - started });
 };
 
-const takeQueued = (): Float32Array => {
-  const samples = new Float32Array(queued);
+/** Takes the audio up to the next marker, and the marker itself. */
+const takeQueued = (): { samples: Float32Array; marker?: 'flush' | 'stop' } => {
+  const end = queue.findIndex((item) => typeof item === 'string');
+  const chunks = (end < 0 ? queue : queue.slice(0, end)).filter(
+    (item): item is Float32Array => typeof item !== 'string',
+  );
+  const marker = end < 0 ? undefined : queue[end];
+  queue = end < 0 ? [] : queue.slice(end + 1);
+
+  const samples = new Float32Array(chunks.reduce((total, chunk) => total + chunk.length, 0));
   let offset = 0;
-  for (const chunk of queue) {
+  for (const chunk of chunks) {
     samples.set(chunk, offset);
     offset += chunk.length;
   }
-  queue = [];
-  queued = 0;
-  return samples;
+  queued -= samples.length;
+  return { samples, marker: typeof marker === 'string' ? marker : undefined };
 };
+
+const hasWork = () => queued >= MIN_PASS_SAMPLES || queue.some((item) => typeof item === 'string');
 
 const parseOutput = (module: NeedleModule): StreamOutput => JSON.parse(readString(module, outPtr));
 
@@ -179,6 +188,9 @@ const offsetWords = (words: WhistleWord[] = []): WhistleWord[] =>
 
 /** Ends the current stream; its unconfirmed tail becomes committed words. */
 const endSegment = (module: NeedleModule): WhistleWord[] => {
+  if (segmentReceived === 0) {
+    return [];
+  }
   module._needle_stream_transcribe_stop(outPtr, OUT_CAPACITY);
   const words = offsetWords(parseOutput(module).words);
   segmentOffset += segmentReceived;
@@ -220,18 +232,21 @@ const drain = async () => {
   }
   draining = true;
   try {
-    while (engine && (queued >= MIN_PASS_SAMPLES || (stopRequested && queued > 0))) {
-      const result = runPass(engine, takeQueued());
+    while (engine && hasWork()) {
+      const { samples, marker } = takeQueued();
+      const received = segmentOffset + segmentReceived;
+      const result: PassResult =
+        samples.length > 0 ? runPass(engine, samples) : { words: [], pending: '', passMs: 0, received };
+      if (marker) {
+        result.words.push(...endSegment(engine));
+        result.pending = '';
+        if (marker === 'stop') {
+          segmentOffset = 0;
+        }
+      }
       // Posted after the yield so the backlog counts the audio that arrived during the pass.
       await yieldToMessages();
       post({ type: 'result', ...result, backlog: queued / WHISTLE_SAMPLE_RATE });
-    }
-    if (engine && stopRequested) {
-      stopRequested = false;
-      const received = segmentOffset + segmentReceived;
-      const words = endSegment(engine);
-      segmentOffset = 0;
-      post({ type: 'result', words, pending: '', passMs: 0, received, backlog: 0 });
     }
   } catch (err) {
     post({ type: 'error', message: err instanceof Error ? err.message : String(err) });
@@ -255,8 +270,9 @@ globalThis.addEventListener('message', (event: MessageEvent<WhistleRequest>) => 
       void drain();
       break;
     }
+    case 'flush':
     case 'stop': {
-      stopRequested = true;
+      queue.push(request.type);
       void drain();
       break;
     }

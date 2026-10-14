@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import { log } from '@dxos/log';
 import { MediaStreamRecorder } from '@dxos/react-ui-transcription';
 
+import { NoiseGate } from './noise-gate.ts';
 import {
   WHISTLE_ASSETS,
   WHISTLE_SAMPLE_RATE,
@@ -48,6 +49,8 @@ export type UseWhistleResult = {
   error?: string;
   /** Model download progress in [0, 1]. */
   progress: number;
+  /** Whether the noise gate currently hears speech. */
+  speaking: boolean;
   stats: WhistleStats;
 };
 
@@ -81,14 +84,16 @@ class Downsampler {
 }
 
 /**
- * Streams a track through the Whistle on-device speech model in a worker. The model loads on first
- * activation (≈17 MB, cached by the browser afterwards); audio never leaves the tab.
+ * Streams a track through the Whistle on-device speech model in a worker. Only gated speech reaches
+ * the model. The model loads on first activation (≈17 MB, cached by the browser afterwards); audio
+ * never leaves the tab.
  */
 export const useWhistle = ({ track, active, language, keywords, onResult }: UseWhistleProps): UseWhistleResult => {
   const [status, setStatus] = useState<WhistleStatus>('idle');
   const [error, setError] = useState<string>();
   const [progress, setProgress] = useState(0);
   const [stats, setStats] = useState<WhistleStats>({});
+  const [speaking, setSpeaking] = useState(false);
   const [worker, setWorker] = useState<Worker>();
 
   const onResultRef = useRef(onResult);
@@ -163,17 +168,27 @@ export const useWhistle = ({ track, active, language, keywords, onResult }: UseW
 
     const recorder = new MediaStreamRecorder({ mediaStreamTrack: track, config: { interval: CAPTURE_INTERVAL_MS } });
     let downsampler: Downsampler | undefined;
+    const gate = new NoiseGate();
     recorder.setOnChunk((chunk) => {
       downsampler ??= new Downsampler(recorder.wavConfig.sampleRate / WHISTLE_SAMPLE_RATE);
-      const samples = downsampler.process(chunk.data);
-      worker.postMessage({ type: 'audio', samples } satisfies WhistleRequest, [samples.buffer]);
+      const { samples, closed, open } = gate.process(downsampler.process(chunk.data));
+      if (samples.length > 0) {
+        worker.postMessage({ type: 'audio', samples } satisfies WhistleRequest, [samples.buffer]);
+      }
+      // A fresh stream per utterance keeps every pass short and stops the decoder carrying words
+      // across the silence.
+      if (closed) {
+        worker.postMessage({ type: 'flush' } satisfies WhistleRequest);
+      }
+      setSpeaking(open);
     });
 
     void recorder.start();
     return () => {
+      setSpeaking(false);
       void recorder.stop().then(() => worker.postMessage({ type: 'stop' } satisfies WhistleRequest));
     };
   }, [worker, track, active]);
 
-  return { status, error, progress, stats };
+  return { status, error, progress, speaking, stats };
 };
