@@ -185,7 +185,9 @@ const handler: Operation.WithHandler<typeof AgentOperation.InviteAgent> = AgentO
       const { db } = yield* Database.Service;
       const here = yield* memberSpace(db.spaceId);
       const admits = identity !== undefined && here !== undefined && !isMember(here.space, identity.identityKey);
-      // Refused before EDGE puts the brain in the space, where the agent would then be without being a member.
+      // A member who may not admit the agent is refused before EDGE puts the brain in the space. Any later failure
+      // fails the invitation, and adding the agent again repeats each step safely: EDGE records the space once, an
+      // admission skips a current member, and the presence is made only where there is none.
       if (admits && !mayAdmitAgent(here.space, here.self)) {
         return yield* Effect.fail(new AdmitAgentError());
       }
