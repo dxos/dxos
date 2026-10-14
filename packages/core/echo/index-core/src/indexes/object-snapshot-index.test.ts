@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as SqlClient from 'effect/sql/SqlClient';
 
 import { ATTR_META, ATTR_TYPE } from '@dxos/echo/internal';
+import { invariant } from '@dxos/invariant';
 import { DXN, EntityId, SpaceId } from '@dxos/keys';
 
 import { TestSqliteLayer as TestLayer } from '../testing/index.ts';
@@ -154,17 +155,19 @@ describe('ObjectSnapshotIndex', () => {
       };
       yield* metaIndex.update([object]);
       yield* metaIndex.lookupRecordIds([object]);
+      const { recordId } = object;
+      invariant(recordId !== null);
       yield* store.update([object]);
-      const [backing] = yield* store.queryBackings([object.recordId!]);
+      const [backing] = yield* store.queryBackings([recordId]);
       expect(backing.bytes).toEqual(new Uint8Array([1, 2, 3]));
 
       yield* store.update([{ ...object, bytes: undefined }]);
-      const [withoutBytes] = yield* store.queryBackings([object.recordId!]);
+      const [withoutBytes] = yield* store.queryBackings([recordId]);
       expect(withoutBytes.heads).toEqual(['h1']);
       expect(withoutBytes.bytes).toBeUndefined();
 
       yield* store.update([{ ...object, heads: undefined }]);
-      expect(yield* store.queryBackings([object.recordId!])).toEqual([]);
+      expect(yield* store.queryBackings([recordId])).toEqual([]);
     }, Effect.provide(TestLayer)),
   );
 
