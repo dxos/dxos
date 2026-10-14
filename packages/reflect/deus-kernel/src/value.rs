@@ -60,6 +60,105 @@ impl Drop for Con {
     }
 }
 
+/// A version of a persistent array (D84), as in the TypeScript kernel: the newest version owns the
+/// items and an older one records the write that separates it from a newer one (Baker's trick).
+/// Reading an old version reroots, reversing the diffs so that version owns the items.
+pub struct Version {
+    node: RefCell<Node>,
+}
+
+enum Node {
+    Root(Vec<Value>),
+    Diff(usize, Value, Rc<Version>),
+}
+
+impl Version {
+    pub fn new(items: Vec<Value>) -> Rc<Version> {
+        Rc::new(Version {
+            node: RefCell::new(Node::Root(items)),
+        })
+    }
+
+    /// Calls `f` with this version's items, after rerooting so it owns them.
+    pub fn with<R>(self: &Rc<Self>, f: impl FnOnce(&[Value]) -> R) -> R {
+        Version::reroot(self);
+        match &*self.node.borrow() {
+            Node::Root(items) => f(items),
+            Node::Diff(..) => unreachable!("rerooted"),
+        }
+    }
+
+    /// A copy of this version's items that no later reroot changes.
+    pub fn snapshot(self: &Rc<Self>) -> Vec<Value> {
+        self.with(|items| items.to_vec())
+    }
+
+    /// A new version with `value` at `index`; this one keeps its contents.
+    pub fn set(self: &Rc<Self>, index: usize, value: Value) -> Rc<Version> {
+        Version::reroot(self);
+        let mut items = match std::mem::replace(&mut *self.node.borrow_mut(), Node::Root(Vec::new())) {
+            Node::Root(items) => items,
+            Node::Diff(..) => unreachable!("rerooted"),
+        };
+        let old = std::mem::replace(&mut items[index], value);
+        let newer = Version::new(items);
+        *self.node.borrow_mut() = Node::Diff(index, old, newer.clone());
+        newer
+    }
+
+    /// Iterative, so a long chain of old versions does not overflow the stack.
+    fn reroot(version: &Rc<Version>) {
+        let mut path: Vec<Rc<Version>> = Vec::new();
+        let mut node = version.clone();
+        loop {
+            let next = match &*node.node.borrow() {
+                Node::Root(_) => None,
+                Node::Diff(_, _, newer) => Some(newer.clone()),
+            };
+            match next {
+                None => break,
+                Some(newer) => {
+                    path.push(node);
+                    node = newer;
+                }
+            }
+        }
+        // From the root back: each newer version becomes a diff to the older one, which takes the items.
+        for older in path.into_iter().rev() {
+            let (index, value, newer) = match std::mem::replace(&mut *older.node.borrow_mut(), Node::Root(Vec::new())) {
+                Node::Diff(index, value, newer) => (index, value, newer),
+                Node::Root(_) => unreachable!("on the path"),
+            };
+            let mut items = match std::mem::replace(&mut *newer.node.borrow_mut(), Node::Root(Vec::new())) {
+                Node::Root(items) => items,
+                Node::Diff(..) => unreachable!("rerooted up to here"),
+            };
+            let current = std::mem::replace(&mut items[index], value);
+            *newer.node.borrow_mut() = Node::Diff(index, current, older.clone());
+            *older.node.borrow_mut() = Node::Root(items);
+        }
+    }
+}
+
+impl Drop for Version {
+    /// Unlinks a long chain of versions iteratively, as above.
+    fn drop(&mut self) {
+        let mut next = match std::mem::replace(self.node.get_mut(), Node::Root(Vec::new())) {
+            Node::Diff(_, _, newer) => Some(newer),
+            Node::Root(_) => None,
+        };
+        while let Some(version) = next {
+            next = match Rc::try_unwrap(version) {
+                Ok(mut version) => match std::mem::replace(version.node.get_mut(), Node::Root(Vec::new())) {
+                    Node::Diff(_, _, newer) => Some(newer),
+                    Node::Root(_) => None,
+                },
+                Err(_) => None,
+            };
+        }
+    }
+}
+
 pub fn push(env: &Env, value: Value) -> Env {
     Some(Rc::new(EnvNode {
         value: OnceCell::from(value),
@@ -190,8 +289,8 @@ pub enum Value {
     Cont(Rc<Vec<Frame>>),
     Cell(Rc<RefCell<Value>>),
     Table(Rc<RefCell<Table>>),
-    /// A mutable fixed-length array (`Array.make`, D83).
-    Array(Rc<RefCell<Vec<Value>>>),
+    /// A version of a persistent array (`Array.make`, D84).
+    Array(Rc<Version>),
 }
 
 /// How a run fails: the three tiers below `Throw` (D14) plus an orderly exit.
@@ -323,6 +422,10 @@ pub fn equal(a: &Value, b: &Value) -> bool {
         if same(&a, &b) {
             return true;
         }
+        if let (Value::Array(x), Value::Array(y)) = (&a, &b) {
+            let (left, right) = (x.snapshot(), y.snapshot());
+            return left.len() == right.len() && left.iter().zip(right.iter()).all(|(p, q)| equal(p, q));
+        }
         let (Value::Con(x), Value::Con(y)) = (&a, &b) else {
             return false;
         };
@@ -392,6 +495,22 @@ pub fn compare(a: &Value, b: &Value) -> Result<i32, Fail> {
                 a = next_a;
                 b = next_b;
             }
+            (Value::Array(x), Value::Array(y)) => {
+                let (left, right) = (x.snapshot(), y.snapshot());
+                for (p, q) in left.iter().zip(right.iter()) {
+                    let c = compare(p, q)?;
+                    if c != 0 {
+                        return Ok(c);
+                    }
+                }
+                return Ok(if left.len() == right.len() {
+                    0
+                } else if left.len() < right.len() {
+                    -1
+                } else {
+                    1
+                });
+            }
             _ => {
                 let (ra, rb) = (rank(&a), rank(&b));
                 if ra != rb {
@@ -440,6 +559,10 @@ pub fn show(symbols: &Symbols, value: &Value) -> String {
                 }
             }
         },
+        Value::Array(version) => {
+            let items: Vec<String> = version.snapshot().iter().map(|item| show(symbols, item)).collect();
+            format!("#[{}]", items.join(", "))
+        }
         _ => "<function>".into(),
     }
 }

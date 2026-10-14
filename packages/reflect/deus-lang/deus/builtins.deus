@@ -125,8 +125,10 @@ def set : Ref a -> a -> Unit := prim "Ref.set"
 end Ref
 
 /--
-  A mutable array of fixed length (D83). Like `Ref`, writes are not rolled back when a
-  continuation is resumed twice. An index outside `0 .. length` is a defect.
+  An immutable array of fixed length (D84). `set` returns a new array and leaves the old one as
+  it was, but costs O(1) when the old one is not used again: the kernels keep versions (reading
+  an old one is slower), and the compiled back ends write in place when the array is unique. An
+  index outside `0 .. length` is a defect.
 -/
 inductive Array (a : Type) @"#Array" where
 
@@ -134,7 +136,7 @@ namespace Array
 def make : Int -> a -> Array a := prim "Array.make"
 def length : Array a -> Int := prim "Array.length"
 def get : Array a -> Int -> a := prim "Array.get"
-def set : Array a -> Int -> a -> Unit := prim "Array.set"
+def set : Array a -> Int -> a -> Array a := prim "Array.set"
 end Array
 
 /-- An immutable hash map with Text or Int keys, built once: O(1) lookups for indexes. -/

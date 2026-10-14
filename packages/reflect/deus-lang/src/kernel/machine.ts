@@ -99,12 +99,80 @@ export class Cell {
   }
 }
 
-/** A mutable fixed-length array (`Array.make`, D83); compared by identity. */
+/**
+  A version of a persistent array (`Array.make`, D84). Every version is an immutable value; the
+  newest one written owns the items and older ones hold the write that separates them from a newer
+  version (Baker's trick), so code that threads versions linearly pays O(1) per `get` and `set`.
+  Reading an old version reroots: the diffs are reversed so that version owns the items.
+*/
 export class Vector {
-  readonly items: Value[];
+  #items: Value[] | undefined;
+  #index = 0;
+  #value: Value = 0;
+  #newer: Vector | undefined;
 
   constructor(items: Value[]) {
-    this.items = items;
+    this.#items = items;
+  }
+
+  /**
+    The items of this version, after rerooting so it owns them. Rerooting another version reuses
+    the same storage, so read them before touching another version, or take a `snapshot`.
+  */
+  get items(): readonly Value[] {
+    return this.#reroot();
+  }
+
+  /** A copy of this version's items that no later reroot changes. */
+  snapshot(): Value[] {
+    return this.#reroot().slice();
+  }
+
+  /** A new version with `value` at `index`; this one keeps its contents. */
+  set(index: number, value: Value): Vector {
+    const items = this.#reroot();
+    const next = new Vector(items);
+    this.#items = undefined;
+    this.#index = index;
+    this.#value = items[index];
+    this.#newer = next;
+    items[index] = value;
+    return next;
+  }
+
+  #reroot(): Value[] {
+    if (this.#items) {
+      return this.#items;
+    }
+    // Iterative: a long chain of old versions must not overflow the stack.
+    const path: Vector[] = [];
+    let node: Vector = this;
+    while (!node.#items) {
+      path.push(node);
+      const newer = node.#newer;
+      if (!newer) {
+        throw new Error('persistent array without a root');
+      }
+      node = newer;
+    }
+    const items = node.#items;
+    // From the root back: each newer version becomes a diff to the older one, which takes the items.
+    for (let i = path.length - 1; i >= 0; i--) {
+      const older = path[i];
+      const newer = older.#newer;
+      if (!newer) {
+        throw new Error('persistent array without a root');
+      }
+      const index = older.#index;
+      newer.#items = undefined;
+      newer.#index = index;
+      newer.#value = items[index];
+      newer.#newer = older;
+      items[index] = older.#value;
+      older.#items = items;
+      older.#newer = undefined;
+    }
+    return items;
   }
 }
 
@@ -1307,6 +1375,9 @@ export const equal = (a: Value, b: Value): boolean => {
     if (a === b) {
       return true;
     }
+    if (a instanceof Vector && b instanceof Vector) {
+      return equalItems(a.snapshot(), b.snapshot());
+    }
     if (!(a instanceof Con) || !(b instanceof Con)) {
       return false;
     }
@@ -1326,6 +1397,10 @@ export const equal = (a: Value, b: Value): boolean => {
     b = b.fields[n - 1];
   }
 };
+
+/** Arrays are values, so they compare by their items. */
+const equalItems = (a: readonly Value[], b: readonly Value[]): boolean =>
+  a.length === b.length && a.every((item, i) => equal(item, b[i]));
 
 const rank = (value: Value): number =>
   typeof value === 'boolean'
@@ -1371,6 +1446,17 @@ export const compare = (a: Value, b: Value): number => {
       b = b.fields[n - 1];
       continue;
     }
+    if (a instanceof Vector && b instanceof Vector) {
+      const left = a.snapshot();
+      const right = b.snapshot();
+      for (let i = 0; i < Math.min(left.length, right.length); i++) {
+        const c = compare(left[i], right[i]);
+        if (c !== 0) {
+          return c;
+        }
+      }
+      return left.length === right.length ? 0 : left.length < right.length ? -1 : 1;
+    }
     const ra = rank(a);
     const rb = rank(b);
     if (ra !== rb) {
@@ -1403,6 +1489,9 @@ export const show = (value: Value): string => {
     }
     const name = `${value.type.slice(0, 8)}#${value.tag}`;
     return value.fields.length === 0 ? name : `(${name} ${value.fields.map(show).join(' ')})`;
+  }
+  if (value instanceof Vector) {
+    return '#[' + value.snapshot().map(show).join(', ') + ']';
   }
   return '<function>';
 };
