@@ -71,6 +71,8 @@ type L0ItemRootProps = {
   item: AppGraphNode.Node;
   parent?: AppGraphNode.Node;
   path: string[];
+  dragging?: boolean;
+  dropTarget?: Edge | null;
   onMouseEnter?: () => void;
 };
 
@@ -119,7 +121,7 @@ const l0Breakpoints: Record<string, string> = {
 
 const L0ItemRoot = memo(
   forwardRef<HTMLButtonElement, PropsWithChildren<L0ItemRootProps>>(
-    ({ item, parent, path, onMouseEnter, children }, forwardedRef) => {
+    ({ item, parent, path, dragging, dropTarget, onMouseEnter, children }, forwardedRef) => {
       const { t } = Hooks.useTranslation(meta.profile.key);
       const { model } = useNavTreeContext();
       const itemPath = useMemo(() => [...path, item.id], [item.id, path]);
@@ -143,6 +145,8 @@ const L0ItemRoot = memo(
               data-type={type}
               data-testid={testId}
               data-object-id={id}
+              {...(dragging && { 'data-dragging': true })}
+              {...(dropTarget && { 'data-drop-target': dropTarget })}
               {...(item.properties.pending === true && { 'aria-disabled': true })}
               onClick={handleClick}
               onMouseEnter={onMouseEnter}
@@ -171,6 +175,7 @@ const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L
   const { t } = Hooks.useTranslation(meta.profile.key);
   const itemElement = useRef<HTMLButtonElement | null>(null);
   const [closestEdge, setEdge] = useState<Edge | null>(null);
+  const [dragging, setDragging] = useState(false);
   const localizedString = Theme.toLocalizedString(item.properties.label, t);
   const hue = item.properties.hue ?? null;
   const pending = item.properties.pending === true;
@@ -194,10 +199,12 @@ const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L
           nativeSetDragImage?.(element, x, y);
         },
         onDragStart: () => {
+          setDragging(true);
           document.body.removeAttribute('data-drag-preview');
           itemElement.current!.closest('[data-drag-autoscroll]')?.setAttribute('data-drag-autoscroll', 'active');
         },
         onDrop: () => {
+          setDragging(false);
           itemElement.current!.closest('[data-drag-autoscroll]')?.setAttribute('data-drag-autoscroll', 'idle');
         },
       }),
@@ -233,7 +240,15 @@ const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L
   const handleMouseEnter = useCallback(() => onItemHover?.({ item }), [item, onItemHover]);
 
   return (
-    <L0ItemRoot ref={itemElement} item={item} parent={parent} path={path} onMouseEnter={handleMouseEnter}>
+    <L0ItemRoot
+      ref={itemElement}
+      item={item}
+      parent={parent}
+      path={path}
+      dragging={dragging}
+      dropTarget={closestEdge}
+      onMouseEnter={handleMouseEnter}
+    >
       <Layout.Flex
         data-frame={true}
         {...(pending && { 'data-pending': true, 'aria-busy': true })}
@@ -365,9 +380,8 @@ export const L0Menu = ({
         </div>
       </ActionMenu>
 
-      {/* Space list. */}
       <ScrollArea.Root orientation='vertical'>
-        <ScrollArea.Viewport classNames='flex flex-col gap-2 py-1'>
+        <ScrollArea.Viewport classNames='flex flex-col gap-2 py-1' data-testid='navtree.workspaces'>
           {topLevelItems.map((item) => (
             <L0Item
               key={item.id}

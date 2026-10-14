@@ -55,6 +55,7 @@ export const translations = [
         'activity-refresh.label': 'Refresh',
         'agent-knowledge-actions.label': 'Knowledge actions',
         'agent-knowledge-reset.label': 'Reset (forget all memories and goals)',
+        'agent-knowledge-raw-facts.label': 'Show facts as triples',
         'activity-error.label': 'That did not work',
         'activity-start.label': 'Connect channels',
         'activity-stop.label': 'Disconnect channels',

@@ -4,7 +4,7 @@
 
 import react from '@vitejs/plugin-react';
 import { execFileSync } from 'node:child_process';
-import { createReadStream, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { createReadStream, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { ResolverFactory } from 'oxc-resolver';
 // import sourcemaps from 'rollup-plugin-sourcemaps';
@@ -33,6 +33,7 @@ import { DxosLogPlugin } from '@dxos/vite-plugin-log';
 import { ModuleUrlPlugin } from '@dxos/vite-plugin-module-url';
 import { ShutdownPlugin } from '@dxos/vite-plugin-shutdown';
 
+import { reactCompilerOptions } from '../../../react-compiler.config.ts';
 import { createConfig as createTestConfig } from '../../../vitest.base.config.ts';
 import { bootChunking } from './src/vite/boot-chunking.ts';
 import { bootMarkFilter, channelFaviconPlugin, channelVariant } from './src/vite/channel-branding.ts';
@@ -170,21 +171,6 @@ const REACT_EXCLUDE = [
   /\/node_modules\//,
   /\/(?:solid-ui-geo|plugin-map-solid|effect-atom-solid|web-context-solid|echo-solid)\//,
 ];
-
-/**
- * React Compiler options; `sources` covers every workspace root except `react-ui`, whose primitives
- * ship whole in the boot graph (an import-map shared package) where compiled caches cost ~75 KB
- * and rarely hit. Scoped here rather than by `exclude` so those primitives keep Fast Refresh.
- */
-const reactCompilerOptions = {
-  sources: readdirSync(path.join(rootDir, 'packages')).flatMap((group) =>
-    group === 'ui'
-      ? readdirSync(path.join(rootDir, 'packages/ui'))
-          .filter((name) => name !== 'react-ui')
-          .map((name) => `/packages/ui/${name}/`)
-      : [`/packages/${group}/`],
-  ),
-};
 
 /**
  * Transpile targets for oxc (dev) and Rolldown (build).

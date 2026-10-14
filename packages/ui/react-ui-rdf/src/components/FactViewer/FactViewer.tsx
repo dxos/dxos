@@ -232,11 +232,13 @@ const FactViewerGroup = forwardRef<HTMLDivElement, FactViewerGroupProps>(({ clas
       )}
     </div>
     <Listbox.Root items={group.facts.map((fact) => ({ value: fact.id, label: fact.assertion.predicate }))}>
-      <Listbox.Content aria-label={group.subject}>
-        {group.facts.map((fact) => (
-          <FactViewerRow key={fact.id} fact={fact} conflicting={group.conflictedIds.has(fact.id)} />
-        ))}
-      </Listbox.Content>
+      <Listbox.Viewport>
+        <Listbox.Content aria-label={group.subject}>
+          {group.facts.map((fact) => (
+            <FactViewerRow key={fact.id} fact={fact} conflicting={group.conflictedIds.has(fact.id)} />
+          ))}
+        </Listbox.Content>
+      </Listbox.Viewport>
     </Listbox.Root>
   </div>
 ));

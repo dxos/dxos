@@ -1,0 +1,6 @@
+PREFIX : <http://example.org/>
+
+SELECT * {
+  ?s :p ?o
+}
+VALUES (?s ?x) { (:a 10) (:b 20) }

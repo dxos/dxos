@@ -1,0 +1,7 @@
+PREFIX : <http://example.org/>
+
+SELECT ?s ?rank {
+  ?s :p ?o
+}
+ORDER BY ?rank
+VALUES (?s ?rank) { (:a 3) (:b 1) (:c 2) }

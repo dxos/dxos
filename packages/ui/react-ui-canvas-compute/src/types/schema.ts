@@ -8,7 +8,6 @@ import * as Struct from 'effect/Struct';
 import { ComputeGraph, ComputeGraphModel } from '@dxos/conductor';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import * as GraphEdge from '@dxos/graph/GraphEdge';
-import * as GraphModel from '@dxos/graph/GraphModel';
 import * as GraphNode from '@dxos/graph/GraphNode';
 
 // TODO(burdon): Consider interop with TLDraw and GeoJSON standards?
@@ -47,6 +46,20 @@ export const Layout = Schema.Struct({
 
 export type Layout = Schema.Schema.Type<typeof Layout>;
 
+/** Extra keys of any type, so a stored element keeps whatever fields its editor wrote. */
+const OpenFields = [Schema.Record(Schema.String, Schema.Any)] as const;
+
+/**
+ * A board's stored graph. Its shapes and connections carry their editor's fields (a shape's `center`, `size` and
+ * `text`, a connection's `input` and `output`) beside the graph's own, so the elements are open: ECHO rejects an
+ * undeclared key on write, which would refuse every edit to a board.
+ */
+const LayoutData = Schema.Struct({
+  id: Schema.optional(Schema.String),
+  nodes: Schema.mutable(Schema.Array(Schema.StructWithRest(GraphNode.GraphNode, OpenFields))),
+  edges: Schema.mutable(Schema.Array(Schema.StructWithRest(GraphEdge.GraphEdge, OpenFields))),
+});
+
 // TODO(wittjosiah): Rename WorkflowType?
 export class CanvasBoard extends Type.makeObject<CanvasBoard>(DXN.make('org.dxos.type.canvasBoard', '0.1.0'))(
   Schema.Struct({
@@ -57,7 +70,7 @@ export class CanvasBoard extends Type.makeObject<CanvasBoard>(DXN.make('org.dxos
     /**
      * Graph of shapes positioned on the canvas.
      */
-    layout: GraphModel.Data,
+    layout: LayoutData,
   }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--infinity--regular', hue: 'sky' }), Annotation.UserType.set()),
 ) {}
 

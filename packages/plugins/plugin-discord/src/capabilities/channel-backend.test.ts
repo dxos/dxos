@@ -210,7 +210,7 @@ describe('Discord channel connection', () => {
       yield* connection.stop(channel).pipe(withCapabilities);
       expect(edge.requests).toEqual([
         {
-          path: '/compute/discord/bots/app-1',
+          path: '/discord/bots/app-1',
           method: 'PUT',
           body: {
             spaceId,
@@ -218,8 +218,8 @@ describe('Discord channel connection', () => {
             channel: `echo://${spaceId}/${channel.id}`,
           },
         },
-        { path: '/compute/discord/bots/app-1', method: 'GET' },
-        { path: '/compute/discord/bots/app-1', method: 'DELETE' },
+        { path: '/discord/bots/app-1', method: 'GET' },
+        { path: '/discord/bots/app-1', method: 'DELETE' },
       ]);
     }).pipe(Effect.provide(testLayer())),
   );

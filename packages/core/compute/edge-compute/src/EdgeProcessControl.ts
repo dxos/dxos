@@ -17,7 +17,7 @@ import type * as Scope from 'effect/Scope';
 
 import { type Client } from '@dxos/client';
 import { createEdgeIdentity } from '@dxos/client/edge';
-import { RemoteCommandRejectedError, type RemoteProcessManager } from '@dxos/compute-runtime';
+import { ProcessNotFoundError, RemoteCommandRejectedError, type RemoteProcessManager } from '@dxos/compute-runtime';
 import { Context as DxosContext } from '@dxos/context';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { EdgeCallFailedError } from '@dxos/protocols';
@@ -53,6 +53,22 @@ const call = <A>(request: () => Promise<A>): Effect.Effect<A> =>
   );
 
 /**
+ * {@link call} for a route that addresses one process: EDGE answers 404 there when it no longer hosts the process,
+ * which dies as {@link ProcessNotFoundError} so the caller fails the process rather than retrying it.
+ */
+const callProcess = <A>(request: () => Promise<A>): Effect.Effect<A> =>
+  Effect.tryPromise(request).pipe(
+    Effect.mapError(({ cause }) =>
+      cause instanceof EdgeCallFailedError && cause.status === 404
+        ? ProcessNotFoundError.wrap()(cause)
+        : isRejection(cause)
+          ? RemoteCommandRejectedError.wrap()(cause)
+          : cause,
+    ),
+    Effect.orDie,
+  );
+
+/**
  * EDGE implementation of {@link RemoteProcessManager.Control}: the seven compute-service process
  * routes, addressed within one space.
  *
@@ -73,7 +89,7 @@ export const make = (getEdgeClient: () => EdgeHttpClient): RemoteProcessManager.
     ),
 
   status: ({ spaceId, pid }: RemoteProcessManager.ProcessTarget) =>
-    call(() => getEdgeClient().getProcess(DxosContext.default(), spaceId, pid)).pipe(Effect.map(decodeSnapshot)),
+    callProcess(() => getEdgeClient().getProcess(DxosContext.default(), spaceId, pid)).pipe(Effect.map(decodeSnapshot)),
 
   submitInput: ({
     spaceId,
@@ -81,7 +97,7 @@ export const make = (getEdgeClient: () => EdgeHttpClient): RemoteProcessManager.
     input,
     idempotencyKey,
   }: RemoteProcessManager.ProcessTarget & RemoteProcessManager.Idempotent & { readonly input: unknown }) =>
-    call(() =>
+    callProcess(() =>
       getEdgeClient().submitProcessInput(DxosContext.default(), spaceId, pid, {
         input,
         ...(idempotencyKey !== undefined ? { idempotencyKey } : {}),
@@ -99,7 +115,7 @@ export const make = (getEdgeClient: () => EdgeHttpClient): RemoteProcessManager.
     ),
 
   readEvents: ({ spaceId, pid, cursor }: RemoteProcessManager.ProcessTarget & { readonly cursor: number }) =>
-    call(() => getEdgeClient().readProcessEvents(DxosContext.default(), spaceId, pid, cursor)).pipe(
+    callProcess(() => getEdgeClient().readProcessEvents(DxosContext.default(), spaceId, pid, cursor)).pipe(
       Effect.map((response): RemoteProcessManager.EventPage => ({
         events: response.events.map(decodeEvent),
         cursor: response.cursor,

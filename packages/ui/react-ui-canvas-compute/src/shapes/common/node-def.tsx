@@ -32,7 +32,7 @@ export type ComputeNodeViewProps<S extends ComputeShape> = Omit<NodeViewProps, '
 
 export type ComputeNodeSpec<S extends ComputeShape> = Pick<
   NodeDef,
-  'name' | 'icon' | 'group' | 'resizable' | 'openable'
+  'name' | 'icon' | 'group' | 'resizable' | 'openable' | 'ellipse'
 > & {
   type: S['type'];
   /** The shape's schema with `z` (`withZ`), so the node is checked as the shape before its view or ports read it. */
@@ -90,9 +90,9 @@ const computeNodeView = <S extends ComputeShape>(
     if (!isShape(node)) {
       return <UnknownNodeView {...props} />;
     }
-    // A shape with no compute node behind it yet (the ghost of a create or palette drag) has no runtime state to
-    // read, so it shows what it will be rather than mounting the live component.
-    if (!node.node) {
+    // A shape with no compute node behind it (the ghost of a create or palette drag, or one whose node a delete or a
+    // peer removed first) has no runtime state to read, so it shows what it is rather than mounting the live component.
+    if (!node.node || !controller.graph.findNode(node.node)) {
       const def = nodeDef(registry, node);
       return (
         <div className='dx-cover flex flex-col items-center justify-center gap-1 text-fg-muted'>
