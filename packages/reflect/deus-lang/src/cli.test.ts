@@ -611,6 +611,34 @@ describe('deus CLI', () => {
     },
   );
 
+  test.skipIf(spawnSync('clang', ['--target=wasm32', '-print-prog-name=wasm-ld']).status !== 0)(
+    'compiles the C back end to wasm with reference counting',
+    { timeout: 120_000 },
+    ({ expect }) => {
+      const c = ['--codebase', join(scratch, 'c-wasm')];
+      deus('init', '--empty', ...c);
+      deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
+      deus('add', join(root, 'examples/bench.deus'), join(root, 'examples/sorting.deus'), ...c);
+      for (const [name, args] of [
+        ['Bench.trees', [2]],
+        ['Bench.queens', [6]],
+        ['Sorting.benchMerge', [300, 7]],
+        ['Sorting.benchArray', [300, 7]],
+      ] as const) {
+        const out = join(scratch, `${name}.wasm`);
+        expect(deus('build', name, '-o', out, '--c', ...c).code).toBe(0);
+        const instance = new WebAssembly.Instance(new WebAssembly.Module(new Uint8Array(readFileSync(out))));
+        const run = instance.exports[name.split('.')[1]];
+        const live = instance.exports.deus_live;
+        if (typeof run !== 'function' || typeof live !== 'function') {
+          throw new Error(`${name}.wasm does not export ${name} and deus_live`);
+        }
+        expect(`${run(...args)}\n`).toBe(deus('eval', `${name} ${args.join(' ')}`, ...c).stdout);
+        expect(live()).toBe(0);
+      }
+    },
+  );
+
   test('simulates Durable Objects that call each other and set alarms', { timeout: 120_000 }, ({ expect }) => {
     const c = ['--codebase', join(scratch, 'cloudflare')];
     deus('init', '--empty', ...c);
