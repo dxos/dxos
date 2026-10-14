@@ -1,0 +1,12 @@
+BASE <http://example.com/xxx/abc>
+PREFIX ns: <http://example.org/ns#>
+
+SELECT ?res0 ?res1 ?res2 ?res3 ?res4 ?res5
+WHERE {
+  OPTIONAL { <>       ns:p ?res0 }
+  OPTIONAL { <def>    ns:p ?res1 }
+  OPTIONAL { <#ghi>   ns:p ?res2 }
+  OPTIONAL { <./jkl>  ns:p ?res3 }
+  OPTIONAL { <../mno> ns:p ?res4 }
+  OPTIONAL { </pqr>   ns:p ?res5 }
+}

@@ -511,6 +511,15 @@ export type LayerOptions = Omit<
   readonly extent?: Extent;
   /** Overrides {@link DEFAULT_DEDUP_SEED_TAIL} — set per pipeline when its commit page size warrants it. */
   readonly dedupSeedTail?: number;
+  /** Overrides {@link DEFAULT_DEDUP_SEED_PAGE_SIZE} — lower it for a feed of larger objects. */
+  readonly dedupSeedPageSize?: number;
+  /**
+   * The type that carries `foreignKeySource` keys, for a feed that also holds objects without them (a
+   * mailbox feed holds its attachment blobs, inline up to 4 MB each). The seed then reads only this type,
+   * in any schema version, so its tail counts, and its pages load, only objects it can dedup. Defaults to
+   * every feed object, which suits a feed that holds only keyed objects.
+   */
+  readonly dedupSeedType?: Type.AnyObj;
   /**
    * Selects the already-committed feed messages a reconcile run must resolve to EntityIds (caller builds
    * it as `Filter.foreignKeys(<message schema>, <delta keys>)`). {@link State.foreignIndex} is built from
@@ -531,9 +540,19 @@ export const layer = (options: LayerOptions): Layer.Layer<Service, never, Databa
   Layer.effect(
     Service,
     Effect.gen(function* () {
-      const { feed, dedupSeedTail = DEFAULT_DEDUP_SEED_TAIL } = options;
+      const {
+        feed,
+        dedupSeedTail = DEFAULT_DEDUP_SEED_TAIL,
+        dedupSeedPageSize = DEFAULT_DEDUP_SEED_PAGE_SIZE,
+      } = options;
       // DB-target runs (no feed) dedup via the cursor + idempotent write; nothing to seed.
-      const dedupSet = feed ? yield* seedDedupSet(feed, options.foreignKeySource, dedupSeedTail) : new Set<string>();
+      const dedupSet = feed
+        ? yield* seedDedupSet(feed, options.foreignKeySource, {
+            tail: dedupSeedTail,
+            pageSize: dedupSeedPageSize,
+            type: options.dedupSeedType,
+          })
+        : new Set<string>();
       // Only reconcile runs build the foreignId → EntityId map, and only for the delta's messages.
       const foreignIndex =
         feed && options.reconcileFilter
@@ -746,15 +765,13 @@ export const boundStage =
 const DEFAULT_DEDUP_SEED_TAIL = 500;
 
 /**
- * Seeds the dedup set of recently-committed foreign ids from BOTH ends of the feed's insertion order.
- *
- * The `key === max` and `key === min` boundaries both re-fetch inclusively and aren't dropped by the
- * strict-interior range check, so both must be seeded. They sit at *opposite* ends of insertion order:
- * a backfill commits `max` first and walks older, so `max`'s item is the OLDEST insertion while `min`'s
- * (plus any crash-orphaned page) is the newest — a newest-only tail would age `max` out and re-commit
- * the newest message every run. Seeding both ends covers both boundaries however forward/backward
- * interleave.
+ * Default number of feed objects one dedup-seed read loads. The seed keeps only foreign ids, but a feed
+ * read returns whole objects (mail bodies included) and EDGE fails a query response past 32 MiB: one
+ * 500-object read of HTML mail measured 47 MB in production. Each page is dropped once its ids are
+ * taken, so the isolate holds one page at a time.
  */
+const DEFAULT_DEDUP_SEED_PAGE_SIZE = 50;
+
 /**
  * Builds a foreignId → EntityId map for the messages a reconcile run targets, selected by the caller's
  * `reconcileFilter`. Unlike {@link seedDedupSet}'s bounded tail read, reconciliation must resolve *any*
@@ -783,26 +800,69 @@ const seedForeignIndex = (
     Effect.withSpan('cursor.seedForeignIndex'),
   );
 
-const seedDedupSet = (
+/** How many objects the dedup seed reads from each end of the feed, and how many per query. */
+type SeedBounds = { readonly tail: number; readonly pageSize: number };
+
+/**
+ * Seeds the dedup set of recently-committed foreign ids from BOTH ends of the feed's insertion order.
+ *
+ * The `key === max` and `key === min` boundaries both re-fetch inclusively and aren't dropped by the
+ * strict-interior range check, so both must be seeded. They sit at *opposite* ends of insertion order:
+ * a backfill commits `max` first and walks older, so `max`'s item is the OLDEST insertion while `min`'s
+ * (plus any crash-orphaned page) is the newest — a newest-only tail would age `max` out and re-commit
+ * the newest message every run. Seeding both ends covers both boundaries however forward/backward
+ * interleave.
+ */
+const seedDedupSet = Effect.fn('cursor.seedDedupSet')(function* (
   feed: Feed.Feed,
   foreignKeySource: string,
-  tail: number,
-): Effect.Effect<Set<string>, never, Database.Service> =>
-  // `limit` selects the newest/oldest N by insertion order, and the query engine pushes it into the
-  // feed scan, so each read costs its tail rather than the whole feed.
-  Effect.all([
-    Feed.query(feed, Query.select(Filter.everything()).orderBy(Order.natural('desc')).limit(tail)).run,
-    Feed.query(feed, Query.select(Filter.everything()).orderBy(Order.natural('asc')).limit(tail)).run,
-  ]).pipe(
-    Effect.map(
-      ([newest, oldest]) =>
-        new Set(
-          [...newest, ...oldest].flatMap((item) =>
-            Obj.getMeta(item)
-              .keys.filter((key) => key.source === foreignKeySource)
-              .map((key) => key.id),
-          ),
-        ),
-    ),
-    Effect.withSpan('cursor.seedDedupSet', { attributes: { limit: tail } }),
-  );
+  { type, ...bounds }: SeedBounds & { readonly type?: Type.AnyObj },
+) {
+  invariant(bounds.pageSize > 0, 'dedup seed page size must be positive');
+  const dedupSet = new Set<string>();
+  const collect = (items: readonly Obj.Any[]) => {
+    for (const item of items) {
+      for (const key of Obj.getMeta(item).keys) {
+        if (key.source === foreignKeySource) {
+          dedupSet.add(key.id);
+        }
+      }
+    }
+  };
+  // By bare typename, so objects written under an earlier schema version are seeded too.
+  const filter = type ? Filter.type(DXN.make(Type.getTypename(type))) : Filter.everything();
+  const newest = yield* readSeedTail(feed, filter, 'desc', bounds, collect);
+  // A newest-end read that came up short reached the start of the feed, so it covered the oldest end too.
+  if (newest === bounds.tail) {
+    yield* readSeedTail(feed, filter, 'asc', bounds, collect);
+  }
+  yield* Effect.annotateCurrentSpan({ ...bounds, seeded: dedupSet.size });
+  return dedupSet;
+});
+
+/**
+ * Reads up to `tail` objects from one end of the feed's natural order, `pageSize` per query, handing each
+ * page to `collect`. Returns how many it read; fewer than `tail` means it reached the other end.
+ */
+const readSeedTail = Effect.fn('cursor.readSeedTail')(function* (
+  feed: Feed.Feed,
+  filter: Filter.Any,
+  direction: 'asc' | 'desc',
+  { tail, pageSize }: SeedBounds,
+  collect: (items: readonly Obj.Any[]) => void,
+) {
+  let read = 0;
+  while (read < tail) {
+    const limit = Math.min(pageSize, tail - read);
+    // The host folds `skip` into the feed scan and drops the skipped rows itself, so only the page
+    // crosses the RPC.
+    const query = Query.select(filter).orderBy(Order.natural(direction)).skip(read).limit(limit);
+    const page = yield* Feed.query(feed, query).run;
+    collect(page);
+    read += page.length;
+    if (page.length < limit) {
+      break;
+    }
+  }
+  return read;
+});

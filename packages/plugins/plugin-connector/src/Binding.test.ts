@@ -812,6 +812,29 @@ describe('Binding.syncAll', () => {
     expect(synced).toContain(Ref.make(second).uri);
   });
 
+  // Regression: deleting a mailbox left its binding behind, and every account sync then failed loading
+  // the deleted target until EDGE switched the routine off.
+  test('skips a binding whose target was deleted and syncs the rest', async ({ expect }) => {
+    const { db, connection, cursor, token } = await setup();
+    const orphaned = await addCursor(db, token);
+    const target = orphaned.spec.target.target;
+    invariant(target);
+    db.remove(target);
+    await db.flush({ indexes: true });
+
+    // Loads the target first, as every connector's per-binding sync does.
+    const outcome = await EffectEx.runPromise(
+      Binding.syncAll({
+        connection: Ref.make(connection),
+        sync: (binding) => Database.load(binding.spec.target).pipe(Effect.andThen(recordingSync(binding))),
+      }).pipe(Effect.result),
+    );
+
+    invariant(outcome._tag === 'Success');
+    expect(outcome.success.synced).toBe(1);
+    expect(synced).toEqual([Ref.make(cursor).uri]);
+  });
+
   test('collects every binding before surfacing a failure', async ({ expect }) => {
     const { db, connection, cursor, token } = await setup();
     const second = await addCursor(db, token);

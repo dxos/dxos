@@ -1,0 +1,10 @@
+PREFIX ex: <http://example.org/>
+
+SELECT ?g ?x
+FROM NAMED ex:g1
+WHERE {
+    VALUES ?g { ex:g1 ex:g2 ex:unknown }
+    GRAPH ?g {
+        VALUES ?x { 1 }
+    }
+}

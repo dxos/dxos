@@ -3,14 +3,14 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
-import { type PanelMode } from '../../model/atoms.ts';
+import { type InspectorMode } from '../../model/atoms.ts';
 import { createLatticeProjection } from '../../model/projections/lattice.ts';
 import { createMemoryStore } from '../../model/store.ts';
 import { type Box, SceneBuilder } from '../../utils/builder.ts';
@@ -24,14 +24,15 @@ import { SceneView } from './SceneView.tsx';
  * Test:
  * 1. Ctrl/cmd+wheel zooms about the cursor; wheel or hand-tool drag pans; drag on empty canvas draws a marquee.
  * 2. Click selects, shift-click toggles; drag moves the selection (snapped); handles resize a single node.
- *    Hovering a node shows its ports; drag from a port onto a node or port links (with the last link type picked).
- * 3. L / K / P pick the line, curve or spline link tool: every port shows; dropping onto empty canvas creates a
+ *    Hovering a node shows its ports; drag from a port onto a node or port links (a smart line, or the last link type
+ *    picked).
+ * 3. O / L / K / P pick the smart line, line, curve or spline link tool: every port shows; dropping onto empty canvas creates a
  *    rectangle and links to it. A selected spline shows a diamond per control point and a dot per span midpoint:
  *    drag a diamond to move a point, drag a dot to add one there, alt-click a diamond to remove one.
  * 4. R / E / T / F then drag draws a rectangle, ellipse, text or frame (the UML class is plugin-uml's);
  *    Delete removes the selection (nodes or links).
  * 5. Double-click a frame (or zoom until it fills the view) drills in; Escape, Up or the breadcrumb drills out.
- * 6. G (or the Grid button) toggles the grid; with it off nothing snaps. The floating panel (top right) edits the
+ * 6. G (or the Grid button) toggles the grid; with it off nothing snaps. The floating inspector (top right) edits the
  *    selected element.
  */
 type StoryArgs = {
@@ -39,7 +40,7 @@ type StoryArgs = {
   liveDepth: number;
   readonly?: boolean;
   fixture?: 'elements' | 'model' | 'square' | 'lattice' | 'scenes' | 'frame';
-  panels?: PanelMode;
+  inspectors?: InspectorMode;
 };
 
 type EditorProps = {
@@ -48,27 +49,41 @@ type EditorProps = {
   liveDepth: number;
   readonly?: boolean;
   lattice?: boolean;
-  panels?: PanelMode;
+  inspectors?: InspectorMode;
 };
 
-const Editor = ({ store, root, liveDepth, readonly, lattice, panels }: EditorProps) => (
-  <SceneView.Root
-    store={store}
-    root={root}
-    readonly={readonly}
-    panels={panels}
-    createProjection={lattice ? createLatticeProjection : undefined}
-  >
-    <SceneView.Canvas liveDepth={liveDepth} />
-    <SceneView.Navigation />
-    <SceneView.Actions />
-    <SceneView.Debug />
-    <SceneView.Palette />
-    <SceneView.Properties />
-    <SceneView.Layers />
-    <SceneView.About />
-  </SceneView.Root>
-);
+const Editor = ({
+  store,
+  root,
+  liveDepth,
+  readonly: initialReadonly = false,
+  lattice,
+  inspectors: initialInspectors = 'docked',
+}: EditorProps) => {
+  // The args are where the view starts; the palette's toggle and the inspectors' menus change it from there.
+  const [readonly, setReadonly] = useState(initialReadonly);
+  const [inspectors, setInspectors] = useState(initialInspectors);
+  return (
+    <SceneView.Root
+      store={store}
+      root={root}
+      readonly={readonly}
+      onReadonlyChange={setReadonly}
+      inspectors={inspectors}
+      onInspectorsChange={setInspectors}
+      createProjection={lattice ? createLatticeProjection : undefined}
+    >
+      <SceneView.Canvas liveDepth={liveDepth} />
+      <SceneView.Navigation />
+      <SceneView.Actions />
+      <SceneView.Debug />
+      <SceneView.Palette />
+      <SceneView.Properties />
+      <SceneView.Layers />
+      <SceneView.About />
+    </SceneView.Root>
+  );
+};
 
 /** One square centred on the origin: something to select and style straight away. */
 const createSquareTree = () => {
@@ -214,7 +229,7 @@ const createFrameTree = () => {
     .build();
 };
 
-const DefaultStory = ({ depth, liveDepth, readonly, fixture, panels }: StoryArgs) => {
+const DefaultStory = ({ depth, liveDepth, readonly, fixture, inspectors }: StoryArgs) => {
   const { store, root } = useMemo(() => {
     // The model fixture is a fixed three levels, so `depth` does not apply to it.
     const tree =
@@ -241,7 +256,7 @@ const DefaultStory = ({ depth, liveDepth, readonly, fixture, panels }: StoryArgs
       liveDepth={liveDepth}
       readonly={readonly}
       lattice={fixture === 'lattice'}
-      panels={panels}
+      inspectors={inspectors}
     />
   );
 };
@@ -253,10 +268,10 @@ const meta: Meta<StoryArgs> = {
   // The properties panel is a react-ui-form form; its strings (e.g. "Mixed") and its controls' come from their bundles.
   parameters: { translations: [...uiTranslations, ...formTranslations] },
   argTypes: {
-    panels: {
+    inspectors: {
       control: { type: 'inline-radio' },
       options: ['docked', 'floating'],
-      description: 'Where the properties and layers panels sit',
+      description: 'Where the inspectors (properties, layers, about) sit',
     },
     depth: {
       control: { type: 'range', min: 0, max: 5, step: 1 },
@@ -291,6 +306,22 @@ export const Nested: Story = {
 /** The same scene to look at: select, pan, zoom and drill, but no handle, port, tool or key changes it. */
 export const Readonly: Story = {
   args: { depth: 1, liveDepth: 1, readonly: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // 1. Read-only, the palette offers only select and pan, and there is no action bar.
+    const toggle = await canvas.findByTestId('palette-readonly');
+    await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+    await expect(canvas.queryByTestId('canvas-actions')).toBeNull();
+
+    // 2. The toggle turns editing on: the action bar appears.
+    await userEvent.click(toggle);
+    await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+    await expect(await canvas.findByTestId('canvas-actions')).toBeVisible();
+
+    // 3. And back to read-only.
+    await userEvent.click(toggle);
+    await waitFor(() => expect(canvas.queryByTestId('canvas-actions')).toBeNull());
+  },
 };
 
 /** A three-level model, a box per class: drill into a subsystem's portal to open its own. */
@@ -311,7 +342,10 @@ export const Lattice: Story = {
   args: { depth: 0, liveDepth: 1, fixture: 'lattice' },
 };
 
-/** The panels dock by default: one accordion section each beside the canvas; a section collapses to its header. */
+/**
+ * The inspectors dock by default: one accordion section each beside the canvas; a section collapses to its header, and
+ * the dock's close button floats them.
+ */
 export const Docked: Story = {
   args: { depth: 0, liveDepth: 1, fixture: 'square' },
   play: async ({ canvasElement }) => {
@@ -327,18 +361,36 @@ export const Docked: Story = {
     await waitFor(() =>
       expect(within(dock).getByTestId('dock-section-properties')).toHaveAttribute('data-state', 'closed'),
     );
+    // 3. Closing the dock floats the inspectors: the layers over the canvas while nothing is selected.
+    await userEvent.click(within(dock).getByTestId('dock-close'));
+    await waitFor(() => expect(canvas.queryByTestId('scene-view-dock')).not.toBeInTheDocument());
+    await expect(await canvas.findByTestId('layers')).toBeVisible();
   },
 };
 
-/** Floating panels: no dock, the layers over the canvas until something is selected. */
+/** Floating inspectors: no dock, the layers over the canvas until something is selected; their menu docks them. */
 export const Floating: Story = {
-  args: { depth: 0, liveDepth: 1, fixture: 'square', panels: 'floating' },
+  args: { depth: 0, liveDepth: 1, fixture: 'square', inspectors: 'floating' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(await canvas.findByTestId('layers')).toBeInTheDocument();
     await expect(canvas.queryByTestId('scene-view-dock')).not.toBeInTheDocument();
     // About lives only in the dock.
     await expect(canvas.queryByTestId('about')).not.toBeInTheDocument();
+    // The layers' menu docks the inspectors.
+    await userEvent.click(canvas.getByTestId('layers-menu'));
+    // Picked from the keyboard, as the Layers story does: a synthetic click does not select a menu item. The dock
+    // item ends the menu.
+    // The keys reach the menu only once it has taken focus, which lags its opening under a loaded run.
+    await waitFor(() => {
+      const menu = within(canvasElement.ownerDocument.body)
+        .getByTestId('inspector-dock-toggle')
+        .closest('[role="menu"]');
+      return expect(menu).toHaveFocus();
+    });
+    await userEvent.keyboard('{End}{Enter}');
+    await expect(await canvas.findByTestId('scene-view-dock')).toBeVisible();
+    await expect(await canvas.findByTestId('about')).toBeVisible();
   },
 };
 
@@ -350,9 +402,9 @@ export const Frame: Story = {
     // 1. The frame shows its label and an open control; the root has nowhere up to go.
     await waitFor(() => expect(canvasElement.querySelector('[data-node-id="frame"]')).toHaveTextContent('Frame'));
     await waitFor(() => expect(canvas.getByTestId('toolbar-up')).toBeDisabled());
-    // 2. Opening the frame drills into its scene.
+    // 2. Opening the frame drills into its scene, once the camera has animated into it, which a loaded run slows.
     await userEvent.click(await canvas.findByTestId('portal-open'));
-    await waitFor(() => expect(canvas.getByTestId('toolbar-up')).toBeEnabled());
+    await waitFor(() => expect(canvas.getByTestId('toolbar-up')).toBeEnabled(), { timeout: 5_000 });
     await waitFor(() => expect(canvasElement.querySelector('[data-node-id="b"]')).not.toBeNull());
   },
 };

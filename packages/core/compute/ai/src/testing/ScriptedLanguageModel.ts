@@ -217,7 +217,7 @@ const encodeStreamTurn = (
 
 const annotate = (span: LanguageModel.ProviderOptions['span']): void =>
   Telemetry.addGenAIAnnotations(span, {
-    system: 'scripted',
+    provider: { name: 'scripted' },
     operation: { name: 'chat' },
     request: { model: 'scripted' },
   });

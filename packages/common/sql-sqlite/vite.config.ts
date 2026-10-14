@@ -28,7 +28,7 @@ export default defineConfig({
     browser: {
       browsers: ['chromium'],
       // Pulled in only by `opfs-in-worker-test-worker.ts`, so vite discovers them once the worker boots.
-      optimizeDeps: ['effect/Deferred', 'effect/Fiber'],
+      optimizeDeps: ['effect/Deferred', 'effect/Fiber', 'effect/Option'],
     },
   },
 });

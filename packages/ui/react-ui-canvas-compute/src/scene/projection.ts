@@ -228,7 +228,8 @@ const withRuntimePorts = (controller: ComputeGraphSource, node: Node): Node => {
   if (!id) {
     return node;
   }
-  const computeNode = model(controller).getNode(id);
+  // `findNode`, not `getNode`: a delete removes the compute node before the shape, and a peer's may land first.
+  const computeNode = model(controller).findNode(id);
   if (!computeNode?.inputSchema && !computeNode?.outputSchema) {
     return node;
   }

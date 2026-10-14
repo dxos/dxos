@@ -324,6 +324,42 @@ describe('ReadSource', () => {
   );
 
   it.effect(
+    "reads a prompt the feed holds twice once, and takes no facts from the agent's own replies",
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Kai' });
+        const agent = yield* Database.load(agentRef);
+        const chat = yield* Agent.loadChat(agent);
+        if (!chat) {
+          return expect.unreachable('The agent has a chat.');
+        }
+        const said = (role: 'user' | 'assistant', name: string, text: string) =>
+          Message.make({ sender: { role, name }, blocks: [{ _tag: 'text', text }] });
+        const feed = yield* Database.load(chat.feed);
+        yield* Feed.append(feed, [
+          // As a prompt queued for a running agent: once as queued, once as the turn's own copy.
+          said('user', 'Dima', 'I own the indexer.'),
+          said('user', 'Dima', 'I own the indexer.'),
+          said('assistant', 'Kai', 'The race is in the v12 index migration.'),
+        ]);
+        yield* Database.flush();
+
+        const read = yield* Operation.invoke(AgentOperation.ReadSource, {
+          agent: agentRef,
+          source: Ref.make<Obj.Unknown>(chat),
+        });
+        expect(read.facts).toBe(1);
+        expect((yield* Operation.invoke(MemoryOperation.Recall, {})).facts.map(({ fact }) => fact)).toEqual([
+          'Dima owns indexer',
+        ]);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 60_000 },
+  );
+
+  it.effect(
     'requires a source, or a url with its text',
     Effect.fnUntraced(
       function* ({ expect }) {

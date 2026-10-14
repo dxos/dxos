@@ -113,7 +113,7 @@ const AgentStateIdentity = ({ did, skills }: AgentStateIdentityProps) => {
           { value: 'skills', label: t('agent-state-skills.label'), icon: 'ph--sparkle--regular' },
         ]}
       >
-        <Listbox.Content scroll={false}>
+        <Listbox.Content>
           <Listbox.Item id='did'>
             <Listbox.ItemIcon />
             <Listbox.ItemText />
@@ -226,7 +226,7 @@ const AgentStateSummary = ({ counts }: AgentStateSummaryProps) => {
       <Listbox.Root
         items={rows.map(({ id, icon, title, description }) => ({ value: id, label: title, icon, description }))}
       >
-        <Listbox.Content scroll={false}>
+        <Listbox.Content>
           {rows.map(({ id, value, description }) => (
             <Listbox.Item key={id} id={id}>
               <Listbox.ItemIcon />
@@ -278,7 +278,7 @@ const AgentStateConversations = ({ channels }: AgentStateConversationsProps) => 
           icon: 'ph--chat-circle--regular',
         }))}
       >
-        <Listbox.Content scroll={false}>
+        <Listbox.Content>
           {channels.map((channel) => (
             <Listbox.Item key={channel.id} id={channel.id} data-testid={`agent-state-channel-${channel.id}`}>
               <Listbox.ItemIcon />
