@@ -55,6 +55,11 @@ def levelOf (name : Text) : Int := Option.getOr (Int.fromText (Text.take (Text.i
 
 def nameOf (level : Int) (text : Text) : Text := Int.toText level ++ "-" ++ Text.sha256 text
 
+/-- Whether `name` is `<level>-<sha256>`; anything else under `bundles/` is not a bundle (D91). -/
+def isBundleName (name : Text) : Bool :=
+  let dash := Text.indexOf name "-" 0
+  dash > 0 && Option.isSome (Int.fromText (Text.take dash name)) && External.isSha256 (Text.drop (dash + 1) name)
+
 /-- The canonical bundle text for branch claims and objects (with their metadata), in columns (D60). -/
 def bundle (dir : Text) (claims : List (Text, Text)) (hashes : List Text) : {IO} Text :=
   let sorted := List.dedup (List.sort hashes)
@@ -62,6 +67,36 @@ def bundle (dir : Text) (claims : List (Text, Text)) (hashes : List Text) : {IO}
   let objects := List.filterMap (fun h => Option.map (fun form => Sexp.node "obj" [Sexp.str h, form]) (Codebase.readObject dir h)) sorted
   let metas := List.filterMap (fun h => Option.map (fun form => Sexp.node "meta" [Sexp.str h, form]) (Codebase.readMeta dir h)) sorted
   Columnar.encode [Sexp.node "bundle" (claimForms ++ objects ++ metas)]
+
+/-- A member reference of recursive group `g` back to `(self i)`, as the group was hashed (CORE.md). -/
+def unself (g : Text) (form : Sexp) : Sexp :=
+  match form with
+  | Sexp.list [Sexp.sym "ref", Sexp.str r] =>
+    if r == g then Sexp.node "self" [Sexp.int 0]
+    else if Text.startsWith (g ++ ".") r then
+      match Int.fromText (Text.drop (Text.length g + 1) r) with
+      | some i => Sexp.node "self" [Sexp.int i]
+      | none => form
+    else form
+  | Sexp.list items => Sexp.list (List.map (fun x => unself g x) items)
+  | _ => form
+
+/--
+  Whether `form` is the object named `h` (D91): its text hashes to `h`, or `h` names a member of a
+  recursive group whose `cycle` form, rebuilt from the members `lookup` finds, hashes to the group.
+-/
+def verified (h : Text) (form : Sexp) (lookup : Text -> {IO} Option Sexp) : {IO} Bool :=
+  if Text.sha256 (Sexp.print form) == h then true
+  else
+    let dot := Text.indexOf h "." 0
+    let g := if dot < 0 then h else Text.take dot h
+    let member := fun (name : Text) => if name == h then some form else lookup name
+    let rec gather i acc :=
+      match member (g ++ "." ++ Int.toText i) with
+      | some m => gather (i + 1) (m :: acc)
+      | none => List.reverse acc
+    let members := if dot < 0 then [form] else gather 0 []
+    not (List.isEmpty members) && Text.sha256 (Sexp.print (Sexp.node "cycle" (List.map (fun m => unself g m) members))) == g
 
 /-- Writes a bundle's objects and metadata into the store; returns what it holds. -/
 def import (dir : Text) (name : Text) (text : Text) : {IO} Seen :=
@@ -72,11 +107,23 @@ def import (dir : Text) (name : Text) (text : Text) : {IO} Seen :=
     match item with
     | Sexp.list [Sexp.sym "branch", Sexp.str branch, Sexp.str causal] => some (branch, causal)
     | _ => none) items
+  let carried := Map.fromList (List.filterMap (fun item =>
+    match item with
+    | Sexp.list [Sexp.sym "obj", Sexp.str h, form] => some (h, form)
+    | _ => none) items)
+  let lookup := fun (h : Text) => match Map.lookup h carried with
+    | some form => some form
+    | none => Codebase.readObject dir h
   let hashes := List.filterMap (fun item =>
     match item with
     | Sexp.list [Sexp.sym "obj", Sexp.str h, form] =>
-      Codebase.writeObject dir h form
-      some h
+      -- An object that is not what its name says would corrupt the store (D91).
+      if verified h form lookup then
+        Codebase.writeObject dir h form
+        some h
+      else
+        IO.eprint ("deus: skipped object #" ++ Text.take 10 h ++ " in bundle " ++ name ++ ": its text does not hash to its name\n")
+        none
     | Sexp.list [Sexp.sym "meta", Sexp.str h, form] =>
       if IO.exists (dir ++ "/meta/" ++ h) then () else Codebase.writeMeta dir h form
       none
@@ -99,7 +146,9 @@ def seenFromText (name : Text) (text : Text) : Seen :=
 
 /-- Every bundle on the remote, importing the ones not seen before. -/
 def sync (dir : Text) (remote : Text) : {Remote, IO} List Seen :=
-  let names := List.filter (fun n => not (Text.isEmpty n)) (Remote.list ())
+  let listed := List.filter (fun n => not (Text.isEmpty n)) (Remote.list ())
+  let names := List.filter isBundleName listed
+  List.forEach (List.filter (fun n => not (isBundleName n)) listed) (fun n => IO.eprint ("deus: ignored bundles/" ++ n ++ " on " ++ remote ++ ": not a bundle name\n"))
   List.filterMap (fun name =>
     let path := seenDir dir remote ++ "/" ++ name
     match IO.readFile path with
@@ -108,9 +157,14 @@ def sync (dir : Text) (remote : Text) : {Remote, IO} List Seen :=
       match Remote.get name with
       | none => none
       | some text =>
-        let s := import dir name text
-        IO.writeFile path (seenToText s)
-        some s) names
+        -- A bundle whose text does not hash to its name is not read, and stays unseen so a repaired copy is (D91).
+        if Text.sha256 text != Text.drop (Text.indexOf name "-" 0 + 1) name then
+          IO.eprint ("deus: skipped bundle " ++ name ++ " on " ++ remote ++ ": its text does not hash to its name\n")
+          none
+        else
+          let s := import dir name text
+          IO.writeFile path (seenToText s)
+          some s) names
 
 /-- Causal nodes, snapshots, and everything their entries reach, from the given heads. -/
 def closureOf (dir : Text) (heads : List Text) : {IO, Throw Text} Map Text Unit :=

@@ -14,7 +14,7 @@
   - Case splits on `Bool` conditions (excluded middle for terminating computations).
   - `Int` is arithmetic modulo 2³² (D9), so + and * form a commutative ring; `<=` is a total
     order: `not (a <= b)` gives `b <= a`, and `<=` is transitive.
-  - The `Array` laws (D91, docs/spec/ARRAY.mdl): `length (make n x) = n` for `0 <= n`;
+  - The `Array` laws (D95, docs/spec/ARRAY.mdl): `length (make n x) = n` for `0 <= n`;
     `get (make n x) i = x` and `get (set a i v) j = if i == j then v else get a j`, with `length`
     of a `set` unchanged, when the index is in bounds; `set (set a i v) i w = set a i w`; and
     `set a i (get a i) = a` in bounds. An index out of bounds is a defect, so a term whose bound

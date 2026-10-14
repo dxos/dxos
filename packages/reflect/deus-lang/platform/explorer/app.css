@@ -886,6 +886,7 @@ ul.rows {
 }
 
 .by {
+  white-space: nowrap;
   color: var(--muted);
   font-size: 12px;
 }
@@ -962,6 +963,7 @@ ul.rows {
 }
 
 .priority {
+  white-space: nowrap;
   font-size: 11.5px;
   font-weight: 500;
 }
@@ -1432,7 +1434,7 @@ ul.rows {
   list-style: none;
 }
 
-.stats li {
+.stats li a {
   display: grid;
   grid-template-columns: auto 1fr;
   grid-template-rows: auto auto;
@@ -1443,6 +1445,46 @@ ul.rows {
   border-radius: 10px;
   background: var(--surface);
   box-shadow: var(--shadow);
+}
+
+.stats li a {
+  height: 100%;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color 0.12s;
+}
+
+.stats li a:hover {
+  border-color: var(--accent);
+}
+
+.stats li a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.entry-row > a.change-message {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: inherit;
+  font-family: inherit;
+  font-size: 13.5px;
+  cursor: pointer;
+}
+
+.entry-row > a.change-message:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.home-header a {
+  color: inherit;
+  cursor: pointer;
+  text-decoration: underline dotted;
 }
 
 .stats .icon {
@@ -1683,6 +1725,7 @@ ul.rows {
   #dialects,
   #account .login,
   #new-task,
+  #report,
   .wide-only,
   .finder-trigger span,
   .card-meta {

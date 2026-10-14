@@ -101,7 +101,7 @@ def prelude (nullary : Int) : Text :=
     "static inline V *deus_con(V *token, V fields) { if (token) { token[-1] = 256 | fields; return token; } return deus_block(fields, fields + 1); }",
     "static inline void deus_unused(V *token) { if (token) deus_release(token); }",
     "static V deus_array(V n, V x) { if (n < 0) __builtin_trap(); V *p = deus_block(K_ARRAY, n + 1); p[0] = n; if (n == 0) deus_drop(x); else if (IS_PTR(x)) HDR(x) += 256 * (n - 1); for (V i = 1; i <= n; i++) p[i] = x; return BOX(p); }",
-    "/* A pure `Array.set` (D91) writes into a unique array and copies a shared one, counting each item again. */",
+    "/* A pure `Array.set` (D95) writes into a unique array and copies a shared one, counting each item again. */",
     "static V deus_array_copy(V a) { V *q = UNBOX(a); V n = q[0]; V *p = deus_block(K_ARRAY, n + 1); p[0] = n; for (V i = 1; i <= n; i++) p[i] = deus_dup(q[i]); return BOX(p); }",
     "static inline V deus_array_unique(V a) { if (UNIQUE(a)) return a; V r = deus_array_copy(a); HDR(a) -= 256; return r; }",
     "#define AT(a, i) ({ V *a_ = UNBOX(a); V i_ = (i); if ((uint32_t)i_ >= (uint32_t)a_[0]) __builtin_trap(); &a_[i_ + 1]; })",
@@ -437,7 +437,7 @@ def form (ctx : FnCtx) (env : List Int) (tail : Bool) (owned : List Int) (token 
   A primitive. `Array` is a block `[length, item…]` and `Ref` a block `[value]` (D83). Their
   first argument is borrowed when it is a local used again later, so a read does not touch its
   count; otherwise it is dropped after the access. Reads `deus_dup` what they return; the writes
-  drop what they overwrite. `Ref.set` returns `()`; `Array.set` is pure (D91) and returns the
+  drop what they overwrite. `Ref.set` returns `()`; `Array.set` is pure (D95) and returns the
   array, written in place when the code holds its only reference, else a copy.
 -/
 def primitive (ctx : FnCtx) (env : List Int) (owned : List Int) (token : Option Token) (e : Sexp) (p : Text) (xs : List Sexp) : {Throw Text} Text :=

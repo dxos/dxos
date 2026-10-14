@@ -3,7 +3,7 @@
 //
 
 import { createHash } from 'node:crypto';
-import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { type ExpectStatic, afterAll, afterEach, beforeEach, describe, test, vi } from 'vitest';
@@ -176,6 +176,7 @@ describe('explorer worker', () => {
     expect((await post('/api/comment', forged, { subject: 'def:List.map', note: 'hi' })).status).toBe(401);
     expect((await post('/api/comment', member, { subject: 'nothing', note: 'hi' })).status).toBe(400);
     expect((await post('/api/task', member, { title: ' ' })).status).toBe(400);
+    expect((await post('/api/task', member, { title: 'x', labels: 'Not A Slug' })).status).toBe(400);
     expect(
       (await post('/api/comment', member, { subject: 'def:List.map', note: 'x', assets: [{ hash: '0'.repeat(64) }] }))
         .status,
@@ -214,6 +215,7 @@ describe('explorer worker', () => {
           title: 'Square negative sides',
           details: 'see the image',
           link: 'Shapes.square',
+          labels: 'explorer,report',
           assets: [asset],
         })
       ).status,
@@ -253,6 +255,7 @@ describe('explorer worker', () => {
       title: 'Square negative sides',
       details: 'see the image',
       links: [{ definition: 'Shapes.square' }],
+      labels: ['explorer', 'report'],
       comments: [{ author: 'github:octocat', assets: [asset] }],
     });
     expect(readFileSync(join(codebase, 'assets', asset.hash))).toEqual(Buffer.from(png));

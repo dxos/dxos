@@ -1,5 +1,5 @@
 /-
-  Uniqueness for the compiled back ends (D91, docs/spec/ARRAY.mdl).
+  Uniqueness for the compiled back ends (D95, docs/spec/ARRAY.mdl).
 
   `Array.set` returns a new array and leaves the old one as it was. Compiled code has one block of
   memory per array, so a `set` may write into the block only when nothing will read the old array

@@ -100,7 +100,7 @@ export class Cell {
 }
 
 /**
-  A version of a persistent array (`Array.make`, D91). Every version is an immutable value; the
+  A version of a persistent array (`Array.make`, D95). Every version is an immutable value; the
   newest one written owns the items and older ones hold the write that separates them from a newer
   version (Baker's trick), so code that threads versions linearly pays O(1) per `get` and `set`.
   Reading an old version reroots: the diffs are reversed so that version owns the items.

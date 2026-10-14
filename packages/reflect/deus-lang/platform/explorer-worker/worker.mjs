@@ -281,6 +281,7 @@ const api = async (request, env, url) => {
         title,
         details: text(body.details, 20000),
         link: text(body.link, 500),
+        ...labelsOf(body.labels),
         assets,
       }),
     );
@@ -295,6 +296,18 @@ const api = async (request, env, url) => {
     );
   }
   throw new HttpError(404, 'not found');
+};
+
+/** A task's labels, comma-separated slugs (at most five), such as `explorer,report` from the report tool (D93). */
+const labelsOf = (value) => {
+  const labels = text(value, 200)
+    .split(',')
+    .map((label) => label.trim())
+    .filter(Boolean);
+  if (labels.length > 5 || labels.some((label) => !/^[a-z0-9][a-z0-9-]{0,31}$/.test(label))) {
+    throw new HttpError(400, 'labels are up to five lowercase slugs');
+  }
+  return labels.length > 0 ? { labels: labels.join(',') } : {};
 };
 
 const text = (value, limit) => (typeof value === 'string' ? value.slice(0, limit) : '');
@@ -371,7 +384,7 @@ const pending = async (env) => {
 // The request format `deus inbox` reads: one S-expression (docs/spec/CORE.md strings).
 //
 
-const FIELDS = ['kind', 'by', 'at', 'subject', 'note', 'title', 'details', 'link', 'task'];
+const FIELDS = ['kind', 'by', 'at', 'subject', 'note', 'title', 'details', 'link', 'labels', 'task'];
 
 export const requestToSexp = (request) => {
   const fields = FIELDS.filter((key) => request[key] !== undefined).map((key) => `(${key} ${quote(request[key])})`);
@@ -381,6 +394,7 @@ export const requestToSexp = (request) => {
 
 /** A string as Core text prints it: `"`, `\` and control characters escaped. */
 export const quote = (value) =>
+  // oxlint-disable-next-line no-control-regex -- matching control characters is the point: they are escaped.
   `"${String(value).replace(/[\\"\u0000-\u001f\u007f]/g, (char) => {
     if (char === '"' || char === '\\') {
       return `\\${char}`;

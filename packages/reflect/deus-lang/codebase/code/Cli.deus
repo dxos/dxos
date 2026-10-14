@@ -9,7 +9,7 @@ structure Cli.Args where
   positional : List Text
   options : Map Text Text
 
-/-- One block's outcome: `ok`, `fail` with its problems, or `unchecked` when no extension is found. -/
+/-- One block's outcome: `ok`, `fail` with its problems, `gap` when every problem is a known gap, or `unchecked` when no extension is found. -/
 structure Cli.Outcome where
   place : Text
   verdict : Text
@@ -231,7 +231,12 @@ def Cli.checkBlock (dir : Text) (ns : Map Text Entry) (byUri : Map Text Text) (p
       let check := Code.run h
       match withHost dir ns (fun _ => guardDefect (fun _ => check b)) with
       | Result.ok [] => Outcome.mk place "ok" []
-      | Result.ok problems => Outcome.mk place "fail" problems
+      | Result.ok problems =>
+          -- A known gap (each problem starting `gap: `) is reported but does not fail the document.
+          Outcome.mk
+            place
+            (if List.all (fun p => startsWith "gap: " p) problems then "gap" else "fail")
+            problems
       | Result.err message => Outcome.mk place "fail" ["defect: " ++ message]
 
 /-- Checks one document: the core rules, then each block through its extension. -/
@@ -243,7 +248,7 @@ def Cli.checkDoc (dir : Text) (ns : Map Text Entry) (byUri : Map Text Text) (pat
     dir
     ns
     byUri
-    (path ++ ":" ++ toText b.lineNo ++ " " ++ describe b)
+    (path ++ ":" ++ toText b.lineNo ++ " " ++ Mdl.describe b)
     (List.lookup b.blockType declared)
     b) (List.filter (fun b => b.blockType != "ext") doc.blocks)
   if List.isEmpty core then outcomes else Outcome.mk path "fail" core :: outcomes
@@ -389,6 +394,46 @@ def Cli.deps (args : Args) (reverse : Bool) : {IO, Throw Text} Unit :=
         (fun _ => Json.obj [("name", Json.str name), (if reverse then "dependents" else "dependencies", Json.arr (List.map (fun x => Json.obj [("hash", Json.str x), ("name", Json.str (display x))]) found))])
         (fun _ => join "\n" (List.map display found))
 
+/-- What `MdlHost.describe` reports about a name: its kind, hash, displayed type, declaration as
+  source, and for a test or a theorem its verdict (checked now unless a result is cached). -/
+def Cli.describeName (dir : Text) (ns : Map Text Entry) (name : Text) : {IO, Throw Text} List (Text, Text) :=
+  match Map.lookup name ns with
+  | Option.none => Throw.throw (name ++ " is not in the codebase")
+  | Option.some e =>
+      let h := Entry.hash e
+      let meta := readMeta dir h
+      let typed :=
+        match metaField meta "scheme" with
+        | Option.some scheme => [("type", displayScheme scheme)]
+        | Option.none => []
+      let verdict :=
+        match Check.verdictOf dir ns e with
+        | Option.some (Verdict.pass evidence cases) => [("verdict", "pass"), ("evidence", evidence), ("cases", toText cases)]
+        | Option.some (Verdict.fail reason) => [("verdict", "fail"), ("reason", reason)]
+        | Option.some Verdict.unchecked => [("verdict", "unchecked")]
+        | Option.none => []
+      -- Specs name things in full, so the statement prints every reference by its full name.
+      let statement :=
+        match readObject dir h with
+        | Option.some (Sexp.list (Sexp.sym "theorem" :: Sexp.list (Sexp.sym "binders" :: types) :: prop :: proof :: _)) =>
+            let base := printer ns (List.map asText (metaList meta "locals"))
+            let full := Printer.mk base.fullNames base.fullNames (Map.fromList (filterMap (fun pair =>
+              match pair with
+              | (n, Entry.type _ iri _) => Option.some (iri, n)
+              | (n, Entry.ability _ iri) => Option.some (iri, n)
+              | _ => Option.none) (Map.toList ns))) Map.empty base.supply base.fresh
+            let decl := View.theoremDecl full name types prop proof
+            let stop := indexOf decl " := " 0
+            [("statement", trim (Text.drop
+              (Text.length ("theorem " ++ name))
+              (if stop < 0 then decl else Text.take stop decl)))]
+        | Option.some (Sexp.list (Sexp.sym "term" :: core :: [])) => if isStub core then [("implemented", "false")] else []
+        | _ => []
+      [("kind", Entry.kind e), ("hash", h), ("view", snd (viewParts (printer ns []) dir ns name e "deus"))] ++
+        typed ++
+        statement ++
+        verdict
+
 def Cli.die (message : Text) : {IO} a :=
   eprintln ("deus: " ++ message)
   IO.exit 1
@@ -421,12 +466,13 @@ def Cli.expandPaths (paths : List Text) : {IO} List Text := concatMap (fun path 
 /-- `deus explore [--out dir] [--port n] [--publish remote] [--console]` (D58): writes the codebase
   explorer for the current branch, then serves it locally, or uploads it next to a remote's bundles
   (`<prefix>/site/`), where a public bucket serves it. `--console` adds a console that runs `deus`
-  in the page (D87); a site that has one keeps it. -/
+  in the page (D84); a site that has one keeps it. -/
 def Cli.explore (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let out := getOr (option args "out") (dir ++ "/cache/site")
-  let pages := Explorer.generate dir out
+  -- The console goes first, so meta.json can say whether the site has one.
   if flag args "console" || IO.exists (out ++ "/console/codebase.json") then console dir out else 0
+  let pages := Explorer.generate dir out
   match (option args "publish", option args "out") with
   | (Option.some name, _) =>
       match publishSite dir name out (flag args "force") with
@@ -740,7 +786,7 @@ def Cli.mdl (args : Args) : {IO, Throw Text} Unit :=
     (fun o => Json.obj [("block", Json.str o.place), ("status", Json.str o.verdict), ("problems", Json.arr (List.map Json.str o.problems))])
     outcomes)) (fun _ => join "\n" (List.map (fun o => padRight 10 o.verdict ++ o.place ++
     Text.concat (List.map (fun p => "\n          " ++ p) o.problems)) outcomes ++ [toText (count "ok") ++ " ok, " ++ toText (count "fail") ++ " failed, " ++
-    toText (count "unchecked") ++ " unchecked"]))
+    toText (count "unchecked") ++ " unchecked" ++ (if count "gap" > 0 then ", " ++ toText (count "gap") ++ " known gaps" else "")]))
   if count "fail" > 0 then IO.exit 1 else ()
 
 def Cli.merge (args : Args) : {IO, Throw Text} Unit :=
@@ -957,9 +1003,9 @@ def Cli.push (args : Args) : {IO, Throw Text} Unit :=
   -- A remote that hosts the explorer (`explore --publish`) gets it refreshed with each push of the current branch.
   let site := if IO.exists (siteManifest dir name) && branch == currentBranch dir then
     let out := dir ++ "/cache/site-" ++ name
-    Explorer.generate dir out
-    -- A site published with its console keeps it, on the codebase as pushed (D87).
+    -- A site published with its console keeps it, on the codebase as pushed (D84).
     if Text.contains " console/codebase.json\n" (getOr (IO.readFile (siteManifest dir name)) "") then console dir out else 0
+    Explorer.generate dir out
     Option.some (snd (publishSite dir name out false))
   else Option.none
   let siteJson := getOr (Option.map (fun n => [("site", Json.num n)]) site) []
@@ -1382,6 +1428,9 @@ def Cli.withHost (dir : Text) (ns : Map Text Entry) (body : Unit -> {MdlHost, IO
     | Result.err message => Result.err message)
   | MdlHost.run source -> k => k (match compiled source with
     | Result.ok h => guardDefect (fun _ => Code.run h)
+    | Result.err message => Result.err message)
+  | MdlHost.describe name -> k => k (match guardDefect (fun _ => try (fun _ => describeName dir ns name)) with
+    | Result.ok r => r
     | Result.err message => Result.err message)
 
 --

@@ -1,5 +1,25 @@
 # History of main
 
+- `9fd93141ff` task: set 82d2d7a2 details (by claude)
+- `4d8c709968` task: set 32bf2703 state details (by claude)
+- `e333372968` export: merge 15 changes from codebase
+- `b891c25ec8` export: merge tasks from codebase
+- `83305ed189` Pure Array (D95): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `a2a98e50c6` task: open 649c69d1 Tested theorems: 'by test' evaluates the conclusion even when a hypothesis is false, because implies is strict; skip (and count) cases whose hypotheses fail, so 'by test' works on bounded statements like the Array laws (D95) (by claude)
+- `c146dc2968` task: set a1b73fb8 title (by claude)
+- `2d3c722b48` delete Sorting.benchPersistent Sorting.copyGo Sorting.lomutoV Sorting.persistentKeepsOld Sorting.persistentSort Sorting.persistentSorts Sorting.quickV Sorting.toListV Sorting.vget Sorting.vlength Sorting.vset Sorting.vswap Sorting.Node.current Sorting.Node.diff Sorting.Node
+- `371b2ea4de` Pure Array (D95): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `61d065619f` Pure Array (D95): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `2ec5f076b0` Pure Array (D95): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `0cc429c92c` Pure Array (D95): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `d50c37bc04` Pure Array (D95): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `aa37439058` Pure Array (D95): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `8d9f79db49` Pure Array (D95): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `1a3c939c73` Pure Array (D95): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `4463ec2bb0` close 95ca184f by #99b512f359 (by claude)
+- `99b512f359` history: import 359 changes (by claude)
+- `7b6f241c41` task: import from tasks.sexp
+- `b878c25ce1` add code specs
 - `dc73933af0` task: set 82d2d7a2 state details (by claude)
 - `11a519e17a` task: set 764249e0 state details (by claude)
 - `60521f6369` export: merge tasks from codebase
@@ -15,15 +35,46 @@
 - `5e69dc066b` Pure Array (D91): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
 - `55e9e2fabe` Pure Array (D91): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
 - `f1a8d16820` close 95ca184f by #41879b7d7e (by claude)
-- `41879b7d7e` history: import 319 changes (by claude)
+- `74a8e8247f` task: open cb6c9a43 deus task set ignores an unknown field (--status) instead of refusing it
+- `aad1732770` task: link cf5e187f to Resolve.stub
+- `c52516022a` task: set cf5e187f state
+- `d26316a767` declarations without a body (D94, task cf5e187f) (by claude)
+- `135f9abba9` task: set cf5e187f assignee
+- `8dbb3e7b5b` task: open cf5e187f Declarations without a body: def f with a full signature and no implementation
+- `32d6c2d287` task: set 20dbe121 state (by claude)
+- `2a43b7dc42` task: open 20dbe121 Explorer overview: count tiles and recent changes should be clickable (by claude)
+- `7829722c1b` history: import 351 changes
+- `ae69cbd311` task: import from tasks.sexp
+- `08e90dab62` add code specs
+- `438184d11a` close e4a19978 by #458d0633bd (by claude)
+- `458d0633bd` the explorer's report tool: a screenshot filed as a labelled task (D90) (by claude)
+- `993938b5c3` task: open e4a19978 Explorer report tool: signed-in members file a screenshot of the current view as a task (by claude)
+- `089232a06c` task: set 6ffdc230 details (by claude)
+- `b1615b9a4a` history: import 347 changes (by claude)
+- `4d335b2648` task: import from tasks.sexp
+- `e373ff3964` add code specs
+- `74b97aebd0` close 6ffdc230 by #10e77371ec (by claude)
+- `10e77371ec` checked specs for the codebase store, compile, export and explorer; req, api and law blocks (D91) (by claude)
+- `3f7d3447c4` task: open 1ab6c044 Checked specs for the remaining subsystems: lexer and parser, types, prover and check, tasks, replicate, update, image, wasm and C back ends (by claude)
+- `6ed8a2b666` task: open b4d7a440 BINDINGS.mdl: turn the requirements table into req blocks so deus mdl checks its evidence links (by claude)
+- `22fa7745e5` task: open 908495a0 deus mdl --coverage: public definitions no api block names, and tests or theorems no req names (by claude)
+- `165385e432` task: open 0d7b0142 law statement: compare compiled propositions instead of printed text, so any spelling of the claim is accepted (by claude)
+- `83f2d1149c` task: open 1cbfdd30 Custom generators for by test laws, declared next to the law, instead of hand-built inputs (Codebase.Spec.dotted, Bindings.Spec.crowded) (by claude)
+- `fc3b0088f4` task: open 6a3b0ebe MDL extensions see the document's name, so tests can point back at requirements (@[req "Doc.R-1"]) and deus mdl can list tests no requirement names (by claude)
+- `33a1f4c824` task: open f6a2c2ff Type display names a type by its IRI's tail (task:Task) instead of its name (Task) (by claude)
+- `c4d35b8416` task: open 4f7f9e40 Theorem view prints P -> Q as prim "implies" (P) (Q) (by claude)
+- `c36de0222a` task: open a2da28e2 A req can name TypeScript tests as evidence (vitest file and test name), so the toolchain-wide view round trip stops being a gap (by claude)
+- `ef4bb40a88` task: open 823f7b83 Laws for task, comment and history-record merges, and for add/update refusing layer crossings (by claude)
+- `6370cf7401` task: open 6ffdc230 Dogfood the spec process: .mdl spec, then APIs and laws, then code, proofs and tests; backfill the toolchain's subsystems (by claude)
+- `192a0b9794` toolchain sources at #13952's head (by claude)
+- `41879b7d7e` history: import 319 changes
 - `ffc6ea6551` task: import from tasks.sexp
 - `3b48b9e68d` add code specs
-- `57f679f52c` close ef46861c by #9081760a10 (by claude)
-- `9081760a10` Wasm with reference counting: the C back end compiled with clang for wasm32 (D90) (by claude)
-- `a8b0e3bf81` task: open 38603468 Native: 32-bit values with a tag bit in wasm built through C (halve block size) (by claude)
-- `74c2b4296d` history: import 313 changes
-- `eb9b7f4404` task: import from tasks.sexp
-- `617221bcb6` add code specs
+- `d3c92c98f9` export: merge 6 changes from codebase
+- `c610f5d907` export: merge tasks from codebase
+- `634f0cce36` merge #13952's branch (wasm refcounting, D90); pull verification renumbered D91 (by claude)
+- `6603ee130b` close 7afeaa0c by #1efeb3fb7d (by claude)
+- `1efeb3fb7d` pull: verify bundle names, bundle and object hashes, cycle members included (D90) (by claude)
 - `83474d34b9` export: merge 19 changes from codebase
 - `aabff4cf3c` export: merge tasks from codebase
 - `63e3914ad2` merge #13952's branch (C refcounting D86, TS bindings D87); spellings and union merge renumbered D88, D89 (by claude)
@@ -107,6 +158,12 @@
 - `7453b3a1b7` task: import 18 tasks
 - `bff1b8d98b` add code
 - `67c7d5a614` init
+- `57f679f52c` close ef46861c by #9081760a10 (by claude)
+- `9081760a10` Wasm with reference counting: the C back end compiled with clang for wasm32 (D90) (by claude)
+- `a8b0e3bf81` task: open 38603468 Native: 32-bit values with a tag bit in wasm built through C (halve block size) (by claude)
+- `74c2b4296d` history: import 313 changes
+- `eb9b7f4404` task: import from tasks.sexp
+- `617221bcb6` add code specs
 - `8fefe275fc` task: comment on 27d2d190 (by claude)
 - `3e65353735` delete Bindings.handlerDecl Bindings.member Bindings.typeDecl
 - `acdf257ca5` close 27d2d190 by #a1cc2bcbf9 (by claude)

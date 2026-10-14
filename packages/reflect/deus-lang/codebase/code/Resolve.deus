@@ -156,6 +156,12 @@ def Resolve.hashFor (iri : Text) (form : Sexp) : Text := if startsWith "#" iri t
 /-- A type IRI: explicit, or derived from the fully qualified name. -/
 def Resolve.iriFor (fqn : Text) (iri : Option Text) : Text := getOr iri ("urn:deus:" ++ fqn)
 
+/-- Whether stripped Core is a declaration without a body. -/
+def Resolve.isStub (core : Sexp) : Bool :=
+  match core with
+  | Sexp.list (Sexp.sym "lam" :: b :: []) => Resolve.isStub b
+  | _ => isSome (stubOf core)
+
 /-- `fun p1 p2 => body`: plain names bind directly; other patterns match on the argument. -/
 def Resolve.lambda (ctx : Ctx) (params : List Pat) (body : List (Option Text) -> {Throw Text} Sexp) (locals : List (Option Text)) : {Throw Text} Sexp :=
   match params with
@@ -364,6 +370,18 @@ def Resolve.structHash (ctx : Ctx) (fqn : Text) : Text :=
   match Dict.lookup fqn (ctx.names).index with
   | Option.some (Entry.type h _ _) => h
   | _ => ""
+
+/-- The body of a declaration without one (D93): the defect `not implemented: <name>`, under a lambda
+  applied to the printed signature, so the hash covers the name and the type. -/
+def Resolve.stub (fqn : Text) (signature : Sexp) : Sexp := Resolve.app (Compile.node "lam" [Sexp.s "", Resolve.app
+  (Compile.node "prim" [Sexp.s "defect"])
+  [Compile.node "text" [Sexp.s ("not implemented: " ++ fqn)]]]) [Compile.node "text" [Sexp.s (Sexp.print signature)]]
+
+/-- The name and printed signature of a stripped `stub` body, after its parameters' lambdas. -/
+def Resolve.stubOf (body : Sexp) : Option (Text, Text) :=
+  match body with
+  | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "lam" :: Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "prim" :: Sexp.str "defect" :: []) :: Sexp.list (Sexp.sym "text" :: Sexp.str message :: []) :: []) :: []) :: Sexp.list (Sexp.sym "text" :: Sexp.str signature :: []) :: []) => if startsWith "not implemented: " message then Option.some (Text.drop 17 message, signature) else Option.none
+  | _ => Option.none
 
 def Resolve.trueCore : Sexp := Compile.node "con" [Sexp.s "#Bool", i 1, i 0]
 

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-// The sorting case study (D83, D91, docs/IMMUTABILITY.md): times examples/sorting.deus on the
+// The sorting case study (D83, D95, docs/IMMUTABILITY.md): times examples/sorting.deus on the
 // TypeScript kernel, the Rust kernel and compiled wasm, against JavaScript baselines.
 //
 //   node scripts/sort-bench.mjs [--sizes 10000,100000] [--wasm-sizes 10000,100000,1000000]

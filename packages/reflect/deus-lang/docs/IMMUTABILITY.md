@@ -12,12 +12,12 @@ with measurements and recommends a design, recorded as [D83](./DECISIONS.md).
    sort is 2–3× slower than the in-place sort (3.4× compiled to C) and allocates 17–26× more memory. The wasm back end
    never frees memory, so a pure sort of 10 million numbers would need about 5 GB, beyond wasm32's
    4 GB. That program cannot run at all today.
-3. **DEUS needs O(1) writes, but not mutation in the language.** D83 added a mutable `Array`; D91
+3. **DEUS needs O(1) writes, but not mutation in the language.** D83 added a mutable `Array`; D95
    replaced it with a pure one. `Array.set` returns a new array, and compiled code writes in place
    whenever nothing reads the old array again. The pure quicksort now runs as fast as the mutable
    one did (see [the update](#update-the-pure-array-d86)).
 
-## Update: the pure array (D91)
+## Update: the pure array (D95)
 
 Dmytro asked for the recommendation to be built. It is: the `--wasm` back end finds unique arrays
 statically, and the C back end by the reference counts it gained in D86.
@@ -38,7 +38,7 @@ statically, and the C back end by the reference counts it gained in D86.
 
 Pure quicksort over `Array`, n = 1 000 000, against the D83 mutable one:
 
-|                    | D83 mutable    | D91 pure                                          |
+|                    | D83 mutable    | D95 pure                                          |
 | ------------------ | -------------- | ------------------------------------------------- |
 | wasm               | 202 ms, 18 MiB | **187 ms, 23 MiB**                                |
 | C (clang `-O2`)    | 153 ms         | **142 ms** without counts; 200 ms with them (D86) |
@@ -57,7 +57,7 @@ buys freeing every block.
 
 ## What was measured
 
-These measurements are from D83 (`9c961d95`), when `Array` was mutable; D91 removed the
+These measurements are from D83 (`9c961d95`), when `Array` was mutable; D95 removed the
 `Persistent` sort from the example, since the pure `Array` now is the persistent array.
 
 [`examples/sorting.deus`](../examples/sorting.deus) sorts pseudo-random `Int`s with seven programs.
@@ -154,7 +154,7 @@ already shows a 2–3× gap in time and a 20× gap in memory.
 Add mutable memory, but in a form that keeps DEUS pure where it matters: hashing, cached test
 results, the prover, and multi-shot handlers. Do it in two steps.
 
-1. **Now: a mutable `Array` primitive** (`Array.make`, `length`, `get`, `set`), done in D83 (replaced by step 2 in D91).
+1. **Now: a mutable `Array` primitive** (`Array.make`, `length`, `get`, `set`), done in D83 (replaced by step 2 in D95).
    It worked like `Ref` and `MutMap`: identity-compared, not rolled back by a resumed
    continuation, and outside the prover's pure primitives, so a theorem over it is tested rather
    than proved. Both kernels implement it identically. The wasm and C back ends compile it to a block
@@ -162,7 +162,7 @@ results, the prover, and multi-shot handlers. Do it in two steps.
    to primitive-only definitions such as `Int.and`, which they used to refuse. Library
    code that needs speed (the compiler, the codebase store, the type checker's unifier) can use
    `Array` today, as it already uses `Ref`.
-2. **Next: a pure `Array` that is updated in place when it is unique.** Done in D91, see
+2. **Next: a pure `Array` that is updated in place when it is unique.** Done in D95, see
    [the update](#update-the-pure-array-d86). `Array.set : Array a -> Int -> a -> Array a` returns a
    new array and leaves the old one unchanged; compiled code writes in place when it can prove
    nobody else holds the old array, as in Lean 4's `Array` and Koka's "functional but in-place".
@@ -187,5 +187,5 @@ These are filed in the codebase's task list ([`codebase/TASKS.md`](../codebase/T
 - Reference counting with reuse (Perceus) in the wasm and C back ends, so pure code frees memory
   and reuses unique cells in place (native-compilation work, tasks `62d1bdda` and `cf0e3937`). With
   counts, the copying `Array.set` should check for a count of one before copying.
-- Done in D91: a pure `Array.set` that writes in place when the array is unique, and no JIT
+- Done in D95: a pure `Array.set` that writes in place when the array is unique, and no JIT
   journaling for `Array` writes.

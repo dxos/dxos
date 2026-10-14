@@ -328,3 +328,20 @@ def Check.typesByIri (dir : Text) (ns : Map Text Entry) : {IO} Map Text Sexp := 
       | Option.some obj => Map.insert iri obj m
       | Option.none => m
   | _ => m) Map.empty (Map.toList ns)
+
+/-- A test's or a theorem's verdict, from the cache or checked now and cached; `none` for other entries. -/
+def Check.verdictOf (dir : Text) (ns : Map Text Entry) (e : Entry) : {IO} Option Verdict :=
+  match e with
+  | Entry.theorem h => Option.some (lemmaVerdict dir ns h)
+  | Entry.test h =>
+      let integration := hasAttr dir h "integration"
+      match if integration then Option.none else cached dir h with
+      | Option.some v => Option.some v
+      | Option.none =>
+          let v :=
+            match try (fun _ => Image.load (fetcher dir) [h]) with
+            | Result.err message => Verdict.fail message
+            | Result.ok _ => checkTest h integration
+          if integration then () else remember dir h v
+          Option.some v
+  | _ => Option.none

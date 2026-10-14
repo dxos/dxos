@@ -155,6 +155,7 @@ const renderAccount = () => {
   const node = element('account');
   node.hidden = !account.signIn;
   element('new-task').hidden = !canWrite();
+  element('report').hidden = !canWrite();
   if (!account.signIn) {
     return;
   }
@@ -326,11 +327,13 @@ const submit = async (form) => {
         title: form.title.value,
         details: form.details.value,
         link: form.link.value.trim(),
+        labels: form.dataset.labels ?? '',
         assets,
       });
       pending.push(entry);
       closeOverlays();
       form.reset();
+      delete form.dataset.labels;
       form.querySelector('.attachments').innerHTML = '';
       attached.delete(form);
       notify('Filed. The task joins the codebase when the inbox is next applied.');
@@ -356,10 +359,17 @@ const submit = async (form) => {
   }
 };
 
-const openTaskForm = () => {
+const openTaskForm = ({ report = false } = {}) => {
   if (!canWrite()) {
     return;
   }
+  const form = element('task-form');
+  if (report) {
+    form.dataset.labels = 'explorer,report';
+  } else if (form.dataset.labels) {
+    delete form.dataset.labels;
+  }
+  form.querySelector('h2').textContent = report ? 'Report' : 'New task';
   const focused = ui.focus?.startsWith('d:') ? index.byHash.get(ui.focus.slice(2))?.name : undefined;
   if (focused && !element('task-link').value) {
     element('task-link').value = focused;
@@ -431,7 +441,8 @@ const onWriteEvents = () => {
       closeOverlays();
     }
   });
-  element('new-task').addEventListener('click', openTaskForm);
+  element('new-task').addEventListener('click', () => openTaskForm());
+  element('report').addEventListener('click', () => void report());
   element('tasks-view').addEventListener('click', (event) => event.target.closest('[data-new-task]') && openTaskForm());
 };
 
@@ -451,7 +462,7 @@ try {
 const parseFragment = () => {
   const keys = decodeURIComponent(location.hash.slice(1))
     .split(',')
-    .filter((key) => /^[dtcnv]:./.test(key));
+    .filter((key) => /^[dtcnvk]:./.test(key));
   const view = keys.find((key) => key.startsWith('v:'))?.slice(2) ?? 'code';
   return { view, keys: keys.filter((key) => !key.startsWith('v:')) };
 };
@@ -740,9 +751,30 @@ const changeRows = (changes) =>
     : `<ul class="rows">${changes
         .map(
           (change) =>
-            `<li class="entry-row">${changeLink(change.causal)}<span>${escape(change.message)}</span>${change.by ? `<span class="by">${escape(change.by)}</span>` : ''}</li>`,
+            `<li class="entry-row">${changeLink(change.causal)}<a class="change-message" data-open="c:${escape(change.causal)}">${escape(change.message)}</a>${change.by ? `<span class="by">${escape(change.by)}</span>` : ''}</li>`,
         )
         .join('')}</ul>`;
+
+/** Every definition of one kind, or every check (`k:checks`, failing first): what an overview tile opens. */
+const kindCard = (key, kind) => {
+  const isChecks = kind === 'checks';
+  if (!isChecks && !KINDS[kind]) {
+    return missingCard(key, `No kind ${kind}`);
+  }
+  const rank = { fail: 0, pass: 2 };
+  const entries = index.names
+    .filter((entry) => (isChecks ? Boolean(entry.status) : entry.kind === kind))
+    .sort((a, b) => (isChecks ? (rank[a.status] ?? 1) - (rank[b.status] ?? 1) : 0) || a.name.localeCompare(b.name));
+  const failing = entries.filter((entry) => entry.status === 'fail').length;
+  return card(key, {
+    iconHtml: isChecks
+      ? `<span class="icon ${failing > 0 ? 'k-fail' : 'k-test'}">${failing > 0 ? '✗' : '✓'}</span>`
+      : icon(kind),
+    title: isChecks ? 'Checks' : escape(KINDS[kind].plural),
+    meta: `<span class="count">${isChecks ? `${entries.length - failing} of ${entries.length} pass` : entries.length}</span>`,
+    body: rowList(entries.map((entry) => entryRow(entry))),
+  });
+};
 
 const taskCard = (key, task) => {
   const parent = index.tasks.find((other) => other.id === task.parent);
@@ -978,6 +1010,8 @@ const buildCard = async (key) => {
       const change = await load(`change/${value}.json`);
       return change ? changeCard(key, change) : missingCard(key, `No change ${short(value)}`);
     }
+    case 'k':
+      return kindCard(key, value);
     default:
       return missingCard(key, key);
   }
@@ -1026,12 +1060,12 @@ const homeHtml = () => {
     '<article class="home">' +
     `<header class="home-header"><h1>${escape(meta.project)}</h1><p class="muted">Branch <span class="chip">${escape(meta.branch)}</span>${
       meta.branches.length > 1 ? ` of ${meta.branches.length}` : ''
-    } · ${meta.definitions} definitions · ${meta.tasks} tasks</p></header>` +
-    `<ul class="stats">${counts.map(([kind, count]) => `<li>${icon(kind)}<b>${count}</b><span>${escape(KINDS[kind].plural.toLowerCase())}</span></li>`).join('')}` +
+    } · ${meta.definitions} definitions · <a data-view="tasks">${meta.tasks} tasks</a></p></header>` +
+    `<ul class="stats">${counts.map(([kind, count]) => `<li><a data-open="k:${kind}" title="List every ${escape(KINDS[kind].label)}">${icon(kind)}<b>${count}</b><span>${escape(KINDS[kind].plural.toLowerCase())}</span></a></li>`).join('')}` +
     (checked.length > 0
-      ? `<li><span class="icon ${failing.length > 0 ? 'k-fail' : 'k-test'}">${failing.length > 0 ? '✗' : '✓'}</span><b>${checked.length - failing.length}/${checked.length}</b><span>checks pass</span></li>`
+      ? `<li><a data-open="k:checks" title="List every check, failing first"><span class="icon ${failing.length > 0 ? 'k-fail' : 'k-test'}">${failing.length > 0 ? '✗' : '✓'}</span><b>${checked.length - failing.length}/${checked.length}</b><span>checks pass</span></a></li>`
       : '') +
-    `<li><span class="icon k-task">◎</span><b>${open.length}</b><span>open task${open.length === 1 ? '' : 's'}</span></li></ul>` +
+    `<li><a data-view="tasks" title="Open the task board"><span class="icon k-task">◎</span><b>${open.length}</b><span>open task${open.length === 1 ? '' : 's'}</span></a></li></ul>` +
     `<div class="home-columns"><div>${section('Recent changes', meta.history.length, changeRows(meta.history.slice(0, 6)))}<a class="more-link" data-view="history">All history →</a></div>` +
     `<div>${section(
       'Open tasks',
@@ -1283,6 +1317,9 @@ const titleOf = (key) => {
   }
   if (key.startsWith('t:')) {
     return index.tasks.find((task) => task.id === value)?.title ?? value;
+  }
+  if (key.startsWith('k:')) {
+    return value === 'checks' ? 'Checks' : (KINDS[value]?.plural ?? value);
   }
   return key.startsWith('n:') ? value : short(value);
 };
@@ -1604,6 +1641,10 @@ const onKey = (event) => {
       event.preventDefault();
       openTaskForm();
       break;
+    case 'r':
+      event.preventDefault();
+      void report();
+      break;
     case '`':
       if (shell.info) {
         event.preventDefault();
@@ -1822,7 +1863,8 @@ const consoleButton = (def) =>
     : '';
 
 const onShellEvents = async () => {
-  shell.info = await load('console/info.json');
+  // meta.json says whether the site has a console, so a site without one requests nothing for it.
+  shell.info = index.meta.console ? await load('console/info.json') : undefined;
   if (!shell.info) {
     return;
   }
@@ -1857,6 +1899,129 @@ const onShellEvents = async () => {
       input.blur();
     }
   });
+};
+
+//
+// Report (D93): a screenshot of what the reader sees, filed as a task about the explorer.
+//
+
+let styleText;
+
+/** Moves a clone's children by its original's scroll offsets, which serialization drops. */
+const keepScroll = (original, copy) => {
+  if (original.scrollTop || original.scrollLeft) {
+    copy.style.overflow = 'hidden';
+    for (const child of copy.children) {
+      child.style.transform = `translate(${-original.scrollLeft}px, ${-original.scrollTop}px)`;
+    }
+  }
+  [...original.children].forEach((child, at) => copy.children[at] && keepScroll(child, copy.children[at]));
+};
+
+/** Draws the page as it is now: the DOM, styled, inside an SVG `foreignObject`, onto a canvas. No permission is asked. */
+const drawPage = async () => {
+  styleText ??= await fetchText('app.css');
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+  const copy = document.body.cloneNode(true);
+  keepScroll(document.body, copy);
+  for (const node of copy.querySelectorAll('script, #toast, .toast')) {
+    node.remove();
+  }
+  // Typed text lives in properties, not attributes, so it is copied across by hand.
+  const fields = document.body.querySelectorAll('input, textarea');
+  copy.querySelectorAll('input, textarea').forEach((field, at) => {
+    const value = fields[at]?.value ?? '';
+    field instanceof HTMLTextAreaElement ? (field.textContent = value) : field.setAttribute('value', value);
+  });
+  // The image is drawn outside this document, so the theme's tokens are resolved here and pinned.
+  const computed = getComputedStyle(document.documentElement);
+  const tokens = [...new Set(styleText.match(/--[a-z0-9-]+(?=\s*:)/g) ?? [])]
+    .map((name) => `${name}:${computed.getPropertyValue(name)}`)
+    .join(';');
+  const root = document.createElement('div');
+  root.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+  root.setAttribute('class', document.body.className);
+  root.setAttribute(
+    'style',
+    `${tokens};width:${width}px;height:${height}px;overflow:hidden;background:var(--bg);color:var(--fg)`,
+  );
+  root.append(...copy.childNodes);
+  const markup = new XMLSerializer().serializeToString(root);
+  const style = styleText.replace(/\bbody\b/g, '.page-shot').replace(/:root/g, '.page-shot');
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">` +
+    `<foreignObject width="100%" height="100%"><style xmlns="http://www.w3.org/1999/xhtml">${style.replace(/</g, '\\3c ')}</style>` +
+    markup.replace('class="', 'class="page-shot ') +
+    '</foreignObject></svg>';
+  const image = new Image();
+  image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+  await image.decode();
+  const scale = Math.min(window.devicePixelRatio || 1, 2);
+  const canvas = document.createElement('canvas');
+  canvas.width = width * scale;
+  canvas.height = height * scale;
+  const context = canvas.getContext('2d');
+  context.scale(scale, scale);
+  context.drawImage(image, 0, 0);
+  return new Promise((done, fail) =>
+    canvas.toBlob((blob) => (blob ? done(blob) : fail(new Error('empty capture'))), 'image/png'),
+  );
+};
+
+/** Asks the browser to share this tab and keeps one frame: the fallback when the page cannot draw itself. */
+const grabTab = async () => {
+  const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, preferCurrentTab: true });
+  try {
+    const video = document.createElement('video');
+    video.srcObject = stream;
+    video.muted = true;
+    await video.play();
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    return await new Promise((done, fail) =>
+      canvas.toBlob((blob) => (blob ? done(blob) : fail(new Error('empty capture'))), 'image/png'),
+    );
+  } finally {
+    stream.getTracks().forEach((track) => track.stop());
+  }
+};
+
+/** What the reader was looking at, in words, for the report's details. */
+const placeOf = () => {
+  const { keys } = parseFragment();
+  const what =
+    ui.view === 'code' ? (keys.length > 0 ? keys.map(titleOf).join(', ') : 'the overview') : `the ${ui.view} view`;
+  return `Reported from ${what}: ${location.href}\n${window.innerWidth}×${window.innerHeight}, ${navigator.userAgent}\n\n`;
+};
+
+/** `r`: capture the view, then open the task form with the screenshot attached. */
+const report = async () => {
+  if (!canWrite()) {
+    return;
+  }
+  closeOverlays();
+  hideTooltip();
+  let shot;
+  try {
+    shot = await drawPage();
+  } catch {
+    shot = await grabTab().catch(() => undefined);
+  }
+  const form = element('task-form');
+  openTaskForm({ report: true });
+  if (!form.details.value) {
+    form.details.value = placeOf();
+  }
+  if (shot) {
+    await attach(form, [
+      new File([shot], `explorer-${new Date().toISOString().replace(/[:.]/g, '-')}.png`, { type: 'image/png' }),
+    ]);
+  } else {
+    notify('Could not capture the page; attach a screenshot yourself');
+  }
 };
 
 const main = async () => {

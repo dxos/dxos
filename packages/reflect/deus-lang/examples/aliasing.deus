@@ -1,5 +1,5 @@
 /-
-  Aliasing cases for the pure `Array` (D91, docs/spec/ARRAY.mdl): each keeps an old array alive
+  Aliasing cases for the pure `Array` (D95, docs/spec/ARRAY.mdl): each keeps an old array alive
   while a new one is made from it, in a different way. Every function gives the same number on the
   kernels, in wasm and in C; compiled, `deus/unique.deus` must copy exactly where an old array is
   still read, or the number changes.

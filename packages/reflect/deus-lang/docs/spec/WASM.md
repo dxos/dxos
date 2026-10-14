@@ -157,7 +157,7 @@ argument's type, so a comparison of an element of an `Array Int` compiles.
 
 ### Unique arrays
 
-`Array.set` is pure ([D91](../DECISIONS.md), [ARRAY.mdl](ARRAY.mdl)): it returns a new array and the old
+`Array.set` is pure ([D95](../DECISIONS.md), [ARRAY.mdl](ARRAY.mdl)): it returns a new array and the old
 one stays readable. `Array.setInPlace` and `Array.copy` are not in the language. A pass over Core,
 [`deus/unique.deus`](../../deus/unique.deus), runs after the functions are gathered. This back end
 never frees memory and its blocks carry no count, so uniqueness has to be proved statically; the C back

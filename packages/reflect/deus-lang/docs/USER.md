@@ -301,4 +301,20 @@ make sure the thread that's picking up open tasks doesnt stop and picks up next 
 
 ---
 
+how much of .mdl are you dogfooding? the general process should be mdl spec > apis + theorems > impls and proofs and tests. maybe backfill this for existing code and keep using this process as you go, eval it
+
+---
+
+- codebase ui -- when authed should have a report tool that takes screenshot and files a task --- typically something about improbing codebase explorer
+
+---
+
+- those should be clickable
+
+---
+
+I think deus should allow declaring a definition with a type but no impl
+
+---
+
 impl recomendation
