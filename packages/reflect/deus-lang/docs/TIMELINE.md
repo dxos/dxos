@@ -123,6 +123,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 114 | 10-14 22:50 | 5m 00s | `159dbea9` | the codebase is on R2: `r2://agent-artifacts/deus/toolchain` seeded from the export and checked against a fresh pull; `origin` and the R2 endpoint default for the toolchain codebase (D109, task 4b1eb1a9) |
 | 115 | 10-14 22:45 | 25m 00s | `2adf5fe6` | the explorer shows events: `events.json` and a count in `meta.json`, an Events card with the latest rows per type, and counts on definition and change cards; spec first in the codebase (Explorer.Spec R-14, R-15, D110) |
 | 116 | 10-14 22:48 | 1h 00m | this commit | C back end compiles higher-order code: flat closures, partial and over-application, unknown calls, lambda-lifted `letrec`, so the prelude list functions compile; 7–19× faster than the JIT, 0 live words (D111, task 610b2785); filed c62198a1, the R2 codebase mistypes pattern variables |
-| 117 | 10-14 23:10 | 0h 40m | this commit | R2 toolchain codebase fixed: pulls lacked builtin objects, so constructor patterns were mistyped; bundles now carry builtins, unknown constructors still bind every pattern variable, R2 remote updated (D112, task c62198a1) |
+| 117 | 10-14 23:10 | 0h 40m | `41c9734b` | R2 toolchain codebase fixed: pulls lacked builtin objects, so constructor patterns were mistyped; bundles now carry builtins, unknown constructors still bind every pattern variable, R2 remote updated (D112, task c62198a1) |
 
-Total from stage 1 to stage 117: 21h 19m.
+| 118 | 10-14 23:11 | 0h 01m | this commit | JsGen.Spec has no gaps: tests that the js target refuses multi-shot handlers (R-2) and `Js.import` inside an expression (R-3); written in the codebase, whose R2 push was refused (403) from this session, so git carries it |
+Total from stage 1 to stage 118: 21h 20m.

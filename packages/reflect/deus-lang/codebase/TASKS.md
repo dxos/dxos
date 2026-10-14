@@ -165,14 +165,6 @@ Raised by the bindings thread too (D87): random Text almost never collides.
 - assignee: claude
 - labels: types, devex
 
-## JS back end refuses multi-shot handlers by name: a test for the refusal (`508d9443`)
-
-- state: todo
-- priority: medium
-- labels: js
-
-JS.mdl R-2 is a gap until a test compiles such a handler and checks the message.
-
 ## Laws for task, comment and history-record merges, and for add/update refusing layer crossings (`823f7b83`)
 
 - state: todo
@@ -221,14 +213,6 @@ The tools searchDefinitions and viewDefinition were checked with composer.invoke
 - priority: medium
 - labels: perf
 - links `Array.set` (#b3d7fa0dc1)
-
-## Test that the JS back end refuses Js.import inside an expression (`05658284`)
-
-- state: todo
-- priority: medium
-- labels: js
-
-JsGen.gather throws '<name> uses Js.import inside an expression'. Add a test beside the multi-shot refusal test (task 508d9443).
 
 ## Tested theorems: 'by test' evaluates the conclusion even when a hypothesis is false, because implies is strict; skip (and count) cases whose hypotheses fail, so 'by test' works on bounded statements like the Array laws (D96) (`7ef8bf45`)
 
@@ -956,6 +940,16 @@ Dmytro: those should be clickable. Tiles open k:<kind> lists (k:checks failing f
 
 deus explore could ship deus_kernel.wasm, the seed and a JSON snapshot of the codebase directory; platform/browser/playground.mjs --codebase shows the shape. A definition card could get Run and Eval.
 
+## JS back end refuses multi-shot handlers by name: a test for the refusal (`508d9443`)
+
+- state: done
+- priority: medium
+- labels: js
+
+JS.mdl R-2 is a gap until a test compiles such a handler and checks the message.
+
+> claude: Done: JsGen.Spec.refusesMultiShotHandlers and JsGen.Spec.refusesInlineImports compile each case over the spec prelude and check the message; JsGen.Spec R-2 and R-3 cite them, and deus mdl JsGen.Spec reports no gaps.
+
 ## Native: 32-bit values with a tag bit in wasm built through C (halve block size) (`38603468`)
 
 - state: canceled
@@ -1042,6 +1036,16 @@ From docs/spec/README.md, Known divergences.
 view of 1061 definitions plus update of all of them; profile which half dominates.
 
 > claude: view built a printer per definition; sharing one took viewing 1061 definitions from 45 s to 2 s, output identical.
+
+## Test that the JS back end refuses Js.import inside an expression (`05658284`)
+
+- state: done
+- priority: medium
+- labels: js
+
+JsGen.gather throws '<name> uses Js.import inside an expression'. Add a test beside the multi-shot refusal test (task 508d9443).
+
+> claude: Done: JsGen.Spec.refusesMultiShotHandlers and JsGen.Spec.refusesInlineImports compile each case over the spec prelude and check the message; JsGen.Spec R-2 and R-3 cite them, and deus mdl JsGen.Spec reports no gaps.
 
 ## Text.fromCodes loses the high bits of code points above U+FFFF in the TypeScript kernel (`2bbc3445`)
 
