@@ -171,11 +171,19 @@ const webkitPids = (): Set<number> => {
 };
 
 const offMachineSockets = (pids: number[]): string[] => {
+  // The check is the partition's proof, so a stage it cannot inspect fails rather than passes.
+  if (pids.length === 0) {
+    throw new Error('no WebKit processes to inspect for sockets');
+  }
   let output = '';
   try {
     output = execFileSync('lsof', ['-nP', '-a', '-i', '-p', pids.join(',')], { encoding: 'utf8' });
-  } catch {
-    return [];
+  } catch (error) {
+    // `lsof` exits 1 when there is nothing to list.
+    if (isRecord(error) && error.status === 1) {
+      return [];
+    }
+    throw error;
   }
   return output
     .split('\n')

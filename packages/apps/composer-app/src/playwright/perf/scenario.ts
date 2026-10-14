@@ -219,6 +219,13 @@ const runScenario = async (scenario: Scenario, mode: Mode, iteration: number): P
     runner.adopt(await attachAll(debugPort, include));
     runner.attachInstruments({ profiler: startProfiling(artifactDir) });
     let retained: { targets: Attached[]; sampling: AllocationSampling } | undefined;
+    const closeRetained = async () => {
+      if (retained) {
+        await retained.sampling.stop(path.join(artifactDir, 'retained'));
+        detachAll(retained.targets);
+        retained = undefined;
+      }
+    };
 
     await scenario.stages({
       page,
@@ -226,7 +233,7 @@ const runScenario = async (scenario: Scenario, mode: Mode, iteration: number): P
       runId,
       budget,
       stage: async (id, body) => {
-        await runner.stage(id, async () => {
+        const row = await runner.stage(id, async () => {
           await body();
           if (INJECT?.stage === id) {
             await page.evaluate((ms) => {
@@ -239,17 +246,21 @@ const runScenario = async (scenario: Scenario, mode: Mode, iteration: number): P
             }, INJECT.ms);
           }
         });
+        // A stage past `--until` did not run, so it neither opens nor closes the window.
+        if (!row) {
+          return;
+        }
         if (RETAINED_SAMPLE?.from === id) {
           const targets = await attachAll(debugPort, include);
           retained = { targets, sampling: await startAllocationSampling(targets, { retainedOnly: true }) };
         }
-        if (RETAINED_SAMPLE?.to === id && retained) {
-          await retained.sampling.stop(path.join(artifactDir, 'retained'));
-          detachAll(retained.targets);
-          retained = undefined;
+        if (RETAINED_SAMPLE?.to === id) {
+          await closeRetained();
         }
       },
     });
+    // A window whose last stage never ran ends with the last stage that did.
+    await closeRetained();
 
     const rows = runner.rows;
     const name = `${scenario.flow}-${mode}`;

@@ -11,6 +11,9 @@ import { uniqueStem } from './snapshot.ts';
 /** One sample per 32 KiB allocated: fine enough to name a hot allocator, cheap enough to run a flow. */
 const SAMPLING_INTERVAL_BYTES = 32 * 1024;
 
+/** A shared worker can leave a GC request unanswered (see `Cdp.send`). */
+const GC_TIMEOUT_MS = 10_000;
+
 export type AllocationSampling = {
   /** Stops sampling and writes one `<realm>.heapprofile` per realm under `dir`; returns the files. */
   stop: (dir: string) => Promise<string[]>;
@@ -46,7 +49,7 @@ export const startAllocationSampling = async (
       const used = new Set<string>();
       for (const target of sampled) {
         if (retainedOnly) {
-          await target.cdp.trySend('HeapProfiler.collectGarbage');
+          await target.cdp.trySend('HeapProfiler.collectGarbage', {}, { timeoutMs: GC_TIMEOUT_MS });
         }
         const result = await target.cdp.trySend<{ profile: unknown }>('HeapProfiler.stopSampling');
         if (!result?.profile) {
