@@ -34,8 +34,8 @@ import {
   UNIT,
   type Value,
   VAR,
-  lookupIn,
   isDeopt,
+  lookupIn,
   pair,
   show,
 } from './machine.ts';
