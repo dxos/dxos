@@ -13,7 +13,7 @@ structure Args where
   options : Map Text Text
 
 /-- Options that never take a value. -/
-def booleanFlags : Map Text Unit := Set.fromList ["json", "core", "all", "force", "help", "integration"]
+def booleanFlags : Map Text Unit := Set.fromList ["json", "core", "all", "force", "help", "integration", "wasm"]
 
 def parseArgs (args : List Text) : Args :=
   let rec go rest pos opts :=
@@ -751,7 +751,11 @@ def build (args : Args) : {IO, Throw Text} Unit :=
   | ((_, Entry.term h), some out) =>
     let image := Image.build (fetcher dir) h
     let target := fun (u : Unit) =>
-      if flag args "worker" then Build.worker image (Text.replace "." "-" (Text.toLower (Option.getOr (List.head? args.positional) "actor"))) out
+      if flag args "wasm" then
+        match try (fun _ => Wasm.compile (fun x => Codebase.readObject dir x) h (Names.lastSegment (Option.getOr (List.head? args.positional) "main"))) with
+        | Result.ok bytes => IO.writeBytes out bytes
+        | Result.err message => throw (Failure.of message [])
+      else if flag args "worker" then Build.worker image (Text.replace "." "-" (Text.toLower (Option.getOr (List.head? args.positional) "actor"))) out
       else if flag args "native" then Build.native image out
       else Build.executable image out
     match try target with
@@ -806,6 +810,7 @@ def usage : Text :=
     "  build <name> -o <file> [--native]    write a standalone executable that runs name ()",
     "                                       (--native: Rust kernel + image, ~1 MB; default: Node SEA)",
     "  build <actor> -o <dir> --worker      write a Cloudflare Worker serving the actor from a Durable Object",
+    "  build <fn> -o <file.wasm> --wasm     compile a first-order Int/Bool function (and its callees) to wasm",
     "  compile <files|dirs…> --main <name>  compile files without a codebase",
     ""]
 

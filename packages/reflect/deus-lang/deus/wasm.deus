@@ -1,0 +1,156 @@
+/-
+  A WebAssembly back end (D51): compiles a definition and the definitions it calls to a binary
+  wasm module, written byte by byte in DEUS.
+
+  The subset is first-order arithmetic: every definition is a function of `Int`s (and `Bool`s,
+  which are `i32` 0 and 1) to an `Int` or `Bool`, built from literals, locals, `let`, `seq`,
+  `if`, integer and comparison primitives, and saturated calls of other such definitions. A call
+  in tail position is a `return_call`, so recursion that loops runs in constant stack. Anything
+  else (closures, data, text, effects) is refused with the form that is out of the subset; such
+  programs run on the wasm kernel instead (D41).
+
+  `Int.div` and `Int.mod` by zero trap rather than raise a defect.
+-/
+
+namespace Wasm
+
+--
+-- Encoding.
+--
+
+def uleb (n : Int) : List Int :=
+  let byte := Int.and n 127
+  let rest := Int.ushr n 7
+  if rest == 0 then [byte] else Int.or byte 128 :: uleb rest
+
+def sleb (n : Int) : List Int :=
+  let byte := Int.and n 127
+  let rest := Int.shr n 7
+  if (rest == 0 && Int.and byte 64 == 0) || (rest == -1 && Int.and byte 64 != 0) then [byte]
+  else Int.or byte 128 :: sleb rest
+
+def vec (items : List (List Int)) : List Int := uleb (List.length items) ++ List.concat items
+
+def name (t : Text) : List Int :=
+  let bytes := Text.utf8 t
+  uleb (List.length bytes) ++ bytes
+
+def section (id : Int) (body : List Int) : List Int := id :: uleb (List.length body) ++ body
+
+def i32 : Int := 127
+
+--
+-- The subset.
+--
+
+/-- A definition in the module: its hash, parameter count and body. -/
+structure Fn @"urn:deus:wasm:Fn" where
+  fnHash : Text
+  fnArity : Int
+  fnBody : Sexp
+
+/-- `(lam (lam … b))` as (parameter count, b). -/
+def unlam (core : Sexp) : (Int, Sexp) :=
+  match core with
+  | Sexp.list [Sexp.sym "lam", b] =>
+    match unlam b with
+    | (n, inner) => (n + 1, inner)
+  | _ => (0, core)
+
+def binary (name : Text) : Option Int :=
+  if name == "Int.add" then some 106
+  else if name == "Int.sub" then some 107
+  else if name == "Int.mul" then some 108
+  else if name == "Int.div" then some 109
+  else if name == "Int.mod" then some 111
+  else if name == "Int.and" then some 113
+  else if name == "Int.or" then some 114
+  else if name == "Int.xor" then some 115
+  else if name == "Int.shl" then some 116
+  else if name == "Int.shr" then some 117
+  else if name == "Int.ushr" then some 118
+  else if name == "eq" then some 70
+  else if name == "neq" then some 71
+  else if name == "lt" then some 72
+  else if name == "gt" then some 74
+  else if name == "le" then some 76
+  else if name == "ge" then some 78
+  else none
+
+def refsOf (form : Sexp) : List Text :=
+  match form with
+  | Sexp.list [Sexp.sym "ref", Sexp.str h] => [h]
+  | Sexp.list items => List.concatMap refsOf items
+  | _ => []
+
+/-- The functions `main` reaches, `main` first; a definition that is not a function is refused. -/
+def gather (fetch : Text -> {Throw Text | r} Option Sexp) (main : Text) : {Throw Text | r} List Fn :=
+  let rec go pending seen acc :=
+    match pending with
+    | [] => List.reverse acc
+    | h :: rest =>
+      if List.any (fun x => x == h) seen then go rest seen acc
+      else
+        match fetch h with
+        | some (Sexp.list [Sexp.sym "term", core]) =>
+          match unlam core with
+          | (0, _) => throw ("#" ++ Text.take 10 h ++ " is not a function, so it is outside the wasm subset")
+          | (n, b) => go (rest ++ refsOf b) (h :: seen) (Fn.mk h n b :: acc)
+        | _ => throw ("#" ++ Text.take 10 h ++ " is not a term the wasm back end can compile")
+  go [main] [] []
+
+/-- Code for `e`; `env` maps de Bruijn indices to locals, `next` is the next free local. -/
+def expr (fns : List Fn) (env : List Int) (next : Ref Int) (tail : Bool) (e : Sexp) : {Throw Text} List Int :=
+  let sub := fun (x : Sexp) => expr fns env next false x
+  let indexOf := fun (h : Text) => List.findIndex (fun f => f.fnHash == h) fns
+  match e with
+  | Sexp.list [Sexp.sym "int", Sexp.int n] => 65 :: sleb n
+  | Sexp.list [Sexp.sym "con", Sexp.str "#Bool", Sexp.int tag, Sexp.int 0] => [65, tag]
+  | Sexp.list [Sexp.sym "var", Sexp.int i] =>
+    match List.get? env i with
+    | some local => 32 :: uleb local
+    | none => throw ("unbound variable " ++ Int.toText i)
+  | Sexp.list [Sexp.sym "if", c, t, f] =>
+    sub c ++ [4, i32] ++ expr fns env next tail t ++ [5] ++ expr fns env next tail f ++ [11]
+  | Sexp.list [Sexp.sym "seq", a, b] => sub a ++ [26] ++ expr fns env next tail b
+  | Sexp.list [Sexp.sym "let", v, b] =>
+    let local := Ref.get next
+    Ref.set next (local + 1)
+    sub v ++ (33 :: uleb local) ++ expr fns (local :: env) next tail b
+  | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str "Int.neg"], a] => [65, 0] ++ sub a ++ [107]
+  | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str p], a, b] =>
+    match binary p with
+    | some op => sub a ++ sub b ++ [op]
+    | none => throw ("the primitive " ++ p ++ " is outside the wasm subset")
+  | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "ref", Sexp.str h] :: args) =>
+    let index := indexOf h
+    match List.find (fun f => f.fnHash == h) fns with
+    | some f =>
+      if f.fnArity != List.length args then throw ("#" ++ Text.take 10 h ++ " takes " ++ Int.toText f.fnArity ++ " arguments but is applied to " ++ Int.toText (List.length args) ++ "; partial application is outside the wasm subset")
+      else List.concatMap sub args ++ ((if tail then 18 else 16) :: uleb index)
+    | none => throw ("unknown function #" ++ Text.take 10 h)
+  | other => throw ("outside the wasm subset: " ++ Text.take 120 (Sexp.print other))
+
+/-- The module: one type and one function per definition; `main` is exported as `export`. -/
+def module (fns : List Fn) (export : Text) : {Throw Text} List Int :=
+  let types := List.map (fun f => [96] ++ vec (List.replicate f.fnArity [i32]) ++ vec [[i32]]) fns
+  let codes := List.map (fun f =>
+    let next := Ref.new f.fnArity
+    let env := List.reverse (List.range 0 f.fnArity)
+    let code := expr fns env next true f.fnBody ++ [11]
+    let extra := Ref.get next - f.fnArity
+    let locals := if extra == 0 then vec [] else vec [uleb extra ++ [i32]]
+    let entry := locals ++ code
+    uleb (List.length entry) ++ entry) fns
+  List.concat [
+    [0, 97, 115, 109, 1, 0, 0, 0],
+    section 1 (vec types),
+    section 3 (vec (List.mapIndexed (fun i _ => uleb i) fns)),
+    section 7 (vec [name export ++ [0, 0]]),
+    section 10 (uleb (List.length codes) ++ List.concat codes)]
+
+/-- Compiles `main` and what it calls to a wasm module exporting it as `export`. -/
+def compile (fetch : Text -> {Throw Text | r} Option Sexp) (main : Text) (export : Text) : {Throw Text | r} List Int :=
+  module (gather fetch main) export
+
+end Wasm

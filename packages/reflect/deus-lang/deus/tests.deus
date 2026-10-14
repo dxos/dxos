@@ -152,6 +152,9 @@ test projectAuthorityAndOwnership :=
     Project.owns "https://dxos.org/deus/std" "https://dxos.org/deus/std/Shape" &&
     not (Project.owns "https://dxos.org/deus/std" "https://dxos.org/deus/stdlib/Shape")
 
+test wasmLeb128 :=
+  Wasm.uleb 624485 == [229, 142, 38] && Wasm.sleb (-123456) == [192, 187, 120] && Wasm.sleb 63 == [63] && Wasm.sleb 64 == [192, 0]
+
 test mdlValidatesDeclarations :=
   Mdl.validate (Mdl.parse mdlSample) == ["line 29: block type `todo` is not in the Extensions table", "block id P-1 is declared twice"]
 

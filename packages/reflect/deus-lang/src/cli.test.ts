@@ -325,6 +325,42 @@ describe('deus CLI', () => {
     },
   );
 
+  test('compiles first-order functions to wasm that agree with the interpreter', { timeout: 120_000 }, ({ expect }) => {
+    const c = ['--codebase', join(scratch, 'wasm')];
+    deus('init', ...c);
+    deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
+    const source = [
+      'def gcd (a : Int) (b : Int) : Int := if b == 0 then a else gcd b (a % b)',
+      'def sumTo (n : Int) (acc : Int) : Int := if n == 0 then acc else sumTo (n - 1) (acc + n)',
+      'def collatz (n : Int) (steps : Int) : Int :=',
+      '  let half := n / 2',
+      '  if n == 1 then steps else if n % 2 == 0 then collatz half (steps + 1) else collatz (3 * n + 1) (steps + 1)',
+      'def inRange (n : Int) : Bool := not (n < 2) && n != 9',
+      'def shout (t : Text) : Text := t ++ "!"',
+      '',
+    ].join('\n');
+    deus('add', file('nums.deus', source), ...c);
+    const call = (name: string, ...args: number[]) => {
+      const out = join(scratch, `${name}.wasm`);
+      expect(deus('build', name, '-o', out, '--wasm', ...c).code).toBe(0);
+      const exports = new WebAssembly.Instance(new WebAssembly.Module(readFileSync(out))).exports;
+      const fn = exports[name];
+      return typeof fn === 'function' ? fn(...args) : undefined;
+    };
+    // A million-deep recursion runs in constant stack (`return_call`) and wraps at 32 bits.
+    for (const [name, args] of [
+      ['gcd', [1071, 462]],
+      ['sumTo', [1_000_000, 0]],
+      ['collatz', [27, 0]],
+    ] as const) {
+      expect(String(call(name, ...args))).toBe(deus('eval', `${name} ${args.join(' ')}`, ...c).stdout.trim());
+    }
+    expect([call('inRange', 7), call('inRange', 9)]).toEqual([1, 0]);
+
+    const refused = deus('build', 'shout', '-o', join(scratch, 'shout.wasm'), '--wasm', ...c);
+    expect([refused.code, refused.stderr]).toEqual([1, 'deus: the primitive append is outside the wasm subset\n']);
+  });
+
   test('fetches a pinned tool by hash, caches it, and refuses a mismatch', { timeout: 120_000 }, ({ expect }) => {
     const c = ['--codebase', join(scratch, 'external')];
     deus('init', ...c);

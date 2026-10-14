@@ -34,6 +34,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 26  | 10-14 13:48 | 13m 31s        | `bd139e99`  | external requirements and containers as pinned data and abilities                           |
 | 27  | 10-14 13:54 | 6m 39s         | `28abe17e`  | codebase layers — spec objects, results, provenance                                         |
 | 28  | 10-14 13:57 | 2m 59s         | `65420c8e`  | projects — IRI identity, pinned libraries, inferred subgraphs                               |
-| 29  | 10-14 14:04 | 6m 32s         | this commit | replication: immutable bundles on R2, concurrent heads, sedimentree compaction              |
+| 29  | 10-14 14:05 | 8m 13s         | `bb45ea74`  | replication — immutable bundles on R2, concurrent heads, sedimentree compaction             |
+| 30  | 10-14 14:12 | 6m 40s         | this commit | wasm compiler for first-order code, written in DEUS                                         |
 
-Total from stage 1 to stage 29: 4h 21m.
+Total from stage 1 to stage 30: 4h 29m.
