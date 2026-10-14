@@ -1,5 +1,14 @@
 # Tasks
 
+## Embed files in the codebase, never in git, and make artifacts cached constants (`88004c30`)
+
+- state: todo
+- priority: high
+- assignee: claude
+- labels: dogfood, artifacts
+
+From Dmytro: an artifact is a constant whose value is cached, e.g. deusCli := Deus.toBinary Cli.main; evaluating it once caches the result in the artifacts layer by the hash of the expression.
+
 ## Keep ordinary comments, so the codebase can be the source of truth for the toolchain (`b09507db`)
 
 - state: todo
@@ -13,6 +22,54 @@ Only doc comments survive add; the -- comments that explain why are lost, so deu
 > claude: Written up as P8 in docs/PROPOSALS.md, four options; recommending B (source text as metadata while it still resolves, export rebuilds the files). Waiting on a choice before building.
 
 > claude: Character literals are lost too: '"' is stored and printed as 34. Source text as metadata (P8 B) would keep both.
+
+## QA flows for web apps: scripted user journeys checked in simulation, on a real server and in a browser (`9428f054`)
+
+- state: doing
+- priority: high
+- assignee: claude
+- labels: qa, web
+- links `Qa.check` (#8fbd9f94b9)
+
+From Dmytro: figure out QA flows for web apps, using what dxos does (.mdl QA tests, composer-qa, autocue).
+
+> claude: First arm built (D65): qa blocks in MDL with do/expect/send/assert steps, run by deus mdl in Web.simulateMany; examples/notes.mdl has two flows. Next: the same steps against deus serve (--integration) and in a browser.
+
+## Restoring the git export loses history, so the next export rewrites HISTORY.md (`5a02d566`)
+
+- state: todo
+- priority: high
+- assignee: claude
+- labels: dogfood, replication
+
+A fresh container restored codebase/ (deus add code; task import) and got one new history; R2 credentials were absent, so pull was not an option. Export history as a restorable chain (causal nodes plus the namespace snapshot each names, as text), or append to HISTORY.md instead of replacing it.
+
+## The codebase explorer app needs to be much better (`861438d2`)
+
+- state: todo
+- priority: high
+- assignee: claude
+- labels: explorer
+
+From Dmytro. Measure it against share.unison-lang.org: search, navigation, dependency links, history.
+
+## Work without git: the codebase is where the toolchain is developed, git only backs it up (`86d7b02a`)
+
+- state: todo
+- priority: high
+- assignee: claude
+- labels: dogfood
+
+From Dmytro. Depends on P8 (b09507db): files must be regenerable from the codebase.
+
+## deus eval with a Codebase ability: a snippet the model sends can read and change the codebase (`10b95384`)
+
+- state: todo
+- priority: high
+- assignee: claude
+- labels: dogfood, llm
+
+From Dmytro. A Codebase ability (find, view, add, update, mv, task ops) handled by the CLI under eval, so an agent scripts edits in DEUS instead of chaining CLI calls.
 
 ## Back up the codebase to GitHub as text (`0c53d3bd`)
 

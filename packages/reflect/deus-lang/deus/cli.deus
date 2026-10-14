@@ -746,6 +746,10 @@ def withHost (dir : Text) (ns : Map Text Entry) (body : Unit -> {MdlHost, IO} a)
     k (match compiled source with
       | Result.ok h => guardDefect (fun _ => Code.run h)
       | Result.err message => Result.err message)
+  | MdlHost.run source -> k =>
+    k (match compiled source with
+      | Result.ok h => guardDefect (fun _ => Code.run h)
+      | Result.err message => Result.err message)
 
 /-- Extensions in the codebase by URI: the terms carrying `@[ext "<uri>"]`. -/
 def extensions (dir : Text) (ns : Map Text Entry) : {IO} Map Text Text :=

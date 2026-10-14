@@ -5,12 +5,19 @@ def Mdl.block (start : Int) (lines : List Text) : Block :=
       match Mdl.header (trim first) start with
       | Block.mk x0 x1 x2 x3 x4 => Block.mk x0 x1 x2 (Mdl.body rest) x4
 
-def Mdl.body (lines : List Text) : List (Text, Text) := reverse (foldl (fun acc line =>
-  let t := trim line
-  if Text.isEmpty t || startsWith "#" t then acc else if startsWith "- " t then continueWith acc (Text.drop 2 t) else
-    match keyValue t with
-    | Option.some kv => kv :: acc
-    | Option.none => continueWith acc t) [] lines)
+/-- A `key: value` line indented deeper than the block's first key continues the last value with
+  two leading spaces, so a list item can carry fields of its own (a `qa` step's `send:`). -/
+def Mdl.body (lines : List Text) : List (Text, Text) :=
+  let base :=
+    match List.filter (fun l => not (Text.isEmpty (trim l))) lines with
+    | [] => 0
+    | first :: _ => indentOf first
+  reverse (foldl (fun acc line =>
+    let t := trim line
+    if Text.isEmpty t || startsWith "#" t then acc else if startsWith "- " t then continueWith acc (Text.drop 2 t) else
+      match keyValue t with
+      | Option.some kv => if indentOf line > base && not (List.isEmpty acc) then continueWith acc ("  " ++ t) else kv :: acc
+      | Option.none => continueWith acc t) [] lines)
 
 /-- Adds a continuation line (a `- item` or prose) to the last key, or to `prose` before any key. -/
 def Mdl.continueWith (acc : List (Text, Text)) (t : Text) : List (Text, Text) :=
@@ -65,6 +72,10 @@ def Mdl.headingOf (t : Text) : Text :=
   let rec go i := if i < Text.length t && code t i == 35 then go (i + 1) else i
   trim (Text.drop (go 0) t)
 
+def Mdl.indentOf (line : Text) : Int :=
+  let rec go i := if i < Text.length line && code line i == 32 then go (i + 1) else i
+  go 0
+
 def Mdl.isKeyChar (c : Int) : Bool := isAlpha c || isDigit c || c == 45 || c == 95 || c == 63
 
 /-- `key: value` when the key is an identifier; a bare `key:` has the empty value. -/
@@ -102,8 +113,11 @@ def Mdl.parse (doc : Text) : Doc :=
 def Mdl.render (b : Block) : Text :=
   let head := b.blockType ++ (if Text.isEmpty b.blockId then "" else " " ++ b.blockId) ++
     (if Text.isEmpty b.blockTitle then "" else ": " ++ b.blockTitle)
-  "```mdl\n" ++ head ++ Text.concat (List.map (fun kv => "\n  " ++ fst kv ++ ":" ++
-    (if Text.contains "\n" (snd kv) then Text.concat (List.map (fun l => "\n  - " ++ l) (lines (snd kv))) else " " ++ snd kv)) b.props) ++ "\n```"
+  "```mdl\n" ++ head ++ Text.concat (List.map
+    (fun kv => "\n  " ++ fst kv ++ ":" ++ (if Text.contains "\n" (snd kv) then Text.concat (List.map
+      (fun l => if startsWith "  " l then "\n    " ++ trim l else "\n  - " ++ l)
+      (lines (snd kv))) else " " ++ snd kv))
+    b.props) ++ "\n```"
 
 /-- A `| term | uri |` row of the Extensions table; none for its header and separator. -/
 def Mdl.termRow (line : Text) : Option (Text, Text) :=

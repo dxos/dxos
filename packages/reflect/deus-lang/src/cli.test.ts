@@ -246,6 +246,43 @@ describe('deus CLI', () => {
     },
   );
 
+  test(
+    'runs QA flows for a web app in simulation and reports the first failing step',
+    { timeout: 120_000 },
+    ({ expect }) => {
+      const c = ['--codebase', join(scratch, 'qa')];
+      deus('init', '--empty', ...c);
+      deus(
+        'add',
+        join(root, 'deus/builtins.deus'),
+        join(root, 'deus/prelude.deus'),
+        join(root, 'deus/sexp.deus'),
+        join(root, 'deus/mdl.deus'),
+        join(root, 'platform/web.deus'),
+        join(root, 'platform/qa.deus'),
+        join(root, 'examples/notes.deus'),
+        ...c,
+      );
+      const passing = deus('mdl', join(root, 'examples/notes.mdl'), '--json', ...c);
+      expect(JSON.parse(passing.stdout).map((row: { status: string }) => row.status)).toEqual(['ok', 'ok']);
+      expect(passing.code).toBe(0);
+
+      // A wrong expectation names the step and what the service answered; a malformed send is refused.
+      const doc = file(
+        'notes-wrong.mdl',
+        readFileSync(join(root, 'examples/notes.mdl'), 'utf8')
+          .replace('content == "hi there"', 'content == "bye"')
+          .replace('send: DELETE /notes/draft', 'send: DELETE notes'),
+      );
+      const failing = deus('mdl', doc, ...c);
+      expect(failing.code).toBe(1);
+      expect(failing.stdout).toContain(
+        "QA-1.3 (Follow the hello link; expect: The note's text is shown) failed: GET /notes/hello answered 200 hi there",
+      );
+      expect(failing.stdout).toContain('QA-2.2: send: DELETE notes is not VERB /path [payload]');
+    },
+  );
+
   test('files objects by layer, stores spec blocks, and records provenance', { timeout: 120_000 }, ({ expect }) => {
     const c = ['--codebase', join(scratch, 'layers')];
     deus('init', '--empty', ...c);

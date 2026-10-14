@@ -304,7 +304,7 @@ def Cli.expandPaths (paths : List Text) : {IO} List Text := concatMap (fun path 
 def Cli.explore (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let out := getOr (option args "out") (dir ++ "/cache/site")
-  let pages := Explorer.generate dir out
+  let pages := #224e695fd9 dir out
   match (option args "publish", option args "out") with
   | (Option.some name, _) =>
       match publishSite dir name out (flag args "force") with
@@ -341,7 +341,7 @@ def Cli.export (args : Args) : {IO, Throw Text} Unit :=
   match head? args.positional with
   | Option.none => Throw.throw "usage: deus export <dir>"
   | Option.some out =>
-      match Export.write dir out with
+      match #38cc4f9534 dir out with
       | (files, definitions, tasks) => Cli.output
           args
           (fun _ => Json.obj [("files", Json.num files), ("definitions", Json.num definitions), ("tasks", Json.num tasks)])
@@ -759,7 +759,7 @@ def Cli.push (args : Args) : {IO, Throw Text} Unit :=
   let pushed := withRemote dir name (fun _ => Replicate.push dir name branch)
   let site := if IO.exists (siteManifest dir name) && branch == currentBranch dir then
     let out := dir ++ "/cache/site-" ++ name
-    Explorer.generate dir out
+    #224e695fd9 dir out
     Option.some (snd (publishSite dir name out false))
   else Option.none
   let siteJson := getOr (Option.map (fun n => [("site", Json.num n)]) site) []
@@ -1109,6 +1109,9 @@ def Cli.withHost (dir : Text) (ns : Map Text Entry) (body : Unit -> {MdlHost, IO
     | Result.ok h => guardDefect (fun _ => Code.cost (Code.run h))
     | Result.err message => Result.err message)
   | MdlHost.holds source -> k => k (match compiled source with
+    | Result.ok h => guardDefect (fun _ => Code.run h)
+    | Result.err message => Result.err message)
+  | MdlHost.run source -> k => k (match compiled source with
     | Result.ok h => guardDefect (fun _ => Code.run h)
     | Result.err message => Result.err message)
 

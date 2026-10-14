@@ -192,3 +192,31 @@ perhaps add an alarm to remind you of that every 30 minutes
 ---
 
 - 1
+
+---
+
+- if you ever run-out of tasks, just find things to work on yourself keeping the spirit
+
+---
+
+- some ideas: figure out qa flows for web-apps. use knowledge from dxos, autocue skill, etc...
+
+---
+
+- \* codebase explorer app needs to be much better
+
+---
+
+- \* continue thinking about dogfooding and working without git
+
+---
+
+- \* embedding files in codebase -- they shouldn't ever go to git + a though: an artifact is just a const defined in codebase with cached value. i.e. you can have something like: let deus_cli = Deus.toBinary Cli.main -- you can change the naming... then this expr can be evaluated and cached
+
+---
+
+- \* dogfooding idea: `deus eval` that model calls with deus snippet that has ability to mutate codebase
+
+---
+
+- i instructed to be autonomous yet a session is blocking on me -- fix this systemically

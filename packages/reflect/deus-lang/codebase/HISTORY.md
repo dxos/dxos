@@ -1,5 +1,22 @@
 # History of main
 
+- `f23a0544a3` task: open 5a02d566 Restoring the git export loses history, so the next export rewrites HISTORY.md (by claude)
+- `35f036f799` task: link 9428f054 to Qa.check (by claude)
+- `1c5eda1dc1` task: comment on 9428f054 (by claude)
+- `284e7679a0` task: set 9428f054 state (by claude)
+- `c12c31e45e` add examples/notes.mdl (by claude)
+- `aa83cb54dc` QA flows for web apps as MDL qa blocks (D65) (by claude)
+- `8cb4d36100` task: open 10b95384 deus eval with a Codebase ability: a snippet the model sends can read and change the codebase (by claude)
+- `419db4fb56` task: open 88004c30 Embed files in the codebase, never in git, and make artifacts cached constants (by claude)
+- `36e16d03e0` task: open 86d7b02a Work without git: the codebase is where the toolchain is developed, git only backs it up (by claude)
+- `ec51f12cdc` task: open 861438d2 The codebase explorer app needs to be much better (by claude)
+- `0e7a5bfb2c` task: open 9428f054 QA flows for web apps: scripted user journeys checked in simulation, on a real server and in a browser (by claude)
+- `7453b3a1b7` task: import 18 tasks
+- `bff1b8d98b` add code
+- `67c7d5a614` init
+
+Before this container restored the export (history not carried over; task `restore loses history`):
+
 - `5ed10805c0` task: comment on b09507db (by claude)
 - `5764357299` json: escape copies unescaped runs whole; explorer reads each object once (by claude)
 - `461d3e955c` explorer: one walk for every task's history, metadata read once (by claude)

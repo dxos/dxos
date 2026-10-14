@@ -195,6 +195,7 @@ inductive Map k v where
 ability MdlHost @"urn:deus:mdl:Host" where
   cost : Text -> Result Text Int
   holds : Text -> Result Text Bool
+  run : Text -> Result Text Text
 
 ability Metrics where
   counter : Text -> Int -> Unit
