@@ -36,13 +36,13 @@ inductive Result (e a : Type) where
   | err (error : e)
 
 /-- Runs `body`, turning a `throw` into `Result.err`. -/
-def try (body : Unit -> {Throw e} a) : Result e a :=
+def try (body : Unit -> {Throw e | r} a) : {r} Result e a :=
   handle body () with
   | return x => Result.ok x
   | throw e -> _ => Result.err e
 
 /-- Runs `body`, recovering from a `throw` with `onError`. -/
-def catch (body : Unit -> {Throw e} a) (onError : e -> a) : a :=
+def catch (body : Unit -> {Throw e | r} a) (onError : e -> {r} a) : {r} a :=
   handle body () with
   | throw e -> _ => onError e
 

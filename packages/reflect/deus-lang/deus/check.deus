@@ -249,10 +249,12 @@ def lemmaVerdict (dir : Text) (ns : Map Text Entry) (h : Text) : {IO} Verdict :=
   | none =>
     match Codebase.readObject dir h with
     | some obj =>
-      Image.load (fun x => Codebase.readObject dir x) [h]
-      let v := checkTheorem dir ns h obj
-      remember dir h v
-      v
+      match try (fun _ => Image.load (fun x => Codebase.readObject dir x) [h]) with
+      | Result.err message => Verdict.fail message
+      | Result.ok _ =>
+        let v := checkTheorem dir ns h obj
+        remember dir h v
+        v
     | none => Verdict.fail "missing lemma"
 
 def checkTest (h : Text) : Verdict :=

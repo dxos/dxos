@@ -61,6 +61,26 @@ end Shapes
   ([D7](./DECISIONS.md)).
 - **No type classes yet.** `==`, `<` and `compare` are structural ([D10](./DECISIONS.md)).
 
+### Types and abilities
+
+Types are inferred (Hindley–Milner) and every arrow carries an ability row, inferred as well:
+
+```text
+List.map     : (a -> {e} b) -> List a -> {e} List b
+Parser.parse : Text -> {Throw Text} List Decl
+try          : (Unit -> {Throw e | r} a) -> {r} Result e a
+```
+
+- A signature's written row is a contract: `{IO}` means IO and nothing else. `{Throw Text | r}`
+  names the rest, so callbacks can share it (Koka's idiom). An arrow written without braces
+  constrains nothing.
+- A handler removes its ability from the row of its body; a `throw` that no handler removes
+  reaches the signature and is reported: `leak: unhandled ability Throw Text`.
+- A call needs the callee's abilities to be contained in the caller's (subsumption), and a lambda
+  passed to a known function is checked against the expected type (bidirectional).
+- Inferred types are stored as metadata and shown by `view` (`-- : (a -> {e} b) -> …`).
+- Known gap: a function kept inside a data structure has untracked effects ([D29](./DECISIONS.md)).
+
 ### Failure has three tiers ([D14](./DECISIONS.md))
 
 | Tier   | Meaning                        | Mechanism                                                                            | Who handles it                                                     |

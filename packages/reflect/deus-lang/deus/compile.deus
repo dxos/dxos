@@ -69,11 +69,21 @@ def signature (names : Names) (scope : Scope) (binders : List Binder) (result : 
   let resultCore := match result with
     | some t => Resolve.tyCore names scope [] t
     | none => unknown
-  List.foldr (fun b acc =>
-    let a := match b.annot with
-      | some t => Resolve.tyCore names scope [] t
-      | none => unknown
-    node "tfun" [a, acc]) resultCore binders
+  -- `(x : A) : {E} B` puts the row on the last arrow.
+  let attach := fun (inner : Sexp) =>
+    match inner with
+    | Sexp.list [Sexp.sym "teff", effs, t] => (t, [effs])
+    | _ => (inner, [])
+  match attach resultCore with
+  | (resultPlain, row) =>
+    let count := List.length binders
+    List.foldr (fun pair acc =>
+      match pair with
+      | (i, b) =>
+        let a := match b.annot with
+          | some t => Resolve.tyCore names scope [] t
+          | none => unknown
+        node "tfun" ([a, acc] ++ (if i == count - 1 then row else []))) (if count == 0 then resultCore else resultPlain) (List.mapIndexed (fun i b => (i, b)) binders)
 
 def metaForm (doc : Option Text) (sig : Option Sexp) (locals : List Text) : Sexp :=
   let docPart := match doc with
@@ -224,7 +234,7 @@ def hashCycle (members : List Pending) (hashes : Map Text Text) (objects : List 
   (named, List.reverse objs ++ objects)
 
 /-- Compiles parsed files against a base namespace. Batch names shadow base names. -/
-def batch (base : Map Text Entry) (files : List (Text, List Decl)) : {Throw Text} Batch :=
+def batch (base : Map Text Entry) (store : Text -> {Throw Text | r} Option Sexp) (storeMeta : Text -> {Throw Text | r} Option Sexp) (typeMode : Text) (files : List (Text, List Decl)) : {Throw Text | r} Batch :=
   let items := collect files
   -- Duplicate names within the batch are an error; shadowing the base is an update.
   let seen := Ref.new Map.empty
@@ -254,7 +264,7 @@ def batch (base : Map Text Entry) (files : List (Text, List Decl)) : {Throw Text
       let i := Resolve.iriFor fqn iri
       let form := typeForm typeNames item i params (List.map snd ctors)
       let h := Resolve.hashFor i form
-      if Text.startsWith "#" h then () else Ref.set typeObjects ((h, form) :: Ref.get typeObjects)
+      Ref.set typeObjects ((h, form) :: Ref.get typeObjects)
       addMeta h doc none []
       (fqn, Entry.type h i []) :: List.mapIndexed (fun tag ctor =>
         match ctor with
@@ -266,7 +276,7 @@ def batch (base : Map Text Entry) (files : List (Text, List Decl)) : {Throw Text
       let i := Resolve.iriFor fqn iri
       let form := typeForm typeNames item i params [List.map snd fields]
       let h := Resolve.hashFor i form
-      if Text.startsWith "#" h then () else Ref.set typeObjects ((h, form) :: Ref.get typeObjects)
+      Ref.set typeObjects ((h, form) :: Ref.get typeObjects)
       addMeta h doc none []
       let count := List.length fields
       claim (fqn ++ ".mk")
@@ -282,7 +292,7 @@ def batch (base : Map Text Entry) (files : List (Text, List Decl)) : {Throw Text
       let scope := bodyScope item
       let form := node "ability" ([s i, n (List.length params)] ++ List.map (fun op => node "op" [n (Resolve.arrowCount (snd op)), Resolve.tyCore typeNames scope params (snd op)]) ops)
       let h := Resolve.hashFor i form
-      if Text.startsWith "#" h then () else Ref.set typeObjects ((h, form) :: Ref.get typeObjects)
+      Ref.set typeObjects ((h, form) :: Ref.get typeObjects)
       addMeta h doc none []
       (fqn, Entry.ability h i) :: List.mapIndexed (fun index op =>
         match op with
@@ -337,6 +347,19 @@ def batch (base : Map Text Entry) (files : List (Text, List Decl)) : {Throw Text
         Ref.set pending (Pending.mk fqn "theorem" form :: Ref.get pending)
         addMeta ("@" ++ fqn) doc none locals
     | _ => ())
+  -- Pass 2½: infer types, group by group, and check signatures; schemes join the metadata.
+  let typeObjectMap := Map.fromList (Ref.get typeObjects)
+  let metaMap := Map.fromList (Ref.get metas)
+  let objectOf := fun (h : Text) => Option.orElse (Map.lookup h typeObjectMap) (fun _ => store h)
+  let metaOf := fun (h : Text) => if Text.startsWith "@" h then Map.lookup h metaMap else storeMeta h
+  let prims := primTypes (Ref.get pending) metaMap base store storeMeta
+  let warnings := Ref.new []
+  let schemes := if typeMode == "off" then Map.empty else typecheck objectOf metaOf prims (Ref.get pending) (typeMode == "warn") warnings
+  Ref.set metas (List.map (fun pair =>
+    match Map.lookup (fst pair) schemes with
+    | some scheme => (fst pair, Sexp.list (Sexp.asList (snd pair) ++ [node "scheme" [scheme]]))
+    | none => pair) (Ref.get metas) ++ List.filterMap (fun pair =>
+      if Map.contains (fst pair) metaMap then none else some (fst pair, node "meta" [node "scheme" [snd pair]])) (Map.toList schemes))
   -- Pass 3: hash terms, then rewrite placeholder entries and metadata keys.
   let baseHashes := Map.empty
   match hashTerms (Ref.get pending) baseHashes with
@@ -349,7 +372,69 @@ def batch (base : Map Text Entry) (files : List (Text, List Decl)) : {Throw Text
       | (name, Entry.theorem h) => (name, Entry.theorem (resolveHash h))
       | other => other) entries
     let finalMetas := List.map (fun pair => (resolveHash (fst pair), snd pair)) (Ref.get metas)
-    Batch.mk (List.reverse (Ref.get typeObjects) ++ termObjects) finalEntries finalMetas
+    Batch.mk (List.reverse (Ref.get typeObjects) ++ termObjects) finalEntries finalMetas (List.reverse (Ref.get warnings))
+
+/-- Types of primitives, from the builtin definitions whose body is `prim "name"`. -/
+def primTypes (pending : List Pending) (metaMap : Map Text Sexp) (base : Map Text Entry) (store : Text -> Option Sexp) (storeMeta : Text -> Option Sexp) : Map Text Sexp :=
+  let fromBatch := List.filterMap (fun p =>
+    match p.core with
+    | Sexp.list [Sexp.sym "prim", Sexp.str name] =>
+      Option.map (fun sig => (name, sig)) (Codebase.metaField (Map.lookup ("@" ++ p.name) metaMap) "sig")
+    | _ => none) pending
+  let fromBase := List.filterMap (fun pair =>
+    match snd pair with
+    | Entry.term h =>
+      match store h with
+      | some (Sexp.list [Sexp.sym "term", Sexp.list [Sexp.sym "prim", Sexp.str name]]) =>
+        Option.map (fun sig => (name, sig)) (Codebase.metaField (storeMeta h) "sig")
+      | _ => none
+    | _ => none) (List.filter (fun pair => not (Text.contains "." (fst pair)) || List.length (Text.split (fst pair) ".") == 2) (Map.toList base))
+  Map.fromList (fromBase ++ fromBatch)
+
+/-- Infers every pending definition's type, dependencies first; returns "@name" to scheme. -/
+def typecheck (objectOf : Text -> {Throw Text | r} Option Sexp) (metaOf : Text -> {Throw Text | r} Option Sexp) (prims : Map Text Sexp) (pending : List Pending) (warnOnly : Bool) (warnings : Ref (List Text)) : {Throw Text | r} Map Text Sexp :=
+  let byName := Map.fromList (List.map (fun p => (p.name, p)) pending)
+  let deps := fun name =>
+    match Map.lookup name byName with
+    | some p => List.dedup (List.sort (List.filter (fun d => Map.contains d byName) (placeholders (coreOf p) [])))
+    | none => []
+  let schemes := Ref.new Map.empty
+  List.forEach (components (List.sort (Map.keys byName)) deps) (fun group =>
+    let u := Types.newUnifier ()
+    let members := List.filterMap (fun name => Map.lookup name byName) group
+    let vars := Map.fromList (List.map (fun p => ("@" ++ p.name, Types.freshType u)) members)
+    -- A member with a signature is used at its signature inside the group (polymorphic
+    -- recursion, as in Haskell); only unannotated members are monomorphic while inferred.
+    let signed := List.filterMap (fun p =>
+      Option.map (fun sig => ("@" ++ p.name, sig)) (Codebase.metaField (metaOf ("@" ++ p.name)) "sig")) members
+    let groupSchemes := Ref.new (List.foldl (fun m pair => Map.insert (fst pair) (snd pair) m) (Ref.get schemes) signed)
+    let unsigned := Map.filter (fun key _ => not (Option.isSome (List.lookup key signed))) vars
+    let env := TypeEnv.mk objectOf metaOf (Ref.new unsigned) groupSchemes prims
+    List.forEach members (fun p =>
+      let key := "@" ++ p.name
+      catch (fun _ =>
+        let core := match p.core with
+          | Sexp.list (Sexp.sym "theorem" :: _ :: prop :: _) => prop
+          | c => c
+        let t := Option.getOr (Map.lookup key vars) (Types.freshType u)
+        match Codebase.metaField (metaOf key) "sig" with
+        | some sig =>
+          -- Checked against its signature, so parameters have their declared types and rows.
+          let sigVars := Ref.new Map.empty
+          let declared := Types.signatureType u sig sigVars (Ref.new Map.empty)
+          Types.unify u t declared
+          Types.checkAgainst u env core declared [] (Types.freshRow u)
+          Types.checkRigid u sigVars
+        | none =>
+          Types.unify u t (Types.infer u env core [] (Types.freshRow u))
+          if p.wrap == "test" then Types.unify u t Types.bool else ()) (fun e =>
+          if warnOnly then Ref.set warnings ((p.name ++ ": " ++ e) :: Ref.get warnings) else throw (p.name ++ ": " ++ e)))
+    List.forEach members (fun p =>
+      let key := "@" ++ p.name
+      match Map.lookup key vars with
+      | some t => Ref.set schemes (Map.insert key (Types.scheme u t) (Ref.get schemes))
+      | none => ()))
+  Ref.get schemes
 
 /-- Parses sources (`.deus`, or the ```deus fences of an `.mdl` document). -/
 def parseFile (path : Text) (source : Text) : {Throw Text} (Text, List Decl) :=

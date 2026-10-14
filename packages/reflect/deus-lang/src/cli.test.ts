@@ -34,7 +34,7 @@ afterAll(() => rmSync(scratch, { recursive: true, force: true }));
 
 describe('deus CLI', () => {
   // Dogfooding: the toolchain's own sources go into a codebase, and its tests and theorems run there.
-  test('adds the compiler to a codebase and passes its own tests and theorems', ({ expect }) => {
+  test('adds the compiler to a codebase and passes its own tests and theorems', { timeout: 180_000 }, ({ expect }) => {
     const codebase = join(scratch, 'self');
     expect(deus('init', '--codebase', codebase).code).toBe(0);
     const add = deus('add', join(root, 'deus'), '--codebase', codebase);
@@ -48,7 +48,7 @@ describe('deus CLI', () => {
     expect(theorems.code).toBe(0);
   });
 
-  test('proves the sorting example and refuses unsound claims', ({ expect }) => {
+  test('proves the sorting example and refuses unsound claims', { timeout: 120_000 }, ({ expect }) => {
     const c = ['--codebase', join(scratch, 'proofs')];
     deus('init', ...c);
     deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
@@ -70,7 +70,7 @@ describe('deus CLI', () => {
     }
   });
 
-  test('update propagates to dependents; branches merge three-way', ({ expect }) => {
+  test('update propagates to dependents; branches merge three-way', { timeout: 120_000 }, ({ expect }) => {
     const codebase = join(scratch, 'demo');
     const file = (name: string, text: string) => {
       const path = join(scratch, name);

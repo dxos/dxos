@@ -79,3 +79,7 @@ proposals are ideas to solve things, you need to evaluate and choose the best ap
 ---
 
 - ability to represent docker containers in mdl
+
+---
+
+- observablity should be first class: structured logging, tracing, otel, metrics, stack traces -- agents love that -- each error must come with a ton of context so that agents can pinpoint bugs

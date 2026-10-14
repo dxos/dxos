@@ -404,6 +404,10 @@ export type HostHandler = (ability: string, index: number, args: Value[]) => Val
 export class Machine {
   readonly globals = new Map<string, Global>();
   steps = 0;
+  /** Recently referenced definitions, kept when `DEUS_TRACE` is set, for diagnosing defects. */
+  trace: string[] | undefined = process.env.DEUS_TRACE ? [] : undefined;
+  /** Entries per definition, kept when `DEUS_PROFILE` is set. */
+  profile: Map<string, number> | undefined = process.env.DEUS_PROFILE ? new Map() : undefined;
 
   readonly prims: Map<string, Prim>;
   readonly host: HostHandler;
@@ -586,6 +590,15 @@ export class Machine {
               evaluating = false;
               break;
             case REF: {
+              if (this.profile) {
+                this.profile.set(term.h, (this.profile.get(term.h) ?? 0) + 1);
+              }
+              if (this.trace) {
+                this.trace.push(term.h);
+                if (this.trace.length > 40) {
+                  this.trace.shift();
+                }
+              }
               const global = this.globals.get(term.h);
               if (!global) {
                 throw new DeusPanic(`unknown definition ${term.h}`);

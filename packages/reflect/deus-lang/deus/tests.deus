@@ -38,7 +38,7 @@ test resolveStripsNames :=
 
 test hashIgnoresLocalNames :=
   let compileOne := fun (source : Text) =>
-    match try (fun _ => Compile.batch Map.empty [Compile.parseFile "t.deus" source]) with
+    match try (fun _ => Compile.batch Map.empty (fun _ => none) (fun _ => none) "strict" [Compile.parseFile "t.deus" source]) with
     | Result.ok b => List.lookup "f" b.entries
     | Result.err _ => none
   let original := compileOne "def f x := x + 1\n"
@@ -46,7 +46,7 @@ test hashIgnoresLocalNames :=
 
 test mutualRecursionHashesAsCycle :=
   let source := "def even n := if n == 0 then true else odd (n - 1)\ndef odd n := if n == 0 then false else even (n - 1)\n"
-  match try (fun _ => Compile.batch Map.empty [Compile.parseFile "t.deus" source]) with
+  match try (fun _ => Compile.batch Map.empty (fun _ => none) (fun _ => none) "strict" [Compile.parseFile "t.deus" source]) with
   | Result.ok b =>
     match (List.lookup "even" b.entries, List.lookup "odd" b.entries) with
     | (some (Entry.term e), some (Entry.term o)) => Text.contains "." e && Text.take 64 e == Text.take 64 o

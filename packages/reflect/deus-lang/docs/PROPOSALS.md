@@ -120,3 +120,23 @@ The dependency column is enforced when adding: code that depends on a test is re
 **Choice: B now, C later.** Running a container goes through a `Container` ability handled
 by the CLI (it shells out to the host's container runtime), so a function that starts one
 shows it in its type. A tag is accepted only together with the digest it resolved to.
+
+## P6. First-class observability
+
+**Proposal:** structured logging, tracing, OpenTelemetry, metrics and stack traces; every error
+carries enough context for an agent to find the bug.
+
+| Approach                                                                                                                                                                                    | Strengths                                                                                | Weaknesses                                                     |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| A. Print statements and host-side logging                                                                                                                                                   | Nothing to design                                                                        | Unstructured; invisible to types; no correlation               |
+| B. A tracing library over IO                                                                                                                                                                | Familiar API                                                                             | Every function that logs must take IO; tests cannot capture it |
+| C. **Abilities**: `Log`, `Trace` (spans), `Metrics`; handlers decide where they go (NDJSON on stderr, OTLP over HTTP, an in-memory list in tests). The kernel adds stack traces to defects. | Visible in types; swappable per run; a test can assert on emitted spans; no global state | Needs the host's HTTP for OTLP export                          |
+
+**Choice: C.**
+
+- **Stack traces from the kernel.** A defect carries the chain of definitions it unwound
+  through, and the CLI prints them with their current names. Errors raised with `throw` use a
+  structured `Failure` (message, fields, cause) that can wrap context at each layer, like
+  Effect-TS's `Cause` but as data.
+- **Traces from content addressing.** A span names the definition and its hash, so a trace
+  points at exact code, not a file and line that may have changed since.

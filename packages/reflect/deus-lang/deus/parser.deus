@@ -280,20 +280,27 @@ def ty (p : Parser) : {Throw Text} Ty :=
   let a := tyApp p
   if is p "->" && not (offside p) then
     skip p
-    let effects := if is p "{" then
-        skip p
-        let rec go acc :=
-          if is p "}" then
-            skip p
-            List.reverse acc
-          else
-            let e := tyApp p
-            if is p "," then skip p else ()
-            go (e :: acc)
-        some (go [])
-      else none
+    let effects := if is p "{" then some (row p) else none
     Ty.arrow a (ty p) effects
   else a
+
+/-- `{E₁, E₂ | r}`: abilities, then an optional row variable (the rest is open). -/
+def row (p : Parser) : {Throw Text} List Ty :=
+  let _ := expect p "{"
+  let rec go acc :=
+    if is p "}" then
+      skip p
+      List.reverse acc
+    else if is p "|" then
+      skip p
+      let tail := Ty.named (ident p) []
+      let _ := expect p "}"
+      List.reverse (tail :: acc)
+    else
+      let e := tyApp p
+      if is p "," then skip p else ()
+      go (e :: acc)
+  go []
 
 def tyApp (p : Parser) : {Throw Text} Ty :=
   let head := tyAtom p
@@ -308,10 +315,9 @@ def tyApp (p : Parser) : {Throw Text} Ty :=
 def tyAtom (p : Parser) : {Throw Text} Ty :=
   if (peek p).kind == Kind.ident then Ty.named (ident p) []
   else if is p "{" then
-    -- A leading ability row `{IO} a` on a result type.
-    let rec go u := if is p "}" then skip p else go (skip p)
-    go ()
-    tyAtom p
+    -- A result that performs abilities: `{IO, Throw Text} a`.
+    let effs := row p
+    Ty.effects effs (tyApp p)
   else
     let _ := expect p "("
     if is p ")" then

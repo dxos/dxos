@@ -54,6 +54,18 @@ def expandPaths (paths : List Text) : {IO} List Text :=
       List.map (fun f => path ++ "/" ++ f) (List.filter (fun f => Text.endsWith ".deus" f || Text.endsWith ".mdl" f) (IO.listDir path))
     else [path]) paths
 
+/--
+  `DEUS_TYPECHECK=0` skips type checking (only to bootstrap a change to the checker itself);
+  `DEUS_TYPECHECK=warn` reports type errors as warnings.
+-/
+def checkTypes (u : Unit) : {IO} Text :=
+  match IO.getEnv "DEUS_TYPECHECK" with
+  | some "0" => "off"
+  | some "warn" => "warn"
+  | _ => "strict"
+
+def warn (b : Batch) : {IO} Unit := List.forEach b.warnings (fun w => eprintln ("warning: " ++ w))
+
 def parseFiles (paths : List Text) : {IO, Throw Text} List (Text, List Decl) :=
   List.map (fun path => Compile.parseFile path (readSource path)) (expandPaths paths)
 
@@ -99,7 +111,8 @@ def lookupName (ns : Map Text Entry) (name : Text) : {Throw Text} (Text, Entry) 
 
 /-- `deus compile <files…> --main <name> -o <image>`: compiles files alone, without a codebase. -/
 def compile (args : Args) : {IO, Throw Text} Unit :=
-  let result := Compile.batch Map.empty (parseFiles args.positional)
+  let result := Compile.batch Map.empty (fun _ => none) (fun _ => none) (checkTypes ()) (parseFiles args.positional)
+  warn result
   let main := Option.getOr (option args "main") "main"
   let entry := match List.lookup main result.entries with
     | some (Entry.term h) => h
@@ -128,7 +141,8 @@ def changes (ns : Map Text Entry) (entries : List (Text, Entry)) : List (Text, E
 def addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let ns := Codebase.current dir
-  let batch := Compile.batch ns (parseFiles args.positional)
+  let batch := Compile.batch ns (fun h => Codebase.readObject dir h) (fun h => Codebase.readMeta dir h) (checkTypes ()) (parseFiles args.positional)
+  warn batch
   let replaced := changes ns batch.entries
   if not isUpdate && not (List.isEmpty replaced) then
     throw ("these names already exist; use `deus update`:\n  " ++ Text.join "\n  " (List.map (fun c =>
@@ -190,7 +204,10 @@ def names (args : Args) : {IO, Throw Text} Unit :=
 def viewEntry (dir : Text) (ns : Map Text Entry) (name : Text) (e : Entry) (core : Bool) : {IO, Throw Text} Text :=
   let h := Entry.hash e
   let meta := Codebase.readMeta dir h
-  let header := "-- " ++ name ++ " " ++ short h ++ "\n"
+  let typeLine := match Codebase.metaField meta "scheme" with
+    | some scheme => "-- : " ++ Types.displayScheme scheme ++ "\n"
+    | none => ""
+  let header := "-- " ++ name ++ " " ++ short h ++ "\n" ++ typeLine
   match e with
   | Entry.ctor _ _ _ => header ++ "-- a constructor of " ++ Text.join ", " (Codebase.namesOf ns h)
   | Entry.op _ _ _ => header ++ "-- an operation of " ++ Text.join ", " (Codebase.namesOf ns h)
@@ -365,7 +382,7 @@ def eval (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let ns := Codebase.current dir
   let source := "def it := " ++ Text.join " " args.positional
-  let batch := Compile.batch ns [Compile.parseFile "<eval>" source]
+  let batch := Compile.batch ns (fun h => Codebase.readObject dir h) (fun h => Codebase.readMeta dir h) (checkTypes ()) [Compile.parseFile "<eval>" source]
   match List.lookup "it" batch.entries with
   | some (Entry.term h) =>
     let objects := Map.fromList batch.objects

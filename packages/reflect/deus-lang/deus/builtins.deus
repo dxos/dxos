@@ -89,6 +89,8 @@ end Text
 
 /-- Structural equality; functions are never equal. -/
 def eq : a -> a -> Bool := prim "eq"
+/-- `a -> b` in a theorem's statement. -/
+def implies : Bool -> Bool -> Bool := prim "implies"
 /-- Structural order: -1, 0 or 1. -/
 def compare : a -> a -> Int := prim "compare"
 /-- Debug rendering of any value. -/

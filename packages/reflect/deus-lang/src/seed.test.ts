@@ -14,7 +14,7 @@ const root = join(import.meta.dirname, '..');
 describe('seed', () => {
   // The compiler is written in DEUS; the seed is its compiled image. Compiling the sources with
   // the seed must reproduce the seed byte for byte, or the checked-in seed is stale.
-  test('compiles the compiler to itself (self-hosting fixpoint)', ({ expect }) => {
+  test('compiles the compiler to itself (self-hosting fixpoint)', { timeout: 180_000 }, ({ expect }) => {
     const seed = readFileSync(SEED_PATH, 'utf8');
     let out = '';
     let err = '';

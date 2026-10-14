@@ -12,6 +12,7 @@ inductive Ty where
   | arrow (from : Ty) (to : Ty) (effects : Option (List Ty))
   | tuple (items : List Ty)
   | unit
+  | effects (row : List Ty) (result : Ty)
 
 inductive Pat where
   | wild
