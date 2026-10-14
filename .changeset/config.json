@@ -303,6 +303,7 @@
       "@dxos/plugin-map-solid",
       "@dxos/plugin-markdown",
       "@dxos/plugin-meeting",
+      "@dxos/plugin-meeting-recorder",
       "@dxos/plugin-mermaid",
       "@dxos/plugin-messenger",
       "@dxos/plugin-mobile",
