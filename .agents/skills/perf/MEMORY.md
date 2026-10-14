@@ -40,10 +40,13 @@ allocator reports wasm linear memory, so the ledger adds it and names the module
 Three snapshots, not two: after warm-up, after N repetitions of one workload and after 2N. What
 grows in both intervals is an accumulator; what grows once is a cache filling. The perf flow does
 not repeat a workload, so its snapshots show growth from one stage to the next, and
-`snapshot-diff.mjs` shows growth while the app sits idle.
+`snapshot-diff.mjs` shows growth while the app sits idle. The memory soaks do repeat one: each pass
+visits every space and idles, so snapshots after the first, third and fifth pass measure two equal
+intervals.
 
 ```bash
 pnpm perf run --snapshots idle,<stage>,end -n 1   # snapshots at one flow's stage boundaries
+DX_PERF_SOAK_PASSES=5 pnpm perf run --scenario memory-synthetic --offline --snapshots idle-1,idle-3,idle-5 -n 1
 pnpm perf summarize --heap                        # their composition
 node packages/apps/composer-app/scripts/memory/snapshot-diff.mjs http://localhost:4173 --wait1 60 --wait2 420
 node packages/apps/composer-app/scripts/memory/retainers.mjs <file.heapsnapshot> --min 400000
