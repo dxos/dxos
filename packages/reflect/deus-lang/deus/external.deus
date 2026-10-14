@@ -1,0 +1,246 @@
+/-
+  The outside world as pinned data (P2, P5; D47).
+
+  - A `Requirement` names an artifact in a `Registry` and the SHA-256 its bytes must have, as a
+    Nix fixed-output derivation does. Requirements are definitions, so the codebase is the
+    lockfile: changing a version or a hash changes the hash of everything that uses it.
+  - `Fetch` gives a requirement's local path; a function that needs a binary has it in its row.
+    `External.fetching` downloads, verifies and caches under `<cache>/<sha256>`, and refuses a
+    mismatch; `External.simulateFetch` answers from memory for deterministic tests.
+  - A `Container` is an image pinned by digest plus how to run it; `Containers` starts and stops
+    one. `External.docker` shells out to the host's runtime; `External.simulateContainers`
+    records what would run.
+  - `requirement` and `container` MDL blocks are extensions defined here; both lower to the data
+    above and check it.
+-/
+
+/-- Where artifacts come from: a URL template over `{package}`, `{version}` and `{platform}`. -/
+structure Registry @"urn:deus:external:Registry" where
+  registryName : Text
+  urlTemplate : Text
+
+/--
+  A pinned artifact. `entry` is the file to use inside an archive (extracted with `tar`), or ""
+  for the downloaded file itself.
+-/
+structure Requirement @"urn:deus:external:Requirement" where
+  registry : Registry
+  pkg : Text
+  version : Text
+  platform : Text
+  sha256 : Text
+  entry : Text
+
+/-- Resolves a requirement to a local path, or says why it cannot. -/
+ability Fetch @"urn:deus:external:Fetch" where
+  fetch : Requirement -> Result Text Text
+
+/-- A container image pinned by digest (`name@sha256:<hex>`) and how to run it. -/
+structure Container @"urn:deus:external:Container" where
+  image : Text
+  command : List Text
+  env : List (Text, Text)
+  ports : List (Int, Int)
+
+/-- Starts a container (its id) and stops one by id. -/
+ability Containers @"urn:deus:external:Containers" where
+  start : Container -> Result Text Text
+  stop : Text -> Unit
+
+namespace External
+
+def npm : Registry := Registry.mk "npm" "https://registry.npmjs.org/{package}/-/{package}-{version}.tgz"
+
+def crates : Registry := Registry.mk "crates" "https://static.crates.io/crates/{package}/{package}-{version}.crate"
+
+/-- `package` is `owner/repo`, `version` the release tag, `platform` the asset's file name. -/
+def github : Registry := Registry.mk "github" "https://github.com/{package}/releases/download/{version}/{platform}"
+
+/-- `package` is the whole URL. -/
+def url : Registry := Registry.mk "url" "{package}"
+
+def registries : List Registry := [npm, crates, github, url]
+
+def registryNamed (name : Text) : Option Registry := List.find (fun r => r.registryName == name) registries
+
+def resolve (r : Requirement) : Text :=
+  Text.replace "{platform}" r.platform (Text.replace "{version}" r.version (Text.replace "{package}" r.pkg r.registry.urlTemplate))
+
+def isHex (t : Text) : Bool :=
+  List.all (fun i =>
+    let c := Text.code t i
+    Text.isDigit c || (c >= 'a' && c <= 'f')) (List.range 0 (Text.length t))
+
+def isSha256 (t : Text) : Bool := Text.length t == 64 && isHex t
+
+/-- What makes a requirement unpinned: a floating version or a missing or malformed hash. -/
+def problems (r : Requirement) : List Text :=
+  List.concat [
+    if Text.isEmpty r.pkg then ["package: is required"] else [],
+    if r.version == "latest" || r.version == "*" then ["version: " ++ r.version ++ " floats; pin a version"] else [],
+    if isSha256 r.sha256 then [] else ["sha256: must be 64 lowercase hex digits, got `" ++ r.sha256 ++ "`"]]
+
+/-- `name@sha256:<hex>`: a tag alone may move, so an image is accepted only with its digest. -/
+def imageProblems (image : Text) : List Text :=
+  let at := Text.indexOf image "@sha256:" 0
+  if at <= 0 then ["image: " ++ image ++ " has no @sha256: digest; a tag alone may move"]
+  else if isSha256 (Text.drop (at + 8) image) then []
+  else ["image: the digest of " ++ image ++ " is not 64 lowercase hex digits"]
+
+/-- Runs a program; a non-zero exit is an `err` carrying stderr. -/
+def run (program : Text) (arguments : List Text) : {IO} Result Text Text :=
+  match IO.exec program arguments with
+  | (0, out, _) => Result.ok out
+  | (code, _, err) => Result.err (program ++ " " ++ Text.join " " arguments ++ " exited with " ++ Int.toText code ++ ": " ++ Text.trim err)
+
+def andThen (result : Result e a) (f : a -> {r} Result e b) : {r} Result e b :=
+  match result with
+  | Result.ok value => f value
+  | Result.err error => Result.err error
+
+/-- The SHA-256 of a file, by the host's `sha256sum`. -/
+def hashFile (path : Text) : {IO} Result Text Text :=
+  andThen (run "sha256sum" [path]) (fun out => Result.ok (Text.take 64 out))
+
+/-- The requirement's path once present: the file, or `entry` inside the extracted archive. -/
+def located (dir : Text) (r : Requirement) : Text :=
+  if Text.isEmpty r.entry then dir ++ "/" ++ r.sha256 else dir ++ "/" ++ r.sha256 ++ ".d/" ++ r.entry
+
+/-- Downloads, verifies and unpacks `r` into `dir`; a hash mismatch leaves nothing behind. -/
+def download (dir : Text) (r : Requirement) : {IO} Result Text Text :=
+  let file := dir ++ "/" ++ r.sha256
+  let partial := file ++ ".partial"
+  IO.mkdirp dir
+  andThen (run "curl" ["-fsSL", "-o", partial, resolve r]) (fun _ =>
+    andThen (hashFile partial) (fun actual =>
+      if actual != r.sha256 then
+        IO.remove partial
+        Result.err ("sha256 mismatch for " ++ resolve r ++ ": expected " ++ r.sha256 ++ ", got " ++ actual)
+      else
+        andThen (run "mv" [partial, file]) (fun _ =>
+          if Text.isEmpty r.entry then andThen (run "chmod" ["+x", file]) (fun _ => Result.ok file)
+          else
+            IO.mkdirp (file ++ ".d")
+            andThen (run "tar" ["-xf", file, "-C", file ++ ".d"]) (fun _ => Result.ok (located dir r)))))
+
+/-- Handles `Fetch` for real, caching under `dir` by hash; a cached artifact is not fetched again. -/
+def fetching (dir : Text) (body : Unit -> {Fetch, IO | r} a) : {IO | r} a :=
+  handle body () with
+  | Fetch.fetch req -> k =>
+    k (match problems req with
+      | [] => if IO.exists (located dir req) then Result.ok (located dir req) else download dir req
+      | found => Result.err (Text.join "; " found))
+
+/-- Handles `Fetch` from memory: `files` maps a hash to its path; anything else is missing. -/
+def simulateFetch (files : List (Text, Text)) (body : Unit -> {Fetch | r} a) : {r} a :=
+  handle body () with
+  | Fetch.fetch req -> k =>
+    k (match problems req with
+      | [] => Option.getOr (Option.map Result.ok (List.lookup req.sha256 files)) (Result.err ("not fetched: " ++ resolve req))
+      | found => Result.err (Text.join "; " found))
+
+/-- Fetches a tool and runs it: (exit code, stdout, stderr). -/
+def tool (req : Requirement) (arguments : List Text) : {Fetch, IO} Result Text (Int, Text, Text) :=
+  andThen (Fetch.fetch req) (fun path => Result.ok (IO.exec path arguments))
+
+def dockerArgs (c : Container) : List Text :=
+  List.concat [
+    ["run", "-d", "--rm"],
+    List.concatMap (fun kv => ["-e", fst kv ++ "=" ++ snd kv]) c.env,
+    List.concatMap (fun p => ["-p", Int.toText (fst p) ++ ":" ++ Int.toText (snd p)]) c.ports,
+    [c.image],
+    c.command]
+
+/-- Handles `Containers` with the host's `docker`. -/
+def docker (body : Unit -> {Containers, IO | r} a) : {IO | r} a :=
+  handle body () with
+  | Containers.start c -> k =>
+    k (match imageProblems c.image with
+      | [] => andThen (run "docker" (dockerArgs c)) (fun out => Result.ok (Text.trim out))
+      | found => Result.err (Text.join "; " found))
+  | Containers.stop id -> k =>
+    IO.exec "docker" ["stop", id]
+    k ()
+
+/-- Handles `Containers` in memory: returns the result and the `docker` command lines that would have run. -/
+def simulateContainers (body : Unit -> {Containers | r} a) : {r} (a, List Text) :=
+  let log := Ref.new []
+  let result := handle body () with
+    | Containers.start c -> k =>
+      match imageProblems c.image with
+      | [] =>
+        Ref.set log (("docker " ++ Text.join " " (dockerArgs c)) :: Ref.get log)
+        k (Result.ok ("sim-" ++ Int.toText (List.length (Ref.get log))))
+      | found => k (Result.err (Text.join "; " found))
+    | Containers.stop id -> k =>
+      Ref.set log (("docker stop " ++ id) :: Ref.get log)
+      k ()
+  (result, List.reverse (Ref.get log))
+
+--
+-- MDL blocks.
+--
+
+def prop (b : Block) (key : Text) : Text := Option.getOr (List.lookup key b.props) ""
+
+/-- A `requirement` block as data. -/
+def requirementOf (b : Block) : Result (List Text) Requirement :=
+  match registryNamed (prop b "registry") with
+  | none => Result.err ["registry: `" ++ prop b "registry" ++ "` is not one of " ++ Text.join ", " (List.map (fun r => r.registryName) registries)]
+  | some registry =>
+    let req := Requirement.mk registry (prop b "package") (prop b "version") (prop b "platform") (prop b "sha256") (prop b "entry")
+    match problems req with
+    | [] => Result.ok req
+    | found => Result.err found
+
+/-- `KEY=VALUE` pairs, one per line or separated by spaces. -/
+def pairsOf (t : Text) : Result (List Text) (List (Text, Text)) :=
+  let items := List.filter (fun w => not (Text.isEmpty w)) (Text.split (Text.replace "\n" " " t) " ")
+  let parsed := List.map (fun w =>
+    let i := Text.indexOf w "=" 0
+    if i <= 0 then Result.err ("env: `" ++ w ++ "` is not KEY=VALUE") else Result.ok (Text.take i w, Text.drop (i + 1) w)) items
+  let bad := List.filterMap (fun r =>
+    match r with
+    | Result.err e => some e
+    | _ => none) parsed
+  if List.isEmpty bad then Result.ok (List.filterMap (fun r =>
+    match r with
+    | Result.ok kv => some kv
+    | _ => none) parsed) else Result.err bad
+
+/-- `HOST:CONTAINER` port pairs. -/
+def portsOf (t : Text) : Result (List Text) (List (Int, Int)) :=
+  match pairsOf (Text.replace ":" "=" t) with
+  | Result.err _ => Result.err ["ports: `" ++ t ++ "` is not a list of HOST:CONTAINER"]
+  | Result.ok kvs =>
+    let ports := List.filterMap (fun kv =>
+      match (Int.fromText (fst kv), Int.fromText (snd kv)) with
+      | (some host, some inner) => some (host, inner)
+      | _ => none) kvs
+    if List.length ports == List.length kvs then Result.ok ports else Result.err ["ports: `" ++ t ++ "` is not a list of HOST:CONTAINER"]
+
+def problemsOf (r : Result (List Text) a) : List Text :=
+  match r with
+  | Result.ok _ => []
+  | Result.err found => found
+
+/-- A `container` block as data. -/
+def containerOf (b : Block) : Result (List Text) Container :=
+  let image := prop b "image"
+  let command := List.filter (fun w => not (Text.isEmpty w)) (Text.split (prop b "command") " ")
+  match (pairsOf (prop b "env"), portsOf (prop b "ports")) with
+  | (Result.ok env, Result.ok ports) =>
+    match imageProblems image with
+    | [] => Result.ok (Container.mk image command env ports)
+    | found => Result.err found
+  | (envResult, portResult) => Result.err (problemsOf envResult ++ problemsOf portResult)
+
+/-- The `requirement` block type. -/
+@[ext "org.dxos.deus.requirement@1.0"]
+def checkRequirement (b : Block) : {MdlHost} List Text := problemsOf (requirementOf b)
+
+/-- The `container` block type. -/
+@[ext "org.dxos.deus.container@1.0"]
+def checkContainer (b : Block) : {MdlHost} List Text := problemsOf (containerOf b)
+
+end External

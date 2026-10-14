@@ -30,6 +30,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 22  | 10-14 12:28 | 13m 26s        | `73d4429d`  | deus-kernel: wasm32-wasip1 build reproduces the seed under Node's WASI                      |
 | 23  | 10-14 13:05 | 37m 06s        | `5a64f053`  | deus-kernel: embeddable kernel with suspend/resume; deus build --native; JIT backoff        |
 | 24  | 10-14 13:22 | 17m 09s        | `d04c0e0c`  | Cloudflare target — a DEUS actor served by a Durable Object                                 |
-| 25  | 10-14 13:34 | 11m 51s        | this commit | MDL extensions as DEUS definitions; perf requirements in machine steps                      |
+| 25  | 10-14 13:34 | 11m 53s        | `082c450c`  | MDL extensions as DEUS definitions; perf requirements in machine steps                      |
+| 26  | 10-14 13:48 | 13m 30s        | this commit | external requirements and containers as pinned data and abilities                           |
 
-Total from stage 1 to stage 25: 3h 51m.
+Total from stage 1 to stage 26: 4h 04m.

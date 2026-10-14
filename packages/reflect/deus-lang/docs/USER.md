@@ -111,3 +111,11 @@ can you re-read all my prompts from the session transcript file
 ---
 
 - I wanna explore cloudflare as potential deployment target -- their durable object model is nice. we'd need language ontology to support that. we can deploy wasm kernel there. also they have temp account and local workerd to test
+
+---
+
+re-read core instructions
+
+---
+
+perhaps add an alarm to remind you of that every 30 minutes

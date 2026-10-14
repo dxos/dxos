@@ -51,6 +51,11 @@ Access goes through an ability (`Fetch`/`Tool`), so a function that needs a bina
 its type. The CLI's handler resolves a requirement, verifies the hash, caches the result under
 it in the store (`cache/fetch/<sha256>`), and refuses a mismatch.
 
+**Status.** Implemented (D47) in `deus/external.deus`: `Registry` (npm, crates, GitHub
+releases, plain URL), `Requirement`, the `Fetch` ability with a real handler (`curl`,
+`sha256sum`, `tar`; `deus run` installs it) and a simulated one, `External.tool`, and the
+`requirement` MDL block.
+
 ## P3. Replicate the store through R2, with compaction
 
 **Proposal:** push to an R2 bucket (the artifacts bucket is suitable), every push a new file;
@@ -120,6 +125,10 @@ The dependency column is enforced when adding: code that depends on a test is re
 **Choice: B now, C later.** Running a container goes through a `Container` ability handled
 by the CLI (it shells out to the host's container runtime), so a function that starts one
 shows it in its type. A tag is accepted only together with the digest it resolved to.
+
+**Status.** Implemented (D47) in `deus/external.deus`: `Container`, the `Containers` ability
+handled by `docker` under `deus run` or simulated in tests, and the `container` MDL block, which
+lowers to `Container` and refuses an image without a digest.
 
 ## P6. First-class observability
 

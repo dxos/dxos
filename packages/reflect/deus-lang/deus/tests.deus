@@ -102,6 +102,41 @@ test mdlParsesDocuments :=
       [("perf", "P-1", "fast enough", 11), ("ext", "note", "", 22), ("note", "P-1", "", 26), ("todo", "", "", 29)] &&
     Option.map (fun b => b.props) (List.head? doc.blocks) == some [("prose", "Prose first."), ("run", "f 1"), ("sizes", "1\n2")]
 
+def sampleHash : Text := Text.repeat 64 "a"
+
+def sampleTool : Requirement := Requirement.mk External.github "bytecodealliance/wasmtime" "v25.0.0" "wasmtime.tar.xz" sampleHash "wasmtime/wasmtime"
+
+test externalResolvesRegistryUrls :=
+  External.resolve sampleTool == "https://github.com/bytecodealliance/wasmtime/releases/download/v25.0.0/wasmtime.tar.xz" &&
+    External.resolve (Requirement.mk External.npm "left-pad" "1.3.0" "" sampleHash "") == "https://registry.npmjs.org/left-pad/-/left-pad-1.3.0.tgz"
+
+test externalRefusesUnpinnedRequirements :=
+  External.problems { sampleTool with version := "latest" } == ["version: latest floats; pin a version"] &&
+    External.problems { sampleTool with sha256 := "abc" } == ["sha256: must be 64 lowercase hex digits, got `abc`"] &&
+    External.problems sampleTool == []
+
+test externalSimulatesFetch :=
+  External.simulateFetch [(sampleHash, "/sim/wasmtime")] (fun _ =>
+    (Fetch.fetch sampleTool, Fetch.fetch { sampleTool with sha256 := Text.repeat 64 "b" })) ==
+    (Result.ok "/sim/wasmtime", Result.err "not fetched: https://github.com/bytecodealliance/wasmtime/releases/download/v25.0.0/wasmtime.tar.xz")
+
+test externalSimulatesContainers :=
+  let pinned := Container.mk ("postgres:16@sha256:" ++ sampleHash) ["postgres"] [("PGPASSWORD", "x")] [(5432, 5432)]
+  match External.simulateContainers (fun _ =>
+    let started := Containers.start pinned
+    Containers.stop "sim-1"
+    (started, Containers.start { pinned with image := "postgres:16" })) with
+  | ((started, refused), log) =>
+    started == Result.ok "sim-1" &&
+      refused == Result.err "image: postgres:16 has no @sha256: digest; a tag alone may move" &&
+      log == ["docker run -d --rm -e PGPASSWORD=x -p 5432:5432 postgres:16@sha256:" ++ sampleHash ++ " postgres", "docker stop sim-1"]
+
+test externalLowersBlocks :=
+  let block := fun (kind : Text) (props : List (Text, Text)) => Block.mk kind "x" "" props 1
+  External.containerOf (block "container" [("image", "redis@sha256:" ++ sampleHash), ("ports", "6379:6379"), ("env", "A=1\nB=2"), ("command", "redis-server --save")]) ==
+      Result.ok (Container.mk ("redis@sha256:" ++ sampleHash) ["redis-server", "--save"] [("A", "1"), ("B", "2")] [(6379, 6379)]) &&
+    External.problemsOf (External.requirementOf (block "requirement" [("registry", "pypi")])) == ["registry: `pypi` is not one of npm, crates, github, url"]
+
 test mdlValidatesDeclarations :=
   Mdl.validate (Mdl.parse mdlSample) == ["line 29: block type `todo` is not in the Extensions table", "block id P-1 is declared twice"]
 

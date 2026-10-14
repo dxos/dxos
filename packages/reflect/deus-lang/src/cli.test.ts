@@ -3,7 +3,8 @@
 //
 
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { chmodSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, describe, test } from 'vitest';
@@ -188,6 +189,76 @@ describe('deus CLI', () => {
       expect(failing.stdout).toContain('took 508 steps; the budget is 10');
     },
   );
+
+  test('fetches a pinned tool by hash, caches it, and refuses a mismatch', { timeout: 120_000 }, ({ expect }) => {
+    const c = ['--codebase', join(scratch, 'external')];
+    deus('init', ...c);
+    deus(
+      'add',
+      join(root, 'deus/builtins.deus'),
+      join(root, 'deus/prelude.deus'),
+      join(root, 'deus/mdl.deus'),
+      join(root, 'deus/external.deus'),
+      ...c,
+    );
+    const tool = join(scratch, 'tool.sh');
+    writeFileSync(tool, '#!/bin/sh\necho "tool says $1"\n');
+    chmodSync(tool, 0o755);
+    const hash = createHash('sha256').update(readFileSync(tool)).digest('hex');
+    const program = (name: string, sha: string) =>
+      `def ${name} (u : Unit) : {IO, Fetch} Unit :=\n` +
+      `  match External.tool (Requirement.mk External.url "file://${tool}" "1" "" "${sha}" "") ["hi"] with\n` +
+      `  | Result.ok (_, out, _) => IO.print out\n` +
+      `  | Result.err message => IO.print ("error: " ++ message)\n`;
+    const source = join(scratch, 'fetch.deus');
+    writeFileSync(source, program('good', hash) + program('bad', '0'.repeat(64)));
+    expect(deus('add', source, ...c).code).toBe(0);
+
+    // `run` hands every argument after the name to the program, so the codebase comes from the environment.
+    process.env.DEUS_CODEBASE = join(scratch, 'external');
+    expect(deus('run', 'good').stdout).toBe('tool says hi\n');
+    // The second run is served from the cache: the source is gone.
+    rmSync(tool);
+    expect(deus('run', 'good').stdout).toBe('tool says hi\n');
+    writeFileSync(tool, 'tampered\n');
+    expect(deus('run', 'bad').stdout).toMatch(
+      /^error: sha256 mismatch for file:\/\/.*: expected 0{64}, got [0-9a-f]{64}$/,
+    );
+
+    const doc = join(scratch, 'external.mdl');
+    writeFileSync(
+      doc,
+      [
+        '## Extensions',
+        '| Term | URI |',
+        '| --- | --- |',
+        '| `requirement` | `org.dxos.deus.requirement@1.0` |',
+        '| `container` | `org.dxos.deus.container@1.0` |',
+        '```mdl',
+        'requirement tool',
+        '  registry: url',
+        `  package: file://${tool}`,
+        '  version: 1',
+        `  sha256: ${hash}`,
+        '```',
+        '```mdl',
+        'container db',
+        '  image: postgres:16',
+        '  ports: 5432:5432',
+        '```',
+        '',
+      ].join('\n'),
+    );
+    const checked = deus('mdl', doc, '--json', ...c);
+    expect(checked.code).toBe(1);
+    expect(
+      JSON.parse(checked.stdout).map((row: { status: string; problems: string[] }) => [row.status, row.problems]),
+    ).toEqual([
+      ['ok', []],
+      ['fail', ['image: postgres:16 has no @sha256: digest; a tag alone may move']],
+    ]);
+    delete process.env.DEUS_CODEBASE;
+  });
 
   test('builds a standalone executable', { timeout: 180_000 }, ({ expect }) => {
     process.env.DEUS_HOME = root;

@@ -175,6 +175,21 @@ perf P-1: insertion sort is quadratic on reversed input
   budget: 100000
 ```
 
+## The outside world
+
+Code that needs something outside the codebase says so in its effect row (D47):
+
+- `Fetch` resolves a `Requirement`, which names a package in a `Registry` (npm, crates, GitHub
+  releases, a URL) and the SHA-256 its bytes must have. Under `deus run` it is downloaded once,
+  verified, and cached by hash in the codebase's `cache/fetch`. `External.tool` fetches and runs
+  one.
+- `Containers` starts and stops a `Container`, an image pinned by digest. Under `deus run` the
+  host's `docker` runs it.
+- Tests use `External.simulateFetch` and `External.simulateContainers`, which never touch the
+  network.
+- In `.mdl`, `requirement` and `container` blocks lower to the same data, and `deus mdl` refuses
+  floating versions, bad hashes and images without a digest.
+
 ## Proofs
 
 A `theorem` states a proposition over typed binders (`P -> Q` for hypotheses) and names its

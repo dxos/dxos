@@ -389,9 +389,11 @@ def run (args : Args) (rest : List Text) : {IO, Throw Text} Unit :=
     | (_, Entry.term h) =>
       Image.load (fetcher dir) [h]
       let f := Code.run h
+      -- External artifacts are cached in the codebase's cache layer, by hash.
       let program := fun (u : Unit) =>
-        handle f () with
-        | IO.args _ -> k => k programArgs
+        External.docker (fun _ => External.fetching (dir ++ "/cache/fetch") (fun _ =>
+          handle f () with
+          | IO.args _ -> k => k programArgs))
       let observed := fun (u : Unit) =>
         match IO.getEnv "DEUS_OTLP" with
         | some out => Observe.otlp out name program
