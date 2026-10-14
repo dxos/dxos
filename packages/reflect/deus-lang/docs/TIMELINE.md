@@ -31,6 +31,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 23  | 10-14 13:05 | 37m 06s        | `5a64f053`  | deus-kernel: embeddable kernel with suspend/resume; deus build --native; JIT backoff        |
 | 24  | 10-14 13:22 | 17m 09s        | `d04c0e0c`  | Cloudflare target — a DEUS actor served by a Durable Object                                 |
 | 25  | 10-14 13:34 | 11m 53s        | `082c450c`  | MDL extensions as DEUS definitions; perf requirements in machine steps                      |
-| 26  | 10-14 13:48 | 13m 30s        | this commit | external requirements and containers as pinned data and abilities                           |
+| 26  | 10-14 13:48 | 13m 31s        | `bd139e99`  | external requirements and containers as pinned data and abilities                           |
+| 27  | 10-14 13:54 | 6m 38s         | this commit | codebase layers: spec objects, results, provenance                                          |
 
-Total from stage 1 to stage 26: 4h 04m.
+Total from stage 1 to stage 27: 4h 11m.

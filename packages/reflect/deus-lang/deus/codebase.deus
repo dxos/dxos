@@ -6,7 +6,15 @@
     meta/<h>                metadata of an object (signature, doc, local names); not hashed
     branches/<name>         the causal hash a branch points at
     HEAD                    the current branch name
-    cache/<h>               test and proof results, keyed by the hash of what was checked
+    results/<h>             test and proof verdicts, keyed by the hash of what was checked
+    provenance/<causal>     who or what produced a change (an agent, a prompt digest)
+    cache/                  re-computable data (fetched artifacts); never replicated
+
+  Every object belongs to a layer (P4, D48), a function of its kind: `code` (types, abilities,
+  terms), `tests`, `proofs` and `history` (snapshots, causal nodes). Hashed layers share
+  `objects/` because they share a policy (`spec` holds the identified blocks of `.mdl`
+  documents); the derived layers have their own directories, so a
+  policy (replicate, delete) is a directory. Code may depend only on code.
 
   A namespace snapshot maps names to entries. A causal node records a snapshot, its
   parents and a message; a branch is a pointer to a causal node, so history is a DAG and
@@ -61,6 +69,36 @@ def metaList (form : Option Sexp) (key : Text) : List Sexp :=
     match List.find (fun x => Sexp.head x == key) (Sexp.args m) with
     | some x => Sexp.args x
     | none => []
+
+--
+-- Layers.
+--
+
+/-- An object's layer, from its kind. -/
+def layerOf (form : Sexp) : Text :=
+  let kind := Sexp.head form
+  if kind == "spec" then "spec"
+  else if kind == "test" then "tests"
+  else if kind == "theorem" then "proofs"
+  else if kind == "ns" || kind == "causal" then "history"
+  else "code"
+
+/-- Layers a layer may depend on; the rest are refused when adding. -/
+def mayDependOn (layer : Text) : List Text :=
+  if layer == "spec" then ["spec"]
+  else if layer == "code" then ["code"]
+  else if layer == "tests" then ["code", "tests"]
+  else if layer == "proofs" then ["code", "proofs"]
+  else ["code", "tests", "proofs", "history"]
+
+/-- Every layer with where it lives and whether it is replicated. -/
+def layers : List (Text, Text, Bool) :=
+  [("spec", "objects/", true), ("code", "objects/", true), ("tests", "objects/", true), ("proofs", "objects/", true), ("history", "objects/", true),
+    ("results", "results/", true), ("provenance", "provenance/", true), ("cache", "cache/", false)]
+
+/-- Hashes of every object in the store. -/
+def allObjects (dir : Text) : {IO} List Text :=
+  List.concatMap (fun shard => IO.listDir (dir ++ "/objects/" ++ shard)) (IO.listDir (dir ++ "/objects"))
 
 --
 -- Namespaces.
@@ -142,6 +180,8 @@ def init (dir : Text) : {IO, Throw Text} Unit :=
     IO.mkdirp (dir ++ "/objects")
     IO.mkdirp (dir ++ "/meta")
     IO.mkdirp (dir ++ "/branches")
+    IO.mkdirp (dir ++ "/results")
+    IO.mkdirp (dir ++ "/provenance")
     IO.mkdirp (dir ++ "/cache")
     let snapshot := put dir (nsToSexp Map.empty)
     let c := put dir (causalToSexp (Causal.mk snapshot [] "init"))

@@ -137,6 +137,16 @@ test externalLowersBlocks :=
       Result.ok (Container.mk ("redis@sha256:" ++ sampleHash) ["redis-server", "--save"] [("A", "1"), ("B", "2")] [(6379, 6379)]) &&
     External.problemsOf (External.requirementOf (block "requirement" [("registry", "pypi")])) == ["registry: `pypi` is not one of npm, crates, github, url"]
 
+test layersFollowObjectKinds :=
+  List.map (fun kind => Codebase.layerOf (Sexp.node kind [])) ["term", "type", "test", "theorem", "spec", "causal"] ==
+      ["code", "code", "tests", "proofs", "spec", "history"] &&
+    Codebase.mayDependOn "code" == ["code"]
+
+test specBlocksRoundTrip :=
+  match List.head? (Mdl.parse mdlSample).blocks with
+  | some b => Mdl.fromSexp (Mdl.toSexp "org.example.perf@1.0" b) == ("org.example.perf@1.0", { b with lineNo := 0 })
+  | none => false
+
 test mdlValidatesDeclarations :=
   Mdl.validate (Mdl.parse mdlSample) == ["line 29: block type `todo` is not in the Extensions table", "block id P-1 is declared twice"]
 

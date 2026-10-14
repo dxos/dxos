@@ -18,6 +18,7 @@ inductive Entry where
   | op (owner : Text) (index : Int) (arity : Int)
   | test (hash : Text)
   | theorem (hash : Text)
+  | spec (hash : Text)
 
 namespace Entry
 
@@ -29,6 +30,7 @@ def toSexp : Entry -> Sexp
   | op a index n => Sexp.node "op" [Sexp.s a, Sexp.i index, Sexp.i n]
   | Entry.test h => Sexp.node "test" [Sexp.s h]
   | Entry.theorem h => Sexp.node "theorem" [Sexp.s h]
+  | Entry.spec h => Sexp.node "spec" [Sexp.s h]
 
 def fromSexp (s : Sexp) : Entry :=
   let a := Sexp.args s
@@ -42,6 +44,7 @@ def fromSexp (s : Sexp) : Entry :=
   else if h == "op" then Entry.op (txt 0) (num 1) (num 2)
   else if h == "test" then Entry.test (txt 0)
   else if h == "theorem" then Entry.theorem (txt 0)
+  else if h == "spec" then Entry.spec (txt 0)
   else defect ("unknown entry " ++ Sexp.print s)
 
 def kind : Entry -> Text
@@ -52,6 +55,7 @@ def kind : Entry -> Text
   | op _ _ _ => "op"
   | Entry.test _ => "test"
   | Entry.theorem _ => "theorem"
+  | Entry.spec _ => "spec"
 
 /-- The hash an entry names (a constructor or operation names its type's or ability's). -/
 def hash : Entry -> Text
@@ -62,6 +66,7 @@ def hash : Entry -> Text
   | op a _ _ => a
   | Entry.test h => h
   | Entry.theorem h => h
+  | Entry.spec h => h
 
 def isValue (e : Entry) : Bool :=
   match e with

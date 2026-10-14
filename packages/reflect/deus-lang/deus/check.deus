@@ -33,12 +33,12 @@ def fromSexp (s : Sexp) : Verdict :=
   | _ => Verdict.unchecked
 
 def cached (dir : Text) (h : Text) : {IO} Option Verdict :=
-  Option.map (fun t => fromSexp (Sexp.read t)) (IO.readFile (dir ++ "/cache/" ++ h))
+  Option.map (fun t => fromSexp (Sexp.read t)) (IO.readFile (dir ++ "/results/" ++ h))
 
 def remember (dir : Text) (h : Text) (v : Verdict) : {IO} Unit :=
   match v with
   | Verdict.unchecked => ()
-  | _ => IO.writeFile (dir ++ "/cache/" ++ h) (Sexp.print (toSexp v) ++ "\n")
+  | _ => IO.writeFile (dir ++ "/results/" ++ h) (Sexp.print (toSexp v) ++ "\n")
 
 /-- Runs a loaded definition; a defect becomes `Result.err`. -/
 def guarded (h : Text) : Result Text a :=

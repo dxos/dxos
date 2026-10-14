@@ -162,4 +162,28 @@ def validate (doc : Doc) : List Text :=
     (List.mapIndexed (fun i ident => (i, ident)) ids)
   undeclared ++ duplicates
 
+/--
+  A block as a spec object, with the URI of the extension its type names (stored specs have no
+  Extensions table). The line is left out, so moving a block does not change its hash.
+-/
+def toSexp (uri : Text) (b : Block) : Sexp :=
+  Sexp.node "spec" ([Sexp.str b.blockType, Sexp.str uri, Sexp.str b.blockId, Sexp.str b.blockTitle] ++
+    List.map (fun kv => Sexp.list [Sexp.str (fst kv), Sexp.str (snd kv)]) b.props)
+
+/-- A spec object as its extension's URI and the block. -/
+def fromSexp (form : Sexp) : (Text, Block) :=
+  match Sexp.args form with
+  | kind :: uri :: ident :: title :: props =>
+    (Sexp.asText uri, Block.mk (Sexp.asText kind) (Sexp.asText ident) (Sexp.asText title) (List.filterMap (fun p =>
+      match p with
+      | Sexp.list [key, value] => some (Sexp.asText key, Sexp.asText value)
+      | _ => none) props) 0)
+  | _ => ("", Block.mk "" "" "" [] 0)
+
+/-- A block printed back as MDL. -/
+def render (b : Block) : Text :=
+  let head := b.blockType ++ (if Text.isEmpty b.blockId then "" else " " ++ b.blockId) ++ (if Text.isEmpty b.blockTitle then "" else ": " ++ b.blockTitle)
+  "```mdl\n" ++ head ++ Text.concat (List.map (fun kv =>
+    "\n  " ++ fst kv ++ ":" ++ (if Text.contains "\n" (snd kv) then Text.concat (List.map (fun l => "\n  - " ++ l) (Text.lines (snd kv))) else " " ++ snd kv)) b.props) ++ "\n```"
+
 end Mdl

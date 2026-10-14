@@ -137,28 +137,92 @@ def changes (ns : Map Text Entry) (entries : List (Text, Entry)) : List (Text, E
       | some old => if old == e then none else some (name, old, e)
       | none => none) entries
 
+/-- Dependencies of a batch's objects that their layer may not have, as `name (layer) -> name (layer)`. -/
+def layerCrossings (dir : Text) (batch : Batch) : {IO} List Text :=
+  let objects := Map.fromList batch.objects
+  let names := Map.fromList (List.map (fun pair => (Entry.hash (snd pair), fst pair)) batch.entries)
+  let nameOf := fun (h : Text) => Option.getOr (Map.lookup h names) (short h)
+  let formOf := fun (h : Text) => Option.orElse (Map.lookup h objects) (fun _ => Codebase.readObject dir h)
+  List.concatMap (fun pair =>
+    match pair with
+    | (h, form) =>
+      let layer := Codebase.layerOf form
+      List.filterMap (fun dep =>
+        match formOf dep with
+        | some depForm =>
+          let depLayer := Codebase.layerOf depForm
+          if List.any (fun allowed => allowed == depLayer) (Codebase.mayDependOn layer) then none
+          else some (nameOf h ++ " (" ++ layer ++ ") -> " ++ nameOf dep ++ " (" ++ depLayer ++ ")")
+        | none => none) (Codebase.dependencies form)) batch.objects
+
+/--
+  With `--by <agent>` (and `--prompt <file>`), records who produced a change in the provenance
+  layer: the agent, the prompt's SHA-256 and the objects the change wrote.
+-/
+def recordProvenance (dir : Text) (args : Args) (causal : Text) (objects : List Text) : {IO} Unit :=
+  match option args "by" with
+  | none => ()
+  | some agent =>
+    let prompt := match Option.bind (option args "prompt") IO.readFile with
+      | some text => [Sexp.node "prompt" [Sexp.str (Text.sha256 text)]]
+      | none => []
+    let form := Sexp.node "provenance" ([Sexp.node "by" [Sexp.str agent], Sexp.node "at" [Sexp.str (IO.wallClock ())]] ++ prompt ++ [Sexp.node "objects" (List.map Sexp.str objects)])
+    IO.writeFile (dir ++ "/provenance/" ++ causal) (Sexp.print form ++ "\n")
+
+/-- Who produced a causal node, from its provenance record. -/
+def producedBy (dir : Text) (causal : Text) : {IO} Option Text :=
+  Option.bind (IO.readFile (dir ++ "/provenance/" ++ causal)) (fun text =>
+    Option.map Sexp.asText (Codebase.metaField (some (Sexp.read text)) "by"))
+
+/-- The last path segment without its extension. -/
+def baseName (path : Text) : Text :=
+  let file := Option.getOr (List.last? (Text.split path "/")) path
+  let dot := Text.indexOf file "." 0
+  if dot > 0 then Text.take dot file else file
+
+/--
+  The identified ```mdl blocks of `.mdl` files, stored as spec objects and named
+  `<document>.<block id>`; the document is its frontmatter `name`, or the file's base name.
+-/
+def specEntries (dir : Text) (paths : List Text) : {IO, Throw Text} List (Text, Entry) :=
+  List.concatMap (fun path =>
+    if not (Text.endsWith ".mdl" path) then []
+    else
+      let doc := Mdl.parse (readSource path)
+      let prefix := Option.getOr (List.lookup "name" doc.front) (baseName path)
+      let declared := Mdl.declared doc
+      List.filterMap (fun b =>
+        if Text.isEmpty b.blockId || b.blockType == "ext" then none
+        else
+          let uri := Option.getOr (List.lookup b.blockType declared) ""
+          some (prefix ++ "." ++ b.blockId, Entry.spec (Codebase.put dir (Mdl.toSexp uri b)))) doc.blocks) (expandPaths paths)
+
 /-- `add`: new names only; `update`: may replace names, then propagates to dependents. -/
 def addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let ns := Codebase.current dir
   let batch := Compile.batch ns (fun h => Codebase.readObject dir h) (fun h => Codebase.readMeta dir h) (checkTypes ()) (parseFiles args.positional)
   warn batch
-  let replaced := changes ns batch.entries
-  if not isUpdate && not (List.isEmpty replaced) then
+  let entries := batch.entries ++ specEntries dir args.positional
+  let replaced := changes ns entries
+  let crossings := layerCrossings dir batch
+  if not (List.isEmpty crossings) then throw ("a layer may not depend on these:\n  " ++ Text.join "\n  " crossings)
+  else if not isUpdate && not (List.isEmpty replaced) then
     throw ("these names already exist; use `deus update`:\n  " ++ Text.join "\n  " (List.map (fun c =>
       match c with
       | (name, _, _) => name) replaced))
   else
     Codebase.store dir batch
-    let added := List.filter (fun pair => not (Map.contains (fst pair) ns)) batch.entries
-    let ns2 := List.foldl (fun m pair => Map.insert (fst pair) (snd pair) m) ns batch.entries
+    let added := List.filter (fun pair => not (Map.contains (fst pair) ns)) entries
+    let ns2 := List.foldl (fun m pair => Map.insert (fst pair) (snd pair) m) ns entries
     let subst := Map.fromList (List.map (fun c =>
       match c with
       | (_, old, new) => (Entry.hash old, Entry.hash new)) replaced)
-    let propagated := Update.propagate dir ns2 subst (Set.fromList (List.map fst batch.entries))
+    let propagated := Update.propagate dir ns2 subst (Set.fromList (List.map fst entries))
     let ns3 := fst propagated
     let message := Option.getOr (option args "message") ((if isUpdate then "update " else "add ") ++ Text.join " " args.positional)
     let causal := Codebase.commit dir ns3 message
+    recordProvenance dir args causal (List.map fst batch.objects ++ List.map (fun pair => Entry.hash (snd pair)) (List.filter (fun pair => Entry.kind (snd pair) == "spec") entries))
     output args
       (fun _ => Json.obj [("added", Json.arr (List.map (fun p => entryJson (fst p) (snd p)) added)), ("updated", Json.arr (List.map (fun c =>
         match c with
@@ -228,6 +292,7 @@ def viewEntry (dir : Text) (ns : Map Text Entry) (name : Text) (e : Entry) (core
           header ++ View.theoremDecl p name types prop proof
         | Sexp.list (Sexp.sym "type" :: _) => header ++ View.typeDecl p ns name e obj
         | Sexp.list (Sexp.sym "ability" :: _) => header ++ View.abilityDecl p ns name e obj
+        | Sexp.list (Sexp.sym "spec" :: _) => header ++ Mdl.render (snd (Mdl.fromSexp obj))
         | _ => header ++ Sexp.print obj
 
 def view (args : Args) : {IO, Throw Text} Unit :=
@@ -340,10 +405,11 @@ def log (args : Args) : {IO, Throw Text} Unit :=
   let entries := Codebase.history dir (Codebase.currentBranch dir) limit
   output args (fun _ => Json.arr (List.map (fun pair =>
       match pair with
-      | (h, c) => Json.obj [("causal", Json.str h), ("message", Json.str c.message), ("parents", Json.arr (List.map Json.str c.parents))]) entries))
+      | (h, c) => Json.obj ([("causal", Json.str h), ("message", Json.str c.message), ("parents", Json.arr (List.map Json.str c.parents))] ++
+        Option.getOr (Option.map (fun agent => [("by", Json.str agent)]) (producedBy dir h)) [])) entries))
     (fun _ => Text.join "\n" (List.map (fun pair =>
       match pair with
-      | (h, c) => short h ++ "  " ++ c.message) entries))
+      | (h, c) => short h ++ "  " ++ c.message ++ Option.getOr (Option.map (fun agent => "  (by " ++ agent ++ ")") (producedBy dir h)) "") entries))
 
 /-- Moves the branch back to its first parent; the undone node stays in the store. -/
 def undo (args : Args) : {IO, Throw Text} Unit :=
@@ -355,6 +421,29 @@ def undo (args : Args) : {IO, Throw Text} Unit :=
     Codebase.setBranch dir branchName parent
     output args (fun _ => Json.obj [("causal", Json.str parent)]) (fun _ => "Undid " ++ short head ++ "; now at " ++ short parent ++ ".")
   | [] => throw "nothing to undo"
+
+/-- `deus layers`: each layer, where it lives, whether it is replicated, and its object count. -/
+def layers (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let counts := List.foldl (fun m h =>
+    match Codebase.readObject dir h with
+    | some form =>
+      let layer := Codebase.layerOf form
+      Map.insert layer (1 + Option.getOr (Map.lookup layer m) 0) m
+    | none => m) Map.empty (Codebase.allObjects dir)
+  let fileCount := fun (sub : Text) => if IO.isDir (dir ++ "/" ++ sub) then List.length (IO.listDir (dir ++ "/" ++ sub)) else 0
+  let rows := List.map (fun layer =>
+    match layer with
+    | (name, place, replicated) =>
+      let count := if place == "objects/" then Option.getOr (Map.lookup name counts) 0 else fileCount (Text.take (Text.length place - 1) place)
+      (name, place, replicated, count)) Codebase.layers
+  output args
+    (fun _ => Json.arr (List.map (fun row =>
+      match row with
+      | (name, place, replicated, count) => Json.obj [("layer", Json.str name), ("path", Json.str place), ("replicated", Json.bool replicated), ("entries", Json.num count)]) rows))
+    (fun _ => Text.join "\n" (List.map (fun row =>
+      match row with
+      | (name, place, replicated, count) => Text.padRight 12 name ++ Text.padRight 14 place ++ Text.padRight 12 (if replicated then "replicated" else "local") ++ Int.toText count) rows))
 
 --
 -- Commands: running.
@@ -461,35 +550,49 @@ structure Outcome where
   verdict : Text
   problems : List Text
 
+/-- Runs one block through the extension `uri` names in the codebase; unchecked when there is none. -/
+def checkBlock (dir : Text) (ns : Map Text Entry) (byUri : Map Text Text) (place : Text) (uri : Option Text) (b : Block) : {IO, Throw Text} Outcome :=
+  match Option.bind uri (fun u => Map.lookup u byUri) with
+  | none => Outcome.mk place "unchecked" []
+  | some h =>
+    Image.load (fetcher dir) [h]
+    let check := Code.run h
+    match withHost dir ns (fun _ => guardDefect (fun _ => check b)) with
+    | Result.ok [] => Outcome.mk place "ok" []
+    | Result.ok problems => Outcome.mk place "fail" problems
+    | Result.err message => Outcome.mk place "fail" ["defect: " ++ message]
+
 /-- Checks one document: the core rules, then each block through its extension. -/
 def checkDoc (dir : Text) (ns : Map Text Entry) (byUri : Map Text Text) (path : Text) : {IO, Throw Text} List Outcome :=
   let doc := Mdl.parse (readSource path)
   let core := Mdl.validate doc
   let declared := Mdl.declared doc
-  let blocks := List.filter (fun b => b.blockType != "ext") doc.blocks
   let outcomes := List.map (fun b =>
-    let at := path ++ ":" ++ Int.toText b.lineNo ++ " " ++ Mdl.describe b
-    match Option.bind (List.lookup b.blockType declared) (fun uri => Map.lookup uri byUri) with
-    | none => Outcome.mk at "unchecked" []
-    | some h =>
-      Image.load (fetcher dir) [h]
-      let check := Code.run h
-      match withHost dir ns (fun _ => guardDefect (fun _ => check b)) with
-      | Result.ok [] => Outcome.mk at "ok" []
-      | Result.ok problems => Outcome.mk at "fail" problems
-      | Result.err message => Outcome.mk at "fail" ["defect: " ++ message]) blocks
+    checkBlock dir ns byUri (path ++ ":" ++ Int.toText b.lineNo ++ " " ++ Mdl.describe b) (List.lookup b.blockType declared) b)
+    (List.filter (fun b => b.blockType != "ext") doc.blocks)
   if List.isEmpty core then outcomes else Outcome.mk path "fail" core :: outcomes
 
+/-- Checks the spec objects the codebase names. -/
+def checkSpecs (dir : Text) (ns : Map Text Entry) (byUri : Map Text Text) : {IO, Throw Text} List Outcome :=
+  List.filterMap (fun pair =>
+    match pair with
+    | (name, Entry.spec h) =>
+      Option.map (fun form =>
+        match Mdl.fromSexp form with
+        | (uri, b) => checkBlock dir ns byUri name (if Text.isEmpty uri then none else some uri) b) (Codebase.readObject dir h)
+    | _ => none) (Map.toList ns)
+
 /--
-  `deus mdl <files|dirs…>`: checks MDL documents. Each block goes to the extension its term's URI
-  names in the codebase; a block whose extension the codebase lacks is reported unchecked.
+  `deus mdl [files|dirs…]`: checks MDL documents, or with no files the spec objects the codebase
+  names. Each block goes to the extension its term's URI names in the codebase; a block whose
+  extension the codebase lacks is reported unchecked.
 -/
 def mdl (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let ns := Codebase.current dir
   let byUri := extensions dir ns
   let paths := List.filter (fun p => Text.endsWith ".mdl" p) (expandPaths args.positional)
-  let outcomes := List.concatMap (fun path => checkDoc dir ns byUri path) paths
+  let outcomes := if List.isEmpty args.positional then checkSpecs dir ns byUri else List.concatMap (fun path => checkDoc dir ns byUri path) paths
   let count := fun (v : Text) => List.length (List.filter (fun o => o.verdict == v) outcomes)
   output args
     (fun _ => Json.arr (List.map (fun o => Json.obj [("block", Json.str o.place), ("status", Json.str o.verdict), ("problems", Json.arr (List.map Json.str o.problems))]) outcomes))
@@ -534,7 +637,8 @@ def usage : Text :=
     "  init                                 create a codebase (./.deus, or --codebase, or $DEUS_CODEBASE)",
     "  add <files|dirs…>                    add new definitions (.deus, or ```deus fences in .mdl)",
     "  update <files|dirs…>                 add or replace definitions; dependents are rehashed",
-    "                                       (both take --message <why> for the history)",
+    "                                       (both take --message <why> for the history, and",
+    "                                       --by <agent> [--prompt <file>] to record provenance)",
     "  ls [prefix]                          list names",
     "  find <text>                          names containing text",
     "  view <name|#hash…> [--core]          print definitions as source (or as Core)",
@@ -548,11 +652,12 @@ def usage : Text :=
     "  switch <branch>                      change branch",
     "  merge <branch>                       three-way merge into the current branch",
     "  log [--n N] / undo                   history / step the branch back",
+    "  layers                               objects per layer (code, tests, proofs, history, results, …)",
     "",
     "running",
     "  run <name> [args…]                   run name () with IO.args = args",
     "  eval <expr>                          evaluate an expression",
-    "  mdl <files|dirs…>                    check .mdl documents: each block runs through the",
+    "  mdl [files|dirs…]                    check .mdl documents (or the codebase's specs): each block runs through the",
     "                                       @[ext \"<uri>\"] term its Extensions table names",
     "  test [prefix] [--integration]        run tests in a deterministic simulation (cached by hash);",
     "                                       --integration also runs @[integration] tests for real",
@@ -586,6 +691,7 @@ def dispatch (argv : List Text) : {IO, Throw Text} Unit :=
     else if command == "switch" then switch args
     else if command == "merge" then merge args
     else if command == "log" then log args
+    else if command == "layers" then layers args
     else if command == "undo" then undo args
     else if command == "run" then run (parseArgs (List.take 0 rest)) rest
     else if command == "eval" then eval args

@@ -37,6 +37,9 @@ export DEUS_CODEBASE=$PWD/.deus     # or pass --codebase <dir>
    deus update /tmp/patch.deus --message "sort: delegate to sortBy" --json
    ```
 
+   Pass `--by <agent>` (and `--prompt <file>`) so the change records who made it; `deus log`
+   shows it.
+
    `add` refuses to replace an existing name; that is how an agent avoids clobbering a definition
    it did not mean to touch.
 

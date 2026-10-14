@@ -149,7 +149,14 @@ describe('deus CLI', () => {
     ({ expect }) => {
       const c = ['--codebase', join(scratch, 'mdl')];
       deus('init', ...c);
-      deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), join(root, 'deus/mdl.deus'), ...c);
+      deus(
+        'add',
+        join(root, 'deus/builtins.deus'),
+        join(root, 'deus/prelude.deus'),
+        join(root, 'deus/sexp.deus'),
+        join(root, 'deus/mdl.deus'),
+        ...c,
+      );
       expect(deus('add', join(root, 'examples/sort.deus'), join(root, 'platform/perf.deus'), ...c).code).toBe(0);
 
       const passing = deus('mdl', join(root, 'examples/perf.mdl'), '--json', ...c);
@@ -190,6 +197,45 @@ describe('deus CLI', () => {
     },
   );
 
+  test('files objects by layer, stores spec blocks, and records provenance', { timeout: 120_000 }, ({ expect }) => {
+    const c = ['--codebase', join(scratch, 'layers')];
+    deus('init', ...c);
+    deus(
+      'add',
+      join(root, 'deus/builtins.deus'),
+      join(root, 'deus/prelude.deus'),
+      join(root, 'deus/sexp.deus'),
+      join(root, 'deus/mdl.deus'),
+      ...c,
+    );
+    deus('add', join(root, 'examples/sort.deus'), join(root, 'platform/perf.deus'), ...c);
+    const prompt = join(scratch, 'prompt.txt');
+    writeFileSync(prompt, 'state the sort performance requirements\n');
+    expect(deus('add', join(root, 'examples/perf.mdl'), '--by', 'agent-x', '--prompt', prompt, ...c).code).toBe(0);
+
+    // With no files, `deus mdl` checks the specs the codebase names.
+    const specs = deus('mdl', '--json', ...c);
+    expect(JSON.parse(specs.stdout).map((row: { block: string; status: string }) => [row.block, row.status])).toEqual([
+      ['Sort.Perf.P-1', 'ok'],
+      ['Sort.Perf.P-2', 'ok'],
+      ['Sort.Perf.P-3', 'ok'],
+    ]);
+    expect(deus('view', 'Sort.Perf.P-3', ...c).stdout).toContain('perf P-3: sorting ten numbers\n  run: Sort.isort');
+    // Theorem verdicts go to the results layer.
+    deus('check', ...c);
+
+    const layers = Object.fromEntries(
+      JSON.parse(deus('layers', '--json', ...c).stdout).map((row: { layer: string; entries: number }) => [
+        row.layer,
+        row.entries,
+      ]),
+    );
+    expect([layers.spec, layers.proofs, layers.provenance, layers.cache]).toEqual([3, 8, 1, 0]);
+    expect(layers.results).toBeGreaterThan(0);
+    const log = JSON.parse(deus('log', '--json', '--n', '1', ...c).stdout);
+    expect(log[0].by).toBe('agent-x');
+  });
+
   test('fetches a pinned tool by hash, caches it, and refuses a mismatch', { timeout: 120_000 }, ({ expect }) => {
     const c = ['--codebase', join(scratch, 'external')];
     deus('init', ...c);
@@ -197,6 +243,7 @@ describe('deus CLI', () => {
       'add',
       join(root, 'deus/builtins.deus'),
       join(root, 'deus/prelude.deus'),
+      join(root, 'deus/sexp.deus'),
       join(root, 'deus/mdl.deus'),
       join(root, 'deus/external.deus'),
       ...c,
@@ -212,7 +259,9 @@ describe('deus CLI', () => {
       `  | Result.err message => IO.print ("error: " ++ message)\n`;
     const source = join(scratch, 'fetch.deus');
     writeFileSync(source, program('good', hash) + program('bad', '0'.repeat(64)));
-    expect(deus('add', source, ...c).code).toBe(0);
+    const added = deus('add', source, ...c);
+    expect(added.stderr).toBe('');
+    expect(added.code).toBe(0);
 
     // `run` hands every argument after the name to the program, so the codebase comes from the environment.
     process.env.DEUS_CODEBASE = join(scratch, 'external');

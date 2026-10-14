@@ -112,6 +112,14 @@ each object under its layer's directory, so policies are physical. The layers an
 
 The dependency column is enforced when adding: code that depends on a test is rejected.
 
+**Status.** Implemented (D48). Each object's layer comes from its kind (`Codebase.layerOf`). The
+hashed layers (spec, code, tests, proofs, history) share `objects/` because their policy is the
+same. `results/`, `provenance/` and `cache/` are directories of their own, so each policy is a
+directory. `deus add doc.mdl` stores each identified ```mdl block as a spec object named
+`<document>.<id>`, and `deus mdl` with no files checks them. `--by <agent> [--prompt <file>]`
+records provenance, which `deus log` shows. `deus layers` counts objects per layer. Artifacts
+(images, binaries) are not stored yet.
+
 ## P5. Docker containers in MDL
 
 **Proposal:** represent Docker containers in `.mdl`.
