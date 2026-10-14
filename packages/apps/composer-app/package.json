@@ -122,6 +122,7 @@
     "@dxos/plugin-map-solid": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-meeting": "workspace:*",
+    "@dxos/plugin-meeting-recorder": "workspace:*",
     "@dxos/plugin-mermaid": "workspace:*",
     "@dxos/plugin-messenger": "workspace:*",
     "@dxos/plugin-mobile": "workspace:*",
