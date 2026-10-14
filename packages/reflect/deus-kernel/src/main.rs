@@ -4,15 +4,8 @@
 
 //! `deus-kernel [args…]`: runs a DEUS image (by default the toolchain's seed) with the arguments.
 
-mod host;
-mod machine;
-mod prims;
-mod run;
-mod sexp;
-mod text;
-mod value;
-
-use machine::Options;
+use deus_kernel::machine::Options;
+use deus_kernel::{host, run};
 
 /// The seed this build was made next to; `DEUS_SEED` overrides it.
 const SEED_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../deus-lang/seed/deus.image");

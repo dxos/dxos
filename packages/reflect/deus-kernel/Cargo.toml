@@ -6,6 +6,9 @@ publish = false
 description = "The DEUS kernel in Rust: a CEK machine for Core images, natively and on wasm32-wasip1."
 license = "FSL-1.1-Apache-2.0"
 
+[lib]
+crate-type = ["cdylib", "rlib"]
+
 [[bin]]
 name = "deus-kernel"
 path = "src/main.rs"

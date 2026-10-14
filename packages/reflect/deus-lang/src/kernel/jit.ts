@@ -340,6 +340,7 @@ export const createCompiler = (machine: Machine) => {
     if (usesHandler(lam.a)) {
       return null;
     }
+
     const generator = new Generator(lam);
     const params = Array.from({ length: lam.i }, (_, i) => `a${i}`);
     generator.stmt(lam.a, params, RETURN);

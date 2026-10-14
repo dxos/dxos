@@ -55,6 +55,10 @@ pub trait Host {
     /// (exit code, stdout, stderr); 127 when the program cannot start.
     fn exec(&mut self, program: &str, args: &[String]) -> (i32, String, String);
     fn flush(&mut self) {}
+    /// Whether operations nothing handles go to the embedder (`Fail::Suspend`) instead of `IO`.
+    fn suspends(&self) -> bool {
+        false
+    }
 }
 
 /// The process's own file system, environment and streams (native, or WASI on wasm32-wasip1).

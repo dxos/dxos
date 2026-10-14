@@ -146,3 +146,33 @@ carries enough context for an agent to find the bug.
 `otlp`). OTLP goes to JSON-lines files rather than HTTP ([D35](./DECISIONS.md)). `Failure`
 with `Failure.context` chains ([D37](./DECISIONS.md)). Not yet: spans tagged with definition
 hashes.
+
+## P7. Cloudflare Workers and Durable Objects as a deployment target
+
+**Proposal:** deploy DEUS to Cloudflare. Durable Objects (single-threaded actors with their own
+transactional storage) need a place in the language's ontology; the wasm kernel runs in a
+Worker; local `workerd` (through `wrangler`) and a temporary account test it.
+
+| Approach                                                                                                                                                                                                        | Strengths                                                                                                                                                | Weaknesses                                                                  |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| A. Compile DEUS to JavaScript and deploy it as an ordinary Worker                                                                                                                                               | No wasm; uses V8 directly                                                                                                                                | A second compiler; effects need a CPS or generator encoding in JS           |
+| B. The wasm kernel plus the image, with a JS shim; platform calls are abilities (`Storage`, `Http`, `Actor`) handled by the shim; **the kernel suspends at an async platform call and resumes with its result** | One kernel everywhere; the explicit CEK stack makes suspension free (no asyncify, no threads); effects in types show what touches storage or the network | The interpreter is slower than native JS; values cross the boundary as JSON |
+| C. A new `actor` declaration with its own semantics                                                                                                                                                             | Reads well                                                                                                                                               | New syntax and a new kind of definition before the semantics are proven     |
+
+**Choice: B, with the ontology as ordinary DEUS data and abilities, not new syntax.**
+
+- **Actors are values.** An actor is a record of handlers, e.g.
+  `Actor.mk (onFetch : Request -> {Storage, Http, Log} Response) (onAlarm : Unit -> {Storage} Unit)`,
+  named by IRI; the Durable Object class is derived from the IRI, and its code is the image of the
+  actor's hash, so a deploy is exactly the closure of what the actor uses.
+- **Platform calls are abilities.** `Storage` maps onto the Durable Object SQLite API (synchronous
+  in workerd, so it needs no suspension), `Http` onto `fetch`, `Actor.call` onto RPC to another
+  Durable Object by name, `Alarm` onto alarms. A function's row says whether it can touch them.
+- **Tests run in simulation first.** A simulated handler (as `Sim.run`, D32) runs many actors in
+  one process with seeded message ordering, so actor protocols are tested deterministically; a
+  `@[integration]` test runs them in local `workerd`.
+- **Suspension.** The wasm build for Workers (`wasm32-unknown-unknown`) exports `start` and
+  `resume`: when an operation is asynchronous the kernel returns the request to JS with its stack
+  intact, JS awaits it, and `resume` continues with the result.
+
+**Status.** Planned after the wasm kernel (D41), which is the piece it depends on.

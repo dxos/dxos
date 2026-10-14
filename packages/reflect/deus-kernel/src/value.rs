@@ -182,13 +182,18 @@ pub enum Value {
 }
 
 /// How a run fails: the three tiers below `Throw` (D14) plus an orderly exit.
-#[derive(Debug)]
 pub enum Fail {
     Defect(String),
     /// The step budget ran out; reported as a defect.
     Budget(String),
     Panic(String),
     Exit(i32),
+    /// An operation the embedder answers asynchronously; `Machine::resume` continues the run.
+    Suspend {
+        ability: String,
+        index: u32,
+        args: Vec<Value>,
+    },
 }
 
 pub fn defect<T>(message: impl Into<String>) -> Result<T, Fail> {

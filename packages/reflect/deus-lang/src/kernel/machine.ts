@@ -177,6 +177,9 @@ export type Compiler = { compile: (lam: Term) => JitFn | null };
 /** After this many deoptimizations a lambda stays on the machine. */
 const DEOPT_LIMIT = 8;
 
+/** The longest run of entries a lambda skips after deoptimizing. */
+const BACKOFF_LIMIT = 1 << 16;
+
 /** Whether an error thrown by compiled code makes the machine replay the call. */
 export const isDeopt = (err: unknown): boolean =>
   err === DEOPT || (err instanceof DeusDefect && !(err instanceof StepBudget)) || err instanceof RangeError;
@@ -250,6 +253,9 @@ export class Term {
   /** LAM: its compiled JavaScript once tried (null: it needs the machine), and how often it deoptimized. */
   jit: JitFn | null | undefined = undefined;
   deopts = 0;
+  /** LAM: entries still to skip after a deoptimization, and the current backoff window. */
+  skip = 0;
+  backoff = 0;
   /** LAM: the global it is the body of, or its index among a letrec's free variables, for self tail calls. */
   selfHash = '';
   selfIndex = -1;
@@ -777,6 +783,12 @@ export class Machine {
     if (!jit) {
       return DEOPTED;
     }
+    // Backoff after a deoptimization: the machine's replay of an entry must not re-enter
+    // compiled code for the same lambda, or nested rethrows replay each level again (2^depth).
+    if (lam.skip > 0) {
+      lam.skip--;
+      return DEOPTED;
+    }
     // A callback already known to need the machine would make this call deoptimize too.
     for (const arg of args) {
       if (arg instanceof Closure && arg.lam.jit === null) {
@@ -786,12 +798,16 @@ export class Machine {
     const mark = this.journal.length;
     this.jitDepth++;
     try {
-      return jit(fn.env, args);
+      const result = jit(fn.env, args);
+      lam.backoff >>= 1;
+      return result;
     } catch (err) {
       if (isDeopt(err)) {
         this.rollback(mark);
         this.charge(lam);
         this.charged = false;
+        lam.backoff = Math.min(lam.backoff * 2 || 1, BACKOFF_LIMIT);
+        lam.skip = lam.backoff;
         return DEOPTED;
       }
       throw err;

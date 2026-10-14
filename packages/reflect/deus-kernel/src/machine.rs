@@ -176,6 +176,11 @@ pub struct Machine {
     pub trace: Option<Vec<u32>>,
     pub profile: Option<(Vec<u32>, HashMap<u32, u64>)>,
     pub defect_trace: Vec<Rc<str>>,
+    /// The run in progress, kept while it is suspended on the embedder.
+    current: Option<Run>,
+    /// IRIs of the user types and abilities an image uses, by hash (its `(type …)` and
+    /// `(ability …)` forms), for embedders.
+    pub iris: HashMap<String, String>,
 }
 
 enum Quick {
@@ -240,14 +245,17 @@ impl Machine {
             trace: options.trace.then(Vec::new),
             profile: options.profile.then(|| (Vec::new(), HashMap::new())),
             defect_trace: Vec::new(),
+            current: None,
+            iris: HashMap::new(),
         }
     }
 
     /// Registers every `(def "hash" term)` form; other forms are ignored.
     pub fn load(&mut self, forms: &[Sexp]) -> Result<(), Fail> {
         for form in forms {
-            if let Sexp::List(items) = form {
-                if matches!(items.first(), Some(Sexp::Sym(head)) if &**head == "def") {
+            let Sexp::List(items) = form else { continue };
+            match items.first() {
+                Some(Sexp::Sym(head)) if &**head == "def" => {
                     let hash: Rc<str> = Rc::from(crate::text::string(&str_of(items.get(1))?));
                     if !self.global_index.contains_key(&hash) {
                         let form = items
@@ -264,6 +272,12 @@ impl Machine {
                         });
                     }
                 }
+                Some(Sexp::Sym(head)) if &**head == "ability" || &**head == "type" => {
+                    let hash = crate::text::string(&str_of(items.get(1))?);
+                    let iri = crate::text::string(&str_of(items.get(2))?);
+                    self.iris.insert(hash, iri);
+                }
+                _ => {}
             }
         }
         Ok(())
@@ -840,6 +854,13 @@ impl Machine {
             return Ok(false);
         }
         let name = self.symbols.name(ability).to_string();
+        if self.host.suspends() {
+            return Err(Fail::Suspend {
+                ability: name,
+                index,
+                args,
+            });
+        }
         run.value = crate::host::dispatch(self, &name, index, &args)?;
         Ok(true)
     }
@@ -1258,13 +1279,32 @@ impl Machine {
     }
 
     pub fn run(&mut self, start: TermId, env: Env) -> Result<Value, Fail> {
-        let mut run = Run {
+        self.current = Some(Run {
             stack: Vec::new(),
             node: start,
             env,
             value: unit(),
             evaluating: true,
             start,
+        });
+        self.drive()
+    }
+
+    /// Continues a suspended run with the embedder's answer to its pending operation.
+    pub fn resume(&mut self, value: Value) -> Result<Value, Fail> {
+        match &mut self.current {
+            Some(run) => {
+                run.value = value;
+                run.evaluating = false;
+            }
+            None => return panic("resume without a suspended run".into()),
+        }
+        self.drive()
+    }
+
+    fn drive(&mut self) -> Result<Value, Fail> {
+        let Some(mut run) = self.current.take() else {
+            return panic("no run to drive".into());
         };
         loop {
             match self.step(&mut run) {
@@ -1286,6 +1326,10 @@ impl Machine {
                         continue;
                     }
                     return Err(Fail::Defect(message));
+                }
+                Err(suspend @ Fail::Suspend { .. }) => {
+                    self.current = Some(run);
+                    return Err(suspend);
                 }
                 Err(other) => return Err(other),
             }

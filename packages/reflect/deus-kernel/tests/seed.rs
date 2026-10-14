@@ -76,3 +76,24 @@ fn defects_and_budgets_exit_with_the_kernel_codes() {
     assert_eq!(output.status.code(), Some(71));
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[test]
+fn runs_an_image_appended_to_its_executable() {
+    let dir = std::env::temp_dir().join(format!("deus-kernel-native-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let binary = dir.join("hello");
+    let mut bytes = std::fs::read(env!("CARGO_BIN_EXE_deus-kernel")).unwrap();
+    let image = "(def \"main\" (lam (app (op \"#IO\" 0 1) (text \"hello\")))) (main \"main\")";
+    bytes.extend_from_slice(image.as_bytes());
+    bytes.extend_from_slice(format!("{:020}DEUSIMG1", image.len()).as_bytes());
+    std::fs::write(&binary, bytes).unwrap();
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::set_permissions(&binary, std::fs::Permissions::from_mode(0o755)).unwrap();
+    }
+    let output = Command::new(&binary).output().unwrap();
+    assert_eq!(String::from_utf8_lossy(&output.stdout), "hello");
+    assert_eq!(output.status.code(), Some(0));
+    let _ = std::fs::remove_dir_all(&dir);
+}

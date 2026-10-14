@@ -19,6 +19,16 @@ target/release/deus-kernel compile ../deus-lang/deus --main Cli.main -o out.imag
 - `wasm32-wasip1`: `cargo build --release --target wasm32-wasip1`, then
   `node wasi/run.mjs target/wasm32-wasip1/release/deus-kernel.wasm …` (`scripts/wasm-seed.sh`
   checks it reproduces the seed). The 315 KB kernel is the same machine, with IO through WASI.
-- An image appended to the executable (`…image, u64 length, "DEUSIMG1"`) runs instead of the seed.
+- An image appended to the executable (`…image, 20-digit byte length, "DEUSIMG1"`) runs instead
+  of the seed: `deus build --native` makes standalone executables this way.
 
 Decision record: [D40](../deus-lang/docs/DECISIONS.md).
+
+## Embedding (Cloudflare Workers, browsers)
+
+`cargo build --release --target wasm32-unknown-unknown --lib` builds a 260 KB kernel with no
+imports. [`embed/kernel.mjs`](./embed/kernel.mjs) loads it and runs an entry; every operation the
+program leaves unhandled (`IO` included) comes back to JS as a request, the machine suspends with
+its stack intact, and `resume` continues with the answer, so asynchronous platform calls need no
+asyncify. Values cross as JSON, and user types and abilities by IRI: images carry
+`(type "hash" "iri")` and `(ability "hash" "iri")` forms. See P7 and D43.

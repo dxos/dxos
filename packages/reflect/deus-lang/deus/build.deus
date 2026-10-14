@@ -1,5 +1,6 @@
 /-
-  `deus build`: a standalone executable for a term (D38).
+  `deus build`: a standalone executable for a term (D38), or with `--native` a small one made
+  from the Rust kernel (D42).
 
   The executable is a Node single-executable application: the kernel, bundled into one script,
   plus the term's image as an asset. The tools are pinned by version and run through `npx`, so
@@ -50,5 +51,18 @@ def executable (image : Text) (out : Text) : {IO, Throw Failure} Unit :=
     tool "npx" (["--yes", postject, out, "NODE_SEA_BLOB", work ++ "/sea.blob", "--sentinel-fuse", fuse] ++ macho))
   let _ := if mac then tool "codesign" ["--sign", "-", out] else ""
   IO.remove work
+
+/--
+  Writes `out`: a copy of the Rust kernel with the image appended (D42), about 1 MB plus the
+  image. The kernel is built with cargo when it is missing; `$DEUS_KERNEL` names another one.
+-/
+def native (image : Text) (out : Text) : {IO, Throw Failure} Unit :=
+  let crate := require "DEUS_HOME" ++ "/../deus-kernel"
+  let kernel := Option.getOr (IO.getEnv "DEUS_KERNEL") (crate ++ "/target/release/deus-kernel")
+  let _ := if IO.exists kernel then ""
+    else Failure.context "building the Rust kernel" [] (fun _ => tool "cargo" ["build", "--release", "--quiet", "--manifest-path", crate ++ "/Cargo.toml"])
+  let _ := tool "cp" [kernel, out]
+  let digits := Int.toText (List.length (Text.utf8 image))
+  IO.appendFile out (image ++ Text.repeat (20 - Text.length digits) "0" ++ digits ++ "DEUSIMG1")
 
 end Build

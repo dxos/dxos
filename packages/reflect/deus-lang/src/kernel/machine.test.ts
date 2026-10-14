@@ -100,6 +100,21 @@ describe('kernel', () => {
     expect(stdout).toBe('51');
   });
 
+  test('a rethrow through many nested handlers costs linear, not exponential, replays', ({ expect }) => {
+    // Each level's handler rethrows; compiled code at every level deoptimizes on the way out.
+    const { stdout, code } = run(
+      `
+      (def "rethrow" (lam (handle (app (var 0) (con "#Unit" 0 0)) (on "E" 0 1 (app (op "E" 0 1) (var 1))))))
+      (def "nest" (lam (if (app (prim "eq") (var 0) (int 0))
+        (app (op "E" 0 1) (text "boom"))
+        (app (ref "rethrow") (lam (app (ref "nest") (app (prim "Int.sub") (var 1) (int 1))))))))
+      (def "main" (lam ${print('(handle (app (ref "nest") (int 30)) (on "E" 0 1 (var 1)))')}))
+      (main "main")`,
+      { machine: { maxSteps: 1_000_000 } },
+    );
+    expect([code, stdout]).toEqual([0, '"boom"']);
+  });
+
   test('a compiled self tail call that swaps its arguments', ({ expect }) => {
     const { stdout } = run(`
       (def "swap" (lam (lam (lam (if (app (prim "eq") (var 0) (int 0)) (app (con "#Pair" 0 2) (var 2) (var 1)) (app (ref "swap") (var 1) (var 2) (app (prim "Int.sub") (var 0) (int 1))))))))

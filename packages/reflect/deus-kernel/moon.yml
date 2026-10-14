@@ -34,9 +34,20 @@ tasks:
       - .cargo/config.toml
       - /packages/reflect/deus-lang/deus/**/*.deus
       - /packages/reflect/deus-lang/seed/deus.image
-  # What CI's `:test` sweep selects; the crate's tests are `cargo-test` and `wasm-test`.
+  embed-test:
+    command: bash -c 'cargo build --release --target wasm32-unknown-unknown --lib --quiet && node --test embed/kernel.test.mjs'
+    inputs:
+      - src/**/*.rs
+      - embed/*.mjs
+      - Cargo.toml
+      - Cargo.lock
+      - rust-toolchain.toml
+      - .cargo/config.toml
+      - /packages/reflect/deus-lang/deus/**/*.deus
+  # What CI's `:test` sweep selects; the crate's tests are `cargo-test`, `wasm-test` and `embed-test`.
   test:
     command: noop
     deps:
       - cargo-test
       - wasm-test
+      - embed-test

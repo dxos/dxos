@@ -27,6 +27,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 19  | 10-14 11:59 | 0m 52s         | `3052ae66`  | sort JIT imports                                                                            |
 | 20  | 10-14 12:03 | 3m 38s         | `6dd9c38d`  | work the agentic review; enforce the step budget under the JIT                              |
 | 21  | 10-14 12:15 | 11m 49s        | `a59e6eb3`  | deus-kernel: the DEUS kernel in Rust, byte-identical to the TypeScript one                  |
-| 22  | 10-14 12:28 | 13m 25s        | this commit | wasm kernel (WASI) self-compiles the seed byte-identically                                  |
+| 22  | 10-14 12:28 | 13m 26s        | `73d4429d`  | deus-kernel: wasm32-wasip1 build reproduces the seed under Node's WASI                      |
+| 23  | 10-14 13:05 | 36m 43s        | this commit | Embeddable kernel (suspend/resume), deus build --native, JIT backoff fix                    |
 
-Total from stage 1 to stage 22: 2h 45m.
+Total from stage 1 to stage 23: 3h 22m.

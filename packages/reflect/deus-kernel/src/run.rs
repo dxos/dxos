@@ -10,20 +10,24 @@ use crate::sexp::{read_all, Sexp};
 use crate::text::{string, text};
 use crate::value::{unit, Fail};
 
-/// Marks an image appended to the kernel's own executable (`deus build --native`).
+/// Marks an image appended to the kernel's own executable (`deus build --native`). The trailer
+/// is text, so DEUS code can write it: `…image, 20-digit decimal byte length, "DEUSIMG1"`.
 const TRAILER: &[u8; 8] = b"DEUSIMG1";
+const LENGTH_DIGITS: usize = 20;
 
-/// The image appended to this executable, if any: `…image bytes, u64 length (LE), TRAILER`.
+/// The image appended to this executable, if any.
 pub fn embedded_image() -> Option<String> {
     let path = std::env::current_exe().ok()?;
     let bytes = std::fs::read(path).ok()?;
     let len = bytes.len();
-    if len < 16 || &bytes[len - 8..] != TRAILER {
+    let tail = TRAILER.len() + LENGTH_DIGITS;
+    if len < tail || &bytes[len - TRAILER.len()..] != TRAILER {
         return None;
     }
-    let size = u64::from_le_bytes(bytes[len - 16..len - 8].try_into().ok()?) as usize;
-    let start = len.checked_sub(16 + size)?;
-    Some(String::from_utf8_lossy(&bytes[start..len - 16]).into_owned())
+    let digits = std::str::from_utf8(&bytes[len - tail..len - TRAILER.len()]).ok()?;
+    let size: usize = digits.trim_start_matches('0').parse().unwrap_or(0);
+    let start = (len - tail).checked_sub(size)?;
+    Some(String::from_utf8_lossy(&bytes[start..len - tail]).into_owned())
 }
 
 /// Runs an image; returns the process exit code (70 for a defect, 71 for a panic).
@@ -89,6 +93,12 @@ pub fn run_image(image: &str, host: Box<dyn Host>, options: &Options) -> i32 {
                     .eprint(&format!("recent definitions:\n  {}\n", recent.join("\n  ")));
             }
             70
+        }
+        Err(Fail::Suspend { ability, index, .. }) => {
+            machine
+                .host
+                .eprint(&format!("panic: unhandled {ability} operation {index}\n"));
+            71
         }
         Err(Fail::Panic(message)) => {
             machine.host.eprint(&format!("panic: {message}\n"));
