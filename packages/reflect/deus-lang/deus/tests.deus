@@ -23,6 +23,10 @@ test controlCharactersPrintAsHex :=
   Print.quoteText (Text.fromCodes [27, 127, 10]) == "\"\\u{1b}\\u{7f}\\n\"" &&
     tokenValues "\"\\u{1b}\"" == [Text.fromCode 27, ""]
 
+test astralEscapes :=
+  Text.fromCodes [128512] == "😀" && Text.length (Text.fromCodes [128512]) == 2 &&
+    tokenValues "\"\u{1F600}\"" == ["😀", ""]
+
 test lexerSymbols := tokenValues "x :: xs ++ [1] |> f" == ["x", "::", "xs", "++", "[", "1", "]", "|>", "f", ""]
 
 test lexerUnicode := tokenValues "fun x → x" == ["fun", "x", "->", "x", ""]

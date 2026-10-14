@@ -132,6 +132,10 @@ Nothing else breaks: declaration headers, list literals, one-argument applicatio
 string literals and doc comments keep their length. Lines past 100 columns are normal in an export (the
 checked-in `codebase/code/` has several hundred), and readers MUST accept lines of any length.
 
+A definition may call a term that no name binds any more (its name was removed or moved). The export
+names each such term `Unnamed.h<first 10 hex of its hash>` and exports it under that name, so every
+reference prints as a name the parser reads back ([D77](../DECISIONS.md)).
+
 ## tasks.sexp
 
 One `task` object per line, in the canonical S-expression form, sorted by task id. The form is the stored

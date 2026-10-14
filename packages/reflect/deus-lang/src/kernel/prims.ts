@@ -136,11 +136,22 @@ export const createPrims = (): Map<string, Prim> => {
   def('Text.trim', 1, ([s]) => text(s).trim());
   def('Text.sha256', 1, ([s]) => createHash('sha256').update(text(s), 'utf8').digest('hex'));
   def('Text.fromCodes', 1, ([codes]) => {
+    // Code units, except that a code above U+FFFF becomes its surrogate pair (D76).
+    const units: number[] = [];
+    for (const value of listTo(codes).map(int)) {
+      if (value < 0 || value > 0x10ffff) {
+        throw new DeusDefect(`Text.fromCodes: ${value} is not a code point`);
+      }
+      if (value > 0xffff) {
+        units.push(0xd800 + ((value - 0x10000) >> 10), 0xdc00 + ((value - 0x10000) & 0x3ff));
+      } else {
+        units.push(value);
+      }
+    }
     // Chunked because spreading a long list into one call overflows V8's argument limit.
-    const values = listTo(codes).map(int);
     let out = '';
-    for (let start = 0; start < values.length; start += 8192) {
-      out += String.fromCharCode(...values.slice(start, start + 8192));
+    for (let start = 0; start < units.length; start += 8192) {
+      out += String.fromCharCode(...units.slice(start, start + 8192));
     }
     return out;
   });

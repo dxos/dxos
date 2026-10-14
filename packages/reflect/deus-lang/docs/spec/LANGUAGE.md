@@ -86,8 +86,8 @@ Escapes in strings: `\n` (10), `\t` (9), `\r` (13), `\0` (0), `\u{h…}` (hex co
 character `c`, which stands for itself (`\"`, `\\`, `\'`). A character literal takes the same escapes
 except `\u{}`, and its content must be one UTF-16 code unit.
 
-Note: a `\u{…}` code above U+FFFF is truncated to its low 16 bits by the TypeScript kernel's
-`Text.fromCodes` (`"\u{1F600}"` gives U+F600). Write such characters literally.
+A `\u{…}` code above U+FFFF becomes its UTF-16 surrogate pair, so `"\u{1F600}"` is `"😀"`, of
+length 2 ([D76](../DECISIONS.md)).
 
 ### Symbols
 

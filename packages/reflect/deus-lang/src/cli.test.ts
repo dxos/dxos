@@ -741,6 +741,25 @@ describe('deus CLI', () => {
       JSON.parse(deus('ls', '--json', ...args).stdout).find((row: { name: string }) => row.name === 'area').hash;
     expect(hashOf(restored)).toBe(hashOf(c));
 
+    // A definition whose callee lost its name still exports as source the parser reads (D77).
+    const orphan = ['--codebase', join(scratch, 'orphan')];
+    deus('init', '--empty', ...orphan);
+    deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...orphan);
+    deus(
+      'add',
+      file('orphan.deus', 'def helper (x : Int) : Int := x + 1\n\ndef user (x : Int) : Int := helper x * 2\n'),
+      ...orphan,
+    );
+    deus('rm', 'helper', ...orphan);
+    const orphanExport = join(scratch, 'orphan-export');
+    deus('export', orphanExport, ...orphan);
+    const orphanRestored = ['--codebase', join(scratch, 'orphan-restored')];
+    deus('init', '--empty', ...orphanRestored);
+    expect(deus('add', join(orphanExport, 'code'), ...orphanRestored).code).toBe(0);
+    const userHash = (args: string[]) =>
+      JSON.parse(deus('ls', '--json', ...args).stdout).find((row: { name: string }) => row.name === 'user').hash;
+    expect(userHash(orphanRestored)).toBe(userHash(orphan));
+
     // The history comes back as a record under the restore's own changes.
     expect(deus('history', 'import', join(first, 'history.sexp'), ...restored).code).toBe(0);
     const messages = (args: string[]) =>

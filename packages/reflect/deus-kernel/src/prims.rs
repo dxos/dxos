@@ -230,7 +230,21 @@ prims! {
         Ok(Value::Text(text::text(&digest.iter().map(|byte| format!("{byte:02x}")).collect::<String>())))
     };
     "Text.fromCodes", 1, |m, a| {
-        let units: Vec<u16> = list_to(&a[0]).iter().map(|code| int(m, code).map(|value| value as u16)).collect::<Result<_, _>>()?;
+        // Code units, except that a code above U+FFFF becomes its surrogate pair (D76).
+        let mut units: Vec<u16> = Vec::new();
+        for code in list_to(&a[0]).iter() {
+            let value = int(m, code)?;
+            if !(0..=0x10ffff).contains(&value) {
+                return defect(format!("Text.fromCodes: {value} is not a code point"));
+            }
+            if value > 0xffff {
+                let offset = (value - 0x10000) as u32;
+                units.push(0xd800 + (offset >> 10) as u16);
+                units.push(0xdc00 + (offset & 0x3ff) as u16);
+            } else {
+                units.push(value as u16);
+            }
+        }
         Ok(Value::Text(from_units(units)))
     };
     "Text.utf8", 1, |m, a| Ok(list_from(string(&txt(m, &a[0])?).bytes().map(|byte| Value::Int(byte as i32)).collect()));
