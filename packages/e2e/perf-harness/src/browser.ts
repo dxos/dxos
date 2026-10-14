@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Browser, type BrowserContext, chromium } from '@playwright/test';
+import { type Browser, type BrowserContext, type Page, chromium } from '@playwright/test';
 
 import { Cdp, browserEndpoint } from './cdp.ts';
 import { PERF_HTTP2, partitionAllow } from './conditions.ts';
@@ -139,4 +139,40 @@ const resolveBrowserPid = async (): Promise<number> => {
   }
   // Zero reads as "no RSS measured" downstream rather than silently attributing the whole machine.
   return 0;
+};
+
+/**
+ * PostHog captures nothing from a browser it takes for a bot: an automated `navigator.webdriver`, or
+ * "HeadlessChrome" in the user agent or its brands. A `--telemetry` run presents as the browser a
+ * person runs, so analytics, exception capture and replay behave as shipped; the sink is its only
+ * destination. Call before the first navigation.
+ */
+export const presentAsPersonsBrowser = async (context: BrowserContext, page: Page): Promise<void> => {
+  await context.addInitScript(() => {
+    Object.defineProperty(Navigator.prototype, 'webdriver', { get: () => false });
+  });
+  // The user agent override goes through CDP, which only Chromium speaks.
+  const session = await context.newCDPSession(page).catch(() => undefined);
+  if (!session) {
+    return;
+  }
+  const { product, userAgent } = await session.send('Browser.getVersion');
+  const fullVersion = product.split('/')[1] ?? '';
+  const major = fullVersion.split('.')[0] ?? '';
+  await session.send('Emulation.setUserAgentOverride', {
+    userAgent: userAgent.replace('HeadlessChrome', 'Chrome'),
+    userAgentMetadata: {
+      brands: [
+        { brand: 'Google Chrome', version: major },
+        { brand: 'Chromium', version: major },
+        { brand: 'Not=A?Brand', version: '24' },
+      ],
+      fullVersion,
+      platform: 'macOS',
+      platformVersion: '',
+      architecture: 'arm',
+      model: '',
+      mobile: false,
+    },
+  });
 };

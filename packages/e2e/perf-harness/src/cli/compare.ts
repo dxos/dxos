@@ -68,6 +68,7 @@ const COMPARABILITY = [
   'cpuThrottle',
   'offline',
   'edge',
+  'telemetry',
 ] as const;
 
 /** Where two arms' rows disagree on what they measured under, as `field base vs candidate`. */

@@ -26,6 +26,7 @@ import {
   launchInstrumentedContext,
   parseCounters,
   partitionAllow,
+  presentAsPersonsBrowser,
   publishPosthogBatch,
   startProfiling,
   trackNetwork,
@@ -158,6 +159,9 @@ const runScenario = async (scenario: Scenario, mode: Mode, iteration: number): P
       await installReactProbe(page);
     }
 
+    if (comparability.telemetry) {
+      await presentAsPersonsBrowser(context, page);
+    }
     await scenario.prepare?.(page);
     await runner.stage('boot', async () => {
       await page.goto(`${BASE_URL}/?profiler=1&model=scripted`, { timeout: 120_000 });

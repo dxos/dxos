@@ -22,7 +22,7 @@ export const partitionAllow = (): ReadonlyArray<string> | undefined =>
 /** The conditions `pnpm perf` hands a flow through its environment, as the fields every row records. */
 export const flowConditions = (): Pick<
   Comparability,
-  'http2' | 'serviceWorker' | 'cpuThrottle' | 'offline' | 'edge'
+  'http2' | 'serviceWorker' | 'cpuThrottle' | 'offline' | 'edge' | 'telemetry'
 > => {
   const cpuThrottle = Number.parseFloat(process.env.DX_PERF_CPU_THROTTLE ?? '');
   return {
@@ -31,5 +31,6 @@ export const flowConditions = (): Pick<
     ...(cpuThrottle > 1 ? { cpuThrottle } : {}),
     ...(PERF_OFFLINE ? { offline: true } : {}),
     ...(PERF_EDGE_HOST ? { edge: PERF_EDGE_HOST } : {}),
+    ...(process.env.DX_PERF_TELEMETRY ? { telemetry: true } : {}),
   };
 };

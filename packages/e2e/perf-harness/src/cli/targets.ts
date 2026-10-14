@@ -57,7 +57,12 @@ export type Conditions = {
   offline?: boolean;
   /** Reach a non-production EDGE and nothing else off the machine; the bundle points at it. */
   edge?: string;
+  /** The port of a loopback telemetry sink the bundle's PostHog and OTel export point at. */
+  telemetry?: number;
 };
+
+/** Not a real project's key: whatever the SDK sends with it goes only to the loopback sink. */
+const SINK_POSTHOG_KEY = 'phc_perf_loopback_sink';
 
 /** Production EDGE, which a partitioned run may never reach whatever `--edge` says. */
 const PRODUCTION_EDGE_HOST = 'dxos.network';
@@ -133,6 +138,7 @@ export const conditionsEnv = ({
   cpuThrottle,
   offline,
   edge,
+  telemetry,
 }: Conditions): Record<string, string> => ({
   ...(until ? { DX_PERF_UNTIL: until } : {}),
   ...(http2 ? { DX_PERF_HTTP2: '1' } : {}),
@@ -140,6 +146,7 @@ export const conditionsEnv = ({
   ...(cpuThrottle && cpuThrottle > 1 ? { DX_PERF_CPU_THROTTLE: String(cpuThrottle) } : {}),
   ...(offline ? { DX_PERF_OFFLINE: '1' } : {}),
   ...(edge ? { DX_PERF_EDGE: edge } : {}),
+  ...(telemetry ? { DX_PERF_TELEMETRY: '1' } : {}),
 });
 
 /** A target measured under `conditions`: the build, the server and the flow all follow them. */
@@ -154,9 +161,15 @@ export const withConditions = (target: Target, conditions: Conditions = {}): Tar
   if (edgeHost && conditions.offline) {
     throw new HarnessError('--offline and --edge are exclusive: one partition at a time');
   }
-  const variant = [conditions.serviceWorker && 'sw', conditions.offline && 'offline', edgeHost && `edge-${edgeHost}`]
+  const variant = [
+    conditions.serviceWorker && 'sw',
+    conditions.offline && 'offline',
+    edgeHost && `edge-${edgeHost}`,
+    conditions.telemetry && 'telemetry',
+  ]
     .filter(Boolean)
     .join('-');
+  const sink = conditions.telemetry ? `http://127.0.0.1:${conditions.telemetry}` : undefined;
   return {
     ...target,
     conditions,
@@ -168,6 +181,14 @@ export const withConditions = (target: Target, conditions: Conditions = {}): Tar
         ...(conditions.offline ? { DX_EDGE_BASE_URL: OFFLINE_EDGE_URL } : {}),
         ...(conditions.edge
           ? { DX_EDGE_BASE_URL: conditions.edge, DX_HUB_URL: new URL('hub/', conditions.edge).href }
+          : {}),
+        ...(sink
+          ? {
+              DX_POSTHOG_API_KEY: SINK_POSTHOG_KEY,
+              DX_POSTHOG_API_HOST: sink,
+              DX_OTEL_ENDPOINT: `${sink}/api/otel`,
+              DX_FEEDBACK_LOGS_ENDPOINT: `${sink}/api/feedback-logs`,
+            }
           : {}),
       },
       ...(variant ? { variant } : {}),
@@ -184,6 +205,7 @@ export const describeConditions = ({
   cpuThrottle,
   offline,
   edge,
+  telemetry,
 }: Conditions): string | undefined => {
   const parts = [
     until && `until ${until}`,
@@ -192,6 +214,7 @@ export const describeConditions = ({
     cpuThrottle && cpuThrottle > 1 && `CPU ${cpuThrottle}x slower`,
     offline && 'offline',
     edge && `EDGE ${edge} only`,
+    telemetry && `telemetry to a loopback sink on :${telemetry}`,
   ].filter((part): part is string => Boolean(part));
   return parts.length > 0 ? parts.join(', ') : undefined;
 };

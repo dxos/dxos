@@ -542,6 +542,7 @@ export const toPosthogEvent = (row: StageRow, timestamp?: string): PosthogEvent 
       ...(row.comparability.cpuThrottle ? { cpuThrottle: row.comparability.cpuThrottle } : {}),
       ...(row.comparability.offline ? { offline: true } : {}),
       ...(row.comparability.edge ? { edge: row.comparability.edge } : {}),
+      ...(row.comparability.telemetry ? { telemetry: true } : {}),
     },
   };
 };

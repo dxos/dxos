@@ -19,6 +19,7 @@ import {
 } from 'node:fs';
 import { request as httpRequest } from 'node:http';
 import { request as httpsRequest } from 'node:https';
+import { createRequire } from 'node:module';
 import net from 'node:net';
 import path from 'node:path';
 import { setTimeout as sleep } from 'node:timers/promises';
@@ -26,6 +27,7 @@ import { setTimeout as sleep } from 'node:timers/promises';
 import { reportDir } from '../report.ts';
 import { readStageEvents } from '../score/run.ts';
 import { type StageEvent } from '../score/stages.ts';
+import { type TelemetryTraffic, startTelemetrySink } from '../telemetry-sink.ts';
 import { type Target } from './targets.ts';
 import { HarnessError, type Ports, errorCode, git, perfDir, trackedChanges } from './workspace.ts';
 
@@ -97,7 +99,10 @@ export const pruneArms = (root: string, keep: number, holding: ReadonlyArray<str
 
 const buildBundle = async (root: string, target: Target, logFile: string): Promise<void> => {
   const index = path.join(root, target.appDir, target.build.outDir, 'index.html');
-  const env = { ...process.env, ...target.build.env };
+  // The config plugin bakes every `DX_` variable into the bundle; the flow's own settings stay out of it.
+  const env = Object.fromEntries(
+    Object.entries({ ...process.env, ...target.build.env }).filter(([key]) => !key.startsWith('DX_PERF_')),
+  );
   const started = Date.now();
   let code = await runLogged('moon', ['run', target.build.moonTarget], { cwd: root, env, logFile });
   // A task with no declared outputs skips on a cache hit and restores nothing, leaving whichever tree built last.
@@ -249,7 +254,20 @@ const ensureCertificate = (root: string): void => {
   );
 };
 
-export type Server = { stop: () => Promise<void> };
+export type Server = {
+  stop: () => Promise<void>;
+  /** Set under `--telemetry`: what the app sent the loopback sink. */
+  telemetry?: () => TelemetryTraffic;
+};
+
+/** posthog-js's `dist`, whose extensions the sink serves; resolved from the package that depends on it. */
+const posthogAssets = (root: string): string =>
+  path.join(
+    path.dirname(
+      createRequire(path.join(root, 'packages/sdk/observability/package.json')).resolve('posthog-js/package.json'),
+    ),
+    'dist',
+  );
 
 export type ServeOptions = { root: string; target: Target; dir: string; port: number; logFile: string };
 
@@ -262,6 +280,9 @@ export const serveArm = async ({ root, target, dir, port, logFile }: ServeOption
   if (https) {
     ensureCertificate(root);
   }
+  const sink = target.conditions.telemetry
+    ? await startTelemetrySink({ port: target.conditions.telemetry, posthogAssets: posthogAssets(root) })
+    : undefined;
   mkdirSync(path.dirname(logFile), { recursive: true });
   const log = openSync(logFile, 'a');
   const child = spawn(
@@ -296,6 +317,7 @@ export const serveArm = async ({ root, target, dir, port, logFile }: ServeOption
       }
     }
     await exit;
+    await sink?.close();
     while (await portListening(port)) {
       await sleep(250);
     }
@@ -309,7 +331,7 @@ export const serveArm = async ({ root, target, dir, port, logFile }: ServeOption
     }
     await sleep(500);
   }
-  return { stop };
+  return { stop, ...(sink ? { telemetry: sink.traffic } : {}) };
 };
 
 export type FlowResult = { exitCode: number; seconds: number; events: StageEvent[]; dir: string };

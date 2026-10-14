@@ -16,7 +16,7 @@ import { scenarioCheck, scenarioNew } from './scenario.ts';
 import { installInterruptHandlers } from './session.ts';
 import { expand, summarize } from './summarize.ts';
 import { type Conditions } from './targets.ts';
-import { HarnessError, errorCode, workspaceRoot } from './workspace.ts';
+import { HarnessError, derivePorts, errorCode, workspaceRoot } from './workspace.ts';
 
 const HELP = `perf: build, serve and measure the app, and say whether a change helped.
 
@@ -73,6 +73,8 @@ conditions (run, compare, scenario check; every arm shares them, and rows record
                           and logs it, and the bundle's EDGE URL is a closed loopback port
   --edge <url>            the same partition, except TLS to this non-production EDGE, which the
                           bundle points at; production EDGE is refused
+  --telemetry             PostHog (events, exceptions, session replay) and OTel export on, as shipped,
+                          delivered to a loopback sink that counts and drops them (a separate bundle)
 
 compare exits 0 improved, 1 regressed, 2 no change, 3 inconclusive, 4 could not measure.
 HEAD must be committed: each attempt is a commit, so the ledger can name what was measured.
@@ -127,6 +129,7 @@ const main = async (): Promise<number> => {
       'cpu-throttle': { type: 'string' },
       'offline': { type: 'boolean', default: false },
       'edge': { type: 'string' },
+      'telemetry': { type: 'boolean', default: false },
       'help': { type: 'boolean', short: 'h', default: false },
     },
   });
@@ -140,6 +143,7 @@ const main = async (): Promise<number> => {
     ...(cpuThrottle && cpuThrottle > 1 ? { cpuThrottle } : {}),
     ...(values.offline ? { offline: true } : {}),
     ...(values.edge ? { edge: values.edge } : {}),
+    ...(values.telemetry ? { telemetry: derivePorts(workspaceRoot()).telemetry } : {}),
   };
   const common = {
     target: values.target,

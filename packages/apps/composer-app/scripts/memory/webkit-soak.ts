@@ -8,21 +8,24 @@
  * at the end of every stage.
  *
  * Usage: node scripts/memory/webkit-soak.ts --archive <file.dxprofile> --dist <offline bundle> [--port 4497]
+ *        [--telemetry <sink port>]
  *
  * `--dist` must be an `--offline` build (`.perf/arms/composer-offline-*`), whose EDGE URL is a closed
  * loopback port; any other is refused. WebKit has no host-resolver rules, so every stage also checks
- * the WebKit processes for sockets to anything but loopback, and the run fails on one.
+ * the WebKit processes for sockets to anything but loopback, and the run fails on one. With
+ * `--telemetry`, the bundle must be a `--telemetry` build for that port; the sink runs alongside.
  */
 
 import { webkit } from '@playwright/test';
 import { execFileSync, spawn } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { parseArgs } from 'node:util';
 
-import { insidePartition, startPartitionProxy } from '@dxos/perf-harness';
+import { insidePartition, presentAsPersonsBrowser, startPartitionProxy, startTelemetrySink } from '@dxos/perf-harness';
 
 import { waitForReady } from '../../src/playwright/perf/page.ts';
 import { importProfileArchive, soakStages } from '../../src/playwright/scenarios/memory-soak.ts';
@@ -48,6 +51,7 @@ const { values } = parseArgs({
     archive: { type: 'string' },
     dist: { type: 'string' },
     port: { type: 'string', default: '4497' },
+    telemetry: { type: 'string' },
   },
 });
 if (!values.archive || !values.dist) {
@@ -58,17 +62,20 @@ const dist = path.resolve(values.dist);
 const port = Number(values.port);
 const origin = `http://127.0.0.1:${port}`;
 
-const offlineBuild = (() => {
+const bundleMentions = (text: string): boolean => {
   try {
-    return (
-      execFileSync('grep', ['-rlF', OFFLINE_EDGE_URL, path.join(dist, 'assets')], { encoding: 'utf8' }).trim() !== ''
-    );
+    return execFileSync('grep', ['-rlF', text, path.join(dist, 'assets')], { encoding: 'utf8' }).trim() !== '';
   } catch {
     return false;
   }
-})();
+};
+const offlineBuild = bundleMentions(OFFLINE_EDGE_URL);
 if (!offlineBuild) {
   throw new Error(`${dist} is not an --offline build: its EDGE URL is not ${OFFLINE_EDGE_URL}`);
+}
+const telemetryPort = values.telemetry ? Number(values.telemetry) : undefined;
+if (telemetryPort && !bundleMentions(`http://127.0.0.1:${telemetryPort}`)) {
+  throw new Error(`${dist} is not a --telemetry build for port ${telemetryPort}`);
 }
 
 /** Processes of Playwright's WebKit build: the UI, networking, GPU and content processes. */
@@ -146,6 +153,19 @@ const main = async (): Promise<number> => {
     { cwd: APP_DIR, detached: true, stdio: 'ignore' },
   );
   const proxy = await startPartitionProxy();
+  const sink = telemetryPort
+    ? await startTelemetrySink({
+        port: telemetryPort,
+        posthogAssets: path.join(
+          path.dirname(
+            createRequire(path.join(WORKSPACE_ROOT, 'packages/sdk/observability/package.json')).resolve(
+              'posthog-js/package.json',
+            ),
+          ),
+          'dist',
+        ),
+      })
+    : undefined;
   const before = new Set(webkitPids().keys());
   const readings: StageReading[] = [];
   const offsite: string[] = [];
@@ -172,6 +192,9 @@ const main = async (): Promise<number> => {
         }
       });
       const page = context.pages()[0] ?? (await context.newPage());
+      if (sink) {
+        await presentAsPersonsBrowser(context, page);
+      }
 
       const stage = async (id: string, body: () => Promise<void>) => {
         const started = Date.now();
@@ -212,12 +235,18 @@ const main = async (): Promise<number> => {
     writeFileSync(
       path.join(outDir, 'report.json'),
       JSON.stringify(
-        { engine: 'webkit', readings, partition: { denied: proxy.denied(), tunnelled: proxy.tunnelled(), offsite } },
+        {
+          engine: 'webkit',
+          readings,
+          partition: { denied: proxy.denied(), tunnelled: proxy.tunnelled(), offsite },
+          ...(sink ? { telemetry: sink.traffic() } : {}),
+        },
         null,
         2,
       ),
     );
     await proxy.close();
+    await sink?.close();
     if (preview.pid !== undefined) {
       try {
         process.kill(-preview.pid, 'SIGTERM');
@@ -231,6 +260,12 @@ const main = async (): Promise<number> => {
 
   process.stdout.write(`report: ${path.relative(WORKSPACE_ROOT, outDir)}/report.json\n`);
   process.stdout.write(`partition: ${proxy.denied().length} refused, ${offsite.length} responses from outside\n`);
+  if (sink) {
+    const traffic = Object.entries(sink.traffic()).sort(([, left], [, right]) => right.bytes - left.bytes);
+    process.stdout.write(
+      `telemetry sent: ${traffic.map(([endpoint, { requests, bytes }]) => `${endpoint} ${requests}x ${mib(bytes)}`).join(', ')}\n`,
+    );
+  }
   return offsite.length > 0 ? 1 : 0;
 };
 

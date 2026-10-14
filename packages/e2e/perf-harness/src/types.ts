@@ -67,6 +67,8 @@ export type Comparability = {
   offline?: boolean;
   /** The one non-production EDGE host a partitioned browser could reach. */
   edge?: string;
+  /** PostHog (events, exceptions, replay) and OTel export on, delivered to a loopback sink. */
+  telemetry?: boolean;
 };
 
 /** A CDP target the harness measures. Shared workers matter most: ECHO and automerge live there. */
