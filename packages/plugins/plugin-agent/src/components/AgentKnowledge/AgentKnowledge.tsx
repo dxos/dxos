@@ -13,6 +13,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Status from '@dxos/react-ui/Status';
 import * as Tabs from '@dxos/react-ui/Tabs';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import * as Typography from '@dxos/react-ui/Typography';
@@ -160,11 +161,9 @@ const AgentKnowledgeRoot = ({
 
 AgentKnowledgeRoot.displayName = 'AgentKnowledge.Root';
 
-const Status = ({ children }: PropsWithChildren) => (
+const StatusBody = ({ children }: PropsWithChildren) => (
   <Panel.Body>
-    <Layout.Flex center classNames='p-2 text-fg-muted' role='status'>
-      {children}
-    </Layout.Flex>
+    <Status.Empty>{children}</Status.Empty>
   </Panel.Body>
 );
 
@@ -206,7 +205,7 @@ const AgentKnowledgeMemories = ({ memories, now }: AgentKnowledgeMemoriesProps) 
   }
 
   return memories.length === 0 || status ? (
-    <Status>{status ?? t('agent-knowledge-memories-empty.message')}</Status>
+    <StatusBody>{status ?? t('agent-knowledge-memories-empty.message')}</StatusBody>
   ) : (
     <Panel.Body asChild>
       <ScrollArea.Root orientation='vertical'>
@@ -275,7 +274,7 @@ const AgentKnowledgeFacts = ({ facts, now }: AgentKnowledgeFactsProps) => {
   }
 
   return facts.length === 0 || status ? (
-    <Status>{status ?? t('agent-knowledge-facts-empty.message')}</Status>
+    <StatusBody>{status ?? t('agent-knowledge-facts-empty.message')}</StatusBody>
   ) : (
     <Panel.Body asChild>
       <ScrollArea.Root orientation='vertical'>
@@ -353,7 +352,7 @@ const AgentKnowledgeEntities = ({ cards }: AgentKnowledgeEntitiesProps) => {
   }
 
   return cards.length === 0 || status ? (
-    <Status>{status ?? t('agent-knowledge-entities-empty.message')}</Status>
+    <StatusBody>{status ?? t('agent-knowledge-entities-empty.message')}</StatusBody>
   ) : (
     <Panel.Body asChild>
       <EntityBrowser cards={cards} hues={ENTITY_HUES} />
@@ -481,9 +480,7 @@ const AgentKnowledgeGoals = ({ goals }: AgentKnowledgeGoalsProps) => {
 
   return goals.length === 0 ? (
     <Panel.Body>
-      <Layout.Flex center classNames='p-2 text-fg-muted' role='status'>
-        {t('agent-knowledge-goals-empty.message')}
-      </Layout.Flex>
+      <Status.Empty>{t('agent-knowledge-goals-empty.message')}</Status.Empty>
     </Panel.Body>
   ) : (
     <Panel.Body asChild>
@@ -584,9 +581,7 @@ const AgentKnowledgeGraph = ({ nodes, edges }: AgentKnowledgeGraphProps) => {
 
   return nodes.length === 0 ? (
     <Panel.Body>
-      <Layout.Flex center classNames='p-2 text-fg-muted' role='status'>
-        {t('agent-knowledge-graph-empty.message')}
-      </Layout.Flex>
+      <Status.Empty>{t('agent-knowledge-graph-empty.message')}</Status.Empty>
     </Panel.Body>
   ) : (
     <Panel.Body asChild>

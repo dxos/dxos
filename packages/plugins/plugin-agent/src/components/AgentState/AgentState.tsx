@@ -9,6 +9,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Status from '@dxos/react-ui/Status';
 import * as Tabs from '@dxos/react-ui/Tabs';
 import * as Tag from '@dxos/react-ui/Tag';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
@@ -266,11 +267,7 @@ const AgentStateConversations = ({ channels }: AgentStateConversationsProps) => 
   const { t } = Hooks.useTranslation(meta.profile.key);
   return (
     <AgentStateSection view='conversations' label={t('agent-state-conversations.heading')}>
-      {channels.length === 0 && (
-        <Layout.Flex center classNames='p-2 text-fg-muted' role='status'>
-          {t('agent-state-conversations-empty.message')}
-        </Layout.Flex>
-      )}
+      {channels.length === 0 && <Status.Empty>{t('agent-state-conversations-empty.message')}</Status.Empty>}
       <Listbox.Root
         items={channels.map((channel) => ({
           value: channel.id,
