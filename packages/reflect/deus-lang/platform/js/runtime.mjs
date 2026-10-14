@@ -873,6 +873,8 @@ export const js = {
   object: (pairs) => Object.fromEntries(pairs),
   array: (items) => items,
   identity: (value) => value,
+  /** One identity per `Js` conversion, so each binding has its own path and so its own hash and codec. */
+  as: Object.fromEntries(['text', 'int', 'bool', 'list', 'fn0', 'fn1', 'fn', 'fn2', 'toText', 'toInt', 'toBool', 'toList', 'toOption', 'wrap', 'unwrap'].map((name) => [name, (value) => value])),
   isNull: (value) => value === null || value === undefined,
   typeOf: (value) => (value === null ? 'null' : Array.isArray(value) ? 'array' : typeof value),
   stringify: (value) => JSON.stringify(value) ?? 'undefined',

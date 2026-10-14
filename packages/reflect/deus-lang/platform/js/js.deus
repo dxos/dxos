@@ -2,7 +2,9 @@
   JavaScript interop for the js target (D97, docs/spec/JS.mdl#foreign-imports).
 
   A binding is a definition whose body is `Js.import "<module>" "<path>"` and whose signature
-  gives its type; values cross through codecs chosen from that type:
+  gives its type; values cross through codecs chosen from that type. The hash of a definition is
+  its body's, so two bindings of one module and path are one definition with one type: the
+  conversions below each name their own path (`js.as.<name>`) for that reason.
 
     def React.useState : a -> (a, a -> Unit) := Js.import "react" "useState"
 
@@ -22,42 +24,45 @@ namespace Js
 -/
 def import (module : Text) (path : Text) : a := defect ("Js.import " ++ module ++ " " ++ path ++ ": JavaScript imports run only on the js target")
 
-def text : Text -> Js := import "deus:runtime" "js.identity"
+def text : Text -> Js := import "deus:runtime" "js.as.text"
 
-def int : Int -> Js := import "deus:runtime" "js.identity"
+def int : Int -> Js := import "deus:runtime" "js.as.int"
 
-def bool : Bool -> Js := import "deus:runtime" "js.identity"
+def bool : Bool -> Js := import "deus:runtime" "js.as.bool"
 
-def list : List Js -> Js := import "deus:runtime" "js.identity"
+def list : List Js -> Js := import "deus:runtime" "js.as.list"
 
 /-- A JavaScript function of no arguments that runs `f ()`. -/
-def fn0 : (Unit -> Unit) -> Js := import "deus:runtime" "js.identity"
+def fn0 : (Unit -> Unit) -> Js := import "deus:runtime" "js.as.fn0"
 
 /-- A JavaScript function of one argument. -/
-def fn1 : (Js -> Unit) -> Js := import "deus:runtime" "js.identity"
+def fn1 : (Js -> Unit) -> Js := import "deus:runtime" "js.as.fn1"
 
 /-- A JavaScript function of one argument that returns a value. -/
-def fn : (Js -> Js) -> Js := import "deus:runtime" "js.identity"
+def fn : (Js -> Js) -> Js := import "deus:runtime" "js.as.fn"
+
+/-- A JavaScript function of two arguments that returns a value. -/
+def fn2 : (Js -> Js -> Js) -> Js := import "deus:runtime" "js.as.fn2"
 
 /-- `{ key: value, … }`. -/
 def obj : List (Text, Js) -> Js := import "deus:runtime" "js.object"
 
-def toText : Js -> Text := import "deus:runtime" "js.identity"
+def toText : Js -> Text := import "deus:runtime" "js.as.toText"
 
-def toInt : Js -> Int := import "deus:runtime" "js.identity"
+def toInt : Js -> Int := import "deus:runtime" "js.as.toInt"
 
-def toBool : Js -> Bool := import "deus:runtime" "js.identity"
+def toBool : Js -> Bool := import "deus:runtime" "js.as.toBool"
 
-def toList : Js -> List Js := import "deus:runtime" "js.identity"
+def toList : Js -> List Js := import "deus:runtime" "js.as.toList"
 
 /-- `none` for `null` and `undefined`. -/
-def toOption : Js -> Option Js := import "deus:runtime" "js.identity"
+def toOption : Js -> Option Js := import "deus:runtime" "js.as.toOption"
 
 /-- A DEUS value carried through JavaScript untouched, for code that hands it back. -/
-def wrap : a -> Js := import "deus:runtime" "js.identity"
+def wrap : a -> Js := import "deus:runtime" "js.as.wrap"
 
 /-- The DEUS value `wrap` carried; the caller vouches for its type. -/
-def unwrap : Js -> a := import "deus:runtime" "js.identity"
+def unwrap : Js -> a := import "deus:runtime" "js.as.unwrap"
 
 def undefined : Js := import "deus:runtime" "js.undefined"
 
