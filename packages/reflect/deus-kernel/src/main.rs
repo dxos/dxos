@@ -40,7 +40,28 @@ fn options() -> Options {
     }
 }
 
+/// The toolchain sources this build was made next to, which `deus build` and `deus explore` read.
+const HOME_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../deus-lang");
+
+/// A native `deus` runs without `bin/deus.mjs`, which is what sets these for the TypeScript kernel.
+fn default_environment() {
+    if std::env::var_os("DEUS_HOME").is_none() {
+        let home = normalize(HOME_PATH);
+        if std::path::Path::new(&home).is_dir() {
+            std::env::set_var("DEUS_HOME", home);
+        }
+    }
+    if std::env::var_os("DEUS_NODE").is_none() {
+        std::env::set_var("DEUS_NODE", "node");
+    }
+    // DEUS code has no isatty; this tells the CLI it may colour its output.
+    if std::env::var_os("DEUS_TTY").is_none() && std::io::IsTerminal::is_terminal(&std::io::stdout()) {
+        std::env::set_var("DEUS_TTY", "1");
+    }
+}
+
 fn main() {
+    default_environment();
     let args: Vec<String> = std::env::args().skip(1).collect();
     let image = match run::embedded_image() {
         #[cfg(not(target_arch = "wasm32"))]

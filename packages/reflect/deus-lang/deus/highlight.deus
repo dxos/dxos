@@ -1,0 +1,75 @@
+/-
+  Syntax highlighting of printed source, shared by the explorer (HTML) and the CLI (ANSI colours
+  on a terminal). Source splits into runs of one kind: kw(keyword), str(ing), cm (comment),
+  ty(pe or other capitalized name) and plain text.
+-/
+
+namespace Highlight
+
+def keywords : Map Text Unit := Set.fromList ["def", "theorem", "test", "inductive", "structure", "ability", "namespace", "end", "match", "with", "fun", "let", "rec", "if", "then", "else", "handle", "return", "by", "where", "prim", "sorry"]
+
+def isWordChar (c : Int) : Bool := Text.isAlpha c || Text.isDigit c || c == '_' || c == '.' || c == '?'
+
+/-- The source as (kind, text) runs, in order. -/
+def runs (source : Text) : List (Text, Text) :=
+  let n := Text.length source
+  let rec scan i acc :=
+    if i >= n then List.reverse acc
+    else
+      let c := Text.code source i
+      if c == '"' then
+        let rec close j := if j >= n then n else if Text.code source j == '\\' then close (j + 2) else if Text.code source j == '"' then j + 1 else close (j + 1)
+        let j := close (i + 1)
+        scan j (("str", Text.slice source i j) :: acc)
+      else if c == '/' && i + 1 < n && Text.code source (i + 1) == '-' then
+        let stop := Text.indexOf source "-/" (i + 2)
+        let j := if stop < 0 then n else stop + 2
+        scan j (("cm", Text.slice source i j) :: acc)
+      else if c == '-' && i + 1 < n && Text.code source (i + 1) == '-' then
+        let stop := Text.indexOf source "\n" i
+        let j := if stop < 0 then n else stop
+        scan j (("cm", Text.slice source i j) :: acc)
+      else if Text.isAlpha c || c == '_' then
+        let rec word j := if j < n && isWordChar (Text.code source j) then word (j + 1) else j
+        let j := word i
+        let w := Text.slice source i j
+        let kind := if Map.contains w keywords then "kw" else if c >= 'A' && c <= 'Z' then "ty" else "plain"
+        scan j ((kind, w) :: acc)
+      else scan (i + 1) (("plain", Text.fromCode c) :: acc)
+  scan 0 []
+
+def escape (t : Text) : Text := Text.replace ">" "&gt;" (Text.replace "<" "&lt;" (Text.replace "&" "&amp;" t))
+
+/-- HTML with a `span` class per kind. -/
+def html (source : Text) : Text :=
+  Text.concat (List.map (fun run =>
+    match run with
+    | ("plain", t) => escape t
+    | (kind, t) => "<span class=" ++ kind ++ ">" ++ escape t ++ "</span>") (runs source))
+
+def esc : Text := Text.fromCode 27
+
+/-- ANSI colours: keywords magenta, strings green, comments dim, types cyan. -/
+def ansi (source : Text) : Text :=
+  let paint := fun (code : Text) (t : Text) => esc ++ "[" ++ code ++ "m" ++ t ++ esc ++ "[0m"
+  Text.concat (List.map (fun run =>
+    match run with
+    | ("kw", t) => paint "35" t
+    | ("str", t) => paint "32" t
+    | ("cm", t) => paint "2" t
+    | ("ty", t) => paint "36" t
+    | (_, t) => t) (runs source))
+
+/-- Whether output goes to a terminal that wants colour: the kernel sets `DEUS_TTY`, and `NO_COLOR` turns it off. -/
+def enabled (u : Unit) : {IO} Bool :=
+  Option.isSome (IO.getEnv "DEUS_TTY") && Option.isNone (IO.getEnv "NO_COLOR")
+
+/-- Colours `text` with ANSI codes when the terminal wants colour. -/
+def forTerminal (source : Text) : {IO} Text := if enabled () then ansi source else source
+
+/-- Text dimmed on a terminal, as is. -/
+def dim (t : Text) : {IO} Text := if enabled () then esc ++ "[2m" ++ t ++ esc ++ "[0m" else t
+
+test spansKinds := html "def x : Int := \"a<b\" -- note" == "<span class=kw>def</span> x : <span class=ty>Int</span> := <span class=str>\"a&lt;b\"</span> <span class=cm>-- note</span>"
+
+end Highlight

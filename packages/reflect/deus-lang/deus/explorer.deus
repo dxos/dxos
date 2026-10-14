@@ -44,40 +44,6 @@ def page (root : Text) (project : Text) (title : Text) (body : Text) : Text :=
   "</title><style>" ++ style ++ "</style></head><body><header><a class=home href=\"" ++ root ++ "index.html\">" ++ escape project ++ "</a>" ++
   search root ++ "</header><main>" ++ body ++ "</main></body></html>"
 
-def keywords : Map Text Unit := Set.fromList ["def", "theorem", "test", "inductive", "structure", "ability", "namespace", "end", "match", "with", "fun", "let", "rec", "if", "then", "else", "handle", "return", "by", "where", "prim", "sorry"]
-
-def isWordChar (c : Int) : Bool := Text.isAlpha c || Text.isDigit c || c == '_' || c == '.' || c == '?'
-
-/-- Printed source as HTML: keywords, strings, comments and capitalized names get classes. -/
-def highlight (source : Text) : Text :=
-  let n := Text.length source
-  let rec scan i acc :=
-    if i >= n then Text.concat (List.reverse acc)
-    else
-      let c := Text.code source i
-      if c == '"' then
-        let rec close j := if j >= n then n else if Text.code source j == '\\' then close (j + 2) else if Text.code source j == '"' then j + 1 else close (j + 1)
-        let j := close (i + 1)
-        scan j (("<span class=str>" ++ escape (Text.slice source i j) ++ "</span>") :: acc)
-      else if c == '/' && i + 1 < n && Text.code source (i + 1) == '-' then
-        let stop := Text.indexOf source "-/" (i + 2)
-        let j := if stop < 0 then n else stop + 2
-        scan j (("<span class=cm>" ++ escape (Text.slice source i j) ++ "</span>") :: acc)
-      else if c == '-' && i + 1 < n && Text.code source (i + 1) == '-' then
-        let stop := Text.indexOf source "\n" i
-        let j := if stop < 0 then n else stop
-        scan j (("<span class=cm>" ++ escape (Text.slice source i j) ++ "</span>") :: acc)
-      else if Text.isAlpha c || c == '_' then
-        let rec word j := if j < n && isWordChar (Text.code source j) then word (j + 1) else j
-        let j := word i
-        let w := Text.slice source i j
-        let html := if Map.contains w keywords then "<span class=kw>" ++ w ++ "</span>"
-          else if c >= 'A' && c <= 'Z' then "<span class=ty>" ++ escape w ++ "</span>"
-          else escape w
-        scan j (html :: acc)
-      else scan (i + 1) (escape (Text.fromCode c) :: acc)
-  scan 0 []
-
 /-- Directories of a dotted name: `List.map` is in `List`. -/
 def parentOf (name : Text) : Text :=
   let parts := Text.split name "."
@@ -200,9 +166,9 @@ def generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
       IO.writeFile (out ++ "/def/" ++ h ++ ".html") (page "../" project name (
         "<p class=muted>" ++ nsLink "../" (parentOf name) ++ " · " ++ Entry.kind e ++ "</p><h1>" ++ escape name ++ "</h1>" ++
         "<p class=hash>#" ++ escape h ++ "</p>" ++
-        (if Text.isEmpty sig then "" else "<pre>" ++ highlight (lastOf name ++ " : " ++ sig) ++ "</pre>") ++
+        (if Text.isEmpty sig then "" else "<pre>" ++ Highlight.html (lastOf name ++ " : " ++ sig) ++ "</pre>") ++
         (if List.isEmpty aliases then "" else "<p class=muted>also named " ++ escape (Text.join ", " aliases) ++ "</p>") ++
-        "<h2>Source</h2><pre>" ++ highlight source ++ "</pre>" ++ checked ++
+        "<h2>Source</h2><pre>" ++ Highlight.html source ++ "</pre>" ++ checked ++
         (if List.isEmpty about then "" else "<h2>Tasks</h2>" ++ taskRows "../" about) ++
         "<h2>Depends on</h2>" ++ links deps ++ "<h2>Used by</h2>" ++ links users)))
   IO.writeFile (out ++ "/tasks.html") (page "" project "Tasks" ("<h1>Tasks</h1>" ++ taskRows "" tasks))

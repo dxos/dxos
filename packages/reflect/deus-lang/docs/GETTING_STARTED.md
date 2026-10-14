@@ -24,21 +24,26 @@ alias deus="node $PWD/bin/deus.mjs"      # the CLI runs from source; there is no
 deus help
 ```
 
-Every command works on the codebase in `./.deus`, or in `$DEUS_CODEBASE`, or in the directory
-that `--codebase <dir>` names. Start one with the standard library:
+Every command works on one codebase per user, `~/.deus`, unless `$DEUS_CODEBASE` or
+`--codebase <dir>` names another. Create it; it starts with the builtins and the prelude
+(`deus init --empty` leaves it bare):
 
 ```bash
 deus init
-deus add deus/builtins.deus deus/prelude.deus
 ```
 
 To get a standalone `deus` executable of about 1.6 MB, add the toolchain's own sources and build it.
-The toolchain is written in DEUS:
+The toolchain is written in DEUS. Paths name files on disk, relative to the current directory, so
+`deus` here is the `deus/` directory of sources next to `bin/`, and `add` takes every `.deus` file
+in it:
 
 ```bash
 deus add deus
 deus build Cli.main -o ~/.local/bin/deus --native      # needs cargo
 ```
+
+The native `deus` finds the toolchain's sources (for `--worker`, `serve` and `explore`) in the
+checkout it was built from, so keep the checkout where it is.
 
 Editor support for VS Code is in [`editors/vscode/`](../editors/vscode).
 

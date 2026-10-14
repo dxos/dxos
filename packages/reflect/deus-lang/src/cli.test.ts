@@ -45,7 +45,7 @@ describe('deus CLI', () => {
   // Dogfooding: the toolchain's own sources go into a codebase, and its tests and theorems run there.
   test('adds the compiler to a codebase and passes its own tests and theorems', { timeout: 180_000 }, ({ expect }) => {
     const codebase = join(scratch, 'self');
-    expect(deus('init', '--codebase', codebase).code).toBe(0);
+    expect(deus('init', '--empty', '--codebase', codebase).code).toBe(0);
     const add = deus('add', join(root, 'deus'), '--codebase', codebase);
     expect(add.stderr).toBe('');
     expect(add.code).toBe(0);
@@ -59,7 +59,7 @@ describe('deus CLI', () => {
 
   test('proves the sorting example and refuses unsound claims', { timeout: 120_000 }, ({ expect }) => {
     const c = ['--codebase', join(scratch, 'proofs')];
-    deus('init', ...c);
+    deus('init', '--empty', ...c);
     deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
     expect(deus('add', join(root, 'examples/sort.deus'), join(root, 'examples/soundness.deus'), ...c).code).toBe(0);
 
@@ -84,7 +84,7 @@ describe('deus CLI', () => {
     { timeout: 120_000 },
     ({ expect }) => {
       const c = ['--codebase', join(scratch, 'effects')];
-      deus('init', ...c);
+      deus('init', '--empty', ...c);
       deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
       const check = (name: string, body: string) => {
         const path = join(scratch, `${name}.deus`);
@@ -145,7 +145,7 @@ describe('deus CLI', () => {
   test('update propagates to dependents; branches merge three-way', { timeout: 120_000 }, ({ expect }) => {
     const codebase = join(scratch, 'demo');
     const c = ['--codebase', codebase];
-    deus('init', ...c);
+    deus('init', '--empty', ...c);
     deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
     deus(
       'add',
@@ -182,7 +182,7 @@ describe('deus CLI', () => {
     { timeout: 120_000 },
     ({ expect }) => {
       const c = ['--codebase', join(scratch, 'mdl')];
-      deus('init', ...c);
+      deus('init', '--empty', ...c);
       deus(
         'add',
         join(root, 'deus/builtins.deus'),
@@ -233,7 +233,7 @@ describe('deus CLI', () => {
 
   test('files objects by layer, stores spec blocks, and records provenance', { timeout: 120_000 }, ({ expect }) => {
     const c = ['--codebase', join(scratch, 'layers')];
-    deus('init', ...c);
+    deus('init', '--empty', ...c);
     deus(
       'add',
       join(root, 'deus/builtins.deus'),
@@ -273,7 +273,7 @@ describe('deus CLI', () => {
   test('projects pin libraries, infer their subgraph, and guard library IRIs', { timeout: 120_000 }, ({ expect }) => {
     const std = ['--codebase', join(scratch, 'std')];
     const app = ['--codebase', join(scratch, 'app')];
-    deus('init', ...std);
+    deus('init', '--empty', ...std);
     deus('project', 'init', 'https://dxos.org/deus/std', ...std);
     deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...std);
     deus(
@@ -285,7 +285,7 @@ describe('deus CLI', () => {
       ...std,
     );
 
-    deus('init', ...app);
+    deus('init', '--empty', ...app);
     deus('project', 'init', 'https://example.org/app', ...app);
     expect(deus('lib', 'install', 'std', join(scratch, 'std'), ...app).code).toBe(0);
     // Library names resolve by suffix, as in UCM.
@@ -314,7 +314,7 @@ describe('deus CLI', () => {
       const a = ['--codebase', join(scratch, 'replica-a')];
       const b = ['--codebase', join(scratch, 'replica-b')];
       for (const c of [a, b]) {
-        deus('init', ...c);
+        deus('init', '--empty', ...c);
         deus('remote', 'add', 'origin', remote, ...c);
       }
       // Fixed messages keep causal hashes, and so the strata boundaries, the same on every run.
@@ -350,7 +350,7 @@ describe('deus CLI', () => {
       expect(JSON.parse(deus('compact', '--json', ...b).stdout)).toEqual({ written: [], deleted: [] });
 
       const fresh = ['--codebase', join(scratch, 'replica-c')];
-      deus('init', ...fresh);
+      deus('init', '--empty', ...fresh);
       deus('remote', 'add', 'origin', remote, ...fresh);
       deus('pull', ...fresh);
       deus('merge', 'origin.main', ...fresh);
@@ -367,7 +367,7 @@ describe('deus CLI', () => {
         dropped: 0,
       });
       const shallow = ['--codebase', join(scratch, 'replica-d')];
-      deus('init', ...shallow);
+      deus('init', '--empty', ...shallow);
       deus('remote', 'add', 'origin', remote, ...shallow);
       deus('pull', ...shallow);
       deus('merge', 'origin.main', ...shallow);
@@ -377,7 +377,7 @@ describe('deus CLI', () => {
 
   test('compiles first-order functions to wasm that agree with the interpreter', { timeout: 120_000 }, ({ expect }) => {
     const c = ['--codebase', join(scratch, 'wasm')];
-    deus('init', ...c);
+    deus('init', '--empty', ...c);
     deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
     const source = [
       'def gcd (a : Int) (b : Int) : Int := if b == 0 then a else gcd b (a % b)',
@@ -432,7 +432,7 @@ describe('deus CLI', () => {
 
   test('simulates Durable Objects that call each other and set alarms', { timeout: 120_000 }, ({ expect }) => {
     const c = ['--codebase', join(scratch, 'cloudflare')];
-    deus('init', ...c);
+    deus('init', '--empty', ...c);
     const sources = [
       'deus/builtins.deus',
       'deus/prelude.deus',
@@ -460,14 +460,10 @@ describe('deus CLI', () => {
       onTestFinished(() => {
         delete process.env.DEUS_CODEBASE;
       });
-      deus('init', ...c);
-      deus(
-        'add',
-        join(root, 'deus/builtins.deus'),
-        join(root, 'deus/prelude.deus'),
-        join(root, 'examples/tour.deus'),
-        ...c,
-      );
+      // `deus init` adds the builtins and prelude from the toolchain's sources, as the guide relies on.
+      process.env.DEUS_HOME = root;
+      expect(deus('init', ...c).stdout).toContain('with the builtins and prelude');
+      deus('add', join(root, 'examples/tour.deus'), ...c);
       expect(deus('test', 'Tour', ...c).stdout).toMatch(/3 passed, 0 failed/);
       expect(deus('run', 'Tour.main', '12', '-3', 'tea').stdout).toBe(
         '12 cups of tea cost 36\nerror: negative quantity -3\nerror: not a number: tea\n',
@@ -475,6 +471,12 @@ describe('deus CLI', () => {
       const view = deus('view', 'Tour.fromTable', 'Tour.total', ...c).stdout;
       expect(view).toContain('def Tour.fromTable (table : Map Text Int) (body : Unit -> {Prices | r} a) : {r} a :=');
       expect(view).toContain('def Tour.total (lines : List Line) : {Prices} Int :=');
+      // Locals keep the author's names, `_` stays `_`, and constructors keep their type.
+      const main = deus('view', 'Tour.main', ...c).stdout;
+      expect(main).toContain('match try (fun _ => parseQuantity arg) with');
+      expect(main).toContain('| Result.ok n => ');
+      expect(main).toContain('| Result.err message => println ("error: " ++ message)');
+      expect(deus('view', 'Tour.area', ...c).stdout).toContain('| Shape.circle r => 3 * r * r');
       const unhandled = deus(
         'add',
         file('unhandled.deus', 'def oops (u : Unit) : {IO} Unit := println (Int.toText (Tour.total []))\n'),
@@ -489,7 +491,7 @@ describe('deus CLI', () => {
     { timeout: 120_000 },
     ({ expect }) => {
       const c = ['--codebase', join(scratch, 'tasks')];
-      deus('init', ...c);
+      deus('init', '--empty', ...c);
       deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
       const shapes = file(
         'tasks-shapes.deus',
@@ -568,7 +570,7 @@ describe('deus CLI', () => {
       const copy = ['--codebase', join(scratch, 'tasks-copy')];
       deus('remote', 'add', 'origin', join(scratch, 'tasks-remote'), ...c);
       deus('push', ...c);
-      deus('init', ...copy);
+      deus('init', '--empty', ...copy);
       deus('remote', 'add', 'origin', join(scratch, 'tasks-remote'), ...copy);
       deus('pull', ...copy);
       deus('merge', 'origin.main', ...copy);
@@ -585,7 +587,7 @@ describe('deus CLI', () => {
 
   test('writes the codebase explorer and publishes it beside a remote', { timeout: 120_000 }, ({ expect }) => {
     const c = ['--codebase', join(scratch, 'explore')];
-    deus('init', ...c);
+    deus('init', '--empty', ...c);
     deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
     const shapes = [
       'namespace Shapes',
@@ -633,7 +635,7 @@ describe('deus CLI', () => {
     async ({ expect, onTestFinished }) => {
       process.env.DEUS_HOME = root;
       const c = ['--codebase', join(scratch, 'server')];
-      deus('init', ...c);
+      deus('init', '--empty', ...c);
       const sources = [
         'deus/builtins.deus',
         'deus/prelude.deus',
@@ -701,7 +703,7 @@ describe('deus CLI', () => {
     { timeout: 120_000 },
     ({ expect, onTestFinished }) => {
       const c = ['--codebase', join(scratch, 'external')];
-      deus('init', ...c);
+      deus('init', '--empty', ...c);
       deus(
         'add',
         join(root, 'deus/builtins.deus'),
@@ -779,7 +781,7 @@ describe('deus CLI', () => {
     process.env.DEUS_HOME = root;
     process.env.DEUS_NODE = process.execPath;
     const c = ['--codebase', join(scratch, 'binary')];
-    deus('init', ...c);
+    deus('init', '--empty', ...c);
     deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
     const source = join(scratch, 'hello.deus');
     writeFileSync(source, 'def main (u : Unit) : {IO} Unit := IO.print ("hello " ++ Text.join "," (IO.args ()))\n');

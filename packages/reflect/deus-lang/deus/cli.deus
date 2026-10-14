@@ -13,7 +13,7 @@ structure Args where
   options : Map Text Text
 
 /-- Options that never take a value. -/
-def booleanFlags : Map Text Unit := Set.fromList ["json", "core", "all", "force", "help", "integration", "wasm", "native", "worker", "server"]
+def booleanFlags : Map Text Unit := Set.fromList ["json", "core", "all", "force", "empty", "help", "integration", "wasm", "native", "worker", "server"]
 
 def parseArgs (args : List Text) : Args :=
   let rec go rest pos opts :=
@@ -69,11 +69,14 @@ def warn (b : Batch) : {IO} Unit := List.forEach b.warnings (fun w => eprintln (
 def parseFiles (paths : List Text) : {IO, Throw Text} List (Text, List Decl) :=
   List.map (fun path => Compile.parseFile path (readSource path)) (expandPaths paths)
 
-/-- The codebase directory: `--codebase`, then `$DEUS_CODEBASE`, then `./.deus`. -/
+/-- The codebase directory: `--codebase`, then `$DEUS_CODEBASE`, then one per user, `~/.deus`, as Unison keeps `~/.unison`. -/
 def codebaseDir (args : Args) : {IO} Text :=
   match option args "codebase" with
   | some dir => dir
-  | none => Option.getOr (IO.getEnv "DEUS_CODEBASE") ".deus"
+  | none =>
+    match IO.getEnv "DEUS_CODEBASE" with
+    | some dir => dir
+    | none => Option.getOr (IO.getEnv "HOME") "." ++ "/.deus"
 
 def openCodebase (args : Args) : {IO, Throw Text} Text :=
   let dir := codebaseDir args
@@ -123,10 +126,17 @@ def compile (args : Args) : {IO, Throw Text} Unit :=
   | some out => IO.writeFile out image
   | none => IO.print image
 
+/-- `deus init [--empty]`: a codebase holding the builtins and prelude, or nothing with `--empty`. -/
 def init (args : Args) : {IO, Throw Text} Unit :=
   let dir := codebaseDir args
   Codebase.init dir
-  output args (fun _ => Json.obj [("codebase", Json.str dir), ("branch", Json.str "main")]) (fun _ => "Initialized an empty codebase in " ++ dir ++ " on branch main.")
+  let library := match (flag args "empty", IO.getEnv "DEUS_HOME") with
+    | (false, some home) =>
+      addOrUpdate (Args.mk [home ++ "/deus/builtins.deus", home ++ "/deus/prelude.deus"] (Map.fromList [("codebase", dir), ("message", "standard library"), ("quiet", "true")])) false
+      true
+    | _ => false
+  output args (fun _ => Json.obj [("codebase", Json.str dir), ("branch", Json.str "main"), ("library", Json.bool library)])
+    (fun _ => "Initialized a codebase in " ++ dir ++ " on branch main" ++ (if library then ", with the builtins and prelude." else ", empty."))
 
 /-- Names a batch would change: (name, old, new) for every name already bound to something else. -/
 def changes (ns : Map Text Entry) (entries : List (Text, Entry)) : List (Text, Entry, Entry) :=
@@ -246,7 +256,7 @@ def addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
       Tasks.save dir [Tasks.link (Tasks.setField t "state" "done") (Attachment.change causal)] ("close " ++ t.id ++ " by " ++ short causal)
       ()
     | none => ()
-    output args
+    if flag args "quiet" then () else output args
       (fun _ => Json.obj [("added", Json.arr (List.map (fun p => entryJson (fst p) (snd p)) added)), ("updated", Json.arr (List.map (fun c =>
         match c with
         | (name, _, new) => entryJson name new) replaced)), ("propagated", Json.arr (List.map Json.str (snd propagated))), ("causal", Json.str causal)])
@@ -268,8 +278,11 @@ def ls (args : Args) : {IO, Throw Text} Unit :=
   let ns := Codebase.current dir
   let prefix := Option.getOr (List.head? args.positional) ""
   let rows := List.filter (fun pair => Text.startsWith prefix (fst pair)) (Map.toList ns)
-  output args (fun _ => Json.arr (List.map (fun p => entryJson (fst p) (snd p)) rows))
-    (fun _ => Text.join "\n" (List.map (fun p => Text.padRight 40 (fst p) ++ " " ++ Text.padRight 8 (Entry.kind (snd p)) ++ " " ++ short (Entry.hash (snd p))) rows))
+  let width := List.foldl (fun w p => if Text.length (fst p) > w then Text.length (fst p) else w) 0 rows
+  let colour := Highlight.enabled ()
+  let paint := fun (code : Text) (t : Text) => if colour then Highlight.esc ++ "[" ++ code ++ "m" ++ t ++ Highlight.esc ++ "[0m" else t
+  let lines := List.map (fun p => Text.padRight (width + 2) (fst p) ++ paint "36" (Text.padRight 8 (Entry.kind (snd p))) ++ " " ++ paint "2" (short (Entry.hash (snd p)))) rows
+  output args (fun _ => Json.arr (List.map (fun p => entryJson (fst p) (snd p)) rows)) (fun _ => Text.join "\n" lines)
 
 def find (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
@@ -327,11 +340,12 @@ def view (args : Args) : {IO, Throw Text} Unit :=
   let ns := Codebase.current dir
   let entries := List.map (fun name => lookupName ns name) args.positional
   let texts := List.map (fun pair => viewEntry dir ns (fst pair) (snd pair) (flag args "core")) entries
+  let shown := Highlight.forTerminal (Text.join "\n\n" texts)
   output args
     (fun _ => Json.arr (List.map (fun pair =>
       match pair with
       | ((name, e), text) => Json.obj [("name", Json.str name), ("kind", Json.str (Entry.kind e)), ("hash", Json.str (Entry.hash e)), ("source", Json.str text)]) (List.zip entries texts)))
-    (fun _ => Text.join "\n\n" texts)
+    (fun _ => shown)
 
 def deps (args : Args) (reverse : Bool) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
@@ -1027,7 +1041,7 @@ def usage : Text :=
     "usage: deus <command> [args] [--json] [--codebase <dir>]",
     "",
     "codebase",
-    "  init                                 create a codebase (./.deus, or --codebase, or $DEUS_CODEBASE)",
+    "  init [--empty]                       create a codebase with the builtins and prelude (~/.deus, $DEUS_CODEBASE or --codebase)",
     "  add <files|dirs…>                    add new definitions (.deus, or ```deus fences in .mdl)",
     "  update <files|dirs…>                 add or replace definitions; dependents are rehashed",
     "                                       (both take --message <why> for the history, and",

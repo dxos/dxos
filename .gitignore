@@ -293,3 +293,7 @@ reports/mutation/
 # Bun writes its cache under `$HOME/Library` on macOS, which lands in the package directory when a
 # command runs with HOME unset — as an MCP server spawned by a client can.
 **/Library/Caches/
+
+# DEUS: a codebase made in a package directory, and `deus serve` object storage.
+.deus/
+deus-data/

@@ -172,3 +172,11 @@ perhaps add an alarm to remind you of that every 30 minutes
     .deus dit not gitignored
 
     it should prob go into user's home dir by default too, no reason to have multiple
+
+---
+
+- keep working
+
+---
+
+- add task viewer to codebase explorer

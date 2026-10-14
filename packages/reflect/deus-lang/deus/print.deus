@@ -13,8 +13,8 @@ structure Printer where
 
 namespace Print
 
-/-- Shortest suffix of `fqn` that names nothing else in the namespace. -/
-def suffixify (all : Dict Text (List Text)) (fqn : Text) : Text :=
+/-- Shortest suffix of `fqn`, of at least `least` segments, that names nothing else in the namespace. -/
+def suffixifyAtLeast (least : Int) (all : Dict Text (List Text)) (fqn : Text) : Text :=
   let segments := Text.split fqn "."
   let count := List.length segments
   let rec go k :=
@@ -23,13 +23,18 @@ def suffixify (all : Dict Text (List Text)) (fqn : Text) : Text :=
       let candidate := Text.join "." (List.drop (count - k) segments)
       let clashes := List.filter (fun other => other == candidate || Text.endsWith ("." ++ candidate) other) (Option.getOr (Dict.lookup (Names.lastSegment fqn) all) [])
       if List.length clashes <= 1 then candidate else go (k + 1)
-  go 1
+  go least
+
+def suffixify (all : Dict Text (List Text)) (fqn : Text) : Text := suffixifyAtLeast 1 all fqn
 
 /-- A printer for a namespace: hash (or `type#tag`, `ability!index`) to display name. -/
 def printer (ns : Map Text Entry) (locals : List Text) : Printer :=
   let bySegment := (Names.build ns).bySegment
   let index := Codebase.nameIndex ns
-  let display := Map.mapValues (fun fqn => suffixify bySegment fqn) index
+  -- Constructors and operations keep their owner (`Result.ok`, `Prices.priceOf`): a bare `ok` reads as a variable in a pattern.
+  let display := Map.fromList (List.map (fun pair =>
+    match pair with
+    | (key, fqn) => (key, suffixifyAtLeast (if Text.contains "#" key || Text.contains "!" key then 2 else 1) bySegment fqn)) (Map.toList index))
   let typeNames := List.foldl (fun m pair =>
     match pair with
     | (name, Entry.type _ iri _) => Map.insert iri (suffixify bySegment name) m
@@ -55,6 +60,21 @@ def nameFor (p : Printer) (key : Text) : Text :=
   match Map.lookup key p.display with
   | some name => name
   | none => "#" ++ Text.take 10 key
+
+/-- Whether a name is one `bind` made up (`x` and digits). -/
+def isGenerated (name : Text) : Bool :=
+  Text.startsWith "x" name && Text.length name > 1 && Option.isSome (Int.fromText (Text.drop 1 name))
+
+/-- Whether `name` occurs in `text` as a whole word. -/
+def mentions (name : Text) (text : Text) : Bool :=
+  let n := Text.length name
+  let isWord := fun (c : Int) => Text.isAlpha c || Text.isDigit c || c == '_' || c == '.' || c == 39
+  let rec scan i :=
+    let found := Text.indexOf text name i
+    if found < 0 then false
+    else if (found == 0 || not (isWord (Text.code text (found - 1)))) && not (isWord (Text.code text (found + n))) then true
+    else scan (found + 1)
+  scan 0
 
 /-- The next binder name: the author's, made unique against the names in scope. -/
 def bind (p : Printer) (env : List Text) : Text :=
@@ -191,16 +211,23 @@ def expr (p : Printer) (t : Sexp) (env : List Text) (ind : Int) (prec : Int) : T
         params b (name :: env2) (name :: acc)
       | _ => (List.reverse acc, x, env2)
     match params t env [] with
-    | (names, b, env2) => paren 1 prec ("fun " ++ Text.join " " names ++ " =>" ++ body p b env2 ind)
+    | (names, b, env2) =>
+      let rendered := body p b env2 ind
+      -- A generated name (`x0`) the body never mentions was `_` in the source.
+      let shown := List.map (fun x => if isGenerated x && not (mentions x rendered) then "_" else x) names
+      paren 1 prec ("fun " ++ Text.join " " shown ++ " =>" ++ rendered)
   | Sexp.list (Sexp.sym "match" :: scrut :: cases) =>
+    -- Binder names come in pre-order (`Resolve.strip`), so the scrutinee is printed before the arms.
+    let scrutText := expr p scrut env ind 0
     let arms := List.map (fun c =>
       match c with
       | Sexp.list [Sexp.sym "case", pat, b] =>
         match pattern p pat env with
         | (text, env2) => "\n" ++ spaces ind ++ "| " ++ text ++ " =>" ++ body p b env2 (ind + 2)
       | _ => "") cases
-    paren 1 prec ("match " ++ expr p scrut env ind 0 ++ " with" ++ Text.concat arms)
+    paren 1 prec ("match " ++ scrutText ++ " with" ++ Text.concat arms)
   | Sexp.list (Sexp.sym "handle" :: b :: clauses) =>
+    let bodyText := body p b env ind
     let rendered := List.map (fun c =>
       match c with
       | Sexp.list [Sexp.sym "ret", rb] =>
@@ -217,7 +244,7 @@ def expr (p : Printer) (t : Sexp) (env : List Text) (ind : Int) (prec : Int) : T
           let k := bind p env2
           "\n" ++ spaces ind ++ "| " ++ nameFor p (a ++ "!" ++ Int.toText index) ++ Text.concat (List.map (fun x => " " ++ x) names) ++ " -> " ++ k ++ " =>" ++ body p hb (k :: env2) (ind + 2)
       | _ => "") clauses
-    paren 1 prec ("handle" ++ body p b env ind ++ (if isBlock b then "\n" ++ spaces ind else " ") ++ "with" ++ Text.concat rendered)
+    paren 1 prec ("handle" ++ bodyText ++ (if isBlock b then "\n" ++ spaces ind else " ") ++ "with" ++ Text.concat rendered)
   | Sexp.list (Sexp.sym "app" :: f :: args) =>
     match (f, args) with
     | (Sexp.list [Sexp.sym "ref", Sexp.str h], [a]) =>

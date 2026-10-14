@@ -7,7 +7,7 @@ errors go to stderr with a non-zero exit code.
 
 ```bash
 deus() { node packages/reflect/deus-lang/bin/deus.mjs "$@"; }
-export DEUS_CODEBASE=$PWD/.deus     # or pass --codebase <dir>
+export DEUS_CODEBASE=$PWD/.deus     # default ~/.deus; or pass --codebase <dir>
 ```
 
 ## The loop

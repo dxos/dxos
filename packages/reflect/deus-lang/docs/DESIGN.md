@@ -137,7 +137,7 @@ deleted ([D17](./DECISIONS.md)). Every change to `deus/` is now compiled by the 
 
 ### The codebase ([`deus/codebase.deus`](../deus/codebase.deus))
 
-A `.deus` directory, after Unison's UCM:
+A `.deus` directory (`~/.deus` by default, as Unison keeps `~/.unison`), after Unison's UCM:
 
 - `objects/` holds every hashed object: definitions, namespace snapshots, history nodes.
 - A **branch** points at a **causal** node: a snapshot plus its parents. Every `add` or `update`
