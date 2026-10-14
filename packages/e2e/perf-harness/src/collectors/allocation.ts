@@ -17,18 +17,22 @@ export type AllocationSampling = {
 };
 
 /**
- * Starts V8's sampling heap profiler in every target, counting objects GC has already freed.
+ * Starts V8's sampling heap profiler in every target, counting objects GC has already freed, or with
+ * `retainedOnly`, only the objects still alive when it stops: what a window left behind, by allocation site.
  *
  * A heap snapshot shows what survives; this shows what was allocated, which is what sizes the young
  * generation during a write burst. The `.heapprofile` files load in DevTools' Memory panel.
  */
-export const startAllocationSampling = async (targets: Attached[]): Promise<AllocationSampling> => {
+export const startAllocationSampling = async (
+  targets: Attached[],
+  { retainedOnly = false }: { retainedOnly?: boolean } = {},
+): Promise<AllocationSampling> => {
   const sampled: Attached[] = [];
   for (const target of targets) {
     const started = await target.cdp.trySend('HeapProfiler.startSampling', {
       samplingInterval: SAMPLING_INTERVAL_BYTES,
-      includeObjectsCollectedByMajorGC: true,
-      includeObjectsCollectedByMinorGC: true,
+      includeObjectsCollectedByMajorGC: !retainedOnly,
+      includeObjectsCollectedByMinorGC: !retainedOnly,
     });
     if (started !== undefined) {
       sampled.push(target);
@@ -41,6 +45,9 @@ export const startAllocationSampling = async (targets: Attached[]): Promise<Allo
       const files: string[] = [];
       const used = new Set<string>();
       for (const target of sampled) {
+        if (retainedOnly) {
+          await target.cdp.trySend('HeapProfiler.collectGarbage');
+        }
         const result = await target.cdp.trySend<{ profile: unknown }>('HeapProfiler.stopSampling');
         if (!result?.profile) {
           continue;

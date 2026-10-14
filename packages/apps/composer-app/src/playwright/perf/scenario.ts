@@ -9,6 +9,8 @@ import path from 'node:path';
 
 import { log } from '@dxos/log';
 import {
+  type AllocationSampling,
+  type Attached,
   type Comparability,
   type DeniedRequest,
   type Mode,
@@ -18,6 +20,7 @@ import {
   appendRows,
   attachAll,
   countersLabel,
+  detachAll,
   flowConditions,
   insidePartition,
   installProbes,
@@ -28,6 +31,7 @@ import {
   partitionAllow,
   presentAsPersonsBrowser,
   publishPosthogBatch,
+  startAllocationSampling,
   startProfiling,
   trackNetwork,
   writePosthogBatch,
@@ -62,6 +66,16 @@ const isMode = (value: string): value is Mode => value === 'measure' || value ==
 const MODES: Mode[] = (process.env.DX_PERF_MODES ?? 'measure').split(',').filter(isMode);
 
 const ITERATIONS = Math.max(1, Number.parseInt(process.env.DX_PERF_ITERATIONS ?? '1', 10) || 1);
+
+/**
+ * `DX_PERF_RETAINED_SAMPLE=<from>:<to>` samples allocations from the end of stage `from` to the end of
+ * stage `to`, keeping only what is still alive, written to `retained/`: what that window left behind
+ * by allocation site. Call frames and sizes only, so it runs on private data too.
+ */
+const RETAINED_SAMPLE = ((spec) => {
+  const [from, to] = spec.split(':');
+  return from && to ? { from, to } : undefined;
+})(process.env.DX_PERF_RETAINED_SAMPLE ?? '');
 
 /**
  * `DX_PERF_INJECT=<stage>:<ms>` busy-waits the page's main thread for that long at the end of the
@@ -204,6 +218,7 @@ const runScenario = async (scenario: Scenario, mode: Mode, iteration: number): P
     await scenario.fixture({ page, mode, runId, budget });
     runner.adopt(await attachAll(debugPort, include));
     runner.attachInstruments({ profiler: startProfiling(artifactDir) });
+    let retained: { targets: Attached[]; sampling: AllocationSampling } | undefined;
 
     await scenario.stages({
       page,
@@ -224,6 +239,15 @@ const runScenario = async (scenario: Scenario, mode: Mode, iteration: number): P
             }, INJECT.ms);
           }
         });
+        if (RETAINED_SAMPLE?.from === id) {
+          const targets = await attachAll(debugPort, include);
+          retained = { targets, sampling: await startAllocationSampling(targets, { retainedOnly: true }) };
+        }
+        if (RETAINED_SAMPLE?.to === id && retained) {
+          await retained.sampling.stop(path.join(artifactDir, 'retained'));
+          detachAll(retained.targets);
+          retained = undefined;
+        }
       },
     });
 
