@@ -4,7 +4,23 @@
 
 import { createHash } from 'node:crypto';
 
-import { Cell, Con, DeusDefect, Machine, NIL, NONE, Prim, type Value, compare, equal, listFrom, listTo, refTerm, show, some } from './machine.ts';
+import {
+  Cell,
+  Con,
+  DeusDefect,
+  Machine,
+  NIL,
+  NONE,
+  Prim,
+  type Value,
+  compare,
+  equal,
+  listFrom,
+  listTo,
+  refTerm,
+  show,
+  some,
+} from './machine.ts';
 import { readAll } from './sexp.ts';
 
 const int = (value: Value): number => {
@@ -60,7 +76,7 @@ export const createPrims = (): Map<string, Prim> => {
     if (int(b) === 0) {
       throw new DeusDefect('division by zero');
     }
-    return int(a) % int(b) | 0;
+    return (int(a) % int(b)) | 0;
   });
   def('Int.neg', 1, ([a]) => -int(a) | 0);
   def('Int.and', 2, ([a, b]) => int(a) & int(b));
@@ -132,7 +148,12 @@ export const createPrims = (): Map<string, Prim> => {
   def('Code.steps', 1, (_args, machine) => machine.steps);
   prims.set(
     'Code.run',
-    new Prim('Code.run', 1, () => NIL, ([hash]) => refTerm(text(hash))),
+    new Prim(
+      'Code.run',
+      1,
+      () => NIL,
+      ([hash]) => refTerm(text(hash)),
+    ),
   );
 
   return prims;

@@ -1,0 +1,88 @@
+/-
+  The `deus` command line. Every command is DEUS code; the kernel only runs the seed.
+-/
+
+namespace Cli
+
+/-- Command-line arguments split into positionals and `--flag value` / `--flag` options. -/
+structure Args where
+  positional : List Text
+  options : Map Text Text
+
+def parseArgs (args : List Text) : Args :=
+  let rec go rest pos opts :=
+    match rest with
+    | [] => Args.mk (List.reverse pos) opts
+    | a :: more =>
+      if Text.startsWith "--" a then
+        let key := Text.drop 2 a
+        match more with
+        | v :: tail =>
+          if Text.startsWith "--" v then go more pos (Map.insert key "true" opts)
+          else if key == "json" then go more pos (Map.insert key "true" opts)
+          else go tail pos (Map.insert key v opts)
+        | [] => go more pos (Map.insert key "true" opts)
+      else if a == "-o" then
+        match more with
+        | v :: tail => go tail pos (Map.insert "out" v opts)
+        | [] => go more pos opts
+      else go more (a :: pos) opts
+  go args [] Map.empty
+
+def option (args : Args) (key : Text) : Option Text := Map.lookup key args.options
+
+def flag (args : Args) (key : Text) : Bool := Map.contains key args.options
+
+def die (message : Text) : {IO} a :=
+  eprintln ("deus: " ++ message)
+  IO.exit 1
+
+def readSource (path : Text) : {IO, Throw Text} Text :=
+  match IO.readFile path with
+  | some text => text
+  | none => throw ("cannot read " ++ path)
+
+/-- Expands directories to the `.deus` and `.mdl` files they contain, sorted. -/
+def expandPaths (paths : List Text) : {IO} List Text :=
+  List.concatMap (fun path =>
+    if IO.isDir path then
+      List.map (fun f => path ++ "/" ++ f) (List.filter (fun f => Text.endsWith ".deus" f || Text.endsWith ".mdl" f) (IO.listDir path))
+    else [path]) paths
+
+/-- `deus compile <files…> --main <name> -o <image>`: compiles files alone, without a codebase. -/
+def compile (args : Args) : {IO, Throw Text} Unit :=
+  let files := expandPaths args.positional
+  let parsed := List.map (fun path => Compile.parseFile path (readSource path)) files
+  let result := Compile.batch Map.empty parsed
+  let main := Option.getOr (option args "main") "main"
+  let entry := match List.lookup main result.entries with
+    | some (Entry.term h) => h
+    | _ => throw ("no definition named " ++ main)
+  let objects := Map.fromList result.objects
+  let image := Image.build (fun h => Map.lookup h objects) entry
+  match option args "out" with
+  | some out => IO.writeFile out image
+  | none => IO.print image
+
+def usage : Text :=
+  Text.join "\n" [
+    "usage: deus <command> [args]",
+    "",
+    "  compile <files|dirs…> --main <name> -o <image>   compile files to a kernel image",
+    ""]
+
+def run (argv : List Text) : {IO, Throw Text} Unit :=
+  match argv with
+  | [] => IO.print usage
+  | command :: rest =>
+    let args := parseArgs rest
+    if command == "compile" then compile args
+    else if command == "help" then IO.print usage
+    else die ("unknown command " ++ command)
+
+def main (u : Unit) : {IO} Unit :=
+  match try (fun _ => run (IO.args ())) with
+  | Result.ok _ => ()
+  | Result.err message => die message
+
+end Cli

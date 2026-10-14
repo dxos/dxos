@@ -133,6 +133,9 @@
       "path": "packages/reflect/deus/tsconfig.json"
     },
     {
+      "path": "packages/reflect/deus-lang/tsconfig.json"
+    },
+    {
       "path": "packages/devtools/devtools/tsconfig.json"
     },
     {

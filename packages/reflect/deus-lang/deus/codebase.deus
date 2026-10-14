@@ -1,0 +1,281 @@
+/-
+  The codebase: a content-addressed store in a `.deus` directory (Unison's model).
+
+    objects/<h[0..2]>/<h>   every hashed object: types, abilities, terms, tests, theorems,
+                            namespace snapshots and causal history nodes
+    meta/<h>                metadata of an object (signature, doc, local names); not hashed
+    branches/<name>         the causal hash a branch points at
+    HEAD                    the current branch name
+    cache/<h>               test and proof results, keyed by the hash of what was checked
+
+  A namespace snapshot maps names to entries. A causal node records a snapshot, its
+  parents and a message; a branch is a pointer to a causal node, so history is a DAG and
+  merging two branches is a three-way merge of their snapshots.
+-/
+
+namespace Codebase
+
+/-- Objects read so far, per process; objects are immutable so the cache never goes stale. -/
+def objectCache : Ref (Map Text Sexp) := Ref.new Map.empty
+
+def objectPath (dir : Text) (h : Text) : Text := dir ++ "/objects/" ++ Text.take 2 h ++ "/" ++ h
+
+def isCodebase (dir : Text) : {IO} Bool := IO.exists (dir ++ "/HEAD")
+
+def readObject (dir : Text) (h : Text) : {IO} Option Sexp :=
+  match Map.lookup h (Ref.get objectCache) with
+  | some form => some form
+  | none =>
+    match IO.readFile (objectPath dir h) with
+    | none => none
+    | some text =>
+      let form := Sexp.read text
+      Ref.set objectCache (Map.insert h form (Ref.get objectCache))
+      some form
+
+def writeObject (dir : Text) (h : Text) (form : Sexp) : {IO} Unit :=
+  let path := objectPath dir h
+  if IO.exists path then () else IO.writeFile path (Sexp.print form ++ "\n")
+
+/-- Stores a form under the hash of its text and returns the hash. -/
+def put (dir : Text) (form : Sexp) : {IO} Text :=
+  let h := Text.sha256 (Sexp.print form)
+  writeObject dir h form
+  h
+
+def readMeta (dir : Text) (h : Text) : {IO} Option Sexp :=
+  Option.map Sexp.read (IO.readFile (dir ++ "/meta/" ++ h))
+
+def writeMeta (dir : Text) (h : Text) (form : Sexp) : {IO} Unit := IO.writeFile (dir ++ "/meta/" ++ h) (Sexp.print form ++ "\n")
+
+/-- A metadata field, e.g. `metaField m "doc"`. -/
+def metaField (form : Option Sexp) (key : Text) : Option Sexp :=
+  match form with
+  | none => none
+  | some m => Option.bind (List.find (fun x => Sexp.head x == key) (Sexp.args m)) (fun x => List.head? (Sexp.args x))
+
+def metaList (form : Option Sexp) (key : Text) : List Sexp :=
+  match form with
+  | none => []
+  | some m =>
+    match List.find (fun x => Sexp.head x == key) (Sexp.args m) with
+    | some x => Sexp.args x
+    | none => []
+
+--
+-- Namespaces.
+--
+
+def nsToSexp (ns : Map Text Entry) : Sexp :=
+  Sexp.node "ns" (List.map (fun pair => Sexp.node "n" [Sexp.str (fst pair), Entry.toSexp (snd pair)]) (Map.toList ns))
+
+def nsFromSexp (form : Sexp) : Map Text Entry :=
+  Map.fromList (List.map (fun item =>
+    match Sexp.args item with
+    | [name, entry] => (Sexp.asText name, Entry.fromSexp entry)
+    | _ => defect "bad namespace entry") (Sexp.args form))
+
+/-- A history node: a namespace snapshot, its parents, and why it was made. -/
+structure Causal where
+  snapshot : Text
+  parents : List Text
+  message : Text
+
+def causalToSexp (c : Causal) : Sexp :=
+  Sexp.node "causal" [Sexp.node "ns" [Sexp.str c.snapshot], Sexp.node "parents" (List.map Sexp.str c.parents), Sexp.node "msg" [Sexp.str c.message]]
+
+def causalFromSexp (form : Sexp) : Causal :=
+  let field := fun key => Option.getOr (List.find (fun x => Sexp.head x == key) (Sexp.args form)) (Sexp.list [])
+  Causal.mk (Sexp.asText (Option.getOr (List.head? (Sexp.args (field "ns"))) (Sexp.str ""))) (List.map Sexp.asText (Sexp.args (field "parents"))) (Sexp.asText (Option.getOr (List.head? (Sexp.args (field "msg"))) (Sexp.str "")))
+
+def readCausal (dir : Text) (h : Text) : {IO, Throw Text} Causal :=
+  match readObject dir h with
+  | some form => causalFromSexp form
+  | none => throw ("missing history node #" ++ h)
+
+def readNamespace (dir : Text) (h : Text) : {IO, Throw Text} Map Text Entry :=
+  match readObject dir h with
+  | some form => nsFromSexp form
+  | none => throw ("missing namespace #" ++ h)
+
+--
+-- Branches.
+--
+
+def validBranch (name : Text) : Bool :=
+  not (Text.isEmpty name) && List.all (fun c => Text.isAlpha c || Text.isDigit c || c == '-' || c == '_' || c == '.') (Text.utf8 name)
+
+def currentBranch (dir : Text) : {IO} Text := Text.trim (Option.getOr (IO.readFile (dir ++ "/HEAD")) "main")
+
+def branchHead (dir : Text) (branch : Text) : {IO} Option Text :=
+  Option.map Text.trim (IO.readFile (dir ++ "/branches/" ++ branch))
+
+def setBranch (dir : Text) (branch : Text) (causal : Text) : {IO} Unit := IO.writeFile (dir ++ "/branches/" ++ branch) (causal ++ "\n")
+
+def branches (dir : Text) : {IO} List Text := IO.listDir (dir ++ "/branches")
+
+def headOf (dir : Text) (branch : Text) : {IO, Throw Text} Text :=
+  match branchHead dir branch with
+  | some h => h
+  | none => throw ("no branch " ++ branch)
+
+def namespaceOf (dir : Text) (branch : Text) : {IO, Throw Text} Map Text Entry :=
+  readNamespace dir (readCausal dir (headOf dir branch)).snapshot
+
+/-- The current branch's namespace. -/
+def current (dir : Text) : {IO, Throw Text} Map Text Entry := namespaceOf dir (currentBranch dir)
+
+/-- Records a new snapshot on the current branch. Returns the new causal hash. -/
+def commit (dir : Text) (ns : Map Text Entry) (message : Text) : {IO, Throw Text} Text :=
+  let branch := currentBranch dir
+  let parent := headOf dir branch
+  let snapshot := put dir (nsToSexp ns)
+  if snapshot == (readCausal dir parent).snapshot then parent
+  else
+    let c := put dir (causalToSexp (Causal.mk snapshot [parent] message))
+    setBranch dir branch c
+    c
+
+def init (dir : Text) : {IO, Throw Text} Unit :=
+  if isCodebase dir then throw ("a codebase already exists at " ++ dir)
+  else
+    IO.mkdirp (dir ++ "/objects")
+    IO.mkdirp (dir ++ "/meta")
+    IO.mkdirp (dir ++ "/branches")
+    IO.mkdirp (dir ++ "/cache")
+    let snapshot := put dir (nsToSexp Map.empty)
+    let c := put dir (causalToSexp (Causal.mk snapshot [] "init"))
+    setBranch dir "main" c
+    IO.writeFile (dir ++ "/HEAD") "main\n"
+
+/-- First-parent history of a branch, newest first. -/
+def history (dir : Text) (branch : Text) (limit : Int) : {IO, Throw Text} List (Text, Causal) :=
+  let rec go h k acc :=
+    if k <= 0 then List.reverse acc
+    else
+      let c := readCausal dir h
+      match c.parents with
+      | [] => List.reverse ((h, c) :: acc)
+      | p :: _ => go p (k - 1) ((h, c) :: acc)
+  go (headOf dir branch) limit []
+
+/-- All ancestors of a causal node (itself included). -/
+def ancestors (dir : Text) (h : Text) : {IO, Throw Text} Map Text Unit :=
+  let rec go work seen :=
+    match work with
+    | [] => seen
+    | x :: rest =>
+      if Set.contains x seen then go rest seen
+      else go ((readCausal dir x).parents ++ rest) (Set.insert x seen)
+  go [h] Set.empty
+
+/-- A common ancestor of two causal nodes: the first of `b`'s ancestors (breadth first) that `a` also has. -/
+def mergeBase (dir : Text) (a : Text) (b : Text) : {IO, Throw Text} Option Text :=
+  let mine := ancestors dir a
+  let rec go work seen :=
+    match work with
+    | [] => none
+    | x :: rest =>
+      if Set.contains x mine then some x
+      else if Set.contains x seen then go rest seen
+      else go (rest ++ (readCausal dir x).parents) (Set.insert x seen)
+  go [b] Set.empty
+
+inductive MergeResult where
+  | upToDate
+  | fastForward (head : Text)
+  | merged (head : Text) (changed : List Text)
+  | conflicts (names : List Text)
+
+/--
+  Merges `other` into the current branch. Names changed on one side only take that side;
+  names changed differently on both sides are conflicts, and nothing is written.
+-/
+def merge (dir : Text) (other : Text) : {IO, Throw Text} MergeResult :=
+  let branch := currentBranch dir
+  let ours := headOf dir branch
+  let theirs := headOf dir other
+  if ours == theirs || Set.contains theirs (ancestors dir ours) then MergeResult.upToDate
+  else if Set.contains ours (ancestors dir theirs) then
+    setBranch dir branch theirs
+    MergeResult.fastForward theirs
+  else
+    let baseNs := match mergeBase dir ours theirs with
+      | some b => readNamespace dir (readCausal dir b).snapshot
+      | none => Map.empty
+    let oursNs := readNamespace dir (readCausal dir ours).snapshot
+    let theirsNs := readNamespace dir (readCausal dir theirs).snapshot
+    let names := Set.toList (Set.fromList (Map.keys baseNs ++ Map.keys oursNs ++ Map.keys theirsNs))
+    let step := fun (state : (Map Text Entry, List Text, List Text)) (name : Text) =>
+      match state with
+      | (ns, changed, conflicts) =>
+        let b := Map.lookup name baseNs
+        let o := Map.lookup name oursNs
+        let t := Map.lookup name theirsNs
+        if o == t then state
+        else if b == o then
+          -- Only theirs changed this name.
+          let ns2 := match t with
+            | some e => Map.insert name e ns
+            | none => Map.remove name ns
+          (ns2, name :: changed, conflicts)
+        else if b == t then state
+        else (ns, changed, name :: conflicts)
+    match List.foldl step (oursNs, [], []) names with
+    | (ns, changed, []) =>
+      let snapshot := put dir (nsToSexp ns)
+      let c := put dir (causalToSexp (Causal.mk snapshot [ours, theirs] ("merge " ++ other ++ " into " ++ branch)))
+      setBranch dir branch c
+      MergeResult.merged c (List.reverse changed)
+    | (_, _, conflicts) => MergeResult.conflicts (List.reverse conflicts)
+
+--
+-- Reading definitions.
+--
+
+/-- Names of every entry whose hash is `h` (aliases included). -/
+def namesOf (ns : Map Text Entry) (h : Text) : List Text :=
+  List.map fst (List.filter (fun pair => Entry.hash (snd pair) == h) (Map.toList ns))
+
+/-- Hash → shortest unique display name, for printing. -/
+def nameIndex (ns : Map Text Entry) : Map Text Text :=
+  List.foldl (fun m pair =>
+    match pair with
+    | (name, e) =>
+      let key := match e with
+        | Entry.ctor t tag _ => t ++ "#" ++ Int.toText tag
+        | Entry.op a index _ => a ++ "!" ++ Int.toText index
+        | _ => Entry.hash e
+      match Map.lookup key m with
+      | some old => if Text.length name < Text.length old then Map.insert key name m else m
+      | none => Map.insert key name m) Map.empty (Map.toList ns)
+
+/-- Writes a compiled batch's objects and metadata. -/
+def store (dir : Text) (b : Batch) : {IO} Unit :=
+  List.forEach b.objects (fun pair => writeObject dir (fst pair) (snd pair))
+  List.forEach b.metas (fun pair => writeMeta dir (fst pair) (snd pair))
+
+/-- Hashes the definitions that `form` references (terms and types alike). -/
+def dependencies (form : Sexp) : List Text :=
+  let rec go x acc :=
+    match x with
+    | Sexp.list [Sexp.sym "ref", Sexp.str h] => h :: acc
+    | Sexp.list (Sexp.sym "con" :: Sexp.str h :: _) => if Text.startsWith "#" h then acc else h :: acc
+    | Sexp.list (Sexp.sym "pcon" :: Sexp.str h :: rest) => List.foldl (fun a y => go y a) (if Text.startsWith "#" h then acc else h :: acc) rest
+    | Sexp.list (Sexp.sym "op" :: Sexp.str h :: _) => if Text.startsWith "#" h then acc else h :: acc
+    | Sexp.list (Sexp.sym "on" :: Sexp.str h :: rest) => List.foldl (fun a y => go y a) (if Text.startsWith "#" h then acc else h :: acc) rest
+    | Sexp.list items => List.foldl (fun a y => go y a) acc items
+    | _ => acc
+  List.dedup (List.sort (go form []))
+
+/-- Replaces hashes throughout a form (used by update propagation). -/
+def rewrite (form : Sexp) (subst : Map Text Text) : Sexp :=
+  match form with
+  | Sexp.str h =>
+    match Map.lookup h subst with
+    | some h2 => Sexp.str h2
+    | none => form
+  | Sexp.list items => Sexp.list (List.map (fun x => rewrite x subst) items)
+  | _ => form
+
+end Codebase

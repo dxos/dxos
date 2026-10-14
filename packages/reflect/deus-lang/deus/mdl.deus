@@ -1,0 +1,20 @@
+/-
+  `.mdl` documents: DEUS code lives in ```deus fences. Lines outside fences are blanked rather
+  than removed, so positions in errors point into the document.
+-/
+
+namespace Mdl
+
+def deusSource (doc : Text) : Text :=
+  let rec go lines inFence acc :=
+    match lines with
+    | [] => Text.join "\n" (List.reverse acc)
+    | line :: rest =>
+      let trimmed := Text.trim line
+      if not inFence && trimmed == "```deus" then go rest true ("" :: acc)
+      else if inFence && trimmed == "```" then go rest false ("" :: acc)
+      else if inFence then go rest true (line :: acc)
+      else go rest false ("" :: acc)
+  go (Text.lines doc) false []
+
+end Mdl

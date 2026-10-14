@@ -1,0 +1,50 @@
+/-
+  Images: the closure of a definition as `(def "hash" core)` forms plus `(main "hash")`,
+  sorted by hash so the same code always yields the same bytes. The kernel loads images.
+-/
+
+namespace Image
+
+/-- Hashes referenced by `(ref …)` in a form. -/
+def refs (form : Sexp) (acc : List Text) : List Text :=
+  match form with
+  | Sexp.list [Sexp.sym "ref", Sexp.str h] => h :: acc
+  | Sexp.list items => List.foldl (fun a x => refs x a) acc items
+  | _ => acc
+
+/-- The runnable Core of an object: a term's or test's body, a theorem's proposition. -/
+def coreOf (obj : Sexp) : Option Sexp :=
+  match obj with
+  | Sexp.list [Sexp.sym "term", core] => some core
+  | Sexp.list [Sexp.sym "test", core] => some core
+  | Sexp.list (Sexp.sym "theorem" :: _ :: core :: _) => some core
+  | _ => none
+
+/-- Every definition reachable from `roots`, as (hash, core) sorted by hash. -/
+def closure (fetch : Text -> Option Sexp) (roots : List Text) : {Throw Text} List (Text, Sexp) :=
+  let rec go work seen acc :=
+    match work with
+    | [] => acc
+    | h :: rest =>
+      if Set.contains h seen then go rest seen acc
+      else
+        match Option.bind (fetch h) coreOf with
+        | some core => go (refs core rest) (Set.insert h seen) ((h, core) :: acc)
+        | none => throw ("missing definition #" ++ h)
+  List.sortBy (fun a b => compare (fst a) (fst b)) (go roots Set.empty [])
+
+def defForm (pair : (Text, Sexp)) : Text :=
+  match pair with
+  | (h, core) => Sexp.print (Sexp.node "def" [Sexp.str h, core])
+
+/-- The image text for an entry point. -/
+def build (fetch : Text -> Option Sexp) (main : Text) : {Throw Text} Text :=
+  let defs := List.map defForm (closure fetch [main])
+  Text.join "\n" (defs ++ [Sexp.print (Sexp.node "main" [Sexp.str main])]) ++ "\n"
+
+/-- Loads definitions into the running machine (for `run` and the test runner). -/
+def load (fetch : Text -> Option Sexp) (roots : List Text) : {Throw Text} Unit :=
+  let pending := List.filter (fun pair => not (Code.has (fst pair))) (closure fetch roots)
+  if List.isEmpty pending then () else Code.load (Text.join "\n" (List.map defForm pending))
+
+end Image

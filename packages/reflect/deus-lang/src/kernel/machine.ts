@@ -508,7 +508,10 @@ export class Machine {
             value = new Pap(fn, args);
             return true;
           }
-          value = fn.type === '#Pair' && fn.arity === 2 ? pair(args[0], args[1]) : new Con(fn.type, fn.tag, args.slice(0, fn.arity));
+          value =
+            fn.type === '#Pair' && fn.arity === 2
+              ? pair(args[0], args[1])
+              : new Con(fn.type, fn.tag, args.slice(0, fn.arity));
           if (args.length > fn.arity) {
             throw new DeusDefect('constructor applied to too many arguments');
           }
@@ -570,207 +573,207 @@ export class Machine {
     };
 
     const loop = (): Value => {
-    while (true) {
-      if (evaluating) {
-        steps++;
-        switch (term.t) {
-          case VAR:
-            value = lookup(term.i);
-            evaluating = false;
-            break;
-          case CONST:
-            value = term.v;
-            evaluating = false;
-            break;
-          case REF: {
-            const global = this.globals.get(term.h);
-            if (!global) {
-              throw new DeusPanic(`unknown definition ${term.h}`);
-            }
-            if (global.value !== undefined) {
-              value = global.value;
+      while (true) {
+        if (evaluating) {
+          steps++;
+          switch (term.t) {
+            case VAR:
+              value = lookup(term.i);
               evaluating = false;
               break;
-            }
-            if (!global.term) {
-              global.term = compileTerm(global.form, this.prims);
-            }
-            if (global.term.t === LAM) {
-              global.value = new Closure(global.term, null);
-              value = global.value;
+            case CONST:
+              value = term.v;
               evaluating = false;
               break;
+            case REF: {
+              const global = this.globals.get(term.h);
+              if (!global) {
+                throw new DeusPanic(`unknown definition ${term.h}`);
+              }
+              if (global.value !== undefined) {
+                value = global.value;
+                evaluating = false;
+                break;
+              }
+              if (!global.term) {
+                global.term = compileTerm(global.form, this.prims);
+              }
+              if (global.term.t === LAM) {
+                global.value = new Closure(global.term, null);
+                value = global.value;
+                evaluating = false;
+                break;
+              }
+              if (global.evaluating) {
+                throw new DeusDefect(`definition ${term.h} depends on its own value`);
+              }
+              global.evaluating = true;
+              stack.push({ k: F_GLOBAL, g: global });
+              term = global.term;
+              env = null;
+              break;
             }
-            if (global.evaluating) {
-              throw new DeusDefect(`definition ${term.h} depends on its own value`);
-            }
-            global.evaluating = true;
-            stack.push({ k: F_GLOBAL, g: global });
-            term = global.term;
-            env = null;
-            break;
-          }
-          case LAM:
-            value = new Closure(term, env);
-            evaluating = false;
-            break;
-          case APP: {
-            // Fast path: every operand is a variable or constant, so no frame is needed.
-            const f = term.f;
-            if (f.t === CONST || f.t === VAR) {
-              const operands = term.args;
-              let simple = true;
-              for (let i = 0; i < operands.length; i++) {
-                const operand = operands[i];
-                if (operand.t !== VAR && operand.t !== CONST) {
-                  simple = false;
+            case LAM:
+              value = new Closure(term, env);
+              evaluating = false;
+              break;
+            case APP: {
+              // Fast path: every operand is a variable or constant, so no frame is needed.
+              const f = term.f;
+              if (f.t === CONST || f.t === VAR) {
+                const operands = term.args;
+                let simple = true;
+                for (let i = 0; i < operands.length; i++) {
+                  const operand = operands[i];
+                  if (operand.t !== VAR && operand.t !== CONST) {
+                    simple = false;
+                    break;
+                  }
+                }
+                if (simple) {
+                  const args: Value[] = new Array(operands.length);
+                  for (let i = 0; i < operands.length; i++) {
+                    const operand = operands[i];
+                    args[i] = operand.t === VAR ? lookup(operand.i) : operand.t === CONST ? operand.v : UNIT;
+                  }
+                  evaluating = !apply(f.t === VAR ? lookup(f.i) : f.v, args);
                   break;
                 }
               }
-              if (simple) {
-                const args: Value[] = new Array(operands.length);
-                for (let i = 0; i < operands.length; i++) {
-                  const operand = operands[i];
-                  args[i] = operand.t === VAR ? lookup(operand.i) : operand.t === CONST ? operand.v : UNIT;
+              stack.push({ k: F_APP, term, env, fn: undefined, args: [] });
+              term = term.f;
+              break;
+            }
+            case LET:
+              stack.push({ k: F_LET, b: term.b, env });
+              term = term.v;
+              break;
+            case SEQ:
+              stack.push({ k: F_SEQ, b: term.b, env });
+              term = term.a;
+              break;
+            case LETREC: {
+              const cells: { value: Value; next: Env }[] = [];
+              let e = env;
+              for (let i = 0; i < term.vs.length; i++) {
+                const cell = { value: UNIT as Value, next: e };
+                cells.push(cell);
+                e = cell;
+              }
+              for (let i = 0; i < term.vs.length; i++) {
+                cells[i].value = new Closure(term.vs[i], e);
+              }
+              env = e;
+              term = term.b;
+              break;
+            }
+            case IF:
+              stack.push({ k: F_IF, th: term.th, el: term.el, env });
+              term = term.c;
+              break;
+            case MATCH:
+              stack.push({ k: F_MATCH, cases: term.cases, env });
+              term = term.s;
+              break;
+            case HANDLE:
+              stack.push({ k: F_HANDLE, h: term, env });
+              term = term.b;
+              break;
+          }
+          continue;
+        }
+
+        const frame = stack.pop();
+        if (!frame) {
+          this.steps = steps;
+          return value;
+        }
+        switch (frame.k) {
+          case F_APP: {
+            if (frame.fn === undefined) {
+              frame.fn = value;
+            } else {
+              frame.args.push(value);
+            }
+            if (frame.args.length < frame.term.args.length) {
+              stack.push(frame);
+              term = frame.term.args[frame.args.length];
+              env = frame.env;
+              evaluating = true;
+            } else {
+              evaluating = !apply(frame.fn, frame.args);
+            }
+            break;
+          }
+          case F_LET:
+            env = { value, next: frame.env };
+            term = frame.b;
+            evaluating = true;
+            break;
+          case F_SEQ:
+            env = frame.env;
+            term = frame.b;
+            evaluating = true;
+            break;
+          case F_IF:
+            env = frame.env;
+            term = value === true ? frame.th : frame.el;
+            evaluating = true;
+            break;
+          case F_MATCH:
+          case F_GUARD: {
+            const cases = frame.cases;
+            const scrutinee = frame.k === F_GUARD ? frame.value : value;
+            let i = frame.k === F_GUARD ? frame.index : 0;
+            if (frame.k === F_GUARD) {
+              if (value === true) {
+                env = frame.bound;
+                term = cases[i].body;
+                evaluating = true;
+                break;
+              }
+              i++;
+            }
+            const base = frame.env;
+            let matched = false;
+            for (; i < cases.length; i++) {
+              const bound = bind(cases[i].pat, scrutinee, base);
+              if (bound !== undefined) {
+                const guard = cases[i].guard;
+                if (guard) {
+                  stack.push({ k: F_GUARD, value: scrutinee, cases, index: i, bound, env: base });
+                  env = bound;
+                  term = guard;
+                } else {
+                  env = bound;
+                  term = cases[i].body;
                 }
-                evaluating = !apply(f.t === VAR ? lookup(f.i) : f.v, args);
+                matched = true;
                 break;
               }
             }
-            stack.push({ k: F_APP, term, env, fn: undefined, args: [] });
-            term = term.f;
-            break;
-          }
-          case LET:
-            stack.push({ k: F_LET, b: term.b, env });
-            term = term.v;
-            break;
-          case SEQ:
-            stack.push({ k: F_SEQ, b: term.b, env });
-            term = term.a;
-            break;
-          case LETREC: {
-            const cells: { value: Value; next: Env }[] = [];
-            let e = env;
-            for (let i = 0; i < term.vs.length; i++) {
-              const cell = { value: UNIT as Value, next: e };
-              cells.push(cell);
-              e = cell;
+            if (!matched) {
+              throw new DeusDefect(`no match for ${show(scrutinee)}`);
             }
-            for (let i = 0; i < term.vs.length; i++) {
-              cells[i].value = new Closure(term.vs[i], e);
-            }
-            env = e;
-            term = term.b;
-            break;
-          }
-          case IF:
-            stack.push({ k: F_IF, th: term.th, el: term.el, env });
-            term = term.c;
-            break;
-          case MATCH:
-            stack.push({ k: F_MATCH, cases: term.cases, env });
-            term = term.s;
-            break;
-          case HANDLE:
-            stack.push({ k: F_HANDLE, h: term, env });
-            term = term.b;
-            break;
-        }
-        continue;
-      }
-
-      const frame = stack.pop();
-      if (!frame) {
-        this.steps = steps;
-        return value;
-      }
-      switch (frame.k) {
-        case F_APP: {
-          if (frame.fn === undefined) {
-            frame.fn = value;
-          } else {
-            frame.args.push(value);
-          }
-          if (frame.args.length < frame.term.args.length) {
-            stack.push(frame);
-            term = frame.term.args[frame.args.length];
-            env = frame.env;
             evaluating = true;
-          } else {
-            evaluating = !apply(frame.fn, frame.args);
+            break;
           }
-          break;
-        }
-        case F_LET:
-          env = { value, next: frame.env };
-          term = frame.b;
-          evaluating = true;
-          break;
-        case F_SEQ:
-          env = frame.env;
-          term = frame.b;
-          evaluating = true;
-          break;
-        case F_IF:
-          env = frame.env;
-          term = value === true ? frame.th : frame.el;
-          evaluating = true;
-          break;
-        case F_MATCH:
-        case F_GUARD: {
-          const cases = frame.cases;
-          const scrutinee = frame.k === F_GUARD ? frame.value : value;
-          let i = frame.k === F_GUARD ? frame.index : 0;
-          if (frame.k === F_GUARD) {
-            if (value === true) {
-              env = frame.bound;
-              term = cases[i].body;
+          case F_HANDLE:
+            if (frame.h.ret) {
+              env = { value, next: frame.env };
+              term = frame.h.ret;
               evaluating = true;
-              break;
             }
-            i++;
-          }
-          const base = frame.env;
-          let matched = false;
-          for (; i < cases.length; i++) {
-            const bound = bind(cases[i].pat, scrutinee, base);
-            if (bound !== undefined) {
-              const guard = cases[i].guard;
-              if (guard) {
-                stack.push({ k: F_GUARD, value: scrutinee, cases, index: i, bound, env: base });
-                env = bound;
-                term = guard;
-              } else {
-                env = bound;
-                term = cases[i].body;
-              }
-              matched = true;
-              break;
-            }
-          }
-          if (!matched) {
-            throw new DeusDefect(`no match for ${show(scrutinee)}`);
-          }
-          evaluating = true;
-          break;
+            break;
+          case F_GLOBAL:
+            frame.g.value = value;
+            frame.g.evaluating = false;
+            break;
+          case F_REST:
+            evaluating = !apply(value, frame.args);
+            break;
         }
-        case F_HANDLE:
-          if (frame.h.ret) {
-            env = { value, next: frame.env };
-            term = frame.h.ret;
-            evaluating = true;
-          }
-          break;
-        case F_GLOBAL:
-          frame.g.value = value;
-          frame.g.evaluating = false;
-          break;
-        case F_REST:
-          evaluating = !apply(value, frame.args);
-          break;
       }
-    }
     };
 
     while (true) {
@@ -816,7 +819,15 @@ export const equal = (a: Value, b: Value): boolean => {
 };
 
 const rank = (value: Value): number =>
-  typeof value === 'boolean' ? 0 : typeof value === 'number' ? 1 : typeof value === 'string' ? 2 : value instanceof Con ? 3 : 4;
+  typeof value === 'boolean'
+    ? 0
+    : typeof value === 'number'
+      ? 1
+      : typeof value === 'string'
+        ? 2
+        : value instanceof Con
+          ? 3
+          : 4;
 
 /** Total structural order: -1, 0 or 1. */
 export const compare = (a: Value, b: Value): number => {

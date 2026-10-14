@@ -1,0 +1,20 @@
+layer: library
+language: typescript
+tags:
+  - ts-vite-build
+  - ts-test
+tasks:
+  # Regenerates seed/deus.seed with the current seed. Run it twice after changing deus/: the
+  # second run must leave the seed unchanged (the self-hosting fixpoint, checked by src/seed.test.ts).
+  self-build:
+    command: node
+    args:
+      - bin/deus.mjs
+      - compile
+      - deus
+      - --main
+      - Cli.main
+      - -o
+      - seed/deus.seed
+    options:
+      cache: false

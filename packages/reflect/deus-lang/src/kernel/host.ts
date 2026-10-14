@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync, writeSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync, writeSync } from 'node:fs';
 import { dirname } from 'node:path';
 
 import { DeusDefect, type HostHandler, NONE, UNIT, type Value, listFrom, listTo, show, some } from './machine.ts';
