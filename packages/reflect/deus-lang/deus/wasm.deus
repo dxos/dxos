@@ -339,7 +339,7 @@ def primitive (scope : Scope) (env : List Int) (next : Ref Int) (e : Sexp) (p : 
   | _ => throw ("the primitive " ++ p ++ " is outside the wasm subset")
 
 /--
-  `Array` primitives (D82) on a block `[length, item…]`, and `Ref` on a block `[value]`; `args`
+  `Array` primitives (D83) on a block `[length, item…]`, and `Ref` on a block `[value]`; `args`
   is the code for each argument. An index outside the array, or a negative length, traps.
   `Array.set` and `Ref.set` return address 0, whose word is 0, so it reads as `()`.
 -/

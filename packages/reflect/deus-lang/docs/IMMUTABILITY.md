@@ -2,7 +2,7 @@
 
 Dmytro asked whether writing programs functionally, with immutable data, leads to fundamentally
 inefficient code, and whether DEUS needs mutable memory ([USER.md](./USER.md)). This note answers
-with measurements and recommends a design, recorded as [D82](./DECISIONS.md).
+with measurements and recommends a design, recorded as [D83](./DECISIONS.md).
 
 ## Short answer
 
@@ -108,7 +108,7 @@ hash tables, dynamic-programming tables and graph search all want O(1) indexed w
 substitutes (`Map`, a balanced tree) cost O(log n) per access. Sorting is the friendly case, and it
 already shows a 2–3× gap in time and a 20× gap in memory.
 
-## Recommendation (D82)
+## Recommendation (D83)
 
 Add mutable memory, but in a form that keeps DEUS pure where it matters: hashing, cached test
 results, the prover, and multi-shot handlers. Do it in two steps.

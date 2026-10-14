@@ -104,6 +104,10 @@ def write (dir : Text) (out : Text) : {IO, Throw Text} (Int, Int, Int) :=
   let tasks := List.sortBy Tasks.order (Map.values (Tasks.current dir))
   IO.writeFile (out ++ "/tasks.sexp") (Text.concat (List.map (fun t => Sexp.print (Tasks.toSexp t) ++ "\n") (List.sortBy (fun a b => compare a.id b.id) tasks)))
   IO.writeFile (out ++ "/TASKS.md") ("# Tasks\n\n" ++ Text.concat (List.map taskMarkdown tasks))
+  -- Comments (D82) are written only when there are some, so an export without them is unchanged.
+  let threads := Map.toList (Comments.current dir)
+  if List.isEmpty threads then () else
+    IO.writeFile (out ++ "/comments.sexp") (Text.concat (List.map (fun pair => Sexp.print (Sexp.node "subject" [Sexp.str (fst pair), Comments.threadToSexp (snd pair)]) ++ "\n") threads))
   let project := match Project.read dir with
     | some p => p.projectIri
     | none => "a DEUS codebase"
@@ -116,9 +120,10 @@ def write (dir : Text) (out : Text) : {IO, Throw Text} (Int, Int, Int) :=
     "- `code/` holds the source of every definition, one file per top-level namespace.",
     "- `tasks.sexp` holds the tasks, and `TASKS.md` lists them to read.",
     "- `history.sexp` holds the branch's changes, and `HISTORY.md` lists them to read.",
-    "- `specs/` holds the `.mdl` spec blocks, one document per name.", "",
+    "- `specs/` holds the `.mdl` spec blocks, one document per name."] ++
+    (if List.isEmpty threads then [] else ["- `comments.sexp` holds comments on definitions and changes; the files they attach stay in the codebase's asset store."]) ++ ["",
     "To restore it into a fresh codebase:", "", "```bash", "deus init --empty"] ++ projectStep ++
-    ["deus add code" ++ (if List.isEmpty documents then "" else " specs"), "deus task import tasks.sexp", "deus history import history.sexp", "```", ""]))
+    ["deus add code" ++ (if List.isEmpty documents then "" else " specs"), "deus task import tasks.sexp"] ++ (if List.isEmpty threads then [] else ["deus comments import comments.sexp"]) ++ ["deus history import history.sexp", "```", ""]))
   let history := Cli.fullLog dir 100000
   IO.writeFile (out ++ "/history.sexp") (Text.concat (List.map (fun entry =>
     match entry with
@@ -233,5 +238,17 @@ def importTasks (dir : Text) (path : Text) : {IO, Throw Text} Int :=
     | (n, conflicts) =>
       List.forEach conflicts (fun c => IO.eprint ("conflict: " ++ c ++ " (this codebase's value kept)\n"))
       n
+
+/-- Restores comments from an export's `comments.sexp` as one change; returns how many. -/
+def importComments (dir : Text) (path : Text) : {IO, Throw Text} Int :=
+  match IO.readFile path with
+  | none => throw ("cannot read " ++ path)
+  | some text =>
+    let added := List.concatMap (fun form =>
+      match Sexp.args form with
+      | [subject, thread] => List.map (fun c => (Sexp.asText subject, Tasks.commentFromSexp c)) (Sexp.args thread)
+      | _ => defect ("bad comments entry " ++ Sexp.print form)) (Sexp.readAll text)
+    let _ := Comments.add dir added ("comments: import " ++ Int.toText (List.length added) ++ " comments")
+    List.length added
 
 end Export

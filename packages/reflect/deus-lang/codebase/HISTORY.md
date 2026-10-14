@@ -1,8 +1,20 @@
 # History of main
 
-- `84ea0dfca4` history: import 194 changes (by claude)
-- `c3d8f786c1` task: import from tasks.sexp
-- `03d2b5612f` add code specs
+- `17d48b3b3e` history: import 206 changes (by claude)
+- `cad965875a` task: import from tasks.sexp
+- `3b25b5f78f` add code specs
+- `32d2bffc00` task: set 747a4182 state (by claude)
+- `f75fd70e74` task: link 747a4182 to #68dcd2f5f1 (by claude)
+- `213c2a9ed5` task: set 81438cac state (by claude)
+- `fea464b8b5` task: link 81438cac to #68dcd2f5f1 (by claude)
+- `bb588af416` close 4909bee3 by #68dcd2f5f1 (by claude)
+- `68dcd2f5f1` the explorer writes: GitHub sign-in, comments, tasks with images (D82) (by claude)
+- `007a69d576` task: open 747a4182 File tasks from the explorer with image attachments stored as codebase assets (by claude)
+- `1ff3a83889` task: open 81438cac Explorer comments on definitions, changes and tasks, stored in the codebase (by claude)
+- `09f2f89158` task: open 4909bee3 Explorer accounts: GitHub sign-in, writes limited to active dxos org members, read-only when signed out (by claude)
+- `e666974c28` history: import 194 changes
+- `1f241c967c` task: import from tasks.sexp
+- `804de180dc` add code specs
 - `61307b80f9` task: open 353444f7 TypeScript bindings: run in-process on the TypeScript kernel too
 - `dd5833e34f` task: open 1474b99e TypeScript bindings: pass functions across (callbacks and closures)
 - `1e488a6077` task: open b6907aeb TypeScript bindings: export polymorphic functions with codec parameters

@@ -41,7 +41,7 @@ def Cli.addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
     let ns2 := foldl (fun m pair => Map.insert (fst pair) (snd pair) m) ns entries
     let subst := Map.fromList (List.map (fun c =>
       match c with
-      | (_, old, new) => (hash old, hash new)) replaced)
+      | (_, old, new) => (Entry.hash old, Entry.hash new)) replaced)
     let propagated := propagate dir ns2 subst (Set.fromList (List.map fst entries))
     let ns3 := fst propagated
     let message := getOr
@@ -49,7 +49,7 @@ def Cli.addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
       ((if isUpdate then "update " else "add ") ++ join " " args.positional)
     let causal := commit dir ns3 message
     recordProvenance dir args causal (List.map fst batch.objects ++ List.map
-      (fun pair => hash (snd pair))
+      (fun pair => Entry.hash (snd pair))
       (List.filter (fun pair => Entry.kind (snd pair) == "spec") entries))
     match option args "closes" with
     | Option.some id =>
@@ -65,10 +65,10 @@ def Cli.addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
         match c with
         | (name, _, new) => entryJson name new) replaced)), ("propagated", Json.arr (List.map Json.str (snd propagated))), ("causal", Json.str causal)])
       (fun _ =>
-        let addedLines := List.map (fun p => "  + " ++ fst p ++ "  " ++ short (hash (snd p))) added
+        let addedLines := List.map (fun p => "  + " ++ fst p ++ "  " ++ short (Entry.hash (snd p))) added
         let updatedLines := List.map (fun c =>
           match c with
-          | (name, old, new) => "  ~ " ++ name ++ "  " ++ short (hash old) ++ " -> " ++ short (hash new)) replaced
+          | (name, old, new) => "  ~ " ++ name ++ "  " ++ short (Entry.hash old) ++ " -> " ++ short (Entry.hash new)) replaced
         let propagatedLines := List.map (fun name => "  ^ " ++ name ++ " (dependent, rehashed)") (snd propagated)
         let lines := addedLines ++ updatedLines ++ propagatedLines
         if List.isEmpty lines then "Nothing changed." else join "\n" lines)
@@ -79,6 +79,20 @@ def Cli.applyFields (args : Args) (t : Task) : {Throw Text} Task := foldl (fun a
   | Option.some value => setField acc field value
   | Option.none => acc) t fields
 
+/-- `deus asset add <file>` (D82): stores a file in the asset store by its SHA-256. -/
+def Cli.asset (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  match args.positional with
+  | "add" :: file :: [] =>
+      let a := Assets.add dir file
+      Cli.output
+        args
+        (fun _ => assetJson a)
+        (fun _ => a.hash ++ "  " ++ a.mediaType ++ "  " ++ a.fileName)
+  | _ => Throw.throw "usage: deus asset add <file>"
+
+def Cli.assetJson (a : Asset) : Json := Json.obj [("hash", Json.str a.hash), ("type", Json.str a.mediaType), ("name", Json.str a.fileName)]
+
 --
 -- Commands: tasks (D59).
 --
@@ -86,6 +100,12 @@ def Cli.attachmentJson (a : Attachment) : Json :=
   match a with
   | Attachment.definition name h => Json.obj [("definition", Json.str name), ("hash", Json.str h)]
   | Attachment.change h => Json.obj [("change", Json.str h)]
+
+/-- `--attach <file>` copied into the asset store (D82); none without the option. -/
+def Cli.attachments (dir : Text) (args : Args) : {IO, Throw Text} List Asset :=
+  match option args "attach" with
+  | Option.some file => [Assets.add dir file]
+  | Option.none => []
 
 /-- The last path segment without its extension. -/
 def Cli.baseName (path : Text) : Text :=
@@ -247,6 +267,50 @@ def Cli.codebaseDir (args : Args) : {IO} Text :=
       | Option.some dir => dir
       | Option.none => getOr (IO.getEnv "HOME") "." ++ "/.deus"
 
+/-- `deus comment <name|change:h> <text…>` (D82): a comment on a definition or a change, kept in the codebase. -/
+def Cli.comment (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let author := getOr (option args "by") (getOr (IO.getEnv "USER") "someone")
+  match args.positional with
+  | given :: words =>
+      let subject := subjectOf dir given
+      let c := Comment.mk author (join " " words) (IO.wallClock ()) (attachments dir args)
+      if Text.isEmpty c.note && List.isEmpty c.assets then Throw.throw "usage: deus comment <name|change:h> <text…> [--attach file]" else
+        recordProvenance dir args (Comments.add dir [(subject, c)] ("comment on " ++ subject)) []
+        Cli.output
+          args
+          (fun _ => Json.obj [("subject", Json.str subject), ("comment", commentJson c)])
+          (fun _ => "Commented on " ++ subject ++ ".")
+  | [] => Throw.throw "usage: deus comment <name|change:h> <text…> [--attach file]"
+
+def Cli.commentJson (c : Comment) : Json := Json.obj [("author", Json.str c.author), ("note", Json.str c.note), ("at", Json.str c.written), ("assets", Json.arr (List.map assetJson c.assets))]
+
+def Cli.commentLine (c : Comment) : Text := "  " ++ c.author ++ ": " ++ c.note ++
+  Text.concat (List.map (fun a => " [" ++ a.fileName ++ " " ++ Text.take 10 a.hash ++ "]") c.assets)
+
+/-- `deus comments [<name|change:h>]`: the comments on one subject, or on every subject that has some. -/
+def Cli.comments (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  match args.positional with
+  | "import" :: path :: [] =>
+      let n := importComments dir path
+      Cli.output
+        args
+        (fun _ => Json.obj [("imported", Json.num n)])
+        (fun _ => "Imported " ++ toText n ++ " comments.")
+  | _ =>
+      let all := Comments.current dir
+      let shown :=
+        match args.positional with
+        | given :: [] =>
+            let subject := subjectOf dir given
+            [(subject, getOr (Map.lookup subject all) [])]
+        | _ => Map.toList all
+      Cli.output
+        args
+        (fun _ => Json.obj (List.map (fun pair => (fst pair, Json.arr (List.map commentJson (snd pair)))) shown))
+        (fun _ => if List.all (fun pair => List.isEmpty (snd pair)) shown then "No comments." else join "\n" (concatMap (fun pair => [fst pair] ++ List.map commentLine (snd pair)) shown))
+
 /-- `deus compact [remote] [--level k]`: rewrites history into level-k strata and drops covered
   bundles. It never drops history: a bundle goes only once strata hold all its objects (D73). -/
 def Cli.compact (args : Args) : {IO, Throw Text} Unit :=
@@ -307,7 +371,7 @@ def Cli.deps (args : Args) (reverse : Bool) : {IO, Throw Text} Unit :=
   let ns := Codebase.current dir
   match Cli.lookupName ns (getOr (head? args.positional) "") with
   | (name, e) =>
-      let h := hash e
+      let h := Entry.hash e
       let index := nameIndex ns
       let display := fun x => getOr (Map.lookup x index) (short x)
       let found := if reverse then dependentsOf dir ns h else
@@ -331,9 +395,9 @@ def Cli.dispatch (argv : List Text) : {IO, Throw Text} Unit :=
       if command == "compile" then Cli.compile args else if command == "init" then Cli.init args else if command == "add" then addOrUpdate args false else if command == "update" then addOrUpdate args true else if command == "ls" then ls args else if command == "find" then Cli.find args else if command == "view" then view args else if command == "names" then Cli.names args else if command == "deps" then deps args false else if command == "dependents" then deps args true else if command == "mv" then mv args false else if command == "alias" then mv args true else if command == "rm" then rm args else if command == "branch" then branch args else if command == "switch" then switch args else if command == "merge" then Cli.merge args else if command == "log" then Cli.log args else if command == "layers" then Cli.layers args else if command == "migrate" then Cli.migrate args else if command == "project" then project args else if command == "lib" then lib args else if command == "remote" then remote args else if command == "push" then Cli.push args else if command == "pull" then Cli.pull args else if command == "compact" then Cli.compact args else if command == "undo" then undo args else if command == "run" then
         match leadingOptions rest with
         | (options, program) => Cli.run (parseArgs options) program
-      else if command == "eval" then eval args else if command == "mdl" then mdl args else if command == "test" then tests args else if command == "check" then theorems args else if command == "image" then Cli.image args else if command == "build" then Cli.build args else if command == "bindings" then bindings args else if command == "serve" then Cli.serve args else if command == "explore" then explore args else if command == "task" then task args else if command == "export" then export args else if command == "history" then Cli.history args else if command == "help" then IO.print usage else die ("unknown command " ++ command ++ "\n" ++ usage)
+      else if command == "eval" then eval args else if command == "mdl" then mdl args else if command == "test" then tests args else if command == "check" then theorems args else if command == "image" then Cli.image args else if command == "build" then Cli.build args else if command == "bindings" then bindings args else if command == "serve" then Cli.serve args else if command == "explore" then explore args else if command == "task" then task args else if command == "comment" then Cli.comment args else if command == "comments" then Cli.comments args else if command == "asset" then asset args else if command == "inbox" then inbox args else if command == "export" then export args else if command == "history" then Cli.history args else if command == "help" then IO.print usage else die ("unknown command " ++ command ++ "\n" ++ usage)
 
-def Cli.entryJson (name : Text) (e : Entry) : Json := Json.obj [("name", Json.str name), ("kind", Json.str (Entry.kind e)), ("hash", Json.str (hash e))]
+def Cli.entryJson (name : Text) (e : Entry) : Json := Json.obj [("name", Json.str name), ("kind", Json.str (Entry.kind e)), ("hash", Json.str (Entry.hash e))]
 
 /-- `deus eval "<expr>"`: evaluates an expression against the codebase and prints it. -/
 def Cli.eval (args : Args) : {IO, Throw Text} Unit :=
@@ -428,7 +492,7 @@ def Cli.find (args : Args) : {IO, Throw Text} Unit :=
   Cli.output
     args
     (fun _ => Json.arr (List.map (fun p => entryJson (fst p) (snd p)) rows))
-    (fun _ => join "\n" (List.map (fun p => fst p ++ "  " ++ short (hash (snd p))) rows))
+    (fun _ => join "\n" (List.map (fun p => fst p ++ "  " ++ short (Entry.hash (snd p))) rows))
 
 def Cli.flag (args : Args) (key : Text) : Bool := Map.contains key args.options
 
@@ -483,6 +547,16 @@ def Cli.image (args : Args) : {IO, Throw Text} Unit :=
       | Option.none => IO.print text
   | _ => Throw.throw "usage: deus image <term> -o <file>"
 
+/-- `deus inbox [remote]` (D82): applies the comments and tasks members filed in the hosted explorer. -/
+def Cli.inbox (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let name := remoteName args
+  let lines := withRemote dir name (fun _ => Inbox.apply dir)
+  Cli.output
+    args
+    (fun _ => Json.arr (List.map Json.str lines))
+    (fun _ => if List.isEmpty lines then "The inbox is empty." else join "\n" lines)
+
 /-- `deus init [--empty]`: a codebase holding the builtins and prelude, or nothing with `--empty`. -/
 def Cli.init (args : Args) : {IO, Throw Text} Unit :=
   let dir := codebaseDir args
@@ -504,7 +578,7 @@ def Cli.init (args : Args) : {IO, Throw Text} Unit :=
 /-- Dependencies of a batch's objects that their layer may not have, as `name (layer) -> name (layer)`. -/
 def Cli.layerCrossings (dir : Text) (batch : Batch) : {IO} List Text :=
   let objects := Map.fromList batch.objects
-  let names := Map.fromList (List.map (fun pair => (hash (snd pair), fst pair)) batch.entries)
+  let names := Map.fromList (List.map (fun pair => (Entry.hash (snd pair), fst pair)) batch.entries)
   let nameOf := fun h => getOr (Map.lookup h names) (short h)
   let formOf := fun h => orElse (Map.lookup h objects) (fun _ => readObject dir h)
   concatMap (fun pair =>
@@ -586,7 +660,7 @@ def Cli.linkReport (dir : Text) (ns : Map Text Entry) (a : Attachment) : {IO, Th
         | Option.none => "(not in this store)"
       (Json.obj [("change", Json.str h), ("message", Json.str message)], ["  change " ++ short h ++ "  " ++ message])
   | Attachment.definition name h =>
-      let now := Option.map hash (Map.lookup name ns)
+      let now := Option.map Entry.hash (Map.lookup name ns)
       let changes := historyOfName dir name 200
       let state :=
         match now with
@@ -608,7 +682,7 @@ def Cli.log (args : Args) : {IO, Throw Text} Unit :=
 /-- Resolves a name (or `#hashprefix`) in a namespace to its full name and entry. -/
 def Cli.lookupName (ns : Map Text Entry) (name : Text) : {Throw Text} (Text, Entry) := if startsWith "#" name then
   let prefix := Text.drop 1 name
-  match List.filter (fun pair => startsWith prefix (hash (snd pair))) (Map.toList ns) with
+  match List.filter (fun pair => startsWith prefix (Entry.hash (snd pair))) (Map.toList ns) with
   | [] => Throw.throw ("no definition with hash " ++ name)
   | pair :: _ => pair
 else
@@ -632,7 +706,7 @@ def Cli.ls (args : Args) : {IO, Throw Text} Unit :=
   let paint := fun code t => if colour then esc ++ "[" ++ code ++ "m" ++ t ++ esc ++ "[0m" else t
   let lines := List.map
     (fun p => padRight (width + 2) (fst p) ++ paint "36" (padRight 8 (Entry.kind (snd p))) ++ " " ++
-      paint "2" (short (hash (snd p))))
+      paint "2" (short (Entry.hash (snd p))))
     rows
   Cli.output
     args
@@ -735,7 +809,7 @@ def Cli.nameCallee (ns : Map Text Entry) (message : Text) : Text :=
   if found < 0 then message else
     let start := found + Text.length marker
     let prefix := slice message start (start + 10)
-    match List.find (fun pair => startsWith prefix (hash (snd pair))) (Map.toList ns) with
+    match List.find (fun pair => startsWith prefix (Entry.hash (snd pair))) (Map.toList ns) with
     | Option.some (name, _) => Text.take (start - 1) message ++ name ++ Text.drop (start + 10) message
     | Option.none => message
 
@@ -750,10 +824,10 @@ def Cli.names (args : Args) : {IO, Throw Text} Unit :=
   let ns := Codebase.current dir
   match Cli.lookupName ns (getOr (head? args.positional) "") with
   | (_, e) =>
-      let all := namesOf ns (hash e)
+      let all := namesOf ns (Entry.hash e)
       Cli.output
         args
-        (fun _ => Json.obj [("hash", Json.str (hash e)), ("names", Json.arr (List.map Json.str all))])
+        (fun _ => Json.obj [("hash", Json.str (Entry.hash e)), ("names", Json.arr (List.map Json.str all))])
         (fun _ => join "\n" all)
 
 def Cli.openCodebase (args : Args) : {IO, Throw Text} Text :=
@@ -833,13 +907,15 @@ def Cli.publishSite (dir : Text) (name : Text) (out : Text) (force : Bool) : {IO
     match Text.split line " " with
     | sum :: path :: [] => Option.some (path, sum)
     | _ => Option.none) (lines (getOr (IO.readFile manifest) "")))
-  let sums := List.map
-    (fun f => (f, Text.sha256 (getOr (IO.readFile (out ++ "/" ++ f)) "")))
-    (filesUnder out "")
+  -- Attached files are binary and already on the remote under `assets/`, where the Worker serves them (D82).
+  let files := List.filter (fun f => not (startsWith "assets/" f)) (filesUnder out "")
+  let sums := List.map (fun f => (f, Text.sha256 (getOr (IO.readFile (out ++ "/" ++ f)) ""))) files
   let changed := List.filter (fun pair => Map.lookup (fst pair) previous != Option.some (snd pair)) sums
-  withRemote dir name (fun _ => Remote.writeAll (List.map
-    (fun pair => ("site/" ++ fst pair, getOr (IO.readFile (out ++ "/" ++ fst pair)) ""))
-    changed))
+  withRemote dir name (fun _ =>
+    pushAssets dir
+    Remote.writeAll (List.map
+      (fun pair => ("site/" ++ fst pair, getOr (IO.readFile (out ++ "/" ++ fst pair)) ""))
+      changed))
   IO.writeFile
     manifest
     (Text.concat (List.map (fun pair => snd pair ++ " " ++ fst pair ++ "\n") sums))
@@ -849,7 +925,10 @@ def Cli.publishSite (dir : Text) (name : Text) (out : Text) (force : Bool) : {IO
 def Cli.pull (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let name := remoteName args
-  let branches := withRemote dir name (fun _ => Replicate.pull dir name)
+  let branches := withRemote dir name (fun _ =>
+    let pulled := Replicate.pull dir name
+    pullAssets dir
+    pulled)
   Cli.output args (fun _ => Json.arr (List.map
     (fun b => Json.obj [("branch", Json.str (fst b)), ("heads", Json.arr (List.map Json.str (snd b)))])
     branches)) (fun _ => join "\n" (List.map (fun b =>
@@ -863,7 +942,10 @@ def Cli.push (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let name := remoteName args
   let branch := getOr (option args "branch") (currentBranch dir)
-  let pushed := withRemote dir name (fun _ => Replicate.push dir name branch)
+  let pushed := withRemote dir name (fun _ =>
+    let bundle := Replicate.push dir name branch
+    pushAssets dir
+    bundle)
   -- A remote that hosts the explorer (`explore --publish`) gets it refreshed with each push of the current branch.
   let site := if IO.exists (siteManifest dir name) && branch == currentBranch dir then
     let out := dir ++ "/cache/site-" ++ name
@@ -1017,11 +1099,23 @@ def Cli.siteManifest (dir : Text) (name : Text) : Text := dir ++ "/cache/site-" 
   `<document>.<block id>`; the document is its frontmatter `name`, or the file's base name. -/
 def Cli.specEntries (dir : Text) (paths : List Text) : {IO, Throw Text} List (Text, Entry) := concatMap (fun path => if not (endsWith ".mdl" path) then [] else
   let doc := Mdl.parse (readSource path)
-  let prefix := getOr (List.lookup "name" doc.front) (baseName path)
+  let prefix := getOr (List.lookup "name" doc.front) (Cli.baseName path)
   let declared := declared doc
   filterMap (fun b => if Text.isEmpty b.blockId || b.blockType == "ext" then Option.none else
     let uri := getOr (List.lookup b.blockType declared) ""
     Option.some (prefix ++ "." ++ b.blockId, Entry.spec (Codebase.put dir (Mdl.toSexp uri b)))) doc.blocks) (expandPaths paths)
+
+/-- A comment's subject from what a command was given: a definition's name, `change:<causal>`, or `def:<name>`. -/
+def Cli.subjectOf (dir : Text) (given : Text) : {IO, Throw Text} Text := if startsWith "change:" given then
+  let h := Text.drop 7 given
+  match List.filter (fun c => startsWith h (fst c)) (Codebase.history dir (currentBranch dir) 100000) with
+  | c :: _ => Comments.change (fst c)
+  | [] => Throw.throw ("no change " ++ h ++ " on this branch")
+else
+  match Cli.lookupName
+    (Codebase.current dir)
+    (if startsWith "def:" given then Text.drop 4 given else given) with
+  | (full, _) => Comments.definition full
 
 def Cli.switch (args : Args) : {IO, Throw Text} Unit :=
   match args.positional with
@@ -1056,14 +1150,18 @@ def Cli.task (args : Args) : {IO, Throw Text} Unit :=
           match option args "link" with
           | Option.some name =>
               match Cli.lookupName (Codebase.current dir) name with
-              | (full, e) => link t (Attachment.definition full (hash e))
+              | (full, e) => link t (Attachment.definition full (Entry.hash e))
           | Option.none => t
-        saved linked ("task: open " ++ t.id ++ " " ++ title)
+        let attached :=
+          match attachments dir args with
+          | [] => linked
+          | assets => Tasks.comment linked (Comment.mk author "" (IO.wallClock ()) assets)
+        saved attached ("task: open " ++ t.id ++ " " ++ title)
   | [] => Cli.task (Args.mk ["list"] args.options)
   | "list" :: [] =>
       let about := Option.map (fun name =>
         match Cli.lookupName (Codebase.current dir) name with
-        | (full, e) => Set.fromList (List.map (fun t => t.id) (about tasks full (hash e)))) (option args "about")
+        | (full, e) => Set.fromList (List.map (fun t => t.id) (about tasks full (Entry.hash e)))) (option args "about")
       let keep := fun t =>
         let byState :=
           match option args "state" with
@@ -1097,13 +1195,17 @@ def Cli.task (args : Args) : {IO, Throw Text} Unit :=
             (if Text.isEmpty t.assignee then "" else " · @" ++ t.assignee) ++ (if List.isEmpty t.labels then "" else " · " ++ join ", " t.labels) ++ (if Text.isEmpty t.parent then "" else " · parent " ++ t.parent)]
           let section := fun title lines => if List.isEmpty lines then [] else ["", title] ++ lines
           join "\n" (head ++ (if Text.isEmpty t.details then [] else ["", t.details]) ++
-            section "Links" (concatMap snd links) ++ section "Subtasks" (List.map (fun c => "  " ++ taskLine c) children) ++ section "Comments" (List.map (fun c => "  " ++ c.author ++ ": " ++ c.note) t.comments) ++ section "History" (List.map (changeLine dir) history)))
+            section "Links" (concatMap snd links) ++ section "Subtasks" (List.map (fun c => "  " ++ taskLine c) children) ++ section "Comments" (List.map commentLine t.comments) ++ section "History" (List.map (changeLine dir) history)))
   | "set" :: id :: [] =>
       let t := applyFields args (Tasks.find tasks id)
       saved t ("task: set " ++ t.id ++ " " ++ join " " (List.filter (fun f => flag args f) fields))
   | "comment" :: id :: words =>
       let t := Tasks.find tasks id
-      saved (Tasks.comment t (Comment.mk author (join " " words))) ("task: comment on " ++ t.id)
+      saved
+        (Tasks.comment
+          t
+          (Comment.mk author (join " " words) (IO.wallClock ()) (attachments dir args)))
+        ("task: comment on " ++ t.id)
   | "link" :: id :: [] =>
       let t := Tasks.find tasks id
       match option args "change" with
@@ -1120,7 +1222,7 @@ def Cli.task (args : Args) : {IO, Throw Text} Unit :=
       let t := Tasks.find tasks id
       match Cli.lookupName (Codebase.current dir) name with
       | (full, e) => saved
-          (link t (Attachment.definition full (hash e)))
+          (link t (Attachment.definition full (Entry.hash e)))
           ("task: link " ++ t.id ++ " to " ++ full)
   | "unlink" :: id :: name :: [] =>
       let t := Tasks.find tasks id
@@ -1133,7 +1235,7 @@ def Cli.task (args : Args) : {IO, Throw Text} Unit :=
         (fun _ => "Imported " ++ toText n ++ " tasks.")
   | _ => Throw.throw "usage: deus task [new <title…> | list | show <id> | set <id> --<field> v | comment <id> <text…> | link <id> <name> | unlink <id> <name>]"
 
-def Cli.taskJson (t : Task) : Json := Json.obj [("id", Json.str t.id), ("title", Json.str t.title), ("state", Json.str (stateText t.state)), ("priority", Json.num t.priority), ("assignee", Json.str t.assignee), ("labels", Json.arr (List.map Json.str t.labels)), ("parent", Json.str t.parent), ("details", Json.str t.details), ("links", Json.arr (List.map attachmentJson t.links)), ("comments", Json.arr (List.map (fun c => Json.obj [("author", Json.str c.author), ("note", Json.str c.note)]) t.comments))]
+def Cli.taskJson (t : Task) : Json := Json.obj [("id", Json.str t.id), ("title", Json.str t.title), ("state", Json.str (stateText t.state)), ("priority", Json.num t.priority), ("assignee", Json.str t.assignee), ("labels", Json.arr (List.map Json.str t.labels)), ("parent", Json.str t.parent), ("details", Json.str t.details), ("links", Json.arr (List.map attachmentJson t.links)), ("comments", Json.arr (List.map commentJson t.comments))]
 
 def Cli.taskLine (t : Task) : Text :=
   let labels := if List.isEmpty t.labels then "" else "  [" ++ join ", " t.labels ++ "]"
@@ -1158,7 +1260,7 @@ def Cli.undo (args : Args) : {IO, Throw Text} Unit :=
 
 def Cli.usage : Text := join
   "\n"
-  ["usage: deus <command> [args] [--json] [--codebase <dir>]", "", "codebase", "  init [--empty]                       create a codebase with the builtins and prelude (~/.deus, $DEUS_CODEBASE or --codebase)", "  add <files|dirs…>                    add new definitions (.deus, or ```deus fences in .mdl)", "  update <files|dirs…>                 add or replace definitions; dependents are rehashed", "                                       (both take --message <why> for the history, and", "                                       --by <agent> [--prompt <file>] to record provenance)", "  ls [prefix]                          list names", "  find <text>                          names containing text", "  view <name|#hash…> [--core]          print definitions as source (or as Core)", "       [--dialect deus|ts]              … in DEUS (default) or TypeScript-like syntax", "  names <name|#hash>                   every name of a hash", "  deps <name> / dependents <name>      what a definition uses / what uses it", "  mv <from> <to> / alias <name> <new>  rename (with everything under it) / add a name", "  rm <names…>                          remove names", "", "history", "  branch [name]                        list branches, or create one and switch to it", "  switch <branch>                      change branch", "  merge <branch>                       three-way merge into the current branch", "  log [--n N] / undo                   history / step the branch back", "  history import <history.sexp>        keep an export's history under a restored codebase", "  layers                               objects per layer (code, tests, proofs, history, results, …)", "  migrate                              rewrite history with namespace-tree snapshots", "", "projects", "  project [init <iri>]                 the project's IRI, libraries and owned subgraph", "  lib install <name> <codebase>        mount that project's head under lib.<name> (--branch b)", "", "replication", "  remote add <name> <dir|r2://b/p>     a remote: a directory, or an R2 bucket and prefix", "  push [remote] [--branch b]           upload one immutable bundle of what the remote lacks", "  pull [remote]                        import new bundles; <remote>.<branch> tracks its heads", "  compact [remote] [--level k]         sedimentree compaction into level-k strata", "", "running", "  run [--codebase c] <name> [args…]    run name () with IO.args = args (options go before the name)", "  eval <expr>                          evaluate an expression", "  mdl [files|dirs…]                    check .mdl documents (or the codebase's specs): each block runs through the", "                                       @[ext \"<uri>\"] term its Extensions table names", "  test [prefix] [--integration]        run tests in a deterministic simulation (cached by hash);", "                                       --integration also runs @[integration] tests for real", "  check [prefix]                       check theorems and report their evidence", "  image <name> -o <file>               write a kernel image", "  build <name> -o <file> [--native]    write a standalone executable that runs name ()", "                                       (--native: Rust kernel + image, ~1 MB; default: Node SEA)", "  build <actor> -o <dir> --worker      write a Cloudflare Worker serving the actor from a Durable Object", "  build <name> -o <dir> --browser      write a static web page that runs name in the browser on the wasm kernel", "  build <handler> -o <file> --server   write a standalone native web server for a handler", "  serve <handler> [--port n]           serve a web handler locally (storage in ./deus-data)", "  explore [--out d|--port n|--publish r]  the codebase explorer: write, serve, or host it on a remote", "", "tasks", "  task new <title…> [--priority p --labels a,b --assignee a --parent id --details d --link name]", "  task [list] [--all|--state s|--label l|--about name]   open tasks, most urgent first", "  task show <id>                       a task, what it links (and how that changed since), its history", "  task set <id> --state doing|done|canceled …   change fields (title, state, priority, assignee, labels, parent, details)", "  task comment <id> <text…>            add a comment (--by <agent>)", "  task link <id> <name>|--change <h>   attach a definition or a change; unlink <id> <name> detaches", "  update <files…> --closes <id>        mark a task done, linked to the change that fixed it", "  task import <tasks.sexp>             restore tasks from an export", "  export <dir>                         the codebase as text for git: code/<Namespace>.deus, tasks, history", "  build <fn> -o <file.wasm> --wasm     compile a first-order Int/Bool function (and its callees) to wasm", "  build <fn> -o <file> --c             the same subset to C, compiled to an executable by $CC (default cc); -o x.c writes the source", "  bindings <prefix|name…> -o <dir>     a TypeScript module that calls those functions on the wasm kernel", "  compile <files|dirs…> --main <name>  compile files without a codebase", ""]
+  ["usage: deus <command> [args] [--json] [--codebase <dir>]", "", "codebase", "  init [--empty]                       create a codebase with the builtins and prelude (~/.deus, $DEUS_CODEBASE or --codebase)", "  add <files|dirs…>                    add new definitions (.deus, or ```deus fences in .mdl)", "  update <files|dirs…>                 add or replace definitions; dependents are rehashed", "                                       (both take --message <why> for the history, and", "                                       --by <agent> [--prompt <file>] to record provenance)", "  ls [prefix]                          list names", "  find <text>                          names containing text", "  view <name|#hash…> [--core]          print definitions as source (or as Core)", "       [--dialect deus|ts]              … in DEUS (default) or TypeScript-like syntax", "  names <name|#hash>                   every name of a hash", "  deps <name> / dependents <name>      what a definition uses / what uses it", "  mv <from> <to> / alias <name> <new>  rename (with everything under it) / add a name", "  rm <names…>                          remove names", "", "history", "  branch [name]                        list branches, or create one and switch to it", "  switch <branch>                      change branch", "  merge <branch>                       three-way merge into the current branch", "  log [--n N] / undo                   history / step the branch back", "  history import <history.sexp>        keep an export's history under a restored codebase", "  layers                               objects per layer (code, tests, proofs, history, results, …)", "  migrate                              rewrite history with namespace-tree snapshots", "", "projects", "  project [init <iri>]                 the project's IRI, libraries and owned subgraph", "  lib install <name> <codebase>        mount that project's head under lib.<name> (--branch b)", "", "replication", "  remote add <name> <dir|r2://b/p>     a remote: a directory, or an R2 bucket and prefix", "  push [remote] [--branch b]           upload one immutable bundle of what the remote lacks", "  pull [remote]                        import new bundles; <remote>.<branch> tracks its heads", "  compact [remote] [--level k]         sedimentree compaction into level-k strata", "  inbox [remote]                       apply comments and tasks members filed in the hosted explorer", "", "running", "  run [--codebase c] <name> [args…]    run name () with IO.args = args (options go before the name)", "  eval <expr>                          evaluate an expression", "  mdl [files|dirs…]                    check .mdl documents (or the codebase's specs): each block runs through the", "                                       @[ext \"<uri>\"] term its Extensions table names", "  test [prefix] [--integration]        run tests in a deterministic simulation (cached by hash);", "                                       --integration also runs @[integration] tests for real", "  check [prefix]                       check theorems and report their evidence", "  image <name> -o <file>               write a kernel image", "  build <name> -o <file> [--native]    write a standalone executable that runs name ()", "                                       (--native: Rust kernel + image, ~1 MB; default: Node SEA)", "  build <actor> -o <dir> --worker      write a Cloudflare Worker serving the actor from a Durable Object", "  build <name> -o <dir> --browser      write a static web page that runs name in the browser on the wasm kernel", "  build <handler> -o <file> --server   write a standalone native web server for a handler", "  serve <handler> [--port n]           serve a web handler locally (storage in ./deus-data)", "  explore [--out d|--port n|--publish r]  the codebase explorer: write, serve, or host it on a remote", "", "tasks", "  task new <title…> [--priority p --labels a,b --assignee a --parent id --details d --link name]", "  task [list] [--all|--state s|--label l|--about name]   open tasks, most urgent first", "  task show <id>                       a task, what it links (and how that changed since), its history", "  task set <id> --state doing|done|canceled …   change fields (title, state, priority, assignee, labels, parent, details)", "  task comment <id> <text…>            add a comment (--by <agent>; --attach <file> adds an image)", "  comment <name|change:h> <text…>      comment on a definition or a change (--by, --attach <file>)", "  comments [<name|change:h>]           comments on one subject, or every subject with comments", "  comments import <comments.sexp>      restore comments from an export", "  asset add <file>                     store a file in the codebase's asset store; prints its SHA-256", "  task link <id> <name>|--change <h>   attach a definition or a change; unlink <id> <name> detaches", "  update <files…> --closes <id>        mark a task done, linked to the change that fixed it", "  task import <tasks.sexp>             restore tasks from an export", "  export <dir>                         the codebase as text for git: code/<Namespace>.deus, tasks, history", "  build <fn> -o <file.wasm> --wasm     compile a first-order Int/Bool function (and its callees) to wasm", "  build <fn> -o <file> --c             the same subset to C, compiled to an executable by $CC (default cc); -o x.c writes the source", "  bindings <prefix|name…> -o <dir>     a TypeScript module that calls those functions on the wasm kernel", "  compile <files|dirs…> --main <name>  compile files without a codebase", ""]
 
 def Cli.view (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
@@ -1172,7 +1274,7 @@ def Cli.view (args : Args) : {IO, Throw Text} Unit :=
   let shown := forTerminalIn dialect (join "\n\n" texts)
   Cli.output args (fun _ => Json.arr (List.map (fun pair =>
     match pair with
-    | ((name, e), text) => Json.obj [("name", Json.str name), ("kind", Json.str (Entry.kind e)), ("hash", Json.str (hash e)), ("source", Json.str text)]) (zip entries texts))) (fun _ => shown)
+    | ((name, e), text) => Json.obj [("name", Json.str name), ("kind", Json.str (Entry.kind e)), ("hash", Json.str (Entry.hash e)), ("source", Json.str text)]) (zip entries texts))) (fun _ => shown)
 
 /-- Source text of one entry (a definition, a type, an ability). -/
 def Cli.viewEntry (dir : Text) (ns : Map Text Entry) (name : Text) (e : Entry) (core : Bool) : {IO, Throw Text} Text := viewEntryWith (printer ns []) dir ns name e core
@@ -1189,7 +1291,7 @@ def Cli.viewEntryWith (base : Printer) (dir : Text) (ns : Map Text Entry) (name 
 def Cli.viewParts (base : Printer) (dir : Text) (ns : Map Text Entry) (name : Text) (e : Entry) (dialect : Text) : {IO, Throw Text} (Text, Text) :=
   let core := dialect == "core"
   let ts := dialect == "ts"
-  let h := hash e
+  let h := Entry.hash e
   let meta := readMeta dir h
   let comment := if ts then "// " else "-- "
   let typeLine :=

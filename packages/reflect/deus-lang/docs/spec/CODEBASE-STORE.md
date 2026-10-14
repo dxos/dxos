@@ -33,6 +33,7 @@ The CLI picks the directory in this order: the `--codebase <dir>` option, then `
   provenance/<causal>          who produced history node <causal>
   remotes/<name>/url           a configured remote
   remotes/<name>/seen/<bundle> what a remote bundle held, so a pull reads it once
+  assets/<sha256>              files comments and tasks attach, named by their bytes' SHA-256 (D82)
   exports/<key>                tasks snapshot last exchanged with an export directory (D79)
   artifacts/<key>              built executables and servers; local only
   cache/…                      re-computable data; local only
@@ -211,16 +212,17 @@ A history node (a causal node) records a namespace snapshot, its parents, a mess
 tasks snapshot:
 
 ```text
-causal = "(causal (ns " hash ") (parents" { " " hash } ") (msg " string ")" [ " (tasks " hash ")" ] [ " (prior " hash ")" ] ")"
+causal = "(causal (ns " hash ") (parents" { " " hash } ") (msg " string ")" [ " (tasks " hash ")" ] [ " (prior " hash ")" ] [ " (comments " hash ")" ] ")"
 ```
 
-| Field     | Meaning                                                                                           |
-| --------- | ------------------------------------------------------------------------------------------------- |
-| `ns`      | hash of the namespace snapshot                                                                    |
-| `parents` | zero parents for the first node, one for an ordinary change, two (ours, theirs) for a merge       |
-| `msg`     | why the change was made                                                                           |
-| `tasks`   | hash of the tasks snapshot; omitted when there are no tasks ([D59](../DECISIONS.md))              |
-| `prior`   | hash of a `record` of history imported from an export; omitted otherwise ([D67](../DECISIONS.md)) |
+| Field      | Meaning                                                                                           |
+| ---------- | ------------------------------------------------------------------------------------------------- |
+| `ns`       | hash of the namespace snapshot                                                                    |
+| `parents`  | zero parents for the first node, one for an ordinary change, two (ours, theirs) for a merge       |
+| `msg`      | why the change was made                                                                           |
+| `tasks`    | hash of the tasks snapshot; omitted when there are no tasks ([D59](../DECISIONS.md))              |
+| `prior`    | hash of a `record` of history imported from an export; omitted otherwise ([D67](../DECISIONS.md)) |
+| `comments` | hash of the comments snapshot; omitted when there are no comments ([D82](../DECISIONS.md))        |
 
 A writer MUST omit `(tasks …)` when the branch has no tasks, so a node without tasks hashes as it did
 before tasks existed. Readers find fields by head and treat a missing field as empty.
@@ -303,18 +305,19 @@ Every object belongs to a layer, which is a function of its head ([D26, D48](../
 layers share `objects/`; derived layers have their own directories, so a policy such as "replicate" or
 "delete" is a directory.
 
-| Layer        | Holds                              | Lives in      | May depend on                        |
-| ------------ | ---------------------------------- | ------------- | ------------------------------------ |
-| `code`       | `term`, `cycle`, `type`, `ability` | `objects/`    | `code`                               |
-| `spec`       | `spec`                             | `objects/`    | `spec`                               |
-| `tests`      | `test`                             | `objects/`    | `code`, `tests`                      |
-| `proofs`     | `theorem`                          | `objects/`    | `code`, `proofs`                     |
-| `history`    | `ns`, `causal`, `tasks`            | `objects/`    | `code`, `tests`, `proofs`, `history` |
-| `tasks`      | `task`                             | `objects/`    | `code`, `tests`, `proofs`, `history` |
-| `results`    | verdicts                           | `results/`    |                                      |
-| `provenance` | change records                     | `provenance/` |                                      |
-| `artifacts`  | built executables                  | `artifacts/`  |                                      |
-| `cache`      | fetched and generated files        | `cache/`      |                                      |
+| Layer        | Holds                               | Lives in      | May depend on                        |
+| ------------ | ----------------------------------- | ------------- | ------------------------------------ |
+| `code`       | `term`, `cycle`, `type`, `ability`  | `objects/`    | `code`                               |
+| `spec`       | `spec`                              | `objects/`    | `spec`                               |
+| `tests`      | `test`                              | `objects/`    | `code`, `tests`                      |
+| `proofs`     | `theorem`                           | `objects/`    | `code`, `proofs`                     |
+| `history`    | `ns`, `causal`, `tasks`, `comments` | `objects/`    | `code`, `tests`, `proofs`, `history` |
+| `tasks`      | `task`, `thread`                    | `objects/`    | `code`, `tests`, `proofs`, `history` |
+| `results`    | verdicts                            | `results/`    |                                      |
+| `provenance` | change records                      | `provenance/` |                                      |
+| `assets`     | attached files, by SHA-256          | `assets/`     |                                      |
+| `artifacts`  | built executables                   | `artifacts/`  |                                      |
+| `cache`      | fetched and generated files         | `cache/`      |                                      |
 
 `deus add` and `deus update` refuse a batch in which an object depends on an object of a layer its own
 layer may not depend on, listing each crossing as `name (layer) -> name (layer)`.
@@ -379,7 +382,9 @@ hashes, and each history node points at one.
 ```text
 task = "(task (id " string ") (title " string ") (state " state ") (priority " int ")"
        " (assignee " string ") (labels" { " " string } ") (parent " string ") (details " string ")"
-       " (links" { " " link } ") (comments" { " (comment " string " " string ")" } "))"
+       " (links" { " " link } ") (comments" { " " comment } "))"
+comment = "(comment " author " " note [ " (at " string ")" ] [ " (assets" { " " asset } ")" ] ")"
+asset = "(asset " sha256 " " media-type " " file-name ")"
 state = "\"todo\"" | "\"doing\"" | "\"done\"" | "\"canceled\""
 link  = "(def " name " (ref " hash "))"       ; a definition, by name and the hash it had when linked
       | "(change " causal-hash ")"            ; a change
@@ -387,7 +392,9 @@ tasks = "(tasks" { " (t " id " (ref " hash "))" } ")"   ; sorted by id
 ```
 
 All fields are always written, in the order above. `priority` is 0 none, 1 urgent, 2 high, 3 medium,
-4 low. `parent` is a task id or `""`. A comment is `(comment author note)`. Links and comments keep the
+4 low. `parent` is a task id or `""`. A comment is `(comment author note)`, plus `(at …)` when its time is
+known (RFC 3339, or nanoseconds since the epoch) and `(assets …)` when it attaches files; a comment
+without either prints as before they existed, so older task objects keep their hashes. Links and comments keep the
 order they were added in. Readers look fields up by head, default a missing text field to `""`, a missing
 priority to 0, a missing list to empty, and an unknown state to `todo`; a malformed link or comment is an
 error.
@@ -402,6 +409,34 @@ taken when the task is created. Ids are unique within a snapshot; commands accep
 Linked hashes appear as `(ref …)`, so replication keeps the version of a definition a task was about.
 An empty tasks snapshot is never written: the node omits `(tasks …)`. A task's own history is not
 stored; it is found by walking the branch and comparing tasks snapshots.
+
+## Comments
+
+Comments on definitions and changes ([D82](../DECISIONS.md), [`deus/comments.deus`](../../deus/comments.deus))
+are kept as tasks are: a history node may point at a `comments` snapshot that maps a subject to the hash of
+its `thread`.
+
+```text
+comments = "(comments" { " (s " subject " (ref " hash "))" } ")"   ; sorted by subject
+thread   = "(thread" { " " comment } ")"                          ; oldest first
+subject  = "\"def:" name "\"" | "\"change:" causal-hash "\""
+```
+
+A definition's subject is its name, so its comments follow it across edits. A task keeps its own
+comments; it has no subject. An empty comments snapshot is never written: the node omits `(comments …)`
+and keeps the hash it had before comments existed. A change to comments keeps the parent's namespace and
+tasks. A merge keeps each subject's thread from the side that changed it; when both did, it keeps ours
+and appends theirs' comments that ours lacks, so comments never conflict.
+
+## Assets
+
+An asset is a file a comment attaches, such as a screenshot. The store keeps its bytes at
+`assets/<sha256>`, named by the SHA-256 of the bytes; a comment names it as `(asset sha256 media-type
+file-name)`. Objects never hold an asset's bytes, so bundles and the git export (`deus export`) stay text
+and small; remotes carry assets as separate files ([CODEBASE-BINARY.md](./CODEBASE-BINARY.md#remote-layout)).
+`deus asset add <file>` and `--attach <file>` on `deus comment` and `deus task` copy a file in; the
+kernel reads only text, so the CLI hashes and copies the bytes with `sha256sum` (or `shasum -a 256`) and
+`cp`.
 
 ## Projects and libraries
 

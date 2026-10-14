@@ -271,6 +271,9 @@ as git, we should be able to keep entire code history without trimming, artifact
 - explore embedding deus into browser apps via wasm (like codenase viewer for example)
 - explore interop with ts and generating typescript binding types
 - explore native compilation (llvm?) -- whats the best perf we can get
+- we need to be able to write from codebase ui, so we need accounts. can we get github oauth, and for now liimit writes to only members of dxos org. default view is still RO unauthed and is allowed.
+- ability to quickly attach comments to things and store them in codebase, attach to tasks and definitions for example
+- ability to file tasks from codebase and attach images (as bin assets pushed to codebase)
 
 ---
 

@@ -80,7 +80,7 @@ That codebase holds its tasks, history and source. It is pushed to R2, where the
   (store, text export, binary bundles), MDL and the rest.
 - [`docs/PRIOR-ART.md`](./docs/PRIOR-ART.md) — what was taken from Unison, Lean, Koka, Effect-TS and others.
 - [`docs/PROPOSALS.md`](./docs/PROPOSALS.md) — the user's proposals, evaluated against alternatives.
-- [`docs/IMMUTABILITY.md`](./docs/IMMUTABILITY.md) — does immutability make DEUS slow? A sorting case study, and the mutable `Array` (D82).
+- [`docs/IMMUTABILITY.md`](./docs/IMMUTABILITY.md) — does immutability make DEUS slow? A sorting case study, and the mutable `Array` (D83).
 - [`docs/LLM.md`](./docs/LLM.md) — how an agent drives the CLI.
 
 ## Changing the compiler

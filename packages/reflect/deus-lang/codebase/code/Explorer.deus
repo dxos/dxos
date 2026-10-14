@@ -11,7 +11,7 @@ def Explorer.changePage (dir : Text) (causal : Text) : {IO, Throw Text} Json :=
   let before :=
     match parentsOf dir causal with
     | p :: _ => readCausal dir p
-    | [] => Causal.mk "" [] "" "" ""
+    | [] => Causal.mk "" [] "" "" "" ""
   let diff := diffNamespaces dir before.snapshot node.snapshot
   let added := filterMap (fun change =>
     match change with
@@ -19,7 +19,7 @@ def Explorer.changePage (dir : Text) (causal : Text) : {IO, Throw Text} Json :=
     | _ => Option.none) diff
   let changed := filterMap (fun change =>
     match change with
-    | (name, Option.some old, Option.some new) => if hash old == hash new || not (visible (name, new)) then Option.none else Option.some (name, old, new)
+    | (name, Option.some old, Option.some new) => if Entry.hash old == Entry.hash new || not (visible (name, new)) then Option.none else Option.some (name, old, new)
     | _ => Option.none) diff
   let removed := filterMap (fun change =>
     match change with
@@ -30,14 +30,14 @@ def Explorer.changePage (dir : Text) (causal : Text) : {IO, Throw Text} Json :=
   let nsBefore := if List.isEmpty changed || Text.isEmpty before.snapshot then Map.empty else readNamespace dir before.snapshot
   let nsAfter := if List.isEmpty changed then Map.empty else readNamespace dir node.snapshot
   let printers := if List.isEmpty changed then Option.none else Option.some (printer nsBefore [], printer nsAfter [])
-  let tasksAfter := snapshotOf dir node
-  let tasksBefore := snapshotOf dir before
+  let tasksAfter := Tasks.snapshotOf dir node
+  let tasksBefore := Tasks.snapshotOf dir before
   let touched := List.filter
     (fun id => Map.lookup id tasksAfter != Map.lookup id tasksBefore)
     (Set.toList (Set.fromList (Map.keys tasksAfter ++ Map.keys tasksBefore)))
-  Json.obj ([("causal", Json.str causal), ("message", Json.str node.message), ("parents", Json.arr (List.map Json.str node.parents)), ("added", Json.arr (List.map (fun pair => refJson (fst pair) (hash (snd pair))) added)), ("changed", Json.arr (List.map (fun c =>
+  Json.obj ([("causal", Json.str causal), ("message", Json.str node.message), ("parents", Json.arr (List.map Json.str node.parents)), ("added", Json.arr (List.map (fun pair => refJson (fst pair) (Entry.hash (snd pair))) added)), ("changed", Json.arr (List.map (fun c =>
     match (c, printers) with
-    | ((name, old, new), Option.some (pBefore, pAfter)) => Json.obj [("name", Json.str name), ("from", Json.str (hash old)), ("hash", Json.str (hash new)), ("before", Json.str (sourceOf pBefore dir nsBefore name old)), ("after", Json.str (sourceOf pAfter dir nsAfter name new))]
+    | ((name, old, new), Option.some (pBefore, pAfter)) => Json.obj [("name", Json.str name), ("from", Json.str (Entry.hash old)), ("hash", Json.str (Entry.hash new)), ("before", Json.str (sourceOf pBefore dir nsBefore name old)), ("after", Json.str (sourceOf pAfter dir nsAfter name new))]
     | _ => Json.null) changed)), ("removed", Json.arr (List.map (fun pair => Json.str (fst pair)) removed)), ("tasks", Json.arr (List.map Json.str touched))] ++
     getOr (Option.map (fun agent => [("by", Json.str agent)]) (producedBy dir causal)) [])
 
@@ -62,10 +62,10 @@ def Explorer.generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
     | Option.some p => p.projectIri
     | Option.none => "codebase"
   -- Each definition's object and metadata are read once: its dependencies, and dependents inverted from them.
-  let metaOf := Map.fromList (List.map (fun pair => (hash (snd pair), readMeta dir (hash (snd pair)))) entries)
+  let metaOf := Map.fromList (List.map (fun pair => (Entry.hash (snd pair), readMeta dir (Entry.hash (snd pair)))) entries)
   let metaFor := fun h => getOr (Map.lookup h metaOf) Option.none
   let depsOf := Map.fromList (List.map (fun pair =>
-    let h := hash (snd pair)
+    let h := Entry.hash (snd pair)
     let fromObject := getOr (Option.map namedHashes (readObject dir h)) []
     let fromScheme := getOr (Option.map namedHashes (metaField (metaFor h) "scheme")) []
     (h, dedup (sort (fromObject ++ fromScheme)))) entries)
@@ -88,11 +88,21 @@ def Explorer.generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
     (Json.render (Json.obj [("project", Json.str project), ("branch", Json.str branch), ("branches", Json.arr (List.map Json.str (branches dir))), ("definitions", Json.num (List.length entries)), ("tasks", Json.num (List.length tasks)), ("open", Json.num (List.length (List.filter isOpen tasks))), ("history", Json.arr (List.map (Cli.changeJson dir) (Codebase.history dir branch 30)))]))
   -- The signature and doc summary let the app list, search and preview names without opening their pages.
   IO.writeFile (out ++ "/names.json") (Json.render (Json.arr (List.map (fun pair =>
-    let h := hash (snd pair)
+    let h := Entry.hash (snd pair)
     Json.obj [("name", Json.str (fst pair)), ("kind", Json.str (Entry.kind (snd pair))), ("hash", Json.str h), ("sig", Json.str (Explorer.signature (metaFor h))), ("summary", Json.str (summaryOf (Explorer.docOf (metaFor h)))), ("status", Json.str (if checked (snd pair) then statusOf (verdictOf dir h) else ""))]) entries)))
   IO.writeFile
     (out ++ "/tasks.json")
     (Json.render (Json.arr (List.map (fun t => Explorer.taskJson dir ns (historyOf t) t) tasks)))
+  -- Comments on definitions and changes (D82), by subject, and the assets they and tasks attach.
+  IO.writeFile (out ++ "/comments.json") (Json.render (Json.obj (List.map
+    (fun pair => (fst pair, Json.arr (List.map commentJson (snd pair))))
+    (Map.toList (Comments.current dir)))))
+  IO.mkdirp (out ++ "/assets")
+  forEach
+    (Assets.named dir)
+    (fun h => if IO.exists (out ++ "/assets/" ++ h) || not (Assets.has dir h) then () else
+      IO.exec "cp" [Assets.path dir h, out ++ "/assets/" ++ h]
+      ())
   -- A page per change the app links to: recent history, and every change in a task's history.
   IO.mkdirp (out ++ "/change")
   let linked := concatMap (fun t => List.map fst (historyOf t)) tasks
@@ -104,7 +114,7 @@ def Explorer.generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
   forEach entries (fun pair =>
     match pair with
     | (name, e) =>
-        let h := hash e
+        let h := Entry.hash e
         let source :=
           match try (fun _ => viewEntryWith printer dir ns name e false) with
           | Result.ok text => join "\n" (List.filter (fun l => not (startsWith "-- " l)) (lines text))
@@ -163,6 +173,8 @@ def Explorer.refJson (name : Text) (h : Text) : Json := Json.obj [("name", Json.
     def/<hash>.json               a definition: names, signature, highlighted source with its
                                   references linked, dependencies, dependents, verdict, tasks
     tasks.json                    every task, with its links resolved and its history
+    comments.json                 comments on definitions and changes, by subject (D82)
+    assets/<sha256>               the files comments and tasks attach
 -/
 def Explorer.signature (meta : Option Sexp) : Text := getOr (Option.map (fun s => displayScheme s) (metaField meta "scheme")) ""
 
@@ -181,14 +193,14 @@ def Explorer.summaryOf (doc : Option Text) : Text := trim (getOr (Option.bind do
 def Explorer.taskJson (dir : Text) (ns : Map Text Entry) (history : List (Text, Causal)) (t : Task) : {IO, Throw Text} Json :=
   let link := fun a =>
     match a with
-    | Attachment.definition name linked => Json.obj [("definition", Json.str name), ("hash", Json.str linked), ("current", getOr (Option.map (fun e => Json.str (hash e)) (Map.lookup name ns)) Json.null)]
+    | Attachment.definition name linked => Json.obj [("definition", Json.str name), ("hash", Json.str linked), ("current", getOr (Option.map (fun e => Json.str (Entry.hash e)) (Map.lookup name ns)) Json.null)]
     | Attachment.change h =>
         let message :=
           match readObject dir h with
           | Option.some form => (causalFromSexp form).message
           | Option.none => ""
         Json.obj [("change", Json.str h), ("message", Json.str message)]
-  Json.obj [("id", Json.str t.id), ("title", Json.str t.title), ("state", Json.str (stateText t.state)), ("priority", Json.num t.priority), ("assignee", Json.str t.assignee), ("labels", Json.arr (List.map Json.str t.labels)), ("parent", Json.str t.parent), ("details", Json.str t.details), ("links", Json.arr (List.map link t.links)), ("comments", Json.arr (List.map (fun c => Json.obj [("author", Json.str c.author), ("note", Json.str c.note)]) t.comments)), ("history", Json.arr (List.map (Cli.changeJson dir) history))]
+  Json.obj [("id", Json.str t.id), ("title", Json.str t.title), ("state", Json.str (stateText t.state)), ("priority", Json.num t.priority), ("assignee", Json.str t.assignee), ("labels", Json.arr (List.map Json.str t.labels)), ("parent", Json.str t.parent), ("details", Json.str t.details), ("links", Json.arr (List.map link t.links)), ("comments", Json.arr (List.map commentJson t.comments)), ("history", Json.arr (List.map (Cli.changeJson dir) history))]
 
 def Explorer.verdictOf (dir : Text) (h : Text) : {IO} Text := trim (getOr (IO.readFile (dir ++ "/results/" ++ h)) "")
 

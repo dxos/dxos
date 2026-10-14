@@ -684,7 +684,10 @@ def push (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let name := remoteName args
   let branch := Option.getOr (option args "branch") (Codebase.currentBranch dir)
-  let pushed := withRemote dir name (fun _ => Replicate.push dir name branch)
+  let pushed := withRemote dir name (fun _ =>
+    let bundle := Replicate.push dir name branch
+    let _ := Replicate.pushAssets dir
+    bundle)
   -- A remote that hosts the explorer (`explore --publish`) gets it refreshed with each push of the current branch.
   let site := if IO.exists (siteManifest dir name) && branch == Codebase.currentBranch dir then
       let out := dir ++ "/cache/site-" ++ name
@@ -701,7 +704,10 @@ def push (args : Args) : {IO, Throw Text} Unit :=
 def pull (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let name := remoteName args
-  let branches := withRemote dir name (fun _ => Replicate.pull dir name)
+  let branches := withRemote dir name (fun _ =>
+    let pulled := Replicate.pull dir name
+    let _ := Replicate.pullAssets dir
+    pulled)
   output args
     (fun _ => Json.arr (List.map (fun b => Json.obj [("branch", Json.str (fst b)), ("heads", Json.arr (List.map Json.str (snd b)))]) branches))
     (fun _ => Text.join "\n" (List.map (fun b =>
@@ -957,9 +963,13 @@ def publishSite (dir : Text) (name : Text) (out : Text) (force : Bool) : {IO, Th
       match Text.split line " " with
       | [sum, path] => some (path, sum)
       | _ => none) (Text.lines (Option.getOr (IO.readFile manifest) "")))
-  let sums := List.map (fun f => (f, Text.sha256 (Option.getOr (IO.readFile (out ++ "/" ++ f)) ""))) (filesUnder out "")
+  -- Attached files are binary and already on the remote under `assets/`, where the Worker serves them (D82).
+  let files := List.filter (fun f => not (Text.startsWith "assets/" f)) (filesUnder out "")
+  let sums := List.map (fun f => (f, Text.sha256 (Option.getOr (IO.readFile (out ++ "/" ++ f)) ""))) files
   let changed := List.filter (fun pair => Map.lookup (fst pair) previous != some (snd pair)) sums
-  withRemote dir name (fun _ => Remote.writeAll (List.map (fun pair => ("site/" ++ fst pair, Option.getOr (IO.readFile (out ++ "/" ++ fst pair)) "")) changed))
+  withRemote dir name (fun _ =>
+    let _ := Replicate.pushAssets dir
+    Remote.writeAll (List.map (fun pair => ("site/" ++ fst pair, Option.getOr (IO.readFile (out ++ "/" ++ fst pair)) "")) changed))
   IO.writeFile manifest (Text.concat (List.map (fun pair => snd pair ++ " " ++ fst pair ++ "\n") sums))
   (List.length sums, List.length changed)
 
@@ -1061,10 +1071,15 @@ def attachmentJson (a : Attachment) : Json :=
   | Attachment.definition name h => Json.obj [("definition", Json.str name), ("hash", Json.str h)]
   | Attachment.change h => Json.obj [("change", Json.str h)]
 
+def assetJson (a : Asset) : Json := Json.obj [("hash", Json.str a.hash), ("type", Json.str a.mediaType), ("name", Json.str a.fileName)]
+
+def commentJson (c : Comment) : Json :=
+  Json.obj [("author", Json.str c.author), ("note", Json.str c.note), ("at", Json.str c.written), ("assets", Json.arr (List.map assetJson c.assets))]
+
 def taskJson (t : Task) : Json :=
   Json.obj [("id", Json.str t.id), ("title", Json.str t.title), ("state", Json.str (Tasks.stateText t.state)), ("priority", Json.num t.priority),
     ("assignee", Json.str t.assignee), ("labels", Json.arr (List.map Json.str t.labels)), ("parent", Json.str t.parent), ("details", Json.str t.details),
-    ("links", Json.arr (List.map attachmentJson t.links)), ("comments", Json.arr (List.map (fun c => Json.obj [("author", Json.str c.author), ("note", Json.str c.note)]) t.comments))]
+    ("links", Json.arr (List.map attachmentJson t.links)), ("comments", Json.arr (List.map commentJson t.comments))]
 
 def taskLine (t : Task) : Text :=
   let labels := if List.isEmpty t.labels then "" else "  [" ++ Text.join ", " t.labels ++ "]"
@@ -1128,7 +1143,10 @@ def task (args : Args) : {IO, Throw Text} Unit :=
           match lookupName (Codebase.current dir) name with
           | (full, e) => Tasks.link t (Attachment.definition full (Entry.hash e))
         | none => t
-      saved linked ("task: open " ++ t.id ++ " " ++ title)
+      let attached := match attachments dir args with
+        | [] => linked
+        | assets => Tasks.comment linked (Comment.mk author "" (IO.wallClock ()) assets)
+      saved attached ("task: open " ++ t.id ++ " " ++ title)
   | [] => task (Args.mk ["list"] args.options)
   | ["list"] =>
     let about := Option.map (fun name =>
@@ -1164,14 +1182,14 @@ def task (args : Args) : {IO, Throw Text} Unit :=
         Text.join "\n" (head ++ (if Text.isEmpty t.details then [] else ["", t.details]) ++
           section "Links" (List.concatMap snd links) ++
           section "Subtasks" (List.map (fun c => "  " ++ taskLine c) children) ++
-          section "Comments" (List.map (fun c => "  " ++ c.author ++ ": " ++ c.note) t.comments) ++
+          section "Comments" (List.map commentLine t.comments) ++
           section "History" (List.map (changeLine dir) history)))
   | ["set", id] =>
     let t := applyFields args (Tasks.find tasks id)
     saved t ("task: set " ++ t.id ++ " " ++ Text.join " " (List.filter (fun f => flag args f) Tasks.fields))
   | "comment" :: id :: words =>
     let t := Tasks.find tasks id
-    saved (Tasks.comment t (Comment.mk author (Text.join " " words))) ("task: comment on " ++ t.id)
+    saved (Tasks.comment t (Comment.mk author (Text.join " " words) (IO.wallClock ()) (attachments dir args))) ("task: comment on " ++ t.id)
   | ["link", id] =>
     let t := Tasks.find tasks id
     match option args "change" with
@@ -1192,6 +1210,74 @@ def task (args : Args) : {IO, Throw Text} Unit :=
     let n := Export.importTasks dir path
     output args (fun _ => Json.obj [("imported", Json.num n)]) (fun _ => "Imported " ++ Int.toText n ++ " tasks.")
   | _ => throw "usage: deus task [new <title…> | list | show <id> | set <id> --<field> v | comment <id> <text…> | link <id> <name> | unlink <id> <name>]"
+
+/-- `--attach <file>` copied into the asset store (D82); none without the option. -/
+def attachments (dir : Text) (args : Args) : {IO, Throw Text} List Asset :=
+  match option args "attach" with
+  | some file => [Assets.add dir file]
+  | none => []
+
+def commentLine (c : Comment) : Text :=
+  "  " ++ c.author ++ ": " ++ c.note ++ Text.concat (List.map (fun a => " [" ++ a.fileName ++ " " ++ Text.take 10 a.hash ++ "]") c.assets)
+
+/-- A comment's subject from what a command was given: a definition's name, `change:<causal>`, or `def:<name>`. -/
+def subjectOf (dir : Text) (given : Text) : {IO, Throw Text} Text :=
+  if Text.startsWith "change:" given then
+    let h := Text.drop 7 given
+    match List.filter (fun c => Text.startsWith h (fst c)) (Codebase.history dir (Codebase.currentBranch dir) 100000) with
+    | c :: _ => Comments.change (fst c)
+    | [] => throw ("no change " ++ h ++ " on this branch")
+  else
+    match lookupName (Codebase.current dir) (if Text.startsWith "def:" given then Text.drop 4 given else given) with
+    | (full, _) => Comments.definition full
+
+/-- `deus comment <name|change:h> <text…>` (D82): a comment on a definition or a change, kept in the codebase. -/
+def comment (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let author := Option.getOr (option args "by") (Option.getOr (IO.getEnv "USER") "someone")
+  match args.positional with
+  | given :: words =>
+    let subject := subjectOf dir given
+    let c := Comment.mk author (Text.join " " words) (IO.wallClock ()) (attachments dir args)
+    if Text.isEmpty c.note && List.isEmpty c.assets then throw "usage: deus comment <name|change:h> <text…> [--attach file]"
+    else
+      recordProvenance dir args (Comments.add dir [(subject, c)] ("comment on " ++ subject)) []
+      output args (fun _ => Json.obj [("subject", Json.str subject), ("comment", commentJson c)]) (fun _ => "Commented on " ++ subject ++ ".")
+  | [] => throw "usage: deus comment <name|change:h> <text…> [--attach file]"
+
+/-- `deus comments [<name|change:h>]`: the comments on one subject, or on every subject that has some. -/
+def comments (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  match args.positional with
+  | ["import", path] =>
+    let n := Export.importComments dir path
+    output args (fun _ => Json.obj [("imported", Json.num n)]) (fun _ => "Imported " ++ Int.toText n ++ " comments.")
+  | _ =>
+    let all := Comments.current dir
+    let shown := match args.positional with
+      | [given] =>
+        let subject := subjectOf dir given
+        [(subject, Option.getOr (Map.lookup subject all) [])]
+      | _ => Map.toList all
+    output args (fun _ => Json.obj (List.map (fun pair => (fst pair, Json.arr (List.map commentJson (snd pair)))) shown))
+      (fun _ => if List.all (fun pair => List.isEmpty (snd pair)) shown then "No comments."
+        else Text.join "\n" (List.concatMap (fun pair => [fst pair] ++ List.map commentLine (snd pair)) shown))
+
+/-- `deus asset add <file>` (D82): stores a file in the asset store by its SHA-256. -/
+def asset (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  match args.positional with
+  | ["add", file] =>
+    let a := Assets.add dir file
+    output args (fun _ => assetJson a) (fun _ => a.hash ++ "  " ++ a.mediaType ++ "  " ++ a.fileName)
+  | _ => throw "usage: deus asset add <file>"
+
+/-- `deus inbox [remote]` (D82): applies the comments and tasks members filed in the hosted explorer. -/
+def inbox (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let name := remoteName args
+  let lines := withRemote dir name (fun _ => Inbox.apply dir)
+  output args (fun _ => Json.arr (List.map Json.str lines)) (fun _ => if List.isEmpty lines then "The inbox is empty." else Text.join "\n" lines)
 
 /--
   `deus export <dir>` (D64): the codebase as text for a git repository: source per namespace,
@@ -1253,6 +1339,7 @@ def usage : Text :=
     "  push [remote] [--branch b]           upload one immutable bundle of what the remote lacks",
     "  pull [remote]                        import new bundles; <remote>.<branch> tracks its heads",
     "  compact [remote] [--level k]         sedimentree compaction into level-k strata",
+    "  inbox [remote]                       apply comments and tasks members filed in the hosted explorer",
     "",
     "running",
     "  run [--codebase c] <name> [args…]    run name () with IO.args = args (options go before the name)",
@@ -1276,7 +1363,11 @@ def usage : Text :=
     "  task [list] [--all|--state s|--label l|--about name]   open tasks, most urgent first",
     "  task show <id>                       a task, what it links (and how that changed since), its history",
     "  task set <id> --state doing|done|canceled …   change fields (title, state, priority, assignee, labels, parent, details)",
-    "  task comment <id> <text…>            add a comment (--by <agent>)",
+    "  task comment <id> <text…>            add a comment (--by <agent>; --attach <file> adds an image)",
+    "  comment <name|change:h> <text…>      comment on a definition or a change (--by, --attach <file>)",
+    "  comments [<name|change:h>]           comments on one subject, or every subject with comments",
+    "  comments import <comments.sexp>      restore comments from an export",
+    "  asset add <file>                     store a file in the codebase's asset store; prints its SHA-256",
     "  task link <id> <name>|--change <h>   attach a definition or a change; unlink <id> <name> detaches",
     "  update <files…> --closes <id>        mark a task done, linked to the change that fixed it",
     "  task import <tasks.sexp>             restore tasks from an export",
@@ -1331,6 +1422,10 @@ def dispatch (argv : List Text) : {IO, Throw Text} Unit :=
     else if command == "serve" then serve args
     else if command == "explore" then explore args
     else if command == "task" then task args
+    else if command == "comment" then comment args
+    else if command == "comments" then comments args
+    else if command == "asset" then asset args
+    else if command == "inbox" then inbox args
     else if command == "export" then export args
     else if command == "history" then history args
     else if command == "help" then IO.print usage

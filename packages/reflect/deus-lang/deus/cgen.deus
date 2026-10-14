@@ -174,7 +174,7 @@ def expr (ctx : FnCtx) (env : List Int) (tail : Bool) (e : Sexp) : {Throw Text} 
   | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str "Int.neg"], a] => ret ("SUB(0, " ++ sub a ++ ")")
   | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "prim", Sexp.str p] :: xs) =>
     match (p, List.map sub xs) with
-    -- `Array` is a block `[length, item…]` and `Ref` a block `[value]` (D82); the writes return `()`.
+    -- `Array` is a block `[length, item…]` and `Ref` a block `[value]` (D83); the writes return `()`.
     | ("Array.make", [n, x]) => ret ("deus_array(" ++ n ++ ", " ++ x ++ ")")
     | ("Array.length", [a]) => ret ("((V *)(" ++ a ++ "))[0]")
     | ("Array.get", [a, i]) => ret ("(*AT(" ++ a ++ ", " ++ i ++ "))")

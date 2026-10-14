@@ -100,7 +100,7 @@ def Check.enumerate (types : Map Text Sexp) (t : Sexp) : Option (List Sexp) :=
       match Map.lookup iri types with
       | Option.some decl =>
           let ctors := View.typeArgs decl
-          if all (fun c => List.length (Sexp.args c) == 1) ctors then
+          if List.all (fun c => List.length (Sexp.args c) == 1) ctors then
             let hash := hashFor iri decl
             Option.some (mapIndexed (fun i _ => Check.con hash i []) ctors)
           else Option.none
@@ -227,7 +227,7 @@ def Check.run (args : Args) (wantTheorems : Bool) : {IO, Throw Text} Unit :=
   let prefix := getOr (head? args.positional) ""
   let runIntegration := flag args "integration"
   let selected := List.filter
-    (fun pair => startsWith prefix (fst pair) && (if wantTheorems || runIntegration || not (hasAttr dir (hash (snd pair)) "integration") then
+    (fun pair => startsWith prefix (fst pair) && (if wantTheorems || runIntegration || not (hasAttr dir (Entry.hash (snd pair)) "integration") then
       match snd pair with
       | Entry.test _ => not wantTheorems
       | Entry.theorem _ => wantTheorems
@@ -237,7 +237,7 @@ def Check.run (args : Args) (wantTheorems : Bool) : {IO, Throw Text} Unit :=
   let results := List.map (fun pair =>
     match pair with
     | (name, e) =>
-        let h := hash e
+        let h := Entry.hash e
         let integration := not wantTheorems && hasAttr dir h "integration"
         -- An integration test talks to the real world, so its result is never reused.
         match if integration then Option.none else cached dir h with

@@ -83,7 +83,7 @@ def Mdl.keyValue (line : Text) : Option (Text, Text) :=
   let i := indexOf line ":" 0
   if i <= 0 then Option.none else
     let key := trim (Text.take i line)
-    if all (fun j => isKeyChar (code key j)) (range 0 (Text.length key)) then Option.some (key, uncomment (trim (Text.drop (i + 1) line))) else Option.none
+    if List.all (fun j => isKeyChar (code key j)) (range 0 (Text.length key)) then Option.some (key, uncomment (trim (Text.drop (i + 1) line))) else Option.none
 
 /-- Parses a document; fences other than ```mdl (```deus among them) are skipped. -/
 def Mdl.parse (doc : Text) : Doc :=

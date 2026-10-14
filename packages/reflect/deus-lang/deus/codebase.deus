@@ -83,8 +83,8 @@ def layerOf (form : Sexp) : Text :=
   if kind == "spec" then "spec"
   else if kind == "test" then "tests"
   else if kind == "theorem" then "proofs"
-  else if kind == "task" then "tasks"
-  else if kind == "ns" || kind == "causal" || kind == "tasks" || kind == "record" then "history"
+  else if kind == "task" || kind == "thread" then "tasks"
+  else if kind == "ns" || kind == "causal" || kind == "tasks" || kind == "record" || kind == "comments" then "history"
   else "code"
 
 /-- Layers a layer may depend on; the rest are refused when adding. -/
@@ -98,7 +98,7 @@ def mayDependOn (layer : Text) : List Text :=
 /-- Every layer with where it lives and whether it is replicated. -/
 def layers : List (Text, Text, Bool) :=
   [("spec", "objects/", true), ("code", "objects/", true), ("tests", "objects/", true), ("proofs", "objects/", true), ("history", "objects/", true), ("tasks", "objects/", true),
-    ("results", "results/", true), ("provenance", "provenance/", true), ("artifacts", "artifacts/", false), ("cache", "cache/", false)]
+    ("results", "results/", true), ("provenance", "provenance/", true), ("assets", "assets/", true), ("artifacts", "artifacts/", false), ("cache", "cache/", false)]
 
 /-- Hashes of every object in the store. -/
 def allObjects (dir : Text) : {IO} List Text :=
@@ -151,7 +151,8 @@ def putNamespace (dir : Text) (ns : Map Text Entry) : {IO} Text :=
 
 /--
   A history node: a namespace snapshot, its parents, why it was made, its tasks snapshot, and the
-  record of history imported from an export (D67). `""` means none for the last two.
+  record of history imported from an export (D67), and its comments snapshot (D82). `""` means
+  none for the last three.
 -/
 structure Causal where
   snapshot : Text
@@ -159,20 +160,22 @@ structure Causal where
   message : Text
   tasks : Text
   prior : Text
+  threads : Text
 
-/-- A node without tasks or a prior record prints as it did before those existed, so its hash is unchanged. -/
+/-- A node without tasks, a prior record or comments prints as it did before those existed, so its hash is unchanged. -/
 def causalToSexp (c : Causal) : Sexp :=
   let tasks := if Text.isEmpty c.tasks then [] else [Sexp.node "tasks" [Sexp.str c.tasks]]
   let prior := if Text.isEmpty c.prior then [] else [Sexp.node "prior" [Sexp.str c.prior]]
-  Sexp.node "causal" ([Sexp.node "ns" [Sexp.str c.snapshot], Sexp.node "parents" (List.map Sexp.str c.parents), Sexp.node "msg" [Sexp.str c.message]] ++ tasks ++ prior)
+  let comments := if Text.isEmpty c.threads then [] else [Sexp.node "comments" [Sexp.str c.threads]]
+  Sexp.node "causal" ([Sexp.node "ns" [Sexp.str c.snapshot], Sexp.node "parents" (List.map Sexp.str c.parents), Sexp.node "msg" [Sexp.str c.message]] ++ tasks ++ prior ++ comments)
 
 def causalFromSexp (form : Sexp) : Causal :=
   let field := fun key => Option.getOr (List.find (fun x => Sexp.head x == key) (Sexp.args form)) (Sexp.list [])
   let first := fun key => Sexp.asText (Option.getOr (List.head? (Sexp.args (field key))) (Sexp.str ""))
-  Causal.mk (first "ns") (List.map Sexp.asText (Sexp.args (field "parents"))) (first "msg") (first "tasks") (first "prior")
+  Causal.mk (first "ns") (List.map Sexp.asText (Sexp.args (field "parents"))) (first "msg") (first "tasks") (first "prior") (first "comments")
 
-/-- The objects a history node points at besides its parents: its namespace, its tasks, its prior record. -/
-def snapshotsOf (c : Causal) : List Text := List.filter (fun h => not (Text.isEmpty h)) [c.snapshot, c.tasks, c.prior]
+/-- The objects a history node points at besides its parents: its namespace, its tasks, its prior record, its comments. -/
+def snapshotsOf (c : Causal) : List Text := List.filter (fun h => not (Text.isEmpty h)) [c.snapshot, c.tasks, c.prior, c.threads]
 
 def readCausal (dir : Text) (h : Text) : {IO, Throw Text} Causal :=
   match readObject dir h with
@@ -296,7 +299,7 @@ def commit (dir : Text) (ns : Map Text Entry) (message : Text) : {IO, Throw Text
   let snapshot := putNamespace dir ns
   if snapshot == previous.snapshot then parent
   else
-    let c := put dir (causalToSexp (Causal.mk snapshot [parent] message previous.tasks ""))
+    let c := put dir (causalToSexp (Causal.mk snapshot [parent] message previous.tasks "" previous.threads))
     setBranch dir branch c
     c
 
@@ -307,7 +310,18 @@ def commitTasks (dir : Text) (tasks : Text) (message : Text) : {IO, Throw Text} 
   let previous := readCausal dir parent
   if tasks == previous.tasks then parent
   else
-    let c := put dir (causalToSexp (Causal.mk previous.snapshot [parent] message tasks ""))
+    let c := put dir (causalToSexp (Causal.mk previous.snapshot [parent] message tasks "" previous.threads))
+    setBranch dir branch c
+    c
+
+/-- Records a new comments snapshot on the current branch, keeping its namespace and tasks. -/
+def commitComments (dir : Text) (comments : Text) (message : Text) : {IO, Throw Text} Text :=
+  let branch := currentBranch dir
+  let parent := headOf dir branch
+  let previous := readCausal dir parent
+  if comments == previous.threads then parent
+  else
+    let c := put dir (causalToSexp (Causal.mk previous.snapshot [parent] message previous.tasks "" comments))
     setBranch dir branch c
     c
 
@@ -319,7 +333,7 @@ def commitPrior (dir : Text) (record : Sexp) (message : Text) : {IO, Throw Text}
   let branch := currentBranch dir
   let parent := headOf dir branch
   let previous := readCausal dir parent
-  let c := put dir (causalToSexp (Causal.mk previous.snapshot [parent] message previous.tasks (put dir record)))
+  let c := put dir (causalToSexp (Causal.mk previous.snapshot [parent] message previous.tasks (put dir record) previous.threads))
   setBranch dir branch c
   c
 
@@ -343,7 +357,7 @@ def init (dir : Text) : {IO, Throw Text} Unit :=
     IO.mkdirp (dir ++ "/provenance")
     IO.mkdirp (dir ++ "/cache")
     let snapshot := putNamespace dir Map.empty
-    let c := put dir (causalToSexp (Causal.mk snapshot [] "init" "" ""))
+    let c := put dir (causalToSexp (Causal.mk snapshot [] "init" "" "" ""))
     setBranch dir "main" c
     IO.writeFile (dir ++ "/HEAD") "main\n"
 
@@ -420,6 +434,10 @@ def merge (dir : Text) (other : Text) : {IO, Throw Text} MergeResult :=
       | some b => Tasks.snapshotOf dir b
       | none => Map.empty
     let tasks := Tasks.merge dir baseTasks (Tasks.snapshotOf dir oursNode) (Tasks.snapshotOf dir theirsNode)
+    let baseComments := match base with
+      | some b => Comments.snapshotOf dir b
+      | none => Map.empty
+    let comments := Comments.merge dir baseComments (Comments.snapshotOf dir oursNode) (Comments.snapshotOf dir theirsNode)
     let names := Set.toList (Set.fromList (Map.keys baseNs ++ Map.keys oursNs ++ Map.keys theirsNs))
     let step := fun (state : (Map Text Entry, List Text, List Text)) (name : Text) =>
       match state with
@@ -439,7 +457,7 @@ def merge (dir : Text) (other : Text) : {IO, Throw Text} MergeResult :=
     match (List.foldl step (oursNs, [], []) names, tasks) with
     | ((ns, changed, []), (merged, [])) =>
       let snapshot := putNamespace dir ns
-      let c := put dir (causalToSexp (Causal.mk snapshot [ours, theirs] ("merge " ++ other ++ " into " ++ branch) (Tasks.putSnapshot dir merged) ""))
+      let c := put dir (causalToSexp (Causal.mk snapshot [ours, theirs] ("merge " ++ other ++ " into " ++ branch) (Tasks.putSnapshot dir merged) "" comments))
       setBranch dir branch c
       MergeResult.merged c (List.reverse changed)
     | ((_, _, conflicts), (_, taskConflicts)) => MergeResult.conflicts (List.reverse conflicts ++ taskConflicts)
@@ -473,7 +491,7 @@ def migrate (dir : Text) : {IO, Throw Text} (Int, Int) :=
           | some form =>
             let links := changeLinks form
             put dir (rewrite form (Map.fromList (List.map (fun l => (l, node l)) links)))) (Tasks.snapshotOf dir c))
-        let moved := put dir (causalToSexp (Causal.mk (putNamespace dir (readNamespace dir c.snapshot)) parents c.message tasks c.prior))
+        let moved := put dir (causalToSexp (Causal.mk (putNamespace dir (readNamespace dir c.snapshot)) parents c.message tasks c.prior c.threads))
         MutMap.set memo h moved
         moved
   let moves := List.filterMap (fun branch =>

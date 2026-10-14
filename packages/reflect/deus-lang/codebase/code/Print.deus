@@ -47,7 +47,7 @@ def Print.definition (p : Printer) (name : Text) (core : Sexp) (sig : Option Sex
         params b (x :: env) (x :: acc)
     | _ => (reverse acc, t, env)
   let rec lamCount t := if head t == "lam" then 1 + lamCount (getOr (head? (Sexp.args t)) t) else 0
-  let unnamed := all (fun x => x == "") (List.take (lamCount core) (Ref.get p.supply))
+  let unnamed := List.all (fun x => x == "") (List.take (lamCount core) (Ref.get p.supply))
   match params core [] [] with
   | (names, Sexp.list (Sexp.sym "match" :: scrut :: cases), env) =>
       let count := List.length names

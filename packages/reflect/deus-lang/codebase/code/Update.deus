@@ -1,6 +1,6 @@
 /-- Term-like entries whose objects reference `h`. -/
 def Update.dependentsOf (dir : Text) (ns : Map Text Entry) (h : Text) : {IO} List Text := dedup (sort (filterMap (fun pair =>
-  let eh := hash (snd pair)
+  let eh := Entry.hash (snd pair)
   if isTermLike (snd pair) && eh != h then
     match readObject dir eh with
     | Option.some obj => if List.contains h (Codebase.dependencies obj) then Option.some eh else Option.none
@@ -37,10 +37,10 @@ def Update.propagate (dir : Text) (ns : Map Text Entry) (subst : Map Text Text) 
   -- Grow the set of changed hashes until no candidate depends on one.
   let rec grow changed affected :=
     let next := List.filter (fun pair =>
-      let h := hash (snd pair)
+      let h := Entry.hash (snd pair)
       not (Set.contains h affected) && any (fun d => Set.contains d changed) (Codebase.dependencies (objectOf h))) candidates
     if List.isEmpty next then affected else
-      let hs := List.map (fun pair => hash (snd pair)) next
+      let hs := List.map (fun pair => Entry.hash (snd pair)) next
       grow
         (foldl (fun s h => Set.insert h s) changed hs)
         (foldl (fun s h => Set.insert h s) affected hs)
@@ -48,7 +48,7 @@ def Update.propagate (dir : Text) (ns : Map Text Entry) (subst : Map Text Text) 
   if Map.size affected == 0 then (ns, []) else
     -- One canonical name per affected hash; aliases follow it.
     let canonical := foldl (fun m pair =>
-      let h := hash (snd pair)
+      let h := Entry.hash (snd pair)
       if Set.contains h affected && not (Map.contains h m) then Map.insert h (fst pair) m else m) Map.empty candidates
     let rewriteMap := foldl (fun m pair => Map.insert (fst pair) ("@" ++ snd pair) m) subst (Map.toList canonical)
     let pending := List.map (fun pair =>
@@ -62,7 +62,7 @@ def Update.propagate (dir : Text) (ns : Map Text Entry) (subst : Map Text Text) 
           | (Option.some m, Option.some h2) => writeMeta dir h2 m
           | _ => ())
         let newHash := fun old => getOr (Option.bind (Map.lookup old canonical) (fun name => Map.lookup name hashes)) old
-        let renamed := List.filter (fun pair => Set.contains (hash (snd pair)) affected) candidates
+        let renamed := List.filter (fun pair => Set.contains (Entry.hash (snd pair)) affected) candidates
         let ns2 := foldl (fun m pair =>
           match pair with
           | (name, Entry.term h) => Map.insert name (Entry.term (newHash h)) m

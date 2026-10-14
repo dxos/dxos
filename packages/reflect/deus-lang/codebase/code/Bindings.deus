@@ -459,7 +459,7 @@ def Bindings.typeDecl (cx : Cx) (fetch : Text -> {IO} Option Sexp) (meta : Text 
           "))")
         (zip (Bindings.fieldNames cx name m tag (List.length types)) types)
       let badTag := "        default:\n          throw rt.badTag(" ++ label ++ ", value);\n"
-      if List.isEmpty shapes then Throw.throw ("type " ++ name ++ " has no constructors") else if all List.isEmpty shapes then
+      if List.isEmpty shapes then Throw.throw ("type " ++ name ++ " has no constructors") else if List.all List.isEmpty shapes then
         let literals := mapIndexed (fun tag _ => Bindings.quote (ctorName tag)) shapes
         header ++ "export type " ++ full ++ " = " ++ join " | " literals ++ ";\n\n" ++ codecHead ++
           "    encode: (value) => {\n      switch (value) {\n" ++ Text.concat (mapIndexed

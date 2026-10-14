@@ -24,7 +24,11 @@
 
 /--
   An object store holding bundles by name; `put` never overwrites. `writeAll` stores files beside
-  the bundles (the explorer's site) as (path, content) pairs, replacing what was there.
+  the bundles (the explorer's site) as (path, content) pairs, replacing what was there. The file
+  operations (D82) move files byte for byte under a folder beside the bundles: `keys folder` lists
+  the names in it, `download key file` copies one to a local file and says whether it existed,
+  `upload key file mediaType` stores one, and `drop key` deletes one. Assets and the explorer's
+  inbox use them.
 -/
 ability Remote @"urn:deus:replicate:Remote" where
   list : Unit -> List Text
@@ -32,6 +36,10 @@ ability Remote @"urn:deus:replicate:Remote" where
   put : Text -> Text -> Unit
   delete : Text -> Unit
   writeAll : List (Text, Text) -> Unit
+  keys : Text -> List Text
+  download : Text -> Text -> Bool
+  upload : Text -> Text -> Text -> Unit
+  drop : Text -> Unit
 
 /-- A seen bundle: its claims (branch, causal) and the hashes of its objects. -/
 structure Seen @"urn:deus:replicate:Seen" where
@@ -142,6 +150,26 @@ def push (dir : Text) (remote : Text) (branch : Text) : {Remote, IO, Throw Text}
     IO.writeFile (seenDir dir remote ++ "/" ++ name) (seenToText (Seen.mk name [(branch, head)] missing))
     some name
 
+/-- Uploads the store's assets the remote lacks; returns how many. -/
+def pushAssets (dir : Text) : {Remote, IO, Throw Text} Int :=
+  let there := Set.fromList (Remote.keys "assets")
+  let missing := List.filter (fun h => not (Set.contains h there)) (Assets.all dir)
+  List.forEach missing (fun h => Remote.upload ("assets/" ++ h) (Assets.path dir h) "application/octet-stream")
+  List.length missing
+
+/-- Downloads the remote's assets the store lacks; returns how many. -/
+def pullAssets (dir : Text) : {Remote, IO, Throw Text} Int :=
+  let missing := List.filter (fun h => Assets.isHash h && not (Assets.has dir h)) (Remote.keys "assets")
+  IO.mkdirp (dir ++ "/assets")
+  List.length (List.filter (fun h =>
+    let staged := Assets.path dir h ++ ".tmp"
+    if Remote.download ("assets/" ++ h) staged && Assets.sha256File staged == h then
+      IO.exec "mv" [staged, Assets.path dir h]
+      true
+    else
+      IO.exec "rm" ["-f", staged]
+      false) missing)
+
 def isBoundary (level : Int) (h : Text) : Bool := Text.startsWith (Text.repeat level "0") h
 
 /--
@@ -223,6 +251,25 @@ def directory (root : Text) (body : Unit -> {Remote, IO | r} a) : {IO | r} a :=
   | Remote.writeAll files -> k =>
     List.forEach files (fun pair => IO.writeFile (root ++ "/" ++ fst pair) (snd pair))
     k ()
+  | Remote.keys folder -> k => k (if IO.isDir (root ++ "/" ++ folder) then List.filter (fun n => not (Text.endsWith ".tmp" n)) (IO.listDir (root ++ "/" ++ folder)) else [])
+  | Remote.download key file -> k =>
+    let source := root ++ "/" ++ key
+    if not (IO.exists source) then k false
+    else
+      match IO.exec "cp" [source, file] with
+      | (0, _, _) => k true
+      | _ => k false
+  | Remote.upload key file _ -> k =>
+    let target := root ++ "/" ++ key
+    IO.mkdirp (Text.take (Text.length target - Text.length (Assets.baseName target) - 1) target)
+    match IO.exec "cp" [file, target ++ ".tmp"] with
+    | (0, _, _) =>
+      IO.exec "mv" [target ++ ".tmp", target]
+      k ()
+    | (_, _, err) => defect ("copying " ++ key ++ " failed: " ++ Text.trim err)
+  | Remote.drop key -> k =>
+    IO.remove (root ++ "/" ++ key)
+    k ()
 
 /-- The `<Key>` values of an S3 ListObjectsV2 response. -/
 def xmlValues (tag : Text) (xml : Text) : List Text :=
@@ -239,18 +286,34 @@ def bucket (endpoint : Text) (name : Text) (prefix : Text) (config : Text) (body
   let base := endpoint ++ "/" ++ name
   let folder := prefix ++ "/bundles/"
   let curl := fun (arguments : List Text) => IO.exec "curl" (["-sS", "--fail-with-body", "-K", config, "--aws-sigv4", "aws:amz:auto:s3"] ++ arguments)
-  handle body () with
-  | Remote.list _ -> k =>
+  -- The names under a folder, one ListObjectsV2 page at a time.
+  let listUnder := fun (under : Text) =>
     let rec page token acc :=
-      let query := "?list-type=2&prefix=" ++ folder ++ (if Text.isEmpty token then "" else "&continuation-token=" ++ token)
+      let query := "?list-type=2&prefix=" ++ under ++ (if Text.isEmpty token then "" else "&continuation-token=" ++ token)
       match curl [base ++ query] with
       | (0, xml, _) =>
-        let keys := List.map (fun key => Text.drop (Text.length folder) key) (xmlValues "Key" xml)
+        let keys := List.map (fun key => Text.drop (Text.length under) key) (xmlValues "Key" xml)
         match xmlValues "NextContinuationToken" xml with
         | next :: _ => page next (acc ++ keys)
         | [] => acc ++ keys
       | (_, out, err) => defect ("listing " ++ base ++ " failed: " ++ Text.trim err ++ " " ++ Text.trim out)
-    k (page "" [])
+    page "" []
+  handle body () with
+  | Remote.list _ -> k => k (listUnder folder)
+  | Remote.keys under -> k => k (listUnder (prefix ++ "/" ++ under ++ "/"))
+  | Remote.download key file -> k =>
+    match curl ["-o", file, base ++ "/" ++ prefix ++ "/" ++ key] with
+    | (0, _, _) => k true
+    | _ =>
+      IO.exec "rm" ["-f", file]
+      k false
+  | Remote.upload key file mediaType -> k =>
+    match curl ["-X", "PUT", "-H", "content-type: " ++ mediaType, "--data-binary", "@" ++ file, base ++ "/" ++ prefix ++ "/" ++ key] with
+    | (0, _, _) => k ()
+    | (_, out, err) => defect ("uploading " ++ key ++ " failed: " ++ Text.trim err ++ " " ++ Text.trim out)
+  | Remote.drop key -> k =>
+    curl ["-X", "DELETE", base ++ "/" ++ prefix ++ "/" ++ key]
+    k ()
   | Remote.get key -> k =>
     let staged := config ++ "." ++ key
     let text := match curl ["-o", staged, base ++ "/" ++ folder ++ key] with

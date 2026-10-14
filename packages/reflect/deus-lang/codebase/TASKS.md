@@ -15,7 +15,7 @@ From Dmytro: an artifact is a constant whose value is cached, e.g. deusCli := De
 - priority: high
 - labels: native, perf
 
-## Pure Array.set that writes in place when the array is unique (Lean 4 / Koka FBIP): Rc::get_mut in the Rust kernel, the reference count in compiled code, a copy on the TypeScript kernel (D82) (`95ca184f`)
+## Pure Array.set that writes in place when the array is unique (Lean 4 / Koka FBIP): Rc::get_mut in the Rust kernel, the reference count in compiled code, a copy on the TypeScript kernel (D83) (`95ca184f`)
 
 - state: todo
 - priority: high
@@ -47,7 +47,7 @@ From Dmytro. Measure it against share.unison-lang.org: search, navigation, depen
 
 > claude: The Codebase explorer UI thread built a Unison-style UI (finder, namespace pages, definition and change cards, keyboard), verified with Playwright; merging into #13952 from PR #13975. It also fixes the builtin page 404 and the content types.
 
-## Wasm back end: Perceus reference counting with reuse, sharing one ownership analysis with the C back end's task 62d1bdda; pure sorts allocate 470 MiB for 10^6 numbers today (D82) (`cf0e3937`)
+## Wasm back end: Perceus reference counting with reuse, sharing one ownership analysis with the C back end's task 62d1bdda; pure sorts allocate 470 MiB for 10^6 numbers today (D83) (`cf0e3937`)
 
 - state: todo
 - priority: high
@@ -124,7 +124,7 @@ deus explore could ship deus_kernel.wasm, the seed and a JSON snapshot of the co
 
 From docs/spec/README.md, Known divergences.
 
-## TS kernel JIT: Array.set and Ref.set journal a closure on every write; journal only when a deoptimisation can replay the entry (D82) (`a1b73fb8`)
+## TS kernel JIT: Array.set and Ref.set journal a closure on every write; journal only when a deoptimisation can replay the entry (D83) (`a1b73fb8`)
 
 - state: todo
 - priority: medium
@@ -260,6 +260,15 @@ Dmytro: one of the most impactful things you can do rn is a really good codebase
 
 Dmytro: explore embedding deus into browser apps via wasm (like codebase viewer for example)
 
+## Explorer accounts: GitHub sign-in, writes limited to active dxos org members, read-only when signed out (`4909bee3`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: explorer, writing
+- parent: 861438d2
+- links change #68dcd2f5f1
+
 ## Explorer as an SPA showing several definitions at once (`84014a86`)
 
 - state: done
@@ -267,6 +276,15 @@ Dmytro: explore embedding deus into browser apps via wasm (like codebase viewer 
 - assignee: claude
 - labels: review, explorer
 - links `Explorer.generate` (#c3e00dc212)
+
+## Explorer comments on definitions, changes and tasks, stored in the codebase (`81438cac`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: explorer, writing
+- parent: 861438d2
+- links change #68dcd2f5f1
 
 ## Exports from several containers overwrite each other's history and tasks (`a93aee73`)
 
@@ -277,6 +295,15 @@ Dmytro: explore embedding deus into browser apps via wasm (like codebase viewer 
 - links change #8159bef4fa
 
 Each thread exports codebase/ from its own ~/.deus, so the last export wins: history.sexp loses the other containers' entries, and tasks.sexp reverts tasks another container changed. Needed: fullLog dedup by causal hash plus importing codebase/history.sexp before export, and a field-wise task merge on import (Tasks.merge exists for branches).
+
+## File tasks from the explorer with image attachments stored as codebase assets (`747a4182`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: explorer, writing
+- parent: 861438d2
+- links change #68dcd2f5f1
 
 ## Keep ordinary comments, so the codebase can be the source of truth for the toolchain (`b09507db`)
 
@@ -340,7 +367,7 @@ A fresh container restored codebase/ (deus add code; task import) and got one ne
 - labels: research
 - links change #448eda5928
 
-Measured in docs/IMMUTABILITY.md (D82): seven sorts on both kernels, wasm, C and JS. Adds a mutable Array primitive (both kernels, wasm, C), Ref in the compiled back ends, and fixes a Rust-kernel stack overflow when dropping long Ref chains.
+Measured in docs/IMMUTABILITY.md (D83): seven sorts on both kernels, wasm, C and JS. Adds a mutable Array primitive (both kernels, wasm, C), Ref in the compiled back ends, and fixes a Rust-kernel stack overflow when dropping long Ref chains.
 
 ## Task viewer in the codebase explorer (`553faf09`)
 

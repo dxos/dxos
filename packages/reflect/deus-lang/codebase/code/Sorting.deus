@@ -161,7 +161,7 @@ def Sorting.mergeSort (xs : List Int) : List Int := mergeAll (runsGo [] xs)
 test Sorting.mergeSorts := mergeSort Sorting.sample == sort Sorting.sample
 
 /-
-  Sorting with and without mutable memory: the case study behind D82
+  Sorting with and without mutable memory: the case study behind D83
   (docs/IMMUTABILITY.md).
 
   Every sort here is first-order and specialised to `Int`, so the same definitions run on the
@@ -264,7 +264,7 @@ def Sorting.runsGo (acc : List (List Int)) (xs : List Int) : List (List Int) :=
 def Sorting.sample : List Int := [5, 3, 9, 1, 5, 0, -2, 7, 3, 3]
 
 --
--- 4. In-place quicksort over a mutable `Array` (D82).
+-- 4. In-place quicksort over a mutable `Array` (D83).
 --
 def Sorting.swap (a : Array Int) (i : Int) (j : Int) : Unit :=
   let t := Array.get a i
