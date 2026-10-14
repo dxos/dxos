@@ -169,9 +169,30 @@ link       = "(def " string " (ref " hash "))" | "(change " hash ")"
 
 `deus task import` reads every top-level form in the file, decodes each as a task with the store's rules
 (fields found by head; missing text is `""`, missing priority 0, missing lists empty, an unknown state
-`todo`), and saves them all as one change with message `task: import <n> tasks`. A task whose id already
-exists on the branch is replaced. Linked hashes and change hashes are kept as they are, even when the
-target codebase does not have them.
+`todo`), and merges them into the branch as one change with message `task: import from <path>`.
+Linked hashes and change hashes are kept as they are, even when the target codebase does not have them.
+
+## Several codebases, one export
+
+An export directory is often shared: each container restores from it, works, and exports back
+([D78](../DECISIONS.md)). So neither side overwrites the other:
+
+- The codebase keeps, per export directory, the tasks snapshot it last exchanged with it, in
+  `exports/<key>` (`key` is the first 16 hex characters of the SHA-256 of the directory's absolute
+  path). It holds one line: the snapshot's object hash.
+- `deus task import <dir>/tasks.sexp`, and `deus export <dir>` before it writes, merge the file's tasks
+  three-way: base is that snapshot (empty when there is none), ours is the branch's, theirs is the
+  file's. The merge is the branch merge's, field by field. A field both sides changed keeps this
+  codebase's value and prints `conflict: <task>.<field>` on stderr. A change is committed only when the
+  result differs from ours. The file's snapshot then becomes the base.
+- `deus export <dir>` also reads `<dir>/history.sexp` first. Entries whose causal hash `deus log` does
+  not list are kept as a `record` under a node with message `export: merge <n> changes from <dir>`, so
+  the history it writes includes the other codebase's changes. `deus log` lists a causal hash once,
+  even when several records hold it.
+- After writing, the export records the branch's tasks snapshot as the base.
+
+Code is not merged: `code/` is the exporting branch's, as before. Share code through a remote; the
+export directory merges only tasks and history.
 
 ## TASKS.md
 

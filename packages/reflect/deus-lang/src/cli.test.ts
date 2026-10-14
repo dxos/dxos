@@ -762,6 +762,24 @@ describe('deus CLI', () => {
       expect(deus('task', 'list', '--all', '--json', ...restored).stdout).toBe(
         deus('task', 'list', '--all', '--json', ...c).stdout,
       );
+
+      // Two codebases exporting to one directory merge what the other wrote there (D78).
+      deus('task', 'set', docs.id, '--state', 'done', '--json', ...restored);
+      expect(deus('export', exported, ...restored).code).toBe(0);
+      task('set', docs.id, '--assignee', 'carol');
+      expect(deus('export', exported, ...c).code).toBe(0);
+      expect(JSON.parse(deus('task', 'show', docs.id, '--json', ...c).stdout).task).toMatchObject({
+        state: 'done',
+        assignee: 'carol',
+      });
+      const history = readFileSync(join(exported, 'history.sexp'), 'utf8');
+      expect(history).toContain(`task: set ${docs.id} state`);
+      expect(history).toContain(`task: set ${docs.id} assignee`);
+      expect(deus('export', exported, ...restored).code).toBe(0);
+      expect(JSON.parse(deus('task', 'show', docs.id, '--json', ...restored).stdout).task).toMatchObject({
+        state: 'done',
+        assignee: 'carol',
+      });
     },
   );
 

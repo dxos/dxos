@@ -364,6 +364,20 @@ def Codebase.nodeItems (dir : Text) (h : Text) : {IO, Throw Text} List Sexp :=
 /-- Items a namespace node holds before it splits into parts. -/
 def Codebase.nodeLimit : Int := 64
 
+def Codebase.nsFromSexp (form : Sexp) : Map Text Entry := Map.fromList (List.map (fun item =>
+  match Sexp.args item with
+  | name :: entry :: [] => (asText name, Entry.fromSexp entry)
+  | _ => defect "bad namespace entry") (Sexp.args form))
+
+--
+-- Namespaces.
+--
+def Codebase.nsToSexp (ns : Map Text Entry) : Sexp := Sexp.node
+  "ns"
+  (List.map
+    (fun pair => Sexp.node "n" [Sexp.str (fst pair), Entry.toSexp (snd pair)])
+    (Map.toList ns))
+
 /-
   The codebase: a content-addressed store in a `.deus` directory (Unison's model).
 

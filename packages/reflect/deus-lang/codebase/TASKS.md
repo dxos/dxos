@@ -70,15 +70,6 @@ Lexer turns a character literal into an int token; keep the form as a note-like 
 
 From docs/spec/README.md, Known divergences.
 
-## Text.fromCodes loses the high bits of code points above U+FFFF in the TypeScript kernel (`2bbc3445`)
-
-- state: todo
-- priority: medium
-- assignee: claude
-- labels: bug, kernel, spec
-
-From docs/spec/README.md, Known divergences.
-
 ## Type ascriptions are erased before checking; a row on a definition without binders is not checked (`a03fdfb6`)
 
 - state: todo
@@ -165,6 +156,16 @@ Dmytro: one of the most impactful things you can do rn is a really good codebase
 - labels: review, explorer
 - links `Explorer.generate` (#c3e00dc212)
 
+## Exports from several containers overwrite each other's history and tasks (`a93aee73`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: dogfood, export, replication
+- links change #8159bef4fa
+
+Each thread exports codebase/ from its own ~/.deus, so the last export wins: history.sexp loses the other containers' entries, and tasks.sexp reverts tasks another container changed. Needed: fullLog dedup by causal hash plus importing codebase/history.sexp before export, and a field-wise task merge on import (Tasks.merge exists for branches).
+
 ## Keep ordinary comments, so the codebase can be the source of truth for the toolchain (`b09507db`)
 
 - state: done
@@ -188,7 +189,6 @@ Only doc comments survive add; the -- comments that explain why are lost, so deu
 - priority: high
 - assignee: claude
 - labels: replication, design
-- links change #a37df20cc0
 
 Namespace snapshots are trees (D72), deus migrate rewrites flat history, the remote keeps the whole history and --keep is gone (D73), bundles stay columnar text (D74). Merged into #13952.
 
@@ -226,6 +226,17 @@ A fresh container restored codebase/ (deus add code; task import) and got one ne
 - links change #e7f95e998b
 
 From docs/spec/README.md, Known divergences.
+
+## codebase/ export has a raw #ebad142960 reference the parser rejects, so it cannot be restored (`b8b3aab7`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: bug, dogfood, export
+
+Reported by the explorer thread on #13952's branch (code/Cli.deus line 45). The printer writes unnamed references as #hash.
+
+> claude: The explorer thread repaired the committed export (62a3bad2, its task b2166fc8). The exporter now names unnamed callees Unnamed.h<hash> (D77), with a round-trip test, so it cannot write #hash references again.
 
 ## deus export drops attributes, .mdl specs, the project file and some doc comments (`5fe4c8b1`)
 
@@ -315,6 +326,16 @@ Done by the Format spec docs thread in b0a392d6: CORE, CODEBASE-STORE, CODEBASE-
 view of 1061 definitions plus update of all of them; profile which half dominates.
 
 > claude: view built a printer per definition; sharing one took viewing 1061 definitions from 45 s to 2 s, output identical.
+
+## Text.fromCodes loses the high bits of code points above U+FFFF in the TypeScript kernel (`2bbc3445`)
+
+- state: done
+- priority: medium
+- assignee: claude
+- labels: bug, kernel, spec
+- links change #fa20112443
+
+From docs/spec/README.md, Known divergences.
 
 ## deus explore is quadratic in names: aliases scan the whole namespace per definition (`a75452c4`)
 

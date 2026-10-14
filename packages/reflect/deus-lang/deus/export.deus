@@ -67,6 +67,7 @@ def withUnnamed (dir : Text) (ns : Map Text Entry) : {IO} Map Text Entry :=
 
 /-- Writes the export of the current branch to `out`; returns (source files, definitions, tasks). -/
 def write (dir : Text) (out : Text) : {IO, Throw Text} (Int, Int, Int) :=
+  let _ := mergeExisting dir out
   let ns := withUnnamed dir (Codebase.current dir)
   let printer := Print.printer ns []
   let entries := List.filter (fun pair => exported (snd pair)) (Map.toList ns)
@@ -125,6 +126,7 @@ def write (dir : Text) (out : Text) : {IO, Throw Text} (Int, Int, Int) :=
   IO.writeFile (out ++ "/HISTORY.md") ("# History of " ++ Codebase.currentBranch dir ++ "\n\n" ++ Text.concat (List.map (fun entry =>
     match entry with
     | (h, message, agent) => "- `" ++ Text.take 10 h ++ "` " ++ message ++ (if Text.isEmpty agent then "" else " (by " ++ agent ++ ")") ++ "\n") history))
+  recordBase dir out (Tasks.snapshotOf dir (Codebase.readCausal dir (Codebase.headOf dir (Codebase.currentBranch dir))))
   (List.length files, List.length sources, List.length tasks)
 
 /-- Records an export's `history.sexp` on the current branch (D67); returns how many changes. -/
@@ -136,13 +138,91 @@ def importHistory (dir : Text) (path : Text) : {IO, Throw Text} Int :=
     let _ := Codebase.commitPrior dir (Sexp.node "record" entries) ("history: import " ++ Int.toText (List.length entries) ++ " changes")
     List.length entries
 
-/-- Saves tasks from an export's `tasks.sexp` as one change; returns how many. -/
+--
+-- Merging an export that other codebases also write (D78).
+--
+
+/-- `path` with `.` and `..` segments resolved. -/
+def normalize (path : Text) : Text :=
+  let segments := List.foldl (fun acc segment =>
+    if segment == "" || segment == "." then acc
+    else if segment == ".." then List.drop 1 acc
+    else segment :: acc) [] (Text.split path "/")
+  "/" ++ Text.join "/" (List.reverse segments)
+
+/-- The directory part of a path: `.` for a bare file name. -/
+def directoryOf (path : Text) : Text :=
+  match List.reverse (Text.split path "/") with
+  | _ :: [] => "."
+  | _ :: rest => Text.join "/" (List.reverse rest)
+  | [] => "."
+
+/-- Where the codebase keeps the tasks it last exchanged with the export at `out`, keyed by its absolute path. -/
+def basePath (dir : Text) (out : Text) : {IO} Text :=
+  let absolute := if Text.startsWith "/" out then out else Option.getOr (IO.getEnv "PWD") "" ++ "/" ++ out
+  dir ++ "/exports/" ++ Text.take 16 (Text.sha256 (normalize absolute))
+
+/-- Remembers `snapshot` as what this codebase and the export at `out` last agreed on. -/
+def recordBase (dir : Text) (out : Text) (snapshot : Map Text Text) : {IO} Unit :=
+  IO.mkdirp (dir ++ "/exports")
+  IO.writeFile (basePath dir out) (Tasks.putSnapshot dir snapshot ++ "\n")
+
+def readBase (dir : Text) (out : Text) : {IO, Throw Text} Map Text Text :=
+  match IO.readFile (basePath dir out) with
+  | some h => Tasks.snapshotAt dir (Text.trim h)
+  | none => Map.empty
+
+/-- The tasks of a `tasks.sexp`, stored, as id -> task object hash. -/
+def fileSnapshot (dir : Text) (text : Text) : {IO} Map Text Text :=
+  Map.fromList (List.map (fun form =>
+    let t := Tasks.fromSexp form
+    (t.id, Codebase.put dir (Tasks.toSexp t))) (Sexp.readAll text))
+
+/--
+  Merges a `tasks.sexp` into the branch's tasks, three-way against what this codebase last
+  exchanged with that export, so a task another codebase changed is not reverted. A field both
+  sides changed keeps this codebase's value and is returned as a conflict. Returns (tasks in the
+  file, conflicts).
+-/
+def mergeTasksFile (dir : Text) (out : Text) (text : Text) (message : Text) : {IO, Throw Text} (Int, List Text) :=
+  let theirs := fileSnapshot dir text
+  let ours := Tasks.snapshotOf dir (Codebase.readCausal dir (Codebase.headOf dir (Codebase.currentBranch dir)))
+  match Tasks.merge dir (readBase dir out) ours theirs with
+  | (merged, conflicts) =>
+    let _ := if Map.toList merged == Map.toList ours then "" else Codebase.commitTasks dir (Tasks.putSnapshot dir merged) message
+    recordBase dir out theirs
+    (Map.size theirs, conflicts)
+
+/-- Before an export overwrites `out`, takes in the tasks and history another codebase wrote there. -/
+def mergeExisting (dir : Text) (out : Text) : {IO, Throw Text} Unit :=
+  let _ := match IO.readFile (out ++ "/tasks.sexp") with
+    | some text =>
+      match mergeTasksFile dir out text ("export: merge tasks from " ++ out) with
+      | (_, conflicts) => List.forEach conflicts (fun c => IO.eprint ("conflict: " ++ c ++ " (this codebase's value kept)\n"))
+    | none => ()
+  match IO.readFile (out ++ "/history.sexp") with
+  | some text =>
+    let known := Set.fromList (List.map (fun entry =>
+      match entry with
+      | (h, _, _) => h) (Cli.fullLog dir 1000000))
+    let fresh := List.filter (fun form =>
+      match form with
+      | Sexp.list [Sexp.sym "entry", Sexp.str h, _, _] => not (Set.contains h known)
+      | _ => false) (Sexp.readAll text)
+    if List.isEmpty fresh then ()
+    else
+      let _ := Codebase.commitPrior dir (Sexp.node "record" fresh) ("export: merge " ++ Int.toText (List.length fresh) ++ " changes from " ++ out)
+      ()
+  | none => ()
+
+/-- Merges tasks from an export's `tasks.sexp` as one change (D78); returns how many the file has. -/
 def importTasks (dir : Text) (path : Text) : {IO, Throw Text} Int :=
   match IO.readFile path with
   | none => throw ("cannot read " ++ path)
   | some text =>
-    let tasks := List.map Tasks.fromSexp (Sexp.readAll text)
-    let _ := Tasks.save dir tasks ("task: import " ++ Int.toText (List.length tasks) ++ " tasks")
-    List.length tasks
+    match mergeTasksFile dir (directoryOf path) text ("task: import from " ++ path) with
+    | (n, conflicts) =>
+      List.forEach conflicts (fun c => IO.eprint ("conflict: " ++ c ++ " (this codebase's value kept)\n"))
+      n
 
 end Export

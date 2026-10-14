@@ -1,21 +1,18 @@
 # History of main
 
-- `3f2d90ae51` close b2166fc8 by #21fbd2e94f (by claude)
-- `21fbd2e94f` codebase: catch up with the toolchain sources, including the codebase UI (by claude)
-- `e11ebf252d` task: set b2166fc8 priority assignee labels details
-- `3f860ada05` task: open b2166fc8 Bring the codebase up to date with the toolchain sources; the export had raw hashes (by claude)
-- `3475042833` history: import 126 changes
-- `be0842c2ee` task: import 41 tasks
-- `2ab0189bcb` add /tmp/claude-0/-home-claude-dxos/9f10d708-cc29-559d-a814-8f86a4793dbc/scratchpad/code4 /home/claude/dxos/packages/reflect/deus-lang/codebase/specs
-- `67c7d5a614` init
-- `d2411251ec` task: set a7a44f7d details (by claude)
-- `aeb5c2cd43` delete Replicate.collect Replicate.recent Codebase.nsFromSexp Codebase.nsToSexp
-- `dccc4c2683` close a7a44f7d by #a37df20cc0 (by claude)
-- `a37df20cc0` codebase: namespace-tree snapshots, deus migrate, full history on the remote (D72-D74) (by claude)
-- `ae188264ee` history: import 118 changes
-- `aa8672c1cf` task: import 39 tasks
-- `a289e87b7a` add code specs
-- `67c7d5a614` init
+- `e630b09568` log: a change shared by several records keeps its oldest position (D78) (by claude)
+- `1b03a289c4` task: set a7a44f7d state details (by claude)
+- `b8e5ff6f29` export: merge 14 changes from codebase
+- `c87fd4be9f` export: merge tasks from codebase
+- `4a55fae398` close a93aee73 by #8159bef4fa (by claude)
+- `8159bef4fa` export: merge tasks and history from other codebases (D78) (by claude)
+- `cac5611fdc` task: open a93aee73 Exports from several containers overwrite each other's history and tasks (by claude)
+- `8f8f989872` task: comment on b8b3aab7 (by claude)
+- `67fa289311` task: set b8b3aab7 state (by claude)
+- `cb694883a2` task: open b8b3aab7 codebase/ export has a raw #ebad142960 reference the parser rejects, so it cannot be restored (by claude)
+- `09d81923ca` export names unnamed callees (D77); Text.fromCodes surrogate pairs (D76) (by claude)
+- `bfe27e468c` close 2bbc3445 by #fa20112443 (by claude)
+- `fa20112443` Text.fromCodes encodes code points above U+FFFF as surrogate pairs (D72) (by claude)
 - `d5df8ec2b7` task: comment on be4c4645 (by claude)
 - `3153eb0b41` task: comment on 9428f054 (by claude)
 - `4c3293900d` task: comment on 861438d2 (by claude)
@@ -65,6 +62,20 @@
 - `7453b3a1b7` task: import 18 tasks
 - `bff1b8d98b` add code
 - `67c7d5a614` init
+- `3f2d90ae51` close b2166fc8 by #21fbd2e94f (by claude)
+- `21fbd2e94f` codebase: catch up with the toolchain sources, including the codebase UI (by claude)
+- `e11ebf252d` task: set b2166fc8 priority assignee labels details
+- `3f860ada05` task: open b2166fc8 Bring the codebase up to date with the toolchain sources; the export had raw hashes (by claude)
+- `3475042833` history: import 126 changes
+- `be0842c2ee` task: import 41 tasks
+- `2ab0189bcb` add /tmp/claude-0/-home-claude-dxos/9f10d708-cc29-559d-a814-8f86a4793dbc/scratchpad/code4 /home/claude/dxos/packages/reflect/deus-lang/codebase/specs
+- `d2411251ec` task: set a7a44f7d details (by claude)
+- `aeb5c2cd43` delete Replicate.collect Replicate.recent Codebase.nsFromSexp Codebase.nsToSexp
+- `dccc4c2683` close a7a44f7d by #a37df20cc0 (by claude)
+- `a37df20cc0` codebase: namespace-tree snapshots, deus migrate, full history on the remote (D72-D74) (by claude)
+- `ae188264ee` history: import 118 changes
+- `aa8672c1cf` task: import 39 tasks
+- `a289e87b7a` add code specs
 - `5ed10805c0` task: comment on b09507db (by claude)
 - `5764357299` json: escape copies unescaped runs whole; explorer reads each object once (by claude)
 - `461d3e955c` explorer: one walk for every task's history, metadata read once (by claude)

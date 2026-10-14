@@ -402,7 +402,14 @@ def Cli.fullLog (dir : Text) (limit : Int) : {IO, Throw Text} List (Text, (Text,
   let imported := concatMap
     (fun pair => if Text.isEmpty (snd pair).prior then [] else recordEntries dir (snd pair).prior)
     live
-  List.take limit (own ++ imported)
+  -- Records repeat the changes they share (D78), the root `init` included; the oldest position stays.
+  let rec unique entries seen acc :=
+    match entries with
+    | [] => reverse acc
+    | entry :: rest =>
+        match entry with
+        | (h, _, _) => if Set.contains h seen then unique rest seen acc else unique rest (Set.insert h seen) (entry :: acc)
+  List.take limit (reverse (unique (reverse (own ++ imported)) Map.empty []))
 
 --
 -- Commands: documents.

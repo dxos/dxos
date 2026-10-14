@@ -265,3 +265,7 @@ as git, we should be able to keep entire code history without trimming, artifact
 ---
 
 - standing instructions: track tasks in codebase and make sure its up to date
+
+---
+
+- have thread chew through other open tasks

@@ -138,11 +138,14 @@ def read (dir : Text) (h : Text) : {IO, Throw Text} Task :=
 --
 
 /-- The tasks snapshot of a history node: task id -> task hash. -/
-def snapshotOf (dir : Text) (c : Causal) : {IO, Throw Text} Map Text Text :=
-  if Text.isEmpty c.tasks then Map.empty
+def snapshotOf (dir : Text) (c : Causal) : {IO, Throw Text} Map Text Text := snapshotAt dir c.tasks
+
+/-- A tasks snapshot by its hash, as id -> task object hash; `""` is no tasks. -/
+def snapshotAt (dir : Text) (h : Text) : {IO, Throw Text} Map Text Text :=
+  if Text.isEmpty h then Map.empty
   else
-    match Codebase.readObject dir c.tasks with
-    | none => throw ("missing tasks snapshot #" ++ c.tasks)
+    match Codebase.readObject dir h with
+    | none => throw ("missing tasks snapshot #" ++ h)
     | some form =>
       Map.fromList (List.map (fun item =>
         match Sexp.args item with
