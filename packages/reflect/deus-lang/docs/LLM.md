@@ -2,8 +2,9 @@
 
 Agents use the same `deus` CLI as people. There is no separate API: read definitions with
 `view`, change them by writing source and running `update`, and check the result with `test`
-and `check`. Add `--json` to any command for one machine-readable JSON document on stdout;
-errors go to stderr with a non-zero exit code.
+and `check`. Add `--json` to a command for one machine-readable JSON document on stdout
+([CLI-JSON.md](./spec/CLI-JSON.md)); `compile`, `image`, `run`, `serve` and `help` ignore it. Errors go to
+stderr with a non-zero exit code.
 
 ```bash
 deus() { node packages/reflect/deus-lang/bin/deus.mjs "$@"; }
@@ -86,6 +87,10 @@ A merge that changed the same name differently on both sides returns `"result":"
 the names, and writes nothing.
 
 ## Working through the codebase
+
+The codebase is the primary version control; git is its backup (D101). Start each task with
+`deus pull origin` and `deus merge origin.main` from the R2 remote (`r2://agent-artifacts/deus/explorer-demo`,
+with `DEUS_R2_ENDPOINT` set), and push each change when it lands, before exporting it to git.
 
 Make changes in the codebase, not only in files: `deus update <file> --by <agent>` records who
 made them, and the task they close goes in with `--closes <id>`. File what you notice while

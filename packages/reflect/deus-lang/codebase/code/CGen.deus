@@ -317,6 +317,12 @@ def CGen.matchForm (ctx : FnCtx) (env : List Int) (tail : Bool) (owned : List In
     CGen.local r ++
     "; })"
 
+/-- The argument that passes `l` itself and after which no argument consumes it: moving `l` there
+  keeps it alive until the call, so later arguments read it without counting. -/
+def CGen.mover (ctx : FnCtx) (env : List Int) (xs : List Sexp) (l : Int) : Option Int := foldl (fun acc pair =>
+  match pair with
+  | (k, x) => if isLocal env l x && not (any (consumes ctx.cBorrow (ctx.cScope).fns ctx.cSelf (-1) env l) (List.drop (k + 1) xs)) then Option.some k else acc) Option.none (mapIndexed (fun k x => (k, x)) xs)
+
 /-- One more than the largest tag of a nullary constructor (other than `Bool`'s) in `form`. -/
 def CGen.nullaryCount (form : Sexp) : Int :=
   match form with
@@ -443,7 +449,12 @@ def CGen.scalarLocal (ctx : FnCtx) (l : Int) : Bool := uncounted (typeOfLocal ct
   and the drops to run after the values are used. An argument in a position `borrows` marks is
   not counted: a local is passed as it is, and anything else is dropped afterwards. -/
 def CGen.sequence (ctx : FnCtx) (env : List Int) (owned : List Int) (token : Option CGen.Token) (borrows : List Bool) (xs : List Sexp) : {Throw Text} (Text, (List Text, Text)) :=
-  let shares := CGen.split owned (List.map (freeLocals env) xs)
+  let last := CGen.split owned (List.map (freeLocals env) xs)
+  let movers := List.map (fun l => (l, mover ctx env xs l)) owned
+  let shares := mapIndexed (fun k here => List.filter (fun l =>
+    match Option.bind (List.lookup l movers) (fun m => m) with
+    | Option.some m => m == k
+    | Option.none => isIn here l) owned) last
   let tokens := hand token xs
   let parts := mapIndexed (fun k triple =>
     match triple with
@@ -490,6 +501,7 @@ def CGen.unit (fns : List Fn) (datatypes : List (Text, Sexp)) (export : Text) : 
       fns
       datatypes
       (Ref.new (mapIndexed (fun j t => (j, t)) (fst (peel f.fnArity f.fnType))))
+      (Ref.new [])
     let ctx := FnCtx.mk scope i f.fnArity (Ref.new f.fnArity) borrow
     let env := reverse (range 0 f.fnArity)
     "/* #" ++ Text.take 10 f.fnHash ++ " */\nstatic V " ++ fnName i ++ CGen.params f.fnArity ++

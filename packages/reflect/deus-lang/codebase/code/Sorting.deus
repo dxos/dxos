@@ -237,5 +237,4 @@ def Sorting.swapM (m : MutMap Int Int) (i : Int) (j : Int) : Unit :=
 
 def Sorting.toList (a : Array Int) : List Int := toListGo a (Array.length a - 1) []
 
-/-- The items of `a` from `i` down to 0, onto `acc`. -/
 def Sorting.toListGo (a : Array Int) (i : Int) (acc : List Int) : List Int := if i < 0 then acc else Sorting.toListGo a (i - 1) (Array.get a i :: acc)

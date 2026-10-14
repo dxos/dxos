@@ -325,10 +325,10 @@ layer may not depend on, listing each crossing as `name (layer) -> name (layer)`
 
 `artifacts/` and `cache/` are local only and may be deleted at any time.
 
-Note: [`Codebase.layers`](../../deus/codebase.deus) marks `results` and `provenance` as replicated, but
-bundles ([`deus/replicate.deus`](../../deus/replicate.deus)) carry only objects, metadata and branch
-claims, so neither directory leaves the machine today. `meta/` is not listed as a layer but is
-replicated with its object.
+`results/` and `provenance/` are not replicated either: bundles
+([`deus/replicate.deus`](../../deus/replicate.deus)) carry only objects, metadata and branch claims, and
+[`Codebase.layers`](../../deus/codebase.deus) says so. `meta/` is not listed as a layer but is replicated
+with its object; `assets/` is replicated beside the bundles (D82).
 
 ## Results
 

@@ -19,7 +19,7 @@ Related specs: the store being exported is [CODEBASE-STORE.md](./CODEBASE-STORE.
   README.md            what the export is and how to restore it
   code/<Top>.deus      source of every exported definition whose name starts with <Top>.
   code/_root.deus      source of every exported definition whose name has no dot
-  specs/<doc>.mdl      the identified spec blocks of each document, with its Extensions table
+  specs/<doc>.mdl      each spec document: its blocks in order with their prose (D99)
   tasks.sexp           every task on the branch, one object per line
   TASKS.md             the tasks, for reading
   history.sexp         the branch's history, one entry per line, for `deus history import`
@@ -260,7 +260,8 @@ generated: change the codebase, then export again.
 - `code/` holds the source of every definition, one file per top-level namespace.
 - `tasks.sexp` holds the tasks, and `TASKS.md` lists them to read.
 - `history.sexp` holds the branch's changes, and `HISTORY.md` lists them to read.
-- `specs/` holds the `.mdl` spec blocks, one document per name.
+- `specs/` holds the spec documents, one per name: frontmatter, the Extensions table written from the
+  blocks' URIs, then each block after the prose that preceded it ([D99](../DECISIONS.md)).
 
 To restore it into a fresh codebase:
 
@@ -304,7 +305,7 @@ any order. The result:
 ## What does not round-trip
 
 Attributes, doc comments, ordinary comments (D66), spec blocks and string literals with control
-characters all come back: the laws in [CODEBASE-TEXT.mdl](CODEBASE-TEXT.mdl) restore an export in the
+characters all come back: the laws in [Export.Spec](../../codebase/specs/Export.Spec.mdl) restore an export in the
 simulation and compare (D92). Hashes do not depend on the rest, so it does not break the guarantee
 above, but a restored codebase lacks it:
 

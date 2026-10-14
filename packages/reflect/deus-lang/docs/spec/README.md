@@ -11,22 +11,27 @@ independent implementation. Where a spec and the code disagree, the code in [`de
 | [CORE.md](./CORE.md)                   | Core IR: canonical S-expressions, terms, patterns, objects, hashing                    |
 | [IMAGE.md](./IMAGE.md)                 | Images (`seed/deus.image`) and the executables that carry one                          |
 | [CODEBASE-STORE.md](./CODEBASE-STORE.md) | The codebase directory (`~/.deus`): objects, metadata, branches, layers, tasks        |
-| [CODEBASE-STORE.mdl](./CODEBASE-STORE.mdl) | Checked spec of the store: requirements, APIs and laws, with their evidence     |
+| [Codebase.Spec](../../codebase/specs/Codebase.Spec.mdl) | Checked spec of the store: requirements, APIs and laws, with their evidence     |
 | [CODEBASE-TEXT.md](./CODEBASE-TEXT.md) | The text export written by `deus export` and kept in git                               |
-| [CODEBASE-TEXT.mdl](./CODEBASE-TEXT.mdl) | Checked spec of the export: restoring gives back the same codebase                |
-| [COMPILE.mdl](./COMPILE.mdl)           | Checked spec of the compiler: hashes follow meaning, printing compiles back          |
+| [Export.Spec](../../codebase/specs/Export.Spec.mdl) | Checked spec of the export: restoring gives back the same codebase                |
+| [Compile.Spec](../../codebase/specs/Compile.Spec.mdl)           | Checked spec of the compiler: hashes follow meaning, printing compiles back          |
 | [CODEBASE-BINARY.md](./CODEBASE-BINARY.md) | Replication bundles: naming, contents, the `DEUSCOL1` columnar encoding, gzip      |
 | [MDL.md](./MDL.md)                     | `.mdl` documents as DEUS reads them: spec blocks and extensions                        |
 | [EMBEDDING.md](./EMBEDDING.md)         | The embeddable wasm kernel's ABI and its JSON protocol                                 |
-| [BINDINGS.mdl](./BINDINGS.mdl)         | `deus bindings`: requirements, the TypeScript API, the mapping, and theorems           |
-| [CHECKING.mdl](./CHECKING.mdl)         | checked ascriptions and rows: requirements, checker rules, and theorems                |
-| [JS.mdl](./JS.mdl)                     | The JavaScript back end: values, handlers, `Js.import` bindings, source maps     |
+| [Bindings.Spec](../../codebase/specs/Bindings.Spec.mdl)         | `deus bindings`: requirements, the TypeScript API, the mapping, and theorems           |
+| [Checking.Spec](../../codebase/specs/Checking.Spec.mdl)         | checked ascriptions and rows: requirements, checker rules, and theorems                |
+| [JsGen.Spec](../../codebase/specs/JsGen.Spec.mdl)                  | The JavaScript back end: values, handlers, `Js.import` bindings, source maps     |
+| [WasmEquality.Spec](../../codebase/specs/WasmEquality.Spec.mdl) | `==` on data in the wasm back end: requirements, layout of the equality functions, theorems |
 | [WASM.md](./WASM.md)                   | Modules emitted by the DEUS wasm compiler                                              |
 | [NATIVE.md](./NATIVE.md)               | C emitted by the DEUS C compiler, benchmarks of every back end, and the native roadmap |
 | [EXPLORER.md](./EXPLORER.md)           | The explorer's JSON data files and site layout                                         |
-| [EXPLORER.mdl](./EXPLORER.mdl)         | Checked spec of the explorer's files                                                   |
+| [Explorer.Spec](../../codebase/specs/Explorer.Spec.mdl)         | Checked spec of the explorer's files                                                   |
 | [CLI-JSON.md](./CLI-JSON.md)           | `deus … --json` output and exit codes                                                  |
 | [OBSERVABILITY.md](./OBSERVABILITY.md) | Log, trace and metric output: NDJSON and OTLP JSON lines                               |
+
+The checked specs (`Codebase.Spec`, `Compile.Spec` and the other `*.Spec` rows) live in the codebase, not
+in this directory ([D99](../DECISIONS.md)): `deus view Compile.Spec` prints one, `deus mdl Compile.Spec` checks it,
+and the links go to the copies `deus export` writes to [`codebase/specs/`](../../codebase/specs).
 
 How they fit together: source ([LANGUAGE](./LANGUAGE.md)) compiles to [Core](./CORE.md); Core objects live
 in the [store](./CODEBASE-STORE.md); the store is backed up as [text](./CODEBASE-TEXT.md) and replicated as
@@ -39,15 +44,4 @@ is fixed, the spec describes what the code does.
 
 Bugs: none open.
 
-Docs that disagree with the code:
-
-- `Codebase.layers` says `results` and `provenance` replicate; bundles carry only objects and metadata.
-- D51 and `deus help` say the wasm compiler is first-order `Int`/`Bool`; it handles data since D56.
-- D62 lists four explorer JSON kinds; the explorer also writes `change/<causal>.json`.
-- D63 says `deus view` keeps lines within 100 columns; only some forms break.
-- D31 says spans identify code by hash; only defect traces carry hashes.
-- LLM.md says `--json` works on any command; `compile`, `image`, `run`, `serve` and `help` ignore it.
-- GETTING_STARTED.md says a `match` must cover every case; nothing checks exhaustiveness, and a missed
-  case is a defect at run time.
-- The header comments of [`deus/codebase.deus`](../../deus/codebase.deus) (a top-level `tasks` entry) and
-  [`deus/image.deus`](../../deus/image.deus) (no nominal lines) are stale.
+Docs that disagree with the code: none open.

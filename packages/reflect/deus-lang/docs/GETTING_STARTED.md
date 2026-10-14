@@ -71,7 +71,7 @@ These are the parts to know:
 | ------------ | ------------------------------------------------------------------------- | ------------------------------------------------------------------- |
 | Data types   | `inductive Shape where \| circle (r : Int) \| rect (w : Int) (h : Int)`   | Constructors are `Shape.circle`, `Shape.rect`.                      |
 | Records      | `structure Line where`, then one `field : Type` per line                  | Built with `Line.mk "tea" 2`, read with `line.item`.                |
-| Matching     | `match s with \| Shape.circle r => … \| Shape.rect w h => …`              | Must cover every case.                                              |
+| Matching     | `match s with \| Shape.circle r => … \| Shape.rect w h => …`              | A value no case matches is a defect at run time; nothing checks it. |
 | Lambdas      | `fun x => x + 1`                                                          | `List.map (fun x => x + 1) xs`                                      |
 | Local values | `let total := a + b`                                                      | One per line, then the result.                                      |
 | Abilities    | `ability Prices where priceOf : Text -> Int`                              | Effects a function may perform, listed in its type: `{Prices} Int`. |
