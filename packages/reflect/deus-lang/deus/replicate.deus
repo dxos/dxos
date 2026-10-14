@@ -55,7 +55,7 @@ def levelOf (name : Text) : Int := Option.getOr (Int.fromText (Text.take (Text.i
 
 def nameOf (level : Int) (text : Text) : Text := Int.toText level ++ "-" ++ Text.sha256 text
 
-/-- Whether `name` is `<level>-<sha256>`; anything else under `bundles/` is not a bundle (D90). -/
+/-- Whether `name` is `<level>-<sha256>`; anything else under `bundles/` is not a bundle (D91). -/
 def isBundleName (name : Text) : Bool :=
   let dash := Text.indexOf name "-" 0
   dash > 0 && Option.isSome (Int.fromText (Text.take dash name)) && External.isSha256 (Text.drop (dash + 1) name)
@@ -82,7 +82,7 @@ def unself (g : Text) (form : Sexp) : Sexp :=
   | _ => form
 
 /--
-  Whether `form` is the object named `h` (D90): its text hashes to `h`, or `h` names a member of a
+  Whether `form` is the object named `h` (D91): its text hashes to `h`, or `h` names a member of a
   recursive group whose `cycle` form, rebuilt from the members `lookup` finds, hashes to the group.
 -/
 def verified (h : Text) (form : Sexp) (lookup : Text -> {IO} Option Sexp) : {IO} Bool :=
@@ -117,7 +117,7 @@ def import (dir : Text) (name : Text) (text : Text) : {IO} Seen :=
   let hashes := List.filterMap (fun item =>
     match item with
     | Sexp.list [Sexp.sym "obj", Sexp.str h, form] =>
-      -- An object that is not what its name says would corrupt the store (D90).
+      -- An object that is not what its name says would corrupt the store (D91).
       if verified h form lookup then
         Codebase.writeObject dir h form
         some h
@@ -157,7 +157,7 @@ def sync (dir : Text) (remote : Text) : {Remote, IO} List Seen :=
       match Remote.get name with
       | none => none
       | some text =>
-        -- A bundle whose text does not hash to its name is not read, and stays unseen so a repaired copy is (D90).
+        -- A bundle whose text does not hash to its name is not read, and stays unseen so a repaired copy is (D91).
         if Text.sha256 text != Text.drop (Text.indexOf name "-" 0 + 1) name then
           IO.eprint ("deus: skipped bundle " ++ name ++ " on " ++ remote ++ ": its text does not hash to its name\n")
           none

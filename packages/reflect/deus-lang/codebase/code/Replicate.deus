@@ -252,7 +252,7 @@ def Replicate.import (dir : Text) (name : Text) (text : Text) : {IO} Seen :=
   let hashes := filterMap (fun item =>
     match item with
     | Sexp.list (Sexp.sym "obj" :: Sexp.str h :: form :: []) =>
-        -- An object that is not what its name says would corrupt the store (D90).
+        -- An object that is not what its name says would corrupt the store (D91).
         if verified h form lookup then
           writeObject dir h form
           Option.some h
@@ -268,7 +268,7 @@ def Replicate.import (dir : Text) (name : Text) (text : Text) : {IO} Seen :=
 
 def Replicate.isBoundary (level : Int) (h : Text) : Bool := startsWith (repeat level "0") h
 
-/-- Whether `name` is `<level>-<sha256>`; anything else under `bundles/` is not a bundle (D90). -/
+/-- Whether `name` is `<level>-<sha256>`; anything else under `bundles/` is not a bundle (D91). -/
 def Replicate.isBundleName (name : Text) : Bool :=
   let dash := indexOf name "-" 0
   dash > 0 && isSome (fromText (Text.take dash name)) && isSha256 (Text.drop (dash + 1) name)
@@ -372,7 +372,7 @@ def Replicate.sync (dir : Text) (remote : Text) : {Remote, IO} List Seen :=
         match Remote.get name with
         | Option.none => Option.none
         | Option.some text =>
-            -- A bundle whose text does not hash to its name is not read, and stays unseen so a repaired copy is (D90).
+            -- A bundle whose text does not hash to its name is not read, and stays unseen so a repaired copy is (D91).
             if Text.sha256 text != Text.drop (indexOf name "-" 0 + 1) name then
               IO.eprint ("deus: skipped bundle " ++ name ++ " on " ++ remote ++
                 ": its text does not hash to its name\n")
@@ -395,7 +395,7 @@ def Replicate.unself (g : Text) (form : Sexp) : Sexp :=
   | Sexp.list items => Sexp.list (List.map (fun x => Replicate.unself g x) items)
   | _ => form
 
-/-- Whether `form` is the object named `h` (D90): its text hashes to `h`, or `h` names a member of a
+/-- Whether `form` is the object named `h` (D91): its text hashes to `h`, or `h` names a member of a
   recursive group whose `cycle` form, rebuilt from the members `lookup` finds, hashes to the group. -/
 def Replicate.verified (h : Text) (form : Sexp) (lookup : Text -> {IO} Option Sexp) : {IO} Bool := if Text.sha256 (Sexp.print form) == h then true else
   let dot := indexOf h "." 0

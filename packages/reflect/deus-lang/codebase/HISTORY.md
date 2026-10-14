@@ -1,5 +1,8 @@
 # History of main
 
+- `d3c92c98f9` export: merge 6 changes from codebase
+- `c610f5d907` export: merge tasks from codebase
+- `634f0cce36` merge #13952's branch (wasm refcounting, D90); pull verification renumbered D91 (by claude)
 - `6603ee130b` close 7afeaa0c by #1efeb3fb7d (by claude)
 - `1efeb3fb7d` pull: verify bundle names, bundle and object hashes, cycle members included (D90) (by claude)
 - `83474d34b9` export: merge 19 changes from codebase
@@ -85,6 +88,12 @@
 - `7453b3a1b7` task: import 18 tasks
 - `bff1b8d98b` add code
 - `67c7d5a614` init
+- `57f679f52c` close ef46861c by #9081760a10 (by claude)
+- `9081760a10` Wasm with reference counting: the C back end compiled with clang for wasm32 (D90) (by claude)
+- `a8b0e3bf81` task: open 38603468 Native: 32-bit values with a tag bit in wasm built through C (halve block size) (by claude)
+- `74c2b4296d` history: import 313 changes
+- `eb9b7f4404` task: import from tasks.sexp
+- `617221bcb6` add code specs
 - `8fefe275fc` task: comment on 27d2d190 (by claude)
 - `3e65353735` delete Bindings.handlerDecl Bindings.member Bindings.typeDecl
 - `acdf257ca5` close 27d2d190 by #a1cc2bcbf9 (by claude)

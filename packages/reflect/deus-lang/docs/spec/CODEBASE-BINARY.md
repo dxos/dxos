@@ -29,7 +29,7 @@ concurrent writers never conflict.
 
 The level is the text before the first `-`. A reader ignores, with a warning, a file under `bundles/`
 whose name is not `<level>-<sha256>`, and skips a bundle whose text does not hash to its name
-([D90](../DECISIONS.md)). A skipped bundle gets no `seen` record, so a repaired copy is read later.
+([D91](../DECISIONS.md)). A skipped bundle gets no `seen` record, so a repaired copy is read later.
 
 Real sample: `0-a86b65c302098f3ddcb8dc11e7b496bce75bb2b7231a9267724f9d293808340f`.
 
@@ -67,7 +67,7 @@ know. For `obj` it writes the object unless the store already has that hash. For
 the metadata only when the store has none for that hash, so the first metadata seen wins. It writes
 an object only when `sha256(print(form))` is its hash or, for a member `g.i` of a recursive group, when
 the `cycle` form rebuilt from the members in the bundle and the store hashes to `g`
-([CORE.md](./CORE.md#hashing), [D90](../DECISIONS.md)); it skips any other object with a warning.
+([CORE.md](./CORE.md#hashing), [D91](../DECISIONS.md)); it skips any other object with a warning.
 
 Only `objects/` and `meta/` travel in bundles. Note: `deus layers` reports the `results` and
 `provenance` layers as replicated, but no bundle carries them (`Codebase.layers` in

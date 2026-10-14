@@ -385,7 +385,7 @@ describe('deus CLI', () => {
       deus('pull', ...b);
       expect(deus('merge', 'origin.main', ...b).stdout).toMatch(/^Fast-forwarded/);
 
-      // A pull ignores files that are not bundles and skips a bundle whose text does not hash to its name (D90).
+      // A pull ignores files that are not bundles and skips a bundle whose text does not hash to its name (D91).
       const fake = `0-${createHash('sha256').update('real').digest('hex')}`;
       writeFileSync(join(remote, 'bundles', 'README'), 'notes');
       writeFileSync(join(remote, 'bundles', fake), gzipSync('forged'));
@@ -436,7 +436,7 @@ describe('deus CLI', () => {
       expect(refused.code).toBe(1);
       expect(refused.stderr).toContain('compact keeps the whole history');
 
-      // An object whose text is not what its name says is not taken in (D90).
+      // An object whose text is not what its name says is not taken in (D91).
       const forger = ['--codebase', join(scratch, 'forger')];
       const victim = ['--codebase', join(scratch, 'victim')];
       for (const c of [forger, victim]) {
@@ -639,6 +639,34 @@ describe('deus CLI', () => {
 
       const refused = deus('build', 'Text.length', '-o', join(scratch, 'length'), '--c', ...c);
       expect(refused.code).toBe(1);
+    },
+  );
+
+  test.skipIf(spawnSync('clang', ['--target=wasm32', '-print-prog-name=wasm-ld']).status !== 0)(
+    'compiles the C back end to wasm with reference counting',
+    { timeout: 120_000 },
+    ({ expect }) => {
+      const c = ['--codebase', join(scratch, 'c-wasm')];
+      deus('init', '--empty', ...c);
+      deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
+      deus('add', join(root, 'examples/bench.deus'), join(root, 'examples/sorting.deus'), ...c);
+      for (const [name, args] of [
+        ['Bench.trees', [2]],
+        ['Bench.queens', [6]],
+        ['Sorting.benchMerge', [300, 7]],
+        ['Sorting.benchArray', [300, 7]],
+      ] as const) {
+        const out = join(scratch, `${name}.wasm`);
+        expect(deus('build', name, '-o', out, '--c', ...c).code).toBe(0);
+        const instance = new WebAssembly.Instance(new WebAssembly.Module(new Uint8Array(readFileSync(out))));
+        const run = instance.exports[name.split('.')[1]];
+        const live = instance.exports.deus_live;
+        if (typeof run !== 'function' || typeof live !== 'function') {
+          throw new Error(`${name}.wasm does not export ${name} and deus_live`);
+        }
+        expect(`${run(...args)}\n`).toBe(deus('eval', `${name} ${args.join(' ')}`, ...c).stdout);
+        expect(live()).toBe(0);
+      }
     },
   );
 
