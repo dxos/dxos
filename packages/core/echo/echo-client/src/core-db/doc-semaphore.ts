@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { beginCommit } from '@dxos/echo/internal';
 import { failedInvariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { getDebugName } from '@dxos/util';
@@ -17,9 +18,12 @@ export const docChangeSemaphore = (handle: any) => {
   }
 
   beingChanged.add(handle);
+  // The commit ends after the semaphore is released, so a post-commit subscriber may change this document again.
+  const endCommit = beginCommit();
 
   return () => {
     log('end change', { handled: getDebugName(handle) });
     beingChanged.delete(handle);
+    endCommit();
   };
 };

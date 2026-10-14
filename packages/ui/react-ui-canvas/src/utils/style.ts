@@ -162,7 +162,8 @@ export const resolveStyle = (style: NodeStyle = {}): NodeStyle => ({
  * Frame classes for a node: fill and text colour, border and corner radius from its style; a guide is
  * dashed and unfilled.
  */
-export const frameClasses = (node: Node, selected: boolean, hovered = false): string[] => {
+/** The frame's classes; `ellipse` rounds it as an ellipse whatever the node's type (its definition asks for it). */
+export const frameClasses = (node: Node, selected: boolean, hovered = false, ellipse = false): string[] => {
   const style = resolveStyle(node.style);
   const hue = hueClasses(style.hue, style.tone);
   const filled = style.fill && !style.guide;
@@ -184,7 +185,7 @@ export const frameClasses = (node: Node, selected: boolean, hovered = false): st
           ? 'border-transparent'
           : hue.border,
     style.guide || style.lineStyle === 'dashed' ? 'border-dashed' : style.lineStyle === 'dotted' ? 'border-dotted' : '',
-    isEllipseNode(node) ? 'rounded-[50%]' : style.rounded ? 'rounded-2xl' : 'rounded-sm',
+    ellipse || isEllipseNode(node) ? 'rounded-[50%]' : style.rounded ? 'rounded-2xl' : 'rounded-sm',
   ];
 };
 

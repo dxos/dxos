@@ -19,6 +19,7 @@ import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import {
   type Camera,
   type Element,
+  type InspectorMode,
   type Node,
   type SceneDisplay,
   type SceneId,
@@ -82,9 +83,17 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   } = useViewState(canvasViewAspect, contextId);
   const { update: updateViewState } = useViewStateActions(canvasViewAspect, contextId);
   // A section is a drawing shown inside another object (a document's embed), so it is only looked at, never edited,
-  // and shows the drawing alone: no palette and no panels.
+  // and shows the drawing alone: no palette and no inspectors.
   const section = role === AppSurface.Section.role;
   const readonly = (viewReadonly ?? record?.readonly ?? false) || section;
+  const handleInspectorsChange = useCallback(
+    (mode: InspectorMode) => updateViewState((state) => ({ ...state, floating: mode === 'floating' })),
+    [updateViewState],
+  );
+  const handleReadonlyChange = useCallback(
+    (readonly: boolean) => updateViewState((state) => ({ ...state, readonly })),
+    [updateViewState],
+  );
   const handleCameraChange = useCallback(
     (camera: Camera) => updateViewState((state) => ({ ...state, camera })),
     [updateViewState],
@@ -140,7 +149,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   );
 
   return (
-    // A section takes the document's width and has no height of its own (its panels float, read-only), so its height
+    // A section takes the document's width and has no height of its own (read-only, it has no dock), so its height
     // follows from the drawing's 3:2 frame.
     <Panel.Root role={role} classNames={section ? 'w-full aspect-[3/2]' : undefined}>
       <Panel.Body>
@@ -155,11 +164,13 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
               createProjection={lattice ? createLatticeProjection : undefined}
               grid={record?.grid}
               readonly={readonly}
+              onReadonlyChange={section ? undefined : handleReadonlyChange}
               initialCamera={savedCamera}
               onCameraChange={handleCameraChange}
               initialDisplay={{ snap, guides, fit }}
               onDisplayChange={handleDisplayChange}
-              panels={floating ? 'floating' : 'docked'}
+              inspectors={floating ? 'floating' : 'docked'}
+              onInspectorsChange={handleInspectorsChange}
             >
               <SceneView.Canvas liveDepth={settings.liveDepth} />
               {/* Unset means shown: settings saved before the default existed hold neither key. */}

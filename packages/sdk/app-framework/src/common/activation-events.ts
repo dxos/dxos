@@ -39,6 +39,15 @@ export const CommandsRequested = ActivationEvent$.make('org.dxos.app-framework.e
 export const SpaceTemplatesRequested = ActivationEvent$.make('org.dxos.app-framework.event.spaceTemplatesRequested');
 
 /**
+ * Demand signal for plugin assets (each plugin's bundled `PLUGIN.mdl`). Fired by whoever is about to
+ * read them — plugin-code's graph builder when a plugin's spec node is resolved.
+ *
+ * Nothing reads a spec while the app boots, so the modules carrying them are gated here rather than
+ * running with every plugin's startup. Fire and await this before a one-shot read.
+ */
+export const PluginAssetsRequested = ActivationEvent$.make('org.dxos.app-framework.event.pluginAssetsRequested');
+
+/**
  * Fired once by the host at main-thread idle after the app is interactive.
  *
  * For REGISTRATION contributions only — graph builders, operation handler sets, settings: the

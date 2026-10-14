@@ -18,17 +18,16 @@ export type CrawlStores =
   | QuestionStore.QuestionStore
   | ExtractedQuestionStore.ExtractedQuestionStore;
 
-// In-memory wasm SQLite shared for the app session: crawl state survives across operation
-// invocations (pause/resume) but not reloads. The durable OPFS client is worker-only, so
-// durable-across-reload storage lands with the EDGE/worker phase.
+// In-memory wasm SQLite for the app session: crawl state survives across operation invocations
+// (pause/resume) but not reloads. The durable OPFS client is worker-only, so durable-across-reload
+// storage lands with the EDGE/worker phase. The FactStore needs synchronous SQLite, so it has its own.
 const storesLayer: Layer.Layer<CrawlStores> = Layer.mergeAll(
   StateStore.layerSql,
   AgentRegistry.layerSql,
-  FactStoreLive.layer,
   MessageStore.layerSql,
   QuestionStore.layerSql,
   ExtractedQuestionStore.layerSql,
-).pipe(Layer.provideMerge(SqliteClient.layerMemory({}).pipe(Layer.orDie)));
+).pipe(Layer.provideMerge(SqliteClient.layerMemory({}).pipe(Layer.orDie)), Layer.merge(FactStoreLive.layerMemory));
 
 let runtime: ManagedRuntime.ManagedRuntime<CrawlStores, never> | undefined;
 

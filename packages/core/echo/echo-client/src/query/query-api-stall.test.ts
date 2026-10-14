@@ -6,6 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
 import { Filter, Obj } from '@dxos/echo';
+import { BACKED_OBJECT_LIMIT } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { openAndClose } from '@dxos/test-utils';
 
@@ -29,7 +30,7 @@ describe('Query API stalls under paused document synchronizer', () => {
     // 1. Add an object normally so it ends up persisted on disk and
     //    discoverable via space root links.
     const db1 = await peer.createDatabase();
-    const obj = db1.add(Obj.make(TestSchema.Expando, { title: 'subject' }));
+    const obj = db1.add(Obj.make(TestSchema.Expando, { title: 'subject', body: 'x'.repeat(BACKED_OBJECT_LIMIT + 1) }));
     await db1.flush();
     const objId = obj.id;
 
@@ -52,7 +53,7 @@ describe('Query API stalls under paused document synchronizer', () => {
     peer.host.dataService.setAllSubscriptionsSendUpdatesPaused(true);
 
     // 5. Run a query that needs to load the object's linked document. The
-    //    load hits `RepoProxy.find()` which queues addIds through the
+    //    load hits `RepoProxy.find()` which queues an add through the
     //    (paused) synchronizer; no document state ever reaches the client,
     //    so the loader's `_updateEvent` never fires for objId.
     let resolved = false;

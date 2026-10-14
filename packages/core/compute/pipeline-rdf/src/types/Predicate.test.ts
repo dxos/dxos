@@ -30,3 +30,18 @@ describe('Predicate.normalize', () => {
     expect(Predicate.normalize(once)).toBe(once);
   });
 });
+
+describe('Predicate.label', () => {
+  test('writes lowercase kebab-case, keeping the words as said', ({ expect }) => {
+    expect(Predicate.label('Works at')).toBe('works-at');
+    expect(Predicate.label('Known by')).toBe('known-by');
+    expect(Predicate.label('is a')).toBe('is-a');
+    expect(Predicate.label('hasRole')).toBe('has-role');
+    expect(Predicate.label('  member  of ')).toBe('member-of');
+  });
+
+  test('is idempotent', ({ expect }) => {
+    const once = Predicate.label('is member of');
+    expect(Predicate.label(once)).toBe(once);
+  });
+});

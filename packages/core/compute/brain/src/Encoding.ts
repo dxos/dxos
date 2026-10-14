@@ -30,6 +30,8 @@ export const FACT_RELATIONS = {
   nature: 2,
   recordedAt: 2,
   pass: 2,
+  graph: 2,
+  kind: 2,
 } as const;
 
 /** Relations the goal runtime maintains: sub-goal status and proposed actions. */
@@ -44,9 +46,10 @@ export const GOAL_RELATIONS = {
 export const RELATIONS: Readonly<Record<string, number>> = { ...FACT_RELATIONS, ...GOAL_RELATIONS };
 
 /**
- * Encodes a fact as `fact(F, S, P, O)` plus one metadata relation per present field. `P` is the
- * canonical predicate when the vocabulary knows the surface form, which `surface(F, …)` keeps; a fact
- * without an illocution is `assertive`, and `supersedes` lists `attribution.wasDerivedFrom`.
+ * Encodes a fact as `fact(F, S, P, O)` plus one metadata relation per present field. `F` is the statement id and
+ * `graph(F, G)` the named graph holding it; `P` is the canonical predicate when the vocabulary knows the surface
+ * form, which `surface(F, …)` keeps; a fact without an illocution is `assertive`, and `supersedes` lists
+ * `attribution.wasDerivedFrom` and the graphs the fact's graph replaces.
  */
 export const encode = (fact: RDF.Fact, vocabulary?: Vocabulary.Vocabulary): Engine.Entry[] => {
   const { id, assertion, factuality, illocution, attribution } = fact;
@@ -78,13 +81,15 @@ export const encode = (fact: RDF.Fact, vocabulary?: Vocabulary.Vocabulary): Engi
     ['confidence', factuality.confidence],
     ['nature', factuality.nature],
     ['pass', fact.pass],
+    ['graph', fact.graph],
+    ['kind', fact.kind],
   ];
   for (const [relation, value] of optional) {
     if (value !== undefined) {
       entries.push({ relation, tuple: [id, value] });
     }
   }
-  for (const superseded of attribution.wasDerivedFrom ?? []) {
+  for (const superseded of [...(attribution.wasDerivedFrom ?? []), ...(fact.supersedes ?? [])]) {
     entries.push({ relation: 'supersedes', tuple: [id, superseded] });
   }
   return entries;

@@ -12,9 +12,13 @@ import { ExtractedQuestionStore, MessageStore, QuestionStore } from '../stores/i
 
 export { type Fixture, THREADED_FIXTURE, deterministicAiService, fixtureSourceLayer } from '@dxos/crawler/testing';
 
-/** Every pipeline store over ONE shared SqlClient (bind the client per environment). */
+/**
+ * Every pipeline store: the Effect-SQL stores over ONE shared SqlClient (bind the client per environment), and
+ * the FactStore, which needs synchronous SQLite, over its own database (in-memory by default).
+ */
 export const storesLayer = <E>(
   client: Layer.Layer<SqlClient.SqlClient, E>,
+  factStore: Layer.Layer<FactStore> = FactStoreLive.layerMemory,
 ): Layer.Layer<
   | StateStore.StateStore
   | AgentRegistry.AgentRegistry
@@ -27,8 +31,7 @@ export const storesLayer = <E>(
   Layer.mergeAll(
     StateStore.layerSql,
     AgentRegistry.layerSql,
-    FactStoreLive.layer,
     MessageStore.layerSql,
     QuestionStore.layerSql,
     ExtractedQuestionStore.layerSql,
-  ).pipe(Layer.provideMerge(client));
+  ).pipe(Layer.provideMerge(client), Layer.merge(factStore));

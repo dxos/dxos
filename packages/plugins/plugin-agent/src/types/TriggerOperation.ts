@@ -155,6 +155,22 @@ export const BrainSnapshot = Schema.Struct({
 
 export interface BrainSnapshot extends Schema.Schema.Type<typeof BrainSnapshot> {}
 
+/** Wipes the agent's brain: every fact, read cursor and queued event, so it starts over; its watches stay. */
+export const ResetBrain = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.agent.resetBrain'),
+    name: 'Reset brain',
+    description:
+      "Wipes the agent's brain: its facts and memories, how far it has read each source, and its queued events. Watches stay.",
+    icon: 'ph--trash--regular',
+  },
+  services: [Database.Service, BrainService.BrainService],
+  input: Schema.Struct({
+    agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent.' }),
+  }),
+  output: Schema.Struct({}),
+});
+
 /** Reads the agent's brain as stored, for the debug view; it changes nothing. */
 export const InspectBrain = Operation.make({
   meta: {

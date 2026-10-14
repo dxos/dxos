@@ -270,6 +270,7 @@ export class EchoHost extends Resource {
         return this._sql;
       },
       hasCompleteSnapshots: () => RuntimeProvider.runPromise(this._runtime)(this.indexEngine.hasCompleteSnapshots()),
+      holdsDocument: (subscriptionIds, documentId) => this._dataService.holds(subscriptionIds, documentId),
     });
 
     this._dataService = new DataServiceImpl({

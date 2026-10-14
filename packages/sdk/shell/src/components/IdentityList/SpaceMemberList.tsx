@@ -9,10 +9,10 @@ import { type PublicKey, useClient } from '@dxos/react-client';
 import { type SpaceMember, useMembers } from '@dxos/react-client/echo';
 import { Listbox } from '@dxos/react-ui-list';
 import * as Hooks from '@dxos/react-ui/Hooks';
-import { mx } from '@dxos/ui-theme';
+import * as Typography from '@dxos/react-ui/Typography';
 
 import { translationKey } from '../../translations.ts';
-import { IdentityListItem } from './IdentityListItem.tsx';
+import { IdentityListItem, identityDisplayName } from './IdentityListItem.tsx';
 
 // TODO(burdon): Consolidate into single component?
 
@@ -47,37 +47,43 @@ export const SpaceMemberList = ({ spaceKey, includeSelf, onSelect }: SpaceMember
   return <SpaceMemberListImpl members={members} onSelect={onSelect} />;
 };
 
+/** The members as a Listbox: the arrow keys move through the rows, and Enter or a click picks one when `onSelect` is given. */
 export const SpaceMemberListImpl = ({ members, onSelect }: SpaceMemberListImplProps) => {
   const { t } = Hooks.useTranslation(translationKey);
-  const visibleMembers = members.filter(isIdentified);
-  const items = visibleMembers.map((member) => {
-    const value = requirePublicKey(member.identity.identityKey).toHex();
-    return { value, label: member.identity.profile?.displayName ?? value };
-  });
-  return visibleMembers.length > 0 ? (
-    <Listbox.Root items={items}>
-      <Listbox.Viewport>
-        <Listbox.Content
-          classNames='flex flex-col gap-2'
-          aria-label={t('space-member-list.heading')}
-          data-testid='space-members-list'
-        >
-          {visibleMembers.map((member) => {
-            return (
-              <IdentityListItem
-                key={toPublicKey(member.identity.identityKey)?.toHex()}
-                identity={member.identity}
-                presence={member.presence}
-                onClick={onSelect && (() => onSelect(member))}
-              />
-            );
-          })}
-        </Listbox.Content>
-      </Listbox.Viewport>
+  const visibleMembers = useMemo(() => members.filter(isIdentified), [members]);
+  const items = useMemo(
+    () =>
+      visibleMembers.map((member) => ({
+        value: requirePublicKey(member.identity.identityKey).toHex(),
+        label: identityDisplayName(member.identity),
+      })),
+    [visibleMembers],
+  );
+  if (visibleMembers.length === 0) {
+    return <Typography.Text tone='muted'>{t('empty-space-members.message')}</Typography.Text>;
+  }
+
+  // Held at no value, so picking the same member again still reports it.
+  const selection = onSelect && {
+    value: '',
+    onValueChange: (value: string) => {
+      const member = visibleMembers.find((member) => requirePublicKey(member.identity.identityKey).toHex() === value);
+      if (member) {
+        onSelect(member);
+      }
+    },
+  };
+  return (
+    <Listbox.Root items={items} {...selection}>
+      <Listbox.Content aria-label={t('space-member-list.heading')} data-testid='space-members-list'>
+        {visibleMembers.map((member) => (
+          <IdentityListItem
+            key={requirePublicKey(member.identity.identityKey).toHex()}
+            identity={member.identity}
+            presence={member.presence}
+          />
+        ))}
+      </Listbox.Content>
     </Listbox.Root>
-  ) : (
-    <div className='grow flex items-center p-2'>
-      <p className={mx('text-fg-muted', 'text-center w-full my-2')}>{t('empty-space-members.message')}</p>
-    </div>
   );
 };

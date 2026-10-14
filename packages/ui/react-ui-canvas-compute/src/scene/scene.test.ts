@@ -24,11 +24,12 @@ const setup = () => {
   const initial = sceneFromCircuit(circuit);
   const registry = Registry.make();
   const store = createMemoryStore([initial]);
+  const update = new Event();
   const projection = createComputeProjection({
     registry,
     store,
     sceneId: initial.id,
-    controller: { graph: model, update: new Event() },
+    controller: { graph: model, update },
   });
   const scene = () => registry.get(projection.scene);
   const nodeOf = (type: string): Node => {
@@ -45,7 +46,7 @@ const setup = () => {
     }
     return node.node;
   };
-  return { model, projection, scene, nodeOf, computeIdOf };
+  return { model, update, projection, scene, nodeOf, computeIdOf };
 };
 
 const line = (id: string, source: Link['source'], target: Link['target']): Link => ({
@@ -155,6 +156,17 @@ describe('compute projection', () => {
     projection.apply({ kind: 'update', id: prompt.id, values: { target: { point: chat.center } } });
     expect(edgeTo(text).length).toBe(0);
     expect(model.edges.length).toBe(edges - 1);
+  });
+
+  test('a shape whose compute node is gone keeps drawing, and still deletes', ({ expect }) => {
+    const { model, update, projection, scene, nodeOf, computeIdOf } = setup();
+    const gpt = nodeOf('gpt');
+    // A peer's delete (or the projection's own, before the shape goes) removes the compute node first.
+    model.removeNodes([computeIdOf('gpt')]);
+    update.emit();
+    expect(scene().nodes[gpt.id]?.type).toBe('gpt');
+    projection.apply({ kind: 'delete', ids: [gpt.id] });
+    expect(scene().nodes[gpt.id]).toBeUndefined();
   });
 
   test('restoring a snapshot brings the compute graph back with it', ({ expect }) => {
