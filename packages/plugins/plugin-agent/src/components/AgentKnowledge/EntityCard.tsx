@@ -42,8 +42,13 @@ export type EntityCardProps = {
   onClose?: () => void;
 };
 
-/** A key and its value side by side, the key a fixed width so the values line up down the card. */
-const KeyValue = ({ label, children }: { label: string; children: React.ReactNode }) => (
+export type EntityCardFieldProps = { label: string; children: React.ReactNode };
+
+/**
+ * A key and its value side by side, the key a fixed width so the values line up down the card: the read-only form row
+ * every knowledge card (entities, predicates) is built from.
+ */
+export const EntityCardField = ({ label, children }: EntityCardFieldProps) => (
   <Layout.Grid cols={['6rem', 'fill']} gap='sm' align='center'>
     <Card.Text variant='muted' truncate>
       {label}
@@ -131,9 +136,9 @@ const PropertyRows = ({
         }
         data-testid='entity-card-property'
       >
-        <KeyValue label={property.label}>
+        <EntityCardField label={property.label}>
           <Values values={property.values} hues={hues} onSelect={onSelect ? (id) => onSelect(id, key) : undefined} />
-        </KeyValue>
+        </EntityCardField>
       </Card.Row>
     );
   });
@@ -161,15 +166,15 @@ export const EntityCard = Util.composable<HTMLDivElement, EntityCardProps>(
         ref={forwardedRef}
       >
         <Card.Row icon={TYPE_ICON} end={onClose && <Card.Action system='close' onClick={onClose} />}>
-          <KeyValue label={t('entity-card-type.label')}>
+          <EntityCardField label={t('entity-card-type.label')}>
             <Card.Text truncate>{card.type ?? '—'}</Card.Text>
-          </KeyValue>
+          </EntityCardField>
         </Card.Row>
         <Layout.Separator />
         <Card.Row icon={NAME_ICON}>
-          <KeyValue label={t('entity-card-name.label')}>
+          <EntityCardField label={t('entity-card-name.label')}>
             <Card.Text truncate>{card.label}</Card.Text>
-          </KeyValue>
+          </EntityCardField>
         </Card.Row>
         <PropertyRows direction='out' properties={card.properties} icon={PROPERTY_ICON} {...rows} />
         {card.inverse.length > 0 && (

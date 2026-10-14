@@ -2,13 +2,23 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, {
+  type PropsWithChildren,
+  type ReactNode,
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
 import { type Obj } from '@dxos/echo';
 import { type RDF } from '@dxos/pipeline-rdf';
 import * as ForceGraph from '@dxos/plugin-explorer/ForceGraph';
+import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
@@ -24,7 +34,7 @@ import { type Goal, type Knowledge } from '#types';
 
 import { MEMORY_ICONS } from '../ProfileGraph/index.ts';
 import { EntityBrowser } from './EntityBrowser.tsx';
-import { type EntityCardProps } from './EntityCard.tsx';
+import { EntityCardField, type EntityCardProps } from './EntityCard.tsx';
 import { type EntityCardModel } from './subgraph.ts';
 import { TRIG_PREFIXES, formatRawFact } from './trig.ts';
 import { TurtleSnippet } from './TurtleSnippet.tsx';
@@ -396,53 +406,74 @@ const AgentKnowledgePredicates = ({ predicates, trig }: AgentKnowledgePredicates
 
   return (
     <Panel.Body asChild>
-      <ScrollArea.Root orientation='vertical'>
-        <ScrollArea.Viewport asChild>
-          <Layout.Container>
-            {raw && trig ? (
-              <pre
-                data-testid='agent-knowledge-predicates-trig'
-                className='m-0 p-2 overflow-x-auto whitespace-pre text-xs font-mono text-fg-muted select-text'
-              >
-                {trig}
-              </pre>
-            ) : (
-              <Listbox.Root
-                items={predicates.map((predicate) => ({
-                  value: predicate.iri,
-                  label: predicate.label,
-                  icon: 'ph--arrow-right--regular',
-                }))}
-              >
-                <Listbox.Content>
-                  {predicates.map((predicate) => (
-                    <Listbox.Item key={predicate.iri} id={predicate.iri} data-testid='agent-knowledge-predicate'>
-                      <Listbox.ItemIcon />
-                      <Listbox.ItemText />
-                      <Listbox.ItemDescription>
-                        {[
-                          predicate.curie,
-                          predicate.vocabulary === 'brain' ? t('agent-knowledge-predicate-minted.label') : undefined,
-                          t('agent-knowledge-predicate-count.label', { count: predicate.count }),
-                          predicate.description,
-                          predicate.synonyms?.length ? predicate.synonyms.join(', ') : undefined,
-                        ]
-                          .filter(Boolean)
-                          .join(' · ')}
-                      </Listbox.ItemDescription>
-                    </Listbox.Item>
-                  ))}
-                </Listbox.Content>
-              </Listbox.Root>
-            )}
-          </Layout.Container>
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
+      <Form.Viewport scroll>
+        <Layout.Container gutter='inherit' gap='sm'>
+          {raw && trig ? (
+            <pre
+              data-testid='agent-knowledge-predicates-trig'
+              className='m-0 p-2 overflow-x-auto whitespace-pre text-xs font-mono text-fg-muted select-text'
+            >
+              {trig}
+            </pre>
+          ) : (
+            predicates.map((predicate) => <PredicateCard key={predicate.iri} predicate={predicate} />)
+          )}
+        </Layout.Container>
+      </Form.Viewport>
     </Panel.Body>
   );
 };
 
 AgentKnowledgePredicates.displayName = 'AgentKnowledge.Predicates';
+
+/** One predicate as a read-only form: its label heads the card, its IRI, vocabulary, use and meaning the rows below. */
+const PredicateCard = ({ predicate }: { predicate: AgentKnowledgePredicate }) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const rows: [string, ReactNode][] = [
+    [
+      t('agent-knowledge-predicate-iri.label'),
+      <Card.Text truncate classNames='font-mono'>
+        {predicate.curie}
+      </Card.Text>,
+    ],
+    [
+      t('agent-knowledge-predicate-vocabulary.label'),
+      <Card.Text truncate>
+        {predicate.vocabulary === 'brain' ? t('agent-knowledge-predicate-minted.label') : (predicate.vocabulary ?? '—')}
+      </Card.Text>,
+    ],
+    [t('agent-knowledge-predicate-facts.label'), <Card.Text>{predicate.count}</Card.Text>],
+    ...(predicate.description
+      ? [
+          [
+            t('agent-knowledge-predicate-description.label'),
+            <Card.Text lines={3}>{predicate.description}</Card.Text>,
+          ] as [string, ReactNode],
+        ]
+      : []),
+    ...(predicate.synonyms?.length
+      ? [
+          [
+            t('agent-knowledge-predicate-synonyms.label'),
+            <Card.Text truncate>{predicate.synonyms.join(', ')}</Card.Text>,
+          ] as [string, ReactNode],
+        ]
+      : []),
+  ];
+  return (
+    <Card.Root grid data-testid='agent-knowledge-predicate'>
+      <Card.Row icon='ph--arrow-right--regular'>
+        <Card.Text truncate>{predicate.label}</Card.Text>
+      </Card.Row>
+      <Layout.Separator />
+      {rows.map(([label, value]) => (
+        <Card.Row key={label}>
+          <EntityCardField label={label}>{value}</EntityCardField>
+        </Card.Row>
+      ))}
+    </Card.Root>
+  );
+};
 
 //
 // Goals
