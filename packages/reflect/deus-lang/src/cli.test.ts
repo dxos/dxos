@@ -577,7 +577,13 @@ describe('deus CLI', () => {
       deus('init', '--empty', ...c);
       deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
       deus('add', join(root, 'examples/bench.deus'), join(root, 'examples/sorting.deus'), ...c);
-      deus('add', join(root, 'examples/closures.deus'), join(root, 'examples/texts.deus'), ...c);
+      deus(
+        'add',
+        join(root, 'examples/closures.deus'),
+        join(root, 'examples/texts.deus'),
+        join(root, 'examples/structural.deus'),
+        ...c,
+      );
       // Definitions that differ only in their annotations share a hash: its stored scheme fits both
       // (D116), and their comparisons are decided at run time.
       deus(
@@ -620,6 +626,8 @@ describe('deus CLI', () => {
         // Text, `++` on lists, and a Text result printed as the interpreter shows it (D115).
         ['Texts.all', [30]],
         ['Texts.shown', [5]],
+        // Structural equality and order of data (D117).
+        ['Structural.structural', [200]],
       ] as const) {
         const out = join(scratch, name);
         expect(deus('build', name, '-o', out, '--c', ...c).code).toBe(0);
@@ -689,10 +697,17 @@ describe('deus CLI', () => {
       deus('init', '--empty', ...c);
       deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
       deus('add', join(root, 'examples/bench.deus'), join(root, 'examples/sorting.deus'), ...c);
-      deus('add', join(root, 'examples/closures.deus'), join(root, 'examples/texts.deus'), ...c);
+      deus(
+        'add',
+        join(root, 'examples/closures.deus'),
+        join(root, 'examples/texts.deus'),
+        join(root, 'examples/structural.deus'),
+        ...c,
+      );
       for (const [name, args] of [
         ['Closures.hofLoop', [5, 200, 0]],
         ['Texts.all', [30]],
+        ['Structural.structural', [200]],
         ['Bench.trees', [2]],
         ['Bench.queens', [6]],
         ['Sorting.benchMerge', [300, 7]],

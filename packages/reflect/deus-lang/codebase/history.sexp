@@ -1,3 +1,8 @@
+(entry "4341bed77f13c9e5ab8d38d6957892c10f3dc602c6abc9ba65bf422cc6fa71b1" "close f9cd5624 by #c9c3e09be7" "claude")
+(entry "c9c3e09be7725a37136929bb27c58c9926ddf06b5858ef5d2962a6a62a472279" "C and wasm back ends compare data by per-type functions (D117)" "claude")
+(entry "ef951547a13d004325d164efd673b56cb950be39a9e019e9b0c6c2dcc99c54de" "history: import 702 changes" "")
+(entry "872dcf4a93c6787fbf20044c1e6f98397fc743258fd0e9c009cef13224b19d99" "task: import from codebase/tasks.sexp" "")
+(entry "f255972bcce0c873e78c6803f2645e1625b8a932788ea0ea12fce4b8a5a37738" "add codebase/code codebase/specs" "")
 (entry "922cec2bc53560e3099a141339d026da0c518510147965fde9b9afc984b2588f" "task: link 62f3f4d0 to Codebase.mergeMeta" "")
 (entry "2ee07a4da00d846ba7a8719458ac175bae374776830c8c78d2a099f4bf6a3b4a" "task: link f4afc2c0 to Replicate.import" "")
 (entry "bbdf5cd081738ff6e40a1d10870dc8ec5681ae2844d80c39db3a6f64098785f2" "task: open 62f3f4d0 Names that share a hash keep only the last name's doc, comments and parameter names" "claude")

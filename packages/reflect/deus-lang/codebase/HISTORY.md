@@ -1,5 +1,10 @@
 # History of main
 
+- `4341bed77f` close f9cd5624 by #c9c3e09be7 (by claude)
+- `c9c3e09be7` C and wasm back ends compare data by per-type functions (D117) (by claude)
+- `ef951547a1` history: import 702 changes
+- `872dcf4a93` task: import from codebase/tasks.sexp
+- `f255972bcc` add codebase/code codebase/specs
 - `922cec2bc5` task: link 62f3f4d0 to Codebase.mergeMeta
 - `2ee07a4da0` task: link f4afc2c0 to Replicate.import
 - `bbdf5cd081` task: open 62f3f4d0 Names that share a hash keep only the last name's doc, comments and parameter names (by claude)

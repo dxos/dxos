@@ -16,35 +16,37 @@ definitions used as values, calls of unknown functions, and `letrec`, so the pre
 `List.filter`, `List.foldl`, `List.zip`, `Option.map` and the like compile. A C runtime adds `Text`
 ([D115](../DECISIONS.md)): literals, `++` on texts and on lists, `Text.length`, `code`, `slice`,
 `fromCode`, `concat`, `join`, `split`, `indexOf`, `trim`, `Int.toText`, `Int.fromText`, text
-patterns, and `==`, `<`, `compare` on texts. Maps, `show`, `Text.sha256`, `Text.utf8`,
-`Text.fromCodes` and structural equality of data are still refused. Error messages for refused forms
+patterns, and `==`, `<`, `compare` on texts. `==`, `<` and `compare` on data compare structurally
+([D117](../DECISIONS.md)). Maps, `show`, `Text.sha256`, `Text.utf8`, `Text.fromCodes` and comparing
+arrays or functions are still refused. Error messages for refused forms
 name the C subset, except the ones raised while gathering definitions, which name the wasm subset.
 
 ## The C it writes
 
-| Core                              | C                                                                                                  |
-| --------------------------------- | -------------------------------------------------------------------------------------------------- |
-| a definition of arity n           | `static V fᵢ(V l0, …, V lₙ₋₁)`; `V` is `intptr_t`                                                  |
-| `(int n)`                         | `(V)n`                                                                                             |
-| `Int.add`, `sub`, `mul`           | `ADD(a, b)` …: computed in `uint32_t`, sign-extended back, so arithmetic wraps at 32 bits          |
-| `Int.div`, `Int.mod`              | `DIV`, `MOD`: trap on zero; `x / -1` is `0 - x`, as in the interpreter                             |
-| comparisons, `and`/`or`/`xor`     | the C operator on `V`s, cast back to `V`                                                           |
-| `(con "T" tag 0)`                 | `(V)&deus_nullary[tag]`: one static block per tag, never allocated                                 |
-| `(app (con "T" tag n) a…)`        | a counted block `[tag, a…]` (see [Memory](#memory)), or a dead block's memory reused               |
-| `match`                           | one `do { tests; body } while (0)` per case; a failed test `break`s to the next case               |
-| `let`, `seq`, `match` (non-tail)  | GNU statement expressions `({ … })` (clang and gcc)                                                |
-| call to itself in tail position   | arguments into temporaries, then the parameters, then `goto top`                                   |
-| other tail call, same arity       | `MUSTTAIL return fⱼ(…)`: `__attribute__((musttail))`, a guaranteed jump, where the compiler has it |
-| other call                        | `fⱼ(…)`                                                                                            |
-| `(lam b)`                         | a closure: a counted block `[code, captured…]`; `b` is lifted to `static V cₖ(V self, V arg)`      |
-| call of an unknown function       | `deus_apply(f, x)`: the code borrows the closure, which reads its captures without counting them   |
-| `fⱼ` applied to too few arguments | the arguments bound, then one lambda per missing parameter around the full call                    |
-| `(letrec (f…) b)`                 | each `f` lifted to a top-level function taking its captures first; uses become direct calls        |
-| `(text "…")`                      | a block made on first use and kept: a count no program brings to one, not counted as live          |
-| a `Text` primitive                | a runtime function (`deus_text_slice` …) that borrows its arguments; owned ones are dropped after  |
-| `a ++ b` on texts                 | `deus_text_extend`: a unique `a` grows in place, doubling its capacity when full                   |
-| `a ++ b` on lists                 | `deus_list_append`: the unique prefix of `a` is relinked in place, the shared rest copied          |
-| `<`, `==` of untyped values       | `deus_cmp_any`, `deus_eq_any`: texts by their units, integers by value; any other block traps      |
+| Core                              | C                                                                                                       |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| a definition of arity n           | `static V fᵢ(V l0, …, V lₙ₋₁)`; `V` is `intptr_t`                                                       |
+| `(int n)`                         | `(V)n`                                                                                                  |
+| `Int.add`, `sub`, `mul`           | `ADD(a, b)` …: computed in `uint32_t`, sign-extended back, so arithmetic wraps at 32 bits               |
+| `Int.div`, `Int.mod`              | `DIV`, `MOD`: trap on zero; `x / -1` is `0 - x`, as in the interpreter                                  |
+| comparisons, `and`/`or`/`xor`     | the C operator on `V`s, cast back to `V`                                                                |
+| `(con "T" tag 0)`                 | `(V)&deus_nullary[tag]`: one static block per tag, never allocated                                      |
+| `(app (con "T" tag n) a…)`        | a counted block `[tag, a…]` (see [Memory](#memory)), or a dead block's memory reused                    |
+| `match`                           | one `do { tests; body } while (0)` per case; a failed test `break`s to the next case                    |
+| `let`, `seq`, `match` (non-tail)  | GNU statement expressions `({ … })` (clang and gcc)                                                     |
+| call to itself in tail position   | arguments into temporaries, then the parameters, then `goto top`                                        |
+| other tail call, same arity       | `MUSTTAIL return fⱼ(…)`: `__attribute__((musttail))`, a guaranteed jump, where the compiler has it      |
+| other call                        | `fⱼ(…)`                                                                                                 |
+| `(lam b)`                         | a closure: a counted block `[code, captured…]`; `b` is lifted to `static V cₖ(V self, V arg)`           |
+| call of an unknown function       | `deus_apply(f, x)`: the code borrows the closure, which reads its captures without counting them        |
+| `fⱼ` applied to too few arguments | the arguments bound, then one lambda per missing parameter around the full call                         |
+| `(letrec (f…) b)`                 | each `f` lifted to a top-level function taking its captures first; uses become direct calls             |
+| `(text "…")`                      | a block made on first use and kept: a count no program brings to one, not counted as live               |
+| a `Text` primitive                | a runtime function (`deus_text_slice` …) that borrows its arguments; owned ones are dropped after       |
+| `a ++ b` on texts                 | `deus_text_extend`: a unique `a` grows in place, doubling its capacity when full                        |
+| `a ++ b` on lists                 | `deus_list_append`: the unique prefix of `a` is relinked in place, the shared rest copied               |
+| `<`, `==` of untyped values       | `deus_cmp_any`, `deus_eq_any`: texts by their units, integers by value; any other block traps           |
+| `<`, `==`, `compare` on data      | `deus_cmpₖ`, `deus_eqₖ`, one pair per data type: tags, then fields; a last field of the same type loops |
 
 The named definition is also exported as `int32_t <name>(int32_t …)`, and `-DDEUS_MAIN` (which
 `deus build` passes) adds a `main` that reads each argument as an integer and prints the result as
@@ -253,8 +255,8 @@ it now. The rest of the language needs these, in order of how much code they unl
    stay direct C calls, and `letrec` is lambda-lifted, so recursion never builds a closure that
    holds itself.
 3. **Text and the other primitives:** `Text` done (D115), with the kernels' UTF-16 semantics,
-   ported from the Rust kernel's `text.rs`. Insertion-ordered maps (`Dict`, `MutMap`), `show` and
-   structural equality of data remain.
+   ported from the Rust kernel's `text.rs`; structural equality and order of data (D117).
+   Insertion-ordered maps (`Dict`, `MutMap`) and `show` remain.
 4. **Effects.** Types carry effect rows, so the compiler knows which functions can perform an
    operation. Functions with an empty row compile as they do now. Handlers compile by evidence
    passing (Koka): a handler is a record passed to the code under it. An operation whose handler
