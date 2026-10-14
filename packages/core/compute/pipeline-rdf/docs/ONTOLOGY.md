@@ -139,9 +139,79 @@ The ontology also borrows terms to **describe** predicates rather than to state 
   IRI as an equivalent and its wordings as synonyms, and the other stays readable, marked
   `owl:deprecated` with `dcterms:isReplacedBy`. No stored statement is rewritten.
 
+## RDF, quads and TriG
+
+**RDF** is the data model, not a file format: everything is a statement of the form
+_subject predicate object_ (a **triple**), where subject and predicate are IRIs and the object is an IRI or a
+literal. RDF 1.1 adds a fourth position, the **graph** a triple belongs to, which makes it a **quad**. Formats
+such as TriG, Turtle and N-Quads are ways of writing the same model down as text.
+
+| Form                 | What it is                                                                               | Where the brain uses it                                                                                                      |
+| -------------------- | ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `RDF.Fact`           | This package's TypeScript object for one statement and its provenance.                   | The application API: extraction, rules, recall and the UI all pass `Fact`s.                                                  |
+| Quads                | The RDF model itself: `(subject, predicate, object, graph)` as n3 `Quad` terms.          | Storage. `Mapping.factToTriples` expands a fact into quads, `triplesToFacts` reassembles them.                               |
+| SQLite `quads` table | The quads with each term interned as an integer id (`sparql-sqlite`, `terms` + `quads`). | What the brain persists: EDGE's Durable Object, or in memory in the app. SPARQL queries run against it.                      |
+| **TriG**             | Text syntax for quads: Turtle, plus `<graph> { … }` blocks for named graphs.             | Display and inspection only: `RDF.Graph.toTriG` (facts) and `ontologyToTriG` (predicates). Never parsed back into the brain. |
+| Turtle               | Text syntax for triples in one graph. TriG is a superset of it.                          | Not produced; the editor's `turtle()` language highlights TriG, since the syntax is the same apart from the graph blocks.    |
+
+So the brain **stores RDF** (quads, in SQLite) and **shows TriG**. A fact is converted
+`Fact → quads → SQLite` on write, and `SQLite → quads → Fact` on read; TriG is produced from facts or from the
+ontology only when someone wants to look at them.
+
+### A fact as TriG
+
+A fact is a statement inside a **named graph**; the provenance shared by the graph's statements is stated once,
+about the graph, outside it (`RDF.Graph.toTriG`, prefixes omitted):
+
+```trig
+fact:f1 {
+  g1:rich-burdon schema:birthPlace g1:london ;
+    rdfs:label "Rich Burdon" .
+  g1:london rdfs:label "London" .
+}
+fact:f1 a sx:Graph ;
+  sx:factuality "CT+" ;
+  sx:polarity "+" ;
+  prov:wasDerivedFrom "https://dxos.org/team" ;
+  prov:generatedAtTime "2026-10-13T07:30:00Z" ;
+  sx:quote "Rich was born in London" .
+```
+
+- `fact:f1 { … }` is the graph; its first line is the statement, with the predicate the extractor wrote
+  (`was born in`) already resolved to `schema:birthPlace`.
+- `g1:` entities are local to this graph: they were known only by a label, so a second graph's `london` is not
+  assumed to be the same place. A known entity is written with its own IRI (`<echo://…>`, `<did:…>`).
+- The lines after the block are in the default graph and describe `fact:f1` itself: factuality, source, time,
+  quote and extractor (`sx:`, PROV-O).
+
+A memory has the same shape: a graph of `<subject> dx:claim "…"` statements whose provenance also carries
+`sx:kind` and `sx:origin` (see plugin-agent's `Knowledge`).
+
+### A predicate as TriG
+
+Predicates are described in their own graph, `Vocab.ONTOLOGY_GRAPH` (`graph:ontology`), never mixed into the
+statements that use them (`RDF.Graph.ontologyToTriG`):
+
+```trig
+graph:ontology {
+  schema:birthPlace a rdf:Property ;
+    rdfs:label "born in" ;
+    sx:shorthand "born_in" ;
+    skos:altLabel "was born in", "birthplace" ;
+    rdfs:domain schema:Person ;
+    rdfs:range schema:Place ;
+    rdfs:isDefinedBy <https://schema.org/> ;
+    rdfs:comment "The place the subject was born." .
+}
+```
+
+Each `Entry` field is one of these triples (the table in
+[One identity and many wordings](#a-predicate-has-one-identity-and-many-wordings)), so a brain's vocabulary
+travels with its facts and any RDF tool can read both.
+
 ## Where it is described
 
 The ontology is stored as quads in the brain's ontology graph (`Vocab.ONTOLOGY_GRAPH`, written by `ontologyQuads`), never in a
 statement graph; `FactStore.predicates` reads it back. In Composer, the agent's **Predicates** tab lists each
-predicate with its label as the title and its IRI, vocabulary, description, synonyms and fact count below; the
-raw view shows the ontology graph as TriG.
+predicate with its label as the title and its IRI, vocabulary, description, synonyms and fact count below; its
+raw view shows the ontology graph as TriG, and the Facts tab's raw view shows each fact's graph the same way.
