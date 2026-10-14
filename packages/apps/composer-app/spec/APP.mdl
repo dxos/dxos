@@ -167,6 +167,7 @@ test QA-2: Rename, undo and a second space
   actors: both
   status: unverified        # 2026-09-08, rewritten from testing/scripts/basics.md chapter 2 (which passed 2026-09-07)
   automated:
+    - composer-e2e:basic.spec.ts#Basic tests › re-order workspaces
     - composer-e2e:collections.spec.ts#Collection tests › deletion undo restores collection
   given:
     - defaultSpace: the space flagged `default` in the snapshot, SPACE_READY
@@ -256,6 +257,10 @@ test QA-2: Rename, undo and a second space
         const rows = await composer.invoke('org.dxos.operation.space.queryObjects',
           { typename: 'org.dxos.type.document' }, { spaceId: $space.id });
         return $snapshot.layout.workspace === `root/${$space.id}` && rows.results.length === 1;
+    - name: Reorder the workspaces
+      do: In the workspace rail, drag "QA: Undo B $runId" above "QA: Undo $runId", then reload the app.
+      expect: the rail lists "QA: Undo B $runId" above "QA: Undo $runId", before and after the reload
+      note: The rail drag has no operation behind it; the agent skips this step.
   after:
     - name: Remove the document
       do: Delete the document from its ⋮ menu.

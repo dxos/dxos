@@ -109,3 +109,13 @@ describe('process manager in the Composer app', () => {
     await expectOneManager(expect, harness, stackManager, remote);
   });
 });
+
+describe('operation handlers in the Composer app', () => {
+  test('the stack provides the contributed handlers, so specs built on them are not pruned', async ({ expect }) => {
+    await using harness = await createApp();
+
+    const handlers = await resolve(harness, OperationHandlerSet.OperationHandlerProvider);
+    const echo = await harness.runPromise(OperationHandlerSet.getHandlerByKey(handlers, Echo.meta.key));
+    expect(echo.meta.key).toBe(Echo.meta.key);
+  });
+});

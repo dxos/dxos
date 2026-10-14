@@ -8,6 +8,7 @@ import v8 from 'node:v8';
 import vm from 'node:vm';
 import { afterAll, bench, describe } from 'vitest';
 
+import { waitForCondition } from '@dxos/async';
 import { Filter, Obj, Order, Query, type QueryResult, Ref, Type } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder, type EchoTestPeer, createTmpPath } from '@dxos/echo-client/testing';
@@ -345,7 +346,8 @@ type FirstResult<T> = { value: T; unsubscribe: () => void };
 /**
  * Opens a reactive query and resolves on its first non-empty result with whatever `read` takes from
  * it while the query is still active; the caller unsubscribes. Subscribing without `fire` means the
- * callback runs only once the host has executed the query.
+ * callback runs on the first change after subscribe: the working set's answer for a query it serves,
+ * the host's for one it does not (such as the windowed `distinctPropertyQuery`).
  */
 const awaitFirstResult = <T>(
   db: EchoDatabase,
@@ -407,13 +409,19 @@ const executionTimeOf = (trace: ExecutionTrace): number =>
 const collectTraces = async ({ peer, db }: Seeded): Promise<TraceRow[]> => {
   const rows: TraceRow[] = [];
   for (const shape of SHAPES) {
-    const { value: trace, unsubscribe } = await awaitFirstResult(db, shape.query, () =>
+    const findTrace = () =>
       peer.host.queryService
         .getQueryTraces()
         .filter((candidate) => candidate.details.includes(shape.traceType))
         .sort((left, right) => right.endTs - left.endTs)
-        .at(0),
-    );
+        .at(0);
+    const { unsubscribe } = await awaitFirstResult(db, shape.query, () => undefined);
+    // The working set can answer before the host has run the query, and a host answer that matches it
+    // notifies no one, so the trace is waited for directly while the query stays registered.
+    const trace: ExecutionTrace | undefined = await waitForCondition({
+      condition: findTrace,
+      timeout: FIRST_RESULT_TIMEOUT_MS,
+    }).catch(() => undefined);
     unsubscribe();
     if (!trace) {
       throw new Error(`${shape.label}: no host trace found`);

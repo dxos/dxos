@@ -9,7 +9,9 @@
   <key>NSCameraUsageDescription</key>
   <string>Request camera access for WebRTC</string>
   <key>NSMicrophoneUsageDescription</key>
-  <string>Request microphone access for WebRTC</string>
+  <string>Request microphone access for WebRTC and meeting notes</string>
+  <key>NSAudioCaptureUsageDescription</key>
+  <string>Composer records the audio of meetings you choose to take notes on</string>
   <key>ITSAppUsesNonExemptEncryption</key>
   <false/>
 </dict>

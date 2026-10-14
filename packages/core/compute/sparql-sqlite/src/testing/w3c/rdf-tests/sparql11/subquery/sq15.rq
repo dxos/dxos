@@ -1,0 +1,10 @@
+SELECT ?x WHERE {
+  GRAPH ?g {
+    SELECT ?x {
+      VALUES ?x { 1 2 3 }
+    }
+    ORDER BY ?x
+    OFFSET 1
+    LIMIT 1
+  }
+}

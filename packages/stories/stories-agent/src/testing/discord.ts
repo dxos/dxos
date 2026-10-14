@@ -7,13 +7,15 @@ import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import { type Database, Filter, Obj, Ref } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';
+import { log } from '@dxos/log';
 import * as AgentChannels from '@dxos/plugin-agent/AgentChannels';
+import * as AgentEmail from '@dxos/plugin-agent/AgentEmail';
 import * as AgentOperation from '@dxos/plugin-agent/AgentOperation';
 import * as ModeOperation from '@dxos/plugin-agent/ModeOperation';
 import * as DiscordChannel from '@dxos/plugin-discord/DiscordChannel';
 import { Channel } from '@dxos/types';
 
-import { seedSupportTeam } from './support-team.ts';
+import { seedSupportFacts, seedSupportTeam } from './support-team.ts';
 
 //
 // The Discord stories: one agent (Kai) in Support mode, the DXOS team it escalates to, and the Discord app (bot)
@@ -37,6 +39,9 @@ export type DiscordBotArgs = {
 
 export const DISCORD_CHANNEL_NAME = 'Discord';
 
+/** The agent's email address on EDGE's agent domain: `kai@dx.pub` on dev. */
+export const EMAIL_HANDLE = 'kai';
+
 /** The mode the agent works in on the community channel; each Discord thread's chat inherits its skills. */
 export const SUPPORT_MODE = 'Support';
 
@@ -52,12 +57,39 @@ export type SetupAgentProps = {
 
 export type SetupDiscordAgentProps = DiscordBotArgs & SetupAgentProps;
 
-/** The agent, in Support mode, with the team it escalates to; reuses what a previous run left in the space. */
+/** The agent, in Support mode, with the team it escalates to; reuses what a previous run left in the space, brain included. */
 export const setupAgent = async ({ db, invoker, remote = false }: SetupAgentProps): Promise<Agent.Agent> => {
   const agent = await ensureAgent(db, invoker, remote);
-  await seedSupportTeam({ db, invoker, agent });
   await enableSupport(db, invoker, agent);
+  await attachChannels(db, agent, [await ensureEmailChannel(db)]);
+  // Not awaited: seeding calls the brain on EDGE, seconds per call and past the setup plugin's activation timeout,
+  // and a space created moments ago may not have reached EDGE yet; the panels pick the seed up when it lands.
+  void seedSupportTeam({ db, invoker, agent, remote })
+    .then(({ seeded }) =>
+      // Facts need a model, which only a story on EDGE has.
+      remote && seeded ? seedSupportFacts({ db, invoker, agent, remote }) : undefined,
+    )
+    .catch((error) => log.warn('seeding the support team failed', { error }));
   return agent;
+};
+
+/** Adds the channels the agent's channel list does not hold yet, creating the list if it has none. */
+const attachChannels = async (db: Database.Database, agent: Agent.Agent, channels: Channel.Channel[]) => {
+  const list = (await db.query(Filter.type(AgentChannels.AgentChannels)).run()).find(
+    (list) => Obj.getParent(list)?.id === agent.id,
+  );
+  if (!list) {
+    db.add(AgentChannels.make({ agent, channels }));
+  } else {
+    const held = new Set((await Promise.all(list.channels.map((ref) => ref.load()))).map(({ id }) => id));
+    const missing = channels.filter(({ id }) => !held.has(id));
+    if (missing.length > 0) {
+      Obj.update(list, (list) => {
+        list.channels = [...list.channels, ...missing.map((added) => Ref.make(added))];
+      });
+    }
+  }
+  await db.flush({ indexes: true });
 };
 
 /**
@@ -106,18 +138,7 @@ export const setupDiscordAgent = async ({
     });
   }
 
-  const list = (await db.query(Filter.type(AgentChannels.AgentChannels)).run()).find(
-    (list) => Obj.getParent(list)?.id === agent.id,
-  );
-  if (!list) {
-    db.add(AgentChannels.make({ agent, channels: [channel] }));
-  } else if (!(await Promise.all(list.channels.map((ref) => ref.load()))).some(({ id }) => id === channel.id)) {
-    Obj.update(list, (list) => {
-      list.channels = [...list.channels, Ref.make(channel)];
-    });
-  }
-
-  await db.flush({ indexes: true });
+  await attachChannels(db, agent, [channel]);
   return { agent, channel };
 };
 
@@ -189,6 +210,28 @@ const ensureChannel = async (db: Database.Database) => {
   );
 };
 
+/**
+ * The agent's email channel, unconnected: its properties' Connect claims the address on EDGE, which the story leaves
+ * to the user since a handle is held by one space at a time.
+ */
+const ensureEmailChannel = async (db: Database.Database): Promise<Channel.Channel> => {
+  const existing = (await db.query(Filter.type(Channel.Channel)).run()).find(
+    (channel) => channel.backend.kind === AgentEmail.BACKEND_KIND,
+  );
+  return (
+    existing ??
+    db.add(
+      Channel.make({
+        name: 'Email',
+        backend: {
+          kind: AgentEmail.BACKEND_KIND,
+          config: AgentEmail.make({ handle: EMAIL_HANDLE, displayName: AGENT_NAME }),
+        },
+      }),
+    )
+  );
+};
+
 //
 // Fake EDGE bot host.
 //
@@ -206,7 +249,7 @@ export type FakeDiscordBot = {
   restore: () => void;
 };
 
-const BOT_PATH = /\/compute\/discord\/bots\/([^/?]+)/;
+const BOT_PATH = /\/discord\/bots\/([^/?]+)/;
 
 /**
  * How long a started gateway reports `connecting` before `ready`: longer than the monitor's poll interval, so the
@@ -218,7 +261,7 @@ const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify({ success: true, data }), { status, headers: { 'Content-Type': 'application/json' } });
 
 /**
- * Stands in for EDGE's Discord bot routes (`/compute/discord/bots/<applicationId>`) by wrapping `fetch`:
+ * Stands in for EDGE's Discord bot routes (`/discord/bots/<applicationId>`) by wrapping `fetch`:
  * PUT starts the bot (connecting for {@link CONNECTING_MS}, then ready), DELETE stops it, GET reports. EDGE's
  * `/auth` challenge answers 404 so the client proceeds unauthenticated instead of reaching a real EDGE.
  */

@@ -7,7 +7,7 @@ import { rmSync } from 'node:fs';
 import { afterAll, bench, describe } from 'vitest';
 
 import { Filter, Obj, Query, Type } from '@dxos/echo';
-import { type EchoDatabase } from '@dxos/echo-client';
+import { type EchoDatabase, getObjectCore } from '@dxos/echo-client';
 import { EchoTestBuilder, type EchoTestPeer, createTmpPath } from '@dxos/echo-client/testing';
 import { DXN } from '@dxos/keys';
 
@@ -47,6 +47,7 @@ const WIDE_OBJECT_COUNT = 100;
 const COLD_OPTIONS = { iterations: 3, time: 0, warmupIterations: 1, warmupTime: 0 };
 const WARM_OPTIONS = { time: 300 };
 const SHORT_RESULT_RETRIES = 10;
+const STEADY_WRITES = 20;
 
 class BenchObject extends Type.makeObject<BenchObject>(DXN.make('com.example.type.benchObject', '0.1.0'))(
   Schema.Struct({
@@ -121,16 +122,20 @@ const phaseSamples: Record<string, number[]> = {};
 const record = (phase: string, ms: number) => {
   (phaseSamples[phase] ??= []).push(ms);
 };
+const heldBytes: Record<string, number> = {};
 
 afterAll(async () => {
   blackhole(checksum);
   const lines = Object.entries(phaseSamples).map(([phase, samples]) => {
     const sorted = [...samples].sort((left, right) => left - right);
     const mean = samples.reduce((sum, sample) => sum + sample, 0) / samples.length;
-    return `${phase.padEnd(44)} mean ${mean.toFixed(1).padStart(7)} ms   min ${sorted[0].toFixed(1).padStart(7)} ms   p50 ${sorted[Math.floor(sorted.length / 2)].toFixed(1).padStart(7)} ms   n=${samples.length}`;
+    return `${phase.padEnd(64)} mean ${mean.toFixed(1).padStart(7)} ms   min ${sorted[0].toFixed(1).padStart(7)} ms   p50 ${sorted[Math.floor(sorted.length / 2)].toFixed(1).padStart(7)} ms   p95 ${sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * 0.95))].toFixed(1).padStart(7)} ms   n=${samples.length}`;
   });
   // eslint-disable-next-line no-console
   console.log(`\nPhase timings (measured inside the cold rows):\n${lines.join('\n')}\n`);
+  const held = Object.entries(heldBytes).map(([label, bytes]) => `${label.padEnd(64)} ${bytes.toFixed(0)} bytes`);
+  // eslint-disable-next-line no-console
+  console.log(`Stored changes held per result:\n${held.join('\n')}\n`);
   await narrow.peer.close();
   await wide.peer.close();
   await builder.close();
@@ -162,6 +167,17 @@ const defineRows = (label: string, state: Populated, type: typeof BenchObject | 
         throw new Error(`Expected ${state.count} results, got ${results.length} after ${SHORT_RESULT_RETRIES} re-runs`);
       }
       return results;
+    };
+
+    const firstWrite = (object: BenchObject | WideBenchObject, phase: string) => {
+      const started = performance.now();
+      Obj.update(object, (object) => {
+        object.value += 1;
+      });
+      record(`${label}: ${phase}`, performance.now() - started);
+      if (getObjectCore(object).docHandle === undefined) {
+        throw new Error('The write did not load the document.');
+      }
     };
 
     const readAll = (results: (BenchObject | WideBenchObject)[], phase: string) => {
@@ -196,6 +212,25 @@ const defineRows = (label: string, state: Populated, type: typeof BenchObject | 
       async () => {
         const db = await reopen();
         readAll(await query(db, 'query (cold, before read)'), 'read one field per result (cold)');
+      },
+      COLD_OPTIONS,
+    );
+
+    bench(
+      'reload + open + query + write one, then more one at a time',
+      async () => {
+        const db = await reopen();
+        const results = await query(db, 'query (cold, before writes)');
+        const held = results.reduce(
+          (sum, object) => sum + (getObjectCore(object).snapshot?.handle.passive?.bytes.length ?? 0),
+          0,
+        );
+        heldBytes[label] = held / results.length;
+        firstWrite(results[0], 'first write (first of the session)');
+        for (let index = 1; index <= STEADY_WRITES; index++) {
+          firstWrite(results[index], 'first write (steady state)');
+        }
+        await db.flush();
       },
       COLD_OPTIONS,
     );

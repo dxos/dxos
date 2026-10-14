@@ -9,9 +9,6 @@ import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 
 import { meta } from '#meta';
 
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../../PLUGIN.mdl?raw';
-
 export const MarkdownExtension = Capability.lazyModule(
   'MarkdownExtension',
   { provides: [MarkdownCapabilities.ExtensionProvider], activatesOn: MarkdownEvents.Start },
@@ -20,6 +17,6 @@ export const MarkdownExtension = Capability.lazyModule(
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
   path: 'PLUGIN.mdl',
-  content: pluginSpec,
+  content: () => import('../../PLUGIN.mdl?raw'),
   mimeType: 'application/x-mdl',
 });

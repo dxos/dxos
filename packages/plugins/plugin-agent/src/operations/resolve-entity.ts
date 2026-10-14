@@ -35,9 +35,7 @@ const handler: Operation.WithHandler<typeof MemoryOperation.ResolveEntity> = Mem
       // A handle is authoritative; the name only breaks the tie when no handle is known yet.
       const match =
         people.find((person) => handles.some((handle) => hasHandle(person, handle))) ??
-        (trimmed
-          ? people.find((person) => sameName(person.fullName, trimmed) || sameName(person.preferredName, trimmed))
-          : undefined);
+        (trimmed ? byName(people, trimmed) : undefined);
 
       if (match) {
         const missing = handles.filter((handle) => !hasHandle(match, handle));
@@ -63,6 +61,32 @@ export default handler;
 
 const sameName = (candidate: string | undefined, name: string) =>
   candidate !== undefined && candidate.trim().toLowerCase() === name.toLowerCase();
+
+const firstName = (fullName: string | undefined) => fullName?.trim().split(/\s+/)[0];
+
+/**
+ * The person a name refers to, most specific first: a full or preferred name, then a nickname or a handle written as
+ * a name (a Discord username), then a first name. An alias that matches two people names neither, so it never
+ * silently picks the wrong person; creating a person for an alias would split what is known about them.
+ */
+const byName = (people: readonly Person.Person[], name: string): Person.Person | undefined => {
+  const tiers: ((person: Person.Person) => boolean)[] = [
+    (person) => sameName(person.fullName, name) || sameName(person.preferredName, name),
+    (person) =>
+      sameName(person.nickname, name) || (person.identities ?? []).some((identity) => sameName(identity.value, name)),
+    (person) => sameName(firstName(person.fullName), name),
+  ];
+  for (const [index, tier] of tiers.entries()) {
+    const matched = people.filter(tier);
+    if (matched.length > 0) {
+      // Two people with one full name are already a duplicate; adding a third would not help.
+      return index === 0 ? matched[0] : unique(matched);
+    }
+  }
+  return undefined;
+};
+
+const unique = <T>(matches: readonly T[]): T | undefined => (matches.length === 1 ? matches[0] : undefined);
 
 const hasHandle = (person: Person.Person, handle: MemoryOperation.Handle) =>
   (person.identities ?? []).some(

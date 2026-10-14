@@ -57,6 +57,9 @@ const makeBookmark = (props: Omit<Obj.MakeProps<typeof Bookmark>, 'visits'>): Bo
 
 const typename = Type.getTypename(Bookmark);
 
+/** Calls to the form-less entry's `createObject`; each starts synchronously on the pick. */
+let quickCreates = 0;
+
 const DefaultStory = ({ mode = 'live', selectType = false }: { mode?: 'draft' | 'live'; selectType?: boolean }) => {
   const [space] = useSpaces();
   const bookmarks = useQuery(space?.db, Filter.type(Bookmark));
@@ -121,6 +124,18 @@ const meta = {
               { object: makeBookmark(props), target: options.target },
               { spaceId: options.db.spaceId },
             ),
+        }),
+        // An entry with no form: picking it from the type list creates straight away, as a document does.
+        Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
+          id: 'com.example.type.quickBookmark',
+          createObject: (props, options) => {
+            quickCreates++;
+            return Operation.invoke(
+              SpaceOperation.AddObject,
+              { object: makeBookmark(props), target: options.target },
+              { spaceId: options.db.spaceId },
+            );
+          },
         }),
       ],
       plugins: [
@@ -222,6 +237,22 @@ export const LiveEnterConfirms: Story = {
 /** No type given: the dialog opens on the type picker. */
 export const SelectType: Story = {
   args: { mode: 'draft', selectType: true },
+};
+
+/** A second pick while the dialog closes does not create again. */
+export const SelectTypeCreatesOnce: Story = {
+  args: { mode: 'draft', selectType: true },
+  play: async () => {
+    quickCreates = 0;
+    const body = within(document.body);
+    await userEvent.click(await body.findByTestId('create-object-form.schema-input', undefined, { timeout: 15_000 }));
+    await userEvent.keyboard('quick');
+    await userEvent.dblClick(await body.findByTestId('create-object-form.type.com.example.type.quickBookmark'));
+
+    // Both keys have been handled once the picker is gone, so the count is final.
+    await waitFor(() => expect(body.queryByTestId('create-object-form.schema-input')).toBeNull(), { timeout: 5_000 });
+    await expect(quickCreates).toBe(1);
+  },
 };
 
 /** A draft create: nothing exists until the form is submitted. */

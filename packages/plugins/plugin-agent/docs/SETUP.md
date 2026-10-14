@@ -2,16 +2,16 @@
 
 How to run an autonomous agent locally and talk to it from a Discord server and from Composer.
 Architecture: [DESIGN.md](./DESIGN.md). The EDGE half lives in the `dxos/edge` repo
-(`packages/services/compute-service/src/discord/`, whose README covers the bot routes in detail).
+(`packages/services/discord-service/src/agent-bot/`, whose README covers the bot routes in detail).
 
 You need three things running:
 
 1. **A Discord bot** in a test server.
-2. **A local EDGE stack** (edge repo) with plugin-agent linked into it.
+2. **A local EDGE stack** (edge repo).
 3. **A local Composer** (this repo) pointed at that EDGE.
 
 Below, `<dxos>` is a dxos checkout on a branch that includes plugin-agent, and `<edge>` is an
-edge checkout on a branch that includes the compute-service Discord bot.
+edge checkout on a branch that includes the discord-service Discord bot.
 
 ## 1. Create the Discord bot
 
@@ -29,11 +29,15 @@ edge checkout on a branch that includes the compute-service Discord bot.
 6. In Discord, **Settings → Advanced → Developer Mode** on; right-click the test channel →
    **Copy Channel ID**.
 
-## 2. Build dxos and link it into edge
+## 2. Link local dxos into edge (optional)
 
-plugin-agent (and the `AgentInput` change in `@dxos/agent-runtime`) are not published, so EDGE
-uses them through a local link. Link the **whole** workspace: linking a few packages mixes the
-dxos version edge's catalog pins with newer local builds and fails to bundle.
+Edge's catalog pins a published dxos build that already includes plugin-agent, and its
+operation-service registers `ThreadPlugin` and `AgentPlugin`, so a plain edge checkout runs the
+agent with no linking.
+
+Link only to run local changes to dxos code that runs on EDGE (plugin-agent operations,
+`agent-runtime`, `assistant`); Composer-only changes need no link. Link the **whole** workspace:
+linking a few packages mixes the pinned dxos version with newer local builds and fails to bundle.
 
 1. Build everything in `<dxos>` (the link packs each package's `dist/`):
 
@@ -47,18 +51,8 @@ dxos version edge's catalog pins with newer local builds and fails to bundle.
    node scripts/link-packages.mjs <dxos> --all --install
    ```
 
-3. In `<edge>/packages/services/operation-service/src/registry.ts`, add `ThreadPlugin.make()`,
-   `DiscordPlugin.make()` and `AgentPlugin.make()` to `PLUGINS` (imports
-   `@dxos/plugin-thread/ThreadPlugin`, `@dxos/plugin-discord/DiscordPlugin`,
-   `@dxos/plugin-agent/AgentPlugin`). plugin-agent depends on plugin-thread, whose operations carry
-   the agent's posts, and plugin-discord provides the Discord channel backend they dispatch to.
-
-Never commit the `file:` overrides or the registry edit; undo them with
-`git checkout -- package.json pnpm-lock.yaml packages/services/operation-service/src/registry.ts && pnpm install`.
-
-The `<dxos>` branch must contain the dxos commit edge's catalog pins (merge dxos `main` if it does
-not). Rebuild and re-link whenever you change dxos code that runs on EDGE (plugin-agent
-operations, `agent-runtime`, `assistant`); Composer-only changes need no re-link.
+Never commit the `file:` overrides; undo them with
+`git checkout -- package.json pnpm-lock.yaml && pnpm install`.
 
 ## 3. Start EDGE
 
@@ -67,11 +61,11 @@ holds `op://` references, and `pnpm dev:env` resolves them with `op inject` and 
 files. It needs the 1Password desktop app with CLI integration on (Settings → Developer); it prompts
 for approval, so no `op signin` is needed.
 
-1. Store the bot token in 1Password following the key standard: vault `eng-dev`, item named in
-   reverse-DNS form, field `credential` (e.g. `op://eng-dev/com.discord.bot.kai/credential`). Item
-   names must not contain `/`, which `op://` references reject. Point `DISCORD_BOT_TOKEN_DEV` in
-   compute-service's `secrets.jsonc` (top-level block) at that reference. In a dev environment it
-   overrides the token stored in the space, so you can test without managing tokens in Composer.
+1. The bot token is `op://eng/com.discord.bot.kai/credential` (Kai), which discord-service's
+   `secrets.jsonc` already names as `DISCORD_BOT_TOKEN_DEV`. In a dev environment it overrides the
+   token stored in the space, so you can test without managing tokens in Composer. To use another
+   bot, point that entry at its item (vault `eng`, reverse-DNS item name, field `credential`; item
+   names must not contain `/`, which `op://` references reject).
 
 2. From the root of `<edge>` (the script is defined in the root `package.json`), write the `.env`
    files:
@@ -80,7 +74,8 @@ for approval, so no `op signin` is needed.
    pnpm dev:env
    ```
 
-   If it reports "no account found", pin the account: `OP_ACCOUNT=<account>.1password.com pnpm dev:env`.
+   If it reports "not signed in", unlock the 1Password app; if "no account found", pin the account:
+   `OP_ACCOUNT=<account>.1password.com pnpm dev:env`.
 
 3. Start (or restart) the stack, also from the root of `<edge>`. EDGE listens on `:8787`:
 
@@ -133,13 +128,25 @@ Then, in Composer at `http://localhost:5282`:
 
 ## Troubleshooting
 
-| Symptom                            | Check                                                                                                                                                                                                                                                                                                                                                                                                        |
-| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Start returns 401/403              | Local EDGE may not accept a fresh identity. For a test, set `"EDGE_CONFIG": { "functions": { "noAuth": true } }` in the local-only block of `compute-service/wrangler.jsonc` (never commit) and `curl -X PUT localhost:8787/compute/discord/bots/<appId> -H 'content-type: application/json' -d '{"spaceId":"<spaceId>","binding":"echo://<spaceId>/<configId>","channel":"echo://<spaceId>/<channelId>"}'`. |
-| Gateway not `ready`                | `GET localhost:8787/compute/discord/bots/<appId>` → `lastError`; usually a bad token or the Message Content intent is off.                                                                                                                                                                                                                                                                                   |
-| No reply in the thread             | Tail compute-service (the bot) and operation-service (the agent's tools); confirm `ensureChannelChat` is registered and the AI key was written by `pnpm dev:env`.                                                                                                                                                                                                                                            |
-| Bundle errors in operation-service | A package lacks `dist/` or the link mixes versions: rebuild `<dxos>` and re-link with `--all`.                                                                                                                                                                                                                                                                                                               |
-| Start/Stop do nothing in Composer  | Starting the bot needs the app's client; check plugin-discord and plugin-thread are enabled and the page is on the local EDGE (`DX_EDGE_BASE_URL`).                                                                                                                                                                                                                                                          |
+| Symptom                            | Check                                                                                                                                                                                                                                                                                                                                                                                                |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Start returns 401/403              | Local EDGE may not accept a fresh identity. For a test, set `"EDGE_CONFIG": { "functions": { "noAuth": true } }` in the local-only block of `discord-service/wrangler.jsonc` (never commit) and `curl -X PUT localhost:8787/discord/bots/<appId> -H 'content-type: application/json' -d '{"spaceId":"<spaceId>","binding":"echo://<spaceId>/<configId>","channel":"echo://<spaceId>/<channelId>"}'`. |
+| Gateway not `ready`                | `GET localhost:8787/discord/bots/<appId>` → `lastError`; usually a bad token or the Message Content intent is off.                                                                                                                                                                                                                                                                                   |
+| No reply in the thread             | Tail discord-service (the bot), compute-service (the agent process) and operation-service (the agent's tools); confirm `ensureChannelChat` is registered and the AI key was written by `pnpm dev:env`.                                                                                                                                                                                               |
+| Bundle errors in operation-service | A package lacks `dist/` or the link mixes versions: rebuild `<dxos>` and re-link with `--all`.                                                                                                                                                                                                                                                                                                       |
+| Start/Stop do nothing in Composer  | Starting the bot needs the app's client; check plugin-discord and plugin-thread are enabled and the page is on the local EDGE (`DX_EDGE_BASE_URL`).                                                                                                                                                                                                                                                  |
+
+## Email
+
+1. Open the agent → **Activity**, add a channel, and pick **Email**. Set the address (`kai`), a
+   display name, and the allowed senders (empty means `braneframe.com` and `dxos.org`).
+2. Open the channel's properties and press **Connect**. The panel shows `kai@dx.pub` with its thread
+   and message counts; "taken" means another space holds the handle.
+3. Mail `kai@dx.pub` from an allowed address. The reply arrives in the same thread, and each new
+   email thread is its own chat under the agent.
+
+The `dx.pub` catch-all routes to the dev compute-service, so this works against dev EDGE. Mail
+handling lives in edge's `compute-service/src/email/`; its README covers the Cloudflare setup.
 
 ## Without Discord or a model key
 
@@ -147,5 +154,5 @@ Then, in Composer at `http://localhost:5282`:
   a scripted model and shows the profile filling in
   (`pnpm exec vitest run --project=storybook src/stories/Interview.stories.tsx` in
   `packages/stories/stories-assistant`).
-- **Bot, fake Discord:** edge's compute-service workerd integration test runs the bot against a fake
+- **Bot, fake Discord:** edge's workerd integration test (`test/discord-bot.node.test.ts`) runs the bot against a fake
   Discord (REST and gateway).
