@@ -37,10 +37,14 @@ def Export.exported (e : Entry) : Bool :=
   | Entry.ability _ _ => true
   | _ => false
 
-/-- The tasks of a `tasks.sexp`, stored, as id -> task object hash. -/
-def Export.fileSnapshot (dir : Text) (text : Text) : {IO} Map Text Text := Map.fromList (List.map (fun form =>
+/-- The tasks of a `tasks.sexp`, stored, as id -> task object hash. A git union merge (D89) can leave
+  two versions of a task; the one that is not a version `past` holds wins, else the later line. -/
+def Export.fileSnapshot (dir : Text) (text : Text) (past : Map Text Unit) : {IO} Map Text Text := foldl (fun m form =>
   let t := Tasks.fromSexp form
-  (t.id, Codebase.put dir (Tasks.toSexp t))) (readAll text))
+  let h := Codebase.put dir (Tasks.toSexp t)
+  match Map.lookup t.id m with
+  | Option.some earlier => if Set.contains h past && not (Set.contains earlier past) then m else Map.insert t.id h m
+  | Option.none => Map.insert t.id h m) Map.empty (readAll text)
 
 /-- Restores comments from an export's `comments.sexp` as one change; returns how many. -/
 def Export.importComments (dir : Text) (path : Text) : {IO, Throw Text} Int :=
@@ -110,10 +114,10 @@ def Export.mergeExisting (dir : Text) (out : Text) : {IO, Throw Text} Unit :=
   changed keeps this codebase's value and is returned as a conflict. Returns (tasks in the file,
   conflicts). -/
 def Export.mergeTasksFile (dir : Text) (out : Text) (text : Text) (message : Text) : {IO, Throw Text} (Int, List Text) :=
-  let file := fileSnapshot dir text
+  let past := pastVersions dir
+  let file := fileSnapshot dir text past
   let ours := Tasks.snapshotOf dir (readCausal dir (headOf dir (currentBranch dir)))
   -- A writer that never saw a task, or saw an older version of it, wrote no change to it: tasks are never deleted.
-  let past := pastVersions dir
   let theirs := foldl (fun m pair =>
     match pair with
     | (id, h) =>

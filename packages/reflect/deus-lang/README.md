@@ -23,7 +23,7 @@ node bin/deus.mjs build Cli.main -o deus --native            # the CLI as a 1.6 
 node bin/deus.mjs build Notes.serve -o out --worker          # a web handler as a Cloudflare Worker
 node bin/deus.mjs build Notes.serve -o notes --server        # …or as a standalone native server
 node bin/deus.mjs build gcd -o gcd.wasm --wasm               # first-order code compiled to wasm
-node bin/deus.mjs bindings Geometry -o out                    # a typed TypeScript module calling those functions
+node bin/deus.mjs bindings Geometry -o out                    # a JS module + .d.ts calling those functions
 ```
 
 A session in a codebase:

@@ -6,10 +6,19 @@
   gathering and type tracking, so a program compiles to both or to neither. Each definition is a
   C function of `V`s, a machine word. `Int` and `Bool` are themselves, sign-extended from 32 bits,
   and arithmetic wraps at 32 bits as in the interpreter. Any other constructed value points at a
-  block `[tag, field…]` from a bump allocator that never frees; a nullary constructor is a static
-  block. A call to itself in tail position is a jump back to the top of the function; a tail call
-  of a function of the same arity is `musttail`, so mutual recursion in tail position runs in
-  constant stack too.
+  block `[tag, field…]` with a header word before it; a nullary constructor is a static block.
+
+  Blocks are reference counted (D86), as in Perceus (Koka, Lean 4). The header holds the count
+  and the block's kind. The code owns each local it binds and consumes it exactly once, so a block
+  is freed the moment its last reference goes, and a `match` that takes apart a unique block it
+  does not use again builds the case's new block in the old one's memory. Parameters that a
+  function only reads through are borrowed, so passing them costs nothing. Every block lives in
+  one reserved region, which tells blocks apart from integers without types. Cycles, which only
+  `Ref` can make, are never freed.
+
+  A call to itself in tail position is a jump back to the top of the function; a tail call of a
+  function of the same arity is `musttail` where the C compiler has it (clang; gcc from 15), so
+  mutual recursion in tail position runs in constant stack too.
 
   `Int.div` and `Int.mod` by zero trap, as in wasm.
 -/
@@ -21,7 +30,13 @@ def prelude (nullary : Int) : Text :=
   Text.join "\n" [
     "#include <stdint.h>",
     "#include <stdlib.h>",
+    "#include <sys/mman.h>",
     "typedef intptr_t V;",
+    "#if defined(__has_attribute) && __has_attribute(musttail)",
+    "#define MUSTTAIL __attribute__((musttail))",
+    "#else",
+    "#define MUSTTAIL",
+    "#endif",
     "#define W(x) ((V)(int32_t)(uint32_t)(x))",
     "#define ADD(a, b) W((uint32_t)(a) + (uint32_t)(b))",
     "#define SUB(a, b) W((uint32_t)(a) - (uint32_t)(b))",
@@ -31,10 +46,36 @@ def prelude (nullary : Int) : Text :=
     "#define USHR(a, b) W((uint32_t)(a) >> ((b) & 31))",
     "static inline V DIV(V a, V b) { if (b == 0) __builtin_trap(); return b == -1 ? SUB(0, a) : (V)((int32_t)a / (int32_t)b); }",
     "static inline V MOD(V a, V b) { if (b == 0) __builtin_trap(); return b == -1 ? 0 : (V)((int32_t)a % (int32_t)b); }",
-    "static V *deus_hp, *deus_hl;",
-    "static V *deus_refill(V n) { V size = n > (1 << 22) ? n : (1 << 22); deus_hp = malloc(size * sizeof(V)); if (!deus_hp) abort(); deus_hl = deus_hp + size; V *p = deus_hp; deus_hp += n; return p; }",
-    "static inline V *deus_alloc(V n) { if (deus_hl - deus_hp < n) return deus_refill(n); V *p = deus_hp; deus_hp += n; return p; }",
-    "static V deus_array(V n, V x) { if (n < 0) __builtin_trap(); V *p = deus_alloc(n + 1); p[0] = n; for (V i = 1; i <= n; i++) p[i] = x; return (V)p; }",
+    "/* The heap is one reserved region, so a word is a block exactly when it points into it (D86). */",
+    "#define DEUS_HEAP ((V)1 << 36)",
+    "static V *deus_base, *deus_hp, *deus_hl, deus_live, deus_peak;",
+    "static V *deus_free_lists[257];",
+    "static void deus_init(void) { void *m = mmap(0, DEUS_HEAP, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE, -1, 0); if (m == MAP_FAILED) abort(); deus_base = deus_hp = m; deus_hl = deus_base + DEUS_HEAP / (V)sizeof(V); }",
+    "#define IS_PTR(v) ((uintptr_t)(v) - (uintptr_t)deus_base < (uintptr_t)DEUS_HEAP)",
+    "/* A block's header, the word before it: its count times 256, plus its kind. */",
+    "#define HDR(v) (((V *)(v))[-1])",
+    "#define K_REF 254",
+    "#define K_ARRAY 255",
+    "#define UNIQUE(v) (HDR(v) < 512)",
+    "static inline V *deus_block(V kind, V body) { V words = body + 1; V *h; deus_live += words; if (deus_live > deus_peak) deus_peak = deus_live; if (words <= 256 && (h = deus_free_lists[words])) deus_free_lists[words] = (V *)h[0]; else { h = deus_hp; deus_hp += words; if (deus_hp > deus_hl) abort(); } h[0] = 256 | kind; return h + 1; }",
+    "static inline V deus_body(V *p) { V k = HDR(p) & 255; return k == K_ARRAY ? p[0] + 1 : k == K_REF ? 1 : k + 1; }",
+    "static inline void deus_release(V *p) { V words = deus_body(p) + 1; deus_live -= words; if (words <= 256) { p[-1] = (V)deus_free_lists[words]; deus_free_lists[words] = p - 1; } }",
+    "static V *deus_stack, deus_sp, deus_cap;",
+    "static void deus_free(V *p) {",
+    "  for (;;) {",
+    "    V k = HDR(p) & 255; V *from = k == K_REF ? p : p + 1; V n = k == K_ARRAY ? p[0] : k == K_REF ? 1 : k;",
+    "    for (V i = 0; i < n; i++) { V c = from[i]; if (IS_PTR(c)) { if (!UNIQUE(c)) HDR(c) -= 256; else { if (deus_sp == deus_cap) { deus_cap = deus_cap ? 2 * deus_cap : 1024; deus_stack = realloc(deus_stack, deus_cap * sizeof(V)); if (!deus_stack) abort(); } deus_stack[deus_sp++] = c; } } }",
+    "    deus_release(p);",
+    "    if (deus_sp == 0) return;",
+    "    p = (V *)deus_stack[--deus_sp];",
+    "  }",
+    "}",
+    "static inline V deus_dup(V v) { if (IS_PTR(v)) HDR(v) += 256; return v; }",
+    "static inline void deus_drop(V v) { if (IS_PTR(v)) { if (!UNIQUE(v)) HDR(v) -= 256; else deus_free((V *)v); } }",
+    "/* A constructor block, in the memory of a dead block of the same size when there is one. */",
+    "static inline V *deus_con(V *token, V fields) { if (token) { token[-1] = 256 | fields; return token; } return deus_block(fields, fields + 1); }",
+    "static inline void deus_unused(V *token) { if (token) deus_release(token); }",
+    "static V deus_array(V n, V x) { if (n < 0) __builtin_trap(); V *p = deus_block(K_ARRAY, n + 1); p[0] = n; if (n == 0) deus_drop(x); else if (IS_PTR(x)) HDR(x) += 256 * (n - 1); for (V i = 1; i <= n; i++) p[i] = x; return (V)p; }",
     "#define AT(a, i) ({ V *a_ = (V *)(a); V i_ = (i); if ((uint32_t)i_ >= (uint32_t)a_[0]) __builtin_trap(); &a_[i_ + 1]; })",
     "static V deus_nullary[" ++ Int.toText (larger nullary 1) ++ "] = {"
       ++ Text.join ", " (List.map Int.toText (List.range 0 (larger nullary 1))) ++ "};",
@@ -87,6 +128,12 @@ structure FnCtx @"urn:deus:cgen:FnCtx" where
   cSelf : Int
   cArity : Int
   cNext : Ref Int
+  cBorrow : List (Int, List Bool)
+
+/-- Which parameters of function `index` are borrowed: the caller keeps ownership (D86). -/
+def borrowsOf (ctx : FnCtx) (index : Int) : List Bool := Option.getOr (List.lookup index ctx.cBorrow) []
+
+def borrowsAt (flags : List Bool) (k : Int) : Bool := Option.getOr (List.get? flags k) false
 
 def fresh (ctx : FnCtx) : Int := Wasm.fresh ctx.cNext
 
@@ -98,36 +145,194 @@ def callee (ctx : FnCtx) (h : Text) (argc : Int) : {Throw Text} (Int, Wasm.Fn) :
     else (List.findIndex (fun g => g.fnHash == h) ctx.cScope.fns, f)
   | none => throw ("unknown function #" ++ Text.take 10 h)
 
-/--
-  A pattern test against the C expression `v` (a local): statements that `break` out of the
-  enclosing `do … while (0)` when it does not match, and the environment with what it binds.
--/
-def pattern (ctx : FnCtx) (v : Int) (env : List Int) (pat : Sexp) : {Throw Text} (Text, List Int) :=
+--
+-- Reference counting (D86). Every local the code owns is consumed exactly once: its last use
+-- moves it, earlier uses `deus_dup` it, and a path that never uses it drops it first.
+--
+
+/-- How many variables a pattern binds. -/
+def binders (pat : Sexp) : Int :=
   match pat with
-  | Sexp.list [Sexp.sym "pany"] => ("", env)
-  | Sexp.list [Sexp.sym "pvar"] => ("", v :: env)
+  | Sexp.list [Sexp.sym "pvar"] => 1
+  | Sexp.list [Sexp.sym "pas", p] => 1 + binders p
+  | Sexp.list (Sexp.sym "pcon" :: _ :: _ :: subs) => List.sum (List.map binders subs)
+  | _ => 0
+
+/-- The locals `e` reads, with `env` mapping its de Bruijn indices to locals (-1 for none). -/
+def freeLocals (env : List Int) (e : Sexp) : List Int :=
+  match e with
+  | Sexp.list [Sexp.sym "var", Sexp.int i] =>
+    match List.get? env i with
+    | some l => if l >= 0 then [l] else []
+    | none => []
+  | Sexp.list [Sexp.sym "let", v, b] => freeLocals env v ++ freeLocals (-1 :: env) b
+  | Sexp.list (Sexp.sym "match" :: scrutinee :: cases) =>
+    freeLocals env scrutinee ++ List.concatMap (fun c =>
+      match c with
+      | Sexp.list [Sexp.sym "case", pat, b] => freeLocals (List.replicate (binders pat) (-1) ++ env) b
+      | _ => []) cases
+  | Sexp.list items => List.concatMap (freeLocals env) items
+  | _ => []
+
+def isIn (xs : List Int) (x : Int) : Bool := List.contains x xs
+
+/-- Whether `e` builds a block of `n` fields, which a dead block of that size can become. -/
+def wants (n : Int) (e : Sexp) : Bool :=
+  match e with
+  | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "con", Sexp.str t, Sexp.int _, Sexp.int k] :: rest) =>
+    (k == n && t != "#Bool") || List.any (wants n) rest
+  | Sexp.list items => List.any (wants n) items
+  | _ => false
+
+/-- Whether values of type `t` are never counted: `Int` and `Bool` are not blocks, and `()` is static. -/
+def uncounted (t : Sexp) : Bool := Wasm.isScalar t || t == Wasm.tref "#Unit"
+
+def scalarLocal (ctx : FnCtx) (l : Int) : Bool := uncounted (Wasm.typeOfLocal ctx.cScope l)
+
+def dropLocal (ctx : FnCtx) (l : Int) : Text := if scalarLocal ctx l then "" else "deus_drop(" ++ local l ++ "); "
+
+def dupLocal (ctx : FnCtx) (l : Int) : Text := if scalarLocal ctx l then "" else "deus_dup(" ++ local l ++ "); "
+
+/-- Whether `e` maps de Bruijn index `i` of `env` to local `l`. -/
+def isLocal (env : List Int) (l : Int) (e : Sexp) : Bool :=
+  match e with
+  | Sexp.list [Sexp.sym "var", Sexp.int i] => List.get? env i == some l
+  | _ => false
+
+/--
+  Whether `e` consumes local `l` of function `self`, given which parameters are borrowed so far:
+  any use but as the container of an `Array` or `Ref` access, or as an argument a callee borrows
+  (a call to `self` only in the same position, so a jump to the top keeps it borrowed).
+-/
+def consumes (borrow : List (Int, List Bool)) (fns : List Wasm.Fn) (self : Int) (param : Int) (env : List Int) (l : Int) (e : Sexp) : Bool :=
+  let again := fun (x : Sexp) => consumes borrow fns self param env l x
+  match e with
+  | Sexp.list [Sexp.sym "var", Sexp.int i] => List.get? env i == some l
+  | Sexp.list [Sexp.sym "let", v, b] => again v || consumes borrow fns self param (-1 :: env) l b
+  | Sexp.list (Sexp.sym "match" :: scrutinee :: cases) =>
+    again scrutinee || List.any (fun c =>
+      match c with
+      | Sexp.list [Sexp.sym "case", pat, b] => consumes borrow fns self param (List.replicate (binders pat) (-1) ++ env) l b
+      | _ => false) cases
+  | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "prim", Sexp.str p] :: x :: rest) =>
+    let container := (Text.startsWith "Array." p || Text.startsWith "Ref." p) && p != "Array.make" && p != "Ref.new" && isLocal env l x
+    (not container && again x) || List.any again rest
+  | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "ref", Sexp.str h] :: xs) =>
+    let index := List.findIndex (fun f => f.fnHash == h) fns
+    let flags := Option.getOr (List.lookup index borrow) []
+    List.any (fun pair =>
+      match pair with
+      | (k, x) => if isLocal env l x then not (borrowsAt flags k && (index != self || k == param)) else again x) (List.mapIndexed (fun k x => (k, x)) xs)
+  | Sexp.list items => List.any again items
+  | _ => false
+
+/-- The borrowed parameters of every function: the largest set no body consumes. -/
+def inferBorrow (fns : List Wasm.Fn) : List (Int, List Bool) :=
+  let initial := List.mapIndexed (fun i f => (i, List.map (fun t => not (Wasm.isScalar t)) (fst (Wasm.peel f.fnArity f.fnType)))) fns
+  let rec step borrow :=
+    let next := List.mapIndexed (fun i f =>
+      let flags := Option.getOr (List.lookup i borrow) []
+      let env := List.reverse (List.range 0 f.fnArity)
+      (i, List.mapIndexed (fun k b => b && not (consumes borrow fns i k env k f.fnBody)) flags)) fns
+    if next == borrow then borrow else step next
+  step initial
+
+/-- A reuse token: the C local holding a dead block's memory, and its field count. -/
+structure Token @"urn:deus:cgen:Token" where
+  tokLocal : Int
+  tokFields : Int
+
+def tokenName (t : Token) : Text := "t" ++ Int.toText t.tokLocal
+
+/-- For expressions evaluated in order, the owned locals each one consumes: its last uses. -/
+def split (owned : List Int) (frees : List (List Int)) : List (List Int) :=
+  match frees with
+  | [] => []
+  | here :: later => List.filter (fun l => isIn here l && not (List.any (fun f => isIn f l) later)) owned :: split owned later
+
+/-- The token for each of `xs`: the first that builds a block of the token's size gets it. -/
+def hand (token : Option Token) (xs : List Sexp) : List (Option Token) :=
+  match (token, xs) with
+  | (_, []) => []
+  | (none, _ :: rest) => none :: hand none rest
+  | (some t, x :: rest) => if wants t.tokFields x then token :: hand none rest else none :: hand token rest
+
+/--
+  A pattern test against the value in local `v`: statements that `break` out of the enclosing
+  `do … while (0)` when it does not match, the environment with what it binds, and each local it
+  loads as (local, the local it was loaded from, field index).
+-/
+def pattern (ctx : FnCtx) (v : Int) (env : List Int) (pat : Sexp) : {Throw Text} (Text, List Int, List (Int, Int, Int)) :=
+  match pat with
+  | Sexp.list [Sexp.sym "pany"] => ("", env, [])
+  | Sexp.list [Sexp.sym "pvar"] => ("", v :: env, [])
   | Sexp.list [Sexp.sym "pas", p] => pattern ctx v (v :: env) p
-  | Sexp.list [Sexp.sym "pint", Sexp.int n] => ("if (" ++ local v ++ " != " ++ lit n ++ ") break; ", env)
-  | Sexp.list [Sexp.sym "pcon", Sexp.str "#Bool", Sexp.int tag] => ("if (" ++ local v ++ " != " ++ Int.toText tag ++ ") break; ", env)
+  | Sexp.list [Sexp.sym "pint", Sexp.int n] => ("if (" ++ local v ++ " != " ++ lit n ++ ") break; ", env, [])
+  | Sexp.list [Sexp.sym "pcon", Sexp.str "#Bool", Sexp.int tag] => ("if (" ++ local v ++ " != " ++ Int.toText tag ++ ") break; ", env, [])
   | Sexp.list (Sexp.sym "pcon" :: Sexp.str t :: Sexp.int tag :: subs) =>
     let tagTest := "if (((V *)" ++ local v ++ ")[0] != " ++ Int.toText tag ++ ") break; "
     List.foldl (fun acc pair =>
       match (acc, pair) with
-      | ((code, bound), (i, Sexp.list [Sexp.sym "pany"])) => (code, bound)
-      | ((code, bound), (i, sub)) =>
+      | ((code, bound, loads), (i, Sexp.list [Sexp.sym "pany"])) => (code, bound, loads)
+      | ((code, bound, loads), (i, sub)) =>
         let f := fresh ctx
         let _ := Wasm.setType ctx.cScope f (Wasm.fieldType ctx.cScope t tag i (Wasm.typeOfLocal ctx.cScope v))
         match pattern ctx f bound sub with
-        | (subCode, bound2) => (code ++ "V " ++ local f ++ " = ((V *)" ++ local v ++ ")[" ++ Int.toText (i + 1) ++ "]; " ++ subCode, bound2)) (tagTest, env) (List.mapIndexed (fun i x => (i, x)) subs)
+        | (subCode, bound2, subLoads) => (code ++ "V " ++ local f ++ " = ((V *)" ++ local v ++ ")[" ++ Int.toText (i + 1) ++ "]; " ++ subCode, bound2, loads ++ ((f, v, i) :: subLoads))) (tagTest, env, []) (List.mapIndexed (fun i x => (i, x)) subs)
   | other => throw ("the pattern " ++ Sexp.print other ++ " is outside the C subset")
 
+/-- The field count of a pattern that takes apart a heap block, or 0. -/
+def blockFields (pat : Sexp) : Int :=
+  match pat with
+  | Sexp.list (Sexp.sym "pcon" :: Sexp.str t :: Sexp.int _ :: subs) => if t == "#Bool" then 0 else List.length subs
+  | _ => 0
+
+/-- `pre` (statements) runs before `body`: in tail position both are statements. -/
+def before (tail : Bool) (pre : Text) (body : Text) : Text :=
+  if pre == "" then body else if tail then pre ++ body else "({ " ++ pre ++ body ++ "; })"
+
 /--
-  `e` compiled to C. In tail position the result is statements that return `e` (a call to
-  itself becomes a jump); otherwise it is an expression, using GNU statement expressions for
-  `let`, `seq` and `match`.
+  `e` compiled to C, consuming each local in `owned` exactly once and the reuse token, if any.
+  In tail position the result is statements that return `e` (a call to itself becomes a jump);
+  otherwise it is an expression, using GNU statement expressions.
 -/
-def expr (ctx : FnCtx) (env : List Int) (tail : Bool) (e : Sexp) : {Throw Text} Text :=
-  let sub := fun (x : Sexp) => expr ctx env false x
+def expr (ctx : FnCtx) (env : List Int) (tail : Bool) (owned : List Int) (token : Option Token) (e : Sexp) : {Throw Text} Text :=
+  let used := freeLocals env e
+  let live := List.filter (isIn used) owned
+  let dead := Text.concat (List.map (dropLocal ctx) (List.filter (fun l => not (isIn used l)) owned))
+  match token with
+  | some t =>
+    if wants t.tokFields e then before tail dead (form ctx env tail live token e)
+    else before tail (dead ++ "deus_unused(" ++ tokenName t ++ "); ") (form ctx env tail live none e)
+  | none => before tail dead (form ctx env tail live none e)
+
+/--
+  Each of `xs`, evaluated in order into a fresh local: the declarations, the C for each value,
+  and the drops to run after the values are used. An argument in a position `borrows` marks is
+  not counted: a local is passed as it is, and anything else is dropped afterwards.
+-/
+def sequence (ctx : FnCtx) (env : List Int) (owned : List Int) (token : Option Token) (borrows : List Bool) (xs : List Sexp) : {Throw Text} (Text, List Text, Text) :=
+  let shares := split owned (List.map (freeLocals env) xs)
+  let tokens := hand token xs
+  let parts := List.mapIndexed (fun k triple =>
+    match triple with
+    | ((x, mine), tok) =>
+      let direct := match x with
+        | Sexp.list [Sexp.sym "var", Sexp.int i] => if borrowsAt borrows k then List.get? env i else none
+        | _ => none
+      match direct with
+      | some l => ("", local l, if isIn mine l then dropLocal ctx l else "")
+      | none =>
+        let l := fresh ctx
+        let _ := Wasm.setType ctx.cScope l (Wasm.typeOf ctx.cScope env x)
+        ("V " ++ local l ++ " = " ++ expr ctx env false mine tok x ++ "; ", local l, if borrowsAt borrows k then dropLocal ctx l else "")) (List.zip (List.zip xs shares) tokens)
+  (Text.concat (List.map (fun t => match t with
+    | (d, _, _) => d) parts), List.map (fun t => match t with
+    | (_, v, _) => v) parts, Text.concat (List.map (fun t => match t with
+    | (_, _, a) => a) parts))
+
+/-- `e` once `expr` has dropped what it does not use: `owned` are exactly the locals it consumes. -/
+def form (ctx : FnCtx) (env : List Int) (tail : Bool) (owned : List Int) (token : Option Token) (e : Sexp) : {Throw Text} Text :=
   let ret := fun (x : Text) => if tail then "return " ++ x ++ ";" else x
   match e with
   | Sexp.list [Sexp.sym "int", Sexp.int n] => ret (lit n)
@@ -136,99 +341,215 @@ def expr (ctx : FnCtx) (env : List Int) (tail : Bool) (e : Sexp) : {Throw Text} 
   | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "con", Sexp.str t, Sexp.int tag, Sexp.int n] :: xs) =>
     if n != List.length xs || t == "#Bool" then throw ("partial application of a constructor of " ++ t ++ " is outside the C subset")
     else
-      let p := fresh ctx
-      let stores := List.mapIndexed (fun i a => local p ++ "[" ++ Int.toText (i + 1) ++ "] = " ++ sub a ++ "; ") xs
-      ret ("({ V *" ++ local p ++ " = deus_alloc(" ++ Int.toText (n + 1) ++ "); " ++ local p ++ "[0] = " ++ Int.toText tag ++ "; " ++ Text.concat stores ++ "(V)" ++ local p ++ "; })")
-  | Sexp.list (Sexp.sym "match" :: scrutinee :: cases) =>
-    let v := fresh ctx
-    let _ := Wasm.setType ctx.cScope v (Wasm.typeOf ctx.cScope env scrutinee)
-    let r := fresh ctx
-    let done := "m" ++ Int.toText r
-    let arms := List.map (fun c =>
-      match c with
-      | Sexp.list [Sexp.sym "case", pat, body] =>
-        match pattern ctx v env pat with
-        | (guard, bound) =>
-          if tail then "do { " ++ guard ++ expr ctx bound true body ++ " } while (0); "
-          else "do { " ++ guard ++ local r ++ " = " ++ expr ctx bound false body ++ "; goto " ++ done ++ "; } while (0); "
-      | other => throw ("outside the C subset: " ++ Sexp.print other)) cases
-    let head := "V " ++ local v ++ " = " ++ sub scrutinee ++ "; "
-    if tail then "{ " ++ head ++ Text.concat arms ++ "__builtin_trap(); }"
-    else "({ " ++ head ++ "V " ++ local r ++ "; " ++ Text.concat arms ++ "__builtin_trap(); " ++ done ++ ": " ++ local r ++ "; })"
+      let mine := match token with
+        | some tok => tok.tokFields == n
+        | none => false
+      match sequence ctx env owned (if mine then none else token) [] xs with
+      | (decls, values, _) =>
+        let p := fresh ctx
+        let memory := match token with
+          | some tok => if mine then tokenName tok else "0"
+          | none => "0"
+        let stores := List.mapIndexed (fun i v => local p ++ "[" ++ Int.toText (i + 1) ++ "] = " ++ v ++ "; ") values
+        ret ("({ " ++ decls ++ "V *" ++ local p ++ " = deus_con(" ++ memory ++ ", " ++ Int.toText n ++ "); " ++ local p ++ "[0] = " ++ Int.toText tag ++ "; " ++ Text.concat stores ++ "(V)" ++ local p ++ "; })")
+  | Sexp.list (Sexp.sym "match" :: scrutinee :: cases) => matchForm ctx env tail owned token scrutinee cases
   | Sexp.list [Sexp.sym "var", Sexp.int i] =>
     match List.get? env i with
-    | some l => ret (local l)
+    | some l => if isIn owned l || scalarLocal ctx l then ret (local l) else ret ("deus_dup(" ++ local l ++ ")")
     | none => throw ("unbound variable " ++ Int.toText i)
   | Sexp.list [Sexp.sym "if", c, t, f] =>
-    if tail then "if (" ++ sub c ++ ") { " ++ expr ctx env true t ++ " } else { " ++ expr ctx env true f ++ " }"
-    else "(" ++ sub c ++ " ? " ++ sub t ++ " : " ++ sub f ++ ")"
+    let branches := freeLocals env t ++ freeLocals env f
+    let mine := List.filter (fun l => not (isIn branches l)) owned
+    let rest := List.filter (isIn branches) owned
+    let cond := expr ctx env false mine none c
+    if tail then "if (" ++ cond ++ ") { " ++ expr ctx env true rest token t ++ " } else { " ++ expr ctx env true rest token f ++ " }"
+    else "(" ++ cond ++ " ? " ++ expr ctx env false rest token t ++ " : " ++ expr ctx env false rest token f ++ ")"
   | Sexp.list [Sexp.sym "seq", a, b] =>
-    if tail then "(void)" ++ sub a ++ "; " ++ expr ctx env true b
-    else "({ (void)" ++ sub a ++ "; " ++ sub b ++ "; })"
+    let later := freeLocals env b
+    let mine := List.filter (fun l => not (isIn later l)) owned
+    let rest := List.filter (isIn later) owned
+    let first := if wants (Option.getOr (Option.map (fun t => t.tokFields) token) 0) a then token else none
+    let second := match first with
+      | some _ => none
+      | none => token
+    let value := expr ctx env false mine first a
+    let consumed := if uncounted (Wasm.typeOf ctx.cScope env a) then "(void)" ++ value ++ "; " else "deus_drop(" ++ value ++ "); "
+    before tail consumed (expr ctx env tail rest second b)
   | Sexp.list [Sexp.sym "let", v, b] =>
+    let later := freeLocals (-1 :: env) b
+    let mine := List.filter (fun l => not (isIn later l)) owned
+    let rest := List.filter (isIn later) owned
+    let first := if wants (Option.getOr (Option.map (fun t => t.tokFields) token) 0) v then token else none
+    let second := match first with
+      | some _ => none
+      | none => token
     let l := fresh ctx
     let _ := Wasm.setType ctx.cScope l (Wasm.typeOf ctx.cScope env v)
-    let bind := "V " ++ local l ++ " = " ++ sub v ++ "; "
-    if tail then "{ " ++ bind ++ expr ctx (l :: env) true b ++ " }"
-    else "({ " ++ bind ++ expr ctx (l :: env) false b ++ "; })"
-  | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str "Int.neg"], a] => ret ("SUB(0, " ++ sub a ++ ")")
-  | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "prim", Sexp.str p] :: xs) =>
-    match (p, List.map sub xs) with
-    -- `Array` is a block `[length, item…]` and `Ref` a block `[value]` (D83); the writes return `()`.
-    | ("Array.make", [n, x]) => ret ("deus_array(" ++ n ++ ", " ++ x ++ ")")
-    | ("Array.length", [a]) => ret ("((V *)(" ++ a ++ "))[0]")
-    | ("Array.get", [a, i]) => ret ("(*AT(" ++ a ++ ", " ++ i ++ "))")
-    | ("Array.set", [a, i, x]) => ret ("({ *AT(" ++ a ++ ", " ++ i ++ ") = " ++ x ++ "; (V)&deus_nullary[0]; })")
-    | ("Ref.new", [x]) =>
-      let l := fresh ctx
-      ret ("({ V *" ++ local l ++ " = deus_alloc(1); " ++ local l ++ "[0] = " ++ x ++ "; (V)" ++ local l ++ "; })")
-    | ("Ref.get", [r]) => ret ("((V *)(" ++ r ++ "))[0]")
-    | ("Ref.set", [r, x]) => ret ("({ ((V *)(" ++ r ++ "))[0] = " ++ x ++ "; (V)&deus_nullary[0]; })")
-    | (_, [ca, cb]) =>
-      match xs with
-      | [a, b] =>
-        if Wasm.isComparison p && not (Wasm.isScalar (Wasm.typeOf ctx.cScope env a) || Wasm.isScalar (Wasm.typeOf ctx.cScope env b)) then
-          throw (p ++ " on values that are not known to be Int or Bool is outside the C subset, since it would compare addresses: " ++ Text.take 120 (Sexp.print e))
-        else
-          match (macro p, infix p) with
-          | (some m, _) => ret (m ++ "(" ++ ca ++ ", " ++ cb ++ ")")
-          | (_, some op) => ret ("(V)(" ++ ca ++ " " ++ op ++ " " ++ cb ++ ")")
-          | _ => throw ("the primitive " ++ p ++ " is outside the C subset")
-      | _ => throw ("the primitive " ++ p ++ " is outside the C subset")
-    | _ => throw ("the primitive " ++ p ++ " is outside the C subset")
+    before tail ("V " ++ local l ++ " = " ++ expr ctx env false mine first v ++ "; ") (expr ctx (l :: env) tail (l :: rest) second b)
+  | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str "Int.neg"], a] => ret ("SUB(0, " ++ expr ctx env false owned none a ++ ")")
+  | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "prim", Sexp.str p] :: xs) => ret (primitive ctx env owned token e p xs)
   | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "ref", Sexp.str h] :: xs) =>
     match callee ctx h (List.length xs) with
     | (index, f) =>
-      let values := List.map sub xs
-      if tail && index == ctx.cSelf then
-        -- Evaluate every argument before assigning any parameter, since they read the old ones.
-        let temps := List.map (fun _ => fresh ctx) values
-        let evals := List.map (fun pair => "V " ++ local (fst pair) ++ " = " ++ snd pair ++ "; ") (List.zip temps values)
-        let assigns := List.mapIndexed (fun i t => local i ++ " = " ++ local t ++ "; ") temps
-        "{ " ++ Text.concat evals ++ Text.concat assigns ++ "goto top; }"
-      else if tail && f.fnArity == ctx.cArity then "__attribute__((musttail)) return " ++ fnName index ++ args values ++ ";"
-      else ret (fnName index ++ args values)
+      match sequence ctx env owned token (borrowsOf ctx index) xs with
+      | (decls, values, after) =>
+        if tail && index == ctx.cSelf && after == "" then
+          "{ " ++ decls ++ Text.concat (List.mapIndexed (fun i v => local i ++ " = " ++ v ++ "; ") values) ++ "goto top; }"
+        else
+          let call := fnName index ++ args values
+          if after != "" then ret ("({ " ++ decls ++ "V r = " ++ call ++ "; " ++ after ++ "r; })")
+          else if tail && f.fnArity == ctx.cArity then "{ " ++ decls ++ "MUSTTAIL return " ++ call ++ "; }"
+          else ret (if decls == "" then call else "({ " ++ decls ++ call ++ "; })")
   | other => throw ("outside the C subset: " ++ Text.take 120 (Sexp.print other))
+
+/--
+  A primitive. `Array` is a block `[length, item…]` and `Ref` a block `[value]` (D83). Their
+  first argument is borrowed when it is a local used again later, so a read does not touch its
+  count; otherwise it is dropped after the access. Reads `deus_dup` what they return; the writes
+  drop what they overwrite and return `()`.
+-/
+def primitive (ctx : FnCtx) (env : List Int) (owned : List Int) (token : Option Token) (e : Sexp) (p : Text) (xs : List Sexp) : {Throw Text} Text :=
+  -- The container is a local the code still needs afterwards: borrow it rather than count it.
+  let borrowed := if Text.startsWith "Array." p || Text.startsWith "Ref." p then
+      match List.head? xs with
+      | some (Sexp.list [Sexp.sym "var", Sexp.int i]) =>
+        match List.get? env i with
+        | some l => if isIn owned l then -1 else l
+        | none => -1
+      | _ => -1
+    else -1
+  let evaluated := if borrowed >= 0 && p != "Ref.new" && p != "Array.make" then
+      match sequence ctx env owned token [] (List.drop 1 xs) with
+      | (decls, values, _) => (decls, local borrowed :: values, true)
+    else
+      match sequence ctx env owned token [] xs with
+      | (decls, values, _) => (decls, values, false)
+  -- What a read returns is counted again, unless it is an `Int` or a `Bool`.
+  let share := if uncounted (Wasm.typeOf ctx.cScope env e) then "" else "deus_dup"
+  let item := match xs with
+    | a :: _ => Wasm.typeArgs (Wasm.typeOf ctx.cScope env a)
+    | [] => []
+  let dropOld := if List.all uncounted item && not (List.isEmpty item) then "" else "deus_drop(old); "
+  match evaluated with
+  | (decls, vs, isBorrowed) =>
+    let release := match List.head? vs with
+      | some c => if isBorrowed then "" else "deus_drop(" ++ c ++ "); "
+      | none => ""
+    let unit := "(V)&deus_nullary[0]"
+    let block := fun (code : Text) => "({ " ++ decls ++ code ++ "; })"
+    match (p, vs, xs) with
+    | ("Array.make", [n, x], _) => block ("deus_array(" ++ n ++ ", " ++ x ++ ")")
+    | ("Array.length", [a], _) => block ("V r = ((V *)" ++ a ++ ")[0]; " ++ release ++ "r")
+    | ("Array.get", [a, i], _) => block ("V r = " ++ share ++ "(*AT(" ++ a ++ ", " ++ i ++ ")); " ++ release ++ "r")
+    | ("Array.set", [a, i, x], _) => block ("V *s = AT(" ++ a ++ ", " ++ i ++ "); V old = *s; *s = " ++ x ++ "; " ++ dropOld ++ release ++ unit)
+    | ("Ref.new", [x], _) => block ("V *r = deus_block(K_REF, 1); r[0] = " ++ x ++ "; (V)r")
+    | ("Ref.get", [r], _) => block ("V v = " ++ share ++ "(((V *)" ++ r ++ ")[0]); " ++ release ++ "v")
+    | ("Ref.set", [r, x], _) => block ("V old = ((V *)" ++ r ++ ")[0]; ((V *)" ++ r ++ ")[0] = " ++ x ++ "; " ++ dropOld ++ release ++ unit)
+    | (_, [ca, cb], [a, b]) =>
+      if Wasm.isComparison p && not (Wasm.isScalar (Wasm.typeOf ctx.cScope env a) || Wasm.isScalar (Wasm.typeOf ctx.cScope env b)) then
+        throw (p ++ " on values that are not known to be Int or Bool is outside the C subset, since it would compare addresses: " ++ Text.take 120 (Sexp.print e))
+      else
+        match (macro p, infix p) with
+        | (some m, _) => block (m ++ "(" ++ ca ++ ", " ++ cb ++ ")")
+        | (_, some op) => block ("(V)(" ++ ca ++ " " ++ op ++ " " ++ cb ++ ")")
+        | _ => throw ("the primitive " ++ p ++ " is outside the C subset")
+    | _ => throw ("the primitive " ++ p ++ " is outside the C subset")
+
+/--
+  A `match`. Each case that takes apart a block the code owns and does not use again reads its
+  fields, then: if the block is unique, its fields' references pass to the case and its memory
+  becomes the case's reuse token; if it is shared, the case `deus_dup`s the fields it uses and
+  decrements the block.
+-/
+def matchForm (ctx : FnCtx) (env : List Int) (tail : Bool) (owned : List Int) (token : Option Token) (scrutinee : Sexp) (cases : List Sexp) : {Throw Text} Text :=
+  let inCases := freeLocals env (Sexp.list (Sexp.sym "match" :: Sexp.list [Sexp.sym "int", Sexp.int 0] :: cases))
+  -- A local is matched where it is: the cases own it if the code does, else they borrow it.
+  let named := match scrutinee with
+    | Sexp.list [Sexp.sym "var", Sexp.int i] => List.get? env i
+    | _ => none
+  let mine := List.filter (fun l => not (isIn inCases l) && some l != named) owned
+  let rest := List.filter (fun l => isIn inCases l || some l == named) owned
+  let v := Option.getOr named (fresh ctx)
+  let vOwned := match named with
+    | some l => isIn owned l
+    | none => true
+  let _ := match named with
+    | some _ => ()
+    | none => Wasm.setType ctx.cScope v (Wasm.typeOf ctx.cScope env scrutinee)
+  let r := fresh ctx
+  let done := "m" ++ Int.toText r
+  let arms := List.map (fun c =>
+    match c with
+    | Sexp.list [Sexp.sym "case", pat, body] =>
+      match pattern ctx v env pat with
+      | (guard, bound, loads) =>
+        let usedInBody := freeLocals bound body
+        let vUsed := isIn usedInBody v
+        let loaded := List.map (fun triple =>
+          match triple with
+          | (l, _, _) => l) loads
+        let usedLoads := List.filter (isIn usedInBody) loaded
+        let n := blockFields pat
+        let ownedInBody := List.filter (fun l => l != v) rest ++ usedLoads ++ (if vUsed && vOwned then [v] else [])
+        let shareFields := Text.concat (List.map (dupLocal ctx) usedLoads)
+        let ownership := if n > 0 && not vUsed && vOwned then
+            let direct := List.filter (fun triple =>
+              match triple with
+              | (_, parent, _) => parent == v) loads
+            let nested := List.filter (fun triple =>
+              match triple with
+              | (_, parent, _) => parent != v) loads
+            let directAt := fun (i : Int) => List.find (fun triple =>
+              match triple with
+              | (_, _, k) => k == i) direct
+            -- Unique: the fields' references pass to the case; drop those it does not use.
+            let keepNested := Text.concat (List.map (fun triple =>
+              match triple with
+              | (l, _, _) => if isIn usedInBody l then dupLocal ctx l else "") nested)
+            let dropUnused := Text.concat (List.map (fun i =>
+              match directAt i with
+              | some (l, _, _) => if isIn usedInBody l then "" else dropLocal ctx l
+              | none => "deus_drop(((V *)" ++ local v ++ ")[" ++ Int.toText (i + 1) ++ "]); ") (List.range 0 n))
+            match token with
+            | none =>
+              if wants n body then
+                let t := Token.mk (fresh ctx) n
+                ("V *" ++ tokenName t ++ "; if (UNIQUE(" ++ local v ++ ")) { " ++ keepNested ++ dropUnused ++ tokenName t ++ " = (V *)" ++ local v ++ "; } else { " ++ shareFields ++ "HDR(" ++ local v ++ ") -= 256; " ++ tokenName t ++ " = 0; } ", some t)
+              else ("if (UNIQUE(" ++ local v ++ ")) { " ++ keepNested ++ dropUnused ++ "deus_release((V *)" ++ local v ++ "); } else { " ++ shareFields ++ "HDR(" ++ local v ++ ") -= 256; } ", none)
+            | some _ => ("if (UNIQUE(" ++ local v ++ ")) { " ++ keepNested ++ dropUnused ++ "deus_release((V *)" ++ local v ++ "); } else { " ++ shareFields ++ "HDR(" ++ local v ++ ") -= 256; } ", token)
+          else (shareFields ++ (if vUsed || not vOwned then "" else dropLocal ctx v), token)
+        match ownership with
+        | (rc, caseToken) =>
+          if tail then "do { " ++ guard ++ rc ++ expr ctx bound true ownedInBody caseToken body ++ " } while (0); "
+          else "do { " ++ guard ++ rc ++ local r ++ " = " ++ expr ctx bound false ownedInBody caseToken body ++ "; goto " ++ done ++ "; } while (0); "
+    | other => throw ("outside the C subset: " ++ Sexp.print other)) cases
+  let head := match named with
+    | some _ => Text.concat (List.map (dropLocal ctx) mine)
+    | none => "V " ++ local v ++ " = " ++ expr ctx env false mine none scrutinee ++ "; "
+  if tail then "{ " ++ head ++ Text.concat arms ++ "__builtin_trap(); }"
+  else "({ " ++ head ++ "V " ++ local r ++ "; " ++ Text.concat arms ++ "__builtin_trap(); " ++ done ++ ": " ++ local r ++ "; })"
 
 def params (n : Int) : Text := args (List.map (fun i => "V " ++ local i) (List.range 0 n))
 
 /-- The C translation unit: every function, and `export` as an `int32_t` entry point. -/
 def unit (fns : List Wasm.Fn) (datatypes : List (Text, Sexp)) (export : Text) : {Throw Text} Text :=
+  let borrow := inferBorrow fns
   let decls := List.mapIndexed (fun i f => "static V " ++ fnName i ++ params f.fnArity ++ ";") fns
   let bodies := List.mapIndexed (fun i f =>
     let scope := Wasm.Scope.mk fns datatypes (Ref.new (List.mapIndexed (fun j t => (j, t)) (fst (Wasm.peel f.fnArity f.fnType))))
-    let ctx := FnCtx.mk scope i f.fnArity (Ref.new f.fnArity)
+    let ctx := FnCtx.mk scope i f.fnArity (Ref.new f.fnArity) borrow
     let env := List.reverse (List.range 0 f.fnArity)
-    "/* #" ++ Text.take 10 f.fnHash ++ " */\nstatic V " ++ fnName i ++ params f.fnArity ++ " {\ntop:;\n  " ++ expr ctx env true f.fnBody ++ "\n}") fns
+    "/* #" ++ Text.take 10 f.fnHash ++ " */\nstatic V " ++ fnName i ++ params f.fnArity ++ " {\ntop:;\n  " ++ expr ctx env true (List.filter (fun k => not (borrowsAt (borrowsOf ctx i) k)) (List.range 0 f.fnArity)) none f.fnBody ++ "\n}") fns
   let arity := Option.getOr (Option.map (fun f => f.fnArity) (List.head? fns)) 0
   let inputs := List.range 0 arity
-  let entry := "int32_t " ++ export ++ args (List.map (fun i => "int32_t a" ++ Int.toText i) inputs) ++ " { return (int32_t)f0" ++ args (List.map (fun i => "(V)a" ++ Int.toText i) inputs) ++ "; }"
+  let entry := "int32_t " ++ export ++ args (List.map (fun i => "int32_t a" ++ Int.toText i) inputs) ++ " { if (!deus_base) deus_init(); return (int32_t)f0" ++ args (List.map (fun i => "(V)a" ++ Int.toText i) inputs) ++ "; }"
   let main := Text.join "\n" [
     "#ifdef DEUS_MAIN",
     "#include <stdio.h>",
     "int main(int argc, char **argv) {",
     "  if (argc != " ++ Int.toText (arity + 1) ++ ") { fprintf(stderr, \"usage: %s" ++ Text.concat (List.map (fun _ => " <int>") inputs) ++ "\\n\", argv[0]); return 2; }",
     "  printf(\"%d\\n\", " ++ export ++ args (List.map (fun i => "(int32_t)atol(argv[" ++ Int.toText (i + 1) ++ "])") inputs) ++ ");",
+    "  if (getenv(\"DEUS_HEAP_STATS\")) fprintf(stderr, \"heap: %ld words bumped, %ld live, %ld peak\\n\", (long)(deus_hp - deus_base), (long)deus_live, (long)deus_peak);",
     "  return 0;",
     "}",
     "#endif"]

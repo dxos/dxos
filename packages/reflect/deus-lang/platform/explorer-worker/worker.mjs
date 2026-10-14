@@ -298,7 +298,7 @@ const api = async (request, env, url) => {
   throw new HttpError(404, 'not found');
 };
 
-/** A task's labels, comma-separated slugs (at most five), such as `explorer,report` from the report tool (D86). */
+/** A task's labels, comma-separated slugs (at most five), such as `explorer,report` from the report tool (D90). */
 const labelsOf = (value) => {
   const labels = text(value, 200)
     .split(',')

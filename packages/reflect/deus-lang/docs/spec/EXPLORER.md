@@ -275,7 +275,7 @@ secrets `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` (a GitHub OAuth app whose cal
 
 ## Report
 
-A signed-in member's Report button (or `r`) files a task about what they are looking at ([D86](../DECISIONS.md)).
+A signed-in member's Report button (or `r`) files a task about what they are looking at ([D90](../DECISIONS.md)).
 The app first draws the page as it is into a PNG with no permission prompt: it clones the DOM, keeps each
 scrolled element's offset and each field's typed text, pins the current theme's tokens, and renders the
 clone with `app.css` inside an SVG `foreignObject` onto a canvas (at most 2× device pixels). Where the

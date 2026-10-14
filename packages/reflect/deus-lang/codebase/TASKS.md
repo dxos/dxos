@@ -9,11 +9,17 @@
 
 From Dmytro: an artifact is a constant whose value is cached, e.g. deusCli := Deus.toBinary Cli.main; evaluating it once caches the result in the artifacts layer by the hash of the expression.
 
-## Native: Perceus reference counting with reuse for the C back end, so compiled programs free memory (`62d1bdda`)
+## Native: Perceus reference counting with reuse for the C back end, so compiled programs free memory (`932f4034`)
 
 - state: todo
 - priority: high
 - labels: native, perf
+
+## Native: reference counting with reuse in the wasm back end (D86's scheme) (`ef46861c`)
+
+- state: todo
+- priority: high
+- labels: native, perf, wasm
 
 ## Pure Array.set that writes in place when the array is unique (Lean 4 / Koka FBIP): Rc::get_mut in the Rust kernel, the reference count in compiled code, a copy on the TypeScript kernel (D83) (`95ca184f`)
 
@@ -82,21 +88,18 @@ From Dmytro. A Codebase ability (find, view, add, update, mv, task ops) handled 
 
 Routine: deus inbox, then deus push, which refreshes the site. Waits on Dmytro's OAuth app and wrangler secrets; publishing to the public bucket needs his named approval.
 
-## Character literals print as numbers ('"' becomes 34) (`0d21d8d5`)
-
-- state: todo
-- priority: medium
-- assignee: claude
-- labels: dogfood, cli
-
-Lexer turns a character literal into an int token; keep the form as a note-like metadata entry so view prints it back.
-
 ## Embedding kernel re-reads the whole image on every deus_start (about 60 ms for the seed): keep a loaded image and call entries on it (`d780de91`)
 
 - state: todo
 - priority: medium
 - assignee: claude
 - labels: wasm, perf, embedding
+
+## Native: a C runtime for Text, maps and the other primitives, ported from the Rust kernel (`434a6dbc`)
+
+- state: todo
+- priority: medium
+- labels: native, perf
 
 ## Native: a C runtime for Text, maps and the other primitives, ported from the Rust kernel (`72a1f2fb`)
 
@@ -105,6 +108,18 @@ Lexer turns a character literal into an int token; keep the form as a note-like 
 - labels: native, perf
 
 ## Native: closure conversion and partial application in the C back end (`610b2785`)
+
+- state: todo
+- priority: medium
+- labels: native, perf
+
+## Native: closure conversion and partial application in the C back end (`d807958c`)
+
+- state: todo
+- priority: medium
+- labels: native, perf
+
+## Native: effect handlers in the C back end by evidence passing, with stack switching for general resumptions (`c338b56e`)
 
 - state: todo
 - priority: medium
@@ -141,6 +156,15 @@ From docs/spec/README.md, Known divergences.
 
 From docs/spec/README.md, Known divergences.
 
+## TypeScript bindings: export polymorphic functions with codec parameters (`091e43c0`)
+
+- state: todo
+- priority: medium
+- assignee: claude
+- labels: interop, typescript
+
+Follow-up of db71c327: a function generic in a (firstOf : List a -> Option a) is skipped today. Export it as a generic TS function that takes the codec of each type variable, as generic types already do.
+
 ## TypeScript bindings: export polymorphic functions with codec parameters (`b6907aeb`)
 
 - state: todo
@@ -150,6 +174,15 @@ From docs/spec/README.md, Known divergences.
 
 Follow-up of 17d50ae5: a function generic in a (firstOf : List a -> Option a) is skipped today. Export it as a generic TS function that takes the codec of each type variable, as generic types already do.
 
+## TypeScript bindings: export polymorphic functions with codec parameters (`e84ff062`)
+
+- state: todo
+- priority: medium
+- assignee: claude
+- labels: interop, typescript
+
+Follow-up of 207cac21: a function generic in a (firstOf : List a -> Option a) is skipped today. Export it as a generic TS function that takes the codec of each type variable, as generic types already do.
+
 ## TypeScript bindings: pass functions across (callbacks and closures) (`1474b99e`)
 
 - state: todo
@@ -158,6 +191,24 @@ Follow-up of 17d50ae5: a function generic in a (firstOf : List a -> Option a) is
 - labels: interop, typescript
 
 Follow-up of 17d50ae5: a parameter or result of function type is skipped. A TS callback could cross as a handle the kernel calls back through an ability; a DEUS closure as a handle TS can apply. Needs an embedding-ABI extension (functions only leave the kernel today, as {"$fn":true}).
+
+## TypeScript bindings: pass functions across (callbacks and closures) (`de710f29`)
+
+- state: todo
+- priority: medium
+- assignee: claude
+- labels: interop, typescript
+
+Follow-up of db71c327: a parameter or result of function type is skipped. A TS callback could cross as a handle the kernel calls back through an ability; a DEUS closure as a handle TS can apply. Needs an embedding-ABI extension (EMBEDDING.md has {"$fn":true} output only).
+
+## TypeScript bindings: pass functions across (callbacks and closures) (`ef597118`)
+
+- state: todo
+- priority: medium
+- assignee: claude
+- labels: interop, typescript
+
+Follow-up of 207cac21: a parameter or result of function type is skipped. A TS callback could cross as a handle the kernel calls back through an ability; a DEUS closure as a handle TS can apply. Needs an embedding-ABI extension (functions only leave the kernel today, as {"$fn":true}).
 
 ## wasm: structural equality on constructed values (`186feaf2`)
 
@@ -184,6 +235,12 @@ D69 refuses == on data; generate per-type compare functions from the type object
 
 From docs/spec/README.md, Known divergences.
 
+## Native: reuse freed blocks over 256 words (long arrays) in the C back end (`f7d39ad6`)
+
+- state: todo
+- priority: low
+- labels: native, perf
+
 ## Parse the TypeScript-like dialect back into Core (`be4c4645`)
 
 - state: todo
@@ -201,6 +258,24 @@ From docs/spec/README.md, Known divergences.
 - labels: interop, typescript
 
 Follow-up of 17d50ae5: bindings run on the wasm kernel only. The TS kernel (src/kernel) would give synchronous calls with no wasm, but its host handler cannot suspend a run for an async TS handler.
+
+## TypeScript bindings: run in-process on the TypeScript kernel too (`e69b5384`)
+
+- state: todo
+- priority: low
+- assignee: claude
+- labels: interop, typescript
+
+Follow-up of 207cac21: bindings run on the wasm kernel only. The TS kernel (src/kernel) would give synchronous calls with no wasm, but its host handler cannot suspend a run for an async TS handler.
+
+## TypeScript bindings: run in-process on the TypeScript kernel too (`eea32f23`)
+
+- state: todo
+- priority: low
+- assignee: claude
+- labels: interop, typescript
+
+Follow-up of db71c327: bindings run on the wasm kernel only. The TS kernel (src/kernel) would give synchronous calls with no wasm, but its host handler cannot suspend a run for an async TS handler.
 
 ## TypeScript kernel in the browser: its JIT runs eval about 1.4x faster than the wasm kernel; needs a synchronous sha256 and an injectable host (no node: imports) (`6e4360bd`)
 
@@ -220,6 +295,18 @@ Follow-up of 17d50ae5: bindings run on the wasm kernel only. The TS kernel (src/
 deus export: source per namespace, tasks and history as text, committed to the repo.
 
 > claude: deus export packages/reflect/deus-lang/codebase writes code/, tasks.sexp, TASKS.md and HISTORY.md; a restore into an empty codebase gives the same 1380 names and hashes.
+
+## Bindings: pretty TypeScript API (.js + .d.ts), spec-first in BINDINGS.mdl (`27d2d190`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: interop, typescript
+- links change #a1cc2bcbf9
+
+Dmytro: 'we need generated pretty ts apis with .d.ts'. Top-level functions, constructor objects, handler interfaces, configure/load, Throw -> DeusThrow by default. Written spec-first per Dmytro's process: docs/spec/BINDINGS.mdl (requirements, API, theorems), then implementation and tests (D87).
+
+> claude: Done: docs/spec/BINDINGS.mdl first (R-1..R-11, ten theorems), then the generator. The first deus check found distinct() colliding on (text, text, text1, text2); fixed. Tests: strict tsc on a consumer with @ts-expect-error probes, every export run, theorems checked in CI.
 
 ## Bring the codebase up to date with the toolchain sources; the export had raw hashes (`b2166fc8`)
 
@@ -261,6 +348,15 @@ Dmytro: one of the most impactful things you can do rn is a really good codebase
 
 Dmytro: explore embedding deus into browser apps via wasm (like codebase viewer for example)
 
+## Explorer accounts: GitHub sign-in, writes limited to active dxos org members, read-only when signed out (`3bb7f0f7`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: explorer, writing
+- parent: 861438d2
+- links change #c3aa27a438
+
 ## Explorer accounts: GitHub sign-in, writes limited to active dxos org members, read-only when signed out (`4909bee3`)
 
 - state: done
@@ -270,6 +366,24 @@ Dmytro: explore embedding deus into browser apps via wasm (like codebase viewer 
 - parent: 861438d2
 - links change #68dcd2f5f1
 
+## Explorer accounts: GitHub sign-in, writes limited to active dxos org members, read-only when signed out (`a00fa56e`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: explorer, writing
+- parent: 861438d2
+- links change #c432032637
+
+## Explorer accounts: GitHub sign-in, writes limited to active dxos org members, read-only when signed out (`fb964840`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: explorer, writing
+- parent: 861438d2
+- links change #feaea530df
+
 ## Explorer as an SPA showing several definitions at once (`84014a86`)
 
 - state: done
@@ -277,6 +391,15 @@ Dmytro: explore embedding deus into browser apps via wasm (like codebase viewer 
 - assignee: claude
 - labels: review, explorer
 - links `Explorer.generate` (#c3e00dc212)
+
+## Explorer comments on definitions, changes and tasks, stored in the codebase (`22a99190`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: explorer, writing
+- parent: 861438d2
+- links change #feaea530df
 
 ## Explorer comments on definitions, changes and tasks, stored in the codebase (`81438cac`)
 
@@ -286,6 +409,24 @@ Dmytro: explore embedding deus into browser apps via wasm (like codebase viewer 
 - labels: explorer, writing
 - parent: 861438d2
 - links change #68dcd2f5f1
+
+## Explorer comments on definitions, changes and tasks, stored in the codebase (`b827edb2`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: explorer, writing
+- parent: 861438d2
+- links change #c3aa27a438
+
+## Explorer comments on definitions, changes and tasks, stored in the codebase (`d1534a34`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: explorer, writing
+- parent: 861438d2
+- links change #c432032637
 
 ## Exports from several containers overwrite each other's history and tasks (`a93aee73`)
 
@@ -297,6 +438,15 @@ Dmytro: explore embedding deus into browser apps via wasm (like codebase viewer 
 
 Each thread exports codebase/ from its own ~/.deus, so the last export wins: history.sexp loses the other containers' entries, and tasks.sexp reverts tasks another container changed. Needed: fullLog dedup by causal hash plus importing codebase/history.sexp before export, and a field-wise task merge on import (Tasks.merge exists for branches).
 
+## File tasks from the explorer with image attachments stored as codebase assets (`16d433b5`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: explorer, writing
+- parent: 861438d2
+- links change #c3aa27a438
+
 ## File tasks from the explorer with image attachments stored as codebase assets (`747a4182`)
 
 - state: done
@@ -305,6 +455,24 @@ Each thread exports codebase/ from its own ~/.deus, so the last export wins: his
 - labels: explorer, writing
 - parent: 861438d2
 - links change #68dcd2f5f1
+
+## File tasks from the explorer with image attachments stored as codebase assets (`77740edd`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: explorer, writing
+- parent: 861438d2
+- links change #feaea530df
+
+## File tasks from the explorer with image attachments stored as codebase assets (`d2d4e786`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: explorer, writing
+- parent: 861438d2
+- links change #c432032637
 
 ## Keep ordinary comments, so the codebase can be the source of truth for the toolchain (`b09507db`)
 
@@ -342,6 +510,15 @@ Namespace snapshots are trees (D72), deus migrate rewrites flat history, the rem
 
 deus build --c compiles the wasm subset to C (deus/cgen.deus); clang -O2 is within 1.4x of or faster than wasm in V8 and 12-26x faster than the JIT. Numbers and roadmap in docs/spec/NATIVE.md (D80).
 
+## Native compilation: a C back end compiled by clang/LLVM, and benchmarks of every back end (`babdb4f2`)
+
+- state: done
+- priority: high
+- labels: native, perf
+- links change #83dbe4c096
+
+deus build --c compiles the wasm subset to C (deus/cgen.deus); clang -O2 is within 1.4x of or faster than wasm in V8 and 12-26x faster than the JIT. Numbers and roadmap in docs/spec/NATIVE.md (D79).
+
 ## Native deus fails with DEUS_HOME is not set (`0f23f671`)
 
 - state: done
@@ -349,6 +526,15 @@ deus build --c compiles the wasm subset to C (deus/cgen.deus); clang -O2 is with
 - assignee: claude
 - labels: review, bug
 - links `Build.kernel` (#3a3356fef8)
+
+## Native: Perceus reference counting with reuse for the C back end, so compiled programs free memory (`62d1bdda`)
+
+- state: done
+- priority: high
+- labels: native, perf
+- links change #dbf6867c1b
+
+Done for the C back end (D86, docs/spec/NATIVE.md#memory). The wasm back end follows as its own task.
 
 ## Restoring the git export loses history, so the next export rewrites HISTORY.md (`5a02d566`)
 
@@ -398,6 +584,30 @@ From docs/spec/README.md, Known divergences.
 From Dmytro: explore interop with ts and generating typescript binding types.
 
 > claude: Done (D81): deus bindings <prefix> -o <dir> writes <stem>.ts (types, codecs, handler types, an embedded image), deus-runtime.ts and deus_kernel.wasm. TypeScript calls DEUS functions; DEUS calls TypeScript by performing abilities the TS handlers answer. Tested by src/bindings/bindings.test.ts on examples/geometry.deus, strict tsc included.
+
+## TypeScript interop: generate typed TypeScript bindings for DEUS namespaces (`207cac21`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: interop, typescript
+- links change #e6755a8eeb
+
+From Dmytro: explore interop with ts and generating typescript binding types.
+
+> claude: Done (D80): deus bindings <prefix> -o <dir> writes <stem>.ts (types, codecs, handler types, an embedded image), deus-runtime.ts and deus_kernel.wasm. TypeScript calls DEUS functions; DEUS calls TypeScript by performing abilities the TS handlers answer. Tested by src/bindings/bindings.test.ts on examples/geometry.deus, strict tsc included.
+
+## TypeScript interop: generate typed TypeScript bindings for DEUS namespaces (`db71c327`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: interop, typescript
+- links change #c564461f42
+
+From Dmytro: explore interop with ts and generating typescript binding types.
+
+> claude: Done (D79): deus bindings <prefix> -o <dir> writes <stem>.ts (types, codecs, handler types, an embedded image), deus-runtime.ts and deus_kernel.wasm. TypeScript calls DEUS functions; DEUS calls TypeScript by performing abilities the TS handlers answer. Tested by src/bindings/bindings.test.ts on examples/geometry.deus, strict tsc included.
 
 ## codebase/ export has a raw #ebad142960 reference the parser rejects, so it cannot be restored (`b8b3aab7`)
 
@@ -469,14 +679,24 @@ From docs/spec/README.md, Known divergences.
 
 Dmytro asked whether builtins should be proper URIs. D68, eaafb41d.
 
-## Explorer report tool: signed-in members file a screenshot of the current view as a task (`ec1edf34`)
+## Character literals print as numbers ('"' becomes 34) (`0d21d8d5`)
+
+- state: done
+- priority: medium
+- assignee: claude
+- labels: dogfood, cli
+- links change #6d6826c8bd
+
+Lexer turns a character literal into an int token; keep the form as a note-like metadata entry so view prints it back.
+
+## Explorer report tool: signed-in members file a screenshot of the current view as a task (`e4a19978`)
 
 - state: done
 - priority: medium
 - assignee: claude
 - labels: explorer, writing
 - parent: 861438d2
-- links change #9791b74c6b
+- links change #458d0633bd
 
 ## Explorer: a live console that runs eval, view and test against the site's codebase in the page (wasm kernel + seed + codebase snapshot, about 900 KB gzipped) (`d2328509`)
 

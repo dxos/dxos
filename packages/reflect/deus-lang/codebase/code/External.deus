@@ -75,7 +75,7 @@ def External.imageProblems (image : Text) : List Text :=
 
 def External.isHex (t : Text) : Bool := List.all (fun i =>
   let c := code t i
-  isDigit c || c >= 97 && c <= 102) (range 0 (Text.length t))
+  isDigit c || c >= 'a' && c <= 'f') (range 0 (Text.length t))
 
 def External.isSha256 (t : Text) : Bool := Text.length t == 64 && External.isHex t
 

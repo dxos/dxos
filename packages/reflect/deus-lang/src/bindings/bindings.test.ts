@@ -3,7 +3,7 @@
 //
 
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, describe, test } from 'vitest';
@@ -32,6 +32,83 @@ const deus = (...args: string[]) => {
 
 afterAll(() => rmSync(scratch, { recursive: true, force: true }));
 
+// A consumer of the generated module, type-checked under strict settings and then run. Each
+// `@ts-expect-error` must be needed, so the declarations are as tight as they claim.
+const consumer = `
+import {
+  area, configure, DeusDefect, DeusThrow, greet, insert, load, lookup, mean, move, paint, ratio,
+  Shape, Shapes, sorted, stats, total, Tree, type Point,
+} from './geometry.js';
+
+export const run = async (logged: string[], printed: string[]) => {
+  // No setup: the first call loads deus_kernel.wasm next to the module.
+  const circle = await area(Shape.circle(2));
+  // @ts-expect-error a Shape has no square.
+  void Shape.square;
+  // @ts-expect-error a radius is a number.
+  void Shape.circle('2');
+  const unconfigured = await total([]).catch((error: unknown) => (error instanceof Error ? error.message : ''));
+
+  configure({
+    handlers: {
+      Log: {
+        // Handlers may be asynchronous: the run waits on the kernel's suspended stack.
+        info: async (line) => {
+          await new Promise((resolve) => setTimeout(resolve, 1));
+          logged.push(line);
+        },
+      },
+    },
+    io: { print: (line) => void printed.push(line) },
+  });
+  const shapes = [Shape.circle(2), Shape.rect(3, 4)];
+  const point: Point = await move({ x: 1, y: 2 }, 10, 20);
+
+  // A generic type crosses with its parameter's codec; the tree comes back as nested objects.
+  let tree: Tree<number> = Tree.leaf;
+  for (const value of [5, 2, 8, 1]) {
+    tree = await insert(tree, value);
+  }
+  const thrown = await ratio(1, 0).catch((error: unknown) => (error instanceof DeusThrow ? error.value : error));
+  const defect = await mean([]).catch((error: unknown) => error instanceof DeusDefect);
+
+  // A separate instance answers Throw itself.
+  const own = await load({
+    handlers: {
+      Log: { info: () => {} },
+      Throw: {
+        throw: (reason) => {
+          throw new Error(\`DEUS threw: \${reason}\`);
+        },
+      },
+    },
+  });
+  const answered = await own.ratio(1, 0).catch((error: unknown) => (error instanceof Error ? error.message : ''));
+
+  return {
+    circle,
+    unconfigured,
+    total: await total(shapes),
+    stats: await stats(shapes),
+    point,
+    found: await lookup([['a', 1], ['b', 2]], 'b'),
+    missing: await lookup([], 'z'),
+    paint: await paint('blue'),
+    sorted: await sorted(tree),
+    tree,
+    ratio: await ratio(7, 2),
+    thrown,
+    answered,
+    greet: await greet(),
+    // Calls overlap: each takes its own kernel instance.
+    overlapping: await Promise.all([area(Shape.rect(2, 5)), total([]), own.area(Shape.circle(1))]),
+    scaled: await Shapes.scale(3, Shape.rect(1, 2)),
+    mean: await mean([1, 2, 6]),
+    defect,
+  };
+};
+`;
+
 describe('deus bindings', () => {
   test('TypeScript calls DEUS functions and answers their abilities', { timeout: 180_000 }, async ({ expect }) => {
     // The CLI finds the runtime and the wasm kernel through DEUS_HOME, as bin/deus.mjs sets it.
@@ -45,9 +122,14 @@ describe('deus bindings', () => {
       'warning: not exported: Geometry.firstOf: polymorphic in t2; only monomorphic functions are exported\n',
     );
     expect(generated.code).toBe(0);
-    expect(JSON.parse(generated.stdout).exported).toHaveLength(11);
+    const report = JSON.parse(generated.stdout);
+    expect(report.exported).toHaveLength(12);
+    expect(report.types).toBe(join(out, 'geometry.d.ts'));
+    expect(readFileSync(join(out, 'geometry.d.ts'), 'utf8')).toContain(
+      'export declare function area(s: Shape): Promise<number>;',
+    );
 
-    // The module type-checks under the strictest settings a consumer might use.
+    writeFileSync(join(out, 'consumer.ts'), consumer);
     const tsc = spawnSync(
       join(root, 'node_modules/.bin/tsc'),
       [
@@ -58,7 +140,6 @@ describe('deus bindings', () => {
         '--noImplicitReturns',
         '--noUnusedLocals',
         '--noUnusedParameters',
-        '--allowImportingTsExtensions',
         '--target',
         'esnext',
         '--module',
@@ -69,7 +150,7 @@ describe('deus bindings', () => {
         'esnext,dom',
         '--types',
         '',
-        'geometry.ts',
+        'consumer.ts',
       ],
       // Outside the package, so no tsconfig.json applies: these flags are the whole configuration.
       { cwd: out, encoding: 'utf8' },
@@ -77,65 +158,43 @@ describe('deus bindings', () => {
     expect(tsc.stdout).toBe('');
     expect(tsc.status).toBe(0);
 
-    const { load, DeusDefect } = await import(join(out, 'geometry.ts'));
     const logged: string[] = [];
     const printed: string[] = [];
-    const geometry = await load(
-      readFileSync(join(out, 'deus_kernel.wasm')),
-      {
-        Log: {
-          // Handlers may be asynchronous: the run waits on the kernel's suspended stack.
-          info: async (line: string) => {
-            await new Promise((resolve) => setTimeout(resolve, 1));
-            logged.push(line);
-          },
-        },
-        Throw: {
-          throw_: (reason: string) => {
-            throw new Error(`DEUS threw: ${reason}`);
-          },
-        },
-      },
-      { print: (line: string) => printed.push(line) },
-    );
-
-    const shapes = [
-      { $tag: 'circle', r: 2 },
-      { $tag: 'rect', w: 3, h: 4 },
-    ];
-    expect(await geometry.area(shapes[0])).toBe(12);
-    expect(await geometry.total(shapes)).toBe(24);
-    expect(logged).toEqual(['summing 2 shapes']);
-    expect(await geometry.stats(shapes)).toEqual([2, 12, 12]);
-    expect(await geometry.move({ x: 1, y: 2 }, 10, 20)).toEqual({ x: 11, y: 22 });
-    expect(
-      await geometry.lookup(
-        [
-          ['a', 1],
-          ['b', 2],
-        ],
-        'b',
-      ),
-    ).toBe(2);
-    expect(await geometry.lookup([], 'z')).toBeUndefined();
-    expect(await geometry.paint('blue')).toBe('#00f');
-
-    // A generic type crosses with its parameter's codec; the tree comes back as nested objects.
-    let tree = { $tag: 'leaf' };
-    for (const value of [5, 2, 8, 1]) {
-      tree = await geometry.insert(tree, value);
-    }
-    expect(await geometry.sorted(tree)).toEqual([1, 2, 5, 8]);
-    expect(tree).toMatchObject({ $tag: 'node', value: 5, left: { $tag: 'node', value: 2 } });
-
-    expect(await geometry.ratio(7, 2)).toBe(3);
-    await expect(geometry.ratio(1, 0)).rejects.toThrow('DEUS threw: division by zero');
-    expect(await geometry.greet()).toBe('greeted');
+    const { run } = await import(join(out, 'consumer.ts'));
+    expect(await run(logged, printed)).toEqual({
+      circle: 12,
+      unconfigured: 'no handler for Geometry.Log: pass handlers.Log to configure() or load()',
+      total: 24,
+      stats: [2, 12, 12],
+      point: { x: 11, y: 22 },
+      found: 2,
+      missing: undefined,
+      paint: '#00f',
+      sorted: [1, 2, 5, 8],
+      tree: expect.objectContaining({
+        $tag: 'node',
+        value: 5,
+        left: expect.objectContaining({ $tag: 'node', value: 2 }),
+      }),
+      ratio: 3,
+      thrown: 'division by zero',
+      answered: 'DEUS threw: division by zero',
+      greet: 'greeted',
+      overlapping: [10, 0, 3],
+      scaled: { $tag: 'rect', w: 3, h: 6 },
+      mean: 3,
+      defect: true,
+    });
+    expect(logged).toEqual(['summing 2 shapes', 'summing 0 shapes']);
     expect(printed).toEqual(['hello from DEUS\n']);
+  });
 
-    // Calls overlap: each takes its own kernel instance.
-    expect(await Promise.all([geometry.area({ $tag: 'rect', w: 2, h: 5 }), geometry.total([])])).toEqual([10, 0]);
-    expect(await geometry.mean([1, 2, 6])).toBe(3);
-    await expect(geometry.mean([])).rejects.toBeInstanceOf(DeusDefect);
+  test('the generator satisfies the theorems in its spec', { timeout: 180_000 }, ({ expect }) => {
+    const c = ['--codebase', join(scratch, 'spec')];
+    expect(deus('init', '--empty', ...c).code).toBe(0);
+    expect(deus('add', join(root, 'deus'), join(root, 'docs/spec/BINDINGS.mdl'), ...c).code).toBe(0);
+    const checked = deus('check', 'Bindings.Spec', ...c);
+    expect(checked.stdout).toMatch(/10 passed, 0 failed/);
+    expect(checked.code).toBe(0);
   });
 });

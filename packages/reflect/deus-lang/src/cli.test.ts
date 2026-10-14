@@ -568,18 +568,28 @@ describe('deus CLI', () => {
       const c = ['--codebase', join(scratch, 'c')];
       deus('init', '--empty', ...c);
       deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
-      deus('add', join(root, 'examples/bench.deus'), ...c);
-      // Mutual recursion, tail loops, data on the heap, nullary constructors and 32-bit wrapping.
-      for (const [name, arg] of [
-        ['Bench.fib', 20],
-        ['Bench.collatz', 1000],
-        ['Bench.trees', 2],
-        ['Bench.queens', 6],
+      deus('add', join(root, 'examples/bench.deus'), join(root, 'examples/sorting.deus'), ...c);
+      // Mutual recursion, tail loops, data on the heap, nullary constructors, 32-bit wrapping,
+      // arrays and refs. Reference counting frees every block by the end of the run (D86).
+      for (const [name, args] of [
+        ['Bench.fib', [20]],
+        ['Bench.collatz', [1000]],
+        ['Bench.trees', [2]],
+        ['Bench.queens', [6]],
+        ['Sorting.benchMerge', [300, 7]],
+        ['Sorting.benchQuick', [300, 7]],
+        ['Sorting.benchHeap', [300, 7]],
+        ['Sorting.benchArray', [300, 7]],
+        ['Sorting.benchPersistent', [300, 7]],
       ] as const) {
         const out = join(scratch, name);
         expect(deus('build', name, '-o', out, '--c', ...c).code).toBe(0);
-        const run = spawnSync(out, [String(arg)], { encoding: 'utf8' });
-        expect(run.stdout).toBe(deus('eval', `${name} ${arg}`, ...c).stdout);
+        const run = spawnSync(out, args.map(String), {
+          encoding: 'utf8',
+          env: { ...process.env, DEUS_HEAP_STATS: '1' },
+        });
+        expect(run.stdout).toBe(deus('eval', `${name} ${args.join(' ')}`, ...c).stdout);
+        expect(run.stderr).toContain(', 0 live,');
       }
       deus('add', file('wrap.deus', 'def wrap (n : Int) : Int := n * 65536 * 65536 + n * 2147483647\n'), ...c);
       expect(deus('build', 'wrap', '-o', join(scratch, 'wrap'), '--c', ...c).code).toBe(0);
@@ -833,6 +843,11 @@ describe('deus CLI', () => {
       );
       expect(deus('export', exported, ...c).code).toBe(0);
       expect(deus('task', 'list', '--all', '--json', ...c).stdout).toBe(tasksBefore);
+      // A git union merge leaves both versions of a task; the one this codebase has not had wins (D89).
+      const current = readFileSync(join(exported, 'tasks.sexp'), 'utf8');
+      writeFileSync(join(exported, 'tasks.sexp'), current + staleTasks);
+      expect(deus('export', exported, ...c).code).toBe(0);
+      expect(deus('task', 'list', '--all', '--json', ...c).stdout).toBe(tasksBefore);
     },
   );
 
@@ -853,6 +868,8 @@ describe('deus CLI', () => {
       '  | n => n * n',
       '',
       'def plain (side : Int) : Int := side * side',
+      '',
+      "def quoted (c : Int) : Bool := c == '\"' || c == 0x60 || c == 1_000",
     ].join('\n');
     deus('add', file('comments.deus', source), ...c);
     // Comments are metadata: the definition hashes as it does without them.
@@ -862,9 +879,15 @@ describe('deus CLI', () => {
     const uncommented = source
       .split('\n')
       .filter((line) => !line.trim().startsWith('--'))
-      .join('\n');
+      .join('\n')
+      .replace(`'"'`, '34')
+      .replace('0x60', '96')
+      .replace('1_000', '1000');
     deus('add', file('uncommented.deus', uncommented), ...bare);
     expect(deus('names', 'area', '--json', ...bare).stdout).toBe(deus('names', 'area', '--json', ...c).stdout);
+    // So are number spellings (D88): `'"'` hashes as `34`, and view prints it as written.
+    expect(deus('names', 'quoted', '--json', ...bare).stdout).toBe(deus('names', 'quoted', '--json', ...c).stdout);
+    expect(deus('view', 'quoted', ...c).stdout).toContain(`c == '"' || c == 0x60 || c == 1_000`);
     const viewed = deus('view', 'area', ...c).stdout;
     expect(viewed).toContain('-- Shapes measured in whole units.\n\n-- Squares only, for now.\ndef area');
     expect(viewed).toContain('  -- Negative sides are measured as positive.\n  let s :=');
@@ -881,6 +904,7 @@ describe('deus CLI', () => {
     const text = (dir: string) => readFileSync(join(dir, 'code', '_root.deus'), 'utf8');
     expect(text(second)).toBe(text(first));
     expect(text(first)).toContain('-- A point has no area.');
+    expect(text(first)).toContain(`c == '"' || c == 0x60`);
     const hashOf = (args: string[]) =>
       JSON.parse(deus('ls', '--json', ...args).stdout).find((row: { name: string }) => row.name === 'area').hash;
     expect(hashOf(restored)).toBe(hashOf(c));
