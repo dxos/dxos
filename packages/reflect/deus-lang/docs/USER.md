@@ -282,3 +282,11 @@ as git, we should be able to keep entire code history without trimming, artifact
 ---
 
 - explore if functional style of writing programs (specifically immutability leads to fundamentally inneficient code and whether we need to add mutable memory. case study: writing a sorting algorithm
+
+---
+
+- we need generated pretty ts apis with .d.ts
+
+---
+
+how much of .mdl are you dogfooding? the general process should be mdl spec > apis + theorems > impls and proofs and tests. maybe backfill this for existing code and keep using this process as you go, eval it

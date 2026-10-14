@@ -1,5 +1,14 @@
 # History of main
 
+- `8fefe275fc` task: comment on 27d2d190 (by claude)
+- `3e65353735` delete Bindings.handlerDecl Bindings.member Bindings.typeDecl
+- `acdf257ca5` close 27d2d190 by #a1cc2bcbf9 (by claude)
+- `a1cc2bcbf9` Bindings emit a .js module and a hand-written-looking .d.ts; spec-first in BINDINGS.mdl, whose theorems found a distinct() collision bug (D87) (by claude)
+- `5f721fc110` task: set 27d2d190 state (by claude)
+- `03e8b7f152` task: open 27d2d190 Bindings: pretty TypeScript API (.js + .d.ts), spec-first in BINDINGS.mdl
+- `44071e35f6` history: import 223 changes
+- `6a9d543900` task: import from tasks.sexp
+- `a050870707` add code specs
 - `18b3ef016c` C back end: MUSTTAIL only where the C compiler has it (D86) (by claude)
 - `22f3b808cf` task: open f7d39ad6 Native: reuse freed blocks over 256 words (long arrays) in the C back end (by claude)
 - `5f3fbc3f4d` task: open ef46861c Native: reference counting with reuse in the wasm back end (D86's scheme) (by claude)

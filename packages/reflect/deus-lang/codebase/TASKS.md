@@ -227,6 +227,18 @@ deus export: source per namespace, tasks and history as text, committed to the r
 
 > claude: deus export packages/reflect/deus-lang/codebase writes code/, tasks.sexp, TASKS.md and HISTORY.md; a restore into an empty codebase gives the same 1380 names and hashes.
 
+## Bindings: pretty TypeScript API (.js + .d.ts), spec-first in BINDINGS.mdl (`27d2d190`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: interop, typescript
+- links change #a1cc2bcbf9
+
+Dmytro: 'we need generated pretty ts apis with .d.ts'. Top-level functions, constructor objects, handler interfaces, configure/load, Throw -> DeusThrow by default. Written spec-first per Dmytro's process: docs/spec/BINDINGS.mdl (requirements, API, theorems), then implementation and tests (D87).
+
+> claude: Done: docs/spec/BINDINGS.mdl first (R-1..R-11, ten theorems), then the generator. The first deus check found distinct() colliding on (text, text, text1, text2); fixed. Tests: strict tsc on a consumer with @ts-expect-error probes, every export run, theorems checked in CI.
+
 ## Bring the codebase up to date with the toolchain sources; the export had raw hashes (`b2166fc8`)
 
 - state: done
