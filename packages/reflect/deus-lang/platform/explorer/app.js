@@ -752,9 +752,10 @@ const changeRows = (changes) =>
   changes.length === 0
     ? '<p class="muted">None.</p>'
     : `<ul class="rows">${changes
-        .map(
-          (change) =>
-            `<li class="entry-row">${changeLink(change.causal)}<a class="change-message" data-open="c:${escape(change.causal)}">${escape(change.message)}</a>${change.by ? `<span class="by">${escape(change.by)}</span>` : ''}</li>`,
+        .map((change) =>
+          change.imported
+            ? `<li class="entry-row"><span class="hash">${escape(short(change.causal))}</span><span class="change-message">${escape(change.message)}</span>${change.by ? `<span class="by">${escape(change.by)}</span>` : ''}</li>`
+            : `<li class="entry-row">${changeLink(change.causal)}<a class="change-message" data-open="c:${escape(change.causal)}">${escape(change.message)}</a>${change.by ? `<span class="by">${escape(change.by)}</span>` : ''}</li>`,
         )
         .join('')}</ul>`;
 
@@ -1146,22 +1147,26 @@ const renderHistory = async () => {
   view.innerHTML =
     `<h1 class="view-title">History <span class="muted">· ${escape(index.meta.branch)}</span></h1><ol class="timeline">` +
     history
-      .map(
-        (change) =>
-          `<li><a class="timeline-row" data-open="c:${escape(change.causal)}"><span class="dot"></span><span class="message">${escape(change.message || '(no message)')}</span>` +
-          `<span class="diffstat" data-stat="${escape(change.causal)}"></span>${change.by ? `<span class="by">${escape(change.by)}</span>` : ''}<span class="hash">${escape(short(change.causal))}</span></a></li>`,
+      .map((change) =>
+        change.imported
+          ? `<li><span class="timeline-row imported" title="Imported from an export; this store has no record of its contents"><span class="dot"></span><span class="message">${escape(change.message || '(no message)')}</span>` +
+            `${change.by ? `<span class="by">${escape(change.by)}</span>` : ''}<span class="chip">imported</span><span class="hash">${escape(short(change.causal))}</span></span></li>`
+          : `<li><a class="timeline-row" data-open="c:${escape(change.causal)}"><span class="dot"></span><span class="message">${escape(change.message || '(no message)')}</span>` +
+            `<span class="diffstat" data-stat="${escape(change.causal)}"></span>${change.by ? `<span class="by">${escape(change.by)}</span>` : ''}<span class="hash">${escape(short(change.causal))}</span></a></li>`,
       )
       .join('') +
     '</ol>' +
-    (history.length >= 30 ? '<p class="muted">The 30 most recent changes.</p>' : '');
+    (history.length >= 1000 ? '<p class="muted">The 1000 most recent changes.</p>' : '');
   await Promise.all(
-    history.map(async (change) => {
-      const page = await load(`change/${change.causal}.json`);
-      const slot = view.querySelector(`[data-stat="${CSS.escape(change.causal)}"]`);
-      if (page && slot) {
-        slot.outerHTML = diffStat(page);
-      }
-    }),
+    history
+      .filter((change) => !change.imported)
+      .map(async (change) => {
+        const page = await load(`change/${change.causal}.json`);
+        const slot = view.querySelector(`[data-stat="${CSS.escape(change.causal)}"]`);
+        if (page && slot) {
+          slot.outerHTML = diffStat(page);
+        }
+      }),
   );
 };
 

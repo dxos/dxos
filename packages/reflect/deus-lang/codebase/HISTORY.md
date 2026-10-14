@@ -15,6 +15,49 @@
 - `68fd7c720d` history: import 408 changes
 - `817e132bb0` task: import from tasks.sexp
 - `09cc7dae97` add code specs
+- `e55740c728` analytics decisions renumbered D104, D105 (by claude)
+- `43a62f2c19` history: import 540 changes
+- `c769c10b59` task: import from tasks.sexp
+- `8be1d54ed3` add code specs
+- `f8f410ac05` export: merge tasks from codebase
+- `4b59911ace` analytics decisions renumbered D103, D104 (by claude)
+- `44f4b80a35` history: import 526 changes
+- `0b582fa2ae` task: import from tasks.sexp
+- `027cb63f7b` add code specs
+- `90521a638a` task: comment on 72207dc1 (by claude)
+- `77856573c6` history: import 515 changes
+- `397db919a9` task: import from tasks.sexp
+- `661910e409` add code specs
+- `6ad8d8e787` analytics decisions renumbered D102, D103 (by claude)
+- `731819a207` task: set 87707577 state (by claude)
+- `5e0af148e7` task: set 87707577 details (by claude)
+- `ae13da09a7` task: open 72207dc1 The R2 codebase remote (r2://agent-artifacts/deus/explorer-demo, main) and the git export are separate lineages: deus merge origin.main reports 373 conflicting names, so threads cannot pull, merge and push main as the primary VCS yet (by claude)
+- `182ea2fa92` close 3c8a311c by #d3d028011c (by claude)
+- `d3d028011c` Analytics.Spec: the analytics store's checked spec (D101) (by claude)
+- `d09aae3945` analytics store: @[event] structures, Parquet writer and reader, a push-only event store, deus event; reference forms in lookupName (D101, D102) (by claude)
+- `d75c424c9d` task: import from /tmp/claude-0/-home-user-dxos/fbb00151-1bb8-59fb-8bcb-7088de0f6fa7/scratchpad/oldexp/tasks.sexp
+- `0b6f2c560e` task: set 696086fe priority labels details (by claude)
+- `f2471f33c4` task: open 696086fe Republish the hosted explorer on every push to the PR branch (by claude)
+- `e468baa69b` task: comment on 12663f55 (by claude)
+- `8ea41a78ca` close 12663f55 by #112a8df7a8 (by claude)
+- `112a8df7a8` explorer: History lists the changes imported from an export (D103) (by claude)
+- `5a6de8245c` task: set 12663f55 state priority assignee labels details (by claude)
+- `da0eb964e9` task: open 12663f55 The explorer History view hides the history imported from an export (by claude)
+- `616c10e45e` history: import 511 changes
+- `a5ec773714` task: import from tasks.sexp
+- `3796ba0f06` task: set 38603468 state details (by claude)
+- `569730f40a` close f7d39ad6 by #eddca32cd2 (by claude)
+- `eddca32cd2` C back end: reuse freed blocks over 256 words by exact fit (D102) (by claude)
+- `3d4d7adba4` task: set e76e36b0 state (by claude)
+- `fa3a704b26` task: set e76e36b0 details (by claude)
+- `26b25952c4` history: import 507 changes
+- `ce1b500e79` task: import from tasks.sexp
+- `880640eb13` task: set e76e36b0 state (by claude)
+- `ea44281ed7` task: set e76e36b0 details (by claude)
+- `7be4505616` task: open e76e36b0 Catch the R2 remote up with the git export and push it, so threads can start from deus pull (by claude)
+- `77337bc6cf` history: import 501 changes
+- `1e220da057` task: import from tasks.sexp
+- `3c07f87183` add code specs
 - `dbfeb70ff7` export: merge 21 changes from codebase
 - `1ec8ae9075` export: merge tasks from codebase
 - `d2758d5ca1` specs: documents with prose, as #13952 keeps them; WasmEquality.Spec moved in (by claude)

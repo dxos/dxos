@@ -1,0 +1,328 @@
+/-- All of a row's cells, system columns first. -/
+def Parquet.allCells (r : Row) : List Cell := Cell.text r.eventId :: Cell.text r.recordedAt :: Cell.text r.recordedBy :: r.cells
+
+def Parquet.asInt (t : Option Thrift) : Int :=
+  match t with
+  | Option.some (Thrift.i32 v) => v
+  | Option.some (Thrift.i64 v) => v
+  | _ => 0
+
+def Parquet.asList (t : Option Thrift) : List Thrift :=
+  match t with
+  | Option.some (Thrift.items _ values) => values
+  | _ => []
+
+/-- The column type a schema element was written with. -/
+def Parquet.columnTypeOf (e : Thrift) : Text :=
+  let kind := Parquet.asInt (Parquet.field e 1)
+  if kind == 0 then "bool" else if kind == 2 then if isSome (Parquet.field e 6) then "time" else "int" else "text"
+
+/-- Decimal digits as eight little-endian bytes (an unsigned 64-bit integer); anything else is 0. -/
+def Parquet.decimalLE64 (digits : Text) : List Int :=
+  let step := fun bytes d =>
+    let rec go bs carry acc :=
+      match bs with
+      | [] => reverse acc
+      | b :: rest =>
+          let v := b * 10 + carry
+          go rest (shr v 8) (and v 255 :: acc)
+    go bytes d []
+  foldl
+    (fun bytes c => if c >= '0' && c <= '9' then step bytes (c - '0') else bytes)
+    [0, 0, 0, 0, 0, 0, 0, 0]
+    (utf8 digits)
+
+/-- Reads a value of compact type `kind` at `pos`: (value, next position). -/
+def Parquet.decode (bytes : Array Int) (kind : Int) (pos : Int) : (Thrift, Int) := if kind == 1 || kind == 2 then (Thrift.flag (Array.get bytes pos == 1), pos + 1) else if kind == 3 then (Thrift.i32 (Array.get bytes pos), pos + 1) else if kind == 4 || kind == 5 then
+  match readVarint bytes pos with
+  | (v, next) => (Thrift.i32 (unzigzag v), next)
+else if kind == 6 then
+  match readVarint bytes pos with
+  | (v, next) => (Thrift.i64 (unzigzag v), next)
+else if kind == 8 then
+  match readVarint bytes pos with
+  | (n, start) => (Thrift.bin (Parquet.slice bytes start (start + n)), start + n)
+else if kind == 9 then
+  let header := Array.get bytes pos
+  let elemType := and header 15
+  let short := ushr header 4
+  let counted := if short == 15 then readVarint bytes (pos + 1) else (short, pos + 1)
+  let n := fst counted
+  let rec go i p acc := if i >= n then (Thrift.items elemType (reverse acc), p) else
+    match Parquet.decode bytes elemType p with
+    | (v, next) => go (i + 1) next (v :: acc)
+  go 0 (snd counted) []
+else if kind == 12 then
+  let rec go p last acc :=
+    let header := Array.get bytes p
+    if header == 0 then (Thrift.fields (reverse acc), p + 1) else
+      let fieldType := and header 15
+      let delta := ushr header 4
+      let located := if delta == 0 then
+        match readVarint bytes (p + 1) with
+        | (z, next) => (unzigzag z, next)
+      else (last + delta, p + 1)
+      let id := fst located
+      let start := snd located
+      if fieldType == 1 || fieldType == 2 then go start id ((id, Thrift.flag (fieldType == 1)) :: acc) else
+        match Parquet.decode bytes fieldType start with
+        | (v, next) => go next id ((id, v) :: acc)
+  go pos 0 []
+else defect ("thrift: unknown compact type " ++ toText kind)
+
+def Parquet.encode (t : Thrift) : List Int :=
+  match t with
+  | Thrift.i32 v => varint (zigzag v)
+  | Thrift.i64 v => varint (zigzag v)
+  | Thrift.bin bytes => varint (List.length bytes) ++ bytes
+  | Thrift.flag v => [if v then 1 else 2]
+  | Thrift.items elemType values =>
+      let n := List.length values
+      let header := if n < 15 then [or (shl n 4) elemType] else or 240 elemType :: varint n
+      header ++ concatMap Parquet.encode values
+  | Thrift.fields pairs =>
+      let rec go ps last acc :=
+        match ps with
+        | [] => List.concat (reverse ([0] :: acc))
+        | (id, v) :: rest =>
+            let delta := id - last
+            let header := if delta > 0 && delta <= 15 then [or (shl delta 4) (Parquet.typeOf v)] else Parquet.typeOf v :: varint (zigzag id)
+            let body :=
+              match v with
+              | Thrift.flag _ => []
+              | _ => Parquet.encode v
+            go rest id (body :: header :: acc)
+      go pairs 0 []
+
+def Parquet.field (t : Thrift) (id : Int) : Option Thrift :=
+  match t with
+  | Thrift.fields pairs => List.lookup id pairs
+  | _ => Option.none
+
+--
+-- UTF-8 back to text, for reading files this module wrote.
+--
+def Parquet.fromUtf8 (bytes : List Int) : Text :=
+  let rec go bs acc :=
+    match bs with
+    | [] => fromCodes (reverse acc)
+    | b :: rest => if b < 128 then go rest (b :: acc) else if b < 224 then
+        match rest with
+        | c :: more => go more (or (shl (and b 31) 6) (and c 63) :: acc)
+        | [] => go [] acc
+      else if b < 240 then
+        match rest with
+        | c :: d :: more => go more (or (shl (and b 15) 12) (or (shl (and c 63) 6) (and d 63)) :: acc)
+        | _ => go [] acc
+      else
+        match rest with
+        | c :: d :: e :: more =>
+            let cp := or (shl (and b 7) 18) (or (shl (and c 63) 12) (or (shl (and d 63) 6) (and e 63)))
+            let v := cp - 65536
+            go more ((56320 + and v 1023) :: (55296 + shr v 10) :: acc)
+        | _ => go [] acc
+  go bytes []
+
+--
+-- Bytes. Ints are 32-bit, so 64-bit values are written as two halves or from decimal text.
+--
+def Parquet.le32 (v : Int) : List Int := [and v 255, and (shr v 8) 255, and (shr v 16) 255, and (ushr v 24) 255]
+
+def Parquet.le64 (v : Int) : List Int := le32 v ++ (if v < 0 then [255, 255, 255, 255] else [0, 0, 0, 0])
+
+/-- Eight little-endian bytes (unsigned) as decimal digits. -/
+def Parquet.le64Decimal (bytes : List Int) : Text :=
+  -- Long division by ten over the big-endian bytes, collecting remainders.
+  let rec divide bs rem acc :=
+    match bs with
+    | [] => (reverse acc, rem)
+    | b :: rest =>
+        let v := rem * 256 + b
+        divide rest (mod v 10) (div v 10 :: acc)
+  let rec go bs digits := if List.all (fun b => b == 0) bs then if List.isEmpty digits then "0" else Text.concat digits else
+    match divide bs 0 [] with
+    | (quotient, rem) => go quotient (toText rem :: digits)
+  go (reverse bytes) []
+
+--
+-- Files.
+--
+def Parquet.magic : List Int := utf8 "PAR1"
+
+/-- Parquet's physical type for a column type: BOOLEAN 0, INT64 2, BYTE_ARRAY 6. -/
+def Parquet.physical (columnType : Text) : Int := if columnType == "bool" then 0 else if columnType == "int" || columnType == "time" then 2 else 6
+
+/-- PLAIN-encoded values of one column. Booleans are bit-packed, least significant bit first. -/
+def Parquet.plain (columnType : Text) (cells : List Cell) : List Int := if columnType == "bool" then
+  let bits := List.map (fun c =>
+    match c with
+    | Cell.bool true => 1
+    | _ => 0) cells
+  let rec pack bs acc :=
+    match bs with
+    | [] => reverse acc
+    | _ =>
+        let byte := foldl (fun b pair => or b (shl (snd pair) (fst pair))) 0 (zip (range 0 8) (List.take 8 bs))
+        pack (List.drop 8 bs) (byte :: acc)
+  pack bits []
+else if columnType == "time" then concatMap (fun c =>
+  match c with
+  | Cell.text t => decimalLE64 t
+  | Cell.int v => le64 v
+  | _ => le64 0) cells else if columnType == "int" then concatMap (fun c =>
+  match c with
+  | Cell.int v => le64 v
+  | _ => le64 0) cells else concatMap (fun c =>
+  let bytes :=
+    match c with
+    | Cell.text t => utf8 t
+    | _ => []
+  le32 (List.length bytes) ++ bytes) cells
+
+/-- Reads a file `write` made: its columns and rows. -/
+def Parquet.read (file : List Int) : (List Column, List Row) :=
+  let bytes := toArray file
+  let size := List.length file
+  let footerLength := readLE32 bytes (size - 8)
+  match Parquet.decode bytes 12 (size - 8 - footerLength) with
+  | (meta, _) =>
+      let n := Parquet.asInt (Parquet.field meta 3)
+      let elements := List.drop 1 (Parquet.asList (Parquet.field meta 2))
+      -- Parquet has no type for a reference, so the event's own column types travel in the metadata.
+      let declared := filterMap (fun kv =>
+        match (Parquet.field kv 1, Parquet.field kv 2) with
+        | (Option.some (Thrift.bin key), Option.some (Thrift.bin value)) => if fromUtf8 key == "deus.event.columns" then Option.some (fromUtf8 value) else Option.none
+        | _ => Option.none) (Parquet.asList (Parquet.field meta 5))
+      let declaredType := fun name => List.find (fun pair => fst pair == name) (filterMap (fun item =>
+        match Text.split item ":" with
+        | n1 :: kind :: [] => Option.some (n1, kind)
+        | _ => Option.none) (Text.split (getOr (head? declared) "") ","))
+      let columns := List.map (fun e =>
+        let name :=
+          match Parquet.field e 4 with
+          | Option.some (Thrift.bin b) => fromUtf8 b
+          | _ => ""
+        Column.mk name (getOr (Option.map snd (declaredType name)) (Parquet.columnTypeOf e))) elements
+      let chunks :=
+        match Parquet.asList (Parquet.field meta 4) with
+        | group :: _ => Parquet.asList (Parquet.field group 1)
+        | [] => []
+      let values := List.map (fun pair =>
+        match pair with
+        | (c, chunk) => readColumn
+            bytes
+            c.columnType
+            (Parquet.asInt (Parquet.field (getOr (Parquet.field chunk 3) (Thrift.fields [])) 9))
+            n) (zip columns chunks)
+      let rows := List.map (fun i =>
+        let cells := filterMap (fun column => get? column i) values
+        match cells with
+        | Cell.text id :: Cell.text when :: Cell.text who :: rest => Row.mk id when who rest
+        | _ => Row.mk "" "0" "" cells) (range 0 n)
+      (List.drop 3 columns, rows)
+
+/-- The values of one column chunk, read from its PLAIN data page. -/
+def Parquet.readColumn (bytes : Array Int) (columnType : Text) (offset : Int) (n : Int) : List Cell :=
+  match Parquet.decode bytes 12 offset with
+  | (_, start) => if columnType == "bool" then List.map
+      (fun i => Cell.bool (and (shr (Array.get bytes (start + div i 8)) (mod i 8)) 1 == 1))
+      (range 0 n) else if columnType == "time" then List.map
+      (fun i => Cell.text (le64Decimal (Parquet.slice bytes (start + 8 * i) (start + 8 * i + 8))))
+      (range 0 n) else if columnType == "int" then List.map (fun i => Cell.int (readLE32 bytes (start + 8 * i))) (range 0 n) else
+      let rec go i p acc := if i >= n then reverse acc else
+        let len := readLE32 bytes p
+        go
+          (i + 1)
+          (p + 4 + len)
+          (Cell.text (fromUtf8 (Parquet.slice bytes (p + 4) (p + 4 + len))) :: acc)
+      go 0 start []
+
+def Parquet.readLE32 (bytes : Array Int) (pos : Int) : Int := or (Array.get bytes pos) (or
+  (shl (Array.get bytes (pos + 1)) 8)
+  (or (shl (Array.get bytes (pos + 2)) 16) (shl (Array.get bytes (pos + 3)) 24)))
+
+/-- Reads a varint at `pos`: (value, next position). -/
+def Parquet.readVarint (bytes : Array Int) (pos : Int) : (Int, Int) :=
+  let rec go p shift acc :=
+    let b := Array.get bytes p
+    let acc2 := or acc (shl (and b 127) shift)
+    if and b 128 == 0 then (acc2, p + 1) else go (p + 1) (shift + 7) acc2
+  go pos 0 0
+
+/-- The schema element of a column: required, with STRING or TIMESTAMP(MICROS, UTC) annotations. -/
+def Parquet.schemaElement (c : Column) : Thrift :=
+  let base := [(1, Thrift.i32 (physical c.columnType)), (3, Thrift.i32 0), (4, Thrift.bin (utf8 c.columnName))]
+  let logical := if c.columnType == "text" || c.columnType == "ref" then [(6, Thrift.i32 0), (10, Thrift.fields [(1, Thrift.fields [])])] else if c.columnType == "time" then [(6, Thrift.i32 10), (10, Thrift.fields [(8, Thrift.fields [(1, Thrift.flag true), (2, Thrift.fields [(2, Thrift.fields [])])])])] else []
+  Thrift.fields (base ++ logical)
+
+def Parquet.slice (bytes : Array Int) (start : Int) (stop : Int) : List Int := List.map (fun i => Array.get bytes i) (range start stop)
+
+/-- The columns every event table starts with, before the type's own fields. -/
+def Parquet.systemColumns : List Column := [Column.mk "event_id" "text", Column.mk "recorded_at" "time", Column.mk "recorded_by" "text"]
+
+def Parquet.toArray (bytes : List Int) : Array Int := foldl
+  (fun a pair => Array.set a (fst pair) (snd pair))
+  (Array.make (List.length bytes) 0)
+  (zip (range 0 (List.length bytes)) bytes)
+
+/-- Text without leading zeros, `"0"` when nothing is left. -/
+def Parquet.trimZeros (digits : Text) : Text :=
+  let n := Text.length digits
+  let rec go i := if i < n - 1 && code digits i == '0' then go (i + 1) else i
+  if n == 0 then "0" else Text.drop (go 0) digits
+
+--
+-- Thrift compact protocol (the subset Parquet's metadata uses).
+--
+def Parquet.typeOf (t : Thrift) : Int :=
+  match t with
+  | Thrift.i32 _ => 5
+  | Thrift.i64 _ => 6
+  | Thrift.bin _ => 8
+  | Thrift.flag v => if v then 1 else 2
+  | Thrift.items _ _ => 9
+  | Thrift.fields _ => 12
+
+def Parquet.unzigzag (v : Int) : Int := xor (ushr v 1) (0 - and v 1)
+
+/-- An unsigned LEB128 varint of a 32-bit pattern. -/
+def Parquet.varint (v : Int) : List Int :=
+  let rec go x acc :=
+    let low := and x 127
+    let rest := ushr x 7
+    if rest == 0 then reverse (low :: acc) else go rest (or low 128 :: acc)
+  go v []
+
+/-- A Parquet file holding `rows` of an event type: one row group, one uncompressed PLAIN page per column. -/
+def Parquet.write (t : EventType) (rows : List Row) : List Int :=
+  let columns := systemColumns ++ t.columns
+  let n := List.length rows
+  let cellRows := List.map allCells rows
+  let rec chunks cs index offset acc :=
+    match cs with
+    | [] => (reverse acc, offset)
+    | c :: rest =>
+        let values := filterMap (fun cells => get? cells index) cellRows
+        let data := Parquet.plain c.columnType values
+        let header := Parquet.encode (Thrift.fields [(1, Thrift.i32 0), (2, Thrift.i32 (List.length data)), (3, Thrift.i32 (List.length data)), (5, Thrift.fields [(1, Thrift.i32 n), (2, Thrift.i32 0), (3, Thrift.i32 3), (4, Thrift.i32 3)])])
+        let size := List.length header + List.length data
+        let meta := Thrift.fields [(2, Thrift.i64 offset), (3, Thrift.fields [(1, Thrift.i32 (physical c.columnType)), (2, Thrift.items 5 [Thrift.i32 0]), (3, Thrift.items 8 [Thrift.bin (utf8 c.columnName)]), (4, Thrift.i32 0), (5, Thrift.i64 n), (6, Thrift.i64 size), (7, Thrift.i64 size), (9, Thrift.i64 offset)])]
+        chunks rest (index + 1) (offset + size) ((header ++ data, meta, size) :: acc)
+  match chunks columns 0 4 [] with
+  | (parts, _) =>
+      let total := sum (List.map (fun p =>
+        match p with
+        | (_, _, size) => size) parts)
+      let schema := Thrift.fields [(4, Thrift.bin (utf8 "schema")), (5, Thrift.i32 (List.length columns))] :: List.map schemaElement columns
+      let kv := fun key value => Thrift.fields [(1, Thrift.bin (utf8 key)), (2, Thrift.bin (utf8 value))]
+      let footer := Parquet.encode (Thrift.fields [(1, Thrift.i32 1), (2, Thrift.items 12 schema), (3, Thrift.i64 n), (4, Thrift.items 12 [Thrift.fields [(1, Thrift.items 12 (List.map (fun p =>
+        match p with
+        | (_, meta, _) => meta) parts)), (2, Thrift.i64 total), (3, Thrift.i64 n)]]), (5, Thrift.items 12 [kv "deus.event.type" t.typeName, kv "deus.event.hash" t.typeHash, kv
+        "deus.event.columns"
+        (join "," (List.map (fun c => c.columnName ++ ":" ++ c.columnType) t.columns))]), (6, Thrift.bin (utf8 "deus analytics"))])
+      magic ++ concatMap (fun p =>
+        match p with
+        | (bytes, _, _) => bytes) parts ++ footer ++ le32 (List.length footer) ++ magic
+
+/-- Zigzag of a 32-bit value; 64-bit fields hold sizes and counts, which are never negative here. -/
+def Parquet.zigzag (v : Int) : Int := xor (shl v 1) (shr v 31)

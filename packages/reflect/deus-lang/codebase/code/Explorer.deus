@@ -263,7 +263,7 @@ def Explorer.generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
   let branch := currentBranch dir
   IO.writeFile
     (out ++ "/meta.json")
-    (Json.render (Json.obj [("project", Json.str project), ("branch", Json.str branch), ("branches", Json.arr (List.map Json.str (branches dir))), ("definitions", Json.num (List.length entries)), ("tasks", Json.num (List.length tasks)), ("open", Json.num (List.length (List.filter isOpen tasks))), ("console", Json.bool (IO.exists (out ++ "/console/info.json"))), ("history", Json.arr (List.map (Cli.changeJson dir) (Codebase.history dir branch 30)))]))
+    (Json.render (Json.obj [("project", Json.str project), ("branch", Json.str branch), ("branches", Json.arr (List.map Json.str (branches dir))), ("definitions", Json.num (List.length entries)), ("tasks", Json.num (List.length tasks)), ("open", Json.num (List.length (List.filter isOpen tasks))), ("console", Json.bool (IO.exists (out ++ "/console/info.json"))), ("history", Json.arr (List.map (logJson dir) (fullLog dir historyLimit)))]))
   -- The signature and doc summary let the app list, search and preview names without opening their pages.
   IO.writeFile (out ++ "/names.json") (Json.render (Json.arr (List.map (fun pair =>
     let h := Entry.hash (snd pair)
@@ -319,7 +319,17 @@ def Explorer.generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
             (about taskMap name h)))])))
   List.length entries
 
+/-- How many changes the History view lists, imported ones (D67) included. -/
+def Explorer.historyLimit : Int := 1000
+
 def Explorer.lastOf (name : Text) : Text := getOr (last? (Text.split name ".")) name
+
+/-- A row of the full log. A change imported from an export has no causal node in this store, so it
+  is marked `imported` and gets no page. -/
+def Explorer.logJson (dir : Text) (entry : (Text, (Text, Text))) : {IO} Json :=
+  match entry with
+  | (h, message, agent) => Json.obj ([("causal", Json.str h), ("message", Json.str message)] ++
+      (if Text.isEmpty agent then [] else [("by", Json.str agent)]) ++ (if isSome (readObject dir h) then [] else [("imported", Json.bool true)]))
 
 /-- Every hash a form names, builtins included. Unlike `Codebase.dependencies`, which lists what an
   update must propagate to, this also counts types named only in a signature, so `Bool` has users. -/
