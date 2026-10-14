@@ -500,10 +500,12 @@ const main = async (): Promise<number> => {
     if (existsSync(storeDir)) {
       process.stderr.write(`data store still on disk: ${storeDir}\n`);
     }
-    await envelope?.close();
-    await proxy.close();
-    await sink?.close();
     await preview.stop();
+    // A close waiting on a connection WebKit left open would keep the run alive with its output unflushed.
+    const bounded = (close: Promise<void> | undefined) => Promise.race([close, sleep(5_000)]);
+    await bounded(envelope?.close());
+    await bounded(proxy.close());
+    await bounded(sink?.close());
     rmSync(scratch, { recursive: true, force: true });
   }
 
@@ -520,4 +522,4 @@ const main = async (): Promise<number> => {
   return 0;
 };
 
-process.exitCode = await main();
+process.exit(await main());
