@@ -115,6 +115,30 @@ describe('deus CLI', () => {
       expect(deus('add', file('cmp.deus', 'def cmp (a : Int) (b : Text) : Bool := a < b\n'), ...c).stderr).toBe(
         'deus: cmp: type mismatch: Int vs Text\n',
       );
+
+      // A function stored in data keeps its effects (D55): fields are closed, and a row parameter carries them.
+      const add = (name: string, source: string) => deus('add', file(`${name}.deus`, source), ...c);
+      expect(
+        add(
+          'box',
+          'structure Box (r : Effect) where\n  run : Unit -> {r} Int\nstructure Pure where\n  f : Int -> Int\n',
+        ).code,
+      ).toBe(0);
+      expect(add('storeLeak', 'def storeLeak : Box {} := Box.mk (fun _ => throw "x")\n').stderr).toMatch(
+        /unexpected ability Throw Text/,
+      );
+      expect(add('pureLeak', 'def pureLeak : Pure := Pure.mk (fun x => throw "no")\n').stderr).toMatch(
+        /unhandled ability Throw Text/,
+      );
+      expect(add('runLeak', 'def runLeak (b : Box {Throw Text}) : {IO} Int := b.run ()\n').stderr).toMatch(
+        /unhandled ability Throw Text/,
+      );
+      expect(
+        add('matchLeak', 'def matchLeak (b : Box {Throw Text}) : {IO} Int := match b with\n  | Box.mk f => f ()\n')
+          .stderr,
+      ).toMatch(/unhandled ability Throw Text/);
+      expect(add('runPoly', 'def runPoly (b : Box {r}) : {r} Int := b.run ()\n').code).toBe(0);
+      expect(deus('view', 'runPoly', ...c).stdout).toContain('-- : Box {e} -> {e} Int');
     },
   );
 

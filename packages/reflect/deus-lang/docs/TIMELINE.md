@@ -40,6 +40,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 32  | 10-14 14:26 | 0m 33s         | `46dff492`  | README and LLM guide cover projects, specs, replication and wasm                            |
 | 33  | 10-14 14:30 | 4m 06s         | `cb7fd584`  | Durable Objects — actor calls, alarms, multi-object simulation                              |
 | 34  | 10-14 14:35 | 4m 49s         | `75b49f19`  | artifacts layer caches builds; operators get types                                          |
-| 35  | 10-14 14:39 | 4m 02s         | this commit | replication: retention GC with shallow history                                              |
+| 35  | 10-14 14:39 | 4m 04s         | `4fde6a76`  | replication — retention GC with shallow history                                             |
+| 36  | 10-14 14:47 | 7m 28s         | this commit | row parameters: functions in data keep their effects                                        |
 
-Total from stage 1 to stage 35: 4h 56m.
+Total from stage 1 to stage 36: 5h 04m.

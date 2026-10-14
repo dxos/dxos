@@ -316,7 +316,9 @@ def tyApp (p : Parser) : {Throw Text} Ty :=
   match head with
   | Ty.named name [] =>
     let rec go acc :=
-      if not (offside p) && ((peek p).kind == Kind.ident || is p "(") then go (tyAtom p :: acc) else List.reverse acc
+      if not (offside p) && ((peek p).kind == Kind.ident || is p "(") then go (tyAtom p :: acc)
+      else if not (offside p) && is p "{" then go (Ty.row (row p) :: acc)
+      else List.reverse acc
     let args := go []
     if List.isEmpty args then head else Ty.named name args
   | _ => head

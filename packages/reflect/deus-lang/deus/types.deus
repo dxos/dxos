@@ -10,12 +10,18 @@
     checked (D14). Defects are not in types.
   - Top-level definitions are generalized; locals are monomorphic. A recursive group is
     inferred together.
+  - A type parameter used as a row inside a field (`run : Unit -> {r} Int`) is a row parameter
+    (D55): the type is applied to a row, `Box {IO | r}`, and the field's effects are the row's.
+    Field arrows are closed, and one written without braces is pure, so a function stored in
+    data keeps its effects.
 -/
 
 inductive TType where
   | con (iri : Text) (args : List TType)
   | fn (from : TType) (row : TRow) (to : TType)
   | var (id : Int)
+  -- The argument of a row parameter (D55): `Box {IO | r}`.
+  | row (r : TRow)
 
 inductive TRow where
   | empty
@@ -74,6 +80,7 @@ def zonk (u : Unifier) (t : TType) : TType :=
   match resolve u t with
   | TType.con iri args => TType.con iri (List.map (fun a => zonk u a) args)
   | TType.fn a r b => TType.fn (zonk u a) (zonkRow u r) (zonk u b)
+  | TType.row r => TType.row (zonkRow u r)
   | v => v
 
 def zonkRow (u : Unifier) (r : TRow) : TRow :=
@@ -86,6 +93,7 @@ def occurs (u : Unifier) (id : Int) (t : TType) : Bool :=
   | TType.var other => other == id
   | TType.con _ args => List.any (fun a => occurs u id a) args
   | TType.fn a r b => occurs u id a || occursInRow u id r || occurs u id b
+  | TType.row r => occursInRow u id r
 
 def occursInRow (u : Unifier) (id : Int) (r : TRow) : Bool :=
   match resolveRow u r with
@@ -150,6 +158,7 @@ def showType (t : TType) (seen : Ref (Map Text Text)) (prec : Int) : Text :=
   | TType.fn a r b =>
     let rowText := showRow r seen
     Print.paren 10 prec (showType a seen 11 ++ " -> " ++ (if rowText == "" then "" else rowText ++ " ") ++ showType b seen 10)
+  | TType.row r => rowArgument (showRow r seen) (resolveTail r) seen
 
 /-- `{IO, Throw Text | e}`; an unconstrained row prints as nothing. -/
 def showRow (r : TRow) (seen : Ref (Map Text Text)) : Text :=
@@ -163,6 +172,21 @@ def showRow (r : TRow) (seen : Ref (Map Text Text)) : Text :=
   | ([], none) => "{}"
   | (ls, none) => "{" ++ Text.join ", " ls ++ "}"
   | (ls, some tail) => "{" ++ Text.join ", " ls ++ " | " ++ tail ++ "}"
+
+/-- The open tail of a row as written, if any. -/
+def resolveTail (r : TRow) : Option Int :=
+  match r with
+  | TRow.extend _ rest => resolveTail rest
+  | TRow.var id => some id
+  | TRow.empty => none
+
+/-- A row argument is always printed in braces, even when it is only a variable. -/
+def rowArgument (text : Text) (tail : Option Int) (seen : Ref (Map Text Text)) : Text :=
+  if text != "" then text
+  else
+    match tail with
+    | some id => "{" ++ varName seen ("r" ++ Int.toText id) true ++ "}"
+    | none => "{}"
 
 --
 -- Unification.
@@ -184,6 +208,7 @@ def unify (u : Unifier) (a : TType) (b : TType) : {Throw Text} Unit :=
     unify u a1 a2
     unifyRow u r1 r2
     unify u b1 b2
+  | (TType.row r1, TType.row r2) => unifyRow u r1 r2
   | (x, y) => mismatch u x y
 
 /-- Finds `label`'s ability in a row: (its occurrence, the row without it). Extends an open tail. -/
@@ -229,6 +254,7 @@ def typeToSexp (t : TType) : Sexp :=
   | TType.con iri args => if List.isEmpty args then Sexp.node "tref" [Sexp.str iri] else Sexp.node "tapp" (Sexp.node "tref" [Sexp.str iri] :: List.map typeToSexp args)
   | TType.fn a r b => Sexp.node "tfun" [typeToSexp a, typeToSexp b, rowToSexp r]
   | TType.var id => Sexp.node "tvar" [Sexp.str ("t" ++ Int.toText id)]
+  | TType.row r => Sexp.node "trow" (Sexp.args (rowToSexp r))
 
 def rowToSexp (r : TRow) : Sexp :=
   let rec items row acc :=
@@ -253,6 +279,7 @@ def fromSexp (u : Unifier) (s : Sexp) (vars : Ref (Map Text TType)) (rowVars : R
   | Sexp.list [Sexp.sym "tvar", Sexp.str "?"] => freshType u
   | Sexp.list [Sexp.sym "tvar", Sexp.str name] => named name
   | Sexp.list [Sexp.sym "teff", _, t] => fromSexp u t vars rowVars params openArrows
+  | Sexp.list (Sexp.sym "trow" :: effs) => TType.row (rowFromSexp u effs vars rowVars params false)
   | Sexp.list (Sexp.sym "tapp" :: Sexp.list [Sexp.sym "tref", Sexp.str iri] :: args) => TType.con iri (List.map (fun a => fromSexp u a vars rowVars params false) args)
   | Sexp.list (Sexp.sym "tapp" :: head :: args) =>
     -- Applying a type variable is beyond this checker; treat it as unknown.
@@ -277,7 +304,26 @@ def rowFromSexp (u : Unifier) (effs : List Sexp) (vars : Ref (Map Text TType)) (
       let r := freshRow u
       Ref.set rowVars (Map.insert name r (Ref.get rowVars))
       r
+  | [Sexp.list [Sexp.sym "tvar", Sexp.int i]] => paramRow u params i
   | e :: rest => TRow.extend (fromSexp u e vars rowVars params false) (rowFromSexp u rest vars rowVars params openArrows)
+
+/-- The row a type's parameter `i` stands for; a parameter first used as a row becomes one. -/
+def paramRow (u : Unifier) (params : List TType) (i : Int) : TRow :=
+  match Option.map (fun t => resolve u t) (List.get? params i) with
+  | some (TType.row r) => r
+  | some (TType.var id) =>
+    let r := freshRow u
+    MutMap.set u.types id (TType.row r)
+    r
+  | _ => freshRow u
+
+/-- A field's type with every arrow closed: one written without braces is pure (D55). -/
+def closeArrows (s : Sexp) : Sexp :=
+  match s with
+  | Sexp.list [Sexp.sym "tfun", a, b] => Sexp.list [Sexp.sym "tfun", closeArrows a, closeArrows b, Sexp.list [Sexp.sym "eff"]]
+  | Sexp.list [Sexp.sym "tfun", a, b, effs] => Sexp.list [Sexp.sym "tfun", closeArrows a, closeArrows b, effs]
+  | Sexp.list items => Sexp.list (List.map closeArrows items)
+  | other => other
 
 def instantiate (u : Unifier) (scheme : Sexp) : TType := fromSexp u scheme (Ref.new Map.empty) (Ref.new Map.empty) [] true
 
@@ -285,16 +331,19 @@ def instantiate (u : Unifier) (scheme : Sexp) : TType := fromSexp u scheme (Ref.
 -- The environment: what the checker knows about hashes.
 --
 
-/-- Lookups the checker needs: objects and metadata by hash, schemes of definitions in this batch. -/
-structure TypeEnv where
-  object : Text -> Option Sexp
-  meta : Text -> Option Sexp
+/--
+  Lookups the checker needs: objects and metadata by hash, schemes of definitions in this batch.
+  Reading the store may fail or perform the caller's abilities, `r`.
+-/
+structure TypeEnv (r : Effect) where
+  object : Text -> {Throw Text | r} Option Sexp
+  meta : Text -> {Throw Text | r} Option Sexp
   group : Ref (Map Text TType)
   schemes : Ref (Map Text Sexp)
-  prims : Text -> Option Sexp
+  prims : Text -> {Throw Text | r} Option Sexp
 
 /-- A definition's type: in this batch (monomorphic while its group is inferred), stored, or unknown. -/
-def globalType (u : Unifier) (env : TypeEnv) (h : Text) : TType :=
+def globalType (u : Unifier) (env : TypeEnv {r}) (h : Text) : TType :=
   match Map.lookup h (Ref.get env.group) with
   | some t => t
   | none =>
@@ -303,7 +352,7 @@ def globalType (u : Unifier) (env : TypeEnv) (h : Text) : TType :=
     | none => storedType u env h
 
 /-- A codebase definition's type: its inferred scheme, else its signature, else unknown. -/
-def storedType (u : Unifier) (env : TypeEnv) (h : Text) : TType :=
+def storedType (u : Unifier) (env : TypeEnv {r}) (h : Text) : TType :=
   match Codebase.metaField (env.meta h) "scheme" with
   | some scheme => instantiate u scheme
   | none =>
@@ -312,19 +361,20 @@ def storedType (u : Unifier) (env : TypeEnv) (h : Text) : TType :=
     | none => freshType u
 
 /-- A constructor's type: fields to the type, with the type's parameters fresh. -/
-def ctorType (u : Unifier) (env : TypeEnv) (typeHash : Text) (tag : Int) : TType :=
+def ctorType (u : Unifier) (env : TypeEnv {r}) (typeHash : Text) (tag : Int) : TType :=
   match env.object typeHash with
   | some (Sexp.list (Sexp.sym "type" :: Sexp.str iri :: Sexp.int count :: ctors)) =>
     let params := List.map (fun _ => freshType u) (List.range 0 count)
     let result := TType.con iri params
     match List.get? ctors tag with
     | some (Sexp.list (Sexp.sym "ctor" :: _ :: fields)) =>
-      List.foldr (fun f acc => TType.fn (fromSexp u f (Ref.new Map.empty) (Ref.new Map.empty) params true) (freshRow u) acc) result fields
+      -- Fields are closed: what a stored function may perform is what its field says (D55).
+      List.foldr (fun f acc => TType.fn (fromSexp u (closeArrows f) (Ref.new Map.empty) (Ref.new Map.empty) params false) (freshRow u) acc) result fields
     | _ => freshType u
   | _ => freshType u
 
 /-- The result type of a constructor pattern and its field types. -/
-def ctorFields (u : Unifier) (env : TypeEnv) (typeHash : Text) (tag : Int) : (TType, List TType) :=
+def ctorFields (u : Unifier) (env : TypeEnv {r}) (typeHash : Text) (tag : Int) : (TType, List TType) :=
   let rec split t acc :=
     match t with
     | TType.fn a _ b => split b (a :: acc)
@@ -332,7 +382,7 @@ def ctorFields (u : Unifier) (env : TypeEnv) (typeHash : Text) (tag : Int) : (TT
   split (ctorType u env typeHash tag) []
 
 /-- An operation's type; its last arrow performs the ability (with the given parameters). -/
-def opType (u : Unifier) (env : TypeEnv) (abilityHash : Text) (index : Int) (params : List TType) : (TType, TType) :=
+def opType (u : Unifier) (env : TypeEnv {r}) (abilityHash : Text) (index : Int) (params : List TType) : (TType, TType) :=
   match env.object abilityHash with
   | some (Sexp.list (Sexp.sym "ability" :: Sexp.str iri :: Sexp.int count :: ops)) =>
     let ps := if List.length params == count then params else List.map (fun _ => freshType u) (List.range 0 count)
@@ -353,7 +403,7 @@ def opType (u : Unifier) (env : TypeEnv) (abilityHash : Text) (index : Int) (par
 -- Inference over Core.
 --
 
-def infer (u : Unifier) (env : TypeEnv) (t : Sexp) (locals : List TType) (row : TRow) : {Throw Text} TType :=
+def infer (u : Unifier) (env : TypeEnv {r}) (t : Sexp) (locals : List TType) (row : TRow) : {Throw Text | r} TType :=
   match t with
   | Sexp.list [Sexp.sym "var", Sexp.int i] => Option.getOr (List.get? locals i) (freshType u)
   | Sexp.list [Sexp.sym "ref", Sexp.str h] => globalType u env h
@@ -410,7 +460,7 @@ def infer (u : Unifier) (env : TypeEnv) (t : Sexp) (locals : List TType) (row : 
   | _ => freshType u
 
 /-- An application `f a₁ … aₙ`. -/
-def application (u : Unifier) (env : TypeEnv) (f : Sexp) (args : List Sexp) (locals : List TType) (row : TRow) : {Throw Text} TType :=
+def application (u : Unifier) (env : TypeEnv {r}) (f : Sexp) (args : List Sexp) (locals : List TType) (row : TRow) : {Throw Text | r} TType :=
   let tf := infer u env f locals row
   -- Bidirectional: when the callee's arrows are known, check plain arguments (they may bind the
   -- callee's row variables), link the rows to the context, then check lambdas against the
@@ -435,7 +485,7 @@ def application (u : Unifier) (env : TypeEnv) (f : Sexp) (args : List Sexp) (loc
       call u acc ta row) tf args
 
 /-- Checks a term against an expected type; a lambda takes its parameter and row from it. -/
-def checkAgainst (u : Unifier) (env : TypeEnv) (t : Sexp) (expected : TType) (locals : List TType) (row : TRow) : {Throw Text} Unit :=
+def checkAgainst (u : Unifier) (env : TypeEnv {r}) (t : Sexp) (expected : TType) (locals : List TType) (row : TRow) : {Throw Text | r} Unit :=
   match (t, resolve u expected) with
   | (Sexp.list [Sexp.sym "lam", b], TType.fn a r result) => checkAgainst u env b result (a :: locals) r
   | _ => unify u expected (infer u env t locals row)
@@ -469,7 +519,7 @@ def subRow (u : Unifier) (small : TRow) (big : TRow) : {Throw Text} Unit :=
   | TRow.var t => if rowTailIs u t big then () else unifyRow u (TRow.var t) big
 
 /-- Binds a pattern against a type; returns the bound variables' types, innermost first. -/
-def pattern (u : Unifier) (env : TypeEnv) (pat : Sexp) (t : TType) (binds : List TType) : {Throw Text} List TType :=
+def pattern (u : Unifier) (env : TypeEnv {r}) (pat : Sexp) (t : TType) (binds : List TType) : {Throw Text | r} List TType :=
   match pat with
   | Sexp.list [Sexp.sym "pany"] => binds
   | Sexp.list [Sexp.sym "pvar"] => t :: binds
@@ -491,7 +541,7 @@ def pattern (u : Unifier) (env : TypeEnv) (pat : Sexp) (t : TType) (binds : List
   A deep handler: the body runs with the handled abilities added to the outer row; each clause
   gets the operation's arguments and a continuation that returns the handler's result.
 -/
-def handler (u : Unifier) (env : TypeEnv) (body : Sexp) (clauses : List Sexp) (locals : List TType) (row : TRow) : {Throw Text} TType :=
+def handler (u : Unifier) (env : TypeEnv {r}) (body : Sexp) (clauses : List Sexp) (locals : List TType) (row : TRow) : {Throw Text | r} TType :=
   let abilities := List.dedup (List.sort (List.filterMap (fun c =>
     match c with
     | Sexp.list (Sexp.sym "on" :: Sexp.str a :: _) => some a
@@ -551,6 +601,7 @@ def signatureType (u : Unifier) (s : Sexp) (vars : Ref (Map Text TType)) (rowVar
           r
       | e :: rest => TRow.extend (signatureType u e vars rowVars) (row rest)
     TType.fn (signatureType u a vars rowVars) (row effs) (signatureType u b vars rowVars)
+  | Sexp.list (Sexp.sym "trow" :: effs) => TType.row (rowFromSexp u effs vars rowVars [] false)
   | Sexp.list (Sexp.sym "tapp" :: Sexp.list [Sexp.sym "tref", Sexp.str iri] :: args) => TType.con iri (List.map (fun x => signatureType u x vars rowVars) args)
   | _ => fromSexp u s vars rowVars [] true
 
@@ -612,6 +663,7 @@ def rowVarCounts (t : TType) (acc : Map Int Int) : Map Int Int :=
   | TType.con _ args => List.foldl (fun m a => rowVarCounts a m) acc args
   | TType.fn a r b => rowVarCounts b (rowCounts r (rowVarCounts a acc))
   | TType.var _ => acc
+  | TType.row r => rowCounts r acc
 
 def rowCounts (r : TRow) (acc : Map Int Int) : Map Int Int :=
   match r with
@@ -628,6 +680,7 @@ def showTypeWith (t : TType) (seen : Ref (Map Text Text)) (prec : Int) (shared :
   | TType.fn a r b =>
     let rowText := showRowWith r seen shared
     Print.paren 10 prec (showTypeWith a seen 11 shared ++ " -> " ++ (if rowText == "" then "" else rowText ++ " ") ++ showTypeWith b seen 10 shared)
+  | TType.row r => rowArgument (showRow r seen) (resolveTail r) seen
 
 def showRowWith (r : TRow) (seen : Ref (Map Text Text)) (shared : Map Int Unit) : Text :=
   let rec labels row acc :=

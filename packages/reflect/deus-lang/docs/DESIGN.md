@@ -7,24 +7,24 @@ and the toolchain; [`DECISIONS.md`](./DECISIONS.md) records why each choice was 
 
 ## Status
 
-| Area                                                                               | State                                                                           |
-| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| Kernel: Core CEK machine, deep multi-shot handlers, primitives, IO                 | done                                                                            |
-| Lexer, parser (Lean syntax, offside rule), resolver, Unison-style hashing in DEUS  | done                                                                            |
-| Self-hosting: the seed compiles the compiler to itself                             | done (`src/seed.test.ts`)                                                       |
-| Failure tiers: `Throw` errors, `#Defect` defects, kernel panics                    | done; defects carry named stack traces; `Failure` context chains                |
-| Codebase store: objects, namespaces, history, branches, three-way merge, undo      | done                                                                            |
-| CLI: codebase, history, `run`, `eval`, `test`, `check`, `image`, `build`, `--json` | done                                                                            |
-| Type checker: Hindley–Milner with Koka-style ability rows                          | done ([D28](./DECISIONS.md), [D36](./DECISIONS.md)); gap D29                    |
-| Theorems: `test`, `decide`, `rfl` evidence and tactic proofs                       | done ([D21](./DECISIONS.md))                                                    |
-| Deterministic simulation for tests; `@[integration]` tests                         | done ([D32](./DECISIONS.md))                                                    |
-| Observability: `Log`, `Trace`, `Metrics` abilities; NDJSON and OTLP sinks          | done ([D31](./DECISIONS.md), [D35](./DECISIONS.md))                             |
-| Standalone executables (`deus build`)                                              | done ([D38](./DECISIONS.md))                                                    |
-| `.mdl`: ```deus fences                                                             | done; extensions defined in DEUS (`@[ext]`), `perf` requirements, `deus mdl`    |
-| Rust kernel (native, byte-identical) and wasm kernel (`wasm32-wasip1`)             | done ([D40](./DECISIONS.md), [D41](./DECISIONS.md))                             |
-| Cloudflare Workers / Durable Objects target (`deus build --worker`)                | done ([D45](./DECISIONS.md), [D52](./DECISIONS.md)): actor calls and alarms     |
-| Wasm compiler for first-order `Int`/`Bool` code (`deus build --wasm`)              | done ([D51](./DECISIONS.md)); closures, data and effects run on the wasm kernel |
-| Projects/subgraphs, external requirements, replication, layers, containers         | done (D47–D50, D53, D54)                                                        |
+| Area                                                                               | State                                                                               |
+| ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Kernel: Core CEK machine, deep multi-shot handlers, primitives, IO                 | done                                                                                |
+| Lexer, parser (Lean syntax, offside rule), resolver, Unison-style hashing in DEUS  | done                                                                                |
+| Self-hosting: the seed compiles the compiler to itself                             | done (`src/seed.test.ts`)                                                           |
+| Failure tiers: `Throw` errors, `#Defect` defects, kernel panics                    | done; defects carry named stack traces; `Failure` context chains                    |
+| Codebase store: objects, namespaces, history, branches, three-way merge, undo      | done                                                                                |
+| CLI: codebase, history, `run`, `eval`, `test`, `check`, `image`, `build`, `--json` | done                                                                                |
+| Type checker: Hindley–Milner with Koka-style ability rows                          | done ([D28](./DECISIONS.md), [D36](./DECISIONS.md)); row parameters close D29 (D55) |
+| Theorems: `test`, `decide`, `rfl` evidence and tactic proofs                       | done ([D21](./DECISIONS.md))                                                        |
+| Deterministic simulation for tests; `@[integration]` tests                         | done ([D32](./DECISIONS.md))                                                        |
+| Observability: `Log`, `Trace`, `Metrics` abilities; NDJSON and OTLP sinks          | done ([D31](./DECISIONS.md), [D35](./DECISIONS.md))                                 |
+| Standalone executables (`deus build`)                                              | done ([D38](./DECISIONS.md))                                                        |
+| `.mdl`: ```deus fences                                                             | done; extensions defined in DEUS (`@[ext]`), `perf` requirements, `deus mdl`        |
+| Rust kernel (native, byte-identical) and wasm kernel (`wasm32-wasip1`)             | done ([D40](./DECISIONS.md), [D41](./DECISIONS.md))                                 |
+| Cloudflare Workers / Durable Objects target (`deus build --worker`)                | done ([D45](./DECISIONS.md), [D52](./DECISIONS.md)): actor calls and alarms         |
+| Wasm compiler for first-order `Int`/`Bool` code (`deus build --wasm`)              | done ([D51](./DECISIONS.md)); closures, data and effects run on the wasm kernel     |
+| Projects/subgraphs, external requirements, replication, layers, containers         | done (D47–D50, D53, D54)                                                            |
 
 ## The language
 
@@ -85,7 +85,16 @@ try          : (Unit -> {Throw e | r} a) -> {r} Result e a
 - A call needs the callee's abilities to be contained in the caller's (subsumption), and a lambda
   passed to a known function is checked against the expected type (bidirectional).
 - Inferred types are stored as metadata and shown by `view` (`-- : (a -> {e} b) -> …`).
-- Known gap: a function kept inside a data structure has untracked effects ([D29](./DECISIONS.md)).
+- A function kept in data keeps its effects ([D55](./DECISIONS.md)). Field arrows are closed, so
+  one written without braces is pure. A type parameter used as a row is a row parameter, passed
+  in braces:
+
+  ```deus
+  structure Box (r : Effect) where
+    run : Unit -> {r} Int
+
+  def runBox (b : Box {r}) : {r} Int := b.run ()
+  ```
 
 ### Failure has three tiers ([D14](./DECISIONS.md))
 

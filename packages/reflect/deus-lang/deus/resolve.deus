@@ -237,6 +237,7 @@ def tyCore (names : Names) (scope : Scope) (params : List Text) (t : Ty) : {Thro
   match t with
   | Ty.unit => node "tref" [s "#Unit"]
   | Ty.effects row result => node "teff" [node "eff" (List.map go row), go result]
+  | Ty.row items => node "trow" (List.map go items)
   | Ty.tuple items => List.foldl (fun acc x => node "tapp" [node "tref" [s "#Pair"], x, acc]) (go (Option.getOr (List.last? items) Ty.unit)) (List.drop 1 (List.reverse (List.map go items)))
   | Ty.arrow a b effects =>
     let effs := match effects with

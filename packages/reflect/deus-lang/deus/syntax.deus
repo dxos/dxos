@@ -13,6 +13,8 @@ inductive Ty where
   | tuple (items : List Ty)
   | unit
   | effects (row : List Ty) (result : Ty)
+  -- A row as a type argument, for a type with a row parameter: `Box {IO | r}`.
+  | row (items : List Ty)
 
 inductive Pat where
   | wild
