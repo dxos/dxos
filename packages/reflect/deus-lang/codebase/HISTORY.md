@@ -1,5 +1,8 @@
 # History of main
 
+- `54bd89e634` task: set 4a833ce9 state
+- `16404fb626` task: comment on 4a833ce9
+- `b62e34a440` task: set 4a833ce9 state assignee
 - `9c4c7f8fc0` task: open 1ce541ac Explorer: show the source of a change, not only its message
 - `2119c92825` task: open 3d6508e4 Task changes do not record who made them as provenance
 - `1eecf8089b` toolchain: the export explains itself (README.md) (by claude)

@@ -66,11 +66,34 @@ export type HostOptions = {
   stderr?: (chunk: string) => void;
 };
 
+/** Time to wait for a full pipe to drain before writing again. */
+const PIPE_WAIT_MS = 1;
+
+/**
+ * Writes all of `chunk` to `fd`. A pipe takes a partial write when nearly full and refuses with
+ * `EAGAIN` when full (node makes stdio pipes non-blocking), so one `writeSync` can lose output.
+ */
+const writeAll = (fd: number, chunk: string) => {
+  const bytes = Buffer.from(chunk, 'utf8');
+  const pause = new Int32Array(new SharedArrayBuffer(4));
+  let offset = 0;
+  while (offset < bytes.length) {
+    try {
+      offset += writeSync(fd, bytes, offset, bytes.length - offset);
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code !== 'EAGAIN') {
+        throw err;
+      }
+      Atomics.wait(pause, 0, 0, PIPE_WAIT_MS);
+    }
+  }
+};
+
 /** Implements `IO` against node's synchronous file system API. */
 export const createHost = ({ args, stdout, stderr }: HostOptions): HostHandler => {
   const start = performance.now();
-  const out = stdout ?? ((chunk: string) => writeSync(1, chunk));
-  const err = stderr ?? ((chunk: string) => writeSync(2, chunk));
+  const out = stdout ?? ((chunk: string) => writeAll(1, chunk));
+  const err = stderr ?? ((chunk: string) => writeAll(2, chunk));
   return (ability, index, params) => {
     if (ability !== '#IO') {
       throw new DeusDefect(`unhandled ability ${ability} operation ${index}`);

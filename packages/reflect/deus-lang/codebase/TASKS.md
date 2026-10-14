@@ -8,15 +8,6 @@
 
 Only doc comments survive add; the -- comments that explain why are lost, so deus/*.deus cannot yet be regenerated from the codebase. Store them as metadata and print them back.
 
-## deus view output is cut off when piped (`4a833ce9`)
-
-- state: todo
-- priority: high
-- labels: dogfood, bug
-- links `Cli.view` (#566910f645)
-
-Viewing about 1000 definitions into a pipe stopped after about 1150 lines; into a file it is complete. The kernel probably exits before stdout drains.
-
 ## Self-hosting test takes 74 s since the round trip covers everything (`5d370204`)
 
 - state: todo
@@ -94,6 +85,18 @@ deus export: source per namespace, tasks and history as text, committed to the r
 - priority: high
 - assignee: claude
 - labels: explorer
+
+## deus view output is cut off when piped (`4a833ce9`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: dogfood, bug
+- links `Cli.view` (#566910f645)
+
+Viewing about 1000 definitions into a pipe stopped after about 1150 lines; into a file it is complete. The kernel probably exits before stdout drains.
+
+> claude: Cause: the TypeScript host wrote stdout with one writeSync, which a full pipe cuts short (EAGAIN). src/kernel/host.ts now writes until every byte is out. Checked: 485919 bytes through a pipe whose reader waits 2 s, identical to the file; before, 65536.
 
 ## deus view output not formatted correctly, and no colours (`7c7b9ca0`)
 
