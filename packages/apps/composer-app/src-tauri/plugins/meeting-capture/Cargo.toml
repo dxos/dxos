@@ -15,7 +15,18 @@ tauri = { version = "2.11" }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 # CoreAudio process objects (which app holds the microphone) and process taps (system audio).
-cidre = { version = "0.15", default-features = false, features = ["app", "av", "blocks", "cat", "cf", "cm", "core_audio", "dispatch", "ns", "macos_14_2"] }
+cidre = { version = "0.15", default-features = false, features = [
+  "app",
+  "av",
+  "blocks",
+  "cat",
+  "cf",
+  "cm",
+  "core_audio",
+  "dispatch",
+  "ns",
+  "macos_14_2",
+] }
 # Lock-free hand-off out of the CoreAudio real-time callback, which must not allocate or lock.
 ringbuf = "0.4"
 
