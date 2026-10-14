@@ -15,15 +15,13 @@ def Array.Spec.fill (n : Int) : Array Int := Spec.fillGo (Array.make n 0) 0 n
 def Array.Spec.fillGo (a : Array Int) (i : Int) (n : Int) : Array Int := if i >= n then a else Array.Spec.fillGo (Array.set a i (n - i)) (i + 1) n
 
 /-- Every item of a made array is the value it was made with. -/
-theorem Array.Spec.getMake (n : Int) (x : Int) (i : Int) : prim "implies" (0 <= i) (prim "implies" (i < n) (Array.get (Array.make n x) i == x)) := by simp
+theorem Array.Spec.getMake (n : Int) (x : Int) (i : Int) : 0 <= i -> i < n -> Array.get (Array.make n x) i == x := by simp
 
 /-- Reading any other index gives what the old array had there. -/
-theorem Array.Spec.getSetOther (a : Array Int) (i : Int) (j : Int) (v : Int) : prim "implies" (0 <= i) (prim "implies"
-    (i < Array.length a)
-    (prim "implies" (i != j) (Array.get (Array.set a i v) j == Array.get a j))) := by auto
+theorem Array.Spec.getSetOther (a : Array Int) (i : Int) (j : Int) (v : Int) : 0 <= i -> i < Array.length a -> i != j -> Array.get (Array.set a i v) j == Array.get a j := by auto
 
 /-- Reading the index just written gives the value written. -/
-theorem Array.Spec.getSetSame (a : Array Int) (i : Int) (v : Int) : prim "implies" (0 <= i) (prim "implies" (i < Array.length a) (Array.get (Array.set a i v) i == v)) := by simp
+theorem Array.Spec.getSetSame (a : Array Int) (i : Int) (v : Int) : 0 <= i -> i < Array.length a -> Array.get (Array.set a i v) i == v := by simp
 
 def Array.Spec.items (a : Array Int) : List Int := toListGo a (Array.length a - 1) []
 
@@ -49,17 +47,15 @@ test Array.Spec.lawsHoldOnKernels :=
   Array.length (Array.make 3 7) == 3 && List.all (fun i => Array.get (Array.make 3 7) i == 7) (range 0 3) && List.all (fun i => List.all (fun j => lawsAt (fill 5) i j 42) indices) indices
 
 /-- `make` builds an array of the length asked for. -/
-theorem Array.Spec.lengthMake (n : Int) (x : Int) : prim "implies" (0 <= n) (Array.length (Array.make n x) == n) := by simp
+theorem Array.Spec.lengthMake (n : Int) (x : Int) : 0 <= n -> Array.length (Array.make n x) == n := by simp
 
 /-- `set` keeps the length. -/
-theorem Array.Spec.lengthSet (a : Array Int) (i : Int) (v : Int) : prim "implies"
-    (0 <= i)
-    (prim "implies" (i < Array.length a) (Array.length (Array.set a i v) == Array.length a)) := by simp
+theorem Array.Spec.lengthSet (a : Array Int) (i : Int) (v : Int) : 0 <= i -> i < Array.length a -> Array.length (Array.set a i v) == Array.length a := by simp
 
 theorem Array.Spec.oldUnchanged (a : Array Int) (i : Int) (v : Int) : keepsOld a i v == true := by test 200
 
 /-- Writing back what is already there gives an equal array. -/
-theorem Array.Spec.setGetSame (a : Array Int) (i : Int) : prim "implies" (0 <= i) (prim "implies" (i < Array.length a) (Array.set a i (Array.get a i) == a)) := by simp
+theorem Array.Spec.setGetSame (a : Array Int) (i : Int) : 0 <= i -> i < Array.length a -> Array.set a i (Array.get a i) == a := by simp
 
 /-- A second write to the same index replaces the first. -/
 theorem Array.Spec.setSetSame (a : Array Int) (i : Int) (v : Int) (w : Int) : Array.set (Array.set a i v) i w == Array.set a i w := by simp

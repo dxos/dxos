@@ -30,7 +30,7 @@ git export:
 ```sh
 export DEUS_CODEBASE=$(mktemp -d)/tc                  # a fresh codebase per task
 deus init --empty
-deus project init https://dxos.org/deus/toolchain    # origin is now the shared remote (D108)
+deus project init https://dxos.org/deus/toolchain    # origin is now the shared remote (D109)
 deus pull origin && deus merge origin.main           # the latest codebase
 ```
 
