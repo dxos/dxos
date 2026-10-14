@@ -1,3 +1,8 @@
+(entry "072f91e16815618b660fab85fcf6ef072644a9287c20e22f515eb1a85b29c61a" "task: set ca75d545 state" "claude")
+(entry "086d4e68280d0e504358e91e5d0d6a79c43d86326057b674468d487d6ed9ec9f" "task: comment on ca75d545" "claude")
+(entry "2935873e9bca3d785e85c60d9c3a2183a9be22f2f4052ff8205c716eab452d07" "task: open ca75d545 Explorer shows events: events.json, an Events card, and counts on definition and change cards" "claude")
+(entry "5af5f624f567ccd313bff8afbdb34f8f12fdebdd85203aaff5feb969c2176fbb" "the explorer writes events.json and meta.events (R-14, R-15)" "claude")
+(entry "c77c21729f09317d91f96d0ac618966b72e6f8c523e4d0dc287c3b505073aebe" "Explorer.Spec R-14, R-15: events.json and the meta count, spec first" "claude")
 (entry "6e64e08bbb07d12c76b91ead409f3238c727978e687f1689e3751feae4f762cc" "task: comment on e76e36b0" "claude")
 (entry "f06a7a09f3d9647ced7b9c60e7c2405f58b904f1e576893dc369959424e09b3c" "history: import 577 changes" "")
 (entry "8637e168f496c0dd5b303edcd1ef5d40b6a407276f037210535408658786131f" "task: import from tasks.sexp" "")

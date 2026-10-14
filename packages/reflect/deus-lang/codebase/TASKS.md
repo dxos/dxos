@@ -950,6 +950,16 @@ Dmytro: those should be clickable. Tiles open k:<kind> lists (k:checks failing f
 - parent: 861438d2
 - links change #458d0633bd
 
+## Explorer shows events: events.json, an Events card, and counts on definition and change cards (`ca75d545`)
+
+- state: done
+- priority: medium
+- assignee: claude
+- labels: explorer, analytics
+- parent: 861438d2
+
+> claude: Done (D108): spec Explorer.Spec R-14, R-15; Explorer.generate writes events.json and meta.events; the app's Events card and per-card counts, checked in a browser on desktop and phone.
+
 ## Explorer: a live console that runs eval, view and test against the site's codebase in the page (wasm kernel + seed + codebase snapshot, about 900 KB gzipped) (`d2328509`)
 
 - state: done

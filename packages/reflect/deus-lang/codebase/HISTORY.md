@@ -1,5 +1,10 @@
 # History of main
 
+- `072f91e168` task: set ca75d545 state (by claude)
+- `086d4e6828` task: comment on ca75d545 (by claude)
+- `2935873e9b` task: open ca75d545 Explorer shows events: events.json, an Events card, and counts on definition and change cards (by claude)
+- `5af5f624f5` the explorer writes events.json and meta.events (R-14, R-15) (by claude)
+- `c77c21729f` Explorer.Spec R-14, R-15: events.json and the meta count, spec first (by claude)
 - `6e64e08bbb` task: comment on e76e36b0 (by claude)
 - `f06a7a09f3` history: import 577 changes
 - `8637e168f4` task: import from tasks.sexp

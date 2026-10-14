@@ -1210,8 +1210,8 @@ describe('deus CLI', () => {
     const remote = join(scratch, 'explore-remote');
     deus('remote', 'add', 'origin', remote, ...c);
     const published = JSON.parse(deus('explore', '--out', out, '--publish', 'origin', '--json', ...c).stdout);
-    // The app's three files, meta, names, tasks and comments, and one file per definition and per change.
-    expect(published.files).toBe(readdirSync(join(out, 'def')).length + readdirSync(join(out, 'change')).length + 7);
+    // The app's three files, meta, names, tasks, comments and events, and one file per definition and per change.
+    expect(published.files).toBe(readdirSync(join(out, 'def')).length + readdirSync(join(out, 'change')).length + 8);
     expect(published.uploaded).toBe(published.files);
     expect(readFileSync(join(remote, 'site', 'def', `${area?.hash}.json`), 'utf8')).toBe(page);
     // Republishing sends only what changed.
