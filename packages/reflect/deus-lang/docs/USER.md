@@ -83,3 +83,11 @@ proposals are ideas to solve things, you need to evaluate and choose the best ap
 ---
 
 - observablity should be first class: structured logging, tracing, otel, metrics, stack traces -- agents love that -- each error must come with a ton of context so that agents can pinpoint bugs
+
+---
+
+- tests: prefer determinisctic tests: abilities are implemented as deterministic simulations: seeded rng, fs, etc... but sometimes its not possible: we might wanna test against external systems: support both
+
+---
+
+- perf is important -- directly influences iteration speed -- invest in it

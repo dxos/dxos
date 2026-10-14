@@ -13,7 +13,7 @@ structure Args where
   options : Map Text Text
 
 /-- Options that never take a value. -/
-def booleanFlags : Map Text Unit := Set.fromList ["json", "core", "all", "force", "help"]
+def booleanFlags : Map Text Unit := Set.fromList ["json", "core", "all", "force", "help", "integration"]
 
 def parseArgs (args : List Text) : Args :=
   let rec go rest pos opts :=
@@ -430,7 +430,8 @@ def usage : Text :=
     "running",
     "  run <name> [args…]                   run name () with IO.args = args",
     "  eval <expr>                          evaluate an expression",
-    "  test [prefix]                        run tests (results cached by hash)",
+    "  test [prefix] [--integration]        run tests in a deterministic simulation (cached by hash);",
+    "                                       --integration also runs @[integration] tests for real",
     "  check [prefix]                       check theorems and report their evidence",
     "  image <name> -o <file>               write a kernel image",
     "  compile <files|dirs…> --main <name>  compile files without a codebase",

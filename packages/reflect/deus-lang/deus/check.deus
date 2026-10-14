@@ -257,19 +257,32 @@ def lemmaVerdict (dir : Text) (ns : Map Text Entry) (h : Text) : {IO} Verdict :=
         v
     | none => Verdict.fail "missing lemma"
 
-def checkTest (h : Text) : Verdict :=
-  match guarded h with
-  | Result.ok true => Verdict.pass "test" 1
+/-- A test, by default in a deterministic simulation seeded from its hash; integration tests run for real. -/
+def checkTest (h : Text) (integration : Bool) : {IO} Verdict :=
+  let outcome := if integration then guarded h
+    else
+      match Sim.run (seedOf h) (fun _ => guarded h) with
+      | (r, _) => r
+  match outcome with
+  | Result.ok true => Verdict.pass (if integration then "integration" else "test") 1
   | Result.ok _ => Verdict.fail "returned false"
   | Result.err message => Verdict.fail ("defect: " ++ message)
+
+/-- Whether a definition carries an attribute, e.g. `@[integration]`. -/
+def hasAttr (dir : Text) (h : Text) (name : Text) : {IO} Bool :=
+  List.any (fun a => Sexp.head a == name || (match a with
+    | Sexp.list (Sexp.str n :: _) => n == name
+    | _ => false)) (Codebase.metaList (Codebase.readMeta dir h) "attrs")
 
 /-- Runs every test or theorem under a prefix; prints a report; exits 1 on failure. -/
 def run (args : Args) (wantTheorems : Bool) : {IO, Throw Text} Unit :=
   let dir := Cli.openCodebase args
   let ns := Codebase.current dir
   let prefix := Option.getOr (List.head? args.positional) ""
+  let runIntegration := Cli.flag args "integration"
   let selected := List.filter (fun pair =>
     Text.startsWith prefix (fst pair) &&
+      (wantTheorems || runIntegration || not (hasAttr dir (Entry.hash (snd pair)) "integration")) &&
       (match snd pair with
       | Entry.test _ => not wantTheorems
       | Entry.theorem _ => wantTheorems
@@ -278,7 +291,9 @@ def run (args : Args) (wantTheorems : Bool) : {IO, Throw Text} Unit :=
     match pair with
     | (name, e) =>
       let h := Entry.hash e
-      match cached dir h with
+      let integration := not wantTheorems && hasAttr dir h "integration"
+      -- An integration test talks to the real world, so its result is never reused.
+      match (if integration then none else cached dir h) with
       | some v => (name, v, true)
       | none =>
         Image.load (Cli.fetcher dir) [h]
@@ -286,8 +301,8 @@ def run (args : Args) (wantTheorems : Bool) : {IO, Throw Text} Unit :=
             match Codebase.readObject dir h with
             | some obj => checkTheorem dir ns h obj
             | none => Verdict.fail "missing object"
-          else checkTest h
-        remember dir h v
+          else checkTest h integration
+        if integration then () else remember dir h v
         (name, v, false)) selected
   let failed := List.filter (fun r =>
     match r with

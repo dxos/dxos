@@ -85,7 +85,7 @@ def signature (names : Names) (scope : Scope) (binders : List Binder) (result : 
           | none => unknown
         node "tfun" ([a, acc] ++ (if i == count - 1 then row else []))) (if count == 0 then resultCore else resultPlain) (List.mapIndexed (fun i b => (i, b)) binders)
 
-def metaForm (doc : Option Text) (sig : Option Sexp) (locals : List Text) : Sexp :=
+def metaForm (doc : Option Text) (sig : Option Sexp) (locals : List Text) (attrs : List Attr) : Sexp :=
   let docPart := match doc with
     | some d => [node "doc" [s d]]
     | none => []
@@ -93,7 +93,8 @@ def metaForm (doc : Option Text) (sig : Option Sexp) (locals : List Text) : Sexp
     | some t => [node "sig" [t]]
     | none => []
   let localsPart := if List.isEmpty locals then [] else [node "locals" (List.map s locals)]
-  node "meta" (sigPart ++ docPart ++ localsPart)
+  let attrsPart := if List.isEmpty attrs then [] else [node "attrs" (List.map (fun a => Sexp.list (s a.attr :: List.map s a.values)) attrs)]
+  node "meta" (sigPart ++ docPart ++ localsPart ++ attrsPart)
 
 /-- Proof tokens; lemma names inside `[…]` become references, so a proof's hash covers its lemmas. -/
 def proofTokens (names : Names) (scope : Scope) (tokens : List Text) : {Throw Text} List Sexp :=
@@ -252,10 +253,11 @@ def batch (base : Map Text Entry) (store : Text -> {Throw Text | r} Option Sexp)
   let typeObjects := Ref.new []
   let metas := Ref.new []
   let pending := Ref.new []
-  let addMeta := fun (h : Text) (doc : Option Text) (sig : Option Sexp) (locals : List Text) =>
-    match (doc, sig, locals) with
-    | (none, none, []) => ()
-    | _ => Ref.set metas ((h, metaForm doc sig locals) :: Ref.get metas)
+  let addMetaWith := fun (h : Text) (doc : Option Text) (sig : Option Sexp) (locals : List Text) (attrs : List Attr) =>
+    match (doc, sig, locals, attrs) with
+    | (none, none, [], []) => ()
+    | _ => Ref.set metas ((h, metaForm doc sig locals attrs) :: Ref.get metas)
+  let addMeta := fun (h : Text) (doc : Option Text) (sig : Option Sexp) (locals : List Text) => addMetaWith h doc sig locals []
   let entries := List.concatMap (fun item =>
     let fqn := item.fqn
     match item.decl with
@@ -330,11 +332,11 @@ def batch (base : Map Text Entry) (store : Text -> {Throw Text | r} Option Sexp)
       | (core, locals) =>
         Ref.set pending (Pending.mk fqn "term" core :: Ref.get pending)
         addMeta ("@" ++ fqn) doc (some (signature names (bodyScope item) binders type)) locals
-    | Decl.check _ body doc _ _ =>
+    | Decl.check _ body doc attributes _ =>
       match Resolve.strip (Resolve.expr ctx body []) with
       | (core, locals) =>
         Ref.set pending (Pending.mk fqn "test" core :: Ref.get pending)
-        addMeta ("@" ++ fqn) doc none locals
+        addMetaWith ("@" ++ fqn) doc none locals attributes
     | Decl.thm _ binders prop proof doc _ pos =>
       let params := List.map (fun b => Pat.id b.binder [] pos) binders
       let types := List.map (fun b =>

@@ -55,6 +55,24 @@ test mutualRecursionHashesAsCycle :=
 
 test mdlFencesKeepLines := Mdl.deusSource "# Doc\n```deus\ndef a := 1\n```\ntext" == "\n\ndef a := 1\n\n"
 
+test simulatedFileSystem :=
+  match Sim.run 7 (fun _ =>
+    IO.writeFile "a/b.txt" "hello"
+    let back := IO.readFile "a/b.txt"
+    let listed := IO.listDir "a"
+    IO.print "done"
+    (back, listed, IO.isDir "a")) with
+  | (result, out) => result == (some "hello", ["b.txt"], true) && out == "done"
+
+test seededRandomRepeats :=
+  let draw := fun (u : Unit) => List.map (fun _ => Random.nextInt 1000) (List.range 0 5)
+  fst (Sim.run 42 draw) == fst (Sim.run 42 draw) && fst (Sim.run 42 draw) != fst (Sim.run 43 draw)
+
+@[integration]
+test realFileSystem :=
+  IO.writeFile "/tmp/deus-integration-probe.txt" "ok"
+  IO.readFile "/tmp/deus-integration-probe.txt" == some "ok"
+
 theorem reverseInvolutive (xs : List Int) : List.reverse (List.reverse xs) = xs := by test 100
 
 theorem sortIsSorted (xs : List Int) : List.sort (List.sort xs) = List.sort xs := by test 100

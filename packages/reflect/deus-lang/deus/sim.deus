@@ -1,0 +1,93 @@
+/-
+  Deterministic simulation: the abilities a program uses, implemented in memory.
+
+  Tests run under `Sim.run` by default: `IO` reads and writes an in-memory file system, time is
+  a counter, output is captured, and `Random` is seeded. The same seed gives the same run, so a
+  result can be cached by the hash of what ran. A test marked `@[integration]` runs against the
+  real host instead (`deus test --integration`), and its result is never cached.
+-/
+
+/-- Randomness as an ability, so tests can seed it and production can use real entropy. -/
+ability Random where
+  nextInt : Int -> Int
+
+/-- The state of one simulated run. -/
+structure World where
+  files : Ref (Map Text Text)
+  dirs : Ref (Map Text Unit)
+  output : Ref (List Text)
+  clock : Ref Int
+  rng : Ref Int
+
+namespace Sim
+
+def newWorld (seed : Int) : World :=
+  World.mk (Ref.new Map.empty) (Ref.new (Set.fromList ["", "."])) (Ref.new []) (Ref.new 0) (Ref.new (if seed == 0 then 1 else seed))
+
+/-- xorshift32: a small, well-mixed deterministic generator. -/
+def next (w : World) : Int :=
+  let x1 := Ref.get w.rng
+  let x2 := Int.xor x1 (Int.shl x1 13)
+  let x3 := Int.xor x2 (Int.ushr x2 17)
+  let x4 := Int.xor x3 (Int.shl x3 5)
+  Ref.set w.rng x4
+  x4
+
+def parent (path : Text) : Text :=
+  let rec go i := if i < 0 then "" else if Text.code path i == '/' then Text.take i path else go (i - 1)
+  go (Text.length path - 1)
+
+def mkdirs (w : World) (path : Text) : Unit :=
+  if Set.contains path (Ref.get w.dirs) then ()
+  else
+    Ref.set w.dirs (Set.insert path (Ref.get w.dirs))
+    mkdirs w (parent path)
+
+def children (w : World) (dir : Text) : List Text :=
+  let prefix := if dir == "" || dir == "." then "" else dir ++ "/"
+  let direct := fun (p : Text) =>
+    if Text.startsWith prefix p && p != dir then
+      let rest := Text.drop (Text.length prefix) p
+      if Text.contains "/" rest || rest == "" then none else some rest
+    else none
+  List.dedup (List.sort (List.filterMap direct (Map.keys (Ref.get w.files) ++ Map.keys (Ref.get w.dirs))))
+
+/-- Runs `body` against a simulated world; returns its result and everything it printed. -/
+def run (seed : Int) (body : Unit -> {IO, Random | r} a) : {r} (a, Text) :=
+  let w := newWorld seed
+  let result := handle body () with
+    | Random.nextInt bound -> k => k (if bound <= 0 then 0 else Int.and (next w) 2147483647 % bound)
+    | IO.print t -> k =>
+      Ref.set w.output (t :: Ref.get w.output)
+      k ()
+    | IO.eprint t -> k =>
+      Ref.set w.output (t :: Ref.get w.output)
+      k ()
+    | IO.readFile p -> k => k (Map.lookup p (Ref.get w.files))
+    | IO.writeFile p t -> k =>
+      mkdirs w (parent p)
+      Ref.set w.files (Map.insert p t (Ref.get w.files))
+      k ()
+    | IO.exists p -> k => k (Map.contains p (Ref.get w.files) || Set.contains p (Ref.get w.dirs))
+    | IO.listDir p -> k => k (children w p)
+    | IO.mkdirp p -> k =>
+      mkdirs w p
+      k ()
+    | IO.remove p -> k =>
+      Ref.set w.files (Map.filter (fun key _ => key != p && not (Text.startsWith (p ++ "/") key)) (Ref.get w.files))
+      Ref.set w.dirs (Map.filter (fun key _ => key != p && not (Text.startsWith (p ++ "/") key)) (Ref.get w.dirs))
+      k ()
+    | IO.args _ -> k => k []
+    | IO.exit code -> _ => defect ("exit " ++ Int.toText code ++ " inside a simulated run")
+    | IO.time _ -> k =>
+      Ref.set w.clock (Ref.get w.clock + 1)
+      k (Ref.get w.clock)
+    | IO.readStdin _ -> k => k ""
+    | IO.writeBytes p bytes -> k =>
+      Ref.set w.files (Map.insert p (Text.fromCodes bytes) (Ref.get w.files))
+      k ()
+    | IO.getEnv _ -> k => k none
+    | IO.isDir p -> k => k (Set.contains p (Ref.get w.dirs))
+  (result, Text.concat (List.reverse (Ref.get w.output)))
+
+end Sim
