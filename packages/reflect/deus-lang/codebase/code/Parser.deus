@@ -259,7 +259,7 @@ def Parser.decl (p : Parser) : {Throw Text} Decl :=
         let fields := withStop p 0 (fun _ => Parser.ctorFields p)
         ctors ((ctorName, fields) :: acc)
       else reverse acc
-      Decl.data name params iri (ctors []) doc pos
+      Decl.data name params iri (ctors []) doc attributes pos
     else if word == "structure" || word == "ability" then
       skip p
       let name := Parser.ident p
@@ -275,7 +275,7 @@ def Parser.decl (p : Parser) : {Throw Text} Decl :=
           fields ((fieldName, type) :: acc)
         else reverse acc
       let fs := fields []
-      if word == "structure" then Decl.record name params iri fs doc pos else Decl.effect name params iri fs doc pos
+      if word == "structure" then Decl.record name params iri fs doc attributes pos else Decl.effect name params iri fs doc attributes pos
     else if word == "namespace" then
       skip p
       Decl.ns (Parser.ident p)

@@ -717,12 +717,12 @@ def JsGen.primValue (p : Text) : {Throw Text} Text := if startsWith "Code." p th
 /-- A JavaScript string literal that is ASCII, so a lone surrogate survives being written as UTF-8. -/
 def JsGen.quote (t : Text) : Text :=
   let n := Text.length t
-  let rec go start i acc := if i >= n then Text.concat (reverse (slice t start n :: acc)) else
+  let rec go start i acc := if i >= n then Text.concat (reverse (Text.slice t start n :: acc)) else
     let c := code t i
     if c == '"' || c == '\\' || c < 32 || c > 126 then
       let piece := if c == '"' then "\\\"" else if c == '\\' then "\\\\" else if c == 10 then "\\n" else "\\u" ++ hexDigit (and (shr c 12) 15) ++ hexDigit (and (shr c 8) 15) ++
         hexDigit (and (shr c 4) 15) ++ hexDigit (and c 15)
-      go (i + 1) (i + 1) (piece :: slice t start i :: acc)
+      go (i + 1) (i + 1) (piece :: Text.slice t start i :: acc)
     else go start (i + 1) acc
   "\"" ++ go 0 0 [] ++ "\""
 
@@ -862,7 +862,7 @@ def JsGen.unlam (core : Sexp) : (Int, Sexp) :=
 /-- The number `vlq` wrote. -/
 def JsGen.unvlq (t : Text) : Int :=
   let rec go i shift acc :=
-    let digit := indexOf base64 (slice t i (i + 1)) 0
+    let digit := indexOf base64 (Text.slice t i (i + 1)) 0
     let acc2 := or acc (shl (and digit 31) shift)
     if and digit 32 == 0 then acc2 else go (i + 1) (shift + 5) acc2
   let v := go 0 0 0
@@ -873,5 +873,5 @@ def JsGen.vlq (n : Int) : Text :=
   let rec digits v :=
     let digit := and v 31
     let rest := ushr v 5
-    if rest == 0 then slice base64 digit (digit + 1) else slice base64 (or digit 32) (or digit 32 + 1) ++ digits rest
+    if rest == 0 then Text.slice base64 digit (digit + 1) else Text.slice base64 (or digit 32) (or digit 32 + 1) ++ digits rest
   digits (if n < 0 then or (shl (Int.neg n) 1) 1 else shl n 1)

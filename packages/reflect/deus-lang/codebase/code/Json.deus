@@ -1,11 +1,11 @@
 def Json.escape (t : Text) : Text :=
   let n := Text.length t
   -- Characters that need no escape are copied a run at a time; per character, a page of source was the explorer's cost.
-  let rec go start i acc := if i >= n then Text.concat (reverse (slice t start n :: acc)) else
+  let rec go start i acc := if i >= n then Text.concat (reverse (Text.slice t start n :: acc)) else
     let c := code t i
     if c == '"' || c == '\\' || c < 32 then
       let piece := if c == '"' then "\\\"" else if c == '\\' then "\\\\" else if c == 10 then "\\n" else if c == 9 then "\\t" else if c == 13 then "\\r" else "\\u" ++ hex4 c
-      go (i + 1) (i + 1) (piece :: slice t start i :: acc)
+      go (i + 1) (i + 1) (piece :: Text.slice t start i :: acc)
     else go start (i + 1) acc
   "\"" ++ go 0 0 [] ++ "\""
 

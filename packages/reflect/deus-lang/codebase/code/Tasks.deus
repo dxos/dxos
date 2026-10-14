@@ -100,7 +100,7 @@ def Tasks.fromSexp (form : Sexp) : Task :=
     (text "id")
     (text "title")
     (getOr (List.lookup (text "state") states) TaskState.todo)
-    (getOr (Option.map asInt (metaField (Option.some form) "priority")) 0)
+    (getOr (Option.map Sexp.asInt (metaField (Option.some form) "priority")) 0)
     (text "assignee")
     (List.map asText (metaList (Option.some form) "labels"))
     (text "parent")

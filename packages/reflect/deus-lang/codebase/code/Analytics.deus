@@ -1,0 +1,616 @@
+test Analytics.Spec.builtinRefs := pinned Spec.projectIri "Bool" "#Bool" == "https://example.org/p/Bool#Bool" && Analytics.hashOf "https://example.org/p/Bool#Bool" == "#Bool" && Analytics.hashOf "#Bool" == "#Bool" && Analytics.hashOf ("#" ++ hex "x") == hex "x" && Analytics.hashOf "#67c7d5a614" == "67c7d5a614"
+
+test Analytics.Spec.countsByHash := inStore (fun dir =>
+  let ns := Map.fromList [("A.f", Entry.term (hex "now"))]
+  let mk := fun ref => [("what", Cell.text ref), ("count", Cell.int 1), ("ok", Cell.bool true), ("note", Cell.text "")]
+  Analytics.record dir demo "a" (mk (pinned Spec.projectIri "A.f" (hex "old")))
+  Analytics.record dir demo "a" (mk (nameIri Spec.projectIri "A.f"))
+  Analytics.record dir demo "a" (mk ("#" ++ hex "now"))
+  let counts := byDefinition dir Spec.projectIri ns [demo]
+  Map.lookup (hex "old") counts == Option.some [("Demo.Seen", "what", 1)] && Map.lookup (hex "now") counts == Option.some [("Demo.Seen", "what", 2)])
+
+theorem Analytics.Spec.decimalRoundTrip (n : Int) (m : Int) : le64Decimal (decimalLE64 (digitsOf n m)) == trimZeros (digitsOf n m) == true := by test 100
+
+def Analytics.Spec.demo : EventType := EventType.mk
+  "Demo.Seen"
+  "d3m0"
+  [Column.mk "what" "ref", Column.mk "count" "int", Column.mk "ok" "bool", Column.mk "note" "text"]
+
+/-- Up to 17 decimal digits from two generated Ints, with leading zeros when the first is 0. -/
+def Analytics.Spec.digitsOf (n : Int) (m : Int) : Text := toText (and n 2147483647) ++ toText (and m 1048575)
+
+test Analytics.Spec.emptyPushUploadsNothing := inStore (fun dir =>
+  match uploads dir [demo] with
+  | ([], []) => true
+  | _ => false)
+
+def Analytics.Spec.hex (seed : Text) : Text := Text.sha256 seed
+
+test Analytics.Spec.onlyFlatColumns := Analytics.columnTypeOf (Sexp.read "(tref \"#Int\")") == Option.some "int" && Analytics.columnTypeOf (Sexp.read "(tref \"#Bool\")") == Option.some "bool" && Analytics.columnTypeOf (Sexp.read "(tref \"#Text\")") == Option.some "text" && Analytics.columnTypeOf (Sexp.read "(tref \"urn:deus:analytics:CodeRef\")") == Option.some "ref" && Analytics.columnTypeOf (Sexp.read "(tapp (tref \"#List\") (tref \"#Int\"))") == Option.none && Analytics.columnTypeOf (Sexp.read "(tref \"#Option\")") == Option.none
+
+test Analytics.Spec.parquetFraming :=
+  let file := Parquet.write demo (rowsOf ["a", "b"] 1 true)
+  let n := List.length file
+  let footer := readLE32 (toArray file) (n - 8)
+  List.take 4 file == magic && List.drop (n - 4) file == magic && footer > 0 && footer < n - 12
+
+theorem Analytics.Spec.parquetRoundTrip (words : List Text) (n : Int) (flag : Bool) : Parquet.read (Parquet.write demo (rowsOf words n flag)) == ((demo).columns, rowsOf words n flag) ==
+    true := by test 40
+
+theorem Analytics.Spec.pinnedRoundTrip (words : List Text) : List.all (fun w =>
+    let name := "A." ++ replace "#" "" w
+    let ref := pinned Spec.projectIri name (hex w)
+    Analytics.hashOf ref == hex w && Analytics.nameOf Spec.projectIri ref == name && Analytics.hashOf (nameIri Spec.projectIri name) == "") words == true := by test 30
+
+def Analytics.Spec.projectIri : Text := "https://example.org/p"
+
+test Analytics.Spec.pushOnlyUploads := inStore (fun dir =>
+  Analytics.record dir demo "a" (seen ())
+  Analytics.record dir demo "b" (seen ())
+  match uploads dir [demo] with
+  | ((name, 2, key) :: [], schema :: file :: []) => name == "Demo.Seen" && key == file && startsWith "events/Demo.Seen/d3m0/" key && endsWith ".parquet" key && (if schema == "events/Demo.Seen/d3m0/schema.json" then
+      match Analytics.rows dir demo with
+      | ([], _ :: _ :: []) => true
+      | _ => false
+    else false)
+  | _ => false)
+
+test Analytics.Spec.recordReadsBack := inStore (fun dir =>
+  let id := Analytics.record dir demo "claude" (seen ())
+  match Analytics.rows dir demo with
+  | (r :: [], []) => r.eventId == id && Text.length id == 16 && r.recordedBy == "claude" && r.cells == [Cell.text (hex "a"), Cell.int 3, Cell.bool true, Cell.text "é\n\""]
+  | _ => false)
+
+test Analytics.Spec.recordRefusesBadRows := inStore (fun dir => Analytics.Spec.refused dir (List.drop 1 (seen ())) && Analytics.Spec.refused dir (seen () ++ [("extra", Cell.int 1)]) && (if Analytics.Spec.refused
+  dir
+  [("what", Cell.text "x"), ("count", Cell.text "3"), ("ok", Cell.bool true), ("note", Cell.text "")] then
+  match Analytics.rows dir demo with
+  | ([], []) => true
+  | _ => false
+else false))
+
+def Analytics.Spec.refused (dir : Text) (values : List (Text, Cell)) : {IO} Bool :=
+  match try (fun _ => Analytics.record dir demo "x" values) with
+  | Result.ok _ => false
+  | Result.err _ => true
+
+def Analytics.Spec.rowsOf (words : List Text) (n : Int) (flag : Bool) : List Row := mapIndexed (fun i w => Row.mk
+  (hex w)
+  (toText (i * 1000 + 1))
+  w
+  [Cell.text ("#" ++ hex w), Cell.int (n * i - i), Cell.bool (flag == (mod i 2 == 0)), Cell.text (w ++ "😀")]) words
+
+def Analytics.Spec.seen (u : Unit) : List (Text, Cell) := [("what", Cell.text (hex "a")), ("count", Cell.int 3), ("ok", Cell.bool true), ("note", Cell.text "é\n\"")]
+
+/-- Constructing each toolchain event type from scalars and a `CodeRef` type-checks only while their fields stay flat. -/
+test Analytics.Spec.toolchainEventTypes :=
+  let ref := CodeRef.mk "#x"
+  (TestRun.mk ref "test" true false true "test" 1 "" 5).ms == 5 && (CiRun.mk "Check" "success" true "abc" 13952 60 "https://ci").pr == 13952 && AgentChange.agent (AgentChange.mk ref "claude" "update" "msg") == "claude" && (AgentWrote.mk ref "claude" "add").via == "add" && AgentStage.seconds (AgentStage.mk 1 "abc" 30 "s") == 30
+
+/-- Runs a push, answering only uploads; any other remote operation fails the test. -/
+def Analytics.Spec.uploads (dir : Text) (ts : List EventType) : {IO, Throw Text} (List (Text, (Int, Text)), List Text) :=
+  let keys := Ref.new []
+  let pushed :=
+    handle Analytics.push dir ts with
+    | Remote.upload key x0 x1 -> k =>
+        Ref.set keys (key :: Ref.get keys)
+        k ()
+    | Remote.list x2 -> x3 => Throw.throw "list"
+    | Remote.get x4 -> x5 => Throw.throw "get"
+    | Remote.keys x6 -> x7 => Throw.throw "keys"
+    | Remote.download x8 x9 -> x10 => Throw.throw "download"
+    | Remote.put x11 x12 -> x13 => Throw.throw "put"
+    | Remote.delete x14 -> x15 => Throw.throw "delete"
+    | Remote.writeAll x16 -> x17 => Throw.throw "writeAll"
+    | Remote.drop x18 -> x19 => Throw.throw "drop"
+  (pushed, reverse (Ref.get keys))
+
+--
+-- Backfills from the codebase's own records.
+--
+/-- `AgentChange` events from an exported history (`history.sexp`): one per change. -/
+def Analytics.backfillHistory (dir : Text) (t : EventType) (path : Text) : {IO, Throw Text} Int :=
+  let text :=
+    match IO.readFile path with
+    | Option.some x => x
+    | Option.none => Throw.throw ("cannot read " ++ path)
+  let entries := filterMap (fun form =>
+    match form with
+    | Sexp.list (Sexp.sym "entry" :: Sexp.str causal :: Sexp.str message :: Sexp.str agent :: []) => Option.some (causal, message, agent)
+    | _ => Option.none) (readAll text)
+  forEach entries (fun e =>
+    match e with
+    | (causal, message, agent) =>
+        let who := if Text.isEmpty agent then "unknown" else agent
+        let action :=
+          match Text.split message " " with
+          | word :: _ => if endsWith ":" word then Text.take (Text.length word - 1) word else word
+          | [] => ""
+        Analytics.record
+          dir
+          t
+          who
+          [("change", Cell.text ("#" ++ causal)), ("agent", Cell.text who), ("action", Cell.text action), ("changeMessage", Cell.text message)]
+        ())
+  List.length entries
+
+/-- `AgentStage` events from the work log's table (docs/TIMELINE.md): one per stage. -/
+def Analytics.backfillTimeline (dir : Text) (t : EventType) (path : Text) : {IO, Throw Text} Int :=
+  let text :=
+    match IO.readFile path with
+    | Option.some x => x
+    | Option.none => Throw.throw ("cannot read " ++ path)
+  let stages := filterMap (fun line =>
+    match List.map trim (Text.split line "|") with
+    | _ :: stage :: _ :: wall :: commit :: summary :: _ :: [] =>
+        match fromText stage with
+        | Option.some n => Option.some (n, replace "`" "" commit, Analytics.seconds wall, summary)
+        | Option.none => Option.none
+    | _ => Option.none) (lines text)
+  forEach stages (fun s =>
+    match s with
+    | (n, commit, secs, summary) =>
+        Analytics.record
+          dir
+          t
+          "unknown"
+          [("stage", Cell.int n), ("commitSha", Cell.text commit), ("seconds", Cell.int secs), ("summary", Cell.text summary)]
+        ())
+  List.length stages
+
+/-- How many events refer to each hash: hash -> list of (event type, column, count). A pinned
+  reference counts under its hash; a name IRI counts under the hash the name has now. -/
+def Analytics.byDefinition (dir : Text) (project : Text) (ns : Map Text Entry) (ts : List EventType) : {IO} Map Text (List (Text, (Text, Int))) :=
+  let tally := MutMap.new ()
+  forEach ts (fun t =>
+    match Analytics.rows dir t with
+    | (pending, pushed) =>
+        let refColumns := List.filter
+          (fun pair => (snd pair).columnType == "ref")
+          (zip (range 0 (List.length t.columns)) t.columns)
+        forEach (pending ++ pushed) (fun r => forEach refColumns (fun pair =>
+          match get? r.cells (fst pair) with
+          | Option.some (Cell.text ref) =>
+              let h := refHash project ns ref
+              if Text.isEmpty h then () else
+                let key := h ++ "\n" ++ t.typeName ++ "\n" ++ (snd pair).columnName
+                MutMap.set tally key (getOr (MutMap.get tally key) 0 + 1)
+          | _ => ())))
+  foldl (fun m key =>
+    match Text.split key "\n" with
+    | h :: typeName :: column :: [] => Map.insert
+        h
+        (getOr (Map.lookup h m) [] ++ [(typeName, column, getOr (MutMap.get tally key) 0)])
+        m
+    | _ => m) Map.empty (sort (MutMap.keys tally))
+
+def Analytics.cellJson (c : Cell) : Json :=
+  match c with
+  | Cell.int v => Json.num v
+  | Cell.bool v => Json.bool v
+  | Cell.text t => Json.str t
+
+def Analytics.cellOf (s : Sexp) : Cell :=
+  match s with
+  | Sexp.int v => Cell.int v
+  | Sexp.sym "true" => Cell.bool true
+  | Sexp.sym "false" => Cell.bool false
+  | other => Cell.text (asText other)
+
+def Analytics.cellSexp (c : Cell) : Sexp :=
+  match c with
+  | Cell.int v => Sexp.int v
+  | Cell.bool v => Sexp.sym (if v then "true" else "false")
+  | Cell.text t => Sexp.str t
+
+/-- The cell a value takes in a column of this type; a value of the wrong kind is an error. -/
+def Analytics.check (t : EventType) (c : Column) (value : Cell) : {Throw Text} Cell :=
+  match (c.columnType, value) with
+  | ("int", Cell.int _) => value
+  | ("bool", Cell.bool _) => value
+  | ("text", Cell.text _) => value
+  | ("ref", Cell.text _) => value
+  | _ => Throw.throw ("event " ++ t.typeName ++ ": " ++ c.columnName ++ " must be " ++ c.columnType)
+
+--
+-- Event types.
+--
+/-- The column type of a field type, or `none` when the field is not flat. -/
+def Analytics.columnTypeOf (t : Sexp) : Option Text :=
+  match t with
+  | Sexp.list (Sexp.sym "tref" :: Sexp.str iri :: []) => if iri == "#Int" then Option.some "int" else if iri == "#Bool" then Option.some "bool" else if iri == "#Text" then Option.some "text" else if iri == "urn:deus:analytics:CodeRef" then Option.some "ref" else Option.none
+  | _ => Option.none
+
+def Analytics.columnsJson (columns : List Column) : Json := Json.arr (List.map
+  (fun c => Json.obj [("name", Json.str c.columnName), ("type", Json.str c.columnType)])
+  columns)
+
+/-- `deus event …`: event types, recording, listing, counts and the push-only sync. -/
+def Analytics.command (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let ns := Codebase.current dir
+  let project := projectOf dir
+  let ts := Analytics.types dir ns
+  match args.positional with
+  | "types" :: [] =>
+      let rows := counts dir ts
+      Cli.output args (fun _ => Json.arr (List.map (fun e =>
+        match e with
+        | (t, pending, pushed) => Json.obj [("name", Json.str t.typeName), ("hash", Json.str t.typeHash), ("columns", columnsJson t.columns), ("count", Json.num (pending + pushed)), ("pending", Json.num pending)]) rows)) (fun _ => if List.isEmpty rows then "No event types; mark a structure with @[event]." else join "\n" (List.map typeLine rows))
+  | "record" :: typeName :: pairs =>
+      let t := Analytics.find dir ns typeName
+      let values := List.map (fun pair =>
+        let eq := indexOf pair "=" 0
+        if eq < 0 then Throw.throw ("expected field=value, not " ++ pair) else
+          let key := Text.take eq pair
+          match List.find (fun c => c.columnName == key) t.columns with
+          | Option.some c => (key, parseCell project ns c (Text.drop (eq + 1) pair))
+          | Option.none => Throw.throw ("event " ++ t.typeName ++ " has no field " ++ key)) pairs
+      let id := Analytics.record dir t (getOr (option args "by") (recorder ())) values
+      Cli.output
+        args
+        (fun _ => Json.obj [("event", Json.str id), ("type", Json.str t.typeName)])
+        (fun _ => "Recorded " ++ t.typeName ++ " " ++ id ++ ".")
+  | "import" :: path :: [] =>
+      let n := importFile dir project ns ts path
+      Cli.output
+        args
+        (fun _ => Json.obj [("imported", Json.num n)])
+        (fun _ => "Recorded " ++ toText n ++ " events.")
+  | "backfill" :: source :: path :: [] =>
+      let n := if source == "history" then backfillHistory dir (Analytics.find dir ns "AgentChange") path else if source == "timeline" then backfillTimeline dir (Analytics.find dir ns "AgentStage") path else Throw.throw Analytics.usage
+      Cli.output
+        args
+        (fun _ => Json.obj [("recorded", Json.num n)])
+        (fun _ => "Recorded " ++ toText n ++ " events from " ++ path ++ ".")
+  | "list" :: rest =>
+      let selected :=
+        match rest with
+        | name :: [] => [Analytics.find dir ns name]
+        | _ => ts
+      let limit := getOr (Option.bind (option args "limit") fromText) 20
+      let about := Option.map (fun name =>
+        match Map.lookup name ns with
+        | Option.some e => Entry.hash e
+        | Option.none => Throw.throw ("unknown name " ++ name)) (option args "about")
+      let mentions := fun t r =>
+        match about with
+        | Option.none => true
+        | Option.some h => any (fun pair => if (fst pair).columnType == "ref" then
+            match snd pair with
+            | Cell.text ref => refHash project ns ref == h
+            | _ => false
+          else false) (zip t.columns r.cells)
+      let picked := List.map (fun t =>
+        match Analytics.rows dir t with
+        | (pending, pushed) => (t, List.take limit (List.filter (mentions t) (reverse (pushed ++ pending))))) selected
+      Cli.output
+        args
+        (fun _ => Json.arr (concatMap (fun pair => List.map (rowJson (fst pair)) (snd pair)) picked))
+        (fun _ => join "\n" (concatMap
+          (fun pair => if List.isEmpty (snd pair) then [] else ("-- " ++ (fst pair).typeName) :: List.map (rowLine (fst pair)) (snd pair))
+          picked))
+  | "stats" :: [] =>
+      let limit := getOr (Option.bind (option args "limit") fromText) 20
+      let site := if Cli.flag args "json" then siteJson dir project ns limit else Json.null
+      Cli.output args (fun _ => site) (fun _ =>
+        let byHash := sortBy
+          (fun a b => sum (List.map tallyCount (snd b)) - sum (List.map tallyCount (snd a)))
+          (Map.toList (byDefinition dir project ns ts))
+        let index := nameIndex ns
+        join "\n" (List.map typeLine (counts dir ts) ++
+          ["", toText (List.length byHash) ++ " definitions have events"] ++ List.map
+          (fun pair => "  " ++ getOr (Map.lookup (fst pair) index) ("#" ++ Text.take 10 (fst pair)) ++ "  " ++
+            toText (sum (List.map tallyCount (snd pair))))
+          (List.take limit byHash)))
+  | "push" :: rest =>
+      let name := getOr (head? rest) "origin"
+      let pushed := withRemote dir name (fun _ => Analytics.push dir ts)
+      Cli.output args (fun _ => Json.arr (List.map (fun p =>
+        match p with
+        | (typeName, n, key) => Json.obj [("type", Json.str typeName), ("rows", Json.num n), ("key", Json.str key)]) pushed)) (fun _ => if List.isEmpty pushed then "Nothing to push." else join "\n" (List.map (fun p =>
+        match p with
+        | (typeName, n, key) => "  " ++ typeName ++ "  " ++ toText n ++ " rows  " ++ key) pushed))
+  | _ => Throw.throw Analytics.usage
+
+--
+-- Counts, for the CLI and the explorer.
+--
+/-- Per event type: (type, pending rows, pushed rows). -/
+def Analytics.counts (dir : Text) (ts : List EventType) : {IO} List (EventType, (Int, Int)) := List.map (fun t =>
+  match Analytics.rows dir t with
+  | (pending, pushed) => (t, List.length pending, List.length pushed)) ts
+
+/-- One hash's entry in `events.json`: its names now, its total and the counts per event type and column. -/
+def Analytics.definitionJson (index : Map Text (List Text)) (h : Text) (tallies : List (Text, (Text, Int))) : Json := Json.obj [("names", Json.arr (List.map Json.str (getOr (Map.lookup h index) []))), ("count", Json.num (sum (List.map tallyCount tallies))), ("events", Json.arr (List.map tallyJson tallies))]
+
+--
+-- Local store.
+--
+def Analytics.eventsDir (dir : Text) : Text := dir ++ "/events"
+
+def Analytics.fileName (t : EventType) : Text := t.typeName ++ "@" ++ t.typeHash ++ ".sexp"
+
+/-- Rows recorded for type hashes no longer in the namespace stay on disk; their files are listed here. -/
+def Analytics.files (dir : Text) (folder : Text) : {IO} List Text :=
+  let path := eventsDir dir ++ "/" ++ folder
+  if IO.isDir path then List.filter (fun f => endsWith ".sexp" f) (IO.listDir path) else []
+
+/-- The event type called `name`, or by the last segment of its name (`TestRun`). -/
+def Analytics.find (dir : Text) (ns : Map Text Entry) (name : Text) : {IO, Throw Text} EventType :=
+  let all := Analytics.types dir ns
+  match List.find (fun t => t.typeName == name) all with
+  | Option.some t => t
+  | Option.none =>
+      match List.filter (fun t => endsWith ("." ++ name) t.typeName) all with
+      | t :: [] => t
+      | [] => Throw.throw ("no event type " ++ name ++ " (an @[event] structure)")
+      | more => Throw.throw ("ambiguous event type " ++ name ++ ": " ++ join ", " (List.map (fun t => t.typeName) more))
+
+/-- The hash (or hash prefix) a reference pins: the fragment, with `#` again for a builtin; `""` for a name IRI. -/
+def Analytics.hashOf (ref : Text) : Text :=
+  match parts ref with
+  | (_, "") => ""
+  | (_, fragment) => if Analytics.isHex fragment then fragment else "#" ++ fragment
+
+/-- Imports `(event "Type" (by "who") (field value)…)` forms; returns how many. -/
+def Analytics.importFile (dir : Text) (project : Text) (ns : Map Text Entry) (ts : List EventType) (path : Text) : {IO, Throw Text} Int :=
+  let text :=
+    match IO.readFile path with
+    | Option.some x => x
+    | Option.none => Throw.throw ("cannot read " ++ path)
+  let forms := List.filter (fun f => head f == "event") (readAll text)
+  forEach forms (fun form =>
+    match Sexp.args form with
+    | typeForm :: fields =>
+        let typeName := asText typeForm
+        let t :=
+          match List.find (fun x => x.typeName == typeName || endsWith ("." ++ typeName) x.typeName) ts with
+          | Option.some x => x
+          | Option.none => Throw.throw ("no event type " ++ typeName)
+        let who := getOr (Option.map asText (metaField (Option.some form) "by")) (recorder ())
+        let values := filterMap (fun f =>
+          match f with
+          | Sexp.list (Sexp.sym key :: v :: []) => if key == "by" then Option.none else
+              match List.find (fun c => c.columnName == key) t.columns with
+              | Option.some c => Option.some (key, match v with
+                | Sexp.str s => parseCell project ns c s
+                | other => cellOf other)
+              | Option.none => Throw.throw ("event " ++ t.typeName ++ " has no field " ++ key)
+          | _ => Option.none) fields
+        Analytics.record dir t who values
+        ()
+    | [] => ())
+  List.length forms
+
+/-- Whether a definition carries `@[event]`. -/
+def Analytics.isEvent (dir : Text) (h : Text) : {IO} Bool := any (fun a => if head a == "event" then true else
+  match a with
+  | Sexp.list (Sexp.str n :: _) => n == "event"
+  | _ => false) (metaList (readMeta dir h) "attrs")
+
+/-- Whether a fragment is a hash or a hash prefix: lowercase hex digits; a builtin's name is not. -/
+def Analytics.isHex (t : Text) : Bool := not (Text.isEmpty t) && List.all (fun c => c >= '0' && c <= '9' || c >= 'a' && c <= 'f') (utf8 t)
+
+--
+-- References (D105).
+--
+/-- The name IRI of a definition: `<project>/<name>`, or the bare name in a codebase without a project. -/
+def Analytics.nameIri (project : Text) (name : Text) : Text := if Text.isEmpty project then name else project ++ "/" ++ name
+
+/-- The dotted name a name IRI or pinned reference carries, given the project IRI. -/
+def Analytics.nameOf (project : Text) (ref : Text) : Text :=
+  match parts ref with
+  | (iri, _) => if Text.isEmpty project then iri else if startsWith (project ++ "/") iri then Text.drop (Text.length project + 1) iri else ""
+
+/-- Microseconds since the epoch, from the host's wall clock (nanoseconds as decimal text). -/
+def Analytics.now (u : Unit) : {IO} Text :=
+  let ns := IO.wallClock ()
+  trimZeros (Text.take (Text.length ns - 3) ns)
+
+--
+-- The `deus event` command.
+--
+/-- A command-line value as a cell of the column's type; a ref that is a plain name is pinned. -/
+def Analytics.parseCell (project : Text) (ns : Map Text Entry) (c : Column) (value : Text) : {Throw Text} Cell := if c.columnType == "int" then
+  match fromText value with
+  | Option.some n => Cell.int n
+  | Option.none => Throw.throw (c.columnName ++ " must be an integer, not " ++ value)
+else if c.columnType == "bool" then if value == "true" then Cell.bool true else if value == "false" then Cell.bool false else Throw.throw (c.columnName ++ " must be true or false") else if c.columnType == "ref" && not (Text.contains "#" value) && not (Text.contains "/" value) then Cell.text (refTo project ns value) else Cell.text value
+
+/-- A reference's parts: (name IRI or `""`, hash or `""`). -/
+def Analytics.parts (ref : Text) : (Text, Text) :=
+  let rec lastHash i := if i < 0 then -1 else if code ref i == '#' then i else lastHash (i - 1)
+  let mark := lastHash (Text.length ref - 1)
+  if mark < 0 then (ref, "") else (Text.take mark ref, Text.drop (mark + 1) ref)
+
+/-- The pinned form `<project>/<name>#<hash>`; a builtin's fragment is its name. -/
+def Analytics.pinned (project : Text) (name : Text) (h : Text) : Text := nameIri project name ++ "#" ++ (if startsWith "#" h then Text.drop 1 h else h)
+
+def Analytics.projectOf (dir : Text) : {IO} Text :=
+  match Project.read dir with
+  | Option.some p => p.projectIri
+  | Option.none => ""
+
+/-- Pushes every pending batch as a Parquet file; returns (event type, rows, remote key) per batch. -/
+def Analytics.push (dir : Text) (ts : List EventType) : {Remote, IO, Throw Text} List (Text, (Int, Text)) := filterMap (fun t =>
+  let pendingFile := eventsDir dir ++ "/pending/" ++ Analytics.fileName t
+  match IO.readFile pendingFile with
+  | Option.none => Option.none
+  | Option.some text =>
+      let batchRows := List.map rowOf (readAll text)
+      let batch := Text.sha256 text
+      let key := remoteKey t batch
+      let local := eventsDir dir ++ "/out/" ++ batch ++ ".parquet"
+      IO.writeBytes local (Parquet.write t batchRows)
+      let schemaFile := eventsDir dir ++ "/out/" ++ batch ++ ".json"
+      IO.writeFile schemaFile (Json.render (schemaJson t) ++ "\n")
+      Remote.upload
+        ("events/" ++ t.typeName ++ "/" ++ t.typeHash ++ "/schema.json")
+        schemaFile
+        "application/json"
+      Remote.upload key local "application/vnd.apache.parquet"
+      IO.appendFile (eventsDir dir ++ "/pushed/" ++ Analytics.fileName t) text
+      IO.remove pendingFile
+      IO.remove local
+      IO.remove schemaFile
+      Option.some (t.typeName, List.length batchRows, key)) ts
+
+def Analytics.readRows (path : Text) : {IO} List Row :=
+  match IO.readFile path with
+  | Option.some text => List.map rowOf (readAll text)
+  | Option.none => []
+
+/-- Records one event of type `t` locally, with a value for every field; returns its id. -/
+def Analytics.record (dir : Text) (t : EventType) (who : Text) (values : List (Text, Cell)) : {IO, Throw Text} Text :=
+  let cells := List.map (fun c =>
+    match List.lookup c.columnName values with
+    | Option.some v => Analytics.check t c v
+    | Option.none => Throw.throw ("event " ++ t.typeName ++ ": no value for " ++ c.columnName)) t.columns
+  forEach
+    values
+    (fun pair => if any (fun c => c.columnName == fst pair) t.columns then () else Throw.throw ("event " ++ t.typeName ++ " has no field " ++ fst pair))
+  let when := now ()
+  let id := Text.take
+    16
+    (Text.sha256 (Sexp.print (Sexp.list (Sexp.str t.typeHash :: Sexp.str when :: Sexp.str who :: List.map cellSexp cells))))
+  IO.appendFile
+    (eventsDir dir ++ "/pending/" ++ Analytics.fileName t)
+    (Sexp.print (rowSexp (Row.mk id when who cells)) ++ "\n")
+  id
+
+--
+-- Recording from the toolchain. Analytics never fails the command that records.
+--
+/-- Records an event of the type whose name ends in `.short`, if this codebase defines one; errors are dropped. -/
+def Analytics.recordIf (dir : Text) (ts : List EventType) (short : Text) (who : Text) (values : List (Text, Cell)) : {IO} Unit := if IO.getEnv "DEUS_EVENTS" == Option.some "0" then () else
+  match List.find (fun t => endsWith ("." ++ short) t.typeName || t.typeName == short) ts with
+  | Option.none => ()
+  | Option.some t =>
+      match try (fun _ => Analytics.record dir t who values) with
+      | Result.ok _ => ()
+      | Result.err _ => ()
+
+/-- A `TestRun` for one test or theorem `deus test` or `deus check` ran or found cached. -/
+def Analytics.recordRun (dir : Text) (ts : List EventType) (ns : Map Text Entry) (name : Text) (kind : Text) (passed : Bool) (cached : Bool) (deterministic : Bool) (evidence : Text) (cases : Int) (failure : Text) (ms : Int) : {IO} Unit := recordIf
+  dir
+  ts
+  "TestRun"
+  (recorder ())
+  [("subject", Cell.text (refTo (projectOf dir) ns name)), ("runKind", Cell.text kind), ("passed", Cell.bool passed), ("cached", Cell.bool cached), ("deterministic", Cell.bool deterministic), ("evidence", Cell.text evidence), ("cases", Cell.int cases), ("failure", Cell.text failure), ("ms", Cell.int ms)]
+
+/-- `AgentWrote` events for the names an `add` or `update --by <agent>` wrote. -/
+def Analytics.recordWrites (dir : Text) (ns : Map Text Entry) (agent : Text) (via : Text) (names : List Text) : {IO} Unit :=
+  let ts := typesNow dir
+  let project := projectOf dir
+  forEach names (fun name => recordIf
+    dir
+    ts
+    "AgentWrote"
+    agent
+    [("definition", Cell.text (refTo project ns name)), ("agent", Cell.text agent), ("via", Cell.text via)])
+
+/-- Who records: `$DEUS_AGENT`, else `$USER`, else `unknown`. -/
+def Analytics.recorder (u : Unit) : {IO} Text := getOr (orElse (IO.getEnv "DEUS_AGENT") (fun _ => IO.getEnv "USER")) "unknown"
+
+/-- The hash a reference stands for: the pinned hash, or the hash its name has now; `""` when neither. -/
+def Analytics.refHash (project : Text) (ns : Map Text Entry) (ref : Text) : Text :=
+  match Analytics.hashOf ref with
+  | "" => getOr (Option.map Entry.hash (Map.lookup (Analytics.nameOf project ref) ns)) ""
+  | h => h
+
+/-- The pinned reference to a name in `ns`. -/
+def Analytics.refTo (project : Text) (ns : Map Text Entry) (name : Text) : Text :=
+  match Map.lookup name ns with
+  | Option.some e => pinned project name (Entry.hash e)
+  | Option.none => nameIri project name
+
+--
+-- Push: clients only ever write to the remote.
+--
+def Analytics.remoteKey (t : EventType) (batch : Text) : Text := "events/" ++ t.typeName ++ "/" ++ t.typeHash ++ "/" ++ batch ++ ".parquet"
+
+def Analytics.rowJson (t : EventType) (r : Row) : Json := Json.obj ([("event_id", Json.str r.eventId), ("recorded_at", Json.str r.recordedAt), ("recorded_by", Json.str r.recordedBy)] ++
+  List.map (fun pair => ((fst pair).columnName, cellJson (snd pair))) (zip t.columns r.cells))
+
+def Analytics.rowLine (t : EventType) (r : Row) : Text := r.eventId ++ "  " ++ r.recordedBy ++ "  " ++
+  join "  " (List.map (fun pair => (fst pair).columnName ++ "=" ++ (match snd pair with
+  | Cell.int v => toText v
+  | Cell.bool v => if v then "true" else "false"
+  | Cell.text x => x)) (zip t.columns r.cells))
+
+def Analytics.rowOf (s : Sexp) : Row :=
+  match Sexp.args s with
+  | id :: when :: who :: cells => Row.mk (asText id) (asText when) (asText who) (List.map cellOf cells)
+  | _ => Row.mk "" "0" "" []
+
+def Analytics.rowSexp (r : Row) : Sexp := Sexp.node
+  "row"
+  ([Sexp.str r.eventId, Sexp.str r.recordedAt, Sexp.str r.recordedBy] ++ List.map cellSexp r.cells)
+
+/-- Pending and pushed rows of an event type. -/
+def Analytics.rows (dir : Text) (t : EventType) : {IO} (List Row, List Row) := (readRows (eventsDir dir ++ "/pending/" ++ Analytics.fileName t), readRows (eventsDir dir ++ "/pushed/" ++ Analytics.fileName t))
+
+/-- The table description a publisher needs: columns and types, as JSON. -/
+def Analytics.schemaJson (t : EventType) : Json := Json.obj [("type", Json.str t.typeName), ("hash", Json.str t.typeHash), ("columns", Json.arr (List.map
+  (fun c => Json.obj [("name", Json.str c.columnName), ("type", Json.str c.columnType)])
+  (systemColumns ++ t.columns)))]
+
+/-- Seconds in a wall time such as `1h 2m 03s`, `14m 46s` or `35m 00s`. -/
+def Analytics.seconds (wall : Text) : Int := foldl (fun total word =>
+  let n := getOr (fromText (Text.take (Text.length word - 1) word)) 0
+  if endsWith "h" word then total + 3600 * n else if endsWith "m" word then total + 60 * n else if endsWith "s" word then total + n else total) 0 (Text.split (trim wall) " ")
+
+/-- The explorer's `events.json` (D104): every event type with its columns, counts and latest rows
+  (at most `limit`), and the counts per definition hash. -/
+def Analytics.siteJson (dir : Text) (project : Text) (ns : Map Text Entry) (limit : Int) : {IO, Throw Text} Json :=
+  let ts := Analytics.types dir ns
+  let index := Codebase.namesByHash ns
+  let tallies := Map.toList (byDefinition dir project ns ts)
+  Json.obj [("project", Json.str project), ("types", Json.arr (List.map (typeJson dir limit) ts)), ("byDefinition", Json.obj (List.map (fun pair => (fst pair, definitionJson index (fst pair) (snd pair))) tallies))]
+
+def Analytics.tallyCount (x : (Text, (Text, Int))) : Int :=
+  match x with
+  | (_, _, n) => n
+
+def Analytics.tallyJson (x : (Text, (Text, Int))) : Json :=
+  match x with
+  | (typeName, column, n) => Json.obj [("type", Json.str typeName), ("column", Json.str column), ("count", Json.num n)]
+
+/-- One event type's entry in `events.json`: columns, counts and the latest rows, newest first. -/
+def Analytics.typeJson (dir : Text) (limit : Int) (t : EventType) : {IO} Json :=
+  match Analytics.rows dir t with
+  | (pending, pushed) =>
+      let newest := reverse (pushed ++ pending)
+      Json.obj [("name", Json.str t.typeName), ("hash", Json.str t.typeHash), ("columns", columnsJson t.columns), ("count", Json.num (List.length newest)), ("pending", Json.num (List.length pending)), ("pushed", Json.num (List.length pushed)), ("latest", Json.arr (List.map (rowJson t) (List.take limit newest)))]
+
+def Analytics.typeLine (entry : (EventType, (Int, Int))) : Text :=
+  match entry with
+  | (t, pending, pushed) => t.typeName ++ "  #" ++ Text.take 10 t.typeHash ++ "  " ++ toText (pending + pushed) ++
+      " events (" ++ toText pending ++ " pending)\n    " ++ join ", " (List.map (fun c => c.columnName ++ " : " ++ c.columnType) t.columns)
+
+/-- The event type a `@[event]` structure declares; a field that is not flat is an error. -/
+def Analytics.typeOf (dir : Text) (name : Text) (h : Text) (fieldNames : List Text) : {IO, Throw Text} EventType :=
+  let types :=
+    match readObject dir h with
+    | Option.some (Sexp.list (Sexp.sym "type" :: _ :: Sexp.int 0 :: Sexp.list (Sexp.sym "ctor" :: _ :: tys) :: [])) => tys
+    | _ => Throw.throw (name ++ " is marked @[event] but is not a structure without parameters")
+  let columns := List.map (fun pair =>
+    match Analytics.columnTypeOf (snd pair) with
+    | Option.some kind => Column.mk (fst pair) kind
+    | Option.none => Throw.throw ("event " ++ name ++ ": field " ++ fst pair ++ " is not Int, Bool, Text or CodeRef")) (zip fieldNames types)
+  EventType.mk name h columns
+
+/-- Every event type in a namespace, by name. -/
+def Analytics.types (dir : Text) (ns : Map Text Entry) : {IO, Throw Text} List EventType := filterMap (fun pair =>
+  match snd pair with
+  | Entry.type h _ fields => if isEvent dir h then Option.some (Analytics.typeOf dir (fst pair) h fields) else Option.none
+  | _ => Option.none) (Map.toList ns)
+
+/-- The event types of the current branch, or none when it cannot be read. -/
+def Analytics.typesNow (dir : Text) : {IO} List EventType :=
+  match try (fun _ => Analytics.types dir (Codebase.current dir)) with
+  | Result.ok ts => ts
+  | Result.err _ => []
+
+def Analytics.usage : Text := "usage: deus event types | record <Type> field=value… | import <file> | list [Type] [--about name] [--limit n] | stats | push [remote] | backfill history|timeline <file>"

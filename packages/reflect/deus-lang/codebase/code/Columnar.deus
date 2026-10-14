@@ -33,7 +33,7 @@ def Columnar.decode (t : Text) : List Sexp :=
         else
           let form := if c == 's' then Sexp.sym (entry symbols (next symbolRefs)) else if c == 't' then Sexp.str (entry strings (next stringRefs)) else if c == 'h' then
             let h := next hashRefs
-            Sexp.str (slice hashes (h * 64) (h * 64 + 64))
+            Sexp.str (Text.slice hashes (h * 64) (h * 64 + 64))
           else Sexp.int (next ints)
           match Sexp.push form stack done with
           | (stack2, done2) => go (i + 1) stack2 done2
@@ -117,11 +117,11 @@ def Columnar.parseDictionary (line : Text) : Dict Int Text :=
 def Columnar.parseNumbers (line : Text) : List Int := filterMap (fun x => if Text.isEmpty x then Option.none else fromText x) (Text.split line " ")
 
 /-- Reads either encoding: columnar text, or plain s-expressions (bundles written before D60). -/
-def Columnar.read (t : Text) : List Sexp := if startsWith Columnar.header t then decode t else readAll t
+def Columnar.read (t : Text) : List Sexp := if startsWith Columnar.header t then Columnar.decode t else readAll t
 
 test Columnar.roundTrips :=
   let bundle := Sexp.node "bundle" [Sexp.node
     "obj"
     [Sexp.str (Text.sha256 "a"), Sexp.node "term" [Sexp.node "lam" [Sexp.node "var" [Sexp.int 0]]]], Sexp.node "meta" [Sexp.str (Text.sha256 "a"), Sexp.node "doc" [Sexp.str "line one\nline \"two\""]], Sexp.node "n" [Sexp.int (0 - 3), Sexp.list []]]
   let forms := [bundle, Sexp.str (Text.sha256 "a")]
-  Columnar.read (encode forms) == forms && Columnar.read (Sexp.print bundle) == [bundle]
+  Columnar.read (Columnar.encode forms) == forms && Columnar.read (Sexp.print bundle) == [bundle]

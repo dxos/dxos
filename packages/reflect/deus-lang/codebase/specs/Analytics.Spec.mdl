@@ -1,0 +1,148 @@
+---
+name: Analytics.Spec
+---
+
+# The analytics store: checked spec
+
+Events about the codebase, kept beside it (D104). Dmytro: "analytical events are synced together
+with codebase, but clients generally only push, dont pull. each event type is defeined in the
+codebase. analytical db entires reference event types, and otherwise have flat structure: scalars,
+and refs to codebase. [...] codebase cannot referece into analytical events, but events referece
+into codebase."
+
+An event type is a `structure` marked `@[event]` whose fields are `Int`, `Bool`, `Text` or
+`CodeRef`. A row adds `event_id`, `recorded_at` (microseconds, UTC) and `recorded_by`. Rows are
+recorded under `events/pending/`, and `deus event push` writes each pending batch to the remote as
+one Parquet file, `events/<Type>/<type hash>/<batch>.parquet`, then moves it to `events/pushed/`.
+`scripts/analytics-publish.py` registers pushed files as Iceberg tables (`deus.test_run`, …), which
+Cloudflare Basin SQL (formerly R2 SQL) queries through Basin Catalog.
+
+A `CodeRef` is one of three forms (D105): a name IRI `<project>/<name>`, which follows the name;
+a pinned `<project>/<name>#<hash>`, which is fixed and names the definition; and a bare `#<hash>`.
+Recorders write the pinned form.
+
+## Extensions
+
+| Term | URI |
+| --- | --- |
+| `api` | `org.dxos.deus.api@1.0` |
+| `law` | `org.dxos.deus.law@1.0` |
+| `req` | `org.dxos.deus.req@1.0` |
+
+## APIs
+
+```mdl
+api A-1: event types and the local store
+  signatures:
+  - Analytics.types : Text -> Map Text Entry -> {IO, Throw Text} List analytics:EventType
+  - Analytics.record : Text -> analytics:EventType -> Text -> List (Text, analytics:Cell) -> {IO, Throw Text} Text
+  - Analytics.rows : Text -> analytics:EventType -> {IO} (List analytics:Row, List analytics:Row)
+  - Analytics.push : Text -> List analytics:EventType -> {replicate:Remote, IO, Throw Text} List (Text, (Int, Text))
+```
+
+```mdl
+api A-2: Parquet files
+  signatures:
+  - Parquet.write : analytics:EventType -> List analytics:Row -> List Int
+  - Parquet.read : List Int -> (List analytics:Column, List analytics:Row)
+```
+
+```mdl
+api A-3: references and counts
+  signatures:
+  - Analytics.pinned : Text -> Text -> Text -> Text
+  - Analytics.hashOf : Text -> Text
+  - Analytics.nameOf : Text -> Text -> Text
+  - Analytics.refHash : Text -> Map Text Entry -> Text -> Text
+  - Analytics.byDefinition : Text -> Text -> Map Text Entry -> List analytics:EventType -> {IO} Map Text (List (Text, (Text, Int)))
+  - Analytics.siteJson : Text -> Text -> Map Text Entry -> Int -> {IO, Throw Text} Json
+```
+
+## Event types
+
+```mdl
+req R-1: a field of an event type is Int, Bool, Text or CodeRef; any other type is not flat and is refused
+  by: Analytics.Spec.onlyFlatColumns
+```
+
+```mdl
+req R-2: the toolchain's own event types are TestRun, CiRun, AgentChange, AgentWrote and AgentStage
+  by: Analytics.Spec.toolchainEventTypes
+```
+
+## Recording
+
+```mdl
+req R-3: a recorded row reads back with its fields, its recorder and a 16-digit id
+  by: Analytics.Spec.recordReadsBack
+```
+
+```mdl
+req R-4: a row with a missing field, an unknown field or a value of the wrong kind is refused, and nothing is written
+  by: Analytics.Spec.recordRefusesBadRows
+```
+
+## Parquet
+
+```mdl
+law L-1: a file reads back as the columns and rows it was written from
+  theorem: Analytics.Spec.parquetRoundTrip
+  evidence: test
+```
+
+```mdl
+law L-2: decimal text round-trips through eight little-endian bytes
+  theorem: Analytics.Spec.decimalRoundTrip
+  evidence: test
+```
+
+```mdl
+req R-5: a file starts and ends with PAR1, and the four bytes before the last PAR1 are the footer's length
+  by: Analytics.Spec.parquetFraming
+```
+
+```mdl
+req R-6: pyarrow, DuckDB and an Iceberg catalog read the files a push writes
+  gap: 1ad89782
+```
+
+## Sync
+
+```mdl
+req R-7: a push only uploads, one Parquet file and the schema per pending batch, under events/<Type>/<hash>/, and moves the batch to pushed
+  by: Analytics.Spec.pushOnlyUploads
+```
+
+```mdl
+req R-8: a push with nothing pending touches nothing
+  by: Analytics.Spec.emptyPushUploadsNothing
+```
+
+```mdl
+req R-9: pushed tables are registered in Basin Catalog and queried with Basin SQL
+  gap: c5955f97
+```
+
+## References and counts
+
+```mdl
+law L-3: a pinned reference gives back its name and its hash
+  theorem: Analytics.Spec.pinnedRoundTrip
+  evidence: test
+```
+
+```mdl
+req R-10: a builtin's pinned fragment is its name, and its hash is `#` and the name again; a hex fragment is a hash or a hash prefix
+  by: Analytics.Spec.builtinRefs
+```
+
+```mdl
+req R-11: events count under the hash they pin, and a name IRI counts under the hash its name has now
+  by: Analytics.Spec.countsByHash
+```
+
+## Laws
+
+The tests run inside `Codebase.Spec.inStore`, a fresh codebase in the deterministic simulation.
+
+The laws are the definitions under `Analytics.Spec`: `deus ls Analytics.Spec.` lists them and `deus view` prints them.

@@ -192,7 +192,7 @@ def Mdl.uncomment (t : Text) : Text :=
   let i := indexOf t " # " 0
   if i < 0 then t else trim (Text.take i t)
 
-def Mdl.unquote (t : Text) : Text := if Text.length t >= 2 && startsWith "`" t && endsWith "`" t then slice t 1 (Text.length t - 1) else t
+def Mdl.unquote (t : Text) : Text := if Text.length t >= 2 && startsWith "`" t && endsWith "`" t then Text.slice t 1 (Text.length t - 1) else t
 
 /-- The core language's own rules: every block type is declared, and block ids are unique. -/
 def Mdl.validate (doc : Doc) : List Text :=

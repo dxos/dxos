@@ -1,9 +1,9 @@
 def Entry.fromSexp (s : Sexp) : Entry :=
   let a := Sexp.args s
   let txt := fun k => asText (getOr (get? a k) (Sexp.str ""))
-  let num := fun k => asInt (getOr (get? a k) (Sexp.int 0))
+  let num := fun k => Sexp.asInt (getOr (get? a k) (Sexp.int 0))
   let h := head s
-  if h == "term" then Entry.term (txt 0) else if h == "ctor" then Entry.ctor (txt 0) (num 1) (num 2) else if h == "type" then Entry.type (txt 0) (txt 1) (List.map asText (asList (getOr (get? a 2) (Sexp.list [])))) else if h == "ability" then Entry.ability (txt 0) (txt 1) else if h == "op" then Entry.op (txt 0) (num 1) (num 2) else if h == "test" then Entry.test (txt 0) else if h == "theorem" then Entry.theorem (txt 0) else if h == "spec" then Entry.spec (txt 0) else defect ("unknown entry " ++ Sexp.print s)
+  if h == "term" then Entry.term (txt 0) else if h == "ctor" then Entry.ctor (txt 0) (num 1) (num 2) else if h == "type" then Entry.type (txt 0) (txt 1) (List.map asText (Sexp.asList (getOr (get? a 2) (Sexp.list [])))) else if h == "ability" then Entry.ability (txt 0) (txt 1) else if h == "op" then Entry.op (txt 0) (num 1) (num 2) else if h == "test" then Entry.test (txt 0) else if h == "theorem" then Entry.theorem (txt 0) else if h == "spec" then Entry.spec (txt 0) else defect ("unknown entry " ++ Sexp.print s)
 
 /-- The hash an entry names (a constructor or operation names its type's or ability's). -/
 def Entry.hash : Entry -> Text
