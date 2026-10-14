@@ -17,6 +17,7 @@ import { toPublicKey } from '@dxos/protocols/buf';
 
 import { AgentOperation, AgentPresence, AgentSpace } from '#types';
 
+import { admitAgent } from './admit-agent.ts';
 import { makeAgent } from './create-agent.ts';
 
 /** What an agent's presence starts from: the URI of its home agent, which names its brain, and what it is called. */
@@ -117,6 +118,25 @@ const registerSpace = Effect.fnUntraced(function* (home: string, spaceId: SpaceI
   });
 });
 
+/**
+ * Admits the agent's identity to the space as a member, found by its DID in the agent's own space, which only its
+ * admins are in. An agent without an identity, or a client without the space, has nothing to admit.
+ */
+const admitHere = Effect.fnUntraced(function* ({ did, name }: Invitee, spaceId: SpaceId) {
+  const client = Option.getOrUndefined(yield* Capability.getOption(ClientCapabilities.Client));
+  const space = client?.spaces.get(spaceId);
+  const self = toPublicKey(client?.halo.identity.get()?.identityKey);
+  if (!client || !space || !self || did === undefined) {
+    return;
+  }
+  const identityKey = AgentSpace.administeredAgents(client.spaces.get(), self).find(
+    (agent) => agent.did === did,
+  )?.identityKey;
+  if (identityKey) {
+    yield* admitAgent(space, identityKey, name);
+  }
+});
+
 const handler: Operation.WithHandler<typeof AgentOperation.InviteAgent> = AgentOperation.InviteAgent.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ agent: agentRef }) {
@@ -125,6 +145,7 @@ const handler: Operation.WithHandler<typeof AgentOperation.InviteAgent> = AgentO
       if (AgentPresence.locate(invitee.home)?.spaceId !== db.spaceId) {
         yield* registerSpace(invitee.home, db.spaceId);
       }
+      yield* admitHere(invitee, db.spaceId);
       const { agent, created } = yield* inviteAgent(invitee);
       return { agent: Ref.make(agent), created };
     }),

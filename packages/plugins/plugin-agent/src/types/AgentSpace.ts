@@ -59,6 +59,7 @@ export type Summary = {
   spaceId: SpaceId;
   name?: string;
   did?: IdentityDid;
+  identityKey?: PublicKey;
   /** The URI of the agent in its home space, which names its brain; absent until the space is open. */
   home?: string;
 };
@@ -66,12 +67,13 @@ export type Summary = {
 /** The agents `identityKey` administers, read from their spaces. */
 export const administeredAgents = (spaces: readonly Space[], identityKey: PublicKey): Summary[] =>
   administeredBy(spaces, identityKey).map((space) => {
-    const did = agentOf(space)?.identity?.did;
+    const agent = agentOf(space)?.identity;
     const properties = space.isOpen ? space.properties : undefined;
     return {
       spaceId: space.id,
       name: properties?.name,
-      did: IdentityDid.isValid(did) ? did : undefined,
+      did: IdentityDid.isValid(agent?.did) ? agent.did : undefined,
+      identityKey: toPublicKey(agent?.identityKey),
       home: properties && Obj.getKeys(properties, AgentPresence.HOME_SOURCE).at(0)?.id,
     };
   });

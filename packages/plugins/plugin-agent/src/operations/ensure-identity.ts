@@ -10,7 +10,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Context } from '@dxos/context';
 import { Database, Obj } from '@dxos/echo';
-import { IdentityDid } from '@dxos/keys';
+import { IdentityDid, PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { buf } from '@dxos/protocols/buf';
@@ -18,12 +18,14 @@ import { CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { AgentOperation } from '#types';
 
+import { admitAgent } from './admit-agent.ts';
+
 /**
  * EDGE's answer to `POST /compute/brain`: the brain's identity and the caller's membership of the agent's default
  * space, as base64 protobuf.
  */
 const ProvisionedBrain = Schema.Struct({
-  identity: Schema.Struct({ identityDid: IdentityDid }),
+  identity: Schema.Struct({ identityDid: IdentityDid, identityKey: Schema.String }),
   membership: Schema.String,
 });
 
@@ -68,6 +70,15 @@ const handler: Operation.WithHandler<typeof AgentOperation.EnsureIdentity> = Age
         yield* Effect.tryPromise(() => client.value.halo.writeCredentials([credential])).pipe(
           Effect.catch((error) => Effect.sync(() => log.warn('membership not written to HALO', { error }))),
         );
+
+        // The agent is a member of the space it is created in, when that space takes members (see `admitAgent`).
+        const space = client.value.spaces.get(db.spaceId);
+        if (space) {
+          yield* Effect.try(() => PublicKey.fromHex(identity.identityKey)).pipe(
+            Effect.flatMap((identityKey) => admitAgent(space, identityKey, agent.name)),
+            Effect.catch((error) => Effect.sync(() => log.warn('agent not admitted to its space', { error }))),
+          );
+        }
       }
       return { provisioned: true, identityDid: identity.identityDid };
     }),

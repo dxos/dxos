@@ -188,6 +188,18 @@ const send = async (peer, text) => {
   return waitForReply(page, before);
 };
 
+/** Whether one of the peer's spaces, other than Kai's own, lists Kai among its members. */
+const listsAgentAsMember = (page) =>
+  page.evaluate(
+    (agent) =>
+      (globalThis.dxos?.client?.spaces.get() ?? []).some(
+        (space) =>
+          !space.tags.includes('org.dxos.space.agent') &&
+          space.members.get().some((member) => member.identity?.profile?.displayName === agent),
+      ),
+    AGENT,
+  );
+
 /** Kai's row in the account's Agents panel. */
 const agentRow = (page) => page.getByTestId('agent-list.item').filter({ hasText: AGENT }).first();
 
@@ -380,7 +392,7 @@ export const steps = [
   },
   {
     name: `Bob adds ${AGENT} to "${OTHER}" from Members › Add from contacts`,
-    subtitle: "QA-5 step 9: as Kai's admin he can, as he would add a person; EDGE checks it",
+    subtitle: "QA-5 step 9: as Kai's admin he can, and Kai becomes a member of the space; EDGE checks it",
     run: async ({ peers: { bob } }) => {
       const { page } = bob;
       await openSpace(bob, OTHER);
@@ -392,8 +404,9 @@ export const steps = [
       await bob.click(page.getByTestId('contact-picker.trigger').first());
       await bob.click(page.getByTestId('contact-picker.item').filter({ hasText: AGENT }).first());
       await bob.click(page.getByTestId('contactPicker.add'));
-      // The space lists it under Agents once it is here.
+      // The space lists it under Agents once it is here, and among its members.
       await treeRow(page, 'Agents').waitFor({ timeout: TIMEOUT });
+      await waitFor(() => listsAgentAsMember(page), { what: 'Offsite team to list Kai among its members' });
     },
   },
   {

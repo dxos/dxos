@@ -65,7 +65,7 @@ describe('AgentSpace', () => {
     expect(AgentSpace.administeredBy([kai, left, plain], other)).toEqual([]);
   });
 
-  test("an agent's space records the agent's name, its DID and the URI of its home agent", ({ expect }) => {
+  test("an agent's space records the agent's name, its identity and the URI of its home agent", ({ expect }) => {
     const did = IdentityDid.random();
     const home = EID.make({ spaceId: SpaceId.random(), entityId: EntityId.random() });
     const kai = space(
@@ -74,13 +74,14 @@ describe('AgentSpace', () => {
       Obj.make(SpaceProperties, { name: 'Kai', [Obj.Meta]: { keys: [AgentPresence.homeKey(home)] } }),
     );
     // Its properties are read only once it is open.
+    const scout = PublicKey.random();
     const opening = space(
       [AppSpace.AGENT_SPACE_TAG],
-      [member(PublicKey.random(), SpaceMember_Role.OWNER, did), member(me, SpaceMember_Role.ADMIN)],
+      [member(scout, SpaceMember_Role.OWNER, did), member(me, SpaceMember_Role.ADMIN)],
     );
     expect(AgentSpace.administeredAgents([kai, opening], me)).toEqual([
-      { spaceId: kai.id, name: 'Kai', did, home },
-      { spaceId: opening.id, name: undefined, did, home: undefined },
+      { spaceId: kai.id, name: 'Kai', did, identityKey: agent, home },
+      { spaceId: opening.id, name: undefined, did, identityKey: scout, home: undefined },
     ]);
     expect(AgentSpace.administeredAgents([kai, opening], other)).toEqual([]);
   });

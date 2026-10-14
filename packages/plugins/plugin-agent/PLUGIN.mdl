@@ -662,6 +662,8 @@ feat F-7: An agent's own space
   req F-7.3: `AgentSpace.admins` lists an agent's admins, every current member of its space but the agent, and `AgentSpace.agentOf` is the agent.
   req F-7.4: The account's Agents panel, right after Devices, lists the agents the identity administers (F-7.2): each one's name, its admins with the viewer marked, and Open space, which switches to the agent's space. It stays current as spaces and their members change.
   req F-7.5: EDGE keys an agent space's properties to the agent's URI (`AgentPresence.HOME_SOURCE`) when it mints the space. `AgentSpace.administeredAgents` reads each administered agent's name, DID and home from its space, so an admin who is not a member of the agent's home space can still add the agent to other spaces (F-6.1).
+  req F-7.6: An agent with an identity is a member of the shared spaces it is in. op:ensureIdentity admits its identity to the space the agent is created in, and op:inviteAgent to the space it joins, as an editor named after the agent. A locked space (a personal or private one, `MembershipPolicy.LOCKED`) takes no members after its genesis, so the agent works there without being one. Only a space's admins can admit members: the agent is created without the membership for anyone else, and the invitation fails.
+  req F-7.7: Creating an agent opens it at once. op:ensureIdentity runs in the background (its identity, its own space, its membership), and the agent's chat takes messages meanwhile: it runs on EDGE without an identity, and a message sent before EDGE has the new chat is delivered once it does.
 ```
 
 ## Acceptance
@@ -762,7 +764,18 @@ scenario T-10: Agent spaces list their admins   # AgentSpace.test.ts
   then:
     - agentOf is the owner, and the admins are the admin and the editor
     - the identity administers only the first space, and another identity none
-    - administeredAgents reads the name, DID and home URI an open agent space records, and only the DID of one still opening
+    - administeredAgents reads the name, DID, identity key and home URI an open agent space records, and only the DID and identity key of one still opening
+```
+
+```mdl
+scenario T-11: An agent is admitted to a space as a member   # admit-agent.test.ts
+  # covers [F-7.6]
+  given: a space owned by someone else
+  then:
+    - the agent's identity is admitted as an editor, named after the agent
+    - a current member is left as it is, and one that was removed is admitted again
+    - a locked space is left as it is, since it takes no members after its genesis
+    - a space that refuses the admission fails it with AdmitAgentError
 ```
 
 ## Not built
@@ -774,9 +787,11 @@ Design items from `docs/DESIGN.md` and `docs/MEMORY.md` that this package does n
   which exists any more, so Discord conversations do not reach the agent.
 - The intended shape: an agent is a member of the spaces it is invited to, people talk to it there as a
   bot in their chats, and each person has one conversation with it at the top level (L0), not one per space.
-  As built, an agent has no HALO identity, so the contact picker adds a presence (an `Agent` keyed to its
-  home) instead of admitting it; the member's one conversation is their private chat in the agent's home
-  space, which the presence's article opens; and chats in a space do not wake the agent.
+  As built, an agent with an identity is a member of each space it is in (F-7.6), but people talk to it
+  through a presence (an `Agent` keyed to its home); the member's one conversation is their private chat in
+  the agent's home space, which the presence's article opens; its messages carry no identity (`sender` is
+  `{ role: 'assistant' }`); and chats in a space do not wake the agent.
+- Removing an agent from a space's members leaves its presence there and the space registered with its brain.
 - A member who cannot reach the agent's home space talks to the presence in a chat of its own, which reads
   the home's brain but not the home conversation.
 - Memories and goals are objects in the space they were recorded in; only facts are shared through the
@@ -1058,7 +1073,7 @@ test QA-5: Two admins — Bob, made Kai's admin by Alice, adds Kai to his own sp
     to his own space from its Members panel and asks it what is planned: it answers from its brain. The autocue flow
     `autocue/agent-admins.mjs` walks it side by side, one browser per person.
   actors: human
-  covers: [F-6.1, F-6.5, F-6.7, F-7.1, F-7.2, F-7.4, F-7.5]
+  covers: [F-6.1, F-6.5, F-6.7, F-7.1, F-7.2, F-7.4, F-7.5, F-7.6, F-7.7]
   status: passing             # 2026-10-13, recorded by autocue/agent-admins.mjs against a local EDGE (dxos/edge#1293)
   given:
     - alice: an identity with the display name "Alice", on one device
@@ -1072,7 +1087,8 @@ test QA-5: Two admins — Bob, made Kai's admin by Alice, adds Kai to his own sp
       do: In Alice's space click + ("Add to space"), pick Agent, name it "Kai" and click Create.
       invoke: [op:createAgent] { name: "Kai" }
       capture: agent
-      expect: Kai's chat opens, and a space named Kai appears in Alice's space list
+      expect: Kai's chat opens at once, and a space named Kai appears in Alice's space list once EDGE has minted it
+      note: Alice's space is her personal one, which is locked, so Kai works there without being among its members (F-7.6).
     - name: Alice finds Kai in Profile › Agents
       do: Open Alice's profile and its Agents panel, listed after Devices.
       expect: Kai is listed with "Admins: Alice (you)"
@@ -1099,7 +1115,7 @@ test QA-5: Two admins — Bob, made Kai's admin by Alice, adds Kai to his own sp
     - name: Bob adds Kai to his own space from its Members panel
       do: In Bob's window open Offsite team, then Settings › Members; under "Add from contacts" pick Kai and click Add.
       invoke: [op:inviteAgent] { agent: Ref($agent.agent) }   # run in $given.other, as Bob
-      expect: the picker lists Alice and Kai, each once; after Add, Offsite team lists Kai under Agents, not among its members
+      expect: the picker lists Alice and Kai, each once; after Add, Offsite team lists Kai under Agents and among its members
       note: Bob is not a member of Alice's space, where Kai lives; the picker finds Kai through Kai's own space, which records its home (F-7.5), and EDGE accepts the space because Bob is Kai's admin (F-6.7).
     - name: Bob opens Kai in Offsite team
       do: Click Kai under Offsite team's Agents.
