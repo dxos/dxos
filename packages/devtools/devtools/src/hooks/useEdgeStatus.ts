@@ -12,14 +12,14 @@ import { type EdgeStatus } from '@dxos/protocols';
 import { useClient } from '@dxos/react-client';
 import { SpaceState, useSpaces, useSyncState } from '@dxos/react-client/echo';
 
+import { pollWithBackoff } from './poll.ts';
+
 /** Upper bound on waiting for replication before querying anyway, so a space that never connects is still reported. */
 const STARTUP_TIMEOUT = 15_000;
 
-/** Delay after the first report with issues (or a failed fetch) before querying again; doubles per retry. */
-const POLL_INTERVAL = 1_000;
+const INITIAL_POLL_DELAY = 1_000;
 
-/** A report whose issues persist is re-queried this often: each one fans out across every space on EDGE. */
-const MAX_POLL_INTERVAL = 60_000;
+const MAX_POLL_DELAY = 60_000;
 
 /** Space states that never open a replication session, so never gain an EDGE sync peer. */
 const NON_REPLICATING_STATES: SpaceState[] = [
@@ -31,8 +31,7 @@ const NON_REPLICATING_STATES: SpaceState[] = [
 
 /**
  * The edge HTTP health report, fetched once every active space replicates with EDGE, then re-fetched
- * with backoff while it reports issues, and on demand. EDGE flags a device the router sees but the
- * space's replicator has no session for, so querying during startup reports a spurious red flag for every space.
+ * with backoff while it reports issues, and on demand.
  */
 export const useEdgeStatus = (): { status?: EdgeStatus; refresh: () => void; copy: () => void } => {
   const client = useClient();
@@ -65,27 +64,24 @@ export const useEdgeStatus = (): { status?: EdgeStatus; refresh: () => void; cop
     }
 
     const ctx = new Context();
-    let interval = POLL_INTERVAL;
-    // Startup issues are often transient (EDGE still catching up), so keep re-querying until the report is clean.
-    const poll = async () => {
-      try {
-        const next = await client.edge.http.getStatus(ctx);
-        if (ctx.disposed) {
-          return;
-        }
-        setStatus(next);
-        if (next.problems.length === 0) {
-          return;
-        }
-      } catch (err) {
-        log.warn('failed to fetch edge status', { err });
-      }
-      scheduleTask(ctx, poll, interval);
-      interval = Math.min(interval * 2, MAX_POLL_INTERVAL);
-    };
-
     client.edge.http.setIdentity(createEdgeIdentity(client));
-    scheduleTask(ctx, poll);
+    // Startup issues are often transient (EDGE still catching up), so keep re-querying until the report is clean.
+    pollWithBackoff(
+      ctx,
+      async () => {
+        try {
+          const next = await client.edge.http.getStatus(ctx);
+          if (!ctx.disposed) {
+            setStatus(next);
+          }
+          return next.problems.length > 0;
+        } catch (err) {
+          log.warn('failed to fetch edge status', { err });
+          return true;
+        }
+      },
+      { initialDelay: INITIAL_POLL_DELAY, maxDelay: MAX_POLL_DELAY },
+    );
     return () => {
       void ctx.dispose();
     };

@@ -15,12 +15,12 @@ import { type Space, SpaceState, useSpaces } from '@dxos/react-client/echo';
 
 import { getSpaceDisplayName } from './getSpaceDisplayName.ts';
 import { countUnindexed } from './indexer-heads.ts';
+import { pollWithBackoff } from './poll.ts';
 
 /** Polled rather than subscribed: the indexer has no push channel to the client. */
-const POLL_INTERVAL = 5_000;
+const INITIAL_POLL_DELAY = 5_000;
 
-/** The poll backs off to this: each one fetches every document's heads for every space from EDGE. */
-const MAX_POLL_INTERVAL = 60_000;
+const MAX_POLL_DELAY = 60_000;
 
 export type IndexerRow = {
   spaceId: SpaceId;
@@ -86,15 +86,9 @@ export const useIndexerRows = (): { spaces: IndexerRow[]; refresh: () => void; c
 
   useEffect(() => {
     const ctx = new Context();
-    let interval = POLL_INTERVAL;
-    const poll = async () => {
-      await fetchRows();
-      scheduleTask(ctx, poll, interval);
-      interval = Math.min(interval * 2, MAX_POLL_INTERVAL);
-    };
     scheduleTask(ctx, async () => {
       client.edge.http.setIdentity(createEdgeIdentity(client));
-      await poll();
+      pollWithBackoff(ctx, fetchRows, { initialDelay: INITIAL_POLL_DELAY, maxDelay: MAX_POLL_DELAY });
     });
     return () => {
       generationRef.current++;
