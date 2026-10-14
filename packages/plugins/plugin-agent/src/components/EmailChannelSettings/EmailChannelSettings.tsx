@@ -46,24 +46,18 @@ export const EmailChannelSettings = ({
     () =>
       MenuBuilder.make()
         .root({ label: ['email-mailbox-actions.label', { ns: meta.profile.key }] })
+        // One toggle, as Activity's: connect while stopped, disconnect while running; reconnecting applies edits.
         .action(
-          'connect',
+          running ? 'disconnect' : 'connect',
           {
-            // Reconnecting pushes edited settings to EDGE, so the label follows the state.
-            label: [running ? 'email-mailbox-update.label' : 'email-mailbox-connect.label', { ns: meta.profile.key }],
-            icon: running ? 'ph--arrow-clockwise--regular' : 'ph--play--regular',
+            label: [
+              running ? 'email-mailbox-disconnect.label' : 'email-mailbox-connect.label',
+              { ns: meta.profile.key },
+            ],
+            icon: running ? 'ph--plugs-connected--regular' : 'ph--plugs--regular',
             disabled: busy,
           },
-          () => onConnect?.(),
-        )
-        .action(
-          'disconnect',
-          {
-            label: ['email-mailbox-disconnect.label', { ns: meta.profile.key }],
-            icon: 'ph--stop--regular',
-            disabled: busy || !running,
-          },
-          () => onDisconnect?.(),
+          () => (running ? onDisconnect : onConnect)?.(),
         )
         .build(),
     [running, busy, onConnect, onDisconnect],

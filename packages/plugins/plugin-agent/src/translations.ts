@@ -40,7 +40,6 @@ export const translations = [
         'email-mailbox-actions.label': 'Mailbox actions',
         'email-mailbox.title': 'Email',
         'email-mailbox-connect.label': 'Connect',
-        'email-mailbox-update.label': 'Update',
         'email-mailbox-disconnect.label': 'Disconnect',
         'email-mailbox-connected.label': 'Receiving mail',
         'email-mailbox-disconnected.label': 'Not connected',
