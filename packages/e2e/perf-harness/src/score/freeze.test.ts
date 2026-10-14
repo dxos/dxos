@@ -7,7 +7,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { FREEZE_FILE, assertNotFrozen, readFreeze } from './freeze.ts';
+import { FREEZE_FILE, assertNotFrozen, readFreeze, removeFreeze, writeFreeze } from './freeze.ts';
 
 describe('perf harness freeze', () => {
   let root: string;
@@ -39,5 +39,18 @@ describe('perf harness freeze', () => {
   test('a malformed freeze file is an error, not a silent thaw', ({ expect }) => {
     freeze('{"hash": 1}');
     expect(() => readFreeze(root)).toThrow(/malformed/);
+  });
+
+  test('thaw removes a malformed record too', ({ expect }) => {
+    freeze('{"hash": 1}');
+    expect(removeFreeze(root)).toEqual({ removed: true });
+    expect(readFreeze(root)).toBeUndefined();
+  });
+
+  test('a written record reads back whole', ({ expect }) => {
+    const record = { hash: 'abc', paths: ['packages/e2e/perf-harness/src'], since: '2026-10-09T15:00:00Z' };
+    writeFreeze(root, record);
+    expect(readFreeze(root)).toEqual(record);
+    expect(removeFreeze(root)).toEqual({ removed: true, freeze: record });
   });
 });
