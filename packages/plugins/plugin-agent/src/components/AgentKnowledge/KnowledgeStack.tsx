@@ -62,7 +62,8 @@ export const KnowledgeStack = <T,>({ items, getId, getText, renderItem, before }
           <Form.Viewport scroll>
             <Layout.Container gutter='inherit' gap='sm'>
               {before}
-              {visible.length === 0 ? (
+              {/* Only a filter that hides every item says so; a stack with nothing to show (the raw view) stays bare. */}
+              {items.length > 0 && visible.length === 0 ? (
                 <Status.Empty>{t('agent-knowledge-filter-empty.message')}</Status.Empty>
               ) : (
                 visible.map((item) => <React.Fragment key={getId(item)}>{renderItem(item)}</React.Fragment>)
