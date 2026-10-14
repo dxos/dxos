@@ -25,7 +25,7 @@
 /--
   An object store holding bundles by name; `put` never overwrites. `writeAll` stores files beside
   the bundles (the explorer's site) as (path, content) pairs, replacing what was there. The file
-  operations (D81) move files byte for byte under a folder beside the bundles: `keys folder` lists
+  operations (D82) move files byte for byte under a folder beside the bundles: `keys folder` lists
   the names in it, `download key file` copies one to a local file and says whether it existed,
   `upload key file mediaType` stores one, and `drop key` deletes one. Assets and the explorer's
   inbox use them.

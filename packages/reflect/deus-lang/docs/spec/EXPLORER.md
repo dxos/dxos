@@ -20,7 +20,7 @@ published to a remote. The codebase it is generated from is described in [CODEBA
   tasks.json                      every task, with links resolved and its history
   def/<page>.json                 one per visible definition
   change/<causal>.json            one per history node the app links to
-  comments.json                   comments on definitions and changes, by subject (D81)
+  comments.json                   comments on definitions and changes, by subject (D82)
   assets/<sha256>                 the files comments and tasks attach
 ```
 
@@ -236,7 +236,7 @@ as `assets/<sha256>` relative to the site.
 
 ## Writing
 
-The hosted explorer lets members comment and file tasks ([D81](../DECISIONS.md)). The app asks
+The hosted explorer lets members comment and file tasks ([D82](../DECISIONS.md)). The app asks
 `api/me`; when that answers, it shows sign-in, a comment box on definition, change and task cards (`m`
 focuses it), and a New task form (`n`) that links the focused definition. Without it (a local `deus
 explore`, a bare bucket), the app is read-only as before.

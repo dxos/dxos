@@ -42,7 +42,7 @@ def Assets.named (dir : Text) : {IO, Throw Text} List Text :=
   Set.toList (Set.fromList (fromTasks ++ fromThreads))
 
 /-
-  Assets (D81): files attached to comments, such as screenshots. A store keeps each one at
+  Assets (D82): files attached to comments, such as screenshots. A store keeps each one at
   `assets/<sha256>`, named by the SHA-256 of its bytes, and a remote at `<prefix>/assets/<sha256>`;
   objects name an asset by that hash, so bundles and the git export never carry its bytes.
 -/

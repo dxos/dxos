@@ -21,7 +21,7 @@ inductive Attachment @"urn:deus:task:Attachment" where
   | change (hash : Text)
 
 /--
-  A file attached to a comment (D81): its bytes are in the codebase's asset store under their
+  A file attached to a comment (D82): its bytes are in the codebase's asset store under their
   SHA-256, never in an object, so a screenshot does not bloat bundles or the git export.
 -/
 structure Asset @"urn:deus:task:Asset" where

@@ -88,6 +88,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 80  | 10-14 19:28 | 20m 40s        | `020553a0`  | DEUS in the browser: `deus build --browser`, an in-memory IO host for the wasm kernel, the whole toolchain as a page (D78, task 3b617154)                                                             |
 | 81  | 10-14 19:45 | 30m 00s        | `bd57d0d3`  | export directories shared by several codebases merge tasks and history instead of overwriting them (D79, task a93aee73)                                                                               |
 | 82  | 10-14 19:50 | 5m 00s         | `edc9d87d`  | native compilation: a C back end (`deus build --c`) compiled by clang/LLVM, benchmarks of every back end in docs/spec/NATIVE.md (D80, task 7ca05fc5)                                                  |
-| 83  | 10-14 19:46 | 8m 55s         | this commit | the explorer writes: GitHub sign-in for active `dxos` members, comments on definitions, changes and tasks, filing tasks with image attachments, all through the inbox that `deus inbox` applies (D81) |
+| 83  | 10-14 19:55 | 5m 00s         | `2a93c586`  | TypeScript interop: `deus bindings` writes typed TypeScript modules over the wasm kernel; TS answers DEUS abilities (D81, task 17d50ae5)                                                              |
+| 84  | 10-14 19:50 | 12m 22s        | this commit | the explorer writes: GitHub sign-in for active `dxos` members, comments on definitions, changes and tasks, filing tasks with image attachments, all through the inbox that `deus inbox` applies (D82) |
 
-Total from stage 1 to stage 83: 11h 27m.
+Total from stage 1 to stage 84: 11h 36m.

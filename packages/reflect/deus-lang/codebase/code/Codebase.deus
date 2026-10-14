@@ -1,5 +1,5 @@
 /-- A history node: a namespace snapshot, its parents, why it was made, its tasks snapshot, and the
-  record of history imported from an export (D67), and its comments snapshot (D81). `""` means
+  record of history imported from an export (D67), and its comments snapshot (D82). `""` means
   none for the last three. -/
 structure Codebase.Causal where
   snapshot : Text

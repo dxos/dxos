@@ -18,7 +18,7 @@ def Comments.current (dir : Text) : {IO, Throw Text} Map Text (List Comment) :=
   mapValues (fun h => Comments.read dir h) snapshot
 
 /-
-  Comments (D81): notes on definitions and changes, kept in the codebase as tasks are (D59), so
+  Comments (D82): notes on definitions and changes, kept in the codebase as tasks are (D59), so
   they branch, merge and replicate with the code. A task keeps its own comments; this holds the
   rest, one thread per subject.
 

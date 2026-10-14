@@ -26,7 +26,7 @@ def Wasm.binary (name : Text) : Option Int := if name == "Int.add" then Option.s
 def Wasm.compile (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {Throw Text | r} Option Sexp) (main : Text) (export : Text) : {Throw Text | r} List Int :=
   let fns := gather fetch meta main
   let names := dedup (concatMap (fun f => patternTypes f.fnBody) fns)
-  module fns (filterMap (fun t => Option.map (fun form => (t, form)) (fetch t)) names) export
+  Wasm.module fns (filterMap (fun t => Option.map (fun form => (t, form)) (fetch t)) names) export
 
 /-- A constructed value: `alloc` a block, store the tag and each field, and leave its address. -/
 def Wasm.construct (scope : Wasm.Scope) (env : List Int) (next : Ref Int) (tag : Int) (args : List Sexp) : {Throw Text} List Int :=

@@ -119,6 +119,24 @@ From docs/spec/README.md, Known divergences.
 
 From docs/spec/README.md, Known divergences.
 
+## TypeScript bindings: export polymorphic functions with codec parameters (`b6907aeb`)
+
+- state: todo
+- priority: medium
+- assignee: claude
+- labels: interop, typescript
+
+Follow-up of 17d50ae5: a function generic in a (firstOf : List a -> Option a) is skipped today. Export it as a generic TS function that takes the codec of each type variable, as generic types already do.
+
+## TypeScript bindings: pass functions across (callbacks and closures) (`1474b99e`)
+
+- state: todo
+- priority: medium
+- assignee: claude
+- labels: interop, typescript
+
+Follow-up of 17d50ae5: a parameter or result of function type is skipped. A TS callback could cross as a handle the kernel calls back through an ability; a DEUS closure as a handle TS can apply. Needs an embedding-ABI extension (functions only leave the kernel today, as {"$fn":true}).
+
 ## wasm: structural equality on constructed values (`186feaf2`)
 
 - state: todo
@@ -152,6 +170,15 @@ From docs/spec/README.md, Known divergences.
 - links `Ts.definition` (#e5f668ab9e)
 
 > claude: Filed by the TS-like dialect thread (D70).
+
+## TypeScript bindings: run in-process on the TypeScript kernel too (`353444f7`)
+
+- state: todo
+- priority: low
+- assignee: claude
+- labels: interop, typescript
+
+Follow-up of 17d50ae5: bindings run on the wasm kernel only. The TS kernel (src/kernel) would give synchronous calls with no wasm, but its host handler cannot suspend a run for an async TS handler.
 
 ## TypeScript kernel in the browser: its JIT runs eval about 1.4x faster than the wasm kernel; needs a synchronous sha256 and an injectable host (no node: imports) (`6e4360bd`)
 
@@ -212,14 +239,14 @@ Dmytro: one of the most impactful things you can do rn is a really good codebase
 
 Dmytro: explore embedding deus into browser apps via wasm (like codebase viewer for example)
 
-## Explorer accounts: GitHub sign-in, writes limited to active dxos org members, read-only when signed out (`3bb7f0f7`)
+## Explorer accounts: GitHub sign-in, writes limited to active dxos org members, read-only when signed out (`4909bee3`)
 
 - state: done
 - priority: high
 - assignee: claude
 - labels: explorer, writing
 - parent: 861438d2
-- links change #c3aa27a438
+- links change #68dcd2f5f1
 
 ## Explorer as an SPA showing several definitions at once (`84014a86`)
 
@@ -229,14 +256,14 @@ Dmytro: explore embedding deus into browser apps via wasm (like codebase viewer 
 - labels: review, explorer
 - links `Explorer.generate` (#c3e00dc212)
 
-## Explorer comments on definitions, changes and tasks, stored in the codebase (`b827edb2`)
+## Explorer comments on definitions, changes and tasks, stored in the codebase (`81438cac`)
 
 - state: done
 - priority: high
 - assignee: claude
 - labels: explorer, writing
 - parent: 861438d2
-- links change #c3aa27a438
+- links change #68dcd2f5f1
 
 ## Exports from several containers overwrite each other's history and tasks (`a93aee73`)
 
@@ -248,14 +275,14 @@ Dmytro: explore embedding deus into browser apps via wasm (like codebase viewer 
 
 Each thread exports codebase/ from its own ~/.deus, so the last export wins: history.sexp loses the other containers' entries, and tasks.sexp reverts tasks another container changed. Needed: fullLog dedup by causal hash plus importing codebase/history.sexp before export, and a field-wise task merge on import (Tasks.merge exists for branches).
 
-## File tasks from the explorer with image attachments stored as codebase assets (`16d433b5`)
+## File tasks from the explorer with image attachments stored as codebase assets (`747a4182`)
 
 - state: done
 - priority: high
 - assignee: claude
 - labels: explorer, writing
 - parent: 861438d2
-- links change #c3aa27a438
+- links change #68dcd2f5f1
 
 ## Keep ordinary comments, so the codebase can be the source of truth for the toolchain (`b09507db`)
 
@@ -327,6 +354,18 @@ A fresh container restored codebase/ (deus add code; task import) and got one ne
 - links change #e7f95e998b
 
 From docs/spec/README.md, Known divergences.
+
+## TypeScript interop: generate typed TypeScript bindings for DEUS namespaces (`17d50ae5`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: interop, typescript
+- links change #7510a284be
+
+From Dmytro: explore interop with ts and generating typescript binding types.
+
+> claude: Done (D81): deus bindings <prefix> -o <dir> writes <stem>.ts (types, codecs, handler types, an embedded image), deus-runtime.ts and deus_kernel.wasm. TypeScript calls DEUS functions; DEUS calls TypeScript by performing abilities the TS handlers answer. Tested by src/bindings/bindings.test.ts on examples/geometry.deus, strict tsc included.
 
 ## codebase/ export has a raw #ebad142960 reference the parser rejects, so it cannot be restored (`b8b3aab7`)
 

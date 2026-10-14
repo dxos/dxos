@@ -1,14 +1,25 @@
 # History of main
 
-- `b75d5795ff` task: set 16d433b5 state (by claude)
-- `6cdd718b34` task: link 16d433b5 to #c3aa27a438 (by claude)
-- `d558b3bb4c` task: set b827edb2 state (by claude)
-- `5e79a11a52` task: link b827edb2 to #c3aa27a438 (by claude)
-- `d2170f01b4` close 3bb7f0f7 by #c3aa27a438 (by claude)
-- `c3aa27a438` the explorer writes: GitHub sign-in, comments, tasks with images (D81) (by claude)
-- `3ee200e1f8` task: open 16d433b5 File tasks from the explorer with image attachments stored as codebase assets (by claude)
-- `da0eac7119` task: open b827edb2 Explorer comments on definitions, changes and tasks, stored in the codebase (by claude)
-- `678df20acd` task: open 3bb7f0f7 Explorer accounts: GitHub sign-in, writes limited to active dxos org members, read-only when signed out (by claude)
+- `32d2bffc00` task: set 747a4182 state (by claude)
+- `f75fd70e74` task: link 747a4182 to #68dcd2f5f1 (by claude)
+- `213c2a9ed5` task: set 81438cac state (by claude)
+- `fea464b8b5` task: link 81438cac to #68dcd2f5f1 (by claude)
+- `bb588af416` close 4909bee3 by #68dcd2f5f1 (by claude)
+- `68dcd2f5f1` the explorer writes: GitHub sign-in, comments, tasks with images (D82) (by claude)
+- `007a69d576` task: open 747a4182 File tasks from the explorer with image attachments stored as codebase assets (by claude)
+- `1ff3a83889` task: open 81438cac Explorer comments on definitions, changes and tasks, stored in the codebase (by claude)
+- `09f2f89158` task: open 4909bee3 Explorer accounts: GitHub sign-in, writes limited to active dxos org members, read-only when signed out (by claude)
+- `e666974c28` history: import 194 changes
+- `1f241c967c` task: import from tasks.sexp
+- `804de180dc` add code specs
+- `61307b80f9` task: open 353444f7 TypeScript bindings: run in-process on the TypeScript kernel too
+- `dd5833e34f` task: open 1474b99e TypeScript bindings: pass functions across (callbacks and closures)
+- `1e488a6077` task: open b6907aeb TypeScript bindings: export polymorphic functions with codec parameters
+- `39cbb23245` task: comment on 17d50ae5 (by claude)
+- `37bffc2ffa` close 17d50ae5 by #7510a284be (by claude)
+- `7510a284be` deus bindings: typed TypeScript modules for a namespace, on the wasm kernel (D81) (by claude)
+- `a6ec8f1d0b` task: set 17d50ae5 state (by claude)
+- `faa4e8b624` task: open 17d50ae5 TypeScript interop: generate typed TypeScript bindings for DEUS namespaces
 - `c0daf520e4` history: import 184 changes
 - `afa110cf75` task: import from tasks.sexp
 - `71eb24530c` export: merge 10 changes from codebase

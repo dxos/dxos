@@ -11,7 +11,7 @@
     def/<hash>.json               a definition: names, signature, highlighted source with its
                                   references linked, dependencies, dependents, verdict, tasks
     tasks.json                    every task, with its links resolved and its history
-    comments.json                 comments on definitions and changes, by subject (D81)
+    comments.json                 comments on definitions and changes, by subject (D82)
     assets/<sha256>               the files comments and tasks attach
 -/
 
@@ -176,7 +176,7 @@ def generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
       ("sig", Json.str (signature (metaFor h))), ("summary", Json.str (summaryOf (docOf (metaFor h)))),
       ("status", Json.str (if checked (snd pair) then statusOf (verdictOf dir h) else ""))]) entries)))
   IO.writeFile (out ++ "/tasks.json") (Json.render (Json.arr (List.map (fun t => taskJson dir ns (historyOf t) t) tasks)))
-  -- Comments on definitions and changes (D81), by subject, and the assets they and tasks attach.
+  -- Comments on definitions and changes (D82), by subject, and the assets they and tasks attach.
   IO.writeFile (out ++ "/comments.json") (Json.render (Json.obj (List.map (fun pair => (fst pair, Json.arr (List.map Cli.commentJson (snd pair)))) (Map.toList (Comments.current dir)))))
   IO.mkdirp (out ++ "/assets")
   List.forEach (Assets.named dir) (fun h =>

@@ -168,7 +168,7 @@ def Print.expr (p : Printer) (t : Sexp) (env : List Text) (ind : Int) (prec : In
                   Print.expr p b env (ind + 2) (level + 1))
           | Option.none => Print.application p f args env ind prec
       | (Sexp.list (Sexp.sym "prim" :: Sexp.str "Int.neg" :: []), a :: []) => paren 95 prec ("-" ++ Print.expr p a env ind 100)
-      | (Sexp.list (Sexp.sym "con" :: Sexp.str "#Pair" :: Sexp.int 0 :: Sexp.int 2 :: []), _ :: _ :: []) => "(" ++ join ", " (List.map (fun x => Print.expr p x env ind 0) (tupleItems t)) ++ ")"
+      | (Sexp.list (Sexp.sym "con" :: Sexp.str "#Pair" :: Sexp.int 0 :: Sexp.int 2 :: []), _ :: _ :: []) => "(" ++ join ", " (List.map (fun x => Print.expr p x env ind 0) (Print.tupleItems t)) ++ ")"
       | (Sexp.list (Sexp.sym "con" :: Sexp.str "#List" :: Sexp.int 1 :: Sexp.int 2 :: []), h :: rest :: []) =>
           match listItems t with
           | Option.some items => "[" ++ join ", " (List.map (fun x => Print.expr p x env ind 0) items) ++ "]"

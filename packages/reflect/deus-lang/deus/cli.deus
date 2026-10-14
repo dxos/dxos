@@ -963,7 +963,7 @@ def publishSite (dir : Text) (name : Text) (out : Text) (force : Bool) : {IO, Th
       match Text.split line " " with
       | [sum, path] => some (path, sum)
       | _ => none) (Text.lines (Option.getOr (IO.readFile manifest) "")))
-  -- Attached files are binary and already on the remote under `assets/`, where the Worker serves them (D81).
+  -- Attached files are binary and already on the remote under `assets/`, where the Worker serves them (D82).
   let files := List.filter (fun f => not (Text.startsWith "assets/" f)) (filesUnder out "")
   let sums := List.map (fun f => (f, Text.sha256 (Option.getOr (IO.readFile (out ++ "/" ++ f)) ""))) files
   let changed := List.filter (fun pair => Map.lookup (fst pair) previous != some (snd pair)) sums
@@ -1031,6 +1031,36 @@ def build (args : Args) : {IO, Throw Text} Unit :=
     | Result.ok _ => output args (fun _ => Json.obj [("binary", Json.str out)]) (fun _ => "Built " ++ out ++ ".")
     | Result.err f => throw (Failure.render f)
   | _ => throw "usage: deus build <term> -o <file>"
+
+/--
+  `deus bindings <prefix|name…> -o <dir> [--name stem]` (D81): a TypeScript module for the
+  functions under the prefixes, `<dir>/<stem>.ts`, with the runtime and the wasm kernel it loads.
+-/
+def bindings (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  match (args.positional, option args "out") with
+  | (first :: _, some out) =>
+    let stem := Option.getOr (option args "name") (Text.toLower (Names.lastSegment first))
+    let command := "deus bindings " ++ Text.join " " args.positional
+    match Bindings.generate dir args.positional command with
+    | (text, exported, skipped) =>
+      let copied := try (fun _ =>
+        let home := Build.require "DEUS_HOME"
+        IO.mkdirp out
+        IO.writeFile (out ++ "/" ++ stem ++ ".ts") text
+        let _ := Build.tool "cp" [home ++ "/src/bindings/runtime.ts", out ++ "/deus-runtime.ts"]
+        let _ := Build.tool "cp" [Build.wasmKernel (), out ++ "/deus_kernel.wasm"]
+        ())
+      match copied with
+      | Result.err f => throw (Failure.render f)
+      | Result.ok _ =>
+        List.forEach skipped (fun s => eprintln ("warning: not exported: " ++ fst s ++ ": " ++ snd s))
+        let path := out ++ "/" ++ stem ++ ".ts"
+        output args
+          (fun _ => Json.obj [("module", Json.str path), ("exported", Json.arr (List.map Json.str exported)),
+            ("skipped", Json.arr (List.map (fun s => Json.obj [("name", Json.str (fst s)), ("reason", Json.str (snd s))]) skipped))])
+          (fun _ => "Wrote " ++ path ++ " with " ++ Int.toText (List.length exported) ++ " functions.")
+  | _ => throw "usage: deus bindings <prefix|name…> -o <dir> [--name stem]"
 
 --
 -- Commands: tasks (D59).
@@ -1181,7 +1211,7 @@ def task (args : Args) : {IO, Throw Text} Unit :=
     output args (fun _ => Json.obj [("imported", Json.num n)]) (fun _ => "Imported " ++ Int.toText n ++ " tasks.")
   | _ => throw "usage: deus task [new <title…> | list | show <id> | set <id> --<field> v | comment <id> <text…> | link <id> <name> | unlink <id> <name>]"
 
-/-- `--attach <file>` copied into the asset store (D81); none without the option. -/
+/-- `--attach <file>` copied into the asset store (D82); none without the option. -/
 def attachments (dir : Text) (args : Args) : {IO, Throw Text} List Asset :=
   match option args "attach" with
   | some file => [Assets.add dir file]
@@ -1201,7 +1231,7 @@ def subjectOf (dir : Text) (given : Text) : {IO, Throw Text} Text :=
     match lookupName (Codebase.current dir) (if Text.startsWith "def:" given then Text.drop 4 given else given) with
     | (full, _) => Comments.definition full
 
-/-- `deus comment <name|change:h> <text…>` (D81): a comment on a definition or a change, kept in the codebase. -/
+/-- `deus comment <name|change:h> <text…>` (D82): a comment on a definition or a change, kept in the codebase. -/
 def comment (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let author := Option.getOr (option args "by") (Option.getOr (IO.getEnv "USER") "someone")
@@ -1233,7 +1263,7 @@ def comments (args : Args) : {IO, Throw Text} Unit :=
       (fun _ => if List.all (fun pair => List.isEmpty (snd pair)) shown then "No comments."
         else Text.join "\n" (List.concatMap (fun pair => [fst pair] ++ List.map commentLine (snd pair)) shown))
 
-/-- `deus asset add <file>` (D81): stores a file in the asset store by its SHA-256. -/
+/-- `deus asset add <file>` (D82): stores a file in the asset store by its SHA-256. -/
 def asset (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   match args.positional with
@@ -1242,7 +1272,7 @@ def asset (args : Args) : {IO, Throw Text} Unit :=
     output args (fun _ => assetJson a) (fun _ => a.hash ++ "  " ++ a.mediaType ++ "  " ++ a.fileName)
   | _ => throw "usage: deus asset add <file>"
 
-/-- `deus inbox [remote]` (D81): applies the comments and tasks members filed in the hosted explorer. -/
+/-- `deus inbox [remote]` (D82): applies the comments and tasks members filed in the hosted explorer. -/
 def inbox (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let name := remoteName args
@@ -1344,6 +1374,7 @@ def usage : Text :=
     "  export <dir>                         the codebase as text for git: code/<Namespace>.deus, tasks, history",
     "  build <fn> -o <file.wasm> --wasm     compile a first-order Int/Bool function (and its callees) to wasm",
     "  build <fn> -o <file> --c             the same subset to C, compiled to an executable by $CC (default cc); -o x.c writes the source",
+    "  bindings <prefix|name…> -o <dir>     a TypeScript module that calls those functions on the wasm kernel",
     "  compile <files|dirs…> --main <name>  compile files without a codebase",
     ""]
 
@@ -1387,6 +1418,7 @@ def dispatch (argv : List Text) : {IO, Throw Text} Unit :=
     else if command == "check" then Check.theorems args
     else if command == "image" then image args
     else if command == "build" then build args
+    else if command == "bindings" then bindings args
     else if command == "serve" then serve args
     else if command == "explore" then explore args
     else if command == "task" then task args

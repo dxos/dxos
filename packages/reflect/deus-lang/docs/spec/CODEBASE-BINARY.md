@@ -215,7 +215,7 @@ hash and seen-record the plain text.
 
 The `Remote` ability is the whole interface: `list`, `get`, `put` (never overwrites), `delete`, and
 `writeAll` for files beside the bundles, and four byte-for-byte file operations under a folder beside
-them ([D81](../DECISIONS.md)): `keys folder`, `download key file`, `upload key file mediaType` and
+them ([D82](../DECISIONS.md)): `keys folder`, `download key file`, `upload key file mediaType` and
 `drop key`. A remote URL is stored locally in `remotes/<name>/url`.
 
 | Remote URL                | Bundles at                                  | Other files                                                     |
