@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { chmodSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -436,7 +436,7 @@ describe('deus CLI', () => {
     const sources = [
       'deus/builtins.deus',
       'deus/prelude.deus',
-      'platform/cloudflare.deus',
+      'platform/web.deus',
       'examples/counter.deus',
       'examples/tally.deus',
     ];
@@ -448,6 +448,75 @@ describe('deus CLI', () => {
       ['Tally.objectsCallEachOther', 'pass'],
     ]);
   });
+
+  test(
+    'serves web handlers from a standalone native server',
+    { timeout: 240_000 },
+    async ({ expect, onTestFinished }) => {
+      process.env.DEUS_HOME = root;
+      const c = ['--codebase', join(scratch, 'server')];
+      deus('init', ...c);
+      const sources = [
+        'deus/builtins.deus',
+        'deus/prelude.deus',
+        'platform/web.deus',
+        'examples/notes.deus',
+        'examples/tally.deus',
+      ];
+      expect(deus('add', ...sources.map((path) => join(root, path)), ...c).code).toBe(0);
+      const start = (handler: string) => {
+        const binary = join(scratch, handler);
+        expect(deus('build', handler, '-o', binary, '--server', ...c).code).toBe(0);
+        const port = String(20_000 + Math.floor(Math.random() * 20_000));
+        const server = spawn(binary, [], {
+          env: { ...process.env, PORT: port, DEUS_DATA: join(scratch, `${handler}-data`) },
+        });
+        onTestFinished(() => {
+          server.kill();
+        });
+        return `http://127.0.0.1:${port}`;
+      };
+      const request = async (url: string, init?: RequestInit) => {
+        for (let attempt = 0; ; attempt++) {
+          try {
+            const response = await fetch(url, init);
+            return [response.status, await response.text(), response.headers.get('content-type')] as const;
+          } catch (err) {
+            if (attempt > 50) {
+              throw err;
+            }
+            await new Promise((resolve) => setTimeout(resolve, 100));
+          }
+        }
+      };
+
+      const notes = start('Notes.serve');
+      expect(await request(`${notes}/notes/greet?actor=me`, { method: 'PUT', body: 'hello' })).toEqual([
+        201,
+        'stored greet',
+        'text/plain; charset=utf-8',
+      ]);
+      expect(await request(`${notes}/notes/greet?actor=me`)).toEqual([200, 'hello', 'text/plain; charset=utf-8']);
+      expect((await request(`${notes}/notes/greet?actor=you`))[0]).toBe(404);
+      expect(await request(`${notes}/?actor=me`)).toEqual([
+        200,
+        '<!doctype html><title>Notes</title><h1>Notes</h1><ul><li><a href="/notes/greet">greet</a></li></ul>',
+        'text/html; charset=utf-8',
+      ]);
+
+      // Objects call each other by name, and an alarm arrives later as a request.
+      const tally = start('Tally.serve');
+      expect((await request(`${tally}/add?actor=a`, { method: 'POST' }))[1]).toBe('count 1, total 1');
+      expect((await request(`${tally}/add?actor=b`, { method: 'POST' }))[1]).toBe('count 1, total 2');
+      expect((await request(`${tally}/remind?actor=c`, { method: 'POST' }))[1]).toBe('reminder set');
+      let reminded = '';
+      for (let i = 0; i < 40 && reminded !== 'yes'; i++) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        reminded = (await request(`${tally}/reminded?actor=c`))[1];
+      }
+      expect(reminded).toBe('yes');
+    },
+  );
 
   test(
     'fetches a pinned tool by hash, caches it, and refuses a mismatch',

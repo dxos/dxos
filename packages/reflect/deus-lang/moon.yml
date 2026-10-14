@@ -4,6 +4,10 @@ tags:
   - ts-vite-build
   - ts-test
 tasks:
+  # The CLI tests build native web servers (D57) from the Rust kernel.
+  test:
+    deps:
+      - deus-kernel:cargo-build
   # Regenerates seed/deus.image with the current seed. Run it twice after changing deus/: the
   # second run must leave the seed unchanged (the self-hosting fixpoint, checked by src/seed.test.ts).
   self-build:

@@ -863,7 +863,7 @@ impl Machine {
             );
         }
         let name = self.symbols.name(ability).to_string();
-        if self.host.suspends() {
+        if self.host.suspends_on(&name) {
             return Err(Fail::Suspend {
                 ability: name,
                 index,

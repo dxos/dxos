@@ -59,6 +59,10 @@ pub trait Host {
     fn suspends(&self) -> bool {
         false
     }
+    /// Whether an operation of `ability` (a hash, or `#IO`-style builtin) suspends the run.
+    fn suspends_on(&self, _ability: &str) -> bool {
+        self.suspends()
+    }
 }
 
 /// The process's own file system, environment and streams (native, or WASI on wasm32-wasip1).
@@ -66,6 +70,8 @@ pub struct SystemHost {
     args: Vec<String>,
     start: Instant,
     stdout: std::io::BufWriter<std::io::Stdout>,
+    /// A server's runs suspend on user abilities, which the server answers (D57).
+    pub suspend_user: bool,
 }
 
 impl SystemHost {
@@ -74,6 +80,7 @@ impl SystemHost {
             args,
             start: Instant::now(),
             stdout: std::io::BufWriter::with_capacity(1 << 16, std::io::stdout()),
+            suspend_user: false,
         }
     }
 }
@@ -209,6 +216,10 @@ impl Host for SystemHost {
             ),
             Err(err) => (127, String::new(), err.to_string()),
         }
+    }
+
+    fn suspends_on(&self, ability: &str) -> bool {
+        self.suspend_user && !ability.starts_with('#')
     }
 
     fn flush(&mut self) {

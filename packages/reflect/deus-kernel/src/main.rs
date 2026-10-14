@@ -43,7 +43,9 @@ fn options() -> Options {
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let image = match run::embedded_image() {
-        Some(image) => image,
+        #[cfg(not(target_arch = "wasm32"))]
+        Some((image, true)) => std::process::exit(deus_kernel::server::serve(&image)),
+        Some((image, _)) => image,
         None => {
             let path = std::env::var("DEUS_SEED").unwrap_or_else(|_| normalize(SEED_PATH));
             match std::fs::read(&path) {

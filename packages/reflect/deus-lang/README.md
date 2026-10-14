@@ -20,7 +20,8 @@ deus/*.deus  ──compile (the seed runs the compiler)──▶  seed/deus.imag
 ```bash
 node bin/deus.mjs compile deus --main Cli.main -o out.seed   # the compiler compiling itself
 node bin/deus.mjs build Cli.main -o deus --native            # the CLI as a 1.6 MB executable
-node bin/deus.mjs build Counter.serve -o out --worker        # an actor as a Cloudflare Worker
+node bin/deus.mjs build Notes.serve -o out --worker          # a web handler as a Cloudflare Worker
+node bin/deus.mjs build Notes.serve -o notes --server        # …or as a standalone native server
 node bin/deus.mjs build gcd -o gcd.wasm --wasm               # first-order code compiled to wasm
 ```
 
@@ -42,9 +43,11 @@ deus push && deus pull && deus compact                       # immutable bundles
 - [`examples/sort.deus`](./examples/sort.deus) — insertion sort with a specification and formal
   proofs that it sorts and permutes.
 - [`examples/soundness.deus`](./examples/soundness.deus) — claims the prover must refuse.
-- [`examples/counter.deus`](./examples/counter.deus) — a Cloudflare Durable Object, tested in
+- [`examples/counter.deus`](./examples/counter.deus) — a Durable Object, tested in
   simulation and served on local workerd (`scripts/worker-test.sh`); the platform's ontology is
-  [`platform/cloudflare.deus`](./platform/cloudflare.deus).
+  [`platform/web.deus`](./platform/web.deus).
+- [`examples/notes.deus`](./examples/notes.deus) — an HTTP notes service, run unchanged in
+  simulation, as a native server (`deus serve`) and on Cloudflare.
 - [`examples/tally.deus`](./examples/tally.deus) — Durable Objects that call each other by name and
   set alarms, simulated deterministically and served on workerd.
 - [`examples/perf.mdl`](./examples/perf.mdl) — performance requirements on the sort, checked by

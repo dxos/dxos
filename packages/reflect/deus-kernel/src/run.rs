@@ -12,22 +12,32 @@ use crate::value::{unit, Fail};
 
 /// Marks an image appended to the kernel's own executable (`deus build --native`). The trailer
 /// is text, so DEUS code can write it: `…image, 20-digit decimal byte length, "DEUSIMG1"`.
+/// `DEUSSRV1` marks a web handler to serve instead of run (`deus build --server`, D57).
 const TRAILER: &[u8; 8] = b"DEUSIMG1";
+const SERVER_TRAILER: &[u8; 8] = b"DEUSSRV1";
 const LENGTH_DIGITS: usize = 20;
 
-/// The image appended to this executable, if any.
-pub fn embedded_image() -> Option<String> {
+/// The image appended to this executable, if any, and whether it is a web handler to serve.
+pub fn embedded_image() -> Option<(String, bool)> {
     let path = std::env::current_exe().ok()?;
     let bytes = std::fs::read(path).ok()?;
     let len = bytes.len();
     let tail = TRAILER.len() + LENGTH_DIGITS;
-    if len < tail || &bytes[len - TRAILER.len()..] != TRAILER {
+    if len < tail {
+        return None;
+    }
+    let marker = &bytes[len - TRAILER.len()..];
+    let server = marker == SERVER_TRAILER;
+    if marker != TRAILER && !server {
         return None;
     }
     let digits = std::str::from_utf8(&bytes[len - tail..len - TRAILER.len()]).ok()?;
     let size: usize = digits.trim_start_matches('0').parse().unwrap_or(0);
     let start = (len - tail).checked_sub(size)?;
-    Some(String::from_utf8_lossy(&bytes[start..len - tail]).into_owned())
+    Some((
+        String::from_utf8_lossy(&bytes[start..len - tail]).into_owned(),
+        server,
+    ))
 }
 
 /// Runs an image; returns the process exit code (70 for a defect, 71 for a panic).

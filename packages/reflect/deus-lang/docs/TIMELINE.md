@@ -45,6 +45,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 37  | 10-14 14:47 | 0m 33s         | `317f5828`  | VS Code grammar highlights ```mdl blocks; drop unreserved keywords                          |
 | 38  | 10-14 14:58 | 11m 12s        | `c9f7dcfd`  | deterministic replication test; scoped env in the fetch test; review refresh                |
 | 39  | 10-14 15:01 | 2m 19s         | `2632d259`  | fix the type error and format break that failed Check                                       |
-| 40  | 10-14 15:06 | 5m 38s         | this commit | wasm compiler: algebraic data on a linear-memory heap                                       |
+| 40  | 10-14 15:06 | 5m 39s         | `8f6c8a02`  | wasm compiler — algebraic data on a linear-memory heap                                      |
+| 41  | 10-14 15:15 | 8m 31s         | this commit | web layer: one handler on simulation, native server and Cloudflare                          |
 
-Total from stage 1 to stage 40: 5h 23m.
+Total from stage 1 to stage 41: 5h 32m.

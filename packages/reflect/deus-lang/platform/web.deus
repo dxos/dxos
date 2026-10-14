@@ -1,44 +1,58 @@
 /-
-  Cloudflare Workers and Durable Objects (P7, D45): the platform as DEUS data and abilities.
+  The web as DEUS data and abilities (P7, D45, D57), independent of where it runs.
 
-  An actor is a function `Request -> {Storage, Http, Actors, Alarm, IO} Response` named by its
-  definition; a Durable Object runs it on the wasm kernel (`deus build --worker`). Its row says
-  what it touches: `Storage` is the object's own transactional storage, `Http` is outbound
-  `fetch`, `Actors` calls other objects of the class by name, and `Alarm` schedules a later
-  request to itself. `Cloudflare.simulate` and `Cloudflare.simulateMany` run actors against
-  in-memory storage and a logical clock, deterministically, for tests.
+  A handler is a function `Request -> {Storage, Http, Actors, Alarm, IO} Response` named by its
+  definition. It serves a named object (a Durable Object, an actor). Its row says what it
+  touches: `Storage` is the object's own storage, `Http` is outbound requests, `Actors` calls
+  other objects by name, and `Alarm` schedules a later request to itself.
+
+  Three runtimes run the same handler:
+  - `Web.simulate` and `Web.simulateMany`: in memory, on a logical clock, for tests.
+  - `deus build <handler> --server` (or `deus serve`): a standalone native binary, serving
+    HTTP with storage on disk (`deus-kernel/src/server.rs`).
+  - `deus build <handler> --worker`: a Cloudflare Worker, with one Durable Object per name
+    (`deus-kernel/embed/worker.mjs`).
 -/
 
-structure Request @"urn:deus:cloudflare:Request" where
+structure Request @"urn:deus:web:Request" where
   verb : Text
   url : Text
   payload : Text
 
-structure Response @"urn:deus:cloudflare:Response" where
+structure Response @"urn:deus:web:Response" where
   status : Int
   content : Text
+  headers : List (Text, Text)
 
 /-- A Durable Object's own transactional storage. -/
-ability Storage @"urn:deus:cloudflare:Storage" where
+ability Storage @"urn:deus:web:Storage" where
   get : Text -> Option Text
   put : Text -> Text -> Unit
   delete : Text -> Bool
 
 /-- Outbound HTTP. -/
-ability Http @"urn:deus:cloudflare:Http" where
+ability Http @"urn:deus:web:Http" where
   fetch : Request -> Response
 
 /-- Other objects of the same class, by name: a call is a request served by that object. -/
-ability Actors @"urn:deus:cloudflare:Actors" where
+ability Actors @"urn:deus:web:Actors" where
   call : Text -> Request -> Response
 
 /-- The object's alarm: `set` schedules one `ALARM /alarm` request after the given milliseconds, replacing any earlier one. -/
-ability Alarm @"urn:deus:cloudflare:Alarm" where
+ability Alarm @"urn:deus:web:Alarm" where
   set : Int -> Unit
 
-namespace Cloudflare
+namespace Web
 
-def ok (content : Text) : Response := Response.mk 200 content
+def ok (content : Text) : Response := Response.mk 200 content []
+
+/-- An HTML page. -/
+def html (content : Text) : Response := Response.mk 200 content [("content-type", "text/html; charset=utf-8")]
+
+/-- A response with a status and no headers. -/
+def reply (code : Int) (content : Text) : Response := Response.mk code content []
+
+def notFound (path : Text) : Response := Response.mk 404 ("no route " ++ path) []
 
 /--
   Runs an actor on a sequence of requests against one in-memory storage, as a Durable Object
@@ -56,7 +70,7 @@ def simulate (actor : Request -> {Storage, Http | r} Response) (requests : List 
       let had := Map.contains key (Ref.get store)
       Ref.set store (Map.remove key (Ref.get store))
       k had
-    | Http.fetch _ -> k => k (Response.mk 503 "no network in simulation")
+    | Http.fetch _ -> k => k (Response.mk 503 "no network in simulation" [])
   let responses := List.map serve requests
   (responses, Ref.get store)
 
@@ -85,7 +99,7 @@ def simulateMany (actor : Request -> {Storage, Http, Actors, Alarm | r} Response
       let had := Map.contains key (storeOf name)
       update name (fun m => Map.remove key m)
       k had
-    | Http.fetch _ -> k => k (Response.mk 503 "no network in simulation")
+    | Http.fetch _ -> k => k (Response.mk 503 "no network in simulation" [])
     | Actors.call other inner -> k => k (serve other inner)
     | Alarm.set delay -> k =>
       Ref.set alarms (Map.insert name (Ref.get clock + delay) (Ref.get alarms))
@@ -106,4 +120,4 @@ def simulateMany (actor : Request -> {Storage, Http, Actors, Alarm | r} Response
   let fired := fire 0 []
   (responses, Ref.get stores, fired)
 
-end Cloudflare
+end Web

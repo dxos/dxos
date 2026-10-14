@@ -205,6 +205,21 @@ To find where time goes:
   slower).
 - For code, `Code.cost` and `perf` blocks state budgets in machine steps.
 
+## The web
+
+A web handler is a function `Request -> {Storage, Http, Actors, Alarm} Response`
+([`platform/web.deus`](../platform/web.deus), D57). The same definition runs three ways:
+
+```bash
+deus test Notes                              # Web.simulateMany: in memory, deterministic
+deus serve Notes.serve --port 8080           # a native server, storage under ./deus-data
+deus build Notes.serve -o out --worker       # a Cloudflare Worker with Durable Objects
+```
+
+`?actor=<name>` picks the object, which is a Durable Object on Cloudflare and a storage
+directory locally. [`examples/notes.deus`](../examples/notes.deus) is a notes service, and
+[`examples/tally.deus`](../examples/tally.deus) shows objects calling each other and alarms.
+
 ## Projects
 
 A codebase is one project, named by an IRI (`deus project init https://dxos.org/deus/std`).

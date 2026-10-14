@@ -12,9 +12,10 @@ stop() { if [ -n "$server" ]; then kill -- "-$server" 2>/dev/null || true; fi; }
 trap 'stop; rm -rf "$work"' EXIT
 export DEUS_CODEBASE="$work/codebase"
 node bin/deus.mjs init >/dev/null
-node bin/deus.mjs add deus/builtins.deus deus/prelude.deus platform/cloudflare.deus examples/counter.deus examples/tally.deus >/dev/null
+node bin/deus.mjs add deus/builtins.deus deus/prelude.deus platform/web.deus examples/counter.deus examples/tally.deus examples/notes.deus >/dev/null
 node bin/deus.mjs test Counter
 node bin/deus.mjs test Tally
+node bin/deus.mjs test Notes
 
 # Builds `$1` as a Worker and serves it on a free port, replacing the previous server.
 serve() {
@@ -58,3 +59,11 @@ for _ in $(seq 1 20); do
 done
 expect "/reminded?actor=c" "yes"
 echo "worker: objects call each other by name, and alarms fire, on workerd"
+
+# The notes service, unchanged from the native server (D57): headers and per-object storage.
+serve Notes.serve
+expect "/notes/greet?actor=me" "stored greet" PUT
+expect "/notes/greet?actor=me" "stored greet" POST
+expect "/notes?actor=me" "greet"
+[ "$(curl -s -o /dev/null -w '%{content_type}' "http://127.0.0.1:$port/?actor=me")" = "text/html; charset=utf-8" ] || { echo "notes index is not HTML"; exit 1; }
+echo "worker: the notes service runs unchanged on workerd"

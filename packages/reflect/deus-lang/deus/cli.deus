@@ -13,7 +13,7 @@ structure Args where
   options : Map Text Text
 
 /-- Options that never take a value. -/
-def booleanFlags : Map Text Unit := Set.fromList ["json", "core", "all", "force", "help", "integration", "wasm", "native", "worker"]
+def booleanFlags : Map Text Unit := Set.fromList ["json", "core", "all", "force", "help", "integration", "wasm", "native", "worker", "server"]
 
 def parseArgs (args : List Text) : Args :=
   let rec go rest pos opts :=
@@ -753,6 +753,33 @@ def image (args : Args) : {IO, Throw Text} Unit :=
     | none => IO.print text
   | _ => throw "usage: deus image <term> -o <file>"
 
+/--
+  `deus serve <handler> [--port n]`: serves a web handler on this machine (D57). The server is
+  built into the artifacts layer by the hash of its image, so serving unchanged code starts at
+  once. It runs until stopped.
+-/
+def serve (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  let ns := Codebase.current dir
+  match lookupName ns (Option.getOr (List.head? args.positional) "") with
+  | (_, Entry.term h) =>
+    let image := Image.build (fetcher dir) h
+    let out := dir ++ "/artifacts/server-" ++ Text.sha256 image
+    let built := if IO.exists out then Result.ok () else try (fun _ =>
+      IO.mkdirp (dir ++ "/artifacts")
+      Build.server image out)
+    match built with
+    | Result.err f => throw (Failure.render f)
+    | Result.ok _ =>
+      let port := Option.getOr (option args "port") "8080"
+      IO.eprint ("serving " ++ Option.getOr (List.head? args.positional) "" ++ " on http://127.0.0.1:" ++ port ++ "\n")
+      match IO.exec "env" ["PORT=" ++ port, out] with
+      | (code, out2, err) =>
+        IO.print out2
+        IO.eprint err
+        if code == 0 then () else IO.exit code
+  | _ => throw "usage: deus serve <handler> [--port n]"
+
 /-- `deus build <term> -o <file> [--native]`: a standalone executable that runs `term ()`. -/
 def build (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
@@ -766,6 +793,7 @@ def build (args : Args) : {IO, Throw Text} Unit :=
         | Result.ok bytes => IO.writeBytes out bytes
         | Result.err message => throw (Failure.of message [])
       else if flag args "worker" then Build.worker image (Text.replace "." "-" (Text.toLower (Option.getOr (List.head? args.positional) "actor"))) out
+      else if flag args "server" then Build.server image out
       else if flag args "native" then Build.native image out
       else Build.executable image out (dir ++ "/artifacts")
     match try target with
@@ -821,6 +849,8 @@ def usage : Text :=
     "  build <name> -o <file> [--native]    write a standalone executable that runs name ()",
     "                                       (--native: Rust kernel + image, ~1 MB; default: Node SEA)",
     "  build <actor> -o <dir> --worker      write a Cloudflare Worker serving the actor from a Durable Object",
+    "  build <handler> -o <file> --server   write a standalone native web server for a handler",
+    "  serve <handler> [--port n]           serve a web handler locally (storage in ./deus-data)",
     "  build <fn> -o <file.wasm> --wasm     compile a first-order Int/Bool function (and its callees) to wasm",
     "  compile <files|dirs…> --main <name>  compile files without a codebase",
     ""]
@@ -862,6 +892,7 @@ def dispatch (argv : List Text) : {IO, Throw Text} Unit :=
     else if command == "check" then Check.theorems args
     else if command == "image" then image args
     else if command == "build" then build args
+    else if command == "serve" then serve args
     else if command == "help" then IO.print usage
     else die ("unknown command " ++ command ++ "\n" ++ usage)
 

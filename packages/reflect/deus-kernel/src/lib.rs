@@ -8,6 +8,8 @@ pub mod host;
 pub mod machine;
 pub mod prims;
 pub mod run;
+#[cfg(not(target_arch = "wasm32"))]
+pub mod server;
 pub mod sexp;
 pub mod text;
 pub mod value;

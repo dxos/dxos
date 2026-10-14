@@ -126,3 +126,15 @@ perhaps add an alarm to remind you of that every 30 minutes
 - we need an abastraction layer on top of cloudflare (http handlers, durable objects) so that programs written with it can be deployed to cf, but also run as standalone binaries
 - binary store format, suggestion: look at columnar stores with column compression
 - performance is always a good thing to look at if youre not sure what to do
+
+---
+
+- we need a codebase explorer like https://share.unison-lang.org/@andreystepanov/unidecode -- should work from cli locally, but also hosted for codebase on r2
+
+---
+
+- we need a task tracking ontology in the codebase -- think like linear or github issues, but then we can attach it to codebase entries: code, change history directly
+
+---
+
+- add human-targeted GETTING_STARTED guide: how would they install, run, language basics, feature-overview. have couple receipies: lang, proofs, http, clouflare -- whatever showcases language best

@@ -9,12 +9,12 @@ import wasm from './deus_kernel.wasm';
 // actor's image; the actor's abilities are answered here, by IRI.
 import { createKernel, run } from './kernel.mjs';
 
-const STORAGE = 'urn:deus:cloudflare:Storage';
-const HTTP = 'urn:deus:cloudflare:Http';
-const ACTORS = 'urn:deus:cloudflare:Actors';
-const ALARM = 'urn:deus:cloudflare:Alarm';
-const REQUEST = 'urn:deus:cloudflare:Request';
-const RESPONSE = 'urn:deus:cloudflare:Response';
+const STORAGE = 'urn:deus:web:Storage';
+const HTTP = 'urn:deus:web:Http';
+const ACTORS = 'urn:deus:web:Actors';
+const ALARM = 'urn:deus:web:Alarm';
+const REQUEST = 'urn:deus:web:Request';
+const RESPONSE = 'urn:deus:web:Response';
 const IO = '#IO';
 const none = { $: '#Option', tag: 0, fields: [] };
 const some = (value) => ({ $: '#Option', tag: 1, fields: [value] });
@@ -33,8 +33,8 @@ export class DeusActor {
     const url = new URL(request.url);
     url.searchParams.delete('actor');
     const payload = request.method === 'GET' || request.method === 'HEAD' ? '' : await request.text();
-    const [status, content] = await this.serve([request.method, url.pathname + url.search, payload]);
-    return new Response(content, { status });
+    const [status, content, headers] = await this.serve([request.method, url.pathname + url.search, payload]);
+    return new Response(content, { status, headers: headers.map((pair) => pair.fields) });
   }
 
   /** Delivers the alarm `Alarm.set` scheduled as an `ALARM /alarm` request. */
@@ -50,7 +50,7 @@ export class DeusActor {
         argument: { $: REQUEST, tag: 0, fields },
         handle: (ability, op, args) => this.handle(ability, op, args),
       });
-      return result.state === 'done' ? result.value.fields : [500, JSON.stringify(result)];
+      return result.state === 'done' ? result.value.fields : [500, JSON.stringify(result), []];
     } finally {
       idle.push(kernel);
     }
@@ -73,7 +73,7 @@ export class DeusActor {
     if (ability === HTTP && op === 0) {
       const [method, url, payload] = args[0].fields;
       const response = await fetch(url, { method, body: method === 'GET' || method === 'HEAD' ? undefined : payload });
-      return { $: RESPONSE, tag: 0, fields: [response.status, await response.text()] };
+      return { $: RESPONSE, tag: 0, fields: [response.status, await response.text(), []] };
     }
     if (ability === ACTORS && op === 0) {
       // Another object of this class, by name; the request goes to its `fetch`.
@@ -85,7 +85,7 @@ export class DeusActor {
           body: method === 'GET' || method === 'HEAD' ? undefined : payload,
         }),
       );
-      return { $: RESPONSE, tag: 0, fields: [response.status, await response.text()] };
+      return { $: RESPONSE, tag: 0, fields: [response.status, await response.text(), []] };
     }
     if (ability === ALARM && op === 0) {
       await this.ctx.storage.setAlarm(Date.now() + args[0]);
