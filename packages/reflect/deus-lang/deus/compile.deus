@@ -100,10 +100,14 @@ def metaForm (doc : Option Text) (sig : Option Sexp) (locals : List Text) (attrs
   let attrsPart := if List.isEmpty attrs then [] else [node "attrs" (List.map (fun a => Sexp.list (s a.attr :: List.map s a.values)) attrs)]
   node "meta" (sigPart ++ docPart ++ localsPart ++ attrsPart ++ extra)
 
-/-- Comment metadata (D66): `(lead "…")` before the declaration, `(notes (n i "…") …)` inside it. -/
-def commentMeta (lead : Text) (notes : List (Int, Text)) : List Sexp :=
-  (if Text.isEmpty lead then [] else [node "lead" [s lead]]) ++
-    (if List.isEmpty notes then [] else [node "notes" (List.map (fun pair => node "n" [n (fst pair), s (snd pair)]) notes)])
+/--
+  Comment metadata (D66): `(lead "…")` before the declaration, `(notes (n i "…") …)` inside it;
+  `(spellings (n i "…") …)` for number literals the source wrote another way (D84).
+-/
+def commentMeta (lead : Text) (notes : List (Int, Text)) (spellings : List (Int, Text)) : List Sexp :=
+  let indexed := fun (head : Text) (list : List (Int, Text)) =>
+    if List.isEmpty list then [] else [node head (List.map (fun pair => node "n" [n (fst pair), s (snd pair)]) list)]
+  (if Text.isEmpty lead then [] else [node "lead" [s lead]]) ++ indexed "notes" notes ++ indexed "spellings" spellings
 
 /-- Proof tokens; lemma names inside `[…]` become references, so a proof's hash covers its lemmas. -/
 def proofTokens (names : Names) (scope : Scope) (tokens : List Text) : {Throw Text} List Sexp :=
@@ -277,7 +281,7 @@ def batch (base : Map Text Entry) (store : Text -> {Throw Text | r} Option Sexp)
       | none => []
     let paramsPart := if List.isEmpty params then [] else [node "params" (List.map s params)]
     let fieldsPart := if List.all (fun names => List.all Text.isEmpty names) fieldNames then [] else [node "fields" (List.map (fun names => node "c" (List.map s names)) fieldNames)]
-    match docPart ++ paramsPart ++ fieldsPart ++ commentMeta lead [] with
+    match docPart ++ paramsPart ++ fieldsPart ++ commentMeta lead [] [] with
     | [] => ()
     | parts => Ref.set metas ((h, node "meta" parts) :: Ref.get metas)
   let entries := List.concatMap (fun item =>
@@ -351,14 +355,14 @@ def batch (base : Map Text Entry) (store : Text -> {Throw Text | r} Option Sexp)
         | (_, some list) => Resolve.equations ctx list locals
         | _ => Resolve.fail ctx "definition has no body") []
       match Resolve.stripNoted named with
-      | (core, locals, notes) =>
+      | (core, locals, notes, spellings) =>
         Ref.set pending (Pending.mk fqn "term" core :: Ref.get pending)
-        addMetaWith ("@" ++ fqn) doc (some (signature names (bodyScope item) binders type)) locals attributes (commentMeta item.lead notes)
+        addMetaWith ("@" ++ fqn) doc (some (signature names (bodyScope item) binders type)) locals attributes (commentMeta item.lead notes spellings)
     | Decl.check _ body doc attributes _ =>
       match Resolve.stripNoted (Resolve.expr ctx body []) with
-      | (core, locals, notes) =>
+      | (core, locals, notes, spellings) =>
         Ref.set pending (Pending.mk fqn "test" core :: Ref.get pending)
-        addMetaWith ("@" ++ fqn) doc none locals attributes (commentMeta item.lead notes)
+        addMetaWith ("@" ++ fqn) doc none locals attributes (commentMeta item.lead notes spellings)
     | Decl.thm _ binders prop proof doc _ pos =>
       let params := List.map (fun b => Pat.id b.binder [] pos) binders
       let types := List.map (fun b =>
@@ -369,7 +373,7 @@ def batch (base : Map Text Entry) (store : Text -> {Throw Text | r} Option Sexp)
       | (core, locals) =>
         let form := node "theorem" [Sexp.list (Sexp.sym "binders" :: types), core, node "proof" (proofTokens names (bodyScope item) proof)]
         Ref.set pending (Pending.mk fqn "theorem" form :: Ref.get pending)
-        addMeta ("@" ++ fqn) doc none locals (commentMeta item.lead [])
+        addMeta ("@" ++ fqn) doc none locals (commentMeta item.lead [] [])
     | _ => ())
   -- Pass 2½: infer types, group by group, and check signatures; schemes join the metadata.
   let typeObjectMap := Map.fromList (Ref.get typeObjects)

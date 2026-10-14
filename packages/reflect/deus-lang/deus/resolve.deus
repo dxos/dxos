@@ -334,6 +334,9 @@ def pat (ctx : Ctx) (p : Pat) (binds : List (Option Text)) : {Throw Text} (Sexp,
   match p with
   | Pat.wild => (node "pany" [], binds)
   | Pat.int v => (node "pint" [n v], binds)
+  | Pat.spelled text q =>
+    match pat ctx q binds with
+    | (core, binds2) => (node "spelled" [s text, core], binds2)
   | Pat.text v => (node "ptext" [s v], binds)
   | Pat.bool v => (node "pcon" [s "#Bool", n (if v then 1 else 0)], binds)
   | Pat.unit => (node "pcon" [s "#Unit", n 0], binds)
@@ -513,6 +516,7 @@ def expr (ctx : Ctx) (e : Expr) (locals : List (Option Text)) : {Throw Text} Sex
   | Expr.ann x _ => go x
   | Expr.proj x field pos => app (fieldAccessor ctx pos field) [go x]
   | Expr.note text x => node "note" [s text, go x]
+  | Expr.spelled text x => node "spelled" [s text, go x]
 
 /-- A handler clause: arguments in order, then the continuation, as Core's `on` expects. -/
 def opClause (ctx : Ctx) (o : OpArm) (locals : List (Option Text)) : {Throw Text} Sexp :=
@@ -546,37 +550,39 @@ def opClause (ctx : Ctx) (o : OpArm) (locals : List (Option Text)) : {Throw Text
 /-- Canonical Core and the binder names in pre-order; every binder contributes exactly one name. -/
 def strip (form : Sexp) : (Sexp, List Text) :=
   match stripNoted form with
-  | (core, names, _) => (core, names)
+  | (core, names, _, _) => (core, names)
 
-/-- `strip`, also returning the comments it removed (D66). -/
-def stripNoted (form : Sexp) : (Sexp, List Text, List (Int, Text)) :=
+/-- `strip`, also returning the comments (D66) and number spellings (D84) it removed. -/
+def stripNoted (form : Sexp) : (Sexp, List Text, List (Int, Text), List (Int, Text)) :=
   match stripAcc form [] with
   | (named, names) =>
     match unnote named with
-    | (core, notes) => (core, List.reverse names, notes)
+    | (core, notes, spellings) => (core, List.reverse names, notes, spellings)
 
 /--
-  Removes `(note "text" e)` nodes. Each comment is returned with the pre-order index of `e` among
-  the list nodes of the result, the position `Notes.restore` puts it back at (D66).
+  Removes `(note "text" e)` and `(spelled "text" e)` nodes. Each is returned with the pre-order
+  index of `e` among the list nodes of the result, the position `Print.restore` puts it back at
+  (D66, D84): comments first, then spellings.
 -/
-def unnote (form : Sexp) : (Sexp, List (Int, Text)) :=
-  let rec go x count acc :=
+def unnote (form : Sexp) : (Sexp, List (Int, Text), List (Int, Text)) :=
+  let rec go x count acc spellings :=
     match x with
     | Sexp.list [Sexp.sym "note", Sexp.str text, inner] =>
       match acc with
-      | (at, earlier) :: rest => if at == count then go inner count ((at, earlier ++ "\n" ++ text) :: rest) else go inner count ((count, text) :: acc)
-      | [] => go inner count [(count, text)]
+      | (at, earlier) :: rest => if at == count then go inner count ((at, earlier ++ "\n" ++ text) :: rest) spellings else go inner count ((count, text) :: acc) spellings
+      | [] => go inner count [(count, text)] spellings
+    | Sexp.list [Sexp.sym "spelled", Sexp.str text, inner] => go inner count acc ((count, text) :: spellings)
     | Sexp.list items =>
-      let rec each rest out c a :=
+      let rec each rest out c a sp :=
         match rest with
-        | [] => (Sexp.list (List.reverse out), c, a)
+        | [] => (Sexp.list (List.reverse out), c, a, sp)
         | y :: more =>
-          match go y c a with
-          | (y2, c2, a2) => each more (y2 :: out) c2 a2
-      each items [] (count + 1) acc
-    | _ => (x, count, acc)
-  match go form 0 [] with
-  | (core, _, notes) => (core, List.reverse notes)
+          match go y c a sp with
+          | (y2, c2, a2, sp2) => each more (y2 :: out) c2 a2 sp2
+      each items [] (count + 1) acc spellings
+    | _ => (x, count, acc, spellings)
+  match go form 0 [] [] with
+  | (core, _, notes, spellings) => (core, List.reverse notes, List.reverse spellings)
 
 def nameOf (x : Sexp) : Text :=
   match x with

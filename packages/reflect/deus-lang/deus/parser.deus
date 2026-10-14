@@ -13,7 +13,7 @@ structure Parser where
 
 namespace Parser
 
-def eofToken : Token := Token.mk Kind.eof "" 0 0 true
+def eofToken : Token := Token.mk Kind.eof "" 0 0 true ""
 
 def peek (p : Parser) : Token :=
   match Ref.get p.toks with
@@ -54,7 +54,7 @@ def kindName : Kind -> Text
 
 def errorAt (t : Token) (message : Text) : {Throw Text} a :=
   match t with
-  | Token.mk kind value line col _ =>
+  | Token.mk kind value line col _ _ =>
     throw (Int.toText line ++ ":" ++ Int.toText col ++ ": " ++ message ++ " (at " ++ kindName kind ++ " " ++ show value ++ ")")
 
 def error (p : Parser) (message : Text) : {Throw Text} a := errorAt (peek p) message
@@ -501,6 +501,13 @@ def app (p : Parser) : {Throw Text} Expr :=
 
 def intOf (t : Token) : Int := Option.getOr (Int.fromText t.value) 0
 
+/-- An integer literal, keeping how the source wrote it for `view` (it never reaches Core). -/
+def intExpr (t : Token) : Expr :=
+  if Text.isEmpty t.spelling then Expr.int (intOf t) else Expr.spelled t.spelling (Expr.int (intOf t))
+
+def intPat (t : Token) : Pat :=
+  if Text.isEmpty t.spelling then Pat.int (intOf t) else Pat.spelled t.spelling (Pat.int (intOf t))
+
 /-- An atom followed by any `(e).field` projections. -/
 def atom (p : Parser) : {Throw Text} Expr :=
   let rec projections e :=
@@ -522,7 +529,7 @@ def atomBase (p : Parser) : {Throw Text} Expr :=
     Expr.dot t.value pos
   else if t.kind == Kind.int then
     skip p
-    Expr.int (intOf t)
+    intExpr t
   else if t.kind == Kind.text then
     skip p
     Expr.text t.value
@@ -733,7 +740,7 @@ def patAtom (p : Parser) : {Throw Text} Pat :=
       Pat.as t.value (patAtom p)
     else Pat.id t.value [] pos
   else if t.kind == Kind.dot then Pat.dot t.value [] pos
-  else if t.kind == Kind.int then Pat.int (intOf t)
+  else if t.kind == Kind.int then intPat t
   else if t.kind == Kind.text then Pat.text t.value
   else if isTok t "true" then Pat.bool true
   else if isTok t "false" then Pat.bool false

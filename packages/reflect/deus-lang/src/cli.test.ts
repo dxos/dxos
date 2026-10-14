@@ -813,6 +813,8 @@ describe('deus CLI', () => {
       '  | n => n * n',
       '',
       'def plain (side : Int) : Int := side * side',
+      '',
+      "def quoted (c : Int) : Bool := c == '\"' || c == 0x60 || c == 1_000",
     ].join('\n');
     deus('add', file('comments.deus', source), ...c);
     // Comments are metadata: the definition hashes as it does without them.
@@ -822,9 +824,15 @@ describe('deus CLI', () => {
     const uncommented = source
       .split('\n')
       .filter((line) => !line.trim().startsWith('--'))
-      .join('\n');
+      .join('\n')
+      .replace(`'"'`, '34')
+      .replace('0x60', '96')
+      .replace('1_000', '1000');
     deus('add', file('uncommented.deus', uncommented), ...bare);
     expect(deus('names', 'area', '--json', ...bare).stdout).toBe(deus('names', 'area', '--json', ...c).stdout);
+    // So are number spellings (D84): `'"'` hashes as `34`, and view prints it as written.
+    expect(deus('names', 'quoted', '--json', ...bare).stdout).toBe(deus('names', 'quoted', '--json', ...c).stdout);
+    expect(deus('view', 'quoted', ...c).stdout).toContain(`c == '"' || c == 0x60 || c == 1_000`);
     const viewed = deus('view', 'area', ...c).stdout;
     expect(viewed).toContain('-- Shapes measured in whole units.\n\n-- Squares only, for now.\ndef area');
     expect(viewed).toContain('  -- Negative sides are measured as positive.\n  let s :=');
@@ -841,6 +849,7 @@ describe('deus CLI', () => {
     const text = (dir: string) => readFileSync(join(dir, 'code', '_root.deus'), 'utf8');
     expect(text(second)).toBe(text(first));
     expect(text(first)).toContain('-- A point has no area.');
+    expect(text(first)).toContain(`c == '"' || c == 0x60`);
     const hashOf = (args: string[]) =>
       JSON.parse(deus('ls', '--json', ...args).stdout).find((row: { name: string }) => row.name === 'area').hash;
     expect(hashOf(restored)).toBe(hashOf(c));
