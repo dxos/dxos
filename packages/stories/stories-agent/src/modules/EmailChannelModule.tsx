@@ -10,7 +10,6 @@ import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { Filter } from '@dxos/echo';
 import * as AgentEmail from '@dxos/plugin-agent/AgentEmail';
 import { useQuery } from '@dxos/react-client/echo';
-import * as Panel from '@dxos/react-ui/Panel';
 import { Channel } from '@dxos/types';
 
 /**
@@ -27,11 +26,7 @@ export const EmailChannelModule = (_props: Surface.ComponentProps<Record<string,
   }
 
   return (
-    // No header of its own: the settings surface's toolbar names the panel and holds its connect and disconnect actions.
-    <Panel.Root data-testid='email-channel'>
-      <Panel.Body>
-        <Surface.Surface type={AppSurface.ObjectProperties} data={data} />
-      </Panel.Body>
-    </Panel.Root>
+    // The settings surface is a panel of its own, its header the toolbar with the connect and disconnect actions.
+    <Surface.Surface type={AppSurface.ObjectProperties} data={data} />
   );
 };

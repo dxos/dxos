@@ -9,7 +9,7 @@ import { Form } from '@dxos/react-ui-form';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import * as Banner from '@dxos/react-ui/Banner';
 import * as UiHooks from '@dxos/react-ui/Hooks';
-import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { meta } from '#meta';
@@ -69,31 +69,35 @@ export const EmailChannelSettings = ({
     [running, busy, onConnect, onDisconnect],
   );
 
-  // The toolbar leads with the panel's name so a host without a header of its own can show this one as its top bar.
+  // A panel of its own, its toolbar the header, so a host without a header shows it as the other panels' top bar.
   return (
-    <Layout.Grid rows={['min', 'fill']} grow>
-      <ActionToolbar
-        {...menuActions}
-        attendableId={attendableId}
-        alwaysActive={attendableId === undefined}
-        start={
-          <>
-            <Toolbar.Text>{t('email-mailbox.title')}</Toolbar.Text>
-            <Toolbar.Separator variant='gap' />
-          </>
-        }
-      />
+    <Panel.Root data-testid='email-channel'>
+      <Panel.Header>
+        <ActionToolbar
+          {...menuActions}
+          attendableId={attendableId}
+          alwaysActive={attendableId === undefined}
+          start={
+            <>
+              <Toolbar.Text>{t('email-mailbox.title')}</Toolbar.Text>
+              <Toolbar.Separator variant='gap' />
+            </>
+          }
+        />
+      </Panel.Header>
       <Form.Root<AgentEmail.Properties> schema={AgentEmail.Properties} values={values} autoSave onSave={onSave}>
-        <Form.Viewport scroll>
-          <Form.Content>
-            <Form.FieldSet label={t('email-channel.label')} description={t('email-channel.description')}>
-              <Form.Fields />
-            </Form.FieldSet>
-            <MailboxBanner status={status} error={error} />
-          </Form.Content>
-        </Form.Viewport>
+        <Panel.Body asChild>
+          <Form.Viewport scroll>
+            <Form.Content>
+              <Form.FieldSet label={t('email-channel.label')} description={t('email-channel.description')}>
+                <Form.Fields />
+              </Form.FieldSet>
+              <MailboxBanner status={status} error={error} />
+            </Form.Content>
+          </Form.Viewport>
+        </Panel.Body>
       </Form.Root>
-    </Layout.Grid>
+    </Panel.Root>
   );
 };
 
