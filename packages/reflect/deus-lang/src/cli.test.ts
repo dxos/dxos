@@ -480,7 +480,7 @@ describe('deus CLI', () => {
         file('unhandled.deus', 'def oops (u : Unit) : {IO} Unit := println (Int.toText (Tour.total []))\n'),
         ...c,
       );
-      expect(unhandled.stderr).toContain('unhandled ability Prices');
+      expect(unhandled.stderr).toContain('unhandled ability Prices (calling Tour.total)');
     },
   );
 
@@ -642,7 +642,8 @@ describe('deus CLI', () => {
         'examples/tally.deus',
       ];
       expect(deus('add', ...sources.map((path) => join(root, path)), ...c).code).toBe(0);
-      const start = (handler: string) => {
+      // The server reports on stderr when it listens and when an alarm fires; the test waits on those lines.
+      const start = async (handler: string) => {
         const binary = join(scratch, handler);
         expect(deus('build', handler, '-o', binary, '--server', ...c).code).toBe(0);
         const port = String(20_000 + Math.floor(Math.random() * 20_000));
@@ -652,23 +653,26 @@ describe('deus CLI', () => {
         onTestFinished(() => {
           server.kill();
         });
-        return `http://127.0.0.1:${port}`;
+        let log = '';
+        const waiters: { line: string; resolve: () => void }[] = [];
+        server.stderr.on('data', (chunk: Buffer) => {
+          log += chunk.toString();
+          for (const waiter of waiters.filter((waiter) => log.includes(waiter.line))) {
+            waiters.splice(waiters.indexOf(waiter), 1);
+            waiter.resolve();
+          }
+        });
+        const logged = (line: string) =>
+          new Promise<void>((resolve) => (log.includes(line) ? resolve() : waiters.push({ line, resolve })));
+        await logged('serving on');
+        return { url: `http://127.0.0.1:${port}`, logged };
       };
       const request = async (url: string, init?: RequestInit) => {
-        for (let attempt = 0; ; attempt++) {
-          try {
-            const response = await fetch(url, init);
-            return [response.status, await response.text(), response.headers.get('content-type')] as const;
-          } catch (err) {
-            if (attempt > 50) {
-              throw err;
-            }
-            await new Promise((resolve) => setTimeout(resolve, 100));
-          }
-        }
+        const response = await fetch(url, init);
+        return [response.status, await response.text(), response.headers.get('content-type')] as const;
       };
 
-      const notes = start('Notes.serve');
+      const { url: notes } = await start('Notes.serve');
       expect(await request(`${notes}/notes/greet?actor=me`, { method: 'PUT', body: 'hello' })).toEqual([
         201,
         'stored greet',
@@ -683,16 +687,12 @@ describe('deus CLI', () => {
       ]);
 
       // Objects call each other by name, and an alarm arrives later as a request.
-      const tally = start('Tally.serve');
+      const { url: tally, logged } = await start('Tally.serve');
       expect((await request(`${tally}/add?actor=a`, { method: 'POST' }))[1]).toBe('count 1, total 1');
       expect((await request(`${tally}/add?actor=b`, { method: 'POST' }))[1]).toBe('count 1, total 2');
       expect((await request(`${tally}/remind?actor=c`, { method: 'POST' }))[1]).toBe('reminder set');
-      let reminded = '';
-      for (let i = 0; i < 40 && reminded !== 'yes'; i++) {
-        await new Promise((resolve) => setTimeout(resolve, 100));
-        reminded = (await request(`${tally}/reminded?actor=c`))[1];
-      }
-      expect(reminded).toBe('yes');
+      await logged('alarm fired for c');
+      expect((await request(`${tally}/reminded?actor=c`))[1]).toBe('yes');
     },
   );
 

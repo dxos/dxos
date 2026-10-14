@@ -203,6 +203,7 @@ impl Server {
             self.alarms.remove(&object);
             let request = ("ALARM".to_string(), "/alarm".to_string(), String::new());
             self.serve(&object, &request);
+            eprintln!("alarm fired for {object}");
         }
     }
 }

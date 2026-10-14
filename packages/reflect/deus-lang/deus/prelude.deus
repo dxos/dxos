@@ -412,7 +412,33 @@ def values (m : Map k v) : List v := foldr (fun _ value acc => value :: acc) [] 
 
 def size (m : Map k v) : Int := foldr (fun _ _ n => n + 1) 0 m
 
-def fromList (pairs : List (k, v)) : Map k v := List.foldl (fun m p => insert (fst p) (snd p) m) Map.tip pairs
+/-- Whether keys strictly ascend, as `toList` returns them and as stored snapshots hold them. -/
+def ascending (pairs : List (k, v)) : Bool :=
+  match pairs with
+  | a :: rest =>
+    match rest with
+    | b :: _ => compare (fst a) (fst b) < 0 && ascending rest
+    | [] => true
+  | [] => true
+
+/-- A balanced tree from strictly ascending pairs in linear time: the middle pair is the root. -/
+def fromAscending (pairs : List (k, v)) : Map k v :=
+  let rec build n xs :=
+    if n == 0 then (Map.tip, xs)
+    else
+      let half := n / 2
+      match build half xs with
+      | (l, rest) =>
+        match rest with
+        | pair :: rest2 =>
+          match build (n - half - 1) rest2 with
+          | (r, rest3) => (mk l (fst pair) (snd pair) r, rest3)
+        | [] => (l, [])
+  fst (build (List.length pairs) pairs)
+
+/-- Later pairs win over earlier ones with the same key. Ascending input skips rebalancing. -/
+def fromList (pairs : List (k, v)) : Map k v :=
+  if ascending pairs then fromAscending pairs else List.foldl (fun m p => insert (fst p) (snd p) m) Map.tip pairs
 
 def update (key : k) (f : Option v -> v) (m : Map k v) : Map k v := insert key (f (lookup key m)) m
 
