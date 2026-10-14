@@ -428,6 +428,13 @@ export class Client {
       }));
     performance.mark('client.initialize:services-created');
     log('client.initialize: services provider created');
+    // Once, not per `_open`: the provider outlives a reopen and keeps every callback it is given.
+    const services = this._services;
+    services.onReconnect?.(async () => {
+      const rpc = services.rpc;
+      this._echoClient._updateServices({ dataService: rpc, queryService: rpc, feedService: rpc });
+      await this._echoClient._notifyReconnect();
+    });
     this._iframeManager = this._options.shell
       ? new IFrameManager({ source: new URL(this._options.shell, window.location.origin) })
       : undefined;

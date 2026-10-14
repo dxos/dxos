@@ -450,6 +450,11 @@ export class FeedHandle {
     }
   }
 
+  /** Whether an append exists only in this client: not yet sent, or sent and not yet acknowledged. */
+  hasPendingWrites(): boolean {
+    return this.#dirtyCores.size > 0 || this.#inFlight.size > 0;
+  }
+
   /**
    * Wait for every pending local `Obj.update` to be captured and sent (not for it to be echoed back
    * through polling — the index that serves queries is caught up synchronously by the query host

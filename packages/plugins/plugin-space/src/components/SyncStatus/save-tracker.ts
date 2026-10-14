@@ -10,9 +10,12 @@ import { type EchoDatabase, type SaveStateChangedEvent } from '@dxos/echo-client
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-export const createClientSaveTracker = (client: Client, cb: (state: 'saved' | 'saving') => void) => {
+/** `failing` means a change could not be handed to the worker, so it exists only in this page. */
+export type SaveState = 'saved' | 'saving' | 'failing';
+
+export const createClientSaveTracker = (client: Client, cb: (state: SaveState) => void) => {
   const CleanupFns: Record<SpaceId, CleanupFn> = {};
-  const state: Record<SpaceId, 'saved' | 'saving'> = {};
+  const state: Record<SpaceId, SaveState> = {};
 
   const install = (spaces: Space[]) => {
     for (const space of spaces) {
@@ -23,7 +26,8 @@ export const createClientSaveTracker = (client: Client, cb: (state: 'saved' | 's
       state[space.id] = 'saved';
       CleanupFns[space.id] = createSpaceSaveTracker(space, (s) => {
         state[space.id] = s;
-        cb(Object.values(state).some((s) => s === 'saving') ? 'saving' : 'saved');
+        const states = Object.values(state);
+        cb(states.includes('failing') ? 'failing' : states.includes('saving') ? 'saving' : 'saved');
       });
     }
   };
@@ -45,7 +49,7 @@ export type SaveTrackedSpace = {
   waitUntilReady(): Promise<unknown>;
 };
 
-export const createSpaceSaveTracker = (space: SaveTrackedSpace, cb: (state: 'saved' | 'saving') => void): CleanupFn => {
+export const createSpaceSaveTracker = (space: SaveTrackedSpace, cb: (state: SaveState) => void): CleanupFn => {
   const ctx = new Context();
 
   void space
@@ -56,20 +60,26 @@ export const createSpaceSaveTracker = (space: SaveTrackedSpace, cb: (state: 'sav
       }
 
       let hasUnsavedChanges = false;
+      let failing = false;
       let lastFlushPromise: Promise<void> | undefined;
-      const reportUnsaved = ({ unsavedDocuments }: SaveStateChangedEvent) => {
-        hasUnsavedChanges = unsavedDocuments.length > 0;
-        if (hasUnsavedChanges) {
+      const reportUnsaved = ({ unsavedDocuments, pendingCreations, failing: sendFailing }: SaveStateChangedEvent) => {
+        hasUnsavedChanges = unsavedDocuments.length > 0 || pendingCreations > 0;
+        failing = sendFailing;
+        if (failing) {
+          lastFlushPromise = undefined;
+          cb('failing');
+        } else if (hasUnsavedChanges) {
           lastFlushPromise = undefined;
           cb('saving');
         }
       };
       const confirmSavedAfterFlush = () => {
-        if (hasUnsavedChanges) {
+        if (failing || hasUnsavedChanges) {
           return;
         }
 
-        const flushPromise = space.db.flush();
+        // Indexing is not saving: a lagging index must not read as changes failing to reach disk.
+        const flushPromise = space.db.flush({ indexes: false });
         lastFlushPromise = flushPromise;
         void flushPromise.then(
           () => {
@@ -81,7 +91,7 @@ export const createSpaceSaveTracker = (space: SaveTrackedSpace, cb: (state: 'sav
             // The failed write is logged where it failed; here it only means the space is not saved.
             log.verbose('space flush failed', { error });
             if (lastFlushPromise === flushPromise) {
-              cb('saving');
+              cb('failing');
             }
           },
         );
