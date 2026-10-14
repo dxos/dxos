@@ -3,6 +3,8 @@
 - `3796ba0f06` task: set 38603468 state details (by claude)
 - `569730f40a` close f7d39ad6 by #eddca32cd2 (by claude)
 - `eddca32cd2` C back end: reuse freed blocks over 256 words by exact fit (D102) (by claude)
+- `3d4d7adba4` task: set e76e36b0 state (by claude)
+- `fa3a704b26` task: set e76e36b0 details (by claude)
 - `26b25952c4` history: import 507 changes
 - `ce1b500e79` task: import from tasks.sexp
 - `880640eb13` task: set e76e36b0 state (by claude)

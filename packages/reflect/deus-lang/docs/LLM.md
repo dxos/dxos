@@ -89,7 +89,7 @@ the names, and writes nothing.
 ## Working through the codebase
 
 The codebase is the primary version control; git is its backup (D101). Start each task with
-`deus pull origin` and `deus merge origin.main` from the R2 remote (`r2://agent-artifacts/deus/explorer-demo`,
+`deus pull origin` and `deus merge origin.main` from the R2 remote (`r2://agent-artifacts/deus/toolchain`,
 with `DEUS_R2_ENDPOINT` set), and push each change when it lands, before exporting it to git.
 
 Make changes in the codebase, not only in files: `deus update <file> --by <agent>` records who
