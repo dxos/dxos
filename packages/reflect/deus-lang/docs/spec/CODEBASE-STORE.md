@@ -33,7 +33,8 @@ The CLI picks the directory in this order: the `--codebase <dir>` option, then `
   provenance/<causal>          who produced history node <causal>
   remotes/<name>/url           a configured remote
   remotes/<name>/seen/<bundle> what a remote bundle held, so a pull reads it once
-  assets/<sha256>              files comments and tasks attach, named by their bytes' SHA-256 (D79)
+  assets/<sha256>              files comments and tasks attach, named by their bytes' SHA-256 (D80)
+  exports/<key>                tasks snapshot last exchanged with an export directory (D79)
   artifacts/<key>              built executables and servers; local only
   cache/…                      re-computable data; local only
 ```
@@ -221,7 +222,7 @@ causal = "(causal (ns " hash ") (parents" { " " hash } ") (msg " string ")" [ " 
 | `msg`      | why the change was made                                                                           |
 | `tasks`    | hash of the tasks snapshot; omitted when there are no tasks ([D59](../DECISIONS.md))              |
 | `prior`    | hash of a `record` of history imported from an export; omitted otherwise ([D67](../DECISIONS.md)) |
-| `comments` | hash of the comments snapshot; omitted when there are no comments ([D79](../DECISIONS.md))        |
+| `comments` | hash of the comments snapshot; omitted when there are no comments ([D80](../DECISIONS.md))        |
 
 A writer MUST omit `(tasks …)` when the branch has no tasks, so a node without tasks hashes as it did
 before tasks existed. Readers find fields by head and treat a missing field as empty.
@@ -411,7 +412,7 @@ stored; it is found by walking the branch and comparing tasks snapshots.
 
 ## Comments
 
-Comments on definitions and changes ([D79](../DECISIONS.md), [`deus/comments.deus`](../../deus/comments.deus))
+Comments on definitions and changes ([D80](../DECISIONS.md), [`deus/comments.deus`](../../deus/comments.deus))
 are kept as tasks are: a history node may point at a `comments` snapshot that maps a subject to the hash of
 its `thread`.
 

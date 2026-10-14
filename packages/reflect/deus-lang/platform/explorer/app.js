@@ -109,7 +109,7 @@ const resolve = (name, namespace) => {
 };
 
 //
-// Writing (D79): signed-in members of the GitHub org comment and file tasks through the hosted
+// Writing (D80): signed-in members of the GitHub org comment and file tasks through the hosted
 // explorer's worker. Its requests wait in the remote's inbox until `deus inbox` applies them, so
 // the app shows them as pending until the pages are regenerated. Without the worker (a local
 // `deus explore`, a bare bucket) `api/me` is missing and the explorer stays read-only.

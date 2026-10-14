@@ -79,7 +79,7 @@ def Cli.applyFields (args : Args) (t : Task) : {Throw Text} Task := foldl (fun a
   | Option.some value => setField acc field value
   | Option.none => acc) t fields
 
-/-- `deus asset add <file>` (D79): stores a file in the asset store by its SHA-256. -/
+/-- `deus asset add <file>` (D80): stores a file in the asset store by its SHA-256. -/
 def Cli.asset (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   match args.positional with
@@ -101,7 +101,7 @@ def Cli.attachmentJson (a : Attachment) : Json :=
   | Attachment.definition name h => Json.obj [("definition", Json.str name), ("hash", Json.str h)]
   | Attachment.change h => Json.obj [("change", Json.str h)]
 
-/-- `--attach <file>` copied into the asset store (D79); none without the option. -/
+/-- `--attach <file>` copied into the asset store (D80); none without the option. -/
 def Cli.attachments (dir : Text) (args : Args) : {IO, Throw Text} List Asset :=
   match option args "attach" with
   | Option.some file => [Assets.add dir file]
@@ -227,7 +227,7 @@ def Cli.codebaseDir (args : Args) : {IO} Text :=
       | Option.some dir => dir
       | Option.none => getOr (IO.getEnv "HOME") "." ++ "/.deus"
 
-/-- `deus comment <name|change:h> <text…>` (D79): a comment on a definition or a change, kept in the codebase. -/
+/-- `deus comment <name|change:h> <text…>` (D80): a comment on a definition or a change, kept in the codebase. -/
 def Cli.comment (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let author := getOr (option args "by") (getOr (IO.getEnv "USER") "someone")
@@ -466,7 +466,14 @@ def Cli.fullLog (dir : Text) (limit : Int) : {IO, Throw Text} List (Text, (Text,
   let imported := concatMap
     (fun pair => if Text.isEmpty (snd pair).prior then [] else recordEntries dir (snd pair).prior)
     live
-  List.take limit (own ++ imported)
+  -- Records repeat the changes they share (D79), the root `init` included; the oldest position stays.
+  let rec unique entries seen acc :=
+    match entries with
+    | [] => reverse acc
+    | entry :: rest =>
+        match entry with
+        | (h, _, _) => if Set.contains h seen then unique rest seen acc else unique rest (Set.insert h seen) (entry :: acc)
+  List.take limit (reverse (unique (reverse (own ++ imported)) Map.empty []))
 
 --
 -- Commands: documents.
@@ -500,7 +507,7 @@ def Cli.image (args : Args) : {IO, Throw Text} Unit :=
       | Option.none => IO.print text
   | _ => Throw.throw "usage: deus image <term> -o <file>"
 
-/-- `deus inbox [remote]` (D79): applies the comments and tasks members filed in the hosted explorer. -/
+/-- `deus inbox [remote]` (D80): applies the comments and tasks members filed in the hosted explorer. -/
 def Cli.inbox (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let name := remoteName args
@@ -860,7 +867,7 @@ def Cli.publishSite (dir : Text) (name : Text) (out : Text) (force : Bool) : {IO
     match Text.split line " " with
     | sum :: path :: [] => Option.some (path, sum)
     | _ => Option.none) (lines (getOr (IO.readFile manifest) "")))
-  -- Attached files are binary and already on the remote under `assets/`, where the Worker serves them (D79).
+  -- Attached files are binary and already on the remote under `assets/`, where the Worker serves them (D80).
   let files := List.filter (fun f => not (startsWith "assets/" f)) (filesUnder out "")
   let sums := List.map (fun f => (f, Text.sha256 (getOr (IO.readFile (out ++ "/" ++ f)) ""))) files
   let changed := List.filter (fun pair => Map.lookup (fst pair) previous != Option.some (snd pair)) sums

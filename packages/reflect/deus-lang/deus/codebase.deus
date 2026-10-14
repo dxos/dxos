@@ -151,7 +151,7 @@ def putNamespace (dir : Text) (ns : Map Text Entry) : {IO} Text :=
 
 /--
   A history node: a namespace snapshot, its parents, why it was made, its tasks snapshot, and the
-  record of history imported from an export (D67), and its comments snapshot (D79). `""` means
+  record of history imported from an export (D67), and its comments snapshot (D80). `""` means
   none for the last three.
 -/
 structure Causal where

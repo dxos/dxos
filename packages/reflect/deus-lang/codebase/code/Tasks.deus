@@ -224,6 +224,16 @@ def Tasks.parseState (t : Text) : {Throw Text} TaskState :=
   | Option.some s => s
   | Option.none => Throw.throw ("unknown task state " ++ t ++ " (todo, doing, done, canceled)")
 
+/-- Every task object the branch's first-parent history has held, the current ones included. -/
+def Tasks.pastVersions (dir : Text) : {IO, Throw Text} Map Text Unit :=
+  let rec walk h seen acc :=
+    let node := readCausal dir h
+    let acc2 := if Set.contains node.tasks seen then acc else foldl (fun a pair => Set.insert (snd pair) a) acc (Map.toList (Tasks.snapshotOf dir node))
+    match parentsOf dir h with
+    | [] => acc2
+    | p :: _ => walk p (Set.insert node.tasks seen) acc2
+  walk (headOf dir (currentBranch dir)) Map.empty Map.empty
+
 def Tasks.priorities : List Text := ["none", "urgent", "high", "medium", "low"]
 
 def Tasks.priorityText (n : Int) : Text := getOr (head? (List.drop n priorities)) (toText n)
@@ -280,17 +290,20 @@ def Tasks.setField (t : Task) (field : Text) (value : Text) : {Throw Text} Task 
   t.links
   t.comments else if field == "parent" then Task.mk t.id t.title t.state t.priority t.assignee t.labels value t.details t.links t.comments else if field == "details" then Task.mk t.id t.title t.state t.priority t.assignee t.labels t.parent value t.links t.comments else Throw.throw ("unknown task field " ++ field)
 
---
--- Snapshots.
---
-/-- The tasks snapshot of a history node: task id -> task hash. -/
-def Tasks.snapshotOf (dir : Text) (c : Causal) : {IO, Throw Text} Map Text Text := if Text.isEmpty c.tasks then Map.empty else
-  match readObject dir c.tasks with
-  | Option.none => Throw.throw ("missing tasks snapshot #" ++ c.tasks)
+/-- A tasks snapshot by its hash, as id -> task object hash; `""` is no tasks. -/
+def Tasks.snapshotAt (dir : Text) (h : Text) : {IO, Throw Text} Map Text Text := if Text.isEmpty h then Map.empty else
+  match readObject dir h with
+  | Option.none => Throw.throw ("missing tasks snapshot #" ++ h)
   | Option.some form => Map.fromList (List.map (fun item =>
       match Sexp.args item with
       | id :: ref :: [] => (asText id, asText (getOr (head? (Sexp.args ref)) (Sexp.str "")))
       | _ => defect ("bad tasks entry " ++ Sexp.print item)) (Sexp.args form))
+
+--
+-- Snapshots.
+--
+/-- The tasks snapshot of a history node: task id -> task hash. -/
+def Tasks.snapshotOf (dir : Text) (c : Causal) : {IO, Throw Text} Map Text Text := snapshotAt dir c.tasks
 
 def Tasks.stateText (s : TaskState) : Text :=
   match s with

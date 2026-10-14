@@ -6,7 +6,7 @@
 // it) uploads it: `ORIGIN` is the public URL of a remote's `site/` folder. Responses are cached
 // briefly, so a push shows up within a minute.
 //
-// Writes (D79): anyone may read; a GitHub user who belongs to `GITHUB_ORG` may also comment, file
+// Writes (D80): anyone may read; a GitHub user who belongs to `GITHUB_ORG` may also comment, file
 // tasks and attach images. The worker cannot run DEUS, so a write is stored in the remote's bucket
 // as a request, `<PREFIX>/inbox/<time>-<id>.sexp`, and its images as `<PREFIX>/assets/<sha256>`;
 // `deus inbox` applies the requests to the codebase. Without the OAuth settings the explorer stays

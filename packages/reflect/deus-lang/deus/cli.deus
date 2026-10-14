@@ -517,7 +517,14 @@ def fullLog (dir : Text) (limit : Int) : {IO, Throw Text} List (Text, Text, Text
     match pair with
     | (h, c) => (h, c.message, Option.getOr (producedBy dir h) "")) live
   let imported := List.concatMap (fun pair => if Text.isEmpty (snd pair).prior then [] else Codebase.recordEntries dir (snd pair).prior) live
-  List.take limit (own ++ imported)
+  -- Records repeat the changes they share (D79), the root `init` included; the oldest position stays.
+  let rec unique entries seen acc :=
+    match entries with
+    | [] => List.reverse acc
+    | entry :: rest =>
+      match entry with
+      | (h, _, _) => if Set.contains h seen then unique rest seen acc else unique rest (Set.insert h seen) (entry :: acc)
+  List.take limit (List.reverse (unique (List.reverse (own ++ imported)) Set.empty []))
 
 def log (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
@@ -956,7 +963,7 @@ def publishSite (dir : Text) (name : Text) (out : Text) (force : Bool) : {IO, Th
       match Text.split line " " with
       | [sum, path] => some (path, sum)
       | _ => none) (Text.lines (Option.getOr (IO.readFile manifest) "")))
-  -- Attached files are binary and already on the remote under `assets/`, where the Worker serves them (D79).
+  -- Attached files are binary and already on the remote under `assets/`, where the Worker serves them (D80).
   let files := List.filter (fun f => not (Text.startsWith "assets/" f)) (filesUnder out "")
   let sums := List.map (fun f => (f, Text.sha256 (Option.getOr (IO.readFile (out ++ "/" ++ f)) ""))) files
   let changed := List.filter (fun pair => Map.lookup (fst pair) previous != some (snd pair)) sums
@@ -1170,7 +1177,7 @@ def task (args : Args) : {IO, Throw Text} Unit :=
     output args (fun _ => Json.obj [("imported", Json.num n)]) (fun _ => "Imported " ++ Int.toText n ++ " tasks.")
   | _ => throw "usage: deus task [new <title…> | list | show <id> | set <id> --<field> v | comment <id> <text…> | link <id> <name> | unlink <id> <name>]"
 
-/-- `--attach <file>` copied into the asset store (D79); none without the option. -/
+/-- `--attach <file>` copied into the asset store (D80); none without the option. -/
 def attachments (dir : Text) (args : Args) : {IO, Throw Text} List Asset :=
   match option args "attach" with
   | some file => [Assets.add dir file]
@@ -1190,7 +1197,7 @@ def subjectOf (dir : Text) (given : Text) : {IO, Throw Text} Text :=
     match lookupName (Codebase.current dir) (if Text.startsWith "def:" given then Text.drop 4 given else given) with
     | (full, _) => Comments.definition full
 
-/-- `deus comment <name|change:h> <text…>` (D79): a comment on a definition or a change, kept in the codebase. -/
+/-- `deus comment <name|change:h> <text…>` (D80): a comment on a definition or a change, kept in the codebase. -/
 def comment (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let author := Option.getOr (option args "by") (Option.getOr (IO.getEnv "USER") "someone")
@@ -1222,7 +1229,7 @@ def comments (args : Args) : {IO, Throw Text} Unit :=
       (fun _ => if List.all (fun pair => List.isEmpty (snd pair)) shown then "No comments."
         else Text.join "\n" (List.concatMap (fun pair => [fst pair] ++ List.map commentLine (snd pair)) shown))
 
-/-- `deus asset add <file>` (D79): stores a file in the asset store by its SHA-256. -/
+/-- `deus asset add <file>` (D80): stores a file in the asset store by its SHA-256. -/
 def asset (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   match args.positional with
@@ -1231,7 +1238,7 @@ def asset (args : Args) : {IO, Throw Text} Unit :=
     output args (fun _ => assetJson a) (fun _ => a.hash ++ "  " ++ a.mediaType ++ "  " ++ a.fileName)
   | _ => throw "usage: deus asset add <file>"
 
-/-- `deus inbox [remote]` (D79): applies the comments and tasks members filed in the hosted explorer. -/
+/-- `deus inbox [remote]` (D80): applies the comments and tasks members filed in the hosted explorer. -/
 def inbox (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let name := remoteName args

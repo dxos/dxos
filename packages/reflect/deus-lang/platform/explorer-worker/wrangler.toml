@@ -5,7 +5,7 @@ compatibility_date = "2026-09-01"
 
 [vars]
 ORIGIN = "https://pub-39066a86073446d7b77b1c157b660bb5.r2.dev/deus/explorer-demo/site"
-# The remote's prefix in the bucket: requests go to <PREFIX>/inbox/, attachments to <PREFIX>/assets/ (D79).
+# The remote's prefix in the bucket: requests go to <PREFIX>/inbox/, attachments to <PREFIX>/assets/ (D80).
 PREFIX = "deus/explorer-demo"
 # Only active members of this GitHub organization may write.
 GITHUB_ORG = "dxos"
