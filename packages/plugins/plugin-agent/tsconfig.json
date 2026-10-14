@@ -130,9 +130,6 @@
       "path": "../../ui/ui-theme"
     },
     {
-      "path": "../plugin-client"
-    },
-    {
       "path": "../plugin-explorer"
     },
     {

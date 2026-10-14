@@ -3,99 +3,91 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Context } from '@dxos/context';
-import { Filter, Obj } from '@dxos/echo';
-import { type EdgeHttpClient, type EdgeRequestArgs } from '@dxos/edge-client';
-import { BaseError } from '@dxos/errors';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
+import { Database, Filter, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { EID } from '@dxos/keys';
-import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import { EID, type SpaceId } from '@dxos/keys';
 import * as ThreadCapabilities from '@dxos/plugin-thread/ThreadCapabilities';
 import type * as ThreadOperation from '@dxos/plugin-thread/ThreadOperation';
 import { type Channel } from '@dxos/types';
 
-import { AgentChannels, AgentEmail } from '#types';
+import { AgentChannels, AgentEmail, AgentMailbox } from '#types';
 
-export class AgentEmailError extends BaseError.extend('AgentEmailError', 'Agent email request failed.') {}
+/** Provides the mailbox service for a space's channel. */
+export type MailboxLayer = (
+  spaceId: SpaceId,
+) => Layer.Layer<AgentMailbox.AgentMailboxService, Error, Capability.Service>;
 
-/** Resolves the EDGE client that signs mailbox requests with the user's identity. */
-export type EdgeClientResolver = Effect.Effect<EdgeHttpClient, AgentEmailError, Capability.Service>;
-
-/** The app's client; absent on EDGE itself, which never claims a mailbox. */
-export const appEdgeClient: EdgeClientResolver = Effect.gen(function* () {
-  const [client] = yield* Capability.getAll(ClientCapabilities.Client);
-  if (!client) {
-    return yield* Effect.fail(new AgentEmailError({ message: 'Claiming an address needs the app client.' }));
-  }
-  return client.edge.http;
-});
+/** The app's {@link AgentMailbox.AgentMailboxService}, resolved from the layer specs plugins contribute. */
+export const appMailbox: MailboxLayer = (spaceId) =>
+  Layer.unwrap(
+    Capability.get(Capabilities.ServiceResolver).pipe(
+      Effect.map((resolver) =>
+        ServiceResolver.provide({ space: spaceId }, AgentMailbox.AgentMailboxService).pipe(
+          Layer.provide(Layer.succeed(ServiceResolver.ServiceResolver, resolver)),
+        ),
+      ),
+    ),
+  );
 
 export type EmailChannelBackendOptions = {
-  /** Where the EDGE client comes from; the app's client by default. */
-  edgeClient?: EdgeClientResolver;
+  /** Where the mailbox service comes from; the app's layer specs by default. */
+  mailbox?: MailboxLayer;
 };
 
 /**
- * Email channel backend: connecting the channel claims the agent's address on EDGE, whose email-service routes each
- * email thread into its own chat of the agent and mails the agent's replies. Nothing is sent from here: the agent
- * answers mail, it does not start it.
+ * Email channel backend: connecting the channel claims the agent's address, after which EDGE's email-service routes
+ * each email thread into its own chat of the agent and mails the agent's replies. Nothing is sent from here: the
+ * agent answers mail, it does not start it.
  */
 export const makeEmailChannelBackend = ({
-  edgeClient = appEdgeClient,
-}: EmailChannelBackendOptions = {}): ThreadCapabilities.ChannelBackendProvider => ({
-  kind: AgentEmail.BACKEND_KIND,
-  label: 'Email',
-  icon: 'ph--envelope--regular',
-  createFields: AgentEmail.Properties,
-  makeConfig: (options) => {
-    invariant(Schema.is(AgentEmail.Properties)(options), 'Invalid email channel options.');
-    return AgentEmail.make(options);
-  },
-  // Inbound mail reaches the agent's chats through EDGE, not this channel's article.
-  subscribe: (_channel, onMessages) => {
-    onMessages([]);
-    return () => {};
-  },
-  send: () =>
-    Effect.fail(new AgentEmailError({ message: 'An agent answers email; it cannot start a new email thread yet.' })),
-  readOnly: () => true,
-  connection: {
-    start: (channel) =>
-      Effect.gen(function* () {
-        const { config, spaceId } = yield* loadConfig(channel);
-        const agent = yield* findAgent(channel);
-        const edge = yield* edgeClient;
-        return toConnectionStatus(
-          yield* callMailbox(edge, config.handle, {
-            method: 'PUT',
-            body: {
-              spaceId,
-              agent: EID.make({ spaceId, entityId: agent }),
-              channel: EID.make({ spaceId, entityId: channel.id }),
-              ...(config.displayName ? { displayName: config.displayName } : {}),
-              allowedSenders: [...config.allowedSenders],
-            },
-          }),
-          spaceId,
-        );
-      }),
-    stop: (channel) =>
-      Effect.gen(function* () {
-        const { config, spaceId } = yield* loadConfig(channel);
-        const edge = yield* edgeClient;
-        return toConnectionStatus(yield* callMailbox(edge, config.handle, { method: 'DELETE' }), spaceId);
-      }),
-    status: (channel) =>
-      Effect.gen(function* () {
-        const { config, spaceId } = yield* loadConfig(channel);
-        const edge = yield* edgeClient;
-        return toConnectionStatus(yield* callMailbox(edge, config.handle, { method: 'GET' }), spaceId);
-      }),
-  },
-});
+  mailbox = appMailbox,
+}: EmailChannelBackendOptions = {}): ThreadCapabilities.ChannelBackendProvider => {
+  /** Runs a connection step with the channel's database and the mailbox service. */
+  const inSpace = <A>(
+    channel: Channel.Channel,
+    effect: Effect.Effect<A, Error, Database.Service | AgentMailbox.AgentMailboxService>,
+  ): Effect.Effect<A, Error, Capability.Service> => {
+    const db = Obj.getDatabase(channel);
+    if (!db) {
+      return Effect.fail(new AgentMailbox.AgentMailboxError({ message: 'The channel is not in a space.' }));
+    }
+    return effect.pipe(Effect.provide(Layer.mergeAll(Database.layer(db), mailbox(db.spaceId))));
+  };
+
+  return {
+    kind: AgentEmail.BACKEND_KIND,
+    label: 'Email',
+    icon: 'ph--envelope--regular',
+    createFields: AgentEmail.Properties,
+    makeConfig: (options) => {
+      invariant(Schema.is(AgentEmail.Properties)(options), 'Invalid email channel options.');
+      return AgentEmail.make(options);
+    },
+    // Inbound mail reaches the agent's chats through EDGE, not this channel's article.
+    subscribe: (_channel, onMessages) => {
+      onMessages([]);
+      return () => {};
+    },
+    send: () =>
+      Effect.fail(
+        new AgentMailbox.AgentMailboxError({
+          message: 'An agent answers email; it cannot start a new email thread yet.',
+        }),
+      ),
+    readOnly: () => true,
+    connection: {
+      start: (channel) => inSpace(channel, connect(channel)),
+      stop: (channel) => inSpace(channel, disconnect(channel)),
+      status: (channel) => inSpace(channel, readStatus(channel)),
+    },
+  };
+};
 
 /** Contributes the email channel backend. */
 export default Capability.makeModule(
@@ -109,7 +101,7 @@ export default Capability.makeModule(
  * the reason, so the user picks another address.
  */
 export const toConnectionStatus = (
-  status: AgentEmail.MailboxStatus,
+  status: AgentMailbox.MailboxStatus,
   spaceId: string,
 ): ThreadOperation.ConnectionStatus => {
   const ours = status.config?.spaceId === spaceId;
@@ -121,56 +113,68 @@ export const toConnectionStatus = (
   };
 };
 
-const callMailbox = (
-  edge: EdgeHttpClient,
-  handle: string,
-  args: EdgeRequestArgs,
-): Effect.Effect<AgentEmail.MailboxStatus, AgentEmailError> =>
-  Effect.gen(function* () {
-    const data = yield* Effect.tryPromise({
-      try: () => edge.request(Context.default(), AgentEmail.mailboxPath(handle), args),
-      catch: (cause) =>
-        new AgentEmailError({
-          message: cause instanceof Error ? cause.message : 'EDGE mailbox request failed.',
-          cause,
-        }),
-    });
-    return yield* Schema.decodeUnknownEffect(AgentEmail.MailboxStatus)(data).pipe(
-      Effect.mapError((cause) => new AgentEmailError({ message: 'Unexpected mailbox status from EDGE.', cause })),
-    );
+const connect = Effect.fnUntraced(function* (channel: Channel.Channel) {
+  const { config, spaceId } = yield* loadConfig(channel);
+  const agent = yield* findAgent(channel);
+  const mailbox = yield* AgentMailbox.AgentMailboxService;
+  // A renamed address releases the one it held first, or that handle would stay bound to the agent.
+  if (config.claimedHandle && config.claimedHandle !== config.handle) {
+    yield* mailbox.release(config.claimedHandle);
+  }
+  const status = yield* mailbox.claim({
+    handle: config.handle,
+    spaceId,
+    agent: EID.make({ spaceId, entityId: agent }),
+    channel: EID.make({ spaceId, entityId: channel.id }),
+    ...(config.displayName ? { displayName: config.displayName } : {}),
+    // EDGE takes an empty list literally (every sender bounces); the config means the default by it.
+    allowedSenders: config.allowedSenders.length > 0 ? config.allowedSenders : AgentEmail.DEFAULT_ALLOWED_SENDERS,
   });
+  Obj.update(config, (config) => {
+    config.claimedHandle = config.handle;
+  });
+  return toConnectionStatus(status, spaceId);
+});
 
-const loadConfig = (channel: Channel.Channel) =>
-  Effect.gen(function* () {
-    const config = yield* Effect.tryPromise({
-      try: () => channel.backend.config.load(),
-      catch: (cause) => new AgentEmailError({ message: 'Could not load the email channel config.', cause }),
-    });
-    if (!AgentEmail.instanceOf(config) || !config.handle) {
-      return yield* Effect.fail(new AgentEmailError({ message: 'The channel has no email address.' }));
-    }
-    const spaceId = Obj.getDatabase(channel)?.spaceId;
-    if (!spaceId) {
-      return yield* Effect.fail(new AgentEmailError({ message: 'The channel is not in a space.' }));
-    }
-    return { config, spaceId };
+const disconnect = Effect.fnUntraced(function* (channel: Channel.Channel) {
+  const { config, spaceId } = yield* loadConfig(channel);
+  const mailbox = yield* AgentMailbox.AgentMailboxService;
+  const status = yield* mailbox.release(config.claimedHandle ?? config.handle);
+  Obj.update(config, (config) => {
+    config.claimedHandle = undefined;
   });
+  return toConnectionStatus(status, spaceId);
+});
+
+const readStatus = Effect.fnUntraced(function* (channel: Channel.Channel) {
+  const { config, spaceId } = yield* loadConfig(channel);
+  const mailbox = yield* AgentMailbox.AgentMailboxService;
+  return toConnectionStatus(yield* mailbox.status(config.claimedHandle ?? config.handle), spaceId);
+});
+
+const loadConfig = Effect.fnUntraced(function* (channel: Channel.Channel) {
+  const config = yield* Database.load(channel.backend.config);
+  if (!AgentEmail.instanceOf(config) || !config.handle) {
+    return yield* Effect.fail(new AgentMailbox.AgentMailboxError({ message: 'The channel has no email address.' }));
+  }
+  return { config, spaceId: yield* Database.spaceId };
+});
 
 /** The agent whose channel list holds the channel: EDGE runs that agent's turns for the mailbox. */
-const findAgent = (channel: Channel.Channel) =>
-  Effect.gen(function* () {
-    const db = Obj.getDatabase(channel);
-    const lists = yield* Effect.tryPromise({
-      try: async () => (db ? await db.query(Filter.type(AgentChannels.AgentChannels)).run() : []),
-      catch: (cause) => new AgentEmailError({ message: 'Could not read the agents’ channel lists.', cause }),
-    });
-    const agent = lists.find((list) => list.channels.some((ref) => entityIdOf(ref.uri) === channel.id))?.agent;
-    const agentId = agent && entityIdOf(agent.uri);
-    if (!agentId) {
-      return yield* Effect.fail(new AgentEmailError({ message: 'Add the channel to an agent before connecting it.' }));
-    }
-    return agentId;
-  });
+const findAgent = Effect.fnUntraced(function* (channel: Channel.Channel) {
+  const lists = yield* Database.query(Filter.type(AgentChannels.AgentChannels)).run.pipe(Effect.orDie);
+  const agentId = lists
+    .map((list) =>
+      list.channels.some((ref) => entityIdOf(ref.uri) === channel.id) ? entityIdOf(list.agent.uri) : undefined,
+    )
+    .find((id) => id !== undefined);
+  if (!agentId) {
+    return yield* Effect.fail(
+      new AgentMailbox.AgentMailboxError({ message: 'Add the channel to an agent before connecting it.' }),
+    );
+  }
+  return agentId;
+});
 
 const entityIdOf = (uri: string): string | undefined => {
   const eid = EID.tryParse(uri);

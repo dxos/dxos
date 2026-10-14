@@ -24,6 +24,11 @@ export const EmailChannelBackend = Capability.lazyModule(
   },
   () => import('./email-channel-backend.ts'),
 );
+// EDGE's mailboxes over the client's EDGE HTTP client (`EdgeHttpClientService`), which plugin-client provides.
+export const AgentMailbox = AppCapability.layerSpec(() => import('./agent-mailbox.ts'), {
+  name: 'AgentMailbox',
+  environments: ['browser', 'node', 'tauri'],
+});
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'));
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,

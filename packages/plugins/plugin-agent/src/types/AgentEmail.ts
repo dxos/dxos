@@ -39,7 +39,14 @@ export type Properties = Schema.Schema.Type<typeof Properties>;
  * Connecting the channel claims the address on EDGE, which routes each email thread into its own chat of the agent.
  */
 export class AgentEmail extends Type.makeObject<AgentEmail>(DXN.make('org.dxos.type.agent.email', '0.1.0'))(
-  Properties.pipe(
+  Schema.Struct({
+    ...Properties.fields,
+    /**
+     * The handle EDGE holds for this channel, set on connect and cleared on disconnect. Kept apart from the editable
+     * `handle` so a renamed address still releases the one it claimed.
+     */
+    claimedHandle: Schema.optional(Schema.String).pipe(Annotation.FormInputAnnotation.set(false)),
+  }).pipe(
     Annotation.LabelAnnotation.set(['handle']),
     Annotation.IconAnnotation.set({ icon: 'ph--envelope--regular', hue: 'amber' }),
   ),
@@ -58,28 +65,3 @@ export const make = ({ handle, allowedSenders, ...props }: MakeProps): AgentEmai
     handle: handle.trim().toLowerCase(),
     allowedSenders: [...(allowedSenders?.length ? allowedSenders : DEFAULT_ALLOWED_SENDERS)],
   });
-
-/** Mirrors the EDGE email-service `MailboxStatus`, which every mailbox route answers with. */
-export const MailboxStatus = Schema.Struct({
-  handle: Schema.String,
-  address: Schema.String,
-  config: Schema.optional(
-    Schema.Struct({
-      spaceId: Schema.String,
-      agent: Schema.String,
-      channel: Schema.String,
-      allowedSenders: Schema.Array(Schema.String),
-    }),
-  ),
-  threads: Schema.Number,
-  pending: Schema.Number,
-  received: Schema.Number,
-  rejected: Schema.Number,
-  sent: Schema.Number,
-  lastError: Schema.optional(Schema.String),
-});
-
-export type MailboxStatus = Schema.Schema.Type<typeof MailboxStatus>;
-
-/** EDGE route of an agent's mailbox. */
-export const mailboxPath = (handle: string): string => `/email/mailboxes/${encodeURIComponent(handle)}`;

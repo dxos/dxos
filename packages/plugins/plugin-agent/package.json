@@ -83,6 +83,11 @@
       "types": "./dist/types/src/types/AgentEmail.d.ts",
       "import": "./dist/lib/AgentEmail.mjs"
     },
+    "./AgentMailbox": {
+      "source": "./src/types/AgentMailbox.ts",
+      "types": "./dist/types/src/types/AgentMailbox.d.ts",
+      "import": "./dist/lib/AgentMailbox.mjs"
+    },
     "./AgentKnowledge": {
       "source": "./src/AgentKnowledge.ts",
       "types": "./dist/types/src/AgentKnowledge.d.ts",
@@ -224,6 +229,9 @@
       "AgentEmail": [
         "dist/types/src/types/AgentEmail.d.ts"
       ],
+      "AgentMailbox": [
+        "dist/types/src/types/AgentMailbox.d.ts"
+      ],
       "AgentKnowledge": [
         "dist/types/src/AgentKnowledge.d.ts"
       ],
@@ -307,7 +315,6 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/pipeline-rdf": "workspace:*",
-    "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-explorer": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-thread": "workspace:*",

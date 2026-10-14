@@ -4,6 +4,7 @@
 
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as Registry from 'effect/reactivity/AtomRegistry';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
@@ -11,31 +12,36 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Instructions from '@dxos/compute/Instructions';
-import { type Context } from '@dxos/context';
 import { Database, Obj, Ref } from '@dxos/echo';
-import { EdgeHttpClient, type EdgeRequestArgs } from '@dxos/edge-client';
 import { TestHelpers } from '@dxos/effect/testing';
 import { Channel } from '@dxos/types';
 
-import { AgentChannels, AgentEmail } from '#types';
+import { AgentChannels, AgentEmail, AgentMailbox } from '#types';
 
 import { makeEmailChannelBackend, toConnectionStatus } from './email-channel-backend.ts';
 
-type RecordedRequest = { path: string } & EdgeRequestArgs;
+type Call = { op: 'claim' | 'release' | 'status'; handle: string; request?: AgentMailbox.ClaimRequest };
 
-/** Records each request and answers with a canned status, standing in for EDGE's mailbox route. */
-class MockEdgeHttpClient extends EdgeHttpClient {
-  readonly requests: RecordedRequest[] = [];
-
-  constructor(private readonly _response: () => AgentEmail.MailboxStatus) {
-    super('http://edge.test');
-  }
-
-  override async request(_ctx: Context, path: string, args: EdgeRequestArgs): Promise<unknown> {
-    this.requests.push({ path, ...args });
-    return this._response();
-  }
-}
+/** Records each call and answers as a mailbox held by `spaceId`. */
+const fakeMailbox = (spaceId: () => string) => {
+  const calls: Call[] = [];
+  const answer = (handle: string) => Effect.succeed(mailbox(spaceId(), handle));
+  const service: AgentMailbox.Service = {
+    claim: (request) => {
+      calls.push({ op: 'claim', handle: request.handle, request });
+      return answer(request.handle);
+    },
+    release: (handle) => {
+      calls.push({ op: 'release', handle });
+      return answer(handle);
+    },
+    status: (handle) => {
+      calls.push({ op: 'status', handle });
+      return answer(handle);
+    },
+  };
+  return { calls, layer: () => Layer.succeed(AgentMailbox.AgentMailboxService, service) };
+};
 
 const TestLayer = AssistantTestLayer({
   types: [Agent.Agent, Instructions.Instructions, Channel.Channel, AgentChannels.AgentChannels, AgentEmail.AgentEmail],
@@ -47,15 +53,30 @@ const withCapabilities = Effect.provideService(
   CapabilityManager.make({ registry: Registry.make() }),
 );
 
-const mailbox = (spaceId: string): AgentEmail.MailboxStatus => ({
-  handle: 'kai',
-  address: 'kai@dx.pub',
+const mailbox = (spaceId: string, handle = 'kai'): AgentMailbox.MailboxStatus => ({
+  handle,
+  address: `${handle}@dx.pub`,
   config: { spaceId, agent: 'a', channel: 'c', allowedSenders: ['dxos.org'] },
   threads: 2,
   pending: 0,
   received: 3,
   rejected: 0,
   sent: 2,
+});
+
+/** An agent listing an email channel for `handle`. */
+const makeAgentChannel = Effect.fnUntraced(function* (handle: string, listed = true) {
+  const instructions = yield* Database.add(Instructions.make({ text: 'Answer email.' }));
+  const agent = yield* Database.add(Obj.make(Agent.Agent, { name: 'Kai', instructions: Ref.make(instructions) }));
+  const config = AgentEmail.make({ handle, displayName: 'Kai' });
+  const channel = yield* Database.add(
+    Channel.make({ name: 'email', backend: { kind: AgentEmail.BACKEND_KIND, config } }),
+  );
+  if (listed) {
+    yield* Database.add(AgentChannels.make({ agent, channels: [channel] }));
+  }
+  yield* Database.flush();
+  return { agent, channel, config };
 });
 
 describe('email channel backend', () => {
@@ -79,32 +100,22 @@ describe('email channel backend', () => {
     Effect.fnUntraced(
       function* ({ expect }) {
         const spaceId = yield* Database.spaceId;
-        const edge = new MockEdgeHttpClient(() => mailbox(spaceId));
-        const backend = makeEmailChannelBackend({ edgeClient: Effect.succeed(edge) });
-        const instructions = yield* Database.add(Instructions.make({ text: 'Answer email.' }));
-        const agent = yield* Database.add(Obj.make(Agent.Agent, { name: 'Kai', instructions: Ref.make(instructions) }));
-        const channel = yield* Database.add(
-          Channel.make({
-            name: 'email',
-            backend: { kind: AgentEmail.BACKEND_KIND, config: AgentEmail.make({ handle: 'kai', displayName: 'Kai' }) },
-          }),
-        );
-        yield* Database.add(AgentChannels.make({ agent, channels: [channel] }));
-        yield* Database.flush();
-
-        const connection = backend.connection;
-        expect(connection).toBeDefined();
+        const fake = fakeMailbox(() => spaceId);
+        const connection = makeEmailChannelBackend({ mailbox: fake.layer }).connection;
         if (!connection) {
-          return;
+          return expect.unreachable('The email backend has a connection.');
         }
+        const { agent, channel } = yield* makeAgentChannel('kai');
+
         const started = yield* connection.start(channel).pipe(withCapabilities);
         expect(started.running).toBe(true);
         yield* connection.stop(channel).pipe(withCapabilities);
-        expect(edge.requests).toEqual([
+        expect(fake.calls).toEqual([
           {
-            path: '/email/mailboxes/kai',
-            method: 'PUT',
-            body: {
+            op: 'claim',
+            handle: 'kai',
+            request: {
+              handle: 'kai',
               spaceId,
               agent: `echo://${spaceId}/${agent.id}`,
               channel: `echo://${spaceId}/${channel.id}`,
@@ -112,8 +123,45 @@ describe('email channel backend', () => {
               allowedSenders: ['braneframe.com', 'dxos.org'],
             },
           },
-          { path: '/email/mailboxes/kai', method: 'DELETE' },
+          { op: 'release', handle: 'kai' },
         ]);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'a renamed address releases the one it claimed; an empty allowlist claims with the default',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const spaceId = yield* Database.spaceId;
+        const fake = fakeMailbox(() => spaceId);
+        const connection = makeEmailChannelBackend({ mailbox: fake.layer }).connection;
+        if (!connection) {
+          return expect.unreachable('The email backend has a connection.');
+        }
+        const { channel, config } = yield* makeAgentChannel('kai');
+
+        yield* connection.start(channel).pipe(withCapabilities);
+        Obj.update(config, (config) => {
+          config.handle = 'kai2';
+          config.allowedSenders = [];
+        });
+        yield* connection.status(channel).pipe(withCapabilities);
+        yield* connection.start(channel).pipe(withCapabilities);
+        yield* connection.stop(channel).pipe(withCapabilities);
+
+        expect(fake.calls.map(({ op, handle }) => `${op} ${handle}`)).toEqual([
+          'claim kai',
+          // Until reconnected, the status is the claimed mailbox's, not the edited address's.
+          'status kai',
+          'release kai',
+          'claim kai2',
+          'release kai2',
+        ]);
+        expect(fake.calls[3]?.request?.allowedSenders).toEqual(['braneframe.com', 'dxos.org']);
+        expect(config.claimedHandle).toBeUndefined();
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -124,21 +172,15 @@ describe('email channel backend', () => {
     'a channel no agent lists cannot connect',
     Effect.fnUntraced(
       function* ({ expect }) {
-        const edge = new MockEdgeHttpClient(() => mailbox('SPACE'));
-        const backend = makeEmailChannelBackend({ edgeClient: Effect.succeed(edge) });
-        const channel = yield* Database.add(
-          Channel.make({
-            name: 'email',
-            backend: { kind: AgentEmail.BACKEND_KIND, config: AgentEmail.make({ handle: 'kai' }) },
-          }),
-        );
-        const connection = backend.connection;
+        const fake = fakeMailbox(() => 'SPACE');
+        const connection = makeEmailChannelBackend({ mailbox: fake.layer }).connection;
         if (!connection) {
           return expect.unreachable('The email backend has a connection.');
         }
-        const result = yield* Effect.flip(connection.start(channel).pipe(withCapabilities));
-        expect(result.message).toBe('Add the channel to an agent before connecting it.');
-        expect(edge.requests).toEqual([]);
+        const { channel } = yield* makeAgentChannel('kai', false);
+        const error = yield* Effect.flip(connection.start(channel).pipe(withCapabilities));
+        expect(error.message).toBe('Add the channel to an agent before connecting it.');
+        expect(fake.calls).toEqual([]);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
