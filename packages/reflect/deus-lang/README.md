@@ -23,7 +23,7 @@ node bin/deus.mjs build Cli.main -o deus --native            # the CLI as a 1.6 
 node bin/deus.mjs build Notes.serve -o out --worker          # a web handler as a Cloudflare Worker
 node bin/deus.mjs build Notes.serve -o notes --server        # …or as a standalone native server
 node bin/deus.mjs build gcd -o gcd.wasm --wasm               # first-order code compiled to wasm
-node bin/deus.mjs bindings Geometry -o out                    # a typed TypeScript module calling those functions
+node bin/deus.mjs bindings Geometry -o out                    # a JS module + .d.ts calling those functions
 ```
 
 A session in a codebase:
@@ -80,7 +80,7 @@ That codebase holds its tasks, history and source. It is pushed to R2, where the
   (store, text export, binary bundles), MDL and the rest.
 - [`docs/PRIOR-ART.md`](./docs/PRIOR-ART.md) — what was taken from Unison, Lean, Koka, Effect-TS and others.
 - [`docs/PROPOSALS.md`](./docs/PROPOSALS.md) — the user's proposals, evaluated against alternatives.
-- [`docs/IMMUTABILITY.md`](./docs/IMMUTABILITY.md) — does immutability make DEUS slow? A sorting case study (D83), and the pure `Array` that compiled code updates in place ([`docs/spec/ARRAY.mdl`](./docs/spec/ARRAY.mdl), D86).
+- [`docs/IMMUTABILITY.md`](./docs/IMMUTABILITY.md) — does immutability make DEUS slow? A sorting case study (D83), and the pure `Array` that compiled code updates in place ([`docs/spec/ARRAY.mdl`](./docs/spec/ARRAY.mdl), D91).
 - [`docs/LLM.md`](./docs/LLM.md) — how an agent drives the CLI.
 
 ## Changing the compiler

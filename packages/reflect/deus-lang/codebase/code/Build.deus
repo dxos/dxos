@@ -42,10 +42,13 @@ def Build.buildExecutable (image : Text) (out : Text) (home : Text) (node : Text
   IO.remove work
 
 /-- Writes C from the C back end (D80): to `out` itself when it ends in `.c`, else beside it as
-  `out.c`, compiled with `$CC` (default `cc`) at `-O2` to an executable that prints its result. -/
+  `out.c`, compiled with `$CC` (default `cc`) at `-O2` to an executable that prints its result.
+  For `out` ending in `.wasm`, `$WASM_CC` (default `clang`) compiles it to a wasm32 module instead. -/
 def Build.cExecutable (source : Text) (out : Text) : {IO, Throw Failure} Unit := if endsWith ".c" out then IO.writeFile out source else
   IO.writeFile (out ++ ".c") source
-  Build.tool (getOr (IO.getEnv "CC") "cc") ["-O2", "-DDEUS_MAIN", "-o", out, out ++ ".c"]
+  if endsWith ".wasm" out then Build.tool
+    (getOr (IO.getEnv "WASM_CC") "clang")
+    ["--target=wasm32", "-O2", "-mtail-call", "-nostdlib", "-Wl,--no-entry", "-o", out, out ++ ".c"] else Build.tool (getOr (IO.getEnv "CC") "cc") ["-O2", "-DDEUS_MAIN", "-o", out, out ++ ".c"]
   ()
 
 /-- Writes the image, the wasm kernel (built with cargo when it is missing) and its JavaScript

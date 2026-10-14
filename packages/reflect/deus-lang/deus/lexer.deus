@@ -22,6 +22,8 @@ structure Token where
   line : Int
   col : Int
   bol : Bool
+  -- How the source wrote a number whose decimal `value` reads differently (`'a'`, `0xFF`, `1_000`); `""` otherwise.
+  spelling : Text
 
 namespace Lexer
 
@@ -99,8 +101,9 @@ def lex (source : Text) : {Throw Text} List Token :=
     else if c == '\n' then stringEnd (i + 1) (c :: acc) (line + 1) (i + 1)
     else stringEnd (i + 1) (c :: acc) line lineStart
   let rec go i line lineStart bol acc :=
-    let tok := fun (kind : Kind) (value : Text) (start : Int) => Token.mk kind value line (start - lineStart) bol :: acc
-    if i >= n then List.reverse (Token.mk Kind.eof "" line 0 true :: acc)
+    let spelled := fun (kind : Kind) (value : Text) (spelling : Text) (start : Int) => Token.mk kind value line (start - lineStart) bol spelling :: acc
+    let tok := fun (kind : Kind) (value : Text) (start : Int) => spelled kind value "" start
+    if i >= n then List.reverse (Token.mk Kind.eof "" line 0 true "" :: acc)
     else
       let c := at i
       let col := i - lineStart
@@ -108,15 +111,15 @@ def lex (source : Text) : {Throw Text} List Token :=
       else if c == ' ' || c == '\t' || c == '\r' then go (i + 1) line lineStart bol acc
       else if c == '-' && at (i + 1) == '-' then
         let j := lineEnd i
-        go j line lineStart bol (Token.mk Kind.comment (Text.slice source i j) line col bol :: acc)
+        go j line lineStart bol (Token.mk Kind.comment (Text.slice source i j) line col bol "" :: acc)
       else if c == '/' && at (i + 1) == '-' then
         let isDoc := at (i + 2) == '-' && at (i + 3) != '/'
         match commentEnd i 0 line lineStart with
         | (j, line2, lineStart2) =>
           if isDoc then
             let body := Text.trim (Text.slice source (i + 3) (j - 2))
-            go j line2 lineStart2 bol (Token.mk Kind.doc body line col bol :: acc)
-          else go j line2 lineStart2 bol (Token.mk Kind.comment (Text.slice source i j) line col bol :: acc)
+            go j line2 lineStart2 bol (Token.mk Kind.doc body line col bol "" :: acc)
+          else go j line2 lineStart2 bol (Token.mk Kind.comment (Text.slice source i j) line col bol "" :: acc)
       else if c == '"' then
         match stringEnd (i + 1) [] line lineStart with
         | (value, j, line2, lineStart2) => go j line2 lineStart2 false (tok Kind.text value i)
@@ -125,16 +128,18 @@ def lex (source : Text) : {Throw Text} List Token :=
         let code := if isEscape then escape (at (i + 2)) else at (i + 1)
         let close := if isEscape then i + 3 else i + 2
         if at close != '\'' then fail line col "bad character literal"
-        else go (close + 1) line lineStart false (tok Kind.int (Int.toText code) i)
+        else go (close + 1) line lineStart false (spelled Kind.int (Int.toText code) (Text.slice source i (close + 1)) i)
       else if Text.isDigit c then
         if c == '0' && at (i + 1) == 'x' then
           let j := hexEnd (i + 2)
           let digits := List.filter (fun d => d != '_') (List.map at (List.range (i + 2) j))
           let value := List.foldl (fun v d => v * 16 + hexValue d) 0 digits
-          go j line lineStart false (tok Kind.int (Int.toText value) i)
+          go j line lineStart false (spelled Kind.int (Int.toText value) (Text.slice source i j) i)
         else
           let j := digitsEnd i
-          go j line lineStart false (tok Kind.int (Text.replace "_" "" (Text.slice source i j)) i)
+          let written := Text.slice source i j
+          let value := Text.replace "_" "" written
+          go j line lineStart false (spelled Kind.int value (if value == written then "" else written) i)
       else if c == '.' && isIdentStart (at (i + 1)) then
         let j := identEnd (i + 1)
         -- `(e).field` and `xs[i].field`: a dot right after a closing bracket projects.

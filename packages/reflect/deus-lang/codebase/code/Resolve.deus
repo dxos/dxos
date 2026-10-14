@@ -128,6 +128,7 @@ def Resolve.expr (ctx : Ctx) (e : Expr) (locals : List (Option Text)) : {Throw T
   | Expr.ann x _ => go x
   | Expr.proj x field pos => Resolve.app (fieldAccessor ctx pos field) [go x]
   | Expr.note text x => Compile.node "note" [Sexp.s text, go x]
+  | Expr.spelled text x => Compile.node "spelled" [Sexp.s text, go x]
 
 def Resolve.fail (ctx : Ctx) (message : Text) : {Throw Text} a := Throw.throw (ctx.origin ++ ": " ++ message)
 
@@ -214,6 +215,9 @@ def Resolve.pat (ctx : Ctx) (p : Pat) (binds : List (Option Text)) : {Throw Text
   match p with
   | Pat.wild => (Compile.node "pany" [], binds)
   | Pat.int v => (Compile.node "pint" [i v], binds)
+  | Pat.spelled text q =>
+      match Resolve.pat ctx q binds with
+      | (core, binds2) => (Compile.node "spelled" [Sexp.s text, core], binds2)
   | Pat.text v => (Compile.node "ptext" [Sexp.s v], binds)
   | Pat.bool v => (Compile.node "pcon" [Sexp.s "#Bool", i (if v then 1 else 0)], binds)
   | Pat.unit => (Compile.node "pcon" [Sexp.s "#Unit", i 0], binds)
@@ -301,7 +305,7 @@ def Resolve.simpleBinder (ctx : Ctx) (p : Pat) : {Throw Text} Option (Option Tex
 /-- Canonical Core and the binder names in pre-order; every binder contributes exactly one name. -/
 def Resolve.strip (form : Sexp) : (Sexp, List Text) :=
   match stripNoted form with
-  | (core, names, _) => (core, names)
+  | (core, names, _, _) => (core, names)
 
 def Resolve.stripAcc (form : Sexp) (acc : List Text) : (Sexp, List Text) :=
   let rebuild := fun head prefix children names =>
@@ -344,12 +348,12 @@ def Resolve.stripList (items : List Sexp) (acc : List Text) : (List Sexp, List T
         | (y, a2) => go more (y :: out) a2
   go items [] acc
 
-/-- `strip`, also returning the comments it removed (D66). -/
-def Resolve.stripNoted (form : Sexp) : (Sexp, (List Text, List (Int, Text))) :=
+/-- `strip`, also returning the comments (D66) and number spellings (D88) it removed. -/
+def Resolve.stripNoted (form : Sexp) : (Sexp, (List Text, (List (Int, Text), List (Int, Text)))) :=
   match stripAcc form [] with
   | (named, names) =>
       match unnote named with
-      | (core, notes) => (core, reverse names, notes)
+      | (core, notes, spellings) => (core, reverse names, notes, spellings)
 
 def Resolve.structFields (ctx : Ctx) (fqn : Text) : List Text :=
   match Dict.lookup fqn (ctx.names).index with
@@ -394,31 +398,33 @@ def Resolve.tyCore (names : Names) (scope : Scope) (params : List Text) (t : Ty)
         | Option.some (_, Entry.ability _ iri) => Compile.node "tref" [Sexp.s iri]
         | _ =>
             let c := code name 0
-            if c >= 97 && c <= 122 then Compile.node "tvar" [Sexp.s name] else Throw.throw ("unknown type " ++ name)
+            if c >= 'a' && c <= 'z' then Compile.node "tvar" [Sexp.s name] else Throw.throw ("unknown type " ++ name)
       if List.isEmpty args then head else Compile.node "tapp" (head :: List.map go args)
 
 def Resolve.unitCore : Sexp := Compile.node "con" [Sexp.s "#Unit", i 0, i 0]
 
-/-- Removes `(note "text" e)` nodes. Each comment is returned with the pre-order index of `e` among
-  the list nodes of the result, the position `Notes.restore` puts it back at (D66). -/
-def Resolve.unnote (form : Sexp) : (Sexp, List (Int, Text)) :=
-  let rec go x count acc :=
+/-- Removes `(note "text" e)` and `(spelled "text" e)` nodes. Each is returned with the pre-order
+  index of `e` among the list nodes of the result, the position `Print.restore` puts it back at
+  (D66, D88): comments first, then spellings. -/
+def Resolve.unnote (form : Sexp) : (Sexp, (List (Int, Text), List (Int, Text))) :=
+  let rec go x count acc spellings :=
     match x with
     | Sexp.list (Sexp.sym "note" :: Sexp.str text :: inner :: []) =>
         match acc with
-        | (at, earlier) :: rest => if at == count then go inner count ((at, earlier ++ "\n" ++ text) :: rest) else go inner count ((count, text) :: acc)
-        | [] => go inner count [(count, text)]
+        | (at, earlier) :: rest => if at == count then go inner count ((at, earlier ++ "\n" ++ text) :: rest) spellings else go inner count ((count, text) :: acc) spellings
+        | [] => go inner count [(count, text)] spellings
+    | Sexp.list (Sexp.sym "spelled" :: Sexp.str text :: inner :: []) => go inner count acc ((count, text) :: spellings)
     | Sexp.list items =>
-        let rec each rest out c a :=
+        let rec each rest out c a sp :=
           match rest with
-          | [] => (Sexp.list (reverse out), c, a)
+          | [] => (Sexp.list (reverse out), c, a, sp)
           | y :: more =>
-              match go y c a with
-              | (y2, c2, a2) => each more (y2 :: out) c2 a2
-        each items [] (count + 1) acc
-    | _ => (x, count, acc)
-  match go form 0 [] with
-  | (core, _, notes) => (core, reverse notes)
+              match go y c a sp with
+              | (y2, c2, a2, sp2) => each more (y2 :: out) c2 a2 sp2
+        each items [] (count + 1) acc spellings
+    | _ => (x, count, acc, spellings)
+  match go form 0 [] [] with
+  | (core, _, notes, spellings) => (core, reverse notes, reverse spellings)
 
 def Resolve.valueOf (ctx : Ctx) (name : Text) (pos : Pos) (locals : List (Option Text)) : {Throw Text} Sexp :=
   let index := localIndex locals name

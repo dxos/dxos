@@ -140,7 +140,7 @@ def Sorting.mergeSort (xs : List Int) : List Int := mergeAll (runsGo [] xs)
 test Sorting.mergeSorts := mergeSort Sorting.sample == sort Sorting.sample
 
 /-
-  Sorting with and without mutable memory: the case study behind D83 and D86
+  Sorting with and without mutable memory: the case study behind D83 and D91
   (docs/IMMUTABILITY.md).
 
   Every sort here is first-order and specialised to `Int`, so the same definitions run on the
@@ -154,7 +154,7 @@ test Sorting.mergeSorts := mergeSort Sorting.sample == sort Sorting.sample
 -- Input and checks.
 --
 /-- A linear congruential generator, so every back end sorts the same numbers. -/
-def Sorting.next (s : Int) : Int := and (s * 1103515245 + 12345) 2147483647
+def Sorting.next (s : Int) : Int := and (s * 1103515245 + 12345) 0x7FFFFFFF
 
 /-- One pass: merges neighbouring runs. -/
 def Sorting.pairsGo (acc : List (List Int)) (runs : List (List Int)) : List (List Int) :=
@@ -223,7 +223,7 @@ def Sorting.runsGo (acc : List (List Int)) (xs : List Int) : List (List Int) :=
 def Sorting.sample : List Int := [5, 3, 9, 1, 5, 0, -2, 7, 3, 3]
 
 --
--- 4. Quicksort over the immutable `Array` (D86), threading each new version: written purely, it
+-- 4. Quicksort over the immutable `Array` (D91), threading each new version: written purely, it
 --    runs in place because no old version is used again.
 --
 def Sorting.swap (a : Array Int) (i : Int) (j : Int) : Array Int :=
@@ -237,4 +237,5 @@ def Sorting.swapM (m : MutMap Int Int) (i : Int) (j : Int) : Unit :=
 
 def Sorting.toList (a : Array Int) : List Int := toListGo a (Array.length a - 1) []
 
+/-- The items of `a` from `i` down to 0, onto `acc`. -/
 def Sorting.toListGo (a : Array Int) (i : Int) (acc : List Int) : List Int := if i < 0 then acc else Sorting.toListGo a (i - 1) (Array.get a i :: acc)

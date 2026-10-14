@@ -7,12 +7,14 @@ ability Alarm @"urn:deus:web:Alarm" where
   set : Int -> Unit
 
 -- Comments written before a statement or an arm; they become metadata, never Core (D66).
+
+-- A number literal as the source wrote it (`'a'`, `0xFF`); metadata, never Core (D88).
 /-- One `| p, q => body` arm. -/
 structure Arm where
   pats : List Pat
   body : Expr
 
-/-- An immutable array of fixed length (D86). `set` returns a new array and leaves the old one as
+/-- An immutable array of fixed length (D91). `set` returns a new array and leaves the old one as
   it was, but costs O(1) when the old one is not used again: the kernels keep versions (reading
   an old one is slower), and the compiled back ends write in place when the array is unique. An
   index outside `0 .. length` is a defect. -/
@@ -141,6 +143,7 @@ inductive Event where
   | span (id : Int) (parent : Int) (name : Text) (attrs : List (Text, Text)) (begin : Text) (finished : Text)
   | metric (kind : Text) (name : Text) (value : Int) (time : Text)
 
+-- A number literal as the source wrote it (`'a'`, `0xFF`); metadata, never Core (D88).
 inductive Expr where
   | var (name : Text) (pos : Pos)
   | dot (name : Text) (pos : Pos)
@@ -167,6 +170,7 @@ inductive Expr where
   | ann (e : Expr) (type : Ty)
   | proj (e : Expr) (field : Text) (pos : Pos)
   | note (text : Text) (e : Expr)
+  | spelled (text : Text) (e : Expr)
 
 /-- A checked error with context: what failed, the facts that locate it, and what it wraps. -/
 structure Failure where
@@ -363,6 +367,7 @@ inductive Pat where
   | list (items : List Pat)
   | unit
   | as (name : Text) (pat : Pat)
+  | spelled (text : Text) (pat : Pat)
 
 /-
   Surface syntax tree produced by the parser and consumed by the resolver.
@@ -568,7 +573,7 @@ ability Stuck where
   - Case splits on `Bool` conditions (excluded middle for terminating computations).
   - `Int` is arithmetic modulo 2³² (D9), so + and * form a commutative ring; `<=` is a total
     order: `not (a <= b)` gives `b <= a`, and `<=` is transitive.
-  - The `Array` laws (D86, docs/spec/ARRAY.mdl): `length (make n x) = n` for `0 <= n`;
+  - The `Array` laws (D91, docs/spec/ARRAY.mdl): `length (make n x) = n` for `0 <= n`;
     `get (make n x) i = x` and `get (set a i v) j = if i == j then v else get a j`, with `length`
     of a `set` unchanged, when the index is in bounds; `set (set a i v) i w = set a i w`; and
     `set a i (get a i) = a` in bounds. An index out of bounds is a defect, so a term whose bound
@@ -676,6 +681,7 @@ structure Token where
   line : Int
   col : Int
   bol : Bool
+  spelling : Text
 
 /-- Tracing: `start` opens a span and returns its id; `finish` closes it. -/
 ability Trace where

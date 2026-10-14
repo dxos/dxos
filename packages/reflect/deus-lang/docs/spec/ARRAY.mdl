@@ -6,7 +6,7 @@ version: 1.0
 
 # Arrays
 
-`Array a` is a fixed-length sequence of values of type `a`, indexed from 0 ([D86](../DECISIONS.md)).
+`Array a` is a fixed-length sequence of values of type `a`, indexed from 0 ([D91](../DECISIONS.md)).
 It is an immutable value like a list: `Array.set` returns a new array and leaves the old one as it
 was. What makes it an array rather than a list is the cost: every operation is O(1) when the program
 does not use an old version again, which is how array code is usually written.
@@ -138,7 +138,7 @@ end ArrayLaws
 | ---------------------- | ------------------------------------------------------------------------------------ |
 | `make n x`             | O(n)                                                                                 |
 | `length`, `get`, `set` | O(1) on the newest array, the one no `set` has been applied to yet                   |
-| `get`, `set` on an older array | O(1) compiled (the old array was copied when it was kept); O(k) on the kernels, for an array k writes old |
+| `get`, `set` on an older array | `get` O(1) compiled, `set` O(n) (it copies); O(k) on the kernels, for an array k writes old |
 
 A program that only ever writes to the newest array, as every in-place algorithm does, pays O(1)
 for each operation on every runtime. A program that keeps old versions still gets correct answers
@@ -150,10 +150,13 @@ Each runtime meets this in its own way:
   rerooting. The newest version owns the items and each older version is a diff to the next one.
   Reading an older version moves the items back to it first, so a program that alternates between
   two versions pays for the distance each time.
-- **Compiled code** (wasm and C) has one block of memory per array. A static pass,
+- **Compiled wasm** (`--wasm`) has one block of memory per array and never frees. A static pass,
   [`deus/unique.deus`](../../deus/unique.deus), finds every `set` whose array nothing will read
   again and makes it write in place. Every other `set` copies the array first. The pass is
-  described in [WASM.md](WASM.md).
+  described in [WASM.md](WASM.md#unique-arrays).
+- **C** (`--c`, and wasm built through it) counts references (Perceus). A `set` on an array the
+  code holds the only reference to writes in place; on a shared one it copies, and on a borrowed
+  one (a local still used later) it copies too.
 
 ## Extensions
 

@@ -1,65 +1,43 @@
 # History of main
 
-- `dc91f14909` task: open 82d2d7a2 RC and the pure Array: once blocks carry reference counts (62d1bdda, cf0e3937), make the copying Array.set write in place at count 1 and Array.copy a share; the static pass in deus/unique.deus keeps removing the check where it proves uniqueness (D86) (by claude)
-- `7b0ba6832b` task: open 32bf2703 Tested theorems: 'by test' evaluates the conclusion even when a hypothesis is false, because implies is strict; skip (and count) cases whose hypotheses fail, so 'by test' works on bounded statements like the Array laws (D86) (by claude)
-- `4eb86d828f` task: set a1b73fb8 title (by claude)
-- `88bf20cb8b` task: set a1b73fb8 details (by claude)
-- `732aafbdfc` delete Sorting.benchPersistent Sorting.copyGo Sorting.lomutoV Sorting.persistentKeepsOld Sorting.persistentSort Sorting.persistentSorts Sorting.quickV Sorting.toListV Sorting.vget Sorting.vlength Sorting.vset Sorting.vswap Sorting.Node.current Sorting.Node.diff Sorting.Node
-- `10e7f36de3` close 95ca184f by #9bc9f93c4b (by claude)
-- `9bc9f93c4b` Pure Array.set (D86): persistent versions on the kernels, a uniqueness pass that writes in place in wasm and C, and the Array spec with its laws as theorems (by claude)
-- `07c79505a1` history: import 213 changes
-- `42c39f5638` task: import from tasks.sexp
-- `14b39bdcec` add code specs
-- `c3fa452f17` task: open 729ad2b4 Apply the explorer inbox every 15 minutes once the Worker is deployed with its GitHub secrets (D85) (by claude)
-- `44e512757f` close d2328509 by #0f3089d483 (by claude)
-- `0f3089d483` the explorer's live console, deus explore --console (D84) (by claude)
-- `78c160790e` history: import 209 changes
-- `17d48b3b3e` history: import 206 changes (by claude)
-- `cad965875a` task: import from tasks.sexp
-- `3b25b5f78f` add code specs
-- `32d2bffc00` task: set 747a4182 state (by claude)
-- `f75fd70e74` task: link 747a4182 to #68dcd2f5f1 (by claude)
-- `213c2a9ed5` task: set 81438cac state (by claude)
-- `fea464b8b5` task: link 81438cac to #68dcd2f5f1 (by claude)
-- `bb588af416` close 4909bee3 by #68dcd2f5f1 (by claude)
-- `68dcd2f5f1` the explorer writes: GitHub sign-in, comments, tasks with images (D82) (by claude)
-- `007a69d576` task: open 747a4182 File tasks from the explorer with image attachments stored as codebase assets (by claude)
-- `1ff3a83889` task: open 81438cac Explorer comments on definitions, changes and tasks, stored in the codebase (by claude)
-- `09f2f89158` task: open 4909bee3 Explorer accounts: GitHub sign-in, writes limited to active dxos org members, read-only when signed out (by claude)
-- `e666974c28` history: import 194 changes
-- `1f241c967c` task: import from tasks.sexp
-- `804de180dc` add code specs
-- `61307b80f9` task: open 353444f7 TypeScript bindings: run in-process on the TypeScript kernel too
-- `dd5833e34f` task: open 1474b99e TypeScript bindings: pass functions across (callbacks and closures)
-- `1e488a6077` task: open b6907aeb TypeScript bindings: export polymorphic functions with codec parameters
-- `39cbb23245` task: comment on 17d50ae5 (by claude)
-- `37bffc2ffa` close 17d50ae5 by #7510a284be (by claude)
-- `7510a284be` deus bindings: typed TypeScript modules for a namespace, on the wasm kernel (D81) (by claude)
-- `a6ec8f1d0b` task: set 17d50ae5 state (by claude)
-- `faa4e8b624` task: open 17d50ae5 TypeScript interop: generate typed TypeScript bindings for DEUS namespaces
-- `c0daf520e4` history: import 184 changes
-- `afa110cf75` task: import from tasks.sexp
-- `71eb24530c` export: merge 10 changes from codebase
-- `86db7b80c4` task: open e1cf2c6c Native: effect handlers in the C back end by evidence passing, with stack switching for general resumptions (by claude)
-- `259f06882e` task: open 72a1f2fb Native: a C runtime for Text, maps and the other primitives, ported from the Rust kernel (by claude)
-- `336d93ba48` task: open 610b2785 Native: closure conversion and partial application in the C back end (by claude)
-- `cf09e48794` task: open 62d1bdda Native: Perceus reference counting with reuse for the C back end, so compiled programs free memory (by claude)
-- `00e0968450` task: set 7ca05fc5 details (by claude)
-- `97914d416e` close 7ca05fc5 by #9aa115afc5 (by claude)
-- `9aa115afc5` task: open 7ca05fc5 Native compilation: a C back end compiled by clang/LLVM, and benchmarks of every back end (by claude)
-- `4e8f52cb61` history: import 163 changes
-- `be6879448e` task: import from tasks.sexp
-- `47072308f5` add code specs
+- `dc73933af0` task: set 82d2d7a2 state details (by claude)
+- `11a519e17a` task: set 764249e0 state details (by claude)
+- `60521f6369` export: merge tasks from codebase
+- `3ddaac8757` task: open 764249e0 Tested theorems: 'by test' evaluates the conclusion even when a hypothesis is false, because implies is strict; skip (and count) cases whose hypotheses fail, so 'by test' works on bounded statements like the Array laws (D91) (by claude)
+- `313d6da960` task: set a1b73fb8 title (by claude)
+- `3dc659aa9a` delete Sorting.benchPersistent Sorting.copyGo Sorting.lomutoV Sorting.persistentKeepsOld Sorting.persistentSort Sorting.persistentSorts Sorting.quickV Sorting.toListV Sorting.vget Sorting.vlength Sorting.vset Sorting.vswap Sorting.Node.current Sorting.Node.diff Sorting.Node
+- `e1960a1c3e` Pure Array (D91): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `26cf39a660` Pure Array (D91): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `6505bacbff` Pure Array (D91): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `f0d8c638b6` Pure Array (D91): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `32103d5d39` Pure Array (D91): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `1d0fa69ccc` Pure Array (D91): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `5e69dc066b` Pure Array (D91): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `55e9e2fabe` Pure Array (D91): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `f1a8d16820` close 95ca184f by #41879b7d7e (by claude)
+- `41879b7d7e` history: import 319 changes (by claude)
+- `ffc6ea6551` task: import from tasks.sexp
+- `3b48b9e68d` add code specs
+- `57f679f52c` close ef46861c by #9081760a10 (by claude)
+- `9081760a10` Wasm with reference counting: the C back end compiled with clang for wasm32 (D90) (by claude)
+- `a8b0e3bf81` task: open 38603468 Native: 32-bit values with a tag bit in wasm built through C (halve block size) (by claude)
+- `74c2b4296d` history: import 313 changes
+- `eb9b7f4404` task: import from tasks.sexp
+- `617221bcb6` add code specs
+- `83474d34b9` export: merge 19 changes from codebase
+- `aabff4cf3c` export: merge tasks from codebase
+- `63e3914ad2` merge #13952's branch (C refcounting D86, TS bindings D87); spellings and union merge renumbered D88, D89 (by claude)
+- `374b38babb` export: merge 4 changes from codebase
+- `bd6bedcbc4` export: merge tasks from codebase
+- `cb1f41b30f` merge #13952's branch: explorer console (D84, D85); spellings and union merge renumbered D86, D87 (by claude)
+- `1e1b206397` export: settle a task a git union merge left on two lines (D85) (by claude)
+- `ebc49e0bde` history: import 68 changes
+- `2dffd26498` task: import from /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/recover-tasks.sexp
+- `da37aed4f5` export: merge 36 changes from codebase
+- `8ddc568763` export: merge tasks from codebase
+- `ce407c2357` close 0d21d8d5 by #6d6826c8bd (by claude)
+- `6d6826c8bd` number literals keep their spelling for view and export (D84) (by claude)
 - `b8fc2ca902` history: import 9 changes
-- `c58a476f13` close dfaad231 by #cf0f719d6e (by claude)
-- `cf0f719d6e` explorer: a Unison-style codebase UI; builtin pages and bucket content types fixed (D72) (by claude)
-- `5ed69c23c8` task: set dfaad231 state
-- `28ca458c20` task: set dfaad231 details
-- `63d82046a6` task: set dfaad231 priority assignee labels
-- `9c2b9f89b4` task: open dfaad231 Codebase UI on par with Unison Share: finder, namespaces, hover previews, diffs (by claude)
-- `cdef7f9a58` history: import 108 changes
-- `89c5f19d03` task: import 37 tasks
-- `b646385392` add code specs
 - `a70f6a17ad` export: a task missing from the file or at a past version is unchanged there (D79) (by claude)
 - `334f503cf8` task: link 2bbc3445 to #fa20112443 (by claude)
 - `f157773921` task: set 2bbc3445 state (by claude)
@@ -129,6 +107,142 @@
 - `7453b3a1b7` task: import 18 tasks
 - `bff1b8d98b` add code
 - `67c7d5a614` init
+- `8fefe275fc` task: comment on 27d2d190 (by claude)
+- `3e65353735` delete Bindings.handlerDecl Bindings.member Bindings.typeDecl
+- `acdf257ca5` close 27d2d190 by #a1cc2bcbf9 (by claude)
+- `a1cc2bcbf9` Bindings emit a .js module and a hand-written-looking .d.ts; spec-first in BINDINGS.mdl, whose theorems found a distinct() collision bug (D87) (by claude)
+- `5f721fc110` task: set 27d2d190 state (by claude)
+- `03e8b7f152` task: open 27d2d190 Bindings: pretty TypeScript API (.js + .d.ts), spec-first in BINDINGS.mdl
+- `44071e35f6` history: import 223 changes
+- `6a9d543900` task: import from tasks.sexp
+- `a050870707` add code specs
+- `18b3ef016c` C back end: MUSTTAIL only where the C compiler has it (D86) (by claude)
+- `22f3b808cf` task: open f7d39ad6 Native: reuse freed blocks over 256 words (long arrays) in the C back end (by claude)
+- `5f3fbc3f4d` task: open ef46861c Native: reference counting with reuse in the wasm back end (D86's scheme) (by claude)
+- `06539159c6` task: set 62d1bdda details (by claude)
+- `a6a923b3cb` close 62d1bdda by #dbf6867c1b (by claude)
+- `dbf6867c1b` C back end: reference counting with reuse, borrowed parameters, in-place matches (D86) (by claude)
+- `a39946d067` task: set 62d1bdda state (by claude)
+- `07c79505a1` history: import 213 changes
+- `42c39f5638` task: import from tasks.sexp
+- `14b39bdcec` add code specs
+- `c3fa452f17` task: open 729ad2b4 Apply the explorer inbox every 15 minutes once the Worker is deployed with its GitHub secrets (D85) (by claude)
+- `44e512757f` close d2328509 by #0f3089d483 (by claude)
+- `0f3089d483` the explorer's live console, deus explore --console (D84) (by claude)
+- `78c160790e` history: import 209 changes
+- `e1fa6d0eb4` task: open c338b56e Native: effect handlers in the C back end by evidence passing, with stack switching for general resumptions (by claude)
+- `cda9251c00` task: open 434a6dbc Native: a C runtime for Text, maps and the other primitives, ported from the Rust kernel (by claude)
+- `215b405dad` task: open d807958c Native: closure conversion and partial application in the C back end (by claude)
+- `cf05f0f744` task: open 932f4034 Native: Perceus reference counting with reuse for the C back end, so compiled programs free memory (by claude)
+- `9dedf7f070` task: set babdb4f2 details (by claude)
+- `d4211dd9fb` close babdb4f2 by #83dbe4c096 (by claude)
+- `83dbe4c096` C back end compiled by clang/LLVM (deus build --c) and benchmarks of every back end (D79) (by claude)
+- `cb399207a1` task: open babdb4f2 Native compilation: a C back end compiled by clang/LLVM, and benchmarks of every back end (by claude)
+- `9ba4d92091` history: import 146 changes
+- `073671715e` task: import 47 tasks
+- `c648f7f874` add code specs
+- `6bf2adb8ab` delete Geometry.Color Geometry.Log Geometry.Point Geometry.Point.x Geometry.Point.y Geometry.Shape Geometry.Tree Geometry.area Geometry.firstOf Geometry.greet Geometry.insert Geometry.lookup Geometry.mean Geometry.move Geometry.paint Geometry.ratio Geometry.sorted Geometry.stats Geometry.total
+- `45a408e0d4` task: open eea32f23 TypeScript bindings: run in-process on the TypeScript kernel too
+- `24083cded2` task: open de710f29 TypeScript bindings: pass functions across (callbacks and closures)
+- `17759b3b47` task: open 091e43c0 TypeScript bindings: export polymorphic functions with codec parameters
+- `e18c04f0fa` task: comment on db71c327 (by claude)
+- `e05dcb4087` close db71c327 by #c564461f42 (by claude)
+- `c564461f42` deus bindings: typed TypeScript modules for a namespace, on the wasm kernel (D79) (by claude)
+- `28ea0c91cd` task: set db71c327 state (by claude)
+- `5eab0fe7ba` task: open db71c327 TypeScript interop: generate typed TypeScript bindings for DEUS namespaces
+- `3e5bea8a28` task: set 77740edd state (by claude)
+- `15483974b6` task: link 77740edd to #feaea530df (by claude)
+- `b02f44ca79` task: set 22a99190 state (by claude)
+- `ef57769f4b` task: link 22a99190 to #feaea530df (by claude)
+- `572b3e7014` close fb964840 by #feaea530df (by claude)
+- `feaea530df` the explorer writes: GitHub sign-in, comments, tasks with images (D79) (by claude)
+- `22b72c5a39` task: open 77740edd File tasks from the explorer with image attachments stored as codebase assets (by claude)
+- `5b1db4e0fd` task: open 22a99190 Explorer comments on definitions, changes and tasks, stored in the codebase (by claude)
+- `700b39b3f0` task: open fb964840 Explorer accounts: GitHub sign-in, writes limited to active dxos org members, read-only when signed out (by claude)
+- `f55f8efcd0` task: open e69b5384 TypeScript bindings: run in-process on the TypeScript kernel too (by claude)
+- `ba9706cb05` task: open ef597118 TypeScript bindings: pass functions across (callbacks and closures)
+- `24786018c1` task: open e84ff062 TypeScript bindings: export polymorphic functions with codec parameters
+- `45a72f0783` task: comment on 207cac21 (by claude)
+- `312532e1eb` close 207cac21 by #e6755a8eeb (by claude)
+- `e6755a8eeb` deus bindings: typed TypeScript modules for a namespace, on the wasm kernel (D80) (by claude)
+- `8d944ac3a0` task: set 207cac21 state (by claude)
+- `6e72aa4658` task: open 207cac21 TypeScript interop: generate typed TypeScript bindings for DEUS namespaces
+- `ee0d3f4cf3` history: import 163 changes
+- `ec9395650d` task: import from tasks.sexp
+- `299d342e26` add code specs
+- `a8ab9e89a8` task: set d2d4e786 state (by claude)
+- `f11b70ad85` task: link d2d4e786 to #c432032637 (by claude)
+- `49e57d6b52` task: set d1534a34 state (by claude)
+- `53a78fb055` task: link d1534a34 to #c432032637 (by claude)
+- `fd900ab2e9` close a00fa56e by #c432032637 (by claude)
+- `c432032637` the explorer writes: GitHub sign-in, comments, tasks with images (D80) (by claude)
+- `2286d547e1` task: open d2d4e786 File tasks from the explorer with image attachments stored as codebase assets (by claude)
+- `61bfd14312` task: open d1534a34 Explorer comments on definitions, changes and tasks, stored in the codebase (by claude)
+- `a180997d4f` task: open a00fa56e Explorer accounts: GitHub sign-in, writes limited to active dxos org members, read-only when signed out (by claude)
+- `b75d5795ff` task: set 16d433b5 state (by claude)
+- `6cdd718b34` task: link 16d433b5 to #c3aa27a438 (by claude)
+- `d558b3bb4c` task: set b827edb2 state (by claude)
+- `5e79a11a52` task: link b827edb2 to #c3aa27a438 (by claude)
+- `d2170f01b4` close 3bb7f0f7 by #c3aa27a438 (by claude)
+- `c3aa27a438` the explorer writes: GitHub sign-in, comments, tasks with images (D81) (by claude)
+- `3ee200e1f8` task: open 16d433b5 File tasks from the explorer with image attachments stored as codebase assets (by claude)
+- `da0eac7119` task: open b827edb2 Explorer comments on definitions, changes and tasks, stored in the codebase (by claude)
+- `678df20acd` task: open 3bb7f0f7 Explorer accounts: GitHub sign-in, writes limited to active dxos org members, read-only when signed out (by claude)
+- `8020860c75` task: open a1b73fb8 TS kernel JIT: Array.set and Ref.set journal a closure on every write; journal only when a deoptimisation can replay the entry (D81) (by claude)
+- `94c0d1648a` task: open cf0e3937 Wasm back end: Perceus reference counting with reuse, sharing one ownership analysis with the C back end's task 62d1bdda; pure sorts allocate 470 MiB for 10^6 numbers today (D81) (by claude)
+- `d537d8fd8f` task: open 95ca184f Pure Array.set that writes in place when the array is unique (Lean 4 / Koka FBIP): Rc::get_mut in the Rust kernel, the reference count in compiled code, a copy on the TypeScript kernel (D81) (by claude)
+- `8c98b7fd26` close 8aa78a39 by #448eda5928 (by claude)
+- `448eda5928` sorting case study (D81): mutable Array in both kernels, wasm and C; Ref and primitive inlining in the compiled back ends (by claude)
+- `e2a8b80692` task: set 8aa78a39 state assignee details (by claude)
+- `e3cdb18335` task: open 8aa78a39 Sorting case study: does immutability make DEUS slow, and does it need mutable memory (by claude)
+- `84ea0dfca4` history: import 194 changes (by claude)
+- `c3d8f786c1` task: import from tasks.sexp
+- `03d2b5612f` add code specs
+- `17d48b3b3e` history: import 206 changes (by claude)
+- `cad965875a` task: import from tasks.sexp
+- `3b25b5f78f` add code specs
+- `32d2bffc00` task: set 747a4182 state (by claude)
+- `f75fd70e74` task: link 747a4182 to #68dcd2f5f1 (by claude)
+- `213c2a9ed5` task: set 81438cac state (by claude)
+- `fea464b8b5` task: link 81438cac to #68dcd2f5f1 (by claude)
+- `bb588af416` close 4909bee3 by #68dcd2f5f1 (by claude)
+- `68dcd2f5f1` the explorer writes: GitHub sign-in, comments, tasks with images (D82) (by claude)
+- `007a69d576` task: open 747a4182 File tasks from the explorer with image attachments stored as codebase assets (by claude)
+- `1ff3a83889` task: open 81438cac Explorer comments on definitions, changes and tasks, stored in the codebase (by claude)
+- `09f2f89158` task: open 4909bee3 Explorer accounts: GitHub sign-in, writes limited to active dxos org members, read-only when signed out (by claude)
+- `e666974c28` history: import 194 changes
+- `1f241c967c` task: import from tasks.sexp
+- `804de180dc` add code specs
+- `61307b80f9` task: open 353444f7 TypeScript bindings: run in-process on the TypeScript kernel too
+- `dd5833e34f` task: open 1474b99e TypeScript bindings: pass functions across (callbacks and closures)
+- `1e488a6077` task: open b6907aeb TypeScript bindings: export polymorphic functions with codec parameters
+- `39cbb23245` task: comment on 17d50ae5 (by claude)
+- `37bffc2ffa` close 17d50ae5 by #7510a284be (by claude)
+- `7510a284be` deus bindings: typed TypeScript modules for a namespace, on the wasm kernel (D81) (by claude)
+- `a6ec8f1d0b` task: set 17d50ae5 state (by claude)
+- `faa4e8b624` task: open 17d50ae5 TypeScript interop: generate typed TypeScript bindings for DEUS namespaces
+- `c0daf520e4` history: import 184 changes
+- `afa110cf75` task: import from tasks.sexp
+- `71eb24530c` export: merge 10 changes from codebase
+- `86db7b80c4` task: open e1cf2c6c Native: effect handlers in the C back end by evidence passing, with stack switching for general resumptions (by claude)
+- `259f06882e` task: open 72a1f2fb Native: a C runtime for Text, maps and the other primitives, ported from the Rust kernel (by claude)
+- `336d93ba48` task: open 610b2785 Native: closure conversion and partial application in the C back end (by claude)
+- `cf09e48794` task: open 62d1bdda Native: Perceus reference counting with reuse for the C back end, so compiled programs free memory (by claude)
+- `00e0968450` task: set 7ca05fc5 details (by claude)
+- `97914d416e` close 7ca05fc5 by #9aa115afc5 (by claude)
+- `9aa115afc5` task: open 7ca05fc5 Native compilation: a C back end compiled by clang/LLVM, and benchmarks of every back end (by claude)
+- `4e8f52cb61` history: import 163 changes
+- `be6879448e` task: import from tasks.sexp
+- `47072308f5` add code specs
+- `c58a476f13` close dfaad231 by #cf0f719d6e (by claude)
+- `cf0f719d6e` explorer: a Unison-style codebase UI; builtin pages and bucket content types fixed (D72) (by claude)
+- `5ed69c23c8` task: set dfaad231 state
+- `28ca458c20` task: set dfaad231 details
+- `63d82046a6` task: set dfaad231 priority assignee labels
+- `9c2b9f89b4` task: open dfaad231 Codebase UI on par with Unison Share: finder, namespaces, hover previews, diffs (by claude)
+- `cdef7f9a58` history: import 108 changes
+- `89c5f19d03` task: import 37 tasks
+- `b646385392` add code specs
 - `e2e0fc6622` task: open 62be7dc4 Browser page: keep the in-memory file system in IndexedDB so a playground codebase survives a reload (by claude)
 - `18416c6fa0` task: open 6e4360bd TypeScript kernel in the browser: its JIT runs eval about 1.4x faster than the wasm kernel; needs a synchronous sha256 and an injectable host (no node: imports) (by claude)
 - `4831107b4d` task: open d780de91 Embedding kernel re-reads the whole image on every deus_start (about 60 ms for the seed): keep a loaded image and call entries on it (by claude)

@@ -379,6 +379,7 @@ def viewParts (base : Printer) (dir : Text) (ns : Map Text Entry) (name : Text) 
               | some text => Print.commentLines (Sexp.asText text) 0
               | none => ""
             let notes := Print.notesOf meta
+            let spellings := Print.spellingsOf meta
             -- Doc comment and attributes go above every kind of declaration, as the parser reads them.
             let docText := match doc with
               | some d => "/-- " ++ d ++ " -/\n"
@@ -389,8 +390,8 @@ def viewParts (base : Printer) (dir : Text) (ns : Map Text Entry) (name : Text) 
               | [] => "") (Codebase.metaList meta "attrs")
             let attrText := if List.isEmpty attrs then "" else "@[" ++ Text.join ", " attrs ++ "]\n"
             (header, lead ++ docText ++ attrText ++ (match obj with
-              | Sexp.list [Sexp.sym "term", c] => Print.definition p name (Print.restore notes c) (Codebase.metaField meta "sig") none
-              | Sexp.list [Sexp.sym "test", c] => "test " ++ name ++ " :=" ++ Print.body p (Print.restore notes c) [] 0
+              | Sexp.list [Sexp.sym "term", c] => Print.definition p name (Print.restore notes spellings c) (Codebase.metaField meta "sig") none
+              | Sexp.list [Sexp.sym "test", c] => "test " ++ name ++ " :=" ++ Print.body p (Print.restore notes spellings c) [] 0
               | Sexp.list (Sexp.sym "theorem" :: Sexp.list (Sexp.sym "binders" :: types) :: prop :: proof :: _) =>
                 View.theoremDecl p name types prop proof
               | Sexp.list (Sexp.sym "type" :: _) => View.typeDecl p ns name e obj meta
@@ -692,7 +693,7 @@ def push (args : Args) : {IO, Throw Text} Unit :=
   let site := if IO.exists (siteManifest dir name) && branch == Codebase.currentBranch dir then
       let out := dir ++ "/cache/site-" ++ name
       let _ := Explorer.generate dir out
-      -- A site published with its console keeps it, on the codebase as pushed (D84).
+      -- A site published with its console keeps it, on the codebase as pushed (D87).
       let _ := if Text.contains " console/codebase.json\n" (Option.getOr (IO.readFile (siteManifest dir name)) "") then Explorer.console dir out else 0
       some (snd (publishSite dir name out false))
     else none
@@ -979,7 +980,7 @@ def publishSite (dir : Text) (name : Text) (out : Text) (force : Bool) : {IO, Th
   `deus explore [--out dir] [--port n] [--publish remote] [--console]` (D58): writes the codebase
   explorer for the current branch, then serves it locally, or uploads it next to a remote's bundles
   (`<prefix>/site/`), where a public bucket serves it. `--console` adds a console that runs `deus`
-  in the page (D84); a site that has one keeps it.
+  in the page (D87); a site that has one keeps it.
 -/
 def explore (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
@@ -1037,8 +1038,9 @@ def build (args : Args) : {IO, Throw Text} Unit :=
   | _ => throw "usage: deus build <term> -o <file>"
 
 /--
-  `deus bindings <prefix|name…> -o <dir> [--name stem]` (D81): a TypeScript module for the
-  functions under the prefixes, `<dir>/<stem>.ts`, with the runtime and the wasm kernel it loads.
+  `deus bindings <prefix|name…> -o <dir> [--name stem]` (D81, D87): a JavaScript module and its
+  declarations for the functions under the prefixes, `<dir>/<stem>.js` and `<dir>/<stem>.d.ts`,
+  with the runtime and the wasm kernel it loads.
 -/
 def bindings (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
@@ -1047,23 +1049,25 @@ def bindings (args : Args) : {IO, Throw Text} Unit :=
     let stem := Option.getOr (option args "name") (Text.toLower (Names.lastSegment first))
     let command := "deus bindings " ++ Text.join " " args.positional
     match Bindings.generate dir args.positional command with
-    | (text, exported, skipped) =>
+    | (js, dts, exported, skipped) =>
+      let path := out ++ "/" ++ stem ++ ".js"
+      let types := out ++ "/" ++ stem ++ ".d.ts"
       let copied := try (fun _ =>
         let home := Build.require "DEUS_HOME"
         IO.mkdirp out
-        IO.writeFile (out ++ "/" ++ stem ++ ".ts") text
-        let _ := Build.tool "cp" [home ++ "/src/bindings/runtime.ts", out ++ "/deus-runtime.ts"]
+        IO.writeFile path js
+        IO.writeFile types dts
+        let _ := Build.tool "cp" [home ++ "/src/bindings/deus-runtime.js", home ++ "/src/bindings/deus-runtime.d.ts", out ++ "/"]
         let _ := Build.tool "cp" [Build.wasmKernel (), out ++ "/deus_kernel.wasm"]
         ())
       match copied with
       | Result.err f => throw (Failure.render f)
       | Result.ok _ =>
         List.forEach skipped (fun s => eprintln ("warning: not exported: " ++ fst s ++ ": " ++ snd s))
-        let path := out ++ "/" ++ stem ++ ".ts"
         output args
-          (fun _ => Json.obj [("module", Json.str path), ("exported", Json.arr (List.map Json.str exported)),
+          (fun _ => Json.obj [("module", Json.str path), ("types", Json.str types), ("exported", Json.arr (List.map Json.str exported)),
             ("skipped", Json.arr (List.map (fun s => Json.obj [("name", Json.str (fst s)), ("reason", Json.str (snd s))]) skipped))])
-          (fun _ => "Wrote " ++ path ++ " with " ++ Int.toText (List.length exported) ++ " functions.")
+          (fun _ => "Wrote " ++ path ++ " and " ++ types ++ " with " ++ Int.toText (List.length exported) ++ " functions.")
   | _ => throw "usage: deus bindings <prefix|name…> -o <dir> [--name stem]"
 
 --
@@ -1378,7 +1382,7 @@ def usage : Text :=
     "  export <dir>                         the codebase as text for git: code/<Namespace>.deus, tasks, history",
     "  build <fn> -o <file.wasm> --wasm     compile a first-order Int/Bool function (and its callees) to wasm",
     "  build <fn> -o <file> --c             the same subset to C, compiled to an executable by $CC (default cc); -o x.c writes the source",
-    "  bindings <prefix|name…> -o <dir>     a TypeScript module that calls those functions on the wasm kernel",
+    "  bindings <prefix|name…> -o <dir>     a JS module + .d.ts that calls those functions on the wasm kernel",
     "  compile <files|dirs…> --main <name>  compile files without a codebase",
     ""]
 

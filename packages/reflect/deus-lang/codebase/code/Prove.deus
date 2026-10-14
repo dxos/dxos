@@ -362,15 +362,12 @@ def Prove.isTrue (s : Sym) : Bool := s == trueSym
 --
 def Prove.key (s : Sym) : Text := show s
 
---
--- Which definitions may be unfolded.
---
-/-- Strips `n` leading lambdas: (arity, body). -/
+/-- `(lam (lam … b))` as (parameter count, b). -/
 def Prove.lambdas (core : Sexp) : (Int, Sexp) :=
   match core with
   | Sexp.list (Sexp.sym "lam" :: b :: []) =>
       match Prove.lambdas b with
-      | (n, body) => (n + 1, body)
+      | (n, inner) => (n + 1, inner)
   | _ => (0, core)
 
 /-- Rewrite rules from a proved lemma: its conclusion, conditioned on its hypotheses. -/

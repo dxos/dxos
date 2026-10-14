@@ -27,6 +27,7 @@ theorem ArrayLaws.getSetSame (a : Array Int) (i : Int) (v : Int) : prim "implies
 
 def ArrayLaws.items (a : Array Int) : List Int := toListGo a (Array.length a - 1) []
 
+/-- The items of `a` from `i` down to 0, onto `acc`. -/
 def ArrayLaws.itemsGo (a : Array Int) (i : Int) (acc : List Int) : List Int := if i < 0 then acc else ArrayLaws.itemsGo a (i - 1) (Array.get a i :: acc)
 
 /-- A write leaves the old array as it was (persistence): what the kernels' versions must keep true. -/

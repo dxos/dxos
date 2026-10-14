@@ -18,7 +18,7 @@ def Names.groups (pairs : List (Text, Text)) : List (Text, List Text) :=
 def Names.joinName (prefix : List Text) (name : Text) : Text := join "." (prefix ++ [name])
 
 def Names.lastSegment (name : Text) : Text :=
-  let rec go i := if i < 0 then name else if code name i == 46 then Text.drop (i + 1) name else go (i - 1)
+  let rec go i := if i < 0 then name else if code name i == '.' then Text.drop (i + 1) name else go (i - 1)
   go (Text.length name - 1)
 
 /-- Resolves a name: the namespace chain innermost first, then `open`s, then (if `suffix`) a

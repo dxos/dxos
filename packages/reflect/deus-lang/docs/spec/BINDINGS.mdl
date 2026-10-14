@@ -1,0 +1,260 @@
+---
+name: Bindings.Spec
+---
+
+# TypeScript bindings
+
+`deus bindings` turns DEUS functions into a JavaScript module with a `.d.ts` that reads like a hand-written
+library ([D81](../DECISIONS.md), [D87](../DECISIONS.md)). TypeScript calls DEUS through ordinary async
+functions; DEUS calls TypeScript by performing an ability whose handler TypeScript supplies. The functions run
+on the embeddable wasm kernel ([EMBEDDING.md](./EMBEDDING.md)) in Node, a browser or a Worker.
+
+This document is the spec, written first: requirements, then the API, then the mapping, then the theorems
+that state the generator's laws. `deus add docs/spec/BINDINGS.mdl` compiles the theorems next to
+[`deus/bindings.deus`](../../deus/bindings.deus), and `deus check Bindings.Spec` checks them. The end-to-end
+test is [`src/bindings/bindings.test.ts`](../../src/bindings/bindings.test.ts), over
+[`examples/geometry.deus`](../../examples/geometry.deus). Each requirement names what checks it.
+
+## Requirements
+
+| Id   | Requirement                                                                                               | Checked by                                       |
+| ---- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| R-1  | Each exported DEUS function is a top-level `export declare function f(…): Promise<R>` in the `.d.ts`.     | test: strict `tsc` on a consumer                 |
+| R-2  | Every name the module emits is a valid JavaScript identifier or property name, whatever the DEUS name.   | `identIsIdentifier`, `identIsIdempotent`, `propKeyIsPropertyName`, `propKeyKeepsReserved` |
+| R-3  | Parameters keep their DEUS names; operation parameters, which have none, get distinct names by type.     | `distinctIsUnique`, `distinctKeepsUnique`        |
+| R-4  | A prefix selects every term under it; the rest of the name decides the TypeScript path.                  | `relativeNameStripsPrefix`, `relativeNameSkipsOthers` |
+| R-5  | The kernel applies an entry to one value, so only a function of exactly one parameter needs no adapter. | `adapterOnlyWhenNeeded`, `adapterTakesNestedPairs` |
+| R-6  | A variant type with fields gets a constructor object: `Shape.circle(2)` builds a `Shape`.                | test                                             |
+| R-7  | Values round-trip: what TypeScript passes decodes in DEUS as the same value, and back.                   | test: every export of the example                |
+| R-8  | The module works with no setup; `configure` sets module-level options, `load` makes a separate instance. | test                                             |
+| R-9  | `Throw` needs no handler: an unhandled `throw` rejects with `DeusThrow`, a defect with `DeusDefect`.     | test                                             |
+| R-10 | A function that cannot be exported is listed with its reason, on stderr, in JSON and in the module.     | test                                             |
+| R-11 | The output needs nothing from this package: the runtime and the kernel are copied next to the module.   | test: the module is imported from a scratch directory |
+
+## API
+
+### Command
+
+```text
+deus bindings <prefix|name…> -o <dir> [--name <stem>]
+```
+
+| File                 | Content                                                                     |
+| -------------------- | --------------------------------------------------------------------------- |
+| `<stem>.js`          | the image, codecs, constructors, `configure`, `load` and one function per export |
+| `<stem>.d.ts`        | types, constructor objects, handler interfaces, `Options` and the functions |
+| `deus-runtime.js`    | a copy of `src/bindings/deus-runtime.js`: the kernel driver, codecs, `IO`   |
+| `deus-runtime.d.ts`  | its declarations: `DeusDefect`, `DeusThrow`, `DeusDecodeError`, `IoHost`    |
+| `deus_kernel.wasm`   | the embedding kernel, built with cargo when it is missing                   |
+
+`<stem>` defaults to the first argument's last segment in lower case. A prefix selects every term under it;
+a full name selects that term. Field accessors are not exported. The JSON document is in
+[CLI-JSON.md](./CLI-JSON.md).
+
+In DEUS, the writer is `Bindings.generate : Text -> List Text -> Text -> {IO, Throw Text} (Text, Text, List Text, List (Text, Text))`:
+the codebase directory, the prefixes and the command line give the `.js` text, the `.d.ts` text, the exported
+names and the skipped names with reasons.
+
+### The generated module
+
+For `examples/geometry.deus` the `.d.ts` is, abridged:
+
+```ts
+export { DeusDecodeError, DeusDefect, DeusThrow, type Awaitable, type IoHost } from './deus-runtime.js';
+
+/** A plane figure. */
+export type Shape = { readonly $tag: 'circle'; readonly r: number } | { readonly $tag: 'rect'; readonly w: number; readonly h: number };
+export type Tree<A> = { readonly $tag: 'leaf' } | { readonly $tag: 'node'; readonly left: Tree<A>; readonly value: A; readonly right: Tree<A> };
+export type Point = { readonly x: number; readonly y: number };
+export type Color = 'red' | 'green' | 'blue';
+
+export interface LogHandler {
+  info(text: string): Awaitable<void>;
+}
+export interface ThrowHandler {
+  throw(text: string): Awaitable<never>;
+}
+export interface Handlers {
+  readonly Throw?: ThrowHandler; // by default a throw rejects with DeusThrow
+  readonly Log: LogHandler;
+}
+export interface Options {
+  readonly wasm?: BufferSource | WebAssembly.Module; // by default deus_kernel.wasm next to the module
+  readonly io?: IoHost;
+  readonly handlers: Handlers; // optional when every handler is
+}
+export interface Geometry {
+  readonly area: (s: Shape) => Promise<number>;
+  // … one member per export
+}
+
+export declare function configure(options: Options): void;
+export declare function load(options: Options): Promise<Geometry>;
+
+/** Area, with pi taken as 3. */
+export declare function area(s: Shape): Promise<number>;
+export declare function total(shapes: ReadonlyArray<Shape>): Promise<number>;
+// … one function per export
+
+export declare const Shape: {
+  readonly circle: (r: number) => Shape;
+  readonly rect: (w: number, h: number) => Shape;
+};
+export declare const Tree: {
+  readonly leaf: Tree<never>;
+  readonly node: <A>(left: Tree<A>, value: A, right: Tree<A>) => Tree<A>;
+};
+```
+
+Used from TypeScript:
+
+```ts
+import { area, configure, DeusThrow, ratio, Shape, total } from './out/geometry.js';
+
+await area(Shape.circle(2)); // 12: the module loads deus_kernel.wasm next to it on first call
+configure({ handlers: { Log: { info: (line) => console.log(line) } } });
+await total([Shape.circle(2), Shape.rect(2, 3)]); // 18, after "summing 2 shapes"
+await ratio(1, 0); // rejects with DeusThrow('division by zero')
+```
+
+- The module-level functions share one instance, loaded on the first call with the options `configure` last
+  set; `configure` drops the instance, so the next call loads a new one. A failed load is not cached.
+- `load(options)` returns an object with the same functions on an instance of its own.
+- A function under a nested name (`Geometry.Shapes.scale` for prefix `Geometry`) is a member of a constant named
+  after the path (`Shapes.scale`); a constant that is also a type's constructor object holds both.
+- A handler that is missing is reported when the DEUS code first performs its ability, naming the option.
+- Each call takes an idle kernel instance or instantiates one, so calls may overlap and a handler may call
+  back into the module.
+
+Not exported, each with its reason:
+
+- a polymorphic function (a type variable in its signature);
+- a parameter or result of function type;
+- `Dict`, `Ref`, `MutMap` and other builtin types without a JSON form;
+- `Option` of `Unit` or of `Option`, whose `none` and `some undefined` would both be `undefined`;
+- a function that performs an ability at different type arguments from an earlier export;
+- a name the module already uses: `load`, `configure`, the error classes, a constructor object, or a clash
+  between a function and a path.
+
+## Mapping
+
+The TypeScript type of each DEUS type, and the JSON its codec reads and writes:
+
+| DEUS                        | TypeScript                                         | JSON                                      |
+| --------------------------- | -------------------------------------------------- | ----------------------------------------- |
+| `Int`                       | `number` (32-bit; encoding truncates with `\| 0`)  | a number                                  |
+| `Text`                      | `string`                                           | a string                                  |
+| `Bool`                      | `boolean`                                          | `true` / `false`                          |
+| `Unit`                      | `void`; a `Unit` parameter is left out             | `null`                                    |
+| `List a`                    | `ReadonlyArray<A>`                                 | an array                                  |
+| `Option a`                  | `A \| undefined`                                   | `#Option`, tag 0 or 1                     |
+| `(a, b)`, `(a, b, c)`       | `readonly [A, B]`, `readonly [A, B, C]`            | right-nested `#Pair`s                     |
+| `structure P where x : X …` | `type P = { readonly x: X; … }`                    | `{"$": hash, "tag": 0, "fields": [x, …]}` |
+| `inductive T` with fields   | `{ readonly $tag: 'ctor'; readonly f: F; … } \| …` | `{"$": hash, "tag": n, "fields": […]}`    |
+| `inductive T`, all nullary  | `'red' \| 'green' \| …`                            | `{"$": hash, "tag": n, "fields": []}`     |
+| `T a` (a type parameter)    | `T<A>`; the codec is `T$(codecA)`                  | as above                                  |
+
+- A field without a name is `_0`, `_1`, …. A structure's fields come from its namespace entry, an inductive
+  type's from its `fields` metadata.
+- An identifier has other characters replaced by `_` and a keyword takes a trailing `_` (`ident`). A property
+  name (an operation, a constructor) may be a keyword, so only the characters are replaced (`propKey`):
+  `Throw.throw` is `throw`. A type's TypeScript name is its last segment, or its whole name with `.` as `_`
+  when two types share the last segment.
+- Values are written with the type's hash as `$`, which the kernel accepts without an IRI form; values read
+  are matched by tag against the static type, so `$` is not checked.
+- A tuple of four or more items keeps its nesting after the third: `(a, b, c, d)` is `readonly [A, B, readonly [C, D]]`.
+- Module-internal names in the `.js` start with `$`, which no DEUS name produces, so no export can shadow them.
+
+### Abilities
+
+Every ability in the exported functions' effect rows, except the builtins, gets a handler interface with one
+method per operation. A parameterised ability is typed at the arguments the functions perform it at (`Throw
+Text` gives `throw(text: string): Awaitable<never>`). An operation whose result is a type variable of its own
+(`throw : e -> a`) returns `never`: its handler must throw, and the call rejects with what it threw. Operation
+parameters are named after their types (`text`, `n`, `flag`, `items`, `maybe`, `pair`, or the type's name),
+numbered where they repeat. Requests are dispatched by the ability's IRI and, as a fallback, by its hash.
+
+`IO` is answered by the runtime: `print`, `eprint`, `time`, `getEnv` and `wallClock`. Any other `IO`
+operation fails the call; files and processes are not available to embedded code.
+
+### Entries
+
+The kernel applies an entry to exactly one value. A function of one parameter is its own entry. For a
+constant, or a function of `n ≥ 2` parameters, the image holds an adapter definition, named by the hash of its
+`(term …)` form:
+
+```text
+(lam (ref "f"))                                                         ; a constant
+(lam (match (var 0)                                                     ; n = 3
+  (case (pcon "#Pair" 0 (pvar) (pcon "#Pair" 0 (pvar) (pvar)))
+    (app (ref "f") (var 2) (var 1) (var 0)))))
+```
+
+The module passes the arguments as the right-nested pair the adapter matches (`$rt.args`). The image is the
+closure of the exported functions plus the adapters, sorted by hash, with the IRI forms of the types and
+abilities they use and a `(main …)` naming the first export's entry.
+
+## Theorems
+
+The laws of the generator, stated over `deus/bindings.deus`. The oracles here are written apart from the
+implementation, so a theorem cannot pass by restating the code.
+
+```deus
+namespace Bindings.Spec
+
+def identChar (c : Int) : Bool := Text.isAlpha c || Text.isDigit c || c == '_' || c == '$'
+
+/-- A JavaScript identifier that is not a reserved word. -/
+def isIdentifier (t : Text) : Bool :=
+  not (Text.isEmpty t) && not (Text.isDigit (Text.code t 0)) && not (List.contains t Bindings.reserved) &&
+    List.all (fun i => identChar (Text.code t i)) (List.range 0 (Text.length t))
+
+/-- A name usable after `.` and before `:` in an object: an identifier, or a reserved word. -/
+def isPropertyName (t : Text) : Bool := isIdentifier t || List.contains t Bindings.reserved
+
+/-- R-2: any DEUS name becomes an identifier. -/
+theorem identIsIdentifier (t : Text) : isIdentifier (Bindings.ident t) = true := by test 300
+
+/-- R-2: an identifier is left alone, so names that are already good survive. -/
+theorem identIsIdempotent (t : Text) : Bindings.ident (Bindings.ident t) = Bindings.ident t := by test 300
+
+/-- R-2: operation and constructor names become property names. -/
+theorem propKeyIsPropertyName (t : Text) : isPropertyName (Bindings.propKey t) = true := by test 300
+
+/-- R-2: `Throw.throw` stays `throw`. -/
+theorem propKeyKeepsReserved : List.all (fun w => Bindings.propKey w == w) Bindings.reserved = true := by rfl
+
+def unique (xs : List Text) : Bool :=
+  match xs with
+  | [] => true
+  | x :: rest => not (List.contains x rest) && unique rest
+
+/-- Names that collide often, including with the numbered forms `distinct` makes. -/
+def crowded (i : Int) : Text := if i % 2 == 0 then "text" else "text" ++ Int.toText (i % 5)
+
+/-- R-3: numbered names never collide, even with a name that already ends in a number. -/
+theorem distinctIsUnique (xs : List Int) : unique (Bindings.distinct (List.map crowded xs)) = true := by test 300
+
+/-- R-3: names that are already distinct are kept. -/
+theorem distinctKeepsUnique (xs : List Text) : unique xs = true -> Bindings.distinct xs = xs := by test 200
+
+/-- R-4: a name under a prefix is selected, relative to it. -/
+theorem relativeNameStripsPrefix (p : Text) (n : Text) : Bindings.relativeName [p] (p ++ "." ++ n) = some n := by test 200
+
+/-- R-4: a name outside every prefix is not selected. -/
+theorem relativeNameSkipsOthers (p : Text) (n : Text) : not (Text.startsWith p n) -> Bindings.relativeName [p] n = none := by test 200
+
+def ints (n : Int) : List (Text, Sexp) := List.map (fun i => ("x" ++ Int.toText i, Sexp.read "(tref \"#Int\")")) (List.range 0 n)
+
+def exportOf (n : Int) : Bindings.Export := Bindings.Export.mk "f" "f" "" "h" (ints n) (Sexp.read "(tref \"#Int\")") [] "" ""
+
+/-- R-5: an adapter exactly when the function does not take one value. -/
+theorem adapterOnlyWhenNeeded (k : Int) : Option.isSome (Bindings.adapter (exportOf (k % 6))) = not (k % 6 == 1) := by test 200
+
+/-- R-5: the entry is the function itself exactly when it needs no adapter. -/
+theorem entryIsFunctionWithoutAdapter (k : Int) : (Bindings.entryOf (exportOf (k % 6)) == "h") = (k % 6 == 1) := by test 200
+
+end Bindings.Spec
+```
+
+`adapterTakesNestedPairs` in `deus/bindings.deus` pins the exact adapter for three parameters.

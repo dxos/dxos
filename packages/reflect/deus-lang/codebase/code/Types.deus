@@ -654,7 +654,7 @@ def Types.varName (seen : Ref (Map Text Text)) (key : Text) (row : Bool) : Text 
       let count := List.length (List.filter
         (fun pair => startsWith (if row then "r" else "t") (fst pair))
         (Map.toList (Ref.get seen)))
-      let name := if row then if count == 0 then "e" else "e" ++ toText count else if count < 4 then fromCode (97 + count) else "t" ++ toText count
+      let name := if row then if count == 0 then "e" else "e" ++ toText count else if count < 4 then fromCode ('a' + count) else "t" ++ toText count
       Ref.set seen (Map.insert key name (Ref.get seen))
       name
 

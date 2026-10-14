@@ -551,7 +551,7 @@ def Codebase.store (dir : Text) (b : Batch) : {IO} Unit :=
 --
 -- Branches.
 --
-def Codebase.validBranch (name : Text) : Bool := not (Text.isEmpty name) && List.all (fun c => isAlpha c || isDigit c || c == 45 || c == 95 || c == 46) (utf8 name)
+def Codebase.validBranch (name : Text) : Bool := not (Text.isEmpty name) && List.all (fun c => isAlpha c || isDigit c || c == '-' || c == '_' || c == '.') (utf8 name)
 
 def Codebase.writeMeta (dir : Text) (h : Text) (form : Sexp) : {IO} Unit := IO.writeFile (dir ++ "/meta/" ++ h) (Sexp.print form ++ "\n")
 

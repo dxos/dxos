@@ -40,7 +40,7 @@ def View.namedVars (t : Sexp) : List Text :=
 /-- Names for a declaration's `count` parameters: letters in order, skipping the names already used in it. -/
 def View.paramNames (count : Int) (used : List Text) : List Text :=
   let rec pick k acc := if List.length acc >= count then reverse acc else
-    let candidate := fromCode (97 + k)
+    let candidate := fromCode ('a' + k)
     if List.contains candidate used then pick (k + 1) acc else pick (k + 1) (candidate :: acc)
   pick 0 []
 
