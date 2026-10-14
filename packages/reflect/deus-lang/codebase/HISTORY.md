@@ -1,12 +1,16 @@
 # History of main
 
-- `8020860c75` task: open a1b73fb8 TS kernel JIT: Array.set and Ref.set journal a closure on every write; journal only when a deoptimisation can replay the entry (D81) (by claude)
-- `94c0d1648a` task: open cf0e3937 Wasm back end: Perceus reference counting with reuse, sharing one ownership analysis with the C back end's task 62d1bdda; pure sorts allocate 470 MiB for 10^6 numbers today (D81) (by claude)
-- `d537d8fd8f` task: open 95ca184f Pure Array.set that writes in place when the array is unique (Lean 4 / Koka FBIP): Rc::get_mut in the Rust kernel, the reference count in compiled code, a copy on the TypeScript kernel (D81) (by claude)
-- `8c98b7fd26` close 8aa78a39 by #448eda5928 (by claude)
-- `448eda5928` sorting case study (D81): mutable Array in both kernels, wasm and C; Ref and primitive inlining in the compiled back ends (by claude)
-- `e2a8b80692` task: set 8aa78a39 state assignee details (by claude)
-- `e3cdb18335` task: open 8aa78a39 Sorting case study: does immutability make DEUS slow, and does it need mutable memory (by claude)
+- `84ea0dfca4` history: import 194 changes (by claude)
+- `c3d8f786c1` task: import from tasks.sexp
+- `03d2b5612f` add code specs
+- `61307b80f9` task: open 353444f7 TypeScript bindings: run in-process on the TypeScript kernel too
+- `dd5833e34f` task: open 1474b99e TypeScript bindings: pass functions across (callbacks and closures)
+- `1e488a6077` task: open b6907aeb TypeScript bindings: export polymorphic functions with codec parameters
+- `39cbb23245` task: comment on 17d50ae5 (by claude)
+- `37bffc2ffa` close 17d50ae5 by #7510a284be (by claude)
+- `7510a284be` deus bindings: typed TypeScript modules for a namespace, on the wasm kernel (D81) (by claude)
+- `a6ec8f1d0b` task: set 17d50ae5 state (by claude)
+- `faa4e8b624` task: open 17d50ae5 TypeScript interop: generate typed TypeScript bindings for DEUS namespaces
 - `c0daf520e4` history: import 184 changes
 - `afa110cf75` task: import from tasks.sexp
 - `71eb24530c` export: merge 10 changes from codebase

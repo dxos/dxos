@@ -89,7 +89,7 @@ def Explorer.generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
   -- The signature and doc summary let the app list, search and preview names without opening their pages.
   IO.writeFile (out ++ "/names.json") (Json.render (Json.arr (List.map (fun pair =>
     let h := hash (snd pair)
-    Json.obj [("name", Json.str (fst pair)), ("kind", Json.str (Entry.kind (snd pair))), ("hash", Json.str h), ("sig", Json.str (Explorer.signature (metaFor h))), ("summary", Json.str (summaryOf (docOf (metaFor h)))), ("status", Json.str (if checked (snd pair) then statusOf (verdictOf dir h) else ""))]) entries)))
+    Json.obj [("name", Json.str (fst pair)), ("kind", Json.str (Entry.kind (snd pair))), ("hash", Json.str h), ("sig", Json.str (Explorer.signature (metaFor h))), ("summary", Json.str (summaryOf (Explorer.docOf (metaFor h)))), ("status", Json.str (if checked (snd pair) then statusOf (verdictOf dir h) else ""))]) entries)))
   IO.writeFile
     (out ++ "/tasks.json")
     (Json.render (Json.arr (List.map (fun t => Explorer.taskJson dir ns (historyOf t) t) tasks)))
@@ -125,7 +125,7 @@ def Explorer.generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
           (out ++ "/def/" ++ pageOf h ++ ".json")
           (Json.render (Json.obj [("name", Json.str name), ("kind", Json.str (Entry.kind e)), ("hash", Json.str h), ("aliases", Json.arr (List.map
             Json.str
-            (List.filter (fun other => other != name) (getOr (Map.lookup h namesByHash) [])))), ("signature", Json.str (if Text.isEmpty sig then "" else lastOf name ++ " : " ++ sig)), ("doc", getOr (Option.map Json.str (docOf meta)) Json.null), ("html", Json.str (htmlLinked links source)), ("ts", Json.str (htmlLinkedIn "ts" links tsSource)), ("deps", named deps), ("users", named users), ("verdict", Json.str (verdictOf dir h)), ("tasks", Json.arr (List.map
+            (List.filter (fun other => other != name) (getOr (Map.lookup h namesByHash) [])))), ("signature", Json.str (if Text.isEmpty sig then "" else lastOf name ++ " : " ++ sig)), ("doc", getOr (Option.map Json.str (Explorer.docOf meta)) Json.null), ("html", Json.str (htmlLinked links source)), ("ts", Json.str (htmlLinkedIn "ts" links tsSource)), ("deps", named deps), ("users", named users), ("verdict", Json.str (verdictOf dir h)), ("tasks", Json.arr (List.map
             (fun t => Json.obj [("id", Json.str t.id), ("title", Json.str t.title), ("state", Json.str (stateText t.state))])
             (about taskMap name h)))])))
   List.length entries

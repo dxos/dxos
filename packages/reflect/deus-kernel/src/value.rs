@@ -190,7 +190,7 @@ pub enum Value {
     Cont(Rc<Vec<Frame>>),
     Cell(Rc<RefCell<Value>>),
     Table(Rc<RefCell<Table>>),
-    /// A mutable fixed-length array (`Array.make`, D81).
+    /// A mutable fixed-length array (`Array.make`, D82).
     Array(Rc<RefCell<Vec<Value>>>),
 }
 

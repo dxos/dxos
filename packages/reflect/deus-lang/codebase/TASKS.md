@@ -15,7 +15,7 @@ From Dmytro: an artifact is a constant whose value is cached, e.g. deusCli := De
 - priority: high
 - labels: native, perf
 
-## Pure Array.set that writes in place when the array is unique (Lean 4 / Koka FBIP): Rc::get_mut in the Rust kernel, the reference count in compiled code, a copy on the TypeScript kernel (D81) (`95ca184f`)
+## Pure Array.set that writes in place when the array is unique (Lean 4 / Koka FBIP): Rc::get_mut in the Rust kernel, the reference count in compiled code, a copy on the TypeScript kernel (D82) (`95ca184f`)
 
 - state: todo
 - priority: high
@@ -47,7 +47,7 @@ From Dmytro. Measure it against share.unison-lang.org: search, navigation, depen
 
 > claude: The Codebase explorer UI thread built a Unison-style UI (finder, namespace pages, definition and change cards, keyboard), verified with Playwright; merging into #13952 from PR #13975. It also fixes the builtin page 404 and the content types.
 
-## Wasm back end: Perceus reference counting with reuse, sharing one ownership analysis with the C back end's task 62d1bdda; pure sorts allocate 470 MiB for 10^6 numbers today (D81) (`cf0e3937`)
+## Wasm back end: Perceus reference counting with reuse, sharing one ownership analysis with the C back end's task 62d1bdda; pure sorts allocate 470 MiB for 10^6 numbers today (D82) (`cf0e3937`)
 
 - state: todo
 - priority: high
@@ -124,7 +124,7 @@ deus explore could ship deus_kernel.wasm, the seed and a JSON snapshot of the co
 
 From docs/spec/README.md, Known divergences.
 
-## TS kernel JIT: Array.set and Ref.set journal a closure on every write; journal only when a deoptimisation can replay the entry (D81) (`a1b73fb8`)
+## TS kernel JIT: Array.set and Ref.set journal a closure on every write; journal only when a deoptimisation can replay the entry (D82) (`a1b73fb8`)
 
 - state: todo
 - priority: medium
@@ -139,6 +139,24 @@ From docs/spec/README.md, Known divergences.
 - labels: bug, types, spec
 
 From docs/spec/README.md, Known divergences.
+
+## TypeScript bindings: export polymorphic functions with codec parameters (`b6907aeb`)
+
+- state: todo
+- priority: medium
+- assignee: claude
+- labels: interop, typescript
+
+Follow-up of 17d50ae5: a function generic in a (firstOf : List a -> Option a) is skipped today. Export it as a generic TS function that takes the codec of each type variable, as generic types already do.
+
+## TypeScript bindings: pass functions across (callbacks and closures) (`1474b99e`)
+
+- state: todo
+- priority: medium
+- assignee: claude
+- labels: interop, typescript
+
+Follow-up of 17d50ae5: a parameter or result of function type is skipped. A TS callback could cross as a handle the kernel calls back through an ability; a DEUS closure as a handle TS can apply. Needs an embedding-ABI extension (functions only leave the kernel today, as {"$fn":true}).
 
 ## wasm: structural equality on constructed values (`186feaf2`)
 
@@ -173,6 +191,15 @@ From docs/spec/README.md, Known divergences.
 - links `Ts.definition` (#e5f668ab9e)
 
 > claude: Filed by the TS-like dialect thread (D70).
+
+## TypeScript bindings: run in-process on the TypeScript kernel too (`353444f7`)
+
+- state: todo
+- priority: low
+- assignee: claude
+- labels: interop, typescript
+
+Follow-up of 17d50ae5: bindings run on the wasm kernel only. The TS kernel (src/kernel) would give synchronous calls with no wasm, but its host handler cannot suspend a run for an async TS handler.
 
 ## TypeScript kernel in the browser: its JIT runs eval about 1.4x faster than the wasm kernel; needs a synchronous sha256 and an injectable host (no node: imports) (`6e4360bd`)
 
@@ -313,7 +340,7 @@ A fresh container restored codebase/ (deus add code; task import) and got one ne
 - labels: research
 - links change #448eda5928
 
-Measured in docs/IMMUTABILITY.md (D81): seven sorts on both kernels, wasm, C and JS. Adds a mutable Array primitive (both kernels, wasm, C), Ref in the compiled back ends, and fixes a Rust-kernel stack overflow when dropping long Ref chains.
+Measured in docs/IMMUTABILITY.md (D82): seven sorts on both kernels, wasm, C and JS. Adds a mutable Array primitive (both kernels, wasm, C), Ref in the compiled back ends, and fixes a Rust-kernel stack overflow when dropping long Ref chains.
 
 ## Task viewer in the codebase explorer (`553faf09`)
 
@@ -331,6 +358,18 @@ Measured in docs/IMMUTABILITY.md (D81): seven sorts on both kernels, wasm, C and
 - links change #e7f95e998b
 
 From docs/spec/README.md, Known divergences.
+
+## TypeScript interop: generate typed TypeScript bindings for DEUS namespaces (`17d50ae5`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: interop, typescript
+- links change #7510a284be
+
+From Dmytro: explore interop with ts and generating typescript binding types.
+
+> claude: Done (D81): deus bindings <prefix> -o <dir> writes <stem>.ts (types, codecs, handler types, an embedded image), deus-runtime.ts and deus_kernel.wasm. TypeScript calls DEUS functions; DEUS calls TypeScript by performing abilities the TS handlers answer. Tested by src/bindings/bindings.test.ts on examples/geometry.deus, strict tsc included.
 
 ## codebase/ export has a raw #ebad142960 reference the parser rejects, so it cannot be restored (`b8b3aab7`)
 

@@ -99,7 +99,7 @@ export class Cell {
   }
 }
 
-/** A mutable fixed-length array (`Array.make`, D81); compared by identity. */
+/** A mutable fixed-length array (`Array.make`, D82); compared by identity. */
 export class Vector {
   readonly items: Value[];
 

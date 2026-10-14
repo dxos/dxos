@@ -12,7 +12,7 @@ structure Arm where
   pats : List Pat
   body : Expr
 
-/-- A mutable array of fixed length (D81). Like `Ref`, writes are not rolled back when a
+/-- A mutable array of fixed length (D82). Like `Ref`, writes are not rolled back when a
   continuation is resumed twice. An index outside `0 .. length` is a defect. -/
 inductive Array a @"#Array" where
 

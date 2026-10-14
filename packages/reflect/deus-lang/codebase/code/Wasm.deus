@@ -20,7 +20,7 @@ structure Wasm.Scope @"urn:deus:wasm:Scope" where
   of times. Locals: 1 the block, 2 the pages missing. -/
 def Wasm.allocBody : List Int := List.concat [[35, 0, 33, 1], [35, 0, 32, 0, 106, 36, 0], [35, 0, 63, 0, 65, 16, 116, 75, 4, 64], [35, 0, 65, 16, 118, 65, 1, 106, 63, 0, 107, 33, 2], [32, 2, 63, 0, 32, 2, 63, 0, 74, 27, 64, 0, 26, 11], [32, 1, 11]]
 
-/-- `Array` primitives (D81) on a block `[length, item…]`, and `Ref` on a block `[value]`; `args`
+/-- `Array` primitives (D82) on a block `[length, item…]`, and `Ref` on a block `[value]`; `args`
   is the code for each argument. An index outside the array, or a negative length, traps.
   `Array.set` and `Ref.set` return address 0, whose word is 0, so it reads as `()`. -/
 def Wasm.array (scope : Wasm.Scope) (next : Ref Int) (p : Text) (args : List (List Int)) : {Throw Text} List Int :=
@@ -61,7 +61,7 @@ def Wasm.binary (name : Text) : Option Int := if name == "Int.add" then Option.s
 def Wasm.compile (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {Throw Text | r} Option Sexp) (main : Text) (export : Text) : {Throw Text | r} List Int :=
   let fns := gather fetch meta main
   let names := dedup (concatMap (fun f => patternTypes f.fnBody) fns)
-  module fns (filterMap (fun t => Option.map (fun form => (t, form)) (fetch t)) names) export
+  Wasm.module fns (filterMap (fun t => Option.map (fun form => (t, form)) (fetch t)) names) export
 
 /-- A constructed value: `alloc` a block, store the tag and each field, and leave its address. -/
 def Wasm.construct (scope : Wasm.Scope) (env : List Int) (next : Ref Int) (tag : Int) (args : List Sexp) : {Throw Text} List Int :=

@@ -262,7 +262,7 @@ binds each to a DEUS name and gives its type. A wrong argument type is a defect.
 | `trace`                                     | 2       | writes `trace <label>: <value>` to stderr, returns the value                                                              |
 | `defect`                                    | 1       | raises a defect with the message                                                                                          |
 | `Ref.new`, `Ref.get`, `Ref.set`             | 1, 1, 2 | a mutable cell                                                                                                            |
-| `Array.make`, `Array.length`                | 2, 1    | a mutable array of `n` copies of a value (D81); its length                                                                |
+| `Array.make`, `Array.length`                | 2, 1    | a mutable array of `n` copies of a value (D82); its length                                                                |
 | `Array.get`, `Array.set`                    | 2, 3    | array, index (and value); an index outside `0 .. length` is a defect                                                      |
 | `Dict.fromList`                             | 1       | an immutable map from a list of pairs; later keys win                                                                     |
 | `Dict.lookup`, `Dict.contains`              | 2       | key first, then the map                                                                                                   |

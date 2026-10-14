@@ -137,7 +137,7 @@ Bindings follow Core's order: left to right, the last one bound is `(var 0)`.
 
 ## Arrays and cells
 
-`Array` and `Ref` ([D81](../DECISIONS.md)) are blocks in linear memory too, without a tag word.
+`Array` and `Ref` ([D82](../DECISIONS.md)) are blocks in linear memory too, without a tag word.
 
 | Primitive         | Code                                                                                       |
 | ----------------- | ------------------------------------------------------------------------------------------ |

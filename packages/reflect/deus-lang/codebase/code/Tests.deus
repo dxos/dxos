@@ -41,10 +41,10 @@ test Tests.externalSimulatesFetch := simulateFetch
   | Requirement.mk x1 x2 x3 x4 x5 x6 => Requirement.mk x1 x2 x3 x4 (repeat 64 "b") x6))) == (Result.ok "/sim/wasmtime", Result.err "not fetched: https://github.com/bytecodealliance/wasmtime/releases/download/v25.0.0/wasmtime.tar.xz")
 
 test Tests.failureContextChains :=
-  let load := fun u => context
+  let load := fun u => Failure.context
     "loading config"
     [("path", "a.toml")]
-    (fun _ => context "parsing" [("line", "3")] (fun _ => Throw.throw (of "unexpected '='" [])))
+    (fun _ => Failure.context "parsing" [("line", "3")] (fun _ => Throw.throw (of "unexpected '='" [])))
   match try load with
   | Result.err f => Failure.render f ==
       "loading config (path=a.toml)\n  caused by: parsing (line=3)\n  caused by: unexpected '='"
