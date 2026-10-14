@@ -9,18 +9,18 @@ is in [DESIGN.md](../DESIGN.md#named-graphs-storage-shape).
 Every predicate is an `Entry`. Its **IRI** is the identity; everything else is a wording that leads to it or
 a description of it.
 
-| Field         | Example (`born_in`)                        | RDF                    | Used for                                          |
-| ------------- | ------------------------------------------ | ---------------------- | ------------------------------------------------- |
-| `iri`         | `schema:birthPlace`                        | the property itself    | Storage and matching: every fact stores this.     |
-| `name`        | `born_in`                                  | `sx:shorthand`         | Rule shorthand: `born_in(rich, X)`.               |
-| `label`       | `born in`                                  | `rdfs:label`           | Display, and a wording that resolves to the IRI.  |
-| `synonyms`    | `was born in`, `birthplace`                | `skos:altLabel`        | Wordings that resolve to the IRI.                 |
-| `description` | The place the subject was born.            | `rdfs:comment`         | Shown to the extractor and in the UI.             |
-| `domain`      | `schema:Person`                            | `rdfs:domain`          | The class of the subject.                         |
-| `range`       | `schema:Place`                             | `rdfs:range`           | The class of the object.                          |
-| `inverse`     | `schema:member` (for `member_of`)          | `owl:inverseOf`        | The same relation read the other way.             |
-| `equivalents` | `dx:memberOf`, `org:memberOf`              | `owl:equivalentProperty` | Other IRIs a query for this predicate also matches. |
-| `definedBy`   | `https://schema.org/`                      | `rdfs:isDefinedBy`     | The vocabulary the term belongs to.               |
+| Field         | Example (`born_in`)               | RDF                      | Used for                                            |
+| ------------- | --------------------------------- | ------------------------ | --------------------------------------------------- |
+| `iri`         | `schema:birthPlace`               | the property itself      | Storage and matching: every fact stores this.       |
+| `name`        | `born_in`                         | `sx:shorthand`           | Rule shorthand: `born_in(rich, X)`.                 |
+| `label`       | `born in`                         | `rdfs:label`             | Display, and a wording that resolves to the IRI.    |
+| `synonyms`    | `was born in`, `birthplace`       | `skos:altLabel`          | Wordings that resolve to the IRI.                   |
+| `description` | The place the subject was born.   | `rdfs:comment`           | Shown to the extractor and in the UI.               |
+| `domain`      | `schema:Person`                   | `rdfs:domain`            | The class of the subject.                           |
+| `range`       | `schema:Place`                    | `rdfs:range`             | The class of the object.                            |
+| `inverse`     | `schema:member` (for `member_of`) | `owl:inverseOf`          | The same relation read the other way.               |
+| `equivalents` | `dx:memberOf`, `org:memberOf`     | `owl:equivalentProperty` | Other IRIs a query for this predicate also matches. |
+| `definedBy`   | `https://schema.org/`             | `rdfs:isDefinedBy`       | The vocabulary the term belongs to.                 |
 
 A minted predicate also records `created`, `creator` and `example` (when, by what extractor, from which quote),
 and a merged one `replacedBy`.
@@ -73,22 +73,22 @@ give, the phrase an extractor mints and an inverse a UI derives all read as one 
 `member-of`, `known-by`). Unlike `normalize`, it keeps the words as said: no stemming, no dropped copula.
 The IRI is shown as a prefixed name (`schema:birthPlace`) beside it.
 
-Labels are verb phrases read along the arrow, so a property row reads as a sentence: *Rich born-in Ottawa*,
-*Paper created-by Alice*. External vocabularies often name the **value** instead, as a noun. That is why a
+Labels are verb phrases read along the arrow, so a property row reads as a sentence: _Rich born-in Ottawa_,
+_Paper created-by Alice_. External vocabularies often name the **value** instead, as a noun. That is why a
 label and its IRI can differ in words, not just in case:
 
-| Label         | IRI                | How they relate                                   |
-| ------------- | ------------------ | ------------------------------------------------- |
-| `member-of`   | `schema:memberOf`  | Same words; only the case differs.                |
-| `works-for`   | `schema:worksFor`  | Same words.                                       |
-| `knows`       | `foaf:knows`       | Same word.                                        |
-| `born-in`     | `schema:birthPlace` | The IRI names the value: the place.              |
-| `has-role`    | `schema:jobTitle`  | The IRI names the value: the title.               |
-| `located-in`  | `schema:location`  | The IRI names the value: the location.            |
-| `has-account` | `foaf:account`     | The IRI names the value: the account.             |
-| `created-by`  | `dcterms:creator`  | The IRI names the value: the creator.             |
-| `is-a`        | `rdf:type`         | RDF's own term for class membership.              |
-| `depends-on`  | `dcterms:requires` | Dublin Core's word for the same relation.         |
+| Label         | IRI                 | How they relate                           |
+| ------------- | ------------------- | ----------------------------------------- |
+| `member-of`   | `schema:memberOf`   | Same words; only the case differs.        |
+| `works-for`   | `schema:worksFor`   | Same words.                               |
+| `knows`       | `foaf:knows`        | Same word.                                |
+| `born-in`     | `schema:birthPlace` | The IRI names the value: the place.       |
+| `has-role`    | `schema:jobTitle`   | The IRI names the value: the title.       |
+| `located-in`  | `schema:location`   | The IRI names the value: the location.    |
+| `has-account` | `foaf:account`      | The IRI names the value: the account.     |
+| `created-by`  | `dcterms:creator`   | The IRI names the value: the creator.     |
+| `is-a`        | `rdf:type`          | RDF's own term for class membership.      |
+| `depends-on`  | `dcterms:requires`  | Dublin Core's word for the same relation. |
 
 ## Where the seed predicates come from
 
@@ -96,17 +96,17 @@ label and its IRI can differ in words, not just in case:
 defines is stored under **that vocabulary's IRI**, so the brain's graph reads as schema.org, FOAF or Dublin
 Core to any RDF tool. `dx:` holds only what none of them names.
 
-| Prefix     | Vocabulary                                                   | Seed predicates (label → IRI)                                                                                      |
-| ---------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
-| `rdf:`     | [RDF](https://www.w3.org/TR/rdf11-concepts/)                 | `is-a` → `rdf:type`                                                                                                |
-| `rdfs:`    | [RDF Schema](https://www.w3.org/TR/rdf-schema/)              | `kind-of` → `rdfs:subClassOf`                                                                                      |
-| `owl:`     | [OWL](https://www.w3.org/TR/owl2-overview/)                  | `same-as` → `owl:sameAs`                                                                                           |
-| `schema:`  | [schema.org](https://schema.org/)                            | `has-role` → `jobTitle`, `member-of` → `memberOf`, `has-member` → `member`, `works-for` → `worksFor`, `alumni-of` → `alumniOf`, `knows-about` → `knowsAbout`, `located-in` → `location`, `born-in` → `birthPlace`, `about` → `about`, `mentions` → `mentions` |
-| `foaf:`    | [FOAF](http://xmlns.com/foaf/spec/)                          | `knows` → `foaf:knows`, `has-account` → `foaf:account`                                                             |
-| `dcterms:` | [Dublin Core terms](https://www.dublincore.org/specifications/dublin-core/dcmi-terms/) | `created-by` → `dcterms:creator`, `part-of` → `dcterms:isPartOf`, `depends-on` → `dcterms:requires` |
-| `skos:`    | [SKOS](https://www.w3.org/TR/skos-reference/)                | `related-to` → `skos:related`                                                                                      |
-| `dx:`      | DXOS (`https://dxos.org/ontology/`)                          | `founded`, `claim`, `has-note`, `helps-with`, `works-on`, `completed`, `shipped`, `proposes`, `received`, `archived`, `deleted`, `filed`, `drafted`, `notified`, `relayed`, `awaiting` |
-| `brain:`   | One brain's own (`https://dxos.org/semantic/brain/<id>/`)    | Whatever that brain's extractor minted (`is blocked by` → `brain:blockBy`).                                                      |
+| Prefix     | Vocabulary                                                                             | Seed predicates (label → IRI)                                                                                                                                                                                                                                 |
+| ---------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `rdf:`     | [RDF](https://www.w3.org/TR/rdf11-concepts/)                                           | `is-a` → `rdf:type`                                                                                                                                                                                                                                           |
+| `rdfs:`    | [RDF Schema](https://www.w3.org/TR/rdf-schema/)                                        | `kind-of` → `rdfs:subClassOf`                                                                                                                                                                                                                                 |
+| `owl:`     | [OWL](https://www.w3.org/TR/owl2-overview/)                                            | `same-as` → `owl:sameAs`                                                                                                                                                                                                                                      |
+| `schema:`  | [schema.org](https://schema.org/)                                                      | `has-role` → `jobTitle`, `member-of` → `memberOf`, `has-member` → `member`, `works-for` → `worksFor`, `alumni-of` → `alumniOf`, `knows-about` → `knowsAbout`, `located-in` → `location`, `born-in` → `birthPlace`, `about` → `about`, `mentions` → `mentions` |
+| `foaf:`    | [FOAF](http://xmlns.com/foaf/spec/)                                                    | `knows` → `foaf:knows`, `has-account` → `foaf:account`                                                                                                                                                                                                        |
+| `dcterms:` | [Dublin Core terms](https://www.dublincore.org/specifications/dublin-core/dcmi-terms/) | `created-by` → `dcterms:creator`, `part-of` → `dcterms:isPartOf`, `depends-on` → `dcterms:requires`                                                                                                                                                           |
+| `skos:`    | [SKOS](https://www.w3.org/TR/skos-reference/)                                          | `related-to` → `skos:related`                                                                                                                                                                                                                                 |
+| `dx:`      | DXOS (`https://dxos.org/ontology/`)                                                    | `founded`, `claim`, `has-note`, `helps-with`, `works-on`, `completed`, `shipped`, `proposes`, `received`, `archived`, `deleted`, `filed`, `drafted`, `notified`, `relayed`, `awaiting`                                                                        |
+| `brain:`   | One brain's own (`https://dxos.org/semantic/brain/<id>/`)                              | Whatever that brain's extractor minted (`is blocked by` → `brain:blockBy`).                                                                                                                                                                                   |
 
 `dx:` covers two kinds of relation:
 
