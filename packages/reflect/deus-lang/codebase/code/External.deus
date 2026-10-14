@@ -13,9 +13,9 @@ def External.checkRequirement (b : Block) : {MdlHost} List Text := problemsOf (r
 
 /-- A `container` block as data. -/
 def External.containerOf (b : Block) : Result (List Text) Container :=
-  let image := Spec.prop b "image"
-  let command := List.filter (fun w => not (Text.isEmpty w)) (Text.split (Spec.prop b "command") " ")
-  match (pairsOf (Spec.prop b "env"), portsOf (Spec.prop b "ports")) with
+  let image := External.prop b "image"
+  let command := List.filter (fun w => not (Text.isEmpty w)) (Text.split (External.prop b "command") " ")
+  match (pairsOf (External.prop b "env"), portsOf (External.prop b "ports")) with
   | (Result.ok env, Result.ok ports) =>
       match imageProblems image with
       | [] => Result.ok (Container.mk image command env ports)
@@ -129,17 +129,17 @@ def External.registryNamed (name : Text) : Option Registry := List.find (fun r =
 
 /-- A `requirement` block as data. -/
 def External.requirementOf (b : Block) : Result (List Text) Requirement :=
-  match registryNamed (Spec.prop b "registry") with
-  | Option.none => Result.err ["registry: `" ++ Spec.prop b "registry" ++ "` is not one of " ++
+  match registryNamed (External.prop b "registry") with
+  | Option.none => Result.err ["registry: `" ++ External.prop b "registry" ++ "` is not one of " ++
       join ", " (List.map (fun r => r.registryName) registries)]
   | Option.some registry =>
       let req := Requirement.mk
         registry
-        (Spec.prop b "package")
-        (Spec.prop b "version")
-        (Spec.prop b "platform")
-        (Spec.prop b "sha256")
-        (Spec.prop b "entry")
+        (External.prop b "package")
+        (External.prop b "version")
+        (External.prop b "platform")
+        (External.prop b "sha256")
+        (External.prop b "entry")
       match External.problems req with
       | [] => Result.ok req
       | found => Result.err found

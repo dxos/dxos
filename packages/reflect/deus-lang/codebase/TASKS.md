@@ -190,15 +190,6 @@ D90 widens values to 64 bits so blocks and integers can be told apart in wasm32;
 
 Found writing law statements (D91): deus view Sort.insertSorted.
 
-## Type ascriptions are erased before checking; a row on a definition without binders is not checked (`a03fdfb6`)
-
-- state: todo
-- priority: medium
-- assignee: claude
-- labels: bug, types, spec
-
-From docs/spec/README.md, Known divergences.
-
 ## TypeScript bindings: export polymorphic functions with codec parameters (`091e43c0`)
 
 - state: todo
@@ -882,6 +873,16 @@ view of 1061 definitions plus update of all of them; profile which half dominate
 - assignee: claude
 - labels: bug, kernel, spec
 - links change #fa20112443
+
+From docs/spec/README.md, Known divergences.
+
+## Type ascriptions are erased before checking; a row on a definition without binders is not checked (`a03fdfb6`)
+
+- state: done
+- priority: medium
+- assignee: claude
+- labels: bug, types, spec
+- links change #a40db3f119
 
 From docs/spec/README.md, Known divergences.
 

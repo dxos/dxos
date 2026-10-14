@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 test Explorer.Spec.aliasesShareAPage := inSite (fun _ =>
   deus "cb" ["area", "zArea"] (fun a => mv a true)
   regenerate ()
@@ -125,6 +126,8 @@ def Explorer.Spec.withHome (body : Unit -> {IO, Throw Text} a) : {IO, Throw Text
   handle body () with
   | IO.getEnv name -> k => k (if name == "DEUS_HOME" then Option.some "home" else IO.getEnv name)
 
+=======
+>>>>>>> origin/dm/agent-13-oct-x8ehi8-0y35ai
 /-- The app's files, from the toolchain's sources. -/
 def Explorer.appFiles : List Text := ["index.html", "app.js", "app.css"]
 
@@ -247,7 +250,7 @@ def Explorer.generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
   -- The signature and doc summary let the app list, search and preview names without opening their pages.
   IO.writeFile (out ++ "/names.json") (Json.render (Json.arr (List.map (fun pair =>
     let h := Entry.hash (snd pair)
-    Json.obj [("name", Json.str (fst pair)), ("kind", Json.str (Entry.kind (snd pair))), ("hash", Json.str h), ("sig", Json.str (Explorer.signature (metaFor h))), ("summary", Json.str (summaryOf (Explorer.docOf (metaFor h)))), ("status", Json.str (if checked (snd pair) then statusOf (Explorer.verdictOf dir h) else ""))]) entries)))
+    Json.obj [("name", Json.str (fst pair)), ("kind", Json.str (Entry.kind (snd pair))), ("hash", Json.str h), ("sig", Json.str (Explorer.signature (metaFor h))), ("summary", Json.str (summaryOf (Explorer.docOf (metaFor h)))), ("status", Json.str (if Explorer.checked (snd pair) then statusOf (Explorer.verdictOf dir h) else ""))]) entries)))
   IO.writeFile
     (out ++ "/tasks.json")
     (Json.render (Json.arr (List.map (fun t => Explorer.taskJson dir ns (historyOf t) t) tasks)))

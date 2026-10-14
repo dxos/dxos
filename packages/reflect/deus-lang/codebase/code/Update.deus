@@ -23,9 +23,9 @@ def Update.isTermLike (e : Entry) : Bool :=
 /-- Rebuilds a pending definition from a stored object. -/
 def Update.pendingOf (name : Text) (obj : Sexp) : Pending :=
   match obj with
-  | Sexp.list (Sexp.sym "term" :: c :: []) => Pending.mk name "term" c
-  | Sexp.list (Sexp.sym "test" :: c :: []) => Pending.mk name "test" c
-  | _ => Pending.mk name "theorem" obj
+  | Sexp.list (Sexp.sym "term" :: c :: []) => Pending.mk name "term" c c
+  | Sexp.list (Sexp.sym "test" :: c :: []) => Pending.mk name "test" c c
+  | _ => Pending.mk name "theorem" obj obj
 
 /-- Propagates `subst` (old hash to new hash) through the namespace. `fresh` names were just
   compiled and are left alone. Returns the new namespace and the names that were rehashed. -/

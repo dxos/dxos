@@ -1,0 +1,66 @@
+/-- R-1: an ascription that holds compiles. -/
+theorem Checking.Spec.ascriptionHolds : checks "def f (x : Int) : Int := (x : Int) + 1\n" == true := by rfl
+
+/-- L-1: the ascription leaves the hash as it was. -/
+theorem Checking.Spec.ascriptionKeepsHash : (isSome (hashOf "def f (x : Int) : Int := (x : Int) + 1\n" "f") && hashOf "def f (x : Int) : Int := (x : Int) + 1\n" "f" ==
+    hashOf "def f (x : Int) : Int := x + 1\n" "f") ==
+    true := by rfl
+
+/-- R-1: an ascription that does not hold is a type error. -/
+theorem Checking.Spec.ascriptionMismatch : checks "def f (x : Int) : Int := (x : Bool)\n" == false := by rfl
+
+/-- R-3: `a` in an ascription may be `Int`. -/
+theorem Checking.Spec.ascriptionVariableIsFlexible : checks "def f (x : Int) : Int := (x : a)\n" == true := by rfl
+
+/-- R-5: a row that names the ability admits it. -/
+theorem Checking.Spec.bareRowAdmits : checks (failAbility ++ "def x : {Fail} Int := Fail.fail 1\n") == true := by rfl
+
+/-- R-5: `{}` admits no ability. -/
+theorem Checking.Spec.bareRowRejects : checks (failAbility ++ "def x : {} Int := Fail.fail 1\n") == false := by rfl
+
+/-- R-6: no braces, no constraint. -/
+theorem Checking.Spec.bareWithoutRow : checks (failAbility ++ "def x : Int := Fail.fail 1\n") == true := by rfl
+
+/-- R-4, L-1: a binder's ascription leaves the hash as it was. -/
+theorem Checking.Spec.binderKeepsHash : (isSome (hashOf "def f (x : Int) : Int := (fun (n : Int) => n) x\n" "f") && hashOf "def f (x : Int) : Int := (fun (n : Int) => n) x\n" "f" ==
+    hashOf "def f (x : Int) : Int := (fun n => n) x\n" "f") ==
+    true := by rfl
+
+def Checking.Spec.checks (source : Text) : Bool := isSome (compiled source)
+
+/-- The entries of `source` compiled alone in strict mode, or none when it fails to compile or check. -/
+def Checking.Spec.compiled (source : Text) : Option (List (Text, Entry)) :=
+  match try (fun _ => batch
+    Map.empty
+    (fun _ => Option.none)
+    (fun _ => Option.none)
+    "strict"
+    [parseFile "t.deus" (Spec.prelude ++ source)]) with
+  | Result.ok b => Option.some b.entries
+  | Result.err _ => Option.none
+
+/-- An ability to perform, declared in each source that needs one. -/
+def Checking.Spec.failAbility : Text := "ability Fail where\n  fail : Int -> Int\n"
+
+def Checking.Spec.hashOf (source : Text) (name : Text) : Option Entry :=
+  match compiled source with
+  | Option.some entries => List.lookup name entries
+  | Option.none => Option.none
+
+/-- R-4: a lambda binder's type is checked. -/
+theorem Checking.Spec.lambdaBinderChecked : checks "def f (x : Int) : Int := (fun (n : Bool) => 1) x\n" == false := by rfl
+
+/-- R-2: a `let` annotation that holds compiles. -/
+theorem Checking.Spec.letAnnotationHolds : checks "def f (x : Int) : Int :=\n  let y : Int := x * 2\n  y\n" == true := by rfl
+
+/-- R-2: a `let` annotation that does not hold is a type error. -/
+theorem Checking.Spec.letAnnotationMismatch : checks "def f (x : Int) : Int :=\n  let y : Bool := x\n  1\n" == false := by rfl
+
+/-- R-2: a local function's annotation is its result type. -/
+theorem Checking.Spec.letFunctionResult : checks "def f (x : Int) : Int :=\n  let g n : Bool := x\n  1\n" == false := by rfl
+
+/-- R-4: a pattern binder's type is checked. -/
+theorem Checking.Spec.patternBinderChecked : checks "def f (x : Int) : Int :=\n  match x with\n  | (n : Bool) => 1\n" == false := by rfl
+
+/-- The builtin types the sources use, declared by IRI as `deus/builtins.deus` does. -/
+def Checking.Spec.prelude : Text := "inductive Int @\"#Int\" where\ninductive Bool @\"#Bool\" where\n  | false\n  | true\n"
