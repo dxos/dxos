@@ -227,13 +227,6 @@ Follow-up of 17d50ae5: a parameter or result of function type is skipped. A TS c
 - assignee: claude
 - labels: mdl, spec
 
-## BINDINGS.mdl: turn the requirements table into req blocks so deus mdl checks its evidence links (`b4d7a440`)
-
-- state: todo
-- priority: low
-- assignee: claude
-- labels: mdl, spec, interop
-
 ## Browser page: keep the in-memory file system in IndexedDB so a playground codebase survives a reload (`62be7dc4`)
 
 - state: todo
@@ -287,6 +280,22 @@ Follow-up of 17d50ae5: bindings run on the wasm kernel only. The TS kernel (src/
 - priority: low
 - assignee: claude
 - labels: mdl, spec
+
+## A pull keeps existing metadata, so spec prose edited in two codebases does not merge (`f4afc2c0`)
+
+- state: todo
+- priority: none
+- labels: replication, spec
+
+Follow-up to D96: spec prose is block metadata; Replicate writes meta only when absent.
+
+## Explorer: show spec documents (prose, blocks in order, verdicts) from the codebase (`3e686896`)
+
+- state: todo
+- priority: none
+- labels: explorer, spec
+
+Follow-up to 50e58574 (D96): deus view <Doc> renders a document from block metadata; the explorer lists blocks only.
 
 ## deus task set ignores an unknown field (--status) instead of refusing it (`cb6c9a43`)
 
@@ -636,6 +645,15 @@ A fresh container restored codebase/ (deus add code; task import) and got one ne
 
 Measured in docs/IMMUTABILITY.md (D83): seven sorts on both kernels, wasm, C and JS. Adds a mutable Array primitive (both kernels, wasm, C), Ref in the compiled back ends, and fixes a Rust-kernel stack overflow when dropping long Ref chains.
 
+## Specs live in the codebase: documents keep their prose, deus view and deus mdl take a document, docs/spec/*.mdl removed (`50e58574`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: spec, mdl, codebase
+
+From Dmytro: about mdl-first approach --- I want agents to record specs in codebase, not in github. and overall, most development at this point should be happening via-codebase. D99.
+
 ## Task viewer in the codebase explorer (`553faf09`)
 
 - state: done
@@ -955,6 +973,13 @@ Profile: Map.foldr 2.0M and Entry.hash 1.7M entries of 8 s, from Codebase.namesO
 - links change #4b89319b5e
 
 D69 refuses == on data; generate per-type compare functions from the type objects so it compiles.
+
+## BINDINGS.mdl: turn the requirements table into req blocks so deus mdl checks its evidence links (`b4d7a440`)
+
+- state: done
+- priority: low
+- assignee: claude
+- labels: mdl, spec, interop
 
 ## Docs disagree with the code in eight places listed in docs/spec/README.md (`11a42afd`)
 

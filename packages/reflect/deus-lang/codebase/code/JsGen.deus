@@ -190,7 +190,7 @@ def JsGen.calleeName (ctx : JsCtx) (env : List Text) (f : Sexp) : {Throw Text} O
   | _ => Option.none
 
 --
--- The `js` MDL extension (docs/spec/JS.mdl).
+-- The `js` MDL extension (the codebase's JsGen.Spec).
 --
 /-- A `js` block: `run:` must print the same on the JS target as on the kernel (and as `expect:`, when given). -/
 @[ext "org.dxos.deus.js@1.0"]
@@ -208,7 +208,7 @@ def JsGen.check (b : Block) : {MdlHost} List Text :=
           expected ++
             (if kernel == js then [] else ["the js target gives " ++ js ++ ", the kernel " ++ kernel])
 
-/-- The codec descriptor of a type (docs/spec/JS.mdl#foreign-imports), as JavaScript. -/
+/-- The codec descriptor of a type (the codebase's JsGen.Spec#foreign-imports), as JavaScript. -/
 def JsGen.codec (mod : JsModule) (seen : List Text) (t : Sexp) : Text :=
   match t with
   | Sexp.list (Sexp.sym "tref" :: Sexp.str "#Int" :: []) => "['int']"
@@ -692,7 +692,7 @@ def JsGen.pattern (path : Text) (p : Sexp) : {Throw Text} (List Text, List (Text
 def JsGen.primValue (p : Text) : {Throw Text} Text := if startsWith "Code." p then Throw.throw ("the primitive " ++ p ++ " is outside the js target") else "rt.prims[" ++ JsGen.quote p ++ "]"
 
 /-
-  A JavaScript back end (D97, docs/spec/JS.mdl): compiles definitions, and every definition they
+  A JavaScript back end (D97, the codebase's JsGen.Spec): compiles definitions, and every definition they
   reach, to one ES module with no kernel.
 
   Each definition is a JavaScript function of its parameters, named after the DEUS name, so a

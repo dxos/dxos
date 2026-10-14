@@ -89,6 +89,59 @@ def Export.directoryOf (path : Text) : Text :=
   | _ :: rest => join "/" (reverse rest)
   | [] => "."
 
+/-- A spec document as `.mdl` text (D99): its frontmatter, then each block after the prose that
+  preceded it, in the stored order, then the closing prose. The Extensions table is written from
+  the blocks' URIs under the document's own Extensions heading, or at the top when it has none.
+  Blocks with no stored order (added before D99) come last, by name. -/
+def Export.document (dir : Text) (ns : Map Text Entry) (d : Text) : {IO} Text :=
+  let blocks := filterMap (fun pair =>
+    match pair with
+    | (name, Entry.spec h) => if documentOf name == d then Option.map (fun obj =>
+        let meta := readMeta dir h
+        let order :=
+          match metaField meta "order" with
+          | Option.some (Sexp.int k) => k
+          | _ => 1000000
+        (order, name, Mdl.fromSexp obj, meta)) (readObject dir h) else Option.none
+    | _ => Option.none) (Map.toList ns)
+  let sorted := sortBy (fun a b =>
+    match (a, b) with
+    | ((oa, na, _, _), ob, nb, _, _) => if oa == ob then compare na nb else compare oa ob) blocks
+  let text := fun meta key => getOr (Option.map asText (metaField meta key)) ""
+  let front :=
+    match sorted with
+    | (_, _, _, meta) :: _ => filterMap (fun kv =>
+        match kv with
+        | Sexp.list (k :: v :: []) => Option.some (asText k, asText v)
+        | _ => Option.none) (metaList meta "front")
+    | [] => []
+  let frontLines := if any (fun kv => fst kv == "name") front then front else ("name", d) :: List.filter (fun kv => fst kv != "name") front
+  let terms := dedup (sort (List.map (fun x =>
+    match x with
+    | (_, _, (uri, b), _) => "| `" ++ b.blockType ++ "` | `" ++ uri ++ "` |") sorted))
+  let table := join "\n" (["| Term | URI |", "| --- | --- |"] ++ terms)
+  let pieces := concatMap (fun x =>
+    match x with
+    | (_, _, (_, b), meta) => List.filter (fun t => not (Text.isEmpty t)) [text meta "lead", Mdl.render b]) sorted
+  let tail :=
+    match last? sorted with
+    | Option.some (_, _, _, meta) => text meta "tail"
+    | Option.none => ""
+  let bodyLines := lines (join "\n\n" (pieces ++ (if Text.isEmpty tail then [] else [tail])))
+  let isExtensions := fun l => startsWith "#" (trim l) && headingOf (trim l) == "Extensions"
+  let body := if any isExtensions bodyLines then
+    let at := findIndex isExtensions bodyLines
+    join "\n" (List.take (at + 1) bodyLines ++ ["", table] ++ List.drop (at + 1) bodyLines)
+  else join "\n" (["## Extensions", "", table, ""] ++ bodyLines)
+  join
+    "\n"
+    (["---"] ++ List.map (fun kv => fst kv ++ ": " ++ snd kv) frontLines ++ ["---", "", body]) ++ "\n"
+
+/-- The document a spec block belongs to: its name without the block id. -/
+def Export.documentOf (name : Text) : Text :=
+  let parts := Text.split name "."
+  join "." (List.take (List.length parts - 1) parts)
+
 /-
   Exporting a codebase as text (D64), so a git repository can back it up and review its changes.
   The export holds the layers that cannot be recomputed, and leaves out the cache and artifacts:
@@ -230,6 +283,12 @@ def Export.recordBase (dir : Text) (out : Text) (snapshot : Map Text Text) : {IO
   IO.mkdirp (dir ++ "/exports")
   IO.writeFile (basePath dir out) (Tasks.putSnapshot dir snapshot ++ "\n")
 
+/-- The names of the spec documents the namespace holds, sorted. -/
+def Export.specDocuments (ns : Map Text Entry) : List Text := dedup (sort (filterMap (fun pair =>
+  match pair with
+  | (name, Entry.spec _) => Option.some (documentOf name)
+  | _ => Option.none) (Map.toList ns)))
+
 /-- The task as Markdown: a heading, its fields, links, comments. -/
 def Export.taskMarkdown (t : Task) : Text :=
   let field := fun label value => if Text.isEmpty value then "" else "- " ++ label ++ ": " ++ value ++ "\n"
@@ -277,29 +336,10 @@ def Export.write (dir : Text) (out : Text) : {IO, Throw Text} (Int, (Int, Int)) 
     | (name, e) =>
         let body := snd (viewParts printer dir ns name e "deus")
         if Text.isEmpty (trim body) then Option.none else Option.some (topOf name, body)) entries
-  -- Spec blocks go back into `.mdl` documents, one per document name, so `deus add` restores them.
-  let specs := filterMap (fun pair =>
-    match pair with
-    | (name, Entry.spec h) =>
-        match readObject dir h with
-        | Option.some obj =>
-            match Mdl.fromSexp obj with
-            | (uri, b) => Option.some (Text.take (Text.length name - Text.length b.blockId - 1) name, b.blockType, uri, Mdl.render b)
-        | Option.none => Option.none
-    | _ => Option.none) (Map.toList ns)
-  let documents := dedup (sort (List.map fst specs))
+  -- Spec documents go back into `.mdl` files, one per document, so `deus add` restores them.
+  let documents := specDocuments ns
   if List.isEmpty documents then () else IO.mkdirp (out ++ "/specs")
-  forEach documents (fun d =>
-    let mine := filterMap (fun pair => if fst pair == d then Option.some (snd pair) else Option.none) specs
-    let terms := dedup (sort (List.map (fun x =>
-      match x with
-      | (term, uri, _) => "| `" ++ term ++ "` | `" ++ uri ++ "` |") mine))
-    IO.writeFile (out ++ "/specs/" ++ d ++ ".mdl") (join
-      "\n"
-      (["---", "name: " ++ d, "---", "", "## Extensions", "", "| Term | URI |", "| --- | --- |"] ++
-        terms ++ ["", "## Blocks", ""] ++ List.map (fun x =>
-        match x with
-        | (_, _, text) => text ++ "\n") mine)))
+  forEach documents (fun d => IO.writeFile (out ++ "/specs/" ++ d ++ ".mdl") (document dir ns d))
   let files := dedup (sort (List.map fst sources))
   IO.mkdirp (out ++ "/code")
   forEach files (fun f => IO.writeFile (out ++ "/code/" ++ f ++ ".deus") (join

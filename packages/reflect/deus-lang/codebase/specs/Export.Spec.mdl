@@ -1,6 +1,15 @@
 ---
+id: org.dxos.deus.spec.codebase-text
 name: Export.Spec
+version: 1.0
 ---
+
+# Text export and restore: checked spec
+
+The checkable half of [CODEBASE-TEXT.md](../../docs/spec/CODEBASE-TEXT.md). The export is the codebase's backup in
+git, so its one promise is that restoring it gives back the same codebase: the same names bound to
+the same hashes, with the metadata people read. Written in the order of the process (D92);
+`deus mdl Export.Spec` checks it against the evidence in [Laws](#laws).
 
 ## Extensions
 
@@ -10,7 +19,7 @@ name: Export.Spec
 | `law` | `org.dxos.deus.law@1.0` |
 | `req` | `org.dxos.deus.req@1.0` |
 
-## Blocks
+## APIs
 
 ```mdl
 api A-1: writing and restoring an export
@@ -20,6 +29,8 @@ api A-1: writing and restoring an export
   - Export.importHistory : Text -> Text -> {IO, Throw Text} Int
   - Export.withUnnamed : Text -> Map Text Entry -> {IO} Map Text Entry
 ```
+
+## Round trip
 
 ```mdl
 law L-1: restoring an export gives the same namespace snapshot, whatever the program holds
@@ -50,3 +61,10 @@ req R-4: tasks come back as the same task objects
 req R-5: exporting twice writes the same files
   by: Export.Spec.exportIsStable
 ```
+
+## Laws
+
+Each law builds a codebase in the deterministic simulation, exports it, restores the export into a
+second codebase through the same `add` the CLI runs, and compares.
+
+The laws are the definitions under `Export.Spec`: `deus ls Export.Spec.` lists them and `deus view` prints them.

@@ -5,7 +5,7 @@
 import { spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { afterAll, describe, test } from 'vitest';
 
 import { SEED_PATH } from '../kernel/main.ts';
@@ -128,6 +128,10 @@ describe('deus bindings', () => {
     expect(readFileSync(join(out, 'geometry.d.ts'), 'utf8')).toContain(
       'export declare function area(s: Shape): Promise<number>;',
     );
+    // The CLI copies the runtime beside the module rather than importing it.
+    expect(readFileSync(join(out, 'deus-runtime.js'), 'utf8')).toBe(
+      readFileSync(resolve(import.meta.dirname, 'deus-runtime.js'), 'utf8'),
+    );
 
     writeFileSync(join(out, 'consumer.ts'), consumer);
     const tsc = spawnSync(
@@ -192,7 +196,8 @@ describe('deus bindings', () => {
   test('the generator satisfies the theorems in its spec', { timeout: 180_000 }, ({ expect }) => {
     const c = ['--codebase', join(scratch, 'spec')];
     expect(deus('init', '--empty', ...c).code).toBe(0);
-    expect(deus('add', join(root, 'deus'), join(root, 'docs/spec/BINDINGS.mdl'), ...c).code).toBe(0);
+    // The spec and its theorems live in the codebase (D99); its export in git carries them.
+    expect(deus('add', join(root, 'codebase/code'), join(root, 'codebase/specs'), ...c).code).toBe(0);
     const checked = deus('check', 'Bindings.Spec', ...c);
     expect(checked.stdout).toMatch(/10 passed, 0 failed/);
     expect(checked.code).toBe(0);
