@@ -2,10 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { type KeyboardEvent, forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import * as Field from '@dxos/react-ui/Field';
+import * as Focus from '@dxos/react-ui/Focus';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
@@ -35,74 +36,101 @@ type ColumnProps = Pick<EntityBrowserProps, 'icons'> & {
   onChoose: (selection: BrowseSelection) => void;
   /** Closes this column (and every one after it); absent on the first, which always shows the whole graph. */
   onClose?: () => void;
+  /** Left and right arrows, which leave the column for its neighbour. */
+  onNavigate?: (direction: 'left' | 'right') => void;
 };
 
-/** One column: a filter and the close action in its toolbar, over a stack of cards. */
-const EntityBrowserColumn = ({ stack, selection, icons, onChoose, onClose }: ColumnProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const [filter, setFilter] = useState('');
-  const menuActions = useMenuBuilder(() => {
-    const builder = MenuBuilder.make().root({ label: ['entity-browser-actions.label', { ns: meta.profile.key }] });
-    if (onClose) {
-      builder.action(
-        'close',
-        {
-          label: ['entity-browser-close.label', { ns: meta.profile.key }],
-          icon: 'ph--x--regular',
-          iconOnly: true,
-          testId: 'entity-browser-close',
-        },
-        () => onClose(),
-      );
-    }
-    return builder.build();
-  }, [onClose]);
+const CARD_SELECTOR = '[data-testid="entity-card"]';
 
-  return (
-    <Panel.Root data-testid='entity-browser-column'>
-      <Panel.Header>
-        <ActionToolbar
-          {...menuActions}
-          alwaysActive
-          start={
-            <Field.Root>
-              <Input.Root
-                placeholder={t('entity-browser-filter.placeholder')}
-                value={filter}
-                onChange={(event) => setFilter(event.target.value)}
-              />
-            </Field.Root>
-          }
-        />
-      </Panel.Header>
-      <Panel.Body asChild>
-        <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport>
-            <Layout.Flex column gap='sm' classNames='p-2'>
-              {stack
-                .filter((card) => matches(card, filter))
-                .map((card) => {
-                  const chosen = selection?.cardId === card.id;
-                  return (
-                    <EntityCard
-                      key={card.id}
-                      card={card}
-                      icons={icons}
-                      selected={chosen}
-                      currentProperty={chosen ? selection?.property : undefined}
-                      onClick={() => onChoose({ cardId: card.id })}
-                      onSelectProperty={(property) => onChoose({ cardId: card.id, property })}
-                      onSelect={(entity, property) => onChoose({ cardId: card.id, property, entity })}
-                    />
-                  );
-                })}
-            </Layout.Flex>
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </Panel.Body>
-    </Panel.Root>
-  );
-};
+/**
+ * One column: a filter and the close action in its toolbar, over a stack of cards that up and down arrows move through
+ * (each card focused is chosen, as in Finder) and left and right leave.
+ */
+const EntityBrowserColumn = forwardRef<HTMLDivElement, ColumnProps>(
+  ({ stack, selection, icons, onChoose, onClose, onNavigate }, forwardedRef) => {
+    const { t } = Hooks.useTranslation(meta.profile.key);
+    const [filter, setFilter] = useState('');
+    const menuActions = useMenuBuilder(() => {
+      const builder = MenuBuilder.make().root({ label: ['entity-browser-actions.label', { ns: meta.profile.key }] });
+      if (onClose) {
+        builder.action(
+          'close',
+          {
+            label: ['entity-browser-close.label', { ns: meta.profile.key }],
+            icon: 'ph--x--regular',
+            iconOnly: true,
+            testId: 'entity-browser-close',
+          },
+          () => onClose(),
+        );
+      }
+      return builder.build();
+    }, [onClose]);
+
+    const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+      if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+        event.preventDefault();
+        onNavigate?.(event.key === 'ArrowLeft' ? 'left' : 'right');
+      }
+    };
+
+    return (
+      <Panel.Root data-testid='entity-browser-column'>
+        <Panel.Header>
+          <ActionToolbar
+            {...menuActions}
+            alwaysActive
+            start={
+              <Field.Root>
+                <Input.Root
+                  placeholder={t('entity-browser-filter.placeholder')}
+                  value={filter}
+                  onChange={(event) => setFilter(event.target.value)}
+                />
+              </Field.Root>
+            }
+          />
+        </Panel.Header>
+        <Panel.Body asChild>
+          <ScrollArea.Root orientation='vertical'>
+            <ScrollArea.Viewport>
+              <Focus.Group asChild onKeyDown={handleKeyDown} ref={forwardedRef}>
+                <Layout.Flex column gap='sm' classNames='p-2'>
+                  {stack
+                    .filter((card) => matches(card, filter))
+                    .map((card) => {
+                      const chosen = selection?.cardId === card.id;
+                      return (
+                        <Focus.Item
+                          key={card.id}
+                          asChild
+                          current={chosen}
+                          // Focus chooses the card, but a card already chosen keeps its finer choice (a row, a chip).
+                          onFocus={() => !chosen && onChoose({ cardId: card.id })}
+                          onCurrentChange={() => onChoose({ cardId: card.id })}
+                        >
+                          <EntityCard
+                            card={card}
+                            icons={icons}
+                            selected={chosen}
+                            currentProperty={chosen ? selection?.property : undefined}
+                            onSelectProperty={(property) => onChoose({ cardId: card.id, property })}
+                            onSelect={(entity, property) => onChoose({ cardId: card.id, property, entity })}
+                          />
+                        </Focus.Item>
+                      );
+                    })}
+                </Layout.Flex>
+              </Focus.Group>
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+        </Panel.Body>
+      </Panel.Root>
+    );
+  },
+);
+
+EntityBrowserColumn.displayName = 'EntityBrowser.Column';
 
 /**
  * The fact graph as Finder-style columns: the first holds every entity, and choosing a card, one of its property rows,
@@ -113,6 +141,16 @@ export const EntityBrowser = ({ cards, icons }: EntityBrowserProps) => {
   // One entry per column that has chosen something; choosing in a column drops every choice after it.
   const [path, setPath] = useState<BrowseSelection[]>([]);
   const viewportRef = useRef<HTMLDivElement>(null);
+  const stackRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  // Into the next column at its first card, or back to the card chosen in the previous one.
+  const navigate = (column: number, direction: 'left' | 'right') => {
+    const target = stackRefs.current[direction === 'left' ? column - 1 : column + 1];
+    const card =
+      (direction === 'left' && target?.querySelector<HTMLElement>(`${CARD_SELECTOR}[aria-current="true"]`)) ||
+      target?.querySelector<HTMLElement>(CARD_SELECTOR);
+    card?.focus();
+  };
 
   const columns = useMemo(() => {
     const result: EntityCardModel[][] = [[...cards]];
@@ -140,6 +178,10 @@ export const EntityBrowser = ({ cards, icons }: EntityBrowserProps) => {
             <Layout.Grid cols={columns.map(() => '24rem')} rows={['fill']} classNames='h-full'>
               {columns.map((stack, column) => (
                 <EntityBrowserColumn
+                  ref={(element) => {
+                    stackRefs.current[column] = element;
+                  }}
+                  onNavigate={(direction) => navigate(column, direction)}
                   // Keyed by what opened the column, so its filter resets when a new choice replaces it.
                   key={column === 0 ? 'root' : JSON.stringify(path[column - 1])}
                   stack={stack}

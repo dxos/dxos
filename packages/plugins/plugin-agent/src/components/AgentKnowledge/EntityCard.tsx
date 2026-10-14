@@ -8,6 +8,7 @@ import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Tag from '@dxos/react-ui/Tag';
+import * as Util from '@dxos/react-ui/Util';
 
 import { meta } from '#meta';
 
@@ -30,7 +31,7 @@ export type EntityCardProps = {
   /** The property row (a `propertyKey`) that is the current one. */
   currentProperty?: string;
   /** Makes the card itself selectable. */
-  onClick?: () => void;
+  onClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
   /** Makes each property row selectable. */
   onSelectProperty?: (key: string) => void;
   /** Opens the entity a chip names; `key` is the row it sits in. */
@@ -128,40 +129,37 @@ const PropertyRows = ({
  * One entity of the graph as a card: its class, its name, what it states about others, and below a rule what others
  * state about it.
  */
-export const EntityCard = ({
-  card,
-  icons,
-  selected,
-  currentProperty,
-  onClick,
-  onSelectProperty,
-  onSelect,
-  onClose,
-}: EntityCardProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const rows = { icons, currentProperty, onSelectProperty, onSelect };
-  return (
-    <Card.Root grid selected={selected} onClick={onClick} data-testid='entity-card'>
-      <Card.Row icon={TYPE_ICON} end={onClose && <Card.Action system='close' onClick={onClose} />}>
-        <KeyValue label={t('entity-card-type.label')}>
-          <Card.Text truncate>{card.type ?? '—'}</Card.Text>
-        </KeyValue>
-      </Card.Row>
-      <Layout.Separator />
-      <Card.Row icon={NAME_ICON}>
-        <KeyValue label={t('entity-card-name.label')}>
-          <Card.Text truncate>{card.label}</Card.Text>
-        </KeyValue>
-      </Card.Row>
-      <PropertyRows direction='out' properties={card.properties} icon={PROPERTY_ICON} {...rows} />
-      {card.inverse.length > 0 && (
-        <>
-          <Layout.Separator />
-          <PropertyRows direction='in' properties={card.inverse} icon={INVERSE_ICON} {...rows} icons={undefined} />
-        </>
-      )}
-    </Card.Root>
-  );
-};
+// Composable, so a `Focus.Item` (or another `asChild` host) can make the card one of its arrow-key stops.
+export const EntityCard = Util.composable<HTMLDivElement, EntityCardProps>(
+  (
+    { card, icons, selected, currentProperty, onClick, onSelectProperty, onSelect, onClose, ...props },
+    forwardedRef,
+  ) => {
+    const { t } = Hooks.useTranslation(meta.profile.key);
+    const rows = { icons, currentProperty, onSelectProperty, onSelect };
+    return (
+      <Card.Root {...props} grid selected={selected} onClick={onClick} data-testid='entity-card' ref={forwardedRef}>
+        <Card.Row icon={TYPE_ICON} end={onClose && <Card.Action system='close' onClick={onClose} />}>
+          <KeyValue label={t('entity-card-type.label')}>
+            <Card.Text truncate>{card.type ?? '—'}</Card.Text>
+          </KeyValue>
+        </Card.Row>
+        <Layout.Separator />
+        <Card.Row icon={NAME_ICON}>
+          <KeyValue label={t('entity-card-name.label')}>
+            <Card.Text truncate>{card.label}</Card.Text>
+          </KeyValue>
+        </Card.Row>
+        <PropertyRows direction='out' properties={card.properties} icon={PROPERTY_ICON} {...rows} />
+        {card.inverse.length > 0 && (
+          <>
+            <Layout.Separator />
+            <PropertyRows direction='in' properties={card.inverse} icon={INVERSE_ICON} {...rows} icons={undefined} />
+          </>
+        )}
+      </Card.Root>
+    );
+  },
+);
 
 EntityCard.displayName = 'EntityCard';
