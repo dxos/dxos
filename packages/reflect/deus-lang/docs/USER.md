@@ -146,3 +146,11 @@ perhaps add an alarm to remind you of that every 30 minutes
 ---
 
 - lets keep pr asdraft
+
+---
+
+- how to login to temp account in wrangler
+
+---
+
+- forget it
