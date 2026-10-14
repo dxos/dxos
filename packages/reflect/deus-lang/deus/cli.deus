@@ -436,7 +436,11 @@ def build (args : Args) : {IO, Throw Text} Unit :=
   match (lookupName ns (Option.getOr (List.head? args.positional) ""), option args "out") with
   | ((_, Entry.term h), some out) =>
     let image := Image.build (fetcher dir) h
-    match try (fun _ => if flag args "native" then Build.native image out else Build.executable image out) with
+    let target := fun (u : Unit) =>
+      if flag args "worker" then Build.worker image (Text.replace "." "-" (Text.toLower (Option.getOr (List.head? args.positional) "actor"))) out
+      else if flag args "native" then Build.native image out
+      else Build.executable image out
+    match try target with
     | Result.ok _ => output args (fun _ => Json.obj [("binary", Json.str out)]) (fun _ => "Built " ++ out ++ ".")
     | Result.err f => throw (Failure.render f)
   | _ => throw "usage: deus build <term> -o <file>"
@@ -473,6 +477,7 @@ def usage : Text :=
     "  image <name> -o <file>               write a kernel image",
     "  build <name> -o <file> [--native]    write a standalone executable that runs name ()",
     "                                       (--native: Rust kernel + image, ~1 MB; default: Node SEA)",
+    "  build <actor> -o <dir> --worker      write a Cloudflare Worker serving the actor from a Durable Object",
     "  compile <files|dirs…> --main <name>  compile files without a codebase",
     ""]
 

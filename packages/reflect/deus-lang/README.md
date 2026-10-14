@@ -18,7 +18,8 @@ deus/*.deus  ──compile (the seed runs the compiler)──▶  seed/deus.imag
 
 ```bash
 node bin/deus.mjs compile deus --main Cli.main -o out.seed   # the compiler compiling itself
-node bin/deus.mjs build Cli.main -o deus                     # the CLI as a standalone executable
+node bin/deus.mjs build Cli.main -o deus --native            # the CLI as a 1.6 MB executable
+node bin/deus.mjs build Counter.serve -o out --worker        # an actor as a Cloudflare Worker
 ```
 
 ## Examples
@@ -26,6 +27,9 @@ node bin/deus.mjs build Cli.main -o deus                     # the CLI as a stan
 - [`examples/sort.deus`](./examples/sort.deus) — insertion sort with a specification and formal
   proofs that it sorts and permutes.
 - [`examples/soundness.deus`](./examples/soundness.deus) — claims the prover must refuse.
+- [`examples/counter.deus`](./examples/counter.deus) — a Cloudflare Durable Object, tested in
+  simulation and served on local workerd (`scripts/worker-test.sh`); the platform's ontology is
+  [`platform/cloudflare.deus`](./platform/cloudflare.deus).
 - [`editors/vscode/`](./editors/vscode) — syntax highlighting for VS Code and TextMate renderers.
 
 ## Docs

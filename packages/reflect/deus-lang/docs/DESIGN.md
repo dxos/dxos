@@ -22,6 +22,7 @@ and the toolchain; [`DECISIONS.md`](./DECISIONS.md) records why each choice was 
 | Standalone executables (`deus build`)                                              | done ([D38](./DECISIONS.md))                                                        |
 | `.mdl`: ```deus fences                                                             | done; extensions defined in DEUS and `perf` requirements planned                    |
 | Rust kernel (native, byte-identical) and wasm kernel (`wasm32-wasip1`)             | done ([D40](./DECISIONS.md), [D41](./DECISIONS.md)); compiling Core to wasm planned |
+| Cloudflare Workers / Durable Objects target (`deus build --worker`)                | done ([D45](./DECISIONS.md)); actor-to-actor calls planned                          |
 | Projects/subgraphs, external requirements, replication, layers, containers         | designed ([PROPOSALS.md](./PROPOSALS.md)); not built                                |
 
 ## The language

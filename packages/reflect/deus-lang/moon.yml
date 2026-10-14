@@ -18,3 +18,9 @@ tasks:
       - seed/deus.image
     options:
       cache: false
+  # Serves examples/counter.deus on local workerd; it starts a server, so it is not in the CI sweep.
+  worker-test:
+    command: bash scripts/worker-test.sh
+    options:
+      cache: false
+      runInCI: false

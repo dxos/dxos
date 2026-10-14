@@ -1,6 +1,6 @@
 /-
-  `deus build`: a standalone executable for a term (D38), or with `--native` a small one made
-  from the Rust kernel (D42).
+  `deus build`: a standalone executable for a term (D38), with `--native` a small one made from
+  the Rust kernel (D42), or with `--worker` a Cloudflare Worker serving an actor (D45).
 
   The executable is a Node single-executable application: the kernel, bundled into one script,
   plus the term's image as an asset. The tools are pinned by version and run through `npx`, so
@@ -64,5 +64,40 @@ def native (image : Text) (out : Text) : {IO, Throw Failure} Unit :=
   let _ := tool "cp" [kernel, out]
   let digits := Int.toText (List.length (Text.utf8 image))
   IO.appendFile out (image ++ Text.repeat (20 - Text.length digits) "0" ++ digits ++ "DEUSIMG1")
+
+/--
+  Writes a Cloudflare Worker to the directory `out` (D45): the wasm kernel, the actor's image,
+  the Durable Object that serves it (`deus-kernel/embed/worker.mjs`) and `wrangler.toml`.
+  `wrangler dev` in `out` serves it locally on workerd; `wrangler deploy` publishes it.
+-/
+def worker (image : Text) (name : Text) (out : Text) : {IO, Throw Failure} Unit :=
+  let crate := require "DEUS_HOME" ++ "/../deus-kernel"
+  let wasm := crate ++ "/target/wasm32-unknown-unknown/release/deus_kernel.wasm"
+  let _ := if IO.exists wasm then ""
+    else Failure.context "building the wasm kernel" [] (fun _ =>
+      tool "cargo" ["build", "--release", "--quiet", "--lib", "--target", "wasm32-unknown-unknown", "--manifest-path", crate ++ "/Cargo.toml"])
+  IO.mkdirp out
+  IO.writeFile (out ++ "/app.image") image
+  let _ := tool "cp" [wasm, out ++ "/deus_kernel.wasm"]
+  let _ := tool "cp" [crate ++ "/embed/kernel.mjs", out ++ "/kernel.mjs"]
+  let _ := tool "cp" [crate ++ "/embed/worker.mjs", out ++ "/worker.mjs"]
+  IO.writeFile (out ++ "/wrangler.toml") (Text.join "\n" [
+    "name = " ++ Json.render (Json.str name),
+    "main = \"worker.mjs\"",
+    "compatibility_date = \"2025-01-01\"",
+    "",
+    "[[rules]]",
+    "type = \"Text\"",
+    "globs = [\"**/*.image\"]",
+    "fallthrough = true",
+    "",
+    "[[durable_objects.bindings]]",
+    "name = \"ACTOR\"",
+    "class_name = \"DeusActor\"",
+    "",
+    "[[migrations]]",
+    "tag = \"v1\"",
+    "new_sqlite_classes = [\"DeusActor\"]",
+    ""])
 
 end Build

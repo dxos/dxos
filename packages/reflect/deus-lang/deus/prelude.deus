@@ -303,6 +303,12 @@ def padLeft (n : Int) (t : Text) : Text := repeat (n - Text.length t) " " ++ t
 /-- Replaces every occurrence of `old` with `new`. -/
 def replace (old : Text) (new : Text) (t : Text) : Text := Text.join new (Text.split t old)
 
+/-- ASCII letters to lower case; every other character is unchanged. -/
+def toLower (t : Text) : Text :=
+  Text.fromCodes (List.map (fun i =>
+    let c := Text.code t i
+    if c >= 'A' && c <= 'Z' then c + 32 else c) (List.range 0 (Text.length t)))
+
 def isDigit (c : Int) : Bool := c >= '0' && c <= '9'
 
 def isAlpha (c : Int) : Bool := (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')

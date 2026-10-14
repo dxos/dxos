@@ -1,0 +1,53 @@
+/-
+  Cloudflare Workers and Durable Objects (P7, D45): the platform as DEUS data and abilities.
+
+  An actor is a function `Request -> {Storage, Http, IO} Response` named by its definition; a
+  Durable Object runs it on the wasm kernel (`deus build --worker`). Its row says what it
+  touches: `Storage` is the object's own transactional storage, `Http` is outbound `fetch`.
+  `Cloudflare.simulate` runs an actor against in-memory storage, deterministically, for tests.
+-/
+
+structure Request @"urn:deus:cloudflare:Request" where
+  verb : Text
+  url : Text
+  payload : Text
+
+structure Response @"urn:deus:cloudflare:Response" where
+  status : Int
+  content : Text
+
+/-- A Durable Object's own transactional storage. -/
+ability Storage @"urn:deus:cloudflare:Storage" where
+  get : Text -> Option Text
+  put : Text -> Text -> Unit
+  delete : Text -> Bool
+
+/-- Outbound HTTP. -/
+ability Http @"urn:deus:cloudflare:Http" where
+  fetch : Request -> Response
+
+namespace Cloudflare
+
+def ok (content : Text) : Response := Response.mk 200 content
+
+/--
+  Runs an actor on a sequence of requests against one in-memory storage, as a Durable Object
+  would serve them; `Http` answers 503. Returns the responses and the final storage.
+-/
+def simulate (actor : Request -> {Storage, Http | r} Response) (requests : List Request) : {r} (List Response, Map Text Text) :=
+  let store := Ref.new Map.empty
+  let serve := fun (request : Request) =>
+    handle actor request with
+    | Storage.get key -> k => k (Map.lookup key (Ref.get store))
+    | Storage.put key value -> k =>
+      Ref.set store (Map.insert key value (Ref.get store))
+      k ()
+    | Storage.delete key -> k =>
+      let had := Map.contains key (Ref.get store)
+      Ref.set store (Map.remove key (Ref.get store))
+      k had
+    | Http.fetch _ -> k => k (Response.mk 503 "no network in simulation")
+  let responses := List.map serve requests
+  (responses, Ref.get store)
+
+end Cloudflare

@@ -175,4 +175,7 @@ Worker; local `workerd` (through `wrangler`) and a temporary account test it.
   `resume`: when an operation is asynchronous the kernel returns the request to JS with its stack
   intact, JS awaits it, and `resume` continues with the result.
 
-**Status.** Planned after the wasm kernel (D41), which is the piece it depends on.
+**Status.** Implemented (D43, D45): `platform/cloudflare.deus`, `deus build --worker`, and
+`examples/counter.deus` served by a Durable Object on local workerd (`scripts/worker-test.sh`).
+Not yet: `Actor.call` between objects, alarms, and a multi-actor simulation with seeded
+message ordering.

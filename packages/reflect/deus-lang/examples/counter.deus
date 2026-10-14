@@ -1,0 +1,20 @@
+/-
+  A Durable Object: a counter whose state lives in the object's storage (P7).
+  `deus build Counter.serve --worker -o out` makes a Worker; `wrangler dev` serves it locally.
+-/
+
+namespace Counter
+
+/-- Each request adds one and answers the new count; `?actor=` picks the object. -/
+def serve (request : Request) : {Storage} Response :=
+  let current := Option.getOr (Option.bind (Storage.get "count") Int.fromText) 0
+  let next := current + 1
+  Storage.put "count" (Int.toText next)
+  Cloudflare.ok ("count " ++ Int.toText next)
+
+test countsAcrossRequests :=
+  let request := Request.mk "GET" "/" ""
+  match Cloudflare.simulate serve [request, request, request] with
+  | (responses, store) => List.map (fun r => r.content) responses == ["count 1", "count 2", "count 3"] && Map.lookup "count" store == some "3"
+
+end Counter
