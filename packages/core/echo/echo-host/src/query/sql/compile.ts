@@ -5,10 +5,15 @@
 import * as SqlClient from 'effect/sql/SqlClient';
 import type * as Statement from 'effect/sql/Statement';
 
-import { EncodedReference, QueryAST, isEncodedReference } from '@dxos/echo-protocol';
+import {
+  EncodedReference,
+  EscapedPropPath,
+  QueryAST,
+  isEncodedReference,
+  referenceIndexKey,
+} from '@dxos/echo-protocol';
 import { ATTR_META } from '@dxos/echo/internal';
 import {
-  EscapedPropPath,
   type QueueRef,
   type QueueWindow,
   buildFtsCondition,
@@ -16,7 +21,6 @@ import {
   buildSourceCondition,
   buildTypeDxnCondition,
   normalizePropPath,
-  referenceIndexKey,
 } from '@dxos/index-core';
 import { DXN, EID, EntityId, type SpaceId } from '@dxos/keys';
 

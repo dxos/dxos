@@ -8,6 +8,7 @@ import { EventEmitter } from 'eventemitter3';
 
 import { Trigger, TriggerState } from '@dxos/async';
 import { BACKED_OBJECT_LIMIT } from '@dxos/echo-protocol';
+import { runInCommit } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -252,13 +253,16 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
     this.batch(() => {
       const body = this.#loaded();
       const before = body.doc;
-      const headsBefore = A.getHeads(before);
-      body.doc = opts ? A.change(before, opts, fn) : A.change(before, fn);
-      this.emit('change', {
-        handle: this,
-        doc: body.doc,
-        patches: A.diff(body.doc, headsBefore, A.getHeads(body.doc)),
-        patchInfo: { before, after: body.doc, source: 'change' },
+      // A local change is a commit: post-commit callbacks run only once every listener has seen the event.
+      runInCommit(() => {
+        const headsBefore = A.getHeads(before);
+        body.doc = opts ? A.change(before, opts, fn) : A.change(before, fn);
+        this.emit('change', {
+          handle: this,
+          doc: body.doc,
+          patches: A.diff(body.doc, headsBefore, A.getHeads(body.doc)),
+          patchInfo: { before, after: body.doc, source: 'change' },
+        });
       });
     });
   }
@@ -266,31 +270,35 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   changeAt(heads: A.Heads, fn: (doc: A.Doc<T>) => void, opts?: A.ChangeOptions<any>): A.Heads | undefined {
     const body = this.#loaded();
     const before = body.doc;
-    const headsBefore = A.getHeads(before);
-    const { newDoc, newHeads } = opts ? A.changeAt(before, heads, opts, fn) : A.changeAt(before, heads, fn);
+    return runInCommit(() => {
+      const headsBefore = A.getHeads(before);
+      const { newDoc, newHeads } = opts ? A.changeAt(before, heads, opts, fn) : A.changeAt(before, heads, fn);
 
-    body.doc = newDoc;
-    this.emit('change', {
-      handle: this,
-      doc: body.doc,
-      patches: newHeads ? A.diff(body.doc, headsBefore, newHeads) : [],
-      patchInfo: { before, after: body.doc, source: 'change' },
+      body.doc = newDoc;
+      this.emit('change', {
+        handle: this,
+        doc: body.doc,
+        patches: newHeads ? A.diff(body.doc, headsBefore, newHeads) : [],
+        patchInfo: { before, after: body.doc, source: 'change' },
+      });
+      return newHeads ?? undefined;
     });
-    return newHeads ?? undefined;
   }
 
   update(updateCallback: (doc: A.Doc<T>) => A.Doc<T>): void {
     const body = this.#loaded();
     const before = body.doc;
-    const headsBefore = A.getHeads(before);
-    const newDoc = updateCallback(before);
-    invariant(newDoc, 'DocHandleProxy.update returned undefined doc');
-    body.doc = newDoc;
-    this.emit('change', {
-      handle: this,
-      doc: body.doc,
-      patches: A.diff(body.doc, headsBefore, A.getHeads(body.doc)),
-      patchInfo: { before, after: body.doc, source: 'change' },
+    runInCommit(() => {
+      const headsBefore = A.getHeads(before);
+      const newDoc = updateCallback(before);
+      invariant(newDoc, 'DocHandleProxy.update returned undefined doc');
+      body.doc = newDoc;
+      this.emit('change', {
+        handle: this,
+        doc: body.doc,
+        patches: A.diff(body.doc, headsBefore, A.getHeads(body.doc)),
+        patchInfo: { before, after: body.doc, source: 'change' },
+      });
     });
   }
 

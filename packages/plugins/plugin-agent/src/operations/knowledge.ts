@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Agent from '@dxos/assistant/Agent';
 import { Database, Filter, Obj, type Ref } from '@dxos/echo';
+import { Organization, Person } from '@dxos/types';
 
 import { BrainService, Knowledge } from '#types';
 
@@ -47,8 +48,32 @@ export const entityKeys = (entity: Obj.Unknown): Set<string> => {
     .map(slug)
     .filter((value) => value.length > 0);
   const did = personDid(entity);
-  return new Set([Obj.getURI(entity), ...(did ? [did] : []), ...names]);
+  return new Set([Obj.getURI(entity), ...(did ? [did] : []), ...names, ...identityValues(entity)]);
 };
+
+/** The values of an object's account identities (a Discord username or id, an email address), when it has any. */
+export const identityValues = (entity: Obj.Unknown): string[] => {
+  const identities: unknown = Reflect.get(entity, 'identities');
+  return Array.isArray(identities)
+    ? identities.flatMap((identity: unknown) => {
+        const value = typeof identity === 'object' && identity !== null ? Reflect.get(identity, 'value') : undefined;
+        return typeof value === 'string' && value.length > 0 ? [value] : [];
+      })
+    : [];
+};
+
+/** An object's strong identifiers: its URI, its DID and its account identities, never its names. */
+export const strongEntityKeys = (entity: Obj.Unknown): string[] => {
+  const did = personDid(entity);
+  return [Obj.getURI(entity), ...(did ? [did] : []), ...identityValues(entity)];
+};
+
+/** The strong identifiers of the space's people and organizations, one list each: what identity groups start from. */
+export const knownIdentities = Effect.gen(function* () {
+  const entities = yield* Database.query(Filter.or(Filter.type(Person.Person), Filter.type(Organization.Organization)))
+    .run;
+  return entities.map(strongEntityKeys);
+});
 
 /** Every fact in the brains of the space's agents, each once: two agents reading one document store the same facts. */
 export const spaceFacts = Effect.gen(function* () {

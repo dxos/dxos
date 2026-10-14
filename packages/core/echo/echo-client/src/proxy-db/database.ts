@@ -394,6 +394,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return this._entityManager._updateEvent;
   }
 
+  get _localCommitEvent() {
+    return this._entityManager._localCommitEvent;
+  }
+
   get opened() {
     return this._entityManager.opened;
   }
@@ -1151,6 +1155,11 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   allObjectCores() {
     return this._entityManager.allObjectCores();
+  }
+
+  /** Objects written locally that the index may not reflect yet; see `EntityManager.unindexedWrites`. */
+  unindexedWrites(): Iterable<string> {
+    return this._entityManager.unindexedWrites();
   }
 
   areStrongDepsSatisfied(core: Parameters<EntityManager['areStrongDepsSatisfied']>[0]) {

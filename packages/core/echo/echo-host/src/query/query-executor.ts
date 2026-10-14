@@ -15,6 +15,7 @@ import {
   EncodedReference,
   type EntityPropPath,
   EntityStructure,
+  EscapedPropPath,
   PROPERTY_ID,
   QueryAST,
   isEncodedReference,
@@ -28,14 +29,7 @@ import {
   objectStructureToJson,
 } from '@dxos/echo/internal';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
-import {
-  type EntityMeta,
-  EscapedPropPath,
-  type IndexEngine,
-  type QueueRef,
-  type QueueWindow,
-  type ReverseRef,
-} from '@dxos/index-core';
+import { type EntityMeta, type IndexEngine, type QueueRef, type QueueWindow, type ReverseRef } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId, SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -52,8 +46,15 @@ import { QueryError } from './errors.ts';
 import { type GroupAggregates, GroupBy, type GroupKeyValue, compareCodeUnits } from './group-by.ts';
 import { backingJson, isSaved } from './object-state.ts';
 import { QueryPlan } from './plan.ts';
-import { type QueryExecutorMode, QueryPlanner, filterContainsInQuery } from './query-planner.ts';
-import { type CompiledRow } from './sql/index.ts';
+import { QueryPlanner, filterContainsInQuery } from './query-planner.ts';
+import { type CompiledRow, compilePlan, planDeclinedByCompiler } from './sql/index.ts';
+
+/**
+ * Which evaluation path a plan targets: `memory` leaves every step for the executor to evaluate in
+ * JS over loaded objects; `sql` compiles the steps into a single {@link QueryPlan.SqlStep} over the
+ * index tables. `memory` is the default; the host resolves where the choice comes from.
+ */
+export type QueryExecutorMode = 'sql' | 'memory';
 
 type QueryExecutorOptions = {
   indexEngine: IndexEngine;
@@ -65,7 +66,7 @@ type QueryExecutorOptions = {
   query: QueryAST.Query;
   reactivity: QueryReactivity;
   executor?: QueryExecutorMode;
-  /** Builds compiled statements; the planner needs it only under the `sql` executor. */
+  /** Builds compiled statements; needed only under the `sql` executor. */
   sql?: SqlClient.SqlClient;
   /** Whether the client already holds a document; its rows ship without JSON and stored changes. */
   holds?: (documentId: DocumentId) => boolean;
@@ -724,8 +725,13 @@ export class QueryExecutor extends Resource {
 
     this.#holds = options.holds ?? (() => false);
     this.#mode = options.executor ?? 'memory';
-    this.#planner = new QueryPlanner({ executor: this.#mode, sql: options.sql });
-    this._plan = this.#planner.createPlan(this._query);
+    this.#planner = new QueryPlanner();
+    const plan = this.#planner.createPlan(this._query);
+    const planSubquery = (query: QueryAST.Query) => this.#planner.createPlan(query);
+    this._plan =
+      this.#mode === 'sql' && options.sql !== undefined && !planDeclinedByCompiler(plan, planSubquery)
+        ? compilePlan(options.sql, plan, planSubquery).plan
+        : plan;
     this.#scopes = extractScopes(this._plan);
     this.#includeAllFeeds = extractIncludeAllFeeds(this._plan);
   }

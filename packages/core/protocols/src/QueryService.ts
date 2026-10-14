@@ -122,6 +122,11 @@ export interface QueryResult extends Schema.Schema.Type<typeof QueryResult> {}
 export const QueryResponse = Schema.Struct({
   queryId: Schema.optional(Schema.String),
   results: Schema.optional(mutableArray(QueryResult)),
+  /**
+   * The reactive query re-ran and its result is the one last sent; `results` is omitted. Lets a client
+   * learn its earlier answer is current again without a resend.
+   */
+  unchanged: Schema.optional(Schema.Boolean),
 });
 export interface QueryResponse extends Schema.Schema.Type<typeof QueryResponse> {}
 
