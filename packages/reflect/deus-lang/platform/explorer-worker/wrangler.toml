@@ -1,0 +1,7 @@
+# The codebase explorer for the toolchain's own codebase, published to the agent-artifacts bucket.
+name = "deus-explorer"
+main = "worker.mjs"
+compatibility_date = "2026-09-01"
+
+[vars]
+ORIGIN = "https://pub-39066a86073446d7b77b1c157b660bb5.r2.dev/deus/explorer-demo/site"

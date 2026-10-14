@@ -1,125 +1,72 @@
 /-
-  The codebase explorer (D58): a static site generated from a codebase, in the spirit of Unison
-  Share. Static pages need no server logic, so the same files are served locally
-  (`deus explore`, by the native web runtime and `platform/site.deus`) and hosted from the
-  bucket that already holds the codebase's bundles (`deus explore --publish <remote>`).
+  The codebase explorer (D58): a single-page app over JSON written from a codebase, in the spirit
+  of Unison Share. Definitions and tasks open as cards in one workspace, so several can be read
+  at once, and a task board shows every task by state. The app is static files, so the same
+  output is served locally (`deus explore`, by the native web runtime and `platform/site.deus`)
+  and hosted from the bucket that holds the codebase's bundles (`deus explore --publish <remote>`).
 
-    index.html            the project: branches, namespaces, recent history, layers, search
-    ns/<namespace>.html   a namespace: its children with kinds, signatures and summaries
-    def/<hash>.html       a definition: names, signature, docs, source, dependencies,
-                          dependents, verdicts and provenance
-    names.json            the search index: name, kind, hash, signature
+    index.html, app.js, app.css   the app (`platform/explorer/`), copied as they are
+    meta.json                     the project, branches, counts and recent history
+    names.json                    every visible name: name, kind, hash
+    def/<hash>.json               a definition: names, signature, highlighted source with its
+                                  references linked, dependencies, dependents, verdict, tasks
+    tasks.json                    every task, with its links resolved and its history
 -/
 
 namespace Explorer
-
-def escape (t : Text) : Text := Text.replace ">" "&gt;" (Text.replace "<" "&lt;" (Text.replace "&" "&amp;" t))
-
-def attr (t : Text) : Text := Text.replace "\"" "&quot;" (escape t)
-
-def style : Text :=
-  Text.join "\n" [
-    ":root { --bg: #fdfdfc; --fg: #1d1d1b; --muted: #6b6b66; --line: #e4e4df; --accent: #3b5bdb; --kw: #a3297a; --str: #2b8a3e; --ty: #1864ab; --code: #f4f4f1; }",
-    "@media (prefers-color-scheme: dark) { :root { --bg: #161615; --fg: #e8e8e3; --muted: #9a9a93; --line: #2e2e2b; --accent: #91a7ff; --kw: #f783ac; --str: #8ce99a; --ty: #74c0fc; --code: #1f1f1d; } }",
-    "* { box-sizing: border-box; } body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.55 system-ui, sans-serif; }",
-    "header { border-bottom: 1px solid var(--line); padding: 12px 20px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }",
-    "header a.home { font-weight: 600; color: var(--fg); text-decoration: none; } main { max-width: 980px; margin: 0 auto; padding: 20px; }",
-    "a { color: var(--accent); text-decoration: none; } a:hover { text-decoration: underline; } h1 { font-size: 22px; margin: 0 0 4px; } h2 { font-size: 15px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 28px 0 8px; }",
-    "pre, code { font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; } pre { background: var(--code); padding: 14px 16px; border-radius: 8px; overflow-x: auto; }",
-    "table { border-collapse: collapse; width: 100%; } td { padding: 6px 8px; border-top: 1px solid var(--line); vertical-align: top; } td.kind { color: var(--muted); width: 1%; white-space: nowrap; }",
-    ".kw { color: var(--kw); } .str { color: var(--str); } .ty { color: var(--ty); } .cm { color: var(--muted); font-style: italic; } .muted { color: var(--muted); } .hash { color: var(--muted); font-size: 12px; }",
-    ".pass { color: var(--str); } .fail { color: var(--kw); } input#q { flex: 1; min-width: 160px; max-width: 360px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--fg); }",
-    ".search { position: relative; flex: 1; max-width: 360px; } .search input { width: 100%; } #results { position: absolute; top: 100%; left: 0; right: 0; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; max-height: 60vh; overflow: auto; z-index: 1; } #results:empty { display: none; } #results a { display: block; padding: 4px 10px; }"]
-
-/-- Search over `names.json`, relative to the page's depth. -/
-def search (root : Text) : Text :=
-  "<div class=search><input id=q placeholder=\"Search names\" autocomplete=off><div id=results></div></div><script>" ++
-  "let names=null;const q=document.getElementById('q'),r=document.getElementById('results');" ++
-  "q.addEventListener('input',async()=>{names??=await (await fetch('" ++ root ++ "names.json')).json();" ++
-  "const t=q.value.toLowerCase();r.innerHTML=t?names.filter(n=>n.name.toLowerCase().includes(t)).slice(0,40)" ++
-  ".map(n=>`<a href=\"" ++ root ++ "def/${n.hash}.html\">${n.name} <span class=muted>${n.kind}</span></a>`).join(''):'';});</script>"
-
-def page (root : Text) (project : Text) (title : Text) (body : Text) : Text :=
-  "<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content=\"width=device-width, initial-scale=1\"><title>" ++ escape title ++
-  "</title><style>" ++ style ++ "</style></head><body><header><a class=home href=\"" ++ root ++ "index.html\">" ++ escape project ++ "</a>" ++
-  search root ++ "</header><main>" ++ body ++ "</main></body></html>"
-
-/-- Directories of a dotted name: `List.map` is in `List`. -/
-def parentOf (name : Text) : Text :=
-  let parts := Text.split name "."
-  Text.join "." (List.take (List.length parts - 1) parts)
-
-def lastOf (name : Text) : Text := Option.getOr (List.last? (Text.split name ".")) name
-
-def defLink (root : Text) (name : Text) (h : Text) : Text := "<a href=\"" ++ root ++ "def/" ++ attr h ++ ".html\">" ++ escape name ++ "</a>"
-
-def nsLink (root : Text) (ns : Text) : Text :=
-  "<a href=\"" ++ root ++ (if Text.isEmpty ns then "index" else "ns/" ++ attr ns) ++ ".html\">" ++ escape (if Text.isEmpty ns then "(root)" else ns) ++ "</a>"
-
-/-- The first line of a doc comment. -/
-def summary (doc : Option Text) : Text :=
-  match doc with
-  | some d => escape (Option.getOr (List.head? (List.filter (fun l => not (Text.isEmpty l)) (List.map Text.trim (Text.lines d)))) "")
-  | none => ""
 
 def signature (dir : Text) (h : Text) : {IO} Text :=
   Option.getOr (Option.map (fun s => Types.displayScheme s) (Codebase.metaField (Codebase.readMeta dir h) "scheme")) ""
 
 def docOf (dir : Text) (h : Text) : {IO} Option Text := Option.map Sexp.asText (Codebase.metaField (Codebase.readMeta dir h) "doc")
 
-/-- Names that are not hidden: not constructors' and operations' own pages, not `lib` mounts' internals. -/
+/-- Names that are not hidden: not constructors' and operations' own pages. -/
 def visible (pair : (Text, Entry)) : Bool :=
   match snd pair with
   | Entry.ctor _ _ _ => false
   | Entry.op _ _ _ => false
   | _ => true
 
-def namespaceRows (dir : Text) (root : Text) (entries : List (Text, Entry)) (children : List Text) : {IO} Text :=
-  let nsRows := List.map (fun c => "<tr><td class=kind>namespace</td><td>" ++ nsLink root c ++ "</td><td></td></tr>") children
-  let defRows := List.map (fun pair =>
-    match pair with
-    | (name, e) =>
-      let h := Entry.hash e
-      let sig := signature dir h
-      "<tr><td class=kind>" ++ Entry.kind e ++ "</td><td>" ++ defLink root (lastOf name) h ++
-        (if Text.isEmpty sig then "" else " <code class=muted>: " ++ escape sig ++ "</code>") ++
-        "</td><td class=muted>" ++ summary (docOf dir h) ++ "</td></tr>") entries
-  "<table>" ++ Text.concat (nsRows ++ defRows) ++ "</table>"
+def lastOf (name : Text) : Text := Option.getOr (List.last? (Text.split name ".")) name
 
-def verdictOf (dir : Text) (h : Text) : {IO} Text :=
-  match IO.readFile (dir ++ "/results/" ++ h) with
-  | some text =>
-    let v := Text.trim text
-    if Text.startsWith "(pass" v then "<span class=pass>" ++ escape v ++ "</span>" else "<span class=fail>" ++ escape v ++ "</span>"
-  | none => "<span class=muted>not checked</span>"
+def verdictOf (dir : Text) (h : Text) : {IO} Text := Text.trim (Option.getOr (IO.readFile (dir ++ "/results/" ++ h)) "")
 
-def taskLink (root : Text) (t : Task) : Text := "<a href=\"" ++ root ++ "task/" ++ attr t.id ++ ".html\">" ++ escape t.title ++ "</a>"
+def changeJson (dir : Text) (pair : (Text, Causal)) : {IO} Json :=
+  Json.obj ([("causal", Json.str (fst pair)), ("message", Json.str (snd pair).message)] ++
+    Option.getOr (Option.map (fun agent => [("by", Json.str agent)]) (Cli.producedBy dir (fst pair))) [])
 
-def taskRows (root : Text) (tasks : List Task) : Text :=
-  if List.isEmpty tasks then "<p class=muted>none</p>"
-  else "<table>" ++ Text.concat (List.map (fun t =>
-    "<tr><td class=kind>" ++ Tasks.stateText t.state ++ "</td><td class=kind>" ++ Tasks.priorityText t.priority ++ "</td><td>" ++ taskLink root t ++
-      (if List.isEmpty t.labels then "" else " <span class=muted>" ++ escape (Text.join ", " t.labels) ++ "</span>") ++
-      (if Text.isEmpty t.assignee then "" else " <span class=muted>@" ++ escape t.assignee ++ "</span>") ++ "</td></tr>") tasks) ++ "</table>"
+def refJson (name : Text) (h : Text) : Json := Json.obj [("name", Json.str name), ("hash", Json.str h)]
 
-/-- Writes the site for the current branch to `out`; returns the number of pages. -/
+def taskJson (dir : Text) (ns : Map Text Entry) (t : Task) : {IO, Throw Text} Json :=
+  let link := fun (a : Attachment) =>
+    match a with
+    | Attachment.definition name linked =>
+      Json.obj [("definition", Json.str name), ("hash", Json.str linked), ("current", Option.getOr (Option.map (fun e => Json.str (Entry.hash e)) (Map.lookup name ns)) Json.null)]
+    | Attachment.change h =>
+      let message := match Codebase.readObject dir h with
+        | some form => (Codebase.causalFromSexp form).message
+        | none => ""
+      Json.obj [("change", Json.str h), ("message", Json.str message)]
+  Json.obj [("id", Json.str t.id), ("title", Json.str t.title), ("state", Json.str (Tasks.stateText t.state)), ("priority", Json.num t.priority),
+    ("assignee", Json.str t.assignee), ("labels", Json.arr (List.map Json.str t.labels)), ("parent", Json.str t.parent), ("details", Json.str t.details),
+    ("links", Json.arr (List.map link t.links)), ("comments", Json.arr (List.map (fun c => Json.obj [("author", Json.str c.author), ("note", Json.str c.note)]) t.comments)),
+    ("history", Json.arr (List.map (changeJson dir) (Tasks.historyOf dir t.id 200)))]
+
+/-- The app's files, from the toolchain's sources. -/
+def appFiles : List Text := ["index.html", "app.js", "app.css"]
+
+/-- Writes the explorer for the current branch to `out`; returns the number of definitions. -/
 def generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
+  let home := match IO.getEnv "DEUS_HOME" with
+    | some h => h
+    | none => throw "$DEUS_HOME is not set; run deus through bin/deus.mjs"
   let ns := Codebase.current dir
   let entries := List.filter visible (Map.toList ns)
   let index := Codebase.nameIndex ns
-  let nameOf := fun (h : Text) => Option.getOr (Map.lookup h index) (Cli.short h)
   let printer := Print.printer ns []
   let project := match Project.read dir with
     | some p => p.projectIri
     | none => "codebase"
-  -- Namespaces: every proper prefix of a name.
-  let namespaces := List.dedup (List.sort (List.concatMap (fun pair =>
-    let parts := Text.split (fst pair) "."
-    List.map (fun k => Text.join "." (List.take k parts)) (List.range 1 (List.length parts))) entries))
-  let childrenOf := fun (parent : Text) =>
-    List.filter (fun n => parentOf n == parent) namespaces
-  let membersOf := fun (parent : Text) =>
-    List.filter (fun pair => parentOf (fst pair) == parent) entries
   -- Dependents, inverted once from every definition's dependencies.
   let dependents := List.foldl (fun m pair =>
     let h := Entry.hash (snd pair)
@@ -128,22 +75,19 @@ def generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
     | none => m) Map.empty entries
   let tasks := List.sortBy Tasks.order (Map.values (Tasks.current dir))
   let taskMap := Map.fromList (List.map (fun t => (t.id, t)) tasks)
-  IO.mkdirp (out ++ "/ns")
   IO.mkdirp (out ++ "/def")
-  IO.mkdirp (out ++ "/task")
-  let history := Codebase.history dir (Codebase.currentBranch dir) 15
-  let historyRows := Text.concat (List.map (fun pair =>
-    match pair with
-    | (h, c) => "<tr><td class=hash>" ++ Cli.short h ++ "</td><td>" ++ escape c.message ++ Option.getOr (Option.map (fun agent => " <span class=muted>by " ++ escape agent ++ "</span>") (Cli.producedBy dir h)) "" ++ "</td></tr>") history)
-  let branches := Text.join ", " (List.map (fun b => if b == Codebase.currentBranch dir then "<b>" ++ escape b ++ "</b>" else escape b) (Codebase.branches dir))
-  IO.writeFile (out ++ "/index.html") (page "" project project (
-    "<h1>" ++ escape project ++ "</h1><p class=muted>" ++ Int.toText (List.length entries) ++ " definitions · branches: " ++ branches ++ "</p>" ++
-    "<h2>Namespace</h2>" ++ namespaceRows dir "" (membersOf "") (childrenOf "") ++
-    (if List.isEmpty tasks then "" else "<h2>Open tasks</h2>" ++ taskRows "" (List.filter Tasks.isOpen tasks) ++ "<p><a href=\"tasks.html\">All " ++ Int.toText (List.length tasks) ++ " tasks</a></p>") ++
-    "<h2>History</h2><table>" ++ historyRows ++ "</table>"))
-  List.forEach namespaces (fun n =>
-    IO.writeFile (out ++ "/ns/" ++ n ++ ".html") (page "../" project n (
-      "<p class=muted>" ++ nsLink "../" (parentOf n) ++ "</p><h1>" ++ escape n ++ "</h1>" ++ namespaceRows dir "../" (membersOf n) (childrenOf n))))
+  List.forEach appFiles (fun f =>
+    match IO.readFile (home ++ "/platform/explorer/" ++ f) with
+    | some text => IO.writeFile (out ++ "/" ++ f) text
+    | none => throw ("missing " ++ home ++ "/platform/explorer/" ++ f))
+  let branch := Codebase.currentBranch dir
+  IO.writeFile (out ++ "/meta.json") (Json.render (Json.obj [("project", Json.str project), ("branch", Json.str branch),
+    ("branches", Json.arr (List.map Json.str (Codebase.branches dir))), ("definitions", Json.num (List.length entries)),
+    ("tasks", Json.num (List.length tasks)), ("open", Json.num (List.length (List.filter Tasks.isOpen tasks))),
+    ("history", Json.arr (List.map (changeJson dir) (Codebase.history dir branch 30)))]))
+  IO.writeFile (out ++ "/names.json") (Json.render (Json.arr (List.map (fun pair =>
+    Json.obj [("name", Json.str (fst pair)), ("kind", Json.str (Entry.kind (snd pair))), ("hash", Json.str (Entry.hash (snd pair)))]) entries)))
+  IO.writeFile (out ++ "/tasks.json") (Json.render (Json.arr (List.map (taskJson dir ns) tasks)))
   List.forEach entries (fun pair =>
     match pair with
     | (name, e) =>
@@ -152,59 +96,20 @@ def generate (dir : Text) (out : Text) : {IO, Throw Text} Int :=
         | Result.ok text => Text.join "\n" (List.filter (fun l => not (Text.startsWith "-- " l)) (Text.lines text))
         | Result.err message => "-- " ++ message
       let deps := match Codebase.readObject dir h with
-        | some obj => List.filter (fun d => Map.contains d index) (Codebase.dependencies obj)
+        | some obj => List.filter (fun d => Map.contains d index && d != h) (Codebase.dependencies obj)
         | none => []
+      -- References in the source print under their display names; those names link to the definitions.
+      let links := Map.fromList (List.map (fun d => (Print.nameFor printer d, d)) deps)
       let users := List.dedup (List.sort (Option.getOr (Map.lookup h dependents) []))
-      let links := fun (hs : List Text) => if List.isEmpty hs then "<p class=muted>none</p>" else "<p>" ++ Text.join " · " (List.map (fun x => defLink "../" (nameOf x) x) hs) ++ "</p>"
+      let named := fun (hs : List Text) => Json.arr (List.map (fun x => refJson (Option.getOr (Map.lookup x index) (Cli.short x)) x) hs)
       let sig := signature dir h
-      let checked := match e with
-        | Entry.test _ => "<h2>Verdict</h2><p>" ++ verdictOf dir h ++ "</p>"
-        | Entry.theorem _ => "<h2>Verdict</h2><p>" ++ verdictOf dir h ++ "</p>"
-        | _ => ""
-      let aliases := List.filter (fun other => other != name) (Codebase.namesOf ns h)
-      let about := Tasks.about taskMap name h
-      IO.writeFile (out ++ "/def/" ++ h ++ ".html") (page "../" project name (
-        "<p class=muted>" ++ nsLink "../" (parentOf name) ++ " · " ++ Entry.kind e ++ "</p><h1>" ++ escape name ++ "</h1>" ++
-        "<p class=hash>#" ++ escape h ++ "</p>" ++
-        (if Text.isEmpty sig then "" else "<pre>" ++ Highlight.html (lastOf name ++ " : " ++ sig) ++ "</pre>") ++
-        (if List.isEmpty aliases then "" else "<p class=muted>also named " ++ escape (Text.join ", " aliases) ++ "</p>") ++
-        "<h2>Source</h2><pre>" ++ Highlight.html source ++ "</pre>" ++ checked ++
-        (if List.isEmpty about then "" else "<h2>Tasks</h2>" ++ taskRows "../" about) ++
-        "<h2>Depends on</h2>" ++ links deps ++ "<h2>Used by</h2>" ++ links users)))
-  IO.writeFile (out ++ "/tasks.html") (page "" project "Tasks" ("<h1>Tasks</h1>" ++ taskRows "" tasks))
-  let changeRow := fun (pair : (Text, Causal)) =>
-    "<tr><td class=hash>" ++ Cli.short (fst pair) ++ "</td><td>" ++ escape (snd pair).message ++ Option.getOr (Option.map (fun agent => " <span class=muted>by " ++ escape agent ++ "</span>") (Cli.producedBy dir (fst pair))) "" ++ "</td></tr>"
-  List.forEach tasks (fun t =>
-    let linkRow := fun (a : Attachment) =>
-      match a with
-      | Attachment.definition name linked =>
-        let now := Option.map Entry.hash (Map.lookup name ns)
-        let target := Option.getOr now linked
-        let state := match now with
-          | none => " <span class=muted>no longer named</span>"
-          | some n => if n == linked then "" else " <span class=muted>changed since linked (was #" ++ escape (Text.take 10 linked) ++ ")</span>"
-        "<li>" ++ defLink "../" name target ++ state ++ "</li>"
-      | Attachment.change h =>
-        let message := match Codebase.readObject dir h with
-          | some form => (Codebase.causalFromSexp form).message
-          | none => ""
-        "<li>change <span class=hash>" ++ Cli.short h ++ "</span> " ++ escape message ++ "</li>"
-    let parent := match Map.lookup t.parent taskMap with
-      | some p => " · parent " ++ taskLink "../" p
-      | none => ""
-    let children := List.filter (fun c => c.parent == t.id) tasks
-    IO.writeFile (out ++ "/task/" ++ t.id ++ ".html") (page "../" project t.title (
-      "<p class=muted><a href=\"../tasks.html\">Tasks</a> · " ++ escape t.id ++ "</p><h1>" ++ escape t.title ++ "</h1>" ++
-      "<p>" ++ Tasks.stateText t.state ++ " · " ++ Tasks.priorityText t.priority ++
-        (if Text.isEmpty t.assignee then "" else " · @" ++ escape t.assignee) ++
-        (if List.isEmpty t.labels then "" else " · " ++ escape (Text.join ", " t.labels)) ++ parent ++ "</p>" ++
-      (if Text.isEmpty t.details then "" else "<p>" ++ escape t.details ++ "</p>") ++
-      "<h2>Links</h2>" ++ (if List.isEmpty t.links then "<p class=muted>none</p>" else "<ul>" ++ Text.concat (List.map linkRow t.links) ++ "</ul>") ++
-      (if List.isEmpty children then "" else "<h2>Subtasks</h2>" ++ taskRows "../" children) ++
-      (if List.isEmpty t.comments then "" else "<h2>Comments</h2>" ++ Text.concat (List.map (fun c => "<p><b>" ++ escape c.author ++ "</b>: " ++ escape c.note ++ "</p>") t.comments)) ++
-      "<h2>History</h2><table>" ++ Text.concat (List.map changeRow (Tasks.historyOf dir t.id 200)) ++ "</table>")))
-  IO.writeFile (out ++ "/names.json") (Json.render (Json.arr (List.map (fun pair =>
-    Json.obj [("name", Json.str (fst pair)), ("kind", Json.str (Entry.kind (snd pair))), ("hash", Json.str (Entry.hash (snd pair)))]) entries)))
-  2 + List.length namespaces + List.length entries + List.length tasks
+      IO.writeFile (out ++ "/def/" ++ h ++ ".json") (Json.render (Json.obj [("name", Json.str name), ("kind", Json.str (Entry.kind e)), ("hash", Json.str h),
+        ("aliases", Json.arr (List.map Json.str (List.filter (fun other => other != name) (Codebase.namesOf ns h)))),
+        ("signature", Json.str (if Text.isEmpty sig then "" else lastOf name ++ " : " ++ sig)),
+        ("doc", Option.getOr (Option.map Json.str (docOf dir h)) Json.null),
+        ("html", Json.str (Highlight.htmlLinked links source)), ("deps", named deps), ("users", named users),
+        ("verdict", Json.str (verdictOf dir h)),
+        ("tasks", Json.arr (List.map (fun t => Json.obj [("id", Json.str t.id), ("title", Json.str t.title), ("state", Json.str (Tasks.stateText t.state))]) (Tasks.about taskMap name h)))])))
+  List.length entries
 
 end Explorer

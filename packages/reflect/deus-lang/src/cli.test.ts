@@ -578,10 +578,16 @@ describe('deus CLI', () => {
         JSON.parse(deus('task', 'list', '--all', '--json', ...copy).stdout).map((row: TaskRow) => row.title),
       ).toEqual(['Doc B', 'Square overflows']);
 
+      // The explorer's task board reads tasks.json: links resolved against the current names, and history.
+      process.env.DEUS_HOME = root;
       const site = join(scratch, 'tasks-site');
       deus('explore', '--out', site, ...c);
-      expect(readFileSync(join(site, 'task', `${bug.id}.html`), 'utf8')).toContain('changed since linked');
-      expect(readFileSync(join(site, 'index.html'), 'utf8')).toContain(`task/${docs.id}.html`);
+      const board = JSON.parse(readFileSync(join(site, 'tasks.json'), 'utf8'));
+      const shownBug = board.find((row: { id: string }) => row.id === bug.id);
+      expect(shownBug.state).toBe('done');
+      expect(shownBug.links[0].current).not.toBe(shownBug.links[0].hash);
+      expect(shownBug.history).toHaveLength(4);
+      expect(JSON.parse(readFileSync(join(site, 'meta.json'), 'utf8'))).toMatchObject({ tasks: 2, open: 1 });
     },
   );
 
@@ -597,10 +603,11 @@ describe('deus CLI', () => {
       'end Shapes',
     ];
     deus('add', file('shapes.deus', shapes.join('\n')), ...c);
+    process.env.DEUS_HOME = root;
     const out = join(scratch, 'explore-site');
     const written = deus('explore', '--out', out, '--json', ...c);
     expect(written.stderr).toBe('');
-    expect(JSON.parse(written.stdout).pages).toBeGreaterThan(10);
+    expect(JSON.parse(written.stdout).definitions).toBeGreaterThan(10);
 
     const names: { name: string; kind: string; hash: string }[] = JSON.parse(
       readFileSync(join(out, 'names.json'), 'utf8'),
@@ -609,24 +616,32 @@ describe('deus CLI', () => {
     const square = names.find((entry) => entry.name === 'Shapes.square');
     const map = names.find((entry) => entry.name === 'List.map');
     expect(area?.kind).toBe('term');
-    const page = readFileSync(join(out, 'def', `${area?.hash}.html`), 'utf8');
-    expect(page).toContain('<span class=cm>/-- The area of a square. -/</span>');
-    expect(page).toContain(`href="../def/${square?.hash}.html"`);
-    expect(readFileSync(join(out, 'def', `${square?.hash}.html`), 'utf8')).toContain(
-      `href="../def/${area?.hash}.html"`,
-    );
-    expect(readFileSync(join(out, 'ns', 'Shapes.html'), 'utf8')).toContain(`../def/${area?.hash}.html`);
-    expect(readFileSync(join(out, 'index.html'), 'utf8')).toContain('ns/List.html');
+    // Each definition is a JSON document: its source highlighted, with references opening their definitions.
+    const page = readFileSync(join(out, 'def', `${area?.hash}.json`), 'utf8');
+    const def = JSON.parse(page);
+    expect(def.html).toContain('<span class=cm>/-- The area of a square. -/</span>');
+    expect(def.html).toContain(`<a class=ref data-open="d:${square?.hash}">square</a>`);
+    expect(def.deps).toEqual([{ name: 'Shapes.square', hash: square?.hash }]);
+    expect(JSON.parse(readFileSync(join(out, 'def', `${square?.hash}.json`), 'utf8')).users).toEqual([
+      { name: 'Shapes.area', hash: area?.hash },
+    ]);
+    expect(readFileSync(join(out, 'index.html'), 'utf8')).toContain('<script type="module" src="app.js">');
     expect(map?.kind).toBe('term');
 
     const remote = join(scratch, 'explore-remote');
     deus('remote', 'add', 'origin', remote, ...c);
     const published = JSON.parse(deus('explore', '--out', out, '--publish', 'origin', '--json', ...c).stdout);
-    expect(published.files).toBe(readdirSync(join(out, 'def')).length + readdirSync(join(out, 'ns')).length + 3);
+    // The app's three files, meta, names and tasks, and one file per definition.
+    expect(published.files).toBe(readdirSync(join(out, 'def')).length + 6);
     expect(published.uploaded).toBe(published.files);
-    expect(readFileSync(join(remote, 'site', 'def', `${area?.hash}.html`), 'utf8')).toBe(page);
+    expect(readFileSync(join(remote, 'site', 'def', `${area?.hash}.json`), 'utf8')).toBe(page);
     // Republishing sends only what changed.
     expect(JSON.parse(deus('explore', '--out', out, '--publish', 'origin', '--json', ...c).stdout).uploaded).toBe(0);
+    // A push to a remote that hosts the explorer refreshes it: the new definition's page and the indexes.
+    deus('add', file('extra.deus', 'def Shapes.unit : Int := 1\n'), ...c);
+    const pushed = JSON.parse(deus('push', 'origin', '--json', ...c).stdout);
+    expect(pushed.site).toBeGreaterThanOrEqual(3);
+    expect(readFileSync(join(remote, 'site', 'names.json'), 'utf8')).toContain('Shapes.unit');
   });
 
   test(

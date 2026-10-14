@@ -586,9 +586,18 @@ def push (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let name := remoteName args
   let branch := Option.getOr (option args "branch") (Codebase.currentBranch dir)
-  match withRemote dir name (fun _ => Replicate.push dir name branch) with
-  | some bundle => output args (fun _ => Json.obj [("bundle", Json.str bundle)]) (fun _ => "Pushed " ++ branch ++ " to " ++ name ++ " as " ++ bundle ++ ".")
-  | none => output args (fun _ => Json.obj [("bundle", Json.null)]) (fun _ => name ++ " already has " ++ branch ++ ".")
+  let pushed := withRemote dir name (fun _ => Replicate.push dir name branch)
+  -- A remote that hosts the explorer (`explore --publish`) gets it refreshed with each push of the current branch.
+  let site := if IO.exists (siteManifest dir name) && branch == Codebase.currentBranch dir then
+      let out := dir ++ "/cache/site-" ++ name
+      let _ := Explorer.generate dir out
+      some (snd (publishSite dir name out false))
+    else none
+  let siteJson := Option.getOr (Option.map (fun n => [("site", Json.num n)]) site) []
+  let siteText := Option.getOr (Option.map (fun n => " Refreshed the explorer (" ++ Int.toText n ++ " files changed).") site) ""
+  match pushed with
+  | some bundle => output args (fun _ => Json.obj ([("bundle", Json.str bundle)] ++ siteJson)) (fun _ => "Pushed " ++ branch ++ " to " ++ name ++ " as " ++ bundle ++ "." ++ siteText)
+  | none => output args (fun _ => Json.obj ([("bundle", Json.null)] ++ siteJson)) (fun _ => name ++ " already has " ++ branch ++ "." ++ siteText)
 
 /-- `deus pull [remote]`: imports new bundles and moves `<remote>.<branch>` to the remote's heads. -/
 def pull (args : Args) : {IO, Throw Text} Unit :=
@@ -836,6 +845,27 @@ def filesUnder (dir : Text) (prefix : Text) : {IO} List Text :=
     let path := if Text.isEmpty prefix then f else prefix ++ "/" ++ f
     if IO.isDir (dir ++ "/" ++ path) then filesUnder dir path else [path]) (IO.listDir (if Text.isEmpty prefix then dir else dir ++ "/" ++ prefix))
 
+/-- Where `--publish` records what it uploaded to a remote; its presence means the remote hosts a site. -/
+def siteManifest (dir : Text) (name : Text) : Text := dir ++ "/cache/site-" ++ name ++ ".sums"
+
+/--
+  Uploads the explorer in `out` beside a remote's bundles, under `site/`. Files are compared by
+  content hash with the last upload, so a republish sends only what changed (`force` sends all).
+  Returns (files, uploaded).
+-/
+def publishSite (dir : Text) (name : Text) (out : Text) (force : Bool) : {IO, Throw Text} (Int, Int) :=
+  let manifest := siteManifest dir name
+  let previous := if force then Map.empty else
+    Map.fromList (List.filterMap (fun line =>
+      match Text.split line " " with
+      | [sum, path] => some (path, sum)
+      | _ => none) (Text.lines (Option.getOr (IO.readFile manifest) "")))
+  let sums := List.map (fun f => (f, Text.sha256 (Option.getOr (IO.readFile (out ++ "/" ++ f)) ""))) (filesUnder out "")
+  let changed := List.filter (fun pair => Map.lookup (fst pair) previous != some (snd pair)) sums
+  withRemote dir name (fun _ => Remote.writeAll (List.map (fun pair => ("site/" ++ fst pair, Option.getOr (IO.readFile (out ++ "/" ++ fst pair)) "")) changed))
+  IO.writeFile manifest (Text.concat (List.map (fun pair => snd pair ++ " " ++ fst pair ++ "\n") sums))
+  (List.length sums, List.length changed)
+
 /--
   `deus explore [--out dir] [--port n] [--publish remote]` (D58): writes the codebase explorer
   for the current branch, then serves it locally, or uploads it next to a remote's bundles
@@ -847,21 +877,12 @@ def explore (args : Args) : {IO, Throw Text} Unit :=
   let pages := Explorer.generate dir out
   match (option args "publish", option args "out") with
   | (some name, _) =>
-    -- What was uploaded before, by content hash, so a republish sends only changed pages (`--force` sends all).
-    let manifest := dir ++ "/cache/site-" ++ name ++ ".sums"
-    let previous := if flag args "force" then Map.empty else
-      Map.fromList (List.filterMap (fun line =>
-        match Text.split line " " with
-        | [sum, path] => some (path, sum)
-        | _ => none) (Text.lines (Option.getOr (IO.readFile manifest) "")))
-    let sums := List.map (fun f => (f, Text.sha256 (Option.getOr (IO.readFile (out ++ "/" ++ f)) ""))) (filesUnder out "")
-    let changed := List.filter (fun pair => Map.lookup (fst pair) previous != some (snd pair)) sums
-    withRemote dir name (fun _ => Remote.writeAll (List.map (fun pair => ("site/" ++ fst pair, Option.getOr (IO.readFile (out ++ "/" ++ fst pair)) "")) changed))
-    IO.writeFile manifest (Text.concat (List.map (fun pair => snd pair ++ " " ++ fst pair ++ "\n") sums))
-    output args (fun _ => Json.obj [("pages", Json.num pages), ("remote", Json.str name), ("files", Json.num (List.length sums)), ("uploaded", Json.num (List.length changed))])
-      (fun _ => "Published " ++ Int.toText (List.length changed) ++ " changed of " ++ Int.toText (List.length sums) ++ " files to " ++ name ++ " under site/ (open site/index.html at the bucket's public URL).")
+    match publishSite dir name out (flag args "force") with
+    | (files, uploaded) =>
+      output args (fun _ => Json.obj [("definitions", Json.num pages), ("remote", Json.str name), ("files", Json.num files), ("uploaded", Json.num uploaded)])
+        (fun _ => "Published " ++ Int.toText uploaded ++ " changed of " ++ Int.toText files ++ " files to " ++ name ++ " under site/ (open site/index.html at the bucket's public URL).")
   | (none, some _) =>
-    output args (fun _ => Json.obj [("pages", Json.num pages), ("out", Json.str out)]) (fun _ => "Wrote " ++ Int.toText pages ++ " pages to " ++ out ++ ".")
+    output args (fun _ => Json.obj [("definitions", Json.num pages), ("out", Json.str out)]) (fun _ => "Wrote the explorer for " ++ Int.toText pages ++ " definitions to " ++ out ++ ".")
   | (none, none) =>
     let image := siteImage ()
     let server := dir ++ "/artifacts/site-server-" ++ Text.sha256 image
@@ -872,7 +893,7 @@ def explore (args : Args) : {IO, Throw Text} Unit :=
     | Result.err f => throw (Failure.render f)
     | Result.ok _ =>
       let port := Option.getOr (option args "port") "8080"
-      IO.eprint ("Wrote " ++ Int.toText pages ++ " pages; exploring on http://127.0.0.1:" ++ port ++ "\n")
+      IO.eprint ("Wrote the explorer for " ++ Int.toText pages ++ " definitions; exploring on http://127.0.0.1:" ++ port ++ "\n")
       match IO.exec "env" ["PORT=" ++ port, "DEUS_SITE=" ++ out, server] with
       | (code, _, err) =>
         IO.eprint err

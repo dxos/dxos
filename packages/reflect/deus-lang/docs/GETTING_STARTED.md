@@ -304,19 +304,25 @@ since then, and links the change that closed it.
 Tasks branch and merge with the code: a task closed on a fix branch is closed when the branch
 merges.
 
-`deus explore` turns the codebase into a website. It has a page for every namespace,
-definition and task, with highlighted source, links between definitions and their dependents,
-and a search box:
+`deus explore` opens the codebase in a browser. The sidebar has the namespace tree and a search
+over names and tasks. Each definition or task you open becomes a card in one workspace, so several
+can be read side by side, and the open cards stay in the URL. A definition card shows its
+signature and highlighted source, where each reference opens the definition it names. It also
+lists the definition's dependencies, dependents and tasks. The Tasks view is a board with a
+column per state.
 
 ```bash
 deus explore                        # serves it on http://127.0.0.1:8080
-deus explore --out site             # or writes the static pages
+deus explore --out site             # or writes the files
 deus explore --publish origin       # or uploads them beside a remote's bundles
 ```
 
 A remote can be a directory or an R2 bucket (`deus remote add origin r2://bucket/prefix`). With a
-public bucket, `--publish` hosts the site, and a republish uploads only the pages that changed.
-The toolchain's own codebase is published at
+public bucket, `--publish` hosts the explorer, and a republish uploads only the files that
+changed. From then on, every `deus push` to that remote refreshes it. To give it a URL of its own,
+deploy [`platform/explorer-worker/`](../platform/explorer-worker) with `ORIGIN` set to the bucket's
+public `site/` URL. That Worker is a cache in front of the bucket, so it never needs redeploying.
+The toolchain's own codebase, with its tasks, is published at
 <https://pub-39066a86073446d7b77b1c157b660bb5.r2.dev/deus/explorer-demo/site/index.html>.
 
 ## Where to go next

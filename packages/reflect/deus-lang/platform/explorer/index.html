@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DEUS codebase</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="app.css" />
+  </head>
+  <body>
+    <aside id="sidebar">
+      <a id="project" href="#"></a>
+      <input id="search" type="search" placeholder="Search names" autocomplete="off" />
+      <nav id="views">
+        <button data-view="code" class="active">Code</button>
+        <button data-view="tasks">Tasks <span id="open-count"></span></button>
+      </nav>
+      <div id="tree"></div>
+    </aside>
+    <main id="workspace">
+      <section id="board" hidden></section>
+      <section id="cards"></section>
+      <section id="overview"></section>
+    </main>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

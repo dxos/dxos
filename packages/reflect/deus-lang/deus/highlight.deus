@@ -47,6 +47,18 @@ def html (source : Text) : Text :=
     | ("plain", t) => escape t
     | (kind, t) => "<span class=" ++ kind ++ ">" ++ escape t ++ "</span>") (runs source))
 
+/-- HTML in which names found in `links` (display name -> hash) open that definition. -/
+def htmlLinked (links : Map Text Text) (source : Text) : Text :=
+  Text.concat (List.map (fun run =>
+    match run with
+    | (kind, t) =>
+      let inner := if kind == "plain" then escape t else "<span class=" ++ kind ++ ">" ++ escape t ++ "</span>"
+      if kind == "plain" || kind == "ty" then
+        match Map.lookup t links with
+        | some h => "<a class=ref data-open=\"d:" ++ h ++ "\">" ++ inner ++ "</a>"
+        | none => inner
+      else inner) (runs source))
+
 def esc : Text := Text.fromCode 27
 
 /-- ANSI colours: keywords magenta, strings green, comments dim, types cyan. -/
