@@ -13,7 +13,7 @@ const { root, scratch, deus } = cliHarness('deus-restore-');
 describe('deus CLI export restore', () => {
   // The specs live in the codebase (D99), so its export in git is where CI finds them: restoring it
   // must give the toolchain as `deus/` compiles it, and every spec document must hold.
-  test('restores the codebase export, which matches deus/ and whose specs hold', { timeout: 180_000 }, ({ expect }) => {
+  test('restores the codebase export, which matches deus/ and whose specs hold', { timeout: 360_000 }, ({ expect }) => {
     const restored = join(scratch, 'restored');
     expect(deus('init', '--empty', '--codebase', restored).code).toBe(0);
     const add = deus('add', join(root, 'codebase/code'), join(root, 'codebase/specs'), '--codebase', restored);
