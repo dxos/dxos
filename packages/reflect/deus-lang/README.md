@@ -8,7 +8,8 @@ types. Its compiler, CLI and codebase manager are written in DEUS.
 deus/*.deus  ──compile (the seed runs the compiler)──▶  seed/deus.image  ──run──▶  src/kernel (TypeScript)
 ```
 
-- `deus/` — the toolchain, in DEUS: lexer, parser, resolver, hasher, codebase store, CLI.
+- `deus/` — the toolchain, in DEUS: lexer, parser, resolver, type checker, prover, hasher,
+  codebase store, projects, replication, MDL, the wasm compiler and the CLI.
 - `seed/deus.image` — the compiled image of the toolchain. Compiling `deus/` with it must
   reproduce it byte for byte (`src/seed.test.ts`).
 - `src/kernel/` — the only TypeScript: a CEK machine for [Core](./docs/CORE.md), primitives and
@@ -20,7 +21,21 @@ deus/*.deus  ──compile (the seed runs the compiler)──▶  seed/deus.imag
 node bin/deus.mjs compile deus --main Cli.main -o out.seed   # the compiler compiling itself
 node bin/deus.mjs build Cli.main -o deus --native            # the CLI as a 1.6 MB executable
 node bin/deus.mjs build Counter.serve -o out --worker        # an actor as a Cloudflare Worker
+node bin/deus.mjs build gcd -o gcd.wasm --wasm               # first-order code compiled to wasm
 ```
+
+A session in a codebase:
+
+```bash
+deus init && deus project init https://example.org/app      # a project, named by an IRI
+deus lib install std ../std                                  # a pinned release under lib.std
+deus add src/ --by agent-x                                   # .deus files and .mdl specs
+deus test && deus check && deus mdl                          # tests, theorems, spec blocks
+deus remote add origin r2://agent-artifacts/deus/app         # or a directory
+deus push && deus pull && deus compact                       # immutable bundles, compacted
+```
+
+`deus help` lists every command; [`docs/LLM.md`](./docs/LLM.md) is the agent's guide.
 
 ## Examples
 
@@ -30,6 +45,8 @@ node bin/deus.mjs build Counter.serve -o out --worker        # an actor as a Clo
 - [`examples/counter.deus`](./examples/counter.deus) — a Cloudflare Durable Object, tested in
   simulation and served on local workerd (`scripts/worker-test.sh`); the platform's ontology is
   [`platform/cloudflare.deus`](./platform/cloudflare.deus).
+- [`examples/perf.mdl`](./examples/perf.mdl) — performance requirements on the sort, checked by
+  the `perf` extension ([`platform/perf.deus`](./platform/perf.deus)) in machine steps.
 - [`editors/vscode/`](./editors/vscode) — syntax highlighting for VS Code and TextMate renderers.
 
 ## Docs

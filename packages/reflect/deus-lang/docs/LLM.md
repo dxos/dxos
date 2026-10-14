@@ -50,6 +50,8 @@ export DEUS_CODEBASE=$PWD/.deus     # or pass --codebase <dir>
    deus check --json                # theorems: evidence level and any counterexample
    deus mdl docs/ --json            # spec blocks (e.g. perf budgets) through their extensions
    deus eval 'Code.cost (fun _ => f x)'   # the steps an expression takes, to set a budget
+   deus project --json              # the project's IRI, libraries and owned subgraph
+   deus layers --json               # objects per layer (spec, code, tests, proofs, results, …)
    ```
 
    A defect, in a test or under `deus run` (exit 70), names the definitions it passed through,
