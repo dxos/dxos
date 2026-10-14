@@ -7,6 +7,7 @@ import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { StoryRole, StorySettingsToolbar } from '../modules/index.ts';
 import {
@@ -61,15 +62,16 @@ const companion = (variant: string) => ({
  * 6. Reload: the space, the binding and the conversation are still there.
  */
 export const Setup: Story = {
-  // Rows, not a fragment: `ModuleContainer` pins itself to its nearest positioned ancestor, so a bare sibling of the
-  // toolbar would cover it.
   render: (args) => (
-    <div className='dx-grow grid grid-rows-[min-content_1fr]'>
-      <StorySettingsToolbar />
-      <div className='relative'>
+    <Panel.Root>
+      <Panel.Header>
+        <StorySettingsToolbar />
+      </Panel.Header>
+      {/* `ModuleContainer` pins itself to its nearest positioned ancestor, so the body is that ancestor. */}
+      <Panel.Body classNames='relative'>
         <ModuleContainer {...args} />
-      </div>
-    </div>
+      </Panel.Body>
+    </Panel.Root>
   ),
   decorators: createDecorators<StoryArgs>(({ args }) => ({
     config: storyConfig({ persistent: args.persistent }),

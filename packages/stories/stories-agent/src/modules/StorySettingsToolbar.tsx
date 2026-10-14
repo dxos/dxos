@@ -13,25 +13,10 @@ import * as Icon from '@dxos/react-ui/Icon';
 import * as Select from '@dxos/react-ui/Select';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import {
-  EDGE_ENVIRONMENTS,
-  type EdgeEnvironment,
-  getEdgeEnvironment,
-  setEdgeEnvironment,
-} from '../testing/story-settings.ts';
+import { EDGE_ENVIRONMENTS, getEdgeEnvironment, setEdgeEnvironment } from '../testing/story-settings.ts';
 
-const EDGE_LABELS: Record<EdgeEnvironment, string> = {
-  local: 'Local',
-  dev: 'Dev',
-  preview: 'Preview',
-  production: 'Production',
-};
-
-/** Each environment with the host it reaches (`dev.dxos.network`), so the choice names where the client connects. */
-const EDGE_ITEMS = EDGE_ENVIRONMENTS.map((value) => ({
-  value,
-  label: `${EDGE_LABELS[value]} · ${new URL(EDGE_URLS[value]).host}`,
-}));
+/** Each environment by the host it reaches (`dev.dxos.network`), which names where the client connects. */
+const EDGE_ITEMS = EDGE_ENVIRONMENTS.map((value) => ({ value, label: new URL(EDGE_URLS[value]).host }));
 
 /** The client's EDGE connection as it reports it, about once a second while connected; `undefined` until the first report. */
 const useEdgeStatus = (): EdgeStatus | undefined => {

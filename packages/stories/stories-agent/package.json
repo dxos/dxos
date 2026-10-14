@@ -17,6 +17,7 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant": "workspace:*",
+    "@dxos/config": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-agent": "workspace:*",
@@ -34,7 +35,6 @@
     "react-dom": "catalog:"
   },
   "devDependencies": {
-    "@dxos/config": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/link": "workspace:*",
