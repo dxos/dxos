@@ -19,18 +19,6 @@ api A-1: generating a site
   - Explorer.console : Text -> Text -> {IO, Throw Text} Int
   - Explorer.pageOf : Text -> Text
   - Explorer.visible : (Text, Entry) -> Bool
-  - Explorer.snapshotFiles : Text -> {IO} List Text
-```
-
-```mdl
-api A-2: writing from the explorer (D82)
-  signatures:
-  - Comments.isSubject : Text -> Bool
-  - Comments.add : Text -> List (Text, task:Comment) -> Text -> {IO, Throw Text} Text
-  - Comments.current : Text -> {IO, Throw Text} Map Text (List task:Comment)
-  - Assets.isHash : Text -> Bool
-  - Inbox.applyOne : Text -> Sexp -> {IO, Throw Text} Text
-  - Inbox.apply : Text -> {replicate:Remote, IO, Throw Text} List Text
 ```
 
 ```mdl
@@ -44,33 +32,8 @@ law L-2: a hash's page is its own page
 ```
 
 ```mdl
-law L-3: a subject is def: or change: followed by something
-  theorem: Explorer.Spec.subjectsNameSomething
-```
-
-```mdl
-law L-4: an asset name is 64 lowercase hex digits
-  theorem: Explorer.Spec.assetNamesAreLong
-```
-
-```mdl
 req R-1: names.json lists every visible name once, sorted by name; constructors and operations are hidden
   by: Explorer.Spec.namesAreTheVisibleNames
-```
-
-```mdl
-req R-10: a console snapshot holds the codebase but not its local state, binary assets or remote bookkeeping
-  by: Explorer.Spec.snapshotSkipsLocalState
-```
-
-```mdl
-req R-11: meta.json says whether the site has a console
-  by: Explorer.Spec.metaNamesTheConsole
-```
-
-```mdl
-req R-12: the inbox refuses a request not signed by a GitHub user, and changes nothing
-  by: Explorer.Spec.inboxRefusesStrangers
 ```
 
 ```mdl
@@ -101,14 +64,4 @@ req R-6: generating twice writes the same files
 ```mdl
 req R-7: a test or theorem shows its cached verdict, and pass or fail in names.json
   by: Explorer.Spec.verdictsAreShown
-```
-
-```mdl
-req R-8: comments on a definition are kept in the codebase and the site lists them by subject in comments.json
-  by: Explorer.Spec.commentsAreListed
-```
-
-```mdl
-req R-9: the inbox opens a member's task with its labels and its link
-  by: Explorer.Spec.inboxOpensTasks
 ```

@@ -1,5 +1,5 @@
 /-
-  React for the js target (D96). Components are DEUS functions from props to an element that
+  React for the js target (D97). Components are DEUS functions from props to an element that
   may perform `Hooks`; the type checker then keeps hooks inside components, which is React's rule
   of hooks as a type. `React.component` turns such a function into a React component: each render
   runs it under a handler that answers `Hooks` with React's own hooks, resuming at once, so the

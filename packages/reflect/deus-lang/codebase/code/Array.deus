@@ -1,7 +1,88 @@
+/-- Writes to two different indices give the same array in either order. -/
+def Array.Spec.commutes (a : Array Int) (i : Int) (j : Int) (v : Int) (w : Int) : Bool :=
+  let n := Array.length a
+  if n == 0 then true else
+    let x := Spec.wrap i n
+    let y := Spec.wrap j n
+    x == y || Array.set (Array.set a x v) y w == Array.set (Array.set a y w) x v
+
+/-- Two arrays are equal exactly when their items are (extensionality). -/
+theorem Array.Spec.equalItems (a : Array Int) (b : Array Int) : a == b == (Sorting.toList a == Sorting.toList b) := by test 200
+
+def Array.Spec.fill (n : Int) : Array Int := Spec.fillGo (Array.make n 0) 0 n
+
+/-- `n` writes in a row, each to the newest array: the use the cost model makes O(1) per write. -/
+def Array.Spec.fillGo (a : Array Int) (i : Int) (n : Int) : Array Int := if i >= n then a else Array.Spec.fillGo (Array.set a i (n - i)) (i + 1) n
+
+/-- Every item of a made array is the value it was made with. -/
+theorem Array.Spec.getMake (n : Int) (x : Int) (i : Int) : prim "implies" (0 <= i) (prim "implies" (i < n) (Array.get (Array.make n x) i == x)) := by simp
+
+/-- Reading any other index gives what the old array had there. -/
+theorem Array.Spec.getSetOther (a : Array Int) (i : Int) (j : Int) (v : Int) : prim "implies" (0 <= i) (prim "implies"
+    (i < Array.length a)
+    (prim "implies" (i != j) (Array.get (Array.set a i v) j == Array.get a j))) := by auto
+
+/-- Reading the index just written gives the value written. -/
+theorem Array.Spec.getSetSame (a : Array Int) (i : Int) (v : Int) : prim "implies" (0 <= i) (prim "implies" (i < Array.length a) (Array.get (Array.set a i v) i == v)) := by simp
+
+def Array.Spec.items (a : Array Int) : List Int := toListGo a (Array.length a - 1) []
+
+/-- The items of `a` from `i` down to 0, onto `acc`. -/
+def Array.Spec.itemsGo (a : Array Int) (i : Int) (acc : List Int) : List Int := if i < 0 then acc else Array.Spec.itemsGo a (i - 1) (Array.get a i :: acc)
+
+/-- A write leaves the old array as it was (persistence): what the kernels' versions must keep true. -/
+def Array.Spec.keepsOld (a : Array Int) (i : Int) (v : Int) : Bool :=
+  let n := Array.length a
+  if n == 0 then true else
+    let x := Spec.wrap i n
+    let before := Sorting.toList a
+    let b := Array.set a x v
+    let c := Array.set b x (v + 1)
+    Sorting.toList a == before && Array.get b x == v && Array.get c x == v + 1 && Sorting.toList b != Sorting.toList c && Sorting.toList a == before
+
+/-- The proved laws, at every pair of indices of one array: the kernels agree with the prover's model. -/
+def Array.Spec.lawsAt (a : Array Int) (i : Int) (j : Int) (v : Int) : Bool :=
+  let b := Array.set a i v
+  Array.length b == Array.length a && Array.get b i == v && (i == j || Array.get b j == Array.get a j) && Array.set b i (v + 1) == Array.set a i (v + 1) && Array.set a i (Array.get a i) == a
+
+test Array.Spec.lawsHoldOnKernels :=
+  let indices := range 0 5
+  Array.length (Array.make 3 7) == 3 && List.all (fun i => Array.get (Array.make 3 7) i == 7) (range 0 3) && List.all (fun i => List.all (fun j => lawsAt (fill 5) i j 42) indices) indices
+
+/-- `make` builds an array of the length asked for. -/
+theorem Array.Spec.lengthMake (n : Int) (x : Int) : prim "implies" (0 <= n) (Array.length (Array.make n x) == n) := by simp
+
+/-- `set` keeps the length. -/
+theorem Array.Spec.lengthSet (a : Array Int) (i : Int) (v : Int) : prim "implies"
+    (0 <= i)
+    (prim "implies" (i < Array.length a) (Array.length (Array.set a i v) == Array.length a)) := by simp
+
+theorem Array.Spec.oldUnchanged (a : Array Int) (i : Int) (v : Int) : keepsOld a i v == true := by test 200
+
+/-- Writing back what is already there gives an equal array. -/
+theorem Array.Spec.setGetSame (a : Array Int) (i : Int) : prim "implies" (0 <= i) (prim "implies" (i < Array.length a) (Array.set a i (Array.get a i) == a)) := by simp
+
+/-- A second write to the same index replaces the first. -/
+theorem Array.Spec.setSetSame (a : Array Int) (i : Int) (v : Int) (w : Int) : Array.set (Array.set a i v) i w == Array.set a i w := by simp
+
+/-- Writes to different indices commute. -/
+theorem Array.Spec.setsCommute (a : Array Int) (i : Int) (j : Int) (v : Int) (w : Int) : commutes a i j v w == true := by test 200
+
+/-- Old versions stay readable while new ones are made from them. -/
+test Array.Spec.versionsIndependent :=
+  let a := fill 4
+  let b := Array.set a 0 9
+  let c := Array.set a 0 7
+  let d := Array.set b 3 1
+  Sorting.toList a == [4, 3, 2, 1] && Sorting.toList b == [9, 3, 2, 1] && Sorting.toList c == [7, 3, 2, 1] && Sorting.toList d == [9, 3, 2, 1] && Sorting.toList (Array.set d 3 5) == [9, 3, 2, 5] && Sorting.toList a == [4, 3, 2, 1]
+
+/-- `i` folded into `0 .. n` (for `n > 0`), so a random index lands inside a random array. -/
+def Array.Spec.wrap (i : Int) (n : Int) : Int := (i % n + n) % n
+
 def Array.get : Array a -> Int -> a := prim "Array.get"
 
 def Array.length : Array a -> Int := prim "Array.length"
 
 def Array.make : Int -> a -> Array a := prim "Array.make"
 
-def Array.set : Array a -> Int -> a -> Unit := prim "Array.set"
+def Array.set : Array a -> Int -> a -> Array a := prim "Array.set"

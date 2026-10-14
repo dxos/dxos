@@ -81,7 +81,8 @@ A kernel works with these values:
 | data         | a saturated constructor: type hash, tag, fields                                                     |
 | function     | `(lam …)`, a partial application, a constructor or operation that is not yet saturated, a primitive |
 | continuation | a handler clause's last binder                                                                      |
-| cell, map    | `Ref.new`, `Array.make`, `Dict.fromList`, `MutMap.new`; compared by identity                        |
+| cell, map    | `Ref.new`, `Dict.fromList`, `MutMap.new`; compared by identity                                      |
+| array        | `Array.make`, `Array.set`; immutable, compared and shown by its items (`#[1, 2]`, D96)              |
 
 `Bool` is data of `#Bool` (`false` tag 0, `true` tag 1), so `(con "#Bool" 1 0)` is `true`.
 
@@ -188,7 +189,7 @@ A `pcon` lists one sub-pattern per field. `true` is `(pcon "#Bool" 1)`, the empt
   ability is a defect (`unhandled ability <A> operation <index>`) under the command-line kernels. An embedder
   instead suspends the run and answers the request itself ([EMBEDDING.md](./EMBEDDING.md)).
 
-Mutable cells (`Ref`, `Array`, `MutMap`) are not rolled back when a continuation is resumed more than once.
+Mutable cells (`Ref`, `MutMap`) are not rolled back when a continuation is resumed more than once.
 
 ## Builtin identities
 
@@ -232,52 +233,52 @@ program cannot start.
 `(prim "name")` names a kernel function. The names are part of Core. [`deus/builtins.deus`](../../deus/builtins.deus)
 binds each to a DEUS name and gives its type. A wrong argument type is a defect.
 
-| Primitive                                   | Arity   | Meaning                                                                                                                   |
-| ------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `Int.add`, `Int.sub`, `Int.mul`             | 2       | 32-bit wrapping arithmetic                                                                                                |
-| `Int.div`, `Int.mod`                        | 2       | truncating division and its remainder; divisor 0 is a defect                                                              |
-| `Int.neg`                                   | 1       | wrapping negation                                                                                                         |
-| `Int.and`, `Int.or`, `Int.xor`              | 2       | bitwise                                                                                                                   |
-| `Int.shl`, `Int.shr`, `Int.ushr`            | 2       | shifts by the count modulo 32; `shr` keeps the sign, `ushr` does not                                                      |
-| `Int.toText`                                | 1       | decimal text                                                                                                              |
-| `Int.fromText`                              | 1       | `some n` when the text matches `-?[0-9]+` (wrapped to 32 bits), else `none`                                               |
-| `eq`, `neq`                                 | 2       | structural equality on data; functions are never equal                                                                    |
-| `compare`                                   | 2       | structural order: -1, 0 or 1; comparing functions is a defect                                                             |
-| `lt`, `le`, `gt`, `ge`                      | 2       | `compare` against 0                                                                                                       |
-| `append`                                    | 2       | concatenates two texts or two lists                                                                                       |
-| `implies`                                   | 2       | `false` only for `true`, `false`                                                                                          |
-| `Text.length`                               | 1       | length in code units                                                                                                      |
-| `Text.code`                                 | 2       | code unit at an index, or -1 outside the text                                                                             |
-| `Text.slice`                                | 3       | code units from start to end (JavaScript `slice`)                                                                         |
-| `Text.fromCode`                             | 1       | a one-unit text                                                                                                           |
-| `Text.fromCodes`                            | 1       | a text from a list of code units; a code above U+FFFF becomes its surrogate pair, and one outside 0..U+10FFFF is a defect |
-| `Text.concat`                               | 1       | joins a list of texts                                                                                                     |
-| `Text.join`                                 | 2       | joins a list with a separator (separator first)                                                                           |
-| `Text.split`                                | 2       | splits a text at a separator (text first)                                                                                 |
-| `Text.indexOf`                              | 3       | first index of a substring at or after a position, or -1                                                                  |
-| `Text.trim`                                 | 1       | removes leading and trailing whitespace                                                                                   |
-| `Text.sha256`                               | 1       | lower-case hex SHA-256 of the UTF-8 bytes                                                                                 |
-| `Text.utf8`                                 | 1       | the UTF-8 bytes as a list of integers                                                                                     |
-| `show`                                      | 1       | debug rendering of any value                                                                                              |
-| `trace`                                     | 2       | writes `trace <label>: <value>` to stderr, returns the value                                                              |
-| `defect`                                    | 1       | raises a defect with the message                                                                                          |
-| `Ref.new`, `Ref.get`, `Ref.set`             | 1, 1, 2 | a mutable cell                                                                                                            |
-| `Array.make`, `Array.length`                | 2, 1    | a mutable array of `n` copies of a value (D83); its length                                                                |
-| `Array.get`, `Array.set`                    | 2, 3    | array, index (and value); an index outside `0 .. length` is a defect                                                      |
-| `Dict.fromList`                             | 1       | an immutable map from a list of pairs; later keys win                                                                     |
-| `Dict.lookup`, `Dict.contains`              | 2       | key first, then the map                                                                                                   |
-| `Dict.size`, `Dict.keys`                    | 1       | size; keys in insertion order                                                                                             |
-| `MutMap.new`                                | 1       | a new mutable map (takes `Unit`)                                                                                          |
-| `MutMap.get`, `MutMap.has`, `MutMap.delete` | 2       | map first, then the key                                                                                                   |
-| `MutMap.set`                                | 3       | map, key, value                                                                                                           |
-| `MutMap.size`, `MutMap.keys`                | 1       | size; keys in insertion order                                                                                             |
-| `Code.load`                                 | 1       | reads Core text and registers its `(def …)` forms; bad text is a panic                                                    |
-| `Code.has`                                  | 1       | whether a hash is loaded                                                                                                  |
-| `Code.run`                                  | 1       | evaluates a loaded definition in place: its requests reach the caller's handlers                                          |
-| `Code.quote`                                | 1       | a data value as Core text (`(int …)`, `(text …)`, `(con …)`, `(app (con …) …)`); a function is `(prim "<function>")`      |
-| `Code.steps`                                | 1       | machine steps so far                                                                                                      |
-| `Code.cost`                                 | 1       | steps a `Unit -> a` function takes; it must handle its own requests                                                       |
-| `Code.defectTrace`                          | 1       | hashes on the stack when the last defect was raised, innermost first                                                      |
+| Primitive                                   | Arity   | Meaning                                                                                                                                               |
+| ------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Int.add`, `Int.sub`, `Int.mul`             | 2       | 32-bit wrapping arithmetic                                                                                                                            |
+| `Int.div`, `Int.mod`                        | 2       | truncating division and its remainder; divisor 0 is a defect                                                                                          |
+| `Int.neg`                                   | 1       | wrapping negation                                                                                                                                     |
+| `Int.and`, `Int.or`, `Int.xor`              | 2       | bitwise                                                                                                                                               |
+| `Int.shl`, `Int.shr`, `Int.ushr`            | 2       | shifts by the count modulo 32; `shr` keeps the sign, `ushr` does not                                                                                  |
+| `Int.toText`                                | 1       | decimal text                                                                                                                                          |
+| `Int.fromText`                              | 1       | `some n` when the text matches `-?[0-9]+` (wrapped to 32 bits), else `none`                                                                           |
+| `eq`, `neq`                                 | 2       | structural equality on data; functions are never equal                                                                                                |
+| `compare`                                   | 2       | structural order: -1, 0 or 1; comparing functions is a defect                                                                                         |
+| `lt`, `le`, `gt`, `ge`                      | 2       | `compare` against 0                                                                                                                                   |
+| `append`                                    | 2       | concatenates two texts or two lists                                                                                                                   |
+| `implies`                                   | 2       | `false` only for `true`, `false`                                                                                                                      |
+| `Text.length`                               | 1       | length in code units                                                                                                                                  |
+| `Text.code`                                 | 2       | code unit at an index, or -1 outside the text                                                                                                         |
+| `Text.slice`                                | 3       | code units from start to end (JavaScript `slice`)                                                                                                     |
+| `Text.fromCode`                             | 1       | a one-unit text                                                                                                                                       |
+| `Text.fromCodes`                            | 1       | a text from a list of code units; a code above U+FFFF becomes its surrogate pair, and one outside 0..U+10FFFF is a defect                             |
+| `Text.concat`                               | 1       | joins a list of texts                                                                                                                                 |
+| `Text.join`                                 | 2       | joins a list with a separator (separator first)                                                                                                       |
+| `Text.split`                                | 2       | splits a text at a separator (text first)                                                                                                             |
+| `Text.indexOf`                              | 3       | first index of a substring at or after a position, or -1                                                                                              |
+| `Text.trim`                                 | 1       | removes leading and trailing whitespace                                                                                                               |
+| `Text.sha256`                               | 1       | lower-case hex SHA-256 of the UTF-8 bytes                                                                                                             |
+| `Text.utf8`                                 | 1       | the UTF-8 bytes as a list of integers                                                                                                                 |
+| `show`                                      | 1       | debug rendering of any value                                                                                                                          |
+| `trace`                                     | 2       | writes `trace <label>: <value>` to stderr, returns the value                                                                                          |
+| `defect`                                    | 1       | raises a defect with the message                                                                                                                      |
+| `Ref.new`, `Ref.get`, `Ref.set`             | 1, 1, 2 | a mutable cell                                                                                                                                        |
+| `Array.make`, `Array.length`                | 2, 1    | an immutable array of `n` copies of a value (D83, D96); its length; `n < 0` is a defect                                                               |
+| `Array.get`, `Array.set`                    | 2, 3    | array, index (and value); `set` returns a new array; an index outside `0 .. length` is a defect ([`Array.Spec`](../../codebase/specs/Array.Spec.mdl)) |
+| `Dict.fromList`                             | 1       | an immutable map from a list of pairs; later keys win                                                                                                 |
+| `Dict.lookup`, `Dict.contains`              | 2       | key first, then the map                                                                                                                               |
+| `Dict.size`, `Dict.keys`                    | 1       | size; keys in insertion order                                                                                                                         |
+| `MutMap.new`                                | 1       | a new mutable map (takes `Unit`)                                                                                                                      |
+| `MutMap.get`, `MutMap.has`, `MutMap.delete` | 2       | map first, then the key                                                                                                                               |
+| `MutMap.set`                                | 3       | map, key, value                                                                                                                                       |
+| `MutMap.size`, `MutMap.keys`                | 1       | size; keys in insertion order                                                                                                                         |
+| `Code.load`                                 | 1       | reads Core text and registers its `(def …)` forms; bad text is a panic                                                                                |
+| `Code.has`                                  | 1       | whether a hash is loaded                                                                                                                              |
+| `Code.run`                                  | 1       | evaluates a loaded definition in place: its requests reach the caller's handlers                                                                      |
+| `Code.quote`                                | 1       | a data value as Core text (`(int …)`, `(text …)`, `(con …)`, `(app (con …) …)`); a function is `(prim "<function>")`                                  |
+| `Code.steps`                                | 1       | machine steps so far                                                                                                                                  |
+| `Code.cost`                                 | 1       | steps a `Unit -> a` function takes; it must handle its own requests                                                                                   |
+| `Code.defectTrace`                          | 1       | hashes on the stack when the last defect was raised, innermost first                                                                                  |
 
 Map keys MUST be texts or integers; any other key is a defect.
 

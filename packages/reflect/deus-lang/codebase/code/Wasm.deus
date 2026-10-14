@@ -20,9 +20,11 @@ structure Wasm.Scope @"urn:deus:wasm:Scope" where
   of times. Locals: 1 the block, 2 the pages missing. -/
 def Wasm.allocBody : List Int := List.concat [[35, 0, 33, 1], [35, 0, 32, 0, 106, 36, 0], [35, 0, 63, 0, 65, 16, 116, 75, 4, 64], [35, 0, 65, 16, 118, 65, 1, 106, 63, 0, 107, 33, 2], [32, 2, 63, 0, 32, 2, 63, 0, 74, 27, 64, 0, 26, 11], [32, 1, 11]]
 
-/-- `Array` primitives (D83) on a block `[length, item…]`, and `Ref` on a block `[value]`; `args`
-  is the code for each argument. An index outside the array, or a negative length, traps.
-  `Array.set` and `Ref.set` return address 0, whose word is 0, so it reads as `()`. -/
+/-- `Array` primitives (D83, D96) on a block `[length, item…]`, and `Ref` on a block `[value]`;
+  `args` is the code for each argument. An index outside the array, or a negative length, traps.
+  `Array.set` copies the block and writes into the copy; `Array.setInPlace` and `Array.copy` come
+  from `Unique.rewriteAll`, which proved the array unique or needs a second one. `Ref.set` returns
+  address 0, whose word is 0, so it reads as `()`. -/
 def Wasm.array (scope : Wasm.Scope) (next : Ref Int) (p : Text) (args : List (List Int)) : {Throw Text} List Int :=
   let unreachableIf := fun cond => cond ++ [4, 64, 0, 11]
   let address := fun a i => localGet a ++ localGet i ++ [65, 2, 116, 106]
@@ -39,11 +41,22 @@ def Wasm.array (scope : Wasm.Scope) (next : Ref Int) (p : Text) (args : List (Li
       let la := Wasm.fresh next
       let li := Wasm.fresh next
       a ++ localSet la ++ i ++ localSet li ++ checked la li ++ address la li ++ Wasm.load 4
-  | ("Array.set", a :: i :: v :: []) =>
+  | ("Array.setInPlace", a :: i :: v :: []) =>
       let la := Wasm.fresh next
       let li := Wasm.fresh next
       a ++ localSet la ++ i ++ localSet li ++ checked la li ++ address la li ++ v ++ Wasm.store 4 ++
-        [65, 0]
+        localGet la
+  | ("Array.set", a :: i :: v :: []) =>
+      let la := Wasm.fresh next
+      let li := Wasm.fresh next
+      let lv := Wasm.fresh next
+      let lc := Wasm.fresh next
+      a ++ localSet la ++ i ++ localSet li ++ v ++ localSet lv ++ checked la li ++
+        copyBlock scope la lc ++ address lc li ++ localGet lv ++ Wasm.store 4 ++ localGet lc
+  | ("Array.copy", a :: []) =>
+      let la := Wasm.fresh next
+      let lc := Wasm.fresh next
+      a ++ localSet la ++ copyBlock scope la lc ++ localGet lc
   | ("Array.make", n :: x :: []) =>
       let ln := Wasm.fresh next
       let lx := Wasm.fresh next
@@ -59,7 +72,8 @@ def Wasm.binary (name : Text) : Option Int := if name == "Int.add" then Option.s
 
 /-- Compiles `main` and what it calls to a wasm module exporting it as `export`. -/
 def Wasm.compile (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {Throw Text | r} Option Sexp) (main : Text) (export : Text) : {Throw Text | r} List Int :=
-  let fns := Wasm.gather fetch meta main
+  let gathered := Wasm.gather fetch meta main
+  let fns := rewriteAll gathered (datatypesOf fetch gathered)
   let names := dedup (concatMap (fun f => patternTypes f.fnBody) fns)
   Wasm.module fns (filterMap (fun t => Option.map (fun form => (t, form)) (fetch t)) names) export
 
@@ -71,6 +85,12 @@ def Wasm.construct (scope : Wasm.Scope) (env : List Int) (next : Ref Int) (tag :
     args)
   65 :: sleb (4 + 4 * List.length args) ++ 16 :: uleb (List.length scope.fns) ++ localSet p ++
     localGet p ++ 65 :: sleb tag ++ Wasm.store 0 ++ fields ++ localGet p
+
+/-- Copies the array block at local `a` into a new block, whose address goes to local `c` (`memory.copy`). -/
+def Wasm.copyBlock (scope : Wasm.Scope) (a : Int) (c : Int) : List Int :=
+  let size := localGet a ++ Wasm.load 0 ++ [65, 2, 116, 65, 4, 106]
+  size ++ 16 :: uleb (List.length scope.fns) ++ localSet c ++ localGet c ++ localGet a ++ size ++
+    [252, 10, 0, 0]
 
 /-- Code for `e`; `env` maps de Bruijn indices to locals, `next` is the next free local. -/
 def Wasm.expr (scope : Wasm.Scope) (env : List Int) (next : Ref Int) (tail : Bool) (e : Sexp) : {Throw Text} List Int :=
@@ -315,7 +335,9 @@ def Wasm.typeOf (scope : Wasm.Scope) (env : List Int) (e : Sexp) : Sexp :=
       match Wasm.typeArgs (Wasm.typeOf scope env a) with
       | t :: [] => t
       | _ => unknown
-  | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "prim" :: Sexp.str "Array.set" :: []) :: _ :: _ :: _ :: []) => tref "#Unit"
+  | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "prim" :: Sexp.str "Array.set" :: []) :: a :: _ :: _ :: []) => Wasm.typeOf scope env a
+  | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "prim" :: Sexp.str "Array.setInPlace" :: []) :: a :: _ :: _ :: []) => Wasm.typeOf scope env a
+  | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "prim" :: Sexp.str "Array.copy" :: []) :: a :: []) => Wasm.typeOf scope env a
   | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "prim" :: Sexp.str "Ref.get" :: []) :: r :: []) =>
       match Wasm.typeArgs (Wasm.typeOf scope env r) with
       | t :: [] => t

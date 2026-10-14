@@ -77,6 +77,9 @@ benchmark ends with 0 live words.
 | `Sorting.benchArray 10⁶`      |                   162 ms |                 174 ms |           55 MB |          39 MB |
 | `Sorting.benchPersistent 10⁶` |                 2,095 ms |               1,337 ms |        1,610 MB |          39 MB |
 
+`benchPersistent` measured a persistent array written in DEUS; D96 removed it, since `Array` itself
+is now pure. `benchArray` is the pure quicksort since D96 (about 200 ms at 10⁶ through C).
+
 Peak RSS is the process's maximum resident set; 10 MB is the floor of an empty run. The sorts'
 peaks after are the input list and the sorted output, which are alive together. `queens` and
 `benchMerge` pay for counting shared cons cells; everything else is as fast or faster, because a
@@ -172,8 +175,8 @@ The best achievable speed for first-order DEUS is what C compilers give, and the
 it now. The rest of the language needs these, in order of how much code they unlock:
 
 1. **Memory: precise reference counting with reuse** (Perceus, as in Koka and Lean 4): done in the
-   C back end (D86) and in wasm built through it (D90). The same uniqueness check is what a pure `Array`
-   needs to update in place (D83).
+   C back end (D86) and in wasm built through it (D90). The same uniqueness check makes the pure
+   `Array.set` write in place (D96): an array whose count is one is written, a shared one copied.
 2. **Closures and partial application:** closure conversion to flat closures; known calls stay
    direct C calls.
 3. **Text and the other primitives:** a C runtime with the kernels' semantics (UTF-16 text,

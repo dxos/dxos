@@ -1,5 +1,9 @@
 # History of main
 
+- `c53158568a` Merge #13952's branch (pure Array, D96) into the JS target, renumbered D97 (by claude)
+- `65aa9a06c5` history: import 434 changes
+- `fc3475b4c1` task: import from tasks.sexp
+- `3f2af1b29d` add code specs
 - `efb62b2ac7` Merge #13952's branch (explorer spec backfill) into the JS target (by claude)
 - `31a71813bc` history: import 410 changes
 - `3487bc898b` history: import 442 changes
@@ -39,12 +43,34 @@
 - `6c41a3a2d6` task: open 86ef7d80 JS back end: deus build --js, direct style, source maps (D94)
 - `ccf54ad86f` history: import 353 changes
 - `f13276e40e` task: import from tasks.sexp
+- `32032ea1fa` task: open 2a2b87a2 Specs in the codebase: the Codebase, Compile, Explorer and Export specs fail 'deus mdl' from the codebase export (32 of 76 blocks pass) because their test helpers (Codebase.Spec.inStore, Compile.Spec.prelude, Export.Spec.deus) are not in it; Array.Spec and Checking.Spec pass (by claude)
+- `4840de1a1a` the explorer's writing and console in its checked spec (from #13952's branch) (by claude)
+- `916dd946a8` history: import 408 changes
+- `b85fb6bdf9` task: import from /tmp/claude-0/-home-user-dxos/7218d591-3085-5d07-8746-c4ab5dbc3b34/scratchpad/theirs/codebase/tasks.sexp
+- `724f14b2e7` history: import 382 changes
+- `2d3f491949` task: import from tasks.sexp
+- `ac74022d77` add code specs
 - `d90027cba3` close c50cd76e by #9cee717581 (by claude)
 - `9cee717581` the explorer's writing and console in its checked spec (EXPLORER.mdl R-8 to R-12, L-3, L-4) (by claude)
 - `e01abbcbd9` task: open c50cd76e Backfill the explorer's writing and console into EXPLORER.mdl (APIs, requirements, laws) (by claude)
 - `99b512f359` history: import 359 changes
 - `7b6f241c41` task: import from tasks.sexp
 - `b878c25ce1` add code specs
+- `66bce7945c` task: open 7ef8bf45 Tested theorems: 'by test' evaluates the conclusion even when a hypothesis is false, because implies is strict; skip (and count) cases whose hypotheses fail, so 'by test' works on bounded statements like the Array laws (D96) (by claude)
+- `99e026a5cf` task: set a1b73fb8 title (by claude)
+- `afaebd5eba` delete Sorting.benchPersistent Sorting.copyGo Sorting.lomutoV Sorting.persistentKeepsOld Sorting.persistentSort Sorting.persistentSorts Sorting.quickV Sorting.toListV Sorting.vget Sorting.vlength Sorting.vset Sorting.vswap Sorting.Node.current Sorting.Node.diff Sorting.Node
+- `a1a75cd968` Pure Array (D96): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `96333fa979` Pure Array (D96): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `758744e3a8` Pure Array (D96): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `616fe2a423` Pure Array (D96): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `ab1c356e8d` Pure Array (D96): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `99ac1e29bb` Pure Array (D96): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `a2774f99ed` Pure Array (D96): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `0e439a4fad` Pure Array (D96): persistent versions on the kernels, in place when unique in compiled code (a static pass for --wasm, the reference count in C), and the Array spec with its laws as theorems (by claude)
+- `4916079850` close 95ca184f by #034fda7dc8 (by claude)
+- `034fda7dc8` history: import 367 changes (by claude)
+- `ab089e6fd9` task: import from tasks.sexp
+- `4589165e18` add code specs
 - `4fa0ad8131` export: merge 35 changes from codebase
 - `e8b6a8fb9d` export: merge tasks from codebase
 - `2c40570335` update docs/spec/CHECKING.mdl (by claude)

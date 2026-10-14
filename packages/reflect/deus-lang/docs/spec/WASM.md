@@ -139,19 +139,47 @@ Bindings follow Core's order: left to right, the last one bound is `(var 0)`.
 
 `Array` and `Ref` ([D83](../DECISIONS.md)) are blocks in linear memory too, without a tag word.
 
-| Primitive         | Code                                                                                       |
-| ----------------- | ------------------------------------------------------------------------------------------ |
-| `Array.make n x`  | traps if `n < 0`; `alloc(4 + 4n)`, word 0 is `n`, words 1 … n are `x`; the block's address |
-| `Array.length a`  | word 0 of `a`                                                                              |
-| `Array.get a i`   | traps unless `0 ≤ i < length` (unsigned compare); word `i + 1`                             |
-| `Array.set a i v` | the same check; stores `v` in word `i + 1`; returns `0`                                    |
-| `Ref.new v`       | `alloc(4)`, word 0 is `v`; the block's address                                             |
-| `Ref.get r`       | word 0 of `r`                                                                              |
-| `Ref.set r v`     | stores `v` in word 0; returns `0`                                                          |
+| Primitive                | Code                                                                                       |
+| ------------------------ | ------------------------------------------------------------------------------------------ |
+| `Array.make n x`         | traps if `n < 0`; `alloc(4 + 4n)`, word 0 is `n`, words 1 … n are `x`; the block's address |
+| `Array.length a`         | word 0 of `a`                                                                              |
+| `Array.get a i`          | traps unless `0 ≤ i < length` (unsigned compare); word `i + 1`                             |
+| `Array.set a i v`        | the same check; a copy of `a` (`memory.copy`) with `v` in word `i + 1`; the copy's address |
+| `Array.setInPlace a i v` | the same check; stores `v` in word `i + 1` of `a`; returns `a`                             |
+| `Array.copy a`           | a new block with `a`'s words; its address                                                  |
+| `Ref.new v`              | `alloc(4)`, word 0 is `v`; the block's address                                             |
+| `Ref.get r`              | word 0 of `r`                                                                              |
+| `Ref.set r v`            | stores `v` in word 0; returns `0`                                                          |
 
-`Array.set` and `Ref.set` return `()` as address 0: the heap starts at 8, so word 0 is always 0, the
-tag of `Unit`'s only constructor. The type checker sees `Array.get` and `Ref.get` return the element
-type of their argument's type, so a comparison of an element of an `Array Int` compiles.
+`Ref.set` returns `()` as address 0: the heap starts at 8, so word 0 is always 0, the tag of `Unit`'s
+only constructor. The type checker sees `Array.get` and `Ref.get` return the element type of their
+argument's type, so a comparison of an element of an `Array Int` compiles.
+
+### Unique arrays
+
+`Array.set` is pure ([D96](../DECISIONS.md), the codebase's [`Array.Spec`](../../codebase/specs/Array.Spec.mdl)): it returns a new array and the old
+one stays readable. `Array.setInPlace` and `Array.copy` are not in the language. A pass over Core,
+[`deus/unique.deus`](../../deus/unique.deus), runs after the functions are gathered. This back end
+never frees memory and its blocks carry no count, so uniqueness has to be proved statically; the C back
+end, and wasm built through it, count references and check for a count of one at run time instead
+([NATIVE.md](NATIVE.md)). The pass rewrites an `Array.set` to `Array.setInPlace` when nothing reads the old array afterwards, and inserts
+`Array.copy` where an array would otherwise get a second owner. Its rules:
+
+| Rule              | Meaning                                                                                                                                              |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| owned             | a local of type `Array` that no other code can read: a parameter that is not borrowed, a `let` whose value is fresh, a fresh structure's array field |
+| borrowed          | a parameter the function only reads (`Array.get`, `Array.length`, a borrowed parameter of a call); found by fixpoint                                 |
+| moved             | an owned local at its last use: not used later, and not pending in an earlier argument of the same call                                              |
+| fresh             | `make`, `set`, `copy`, a moved local, a call whose declared result is an `Array`, or an `if`, `let`, `seq` or `match` whose results are              |
+| fresh structure   | a function whose every result is a constructor of one monomorphic type (or a call to such a function); `match f … with (a, i)` owns `a`              |
+| must be fresh     | an owned parameter's argument, an `Array` result, and a fresh structure's array fields: copied when not fresh                                        |
+| stored while live | an owned local passed to a constructor, a `let`, a `Ref`, an array item or a generic parameter while it is still used later: copied                  |
+
+Arguments are evaluated before a call runs, so a read in a later argument (`swap a i (Array.get a j)`)
+does not stop `a` from moving into the call. A write in an earlier argument does: the later argument
+runs after it. [`examples/aliasing.deus`](../../examples/aliasing.deus) holds one case per rule, and a
+test checks that wasm, and C, give the kernel's answer for each. The pure quicksort in
+[`examples/sorting.deus`](../../examples/sorting.deus) compiles with no copy at all.
 
 ## Allocation
 
