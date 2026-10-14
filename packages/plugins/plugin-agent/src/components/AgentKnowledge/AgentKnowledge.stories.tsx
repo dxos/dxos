@@ -225,6 +225,15 @@ const CARD_OPTIONS = {
   },
 };
 
+/** One hue per type, chosen rather than hashed, so no two of the story's types share one. */
+const CARD_HUES = {
+  Person: 'amber',
+  Organization: 'indigo',
+  Document: 'pink',
+  Role: 'emerald',
+  Project: 'violet',
+} as const;
+
 const CARD_ICONS = {
   'work at': 'ph--buildings--regular',
   'know': 'ph--users--regular',
@@ -234,7 +243,7 @@ const CARD_ICONS = {
 
 /** One card per entity of the graph: what it states, and below the rule what others state about it. */
 const EntityCardTile = ({ data }: { data: EntityCardModel }) => (
-  <EntityCard card={data} icons={CARD_ICONS} onSelect={() => {}} onClose={() => {}} />
+  <EntityCard card={data} icons={CARD_ICONS} hues={CARD_HUES} onSelect={() => {}} onClose={() => {}} />
 );
 
 const SubgraphsStory = () => {
@@ -255,7 +264,7 @@ const SubgraphsStory = () => {
 /** Finder-style columns over the same graph; objects (an employer, a paper) get cards too, so every chip opens one. */
 const BrowserStory = () => {
   const cards = useMemo(() => toEntityCards([...PROFILE_FACTS, ...RDF_FACTS], { ...CARD_OPTIONS, objects: true }), []);
-  return <EntityBrowser cards={cards} icons={CARD_ICONS} />;
+  return <EntityBrowser cards={cards} icons={CARD_ICONS} hues={CARD_HUES} />;
 };
 
 type StoryProps = {

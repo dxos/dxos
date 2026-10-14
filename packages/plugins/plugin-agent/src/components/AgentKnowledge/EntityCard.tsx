@@ -27,6 +27,8 @@ export type EntityCardProps = {
   card: EntityCardModel;
   /** Icons by normalized predicate; an arrow otherwise. */
   icons?: Readonly<Record<string, string>>;
+  /** Chip hues by entity type; a hue hashed from the type otherwise, so an unlisted type still keeps one colour. */
+  hues?: Readonly<Record<string, Tag.TagHue>>;
   /** The card is the chosen one of its set. */
   selected?: boolean;
   /** The property row (a `propertyKey`) that is the current one. */
@@ -52,7 +54,15 @@ const KeyValue = ({ label, children }: { label: string; children: React.ReactNod
   </Layout.Grid>
 );
 
-const Values = ({ values, onSelect }: { values: readonly EntityCardValue[]; onSelect?: (id: string) => void }) => {
+const Values = ({
+  values,
+  hues,
+  onSelect,
+}: {
+  values: readonly EntityCardValue[];
+  hues?: EntityCardProps['hues'];
+  onSelect?: (id: string) => void;
+}) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const rest = values.length - MAX_VALUES;
   return (
@@ -62,7 +72,7 @@ const Values = ({ values, onSelect }: { values: readonly EntityCardValue[]; onSe
           <Tag.Tag
             key={value.id}
             // One hue per class, so a card's people, places and papers read apart at a glance.
-            hue={getHashHue(value.type)}
+            hue={(value.type && hues?.[value.type]) || getHashHue(value.type)}
             onClick={
               onSelect
                 ? (event) => {
@@ -95,10 +105,11 @@ const PropertyRows = ({
   properties,
   icon,
   icons,
+  hues,
   currentProperty,
   onSelectProperty,
   onSelect,
-}: Pick<EntityCardProps, 'icons' | 'currentProperty' | 'onSelectProperty' | 'onSelect'> & {
+}: Pick<EntityCardProps, 'icons' | 'hues' | 'currentProperty' | 'onSelectProperty' | 'onSelect'> & {
   direction: 'out' | 'in';
   properties: readonly EntityCardProperty[];
   icon: string;
@@ -121,7 +132,7 @@ const PropertyRows = ({
         data-testid='entity-card-property'
       >
         <KeyValue label={property.label}>
-          <Values values={property.values} onSelect={onSelect ? (id) => onSelect(id, key) : undefined} />
+          <Values values={property.values} hues={hues} onSelect={onSelect ? (id) => onSelect(id, key) : undefined} />
         </KeyValue>
       </Card.Row>
     );
@@ -134,11 +145,11 @@ const PropertyRows = ({
 // Composable, so a `Focus.Item` (or another `asChild` host) can make the card one of its arrow-key stops.
 export const EntityCard = Util.composable<HTMLDivElement, EntityCardProps>(
   (
-    { card, icons, selected, currentProperty, onClick, onSelectProperty, onSelect, onClose, ...props },
+    { card, icons, hues, selected, currentProperty, onClick, onSelectProperty, onSelect, onClose, ...props },
     forwardedRef,
   ) => {
     const { t } = Hooks.useTranslation(meta.profile.key);
-    const rows = { icons, currentProperty, onSelectProperty, onSelect };
+    const rows = { icons, hues, currentProperty, onSelectProperty, onSelect };
     return (
       <Card.Root
         {...props}
