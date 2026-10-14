@@ -681,6 +681,15 @@ From docs/spec/README.md, Known divergences.
 
 From docs/spec/README.md, Known divergences.
 
+## Backfill the explorer's writing and console into EXPLORER.mdl (APIs, requirements, laws) (`c50cd76e`)
+
+- state: done
+- priority: medium
+- assignee: claude
+- labels: explorer, spec
+- parent: 861438d2
+- links change #9cee717581
+
 ## Builtins are URIs at the embedding boundary (urn:deus:builtin:IO) (`279f2266`)
 
 - state: done

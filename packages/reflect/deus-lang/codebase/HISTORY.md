@@ -1,5 +1,8 @@
 # History of main
 
+- `380ed47988` export: merge 6 changes from codebase
+- `995c501193` export: merge tasks from codebase
+- `e494c469b1` merge #13952's branch (explorer spec backfill) (by claude)
 - `609c728841` close 11a42afd by #387eb2652a (by claude)
 - `387eb2652a` update deus (by claude)
 - `1cb8a6f2e3` close 186feaf2 by #4b89319b5e (by claude)
@@ -120,6 +123,12 @@
 - `7453b3a1b7` task: import 18 tasks
 - `bff1b8d98b` add code
 - `67c7d5a614` init
+- `d90027cba3` close c50cd76e by #9cee717581 (by claude)
+- `9cee717581` the explorer's writing and console in its checked spec (EXPLORER.mdl R-8 to R-12, L-3, L-4) (by claude)
+- `e01abbcbd9` task: open c50cd76e Backfill the explorer's writing and console into EXPLORER.mdl (APIs, requirements, laws) (by claude)
+- `99b512f359` history: import 359 changes
+- `7b6f241c41` task: import from tasks.sexp
+- `b878c25ce1` add code specs
 - `74a8e8247f` task: open cb6c9a43 deus task set ignores an unknown field (--status) instead of refusing it
 - `aad1732770` task: link cf5e187f to Resolve.stub
 - `c52516022a` task: set cf5e187f state

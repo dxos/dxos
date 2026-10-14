@@ -28,6 +28,18 @@ api A-1: generating a site
   - Explorer.console : Text -> Text -> {IO, Throw Text} Int
   - Explorer.pageOf : Text -> Text
   - Explorer.visible : (Text, Entry) -> Bool
+  - Explorer.snapshotFiles : Text -> {IO} List Text
+```
+
+```mdl
+api A-2: writing from the explorer (D82)
+  signatures:
+  - Comments.isSubject : Text -> Bool
+  - Comments.add : Text -> List (Text, task:Comment) -> Text -> {IO, Throw Text} Text
+  - Comments.current : Text -> {IO, Throw Text} Map Text (List task:Comment)
+  - Assets.isHash : Text -> Bool
+  - Inbox.applyOne : Text -> Sexp -> {IO, Throw Text} Text
+  - Inbox.apply : Text -> {replicate:Remote, IO, Throw Text} List Text
 ```
 
 ## Files
@@ -75,6 +87,48 @@ req R-6: generating twice writes the same files
 ```mdl
 req R-7: a test or theorem shows its cached verdict, and pass or fail in names.json
   by: Explorer.Spec.verdictsAreShown
+```
+
+## Writing and the console
+
+The hosted explorer files comments and tasks as inbox requests, and `deus inbox` applies them (D82,
+D93). The Worker's side, sign-in and the request format it writes, is checked by
+`src/explorer-worker.test.ts`, which also applies what it filed with `deus inbox`; the requirements
+here are the codebase's side. The console (D84) is a snapshot of the codebase directory.
+
+```mdl
+req R-8: comments on a definition are kept in the codebase and the site lists them by subject in comments.json
+  by: Explorer.Spec.commentsAreListed
+```
+
+```mdl
+law L-3: a subject is def: or change: followed by something
+  theorem: Explorer.Spec.subjectsNameSomething
+```
+
+```mdl
+law L-4: an asset name is 64 lowercase hex digits
+  theorem: Explorer.Spec.assetNamesAreLong
+```
+
+```mdl
+req R-9: the inbox opens a member's task with its labels and its link
+  by: Explorer.Spec.inboxOpensTasks
+```
+
+```mdl
+req R-12: the inbox refuses a request not signed by a GitHub user, and changes nothing
+  by: Explorer.Spec.inboxRefusesStrangers
+```
+
+```mdl
+req R-10: a console snapshot holds the codebase but not its local state, binary assets or remote bookkeeping
+  by: Explorer.Spec.snapshotSkipsLocalState
+```
+
+```mdl
+req R-11: meta.json says whether the site has a console
+  by: Explorer.Spec.metaNamesTheConsole
 ```
 
 ## Laws
@@ -172,6 +226,49 @@ test verdictsAreShown :=
       Text.contains ("\"name\":\"notNot\",\"kind\":\"theorem\",\"hash\":\"" ++ Entry.hash e ++ "\"") (file "names.json") &&
       Text.contains "\"summary\":\"A theorem.\",\"status\":\"pass\"" (file "names.json")
     | none => false)
+
+test commentsAreListed :=
+  inSite (fun _ =>
+    let _ := Comments.add "cb" [(Comments.definition "area", Comment.mk "github:o" "why area?" "t" [])] "comment"
+    let _ := regenerate ()
+    match Map.lookup "def:area" (Comments.current "cb") with
+    | some [c] => c.note == "why area?" && Text.contains "\"def:area\":[{\"author\":\"github:o\",\"note\":\"why area?\"" (file "comments.json")
+    | _ => false)
+
+theorem subjectsNameSomething (t : Text) : Comments.isSubject (Comments.definition t) = not (Text.isEmpty t) := by test 100
+
+theorem assetNamesAreLong (t : Text) : Assets.isHash t = true -> Text.length t = 64 := by test 100
+
+def request (author : Text) : Sexp :=
+  Sexp.read ("(request (kind \"task\") (by \"" ++ author ++ "\") (at \"t\") (title \"Wrap long lines\") (details \"\") (link \"area\") (labels \"explorer,report\") (assets))")
+
+test inboxOpensTasks :=
+  inSite (fun _ =>
+    let _ := Inbox.applyOne "cb" (request "github:o")
+    List.any (fun t => t.title == "Wrap long lines" && t.labels == ["explorer", "report"] && not (List.isEmpty t.links)) (Map.values (Tasks.current "cb")))
+
+test inboxRefusesStrangers :=
+  inSite (fun _ =>
+    match try (fun _ => Inbox.applyOne "cb" (request "agent")) with
+    | Result.ok _ => false
+    | Result.err _ => not (List.any (fun t => t.title == "Wrap long lines") (Map.values (Tasks.current "cb"))))
+
+test snapshotSkipsLocalState :=
+  inSite (fun _ =>
+    List.forEach ["cache/site/x", "artifacts/a", "assets/0", "remotes/origin/url", "exports/k"] (fun f =>
+      IO.mkdirp (Text.join "/" (List.reverse (List.drop 1 (List.reverse (Text.split ("cb/" ++ f) "/")))))
+      IO.writeFile ("cb/" ++ f) "x")
+    let files := Explorer.snapshotFiles "cb"
+    List.contains "HEAD" files && List.any (fun f => Text.startsWith "objects/" f) files &&
+      not (List.any (fun f => List.any (fun skip => Text.startsWith (skip ++ "/") f) Explorer.consoleSkips) files))
+
+test metaNamesTheConsole :=
+  inSite (fun _ =>
+    let without := Text.contains "\"console\":false" (file "meta.json")
+    IO.mkdirp "site/console"
+    IO.writeFile "site/console/info.json" "{}"
+    let _ := regenerate ()
+    without && Text.contains "\"console\":true" (file "meta.json"))
 
 end Explorer.Spec
 ```
