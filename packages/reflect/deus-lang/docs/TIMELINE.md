@@ -121,6 +121,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 112 | 10-14 22:40 | 25m 00s | `a57f4f60` | Parquet files carry min/max statistics and column orders for every column, so pyarrow and Iceberg see bounds on all 42 columns and Basin SQL can prune files (task 821dd13d); task 72207dc1 canceled, the codebase remote is deus/toolchain (D101) |
 | 113 | 10-14 21:55 | 23m 00s | `709f7e73` | spec-first View.Spec: theorem hypotheses print as `P -> Q` and header types by their name, not their IRI path (D108, tasks 4f7f9e40, f6a2c2ff) |
 | 114 | 10-14 22:50 | 5m 00s | `159dbea9` | the codebase is on R2: `r2://agent-artifacts/deus/toolchain` seeded from the export and checked against a fresh pull; `origin` and the R2 endpoint default for the toolchain codebase (D109, task 4b1eb1a9) |
-| 115 | 10-14 22:45 | 25m 00s | this commit | the explorer shows events: `events.json` and a count in `meta.json`, an Events card with the latest rows per type, and counts on definition and change cards; spec first in the codebase (Explorer.Spec R-14, R-15, D110) |
+| 115 | 10-14 22:45 | 25m 00s | `2adf5fe6` | the explorer shows events: `events.json` and a count in `meta.json`, an Events card with the latest rows per type, and counts on definition and change cards; spec first in the codebase (Explorer.Spec R-14, R-15, D110) |
+| 116 | 10-14 22:48 | 1h 00m | this commit | C back end compiles higher-order code: flat closures, partial and over-application, unknown calls, lambda-lifted `letrec`, so the prelude list functions compile; 7–19× faster than the JIT, 0 live words (D111, task 610b2785); filed c62198a1, the R2 codebase mistypes pattern variables |
 
-Total from stage 1 to stage 115: 19h 39m.
+Total from stage 1 to stage 116: 20h 39m.

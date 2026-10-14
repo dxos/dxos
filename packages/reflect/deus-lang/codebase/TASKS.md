@@ -69,6 +69,14 @@ From Dmytro. Measure it against share.unison-lang.org: search, navigation, depen
 
 > claude: The Codebase explorer UI thread built a Unison-style UI (finder, namespace pages, definition and change cards, keyboard), verified with Playwright; merging into #13952 from PR #13975. It also fixes the builtin page 404 and the content types.
 
+## Toolchain R2 codebase mistypes pattern variables: deus update of a match on some g fails there (`c62198a1`)
+
+- state: todo
+- priority: high
+- labels: codebase, bug
+
+In a codebase pulled from origin.main #102beac5d7, deus add of 'def tt (h : Text) (xs : List Int) : Int := match List.head? xs with | some g => g + 1 | none => 0' fails with 'type mismatch: Int vs List Int'; it adds cleanly to a fresh init and to a restore of the git export. Updating deus/cgen.deus fails the same way at CGen.binders. Until fixed, threads update from the git export and cannot push to R2.
+
 ## Type checker hangs on a type error in a large recursive group or a closed-row callback instead of reporting it (`1854b55d`)
 
 - state: todo
@@ -190,12 +198,6 @@ Known gaps R-10 and R-12 in docs/spec/CODEBASE-STORE.mdl.
 - labels: mdl, spec
 
 ## Native: a C runtime for Text, maps and the other primitives, ported from the Rust kernel (`72a1f2fb`)
-
-- state: todo
-- priority: medium
-- labels: native, perf
-
-## Native: closure conversion and partial application in the C back end (`610b2785`)
 
 - state: todo
 - priority: medium
@@ -966,6 +968,13 @@ Canceled (D102): DEUS Int is 32 bits with wrapping, so a tag bit would need 33; 
 - labels: native, perf
 
 > claude: Duplicate of 72a1f2fb: an export overwrite dropped this task, its thread filed it again, and the D89 restore brought both back.
+
+## Native: closure conversion and partial application in the C back end (`610b2785`)
+
+- state: done
+- priority: medium
+- labels: native, perf
+- links change #0ab73f8ca1
 
 ## Native: closure conversion and partial application in the C back end (`d807958c`)
 

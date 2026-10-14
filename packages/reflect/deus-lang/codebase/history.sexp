@@ -1,3 +1,8 @@
+(entry "e5816f8806f8c13c1481415231bc2385b19cfb92f9190189ebdc104d337696c6" "task: open c62198a1 Toolchain R2 codebase mistypes pattern variables: deus update of a match on some g fails there" "claude")
+(entry "d4da2862029d8cf4c6c64a0d3135df78599775eec5d560c238162cfe6209cbd4" "close 610b2785 by #0ab73f8ca1" "claude")
+(entry "0ab73f8ca1c79631b53414149510dfcbf381301b128a6e05737852d5f21b7483" "C back end: closures, partial application and lambda-lifted letrec (D111)" "claude")
+(entry "d2791171c63a990a033be74e3bd21ad7060d4b140fc52de61af553b6a23a10e4" "history: import 627 changes" "")
+(entry "671c6d263780df2a7fb7f9ddea753d8fcd161aa48bca034841041c04dcab163c" "task: import from tasks.sexp" "")
 (entry "9d20d6564fce252b6cfe0bc9111ed01edbebd874e632ccf9d7d20d04c8411722" "task: set 381f55f3 state details" "claude")
 (entry "b28f47c0ce348d883d2f57d1a935609fbc685c6d767125d13d70ca48c0753318" "history: import 623 changes" "")
 (entry "d77982c14174c6710caf6d36ebacb6c20559ce654c92b8bcae909ac93f8d7f0d" "task: import from tasks.sexp" "")

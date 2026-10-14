@@ -1,0 +1,57 @@
+/-
+  Higher-order programs for the C back end's closures (D111): lambdas that capture locals, partial
+  application, functions passed and returned as values, and the prelude's `letrec`-based list
+  functions, which are lambda-lifted. `docs/spec/NATIVE.md` has the numbers.
+-/
+
+namespace Closures
+
+inductive Ints where
+  | nil
+  | cons (head : Int) (tail : Ints)
+
+def upTo (i : Int) (n : Int) : Ints := if i >= n then Ints.nil else Ints.cons i (upTo (i + 1) n)
+
+def mapInts (f : Int -> Int) (xs : Ints) : Ints :=
+  match xs with
+  | Ints.nil => Ints.nil
+  | Ints.cons x rest => Ints.cons (f x) (mapInts f rest)
+
+def foldInts (f : Int -> Int -> Int) (acc : Int) (xs : Ints) : Int :=
+  match xs with
+  | Ints.nil => acc
+  | Ints.cons x rest => foldInts f (f acc x) rest
+
+def plus (a : Int) (b : Int) : Int := a + b
+
+def times (k : Int) (x : Int) : Int := k * x
+
+def after (f : Int -> Int) (g : Int -> Int) : Int -> Int := fun x => f (g x)
+
+/-- Lambdas capturing locals, partial application, a function passed as a value, composition. -/
+def run (n : Int) (k : Int) : Int :=
+  let xs := upTo 0 n
+  let ys := mapInts (fun x => x * k + 1) xs
+  let zs := mapInts (times k) ys
+  let ws := mapInts (after (plus 3) (times 2)) zs
+  foldInts plus 0 ws + foldInts (fun a b => a + b * b) 0 xs
+
+/-- Many short-lived closures. -/
+def closureLoop (i : Int) (acc : Int) : Int := if i == 0 then acc else closureLoop (i - 1) (acc + run 100 i % 1000)
+
+def evens (n : Int) : List Int := List.filter (fun x => x % 2 == 0) (List.range 0 n)
+
+def opt (n : Int) : Int := Option.getOr (Option.map (fun x => x + 1) (List.head? (List.reverse (List.range 0 n)))) 0
+
+def anyLast (n : Int) : Int := if List.any (fun x => x == n - 1) (List.range 0 n) then 1 else 0
+
+def zipped (n : Int) : Int := List.foldl (fun acc p => acc + fst p * snd p) 0 (List.zip (List.range 0 n) (List.range 0 n))
+
+def hof (n : Int) : Int := List.foldl (fun a b => a + b) 0 (evens n) + opt n + anyLast n + zipped n % 1000
+
+def hofLoop (i : Int) (n : Int) (acc : Int) : Int := if i == 0 then acc else hofLoop (i - 1) n ((acc + hof n) % 1000000)
+
+test closuresSmall := run 10 3 == 1185
+test hofSmall := hof 100 == 2901
+
+end Closures

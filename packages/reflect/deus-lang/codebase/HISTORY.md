@@ -1,5 +1,10 @@
 # History of main
 
+- `e5816f8806` task: open c62198a1 Toolchain R2 codebase mistypes pattern variables: deus update of a match on some g fails there (by claude)
+- `d4da286202` close 610b2785 by #0ab73f8ca1 (by claude)
+- `0ab73f8ca1` C back end: closures, partial application and lambda-lifted letrec (D111) (by claude)
+- `d2791171c6` history: import 627 changes
+- `671c6d2637` task: import from tasks.sexp
 - `9d20d6564f` task: set 381f55f3 state details (by claude)
 - `b28f47c0ce` history: import 623 changes
 - `d77982c141` task: import from tasks.sexp

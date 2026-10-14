@@ -670,6 +670,7 @@ describe('deus CLI', () => {
       deus('init', '--empty', ...c);
       deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
       deus('add', join(root, 'examples/bench.deus'), join(root, 'examples/sorting.deus'), ...c);
+      deus('add', join(root, 'examples/closures.deus'), ...c);
       // Mutual recursion, tail loops, data on the heap, nullary constructors, 32-bit wrapping,
       // arrays and refs. Reference counting frees every block by the end of the run (D86).
       for (const [name, args] of [
@@ -681,6 +682,9 @@ describe('deus CLI', () => {
         ['Sorting.benchQuick', [300, 7]],
         ['Sorting.benchHeap', [300, 7]],
         ['Sorting.benchArray', [300, 7]],
+        // Closures, partial application and lambda-lifted prelude letrecs (D111).
+        ['Closures.closureLoop', [20, 0]],
+        ['Closures.hofLoop', [5, 200, 0]],
       ] as const) {
         const out = join(scratch, name);
         expect(deus('build', name, '-o', out, '--c', ...c).code).toBe(0);
@@ -749,7 +753,9 @@ describe('deus CLI', () => {
       deus('init', '--empty', ...c);
       deus('add', join(root, 'deus/builtins.deus'), join(root, 'deus/prelude.deus'), ...c);
       deus('add', join(root, 'examples/bench.deus'), join(root, 'examples/sorting.deus'), ...c);
+      deus('add', join(root, 'examples/closures.deus'), ...c);
       for (const [name, args] of [
+        ['Closures.hofLoop', [5, 200, 0]],
         ['Bench.trees', [2]],
         ['Bench.queens', [6]],
         ['Sorting.benchMerge', [300, 7]],
