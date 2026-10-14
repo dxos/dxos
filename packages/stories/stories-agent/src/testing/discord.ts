@@ -65,9 +65,9 @@ export const setupAgent = async ({ db, invoker, remote = false }: SetupAgentProp
   // Not awaited: seeding calls the brain on EDGE, seconds per call and past the setup plugin's activation timeout,
   // and a space created moments ago may not have reached EDGE yet; the panels pick the seed up when it lands.
   void seedSupportTeam({ db, invoker, agent, remote })
-    .then(({ seeded }) =>
+    .then(() =>
       // Facts need a model, which only a story on EDGE has.
-      remote && seeded ? seedSupportFacts({ db, invoker, agent, remote }) : undefined,
+      remote ? seedSupportFacts({ db, invoker, agent, remote }) : undefined,
     )
     .catch((error) => log.warn('seeding the support team failed', { error }));
   return agent;
