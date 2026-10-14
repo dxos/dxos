@@ -74,6 +74,20 @@ impl SystemHost {
     }
 }
 
+/// WASI has no working directory, so a relative path is taken against `$PWD` (the runner sets it).
+#[cfg(target_os = "wasi")]
+fn resolve(path: &str) -> String {
+    match std::env::var("PWD") {
+        Ok(cwd) if !path.starts_with('/') => format!("{}/{}", cwd.trim_end_matches('/'), path),
+        _ => path.to_string(),
+    }
+}
+
+#[cfg(not(target_os = "wasi"))]
+fn resolve(path: &str) -> String {
+    path.to_string()
+}
+
 fn parent(path: &str) -> Option<&std::path::Path> {
     std::path::Path::new(path)
         .parent()
@@ -92,11 +106,13 @@ impl Host for SystemHost {
     }
 
     fn read_file(&mut self, path: &str) -> Option<Vec<u8>> {
+        let path = &resolve(path);
         std::fs::read(path).ok()
     }
 
     fn write_file(&mut self, path: &str, bytes: &[u8], append: bool) -> Result<(), String> {
-        if let Some(dir) = parent(path) {
+        let path = &resolve(path);
+        if let Some(dir) = parent(path).filter(|dir| !dir.is_dir()) {
             std::fs::create_dir_all(dir).map_err(|err| err.to_string())?;
         }
         if append {
@@ -112,14 +128,17 @@ impl Host for SystemHost {
     }
 
     fn exists(&mut self, path: &str) -> bool {
+        let path = &resolve(path);
         std::path::Path::new(path).exists()
     }
 
     fn is_dir(&mut self, path: &str) -> bool {
+        let path = &resolve(path);
         std::path::Path::new(path).is_dir()
     }
 
     fn list_dir(&mut self, path: &str) -> Vec<String> {
+        let path = &resolve(path);
         std::fs::read_dir(path)
             .map(|entries| {
                 entries
@@ -131,10 +150,17 @@ impl Host for SystemHost {
     }
 
     fn mkdirp(&mut self, path: &str) -> Result<(), String> {
+        let path = &resolve(path);
+        // Only when missing: Node's WASI crashes when a collection runs inside
+        // `path_create_directory` (seen on Node 22), and a write calls this for every file.
+        if std::path::Path::new(path).is_dir() {
+            return Ok(());
+        }
         std::fs::create_dir_all(path).map_err(|err| err.to_string())
     }
 
     fn remove(&mut self, path: &str) {
+        let path = &resolve(path);
         let target = std::path::Path::new(path);
         let _ = if target.is_dir() {
             std::fs::remove_dir_all(target)

@@ -26,6 +26,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 18  | 10-14 11:58 | 3m 14s         | `beb703a9`  | charge JIT deoptimizations to the innermost call                                            |
 | 19  | 10-14 11:59 | 0m 52s         | `3052ae66`  | sort JIT imports                                                                            |
 | 20  | 10-14 12:03 | 3m 38s         | `6dd9c38d`  | work the agentic review; enforce the step budget under the JIT                              |
-| 21  | 10-14 12:14 | 11m 42s        | this commit | Rust kernel: self-compiles the seed byte-identically                                        |
+| 21  | 10-14 12:15 | 11m 49s        | `a59e6eb3`  | deus-kernel: the DEUS kernel in Rust, byte-identical to the TypeScript one                  |
+| 22  | 10-14 12:28 | 13m 25s        | this commit | wasm kernel (WASI) self-compiles the seed byte-identically                                  |
 
-Total from stage 1 to stage 21: 2h 31m.
+Total from stage 1 to stage 22: 2h 45m.

@@ -17,6 +17,21 @@ use machine::Options;
 /// The seed this build was made next to; `DEUS_SEED` overrides it.
 const SEED_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../deus-lang/seed/deus.image");
 
+/// Resolves `..` lexically; WASI refuses paths that climb out of a component.
+fn normalize(path: &str) -> String {
+    let mut parts: Vec<&str> = Vec::new();
+    for part in path.split('/') {
+        match part {
+            ".." => {
+                parts.pop();
+            }
+            "." | "" => {}
+            other => parts.push(other),
+        }
+    }
+    format!("/{}", parts.join("/"))
+}
+
 fn options() -> Options {
     let flag = |name: &str| {
         std::env::var(name)
@@ -37,7 +52,7 @@ fn main() {
     let image = match run::embedded_image() {
         Some(image) => image,
         None => {
-            let path = std::env::var("DEUS_SEED").unwrap_or_else(|_| SEED_PATH.to_string());
+            let path = std::env::var("DEUS_SEED").unwrap_or_else(|_| normalize(SEED_PATH));
             match std::fs::read(&path) {
                 Ok(bytes) => String::from_utf8_lossy(&bytes).into_owned(),
                 Err(err) => {

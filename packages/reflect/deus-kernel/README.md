@@ -16,6 +16,9 @@ target/release/deus-kernel compile ../deus-lang/deus --main Cli.main -o out.imag
 - Host IO goes through the `Host` trait: `SystemHost` for native and WASI, or one an embedder
   supplies.
 - `DEUS_SEED`, `DEUS_TRACE`, `DEUS_PROFILE` and `DEUS_MAX_STEPS` work as in the TypeScript CLI.
+- `wasm32-wasip1`: `cargo build --release --target wasm32-wasip1`, then
+  `node wasi/run.mjs target/wasm32-wasip1/release/deus-kernel.wasm …` (`scripts/wasm-seed.sh`
+  checks it reproduces the seed). The 315 KB kernel is the same machine, with IO through WASI.
 - An image appended to the executable (`…image, u64 length, "DEUSIMG1"`) runs instead of the seed.
 
 Decision record: [D40](../deus-lang/docs/DECISIONS.md).

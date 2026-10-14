@@ -62,7 +62,7 @@ fn append(a: &Value, b: &Value) -> Value {
     }
     let mut out = b.clone();
     for item in list_to(a).into_iter().rev() {
-        out = con(LIST, 1, vec![item, out]);
+        out = con(LIST, 1, smallvec::smallvec![item, out]);
     }
     out
 }

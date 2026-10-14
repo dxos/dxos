@@ -1,0 +1,7 @@
+# The kernel's own stack is explicit, but Core compilation and pattern binding recurse; wasm's
+# default 1 MiB stack has no guard page, so give it the 8 MiB a native thread has.
+[target.wasm32-wasip1]
+rustflags = ["-C", "link-arg=-zstack-size=8388608"]
+
+[target.wasm32-unknown-unknown]
+rustflags = ["-C", "link-arg=-zstack-size=8388608"]

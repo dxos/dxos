@@ -2,3 +2,6 @@
 [toolchain]
 channel = "1.93.0"
 profile = "minimal"
+components = ["rustfmt", "clippy"]
+# The wasm kernel (scripts/wasm-seed.sh) builds for WASI.
+targets = ["wasm32-wasip1"]

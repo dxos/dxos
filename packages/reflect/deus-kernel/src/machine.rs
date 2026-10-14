@@ -344,7 +344,7 @@ impl Machine {
         if sym == BOOL {
             return Value::Bool(tag == 1);
         }
-        con(sym, tag, Vec::new())
+        con(sym, tag, Fields::new())
     }
 
     fn compile_pattern(&mut self, form: &Sexp) -> Result<u32, Fail> {
@@ -677,7 +677,11 @@ impl Machine {
                 }
                 match callee {
                     Value::Prim(prim) => Ok(Quick::Value((prim.func)(self, &args)?)),
-                    Value::ConFn(con) => Ok(Quick::Value(crate::value::con(con.ty, con.tag, args))),
+                    Value::ConFn(con) => Ok(Quick::Value(crate::value::con(
+                        con.ty,
+                        con.tag,
+                        Fields::from_vec(args),
+                    ))),
                     _ => Ok(Quick::Slow),
                 }
             }
@@ -789,7 +793,7 @@ impl Machine {
                     if args.len() > con.arity {
                         return defect("constructor applied to too many arguments");
                     }
-                    run.value = crate::value::con(con.ty, con.tag, args);
+                    run.value = crate::value::con(con.ty, con.tag, Fields::from_vec(args));
                     return Ok(true);
                 }
                 Value::OpFn(op) => {

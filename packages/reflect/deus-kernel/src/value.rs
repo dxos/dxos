@@ -8,6 +8,8 @@ use std::cell::{OnceCell, RefCell};
 use std::collections::HashMap;
 use std::rc::Rc;
 
+use smallvec::SmallVec;
+
 use crate::machine::{Frame, Machine, TermId};
 use crate::text::{json, Text};
 
@@ -23,6 +25,33 @@ pub struct EnvNode {
     pub next: Env,
 }
 
+impl Drop for EnvNode {
+    /// Unlinks the chain iteratively: dropping a long environment recursively overflows the
+    /// stack, which on wasm has no guard page.
+    fn drop(&mut self) {
+        let mut next = self.next.take();
+        while let Some(node) = next {
+            match Rc::try_unwrap(node) {
+                Ok(mut node) => next = node.next.take(),
+                Err(_) => break,
+            }
+        }
+    }
+}
+
+impl Drop for Con {
+    /// Drops the spine of a long list (or any right-nested data) iteratively, as above.
+    fn drop(&mut self) {
+        let mut next = self.fields.pop();
+        while let Some(Value::Con(con)) = next {
+            match Rc::try_unwrap(con) {
+                Ok(mut con) => next = con.fields.pop(),
+                Err(_) => break,
+            }
+        }
+    }
+}
+
 pub fn push(env: &Env, value: Value) -> Env {
     Some(Rc::new(EnvNode {
         value: OnceCell::from(value),
@@ -30,10 +59,13 @@ pub fn push(env: &Env, value: Value) -> Env {
     }))
 }
 
+/// Constructor fields; up to two live inside the constructor's own allocation.
+pub type Fields = SmallVec<[Value; 2]>;
+
 pub struct Con {
     pub ty: Sym,
     pub tag: u32,
-    pub fields: Vec<Value>,
+    pub fields: Fields,
 }
 
 pub struct Closure {
@@ -199,34 +231,34 @@ pub const WELL_KNOWN: [&str; 7] = [
     "#Unit", "#List", "#Option", "#Pair", "#Bool", "#IO", "#Defect",
 ];
 
-pub fn con(ty: Sym, tag: u32, fields: Vec<Value>) -> Value {
+pub fn con(ty: Sym, tag: u32, fields: Fields) -> Value {
     Value::Con(Rc::new(Con { ty, tag, fields }))
 }
 
 pub fn unit() -> Value {
-    con(UNIT, 0, Vec::new())
+    con(UNIT, 0, Fields::new())
 }
 
 pub fn nil() -> Value {
-    con(LIST, 0, Vec::new())
+    con(LIST, 0, Fields::new())
 }
 
 pub fn none() -> Value {
-    con(OPTION, 0, Vec::new())
+    con(OPTION, 0, Fields::new())
 }
 
 pub fn some(value: Value) -> Value {
-    con(OPTION, 1, vec![value])
+    con(OPTION, 1, smallvec::smallvec![value])
 }
 
 pub fn pair(first: Value, second: Value) -> Value {
-    con(PAIR, 0, vec![first, second])
+    con(PAIR, 0, smallvec::smallvec![first, second])
 }
 
 pub fn list_from(values: Vec<Value>) -> Value {
     let mut out = nil();
     for value in values.into_iter().rev() {
-        out = con(LIST, 1, vec![value, out]);
+        out = con(LIST, 1, smallvec::smallvec![value, out]);
     }
     out
 }
