@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Page, expect, test } from '@playwright/test';
+import { type BrowserContext, type Page, expect, test } from '@playwright/test';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -48,6 +48,14 @@ export const BASE_URL = PERF_ORIGIN;
 export const SETTLE_MS = 20_000;
 
 const COUNTERS = parseCounters(process.env.DX_PERF_COUNTERS);
+
+/** Stages to take a memory snapshot after (`DX_PERF_SNAPSHOTS`, comma-separated stage ids). */
+const SNAPSHOTS = new Set(
+  (process.env.DX_PERF_SNAPSHOTS ?? '')
+    .split(',')
+    .map((name) => name.trim())
+    .filter(Boolean),
+);
 
 const isMode = (value: string): value is Mode => value === 'measure' || value === 'diagnose';
 
@@ -99,7 +107,7 @@ export type Scenario = {
   privateData?: boolean;
   /** Storage on disk in a throwaway profile directory, as installed; Playwright's contexts keep it in memory. */
   persistentProfile?: boolean;
-  /** Runs before the app's first boot, e.g. to import a profile through `/recovery.html`. */
+  /** Runs in a browser of its own before the measured one boots the app, e.g. to import a profile through `/recovery.html`. */
   prepare?: (page: Page) => Promise<void>;
 };
 
@@ -113,13 +121,16 @@ const runScenario = async (scenario: Scenario, mode: Mode, iteration: number): P
   if (scenario.privateData && !allow) {
     throw new Error(`${scenario.flow} loads private data and runs only partitioned: pass --offline or --edge`);
   }
+  // A heap snapshot holds every string the realm does.
+  if (scenario.privateData && SNAPSHOTS.size > 0) {
+    throw new Error(`${scenario.flow} loads private data, so it takes no memory snapshots`);
+  }
+  if (scenario.prepare && !scenario.persistentProfile) {
+    throw new Error(`${scenario.flow} prepares a profile, so it needs persistentProfile`);
+  }
   const profileDir = scenario.persistentProfile ? mkdtempSync(path.join(tmpdir(), 'dx-perf-profile-')) : undefined;
-  const instrumented = profileDir ? await launchInstrumentedContext(profileDir) : await launchInstrumentedBrowser();
-  const { browserCdp, debugPort } = instrumented;
   const offsite: string[] = [];
-  try {
-    const context = 'context' in instrumented ? instrumented.context : await instrumented.browser.newContext();
-    const page = context.pages()[0] ?? (await context.newPage());
+  const guard = (context: BrowserContext) => {
     if (allow) {
       context.on('response', (response) => {
         if (!insidePartition(response.url(), allow)) {
@@ -127,6 +138,29 @@ const runScenario = async (scenario: Scenario, mode: Mode, iteration: number): P
         }
       });
     }
+  };
+  // The preparing page can outlive the navigation away from it (an imported archive is hundreds of
+  // megabytes), so the measured browser starts fresh on the prepared profile, as an installed app does.
+  if (scenario.prepare && profileDir) {
+    try {
+      const preparing = await launchInstrumentedContext(profileDir);
+      try {
+        guard(preparing.context);
+        await scenario.prepare(preparing.context.pages()[0] ?? (await preparing.context.newPage()));
+      } finally {
+        await preparing.close();
+      }
+    } catch (error) {
+      rmSync(profileDir, { recursive: true, force: true });
+      throw error;
+    }
+  }
+  const instrumented = profileDir ? await launchInstrumentedContext(profileDir) : await launchInstrumentedBrowser();
+  const { browserCdp, debugPort } = instrumented;
+  try {
+    const context = 'context' in instrumented ? instrumented.context : await instrumented.browser.newContext();
+    const page = context.pages()[0] ?? (await context.newPage());
+    guard(context);
     const include = scenario.navigates ? skipSharedWorkers : undefined;
     const comparability: Comparability = {
       ...flowConditions(),
@@ -135,6 +169,7 @@ const runScenario = async (scenario: Scenario, mode: Mode, iteration: number): P
       profileState: 'first-run',
       settleMs: SETTLE_MS,
       instruments: 'profiler',
+      ...(SNAPSHOTS.size > 0 ? { snapshotStages: [...SNAPSHOTS] } : {}),
       counters: countersLabel(COUNTERS),
     };
     const runner = new StageRunner({
@@ -148,7 +183,7 @@ const runScenario = async (scenario: Scenario, mode: Mode, iteration: number): P
       network: trackNetwork(page),
       comparability,
       ...(scenario.privateData ? {} : { screenshotDir: path.join(artifactDir, 'stages') }),
-      snapshotStages: new Set(),
+      snapshotStages: SNAPSHOTS,
       snapshotDir: path.join(artifactDir, 'snapshots'),
       counters: COUNTERS,
       counterDir: path.join(artifactDir, 'counters'),
@@ -162,7 +197,6 @@ const runScenario = async (scenario: Scenario, mode: Mode, iteration: number): P
     if (comparability.telemetry) {
       await presentAsPersonsBrowser(context, page);
     }
-    await scenario.prepare?.(page);
     await runner.stage('boot', async () => {
       await page.goto(`${BASE_URL}/?profiler=1&model=scripted`, { timeout: 120_000 });
       await waitForReady(page);

@@ -19,18 +19,18 @@
  */
 
 import { webkit } from '@playwright/test';
-import { execFileSync, spawn } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { setTimeout as sleep } from 'node:timers/promises';
 import { parseArgs } from 'node:util';
 
 import { insidePartition, presentAsPersonsBrowser, startPartitionProxy, startTelemetrySink } from '@dxos/perf-harness';
 
 import { waitForReady } from '../../src/playwright/perf/page.ts';
 import { importProfileArchive, soakStages } from '../../src/playwright/scenarios/memory-soak.ts';
+import { servePreview } from './preview.ts';
 
 const APP_DIR = path.resolve(import.meta.dirname, '../..');
 const WORKSPACE_ROOT = path.resolve(APP_DIR, '../../..');
@@ -154,11 +154,7 @@ const main = async (): Promise<number> => {
   const scratch = mkdtempSync(path.join(tmpdir(), 'dx-webkit-footprint-'));
   const profileDir = mkdtempSync(path.join(tmpdir(), 'dx-webkit-profile-'));
 
-  const preview = spawn(
-    'pnpm',
-    ['exec', 'vite', 'preview', '--configLoader', 'native', '--port', String(port), '--strictPort', '--outDir', dist],
-    { cwd: APP_DIR, detached: true, stdio: 'ignore' },
-  );
+  const preview = await servePreview(dist, port);
   const allow = edgeHost ? [edgeHost] : [];
   const proxy = await startPartitionProxy({ allow });
   const sink = telemetryPort
@@ -178,27 +174,28 @@ const main = async (): Promise<number> => {
   const readings: StageReading[] = [];
   const offsite: string[] = [];
   try {
-    for (let attempt = 0; attempt < 120; attempt++) {
-      const up = await fetch(origin).then(
-        (response) => response.ok,
-        () => false,
-      );
-      if (up) {
-        break;
-      }
-      await sleep(1_000);
-    }
-
-    const context = await webkit.launchPersistentContext(profileDir, {
-      headless: true,
-      proxy: { server: `http://127.0.0.1:${proxy.port}`, bypass: '127.0.0.1,localhost' },
-    });
-    try {
+    const launch = async () => {
+      const context = await webkit.launchPersistentContext(profileDir, {
+        headless: true,
+        proxy: { server: `http://127.0.0.1:${proxy.port}`, bypass: '127.0.0.1,localhost' },
+      });
       context.on('response', (response) => {
         if (!insidePartition(response.url(), allow)) {
           offsite.push(new URL(response.url()).host);
         }
       });
+      return context;
+    };
+    // The importing page holds the whole archive and can outlive the navigation away from it, so the
+    // app boots in a fresh browser on the imported profile, as an installed app starts.
+    const importing = await launch();
+    try {
+      await importProfileArchive(importing.pages()[0] ?? (await importing.newPage()), origin, archive);
+    } finally {
+      await importing.close();
+    }
+    const context = await launch();
+    try {
       const page = context.pages()[0] ?? (await context.newPage());
       if (sink) {
         await presentAsPersonsBrowser(context, page);
@@ -229,7 +226,6 @@ const main = async (): Promise<number> => {
         }
       };
 
-      await importProfileArchive(page, origin, archive);
       await stage('boot', async () => {
         await page.goto(`${origin}/?profiler=1`, { timeout: 120_000 });
         await waitForReady(page);
@@ -255,13 +251,7 @@ const main = async (): Promise<number> => {
     );
     await proxy.close();
     await sink?.close();
-    if (preview.pid !== undefined) {
-      try {
-        process.kill(-preview.pid, 'SIGTERM');
-      } catch {
-        // Already gone.
-      }
-    }
+    await preview.stop();
     rmSync(profileDir, { recursive: true, force: true });
     rmSync(scratch, { recursive: true, force: true });
   }
