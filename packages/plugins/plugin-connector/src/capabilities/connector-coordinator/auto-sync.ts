@@ -25,7 +25,7 @@ import { SyncRoutineMissingError } from '../../errors.ts';
  *
  * Forked: a first sync walks the whole remote history, and the setup flows it hangs off (the OAuth
  * finalize handler, the sync-targets dialog submit) must return before it finishes. Failures are
- * surfaced by the sync process itself — the auth-expired toast rides on `Process.Info.error` — so
+ * surfaced by the sync process itself — the auth-expired toast rides on `Process.Process.error` — so
  * nothing propagates back to the caller.
  */
 export const autoSyncConnection = (
@@ -46,6 +46,9 @@ export const autoSyncConnection = (
     Effect.catchIf(
       (error): error is SyncRoutineMissingError => error instanceof SyncRoutineMissingError,
       () => Effect.sync(() => log.info('no sync routine; skipping auto sync', { connectorId: connector.id })),
+    ),
+    Effect.catchTag('TriggerDisabledError', () =>
+      Effect.sync(() => log.info('sync routine switched off; skipping auto sync', { connectorId: connector.id })),
     ),
     Effect.catch((error) => Effect.sync(() => log.warn('auto sync failed', { connectorId: connector.id, error }))),
     Effect.catchDefect((defect) =>

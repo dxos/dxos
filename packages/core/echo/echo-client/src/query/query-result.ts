@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 
 import { type CleanupFn, Event } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -12,10 +12,11 @@ import { type AggregateValue, GroupBy } from '@dxos/echo-host/query';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
-import { getDeep, isNonNullable } from '@dxos/util';
+import { countWork, getDeep, isNonNullable } from '@dxos/util';
 
 import { getObjectCore, isEchoObject } from '../echo-handler/index.ts';
 import { type QueryContext, type SourceEntry } from './query-context.ts';
+import { queryMetrics } from './query-metrics.ts';
 
 /**
  * True when any part of the query asks for deleted entities.
@@ -33,25 +34,41 @@ const _queryIncludesDeleted = (query: QueryAST.Query): boolean => {
   return includesDeleted;
 };
 
+/** A query's results in their public shape. */
+type PresentedResults<T extends Entity.Unknown> = {
+  kind: 'entities' | 'groups' | 'records';
+  objects: T[];
+  entries: QueryResult.EntityEntry<T>[];
+};
+
 /**
  * Predicate based query.
  */
 export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implements QueryResult.QueryResult<T> {
   private readonly _event = new Event<QueryResult.QueryResult<T>>();
   private readonly _diagnostic: QueryDiagnostic;
+  /** Grouping key under which this query's metrics are recorded. */
+  private readonly _metricsKey: string;
 
   private _isActive = false;
   private _resultCache?: QueryResult.EntityEntry<T>[] = undefined;
   private _objectCache?: T[] = undefined;
   private _subscribers: number = 0;
   private _atom: Atom.Atom<T[]> | undefined = undefined;
+  /** When the reactive query started, until it first holds every source's answer. */
+  private _startedAt?: number = undefined;
 
   constructor(
     private readonly _queryContext: QueryContext<T>,
     private readonly _query: Query.Query<T>,
   ) {
+    // Assigned before the context subscription below, whose recompute records under it.
+    this._metricsKey = Query.pretty(this._query);
+    queryMetrics.created(this._metricsKey);
+
     this._queryContext.changed.on(() => {
       if (this._recomputeResult()) {
+        countWork('echo.querySubscriberCallbacks', this._event.listenerCount());
         this._event.emit(this);
       }
     });
@@ -89,10 +106,7 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
    * Does not subscribe to updates.
    */
   async run(opts?: { timeout?: number }): Promise<T[]> {
-    const filteredResults = await this._queryContext.run(Context.default(), this._query.ast, {
-      timeout: opts?.timeout ?? 30_000,
-    });
-    return this._presentResults(filteredResults).objects;
+    return (await this._runOnce(opts)).objects;
   }
 
   /**
@@ -100,10 +114,7 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
    * Does not subscribe to updates.
    */
   async runEntries(opts?: { timeout?: number }): Promise<QueryResult.EntityEntry<T>[]> {
-    const filteredResults = await this._queryContext.run(Context.default(), this._query.ast, {
-      timeout: opts?.timeout ?? 30_000,
-    });
-    return this._presentResults(filteredResults).entries;
+    return (await this._runOnce(opts)).entries;
   }
 
   async first(opts?: { timeout?: number }): Promise<T> {
@@ -154,18 +165,33 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
     const unsubscribeFromEvent = callback ? this._event.on(callback) : undefined;
     this._handleQueryLifecycle();
 
+    // Idempotent: results are cached and shared per query, so a caller releasing twice would
+    // otherwise stop the query under every other subscriber and leave the count negative.
+    let subscribed = true;
     const unsubscribe = () => {
+      if (!subscribed) {
+        log.warn('query unsubscribed twice', { query: Query.pretty(this._query) });
+        return;
+      }
+      subscribed = false;
       log('unsubscribe', { query: Query.pretty(this._query), active: this._isActive });
       this._subscribers--;
       unsubscribeFromEvent?.();
       this._handleQueryLifecycle();
     };
 
-    // Fire the initial event synchronously when authoritative results are already available: either
-    // a source can produce them synchronously, or this (cached/reused) result already computed them
-    // during a prior subscription. Only defer when an async-only query has no results yet (e.g. a
-    // fresh feed query served by the index), so subscribers don't observe a spurious empty snapshot.
-    if (callback && opts?.fire && (this._queryContext.isSynchronous() || this._objectCache !== undefined)) {
+    // Fire the initial event synchronously when there is something true to report: every source has
+    // answered, this (cached/reused) result was already computed during a prior subscription, or the
+    // working set already holds matches. An empty snapshot from a query the index has not answered
+    // yet is deferred: a subscriber that creates a default object when it sees none would otherwise
+    // act on an answer that was never given.
+    if (
+      callback &&
+      opts?.fire &&
+      (!this._queryContext.hasPendingSources() ||
+        this._objectCache !== undefined ||
+        (this._queryContext.isSynchronous() && this._queryContext.getResults().length > 0))
+    ) {
       try {
         callback(this);
       } catch (err) {
@@ -175,6 +201,14 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
     }
 
     return unsubscribe;
+  }
+
+  get completeness(): QueryResult.Completeness {
+    return this._queryContext.getCompleteness();
+  }
+
+  get sources(): readonly QueryResult.SourceState[] {
+    return this._queryContext.getSourceStates();
   }
 
   get atom(): Atom.Atom<T[]> {
@@ -190,6 +224,18 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
     return this._atom;
   }
 
+  private async _runOnce(opts?: { timeout?: number }): Promise<PresentedResults<T>> {
+    const begin = performance.now();
+    const filteredResults = await this._queryContext.run(Context.default(), this._query.ast, {
+      timeout: opts?.timeout ?? 30_000,
+    });
+    const presented = this._presentResults(filteredResults);
+    countWork('echo.queryRuns');
+    countWork('echo.queryResultObjects', presented.objects.length);
+    queryMetrics.executed(this._metricsKey, performance.now() - begin, presented.objects.length, 'run');
+    return presented;
+  }
+
   private _ensureCachePresent(): void {
     if (!this._resultCache) {
       this._recomputeResult();
@@ -201,28 +247,43 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
    */
   private _recomputeResult(): boolean {
     // TODO(dmaretskyi): Make results unique too.
+    const begin = performance.now();
     const results = this._queryContext.getResults();
     const presented = this._presentResults(results);
+    const end = performance.now();
+    countWork('echo.queryRecomputes');
+    countWork('echo.queryResultObjects', presented.objects.length);
+    queryMetrics.updated(this._metricsKey, end - begin, presented.objects.length);
+    // Time to answer: the first recompute after start at which no source is still outstanding.
+    if (this._startedAt !== undefined && !this._queryContext.hasPendingSources()) {
+      queryMetrics.executed(this._metricsKey, end - this._startedAt, presented.objects.length, 'reactive');
+      this._startedAt = undefined;
+    }
 
-    const changed = presented.grouped
-      ? // Same T-is-erased-Group boundary as `_presentResults` — `_objectCache`/`presented.objects`
-        // are really `GroupResult[]` here, just typed as `T[]` at this generic class's surface.
-        !_groupsEqual(
-          this._objectCache as unknown as GroupResult[] | undefined,
-          presented.objects as unknown as GroupResult[],
-        )
-      : !this._objectCache ||
-        this._objectCache.length !== presented.objects.length ||
-        this._objectCache.some((obj, index) => obj.id !== presented.objects[index].id);
+    const changed =
+      presented.kind === 'groups'
+        ? // Same T-is-erased-Group boundary as `_presentResults` — `_objectCache`/`presented.objects`
+          // are really `GroupResult[]` here, just typed as `T[]` at this generic class's surface.
+          !_groupsEqual(
+            this._objectCache as unknown as GroupResult[] | undefined,
+            presented.objects as unknown as GroupResult[],
+          )
+        : presented.kind === 'records'
+          ? !this._resultCache ||
+            this._resultCache.length !== presented.entries.length ||
+            this._resultCache.some((entry, index) => entry.id !== presented.entries[index].id)
+          : !this._objectCache ||
+            this._objectCache.length !== presented.objects.length ||
+            this._objectCache.some((obj, index) => obj.id !== presented.objects[index].id);
 
     log('recomputeResult', { changed });
 
-    // An aggregate query assembles its group records fresh on every recompute, so an unchanged result
+    // An aggregate or change query assembles its records fresh on every recompute, so an unchanged result
     // still yields a new array — and `useQuery` reads `results` as its `useSyncExternalStore` snapshot
     // on every render, which would then see a new reference for identical data. Hold the previous
     // arrays in that case only: on the flat path `changed` compares ids and order alone, so pinning
     // would serve stale entities and stale per-row match metadata.
-    if (!presented.grouped || changed) {
+    if (presented.kind === 'entities' || changed) {
       this._resultCache = presented.entries;
       this._objectCache = presented.objects;
     }
@@ -234,11 +295,7 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
    * query (detected by the internal `SourceEntry.group` annotation, which the query context sets
    * uniformly across all entries or none), assembles flat aggregate records instead of deduped rows.
    */
-  private _presentResults(entries: SourceEntry<T>[]): {
-    objects: T[];
-    entries: QueryResult.EntityEntry<T>[];
-    grouped: boolean;
-  } {
+  private _presentResults(entries: SourceEntry<T>[]): PresentedResults<T> {
     const { kept, removed } = this._collapseDuplicates(entries);
     entries = kept;
 
@@ -248,17 +305,18 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
         _groupAggregatesFromQuery(this._query.ast),
         removed,
       );
-      // Boundary cast: T is the flat aggregate record for aggregate queries (per Query.aggregate's
-      // return type), but this class is written generically over the row type — aggregation is a
-      // presentation transform applied on top of row-level entries, with the row type erased at runtime.
       return {
-        objects: groups as unknown as T[],
+        kind: 'groups',
+        objects: _asResultRows<T>(groups),
         entries: groupEntries as unknown as QueryResult.EntityEntry<T>[],
-        grouped: true,
       };
     }
 
-    return { objects: this._uniqueObjects(entries), entries, grouped: false };
+    if (entries.length > 0 && entries[0].record !== undefined) {
+      return { kind: 'records', objects: _asResultRows<T>(entries.map((entry) => entry.record)), entries };
+    }
+
+    return { kind: 'entities', objects: this._uniqueObjects(entries), entries };
   }
 
   /**
@@ -284,7 +342,11 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
     const kept: SourceEntry<T>[] = [];
     const removed: SourceEntry<T>[] = [];
     for (const entry of entries) {
-      (isEchoObject(entry.result) && getObjectCore(entry.result).isDeleted() ? removed : kept).push(entry);
+      // The working set already applied the deleted option, so only remote entries can carry a tombstone;
+      // skipping the rest keeps this off the per-write path of a synchronous notification.
+      const tombstone =
+        entry.resolution?.source !== 'local' && isEchoObject(entry.result) && getObjectCore(entry.result).isDeleted();
+      (tombstone ? removed : kept).push(entry);
     }
     return { kept, removed };
   }
@@ -321,6 +383,8 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
 
   private _start(): void {
     this._isActive = true;
+    this._startedAt = performance.now();
+    queryMetrics.started(this._metricsKey);
     this._queryContext.start();
     this._diagnostic.isActive = true;
   }
@@ -329,6 +393,8 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
     this._queryContext.stop();
     this._isActive = false;
     this._diagnostic.isActive = false;
+    this._startedAt = undefined;
+    queryMetrics.stopped(this._metricsKey);
   }
 
   private _checkQueryIsRunning(): void {
@@ -345,6 +411,13 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
  * field per declared aggregate ({@link Query.aggregate}), including the group-key fields.
  */
 type GroupResult = { [field: string]: unknown };
+
+/**
+ * Boundary cast: T is a plain record for aggregate and change queries (`Query.RecordResult`), but
+ * this class is written generically over the entity type — records are a presentation transform
+ * applied on top of row-level entries, with the row type erased at runtime.
+ */
+const _asResultRows = <T>(rows: readonly unknown[]): T[] => rows as unknown as T[];
 
 /**
  * Buckets flat row-level entries into flat aggregate records, in the order groups first appear in
@@ -366,6 +439,7 @@ const _assembleGroups = (
   const keys = new Map<string, Record<string, unknown>>();
   const members = new Map<string, unknown[]>();
   const counts = new Map<string, number>();
+  const sourceAggregates = new Map<string, Record<string, AggregateValue>>();
 
   for (const entry of entries) {
     if (!entry.group) {
@@ -386,6 +460,9 @@ const _assembleGroups = (
       keys.set(serializedKey, entry.group.key);
       counts.set(serializedKey, entry.group.count);
       order.push(serializedKey);
+    }
+    if (entry.group.aggregates !== undefined) {
+      sourceAggregates.set(serializedKey, entry.group.aggregates);
     }
     if (entry.result != null) {
       members.get(serializedKey)!.push(entry.result);
@@ -415,11 +492,16 @@ const _assembleGroups = (
     const groupMembers = members.get(serializedKey)!;
     // Group-key fields are already keyed by their result-field name; spread them flat.
     const record: GroupResult = { ...keys.get(serializedKey)! };
+    const computed = sourceAggregates.get(serializedKey);
     for (const aggregate of aggregates) {
-      if (aggregate.kind === 'group') {
+      if (QueryAST.isGroupKeyAggregate(aggregate)) {
         continue; // Group-key fields come from the spread above.
       }
-      record[aggregate.name] = _computeAggregate(aggregate, groupMembers, counts.get(serializedKey)!);
+      // A collapsed group has no members to reduce; the source's value is the only one there is.
+      record[aggregate.name] =
+        computed !== undefined && aggregate.kind !== 'items'
+          ? computed[aggregate.name]
+          : _computeAggregate(aggregate, groupMembers, counts.get(serializedKey)!);
     }
     return record;
   });
@@ -431,7 +513,12 @@ const _assembleGroups = (
 const _computeAggregate = (aggregate: QueryAST.GroupAggregate, members: readonly unknown[], count: number): unknown => {
   switch (aggregate.kind) {
     case 'group':
+    case 'type':
+    case 'timestamp':
+    case 'time':
       return undefined; // Group-key fields are assembled from the source key, not here.
+    case 'sum':
+      return GroupBy.sum(members.map((value) => getDeep(value as Record<string, unknown>, [aggregate.property])));
     case 'items':
       return aggregate.limit !== undefined ? members.slice(0, aggregate.limit) : members;
     case 'count':

@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import { describe, test } from 'vitest';
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
@@ -13,12 +13,13 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { Client } from '@dxos/client';
 import { DXN, Key } from '@dxos/echo';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 import { Attention } from '@dxos/react-ui-attention/types';
 
 import { SearchPlugin } from '#plugin';
@@ -53,18 +54,18 @@ const makeUninitializedClientHostPlugin = (client: Client) =>
 describe('SearchPlugin', () => {
   test('contributes the search deck companion before the client initializes', async ({ expect }) => {
     const client = new Client();
-    await using harness = await createComposerTestApp({
+    await using harness = await Harness.createComposerTestApp({
       plugins: [makeUninitializedClientHostPlugin(client)(), SearchPlugin()],
     });
 
     const builder = await harness.waitForCapability(AppCapabilities.AppGraph);
     const registry = harness.get(Capabilities.AtomRegistry);
-    AppGraph.expandSync(builder.graph, GraphNode.RootId, 'child');
+    AppGraph.expandSync(builder.graph, GraphNode.RootId, AppNode.companion);
     await AppGraphBuilder.flush(builder);
 
     expect(client.initialized).toBe(false);
     const companion = registry
-      .get(builder.graph.connections(GraphNode.RootId, 'child'))
+      .get(builder.graph.connections(GraphNode.RootId, AppNode.companion))
       .find((node) => node.id.endsWith(Attention.linkedSegment('search')));
     expect(companion).toBeDefined();
     expect(companion?.data).toBeNull();

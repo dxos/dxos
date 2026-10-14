@@ -9,4 +9,5 @@ export const OutlineCard: ComponentType<any> = lazy(() => import('./OutlineCard/
 export const OutlineArticle: ComponentType<any> = lazy(() => import('./OutlineArticle/index.ts'));
 export const RemoteSessionCard: ComponentType<any> = lazy(() => import('./RemoteSessionCard/index.ts'));
 export const QuickEntryDialog: ComponentType<any> = lazy(() => import('./QuickEntryDialog/index.ts'));
+export const TaskArticle: ComponentType<any> = lazy(() => import('./TaskArticle/index.ts'));
 export const TaskSetArticle: ComponentType<any> = lazy(() => import('./TaskSetArticle/index.ts'));

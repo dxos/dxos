@@ -3,13 +3,13 @@
 //
 
 import { it } from '@effect/vitest';
+import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
+import * as HttpClient from 'effect/http/HttpClient';
+import * as HttpClientRequest from 'effect/http/HttpClientRequest';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
-import * as HttpClient from 'effect/unstable/http/HttpClient';
-import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 import { describe, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
@@ -46,7 +46,7 @@ const ClientLayer = ChatCompletionsAdapter.clientLayer({
 const ResolverLayer = DeepSeekResolver.make().pipe(Layer.provide(ClientLayer));
 
 const modelLayer = (options?: { thinking?: boolean }) =>
-  AiService.model(FLASH, { provider: Provider.edge.id, ...options }).pipe(
+  AiService.languageModel(FLASH, { provider: Provider.edge.id, ...options }).pipe(
     Layer.provide(AiModelResolver.buildAiService),
     Layer.provide(ResolverLayer),
   );
@@ -138,8 +138,7 @@ describe('DeepSeekResolver', () => {
         log.info('tools', { text: response.text, toolCalls: response.toolCalls.length });
         expect(response.toolCalls.length).toBeGreaterThan(0);
       },
-      Effect.provide(CalculatorLayer),
-      Effect.provide(modelLayer({ thinking: false })),
+      Effect.provide(Layer.provideMerge(CalculatorLayer, modelLayer({ thinking: false }))),
     ),
     { timeout: 180_000, tags: ['manual'] },
   );

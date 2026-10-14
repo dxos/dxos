@@ -11,21 +11,21 @@ tags:
   - storybook
 tasks:
   check-module-structure:
-    # Verify headless entrypoints resolve under workerd conditions (post-build artifacts
-    # must exist — catches stale `./workerd` export paths like the removed browser bundle).
-    # Then fail when the root export pulls in React; React lives only behind `./ui`.
-    script: |
-      bun $workspaceRoot/tools/dx-trace-imports/cli.js \
-        --export . \
-        --to "{react,react-dom}" \
-        --conditions workerd,worker \
-        --fail-on present
+    # Fail when any export pulls in `@dxos/react-ui`: the framework renders no UI of its own, so
+    # components built on react-ui belong in `@dxos/app-toolkit`.
+    command: >-
+      bun $workspaceRoot/tools/dx-trace-imports/cli.js
+      --all-exports
+      --to "@dxos/react-ui"
+      --conditions browser
+      --conditions node
+      --fail-on present
     deps:
       - dx-trace-imports:build
       - build
     inputs:
-      - tsconfig.json
       - package.json
+      - tsconfig.json
       - '@group(production)'
       - '^@group(production)'
       - /pnpm-lock.yaml

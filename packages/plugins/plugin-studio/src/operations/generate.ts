@@ -10,13 +10,10 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { meta } from '#meta';
 import { Generation, GenerationService, StudioCapabilities, StudioOperation, Variant } from '#types';
-
-/** Route a provider rejection to the failure channel, preserving the original Error for name matching. */
-const toError = (error: unknown): Error =>
-  error instanceof Error ? error : new GenerationService.GenerationError(String(error));
 
 const handler: Operation.WithHandler<typeof StudioOperation.Generate> = StudioOperation.Generate.pipe(
   Operation.withHandler(
@@ -82,6 +79,7 @@ const handler: Operation.WithHandler<typeof StudioOperation.Generate> = StudioOp
       const options: GenerationService.GenerateOptions = {
         apiKey,
         signal: controller.signal,
+        load: (ref) => EffectEx.runPromise(Database.load(ref)),
         onProgress: ({ current, total }) => {
           if (total !== undefined) {
             monitor?.total(total);
@@ -130,7 +128,10 @@ const handler: Operation.WithHandler<typeof StudioOperation.Generate> = StudioOp
           let pending = resumeVariant;
           let jobId = pending?.jobId;
           if (!jobId) {
-            const enqueued = yield* Effect.tryPromise({ try: () => enqueue(request, options), catch: toError });
+            const enqueued = yield* Effect.tryPromise({
+              try: () => enqueue(request, options),
+              catch: GenerationService.GenerationError.wrap({ ifTypeDiffers: true }),
+            });
             jobId = enqueued.jobId;
             const created = Variant.make({ name, config, jobId });
             yield* Database.add(created);
@@ -141,7 +142,9 @@ const handler: Operation.WithHandler<typeof StudioOperation.Generate> = StudioOp
             pending = created;
           }
           if (!pending || jobId === undefined) {
-            return yield* Effect.fail(new GenerationService.GenerationError('Failed to enqueue generation job.'));
+            return yield* Effect.fail(
+              new GenerationService.GenerationError({ message: 'Failed to enqueue generation job.' }),
+            );
           }
           const pendingVariant = pending;
           const pendingJobId = jobId;
@@ -153,7 +156,7 @@ const handler: Operation.WithHandler<typeof StudioOperation.Generate> = StudioOp
               Obj.update(pendingVariant, (pendingVariant) => {
                 pendingVariant.jobId = undefined;
               });
-              return toError(error);
+              return GenerationService.GenerationError.wrap({ ifTypeDiffers: true })(error);
             },
           });
           // Fill the pending variant with the first result (freezing it); append any extras.
@@ -181,14 +184,19 @@ const handler: Operation.WithHandler<typeof StudioOperation.Generate> = StudioOp
           return { count: awaited.variants.length };
         }
         if (generate) {
-          const result = yield* Effect.tryPromise({ try: () => generate(request, options), catch: toError });
+          const result = yield* Effect.tryPromise({
+            try: () => generate(request, options),
+            catch: GenerationService.GenerationError.wrap({ ifTypeDiffers: true }),
+          });
           for (const data of result.variants) {
             yield* appendVariant(data);
           }
           return { count: result.variants.length };
         }
         return yield* Effect.fail(
-          new GenerationService.GenerationError(`Provider ${service.id} implements neither generate nor enqueue.`),
+          new GenerationService.GenerationError({
+            message: `Provider ${service.id} implements neither generate nor enqueue.`,
+          }),
         );
       });
 

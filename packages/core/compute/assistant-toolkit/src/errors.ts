@@ -33,3 +33,6 @@ export class UpdateTasksError extends BaseError.extend('UpdateTasksError') {
     super({ message });
   }
 }
+
+/** Toolkit operation failed. The underlying failure, where there is one, is the `cause`. */
+export class ToolkitError extends BaseError.extend('ToolkitError', 'Toolkit operation failed.') {}

@@ -40,6 +40,10 @@ describe('causeToError', () => {
       Effect.sync(() => {
         throw new Error('defect');
       }),
+      // The assertion below is on the thrown `Error`'s own stack, so the `catch` has to hand it
+      // back untouched; wrapping it would replace the frames under test, and dropping the `catch`
+      // reports `UnknownError`'s stack instead.
+      // @effect-diagnostics-next-line unknownInEffectCatch:off
       Effect.try({
         try: () => {
           throw new Error('failure');

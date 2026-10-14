@@ -3,13 +3,14 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
+import * as Layer from 'effect/Layer';
 import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { InternalError } from '@dxos/errors';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
 import * as Kanban from '@dxos/plugin-kanban/Kanban';
@@ -196,7 +197,7 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
         throw new Error('expected external cursor');
       }
       return binding;
-    }).pipe(Effect.provide(Database.layer(db)), Effect.provide(FetchHttpClient.layer));
+    }).pipe(Effect.provide(Layer.provideMerge(Database.layer(db), FetchHttpClient.layer)));
 
   test('full flow: GetTrelloBoards (discovery) → bind selection → SyncTrelloBoard syncs only chosen boards', async ({
     expect,

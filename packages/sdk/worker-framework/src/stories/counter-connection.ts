@@ -10,7 +10,7 @@ import * as Stream from 'effect/Stream';
 
 import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import * as Client from '@dxos/worker-framework/Client';
 import * as Coordinator from '@dxos/worker-framework/Coordinator';

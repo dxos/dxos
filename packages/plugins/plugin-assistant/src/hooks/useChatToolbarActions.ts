@@ -4,10 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Chat from '@dxos/assistant/Chat';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
@@ -35,7 +35,7 @@ export type ChatToolbarActionsProps = {
 };
 
 export const useChatToolbarActions = ({ chat, companionTo, switcher }: ChatToolbarActionsProps) => {
-  const { invoke } = useOperationInvoker();
+  const { invoke } = Hooks.useOperationInvoker();
   const { db } = useChatContext('useChatToolbarActions');
 
   // Stable references in deps avoid circular reference issues.

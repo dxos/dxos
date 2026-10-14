@@ -10,6 +10,7 @@ import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import * as Aggregate from './Aggregate.ts';
+import * as Annotation from './Annotation.ts';
 import * as Dataset from './Dataset.ts';
 import * as Feed from './Feed.ts';
 import * as Filter from './Filter.ts';
@@ -42,6 +43,36 @@ describe('query api', () => {
       const recentlyUpdated = Query.type(TestSchema.Person).orderBy(Order.updated('desc')).limit(3);
 
       Schema.decodeSync(Schema.toType(QueryAST.Query))(recentlyUpdated.ast);
+    });
+
+    test('order by annotation', () => {
+      const Rating = Annotation.make({ id: 'org.dxos.annotation.test-rating', schema: Schema.Number });
+      const Distance = Annotation.make({
+        id: 'org.dxos.annotation.test-distance',
+        schema: Schema.Struct({ meters: Schema.Number, label: Schema.optional(Schema.String) }),
+      });
+
+      const byRating = Query.type(TestSchema.Person).orderBy(Order.annotation(Rating)).limit(50);
+      const byDistance = Query.type(TestSchema.Person).orderBy(Order.annotation(Distance, 'desc', ['meters']));
+      for (const query of [byRating, byDistance]) {
+        const decoded = Schema.decodeSync(Schema.toType(QueryAST.Query))(query.ast);
+        expect(Schema.encodeSync(QueryAST.Query)(decoded)).toEqual(query.ast);
+      }
+      expect(Order.annotation(Rating).ast).toEqual({ kind: 'annotation', key: Rating.key, direction: 'asc' });
+      expect(Order.annotation(Distance, 'desc', ['meters']).ast).toEqual({
+        kind: 'annotation',
+        key: Distance.key,
+        path: ['meters'],
+        direction: 'desc',
+      });
+      expect(Query.pretty(byDistance)).toContain(
+        `Order.annotation(${JSON.stringify(Distance.key)}, "desc", ["meters"])`,
+      );
+
+      // @ts-expect-error a struct-valued annotation needs a path to a scalar.
+      Order.annotation(Distance);
+      // @ts-expect-error the path must name a field of the annotation's value.
+      Order.annotation(Distance, 'asc', ['miles']);
     });
 
     test('get all people named Fred', () => {
@@ -1181,6 +1212,22 @@ describe('query api', () => {
       const filter = Filter.or(Filter.type(TestSchema.Person), Filter.type(TestSchema.Organization));
       const pretty = Filter.pretty(filter);
       expect(pretty).toContain('Filter.or');
+    });
+
+    test('Filter.annotation checks presence of any annotation, but compares only scalar values', () => {
+      const Status = Annotation.make({ id: 'org.dxos.annotation.test-status', schema: Schema.String });
+      const Shape = Annotation.make({
+        id: 'org.dxos.annotation.test-shape',
+        schema: Schema.Struct({ sides: Schema.Number }),
+      });
+
+      expect(Filter.annotation(Shape).ast).toEqual({ type: 'annotation', key: Shape.key });
+      expect(Filter.annotation(Status, 'done').ast).toEqual({ type: 'annotation', key: Status.key, value: 'done' });
+
+      // @ts-expect-error — the value must match the annotation's type.
+      Filter.annotation(Status, 1);
+      // @ts-expect-error — a struct-valued annotation cannot be compared.
+      Filter.annotation(Shape, { sides: 3 });
     });
   });
 });

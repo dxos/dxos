@@ -5,7 +5,7 @@
 import { describe, onTestFinished, test } from 'vitest';
 
 import { Client } from '@dxos/client';
-import { DiagnosticsCollector } from '@dxos/client-services';
+import { Diagnostics } from '@dxos/client-services';
 import { TestBuilder } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
 
@@ -14,7 +14,7 @@ describe.skip('DiagnosticsCollector', () => {
     const testBuilder = new TestBuilder();
     onTestFinished(() => testBuilder.destroy());
 
-    const diagnostics = await DiagnosticsCollector.collect();
+    const diagnostics = await Diagnostics.DiagnosticsCollector.collect();
     expect(diagnostics.client.config).not.to.be.undefined;
     expect(diagnostics.services).to.be.undefined;
   });
@@ -27,7 +27,7 @@ describe.skip('DiagnosticsCollector', () => {
     await client.initialize();
     onTestFinished(() => client.destroy());
 
-    const diagnostics = await DiagnosticsCollector.collect();
+    const diagnostics = await Diagnostics.DiagnosticsCollector.collect();
     expect(diagnostics.client.config).not.to.be.undefined;
     expect(diagnostics.services).not.to.be.undefined;
   });
@@ -43,7 +43,7 @@ describe.skip('DiagnosticsCollector', () => {
     await client.initialize();
     onTestFinished(() => client.destroy());
 
-    const diagnostics = await DiagnosticsCollector.collect();
+    const diagnostics = await Diagnostics.DiagnosticsCollector.collect();
     expect(diagnostics.client.config).not.to.be.undefined;
     expect(diagnostics.services).not.to.be.undefined;
   });

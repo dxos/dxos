@@ -60,3 +60,49 @@ moon run assistant-e2e:test
 # Live, regenerating conversations (requires credentials)
 DX_UPDATE_MODEL_FIXTURES=1 moon run assistant-e2e:test -- src/testing/sandbox.test.ts
 ```
+
+## Chat performance
+
+`src/playwright/perf-chat.spec.ts` measures the chat stack in a browser with `@dxos/perf-harness`
+(the harness behind `composer-app`'s `perf-*.spec.ts`). It drives the `stories-assistant`
+`Chat` / `PerfScripted` story: a 20-turn calculator loop over a scripted model, so no live LLM is
+involved. It runs against a static build of the `stories-assistant` stories
+(`storybook-react:bundle-perf`), served by `vite preview` on :9019, so the stages measure the bundled
+app rather than Vite's dev server transforming and streaming thousands of unbundled modules. Stages are `boot`, `assistant-turns`,
+`scroll-thread` and `idle`; each writes one row of CPU, memory, DOM, network, disk and
+responsiveness metrics under `test-results/perf/`.
+
+```bash
+moon run assistant-e2e:e2e-perf                      # builds the stories, then runs the flow on the build
+DX_PERF_SERVER=dev moon run assistant-e2e:e2e-perf   # `storybook dev` on :9009 (reused if running) instead
+```
+
+Rows from the dev server carry `servingMode: 'dev'` and are not comparable with the budgets, which
+are calibrated on the build. What the build needs to boot is in `tools/storybook-react/.storybook/perf-bundle.ts`.
+
+`DX_PERF_SCALES` picks the spaces (`blank`, `busy`; both by default) and `DX_PERF_ITERATIONS` repeats
+the flow. With `DX_POSTHOG_API_KEY` set, each iteration publishes its rows as `ci.perf-stage`.
+
+The busy space (`PerfScriptedBusy`) is seeded in the browser by `stories-assistant`'s
+`busy-space.ts`, at a twentieth of the long-lived space it was modelled on (`OBSERVED_BUSY_SCALE`):
+feed appends run at tens of entries a second on OPFS, so the full volume cannot be seeded once per
+iteration. The `seed` stage logs each seeding phase's wall time.
+
+The `chat-bench` job in `.depot/workflows/perf-nightly.yml` runs both spaces nightly and scores them
+together as `ci.perf-score` with `ciSuite = 'chat'`, against `src/playwright/perf/budgets.json`.
+Each metric is the median of the night's iterations. The busy space's metrics carry a `busy > `
+prefix and roll up into one `busy space` group, so a busy regression moves the Chat score; a busy
+run that wrote no rows scores that group at the floor:
+
+```bash
+node scripts/score-perf.ts score [--dir test-results/perf] [--publish]
+```
+
+Each target is the median of the first perf-nightly CI run against the built Storybook (5
+iterations, blank and busy), rounded up to two significant figures, and each limit is 1.5× it.
+Dev-server rows (`DX_PERF_SERVER=dev`) never feed these budgets. One run is a thin sample:
+recalibrate from the nightly's own `ci.perf-stage` rows once a few nights have run, and never raise a
+target. Where the CI median was worse than the earlier dev-server target, the earlier target stands:
+the worst tab lag p95 (blank and busy) and busy's worst worker lag p95, which the build's single
+chunk pushes up while it parses. `seed`, `wall > idle` (a scripted wait), `edge traffic` (EDGE is off)
+and `app code transferred` are left unbudgeted on purpose.

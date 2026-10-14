@@ -7,7 +7,7 @@
 // every edit.
 
 export const defaultConfig = {
-  radius: 800,
+  radius: 700,
   minDistance: 150,
   particleCount: 400,
   maxParticleCount: 600,

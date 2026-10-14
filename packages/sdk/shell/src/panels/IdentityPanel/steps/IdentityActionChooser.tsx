@@ -2,14 +2,27 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { DeviceType, useHaloInvitations } from '@dxos/react-client/halo';
 import { type Invitation, Invitation_State, InvitationEncoder } from '@dxos/react-client/invitations';
+import * as Button from '@dxos/react-ui/Button';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Typography from '@dxos/react-ui/Typography';
+import { getSize, mx } from '@dxos/ui-theme';
 
-import { AgentConfig, type AgentFormProps, DeviceList, type DeviceListProps } from '../../../components/index.ts';
+import {
+  AgentConfig,
+  type AgentFormProps,
+  DeviceList,
+  type DeviceListProps,
+  toShellDevice,
+} from '../../../components/index.ts';
+import { translationKey } from '../../../translations.ts';
 import { type IdentityPanelStepProps } from '../IdentityPanelProps.ts';
 
 export type IdentityActionChooserProps = IdentityPanelStepProps;
@@ -47,11 +60,14 @@ export const IdentityActionChooser = (props: IdentityPanelStepProps) => {
 
 export type IdentityActionChooserImplProps = IdentityActionChooserProps &
   Partial<AgentFormProps> &
-  Pick<DeviceListProps, 'onClickAdd' | 'onClickJoinExisting' | 'onClickRecover' | 'onClickReset'>;
+  Pick<DeviceListProps, 'onClickJoinExisting' | 'onClickRecover' | 'onClickReset'> & {
+    onClickAdd?: () => void;
+  };
 
 export const IdentityActionChooserImpl = ({
   devices,
   connectionState,
+  heading,
   agentHostingEnabled,
   onClickAdd,
   onClickJoinExisting,
@@ -59,21 +75,37 @@ export const IdentityActionChooserImpl = ({
   onClickReset,
   ...agentProps
 }: IdentityActionChooserImplProps) => {
+  const { t } = Hooks.useTranslation(translationKey);
+  const shellDevices = useMemo(() => devices.map(toShellDevice), [devices]);
   const edgeDeviceAvailable = devices.find(
     (device) => device.profile?.type === DeviceType.AGENT_MANAGED && device.profile?.os?.toUpperCase() === 'EDGE',
   );
   return (
-    <div className='h-40 w-full overflow-y-auto'>
-      <DeviceList
-        devices={devices}
-        connectionState={connectionState}
-        onClickAdd={onClickAdd}
-        onClickJoinExisting={onClickJoinExisting}
-        onClickRecover={agentProps.agentStatus === 'created' ? onClickRecover : undefined}
-        onClickReset={onClickReset}
-        onAgentDestroy={agentProps.onAgentDestroy!}
-      />
+    <Dialog.Body gap='md'>
+      {heading}
+      <Typography.Text tone='muted'>{t('devices.heading')}</Typography.Text>
+      {shellDevices.length > 0 && (
+        <DeviceList
+          devices={shellDevices}
+          connectionState={connectionState}
+          onClickJoinExisting={onClickJoinExisting}
+          onClickRecover={agentProps.agentStatus === 'created' ? onClickRecover : undefined}
+          onClickReset={onClickReset}
+        />
+      )}
+      <Button.Root
+        variant='ghost'
+        classNames='justify-start gap-2 ps-0 pe-3 w-full'
+        data-testid='devices-panel.create-invitation'
+        onClick={onClickAdd}
+      >
+        <div role='img' className={mx(getSize(8), 'm-1 rounded-xs bg-input-surface grid place-items-center')}>
+          <Icon.Icon icon='ph--plus--light' size='xl' />
+        </div>
+        <span className='grow font-medium text-start'>{t('choose-add-device.label')}</span>
+        <Icon.Icon icon='ph--caret-right--bold' size='md' />
+      </Button.Root>
       {!edgeDeviceAvailable && agentHostingEnabled && <AgentConfig {...(agentProps as AgentFormProps)} />}
-    </div>
+    </Dialog.Body>
   );
 };

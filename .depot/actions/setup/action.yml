@@ -142,10 +142,52 @@ runs:
         proto-version: '0.60.2'
 
     # Installs the toolchains `.moon/toolchains.yml` declares, which the first moon task would do anyway.
-    # Deliberately not `auto-install` on setup-toolchain: that installs everything pinned, and rust is a
-    # 1.2 GB rustup toolchain that nothing in CI uses.
+    # Deliberately not `auto-install` on setup-toolchain: that installs everything pinned, rust included as
+    # proto's 1.2 GB default-profile toolchain, where the step below installs the minimal profile.
     - name: Install moon toolchains
       run: moon setup
+      shell: bash
+
+    # Only a job whose crate inputs changed compiles, since moon's remote cache restores the addon and
+    # skips `cargo-test` otherwise; the registry is cached because that compile would refetch every crate.
+    - name: Cache cargo registry
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry/index
+          ~/.cargo/registry/cache
+          ~/.cargo/git/db
+        key: ${{ inputs.cache-scope }}-${{ runner.os }}-cargo-registry-${{ hashFiles('tools/code-index-native/Cargo.lock') }}
+        restore-keys: |
+          ${{ inputs.cache-scope }}-${{ runner.os }}-cargo-registry-
+
+    # `code-index`'s store is a Rust addon (`tools/code-index-native`) that `code-index:test` builds. The
+    # toolchain is the one the crate's `rust-toolchain.toml` pins, from rustup's minimal profile; RocksDB is
+    # compiled from source and its bindgen step loads libclang, which the CI image does not ship.
+    - name: Install Rust
+      run: |
+        toolchain=$(sed -n 's/^channel = "\(.*\)"$/\1/p' tools/code-index-native/rust-toolchain.toml)
+        if [ -z "$toolchain" ]; then
+          echo "::error::Could not read the toolchain channel from tools/code-index-native/rust-toolchain.toml."
+          exit 1
+        fi
+        cargo_home="${CARGO_HOME:-$HOME/.cargo}"
+        export PATH="$cargo_home/bin:$PATH"
+        if ! command -v rustup >/dev/null 2>&1; then
+          curl --proto '=https' --tlsv1.2 -sSf --retry 3 https://sh.rustup.rs |
+            sh -s -- -y --profile minimal --default-toolchain none --no-modify-path
+        fi
+        echo "$cargo_home/bin" >> "$GITHUB_PATH"
+        rustup toolchain install "$toolchain" --profile minimal --no-self-update
+        rustc_seconds=$SECONDS
+
+        if ! compgen -G '/usr/lib/llvm-*/lib/libclang.so' >/dev/null; then
+          sudo=$([ "$(id -u)" = 0 ] || echo sudo)
+          $sudo apt-get update -qq
+          $sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends libclang-dev >/dev/null
+        fi
+        (cd tools/code-index-native && rustc --version && cargo --version)
+        echo "Rust ready in ${SECONDS}s (toolchain ${rustc_seconds}s, libclang $((SECONDS - rustc_seconds))s)."
       shell: bash
 
     # `.github/Dockerfile` installs node and pnpm to bootstrap CI while moon installs them from

@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { useObject } from '@dxos/echo-react';
 import type * as Markdown from '@dxos/plugin-markdown/Markdown';
 
 import { Panel, Slide } from '#components';
@@ -12,7 +13,7 @@ import { Panel, Slide } from '#components';
 export type SlideArticleProps = AppSurface.ObjectSectionProps<Markdown.Document>;
 
 export const SlideArticle = ({ subject: document }: SlideArticleProps) => {
-  const content = document.content.target?.content;
+  const [content] = useObject(document.content, 'content');
   if (!content) {
     return null;
   }

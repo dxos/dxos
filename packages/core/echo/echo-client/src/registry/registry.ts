@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 
 import { Event, type ReadOnlyEvent } from '@dxos/async';
 import { type Database, Entity, type Filter, Query, type QueryResult, Registry, Type } from '@dxos/echo';
@@ -286,6 +286,15 @@ class RegistryQueryResult<T> implements QueryResult.QueryResult<T> {
     return this.runSync();
   }
 
+  /** The registry is matched in memory on every read, so its answer is always whole and current. */
+  get completeness(): QueryResult.Completeness {
+    return 'complete';
+  }
+
+  get sources(): readonly QueryResult.SourceState[] {
+    return [{ source: 'registry', state: 'answered', answers: 0 }];
+  }
+
   run(): Promise<T[]> {
     return Promise.resolve(this.runSync());
   }
@@ -307,7 +316,7 @@ class RegistryQueryResult<T> implements QueryResult.QueryResult<T> {
       // `executeQuery` only knows `Entity.Unknown`; the caller's `T` is verified by `#query`'s own
       // filter/select AST at construction time, not by the compiler.
       result: entity as T,
-      resolution: { source: 'local', time: 0 },
+      resolution: { source: 'registry', time: 0 },
     }));
   }
 

@@ -3,18 +3,22 @@
 //
 
 import * as Schema from 'effect/Schema';
-import { describe, test } from 'vitest';
+import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Type } from '@dxos/echo';
-import { HiddenAnnotation } from '@dxos/echo/Annotation';
+import { Annotation, Collection, Obj, Ref, Type } from '@dxos/echo';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { DXN } from '@dxos/keys';
+import { ArchivedAnnotation } from '@dxos/schema';
 
+import * as AppAnnotation from './AppAnnotation.ts';
 import * as TypeOptions from './TypeOptions.ts';
 
-const UserType = Type.makeObject(DXN.make('com.example.type.user', '0.1.0'))(Schema.Struct({ name: Schema.String }));
+const UserType = Type.makeObject(DXN.make('com.example.type.user', '0.1.0'))(
+  Schema.Struct({ name: Schema.String }).pipe(Annotation.UserType.set()),
+);
 
 const HiddenType = Type.makeObject(DXN.make('com.example.type.hidden', '0.1.0'))(
-  Schema.Struct({ name: Schema.String }).pipe(HiddenAnnotation.set(true)),
+  Schema.Struct({ name: Schema.String }),
 );
 
 const Relation = Type.makeRelation(DXN.make('com.example.type.relation', '0.1.0'))({
@@ -52,5 +56,73 @@ describe('filterTypeOptions', () => {
     // `useTypeOptions` resolves the proper label via `t('typename.label', { ns: typename })`.
     const [option] = TypeOptions.filterTypeOptions([UserType], { location: ['runtime'], kind: ['user'] });
     expect(option.label).toBeUndefined();
+  });
+});
+
+describe('isUserType', () => {
+  test('a static type is user-facing only when annotated', ({ expect }) => {
+    expect(TypeOptions.isUserType(UserType)).toBe(true);
+    expect(TypeOptions.isUserType(HiddenType)).toBe(false);
+    expect(TypeOptions.isUserType(HiddenType, { includeHidden: true })).toBe(true);
+  });
+
+  test('a tag is only on the types annotated with it', ({ expect }) => {
+    const Tagged = Type.makeObject(DXN.make('com.example.type.tagged', '0.1.0'))(
+      Schema.Struct({ name: Schema.String }).pipe(Annotation.UserType.set({ tags: ['com.example.tag'] })),
+    );
+    expect(TypeOptions.hasUserTypeTag(Tagged, 'com.example.tag')).toBe(true);
+    expect(TypeOptions.hasUserTypeTag(UserType, 'com.example.tag')).toBe(false);
+  });
+
+  test('an object is user-facing when its type is', ({ expect }) => {
+    expect(TypeOptions.isUserObject(Obj.make(UserType, { name: 'a' }))).toBe(true);
+    expect(TypeOptions.isUserObject(Obj.make(HiddenType, { name: 'b' }))).toBe(false);
+  });
+
+  test('a relation is never user-facing', ({ expect }) => {
+    expect(TypeOptions.isUserType(Relation, { includeHidden: true })).toBe(false);
+  });
+});
+
+describe('filterListedObjects', () => {
+  test('keeps unarchived objects of user types', ({ expect }) => {
+    const listed = Obj.make(UserType, { name: 'listed' });
+    const hidden = Obj.make(HiddenType, { name: 'hidden' });
+    const archived = Obj.make(UserType, { name: 'archived' });
+    Obj.update(archived, (archived) => {
+      Annotation.set(archived, ArchivedAnnotation, true);
+    });
+    expect(TypeOptions.filterListedObjects([listed, hidden, archived])).toEqual([listed]);
+  });
+
+  test("drops the root collection named by the set's space properties, not other collections", ({ expect }) => {
+    const root = Collection.make();
+    const named = Collection.make({ name: 'Projects' });
+    const properties = Obj.make(HiddenType, { name: 'properties' });
+    Obj.update(properties, (properties) => {
+      Annotation.set(properties, AppAnnotation.RootCollectionAnnotation, Ref.make(root));
+    });
+    expect(TypeOptions.filterListedObjects([properties, root, named])).toEqual([named]);
+  });
+});
+
+describe('filterListedObjects in a space', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  test('keeps an object of a type persisted in the space', async ({ expect }) => {
+    const { db } = await builder.createDatabase();
+    const Persisted = await db.addType(
+      Type.makeObject(DXN.make('com.example.type.persisted', '0.1.0'))(Schema.Struct({ name: Schema.String })),
+    );
+    const object = db.add(Obj.make(Persisted, { name: 'persisted' }));
+    expect(TypeOptions.filterListedObjects([object])).toEqual([object]);
   });
 });

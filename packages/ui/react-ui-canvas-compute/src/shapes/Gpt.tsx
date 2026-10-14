@@ -4,14 +4,13 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { ScrollArea } from '@dxos/react-ui';
-import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 
 import { useComputeNodeState } from '../hooks/index.ts';
-import { FunctionBody } from './common/index.ts';
+import { type ComputeNodeViewProps, FunctionBody } from './common/index.ts';
 import { type GptShape } from './gpt-def.ts';
 
-export const GptComponent = ({ shape }: ShapeComponentProps<GptShape>) => {
+export const GptComponent = ({ node: shape }: ComputeNodeViewProps<GptShape>) => {
   const { meta, runtime } = useComputeNodeState(shape);
   const [text, setText] = useState('');
   const [tokens, setTokens] = useState(0);
@@ -55,7 +54,7 @@ export const GptComponent = ({ shape }: ShapeComponentProps<GptShape>) => {
     <FunctionBody
       shape={shape}
       content={
-        <ScrollArea.Root orientation='vertical' thin>
+        <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport>{text}</ScrollArea.Viewport>
         </ScrollArea.Root>
       }

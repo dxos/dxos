@@ -12,8 +12,13 @@ import { Attention } from '@dxos/react-ui-attention/types';
 
 import { meta } from '#meta';
 
+import { isAnyCompanionOpen } from '../util/companion-anchor.ts';
+
 export const PLANK_COMPANION_TYPE = AppNode.PLANK_COMPANION_TYPE;
 export const DECK_COMPANION_TYPE = AppNode.DECK_COMPANION_TYPE;
+
+/** A companion of a plank, as opposed to one of the deck. */
+export const isPlankCompanion = (node: { type?: string }): boolean => node.type === PLANK_COMPANION_TYPE;
 
 export const selectCompanion = <T extends { id: string }>(
   companions: readonly T[],
@@ -40,6 +45,8 @@ export const OpenDeck = Schema.Struct({
   inactive: Schema.mutable(Schema.Array(Schema.String)),
   /** Each open plank's URL segment, by plank id; the key its per-plank preferences hang off. */
   segments: Schema.optional(Schema.Record(Schema.String, Schema.mutableKey(Schema.String))),
+  /** The pathname the workspace was last projected from; a return restores it as a reload would. */
+  url: Schema.optional(Schema.String),
 });
 export type OpenDeck = Schema.Schema.Type<typeof OpenDeck>;
 
@@ -54,9 +61,11 @@ export const StoredDeck = Schema.Struct({
   plankSizing: Schema.mutableKey(PlankSizing),
   companionPlanks: Schema.optional(Schema.mutable(Schema.Array(Schema.String))),
   /**
-   * Named planks, as name → the plank id currently occupying that name. A name makes a plank behave
-   * like a browser tab: opening under a name that is already taken replaces its occupant in place.
-   * Entries are pruned as their plank closes.
+   * Named planks, as name → the plank id holding that name. A name makes a plank behave like a browser
+   * tab: opening under a name that is already taken replaces its holder in place. A plank's detail is
+   * the plank holding its detail name (see `detailName`); a flattened deck shows that one in the
+   * companion rather than opening it, so detail names outlive their holder's plank and are pruned only
+   * once no open plank reaches them. Other names are pruned as their plank closes.
    */
   plankNames: Schema.mutableKey(Schema.Record(Schema.String, Schema.mutableKey(Schema.String))),
 });
@@ -153,18 +162,26 @@ export const getCompanionSelection = (
   platform: Platform,
   state: StoredDeckState,
   viewStateVariant: string | undefined,
+  flatten: boolean | undefined,
 ): CompanionSelection => {
   if (platform === 'mobile') {
     const open = state.complementarySidebarState !== 'closed' && state.complementarySidebarPanel !== undefined;
     return { open, variant: open ? state.complementarySidebarPanel : undefined };
   }
 
-  const companionPlanks = state.decks[state.activeDeck]?.companionPlanks;
-  const open = companionPlanks === undefined || companionPlanks.length > 0;
+  const open = isAnyCompanionOpen(state.decks[state.activeDeck]?.companionPlanks, flatten);
   return { open, variant: open ? viewStateVariant : undefined };
 };
 
 // Transient/ephemeral plugin state (not persisted).
+export const ScrollIntoView = Schema.Struct({
+  /** The identifier of the component. */
+  id: Schema.String,
+  /** Where focus goes once in view: the component (unset or true), its first focusable content, or nowhere. */
+  focus: Schema.optional(Schema.Union([Schema.Boolean, Schema.Literal('content')])),
+});
+export type ScrollIntoView = Schema.Schema.Type<typeof ScrollIntoView>;
+
 export const EphemeralDeckState = Schema.Struct({
   /** Item ID of the plank currently displayed fullscreen (headless); transient, never in the URL. */
   fullscreen: Schema.optional(Schema.String),
@@ -204,8 +221,8 @@ export const EphemeralDeckState = Schema.Struct({
   ),
   toasts: Schema.mutable(Schema.Array(LayoutOperation.Toast)),
   currentUndoId: Schema.optional(Schema.String),
-  /** The identifier of a component to scroll into view when it is mounted. */
-  scrollIntoView: Schema.optional(Schema.String),
+  /** A component to scroll into view when it is mounted. */
+  scrollIntoView: Schema.optional(ScrollIntoView),
 }).mapFields(Struct.map(Schema.mutableKey));
 export type EphemeralDeckState = Schema.Schema.Type<typeof EphemeralDeckState>;
 

@@ -55,6 +55,7 @@ describe('Signal Integration Test', () => {
       sendMessage: (ctx, message) => messenger.sendMessage(ctx, message),
       onSignal: signalMock,
       onOffer: async (_ctx) => create(AnswerSchema, { accept: true }),
+      onClose: async () => {},
       topic,
     });
 

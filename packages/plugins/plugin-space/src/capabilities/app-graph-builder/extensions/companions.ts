@@ -11,7 +11,7 @@ import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import { Obj, Type } from '@dxos/echo';
 import type { EchoViewRefPath } from '@dxos/schema';
 import { ViewAnnotation } from '@dxos/schema';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { meta } from '#meta';
 
@@ -27,6 +27,7 @@ export const createCompanionExtensions: () => Effect.Effect<AppGraphBuilder.Buil
       // Object settings plank companion.
       AppGraphBuilder.createExtension({
         id: 'settings',
+        relation: AppNode.companion,
         match: AppNodeMatcher.whenEchoObjectMatches,
         connector: (node) =>
           Effect.succeed([
@@ -43,6 +44,7 @@ export const createCompanionExtensions: () => Effect.Effect<AppGraphBuilder.Buil
       // Related objects plank companion.
       AppGraphBuilder.createExtension({
         id: 'related',
+        relation: AppNode.companion,
         match: AppNodeMatcher.whenEchoObjectMatches,
         connector: (node) =>
           Effect.succeed([
@@ -59,6 +61,7 @@ export const createCompanionExtensions: () => Effect.Effect<AppGraphBuilder.Buil
       // View selected objects companion.
       AppGraphBuilder.createExtension({
         id: 'selectedObjects',
+        relation: AppNode.companion,
         match: (node) => {
           // Type/schema node (e.g. a TypeArticle plank): the table's own row selection feeds this
           // companion directly, no view lookup needed.

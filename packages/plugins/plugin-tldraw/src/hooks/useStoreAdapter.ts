@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { Doc } from '@dxos/echo-doc';
 import { log } from '@dxos/log';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { useAsyncEffect } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { Tldraw } from '#types';
 
@@ -23,7 +23,7 @@ import { TLDrawStoreAdapter } from './adapter.ts';
 export const useStoreAdapter = (canvas?: Drawing.Canvas) => {
   const [adapter] = useState(new TLDrawStoreAdapter());
   const [_, forceUpdate] = useState({});
-  useAsyncEffect(
+  Hooks.useAsyncEffect(
     async (controller) => {
       if (!canvas) {
         return;

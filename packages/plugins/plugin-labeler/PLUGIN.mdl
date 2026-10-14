@@ -1,0 +1,100 @@
+---
+id: org.dxos.plugin.labeler
+name: LabelerPlugin
+version: 0.1.0
+---
+
+Labels mailbox messages with the space's own tags by asking a decision model three questions per
+message, applying only the answers it is confident about.
+
+## Extensions
+
+| Term       | URI                          |
+| ---------- | ---------------------------- |
+| `feat`     | `org.dxos.mdl.feat@1.0`      |
+| `scenario` | `org.dxos.mdl.scenario@1.0`  |
+
+## Features
+
+```mdl
+feat F-1: Ask about a message
+
+  req F-1.1: Each message is asked three questions in one call: needs-reply (probability), label (classify), urgency (rate).
+  req F-1.2: The label options are the space's own user tags plus "none of these"; canonical and provider tags are excluded.
+  req F-1.3: With no user tags in the space the label question is omitted and the other two still run.
+  req F-1.4: The state sent is the sender, subject and a snippet — never the full message body.
+
+feat F-2: Apply only what it is confident about
+
+  req F-2.1: A label is applied only when its confidence reaches the threshold (default 0.5).
+  req F-2.2: `Needs reply` is applied at a probability of 0.6 or above.
+  req F-2.3: `Urgent` is applied for the top band of the scale, and only when confident.
+  req F-2.4: Nothing but tags is written; the message itself is not modified.
+
+feat F-3: Run it over the inbox
+
+  req F-3.1: A toolbar action runs the labeller over the whole mailbox.
+  req F-3.2: A cascade pass (`label`, after `contacts`) runs it as part of Analyze.
+  req F-3.3: A message already carrying one of these tags is skipped, so a re-run is cheap.
+  req F-3.4: A run is capped (default 50, max 200 messages) since each message costs one call.
+```
+
+## Acceptance
+
+```mdl
+scenario T-1: An urgent request is tagged
+  given: a mailbox with a message asking the user to act today
+  when: LabelMailbox runs
+  then: the message carries `Needs reply` and `Urgent`
+
+scenario T-2: A receipt is labelled with the user's own tag
+  given: a space with a user tag "Receipts" and a mailbox holding a payment receipt
+  when: LabelMailbox runs
+  then: the receipt carries "Receipts" and not `Needs reply`
+
+scenario T-3: Re-running changes nothing
+  given: a mailbox whose messages were labelled by a previous run
+  when: LabelMailbox runs again
+  then: every message is reported skipped and no decision call is made
+```
+
+## QA
+
+```mdl
+test QA-1: Label an inbox from the toolbar
+  desc: The plugin's whole journey — a mailbox of mixed mail, one click, tags that match.
+  actors: human
+  covers: [F-1.1, F-2.1, F-3.1, F-3.3]
+  status: partial            # 2026-09-17; recorded against the Northwind Sales template with a live
+                             # TypeSafe key. Steps 1 and 2 verified on screen in the recorded take:
+                             # four of the eight messages take "Needs reply" and the rest none. The
+                             # re-run (step 4) was verified in an earlier take on the same build,
+                             # which reported every message skipped. Step 3 is NOT
+                             # covered — the template seeds no user tags, so the label question is not
+                             # asked at all and the choice path is only covered by
+                             # src/operations/label-mailbox.test.ts.
+                             # Tag chips render only with Inbox's "Group by conversation" OFF:
+                             # in conversation mode MailboxArticle passes no tagsAtom to the tile.
+  given:
+    - an identity exists
+    - space: a space is open with a synced mailbox holding at least one request and one receipt
+    - TypeSafe is connected in that space (see plugin-typesafe QA-1)
+    - tags: at least one user tag exists in the space (e.g. "Receipts")
+    - inbox: "Group by conversation" is off, so per-message tag chips render
+    - plugin-labeler is enabled
+  steps:
+    - name: Run the labeller
+      do: Open the mailbox and choose "Label messages" from the toolbar menu.
+      invoke: org.dxos.operation.labeler.labelMailbox
+      expect: progress reports the mailbox, then messages show tags
+    - name: Check a request
+      do: Open a message that asks the user to do something.
+      expect: it carries "Needs reply"; "Urgent" only if the message says so
+    - name: Check a receipt
+      do: Open a payment receipt.
+      expect: it carries the user's "Receipts" tag and not "Needs reply"
+    - name: Run it again
+      do: Choose "Label messages" a second time.
+      invoke: org.dxos.operation.labeler.labelMailbox
+      expect: the run reports every message skipped and no tag changes
+```

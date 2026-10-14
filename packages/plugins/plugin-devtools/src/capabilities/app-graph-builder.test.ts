@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import { describe, test } from 'vitest';
 
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
@@ -12,7 +12,7 @@ import * as PathResolution from '@dxos/app-graph/PathResolution';
 import { setupGraphBuilder } from '@dxos/app-graph/testing';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 
@@ -56,6 +56,15 @@ describe('devtools graph extension', () => {
     const ids = getConnections(devtoolsNodeId).map((node) => node.id);
     expect(ids).toContain(GraphNode.qualifyId(devtoolsNodeId, Devtools.nodeId(Devtools.AppGraph)));
     expect(ids).toContain(GraphNode.qualifyId(devtoolsNodeId, Devtools.nodeId(Devtools.Client.id)));
+  });
+
+  test('getNodePath names the node the tree builds', async ({ expect }) => {
+    const { expand, getNode, devtoolsNodeId } = await setup();
+    expect(Devtools.getNodePath(Devtools.id)).toBe(devtoolsNodeId);
+    await expand(Devtools.getNodePath(Devtools.Echo.id));
+    for (const id of [Devtools.AppGraph, Devtools.Echo.id, Devtools.Echo.Space, Devtools.Echo.Feeds]) {
+      expect(getNode(Devtools.getNodePath(id))).not.toBeNull();
+    }
   });
 
   test('devtools pages have no URL representation', async ({ expect }) => {

@@ -11,7 +11,7 @@ bucket, linked from the PR body.
 
 - [x] proto/moon toolchain + `pnpm install` (`.config/claude-code-setup.sh`)
 - [~] `moon run composer-app:build` (running)
-- [ ] Chromium driver smoke test (`.agents/skills/recording-demos/scripts/driver.mjs`)
+- [ ] Chromium driver smoke test (`.agents/skills/autocue/scripts/driver.mjs`)
 
 ## Phase 1 — author QA flows (one subagent per batch, Sonnet)
 
@@ -129,7 +129,7 @@ Already had flows before this branch: plugin-chess, plugin-deepseek, plugin-mark
 ## Phase 2 — record + upload
 
 - [ ] Pick the flows that are actually runnable (plugin enabled by default, ops registered)
-- [ ] Record each as a captioned `.webm` via the `recording-demos` driver
+- [ ] Record each as a captioned `.webm` via the `autocue` driver
 - [ ] Upload to R2 under `demos/<date>-qa-flows/` (`hosting-artifacts`)
 - [ ] List every video URL in the PR body
 
@@ -151,7 +151,7 @@ a real `DXN.make(...)` in source):
 ## Phase 2 — recording (done)
 
 Recorded against a real Composer dev server (`composer-app:serve`, fresh disposable
-profile, 205 operations live in the registry) driven through the `recording-demos`
+profile, 205 operations live in the registry) driven through the `autocue`
 driver. One continuous session, captioned per step from each flow's `do:` text, trimmed
 79% (9m21s → 1m57s, 23 chapters) and cut into per-plugin clips.
 

@@ -32,6 +32,7 @@ export class Topic extends Type.makeObject<Topic>(DXN.make('org.dxos.type.discor
   }).pipe(
     Annotation.IconAnnotation.set({ icon: 'ph--chats-circle--regular', hue: 'purple' }),
     Schema.annotate({ description: 'A detected conversation topic within a crawled channel.' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

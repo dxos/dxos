@@ -87,7 +87,7 @@ type EphemeralDeckState
     popoverContent?: { component: string } | { subject: any }
     toasts: Toast[]
     currentUndoId?: string
-    scrollIntoView?: string
+    scrollIntoView?: { id: string; focus?: boolean }   # focus unset means the plank takes focus once in view
 ```
 
 ```mdl
@@ -365,6 +365,7 @@ op ScrollIntoView
   desc: Schedule a subject to be scrolled into view when its plank mounts.
   input:
     subject: string
+    focus?: boolean               # default true; false reveals the plank without taking focus
   output: void
   effects: [layout:state]
   requires: [DeckCapabilities]

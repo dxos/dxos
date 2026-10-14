@@ -6,6 +6,8 @@ import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 
 import {
+  type ObjectLinkProps,
+  type WidgetDef,
   WidgetHostOptions,
   type XmlWidgetRegistry,
   createBasicExtensions,
@@ -24,6 +26,8 @@ import { highlights, highlightTheme } from './highlight.ts';
 
 export type ItemExtensionOptions = {
   registry?: XmlWidgetRegistry;
+  /** The block widget for `![label](echo://…)` — an object embedded as a card; none by default. */
+  objectImage?: WidgetDef<ObjectLinkProps>;
   editable?: boolean;
   themeMode?: 'light' | 'dark';
   setWidgets?: WidgetHostOptions['setWidgets'];
@@ -44,13 +48,16 @@ export type ItemExtensionOptions = {
  */
 export const createBlockExtensions = ({
   registry,
+  objectImage,
   editable = false,
   themeMode = 'light',
   setWidgets,
 }: ItemExtensionOptions = {}): Extension[] => [
   ...sharedExtensions(registry, editable, themeMode),
   // The one part that cannot be shared: the callback that hands this item's widgets back to it.
-  ...(registry ? [widgetHost({ setWidgets, bookmarks: ['prompt'] }), xmlTags({ registry }), objectLinks()] : []),
+  ...(registry
+    ? [widgetHost({ setWidgets, bookmarks: ['prompt'] }), xmlTags({ registry }), objectLinks({ image: objectImage })]
+    : []),
 ];
 
 /** Registries are compared by identity, so a feed's single registry is a single cache scope. */
@@ -83,12 +90,14 @@ const sharedExtensions = (
 const build = (registry: XmlWidgetRegistry | undefined, editable: boolean, themeMode: 'light' | 'dark'): Extension[] =>
   [
     createBasicExtensions({ readOnly: !editable, editable, lineWrapping: true }),
-    createThemeExtensions({ themeMode }),
+    // Colours fenced code, as the markdown editor and the previous chat stream do.
+    createThemeExtensions({ themeMode, syntaxHighlighting: true }),
     // A registry changes how the document is *parsed*, not only how it is decorated: registered
     // tags have to survive as single blocks through the markdown parser before `xmlTags` can
     // replace them, and without that they render as the literal angle brackets they are.
     registry ? extendedMarkdown({ registry }) : createMarkdownExtensions(),
-    registry && xmlFormatting({ skip: ['prompt'] }),
+    // `prompt` is skipped only when its block decoration frames it; otherwise its tags are text like any other.
+    registry && xmlFormatting({ skip: registry.prompt ? ['prompt'] : [] }),
     decorateMarkdown(),
     // The tags are hidden but the prompt is NOT framed here: the frame is chrome's, which also
     // owns the rewind toolbar under it. Styling it in both places drew the border twice.

@@ -3,12 +3,12 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import { describe, test } from 'vitest';
 
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import { setupGraphBuilder } from '@dxos/app-graph/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { Path } from '@dxos/react-ui-list';

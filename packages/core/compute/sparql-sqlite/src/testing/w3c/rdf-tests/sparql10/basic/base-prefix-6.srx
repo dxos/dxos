@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<sparql xmlns="http://www.w3.org/2005/sparql-results#">
+  <head>
+    <variable name="res0"/>
+    <variable name="res1"/>
+    <variable name="res2"/>
+    <variable name="res3"/>
+    <variable name="res4"/>
+    <variable name="res5"/>
+  </head>
+  <results>
+    <result>
+      <binding name="res0"><literal>res0</literal></binding>
+      <binding name="res1"><literal>res1</literal></binding>
+      <binding name="res2"><literal>res2</literal></binding>
+      <binding name="res3"><literal>res3</literal></binding>
+      <binding name="res4"><literal>res4</literal></binding>
+      <binding name="res5"><literal>res5</literal></binding>
+    </result>
+  </results>
+</sparql>

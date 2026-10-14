@@ -5,15 +5,15 @@
 import { type EditorView } from '@codemirror/view';
 import { useCallback, useMemo, useRef } from 'react';
 
-import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import {
   type EditorMenuGroup,
-  type EditorMenuProviderProps,
   type UseEditorMenuProps,
   filterMenuGroups,
   formattingCommands,
   linkSlashCommands,
 } from '@dxos/react-ui-editor';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Theme from '@dxos/react-ui/Theme';
 import { Domino } from '@dxos/ui';
 
 import { meta } from '#meta';
@@ -24,14 +24,12 @@ export type UseEditorMenuOptionsProps = {
   onLinkQuery?: (query?: string) => Promise<EditorMenuGroup[]>;
 };
 
-export type UseEditorMenuOptions = UseEditorMenuProps & Pick<EditorMenuProviderProps, 'searchPlaceholder'>;
-
 export const useEditorMenuOptions = ({
   editorView,
   slashCommandGroups,
   onLinkQuery,
-}: UseEditorMenuOptionsProps): UseEditorMenuOptions => {
-  const { t } = useTranslation(meta.profile.key);
+}: UseEditorMenuOptionsProps): UseEditorMenuProps => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   const getMenu = useCallback<NonNullable<UseEditorMenuProps['getMenu']>>(
     ({ text, trigger }) => {
@@ -43,7 +41,7 @@ export const useEditorMenuOptions = ({
         case '/':
         default: {
           return filterMenuGroups([linkSlashCommands, formattingCommands, ...(slashCommandGroups ?? [])], (item) =>
-            text ? toLocalizedString(item.label, t).toLowerCase().includes(text.toLowerCase()) : true,
+            text ? Theme.toLocalizedString(item.label, t).toLowerCase().includes(text.toLowerCase()) : true,
           );
         }
       }
@@ -52,7 +50,7 @@ export const useEditorMenuOptions = ({
   );
 
   const viewRef = useRef(editorView);
-  return useMemo<UseEditorMenuOptions>(() => {
+  return useMemo<UseEditorMenuProps>(() => {
     const trigger = onLinkQuery ? ['/', '@'] : ['/'];
     const placeholder = {
       delay: 3_000,
@@ -66,14 +64,7 @@ export const useEditorMenuOptions = ({
       },
     };
 
-    // The object picker filters by name, so its query belongs in the popover, not the document.
-    return {
-      viewRef,
-      getMenu,
-      trigger,
-      placeholder,
-      searchTriggers: ['@'],
-      searchPlaceholder: t('link-query.placeholder'),
-    };
-  }, [getMenu, onLinkQuery, t]);
+    // Object names hold spaces, so a link query (or a new object's name) runs on past one.
+    return { viewRef, getMenu, trigger, placeholder, multiWordTriggers: ['@'] };
+  }, [getMenu, onLinkQuery]);
 };

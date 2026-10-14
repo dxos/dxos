@@ -2,13 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaTransformation from 'effect/SchemaTransformation';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { type AiModelNotAvailableError, AiService } from '@dxos/ai';
 import { invariant } from '@dxos/invariant';
@@ -16,7 +16,13 @@ import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { SemanticIndexError } from '../../errors.ts';
-import { type ExtractDocument, type ExtractOptions, FactualityValue } from '../../types/index.ts';
+import {
+  type ExtractDocument,
+  type ExtractOptions,
+  FactualityValue,
+  type KnownEntity,
+  Ontology,
+} from '../../types/index.ts';
 
 export const DEFAULT_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 
@@ -41,22 +47,23 @@ const nullableAsAbsent = <A>(schema: Schema.Codec<A, A>) =>
 const OptionalString = nullableAsAbsent(Schema.String);
 
 // Soft enum: keep the known values, coerce anything else (a model's stray value like "Person", or a
-// null) to absent. A bad enrichment value must not discard an otherwise-valid fact.
+// null) to absent. A bad enrichment value must not discard an otherwise-valid fact. The wire side is a
+// nullable string, not `Unknown`: Anthropic's structured output rejects a property schema with no type.
 const softEnum = <const A extends string>(...values: readonly A[]) =>
   Schema.optional(
-    Schema.Unknown.pipe(
+    Schema.NullOr(Schema.String).pipe(
       Schema.decodeTo(
         Schema.UndefinedOr(Schema.Literals(values)),
         SchemaTransformation.transform({
-          decode: (value) =>
-            typeof value === 'string' && (values as readonly string[]).includes(value) ? (value as A) : undefined,
-          encode: (value) => value,
+          decode: (value) => values.find((known) => known === value),
+          encode: (value) => value ?? null,
         }),
       ),
     ),
   );
 
 const Nature = softEnum('epistemic', 'aleatory');
+const Kind = softEnum('person', 'org', 'place', 'event', 'concept', 'thing');
 // Illocutionary force + sentence mood — the speech act the author performs (see pipeline-rdf
 // `Illocution`). Soft enums so a stray value never discards the fact; default (absent) is assertive.
 const Force = softEnum('assertive', 'directive', 'commissive', 'expressive');
@@ -81,6 +88,12 @@ export const ExtractedFact = Schema.Struct({
   force: Force,
   mood: Mood,
   quote: OptionalString,
+  subjectType: Kind,
+  objectType: Kind,
+  /** A short name for the group of statements this one belongs to. */
+  graph: OptionalString,
+  /** For a predicate not in the listed vocabulary only: one sentence defining what it relates. */
+  predicateDescription: OptionalString,
 });
 
 /** Flat LLM payload (entities are surface strings; linking happens in the pipeline). */
@@ -90,7 +103,38 @@ export const ExtractPayload = Schema.Struct({
 export interface ExtractPayload extends Schema.Schema.Type<typeof ExtractPayload> {}
 
 const BASE_PROMPT = `You extract atomic propositions from a message as structured facts.
-For each proposition output: subject, predicate (a short verb phrase), object, optional validFrom/validTo (ISO dates), a FactBank factuality value (CT+ certain-positive, PR+ probable-positive, PS+ possible-positive, and their - and CTu/Uu variants), polarity (+/-/?), optional confidence 0..1, optional nature (epistemic/aleatory), the speech act as force (assertive|directive|commissive|expressive) and mood (declarative|interrogative|imperative), and the source quote.`;
+For each proposition output: subject, predicate (a listed predicate's shorthand, or a new short verb phrase), object, optional validFrom/validTo (ISO dates), a FactBank factuality value (CT+ certain-positive, PR+ probable-positive, PS+ possible-positive, and their - and CTu/Uu variants), polarity (+/-/?), optional confidence 0..1, optional nature (epistemic/aleatory), the speech act as force (assertive|directive|commissive|expressive) and mood (declarative|interrogative|imperative), the source quote, optional subjectType/objectType (person|org|place|event|concept|thing), graph (a short name for the group of propositions it belongs to), and predicateDescription (only for a new predicate).`;
+
+/**
+ * The ontology's predicates as a prompt section, one per line with its shorthand, label, synonyms, description and
+ * typing, so the extractor reuses them rather than inventing variants. Deprecated (merged-away) predicates are left
+ * out: their replacement is listed with their surface forms.
+ */
+export const predicateSection = (ontology: Ontology.Ontology): string => {
+  const lines = ontology.entries
+    .filter((entry) => entry.replacedBy === undefined)
+    .map((entry) => {
+      const synonyms = entry.synonyms?.length ? ` (also: ${entry.synonyms.join(', ')})` : '';
+      const typing = [entry.domain, entry.range].some(Boolean)
+        ? ` [${Ontology.labelFromIri(entry.domain ?? 'any')} → ${Ontology.labelFromIri(entry.range ?? 'any')}]`
+        : '';
+      return `- ${entry.name}: "${entry.label}"${synonyms}${typing}${entry.description ? ` — ${entry.description}` : ''}`;
+    });
+  return [
+    'Predicates. Use the shorthand of the one that fits the relation (or any of its forms). Only when none fits, write a new short verb phrase in timeless present form and set predicateDescription to one sentence saying what it relates:',
+    ...lines,
+  ].join('\n');
+};
+
+/** The known entities as a prompt section, so a mention of one is spelled the way it resolves. */
+export const entitySection = (entities: ReadonlyArray<KnownEntity>): string =>
+  [
+    'Known entities. When a subject or object refers to one of these, spell it exactly as listed:',
+    ...entities.map(
+      (entity) =>
+        `- ${entity.label}${entity.type ? ` (${entity.type})` : ''}${entity.aliases?.length ? ` — also: ${entity.aliases.join(', ')}` : ''}`,
+    ),
+  ].join('\n');
 
 /**
  * The default extraction rules, one self-contained constraint per entry. Callers extend the set via
@@ -100,18 +144,26 @@ For each proposition output: subject, predicate (a short verb phrase), object, o
 export const DEFAULT_EXTRACTION_RULES: readonly string[] = [
   'Capture uncertainty in factuality ("probably" => PR+, "might" => PS+).',
   'Keep prepositions and particles that bind to the verb in the predicate, not the object: passive voice "X was created by Y" => predicate "created by", object "Y" (just the agent). Likewise "moved to", "depends on", "reported by".',
-  'Use the exact predicate "is-a" for class membership: "Socrates is a man" => subject "Socrates", predicate "is-a", object "man". Never use bare "is" or "was" as the membership predicate.',
+  'Use the predicate "is_a" for class membership: "Socrates is a man" => subject "Socrates", predicate "is_a", object "man". A job title or role is "has_role" instead: "Rich is the founder" => subject "Rich", predicate "has_role", object "founder". Never use bare "is" or "was".',
+  'Give propositions from the same sentence the same graph name, and propositions from another sentence a different one.',
   'Keep every predicate in timeless present form and express tense through validFrom/validTo instead: "Alice worked at Acme until 2020" => predicate "works at" with validTo set from the stated end. Past tense alone — without an explicit date or an end cue such as "until", "former", or "no longer" — does NOT set validTo.',
-  'Prefer short, reusable predicates and reuse the SAME predicate for the same relation throughout ("works for" / "employed by" => pick one, e.g. "works at"). Never invent a synonym variant of a predicate you have already emitted.',
+  'Prefer short, reusable predicates and reuse the SAME predicate for the same relation throughout ("works for" / "employed by" => the listed "works_for"). Never invent a synonym variant of a listed predicate or of one you have already emitted.',
   'The object must be a single concrete entity (a person, project, org, place, or thing) or a literal value — never a raw id, snowflake, URL, or channel reference. Drop the proposition if the only object would be such an opaque token.',
   'Emit a proposition only when BOTH its subject and object are concrete and named. If either would be an unresolved pronoun (we/it/they/this/that) or otherwise unknown, omit the proposition entirely — never output "unknown" as a subject or object.',
   'Classify each proposition by speech act. A statement the author commits to => force "assertive", mood "declarative" (this is the default — omit force to mean assertive). A request that the recipient do something => force "directive", mood "imperative", factuality "Uu": subject = who is asked to act, predicate = the requested action, object = the thing. A question the author asks => force "directive", mood "interrogative", factuality "Uu": the proposition being asked about. The author\'s own promise/offer => force "commissive". Requests and questions are still subject to the previous rule: emit them ONLY when both subject and object are concrete and named.',
 ];
 
-/** Compose the system prompt from the base instruction and the (default + caller) rules. */
+/**
+ * Compose the system prompt from the base instruction, the (default + caller) rules, the vocabulary of predicates and
+ * the known entities.
+ */
 export const buildExtractionPrompt = (options?: ExtractOptions): string => {
   const rules = [...DEFAULT_EXTRACTION_RULES, ...(options?.rules ?? [])];
-  return `${BASE_PROMPT}\nRules:\n${rules.map((rule, index) => `${index + 1}. ${rule}`).join('\n')}`;
+  return [
+    `${BASE_PROMPT}\nRules:\n${rules.map((rule, index) => `${index + 1}. ${rule}`).join('\n')}`,
+    predicateSection(options?.ontology ?? Ontology.DEFAULT),
+    ...(options?.entities?.length ? [entitySection(options.entities)] : []),
+  ].join('\n\n');
 };
 
 const decodeFact = Schema.decodeUnknownOption(ExtractedFact);
@@ -237,9 +289,9 @@ const modelLayer = (
   options?: ExtractOptions,
 ): Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, AiService.AiService> => {
   if (!options?.provider) {
-    return AiService.model(options?.model ?? DEFAULT_MODEL);
+    return AiService.languageModel(options?.model ?? DEFAULT_MODEL);
   }
   const provider = DXN.tryMake(options.provider);
   invariant(provider, `Invalid provider DXN: ${options.provider}`);
-  return AiService.model(options.model ?? DEFAULT_MODEL, { provider });
+  return AiService.languageModel(options.model ?? DEFAULT_MODEL, { provider });
 };

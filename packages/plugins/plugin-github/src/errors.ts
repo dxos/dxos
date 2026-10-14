@@ -24,6 +24,12 @@ export class GitHubPullRequestUnstoredError extends BaseError.extend(
   'Pull request is not stored in a space.',
 ) {}
 
+/** The text a user typed names no pull request: neither a github.com URL nor `owner/repo#123`. */
+export class GitHubPullRequestReferenceError extends BaseError.extend(
+  'GitHubPullRequestReferenceError',
+  'Not a pull request reference.',
+) {}
+
 /** The local Project could not be re-resolved after its upsert. */
 export class GitHubProjectMissingError extends BaseError.extend(
   'GitHubProjectMissingError',

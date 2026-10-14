@@ -33,3 +33,22 @@ export const createRotationTween = (
     setRotation(projection.rotate() as Vector);
   };
 };
+
+/**
+ * Per-frame tween that turns the globe about its axis to the target longitude while tilting to the
+ * target latitude, keeping the poles upright; `versor` would take the great-circle path, which rolls
+ * the globe on the way.
+ */
+export const createAxisRotationTween = (
+  projection: GeoProjection,
+  setRotation: (rotation: Vector) => void,
+  r1: Vector,
+  r2: Vector,
+): ((t: number) => void) => {
+  // The shorter way round: a turn of more than half the globe goes the other way.
+  const lambda = ((((r2[0] - r1[0]) % 360) + 540) % 360) - 180;
+  return (t: number) => {
+    projection.rotate([r1[0] + lambda * t, r1[1] + (r2[1] - r1[1]) * t, r1[2] + (r2[2] - r1[2]) * t]);
+    setRotation(projection.rotate() as Vector);
+  };
+};

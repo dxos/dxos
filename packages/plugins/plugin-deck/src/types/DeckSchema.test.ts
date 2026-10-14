@@ -19,29 +19,55 @@ const makeState = (partial: Partial<DeckSchema.StoredDeckState> = {}): DeckSchem
 describe('getCompanionSelection', () => {
   test('desktop reports the pane open while a plank carries a companion, and closed once emptied', ({ expect }) => {
     const closed = makeState({ decks: { deck: { ...DeckSchema.defaultDeck, companionPlanks: [] } } });
-    expect(DeckSchema.getCompanionSelection('desktop', closed, 'assistant-chat')).toEqual({
+    expect(DeckSchema.getCompanionSelection('desktop', closed, 'assistant-chat', false)).toEqual({
       open: false,
       variant: undefined,
     });
 
     const open = makeState({ decks: { deck: { ...DeckSchema.defaultDeck, companionPlanks: ['plank'] } } });
-    expect(DeckSchema.getCompanionSelection('desktop', open, 'assistant-chat')).toEqual({
+    expect(DeckSchema.getCompanionSelection('desktop', open, 'assistant-chat', false)).toEqual({
       open: true,
       variant: 'assistant-chat',
     });
   });
 
-  test('a deck the reader has not decided on reports open, which is what starts the pane up', ({ expect }) => {
+  test('a deck the reader has not decided on reports open while flat, which is what starts the single pane up', ({
+    expect,
+  }) => {
     expect(makeState().decks.deck.companionPlanks).toBeUndefined();
-    expect(DeckSchema.getCompanionSelection('desktop', makeState(), 'assistant-chat')).toEqual({
+    expect(DeckSchema.getCompanionSelection('desktop', makeState(), 'assistant-chat', true)).toEqual({
       open: true,
       variant: 'assistant-chat',
+    });
+  });
+
+  test('a deck the reader has not decided on reports closed while stacked, so no plank grows an unasked-for companion', ({
+    expect,
+  }) => {
+    expect(DeckSchema.getCompanionSelection('desktop', makeState(), 'assistant-chat', false)).toEqual({
+      open: false,
+      variant: undefined,
+    });
+  });
+
+  test('an explicitly emptied deck reads closed regardless of flatten', ({ expect }) => {
+    const closed = makeState({ decks: { deck: { ...DeckSchema.defaultDeck, companionPlanks: [] } } });
+    expect(DeckSchema.getCompanionSelection('desktop', closed, 'assistant-chat', false)).toEqual({
+      open: false,
+      variant: undefined,
+    });
+    expect(DeckSchema.getCompanionSelection('desktop', closed, 'assistant-chat', true)).toEqual({
+      open: false,
+      variant: undefined,
     });
   });
 
   test('desktop leaves the variant absent so the pane falls back to its default companion', ({ expect }) => {
     const state = makeState({ decks: { deck: { ...DeckSchema.defaultDeck, companionPlanks: ['plank'] } } });
-    expect(DeckSchema.getCompanionSelection('desktop', state, undefined)).toEqual({ open: true, variant: undefined });
+    expect(DeckSchema.getCompanionSelection('desktop', state, undefined, false)).toEqual({
+      open: true,
+      variant: undefined,
+    });
   });
 
   test('mobile reads the drawer rather than the plank companion bookkeeping', ({ expect }) => {
@@ -50,21 +76,30 @@ describe('getCompanionSelection', () => {
       complementarySidebarPanel: 'assistant-chat',
       decks: { deck: { ...DeckSchema.defaultDeck, companionPlanks: [] } },
     });
-    expect(DeckSchema.getCompanionSelection('mobile', state, undefined)).toEqual({
+    expect(DeckSchema.getCompanionSelection('mobile', state, undefined, false)).toEqual({
       open: true,
       variant: 'assistant-chat',
     });
-    expect(DeckSchema.getCompanionSelection('desktop', state, undefined)).toEqual({ open: false, variant: undefined });
+    expect(DeckSchema.getCompanionSelection('desktop', state, undefined, false)).toEqual({
+      open: false,
+      variant: undefined,
+    });
   });
 
   test('mobile reports closed once the drawer closes, whatever tab it was left on', ({ expect }) => {
     const state = makeState({ complementarySidebarState: 'closed', complementarySidebarPanel: 'assistant-chat' });
-    expect(DeckSchema.getCompanionSelection('mobile', state, undefined)).toEqual({ open: false, variant: undefined });
+    expect(DeckSchema.getCompanionSelection('mobile', state, undefined, false)).toEqual({
+      open: false,
+      variant: undefined,
+    });
   });
 
   test('mobile reports closed when no tab is selected', ({ expect }) => {
     const state = makeState({ complementarySidebarState: 'expanded', complementarySidebarPanel: undefined });
-    expect(DeckSchema.getCompanionSelection('mobile', state, undefined)).toEqual({ open: false, variant: undefined });
+    expect(DeckSchema.getCompanionSelection('mobile', state, undefined, false)).toEqual({
+      open: false,
+      variant: undefined,
+    });
   });
 });
 

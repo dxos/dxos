@@ -10,4 +10,10 @@ rules: [harness-script-hygiene]
 reviewId: e8ad2af114
 ---
 
-<!-- no diagnostics: clean -->
+_Clean: no issues._
+
+## Index
+
+<!-- `- <id> - unresolved|ignored|resolved - <rule> - <file:line[:col]>` -->
+
+<!-- no issues -->

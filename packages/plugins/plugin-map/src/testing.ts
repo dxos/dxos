@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Format, Type } from '@dxos/echo';
+import { Annotation, DXN, Format, Type } from '@dxos/echo';
 
 // Eager re-export of `MapPlugin`. See `@dxos/plugin-testing/src/core.ts`
 // for the rationale.
@@ -16,5 +16,5 @@ export const createLocationSchema = () =>
       name: Schema.optional(Schema.String).annotate({ title: 'Name' }),
       description: Schema.optional(Schema.String).annotate({ title: 'Description' }),
       location: Schema.optional(Format.GeoPoint).annotate({ title: 'Location' }),
-    }),
+    }).pipe(Annotation.UserType.set()),
   );

@@ -32,6 +32,7 @@ tasks:
       - $DX_POSTHOG_PROJECT_ID
       - $DX_SANDBOX_SERVICE_URL
       - $DX_SHARED_WORKER
+      - $DX_TAURI
       - $IPFS_API_SECRET
       - $LOG_FILTER
       - $LOG_PREFIX

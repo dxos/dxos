@@ -8,6 +8,7 @@ export default defineConfig({
   entry: {
     index: 'src/index.ts',
     // One entry per subpath the package exports, or the built package cannot resolve them.
+    LocalUpload: 'src/LocalUpload.ts',
     McpServer: 'src/McpServer.ts',
   },
   test: { node: true },

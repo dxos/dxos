@@ -1,0 +1,229 @@
+# Composer plugin framework (`@dxos/app-framework`).
+#
+# A plugin is three declarations in three files: `Plugin.define(...)` is the body with its modules,
+# `Plugin.lazy(meta, () => import(...))` is the shim that defers loading it, and
+# `Plugin.getMetaFromConfig(...)` is the metadata available without either. They are classified
+# apart because they answer different questions.
+
+@prefix deus: <https://dxos.org/vocab/deus#>.
+@prefix framework: <https://dxos.org/deus/module/@dxos/app-framework/>.
+@prefix log: <http://www.w3.org/2000/10/swap/log#>.
+@prefix plugx: <https://dxos.org/vocab/deus/plugins#>.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix string: <http://www.w3.org/2000/10/swap/string#>.
+
+# The `Plugin` functions, by the class of what they construct. Each is addressed the ways a caller
+# can reach it: the subpath member (`@dxos/app-framework/Plugin`), the root member (`{ Plugin }`),
+# and the resolved declaration — which is also where a relative import of the `Plugin` namespace
+# inside the framework lands, through `plugx:via` below.
+plugx:define plugx:class deus:Plugin.
+plugx:lazy plugx:class deus:LazyPlugin.
+plugx:getMetaFromConfig plugx:class deus:PluginMeta.
+plugx:makeMeta plugx:class deus:PluginMeta.
+
+<https://dxos.org/deus/module/@dxos/app-framework/Plugin#define> plugx:role plugx:define.
+<https://dxos.org/deus/module/@dxos/app-framework/Plugin#lazy> plugx:role plugx:lazy.
+<https://dxos.org/deus/module/@dxos/app-framework/Plugin#getMetaFromConfig> plugx:role plugx:getMetaFromConfig.
+<https://dxos.org/deus/module/@dxos/app-framework/Plugin#makeMeta> plugx:role plugx:makeMeta.
+<https://dxos.org/deus/module/@dxos/app-framework#Plugin.define> plugx:role plugx:define.
+<https://dxos.org/deus/module/@dxos/app-framework#Plugin.lazy> plugx:role plugx:lazy.
+<https://dxos.org/deus/module/@dxos/app-framework#Plugin.getMetaFromConfig> plugx:role plugx:getMetaFromConfig.
+<https://dxos.org/deus/module/@dxos/app-framework#Plugin.makeMeta> plugx:role plugx:makeMeta.
+<https://dxos.org/deus/file/packages/sdk/app-framework/src/core/plugin.ts#define> plugx:role plugx:define.
+<https://dxos.org/deus/file/packages/sdk/app-framework/src/core/plugin.ts#lazy> plugx:role plugx:lazy.
+<https://dxos.org/deus/file/packages/sdk/app-framework/src/core/plugin.ts#getMetaFromConfig> plugx:role plugx:getMetaFromConfig.
+<https://dxos.org/deus/file/packages/sdk/app-framework/src/core/plugin.ts#makeMeta> plugx:role plugx:makeMeta.
+# `DXN.make`, which spells a meta's key; `@dxos/echo` re-exports `DXN`.
+<https://dxos.org/deus/module/@dxos/keys#DXN.make> plugx:role plugx:dxnMake.
+<https://dxos.org/deus/module/@dxos/echo#DXN.make> plugx:role plugx:dxnMake.
+
+# What built a declaration. Where resolution stopped at a namespace (`SpaceCapability.createObject`
+# with `SpaceCapability` from `export * as SpaceCapability from './x'`), the leftover
+# `deus:constructedByPath` is looked up among the declarations of the module it publishes. These are
+# backward rules: proven on demand, never written to the derived graph.
+{ ?namespace plugx:publishes ?module } <= { ?namespace deus:namespaceOf ?module }.
+{ ?namespace plugx:publishes ?module } <= { ?namespace deus:aliasOf ?origin. ?origin plugx:publishes ?module }.
+{ ?s plugx:via ?f } <= { ?s deus:constructedBy ?f }.
+{ ?s plugx:via ?f } <= {
+  ?s deus:constructedBy ?namespace; deus:constructedByPath ?name.
+  ?namespace plugx:publishes ?module.
+  ?module deus:declares ?f.
+  ?f deus:name ?name.
+}.
+
+{ ?s plugx:via ?f. ?f plugx:role ?role. ?role plugx:class ?class } => { ?s rdf:type ?class }.
+
+# The modules a plugin adds: `Plugin.define(meta).pipe(Plugin.addModule(X), …)` puts every module in
+# the plugin's implementation references, and a module is a capability declaration.
+#
+# Most modules are not built by `Capability.makeModule` directly but by one of the ~20 helpers in
+# `@dxos/app-toolkit` (`AppCapability.surface`, `.settings`, `.translations`, `SpaceCapability
+# .createObject`, …). Rather than enumerate a list that drifts every time one is added, the rule
+# keys on what those helpers declare about themselves: their signature names `Capability.Module`,
+# which is the type system's own statement that they build one.
+plugx:module plugx:class deus:PluginModule.
+<https://dxos.org/deus/module/@dxos/app-framework/Capability#makeModule> plugx:role plugx:module.
+<https://dxos.org/deus/module/@dxos/app-framework#Capability.makeModule> plugx:role plugx:module.
+<https://dxos.org/deus/file/packages/sdk/app-framework/src/core/capability.ts#makeModule> plugx:role plugx:module.
+<https://dxos.org/deus/module/@dxos/app-framework/Capability#lazyModule> plugx:role plugx:module.
+<https://dxos.org/deus/module/@dxos/app-framework#Capability.lazyModule> plugx:role plugx:module.
+<https://dxos.org/deus/file/packages/sdk/app-framework/src/core/capability.ts#lazyModule> plugx:role plugx:module.
+<https://dxos.org/deus/module/@dxos/app-framework/Capability#inlineModule> plugx:role plugx:module.
+<https://dxos.org/deus/module/@dxos/app-framework#Capability.inlineModule> plugx:role plugx:module.
+<https://dxos.org/deus/file/packages/sdk/app-framework/src/core/capability.ts#inlineModule> plugx:role plugx:module.
+
+# A module built by a helper. Three ways a helper says so, none of them a list of names:
+#   1. its signature returns `Capability.Module`;
+#   2. it was itself built by `Capability.moduleMaker`;
+#   3. its implementation calls `Capability.makeModule` / `lazyModule` / `inlineModule` (the case left when a helper
+#      has neither an annotation nor a maker — an inferred return type says nothing on its own).
+#      This one can over-reach: a function that merely mentions `makeModule` without returning one
+#      would classify its callers' values as modules. No such function exists here today.
+{
+  ?s plugx:via ?helper.
+  ?helper deus:apiDependsOn <https://dxos.org/deus/module/@dxos/app-framework/Capability#Module>.
+} => {
+  ?s rdf:type deus:PluginModule.
+}.
+{
+  ?s plugx:via ?helper.
+  ?helper deus:apiDependsOn <https://dxos.org/deus/file/packages/sdk/app-framework/src/core/capability.ts#Module>.
+} => {
+  ?s rdf:type deus:PluginModule.
+}.
+{
+  ?s plugx:via ?helper.
+  ?helper deus:constructedBy <https://dxos.org/deus/module/@dxos/app-framework/Capability#moduleMaker>.
+} => {
+  ?s rdf:type deus:PluginModule.
+}.
+{
+  ?s plugx:via ?helper.
+  ?helper deus:constructedBy <https://dxos.org/deus/file/packages/sdk/app-framework/src/core/capability.ts#moduleMaker>.
+} => {
+  ?s rdf:type deus:PluginModule.
+}.
+# A plugin names its modules through the package barrel, so the reference may be an alias, followed
+# here because `90-aliases.n3` runs later. The object is always the declaration — an alias, which
+# `90-aliases.n3` types alike on a later pass, has no constructing call.
+{
+  ?s rdf:type deus:Plugin.
+  ?s deus:implDependsOn ?module.
+  ?module rdf:type deus:PluginModule; deus:constructedBy ?any.
+} => {
+  ?s deus:addsModule ?module.
+}.
+{
+  ?s rdf:type deus:Plugin.
+  ?s deus:implDependsOn ?alias.
+  ?alias deus:aliasOf ?module.
+  ?module rdf:type deus:PluginModule.
+} => {
+  ?s deus:addsModule ?module.
+}.
+# A barrel that re-exports the module with `export * from './x'` declares no symbol of that name, so
+# the reference names one nothing declares: the module is found by name in a file the barrel
+# re-exports, one hop deep.
+{
+  ?s rdf:type deus:Plugin.
+  ?file deus:declares ?s; deus:imports ?barrel.
+  ?barrel deus:reexports ?origin.
+  ?origin deus:declares ?module.
+  ?module rdf:type deus:PluginModule; deus:name ?name.
+  ?s deus:implDependsOn ?reference.
+  ?reference log:uri ?referenceIri.
+  ?barrel log:uri ?barrelIri.
+  (?barrelIri "#" ?name) string:concatenation ?referenceIri.
+} => {
+  ?s deus:addsModule ?module.
+}.
+
+# Plugin-level facts: what a plugin is defined with, what loads it, where it lives.
+
+# The metadata a plugin is defined with: `Plugin.define(meta)` / `Plugin.lazy(meta, …)`, argument 0.
+# A lazy shim usually names a re-export of the meta (`export const meta = pluginMeta`), so one
+# `derivedFrom` / `aliasOf` hop is followed.
+{ ?plugin rdf:type deus:Plugin; deus:argument ?meta. ?meta rdf:type deus:PluginMeta } => { ?plugin deus:pluginMeta ?meta }.
+{ ?plugin rdf:type deus:LazyPlugin; deus:argument ?meta. ?meta rdf:type deus:PluginMeta } => { ?plugin deus:pluginMeta ?meta }.
+{
+  ?plugin rdf:type deus:LazyPlugin; deus:argument ?alias.
+  ?alias deus:derivedFrom ?meta.
+  ?meta rdf:type deus:PluginMeta.
+} => { ?plugin deus:pluginMeta ?meta }.
+{
+  ?plugin rdf:type deus:LazyPlugin; deus:argument ?alias.
+  ?alias deus:aliasOf ?meta.
+  ?meta rdf:type deus:PluginMeta.
+} => { ?plugin deus:pluginMeta ?meta }.
+
+# The plugin id, read where it is written: `Plugin.getMetaFromConfig(config)` over a
+# `Config2.make({ plugin: { key } })`, or `Plugin.makeMeta({ key: DXN.make('…') })`.
+{
+  ?meta rdf:type deus:PluginMeta; deus:argument ?config.
+  ?config deus:passesLiteral ?argument.
+  ?argument deus:slot "0.plugin.key"; deus:literal ?id;
+    deus:callee <https://dxos.org/deus/module/@dxos/app-framework/config#Config2.make>.
+} => { ?meta deus:pluginId ?id }.
+{
+  ?meta plugx:via ?f.
+  ?f plugx:role plugx:makeMeta.
+  ?meta deus:passesLiteral ?argument.
+  ?argument deus:slot "0.key"; deus:literal ?id.
+} => { ?meta deus:pluginId ?id }.
+{
+  ?meta plugx:via ?f.
+  ?f plugx:role plugx:makeMeta.
+  ?meta deus:passesLiteral ?argument.
+  ?argument deus:slot "0"; deus:literal ?id;
+    deus:callee ?dxn.
+  ?dxn plugx:role plugx:dxnMake.
+} => { ?meta deus:pluginId ?id }.
+{ ?plugin deus:pluginMeta ?meta. ?meta deus:pluginId ?id } => { ?plugin deus:pluginId ?id }.
+# A meta written inline, as story and test plugins do: `Plugin.define({ profile: { key } })`, or
+# `Plugin.define(Plugin.makeMeta({ key: DXN.make('…') }))` — the only `DXN.make` such a plugin passes.
+{
+  ?plugin rdf:type deus:Plugin; deus:passesLiteral ?argument.
+  ?argument deus:slot "0.profile.key"; deus:literal ?id.
+  ?argument deus:callee ?f.
+  ?f plugx:role plugx:define.
+} => { ?plugin deus:pluginId ?id }.
+{
+  ?plugin rdf:type deus:Plugin; deus:implDependsOn ?f.
+  ?f plugx:role plugx:makeMeta.
+  ?plugin deus:passesLiteral ?argument.
+  ?argument deus:slot "0"; deus:literal ?id;
+    deus:callee ?dxn.
+  ?dxn plugx:role plugx:dxnMake.
+} => { ?plugin deus:pluginId ?id }.
+
+# The body a lazy shim defers: `Plugin.lazy(meta, () => import('#plugin'))` loads the file whose
+# `Plugin.define` declaration is the plugin.
+{
+  ?lazy rdf:type deus:LazyPlugin; deus:loads ?file.
+  ?file deus:declares ?plugin.
+  ?plugin rdf:type deus:Plugin.
+} => { ?lazy deus:loadsPlugin ?plugin }.
+
+# The package a plugin is defined in.
+{ ?plugin rdf:type deus:Plugin. ?file deus:declares ?plugin; deus:inPackage ?package } => { ?package deus:definesPlugin ?plugin }.
+
+# Capability slots and what modules contribute to them: `41-capabilities.n3`.
+
+{
+  ?s plugx:via ?helper.
+  ?helper deus:implDependsOn <https://dxos.org/deus/module/@dxos/app-framework/Capability#makeModule>.
+} => {
+  ?s rdf:type deus:PluginModule.
+}.
+{
+  ?s plugx:via ?helper.
+  ?helper deus:implDependsOn <https://dxos.org/deus/module/@dxos/app-framework/Capability#lazyModule>.
+} => {
+  ?s rdf:type deus:PluginModule.
+}.
+{
+  ?s plugx:via ?helper.
+  ?helper deus:implDependsOn <https://dxos.org/deus/module/@dxos/app-framework/Capability#inlineModule>.
+} => {
+  ?s rdf:type deus:PluginModule.
+}.

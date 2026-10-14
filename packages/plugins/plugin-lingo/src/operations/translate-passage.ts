@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { AiService, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
@@ -41,7 +41,7 @@ const handler: Operation.WithHandler<typeof LingoOperation.TranslatePassage> = L
       },
       Effect.provide(
         Layer.mergeAll(
-          AiService.model('com.anthropic.model.claude-haiku-4-5.default'),
+          AiService.languageModel('com.anthropic.model.claude-haiku-4-5.default'),
           ToolResolverService.layerEmpty,
           ToolExecutionService.layerEmpty,
           Trace.writerLayerNoop,

@@ -119,6 +119,35 @@ describe('Progress', () => {
       expect(eta).toBe(16_000);
     });
 
+    test('returns undefined once the run has stalled', () => {
+      const progressedAt = new Date('2026-01-01T00:00:00Z');
+      const base = { name: 'a', current: 2, total: 10, status: 'running' as const, elapsedMs: 4_000 };
+      const at = (offsetMs: number) => ({
+        ...base,
+        progressedAt: progressedAt.toISOString(),
+        updatedAt: new Date(progressedAt.getTime() + offsetMs).toISOString(),
+      });
+      // Touched again within the window: still rated.
+      expect(Progress.deriveEta(at(1_000))).toBe(16_000);
+      // Past the floor with nothing to show for it: no estimate.
+      expect(Progress.deriveEta(at(6_000))).toBeUndefined();
+      // A slow run keeps its estimate for twice its per-item time even past the floor.
+      const slow = { ...base, elapsedMs: 20_000 };
+      expect(Progress.deriveEta({ ...at(15_000), ...slow })).toBe(80_000);
+      expect(Progress.deriveEta({ ...at(25_000), ...slow })).toBeUndefined();
+    });
+
+    test('a task records when its count last moved', () => {
+      const registry = Progress.make();
+      const handle = registry.task('a', { total: 3 });
+      const started = registry.snapshot().tasks[0].progressedAt;
+      expect(started).toBeDefined();
+      handle.total(4);
+      expect(registry.snapshot().tasks[0].progressedAt).toBe(started);
+      handle.advance();
+      expect(registry.snapshot().tasks[0].progressedAt! >= started!).toBe(true);
+    });
+
     test('returns undefined when total or progress is unknown', () => {
       const base = { name: 'a', current: 0, status: 'running' as const, updatedAt: new Date().toISOString() };
       expect(Progress.deriveEta(base)).toBeUndefined();

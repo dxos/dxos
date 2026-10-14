@@ -7,10 +7,11 @@ import React from 'react';
 
 import { type Ref } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
+import { useObject } from '@dxos/echo-react';
 import { composeRefs } from '@dxos/react-hooks';
-import { useThemeContext, useTranslation } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Util from '@dxos/react-ui/Util';
 import { type Text } from '@dxos/schema';
 import {
   createBasicExtensions,
@@ -32,13 +33,14 @@ export type TemplateEditorProps = {
   lineNumbers?: boolean;
 };
 
-export const TemplateEditor = composable<HTMLDivElement, TemplateEditorProps>(
+export const TemplateEditor = Util.composable<HTMLDivElement, TemplateEditorProps>(
   ({ classNames, id, source, lineNumbers = true, ...props }, forwardedRef) => {
-    const { t } = useTranslation(meta.profile.key);
-    const { themeMode } = useThemeContext();
+    const { t } = Hooks.useTranslation(meta.profile.key);
+    const themeMode = Hooks.useThemeMode();
+    const [resolved] = useObject(source);
     const { parentRef } = useTextEditor(() => {
       const target = source?.target;
-      if (!target) {
+      if (!resolved || !target) {
         return {};
       }
 
@@ -62,11 +64,11 @@ export const TemplateEditor = composable<HTMLDivElement, TemplateEditorProps>(
           syntaxHighlighting(defaultHighlightStyle),
         ].filter(isNonNullable),
       };
-    }, [themeMode, source?.target, lineNumbers]);
+    }, [themeMode, resolved, lineNumbers]);
 
     return (
       <div
-        {...composableProps(props, {
+        {...Util.composableProps(props, {
           role: 'none',
           classNames: ['h-full overflow-hidden', classNames],
         })}

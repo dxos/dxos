@@ -112,10 +112,10 @@ describe('feeds', () => {
     }
   });
 
-  // Expected to fail: a relation in a feed whose source lives in the automerge database hangs
-  // during query because the strong-dep resolver cannot yet bridge feed→database direction.
-  // Unskip once feed→db strong-dep resolution is implemented.
-  test.fails('relation between feed object and a database object', async ({ expect }) => {
+  // Holds for the writer only: its query returns the relation it appended without decoding it again,
+  // since the feed handle already reflects that block. A reader that has to decode it still hangs,
+  // because the strong-dep resolver cannot yet bridge feed→database.
+  test('relation between feed object and a database object', async ({ expect }) => {
     await using peer = await builder.createPeer({
       types: [Feed.Feed, TestSchema.Person, TestSchema.Organization, TestSchema.EmployedBy],
     });

@@ -93,6 +93,19 @@ export class RemoteEdgeQueryContext<T extends Entity.Unknown = Entity.Unknown> i
     return false;
   }
 
+  hasPendingSources(): boolean {
+    // Only `run` answers; a subscription never does.
+    return true;
+  }
+
+  getCompleteness(): QueryResult.Completeness {
+    return 'pending';
+  }
+
+  getSourceStates(): QueryResult.SourceState[] {
+    return [{ source: 'remote', state: 'pending', answers: 0 }];
+  }
+
   async run(
     _ctx: Context,
     query: QueryAST.Query,

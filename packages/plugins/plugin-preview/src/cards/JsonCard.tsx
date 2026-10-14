@@ -4,8 +4,10 @@
 
 import React, { useState } from 'react';
 
-import { Card, ToggleIconButton } from '@dxos/react-ui';
-import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Card from '@dxos/react-ui/Card';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 
 export const JsonCard = ({ data }: { data: unknown }) => {
   const [open, setOpen] = useState(false);
@@ -16,29 +18,18 @@ export const JsonCard = ({ data }: { data: unknown }) => {
   } catch {}
   return (
     <Card.Row>
-      <Card.Block classNames='self-start'>
-        <ToggleIconButton
+      <Layout.Block classNames='self-start'>
+        <SystemButton.Disclosure
           variant='ghost'
-          density='sm'
-          icon='ph--caret-right--regular'
-          iconOnly
-          active={open}
-          onClick={() => setOpen(!open)}
+          size='sm'
           label='Toggle JSON'
+          expanded={open}
+          onExpandedChange={setOpen}
         />
-      </Card.Block>
-      {(open && (
-        // `Syntax.*` rather than a bare `JsonHighlighter`: the highlighter renders inline and does
-        // not scroll, so overflowing it falls back to the platform's own scrollbars. The viewport is
-        // a `ScrollArea`, which is where the themed thin scrollbar comes from.
-        <Syntax.Root data={data}>
-          <Syntax.Content classNames='col-span-full p-0'>
-            <Syntax.Viewport classNames='max-h-[20lh]'>
-              <Syntax.Code classNames='py-1.5 text-xs' />
-            </Syntax.Viewport>
-          </Syntax.Content>
-        </Syntax.Root>
-      )) || <Card.Text variant='description'>{collapsedLength}</Card.Text>}
+      </Layout.Block>
+      {(open && <JsonHighlighter data={data} classNames='col-span-full max-h-[20lh] py-1.5 text-xs' />) || (
+        <Card.Text variant='muted'>{collapsedLength}</Card.Text>
+      )}
     </Card.Row>
   );
 };

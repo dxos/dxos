@@ -105,7 +105,7 @@ export const MyPlugin = Plugin.define(meta).pipe(
 Use `useOperationInvoker` to invoke operations from components:
 
 ```typescript
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 
 const { invokePromise } = useOperationInvoker();
 await invokePromise(MyOperation.CreateItem, { name: 'New Item' });

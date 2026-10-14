@@ -5,6 +5,7 @@
 import { type Heads } from '@automerge/automerge';
 import * as EffectContext from 'effect/Context';
 import * as Equal from 'effect/Equal';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import { inspect } from 'node:util';
 
@@ -12,7 +13,9 @@ import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/a
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
 import {
+  Annotation,
   type Blob,
+  type Change,
   Database,
   Entity,
   Feed,
@@ -24,6 +27,7 @@ import {
   QueryAST,
   Ref,
   type Registry,
+  Relation,
   Type,
 } from '@dxos/echo';
 import {
@@ -53,15 +57,23 @@ import { DXN, EID, EntityId, type PublicKey, type SpaceId, type URI } from '@dxo
 import { log } from '@dxos/log';
 import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
+import { type EventAttributes, trace } from '@dxos/tracing';
 
 import type { SaveStateChangedEvent } from '../automerge/index.ts';
 import { type DocHandleProxy, type RepoProxy } from '../automerge/index.ts';
-import { type BranchStore, EntityManager, type LoadObjectOptions } from '../core-db/index.ts';
+import {
+  type BranchStore,
+  type DocumentRetention,
+  EntityManager,
+  type LoadObjectOptions,
+  type SpaceDocumentHeads,
+} from '../core-db/index.ts';
 import {
   EchoReactiveHandler,
   type ProxyTarget,
   checkoutVersionSnapshot,
   createObject,
+  getObjectChanges,
   getObjectCore,
   initEchoReactiveObjectRootProxy,
   isEchoObject,
@@ -104,6 +116,11 @@ export interface EchoDatabase extends Database.Database {
    * Get notification about the per-peer automerge document sync progress.
    */
   subscribeToAutomergeSyncState(ctx: Context, callback: (state: DataService.SpaceSyncState) => void): CleanupFn;
+
+  /**
+   * Get the local heads of the space root document and every document it links.
+   */
+  getDocumentHeads(): Promise<SpaceDocumentHeads>;
 
   /**
    * Returns ids for all objects in the space (both loaded and unloaded).
@@ -187,6 +204,9 @@ export type EchoDatabaseProps = {
 
   /** Device-local persistence for the current-branch selection (non-synced). In-memory if omitted. */
   branchStore?: BranchStore;
+
+  /** Which loaded object documents the database keeps in memory. */
+  documentRetention?: DocumentRetention;
 
   /**
    * Run a reactive query for dynamic schemas.
@@ -304,6 +324,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
    * EDGE queue addressed by the feed object's URI; this map caches the per-feed client handle.
    */
   readonly #feeds = new Map<EID.EID, FeedHandle>();
+  /**
+   * Disposals of handles retired by a service swap. A disposal that lost writes is kept until {@link flush} raises it.
+   */
+  readonly #retiredFeeds = new Set<Promise<void>>();
 
   constructor(params: EchoDatabaseProps) {
     super();
@@ -322,6 +346,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       spaceId: params.spaceId,
       spaceKey: params.spaceKey,
       branchStore: params.branchStore,
+      documentRetention: params.documentRetention,
       createEntity: (core) => initEchoReactiveObjectRootProxy(core, this),
     });
 
@@ -369,12 +394,20 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return this._entityManager._updateEvent;
   }
 
+  get _localCommitEvent() {
+    return this._entityManager._localCommitEvent;
+  }
+
   get opened() {
     return this._entityManager.opened;
   }
 
   get rootChanged() {
     return this._entityManager.rootChanged;
+  }
+
+  get linksAdded() {
+    return this._entityManager.linksAdded;
   }
 
   // ── Resource lifecycle ──────────────────────────────────────────────────
@@ -399,8 +432,15 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   @synchronized
   protected override async _close(): Promise<void> {
-    await Promise.allSettled([...this.#feeds.values()].map((feed) => feed.dispose()));
+    const disposals = await Promise.allSettled([...this.#feeds.values()].map((feed) => feed.dispose()));
+    for (const disposal of disposals) {
+      if (disposal.status === 'rejected') {
+        log.warn('feed writes lost on close', { err: disposal.reason });
+      }
+    }
     this.#feeds.clear();
+    await Promise.allSettled([...this.#retiredFeeds]);
+    this.#retiredFeeds.clear();
     await this._entityManager.close();
   }
 
@@ -434,19 +474,16 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return schema;
   }
 
-  private _addPersistentSchema(schemaInput: Schema.Codec<unknown, unknown> | Type.AnyEntity): Type.AnyEntity {
+  private _addPersistentSchema(
+    schemaInput: Schema.Codec<unknown, unknown> | Type.AnyEntity,
+    origin?: Database.Origin,
+  ): Type.AnyEntity {
     let schema: Schema.Codec<unknown, unknown>;
     let meta: TypeAnnotation | undefined;
     if (Type.isType(schemaInput)) {
       const entity = schemaInput;
       schema = Type.getSchema(entity).annotate({ [TypeIdentifierAnnotationId]: undefined });
-      meta =
-        getTypeAnnotation(schema) ??
-        ({
-          kind: Type.isRelation(entity) ? EntityKind.Relation : EntityKind.Object,
-          typename: Type.getTypename(entity),
-          version: Type.getVersion(entity),
-        } satisfies TypeAnnotation);
+      meta = getTypeAnnotation(schema) ?? this.#describedTypeAnnotation(entity);
     } else {
       schema = schemaInput;
       meta = getTypeAnnotation(schema);
@@ -468,13 +505,49 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
           kind: meta.kind,
           typename: meta.typename,
           version: meta.version,
+          relationSource: meta.sourceSchema,
+          relationTarget: meta.targetSchema,
         }),
       }),
     );
 
-    const persistentSchema = this._addObject(schemaToStore);
+    const persistentSchema = this._addObject(schemaToStore, { origin });
     invariant(Type.isType(persistentSchema), 'persisted schema must materialize as a Type entity (kind=type)');
     return persistentSchema;
+  }
+
+  /**
+   * The annotation of a type entity built from JSON Schema, whose rebuilt schema carries none because
+   * its typename and version live in meta; the kind and relation ends come from the JSON Schema.
+   */
+  #describedTypeAnnotation(entity: Type.AnyEntity): TypeAnnotation {
+    const { entityKind, relationSource, relationTarget } = entity.jsonSchema;
+    const isRelation = Type.isRelation(entity) || entityKind === EntityKind.Relation;
+    return {
+      kind: isRelation ? EntityKind.Relation : EntityKind.Object,
+      typename: Type.getTypename(entity),
+      version: Type.getVersion(entity),
+      ...(isRelation && {
+        sourceSchema: this.#relationEndDXN(relationSource?.$ref),
+        targetSchema: this.#relationEndDXN(relationTarget?.$ref),
+      }),
+    };
+  }
+
+  /**
+   * A relation end as the `dxn:` the stored annotation requires; an end naming a type persisted in
+   * this space by its `echo:` id is recorded under that type's typename and version.
+   */
+  #relationEndDXN(uri: string | undefined): DXN.DXN | undefined {
+    if (uri == null || !EID.isEID(uri)) {
+      return uri == null ? undefined : DXN.tryMake(uri);
+    }
+    const entityId = EID.getEntityId(EID.parse(uri));
+    const type = entityId ? this._entityManager.getEntityById(entityId) : undefined;
+    if (!Type.isType(type)) {
+      return undefined;
+    }
+    return DXN.tryMake(`dxn:${Type.getTypename(type)}:${Type.getMeta(type).version}`);
   }
 
   // TODO(burdon): Type check.
@@ -526,6 +599,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       // Synchronous feed append: registers the object as a live feed object and schedules the
       // background write. Returns the same instance; confirm persistence with `db.flush()`.
       this.#getFeedHandle(opts.to).appendSync([obj]);
+      this.#emitFeedAppend(opts.to, [obj], opts.origin);
       return obj;
     }
     return this._addObject(obj, opts);
@@ -534,7 +608,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   /**
    * Persist a Type definition (clones/forks the entity) so it replicates to other peers.
    */
-  async addType<T extends Type.AnyEntity>(type: T): Promise<T> {
+  async addType<T extends Type.AnyEntity>(type: T, opts?: Database.WriteOptions): Promise<T> {
     invariant(Type.isType(type), 'addType expects a Type entity');
     const typename = Type.getTypename(type);
     const version = Type.getMeta(type).version ?? Type.getVersion(type);
@@ -554,7 +628,14 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     // `_addPersistentSchema` reconstructs the entity from a JSON schema at runtime, so its result
     // can only be typed as `Type.AnyEntity`; the caller's `T` is verified by the `Type.isType`
     // invariant inside `_addPersistentSchema`, not by the compiler.
-    return this._addPersistentSchema(type) as T;
+    const persisted = this._addPersistentSchema(type, opts?.origin) as T;
+    trace.events.emit(Database.TraceEvents.typeAdd, {
+      spaceId: this.spaceId,
+      typename,
+      version,
+      origin: opts?.origin ?? 'unknown',
+    });
+    return persisted;
   }
 
   private _addObject<T extends Entity.Unknown = Entity.Unknown>(obj: T, opts?: Database.AddOptions): T {
@@ -587,6 +668,8 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     invariant(isEchoObject(obj));
     getObjectCore(obj).rootProxy = obj;
 
+    // An object already bound to a database is being restored, not created.
+    const created = getObjectCore(obj).entityManager == null;
     const target = getProxyTarget(obj) as ProxyTarget & Entity.Unknown;
     EchoReactiveHandler.instance.setDatabase(target, this);
     // Re-stamp relation endpoints now that the database (and thus space) is known: cross-space
@@ -594,20 +677,47 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     EchoReactiveHandler.instance.rebindRelationEndpoints(target);
     EchoReactiveHandler.instance.saveRefs(target);
     this._entityManager.addCore(getObjectCore(obj), opts);
+    if (created) {
+      trace.events.emit(Database.TraceEvents.objectAdd, this.#entityAttributes(obj, opts?.origin));
+    }
     return obj;
   }
 
-  remove<T extends Entity.Unknown = Entity.Unknown>(obj: T): void {
+  remove<T extends Entity.Unknown = Entity.Unknown>(obj: T, opts?: Database.WriteOptions): void {
     assertArgument(isEchoObject(obj), 'obj');
-    return this._entityManager.removeCore(getObjectCore(obj));
+    this._entityManager.removeCore(getObjectCore(obj));
+    trace.events.emit(Database.TraceEvents.objectRemove, this.#entityAttributes(obj, opts?.origin));
+  }
+
+  /** What ECHO's trace events report about a written entity. */
+  #entityAttributes(entity: Entity.Unknown, origin?: Database.Origin): EventAttributes {
+    const type = Entity.getType(entity);
+    return {
+      spaceId: this.spaceId,
+      objectId: entity.id,
+      typename: Entity.getTypename(entity),
+      relation: Relation.isRelation(entity),
+      userType: type != null && isUserFacing(type),
+      origin: resolveOrigin(entity, origin),
+    };
+  }
+
+  #emitFeedAppend(feed: Feed.Feed, entities: Entity.Unknown[], origin?: Database.Origin): void {
+    for (const entity of entities) {
+      trace.events.emit(Database.TraceEvents.feedAppend, {
+        ...this.#entityAttributes(entity, origin),
+        feedId: feed.id,
+      });
+    }
   }
 
   //
   // Feeds.
   //
 
-  async appendToFeed(feed: Feed.Feed, entities: Entity.Unknown[]): Promise<void> {
+  async appendToFeed(feed: Feed.Feed, entities: Entity.Unknown[], opts?: Database.WriteOptions): Promise<void> {
     await this.#getFeedHandle(feed).append(entities);
+    this.#emitFeedAppend(feed, entities, opts?.origin);
   }
 
   async deleteFromFeed(feed: Feed.Feed, entities: Entity.Unknown[]): Promise<void> {
@@ -718,6 +828,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   // Blobs.
   //
 
+  async createBlobFromUpload(uploadId: string, options?: { storage?: string }): Promise<Blob.Blob> {
+    return this.graph.blobManager.createBlobFromUpload(this.spaceId, uploadId, options);
+  }
+
   async createBlob(bytes: Uint8Array, options?: { type?: string; storage?: string }): Promise<Blob.Blob> {
     return this.graph.blobManager.createBlob(this.spaceId, bytes, options);
   }
@@ -736,7 +850,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   async flush(opts?: Database.FlushOptions): Promise<void> {
     await this._entityManager.flush(opts);
-    await Promise.all([...this.#feeds.values()].map((handle) => handle.waitForPendingWrites()));
+    await Promise.all([
+      ...[...this.#feeds.values()].map((handle) => handle.waitForPendingWrites()),
+      ...[...this.#retiredFeeds].map((disposal) => disposal.finally(() => this.#retiredFeeds.delete(disposal))),
+    ]);
   }
 
   async runMigrations(migrations: Migration.Migration[]): Promise<void> {
@@ -914,10 +1031,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     if (!this.#feedService) {
       return EMPTY_FEED_SYNC_STATE;
     }
-    const response = await runServiceCall(
-      this.#runtime,
-      this.#feedService['FeedService.getSyncState']({ spaceId: this.spaceId, namespaces: [] }),
-    );
+    const response = await runServiceCall(this.#runtime, this.#feedService, 'FeedService.getSyncState', {
+      spaceId: this.spaceId,
+      namespaces: [],
+    });
     return aggregateFeedSyncState(response);
   }
 
@@ -971,6 +1088,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   getVersion<T extends Obj.Unknown>(obj: T, heads: readonly string[]): Obj.Snapshot<T> {
     return checkoutVersionSnapshot(obj, [...heads]);
+  }
+
+  getChanges<T extends Obj.Unknown>(obj: T, opts?: Obj.GetChangesOptions): Change.ValueChange<unknown>[] {
+    return getObjectChanges(obj, opts);
   }
 
   listBranches(objectId: string): string[] {
@@ -1036,11 +1157,20 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return this._entityManager.allObjectCores();
   }
 
+  /** Objects written locally that the index may not reflect yet; see `EntityManager.unindexedWrites`. */
+  unindexedWrites(): Iterable<string> {
+    return this._entityManager.unindexedWrites();
+  }
+
   areStrongDepsSatisfied(core: Parameters<EntityManager['areStrongDepsSatisfied']>[0]) {
     return this._entityManager.areStrongDepsSatisfied(core);
   }
 
-  getDocumentHeads() {
+  areStrongDepsResolved(core: Parameters<EntityManager['areStrongDepsResolved']>[0]) {
+    return this._entityManager.areStrongDepsResolved(core);
+  }
+
+  getDocumentHeads(): Promise<SpaceDocumentHeads> {
     return this._entityManager.getDocumentHeads();
   }
 
@@ -1100,7 +1230,18 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     feedService?: FeedService.Client;
   }): void {
     this._entityManager._updateServices({ dataService, queryService });
-    if (feedService !== undefined) {
+    if (feedService !== undefined && feedService !== this.#feedService) {
+      const stale = [...this.#feeds.values()];
+      this.#feeds.clear();
+      for (const handle of stale) {
+        // Tracked because `dispose` drains pending writes: dropping the handle from `#feeds` alone would let `flush()`
+        // resolve while that drain is still running, or after it lost the writes.
+        const disposal = handle.dispose().then(() => {
+          this.#retiredFeeds.delete(disposal);
+        });
+        disposal.catch((err) => log.warn('retired feed handle lost writes', { err }));
+        this.#retiredFeeds.add(disposal);
+      }
       this.#feedService = feedService;
     }
   }
@@ -1121,6 +1262,19 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   /** @deprecated */
   readonly pendingBatch = new Event<unknown>();
 }
+
+/**
+ * Whether entities of this type are ones a user creates and sees: not a meta-type, and persisted in a space
+ * or carrying {@link Annotation.UserType}. Mirrors `TypeOptions.isUserType` in `@dxos/app-toolkit`, which
+ * ECHO cannot depend on, except that relation types qualify too.
+ */
+const isUserFacing = (type: Type.AnyEntity): boolean =>
+  !Type.isTypeKind(type) &&
+  (Type.getDatabase(type) != null || Option.isSome(Annotation.UserType.get(Type.getSchema(type))));
+
+/** The caller's origin, or else a guess: foreign keys mean a sync or import wrote the entity. */
+const resolveOrigin = (entity: Entity.Unknown, origin?: Database.Origin): Database.Origin =>
+  origin ?? (Entity.getMeta(entity).keys.length > 0 ? 'system' : 'unknown');
 
 // TODO(burdon): Create APIError class.
 const createSchemaNotRegisteredError = (schema?: Type.AnyEntity) => {

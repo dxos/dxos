@@ -1,0 +1,50 @@
+/*
+ * Drag and drop (Phase 4 decision 5): the drop indicator is a line on a target row's edge in the focus-ring colour, and
+ * the drag preview is a block-tall chip at the source row's size and level.
+ */
+
+@layer dx-components {
+  :root {
+    --dx-drop-indicator-color: var(--dx-focus-ring-color);
+    --dx-drop-indicator-width: 2px;
+  }
+
+  .dx-drop-indicator {
+    position: absolute;
+    inset-inline: 0;
+    height: var(--dx-drop-indicator-width);
+    background: var(--dx-drop-indicator-color);
+    pointer-events: none;
+  }
+  .dx-drop-indicator[data-edge='top'] {
+    top: calc(var(--dx-drop-indicator-width) / -2);
+  }
+  .dx-drop-indicator[data-edge='bottom'] {
+    bottom: calc(var(--dx-drop-indicator-width) / -2);
+  }
+
+  /*
+   * Fallback for custom hosts that render a DropIndicator: the row must contain it; position moves nothing. Next list
+   * rows draw their indicator from `data-drop-target` instead (row.css).
+   */
+  :is(.dx-container, .dx-collapsible):has(> .dx-drop-indicator) {
+    position: relative;
+  }
+
+  .dx-drag-preview {
+    display: flex;
+    align-items: center;
+    gap: var(--dx-gap-size);
+    height: var(--dx-block-size);
+    padding-inline: var(--dx-gap-size);
+    border-radius: var(--radius-sm, 0.25rem);
+    font-size: var(--dx-font-size);
+    line-height: var(--dx-line-height);
+    white-space: nowrap;
+  }
+
+  /* A grabbed handle stays lit while the arrow keys move its item. */
+  .dx-button[data-drag-handle][data-grabbed] {
+    background: var(--color-hover-surface);
+  }
+}

@@ -12,7 +12,7 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
@@ -51,7 +51,7 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: [
             Lightbox.Lightbox,
@@ -79,8 +79,8 @@ const meta = {
                   lightbox.layout.cells[added.id] = {
                     x: (index % 3) * 2,
                     y: Math.floor(index / 3) * 2,
-                    width: 2,
-                    height: 2,
+                    w: 2,
+                    h: 2,
                   };
                 }
               });

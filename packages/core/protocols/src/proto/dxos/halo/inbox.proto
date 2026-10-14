@@ -1,0 +1,58 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+syntax = "proto3";
+
+package dxos.halo.inbox;
+
+option go_package = "github.com/dxos/dxos/proto/def/dxos/halo/inbox";
+
+import "google/protobuf/timestamp.proto";
+
+import "dxos/halo/credentials.proto";
+import "dxos/keys.proto";
+
+//
+// **InboxEnvelope** -
+// A user-to-user message relayed through the EDGE inbox, signed by the sender.
+// Not a credential: it asserts nothing HALO or a space interprets, so it carries no assertion.
+//
+
+message InboxEnvelope {
+  // Field numbers start past every `Credential` field, so a legacy credential payload decodes as an
+  // envelope with no fields set (and vice versa) instead of being misread.
+
+  /// Format version; a recipient leaves envelopes of a version it does not know pending.
+  uint32 version = 16;
+
+  /// Binary `InboxEnvelopeHeader`; signed exactly as transmitted, so it is never re-encoded to verify.
+  bytes header = 17;
+
+  /// Key that made `signature`: the sender's identity key, or a device key `chain` delegates to it.
+  dxos.keys.PublicKey signer = 18;
+
+  bytes signature = 19;
+
+  /// The device's `AuthorizedDevice` credential, present when `signer` is not the sender identity.
+  optional dxos.halo.credentials.Chain chain = 20;
+}
+
+message InboxEnvelopeHeader {
+  /// Repeats the envelope version under the signature.
+  uint32 version = 1;
+
+  /// Reverse-DNS payload type (e.g., `org.dxos.inbox.message`).
+  string type = 2;
+
+  /// Sender identity key.
+  dxos.keys.PublicKey sender = 3;
+
+  /// Recipient identity key.
+  dxos.keys.PublicKey recipient = 4;
+
+  google.protobuf.Timestamp sent_at = 5;
+
+  /// Type-specific payload (e.g., a JSON-encoded message).
+  string payload = 6;
+}

@@ -9,7 +9,6 @@ import * as Schema from 'effect/Schema';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Skill from '@dxos/compute/Skill';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { FormInlineAnnotation, FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { type EntityId } from '@dxos/keys';
 import { StateMap } from '@dxos/schema';
 import { trim } from '@dxos/util';
@@ -87,7 +86,7 @@ export class Magazine extends Type.makeObject<Magazine>(DXN.make('org.dxos.type.
     /** Feeds to pull content from. */
     feeds: Schema.Array(Ref.Ref(Subscription.Subscription)),
     /** Curated Post refs (insertion order; UI displays newest-last reversed). */
-    posts: Schema.Array(Ref.Ref(Subscription.Post)).pipe(FormInputAnnotation.set(false)),
+    posts: Schema.Array(Ref.Ref(Subscription.Post)).pipe(Annotation.FormInputAnnotation.set(false)),
     /**
      * Curation Instructions, created with the magazine ({@link make}). Holds the editorial brief and
      * references the Magazine skill. Rendered inline by the properties form (the Instructions'
@@ -95,8 +94,8 @@ export class Magazine extends Type.makeObject<Magazine>(DXN.make('org.dxos.type.
      * Optional for backward compatibility; {@link CurateMagazine} and the toolbar require it.
      */
     instructions: Ref.Ref(Instructions.Instructions).pipe(
-      Annotation.SetParent.set(true),
-      FormInlineAnnotation.set(true),
+      Annotation.SetParent.set(),
+      Annotation.FormInlineAnnotation.set(true),
       Schema.optional,
     ),
     /**
@@ -104,7 +103,7 @@ export class Magazine extends Type.makeObject<Magazine>(DXN.make('org.dxos.type.
      * star/archive tags) lives on `Subscription`; snippet/imageUrl here are agent-written at
      * curation time and take precedence over the RSS-derived defaults in display.
      */
-    postState: Ref.Ref(StateMap.StateMap).pipe(Annotation.SetParent.set(true), FormInputAnnotation.set(false)),
+    postState: Ref.Ref(StateMap.StateMap).pipe(Annotation.SetParent.set(), Annotation.FormInputAnnotation.set(false)),
     /**
      * Maximum number of (non-starred) curated Posts retained on the magazine after curation.
      * Older posts beyond this bound are dropped; starred posts are preserved regardless.
@@ -118,9 +117,10 @@ export class Magazine extends Type.makeObject<Magazine>(DXN.make('org.dxos.type.
       Schema.optional,
     ),
   }).pipe(
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--book-open-text--regular', hue: 'indigo' }),
     Skill.SkillsAnnotation.set([SKILL_KEY]),
+    Annotation.UserType.set(),
   ),
 ) {}
 

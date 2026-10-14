@@ -28,7 +28,7 @@ const DefaultStory = ({ initial, minInterval }: { initial: ScheduleValue; minInt
         <Schedule.Body />
       </Schedule.Root>
       <div className='flex flex-col gap-1'>
-        <p className='text-xs text-subdued'>Value</p>
+        <p className='text-xs text-fg-subtle'>Value</p>
         <pre className='font-mono text-sm bg-base-surface rounded p-2 whitespace-pre-wrap'>
           {JSON.stringify(value, null, 2)}
         </pre>

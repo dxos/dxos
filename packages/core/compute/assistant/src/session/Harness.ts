@@ -9,15 +9,15 @@ import * as DateTime from 'effect/DateTime';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
+import type * as RpcClient from 'effect/rpc/RpcClient';
 import type * as Scope from 'effect/Scope';
-import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
 
-import { ServiceNotAvailableError } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import * as Process from '@dxos/compute/Process';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { Annotation, Database, EID, Feed, Filter, Obj, type URI } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError } from '@dxos/errors';
 import { type ContentBlock, Message } from '@dxos/types';
 
@@ -143,7 +143,7 @@ export const layerSpec: LayerSpec.LayerSpec = LayerSpec.make(
           // is not possible here. Die with ServiceNotAvailableError to signal a programming error
           // (missing 'conversation' in spawn environment) that callers cannot recover from.
           return yield* Effect.die(
-            new ServiceNotAvailableError(HarnessService.key, {
+            new ServiceResolver.ServiceNotAvailableError(HarnessService.key, {
               message: `Service not available: ${HarnessService.key} — process spawn is missing 'conversation' in environment (set via Operation.withInvocationOptions or ProcessManager.spawn environment)`,
             }),
           );
@@ -258,7 +258,7 @@ const lookupOwningHost = (
     const processes = yield* processManager.list({ target: conversation });
     const host = processes.find(
       (process) =>
-        !isTerminalProcess(process.status.state) &&
+        !Process.isTerminal(process.status.state) &&
         Option.getOrElse(
           Annotation.getDictionary(process.params.annotations, Process.HarnessHostAnnotation),
           () => false,
@@ -274,10 +274,3 @@ const lookupOwningHost = (
     // in `@dxos/functions-runtime`, which depends on this package — importing it would cycle.
     return host.rpc as unknown as RpcClient.RpcClient<HarnessControlRpcs>;
   });
-
-// TERMINATING counts as terminal: the handle is already `#finished` and no longer accepts input.
-const isTerminalProcess = (state: Process.State): boolean =>
-  state === Process.State.SUCCEEDED ||
-  state === Process.State.FAILED ||
-  state === Process.State.TERMINATED ||
-  state === Process.State.TERMINATING;

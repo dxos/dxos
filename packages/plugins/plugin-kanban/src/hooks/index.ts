@@ -8,3 +8,4 @@ export * from './useKanbanBoardModel.ts';
 export * from './useKanbanColumnEventHandler.ts';
 export * from './useKanbanItemEventHandler.ts';
 export * from './useProjectionModel.ts';
+export * from './useSingleSelectFields.ts';

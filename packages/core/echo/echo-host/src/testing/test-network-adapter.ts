@@ -10,35 +10,47 @@ import { log } from '@dxos/log';
 
 export type TestConnectionStateProvider = () => 'on' | 'off';
 
+export type TestTransportOptions = {
+  /**
+   * Each message leaves only after the previous one's round trip, as the mesh replicator's
+   * `sendSyncMessage` RPC does, so the link carries one message per `serialRoundTripMs`.
+   */
+  serialRoundTripMs?: number;
+};
+
 export class TestAdapter extends NetworkAdapter {
   static createPair(
     connectionStateProvider: TestConnectionStateProvider = () => 'on',
     onMessage?: (message: Message) => void,
+    transport: TestTransportOptions = {},
   ): TestAdapter[] {
-    const adapter1: TestAdapter = new TestAdapter({
-      send: (message: Message) => {
-        onMessage?.(message);
-        if (connectionStateProvider() === 'on') {
-          void sleep(10).then(() => {
-            if (connectionStateProvider() === 'on' && adapter2.peerId) {
-              adapter2.receive(message);
-            }
-          });
+    const createSend = (receiver: () => TestAdapter) => {
+      const deliver = (message: Message) => {
+        const target = receiver();
+        if (connectionStateProvider() === 'on' && target.peerId) {
+          target.receive(message);
         }
-      },
-    });
-    const adapter2: TestAdapter = new TestAdapter({
-      send: (message: Message) => {
+      };
+      let previousRoundTrip = Promise.resolve();
+      return (message: Message) => {
         onMessage?.(message);
-        if (connectionStateProvider() === 'on') {
-          void sleep(10).then(() => {
-            if (connectionStateProvider() === 'on' && adapter1.peerId) {
-              adapter1.receive(message);
-            }
-          });
+        if (connectionStateProvider() !== 'on') {
+          return;
         }
-      },
-    });
+        const roundTripMs = transport.serialRoundTripMs;
+        if (roundTripMs === undefined) {
+          void sleep(10).then(() => deliver(message));
+          return;
+        }
+        previousRoundTrip = previousRoundTrip.then(async () => {
+          await sleep(roundTripMs / 2);
+          deliver(message);
+          await sleep(roundTripMs / 2);
+        });
+      };
+    };
+    const adapter1: TestAdapter = new TestAdapter({ send: createSend(() => adapter2) });
+    const adapter2: TestAdapter = new TestAdapter({ send: createSend(() => adapter1) });
 
     return [adapter1, adapter2];
   }

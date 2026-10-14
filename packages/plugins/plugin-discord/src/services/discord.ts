@@ -4,12 +4,13 @@
 
 import { DiscordConfig, type DiscordREST, DiscordRESTMemoryLive } from 'dfx';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
 import * as Redacted from 'effect/Redacted';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
+import * as Credential from '@dxos/compute/Credential';
 import { Database, Error, type Ref } from '@dxos/echo';
-import { Connection } from '@dxos/link';
+import { type AccessToken, Connection } from '@dxos/link';
 
 import { DISCORD_API_BASE } from '../constants.ts';
 import { makeEdgeProxyHttpClientLayer } from './proxy-http-client.ts';
@@ -33,23 +34,35 @@ export const makeDiscordLayerFromToken = (token: string): Layer.Layer<DiscordRES
   );
 
 /**
+ * Resolve the secret behind an `AccessToken` through {@link Credential.CredentialsService}.
+ *
+ * Looked up by id so an EDGE-custodied (managed) token resolves server-side, while an inline
+ * token stored on the object is still returned as-is by the database-backed credentials layer.
+ */
+export const resolveDiscordToken = (
+  accessToken: AccessToken.AccessToken,
+): Effect.Effect<string, never, Credential.CredentialsService> =>
+  Credential.getApiKeyValue({ accessTokenId: accessToken.id });
+
+/** Load a connection's `AccessToken` and resolve its secret. */
+const resolveConnectionToken = Effect.fnUntraced(function* (connectionRef: Ref.Ref<Connection.Connection>) {
+  const connection = yield* Database.load(connectionRef);
+  const accessToken = yield* Database.load(connection.accessToken);
+  return yield* resolveDiscordToken(accessToken);
+});
+
+/**
  * Build a `DiscordREST` layer from a persisted {@link Connection} ref.
  *
- * Loads the connection's `AccessToken` on layer construction; the operation
+ * Resolves the connection's token on layer construction; the operation
  * handler runs against the resulting `DiscordREST` without ever seeing the
  * raw token. Requires `Database.Service`, which the operation runner already
  * provides via the connection's database.
  */
 export const makeDiscordLayer = (
   connectionRef: Ref.Ref<Connection.Connection>,
-): Layer.Layer<DiscordREST, Error.EntityNotFoundError> =>
-  Layer.unwrap(
-    Effect.gen(function* () {
-      const connection = yield* Database.load(connectionRef);
-      const accessToken = yield* Database.load(connection.accessToken);
-      return makeDiscordLayerFromToken(accessToken.token);
-    }),
-  );
+): Layer.Layer<DiscordREST, Error.EntityNotFoundError, Credential.CredentialsService> =>
+  Layer.unwrap(Effect.map(resolveConnectionToken(connectionRef), makeDiscordLayerFromToken));
 
 /**
  * Build a `DiscordREST` layer pinned to a specific user OAuth token.
@@ -70,11 +83,5 @@ export const makeDiscordUserLayerFromToken = (token: string): Layer.Layer<Discor
  */
 export const makeDiscordUserLayer = (
   connectionRef: Ref.Ref<Connection.Connection>,
-): Layer.Layer<DiscordREST, Error.EntityNotFoundError> =>
-  Layer.unwrap(
-    Effect.gen(function* () {
-      const connection = yield* Database.load(connectionRef);
-      const accessToken = yield* Database.load(connection.accessToken);
-      return makeDiscordUserLayerFromToken(accessToken.token);
-    }),
-  );
+): Layer.Layer<DiscordREST, Error.EntityNotFoundError, Credential.CredentialsService> =>
+  Layer.unwrap(Effect.map(resolveConnectionToken(connectionRef), makeDiscordUserLayerFromToken));

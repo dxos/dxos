@@ -37,8 +37,8 @@ across whichever package owns the fix. Findings and rationale live in
 ## Phase 2: HTML rendering + dark mode — SUPERSEDED
 
 Implemented and moved. The component, its dialect seam and the full design write-up now live in
-`packages/ui/react-ui-components/src/components/HtmlViewer/` — see its
-[DESIGN.md](../../../packages/ui/react-ui-components/src/components/HtmlViewer/DESIGN.md), which is
+`packages/ui/react-ui-html/src/HtmlViewer/` — see its
+[DESIGN.md](../../../packages/ui/react-ui-html/src/docs/DESIGN.md), which is
 the current record for everything below.
 
 - [x] **Capture real email fixtures to analyze against** — done in the MailboxSync
@@ -155,7 +155,7 @@ and its [DESIGN.md](../../../packages/plugins/plugin-deck/DESIGN.md).
 ## References
 
 - [DESIGN.md](DESIGN.md) — findings and rationale.
-- `packages/ui/react-ui-components/src/components/HtmlViewer/` — the HTML sandbox, email dialect and
+- `packages/ui/react-ui-html/src/HtmlViewer/` — the HTML sandbox, email dialect and
   its own DESIGN.md.
 - `packages/plugins/plugin-connector/src/util/sync-routine.ts`
 - `packages/plugins/plugin-routine/src/components/RoutineForm/RoutineForm.tsx`

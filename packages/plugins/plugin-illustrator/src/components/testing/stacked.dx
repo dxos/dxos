@@ -1,0 +1,9 @@
+# Three boxes in one column. A -> B has a box in its way: the router connects them side to side
+# down the free gutter (two bends) instead of snaking around X. Force `A:bottom -> B:top` to compare.
+node A "Source"
+node X "Middle" below A
+node B "Sink" below X
+
+edge A -> X "first"
+edge X -> B "second"
+edge A -> B "skip"

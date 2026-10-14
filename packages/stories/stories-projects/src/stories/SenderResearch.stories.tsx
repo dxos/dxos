@@ -75,11 +75,12 @@ export const Test: Story = {
       timeout: 30_000,
     });
 
-    // Skill rows resolve their labels from the registry (blank if the owning plugin is unloaded).
-    await waitFor(async () => expect(canvas.getByDisplayValue('CRM')).toBeInTheDocument(), { timeout: 10_000 });
-    await expect(canvas.getByDisplayValue('Web Search')).toBeInTheDocument();
-    await expect(canvas.getByDisplayValue('Markdown')).toBeInTheDocument();
+    // Skill rows resolve their labels from the registry (blank if the owning plugin is unloaded); references show as
+    // chips and the picker's text rather than input values.
+    await waitFor(async () => expect(canvas.getAllByText('CRM')[0]).toBeInTheDocument(), { timeout: 10_000 });
+    await expect(canvas.getAllByText('Web Search')[0]).toBeInTheDocument();
+    await expect(canvas.getAllByText('Markdown')[0]).toBeInTheDocument();
 
-    await expect(canvas.getByDisplayValue(MAILBOX_NAME)).toBeInTheDocument();
+    await expect(canvas.getAllByText(MAILBOX_NAME)[0]).toBeInTheDocument();
   },
 };

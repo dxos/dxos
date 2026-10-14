@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Atom from 'effect/reactivity/Atom';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 import { Progress } from '@dxos/progress';
 
@@ -15,9 +15,9 @@ import * as AppCapabilities from './AppCapabilities.ts';
  * kept-alive writable atom (so a background producer can populate it before any surface subscribes),
  * and per-provider atoms are derived selectors memoized by name.
  */
-export const createProgressRegistry = (registry: Registry.AtomRegistry): AppCapabilities.ProgressRegistry => {
+export const makeRegistry = (registry: Registry.AtomRegistry): AppCapabilities.ProgressRegistry => {
   const core = Progress.make();
-  const snapshotAtom = Atom.make<Progress.ProgressSnapshot>(core.snapshot()).pipe(Atom.keepAlive);
+  const snapshotAtom = Atom.make<Progress.Snapshot>(core.snapshot()).pipe(Atom.keepAlive);
   core.subscribe((snapshot) => registry.set(snapshotAtom, snapshot));
 
   const monitorAtoms = new Map<string, Atom.Atom<Progress.TaskProgress | undefined>>();

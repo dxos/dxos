@@ -6,26 +6,27 @@ import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
-import { RunInstructions } from '@dxos/assistant-toolkit';
+import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
 import { FeedTraceSink } from '@dxos/compute-runtime';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Skill from '@dxos/compute/Skill';
 import { Collection, Database, Obj, Ref } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { WeatherSpace } from '@dxos/plugin-debug/sample';
+import * as WeatherSpace from '@dxos/plugin-debug/WeatherSpace';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 
 import { findObject, toolInvocations } from '../../assertions.ts';
+import { EvalRunError } from '../../errors.ts';
 import { OPENING_PROMPT, SKILL_KEY, evaluateHandOff, seed } from './scenario.ts';
 import { startWorkerSpecServer } from './worker-spec-server.ts';
 
@@ -46,9 +47,9 @@ describe('weather MCP hand-off', () => {
       // Filled in once the space is seeded and the server is up; the script reads them when it emits.
       const target: { skill?: string; server?: string } = {};
 
-      await using harness = await createComposerTestApp({
+      await using harness = await Harness.createComposerTestApp({
         plugins: [
-          ClientPlugin.make({ types: [...WeatherSpace().schemas, Collection.Collection] }),
+          ClientPlugin.make({ types: [...WeatherSpace.make().schemas, Collection.Collection] }),
           AssistantPlugin.make({
             aiServiceMiddleware: ScriptedLanguageModel.scriptedAiServiceMiddleware([
               // Step three: the configuring write, as the task text tells the session to make it.
@@ -94,7 +95,9 @@ describe('weather MCP hand-off', () => {
 
           const skill = yield* findObject(Skill.Skill, (candidate) => Obj.getMeta(candidate).key === SKILL_KEY);
           if (!skill) {
-            return yield* Effect.fail(new Error('The template did not seed the Weather MCP skill.'));
+            return yield* Effect.fail(
+              new EvalRunError({ message: 'The template did not seed the Weather MCP skill.' }),
+            );
           }
           expect(skill.mcpServers).toEqual([]);
           target.skill = Obj.getURI(skill);
@@ -107,7 +110,7 @@ describe('weather MCP hand-off', () => {
           yield* Database.flush();
 
           const output = yield* Operation.invoke(
-            RunInstructions,
+            AgentOperation.RunInstructions,
             { instructions: Ref.make(instructions), input: null, chat: seeded.chat },
             { spaceId: defaultSpace.id },
           );

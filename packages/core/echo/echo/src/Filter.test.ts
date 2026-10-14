@@ -93,6 +93,28 @@ describe('Filter timestamp builders', () => {
   });
 });
 
+describe('entity', () => {
+  test('matches the anchor and nothing else', () => {
+    const alice = Obj.make(TestSchema.Person, { name: 'Alice' });
+    const bob = Obj.make(TestSchema.Person, { name: 'Bob' });
+    const match = Filter.toPredicate(Filter.entity(alice));
+    expect(match(alice)).toBe(true);
+    expect(match(bob)).toBe(false);
+  });
+
+  test('is Filter.id on the anchor id', () => {
+    const alice = Obj.make(TestSchema.Person, { name: 'Alice' });
+    expect(Filter.entity(alice).ast).toEqual(Filter.id(alice.id).ast);
+  });
+
+  test('accepts a snapshot, keeping its entity type', () => {
+    const alice = Obj.make(TestSchema.Person, { name: 'Alice' });
+    // The annotation is the assertion: a snapshot must not widen to `Filter<Entity.Unknown>`.
+    const filter: Filter.Filter<TestSchema.Person> = Filter.entity(Obj.getSnapshot(alice));
+    expect(Filter.toPredicate(filter)(alice)).toBe(true);
+  });
+});
+
 describe('toPredicate', () => {
   test('matches by type', () => {
     const expando = Obj.make(TestSchema.Expando, { title: 'test' });

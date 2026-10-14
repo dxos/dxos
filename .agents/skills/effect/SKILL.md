@@ -16,11 +16,11 @@ own agent documentation to npm, matched to the exact version this repo compiles
 against. Its `files` field ships `src/**/*.ts`, `AGENTS.md`, and `ai-docs/**`, so
 this is real source on disk, not `dist`:
 
-| Path                                 | What it holds                                                                                                                                                       |
-| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `node_modules/effect/AGENTS.md`      | The Effect team's authoring guide, 380 lines                                                                                                                        |
-| `node_modules/effect/ai-docs/src/**` | 48 compiling examples, one per topic, linked from `AGENTS.md`                                                                                                       |
-| `node_modules/effect/src/**`         | 436 files of implementation, JSDoc and every export, including the `unstable/` tree that holds `sql`, `http`, `httpapi`, `cli`, `ai`, `cluster` and `observability` |
+| Path                                 | What it holds                                                                                                                                           |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `node_modules/effect/AGENTS.md`      | The Effect team's authoring guide, 409 lines                                                                                                            |
+| `node_modules/effect/ai-docs/src/**` | 50 compiling examples, one per topic, linked from `AGENTS.md`                                                                                           |
+| `node_modules/effect/src/**`         | 496 files of implementation, JSDoc and every export, including the `sql`, `http`, `http-api`, `cli`, `ai`, `cluster` and `observability` subdirectories |
 
 effect.website tracks `main`; the pinned copy tracks what you compile against.
 

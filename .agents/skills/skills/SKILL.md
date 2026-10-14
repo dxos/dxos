@@ -23,7 +23,7 @@ A skill has three parts:
 Example (see `packages/plugins/plugin-markdown/src/skills/markdown-skill.ts`):
 
 ```ts
-import { type AppCapabilities } from '@dxos/app-toolkit';
+import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Skill, Template } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
@@ -85,8 +85,8 @@ plugin-my-domain/
 ```ts
 // capabilities/skill-definition/skill-definition.ts
 import * as Effect from 'effect/Effect';
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 
 import { MarkdownSkill } from '../../skills';
 

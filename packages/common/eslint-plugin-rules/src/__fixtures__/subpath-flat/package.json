@@ -1,0 +1,10 @@
+{
+  "name": "@dxos/plugin-flat-fixture",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": { "source": "./src/index.ts" },
+    "./Alpha": { "source": "./src/Alpha.ts" }
+  }
+}

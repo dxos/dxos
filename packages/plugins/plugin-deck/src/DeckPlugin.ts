@@ -16,4 +16,4 @@ export const meta = pluginMeta;
 export const make = Plugin.lazy<DeckCapabilities.DeckPluginOptions>(meta, () => import('#plugin'));
 
 /** Re-exported so callers can reference options without importing `#types` directly. */
-export type DeckPluginOptions = DeckCapabilities.DeckPluginOptions;
+export type Options = DeckCapabilities.DeckPluginOptions;

@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, DXN, Feed, Ref, Type } from '@dxos/echo';
+import { DXN, Feed, Ref, Type } from '@dxos/echo';
 
 export const SpacePropertiesSchema = Schema.Struct({
   //
@@ -44,4 +44,4 @@ export type SpacePropertiesSchema = Schema.Schema.Type<typeof SpacePropertiesSch
 // TODO(burdon): Is separate schema def required for forms? Can it be extracted from SpaceProperties?
 export class SpaceProperties extends Type.makeObject<SpaceProperties>(
   DXN.make('org.dxos.type.spaceProperties', '0.1.0'),
-)(SpacePropertiesSchema.pipe(Annotation.HiddenAnnotation.set(true))) {}
+)(SpacePropertiesSchema) {}

@@ -5,11 +5,13 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useMemo } from 'react';
 
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as Plugin from '@dxos/app-framework/Plugin';
-import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as AppSettings from '@dxos/app-toolkit/AppSettings';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { useSettingsKeyScope } from '@dxos/app-toolkit/ui';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { PluginDetail, PluginScope } from '#components';
 
@@ -27,11 +29,11 @@ export type PluginArticleProps = { subject: Plugin.Plugin };
 
 export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
   const pluginId = plugin.meta.profile.key;
-  const manager = usePluginManager();
+  const manager = PluginManagerProvider.usePluginManager();
   const plugins = useAtomValue(manager.plugins);
   const remotePluginIds = useRemotePluginIds();
   const provider = useRegistryPluginProvider();
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
 
   const { catalogEntry, moduleUrl } = useCatalogEntry(pluginId);
   const { installedVersionTag, syncInstalledVersion } = useInstalledVersionTag(pluginId, plugins);
@@ -43,7 +45,7 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
   });
 
   const enabled = manager.getEnabled().includes(pluginId);
-  const scope = useSettingsKeyScope(AppSettings.PLUGINS_NAMESPACE, pluginId);
+  const scope = ToolkitHooks.useSettingsKeyScope(AppSettings.PLUGINS_NAMESPACE, pluginId);
   const failed = useAtomValue(manager.failed);
   const failure = useMemo(() => failed.find((entry) => entry.id === pluginId), [failed, pluginId]);
   const isInstalled = useMemo(
@@ -81,7 +83,7 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
       void invokePromise(LayoutOperation.Open, {
         subject: [getPluginPath(targetId)],
         pivotId: getPluginPath(pluginId),
-        disposition: 'add',
+        disposition: 'detail',
       });
     },
     [invokePromise, pluginId],
@@ -99,31 +101,36 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
   });
 
   return (
-    <PluginDetail
-      plugin={plugin}
-      scope={
-        scope.available ? <PluginScope synced={scope.synced} onPin={scope.pin} onUnpin={scope.unpin} /> : undefined
-      }
-      enabled={enabled}
-      installing={actions.installing}
-      updating={actions.updating}
-      hasUpdate={hasUpdate}
-      installedVersionTag={installedVersionTag}
-      selectedVersionTag={selectedVersionTag}
-      versions={pickerVersions}
-      dependencies={dependencies}
-      dependents={dependents}
-      failure={failure}
-      onOpenSpec={actions.handleOpenSpec}
-      onEnabledChange={actions.handleEnableChange}
-      onInstall={!isInstalled && moduleUrl ? actions.handleInstall : undefined}
-      onInstallVersion={pickerVersions.length > 0 ? actions.handleInstallVersion : undefined}
-      onNavigateToPlugin={handleNavigateToPlugin}
-      onResolvePluginName={handleResolvePluginName}
-      onUninstall={canUninstall ? actions.handleUninstall : undefined}
-      onUpdate={hasUpdate ? actions.handleUpdate : undefined}
-      onVersionChange={setSelectedVersionTag}
-    />
+    // The panel bounds the detail's height, so its scroll area scrolls in a companion as well as a plank.
+    <Panel.Root>
+      <Panel.Body asChild>
+        <PluginDetail
+          plugin={plugin}
+          scope={
+            scope.available ? <PluginScope synced={scope.synced} onPin={scope.pin} onUnpin={scope.unpin} /> : undefined
+          }
+          enabled={enabled}
+          installing={actions.installing}
+          updating={actions.updating}
+          hasUpdate={hasUpdate}
+          installedVersionTag={installedVersionTag}
+          selectedVersionTag={selectedVersionTag}
+          versions={pickerVersions}
+          dependencies={dependencies}
+          dependents={dependents}
+          failure={failure}
+          onOpenSpec={actions.handleOpenSpec}
+          onEnabledChange={actions.handleEnableChange}
+          onInstall={!isInstalled && moduleUrl ? actions.handleInstall : undefined}
+          onInstallVersion={pickerVersions.length > 0 ? actions.handleInstallVersion : undefined}
+          onNavigateToPlugin={handleNavigateToPlugin}
+          onResolvePluginName={handleResolvePluginName}
+          onUninstall={canUninstall ? actions.handleUninstall : undefined}
+          onUpdate={hasUpdate ? actions.handleUpdate : undefined}
+          onVersionChange={setSelectedVersionTag}
+        />
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

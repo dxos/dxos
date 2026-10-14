@@ -1,0 +1,117 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import React, { useMemo, useState } from 'react';
+
+import { type DatabaseDirectory } from '@dxos/echo-protocol';
+import { Format } from '@dxos/echo/Format';
+import { useClient } from '@dxos/react-client';
+import { type Space } from '@dxos/react-client/echo';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+
+import { MasterDetailTable, Searchbar } from '../../../../components/index.ts';
+import { DataSpaceSelector } from '../../../../containers/index.ts';
+import { useDevtoolsState } from '../../../../hooks/index.ts';
+import { type ArticleProps } from '../../types.ts';
+
+const hasMatchRecursive = (object: any, pattern: RegExp): boolean => {
+  if (!object) {
+    return false;
+  }
+  if (typeof object !== 'object') {
+    return Boolean(String(object).match(pattern));
+  }
+  if (Array.isArray(object)) {
+    return object.some((element) => hasMatchRecursive(element, pattern));
+  }
+  return Object.values(object).some((element) => hasMatchRecursive(element, pattern));
+};
+
+const textFilter = (text?: string) => {
+  if (!text?.length) {
+    return () => true;
+  }
+  const pattern = new RegExp(text, 'i');
+  return (item: Data) => {
+    if (getStoredObjectType(item)?.toLowerCase()?.endsWith('canvas')) {
+      return false;
+    }
+    return hasMatchRecursive(getStoredObject(item.accessor()), pattern);
+  };
+};
+
+const getStoredObject = (doc: DatabaseDirectory | undefined): any => {
+  const [[id, object]] = Object.entries(doc?.objects ?? {});
+  return { id, object };
+};
+
+const getStoredObjectType = (data: Data): string | undefined => {
+  return isSpaceRoot(data.accessor()) ? '' : getStoredObject(data.accessor())?.object?.system?.type?.['/'];
+};
+
+type Data = {
+  documentId: string;
+  accessor: () => DatabaseDirectory;
+  id: string;
+};
+
+export const AutomergeArticle = ({ role, ...props }: ArticleProps & { space?: Space }) => {
+  const state = useDevtoolsState();
+  const space = props.space ?? state.space;
+
+  const client = useClient();
+  const handles =
+    (space &&
+      client.spaces
+        .get()
+        .find((s) => s.id === space.id)
+        ?.internal.db.getLoadedDocumentHandles()) ??
+    [];
+
+  const [filter, setFilter] = useState('');
+
+  const properties = useMemo(
+    () => [
+      { name: 'documentId', format: Format.TypeFormat.DID, size: 320 },
+      { name: 'content', format: Format.TypeFormat.String, size: 320 },
+      { name: 'type', format: Format.TypeFormat.String, size: 320 },
+    ],
+    [],
+  );
+
+  const data = useMemo(() => {
+    return handles
+      .map((handle) => {
+        const doc = handle.doc();
+        return {
+          id: handle.documentId!,
+          documentId: handle.documentId!,
+          content: isSpaceRoot(doc) ? 'space root doc' : getStoredObject(doc)?.id,
+          type: getStoredObjectType({ documentId: handle.documentId!, accessor: () => doc, id: handle.documentId! }),
+          accessor: () => doc,
+        };
+      })
+      .filter((item) => item.id != null)
+      .filter(textFilter(filter));
+  }, [handles, filter]);
+
+  return (
+    <Panel.Root role={role}>
+      <Panel.Header>
+        <Toolbar.Root>
+          {!props.space && <DataSpaceSelector />}
+          <Searchbar onChange={setFilter} />
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body>
+        <MasterDetailTable properties={properties} data={data} detailsTransform={({ accessor }) => accessor()} />
+      </Panel.Body>
+    </Panel.Root>
+  );
+};
+
+const isSpaceRoot = (accessor: DatabaseDirectory) => {
+  return Object.keys(accessor?.links ?? {}).length > 0;
+};

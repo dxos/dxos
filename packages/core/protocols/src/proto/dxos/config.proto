@@ -137,6 +137,16 @@ message Runtime {
       optional SqliteMode sqlite_mode = 6;
     }
 
+    /// Which path evaluates ECHO queries on the host.
+    enum QueryExecutor {
+      UNSPECIFIED_QUERY_EXECUTOR = 0;
+      /// Load the objects a plan touches and evaluate every step in JS.
+      MEMORY = 1;
+      /// Compile the plan into one SQLite statement over the index tables and load no documents.
+      /// The default.
+      SQL = 2;
+    }
+
     message Log {
       optional string filter = 1 [ (env_var) = "LOG_FILTER" ];
       optional string prefix = 2 [ (env_var) = "LOG_PREFIX" ];
@@ -216,6 +226,11 @@ message Runtime {
     /// the hypercore control feed. Off by default: the automerge scheme is opt-in until it has
     /// soaked. Set via DX_AUTOMERGE_CREDENTIALS.
     optional bool automerge_credentials = 17;
+
+    /// Query evaluation path; defaults to SQL. Set MEMORY to evaluate in JS instead, which is how a
+    /// suspected regression is bisected against the pre-compiler path. `DX_ECHO_QUERY_EXECUTOR`
+    /// overrides it when unset.
+    optional QueryExecutor query_executor = 18 [ (env_var) = "DX_ECHO_QUERY_EXECUTOR" ];
   }
 
   message App {

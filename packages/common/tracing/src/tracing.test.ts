@@ -2,11 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { afterEach, beforeEach, describe, test } from 'vitest';
+import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 
 import { Context, TRACE_SPAN_ATTRIBUTE, type TraceContextData } from '@dxos/context';
 
 import { trace } from './api.ts';
+import { DiagnosticsManager } from './diagnostic.ts';
+import { DiagnosticsChannel } from './diagnostics-channel.ts';
 import { TRACE_PROCESSOR } from './trace-processor.ts';
 import type { RemoteSpan, StartSpanOptions, TracingBackend } from './tracing-types.ts';
 
@@ -123,6 +125,43 @@ describe('manual spans', () => {
     expect(spans.filter((record) => record.options.name.endsWith('.work'))).toHaveLength(1);
 
     trace.spanEnd('op-3');
+  });
+
+  test('spanEnd attaches end attributes under ctx. before ending', ({ expect }) => {
+    const { backend, spans } = createMockBackend();
+    TRACE_PROCESSOR.tracingBackend = backend;
+
+    trace.spanStart({ id: 'op-4', instance: {}, methodName: 'finish', parentCtx: new Context() });
+    trace.spanEnd('op-4', { attributes: { outcome: 'synced' } });
+
+    const span = spans.find((record) => record.options.name.endsWith('.finish'));
+    expect(span?.ended).toBe(true);
+    expect(span?.lateAttributes).toEqual({ 'ctx.outcome': 'synced' });
+  });
+
+  test('spanEnd frees the id for a new span where performance.measure is missing', ({ expect }) => {
+    const { backend, spans } = createMockBackend();
+    TRACE_PROCESSOR.tracingBackend = backend;
+    vi.stubGlobal('performance', { now: () => Date.now() });
+    try {
+      const startAndEnd = () => {
+        trace.spanStart({
+          id: 'op-5',
+          instance: {},
+          methodName: 'again',
+          parentCtx: new Context(),
+          showInBrowserTimeline: true,
+        });
+        trace.spanEnd('op-5');
+      };
+      startAndEnd();
+      startAndEnd();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+
+    const started = spans.filter((record) => record.options.name.endsWith('.again'));
+    expect(started.map((record) => record.ended)).toEqual([true, true]);
   });
 });
 
@@ -396,5 +435,27 @@ describe('span attributes', () => {
     const span = spans.find((record) => record.options.name === 'Svc.work')!;
     expect(span.error).toBeUndefined();
     expect(span.ended).toBe(true);
+  });
+});
+
+describe('diagnostics channel', () => {
+  test('fetch is answered only by the instance holding the diagnostic', async ({ expect }) => {
+    const channelName = `diagnostics-test-${Math.random()}`;
+    const holder = new DiagnosticsManager();
+    holder.registerDiagnostic({ id: 'stats', fetch: () => 42 });
+    const holderChannel = new DiagnosticsChannel(channelName);
+    holderChannel.serve(holder);
+    const otherChannel = new DiagnosticsChannel(channelName);
+    otherChannel.serve(new DiagnosticsManager());
+    const client = new DiagnosticsChannel(channelName);
+
+    try {
+      const response = await client.fetch({ id: 'stats' });
+      expect(response).toMatchObject({ id: 'stats', instanceId: holder.instanceId, data: 42 });
+    } finally {
+      for (const channel of [holderChannel, otherChannel, client]) {
+        channel.destroy();
+      }
+    }
   });
 });

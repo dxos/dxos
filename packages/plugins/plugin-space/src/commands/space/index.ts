@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from 'effect/unstable/cli/Command';
+import * as Command from 'effect/cli/Command';
 
 import { close } from './close/index.ts';
 import { create } from './create/index.ts';

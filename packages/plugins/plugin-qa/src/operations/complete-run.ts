@@ -9,6 +9,8 @@ import { Database, Obj, Ref } from '@dxos/echo';
 
 import { QaOperation, TestRun } from '#types';
 
+import { QaError } from '../errors.ts';
+
 /**
  * Seals the run. The rollup runs over the captured cases rather than the reported results, so a run
  * that covered nothing, or reported nothing, cannot seal as `passed`.
@@ -18,7 +20,7 @@ const handler: Operation.WithHandler<typeof QaOperation.CompleteRun> = QaOperati
     Effect.fnUntraced(function* ({ run: runRef, summary }) {
       const run = yield* Database.load(runRef);
       if (run.status !== 'running') {
-        return yield* Effect.fail(new Error('Run is already sealed.'));
+        return yield* Effect.fail(new QaError({ message: 'Run is already sealed.' }));
       }
 
       const status = TestRun.rollup(run.cases, run.results);

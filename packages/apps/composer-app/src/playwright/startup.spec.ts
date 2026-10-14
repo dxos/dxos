@@ -10,8 +10,8 @@ import path from 'node:path';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { INITIAL_URL } from './app-manager.ts';
 import {
+  INITIAL_URL,
   appendBenchmarkRow,
   appendRunSample,
   collectStartupReport,
@@ -20,6 +20,9 @@ import {
   waitForReady,
   writeReport,
 } from './harness-helpers.ts';
+
+/** A loaded machine has taken over 30 s to boot this app twice in one context. */
+const WARM_READY_TIMEOUT_MS = 90_000;
 
 // Surface the DX_PWA requirement as a test-level failure rather than a hard
 // `process.exit` at spec-collection time — keeps the playwright report and
@@ -34,8 +37,8 @@ test.beforeAll(() => {
  * Registers a `longtask` PerformanceObserver before any page script runs — `collectStartupReport`
  * reads the accumulated entries from `window.__longTasks` to compute Total Blocking Time.
  */
-const observeLongTasks = (page: Page): Promise<void> =>
-  page.addInitScript(() => {
+const observeLongTasks = async (page: Page): Promise<void> => {
+  await page.addInitScript(() => {
     window.__longTasks = [];
     try {
       if (PerformanceObserver.supportedEntryTypes?.includes('longtask')) {
@@ -49,6 +52,7 @@ const observeLongTasks = (page: Page): Promise<void> =>
       // Long Tasks API unsupported in this browser (firefox/webkit) — `__longTasks` stays empty.
     }
   });
+};
 
 test.describe.serial('Startup timing harness', () => {
   // First-paint and module-graph evaluation each take real wall clock; webkit can be much slower.
@@ -94,24 +98,20 @@ test.describe.serial('Startup timing harness', () => {
     await context.close();
   });
 
-  // TODO(wittjosiah): Flaky — under load the 30s `waitForReady` in harness-helpers.ts is too tight,
-  //   and the spec already retries 2x via `test.describe.configure({ retries: 2 })` and still fails.
-  //   Either bump that timeout (or pass a longer one through) and re-enable, or move warm-start
-  //   benchmarking off the e2e path.
-  test.skip('warm start (reuse storage)', async ({ browser, browserName }, testInfo) => {
+  test('warm start (reuse storage)', async ({ browser, browserName }, testInfo) => {
     const context = await browser.newContext();
     const page = await context.newPage();
 
     // Prime: first navigation populates IDB, OPFS and the SW cache.
     await page.goto(`${INITIAL_URL}/?profiler=1`);
-    await waitForReady(page);
+    await waitForReady(page, WARM_READY_TIMEOUT_MS);
 
     // Warm reload: navigate again, measure.
     const network = trackNetwork(page);
     await observeLongTasks(page);
     const start = Date.now();
     await page.reload();
-    await waitForReady(page);
+    await waitForReady(page, WARM_READY_TIMEOUT_MS);
     const navigationToReady = Date.now() - start;
 
     const report = await collectStartupReport(page, 'warm');

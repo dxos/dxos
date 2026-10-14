@@ -651,7 +651,7 @@ describe('Reactive Object with ECHO database', () => {
 
   // Annotations store their values in entity meta. A Ref-valued annotation must persist its
   // unsaved target just like a Ref assigned to an ordinary property does, otherwise the stored
-  // DXN dangles and resolution throws EntityNotFoundError (see CollectionModel root collection).
+  // DXN dangles and resolution throws EntityNotFoundError (see ContainerModel root collection).
   describe('annotation references', () => {
     const RootCollection = Type.makeObject(DXN.make('com.example.type.rootCollection', '0.1.0'))(
       Schema.Struct({

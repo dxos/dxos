@@ -10,7 +10,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { AudioStream, type AudioStreamProps } from './AudioStream.tsx';
 
 const DefaultStory = (props: AudioStreamProps) => (
-  <div className='p-4 text-sm text-description'>
+  <div className='p-4 text-sm text-fg-muted'>
     Headless audio sink for {props.tracks.length} track(s); renders an off-screen <code>&lt;audio&gt;</code> element.
     <AudioStream {...props} />
   </div>

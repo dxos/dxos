@@ -4,12 +4,12 @@
 
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
+import * as HttpClient from 'effect/http/HttpClient';
 import * as Schedule from 'effect/Schedule';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
-import * as HttpClient from 'effect/unstable/http/HttpClient';
 import { type Loader, type Plugin } from 'esbuild';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError } from '@dxos/errors';
 
 const MAX_RETRIES = 5;

@@ -7,3 +7,4 @@ export * from './useListGrid.ts';
 export * from './useListNavigation.ts';
 export * from './useListSelection.ts';
 export * from './useReorder.ts';
+export * from './useStableIds.ts';

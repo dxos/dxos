@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { type Plugin as VitePlugin } from 'vite';
 
-import { Plugin, PLUGIN_DEV_SERVER_PORT } from '../../core/index.ts';
+import { Plugin, PluginManifest } from '../../core/index.ts';
 import { findDxConfigFile, loadDxConfig } from '../load.ts';
 import { type BuildMeta, ENTRY_FILENAME, MANIFEST_ASSET_NAME, serializeManifest, toBuildMeta } from '../manifest.ts';
 import { DEFAULT_PACKAGES, isSharedPackage } from '../packages.ts';
@@ -110,7 +110,7 @@ const REQUIRE_SHIM_BANNER = [
 export type ComposerPluginOptions = {
   /** Entry point for the plugin bundle. Defaults to `src/plugin.tsx`. */
   entry?: string;
-  /** Dev server port. Defaults to {@link PLUGIN_DEV_SERVER_PORT}. */
+  /** Dev server port. Defaults to {@link PluginManifest.DEV_SERVER_PORT}. */
   port?: number;
   /**
    * Path to the project's `dx.config.ts`. Defaults to auto-discovery in the project root
@@ -145,26 +145,28 @@ export type ComposerPluginOptions = {
  */
 export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] => {
   const entry = options?.entry ?? 'src/plugin.tsx';
-  const port = options?.port ?? PLUGIN_DEV_SERVER_PORT;
-  const projectRoot = process.cwd();
-
+  const port = options?.port ?? PluginManifest.DEV_SERVER_PORT;
   // Plugin metadata source of truth is `dx.config.ts` (`@dxos/protocols` `Config2.Config`). When the caller
   // doesn't pass `meta` explicitly, load + validate the config and derive a `BuildMeta` from it
-  // (augmented with the package `version` and a resolved dependency snapshot). Resolved once,
-  // lazily, so the synchronous plugin factory stays sync; the manifest hooks await it.
-  const metaPromise: Promise<BuildMeta | undefined> = options?.meta
-    ? Promise.resolve(options.meta)
-    : Promise.resolve(options?.config ?? findDxConfigFile(projectRoot)).then((configFile) =>
-        configFile
-          ? loadDxConfig(configFile).then((config) =>
-              toBuildMeta(
-                Plugin.getMetaFromConfig(config),
-                readPackageVersion(projectRoot),
-                readResolvedDependencies(projectRoot),
-              ),
-            )
-          : undefined,
-      );
+  // (augmented with the package `version` and a resolved dependency snapshot). Loaded once the Vite root
+  // is known — `vite build <dir>` roots the project there, not at the process cwd — and awaited by the
+  // manifest hooks, so the synchronous plugin factory stays sync.
+  const loadMeta = (projectRoot: string): Promise<BuildMeta | undefined> =>
+    options?.meta
+      ? Promise.resolve(options.meta)
+      : Promise.resolve(options?.config ?? findDxConfigFile(projectRoot)).then((configFile) =>
+          configFile
+            ? loadDxConfig(configFile).then((config) =>
+                toBuildMeta(
+                  Plugin.getMetaFromConfig(config),
+                  readPackageVersion(projectRoot),
+                  readResolvedDependencies(projectRoot),
+                ),
+              )
+            : undefined,
+        );
+  let metaPromise: Promise<BuildMeta | undefined> | undefined;
+  const getMeta = () => (metaPromise ??= loadMeta(process.cwd()));
   const resolved = new Set<string>();
   let base = '/';
 
@@ -173,12 +175,14 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
     {
       name: 'composer-plugin',
       config: () => ({
+        // Fail on a busy port rather than moving to the next one: Composer's Dev Server setting loads from this one.
         server: {
           port,
+          strictPort: true,
           // Allow the Composer host (different origin) to dynamically import plugin modules.
           cors: true,
         },
-        preview: { port },
+        preview: { port, strictPort: true },
         build: {
           sourcemap: true,
           // Transitively-bundled WASM modules (automerge, tiktoken, …) emit top-level
@@ -325,8 +329,11 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
     // and sees only the JS chunks — the manifest then omits CSS, so the host can't
     // inject `<link>` tags for the plugin's stylesheet at install time.
     enforce: 'post',
+    configResolved: (config) => {
+      metaPromise ??= loadMeta(config.root);
+    },
     async generateBundle(_options, bundle) {
-      const meta = await metaPromise;
+      const meta = await getMeta();
       if (!meta) {
         return;
       }
@@ -351,8 +358,11 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
   plugins.push({
     name: 'composer-plugin:serve-manifest',
     apply: 'serve',
+    configResolved: (config) => {
+      metaPromise ??= loadMeta(config.root);
+    },
     async configureServer(server) {
-      const meta = await metaPromise;
+      const meta = await getMeta();
       if (!meta) {
         return;
       }

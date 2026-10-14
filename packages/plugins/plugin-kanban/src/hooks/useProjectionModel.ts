@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 import { useState } from 'react';
 
 import { JsonSchema, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { useAsyncEffect } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { ProjectionModel, createEchoChangeCallback } from '@dxos/schema';
 
 import { Kanban } from '#types';
@@ -28,7 +28,7 @@ export const useProjectionModel = <S extends Type.AnyEntity>(
 ) => {
   const [projection, setProjection] = useState<ProjectionModel | undefined>();
 
-  useAsyncEffect(
+  Hooks.useAsyncEffect(
     async (controller) => {
       if (!schema || !kanban || kanban.spec.kind !== 'view') {
         return;

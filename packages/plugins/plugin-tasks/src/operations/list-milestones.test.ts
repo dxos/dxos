@@ -4,6 +4,7 @@
 
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Filter, Query, Ref } from '@dxos/echo';
@@ -42,8 +43,12 @@ describe('list-milestones', () => {
         { id: milestone.id, name: 'Alpha', description: 'Ships to staging', targetDate: undefined, total: 2, done: 1 },
       ]);
     }).pipe(
-      Effect.provide(Trace.writerLayerNoop),
-      Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] })),
+      Effect.provide(
+        Layer.provideMerge(
+          Trace.writerLayerNoop,
+          TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }),
+        ),
+      ),
     ),
   );
 

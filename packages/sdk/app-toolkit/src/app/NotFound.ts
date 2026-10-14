@@ -6,12 +6,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import * as AppGraph from '@dxos/app-graph/AppGraph';
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Filter, Key, Query, Scope } from '@dxos/echo';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { EID } from '@dxos/keys';
-import { Attention } from '@dxos/react-ui-attention/types';
 
 export const NOT_FOUND_NODE_ID = 'not-found';
 
@@ -22,17 +20,6 @@ export const NOT_FOUND_NODE_ID = 'not-found';
 export const NOT_FOUND_PATH = `${GraphNode.RootId}/${NOT_FOUND_NODE_ID}`;
 
 export const NOT_FOUND_NODE_TYPE = 'org.dxos.type.not-found';
-
-/**
- * Expand a qualified graph path by expanding each ancestor prefix.
- * This triggers graph connectors to populate child nodes at each level.
- */
-export const expandPath = (graph: AppGraph.ExpandableGraph, qualifiedId: string): void => {
-  const prefixes = Attention.expandAttendableId(qualifiedId);
-  for (const prefix of prefixes) {
-    AppGraph.expandSync(graph, prefix, 'child');
-  }
-};
 
 /**
  * A fallible remote existence probe: a `false` means the store answered "no", while a

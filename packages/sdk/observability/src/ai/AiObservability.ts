@@ -2,14 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-// Standalone entrypoint, not a barrel namespace: Composer's boot imports the root barrel, and the
-// boot set is the parse graph, so hoisting the AI sink there would put it on the boot path for code
-// only a lazily-activated plugin module uses. Reached at `@dxos/observability/AiObservability`.
+// @import-as-namespace
+
+// Consumers import `@dxos/observability/AiObservability`, so only the lazily-activated plugin module
+// that uses the AI sink loads the OpenTelemetry SDK.
 
 import { type Context, SpanStatusCode } from '@opentelemetry/api';
 import type { ReadableSpan, Span, SpanProcessor } from '@opentelemetry/sdk-trace-base';
 
-import { SpanAttributes } from '@dxos/effect';
+import * as SpanAttributes from '@dxos/effect/SpanAttributes';
 import { log } from '@dxos/log';
 
 import type * as ObservabilityExtension from '../ObservabilityExtension.ts';
@@ -18,7 +19,7 @@ import type * as ObservabilityExtension from '../ObservabilityExtension.ts';
  * AI telemetry capture — data policy.
  *
  * The AI stack already annotates every model call with the OTel GenAI conventions (`gen_ai.*`,
- * emitted by the `effect/unstable/ai` provider layers) plus the `dxos.ai.*` attributes those
+ * emitted by the `effect/ai` provider layers) plus the `dxos.ai.*` attributes those
  * conventions have no room for. This reads the finished spans, applies the capture policy, and
  * hands each surviving call to a sink as a {@link ObservabilityExtension.Inference} — a shape
  * that follows the GenAI conventions, not any vendor's schema. Mapping onto a backend's own
@@ -103,11 +104,11 @@ export type Options = {
   allowContent: (spaceId: string) => boolean;
 };
 
-/** The span `effect/unstable/ai` names for a streamed call; anything else is a single response. */
+/** The span `effect/ai` names for a streamed call; anything else is a single response. */
 const STREAM_SPAN_NAME = 'LanguageModel.streamText';
 
 /** Marker attributes identifying a GenAI span (per OTel GenAI semantic conventions). */
-const GEN_AI_MARKERS = ['gen_ai.system', 'gen_ai.request.model', 'gen_ai.response.model'];
+const GEN_AI_MARKERS = ['gen_ai.provider.name', 'gen_ai.request.model', 'gen_ai.response.model'];
 
 /**
  * Session/content attributes stamped by `AiTelemetry.ATTRIBUTES` in `@dxos/ai` (not part of the
@@ -214,7 +215,7 @@ export class AiSpanProcessor implements SpanProcessor {
       spanId: spanContext.spanId,
       parentSpanId: span.parentSpanContext?.spanId,
       spanName: span.name,
-      provider: stringAttribute(attributes['gen_ai.system']),
+      provider: stringAttribute(attributes['gen_ai.provider.name']),
       model: stringAttribute(attributes['gen_ai.response.model'] ?? attributes['gen_ai.request.model']),
       sessionId: stringAttribute(attributes[SESSION_ID_ATTR]),
       parameters: modelParameters(attributes),

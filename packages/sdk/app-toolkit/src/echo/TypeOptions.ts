@@ -7,10 +7,11 @@
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Filter, Query, Scope, Type } from '@dxos/echo';
-import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
-import { Kind as EntityKind } from '@dxos/echo/Entity';
+import { Annotation, type Entity, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { type URI } from '@dxos/keys';
+import { ArchivedAnnotation } from '@dxos/schema';
+
+import * as AppAnnotation from './AppAnnotation.ts';
 
 export const TypeInputOptions = Schema.Struct({
   location: Schema.Array(Schema.Literals(['database', 'runtime'])),
@@ -37,22 +38,76 @@ export const TypeInputOptionsAnnotation = Annotation.make({
 export const allTypesQuery = Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry());
 
 /**
- * Whether a type is user-facing: an object type (not a relation or meta-schema) that is not
- * annotated hidden, unless `includeHidden`. Shared by the nav tree's Database section and the
- * search type scope so the two agree.
+ * Whether a type is user-facing: an object type (not a relation or meta-schema) that is persisted in a
+ * space or carries {@link Annotation.UserType}, unless `includeHidden`. Shared by every surface that
+ * lists types or objects so they agree.
  */
 export const isUserType = (type: Type.AnyEntity, options?: { includeHidden?: boolean }): boolean => {
   if (Type.isRelation(type) || Type.isTypeKind(type)) {
     return false;
   }
-  if (!options?.includeHidden) {
-    const hidden = HiddenAnnotation.get(Type.getSchema(type)).pipe(Option.getOrElse(() => false));
-    if (hidden) {
-      return false;
-    }
-  }
-  return true;
+  return (
+    options?.includeHidden === true ||
+    Type.getDatabase(type) != null ||
+    Option.isSome(Annotation.UserType.get(Type.getSchema(type)))
+  );
 };
+
+/**
+ * Whether the object's type is user-facing. An object whose type is not registered reads as user-facing:
+ * a persisted type can still be loading, and refusing its objects would fail a drop mid-drag.
+ */
+export const isUserObject = (object: Obj.Unknown): boolean => {
+  const type = Obj.getType(object);
+  return type === undefined || isUserType(type);
+};
+
+/**
+ * The object's type, falling back to the database registry's entry for its typename: a type persisted in the space
+ * is stored under its EID, which an id-based lookup can miss.
+ */
+const resolveType = (object: Obj.Unknown): Type.AnyEntity | undefined => {
+  const type = Obj.getType(object);
+  if (type) {
+    return type;
+  }
+  const typename = Obj.getTypename(object);
+  return Obj.getDatabase(object)
+    ?.graph.registry.list()
+    .filter(Type.isType)
+    .find((candidate) => Type.getTypename(candidate) === typename);
+};
+
+/**
+ * The objects among `objects` a user finds in the navigator or a Database section, so a picker of objects offers
+ * only these: a registered user-facing type, not archived, and not a space's root collection (the navigator's own
+ * scaffolding, shown as its Collections branch). Unlike {@link isUserObject}, an unresolved type is refused.
+ */
+export const filterListedObjects = (objects: readonly (Entity.Any | Entity.Unknown)[]): Obj.Unknown[] => {
+  const roots = new Set(
+    objects.flatMap((object) =>
+      Annotation.get(object, AppAnnotation.RootCollectionAnnotation).pipe(
+        Option.flatMap((ref) => Option.fromNullishOr(ref.target?.id)),
+        Option.toArray,
+      ),
+    ),
+  );
+  return objects.flatMap((object) => {
+    if (!Obj.isObject(object) || roots.has(object.id)) {
+      return [];
+    }
+    const type = resolveType(object);
+    const archived = Option.getOrElse(Annotation.get(object, ArchivedAnnotation), () => false);
+    return type !== undefined && isUserType(type) && !archived ? [object] : [];
+  });
+};
+
+/**
+ * Whether the type's {@link Annotation.UserType} carries the tag. Only annotations carry tags, so a type
+ * persisted in a space without one has none even though it is user-facing.
+ */
+export const hasUserTypeTag = (type: Type.AnyEntity, tag: string): boolean =>
+  Annotation.UserType.get(Type.getSchema(type)).pipe(Option.exists(({ tags }) => tags?.includes(tag) === true));
 
 export type TypeOption = {
   /** Full type URI (DXN or EID), suitable for use with Filter.type. */
@@ -86,10 +141,7 @@ export const filterTypeOptions = (types: readonly Type.AnyEntity[], annotation: 
       continue;
     }
 
-    const effectSchema = Type.getSchema(type);
-    const relation = getTypeAnnotation(effectSchema)?.kind === EntityKind.Relation;
-    const hidden = HiddenAnnotation.get(effectSchema).pipe(Option.getOrElse(() => false));
-    if (relation || hidden) {
+    if (!isUserType(type)) {
       if (!includeHiddenType) {
         continue;
       }

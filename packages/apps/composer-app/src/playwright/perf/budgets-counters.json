@@ -1,0 +1,242 @@
+{
+  "forcedLayouts > assistant-turns": {
+    "target": 313,
+    "limit": 332,
+    "unit": "count"
+  },
+  "forcedLayouts > edit-document": {
+    "target": 62,
+    "limit": 65.1,
+    "unit": "count"
+  },
+  "forcedLayouts > open-assistant": {
+    "target": 2,
+    "limit": 3,
+    "unit": "count"
+  },
+  "forcedLayouts > open-project": {
+    "target": 13,
+    "limit": 14,
+    "unit": "count"
+  },
+  "forcedLayouts > open-tasks": {
+    "target": 13,
+    "limit": 14,
+    "unit": "count"
+  },
+  "forcedLayouts > reopen-project": {
+    "target": 14,
+    "limit": 15,
+    "unit": "count"
+  },
+  "forcedLayouts > scroll-document": {
+    "target": 27,
+    "limit": 28.4,
+    "unit": "count"
+  },
+  "forcedLayouts > scroll-tasks": {
+    "target": 15,
+    "limit": 16,
+    "unit": "count"
+  },
+  "jsCalls > assistant-turns": {
+    "target": 153000000,
+    "limit": 161000000,
+    "unit": "count"
+  },
+  "jsCalls > boot": {
+    "target": 13300000,
+    "limit": 14000000,
+    "unit": "count"
+  },
+  "jsCalls > edit-document": {
+    "target": 17100000,
+    "limit": 18000000,
+    "unit": "count"
+  },
+  "jsCalls > open-project": {
+    "target": 8480000,
+    "limit": 8900000,
+    "unit": "count"
+  },
+  "jsCalls > open-space": {
+    "target": 546000,
+    "limit": 573000,
+    "unit": "count"
+  },
+  "layoutDirtyObjects > assistant-turns": {
+    "target": 10800,
+    "limit": 11400,
+    "unit": "count"
+  },
+  "layoutDirtyObjects > boot": {
+    "target": 6100,
+    "limit": 6410,
+    "unit": "count"
+  },
+  "layoutDirtyObjects > edit-document": {
+    "target": 1220,
+    "limit": 1280,
+    "unit": "count"
+  },
+  "layoutDirtyObjects > open-assistant": {
+    "target": 70,
+    "limit": 73.5,
+    "unit": "count"
+  },
+  "layoutDirtyObjects > open-document": {
+    "target": 1890,
+    "limit": 1980,
+    "unit": "count"
+  },
+  "layoutDirtyObjects > open-project": {
+    "target": 1610,
+    "limit": 1690,
+    "unit": "count"
+  },
+  "layoutDirtyObjects > open-space": {
+    "target": 6,
+    "limit": 7,
+    "unit": "count"
+  },
+  "layoutDirtyObjects > open-tasks": {
+    "target": 386,
+    "limit": 405,
+    "unit": "count"
+  },
+  "layoutDirtyObjects > reopen-project": {
+    "target": 576,
+    "limit": 605,
+    "unit": "count"
+  },
+  "layoutDirtyObjects > scroll-document": {
+    "target": 642,
+    "limit": 674,
+    "unit": "count"
+  },
+  "layoutDirtyObjects > scroll-tasks": {
+    "target": 560,
+    "limit": 588,
+    "unit": "count"
+  },
+  "layouts > edit-document": {
+    "target": 64,
+    "limit": 67.2,
+    "unit": "count"
+  },
+  "layouts > open-assistant": {
+    "target": 4,
+    "limit": 5,
+    "unit": "count"
+  },
+  "layouts > open-document": {
+    "target": 34,
+    "limit": 37,
+    "unit": "count"
+  },
+  "layouts > open-project": {
+    "target": 25,
+    "limit": 26.3,
+    "unit": "count"
+  },
+  "layouts > open-space": {
+    "target": 1,
+    "limit": 2,
+    "unit": "count"
+  },
+  "layouts > open-tasks": {
+    "target": 16,
+    "limit": 17,
+    "unit": "count"
+  },
+  "layouts > reopen-project": {
+    "target": 27.5,
+    "limit": 29,
+    "unit": "count"
+  },
+  "layouts > scroll-document": {
+    "target": 31,
+    "limit": 32.6,
+    "unit": "count"
+  },
+  "layouts > scroll-tasks": {
+    "target": 24,
+    "limit": 25.2,
+    "unit": "count"
+  },
+  "styleRecalcElements > assistant-turns": {
+    "target": 3930,
+    "limit": 4130,
+    "unit": "count"
+  },
+  "styleRecalcElements > boot": {
+    "target": 3270,
+    "limit": 3430,
+    "unit": "count"
+  },
+  "styleRecalcElements > edit-document": {
+    "target": 198,
+    "limit": 208,
+    "unit": "count"
+  },
+  "styleRecalcElements > open-document": {
+    "target": 2500,
+    "limit": 2630,
+    "unit": "count"
+  },
+  "styleRecalcElements > open-project": {
+    "target": 1570,
+    "limit": 1650,
+    "unit": "count"
+  },
+  "styleRecalcElements > reopen-project": {
+    "target": 4370,
+    "limit": 4590,
+    "unit": "count"
+  },
+  "styleRecalcElements > scroll-document": {
+    "target": 451,
+    "limit": 474,
+    "unit": "count"
+  },
+  "styleRecalcElements > scroll-tasks": {
+    "target": 1080,
+    "limit": 1130,
+    "unit": "count"
+  },
+  "styleRecalcElements > toggle-task": {
+    "target": 930,
+    "limit": 977,
+    "unit": "count"
+  },
+  "styleRecalcs > assistant-turns": {
+    "target": 1180,
+    "limit": 1240,
+    "unit": "count"
+  },
+  "styleRecalcs > edit-document": {
+    "target": 146,
+    "limit": 153,
+    "unit": "count"
+  },
+  "styleRecalcs > open-document": {
+    "target": 62,
+    "limit": 65.9,
+    "unit": "count"
+  },
+  "styleRecalcs > open-project": {
+    "target": 45,
+    "limit": 48,
+    "unit": "count"
+  },
+  "styleRecalcs > reopen-project": {
+    "target": 45.5,
+    "limit": 47.9,
+    "unit": "count"
+  },
+  "styleRecalcs > scroll-document": {
+    "target": 136,
+    "limit": 143,
+    "unit": "count"
+  }
+}

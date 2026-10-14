@@ -6,8 +6,9 @@ import { Collapsible } from '@ark-ui/react/collapsible';
 import React, { type ComponentPropsWithoutRef, type JSX, type PropsWithChildren } from 'react';
 
 import { createContext } from '@dxos/react-hooks';
-import { Icon, IconBlock, type ThemedClassName } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 // Built on `@ark-ui/react`'s Collapsible (zag state machine), so the header is a real button with
@@ -30,25 +31,38 @@ const [TogglePanelContext, useTogglePanelContext] = createContext<ContextValue>(
 
 const ROOT_NAME = 'TogglePanel.Root';
 
-type RootProps = ThemedClassName<
+type RootProps = Util.ThemedClassName<
   PropsWithChildren<
     {
       open?: boolean;
       defaultOpen?: boolean;
       onChangeOpen?: (open: boolean) => void;
+      /**
+       * Mount the body on first open, and keep it mounted after. For a panel rendered many times over
+       * whose body is costly to build — a list of them pays for every body the reader never opens.
+       */
+      lazyMount?: boolean;
     } & Partial<ContextValue>
   >
 >;
 
-const Root = ({ children, classNames, open, defaultOpen = false, duration = 250, onChangeOpen }: RootProps) => (
+const Root = ({
+  children,
+  classNames,
+  open,
+  defaultOpen = false,
+  duration = 250,
+  lazyMount = false,
+  onChangeOpen,
+}: RootProps) => (
   <TogglePanelContext duration={duration}>
     <Collapsible.Root
       open={open}
       defaultOpen={defaultOpen}
       onOpenChange={onChangeOpen && ((details) => onChangeOpen(details.open))}
-      // The body is clipped rather than unmounted, matching what callers relied on before: several
-      // gate their own content on `open` and would double-unmount otherwise.
-      lazyMount={false}
+      // The body is clipped rather than unmounted by default, matching what callers relied on before:
+      // several gate their own content on `open` and would double-unmount otherwise.
+      lazyMount={lazyMount}
       className={mx(classNames)}
     >
       {children}
@@ -64,12 +78,12 @@ Root.displayName = ROOT_NAME;
 
 const CONTENT_NAME = 'TogglePanel.Content';
 
-type ContentProps = ThemedClassName<PropsWithChildren>;
+type ContentProps = Util.ThemedClassName<PropsWithChildren>;
 
-const Content = composable<HTMLDivElement, ContentProps>(({ children, ...props }, forwardedRef) => (
+const Content = Util.composable<HTMLDivElement, ContentProps>(({ children, ...props }, forwardedRef) => (
   <div
-    {...composableProps(props, {
-      classNames: 'w-full border border-subdued-separator rounded-md overflow-hidden!',
+    {...Util.composableProps(props, {
+      classNames: 'w-full border border-separator-subtle rounded-md overflow-hidden!',
     })}
     ref={forwardedRef}
   >
@@ -85,7 +99,7 @@ Content.displayName = CONTENT_NAME;
 
 const HEADER_NAME = 'TogglePanel.Header';
 
-type HeaderProps = ThemedClassName<
+type HeaderProps = Util.ThemedClassName<
   Omit<ComponentPropsWithoutRef<'button'>, 'className'> & {
     icon?: JSX.Element;
     /**
@@ -100,15 +114,15 @@ const Header = ({ classNames, children, icon, caret = 'start', ...props }: Heade
   const { duration } = useTogglePanelContext(HEADER_NAME);
 
   const disclosure = (
-    <IconBlock>
-      <Icon
-        size={4}
+    <Layout.Block>
+      <Icon.Icon
+        size='md'
         icon={'ph--caret-right--regular'}
         style={{ transitionDuration: `${duration}ms` }}
         // The machine owns the state, so the caret reads it off the trigger rather than a prop.
         classNames={['transition transition-transform ease-in-out', 'group-data-[state=open]:rotate-90']}
       />
-    </IconBlock>
+    </Layout.Block>
   );
 
   return (
@@ -125,7 +139,7 @@ const Header = ({ classNames, children, icon, caret = 'start', ...props }: Heade
         {children}
       </div>
       {caret === 'end' && disclosure}
-      {icon && <IconBlock>{icon}</IconBlock>}
+      {icon && <Layout.Block>{icon}</Layout.Block>}
     </Collapsible.Trigger>
   );
 };
@@ -138,13 +152,13 @@ Header.displayName = HEADER_NAME;
 
 const BODY_NAME = 'TogglePanel.Body';
 
-type BodyProps = ThemedClassName<PropsWithChildren>;
+type BodyProps = Util.ThemedClassName<PropsWithChildren>;
 
-const Body = composable<HTMLDivElement, BodyProps>(({ children, ...props }, forwardedRef) => {
+const Body = Util.composable<HTMLDivElement, BodyProps>(({ children, ...props }, forwardedRef) => {
   const { duration } = useTogglePanelContext(BODY_NAME);
   return (
     <Collapsible.Content
-      {...composableProps(props, {
+      {...Util.composableProps(props, {
         // `--height` is measured by the machine; a zero duration is how a caller opts out of the
         // ramp entirely (the assistant feed does, because it measures height as the body settles).
         style: { animationDuration: `${duration}ms` },
@@ -168,13 +182,13 @@ Body.displayName = BODY_NAME;
 
 const VIEWPORT_NAME = 'TogglePanel.Viewport';
 
-export type ViewportProps = ThemedClassName<PropsWithChildren>;
+export type ViewportProps = Util.ThemedClassName<PropsWithChildren>;
 
 /**
  * Scrollable region for nested flex/grid layouts. Uses min-h-0 and min-w-0 so overflow can shrink correctly.
  */
-export const Viewport = composable<HTMLDivElement, ViewportProps>(({ children, ...props }, forwardedRef) => (
-  <div {...composableProps(props, { classNames: ['overflow-y-auto'] })} ref={forwardedRef}>
+export const Viewport = Util.composable<HTMLDivElement, ViewportProps>(({ children, ...props }, forwardedRef) => (
+  <div {...Util.composableProps(props, { classNames: ['overflow-y-auto'] })} ref={forwardedRef}>
     {children}
   </div>
 ));

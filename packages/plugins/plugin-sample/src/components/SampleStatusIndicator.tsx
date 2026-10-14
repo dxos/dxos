@@ -9,13 +9,13 @@
 
 import React from 'react';
 
-import { StatusBar } from '@dxos/plugin-status-bar/components';
-import { IconButton } from '@dxos/react-ui';
+import * as StatusBar from '@dxos/plugin-status-bar/StatusBar';
+import * as Button from '@dxos/react-ui/Button';
 
 export const SampleStatusIndicator = () => {
   return (
     <StatusBar.Item>
-      <IconButton variant='ghost' icon='ph--book-open--regular' iconOnly label='Sample plugin active.' />
+      <Button.Root variant='ghost' icon='ph--book-open--regular' iconOnly label='Sample plugin active.' />
     </StatusBar.Item>
   );
 };

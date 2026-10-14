@@ -6,6 +6,7 @@ import { DXN } from '@dxos/keys';
 
 import { meta } from '#meta';
 
+export const ADD_TO_COLLECTION_DIALOG = DXN.make(`${meta.profile.key}.addToCollectionDialog`);
 export const OBJECT_FORM_DIALOG = DXN.make(`${meta.profile.key}.objectFormDialog`);
 export const CREATE_SPACE_DIALOG = DXN.make(`${meta.profile.key}.createSpaceDialog`);
 export const IMPORT_SPACE_DIALOG = DXN.make(`${meta.profile.key}.importSpaceDialog`);

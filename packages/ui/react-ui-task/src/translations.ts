@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Resource } from '@dxos/react-ui';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 export const translationKey = '@dxos/react-ui-task';
 
@@ -27,6 +27,13 @@ export const translations = [
         'task-priority.label': 'Priority',
         'priority-none.label': 'None',
         'task-estimate.label': 'Estimate',
+        'task-properties.label': 'Properties',
+        'set-priority.label': 'Set priority',
+        'set-estimate.label': 'Set estimate',
+        'set-assignee.label': 'Set assignee',
+        'task-created.label': 'Created {{date}}',
+        'assignee-none.label': 'Unassigned',
+        'assignee-agent.label': 'Agent',
         'estimate-none.label': 'None',
         'priority-low.label': 'Low',
         'priority-medium.label': 'Medium',
@@ -34,10 +41,15 @@ export const translations = [
         'priority-urgent.label': 'Urgent',
         'task-actions.label': 'Task actions',
         'task-check.label': 'Select task',
-        'task-title.placeholder': 'Untitled',
-        'save-task.label': 'Save',
-        'cancel-edit.label': 'Cancel',
+        'task-title.placeholder': 'Task title',
+        'add-task.placeholder': 'Task title',
+        'task-description.placeholder': 'Task description',
+        'task-history.label': 'Activity',
+        'question-answer.label': 'Your answer',
+        'question-answer.placeholder': 'Type an answer…',
+        'question-submit.label': 'Answer',
+        'remove-file.label': 'Remove {{name}}',
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

@@ -1,0 +1,462 @@
+---
+id: org.dxos.echo-sqlite
+name: EchoSqlite
+version: 0.1.0
+---
+
+`@dxos/echo-sqlite` is the smallest backend that implements the ECHO `Database` interface from
+`@dxos/echo` without `@dxos/echo-client` / `@dxos/echo-host`: no Automerge, no feeds, no replication,
+no client/host split. Entities are stored as JSON rows in SQLite and surface to callers as ordinary
+in-memory live objects (`Obj.make` proxies).
+
+Two properties define it and outrank simplicity:
+
+- **SQLite is the source of truth and the space is never resident.** Opening a database, querying it,
+  or resolving a ref materializes only the rows that call needs. Memory is bounded by what callers hold,
+  not by the size of the space [F-3].
+- **Queries run in SQLite.** A query AST compiles to one read-only SQL statement, following the design
+  in `packages/core/echo/echo-host/docs/SQL_QUERY_EXECUTION.md` and its compiler
+  `packages/core/echo/echo-host/src/query/sql/compile.ts`. Only the result rows are hydrated; nothing is
+  filtered, traversed or ordered in JavaScript [F-4].
+
+Tests map to the acceptance scenarios: `src/memory.test.ts` (T-1, T-2), `src/differential.test.ts`
+(T-3), `src/sql/explain.test.ts` (T-4, T-5), `src/database.test.ts` (T-6 to T-9). Benchmarks are in
+`src/testing/database.bench.ts` and `src/memory.report.test.ts`; results are recorded in `BENCHMARKS.md`.
+
+## Extensions
+
+The following extension dialects are used in this document.
+
+| Term       | URI                         |
+| ---------- | --------------------------- |
+| `feat`     | `org.dxos.mdl.feat@1.0`     |
+| `scenario` | `org.dxos.mdl.scenario@1.0` |
+| `rule`     | `org.dxos.mdl.rule@1.0`     |
+
+## Features
+
+```mdl
+feat F-1: Database interface
+
+  req F-1.1:
+    when: SqliteDatabase is constructed
+    then: it satisfies Database.Database, Database.isDatabase(db) is true, and db.graph is a
+          Hypergraph whose getDatabase(db.spaceId) returns db
+
+  req F-1.2:
+    when: the database is opened with an Effect SqlClient in scope
+    then: it runs on every SqlClient the repo supports — node (@effect/sql-sqlite-node), browser
+          (wa-sqlite over OPFS via @dxos/sql-sqlite) and bun — with no platform-specific code in the
+          package
+
+  req F-1.3:
+    when: code runs in Effect
+    then: SqliteDatabase.layer(options) provides Database.Service, and closing its scope flushes
+          pending writes and releases every subscription
+
+  req F-1.4:
+    when: a caller uses feeds, branches, history (getVersion, getChanges), a non-inline blob backend, or
+          retainObjects (whose synchronous list of dropped ids would need the whole space in memory)
+    then: the call fails with UnsupportedOperationError; nothing silently no-ops or returns a
+          fabricated value
+```
+
+```mdl
+feat F-2: Storage layout
+
+  req F-2.1:
+    when: an entity is stored
+    then: it is one row of the entity table, keyed by (spaceId, id), holding the full ECHO JSON
+          (Obj.toJSON plus @parent, @meta included) as the body
+
+  req F-2.2:
+    when: the compiler needs a field to select, join or order on
+    then: that field is a denormalized, indexed column written in the same transaction as the body —
+          kind, typeDXN, deleted, createdAt, updatedAt, the raw parent/source/target URIs, and the
+          normalized parentId/sourceId/targetId (the bare entity id when local to the row's space,
+          NULL otherwise)
+
+  req F-2.3:
+    when: an entity holding references or text is written
+    then: its outgoing references (target id, normalized property path) and its extracted string
+          values are written to a reverse-reference side table and an FTS5 (trigram) side table in
+          the same transaction, so incoming-reference and text queries never read bodies
+
+  req F-2.4:
+    when: the schema changes
+    then: the change is a new numbered, immutable .sql migration in src/migrations with its own
+          history table, applied through Migrator.make({}); every CREATE carries IF NOT EXISTS
+          (see .agents/projects/sql-migrations/DESIGN.md)
+
+  req F-2.5:
+    when: several spaces share one SQLite file
+    then: every statement is constrained to its spaceId and no space can read or write another's rows
+```
+
+```mdl
+feat F-3: Bounded memory — the space is never loaded whole
+
+  desc: |
+    The non-negotiable requirement. Nothing in the package may read every row of a space into memory
+    as part of normal operation: not on open, not to answer a query, not to resolve a ref, not to
+    notify a subscriber. Memory must scale with what callers hold, not with the size of the space.
+
+  req F-3.1:
+    when: a database is opened
+    then: it runs migrations and reads at most the persisted type rows (kind = type); no object or
+          relation row is read or hydrated
+
+  req F-3.2:
+    when: a query runs
+    then: only the rows in its final result are read from SQLite and hydrated; a LIMIT bounds the
+          rows read, not just the rows returned
+
+  req F-3.3:
+    when: a ref is loaded (ref.load(), Database.load, db.makeRef(uri).load())
+    then: the single target row is read by (spaceId, id) and hydrated; ref.target / ref.peek()
+          answer synchronously from the working set only and never trigger a scan
+
+  req F-3.4:
+    when: a row is hydrated
+    then: it enters a working set keyed by id; while any caller still holds that live object, every
+          lookup of the same id (query result, ref, getObjectById) returns the same instance
+
+  req F-3.5:
+    when: no caller holds a hydrated object any longer and it has no unflushed changes
+    then: the working set releases it (weakly held); the working set never pins objects for the
+          lifetime of the database
+
+  req F-3.6:
+    when: relations, parents or references are added or resolved
+    then: endpoints and targets are resolved one row at a time on demand; no traversal preloads a
+          subgraph
+
+  req F-3.7:
+    when: db.diagnostics() is read
+    then: it reports resident objects, rows hydrated, compiled statements and single-row loads, so
+          tests and benchmarks can assert how much of the space was read and is held
+```
+
+```mdl
+feat F-4: Queries compile to SQL
+
+  desc: |
+    Follows packages/core/echo/echo-host/docs/SQL_QUERY_EXECUTION.md with the package's own compiler
+    (src/sql/compile.ts), so the package does not depend on echo-host. Joins are CROSS JOIN so SQLite
+    keeps the written order: each step walks its input and seeks an index, rather than the
+    unanalyzed planner scanning a space.
+
+  req F-4.1:
+    when: a query (Query or Filter) is executed
+    then: it compiles to exactly one read-only statement, WITH RECURSIVE with one CTE per plan step
+          and a final SELECT; sub-plans (in-query, union branches, set-difference) compile into the
+          same statement
+
+  req F-4.2:
+    when: the compiler builds SQL
+    then: compilation is pure (plan in, SQL out, no store reads); every value is a bound parameter,
+          lists are bound as one JSON array read with json_each(?), and only JSON paths and
+          identifiers are emitted as literals
+
+  req F-4.3:
+    when: a property filter is compiled
+    then: it reads json_extract(body, '$."k1"."k2"') with typed comparison — gt/gte/lt/lte match
+          only when operand and value share a JSON type, eq/neq/in/contains/range/eq-undefined and
+          nested object filters follow filterMatchEntity, and every type test uses
+          COALESCE(json_type(...), 'missing') so NOT keeps three-valued logic correct
+
+  req F-4.4:
+    when: a query selects by type, id, timestamp, tag, foreign key, meta key or text
+    then: type/id/timestamp read the denormalized columns through their indexes (a typed select is
+          pinned to the (space_id, type_dxn, id) index, which also supplies id order for paging),
+          tag/foreignKeys/metaKey read $."@meta" in the body, and text search reads the FTS5 table
+
+  req F-4.5:
+    when: a query traverses references, incoming references, relations or the hierarchy
+    then: the traversal is a join on the normalized id columns or the reverse-reference table, and
+          results are de-duplicated by row
+
+  req F-4.6:
+    when: deleted objects are in scope
+    then: an object is deleted if its own row is deleted or any parent (up to depth 10) or relation
+          endpoint is; options({ deleted }) selects exclude (default) / include / only in SQL
+
+  req F-4.7:
+    when: a query orders, limits or skips
+    then: order, LIMIT and OFFSET run in SQL; natural order is by id in BINARY (code-unit)
+          collation, NULLS LAST, with id as the final tiebreaker, so results are deterministic
+
+  req F-4.8:
+    when: a clause cannot be expressed as SQL without first reading the store (e.g. a metaVersion
+          semver range)
+    then: it is resolved by a pre-pass statement that turns it into literals; if no pre-pass exists
+          the query fails with UnsupportedQueryError — there is no fallback that scans or filters
+          the space in JavaScript
+
+  req F-4.9:
+    when: a query runs while the database has unflushed changes
+    then: pending writes are committed before the statement executes, so run() always reflects
+          every mutation made before it was called (read-your-writes)
+
+  req F-4.10:
+    when: a query is executed against the registry scope (Scope.registry())
+    then: it is answered from the in-process registry, which is small and code-shipped, and is the
+          one place in-memory matching is allowed
+```
+
+```mdl
+feat F-5: Query results and reactivity
+
+  req F-5.1:
+    when: QueryResult.run() / runEntries() / first() is called
+    then: the compiled statement executes and the hydrated results are returned
+
+  req F-5.2:
+    when: QueryResult.runSync() / .results / .entries is read
+    then: it returns the results of the most recent execution of that query (empty before the first
+          one) and schedules an execution if none is current; it never executes SQL synchronously and
+          never scans the working set
+
+  req F-5.3:
+    when: a query has a subscriber (subscribe or atom)
+    then: it executes once on subscribe and re-executes after each committed write batch that could
+          affect it — any batch for a query that is not a plain typed select, and any batch with a
+          delete, restore or purge (the cascade reaches rows of every type); otherwise only a batch
+          that wrote one of the query's types
+
+  req F-5.4:
+    when: a re-execution returns the same rows in the same order
+    then: subscribers are not notified; they are notified only when membership or order changes
+```
+
+```mdl
+feat F-6: Writes and durability
+
+  req F-6.1:
+    when: an entity is added, mutated (Obj.update, nested or meta changes) or removed
+    then: only that entity's row (and its side-table rows) is rewritten, batched per microtask into
+          one transaction; db.flush() resolves once the batch is durable
+
+  req F-6.2:
+    when: an object added to the database references (Ref.make) or relates to entities not yet stored
+    then: those entities are stored with it in the same batch
+
+  req F-6.3:
+    when: db.remove(obj) is called
+    then: the row is soft-deleted (deleted = 1), re-adding the object restores it, and
+          runGarbageCollection hard-deletes soft-deleted rows and their side-table rows
+
+  req F-6.4:
+    when: a write batch fails
+    then: the batch stays pending and the next flush retries it and rejects if it fails again;
+          memory and disk never silently diverge, and close() releases subscriptions even when its
+          final flush fails
+
+  req F-6.5:
+    when: the process restarts and the database is reopened
+    then: every flushed entity — body, meta, parent, relation endpoints, references, deletion state,
+          timestamps — reads back identically
+```
+
+```mdl
+feat F-7: Types
+
+  req F-7.1:
+    when: static types are passed to open({ types })
+    then: rows of those types hydrate as typed live objects
+
+  req F-7.2:
+    when: db.addType(type) is called
+    then: a Type entity with the type's JSON Schema is stored (idempotent on typename + version) and
+          registered, so its objects hydrate after reopen without code-side registration
+
+  req F-7.3:
+    when: a row's type is unknown
+    then: it hydrates as a read-only snapshot instead of failing the query that returned it
+```
+
+## Acceptance
+
+```mdl
+scenario T-1: Opening a large space reads nothing
+  given: a file holding a space of 100,000 objects
+  when: the database is opened and one query with limit(10) runs
+  then:
+    - open reads zero object rows
+    - the query hydrates exactly 10 objects
+    - heap growth stays bounded independent of the space size (see memory.report.test.ts)
+  tags: [memory, F-3]
+```
+
+```mdl
+scenario T-2: The working set releases unheld objects
+  given: 10,000 objects hydrated by queries whose results are then dropped
+  when: garbage collection runs (forced via v8.setFlagsFromString('--expose-gc'))
+  then:
+    - the working set size returns to the number of objects still referenced
+    - a later lookup of a released id re-reads its row and returns a fresh live object
+  tags: [memory, F-3]
+```
+
+```mdl
+scenario T-3: Differential against the in-memory matcher
+  given: a seeded generator of objects with mixed-type fields, nested objects, arrays and refs
+  when: 200 random filters (eq/neq/gt/lt/in/range/contains/eq-undefined/not/and/or/nested) run
+  then: the ids returned by the compiled SQL equal those selected by filterMatchEntity over the
+        same objects, for more than 50 non-empty rounds
+  tags: [query, F-4]
+```
+
+```mdl
+scenario T-4: Compiled SQL uses the indexes
+  given: the package migrations applied to an empty database
+  when: EXPLAIN QUERY PLAN runs on compiled type selects, id selects, traversals and deletion checks
+  then: each plan SEARCHes the intended index; none SCANs the entity table
+  tags: [query, F-4]
+```
+
+```mdl
+scenario T-5: One statement per query
+  given: a query with a filter, a reference traversal, a union and orderBy + limit
+  when: it executes
+  then:
+    - exactly one SELECT statement reaches SQLite
+    - its parameters contain no interpolated values
+  tags: [query, F-4]
+```
+
+```mdl
+scenario T-6: Read-your-writes
+  given: an open database with no explicit flush
+  when: an object is added and mutated, then db.query(...).run() is called
+  then: the result includes the object with its latest values
+  tags: [query, F-4.9]
+```
+
+```mdl
+scenario T-7: Subscriptions fire only on change
+  given: a subscription on Filter.type(Person, { age: Filter.gt(18) })
+  when: a matching Person is added, an unrelated Organization is added, then the Person's age drops
+        to 10
+  then: the subscriber is notified twice, with 1 and then 0 results
+  tags: [reactivity, F-5]
+```
+
+```mdl
+scenario T-8: Persistence across reopen
+  given: objects, a relation, a parent/child pair, references, a soft-deleted object, a persisted
+         dynamic type and an inline blob written and flushed
+  when: the scope closes and the file is reopened without registering the dynamic type
+  then: every entity, reference, endpoint, parent, deletion flag and blob reads back identically
+  tags: [durability, F-6, F-7]
+```
+
+```mdl
+scenario T-9: A failed write is retried, not dropped
+  given: an open database whose entity table is made unavailable
+  when: objects are added and removed, flush rejects, the table is restored and flush runs again
+  then: after reopen both the additions and the deletions are present
+  tags: [durability, F-6.4]
+```
+
+## Rules
+
+```mdl
+rule echo-sqlite-no-whole-space-read: Never read or hydrate a whole space
+  Flag any code path that reads every entity row of a space into memory or iterates the whole working
+  set to answer a request: a SELECT over the entity table without a selective predicate (id, id list,
+  compiled query, or kind = type) or a LIMIT; a store method that returns all rows of a space; a loop
+  that hydrates each row of such a result; or any query, ref-resolution or subscription path that
+  enumerates `#tracked`/the working set to find matches. Loading the persisted type rows on open is
+  allowed, as are migrations, garbage collection that deletes by predicate in SQL, and tests.
+  scope: dir
+  files:
+    - src/**/*.ts
+  grep: SELECT|list\(|entities\(\)|values\(\)|forEach|for \(const
+  severity: error
+  question: Does this change read or hydrate every row of a space, or scan the whole working set, to answer a request?
+```
+
+```mdl
+rule echo-sqlite-no-js-query-evaluation: Queries are answered by SQL, not by JavaScript matching
+  Flag code outside the registry scope that decides query membership, traversal, ordering, limit or
+  skip in JavaScript — calls to `filterMatchEntity`, `Filter.toPredicate`, or hand-written predicate
+  loops over hydrated objects, `.sort` / `.slice` on query results, or a fallback that evaluates a
+  query AST in memory when compilation declines. Hydrating the final rows of a compiled statement is
+  fine; so is matching against the in-process registry for `Scope.registry()` queries.
+  scope: dir
+  files:
+    - src/**/*.ts
+  grep: filterMatchEntity|toPredicate|\.sort\(|\.slice\(|\.filter\(
+  severity: error
+  question: Does this code evaluate query filters, traversal, ordering or paging in JavaScript instead of SQL?
+```
+
+```mdl
+rule echo-sqlite-bound-parameters: SQL values are bound, never interpolated
+  Flag SQL built by string concatenation or template interpolation of values — ids, typenames,
+  property values, lists — into `sql.unsafe`, `sql.literal` or a raw string. Values go through the
+  `sql` tagged template or the params array, and lists are one JSON-array parameter read with
+  `json_each(?)`. JSON paths, CTE names and index names emitted as literals by the compiler are
+  allowed when they come from the query AST's property names through the compiler's quoting helper.
+  scope: dir
+  files:
+    - src/**/*.ts
+  grep: unsafe|literal|\$\{
+  severity: error
+  question: Does this code interpolate a runtime value into SQL text instead of binding it?
+```
+
+```mdl
+rule echo-sqlite-ddl-in-migrations: Schema lives only in numbered migrations
+  Flag CREATE, ALTER or DROP statements in TypeScript outside `src/migrations/` (tests excepted), and
+  any edit to an already-committed `src/migrations/*.sql` file. New schema is a new numbered file
+  listed in `src/migrations/index.ts`.
+  scope: dir
+  files:
+    - src/**/*.ts
+    - src/migrations/*.sql
+  grep: CREATE|ALTER|DROP
+  severity: error
+```
+
+---
+
+## Appendix: Extension Definitions
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self
+```
+
+```mdl
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext rule
+  uri: org.dxos.mdl.rule@1.0
+  desc: A machine-checked review rule applied by an LLM subagent or the System One checker.
+  inline-prose: true
+  fields:
+    files:       Glob | Glob[]     # paths this rule reviews, relative to `scope`
+    grep?:       Prose             # optional regex pre-filter over file contents
+    severity?:   warn | error      # defaults to warn
+    scope?:      dir | repo        # glob base: this file's dir (default) or repo root
+    unit?:       file | pr         # one verdict per file (default) or per change set
+    context?:    ContextKind[]     # diff | imports | importers | siblings | package | public-api | similar | test | pr
+    system-one?: on | off          # off when no fetcher can supply what the rule needs
+    question?:   Prose             # literal yes/no question for the System One checker
+```

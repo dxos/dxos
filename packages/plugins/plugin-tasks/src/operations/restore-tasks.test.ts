@@ -32,9 +32,31 @@ describe('restore-tasks', () => {
 
       yield* restoreTasks.handler(restore);
 
-      expect(taskSet.tasks.map((ref) => ref.target?.id)).toEqual([first.id, parent.id, child.id, last.id]);
+      expect(taskSet.tasks.map((ref) => ref.target?.id)).toEqual([first.id, parent.id, last.id]);
+      expect(parent.subtasks?.map((ref) => ref.target?.id)).toEqual([child.id]);
+      expect(Task.parentTaskId(child)).toBe(parent.id);
       expect(Obj.isDeleted(parent)).toBe(false);
       expect(Obj.isDeleted(child)).toBe(false);
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
+  );
+
+  it.effect('puts a deleted sub-task back into its parent at the position it held', () =>
+    Effect.gen(function* () {
+      const taskSet = yield* Database.add(TaskSet.make({ name: 'Sprint' }));
+      yield* Database.flush();
+      const { task: parent } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Epic' });
+      const children = [];
+      for (const title of ['one', 'two', 'three']) {
+        const { task } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title, parentTask: Ref.make(parent) });
+        children.push(task);
+      }
+
+      const { restore } = yield* deleteTask.handler({ task: Ref.make(children[1]) });
+      expect(parent.subtasks?.map((ref) => ref.target?.id)).toEqual([children[0].id, children[2].id]);
+
+      yield* restoreTasks.handler(restore);
+      expect(parent.subtasks?.map((ref) => ref.target?.id)).toEqual(children.map((child) => child.id));
+      expect(taskSet.tasks.map((ref) => ref.target?.id)).toEqual([parent.id]);
     }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
   );
 

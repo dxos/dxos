@@ -318,6 +318,8 @@ drift on `plugin.profile`. All items listed here are resolved.
 
 ## Open questions & follow-ons
 
+- **Direct publishing** — publishing without an AT Protocol account, with server-enforced key
+  ownership: see [REGISTRY-PUBLISH.md](./REGISTRY-PUBLISH.md).
 - **Integrity / tamper detection** — first-seen release pinning is enforced at the app-view; still to
   do (see [Integrity & tamper detection](#integrity--tamper-detection)): client-side `manifestHash`
   verification, durable pinning across full DO eviction, and longer term content addressing + signed

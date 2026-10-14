@@ -39,13 +39,28 @@ env | grep -c R2_ACCESS_KEY_ID   # 1 = already available
 curl -sS --aws-sigv4 'aws:amz:auto:s3' \
   --user "$R2_ACCESS_KEY_ID:$R2_SECRET_ACCESS_KEY" \
   "https://950816f3f59b079880a1ae33fb0ec320.r2.cloudflarestorage.com/<path-from-issue>" \
-  -o feedback-logs.ndjson
+  -o feedback-logs.ndjson.gz
+gunzip feedback-logs.ndjson.gz
 ```
+
+Current clients upload gzipped NDJSON, so the path ends in `.ndjson.gz`; an older
+native build still uploads plain `.ndjson` — save that one under its own name and
+skip the `gunzip`. `scripts/query-logs.mjs` reads either form directly.
 
 Locally, the credential is `op://Shared/Composer survey logs R2 read-only
 token` — the access key id is the token's id, the secret is the **sha256 of the
 token value** (how Cloudflare authenticates the R2 S3 API with an API token).
 Never paste it into chat; see AGENTS.md → "Handing an agent a credential".
+
+**The item's name is a misnomer on both counts, and treating it literally has
+cost time more than once.** It is not read-only — the same pair writes and
+deletes — and it is not scoped to the survey logs: it reaches every bucket in
+the account, including `agent-artifacts` (the `hosting-artifacts` skill) and the
+`composer-assets*` retention buckets the deploy pipeline writes on every deploy
+(`.github/workflows/scripts/upload-assets.mjs`). Measured, not assumed. Two
+consequences: never point a delete at a path you have not checked, and rotating
+this token breaks four things at once, so coordinate it. The name is load-bearing
+in `survey-to-linear.mjs`, which is why it has not simply been corrected.
 
 Write the bundle to the scratchpad, not the working tree. They run 50 MB+ and
 100k+ lines.

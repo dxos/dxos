@@ -6,10 +6,9 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 import type * as Types from 'effect/Types';
 
-import { Format } from '@dxos/echo';
+import { Format, JsonSchema } from '@dxos/echo';
 import { DecimalPrecision, SelectOption, TypeEnum } from '@dxos/echo/Format';
-import { type JsonSchema as JsonSchemaType } from '@dxos/echo/JsonSchema';
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 
 /**
  * Base schema.
@@ -101,6 +100,7 @@ export const formatToSchema: Record<Format.TypeFormat, Schema.Codec<FormatSchema
   [Format.TypeFormat.Formula]: extend(Format.TypeFormat.Formula, TypeEnum.String),
   [Format.TypeFormat.Hostname]: extend(Format.TypeFormat.Hostname, TypeEnum.String),
   [Format.TypeFormat.JSON]: extend(Format.TypeFormat.JSON, TypeEnum.String),
+  [Format.TypeFormat.Key]: extend(Format.TypeFormat.Key, TypeEnum.String),
   [Format.TypeFormat.Markdown]: extend(Format.TypeFormat.Markdown, TypeEnum.String),
   [Format.TypeFormat.Password]: extend(Format.TypeFormat.Password, TypeEnum.String),
   [Format.TypeFormat.Regex]: extend(Format.TypeFormat.Regex, TypeEnum.String),
@@ -172,59 +172,11 @@ export const formatToSchema: Record<Format.TypeFormat, Schema.Codec<FormatSchema
  * This is the schema used by the ViewEditor's Form.
  * It is mapped to/from the View's Field AND Schema properties via the ViewProjection.
  */
-export const PropertySchema = Schema.Union([
-  formatToSchema[Format.TypeFormat.None],
-  formatToSchema[Format.TypeFormat.String],
-  formatToSchema[Format.TypeFormat.Number],
-  formatToSchema[Format.TypeFormat.Boolean],
-  formatToSchema[Format.TypeFormat.Ref],
-
-  //
-  // Strings
-  //
-
-  formatToSchema[Format.TypeFormat.DID],
-  formatToSchema[Format.TypeFormat.DXN],
-  formatToSchema[Format.TypeFormat.Email],
-  formatToSchema[Format.TypeFormat.Formula],
-  formatToSchema[Format.TypeFormat.Hostname],
-  formatToSchema[Format.TypeFormat.JSON],
-  formatToSchema[Format.TypeFormat.Markdown],
-  formatToSchema[Format.TypeFormat.Password],
-  formatToSchema[Format.TypeFormat.Regex],
-  formatToSchema[Format.TypeFormat.URL],
-  formatToSchema[Format.TypeFormat.UUID],
-  formatToSchema[Format.TypeFormat.SingleSelect],
-  formatToSchema[Format.TypeFormat.MultiSelect],
-
-  //
-  // Numbers
-  //
-
-  formatToSchema[Format.TypeFormat.Currency],
-  formatToSchema[Format.TypeFormat.Integer],
-  formatToSchema[Format.TypeFormat.Percent],
-  formatToSchema[Format.TypeFormat.Timestamp],
-
-  //
-  // Dates
-  //
-
-  formatToSchema[Format.TypeFormat.DateTime],
-  formatToSchema[Format.TypeFormat.Date],
-  formatToSchema[Format.TypeFormat.Time],
-  formatToSchema[Format.TypeFormat.Duration],
-
-  //
-  // Objects
-  //
-
-  formatToSchema[Format.TypeFormat.GeoPoint],
-]);
+export const PropertySchema = Schema.Union(Object.values(formatToSchema));
 
 export interface PropertyType extends Types.Simplify<Schema.Schema.Type<typeof PropertySchema>> {}
 
-export const formatToAdditionalPropertyAttributes: Record<Format.TypeFormat, Partial<JsonSchemaType>> = {
+export const formatToAdditionalPropertyAttributes: Record<Format.TypeFormat, Partial<JsonSchema.JsonSchema>> = {
   [Format.TypeFormat.None]: {},
   [Format.TypeFormat.String]: {},
   [Format.TypeFormat.Number]: {},
@@ -236,6 +188,7 @@ export const formatToAdditionalPropertyAttributes: Record<Format.TypeFormat, Par
   [Format.TypeFormat.Formula]: {},
   [Format.TypeFormat.Hostname]: {},
   [Format.TypeFormat.JSON]: {},
+  [Format.TypeFormat.Key]: {},
   [Format.TypeFormat.Markdown]: {},
   [Format.TypeFormat.Password]: {},
   [Format.TypeFormat.Regex]: {},

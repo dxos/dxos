@@ -4,13 +4,19 @@
 
 /// <reference lib="webworker" />
 
+import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
-import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import * as Option from 'effect/Option';
+import * as Reactivity from 'effect/reactivity/Reactivity';
+import * as SqlClient from 'effect/sql/SqlClient';
+
+import { BaseError } from '@dxos/errors';
 
 import * as OpfsPool from '../OpfsPool.ts';
 import * as SqliteClient from '../SqliteClient.ts';
+import { SqliteTestError } from './errors.ts';
 import { TEST_HALO_CONTROL_FEED_KEY } from './opfs-test-helpers.ts';
 
 const DB_NAME = 'DXOS';
@@ -49,7 +55,7 @@ const runTest = (testCase: string, payload?: string | Uint8Array): Effect.Effect
       }
       case 'import': {
         if (!(payload instanceof Uint8Array)) {
-          return yield* Effect.fail(new Error('import test requires Uint8Array payload'));
+          return yield* Effect.fail(new SqliteTestError({ message: 'import test requires Uint8Array payload' }));
         }
         const sql = yield* SqliteClient.SqliteClient;
         const copy = new Uint8Array(payload.byteLength);
@@ -73,7 +79,7 @@ const runTest = (testCase: string, payload?: string | Uint8Array): Effect.Effect
       }
       case 'persist-write': {
         if (typeof payload !== 'string') {
-          return yield* Effect.fail(new Error('persist-write test requires string payload'));
+          return yield* Effect.fail(new SqliteTestError({ message: 'persist-write test requires string payload' }));
         }
         const client = yield* SqlClient.SqlClient;
         yield* client`CREATE TABLE IF NOT EXISTS in_worker_persist (marker TEXT NOT NULL)`;
@@ -112,11 +118,59 @@ const runTest = (testCase: string, payload?: string | Uint8Array): Effect.Effect
           writtenBytes: rows[0]?.data?.byteLength ?? 0,
         };
       }
+      case 'handoff': {
+        const sql = yield* SqlClient.SqlClient;
+        yield* sql`CREATE TABLE IF NOT EXISTS in_worker_handoff (step TEXT NOT NULL)`;
+        yield* sql`DELETE FROM in_worker_handoff`;
+        const write = (step: string) => sql`INSERT INTO in_worker_handoff (step) VALUES (${step})`;
+        const inTransaction = yield* Deferred.make<void>();
+        // Forked outside the transaction, so the statement asks for the connection rather than joining it.
+        const waiting = yield* Effect.forkChild(
+          Deferred.await(inTransaction).pipe(Effect.andThen(write('waiting statement'))),
+        );
+        yield* sql.withTransaction(
+          Effect.gen(function* () {
+            yield* write('first transaction');
+            yield* Deferred.succeed(inTransaction, undefined);
+            yield* Effect.sleep('20 millis');
+          }),
+        );
+        yield* sql.withTransaction(write('next transaction'));
+        yield* Fiber.join(waiting);
+        const rows = yield* sql<{ step: string }>`SELECT step FROM in_worker_handoff ORDER BY rowid`;
+        return { steps: rows.map((row) => row.step) };
+      }
+      case 'backlog': {
+        const sql = yield* SqlClient.SqlClient;
+        const inTransaction = yield* Deferred.make<void>();
+        const queued = yield* Deferred.make<void>();
+        // Forked outside the transaction, so each statement asks for the connection; started immediately, so
+        // it is waiting on the permit before `queued` settles; detached, so one that never gets it cannot hold
+        // up the case. More statements than the stack could nest one per waiter.
+        yield* Effect.forkChild(
+          Deferred.await(inTransaction).pipe(
+            Effect.andThen(
+              Effect.forEach(Array.from({ length: 5_000 }), () =>
+                Effect.forkDetach(sql`SELECT 1`, { startImmediately: true }),
+              ),
+            ),
+            Effect.andThen(Deferred.succeed(queued, undefined)),
+          ),
+        );
+        yield* sql.withTransaction(
+          Effect.gen(function* () {
+            yield* Deferred.succeed(inTransaction, undefined);
+            yield* Deferred.await(queued);
+          }),
+        );
+        const next = yield* sql`SELECT 1`.pipe(Effect.timeoutOption('5 seconds'));
+        return { free: Option.isSome(next) };
+      }
       default:
-        return yield* Effect.fail(new Error(`Unknown in-worker test case: ${testCase}`));
+        return yield* Effect.fail(new SqliteTestError({ message: `Unknown in-worker test case: ${testCase}` }));
     }
   }).pipe(
-    Effect.mapError((error) => (error instanceof Error ? error : new Error(String(error)))),
+    Effect.mapError((error) => (error instanceof BaseError ? error : SqliteTestError.wrap()(error))),
     (effect) => runWithClient(effect),
   );
 

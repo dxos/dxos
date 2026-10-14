@@ -2,8 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-// Standalone entrypoint, not a barrel namespace: this is loaded by the log-writer worker, and
-// hoisting it onto the root barrel would put it in the graph of everyone importing the package.
+// @import-as-namespace
+
+// The log-writer worker imports this through its own subpath, so nothing else loads the
+// OpenTelemetry SDK.
 
 import { type Resource, defaultResource, resourceFromAttributes } from '@opentelemetry/resources';
 import { type LogRecordExporter } from '@opentelemetry/sdk-logs';

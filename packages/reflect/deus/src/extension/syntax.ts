@@ -4,6 +4,7 @@
 
 import { LRLanguage } from '@codemirror/language';
 
+import * as terms from './gen/mdl.terms.ts';
 import { parser } from './gen/mdl.ts';
 
 /**
@@ -19,3 +20,6 @@ export const mdlBlockLanguage = LRLanguage.define({
     commentTokens: { line: '#' },
   },
 });
+
+/** Node type ids of the generated parser, for callers that walk a parse tree (see `QueryDSL.Node`). */
+export const mdlTerms = terms;

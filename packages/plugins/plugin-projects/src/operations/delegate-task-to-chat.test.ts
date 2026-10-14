@@ -2,15 +2,19 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/reactivity/Atom';
 import { describe, test } from 'vitest';
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { AiContext } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
-import { Filter, Obj, Query, Ref } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import { DXN, Filter, Obj, Query, Ref } from '@dxos/echo';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
+import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
@@ -18,7 +22,7 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 import { Task } from '@dxos/types';
 
 import { ProjectsPlugin } from '#plugin';
@@ -39,6 +43,8 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
 
     // The chat is named for the task, so the conversation is findable by what it is about.
     expect(chat.name).toBe('Ship the release');
+    // Named even when it is Composer's own, so no reader has to treat an unset agent as a default.
+    expect(chat.session?.harness).toBe('composer');
 
     const [ref] = chat.tasks;
     invariant(ref, 'Expected the task in the chat checklist.');
@@ -47,6 +53,30 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     // The checklist is a plain ref array, so delegation does not claim ownership of the task: an
     // unparented one stays unparented.
     expect(Obj.getParent(task)).toBeUndefined();
+  });
+
+  test("starts the chat on the project's session config", async ({ expect }) => {
+    await using harness = await setup();
+    const space = AppSpace.getDefaultSpace(harness.get(ClientCapabilities.Client));
+    invariant(space, 'Expected a default space.');
+
+    const { project } = await harness.runPromise(
+      Operation.invoke(ProjectOperation.Create, { name: 'Voyage' }, { spaceId: space.id }),
+    );
+    const model = DXN.make('com.anthropic.model.claude-haiku-4-5.default');
+    Obj.update(project, (project) => {
+      project.session = { model };
+    });
+    const taskSet = await project.taskSet?.tryLoad();
+    invariant(taskSet, 'Expected the scaffolded task set.');
+    const task = space.db.add(Task.make({ [Obj.Parent]: taskSet, title: 'Write a poem', status: 'todo' }));
+    await space.db.flush();
+
+    const { chat } = await harness.runPromise(
+      Operation.invoke(ProjectOperation.DelegateTaskToChat, { tasks: [Ref.make(task)] }, { spaceId: space.id }),
+    );
+
+    expect(chat.session?.model).toBe(model);
   });
 
   test('files the chat under the task project, marks it started, and names a reviewer', async ({ expect }) => {
@@ -78,6 +108,9 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     // session has it, and the chat's agent is who holds it.
     expect(task.status).toBe('started');
     expect(task.assignee?.role).toBe('assistant');
+    // Held by that chat, named as the assignee's subject: a bare assistant role is the supervisor's
+    // spawn request, whose orphan sweep would fail a started task no sub-agent is running.
+    expect(Task.refEntityId(task.assignee?.subject)).toBe(chat.id);
 
     // The delegating identity reviews the result, which is what will send the task to `review`
     // rather than `done` when the work finishes.
@@ -143,6 +176,36 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     // Every delegated task is underway and assigned to the agent; the one left unchecked is untouched.
     expect(tasks.map((task) => task.status)).toEqual(['started', 'todo', 'started']);
     expect(tasks.map((task) => task.assignee?.role)).toEqual(['assistant', undefined, 'assistant']);
+  });
+
+  test('a parent brings its subtasks, parent first', async ({ expect }) => {
+    await using harness = await setup();
+    const space = AppSpace.getDefaultSpace(harness.get(ClientCapabilities.Client));
+    invariant(space, 'Expected a default space.');
+
+    const children = ['Read the guide', 'Write the plugin'].map((title) => Task.make({ title, status: 'todo' }));
+    const finished = Task.make({ title: 'Already shipped', status: 'done' });
+    const parent = space.db.add(
+      Task.make({
+        title: 'Build the plugin',
+        status: 'todo',
+        subtasks: [...children, finished].map((child) => Ref.make(child)),
+      }),
+    );
+    const sibling = space.db.add(Task.make({ title: 'Unrelated', status: 'todo' }));
+    await space.db.flush();
+
+    const { chat } = await harness.runPromise(
+      Operation.invoke(ProjectOperation.DelegateTaskToChat, { tasks: [Ref.make(parent)] }, { spaceId: space.id }),
+    );
+
+    // Ticking the parent is enough: the whole subtree joins the checklist, in tree order.
+    expect(chat.tasks.map((ref) => Task.refEntityId(ref))).toEqual([parent.id, ...children.map((child) => child.id)]);
+    expect(chat.name).toBe('Build the plugin');
+    expect([parent, ...children].map((task) => task.status)).toEqual(['started', 'started', 'started']);
+    expect(sibling.status).toBe('todo');
+    // A finished subtask is not reopened.
+    expect(finished.status).toBe('done');
   });
 
   test('refuses a list spanning two projects', async ({ expect }) => {
@@ -214,10 +277,77 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
       ),
     ).rejects.toThrow();
   });
+
+  test('runs the chat on the agent asked for, opening with the task brief', async ({ expect }) => {
+    await using harness = await setup();
+    const space = AppSpace.getDefaultSpace(harness.get(ClientCapabilities.Client));
+    invariant(space, 'Expected a default space.');
+    const agent = contributeAgent(harness);
+
+    const task = space.db.add(Task.make({ title: 'Fix the flaky test', description: 'It times out.', status: 'todo' }));
+    await space.db.flush();
+
+    const { chat } = await harness.runPromise(
+      Operation.invoke(
+        ProjectOperation.DelegateTaskToChat,
+        { tasks: [Ref.make(task)], harness: agent.id },
+        { spaceId: space.id },
+      ),
+    );
+
+    expect(chat.session?.harness).toBe(agent.id);
+    // The agent cannot read the chat's checklist, so the brief carries the task itself.
+    await expect.poll(() => agent.prompts.length).toBe(1);
+    const [prompt] = agent.prompts;
+    expect(prompt).toContain('Title: Fix the flaky test');
+    expect(prompt).toContain('It times out.');
+    expect(prompt).toContain(Obj.getURI(task));
+  });
+
+  test("runs on the reader's default agent while it is available, else on Composer", async ({ expect }) => {
+    await using harness = await setup();
+    const space = AppSpace.getDefaultSpace(harness.get(ClientCapabilities.Client));
+    invariant(space, 'Expected a default space.');
+    const agent = contributeAgent(harness);
+    await harness.fire(ActivationEvents.Idle);
+    const settings = await harness.waitForCapability(AssistantCapabilities.Settings);
+    harness.registry.set(settings, { ...harness.registry.get(settings), defaultAgent: agent.id });
+
+    const delegate = async (title: string) => {
+      const task = space.db.add(Task.make({ title, status: 'todo' }));
+      await space.db.flush();
+      const { chat } = await harness.runPromise(
+        Operation.invoke(ProjectOperation.DelegateTaskToChat, { tasks: [Ref.make(task)] }, { spaceId: space.id }),
+      );
+      return chat.session?.harness;
+    };
+
+    expect(await delegate('Available')).toBe(agent.id);
+    harness.registry.set(agent.availability, { available: false, reason: 'not installed' });
+    expect(await delegate('Unavailable')).toBe('composer');
+  });
+
+  test('refuses an agent nobody registered', async ({ expect }) => {
+    await using harness = await setup();
+    const space = AppSpace.getDefaultSpace(harness.get(ClientCapabilities.Client));
+    invariant(space, 'Expected a default space.');
+    const task = space.db.add(Task.make({ title: 'Orphan', status: 'todo' }));
+    await space.db.flush();
+
+    await expect(
+      harness.runPromise(
+        Operation.invoke(
+          ProjectOperation.DelegateTaskToChat,
+          { tasks: [Ref.make(task)], harness: 'nobody' },
+          { spaceId: space.id },
+        ),
+      ),
+    ).rejects.toThrow();
+  });
 });
 
 const setup = async () => {
-  const harness = await createComposerTestApp({
+  const harness = await Harness.createComposerTestApp({
     // Tasks is declared in Projects' `dependsOn`; Assistant supplies the `CreateChat` handler.
     // Routine is what provides `RemoteProcessManager`, which Assistant's `AgentService` spec
     // requires — without it that spec is pruned and every delegation fails to resolve `AgentService`.
@@ -232,6 +362,33 @@ const setup = async () => {
   });
   const client = harness.get(ClientCapabilities.Client);
   await EffectEx.runAndForwardErrors(initializeIdentity(client));
-  await harness.waitForEvent(ClientEvents.SpacesReady);
+  await harness.waitForEvent(ClientEvents.SpacesAvailable);
   return harness;
+};
+
+/** Registers an agent that records the text of each prompt it is given and answers with nothing. */
+const contributeAgent = (harness: Awaited<ReturnType<typeof setup>>) => {
+  const prompts: string[] = [];
+  const availability = Atom.make<AssistantCapabilities.AgentAvailability>({ available: true }).pipe(Atom.keepAlive);
+  const agent: AssistantCapabilities.Agent = {
+    id: 'test-agent',
+    label: 'Test agent',
+    icon: 'ph--robot--regular',
+    availability,
+    makeTurnProducer: () =>
+      Effect.succeed({
+        runTurn: ({ prompt }) =>
+          Effect.sync(() => {
+            prompts.push(
+              typeof prompt === 'string'
+                ? prompt
+                : prompt.flatMap((block) => (block._tag === 'text' ? [block.text] : [])).join('\n'),
+            );
+            return [];
+          }),
+        getSkills: () => [],
+      }),
+  };
+  harness.capabilities.contribute({ module: 'test', interface: AssistantCapabilities.Agent, implementation: agent });
+  return { id: agent.id, availability, prompts };
 };

@@ -5,19 +5,14 @@
 import React, { useCallback } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { Surface, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import {
-  AppSurface,
-  OBJECT_ACTIONS_CONTRIBUTION_ID,
-  OBJECT_ACTIONS_CONTRIBUTION_PRIORITY,
-  useCardPivot,
-  useObjectMenuItems,
-} from '@dxos/app-toolkit/ui';
-import { Panel } from '@dxos/react-ui';
-import { Attention } from '@dxos/react-ui-attention';
-import { useAttention } from '@dxos/react-ui-attention';
+import { Attention, useAttention } from '@dxos/react-ui-attention';
 import { useMenuContribution } from '@dxos/react-ui-menu';
+import * as Panel from '@dxos/react-ui/Panel';
 import { type Pipeline } from '@dxos/types';
 
 import { type ItemProps, PipelineComponent } from '#components';
@@ -26,9 +21,9 @@ import { usePipelineBoardModel } from '#hooks';
 export type PipelineArticleProps = AppSurface.ObjectArticleProps<Pipeline.Pipeline>;
 
 export const PipelineArticle = ({ role, subject: pipeline, attendableId }: PipelineArticleProps) => {
-  const registry = useCapability(Capabilities.AtomRegistry);
+  const registry = Hooks.useCapability(Capabilities.AtomRegistry);
   const model = usePipelineBoardModel(pipeline, registry);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const { hasAttention } = useAttention(attendableId);
 
   const handleColumnAdd = useCallback(
@@ -42,14 +37,14 @@ export const PipelineArticle = ({ role, subject: pipeline, attendableId }: Pipel
   return (
     <PipelineComponent.Root Item={PipelineItem} onAddColumn={handleColumnAdd}>
       <Panel.Root role={role}>
-        <Panel.Toolbar asChild>
-          <PipelineComponent.Toolbar disabled={!hasAttention} />
-        </Panel.Toolbar>
-        <Panel.Content asChild>
+        <Panel.Header>
+          <PipelineComponent.Toolbar inactive={!hasAttention} />
+        </Panel.Header>
+        <Panel.Body asChild>
           <PipelineComponent.Content asChild model={model}>
             <PipelineComponent.Columns pipeline={pipeline} />
           </PipelineComponent.Content>
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     </PipelineComponent.Root>
   );
@@ -57,12 +52,12 @@ export const PipelineArticle = ({ role, subject: pipeline, attendableId }: Pipel
 
 const PipelineItem = ({ item, projectionModel, menu }: ItemProps) => {
   // The card menu renders in a portal; resolve the origin plank from the item element instead.
-  const [cardRef, pivotId] = useCardPivot();
-  const items = useObjectMenuItems(item, pivotId);
+  const [cardRef, pivotId] = ToolkitHooks.useCardPivot();
+  const items = ToolkitHooks.useObjectMenuItems(item, pivotId);
   useMenuContribution(menu, {
-    id: OBJECT_ACTIONS_CONTRIBUTION_ID,
+    id: ToolkitHooks.OBJECT_ACTIONS_CONTRIBUTION_ID,
     mode: 'additive',
-    priority: OBJECT_ACTIONS_CONTRIBUTION_PRIORITY,
+    priority: ToolkitHooks.OBJECT_ACTIONS_CONTRIBUTION_PRIORITY,
     items,
   });
 

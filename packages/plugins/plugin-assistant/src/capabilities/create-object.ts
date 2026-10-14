@@ -7,7 +7,7 @@ import * as Layer from 'effect/Layer';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { AgentSkill } from '@dxos/assistant-toolkit';
+import * as AgentSkill from '@dxos/assistant-toolkit/AgentSkill';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';

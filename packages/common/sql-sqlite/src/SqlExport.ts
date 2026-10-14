@@ -6,7 +6,7 @@
 
 import * as Context from 'effect/Context';
 import type * as Effect from 'effect/Effect';
-import type * as SqlError from 'effect/unstable/sql/SqlError';
+import type * as SqlError from 'effect/sql/SqlError';
 
 export interface Service {
   export: Effect.Effect<Uint8Array, SqlError.SqlError>;

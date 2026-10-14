@@ -3,23 +3,38 @@
 //
 
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
+import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as Statement from 'effect/sql/Statement';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { RuntimeProvider } from '@dxos/effect';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
+import { SQL_MAX_BOUND_VARIABLES } from '@dxos/index-core';
 import { PublicKey } from '@dxos/keys';
 import { bufferToArray } from '@dxos/util';
 
 import { SqliteHeadsStore } from './sqlite-heads-store.ts';
 import { SqliteStorageAdapter, decodeKey, encodeKey } from './sqlite-storage-adapter.ts';
 
-const makeTestLayer = () => {
+const makeTestLayer = ({ transformer }: { transformer?: Statement.Transformer } = {}) => {
   const baseLayer = SqliteClient.layer({ filename: ':memory:' });
   const txLayer = baseLayer;
-  const rt = ManagedRuntime.make(Layer.merge(baseLayer, txLayer).pipe(Layer.orDie));
+  const layer = Layer.merge(baseLayer, txLayer);
+  const rt = ManagedRuntime.make(
+    (transformer
+      ? layer.pipe(Layer.provideMerge(Layer.succeed(Statement.CurrentTransformer, transformer)))
+      : layer
+    ).pipe(Layer.orDie),
+  );
   return { runtime: rt.contextEffect, dispose: () => rt.dispose() };
 };
+
+/** Refuses a statement binding more variables than Durable Object SQLite does; node's SQLite takes 32766. */
+const refuseWideStatements: Statement.Transformer = (statement) =>
+  statement.compile()[1].length > SQL_MAX_BOUND_VARIABLES
+    ? Effect.die(new Error(`statement binds more than ${SQL_MAX_BOUND_VARIABLES} variables`))
+    : Effect.succeed(statement);
 
 describe('encodeKey / decodeKey', () => {
   test('round-trips simple keys', () => {
@@ -112,6 +127,24 @@ describe('SqliteStorageAdapter', () => {
     expect(await adapter.load(chunks[1].key)).toEqual(chunks[1].data);
   });
 
+  test('concurrent writes commit in the order they were issued', async () => {
+    const adapter = await setup();
+    await Promise.all([
+      adapter.save(chunks[0].key, chunks[0].data),
+      adapter.remove(chunks[0].key),
+      adapter.saveBatch([
+        [chunks[1].key, chunks[1].data],
+        [chunks[2].key, chunks[2].data],
+      ]),
+      adapter.removeRange(['a', 'b', 'd']),
+      adapter.save(chunks[3].key, chunks[3].data),
+    ]);
+    expect(await adapter.load(chunks[0].key)).toBeUndefined();
+    expect(await adapter.load(chunks[1].key)).toEqual(chunks[1].data);
+    expect(await adapter.load(chunks[2].key)).toBeUndefined();
+    expect(await adapter.load(chunks[3].key)).toEqual(chunks[3].data);
+  });
+
   test('loadRange returns keys in sorted order', async () => {
     const adapter = await setup();
     await adapter.save(['test', '2'], bufferToArray(Buffer.from('two')));
@@ -182,7 +215,7 @@ describe('SqliteStorageAdapter', () => {
 
 describe('SqliteHeadsStore', () => {
   const setup = async () => {
-    const { runtime, dispose } = makeTestLayer();
+    const { runtime, dispose } = makeTestLayer({ transformer: refuseWideStatements });
     const store = new SqliteHeadsStore({ runtime });
     await RuntimeProvider.runPromise(runtime)(store.migrate);
     onTestFinished(() => dispose());
@@ -202,6 +235,16 @@ describe('SqliteHeadsStore', () => {
     const { store } = await setup();
     const result = await store.getHeads(['missing' as any]);
     expect(result[0]).toBeUndefined();
+  });
+
+  test('getHeads reads more documents than one statement binds, in the order asked', async () => {
+    const { store, runtime } = await setup();
+    const ids = Array.from({ length: 250 }, (_, index) => `doc-${index}` as any);
+    for (const id of ids) {
+      await RuntimeProvider.runPromise(runtime)(store.setHeads(id, [`h-${id}`]));
+    }
+    const reversed = [...ids].reverse();
+    expect(await store.getHeads(reversed)).toEqual(reversed.map((id) => [`h-${id}`]));
   });
 
   test('getHeads handles empty array', async () => {

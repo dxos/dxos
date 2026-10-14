@@ -38,6 +38,51 @@ export interface BlobTransport {
   /** `undefined` means the key was not found. */
   get(key: string): Promise<Uint8Array | undefined>;
   has(key: string): Promise<boolean>;
+  /**
+   * Admits bytes already staged by a direct upload, returning the key they landed under.
+   *
+   * Optional because it is meaningful only for a hosted store: the bytes are moved server-side and
+   * never reach this process, which is the entire reason the path exists — the uploader was an
+   * agent's shell, and routing the file back through the client to hash it would undo the saving.
+   */
+  finalizeUpload?(uploadId: string): Promise<{ key: string; size: number; contentType?: string }>;
+}
+
+/** Bytes held by a {@link BlobStore}, with the content type they were written under. */
+export interface LocalBlob {
+  data: Uint8Array;
+  contentType?: string;
+}
+
+/**
+ * Content-addressed bytes keyed by lowercase hex digest: what a client needs from the store on its
+ * device. Replication to the hosted store happens behind it, never in the caller's write path.
+ */
+export interface BlobStore {
+  /** Stores bytes under `key`; a key already present keeps its bytes, since content addressing makes them identical. */
+  put(key: string, data: Uint8Array, options?: { contentType?: string }): Promise<void>;
+  /** `undefined` means the key was not found. */
+  get(key: string): Promise<LocalBlob | undefined>;
+  has(key: string): Promise<boolean>;
+}
+
+/**
+ * The durable {@link BlobStore} on this device, together with its ledger of entries the hosted store
+ * does not hold yet.
+ *
+ * The ledger lives beside the bytes rather than in a replicator's memory so that a write made
+ * offline is still replicated after a restart.
+ */
+export interface LocalBlobStore extends BlobStore {
+  /**
+   * As {@link BlobStore.put}; an existing key only learns a missing content type. `uploaded` records
+   * that the hosted store already holds the bytes (a read-through fill), and is never cleared by a
+   * later write.
+   */
+  put(key: string, data: Uint8Array, options?: { contentType?: string; uploaded?: boolean }): Promise<void>;
+  /** Keys not yet uploaded, oldest first. */
+  listPending(options: { limit: number }): Promise<string[]>;
+  markUploaded(key: string): Promise<void>;
 }
 
 /**
@@ -58,4 +103,19 @@ export interface BlobBackend {
   get(request: { spaceId: SpaceId; uri: string }): Promise<Uint8Array | undefined>;
   has(request: { spaceId: SpaceId; uri: string }): Promise<boolean>;
   getUrl?(request: { spaceId: SpaceId; uri: string; contentType?: string }): Promise<string | undefined>;
+  /**
+   * Turns a completed direct upload into a stored blob, returning its URI and what the store
+   * actually received.
+   *
+   * The size and content type come back from the store rather than from the caller because the
+   * caller never saw the bytes: a direct upload is written by a third party (an agent's `curl`), so
+   * the only honest source for what landed is whatever received it.
+   *
+   * Implemented only by backends with a direct-upload path; `undefined` on the others, which is how
+   * the manager tells "this backend cannot adopt uploads" from "the upload failed".
+   */
+  adoptUpload?(request: {
+    spaceId: SpaceId;
+    uploadId: string;
+  }): Promise<{ uri: string; size: number; contentType?: string }>;
 }

@@ -2,30 +2,34 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as Migrator from 'effect/unstable/sql/Migrator';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import * as Migrator from 'effect/sql/Migrator';
+import * as SqlClient from 'effect/sql/SqlClient';
 import { readdirSync } from 'node:fs';
 import { test } from 'vitest';
 
-import { SqlMigrations } from '@dxos/sql-sqlite';
+import * as SqlMigrations from '@dxos/sql-sqlite/SqlMigrations';
 
+import { TestSqliteLayer as TestLayer } from '../testing/index.ts';
+import activityInit from './activity/0001_init.sql?raw';
+import { MIGRATIONS as ACTIVITY } from './activity/index.ts';
 import entityMetaInit from './entity-meta/0001_init.sql?raw';
 import { MIGRATIONS as ENTITY_META, MIGRATIONS_TABLE as ENTITY_META_TABLE } from './entity-meta/index.ts';
 import ftsInit from './fts/0001_init.sql?raw';
 import { MIGRATIONS as FTS } from './fts/index.ts';
+import objectSnapshotInit from './object-snapshot/0001_init.sql?raw';
+import { MIGRATIONS as OBJECT_SNAPSHOT } from './object-snapshot/index.ts';
 import reverseRefInit from './reverse-ref/0001_init.sql?raw';
 import { MIGRATIONS as REVERSE_REF } from './reverse-ref/index.ts';
 import trackerInit from './tracker/0001_init.sql?raw';
 import { MIGRATIONS as TRACKER } from './tracker/index.ts';
 
-const TestLayer = SqliteClient.layer({ filename: ':memory:' });
-
 const STORES = [
+  { name: 'activity', init: activityInit, manifest: ACTIVITY },
   { name: 'entity-meta', init: entityMetaInit, manifest: ENTITY_META },
   { name: 'fts', init: ftsInit, manifest: FTS },
+  { name: 'object-snapshot', init: objectSnapshotInit, manifest: OBJECT_SNAPSHOT },
   { name: 'reverse-ref', init: reverseRefInit, manifest: REVERSE_REF },
   { name: 'tracker', init: trackerInit, manifest: TRACKER },
 ];
@@ -48,6 +52,7 @@ const objectMetaColumns = Effect.gen(function* () {
 });
 
 const DESIRED_COLUMNS = [
+  'annotations',
   'convergenceKey',
   'createdAt',
   'deleted',
@@ -55,13 +60,16 @@ const DESIRED_COLUMNS = [
   'entityKind',
   'objectId',
   'parent',
+  'parentId',
   'queueId',
   'queueNamespace',
   'queuePosition',
   'recordId',
   'source',
+  'sourceId',
   'spaceId',
   'target',
+  'targetId',
   'typeDXN',
   'updatedAt',
   'version',

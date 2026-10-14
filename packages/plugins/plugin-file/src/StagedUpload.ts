@@ -1,0 +1,100 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+// @import-as-namespace
+
+import * as Effect from 'effect/Effect';
+
+import * as Operation from '@dxos/compute/Operation';
+import { Blob, Database, Ref } from '@dxos/echo';
+import { BaseError } from '@dxos/errors';
+import { File } from '@dxos/types';
+
+import { FileLimits, FileOperation } from '#types';
+
+import { UploadNotFoundError } from './operations/create-from-upload.ts';
+
+/** Bytes a local host received on its own upload listener, keyed by the id it minted. */
+export type Upload = {
+  readonly bytes: Uint8Array;
+  readonly type: string;
+  readonly name?: string;
+};
+
+/** Where completed uploads wait: read without removing, released only once the file is stored. */
+export type Source = {
+  /** `undefined` when the upload never arrived or has expired. */
+  peek(uploadId: string): Upload | undefined;
+  consume(uploadId: string): void;
+};
+
+/**
+ * `file.createFromUpload` for a host that stages uploads itself (`@dxos/mcp-server/LocalUpload`)
+ * rather than on EDGE. Registered in place of the default handler, which adopts from EDGE's staging
+ * area — a store these uploads never reach. The bytes go to the client's default blob backend
+ * (EDGE when configured), exactly as a UI upload's would; with no backend they are stored inline,
+ * which `Blob.fromBytes` caps at `Blob.MAX_INLINE_SIZE`.
+ */
+export const createFromUploadHandler = (source: Source) =>
+  FileOperation.CreateFromUpload.pipe(
+    Operation.withHandler(
+      Effect.fnUntraced(function* ({ uploadId, name }) {
+        const staged = source.peek(uploadId);
+        if (!staged) {
+          return yield* Effect.fail(new UploadNotFoundError(uploadId));
+        }
+
+        const blob = yield* Blob.fromBytes(staged.bytes, { type: FileLimits.toStoredMimeType(staged.type) });
+        const object = File.make({ name: name ?? staged.name, data: Ref.make(blob) });
+        // The blob first: `SetParent` on `File.data` cascades deletion, so the child must exist
+        // before the parent references it.
+        yield* Database.add(blob);
+        yield* Database.add(object);
+        yield* Database.flush();
+        source.consume(uploadId);
+        return { object };
+      }),
+    ),
+  );
+
+/** Where a local host holds bytes for its download listener to serve. */
+export type Sink = {
+  /** Bytes the sink can still accept, checked before a blob is read so an oversized one is never materialized. */
+  available(): number;
+  /** Holds the bytes and returns the id the host's `createDownload` tool signs a URL for. */
+  stage(download: Upload): string;
+};
+
+/** Raised when a file is larger than the host can stage for download. */
+export class DownloadTooLargeError extends BaseError.extend('DownloadTooLargeError') {
+  constructor(size: number, available: number) {
+    super({
+      message: `File is ${size} bytes; the host can stage ${available} more bytes for download. Try again in a few minutes.`,
+    });
+  }
+}
+
+/**
+ * `file.resolveDownload` for a host that serves downloads itself. Registered in place of the default
+ * handler, which only resolves files already in EDGE's content-addressed store: this one reads the
+ * bytes through whichever backend holds them, so inline and extension-backed files download too.
+ */
+export const resolveDownloadHandler = (sink: Sink) =>
+  FileOperation.ResolveDownload.pipe(
+    Operation.withHandler(
+      Effect.fnUntraced(function* ({ file }) {
+        const object = yield* Database.load(file);
+        const blob = yield* Database.load(object.data);
+        const available = sink.available();
+        if (blob.size > available) {
+          return yield* Effect.fail(new DownloadTooLargeError(blob.size, available));
+        }
+
+        const bytes = yield* Blob.read(blob);
+        const type = blob.type ?? 'application/octet-stream';
+        const downloadId = sink.stage({ bytes, type, name: object.name });
+        return { downloadId, name: object.name, type, size: bytes.byteLength };
+      }),
+    ),
+  );

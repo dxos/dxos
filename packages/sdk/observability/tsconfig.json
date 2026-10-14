@@ -30,6 +30,9 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/errors"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -61,6 +64,9 @@
     },
     {
       "path": "../client"
+    },
+    {
+      "path": "../client-protocol"
     },
     {
       "path": "../client-services"

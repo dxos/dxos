@@ -24,13 +24,17 @@
     "ENVIRONMENT": "local",
     "SIGNOZ_INGEST_URL": "https://ingest.eu.signoz.cloud",
   },
-  "r2_buckets": [{ "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-dev" }],
+  "r2_buckets": [
+    { "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-dev" },
+    { "binding": "ASSET_ARCHIVE", "bucket_name": "composer-assets-dev" },
+  ],
   "assets": {
     "directory": "./out/composer",
     "binding": "ASSETS",
-    // Unmatched routes return index.html (client-side router owns them)...
-    "not_found_handling": "single-page-application",
-    // ...except these, which must reach the Worker before the SPA fallback swallows them.
+    // Misses reach the Worker, which serves the SPA itself: "single-page-application" would answer a
+    // missing chunk with index.html before the Worker could 404 it or serve it from ASSET_ARCHIVE.
+    "not_found_handling": "none",
+    // These must reach the Worker even where an asset would match.
     "run_worker_first": ["/api/*", "/.well-known/*"],
   },
   // Per-env Workers (name = the deployed Worker; production = the bare name that carries the custom domain,
@@ -44,7 +48,10 @@
         "ENVIRONMENT": "production",
         "SIGNOZ_INGEST_URL": "https://ingest.eu.signoz.cloud",
       },
-      "r2_buckets": [{ "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs" }],
+      "r2_buckets": [
+        { "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs" },
+        { "binding": "ASSET_ARCHIVE", "bucket_name": "composer-assets" },
+      ],
     },
     "staging": {
       "name": "composer-staging",
@@ -53,7 +60,10 @@
         "ENVIRONMENT": "staging",
         "SIGNOZ_INGEST_URL": "https://ingest.eu.signoz.cloud",
       },
-      "r2_buckets": [{ "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-preview" }],
+      "r2_buckets": [
+        { "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-preview" },
+        { "binding": "ASSET_ARCHIVE", "bucket_name": "composer-assets-staging" },
+      ],
     },
     // The daily dogfood build (preview.composer.space) — deployed from `main` on a schedule, talking to
     // EDGE production. Distinct from the per-PR previews, which are Worker versions of `dev` below.
@@ -64,7 +74,10 @@
         "ENVIRONMENT": "preview",
         "SIGNOZ_INGEST_URL": "https://ingest.eu.signoz.cloud",
       },
-      "r2_buckets": [{ "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-dev" }],
+      "r2_buckets": [
+        { "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-dev" },
+        { "binding": "ASSET_ARCHIVE", "bucket_name": "composer-assets-preview" },
+      ],
     },
     // Deployed on demand, talking to EDGE preview; also the Worker PR previews upload versions to.
     "dev": {
@@ -74,7 +87,10 @@
         "ENVIRONMENT": "dev",
         "SIGNOZ_INGEST_URL": "https://ingest.eu.signoz.cloud",
       },
-      "r2_buckets": [{ "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-dev" }],
+      "r2_buckets": [
+        { "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-dev" },
+        { "binding": "ASSET_ARCHIVE", "bucket_name": "composer-assets-dev" },
+      ],
     },
   },
 }

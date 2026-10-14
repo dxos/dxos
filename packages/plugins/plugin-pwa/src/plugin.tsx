@@ -4,10 +4,12 @@
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 
-import { RegisterPwa, Translations, UpdateProgress } from '#capabilities';
+import { PwaSettings, ReactSurface, RegisterPwa, Translations, UpdateProgress } from '#capabilities';
 import { meta } from '#meta';
 
 export const PwaPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule(PwaSettings),
+  Plugin.addModule(ReactSurface),
   Plugin.addModule(RegisterPwa),
   Plugin.addModule(Translations),
   Plugin.addModule(UpdateProgress),

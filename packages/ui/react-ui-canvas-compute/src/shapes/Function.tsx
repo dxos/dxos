@@ -6,28 +6,21 @@ import React, { useCallback, useRef } from 'react';
 
 import * as Operation from '@dxos/compute/Operation';
 import * as Script from '@dxos/compute/Script';
-import { Filter, Ref } from '@dxos/echo';
-import { instanceOf as isInstanceOf } from '@dxos/echo/Obj';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { parseId } from '@dxos/keys';
 import { useClient } from '@dxos/react-client';
-import {
-  type ShapeComponentProps,
-  TextBox,
-  type TextBoxControl,
-  type TextBoxProps,
-} from '@dxos/react-ui-canvas-editor';
 
 import { useComputeNodeState } from '../hooks/index.ts';
-import { Box } from './common/index.ts';
+import { Box, type ComputeNodeViewProps, TextBox, type TextBoxControl, type TextBoxProps } from './common/index.ts';
 import { type FunctionShape } from './function-def.ts';
 
 //
 // Component
 //
 
-type FunctionShapeComponentProps = ShapeComponentProps<FunctionShape> & TextBoxProps & { title?: string };
+type FunctionShapeComponentProps = ComputeNodeViewProps<FunctionShape> & Pick<TextBoxProps, 'placeholder'>;
 
-export const FunctionShapeComponent = ({ shape, title, ...props }: FunctionShapeComponentProps) => {
+export const FunctionShapeComponent = ({ node: shape, placeholder }: FunctionShapeComponentProps) => {
   const client = useClient();
   const { node, runtime } = useComputeNodeState(shape);
   const inputRef = useRef<TextBoxControl>(null);
@@ -42,7 +35,7 @@ export const FunctionShapeComponent = ({ shape, title, ...props }: FunctionShape
 
       const space = client.spaces.get(spaceId);
       const object = space?.db.query(Filter.id(objectId)).runSync()[0];
-      if (!space || !isInstanceOf(Script.Script, object)) {
+      if (!space || !Obj.instanceOf(Script.Script, object)) {
         return;
       }
 
@@ -73,7 +66,7 @@ export const FunctionShapeComponent = ({ shape, title, ...props }: FunctionShape
   return (
     <Box shape={shape} title='Function' onAction={handleAction}>
       <TextBox
-        {...props}
+        placeholder={placeholder}
         ref={inputRef}
         value={node.value}
         language={node.valueType === 'object' ? 'json' : undefined}

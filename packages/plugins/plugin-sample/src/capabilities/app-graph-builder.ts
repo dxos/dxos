@@ -20,7 +20,7 @@ import { isSpace } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
 import { Filter } from '@dxos/echo';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { meta } from '#meta';
 import { SampleItem, SampleOperation } from '#types';
@@ -139,6 +139,7 @@ export default Capability.makeModule(
       // `literalArticle` filter in react-surface.tsx).
       AppGraphBuilder.createTypeExtension({
         id: 'relatedCompanion',
+        relation: AppNode.companion,
         type: SampleItem.SampleItem,
         connector: () =>
           Effect.succeed([
@@ -157,6 +158,7 @@ export default Capability.makeModule(
       // `position: Position.last` places it after higher-priority companions.
       AppGraphBuilder.createExtension({
         id: 'deckCompanion',
+        relation: AppNode.companion,
         match: GraphNodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([

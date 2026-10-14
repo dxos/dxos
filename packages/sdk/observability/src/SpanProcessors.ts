@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 // Standalone entrypoint, reached at `@dxos/observability/SpanProcessors`: the processors a host
 // attaches to a tracer provider it owns elsewhere (EDGE puts them in the `otel-cf-workers`
 // config). They depend on `@opentelemetry/sdk-trace-base` types only, never on a provider.

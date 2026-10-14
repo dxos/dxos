@@ -14,11 +14,11 @@ export const HIGGSFIELD_SOURCE = 'higgsfield.ai';
 /** Higgsfield Cloud API base. Model endpoints are `POST {base}/<model path>`. */
 export const HIGGSFIELD_API_URL = 'https://api.higgsfield.ai';
 
-/** The image service's default, and the still generator behind the text-to-video pipeline. */
+/** The image service's default model. */
 export const HIGGSFIELD_DEFAULT_IMAGE_MODEL = 'higgsfield-ai/soul/v2/standard';
 
 /**
- * Default video model. Higgsfield's video models (DoP) animate a still: they take `image_url`, so a
- * text prompt becomes a video through a Soul still first — see the video service.
+ * Default video model. Higgsfield's video models (DoP) animate a still (`image_url`): the cover of
+ * the image artifact the request references — see the video service.
  */
 export const HIGGSFIELD_DEFAULT_VIDEO_MODEL = 'higgsfield-ai/dop/lite';

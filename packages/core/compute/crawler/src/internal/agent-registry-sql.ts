@@ -3,9 +3,9 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Migrator from 'effect/unstable/sql/Migrator';
-import type * as SqlClient from 'effect/unstable/sql/SqlClient';
-import type * as SqlError from 'effect/unstable/sql/SqlError';
+import * as Migrator from 'effect/sql/Migrator';
+import type * as SqlClient from 'effect/sql/SqlClient';
+import type * as SqlError from 'effect/sql/SqlError';
 
 import type * as AgentRegistry from '../AgentRegistry.ts';
 import { StateError } from '../errors.ts';

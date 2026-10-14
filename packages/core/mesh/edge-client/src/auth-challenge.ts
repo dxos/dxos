@@ -3,11 +3,16 @@
 //
 
 import { toBinary } from '@bufbuild/protobuf';
+import { base64Decode } from '@bufbuild/protobuf/wire';
+import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { EdgeClientTooOldError } from '@dxos/protocols';
 import { PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
+import { assertClientSupported, clientVersionHeaders, readJsonBody } from './client-version.ts';
 import { type EdgeIdentity } from './edge-identity.ts';
 
 /**
@@ -128,23 +133,8 @@ const splitOutsideQuotes = (header: string): string[] => {
  * - `401` with `WWW-Authenticate` — every protected resource, plus older servers whose `/auth`
  *   could only issue a challenge by failing.
  */
-export const readAuthChallenge = async (response: Response): Promise<string | undefined> => {
-  const headerChallenge = parseChallengeHeader(response.headers.get('WWW-Authenticate'));
-  if (headerChallenge) {
-    return headerChallenge;
-  }
-  if (!response.ok) {
-    return undefined;
-  }
-  try {
-    const body = await response.clone().json();
-    const challenge = body?.data?.challenge ?? body?.challenge;
-    return typeof challenge === 'string' && challenge.length > 0 ? challenge : undefined;
-  } catch (error) {
-    log.verbose('auth challenge response was not JSON', { error });
-    return undefined;
-  }
-};
+export const readAuthChallenge = async (response: Response): Promise<string | undefined> =>
+  challengeInfoOf(response, response.ok ? await readJsonBody(response.clone()) : undefined)?.challenge;
 
 export type AuthChallengeInfo = {
   /** Base64 challenge nonce. */
@@ -156,6 +146,29 @@ export type AuthChallengeInfo = {
   expiresInMs?: number;
 };
 
+const decodeChallengeBody = Schema.decodeUnknownOption(
+  Schema.Struct({
+    data: Schema.optional(
+      Schema.Struct({ challenge: Schema.optional(Schema.String), expiresInMs: Schema.optional(Schema.Number) }),
+    ),
+    challenge: Schema.optional(Schema.String),
+  }),
+);
+
+const challengeInfoOf = (response: Response, body: unknown): AuthChallengeInfo | undefined => {
+  const decoded = Option.getOrUndefined(decodeChallengeBody(body));
+  const challenge =
+    parseChallengeHeader(response.headers.get('WWW-Authenticate')) ?? (decoded?.data?.challenge || decoded?.challenge);
+  if (!challenge) {
+    return undefined;
+  }
+  const advertised = decoded?.data?.expiresInMs;
+  // Finite-positive only: `1e400` parses to `Infinity`, which would schedule a refresh at never.
+  const expiresInMs =
+    advertised !== undefined && Number.isFinite(advertised) && advertised > 0 ? advertised : undefined;
+  return { challenge, expiresInMs };
+};
+
 /**
  * Fetch a challenge nonce from the edge `/auth` endpoint.
  *
@@ -164,27 +177,23 @@ export type AuthChallengeInfo = {
  * console and records a routine auth failure server-side on each client boot.
  *
  * Returns undefined if the endpoint is unreachable or answers in neither known shape; callers fall
- * back to the 401 path, which still works against every server.
+ * back to the 401 path, which still works against every server. Throws {@link EdgeClientTooOldError} when EDGE refuses
+ * this SDK, which no fallback can get past.
  */
 export const fetchAuthChallengeInfo = async (baseHttpUrl: string | URL): Promise<AuthChallengeInfo | undefined> => {
   try {
-    const response = await fetch(new URL('/auth', baseHttpUrl));
-    const challenge = await readAuthChallenge(response);
-    if (!challenge) {
+    const response = await fetch(new URL('/auth', baseHttpUrl), { headers: clientVersionHeaders() });
+    const body = await readJsonBody(response);
+    assertClientSupported(response, body);
+    const info = challengeInfoOf(response, response.ok ? body : undefined);
+    if (!info) {
       log.verbose('no challenge in /auth response', { status: response.status });
-      return undefined;
     }
-    let expiresInMs: number | undefined;
-    try {
-      const body = await response.clone().json();
-      const advertised = body?.data?.expiresInMs;
-      // Finite-positive only: `1e400` parses to `Infinity`, which would schedule a refresh at never.
-      expiresInMs = Number.isFinite(advertised) && advertised > 0 ? advertised : undefined;
-    } catch {
-      // Header-shaped challenge (the 401 fallback) — no JSON body to read a TTL from.
-    }
-    return { challenge, expiresInMs };
+    return info;
   } catch (error) {
+    if (error instanceof EdgeClientTooOldError) {
+      throw error;
+    }
     log.verbose('failed to fetch auth challenge', { error });
     return undefined;
   }
@@ -204,7 +213,7 @@ export const presentCredentialsForChallenge = async (
   identity: EdgeIdentity,
   challenge: string,
 ): Promise<Uint8Array> => {
-  const presentation = await identity.presentCredentials({ challenge: Buffer.from(challenge, 'base64') });
+  const presentation = await identity.presentCredentials({ challenge: base64Decode(challenge) });
   return toBinary(PresentationSchema, presentation);
 };
 

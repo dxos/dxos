@@ -6,17 +6,25 @@ import * as Console from 'effect/Console';
 import * as Layer from 'effect/Layer';
 
 import type { TerminalBridge } from './bridge.ts';
+import { highlightJson, parseJson } from './json.ts';
 
+/** A value as terminal text: an object, or a string holding a JSON object or array, is highlighted; a scalar stays plain. */
 const stringify = (value: unknown): string => {
   if (typeof value === 'string') {
-    return value;
+    const json = parseJson(value);
+    return json === undefined ? value : highlightJson(json);
   }
   if (value instanceof Error) {
     return value.stack ?? value.message;
   }
 
+  // Only structured values are highlighted: a logged number or boolean is output, not data to read.
+  if (typeof value !== 'object' || value === null) {
+    return String(value);
+  }
+
   try {
-    return JSON.stringify(value, null, 2) ?? String(value);
+    return highlightJson(value);
   } catch {
     return String(value);
   }

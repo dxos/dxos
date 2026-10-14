@@ -82,13 +82,13 @@
       "path": "../../ui/react-ui-form"
     },
     {
-      "path": "../../ui/react-ui-list"
-    },
-    {
       "path": "../../ui/react-ui-markdown"
     },
     {
       "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../plugin-client"
     },
     {
       "path": "../plugin-graph"

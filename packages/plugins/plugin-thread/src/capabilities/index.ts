@@ -12,9 +12,6 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 import { ThreadCapabilities, ThreadEvents } from '#types';
 
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../../PLUGIN.mdl?raw';
-
 // The graph builder reads the call manager OPTIONALLY (reactive atom with an absence guard),
 // so no spec-level require: a hard cross-plugin require would fail this plugin whenever
 // plugin-calls is disabled. Cross-feature requires are only valid with a plugin-level dependsOn.
@@ -24,14 +21,14 @@ export const ChannelBackendFeed = Capability.lazyModule(
   {
     provides: [ThreadCapabilities.ChannelBackend],
     activatesOn: ThreadEvents.Start,
-    environments: ['node', 'workerd'],
+    environments: ['browser', 'node', 'tauri', 'workerd'],
   },
   () => import('./channel-backend-feed.ts'),
 );
 // `CreateObjectEntry` carries a `customPanel` React component alongside the object factory, so it
 // cannot load without React — browser only.
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'), {
-  environments: [],
+  environments: ['browser', 'tauri'],
 });
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
@@ -44,6 +41,6 @@ export const Translations = AppCapability.translations([...translations, ...thre
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
   path: 'PLUGIN.mdl',
-  content: pluginSpec,
+  content: () => import('../../PLUGIN.mdl?raw'),
   mimeType: 'application/x-mdl',
 });

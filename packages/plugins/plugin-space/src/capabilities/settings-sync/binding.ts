@@ -2,13 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
+import type * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
 import * as UrlLoader from '@dxos/app-framework/UrlLoader';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSettings from '@dxos/app-toolkit/AppSettings';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 /** One namespace's two-way link between a local value and the synced store. */
 export type Binding = {
@@ -16,7 +16,7 @@ export type Binding = {
   /** The values in effect locally right now. */
   read: () => AppSettings.Values;
   /** Put resolved values into effect locally. */
-  write: (values: AppSettings.Values) => void;
+  write: (values: AppSettings.Values) => Promise<void>;
   /** Report local edits, returning an unsubscribe. Omit where the local side cannot notify. */
   subscribe?: (onChange: () => void) => () => void;
   /**
@@ -36,21 +36,31 @@ export const pluginSettings = (entry: AppCapabilities.Settings, registry: AtomRe
   namespace: entry.prefix,
   freezes: true,
   read: () => registry.get(entry.atom),
-  write: (values) => registry.set(entry.atom, values),
+  write: async (values) => {
+    registry.set(entry.atom, values);
+  },
   subscribe: (onChange) => registry.subscribe(entry.atom, onChange),
 });
 
 /**
  * Which plugins are enabled, keyed by plugin id.
  *
- * Core plugins are left out: the host force-enables them, so they are not the user's to toggle.
+ * Core plugins are left out: the host force-enables them, so they are not the user's to toggle. So are a
+ * dev plugin and what it depends on while it is loaded: it is this session's, and a synced decision that
+ * turned a dependency off would take the dev plugin down with it.
  */
 export const pluginSet = (manager: PluginManager.PluginManager, registry: AtomRegistry.AtomRegistry): Binding => {
-  const toggleable = () =>
-    manager
+  const toggleable = () => {
+    const devPlugins = manager.getDevPluginIds();
+    const held = new Set([
+      ...devPlugins,
+      ...devPlugins.flatMap((id) => manager.getDependencies(id, { transitive: true })),
+    ]);
+    return manager
       .getPlugins()
       .map((plugin) => plugin.meta.profile.key)
-      .filter((id) => !manager.getCore().includes(id));
+      .filter((id) => !manager.getCore().includes(id) && !held.has(id));
+  };
 
   return {
     namespace: AppSettings.PLUGINS_NAMESPACE,
@@ -59,17 +69,15 @@ export const pluginSet = (manager: PluginManager.PluginManager, registry: AtomRe
       const enabled = manager.getEnabled();
       return Object.fromEntries(toggleable().map((id) => [id, enabled.includes(id)]));
     },
-    write: (decisions) => {
+    write: async (decisions) => {
       const target = new Set(AppSettings.getEnabledPlugins(decisions));
       const current = manager.getEnabled();
-      for (const id of toggleable()) {
-        // An id with no decision is one no device has an opinion about yet.
-        if (!(id in decisions) || target.has(id) === current.includes(id)) {
-          continue;
-        }
-
-        void EffectEx.runAndForwardErrors(target.has(id) ? manager.enable(id) : manager.disable(id));
-      }
+      await Promise.all(
+        toggleable()
+          // An id with no decision is one no device has an opinion about yet.
+          .filter((id) => id in decisions && target.has(id) !== current.includes(id))
+          .map((id) => EffectEx.runAndForwardErrors(target.has(id) ? manager.enable(id) : manager.disable(id))),
+      );
     },
     // `plugins` as well as `enabled`, so a newly registered plugin gets a decision recorded rather
     // than waiting for the next unrelated toggle.
@@ -77,6 +85,7 @@ export const pluginSet = (manager: PluginManager.PluginManager, registry: AtomRe
       const unsubscribe = [
         registry.subscribe(manager.enabled, onChange),
         registry.subscribe(manager.plugins, onChange),
+        registry.subscribe(manager.devPluginIds, onChange),
       ];
       return () => unsubscribe.forEach((fn) => fn());
     },
@@ -91,7 +100,7 @@ export const installedPlugins = (): Binding => ({
   namespace: AppSettings.INSTALLED_NAMESPACE,
   freezes: true,
   read: () => Object.fromEntries(UrlLoader.getRemoteEntries().map((entry) => [entry.id, entry])),
-  write: (entries) => {
+  write: async (entries) => {
     UrlLoader.setRemoteEntries(Object.values(entries).filter(AppSettings.isInstalledPlugin));
   },
 });

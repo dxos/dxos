@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Resource } from '@dxos/react-ui';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 export const translations = [
   {
@@ -10,4 +10,4 @@ export const translations = [
       testbench: {},
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

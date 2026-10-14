@@ -21,7 +21,10 @@ import INSTRUCTIONS from './update-tasks.md?raw';
  */
 const TaskChange = Schema.Struct({
   task: Ref.Ref(Task.Task)
-    .annotate({ description: 'The existing task to change, as the ref on its checklist line. Omit with `create`.' })
+    .annotate({
+      description:
+        'The existing task to change: the `echo://` URI inside the link on its checklist line, as a plain string. Omit with `create`.',
+    })
     .pipe(Schema.optional),
   create: Schema.Boolean.annotate({
     description: 'Create a new task on this checklist, assigned to you. Requires `title`; omit `task`.',

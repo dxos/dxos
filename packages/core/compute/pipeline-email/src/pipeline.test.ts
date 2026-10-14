@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { type RDF } from '@dxos/pipeline-rdf';
 import { mockAiService } from '@dxos/pipeline-rdf/testing';
 import { Message, Organization, Person } from '@dxos/types';

@@ -3,9 +3,9 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
+import * as Layer from 'effect/Layer';
 
-import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 
@@ -21,6 +21,7 @@ import { meta } from '#meta';
 import { LinearOperation } from '#types';
 
 import { LINEAR_SOURCE } from '../constants.ts';
+import { LinearGraphQLError } from '../errors.ts';
 import { LinearTeamUnresolvedError, formatLinearSyncFailure } from '../errors.ts';
 import { LinearApi } from '../services/index.ts';
 
@@ -124,7 +125,9 @@ const sinceFromOptions = (options: LinearOperation.SyncOptions | undefined): str
  * sync runs repeatedly and must never append a second ref for a task already in the set.
  */
 const setTaskContainer = Effect.fn('setTaskContainer')(function* (task: Task.Task, container: TaskSet.TaskSet) {
-  if (container.tasks.some(Ref.hasEntityId(task.id))) {
+  const listed = container.tasks.some(Ref.hasEntityId(task.id));
+  // A stale entry for a task now parented elsewhere is not membership; it still needs re-rooting.
+  if (listed && Obj.getParent(task)?.id === container.id) {
     return;
   }
   // The reverse-ref index, not `Obj.getParent`: the array states membership, the parent edge does not.
@@ -136,12 +139,21 @@ const setTaskContainer = Effect.fn('setTaskContainer')(function* (task: Task.Tas
       continue;
     }
     Obj.update(set, (set) => {
-      set.tasks = set.tasks.filter((ref) => !Ref.hasEntityId(task.id)(ref));
+      TaskSet.removeRefsInPlace(set.tasks, new Set([task.id]));
     });
   }
-  Obj.update(container, (container) => {
-    container.tasks.push(Ref.make(task));
-  });
+  // A task filed as a sub-task is listed by its parent rather than a set; it leaves that list too.
+  const parent = Task.getParentTask(task);
+  if (parent) {
+    Obj.update(parent, (parent) => {
+      TaskSet.removeRefsInPlace(parent.subtasks ?? [], new Set([task.id]));
+    });
+  }
+  if (!listed) {
+    Obj.update(container, (container) => {
+      container.tasks.push(Ref.make(task));
+    });
+  }
   Obj.setParent(task, container);
 });
 
@@ -530,7 +542,7 @@ export const pushTeamUpdates: <E, R>(
 const syncTeamBinding = Effect.fn(function* (binding: Cursor.ExternalCursor) {
   const db = Obj.getDatabase(binding);
   if (!db) {
-    return yield* Effect.fail(new SyncDatabaseMissingError());
+    return yield* Effect.fail(new ConnectorSync.DatabaseMissingError());
   }
 
   const outcome = yield* Effect.result(
@@ -549,7 +561,7 @@ const syncTeamBinding = Effect.fn(function* (binding: Cursor.ExternalCursor) {
           const allTeams = yield* LinearApi.fetchTeams();
           const remoteTeam = allTeams.find((team) => team.id === externalId);
           if (!remoteTeam) {
-            return yield* Effect.fail(new Error('Team not accessible to connection token'));
+            return yield* Effect.fail(new LinearGraphQLError({ message: 'Team not accessible to connection token' }));
           }
 
           // Pull: projects → DXOS Projects, issues → DXOS Tasks. Each
@@ -657,7 +669,7 @@ const syncTeamBinding = Effect.fn(function* (binding: Cursor.ExternalCursor) {
           tasks: syncResult.success.pushedTasks,
         },
       };
-    }).pipe(Effect.provide(Database.layer(db)), Effect.provide(LinearApi.fromAccessToken(binding.spec.source))),
+    }).pipe(Effect.provide(Layer.provideMerge(Database.layer(db), LinearApi.fromAccessToken(binding.spec.source)))),
   );
 
   if (outcome._tag === 'Success') {

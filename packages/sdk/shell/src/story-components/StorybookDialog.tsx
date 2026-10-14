@@ -4,36 +4,31 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { Clipboard, Dialog, Tooltip } from '@dxos/react-ui';
-import { type DialogSize } from '@dxos/react-ui';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import type * as Util from '@dxos/react-ui/Util';
 
 export type StorybookDialogProps = PropsWithChildren & {
   /** Passed to `Dialog.Content` (default `md`). */
-  size?: DialogSize;
-  /** Passed to `Dialog.Overlay` (default `center`). */
-  blockAlign?: 'center' | 'start' | 'end';
+  size?: Util.Size;
+  /** A Dialog.Header for a lone step, which (unlike a panel) has no heading of its own. */
+  title?: string;
 };
 
 /**
- * Renders shell story content inside a real `Dialog` so Storybook matches production
- * layout, portal/overlay behavior, and focus management. `Dialog.Content` supplies
- * `Column.Root`; overlay layout is taken from `Dialog.Overlay` context.
+ * Renders shell story content as the parts of a real `Dialog.Content` so Storybook matches production
+ * layout, portal/overlay behavior, and focus management.
  */
-export const StorybookDialog = ({ children, size = 'md', blockAlign = 'center' }: StorybookDialogProps) => {
+export const StorybookDialog = ({ children, size = 'md', title }: StorybookDialogProps) => {
   return (
-    <Tooltip.Provider>
-      <Clipboard.Provider>
-        <Dialog.Root defaultOpen modal>
-          <Dialog.Overlay blockAlign={blockAlign}>
-            <Dialog.Content size={size}>
-              <Dialog.Header>
-                <Dialog.Title classNames='sr-only'>Storybook Dialog</Dialog.Title>
-              </Dialog.Header>
-              <Dialog.Body>{children}</Dialog.Body>
-            </Dialog.Content>
-          </Dialog.Overlay>
-        </Dialog.Root>
-      </Clipboard.Provider>
-    </Tooltip.Provider>
+    <Dialog.Root defaultOpen modal>
+      <Dialog.Content size={size}>
+        {title && (
+          <Dialog.Header>
+            <Dialog.Title>{title}</Dialog.Title>
+          </Dialog.Header>
+        )}
+        {children}
+      </Dialog.Content>
+    </Dialog.Root>
   );
 };

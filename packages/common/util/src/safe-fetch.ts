@@ -113,18 +113,19 @@ export type SafeFetchOptions = {
  * **Redirects are refused, not followed.** `validateExternalUrl` vets the host the caller asked
  * for; following a redirect would land on a host nobody vetted, which turns a public URL into a
  * path to a private one. A caller that legitimately needs to follow one should re-validate the
- * `Location` itself and call again.
+ * `Location` itself and call again. The request asks for `redirect: 'manual'` rather than `'error'`
+ * because Cloudflare Workers reject `'error'` outright, failing every fetch on the edge.
  */
 export const safeFetchBytes = async (
   url: URL,
   { maxBytes, timeoutMs, fetch: fetchImpl = (target, init) => fetch(target, init) }: SafeFetchOptions,
 ): Promise<{ bytes: Uint8Array; contentType: string | undefined }> => {
-  const response = await fetchImpl(url, { signal: AbortSignal.timeout(timeoutMs), redirect: 'error' });
+  const response = await fetchImpl(url, { signal: AbortSignal.timeout(timeoutMs), redirect: 'manual' });
+  // A browser surfaces a manual redirect as an opaque response; a worker or a proxy as the 3xx itself.
+  if (response.type === 'opaqueredirect' || (response.status >= 300 && response.status < 400)) {
+    throw new Error(`Refusing to follow a redirect from ${url.host} to an unvalidated host`);
+  }
   if (!response.ok) {
-    // A proxy may surface a redirect as a 3xx rather than rejecting; treat it the same way.
-    if (response.status >= 300 && response.status < 400) {
-      throw new Error(`Refusing to follow a redirect from ${url.host} to an unvalidated host`);
-    }
     throw new Error(`Failed to download: ${response.status} ${response.statusText}`);
   }
 

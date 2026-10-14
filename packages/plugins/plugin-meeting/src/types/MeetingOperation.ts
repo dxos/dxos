@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
-import { Ref, Type } from '@dxos/echo';
+import { Database, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { Channel, Event } from '@dxos/types';
 
@@ -26,6 +26,8 @@ export const Create = Operation.make({
     channel: Schema.optional(Type.getSchema(Channel.Channel)),
     /** Anchor the new meeting to this event (creates a `Meeting --AnchoredTo--> Event` relation). */
     event: Schema.optional(Ref.Ref(Event.Event)),
+    /** Create the meeting in this database with no anchor (e.g. a meeting recorded from another app). */
+    db: Schema.optional(Database.Database),
   }),
   output: Schema.Struct({
     object: Type.getSchema(Meeting.Meeting),

@@ -5,6 +5,12 @@
 // @import-as-namespace
 
 import { createPatch } from 'diff';
+import * as AiError from 'effect/ai/AiError';
+import * as LanguageModel from 'effect/ai/LanguageModel';
+import * as Prompt from 'effect/ai/Prompt';
+import * as Response from 'effect/ai/Response';
+import * as Tool from 'effect/ai/Tool';
+import * as Toolkit from 'effect/ai/Toolkit';
 import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
@@ -13,15 +19,9 @@ import * as Option from 'effect/Option';
 import * as Order from 'effect/Order';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
-import * as AiError from 'effect/unstable/ai/AiError';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
-import * as Prompt from 'effect/unstable/ai/Prompt';
-import * as Response from 'effect/unstable/ai/Response';
-import * as Tool from 'effect/unstable/ai/Tool';
-import * as Toolkit from 'effect/unstable/ai/Toolkit';
 import jsonStableStringify from 'json-stable-stringify';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { TestContextService } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
 import { deepMapValues } from '@dxos/util';
@@ -134,6 +134,17 @@ export const UUID_PATTERN = /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-
 export const RESULT_PID_PATTERN = /<result pid=\d+>/;
 
 /**
+ * Matches the label of a markdown link whose text is an object mnemonic (the last 6 Crockford
+ * base-32 chars of an EntityId, uppercased) — the form task refs take in a rendered checklist.
+ * The mnemonic is a projection of an id that {@link ENTITY_ID_PATTERN} already canonicalizes, so
+ * it would otherwise drift with the id while its URI stayed normalized. The `](echo:/` lookahead
+ * keeps six ordinary uppercase letters, and any non-ECHO link, from matching — two unrelated links
+ * canonicalized to the same label would otherwise share a fixture key.
+ * @example [KCNT8N](echo:/
+ */
+export const MNEMONIC_LINK_LABEL_PATTERN = /\[[0-9A-HJKMNP-TV-Z]{6}\](?=\(echo:\/)/;
+
+/**
  * Dynamic-value patterns canonicalized on every fixture match by default (see {@link make}). Because
  * deterministic id generation only holds the id sequence stable while the surrounding allocation
  * order is unchanged, an unrelated change to activation/allocation order silently drifts the ids —
@@ -143,6 +154,7 @@ export const RESULT_PID_PATTERN = /<result pid=\d+>/;
  */
 export const DEFAULT_DYNAMIC_VALUE_PATTERNS: readonly RegExp[] = [
   RESULT_PID_PATTERN,
+  MNEMONIC_LINK_LABEL_PATTERN,
   SPACE_ID_PATTERN,
   ENTITY_ID_PATTERN,
   UUID_PATTERN,
@@ -346,7 +358,8 @@ export type ServiceOptions = {
 
 /** Wraps an upstream {@link AiService.Service} so every model it builds replays through the fixture store. */
 export const makeService = (options: ServiceOptions): AiService.Service => ({
-  model: (model) =>
+  ...options.upstream,
+  languageModel: (model) =>
     Layer.provide(
       layer({
         modelName: model,
@@ -354,7 +367,7 @@ export const makeService = (options: ServiceOptions): AiService.Service => ({
         allowGeneration: options.allowGeneration,
         dynamicValuePatterns: options.dynamicValuePatterns,
       }),
-      options.upstream.model(model),
+      options.upstream.languageModel(model),
     ),
 });
 

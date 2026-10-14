@@ -5,7 +5,7 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
-import { Obj, Type } from '@dxos/echo';
+import { Database, Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ProjectionModel, createEchoChangeCallback, getTypeURIFromQuery } from '@dxos/schema';
 
@@ -13,7 +13,8 @@ import { KanbanOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof KanbanOperation.RestoreCardField> = KanbanOperation.RestoreCardField.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ view, field, props, index }) {
+    Effect.fnUntraced(function* ({ view: viewRef, field, props, index }) {
+      const view = yield* Database.load(viewRef);
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
       const db = Obj.getDatabase(view);
       invariant(db, 'Database not found');

@@ -17,7 +17,7 @@ import {
 } from '../testing/harness/index.ts';
 
 /** The display label for a term (entity surface form, else the literal). */
-const termLabel = (term: RDF.Term): string => ('entity' in term ? (term.label ?? term.entity) : term.literal);
+const termLabel = (term: RDF.Term): string => (term.kind === 'entity' ? (term.label ?? term.entity) : term.literal);
 
 /** Renders a directive fact as a readable line, citing the source message. */
 const renderFact = (fact: RDF.Fact): string =>

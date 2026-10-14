@@ -7,6 +7,7 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import {
   AgentHydrator,
   AgentRuntime,
+  Agents,
   AiContext as AiContextCapability,
   AiService,
   AppGraphBuilder,
@@ -20,6 +21,7 @@ import {
   MarkdownExtension,
   OperationHandler,
   PluginAsset,
+  QuestionResumer,
   ReactSurface,
   Schema,
   Settings,
@@ -57,11 +59,13 @@ export const AssistantPlugin = Plugin.define<AssistantOptions.AssistantPluginOpt
     // upstream. See `capabilities/ai-context.ts` for the rationale.
     Plugin.addModule(AiContextCapability),
     Plugin.addModule(AgentRuntime),
+    Plugin.addModule(Agents),
   )
   .pipe(
     Plugin.addModule(Toolkit),
     Plugin.addModule(AgentHydrator),
     Plugin.addModule(CompanionChatProvisioner),
+    Plugin.addModule(QuestionResumer),
     Plugin.addModule(SubjectContext),
     Plugin.addModule(Connector),
     Plugin.addModule(PluginAsset),

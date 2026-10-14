@@ -20,11 +20,12 @@ export default defineConfig({
     OutlineOperation: 'src/types/OutlineOperation.ts',
     RemoteSessionOperation: 'src/types/RemoteSessionOperation.ts',
     TaskOperation: 'src/types/TaskOperation.ts',
+    TaskSetView: 'src/types/TaskSetView.ts',
     TasksCapabilities: 'src/types/TasksCapabilities.ts',
     TasksEvents: 'src/types/TasksEvents.ts',
     TasksUtil: 'src/types/TasksUtil.ts',
     types: 'src/types/index.ts',
   },
   jsx: 'react',
-  test: { node: true, storybook: true },
+  test: { node: true, storybook: true, workerd: true },
 });

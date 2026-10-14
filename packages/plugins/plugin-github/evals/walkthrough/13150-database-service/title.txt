@@ -1,0 +1,1 @@
+plugin-space: declare Database.Service on RemoveObjects (#13150)

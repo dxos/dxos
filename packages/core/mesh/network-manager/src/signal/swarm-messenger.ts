@@ -22,7 +22,7 @@ import {
 } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 import { ComplexMap } from '@dxos/util';
 
-import { type OfferMessage, type SignalMessage, type SignalMessenger } from './signal-messenger.ts';
+import { type CloseMessage, type OfferMessage, type SignalMessage, type SignalMessenger } from './signal-messenger.ts';
 
 interface OfferRecord {
   resolve: (answer: Answer) => void;
@@ -32,6 +32,7 @@ export type SwarmMessengerOptions = {
   sendMessage: (ctx: Context, params: Message) => Promise<void>;
   onOffer: (ctx: Context, message: OfferMessage) => Promise<Answer>;
   onSignal: (ctx: Context, message: SignalMessage) => Promise<void>;
+  onClose: (ctx: Context, message: CloseMessage) => Promise<void>;
   topic: PublicKey;
 };
 
@@ -42,14 +43,16 @@ export class SwarmMessenger implements SignalMessenger {
   private readonly _sendMessage: SwarmMessengerOptions['sendMessage'];
   private readonly _onSignal: SwarmMessengerOptions['onSignal'];
   private readonly _onOffer: SwarmMessengerOptions['onOffer'];
+  private readonly _onClose: SwarmMessengerOptions['onClose'];
   private readonly _topic: PublicKey;
 
   private readonly _offerRecords: ComplexMap<PublicKey, OfferRecord> = new ComplexMap((key) => key.toHex());
 
-  constructor({ sendMessage, onSignal, onOffer, topic }: SwarmMessengerOptions) {
+  constructor({ sendMessage, onSignal, onOffer, onClose, topic }: SwarmMessengerOptions) {
     this._sendMessage = sendMessage;
     this._onSignal = onSignal;
     this._onOffer = onOffer;
+    this._onClose = onClose;
     this._topic = topic;
   }
 
@@ -80,6 +83,9 @@ export class SwarmMessenger implements SignalMessenger {
       case 'signalBatch':
         await this._handleSignal(ctx, { author, recipient, message });
         break;
+      case 'close':
+        await this._handleClose(ctx, { author, recipient, message });
+        break;
       default:
         log.warn('unknown message', { message });
     }
@@ -93,6 +99,14 @@ export class SwarmMessenger implements SignalMessenger {
       author: message.author,
       recipient: message.recipient,
       message: swarmMessage(message, data),
+    });
+  }
+
+  async close(ctx: Context, message: CloseMessage): Promise<void> {
+    await this._sendReliableMessage(ctx, {
+      author: message.author,
+      recipient: message.recipient,
+      message: swarmMessage(message, messageData({ case: 'close', value: message.data.close })),
     });
   }
 
@@ -222,6 +236,26 @@ export class SwarmMessenger implements SignalMessenger {
       sessionId,
       data: payload.case === 'signal' ? { signal: payload.value } : { signalBatch: payload.value },
     });
+  }
+
+  private async _handleClose(
+    ctx: Context,
+    {
+      author,
+      recipient,
+      message,
+    }: {
+      author: PeerInfo;
+      recipient: PeerInfo;
+      message: SwarmMessage;
+    },
+  ): Promise<void> {
+    invariant(message.data?.payload.case === 'close', 'No close');
+    const topic = toPublicKey(message.topic);
+    const sessionId = toPublicKey(message.sessionId);
+    invariant(topic && sessionId, 'Swarm message is missing its topic or session.');
+
+    await this._onClose(ctx, { author, recipient, topic, sessionId, data: { close: message.data.payload.value } });
   }
 }
 

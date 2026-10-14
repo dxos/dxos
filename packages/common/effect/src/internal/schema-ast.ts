@@ -31,6 +31,7 @@ export {
   isEnum as isEnums,
   isLiteral,
   isNever as isNeverKeyword,
+  isNull as isNullKeyword,
   isNumber as isNumberKeyword,
   isObjectKeyword,
   isObjects,

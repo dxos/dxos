@@ -5,7 +5,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, EID, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { Text } from '@dxos/schema';
 import { Event, Transcript } from '@dxos/types';
 
@@ -22,31 +21,32 @@ export class Meeting extends Type.makeObject<Meeting>(DXN.make('org.dxos.type.me
     /**
      * List of dids of identities which joined some portion of the meeting.
      */
-    participants: Schema.Array(IdentityDidSchema).pipe(FormInputAnnotation.set(false)),
+    participants: Schema.Array(IdentityDidSchema).pipe(Annotation.FormInputAnnotation.set(false)),
 
     /**
      * Transcript of the meeting.
      */
-    transcript: Ref.Ref(Transcript.Transcript).pipe(FormInputAnnotation.set(false)),
+    transcript: Ref.Ref(Transcript.Transcript).pipe(Annotation.FormInputAnnotation.set(false)),
 
     /**
      * Markdown notes for the meeting.
      */
-    notes: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
+    notes: Ref.Ref(Text.Text).pipe(Annotation.FormInputAnnotation.set(false)),
 
     /**
      * Generated summary of the meeting.
      */
-    summary: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
+    summary: Ref.Ref(Text.Text).pipe(Annotation.FormInputAnnotation.set(false)),
 
     /**
      * The calendar event this meeting is for, if any. A `Ref` (not a relation) so it can point at a
      * feed/queue event synced from the calendar — relation endpoints require live db objects.
      */
-    event: Ref.Ref(Event.Event).pipe(FormInputAnnotation.set(false), Schema.optional),
+    event: Ref.Ref(Event.Event).pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
   }).pipe(
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--handshake--regular', hue: 'yellow' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

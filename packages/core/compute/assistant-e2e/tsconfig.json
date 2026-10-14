@@ -2,6 +2,7 @@
   "extends": "../../../../tsconfig.base.json",
   "compilerOptions": {},
   "include": [
+    "scripts",
     "src",
     "src/**/*.json"
   ],
@@ -10,10 +11,22 @@
       "path": "../../../common/effect"
     },
     {
+      "path": "../../../common/errors"
+    },
+    {
       "path": "../../../common/keys"
     },
     {
+      "path": "../../../common/log"
+    },
+    {
+      "path": "../../../common/test-utils"
+    },
+    {
       "path": "../../../common/util"
+    },
+    {
+      "path": "../../../e2e/perf-harness"
     },
     {
       "path": "../../../plugins/plugin-assistant"

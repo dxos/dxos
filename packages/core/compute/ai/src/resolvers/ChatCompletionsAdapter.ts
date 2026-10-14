@@ -4,22 +4,22 @@
 
 // @import-as-namespace
 
+import * as AiError from 'effect/ai/AiError';
+import * as IdGenerator from 'effect/ai/IdGenerator';
+import * as LanguageModel from 'effect/ai/LanguageModel';
+import type * as Prompt from 'effect/ai/Prompt';
+import type * as Response from 'effect/ai/Response';
+import * as Telemetry from 'effect/ai/Telemetry';
+import * as Tool from 'effect/ai/Tool';
 import * as Context from 'effect/Context';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as HttpClient from 'effect/http/HttpClient';
+import * as HttpClientError from 'effect/http/HttpClientError';
+import * as HttpClientRequest from 'effect/http/HttpClientRequest';
 import * as Layer from 'effect/Layer';
 import * as Predicate from 'effect/Predicate';
 import * as Stream from 'effect/Stream';
-import * as AiError from 'effect/unstable/ai/AiError';
-import * as IdGenerator from 'effect/unstable/ai/IdGenerator';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
-import type * as Prompt from 'effect/unstable/ai/Prompt';
-import type * as Response from 'effect/unstable/ai/Response';
-import * as Telemetry from 'effect/unstable/ai/Telemetry';
-import * as Tool from 'effect/unstable/ai/Tool';
-import * as HttpClient from 'effect/unstable/http/HttpClient';
-import * as HttpClientError from 'effect/unstable/http/HttpClientError';
-import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 
 import { log } from '@dxos/log';
 
@@ -63,6 +63,31 @@ const unknownError = (method: string, detail: string, cause?: unknown) =>
     method,
     reason: new AiError.UnknownError({ description: describe(detail, cause) }),
   });
+
+/**
+ * The error for a non-2xx response, carrying the provider's own message. Ollama answers a tool call
+ * it cannot parse (gpt-oss writing a JS object literal for the arguments) with a 500, which is a
+ * fault in the model's output rather than the request, so it is reported as one: callers retry
+ * `InvalidOutputError` and not `UnknownError`.
+ */
+export const rejectionError = (method: string, status: number, body: string): AiError.AiError => {
+  let message = body;
+  try {
+    const error = JSON.parse(body).error;
+    if (typeof error === 'string') {
+      message = error;
+    } else if (typeof error?.message === 'string') {
+      message = error.message;
+    }
+  } catch {}
+  return new AiError.AiError({
+    module: MODULE,
+    method,
+    reason: message.includes('error parsing tool call')
+      ? new AiError.InvalidOutputError({ description: message })
+      : new AiError.UnknownError({ description: `HTTP ${status}: ${message}` }),
+  });
+};
 
 /**
  * OpenAI-style tool call (both Ollama and OpenAI endpoints emit a variant of this).
@@ -258,11 +283,11 @@ export type ChatCompletionsClientConfig = {
   readonly baseUrl: string;
   readonly apiFormat: ApiFormat;
   /**
-   * The serving product, reported as `gen_ai.system`. Distinct from {@link ApiFormat}, which is the
+   * The serving product, reported as `gen_ai.provider.name`. Distinct from {@link ApiFormat}, which is the
    * wire dialect: LM Studio and any other OpenAI-compatible endpoint speak `'openai'` without being
-   * OpenAI, and consumers price on this field. Defaults to the API format.
+   * OpenAI, and consumers price on this field.
    */
-  readonly provider?: string;
+  readonly provider: string;
   /**
    * Request `stream_options.include_usage` on streamed OpenAI-format calls. Providers that meter on
    * reported usage (DeepSeek via EDGE) need it; local servers that reject unknown fields do not.
@@ -747,7 +772,21 @@ export const make = (model: string, requestOptions: RequestOptions = {}) =>
           const endpoint = getChatEndpoint(config.baseUrl, config.apiFormat);
           const httpRequest = HttpClientRequest.post(endpoint).pipe(HttpClientRequest.bodyJson(requestBody));
           const response = yield* httpRequest.pipe(
-            Effect.flatMap((req) => httpClient.execute(req).pipe(Effect.flatMap((res) => res.json))),
+            Effect.flatMap((req) => httpClient.execute(req)),
+            // Without this a rejection's error body is read as a reply with no content, and the turn
+            // ends silently instead of failing.
+            Effect.flatMap((res) =>
+              res.status === 200
+                ? res.json
+                : Effect.flatMap(res.text, (body) => {
+                    log.warn('chat completions request rejected', {
+                      status: res.status,
+                      body: body.slice(0, 500),
+                      messages: describeMessages(messages),
+                    });
+                    return Effect.fail(rejectionError('generateText', res.status, body));
+                  }),
+            ),
             Effect.timeoutOrElse({
               duration: requestTimeout,
               orElse: () => networkError('generateText', `request timed out after ${Duration.format(requestTimeout)}`),
@@ -865,14 +904,7 @@ export const make = (model: string, requestOptions: RequestOptions = {}) =>
                 body: body.slice(0, 500),
                 messages: describeMessages(messages),
               });
-              try {
-                const json = JSON.parse(body);
-                const error = json.error;
-                if (typeof error === 'string') {
-                  return Stream.fail(unknownError('streamText', error));
-                }
-              } catch {}
-              return Stream.fail(unknownError('streamText', body));
+              return Stream.fail(rejectionError('streamText', response.status, body));
             }
 
             const textId = `chat-text-${Date.now()}`;
@@ -1112,7 +1144,7 @@ const annotateRequest = (
   config: ChatCompletionsClientConfig,
 ): void =>
   Telemetry.addGenAIAnnotations(span, {
-    system: config.provider ?? config.apiFormat,
+    provider: { name: config.provider },
     operation: { name: 'chat' },
     request: { model },
   });

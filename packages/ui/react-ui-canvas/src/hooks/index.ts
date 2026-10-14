@@ -1,8 +1,8 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
-export * from './projection.tsx';
-export * from './useCanvasContext.ts';
-export * from './useDrag.tsx';
-export * from './useWheel.tsx';
+export * from './useRegistry.ts';
+export * from './useSceneProjection.ts';
+export * from './useViewport.ts';
+export * from './useWheel.ts';

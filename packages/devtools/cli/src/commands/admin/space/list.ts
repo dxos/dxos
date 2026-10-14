@@ -2,15 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Command from 'effect/cli/Command';
+import * as Options from 'effect/cli/Flag';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
-import * as Command from 'effect/unstable/cli/Command';
-import * as Options from 'effect/unstable/cli/Flag';
 
 import { CommandConfig } from '@dxos/cli-util';
 import { type ListSpacesResponse, type SpaceActivityEntry } from '@dxos/protocols';
 
-import { adminRequest, formatAdminError } from '../util.ts';
+import { AdminApiError, adminRequest, formatAdminError } from '../util.ts';
 
 const formatSpaceRow = (space: SpaceActivityEntry): string => {
   const status = space.metadata?.status ?? 'unknown';
@@ -38,7 +38,7 @@ export const list = Command.make(
     }
 
     const result = yield* adminRequest<ListSpacesResponse>('GET', '/admin/spaces', { query }).pipe(
-      Effect.catch((error) => Effect.fail(new Error(formatAdminError(error)))),
+      Effect.catch((error) => Effect.fail(new AdminApiError({ message: formatAdminError(error), cause: error }))),
     );
 
     if (yield* CommandConfig.isJson) {

@@ -1,0 +1,35 @@
+# Process runtime: requesters on top, the local runtime below them, the EDGE runtime beside it.
+diagram flow=down
+
+group req "Requesters" {
+  node TrigDisp "TriggerDispatcher" ref="packages/core/compute/compute-runtime/src/triggers/trigger-dispatcher.ts"
+  node AgentSvc "AgentService" right-of TrigDisp ref="packages/core/compute/agent-runtime/src/agent-service/AgentService.ts"
+}
+
+group local "Local runtime" below req {
+  node PM "ProcessManager" below AgentSvc ref="packages/core/compute/compute-runtime/src/ProcessManager.ts"
+  node OpInvoker "ProcOpInvoker" right-of PM ref="packages/core/compute/compute-runtime/src/ProcessOperationInvoker.ts"
+  node LocalHandle "ProcessHandle" below PM ref="packages/core/compute/compute-runtime/src/ProcessHandle.ts"
+  node Store "ProcessStore" left-of LocalHandle ref="packages/core/compute/compute-runtime/src/process-store.ts"
+  node ProcDef "Process def" right-of LocalHandle ref="packages/core/compute/compute/src/Process.ts"
+}
+
+group remote "EDGE runtime" right-of local {
+  node RPM "RemoteProcessMgr" ref="packages/core/compute/compute-runtime/src/RemoteProcessManager.ts"
+  node RHandle "RemoteProcHandle" right-of RPM ref="packages/core/compute/compute-runtime/src/RemoteProcessHandle.ts"
+  node Queued "QueuedRemoteCtl" below RHandle ref="packages/core/compute/compute-runtime/src/QueuedRemoteControl.ts"
+  node EdgeCtl "EdgeProcControl" left-of Queued ref="packages/core/compute/edge-compute/src/EdgeProcessControl.ts"
+}
+
+edge AgentSvc -> PM "spawn local"
+edge AgentSvc -> RPM:top "spawn on EDGE"
+edge TrigDisp -> PM "spawn"
+edge PM owns LocalHandle "no cap"
+edge PM -> Store "persist"
+edge PM -> OpInvoker
+edge OpInvoker -> PM "spawn child"
+edge LocalHandle -> ProcDef "run"
+edge LocalHandle -> Store "delete on exit"
+edge RPM -> RHandle "make"
+edge RHandle -> Queued "control"
+edge Queued -> EdgeCtl "deliver"

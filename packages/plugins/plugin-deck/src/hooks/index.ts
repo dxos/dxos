@@ -14,3 +14,4 @@ export * from './useMainSize.ts';
 export * from './useNodeActionExpander.ts';
 export * from './useSelectedCompanion.ts';
 export * from './useSelectedCompanionVariant.ts';
+export * from './useUrlTitle.ts';

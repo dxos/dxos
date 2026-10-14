@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
+import { Database } from '@dxos/echo';
 
 import { Drawing, DrawingOperation, IllustratorCapabilities } from '#types';
 
@@ -20,7 +21,10 @@ const handler: Operation.WithHandler<typeof DrawingOperation.Create> = DrawingOp
         return yield* Effect.fail(new UnknownDrawingVariantError(variantId ?? '(none registered)'));
       }
       const canvas = variant.createCanvas ? yield* variant.createCanvas() : Drawing.makeCanvas({ schema: variant.id });
-      return { object: Drawing.make({ name, canvas }) };
+      // Persisted here, canvas first: an agent has only this operation to create a drawing, and a
+      // drawing it has to add itself arrives without its hidden canvas.
+      yield* Database.add(canvas);
+      return { object: yield* Database.add(Drawing.make({ name, canvas })) };
     }),
   ),
 );

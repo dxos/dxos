@@ -4,26 +4,26 @@
 
 import { type EditorView } from '@codemirror/view';
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
-import { useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
-import * as CollectionModel from '@dxos/app-toolkit/CollectionModel';
-import { Annotation, Database, Filter, Obj, Query, Type } from '@dxos/echo';
-import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
-import { Kind as EntityKind } from '@dxos/echo/Entity';
-import { EffectEx } from '@dxos/effect';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
+import * as ObjectCombobox from '@dxos/app-toolkit/ObjectCombobox';
+import { Database, Filter, Obj, Query } from '@dxos/echo';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { type Label, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type EditorMenuGroup, type EditorMenuItem } from '@dxos/react-ui-editor';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Theme from '@dxos/react-ui/Theme';
 import { insertAtCursor, insertAtLineStart } from '@dxos/ui-editor';
+import { hues } from '@dxos/ui-types';
 
 import { meta } from '#meta';
 
-const getLabel = (object: Obj.Unknown): Label => {
+const getLabel = (object: Obj.Unknown): Theme.Label => {
   const typename = Obj.getTypename(object);
   // A typeless object cannot key a translation namespace, so it falls back to the literal.
-  const placeholder: Label = typename
+  const placeholder: Theme.Label = typename
     ? ['object-name.placeholder', { ns: typename, defaultValue: 'New object' }]
     : 'New object';
   return Obj.getLabel(object) ?? placeholder;
@@ -45,20 +45,11 @@ const insertLink = (view: EditorView, head: number, label: string, uri: string, 
   }
 };
 
-export const useLinkQuery = (db: Database.Database | undefined, current?: Obj.Unknown) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+const everything = Query.select(Filter.everything());
 
-  const filter = useMemo(
-    () =>
-      Filter.or(
-        ...(db ? db.graph.registry.list().filter(Type.isType) : [])
-          .filter((schema) => getTypeAnnotation(Type.getSchema(schema))?.kind !== EntityKind.Relation)
-          .filter((schema) => !HiddenAnnotation.get(Type.getSchema(schema)).pipe(Option.getOrElse(() => false)))
-          .map((schema) => Filter.type(Type.getURI(schema))),
-      ),
-    [db],
-  );
+export const useLinkQuery = (db: Database.Database | undefined, current?: Obj.Unknown) => {
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
 
   const handleLinkQuery = useCallback(
     (query?: string): Promise<EditorMenuGroup[]> => {
@@ -67,36 +58,31 @@ export const useLinkQuery = (db: Database.Database | undefined, current?: Obj.Un
       }
 
       // A second "@" switches the link query into block-embed mode, so "@@foo" searches for "foo".
-      const block = query?.startsWith('@') ?? false;
-      const name = (block ? query!.slice(1) : (query ?? '')).toLowerCase();
+      const raw = query ?? '';
+      const block = raw.startsWith('@');
+      // The query may end in the space before the next word.
+      const text = (block ? raw.slice(1) : raw).trim();
+      const name = text.toLowerCase();
 
       return Effect.gen(function* () {
         const [results, containing] = yield* Effect.all(
           [
-            Database.query(Query.select(filter)).run,
-            current ? Database.query(CollectionModel.containing(current)).run : Effect.succeed([]),
+            Database.query(everything).run,
+            current ? Database.query(ContainerModel.containing(current)).run : Effect.succeed([]),
           ],
           { concurrency: 'unbounded' },
         );
 
-        const items = results
-          // Exclude the current document; it cannot link to itself.
-          .filter((object) => object.id !== current?.id)
-          .map((object: Obj.Unknown) => ({ object, label: toLocalizedString(getLabel(object), t) }))
+        // The current document cannot link to itself.
+        const items = ObjectCombobox.toOptions(results, { t, filter: (object) => object.id !== current?.id })
           .filter(({ label }) => label.toLowerCase().includes(name))
-          .sort((a, b) => a.label.localeCompare(b.label))
-          .map(({ object, label }): EditorMenuItem => {
-            const type = Obj.getType(object);
-            const icon = type
-              ? Option.getOrUndefined(Annotation.IconAnnotation.get(Type.getSchema(type)))?.icon
-              : undefined;
-            return {
-              id: object.id,
-              label,
-              icon,
-              onSelect: ({ view, head }) => insertLink(view, head, label, Obj.getURI(object), block),
-            };
-          });
+          .map(({ id, label, icon, iconHue }): EditorMenuItem => ({
+            id,
+            label,
+            icon,
+            iconHue: hues.find((hue) => hue === iconHue),
+            onSelect: ({ view, head }) => insertLink(view, head, label, id, block),
+          }));
 
         // File new objects in the current document's collection; with no containing collection
         // `OpenObjectForm` falls back to the space's own default placement.
@@ -111,11 +97,12 @@ export const useLinkQuery = (db: Database.Database | undefined, current?: Obj.Un
               target,
               // Keep the deck where it is: the link is inserted back into the editor the user is in.
               navigable: false,
-              defaults: name ? { name } : undefined,
+              // As typed: the lowercased copy is only for matching.
+              defaults: text ? { name: text } : undefined,
             }).then(({ data }) => {
               const object = data?.target;
               if (object) {
-                insertLink(view, head, toLocalizedString(getLabel(object), t), Obj.getURI(object), block);
+                insertLink(view, head, Theme.toLocalizedString(getLabel(object), t), Obj.getURI(object), block);
                 view.focus();
               }
             });
@@ -128,7 +115,7 @@ export const useLinkQuery = (db: Database.Database | undefined, current?: Obj.Un
         ];
       }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
     },
-    [db, filter, t, current, invokePromise],
+    [db, t, current, invokePromise],
   );
 
   return handleLinkQuery;

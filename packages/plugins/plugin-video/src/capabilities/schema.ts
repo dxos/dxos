@@ -3,8 +3,7 @@
 //
 
 import { Text } from '@dxos/schema';
-
-import { Video } from '#types';
+import { Video } from '@dxos/types';
 
 /**
  * Schemas this plugin registers, loaded on demand: the capability activates at idle,

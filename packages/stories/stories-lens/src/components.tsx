@@ -8,9 +8,12 @@ import { Obj } from '@dxos/echo';
 import { Lens } from '@dxos/echo-panproto';
 import { useLens } from '@dxos/echo-panproto/react';
 import { useObject } from '@dxos/echo-react';
-import { Card, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { Form, type FormUpdateMeta, omitId } from '@dxos/react-ui-form';
-import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Card from '@dxos/react-ui/Card';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Task } from '@dxos/types';
 
 import { GTD_LENS_ID, GtdLens, GtdTask } from './gtd.ts';
@@ -25,17 +28,17 @@ import { GTD_LENS_ID, GtdLens, GtdTask } from './gtd.ts';
 
 /** The panel chrome: a captioned, scrollable region. */
 export const DemoPanel = ({ label, children, testId }: { label: string; children: ReactNode; testId: string }) => (
-  <Panel.Root classNames='min-w-0 dx-base-surface border border-subdued-separator rounded-md' data-testid={testId}>
-    <Panel.Toolbar>
+  <Panel.Root classNames='min-w-0 dx-base-surface border border-separator-subtle rounded-md' data-testid={testId}>
+    <Panel.Header>
       <Toolbar.Root>
         <Toolbar.Text>{label}</Toolbar.Text>
       </Toolbar.Root>
-    </Panel.Toolbar>
-    <Panel.Content asChild>
+    </Panel.Header>
+    <Panel.Body asChild>
       <ScrollArea.Root orientation='vertical'>
         <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
       </ScrollArea.Root>
-    </Panel.Content>
+    </Panel.Body>
   </Panel.Root>
 );
 
@@ -165,19 +168,10 @@ export const LensedGtdPanel = ({ task }: { task: Obj.Unknown }) => {
   );
 };
 
-/**
- * A labelled JSON block.
- *
- * `Syntax` rather than a bare `JsonHighlighter`: the highlighter is documented as inline and
- * non-scrolling, so a long property value ran off the pane instead of scrolling.
- */
+/** A labelled JSON block, capped so a long value scrolls inside the pane. */
 const JsonSection = ({ title, data, testId }: { title: string; data: unknown; testId: string }) => (
   <Card.Section title={title}>
-    <Syntax.Root data={data}>
-      <Syntax.Viewport classNames='max-h-64'>
-        <Syntax.Code testId={testId} />
-      </Syntax.Viewport>
-    </Syntax.Root>
+    <JsonHighlighter data={data} classNames='max-h-64' testId={testId} />
   </Card.Section>
 );
 
@@ -198,9 +192,9 @@ export const RawInspector = ({ task }: { task: Obj.Unknown }) => {
 
   return (
     <DemoPanel label='Raw object' testId='inspector-panel'>
-      <Card.Root fullWidth border={false}>
+      <Card.Root border={false}>
         <Card.Section title='typename'>
-          <Card.Row fullWidth>
+          <Card.Row>
             <Card.Text data-testid='inspector-typename'>{Obj.getTypename(task)}</Card.Text>
           </Card.Row>
         </Card.Section>

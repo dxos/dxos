@@ -4,11 +4,15 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { ReportSections } from '#components';
 import { Ibkr, IbkrOperation } from '#types';
@@ -28,8 +32,8 @@ export type PortfolioReportDetailProps = Pick<
  * copies the raw XML and can sync lots from this report into the owning portfolio.
  */
 export const PortfolioReportDetail = ({ role, subject, companionTo }: PortfolioReportDetailProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const db = Obj.getDatabase(subject);
   const positions = useMemo(() => parsePositions(subject.xml), [subject.xml]);
   const trades = useMemo(() => parseTrades(subject.xml), [subject.xml]);
@@ -37,18 +41,7 @@ export const PortfolioReportDetail = ({ role, subject, companionTo }: PortfolioR
   const openLots = useMemo(() => parseOpenLots(subject.xml), [subject.xml]);
   const closedLots = useMemo(() => parseClosedLots(subject.xml), [subject.xml]);
 
-  const [copied, setCopied] = useState(false);
   const [syncingLots, setSyncingLots] = useState(false);
-
-  const handleCopyXml = useCallback(() => {
-    void navigator.clipboard.writeText(subject.xml).then(
-      () => {
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      },
-      () => {},
-    );
-  }, [subject.xml]);
 
   const handleSyncLots = useCallback(async () => {
     if (!companionTo) {
@@ -70,10 +63,10 @@ export const PortfolioReportDetail = ({ role, subject, companionTo }: PortfolioR
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root classNames='justify-end'>
           {companionTo && (
-            <IconButton
+            <Button.Root
               disabled={syncingLots}
               variant='primary'
               iconClassNames={syncingLots ? 'animate-spin' : undefined}
@@ -84,16 +77,12 @@ export const PortfolioReportDetail = ({ role, subject, companionTo }: PortfolioR
               }}
             />
           )}
-          <IconButton
-            icon={copied ? 'ph--check--regular' : 'ph--copy--regular'}
-            label={copied ? t('copied.label') : t('copy-xml.label')}
-            onClick={handleCopyXml}
-          />
+          <SystemButton.Clipboard label={t('copy-xml.label')} value={subject.xml} />
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content classNames='grid grid-rows-1 min-h-0'>
+      </Panel.Header>
+      <Panel.Body asChild>
         <ReportSections positions={positions} trades={trades} cash={cash} openLots={openLots} closedLots={closedLots} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

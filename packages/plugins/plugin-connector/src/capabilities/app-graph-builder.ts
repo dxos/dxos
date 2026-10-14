@@ -133,9 +133,11 @@ export default Capability.makeModule(
                     const routine = db
                       ? yield* Binding.findRoutine(connection).pipe(Effect.provide(Database.layer(db)))
                       : undefined;
-                    yield* Operation.invoke(SpaceOperation.RemoveObjects, {
-                      objects: routine ? [connection, routine] : [connection],
-                    });
+                    yield* Operation.invoke(
+                      SpaceOperation.RemoveObjects,
+                      { objects: routine ? [connection, routine] : [connection] },
+                      { spaceId: db?.spaceId },
+                    );
                   }),
                 properties: {
                   label: ['delete-connection.label', { ns: meta.profile.key }],
@@ -178,6 +180,7 @@ export default Capability.makeModule(
       // Reactively appears and disappears as cursors are created or removed.
       AppGraphBuilder.createExtension({
         id: 'connectorCompanion',
+        relation: AppNode.companion,
         match: whenObjectHasCursor,
         connector: (cursor) =>
           Effect.succeed([

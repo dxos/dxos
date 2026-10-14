@@ -5,9 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { ProcessManagerPlugin } from '@dxos/app-framework';
+import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -33,7 +33,7 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withClientProvider({ createIdentity: true, createSpace: true }),
     // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
-    withPluginManager({ plugins: [ProcessManagerPlugin()] }),
+    withPluginManager({ plugins: [ProcessManagerPlugin.make()] }),
   ],
   parameters: {
     translations,

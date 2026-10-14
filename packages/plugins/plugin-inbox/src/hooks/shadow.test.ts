@@ -32,11 +32,9 @@ describe('shadow', () => {
     await builder.close();
   });
 
-  const addNote = (value: string): Type.InstanceType<typeof Note> => db.add(Obj.make(Note, { value }));
-
   test('finds and re-anchors a shadow from a draft to its synced copy', async ({ expect }) => {
-    const draft = addNote('Draft');
-    const synced = addNote('Synced');
+    const draft = db.add(Obj.make(Note, { value: 'Draft' }));
+    const synced = db.add(Obj.make(Note, { value: 'Synced' }));
     const draftUri = Obj.getURI(draft);
     const syncedUri = Obj.getURI(synced);
 

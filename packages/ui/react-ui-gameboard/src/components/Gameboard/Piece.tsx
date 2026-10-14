@@ -10,14 +10,15 @@ import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type ThemedClassName, useDynamicRef } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { useGameboardContext } from './GameboardContext.ts';
 import { type Location, type PieceRecord, type Player, isEqualLocation, isLocation } from './types.ts';
 import { type DOMRectBounds } from './util.ts';
 
-export type PieceProps = ThemedClassName<{
+export type PieceProps = Util.ThemedClassName<{
   Component: FC<SVGProps<SVGSVGElement>>;
   piece: PieceRecord;
   bounds: DOMRectBounds;
@@ -30,7 +31,7 @@ const PIECE_NAME = 'Piece';
 
 export const Piece = memo(({ classNames, Component, piece, bounds, label, onClick }: PieceProps) => {
   const { model, dragging: isDragging, promoting } = useGameboardContext(PIECE_NAME);
-  const promotingRef = useDynamicRef(promoting);
+  const promotingRef = Hooks.useDynamicRef(promoting);
   const [dragging, setDragging] = useState(false);
   const [preview, setPreview] = useState<HTMLElement>();
 

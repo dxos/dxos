@@ -4,8 +4,8 @@
 
 import * as Equal from 'effect/Equal';
 import * as Hash from 'effect/Hash';
+import * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
-import * as Atom from 'effect/unstable/reactivity/Atom';
 import { describe, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';

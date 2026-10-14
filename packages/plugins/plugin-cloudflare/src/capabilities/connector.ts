@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Credential from '@dxos/compute/Credential';
 import { Obj } from '@dxos/echo';
-import { ConnectionTestError } from '@dxos/plugin-connector';
+import * as ConnectorError from '@dxos/plugin-connector/ConnectorError';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { OAuthProvider } from '@dxos/protocols';
 
@@ -28,8 +28,9 @@ const onTokenCreated: ConnectorSpec.OnTokenCreated = ({ accessToken }) =>
     const label = yield* CloudflareApi.fetchUser().pipe(
       Effect.map((user) => user.email ?? user.username ?? undefined),
       Effect.catch(() => Effect.map(CloudflareApi.fetchAccounts(), (accounts) => accounts[0]?.name)),
-      Effect.provide(Layer.succeed(CloudflareApi.CloudflareCredentials, { token })),
-      Effect.provide(CloudflareHttpClientLayer),
+      Effect.provide(
+        Layer.provideMerge(Layer.succeed(CloudflareApi.CloudflareCredentials, { token }), CloudflareHttpClientLayer),
+      ),
     );
     if (!label) {
       return;
@@ -45,14 +46,15 @@ const isCredentialRejection = (error: CloudflareApi.CloudflareError): boolean =>
 const testConnection: ConnectorSpec.TestConnection = ({ accessToken }) =>
   Effect.flatMap(Credential.getApiKeyValue({ accessTokenId: accessToken.id }), (token) =>
     CloudflareApi.fetchAccounts().pipe(
-      Effect.provide(Layer.succeed(CloudflareApi.CloudflareCredentials, { token })),
-      Effect.provide(CloudflareHttpClientLayer),
+      Effect.provide(
+        Layer.provideMerge(Layer.succeed(CloudflareApi.CloudflareCredentials, { token }), CloudflareHttpClientLayer),
+      ),
     ),
   ).pipe(
     Effect.asVoid,
     Effect.mapError(
       (error) =>
-        new ConnectionTestError({
+        new ConnectorError.ConnectionTestError({
           message: isCredentialRejection(error)
             ? 'Cloudflare rejected the credential. Reauthenticate to continue.'
             : 'Could not reach Cloudflare. Try again.',

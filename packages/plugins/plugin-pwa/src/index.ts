@@ -3,4 +3,3 @@
 //
 
 export * as PwaPlugin from './PwaPlugin.ts';
-export * from '#meta';

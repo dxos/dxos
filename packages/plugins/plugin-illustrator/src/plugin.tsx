@@ -5,6 +5,7 @@
 import * as Plugin from '@dxos/app-framework/Plugin';
 
 import {
+  AppGraphBuilder,
   CommentConfig,
   CreateObject,
   Migrations,
@@ -19,6 +20,7 @@ import {
 import { meta } from '#meta';
 
 export const IllustratorPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(CommentConfig),
   Plugin.addModule(CreateObject),
   Plugin.addModule(Migrations),

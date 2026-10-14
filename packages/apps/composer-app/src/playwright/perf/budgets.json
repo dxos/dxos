@@ -1,0 +1,421 @@
+{
+  "wall > boot": {
+    "target": 3300,
+    "limit": 4120,
+    "unit": "ms"
+  },
+  "wall > await-replication": {
+    "target": 2000,
+    "limit": 4000,
+    "unit": "ms",
+    "weight": 0.5
+  },
+  "wall > open-space": {
+    "target": 35,
+    "limit": 56,
+    "unit": "ms"
+  },
+  "wall > open-project": {
+    "target": 640,
+    "limit": 864,
+    "unit": "ms"
+  },
+  "wall > open-tasks": {
+    "target": 450,
+    "limit": 675,
+    "unit": "ms"
+  },
+  "wall > toggle-task": {
+    "target": 600,
+    "limit": 900,
+    "unit": "ms"
+  },
+  "wall > scroll-tasks": {
+    "target": 1620,
+    "limit": 1860,
+    "unit": "ms"
+  },
+  "wall > open-document": {
+    "target": 650,
+    "limit": 878,
+    "unit": "ms"
+  },
+  "wall > scroll-document": {
+    "target": 1740,
+    "limit": 2000,
+    "unit": "ms"
+  },
+  "wall > edit-document": {
+    "target": 1350,
+    "limit": 1620,
+    "unit": "ms"
+  },
+  "wall > reopen-project": {
+    "target": 450,
+    "limit": 675,
+    "unit": "ms"
+  },
+  "wall > open-assistant": {
+    "target": 80,
+    "limit": 128,
+    "unit": "ms"
+  },
+  "wall > assistant-turns": {
+    "target": 24000,
+    "limit": 30000,
+    "unit": "ms"
+  },
+  "cpu > boot": {
+    "target": 8000,
+    "limit": 10000,
+    "unit": "ms"
+  },
+  "cpu > await-replication": {
+    "target": 1300,
+    "limit": 2600,
+    "unit": "ms",
+    "weight": 0.5
+  },
+  "cpu > open-space": {
+    "target": 60,
+    "limit": 96,
+    "unit": "ms"
+  },
+  "cpu > open-project": {
+    "target": 1800,
+    "limit": 2430,
+    "unit": "ms"
+  },
+  "cpu > open-tasks": {
+    "target": 400,
+    "limit": 600,
+    "unit": "ms"
+  },
+  "cpu > toggle-task": {
+    "target": 300,
+    "limit": 450,
+    "unit": "ms"
+  },
+  "cpu > scroll-tasks": {
+    "target": 1000,
+    "limit": 1500,
+    "unit": "ms"
+  },
+  "cpu > open-document": {
+    "target": 1500,
+    "limit": 2030,
+    "unit": "ms"
+  },
+  "cpu > scroll-document": {
+    "target": 400,
+    "limit": 600,
+    "unit": "ms"
+  },
+  "cpu > edit-document": {
+    "target": 2400,
+    "limit": 3360,
+    "unit": "ms"
+  },
+  "cpu > reopen-project": {
+    "target": 1200,
+    "limit": 1800,
+    "unit": "ms"
+  },
+  "cpu > open-assistant": {
+    "target": 160,
+    "limit": 256,
+    "unit": "ms"
+  },
+  "cpu > assistant-turns": {
+    "target": 37500,
+    "limit": 48800,
+    "unit": "ms"
+  },
+  "run > total tab CPU": {
+    "target": 14500,
+    "limit": 19600,
+    "unit": "ms",
+    "weight": 0.5
+  },
+  "run > total worker CPU": {
+    "target": 20000,
+    "limit": 30000,
+    "unit": "ms",
+    "weight": 0.5
+  },
+  "run > SQLite read bytes": {
+    "target": 13000000,
+    "limit": 19500000,
+    "unit": "bytes"
+  },
+  "run > SQLite write bytes": {
+    "target": 75000000,
+    "limit": 93800000,
+    "unit": "bytes"
+  },
+  "run > app code transferred": {
+    "target": 25500000,
+    "limit": 28100000,
+    "unit": "bytes"
+  },
+  "run > edge traffic": {
+    "target": 1400000,
+    "limit": 1820000,
+    "unit": "bytes"
+  },
+  "run > worst tab lag p95": {
+    "target": 600,
+    "limit": 900,
+    "unit": "ms"
+  },
+  "run > worst worker lag p95": {
+    "target": 250,
+    "limit": 500,
+    "unit": "ms"
+  },
+  "run > peak tab realm memory": {
+    "target": 230686720,
+    "limit": 288000000,
+    "unit": "bytes"
+  },
+  "run > peak worker realm memory": {
+    "target": 161480704,
+    "limit": 194000000,
+    "unit": "bytes"
+  },
+  "run > peak app footprint": {
+    "target": 1000000000,
+    "limit": 1250000000,
+    "unit": "bytes"
+  },
+  "run > total blocking time": {
+    "target": 1300,
+    "limit": 1950,
+    "unit": "ms"
+  },
+  "automergeSaveBytes > assistant-turns": {
+    "target": 7490,
+    "limit": 7860,
+    "unit": "bytes"
+  },
+  "automergeSaves > assistant-turns": {
+    "target": 40.5,
+    "limit": 42.5,
+    "unit": "count"
+  },
+  "automergeSaves > open-project": {
+    "target": 5,
+    "limit": 6,
+    "unit": "count"
+  },
+  "echoIndexPasses > open-project": {
+    "target": 2,
+    "limit": 3,
+    "unit": "count"
+  },
+  "echoQueryRecomputes > open-project": {
+    "target": 38,
+    "limit": 39.9,
+    "unit": "count"
+  },
+  "echoQueryRecomputes > reopen-project": {
+    "target": 11,
+    "limit": 12,
+    "unit": "count"
+  },
+  "echoQueryRuns > assistant-turns": {
+    "target": 46,
+    "limit": 48.3,
+    "unit": "count"
+  },
+  "echoQueryRuns > open-document": {
+    "target": 4,
+    "limit": 5,
+    "unit": "count"
+  },
+  "echoQueryRuns > open-project": {
+    "target": 1,
+    "limit": 2,
+    "unit": "count"
+  },
+  "echoQueryRuns > reopen-project": {
+    "target": 1,
+    "limit": 2,
+    "unit": "count"
+  },
+  "layoutCount > edit-document": {
+    "target": 65,
+    "limit": 68.3,
+    "unit": "count"
+  },
+  "layoutCount > open-document": {
+    "target": 32,
+    "limit": 33.6,
+    "unit": "count"
+  },
+  "layoutCount > open-project": {
+    "target": 26,
+    "limit": 27.4,
+    "unit": "count"
+  },
+  "layoutCount > open-tasks": {
+    "target": 16,
+    "limit": 17,
+    "unit": "count"
+  },
+  "layoutCount > reopen-project": {
+    "target": 26,
+    "limit": 27.4,
+    "unit": "count"
+  },
+  "layoutCount > scroll-document": {
+    "target": 31,
+    "limit": 32.6,
+    "unit": "count"
+  },
+  "layoutCount > scroll-tasks": {
+    "target": 24,
+    "limit": 25.2,
+    "unit": "count"
+  },
+  "reactCommits > assistant-turns": {
+    "target": 531,
+    "limit": 558,
+    "unit": "count"
+  },
+  "reactCommits > open-project": {
+    "target": 58.5,
+    "limit": 62.2,
+    "unit": "count"
+  },
+  "reactRenders > assistant-turns": {
+    "target": 15900,
+    "limit": 16700,
+    "unit": "count"
+  },
+  "reactRenders > open-assistant": {
+    "target": 949,
+    "limit": 996,
+    "unit": "count"
+  },
+  "reactRenders > open-project": {
+    "target": 9260,
+    "limit": 9720,
+    "unit": "count"
+  },
+  "reactRenders > open-tasks": {
+    "target": 3950,
+    "limit": 4150,
+    "unit": "count"
+  },
+  "reactRenders > reopen-project": {
+    "target": 7140,
+    "limit": 7500,
+    "unit": "count"
+  },
+  "reactRenders > scroll-document": {
+    "target": 421,
+    "limit": 442,
+    "unit": "count"
+  },
+  "reactRenders > scroll-tasks": {
+    "target": 19200,
+    "limit": 20200,
+    "unit": "count"
+  },
+  "reactRenders > toggle-task": {
+    "target": 863,
+    "limit": 906,
+    "unit": "count"
+  },
+  "reactWastedRenders > open-assistant": {
+    "target": 82,
+    "limit": 86.1,
+    "unit": "count"
+  },
+  "reactWastedRenders > open-document": {
+    "target": 230,
+    "limit": 242,
+    "unit": "count"
+  },
+  "reactWastedRenders > open-project": {
+    "target": 460,
+    "limit": 485,
+    "unit": "count"
+  },
+  "reactWastedRenders > open-tasks": {
+    "target": 87,
+    "limit": 91.4,
+    "unit": "count"
+  },
+  "reactWastedRenders > reopen-project": {
+    "target": 273,
+    "limit": 287,
+    "unit": "count"
+  },
+  "reactWastedRenders > scroll-document": {
+    "target": 22,
+    "limit": 23.1,
+    "unit": "count"
+  },
+  "reactWastedRenders > scroll-tasks": {
+    "target": 40,
+    "limit": 42,
+    "unit": "count"
+  },
+  "reactWastedRenders > toggle-task": {
+    "target": 59,
+    "limit": 62,
+    "unit": "count"
+  },
+  "recalcStyleCount > assistant-turns": {
+    "target": 807,
+    "limit": 873,
+    "unit": "count"
+  },
+  "recalcStyleCount > edit-document": {
+    "target": 162,
+    "limit": 170,
+    "unit": "count"
+  },
+  "recalcStyleCount > open-project": {
+    "target": 62.5,
+    "limit": 65.6,
+    "unit": "count"
+  },
+  "recalcStyleCount > reopen-project": {
+    "target": 63,
+    "limit": 66.2,
+    "unit": "count"
+  },
+  "recalcStyleCount > scroll-document": {
+    "target": 197,
+    "limit": 207,
+    "unit": "count"
+  },
+  "recalcStyleCount > scroll-tasks": {
+    "target": 43,
+    "limit": 45.1,
+    "unit": "count"
+  },
+  "sqliteDeletes > assistant-turns": {
+    "target": 266,
+    "limit": 279,
+    "unit": "count"
+  },
+  "sqliteInserts > open-project": {
+    "target": 12,
+    "limit": 13,
+    "unit": "count"
+  },
+  "sqliteRowsChanged > assistant-turns": {
+    "target": 2900,
+    "limit": 3050,
+    "unit": "count"
+  },
+  "sqliteUpdates > open-project": {
+    "target": 1,
+    "limit": 2,
+    "unit": "count"
+  }
+}

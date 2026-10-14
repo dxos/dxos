@@ -4,7 +4,7 @@
 
 import type * as Effect from 'effect/Effect';
 import type * as Option from 'effect/Option';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Atom from 'effect/reactivity/Atom';
 
 import { type CleanupFn } from '@dxos/async';
 
@@ -36,13 +36,37 @@ export type Entry<T> = {
   // TODO(dmaretskyi): Rename to meta?
   resolution?: {
     // TODO(dmaretskyi): Make this more generic.
-    source: 'remote' | 'local' | 'index';
+    source: Source;
 
     /**
      * Query resolution time in milliseconds.
      */
     time: number;
   };
+};
+
+/**
+ * Where query results come from.
+ */
+export type Source = 'remote' | 'local' | 'index' | 'registry';
+
+/**
+ * How much of the answer a live query holds right now:
+ * - `complete`: nothing outstanding.
+ * - `local-only`: in-process results are shown; no remote source has answered yet.
+ * - `merged`: some remote sources answered and some have not.
+ * - `stale`: a remote answer predates a local write inside its scope; its re-run has not arrived.
+ * - `failed`: a remote source errored or timed out; `sources` names it.
+ * - `pending`: nothing in-process contributes and no remote has answered.
+ */
+export type Completeness = 'complete' | 'local-only' | 'merged' | 'stale' | 'failed' | 'pending';
+
+/** One source's progress on a live query, for diagnostics and for waiting on a specific answer. */
+export type SourceState = {
+  source: Source;
+  state: 'pending' | 'answered' | 'failed';
+  /** Answers integrated for the current query, including re-runs that left the result unchanged. */
+  answers: number;
 };
 
 /**
@@ -65,46 +89,68 @@ export type SubscriptionOptions = {
 export interface QueryResult<T> {
   /**
    * Currently available results along with their match metadata.
+   *
+   * @performance Synchronous; O(n) recompute from the working set on first read after a change, cached otherwise.
    */
   readonly entries: Entry<T>[];
 
   /**
    * Currently available results.
+   *
+   * @performance Synchronous; O(n) recompute from the working set on first read after a change, cached otherwise.
    */
   readonly results: T[];
 
   /**
    * Returns all known results.
+   *
+   * @performance Async; executes the full query (index plus working set) on every call, not cached; O(n) in the data
+   * the executor examines, not in the result count.
    */
   run(opts?: RunOptions): Promise<T[]>;
 
   /**
    * Returns all known results along with their match metadata.
+   *
+   * @performance Async; executes the full query (index plus working set) on every call, not cached; O(n) in the data
+   * the executor examines, not in the result count.
    */
   runEntries(opts?: RunOptions): Promise<Entry<T>[]>;
 
   /**
    * Returns currently available results synchronously.
+   *
+   * @performance Synchronous; working-set results only, recomputed in O(n) after a change and cached otherwise.
    */
   runSync(): T[];
 
   /**
    * Returns currently available results synchronously along with their match metadata.
+   *
+   * @performance Synchronous; working-set results only, recomputed in O(n) after a change and cached otherwise.
    */
   runSyncEntries(): Entry<T>[];
 
   /**
    * Returns first result.
+   *
+   * @performance O(n) in the data examined: runs the full query and takes the first result; `.limit(1)` bounds the
+   * work only where the executor applies the limit before scanning.
    */
   first(opts?: RunOptions): Promise<T>;
 
   /**
    * Returns first result if there is one.
+   *
+   * @performance O(n) in the data examined: runs the full query and takes the first result; `.limit(1)` bounds the
+   * work only where the executor applies the limit before scanning.
    */
   firstOrUndefined(opts?: RunOptions): Promise<T | undefined>;
 
   /**
    * Subscribes to changes in query results.
+   *
+   * @performance O(1) registration; the first subscriber starts the live query, whose updates cost an O(n) recompute.
    */
   subscribe(callback?: (query: QueryResult<T>) => void, opts?: SubscriptionOptions): CleanupFn;
 
@@ -117,15 +163,43 @@ export interface QueryResult<T> {
    * where `db.query(...)` is called fresh on each re-evaluation: every run constructs a new
    * QueryResult and so a new atom + subscription, leaking the previous ones. Use the memoized
    * {@link atom} family there instead.
+   *
+   * @performance O(1) memoized per instance; each emission is a `runSync`.
    */
   readonly atom: Atom.Atom<T[]>;
+
+  /**
+   * How much of the answer the current results hold. Reading it never notifies; subscribers are notified
+   * only when results change.
+   *
+   * @performance O(sources).
+   */
+  readonly completeness: Completeness;
+
+  /**
+   * Per-source progress of the live query.
+   *
+   * @performance O(sources); allocates.
+   */
+  readonly sources: readonly SourceState[];
 }
 
 /**
  * Effect that returns a QueryResult when evaluated, but also has shorthand methods for running the query or getting the first result.
  */
 export interface QueryResultEffect<T, E, R> extends Effect.Effect<QueryResult<T>, E, R> {
+  /**
+   * Runs the query once.
+   *
+   * @performance Executes the full query once, O(n) in the data the executor examines.
+   */
   run: Effect.Effect<T[], E, R>;
+  /**
+   * Runs the query once and returns the first result.
+   *
+   * @performance O(n) in the data examined: runs the full query and takes the first result; `.limit(1)` bounds the
+   * work only where the executor applies the limit before scanning.
+   */
   first: Effect.Effect<Option.Option<T>, E, R>;
 
   // TODO(dmaretskyi): Considering adding `atom`, but since `Database.query` is used in imperative code only, I dont think it will be useful.

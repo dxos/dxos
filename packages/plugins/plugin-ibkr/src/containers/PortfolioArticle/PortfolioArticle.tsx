@@ -4,19 +4,22 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import { type AppSurface, useAppGraph, useShowItem } from '@dxos/app-toolkit/ui';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
-import { useActionRunner } from '@dxos/plugin-graph/hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { useAtomState } from '@dxos/react-hooks';
-import { Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { Listbox } from '@dxos/react-ui-list';
 import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 
 import { Ibkr, IbkrOperation } from '#types';
 
@@ -35,8 +38,8 @@ export type PortfolioArticleProps = AppSurface.ObjectArticleProps<Ibkr.Portfolio
  * Clicking a report opens it in the complementary plank via the app-graph-builder companion node.
  */
 export const PortfolioArticle = ({ role, subject, attendableId }: PortfolioArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const showItem = useShowItem();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const showItem = ToolkitHooks.useShowItem();
 
   // `useObject` re-renders when the Portfolio's feed ref resolves, so the query below picks up the feed.
   const [portfolio] = useObject(subject);
@@ -67,7 +70,7 @@ export const PortfolioArticle = ({ role, subject, attendableId }: PortfolioArtic
   const id = attendableId ?? Obj.getURI(subject);
   const currentId = useSelection(id, 'single');
 
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   // IBKR has no external-sync Cursor, so the connection is detected space-wide by connectorId.
   const connections = useQuery(db, Filter.type(Connection.Connection));
   const connected = connections.some((connection) => connection.connectorId === IBKR_CONNECTOR_ID);
@@ -92,8 +95,8 @@ export const PortfolioArticle = ({ role, subject, attendableId }: PortfolioArtic
     }
   }, [invokePromise, db, subject, setSyncing]);
 
-  const { graph } = useAppGraph();
-  const runAction = useActionRunner();
+  const { graph } = ToolkitHooks.useAppGraph();
+  const runAction = GraphHooks.useActionRunner();
   const menuActions = useMenuBuilder(
     (get) => {
       // `MenuBuilder` mutates in place, so the conditional sync action is added without reassignment.
@@ -148,32 +151,34 @@ export const PortfolioArticle = ({ role, subject, attendableId }: PortfolioArtic
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <ActionToolbar {...menuActions} onAction={runAction} attendableId={id} />
-      </Panel.Toolbar>
+      </Panel.Header>
 
-      <Panel.Content asChild>
+      <Panel.Body asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport>
-            <Listbox.Root value={currentId} onValueChange={handleNavigate}>
-              <Listbox.Viewport>
-                <Listbox.Content aria-label={t('reports.label')}>
-                  {rows.map((row) => (
-                    <Listbox.Item key={row.id} id={row.id}>
-                      {t('report-row.label', {
-                        date: row.date,
-                        positions: row.positions,
-                        trades: row.trades,
-                        cash: row.cash,
-                      })}
-                    </Listbox.Item>
-                  ))}
-                </Listbox.Content>
-              </Listbox.Viewport>
+            <Listbox.Root
+              value={currentId}
+              onValueChange={handleNavigate}
+              items={rows.map((row) => ({ value: row.id, label: row.id }))}
+            >
+              <Listbox.Content aria-label={t('reports.label')}>
+                {rows.map((row) => (
+                  <Listbox.Item key={row.id} id={row.id}>
+                    {t('report-row.label', {
+                      date: row.date,
+                      positions: row.positions,
+                      trades: row.trades,
+                      cash: row.cash,
+                    })}
+                  </Listbox.Item>
+                ))}
+              </Listbox.Content>
             </Listbox.Root>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

@@ -3,69 +3,74 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useMemo } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
+import { expect, waitFor } from 'storybook/test';
 
-import { useThemeContext } from '@dxos/react-ui';
-import { useTextEditor } from '@dxos/react-ui-editor';
+import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import {
-  type DiffLayout,
-  type ThemeExtensionsOptions,
-  createBasicExtensions,
-  createMarkdownExtensions,
-  createThemeExtensions,
-  decorateMarkdown,
-  diffBlocks,
-  walkthroughSidebar,
-  walkthroughTheme,
-} from '@dxos/ui-editor';
+import { type DiffLayout, type DiffLineTarget } from '@dxos/ui-editor';
 
+import { translations } from '#translations';
+
+import { LineCommentPopover } from '../components/CommentComposer/index.ts';
+import { WalkthroughView } from '../components/WalkthroughView/index.ts';
 import { WALKTHROUGH } from './walkthrough-fixture.ts';
-
-/**
- * A definite content width, which the chunks cap themselves against: a block widget with no query
- * container above it would size the document to its own longest line.
- */
-const walkthroughSlots: ThemeExtensionsOptions['slots'] = {
-  content: {
-    className: 'dx-container-type-inline-size w-full mx-auto! max-w-[min(72rem,100%-3rem)] py-3!',
-  },
-};
 
 type StoryArgs = {
   text: string;
   layout?: DiffLayout;
   sidebar?: 'full' | 'stats' | 'none';
+  /** Offer the hover comment button on each diff line, and float the composer at the line picked. */
+  comments?: boolean;
 };
 
 /**
  * A walkthrough is ONE markdown document: the ```diff fences are block widgets inside it, not a
  * separate diff view the prose is wrapped around.
  */
-const DefaultStory = ({ text, layout, sidebar = 'full' }: StoryArgs) => {
-  const { themeMode } = useThemeContext();
-  const extensions = useMemo(
-    () => [
-      createThemeExtensions({ themeMode, slots: walkthroughSlots }),
-      createBasicExtensions({ lineWrapping: true, readOnly: true }),
-      createMarkdownExtensions(),
-      decorateMarkdown(),
-      walkthroughTheme(),
-      diffBlocks({ layout }),
-      sidebar === 'none' ? [] : walkthroughSidebar({ variant: sidebar }),
-    ],
-    [themeMode, layout, sidebar],
-  );
-  const { parentRef } = useTextEditor({ initialValue: text, extensions }, [extensions]);
+const DefaultStory = ({ text, layout, sidebar = 'full', comments }: StoryArgs) => {
+  const [target, setTarget] = useState<DiffLineTarget>();
+  const [comment, setComment] = useState('');
+  const anchorRef = useRef<HTMLElement | null>(null);
 
-  return <div ref={parentRef} className='dx-fill overflow-auto' />;
+  const handleLineComment = useCallback((next: DiffLineTarget, anchor: HTMLElement) => {
+    anchorRef.current = anchor;
+    setTarget(next);
+  }, []);
+
+  const handleCancel = useCallback(() => {
+    setTarget(undefined);
+    anchorRef.current = null;
+  }, []);
+
+  return (
+    <Panel.Root>
+      <Panel.Body>
+        <WalkthroughView
+          value={text}
+          layout={layout}
+          sidebar={sidebar}
+          onLineComment={comments ? handleLineComment : undefined}
+        />
+      </Panel.Body>
+      <LineCommentPopover
+        open={!!target}
+        anchorRef={anchorRef}
+        target={target}
+        value={comment}
+        onValueChange={setComment}
+        onSubmit={handleCancel}
+        onCancel={handleCancel}
+      />
+    </Panel.Root>
+  );
 };
 
 const meta = {
   title: 'plugins/plugin-github/stories/Walkthrough',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
-  parameters: { layout: 'fullscreen', controls: { disable: true } },
+  parameters: { layout: 'fullscreen', controls: { disable: true }, translations },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
@@ -75,6 +80,13 @@ type Story = StoryObj<typeof meta>;
 /** The whole thing: prose, headings, side-by-side chunks and the navigation rail. */
 export const Default: Story = {
   args: { text: WALKTHROUGH },
+  play: async ({ canvasElement }) => {
+    // The rail overflows in a short pane; it must scroll with the app's scrollbar, not the browser's.
+    await waitFor(() => expect(canvasElement.querySelector('.cm-walkthrough-sidebar')).not.toBeNull(), {
+      timeout: 10_000,
+    });
+    await expect(canvasElement.querySelector('.cm-walkthrough-sidebar')).toHaveClass('dx-scrollbar-thin');
+  },
 };
 
 /** The rail Graphite collapses to when the reader wants the width back. */
@@ -90,4 +102,9 @@ export const Inline: Story = {
 /** No rail, so the chunks are the only thing the document adds to plain markdown. */
 export const Chunks: Story = {
   args: { text: WALKTHROUGH, sidebar: 'none' },
+};
+
+/** The comment composer floats at the diff line it addresses, not in a band above the document. */
+export const LineComment: Story = {
+  args: { text: WALKTHROUGH, comments: true, sidebar: 'none' },
 };

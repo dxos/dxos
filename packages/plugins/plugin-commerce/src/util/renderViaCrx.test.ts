@@ -5,7 +5,7 @@
 
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 const proxyFetchLegacy = vi.fn(
   async () => new Response('PROXY_BODY', { status: 200, headers: { 'content-type': 'text/html' } }),

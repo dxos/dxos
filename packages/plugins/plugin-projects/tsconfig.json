@@ -94,9 +94,6 @@
       "path": "../../ui/react-ui-attention"
     },
     {
-      "path": "../../ui/react-ui-components"
-    },
-    {
       "path": "../../ui/react-ui-form"
     },
     {
@@ -110,6 +107,9 @@
     },
     {
       "path": "../../ui/react-ui-task"
+    },
+    {
+      "path": "../../ui/react-ui-trace"
     },
     {
       "path": "../plugin-assistant"

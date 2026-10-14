@@ -50,6 +50,7 @@ describe.skip('Connection', () => {
         signal: async (ctx, msg) => {
           await fastConnection.signal(ctx, msg);
         },
+        close: async () => {},
       },
       slowPeerProtocol.factory({
         initiator: true,
@@ -72,6 +73,7 @@ describe.skip('Connection', () => {
         signal: async (ctx, msg) => {
           await slowConnection.signal(ctx, msg);
         },
+        close: async () => {},
       },
       fastPeerProtocol.factory({
         initiator: false,

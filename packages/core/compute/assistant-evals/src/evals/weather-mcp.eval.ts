@@ -7,24 +7,25 @@ import * as Schema from 'effect/Schema';
 import { evalite } from 'evalite';
 
 import { Model } from '@dxos/ai';
-import { McpServer, PlanningSkill } from '@dxos/assistant-toolkit';
+import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
 import { Config } from '@dxos/client';
+import * as McpServer from '@dxos/compute/McpServer';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import * as Skill from '@dxos/compute/Skill';
 import { EDGE_URLS } from '@dxos/config';
 import { Blob, Collection, Database, Obj, Ref } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';
-import { WeatherSpace } from '@dxos/plugin-debug/sample';
+import * as WeatherSpace from '@dxos/plugin-debug/WeatherSpace';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 import * as ProjectSkill from '@dxos/plugin-projects/ProjectSkill';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
-import { SandboxSkill } from '@dxos/plugin-sandbox';
 import * as Sandbox from '@dxos/plugin-sandbox/Sandbox';
 import * as SandboxOperation from '@dxos/plugin-sandbox/SandboxOperation';
 import * as SandboxPlugin from '@dxos/plugin-sandbox/SandboxPlugin';
+import * as SandboxSkill from '@dxos/plugin-sandbox/SandboxSkill';
 import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import { File } from '@dxos/types';
@@ -180,7 +181,7 @@ const task = createEvalRunner({
   ],
   plugins: [ProjectsPlugin.make(), TasksPlugin.make(), MarkdownPlugin.make(), SandboxPlugin.make()],
   types: [
-    ...WeatherSpace().schemas,
+    ...WeatherSpace.make().schemas,
     Collection.Collection,
     Sandbox.Sandbox,
     // A sandbox names its credentials by this type; a space query that meets it unregistered fails.

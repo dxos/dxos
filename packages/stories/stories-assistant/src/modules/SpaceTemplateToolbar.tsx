@@ -5,18 +5,22 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Model } from '@dxos/ai';
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Project from '@dxos/compute/Project';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
-import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { type Client, useClient } from '@dxos/react-client';
 import { type Space, SpaceState } from '@dxos/react-client/echo';
-import { Field, Select, Toolbar, useAsyncEffect } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as Select from '@dxos/react-ui/Select';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { isPersistent, setPersistent } from '../testing/persistence.ts';
 import { VOYAGE_SPACE_ID } from '../testing/voyage-space.ts';
@@ -24,7 +28,7 @@ import { exportProfileArchive, pickProfileArchive, stageProfileImport } from './
 
 /**
  * Story chrome: a picker over the contributed space templates
- * ({@link SpaceCapabilities.SpaceTemplate}) above the story's grid, plus a reset.
+ * ({@link AppCapabilities.SpaceTemplate}) above the story's grid, plus a reset.
  *
  * Space templates rather than project templates, because a project only means something with the
  * data it works over: the template brings the mailbox, the accounts and the documents into the
@@ -48,8 +52,8 @@ export const SpaceTemplateToolbar = () => (
 
 const TemplateSelect = () => {
   const client = useClient();
-  const templates = useCapabilities(SpaceCapabilities.SpaceTemplate);
-  const { invokePromise } = useOperationInvoker();
+  const templates = Hooks.useCapabilities(AppCapabilities.SpaceTemplate);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [templateId, setTemplateId] = useState(VOYAGE_SPACE_ID);
   // Guards the seed effect against the re-renders between an open starting and its space landing.
   const busy = useRef(false);
@@ -85,7 +89,7 @@ const TemplateSelect = () => {
       const model = TEMPLATE_MODELS[templateId];
       if (model) {
         Obj.update(chat, (chat) => {
-          chat.model = Ref.fromURI(model.id);
+          chat.session = { ...chat.session, model: model.id };
         });
       }
       if (project) {
@@ -135,7 +139,7 @@ const TemplateSelect = () => {
   // template rather than on any: each contributing module activates on its own, so the samples can
   // register a beat before the story's own, and a one-shot on the first arrival would open nothing.
   const [opened, setOpened] = useState(false);
-  useAsyncEffect(async () => {
+  UiHooks.useAsyncEffect(async () => {
     if (!opened && !busy.current && templates.some(({ id }) => id === templateId)) {
       setOpened(true);
       await handleSelect(templateId);
@@ -144,19 +148,17 @@ const TemplateSelect = () => {
 
   return (
     <>
-      <Select.Root value={templateId} onValueChange={(id) => void handleSelect(id)}>
-        <Select.TriggerButton placeholder='Template' />
-        <Select.Portal>
-          <Select.Content>
-            <Select.Viewport>
-              {sorted.map(({ id, label }) => (
-                <Select.Option key={id} value={id}>
-                  {label}
-                </Select.Option>
-              ))}
-            </Select.Viewport>
-          </Select.Content>
-        </Select.Portal>
+      <Select.Root
+        value={[templateId]}
+        onValueChange={({ value: [id] }) => void handleSelect(id)}
+        items={sorted.map(({ id, label }) => ({ value: id, label: label }))}
+      >
+        <Select.Trigger placeholder='Template' />
+        <Select.Content>
+          {sorted.map(({ id, label }) => (
+            <Select.Item key={id} item={{ value: id, label: label }} />
+          ))}
+        </Select.Content>
       </Select.Root>
     </>
   );
@@ -209,24 +211,26 @@ const ProfileControls = () => {
 
   return (
     <>
-      <Toolbar.IconButton
+      <Button.Root
         icon='ph--download-simple--regular'
         iconOnly
         label='Export profile (.dxprofile)'
         disabled={!persistent}
         onClick={() => void handleExport()}
       />
-      <Toolbar.IconButton
+      <Button.Root
         icon='ph--upload-simple--regular'
         iconOnly
         label='Import profile (.dxprofile)'
         disabled={!persistent}
         onClick={() => void handleImport()}
       />
-      <Field.Checkbox checked={persistent} onCheckedChange={handlePersistentChange}>
-        Persistent
-      </Field.Checkbox>
-      <Toolbar.IconButton icon='ph--trash--regular' label='Reset' onClick={() => void handleReset()} />
+      <Input.Checkbox
+        checked={persistent}
+        onCheckedChange={({ checked }) => handlePersistentChange(checked === true)}
+        label='Persistent'
+      />
+      <Button.Root icon='ph--trash--regular' label='Reset' onClick={() => void handleReset()} />
     </>
   );
 };
@@ -236,8 +240,8 @@ const ProfileControls = () => {
  * through the edge, which needs no key; a template not listed keeps the picker's default.
  */
 const TEMPLATE_MODELS: Record<string, Model.Model> = {
-  'org.dxos.plugin-debug.sample.stockfish': Model.deepseekV4Pro,
-  'org.dxos.plugin-debug.sample.weather': Model.deepseekV4Pro,
+  'org.dxos.plugin-debug.template.stockfish': Model.deepseekV4Pro,
+  'org.dxos.plugin-debug.template.weather': Model.deepseekV4Pro,
 };
 
 /**

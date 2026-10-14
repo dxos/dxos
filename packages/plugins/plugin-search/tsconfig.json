@@ -17,6 +17,9 @@
   ],
   "references": [
     {
+      "path": "../../common/async"
+    },
+    {
       "path": "../../common/debug"
     },
     {
@@ -60,6 +63,9 @@
     },
     {
       "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/react-client"

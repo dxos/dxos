@@ -17,8 +17,10 @@ const handler: Operation.WithHandler<typeof HelpOperation.StartTour> = HelpOpera
         running: true,
         tourId,
         subjectId,
-        seenTours: state.seenTours.includes(tourId) ? state.seenTours : [...state.seenTours, tourId],
       }));
+      yield* Capabilities.updateAtomValue(HelpCapabilities.SeenTours, (seen) =>
+        seen[tourId] ? seen : { ...seen, [tourId]: true },
+      );
     }),
   ),
 );

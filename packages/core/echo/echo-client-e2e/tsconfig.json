@@ -36,6 +36,9 @@
       "path": "../../../common/util"
     },
     {
+      "path": "../../../e2e/perf-harness"
+    },
+    {
       "path": "../../../sdk/types"
     },
     {
@@ -61,6 +64,9 @@
     },
     {
       "path": "../echo-protocol"
+    },
+    {
+      "path": "../index-core"
     }
   ]
 }

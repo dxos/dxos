@@ -5,13 +5,16 @@
 import React, { useEffect, useMemo } from 'react';
 
 import { log } from '@dxos/log';
-import { useInvitationStatus } from '@dxos/react-client/invitations';
-import type { CancellableInvitationObservable } from '@dxos/react-client/invitations';
-import { Icon, useId, useTranslation } from '@dxos/react-ui';
+import { type CancellableInvitationObservable, useInvitationStatus } from '@dxos/react-client/invitations';
+import * as Button from '@dxos/react-ui/Button';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Typography from '@dxos/react-ui/Typography';
 
-import { CloseButton, Heading, Viewport } from '../../components/index.ts';
+import { Viewport } from '../../components/index.ts';
 import { InvitationManager } from '../../steps/index.ts';
-import { stepStyles } from '../../styles/index.ts';
 import { translationKey } from '../../translations.ts';
 import { useSpaceMachine } from './space-machine.ts';
 import { SpaceManager } from './SpaceManager.tsx';
@@ -19,22 +22,30 @@ import { type SpacePanelHeadingProps, type SpacePanelImplProps, type SpacePanelP
 
 type SpacePanelActiveView = SpacePanelImplProps['activeView'];
 
-const SpacePanelHeading = ({ titleId, space, onDone }: SpacePanelHeadingProps) => {
-  const { t } = useTranslation(translationKey);
-  const name = space.properties.name;
+const SpacePanelHeading = ({ titleId, onDone }: SpacePanelHeadingProps) => {
+  const { t } = Hooks.useTranslation(translationKey);
   return (
-    <Heading
-      titleId={titleId}
-      title={t('space-panel.heading')}
-      corner={<CloseButton data-testid='identity-panel-done' onDone={onDone} />}
-    >
-      <div className='flex gap-4 items-center justify-center my-4'>
-        <Icon icon='ph--planet--light' size={8} />
-        <div className='block text-start font-light text-xl'>{name ?? space.key.truncate()}</div>
-      </div>
-    </Heading>
+    <Dialog.Header>
+      <Dialog.Title id={titleId}>{t('space-panel.heading')}</Dialog.Title>
+      <Button.Root
+        variant='ghost'
+        icon='ph--x--regular'
+        iconOnly
+        label={t('exit.label')}
+        onClick={() => onDone?.()}
+        data-testid='identity-panel-done'
+      />
+    </Dialog.Header>
   );
 };
+
+/** The space's name, at the top of the space manager's body. */
+const SpaceName = ({ space }: Pick<SpacePanelImplProps, 'space'>) => (
+  <Layout.Flex gap='sm' align='center'>
+    <Icon.Icon icon='ph--planet--light' size='xl' />
+    <Typography.Text truncate>{space.properties.name ?? space.key.truncate()}</Typography.Text>
+  </Layout.Flex>
+);
 
 export const SpacePanelImpl = (props: SpacePanelImplProps) => {
   const {
@@ -50,13 +61,19 @@ export const SpacePanelImpl = (props: SpacePanelImplProps) => {
 
   return (
     <>
-      {!hideHeading && <SpacePanelHeading {...rest} {...{ titleId, space }} />}
+      {!hideHeading && <SpacePanelHeading {...rest} titleId={titleId} />}
       <Viewport.Root activeView={activeView}>
         <Viewport.Views>
-          <Viewport.View id='space-manager' classNames={stepStyles}>
-            <SpaceManagerComponent active={activeView === 'space-manager'} space={space} target={target} {...rest} />
+          <Viewport.View id='space-manager'>
+            <SpaceManagerComponent
+              active={activeView === 'space-manager'}
+              space={space}
+              target={target}
+              heading={hideHeading ? undefined : <SpaceName space={space} />}
+              {...rest}
+            />
           </Viewport.View>
-          <Viewport.View id='space-invitation-manager' classNames={stepStyles}>
+          <Viewport.View id='space-invitation-manager'>
             <InvitationManagerComponent
               active={activeView === 'space-invitation-manager'}
               {...rest}
@@ -88,7 +105,7 @@ export const SpacePanel = ({
   createInvitationUrl = (code) => code,
   ...props
 }: SpacePanelProps) => {
-  const titleId = useId('spacePanel__heading', propsTitleId);
+  const titleId = Hooks.useId('spacePanel__heading', propsTitleId);
 
   const [spaceState, spaceSend, spaceService] = useSpaceMachine({ context: { space: props.space } });
 

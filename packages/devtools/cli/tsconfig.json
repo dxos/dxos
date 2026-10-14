@@ -47,6 +47,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/compute/agent-code-mode"
+    },
+    {
       "path": "../../core/compute/ai"
     },
     {
@@ -74,6 +77,12 @@
       "path": "../../core/echo/echo-client"
     },
     {
+      "path": "../../core/halo/halo"
+    },
+    {
+      "path": "../../core/halo/halo-adapter-client"
+    },
+    {
       "path": "../../core/mesh/edge-client"
     },
     {
@@ -90,6 +99,9 @@
     },
     {
       "path": "../../plugins/plugin-connector"
+    },
+    {
+      "path": "../../plugins/plugin-file"
     },
     {
       "path": "../../plugins/plugin-game"

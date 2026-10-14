@@ -5,14 +5,16 @@
 import * as Context from 'effect/Context';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import type * as HttpClient from 'effect/http/HttpClient';
+import type * as HttpClientError from 'effect/http/HttpClientError';
+import type * as HttpClientResponse from 'effect/http/HttpClientResponse';
 import * as Layer from 'effect/Layer';
 import * as Schedule from 'effect/Schedule';
-import type * as HttpClient from 'effect/unstable/http/HttpClient';
-import type * as HttpClientError from 'effect/unstable/http/HttpClientError';
-import type * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
 
 import { log } from '@dxos/log';
 import { EdgeCredentialsHeaderCodec } from '@dxos/protocols';
+
+import { EdgeClientError } from './errors.ts';
 
 // TODO(burdon): Factor out.
 
@@ -41,9 +43,9 @@ export const withRetry = (
   }: Partial<RetryOptions> = {},
 ) => {
   return effect.pipe(
-    Effect.flatMap((res) =>
+    Effect.flatMap((res): Effect.Effect<unknown, EdgeClientError | HttpClientError.HttpClientError> =>
       // Treat 500 errors as retryable?
-      res.status === 500 ? Effect.fail(new Error(res.status.toString())) : res.json,
+      res.status === 500 ? Effect.fail(new EdgeClientError({ message: res.status.toString() })) : res.json,
     ),
     Effect.timeout(timeout),
     Effect.retry({

@@ -8,8 +8,8 @@ use serde::Serialize;
 static HOST_START: OnceLock<Instant> = OnceLock::new();
 static TERMINATIONS: Mutex<Vec<Termination>> = Mutex::new(Vec::new());
 
-/// Only macOS observes terminations; elsewhere the queue stays empty.
-#[cfg_attr(not(target_os = "macos"), allow(dead_code))]
+/// Only macOS and Linux observe terminations; elsewhere the queue stays empty.
+#[cfg_attr(not(any(target_os = "macos", target_os = "linux")), allow(dead_code))]
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Termination {
@@ -27,7 +27,7 @@ pub fn mark_host_start() {
     HOST_START.get_or_init(Instant::now);
 }
 
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", target_os = "linux"))]
 pub fn record(webview: &str, visible: bool) {
     use std::time::{SystemTime, UNIX_EPOCH};
 

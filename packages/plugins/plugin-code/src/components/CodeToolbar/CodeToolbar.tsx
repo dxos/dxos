@@ -2,11 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useMemo } from 'react';
 
-import { AppSurface } from '@dxos/app-toolkit/ui';
-import { ElevationProvider } from '@dxos/react-ui';
 import {
   type ActionGraphProps,
   ActionToolbar,
@@ -46,11 +44,7 @@ export const CodeToolbar = ({ attendableId, role, state, onBuild, onRun }: CodeT
   );
   const menuActions = useMenuActions(menuCreator);
 
-  return (
-    <ElevationProvider elevation={role === AppSurface.Section.role ? 'positioned' : 'base'}>
-      <ActionToolbar {...menuActions} attendableId={attendableId} />
-    </ElevationProvider>
-  );
+  return <ActionToolbar {...menuActions} attendableId={attendableId} />;
 };
 
 type CreateOptions = {

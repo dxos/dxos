@@ -22,6 +22,16 @@ const handler: Operation.WithHandler<typeof ProjectOperation.ArtifactAdd> = Proj
     Effect.fn(function* ({ project: projectRef, object: objectRef, task: taskRef }) {
       const project = yield* Database.load(projectRef);
 
+      // Checked before any write, so a rejected task (a conflicting PR) leaves the project untouched.
+      const taskTarget = taskRef
+        ? yield* Effect.gen(function* () {
+            const task = yield* Database.load(taskRef);
+            const object = yield* Database.load(objectRef);
+            yield* Task.checkArtifact(task, object);
+            return { task, object };
+          })
+        : undefined;
+
       if (!project.artifacts.some((ref) => refKey(ref) === refKey(objectRef))) {
         Obj.update(project, (project) => {
           project.artifacts.push(objectRef);
@@ -30,10 +40,8 @@ const handler: Operation.WithHandler<typeof ProjectOperation.ArtifactAdd> = Proj
 
       // Also on the task, when the object was made working one: the project holds everything it
       // owns, the task holds what it produced, and a reader wants both.
-      if (taskRef) {
-        const task = yield* Database.load(taskRef);
-        const object = yield* Database.load(objectRef);
-        Task.addArtifact(task, object);
+      if (taskTarget) {
+        Task.addArtifact(taskTarget.task, taskTarget.object);
       }
 
       yield* Database.flush();

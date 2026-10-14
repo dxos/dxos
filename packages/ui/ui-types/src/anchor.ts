@@ -25,6 +25,8 @@ export type DxAnchorActivateProps = {
    * `state` is `false` — the close path ignores them.
    */
   state?: boolean;
+  /** Navigate straight to the anchor's target (e.g. a modifier-click) instead of opening its preview. */
+  navigate?: boolean;
 };
 
 /**
@@ -56,6 +58,7 @@ export class DxAnchorActivate extends Event {
   public readonly side?: 'top' | 'right' | 'bottom' | 'left';
   public readonly props?: Record<string, unknown>;
   public readonly state?: boolean;
+  public readonly navigate?: boolean;
 
   constructor(props: DxAnchorActivateProps) {
     super(DX_ANCHOR_ACTIVATE);
@@ -67,5 +70,6 @@ export class DxAnchorActivate extends Event {
     this.side = props.side;
     this.props = props.props;
     this.state = props.state;
+    this.navigate = props.navigate;
   }
 }

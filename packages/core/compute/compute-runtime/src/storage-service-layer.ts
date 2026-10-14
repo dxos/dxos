@@ -5,8 +5,8 @@
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as KeyValueStore from 'effect/persistence/KeyValueStore';
 import * as Schema from 'effect/Schema';
-import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
 
 import * as StorageService from '@dxos/compute/StorageService';
 

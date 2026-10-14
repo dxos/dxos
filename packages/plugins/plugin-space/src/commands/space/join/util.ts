@@ -11,7 +11,7 @@ import {
   Invitation_AuthMethod,
   Invitation_State,
 } from '@dxos/client/invitations';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { AlreadyJoinedError } from '@dxos/protocols';
 

@@ -6,12 +6,12 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/ui';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import { type IdbLogStore } from '@dxos/log-store-idb';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { DebugPanelDrawer, DebugPanelStatus, DebugStatus, LoggerPanel, StatsPanel, Wireframe } from '#containers';
 import { meta } from '#meta';
@@ -45,7 +45,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'space',
-        filter: AppSurface.literal(AppSurface.Article, DebugNodes.SpaceType),
+        filter: AppSurface.literal(DebugSurface.Page, DebugNodes.SpaceType),
         component: SpaceGeneratorSurface,
         props: ({ role }) => ({ role }),
       }),
@@ -72,12 +72,12 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'console',
-        filter: AppSurface.literal(AppSurface.Article, DebugNodes.Console),
+        filter: AppSurface.literal(DebugSurface.Page, DebugNodes.Console),
         component: DebugConsoleArticle,
       }),
       Surface.create({
         id: 'logsArticle',
-        filter: AppSurface.literal(AppSurface.Article, DebugNodes.Logs),
+        filter: AppSurface.literal(DebugSurface.Page, DebugNodes.Logs),
         component: LoggerPanel,
       }),
       Surface.create({
@@ -101,11 +101,6 @@ export default Capability.makeModule(
         component: DebugStatus,
       }),
       Surface.create({
-        id: 'logs',
-        filter: Surface.makeFilter(AppSurface.deckCompanion('logs')),
-        component: LoggerPanel,
-      }),
-      Surface.create({
         id: 'debugPanelStatus',
         filter: Surface.makeFilter(AppSurface.StatusIndicator),
         component: DebugPanelStatus,
@@ -119,6 +114,14 @@ export default Capability.makeModule(
         id: 'statsPanel',
         filter: Surface.makeFilter(DebugSurface.Stats),
         component: StatsPanel,
+      }),
+      Surface.create({
+        id: 'statsCards',
+        filter: Surface.makeFilter(AppSurface.DevtoolsOverview),
+        // After the devtools cards (0–12) and before contributors that sit last.
+        position: 20,
+        component: StatsPanel,
+        props: () => ({ showEmpty: false }),
       }),
     ]);
   }),

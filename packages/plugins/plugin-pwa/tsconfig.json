@@ -19,6 +19,9 @@
   ],
   "references": [
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/log"
     },
     {
@@ -32,6 +35,9 @@
     },
     {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-form"
     },
     {
       "path": "../../ui/ui-theme"

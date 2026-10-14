@@ -8,6 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN, Ref } from '@dxos/echo';
 import { Connection } from '@dxos/link';
@@ -28,7 +29,7 @@ export const GetDiscordChannels = Operation.make({
     description: 'List Discord text channels reachable from a connection without materializing local Channels.',
     icon: 'ph--hash--regular',
   },
-  services: [Capability.Service],
+  services: [Capability.Service, Credential.CredentialsService],
   input: ConnectorSpec.GetSyncTargetsInput,
   output: ConnectorSpec.GetSyncTargetsOutput,
 });
@@ -65,6 +66,7 @@ export const SyncDiscordChannel = Operation.make({
     description: 'Reconcile messages for every Discord channel bound to a connection.',
     icon: 'ph--arrows-clockwise--regular',
   },
+  services: [Credential.CredentialsService],
   input: ConnectorSpec.SyncInput,
   output: Schema.Struct({
     pulled: Schema.Struct({
@@ -86,7 +88,7 @@ export const CrawlDiscordChannels = Operation.make({
     description: 'Incrementally crawl Discord channels through the fact-extraction pipeline.',
     icon: 'ph--bulldozer--regular',
   },
-  services: [Capability.Service, AiService.AiService],
+  services: [Capability.Service, AiService.AiService, Credential.CredentialsService],
   input: Schema.Struct({
     connection: Ref.Ref(Connection.Connection),
     channels: Schema.Array(Schema.String),

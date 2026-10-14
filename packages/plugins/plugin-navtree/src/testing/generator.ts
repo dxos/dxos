@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import { DXN, Obj, Type } from '@dxos/echo';
+import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { random } from '@dxos/random';
 import { range } from '@dxos/util';
@@ -64,7 +64,7 @@ export const defaultGenerators: { [type: string]: ObjectDataGenerator } = {
           repo: Schema.String,
           status: Schema.String,
           priority: Schema.Number,
-        }),
+        }).pipe(Annotation.UserType.set()),
       ),
 
     createData: () => ({

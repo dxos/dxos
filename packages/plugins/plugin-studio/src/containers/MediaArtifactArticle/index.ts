@@ -4,4 +4,4 @@
 
 export { MediaArtifactArticle as default } from './MediaArtifactArticle.tsx';
 export { MediaArtifactForm, type MediaArtifactFormProps } from './MediaArtifactForm.tsx';
-export { MediaArtifactVariants, type MediaArtifactVariantsProps, type PlayControl } from './MediaArtifactVariants.tsx';
+export { MediaArtifactVariants, type MediaArtifactVariantsProps } from './MediaArtifactVariants.tsx';

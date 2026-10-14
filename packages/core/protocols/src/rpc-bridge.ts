@@ -3,11 +3,11 @@
 //
 
 import * as Effect from 'effect/Effect';
+import type * as Rpc from 'effect/rpc/Rpc';
+import type * as RpcClient from 'effect/rpc/RpcClient';
+import type * as RpcGroup from 'effect/rpc/RpcGroup';
+import * as RpcTest from 'effect/rpc/RpcTest';
 import type * as Scope from 'effect/Scope';
-import type * as Rpc from 'effect/unstable/rpc/Rpc';
-import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
-import type * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
-import * as RpcTest from 'effect/unstable/rpc/RpcTest';
 
 // Bridges an effect-rpc Handlers implementation to a Client without a wire hop or serialization
 // (backed by RpcServer/RpcClient in no-serialization mode). Consumers use the same effect-rpc
@@ -21,6 +21,9 @@ import * as RpcTest from 'effect/unstable/rpc/RpcTest';
  * effect-rpc calls them unbound — so a class-instance implementation both hides its methods (they
  * live on the prototype) and loses `this` when one is found. Either way the failure surfaces at
  * dispatch, where nothing carries it back to the caller, so the request hangs.
+ *
+ * Each method is resolved per call, so an implementation replaced after the handlers were built
+ * (a test spy, a service that swaps a method) is the one that serves the request.
  */
 export const normalizeHandlers = <Rpcs extends Rpc.Any>(
   group: RpcGroup.RpcGroup<Rpcs>,
@@ -29,9 +32,8 @@ export const normalizeHandlers = <Rpcs extends Rpc.Any>(
   const source = handlers as unknown as Record<string, (...args: any[]) => unknown>;
   const normalized: Record<string, (...args: any[]) => unknown> = {};
   for (const [tag] of group.requests) {
-    const handler = source[tag];
-    if (typeof handler === 'function') {
-      normalized[tag] = (...args) => handler.apply(handlers, args);
+    if (typeof source[tag] === 'function') {
+      normalized[tag] = (...args) => source[tag].apply(handlers, args);
     }
   }
   return normalized as unknown as RpcGroup.HandlersFrom<Rpcs>;

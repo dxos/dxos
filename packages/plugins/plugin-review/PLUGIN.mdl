@@ -588,6 +588,13 @@ test QA-1: Comment on a document, reply, and resolve
   actors: agent
   covers: [F-5.1, F-5.3, T-1, T-7]
   status: unverified
+  automated:
+    - composer-e2e:comments.spec.ts#Comments tests › create
+    - composer-e2e:comments.spec.ts#Comments tests › edit message
+    - composer-e2e:comments.spec.ts#Comments tests › delete message
+    - composer-e2e:comments.spec.ts#Comments tests › delete thread
+    - composer-e2e:comments.spec.ts#Comments tests › undo delete thread
+    - composer-e2e:comments.spec.ts#Comments tests › selecting comment highlights thread and vice versa
   given:
     - identity: an identity exists, its Actor used as the comment `sender`
     - space: a space is open

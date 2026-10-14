@@ -9,7 +9,7 @@
 
 svg {
   marker {
-    &.dx-arrow path {
+    &.dx-graph-arrow path {
       @apply fill-none;
     }
 
@@ -127,7 +127,7 @@ svg {
           }
         }
 
-        g.dx-label {
+        g.dx-graph-label {
           @apply hidden;
         }
       }
@@ -263,7 +263,7 @@ svg {
           }
         }
 
-        g.dx-label {
+        g.dx-graph-label {
           @apply block;
 
           line {

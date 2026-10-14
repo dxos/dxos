@@ -9,7 +9,7 @@ import { trim } from '@dxos/util';
 
 import { ComputerOperation } from '#types';
 
-const SKILL_KEY = 'org.dxos.skill.computer';
+export const SKILL_KEY = 'org.dxos.skill.computer';
 
 const operations = [ComputerOperation.Bash, ComputerOperation.Edits];
 
@@ -19,9 +19,9 @@ const make = () =>
     name: 'Coding (Dev)',
     description: trim`
       Proof of concept, dev only. A minimal coding harness: run shell commands and apply exact file
-      edits on the developer's own machine, through the vite dev server serving this app. Enable it to
-      read, change and verify code in the working tree that server was started against. Outside a dev
-      server — any deployed Composer — there is no such route and both tools fail.
+      edits on the developer's own machine, through the vite server (dev or preview) serving this app.
+      Enable it to read, change and verify code in the working tree that server was started against.
+      Outside a vite server — any deployed Composer — there is no such route and both tools fail.
     `,
     // Not agent-enablable: shell access on the developer's machine is a decision for the developer,
     // and an agent that could turn it on mid-conversation would be making that decision for them.
@@ -35,7 +35,7 @@ const make = () =>
         is their real checkout, not a sandbox: an edit is immediately visible to their editor, their
         dev server and their git status.
 
-        This harness is a proof of concept and exists only while a vite dev server hosts it. If the
+        This harness is a proof of concept and exists only while a vite server hosts it. If the
         tools report that the host is not mounted, no command will work until the developer fixes
         that — say so rather than looking for another way in.
 
@@ -47,6 +47,8 @@ const make = () =>
         - Edit with the ${Operation.toolName(ComputerOperation.Edits)} tool, not with sed, awk or a heredoc. It matches literal text, applies a
           whole batch or nothing at all, and tells you what matched — a shell rewrite silently
           succeeds when it changed the wrong line.
+        - Create a new file with a quoted bash heredoc (cat > path <<'EOF' … EOF): the edit tool only
+          replaces text that already exists, so it cannot create one.
         - Verify with bash. Re-read the changed region, and run the project's own checks (its test,
           lint or build command) when the change is more than cosmetic.
         - Work in small steps and report what you did after each one, including the command you ran.
@@ -71,7 +73,7 @@ const make = () =>
         - When a task needs one of the above, say what you would run and why, and wait.
 
         If a tool reports that the host is unreachable, the harness is not mounted: the app is not
-        being served by a dev server with the computer vite plugin. Say so plainly — no command
+        being served by a vite server with the computer vite plugin. Say so plainly — no command
         will work until the developer fixes it.
       `,
     }),

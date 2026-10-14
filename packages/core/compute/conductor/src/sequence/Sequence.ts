@@ -29,7 +29,7 @@ export class Sequence extends Type.makeObject<Sequence>(DXN.make('org.dxos.type.
   Schema.Struct({
     name: Schema.optional(Schema.String),
     steps: Schema.Array(Step),
-  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--circuitry--regular', hue: 'amber' })),
+  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--circuitry--regular', hue: 'amber' }), Annotation.UserType.set()),
 ) {}
 /**
  * Sequence builder API.

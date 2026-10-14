@@ -5,9 +5,9 @@
 import * as Trace from '@dxos/compute/Trace';
 import { log } from '@dxos/log';
 
-export const noopTraceWriter: Trace.TraceWriter = Trace.noopWriter;
+export const noopTraceWriter: Trace.Writer = Trace.noopWriter;
 
-export const consoleTraceWriter: Trace.TraceWriter = {
+export const consoleTraceWriter: Trace.Writer = {
   write: (event, payload) => {
     log.info(event.key, payload as object);
   },

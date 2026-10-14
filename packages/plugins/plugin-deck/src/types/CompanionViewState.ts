@@ -14,6 +14,15 @@ export const CONTEXT = 'deck-companion';
 
 export const DEFAULT_COMPANION_VARIANT = 'help';
 
+/** The companion a flattened deck shows the main plank's detail in. */
+export const DETAIL_VARIANT = 'detail';
+
+/** The detail companion's node data: the id of the detail node it shows. */
+export type DetailData = { detail: string };
+
+export const isDetailData = (data: unknown): data is DetailData =>
+  typeof data === 'object' && data !== null && typeof (data as DetailData).detail === 'string';
+
 export const State = Schema.Struct({
   /** Linked variant of the currently selected companion tab. */
   variant: Schema.optional(Schema.String),

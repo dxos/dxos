@@ -8,7 +8,7 @@ import { meta } from '../meta.ts';
 import { type OnboardingManager } from '../onboarding-manager.ts';
 
 export type OnboardingOptions = {
-  generateSampleSpace: boolean;
+  generateDemoSpace: boolean;
 };
 
 export namespace OnboardingCapabilities {

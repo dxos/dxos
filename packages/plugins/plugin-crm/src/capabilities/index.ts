@@ -16,9 +16,6 @@ import * as RoutineEvents from '@dxos/plugin-routine/RoutineEvents';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../../PLUGIN.mdl?raw';
-
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'));
 
 export const AutomationTemplates = Capability.lazyModule(
@@ -48,7 +45,7 @@ export const MailboxProcessor = Capability.lazyModule(
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
   path: 'PLUGIN.mdl',
-  content: pluginSpec,
+  content: () => import('../../PLUGIN.mdl?raw'),
   mimeType: 'application/x-mdl',
 });
 export const SenderAction = Capability.lazyModule(

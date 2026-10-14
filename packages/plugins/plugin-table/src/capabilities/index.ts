@@ -18,19 +18,16 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 import { TableEvents, TableOperation } from '#types';
 
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../../PLUGIN.mdl?raw';
-
 export const Schema = AppCapability.schema(() => import('./schema.ts'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'), {
-  environments: ['node'],
+  environments: ['browser', 'node', 'tauri'],
 });
 export const CommentConfig = AppCapability.commentConfig(() => import('./comment-config.ts'), {
   activatesOn: TableEvents.Start,
-  environments: ['node'],
+  environments: ['browser', 'node', 'tauri'],
 });
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'), {
-  environments: ['node'],
+  environments: ['browser', 'node', 'tauri'],
 });
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
@@ -54,6 +51,6 @@ export const Translations = AppCapability.translations([...translations, ...form
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
   path: 'PLUGIN.mdl',
-  content: pluginSpec,
+  content: () => import('../../PLUGIN.mdl?raw'),
   mimeType: 'application/x-mdl',
 });

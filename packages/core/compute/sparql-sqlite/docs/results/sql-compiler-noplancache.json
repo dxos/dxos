@@ -1,0 +1,111 @@
+{
+  "variant": "sql-compiler",
+  "url": "https://rdf-bench-sql-compiler.dxos.workers.dev",
+  "db": "nocache-1791829982",
+  "startedAt": "2026-10-12T18:33:03.455Z",
+  "scales": [
+    {
+      "facts": 10000,
+      "batchQuads": 101441,
+      "ingestMs": 2812.687305,
+      "ingestQuadsPerSec": 46850.02944227915,
+      "medianBatchMs": 285.25203599999986,
+      "stats": {
+        "triples": 101441,
+        "dbBytes": 7897088,
+        "terms": 43339,
+        "termLexBytes": 1501632,
+        "indexes": "spo,pos,osp",
+        "dbstat": "Error: no such table: dbstat: SQLITE_ERROR"
+      },
+      "queries": [
+        {
+          "id": "Q1_lookup",
+          "correct": true,
+          "rows": 10,
+          "checksum": "42549c7a",
+          "firstMs": 71.33367999999973,
+          "wallMs": 56.12364200000047,
+          "serverMs": 0.9752687499999411
+        },
+        {
+          "id": "Q2_entity",
+          "correct": true,
+          "rows": 163,
+          "checksum": "ee2e2aa7",
+          "firstMs": 84.46227799999997,
+          "wallMs": 77.44618600000013,
+          "serverMs": 0.6441572500000348
+        },
+        {
+          "id": "Q3_filtered",
+          "correct": true,
+          "rows": 114,
+          "checksum": "e6dc6eaf",
+          "firstMs": 63.21902900000077,
+          "wallMs": 54.879807000000255,
+          "serverMs": 4.079251749999912
+        },
+        {
+          "id": "Q4_asof",
+          "correct": true,
+          "rows": 10,
+          "checksum": "ba487f6a",
+          "firstMs": 75.43586300000061,
+          "wallMs": 57.425388999999996,
+          "serverMs": 5.783445999999913
+        },
+        {
+          "id": "Q5_aggregate",
+          "correct": true,
+          "rows": 10,
+          "checksum": "0392dde8",
+          "firstMs": 66.07835299999988,
+          "wallMs": 65.8746740000006,
+          "serverMs": 0.3817359999998189
+        },
+        {
+          "id": "Q6_join",
+          "correct": true,
+          "rows": 351,
+          "checksum": "3d68f645",
+          "firstMs": 80.0128939999995,
+          "wallMs": 77.57137200000034,
+          "serverMs": 0
+        },
+        {
+          "id": "Q8_text",
+          "correct": true,
+          "rows": 116,
+          "checksum": "78012a5f",
+          "firstMs": 58.42974400000003,
+          "wallMs": 57.585675000000265,
+          "serverMs": 9.902952999999798
+        },
+        {
+          "id": "Q9_optional",
+          "correct": true,
+          "rows": 40,
+          "checksum": "b54aca3b",
+          "firstMs": 55.614786000000095,
+          "wallMs": 55.82496700000047,
+          "serverMs": 0
+        },
+        {
+          "id": "Q10_count",
+          "correct": true,
+          "rows": 1,
+          "checksum": "b9443bd0",
+          "firstMs": 68.53561700000137,
+          "wallMs": 66.18365000000085,
+          "serverMs": 0
+        }
+      ],
+      "coldStartMs": 329.3531240000011,
+      "afterColdQ2Ms": 54.73068499999863
+    }
+  ],
+  "pingMs": 64.74592099999995,
+  "genOnlyMsPerBatch": 91.52028199999995,
+  "finishedAt": "2026-10-12T18:33:13.686Z"
+}

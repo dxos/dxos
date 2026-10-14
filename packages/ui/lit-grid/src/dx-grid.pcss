@@ -129,6 +129,14 @@
           --dx-grid-cell-content-padding-block: 1px;
         }
 
+        /* Bare tags (a select cell's accessory) are spaced by the cell, since a tag carries no margin. */
+        &:has(> .dx-tag) {
+          display: flex;
+          align-items: center;
+          gap: 0.25rem;
+          --dx-grid-cell-content-padding-inline: 3px;
+        }
+
         & > .dx-grid__cell__block {
           position: absolute;
           top: 0;

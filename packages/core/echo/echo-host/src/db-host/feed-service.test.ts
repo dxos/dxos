@@ -3,15 +3,18 @@
 //
 
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
-import { describe, expect, it } from '@effect/vitest';
+import { describe, expect, it, vi } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import type * as SqlClient from 'effect/sql/SqlClient';
 import * as EffectStream from 'effect/Stream';
-import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
-import { RuntimeProvider } from '@dxos/effect';
+import { EchoFeedCodec } from '@dxos/echo-protocol';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { FeedStore } from '@dxos/feed';
+import { invariant } from '@dxos/invariant';
 import { EntityId, SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
+import { type FeedService } from '@dxos/protocols/rpc';
 
 import { LocalFeedServiceImpl } from './local-feed-service.ts';
 
@@ -217,6 +220,83 @@ describe('LocalFeedServiceImpl', () => {
     ),
   );
 
+  it.effect('subscribeSyncState recomputes only for writes to its own space', () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const feedStore = new FeedStore({ localActorId: 'actor-id', assignPositions: false });
+        const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient>();
+        const service = new LocalFeedServiceImpl(runtime, feedStore);
+        yield* feedStore.migrate();
+        const countBlocks = vi.spyOn(feedStore, 'countNamespaceBlocks');
+
+        const spaceId = SpaceId.random();
+        const pull = yield* EffectStream.toPull(service['FeedService.subscribeSyncState']({ spaceId }));
+        yield* pull;
+        const readsPerRecompute = countBlocks.mock.calls.length;
+
+        for (const target of [SpaceId.random(), spaceId]) {
+          yield* service['FeedService.insertIntoFeed']({
+            subspaceTag: FeedProtocol.WellKnownNamespaces.data,
+            spaceId: target,
+            feedId: EntityId.random(),
+            objects: [JSON.stringify({ id: 'obj1', data: 'test1' })],
+          });
+        }
+
+        yield* pull;
+        expect(countBlocks.mock.calls.length).toBe(2 * readsPerRecompute);
+      }).pipe(Effect.provide(TestLayer)),
+    ),
+  );
+
+  it.effect('subscribeSyncState emits when the remote backlog changes and when pushed blocks get positions', () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const feedStore = new FeedStore({ localActorId: 'actor-id', assignPositions: false });
+        const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient>();
+        const service = new LocalFeedServiceImpl(runtime, feedStore);
+        yield* feedStore.migrate();
+
+        const feedNamespace = FeedProtocol.WellKnownNamespaces.data;
+        const spaceId = SpaceId.random();
+        const dataState = (response: FeedService.GetSyncStateResponse) =>
+          response.namespaces?.find((entry) => entry.namespace === feedNamespace);
+        const pull = yield* EffectStream.toPull(service['FeedService.subscribeSyncState']({ spaceId }));
+        yield* pull;
+
+        yield* service['FeedService.insertIntoFeed']({
+          subspaceTag: feedNamespace,
+          spaceId,
+          feedId: EntityId.random(),
+          objects: [JSON.stringify({ id: 'obj1', data: 'test1' })],
+        });
+        const [written] = yield* pull;
+        expect(dataState(written)?.blocksToPush).toBe('1');
+
+        yield* feedStore.recordPullProgress({ spaceId, feedNamespace, lastPulledPosition: -1, blocksToPull: 3 });
+        const [remote] = yield* pull;
+        expect(dataState(remote)?.blocksToPull).toBe('3');
+
+        const { blocks } = yield* feedStore.query({ spaceId, feedNamespace, unpositionedOnly: true });
+        yield* feedStore.setPosition({
+          spaceId,
+          blocks: blocks.map((block, position) => {
+            invariant(block.feedId != null, 'queried block carries no feed id');
+            return {
+              feedId: block.feedId,
+              actorId: block.actorId,
+              sequence: block.sequence,
+              feedNamespace,
+              position,
+            };
+          }),
+        });
+        const [pushed] = yield* pull;
+        expect(dataState(pushed)?.blocksToPush).toBe('0');
+      }).pipe(Effect.provide(TestLayer)),
+    ),
+  );
+
   it.effect('subscribeFeed pushes an initial snapshot, then another on a local write', () =>
     Effect.scoped(
       Effect.gen(function* () {
@@ -249,6 +329,80 @@ describe('LocalFeedServiceImpl', () => {
         const [next] = yield* pull;
         expect(next.objects).toHaveLength(1);
         expect(JSON.parse(next.objects![0])).toMatchObject(object1);
+      }).pipe(Effect.provide(TestLayer)),
+    ),
+  );
+
+  it.effect('insertIntoFeed returns the block ids that reads stamp into each object', () =>
+    Effect.gen(function* () {
+      const feedStore = new FeedStore({ localActorId: 'actor-id', assignPositions: true });
+      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient>();
+      const service = new LocalFeedServiceImpl(runtime, feedStore);
+      yield* feedStore.migrate();
+
+      const spaceId = SpaceId.random();
+      const feedId = EntityId.random();
+      const { blocks } = yield* service['FeedService.insertIntoFeed']({
+        subspaceTag: FeedProtocol.WellKnownNamespaces.data,
+        spaceId,
+        feedId,
+        objects: [{ id: 'obj1' }, { id: 'obj2' }].map((obj) => JSON.stringify(obj)),
+      });
+
+      const result = yield* service['FeedService.queryFeed']({ query: { spaceId, feedIds: [feedId] } });
+      const read = (result.objects ?? []).map((encoded) => EchoFeedCodec.blockOf(JSON.parse(encoded)));
+      expect(read.map(({ actorId, sequence }) => EchoFeedCodec.blockId(actorId ?? '', sequence ?? -1))).toEqual(blocks);
+      expect(read.map(({ position }) => position)).toEqual([0, 1]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('subscribeFeed deltas carry only new blocks, then the positions assigned to them', () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const feedStore = new FeedStore({ localActorId: 'actor-id', assignPositions: false });
+        const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient>();
+        const service = new LocalFeedServiceImpl(runtime, feedStore);
+        yield* feedStore.migrate();
+
+        const spaceId = SpaceId.random();
+        const feedId = EntityId.random();
+        const insert = (id: string) =>
+          service['FeedService.insertIntoFeed']({
+            subspaceTag: FeedProtocol.WellKnownNamespaces.data,
+            spaceId,
+            feedId,
+            objects: [JSON.stringify({ id })],
+          });
+
+        const { blocks: first } = yield* insert('obj1');
+        const pull = yield* EffectStream.toPull(
+          service['FeedService.subscribeFeed']({ query: { spaceId, feedIds: [feedId] } }),
+        );
+        const [initial] = yield* pull;
+        expect(initial.delta).toBeUndefined();
+        expect(initial.objects).toHaveLength(1);
+
+        yield* insert('obj2');
+        const [added] = yield* pull;
+        expect(added.delta).toBe(true);
+        expect((added.objects ?? []).map((encoded) => JSON.parse(encoded).id)).toEqual(['obj2']);
+        expect(added.positions).toEqual([]);
+
+        yield* feedStore.setPosition({
+          spaceId,
+          blocks: [
+            {
+              feedId,
+              feedNamespace: FeedProtocol.WellKnownNamespaces.data,
+              actorId: 'actor-id',
+              sequence: 0,
+              position: 5,
+            },
+          ],
+        });
+        const [positioned] = yield* pull;
+        expect(positioned.objects).toEqual([]);
+        expect(positioned.positions).toEqual([{ block: first?.[0], position: 5 }]);
       }).pipe(Effect.provide(TestLayer)),
     ),
   );

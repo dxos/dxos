@@ -6,7 +6,6 @@ import * as Effect from 'effect/Effect';
 import type * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 
-import { CompleteBlock, PartialBlock } from '@dxos/assistant';
 import type * as AgentService from '@dxos/compute/AgentService';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Filter, Obj } from '@dxos/echo';
@@ -18,10 +17,10 @@ import { Message } from '@dxos/types';
  * UI renders while a request streams.
  */
 export interface EphemeralCollector {
-  /** Snapshot of `PartialBlock` payloads observed so far, in arrival order. */
-  partialBlocks: () => readonly Trace.PayloadType<typeof PartialBlock>[];
-  /** Snapshot of `CompleteBlock` payloads observed so far, in arrival order. */
-  completeBlocks: () => readonly Trace.PayloadType<typeof CompleteBlock>[];
+  /** Snapshot of `Trace.PartialBlock` payloads observed so far, in arrival order. */
+  partialBlocks: () => readonly Trace.PayloadType<typeof Trace.PartialBlock>[];
+  /** Snapshot of `Trace.CompleteBlock` payloads observed so far, in arrival order. */
+  completeBlocks: () => readonly Trace.PayloadType<typeof Trace.CompleteBlock>[];
 }
 
 /**
@@ -33,15 +32,15 @@ export const collectEphemeral = (
   session: AgentService.Session,
 ): Effect.Effect<EphemeralCollector, never, Scope.Scope> =>
   Effect.gen(function* () {
-    const partial: Trace.PayloadType<typeof PartialBlock>[] = [];
-    const complete: Trace.PayloadType<typeof CompleteBlock>[] = [];
+    const partial: Trace.PayloadType<typeof Trace.PartialBlock>[] = [];
+    const complete: Trace.PayloadType<typeof Trace.CompleteBlock>[] = [];
     yield* session.subscribeEphemeral().pipe(
       Stream.runForEach((message) =>
         Effect.sync(() => {
           for (const event of message.events) {
-            if (Trace.isOfType(PartialBlock, event)) {
+            if (Trace.isOfType(Trace.PartialBlock, event)) {
               partial.push(event.data);
-            } else if (Trace.isOfType(CompleteBlock, event)) {
+            } else if (Trace.isOfType(Trace.CompleteBlock, event)) {
               complete.push(event.data);
             }
           }

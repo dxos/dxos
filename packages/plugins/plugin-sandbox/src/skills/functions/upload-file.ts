@@ -3,38 +3,32 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
-import { ClientService } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
 import { Blob, Database } from '@dxos/echo';
 // Imported so TypeScript can name this type in the emitted .d.ts (UploadFile → File).
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { type File } from '@dxos/types';
 
-import { SandboxOperation } from '#types';
-
-import { createSandboxClient } from '../../services/sandbox-url.ts';
+import { SandboxOperation, SandboxService } from '#types';
 
 export default SandboxOperation.UploadFile.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ sandbox, file, path }) {
       const { db } = yield* Database.Service;
-      const client = yield* ClientService;
 
       const loadedSandbox = yield* Database.load(sandbox);
       const loadedFile = yield* Database.load(file);
       const blob = yield* Database.load(loadedFile.data);
 
       const bytes = yield* Blob.read(blob);
-      const content = new TextDecoder().decode(bytes);
       const sandboxId = loadedSandbox.id;
       const spaceId = db.spaceId;
-      const sandboxClient = createSandboxClient(client);
+      const sandboxService = yield* SandboxService.Service;
 
-      yield* sandboxClient.writeFile(spaceId, sandboxId, path, content).pipe(Effect.orDie);
+      yield* sandboxService.writeFile(spaceId, sandboxId, path, bytes).pipe(Effect.orDie);
 
       return { path };
-    }, Effect.provide(FetchHttpClient.layer)),
+    }),
   ),
 );

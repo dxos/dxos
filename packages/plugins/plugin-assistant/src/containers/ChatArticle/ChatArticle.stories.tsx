@@ -3,9 +3,10 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as LanguageModel from 'effect/ai/LanguageModel';
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 import React from 'react';
 import { expect, userEvent, waitFor } from 'storybook/test';
 
@@ -15,7 +16,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AiContext } from '@dxos/assistant';
-import { PlanningSkill } from '@dxos/assistant-toolkit';
+import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Skill from '@dxos/compute/Skill';
@@ -27,7 +28,7 @@ import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { Config } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
@@ -52,14 +53,14 @@ import { ChatArticle, ChatArticleProps } from './ChatArticle.tsx';
  * are unaffected. The script is exhausted rather than looped, so submitting more often than there are
  * replies fails loudly instead of hanging.
  */
-const scriptedAiServiceMiddleware = (replies: readonly string[]) => {
+const scriptedAiServiceMiddleware = (turns: readonly StoryTurn[]) => {
   const model = Effect.runSync(
     ScriptedLanguageModel.makeScriptedLanguageModel(
-      replies.map((reply) => ({ parts: [ScriptedLanguageModel.text(reply)] })),
+      turns.map(({ reply, delay }) => ({ parts: [ScriptedLanguageModel.text(reply)], delay })),
     ),
   );
   const layer = Layer.succeed(LanguageModel.LanguageModel, model);
-  return (_upstream: AiService.Service) => ({ model: () => layer });
+  return (upstream: AiService.Service): AiService.Service => ({ ...upstream, languageModel: () => layer });
 };
 
 /**
@@ -117,9 +118,12 @@ const desktopOnlyChrome = (canvasElement: HTMLElement) => ({
   statusPill: canvasElement.querySelector('[data-testid="assistant.chat-status"]'),
 });
 
+/** A turn the story drives: the prompt submitted, and the reply the scripted model returns after `delay`. */
+type StoryTurn = { prompt: string; reply: string; delay?: Duration.Input };
+
 type StoryArgs = {
   /** Turns the story drives: each prompt is submitted, and its reply is what the scripted model returns. */
-  messages?: { prompt: string; reply: string }[];
+  messages?: StoryTurn[];
   /** Seed the chat's checklist, so the article renders its `Chat.TaskList`. */
   tasks?: { title: string; status?: Task.Task['status'] }[];
   /** Contributes the deck's platform capability, which the prompt reads to drop desktop-only affordances. */
@@ -144,7 +148,7 @@ const meta = {
     withPluginManager<StoryArgs>(({ args: { messages = [], tasks = [], platform } }) => {
       return {
         plugins: [
-          ...corePlugins(),
+          ...CorePlugins.make(),
           ClientPlugin.make({
             types: [Chat.Chat, Feed.Feed, Message.Message, Outline.Outline, Task.Task, Text.Text],
             config: new Config({ runtime: { services: SERVICES_CONFIG.REMOTE } }),
@@ -190,8 +194,7 @@ const meta = {
           AssistantPlugin({
             // Only the stories that declare their turns are scripted; the rest keep the real service, so
             // `Default` stays a place to actually talk to a model rather than one with an empty script.
-            aiServiceMiddleware:
-              messages.length > 0 ? scriptedAiServiceMiddleware(messages.map(({ reply }) => reply)) : undefined,
+            aiServiceMiddleware: messages.length > 0 ? scriptedAiServiceMiddleware(messages) : undefined,
           }),
           PreviewPlugin.make(),
           // The assistant contributes the database SKILL unconditionally, but its tools resolve to
@@ -333,7 +336,7 @@ export const Send: Story = {
 /**
  * Submitting again without waiting for the running turn: the second prompt is QUEUED on the feed and
  * runs after the first, rather than being dropped (the composer used to ignore a submit while a turn
- * was active) or cancelling the turn in flight (`processor.request` interrupts, `enqueue` does not).
+ * was active) or cancelling the turn in flight (`chatModel.request` interrupts, `enqueue` does not).
  *
  * Deliberately no wait between the two submits — that is the whole case. Both replies landing is what
  * proves the second prompt survived; the agent-level ordering and mid-turn arrival are pinned
@@ -342,7 +345,8 @@ export const Send: Story = {
 export const QueueWhileProcessing: Story = {
   args: {
     messages: [
-      { prompt: 'First question', reply: 'The first answer.' },
+      // Held, so the second prompt waits in the queue long enough to be seen there.
+      { prompt: 'First question', reply: 'The first answer.', delay: '2 seconds' },
       { prompt: 'Second question', reply: 'The second answer.' },
     ],
   },
@@ -351,6 +355,21 @@ export const QueueWhileProcessing: Story = {
     // No `waitFor` on the first reply: this submit is meant to land while the first turn is running.
     await submitPrompt(canvasElement, messages[1].prompt);
 
+    // While it waits, the queued prompt is the thread's last row, framed as a prompt and ticked as
+    // waiting on the agent rather than read.
+    await waitFor(
+      () => {
+        const rows = [...canvasElement.querySelectorAll<HTMLElement>('[data-testid="feed.message"]')];
+        const row = rows.find((item) => item.textContent?.includes(messages[1].prompt));
+        const status = row?.querySelector<HTMLElement>('[data-testid="chat.delivery"]')?.dataset.delivery;
+        if (!row || (status !== 'sent' && status !== 'delivered')) {
+          throw new Error(`Queued prompt "${messages[1].prompt}" not shown as waiting.`);
+        }
+        void expect(rows.at(-1)).toBe(row);
+      },
+      { timeout: 10_000, interval: 50 },
+    );
+
     for (const { prompt, reply } of messages) {
       await waitFor(() => void expect(threadText(canvasElement)).toContain(reply), {
         timeout: 30_000,
@@ -358,6 +377,21 @@ export const QueueWhileProcessing: Story = {
       });
       await expect(threadText(canvasElement)).toContain(prompt);
     }
+  },
+};
+
+/**
+ * For people rather than the runner: three prompts submitted while the first turn is still being
+ * answered, so each shows in the thread at once and its ticks move from sent to delivered to read as
+ * the agent takes them up in order. The first reply is held long enough for the queue to be seen.
+ */
+export const QueuedPrompts: Story = {
+  args: {
+    messages: [
+      { prompt: 'Summarize the meeting notes.', reply: 'The meeting agreed three things.', delay: '4 seconds' },
+      { prompt: 'Then draft a follow-up email.', reply: 'Here is a draft of the email.', delay: '2 seconds' },
+      { prompt: 'Copy in the design leads.', reply: 'Added the design leads.' },
+    ],
   },
 };
 

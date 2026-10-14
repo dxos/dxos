@@ -94,7 +94,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
    * instead of being minted again. Held weakly, and only ever compared by identity: a stale entry costs
    * a refresh that was already the unconditional behaviour.
    */
-  _rawRecords = new WeakMap<object, { docHandle: object | undefined; raw: object | undefined }>();
+  _rawRecords = new WeakMap<object, { handle: object | undefined; raw: object | undefined }>();
 
   init(target: ProxyTarget): void {
     invariant(target[symbolInternals]);
@@ -186,7 +186,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return;
     }
     this._rawRecords.set(target, {
-      docHandle: core.docHandle,
+      handle: core.handle,
       raw: typeof raw === 'object' ? (raw ?? undefined) : undefined,
     });
 
@@ -222,7 +222,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (previousRaw !== undefined && previousRaw === raw) {
       return;
     }
-    this._rawRecords.set(target, { docHandle: core.docHandle, raw });
+    this._rawRecords.set(target, { handle: core.handle, raw });
     // Both sides of the per-key comparison below, or nothing: with no record to compare against, every
     // key is materialized afresh as it was before.
     const comparable =
@@ -282,7 +282,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
    */
   private _previousRaw(target: ProxyTarget, core: ObjectCore): object | undefined {
     const cached = this._rawRecords.get(target);
-    return cached !== undefined && cached.docHandle === core.docHandle ? cached.raw : undefined;
+    return cached !== undefined && cached.handle === core.handle ? cached.raw : undefined;
   }
 
   /**
@@ -484,7 +484,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     });
 
     Schema.asserts(propertySchema, value);
-    SchemaValidator.assertExactProperties(propertySchema, value, (path) => getDeep(value, path));
+    SchemaValidator.assertExactProperties(propertySchema.ast, value, (path) => getDeep(value, path));
     return value;
   }
 

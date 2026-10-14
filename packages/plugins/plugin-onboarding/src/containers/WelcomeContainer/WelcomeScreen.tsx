@@ -5,19 +5,19 @@
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Account from '@dxos/app-toolkit/Account';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { createDidFromIdentityKey } from '@dxos/credentials';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ClientOperation } from '@dxos/plugin-client';
+import * as ClientOperation from '@dxos/plugin-client/ClientOperation';
 import * as PasskeyError from '@dxos/plugin-client/PasskeyError';
 import { requirePublicKey } from '@dxos/protocols/buf';
 import { useClient } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
-import { ThemeProvider, defaultTx } from '@dxos/react-ui';
+import * as Theme from '@dxos/react-ui/Theme';
 import { getHostPlatform, isTauri } from '@dxos/util';
 
 import { joinWaitlist, login } from '../../credentials/index.ts';
@@ -50,7 +50,7 @@ const emailLoginEnabled = !passkeyOnly && (!isTauri() || NATIVE_EMAIL_LOGIN_ENAB
 export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
   const client = useClient();
   const identity = useIdentity();
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [state, setState] = useState<WelcomeState>(WelcomeState.INIT);
   const [error, setError] = useState<WelcomeError | null>(null);
   const pendingRef = useRef(false);
@@ -121,8 +121,8 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
     // On success the onboarding manager dismisses this dialog off the back of the new identity.
     const { error: redeemError } = await invokePromise(ClientOperation.RedeemPasskey);
     if (redeemError) {
-      log.catch(redeemError);
-      setError(passkeyError(PasskeyError.classify(redeemError)));
+      // `report` logs a dismissal at info and a genuine failure at error, then classifies for the UI.
+      setError(passkeyError(PasskeyError.report(redeemError)));
     }
   }, [invokePromise]);
 
@@ -289,7 +289,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
   );
 
   return (
-    <ThemeProvider tx={defaultTx} themeMode='dark' resourceExtensions={translations}>
+    <Theme.Provider tx={Theme.defaultTx} themeMode='dark' resourceExtensions={translations}>
       <Welcome
         state={state}
         error={error}
@@ -304,6 +304,6 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
         onCreateAccountWithOAuth={!identity && !passkeyOnly ? handleCreateAccountWithOAuth : undefined}
         onJoinWaitlist={!passkeyOnly ? handleJoinWaitlist : undefined}
       />
-    </ThemeProvider>
+    </Theme.Provider>
   );
 };

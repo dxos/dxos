@@ -6,7 +6,7 @@ import { Ref } from '@dxos/echo';
 
 import { meta } from '#meta';
 
-import { getReadySpaces, labelObject, queryAllObjects } from '../helpers.ts';
+import { getReadyDatabases, labelObject, queryAllObjects } from '../helpers.ts';
 import { type DiagnosticIssue, type DiagnosticProvider } from '../types.ts';
 
 /**
@@ -17,15 +17,15 @@ export const danglingRefsDiagnostic: DiagnosticProvider = {
   id: 'dangling-refs',
   label: ['diagnostic.dangling-refs.label', { ns: meta.profile.key }],
   description: ['diagnostic.dangling-refs.description', { ns: meta.profile.key }],
-  run: async ({ client, reportProgress, signal }) => {
+  run: async ({ spaces, graph, reportProgress, signal }) => {
     const issues: DiagnosticIssue[] = [];
-    const spaces = getReadySpaces(client);
-    for (const space of spaces) {
+    const databases = await getReadyDatabases({ spaces, graph });
+    for (const db of databases) {
       if (signal.aborted) {
         break;
       }
-      reportProgress(space.id);
-      const objects = await queryAllObjects(space);
+      reportProgress(db.spaceId);
+      const objects = await queryAllObjects(db);
       for (const obj of objects) {
         if (signal.aborted) {
           break;
@@ -39,22 +39,22 @@ export const danglingRefsDiagnostic: DiagnosticProvider = {
             const target = await ref.tryLoad();
             if (!target) {
               issues.push({
-                id: `${space.id}:${(obj as { id?: string }).id ?? 'unknown'}:${path.join('.')}:dangling`,
+                id: `${db.spaceId}:${(obj as { id?: string }).id ?? 'unknown'}:${path.join('.')}:dangling`,
                 severity: 'error',
                 message: `Dangling reference at "${path.join('.')}" → ${ref.uri}.`,
                 subjectLabel: labelObject(obj),
-                spaceId: space.id,
+                spaceId: db.spaceId,
               });
             }
           } catch (error) {
             issues.push({
-              id: `${space.id}:${(obj as { id?: string }).id ?? 'unknown'}:${path.join('.')}:error`,
+              id: `${db.spaceId}:${(obj as { id?: string }).id ?? 'unknown'}:${path.join('.')}:error`,
               severity: 'error',
               message: `Failed to resolve reference at "${path.join('.')}": ${
                 error instanceof Error ? error.message : String(error)
               }.`,
               subjectLabel: labelObject(obj),
-              spaceId: space.id,
+              spaceId: db.spaceId,
             });
           }
         }

@@ -7,6 +7,7 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import {
   AppGraphBuilder,
   CreateObject,
+  Migrations,
   OperationHandler,
   PluginAsset,
   ReactSurface,
@@ -19,6 +20,7 @@ import { meta } from '#meta';
 export const TasksPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(CreateObject),
+  Plugin.addModule(Migrations),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(PluginAsset),
   Plugin.addModule(ReactSurface),

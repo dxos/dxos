@@ -15,6 +15,7 @@ import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type Client, ClientService } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import type * as Skill from '@dxos/compute/Skill';
 import { type Registry } from '@dxos/echo';
 import { SpaceId } from '@dxos/keys';
 import { McpServer } from '@dxos/mcp-server';
@@ -40,7 +41,14 @@ export type LocalServer = {
  * the client's own hypergraph registry rather than one hydrated from an RPC
  * (`McpServer.hydrateRegistry`).
  */
-export const makeLocalServer = Effect.fn(function* () {
+export const makeLocalServer = Effect.fn(function* (
+  options: {
+    /** Handlers that take precedence over the capability-contributed ones for the same key. */
+    readonly overrides?: readonly Operation.WithHandler<Operation.Definition.Any>[];
+    /** Skills served in addition to the capability-contributed ones. */
+    readonly skills?: readonly Skill.Definition[];
+  } = {},
+) {
   const client = yield* ClientService;
   const capabilities = yield* Capability.Service;
   // Captured so an invocation can erase its own requirements: the tool handlers this host backs
@@ -52,11 +60,13 @@ export const makeLocalServer = Effect.fn(function* () {
   // The project and task verbs arrive as capabilities like every other, because `serve` activates
   // both plugins; `operationHandlers` brings the rest the CLI curates for chat.
   const handlerSet = OperationHandlerSet.merge(
+    // First, because the merge keeps the first registration of a key.
+    OperationHandlerSet.make(...(options.overrides ?? [])),
     ...capabilities.getAll(Capabilities.OperationHandler),
     operationHandlers,
   );
   const handlers = dedupeOperations(yield* handlerSet.handlers);
-  const skills = dedupeByKey(capabilities.getAll(AppCapabilities.SkillDefinition));
+  const skills = dedupeByKey([...capabilities.getAll(AppCapabilities.SkillDefinition), ...(options.skills ?? [])]);
 
   // The client's own hypergraph registry, not a separate instance: plugin-routine's registry-sync
   // already fills it with the capability-contributed skills and serialized operation handlers, so

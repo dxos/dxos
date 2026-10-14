@@ -1,0 +1,165 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { beforeEach, describe, test } from 'vitest';
+
+import {
+  SQLITE_IO_GLOBAL,
+  getSqliteIoStats,
+  instrumentVfs,
+  recordStatement,
+  recordStatementError,
+  registerCacheSampler,
+  resetSqliteIoStats,
+  statementKind,
+} from './vfs-metrics.ts';
+
+const SQLITE_OK = 0;
+const SQLITE_IOERR = 10;
+const SQLITE_IOERR_SHORT_READ = 522;
+
+describe('instrumentVfs', () => {
+  beforeEach(() => {
+    resetSqliteIoStats();
+  });
+
+  test('counts requested bytes and operations', ({ expect }) => {
+    const vfs = fakeVfs();
+    instrumentVfs(vfs);
+
+    vfs.jRead(1, new Uint8Array(4096), 0);
+    vfs.jRead(1, new Uint8Array(4096), 4096);
+    vfs.jWrite(1, new Uint8Array(1024), 0);
+    vfs.jTruncate(1, 0);
+    vfs.jSync(1, 0);
+
+    expect(getSqliteIoStats()).toMatchObject({
+      readBytes: 8192,
+      reads: 2,
+      writeBytes: 1024,
+      writes: 1,
+      truncates: 1,
+      syncs: 1,
+    });
+  });
+
+  test('the wrapped method still runs, and its result is returned unchanged', ({ expect }) => {
+    // The wrapper sits in SQLite's I/O path: swallowing a result code or skipping the call would
+    // corrupt a database rather than spoil a measurement.
+    const vfs = fakeVfs(SQLITE_IOERR);
+    instrumentVfs(vfs);
+
+    expect(vfs.jWrite(1, new Uint8Array(8), 0)).toBe(SQLITE_IOERR);
+    expect(vfs.calls).toEqual(['write']);
+  });
+
+  test('a short read is counted as bytes requested, and flagged', ({ expect }) => {
+    // SQLite asks for a whole page past end-of-file during recovery; the VFS zero-fills the rest.
+    // `readBytes` stays the I/O that was asked for, and the flag says the delivery differed.
+    const vfs = fakeVfs(SQLITE_IOERR_SHORT_READ);
+    instrumentVfs(vfs);
+
+    vfs.jRead(1, new Uint8Array(4096), 0);
+
+    expect(getSqliteIoStats()).toMatchObject({ readBytes: 4096, reads: 1, shortReads: 1 });
+  });
+
+  test('a rejected write contributes no bytes', ({ expect }) => {
+    // A short write is an error rather than a partial success, so counting its buffer would report
+    // bytes that never reached storage.
+    const vfs = fakeVfs(SQLITE_IOERR);
+    instrumentVfs(vfs);
+
+    vfs.jWrite(1, new Uint8Array(4096), 0);
+
+    expect(getSqliteIoStats()).toMatchObject({ writeBytes: 0, writes: 1, writeErrors: 1 });
+  });
+
+  test('a VFS missing a method is wrapped without throwing', ({ expect }) => {
+    // wa-sqlite ships several VFS examples and the harness must not assume this one's shape.
+    const partial: { jSync?: (fileId: number, flags: number) => number } = {};
+    expect(() => instrumentVfs(partial)).not.toThrow();
+    expect(() => instrumentVfs(undefined)).not.toThrow();
+    expect(() => instrumentVfs(null)).not.toThrow();
+  });
+
+  test('the counters are readable from outside the module', ({ expect }) => {
+    // How the measurement harness reads them: SQLite runs in the dedicated worker, so the harness
+    // evaluates this global in the worker target over CDP.
+    const vfs = fakeVfs();
+    instrumentVfs(vfs);
+    vfs.jWrite(1, new Uint8Array(2048), 0);
+
+    const read = (globalThis as Record<string, unknown>)[SQLITE_IO_GLOBAL];
+    expect(typeof read).toBe('function');
+    expect((read as () => { writeBytes: number })().writeBytes).toBe(2048);
+  });
+
+  test('the returned stats cannot mutate the running totals', ({ expect }) => {
+    const vfs = fakeVfs();
+    instrumentVfs(vfs);
+    vfs.jWrite(1, new Uint8Array(512), 0);
+
+    const snapshot = getSqliteIoStats();
+    snapshot.writeBytes = 999_999;
+
+    expect(getSqliteIoStats().writeBytes).toBe(512);
+  });
+});
+
+/** A VFS that records its calls and returns whatever the test needs it to. */
+const fakeVfs = (result: number = SQLITE_OK) => {
+  const calls: string[] = [];
+  return {
+    calls,
+    jRead: (_fileId: number, _pData: Uint8Array, _iOffset: number) => (calls.push('read'), result),
+    jWrite: (_fileId: number, _pData: Uint8Array, _iOffset: number) => (calls.push('write'), result),
+    jTruncate: (_fileId: number, _iSize: number) => (calls.push('truncate'), SQLITE_OK),
+    jSync: (_fileId: number, _flags: number) => (calls.push('sync'), SQLITE_OK),
+  };
+};
+
+describe('statement counters', () => {
+  beforeEach(() => {
+    resetSqliteIoStats();
+  });
+
+  test('statementKind reads the leading keyword, a CTE counting as a select', ({ expect }) => {
+    expect(statementKind('  SELECT 1')).toBe('select');
+    expect(statementKind('WITH x AS (SELECT 1) SELECT * FROM x')).toBe('select');
+    // A CTE introduces a write as often as a read; the verb after its definitions decides.
+    expect(statementKind('WITH x AS (SELECT 1) INSERT INTO t SELECT * FROM x')).toBe('insert');
+    expect(statementKind('WITH RECURSIVE x(n) AS (SELECT 1 UNION SELECT n + 1 FROM x) DELETE FROM t')).toBe('delete');
+    expect(statementKind("with a as (select ')'), b as (update t set c = 1) update u set d = 2")).toBe('update');
+    expect(statementKind('insert into t values (1)')).toBe('insert');
+    expect(statementKind('REPLACE INTO t VALUES (1)')).toBe('insert');
+    expect(statementKind('UPDATE t SET a = 1')).toBe('update');
+    expect(statementKind('DELETE FROM t')).toBe('delete');
+    expect(statementKind('PRAGMA user_version')).toBe('other');
+    expect(statementKind('WITH x AS (SELECT 1)')).toBe('other');
+  });
+
+  test('recordStatement accumulates kinds, rows read and rows changed', ({ expect }) => {
+    recordStatement('select', 12, 0);
+    recordStatement('insert', 0, 3);
+    recordStatementError();
+    expect(getSqliteIoStats()).toMatchObject({
+      selects: 1,
+      inserts: 1,
+      rowsRead: 12,
+      rowsChanged: 3,
+      statementErrors: 1,
+    });
+  });
+
+  test('cache readings are sampled on read and survive the connection closing', ({ expect }) => {
+    let reading = { hits: 5, misses: 1 };
+    const unregister = registerCacheSampler(() => reading);
+    expect(getSqliteIoStats()).toMatchObject({ cacheHits: 5, cacheMisses: 1 });
+    reading = { hits: 9, misses: 2 };
+    unregister();
+    // Monotonic across the close: the final reading is kept rather than dropped with the sampler.
+    expect(getSqliteIoStats()).toMatchObject({ cacheHits: 9, cacheMisses: 2 });
+  });
+});

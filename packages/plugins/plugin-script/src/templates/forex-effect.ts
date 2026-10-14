@@ -2,15 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
+import * as HttpClient from 'effect/http/HttpClient';
+import * as HttpClientRequest from 'effect/http/HttpClientRequest';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
-import * as HttpClient from 'effect/unstable/http/HttpClient';
-import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
+
+class NoRateError extends Data.TaggedError('NoRateError')<{ from: string; to: string }> {}
 
 const ForexEffect = Operation.make({
   meta: {
@@ -40,7 +43,7 @@ export default ForexEffect.pipe(
 
       const rate = json?.data?.rates?.[to];
       if (rate == null) {
-        return yield* Effect.fail(new Error(`No rate found for ${from} -> ${to}`));
+        return yield* Effect.fail(new NoRateError({ from, to }));
       }
 
       return rate.toString();

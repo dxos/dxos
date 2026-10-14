@@ -155,6 +155,9 @@
       "path": "../../ui/react-ui-pickers"
     },
     {
+      "path": "../../ui/react-ui-query"
+    },
+    {
       "path": "../../ui/react-ui-search"
     },
     {
@@ -174,9 +177,6 @@
     },
     {
       "path": "../plugin-graph"
-    },
-    {
-      "path": "../plugin-observability"
     },
     {
       "path": "../plugin-preview"

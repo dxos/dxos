@@ -15,8 +15,8 @@ import { escapeRegExpSource } from '../../../util/index.ts';
 import {
   type WidgetDef,
   type WidgetMatch,
+  type WidgetMatchContext,
   type WidgetMatcher,
-  type WidgetNotifier,
   type WidgetProps,
   createWidget,
   widgetId,
@@ -48,7 +48,7 @@ export type XmlWidgetRegistry = Record<string, XmlWidgetDef>;
  * from that element onwards dropped, because the parser splits contents into alternating text and
  * element children. Use {@link getXmlInnerText} where nesting is possible.
  */
-export const getXmlTextChild = (children: any[]): string | null => {
+export const getXmlTextChild = (children: WidgetProps['children']): string | null => {
   const child = children?.[0];
   return typeof child === 'string' ? child : null;
 };
@@ -144,11 +144,7 @@ const matchStreamingTail = (
   range: Range,
   registry: XmlWidgetRegistry,
   streamingTagNames: string[],
-  {
-    context,
-    widgetStateMap,
-    notifier,
-  }: { context: any; widgetStateMap: Record<string, any>; notifier: WidgetNotifier },
+  { context, widgetStateMap, notifier }: Pick<WidgetMatchContext, 'context' | 'widgetStateMap' | 'notifier'>,
 ): WidgetMatch | undefined => {
   const tailText = state.sliceDoc(range.from, range.to);
   const streamingPattern = streamingTagNames.map(escapeRegExpSource).join('|');

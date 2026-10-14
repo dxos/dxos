@@ -39,7 +39,7 @@ export const MultiSelectList = ({ items, onChange }: MultiSelectListProps) => {
   const api = connect(service);
 
   return (
-    <Listbox.Root>
+    <Listbox.Root items={items.map(({ id, label }) => ({ value: id, label: label }))}>
       <Listbox.Viewport>
         <Listbox.Content aria-label='Tasks' aria-multiselectable>
           {items.map(({ id, label }) => (
@@ -51,7 +51,7 @@ export const MultiSelectList = ({ items, onChange }: MultiSelectListProps) => {
               onMouseDown={(event) => event.shiftKey && event.preventDefault()}
               onClick={(event) => (event.shiftKey && event.altKey ? api.extendTo(id) : api.select(id, event.shiftKey))}
             >
-              <Listbox.ItemLabel>{label}</Listbox.ItemLabel>
+              <Listbox.ItemText>{label}</Listbox.ItemText>
             </Listbox.Item>
           ))}
         </Listbox.Content>

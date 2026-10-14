@@ -1,6 +1,6 @@
 {
   "name": "@dxos/assistant-evals",
-  "version": "0.11.1",
+  "version": "0.14.0",
   "private": true,
   "description": "Cross-plugin assistant evaluations: evalite-scored evals graded against real DB/tool effects.",
   "homepage": "https://dxos.org",
@@ -23,6 +23,9 @@
     "dist",
     "src"
   ],
+  "scripts": {
+    "evals:live": "DEEPSEEK_API_KEY=op://eng-dev/com.deepseek/credential op run -- pnpm exec dx-killorphans evalite run"
+  },
   "dependencies": {
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/edge-client": "workspace:*",
@@ -30,6 +33,8 @@
   },
   "devDependencies": {
     "@bufbuild/protobuf": "catalog:",
+    "@dxos/agent-code-mode": "workspace:*",
+    "@dxos/agent-runtime": "workspace:*",
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/assistant": "workspace:*",
@@ -40,17 +45,21 @@
     "@dxos/compute-runtime": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/credentials": "workspace:*",
+    "@dxos/diagram": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/link": "workspace:*",
     "@dxos/mcp-client": "workspace:*",
     "@dxos/mcp-server": "workspace:*",
+    "@dxos/plugin-agent": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-crm": "workspace:*",
     "@dxos/plugin-debug": "workspace:*",
+    "@dxos/plugin-file": "workspace:*",
     "@dxos/plugin-illustrator": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
@@ -61,6 +70,7 @@
     "@dxos/plugin-table": "workspace:*",
     "@dxos/plugin-tasks": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
+    "@dxos/plugin-uml": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
     "@dxos/test-utils": "workspace:*",

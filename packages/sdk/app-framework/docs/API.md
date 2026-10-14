@@ -6,15 +6,14 @@ API surface.
 ## Imports
 
 ```ts
-import {
-  ActivationEvent, // Runtime activation events (make/oneOf/allOf)
-  ActivationEvents, // Well-known framework events (Startup, ...)
-  Capabilities, // Well-known capability tags (ReactSurface, OperationHandler, ...)
-  Capability, // Capability tags, contributions, module authoring
-  Plugin, // Plugin definition + builder
-  PluginManager, // Manager type (usually obtained, not constructed)
-} from '@dxos/app-framework';
-import { Surface, useApp, useCapabilities, useCapability } from '@dxos/app-framework/ui';
+import * as ActivationEvent from '@dxos/app-framework/ActivationEvent'; // Runtime activation events (make/oneOf/allOf)
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents'; // Well-known framework events (Startup, ...)
+import * as Capabilities from '@dxos/app-framework/Capabilities'; // Well-known capability tags (ReactSurface, OperationHandler, ...)
+import * as Capability from '@dxos/app-framework/Capability'; // Capability tags, contributions, module authoring
+import * as Hooks from '@dxos/app-framework/Hooks'; // useApp, useCapabilities, useCapability
+import * as Plugin from '@dxos/app-framework/Plugin'; // Plugin definition + builder
+import * as PluginManager from '@dxos/app-framework/PluginManager'; // Manager type (usually obtained, not constructed)
+import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
 ```
 
@@ -140,8 +139,8 @@ Effect.gen(function* () {
 **3. React.**
 
 ```tsx
-const surfaces = useCapabilities(Capabilities.ReactSurface);
-const client = useCapability(ClientCapabilities.Client);
+const surfaces = Hooks.useCapabilities(Capabilities.ReactSurface);
+const client = Hooks.useCapability(ClientCapabilities.Client);
 ```
 
 > In graph-extension atom callbacks always use `Capability.atom`, never a synchronous
@@ -233,7 +232,7 @@ provider, or unsatisfiable requirement puts the owning plugin in an error state
 
 `Capabilities` (framework) — `ReactSurface`, `ReactContext`, `ReactRoot`, `OperationHandler`,
 `OperationInvoker`, `UndoMapping`, `Command`, `Layer`, `LayerSpec`, `TraceSink`, `AtomRegistry`,
-`ServiceResolver`, `ProcessManagerRuntime`, `ProcessMonitor`, `PluginManager`.
+`ServiceResolver`, `ProcessManagerRuntime`, `ProcessManager`, `PluginManager`.
 
 `AppCapabilities` (`@dxos/app-toolkit`) — `Translations`, `Schema`, `Settings`, `AppGraph`,
 `AppGraphBuilder`, `SkillDefinition`, `PluginAsset`, `Toolkit`, `NavigationTargetResolver`,

@@ -1,0 +1,1 @@
+SELECT (STRLANG("abc", "en") = STRLANG("abc", "EN") AS ?res0) (STRLANG("abc", "EN") = "abc"@en AS ?res1) {}

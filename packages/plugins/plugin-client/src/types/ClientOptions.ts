@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+// @import-as-namespace
+
 import type * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
@@ -86,11 +88,5 @@ export type ClientPluginOptions = ClientOptions & {
    * Called when spaces are ready.
    * Plugin context is provided so capabilities are accessible.
    */
-  onSpacesReady?: (params: { client: Client }) => Effect.Effect<void, Error | never, Capability.Service | never>;
-
-  /**
-   * Called when the client is reset.
-   * Plugin context is provided so capabilities are accessible.
-   */
-  onReset?: (params: { target?: string }) => Effect.Effect<void, Error | never, Capability.Service | never>;
+  onSpacesAvailable?: (params: { client: Client }) => Effect.Effect<void, Error | never, Capability.Service | never>;
 };

@@ -15,16 +15,27 @@ import { Database, type Query } from '@dxos/echo';
 
 import { type ToolInvocation, toolInvocations } from './assertions.ts';
 
+/** One message of a conversational run, as the scorers see it. */
+export type Turn = {
+  readonly role: 'user' | 'assistant';
+  readonly text: string;
+};
+
 /** What the run itself contributes, for a scorer grading the session rather than what it left. */
-export class Run extends Context.Service<Run, { readonly durationMillis: number }>()(
-  '@dxos/assistant-evals/Scorer/Run',
-) {}
+export class Run extends Context.Service<
+  Run,
+  {
+    readonly durationMillis: number;
+    /** The messages exchanged, for a run driven as a conversation; empty otherwise. */
+    readonly transcript: readonly Turn[];
+  }
+>()('@dxos/assistant-evals/Scorer/Run') {}
 
 /**
  * Per-run memo for the work several scorers share (see {@link shared}). Variants of one eval run
  * concurrently in one process, so the cache is the run's and never the module's.
  */
-export class Memo extends Context.Service<Memo, { readonly cache: Map<unknown, Exit.Exit<any, any>> }>()(
+export class Memo extends Context.Service<Memo, { readonly cache: Map<unknown, Exit.Exit<unknown, unknown>> }>()(
   '@dxos/assistant-evals/Scorer/Memo',
 ) {}
 
@@ -122,6 +133,23 @@ export const toolCalls = (options: {
     score: invocations.pipe(Effect.map(options.score)),
   });
 
+/** Whether one tool call failed: code mode's `eval` reports a failed program as a tool error too. */
+export const failedCall = (invocation: ToolInvocation): boolean => invocation.error !== undefined;
+
+/**
+ * The fraction of the session's tool calls that succeeded (see {@link failedCall}). A session that
+ * made no calls scores nothing: every task graded with this one needs at least one.
+ */
+export const toolCallSuccess = (options: { name?: string; description?: string } = {}): Scorer =>
+  toolCalls({
+    name: options.name ?? 'tool-calls-succeeded',
+    description: options.description ?? 'The fraction of tool calls that succeeded rather than failed.',
+    score: (invocations) =>
+      invocations.length === 0
+        ? 0
+        : invocations.filter((invocation) => !failedCall(invocation)).length / invocations.length,
+  });
+
 /**
  * A scorer over the session's wall clock: full marks up to `targetMinutes`, falling linearly to
  * nothing at `budgetMinutes`. `delivered` gates it, so a run that never produced the thing being
@@ -150,8 +178,6 @@ export const duration = (options: {
 /** Booleans are a mark or none; fractions are clamped, so a scorer cannot spend more than its one. */
 const normalize = (result: Result): number =>
   typeof result === 'boolean' ? (result ? 1 : 0) : Math.max(0, Math.min(1, Number.isFinite(result) ? result : 0));
-
-const describe = (cause: Cause.Cause<unknown>): string => Cause.pretty(cause);
 
 /**
  * A run whose space is still open. The harness is disposed by the eval's `afterAll` (see
@@ -182,11 +208,11 @@ export const closeSession = (id: string): void => {
  * What a session provides its scorers beyond the space itself: what the run reports about its own
  * wall clock, and the memo the shared reads of that run agree on.
  */
-export const sessionServices = (run: { durationMillis: number }) => {
-  const cache = new Map<unknown, Exit.Exit<any, any>>();
+export const sessionServices = (run: { durationMillis: number; transcript?: readonly Turn[] }) => {
+  const cache = new Map<unknown, Exit.Exit<unknown, unknown>>();
   return <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, Exclude<R, Run | Memo>> =>
     effect.pipe(
-      Effect.provideService(Run, { durationMillis: run.durationMillis }),
+      Effect.provideService(Run, { durationMillis: run.durationMillis, transcript: run.transcript ?? [] }),
       Effect.provideService(Memo, { cache }),
     ) as Effect.Effect<A, E, Exclude<R, Run | Memo>>;
 };
@@ -205,7 +231,9 @@ export const runAll = (scorers: readonly Any[]): Effect.Effect<Scores, never, Se
       const exit = yield* Effect.exit(
         scorer.score.pipe(Effect.flatMap((result) => Effect.try(() => normalize(result)))),
       );
-      scores[scorer.name] = Exit.isSuccess(exit) ? { score: exit.value } : { score: 0, error: describe(exit.cause) };
+      scores[scorer.name] = Exit.isSuccess(exit)
+        ? { score: exit.value }
+        : { score: 0, error: Cause.pretty(exit.cause) };
     }
     return scores;
   });
@@ -233,6 +261,6 @@ export const toEvalite = (scorers: readonly Any[]) =>
       const exit = await session.grade(scorer);
       return Exit.isSuccess(exit)
         ? { score: normalize(exit.value), metadata: {} }
-        : { score: 0, metadata: { error: describe(exit.cause) } };
+        : { score: 0, metadata: { error: Cause.pretty(exit.cause) } };
     },
   }));

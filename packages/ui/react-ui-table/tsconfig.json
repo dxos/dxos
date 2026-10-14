@@ -33,9 +33,6 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/test-utils"
     },
     {

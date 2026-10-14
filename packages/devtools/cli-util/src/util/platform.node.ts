@@ -5,11 +5,13 @@
 import * as Effect from 'effect/Effect';
 import { spawn } from 'node:child_process';
 
+import { PlatformError } from './errors.ts';
+
 /**
  * Copy text to the system clipboard.
  * Supports macOS (pbcopy), Windows (clip), and Linux (xclip/xsel).
  */
-export const copyToClipboard = (text: string): Effect.Effect<void, Error> =>
+export const copyToClipboard = (text: string): Effect.Effect<void, PlatformError> =>
   Effect.tryPromise({
     try: () => {
       return new Promise<void>((resolve, reject) => {
@@ -65,14 +67,14 @@ export const copyToClipboard = (text: string): Effect.Effect<void, Error> =>
         proc.on('error', fallback);
       });
     },
-    catch: (error) => new Error(`Failed to copy to clipboard: ${error}`),
+    catch: (error) => new PlatformError({ message: 'Failed to copy to clipboard.', cause: error }),
   });
 
 /**
  * Open a URL in the system's default browser.
  * Supports macOS (open), Windows (start), and Linux (xdg-open).
  */
-export const openBrowser = (url: string): Effect.Effect<void, Error> =>
+export const openBrowser = (url: string): Effect.Effect<void, PlatformError> =>
   Effect.tryPromise({
     try: () => {
       return new Promise<void>((resolve, reject) => {
@@ -104,5 +106,5 @@ export const openBrowser = (url: string): Effect.Effect<void, Error> =>
         proc.on('error', reject);
       });
     },
-    catch: (error) => new Error(`Failed to open browser: ${error}`),
+    catch: (error) => new PlatformError({ message: 'Failed to open browser.', cause: error }),
   });

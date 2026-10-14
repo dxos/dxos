@@ -7,7 +7,7 @@ import React from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { Path } from '@dxos/react-ui-list';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -39,7 +39,7 @@ const meta = {
   decorators: [
     // The attention core plugin provides the view state the selection persists through; the debug
     // plugin contributes the console and log pages and their articles; the stub adds a branch.
-    withPluginManager({ plugins: [...corePlugins(), DebugPlugin.make(), StubToolsPlugin()] }),
+    withPluginManager({ plugins: [...CorePlugins.make(), DebugPlugin.make(), StubToolsPlugin()] }),
     withTheme(),
     withLayout({ layout: 'centered' }),
   ],

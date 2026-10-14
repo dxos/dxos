@@ -15,4 +15,4 @@ export const meta = pluginMeta;
 /** Constructs the plugin; the body loads on first enable. */
 export const make = Plugin.lazy<RegistryPluginOptions>(meta, () => import('#plugin'));
 
-export type { RegistryPluginOptions };
+export type { RegistryPluginOptions as Options };

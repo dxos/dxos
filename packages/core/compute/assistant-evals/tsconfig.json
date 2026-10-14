@@ -12,7 +12,13 @@
       "path": "../../../common/async"
     },
     {
+      "path": "../../../common/diagram"
+    },
+    {
       "path": "../../../common/effect"
+    },
+    {
+      "path": "../../../common/errors"
     },
     {
       "path": "../../../common/keys"
@@ -22,6 +28,9 @@
     },
     {
       "path": "../../../common/util"
+    },
+    {
+      "path": "../../../plugins/plugin-agent"
     },
     {
       "path": "../../../plugins/plugin-assistant"
@@ -34,6 +43,9 @@
     },
     {
       "path": "../../../plugins/plugin-debug"
+    },
+    {
+      "path": "../../../plugins/plugin-file"
     },
     {
       "path": "../../../plugins/plugin-illustrator"
@@ -64,6 +76,9 @@
     },
     {
       "path": "../../../plugins/plugin-testing"
+    },
+    {
+      "path": "../../../plugins/plugin-uml"
     },
     {
       "path": "../../../sdk/app-framework"
@@ -100,6 +115,12 @@
     },
     {
       "path": "../../protocols"
+    },
+    {
+      "path": "../agent-code-mode"
+    },
+    {
+      "path": "../agent-runtime"
     },
     {
       "path": "../ai"

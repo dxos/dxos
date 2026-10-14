@@ -9,7 +9,7 @@
  * Usage: node retainers.mjs <file.heapsnapshot> [--min 400000] [--depth 5]
  */
 
-import { readFileSync } from 'node:fs';
+import { readHeapSnapshot } from './read-heap-snapshot.mjs';
 
 const file = process.argv[2];
 const arg = (name, dflt) => {
@@ -20,7 +20,7 @@ const minSize = arg('--min', 400_000);
 const depth = arg('--depth', 5);
 
 console.error('parsing...');
-const snap = JSON.parse(readFileSync(file, 'utf8'));
+const snap = readHeapSnapshot(file);
 const { snapshot, nodes, edges, strings } = snap;
 const nodeFields = snapshot.meta.node_fields;
 const nodeTypes = snapshot.meta.node_types[0];

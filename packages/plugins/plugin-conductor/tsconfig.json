@@ -47,10 +47,10 @@
       "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/react-ui-canvas-compute"
+      "path": "../../ui/react-ui-canvas"
     },
     {
-      "path": "../../ui/react-ui-canvas-editor"
+      "path": "../../ui/react-ui-canvas-compute"
     },
     {
       "path": "../../ui/ui-theme"

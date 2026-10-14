@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Obj, type Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
@@ -30,7 +30,7 @@ export type Source = {
  * without this plugin knowing those types exist.
  */
 export const useSourceText = (subject: Obj.Unknown | undefined): Source => {
-  const extractors = useCapabilities(AppCapabilities.TextContent);
+  const extractors = Hooks.useCapabilities(AppCapabilities.TextContent);
   const document = Obj.instanceOf(Markdown.Document, subject) ? subject : undefined;
   const [content] = useObject(document?.content);
   const [extracted, setExtracted] = useState<string | undefined>();

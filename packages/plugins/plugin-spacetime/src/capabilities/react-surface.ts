@@ -6,10 +6,10 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 
-import { SpacetimeArticle } from '#containers';
+import { SceneArticle, SceneCard } from '#containers';
 import { Scene } from '#types';
 
 export default Capability.makeModule(() =>
@@ -21,8 +21,14 @@ export default Capability.makeModule(() =>
           AppSurface.object(AppSurface.Article, Scene.Scene),
           AppSurface.object(AppSurface.Section, Scene.Scene),
         ),
-        component: SpacetimeArticle,
+        component: SceneArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
+      }),
+      Surface.create({
+        id: 'sceneCard',
+        filter: AppSurface.object(AppSurface.CardContent, Scene.Scene),
+        component: SceneCard,
+        props: ({ role, data: { subject } }) => ({ role, subject }),
       }),
     ]),
   ),

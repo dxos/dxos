@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database } from '@dxos/echo';
+import { Database, Obj } from '@dxos/echo';
 import { Task, TaskSet } from '@dxos/types';
 
 import { TaskOperation } from '#types';
@@ -16,27 +16,28 @@ const handler: Operation.WithHandler<typeof TaskOperation.DeleteTask> = TaskOper
       const task = yield* Database.load(taskRef);
       const subtree = yield* Task.collectSubtree(task);
       const ids = new Set(subtree.map((member) => member.id));
-
-      // Only the root's own set is swept; a member filed in another set leaves a dangling entry
-      // there, which readers tolerate (a dangling ref reads as absent).
       const taskSet = yield* TaskSet.findTaskSet(task);
+      const parentTask = Task.getParentTask(task);
 
-      // Read before the sweep: the array order is what an undo puts back.
-      const entries = subtree.map((member) => {
-        const index = taskSet?.tasks.findIndex((ref) => Task.refEntityId(ref) === member.id) ?? -1;
-        return { task: member, index: index === -1 ? undefined : index };
-      });
-
-      if (taskSet) {
-        TaskSet.removeTasksFromSet(taskSet, ids);
-      }
-      // Nothing cascades through `parentTask`, so the subtree is removed explicitly.
+      // Only the task leaves a list: its sub-tasks stay listed in their own parents, which are
+      // deleted and restored with them, so an undo needs the one position.
+      const { index } = TaskSet.detach(taskSet, task);
+      // The delete cascades along the parent edge; the sweep catches a member it already took.
       for (const member of subtree) {
-        yield* Database.remove(member);
+        if (!Obj.isDeleted(member)) {
+          yield* Database.remove(member);
+        }
       }
       yield* Database.flush();
 
-      return { deleted: [...ids], restore: { entries, taskSet } };
+      return {
+        deleted: [...ids],
+        restore: {
+          entries: subtree.map((member) => (member.id === task.id ? { task: member, index } : { task: member })),
+          taskSet,
+          parentTask,
+        },
+      };
     }),
   ),
 );

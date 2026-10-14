@@ -6,20 +6,21 @@ import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import type * as EffectRpc from 'effect/rpc/Rpc';
+import * as RpcGroup from 'effect/rpc/RpcGroup';
+import * as RpcSchema from 'effect/rpc/RpcSchema';
+import * as RpcServer from 'effect/rpc/RpcServer';
+import * as RpcTest from 'effect/rpc/RpcTest';
 import type * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
-import type * as EffectRpc from 'effect/unstable/rpc/Rpc';
-import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
-import * as RpcSchema from 'effect/unstable/rpc/RpcSchema';
-import * as RpcServer from 'effect/unstable/rpc/RpcServer';
-import * as RpcTest from 'effect/unstable/rpc/RpcTest';
 
 import { Stream as PbStream } from '@dxos/async';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { normalizeHandlers, runServiceCall } from '@dxos/protocols';
+import { makeInProcessClient, normalizeHandlers, runServiceEffect, toServiceError } from '@dxos/protocols';
 import {
+  BlobStoreService,
   ContactsService,
   DataService,
   DevicesService,
@@ -27,15 +28,17 @@ import {
   EdgeAgentService,
   FeedService,
   IdentityService,
+  InboxService,
   InvitationsService,
   LoggingService,
   NetworkService,
   QueryService,
   SpacesService,
+  SqlService,
   SystemService,
 } from '@dxos/protocols/rpc';
 import { type RequestOptions } from '@dxos/protocols/service-contract';
-import { type RpcPort, layerProtocolRpcPortClient, layerProtocolRpcPortServer } from '@dxos/rpc';
+import { type RpcPort, RpcRouter, layerProtocolRpcPortClient, layerProtocolRpcPortServer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 
 import { DEFAULT_CLIENT_CHANNEL } from './config.ts';
@@ -67,7 +70,10 @@ export class ClientServicesRpcs extends RpcGroup.make().merge(
   QueryService.Rpcs,
   FeedService.Rpcs,
   ContactsService.Rpcs,
+  InboxService.Rpcs,
   EdgeAgentService.Rpcs,
+  SqlService.Rpcs,
+  BlobStoreService.Rpcs,
   DevtoolsHost.Rpcs,
 ) {}
 
@@ -90,11 +96,12 @@ export type ClientServicesHandlers = {
   QueryService: QueryService.Handlers;
   FeedService: FeedService.Handlers;
   ContactsService: ContactsService.Handlers;
+  InboxService: InboxService.Handlers;
   EdgeAgentService: EdgeAgentService.Handlers;
+  SqlService: SqlService.Handlers;
+  BlobStoreService: BlobStoreService.Handlers;
   DevtoolsHost: DevtoolsHost.Handlers;
 };
-
-const toError = (cause: unknown): Error => (cause instanceof Error ? cause : new Error(String(cause)));
 
 const isVoidSchema = (schema: { ast: { _tag: string } }): boolean => schema.ast._tag === 'Void';
 
@@ -223,23 +230,50 @@ export const serveClientServicesOverIFrame = async ({
 };
 
 /**
- * The handler layer for one service's rpcs, resolved from its tag and normalized so effect-rpc
- * finds and correctly invokes a class-instance implementation (see {@link normalizeHandlers}).
+ * The rpc tag prefix a group was defined with (e.g. `DataService.`), read off its requests so a
+ * registration carries no second copy of the service name.
  */
-export const layerHandlersFromTag = <Rpcs extends EffectRpc.Any, Identifier, Shape extends object>(
-  group: RpcGroup.RpcGroup<Rpcs>,
-  tag: Context.Key<Identifier, Shape>,
-) => group.toLayer(Effect.map(tag, (service) => normalizeHandlers(group, service as RpcGroup.HandlersFrom<Rpcs>)));
+const servicePrefix = <Rpcs extends EffectRpc.Any>(group: RpcGroup.RpcGroup<Rpcs>): string => {
+  const [tag] = [...group.requests.keys()];
+  invariant(tag, 'rpc group has no requests');
+  const index = tag.indexOf('.');
+  invariant(index > 0, `rpc tag is not service-prefixed: ${tag}`);
+  return tag.slice(0, index + 1);
+};
 
 /**
- * Serves every client service over the ambient {@link RpcServer.Protocol}, with the handler layers
- * supplied by the caller (typically {@link layerHandlersFromTag} per service over a stack context).
+ * Registers a service's handlers with the stack's {@link RpcRouter.RpcRouter}, which serves them
+ * over every attached transport (and in-process) for the life of the layer. Handler creation and
+ * registration stay separate layers: a provider merges this with the layer that supplies its tag,
+ * and no list of services is needed anywhere else.
  */
-export const layerClientServicesServer = <R>(
-  handlers: Layer.Layer<EffectRpc.ToHandler<ClientServicesRpcUnion>, never, R>,
-): Layer.Layer<never, never, RpcServer.Protocol | R> =>
-  // `timing` must match the tab client, whose middleware is `requiredForClient`.
-  Rpc.serverLayer(ClientServicesRpcs, handlers, { disableTracing: true, concurrency: 'unbounded', timing: true });
+export const RegisterService = <Rpcs extends EffectRpc.Any, Identifier>(
+  rpc: RpcGroup.RpcGroup<Rpcs>,
+  tag: Context.Key<Identifier, RpcGroup.HandlersFrom<Rpcs>>,
+): Layer.Layer<never, never, Identifier | RpcRouter.RpcRouter | EffectRpc.ServicesServer<Rpc.Served<Rpcs>>> =>
+  Layer.effectDiscard(
+    Effect.gen(function* () {
+      const handlers = normalizeHandlers(rpc, yield* tag);
+      yield* Rpc.serveOnRouter(servicePrefix(rpc), rpc, handlers, {
+        // The in-process surface calls the handlers directly, so it is built from the group as
+        // defined rather than from the middleware-wrapped one the transport serves.
+        inProcessClient: makeInProcessClient(rpc, handlers),
+      });
+    }),
+  );
+
+/**
+ * The whole in-process {@link ClientServicesRpc}, sourced from the services registered with the
+ * router rather than from an enumerated handler map.
+ */
+export const makeClientServicesRpcFromRouter: Effect.Effect<
+  ClientServicesRpc,
+  never,
+  RpcRouter.RpcRouter | Scope.Scope
+> =
+  // The router's client is keyed dynamically by rpc tag; `ClientServicesRpc` is the static view of
+  // the same record, and is what every consumer of the stack expects.
+  RpcRouter.client.pipe(Effect.map((client) => client as unknown as ClientServicesRpc));
 
 /**
  * Builds handler layers for every client service RPC, dispatching to the service implementations
@@ -249,7 +283,7 @@ export const makeClientServicesHandlers = ({
   services,
   onRequest,
 }: Pick<ClientRpcServerParams, 'services' | 'onRequest'>): Layer.Layer<EffectRpc.ToHandler<ClientServicesRpcUnion>> => {
-  const gate = onRequest ? Effect.tryPromise({ try: onRequest, catch: toError }) : Effect.void;
+  const gate = onRequest ? Effect.tryPromise({ try: onRequest, catch: toServiceError }) : Effect.void;
 
   const handlers: Record<string, (payload: unknown) => unknown> = {};
   for (const [tag, rpc] of ClientServicesRpcs.requests) {
@@ -320,7 +354,10 @@ export interface ClientServicesRpc
     QueryService.Client,
     FeedService.Client,
     ContactsService.Client,
+    InboxService.Client,
     EdgeAgentService.Client,
+    SqlService.Client,
+    BlobStoreService.Client,
     DevtoolsHost.Client {}
 
 /**
@@ -393,7 +430,7 @@ export const makeServicesFromRpc = (
         streamToPbStream(runtime, invoke(request) as Stream.Stream<unknown, unknown>, tag);
     } else {
       service[methodName] = (request?: unknown, options?: RequestOptions) =>
-        runServiceCall(runtime, invoke(request) as Effect.Effect<unknown, unknown, never>, {
+        runServiceEffect(runtime, invoke(request) as Effect.Effect<unknown, unknown, never>, {
           timeout: options?.timeout,
           label: tag,
         });
@@ -419,7 +456,7 @@ export const makeRpcFromServices = (services: () => Partial<ClientServices>): Cl
         pbStreamToStream(() => resolveMethod()(request) as PbStream<unknown>);
     } else {
       service[methodName] = (request?: unknown) =>
-        Effect.tryPromise({ try: async () => resolveMethod()(request), catch: toError });
+        Effect.tryPromise({ try: async () => resolveMethod()(request), catch: toServiceError });
     }
   }
   return rpc as unknown as ClientServicesRpc;
@@ -439,12 +476,12 @@ export const pbStreamToStream = <T>(open: () => PbStream<T>): Stream.Stream<T, E
     try {
       source = open();
     } catch (err) {
-      emit.fail(toError(err));
+      emit.fail(toServiceError(err));
       return;
     }
     source.subscribe(
       (data) => void emit.single(data),
-      (err) => void (err ? emit.fail(toError(err)) : emit.end()),
+      (err) => void (err ? emit.fail(toServiceError(err)) : emit.end()),
     );
     return Effect.promise(async () => source.close());
   });
@@ -465,7 +502,7 @@ export const streamToPbStream = <T>(
       Effect.matchCauseEffect({
         onFailure: (cause) =>
           Effect.sync(() => {
-            const error = toError(Cause.squash(cause));
+            const error = toServiceError(Cause.squash(cause));
             if (Cause.hasInterruptsOnly(cause)) {
               close();
               return;

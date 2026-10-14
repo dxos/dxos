@@ -9,6 +9,7 @@ import { afterAll, beforeAll, describe, test } from 'vitest';
 
 import { Shell } from '#shell';
 
+import { isLoopback } from './shell-middleware.ts';
 import { type Host, startHost } from './testing.ts';
 
 describe('shell middleware', () => {
@@ -145,5 +146,14 @@ describe('shell middleware', () => {
     await expect(Shell.exec({ script: 'pwd' }, { path: host.path.replace(Shell.PATH, '/elsewhere') })).rejects.toThrow(
       /not mounted/,
     );
+  });
+
+  test('accepts only loopback peers', ({ expect }) => {
+    expect(isLoopback('127.0.0.1')).toBe(true);
+    expect(isLoopback('::1')).toBe(true);
+    expect(isLoopback('::ffff:127.0.0.1')).toBe(true);
+    expect(isLoopback('192.168.1.20')).toBe(false);
+    expect(isLoopback('::ffff:10.0.0.5')).toBe(false);
+    expect(isLoopback(undefined)).toBe(false);
   });
 });

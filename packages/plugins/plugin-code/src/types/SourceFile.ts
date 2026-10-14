@@ -15,11 +15,12 @@ export class SourceFile extends Type.makeObject<SourceFile>(DXN.make('org.dxos.t
   Schema.Struct({
     path: Schema.String,
     /** Owned body: `SetParent` cascades it with the file. */
-    content: Ref.Ref(Text.Text).pipe(Annotation.SetParent.set(true)),
+    content: Ref.Ref(Text.Text).pipe(Annotation.SetParent.set()),
     mode: Schema.optional(Schema.Number),
   }).pipe(
     Annotation.LabelAnnotation.set(['path']),
     Annotation.IconAnnotation.set({ icon: 'ph--file-code--regular', hue: meta.profile.icon?.hue }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

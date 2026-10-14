@@ -14,17 +14,14 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 import { RoutineCapabilities } from '#types';
 
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../../PLUGIN.mdl?raw';
-
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
-  environments: ['node'],
+  environments: ['browser', 'node', 'tauri'],
 });
 export const Commands = AppCapability.commands(() => import('./commands.ts'));
 // The entry carries a live `customPanel` (`CreateRoutinePanel`) alongside the object factory, so the
 // module cannot be evaluated without React.
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'), {
-  environments: [],
+  environments: ['browser', 'tauri'],
 });
 export const LayerSpecs = AppCapability.layerSpec(() => import('./layer-specs.ts'), {
   name: 'LayerSpecs',
@@ -34,7 +31,7 @@ export const OperationHandler = AppCapability.operationHandler(() => import('./o
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
   path: 'PLUGIN.mdl',
-  content: pluginSpec,
+  content: () => import('../../PLUGIN.mdl?raw'),
   mimeType: 'application/x-mdl',
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
@@ -50,14 +47,14 @@ export const RegistrySync = Capability.lazyModule(
       Capabilities.OperationHandler,
     ],
     provides: [],
-    environments: ['node'],
+    environments: ['browser', 'node', 'tauri'],
   },
   () => import('./registry-sync.ts'),
 );
 export const Schema = AppCapability.schema(() => import('./schema.ts'));
 export const Templates = Capability.lazyModule(
   'Templates',
-  { provides: [RoutineCapabilities.Template], environments: ['node', 'workerd'] },
+  { provides: [RoutineCapabilities.Template], environments: ['browser', 'node', 'tauri', 'workerd'] },
   () => import('./templates.ts'),
 );
 export const Translations = AppCapability.translations(translations);
@@ -67,8 +64,8 @@ export const TriggerRuntimeController = Capability.lazyModule(
     requires: [ClientCapabilities.Client, Capabilities.ProcessManagerRuntime],
     provides: [],
     // Runtime event: triggers only need to react to spaces once the client observes them.
-    activatesOn: ClientEvents.SpacesReady,
-    environments: ['node'],
+    activatesOn: ClientEvents.SpacesAvailable,
+    environments: ['browser', 'node', 'tauri'],
   },
   () => import('./trigger-runtime-controller.ts'),
 );

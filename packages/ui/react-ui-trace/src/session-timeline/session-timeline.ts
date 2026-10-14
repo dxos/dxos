@@ -1,0 +1,976 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
+
+import * as Process from '@dxos/compute/Process';
+import * as Trace from '@dxos/compute/Trace';
+import { Annotation, Obj } from '@dxos/echo';
+import { EID } from '@dxos/keys';
+import { Task } from '@dxos/types';
+import { getHashHue } from '@dxos/ui-theme';
+
+import { type Span, buildSpanTree, flattenSpanTree } from '../execution-graph/index.ts';
+import {
+  type DelegationSource,
+  type Lane,
+  type LaneStatus,
+  type Marker,
+  type Session,
+  type SessionTimeline,
+  type TokenUsage,
+} from './types.ts';
+
+export interface BuildSessionTimelineInput {
+  traceMessages: readonly Trace.Message[];
+  processes?: readonly Process.Process[];
+  /** The sessions to draw; each contributes a lane and its checklist's task lanes. */
+  sessions?: readonly Session[];
+  tasks?: readonly Task.Task[];
+  /** Per task id, the status moves its edit history records, oldest first (see {@link readTaskStatusChanges}). */
+  taskStatusChanges?: ReadonlyMap<string, readonly TaskStatusChange[]>;
+  /** Reference time; extends the range past open lanes. */
+  now?: number;
+}
+
+/** One move of a task's status, as its edit history records it. */
+export type TaskStatusChange = {
+  /** Epoch ms. */
+  timestamp: number;
+  status: Task.Status;
+  /** Absent when the task held no status before. */
+  previousStatus?: Task.Status;
+};
+
+const isStatus = Schema.is(Task.Status);
+
+/**
+ * The status moves in a task's edit history, oldest first; none for a task not stored in a database,
+ * which keeps no history.
+ */
+export const readTaskStatusChanges = (task: Task.Task): TaskStatusChange[] =>
+  Obj.getDatabase(task) === undefined
+    ? []
+    : Obj.getChanges(task, { property: 'status' }).flatMap(({ time, before, after }) =>
+        isStatus(after)
+          ? [{ timestamp: time, status: after, ...(isStatus(before) ? { previousStatus: before } : {}) }]
+          : [],
+      );
+
+/** Statuses of a task not yet picked up. */
+const PENDING_STATUSES = new Set<Task.Status>(['todo', 'backlog']);
+
+/**
+ * The edit history's status moves, each timed by the trace event recording the same move when there is
+ * one. History times are whole seconds, rounded down, so on their own they start a lane up to a second
+ * before the node that marks its start; everything derived from them — spans, nodes — reads these.
+ */
+const refineStatusChanges = (
+  changes: ReadonlyMap<string, readonly TaskStatusChange[]>,
+  events: readonly Trace.FlatEvent[],
+): ReadonlyMap<string, readonly TaskStatusChange[]> => {
+  const traced = new Map<string, { timestamp: number; status: string }[]>();
+  for (const event of events) {
+    if (event.type === Trace.TaskStatusChanged.key) {
+      const data = decode(Trace.TaskStatusChanged.schema, event.data);
+      if (data) {
+        traced.set(data.taskId, [
+          ...(traced.get(data.taskId) ?? []),
+          { timestamp: event.timestamp, status: data.status },
+        ]);
+      }
+    }
+  }
+  return new Map(
+    [...changes].map(([taskId, list]) => {
+      const candidates = [...(traced.get(taskId) ?? [])];
+      return [
+        taskId,
+        list.map((change) => {
+          const index = candidates.findIndex(
+            ({ timestamp, status }) =>
+              status === change.status && Math.abs(timestamp - change.timestamp) <= HISTORY_MATCH_MS,
+          );
+          if (index < 0) {
+            return change;
+          }
+          const [match] = candidates.splice(index, 1);
+          return { ...change, timestamp: match.timestamp };
+        }),
+      ];
+    }),
+  );
+};
+
+/** Statuses that end a stretch of work on a task. */
+const CLOSED_STATUSES = new Set<Task.Status>(['done', 'review', 'failed', 'cancelled']);
+
+const isStatusChange = (detail: unknown): detail is TaskStatusChange =>
+  typeof detail === 'object' && detail !== null && 'status' in detail && isStatus(detail.status);
+
+const ACTIVE_STATES = new Set<Process.State>([Process.State.RUNNING, Process.State.HYBERNATING]);
+
+/** How long an open lane may be silent before the axis stops following `now`. */
+const OPEN_LANE_STALE_MS = 10 * 60_000;
+
+/** How far apart a task's recorded status move and the trace event recording the same move may land. */
+const HISTORY_MATCH_MS = 5_000;
+
+const TASK_STATUS: Partial<Record<Task.Status, LaneStatus>> = {
+  todo: 'pending',
+  backlog: 'pending',
+  blocked: 'blocked',
+  started: 'running',
+  review: 'review',
+  done: 'done',
+  failed: 'failed',
+};
+
+/** Entity id of an ECHO URI, the join key between a process target, a trace meta and a chat. */
+const entityKey = (uri: string): string => {
+  const eid = EID.tryParse(uri);
+  return (eid && EID.getEntityId(eid)) ?? uri;
+};
+
+const eventFeedKey = (event: Trace.FlatEvent): string | undefined =>
+  event.meta.conversation ? entityKey(event.meta.conversation.uri) : undefined;
+
+const decode = <S extends Schema.ConstraintDecoder<unknown>>(schema: S, data: unknown): S['Type'] | undefined =>
+  Option.getOrUndefined(Schema.decodeUnknownOption(schema)(data));
+
+type MutableLane = { -readonly [K in keyof Lane]: Lane[K] };
+
+const sessionLaneId = (key: string): string => `session:${key}`;
+const taskLaneId = (taskId: string): string => `task:${taskId}`;
+
+interface SessionSource {
+  key: string;
+  label: string;
+  session?: Session;
+  pids: Set<string>;
+}
+
+/**
+ * The stretch of a session during which one task was the active one, bounded by the status events
+ * the planning tool writes. Everything the session did inside it belongs to that task.
+ */
+interface TaskSegment {
+  taskId: string;
+  laneId: string;
+  start: number;
+  end?: number;
+}
+
+/**
+ * Cuts a session's events into segments of task work, from the status events its task tools write.
+ * Only tasks in `taskIds` — the session's own checklist — take part: an agent is free to move a task
+ * belonging to nothing on this chart, and such an event must not open or close anything here.
+ *
+ * An agent may hold several tasks in progress at once, and may put one down and pick it up again as
+ * it discovers what depends on what: a `started` event opens a segment for its task and leaves every
+ * other open segment alone, and any other status closes that task's open segment. A task can also
+ * finish without a start: delegation marks every task it hands over `started` before the agent's
+ * first turn, so the run's only event for that task is the one closing it. Such a task gets the
+ * stretch since the last boundary, which is where its work happened — but only on the transition out
+ * of `started` and only while no other task holds the stretch: a task merely dismissed
+ * (`todo` → `blocked`) claims nothing, a second close (`review` → `done`) mints nothing, and a close
+ * arriving while other work is open leaves that work alone rather than overlapping it.
+ */
+const buildTaskSegments = (
+  events: readonly Trace.FlatEvent[],
+  sessionStart: number | undefined,
+  taskIds: ReadonlySet<string>,
+): TaskSegment[] => {
+  const segments: TaskSegment[] = [];
+  const open = new Map<string, TaskSegment>();
+  let boundary = sessionStart;
+
+  for (const event of events) {
+    if (event.type !== Trace.TaskStatusChanged.key) {
+      continue;
+    }
+    const data = decode(Trace.TaskStatusChanged.schema, event.data);
+    if (!data || !taskIds.has(data.taskId)) {
+      continue;
+    }
+    const current = open.get(data.taskId);
+    if (data.status === 'started') {
+      if (!current) {
+        const segment = { taskId: data.taskId, laneId: taskLaneId(data.taskId), start: event.timestamp };
+        segments.push(segment);
+        open.set(data.taskId, segment);
+      }
+      boundary = event.timestamp;
+    } else if (current) {
+      current.end = event.timestamp;
+      open.delete(data.taskId);
+      boundary = event.timestamp;
+    } else if (data.previousStatus === 'started' && open.size === 0) {
+      segments.push({
+        taskId: data.taskId,
+        laneId: taskLaneId(data.taskId),
+        start: Math.min(boundary ?? event.timestamp, event.timestamp),
+        end: event.timestamp,
+      });
+      boundary = event.timestamp;
+    }
+  }
+  return segments;
+};
+
+/**
+ * The segment an event belongs to. A status event goes to its own task's segment. Any other event
+ * goes to the one segment in progress when it happened; where segments merely meet, the one ending
+ * there yields to the one beginning — the newcomer's start is the first thing the agent did on it.
+ * With several tasks genuinely in progress at once the event belongs to none of them in particular,
+ * so it stays with the session rather than being credited to whichever started last.
+ */
+const segmentFor = (segments: readonly TaskSegment[] | undefined, event: Trace.FlatEvent): TaskSegment | undefined => {
+  if (!segments) {
+    return undefined;
+  }
+  const contains = (segment: TaskSegment) =>
+    event.timestamp >= segment.start && event.timestamp <= (segment.end ?? Number.MAX_SAFE_INTEGER);
+  if (event.type === Trace.TaskStatusChanged.key) {
+    const data = decode(Trace.TaskStatusChanged.schema, event.data);
+    return data && segments.findLast((segment) => segment.taskId === data.taskId && contains(segment));
+  }
+  const candidates = segments.filter(contains);
+  const inside = candidates.filter((segment) => segment.end === undefined || event.timestamp < segment.end);
+  if (inside.length > 1) {
+    return undefined;
+  }
+  return inside[0] ?? candidates.at(-1);
+};
+
+/**
+ * The stretch a task's edit history says it was worked: from its first move to `started` to the last
+ * move out of it. `end` is absent while the history leaves it `started`; `last` is its last move.
+ * Absent when the task was never started.
+ */
+const historySpan = (
+  changes: readonly TaskStatusChange[],
+): { start: number; end?: number; last: number } | undefined => {
+  let start: number | undefined;
+  let end: number | undefined;
+  let open = false;
+  for (const change of changes) {
+    if (change.status === 'started') {
+      start ??= change.timestamp;
+      open = true;
+    } else if (open) {
+      end = change.timestamp;
+      open = false;
+    }
+  }
+  const last = changes.at(-1)?.timestamp;
+  return start === undefined || last === undefined ? undefined : { start, end: open ? undefined : end, last };
+};
+
+/**
+ * The stretches a task was put down between two runs of work: from a move out of `started` that did
+ * not finish it (a question blocking it, say) to the next move back. One still open is no gap — the
+ * lane simply ends there — and nothing before the first start is one either.
+ */
+const workGaps = (changes: readonly TaskStatusChange[]): { start: number; end: number }[] => {
+  const gaps: { start: number; end: number }[] = [];
+  let started = false;
+  let pausedAt: number | undefined;
+  for (const change of changes) {
+    if (change.status === 'started') {
+      if (pausedAt !== undefined && change.timestamp > pausedAt) {
+        gaps.push({ start: pausedAt, end: change.timestamp });
+      }
+      started = true;
+      pausedAt = undefined;
+    } else if (started && pausedAt === undefined && !CLOSED_STATUSES.has(change.status)) {
+      pausedAt = change.timestamp;
+    }
+  }
+  return gaps;
+};
+
+/** A question or answer in the task's log; other entries are edits the edit history already holds. */
+const exchangeMarker = (entry: Task.HistoryEntry, id: string, laneId: string): Marker | undefined => {
+  const timestamp = Date.parse(entry.date);
+  if (Number.isNaN(timestamp)) {
+    return undefined;
+  }
+  const base = { id, laneId, kind: 'task' as const, timestamp, detail: entry };
+  switch (entry.event) {
+    case 'question':
+      return { ...base, label: entry.text, level: 'warn' };
+    case 'answer':
+      return { ...base, label: `Answered: ${entry.answer}` };
+    default:
+      return undefined;
+  }
+};
+
+interface SubAgentSpan {
+  span: Span;
+  pid: string;
+  startEvent: Trace.FlatEvent;
+}
+
+/**
+ * Builds the gantt-shaped view of one or more assistant sessions from their trace: session lanes
+ * (supervisors and the sub-agents they delegate to), task lanes, and the markers on each.
+ */
+export const buildSessionTimeline = ({
+  traceMessages,
+  processes = [],
+  sessions,
+  tasks = [],
+  taskStatusChanges: recordedChanges,
+  now,
+}: BuildSessionTimelineInput): SessionTimeline => {
+  const root = buildSpanTree(traceMessages);
+  const spans = flattenSpanTree(root);
+  const events = spans.flatMap((span) => span.events).sort((a, b) => a.timestamp - b.timestamp);
+  const taskStatusChanges = recordedChanges && refineStatusChanges(recordedChanges, events);
+  const requestBegins = events.filter(
+    (event): event is Trace.FlatEvent & { meta: { pid: string } } =>
+      event.type === Trace.AgentRequestBegin.key && event.meta.pid !== undefined,
+  );
+
+  // The agent process targets the chat; its trace meta carries the chat's feed.
+  const agentPidsByChat = new Map<string, string[]>();
+  for (const process of processes) {
+    if (!Process.isHarnessHost(process)) {
+      continue;
+    }
+    const target = Option.getOrUndefined(
+      Annotation.getDictionary(process.params.annotations, Process.TargetAnnotation),
+    );
+    if (target !== undefined) {
+      const key = entityKey(target.toString());
+      agentPidsByChat.set(key, [...(agentPidsByChat.get(key) ?? []), process.pid]);
+    }
+  }
+
+  const sources: SessionSource[] = [];
+  if (sessions) {
+    for (const session of sessions) {
+      if (session.taskIds.length === 0) {
+        continue;
+      }
+      const feed = session.feedId;
+      const pids = new Set<string>(agentPidsByChat.get(entityKey(session.uri)) ?? []);
+      for (const event of requestBegins) {
+        if (feed !== undefined && eventFeedKey(event) === feed) {
+          pids.add(event.meta.pid);
+        }
+      }
+      // A feed or object id is not a name: an unnamed chat reads as the session it is until the
+      // naming turn lands.
+      sources.push({ key: session.id, label: session.label?.trim() || 'Session', session, pids });
+    }
+  } else {
+    // Without chats, the conversation feed groups a session's pids; a trace with no conversation
+    // meta falls back to one session per agent pid.
+    const byKey = new Map<string, SessionSource>();
+    for (const event of requestBegins) {
+      const pid = event.meta.pid;
+      const key = eventFeedKey(event) ?? pid;
+      const source = byKey.get(key) ?? {
+        key,
+        label: eventFeedKey(event) ?? event.meta.processName ?? pid,
+        pids: new Set<string>(),
+      };
+      source.pids.add(pid);
+      byKey.set(key, source);
+    }
+    sources.push(...byKey.values());
+  }
+
+  const processByPid = new Map<string, Process.Process>(processes.map((process) => [process.pid, process]));
+  const taskById = new Map(tasks.map((task) => [task.id, task]));
+  const laneByPid = new Map<string, string>();
+  const lanes: MutableLane[] = [];
+  const markers: Marker[] = [];
+  const childSessions: { lane: MutableLane; sessionLaneId: string }[] = [];
+  const replacedTaskLanes = new Map<string, string>();
+  /** Per session lane: the task segments its markers are attributed to. */
+  const segmentsBySession = new Map<string, TaskSegment[]>();
+
+  for (const source of sources) {
+    const laneId = sessionLaneId(source.key);
+    const sessionEvents = events.filter((event) => event.meta.pid && source.pids.has(event.meta.pid));
+    const begins = sessionEvents.filter((event) => event.type === Trace.AgentRequestBegin.key);
+    const ends = sessionEvents.filter((event) => event.type === Trace.AgentRequestEnd.key);
+    const requestOpen = begins.length > ends.length;
+    const processActive = [...source.pids].some((pid) => {
+      const process = processByPid.get(pid);
+      return process !== undefined && ACTIVE_STATES.has(process.state);
+    });
+    const lastEnd = ends.at(-1);
+    const lastEndStatus = lastEnd ? decode(Trace.AgentRequestEnd.schema, lastEnd.data)?.status : undefined;
+    // An unmatched request begin is a run in flight only while its process is; with the process
+    // recorded as ended, the run died before writing its end, so the lane closes at its last event
+    // rather than staying open (and stretching the chart) indefinitely.
+    const processKnown = [...source.pids].some((pid) => processByPid.has(pid));
+    const died = requestOpen && processKnown && !processActive;
+    const open = requestOpen && !died;
+    const status: LaneStatus =
+      processActive || open ? 'running' : died || lastEndStatus === 'error' ? 'failed' : 'done';
+
+    lanes.push({
+      id: laneId,
+      kind: 'session',
+      label: source.label,
+      status,
+      start: begins[0]?.timestamp,
+      end: open ? undefined : died ? sessionEvents.at(-1)?.timestamp : lastEnd?.timestamp,
+      sessionId: source.session?.id,
+      pid: [...source.pids].at(-1),
+    });
+    for (const pid of source.pids) {
+      laneByPid.set(pid, laneId);
+    }
+
+    // The spawn event is the only durable pid ↔ task pairing; a sub-agent's own trace carries
+    // neither the task nor the conversation.
+    const taskByPid = new Map<string, string>();
+    for (const event of sessionEvents) {
+      if (event.type === Trace.DelegationSpawned.key) {
+        const data = decode(Trace.DelegationSpawned.schema, event.data);
+        if (data) {
+          taskByPid.set(data.pid, data.taskId);
+        }
+      }
+    }
+
+    // A child span is a sub-agent (not a tool call) when it was spawned as one or emits its own
+    // content blocks.
+    const subAgentSpans: SubAgentSpan[] = spans.flatMap((span) => {
+      const startEvent = span.events[0];
+      const pid = span.meta.pid;
+      if (
+        pid === undefined ||
+        span.meta.parentPid === undefined ||
+        !source.pids.has(span.meta.parentPid) ||
+        startEvent?.type !== Trace.OperationStart.key
+      ) {
+        return [];
+      }
+      const isAgent = taskByPid.has(pid) || span.events.some((event) => event.type === Trace.CompleteBlock.key);
+      return isAgent ? [{ span, pid, startEvent }] : [];
+    });
+
+    const chatTasks = (source.session?.taskIds ?? [])
+      .map((id) => taskById.get(id))
+      .filter((task): task is Task.Task => task !== undefined);
+    // Only a dependency on the checklist gets a lane, so `blockedOn` never names a lane that is
+    // not drawn.
+    const chatTaskIds = new Set(chatTasks.map((task) => task.id));
+    const taskLanes = new Map<string, MutableLane>();
+    for (const task of chatTasks) {
+      // A sub-task of a task on the same checklist nests under it, so the chart keeps the hierarchy
+      // the ledger shows; any other task hangs off the session.
+      const parentTask = Task.getParentTask(task);
+      const taskLane: MutableLane = {
+        id: taskLaneId(task.id),
+        kind: 'task',
+        label: task.title,
+        status: taskLaneStatus(task, tasks),
+        parentId: parentTask && chatTaskIds.has(parentTask.id) ? taskLaneId(parentTask.id) : laneId,
+        sessionId: source.session?.id,
+        taskId: task.id,
+      };
+      const blockedOn = (task.dependsOn ?? [])
+        .map((ref) => Task.refEntityId(ref))
+        .filter((id): id is string => id !== undefined && chatTaskIds.has(id))
+        .map(taskLaneId);
+      if (blockedOn.length > 0) {
+        taskLane.blockedOn = blockedOn;
+      }
+      taskLanes.set(task.id, taskLane);
+      lanes.push(taskLane);
+    }
+
+    // Spawned pids without a trace yet still get a lane from their process.
+    const subAgentPids = new Set<string>([...subAgentSpans.map(({ pid }) => pid), ...taskByPid.keys()]);
+
+    // The status events bound each task's stretch of the session, giving its lane a span of its own
+    // and a node where it started and finished. A status tool runs as a child process of the agent,
+    // so its events carry their own pid and reach the session through `parentPid`; a spawned
+    // sub-agent's do too, and those belong to its own lane rather than cutting this one.
+    const ownEvents = events.filter(
+      (event) =>
+        (event.meta.pid !== undefined && source.pids.has(event.meta.pid)) ||
+        (event.meta.parentPid !== undefined &&
+          source.pids.has(event.meta.parentPid) &&
+          !(event.meta.pid !== undefined && subAgentPids.has(event.meta.pid))),
+    );
+    const segments = buildTaskSegments(ownEvents, begins[0]?.timestamp, chatTaskIds);
+    segmentsBySession.set(laneId, segments);
+    for (const segment of segments) {
+      const taskLane = taskLanes.get(segment.taskId);
+      if (!taskLane) {
+        continue;
+      }
+      taskLane.start = Math.min(taskLane.start ?? segment.start, segment.start);
+      // An open segment leaves the lane open, even if an earlier one closed.
+      taskLane.end = segment.end === undefined ? undefined : Math.max(taskLane.end ?? segment.end, segment.end);
+    }
+
+    // The task's edit history bounds its lane too, so a task worked where the trace does not reach
+    // (another device, a pruned feed, a person's edit) still gets a span. The lane stays open only while
+    // the task itself is `started`, whatever the history last says.
+    for (const task of chatTasks) {
+      const taskLane = taskLanes.get(task.id);
+      const span = historySpan(taskStatusChanges?.get(task.id) ?? []);
+      if (!taskLane || !span) {
+        continue;
+      }
+      const tracedEnd = taskLane.start === undefined ? undefined : taskLane.end;
+      taskLane.start = Math.min(taskLane.start ?? span.start, span.start);
+      if (span.end === undefined && task.status === 'started') {
+        taskLane.end = undefined;
+      } else {
+        const end = span.end ?? tracedEnd ?? span.last;
+        taskLane.end = tracedEnd === undefined ? end : Math.max(tracedEnd, end);
+      }
+    }
+
+    for (const subPid of subAgentPids) {
+      const match = subAgentSpans.find((candidate) => candidate.pid === subPid);
+      const process = processByPid.get(subPid);
+      if (!match && !process) {
+        continue;
+      }
+      const taskId = taskByPid.get(subPid);
+      const task = taskId === undefined ? undefined : taskById.get(taskId);
+      const startName = match ? decode(Trace.OperationStart.schema, match.startEvent.data)?.name : undefined;
+      const endEvent = match?.span.events.find((event) => event.type === Trace.OperationEnd.key);
+      const start = match?.startEvent.timestamp ?? process?.startedAt;
+      const end = endEvent?.timestamp ?? (process ? Option.getOrUndefined(process.completedAt) : undefined);
+      const subLane: MutableLane = {
+        id: sessionLaneId(subPid),
+        kind: 'session',
+        label: task?.title ?? startName ?? process?.params.name ?? subPid,
+        status: subSessionStatus(endEvent, process),
+        start,
+        end,
+        parentId: laneId,
+        sessionId: source.session?.id,
+        taskId,
+        pid: subPid,
+      };
+      laneByPid.set(subPid, subLane.id);
+      childSessions.push({ lane: subLane, sessionLaneId: laneId });
+      // A delegated task IS its child session: the session lane takes the task lane's place and
+      // its dependencies, so a task is either worked in-session (a task lane) or spawned (a session).
+      const taskLane = taskId === undefined ? undefined : taskLanes.get(taskId);
+      if (taskLane) {
+        subLane.blockedOn = taskLane.blockedOn;
+        lanes.splice(lanes.indexOf(taskLane), 1, subLane);
+        replacedTaskLanes.set(taskLane.id, subLane.id);
+      } else {
+        lanes.push(subLane);
+      }
+    }
+  }
+
+  // A task no drawn session works (an external harness's, a person's) is drawn from its edit history
+  // alone, as a lane of its own, so the chart still shows it; one never started has no span to draw.
+  const lanedTaskIds = new Set(lanes.flatMap((lane) => (lane.taskId === undefined ? [] : [lane.taskId])));
+  const unownedLanes = new Map<string, MutableLane>();
+  for (const task of tasks) {
+    const span = lanedTaskIds.has(task.id) ? undefined : historySpan(taskStatusChanges?.get(task.id) ?? []);
+    if (!span) {
+      continue;
+    }
+    unownedLanes.set(task.id, {
+      id: taskLaneId(task.id),
+      kind: 'task',
+      label: task.title,
+      status: taskLaneStatus(task, tasks),
+      start: span.start,
+      end: span.end === undefined && task.status === 'started' ? undefined : (span.end ?? span.last),
+      taskId: task.id,
+    });
+  }
+  for (const [taskId, lane] of unownedLanes) {
+    const blockedOn = (taskById.get(taskId)?.dependsOn ?? [])
+      .map((ref) => Task.refEntityId(ref))
+      .filter((id): id is string => id !== undefined && unownedLanes.has(id))
+      .map(taskLaneId);
+    if (blockedOn.length > 0) {
+      lane.blockedOn = blockedOn;
+    }
+    lanes.push(lane);
+  }
+
+  // A delegated task IS its child session, drawn with the child's own span; the parent's markers in
+  // that stretch are the parent's work of handing it over, so the segment goes rather than moving.
+  for (const [sessionId, segments] of segmentsBySession) {
+    segmentsBySession.set(
+      sessionId,
+      segments.filter((segment) => !replacedTaskLanes.has(segment.laneId)),
+    );
+  }
+
+  // Each status move in a task's edit history is a node on its lane, and so is each question and answer
+  // in its log. A move the trace also recorded is drawn once, from the history, taking the trace event's
+  // pid. Only a trace event on a drawn lane is matched, so none is hidden that had a node.
+  const tracedChanges = new Map<string, Trace.FlatEvent[]>();
+  for (const event of events) {
+    const drawn =
+      (event.meta.pid !== undefined && laneByPid.has(event.meta.pid)) ||
+      (event.meta.parentPid !== undefined && laneByPid.has(event.meta.parentPid));
+    if (drawn && event.type === Trace.TaskStatusChanged.key) {
+      const data = decode(Trace.TaskStatusChanged.schema, event.data);
+      if (data) {
+        tracedChanges.set(data.taskId, [...(tracedChanges.get(data.taskId) ?? []), event]);
+      }
+    }
+  }
+  const mergedEvents = new Set<Trace.FlatEvent>();
+  // A delegated task's lane is its child session, which carries the task id, so it gets the nodes too.
+  for (const lane of lanes) {
+    const task = lane.taskId === undefined ? undefined : taskById.get(lane.taskId);
+    if (!task) {
+      continue;
+    }
+    const traced = tracedChanges.get(task.id) ?? [];
+    const changes = taskStatusChanges?.get(task.id) ?? [];
+    // Waiting to be picked up is the lane's absence, not an event on it: a node for it would sit
+    // alone before the bar, reading as work that happened and then a pause.
+    const firstStart = changes.findIndex((change) => change.status === 'started');
+    for (const [index, change] of changes.entries()) {
+      if (PENDING_STATUSES.has(change.status) && (firstStart < 0 || index < firstStart)) {
+        continue;
+      }
+      const match = traced.find(
+        (event) =>
+          !mergedEvents.has(event) &&
+          decode(Trace.TaskStatusChanged.schema, event.data)?.status === change.status &&
+          Math.abs(event.timestamp - change.timestamp) <= HISTORY_MATCH_MS,
+      );
+      if (match) {
+        mergedEvents.add(match);
+      }
+      markers.push({
+        id: `${lane.id}:${markers.length}`,
+        laneId: lane.id,
+        kind: 'task',
+        // The trace's instant when it recorded the same move: edit-history times are whole seconds, so
+        // on their own they land before the work they mark.
+        timestamp: match?.timestamp ?? change.timestamp,
+        label: `Task ${change.status}`,
+        level: change.status === 'failed' ? 'error' : undefined,
+        pid: match?.meta.pid,
+        detail: change,
+      });
+    }
+    for (const entry of task.history ?? []) {
+      const marker = exchangeMarker(entry, `${lane.id}:${markers.length}`, lane.id);
+      if (marker) {
+        markers.push(marker);
+      }
+    }
+  }
+
+  // Dependencies named the task lane; they follow it to the session that replaced it.
+  for (const lane of lanes) {
+    if (lane.blockedOn) {
+      lane.blockedOn = lane.blockedOn.map((id) => replacedTaskLanes.get(id) ?? id);
+    }
+  }
+
+  // Markers and token totals, attributed to the lane owning the event's pid or its parent pid.
+  const tokens = new Map<string, { usage: TokenUsage; toolCalls: number }>();
+  // The marker's own lane travels with its id: `markerLaneId` routes an event to whichever task
+  // segment was open at the time, so a delegation node does not always land on the session's lane —
+  // and a connector drawn to a row that does not hold the node points at nothing.
+  const spawnMarkerByPid = new Map<string, DelegationSource>();
+  const returnMarkerByPid = new Map<string, DelegationSource>();
+  for (const event of events) {
+    const laneId =
+      (event.meta.pid && laneByPid.get(event.meta.pid)) ??
+      (event.meta.parentPid && laneByPid.get(event.meta.parentPid)) ??
+      undefined;
+    if (laneId === undefined) {
+      continue;
+    }
+    // Everything the session did while a task was active is that task's, so the session bar keeps
+    // only what brackets the whole run (its request markers) and the timeline reads per task.
+    const markerLaneId =
+      event.type === Trace.AgentRequestBegin.key || event.type === Trace.AgentRequestEnd.key
+        ? laneId
+        : (segmentFor(segmentsBySession.get(laneId), event)?.laneId ?? laneId);
+    const marker = mergedEvents.has(event)
+      ? undefined
+      : toMarker(event, `${markerLaneId}:${markers.length}`, markerLaneId);
+    if (marker) {
+      markers.push(marker);
+      if (event.type === Trace.DelegationSpawned.key) {
+        const data = decode(Trace.DelegationSpawned.schema, event.data);
+        if (data) {
+          spawnMarkerByPid.set(data.pid, { laneId: marker.laneId, markerId: marker.id });
+        }
+      }
+      if (event.type === Trace.DelegationCompleted.key) {
+        const data = decode(Trace.DelegationCompleted.schema, event.data);
+        if (data) {
+          returnMarkerByPid.set(data.pid, { laneId: marker.laneId, markerId: marker.id });
+        }
+      }
+    }
+    if (event.type === Trace.CompleteBlock.key) {
+      const data = decode(Trace.CompleteBlock.schema, event.data);
+      if (data?.block._tag === 'stats') {
+        const entry = tokens.get(laneId) ?? { usage: { input: 0, output: 0, total: 0 }, toolCalls: 0 };
+        // A provider that reports no total still reports the parts.
+        const input = data.block.usage?.inputTokens ?? 0;
+        const output = data.block.usage?.outputTokens ?? 0;
+        const total = data.block.usage?.totalTokens ?? input + output;
+        entry.usage = {
+          input: entry.usage.input + input,
+          output: entry.usage.output + output,
+          total: entry.usage.total + total,
+        };
+        entry.toolCalls += data.block.toolCalls ?? 0;
+        tokens.set(laneId, entry);
+      }
+    }
+  }
+  for (const lane of lanes) {
+    const entry = tokens.get(lane.id);
+    if (entry) {
+      lane.tokens = entry.usage;
+      lane.toolCalls = entry.toolCalls;
+    }
+  }
+
+  // The connector starts at the spawn marker, else at the supervisor's last node before the child began.
+  for (const { lane, sessionLaneId } of childSessions) {
+    const fallbackId = markers
+      .filter((marker) => marker.laneId === sessionLaneId && marker.timestamp <= (lane.start ?? 0))
+      .at(-1)?.id;
+    const spawn =
+      (lane.pid === undefined ? undefined : spawnMarkerByPid.get(lane.pid)) ??
+      (fallbackId === undefined ? undefined : { laneId: sessionLaneId, markerId: fallbackId });
+    if (spawn) {
+      lane.delegatedFrom = spawn;
+    }
+    // The return connector has no such fallback: only the completion event says the child reported
+    // back, and guessing from the supervisor's next node would invent a causal edge that may not
+    // exist — a child can end without ever answering.
+    const returned = lane.pid === undefined ? undefined : returnMarkerByPid.get(lane.pid);
+    if (returned) {
+      lane.returnedTo = returned;
+    }
+  }
+
+  // A session working exactly one task is that task: the two lanes would carry the same label,
+  // so the task lane folds into the session's (which keeps its run span and totals, and takes the
+  // task's id and status so it still reads as the work). Only a lone in-session task, with nothing
+  // depending on it, no sub-tasks and no spawned child, folds — a checklist of several stays a tree.
+  for (const session of lanes.filter((lane) => lane.kind === 'session' && lane.parentId === undefined)) {
+    const children = lanes.filter((lane) => lane.parentId === session.id);
+    const [task] = children;
+    if (
+      children.length !== 1 ||
+      task.kind !== 'task' ||
+      lanes.some((lane) => lane.parentId === task.id || lane.blockedOn?.includes(task.id))
+    ) {
+      continue;
+    }
+    lanes.splice(lanes.indexOf(task), 1);
+    session.taskId = task.taskId;
+    // The task was started (delegated) before the session's first request, so the folded lane begins
+    // with the task; otherwise its first node would sit alone ahead of the bar.
+    if (task.start !== undefined) {
+      session.start = session.start === undefined ? task.start : Math.min(session.start, task.start);
+    }
+    if (task.status === 'blocked' || task.status === 'review' || task.status === 'pending') {
+      session.status = task.status;
+    }
+    markers.forEach((marker, index) => {
+      if (marker.laneId === task.id) {
+        markers[index] = { ...marker, laneId: session.id };
+      }
+    });
+  }
+
+  // A parent task's lane carries each of its sub-tasks' starts and finishes as nodes of its own, so it reads as the
+  // span of the work it contains rather than one unbroken bar, and its first node is where that work began. Read from
+  // the task tree rather than the lanes' `parentId`, which joins a sub-task to its parent only when both sit on one
+  // checklist, and carried to every ancestor, since a grandchild's work is inside its grandparent too.
+  const laneById = new Map(lanes.map((lane) => [lane.id, lane]));
+  const laneByTaskId = new Map(lanes.flatMap((lane) => (lane.taskId === undefined ? [] : [[lane.taskId, lane]])));
+  const ancestorLanesOf = (lane: Lane): Lane[] => {
+    const task = lane.taskId === undefined ? undefined : taskById.get(lane.taskId);
+    const ancestors: Lane[] = [];
+    const seen = new Set<string>(task ? [task.id] : []);
+    for (
+      let parent = task && Task.getParentTask(task);
+      parent && !seen.has(parent.id);
+      parent = Task.getParentTask(parent)
+    ) {
+      seen.add(parent.id);
+      const parentLane = laneByTaskId.get(parent.id);
+      if (parentLane?.kind === 'task') {
+        ancestors.push(parentLane);
+      }
+    }
+    return ancestors;
+  };
+  for (const marker of [...markers]) {
+    const lane = laneById.get(marker.laneId);
+    if (lane?.kind !== 'task' || !isStatusChange(marker.detail)) {
+      continue;
+    }
+    const { status } = marker.detail;
+    if (status !== 'started' && !CLOSED_STATUSES.has(status)) {
+      continue;
+    }
+    for (const ancestor of ancestorLanesOf(lane)) {
+      markers.push({
+        ...marker,
+        id: `${ancestor.id}:sub:${marker.id}`,
+        laneId: ancestor.id,
+        label: `${lane.label}: ${status}`,
+      });
+    }
+  }
+
+  // A parent task encloses its sub-tasks, so its bar begins no later than the earliest of theirs. Read
+  // from the task tree rather than the lanes' `parentId`, which joins a sub-task to its parent only when
+  // both sit on one checklist: a parent drawn from its edit history alone, or a sub-task worked by
+  // another session, would otherwise begin at its own `started` move, after work it contains.
+  for (const lane of lanes) {
+    const task = lane.taskId === undefined ? undefined : taskById.get(lane.taskId);
+    if (!task || lane.start === undefined) {
+      continue;
+    }
+    const seen = new Set<string>([task.id]);
+    for (let parent = Task.getParentTask(task); parent && !seen.has(parent.id); parent = Task.getParentTask(parent)) {
+      seen.add(parent.id);
+      const parentLane = laneByTaskId.get(parent.id);
+      if (parentLane?.start !== undefined && lane.start < parentLane.start) {
+        parentLane.start = lane.start;
+      }
+    }
+  }
+
+  // Hashed from the mnemonic, as the task's mnemonic chip is, so a lane and its chip share a hue.
+  for (const lane of lanes) {
+    const task = lane.taskId === undefined ? undefined : taskById.get(lane.taskId);
+    if (task) {
+      lane.hue = getHashHue(Obj.getMnemonic(task));
+      // After the fold, so a session standing for its one task breaks where the task was put down too.
+      const gaps = workGaps(taskStatusChanges?.get(task.id) ?? []);
+      if (gaps.length > 0) {
+        lane.gaps = gaps;
+      }
+    }
+  }
+
+  const times = [
+    ...lanes.flatMap((lane) => [lane.start, lane.end]).filter((time): time is number => time !== undefined),
+    ...markers.map((marker) => marker.timestamp),
+  ];
+  // The axis reaches `now` for a run still in flight; one whose last event is long past is idle or
+  // dead whatever its status says, and stretching the axis to now would bunch its nodes into a sliver.
+  const hasOpen = lanes.some((lane) => lane.start !== undefined && lane.end === undefined);
+  const latest = times.length > 0 ? Math.max(...times) : undefined;
+  if (hasOpen && now !== undefined && (latest === undefined || now - latest <= OPEN_LANE_STALE_MS)) {
+    times.push(now);
+  }
+  const start = times.length > 0 ? Math.min(...times) : (now ?? 0);
+  const end = times.length > 0 ? Math.max(...times) : start;
+
+  return { lanes, markers, range: { start, end } };
+};
+
+const taskLaneStatus = (task: Task.Task, tasks: readonly Task.Task[]): LaneStatus => {
+  if (task.status === 'todo' && !Task.isTaskReady(tasks, task)) {
+    return 'blocked';
+  }
+  return (task.status && TASK_STATUS[task.status]) ?? 'pending';
+};
+
+const subSessionStatus = (endEvent: Trace.FlatEvent | undefined, process: Process.Process | undefined): LaneStatus => {
+  if (endEvent) {
+    return decode(Trace.OperationEnd.schema, endEvent.data)?.outcome === 'failure' ? 'failed' : 'done';
+  }
+  if (process && !ACTIVE_STATES.has(process.state)) {
+    return process.state === Process.State.FAILED ? 'failed' : 'done';
+  }
+  return 'running';
+};
+
+const toMarker = (event: Trace.FlatEvent, id: string, laneId: string): Marker | undefined => {
+  const base = { id, laneId, timestamp: event.timestamp, pid: event.meta.pid };
+  switch (event.type) {
+    case Trace.AgentRequestBegin.key:
+      return { ...base, kind: 'request', label: 'Request started' };
+    case Trace.AgentRequestEnd.key: {
+      const data = decode(Trace.AgentRequestEnd.schema, event.data);
+      return {
+        ...base,
+        kind: 'request',
+        label: `Request ${data?.status ?? 'ended'}`,
+        level: data?.status === 'error' ? 'error' : data?.status === 'interrupted' ? 'warn' : undefined,
+        detail: data?.error,
+      };
+    }
+    case Trace.TaskStatusChanged.key: {
+      const data = decode(Trace.TaskStatusChanged.schema, event.data);
+      return {
+        ...base,
+        kind: 'task',
+        label: data?.status === 'started' ? 'Task started' : `Task ${data?.status ?? 'updated'}`,
+        level: data?.status === 'failed' ? 'error' : undefined,
+        detail: data,
+      };
+    }
+    case Trace.DelegationSpawned.key: {
+      const data = decode(Trace.DelegationSpawned.schema, event.data);
+      return { ...base, kind: 'delegation', label: 'Delegated', detail: data };
+    }
+    case Trace.DelegationCompleted.key: {
+      const data = decode(Trace.DelegationCompleted.schema, event.data);
+      return {
+        ...base,
+        kind: 'delegation',
+        label: data?.status === 'failure' ? 'Sub-agent failed' : `Returned${data?.result ? `: ${data.result}` : ''}`,
+        level: data?.status === 'failure' ? 'error' : undefined,
+        detail: data,
+      };
+    }
+    case Trace.OperationStart.key: {
+      const data = decode(Trace.OperationStart.schema, event.data);
+      return { ...base, kind: 'operation', label: data?.name ?? data?.key ?? 'Operation' };
+    }
+    case Trace.OperationEnd.key: {
+      const data = decode(Trace.OperationEnd.schema, event.data);
+      const failed = data?.outcome === 'failure';
+      return {
+        ...base,
+        kind: 'operation',
+        label: data?.name ?? data?.key ?? 'Operation',
+        level: failed ? 'error' : undefined,
+        detail: failed ? data?.error : undefined,
+      };
+    }
+    case Trace.CompleteBlock.key: {
+      const data = decode(Trace.CompleteBlock.schema, event.data);
+      if (data?.block._tag === 'toolCall') {
+        return { ...base, kind: 'tool', label: data.block.name };
+      }
+      if (data?.block._tag === 'text' && data.role === 'user') {
+        return { ...base, kind: 'message', label: data.block.text.split('\n')[0] ?? '' };
+      }
+      return undefined;
+    }
+    default:
+      return undefined;
+  }
+};

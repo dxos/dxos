@@ -11,16 +11,15 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
+import { translations as queryTranslations } from '@dxos/react-ui-query/translations';
 import { translations as shellTranslations } from '@dxos/shell/translations';
 
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { SpaceCapabilities, SpaceCapability, SpaceSchema } from '#types';
 
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../../PLUGIN.mdl?raw';
 import { SpaceOperationConfig } from '../operations/helpers.ts';
-import { makeCreateInvitationUrl } from './helpers.ts';
+import { makeCreateInvitationUrl, makeCreateJoinUrl } from './helpers.ts';
 
 export * from './app-graph-builder/index.ts';
 export * from './settings-sync/index.ts';
@@ -28,18 +27,19 @@ export { makeCreateObjectEntryForDatabaseType } from '../util/index.ts';
 
 export const Commands = AppCapability.commands(() => import('./commands.ts'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'), {
-  environments: ['node'],
+  environments: ['browser', 'node', 'tauri'],
 });
 export const Dashboard = Capability.lazyModule(
   'Dashboard',
   {
-    environments: [],
+    environments: ['browser', 'tauri'],
     requires: [Capabilities.PluginManager, ClientCapabilities.Client, AppCapabilities.Layout],
     provides: [SpaceCapabilities.Dashboard],
-    activatesOn: ClientEvents.SpacesReady,
+    activatesOn: ClientEvents.SpacesAvailable,
   },
   () => import('./dashboard.ts'),
 );
+export const DefaultParent = AppCapability.defaultParent(() => import('./default-parent.ts'));
 export const IdentityCreated = Capability.lazyModule(
   'IdentityCreated',
   {
@@ -49,7 +49,7 @@ export const IdentityCreated = Capability.lazyModule(
     provides: [SpaceCapabilities.DefaultSpace],
     // Runtime event: the default space is created when a local identity is created, not at startup.
     activatesOn: ClientEvents.IdentityCreated,
-    environments: ['node'],
+    environments: ['browser', 'node', 'tauri'],
   },
   () => import('./identity-created.ts'),
 );
@@ -58,15 +58,16 @@ export type { NavigationHandlerOptions } from './navigation-handler/index.ts';
 export const NavigationTargetResolver = AppCapability.navigationResolver(
   () => import('./navigation-target-resolver.ts'),
   {
+    environments: ['browser', 'tauri'],
     requires: [ClientCapabilities.Client],
   },
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'));
-export const ReactRoot = AppCapability.reactRoot(() => import('./react-root.tsx'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: [
     'org.dxos.plugin.space.role.homeContent',
     'org.dxos.role.article',
+    'org.dxos.role.cardMasonry',
     'org.dxos.role.dialog',
     'org.dxos.role.formInput',
     'org.dxos.role.navbarEnd',
@@ -83,20 +84,17 @@ export const Repair = Capability.lazyModule(
   {
     provides: [SpaceCapabilities.Repair],
     // Runtime event: repairs run once spaces are observed, not at startup.
-    activatesOn: ClientEvents.SpacesReady,
+    activatesOn: ClientEvents.SpacesAvailable,
   },
   () => import('./repair.ts'),
 );
 export const Schema = AppCapability.schema(() => import('./schema.ts'));
-export const SpaceSettings = AppCapability.settings(() => import('./settings.ts'), {
-  provides: [SpaceCapabilities.SettingsAtom],
-});
 // Browser-only: it requires the app graph, layout and attention — app-shell capabilities no
 // headless host registers.
-export const SpacesReady = Capability.lazyModule(
-  'SpacesReady',
+export const SpacesAvailable = Capability.lazyModule(
+  'SpacesAvailable',
   {
-    environments: [],
+    environments: ['browser', 'tauri'],
     requires: [
       Capabilities.OperationInvoker,
       AppCapabilities.AppGraph,
@@ -110,19 +108,22 @@ export const SpacesReady = Capability.lazyModule(
     ],
     provides: [],
     // Runtime event: spaces become ready when the client observes them, not at startup.
-    activatesOn: ClientEvents.SpacesReady,
+    activatesOn: ClientEvents.SpacesAvailable,
   },
-  () => import('./spaces-ready.ts'),
+  () => import('./spaces-available.ts'),
 );
+export const SpaceSettings = AppCapability.settings(() => import('./settings.ts'), {
+  provides: [SpaceCapabilities.SettingsAtom],
+});
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
 // Holds view state (space names, viewers, merge preview); every consumer — the React surfaces,
-// the app-graph builder, `SpacesReady` — is itself browser-only.
+// the app-graph builder, `SpacesAvailable` — is itself browser-only.
 export const SpaceState = Capability.lazyModule(
   'SpaceState',
   {
     requires: [Capabilities.AtomRegistry, Capabilities.PluginManager],
     provides: [SpaceCapabilities.State, SpaceCapabilities.EphemeralState],
-    environments: [],
+    environments: ['browser', 'tauri'],
   },
   () => import('./state.ts'),
 );
@@ -130,21 +131,23 @@ export const ObservabilityMappings = AppCapability.observabilityMappings(() => i
   props: (options: SpaceSchema.SpacePluginOptions) => ({ observability: options.observability }),
 });
 export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings.ts'), {
-  environments: ['node'],
+  environments: ['browser', 'node', 'tauri'],
   provides: [SpaceOperationConfig],
   props: (options: SpaceSchema.SpacePluginOptions) => ({
     createInvitationUrl: makeCreateInvitationUrl(options),
+    createJoinUrl: makeCreateJoinUrl(options),
   }),
 });
 export const Translations = AppCapability.translations([
   ...translations,
   ...componentsTranslations,
+  ...queryTranslations,
   ...formTranslations,
   ...shellTranslations,
 ]);
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
   path: 'PLUGIN.mdl',
-  content: pluginSpec,
+  content: () => import('../../PLUGIN.mdl?raw'),
   mimeType: 'application/x-mdl',
 });

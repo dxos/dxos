@@ -1,0 +1,5 @@
+@prefix u: <urn:u#>.
+
+u:k1 u:seenKey true.
+u:k2 u:seenKey true.
+u:k3 u:seenKey true.

@@ -12,8 +12,8 @@ import { TranscriptOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof TranscriptOperation.Create> = TranscriptOperation.Create.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ space }) {
-      const feed = space.db.add(Feed.make());
+    Effect.fn(function* ({ db }) {
+      const feed = db.add(Feed.make());
       return {
         object: Transcript.make(Ref.make(feed)),
       };

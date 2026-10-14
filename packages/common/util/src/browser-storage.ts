@@ -2,8 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
+// Each helper is a no-op where its API is absent (e.g. a WKWebView on a custom scheme has no service workers):
+// there is nothing to clear.
+
 /** Delete all IndexedDB databases for this origin. */
 export const clearIndexedDB = async (): Promise<void> => {
+  if (typeof indexedDB === 'undefined') {
+    return;
+  }
   const dbs = await indexedDB.databases();
   const results = await Promise.allSettled(
     dbs
@@ -29,6 +35,9 @@ export const clearIndexedDB = async (): Promise<void> => {
 
 /** Remove all entries from the Origin Private File System. */
 export const clearOPFS = async (): Promise<void> => {
+  if (!globalThis.navigator?.storage?.getDirectory) {
+    return;
+  }
   const root = await navigator.storage.getDirectory();
   const errors: unknown[] = [];
   for await (const [name] of root.entries()) {
@@ -45,6 +54,9 @@ export const clearOPFS = async (): Promise<void> => {
 
 /** Unregister all service workers for this origin. */
 export const clearServiceWorkers = async (): Promise<void> => {
+  if (!globalThis.navigator?.serviceWorker) {
+    return;
+  }
   const regs = await navigator.serviceWorker.getRegistrations();
   for (const reg of regs) {
     await reg.unregister();
@@ -53,6 +65,9 @@ export const clearServiceWorkers = async (): Promise<void> => {
 
 /** Delete all HTTP caches for this origin. */
 export const clearCaches = async (): Promise<void> => {
+  if (typeof caches === 'undefined') {
+    return;
+  }
   const keys = await caches.keys();
   for (const key of keys) {
     await caches.delete(key);

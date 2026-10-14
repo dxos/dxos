@@ -20,6 +20,10 @@ export class TestBridge implements TerminalBridge {
     return this.#atLineStart;
   }
 
+  get written(): number {
+    return this.writes.length;
+  }
+
   get rendered(): string {
     return this.writes.join('');
   }

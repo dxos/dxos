@@ -53,7 +53,9 @@ work for both. You can manage the plugin through the Desktop UI instead:
 
 ## Connect Composer
 
-The plugin provides the Composer MCP server. Do not add its URL manually.
+The plugin provides the Composer MCP server, so on the CLI and Desktop do not add
+its URL manually. Cloud sessions are the exception: see
+[Claude Code on the web](#claude-code-on-the-web).
 
 Create an account at [composer.space](https://composer.space), then open its
 settings and create a passkey.
@@ -70,24 +72,34 @@ sign-in in your browser.
    **DXOS Project Tracking**, **Connectors**, then select `composer`.
 2. Click **Connect** and complete the passkey sign-in in your browser.
 
+### Claude Code on the web
+
+Cloud sessions do not get the MCP servers of locally installed plugins, so the
+plugin's bundled `composer` server is not available there (and a cloud session
+could not complete the passkey sign-in anyway). Add Composer separately as a
+claude.ai connector:
+
+1. At [claude.ai/customize/connectors](https://claude.ai/customize/connectors),
+   add a custom connector named exactly `Composer` with the URL
+   `https://composer.dxos.network/mcp`, and complete the passkey sign-in.
+2. Install the plugin in each container: have the environment's setup script run
+   the repo's `.config/claude-code-setup.sh` (it calls
+   `.claude/scripts/bootstrap-plugins.sh`).
+3. Start a new session; connectors and plugins are read at session start.
+
+The session-reporting hooks target both `plugin:dxos:composer` and `Composer`;
+whichever server is not connected is skipped, so the connector name must match.
+
 ## Use Composer for project tracking
 
-Skip this whole section if you are staying on `file`.
+This is the default backend. To keep projects in committed files instead, see
+[`file`](#file).
 
 ### Steps
 
-**1. Select the backend.** `DX_PROJECT_BACKEND` is read by the hook process, so
-it has to be in that process's environment. A desktop session is not launched
-from your shell and inherits nothing from `.zshrc`, so set it in `settings.json`,
-which Claude Code passes to every session and its subprocesses:
-
-```json
-{ "env": { "DX_PROJECT_BACKEND": "mcp" } }
-```
-
-`.claude/settings.local.json` in the repo keeps it to you. `.claude/settings.json`
-commits it for everyone working in the repo. `~/.claude/settings.json` turns it on
-for every repo you open.
+**1. Connect Composer.** Authenticate the bundled connector as described under
+[Connect Composer](#connect-composer). There is no backend to select: `mcp` is
+the default.
 
 **2. Bind the space.** Run `/dxos:project setup`. It lists the spaces you own by
 name, asks which one this repo's projects belong in, confirms the session can
@@ -219,7 +231,7 @@ merely mentioned it — including the message asking for it to be replaced.
 | Variable              | Default                          | Purpose                                         |
 | --------------------- | -------------------------------- | ----------------------------------------------- |
 | `DX_PROJECT_REGISTRY` | `.agents/projects/registry.yml`  | Registry location, relative to the project root (`file` only) |
-| `DX_PROJECT_BACKEND`  | `file`                           | Where projects are stored — `file` or `mcp`     |
+| `DX_PROJECT_BACKEND`  | `mcp`                            | Where projects are stored — `mcp` or `file`     |
 | `DX_PROJECT_SPACE`    | unset                            | Guard against a stale binding (`mcp` only)      |
 
 The spaces themselves are bound per repo in the committed
@@ -235,12 +247,21 @@ Every directive ends with a `BACKEND:` line naming the store and how to read or
 write it. The verbs, the command file and the skill are all backend-agnostic —
 that seam is what lets the store change without touching them.
 
-### `file` (default)
+### `file`
 
 A committed `registry.yml` plus a `TASKS.md` per project. Works in any repo with
-no services running.
+no services running. `DX_PROJECT_BACKEND` is read by the hook process, and a
+desktop session inherits nothing from `.zshrc`, so opt in through `settings.json`:
 
-### `mcp` — DXOS Composer
+```json
+{ "env": { "DX_PROJECT_BACKEND": "file" } }
+```
+
+`.claude/settings.local.json` in the repo keeps it to you. `.claude/settings.json`
+commits it for everyone working in the repo. `~/.claude/settings.json` applies it
+to every repo you open.
+
+### `mcp` — DXOS Composer (default)
 
 Projects become live objects in a Composer space, reached through MCP tools. A
 registry entry is a `Project`, its ledger is `Project.outline` (one markdown
@@ -250,7 +271,9 @@ from any machine, without a committed file.
 
 #### The bundled connector
 
-The plugin ships the deployed server, so there is nothing to add:
+The plugin ships the deployed server, so on the CLI and Desktop there is nothing
+to add (cloud sessions need the claude.ai connector described under
+[Claude Code on the web](#claude-code-on-the-web)):
 
 ```json
 "mcpServers": { "composer": { "type": "http", "url": "https://composer.dxos.network/mcp" } }

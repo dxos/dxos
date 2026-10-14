@@ -5,19 +5,18 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
+import * as Atom from 'effect/reactivity/Atom';
 import * as Stream from 'effect/Stream';
-import * as Atom from 'effect/unstable/reactivity/Atom';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { useOptionalCapability } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { ProcessManager } from '@dxos/compute-runtime';
 import * as Process from '@dxos/compute/Process';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import type * as Trace from '@dxos/compute/Trace';
 import { type Space } from '@dxos/react-client/echo';
-
-import { resolveEphemeralStatusUpdate } from '#execution-graph';
+import { resolveEphemeralStatusUpdate } from '@dxos/react-ui-trace';
 
 const atomEmpty = Atom.make(() => [] as const);
 
@@ -27,7 +26,7 @@ const ACTIVE_PROCESS_STATES = new Set<Process.State>([Process.State.RUNNING, Pro
 export const isTerminalActivityLine = (line: string): boolean =>
   line.endsWith(' - Success') || line.endsWith(' - Error') || line === 'Agent completed request';
 
-const collectDescendantPids = (processes: readonly Process.Info[], rootPid: string): Set<string> => {
+const collectDescendantPids = (processes: readonly Process.Process[], rootPid: string): Set<string> => {
   const pids = new Set([rootPid]);
   let expanded = true;
   while (expanded) {
@@ -44,7 +43,7 @@ const collectDescendantPids = (processes: readonly Process.Info[], rootPid: stri
   return pids;
 };
 
-const resolveSubscribePids = (agentPid: Process.ID, processes: readonly Process.Info[]): Process.ID[] => {
+const resolveSubscribePids = (agentPid: Process.ID, processes: readonly Process.Process[]): Process.ID[] => {
   const rootPid = String(agentPid);
   const descendants = collectDescendantPids(processes, rootPid);
   const activePids = processes
@@ -61,7 +60,7 @@ const resolveSubscribePids = (agentPid: Process.ID, processes: readonly Process.
 const attachActiveHandle = (
   processManager: ProcessManager.Manager,
   pid: Process.ID,
-): Effect.Effect<ProcessManager.Handle<any, any, never> | undefined> =>
+): Effect.Effect<Process.Process<any, any, never> | undefined> =>
   Effect.gen(function* () {
     const maxAttempts = 15;
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
@@ -87,8 +86,8 @@ export const useProcessEphemeralStatus = (
 ): string | undefined => {
   // Optional capabilities: the live status is a progressive enhancement, so the component still
   // renders (e.g. in standalone stories) when there is no plugin manager / process runtime.
-  const runtime = useOptionalCapability(Capabilities.ProcessManagerRuntime);
-  const monitor = useOptionalCapability(Capabilities.ProcessMonitor);
+  const runtime = Hooks.useOptionalCapability(Capabilities.ProcessManagerRuntime);
+  const monitor = Hooks.useOptionalCapability(Capabilities.ProcessManager);
   const processes = useAtomValue(monitor?.processTreeAtom ?? atomEmpty);
   const [status, setStatus] = useState<string | undefined>();
   const fibersRef = useRef<Fiber.Fiber<void, unknown>[]>([]);

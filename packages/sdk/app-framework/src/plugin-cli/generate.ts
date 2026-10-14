@@ -28,10 +28,6 @@ const findFirst = (dir: string, names: string[]): string | null =>
  * Generates the per-condition capability barrels for one plugin package:
  * `src/capabilities/gen/<env>.ts` for every condition named by an `environments` annotation in
  * the canonical barrel, plus the matching `#capabilities` condition map in package.json.
- *
- * A plugin whose modules name no conditions generates nothing and keeps an unconditioned
- * `#capabilities`: the canonical barrel IS the `default` condition, so there is no variant to
- * split out.
  */
 export const generate = (pluginDir: string): GenerateResult => {
   const capabilitiesDir = path.join(pluginDir, 'src/capabilities');
@@ -47,11 +43,12 @@ export const generate = (pluginDir: string): GenerateResult => {
 
   const genDir = path.join(capabilitiesDir, 'gen');
   const result: GenerateResult = { pluginDir, environments, files: [] };
+  const canonicalSource = `./${path.relative(pluginDir, indexPath).split(path.sep).join('/')}`;
+  fs.rmSync(genDir, { recursive: true, force: true });
   if (environments.length === 0) {
     // Still sync: dropping the last annotation has to retract the conditions too, or package.json
     // keeps pointing `#capabilities` at gen files that are no longer produced.
-    fs.rmSync(genDir, { recursive: true, force: true });
-    syncPackageImports(pluginDir, environments);
+    syncPackageImports(pluginDir, environments, canonicalSource);
     return result;
   }
   fs.mkdirSync(genDir, { recursive: true });
@@ -73,7 +70,7 @@ export const generate = (pluginDir: string): GenerateResult => {
     });
   }
 
-  syncPackageImports(pluginDir, environments);
+  syncPackageImports(pluginDir, environments, canonicalSource);
   return result;
 };
 
@@ -227,68 +224,48 @@ const sortImports = (imports: string[]): string[] => {
 };
 
 /**
- * Where a condition's built barrel lands, derived from the package's own `default` target so the
- * manifest matches whichever build the package uses.
- *
- * Two layouts exist. `ts-vite-build` flattens each entry to `dist/lib/<name>.mjs`, so the
- * condition rides the name (`capabilities.node.mjs`). The retired esbuild pipeline mirrored the source
- * tree under a platform slug (`dist/lib/neutral/capabilities/index.mjs`), so the condition keeps
- * the source's own shape (`.../capabilities/gen/node.mjs`). Guessing one of them for every
- * package is what left two plugins pointing at bundles their build never emits.
- */
-const conditionDist = (defaultDist: string, env: string): string => {
-  const dir = path.posix.dirname(defaultDist);
-  return path.posix.basename(defaultDist) === 'index.mjs' ? `${dir}/gen/${env}.mjs` : `${dir}/capabilities.${env}.mjs`;
-};
-
-/**
  * Rewrites the `#capabilities` entry of the plugin's package.json so each generated environment
  * resolves the generated barrel (source condition) and its built counterpart (dist condition).
- * Key order is load-bearing: `source` first, env conditions before `default`.
  */
-const syncPackageImports = (pluginDir: string, environments: string[]): void => {
+const syncPackageImports = (pluginDir: string, environments: string[], canonicalSource: string): void => {
   const pkgPath = path.join(pluginDir, 'package.json');
   const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
   const existing = pkg.imports?.['#capabilities'];
-  const existingSource = typeof existing?.source === 'object' ? existing.source : {};
 
   // Nothing to split and nothing already split: leave the manifest untouched. Writing an entry
   // here would invent `#capabilities` for a plugin that never declared one, and expand a
   // deliberate shorthand string into the conditional form for no reason.
-  const hasConditions = Object.keys(existingSource).some((key) => key !== 'default');
+  const hasConditions = typeof existing?.source === 'object';
   if (environments.length === 0 && !hasConditions) {
     return;
   }
 
-  // Conditions resolve in map order; workerd before node before default matches the runtimes' own
-  // condition lists (wrangler never resolves `node`). Conditions outside that pair are ordered
-  // alphabetically after them — the set is open, so the tool ranks what it knows and stays stable
-  // for the rest rather than refusing them.
-  const RANKED = ['workerd', 'node'];
-  const envOrder = [...environments].sort((a, b) => {
-    const rank = (env: string) => (RANKED.indexOf(env) === -1 ? RANKED.length : RANKED.indexOf(env));
-    return rank(a) - rank(b) || a.localeCompare(b);
-  });
+  const types = existing?.types ?? './dist/types/src/capabilities/index.d.ts';
+  if (environments.length === 0) {
+    pkg.imports = {
+      ...pkg.imports,
+      '#capabilities': { source: canonicalSource, types, default: './dist/lib/capabilities.mjs' },
+    };
+    fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
+    return;
+  }
 
-  const defaultSource =
-    typeof existing?.source === 'string' ? existing.source : (existingSource.default ?? './src/capabilities/index.ts');
+  // Tools match several conditions and take the first key that matches, so a condition goes
+  // before any broader one its tools also match: workerd and tauri builds both match `browser`.
+  const FIRST = ['workerd', 'node'];
+  const LAST = ['browser'];
+  const rank = (env: string) =>
+    FIRST.includes(env) ? FIRST.indexOf(env) : LAST.includes(env) ? FIRST.length + 1 : FIRST.length;
+  const envOrder = [...environments].sort((a, b) => rank(a) - rank(b) || a.localeCompare(b));
+
   const source: Record<string, string> = {};
   for (const env of envOrder) {
     source[env] = `./src/capabilities/gen/${env}.ts`;
   }
-  source.default = defaultSource;
-
-  const entry: Record<string, unknown> = {
-    // With no conditions there is nothing to branch on, so the map collapses back to the plain
-    // string form rather than leaving a single-key object that reads as an unfinished split.
-    source: envOrder.length > 0 ? source : defaultSource,
-    types: existing?.types ?? './dist/types/src/capabilities/index.d.ts',
-  };
-  const defaultDist = existing?.default ?? './dist/lib/capabilities.mjs';
+  const entry: Record<string, unknown> = { source, types };
   for (const env of envOrder) {
-    entry[env] = conditionDist(defaultDist, env);
+    entry[env] = `./dist/lib/capabilities.${env}.mjs`;
   }
-  entry.default = defaultDist;
 
   pkg.imports = { ...pkg.imports, '#capabilities': entry };
   fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');

@@ -4,6 +4,7 @@
 
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import { type DropKind } from '@dxos/react-ui-list';
 import { isNonNullable } from '@dxos/util';
 
 import { NavTreeNode } from '#types';
@@ -11,56 +12,52 @@ import { NavTreeNode } from '#types';
 export const getParent = (
   graph: AppGraph.ReadableGraph,
   node: NavTreeNode.NavTreeItemGraphNode,
-  path: string[],
+  path: readonly string[],
 ): NavTreeNode.NavTreeItemGraphNode | undefined => {
   const parentId = path[path.length - 2];
-  return AppGraph.getConnections(graph, node.id, AppGraphNode.childRelation('inbound')).find(
+  return AppGraph.getConnections(graph, node.id, AppGraph.inverseRelation(AppGraphNode.child)).find(
     (n: AppGraphNode.Node) => n.id === parentId,
   ) as NavTreeNode.NavTreeItemGraphNode | undefined;
 };
 
-export const getPersistenceParent = (
-  graph: AppGraph.ReadableGraph,
-  node: NavTreeNode.NavTreeItemGraphNode,
-  path: string[],
-  persistenceClass: string,
-): NavTreeNode.NavTreeItemGraphNode | null => {
-  if (node.properties.acceptPersistenceClass?.has(persistenceClass)) {
-    return node;
-  } else {
-    const parent = getParent(graph, node, path);
-    return parent ? getPersistenceParent(graph, parent, path.slice(0, path.length - 1), persistenceClass) : null;
-  }
-};
-
-export const resolveMigrationOperation = (
-  graph: AppGraph.ReadableGraph,
-  activeNode: NavTreeNode.NavTreeItemGraphNode,
-  destinationPath: string[],
-  destinationRelatedNode?: NavTreeNode.NavTreeItemGraphNode,
-): 'transfer' | 'copy' | 'reject' => {
-  const activeClass = activeNode.properties.persistenceClass;
-  if (destinationRelatedNode && activeClass) {
-    const persistenceParent = getPersistenceParent(graph, destinationRelatedNode, destinationPath, activeClass);
-    if (persistenceParent) {
-      const activeKey = activeNode.properties.persistenceKey;
-      if (activeKey && persistenceParent?.properties.acceptPersistenceKey) {
-        return persistenceParent.properties.acceptPersistenceKey.has(activeKey) &&
-          persistenceParent.properties.onTransferStart
-          ? 'transfer'
-          : persistenceParent.properties.onCopy
-            ? 'copy'
-            : 'reject';
-      } else {
-        return 'reject';
-      }
-    } else {
-      return 'reject';
-    }
-  } else {
+export const resolveDropKind = ({
+  source,
+  sourceParent,
+  destination,
+}: {
+  source: NavTreeNode.NavTreeItemGraphNode;
+  sourceParent?: NavTreeNode.NavTreeItemGraphNode;
+  destination?: NavTreeNode.NavTreeItemGraphNode;
+}): DropKind => {
+  const { persistenceClass, persistenceKey } = source.properties;
+  if (
+    !destination ||
+    destination.id === sourceParent?.id ||
+    // Node ids are qualified by path, so another row for the same object has a different id.
+    (destination.data?.id !== undefined && destination.data.id === source.data?.id) ||
+    !persistenceClass ||
+    !persistenceKey ||
+    !destination.properties.acceptPersistenceClass?.has(persistenceClass) ||
+    !destination.properties.acceptPersistenceKey?.has(persistenceKey)
+  ) {
     return 'reject';
   }
+
+  const scope = destination.properties.moveScope;
+  if (
+    scope &&
+    sourceParent?.properties.moveScope === scope &&
+    sourceParent.properties.onMoveOut &&
+    destination.properties.onMoveIn
+  ) {
+    return 'move';
+  }
+  return destination.properties.onLink ? 'link' : 'reject';
 };
+
+/** The index `arrayMove` takes to land an item at `insertIndex`, counted before the item leaves its slot. */
+export const getRearrangeIndex = (sourceIndex: number, insertIndex: number): number =>
+  sourceIndex < insertIndex ? insertIndex - 1 : insertIndex;
 
 // TODO(wittjosiah): Move into node implementation?
 export const sortActions = (actions: AppGraphNode.Action[]): AppGraphNode.Action[] =>

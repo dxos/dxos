@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-const TOOL_FAILURE_CODES = ['invalid_request', 'space_not_in_context', 'operation_failed'] as const;
+const TOOL_FAILURE_CODES = ['invalid_request', 'space_not_in_context', 'operation_failed', 'skill_not_loaded'] as const;
 
 export type ToolFailureCode = (typeof TOOL_FAILURE_CODES)[number];
 

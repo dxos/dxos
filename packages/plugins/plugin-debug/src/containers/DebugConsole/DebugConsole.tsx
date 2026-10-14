@@ -4,9 +4,13 @@
 
 import React, { useCallback, useMemo, useRef } from 'react';
 
-import { usePluginManager } from '@dxos/app-framework/ui';
-import { IconButton, Panel, SystemIconButton, Toolbar, useTranslation } from '@dxos/react-ui';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import { Terminal, type TerminalApi } from '@dxos/react-ui-terminal';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { meta } from '#meta';
 
@@ -33,8 +37,8 @@ export type DebugConsoleProps = {
  * snapshot, plugin management, eval), as an interactive Effect-CLI terminal.
  */
 export const DebugConsole = ({ onClose, fit }: DebugConsoleProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const manager = usePluginManager();
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const manager = PluginManagerProvider.usePluginManager();
   const apiRef = useRef<TerminalApi | null>(null);
   const lastResultRef = useRef('');
   const cli = useMemo(
@@ -54,7 +58,7 @@ export const DebugConsole = ({ onClose, fit }: DebugConsoleProps) => {
 
   return (
     <Panel.Root>
-      <Panel.Content>
+      <Panel.Body>
         <Terminal
           ref={apiRef}
           command={cli.command}
@@ -63,26 +67,26 @@ export const DebugConsole = ({ onClose, fit }: DebugConsoleProps) => {
           banner={BANNER}
           dimensions={fit ? undefined : FIXED_GRID}
         />
-      </Panel.Content>
-      <Panel.Statusbar asChild>
+      </Panel.Body>
+      <Panel.Footer>
         <Toolbar.Root classNames='bg-transparent'>
-          <IconButton
+          <Button.Root
             variant='ghost'
             iconOnly
             icon='ph--eraser--regular'
             label={t('console.clear.label')}
             onClick={handleClear}
           />
-          <SystemIconButton.Clipboard
+          <SystemButton.Clipboard
             variant='ghost'
             iconOnly
             label={t('console.copy.label')}
             onCopy={() => lastResultRef.current}
           />
           <Toolbar.Separator />
-          {onClose && <SystemIconButton.Close variant='ghost' iconOnly onClick={onClose} />}
+          {onClose && <SystemButton.Close variant='ghost' iconOnly onClick={onClose} />}
         </Toolbar.Root>
-      </Panel.Statusbar>
+      </Panel.Footer>
     </Panel.Root>
   );
 };

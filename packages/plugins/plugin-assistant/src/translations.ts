@@ -2,27 +2,28 @@
 // Copyright 2023 DXOS.org
 //
 
-import { McpServer } from '@dxos/assistant-toolkit';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
+import * as McpServer from '@dxos/compute/McpServer';
 import * as Skill from '@dxos/compute/Skill';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
-import { type Resource } from '@dxos/react-ui';
 import { translations as assistantTranslations } from '@dxos/react-ui-assistant/translations';
 import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { translations as taskTranslations } from '@dxos/react-ui-task/translations';
-import { Question } from '@dxos/types';
+import { translations as traceTranslations } from '@dxos/react-ui-trace/translations';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
 
-export const translations: Resource[] = [
+export const translations: Theme.Resource[] = [
   ...assistantTranslations,
   ...componentsTranslations,
   ...formTranslations,
   ...taskTranslations,
+  ...traceTranslations,
   {
     'en-US': {
       [Type.getTypename(Skill.Skill)]: {
@@ -86,15 +87,11 @@ export const translations: Resource[] = [
         'delete-object.label': 'Delete agent',
         'object-deleted.label': 'Agent deleted',
       },
-      [Type.getTypename(Question.Question)]: {
-        'typename.label': 'Question',
-        'typename.label_zero': 'Questions',
-        'typename.label_one': 'Question',
-        'typename.label_other': 'Questions',
-      },
       // TODO(burdon): Reconcile with react-ui-chat.
       [meta.profile.key]: {
         'delete-task.label': 'Delete task',
+        'execute-task.label': 'Execute task',
+        'execute-task.prompt': 'Implement task #{{ordinal}}',
         'templates.label': 'Templates',
         'open-ambient-chat.label': 'Open Assistant',
         'assistant-chat.label': 'Assistant',
@@ -118,13 +115,6 @@ export const translations: Resource[] = [
 
         'invocations.label': 'Invocations',
         'trace.label': 'Trace',
-
-        'trace-filter.menu': 'Filter processes',
-        'trace-filter-all.label': 'Show all',
-        'trace-filter-none.label': 'Hide all',
-        'trace-environment-app.label': 'App',
-        'trace-environment-space.label': 'Space',
-        'trace-environment-conversation.label': 'Conversation',
 
         'activity.starting.label': 'Starting agent',
         'activity.preparing.label': 'Preparing request',
@@ -152,9 +142,7 @@ export const translations: Resource[] = [
 
         'no-results.message': 'No results',
 
-        'cancel.button': 'Cancel',
         'cancel-queued.button': 'Remove from queue',
-        'save.button': 'Save',
         'new-thread.button': 'New Chat',
         'rename-thread.button': 'Rename Chat',
         'chat-history.label': 'Chat History',
@@ -173,10 +161,6 @@ export const translations: Resource[] = [
         'integration-prompt.unavailable': 'No connector is available for {{service}}.',
         'integration-prompt.scopes': 'Permissions needed:',
 
-        'question-card.label': 'Question',
-        'question-answer.label': 'Your answer',
-        'question-answer.placeholder': 'Type an answer…',
-        'question-submit.label': 'Answer',
         'question-actions.label': 'Question actions',
         'question-failed.message': 'That answer could not be saved. Try again.',
         'question-stranded.message': 'Answer saved, but the assistant could not be resumed.',
@@ -187,6 +171,13 @@ export const translations: Resource[] = [
         'plugin-prompt.unavailable': '{{plugin}} is not installed on this device.',
         'plugin-prompt.failed': 'Could not enable {{plugin}}. Try again from the plugin registry.',
         'plugin-prompt.button': 'Enable',
+        'plugin-url-prompt.title': 'Load {{plugin}}',
+        'plugin-url-prompt.default.name': 'plugin',
+        'plugin-url-prompt.description':
+          'Load {{plugin}} from this URL, then enable it in Plugins. It runs inside the app, so load only code you trust.',
+        'plugin-url-prompt.loaded': '{{plugin}} is loaded. Enable it in Plugins.',
+        'plugin-url-prompt.failed': 'Could not load the plugin: {{error}}',
+        'plugin-url-prompt.button': 'Load plugin',
 
         'search.placeholder': 'Search...',
         'prompt.placeholder': 'Enter question or command...',
@@ -201,6 +192,8 @@ export const translations: Resource[] = [
         'options.mcp.title': 'MCP',
         'options.chat-model.title': 'Models',
         'options.environment.title': 'Environment',
+        'options.agent.title': 'Agent',
+        'agent-locked.message': 'The agent is chosen before the first message. Start a new chat to use another.',
         'remove-object.label': 'Remove object',
 
         'chat-view.title': 'View',
@@ -209,7 +202,7 @@ export const translations: Resource[] = [
         'chat-view.thinking.label': 'Thinking',
         'chat-view.debug.label': 'Debug',
         'chat-environment.local.label': 'Local',
-        'chat-environment.remote.label': 'Remote (EDGE)',
+        'chat-environment.remote.label': 'EDGE',
         'mcp-server-add.label': 'Add MCP server',
         'mcp-server-remove.label': 'Remove MCP server',
         'mcp-server-name.label': 'Server name',
@@ -219,7 +212,15 @@ export const translations: Resource[] = [
         'mcp-server-protocol.label': 'Protocol',
         'mcp-server-api-key.label': 'API key',
         'mcp-server-api-key.placeholder': 'API key (optional)',
+        'mcp-server-status.checking': 'Connecting…',
+        'mcp-server-status.connected_one': '{{count}} tool',
+        'mcp-server-status.connected_other': '{{count}} tools',
+        'mcp-server-status.unauthorized': 'Sign-in required',
+        'mcp-server-status.disabled': 'Disabled',
+        'mcp-server-sign-in.label': 'Sign in',
+        'mcp-server-retry.label': 'Retry connection',
         'mcp-server-error.label': 'MCP server unavailable',
+        'mcp-server-error.unauthorized': 'Sign-in required — sign in from the MCP tab of the chat options.',
         'ai-service-error.label': 'AI service error',
         'view-usage.label': 'View usage',
 
@@ -277,8 +278,6 @@ export const translations: Resource[] = [
         // Per-space Home article: starter-prompt cards + the pinned assistant prompt.
         'space-home.suggestions.heading': 'Get started',
         'space-home.suggestion-magazine.label': 'Create feeds for tracking the latest AI news and build a magazine',
-        'space-home.suggestion-spreadsheet.label':
-          "Look up and create a spreadsheet of MLB's top starters by month for {{year}}",
         'space-home.suggestion-kanban.label': 'Create a kanban view for tracking tasks',
         'space-home.prompt.placeholder': 'Ask the assistant anything…',
 

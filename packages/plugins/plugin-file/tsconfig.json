@@ -26,6 +26,9 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/errors"
+    },
+    {
       "path": "../../common/keys"
     },
     {
@@ -36,6 +39,9 @@
     },
     {
       "path": "../../core/compute/compute"
+    },
+    {
+      "path": "../../core/echo/blob"
     },
     {
       "path": "../../core/echo/echo"

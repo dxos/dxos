@@ -19,8 +19,6 @@ import { meta } from '#meta';
 import { TripMessageExtractor } from '#operations';
 import { translations } from '#translations';
 
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../../PLUGIN.mdl?raw';
 import skillDefinition from './skill-definition.ts';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
@@ -29,7 +27,7 @@ export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
   path: 'PLUGIN.mdl',
-  content: pluginSpec,
+  content: () => import('../../PLUGIN.mdl?raw'),
   mimeType: 'application/x-mdl',
 });
 export const Schema = AppCapability.schema(() => import('./schema.ts'));
@@ -43,7 +41,7 @@ export const CreateObject = SpaceCapability.createObject(() => import('./create-
 // `useMemo`/`useObject`/`useObjects` in its own body.
 export const MarkerProvider = Capability.lazyModule(
   'MarkerProvider',
-  { provides: [MapCapabilities.MarkerProvider], activatesOn: MapEvents.Start, environments: [] },
+  { provides: [MapCapabilities.MarkerProvider], activatesOn: MapEvents.Start, environments: ['browser', 'tauri'] },
   () => import('./marker-provider.tsx'),
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {

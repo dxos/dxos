@@ -6,6 +6,7 @@ import {
   type LogConfig,
   type LogEntry,
   type LogFilter,
+  type LogLevel,
   type LogProcessor,
   type TraceContext,
   inferEnvironmentName,
@@ -30,11 +31,11 @@ export type ObservabilityWorkerMessage =
   | OtelSpanSink.Message;
 
 export type WorkerLogProcessorOptions = {
-  worker: Worker;
+  worker: Pick<Worker, 'postMessage'>;
   /** Identifier embedded in every record's `i` field. Defaults to {@link inferEnvironmentName}. */
   tabId?: string;
   /** Same syntax as `DX_LOG` — entries below the minimum level are not sent. Default `debug`. */
-  logFilter?: string;
+  logFilter?: string | string[] | LogLevel;
   /** The span active on this thread, read per entry so the worker can link the record to its trace. */
   traceContext?: () => TraceContext | undefined;
 };
@@ -49,16 +50,17 @@ export type WorkerLogProcessorOptions = {
  * directly — IDB keeps the data.
  */
 export class WorkerLogProcessor {
-  readonly #worker: Worker;
+  readonly #worker: Pick<Worker, 'postMessage'>;
   readonly #tabId: string;
-  readonly #filters: LogFilter[];
   readonly #traceContext?: () => TraceContext | undefined;
+  #filters: LogFilter[] = [];
+  #minLevel = Infinity;
 
   constructor(options: WorkerLogProcessorOptions) {
     this.#worker = options.worker;
     this.#tabId = options.tabId ?? inferEnvironmentName();
-    this.#filters = parseFilter(options.logFilter ?? DEFAULT_LOG_FILTER);
     this.#traceContext = options.traceContext;
+    this.setFilter(options.logFilter ?? DEFAULT_LOG_FILTER);
 
     this.#installLifecycleHandlers();
   }
@@ -68,7 +70,8 @@ export class WorkerLogProcessor {
    * Fire-and-forget: never throws and never awaits.
    */
   readonly processor: LogProcessor = (_config: LogConfig, entry: LogEntry) => {
-    if (!shouldLog(entry, this.#filters)) {
+    // Hot callers log far below the filter; reject them before `shouldLog` allocates per entry.
+    if (entry.level < this.#minLevel || !shouldLog(entry, this.#filters)) {
       return;
     }
     const line = serializeToJsonl(entry, { env: this.#tabId, trace: this.#traceContext?.() });
@@ -77,6 +80,17 @@ export class WorkerLogProcessor {
     }
     this.#post(line);
   };
+
+  /**
+   * Replace the filter, e.g. once the worker's config arrives.
+   */
+  setFilter(filter: string | string[] | LogLevel): void {
+    this.#filters = parseFilter(filter);
+    // Exclusion patterns can only reject, so no entry below the lowest inclusion level can pass.
+    this.#minLevel = Math.min(
+      ...this.#filters.filter((filter) => !filter.pattern?.startsWith('-')).map((filter) => filter.level),
+    );
+  }
 
   /**
    * Ask the worker to flush now. Fire-and-forget, same as the in-thread store's lifecycle

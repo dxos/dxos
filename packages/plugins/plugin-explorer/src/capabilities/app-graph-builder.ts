@@ -9,7 +9,7 @@ import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { meta } from '#meta';
 
@@ -22,6 +22,7 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       AppGraphBuilder.createExtension({
         id: 'neighborhoodCompanion',
+        relation: AppNode.companion,
         match: AppNodeMatcher.whenEchoObjectMatches,
         connector: () =>
           Effect.succeed([

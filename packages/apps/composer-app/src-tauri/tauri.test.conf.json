@@ -1,0 +1,8 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "identifier": "org.dxos.composer.test",
+  "productName": "Composer Test",
+  "bundle": {
+    "createUpdaterArtifacts": false
+  }
+}

@@ -283,10 +283,10 @@ describe('strong dependency resolution', () => {
   //
 
   describe('relation source/target — feed → automerge', () => {
-    // Expected to fail: a relation in a feed whose source lives in the automerge database hangs
-    // during query because the strong-dep resolver cannot yet bridge feed→database direction in-memory.
-    // Unskip once feed→db strong-dep resolution is implemented.
-    test.fails('in-memory', async () => {
+    // Resolves because the writer's feed handle already reflects the appended relation, so the query
+    // returns it without decoding it again; decoding it is what the resolver cannot yet do (see the
+    // reload case below).
+    test('in-memory', async () => {
       await using peer = await builder.createPeer({ types: TYPES });
       await using db = await peer.createDatabase();
       const feed = db.add(Feed.make({}));

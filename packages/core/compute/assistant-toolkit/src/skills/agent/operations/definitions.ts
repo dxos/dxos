@@ -8,7 +8,7 @@ import { AiService } from '@dxos/ai';
 import { Harness } from '@dxos/assistant';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
-import { AgentService } from '@dxos/compute/AgentService';
+import * as AgentService from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
 import * as TriggerEvent from '@dxos/compute/TriggerEvent';
 import { Database, Obj, Ref } from '@dxos/echo';
@@ -31,7 +31,7 @@ export const Relay = Operation.make({
     qualify: Schema.optional(Schema.Boolean),
   }),
   output: Schema.Void,
-  services: [AiService.AiService, Database.Service, AgentService],
+  services: [AiService.AiService, Database.Service, AgentService.AgentService],
 });
 
 export const GetContext = Operation.make({

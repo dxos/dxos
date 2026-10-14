@@ -12,20 +12,21 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 import { TldrawCapabilities } from '#types';
 
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../../PLUGIN.mdl?raw';
-
 // Browser-only: the variant supplies the React article/card components that render a drawing.
 export const DrawingVariant = Capability.lazyModule(
   'drawing-variant',
-  { provides: [IllustratorCapabilities.VariantProvider], activatesOn: IllustratorEvents.Start, environments: [] },
+  {
+    provides: [IllustratorCapabilities.VariantProvider],
+    activatesOn: IllustratorEvents.Start,
+    environments: ['browser', 'tauri'],
+  },
   () => import('./drawing-variant.ts'),
 );
 
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
   path: 'PLUGIN.mdl',
-  content: pluginSpec,
+  content: () => import('../../PLUGIN.mdl?raw'),
   mimeType: 'application/x-mdl',
 });
 export const TldrawSettings = AppCapability.settings(() => import('./settings.ts'), {

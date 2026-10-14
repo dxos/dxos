@@ -8,24 +8,21 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
-import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { Debug, DebugEvents } from '#types';
 
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../../PLUGIN.mdl?raw';
-
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
-  environments: ['node'],
+  environments: ['browser', 'node', 'tauri'],
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: [
+    'org.dxos.plugin.debug.surface.page',
     'org.dxos.plugin.debug.surface.stats',
     'org.dxos.role.article',
-    'org.dxos.role.deckCompanion.logs',
     'org.dxos.role.deckCompanion.spaceObjects',
+    'org.dxos.role.devtoolsOverview',
     'org.dxos.role.drawer',
     'org.dxos.role.section',
     'org.dxos.role.statusIndicator',
@@ -36,8 +33,13 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface.
 export const DebugSettings = AppCapability.settings(() => import('./settings.ts'), {
   activatesOn: ActivationEvents.Idle,
   provides: [Debug.DebugCapabilities.Settings],
-  environments: ['node'],
+  environments: ['browser', 'node', 'tauri'],
 });
+export const GraphRetention = Capability.lazyModule(
+  'GraphRetention',
+  { provides: [AppCapabilities.AppGraphRetention] },
+  () => import('./graph-retention.ts'),
+);
 export const StatsPanel = Capability.lazyModule(
   'StatsPanel',
   {
@@ -54,12 +56,7 @@ export const MarkdownMenu = Capability.lazyModule(
   { provides: [MarkdownCapabilities.MenuExtension], activatesOn: DebugEvents.Start },
   () => import('./markdown-menu.ts'),
 );
-export const SampleSpaces = AppCapability.sampleSpaces(() => import('./sample-spaces.ts'));
-export const SpaceTemplates = Capability.lazyModule(
-  'SpaceTemplates',
-  { provides: [SpaceCapabilities.SpaceTemplate], activatesOn: DebugEvents.Start },
-  () => import('./space-templates.ts'),
-);
+export const SpaceTemplates = AppCapability.spaceTemplates(() => import('./space-templates.ts'));
 export const LogRecording = Capability.lazyModule(
   'LogRecording',
   { provides: [], activatesOn: DebugEvents.Start },
@@ -69,6 +66,6 @@ export const Translations = AppCapability.translations(translations);
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
   path: 'PLUGIN.mdl',
-  content: pluginSpec,
+  content: () => import('../../PLUGIN.mdl?raw'),
   mimeType: 'application/x-mdl',
 });

@@ -2,17 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/reactivity/Atom';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj, Type } from '@dxos/echo';
-import { useResolveRef } from '@dxos/echo-react';
-import { SchemaEx } from '@dxos/effect';
+import { useObject, useResolveRef } from '@dxos/echo-react';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { URI } from '@dxos/keys';
 import { useQuery } from '@dxos/react-client/echo';
-import { Panel, Show, ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Show from '@dxos/react-ui/Show';
 import { Outline as OutlineType, Task, TaskSet } from '@dxos/types';
 
 import { Outline, type OutlineController } from '#components';
@@ -40,7 +44,7 @@ export const OutlineArticle = ({
   taskSet,
   toolbar = true,
 }: OutlineArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const db = Obj.getDatabase(outline);
 
   // Link the user navigated into; the back button clears it to return to the outline.
@@ -84,21 +88,25 @@ export const OutlineArticle = ({
   // parented to their parent task.
   const tasks = useQuery(db, taskSet ? Filter.and(Filter.type(Task.Task), Filter.childOf(taskSet)) : Filter.nothing());
   // `useQuery` re-emits only when result membership changes, never on a member's property change,
-  // so renames are observed by subscribing to each task; the bump rebuilds the resolver, whose new
-  // identity re-runs the editor's label sync.
-  const [tick, bump] = useReducer((count: number) => count + 1, 0);
-  useEffect(() => {
-    const unsubscribes = tasks.map((task) => Obj.subscribe(task, bump));
-    return () => unsubscribes.forEach((unsubscribe) => unsubscribe());
-  }, [tasks]);
+  // so titles are read through atoms; a rename yields a new resolver, whose identity re-runs the
+  // editor's label sync.
+  const labels = useAtomValue(
+    useMemo(
+      () =>
+        Atom.make((get) =>
+          tasks.map((task) => [Obj.getURI(task).toString(), get(Obj.atomProperty(task, 'title'))] as const),
+        ),
+      [tasks],
+    ),
+  );
 
   // An item that is already a link cannot be promoted again; the outline reports this as the caret moves.
   const [convertible, setConvertible] = useState(true);
 
   const resolveLinkLabel = useMemo(() => {
-    const labels = new Map(tasks.map((task) => [Obj.getURI(task).toString(), task.title]));
-    return (url: string) => labels.get(url);
-  }, [tasks, tick]);
+    const byUrl = new Map(labels);
+    return (url: string) => byUrl.get(url);
+  }, [labels]);
 
   const taskActions = useMenuBuilder(
     (): ActionGraphProps =>
@@ -137,18 +145,18 @@ export const OutlineArticle = ({
   if (task) {
     return (
       <Panel.Root role={role}>
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <ActionToolbar {...taskActions} attendableId={attendableId} classNames='dx-document' />
-        </Panel.Toolbar>
-        <Panel.Content>
-          <TaskForm task={task} classNames='dx-document' />
-        </Panel.Content>
+        </Panel.Header>
+        <Panel.Body>
+          <TaskForm task={task} />
+        </Panel.Body>
       </Panel.Root>
     );
   }
 
   return (
-    <Show when={text}>
+    <Show.Show when={text}>
       {(text) => (
         <Outline.Root
           ref={outlineRef}
@@ -161,25 +169,26 @@ export const OutlineArticle = ({
           extensions={extensions}
         >
           <Panel.Root role={role}>
-            <Show when={toolbar}>
-              <Panel.Toolbar asChild>
+            <Show.Show when={toolbar}>
+              <Panel.Header>
                 <ActionToolbar {...outlineActions} attendableId={attendableId} classNames='dx-document' />
-              </Panel.Toolbar>
-            </Show>
-            <Panel.Content asChild>
+              </Panel.Header>
+            </Show.Show>
+            <Panel.Body asChild>
               <Outline.Content classNames='dx-document' />
-            </Panel.Content>
+            </Panel.Body>
           </Panel.Root>
         </Outline.Root>
       )}
-    </Show>
+    </Show.Show>
   );
 };
 
 OutlineArticle.displayName = 'OutlineArticle';
 
-const TaskForm = ({ classNames, task }: ThemedClassName<{ task: Task.Task }>) => {
+const TaskForm = ({ task }: { task: Task.Task }) => {
   const schema = useMemo(() => omitId(Type.getSchema(Task.Task)), []);
+  const [snapshot] = useObject(task);
 
   const handleSave = useCallback(
     (values: Record<string, unknown>, { changed }: { changed: Record<string, boolean> }) => {
@@ -195,8 +204,8 @@ const TaskForm = ({ classNames, task }: ThemedClassName<{ task: Task.Task }>) =>
   );
 
   return (
-    <Form.Root schema={schema} values={task} autoSave onSave={handleSave}>
-      <Form.Viewport classNames={classNames} scroll>
+    <Form.Root schema={schema} values={snapshot} autoSave onSave={handleSave}>
+      <Form.Viewport scroll width='document'>
         <Form.Content>
           <Form.Fields />
         </Form.Content>

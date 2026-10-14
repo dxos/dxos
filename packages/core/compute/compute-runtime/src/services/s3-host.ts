@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 import { type S3Host } from '@dxos/blob/s3';
 import * as Credential from '@dxos/compute/Credential';
 import { Database, Query } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { type SpaceId } from '@dxos/keys';
 import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
@@ -52,8 +52,12 @@ export const createS3Host = ({
 
     const credential = await EffectEx.runPromise(
       Credential.CredentialsService.getCredential({ service: host }).pipe(
-        Effect.provide(credentialsLayerFromDatabase().pipe(Layer.provide(Database.layer(db)))),
-        Effect.provide(accessTokenResolver),
+        Effect.provide(
+          Layer.provideMerge(
+            credentialsLayerFromDatabase().pipe(Layer.provide(Database.layer(db))),
+            accessTokenResolver,
+          ),
+        ),
         // `getCredential` dies rather than failing when no token matches; an absent credential is
         // the ordinary case for a public bucket, so it resolves to `undefined` instead of throwing.
         Effect.catchDefect(() => Effect.succeed<Credential.ServiceCredential | undefined>(undefined)),

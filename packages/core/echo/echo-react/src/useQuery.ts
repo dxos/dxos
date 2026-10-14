@@ -11,9 +11,8 @@ const EMPTY_ARRAY: never[] = [];
 const noop = () => {};
 
 interface UseQueryFn {
-  // Aggregate queries produce flat records branded with `Query.AggregateResult`; return them as-is,
-  // never wrapped in `Entity.Entity` (they are not entities).
-  <R extends Query.AggregateResult>(resource: Database.Queryable | undefined, query: Query.Query<R>): R[];
+  <R extends Query.RecordResult>(resource: Database.Queryable | undefined, query: Query.Query<R>): R[];
+  <R extends Query.RecordResult>(resource: Database.Queryable | undefined, filter: Filter.Filter<R>): R[];
 
   <Q extends Query.Any, O extends Entity.Entity<Query.Type<Q>> = Entity.Entity<Query.Type<Q>>>(
     resource: Database.Queryable | undefined,
@@ -32,19 +31,21 @@ interface UseQueryFn {
  * @param queryOrFilter - The query or filter to apply. Query is memoized based on the AST. No need to call useMemo.
  */
 // The overloaded public signature returns `O[]` (entities) or the flat record `R[]` (aggregate
-// queries) depending on the query shape; the implementation forwards whatever the query result
+// rows and changes) depending on the query shape; the implementation forwards whatever the query result
 // produces, so — as with any implementation of a multi-signature overloaded function type — it is
 // typed as `any[]` here rather than picking one of the mutually-incompatible overload return shapes.
 export const useQuery: UseQueryFn = (
   resource: Database.Queryable | undefined,
   queryOrFilter: Query.Any | Filter.Any,
 ): any[] => {
-  const query = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
+  // Keyed by the AST and rebuilt from it, so a caller's inline filter (a new object every render) reuses
+  // the query; the memo reads only its key, which the React Compiler requires to honor it.
+  const astKey = JSON.stringify((Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter).ast);
 
   const { getObjects, subscribe } = useMemo(() => {
     let queryResult = undefined;
     if (resource) {
-      queryResult = resource.query(query);
+      queryResult = resource.query(Query.fromAst(JSON.parse(astKey)));
     }
 
     let subscribed = false;
@@ -59,7 +60,7 @@ export const useQuery: UseQueryFn = (
         };
       },
     };
-  }, [resource, JSON.stringify(query.ast)]);
+  }, [resource, astKey]);
 
   // https://beta.reactjs.org/reference/react/useSyncExternalStore
   // NOTE: This hook will resubscribe whenever the callback passed to the first argument changes; make sure it is stable.

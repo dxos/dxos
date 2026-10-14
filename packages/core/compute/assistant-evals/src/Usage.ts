@@ -4,12 +4,12 @@
 
 // @import-as-namespace
 
+import type * as Response from 'effect/ai/Response';
+import * as Telemetry from 'effect/ai/Telemetry';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
-import type * as Response from 'effect/unstable/ai/Response';
-import * as Telemetry from 'effect/unstable/ai/Telemetry';
 import { reportTrace, shouldReportTrace } from 'evalite/traces';
 
 import { type AiService, Model } from '@dxos/ai';
@@ -60,7 +60,7 @@ const json = (value: unknown): unknown => {
 
 const fromResponse = (
   model: DXN.DXN,
-  response: ReadonlyArray<Response.AllParts<any>>,
+  response: ReadonlyArray<Response.AnyPart>,
   span: Parameters<Telemetry.SpanTransformer>[0]['span'],
 ): Call | undefined => {
   const finish = response.find((part): part is Response.FinishPart => part.type === 'finish');
@@ -70,20 +70,19 @@ const fromResponse = (
   const now = Date.now();
   const started = span.status.startTime;
   const ended = span.status._tag === 'Ended' ? span.status.endTime : undefined;
-  const attribute = (key: string): unknown => span.attributes.get(key);
   const parameters = Object.fromEntries(
     ['temperature', 'max_tokens', 'top_p', 'top_k']
-      .map((key) => [key, attribute(`gen_ai.request.${key}`)] as const)
+      .map((key) => [key, span.attributes.get(`gen_ai.request.${key}`)] as const)
       .filter(([, value]) => value !== undefined),
   );
   return {
     model: backendName(model),
-    provider: string(attribute('gen_ai.system')),
+    provider: string(span.attributes.get('gen_ai.provider.name')),
     spanName: span.name,
     parameters: Object.keys(parameters).length > 0 ? parameters : undefined,
-    input: json(attribute('dxos.ai.input')),
-    output: json(attribute('dxos.ai.output')),
-    tools: json(attribute('dxos.ai.tools')),
+    input: json(span.attributes.get('dxos.ai.input')),
+    output: json(span.attributes.get('dxos.ai.output')),
+    tools: json(span.attributes.get('dxos.ai.tools')),
     inputTokens:
       finish.usage.inputTokens.uncached ??
       (finish.usage.inputTokens.total ?? 0) -
@@ -103,10 +102,10 @@ const fromResponse = (
  * with a transformer that records after the one it found.
  */
 export const instrument = (service: AiService.Service, record: (call: Call) => void): AiService.Service => ({
-  metadata: service.metadata,
-  model: (model, options) =>
+  ...service,
+  languageModel: (model, options) =>
     Layer.effectContext(
-      Layer.build(service.model(model, options)).pipe(
+      Layer.build(service.languageModel(model, options)).pipe(
         Effect.map((context) => {
           const inner = Context.getOption(context, Telemetry.CurrentSpanTransformer);
           const transformer: Telemetry.SpanTransformer = (input) => {

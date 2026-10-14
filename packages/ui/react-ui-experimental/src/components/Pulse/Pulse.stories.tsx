@@ -3,12 +3,15 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 
-import { Button, Panel, Toolbar } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { Pulse, type PulseProps, type PulseSignal } from './Pulse.tsx';
+import { radialWave, ripple, useRandomPing } from './signals.ts';
 
 type StoryArgs = PulseProps & { interval?: number };
 
@@ -17,14 +20,14 @@ const DefaultStory = (props: PulseProps) => {
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
-          <Button onClick={() => setActive((a) => !a)}>{active ? 'Stop' : 'Start'}</Button>
+          <Button.Root onClick={() => setActive((a) => !a)}>{active ? 'Stop' : 'Start'}</Button.Root>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content classNames='flex items-center justify-center'>
+      </Panel.Header>
+      <Panel.Body classNames='flex items-center justify-center'>
         <Pulse {...props} active={active} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };
@@ -43,14 +46,6 @@ export default meta;
 
 type Story = StoryObj<StoryArgs>;
 
-// Radial wave emanating from the center.
-const radialWave: PulseSignal = (i, j, time) => {
-  const dx = i - 7 / 2;
-  const dy = j - 7 / 2;
-  const distance = Math.sqrt(dx * dx + dy * dy);
-  return 0.5 + 0.5 * Math.sin(time * 2 - distance * 0.9);
-};
-
 export const Default: Story = {
   args: {
     dim: 8,
@@ -59,12 +54,9 @@ export const Default: Story = {
     gap: 6,
     smoothing: 0.2,
     classNames: 'text-primary-500',
-    getSignal: radialWave,
+    getSignal: radialWave(8),
   },
 };
-
-// Each column pulses with a phase-shifted sine — vertical bars sweeping across the grid.
-const ripple: PulseSignal = (i, j, time) => 0.5 + 0.5 * Math.sin(time * 3 + Math.sin((i + j) / 3) * 0.6);
 
 export const Ripple: Story = {
   args: {
@@ -127,17 +119,17 @@ const PointerStory = (props: PulseProps) => {
 export const Pointer: Story = {
   render: (props) => (
     <Panel.Root>
-      <Panel.Content classNames='flex items-center justify-center'>
+      <Panel.Body classNames='flex items-center justify-center'>
         <PointerStory {...props} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   ),
   args: {
-    dim: 8,
+    dim: 12,
     maxRadius: 6,
     minRadius: 0.5,
     gap: 2,
-    smoothing: 0.04,
+    smoothing: 0.03,
     growSmoothing: 1,
     classNames: 'text-sky-500',
   },
@@ -146,48 +138,16 @@ export const Pointer: Story = {
 // Randomly pings dots that then decay back to zero.
 const RandomPing = (props: StoryArgs) => {
   const { dim = 4, interval = 100 } = props;
-  const valuesRef = useRef<Float32Array>(new Float32Array(dim * dim));
-  const lastTimeRef = useRef(0);
-
-  useEffect(() => {
-    valuesRef.current = new Float32Array(dim * dim);
-    lastTimeRef.current = 0;
-  }, [dim]);
-
-  useEffect(() => {
-    const id = setInterval(() => {
-      valuesRef.current[Math.floor(Math.random() * valuesRef.current.length)] = 1;
-    }, interval);
-
-    return () => clearInterval(id);
-  }, [interval]);
-
-  const getSignal = useCallback<PulseSignal>(
-    (i, j, time) => {
-      if (time !== lastTimeRef.current) {
-        const dt = lastTimeRef.current === 0 ? 0 : time - lastTimeRef.current;
-        // Exponential decay; half-life ≈ 0.46s.
-        const decay = Math.exp(-dt * 1.5);
-        const values = valuesRef.current;
-        for (let k = 0; k < values.length; k++) {
-          values[k] *= decay;
-        }
-        lastTimeRef.current = time;
-      }
-      return valuesRef.current[i * dim + j];
-    },
-    [dim],
-  );
-
+  const getSignal = useRandomPing(dim, interval);
   return <Pulse {...props} getSignal={getSignal} />;
 };
 
 export const Matrix: Story = {
   render: (props) => (
     <Panel.Root>
-      <Panel.Content classNames='flex items-center justify-center'>
+      <Panel.Body classNames='flex items-center justify-center'>
         <RandomPing {...props} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   ),
   args: {
@@ -204,9 +164,9 @@ export const Matrix: Story = {
 export const Icon: Story = {
   render: (props) => (
     <Panel.Root>
-      <Panel.Content classNames='flex items-center justify-center'>
+      <Panel.Body classNames='flex items-center justify-center'>
         <RandomPing {...props} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   ),
   args: {

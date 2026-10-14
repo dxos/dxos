@@ -2,20 +2,26 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as Option from 'effect/Option';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/reactivity/Atom';
 import { useMemo } from 'react';
 
-import { type Database, Entity, Filter, Obj, Ref, Relation, Type } from '@dxos/echo';
+import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
+import { type Database, Entity, Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { isNonNullable } from '@dxos/util';
+
+const getReferences = (obj: Entity.Unknown | Entity.Snapshot): Ref.Unknown[] =>
+  Object.getOwnPropertyNames(obj)
+    .map((name) => Reflect.get(obj, name))
+    .filter(Ref.isRef);
 
 /**
  * Returns objects related to `subject` via direct references and/or relations.
  * Returns an empty array when `subject` is undefined.
  *
- * Withholds only types annotated hidden, which the user cannot address at all; narrowing the rest
- * belongs to the consumer (see `useRelatedTypeFilter`).
+ * Withholds only objects whose types are not user-facing, which the user cannot address at all; narrowing
+ * the rest belongs to the consumer (see `useRelatedTypeFilter`).
  */
 // TODO(burdon): Factor out (make more generally useful -- e.g., in cards).
 // TODO(wittjosiah): This is a hack. ECHO needs to have a back reference index to easily query for related objects.
@@ -28,6 +34,14 @@ export const useRelatedObjects = (
   } = {},
 ) => {
   const objects = useQuery(db, Filter.everything());
+  const referencesAtom = useMemo(
+    () =>
+      Atom.make((get) => (subject ? getReferences(get(Obj.atom(subject))) : [])).pipe(
+        Atom.withEquality<Ref.Unknown[]>(Ref.equals),
+      ),
+    [subject],
+  );
+  const references = useAtomValue(referencesAtom);
   return useMemo(() => {
     if (!subject) {
       return [];
@@ -37,13 +51,6 @@ export const useRelatedObjects = (
 
     // TODO(burdon): Change Person => Organization to relations.
     if (options.references) {
-      const getReferences = (obj: Entity.Unknown): Ref.Unknown[] => {
-        return Object.getOwnPropertyNames(obj)
-          .map((name) => obj[name as keyof Obj.Unknown])
-          .filter((value) => Ref.isRef(value)) as Ref.Unknown[];
-      };
-
-      const references = getReferences(subject);
       const referenceTargets = references.map((ref) => ref.target).filter(isNonNullable);
       const referenceSources = objects.filter((obj) => {
         const refs = getReferences(obj);
@@ -78,16 +85,7 @@ export const useRelatedObjects = (
       Array.from(new Set(related))
         // A relation may name the subject at both ends, which would otherwise relate it to itself.
         .filter((obj) => obj !== subject)
-        .filter((obj) => {
-          if (!Obj.isObject(obj)) {
-            return true;
-          }
-          const typeEntity = Obj.getType(obj);
-          if (!typeEntity) {
-            return true;
-          }
-          return !HiddenAnnotation.get(Type.getSchema(typeEntity)).pipe(Option.getOrElse(() => false));
-        })
+        .filter((obj) => !Obj.isObject(obj) || TypeOptions.isUserObject(obj))
     );
-  }, [subject, objects, options.references, options.relations]);
+  }, [subject, references, objects, options.references, options.relations]);
 };

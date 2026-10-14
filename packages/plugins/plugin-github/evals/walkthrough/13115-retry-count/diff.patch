@@ -1,0 +1,13 @@
+diff --git a/packages/sdk/client-services/src/packlets/spaces/notarization-plugin.ts b/packages/sdk/client-services/src/packlets/spaces/notarization-plugin.ts
+index a38261b8..c8ad9827 100644
+--- a/packages/sdk/client-services/src/packlets/spaces/notarization-plugin.ts
++++ b/packages/sdk/client-services/src/packlets/spaces/notarization-plugin.ts
+@@ -35,7 +35,7 @@ const DEFAULT_NOTARIZE_TIMEOUT = 10_000;
+ 
+ const DEFAULT_ACTIVE_EDGE_POLLING_INTERVAL = 3_000;
+ 
+-const MAX_EDGE_RETRIES = 2;
++const MAX_EDGE_RETRIES = 5;
+ 
+ const WRITER_NOT_SET_ERROR_CODE = 'WRITER_NOT_SET';
+ 

@@ -3,8 +3,8 @@
 //
 
 import * as Option from 'effect/Option';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Atom from 'effect/reactivity/Atom';
+import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 
 import { type Space, SpaceState } from '@dxos/client/echo';
 import { Annotation, Obj } from '@dxos/echo';

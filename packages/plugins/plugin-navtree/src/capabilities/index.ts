@@ -16,9 +16,6 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 import { NavTreeCapabilities } from '#types';
 
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../../PLUGIN.mdl?raw';
-
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'));
 export const Expose = Capability.inlineModule(
   'expose',
@@ -40,14 +37,19 @@ export const Expose = Capability.inlineModule(
 );
 export const Keyboard = Capability.lazyModule(
   'Keyboard',
-  { requires: [AppCapabilities.AppGraph, Capabilities.OperationInvoker], provides: [] },
+  // Listens on `document`, which node and workerd lack.
+  {
+    requires: [AppCapabilities.AppGraph, Capabilities.OperationInvoker],
+    provides: [],
+    environments: ['browser', 'tauri'],
+  },
   () => import('./keyboard.ts'),
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'));
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
   path: 'PLUGIN.mdl',
-  content: pluginSpec,
+  content: () => import('../../PLUGIN.mdl?raw'),
   mimeType: 'application/x-mdl',
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {

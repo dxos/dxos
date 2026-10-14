@@ -8,19 +8,14 @@
 import * as Option from 'effect/Option';
 import React, { type Ref } from 'react';
 
-import { useAtomCapability, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
-import {
-  SettingsScope,
-  useActiveSpace,
-  useHomeVisibility,
-  useSettingsSpace,
-  useSettingsSpaceProperties,
-} from '@dxos/app-toolkit/ui';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
+import * as SettingsScope from '@dxos/app-toolkit/SettingsScope';
 import { Annotation, Obj, Type } from '@dxos/echo';
-import { useType } from '@dxos/echo-react';
+import { useResolveRef, useType } from '@dxos/echo-react';
 import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Space, SpaceState, getSpace, isSpace, useSpaces } from '@dxos/react-client/echo';
 import { getTypeURIFromQuery } from '@dxos/schema';
@@ -49,13 +44,13 @@ export type SpaceHomeSectionProps = {
 
 /** Home sections are individually dismissible per space, which is durable UI state. */
 export const SpaceHomeRecentSurface = ({ space }: SpaceHomeSectionProps) => {
-  const { visible, hide } = useHomeVisibility(space, 'spaceHomeRecent');
+  const { visible, hide } = ToolkitHooks.useHomeVisibility(space, 'spaceHomeRecent');
 
   return visible ? <SpaceHomeRecent space={space} onClose={hide} /> : null;
 };
 
 export const SpaceHomeDashboardSurface = ({ space }: SpaceHomeSectionProps) => {
-  const { visible, hide } = useHomeVisibility(space, 'spaceHomeDashboard');
+  const { visible, hide } = ToolkitHooks.useHomeVisibility(space, 'spaceHomeDashboard');
 
   return visible ? <SpaceHomeDashboard space={space} onClose={hide} /> : null;
 };
@@ -83,11 +78,11 @@ export type SpaceSettingsSurfaceProps = {
 
 export const SpaceSettingsSurface = ({ subject }: SpaceSettingsSurfaceProps) => {
   const spaces = useSpaces();
-  const { invokePromise } = useOperationInvoker();
-  const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const { settings, updateSettings } = Hooks.useSettingsState<Settings.Settings>(subject.atom);
 
-  const settingsSpace = useSettingsSpace();
-  const [settingsProperties] = useSettingsSpaceProperties();
+  const settingsSpace = ToolkitHooks.useSettingsSpace();
+  const [settingsProperties] = ToolkitHooks.useSettingsSpaceProperties();
   const defaultSpaceId = settingsProperties
     ? Annotation.get(settingsProperties, AppAnnotation.DefaultSpaceAnnotation).pipe(Option.getOrUndefined)
     : undefined;
@@ -105,7 +100,7 @@ export const SpaceSettingsSurface = ({ subject }: SpaceSettingsSurfaceProps) => 
 
   return (
     <SpaceSettings
-      scope={<SettingsScope prefix={subject.prefix} />}
+      scope={<SettingsScope.Root prefix={subject.prefix} />}
       spaces={visibleSpaces}
       eligibleDefaultSpaces={eligibleSpaces}
       onOpenSpaceSettings={(space: Space) => invokePromise(SpaceOperation.OpenSettings, { space })}
@@ -121,7 +116,7 @@ export const SpaceSettingsSurface = ({ subject }: SpaceSettingsSurfaceProps) => 
 
 /** The space-settings articles are scoped to the active space rather than to a subject. */
 export const SpaceSettingsPropertiesSurface = () => {
-  const space = useActiveSpace();
+  const space = ToolkitHooks.useActiveSpace();
   if (!space) {
     return null;
   }
@@ -134,7 +129,7 @@ export type SpaceMembersSurfaceProps = {
 };
 
 export const SpaceMembersSurface = ({ createInvitationUrl }: SpaceMembersSurfaceProps) => {
-  const space = useActiveSpace();
+  const space = ToolkitHooks.useActiveSpace();
   if (!space) {
     return null;
   }
@@ -143,7 +138,7 @@ export const SpaceMembersSurface = ({ createInvitationUrl }: SpaceMembersSurface
 };
 
 export const SpaceSchemaSurface = () => {
-  const space = useActiveSpace();
+  const space = ToolkitHooks.useActiveSpace();
   if (!space) {
     return null;
   }
@@ -158,7 +153,7 @@ export type SelectedObjectsSurfaceProps = {
 
 // TODO(burdon): Replace with mosaic.
 export const SelectedObjectsSurface = ({ companionTo, ref }: SelectedObjectsSurfaceProps) => {
-  const activeSpace = useActiveSpace();
+  const activeSpace = ToolkitHooks.useActiveSpace();
   const isTypeCompanion = Type.isType(companionTo);
 
   // Object companion (e.g. a Table.Table): resolve its type via the view backing it.
@@ -169,7 +164,7 @@ export const SelectedObjectsSurface = ({ companionTo, ref }: SelectedObjectsSurf
 
   // A staged merge takes over the companion: the panel's job is to show what the user is
   // about to select, and during a review that is the proposed merged object, not the inputs.
-  const { mergePreview } = useAtomCapability(SpaceCapabilities.EphemeralState);
+  const { mergePreview } = Hooks.useAtomCapability(SpaceCapabilities.EphemeralState);
 
   // Type/schema companion (e.g. a TypeArticle plank): the type IS the subject, no view lookup needed.
   if (isTypeCompanion) {
@@ -227,7 +222,7 @@ export type NavtreePresenceSurfaceProps = {
 };
 
 export const NavtreePresenceSurface = ({ id, open }: NavtreePresenceSurfaceProps) => {
-  const ephemeral = useAtomCapability(SpaceCapabilities.EphemeralState);
+  const ephemeral = Hooks.useAtomCapability(SpaceCapabilities.EphemeralState);
 
   return <SmallPresenceLive id={id} open={open} viewers={ephemeral.viewersByObject[id]} />;
 };
@@ -239,12 +234,13 @@ export type NavbarPresenceSurfaceProps = {
 /** For a space the presence target is its root collection; for an object it is the object itself. */
 export const NavbarPresenceSurface = ({ subject }: NavbarPresenceSurfaceProps) => {
   const space = isSpace(subject) ? subject : getSpace(subject);
-  const object = isSpace(subject)
-    ? subject.state.get() === SpaceState.SPACE_READY
-      ? space &&
-        Annotation.get(space.properties, AppAnnotation.RootCollectionAnnotation).pipe(Option.getOrUndefined)?.target
-      : undefined
-    : subject;
+  const isSpaceReady = isSpace(subject) && subject.state.get() === SpaceState.SPACE_READY;
+  const rootCollectionRef =
+    isSpaceReady && space
+      ? Annotation.get(space.properties, AppAnnotation.RootCollectionAnnotation).pipe(Option.getOrUndefined)
+      : undefined;
+  const rootCollection = useResolveRef(rootCollectionRef);
+  const object = isSpace(subject) ? (isSpaceReady ? rootCollection : undefined) : subject;
 
   return object ? <SpacePresence object={object} /> : null;
 };

@@ -7,7 +7,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Format, Obj, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/Annotation';
 import { type ForeignKey } from '@dxos/echo/Key';
 
 /**
@@ -78,11 +77,12 @@ export class RemoteSession extends Type.makeObject<RemoteSession>(DXN.make('org.
     worktree: Schema.optional(Schema.String.annotate({ title: 'Worktree' })),
   }).pipe(
     Schema.annotate({ title: 'Remote Session' }),
-    LabelAnnotation.set(['title']),
+    Annotation.LabelAnnotation.set(['title']),
     // The harness's own mark rather than a generic robot: every session this type holds is reported
     // by Claude Code (`SOURCE`). An icon annotation is type-level, so a second harness would have to
     // make this per-object — `harnessIcon` already keys off the foreign key for the places that can.
     Annotation.IconAnnotation.set({ icon: 'px--anthropic--regular', hue: 'yellow' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 
@@ -142,5 +142,5 @@ export const isStale = (session: RemoteSession, now: number = Date.now()): boole
   (session.lastCheckedIn === undefined || now - new Date(session.lastCheckedIn).getTime() > STALE_AFTER_MS);
 
 /** Terminal states: a session in one of these is not expected to check in again. */
-export const isTerminal = (session: RemoteSession): boolean =>
+export const isTerminal = (session: RemoteSession | Obj.Snapshot<RemoteSession>): boolean =>
   session.state === 'finished' || session.state === 'failed';

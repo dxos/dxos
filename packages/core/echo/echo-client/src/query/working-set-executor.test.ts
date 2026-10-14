@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Aggregate, Filter, Obj, Order, Query, Ref, Relation, Scope, Type } from '@dxos/echo';
+import { Aggregate, Annotation, Filter, Obj, Order, Query, Ref, Relation, Scope, Type } from '@dxos/echo';
 import { QueryPlanner } from '@dxos/echo-host/query';
 import { TestSchema } from '@dxos/echo/testing';
 import { DXN } from '@dxos/keys';
@@ -55,6 +55,22 @@ describe('WorkingSetQueryExecutor', () => {
     const ids = results.map((item) => item.objectId);
     expect(ids).toContain(alice.id);
     expect(ids).toContain(bob.id);
+  });
+
+  test('declines an aggregate that asks for no members, so the host count is the only one', async ({ expect }) => {
+    db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+    await db.flush();
+
+    const planner = new QueryPlanner({ defaultTextSearchKind: 'full-text', noIndexes: true });
+    const countOnly = planner.createPlan(
+      Query.select(Filter.type(TestSchema.Person)).aggregate({ count: Aggregate.count() }).from(db).ast,
+    );
+    expect(makeExecutor(db).tryExecute(countOnly)).toBeNull();
+
+    const withMembers = planner.createPlan(
+      Query.select(Filter.type(TestSchema.Person)).aggregate({ items: Aggregate.items() }).from(db).ast,
+    );
+    expect(makeExecutor(db).tryExecute(withMembers)).toHaveLength(1);
   });
 
   test('type filter returns only objects of matching type', async ({ expect }) => {
@@ -231,12 +247,40 @@ describe('WorkingSetQueryExecutor', () => {
       Query.select(Filter.type(TestSchema.Person)).orderBy(Order.property('name', 'asc')),
     );
     const personResults = results.filter((item) => {
-      const data = item.core?.getObjectStructure().data;
-      const name = data?.['name'];
+      const name = item.structure.data['name'];
       return name === 'Alice' || name === 'Bob' || name === 'Charlie';
     });
-    const names = personResults.map((item) => item.core!.getObjectStructure().data['name']);
+    const names = personResults.map((item) => item.structure.data['name']);
     expect(names).toEqual(['Alice', 'Bob', 'Charlie']);
+  });
+
+  test('order by annotation sorts by the scalar at its path, missing values last in either direction', async ({
+    expect,
+  }) => {
+    const Distance = Annotation.make({
+      id: 'org.dxos.annotation.test-distance',
+      schema: Schema.Struct({ meters: Schema.Number }),
+    });
+    for (const [name, meters] of [
+      ['Far', 300],
+      ['Near', 100],
+      ['Unplaced', undefined],
+      ['Mid', 200],
+    ] as const) {
+      const person = db.add(Obj.make(TestSchema.Person, { name }));
+      if (meters !== undefined) {
+        Obj.update(person, (person) => Annotation.set(person, Distance, { meters }));
+      }
+    }
+    await db.flush();
+
+    const namesBy = (direction: 'asc' | 'desc') =>
+      planAndExecute(
+        db,
+        Query.select(Filter.type(TestSchema.Person)).orderBy(Order.annotation(Distance, direction, ['meters'])),
+      ).map((item) => item.structure.data['name']);
+    expect(namesBy('asc')).toEqual(['Near', 'Mid', 'Far', 'Unplaced']);
+    expect(namesBy('desc')).toEqual(['Far', 'Mid', 'Near', 'Unplaced']);
   });
 
   test('limit step caps the result count', async ({ expect }) => {
@@ -332,7 +376,7 @@ describe('WorkingSetQueryExecutor', () => {
 
     const results = planAndExecute(
       db,
-      Query.select(Filter.type(TestSchema.Person)).aggregate({ age: Aggregate.group('age') }),
+      Query.select(Filter.type(TestSchema.Person)).aggregate({ age: Aggregate.group('age'), items: Aggregate.items() }),
     );
     const byId = new Map(results.map((item) => [item.objectId, item.groupKey]));
     expect(byId.get(alice.id)).toEqual({ age: 30 });
@@ -353,7 +397,10 @@ describe('WorkingSetQueryExecutor', () => {
 
     const results = planAndExecute(
       db,
-      Query.select(Filter.type(TestSchema.Person)).aggregate({ age: Aggregate.group({ coalesce: ['age', 'id'] }) }),
+      Query.select(Filter.type(TestSchema.Person)).aggregate({
+        age: Aggregate.group({ coalesce: ['age', 'id'] }),
+        items: Aggregate.items(),
+      }),
     );
     const byId = new Map(results.map((item) => [item.objectId, item.groupKey]));
     expect(byId.get(alice.id)).toEqual({ age: 30 });
@@ -375,7 +422,7 @@ describe('WorkingSetQueryExecutor', () => {
       db,
       Query.select(Filter.type(TestSchema.Person))
         .orderBy(Order.property('name', 'asc'))
-        .aggregate({ age: Aggregate.group('age') }),
+        .aggregate({ age: Aggregate.group('age'), items: Aggregate.items() }),
     );
     // Alice (30) and Charlie (30) end up contiguous even though Bob (40) sorts between them by name.
     const ages = results.map((item) => item.groupKey?.age);
@@ -408,7 +455,7 @@ describe('WorkingSetQueryExecutor', () => {
       db,
       Query.select(Filter.type(TestSchema.Task))
         .reference('assignee')
-        .aggregate({ age: Aggregate.group('age') }),
+        .aggregate({ age: Aggregate.group('age'), items: Aggregate.items() }),
     );
     expect(results).toHaveLength(2);
     const byId = new Map(results.map((item) => [item.objectId, item.groupKey]));
@@ -473,7 +520,7 @@ describe('WorkingSetQueryExecutor', () => {
       db,
       Query.select(Filter.type(TestSchema.Expando))
         .orderBy(Order.property('rank', 'asc'))
-        .aggregate({ category: Aggregate.group('category') })
+        .aggregate({ category: Aggregate.group('category'), items: Aggregate.items() })
         .limit(2),
     );
 
@@ -499,7 +546,7 @@ describe('WorkingSetQueryExecutor', () => {
       db,
       Query.select(Filter.type(TestSchema.Expando))
         .orderBy(Order.property('rank', 'asc'))
-        .aggregate({ category: Aggregate.group('category') })
+        .aggregate({ category: Aggregate.group('category'), items: Aggregate.items() })
         .skip(1)
         .limit(2),
     );
@@ -519,6 +566,7 @@ const makeProvider = (db: DatabaseImpl): WorkingSetDataProvider => ({
   allCores: () => db.allObjectCores(),
   getCoreById: (id, load) => db.getObjectCoreById(id, { load: load ?? false }),
   areStrongDepsSatisfied: (core) => db.areStrongDepsSatisfied(core),
+  areStrongDepsResolved: (core) => db.areStrongDepsResolved(core),
 });
 
 const makeExecutor = (db: DatabaseImpl) => new WorkingSetQueryExecutor(makeProvider(db));

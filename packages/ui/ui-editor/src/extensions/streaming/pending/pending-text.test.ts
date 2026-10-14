@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { EditorState } from '@codemirror/state';
+import { EditorState, StateEffect } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { describe, test } from 'vitest';
 
@@ -132,6 +132,25 @@ describe('pendingText extension', () => {
     expect(isBusy(view.state)).toBe(false);
     view.destroy();
   });
+  test('tearing the extension down cancels the queued busy update', async ({ expect }) => {
+    const view = createView('hello ');
+    const errors: unknown[] = [];
+    const onError = (error: unknown) => errors.push(error);
+    process.on('uncaughtException', onError);
+    try {
+      // Opening a session queues the busy microtask; dropping the extension before it runs leaves
+      // the callback holding a configuration that no longer has the field.
+      view.dispatch({ effects: setPendingAnchor.of({ anchor: 6 }) });
+      view.dispatch({ effects: StateEffect.reconfigure.of([]) });
+      await flush();
+      expect(errors).to.deep.equal([]);
+      expect(view.state.field(pendingTextState, false)).to.be.undefined;
+    } finally {
+      process.off('uncaughtException', onError);
+      view.destroy();
+    }
+  });
+
   // The editor's own placeholder shows whenever the document is empty, and pending text is a
   // decoration rather than document content — so without this the two are drawn over each other,
   // the hint sitting behind the words being dictated.

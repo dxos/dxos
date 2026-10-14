@@ -4,11 +4,13 @@
 
 import * as A from '@automerge/automerge';
 import * as Schema from 'effect/Schema';
-import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { Trigger, asyncTimeout, sleep, waitForCondition } from '@dxos/async';
+import { Context } from '@dxos/context';
 import {
   Aggregate,
+  Annotation,
   Collection,
   Dataset,
   type Entity,
@@ -25,9 +27,9 @@ import {
   Type,
   View,
 } from '@dxos/echo';
-import { type EchoDatabase } from '@dxos/echo-client';
+import { DatabaseImpl, type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder, type EchoTestPeer, createTmpPath, getObjectCore } from '@dxos/echo-client/testing';
-import { type DatabaseDirectory } from '@dxos/echo-protocol';
+import { BACKED_OBJECT_LIMIT, type DatabaseDirectory } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId, PublicKey, URI } from '@dxos/keys';
@@ -377,6 +379,117 @@ describe('Query', () => {
     });
   });
 
+  describe.each(['memory', 'sql'] as const)('changes (%s executor)', (queryExecutor) => {
+    const createDatabase = async () => (await builder.createPeer({ queryExecutor })).createDatabase();
+    const total = (rows: readonly { changes: number }[]) => rows.reduce((sum, row) => sum + row.changes, 0);
+
+    test('a space-wide count by day follows new edits', async () => {
+      const db = await createDatabase();
+      const object = db.add(Obj.make(TestSchema.Expando, { value: 1 }));
+      await db.flush({ indexes: true });
+
+      let rows: readonly { day: number | null; changes: number; ops: number }[] = [];
+      const unsubscribe = db
+        .query(
+          Query.select(Filter.changes()).aggregate({
+            day: Aggregate.time('time', 'day'),
+            changes: Aggregate.count(),
+            ops: Aggregate.sum('ops'),
+          }),
+        )
+        .subscribe((result) => {
+          rows = result.results;
+        });
+      onTestFinished(unsubscribe);
+
+      await waitForCondition({ condition: () => total(rows) > 0, timeout: 5000 });
+      const before = total(rows);
+      expect(rows.every((row) => row.ops >= row.changes)).to.be.true;
+
+      Obj.update(object, (object) => {
+        object.value = 2;
+      });
+      await db.flush({ indexes: true });
+      await waitForCondition({ condition: () => total(rows) > before, timeout: 5000 });
+    });
+
+    test("an object's history comes back as frozen change records, newest first", async () => {
+      const db = await createDatabase();
+      const object = db.add(Obj.make(TestSchema.Expando, { value: 1 }));
+      for (const value of [2, 3]) {
+        Obj.update(object, (object) => {
+          object.value = value;
+        });
+      }
+      await db.flush({ indexes: true });
+
+      const changes = await db
+        .query(Query.select(Filter.changes(object)).orderBy(Order.property('time', 'desc')).limit(2))
+        .run();
+
+      expect(changes).to.have.length(2);
+      expect(changes[0].time).to.be.greaterThanOrEqual(changes[1].time);
+      for (const change of changes) {
+        expect(change).to.include({ source: 'document' });
+        expect(change).to.include.keys('key', 'time', 'actor', 'seq', 'ops');
+        expect(Object.isFrozen(change)).to.be.true;
+        expect(Reflect.set(change, 'ops', 0)).to.be.false;
+      }
+    });
+
+    test("the index and a replay agree on an object's changes", async () => {
+      const db = await createDatabase();
+      const object = db.add(Obj.make(TestSchema.Expando, { value: 1 }));
+      Obj.update(object, (object) => {
+        object.value = 2;
+      });
+      await db.flush({ indexes: true });
+
+      const [indexed, replayed] = await Promise.all([
+        db
+          .query(
+            Query.select(Filter.changes(object)).aggregate({ changes: Aggregate.count(), ops: Aggregate.sum('ops') }),
+          )
+          .run(),
+        db
+          .query(
+            Query.select(Filter.changes(object)).aggregate({
+              actor: Aggregate.group('actor'),
+              changes: Aggregate.count(),
+              ops: Aggregate.sum('ops'),
+            }),
+          )
+          .run(),
+      ]);
+
+      expect(total(indexed)).to.be.greaterThan(0);
+      expect(total(replayed)).to.equal(total(indexed));
+      expect(replayed.reduce((sum, row) => sum + row.ops, 0)).to.equal(indexed[0].ops);
+    });
+
+    test('sums and time buckets apply to ordinary objects', async () => {
+      const db = await createDatabase();
+      const day = Date.UTC(2026, 0, 2);
+      db.add(Obj.make(TestSchema.Expando, { at: day + 1_000, amount: 2 }));
+      db.add(Obj.make(TestSchema.Expando, { at: day + 2_000, amount: 3 }));
+      db.add(Obj.make(TestSchema.Expando, { at: day - 1_000, amount: 7 }));
+      await db.flush({ indexes: true });
+
+      const rows = await db
+        .query(
+          Query.select(Filter.type(TestSchema.Expando))
+            .aggregate({ day: Aggregate.time('at', 'day'), amount: Aggregate.sum('amount') })
+            .orderBy(Order.property('day', 'asc')),
+        )
+        .run();
+
+      expect(rows.map(({ day, amount }) => ({ day, amount }))).to.deep.equal([
+        { day: day - 86_400_000, amount: 7 },
+        { day, amount: 5 },
+      ]);
+    });
+  });
+
   describe('aggregate', () => {
     test('groups by a single property, with per-group counts', async () => {
       const { db } = await builder.createDatabase();
@@ -451,6 +564,40 @@ describe('Query', () => {
       // A group smaller than the limit is returned whole.
       expect(byKey.get('b')?.count).to.equal(1);
       expect(byKey.get('b')?.items).to.have.length(1);
+    });
+
+    test('a count by type and hour is answered without members and agrees with the loaded rows', async () => {
+      const startedAt = Math.floor(Date.now() / 3_600_000) * 3_600_000;
+      const { db } = await builder.createDatabase({ types: [TestSchema.Person, TestSchema.Task] });
+      db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+      db.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
+      db.add(Obj.make(TestSchema.Task, { title: 'Ship it' }));
+      // Counted from index rows, a child still has to follow its deleted parent out of the result.
+      const parent = db.add(Obj.make(TestSchema.Person, { name: 'Parent' }));
+      db.add(Obj.make(TestSchema.Task, { [Obj.Parent]: parent, title: 'Orphaned' }));
+      db.remove(parent);
+      await db.flush({ indexes: true });
+      const loaded = await db.query(Filter.everything()).run();
+
+      const rows = await db
+        .query(
+          Query.select(Filter.everything()).aggregate({
+            type: Aggregate.type(),
+            hour: Aggregate.updated('hour'),
+            count: Aggregate.count(),
+          }),
+        )
+        .run();
+
+      // The hour may turn between the edits and this assertion, so accept either side of a boundary.
+      const hours = new Set([startedAt, Math.floor(Date.now() / 3_600_000) * 3_600_000]);
+      const countOf = (typename: string) => rows.find((row) => String(row.type).includes(typename))?.count;
+      expect(rows).to.have.length(2);
+      expect(countOf(Type.getTypename(TestSchema.Person))).to.equal(2);
+      expect(countOf(Type.getTypename(TestSchema.Task))).to.equal(1);
+      expect(rows.every((row) => hours.has(Number(row.hour)))).to.be.true;
+      expect(rows.every((row) => !('items' in row))).to.be.true;
+      expect(rows.reduce((total, row) => total + row.count, 0)).to.equal(loaded.length);
     });
 
     test('a coalesce group key gives each member without the leading property its own group', async () => {
@@ -831,8 +978,11 @@ describe('Query', () => {
         let lastResult = await subscribeAndWaitForFirstResult(query);
         expect(lastResult).to.have.length(1);
 
+        // Without `items` the working set declines the aggregate, so the host answers after its
+        // index round trip, which `db.flush({ updates: true })` does not await — poll.
         db.add(Obj.make(TestSchema.Expando, { category: 'b' }));
         await db.flush({ updates: true });
+        await waitForCondition({ condition: () => query.results.length === 2, timeout: 2000 });
         lastResult = query.results;
 
         expect(lastResult).to.have.length(2);
@@ -840,6 +990,10 @@ describe('Query', () => {
 
         db.add(Obj.make(TestSchema.Expando, { category: 'a' }));
         await db.flush({ updates: true });
+        await waitForCondition({
+          condition: () => query.results.find((group) => group.category === 'a')?.count === 2,
+          timeout: 2000,
+        });
         lastResult = query.results;
 
         expect(lastResult.find((group) => group.category === 'a')?.count).to.equal(2);
@@ -889,6 +1043,8 @@ describe('Query', () => {
 
         db.remove(obj);
         await db.flush({ updates: true });
+        // Host-routed (no `items`), so the removal lands after the index round trip — poll.
+        await waitForCondition({ condition: () => query.results.length === 1, timeout: 2000 });
         const lastResult = query.results;
 
         expect(lastResult).to.have.length(1);
@@ -1691,7 +1847,7 @@ describe('Query', () => {
 
       db.add(Obj.make(TestSchema.Task, { title: 'Space TypeScript Task' }));
       await db.appendToFeed(feed, [Obj.make(TestSchema.Task, { title: 'Queue TypeScript Task' })]);
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       const withFeeds: TestSchema.Task[] = await db
         .query(Query.select(Filter.text('TypeScript', { type: 'full-text' })).from(db, { includeFeeds: true }))
@@ -1735,7 +1891,7 @@ describe('Query', () => {
 
       const traceTask = Obj.make(TestSchema.Task, { title: 'Trace TypeScript Task' });
       await db.appendToFeed(feed, [traceTask]);
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       const results: TestSchema.Task[] = await db
         .query(Query.select(Filter.text('TypeScript', { type: 'full-text' })).from(db, { includeFeeds: true }))
@@ -2029,6 +2185,7 @@ describe('Query', () => {
 
       const object = queryResult.find((obj) => obj.id === assertion.objectId);
       invariant(object, 'object missing after reload');
+      getObjectCore(object).getDoc();
       const objectDocHandle = getObjectCore(object).docHandle;
       invariant(objectDocHandle, 'docHandle missing');
       expect(objectDocHandle.url).to.eq(assertion.documentUrl);
@@ -2712,7 +2869,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Task, { title: 'fix the tests' }));
       db.add(Obj.make(TestSchema.Task, { title: 'perf optimizations' }));
 
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       {
         const objects = await db.query(Query.select(Filter.text('fix the tests', { type: 'full-text' }))).run();
@@ -2739,13 +2896,48 @@ describe('Query', () => {
   });
 
   describe('indexer2 text search', () => {
+    test('flush waits for the full-text index', async () => {
+      const { db, host, graph } = await builder.createDatabase();
+      graph.registry.add([TestSchema.Task]);
+
+      db.add(Obj.make(TestSchema.Task, { title: 'deferred tokenization' }));
+      await db.flush({ secondaryIndexes: true });
+
+      // The full-text index lags the primary pass, so a flush that did not wait for it would leave
+      // records for this to index.
+      expect(await host.updateSecondaryIndexes()).toEqual(0);
+    });
+
+    test('the deferred pass invalidates a live text query', async () => {
+      const { db, host, graph } = await builder.createDatabase();
+      graph.registry.add([TestSchema.Task]);
+
+      const query = db.query(Query.select(Filter.text('deferred invalidation', { type: 'full-text' })));
+      const matched = new Trigger();
+      const unsubscribe = query.subscribe(() => {
+        if (query.results.length > 0) {
+          matched.wake();
+        }
+      });
+      onTestFinished(unsubscribe);
+
+      db.add(Obj.make(TestSchema.Task, { title: 'deferred invalidation' }));
+      // Primary pass only: the trigram index still has nothing to match, so the subscription above
+      // is left holding an empty result that only the catch-up below can fill.
+      await db.flush();
+      await host.updateSecondaryIndexes();
+
+      await matched.wait();
+      expect(query.results).toHaveLength(1);
+    });
+
     test('full-text search via indexer2', async () => {
       const { db } = await builder.createDatabase();
 
       db.add(Obj.make(TestSchema.Expando, { title: 'Introduction to TypeScript' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'Getting Started with React' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'Advanced Python Programming' }));
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       // TODO(mykola): Defalut to full-text
       const objects = await db.query(Query.select(Filter.text('TypeScript', { type: 'full-text' }))).run();
@@ -2784,7 +2976,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Expando, { title: 'Programming with JavaScript' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'JavaScript Best Practices' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'Python for Data Science' }));
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       const objects = await db.query(Query.select(Filter.text('JavaScript', { type: 'full-text' }))).run();
       expect(objects).toHaveLength(2);
@@ -2799,7 +2991,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Expando, { title: 'Introduction to TypeScript' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'Getting Started with React' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'Advanced Python Programming' }));
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       // Partial word "Script" should match "TypeScript".
       {
@@ -2834,7 +3026,7 @@ describe('Query', () => {
 
       db.add(Obj.make(TestSchema.Expando, { title: 'Python Programming Guide' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'JavaScript Basics' }));
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       // Words in different order should still match.
       {
@@ -2858,7 +3050,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Task, { title: 'Quarterly planning' }));
       db.add(Obj.make(TestSchema.Person, { name: 'Quarterly Reviewer' }));
       db.add(Obj.make(TestSchema.Person, { name: 'Unrelated Name' }));
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       // Unscoped matches both entities containing the term.
       {
@@ -2907,7 +3099,7 @@ describe('Query', () => {
       const { db } = await builder.createDatabase();
 
       const obj = db.add(Obj.make(TestSchema.Expando, { title: 'Original Title' }));
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       // Poll until indexer2 has processed the document.
       {
@@ -2919,7 +3111,7 @@ describe('Query', () => {
       Obj.update(obj, (obj) => {
         obj.title = 'Updated Title';
       });
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       // Verify search results.
       {
@@ -2979,7 +3171,7 @@ describe('Query', () => {
       console.timeEnd('create');
 
       console.time('flush');
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
       console.timeEnd('flush');
 
       console.time('query');
@@ -3009,7 +3201,7 @@ describe('Query', () => {
       ]);
 
       // Wait for indexing.
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       // Search in specific queue.
       {
@@ -3054,7 +3246,7 @@ describe('Query', () => {
       await db.appendToFeed(feed, [Obj.make(TestSchema.Task, { title: 'Queue Object TypeScript' })]);
 
       // Wait for indexing.
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       // Search with allFeedsFromSpaces: true should return both space and queue objects.
       {
@@ -3081,7 +3273,7 @@ describe('Query', () => {
       const feed = db.add(Feed.make({}));
       const task = Obj.make(TestSchema.Task, { title: 'Queue Object TypeScript' });
       await db.appendToFeed(feed, [task]);
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       const obj: TestSchema.Task = await db
         .query(
@@ -3105,7 +3297,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript TypeScript TypeScript' })); // High relevance.
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript Programming' })); // Medium relevance.
       db.add(Obj.make(TestSchema.Expando, { title: 'Python Programming' })); // No match.
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       const query = db.query(Query.select(Filter.text('TypeScript', { type: 'full-text' })));
       const entries = await query.runEntries();
@@ -3128,7 +3320,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript' })); // Single occurrence.
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript TypeScript TypeScript TypeScript' })); // High relevance.
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript Programming Guide' })); // Medium relevance.
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       // Order by rank descending (best matches first) - default direction.
       const query = db.query(Query.select(Filter.text('TypeScript', { type: 'full-text' })).orderBy(Order.rank()));
@@ -3158,7 +3350,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript' })); // Single occurrence.
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript TypeScript TypeScript TypeScript' })); // High relevance.
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript Programming Guide' })); // Medium relevance.
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       // Order by rank ascending (worst matches first).
       const query = db.query(Query.select(Filter.text('TypeScript', { type: 'full-text' })).orderBy(Order.rank('asc')));
@@ -3210,7 +3402,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript TypeScript' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript TypeScript TypeScript' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript TypeScript TypeScript TypeScript' }));
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
 
       // Order by rank descending and limit to top 2 results.
       const query = db.query(
@@ -3243,7 +3435,7 @@ describe('Query', () => {
         db.add(object);
       }
 
-      await db.flush();
+      await db.flush({ secondaryIndexes: true });
     });
 
     test('fires only once when new objects are added', async () => {
@@ -3978,6 +4170,318 @@ describe('Query', () => {
       Obj.setParent(chat, undefined);
       await db.flush({ updates: true });
       await waitForCondition({ condition: () => query.results.length === 2, timeout: 2000 });
+    });
+  });
+
+  describe('Filter.mnemonic', () => {
+    test('selects the object whose mnemonic matches', async ({ expect }) => {
+      const { db } = await builder.createDatabase();
+      const target = db.add(Obj.make(TestSchema.Expando, { name: 'Target' }));
+      db.add(Obj.make(TestSchema.Expando, { name: 'Other' }));
+      await db.flush();
+
+      const mnemonic = Obj.getMnemonic(target);
+      expect(mnemonic).toEqual(target.id.slice(-6).toUpperCase());
+
+      const objects = await db.query(Query.select(Filter.mnemonic(mnemonic))).run();
+      expect(objects.map((obj) => obj.name)).toEqual(['Target']);
+    });
+
+    test('matching is case-insensitive', async ({ expect }) => {
+      const { db } = await builder.createDatabase();
+      const target = db.add(Obj.make(TestSchema.Expando, { name: 'Target' }));
+      await db.flush();
+
+      const objects = await db.query(Query.select(Filter.mnemonic(Obj.getMnemonic(target).toLowerCase()))).run();
+      expect(objects.map((obj) => obj.name)).toEqual(['Target']);
+    });
+
+    test('combines with a type filter', async ({ expect }) => {
+      const { db } = await builder.createDatabase({ types: [TestSchema.Person] });
+      const person = db.add(Obj.make(TestSchema.Person, { name: 'Person' }));
+      await db.flush();
+
+      const mnemonic = Obj.getMnemonic(person);
+      const matching = await db
+        .query(Query.select(Filter.and(Filter.type(TestSchema.Person), Filter.mnemonic(mnemonic))))
+        .run();
+      expect(matching.map((obj) => obj.name)).toEqual(['Person']);
+
+      // The same mnemonic under a type the object does not have matches nothing.
+      const mismatched = await db
+        .query(Query.select(Filter.and(Filter.type(TestSchema.Expando), Filter.mnemonic(mnemonic))))
+        .run();
+      expect(mismatched).toHaveLength(0);
+    });
+
+    test('negation excludes the named object', async ({ expect }) => {
+      const { db } = await builder.createDatabase();
+      const target = db.add(Obj.make(TestSchema.Expando, { name: 'Target' }));
+      db.add(Obj.make(TestSchema.Expando, { name: 'Other' }));
+      await db.flush();
+
+      const objects = await db.query(Query.select(Filter.not(Filter.mnemonic(Obj.getMnemonic(target))))).run();
+      expect(objects.map((obj) => obj.name)).toEqual(['Other']);
+    });
+
+    test('an unused mnemonic matches nothing', async ({ expect }) => {
+      const { db } = await builder.createDatabase();
+      db.add(Obj.make(TestSchema.Expando, { name: 'Other' }));
+      await db.flush();
+
+      const objects = await db.query(Query.select(Filter.mnemonic('ZZZZZZ'))).run();
+      expect(objects).toHaveLength(0);
+    });
+
+    test('a malformed mnemonic is rejected', async ({ expect }) => {
+      expect(() => Filter.mnemonic('nope')).toThrow();
+      // I, L, O and U are not in the Crockford base32 alphabet ULIDs use.
+      expect(() => Filter.mnemonic('ABCDEI')).toThrow();
+    });
+
+    test('a newly added object appears in a live mnemonic query', async ({ expect }) => {
+      const { db } = await builder.createDatabase();
+      const target = Obj.make(TestSchema.Expando, { name: 'Target' });
+      const mnemonic = Obj.getMnemonic(target);
+
+      const query = db.query(Query.select(Filter.mnemonic(mnemonic)));
+      const unsubscribe = query.subscribe(() => {});
+      onTestFinished(unsubscribe);
+      await waitForCondition({ condition: () => query.results.length === 0, timeout: 2000 });
+
+      db.add(target);
+      await db.flush({ updates: true });
+      await waitForCondition({ condition: () => query.results.length === 1, timeout: 2000 });
+      expect(query.results.map((obj) => obj.name)).toEqual(['Target']);
+    });
+  });
+
+  describe.each(['memory', 'sql'] as const)('Filter.annotation (%s executor)', (queryExecutor) => {
+    const StatusAnnotation = Annotation.make({ id: 'org.dxos.annotation.test-status', schema: Schema.String });
+    const createDatabase = async () => (await builder.createPeer({ queryExecutor })).createDatabase();
+
+    const setup = async () => {
+      const db = await createDatabase();
+      const done = db.add(Obj.make(TestSchema.Expando, { name: 'Done' }));
+      Obj.update(done, (done) => Annotation.set(done, StatusAnnotation, 'done'));
+      const open = db.add(Obj.make(TestSchema.Expando, { name: 'Open' }));
+      Obj.update(open, (open) => Annotation.set(open, StatusAnnotation, 'open'));
+      const plain = db.add(Obj.make(TestSchema.Expando, { name: 'Plain' }));
+      await db.flush({ indexes: true });
+      return { db, plain };
+    };
+
+    const names = (objects: readonly { name?: unknown }[]) => objects.map((obj) => String(obj.name)).sort();
+
+    test('without a value matches entities carrying the annotation', async () => {
+      const { db } = await setup();
+      const objects = await db.query(Query.select(Filter.annotation(StatusAnnotation))).run();
+      expect(names(objects)).toEqual(['Done', 'Open']);
+    });
+
+    test('with a value matches entities whose value is equal', async () => {
+      const { db } = await setup();
+      const objects = await db.query(Query.select(Filter.annotation(StatusAnnotation, 'done'))).run();
+      expect(names(objects)).toEqual(['Done']);
+    });
+
+    test('negation keeps entities without the annotation', async () => {
+      const { db } = await setup();
+      const objects = await db
+        .query(
+          Query.select(
+            Filter.and(Filter.type(TestSchema.Expando), Filter.not(Filter.annotation(StatusAnnotation, 'done'))),
+          ),
+        )
+        .run();
+      expect(names(objects)).toEqual(['Open', 'Plain']);
+    });
+
+    test('filters the result of a traversal', async () => {
+      const { db } = await setup();
+      const parent = db.add(Obj.make(TestSchema.Expando, { name: 'Parent' }));
+      const child = db.add(Obj.make(TestSchema.Expando, { name: 'Child' }));
+      const archived = db.add(Obj.make(TestSchema.Expando, { name: 'Archived child' }));
+      Obj.setParent(child, parent);
+      Obj.setParent(archived, parent);
+      Obj.update(archived, (archived) => Annotation.set(archived, StatusAnnotation, 'done'));
+      await db.flush({ indexes: true });
+
+      const objects = await db
+        .query(
+          Query.select(Filter.id(parent.id))
+            .children()
+            .select(Filter.not(Filter.annotation(StatusAnnotation, 'done'))),
+        )
+        .run();
+      expect(names(objects)).toEqual(['Child']);
+    });
+
+    test('a live query follows annotation changes', async () => {
+      const { db, plain } = await setup();
+
+      const query = db.query(Query.select(Filter.annotation(StatusAnnotation, 'done')));
+      const unsubscribe = query.subscribe(() => {});
+      onTestFinished(unsubscribe);
+      await waitForCondition({ condition: () => query.results.length === 1, timeout: 2000 });
+
+      Obj.update(plain, (plain) => Annotation.set(plain, StatusAnnotation, 'done'));
+      await db.flush({ indexes: true, updates: true });
+      await waitForCondition({ condition: () => query.results.length === 2, timeout: 2000 });
+    });
+  });
+
+  describe('Lazy queries', () => {
+    const openReloaded = async (populate: (db: EchoDatabase) => { id: string }[] | Promise<{ id: string }[]>) => {
+      const reloadBuilder = new EchoTestBuilder();
+      onTestFinished(async () => {
+        await reloadBuilder.close();
+      });
+      const { peer, db: initialDb } = await reloadBuilder.createDatabase();
+      invariant(initialDb instanceof DatabaseImpl);
+      const ids = (await populate(initialDb)).map((object) => object.id);
+      await initialDb.flush({ secondaryIndexes: true });
+      const documentIds = new Map(
+        ids.map((id) => [id, initialDb.getObjectCoreById(id, { load: false })?.docHandle?.documentId]),
+      );
+      await peer.reload();
+      const db = await peer.openLastDatabase();
+      invariant(db instanceof DatabaseImpl);
+
+      const changeOnHost = async (id: string, change: (data: Record<string, any>) => void) => {
+        const documentId = documentIds.get(id);
+        invariant(documentId);
+        using lease = await peer.host.automergeHost.loadDoc<DatabaseDirectory>(Context.default(), documentId);
+        invariant(lease);
+        lease.change((doc) => change(doc.objects![id].data));
+        await peer.host.automergeHost.flush(Context.default());
+        return A.getHeads(lease.doc());
+      };
+      return { db, ids, peer, documentIds, changeOnHost };
+    };
+
+    const hasDocument = (db: DatabaseImpl, id: string) =>
+      db.getObjectCoreById(id, { load: false })?.docHandle !== undefined;
+
+    test('query results are live, index-backed, and load no document', async () => {
+      const { db, ids } = await openReloaded((db) => {
+        const tagged = Obj.make(TestSchema.Expando, { value: 1, blob: new Uint8Array([1, 2, 3]) });
+        Obj.update(tagged, (tagged) => Obj.getMeta(tagged).keys.push({ id: 'key-1', source: 'test' }));
+        return [db.add(tagged), db.add(createTestObject({ value: 2 }))];
+      });
+
+      const results = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
+      expect(results.map((object) => object.id).sort()).toEqual([...ids].sort());
+      expect(results.map((object) => object.value).sort()).toEqual([1, 2]);
+      for (const object of results) {
+        expect(Obj.isSnapshot(object)).toBe(false);
+        expect(hasDocument(db, object.id)).toBe(false);
+        expect(db.getObjectById(object.id)).toBe(object);
+        expect(Obj.version(object).automergeHeads?.length).toBeGreaterThan(0);
+        expect(Obj.getMeta(object).createdAt).toBeTypeOf('number');
+      }
+      const tagged = results.find((object) => object.value === 1);
+      invariant(tagged);
+      expect(Obj.getMeta(tagged).keys.map((key) => ({ ...key }))).toEqual([{ id: 'key-1', source: 'test' }]);
+      expect(tagged.blob).toEqual(new Uint8Array([1, 2, 3]));
+    });
+
+    test('a query over objects the tab holds reads none of their stored changes', async () => {
+      const { db, peer } = await builder.createDatabase();
+      db.add(createTestObject({ value: 1 }));
+      await db.flush({ indexes: true });
+      const reads = vi.spyOn(peer.host.automergeHost, 'readStoredChanges');
+
+      expect(await db.query(Query.select(Filter.type(TestSchema.Expando))).run()).toHaveLength(1);
+      expect(reads).not.toHaveBeenCalled();
+    });
+
+    test('a parent that follows its child in the results is backed by the index too', async () => {
+      const { db, ids } = await openReloaded((db) => {
+        const parent = db.add(createTestObject({ value: 2 }));
+        const child = db.add(createTestObject({ value: 1 }));
+        Obj.setParent(child, parent);
+        return [parent, child];
+      });
+
+      const results = await db
+        .query(Query.select(Filter.type(TestSchema.Expando)).orderBy(Order.property('value', 'asc')))
+        .run();
+      expect(results.map((object) => object.id)).toEqual([...ids].reverse());
+      for (const id of ids) {
+        expect(hasDocument(db, id)).toBe(false);
+      }
+    });
+
+    test('a write loads the document at once and reaches the host', async () => {
+      const { db, peer, ids, documentIds } = await openReloaded((db) => [db.add(createTestObject({ value: 1 }))]);
+      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
+      const shownAt = Obj.version(object).automergeHeads;
+
+      Obj.update(object, (object) => {
+        object.value = 2;
+      });
+      expect(hasDocument(db, object.id)).toBe(true);
+      expect(Obj.version(object).automergeHeads).not.toEqual(shownAt);
+
+      await db.flush();
+      const documentId = documentIds.get(ids[0]);
+      invariant(documentId);
+      using lease = await peer.host.automergeHost.loadDoc<DatabaseDirectory>(Context.default(), documentId);
+      invariant(lease);
+      await waitForCondition({ condition: () => lease.doc().objects![object.id].data.value === 2, timeout: 5_000 });
+    });
+
+    test('reading the document loads it from the stored changes', async () => {
+      const { db } = await openReloaded((db) => [db.add(createTestObject({ value: 1 }))]);
+      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
+
+      const shownAt = Obj.version(object).automergeHeads;
+
+      const doc = getObjectCore(object).getDocAccessor(['value']).handle.doc();
+      expect(hasDocument(db, object.id)).toBe(true);
+      expect(A.getHeads(doc)).toEqual(shownAt);
+      expect(object.value).toBe(1);
+    });
+
+    test('an index-backed object takes host changes through its passive subscription', async () => {
+      const { db, changeOnHost } = await openReloaded((db) => [db.add(createTestObject({ value: 1 }))]);
+      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
+      let ones: Entity.Any[] = [];
+      onTestFinished(
+        db.query(Query.select(Filter.type(TestSchema.Expando, { value: 1 }))).subscribe((query) => {
+          ones = query.results;
+        }),
+      );
+      await waitForCondition({ condition: () => ones.length === 1, timeout: 5_000 });
+
+      const hostHeads = await changeOnHost(object.id, (data) => {
+        data.value = 2;
+      });
+      await waitForCondition({ condition: () => object.value === 2, timeout: 5_000 });
+      await waitForCondition({ condition: () => ones.length === 0, timeout: 5_000 });
+      expect(hasDocument(db, object.id)).toBe(false);
+      expect(Obj.version(object).automergeHeads).toEqual(hostHeads);
+      Obj.update(object, (object) => {
+        object.value = object.value + 1;
+      });
+      expect(object.value).toBe(3);
+    });
+
+    test('a host change the JSON cannot show loads the document', async () => {
+      const { db, changeOnHost } = await openReloaded((db) => [db.add(createTestObject({ value: 1 }))]);
+      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
+
+      await changeOnHost(object.id, (data) => {
+        data.body = 'x'.repeat(BACKED_OBJECT_LIMIT + 1);
+      });
+      await waitForCondition({ condition: () => object.body?.length === BACKED_OBJECT_LIMIT + 1, timeout: 5_000 });
+      expect(hasDocument(db, object.id)).toBe(true);
+    });
+
+    test('the schema query a database runs while it opens is backed by the index', async () => {
+      const { db, ids } = await openReloaded(async (db) => [await db.addType(TestSchema.Person)]);
+      expect(db.getObjectCoreById(ids[0], { load: false })?.snapshot).toBeDefined();
     });
   });
 

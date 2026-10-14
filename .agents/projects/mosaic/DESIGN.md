@@ -22,7 +22,7 @@ the decision log.
 | [`2026-08-13-hyperspace-app-ontology.md`](../../../agents/superpowers/specs/2026-08-13-hyperspace-app-ontology.md)                     | Data ontology (Hyperspace / Space / Schema / Feeds) + app ontology (Deck / Plugins / Components) with the layer↔MDL correspondence.                    |
 | [`packages/reflect/deus/lang/app.mdl`](../../../packages/reflect/deus/lang/app.mdl)                                                    | The DEUS app dialect: `node`, `deck`, `plank`, `companion`, `surface`, `menu`.                                                                         |
 | [`packages/plugins/plugin-inbox/PLUGIN.mdl`](../../../packages/plugins/plugin-inbox/PLUGIN.mdl)                                        | First full plugin description in the dialect (app graph, deck chain, surfaces, menus, ops, sync, skills).                                              |
-| [`packages/plugins/plugin-illustrator/src/model/ui.ts`](../../../packages/plugins/plugin-illustrator/src/model/ui.ts)                  | UI-schematic dialect (phase 1): schema → Deck/Plank/Panel/Form/Control drawing → ASCII + tldraw renderers.                                             |
+| [`packages/common/diagram/src/ui.ts`](../../../packages/common/diagram/src/ui.ts)                                                      | UI-schematic dialect (phase 1): schema → Deck/Plank/Panel/Form/Control drawing → ASCII + tldraw renderers.                                             |
 
 ## Decisions
 

@@ -1,0 +1,78 @@
+/*
+ * Menu: a portalled popup (`.dx-popup` supplies size, level and the focus outline) of block-tall item rows.
+ */
+
+@layer dx-components {
+  /* The frame of `PopupScroll`; a long menu scrolls in it (`.dx-popup` with a viewport, `control.css`). */
+  .dx-menu {
+    min-width: 10rem;
+  }
+  /*
+   * A submenu's frame overhangs its positioner by the viewport's block padding, so the first item (or, flipped, the
+   * last) lines up with the SubTrigger row that floating-ui aligns the positioner to.
+   */
+  .dx-submenu:has(> [data-placement$='-start']) {
+    margin-block-start: calc(-1 * var(--dx-control-inset));
+  }
+  .dx-submenu:has(> [data-placement$='-end']) {
+    margin-block-end: calc(-1 * var(--dx-control-inset));
+  }
+
+  /* A palette: square cells, `columns` to a row; the frame shrinks to the grid rather than a menu's minimum width. */
+  .dx-menu:has([data-columns]) {
+    min-width: 0;
+  }
+  [data-scope='menu'][data-part='content'][data-columns] {
+    display: grid;
+  }
+  [data-columns] > .dx-menu-item {
+    justify-content: center;
+    padding-inline: 0;
+  }
+
+  .dx-menu-item {
+    display: flex;
+    align-items: center;
+    gap: var(--dx-gap-size);
+    height: var(--dx-block-size);
+    padding-inline: var(--dx-gap-size);
+    cursor: pointer;
+  }
+  .dx-menu-item[data-highlighted] {
+    background: var(--color-hover-surface);
+    border-radius: var(--radius-xs, 0.125rem);
+  }
+  .dx-menu-item[data-disabled] {
+    opacity: 0.5;
+    cursor: default;
+  }
+  .dx-menu-item-text {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .dx-menu-shortcut {
+    padding-inline-start: var(--dx-gap-size);
+    font-family: inherit;
+    font-size: var(--dx-label-font-size);
+    line-height: var(--dx-label-line-height);
+    color: var(--color-fg-muted);
+  }
+
+  /* An icon-sized leading cell that keeps its place while unchecked, so option labels stay aligned. */
+  .dx-menu-indicator {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: var(--dx-icon-size);
+    height: var(--dx-icon-size);
+  }
+  .dx-menu-indicator[data-state='unchecked'] {
+    visibility: hidden;
+  }
+  .dx-menu-item[data-state='open'] {
+    background: var(--color-hover-surface);
+  }
+}

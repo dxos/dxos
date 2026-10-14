@@ -4,13 +4,13 @@
 
 import * as Routine from '@dxos/compute/Routine';
 import { Type } from '@dxos/echo';
-import { type Resource } from '@dxos/react-ui';
 import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
 
-export const translations: Resource[] = [
+export const translations: Theme.Resource[] = [
   ...componentsTranslations,
   ...formTranslations,
   {
@@ -62,6 +62,7 @@ export const translations: Resource[] = [
         'action-input.label': 'Input',
         'action-kind.operation.label': 'Operation',
         'action-kind.instructions.label': 'Instructions',
+        'action-unset.message': 'This routine is enabled but has nothing to run. Select an operation.',
 
         'triggers.title': 'Triggers',
         'triggers.description': 'When this routine runs.',
@@ -117,4 +118,4 @@ export const translations: Resource[] = [
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

@@ -17,13 +17,13 @@ import { SupportIssueResult, SupportReportResult } from './SupportService.ts';
 // — kept inline here to avoid an import cycle (translations -> #types -> SupportOperation).
 export const IssueType = Schema.Literals(['bug', 'feature']).annotate({
   title: 'Type',
-  description: 'Whether this is a bug report or a feature request.',
+  description: 'Bug report or a feature request.',
 });
 export type IssueType = Schema.Schema.Type<typeof IssueType>;
 
 export const Severity = Schema.Literals(['High priority', 'Medium priority', 'Low priority']).annotate({
   title: 'Severity',
-  description: 'How disruptive the issue is.',
+  description: 'Level of impact.',
 });
 export type Severity = Schema.Schema.Type<typeof Severity>;
 
@@ -67,6 +67,9 @@ export const SupportRequest = Schema.Struct({
   ),
   // Hidden — auto-populated by FeedbackPanel; never rendered as an input.
   version: Schema.String.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
+  // Hidden — set by callers filing on the team's behalf (the debug console) so the issue lands
+  // under the same Linear label the PostHog submissions sync under.
+  labels: Schema.Array(Schema.String).pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
 });
 
 export type SupportRequest = Schema.Schema.Type<typeof SupportRequest>;

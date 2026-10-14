@@ -39,8 +39,10 @@ export type GlobeContextType = {
  * Imperative options accepted by GlobeController.flyTo.
  */
 export type FlyToOptions = {
-  /** Base duration in ms (scales with great-circle distance). */
+  /** Minimum duration in ms; a longer move takes its distance-based time instead. */
   duration?: number;
+  /** Milliseconds per radian of arc: the flight takes the greater of this times the distance and `duration` (default 1500). */
+  msPerRadian?: number;
   /** Optional pitch offset applied along the latitude axis of the target. */
   tilt?: number;
   /**
@@ -49,6 +51,11 @@ export type FlyToOptions = {
    * `t` runs 0→1 across the eased duration.
    */
   onTick?: (t: number) => void;
+  /**
+   * `arc` (default) takes the great-circle path; `axis` turns the globe about its axis, keeping the
+   * poles upright, so the move reads as the earth spinning to the place.
+   */
+  path?: 'arc' | 'axis';
 };
 
 export type FlyToTarget = LatLngLiteral & {

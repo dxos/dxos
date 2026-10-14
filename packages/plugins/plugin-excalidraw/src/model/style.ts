@@ -7,7 +7,7 @@
 // Kept bidirectional so `read.ts` can report only non-default styles back to the agent.
 //
 
-import { type Scene } from '@dxos/plugin-illustrator/model';
+import { type Scene } from '@dxos/diagram';
 
 /** Scene palette → excalidraw stroke colors (tldraw-compatible hues). */
 const COLOR_TO_HEX: Record<Scene.Color, string> = {
@@ -53,7 +53,8 @@ export const toStyle = ({
   weight = 'm',
 }: SceneStyle): StyleProps => ({
   strokeColor: COLOR_TO_HEX[color],
-  backgroundColor: fill === 'none' ? 'transparent' : COLOR_TO_HEX[color],
+  // Excalidraw fills only at full strength, so a tint is left unfilled rather than drawn saturated.
+  backgroundColor: fill === 'none' || fill === 'tint' ? 'transparent' : COLOR_TO_HEX[color],
   fillStyle: fill === 'pattern' ? 'hachure' : 'solid',
   strokeWidth: WEIGHT_TO_STROKE_WIDTH[weight],
   strokeStyle: stroke === 'dashed' || stroke === 'dotted' ? stroke : 'solid',

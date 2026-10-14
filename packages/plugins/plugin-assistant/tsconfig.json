@@ -67,7 +67,13 @@
       "path": "../../core/compute/conductor"
     },
     {
+      "path": "../../core/compute/edge-compute"
+    },
+    {
       "path": "../../core/compute/link"
+    },
+    {
+      "path": "../../core/compute/mcp-client"
     },
     {
       "path": "../../core/echo/echo"
@@ -83,6 +89,9 @@
     },
     {
       "path": "../../core/mesh/edge-client"
+    },
+    {
+      "path": "../../core/protocols"
     },
     {
       "path": "../../devtools/devtools"
@@ -101,6 +110,9 @@
     },
     {
       "path": "../../sdk/config"
+    },
+    {
+      "path": "../../sdk/observability"
     },
     {
       "path": "../../sdk/react-client"
@@ -136,6 +148,9 @@
       "path": "../../ui/react-ui-editor"
     },
     {
+      "path": "../../ui/react-ui-experimental"
+    },
+    {
       "path": "../../ui/react-ui-feed"
     },
     {
@@ -158,6 +173,9 @@
     },
     {
       "path": "../../ui/react-ui-task"
+    },
+    {
+      "path": "../../ui/react-ui-trace"
     },
     {
       "path": "../../ui/react-ui-transcription"
@@ -197,6 +215,9 @@
     },
     {
       "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-observability"
     },
     {
       "path": "../plugin-preview"

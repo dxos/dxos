@@ -2,17 +2,22 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type AutomergeUrl, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
+import {
+  type AutomergeUrl,
+  type DocumentId,
+  interpretAsDocumentId,
+  isValidAutomergeUrl,
+} from '@automerge/automerge-repo';
 import * as Effect from 'effect/Effect';
-import * as Migrator from 'effect/unstable/sql/Migrator';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
-import type * as SqlError from 'effect/unstable/sql/SqlError';
+import * as Migrator from 'effect/sql/Migrator';
+import * as SqlClient from 'effect/sql/SqlClient';
+import type * as SqlError from 'effect/sql/SqlError';
 import isEqual from 'fast-deep-equal';
 
 import { Event, UpdateScheduler } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
-import { type DatabaseDirectory } from '@dxos/echo-protocol';
-import { RuntimeProvider } from '@dxos/effect';
+import { DatabaseDirectory } from '@dxos/echo-protocol';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -101,6 +106,21 @@ export class SpaceStateManager extends Resource {
       return undefined;
     }
     return this._roots.get(documentId);
+  }
+
+  isBranchDocument(documentId: DocumentId): boolean {
+    for (const root of this._roots.values()) {
+      const doc = root.doc();
+      if (!doc) {
+        continue;
+      }
+      for (const url of DatabaseDirectory.getAllBranchDocUrls(doc)) {
+        if (isValidAutomergeUrl(url) && interpretAsDocumentId(url) === documentId) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   /**
@@ -209,7 +229,12 @@ export class SpaceStateManager extends Resource {
       this._roots.delete(prevRootId);
     }
 
-    await this._saveSpace(spaceId, root.url);
+    // A space restored from storage is re-assigned the directory it was saved with, which retires nothing
+    // and has nothing new to persist.
+    let retiredRootId = prevRootId !== root.documentId ? prevRootId : undefined;
+    if (prevRootId !== root.documentId) {
+      await this._saveSpace(spaceId, root.url);
+    }
 
     const ctx = new Context();
 
@@ -231,9 +256,10 @@ export class SpaceStateManager extends Resource {
         ];
         if (!isEqual(documentIds, this._lastSpaceDocumentList.get(spaceId))) {
           this._lastSpaceDocumentList.set(spaceId, documentIds);
-          this.spaceDocumentListUpdated.emit(
-            new SpaceDocumentListUpdatedEvent(spaceId, root.documentId, prevRootId, documentIds),
-          );
+          const event = new SpaceDocumentListUpdatedEvent(spaceId, root.documentId, retiredRootId, documentIds);
+          // Reported once: listeners tear down the retired root's sync state, which must not repeat per list change.
+          retiredRootId = undefined;
+          this.spaceDocumentListUpdated.emit(event);
         }
       },
       { maxFrequency: 50 },
@@ -321,6 +347,7 @@ export class SpaceDocumentListUpdatedEvent {
   constructor(
     public readonly spaceId: SpaceId,
     public readonly spaceRootId: DocumentId,
+    /** The directory `spaceRootId` replaced; set only on the first update after the swap. */
     public readonly previousRootId: DocumentId | undefined,
     public readonly documentIds: DocumentId[],
   ) {}

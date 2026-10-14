@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
@@ -36,6 +36,7 @@ export default Capability.makeModule(
 
     const extension = yield* AppGraphBuilder.createExtension({
       id: 'portfolioReport',
+      relation: AppNode.companion,
       match: (node) =>
         Ibkr.isPortfolio(node.data) ? Option.some({ portfolio: node.data, nodeId: node.id }) : Option.none(),
       connector: ({ portfolio, nodeId }, get) => {

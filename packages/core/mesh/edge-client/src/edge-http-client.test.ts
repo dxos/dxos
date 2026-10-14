@@ -6,6 +6,7 @@ import { create } from '@bufbuild/protobuf';
 import { afterEach, describe, it, test, vi } from 'vitest';
 
 import { Context } from '@dxos/context';
+import { EDGE_CLIENT_TOO_OLD, EdgeClientTooOldError, EdgeResponse } from '@dxos/protocols';
 import { type Presentation, PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { createEphemeralEdgeIdentity } from './auth.ts';
@@ -33,8 +34,8 @@ describe('EdgeHttpClient.aiRequest', () => {
   });
 
   test('re-bases the request path onto the EDGE /ai/generate/anthropic route', async ({ expect }) => {
-    const fetchMock = vi.fn(async (input: any, _init?: RequestInit) => {
-      const url = String(input instanceof URL ? input : (input.url ?? input));
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) => {
+      const url = input instanceof Request ? input.url : String(input);
       // `/auth` preflight: respond non-401 so no auth header is attached.
       if (url.endsWith('/auth')) {
         return new Response(null, { status: 200 });
@@ -58,6 +59,101 @@ describe('EdgeHttpClient.aiRequest', () => {
     expect(targetCall).toBeDefined();
     expect(String(targetCall![0])).toBe('https://edge.example.com/ai/generate/anthropic/v1/messages?beta=true');
     expect(targetCall![1]?.method).toBe('POST');
+  });
+});
+
+describe('EdgeHttpClient.request', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  test('sends method and JSON body to the path and unwraps the envelope', async ({ expect }) => {
+    const fetchMock = vi.fn(async (input: any, _init?: RequestInit) => {
+      const url = String(input instanceof URL ? input : (input.url ?? input));
+      if (url.endsWith('/auth')) {
+        return new Response(null, { status: 200 });
+      }
+      return new Response(JSON.stringify({ success: true, data: { running: true } }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const client = new EdgeHttpClient('https://edge.example.com');
+    const data = await client.request(Context.default(), '/discord/bots/app-1', {
+      method: 'PUT',
+      body: { spaceId: 'space' },
+    });
+
+    expect(data).toEqual({ running: true });
+    const targetCall = fetchMock.mock.calls.find((call) => !String(call[0]).endsWith('/auth'));
+    expect(String(targetCall?.[0])).toBe('https://edge.example.com/discord/bots/app-1');
+    expect(targetCall?.[1]?.method).toBe('PUT');
+    expect(targetCall?.[1]?.body).toBe(JSON.stringify({ spaceId: 'space' }));
+  });
+
+  // WebKit never frees a cloned body whose other branch goes unread.
+  test('reads each response body once, without cloning it, and decodes every failure', async ({ expect }) => {
+    const json = { 'Content-Type': 'application/json' };
+    const fetchMock = vi.fn(async (input: any, _init?: RequestInit) => {
+      const { pathname } = new URL(String(input instanceof URL ? input : (input.url ?? input)));
+      switch (pathname) {
+        case '/auth':
+          return new Response(
+            JSON.stringify({ success: true, data: { challenge: 'Y2hhbGxlbmdl', expiresInMs: 60_000 } }),
+            {
+              status: 200,
+              headers: json,
+            },
+          );
+        case '/declined':
+          return new Response(JSON.stringify({ success: false, message: 'declined by edge' }), {
+            status: 200,
+            headers: json,
+          });
+        case '/refused':
+          return new Response(JSON.stringify({ success: false, message: 'refused by edge' }), {
+            status: 400,
+            headers: json,
+          });
+        case '/broken':
+          return new Response('bad request', { status: 400, headers: { 'Content-Type': 'text/plain' } });
+        default:
+          return new Response(JSON.stringify({ success: true, data: { running: true } }), {
+            status: 200,
+            headers: json,
+          });
+      }
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const clone = vi.spyOn(Response.prototype, 'clone');
+    try {
+      const client = new EdgeHttpClient('https://edge.example.com');
+      client.setIdentity({
+        peerKey: 'peer-key',
+        identityDid: 'did:halo:test',
+        presentCredentials: async (): Promise<Presentation> => create(PresentationSchema, {}),
+      });
+
+      expect(await client.request(Context.default(), '/status', { method: 'GET' })).toEqual({ running: true });
+      await expect(client.request(Context.default(), '/declined', { method: 'GET' })).rejects.toMatchObject({
+        message: expect.stringContaining('declined by edge'),
+        isRetryable: false,
+      });
+      await expect(client.request(Context.default(), '/refused', { method: 'GET' })).rejects.toMatchObject({
+        message: expect.stringContaining('refused by edge'),
+      });
+      await expect(client.request(Context.default(), '/broken', { method: 'GET' })).rejects.toMatchObject({
+        message: expect.stringContaining('HTTP code 400'),
+        cause: expect.objectContaining({ message: 'bad request' }),
+      });
+      expect(fetchMock.mock.calls.filter((call) => String(call[0]).endsWith('/declined'))).toHaveLength(1);
+      expect(fetchMock.mock.calls.some((call) => String(call[0]).endsWith('/auth'))).toBe(true);
+      expect(clone).not.toHaveBeenCalled();
+    } finally {
+      clone.mockRestore();
+    }
   });
 });
 
@@ -297,6 +393,48 @@ describe('EdgeHttpClient auth refresh', () => {
   });
 });
 
+describe('EdgeHttpClient outdated SDK', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  // Built by EDGE's own envelope producer, exactly as `requireClientSdkVersion` answers.
+  const refusal = () =>
+    EdgeResponse.failure({
+      message: 'Client too old: SDK 0.12.0 is older than 0.13.0. Update the app (reload it) to continue.',
+      status: 426,
+      data: { type: EDGE_CLIENT_TOO_OLD, clientVersion: '0.12.0', minimumVersion: '0.13.0' },
+    });
+
+  // The prefetch swallows other failures to proceed unauthenticated, which here would only be refused again, silently.
+  test('a refusal at the /auth prefetch fails the call once, without sending it', async ({ expect }) => {
+    const fetchMock = vi.fn(async (_input: any, _init?: RequestInit) => refusal());
+    vi.stubGlobal('fetch', fetchMock);
+    const client = new EdgeHttpClient('https://edge.example.com');
+    client.setIdentity({
+      peerKey: 'peer-key',
+      identityDid: 'did:halo:test',
+      presentCredentials: async (): Promise<Presentation> => create(PresentationSchema, {}),
+    });
+
+    const error = await client.getStatus(Context.default()).catch((error: unknown) => error);
+    expect(error).toBeInstanceOf(EdgeClientTooOldError);
+    expect(error).toMatchObject({ status: 426, isRetryable: false, data: { minimumVersion: '0.13.0' } });
+    expect(fetchMock.mock.calls.map((call) => new URL(String(call[0])).pathname)).toEqual(['/auth']);
+  });
+
+  test('a route refusing the SDK fails with the typed error and is not retried', async ({ expect }) => {
+    const fetchMock = vi.fn(async (_input: any, _init?: RequestInit) => refusal());
+    vi.stubGlobal('fetch', fetchMock);
+    const client = new EdgeHttpClient('https://edge.example.com');
+
+    await expect(client.request(Context.default(), '/status', { method: 'GET' })).rejects.toBeInstanceOf(
+      EdgeClientTooOldError,
+    );
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('EdgeHttpClient blobs', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
@@ -481,6 +619,28 @@ describe('EdgeHttpClient api key', () => {
     expect((uploadCall![1]?.headers as Record<string, string>).Authorization).toBe('Bearer secret-key');
   });
 
+  test('uploadPrivatePluginBundle posts to the private route with the key as a Bearer header', async ({ expect }) => {
+    const fetchMock = vi.fn(
+      async (_input: any, _init?: RequestInit) =>
+        new Response(JSON.stringify({ success: true, data: { moduleUrl: 'url' } }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const client = new EdgeHttpClient('https://edge.example.com', { apiKey: 'dx-api01-token' });
+    const { moduleUrl } = await client.uploadPrivatePluginBundle(Context.default(), {
+      slug: 'x',
+      version: '1',
+      files: [],
+    });
+
+    expect(moduleUrl).toBe('url');
+    const uploadCall = fetchMock.mock.calls.find((call) => String(call[0]).endsWith('/registry/private/upload'));
+    expect(uploadCall?.[1]?.headers).toMatchObject({ Authorization: 'Bearer dx-api01-token' });
+  });
+
   test('a rejected api key is terminal — no retry on the auth 401', async ({ expect }) => {
     const fetchMock = vi.fn(
       async (_input: any, _init?: RequestInit) =>
@@ -515,3 +675,62 @@ describe('EdgeHttpClient api key', () => {
 /** Narrow a `fetch` input to its URL string, covering all three shapes the contract allows. */
 const requestUrl = (input: RequestInfo | URL): string =>
   input instanceof URL ? input.toString() : typeof input === 'string' ? input : input.url;
+
+describe('EdgeHttpClient inbox', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  const json = (data: unknown) =>
+    new Response(JSON.stringify({ success: true, data }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+  const notice = { id: 'n1', senderDid: 'did:halo:sender', sentAt: 1, expiresAt: 2, payload: 'AAAA' };
+
+  const stubFetch = () => {
+    const fetchMock = vi.fn(async (input: any, init?: RequestInit) => {
+      const url = new URL(String(input instanceof URL ? input : (input.url ?? input)));
+      switch (`${init?.method} ${url.pathname}`) {
+        case 'POST /inbox/did%3Ahalo%3Arecipient':
+          return json({ id: 'n1' });
+        case 'GET /inbox':
+          return json({ notices: [notice] });
+        case 'POST /inbox/ack':
+          return new Response(null, { status: 204 });
+        default:
+          return new Response(null, { status: 200 });
+      }
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    return fetchMock;
+  };
+
+  const callTo = (fetchMock: ReturnType<typeof stubFetch>, pathname: string) =>
+    fetchMock.mock.calls.find((call) => new URL(String(call[0])).pathname === pathname);
+
+  test('sends, lists and acks against the inbox endpoints', async ({ expect }) => {
+    const fetchMock = stubFetch();
+    const client = new EdgeHttpClient('https://edge.example.com');
+
+    expect(await client.sendInboxMessage(Context.default(), 'did:halo:recipient', 'AAAA')).toEqual({ id: 'n1' });
+    expect(JSON.parse(String(callTo(fetchMock, '/inbox/did%3Ahalo%3Arecipient')?.[1]?.body))).toEqual({
+      payload: 'AAAA',
+    });
+
+    expect(await client.listInbox(Context.default())).toEqual({ notices: [notice] });
+
+    await client.ackInbox(Context.default(), ['n1']);
+    expect(JSON.parse(String(callTo(fetchMock, '/inbox/ack')?.[1]?.body))).toEqual({ ids: ['n1'] });
+  });
+
+  test('rejects a malformed list response', async ({ expect }) => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => json({ notices: [{ id: 1 }] })),
+    );
+    const client = new EdgeHttpClient('https://edge.example.com');
+    await expect(client.listInbox(Context.default())).rejects.toThrow();
+  });
+});

@@ -54,13 +54,4 @@
       aria-[current=true]:bg-current-surface! aria-[current=true]:text-current-fg!
       aria-[current=true]:after:ring-focus-ring-subtle!;
   }
-
-  /*
-   * Pairs with the machine-managed `data-highlighted` (Zag). Don't set the attribute manually.
-   */
-  .dx-highlighted {
-    @apply data-[highlighted]:bg-current-surface
-      data-[highlighted]:text-current-fg
-      hover:data-[highlighted]:bg-current-surface-hover;
-  }
 }

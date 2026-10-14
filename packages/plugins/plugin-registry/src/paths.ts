@@ -9,8 +9,11 @@ export const REGISTRY_ID = 'dxos:registry';
 // segment (`category/<name>`); the graph builder, the category surfaces and `getCategoryPredicate` all
 // use the name directly.
 
+/** Segment of the hidden node the plugin nodes hang off, apart from the categories. */
+export const PLUGINS_SEGMENT = 'plugins';
+
 /** Qualified graph path to a specific plugin node. */
-export const getPluginPath = (pluginId: string): string => `root/${REGISTRY_ID}/${pluginId}`;
+export const getPluginPath = (pluginId: string): string => `root/${REGISTRY_ID}/${PLUGINS_SEGMENT}/${pluginId}`;
 
 /**
  * Qualified graph path to a plugin's MDL spec child, which is absent unless some plugin contributes

@@ -19,13 +19,13 @@ export default Capability.makeModule(() =>
     Capability.contribute(PreviewCapabilities.LinkResolver, [
       {
         match: (url) => EID.tryParse(url) !== undefined,
-        resolve: ({ eid, label }, { space }) =>
+        resolve: ({ eid, label }, { db }) =>
           Effect.gen(function* () {
             const parsed = EID.tryParse(eid);
-            if (!parsed || !space) {
+            if (!parsed || !db) {
               return undefined;
             }
-            const entity = yield* Effect.tryPromise(() => space.db.makeRef(parsed).load()).pipe(
+            const entity = yield* Effect.tryPromise(() => db.makeRef(parsed).load()).pipe(
               Effect.catch(() => Effect.succeed(undefined)),
             );
             // A relation has no card; only an object is previewed.

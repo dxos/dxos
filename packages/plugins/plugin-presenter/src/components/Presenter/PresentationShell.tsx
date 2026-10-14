@@ -4,7 +4,8 @@
 
 import React, { type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react';
 
-import { composable, composableProps } from '@dxos/react-ui';
+import { useComposedRefs } from '@dxos/react-hooks';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 export type PresentationShellProps = PropsWithChildren<{
@@ -19,15 +20,17 @@ export type PresentationShellProps = PropsWithChildren<{
 }>;
 
 /**
- * Wraps presentation content with a fade-in/out transition, an ESC handler that exits in a
- * single keypress (intercepting before the deck's fullscreen handler), and a transient [ESC]
+ * Wraps presentation content with a fade-in/out transition and, when fullscreen, an ESC handler
+ * that exits in a single keypress (intercepting before the deck's handler) plus a transient [ESC]
  * caption shown on enter.
  */
-export const PresentationShell = composable<HTMLDivElement, PresentationShellProps>(
+export const PresentationShell = Util.composable<HTMLDivElement, PresentationShellProps>(
   ({ children, fadeDuration = 300, hintDuration = 3000, fullscreen = true, onExit, ...props }, forwardedRef) => {
     const [visible, setVisible] = useState(false);
     const [exiting, setExiting] = useState(false);
     const [showHint, setShowHint] = useState(true);
+    const rootRef = useRef<HTMLDivElement>(null);
+    const ref = useComposedRefs<HTMLDivElement>(forwardedRef, rootRef);
     const exitTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
     // Guards against exiting twice; a state updater can't gate this since React double-invokes
     // updaters in dev, which would schedule the exit (and its side effects) more than once.
@@ -38,6 +41,14 @@ export const PresentationShell = composable<HTMLDivElement, PresentationShellPro
       const frame = requestAnimationFrame(() => setVisible(true));
       return () => cancelAnimationFrame(frame);
     }, []);
+
+    // Arrow keys reach the slides only while focus is inside the shell; on the enclosing pane, the
+    // deck's plank navigation and the landmark mover claim them first.
+    useEffect(() => {
+      if (fullscreen) {
+        rootRef.current?.focus({ preventScroll: true });
+      }
+    }, [fullscreen]);
 
     // Hide the hint after the configured duration.
     useEffect(() => {
@@ -58,7 +69,12 @@ export const PresentationShell = composable<HTMLDivElement, PresentationShellPro
     useEffect(() => () => clearTimeout(exitTimeout.current), []);
 
     // Capture ESC before the deck/reveal handlers so a single keypress exits directly.
+    // Only while fullscreen: in a companion, ESC belongs to the rest of the app.
     useEffect(() => {
+      if (!fullscreen) {
+        return;
+      }
+
       const handler = (event: KeyboardEvent) => {
         if (event.key === 'Escape') {
           event.preventDefault();
@@ -69,18 +85,19 @@ export const PresentationShell = composable<HTMLDivElement, PresentationShellPro
 
       document.addEventListener('keydown', handler, { capture: true });
       return () => document.removeEventListener('keydown', handler, { capture: true });
-    }, [handleExit]);
+    }, [fullscreen, handleExit]);
 
     return (
       <div
-        {...composableProps(props, {
+        {...Util.composableProps(props, {
           classNames: [
-            'relative grow overflow-hidden bg-black transition-opacity',
+            'relative grow overflow-hidden bg-black transition-opacity outline-none',
             visible && !exiting ? 'opacity-100' : 'opacity-0',
           ],
           style: { transitionDuration: `${fadeDuration}ms` },
         })}
-        ref={forwardedRef}
+        tabIndex={-1}
+        ref={ref}
       >
         {children}
         {fullscreen && (

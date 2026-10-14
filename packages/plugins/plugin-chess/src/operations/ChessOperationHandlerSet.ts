@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 

@@ -6,10 +6,10 @@
 
 import * as Schema from 'effect/Schema';
 
-import { type Entity, Key, Obj, type Type } from '@dxos/echo';
+import { Annotation, type Entity, Key, Obj, type Type } from '@dxos/echo';
 import { isEncodedReference } from '@dxos/echo-protocol';
-import { ReferenceAnnotationId } from '@dxos/echo/Annotation';
-import { SchemaAST, SchemaEx } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { deepMapValues, trim } from '@dxos/util';
 
 export type SearchOptions<T extends Type.AnyEntity> = {
@@ -217,7 +217,7 @@ const SoftRef = Schema.Struct({
 // TODO(burdon): Move to @dxos/echo.
 const mapSchemaRefs = (schema: Schema.Codec<any, any>): Schema.Codec<any, any> => {
   const go = (ast: SchemaAST.AST): SchemaAST.AST => {
-    if (SchemaAST.getAnnotation(ast, ReferenceAnnotationId) !== undefined) {
+    if (SchemaAST.getAnnotation(ast, Annotation.ReferenceAnnotationId) !== undefined) {
       return SoftRef.ast;
     }
 

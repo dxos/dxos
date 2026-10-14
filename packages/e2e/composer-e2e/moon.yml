@@ -1,0 +1,58 @@
+# The behavioural browser suite for the Composer app. `automation`, like its siblings under
+# packages/e2e and unlike `perf-harness`: this package is consumed by nothing and consumes the
+# composer-app APPLICATION (its `e2e` task serves that app's bundle), which only the top layer may
+# do. Nothing may depend on it in return — composer-app declaring `@dxos/composer-e2e` is what
+# moon rejects as `would_cycle`, which is why `INITIAL_URL` is duplicated in `harness-helpers.ts`.
+layer: automation
+language: typescript
+tags:
+  # Contributes the `e2e` task (`.moon/tasks/tag-e2e.yml`): `pnpm exec playwright test
+  # --config=src/playwright/playwright.config.ts`, with DX_PWA/DX_EDGE_BASE_URL and the
+  # `e2e-ports` mutex already set.
+  - e2e
+  # `ts-test` contributes `test` (the report unit tests), which does not collide with the `build`
+  # below; the `typecheck` tag is still avoided because its `build` would.
+  - ts-test
+
+tasks:
+  # No `typecheck` tag: that tag also contributes a `build` task (`tsc --noEmit`) which would merge
+  # with this one and suppress the emit. Plain `tsc` typechecks the specs, the page objects and the
+  # report module — which is the only compile-time check this package gets, since a spec is only
+  # ever run by Playwright.
+  build:
+    command: pnpm exec tsc
+    deps:
+      - ^:build
+    inputs:
+      - /tsconfig.base.json
+      - tsconfig.json
+      - '@group(sources)'
+    outputs:
+      - dist/types/
+    options:
+      timeout: 60
+
+  e2e:
+    deps:
+      # The tag's own `bundle-e2e` dep is `~:bundle-e2e` and optional, so it resolves to nothing
+      # here: the bundle this suite serves belongs to the app, not to this package.
+      - composer-app:bundle-e2e
+      # `crx-extension.spec.ts` loads this unpacked build; without it the spec skips itself and the
+      # flow it automates silently stops being covered.
+      - composer-crx:bundle
+    inputs:
+      # The served bundle is not in this package's `@group(sources)`, so without this a change to
+      # the app would replay a cached green run against a bundle it never tested.
+      - /packages/apps/composer-app/out/composer/index.html
+      - /packages/apps/composer-crx/dist/manifest.json
+
+  # Publishes the Playwright JSON report of the run that just finished to PostHog. Its own task
+  # rather than a step inside `e2e`: a publish must never fail the suite, and the suite's exit code
+  # has to survive for the CI job to report on. Not cacheable — the point is to send THIS run.
+  publish-results:
+    command: node scripts/publish-results.mjs
+    options:
+      cache: false
+    inputs:
+      - scripts/publish-results.mjs
+      - '@group(sources)'

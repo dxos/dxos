@@ -1,0 +1,205 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import React, { useCallback } from 'react';
+
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as ObjectCombobox from '@dxos/app-toolkit/ObjectCombobox';
+import { Entity, Obj } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
+import { invariant } from '@dxos/invariant';
+import * as Drawing from '@dxos/plugin-illustrator/Drawing';
+import type * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
+import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
+import {
+  type Camera,
+  type Element,
+  type InspectorMode,
+  type Node,
+  type SceneDisplay,
+  type SceneId,
+  SceneView,
+  type SceneViewPropertiesProps,
+  createLatticeProjection,
+  isFrameNode,
+  isLink,
+  useRegistry,
+} from '@dxos/react-ui-canvas/scene';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+
+import { canvasRecordOf, isCanvasDrawing, objectRef, objectUri, parseLinkedSceneId } from '#model';
+import { CanvasCapabilities } from '#types';
+
+import { CanvasDatabaseContext } from './CanvasFrameNodeView.tsx';
+import { useBoundCanvasStore, useCanvasNodes } from './use-canvas-scene.ts';
+import { canvasViewAspect } from './view-state.ts';
+
+export type CanvasArticleProps = IllustratorCapabilities.DrawingVariantSurfaceProps;
+
+/** The article surface of the canvas variant: the scene engine over the drawing's canvas. */
+export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
+  invariant(Obj.instanceOf(Drawing.Canvas, canvas));
+  const registry = useRegistry();
+  const settings = useAtomValue(Hooks.useCapability(CanvasCapabilities.Settings));
+  // A frame showing an object (not a canvas drawing) opens it in the app; the frame's view shows the frame's own
+  // scene until the object loads, so opening drills into that scene until then too.
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const db = Obj.getDatabase(canvas);
+  const openObject = useCallback(
+    (node: Node) => {
+      const object = objectRef(node, db)?.target;
+      if (!object || !isFrameNode(node) || parseLinkedSceneId(node.scene) || isCanvasDrawing(object) !== false) {
+        return undefined;
+      }
+      return () => {
+        void invokePromise(LayoutOperation.Open, { subject: [GraphPath.getObjectPathFromObject(object)] });
+      };
+    },
+    [invokePromise, db],
+  );
+  const nodes = useCanvasNodes(openObject);
+  const bound = useBoundCanvasStore(canvas);
+
+  // The drawing's settings, edited in the properties companion: the lattice picks the projection.
+  const [snapshot] = useObject(canvas);
+  const record = canvasRecordOf(snapshot.content);
+  const lattice = record?.lattice === true;
+
+  // Restores where the root scene was last left; read once per binding, since later values are our own writes.
+  const contextId = Entity.getURI(canvas);
+  const {
+    camera: savedCamera,
+    readonly: viewReadonly,
+    floating = false,
+    grid: snap,
+    guides,
+    fit,
+  } = useViewState(canvasViewAspect, contextId);
+  const { update: updateViewState } = useViewStateActions(canvasViewAspect, contextId);
+  // A section is a drawing shown inside another object (a document's embed), so it is only looked at, never edited,
+  // and shows the drawing alone: no palette and no inspectors.
+  const section = role === AppSurface.Section.role;
+  const readonly = (viewReadonly ?? record?.readonly ?? false) || section;
+  const handleInspectorsChange = useCallback(
+    (mode: InspectorMode) => updateViewState((state) => ({ ...state, floating: mode === 'floating' })),
+    [updateViewState],
+  );
+  const handleReadonlyChange = useCallback(
+    (readonly: boolean) => updateViewState((state) => ({ ...state, readonly })),
+    [updateViewState],
+  );
+  const handleCameraChange = useCallback(
+    (camera: Camera) => updateViewState((state) => ({ ...state, camera })),
+    [updateViewState],
+  );
+  const handleDisplayChange = useCallback(
+    // The engine's snap toggle is what draws the grid, so the view state calls it the grid.
+    ({ snap, guides, fit }: SceneDisplay) => updateViewState((state) => ({ ...state, grid: snap, guides, fit })),
+    [updateViewState],
+  );
+
+  // A shape opens a scene of this drawing, never one bound from a linked drawing.
+  const isLocalScene = useCallback((id: SceneId) => !parseLinkedSceneId(id), []);
+
+  // A frame may show any object listed in the navigator but this drawing itself.
+  const { t } = UiHooks.useTranslation();
+  const getOptions = useCallback<NonNullable<SceneViewPropertiesProps['getOptions']>>(
+    (results) =>
+      ObjectCombobox.toOptions(results, {
+        t,
+        filter: (object) => !(Obj.instanceOf(Drawing.Drawing, object) && object.canvas.target === canvas),
+      }),
+    [canvas, t],
+  );
+
+  // A frame holds its own scene or an object, never both: it may take an object only while its own child scene is
+  // empty, so linking never hides what was drawn there.
+  const overrides = useCallback(
+    (elements: readonly Element[]): ReturnType<NonNullable<SceneViewPropertiesProps['overrides']>> => {
+      const scenes = bound ? registry.get(bound.store.scenes) : {};
+      const locked = elements.some((element) => {
+        if (isLink(element) || !isFrameNode(element) || objectUri(element) || parseLinkedSceneId(element.scene)) {
+          return false;
+        }
+        const child = scenes[element.scene];
+        return child !== undefined && Object.keys(child.nodes).length > 0;
+      });
+      // A frame showing an object opens the object (or a canvas drawing's root), not a scene of this one.
+      const linked = elements.some((element) => !isLink(element) && objectUri(element));
+      // The role applies only to an object shown as a surface, not to a canvas drawing shown as a scene; an object
+      // still loading is offered one, so the field appears as soon as the object is picked.
+      const surfaced = elements.some(
+        (element) =>
+          !isLink(element) && objectUri(element) && isCanvasDrawing(objectRef(element, db)?.target) === false,
+      );
+      return {
+        ...(locked ? { object: { readonly: true } } : {}),
+        ...(linked ? { scene: { hidden: true } } : {}),
+        ...(surfaced ? {} : { role: { hidden: true } }),
+      };
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [registry, bound, db],
+  );
+
+  return (
+    // A section takes the document's width and has no height of its own (read-only, it has no dock), so its height
+    // follows from the drawing's 3:2 frame.
+    <Panel.Root role={role} classNames={section ? 'w-full aspect-[3/2]' : undefined}>
+      <Panel.Body>
+        {bound && (
+          // An unset preference leaves the engine's own default in place.
+          <CanvasDatabaseContext.Provider value={db}>
+            <SceneView.Root
+              key={bound.root}
+              store={bound.store}
+              root={bound.root}
+              nodes={nodes}
+              createProjection={lattice ? createLatticeProjection : undefined}
+              grid={record?.grid}
+              readonly={readonly}
+              onReadonlyChange={section ? undefined : handleReadonlyChange}
+              initialCamera={savedCamera}
+              onCameraChange={handleCameraChange}
+              initialDisplay={{ snap, guides, fit }}
+              onDisplayChange={handleDisplayChange}
+              inspectors={floating ? 'floating' : 'docked'}
+              onInspectorsChange={handleInspectorsChange}
+            >
+              <SceneView.Canvas liveDepth={settings.liveDepth} />
+              {/* Unset means shown: settings saved before the default existed hold neither key. */}
+              {(settings.showToolbar ?? true) && (
+                <>
+                  <SceneView.Navigation />
+                  <SceneView.Actions />
+                  <SceneView.Debug />
+                </>
+              )}
+              {!section && (
+                <>
+                  {(settings.showPalette ?? true) && <SceneView.Palette />}
+                  <SceneView.Properties
+                    db={db}
+                    getOptions={getOptions}
+                    overrides={overrides}
+                    sceneFilter={isLocalScene}
+                  />
+                  <SceneView.Layers />
+                  <SceneView.About />
+                </>
+              )}
+            </SceneView.Root>
+          </CanvasDatabaseContext.Provider>
+        )}
+      </Panel.Body>
+    </Panel.Root>
+  );
+};
+
+CanvasArticle.displayName = 'CanvasArticle';

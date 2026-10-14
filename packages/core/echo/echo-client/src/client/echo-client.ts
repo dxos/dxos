@@ -12,10 +12,13 @@ import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
 
-import { type BranchStore } from '../core-db/index.ts';
+import { type BranchStore, type DocumentRetention } from '../core-db/index.ts';
 import { HypergraphImpl } from '../hypergraph.ts';
 import { DatabaseImpl } from '../proxy-db/index.ts';
 import { IndexQuerySourceProvider, type LoadObjectProps, type ObjectUpdate } from './index-query-source-provider.ts';
+
+/** A root that has not linked an index hit by then may never; `linksAdded` re-hydrates it if it does. */
+const ROOT_LINK_WAIT_TIMEOUT = 2_000;
 
 export type EchoClientProps = {};
 
@@ -54,6 +57,9 @@ export type ConstructDatabaseProps = {
 
   /** Device-local persistence for the current-branch selection (non-synced). In-memory if omitted. */
   branchStore?: BranchStore;
+
+  /** Which loaded object documents the database keeps in memory. */
+  documentRetention?: DocumentRetention;
 };
 
 /**
@@ -113,16 +119,21 @@ export class EchoClient extends Resource {
   protected override async _open(ctx: Context): Promise<void> {
     invariant(this._dataService && this._queryService, 'Invalid state: not connected');
 
-    this._indexQuerySourceProvider = new IndexQuerySourceProvider({
-      service: this._queryService,
+    this._indexQuerySourceProvider = this.#createIndexQuerySourceProvider(this._queryService);
+    this._graph.registerQuerySourceProvider(this._indexQuerySourceProvider);
+  }
+
+  #createIndexQuerySourceProvider(service: QueryService.Client): IndexQuerySourceProvider {
+    return new IndexQuerySourceProvider({
+      service,
       runtime: this._runtime,
       objectLoader: {
         loadObject: this._loadObjectFromDocument.bind(this),
         updateEvent: this._objectsUpdated,
+        subscriptionIds: this._subscriptionIds.bind(this),
       },
       graph: this._graph,
     });
-    this._graph.registerQuerySourceProvider(this._indexQuerySourceProvider);
   }
 
   protected override async _close(ctx: Context): Promise<void> {
@@ -148,6 +159,7 @@ export class EchoClient extends Resource {
     preloadSchemaOnOpen,
     spaceKey,
     branchStore,
+    documentRetention,
   }: ConstructDatabaseProps): DatabaseImpl {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     invariant(!this._databases.has(spaceId), 'Database already exists.');
@@ -162,20 +174,42 @@ export class EchoClient extends Resource {
       preloadSchemaOnOpen,
       spaceKey,
       branchStore,
+      documentRetention,
     });
     this._graph._registerDatabase(spaceId, db, owningObject);
     this._databases.set(spaceId, db);
 
     // Forward this database's local object updates to the aggregated signal so reactive index
     // sources can re-hydrate index hits once their documents become available locally.
-    this._dbUpdateSubscriptions.set(
-      spaceId,
-      db._entityManager._updateEvent.on((event) => {
-        this._objectsUpdated.emit({ spaceId, objectIds: event.itemsUpdated.map((item) => item.id) });
-      }),
-    );
+    const unsubscribeFromUpdates = db._entityManager._updateEvent.on((event) => {
+      this._objectsUpdated.emit({ spaceId, objectIds: event.itemsUpdated.map((item) => item.id) });
+    });
+    // An index hit dropped because this client's space root did not route it yet is re-hydrated when
+    // the root gains the link, rather than staying missing until the next host response.
+    const unsubscribeFromLinks = db.linksAdded.on((objectIds) => {
+      this._objectsUpdated.emit({ spaceId, objectIds });
+    });
+    this._dbUpdateSubscriptions.set(spaceId, () => {
+      unsubscribeFromUpdates();
+      unsubscribeFromLinks();
+    });
 
     return db;
+  }
+
+  /**
+   * Closes and unregisters a space's database, so the space can be constructed again should it
+   * return (e.g. an identity deleted in place and then recovered brings back the same space ids).
+   */
+  removeDatabase(db: DatabaseImpl): Promise<void> {
+    if (this._databases.get(db.spaceId) !== db) {
+      return Promise.resolve();
+    }
+    this._databases.delete(db.spaceId);
+    this._dbUpdateSubscriptions.get(db.spaceId)?.();
+    this._dbUpdateSubscriptions.delete(db.spaceId);
+    this._graph._unregisterDatabase(db.spaceId);
+    return db.close().then(() => undefined);
   }
 
   /**
@@ -199,15 +233,7 @@ export class EchoClient extends Resource {
     // Update IndexQuerySourceProvider with new service.
     if (this._indexQuerySourceProvider) {
       this._graph.unregisterQuerySourceProvider(this._indexQuerySourceProvider);
-      this._indexQuerySourceProvider = new IndexQuerySourceProvider({
-        service: this._queryService,
-        runtime: this._runtime,
-        objectLoader: {
-          loadObject: this._loadObjectFromDocument.bind(this),
-          updateEvent: this._objectsUpdated,
-        },
-        graph: this._graph,
-      });
+      this._indexQuerySourceProvider = this.#createIndexQuerySourceProvider(queryService);
       this._graph.registerQuerySourceProvider(this._indexQuerySourceProvider);
     }
 
@@ -226,6 +252,14 @@ export class EchoClient extends Resource {
     for (const db of this._databases.values()) {
       await db._onReconnect();
     }
+  }
+
+  private _subscriptionIds(spaceIds: readonly SpaceId[]): string[] {
+    const databases =
+      spaceIds.length > 0
+        ? spaceIds.flatMap((spaceId) => this._databases.get(spaceId) ?? [])
+        : [...this._databases.values()];
+    return databases.map((db) => db._entityManager._repoProxy.subscriptionId);
   }
 
   private async _loadObjectFromDocument({
@@ -249,9 +283,14 @@ export class EchoClient extends Resource {
       throw err;
     }
 
-    const objectDocId = db.getObjectDocumentId(objectId);
+    const objectDocId = db.getObjectDocumentId(objectId) ?? (await this._waitForObjectLink(db, objectId));
     if (objectDocId !== documentId) {
-      log("documentIds don't match", { objectId, expected: documentId, actual: objectDocId ?? null });
+      // Dropping the hit makes the result short, which reads to a caller as "no such object".
+      log.warn('index hit dropped: the space root does not route the object to the indexed document', {
+        objectId,
+        expected: documentId,
+        actual: objectDocId ?? null,
+      });
       return undefined;
     }
 
@@ -260,6 +299,29 @@ export class EchoClient extends Resource {
     return db._loadObjectById(objectId, {
       allowDeleted: true,
       diskOnly: true,
+    });
+  }
+
+  /**
+   * The document the space root routes `objectId` to, once this client's replica of the root links it.
+   * The index can learn of an object from the host's replica one sync batch before this one does.
+   */
+  private _waitForObjectLink(db: DatabaseImpl, objectId: string): Promise<string | undefined> {
+    return new Promise((resolve) => {
+      const settle = () => {
+        clearTimeout(timer);
+        unsubscribe();
+        resolve(db.getObjectDocumentId(objectId));
+      };
+      const rootHandle = db._entityManager.getSpaceRootDocHandle();
+      const onChange = () => {
+        if (db.getObjectDocumentId(objectId) !== undefined) {
+          settle();
+        }
+      };
+      const unsubscribe = () => rootHandle.off('change', onChange);
+      const timer = setTimeout(settle, ROOT_LINK_WAIT_TIMEOUT);
+      rootHandle.on('change', onChange);
     });
   }
 }

@@ -30,14 +30,22 @@ export const SurfacesRequested = (role: string) =>
 export const CommandsRequested = ActivationEvent$.make('org.dxos.app-framework.event.commandsRequested');
 
 /**
- * Demand signal for sample spaces. Fired by whoever is about to offer a list of them — today the
- * debug plugin's space generator, when its panel mounts.
+ * Demand signal for space templates. Fired by whoever is about to offer a list of them — the create
+ * space dialog, and the debug plugin's space generator when its panel mounts.
  *
- * Sample content is bulky and of interest to nobody who has not opened that panel, so the modules
- * carrying it are gated here rather than contributing at startup. Like a command tree, the list is
- * read once: fire and await this before reading it.
+ * Template content is bulky, so the modules carrying it are gated here rather than contributing at
+ * startup. Like a command tree, the list is read once: fire and await this before reading it.
  */
-export const SampleSpacesRequested = ActivationEvent$.make('org.dxos.app-framework.event.sampleSpacesRequested');
+export const SpaceTemplatesRequested = ActivationEvent$.make('org.dxos.app-framework.event.spaceTemplatesRequested');
+
+/**
+ * Demand signal for plugin assets (each plugin's bundled `PLUGIN.mdl`). Fired by whoever is about to
+ * read them — plugin-code's graph builder when a plugin's spec node is resolved.
+ *
+ * Nothing reads a spec while the app boots, so the modules carrying them are gated here rather than
+ * running with every plugin's startup. Fire and await this before a one-shot read.
+ */
+export const PluginAssetsRequested = ActivationEvent$.make('org.dxos.app-framework.event.pluginAssetsRequested');
 
 /**
  * Fired once by the host at main-thread idle after the app is interactive.

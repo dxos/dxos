@@ -6,7 +6,7 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as Project from '@dxos/compute/Project';
 import { Type } from '@dxos/echo';
 
-import { SESSIONS_SEGMENT } from './capabilities/app-graph-builder.ts';
+import { ARTIFACTS_SEGMENT, SESSIONS_SEGMENT } from './capabilities/app-graph-builder.ts';
 
 const PROJECT_TYPENAME = Type.getTypename(Project.Project)!;
 
@@ -21,3 +21,7 @@ export const getProjectPath = (spaceId: string, projectId: string): string =>
  */
 export const getProjectChatPath = (spaceId: string, projectId: string, chatId: string): string =>
   `${getProjectPath(spaceId, projectId)}/${SESSIONS_SEGMENT}/${chatId}`;
+
+/** Path to an artifact on a project's Artifacts branch. */
+export const getProjectArtifactPath = (spaceId: string, projectId: string, artifactId: string): string =>
+  `${getProjectPath(spaceId, projectId)}/${ARTIFACTS_SEGMENT}/${artifactId}`;

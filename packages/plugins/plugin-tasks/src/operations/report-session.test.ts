@@ -112,7 +112,7 @@ describe('report-session', () => {
 
       const { sessions } = yield* listSessions.handler({ sessionId: 'session_dup' });
       expect(sessions).toHaveLength(1);
-      expect(sessions[0]!.session.title).toBe('Survivor');
+      expect(sessions[0].session.title).toBe('Survivor');
     }).pipe(Effect.provide(TestDatabaseLayer({ types }))),
   );
 
@@ -241,11 +241,12 @@ describe('report-session', () => {
       // Closed work is not a reminder.
       expect(titles).toEqual(['Ship the thing']);
 
+      expect(reported.tasks).toHaveLength(1);
       const [row] = reported.tasks ?? [];
-      expect(row!.dxn).toBe(Obj.getURI(open).toString());
-      expect(row!.status).toBe('started');
-      expect(row!.project).toBe('Voyage');
-      expect(row!.projectDxn).toBe(Obj.getURI(project).toString());
+      expect(row.dxn).toBe(Obj.getURI(open).toString());
+      expect(row.status).toBe('started');
+      expect(row.project).toBe('Voyage');
+      expect(row.projectDxn).toBe(Obj.getURI(project).toString());
       expect(reported.instructions).toContain('tasks-list');
     }).pipe(Effect.provide(TestDatabaseLayer({ types }))),
   );
@@ -277,7 +278,7 @@ describe('list-sessions', () => {
 
       const byId = yield* listSessions.handler({ sessionId: 'session_b' });
       expect(byId.sessions).toHaveLength(1);
-      expect(byId.sessions[0]!.session.state).toBe('finished');
+      expect(byId.sessions[0].session.state).toBe('finished');
     }).pipe(Effect.provide(TestDatabaseLayer({ types }))),
   );
 });

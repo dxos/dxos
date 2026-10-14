@@ -47,6 +47,27 @@ describe('serializeToJsonl', () => {
     }
   });
 
+  test('reports an Error passed only in the context once, in the error field', ({ expect }) => {
+    const error = new Error('worker init failed');
+    const record = parseLine(serializeToJsonl(createEntry({ context: { clientId: 'abc', error } })));
+    expect(record.e).toContain('worker init failed');
+    expect(JSON.parse(String(record.c))).toEqual({ clientId: 'abc' });
+  });
+
+  test('keeps a context error that is not the Error the error field reports', ({ expect }) => {
+    const entry = createEntry({ error: new Error('sync failed'), context: { err: { code: 'E_TIMEOUT' } } });
+    const record = parseLine(serializeToJsonl(entry));
+    expect(record.e).toContain('sync failed');
+    expect(JSON.parse(String(record.c))).toEqual({ err: '{"code":"E_TIMEOUT"}' });
+  });
+
+  test('drops a context error already carried as the entry error', ({ expect }) => {
+    const error = new Error('boom');
+    const record = parseLine(serializeToJsonl(createEntry({ context: { clientId: 'abc', error }, error })));
+    expect(record.e).toContain('boom');
+    expect(JSON.parse(record.c as string)).toEqual({ clientId: 'abc' });
+  });
+
   test('omits optional fields when not present', ({ expect }) => {
     const record = parseLine(serializeToJsonl(createEntry({ message: 'plain' })));
     expect(record.f).toBeUndefined();

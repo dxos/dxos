@@ -3,22 +3,25 @@
 //
 
 import { type IdbLogStore, MANUAL_LOG_EXPORT_MAX_BYTES } from '@dxos/log-store-idb';
-import { downloadBlob } from '@dxos/util';
+import { downloadBlob, gzip } from '@dxos/util';
 
 export { MANUAL_LOG_EXPORT_MAX_BYTES };
 
 export const composerLogFileName = (): string =>
-  `composer-logs-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.ndjson`;
+  `composer-logs-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.ndjson.gz`;
 
 /**
- * Save an NDJSON blob to disk. Resolves false if the user cancelled the native save dialog.
+ * Save a gzipped NDJSON blob to disk. Resolves false if the user cancelled the native save dialog.
  */
-export const triggerNdjsonDownload = (blob: Blob, fileName = composerLogFileName()): Promise<boolean> =>
+export const triggerLogDownload = (blob: Blob, fileName = composerLogFileName()): Promise<boolean> =>
   downloadBlob(blob, fileName);
 
-/** Export logs for a user-initiated download, capped at {@link MANUAL_LOG_EXPORT_MAX_BYTES}. */
-export const exportManualLogDownload = (logStore: IdbLogStore): Promise<Blob> =>
-  logStore.exportBlob({ maxSize: MANUAL_LOG_EXPORT_MAX_BYTES });
+/**
+ * Export logs for a user-initiated download as gzipped NDJSON, capped at {@link MANUAL_LOG_EXPORT_MAX_BYTES}
+ * before compression.
+ */
+export const exportManualLogDownload = async (logStore: IdbLogStore): Promise<Blob> =>
+  gzip(await logStore.exportBlob({ maxSize: MANUAL_LOG_EXPORT_MAX_BYTES }));
 
 /**
  * Export buffered logs from the IDB store and save them to disk.
@@ -27,5 +30,5 @@ export const exportManualLogDownload = (logStore: IdbLogStore): Promise<Blob> =>
  */
 export const downloadLogs = async (logStore: IdbLogStore): Promise<void> => {
   const blob = await exportManualLogDownload(logStore);
-  await triggerNdjsonDownload(blob);
+  await triggerLogDownload(blob);
 };

@@ -3,3 +3,20 @@ language: typescript
 tags:
   - ts-test
   - typecheck
+
+tasks:
+  # The `manual`-tagged benches, as the perf nightly runs them, with the JSON the scorer reads. Never
+  # a PR gate and never cached: a measurement is not a pass/fail, and a cached one measured nothing.
+  bench:
+    command: pnpm exec vitest bench --run --outputJson ../../../../test-results/echo-bench/results.json
+    env:
+      DX_RUN_MANUAL_TESTS: '1'
+    deps:
+      - ^:build
+    options:
+      cache: false
+  # Scores the last `bench` run against `src/bench-score/budgets.json`; `--publish` sends it to PostHog.
+  bench-score:
+    command: node src/bench-score/cli.ts score --results ../../../../test-results/echo-bench/results.json
+    options:
+      cache: false

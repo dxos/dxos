@@ -51,6 +51,7 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       AppGraphBuilder.createExtension({
         id: 'atprotoCompanion',
+        relation: AppNode.companion,
         match: whenPublishable,
         connector: (object) =>
           Effect.succeed([
@@ -82,7 +83,7 @@ export default Capability.makeModule(
               // the registered singleton URL key — see {@link PDS_URL_KEY}.
               id: PDS_URL_KEY,
               type: PDS_NODE_TYPE,
-              data: { type: PDS_NODE_TYPE, space },
+              data: { type: PDS_NODE_TYPE, db: space.db },
               properties: {
                 label: ['pds-section.label', { ns: meta.profile.key }],
                 icon: 'ph--hard-drives--regular',

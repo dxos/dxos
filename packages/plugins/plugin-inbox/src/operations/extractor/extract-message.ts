@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
@@ -69,9 +70,12 @@ const handler: Operation.WithHandler<typeof InboxOperation.ExtractMessage> = Inb
               : undefined,
         },
       ).pipe(
-        Effect.provide(fromExtractors(extractors)),
-        Effect.provide(InboxResolver.Live),
-        Effect.provide(Database.layer(db)),
+        Effect.provide(
+          fromExtractors(extractors).pipe(
+            Layer.provideMerge(InboxResolver.Live),
+            Layer.provideMerge(Database.layer(db)),
+          ),
+        ),
       );
 
       const result = outcome.result;

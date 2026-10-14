@@ -92,7 +92,7 @@ export class TestRun extends Type.makeObject<TestRun>(DXN.make('org.dxos.type.qa
     finishedAt: Schema.optional(Schema.String),
     results: Schema.mutable(Schema.Array(Result)),
     summary: Schema.optional(Schema.String),
-  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--play-circle--regular', hue: 'green' })),
+  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--play-circle--regular', hue: 'green' }), Annotation.UserType.set()),
 ) {}
 
 export const make = (props: Obj.MakeProps<typeof TestRun>): TestRun => Obj.make(TestRun, props);

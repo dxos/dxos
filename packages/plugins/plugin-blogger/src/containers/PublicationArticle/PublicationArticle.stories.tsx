@@ -15,7 +15,7 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { withLayout } from '@dxos/react-ui/testing';
 
@@ -58,7 +58,7 @@ const meta = {
     withPluginManager({
       capabilities: [Capability.contribute(AppCapabilities.Translations, translations)],
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         StorybookPlugin.make({}),
         PreviewPlugin.make(),
         ClientPlugin.make({

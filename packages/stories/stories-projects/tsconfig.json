@@ -43,10 +43,16 @@
       "path": "../../plugins/plugin-crm"
     },
     {
+      "path": "../../plugins/plugin-github"
+    },
+    {
       "path": "../../plugins/plugin-inbox"
     },
     {
       "path": "../../plugins/plugin-markdown"
+    },
+    {
+      "path": "../../plugins/plugin-preview"
     },
     {
       "path": "../../plugins/plugin-projects"
@@ -83,6 +89,9 @@
     },
     {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-attention"
     },
     {
       "path": "../../ui/react-ui-form"

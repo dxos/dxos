@@ -12,7 +12,7 @@ import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { meta } from '#meta';
 import { DebugNodes } from '#types';
@@ -104,6 +104,7 @@ export default Capability.makeModule(
       // Debug object companion.
       AppGraphBuilder.createExtension({
         id: 'debugObject',
+        relation: AppNode.companion,
         match: AppNodeMatcher.whenEchoObject,
         connector: () =>
           Effect.succeed([
@@ -120,6 +121,7 @@ export default Capability.makeModule(
       // Object explorer deck companion.
       AppGraphBuilder.createExtension({
         id: 'spaceObjects',
+        relation: AppNode.companion,
         match: GraphNodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
@@ -130,22 +132,6 @@ export default Capability.makeModule(
               data: 'space-objects' as const,
               position: Position.last,
               mount: 'open',
-            }),
-          ]),
-      }),
-
-      // Log panel deck companion.
-      AppGraphBuilder.createExtension({
-        id: 'logs',
-        match: GraphNodeMatcher.whenRoot,
-        connector: () =>
-          Effect.succeed([
-            AppNode.makeDeckCompanion({
-              id: 'logs',
-              label: ['logs.label', { ns: meta.profile.key }],
-              icon: 'ph--list-magnifying-glass--regular',
-              data: 'logs' as const,
-              position: Position.last,
             }),
           ]),
       }),

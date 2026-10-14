@@ -4,9 +4,9 @@
 
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import type * as HttpClient from 'effect/http/HttpClient';
 import * as Layer from 'effect/Layer';
 import * as Predicate from 'effect/Predicate';
-import type * as HttpClient from 'effect/unstable/http/HttpClient';
 
 import { Jmap, JmapMail } from '#apis';
 

@@ -9,9 +9,9 @@ import * as Operation from '@dxos/compute/Operation';
 import type { JoinPanelProps } from '@dxos/shell/react';
 
 import { JOIN_DIALOG } from '../constants.ts';
-import { RecoverIdentity } from './definitions.ts';
+import * as ClientOperation from '../types/ClientOperation.ts';
 
-const handler: Operation.WithHandler<typeof RecoverIdentity> = RecoverIdentity.pipe(
+const handler: Operation.WithHandler<typeof ClientOperation.RecoverIdentity> = ClientOperation.RecoverIdentity.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
       yield* Operation.invoke(LayoutOperation.UpdateDialog, {

@@ -3,4 +3,3 @@
 //
 
 export * from './load-game.ts';
-export * as GameUtil from './load-game.ts';

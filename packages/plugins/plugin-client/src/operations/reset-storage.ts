@@ -8,9 +8,9 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 
 import { RESET_DIALOG } from '../constants.ts';
-import { ResetStorage } from './definitions.ts';
+import * as ClientOperation from '../types/ClientOperation.ts';
 
-const handler: Operation.WithHandler<typeof ResetStorage> = ResetStorage.pipe(
+const handler: Operation.WithHandler<typeof ClientOperation.ResetStorage> = ClientOperation.ResetStorage.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (data) {
       yield* Operation.invoke(LayoutOperation.UpdateDialog, {
@@ -18,6 +18,7 @@ const handler: Operation.WithHandler<typeof ResetStorage> = ResetStorage.pipe(
         blockAlign: 'start',
         props: {
           mode: data.mode ?? 'reset-storage',
+          invitationCode: data.invitationCode,
         },
       });
     }),

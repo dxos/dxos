@@ -19,7 +19,7 @@ import { Text } from '@dxos/schema';
 import { Message, Outline, Task } from '@dxos/types';
 
 import { PlanningHandlers } from './operations/index.ts';
-import PlanningSkill from './skill.ts';
+import * as PlanningSkill from './PlanningSkill.ts';
 
 EntityId.dangerouslyDisableRandomness();
 

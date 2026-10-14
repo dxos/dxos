@@ -49,6 +49,8 @@ fn main() {
             "set_preferred_audio_input",
             "start_microphone_bridge",
             "stop_microphone_bridge",
+            "login_passkey",
+            "register_passkey",
         ])),
     )
     .expect("failed to run tauri-build");

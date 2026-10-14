@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Skill from '@dxos/compute/Skill';
 import { Obj, Ref } from '@dxos/echo';
 import type * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
-import { scaffoldProject } from '@dxos/plugin-projects/templates';
+import * as Templates from '@dxos/plugin-projects/Templates';
 import { Task } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -41,17 +41,15 @@ export const studioTemplate: ProjectCapabilities.Template = {
   icon: 'ph--paint-brush--regular',
   scaffold: ({ name }) =>
     Effect.sync(() => {
-      const project = scaffoldProject({
+      const project = Templates.scaffoldProject({
         name,
         text: STUDIO_INSTRUCTIONS,
         skills: PROJECT_SKILL_KEYS.map((key) => Ref.fromURI(Skill.registryURI(key))),
       });
-      const lightbox = Lightbox.make({ name: 'Lightbox' });
-      // Ref before parent edge: the ref is what declares the edge (see `Obj.setParent`).
+      const lightbox = Lightbox.make({ [Obj.Parent]: project, name: 'Lightbox' });
       Obj.update(project, (project) => {
         project.artifacts.push(Ref.make(lightbox));
       });
-      Obj.setParent(lightbox, project);
       // The ledger is owned by the project (`Project.make`), so the task rides the same cascade.
       const taskSet = project.taskSet?.target;
       if (taskSet) {

@@ -3,10 +3,10 @@
 //
 
 import * as Context from 'effect/Context';
+import * as Rpc from 'effect/rpc/Rpc';
+import type * as RpcClient from 'effect/rpc/RpcClient';
+import * as RpcGroup from 'effect/rpc/RpcGroup';
 import * as Schema from 'effect/Schema';
-import * as Rpc from 'effect/unstable/rpc/Rpc';
-import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
-import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
 import { serviceError } from './service-rpc.ts';
 import { mutableArray } from './service-schemas.ts';
@@ -67,6 +67,8 @@ export const QueryRequest = Schema.Struct({
    * JSON-encoded `QueryAST.Query`.
    */
   query: Schema.String,
+  /** The client's data subscriptions: rows of documents they hold ship without their JSON and stored changes. */
+  subscriptionIds: Schema.optional(mutableArray(Schema.String)),
 });
 export interface QueryRequest extends Schema.Schema.Type<typeof QueryRequest> {}
 
@@ -78,7 +80,8 @@ export const QueryResult = Schema.Struct({
   queueNamespace: Schema.optional(Schema.String),
   rank: Schema.Number,
   /**
-   * In the ECHO JSON object format.
+   * In the ECHO JSON object format. Sent for a feed row, and for a document row the client can back
+   * with {@link heads} and {@link bytes}.
    */
   documentJson: Schema.optional(Schema.String),
   /**
@@ -89,12 +92,41 @@ export const QueryResult = Schema.Struct({
    * Number of records in this record's group within the result set. Present iff the query has an aggregate clause.
    */
   groupCount: Schema.optional(Schema.Number),
+  /**
+   * JSON-encoded map of aggregate name to scalar value. Present iff this record stands for a whole
+   * group rather than one object: the query declared no `items` aggregate, so the host collapsed the
+   * group and no object fields (`documentJson`, `documentId`, `queueId`) are sent; `id` is then the
+   * serialized group key.
+   */
+  aggregates: Schema.optional(Schema.String),
+  /**
+   * JSON-encoded plain record for a result that is not an entity (an Automerge change selected by
+   * `Filter.changes`); no object fields are sent, and `id` is the record's own identity.
+   */
+  recordJson: Schema.optional(Schema.String),
+  /** Heads of the document the index read a document row's {@link documentJson} at. */
+  heads: Schema.optional(mutableArray(Schema.String)),
+  /**
+   * The document's Automerge bytes as storage holds them, which may be ahead of {@link heads}; sent with
+   * {@link documentJson} for a document that holds only this object. The client loads them when it first
+   * writes to the object, and makes every write of that update at {@link heads} when the bytes hold them.
+   */
+  bytes: Schema.optional(Schema.Uint8Array),
+  /** Unix ms of the object's creation, sent with a document row's {@link bytes}. */
+  createdAt: Schema.optional(Schema.Number),
+  /** Unix ms of the object's last change, sent with a document row's {@link bytes}. */
+  updatedAt: Schema.optional(Schema.Number),
 });
 export interface QueryResult extends Schema.Schema.Type<typeof QueryResult> {}
 
 export const QueryResponse = Schema.Struct({
   queryId: Schema.optional(Schema.String),
   results: Schema.optional(mutableArray(QueryResult)),
+  /**
+   * The reactive query re-ran and its result is the one last sent; `results` is omitted. Lets a client
+   * learn its earlier answer is current again without a resend.
+   */
+  unchanged: Schema.optional(Schema.Boolean),
 });
 export interface QueryResponse extends Schema.Schema.Type<typeof QueryResponse> {}
 

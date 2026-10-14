@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Resource } from '@dxos/react-ui';
+import type * as Theme from '@dxos/react-ui/Theme';
 // TODO(burdon): Rename translationKey.
 import { osTranslations } from '@dxos/ui-theme';
 
@@ -98,6 +98,7 @@ export const translations = [
         'back.label': 'Back',
         'next.label': 'Next',
         'open.label': 'Open',
+        'add-to-collection.label': 'Add to collection',
         'close.label': 'Close',
         'auth-choices.label': 'Choose an identity',
         'create-identity.label': 'Create an identity',
@@ -133,7 +134,7 @@ export const translations = [
         'delete.label': 'Delete',
         'delete-object.description': 'Delete item?',
         'reset.label': 'Start over',
-        'auth-code-input.label': 'Enter the verification code',
+        'auth-code-input.label': 'Enter the verification code.',
         'invitation-input.label': 'Paste an invitation code or URL',
         'create-device-invitation.label': 'Invite',
         'create-space-invitation.label': 'Invite',
@@ -149,7 +150,7 @@ export const translations = [
         'open-sidebar.label': 'Open sidebar',
         'close-sidebar.label': 'Close sidebar',
         'welcome.message': 'Welcome',
-        'selecting-identity.heading': 'Selecting identity',
+        'selecting-identity.heading': 'Identity',
         'toggle-expand.label': 'Toggle expand',
         'expand.label': 'Expand',
         'collapse.label': 'Collapse',
@@ -159,4 +160,4 @@ export const translations = [
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

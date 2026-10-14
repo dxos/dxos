@@ -10,9 +10,10 @@ import * as EffectFunction from 'effect/Function';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 
-import { type Database, Filter, Query, type QueryAST, Scope, Type } from '@dxos/echo';
-import { ReferenceAnnotationId, type ReferenceAnnotationValue, getTypeAnnotation } from '@dxos/echo/Annotation';
-import { EffectEx, SchemaAST, SchemaEx } from '@dxos/effect';
+import { Annotation, type Database, Filter, Query, type QueryAST, Scope, Type } from '@dxos/echo';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Person } from '@dxos/types';
@@ -80,9 +81,9 @@ const resolveType = (
             // v4 annotations are a plain record, so the getter returns the value or `undefined`.
             Option.flatMap((property) =>
               Option.fromNullishOr(
-                SchemaAST.getAnnotation<ReferenceAnnotationValue>(
+                SchemaAST.getAnnotation<Annotation.ReferenceAnnotationValue>(
                   SchemaEx.unwrapOptional(property.type),
-                  ReferenceAnnotationId,
+                  Annotation.ReferenceAnnotationId,
                 ),
               ),
             ),
@@ -107,7 +108,7 @@ const resolveType = (
       resolveType(anchor, resolve).pipe(
         Effect.map((base) =>
           base.pipe(
-            Option.map((type) => getTypeAnnotation(Type.getSchema(type))),
+            Option.map((type) => Annotation.getTypeAnnotation(Type.getSchema(type))),
             Option.flatMap((annotation) =>
               Option.fromNullishOr(direction === 'source' ? annotation?.sourceSchema : annotation?.targetSchema),
             ),

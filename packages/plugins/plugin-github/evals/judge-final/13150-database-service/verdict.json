@@ -1,0 +1,26 @@
+{
+  "A": {
+    "order": 4,
+    "why": 4,
+    "load": 4,
+    "trust": 3,
+    "reasons": {
+      "order": "It opens with the `services: [Capability.Service, Database.Service]` declaration in SpaceOperation.ts and then orders the call-site hunks by how each obtains `spaceId` (db in scope, `Obj.getDatabase`, create-object cleanup using `options.db.spaceId`), which is a real organizing principle rather than file order — but the substantive handler rewrite in `remove-objects.ts` (Database.Service, `ref.peek()`, `loadRootCollection`) and its new test are never shown, so the true core is missing from the front.",
+      "why": "Group headers carry genuine constraints — \"A cleanup path that removes an object it just failed to fully create already has the space that created it, from the same options it used to create the object\" and \"A callback that reads `db` now depends on it, so its `useCallback` dependency list grows to match\" — though the opening claim that the change avoids \"silently operating on the wrong space\" is not what the old code did (it tripped an invariant).",
+      "load": "A reader meets the service declaration, then each call-site family with its spaceId source named before the hunk, so no term arrives unexplained; the only stumble is the \"Effect-based caller\" heading preceding a React `useCallback` hunk.",
+      "trust": "`ConnectorCompanion.tsx` is presented under \"An Effect-based caller passes the same `db?.spaceId` through its generator instead of a hook dependency array\" when the patch shows it is a `useCallback` whose deps become `[invokePromise, subject, db]`, and the intro's \"every in-repo caller passes `spaceId`\" is paired with a list that silently omits `ConnectionArticle.tsx` and plugin-blogger's `app-graph-builder.ts`."
+    }
+  },
+  "B": {
+    "order": 3,
+    "why": 3,
+    "load": 4,
+    "trust": 3,
+    "reasons": {
+      "order": "It leads with the SpaceOperation.ts services change and then shows three sample call sites (space collections, inbox EventArticle, table TableArticle) before summarizing the rest, which is core-first for what it covers, but the handler rewrite in `remove-objects.ts` — the change that actually consumes `Database.Service`, swaps `ref.target` for `ref.peek()` and adds `loadRootCollection` — plus the new `remove-objects.test.ts` are absent entirely.",
+      "why": "The section on the declaration quotes and explains the deleted comment (\"The space comes from the input itself\") against the headless-host failure, which is a real constraint; the call-site section, however, mostly restates that a third argument is now required without saying why particular sources were chosen.",
+      "load": "Short, linear, and each new idea (invoke options, dependency arrays) is introduced before use; a first-time reader can finish it in one pass, at the cost of never seeing most of the hunks.",
+      "trust": "\"Most call sites read `spaceId` off `Obj.getDatabase(object)?.spaceId`\" is wrong — the patch shows more sites using an in-scope `db?.spaceId` or `options.db.spaceId` than `Obj.getDatabase` — and \"roughly a dozen call sites\" undercounts the ~17 invocations changed."
+    }
+  }
+}

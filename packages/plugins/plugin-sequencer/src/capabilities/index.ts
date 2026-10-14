@@ -9,9 +9,6 @@ import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../../PLUGIN.mdl?raw';
-
 // Both node and workerd invoke the Score Read/Write operations behind the sequencer skill's tool
 // calls, so the handler has to be reachable headlessly, not just from the browser surface.
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
@@ -27,6 +24,6 @@ export const Translations = AppCapability.translations(translations);
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
   path: 'PLUGIN.mdl',
-  content: pluginSpec,
+  content: () => import('../../PLUGIN.mdl?raw'),
   mimeType: 'application/x-mdl',
 });

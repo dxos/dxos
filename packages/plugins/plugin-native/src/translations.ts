@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Resource } from '@dxos/react-ui';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
 
@@ -12,14 +12,14 @@ export const translations = [
       [meta.profile.key]: {
         'update-ready.label': 'Ready to update',
         'update-ready.description': 'A new version of Composer is available.',
-        'update.label': 'Update',
+        'update.label': 'Restart to update',
         'update.alt': 'Relaunch the app to update',
         'settings.updates.label': 'Updates',
         'settings.updates.check.label': 'Check for updates',
         'settings.updates.checking.label': 'Checking…',
         'settings.updates.update-now.label': 'Update now',
         'settings.updates.downloading.label': 'Downloading…',
-        'settings.updates.relaunch.label': 'Restart to install',
+        'settings.updates.relaunch.label': 'Restart to update',
         'settings.updates.idle.message': 'Check now for a newer version of Composer.',
         'settings.updates.checking.message': 'Checking for updates…',
         'settings.updates.up-to-date.message': 'You are running the latest version of Composer. Checked {{checkedAt}}.',
@@ -32,4 +32,4 @@ export const translations = [
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

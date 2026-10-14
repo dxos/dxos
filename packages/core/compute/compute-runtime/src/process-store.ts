@@ -3,9 +3,9 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as KeyValueStore from 'effect/persistence/KeyValueStore';
 import * as Schema from 'effect/Schema';
 import * as Semaphore from 'effect/Semaphore';
-import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
 
 import * as Process from '@dxos/compute/Process';
 import { Annotation } from '@dxos/echo';
@@ -57,6 +57,8 @@ export const PersistedProcess = Schema.Struct({
     conversation: Schema.optional(Schema.String),
   }),
   parentId: Schema.NullOr(Process.ID),
+  // Who the process's writes are attributed to (`Database.Origin`); absent on records written before it existed.
+  origin: Schema.optional(Schema.Literals(['user', 'system', 'unknown'])),
   state: Schema.Enum(Process.State),
   alarmDueAt: Schema.NullOr(Schema.Number),
   events: Schema.Array(PersistedEvent),
@@ -128,13 +130,21 @@ export class ProcessStore {
     });
   }
 
-  /** Persists a process record, adding it to the index if it is not already present. */
+  /**
+   * Persists a process record, adding it to the index if it is not already present.
+   *
+   * The index is read while the record is written, and written only once the record has landed: two
+   * storage round trips on the spawn path rather than three, without an index entry ever naming a
+   * record that is not there.
+   */
   putProcess(record: PersistedProcess): Effect.Effect<void> {
     return this.#lock(record.id).withPermits(1)(
       Effect.gen({ self: this }, function* () {
         const encoded = yield* Schema.encodeEffect(RecordSchema)(record).pipe(Effect.orDie);
-        yield* this.#kv.set(recordKey(record.id), encoded).pipe(Effect.orDie);
-        const ids = yield* this.listProcessIds();
+        const [, ids] = yield* Effect.all(
+          [this.#kv.set(recordKey(record.id), encoded).pipe(Effect.orDie), this.listProcessIds()],
+          { concurrency: 'unbounded' },
+        );
         if (!ids.includes(record.id)) {
           const nextIndex = yield* Schema.encodeEffect(IndexSchema)([...ids, record.id]).pipe(Effect.orDie);
           yield* this.#kv.set(INDEX_KEY, nextIndex).pipe(Effect.orDie);

@@ -2,16 +2,20 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
+import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 import { describe, expect, expectTypeOf, test } from 'vitest';
 
 import { EID } from '@dxos/keys';
 
+import type * as Change from './Change.ts';
 import * as Entity from './Entity.ts';
-import { SnapshotKindId } from './internal/index.ts';
+import { getProxyTarget } from './internal/common/proxy/proxy-utils.ts';
+import { EventId } from './internal/common/proxy/symbols.ts';
+import { RefTypeId, SnapshotKindId } from './internal/index.ts';
 import * as Obj from './Obj.ts';
 import * as Ref from './Ref.ts';
 import * as Relation from './Relation.ts';
+import * as Tag from './Tag.ts';
 import { TestSchema } from './testing/index.ts';
 import type * as Type from './Type.ts';
 
@@ -590,7 +594,41 @@ describe('Obj', () => {
     });
   });
 
+  describe('atom', () => {
+    test('an unobserved atom is released by its registry', async ({ expect }) => {
+      const registry = AtomRegistry.make();
+      const obj = Obj.make(TestSchema.Person, { name: 'Alice' });
+      registry.subscribe(Obj.atom(obj), () => {}, { immediate: true })();
+      await settle();
+      expect(registry.getNodes().size).toBe(0);
+    });
+
+    test('a ref atom removed before its target loads leaves no subscription', async ({ expect }) => {
+      const registry = AtomRegistry.make();
+      const obj = Obj.make(TestSchema.Person, { name: 'Alice' });
+      const listeners = () => (getProxyTarget(obj) as any)[EventId].listenerCount();
+      const baseline = listeners();
+      let resolve!: (target: TestSchema.Person) => void;
+      const load = new Promise<TestSchema.Person>((resolveLoad) => (resolve = resolveLoad));
+      const ref = { [RefTypeId]: RefTypeId, target: undefined, onResolved: () => () => {}, load: () => load } as any;
+
+      registry.subscribe(Obj.atom(ref), () => {}, { immediate: true })();
+      await settle();
+      resolve(obj);
+      await settle();
+      expect(listeners()).toBe(baseline);
+    });
+  });
+
   describe('atomProperty', () => {
+    test('is one atom per object and key', ({ expect }) => {
+      const obj = Obj.make(TestSchema.Person, { name: 'Alice' });
+      const ref = Ref.make(obj);
+      expect(Obj.atomProperty(obj, 'name')).toBe(Obj.atomProperty(obj, 'name'));
+      expect(Obj.atomProperty(obj, 'name')).not.toBe(Obj.atomProperty(obj, 'email'));
+      expect(Obj.atomProperty(ref, 'name')).toBe(Obj.atomProperty(Ref.make(obj), 'name'));
+    });
+
     test('fires only when the observed property changes', ({ expect }) => {
       const registry = AtomRegistry.make();
       const obj = Obj.make(TestSchema.Person, { name: 'Alice', tasks: [] });
@@ -679,6 +717,45 @@ describe('Obj', () => {
         obj.employer = Ref.make(org).noInline();
       });
       expect(fires).toBe(baseline + 1);
+    });
+  });
+
+  describe('tagsAtom', () => {
+    test('fires only when the tag list changes', ({ expect }) => {
+      const registry = AtomRegistry.make();
+      const urgent = Tag.make({ label: 'urgent' });
+      const later = Tag.make({ label: 'later' });
+      const obj = Obj.make(TestSchema.Person, { name: 'Alice' });
+
+      const tagsAtom = Obj.tagsAtom(obj);
+      let fires = 0;
+      registry.subscribe(tagsAtom, () => {
+        fires++;
+      });
+      expect(registry.get(tagsAtom)).toEqual([]);
+      const baseline = fires;
+
+      Obj.update(obj, (obj) => {
+        obj.name = 'Bob';
+      });
+      expect(fires).toBe(baseline);
+
+      Obj.update(obj, (obj) => {
+        Obj.getMeta(obj).tags.push(Ref.make(urgent));
+      });
+      expect(fires).toBe(baseline + 1);
+      expect(registry.get(tagsAtom).map((ref) => ref.uri.toString())).toEqual([Ref.make(urgent).uri.toString()]);
+
+      Obj.update(obj, (obj) => {
+        Obj.getMeta(obj).tags.splice(0, 1, Ref.make(urgent));
+      });
+      expect(fires).toBe(baseline + 1);
+
+      Obj.update(obj, (obj) => {
+        Obj.getMeta(obj).tags.push(Ref.make(later));
+      });
+      expect(fires).toBe(baseline + 2);
+      expect(registry.get(tagsAtom)).toHaveLength(2);
     });
   });
 
@@ -811,3 +888,37 @@ describe('Obj', () => {
     });
   });
 });
+
+describe('Obj.getChanges', () => {
+  test('requires an object bound to a database', ({ expect }) => {
+    const task = Obj.make(TestSchema.Task, { title: 'draft' });
+    expect(() => Obj.getChanges(task)).toThrow('not bound to a database');
+    expect(() => Obj.getChanges(task, { property: 'title' })).toThrow('not bound to a database');
+  });
+
+  test('types before/after as the object snapshot, or as the selected property', () => {
+    // Type-level only: never invoked, since the object has no database.
+    const _types = (task: TestSchema.Task) => {
+      const [change] = Obj.getChanges(task);
+      expectTypeOf(change.before).toEqualTypeOf<Obj.Snapshot<TestSchema.Task> | undefined>();
+      expectTypeOf(change.after).toEqualTypeOf<Obj.Snapshot<TestSchema.Task> | undefined>();
+      expectTypeOf(change.heads).toEqualTypeOf<readonly string[]>();
+      expectTypeOf(change).toEqualTypeOf<Change.ValueChange<Obj.Snapshot<TestSchema.Task>>>();
+
+      const [titleChange] = Obj.getChanges(task, { property: 'title' });
+      expectTypeOf(titleChange.after).toEqualTypeOf<string | undefined>();
+      expectTypeOf(titleChange).toEqualTypeOf<Change.Change<string | undefined>>();
+
+      // @ts-expect-error not a property of Task.
+      Obj.getChanges(task, { property: 'status' });
+    };
+
+    // With no type argument, `Change.Change` stays the `Filter.changes` query row.
+    expectTypeOf<Change.Change>().toHaveProperty('ops');
+    expectTypeOf<Change.Change>().not.toHaveProperty('before');
+    expectTypeOf<Change.Change<number>>().toHaveProperty('before').toEqualTypeOf<number | undefined>();
+  });
+});
+
+// The registry removes nodes on `setImmediate`.
+const settle = () => new Promise((resolve) => setImmediate(resolve));

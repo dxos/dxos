@@ -44,3 +44,13 @@ are (event → session → task).
 - [ ] **TracePanel `resolveLabel` matches feed ids but `TargetAnnotation` is the chat URI (§7.4)**.
 - [ ] **Sub-agent trace events carry no `meta.conversation` (§7.5)**; their feeds are unparented (§7.6).
 - [ ] **`onComplete` writes `done` directly, bypassing `finishStatus`/reviewers (§7.3)**.
+
+## Agent simulation (AgentSimulation stories, `plugin-projects/src/testing/AgentSimulator.ts`)
+
+- [x] Scripted agent (`AgentSimulator`) driving delegation offline: `sequential`, `concurrent`, `withQuestion` strategies.
+- [x] Timeline: no node for the wait before a task is first picked up; concurrent task segments
+      (work while several are open stays on the session); sub-tasks nest under their parent task.
+- [x] Gantt: a session is its band's header row (`GanttGroup.header`), not a lane of its own.
+- [x] Answering a question from the task pane resumes the chat that asked (`QuestionResumer`).
+- [ ] Simulator variant: the session re-orders tasks or creates task dependencies as it discovers them.
+- [ ] Simulator variant: the session delegates a task to a new session (sub-agent band nested under its parent).

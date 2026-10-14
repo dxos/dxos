@@ -13,6 +13,10 @@ RUN apt-get update \
     libpng++-dev \
     libxtst-dev \
     python3 \
+    # OS sandbox for plugin-sandbox's local backend (bubblewrap + its proxy bridge + glob expansion).
+    bubblewrap \
+    ripgrep \
+    socat \
     sudo \
     unzip \
     xz-utils

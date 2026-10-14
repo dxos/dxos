@@ -3,18 +3,18 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphNode from '@dxos/graph/GraphNode';
-import { COMMANDS_DIALOG } from '@dxos/plugin-navtree/meta';
+import * as NavTreeSurface from '@dxos/plugin-navtree/NavTreeSurface';
 
 import { SpotlightCapabilities } from '#types';
 
 const defaultState: SpotlightCapabilities.SpotlightState = {
   dialogOpen: true,
-  dialogContent: { component: COMMANDS_DIALOG },
+  dialogContent: { component: NavTreeSurface.COMMANDS_DIALOG },
 };
 
 export default Capability.makeModule(() =>

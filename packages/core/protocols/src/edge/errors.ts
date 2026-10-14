@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+import { BaseError } from '@dxos/errors';
+
 import { type EdgeErrorData, type EdgeFailure, EdgeHttpErrorCodec, ErrorCodec } from './edge.ts';
 
-// TODO(burdon): Reconcile with @dxos/errors.
 /**
  * Error thrown when a call to the Edge service fails.
  * There 3 possible sources of failure:
@@ -13,25 +14,29 @@ import { type EdgeErrorData, type EdgeFailure, EdgeHttpErrorCodec, ErrorCodec } 
  *                               -> Unhandled exception on EDGE side, EDGE would provide serialized error in the response body.
  * 3. Processing failure -> Unhandled exception on client side while processing the response.
  */
-export class EdgeCallFailedError extends Error {
+export class EdgeCallFailedError extends BaseError.extend('EdgeCallFailedError', 'EDGE call failed.') {
   public static fromUnsuccessfulResponse(response: Response, body: EdgeFailure): EdgeCallFailedError {
     const error = new EdgeCallFailedError({
       message: body.message,
       data: body.data,
       isRetryable: body.data == null && response.headers.has('Retry-After'),
       retryAfterMs: getRetryAfterMillis(response),
+      status: response.status,
       cause: body.error ? ErrorCodec.decode(body.error) : undefined,
     });
 
     return error;
   }
 
-  public static async fromHttpFailure(response: Response): Promise<EdgeCallFailedError> {
+  /** Reads the response body, unless `text` is the body already read. */
+  public static async fromHttpFailure(response: Response, text?: string): Promise<EdgeCallFailedError> {
     return new EdgeCallFailedError({
       message: `HTTP code ${response.status}: ${response.statusText}.`,
       isRetryable: isRetryableCode(response.status),
       retryAfterMs: getRetryAfterMillis(response),
-      cause: await EdgeHttpErrorCodec.decode(response),
+      status: response.status,
+      cause:
+        text === undefined ? await EdgeHttpErrorCodec.decode(response) : EdgeHttpErrorCodec.decodeText(response, text),
     });
   }
 
@@ -46,18 +51,21 @@ export class EdgeCallFailedError extends Error {
   readonly data?: EdgeErrorData;
   readonly isRetryable?: boolean;
   readonly retryAfterMs?: number;
+  /** HTTP status of the response, absent when no response arrived (a network or client-side failure). */
+  readonly status?: number;
 
   constructor(args: {
     message: string;
     isRetryable?: boolean;
     data?: EdgeErrorData;
     retryAfterMs?: number;
+    status?: number;
     cause?: Error;
   }) {
-    super(args.message, { cause: args.cause });
-    this.message = args.message;
+    super({ message: args.message, cause: args.cause });
     this.data = args.data;
     this.retryAfterMs = args.retryAfterMs;
+    this.status = args.status;
     this.isRetryable = Boolean(args.isRetryable);
   }
 }
@@ -68,6 +76,16 @@ export class EdgeAuthChallengeError extends EdgeCallFailedError {
     data: EdgeErrorData,
   ) {
     super({ message: 'Auth challenge.', data, isRetryable: false });
+  }
+}
+
+/**
+ * EDGE refused this client SDK as older than the oldest it serves (`data.type` `EDGE_CLIENT_TOO_OLD`). Not
+ * retryable: every retry carries the same version, and only updating the app clears it.
+ */
+export class EdgeClientTooOldError extends EdgeCallFailedError {
+  constructor(body: EdgeFailure, status?: number) {
+    super({ message: body.message, data: body.data, status, isRetryable: false });
   }
 }
 

@@ -12,6 +12,15 @@ reviewId: f8f2889b
 
 _0 error(s), 2 warning(s)._
 
+## Index
+
+<!-- `- <id> - unresolved|ignored|resolved - <rule> - <file:line[:col]>` -->
+
+- f8f2889b-1 - resolved - harness-script-hygiene - .agents/skills/agentic-review/lib/store.mjs:117
+- f8f2889b-2 - resolved - harness-script-hygiene - .agents/skills/agentic-review/scripts/finalize.mjs:199
+
+## Issues
+
 # WARN f8f2889b-1 harness-script-hygiene `.agents/skills/agentic-review/lib/store.mjs:117`
 
 The `catch { return []; }` in `ruleIdsFromReviewDir`'s `GROUPS_MANIFEST` fallback swallows any `readFileSync`/`JSON.parse` failure — including a corrupt `groups.json` — and silently treats it as "no rules covered," with no comment marking this as a deliberate best-effort skip. This is the harness-script-hygiene rule's swallowed-catch case, and it directly contradicts `readReview` a few lines above in the same file, which deliberately *rethrows* on corruption specifically so a bad file is never mistaken for a missing one. Fix by either propagating the error (consistent with `readReview`) or adding a comment explaining why silently discarding manifest-parse failures is safe here.

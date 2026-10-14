@@ -15,7 +15,7 @@ import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { type Answer, AnswerSchema } from '@dxos/protocols/buf/dxos/mesh/swarm_pb';
 import { ComplexMap, isNonNullable } from '@dxos/util';
 
-import { type OfferMessage, type SignalMessage, SwarmMessenger } from '../signal/index.ts';
+import { type CloseMessage, type OfferMessage, type SignalMessage, SwarmMessenger } from '../signal/index.ts';
 import { type SwarmController, type Topology } from '../topology/index.ts';
 import { type TransportFactory } from '../transport/index.ts';
 import { type Topic } from '../types.ts';
@@ -94,6 +94,7 @@ export class Swarm {
       sendMessage: async (ctx, msg) => await this._messenger.sendMessage(ctx, msg),
       onSignal: async (ctx, msg) => await this.onSignal(ctx, msg),
       onOffer: async (ctx, msg) => await this.onOffer(ctx, msg),
+      onClose: async (ctx, msg) => await this.onClose(ctx, msg),
       topic: this._topic,
     });
   }
@@ -257,6 +258,21 @@ export class Swarm {
 
     const peer = this._getOrCreatePeer(message.author);
     await peer.onSignal(ctx, message);
+  }
+
+  async onClose(ctx: Context, message: CloseMessage): Promise<void> {
+    log('close', { message });
+    if (this._ctx.disposed) {
+      log('ignored for offline swarm');
+      return;
+    }
+    invariant(
+      message.recipient.peerKey === this._ownPeer.peerKey,
+      `Invalid close peer id expected=${this.ownPeerId}, actual=${message.recipient}`,
+    );
+    invariant(message.topic?.equals(this._topic));
+
+    await this._peers.get(message.author)?.onClose(ctx, message);
   }
 
   // For debug purposes

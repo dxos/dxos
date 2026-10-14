@@ -94,7 +94,6 @@ export const translations = [
         'term.long.label': 'Long',
         'term.short.label': 'Short',
         'copy-xml.label': 'Copy raw XML',
-        'copied.label': 'Copied',
         'sync-lots.label': 'Sync lots',
         'sync-lots.syncing.label': 'Syncing lots…',
         'fundamentals.heading': 'Fundamentals',

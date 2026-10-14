@@ -4,7 +4,10 @@
 
 import React from 'react';
 
-import { type ButtonProps, Icon, type IconProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import type * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import type * as Util from '@dxos/react-ui/Util';
 import { osTranslations } from '@dxos/ui-theme';
 import { iconValues } from '@dxos/ui-types';
 
@@ -15,14 +18,14 @@ export type IconPickerProps = {
   defaultValue?: string;
   value?: string;
   onChange?: (nextHue: string) => void;
-  onReset?: ButtonProps['onClick'];
+  onReset?: Button.RootProps['onClick'];
 } & Pick<
   PickerButtonProps,
   'disabled' | 'rootVariant' | 'iconSize' | 'defaultValue' | 'value' | 'onChange' | 'onReset'
 >;
 
-export const IconPicker = ({ ...props }: ThemedClassName<IconPickerProps>) => {
-  const { t } = useTranslation(osTranslations);
+export const IconPicker = ({ ...props }: Util.ThemedClassName<IconPickerProps>) => {
+  const { t } = Hooks.useTranslation(osTranslations);
 
   return (
     <PickerButton
@@ -35,6 +38,6 @@ export const IconPicker = ({ ...props }: ThemedClassName<IconPickerProps>) => {
   );
 };
 
-const IconPreview = ({ value, size }: { value: string; size?: IconProps['size'] }) => {
-  return <Icon icon={`ph--${value}--regular`} size={size} />;
+const IconPreview = ({ value, size }: { value: string; size?: Icon.IconProps['size'] }) => {
+  return <Icon.Icon icon={`ph--${value}--regular`} size={size} />;
 };

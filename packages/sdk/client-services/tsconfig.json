@@ -31,6 +31,9 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/errors"
+    },
+    {
       "path": "../../common/feed-store"
     },
     {
@@ -67,6 +70,15 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/compute/compute"
+    },
+    {
+      "path": "../../core/compute/compute-runtime"
+    },
+    {
+      "path": "../../core/echo/blob"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
@@ -100,6 +112,9 @@
       "path": "../../core/mesh/network-manager"
     },
     {
+      "path": "../../core/mesh/rpc"
+    },
+    {
       "path": "../../core/mesh/teleport"
     },
     {
@@ -116,6 +131,9 @@
     },
     {
       "path": "../config"
+    },
+    {
+      "path": "../types"
     }
   ]
 }

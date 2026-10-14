@@ -23,6 +23,9 @@
       "path": "../../../common/effect"
     },
     {
+      "path": "../../../common/errors"
+    },
+    {
       "path": "../../../common/invariant"
     },
     {
@@ -60,9 +63,6 @@
     },
     {
       "path": "../echo-protocol"
-    },
-    {
-      "path": "../index-core"
     }
   ]
 }

@@ -28,7 +28,7 @@ import {
   keymap,
 } from '@codemirror/view';
 import { type SyntaxNodeRef } from '@lezer/common';
-import { type FunctionComponent } from 'react';
+import { type FunctionComponent, type ReactNode } from 'react';
 
 import { log } from '@dxos/log';
 
@@ -63,16 +63,18 @@ export interface WidgetStateManager {
   updateWidget<T>(id: string, props: StateDispatch<T>): void;
 }
 
-export type WidgetEventHandler<TEvent = any> = (event: TEvent) => void;
+export type WidgetEventHandler<TEvent = unknown> = (event: TEvent) => void;
 
 /**
- * Props every widget receives: what matched (`_tag`), where, and the host's context.
+ * Props every widget receives: what matched (`_tag`), where, and the host's context. `TProps`
+ * defaults to an index signature (rather than `unknown`) so a matcher can carry the tag's own
+ * caller-defined attributes (see `xml-tags.ts`) without narrowing them first.
  */
-export type WidgetProps<TProps = any, TContext = any> = TProps & {
+export type WidgetProps<TProps = Record<string, unknown>, TContext = unknown> = TProps & {
   _tag: string;
-  view?: EditorView;
+  view?: EditorView | null;
   range: Range;
-  children?: any[];
+  children?: ReactNode[];
   context?: TContext;
   onEvent?: WidgetEventHandler;
 };
@@ -121,12 +123,19 @@ export type WidgetDef<TProps extends WidgetProps = WidgetProps> = {
    * since a pinned box cannot open and clips what it holds.
    */
   heightMode?: 'fixed' | 'min';
+
+  /**
+   * Keep a block's placeholder (and portal) mounted across viewport culls and decoration rebuilds
+   * even without a reserved height — otherwise only known-height blocks are kept. For a bounded set
+   * of widgets (a document's embeds), not a stream: every kept block stays mounted off screen.
+   */
+  keepAlive?: boolean;
 };
 
 export type WidgetState = {
   id: string;
   root: HTMLElement;
-  props: any;
+  props: WidgetProps;
   Component: FunctionComponent<WidgetProps>;
 };
 
@@ -139,7 +148,7 @@ export type { WidgetNotifier };
 /**
  * Update context.
  */
-export const widgetContextEffect = StateEffect.define<any>();
+export const widgetContextEffect = StateEffect.define<unknown>();
 
 /**
  * Reset all state.
@@ -152,21 +161,26 @@ export const widgetResetEffect = StateEffect.define();
  */
 export const widgetRebuildEffect = StateEffect.define();
 
+/** A widget update either replaces the accumulated props outright or derives them from the prior value. */
+type WidgetPropsUpdate = Partial<WidgetProps> | ((prev: Partial<WidgetProps> | undefined) => Partial<WidgetProps>);
+
 /**
  * Update widget.
  */
-export const widgetUpdateEffect = StateEffect.define<{ id: string; value: any }>();
+export const widgetUpdateEffect = StateEffect.define<{ id: string; value: WidgetPropsUpdate }>();
 
 //
 // Matchers
 //
 
-type WidgetStateMap = Record<string, any>;
+/** Widget props updates accumulated by id, merged over a widget's baked props at mount/re-render. */
+type WidgetStateMap = Record<string, Partial<WidgetProps>>;
 
 /** What a matcher sees for one node of the tree walk. */
 export type WidgetMatchContext = {
   state: EditorState;
-  context: any;
+  /** Opaque host-supplied value (theme, callbacks, …); narrowed by the host's own widget code. */
+  context: unknown;
   widgetStateMap: WidgetStateMap;
   notifier: WidgetNotifier;
   /** Per-build scratch counters, for ids that must not depend on document position. */
@@ -267,7 +281,7 @@ export const createWidget = <TProps extends WidgetProps>({
     // Known-height block widgets get their reserved height so the placeholder's fixed-height
     // keep-alive applies before the component mounts.
     const blockHeight = def.block ? def.estimatedHeight?.(props) : undefined;
-    return new StubWidget({
+    const widget = new StubWidget({
       id,
       Component: def.Component,
       props,
@@ -277,8 +291,10 @@ export const createWidget = <TProps extends WidgetProps>({
       block: !!def.block,
       blockHeight,
       heightMode: def.heightMode,
+      keepAlive: def.keepAlive,
       debug: def.debug,
     });
+    return widget;
   }
   return undefined;
 };
@@ -290,7 +306,7 @@ export const createWidget = <TProps extends WidgetProps>({
 /**
  * Context state.
  */
-const widgetContextStateField = StateField.define<any>({
+const widgetContextStateField = StateField.define<unknown>({
   create: () => undefined,
   update: (value, tr) => {
     for (const effect of tr.effects) {
@@ -327,6 +343,10 @@ const widgetStateMapStateField = StateField.define<WidgetStateMap>({
   },
 });
 
+/** The accumulated state a host has reported for a widget id, if any. */
+export const getWidgetState = (state: EditorState, id: string): Partial<WidgetProps> | undefined =>
+  state.field(widgetStateMapStateField, false)?.[id];
+
 /**
  * Re-applies the accumulated widget state at mount time.
  *
@@ -337,7 +357,7 @@ const widgetStateMapStateField = StateField.define<WidgetStateMap>({
  * later rebuild from replacing the instance.
  */
 const withCurrentWidgetState = (state: WidgetState): WidgetState => {
-  const view: EditorView | undefined = state.props?.view;
+  const view: EditorView | null | undefined = state.props?.view;
   const widgetState = view?.state.field(widgetStateMapStateField, false)?.[state.id];
   return widgetState ? { ...state, props: { ...state.props, ...widgetState } } : state;
 };
@@ -360,7 +380,7 @@ const createWidgetMap = (setWidgets?: WidgetHostOptions['setWidgets'], debug = f
       }
       setWidgets?.([...widgets.values()]);
     },
-    updated: (id: string, widgetState: any) => {
+    updated: (id: string, widgetState: Partial<WidgetProps>) => {
       const current = widgets.get(id);
       if (!current || !widgetState) {
         return;
@@ -409,6 +429,8 @@ type WidgetDecorationSet = {
   /** Start position of an active unclosed streaming tag (for rebuild range). */
   streamingFrom?: number;
   decorations: DecorationSet;
+  /** `decorations` as the ranges the caret skips; block widgets are widened past their line breaks. */
+  atomic: DecorationSet;
   /** Created with the field, from the host's `setWidgets`; the update plugin reports through it. */
   notifier: WidgetNotifier;
 };
@@ -436,7 +458,7 @@ const buildDecorations = (
   // first paint and its markup renders raw until a rebuild — the flash on a remounted row.
   const tree = (forceParse ? ensureSyntaxTree(state, range.to, PARSE_BUDGET) : null) ?? syntaxTree(state);
   if (!tree || (tree.type.name === 'Program' && tree.length === 0)) {
-    return { from: range.from, decorations: Decoration.none };
+    return { from: range.from, decorations: Decoration.none, atomic: Decoration.none };
   }
 
   let last = range.from;
@@ -492,7 +514,8 @@ const buildDecorations = (
     builder.add(match.from, match.to, match.decoration);
   }
 
-  return { from: last, streamingFrom, decorations: builder.finish() };
+  const decorations = builder.finish();
+  return { from: last, streamingFrom, decorations, atomic: atomicRanges(state, decorations) };
 };
 
 /**
@@ -507,7 +530,7 @@ const widgetDecorationsField = StateField.define<WidgetDecorationSet>({
     // Forced only here, so a streamed chunk is not charged for a parse it will get anyway.
     return { ...buildDecorations(state, { from: 0, to: state.doc.length }, notifier, true), notifier };
   },
-  update: ({ from, streamingFrom, decorations, notifier }, tr) => {
+  update: ({ from, streamingFrom, decorations, atomic, notifier }, tr) => {
     const rebuild = (range: Range): WidgetDecorationSet => ({
       ...buildDecorations(tr.state, range, notifier),
       notifier,
@@ -520,7 +543,7 @@ const widgetDecorationsField = StateField.define<WidgetDecorationSet>({
         if (tr.docChanged) {
           return rebuild(whole);
         }
-        return { from: 0, decorations: Decoration.none, notifier };
+        return { from: 0, decorations: Decoration.none, atomic: Decoration.none, notifier };
       }
       // Full rebuild once background parsing has advanced (no document change).
       if (effect.is(widgetRebuildEffect)) {
@@ -546,26 +569,43 @@ const widgetDecorationsField = StateField.define<WidgetDecorationSet>({
         // Rebuild from the streaming tag start (if active) so the tree walk can detect completion.
         const rebuildFrom = streamingFrom ?? from;
         const result = buildDecorations(state, { from: rebuildFrom, to: state.doc.length }, notifier);
+        const next = decorations.update({
+          // Remove old streaming decorations — they are rebuilt each tick.
+          filter: (_f, _t, deco) => !deco.spec.streaming,
+          add: decorationSetToArray(result.decorations),
+        });
         return {
           from: result.from,
           streamingFrom: result.streamingFrom,
-          decorations: decorations.update({
-            // Remove old streaming decorations — they are rebuilt each tick.
-            filter: (_f, _t, deco) => !deco.spec.streaming,
-            add: decorationSetToArray(result.decorations),
-          }),
+          decorations: next,
+          atomic: atomicRanges(state, next),
           notifier,
         };
       }
     }
 
-    return { from, streamingFrom, decorations, notifier };
+    return { from, streamingFrom, decorations, atomic, notifier };
   },
   provide: (field) => [
     EditorView.decorations.from(field, (v) => v.decorations),
-    EditorView.atomicRanges.of((view) => view.state.field(field).decorations || Decoration.none),
+    EditorView.atomicRanges.of((view) => view.state.field(field).atomic || Decoration.none),
   ],
 });
+
+/**
+ * The ranges cursor motion skips over. A block widget replaces whole lines, so both ends of its own
+ * range sit on the hidden line and the caret vanished there for two presses; widened by the line
+ * breaks on either side, a single press lands on the neighbouring line instead.
+ */
+const atomicRanges = (state: EditorState, decorations: DecorationSet): DecorationSet =>
+  Decoration.set(
+    decorationSetToArray(decorations).map((range) =>
+      range.value.spec.block
+        ? range.value.range(Math.max(0, range.from - 1), Math.min(state.doc.length, range.to + 1))
+        : range.value.range(range.from, range.to),
+    ),
+    true,
+  );
 
 //
 // Plugins

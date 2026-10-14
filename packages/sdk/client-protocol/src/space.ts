@@ -21,7 +21,7 @@ import {
 import { type EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { type SpaceSnapshot } from '@dxos/protocols/buf/dxos/echo/snapshot_pb';
 import { type MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { type Credential, type Epoch } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type Credential, type Epoch, type SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type SpacesService } from '@dxos/protocols/rpc';
 
 import { type CancellableInvitation } from './invitations/index.ts';
@@ -166,7 +166,8 @@ export interface Space extends Messenger {
   // TODO(burdon): Create invitation?
   // TODO(burdon): Factor out membership, etc.
   share(options?: Partial<Invitation>): CancellableInvitation;
-  admitContact(contact: Contact): Promise<void>;
+  /** Admits a known identity directly, without an invitation; the guest completes with `joinBySpaceKey`. */
+  admitContact(contact: Contact, role?: SpaceMember_Role): Promise<void>;
   updateMemberRole(request: Omit<SpacesService.UpdateMemberRoleRequest, 'spaceKey'>): Promise<void>;
 }
 

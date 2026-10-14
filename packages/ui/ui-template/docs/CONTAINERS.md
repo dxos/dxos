@@ -109,7 +109,7 @@ external agents share one write path.
 | Concern      | Implementation                                                                                                                                                                                         |
 | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Local state  | `selected` (`useState<string>`)                                                                                                                                                                        |
-| Derived      | `useSetTasks`: `useQuery` (`Filter.childOf`) → `useMemo` `Atom.make` ordering by the set's `tasks` array and subscribing to every member's `parentTask` (`subscribeHierarchy`) → `useAtomValue`        |
+| Derived      | `useSetTasks`: `useQuery` (`Filter.childOf`) → `useMemo` `Atom.make` ordering by the set's `tasks` array and subscribing to every member's `subtasks` (`subscribeHierarchy`) → `useAtomValue`          |
 | Hooks        | `useTranslation`, `useAttention`, `useOperationInvoker`, `useQuery`, `useAtomValue`                                                                                                                    |
 | Interactions | `handleCreate`/`handleUpdate`/`handleDelete` (operation dispatch with `spaceId` context), `handleMove` (direct model call `TaskSet.moveTask` — the one write that bypasses operations), `handleSelect` |
 
@@ -241,16 +241,16 @@ component the renderer maps a kind onto. What crosses the boundary:
 
 #### TaskSetArticle
 
-| Function                                          | Template construct                                               | Status                           |
-| ------------------------------------------------- | ---------------------------------------------------------------- | -------------------------------- |
-| Task list composition + create field              | `collection` + `control` (`R-10` parts for the tree rows)        | today (coarse)                   |
-| Selection                                         | `let machine="…selection"` (the spike's proven machine)          | today                            |
-| CRUD via `TaskOperation` verbs                    | `on-*` → operation keys — **already the template's write model** | today                            |
-| Ordered/hierarchical derivation (`useSetTasks`)   | derived typed export of the owning module                        | proposal                         |
-| Live query + per-member `parentTask` subscription | `query` binding + reactivity semantics                           | proposal (`R-2`)                 |
-| Drag reorder / `Alt`+arrow restructure            | drop lands as an operation (`handleMove`), gesture itself —      | MISSING (DnD vocabulary)         |
-| Attention-gated toolbar                           | read of app-level published state                                | proposal (module read via `use`) |
-| Article vs section chrome by role                 | `switch`/`match` on a role binding                               | today                            |
+| Function                                        | Template construct                                               | Status                           |
+| ----------------------------------------------- | ---------------------------------------------------------------- | -------------------------------- |
+| Task list composition + create field            | `collection` + `control` (`R-10` parts for the tree rows)        | today (coarse)                   |
+| Selection                                       | `let machine="…selection"` (the spike's proven machine)          | today                            |
+| CRUD via `TaskOperation` verbs                  | `on-*` → operation keys — **already the template's write model** | today                            |
+| Ordered/hierarchical derivation (`useSetTasks`) | derived typed export of the owning module                        | proposal                         |
+| Live query + per-member `subtasks` subscription | `query` binding + reactivity semantics                           | proposal (`R-2`)                 |
+| Drag reorder / `Alt`+arrow restructure          | drop lands as an operation (`handleMove`), gesture itself —      | MISSING (DnD vocabulary)         |
+| Attention-gated toolbar                         | read of app-level published state                                | proposal (module read via `use`) |
+| Article vs section chrome by role               | `switch`/`match` on a role binding                               | today                            |
 
 #### OutlineCard
 

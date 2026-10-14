@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-canvas",
-  "version": "0.11.1",
+  "version": "0.14.0",
   "description": "A canvas component.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,6 +10,7 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
@@ -17,10 +18,10 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./types": {
-      "source": "./src/types.ts",
-      "types": "./dist/types/src/types.d.ts",
-      "import": "./dist/lib/types.mjs"
+    "./scene": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/lib/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -29,16 +30,28 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/debug": "workspace:*",
+    "@atlaskit/pragmatic-drag-and-drop": "catalog:",
+    "@codemirror/state": "catalog:",
+    "@codemirror/view": "catalog:",
+    "@dxos/diagram": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/react-hooks": "workspace:*",
+    "@dxos/react-ui-editor": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-list": "workspace:*",
+    "@dxos/ui-editor": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
     "@effect/atom-react": "catalog:",
-    "bind-event-listener": "catalog:",
-    "d3": "catalog:",
-    "react-resize-detector": "catalog:",
-    "transformation-matrix": "catalog:"
+    "d3": "catalog:"
   },
   "devDependencies": {
+    "@dxos/log": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-syntax-highlighter": "workspace:*",
+    "@dxos/test-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@playwright/test": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/d3": "catalog:",
     "@types/react": "catalog:",

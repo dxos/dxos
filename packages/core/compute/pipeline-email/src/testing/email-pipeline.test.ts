@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
@@ -9,7 +10,6 @@ import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 import { existsSync } from 'node:fs';
 import { readdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -21,7 +21,7 @@ import { OllamaAiServiceLayer } from '@dxos/ai/testing';
 import * as Project from '@dxos/compute/Project';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { extractContact } from '@dxos/extractor-lib';
 import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
@@ -237,9 +237,11 @@ const logStage = (label: string): Stage.Stage<Message.Message, Message.Message> 
 
 describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', () => {
   // Model layer built ONCE so it is not rebuilt per message.
-  // `AiService.model` provides the `LanguageModel`, resolved through the local Ollama provider;
+  // `AiService.languageModel` provides the `LanguageModel`, resolved through the local Ollama provider;
   // `OllamaAiServiceLayer` provides the `AiService` it requires.
-  const modelLayer = AiService.model(MODEL, { provider: Provider.ollama.id }).pipe(Layer.provide(OllamaAiServiceLayer));
+  const modelLayer = AiService.languageModel(MODEL, { provider: Provider.ollama.id }).pipe(
+    Layer.provide(OllamaAiServiceLayer),
+  );
   const runtime = ManagedRuntime.make(modelLayer.pipe(Layer.orDie));
 
   // In-memory fact substrate for this run; shares the Ollama-backed AiService the extraction resolves

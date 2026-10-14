@@ -19,8 +19,9 @@ import { useResizeDetector } from 'react-resize-detector';
 import { List, type ListProps, type ListRowRenderer } from 'react-virtualized';
 
 import { Event } from '@dxos/async';
-import { IconButton, useTranslation } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
@@ -140,39 +141,41 @@ const CALENDAR_TOOLBAR_NAME = 'CalendarHeader';
 
 type CalendarToolbarProps = {};
 
-const CalendarToolbar = composable<HTMLDivElement, CalendarToolbarProps>(({ classNames, ...props }, forwardedRef) => {
-  const { t } = useTranslation(translationKey);
-  const { weekStartsOn, event, index, selected } = useCalendarContext(CALENDAR_TOOLBAR_NAME);
-  const top = useMemo(() => getDate(start, index ?? 0, 6, weekStartsOn), [index, weekStartsOn]);
-  const today = useMemo(() => new Date(), []);
+const CalendarToolbar = Util.composable<HTMLDivElement, CalendarToolbarProps>(
+  ({ classNames, ...props }, forwardedRef) => {
+    const { t } = Hooks.useTranslation(translationKey);
+    const { weekStartsOn, event, index, selected } = useCalendarContext(CALENDAR_TOOLBAR_NAME);
+    const top = useMemo(() => getDate(start, index ?? 0, 6, weekStartsOn), [index, weekStartsOn]);
+    const today = useMemo(() => new Date(), []);
 
-  const handleToday = useCallback(() => {
-    event.emit({ type: 'scroll', date: today });
-  }, [event, start, today]);
+    const handleToday = useCallback(() => {
+      event.emit({ type: 'scroll', date: today });
+    }, [event, start, today]);
 
-  return (
-    <div
-      {...composableProps(props, {
-        role: 'none',
-        classNames: ['shrink-0 grid! grid-cols-3 items-center dx-toolbar-surface', classNames],
-      })}
-      ref={forwardedRef}
-    >
-      <div className='flex justify-start'>
-        <IconButton
-          variant='ghost'
-          icon='ph--calendar--regular'
-          iconOnly
-          classNames='aspect-square'
-          label={t('today.button')}
-          onClick={handleToday}
-        />
+    return (
+      <div
+        {...Util.composableProps(props, {
+          role: 'none',
+          classNames: ['shrink-0 grid! grid-cols-3 items-center dx-toolbar-surface', classNames],
+        })}
+        ref={forwardedRef}
+      >
+        <div className='flex justify-start'>
+          <Button.Root
+            variant='ghost'
+            icon='ph--calendar--regular'
+            iconOnly
+            classNames='aspect-square'
+            label={t('today.button')}
+            onClick={handleToday}
+          />
+        </div>
+        <div className='flex justify-center p-2 text-fg-muted'>{format(selected ?? top, 'MMMM')}</div>
+        <div className='flex justify-end p-2 text-fg-muted'>{(selected ?? top).getFullYear()}</div>
       </div>
-      <div className='flex justify-center p-2 text-description'>{format(selected ?? top, 'MMMM')}</div>
-      <div className='flex justify-end p-2 text-description'>{(selected ?? top).getFullYear()}</div>
-    </div>
-  );
-});
+    );
+  },
+);
 
 CalendarToolbar.displayName = CALENDAR_TOOLBAR_NAME;
 
@@ -216,7 +219,7 @@ type CalendarGridProps = {
   onSelectRange?: (event: { range: Range }) => void;
 };
 
-const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
+const CalendarGrid = Util.composable<HTMLDivElement, CalendarGridProps>(
   (
     { classNames, rows, dates = [], initialDate, scrollMargin = 2, onSelect, onSelectRange, ...props },
     forwardedRef,
@@ -602,15 +605,15 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
                     onPointerUp={() => handleDayPointerUp(date)}
                   >
                     {/* Selection range */}
-                    {inRange && <div className='dx-fullscreen bg-primary-500/20' />}
+                    {inRange && <div className='dx-cover bg-primary-500/20' />}
                     {/* Month */}
                     {!dateClassNames && date.getDate() === 1 && (
-                      <span className='absolute top-0 text-xs text-description'>{format(date, 'MMM')}</span>
+                      <span className='absolute top-0 text-xs text-fg-muted'>{format(date, 'MMM')}</span>
                     )}
                     {/* Day + Marker */}
                     <div
                       className={mx(
-                        'absolute inset-1 rounded-full flex justify-center items-center text-sm text-description',
+                        'absolute inset-1 rounded-full flex justify-center items-center text-sm text-fg-muted',
                         dateClassNames,
                       )}
                     >
@@ -630,7 +633,7 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
 
     return (
       <div
-        {...composableProps(props, {
+        {...Util.composableProps(props, {
           role: 'none',
           classNames: ['flex flex-col dx-fill justify-center overflow-hidden outline-hidden', classNames],
         })}

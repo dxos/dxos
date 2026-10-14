@@ -14,9 +14,9 @@ import {
   type Identity,
   type Scene,
   applyCommands as applyContentCommands,
-  makeBuilder,
   nextIndex,
-} from '@dxos/plugin-illustrator/model';
+} from '@dxos/diagram';
+import * as IllustratorModel from '@dxos/plugin-illustrator/IllustratorModel';
 
 import { Tldraw } from '#types';
 
@@ -59,7 +59,7 @@ const handler: ContentHandler = {
   },
 };
 
-export const TldrawBuilder = makeBuilder({ schema: Tldraw.TLDRAW_SCHEMA, handler });
+export const TldrawBuilder = IllustratorModel.makeBuilder({ schema: Tldraw.TLDRAW_SCHEMA, handler });
 
 /**
  * Apply commands straight to a content map, bypassing ECHO — for tests and tooling that hold

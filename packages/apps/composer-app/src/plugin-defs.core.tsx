@@ -4,8 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { ProcessManagerPlugin } from '@dxos/app-framework';
 import type * as Plugin from '@dxos/app-framework/Plugin';
+import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
 import { type Client, type ClientServicesProvider, type Config } from '@dxos/client';
 import { type IdbLogStore } from '@dxos/log-store-idb';
@@ -16,6 +16,7 @@ import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as ConnectorPlugin from '@dxos/plugin-connector/ConnectorPlugin';
 import * as DeckPlugin from '@dxos/plugin-deck/DeckPlugin';
 import * as GraphPlugin from '@dxos/plugin-graph/GraphPlugin';
+import * as MessengerPlugin from '@dxos/plugin-messenger/MessengerPlugin';
 import * as MobilePlugin from '@dxos/plugin-mobile/MobilePlugin';
 import * as NativePlugin from '@dxos/plugin-native/NativePlugin';
 import * as NavTreePlugin from '@dxos/plugin-navtree/NavTreePlugin';
@@ -60,6 +61,8 @@ export type PluginConfig = State & {
   isStrict?: boolean;
   isPopover?: boolean;
   isMobile?: boolean;
+  /** Replaces the assistant's language models with the offline scripted model (`?model=scripted`). */
+  scriptedModel?: boolean;
 };
 
 /**
@@ -116,23 +119,6 @@ export const getCorePlugins = ({
       // The forked init is outside the render tree, so a failure or a stalled handshake reaches
       // the user only if the entry point raises it — React never sees one.
       onClientInitializationError: ({ error }) => Effect.sync(() => onFatalError?.(error)),
-      onReset: ({ target }) =>
-        Effect.sync(() => {
-          localStorage.clear();
-          if (target === 'deviceInvitation') {
-            // Carry a pending invitation code across the reset so the join can complete.
-            const url = new URL('/', window.location.origin);
-            url.searchParams.set(
-              'deviceInvitationCode',
-              new URLSearchParams(window.location.search).get('deviceInvitationCode') ?? '',
-            );
-            window.location.assign(url);
-          } else if (target === 'recoverIdentity') {
-            window.location.assign(new URL('/?recoverIdentity=true', window.location.origin));
-          } else {
-            window.location.pathname = '/';
-          }
-        }),
     }),
     // Core because it owns the connector machinery itself, not any one integration: it fires
     // `SetupConnectors` (the event every connector-contributing plugin activates on), registers the
@@ -141,16 +127,18 @@ export const getCorePlugins = ({
     ConnectorPlugin.make(),
     GraphPlugin.make(),
     ...layoutPlugins,
+    // Core because invitations reach the user only through its inbox materializer.
+    MessengerPlugin.make(),
     NavTreePlugin.make(),
     ObservabilityPlugin.make({
       namespace: appKey,
       observability: () => observability,
       downloadLogs: () => downloadLogs(logStore),
     }),
-    OnboardingPlugin.make({ generateSampleSpace: !isLocal }),
+    OnboardingPlugin.make({ generateDemoSpace: !isLocal }),
     isTauri && !isMobile && !isPopover && NativePlugin.make(),
     PreviewPlugin.make(),
-    ProcessManagerPlugin(),
+    ProcessManagerPlugin.make(),
     ProgressPlugin.make(),
     !isTauri && isPwa && PwaPlugin.make(),
     RegistryPlugin.make({ externalPlugins }),

@@ -35,17 +35,28 @@ export const findDxConfigFile = (dir: string): string | undefined =>
  * Loads a `dx.config.ts` (or `.mjs`/`.js`) file at the given `filePath`, decoding its default export
  * against the `Config2` schema — a malformed config throws a `Schema` parse error.
  *
- * The config is evaluated by a `node` subprocess and handed back as JSON, so its imports resolve in
- * the plugin's own module context — one behavior whether the caller is node (`composerPlugin`), bun,
- * or the compiled CLI, whose embedded resolver cannot reach an external `node_modules`. `Config2` is
- * pure data, so JSON carries it losslessly. node executes the TypeScript itself (type stripping), so
- * a config may only use erasable syntax — no `enum`, no `namespace`.
+ * The config is evaluated by a subprocess and handed back as JSON, so its imports resolve in the
+ * plugin's own module context — one behavior whether the caller is node (`composerPlugin`), bun, or
+ * the compiled CLI, whose embedded resolver cannot reach an external `node_modules`. Under bun the
+ * subprocess is the running executable itself, so a plugin builds on a machine without node.
+ * `Config2` is pure data, so JSON carries it losslessly. The runtime executes the TypeScript itself
+ * (type stripping), so a config may only use erasable syntax — no `enum`, no `namespace`.
  */
 export const loadDxConfig = async (filePath: string): Promise<Config2.Config> => {
   const resultPath = join(tmpdir(), `dx-config-${randomUUID()}.json`);
+  const args = [pathToFileURL(filePath).href, resultPath];
+  // `BUN_BE_BUN` makes a `bun build --compile` executable behave as the bun CLI; plain bun ignores it.
+  const { command, runtimeArgs, env } = process.versions.bun
+    ? {
+        command: process.execPath,
+        runtimeArgs: ['-e', LOADER_SCRIPT, ...args],
+        env: { ...process.env, BUN_BE_BUN: '1' },
+      }
+    : { command: 'node', runtimeArgs: ['--input-type=module', '-e', LOADER_SCRIPT, ...args], env: process.env };
   try {
-    execFileSync('node', ['--input-type=module', '-e', LOADER_SCRIPT, pathToFileURL(filePath).href, resultPath], {
+    execFileSync(command, runtimeArgs, {
       cwd: dirname(filePath),
+      env,
       // The subprocess's stdout and stderr pass through, so the config's own logs and a throwing
       // config's actual error both reach the terminal.
       stdio: ['ignore', 'inherit', 'inherit'],

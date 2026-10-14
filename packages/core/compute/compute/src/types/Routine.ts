@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/internal';
 
 import type * as Operation from '../Operation.ts';
@@ -26,7 +26,7 @@ const RunnableSpec = Schema.Struct({
 const InstructionsSpec = Schema.Struct({
   kind: Schema.Literal('instructions'),
   /** Owned by the routine: `SetParent` cascades it. */
-  instructions: Ref.Ref(Instructions.Instructions).pipe(Annotation.SetParent.set(true)),
+  instructions: Ref.Ref(Instructions.Instructions).pipe(Annotation.SetParent.set()),
 });
 
 const RoutineSpec = Schema.Union([RunnableSpec, InstructionsSpec]);
@@ -38,7 +38,7 @@ const RoutineSpec = Schema.Union([RunnableSpec, InstructionsSpec]);
 export class Routine extends Type.makeObject<Routine>(DXN.make('org.dxos.type.routine', '0.2.0'))(
   Schema.Struct({
     name: Schema.String.pipe(Schema.optional),
-    description: Schema.String.pipe(Schema.optional),
+    description: Format.Text.pipe(Schema.optional),
 
     /**
      * The action to run: either an Operation (`spec.runnable`, bound directly) or the routine's own owned
@@ -55,10 +55,11 @@ export class Routine extends Type.makeObject<Routine>(DXN.make('org.dxos.type.ro
      * because the runnable may be a shared registry operation referenced by multiple automations, which would
      * conflate triggers. MVP enforces length <= 1.
      */
-    triggers: Schema.Array(Ref.Ref(Trigger.Trigger)).pipe(Annotation.SetParent.set(true)),
+    triggers: Schema.Array(Ref.Ref(Trigger.Trigger)).pipe(Annotation.SetParent.set()),
   }).pipe(
     LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--lightning--regular', hue: 'amber' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

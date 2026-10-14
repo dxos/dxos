@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 
 /**
  * @deprecated Use @dxos/echo/testing.
@@ -14,14 +14,14 @@ export namespace TestSchema {
   export class TextV0Type extends Type.makeObject<TextV0Type>(DXN.make('org.dxos.textV0', '0.1.0'))(
     Schema.Struct({
       content: Schema.String,
-    }),
+    }).pipe(Annotation.UserType.set()),
   ) {}
 
   export class DocumentType extends Type.makeObject<DocumentType>(DXN.make('com.braneframe.document', '0.1.0'))(
     Schema.Struct({
       title: Schema.optional(Schema.String), // TODO(burdon): Change to name.
       content: Ref.Ref(TextV0Type),
-    }),
+    }).pipe(Annotation.UserType.set()),
   ) {}
 
   export const ContactType = Type.makeObject(DXN.make('com.braneframe.contact', '0.1.0'))(
@@ -35,7 +35,7 @@ export namespace TestSchema {
           }),
         ),
       ),
-    }),
+    }).pipe(Annotation.UserType.set()),
   );
 
   const BlockSchema = Schema.Struct({
@@ -62,7 +62,7 @@ export namespace TestSchema {
           object: Schema.optional(Schema.String),
         }),
       ),
-    }),
+    }).pipe(Annotation.UserType.set()),
   ) {}
 
   export class ThreadType extends Type.makeObject<ThreadType>(DXN.make('com.braneframe.thread', '0.1.0'))(
@@ -76,6 +76,6 @@ export namespace TestSchema {
           object: Schema.optional(Schema.String),
         }),
       ),
-    }),
+    }).pipe(Annotation.UserType.set()),
   ) {}
 }

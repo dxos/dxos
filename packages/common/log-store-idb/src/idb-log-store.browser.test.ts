@@ -53,6 +53,41 @@ const countRecords = (dbName: string): Promise<number> =>
     openReq.onerror = () => reject(openReq.error);
   });
 
+/** Read the raw chunk keys, newest last. */
+const readKeys = (dbName: string): Promise<IDBValidKey[]> =>
+  new Promise((resolve, reject) => {
+    const openReq = indexedDB.open(dbName);
+    openReq.onsuccess = () => {
+      const db = openReq.result;
+      const keysReq = db.transaction('logs', 'readonly').objectStore('logs').getAllKeys();
+      keysReq.onsuccess = () => {
+        db.close();
+        resolve(keysReq.result);
+      };
+      keysReq.onerror = () => {
+        db.close();
+        reject(keysReq.error);
+      };
+    };
+    openReq.onerror = () => reject(openReq.error);
+  });
+
+/** Count `getAll` calls (the bulk payload read) made while `body` runs. */
+const countBulkReads = async (body: () => Promise<void>): Promise<number> => {
+  const getAll = IDBObjectStore.prototype.getAll;
+  let calls = 0;
+  IDBObjectStore.prototype.getAll = function (this: IDBObjectStore, ...args: Parameters<typeof getAll>) {
+    calls++;
+    return getAll.apply(this, args);
+  };
+  try {
+    await body();
+  } finally {
+    IDBObjectStore.prototype.getAll = getAll;
+  }
+  return calls;
+};
+
 /** Create a database with the v1 schema (one row per line, autoincrement keyPath). */
 const createV1Database = (dbName: string, lines: string[]): Promise<void> =>
   new Promise((resolve, reject) => {
@@ -66,6 +101,29 @@ const createV1Database = (dbName: string, lines: string[]): Promise<void> =>
       for (const line of lines) {
         tx.objectStore('logs').add({ line });
       }
+      tx.oncomplete = () => {
+        db.close();
+        resolve();
+      };
+      tx.onerror = () => {
+        db.close();
+        reject(tx.error);
+      };
+    };
+    openReq.onerror = () => reject(openReq.error);
+  });
+
+/** Create a database with the v2 schema (chunked rows keyed without a byte length). */
+const createV2Database = (dbName: string, lines: string[]): Promise<void> =>
+  new Promise((resolve, reject) => {
+    const openReq = indexedDB.open(dbName, 2);
+    openReq.onupgradeneeded = () => {
+      openReq.result.createObjectStore('logs');
+    };
+    openReq.onsuccess = () => {
+      const db = openReq.result;
+      const tx = db.transaction('logs', 'readwrite');
+      tx.objectStore('logs').add({ lines: lines.join('\n') }, [Date.now(), 'legacy-writer', 0, lines.length]);
       tx.oncomplete = () => {
         db.close();
         resolve();
@@ -328,6 +386,70 @@ describe('IdbLogStore', () => {
 
     const jsonl = await store.export();
     expect(jsonl).not.toContain('legacy');
+    expect(jsonl).toContain('fresh');
+  });
+
+  test('chunk keys carry the line count and the UTF-8 byte length of the chunk', async ({ expect }) => {
+    store = new IdbLogStore({ dbName, flushInterval: 60_000 });
+    // A multibyte message, so a byte length that merely counted characters would differ.
+    store.processor(fakeConfig, makeEntry(LogLevel.INFO, 'caf\u00e9 \ud83d\ude80'));
+    store.processor(fakeConfig, makeEntry(LogLevel.INFO, 'second'));
+    await store.flush();
+
+    const keys = await readKeys(dbName);
+    expect(keys).toHaveLength(1);
+    const [, , , lineCount, byteLength] = keys[0] as [number, string, number, number, number];
+    expect(lineCount).toBe(2);
+    const stored = await store.export();
+    expect(byteLength).toBe(new TextEncoder().encode(stored).length);
+  });
+
+  test('eviction never reads chunk payloads', async ({ expect }) => {
+    store = new IdbLogStore({
+      dbName,
+      flushInterval: 10,
+      maxRecords: 3,
+      evictionInterval: 0,
+    });
+    for (let i = 0; i < 8; i++) {
+      store.processor(fakeConfig, makeEntry(LogLevel.INFO, `msg-${i}`));
+      await store.flush();
+    }
+
+    const bulkReads = await countBulkReads(() => store!.evictNow());
+    expect(bulkReads).toBe(0);
+    // The sweep still did its job from the keys alone.
+    const lines = (await store.export()).split('\n').filter(Boolean);
+    expect(lines).toHaveLength(3);
+  });
+
+  test('writes do not trigger eviction', async ({ expect }) => {
+    store = new IdbLogStore({
+      dbName,
+      flushInterval: 10,
+      maxRecords: 2,
+      evictionInterval: 60_000, // Far enough out that only an explicit sweep can run.
+    });
+    for (let i = 0; i < 6; i++) {
+      store.processor(fakeConfig, makeEntry(LogLevel.INFO, `msg-${i}`));
+      await store.flush();
+    }
+    // Counted raw: reading through `export` would sweep before answering.
+    expect(await countRecords(dbName)).toBe(6);
+
+    await store.evictNow();
+    expect(await countRecords(dbName)).toBe(2);
+  });
+
+  test('upgrades a v2 database, discarding chunks keyed without a byte length', async ({ expect }) => {
+    await createV2Database(dbName, ['{"m":"legacy-chunk"}']);
+
+    store = new IdbLogStore({ dbName, flushInterval: 10 });
+    store.processor(fakeConfig, makeEntry(LogLevel.INFO, 'fresh'));
+    await store.flush();
+
+    const jsonl = await store.export();
+    expect(jsonl).not.toContain('legacy-chunk');
     expect(jsonl).toContain('fresh');
   });
 

@@ -5,7 +5,7 @@
 import * as semver from 'semver';
 
 import { EncodedReference, type QueryAST, isEncodedReference } from '@dxos/echo-protocol';
-import { DXN, EID } from '@dxos/keys';
+import { DXN, EID, EntityId } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
 import { getTypeURI } from '../Annotation/annotations.ts';
@@ -58,6 +58,12 @@ export const matchMetaKey = (
  * Compares a filter's type discriminator against the value stored on an object's `system.type`.
  */
 export const compareTypenameStrings = (expectedStr: string, actualStr: string): boolean => {
+  // Identical strings agree under every branch below, and a type query compares the same pair once
+  // per candidate, so the parse is skipped rather than repeated.
+  if (expectedStr === actualStr) {
+    return true;
+  }
+
   const expectedEid = EID.tryParse(expectedStr);
   if (expectedEid) {
     const actualEid = EID.tryParse(actualStr);
@@ -229,6 +235,7 @@ export type FilterRecordMeta = {
   version?: string;
   /** Encoded references or bare URI strings — {@link matchesTag} normalizes both. */
   tags?: readonly unknown[];
+  annotations?: Readonly<Record<string, unknown>>;
 };
 
 /**
@@ -318,6 +325,14 @@ export const makeFilterMatcher = <T>(
         return matchesTag(accessor.getMeta(record).tags ?? [], filter.tag);
       }
 
+      case 'annotation': {
+        const annotations = accessor.getMeta(record).annotations;
+        if (annotations === undefined || !(filter.key in annotations)) {
+          return false;
+        }
+        return filter.value === undefined || annotations[filter.key] === filter.value;
+      }
+
       case 'text-search': {
         return accessor.matchTextSearch(filter, record);
       }
@@ -330,8 +345,16 @@ export const makeFilterMatcher = <T>(
         throw new Error('child-of filters must be handled at the executor level, not in-memory matching.');
       }
 
+      case 'changes': {
+        throw new Error('changes filters select change records on the host; they never match an object.');
+      }
+
       case 'has-parent': {
         return accessor.hasParent(record) === filter.value;
+      }
+
+      case 'mnemonic': {
+        return EntityId.getMnemonic(accessor.getId(record)) === filter.mnemonic;
       }
 
       case 'in-query': {
@@ -375,6 +398,7 @@ const entityAccessor: FilterRecordAccessor<AnyEntity> = {
       keys: meta.keys,
       key: meta.key,
       version: meta.version,
+      annotations: meta.annotations,
       // Lazy: meta tags surface as `Ref`s on a live proxy and only the `tag` arm needs them encoded.
       get tags() {
         return meta.tags.map((tag: any) => (typeof tag?.encode === 'function' ? tag.encode() : tag));

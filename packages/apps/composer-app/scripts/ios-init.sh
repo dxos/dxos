@@ -38,11 +38,16 @@ cp "$SRC_TAURI/ios/KeyboardHandler.m" "$IOS_SOURCES/"
 # Native microphone capture bridged into the webview (simulator development aid).
 cp "$SRC_TAURI/ios/MicrophoneBridge.m" "$IOS_SOURCES/"
 
+cp "$SRC_TAURI/ios/PasskeyBridge.m" "$IOS_SOURCES/"
+
 #
 # Regenerate Xcode project to include new files.
 #
 
 echo "Regenerating Xcode project..."
 (cd "$SRC_TAURI/gen/apple" && xcodegen)
+
+# xcodegen writes an empty entitlements file for the path-only entry in project.yml, as in Tauri's template.
+cp "$SRC_TAURI/ios/app_iOS.entitlements" "$SRC_TAURI/gen/apple/app_iOS/"
 
 echo "Done."

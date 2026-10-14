@@ -12,7 +12,7 @@ import { type WidgetDef } from './widgets.ts';
 export const OBJECT_URL_SCHEMES = ['eid:', 'echo:'];
 
 /** A link widget's props, with the URL under the name the object machinery uses. */
-export type ObjectLinkProps<TContext = any> = LinkWidgetProps<TContext> & { eid: string };
+export type ObjectLinkProps<TContext = unknown> = LinkWidgetProps<TContext> & { eid: string };
 
 export type ObjectLinksOptions = {
   /** URL scheme prefixes that make a link an object link. */

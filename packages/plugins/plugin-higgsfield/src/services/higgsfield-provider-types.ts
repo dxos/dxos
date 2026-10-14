@@ -29,7 +29,9 @@ export const HiggsfieldRequestStatus = Schema.Literals([
 ]);
 export type HiggsfieldRequestStatus = Schema.Schema.Type<typeof HiggsfieldRequestStatus>;
 
-const MediaOutput = Schema.Struct({ url: Schema.String });
+const MediaOutput = Schema.Struct({
+  url: Schema.String,
+});
 
 /**
  * The `/requests/{id}/status` payload (also the submit response). Output fields are set only on

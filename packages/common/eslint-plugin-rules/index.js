@@ -7,6 +7,7 @@ import fs from 'node:fs';
 import comment from './rules/comment.js';
 import consistentUpdateParam from './rules/consistent-update-param.js';
 import dxosPackageImports from './rules/dxos-package-imports.js';
+import dxosSubpathEntrypoints from './rules/dxos-subpath-entrypoints.js';
 import dxosSubpathExports from './rules/dxos-subpath-exports.js';
 import dxosSubpathImports from './rules/dxos-subpath-imports.js';
 import effectSubpathImports from './rules/effect-subpath-imports.js';
@@ -16,6 +17,8 @@ import noBareDotImports from './rules/no-bare-dot-imports.js';
 import noDeadTailwindLogical from './rules/no-dead-tailwind-logical.js';
 import noEffectRunPromise from './rules/no-effect-run-promise.js';
 import noEmptyPromiseCatch from './rules/no-empty-promise-catch.js';
+import noErrorClassName from './rules/no-error-class-name.js';
+import noSimilarSiblingFiles from './rules/no-similar-sibling-files.js';
 import operationKeyShape from './rules/operation-key-shape.js';
 import preferSizingUtilities from './rules/prefer-sizing-utilities.js';
 import translationKeyFormat from './rules/translation-key-format.js';
@@ -32,6 +35,7 @@ const plugin = {
     comment,
     'consistent-update-param': consistentUpdateParam,
     'dxos-package-imports': dxosPackageImports,
+    'dxos-subpath-entrypoints': dxosSubpathEntrypoints,
     'dxos-subpath-exports': dxosSubpathExports,
     'dxos-subpath-imports': dxosSubpathImports,
     'effect-subpath-imports': effectSubpathImports,
@@ -43,6 +47,8 @@ const plugin = {
     'operation-key-shape': operationKeyShape,
     'prefer-sizing-utilities': preferSizingUtilities,
     'no-empty-promise-catch': noEmptyPromiseCatch,
+    'no-error-class-name': noErrorClassName,
+    'no-similar-sibling-files': noSimilarSiblingFiles,
     'translation-key-format': translationKeyFormat,
   },
   configs: {

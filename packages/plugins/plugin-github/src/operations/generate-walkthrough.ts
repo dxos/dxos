@@ -2,15 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import { AiService } from '@dxos/ai';
-import { PROGRESS_STATUS_CANCELLED, PROGRESS_STATUS_FAILED } from '@dxos/app-toolkit';
+import * as Progress from '@dxos/app-toolkit/Progress';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Obj, Ref } from '@dxos/echo';
@@ -89,7 +89,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.GenerateWalkthrough>
             narrate: (prompt) =>
               LanguageModel.generateText({ prompt }).pipe(
                 Effect.map((response) => response.text),
-                Effect.provide(AiService.model(MODEL).pipe(Layer.orDie)),
+                Effect.provide(AiService.languageModel(MODEL).pipe(Layer.orDie)),
                 Effect.orDie,
               ),
           });
@@ -111,7 +111,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.GenerateWalkthrough>
               if (Exit.isSuccess(exit)) {
                 return;
               }
-              const terminal = Cause.hasInterrupts(exit.cause) ? PROGRESS_STATUS_CANCELLED : PROGRESS_STATUS_FAILED;
+              const terminal = Cause.hasInterrupts(exit.cause) ? Progress.STATUS_CANCELLED : Progress.STATUS_FAILED;
               report(terminal, GENERATE_PHASES);
             }),
           ),

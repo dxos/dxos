@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { AiService } from '@dxos/ai';
 
@@ -162,7 +162,7 @@ export const segmentText = (source: string, options: SegmentTextOptions = {}) =>
       LanguageModel.generateObject({ schema: AnalyzedText, prompt: buildPrompt(source, options) }),
     );
     return alignSegments(source, toRawSegments(value), options.target);
-  }).pipe(Effect.provide(AiService.model(SEGMENT_MODEL)));
+  }).pipe(Effect.provide(AiService.languageModel(SEGMENT_MODEL)));
 
 /**
  * The pluggable analyzer contract, mirroring `Parser` for the editor extension and pipelines.

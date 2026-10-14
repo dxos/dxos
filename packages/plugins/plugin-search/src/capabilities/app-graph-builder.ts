@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
@@ -38,6 +38,7 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       AppGraphBuilder.createExtension({
         id: 'spaceSearch',
+        relation: AppNode.companion,
         match: GraphNodeMatcher.whenRoot,
         connector: (_node, get) =>
           Effect.sync(() => {

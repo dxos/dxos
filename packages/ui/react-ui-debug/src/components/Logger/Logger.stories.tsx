@@ -5,14 +5,17 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { type CallMetadata, log } from '@dxos/log';
+import { type CallMetadata, LogEntry, LogLevel, log } from '@dxos/log';
 import { random } from '@dxos/random';
-import { Panel, Toolbar } from '@dxos/react-ui';
 import { ViewStateProvider } from '@dxos/react-ui-attention';
+import * as Button from '@dxos/react-ui/Button';
+import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { translations } from '#translations';
 
+import { LogBuffer } from './log-buffer.ts';
 import { Logger } from './Logger.tsx';
 
 random.seed(123);
@@ -39,32 +42,66 @@ const DefaultStory = () => (
   <ViewStateProvider>
     <Logger.Root initialFilter='info'>
       <Panel.Root>
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <Toolbar.Root>
             {FILES.map((file) => (
-              <Toolbar.Button key={file} onClick={() => emit(file, 'info')}>
+              <Button.Root key={file} onClick={() => emit(file, 'info')}>
                 {file.split('/').pop()}
-              </Toolbar.Button>
+              </Button.Root>
             ))}
-            <Toolbar.Button onClick={() => emit(FILES[1], 'warn')}>Warn (beta)</Toolbar.Button>
-            <Toolbar.Button onClick={() => emit(FILES[1], 'error')}>Error (beta)</Toolbar.Button>
+            <Button.Root onClick={() => emit(FILES[1], 'warn')}>Warn (beta)</Button.Root>
+            <Button.Root onClick={() => emit(FILES[1], 'error')}>Error (beta)</Button.Root>
           </Toolbar.Root>
-        </Panel.Toolbar>
-        <Panel.Content asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <Panel.Root>
-            <Panel.Toolbar asChild>
+            <Panel.Header>
               <Logger.Toolbar />
-            </Panel.Toolbar>
-            <Panel.Content asChild>
+            </Panel.Header>
+            <Panel.Body asChild>
               <Logger.Content>
                 <Logger.List />
               </Logger.Content>
-            </Panel.Content>
-            <Panel.Statusbar asChild>
+            </Panel.Body>
+            <Panel.Footer>
               <Logger.Filter />
-            </Panel.Statusbar>
+            </Panel.Footer>
           </Panel.Root>
-        </Panel.Content>
+        </Panel.Body>
+      </Panel.Root>
+    </Logger.Root>
+  </ViewStateProvider>
+);
+
+// Owned by the story rather than the process-wide buffer, so only the entries appended here appear.
+const customBuffer = new LogBuffer();
+
+const appendCustom = (level: LogLevel) =>
+  customBuffer.append(new LogEntry({ level, message: random.lorem.sentence(), context: { seq: ++seq } }));
+
+const CustomBufferStory = () => (
+  <ViewStateProvider>
+    <Logger.Root buffer={customBuffer}>
+      <Panel.Root>
+        <Panel.Header>
+          <Toolbar.Root>
+            <Button.Root onClick={() => appendCustom(LogLevel.INFO)}>Append info</Button.Root>
+            <Button.Root onClick={() => appendCustom(LogLevel.WARN)}>Append warn</Button.Root>
+            <Button.Root onClick={() => appendCustom(LogLevel.ERROR)}>Append error</Button.Root>
+          </Toolbar.Root>
+        </Panel.Header>
+        <Panel.Body asChild>
+          <Panel.Root>
+            <Panel.Header>
+              <Logger.Toolbar />
+            </Panel.Header>
+            <Panel.Body asChild>
+              <Logger.Content>
+                <Logger.List />
+              </Logger.Content>
+            </Panel.Body>
+          </Panel.Root>
+        </Panel.Body>
       </Panel.Root>
     </Logger.Root>
   </ViewStateProvider>
@@ -85,3 +122,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+export const CustomBuffer: Story = {
+  render: CustomBufferStory,
+};

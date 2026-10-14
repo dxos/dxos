@@ -7,14 +7,14 @@
 import * as Context from 'effect/Context';
 import type * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import type * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { Annotation, DXN, Feed, Obj, type Query, QueryAST, Ref, Type } from '@dxos/echo';
-import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { OptionsAnnotationId } from '@dxos/echo/Format';
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 
+import type { TriggerDisabledError } from '../errors.ts';
 import * as Runnable from '../Runnable.ts';
 import type * as TriggerEvent from './TriggerEvent.ts';
 
@@ -226,7 +226,7 @@ export class Trigger extends Type.makeObject<Trigger>(DXN.make('org.dxos.type.tr
      * Passed as the input data to the runnable.
      */
     input: InputTemplate.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
-  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--lightning--regular', hue: 'yellow' }), HiddenAnnotation.set(true)),
+  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--lightning--regular', hue: 'yellow' })),
 ) {}
 
 export const make = (props: Obj.MakeProps<typeof Trigger>) => Obj.make(Trigger, props);
@@ -289,9 +289,9 @@ export interface InvokeOptions {
 }
 
 /**
- * Service for monitoring trigger dispatcher state.
+ * Observes and invokes the triggers registered with the dispatchers (local and edge).
  */
-export interface Monitor {
+export interface Manager {
   /**
    * Triggers actively registered in the dispatcher.
    * Could contain entries for both local and edge triggers, but only the edge ones are actually running.
@@ -304,13 +304,16 @@ export interface Monitor {
    * Invoke a trigger.
    * Available only for direct and timer triggers.
    * Invocation respects the trigger's concurrency limit.
+   * Fails with {@link TriggerDisabledError} for a trigger that is switched off.
    */
-  readonly invokeTrigger: (options: InvokeOptions) => Effect.Effect<void>;
+  readonly invokeTrigger: (options: InvokeOptions) => Effect.Effect<void, TriggerDisabledError>;
 }
 
 /**
- * Service for monitoring trigger executions.
+ * Service providing the {@link Manager}.
  */
-export class TriggerMonitorService extends Context.Service<TriggerMonitorService, Monitor>()(
-  '@dxos/functions/TriggerMonitorService',
+export class ManagerService extends Context.Service<ManagerService, Manager>()(
+  '@dxos/compute/Trigger.ManagerService',
 ) {}
+
+export { TriggerDisabledError, TriggerStateNotFoundError } from '../errors.ts';

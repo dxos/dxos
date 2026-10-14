@@ -8,14 +8,15 @@ import { inspect } from 'node:util';
 import { Event, MulticastObservable, PushStream, SubscriptionList, Trigger, scheduleMicroTask } from '@dxos/async';
 import {
   type ClientServicesProvider,
-  CREATE_SPACE_TIMEOUT,
+  ClientTraceEvents,
+  type CreateSpaceOptions,
   type Echo,
   IMPORT_SPACE_TIMEOUT,
   type Space,
   SpaceProperties,
 } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
-import { Context } from '@dxos/context';
+import { Context, cancelWithContext } from '@dxos/context';
 import { failUndefined, inspectObject } from '@dxos/debug';
 import { type Database, Filter, Obj, Query } from '@dxos/echo';
 import { type EchoClient } from '@dxos/echo-client';
@@ -223,9 +224,8 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
 
   async setConfig(config: IndexConfig): Promise<void> {
     // TODO(dmaretskyi): Set global timeout instead.
-    await runServiceCall(this._runtime, this._serviceProvider.rpc['QueryService.setConfig'](config), {
+    await runServiceCall(this._runtime, this._serviceProvider.rpc, 'QueryService.setConfig', config, {
       timeout: 20_000,
-      label: 'QueryService.setConfig',
     });
   }
 
@@ -264,10 +264,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     return this.get();
   }
 
-  async create(
-    meta?: SpaceProperties,
-    options?: { tags?: string[]; membershipPolicy?: MembershipPolicy },
-  ): Promise<Space> {
+  async create(meta?: SpaceProperties, options?: CreateSpaceOptions): Promise<Space> {
     return this._createSpaceInternal(this._ctx, meta, options);
   }
 
@@ -275,24 +272,28 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   private async _createSpaceInternal(
     ctx: Context,
     meta?: SpaceProperties,
-    options?: { tags?: string[]; membershipPolicy?: MembershipPolicy },
+    options?: CreateSpaceOptions,
   ): Promise<Space> {
     log('creating space');
     const space = await runServiceCall(
       this._runtime,
-      this._serviceProvider.rpc['SpacesService.createSpace']({
+      this._serviceProvider.rpc,
+      'SpacesService.createSpace',
+      {
         tags: options?.tags ?? [],
         membershipPolicy: options?.membershipPolicy ?? MembershipPolicy.INVITE,
-      }),
-      { timeout: RPC_TIMEOUT, label: 'SpacesService.createSpace' },
+      },
+      { timeout: RPC_TIMEOUT },
     );
 
     await this._spaceCreated.waitForCondition(() => {
       return this.get().some(({ key }) => key.equals(requirePublicKey(space.spaceKey)));
     });
     const spaceProxy = this._findProxy(space);
+    // Reported once the service has created the space, so a failure while initializing it below still counts.
+    trace.events.emit(ClientTraceEvents.spaceCreate, { spaceId: spaceProxy.id, origin: options?.origin ?? 'unknown' });
 
-    await spaceProxy._databaseInitialized.wait({ timeout: CREATE_SPACE_TIMEOUT });
+    await cancelWithContext(ctx, spaceProxy._databaseInitialized.wait());
     spaceProxy.db.add(Obj.make(SpaceProperties, meta ?? {}), { placeIn: 'root-doc' });
     await spaceProxy.db.flush();
     await spaceProxy._initializationComplete.wait();
@@ -307,8 +308,10 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   async import(archive: SpacesService.SpaceArchive, options?: { tags?: string[] }): Promise<Space> {
     const { newSpaceId } = await runServiceCall(
       this._runtime,
-      this._serviceProvider.rpc['SpacesService.importSpace']({ archive, tags: options?.tags }),
-      { timeout: IMPORT_SPACE_TIMEOUT, label: 'SpacesService.importSpace' },
+      this._serviceProvider.rpc,
+      'SpacesService.importSpace',
+      { archive, tags: options?.tags },
+      { timeout: IMPORT_SPACE_TIMEOUT },
     );
     invariant(SpaceId.isValid(newSpaceId), 'Invalid space ID');
     await this._spaceCreated.waitForCondition(() => {
@@ -335,11 +338,9 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
 
   @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
   private async _joinBySpaceKeyInternal(ctx: Context, spaceKey: PublicKey): Promise<Space> {
-    const response = await runServiceCall(
-      this._runtime,
-      this._serviceProvider.rpc['SpacesService.joinBySpaceKey']({ spaceKey }),
-      { label: 'SpacesService.joinBySpaceKey' },
-    );
+    const response = await runServiceCall(this._runtime, this._serviceProvider.rpc, 'SpacesService.joinBySpaceKey', {
+      spaceKey,
+    });
     const space = response.space ?? failedInvariant();
     // The proxy appears via the `querySpaces` stream, not the call's own response, so the two race —
     // same wait `createSpace` and `import` do before resolving their proxy.

@@ -6,6 +6,17 @@ import { type ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
 
 import { dxBin } from './run-dx.ts';
 
+/** What a 2026-07-28 client sends on every request in place of a handshake. */
+export const MCP_REQUEST_META: {
+  readonly 'io.modelcontextprotocol/protocolVersion': '2026-07-28';
+  readonly 'io.modelcontextprotocol/clientInfo': { readonly name: string; readonly version: string };
+  readonly 'io.modelcontextprotocol/clientCapabilities': Readonly<Record<string, never>>;
+} = {
+  'io.modelcontextprotocol/protocolVersion': '2026-07-28',
+  'io.modelcontextprotocol/clientInfo': { name: 'dx-cli-test', version: '1' },
+  'io.modelcontextprotocol/clientCapabilities': {},
+};
+
 /**
  * A live `dx mcp serve` stdio session the caller keeps open across several calls.
  *
@@ -21,7 +32,7 @@ export type McpSessionOptions = {
   timeout?: number;
 };
 
-type Message = { id?: number; result?: any; error?: { message?: string } };
+type Message = { id?: number; result?: unknown; error?: { message?: string } };
 
 const DEFAULT_TIMEOUT = 120_000;
 
@@ -73,17 +84,13 @@ export class McpSession {
 
     const session = new McpSession(child, timeout);
     try {
-      await session.#request('initialize', {
-        protocolVersion: '2025-06-18',
-        capabilities: {},
-        clientInfo: { name: 'dx-agent-e2e', version: '1' },
-      });
+      // Waits out the server's boot, so a server that cannot start fails here rather than at the first call.
+      await session.#request('server/discover', {});
     } catch (error) {
       // The caller never receives a handle when this throws, so nothing else can stop the server.
       await session.close();
       throw error;
     }
-    session.#notify('notifications/initialized');
     return session;
   }
 
@@ -94,7 +101,7 @@ export class McpSession {
    * space before the operation's own schema is applied, and an operation acting on a space fails
    * with "it needs one named" when the id is buried in the payload.
    */
-  async invoke(key: string, input: Record<string, unknown> = {}, spaceId?: string): Promise<any> {
+  async invoke<T = unknown>(key: string, input: Record<string, unknown> = {}, spaceId?: string): Promise<T> {
     const result: ToolResult = await this.#call('invokeOperation', {
       key,
       input,
@@ -104,7 +111,8 @@ export class McpSession {
       throw new Error(`operation ${key} failed: ${JSON.stringify(result.content)}`);
     }
     const text = result.content?.[0]?.text;
-    return text === undefined ? result.structuredContent : JSON.parse(text);
+    const value: unknown = text === undefined ? result.structuredContent : JSON.parse(text);
+    return value as T;
   }
 
   /**
@@ -173,12 +181,9 @@ export class McpSession {
           reject(error);
         },
       });
-      this.#child.stdin.write(`${JSON.stringify({ jsonrpc: '2.0', id, method, params })}\n`);
+      const request = { jsonrpc: '2.0', id, method, params: { _meta: MCP_REQUEST_META, ...params } };
+      this.#child.stdin.write(`${JSON.stringify(request)}\n`);
     });
-  }
-
-  #notify(method: string): void {
-    this.#child.stdin.write(`${JSON.stringify({ jsonrpc: '2.0', method })}\n`);
   }
 
   #consume(chunk: string): void {

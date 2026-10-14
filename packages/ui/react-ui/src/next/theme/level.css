@@ -1,0 +1,61 @@
+/*
+ * Levels (decision 4): absolute levels reuse ui-theme's `data-surface` zones, which paint and re-derive every aspect;
+ * each publishes its rung so a `+1` child resolves the next one from its parent with a style query, not React context.
+ */
+
+@layer dx-components {
+  :is(.dx-panel, .dx-container, .dx-field, .dx-popup, .dx-dialog)[data-surface='sunken'] {
+    --dx-level: 0;
+  }
+  :is(.dx-panel, .dx-container, .dx-field, .dx-popup, .dx-dialog)[data-surface='chrome'] {
+    --dx-level: 1;
+  }
+  :is(.dx-panel, .dx-container, .dx-field, .dx-popup, .dx-dialog)[data-surface='base'] {
+    --dx-level: 2;
+  }
+  :is(.dx-panel, .dx-container, .dx-field, .dx-popup, .dx-dialog)[data-surface='raised'] {
+    --dx-level: 3;
+  }
+  :is(.dx-panel, .dx-container, .dx-field, .dx-popup, .dx-dialog)[data-surface='overlay'] {
+    --dx-level: 4;
+  }
+  :is(.dx-panel, .dx-container, .dx-field, .dx-popup, .dx-dialog)[data-surface='popup'] {
+    --dx-level: 5;
+  }
+
+  @container style(--dx-level: 0) {
+    :is(.dx-container, .dx-card, .dx-field)[data-surface='+1'] {
+      --dx-level: 1;
+      --surface-bg: var(--dx-surface-chrome);
+      box-shadow: none;
+    }
+  }
+  @container style(--dx-level: 1) {
+    :is(.dx-container, .dx-card, .dx-field)[data-surface='+1'] {
+      --dx-level: 2;
+      --surface-bg: var(--dx-surface-base);
+      box-shadow: none;
+    }
+  }
+  @container style(--dx-level: 2) {
+    :is(.dx-container, .dx-card, .dx-field)[data-surface='+1'] {
+      --dx-level: 3;
+      --surface-bg: var(--dx-surface-raised);
+      box-shadow: var(--shadow-sm, 0 1px 3px 0 rgb(0 0 0 / 0.1));
+    }
+  }
+  @container style(--dx-level: 3) {
+    :is(.dx-container, .dx-card, .dx-field)[data-surface='+1'] {
+      --dx-level: 4;
+      --surface-bg: var(--dx-surface-overlay);
+      box-shadow: var(--shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1));
+    }
+  }
+  @container style(--dx-level: 4) {
+    :is(.dx-container, .dx-card, .dx-field)[data-surface='+1'] {
+      --dx-level: 5;
+      --surface-bg: var(--dx-surface-popup);
+      box-shadow: var(--shadow-lg, 0 10px 15px -3px rgb(0 0 0 / 0.1));
+    }
+  }
+}

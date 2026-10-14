@@ -225,19 +225,27 @@ agent's own definition of done back at it. That placement is the whole design:
 kinds 1–2 decay as the session fills, and stopping early is precisely the
 failure that shows up late in a long session.
 
-Its state is four files, split by writer. The hook owns the task
-(`.autonomous`) and the **user log** (`.autonomous-user.md`, every user message
-verbatim, appended on every turn whether or not a run is active); the agent owns
+Its state is five files, split by writer. The hook owns the task
+(`.autonomous`), the owning session id (`.autonomous-session`) and the **user
+log** (`.autonomous-user.md`, the owning session's messages verbatim); the agent owns
 the **definition of done** (`.autonomous-dod`) and the **decision log**
 (`.autonomous-log.md`). The two logs are not one file on purpose: the user log
 is evidence, the decision log is accountability, and mixing them would let a
 summary of what the user said sit where the quote belongs. An agent that may not
 ask a question still has to answer scoping and PR-size questions somehow, and
 the user has almost always already said — three turns earlier, in an aside — so
-the log it greps must be what they actually typed. Starting a run mid-session
+the log it greps must be what they actually typed. A session's first run
 backfills the log from the event's `transcript_path`, for the same reason the
 focus pin is derived there: a record on disk is mechanism, an agent asked to
 remember is not.
+
+**A run belongs to the session that started it.** Every session whose project
+dir is the checkout reads the same files, including sessions in other worktrees
+that point `CLAUDE_PROJECT_DIR` at it, so the hooks compare the event's
+`session_id` with the recorded owner and inject, block `Stop`, and log only for
+the owner. Ownership is denied only on evidence: a run with no recorded owner
+or an owner file that cannot be read still binds every session. Another session
+can take a run over with `/autonomous <task>`; its `/autonomous off` is refused.
 
 The clean exit is `autonomous.sh stop <reason>` — the reason is mandatory and
 logged, because a run that ends without one is indistinguishable from one that

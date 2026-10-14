@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ProcessManagerPlugin } from '@dxos/app-framework';
 import type * as Plugin from '@dxos/app-framework/Plugin';
+import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import { type Config } from '@dxos/client';
+import { Blob } from '@dxos/echo';
 import type * as Observability from '@dxos/observability/Observability';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as ChessPlugin from '@dxos/plugin-chess/ChessPlugin';
@@ -19,6 +20,7 @@ import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as SamplePlugin from '@dxos/plugin-sample/SamplePlugin';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
+import { File } from '@dxos/types';
 
 export type PluginConfig = {
   config?: Config;
@@ -72,12 +74,14 @@ export const getPlugins = ({ config, namespace, observability }: PluginConfig): 
     ChessPlugin.make(),
     // Commands are imperative and run straight through, so the service must hand them a client
     // that is already initialized rather than one whose `halo` getter still throws.
-    ClientPlugin.make({ config, awaitInitialization: true }),
+    // `File` and `Blob` are FilePlugin's types, and FilePlugin is not loaded here (it is mostly UI);
+    // without them `file.createFromUpload` from `dx mcp serve` fails with `Schema not registered`.
+    ClientPlugin.make({ config, awaitInitialization: true, types: [File.File, Blob.Blob] }),
     ConnectorPlugin.make(),
     InboxPlugin.make(),
     MarkdownPlugin.make(),
     ObservabilityPlugin.make({ namespace, observability }),
-    ProcessManagerPlugin(),
+    ProcessManagerPlugin.make(),
     ProjectsPlugin.make(),
     RegistryPlugin.make(),
     RoutinePlugin.make(),

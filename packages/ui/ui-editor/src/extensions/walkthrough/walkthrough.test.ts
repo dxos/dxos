@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { EditorState } from '@codemirror/state';
+import { EditorState, SelectionRange } from '@codemirror/state';
 import { EditorView, type WidgetType } from '@codemirror/view';
 import { describe, expect, test } from 'vitest';
 
@@ -60,8 +60,10 @@ describe('diffBlocks', () => {
       .map((source) => source(view))
       .some((set) => {
         let covered = false;
+        // The widget host widens a block's atomic range past its line breaks, so one caret step
+        // clears the block; the range must still cover the replaced text.
         set.between(from, to, (rangeFrom, rangeTo) => {
-          covered ||= rangeFrom === from && rangeTo === to;
+          covered ||= rangeFrom <= from && rangeTo >= to;
         });
         return covered;
       });
@@ -140,7 +142,9 @@ describe('walkthroughOutline', () => {
     expect(outline.map((entry) => entry.level)).to.deep.eq([1, 2, 2]);
 
     const [, wiring, tests] = outline;
-    expect(wiring.files).to.deep.eq(['harness.ts']);
+    expect(wiring.files.map((file) => file.name)).to.deep.eq(['harness.ts']);
+    expect(wiring.files[0].added).to.eq(1);
+    expect(wiring.files[0].removed).to.eq(1);
     expect(wiring.added).to.eq(1);
     expect(wiring.removed).to.eq(1);
     // A fence that is not a diff contributes nothing.
@@ -177,7 +181,12 @@ describe('walkthroughOutline', () => {
     // Two additions across two chunks, one removal — the section's own total, not a file's.
     expect(outline[0].added).to.eq(2);
     expect(outline[0].removed).to.eq(1);
-    expect(outline[0].files).to.deep.eq(['a.ts', 'b.ts']);
+    expect(outline[0].files.map((file) => file.name)).to.deep.eq(['a.ts', 'b.ts']);
+    // Each file carries its OWN counts, which is what the second level of the rail renders.
+    expect(outline[0].files.map((file) => [file.added, file.removed])).to.deep.eq([
+      [1, 0],
+      [1, 1],
+    ]);
   });
 
   test('lists a file once however many chunks name it', () => {
@@ -202,7 +211,10 @@ describe('walkthroughOutline', () => {
       ),
     );
 
-    expect(outline[0].files).to.deep.eq(['a.ts']);
+    expect(outline[0].files.map((file) => file.name)).to.deep.eq(['a.ts']);
+    // The row carries both chunks' additions and scrolls to the first of them.
+    expect(outline[0].files[0].added).to.eq(2);
+    expect(outline[0].files[0].from).to.be.lessThan(outline[0].files[0].from + 1);
     expect(outline[0].added).to.eq(2);
   });
 
@@ -232,7 +244,7 @@ describe('walkthroughOutline', () => {
 
     expect(outline).to.have.length(1);
     expect(outline[0].title).to.eq('');
-    expect(outline[0].files).to.deep.eq(['a.ts']);
+    expect(outline[0].files.map((file) => file.name)).to.deep.eq(['a.ts']);
   });
 });
 
@@ -260,6 +272,94 @@ describe('DiffBlockWidget equality', () => {
 });
 
 describe('walkthroughSidebar', () => {
+  test('lists each file as its own row beneath its section', () => {
+    const view = new EditorView({
+      state: EditorState.create({
+        doc: [
+          '## Section',
+          '',
+          '```diff file=src/a.ts',
+          '@@ -1,1 +1,2 @@',
+          ' keep();',
+          '+one();',
+          '```',
+          '',
+          '```diff file=src/b.ts',
+          '@@ -1,2 +1,2 @@',
+          ' keep();',
+          '-old();',
+          '+new();',
+          '```',
+          '',
+        ].join('\n'),
+        extensions: [createMarkdownExtensions(), diffBlocks(), walkthroughSidebar()],
+      }),
+    });
+
+    const rail = view.dom.querySelector('.cm-walkthrough-sidebar');
+    invariant(rail);
+    const rows = Array.from(rail.querySelectorAll('button'));
+    const files = Array.from(rail.querySelectorAll('.cm-walkthrough-file'));
+
+    // One section row followed by one row per file, in document order.
+    expect(rows.map((row) => row.className)).to.deep.eq([
+      'cm-walkthrough-entry',
+      'cm-walkthrough-file',
+      'cm-walkthrough-file',
+    ]);
+    expect(files.map((row) => row.querySelector('.cm-walkthrough-name')?.textContent)).to.deep.eq(['a.ts', 'b.ts']);
+    expect(files.map((row) => row.querySelector('.cm-walkthrough-added')?.textContent)).to.deep.eq(['+1', '+1']);
+    expect(files.map((row) => row.querySelector('.cm-walkthrough-removed')?.textContent)).to.deep.eq([undefined, '-1']);
+    view.destroy();
+  });
+
+  test('scrolls to the file a second-level row names', () => {
+    const doc = [
+      '## Section',
+      '',
+      '```diff file=src/a.ts',
+      '@@ -1,1 +1,2 @@',
+      ' keep();',
+      '+one();',
+      '```',
+      '',
+      '```diff file=src/b.ts',
+      '@@ -1,1 +1,2 @@',
+      ' keep();',
+      '+two();',
+      '```',
+      '',
+    ].join('\n');
+    const scrolled: number[] = [];
+    const view = new EditorView({
+      state: EditorState.create({
+        doc,
+        extensions: [createMarkdownExtensions(), diffBlocks(), walkthroughSidebar()],
+      }),
+      dispatchTransactions: (transactions) => {
+        for (const transaction of transactions) {
+          for (const effect of transaction.effects) {
+            // The effect a row dispatches carries the range it would scroll into view.
+            const { value } = effect;
+            if (value instanceof Object && 'range' in value && value.range instanceof SelectionRange) {
+              scrolled.push(value.range.from);
+            }
+          }
+        }
+      },
+    });
+
+    const rail = view.dom.querySelector('.cm-walkthrough-sidebar');
+    invariant(rail);
+    const rows = rail.querySelectorAll('.cm-walkthrough-file');
+    const second = rows[1];
+    invariant(second instanceof HTMLElement);
+    second.click();
+    view.destroy();
+
+    expect(scrolled).to.deep.eq([doc.indexOf('```diff file=src/b.ts')]);
+  });
+
   test('names every rail button, including in the stats variant that hides its text', () => {
     const view = new EditorView({
       state: EditorState.create({
@@ -277,6 +377,8 @@ describe('walkthroughSidebar', () => {
     expect(labels.every((label) => label && label.length > 0)).to.eq(true);
     expect(labels[0]).to.eq('Walkthrough');
     expect(labels[1]).to.eq('Harness wiring — harness.ts — +1 -1');
+    // The file's own row, named without its section.
+    expect(labels[2]).to.eq('harness.ts — +1 -1');
   });
 
   test('leaves a count the row does not show out of the name', () => {
@@ -301,8 +403,71 @@ describe('walkthroughSidebar', () => {
     const label = rail.querySelector('button')?.getAttribute('aria-label');
     view.destroy();
 
-    // The row renders `+1` alone, so `-0` would be announced to a reader who cannot see it.
-    expect(label).to.eq('Additions only — a.ts — +1');
+    // The one file row below carries the counts, so the section's name does not repeat them.
+    expect(label).to.eq('Additions only — a.ts');
+  });
+
+  test('leaves the counts to the file row when a section has exactly one file', () => {
+    const view = new EditorView({
+      state: EditorState.create({
+        doc: [
+          '## One file',
+          '',
+          '```diff file=src/a.ts',
+          '@@ -1,2 +1,2 @@',
+          ' keep();',
+          '-old();',
+          '+new();',
+          '```',
+          '',
+        ].join('\n'),
+        extensions: [createMarkdownExtensions(), diffBlocks(), walkthroughSidebar()],
+      }),
+    });
+
+    const rail = view.dom.querySelector('.cm-walkthrough-sidebar');
+    invariant(rail);
+    const counts = Array.from(rail.querySelectorAll('button')).map((row) =>
+      Array.from(row.querySelectorAll('.cm-walkthrough-added, .cm-walkthrough-removed')).map(
+        (count) => count.textContent,
+      ),
+    );
+    view.destroy();
+
+    // The section row is bare; only the file row states `+1 -1`.
+    expect(counts).to.deep.eq([[], ['+1', '-1']]);
+  });
+
+  test('keeps the section total when the files below it do not repeat it', () => {
+    const view = new EditorView({
+      state: EditorState.create({
+        doc: [
+          '## Two files',
+          '',
+          '```diff file=src/a.ts',
+          '@@ -1,1 +1,2 @@',
+          ' keep();',
+          '+one();',
+          '```',
+          '',
+          '```diff file=src/b.ts',
+          '@@ -1,1 +1,2 @@',
+          ' keep();',
+          '+two();',
+          '```',
+          '',
+        ].join('\n'),
+        extensions: [createMarkdownExtensions(), diffBlocks(), walkthroughSidebar()],
+      }),
+    });
+
+    const rail = view.dom.querySelector('.cm-walkthrough-sidebar');
+    invariant(rail);
+    const section = rail.querySelector('.cm-walkthrough-entry');
+    const total = section?.querySelector('.cm-walkthrough-added')?.textContent;
+    view.destroy();
+
+    expect(total).to.eq('+2');
   });
 });
 

@@ -4,13 +4,18 @@
 
 import * as Effect from 'effect/Effect';
 import { evalite } from 'evalite';
+import fs from 'node:fs';
+import path from 'node:path';
 
 import * as Project from '@dxos/compute/Project';
-import { Database, Filter, Query, Ref, Type } from '@dxos/echo';
+import { Blob, Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import * as FilePlugin from '@dxos/plugin-file/FilePlugin';
+import * as FileSkill from '@dxos/plugin-file/FileSkill';
 import * as ProjectSkill from '@dxos/plugin-projects/ProjectSkill';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
-import { Milestone, Outline, Task, TaskSet } from '@dxos/types';
+import { type Turn } from '@dxos/test-utils/claude-agent';
+import { File, Milestone, Outline, Task, TaskSet } from '@dxos/types';
 
 import { findObject } from '../assertions.ts';
 import { SERVER, runClaudeEval, tool } from '../claude-harness.ts';
@@ -28,16 +33,22 @@ import * as Scorer from '../Scorer.ts';
 // so there is no CLI binary to build, no profile to bootstrap, and one database — which is what
 // lets a scorer grade the write rather than the model's account of it.
 //
-// Only the server's tools are allowed. No Bash, no file tools: an agent that can shell out could
-// satisfy a prompt without ever reaching the surface, and the run would prove nothing about it.
+// Only the server's tools are allowed, plus `Bash(curl:*)` — no file tools, and no other shell. The
+// rule and its one exception have the same root: an agent that can shell out freely could satisfy a
+// prompt without ever reaching the surface, and the run would prove nothing about it. `curl` is
+// admitted because the upload stage measures a flow that is DEFINED by the bytes not passing
+// through the model, so there is no version of it the agent can complete through MCP alone. It
+// cannot be used to fake the other stages: each asserts the MCP tool call it required by name, and
+// the agent is never told an endpoint or credential it could reach the surface with by hand.
 //
 // `DX_EVAL_MCP_TARGET` picks the surface: `local` (the in-process host, the default), `local-edge`
-// (`wrangler dev`), or the deployed `dev` / `main` / `prod` workers. Against `dev` the harness
-// brings its own identity: it replicates the space it seeds to dev EDGE and mints the worker's grant
-// itself (`McpAuth`), so the run is graded from the database exactly as a local one is — every write
-// the agent makes through the deployed worker comes back by replication. A worker reached with a
-// hand-minted `DX_EVAL_MCP_TOKEN` serves a space this process cannot see, so that run drops the
-// write stages and scores what a client can see from outside: discovery, and per-tool latency.
+// (`wrangler dev`), or the deployed `dev` / `main` / `prod` workers. Against `dev` and `main` the
+// harness brings its own identity: it binds a `test+*@dxos.org` account through that EDGE's test
+// hatch, replicates the space it seeds, and mints the worker's grant itself (`McpAuth`), so the run
+// is graded from the database exactly as a local one is — every write the agent makes through the
+// deployed worker comes back by replication. `prod`, whose hatch is closed, and any worker reached
+// with a hand-minted `DX_EVAL_MCP_TOKEN` serve a space this process cannot see, so those runs drop
+// the write stages and score what a client can see from outside: discovery, and per-tool latency.
 //
 
 const TARGET = McpTarget.fromEnv();
@@ -46,6 +57,13 @@ const REMOTE = !McpTarget.isLocal(TARGET);
 
 /** Whether the run can be graded from the database (see {@link McpTarget.mode}). */
 const GRADED = McpTarget.mode(TARGET) !== 'token';
+
+/**
+ * Whether to run the direct-upload stage. Every graded target: a deployed worker mints an EDGE-signed
+ * URL, and the in-process host stages on a loopback listener the way `dx mcp serve` does
+ * (`@dxos/mcp-server/LocalUpload`), so both put the bytes on a path the model never touches.
+ */
+const UPLOAD_STAGE = GRADED;
 
 /**
  * The calls the latency report is built from.
@@ -62,13 +80,20 @@ const GRADED = McpTarget.mode(TARGET) !== 'token';
 const readProbes = (spaceId: string): McpLatency.Probe[] => [
   { tool: 'queryOperations', args: { query: 'task' } },
   { tool: 'loadSkill' },
+  // The server refuses a skill's operations without the token loadSkill returns, so this precedes them.
+  { tool: 'loadSkill', label: 'loadSkill(project)', args: { skill: 'project' } },
   // Cheapest handler that still reaches the database: an unfiltered listing, ids and labels only.
-  { tool: 'invokeOperation', args: { key: 'org.dxos.operation.space.queryObjects', input: { limit: 10 }, spaceId } },
+  {
+    tool: 'invokeOperation',
+    skill: 'project',
+    args: { key: 'org.dxos.operation.space.queryObjects', input: { limit: 10 }, spaceId },
+  },
   // The same verb with the objects loaded, which is what separates a query's cost from a handler's.
   // Labelled, because the operation key alone would fold it into the row above and average the two
   // shapes into a figure describing neither.
   {
     tool: 'invokeOperation',
+    skill: 'project',
     label: 'invokeOperation:org.dxos.operation.space.queryObjects(content)',
     args: {
       key: 'org.dxos.operation.space.queryObjects',
@@ -76,7 +101,11 @@ const readProbes = (spaceId: string): McpLatency.Probe[] => [
       spaceId,
     },
   },
-  { tool: 'invokeOperation', args: { key: 'org.dxos.operation.tasks.listSessions', input: { limit: 10 }, spaceId } },
+  {
+    tool: 'invokeOperation',
+    skill: 'project',
+    args: { key: 'org.dxos.operation.tasks.listSessions', input: { limit: 10 }, spaceId },
+  },
 ];
 
 /**
@@ -88,8 +117,16 @@ const readProbes = (spaceId: string): McpLatency.Probe[] => [
 const refProbes = (spaceId: string, projectId: string): McpLatency.Probe[] => {
   const project = { '/': `echo://${spaceId}/${projectId}` };
   return [
-    { tool: 'invokeOperation', args: { key: 'org.dxos.operation.projects.get', input: { project }, spaceId } },
-    { tool: 'invokeOperation', args: { key: 'org.dxos.operation.tasks.list', input: { project }, spaceId } },
+    {
+      tool: 'invokeOperation',
+      skill: 'project',
+      args: { key: 'org.dxos.operation.projects.get', input: { project }, spaceId },
+    },
+    {
+      tool: 'invokeOperation',
+      skill: 'project',
+      args: { key: 'org.dxos.operation.tasks.list', input: { project }, spaceId },
+    },
   ];
 };
 
@@ -107,6 +144,139 @@ const ROTATE = 'Rotate the staging credentials';
 const BACKFILL = 'Backfill the sync telemetry dashboard';
 
 const DESCRIPTION = 'picked up by the eval agent';
+
+/**
+ * The question stages' tasks, filed into the ledger only once the earlier stages are done: stage 4
+ * addresses "the remaining todo task", which a third todo task would make ambiguous.
+ */
+const RETENTION = 'Set the audit log retention period';
+const RENAME = 'Rename the sync telemetry dashboard';
+const RENAME_TO = 'Sync Health';
+
+/**
+ * Said identically in both question stages, so the one that must NOT ask is graded on judgment —
+ * whether the decision was already made — rather than on which prompt mentioned asking.
+ */
+const ASK_POLICY =
+  'If finishing it needs a decision only the user can make, put the question to the user on that task ' +
+  'instead of deciding it yourself, and stop there. Otherwise just do the work.';
+
+/** The operation the question stage exists to exercise. */
+const ASK_QUESTION = 'org.dxos.operation.tasks.askQuestion';
+
+/** Filename the upload stage plants and then asks for back, distinctive enough not to collide. */
+const UPLOAD_NAME = 'eval-capture.png';
+
+/**
+ * Bytes the upload stage transfers.
+ *
+ * Comfortably past what any model would emit inline, so a run that somehow satisfied the stage
+ * through a base64 tool argument would be visible as a vastly more expensive turn rather than
+ * passing quietly. Random, so the size assertion below cannot be met by an empty or truncated
+ * transfer that happens to compress to the same thing.
+ */
+const UPLOAD_BYTES = 3 * 1024 * 1024;
+
+/**
+ * A PNG header on random bytes: `FileLimits` accepts by declared media type, and `curl` derives
+ * that from the extension, so the fixture has to be plausible enough for the type it claims.
+ */
+const uploadFixture = (): Uint8Array => {
+  const bytes = new Uint8Array(UPLOAD_BYTES);
+  // Filled in 64KB chunks: `getRandomValues` rejects a view longer than 65536 bytes outright, so a
+  // single call for a multi-megabyte fixture throws rather than returning short.
+  const CHUNK = 65_536;
+  for (let offset = 0; offset < bytes.length; offset += CHUNK) {
+    crypto.getRandomValues(bytes.subarray(offset, Math.min(offset + CHUNK, bytes.length)));
+  }
+  bytes.set([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a], 0);
+  return bytes;
+};
+
+/** The uploaded file as the database holds it, bytes included, read outside the agent. */
+const readUploadedFile = Effect.gen(function* () {
+  const file = yield* findObject(File.File, (candidate) => candidate.name === UPLOAD_NAME);
+  if (!file) {
+    return undefined;
+  }
+  const blob = yield* Database.load(file.data);
+  return {
+    size: blob.size,
+    type: blob.type,
+    external: blob.data._tag === 'external',
+    // The bytes themselves, because a length is not an identity: a truncated-then-padded or
+    // substituted payload of the same size would satisfy every other check here.
+    bytes: yield* Blob.read(blob),
+  };
+});
+
+/** Whether two byte arrays are identical. */
+const sameBytes = (left: Uint8Array, right: Uint8Array): boolean =>
+  left.length === right.length && left.every((byte, index) => byte === right[index]);
+
+/** The operation the upload stage exists to exercise. */
+const CREATE_FROM_UPLOAD = 'org.dxos.operation.file.createFromUpload';
+
+/** Ids of the objects filed on a task's `artifacts`, read outside the agent. */
+const readArtifactIds = (title: string) =>
+  Effect.gen(function* () {
+    const task = yield* findObject(Task.Task, (candidate) => candidate.title === title);
+    const objects = yield* Effect.forEach(task?.artifacts ?? [], (ref) => Database.load(ref));
+    return objects.map((object) => object.id);
+  });
+
+/**
+ * Every tool call of a turn with its arguments.
+ *
+ * `Turn.toolCalls` carries names only, and a name is not enough here: `invokeOperation` is one tool
+ * standing in front of every projected verb, so asking whether it was called says nothing about
+ * which one ran.
+ */
+const toolUses = (turn: Turn): { name: string; input: Record<string, unknown> }[] => {
+  const uses: { name: string; input: Record<string, unknown> }[] = [];
+  for (const event of turn.events) {
+    if (event?.type !== 'assistant') {
+      continue;
+    }
+    for (const block of event.message?.content ?? []) {
+      if (block?.type === 'tool_use' && typeof block.name === 'string') {
+        uses.push({ name: block.name, input: (block.input ?? {}) as Record<string, unknown> });
+      }
+    }
+  }
+  return uses;
+};
+
+/** Whether the turn invoked a named operation through `invokeOperation`. */
+const invokedOperation = (turn: Turn, key: string): boolean =>
+  toolUses(turn).some((use) => use.name === tool('invokeOperation') && use.input.key === key);
+
+/** Files the question stages' tasks into the seeded ledger, as `tasks-create` would. */
+const seedQuestionTasks = Effect.gen(function* () {
+  const project = yield* findObject(Project.Project, (candidate) => candidate.name === PROJECT_NAME);
+  const taskSet = project?.taskSet ? yield* Database.load(project.taskSet) : undefined;
+  if (!taskSet) {
+    return false;
+  }
+  for (const title of [RETENTION, RENAME]) {
+    const task = yield* Database.add(Task.make({ title, status: 'todo', [Obj.Parent]: taskSet }));
+    TaskSet.addTaskToSet(taskSet, task);
+  }
+  yield* Database.flush();
+  return true;
+});
+
+/** Every question in the ledger, from its task's history, read outside the agent. */
+const readQuestions = Effect.gen(function* () {
+  const tasks = yield* Database.query(Filter.type(Task.Task)).run;
+  return tasks.flatMap((task) =>
+    Task.getQuestions(task.history).map(({ question, answer }) => ({
+      taskId: task.id,
+      options: question.options?.length ?? 0,
+      answered: answer !== undefined,
+    })),
+  );
+});
 
 type TaskRow = { title?: string; status?: string; description?: string };
 
@@ -136,6 +306,14 @@ type Staged = {
   readOnly: boolean;
   completed: boolean;
   started: boolean;
+  /** `undefined` when the stage did not run — see {@link UPLOAD_STAGE}. */
+  uploaded?: boolean;
+  /** `undefined` when the upload stage did not run. */
+  attached?: boolean;
+  /** A decision already made in the prompt was acted on, with no question filed. */
+  answeredFromContext: boolean;
+  /** A decision only the user can make was asked on its task, and the agent chose no answer. */
+  asked: boolean;
 };
 
 const NOTHING_STAGED: Staged = {
@@ -144,6 +322,8 @@ const NOTHING_STAGED: Staged = {
   readOnly: false,
   completed: false,
   started: false,
+  answeredFromContext: false,
+  asked: false,
 };
 
 /**
@@ -193,19 +373,51 @@ const scorers = (staged: Staged, report?: McpLatency.Report): Scorer.Any[] => [
     description: 'A second turn set the other task started with its description, without rolling the first back.',
     score: Effect.succeed(staged.started),
   }),
+  ...(staged.uploaded === undefined
+    ? []
+    : [
+        Scorer.make({
+          name: 'upload-round-trip',
+          description:
+            'The agent uploaded a 3MB file off its own disk through the signed URL and turned it ' +
+            'into a File object whose blob holds exactly those bytes, compared byte for byte.',
+          score: Effect.succeed(staged.uploaded),
+        }),
+        Scorer.make({
+          name: 'upload-attached-to-task',
+          description: 'The uploaded file is recorded on the named task as an artifact, and on no other task.',
+          score: Effect.succeed(staged.attached === true),
+        }),
+      ]),
+  Scorer.make({
+    name: 'no-question-when-decided',
+    description:
+      'Given a decision the prompt had already made, the agent did the work and filed no question — ' +
+      'asking is for what it cannot decide, not a reflex.',
+    score: Effect.succeed(staged.answeredFromContext),
+  }),
+  Scorer.make({
+    name: 'question-asked',
+    description:
+      'Given a decision only the user can make, the agent called `tasks.askQuestion`: exactly one ' +
+      "question, in its task's history, with options offered and no answer recorded, and the task blocked.",
+    score: Effect.succeed(staged.asked),
+  }),
   Scorer.database({
     name: 'ledger-intact',
     // The ledger's own length, not a filter: the natural failure of an agent that cannot find a task
     // is to create a new one and report success, which every title-keyed check would pass.
-    description: 'Still exactly two tasks — the agent updated the ledger rather than adding to it.',
+    description: 'Still exactly the four seeded tasks — the agent updated the ledger rather than adding to it.',
     query: Query.select(Filter.type(Task.Task)),
-    score: (tasks) => tasks.length === 2,
+    score: (tasks) => tasks.length === 4,
   }),
   latencyScorer(report),
 ];
 
 /** Names and descriptions only; the marks come from the run, through `output.scores`. */
-const SCORERS = GRADED ? scorers(NOTHING_STAGED) : remoteScorers(false);
+const SCORERS = GRADED
+  ? scorers({ ...NOTHING_STAGED, ...(UPLOAD_STAGE ? { uploaded: false, attached: false } : {}) })
+  : remoteScorers(false);
 
 /**
  * A deployed worker over a space this process cannot see, driven from the outside: no seed, no
@@ -232,9 +444,21 @@ const localTask = () =>
   runClaudeEval(
     {
       target: TARGET,
-      skills: [{ key: ProjectSkill.key, make: ProjectSkill.make, operations: ProjectSkill.operations }],
-      plugins: [ProjectsPlugin.make(), TasksPlugin.make()],
-      types: [Project.Project, Milestone.Milestone, Outline.Outline, Task.Task, TaskSet.TaskSet],
+      skills: [{ key: ProjectSkill.key, make: ProjectSkill.make, operations: ProjectSkill.operations }, FileSkill],
+      // Locally the harness answers `file.createFromUpload` from its own stage, and FilePlugin's
+      // handler for the same operation (EDGE adoption) would compete with it.
+      plugins: [ProjectsPlugin.make(), TasksPlugin.make(), ...(REMOTE ? [FilePlugin.make()] : [])],
+      localUploads: true,
+      types: [Project.Project, Milestone.Milestone, Outline.Outline, Task.Task, TaskSet.TaskSet, File.File, Blob.Blob],
+      // The server's own tools, plus `curl` for the upload stage only — see the header comment for
+      // why the no-shell rule has this one exception and why it cannot launder the other stages.
+      allowedTools: [
+        tool('queryOperations'),
+        tool('invokeOperation'),
+        tool('loadSkill'),
+        tool('createUpload'),
+        'Bash(curl:*)',
+      ],
       seed: () =>
         Effect.gen(function* () {
           const tasks = yield* Effect.forEach([ROTATE, BACKFILL], (title) =>
@@ -250,7 +474,7 @@ const localTask = () =>
           yield* Database.add(Project.make({ name: PROJECT_NAME, taskSet: Ref.make(taskSet) }));
         }),
     },
-    async ({ spaceId, send, query, score, latency }) => {
+    async ({ spaceId, workdir, send, query, score, latency }) => {
       // Stage 1 — the starting state, proven before a single token is spent. Without it, a later
       // "the task is done" score cannot distinguish the agent's work from a bad fixture.
       const seeded = await query(readTasks);
@@ -305,17 +529,106 @@ const localTask = () =>
         // Still done: a later turn must not roll back what an earlier one committed.
         find(afterStart, ROTATE)?.status === 'done';
 
+      // Stage 5 — the direct-upload path, which exists precisely because these bytes cannot travel
+      // as a tool argument. The fixture is planted on the agent's disk rather than described to it,
+      // so the only way through is `createUpload` -> shell transfer -> `createFromUpload`.
+      let uploaded: boolean | undefined;
+      let attached: boolean | undefined;
+      let uploadTurn: Turn | undefined;
+      if (UPLOAD_STAGE) {
+        const fixture = uploadFixture();
+        fs.writeFileSync(path.join(workdir, UPLOAD_NAME), fixture);
+        const upload = await send(
+          `The file ./${UPLOAD_NAME} in your working directory is a ${UPLOAD_BYTES}-byte screenshot. ` +
+            `Add it to space ${spaceId} as a file named "${UPLOAD_NAME}". It is far too large to pass ` +
+            'as a tool argument, so upload it directly: get an upload URL, transfer the bytes with ' +
+            `curl, then create the file object from the upload id. Then attach the new file to the task ` +
+            `titled "${ROTATE}" as an artifact.`,
+        );
+        uploadTurn = upload;
+        const stored = await query(readUploadedFile);
+        uploaded =
+          !upload.isError &&
+          upload.toolCalls.includes(tool('createUpload')) &&
+          // The operation by name, not merely `invokeOperation`. Without this the stage is
+          // satisfiable through `createFromSource`'s base64 arm — which also stores to edge, so the
+          // external check below does not exclude it — and would pass by doing the one thing this
+          // path exists to avoid. The uploadId needs no separate check: the byte comparison already
+          // fails if the operation adopted a different upload.
+          invokedOperation(upload, CREATE_FROM_UPLOAD) &&
+          // The bytes are the real assertion: they can only match if the transfer completed intact
+          // and the service stored what it received, which no amount of model narration produces.
+          stored?.size === UPLOAD_BYTES &&
+          sameBytes(stored.bytes, fixture) &&
+          // External, not inline — an inline blob would mean the bytes came back through the model
+          // after all, which is the exact failure this whole path exists to prevent.
+          stored.external === true;
+        const file = await query(findObject(File.File, (candidate) => candidate.name === UPLOAD_NAME));
+        const [onRotate, onBackfill] = await Promise.all([
+          query(readArtifactIds(ROTATE)),
+          query(readArtifactIds(BACKFILL)),
+        ]);
+        attached = file != null && onRotate.includes(file.id) && !onBackfill.includes(file.id);
+      }
+
+      // Stage 6 — the counter-case: the decision is in the prompt, so any question is a reflex. Run
+      // first so the stage after it can demand exactly one question in the ledger.
+      const questionTasksSeeded = await query(seedQuestionTasks);
+      const decided = await send(
+        `In space ${spaceId}, pick up the task "${RENAME}" in project "${PROJECT_NAME}". The user has ` +
+          `already chosen the new name: "${RENAME_TO}". Set the task's description to the new name and ` +
+          `its status to "started". ${ASK_POLICY}`,
+      );
+      const afterDecided = await query(readQuestions);
+      const renameTask = find(await query(readTasks), RENAME);
+      const answeredFromContext =
+        questionTasksSeeded &&
+        !decided.isError &&
+        afterDecided.length === 0 &&
+        !invokedOperation(decided, ASK_QUESTION) &&
+        renameTask?.status === 'started' &&
+        (renameTask?.description ?? '').includes(RENAME_TO);
+
+      // Stage 7 — a decision nothing the agent can reach settles; no answer entry in the history is
+      // what proves it did not answer on the user's behalf.
+      const ask = await send(
+        `In space ${spaceId}, pick up the task "${RETENTION}" in project "${PROJECT_NAME}". It needs an ` +
+          'audit log retention period. That is a compliance decision the user owns and has not made yet; ' +
+          'the plausible choices are 30 days, 1 year and 7 years, and nothing in the space settles it. ' +
+          ASK_POLICY,
+      );
+      const questions = await query(readQuestions);
+      const retentionTask = await query(findObject(Task.Task, (candidate) => candidate.title === RETENTION));
+      const [question] = questions;
+      const asked =
+        !ask.isError &&
+        invokedOperation(ask, ASK_QUESTION) &&
+        retentionTask !== undefined &&
+        questions.length === 1 &&
+        question !== undefined &&
+        question.taskId === retentionTask.id &&
+        question.options >= 2 &&
+        !question.answered &&
+        retentionTask.status === 'blocked';
+
       // After the turns, so the probe's own connection is not competing with the agent's for the
       // listener — and so a latency figure is never what a scenario's writes waited behind. The
       // ledger is at its fullest here too, which is the state worth timing a read against.
       const project = await query(findObject(Project.Project, (candidate) => candidate.name === PROJECT_NAME));
       const report = await latency([...readProbes(spaceId), ...(project ? refProbes(spaceId, project.id) : [])]);
 
-      const scores = await score(scorers({ scaffolded, listed, readOnly, completed, started }, report));
+      const scores = await score(
+        scorers(
+          { scaffolded, listed, readOnly, completed, started, uploaded, attached, answeredFromContext, asked },
+          report,
+        ),
+      );
       return {
         scores,
         latency: report,
-        turns: [read, complete, start].map(({ isError, toolCalls, result }) => ({ isError, toolCalls, result })),
+        turns: [read, complete, start, ...(uploadTurn ? [uploadTurn] : []), decided, ask].map(
+          ({ isError, toolCalls, result }) => ({ isError, toolCalls, result }),
+        ),
       };
     },
   );

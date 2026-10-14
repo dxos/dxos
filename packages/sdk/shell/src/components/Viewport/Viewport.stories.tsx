@@ -5,36 +5,31 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { AlertDialog } from '@dxos/react-ui';
+import * as AlertDialog from '@dxos/react-ui/AlertDialog';
+import * as Button from '@dxos/react-ui/Button';
 import { withTheme } from '@dxos/react-ui/testing';
+import * as Typography from '@dxos/react-ui/Typography';
 
-import { Action } from '../Panel/index.ts';
 import { Viewport, useViewportContext } from './Viewport.tsx';
 
 type StorybookViewportProps = {};
+
+const VIEWS = ['one', 'two', 'three'];
 
 const Views = () => {
   const { setActiveView } = useViewportContext('StorybookViews');
   return (
     <Viewport.Views>
-      <Viewport.View id='one' classNames='p-4'>
-        <p>One</p>
-        <p className='invisible'>Two</p>
-        <p className='invisible'>Three</p>
-        <Action onClick={() => setActiveView('two')}>Next</Action>
-      </Viewport.View>
-      <Viewport.View id='two' classNames='p-4'>
-        <p className='invisible'>One</p>
-        <p>Two</p>
-        <p className='invisible'>Three</p>
-        <Action onClick={() => setActiveView('three')}>Next</Action>
-      </Viewport.View>
-      <Viewport.View id='three' classNames='p-4'>
-        <p className='invisible'>One</p>
-        <p className='invisible'>Two</p>
-        <p>Three</p>
-        <Action onClick={() => setActiveView('one')}>Next</Action>
-      </Viewport.View>
+      {VIEWS.map((id, index) => (
+        <Viewport.View key={id} id={id}>
+          <AlertDialog.Body>
+            <Typography.Text>{id}</Typography.Text>
+          </AlertDialog.Body>
+          <AlertDialog.Footer>
+            <Button.Root onClick={() => setActiveView(VIEWS[(index + 1) % VIEWS.length])}>Next</Button.Root>
+          </AlertDialog.Footer>
+        </Viewport.View>
+      ))}
     </Viewport.Views>
   );
 };
@@ -42,15 +37,15 @@ const Views = () => {
 const StorybookViewport = (_: StorybookViewportProps) => {
   return (
     <AlertDialog.Root defaultOpen>
-      <AlertDialog.Overlay>
-        <AlertDialog.Content classNames='p-0'>
-          <AlertDialog.Title srOnly>Viewport</AlertDialog.Title>
-          <AlertDialog.Description srOnly>Storybook viewport navigation demo.</AlertDialog.Description>
-          <Viewport.Root defaultActiveView='one'>
-            <Views />
-          </Viewport.Root>
-        </AlertDialog.Content>
-      </AlertDialog.Overlay>
+      <AlertDialog.Content>
+        <AlertDialog.Header>
+          <AlertDialog.Title>Viewport</AlertDialog.Title>
+        </AlertDialog.Header>
+        <AlertDialog.Description srOnly>Storybook viewport navigation demo.</AlertDialog.Description>
+        <Viewport.Root defaultActiveView='one'>
+          <Views />
+        </Viewport.Root>
+      </AlertDialog.Content>
     </AlertDialog.Root>
   );
 };

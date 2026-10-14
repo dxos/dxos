@@ -1,0 +1,42 @@
+%% Process management: local and EDGE managers side by side; the local manager alone owns the live table, uncapped.
+flowchart TB
+  subgraph req [Requesters]
+    AgentSvc[AgentService]
+    TrigDisp[TriggerDispatcher]
+  end
+  subgraph local [Local runtime]
+    PM[ProcessManager]
+    OpInvoker[ProcOpInvoker]
+    LocalHandle[ProcessHandle]
+    Store[ProcessStore]
+    ProcDef[Process def]
+  end
+  subgraph remote [EDGE runtime]
+    RPM[RemoteProcessMgr]
+    RHandle[RemoteProcHandle]
+    Queued[QueuedRemoteCtl]
+    EdgeCtl[EdgeProcControl]
+  end
+  AgentSvc -->|spawn local| PM
+  AgentSvc -->|spawn on EDGE| RPM
+  TrigDisp -->|spawn| PM
+  PM -->|owns, no cap| LocalHandle
+  PM -->|persist| Store
+  PM --> OpInvoker
+  OpInvoker -->|spawn child| PM
+  LocalHandle -->|run| ProcDef
+  LocalHandle -->|delete on exit| Store
+  RPM -->|make| RHandle
+  RHandle -->|control| Queued
+  Queued -->|deliver| EdgeCtl
+%% ref AgentSvc packages/core/compute/agent-runtime/src/agent-service/AgentService.ts
+%% ref TrigDisp packages/core/compute/compute-runtime/src/triggers/trigger-dispatcher.ts
+%% ref PM packages/core/compute/compute-runtime/src/ProcessManager.ts
+%% ref OpInvoker packages/core/compute/compute-runtime/src/ProcessOperationInvoker.ts
+%% ref LocalHandle packages/core/compute/compute-runtime/src/ProcessHandle.ts
+%% ref Store packages/core/compute/compute-runtime/src/process-store.ts
+%% ref ProcDef packages/core/compute/compute/src/Process.ts
+%% ref RPM packages/core/compute/compute-runtime/src/RemoteProcessManager.ts
+%% ref RHandle packages/core/compute/compute-runtime/src/RemoteProcessHandle.ts
+%% ref Queued packages/core/compute/compute-runtime/src/QueuedRemoteControl.ts
+%% ref EdgeCtl packages/core/compute/edge-compute/src/EdgeProcessControl.ts

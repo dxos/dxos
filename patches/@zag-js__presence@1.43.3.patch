@@ -1,0 +1,48 @@
+diff --git a/dist/presence.machine.js b/dist/presence.machine.js
+index 9b104c40febc6d5122c66deaaf9930e4e196b55e..4765d56f0bbb57191c9a4b277a39c76b8cd1b632 100644
+--- a/dist/presence.machine.js
++++ b/dist/presence.machine.js
+@@ -136,7 +136,7 @@ var machine = (0, import_core.createMachine)({
+           if (prop("present")) return;
+           const animationName = getAnimationName(refs.get("styles"));
+           context.set("unmountAnimationName", animationName);
+-          if (animationName === "none" || animationName === context.get("prevAnimationName") || refs.get("styles")?.display === "none" || refs.get("styles")?.animationDuration === "0s") {
++          if (animationName === "none" || animationName === context.get("prevAnimationName") || refs.get("styles")?.display === "none" || refs.get("styles")?.animationDuration === "0s" || !hasUnfinishedAnimation(refs.get("node"))) {
+             send({ type: "UNMOUNT", src: "presence.changed" });
+           } else {
+             send({ type: "UNMOUNT.SUSPEND" });
+@@ -223,6 +223,10 @@ var machine = (0, import_core.createMachine)({
+ function getAnimationName(styles) {
+   return styles?.animationName || "none";
+ }
++function hasUnfinishedAnimation(node) {
++  if (typeof node?.getAnimations !== "function") return true;
++  return node.getAnimations().some((animation) => animation.playState !== "finished");
++}
+ // Annotate the CommonJS export names for ESM import in node:
+ 0 && (module.exports = {
+   machine
+diff --git a/dist/presence.machine.mjs b/dist/presence.machine.mjs
+index 5c11a9efeff5db5ada2a8602073f671203a703ef..3bd0fd0ab9ad19baf8ffafc016008f423b097828 100644
+--- a/dist/presence.machine.mjs
++++ b/dist/presence.machine.mjs
+@@ -112,7 +112,7 @@ var machine = createMachine({
+           if (prop("present")) return;
+           const animationName = getAnimationName(refs.get("styles"));
+           context.set("unmountAnimationName", animationName);
+-          if (animationName === "none" || animationName === context.get("prevAnimationName") || refs.get("styles")?.display === "none" || refs.get("styles")?.animationDuration === "0s") {
++          if (animationName === "none" || animationName === context.get("prevAnimationName") || refs.get("styles")?.display === "none" || refs.get("styles")?.animationDuration === "0s" || !hasUnfinishedAnimation(refs.get("node"))) {
+             send({ type: "UNMOUNT", src: "presence.changed" });
+           } else {
+             send({ type: "UNMOUNT.SUSPEND" });
+@@ -199,6 +199,10 @@ var machine = createMachine({
+ function getAnimationName(styles) {
+   return styles?.animationName || "none";
+ }
++function hasUnfinishedAnimation(node) {
++  if (typeof node?.getAnimations !== "function") return true;
++  return node.getAnimations().some((animation) => animation.playState !== "finished");
++}
+ export {
+   machine
+ };

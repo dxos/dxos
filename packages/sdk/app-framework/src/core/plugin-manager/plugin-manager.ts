@@ -43,12 +43,13 @@ import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as PubSub from 'effect/PubSub';
+import * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Ref from 'effect/Ref';
 import * as Semaphore from 'effect/Semaphore';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
-import { EffectEx } from '@dxos/effect';
+import * as AtomEx from '@dxos/effect/AtomEx';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 
 import type * as ActivationEvent from '../activation-event.ts';
@@ -110,6 +111,7 @@ export type ManagerOptions = {
    * `plugins` are ignored.
    */
   core?: string[];
+  /** Registry to use instead of creating one; `atomIdleTTL` does not apply to it. */
   registry?: Registry.AtomRegistry;
   /**
    * Backend for the plugin registry catalog. When omitted the manager exposes a
@@ -131,6 +133,11 @@ export type ManagerOptions = {
    * Defaults to 30 seconds; pass `Duration.infinity` to disable.
    */
   loadTimeout?: Duration.Input;
+  /**
+   * Grace period before an atom with no subscribers is removed from the registry this manager creates.
+   * Defaults to {@link AtomEx.DEFAULT_IDLE_TTL}; see `AtomEx.makeRegistry`.
+   */
+  atomIdleTTL?: Duration.Input;
   /**
    * Maximum time allowed for a single module's `activate()` Effect to settle.
    * Modules that exceed this fail with {@link PluginTimeoutError}; the owning
@@ -202,6 +209,8 @@ export interface PluginManager {
    * Loads a plugin via the plugin loader and registers it without enabling it.
    * Returns the loaded plugin so callers can enable it by its canonical id
    * (which may differ from the locator used to load it, e.g. URL loaders).
+   * A plugin whose id is already enabled, such as one persisted from an earlier
+   * session, is activated as part of the add.
    */
   add(id: string): Effect.Effect<Plugin.Plugin, Error>;
 
@@ -318,6 +327,7 @@ class ManagerImpl implements PluginManager {
     onRemove,
     loadTimeout = DEFAULT_LOAD_TIMEOUT,
     activationTimeout = DEFAULT_ACTIVATION_TIMEOUT,
+    atomIdleTTL = AtomEx.DEFAULT_IDLE_TTL,
     whenIdle,
   }: ManagerOptions) {
     // Core plugins default to `meta.tags.includes('system')`, overridden by the host's
@@ -328,7 +338,7 @@ class ManagerImpl implements PluginManager {
     const core: string[] = coreProp
       ? coreProp.filter((id) => registered.has(id))
       : plugins.filter(({ meta }) => meta.profile.tags?.includes('system')).map(({ meta }) => meta.profile.key);
-    this.registry = registry ?? Registry.make();
+    this.registry = registry ?? AtomEx.makeRegistry({ idleTTL: atomIdleTTL });
     this.capabilities = CapabilityManager.make({
       registry: this.registry,
     });
@@ -388,7 +398,8 @@ class ManagerImpl implements PluginManager {
       Effect.flatMap((subscription) =>
         PubSub.take(subscription).pipe(
           Effect.tap((message) => Effect.sync(() => this._autoDisableOnModuleError(message))),
-          Effect.forever,
+          // A yield per message is a clamped 4ms browser timer; `take` already suspends when the queue is empty.
+          Effect.forever({ disableYield: true }),
         ),
       ),
       Effect.scoped,
@@ -528,7 +539,13 @@ class ManagerImpl implements PluginManager {
   }
 
   add(id: string): Effect.Effect<Plugin.Plugin, Error> {
-    return this._catalog.add(id);
+    return this._catalog.add(id).pipe(
+      // An id already in the enabled set (persisted from an earlier session) would otherwise read
+      // as enabled while none of its modules is registered, and no toggle short of off-and-on starts it.
+      Effect.tap((plugin) =>
+        this._state.isEnabled(plugin.meta.profile.key) ? this.enable(plugin.meta.profile.key) : Effect.void,
+      ),
+    );
   }
 
   enable(id: string, opts?: { resolveDependencies?: boolean }): Effect.Effect<boolean, Error> {

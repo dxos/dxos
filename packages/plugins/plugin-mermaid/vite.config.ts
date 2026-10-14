@@ -13,5 +13,5 @@ export default defineConfig({
     meta: 'src/meta.ts',
   },
   jsx: 'react',
-  test: { node: true, storybook: true },
+  test: { browser: 'chromium', storybook: true },
 });

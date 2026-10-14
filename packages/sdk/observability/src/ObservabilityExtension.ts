@@ -85,7 +85,7 @@ export type Inference = {
   parentSpanId?: string;
   /** Provider span name, e.g. `LanguageModel.streamText`. */
   spanName: string;
-  /** `gen_ai.system` — the serving product, not the wire dialect. */
+  /** `gen_ai.provider.name` — the serving product, not the wire dialect. */
   provider?: string;
   model?: string;
   /** Conversation the call belongs to, when the call site named one. */
@@ -158,7 +158,10 @@ export type Ai = {
   captureToolCall(toolCall: ToolCall): void;
 };
 
-/** What every event in one MCP session carries; learned at `initialize` and stamped on the calls that follow. */
+/** The client name an MCP event carries when no request named its client; `@posthog/mcp` drops a falsy one. */
+export const UNKNOWN_MCP_CLIENT = 'unknown';
+
+/** What every MCP event carries: the session it groups under and the client it came from. */
 export type McpSession = {
   /** Groups the session's events; one server process is one session over a stdio transport. */
   sessionId: string;
@@ -169,6 +172,7 @@ export type McpSession = {
 
 /** MCP extension API (kind-specific methods only). */
 export type Mcp = {
+  /** A client connected successfully. */
   captureInitialize(session: McpSession): void;
   captureToolCall(
     call: McpSession & { toolName: string; parameters?: unknown; durationMs: number; isError: boolean },
@@ -180,8 +184,13 @@ export type Mcp = {
  */
 export type SupportLogTags = { ticketId: string } | { reportId: string };
 
+/** What an uploaded NDJSON bundle is, which decides where it is filed in storage. */
+export type SupportUploadKind = 'logs' | 'trajectory';
+
 export type Support = {
   uploadLogs(): Promise<string | undefined>;
+  /** Uploads an NDJSON bundle the caller built (e.g. an agent trajectory), returning its storage key. */
+  uploadNdjson(ndjson: string, kind: SupportUploadKind): Promise<string | undefined>;
   sessionContext(): SupportSessionContext | undefined;
   flushLogs(attributes: SupportLogTags): Promise<void>;
 };

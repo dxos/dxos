@@ -5,7 +5,7 @@
 import * as EffectContext from 'effect/Context';
 import { inspect } from 'node:util';
 
-import { type CleanupFn, Event, MulticastObservable, Trigger, synchronized } from '@dxos/async';
+import { Event, MulticastObservable, Trigger, asyncTimeout, synchronized } from '@dxos/async';
 import { createEdgeBlobBackend } from '@dxos/blob/hosted';
 import {
   type ClientServicesProvider,
@@ -31,6 +31,7 @@ import {
   InvalidConfigError,
   RemoteServiceConnectionError,
   RemoteServiceConnectionTimeout,
+  RpcClosedError,
   runServiceCall,
   subscribeStream,
 } from '@dxos/protocols';
@@ -43,6 +44,10 @@ import { type MeshProxy } from '../mesh/mesh-proxy.ts';
 import type { IFrameManager, Shell, ShellManager } from '../services/index.ts';
 import { DXOS_VERSION } from '../version.ts';
 import { ClientRuntime } from './client-runtime.ts';
+import { createRpcBlobStore } from './rpc-blob-store.ts';
+
+/** Longest a destroy waits for a database's pending writes to reach the host. */
+const DESTROY_FLUSH_TIMEOUT = 5_000;
 
 /**
  * This options object configures the DXOS Client.
@@ -83,6 +88,8 @@ export class Client {
   // TODO(wittjosiah): Make `null` status part of enum.
   private readonly _statusUpdate = new Event<SystemStatus | null>();
   private readonly _status = MulticastObservable.from(this._statusUpdate, null);
+  private readonly _fatalErrorUpdate = new Event<Error | null>();
+  private readonly _fatalError = MulticastObservable.from(this._fatalErrorUpdate, null);
 
   private readonly _echoClient = new EchoClient();
 
@@ -122,7 +129,7 @@ export class Client {
   private _edgeHttpClient?: EdgeHttpClient = undefined;
   private _edgeApi?: ClientEdgeAPI = undefined;
   private _edgeIdentitySubscription?: { unsubscribe: () => void };
-  private _edgeBlobBackendCleanup?: CleanupFn;
+  private _blobBackendCleanup?: () => void;
 
   constructor(options: ClientOptions = {}) {
     if (
@@ -218,6 +225,13 @@ export class Client {
   }
 
   /**
+   * Set when the system status stream fails after open; cleared only when the client reopens.
+   */
+  get fatalError(): MulticastObservable<Error | null> {
+    return this._fatalError;
+  }
+
+  /**
    * True while an in-progress {@link reset} is tearing down services. Consumers that react to
    * service disconnect/reconnect (e.g. to force a reload) should check this before choosing a
    * reload target — mid-reset, the current route is stale and reloading to it would reopen
@@ -296,9 +310,9 @@ export class Client {
    */
   // TODO(burdon): Return type?
   async diagnostics(options: JsonKeyOptions = {}): Promise<any> {
-    const { DiagnosticsCollector } = await import('@dxos/client-services');
+    const { Diagnostics } = await import('@dxos/client-services');
     invariant(this._services?.services.SystemService, 'SystemService is not available.');
-    return DiagnosticsCollector.collect(this._config, this.services, options);
+    return Diagnostics.DiagnosticsCollector.collect(this._config, this.services, options);
   }
 
   /**
@@ -347,9 +361,8 @@ export class Client {
 
     {
       invariant(this._services, 'Client not initialized.');
-      await runServiceCall(this._effectRuntime, this._services.rpc['QueryService.reindex'](undefined), {
+      await runServiceCall(this._effectRuntime, this._services.rpc, 'QueryService.reindex', undefined, {
         timeout: 30_000,
-        label: 'QueryService.reindex',
       });
     }
 
@@ -445,13 +458,6 @@ export class Client {
   private async _open(ctx: Context): Promise<void> {
     log('opening...');
     invariant(this._services);
-    log('client._open: importing proxy modules');
-    const { SpaceList } = await import('../echo/space-list.ts');
-    const { HaloProxy } = await import('../halo/halo-proxy.ts');
-    const { MeshProxy } = await import('../mesh/mesh-proxy.ts');
-    const { Shell } = await import('../services/index.ts');
-    log('client._open: proxy modules loaded');
-
     const trigger = new Trigger<Error | undefined>();
     this._services.closed?.on(async (error) => {
       log('terminated', { resetting: this._resetting });
@@ -471,13 +477,23 @@ export class Client {
         this.reloaded.emit();
       }
     });
-    log('client._open: opening services...');
-    await this._services.open();
+    // The services open alongside the proxy imports rather than after them: the worker handshake is
+    // the long pole, and each sequential import waits out a main thread busy with plugin activation.
+    log('client._open: importing proxy modules and opening services...');
+    invariant(this._config, 'Client not initialized.');
+    const edgeUrl = this._config.get('runtime.services.edge.url');
+    const [{ SpaceList }, { HaloProxy }, { MeshProxy }, { Shell }, edgeClientModule] = await Promise.all([
+      import('../echo/space-list.ts'),
+      import('../halo/halo-proxy.ts'),
+      import('../mesh/mesh-proxy.ts'),
+      import('../services/index.ts'),
+      edgeUrl ? import('@dxos/edge-client') : undefined,
+      this._services.open(),
+    ]);
     log('client._open: services opened');
 
-    const edgeUrl = this._config!.get('runtime.services.edge.url');
-    if (edgeUrl) {
-      const { EdgeHttpClient } = await import('@dxos/edge-client');
+    if (edgeUrl && edgeClientModule) {
+      const { EdgeHttpClient } = edgeClientModule;
       const clientTag = resolveTelemetryTag(this._config);
       this._edgeHttpClient = new EdgeHttpClient(edgeUrl, { clientTag });
       this._edgeApi = createClientEdgeAPI({ client: this, edgeClient: this._edgeHttpClient });
@@ -537,30 +553,33 @@ export class Client {
           deviceSubscription.unsubscribe();
         },
       };
-
-      this._edgeBlobBackendCleanup = this._echoClient.graph.registerBlobBackend(
-        Blob.Storage.edge,
-        // Adapted rather than passed: the backend takes the four operations it needs, so it does not
-        // depend on the other twenty-nine methods of `EdgeHttpClient`, and `Context` stays here.
-        createEdgeBlobBackend({
-          transport: {
-            url: (key) => edgeHttpClient.getBlobUrl(key),
-            put: (key, data, options) => edgeHttpClient.putBlob(Context.default(), key, data, options),
-            get: (key) => edgeHttpClient.getBlob(Context.default(), key),
-            has: (key) => edgeHttpClient.hasBlob(Context.default(), key),
-          },
-        }),
-        { default: true },
-      );
     }
 
+    // Registered with or without an edge endpoint: a write is confirmed once the host stores it
+    // locally, and the host replicates to the edge, when configured, on its own.
+    const edgeHttpClient = this._edgeHttpClient;
+    const blobBackend = createEdgeBlobBackend({
+      store: createRpcBlobStore(this._services.rpc, this._effectRuntime),
+      finalizeUpload: edgeHttpClient && ((uploadId) => edgeHttpClient.finalizeBlobUpload(Context.default(), uploadId)),
+    });
+    const unregisterBlobBackend = this._echoClient.graph.registerBlobBackend(Blob.Storage.edge, blobBackend, {
+      default: true,
+    });
+    this._blobBackendCleanup = () => {
+      unregisterBlobBackend();
+      blobBackend.close();
+    };
+
     log('client._open: subscribing to system status...');
+    this._fatalErrorUpdate.emit(null);
+    let statusReceived = false;
     this._statusStreamCleanup = subscribeStream(
       this._effectRuntime,
       this._services.rpc['SystemService.queryStatus']({ interval: 3_000 }),
       {
         onData: ({ status }) => {
           log('client._open: status received', { status });
+          statusReceived = true;
           this._statusTimeout && clearTimeout(this._statusTimeout);
           trigger.wake(undefined);
 
@@ -571,8 +590,18 @@ export class Client {
         },
         onError: (err) => {
           log('client._open: status error', { err });
-          trigger.wake(err);
           this._statusUpdate.emit(null);
+          if (!statusReceived) {
+            trigger.wake(err);
+            return;
+          }
+
+          // A lost connection is reopened by `_services.closed`, and a reset tears services down on purpose.
+          if (this._resetting || err instanceof RpcClosedError) {
+            return;
+          }
+          log.error('system status stream failed', { err });
+          this._fatalErrorUpdate.emit(err);
         },
         onClose: () => {
           trigger.wake(undefined);
@@ -639,7 +668,7 @@ export class Client {
       return;
     }
 
-    // TODO(burdon): Call flush?
+    await this._flushDatabases();
     await this._close();
     this._statusUpdate.emit(null);
     await this._ctx.dispose();
@@ -655,6 +684,20 @@ export class Client {
     await this.destroy();
   }
 
+  /**
+   * Hands writes still pending to the host, so objects added just before the client is torn down (e.g. by a
+   * React StrictMode remount) are not lost. The bound only stops a dead host from holding destroy open.
+   */
+  private async _flushDatabases(): Promise<void> {
+    await Promise.all(
+      Array.from(this._echoClient.openDatabases, (db) =>
+        asyncTimeout(db.flush({ indexes: false }), DESTROY_FLUSH_TIMEOUT).catch((err) =>
+          log.warn('pending writes were not handed to the host before destroy', { spaceId: db.spaceId, err }),
+        ),
+      ),
+    );
+  }
+
   private async _close(): Promise<void> {
     log.verbose('client._close: closing...');
     this._statusTimeout && clearTimeout(this._statusTimeout);
@@ -664,12 +707,12 @@ export class Client {
     await this._echoClient.close(this._ctx);
     await this._shellClientServer?.close();
     this._shellClientServer = undefined;
+    this._blobBackendCleanup?.();
+    this._blobBackendCleanup = undefined;
     log.verbose('client._close: closing services...');
     await this._services?.close();
     this._edgeIdentitySubscription?.unsubscribe();
     this._edgeIdentitySubscription = undefined;
-    this._edgeBlobBackendCleanup?.();
-    this._edgeBlobBackendCleanup = undefined;
     this._edgeHttpClient = undefined;
     this._edgeApi = undefined;
     log('closed');
@@ -681,13 +724,9 @@ export class Client {
    * (e.g., HALO when SharedWorker is unavailable).
    */
   async resumeHostServices(): Promise<void> {
-    await runServiceCall(
-      this._effectRuntime,
-      this.services.rpc['SystemService.updateStatus']({ status: SystemStatus.ACTIVE }),
-      {
-        label: 'SystemService.updateStatus',
-      },
-    );
+    await runServiceCall(this._effectRuntime, this.services.rpc, 'SystemService.updateStatus', {
+      status: SystemStatus.ACTIVE,
+    });
   }
 
   /**
@@ -704,8 +743,10 @@ export class Client {
     log('resetting...');
     this._resetting = true;
     invariant(this._services, 'Client not initialized.');
-    await runServiceCall(this._effectRuntime, this._services.rpc['SystemService.reset'](undefined), {
-      label: 'SystemService.reset',
+    await runServiceCall(this._effectRuntime, this._services.rpc, 'SystemService.reset', undefined).catch((err) => {
+      if (!isHostShutDownByReset(err)) {
+        throw err;
+      }
     });
     await this._close();
 
@@ -716,3 +757,5 @@ export class Client {
     log('reset complete');
   }
 }
+
+const isHostShutDownByReset = (err: unknown): boolean => err instanceof RpcClosedError;

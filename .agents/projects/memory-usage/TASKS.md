@@ -1,6 +1,6 @@
 # Composer Memory Usage — Tasks
 
-_Resume: Phase 4 idle-churn sites S1-S4 fixed/investigated (see below). S1 landed in #12561 (trigger-list subscription); S3 upgraded from backoff to a real streaming RPC in #12580; S2 likewise upgraded from backoff to a real streaming RPC in this pass. Sequencing still open — verify decommit with `scripts/memory/soak.mjs` once this lands. Phase 3 continues opportunistically. Uncommitted: none._
+_Resume: Phase 7 W3 (attention/view-state containers) is the next action; push the branch first, since PR #12601 reads CONFLICTING until the merge below reaches it. Uncommitted: none. Last: merged `main` into `claude/atoms-keepalive-memory-audit-7lzyb3` on 2026-08-26 — three conflicts resolved, `app-graph`/`app-framework`/`echo` green afterwards (131 / 256 / 583 passing). Phases 1-4 and W1-W2 are done; Phase 3 continues opportunistically and Phase 4 sequencing still wants a `scripts/memory/soak.mjs` decommit run._
 
 **Target: 300–400 MB resting footprint for an idle tab, 500 MB ceiling.**
 Composition model and measurement rules: DESIGN.md. Industry comparison:
@@ -230,6 +230,74 @@ state, much of it built at module-init time (Effect contexts, schema classes).
 - [ ] Measure what schema/layer construction contributes at boot.
 - [ ] Assess whether that construction can be deferred to first use.
 
+## Phase 7: Atom `keepAlive` retention
+
+Every `Atom.keepAlive` atom is pinned in the registry for the tab's lifetime —
+`canBeRemoved` is permanently false, so idle-TTL eviction never applies. Inside
+an `Atom.family` that pins one atom, one deep-cloned value, one ECHO
+subscription and the family key **per distinct key ever read**. Full mechanism,
+cost model, and the complete site catalog: ATOMS-AUDIT.md.
+
+Bounding plan (work items W1–W7, full detail incl. prior-art survey in
+ATOMS-AUDIT.md): ECHO atoms lose `keepAlive` and stay in `WeakRef` families, so
+they are released with the entity once unobserved, with no atom-level TTL (the
+proxy-bounded record decided 2026-08-14 was dropped 2026-09-16; see W2). Everything else becomes subscriber-bounded plus a short idle TTL,
+with per-key state in owner-controlled containers. **App-graph's `_node`/`_edges`
+are excluded — handled independently, and that work has since landed on `main`
+as #12594**, which rebuilt the package (`graph.ts` → `AppGraph.ts` +
+`AppGraphBuilder.ts`) and replaced their `keepAlive` with revocable per-node
+registry mounts (`_pin`/`_unpin`, covered by `retention.test.ts`).
+
+- [x] **W1. TTL groundwork.** `AtomEx.DEFAULT_IDLE_TTL` (5 s) and
+      `AtomEx.makeRegistry` live in `@dxos/effect`'s `AtomEx` namespace. A render-churn grace,
+      explicitly not a residency policy. `idleTTL` must be finite
+      (`Duration.infinity` made the registry's bucket math `NaN` and removed
+      nodes at once) and zero maps to no grace; tests in `AtomEx.test.ts`.
+      `PluginManager` builds its registry with it (`atomIdleTTL` option), and so
+      do the fallbacks that host ECHO atoms: `withRegistry` (storybook),
+      `apps/tasks`, `apps/todomvc`, `AppGraph`, `ProjectionModel`, `AiContext`.
+      Registries that host no ECHO atoms (`GraphModel`, `GraphBuilder`,
+      `selection`, `list-model`, `migrations`, the assistant processor) keep the
+      bare constructor.
+      Follow-on: app-graph atoms must not throw during a rebuild, because a
+      batch rebuilds every stale node regardless of `lazy`. Caught by
+      plugin-navtree's storybook run. The throwing `nodeOrThrow` atom is gone
+      (from app-graph and from `@dxos/graph`'s `Store`); `getNodeOrThrow` and
+      `explore` read `node` once and throw at the call site. `_json` skips a
+      tombstoned node instead of asserting. No per-atom `setIdleTTL(0)`.
+- [x] **W2. ECHO families lose `keepAlive`.** All 11 ECHO atom families
+      (`Obj/atoms.ts`, `Annotation/atoms.ts`, `Ref/atoms.ts`) keep
+      `Atom.family` and drop `keepAlive`. A family holds atoms through `WeakRef`,
+      so once the registry node expires and no consumer holds the atom, the
+      entry, the atom and the entity key are all collectable. No `setIdleTTL` on
+      any of them. The three nested families (`propertyFamily`,
+      `refPropertyFamily`, `annotationFamily`) are flattened to tuple keys: a
+      nested family holds its inner family only weakly, so after a GC a mounted
+      consumer got a fresh atom. Ref target subscriptions are registered as
+      finalizers, so a node removed while its target loads does not leak one.
+      A per-entity atom record stored on the proxy target was tried and dropped
+      (2026-09-16): objects are unique per id in practice, so it bought no
+      behaviour over the families for a much larger diff. Tests in
+      `Obj.test.ts` and `Annotation.test.ts`.
+- [ ] **W3. Attention/view-state containers.** `LocalBackend` un-pin (storage
+      is the store); `MemoryBackend`/`AttentionManager` hold values in their
+      existing `Map`s, one pinned notify atom per owner; prune ids on
+      `update()`.
+- [ ] **W4. Mechanical removals.** `TagIndex` (3), `StateMap`, magazine (5),
+      navtree hook families (5, plus hoist out of `useMemo` to stop per-mount
+      stranding), navtree `itemAtomFamily` (map-backed like W3), native-fs
+      generation counters.
+- [ ] **W5. Per-mount swaps.** `Menu.tsx:53`, `useToolbarState.ts:21`:
+      `keepAlive` → `useAtomMount` (value lives exactly as long as the
+      component).
+- [ ] **W6. Singleton value bounds.** `companionChatCacheAtom`: evict entries
+      when the companion closes, or LRU-cap; review `AiContext._objects`
+      against census data.
+- [ ] **W7. Guardrails + verify.** Lint rule for `keepAlive` inside
+      `Atom.family`/`useMemo` (allowlist Band D); registry census in
+      `plugin-debug`'s stats panel; mailbox scenario before W2 and after each
+      item; `soak.mjs` for RSS. The audit's bands are modelled, not observed.
+
 ## Fleet-wide memory metrics (contract with `sdk-metrics`)
 
 Added by the [`sdk-metrics`](../sdk-metrics/TASKS.md) project, which exports these to
@@ -265,6 +333,7 @@ same series — agree any change before a dashboard or alert is built on them.
 
 - DESIGN.md — composition model, findings, measurement rules.
 - RESEARCH.md — industry norms, postmortems, strategy playbook.
+- ATOMS-AUDIT.md — `Atom.keepAlive` retention mechanism and site catalog.
 - Linear DX-1148 — feed/query payload retention.
 - `.agents/projects/feed-live-objects/DESIGN.md` — push-over-poll roadmap.
 - `.agents/projects/startup-latency/DESIGN.md` — demand-driven activation.

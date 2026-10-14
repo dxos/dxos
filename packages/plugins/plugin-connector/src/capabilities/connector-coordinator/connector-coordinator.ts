@@ -3,9 +3,9 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -18,7 +18,7 @@ import * as Routine from '@dxos/compute/Routine';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { Database, EID, type Key, Obj, Ref, Type } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { AccessToken, Connection } from '@dxos/link';
 import { log } from '@dxos/log';
@@ -29,6 +29,7 @@ import { meta } from '#meta';
 import { ConnectorCoordination, ConnectorSpec } from '#types';
 
 import * as Binding from '../../Binding.ts';
+import { ConnectorCommandError } from '../../commands/errors.ts';
 import { PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG, connectionDeckSubject } from '../../constants.ts';
 import { ConnectionNotReauthenticatableError, ConnectorNotFoundError, SpaceUnavailableError } from '../../errors.ts';
 import * as SyncTemplate from '../../SyncTemplate.ts';
@@ -105,12 +106,12 @@ const runOnTokenCreated = (
     return Effect.void;
   }
   return onTokenCreated(input).pipe(
-    Effect.provide(FetchHttpClient.layer),
-    // Resolved through the process manager so the connector reads its credential from the same
-    // space-scoped `CredentialsService` operations use.
     Effect.provide(
-      ServiceResolver.provide({ space: db.spaceId }, Credential.CredentialsService).pipe(
-        Layer.provide(Layer.succeed(ServiceResolver.ServiceResolver, serviceResolver)),
+      Layer.provideMerge(
+        FetchHttpClient.layer,
+        ServiceResolver.provide({ space: db.spaceId }, Credential.CredentialsService).pipe(
+          Layer.provide(Layer.succeed(ServiceResolver.ServiceResolver, serviceResolver)),
+        ),
       ),
     ),
     Effect.catch((error) =>
@@ -191,8 +192,8 @@ const openCreateSyncRoutineDialog = (
         Binding.syncCreatedRoutine({ created, connector, spaceId: db.spaceId }).pipe(
           Effect.provideService(Capability.Service, capabilities),
           Effect.catch((error) => Effect.sync(() => log.warn('first sync after routine created failed', { error }))),
-          // An EDGE force-run that outlives its replication backoff arrives as a defect
-          // (`Effect.orDie`), which the typed catch above would let escape unreported.
+          // A force-run EDGE fails other than as switched off arrives as a defect, which the typed
+          // catch above would let escape unreported.
           Effect.catchDefect((defect) =>
             Effect.sync(() => log.warn('first sync after routine created died', { defect })),
           ),
@@ -643,7 +644,9 @@ export default Capability.makeModule(
       Effect.gen(function* () {
         const connector = yield* resolveConnector(getConnectorEntries, connectorId);
         if (!connector.credentialForm) {
-          return yield* Effect.fail(new Error(`ConnectorSpec.Connector ${connectorId} has no credentialForm.`));
+          return yield* Effect.fail(
+            new ConnectorCommandError({ message: `ConnectorSpec.Connector ${connectorId} has no credentialForm.` }),
+          );
         }
 
         const result = yield* connector.credentialForm.onSubmit({ values, connector, db });
@@ -666,7 +669,9 @@ export default Capability.makeModule(
         const loginHint = result.loginHint?.trim();
         if (!loginHint) {
           return yield* Effect.fail(
-            new Error(`ConnectorSpec.Connector ${connectorId} credentialForm produced an empty loginHint.`),
+            new ConnectorCommandError({
+              message: `ConnectorSpec.Connector ${connectorId} credentialForm produced an empty loginHint.`,
+            }),
           );
         }
         return yield* createConnection({ db, spaceId, connectorId, loginHint, existingTarget });

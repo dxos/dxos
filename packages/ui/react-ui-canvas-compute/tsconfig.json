@@ -36,6 +36,9 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/test-utils"
+    },
+    {
       "path": "../../common/util"
     },
     {
@@ -58,6 +61,9 @@
     },
     {
       "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/echo/echo-react"
     },
     {
       "path": "../../sdk/app-framework"
@@ -84,16 +90,16 @@
       "path": "../react-ui-canvas"
     },
     {
-      "path": "../react-ui-canvas-editor"
+      "path": "../react-ui-editor"
     },
     {
       "path": "../react-ui-experimental"
     },
     {
-      "path": "../react-ui-form"
+      "path": "../react-ui-syntax-highlighter"
     },
     {
-      "path": "../react-ui-syntax-highlighter"
+      "path": "../ui-editor"
     },
     {
       "path": "../ui-theme"

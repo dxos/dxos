@@ -2,15 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
-import { describe, it } from '@effect/vitest';
+import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import { readFileSync } from 'node:fs';
 
 import { Pipeline } from '@dxos/pipeline';
+import * as SqlStorage from '@dxos/sql-sqlite/SqlStorage';
 
 import { SemanticIndexError } from './errors.ts';
 import { DEFAULT_EXTRACTION_RULES, buildExtractionPrompt } from './internal/stages/extract.ts';
@@ -25,8 +24,7 @@ import {
 } from './stages/index.ts';
 import { FactStore, FactStoreLive } from './store/index.ts';
 import { countingAiService, failingAiService, mockAiService, queuedAiService } from './testing/index.ts';
-import { type ExtractDocument } from './types/index.ts';
-import { type Fact } from './types/index.ts';
+import { type ExtractDocument, type Fact, Ontology, Vocab } from './types/index.ts';
 
 // Discord channel fixture (snapshot of `plugin-discord:generate-fixtures`) as extraction documents.
 type FixtureMessage = {
@@ -86,23 +84,23 @@ const QUESTION_OUTPUT = {
   ],
 };
 
-const TestLayer = FactStoreLive.layer.pipe(
-  Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })),
-  Layer.provideMerge(mockAiService(LLM_OUTPUT)),
-);
+const TestLayer = FactStoreLive.layerMemory.pipe(Layer.provideMerge(mockAiService(LLM_OUTPUT)));
 
-const FailingLayer = FactStoreLive.layer.pipe(
-  Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })),
-  Layer.provideMerge(failingAiService()),
-);
+const FailingLayer = FactStoreLive.layerMemory.pipe(Layer.provideMerge(failingAiService()));
 
 describe('FactPipeline', () => {
   it('composes extraction rules, appending caller rules after the defaults', ({ expect }) => {
     const prompt = buildExtractionPrompt();
     // Questions and requests are extracted as directive facts, tagged by speech act.
     expect(prompt).toContain('Classify each proposition by speech act');
-    // Class membership uses the distinguished `is-a` predicate (rdf:type-like), never bare "is"/"was".
-    expect(prompt).toContain('Use the exact predicate "is-a" for class membership');
+    // Class membership and roles use the ontology's predicates, never bare "is"/"was".
+    expect(prompt).toContain('Use the predicate "is_a" for class membership');
+    // Every listed predicate is shown with its shorthand, label, forms, typing and description.
+    expect(prompt).toContain(
+      '- has_role: "has role" (also: works as, is on the team as, role, job title) [person → any] — The role or job title the subject holds.',
+    );
+    // A new predicate must come with a definition.
+    expect(prompt).toContain('set predicateDescription to one sentence');
     // Predicates are atemporal: tense flows into valid-time, and past tense alone does not end a fact.
     expect(prompt).toContain('timeless present form');
     expect(prompt).toContain('does NOT set validTo');
@@ -198,6 +196,104 @@ describe('FactPipeline', () => {
   );
 
   it.effect(
+    'normalizeFactsStage maps onto the ontology, keeping each statement in its graph',
+    Effect.fnUntraced(function* () {
+      const input: DocumentFacts = {
+        doc: { text: 'irrelevant', source: 'test:doc' },
+        facts: [testFact('is on the team as'), testFact('likes')],
+      };
+      const collected: DocumentFacts[] = [];
+      yield* Stream.fromIterable([input]).pipe(
+        normalizeFactsStage({ ontology: Ontology.DEFAULT }),
+        Pipeline.run({ sink: (out) => Effect.sync(() => collected.push(out)) }),
+      );
+      yield* Effect.sync(() => {
+        const [role, likes] = collected[0].facts;
+        if (role.assertion.predicate !== 'has role' || role.assertion.predicateIri !== `${Vocab.SCHEMA}jobTitle`) {
+          throw new Error(`unexpected predicate: ${role.assertion.predicate}`);
+        }
+        // A predicate the ontology does not know is minted in the brain's namespace, not the shared `dx:` one.
+        if (likes.assertion.predicateIri !== `${Vocab.LOCAL_BRAIN}like` || role.graph !== likes.graph) {
+          throw new Error('expected a minted predicate in the shared graph');
+        }
+      });
+    }),
+  );
+
+  it.effect(
+    'extractFactsStage reuses known entities and the predicates earlier documents minted',
+    Effect.fnUntraced(function* () {
+      const prompts: unknown[] = [];
+      const fact = (subject: string, predicate: string, object: string, extra: Record<string, unknown> = {}) => ({
+        subject,
+        predicate,
+        object,
+        factuality: 'CT+',
+        polarity: '+',
+        ...extra,
+      });
+      const ontology = Ontology.DEFAULT.withNamespace(Vocab.brainNamespace('agent-1'));
+      const collected: DocumentFacts[] = [];
+      yield* Stream.fromIterable([
+        { text: 'Plato studied under Socrates.', source: 'doc-1' },
+        { text: 'Aristotle studied under Plato.', source: 'doc-2' },
+      ]).pipe(
+        extractFactsStage({
+          ontology,
+          entities: [{ iri: 'echo://SPACE/SOCRATES', label: 'Socrates', type: 'person' }],
+        }),
+        Pipeline.run({ sink: (out) => Effect.sync(() => collected.push(out)) }),
+        Effect.provide(
+          queuedAiService(
+            [
+              {
+                facts: [
+                  fact('Plato', 'studies under', 'Socrates', {
+                    predicateDescription: 'A teacher the subject learned from.',
+                  }),
+                ],
+              },
+              { facts: [fact('Aristotle', 'studies_under', 'Plato'), fact('Aristotle', 'is_a', 'philosopher')] },
+            ],
+            prompts,
+          ),
+        ),
+      );
+      yield* Effect.sync(() => {
+        const [[minted], [reused, typed]] = collected.map(({ facts }) => facts);
+        const studiesUnder = 'https://dxos.org/semantic/brain/agent-1/studyUnder';
+        expect(minted.assertion.predicateIri).toBe(studiesUnder);
+        expect(minted.assertion.predicateDescription).toBe('A teacher the subject learned from.');
+        // A mention of a known entity is stored under its IRI; an unknown one stays a (graph-local) slug.
+        expect(minted.assertion.object).toEqual({
+          kind: 'entity',
+          entity: 'echo://SPACE/SOCRATES',
+          label: 'Socrates',
+          type: 'person',
+        });
+        expect(minted.assertion.subject).toEqual({ kind: 'entity', entity: 'plato', label: 'Plato' });
+        // The second document is shown the predicate the first minted, and uses it.
+        expect(String(prompts[1])).toContain('- study_under: "studies under" — A teacher the subject learned from.');
+        expect(String(prompts[0])).toContain('- Socrates (person)');
+        expect(reused.assertion.predicateIri).toBe(studiesUnder);
+        expect(typed.assertion.predicateIri).toBe(Vocab.RDF_TYPE);
+      });
+    }),
+  );
+
+  it.effect(
+    'normalizeEntityId keys an email by its mailto IRI and a URL as itself',
+    Effect.fnUntraced(function* () {
+      yield* Effect.sync(() => {
+        const keys = ['Alice@Enron.com', 'https://dxos.org/team', 'Rich Burdon'].map(normalizeEntityId);
+        if (keys.join('|') !== 'mailto:alice@enron.com|https://dxos.org/team|rich-burdon') {
+          throw new Error(`unexpected keys: ${keys.join('|')}`);
+        }
+      });
+    }),
+  );
+
+  it.effect(
     'extracts the Alice fact and persists it',
     Effect.fnUntraced(function* () {
       yield* FactPipeline.run([
@@ -267,14 +363,13 @@ describe('FactPipeline', () => {
       const ai = countingAiService({
         facts: [{ subject: 'Alice', predicate: 'travelsTo', object: 'Paris', factuality: 'PR+', polarity: '+' }],
       });
-      const layer = FactStoreLive.layer.pipe(
-        Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })),
-        Layer.provideMerge(ai.layer),
-      );
+      const database = yield* Effect.acquireRelease(SqlStorage.makeMemory(), (opened) =>
+        Effect.sync(() => opened.close()),
+      ).pipe(Effect.orDie);
+      const layer = FactStoreLive.layer(database).pipe(Layer.provideMerge(ai.layer));
       yield* Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
         const triplesCount = () =>
-          sql<{ n: number }>`SELECT COUNT(*) AS n FROM triples`.pipe(Effect.map((rows) => rows[0].n));
+          Effect.sync(() => Number(database.exec('SELECT COUNT(*) AS n FROM quads').toArray()[0].n));
 
         const doc = { text: 'going to Paris', source: 'dxn:q:m9', author: 'Alice', date: '2026-06-06T00:00:00.000Z' };
         yield* FactPipeline.run([doc]);
@@ -297,7 +392,7 @@ describe('FactPipeline', () => {
           }
         });
       }).pipe(Effect.provide(layer));
-    }),
+    }, Effect.scoped),
   );
 
   it.effect(
@@ -318,11 +413,11 @@ describe('FactPipeline', () => {
             throw new Error(`expected 1 fact, got ${facts.length}`);
           }
           const [fact] = facts;
-          if (!('entity' in fact.assertion.subject) || fact.assertion.subject.entity !== 'alice') {
+          if (fact.assertion.subject.kind !== 'entity' || fact.assertion.subject.entity !== 'alice') {
             throw new Error('subject not linked');
           }
           // The original surface form is preserved as the display label (the entity id is the slug).
-          if (!('entity' in fact.assertion.subject) || fact.assertion.subject.label !== 'Alice') {
+          if (fact.assertion.subject.kind !== 'entity' || fact.assertion.subject.label !== 'Alice') {
             throw new Error(`subject label not preserved: ${JSON.stringify(fact.assertion.subject)}`);
           }
           if (fact.assertion.predicate !== 'travelsTo') {
@@ -376,7 +471,7 @@ describe('FactPipeline', () => {
             throw new Error(`expected 1 grounded fact, got ${facts.length}`);
           }
           const [fact] = facts;
-          if (!('entity' in fact.assertion.subject) || fact.assertion.subject.entity !== 'alice') {
+          if (fact.assertion.subject.kind !== 'entity' || fact.assertion.subject.entity !== 'alice') {
             throw new Error('the grounded fact was dropped');
           }
         });
@@ -435,7 +530,9 @@ describe('FactPipeline', () => {
 
         // Structured query (builds + runs SPARQL) and the raw SELECT path used by the story's NL→SPARQL query.
         const byEntity = yield* store.query({ entity: 'composer' });
-        const all = yield* store.select('SELECT ?fact ?p ?o WHERE { ?fact ?p ?o }');
+        const all = yield* store.select(
+          'SELECT ?g WHERE { ?g <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://dxos.org/semantic#Graph> }',
+        );
         // Fuzzy predicate: "discussed" is a substring of the stored "discussedIn".
         const byFuzzyPredicate = yield* store.query({ predicate: 'discussed' });
 
@@ -456,7 +553,7 @@ describe('FactPipeline', () => {
             throw new Error(`fuzzy predicate query returned ${byFuzzyPredicate.length}, expected ${byEntity.length}`);
           }
           const [fact] = byEntity;
-          if (!('entity' in fact.assertion.subject) || fact.assertion.subject.entity !== 'composer') {
+          if (fact.assertion.subject.kind !== 'entity' || fact.assertion.subject.entity !== 'composer') {
             throw new Error('subject entity not linked');
           }
           if (fact.assertion.predicate !== 'discussedIn') {
@@ -475,9 +572,9 @@ describe('FactPipeline', () => {
 const testFact = (predicate: string): Fact => ({
   id: `test:doc#hash#${predicate}`,
   assertion: {
-    subject: { entity: 'alice', label: 'Alice' },
+    subject: { kind: 'entity', entity: 'alice', label: 'Alice' },
     predicate,
-    object: { entity: 'acme', label: 'Acme' },
+    object: { kind: 'entity', entity: 'acme', label: 'Acme' },
   },
   factuality: { value: 'CT+', polarity: '+' },
   attribution: { source: 'test:doc', generatedAtTime: '2026-01-01T00:00:00.000Z' },

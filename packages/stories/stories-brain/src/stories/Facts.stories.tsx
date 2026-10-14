@@ -5,8 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
-import { useCapability } from '@dxos/app-framework/ui';
-import { EffectEx } from '@dxos/effect';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { type RDF } from '@dxos/pipeline-rdf';
 import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
 import * as BrainPlugin from '@dxos/plugin-brain/BrainPlugin';
@@ -39,7 +39,7 @@ const VIEWER_LAYOUT: ModuleLayout = [[StoryRole.Facts], [StoryRole.Entities]];
  * `seed` pre-populates the space's `FactStore` (the no-crawl variant).
  */
 const FactsStoryRoot = ({ layout, seed }: { layout: ModuleLayout; seed?: RDF.Fact[] }) => {
-  const registry = useCapability(BrainCapabilities.FactStoreRegistry);
+  const registry = Hooks.useCapability(BrainCapabilities.FactStoreRegistry);
   const [space] = useSpaces();
   const [facts, setFacts] = useState<RDF.Fact[]>([]);
   const [selected, setSelected] = useState<string | undefined>(undefined);
@@ -64,9 +64,9 @@ const DefaultStory = () => <FactsStoryRoot layout={CRAWL_LAYOUT} />;
 const sampleFact = (id: string, subject: string, predicate: string, object: string, confidence: number): RDF.Fact => ({
   id,
   assertion: {
-    subject: { entity: subject, label: subject === 'dxos' ? 'DXOS' : subject },
+    subject: { kind: 'entity', entity: subject, label: subject === 'dxos' ? 'DXOS' : subject },
     predicate,
-    object: { entity: object, label: object === 'dxos' ? 'DXOS' : object },
+    object: { kind: 'entity', entity: object, label: object === 'dxos' ? 'DXOS' : object },
   },
   factuality: { value: 'CT+', polarity: '+', confidence },
   attribution: { source: `sample:${id}`, generatedAtTime: '2026-06-29T00:00:00.000Z' },

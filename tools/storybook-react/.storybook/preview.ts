@@ -19,6 +19,8 @@ import './cubes.css';
 import { withThemeByClassName } from '@storybook/addon-themes';
 import { type Preview } from '@storybook/react-vite';
 
+// Next components style through `.dx-*` rules that ship separately from the theme.
+import '@dxos/react-ui/theme.css';
 import { StorybookErrorFallback } from '@dxos/storybook-addon-logger/StorybookErrorFallback';
 
 import { docsTheme } from './theme.tsx';
@@ -33,6 +35,15 @@ globalThis.__STORY_ERROR_FALLBACK__ = StorybookErrorFallback;
  * NOTE: Do not depend on @dxos/storybook-utils in the root storybook config due to circular dependencies.
  */
 export const preview: Preview = {
+  // Under `perfBundlePlugin` automerge does no wasm work at import, so the page realm initializes it
+  // before any story runs; imported dynamically to keep it out of the `storybook dev` graph.
+  beforeAll: async () => {
+    if (typeof __DX_PERF_BUNDLE__ !== 'undefined') {
+      const { initEchoHostWasm } = await import('./automerge-wasm.ts');
+      await initEchoHostWasm();
+    }
+  },
+
   // NOTE: Does not affect docs.
   decorators: [
     withThemeByClassName({

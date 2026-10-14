@@ -24,7 +24,7 @@ import { DelegationSkillHandlers } from '../skills/delegation/operations/index.t
 import { MemoryHandlers } from '../skills/memory/operations/index.ts';
 import { PlanningHandlers } from '../skills/planning/operations/index.ts';
 import { SkillManagerHandlers } from '../skills/skill-manager/operations/index.ts';
-import { Memory } from '../types/Memory.ts';
+import * as Memory from '../types/Memory.ts';
 
 /**
  * Shared layer for operation tests: every handler in the package plus the types those handlers
@@ -50,7 +50,7 @@ export const OperationTestLayer = AssistantTestLayerWithTriggers({
     Employer.Employer,
     Feed.Feed,
     Instructions.Instructions,
-    Memory,
+    Memory.Memory,
     Organization.Organization,
     Person.Person,
     Outline.Outline,

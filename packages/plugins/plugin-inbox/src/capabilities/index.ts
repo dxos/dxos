@@ -15,15 +15,15 @@ import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
 import { MessageExtractor } from '#operations';
 import { translations } from '#translations';
-import { InboxCapabilities } from '#types';
+import { InboxCapabilities, InboxEvents } from '#types';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'));
 export const Schema = AppCapability.schema(() => import('./schema.ts'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'), {
-  environments: ['node'],
+  environments: ['browser', 'node', 'tauri'],
 });
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'), {
-  environments: ['node'],
+  environments: ['browser', 'node', 'tauri'],
 });
 export const IdentitySpecs = Capability.lazyModule(
   'IdentitySpecs',
@@ -46,9 +46,10 @@ export const SummarizeExtractor = Capability.inlineModule(
       Capability.contribute(InboxCapabilities.ObjectExtractor, MessageExtractor.SummarizeMessageExtractor),
     ]),
 );
+// Read only by AnalyzeMailbox, which fires the start event before it reads them.
 export const MailboxProcessors = Capability.lazyModule(
   'MailboxProcessors',
-  { provides: [InboxCapabilities.MailboxProcessor] },
+  { provides: [InboxCapabilities.MailboxProcessor], activatesOn: InboxEvents.Start },
   () => import('./mailbox-processors.ts'),
 );
 export const AutomationTemplates = Capability.lazyModule(
@@ -59,6 +60,7 @@ export const AutomationTemplates = Capability.lazyModule(
 export const NavigationTargetResolver = AppCapability.navigationResolver(
   () => import('./navigation-target-resolver.ts'),
   {
+    environments: ['browser', 'tauri'],
     requires: [ClientCapabilities.Client],
   },
 );

@@ -9,6 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { type URI } from '@dxos/keys';
 
 import { GraphExecutor } from '../compiler/index.ts';
+import { ComputeNodeError } from '../errors.ts';
 import {
   type ComputeGraphModel,
   type ComputeNode,
@@ -81,7 +82,8 @@ export class TestRuntime {
         computeNodeResolver: async (node: ComputeNode) => workflow.getResolvedNode(node.id)!,
       });
 
-      const graph = this._graphs.get(graphUri) ?? raise(new Error(`Graph not found: ${graphUri}`));
+      const graph =
+        this._graphs.get(graphUri) ?? raise(new ComputeNodeError({ message: `Graph not found: ${graphUri}` }));
       yield* Effect.promise(() => executor.load(graph));
 
       executor.setOutputs(inputNodeId, Effect.succeed(input));

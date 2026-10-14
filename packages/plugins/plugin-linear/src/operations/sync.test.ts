@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Database, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { Milestone, Task, TaskSet } from '@dxos/types';
 

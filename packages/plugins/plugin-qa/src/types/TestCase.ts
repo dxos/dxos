@@ -7,7 +7,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/Annotation';
 
 /**
  * A terminal outcome — the only thing a case or a step can be reported as. `blocked` is distinct
@@ -52,8 +51,9 @@ export class TestCase extends Type.makeObject<TestCase>(DXN.make('org.dxos.type.
     /** The spec this case was authored from (a PLUGIN.mdl document). */
     source: Schema.optional(Schema.String),
   }).pipe(
-    LabelAnnotation.set(['title']),
+    Annotation.LabelAnnotation.set(['title']),
     Annotation.IconAnnotation.set({ icon: 'ph--check-square--regular', hue: 'green' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

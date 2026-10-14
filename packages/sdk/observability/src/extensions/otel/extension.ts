@@ -243,6 +243,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
       }),
       close: () =>
         Effect.promise(async () => {
+          remoteMetrics?.flush();
           remoteLogs?.post({ type: 'otel-flush' });
           // Run logs/metrics close concurrently and swallow their failures so the
           // tracer provider shutdown below ALWAYS runs. Without this, a rejection
@@ -262,6 +263,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Observabi
         }),
       flush: () =>
         Effect.promise(async () => {
+          remoteMetrics?.flush();
           remoteLogs?.post({ type: 'otel-flush' });
           const results = await Promise.allSettled([logs?.flush(), metrics?.flush()]);
           for (const result of results) {

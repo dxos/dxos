@@ -3,7 +3,7 @@
 //
 
 import * as Layer from 'effect/Layer';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 
 import { Event } from '@dxos/async';
 
@@ -40,5 +40,7 @@ export const registryLayerNoop: Layer.Layer<Registry.Service> = Layer.succeed(Re
     firstOrUndefined: async () => undefined,
     subscribe: () => () => {},
     atom: Atom.make((): never[] => []),
+    completeness: 'complete' as const,
+    sources: [],
   })) as Registry.Registry['query'],
 } satisfies Registry.Registry);

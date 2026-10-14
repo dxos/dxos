@@ -7,8 +7,8 @@ import { describe, test } from 'vitest';
 import { Type } from '@dxos/echo';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
-import { Task, TaskSet } from '@dxos/types';
+import * as Harness from '@dxos/plugin-testing/Harness';
+import { Task, TaskMigration, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
 import { TasksPlugin } from '#plugin';
@@ -17,7 +17,7 @@ const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('TasksPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
-    await using harness = await createComposerTestApp({
+    await using harness = await Harness.createComposerTestApp({
       plugins: [ClientPlugin.make({}), TasksPlugin()],
     });
 
@@ -31,9 +31,20 @@ describe('TasksPlugin', () => {
     expect(harness.manager.getActive()).not.toContain(moduleId('AppGraphBuilder'));
   });
 
+  test('contributes the task hierarchy migrations', async ({ expect }) => {
+    await using harness = await Harness.createComposerTestApp({
+      plugins: [ClientPlugin.make({}), TasksPlugin()],
+    });
+
+    await harness.waitForCapability(ClientCapabilities.Migration);
+    expect(harness.getAll(ClientCapabilities.Migration).flat()).toEqual(
+      expect.arrayContaining(TaskMigration.migrations),
+    );
+  });
+
   test('registers the task types with the client', async ({ expect }) => {
     // Without these registered, every task verb fails where it stores the object.
-    await using harness = await createComposerTestApp({
+    await using harness = await Harness.createComposerTestApp({
       plugins: [ClientPlugin.make({}), TasksPlugin()],
     });
 

@@ -1,7 +1,9 @@
 name: Assistant evals
 
 # `DX_ANTHROPIC_API_KEY` is read from Depot's secret settings; restrict its variant to this workflow
-# file on `main` there, since any workflow that names it can read an unscoped variant.
+# file on `main` there, since any workflow that names it can read an unscoped variant. The same goes
+# for the optional `DX_EVAL_MCP_TOKEN` and `DX_EVAL_SPACE_ID`, which only a closed-hatch target such
+# as `prod` needs: the token is minted by hand and grants access to the space it names.
 
 # TODO(wittjosiah): Once a few weeks of nightly baseline exist, add an advisory `pull_request` job
 # that runs the cheap, deterministically graded scenarios (smoke, basic, database, markdown) on
@@ -16,6 +18,10 @@ on:
         type: string
         description: 'DX_EVAL_MODELS: comma-separated model variants for the scenarios that take them'
         default: ''
+      mcp_target:
+        type: string
+        description: 'DX_EVAL_MCP_TARGET for the MCP server eval: preview, dev or prod'
+        default: 'preview'
 
 permissions:
   contents: read
@@ -36,7 +42,8 @@ concurrency:
 
 jobs:
   evals:
-    runs-on: depot-ubuntu-24.04-8
+    # 4 vCPU: the run waits on model calls, averaging 6% of 8 vCPU and peaking at 9 GB.
+    runs-on: depot-ubuntu-24.04-4
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
       credentials:
@@ -85,6 +92,9 @@ jobs:
         env:
           DX_ANTHROPIC_API_KEY: ${{ secrets.DX_ANTHROPIC_API_KEY }}
           DX_EVAL_MODELS: ${{ inputs.models }}
+          DX_EVAL_MCP_TARGET: ${{ inputs.mcp_target || 'preview' }}
+          DX_EVAL_MCP_TOKEN: ${{ (inputs.mcp_target == 'prod' || inputs.mcp_target == 'production') && secrets.DX_EVAL_MCP_TOKEN || '' }}
+          DX_EVAL_SPACE_ID: ${{ (inputs.mcp_target == 'prod' || inputs.mcp_target == 'production') && secrets.DX_EVAL_SPACE_ID || '' }}
           DX_EVAL_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
           DX_EVAL_RUN_NAME: ${{ github.ref_name }}
           DX_EVALS_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}

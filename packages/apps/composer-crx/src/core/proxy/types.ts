@@ -43,7 +43,7 @@ export const DEFAULT_RENDER_TIMEOUT_MS = 20_000;
 export type RenderRequest = Proxy.RenderRequest;
 
 /** Discriminated set of failure modes returned in a non-ok ack. */
-export type ProxyError = Proxy.ProxyError;
+export type ProxyError = Proxy.Error;
 
 /** Reply to a {@link RenderRequest}. */
 export type RenderAck = Proxy.RenderAck;

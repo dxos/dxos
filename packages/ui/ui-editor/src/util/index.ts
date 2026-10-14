@@ -5,6 +5,7 @@
 export * from './cursor.ts';
 export * from './decorations.ts';
 export * from './debug.ts';
+export * from './doc-sync.ts';
 export * from './dom.ts';
 export * from './facet.ts';
 export * from './util.ts';

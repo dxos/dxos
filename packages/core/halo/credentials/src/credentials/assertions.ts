@@ -24,6 +24,7 @@ import {
   type ServiceAccess,
   type SpaceDeleted,
   type SpaceGenesis,
+  type SpaceInvitationNotice,
   type SpaceMember,
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import {
@@ -53,6 +54,7 @@ export type CredentialAssertion =
   | ServiceAccess
   | SpaceDeleted
   | SpaceGenesis
+  | SpaceInvitationNotice
   | SpaceMember
   | CancelDelegatedInvitation
   | DelegateSpaceInvitation;

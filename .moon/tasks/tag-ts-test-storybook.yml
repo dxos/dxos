@@ -8,6 +8,7 @@ tasks:
       - storybook-addon-logger:build
       - vite-plugin-icons:build
       - vite-plugin-import-source:build
+      - vite-plugin-module-url:build
       - vite-plugin-log:build
       - ^:build
       # Dependency packages' generated sources (e.g. the plugin capability barrels) must exist
@@ -16,6 +17,7 @@ tasks:
       - '^:#prebuild'
     inputs:
       - '@group(sources)'
+      - /react-compiler.config.ts
       - /tools/storybook-react/.storybook/main.ts
       - /tools/storybook-react/.storybook/vitest.setup.ts
       - /vite.base.config.ts

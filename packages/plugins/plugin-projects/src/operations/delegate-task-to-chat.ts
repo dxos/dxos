@@ -5,7 +5,10 @@
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as Option from 'effect/Option';
 
+import { SessionConfig } from '@dxos/ai';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { AiContext } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
@@ -15,6 +18,7 @@ import * as Skill from '@dxos/compute/Skill';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { Task } from '@dxos/types';
@@ -23,6 +27,7 @@ import { concat } from '@dxos/util';
 import { ProjectOperation } from '#types';
 
 import { findProject } from './find-project.ts';
+import { projectContext, renderDelegationBrief } from './task-brief.ts';
 
 /**
  * Skills the delegated session needs beyond a chat's defaults: the checklist it works from, the
@@ -38,19 +43,34 @@ const DELEGATION_SKILL_KEYS = [
   'org.dxos.skill.sandbox',
 ];
 
+/** Statuses a subtask keeps when its parent is delegated. */
+const FINISHED: ReadonlySet<string> = new Set(['done', 'review', 'cancelled', 'duplicate']);
+
 const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat> =
   ProjectOperation.DelegateTaskToChat.pipe(
     Operation.withHandler(
-      Effect.fnUntraced(function* ({ tasks: taskRefs }) {
+      Effect.fnUntraced(function* ({ tasks: taskRefs, harness: requestedHarness }) {
         // A chat delegating nothing has no subject; the schema cannot say so (see the operation's
         // input), so the invariant is where an empty list stops.
         invariant(taskRefs.length > 0, 'Expected at least one task to delegate.');
         const requested = yield* Effect.forEach(taskRefs, (taskRef) => Database.load(taskRef));
         const { db } = yield* Database.Service;
 
+        // A parent brings its subtasks: handing over the heading of a piece of work hands over the work,
+        // parent first, then its subtree in order. Deduped, so ticking a parent and a child does not
+        // list the child twice.
+        const subtrees = yield* Effect.forEach(requested, (task) => Task.collectSubtree(task));
+
+        // A subtask that is already finished stays finished: it comes along only when it was asked for
+        // by name, so delegating a parent never reopens work that is done.
+        const asked = new Set(requested.map((task) => task.id));
+        const descendants = Task.dedupeById(subtrees.flat()).filter(
+          (task) => asked.has(task.id) || !FINISHED.has(task.status ?? 'todo'),
+        );
+
         // Idempotent over re-invocation: a task the agent already holds is skipped rather than
         // handed to a second session, and a list of nothing else stops here the way an empty one does.
-        const tasks = requested.filter((task) => !Task.isAgentWorking(task));
+        const tasks = descendants.filter((task) => !Task.isAgentWorking(task));
         invariant(tasks.length > 0, 'Expected at least one task not already delegated.');
 
         // The chat is filed under the tasks' project, so it lands in that project's navtree rather
@@ -72,9 +92,9 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
         const [project] = projects.values();
 
         const { object: chat } = yield* Operation.invoke(AssistantOperation.CreateChat, {
-          // Named after the task only when it is about exactly one: a chat holding three would be
-          // claiming to be about whichever happened to be first.
-          ...(tasks.length === 1 && { name: tasks[0].title }),
+          // Named after the task only when it was handed exactly one (with its subtasks): a chat holding
+          // three would be claiming to be about whichever happened to be first.
+          ...(requested.length === 1 && { name: requested[0].title }),
         });
 
         // The tasks join the chat's checklist in the order they were given, which is the order the
@@ -87,7 +107,14 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
         // chat under the project rather than the space root.
         if (project) {
           Chat.linkCompanion({ chat, subject: project });
+          Chat.seedSession(chat, project.session);
         }
+
+        // Every new chat names its agent, so the agent service never has to guess from an unset field.
+        const harness = yield* resolveHarness(requestedHarness);
+        Obj.update(chat, (chat) => {
+          chat.session = { ...chat.session, harness };
+        });
 
         // Added here rather than through `SpaceOperation.AddObject`: this is a database write, and
         // routing it through plugin-space would make the operation unavailable to any host that does
@@ -104,9 +131,10 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
           Task.setStatus(task, 'started', { actor: reviewer });
           Obj.update(task, (task) => {
             // The chat's agent holds the work now, so the row says so rather than keeping whoever
-            // had it before. A bare role, as the delegation skill writes: `delegation-strategy`
-            // matches on the role, and a chat session has no name of its own to give.
-            task.assignee = { role: 'assistant' };
+            // had it before. Named by the chat, as the planning tool's self-assignment is: a bare
+            // role is the supervisor's request to spawn a sub-agent, and its orphan sweep fails a
+            // started one no sub-agent is running.
+            task.assignee = { role: 'assistant', subject: Ref.make(chat) };
             if (reviewer) {
               task.reviewers = [reviewer];
             }
@@ -116,9 +144,22 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
         yield* bindDelegationContext(chat, project);
         yield* Database.flush();
 
+        // The project's companion shows the delegated chat, so opening the Assistant beside the ledger
+        // lands on the session holding the tasks rather than on a fresh, empty one. Best-effort like the
+        // opening turn below: the delegation is durable either way.
+        if (project) {
+          const selected = yield* Operation.invoke(AssistantOperation.SetCurrentChat, {
+            companionTo: project,
+            chat,
+          }).pipe(Effect.exit);
+          if (Exit.isFailure(selected)) {
+            log.warn('delegated chat was not made the companion chat', { cause: Cause.pretty(selected.cause) });
+          }
+        }
+
         // The reader stays where they delegated from — the project's ledger, whose pipeline chart
-        // shows the session as it starts — so the operation does not navigate; the chart's session
-        // lane is the way into the chat.
+        // shows the session as it starts — so the operation does not navigate (it only selects the
+        // companion's chat); the chart's session lane is the way into the chat as a plank.
         //
         // Best-effort and deliberately not fatal: the delegation itself is already durable — the
         // chat exists, carries the task, and is filed under the project — so a host with no agent
@@ -127,9 +168,20 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
         //
         // `Effect.exit`, not `Effect.catch`: a missing service arrives as a DEFECT (the process
         // layers are `orDie`), which a failure channel handler never sees.
+        const prompt =
+          harness === SessionConfig.COMPOSER_HARNESS
+            ? OPENING_PROMPT
+            : renderDelegationBrief({
+                tasks,
+                project,
+                context: project ? yield* projectContext(project) : undefined,
+              });
+        // Another agent's brief is the system writing on the reader's behalf, so it shows as context
+        // rather than as words the reader typed.
         const started = yield* Operation.invoke(AssistantOperation.RunPromptInChat, {
           chat,
-          prompt: OPENING_PROMPT,
+          prompt,
+          ...(harness !== SessionConfig.COMPOSER_HARNESS && { disposition: 'synthetic' as const }),
         }).pipe(Effect.exit);
         if (Exit.isFailure(started)) {
           log.warn('delegated chat did not start its turn', { cause: Cause.pretty(started.cause) });
@@ -150,6 +202,29 @@ const OPENING_PROMPT = concat`
   This may require you to read, update, or create artifacts associated with the project.
   Update the tasklist as you work on each task, and mark tasks ready for review as you complete them.
 `;
+
+/**
+ * The agent the chat runs on: the one asked for, else the person's default agent while it is
+ * available on this device, else Composer's own.
+ */
+const resolveHarness = Effect.fnUntraced(function* (requested: string | undefined) {
+  const agents = yield* Capability.getAll(AssistantCapabilities.Agent);
+  if (requested) {
+    invariant(
+      requested === SessionConfig.COMPOSER_HARNESS || agents.some((agent) => agent.id === requested),
+      `Unknown agent: ${requested}`,
+    );
+    return requested;
+  }
+  const registry = yield* Capability.getOption(Capabilities.AtomRegistry);
+  const settings = yield* Capability.getOption(AssistantCapabilities.Settings);
+  if (Option.isNone(registry) || Option.isNone(settings)) {
+    return SessionConfig.COMPOSER_HARNESS;
+  }
+  const preferred = registry.value.get(settings.value).defaultAgent;
+  const agent = agents.find((agent) => agent.id === preferred);
+  return agent && registry.value.get(agent.availability).available ? agent.id : SessionConfig.COMPOSER_HARNESS;
+});
 
 /** The delegating identity as an actor, for the reviewer field. */
 const currentActor = Effect.gen(function* () {

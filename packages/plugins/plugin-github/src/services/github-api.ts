@@ -7,12 +7,12 @@
 import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as HttpClient from 'effect/http/HttpClient';
+import * as HttpClientError from 'effect/http/HttpClientError';
+import * as HttpClientRequest from 'effect/http/HttpClientRequest';
 import * as Layer from 'effect/Layer';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
-import * as HttpClient from 'effect/unstable/http/HttpClient';
-import * as HttpClientError from 'effect/unstable/http/HttpClientError';
-import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 
 import { Database, type Ref } from '@dxos/echo';
 import { type AccessToken, Connection } from '@dxos/link';
@@ -125,6 +125,8 @@ const GitHubPullSchema = Schema.Struct({
   draft: Schema.Boolean.pipe(Schema.optional),
   merged: Schema.Boolean.pipe(Schema.optional),
   merged_at: Schema.NullOr(Schema.String).pipe(Schema.optional),
+  created_at: Schema.NullOr(Schema.String).pipe(Schema.optional),
+  updated_at: Schema.NullOr(Schema.String).pipe(Schema.optional),
   html_url: Schema.NullOr(Schema.String).pipe(Schema.optional),
   user: Schema.NullOr(GitHubUserSchema).pipe(Schema.optional),
   labels: Schema.Array(GitHubLabelSchema).pipe(Schema.optional),
@@ -192,7 +194,7 @@ export const fromConnection = (connectionRef: Ref.Ref<Connection.Connection>) =>
 // Request pipeline
 //
 
-type GitHubEffect<T> = Effect.Effect<
+export type GitHubEffect<T> = Effect.Effect<
   T,
   HttpClientError.HttpClientError | Schema.SchemaError | Cause.TimeoutError,
   HttpClient.HttpClient | GitHubCredentials
@@ -222,6 +224,15 @@ const shouldRetry = (error: HttpClientError.HttpClientError | Schema.SchemaError
   const status = error.reason.response.status;
   return status === 429 || (status >= 500 && status <= 599);
 };
+
+/**
+ * The status a failed GitHub request answered with, or `undefined` for a transport, timeout or
+ * decode failure. Callers branch on it to tell a dead credential (401) from an absent resource.
+ */
+export const responseStatus = (error: unknown): number | undefined =>
+  HttpClientError.isHttpClientError(error) && error.reason._tag === 'StatusCodeError'
+    ? error.reason.response.status
+    : undefined;
 
 /** Anonymous when the token is empty: a bare `Bearer` header is rejected where no header is rate-limited. */
 const withAuth = (req: HttpClientRequest.HttpClientRequest, creds: GitHubCredentialsValue, accept = ACCEPT) =>
@@ -621,6 +632,33 @@ export const approvePullRequest = (
     GitHubReviewSchema,
   );
 
+const GitHubSubmittedReviewSchema = Schema.Struct({
+  id: Schema.Number,
+  /** `APPROVED`, `CHANGES_REQUESTED`, `COMMENTED`, `DISMISSED` or `PENDING`. */
+  state: Schema.String,
+  user: Schema.NullOr(Schema.Struct({ login: Schema.String })).pipe(Schema.optional),
+  submitted_at: Schema.NullOr(Schema.String).pipe(Schema.optional),
+});
+export type GitHubSubmittedReview = Schema.Schema.Type<typeof GitHubSubmittedReviewSchema>;
+
+/**
+ * GET /repos/{owner}/{repo}/pulls/{number}/reviews — every page, oldest first, since a reviewer's
+ * standing verdict is their latest review and a truncated list could miss it.
+ */
+export const fetchReviews = (
+  owner: string,
+  repo: string,
+  number: number,
+): GitHubEffect<readonly GitHubSubmittedReview[]> =>
+  githubPages(
+    () =>
+      HttpClientRequest.get(
+        `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${number}/reviews`,
+      ),
+    Schema.Array(GitHubSubmittedReviewSchema),
+    (page) => page,
+  );
+
 /** POST /repos/{owner}/{repo}/issues/{number}/comments — a conversation comment, which a pull request shares with issues. */
 export const createIssueComment = (
   owner: string,
@@ -638,11 +676,17 @@ export const createIssueComment = (
   );
 
 const GitHubCheckRunSchema = Schema.Struct({
+  id: Schema.Number.pipe(Schema.optional),
   name: Schema.String,
   /** `queued`, `in_progress` or `completed`. */
   status: Schema.String,
   /** Set once `completed`: `success`, `failure`, `neutral`, `cancelled`, `skipped`, `timed_out`, `action_required`. */
   conclusion: Schema.NullOr(Schema.String).pipe(Schema.optional),
+  html_url: Schema.NullOr(Schema.String).pipe(Schema.optional),
+  /** The provider's own page for the run (Depot, say), which GitHub's `html_url` only links back to. */
+  details_url: Schema.NullOr(Schema.String).pipe(Schema.optional),
+  started_at: Schema.NullOr(Schema.String).pipe(Schema.optional),
+  completed_at: Schema.NullOr(Schema.String).pipe(Schema.optional),
 });
 export type GitHubCheckRun = Schema.Schema.Type<typeof GitHubCheckRunSchema>;
 

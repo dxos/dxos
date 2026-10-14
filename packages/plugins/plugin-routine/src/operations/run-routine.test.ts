@@ -5,9 +5,9 @@
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -31,7 +31,7 @@ const received: unknown[] = [];
 const monitorInvocations: string[] = [];
 
 /** Stands in for the aggregate monitor, whose real implementation routes `remote` triggers to EDGE over HTTP. */
-const TestMonitor = Layer.succeed(Trigger.TriggerMonitorService, {
+const TestMonitor = Layer.succeed(Trigger.ManagerService, {
   triggers: Atom.make<readonly Trigger.State[]>([]),
   localDispatcherEnabled: false,
   invokeTrigger: ({ trigger }) => Effect.sync(() => void monitorInvocations.push(trigger.id)),

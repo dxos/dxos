@@ -6,7 +6,7 @@ Status: spike (2026-08). Owner: plugin-illustrator.
 
 The illustrator dialects (mermaid flowchart, UML class, UML grid) compile diagram _models_ into
 the renderer-neutral scene DSL; the dialect owns layout because mermaid carries no coordinates
-(see `src/model/dialect.ts`). Today's layout is hand-rolled:
+(see `@dxos/diagram`, `packages/common/diagram/src/dialect.ts`). Today's layout is hand-rolled:
 
 - `layout.ts` — longest-path layering with DFS cycle-breaking (shared ranking).
 - `uml.ts` — variable-size compartment boxes, lanes centered on the widest lane.
@@ -282,7 +282,7 @@ legible by exactly the machinery that judges our own layouts.
    (b) the Tier‑1 report on the result, (c) an LLM judge for faithfulness. Scorer interface first,
    memoized fixtures later.
 
-The corpus lives in `docs/diagrams/*.mmd` and is simultaneously the deliverable (rendered `.svg`
+The corpus lives in `docs/diagrams/*.mmd` and is simultaneously the deliverable (rendered `.dx.svg`
 beside each source) — one copy, so it cannot drift from what the tests exercise.
 
 ### The repair loop

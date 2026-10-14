@@ -4,31 +4,35 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Obj } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
-import { Button, Field, Flex, Icon, Panel, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
+import type * as Util from '@dxos/react-ui/Util';
 
 import { VariantGallery } from '#components';
 import { meta } from '#meta';
 import { VariantRenderer } from '#surfaces';
 import { type MediaArtifact } from '#types';
 
-/** A host's Play control, appended to the toolbar when given (a storyboard playing its frames). */
-// TDOO(burdon): Can we remove this?
-export type PlayControl = {
-  disabled?: boolean;
-  onPlay: () => void;
-};
-
 /** `'all'` gallery, or the index of a produced (frozen) variant. */
 type Selected = 'all' | number;
 
-export type MediaArtifactVariantsProps = ThemedClassName<{
+export type MediaArtifactVariantsProps = Util.ThemedClassName<{
   artifact: MediaArtifact.MediaArtifact;
   attendableId?: string;
-  play?: PlayControl;
+  /**
+   * A host node whose toolbar actions end this toolbar (a storyboard's Play). The artifact's own
+   * node is not used: its actions (Connect) belong to the form's toolbar.
+   */
+  actionsNodeId?: string;
 }>;
 
 /**
@@ -36,10 +40,16 @@ export type MediaArtifactVariantsProps = ThemedClassName<{
  * produced variant, the gallery or the selected variant rendered through the variant surface, and
  * — for a produced variant — the cover toggle and delete. Opens on the cover; a variant that is
  * still generating shows as a spinner tab, and the newest variant is selected as it lands, so a
- * Generate in the form ends on its result. A host's `play` becomes the toolbar's last action.
+ * Generate in the form ends on its result. A host's toolbar actions end the toolbar.
  */
-export const MediaArtifactVariants = ({ classNames, artifact, attendableId, play }: MediaArtifactVariantsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+export const MediaArtifactVariants = ({
+  classNames,
+  artifact,
+  attendableId,
+  actionsNodeId,
+}: MediaArtifactVariantsProps) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { graph } = ToolkitHooks.useAppGraph();
   const db = Obj.getDatabase(artifact);
   const [artifactSnapshot] = useObject(artifact);
   const variantRefs = artifactSnapshot?.variants ?? [];
@@ -112,74 +122,66 @@ export const MediaArtifactVariants = ({ classNames, artifact, attendableId, play
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [db, selected, artifact]);
 
-  const menuActions = useMenuBuilder(() => {
-    const builder = MenuBuilder.make().root({ label: ['variants-toolbar.menu', { ns: meta.profile.key }] });
-    // Segmented tab strip (All / one per produced variant), custom-rendered to keep the buttons.
-    builder.action(
-      'tabs',
-      {
-        variant: 'custom',
-        label: ['all.tab.label', { ns: meta.profile.key }],
-        render: () => (
-          <>
-            <Button variant={selected === 'all' ? 'primary' : 'ghost'} onClick={() => setSelected('all')}>
-              {t('all.tab.label')}
-            </Button>
-            {variants.map((variant, index) => (
-              <Button
-                key={variant.id}
-                variant={selected === index ? 'primary' : 'ghost'}
-                onClick={() => setSelected(index)}
-              >
-                {variant.jobId ? (
-                  <Icon icon='ph--spinner-gap--regular' size={4} classNames='animate-spin' />
-                ) : (
-                  index + 1
-                )}
-              </Button>
-            ))}
-          </>
-        ),
-      },
-      () => {},
-    );
-    builder.separator('gap');
-    if (selectedVariant && !selectedVariant.jobId) {
+  const menuActions = useMenuBuilder(
+    (get) => {
+      const builder = MenuBuilder.make().root({ label: ['variants-toolbar.menu', { ns: meta.profile.key }] });
+      // Segmented tab strip (All / one per produced variant), custom-rendered to keep the buttons.
       builder.action(
-        'cover',
+        'tabs',
         {
           variant: 'custom',
-          label: ['cover.label', { ns: meta.profile.key }],
+          label: ['all.tab.label', { ns: meta.profile.key }],
           render: () => (
-            <Field.Checkbox checked={isCover} onCheckedChange={(checked) => handleCoverChange(checked === true)}>
-              {t('cover.label')}
-            </Field.Checkbox>
+            <>
+              <Button.Root variant={selected === 'all' ? 'primary' : 'ghost'} onClick={() => setSelected('all')}>
+                {t('all.tab.label')}
+              </Button.Root>
+              {variants.map((variant, index) => (
+                <Button.Root
+                  key={variant.id}
+                  variant={selected === index ? 'primary' : 'ghost'}
+                  onClick={() => setSelected(index)}
+                >
+                  {variant.jobId ? <Icon.Icon icon='ph--spinner-gap--regular' size='md' spin /> : index + 1}
+                </Button.Root>
+              ))}
+            </>
           ),
         },
         () => {},
       );
-    }
-    if (play) {
-      builder.action(
-        'play',
-        {
-          label: ['play.label', { ns: meta.profile.key }],
-          icon: 'ph--play--regular',
-          disposition: 'toolbar',
-          disabled: play.disabled,
-        },
-        play.onPlay,
-      );
-    }
-    return builder.build();
-  }, [selected, variants, selectedVariant, isCover, play, t, handleCoverChange]);
+      builder.separator('gap');
+      if (selectedVariant && !selectedVariant.jobId) {
+        builder.action(
+          'cover',
+          {
+            variant: 'custom',
+            label: ['cover.label', { ns: meta.profile.key }],
+            render: () => (
+              <Input.Checkbox
+                checked={isCover}
+                onCheckedChange={({ checked }) => handleCoverChange(checked === true)}
+                label={t('cover.label')}
+              />
+            ),
+          },
+          () => {},
+        );
+      }
+      if (actionsNodeId) {
+        builder.subgraph(graphActions(graph, get, actionsNodeId, { filter: isToolbarAction }));
+      }
+      return builder.build();
+    },
+    [selected, variants, selectedVariant, isCover, graph, actionsNodeId, t, handleCoverChange],
+  );
 
   return (
     <Panel.Root classNames={classNames}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <ActionToolbar {...menuActions} attendableId={attendableId} />
-      </Panel.Toolbar>
-      <Panel.Content classNames='bg-scrim-surface'>
+      </Panel.Header>
+      <Panel.Body classNames='bg-scrim-surface'>
         {selected === 'all' ? (
           <VariantGallery
             variants={galleryItems}
@@ -194,9 +196,9 @@ export const MediaArtifactVariants = ({ classNames, artifact, attendableId, play
         ) : (
           selectedVariant &&
           (selectedVariant.jobId ? (
-            <Flex role='status' center classNames='h-full text-subdued'>
+            <Layout.Flex role='status' center classNames='h-full text-fg-subtle'>
               {t('generating.label')}
-            </Flex>
+            </Layout.Flex>
           ) : (
             <Surface.Surface
               type={VariantRenderer}
@@ -213,7 +215,7 @@ export const MediaArtifactVariants = ({ classNames, artifact, attendableId, play
             />
           ))
         )}
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

@@ -5,7 +5,7 @@
 import { type Extension } from '@codemirror/state';
 import { useMemo } from 'react';
 
-import { useThemeContext } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
@@ -30,7 +30,8 @@ export const useChatExtensions = ({
   placeholder,
   onSubmit,
 }: ChatEditorProps) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = Hooks.useThemeMode();
+  const onSubmitRef = Hooks.useDynamicRef(onSubmit);
   return useMemo<Extension[]>(
     () =>
       [
@@ -42,10 +43,10 @@ export const useChatExtensions = ({
         // `submit()`: both bind Enter at `Prec.highest`, and CodeMirror breaks precedence ties by
         // extension order, so listing `submit()` first would always win and swallow the keystroke.
         extensions,
-        submit({ onSubmit }),
+        submit({ onSubmit: (text) => onSubmitRef.current?.(text) }),
       ]
         .flat()
         .filter(isTruthy),
-    [themeMode, markdown, lineWrapping, placeholder, extensions, onSubmit],
+    [themeMode, markdown, lineWrapping, placeholder, extensions, onSubmitRef],
   );
 };

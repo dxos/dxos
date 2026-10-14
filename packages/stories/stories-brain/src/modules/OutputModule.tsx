@@ -4,17 +4,17 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { useCapability } from '@dxos/app-framework/ui';
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Query } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Thread } from '@dxos/pipeline-email';
-import { type RDF } from '@dxos/pipeline-rdf';
+import { RDF } from '@dxos/pipeline-rdf';
 import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Organization, Person } from '@dxos/types';
 
-import { type EchoObjectItem, OutputPanel } from '../components/index.ts';
+import { type EchoObjectItem, OutputPanel, spaceOntology } from '../components/index.ts';
 import { usePipelineStory } from './pipeline-context.ts';
 
 /**
@@ -22,7 +22,7 @@ import { usePipelineStory } from './pipeline-context.ts';
  * mutates (the store is not ECHO-reactive, so the registry's `subscribe` is the change signal).
  */
 const useFacts = (spaceId: string): RDF.Fact[] => {
-  const registry = useCapability(BrainCapabilities.FactStoreRegistry);
+  const registry = Hooks.useCapability(BrainCapabilities.FactStoreRegistry);
   const [facts, setFacts] = useState<RDF.Fact[]>([]);
   useEffect(() => {
     let cancelled = false;
@@ -42,12 +42,34 @@ const useFacts = (spaceId: string): RDF.Fact[] => {
   return facts;
 };
 
+/** The predicates a space's `FactStore` has learned, re-read whenever the store mutates. */
+const usePredicates = (spaceId: string): RDF.Ontology.Entry[] => {
+  const registry = Hooks.useCapability(BrainCapabilities.FactStoreRegistry);
+  const [predicates, setPredicates] = useState<RDF.Ontology.Entry[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    const refresh = () =>
+      void EffectEx.runPromise(registry.forSpace(spaceId).predicates()).then((result) => {
+        if (!cancelled) {
+          setPredicates(result);
+        }
+      });
+    refresh();
+    const unsubscribe = registry.subscribe(spaceId, refresh);
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
+  }, [registry, spaceId]);
+  return predicates;
+};
+
 /**
  * RIGHT: the pipeline output. Facts come from Brain's per-space `FactStore` (reactive); stats/details
  * are the run's shared state; the live ECHO objects list is space-derived (Person/Organization/Thread).
  */
 export const OutputModule = () => {
-  const space = useActiveSpace();
+  const space = ToolkitHooks.useActiveSpace();
   if (!space) {
     return null;
   }
@@ -57,6 +79,8 @@ export const OutputModule = () => {
 const OutputModuleContainer = ({ space }: { space: Space }) => {
   const { stats, details } = usePipelineStory();
   const facts = useFacts(space.id);
+  const predicates = usePredicates(space.id);
+  const ontology = useMemo(() => spaceOntology(space.id).include(predicates), [space.id, predicates]);
   const organizations = useQuery(space.db, Query.type(Organization.Organization));
   const people = useQuery(space.db, Query.type(Person.Person));
   const threads = useQuery(space.db, Query.type(Thread));
@@ -69,5 +93,5 @@ const OutputModuleContainer = ({ space }: { space: Space }) => {
     [organizations, people, threads],
   );
 
-  return <OutputPanel facts={facts} objects={objects} stats={stats} details={details} />;
+  return <OutputPanel facts={facts} ontology={ontology} objects={objects} stats={stats} details={details} />;
 };

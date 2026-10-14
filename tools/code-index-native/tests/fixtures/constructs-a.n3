@@ -1,0 +1,29 @@
+# Every N3 construct the engine supports beyond plain forward rules, for `tests/engine.rs`, which
+# checks the engine derives exactly `constructs-a.expected.n3` — EYE's output, from `expected.mjs`.
+
+@prefix u: <urn:u#>.
+@prefix log: <http://www.w3.org/2000/10/swap/log#>.
+@prefix list: <http://www.w3.org/2000/10/swap/list#>.
+@prefix string: <http://www.w3.org/2000/10/swap/string#>.
+
+u:k1 u:role u:keyish.
+u:k2 u:role u:keyish.
+{ ?x u:key true } <= { ?x u:role u:keyish }.
+{ ?x u:key true } <= { ?x list:in (u:k3) }.
+{ ?x u:key true } => { ?x u:isKey true }.
+
+{ (?a ?b) u:linked ?c } <= { ?a u:p ?c. ?b u:q ?c }.
+{ (?a ?b) u:linked ?c } <= { ?a u:q ?c. ?b u:p ?c. ?c log:notEqualTo ?a }.
+{ ?a u:p ?x. ?b u:q ?x. (?a ?b) u:linked ?c } => { ?a u:linkedTo ?b }.
+{ ?a u:p ?x. ?b u:q ?y. ?scope log:notIncludes { ?a u:q ?b }. (?z { (?a ?b) u:linked ?z } ?l) log:collectAllIn ?scope. ?l list:length 0 }
+  => { ?a u:unlinked ?b }.
+
+{ ?a u:p ?x. (?y { ?a u:q ?y } ?ys) log:collectAllIn ?s. ?ys list:length 1. ?ys list:first ?only } => { ?a u:onlyQ ?only }.
+{ ?a u:p ?x. (?y { ?a u:q ?y } ?all) log:collectAllIn ?s. (?y { ?a u:q ?y. ?y u:key true } ?keys) log:collectAllIn ?s.
+  ?all list:length ?n. ?keys list:length ?n } => { ?a u:allKeys true }.
+
+{ ?a u:p ?x. ?a log:uri ?u. ?u string:startsWith "urn:node:". (?u "^urn:node:(\\d+)$") string:scrape ?n.
+  ("^urn:node:" ?n "$") string:concatenation ?re. ?x log:uri ?xu. ?xu string:matches ?re } => { ?a u:selfLoop true }.
+
+{ (?a ?b) u:solo ?c } <= { ?a u:p ?c. ?b u:q ?c. ?scope log:notIncludes { ?c u:p ?a } }.
+{ ?a u:p ?x. ?b u:q ?x. ?scope log:notIncludes { (?a ?b) u:solo ?z } } => { ?a u:noSolo ?b }.

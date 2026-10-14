@@ -3,11 +3,12 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Cursor } from '@dxos/link';
 import { type FactExtractor, messageSource, runFactPipeline } from '@dxos/pipeline-email';
 import { FactStore, FactStoreLive, type RDF } from '@dxos/pipeline-rdf';
@@ -24,9 +25,9 @@ const makeMessage = (suffix: string, created: string) =>
 const makeFact = (source: string, id: string, object = 'paris'): RDF.Fact => ({
   id,
   assertion: {
-    subject: { entity: 'alice' },
+    subject: { kind: 'entity', entity: 'alice' },
     predicate: 'travelsTo',
-    object: { entity: object },
+    object: { kind: 'entity', entity: object },
   },
   factuality: { value: 'PR+', polarity: '+', confidence: 0.6, nature: 'epistemic' },
   attribution: {
@@ -79,8 +80,7 @@ describe('runFactPipeline', () => {
       const second = yield* runFactPipeline({ feed, cursor, extract: stubExtract, pageSize: 10 });
       return { first, second, storedFacts, cursorValue: Cursor.parseKey(cursor.max) };
     }).pipe(
-      Effect.provide(Database.layer(db)),
-      Effect.provide(FactStoreLive.layerMemory),
+      Effect.provide(Layer.provideMerge(Database.layer(db), FactStoreLive.layerMemory)),
       EffectEx.runAndForwardErrors,
     );
 
@@ -119,8 +119,7 @@ describe('runFactPipeline', () => {
       pageSize: 1,
       onProgress: (update) => progress.push(update),
     }).pipe(
-      Effect.provide(Database.layer(db)),
-      Effect.provide(FactStoreLive.layerMemory),
+      Effect.provide(Layer.provideMerge(Database.layer(db), FactStoreLive.layerMemory)),
       EffectEx.runAndForwardErrors,
     );
 
@@ -151,8 +150,7 @@ describe('runFactPipeline', () => {
 
     const cursor = db.add(Cursor.makeFeed({ source: mailbox.feed, target: Ref.make(mailbox) }));
     const result = await runFactPipeline({ feed, cursor, extract: stubExtract, pageSize: 1 }).pipe(
-      Effect.provide(Database.layer(db)),
-      Effect.provide(FactStoreLive.layerMemory),
+      Effect.provide(Layer.provideMerge(Database.layer(db), FactStoreLive.layerMemory)),
       EffectEx.runAndForwardErrors,
     );
 

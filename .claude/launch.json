@@ -249,6 +249,16 @@
       ],
       "port": 9010,
       "autoPort": false
+    },
+    {
+      "name": "composer-app-local-edge",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && DX_EDGE_BASE_URL=http://localhost:8787 DX_STRICT=false moon run composer-app:serve -- --port 5282 --strictPort"
+      ],
+      "port": 5282,
+      "autoPort": true
     }
   ]
 }

@@ -38,7 +38,7 @@ const StoryRow = ({ components }: { components: FC[] }) => {
 
 export const Default = (props: any) => {
   return (
-    <table className='bg-body'>
+    <table className='bg-base-surface'>
       <tbody>
         <StoryRow components={getComponents(IdentityPanels)} />
         <StoryRow components={getComponents(SpacePanels)} />

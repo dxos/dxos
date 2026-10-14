@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Client } from '@dxos/client';
 import { getUserFunctionIdInMetadata } from '@dxos/compute-runtime';
 import * as Operation from '@dxos/compute/Operation';
 import * as Script from '@dxos/compute/Script';
 import { Context } from '@dxos/context';
 import { type Database, Obj, Ref } from '@dxos/echo';
+import { type EdgeHttpClient } from '@dxos/edge-client';
 import { FunctionsServiceClient, incrementSemverPatch } from '@dxos/edge-compute';
 import { bundleFunction } from '@dxos/edge-compute/bundler';
 import { log } from '@dxos/log';
@@ -20,7 +20,10 @@ export const isScriptDeployed = ({ script, fn }: { script: Script.Script; fn: an
 
 type DeployScriptProps = {
   script: Script.Script;
-  client: Client;
+  /** Identity-bound EDGE HTTP client, read inside the deploy so a missing EDGE URL fails it rather than throwing. */
+  getEdgeHttpClient: () => EdgeHttpClient;
+  /** Owner identity DID (`did:halo:…`); deployment fails without one. */
+  ownerDid?: string;
   db: Database.Database;
   fn?: Operation.PersistentOperation;
   existingFunctionId?: string;
@@ -33,7 +36,8 @@ type DeployScriptResult = { success: boolean; error?: Error; functionId?: string
  */
 export const deployScript = async ({
   script,
-  client,
+  getEdgeHttpClient,
+  ownerDid,
   db,
   fn,
   existingFunctionId,
@@ -43,8 +47,7 @@ export const deployScript = async ({
     return { success: false, error: validationError };
   }
 
-  const identity = client.halo.identity.get();
-  if (!identity) {
+  if (!ownerDid) {
     return { success: false, error: new Error('Identity not available.') };
   }
 
@@ -56,9 +59,9 @@ export const deployScript = async ({
       throw buildResult.error || new Error('Bundle creation failed');
     }
 
-    const functionsServiceClient = FunctionsServiceClient.fromClient(client);
+    const functionsServiceClient = new FunctionsServiceClient(getEdgeHttpClient());
     const newFunction = await functionsServiceClient.deploy(Context.default(), {
-      ownerUri: identity.did,
+      ownerUri: ownerDid,
       version: fn ? incrementSemverPatch(Obj.getMeta(fn).version ?? '0.0.0') : '0.0.1',
       functionId: existingFunctionId,
       entryPoint: buildResult.entryPoint,

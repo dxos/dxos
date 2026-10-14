@@ -51,7 +51,7 @@ export class WebsocketRpcServer<C, S> {
           subscribe: (cb) => {
             socket.onmessage = async (msg: WebSocket.MessageEvent) => {
               if (typeof Blob !== 'undefined' && msg.data instanceof Blob) {
-                cb(Buffer.from(await msg.data.arrayBuffer()));
+                cb(new Uint8Array(await msg.data.arrayBuffer()));
               } else {
                 cb(msg.data as any);
               }

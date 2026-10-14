@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as LanguageModel from 'effect/ai/LanguageModel';
+import * as Prompt from 'effect/ai/Prompt';
 import * as Effect from 'effect/Effect';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
-import * as Prompt from 'effect/unstable/ai/Prompt';
 
 import { AiPreprocessor, AiService } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
@@ -57,7 +57,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.UpdateChatName> =
         });
         log.info('chat name updated', { chat, newName: chat.name });
       },
-      Effect.provide(AiService.model('com.anthropic.model.claude-haiku-4-5.default')),
+      Effect.provide(AiService.languageModel('com.anthropic.model.claude-haiku-4-5.default')),
     ),
   ),
 );

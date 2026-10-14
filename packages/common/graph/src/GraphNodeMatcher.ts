@@ -5,7 +5,7 @@
 // @import-as-namespace
 
 import * as Option from 'effect/Option';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 
 import * as GraphNode from './GraphNode.ts';
 

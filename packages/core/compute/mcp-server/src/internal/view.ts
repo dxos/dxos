@@ -23,7 +23,7 @@ export type McpSkill = {
   skill: Skill.Skill;
   key: string;
   promptName: string;
-  description?: string;
+  description: string;
   instructions: string;
 };
 

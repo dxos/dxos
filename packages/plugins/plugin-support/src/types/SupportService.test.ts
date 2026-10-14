@@ -5,13 +5,16 @@
 import * as Effect from 'effect/Effect';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import type * as Observability from '@dxos/observability/Observability';
 
 import * as SupportService from './SupportService.ts';
 
-const observabilityWith = (support: Observability.Observability['support']): Observability.Observability =>
-  ({ support }) as unknown as Observability.Observability;
+/** Reports never upload caller-built bundles, so the mocks leave `uploadNdjson` out. */
+const observabilityWith = (
+  support: Omit<Observability.Observability['support'], 'uploadNdjson'>,
+): Observability.Observability =>
+  ({ support: { uploadNdjson: async () => undefined, ...support } }) as unknown as Observability.Observability;
 
 /** Runs to a result so a failure is asserted on rather than thrown. */
 const run = <A, E>(effect: Effect.Effect<A, E>) =>
@@ -145,7 +148,13 @@ describe('submitSupportIssue', () => {
           sessionContext: () => ({ distinctId: 'did:dx:me', widgetSessionId: 'w-1', replayUrl: 'https://r' }),
           flushLogs,
         }),
-        report: { title: 'Broken', body: 'It broke.', type: 'bug', includeLogs: true },
+        report: {
+          title: 'Broken',
+          body: 'It broke.',
+          type: 'bug',
+          includeLogs: true,
+          labels: ['Composer Feedback Form'],
+        },
         did: 'did:dx:me',
       }),
     );
@@ -154,7 +163,12 @@ describe('submitSupportIssue', () => {
     expect(value).toEqual(issue);
     const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toBe('https://edge.test/discord/issue');
-    expect(JSON.parse(String(init.body))).toMatchObject({ title: 'Broken', did: 'did:dx:me', logKey: 'logs/1.ndjson' });
+    expect(JSON.parse(String(init.body))).toMatchObject({
+      title: 'Broken',
+      did: 'did:dx:me',
+      logKey: 'logs/1.ndjson',
+      labels: ['Composer Feedback Form'],
+    });
     await vi.waitFor(() => expect(flushLogs).toHaveBeenCalledWith({ reportId: 'r-1' }));
   });
 

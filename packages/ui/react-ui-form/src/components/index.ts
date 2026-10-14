@@ -1,12 +1,16 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
-export * from './FieldEditor/index.ts';
-export * from './Form/index.ts';
-export * from './ObjectForm/index.ts';
-export * from './ObjectPicker/index.ts';
-export * from './ObjectProperties/index.ts';
-export * from './ObjectTree/index.ts';
-export * from './RefEditor/index.ts';
-export * from './ViewEditor/index.ts';
+export * from './Form.tsx';
+export * from './FormField.tsx';
+export * from './FormFieldSet.tsx';
+export * from './FormLayout.tsx';
+export * from './ObjectForm.tsx';
+export * from './ObjectPicker.tsx';
+export * from './RefEditor.tsx';
+export * from './ViewEditor.tsx';
+export * from './fields/index.ts';
+export * from './FieldEditor.tsx';
+export { EMAIL_REGEX, NAME_ADDR_REGEX, REF_REGEX } from './ref-editor-extension.ts';
+export { type FormFieldsProps, type FormPath } from './property-walk.ts';

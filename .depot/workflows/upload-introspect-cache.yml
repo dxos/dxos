@@ -35,7 +35,8 @@ jobs:
     # `dxos/main/` is the canonical trunk cache: only schedule runs (default branch) and manual
     # dispatches of `main` itself may publish it — a dispatch from any other ref must not.
     if: github.event_name == 'schedule' || github.ref == 'refs/heads/main'
-    runs-on: depot-ubuntu-24.04-8
+    # 4 vCPU: averages 14% of 8 vCPU and peaks at 5 GB.
+    runs-on: depot-ubuntu-24.04-4
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
       credentials:

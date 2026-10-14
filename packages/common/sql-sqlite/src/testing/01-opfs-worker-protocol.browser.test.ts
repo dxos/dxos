@@ -106,7 +106,7 @@ describe('opfs-worker protocol browser test', { timeout: 60_000, sequential: tru
       workerB.postMessage([queryId, 'SELECT value FROM checkpoint_probe ORDER BY rowid', []]);
       const [, queryError, results] = await queryPromise;
       expect(queryError).toBeUndefined();
-      const [, rows] = results as [string[], unknown[][]];
+      const [, rows] = results as [string[][], unknown[][]];
       expect(rows).toEqual([['committed-via-wal']]);
     } finally {
       await shutdownWorker(workerB);

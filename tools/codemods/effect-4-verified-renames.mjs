@@ -38,7 +38,7 @@ const RENAMES = {
     },
   },
   CliConfig: {
-    module: 'effect/unstable/cli/CliConfig',
+    module: 'effect/cli/CliConfig',
     renames: { defaultConfig: 'defaults' },
   },
   Config: {
@@ -62,7 +62,7 @@ const RENAMES = {
     renames: { RuntimeFiber: 'Fiber' },
   },
   HttpClientRequest: {
-    module: 'effect/unstable/http/HttpClientRequest',
+    module: 'effect/http/HttpClientRequest',
     renames: { bodyUnsafeJson: 'bodyJsonUnsafe' },
   },
   Layer: {
@@ -101,7 +101,7 @@ const RENAMES = {
     renames: { CloseableScope: 'Closeable' },
   },
   Tool: {
-    module: 'effect/unstable/ai/Tool',
+    module: 'effect/ai/Tool',
     renames: { Requirements: 'HandlerServices' },
   },
   Stream: {

@@ -10,5 +10,5 @@ import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilitie
 import { mermaid } from '../extensions/index.ts';
 
 export default Capability.makeModule(() =>
-  Effect.succeed(Capability.contribute(MarkdownCapabilities.ExtensionProvider, [mermaid])),
+  Effect.succeed(Capability.contribute(MarkdownCapabilities.ExtensionProvider, [() => mermaid()])),
 );

@@ -64,6 +64,9 @@
     },
     {
       "path": "../config"
+    },
+    {
+      "path": "../schema"
     }
   ]
 }

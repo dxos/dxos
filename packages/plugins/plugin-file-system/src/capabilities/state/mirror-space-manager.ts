@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
@@ -66,7 +66,7 @@ export class MirrorSpaceManager {
 
     const space = await this._client.spaces.create(
       {},
-      { tags: [FILE_SYSTEM_MIRROR_TAG], membershipPolicy: MembershipPolicy.LOCKED },
+      { tags: [FILE_SYSTEM_MIRROR_TAG], membershipPolicy: MembershipPolicy.LOCKED, origin: 'system' },
     );
     await space.waitUntilReady();
 

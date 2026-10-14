@@ -3,5 +3,5 @@
 //
 
 export * as ClaudePlugin from './ClaudePlugin.ts';
-export * from '#meta';
+export * from '#skills';
 export * from '#types';

@@ -21,7 +21,7 @@ const Host = slottable<HTMLDivElement>(({ children, asChild, ...props }, forward
   return (
     <ark.div
       asChild={asChild}
-      {...composableProps(props, { classNames: 'p-2 rounded-sm bg-base-surface text-base-fg' })}
+      {...composableProps(props, { classNames: 'p-2 rounded-sm bg-base-surface text-fg' })}
       ref={forwardedRef}
     >
       {children}
@@ -44,7 +44,7 @@ const BadChild = forwardRef<HTMLDivElement, { children?: ReactNode }>(({ childre
 
 const Row = ({ label, children }: { label: string; children: ReactNode }) => (
   <div className='flex flex-col gap-1'>
-    <span className='text-sm text-description'>{label}</span>
+    <span className='text-sm text-fg-muted'>{label}</span>
     {children}
   </div>
 );

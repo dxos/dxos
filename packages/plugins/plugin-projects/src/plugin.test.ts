@@ -4,6 +4,8 @@
 
 import { describe, test } from 'vitest';
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Project from '@dxos/compute/Project';
@@ -12,16 +14,17 @@ import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 
 import { meta } from '#meta';
 import { ProjectsPlugin } from '#plugin';
+import { ProjectCapabilities } from '#types';
 
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('ProjectsPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
-    await using harness = await createComposerTestApp({
+    await using harness = await Harness.createComposerTestApp({
       // Assistant and Tasks are declared in `dependsOn`, so the manager refuses to resolve Projects
       // without them.
       plugins: [ClientPlugin.make({}), AssistantPlugin.make(), TasksPlugin.make(), ProjectsPlugin()],
@@ -42,7 +45,7 @@ describe('ProjectsPlugin', () => {
   });
 
   test('the project skill activates when the assistant starts', async ({ expect }) => {
-    await using harness = await createComposerTestApp({
+    await using harness = await Harness.createComposerTestApp({
       // Assistant and Tasks are declared in `dependsOn`, so the manager refuses to resolve Projects
       // without them.
       plugins: [ClientPlugin.make({}), AssistantPlugin.make(), TasksPlugin.make(), ProjectsPlugin()],
@@ -55,7 +58,7 @@ describe('ProjectsPlugin', () => {
 
   test('registers the project types with the client', async ({ expect }) => {
     // Without a registered `Project` type every project verb fails where it stores the object.
-    await using harness = await createComposerTestApp({
+    await using harness = await Harness.createComposerTestApp({
       // Assistant and Tasks are declared in `dependsOn`, so the manager refuses to resolve Projects
       // without them.
       plugins: [ClientPlugin.make({}), AssistantPlugin.make(), TasksPlugin.make(), ProjectsPlugin()],
@@ -65,5 +68,20 @@ describe('ProjectsPlugin', () => {
     await client.waitUntilInitialized();
     await harness.waitForCapability(ClientCapabilities.SchemaRegistered);
     expect(client.graph.registry.getByURI(String(Type.getURI(Project.Project)))).toBeDefined();
+  });
+
+  test('the settings default to showing task descriptions', async ({ expect }) => {
+    await using harness = await Harness.createComposerTestApp({
+      // Assistant and Tasks are declared in `dependsOn`, so the manager refuses to resolve Projects
+      // without them.
+      plugins: [ClientPlugin.make({}), AssistantPlugin.make(), TasksPlugin.make(), ProjectsPlugin()],
+    });
+
+    // Idle-gated; the harness awaits Startup only.
+    await harness.fire(ActivationEvents.Idle);
+    expect(harness.manager.getActive()).toContain(moduleId('Settings'));
+    const registry = harness.get(Capabilities.AtomRegistry);
+    expect(registry.get(harness.get(ProjectCapabilities.Settings)).showTaskDescriptions).toBe(true);
+    expect(harness.getAll(AppCapabilities.Settings).some((entry) => entry.prefix === meta.profile.key)).toBe(true);
   });
 });

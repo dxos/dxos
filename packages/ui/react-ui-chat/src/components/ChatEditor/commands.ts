@@ -28,9 +28,10 @@ export type CommandsOptions = { getCommands: () => CommandData[] };
  * typing `/` at the start of the prompt offers registered slash commands.
  */
 const commandMark = Decoration.mark({
-  class: 'dx-tag',
+  // Inline in text, so the pill keeps its own inset from the words either side.
+  class: 'dx-tag dx-tag-inline mx-0.5',
   // Baseline alignment puts the pill's text on the line's baseline; the negative block margin
-  // cancels the padded pill's line-box growth (same recipe as `.dx-tag--anchor` in CodeMirror).
+  // cancels the padded pill's line-box growth (same recipe as `.dx-tag-anchor` in CodeMirror).
   attributes: {
     'data-hue': 'blue',
     'style': 'margin-block: -5px;',

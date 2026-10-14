@@ -6,8 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Panel } from '@dxos/react-ui';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -164,10 +164,10 @@ const DefaultStory = ({ seed, terrain }: StoryArgs) => {
 
   return (
     <Panel.Root role='article'>
-      <Panel.Toolbar asChild classNames='dx-expand'>
+      <Panel.Header classNames='dx-expand'>
         <ActionToolbar {...menuActions} attendableId={STORY_ATTENDABLE_ID} />
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <div className='relative grow overflow-hidden'>
           <TerraMap
             objects={objects}
@@ -180,7 +180,7 @@ const DefaultStory = ({ seed, terrain }: StoryArgs) => {
             <TelemetryPanel rows={telemetry} selectedId={selectedId} onSelect={setSelectedId} />
           </div>
         </div>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

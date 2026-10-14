@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
@@ -22,15 +22,17 @@ import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { type Space, isSpace } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Collection, Entity, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { ViewAnnotation } from '@dxos/schema';
 import { isLabel, toLocalizedString } from '@dxos/ui-types/translations';
 import { createFilename, downloadBlob, isNonNullable } from '@dxos/util';
 
+import { SPACE_STATS_QUERY, typeUrisWithObjects } from '#dashboard';
 import { meta } from '#meta';
 import { SpaceCapabilities, SpaceEvents, SpaceOperation } from '#types';
 
+import { SpaceOperationError } from '../../../operations/errors.ts';
 import { makeCreateObjectEntryForDatabaseType } from '../../../util/index.ts';
 import {
   ADD_VIEW_TO_SCHEMA_LABEL,
@@ -120,17 +122,18 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
         });
 
         const viewIndex = buildViewIndex(get, space, allSchemas);
+        // Index-only per-type counts; the same query as the space dashboard, so both share one result.
+        const withObjects = typeUrisWithObjects(get(space.db.query(SPACE_STATS_QUERY).atom));
 
         const visibleSchemas = userSchemas.filter((schema) => {
           if (Type.getDatabase(schema) != null) {
             return true;
           }
           const typeUri = Type.getURI(schema);
-          const objects = get(space.db.query(Filter.type(typeUri)).atom);
           if (ViewAnnotation.has(schema)) {
-            return objects.some((obj) => !viewIndex.isView(obj));
+            return viewIndex.typeUrisWithNonViewObjects.has(typeUri);
           }
-          return objects.length > 0 || viewIndex.typeUrisWithViews.has(typeUri);
+          return withObjects.has(typeUri) || viewIndex.typeUrisWithViews.has(typeUri);
         });
 
         // Sort alphabetically by display name. Static types' labels are `typename.label` translation
@@ -157,7 +160,13 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
     // {All} virtual node + view objects under each schema node.
     AppGraphBuilder.createExtension({
       id: 'schemaChildren',
-      url: { key: 'view', kind: 'item', path: [GraphPath.GroupSegments.system, GraphPath.Segments.database] },
+      // Shares `db` with `databaseObjects`: whether an object is a view is data, not shape.
+      url: {
+        key: 'db',
+        kind: 'item',
+        path: [GraphPath.GroupSegments.system, GraphPath.Segments.database],
+        minDepth: 2,
+      },
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
         // Scoped to the Database section's own type nodes (both static and database schemas — see
@@ -202,7 +211,12 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
     // subgraph.
     AppGraphBuilder.createExtension({
       id: 'databaseObjects',
-      url: { key: 'db', kind: 'item', path: [GraphPath.GroupSegments.system, GraphPath.Segments.database] },
+      url: {
+        key: 'db',
+        kind: 'item',
+        path: [GraphPath.GroupSegments.system, GraphPath.Segments.database],
+        minDepth: 2,
+      },
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
         return node.type === SCHEMA_NODE_TYPE && space && Type.isType(node.data)
@@ -437,7 +451,7 @@ const createSchemaActions = ({
               object: type,
               caller: `${params?.caller}:${params?.parent?.id}`,
             })
-          : Effect.fail(new Error('Cannot rename immutable schema')),
+          : Effect.fail(new SpaceOperationError({ message: 'Cannot rename immutable schema' })),
       properties: {
         label: AppNode.getDynamicLabel('rename-object.label', Type.getTypename(Type.Type)),
         icon: 'ph--pencil-simple-line--regular',
@@ -450,9 +464,11 @@ const createSchemaActions = ({
       id: SpaceOperation.RemoveObjects.meta.key,
       data: () =>
         Type.getDatabase(type) != null
-          ? Operation.invoke(SpaceOperation.RemoveObjects, {
-              objects: [type],
-            })
+          ? Operation.invoke(
+              SpaceOperation.RemoveObjects,
+              { objects: [type] },
+              { spaceId: Type.getDatabase(type)?.spaceId },
+            )
           : Effect.succeed(undefined),
       properties: {
         label: AppNode.getDynamicLabel('delete-object.label', Type.getTypename(Type.Type)),

@@ -6,17 +6,17 @@ import { describe, it } from '@effect/vitest';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
+import * as KeyValueStore from 'effect/persistence/KeyValueStore';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
+import * as TestClock from 'effect/testing/TestClock';
 import * as Tracer from 'effect/Tracer';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
-import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { AiService } from '@dxos/ai';
-import { ServiceNotAvailableError } from '@dxos/compute';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Runnable from '@dxos/compute/Runnable';
@@ -29,6 +29,7 @@ import { Annotation, Database, DXN, Feed, Filter, Obj, Query, Ref, Scope, Type }
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { makeRecordingTracer } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
+import { URI } from '@dxos/keys';
 import { Person, Task } from '@dxos/types';
 
 import * as ProcessManager from '../ProcessManager.ts';
@@ -52,7 +53,7 @@ const SpaceAwareResolverLayer = Layer.effect(
       context.space === dbService.db.spaceId
         ? Effect.succeed(dbService)
         : Effect.fail(
-            new ServiceNotAvailableError(
+            new ServiceResolver.ServiceNotAvailableError(
               `Database.Service requires space context (got ${context.space ?? 'none'}, want ${dbService.db.spaceId})`,
             ),
           ),
@@ -97,6 +98,29 @@ const SubjectProbeOp = Operation.make({
   services: [Database.Service],
 });
 
+/**
+ * Registered as an operation definition but deliberately absent from every handler set, so
+ * invoking it reproduces the production `NoHandlerError` raised by a plugin that is gone.
+ */
+const UnhandledOp = Operation.make({
+  meta: { key: DXN.make('com.example.operation.triggerDispatcher.unhandled'), name: 'Unhandled' },
+  input: Schema.Any,
+  output: Schema.Void,
+});
+
+/** Shape of the uris seen in production, referencing an object that no longer exists. */
+const DANGLING_URI = URI.make('echo:///01KYMGPJCXG398JQYERR2BJ80W');
+
+/** A uri no resolver supports, so loading it throws rather than reporting the object missing. */
+const UNREADABLE_URI = URI.make('urn:example:unreadable');
+
+/** Takes the optional `priority` a connector's sync trigger templates from its event. */
+const PriorityOp = Operation.make({
+  meta: { key: DXN.make('com.example.operation.triggerDispatcher.priority'), name: 'Priority' },
+  input: Schema.Struct({ priority: Schema.optional(Schema.String) }),
+  output: Schema.Void,
+});
+
 /** Opens a span when invoked, so a test can see which tracer a dispatched trigger ran under. */
 const TracedOp = Operation.make({
   meta: { key: DXN.make('com.example.operation.triggerDispatcher.traced'), name: 'Traced' },
@@ -117,6 +141,7 @@ const TracedHandlers = OperationHandlerSet.make(
 const dispatcherSpans: Tracer.Span[] = [];
 
 const TestHanlers = OperationHandlerSet.make(
+  PriorityOp.pipe(Operation.withHandler(() => Effect.void)),
   SubjectProbeOp.pipe(
     Operation.withHandler(
       Effect.fn(function* (event: TriggerEvent.SubscriptionEvent) {
@@ -354,6 +379,31 @@ describe('TriggerDispatcher', () => {
   });
 
   describe('Timer Triggers', () => {
+    // Regression: a connector's sync trigger passes `priority: '{{event.data.priority}}'`, which a cron
+    // tick leaves unset. The key was still written as `undefined`, which the operation's serialized
+    // schema rejects, so every scheduled local sync failed with `Expected string, got undefined`.
+    it.effect(
+      'a template that resolves to nothing leaves an optional input out',
+      Effect.fnUntraced(function* ({ expect }) {
+        const functionObj = yield* registerOperation(PriorityOp);
+        const trigger = Trigger.make({
+          runnable: Ref.make(functionObj),
+          enabled: true,
+          spec: Trigger.specTimer('* * * * *'),
+          input: { priority: '{{event.data.priority}}' },
+        });
+        yield* Database.add(trigger);
+
+        const dispatcher = yield* TriggerDispatcher;
+        yield* dispatcher.refreshTriggers();
+        yield* dispatcher.advanceTime(Duration.minutes(1));
+        const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['timer'] });
+
+        expect(results).toHaveLength(1);
+        expect(Exit.isSuccess(results[0].result)).toBe(true);
+      }, Effect.provide(TestLayer())),
+    );
+
     // A schedule finer than the poll cannot be honoured: the tick finds it due, fires it once and
     // skips to the next occurrence after now, dropping the ones in between. It is refused rather
     // than run at the poll rate under a faster name.
@@ -771,8 +821,12 @@ describe('TriggerDispatcher', () => {
             expect(traced, `recorded spans: ${JSON.stringify(dispatcherSpans.map(({ name }) => name))}`).toBe(true);
           }).pipe(Effect.ensuring(dispatcher.stop()));
         },
-        Effect.provide(TestLayer({ timeControl: 'natural', livePollInterval: Duration.hours(1) })),
-        Effect.provide(Layer.succeed(Tracer.Tracer, makeRecordingTracer(dispatcherSpans))),
+        Effect.provide(
+          Layer.provideMerge(
+            TestLayer({ timeControl: 'natural', livePollInterval: Duration.hours(1) }),
+            Layer.succeed(Tracer.Tracer, makeRecordingTracer(dispatcherSpans)),
+          ),
+        ),
       ),
     );
   });
@@ -1542,6 +1596,228 @@ describe('TriggerDispatcher', () => {
           invariant(lastResult, 'expected a last result');
           expect(Exit.isSuccess(lastResult)).toBe(true);
         }
+      }, Effect.provide(TestLayer())),
+    );
+  });
+
+  // A trigger outlives what it points at: its target object is deleted, or the plugin contributing
+  // its operation is disabled. The dispatcher cannot repair either, so it must park that one
+  // trigger rather than fail the pass it is running in.
+  describe('Stale References', () => {
+    it.effect(
+      'a deleted feed parks its trigger without aborting the dispatch pass',
+      Effect.fnUntraced(function* ({ expect }) {
+        const feed = yield* Database.add(Feed.make());
+        const functionObj = yield* registerOperation(Reply);
+        const healthy = Trigger.make({
+          runnable: Ref.make(functionObj),
+          enabled: true,
+          spec: Trigger.specFeed(feed),
+        });
+        const stale = Trigger.make({
+          runnable: Ref.make(functionObj),
+          enabled: true,
+          spec: { kind: 'feed', feed: Ref.fromURI(DANGLING_URI) },
+        });
+        // Added first so the pass reaches it before the healthy trigger.
+        yield* Database.add(stale);
+        yield* Database.add(healthy);
+        yield* Feed.append(feed, [Obj.make(Person.Person, { fullName: 'John Doe' })]);
+
+        const dispatcher = yield* TriggerDispatcher;
+        const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'] });
+
+        expect(results.map((result) => result.triggerId)).toEqual([healthy.id]);
+        expect(Exit.isSuccess(results[0].result)).toBe(true);
+
+        const registry = yield* Registry.AtomRegistry;
+        const status = registry.get(dispatcher.state);
+        expect(status.triggers.find((t) => t.triggerId === stale.id)?.staleReference).toBeDefined();
+        expect(status.triggers.find((t) => t.triggerId === healthy.id)?.staleReference).toBeUndefined();
+      }, Effect.provide(TestLayer())),
+    );
+
+    it.effect(
+      'a deleted feed does not fail the refresh pass that reconciles reactive sources',
+      Effect.fnUntraced(
+        function* ({ expect }) {
+          const functionObj = yield* registerOperation(Reply);
+          const stale = Trigger.make({
+            runnable: Ref.make(functionObj),
+            enabled: true,
+            spec: { kind: 'feed', feed: Ref.fromURI(DANGLING_URI) },
+          });
+          yield* Database.add(stale);
+          const healthy = Trigger.make({
+            runnable: Ref.make(functionObj),
+            enabled: true,
+            spec: Trigger.specTimer('*/5 * * * *'),
+          });
+          yield* Database.add(healthy);
+
+          const dispatcher = yield* TriggerDispatcher;
+          yield* dispatcher.start();
+          yield* dispatcher.refreshTriggers();
+
+          const registry = yield* Registry.AtomRegistry;
+          const status = registry.get(dispatcher.state);
+          // The refresh completed: the healthy trigger got its schedule, and the dispatcher is up.
+          expect(status.enabled).toBe(true);
+          expect(status.triggers.find((t) => t.triggerId === healthy.id)?.nextExecution).toBeInstanceOf(Date);
+          expect(status.triggers.find((t) => t.triggerId === stale.id)?.staleReference).toBeDefined();
+
+          yield* dispatcher.stop();
+        },
+        Effect.provide(TestLayer({ timeControl: 'natural', livePollInterval: Duration.minutes(1) })),
+      ),
+    );
+
+    // Regression: a source that failed to load with anything but not-found (a storage error, in the
+    // field) failed every refresh, so no trigger ran again until the app restarted.
+    it.effect(
+      'a feed that cannot be read parks its trigger without failing the refresh',
+      Effect.fnUntraced(
+        function* ({ expect }) {
+          const functionObj = yield* registerOperation(Reply);
+          const unreadable = Trigger.make({
+            runnable: Ref.make(functionObj),
+            enabled: true,
+            spec: { kind: 'feed', feed: Ref.fromURI(UNREADABLE_URI) },
+          });
+          yield* Database.add(unreadable);
+          const healthy = Trigger.make({
+            runnable: Ref.make(functionObj),
+            enabled: true,
+            spec: Trigger.specTimer('*/5 * * * *'),
+          });
+          yield* Database.add(healthy);
+
+          const dispatcher = yield* TriggerDispatcher;
+          yield* dispatcher.start();
+          yield* dispatcher.refreshTriggers();
+
+          const registry = yield* Registry.AtomRegistry;
+          const status = registry.get(dispatcher.state);
+          expect(status.enabled).toBe(true);
+          expect(status.triggers.find((t) => t.triggerId === healthy.id)?.nextExecution).toBeInstanceOf(Date);
+          expect(status.triggers.find((t) => t.triggerId === unreadable.id)?.staleReference).toBeDefined();
+
+          yield* dispatcher.stop();
+        },
+        Effect.provide(TestLayer({ timeControl: 'natural', livePollInterval: Duration.minutes(1) })),
+      ),
+    );
+
+    // Regression: `repeat` ended at the first failed tick and nothing restarted the dispatcher, so one
+    // storage error in the field (`RangeError: Bad value`) stopped every schedule until a reload.
+    it.effect(
+      'a failed tick leaves the dispatcher running',
+      Effect.fnUntraced(
+        function* ({ expect }) {
+          const dispatcher = yield* TriggerDispatcher;
+          const invokeScheduledTriggers = dispatcher.invokeScheduledTriggers;
+          let ticks = 0;
+          dispatcher.invokeScheduledTriggers = (opts) => {
+            ticks += 1;
+            return ticks === 1 ? Effect.die(new RangeError('Bad value')) : invokeScheduledTriggers(opts);
+          };
+
+          yield* dispatcher.start();
+          yield* TestClock.adjust(Duration.minutes(2));
+
+          const registry = yield* Registry.AtomRegistry;
+          const status = registry.get(dispatcher.state);
+          expect(ticks).toBeGreaterThan(1);
+          expect(status.enabled).toBe(true);
+          expect(status.errors.map((error) => error.message)).toEqual(['Bad value']);
+
+          yield* dispatcher.stop();
+        },
+        Effect.provide(TestLayer({ timeControl: 'natural', livePollInterval: Duration.minutes(1) })),
+      ),
+    );
+
+    it.effect(
+      'a schedule with no next occurrence does not fail the refresh',
+      Effect.fnUntraced(function* ({ expect }) {
+        const functionObj = yield* registerOperation(Reply);
+        const never = Trigger.make({
+          runnable: Ref.make(functionObj),
+          enabled: true,
+          spec: Trigger.specTimer('0 0 30 2 *'), // February 30th.
+        });
+        yield* Database.add(never);
+        const healthy = Trigger.make({
+          runnable: Ref.make(functionObj),
+          enabled: true,
+          spec: Trigger.specTimer('*/5 * * * *'),
+        });
+        yield* Database.add(healthy);
+
+        const dispatcher = yield* TriggerDispatcher;
+        yield* dispatcher.refreshTriggers();
+
+        const registry = yield* Registry.AtomRegistry;
+        const status = registry.get(dispatcher.state);
+        expect(status.triggers.find((t) => t.triggerId === healthy.id)?.nextExecution).toBeInstanceOf(Date);
+        expect(status.triggers.find((t) => t.triggerId === never.id)?.nextExecution).toBeUndefined();
+      }, Effect.provide(TestLayer())),
+    );
+
+    it.effect(
+      'an operation with no registered handler parks the trigger instead of arming the cooldown',
+      Effect.fnUntraced(
+        function* ({ expect }) {
+          const functionObj = yield* registerOperation(UnhandledOp);
+          const trigger = Trigger.make({
+            runnable: Ref.make(functionObj),
+            enabled: true,
+            spec: Trigger.specTimer('* * * * *'),
+          });
+          yield* Database.add(trigger);
+
+          const dispatcher = yield* TriggerDispatcher;
+          yield* dispatcher.refreshTriggers();
+          yield* dispatcher.advanceTime(Duration.minutes(1));
+          const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['timer'] });
+          expect(results.length).toBe(1);
+          expect(Exit.isFailure(results[0].result)).toBe(true);
+
+          const registry = yield* Registry.AtomRegistry;
+          const triggerStatus = registry.get(dispatcher.state).triggers.find((t) => t.triggerId === trigger.id);
+          expect(triggerStatus?.staleReference).toBeDefined();
+          expect(triggerStatus?.cooldownUntil).toBeUndefined();
+
+          // Past the failure cooldown the trigger stays parked rather than re-running and re-throwing.
+          yield* dispatcher.advanceTime(Duration.minutes(6));
+          expect(yield* dispatcher.invokeScheduledTriggers({ kinds: ['timer'] })).toEqual([]);
+
+          // The park is not permanent: the probe interval elapsing lets a repaired reference resume.
+          yield* dispatcher.advanceTime(Duration.minutes(16));
+          expect((yield* dispatcher.invokeScheduledTriggers({ kinds: ['timer'] })).length).toBe(1);
+        },
+        Effect.provide(TestLayer({ failureCooldown: Duration.minutes(5) })),
+      ),
+    );
+
+    it.effect(
+      'a deleted operation object parks the trigger',
+      Effect.fnUntraced(function* ({ expect }) {
+        const trigger = Trigger.make({
+          runnable: Ref.fromURI(DANGLING_URI),
+          enabled: true,
+          spec: Trigger.specDirect(),
+        });
+        yield* Database.add(trigger);
+
+        const dispatcher = yield* TriggerDispatcher;
+        const { result } = yield* dispatcher.invokeTrigger({ trigger, event: { data: {} } });
+        expect(Exit.isFailure(result)).toBe(true);
+
+        const registry = yield* Registry.AtomRegistry;
+        const triggerStatus = registry.get(dispatcher.state).triggers.find((t) => t.triggerId === trigger.id);
+        expect(triggerStatus?.staleReference).toBeDefined();
+        expect(triggerStatus?.cooldownUntil).toBeUndefined();
       }, Effect.provide(TestLayer())),
     );
   });

@@ -169,8 +169,9 @@ export class CallsServicePeer extends Resource {
       throw new Error('Error while fetching from Calls service');
     }
 
+    const text = await response.text();
     try {
-      const data = (await response.clone().json()) as T;
+      const data = JSON.parse(text) as T;
       this.history.push({
         endpoint: relativePath,
         type: 'response',
@@ -184,7 +185,6 @@ export class CallsServicePeer extends Resource {
 
       return data;
     } catch (error) {
-      const text = await response.text();
       this.history.push({
         endpoint: relativePath,
         type: 'response',

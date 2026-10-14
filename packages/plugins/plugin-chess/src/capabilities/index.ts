@@ -11,18 +11,15 @@ import * as GameEvents from '@dxos/plugin-game/GameEvents';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../../PLUGIN.mdl?raw';
-
 export const Schema = AppCapability.schema(() => import('./schema.ts'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'), {
-  environments: ['node'],
+  environments: ['browser', 'node', 'tauri'],
 });
 // Browser-only: the variant descriptor carries the `card`/`article` React components the game
 // host renders, so the module cannot load without a DOM.
 export const GameVariant = Capability.lazyModule(
   'GameVariant',
-  { provides: [GameCapabilities.VariantProvider], activatesOn: GameEvents.Start, environments: [] },
+  { provides: [GameCapabilities.VariantProvider], activatesOn: GameEvents.Start, environments: ['browser', 'tauri'] },
   () => import('./game-variant.ts'),
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
@@ -31,7 +28,7 @@ export const OperationHandler = AppCapability.operationHandler(() => import('./o
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
   path: 'PLUGIN.mdl',
-  content: pluginSpec,
+  content: () => import('../../PLUGIN.mdl?raw'),
   mimeType: 'application/x-mdl',
 });
 export const Translations = AppCapability.translations(translations);

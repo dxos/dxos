@@ -246,7 +246,7 @@ asserted structurally.
 | layer                                                            | what it covers                                                                                                                 | how to run                                       |
 | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------ |
 | unit — `hierarchy.test.ts` (26)                                  | placement algebra: above/below/make-child, indent, outdent, nudge, cycle and foreign-set rejection                             | `moon run react-ui-task:test`                    |
-| unit — `tree-model.test.ts` (7), `static-tree-model.test.ts` (8) | topology from `parentTask`, sibling order, seeded collapse, path uniqueness                                                    | `moon run react-ui-task:test react-ui-list:test` |
+| unit — `tree-model.test.ts` (7), `static-tree-model.test.ts` (8) | topology from parent edges, sibling order from `subtasks`, seeded collapse, path uniqueness                                    | `moon run react-ui-task:test react-ui-list:test` |
 | story — `TaskList.stories.tsx > Test Hierarchy` (16 in file)     | shape, levels, ordinals, collapse, `Shift+Arrow` restructuring, focus movement, row draggability, toggle/description alignment | `moon run react-ui-task:test-storybook`          |
 
 **The drop gesture is not covered by the story suite** — a play function cannot drive native HTML5

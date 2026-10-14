@@ -4,7 +4,7 @@
 
 import { describe, expect, test, vi } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import type * as ObservabilityExtension from '../../ObservabilityExtension.ts';
 import { type Envelope, isEnvelope } from './envelope.ts';

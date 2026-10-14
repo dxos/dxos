@@ -3,9 +3,9 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Migrator from 'effect/unstable/sql/Migrator';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
-import type * as SqlError from 'effect/unstable/sql/SqlError';
+import * as Migrator from 'effect/sql/Migrator';
+import * as SqlClient from 'effect/sql/SqlClient';
+import type * as SqlError from 'effect/sql/SqlError';
 
 import { type SpaceId } from '@dxos/keys';
 
@@ -19,12 +19,18 @@ import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations/convergence-key-inten
  * services a group of one as a no-op before vacating the key's rows.
  *
  * Not an index: the table holds merge-workflow state, not derived data. It lives in the index
- * database anyway because the coupling is transactional — an intent must commit atomically with
- * the index-cursor advance it guards (see `IndexEngine.#update`); if the cursor advanced and the
+ * database anyway because the coupling is transactional — an intent must commit no later than the
+ * index-cursor advance it guards (see `IndexEngine.#update`); if the cursor advanced and the
  * intent write lived in a different store, a crash between the two would lose the detection
  * forever, since that keyed write is never re-presented to the indexing loop.
  */
 export class ConvergenceKeyIntentStore {
+  readonly #sql: SqlClient.SqlClient;
+
+  constructor(sql: SqlClient.SqlClient) {
+    this.#sql = sql;
+  }
+
   /**
    * Applies any migrations this database has not recorded yet.
    */
@@ -33,24 +39,23 @@ export class ConvergenceKeyIntentStore {
       // A malformed bundled manifest is a defect, not something a caller can recover from.
       Effect.catchTag('MigrationError', (error) => Effect.die(error)),
       Effect.asVoid,
+      Effect.provideService(SqlClient.SqlClient, this.#sql),
     ),
   );
 
   /**
-   * Durably queue convergence keys for duplicate detection. Runs inside the same transaction that
-   * commits the index rows and cursors (see `IndexEngine.#update`), so a keyed write can never
-   * be indexed-but-forgotten: until the merge pass services the key and clears the intent, every
-   * later pass re-presents it.
+   * Durably queue convergence keys for duplicate detection. Runs inside the transaction that
+   * commits the keyed objects' index rows, which commits no later than their cursor (see
+   * `IndexEngine.#update`), so a keyed write can never be indexed-but-forgotten: until the merge
+   * pass services the key and clears the intent, every later pass re-presents it.
    */
   record = Effect.fn('ConvergenceKeyIntentStore.record')(
-    (
-      intents: readonly { spaceId: SpaceId; convergenceKey: string }[],
-    ): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(function* () {
+    (intents: readonly { spaceId: SpaceId; convergenceKey: string }[]): Effect.Effect<void, SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
         if (intents.length === 0) {
           return;
         }
-        const sql = yield* SqlClient.SqlClient;
+        const sql = this.#sql;
         for (const { spaceId, convergenceKey } of intents) {
           yield* sql`INSERT INTO convergenceKeyIntents (spaceId, convergenceKey) VALUES (${spaceId}, ${convergenceKey})`;
         }
@@ -63,9 +68,9 @@ export class ConvergenceKeyIntentStore {
    * so a concurrent indexing pass cannot have its trigger erased.
    */
   take = Effect.fn('ConvergenceKeyIntentStore.take')(
-    (): Effect.Effect<{ maxId: number; intents: Map<SpaceId, Set<string>> }, SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
+    (): Effect.Effect<{ maxId: number; intents: Map<SpaceId, Set<string>> }, SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
+        const sql = this.#sql;
         const rows = yield* sql<{ id: number; spaceId: SpaceId; convergenceKey: string }>`
           SELECT id, spaceId, convergenceKey FROM convergenceKeyIntents`;
         let maxId = 0;
@@ -84,13 +89,9 @@ export class ConvergenceKeyIntentStore {
    * Clear a serviced convergence-key intent, bounded by the id captured at read time.
    */
   clear = Effect.fn('ConvergenceKeyIntentStore.clear')(
-    (
-      spaceId: SpaceId,
-      convergenceKey: string,
-      upToId: number,
-    ): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
+    (spaceId: SpaceId, convergenceKey: string, upToId: number): Effect.Effect<void, SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
+        const sql = this.#sql;
         yield* sql`DELETE FROM convergenceKeyIntents WHERE spaceId = ${spaceId} AND convergenceKey = ${convergenceKey} AND id <= ${upToId}`;
       }),
   );

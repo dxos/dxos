@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { createKvsStore } from '@dxos/effect';
+import * as KvsStore from '@dxos/effect/KvsStore';
 
 import { meta } from '#meta';
 import { LaMetricCapabilities, Settings } from '#types';
@@ -16,7 +16,7 @@ const DEFAULT_MIN_PUSH_INTERVAL_MS = 5_000;
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {
-    const settingsAtom = createKvsStore({
+    const settingsAtom = KvsStore.make({
       key: meta.profile.key,
       schema: Settings.Settings,
       defaultValue: () => ({ minPushIntervalMs: DEFAULT_MIN_PUSH_INTERVAL_MS }),

@@ -5,10 +5,9 @@
 import { isAfter, isBefore, isEqual } from 'date-fns';
 import * as Schema from 'effect/Schema';
 
-import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Collection, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { updateText } from '@dxos/echo-client';
-import { HiddenAnnotation } from '@dxos/echo/Annotation';
-import { CollectionItemAnnotation, Text } from '@dxos/schema';
+import { Text } from '@dxos/schema';
 
 import { getDateString, parseDateString } from './TasksUtil.ts';
 
@@ -17,7 +16,7 @@ export class JournalEntry extends Type.makeObject<JournalEntry>(DXN.make('org.dx
     id: Schema.String,
     date: Schema.String,
     content: Ref.Ref(Text.Text),
-  }).pipe(HiddenAnnotation.set(true)),
+  }),
 ) {}
 
 export class Journal extends Type.makeObject<Journal>(DXN.make('org.dxos.type.journal', '0.1.0'))(
@@ -28,7 +27,7 @@ export class Journal extends Type.makeObject<Journal>(DXN.make('org.dxos.type.jo
     entries: Schema.Record(Schema.String, Ref.Ref(JournalEntry)),
   }).pipe(
     Annotation.IconAnnotation.set({ icon: 'ph--calendar-check--regular', hue: 'indigo' }),
-    CollectionItemAnnotation.set(true),
+    Annotation.UserType.set({ tags: [Collection.ItemTag] }),
   ),
 ) {}
 

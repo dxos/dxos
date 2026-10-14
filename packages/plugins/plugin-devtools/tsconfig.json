@@ -43,6 +43,9 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/echo/echo-react"
+    },
+    {
       "path": "../../core/protocols"
     },
     {
@@ -79,6 +82,9 @@
       "path": "../../ui/react-ui-introspect"
     },
     {
+      "path": "../../ui/react-ui-query"
+    },
+    {
       "path": "../../ui/react-ui-table"
     },
     {
@@ -89,6 +95,9 @@
     },
     {
       "path": "../plugin-client"
+    },
+    {
+      "path": "../plugin-debug"
     },
     {
       "path": "../plugin-script"

@@ -1,0 +1,36 @@
+//
+// Copyright 2020 DXOS.org
+//
+
+import { type HypercoreBlock, type HypercoreBlockSelector } from '@dxos/feed-store';
+import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
+import { toTimeframe } from '@dxos/protocols/buf';
+import type { FeedMessage } from '@dxos/protocols/buf/dxos/echo/feed_pb';
+
+import { type TimeframeClock } from './timeframe-clock.ts';
+
+/**
+ * The MessageSelector makes sure that we read in a trusted order.
+ * The first message we wish to process is the SpaceGenesis, which will admit a Feed.
+ * As we encounter and process FeedAdmit messages those are added to the Space's trust,
+ * and we begin processing messages from them as well.
+ */
+export const createMessageSelector = (timeframeClock: TimeframeClock): HypercoreBlockSelector<FeedMessage> => {
+  return (messages: HypercoreBlock<FeedMessage>[]) => {
+    // Pick the first candidate with a valid timeframe that has no gaps.
+    for (let i = 0; i < messages.length; i++) {
+      const {
+        data: { timeframe },
+      } = messages[i];
+      invariant(timeframe);
+
+      if (!timeframeClock.hasGaps(toTimeframe(timeframe))) {
+        return i;
+      }
+    }
+
+    // Not ready for this message yet.
+    log('Skipping...');
+  };
+};

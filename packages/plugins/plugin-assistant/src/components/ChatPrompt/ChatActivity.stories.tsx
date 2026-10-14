@@ -6,7 +6,6 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 import { expect, within } from 'storybook/test';
 
-import { type RequestPhase } from '@dxos/assistant';
 import type * as Trace from '@dxos/compute/Trace';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -138,7 +137,7 @@ export const Retrying: Story = {
 
 /** One scripted step of {@link Sequence}: what to show, and for how long. */
 type Step = {
-  activity?: Trace.PayloadType<typeof RequestPhase>;
+  activity?: Trace.PayloadType<typeof Trace.RequestPhase>;
   /** Milliseconds to hold before the next step. */
   hold: number;
   /** Streamed reply so far, standing in for the thread above the footer. */

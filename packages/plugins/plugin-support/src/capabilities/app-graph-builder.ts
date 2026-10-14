@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Atom from 'effect/reactivity/Atom';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -18,7 +18,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 import { Attention } from '@dxos/react-ui-attention/types';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { meta } from '#meta';
 import { HelpCapabilities, HelpOperation, SupportCapabilities } from '#types';
@@ -105,12 +105,14 @@ export default Capability.makeModule(
       // renders the owning plugin's `meta.description`.
       AppGraphBuilder.createExtension({
         id: 'helpCompanion',
+        relation: AppNode.companion,
         match: AppNodeMatcher.whenEchoObject,
         connector: (_object, get) => Effect.succeed(showHelpCompanions(get) ? [makeHelpCompanion()] : []),
       }),
 
       AppGraphBuilder.createExtension({
         id: 'homeHelpCompanion',
+        relation: AppNode.companion,
         match: (node) =>
           node.type === SpaceSchema.SPACE_HOME_NODE_TYPE ? Option.some(node) : Option.none<AppGraphNode.Node>(),
         connector: (_node, get) => Effect.succeed(showHelpCompanions(get) ? [makeHelpCompanion()] : []),
@@ -120,6 +122,7 @@ export default Capability.makeModule(
       // Renders the FeedbackPanel via the `deck-companion--help` surface.
       AppGraphBuilder.createExtension({
         id: 'help',
+        relation: AppNode.companion,
         match: GraphNodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
@@ -139,6 +142,7 @@ export default Capability.makeModule(
       // Hidden by default; toggled via the showDiscordCompanion setting.
       AppGraphBuilder.createExtension({
         id: 'discord',
+        relation: AppNode.companion,
         match: GraphNodeMatcher.whenRoot,
         connector: (_root, get) => {
           const [settingsAtom] = get(settingsCapabilityAtom);

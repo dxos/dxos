@@ -13,7 +13,7 @@ import { ConnectorCoordination } from '#types';
 export const Coordinator = Capability.lazyModule(
   'ConnectorCoordination.ConnectorCoordinator',
   {
-    environments: [],
+    environments: ['browser', 'tauri'],
     requires: [
       ClientCapabilities.Client,
       ClientCapabilities.IdentityService,

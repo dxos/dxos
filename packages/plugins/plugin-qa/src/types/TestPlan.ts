@@ -7,7 +7,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 
 import * as TestCase from './TestCase.ts';
 
@@ -17,14 +16,15 @@ export class TestPlan extends Type.makeObject<TestPlan>(DXN.make('org.dxos.type.
     name: Schema.String.pipe(Schema.annotate({ title: 'Name' })),
     description: Schema.optional(Schema.String),
     /** Ordered; the plan owns the ordering, the case does not. */
-    cases: Schema.mutable(Schema.Array(Ref.Ref(TestCase.TestCase))).pipe(FormInputAnnotation.set(false)),
+    cases: Schema.mutable(Schema.Array(Ref.Ref(TestCase.TestCase))).pipe(Annotation.FormInputAnnotation.set(false)),
     /** Durable append-only log of executions; a child of the plan, so it cascade-deletes with it. */
-    feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(true), FormInputAnnotation.set(false)),
+    feed: Ref.Ref(Feed.Feed).pipe(Annotation.SetParent.set(), Annotation.FormInputAnnotation.set(false)),
     /** The `## QA` section this plan tracks, when generated from a spec. */
     source: Schema.optional(Schema.String),
   }).pipe(
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--check-square-offset--regular', hue: 'green' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 

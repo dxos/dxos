@@ -105,13 +105,16 @@ MOON_CACHE_SHARED_WORKTREE_CACHE=false MOON_EXPERIMENT_CAS_OUTPUTS_CACHE=false m
 3. **`--max_size` is bounded by RAM, not by disk.** It is 50 (GiB), enforced as an LRU:
    `bazel-remote` evicts the least recently used blobs rather than filling the volume. The
    temptation is to size it against the 320 GiB disk, and that is how it was first set, at 200.
-   The real constraint is that `bazel-remote` holds one index entry per cache file, measured here
-   at ~1.2 KB against a mean compressed blob of ~14.3 KB. Budget **a quarter of RAM** for the
-   index, not half: the heap has to leave room for the GC target above it and the page cache
-   beside it, and the 16 GB droplet was already thrashing at a 11.7 GB heap. A quarter of 16 GB
-   is 4 GB, which buys 4 GB / 1.2 KB = ~3.3M files, which at 14.3 KB each is ~44 GiB. 50 GiB is
-   that rounded up, and it measured out at 3.78M files and a 4.59 GB heap. See item 7 for what
-   happens when the cap is set from the disk instead.
+   The real constraint is that `bazel-remote` holds one index entry per cache file. Budget **a
+   quarter of RAM** for the index, not half: the heap has to leave room for the GC target above it
+   and the page cache beside it, and the 16 GB droplet was already thrashing at a 11.7 GB heap.
+
+   Size that entry at **604 bytes**, not the ~1.2 KB this file carried until 2026-09-17. The older
+   number came from dividing a heap that was half uncollected garbage by the file count. Measured
+   on a freshly restarted server, 3.74M items occupy 2.26 GB. A quarter of 16 GB is 4 GB, which at
+   604 bytes buys ~6.6M files, and at a mean compressed blob of 14.3 KB that is ~90 GiB. The cap
+   stays at 50 GiB until someone spends a restart window raising it, not because 50 is the
+   ceiling. See item 7 for what happens when the cap is set from the disk instead.
 4. **Release workflows deliberately skip the cache** — `remote-cache: 'false'` on the setup action,
    or a workflow-level `MOON_REMOTE_HOST` where the workflow does not use that action.
 5. **`--access_log_level` defaults to `all`.** At CI volume that's one line per request: 8 days
@@ -151,6 +154,33 @@ MOON_CACHE_SHARED_WORKTREE_CACHE=false MOON_EXPERIMENT_CAS_OUTPUTS_CACHE=false m
    handled: `.github/actions/setup/action.yml` retries the probe (`--retry 3 --retry-all-errors`)
    and its `degrade()` then warns, blanks `MOON_REMOTE_HOST` and exits 0 rather than failing the
    job, so an unreachable cache costs a slower build instead of a red one.
+8. **A correctly sized cache still swapped, because of Go's GC target.** Three weeks after item 7
+   was fixed, CI slowed down again with the same symptom and a different cause. The cap was right
+   and the index fit, but `GOGC` was at its default of 100, so the runtime let the heap grow to
+   twice the live set before collecting: 4.4 GB of index, an 8 GB `next_gc_bytes` target, and a
+   16 GB box that also wants page cache for a 50 GB file store. The kernel paged the cold half of
+   the heap out at the default swappiness of 60, and each collection faulted it back. Swap used
+   oscillated between 1.2 GB and 5.7 GB inside single 10-minute windows **while 6.9 GB of RAM sat
+   free**, `pswpin/s` and `pswpout/s` both ran 10,000–16,000, and `BatchReadBlobs` averaged 2.45 s,
+   with 36 s in the worst window.
+
+   `GOGC=50` and `GOMEMLIMIT=10GiB` in the unit, plus `vm.swappiness=1` from
+   `sysctl-moon-cache.conf`, took the GC target to 3.3 GB, the live heap to 2.26 GB, RSS from
+   5.07 GB to 3.52 GB, swap-in to zero and `BatchReadBlobs` to 36 ms under a comparable load.
+
+   Free memory is what makes this one hard to see. Item 7 announced itself with a `next_gc_bytes`
+   above physical RAM; here the target was under RAM and the box still thrashed, so the counter to
+   watch is `pswpin/s` against free memory. Both swapping with memory to spare means the GC target
+   is the problem, not the cap.
+
+   Writes did not recover with the reads, and that is understood and accepted: `BatchUpdateBlobs`
+   still averages ~800 ms. It is not the disk. A 45-second syscall trace put `fsync` at 4–8 ms and
+   87/s, one per stored blob, `unlinkat` at 52 ms in total, and every file syscall together at
+   about 7% of in-flight write time, with the host at 85–90% idle CPU, 14–36% disk utilization and
+   a journal 16% busy. An isolated 4 KB write costs 38 ms, and 63 ms at 20-way parallelism, so the
+   queueing is inside `bazel-remote` rather than under it. Hydration is what CI waits on, so this
+   is a lower priority than it looks. Pinning it down needs `--profile_address` on the unit, which
+   needs a restart; add it the next time one is spent.
 
 ## The server
 
@@ -161,6 +191,13 @@ MOON_CACHE_SHARED_WORKTREE_CACHE=false MOON_EXPERIMENT_CAS_OUTPUTS_CACHE=false m
 | ports | 9092 gRPC, 9093 HTTPS (metrics + `/status`) |
 | storage | `/var/cache/moon`, zstd, 50 GiB LRU (~3.8M files, see item 3) |
 | certificates | `/etc/bazel-remote/{server.pem,server.key,ca.pem}` |
+| memory | `GOGC=50`, `GOMEMLIMIT=10GiB` in the unit, `vm.swappiness=1` in `/etc/sysctl.d/99-moon-cache.conf` (item 8) |
+
+SSH is firewalled to named addresses in the `moon-cache-fw` DigitalOcean firewall, so a new
+operator adds their own before the commands below work, with
+`doctl compute firewall add-rules <id> --inbound-rules "protocol:tcp,ports:22,address:<ip>/32"`.
+Dial the address rather than the name right afterwards; the rule takes effect before DNS is
+useful.
 
 `--tls_ca_file` is what makes it mTLS. Without it the cache would be world-readable and
 world-writable, which on a public IP means anyone can poison your build outputs.
@@ -182,8 +219,11 @@ ssh root@cache.dxos.network 'systemctl status bazel-remote; journalctl -u bazel-
 
 Deploying a config change is `scp bazel-remote.service root@…:/etc/systemd/system/` then
 `systemctl daemon-reload && systemctl restart bazel-remote`. Restarts are safe for the cache
-data — it's on disk and survives — but not instantaneous: see item 6 above for the ~70 s of
-downtime while the index rebuilds.
+data. It is on disk and survives. They are not instantaneous: see item 6 above for the downtime
+while the index rebuilds, measured at 94 s for 3.74M items on 2026-09-17.
+
+`sysctl-moon-cache.conf` goes to `/etc/sysctl.d/99-moon-cache.conf` and applies with
+`sysctl -p /etc/sysctl.d/99-moon-cache.conf`, no restart involved.
 
 `rsyslog-logrotate.conf` bounds the six paths rsyslog writes on this box (`syslog`, `mail.log`,
 `kern.log`, `auth.log`, `user.log`, `cron.log`) — daily rotation, 500 MB max size, 3 generations

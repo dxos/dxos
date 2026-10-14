@@ -16,9 +16,6 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 import { SheetCapabilities, SheetEvents } from '#types';
 
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../../PLUGIN.mdl?raw';
-
 // Ordering-only: registers the sort comparator once the app graph exists; the body reads
 // nothing else.
 export const AnchorSort = AppCapability.anchorSort(() => import('./anchor-sort.ts'), {
@@ -27,7 +24,7 @@ export const AnchorSort = AppCapability.anchorSort(() => import('./anchor-sort.t
 });
 export const CommentConfig = AppCapability.commentConfig(() => import('./comment-config.ts'), {
   activatesOn: SheetEvents.Start,
-  environments: ['node'],
+  environments: ['browser', 'node', 'tauri'],
 });
 export const ComputeGraphRegistry = Capability.lazyModule(
   'ComputeGraphRegistry',
@@ -38,11 +35,13 @@ export const ComputeGraphRegistry = Capability.lazyModule(
     // earlier, which a start-gated provider is not.
     requires: [ClientCapabilities.Client, Capabilities.ProcessManagerRuntime],
     provides: [SheetCapabilities.ComputeGraphRegistry],
+    // Needs a client, which headless hosts (EDGE) do not provide.
+    environments: ['browser', 'node', 'tauri'],
   },
   () => import('./compute-graph-registry.ts'),
 );
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'), {
-  environments: ['node'],
+  environments: ['browser', 'node', 'tauri'],
 });
 export const Markdown = Capability.lazyModule(
   'MarkdownExtension',
@@ -51,6 +50,8 @@ export const Markdown = Capability.lazyModule(
     requires: [SheetCapabilities.ComputeGraphRegistry],
     provides: [MarkdownCapabilities.ExtensionProvider],
     activatesOn: MarkdownEvents.Start,
+    // Follows its required registry, which headless hosts (EDGE) do not provide.
+    environments: ['browser', 'node', 'tauri'],
   },
   () => import('./markdown-extension.ts'),
 );
@@ -67,16 +68,16 @@ export const SheetState = Capability.lazyModule(
   () => import('./state.ts'),
 );
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'), {
-  environments: ['node'],
+  environments: ['browser', 'node', 'tauri'],
 });
 export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings.ts'), {
   activatesOn: SheetEvents.Start,
-  environments: ['node'],
+  environments: ['browser', 'node', 'tauri'],
 });
 export const Translations = AppCapability.translations(translations);
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
   path: 'PLUGIN.mdl',
-  content: pluginSpec,
+  content: () => import('../../PLUGIN.mdl?raw'),
   mimeType: 'application/x-mdl',
 });

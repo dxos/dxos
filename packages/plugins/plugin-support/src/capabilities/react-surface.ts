@@ -6,11 +6,11 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Hints, Keyshortcuts } from '@dxos/plugin-deck/DeckRole';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as DeckRole from '@dxos/plugin-deck/DeckRole';
 import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import {
   DiscordPanel,
@@ -80,12 +80,12 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'hints',
-        filter: Surface.makeFilter(Hints),
+        filter: Surface.makeFilter(DeckRole.Hints),
         component: ShortcutsHints,
       }),
       Surface.create({
         id: 'keyshortcuts',
-        filter: Surface.makeFilter(Keyshortcuts),
+        filter: Surface.makeFilter(DeckRole.Keyshortcuts),
         component: ShortcutsList,
       }),
       Surface.create({

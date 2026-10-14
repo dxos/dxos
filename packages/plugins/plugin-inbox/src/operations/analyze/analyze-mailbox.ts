@@ -5,9 +5,11 @@
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { PROGRESS_STATUS_CANCELLED, PROGRESS_STATUS_COMPLETE, PROGRESS_STATUS_FAILED } from '@dxos/app-toolkit';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as Progress from '@dxos/app-toolkit/Progress';
 import * as Cancellation from '@dxos/compute/Cancellation';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
@@ -15,6 +17,7 @@ import { Database, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 
 import * as InboxCapabilities from '../../types/InboxCapabilities.ts';
+import * as InboxEvents from '../../types/InboxEvents.ts';
 import * as InboxOperation from '../../types/InboxOperation.ts';
 import { unmetPrecondition } from '../precondition.ts';
 import * as Topology from '../topology.ts';
@@ -96,6 +99,14 @@ const handler = InboxOperation.AnalyzeMailbox.pipe(
       // the same run as `['deterministic', 'summarize']` rather than a cascade that summarizes against
       // contacts it has not extracted.
       const selected = new Set(tiers);
+      // Processors are start-gated, and a routine can run this before any inbox surface has loaded;
+      // a host without a plugin manager contributes them directly.
+      const plugins = yield* Effect.serviceOption(Plugin.Service);
+      if (Option.isSome(plugins)) {
+        yield* plugins.value
+          .activate(InboxEvents.Start)
+          .pipe(Effect.catch((error) => Effect.sync(() => log.warn('inbox start activation failed', { error }))));
+      }
       const contributed = yield* Capability.getAll(InboxCapabilities.MailboxProcessor);
       const { ordered, excluded } = Topology.sort(contributed.filter((processor) => selected.has(processor.tier)));
 
@@ -220,10 +231,10 @@ const handler = InboxOperation.AnalyzeMailbox.pipe(
       reportStatus({
         current: passes.length,
         message: signal.aborted
-          ? PROGRESS_STATUS_CANCELLED
+          ? Progress.STATUS_CANCELLED
           : failed > 0
-            ? PROGRESS_STATUS_FAILED
-            : PROGRESS_STATUS_COMPLETE,
+            ? Progress.STATUS_FAILED
+            : Progress.STATUS_COMPLETE,
       });
 
       return { completed, failed, skipped, cancelled, stages: results };

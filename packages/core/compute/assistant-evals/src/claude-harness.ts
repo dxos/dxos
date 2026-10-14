@@ -11,28 +11,33 @@ import path from 'node:path';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import type * as Capabilities from '@dxos/app-framework/Capabilities';
-import type * as Plugin from '@dxos/app-framework/Plugin';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { asyncTimeout, sleep } from '@dxos/async';
 import { type Client, Config } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { createEdgeIdentity } from '@dxos/client/edge';
 import { FeedTraceSink } from '@dxos/compute-runtime';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import type * as Skill from '@dxos/compute/Skill';
 import { createDidFromIdentityKey } from '@dxos/credentials';
 import { Database, Tag, type Type } from '@dxos/echo';
 import { isEdgePeerId } from '@dxos/echo-protocol';
-import { EffectEx } from '@dxos/effect';
-import type { SpaceId } from '@dxos/keys';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import { DXN, type SpaceId } from '@dxos/keys';
+import * as LocalUpload from '@dxos/mcp-server/LocalUpload';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
+import * as StagedUpload from '@dxos/plugin-file/StagedUpload';
 import * as InboxPlugin from '@dxos/plugin-inbox/InboxPlugin';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 import { requirePublicKey } from '@dxos/protocols/buf';
 import {
   EdgeStatus_ConnectionState,
@@ -85,6 +90,15 @@ export type ClaudeHarnessOptions = {
    * workers (see {@link McpTarget}). Defaults to `DX_EVAL_MCP_TARGET`, and to `local` without it.
    */
   target?: McpTarget.Target;
+  /**
+   * Serve `createUpload` from the in-process host, staging uploads on a loopback listener the way
+   * `dx mcp serve` does, and answer `file.createFromUpload` from that stage. Ignored for a deployed
+   * target, which has its own. The scenario must not also load FilePlugin, whose handler for the
+   * same operation adopts from EDGE instead.
+   */
+  localUploads?: boolean;
+  /** Serve `runScript` from the in-process host, as `dx mcp serve --code-mode` does. Ignored for a deployed target. */
+  codeMode?: boolean;
   /** Fills the space before the agent starts. */
   seed?: (context: {
     spaceId: SpaceId;
@@ -94,6 +108,14 @@ export type ClaudeHarnessOptions = {
 /** What a scenario drives and reads inside {@link runClaudeEval}. */
 export type ClaudeHarness = {
   readonly spaceId: SpaceId;
+  /**
+   * The agent's working directory — a throwaway tree, and the only one its file tools may touch.
+   *
+   * Exposed so a scenario can plant a fixture the agent will act on from disk rather than from the
+   * prompt, which is the only way to exercise a flow whose whole point is that the bytes never
+   * enter the conversation.
+   */
+  readonly workdir: string;
   /** The surface this run is driving. */
   readonly target: McpTarget.Target;
   /** Endpoint the agent dials — the in-process listener's, or the deployed worker's. */
@@ -368,8 +390,8 @@ const turnCalls = (prompt: string, turn: Turn): Usage.Call[] => {
   const transcript: unknown[] = [{ role: 'user', content: prompt }];
   const calls: Usage.Call[] = [];
   for (const event of turn.events) {
-    const message = event?.message;
-    if (event?.type === 'assistant' && message) {
+    if (event.type === 'assistant') {
+      const { message } = event;
       calls.push({
         model: typeof message.model === 'string' ? message.model : 'claude',
         provider: 'anthropic',
@@ -384,12 +406,33 @@ const turnCalls = (prompt: string, turn: Turn): Usage.Call[] => {
         end: turn.end,
       });
       transcript.push({ role: 'assistant', content: message.content });
-    } else if (event?.type === 'user' && message) {
-      transcript.push({ role: 'user', content: message.content });
+    } else if (event.type === 'user') {
+      transcript.push({ role: 'user', content: event.message.content });
     }
   }
   return calls;
 };
+
+const stagedUploadMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.test.stagedUpload'), name: 'Staged upload' });
+
+/** Contributes `file.createFromUpload` over a loopback stage, in place of FilePlugin's EDGE adoption. */
+const stagedUploadPlugin = (uploads: LocalUpload.Stage): Plugin.Plugin =>
+  Plugin.make(
+    Plugin.define(stagedUploadMeta).pipe(
+      Plugin.addModule({
+        id: 'staged-upload-handler',
+        activatesOn: ActivationEvents.Startup,
+        provides: [Capabilities.OperationHandler],
+        activate: () =>
+          Effect.succeed([
+            Capability.contribute(
+              Capabilities.OperationHandler,
+              OperationHandlerSet.make(StagedUpload.createFromUploadHandler(uploads)),
+            ),
+          ]),
+      }),
+    ),
+  )();
 
 const aiServiceMiddleware = (): Promise<(_upstream: AiService.Service) => AiService.Service> =>
   AiService.tag.pipe(
@@ -431,7 +474,8 @@ export const runClaudeEval = async <T>(
 
   // A throwaway tree, so a prompt that goes wrong cannot touch the checkout the eval runs from.
   const workdir = fs.mkdtempSync(path.join(os.tmpdir(), 'dx-mcp-eval-'));
-  const app = await createComposerTestApp({
+  const uploads = options.localUploads && remoteUrl == null ? new LocalUpload.Stage() : undefined;
+  const app = await Harness.createComposerTestApp({
     plugins: [
       ClientPlugin.make({
         types: [Tag.Tag, ...(options.types ?? [])],
@@ -444,6 +488,7 @@ export const runClaudeEval = async <T>(
       RoutinePlugin.make(),
       InboxPlugin.make(),
       SpacePlugin.make({}),
+      ...(uploads ? [stagedUploadPlugin(uploads)] : []),
       ...(options.plugins ?? []),
     ],
   });
@@ -508,6 +553,8 @@ export const runClaudeEval = async <T>(
                 spaceIds: [spaceId],
                 context: () => context,
                 registry: () => registry,
+                uploads,
+                codeMode: options.codeMode,
               }).pipe(Scope.provide(scope)),
             );
 
@@ -539,6 +586,7 @@ export const runClaudeEval = async <T>(
       return await body({
         spaceId,
         target,
+        workdir,
         url,
         query,
         score,
@@ -557,6 +605,7 @@ export const runClaudeEval = async <T>(
     }
   } finally {
     await agent?.close();
+    await uploads?.close();
     await app.dispose();
     fs.rmSync(workdir, { recursive: true, force: true });
     await run.finish();

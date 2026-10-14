@@ -9,8 +9,8 @@ import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Match from 'effect/Match';
+import * as Atom from 'effect/reactivity/Atom';
 import * as Schedule from 'effect/Schedule';
-import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -108,15 +108,21 @@ export default Capability.makeModule(
       }
       let downloaded = 0;
       let contentLength = 0;
-      registry.set(statusAtom, { kind: 'downloading', downloaded: 0, contentLength: 0 });
+      registry.set(statusAtom, { kind: 'downloading' });
       const onEvent = Match.type<Updater.DownloadEvent>().pipe(
         Match.when({ event: 'Started' }, (event) => {
           contentLength = event.data.contentLength ?? 0;
-          registry.set(statusAtom, { kind: 'downloading', downloaded, contentLength });
+          registry.set(statusAtom, {
+            kind: 'downloading',
+            progress: { completed: downloaded, total: contentLength, unit: 'bytes' },
+          });
         }),
         Match.when({ event: 'Progress' }, (event) => {
           downloaded += event.data.chunkLength;
-          registry.set(statusAtom, { kind: 'downloading', downloaded, contentLength });
+          registry.set(statusAtom, {
+            kind: 'downloading',
+            progress: { completed: downloaded, total: contentLength, unit: 'bytes' },
+          });
         }),
         Match.when({ event: 'Finished' }, () => {
           log.info('download completed');
@@ -146,7 +152,7 @@ export default Capability.makeModule(
         }
         await doInstall();
       },
-      relaunch: async () => {
+      apply: async () => {
         await relaunch();
       },
     };

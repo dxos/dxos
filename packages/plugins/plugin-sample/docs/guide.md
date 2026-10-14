@@ -67,8 +67,8 @@ See [Graph Builder API](../../../sdk/app-toolkit/docs/graph-builder-api.md) for 
 2. **Sub-graph section** — `whenSpace` matcher + `connector` creates a "Samples" section under each space.
 3. **Section children** — Custom matcher for the section type + `connector` populates SampleItem objects as child nodes.
 4. **Type-specific action** — `createTypeExtension` + `actions` adds an "Archive" action to SampleItem nodes.
-5. **Plank companion** — `createTypeExtension` + `connector` attaches a "Related" side panel to SampleItem objects.
-6. **Deck companion** — `createExtension` + `NodeMatcher.whenRoot` + `connector` adds a workspace-wide panel.
+5. **Plank companion** — `createTypeExtension` + `relation: AppNode.companion` + `connector` attaches a "Related" side panel to SampleItem objects.
+6. **Deck companion** — `createExtension` + `NodeMatcher.whenRoot` + `relation: AppNode.companion` + `connector` adds a workspace-wide panel.
 
 ## Schema Types
 
@@ -86,13 +86,13 @@ See [Graph Builder API](../../../sdk/app-toolkit/docs/graph-builder-api.md) for 
 ## Settings
 
 - [`src/types/Settings.ts`](../src/types/Settings.ts) — Schema definition.
-- [`src/capabilities/settings.ts`](../src/capabilities/settings.ts) — Creates a persistent `createKvsStore` atom and contributes it both locally (`SampleCapabilities.Settings`) and globally (`AppCapabilities.Settings`).
+- [`src/capabilities/settings.ts`](../src/capabilities/settings.ts) — Creates a persistent `KvsStore.make` atom and contributes it both locally (`SampleCapabilities.Settings`) and globally (`AppCapabilities.Settings`).
 
 ## Companions
 
-**Plank companions** are side panels attached to specific objects. Registered in the graph builder via `AppNode.makeCompanion()` and rendered via a companion article surface.
+**Plank companions** are side panels attached to specific objects. Registered in the graph builder via `AppNode.makeCompanion()` from an extension with the companion relation, and rendered via a companion article surface.
 
-**Deck companions** are workspace-wide panels. Registered via `AppNode.makeDeckCompanion()` and rendered via a `deck-companion--{id}` surface role.
+**Deck companions** are workspace-wide panels. Registered via `AppNode.makeDeckCompanion()`, also under the companion relation, and rendered via a `deck-companion--{id}` surface role.
 
 See [`src/capabilities/app-graph-builder.ts`](../src/capabilities/app-graph-builder.ts) for the graph registration and [`src/capabilities/react-surface.tsx`](../src/capabilities/react-surface.tsx) for the surface rendering.
 
