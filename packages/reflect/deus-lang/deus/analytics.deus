@@ -1,0 +1,942 @@
+/-
+  The analytics store (D96, task d70cd8c1): events about the codebase, kept beside it.
+
+  - An event type is a `structure` marked `@[event]`, so it lives in the codebase like any
+    definition. Its fields are flat: `Int`, `Bool`, `Text` or `CodeRef`, a reference into the
+    codebase. Events point at the codebase; nothing in the codebase points at an event.
+  - A client records rows locally, then pushes them; it never pulls. A push writes one Parquet
+    file per event type and batch, `events/<Type>/<type hash>/<batch>.parquet` on the remote,
+    named by content, so pushes never conflict. Basin SQL reads them once they are registered
+    as Iceberg tables (scripts/analytics-publish.py).
+  - Every row also carries `event_id`, `recorded_at` (microseconds, UTC) and `recorded_by`.
+
+  Locally, `events/pending/<Type>@<hash>.sexp` holds rows not pushed yet and
+  `events/pushed/…` the rows already pushed, one `(row id at by value…)` per line, so counts
+  never need the remote.
+
+  A `CodeRef` holds one of three forms (D97): a name IRI `<project>/<name>` (follows the name),
+  a pinned `<project>/<name>#<hash>` (fixed, and names the definition), or a bare `#<hash>`.
+  Recorders write the pinned form; a builtin's fragment is its name (`…/Bool#Bool`).
+-/
+
+/-- A reference into the codebase, as text in one of the three forms above. -/
+structure CodeRef @"urn:deus:analytics:CodeRef" where
+  target : Text
+
+/-- A column of an event table: the field's name and `int`, `bool`, `text`, `ref` or `time`. -/
+structure Column @"urn:deus:analytics:Column" where
+  columnName : Text
+  columnType : Text
+
+/-- An event type found in the codebase. -/
+structure EventType @"urn:deus:analytics:EventType" where
+  typeName : Text
+  typeHash : Text
+  columns : List Column
+
+/-- A value in an event row. -/
+inductive Cell @"urn:deus:analytics:Cell" where
+  | int (value : Int)
+  | bool (value : Bool)
+  | text (value : Text)
+
+/-- A recorded event: its id, when (microseconds since the epoch, as decimal text), by whom, and one cell per field. -/
+structure Row @"urn:deus:analytics:Row" where
+  eventId : Text
+  recordedAt : Text
+  recordedBy : Text
+  cells : List Cell
+
+/-- A Thrift value, for the compact protocol Parquet uses for its metadata. -/
+inductive Thrift @"urn:deus:analytics:Thrift" where
+  | i32 (value : Int)
+  | i64 (value : Int)
+  | bin (bytes : List Int)
+  | flag (value : Bool)
+  | items (elemType : Int) (values : List Thrift)
+  | fields (pairs : List (Int, Thrift))
+
+namespace Events
+
+/-- One run of a test or theorem by `deus test` or `deus check`. Integration tests talk to the real world, so they are the non-deterministic ones. -/
+@[event]
+structure TestRun @"urn:deus:event:TestRun" where
+  subject : CodeRef
+  runKind : Text
+  passed : Bool
+  cached : Bool
+  deterministic : Bool
+  evidence : Text
+  cases : Int
+  failure : Text
+  ms : Int
+
+/-- One CI check run on a commit of the pull request that carries the codebase. -/
+@[event]
+structure CiRun @"urn:deus:event:CiRun" where
+  check : Text
+  conclusion : Text
+  passed : Bool
+  commit : Text
+  pr : Int
+  seconds : Int
+  runUrl : Text
+
+/-- One change an agent or a person made to the codebase's history. -/
+@[event]
+structure AgentChange @"urn:deus:event:AgentChange" where
+  change : CodeRef
+  agent : Text
+  action : Text
+  changeMessage : Text
+
+/-- One definition an agent wrote with `deus add` or `deus update`. -/
+@[event]
+structure AgentWrote @"urn:deus:event:AgentWrote" where
+  definition : CodeRef
+  agent : Text
+  via : Text
+
+/-- One stage of the work log (docs/TIMELINE.md): a commit and the wall time since the one before. -/
+@[event]
+structure AgentStage @"urn:deus:event:AgentStage" where
+  stage : Int
+  commit : Text
+  seconds : Int
+  summary : Text
+
+end Events
+
+namespace Parquet
+
+--
+-- Bytes. Ints are 32-bit, so 64-bit values are written as two halves or from decimal text.
+--
+
+def le32 (v : Int) : List Int := [Int.and v 255, Int.and (Int.shr v 8) 255, Int.and (Int.shr v 16) 255, Int.and (Int.ushr v 24) 255]
+
+def le64 (v : Int) : List Int := le32 v ++ (if v < 0 then [255, 255, 255, 255] else [0, 0, 0, 0])
+
+/-- An unsigned LEB128 varint of a 32-bit pattern. -/
+def varint (v : Int) : List Int :=
+  let rec go x acc :=
+    let low := Int.and x 127
+    let rest := Int.ushr x 7
+    if rest == 0 then List.reverse (low :: acc) else go rest (Int.or low 128 :: acc)
+  go v []
+
+/-- Decimal digits as eight little-endian bytes (an unsigned 64-bit integer); anything else is 0. -/
+def decimalLE64 (digits : Text) : List Int :=
+  let step := fun (bytes : List Int) (d : Int) =>
+    let rec go bs carry acc :=
+      match bs with
+      | [] => List.reverse acc
+      | b :: rest =>
+        let v := b * 10 + carry
+        go rest (Int.shr v 8) (Int.and v 255 :: acc)
+    go bytes d []
+  List.foldl (fun bytes c => if c >= '0' && c <= '9' then step bytes (c - '0') else bytes) [0, 0, 0, 0, 0, 0, 0, 0] (Text.utf8 digits)
+
+/-- Eight little-endian bytes (unsigned) as decimal digits. -/
+def le64Decimal (bytes : List Int) : Text :=
+  -- Long division by ten over the big-endian bytes, collecting remainders.
+  let rec divide bs rem acc :=
+    match bs with
+    | [] => (List.reverse acc, rem)
+    | b :: rest =>
+      let v := rem * 256 + b
+      divide rest (Int.mod v 10) (Int.div v 10 :: acc)
+  let rec go bs digits :=
+    if List.all (fun b => b == 0) bs then (if List.isEmpty digits then "0" else Text.concat digits)
+    else
+      match divide bs 0 [] with
+      | (quotient, rem) => go quotient (Int.toText rem :: digits)
+  go (List.reverse bytes) []
+
+/-- Text without leading zeros, `"0"` when nothing is left. -/
+def trimZeros (digits : Text) : Text :=
+  let n := Text.length digits
+  let rec go i := if i < n - 1 && Text.code digits i == '0' then go (i + 1) else i
+  if n == 0 then "0" else Text.drop (go 0) digits
+
+--
+-- Thrift compact protocol (the subset Parquet's metadata uses).
+--
+
+def typeOf (t : Thrift) : Int :=
+  match t with
+  | Thrift.i32 _ => 5
+  | Thrift.i64 _ => 6
+  | Thrift.bin _ => 8
+  | Thrift.flag v => if v then 1 else 2
+  | Thrift.items _ _ => 9
+  | Thrift.fields _ => 12
+
+/-- Zigzag of a 32-bit value; 64-bit fields hold sizes and counts, which are never negative here. -/
+def zigzag (v : Int) : Int := Int.xor (Int.shl v 1) (Int.shr v 31)
+
+def encode (t : Thrift) : List Int :=
+  match t with
+  | Thrift.i32 v => varint (zigzag v)
+  | Thrift.i64 v => varint (zigzag v)
+  | Thrift.bin bytes => varint (List.length bytes) ++ bytes
+  | Thrift.flag v => [if v then 1 else 2]
+  | Thrift.items elemType values =>
+    let n := List.length values
+    let header := if n < 15 then [Int.or (Int.shl n 4) elemType] else Int.or 240 elemType :: varint n
+    header ++ List.concatMap encode values
+  | Thrift.fields pairs =>
+    let rec go ps last acc :=
+      match ps with
+      | [] => List.concat (List.reverse ([0] :: acc))
+      | (id, v) :: rest =>
+        let delta := id - last
+        let header := if delta > 0 && delta <= 15 then [Int.or (Int.shl delta 4) (typeOf v)] else typeOf v :: varint (zigzag id)
+        let body := match v with
+          | Thrift.flag _ => []
+          | _ => encode v
+        go rest id (body :: header :: acc)
+    go pairs 0 []
+
+/-- Reads a varint at `pos`: (value, next position). -/
+def readVarint (bytes : Array Int) (pos : Int) : (Int, Int) :=
+  let rec go p shift acc :=
+    let b := Array.get bytes p
+    let acc2 := Int.or acc (Int.shl (Int.and b 127) shift)
+    if Int.and b 128 == 0 then (acc2, p + 1) else go (p + 1) (shift + 7) acc2
+  go pos 0 0
+
+def unzigzag (v : Int) : Int := Int.xor (Int.ushr v 1) (0 - Int.and v 1)
+
+def slice (bytes : Array Int) (start : Int) (stop : Int) : List Int :=
+  List.map (fun i => Array.get bytes i) (List.range start stop)
+
+/-- Reads a value of compact type `kind` at `pos`: (value, next position). -/
+def decode (bytes : Array Int) (kind : Int) (pos : Int) : (Thrift, Int) :=
+  if kind == 1 || kind == 2 then (Thrift.flag (Array.get bytes pos == 1), pos + 1)
+  else if kind == 3 then (Thrift.i32 (Array.get bytes pos), pos + 1)
+  else if kind == 4 || kind == 5 then
+    match readVarint bytes pos with
+    | (v, next) => (Thrift.i32 (unzigzag v), next)
+  else if kind == 6 then
+    match readVarint bytes pos with
+    | (v, next) => (Thrift.i64 (unzigzag v), next)
+  else if kind == 8 then
+    match readVarint bytes pos with
+    | (n, start) => (Thrift.bin (slice bytes start (start + n)), start + n)
+  else if kind == 9 then
+    let header := Array.get bytes pos
+    let elemType := Int.and header 15
+    let short := Int.ushr header 4
+    let counted := if short == 15 then readVarint bytes (pos + 1) else (short, pos + 1)
+    let n := fst counted
+    let rec go i p acc :=
+      if i >= n then (Thrift.items elemType (List.reverse acc), p)
+      else
+        match decode bytes elemType p with
+        | (v, next) => go (i + 1) next (v :: acc)
+    go 0 (snd counted) []
+  else if kind == 12 then
+    let rec go p last acc :=
+      let header := Array.get bytes p
+      if header == 0 then (Thrift.fields (List.reverse acc), p + 1)
+      else
+        let fieldType := Int.and header 15
+        let delta := Int.ushr header 4
+        let located := if delta == 0 then
+            match readVarint bytes (p + 1) with
+            | (z, next) => (unzigzag z, next)
+          else (last + delta, p + 1)
+        let id := fst located
+        let start := snd located
+        if fieldType == 1 || fieldType == 2 then go start id ((id, Thrift.flag (fieldType == 1)) :: acc)
+        else
+          match decode bytes fieldType start with
+          | (v, next) => go next id ((id, v) :: acc)
+    go pos 0 []
+  else defect ("thrift: unknown compact type " ++ Int.toText kind)
+
+def field (t : Thrift) (id : Int) : Option Thrift :=
+  match t with
+  | Thrift.fields pairs => List.lookup id pairs
+  | _ => none
+
+def asInt (t : Option Thrift) : Int :=
+  match t with
+  | some (Thrift.i32 v) => v
+  | some (Thrift.i64 v) => v
+  | _ => 0
+
+def asList (t : Option Thrift) : List Thrift :=
+  match t with
+  | some (Thrift.items _ values) => values
+  | _ => []
+
+--
+-- UTF-8 back to text, for reading files this module wrote.
+--
+
+def fromUtf8 (bytes : List Int) : Text :=
+  let rec go bs acc :=
+    match bs with
+    | [] => Text.fromCodes (List.reverse acc)
+    | b :: rest =>
+      if b < 128 then go rest (b :: acc)
+      else if b < 224 then
+        match rest with
+        | c :: more => go more (Int.or (Int.shl (Int.and b 31) 6) (Int.and c 63) :: acc)
+        | [] => go [] acc
+      else if b < 240 then
+        match rest with
+        | c :: d :: more => go more (Int.or (Int.shl (Int.and b 15) 12) (Int.or (Int.shl (Int.and c 63) 6) (Int.and d 63)) :: acc)
+        | _ => go [] acc
+      else
+        match rest with
+        | c :: d :: e :: more =>
+          let cp := Int.or (Int.shl (Int.and b 7) 18) (Int.or (Int.shl (Int.and c 63) 12) (Int.or (Int.shl (Int.and d 63) 6) (Int.and e 63)))
+          let v := cp - 65536
+          go more ((56320 + Int.and v 1023) :: (55296 + Int.shr v 10) :: acc)
+        | _ => go [] acc
+  go bytes []
+
+--
+-- Files.
+--
+
+def magic : List Int := Text.utf8 "PAR1"
+
+/-- Parquet's physical type for a column type: BOOLEAN 0, INT64 2, BYTE_ARRAY 6. -/
+def physical (columnType : Text) : Int :=
+  if columnType == "bool" then 0 else if columnType == "int" || columnType == "time" then 2 else 6
+
+/-- PLAIN-encoded values of one column. Booleans are bit-packed, least significant bit first. -/
+def plain (columnType : Text) (cells : List Cell) : List Int :=
+  if columnType == "bool" then
+    let bits := List.map (fun c => match c with
+      | Cell.bool true => 1
+      | _ => 0) cells
+    let rec pack bs acc :=
+      match bs with
+      | [] => List.reverse acc
+      | _ =>
+        let byte := List.foldl (fun b pair => Int.or b (Int.shl (snd pair) (fst pair))) 0 (List.zip (List.range 0 8) (List.take 8 bs))
+        pack (List.drop 8 bs) (byte :: acc)
+    pack bits []
+  else if columnType == "time" then
+    List.concatMap (fun c => match c with
+      | Cell.text t => decimalLE64 t
+      | Cell.int v => le64 v
+      | _ => le64 0) cells
+  else if columnType == "int" then
+    List.concatMap (fun c => match c with
+      | Cell.int v => le64 v
+      | _ => le64 0) cells
+  else
+    List.concatMap (fun c =>
+      let bytes := match c with
+        | Cell.text t => Text.utf8 t
+        | _ => []
+      le32 (List.length bytes) ++ bytes) cells
+
+/-- The schema element of a column: required, with STRING or TIMESTAMP(MICROS, UTC) annotations. -/
+def schemaElement (c : Column) : Thrift :=
+  let base := [(1, Thrift.i32 (physical c.columnType)), (3, Thrift.i32 0), (4, Thrift.bin (Text.utf8 c.columnName))]
+  let logical := if c.columnType == "text" || c.columnType == "ref" then
+      [(6, Thrift.i32 0), (10, Thrift.fields [(1, Thrift.fields [])])]
+    else if c.columnType == "time" then
+      [(6, Thrift.i32 10), (10, Thrift.fields [(8, Thrift.fields [(1, Thrift.flag true), (2, Thrift.fields [(2, Thrift.fields [])])])])]
+    else []
+  Thrift.fields (base ++ logical)
+
+/-- The columns every event table starts with, before the type's own fields. -/
+def systemColumns : List Column := [Column.mk "event_id" "text", Column.mk "recorded_at" "time", Column.mk "recorded_by" "text"]
+
+/-- All of a row's cells, system columns first. -/
+def allCells (r : Row) : List Cell := Cell.text r.eventId :: Cell.text r.recordedAt :: Cell.text r.recordedBy :: r.cells
+
+/-- A Parquet file holding `rows` of an event type: one row group, one uncompressed PLAIN page per column. -/
+def write (t : EventType) (rows : List Row) : List Int :=
+  let columns := systemColumns ++ t.columns
+  let n := List.length rows
+  let cellRows := List.map allCells rows
+  let rec chunks cs index offset acc :=
+    match cs with
+    | [] => (List.reverse acc, offset)
+    | c :: rest =>
+      let values := List.filterMap (fun cells => List.get? cells index) cellRows
+      let data := plain c.columnType values
+      let header := encode (Thrift.fields [(1, Thrift.i32 0), (2, Thrift.i32 (List.length data)), (3, Thrift.i32 (List.length data)),
+        (5, Thrift.fields [(1, Thrift.i32 n), (2, Thrift.i32 0), (3, Thrift.i32 3), (4, Thrift.i32 3)])])
+      let size := List.length header + List.length data
+      let meta := Thrift.fields [(2, Thrift.i64 offset), (3, Thrift.fields [(1, Thrift.i32 (physical c.columnType)), (2, Thrift.items 5 [Thrift.i32 0]),
+        (3, Thrift.items 8 [Thrift.bin (Text.utf8 c.columnName)]), (4, Thrift.i32 0), (5, Thrift.i64 n), (6, Thrift.i64 size), (7, Thrift.i64 size), (9, Thrift.i64 offset)])]
+      chunks rest (index + 1) (offset + size) ((header ++ data, meta, size) :: acc)
+  match chunks columns 0 4 [] with
+  | (parts, _) =>
+    let total := List.sum (List.map (fun p => match p with
+      | (_, _, size) => size) parts)
+    let schema := Thrift.fields [(4, Thrift.bin (Text.utf8 "schema")), (5, Thrift.i32 (List.length columns))] :: List.map schemaElement columns
+    let kv := fun (key : Text) (value : Text) => Thrift.fields [(1, Thrift.bin (Text.utf8 key)), (2, Thrift.bin (Text.utf8 value))]
+    let footer := encode (Thrift.fields [(1, Thrift.i32 1), (2, Thrift.items 12 schema), (3, Thrift.i64 n),
+      (4, Thrift.items 12 [Thrift.fields [(1, Thrift.items 12 (List.map (fun p => match p with
+        | (_, meta, _) => meta) parts)), (2, Thrift.i64 total), (3, Thrift.i64 n)]]),
+      (5, Thrift.items 12 [kv "deus.event.type" t.typeName, kv "deus.event.hash" t.typeHash]),
+      (6, Thrift.bin (Text.utf8 "deus analytics (D96)"))])
+    magic ++ List.concatMap (fun p => match p with
+      | (bytes, _, _) => bytes) parts ++ footer ++ le32 (List.length footer) ++ magic
+
+def toArray (bytes : List Int) : Array Int :=
+  let a := Array.make (List.length bytes) 0
+  List.forEach (List.zip (List.range 0 (List.length bytes)) bytes) (fun pair => Array.set a (fst pair) (snd pair))
+  a
+
+/-- The column type a schema element was written with. -/
+def columnTypeOf (e : Thrift) : Text :=
+  let kind := asInt (field e 1)
+  if kind == 0 then "bool"
+  else if kind == 2 then (if Option.isSome (field e 6) then "time" else "int")
+  else "text"
+
+def readLE32 (bytes : Array Int) (pos : Int) : Int :=
+  Int.or (Array.get bytes pos) (Int.or (Int.shl (Array.get bytes (pos + 1)) 8) (Int.or (Int.shl (Array.get bytes (pos + 2)) 16) (Int.shl (Array.get bytes (pos + 3)) 24)))
+
+/-- The values of one column chunk, read from its PLAIN data page. -/
+def readColumn (bytes : Array Int) (columnType : Text) (offset : Int) (n : Int) : List Cell :=
+  match decode bytes 12 offset with
+  | (_, start) =>
+    if columnType == "bool" then List.map (fun i => Cell.bool (Int.and (Int.shr (Array.get bytes (start + Int.div i 8)) (Int.mod i 8)) 1 == 1)) (List.range 0 n)
+    else if columnType == "time" then List.map (fun i => Cell.text (le64Decimal (slice bytes (start + 8 * i) (start + 8 * i + 8)))) (List.range 0 n)
+    else if columnType == "int" then List.map (fun i => Cell.int (readLE32 bytes (start + 8 * i))) (List.range 0 n)
+    else
+      let rec go i p acc :=
+        if i >= n then List.reverse acc
+        else
+          let len := readLE32 bytes p
+          go (i + 1) (p + 4 + len) (Cell.text (fromUtf8 (slice bytes (p + 4) (p + 4 + len))) :: acc)
+      go 0 start []
+
+/-- Reads a file `write` made: its columns and rows. -/
+def read (file : List Int) : (List Column, List Row) :=
+  let bytes := toArray file
+  let size := List.length file
+  let footerLength := readLE32 bytes (size - 8)
+  match decode bytes 12 (size - 8 - footerLength) with
+  | (meta, _) =>
+    let n := asInt (field meta 3)
+    let elements := List.drop 1 (asList (field meta 2))
+    let columns := List.map (fun e => Column.mk (match field e 4 with
+      | some (Thrift.bin b) => fromUtf8 b
+      | _ => "") (columnTypeOf e)) elements
+    let chunks := match asList (field meta 4) with
+      | group :: _ => asList (field group 1)
+      | [] => []
+    let values := List.map (fun pair =>
+      match pair with
+      | (c, chunk) => readColumn bytes c.columnType (asInt (field (Option.getOr (field chunk 3) (Thrift.fields [])) 9)) n) (List.zip columns chunks)
+    let rows := List.map (fun i =>
+      let cells := List.filterMap (fun column => List.get? column i) values
+      match cells with
+      | Cell.text id :: Cell.text when :: Cell.text who :: rest => Row.mk id when who rest
+      | _ => Row.mk "" "0" "" cells) (List.range 0 n)
+    (List.drop 3 columns, rows)
+
+end Parquet
+
+namespace Analytics
+
+--
+-- Event types.
+--
+
+/-- The column type of a field type, or `none` when the field is not flat. -/
+def columnTypeOf (t : Sexp) : Option Text :=
+  match t with
+  | Sexp.list [Sexp.sym "tref", Sexp.str iri] =>
+    if iri == "#Int" then some "int"
+    else if iri == "#Bool" then some "bool"
+    else if iri == "#Text" then some "text"
+    else if iri == "urn:deus:analytics:CodeRef" then some "ref"
+    else none
+  | _ => none
+
+/-- Whether a definition carries `@[event]`. -/
+def isEvent (dir : Text) (h : Text) : {IO} Bool :=
+  List.any (fun a => Sexp.head a == "event" || (match a with
+    | Sexp.list (Sexp.str n :: _) => n == "event"
+    | _ => false)) (Codebase.metaList (Codebase.readMeta dir h) "attrs")
+
+/-- The event type a `@[event]` structure declares; a field that is not flat is an error. -/
+def typeOf (dir : Text) (name : Text) (h : Text) (fieldNames : List Text) : {IO, Throw Text} EventType :=
+  let types := match Codebase.readObject dir h with
+    | some (Sexp.list (Sexp.sym "type" :: _ :: Sexp.int 0 :: Sexp.list (Sexp.sym "ctor" :: _ :: tys) :: [])) => tys
+    | _ => throw (name ++ " is marked @[event] but is not a structure without parameters")
+  let columns := List.map (fun pair =>
+    match columnTypeOf (snd pair) with
+    | some kind => Column.mk (fst pair) kind
+    | none => throw ("event " ++ name ++ ": field " ++ fst pair ++ " is not Int, Bool, Text or CodeRef")) (List.zip fieldNames types)
+  EventType.mk name h columns
+
+/-- Every event type in a namespace, by name. -/
+def types (dir : Text) (ns : Map Text Entry) : {IO, Throw Text} List EventType :=
+  List.filterMap (fun pair =>
+    match snd pair with
+    | Entry.type h _ fields => if isEvent dir h then some (typeOf dir (fst pair) h fields) else none
+    | _ => none) (Map.toList ns)
+
+/-- The event type called `name`, or by the last segment of its name (`TestRun`). -/
+def find (dir : Text) (ns : Map Text Entry) (name : Text) : {IO, Throw Text} EventType :=
+  let all := types dir ns
+  match List.find (fun t => t.typeName == name) all with
+  | some t => t
+  | none =>
+    match List.filter (fun t => Text.endsWith ("." ++ name) t.typeName) all with
+    | [t] => t
+    | [] => throw ("no event type " ++ name ++ " (an @[event] structure)")
+    | more => throw ("ambiguous event type " ++ name ++ ": " ++ Text.join ", " (List.map (fun t => t.typeName) more))
+
+--
+-- References (D97).
+--
+
+/-- The name IRI of a definition: `<project>/<name>`, or the bare name in a codebase without a project. -/
+def nameIri (project : Text) (name : Text) : Text := if Text.isEmpty project then name else project ++ "/" ++ name
+
+/-- The pinned form `<project>/<name>#<hash>`; a builtin's fragment is its name. -/
+def pinned (project : Text) (name : Text) (h : Text) : Text :=
+  nameIri project name ++ "#" ++ (if Text.startsWith "#" h then Text.drop 1 h else h)
+
+/-- A reference's parts: (name IRI or `""`, hash or `""`). -/
+def parts (ref : Text) : (Text, Text) :=
+  let rec lastHash i := if i < 0 then -1 else if Text.code ref i == '#' then i else lastHash (i - 1)
+  let mark := lastHash (Text.length ref - 1)
+  if mark < 0 then (ref, "") else (Text.take mark ref, Text.drop (mark + 1) ref)
+
+/-- The hash a reference pins: the fragment, with `#` again for a builtin; `""` for a name IRI. -/
+def hashOf (ref : Text) : Text :=
+  match parts ref with
+  | (_, "") => ""
+  | (_, fragment) => if Columnar.isHash fragment then fragment else "#" ++ fragment
+
+/-- The dotted name a name IRI or pinned reference carries, given the project IRI. -/
+def nameOf (project : Text) (ref : Text) : Text :=
+  match parts ref with
+  | (iri, _) =>
+    if Text.isEmpty project then iri
+    else if Text.startsWith (project ++ "/") iri then Text.drop (Text.length project + 1) iri
+    else ""
+
+/-- The hash a reference stands for: the pinned hash, or the hash its name has now; `""` when neither. -/
+def refHash (project : Text) (ns : Map Text Entry) (ref : Text) : Text :=
+  match hashOf ref with
+  | "" => Option.getOr (Option.map Entry.hash (Map.lookup (nameOf project ref) ns)) ""
+  | h => h
+
+/-- The pinned reference to a name in `ns`. -/
+def refTo (project : Text) (ns : Map Text Entry) (name : Text) : Text :=
+  match Map.lookup name ns with
+  | some e => pinned project name (Entry.hash e)
+  | none => nameIri project name
+
+--
+-- Local store.
+--
+
+def eventsDir (dir : Text) : Text := dir ++ "/events"
+
+def fileName (t : EventType) : Text := t.typeName ++ "@" ++ t.typeHash ++ ".sexp"
+
+def cellSexp (c : Cell) : Sexp :=
+  match c with
+  | Cell.int v => Sexp.int v
+  | Cell.bool v => Sexp.sym (if v then "true" else "false")
+  | Cell.text t => Sexp.str t
+
+def cellOf (s : Sexp) : Cell :=
+  match s with
+  | Sexp.int v => Cell.int v
+  | Sexp.sym "true" => Cell.bool true
+  | Sexp.sym "false" => Cell.bool false
+  | other => Cell.text (Sexp.asText other)
+
+def rowSexp (r : Row) : Sexp :=
+  Sexp.node "row" ([Sexp.str r.eventId, Sexp.str r.recordedAt, Sexp.str r.recordedBy] ++ List.map cellSexp r.cells)
+
+def rowOf (s : Sexp) : Row :=
+  match Sexp.args s with
+  | id :: when :: who :: cells => Row.mk (Sexp.asText id) (Sexp.asText when) (Sexp.asText who) (List.map cellOf cells)
+  | _ => Row.mk "" "0" "" []
+
+def readRows (path : Text) : {IO} List Row :=
+  match IO.readFile path with
+  | some text => List.map rowOf (Sexp.readAll text)
+  | none => []
+
+/-- The cell a value takes in a column of this type; a value of the wrong kind is an error. -/
+def check (t : EventType) (c : Column) (value : Cell) : {Throw Text} Cell :=
+  match (c.columnType, value) with
+  | ("int", Cell.int _) => value
+  | ("bool", Cell.bool _) => value
+  | ("text", Cell.text _) => value
+  | ("ref", Cell.text _) => value
+  | _ => throw ("event " ++ t.typeName ++ ": " ++ c.columnName ++ " must be " ++ c.columnType)
+
+/-- Microseconds since the epoch, from the host's wall clock (nanoseconds as decimal text). -/
+def now (u : Unit) : {IO} Text :=
+  let ns := IO.wallClock ()
+  Parquet.trimZeros (Text.take (Text.length ns - 3) ns)
+
+/-- Records one event of type `t` locally, with a value for every field; returns its id. -/
+def record (dir : Text) (t : EventType) (who : Text) (values : List (Text, Cell)) : {IO, Throw Text} Text :=
+  let cells := List.map (fun c =>
+    match List.lookup c.columnName values with
+    | some v => check t c v
+    | none => throw ("event " ++ t.typeName ++ ": no value for " ++ c.columnName)) t.columns
+  List.forEach values (fun pair =>
+    if List.any (fun c => c.columnName == fst pair) t.columns then () else throw ("event " ++ t.typeName ++ " has no field " ++ fst pair))
+  let when := now ()
+  let id := Text.take 16 (Text.sha256 (Sexp.print (Sexp.list (Sexp.str t.typeHash :: Sexp.str when :: Sexp.str who :: List.map cellSexp cells))))
+  IO.appendFile (eventsDir dir ++ "/pending/" ++ fileName t) (Sexp.print (rowSexp (Row.mk id when who cells)) ++ "\n")
+  id
+
+/-- Pending and pushed rows of an event type. -/
+def rows (dir : Text) (t : EventType) : {IO} (List Row, List Row) :=
+  (readRows (eventsDir dir ++ "/pending/" ++ fileName t), readRows (eventsDir dir ++ "/pushed/" ++ fileName t))
+
+/-- Rows recorded for type hashes no longer in the namespace stay on disk; their files are listed here. -/
+def files (dir : Text) (folder : Text) : {IO} List Text :=
+  let path := eventsDir dir ++ "/" ++ folder
+  if IO.isDir path then List.filter (fun f => Text.endsWith ".sexp" f) (IO.listDir path) else []
+
+--
+-- Push: clients only ever write to the remote.
+--
+
+def remoteKey (t : EventType) (batch : Text) : Text := "events/" ++ t.typeName ++ "/" ++ t.typeHash ++ "/" ++ batch ++ ".parquet"
+
+/-- The table description a publisher needs: columns and types, as JSON. -/
+def schemaJson (t : EventType) : Json :=
+  Json.obj [("type", Json.str t.typeName), ("hash", Json.str t.typeHash),
+    ("columns", Json.arr (List.map (fun c => Json.obj [("name", Json.str c.columnName), ("type", Json.str c.columnType)]) (Parquet.systemColumns ++ t.columns)))]
+
+/-- Pushes every pending batch as a Parquet file; returns (event type, rows, remote key) per batch. -/
+def push (dir : Text) (ts : List EventType) : {Remote, IO, Throw Text} List (Text, Int, Text) :=
+  List.filterMap (fun t =>
+    let pendingFile := eventsDir dir ++ "/pending/" ++ fileName t
+    match IO.readFile pendingFile with
+    | none => none
+    | some text =>
+      let batchRows := List.map rowOf (Sexp.readAll text)
+      let batch := Text.sha256 text
+      let key := remoteKey t batch
+      let local := eventsDir dir ++ "/out/" ++ batch ++ ".parquet"
+      IO.writeBytes local (Parquet.write t batchRows)
+      let schemaFile := eventsDir dir ++ "/out/" ++ batch ++ ".json"
+      IO.writeFile schemaFile (Json.render (schemaJson t) ++ "\n")
+      Remote.upload ("events/" ++ t.typeName ++ "/" ++ t.typeHash ++ "/schema.json") schemaFile "application/json"
+      Remote.upload key local "application/vnd.apache.parquet"
+      IO.appendFile (eventsDir dir ++ "/pushed/" ++ fileName t) text
+      IO.remove pendingFile
+      IO.remove local
+      IO.remove schemaFile
+      some (t.typeName, List.length batchRows, key)) ts
+
+--
+-- Counts, for the CLI and the explorer.
+--
+
+/-- Per event type: (type, pending rows, pushed rows). -/
+def counts (dir : Text) (ts : List EventType) : {IO} List (EventType, Int, Int) :=
+  List.map (fun t =>
+    match rows dir t with
+    | (pending, pushed) => (t, List.length pending, List.length pushed)) ts
+
+/--
+  How many events refer to each hash: hash -> list of (event type, column, count). A pinned
+  reference counts under its hash; a name IRI counts under the hash the name has now.
+-/
+def byDefinition (dir : Text) (project : Text) (ns : Map Text Entry) (ts : List EventType) : {IO} Map Text (List (Text, Text, Int)) :=
+  let tally := MutMap.new ()
+  List.forEach ts (fun t =>
+    match rows dir t with
+    | (pending, pushed) =>
+      let refColumns := List.filter (fun pair => (snd pair).columnType == "ref") (List.zip (List.range 0 (List.length t.columns)) t.columns)
+      List.forEach (pending ++ pushed) (fun r =>
+        List.forEach refColumns (fun pair =>
+          match List.get? r.cells (fst pair) with
+          | some (Cell.text ref) =>
+            let h := refHash project ns ref
+            if Text.isEmpty h then () else
+              let key := h ++ "\n" ++ t.typeName ++ "\n" ++ (snd pair).columnName
+              MutMap.set tally key (Option.getOr (MutMap.get tally key) 0 + 1)
+          | _ => ())))
+  List.foldl (fun m key =>
+    match Text.split key "\n" with
+    | [h, typeName, column] => Map.insert h (Option.getOr (Map.lookup h m) [] ++ [(typeName, column, Option.getOr (MutMap.get tally key) 0)]) m
+    | _ => m) Map.empty (List.sort (MutMap.keys tally))
+
+def cellJson (c : Cell) : Json :=
+  match c with
+  | Cell.int v => Json.num v
+  | Cell.bool v => Json.bool v
+  | Cell.text t => Json.str t
+
+def rowJson (t : EventType) (r : Row) : Json :=
+  Json.obj ([("event_id", Json.str r.eventId), ("recorded_at", Json.str r.recordedAt), ("recorded_by", Json.str r.recordedBy)] ++
+    List.map (fun pair => ((fst pair).columnName, cellJson (snd pair))) (List.zip t.columns r.cells))
+
+def columnsJson (columns : List Column) : Json :=
+  Json.arr (List.map (fun c => Json.obj [("name", Json.str c.columnName), ("type", Json.str c.columnType)]) columns)
+
+/-- One event type's entry in `events.json`: columns, counts and the latest rows, newest first. -/
+def typeJson (dir : Text) (limit : Int) (t : EventType) : {IO} Json :=
+  match rows dir t with
+  | (pending, pushed) =>
+    let newest := List.reverse (pushed ++ pending)
+    Json.obj [("name", Json.str t.typeName), ("hash", Json.str t.typeHash), ("columns", columnsJson t.columns),
+      ("count", Json.num (List.length newest)), ("pending", Json.num (List.length pending)), ("pushed", Json.num (List.length pushed)),
+      ("latest", Json.arr (List.map (rowJson t) (List.take limit newest)))]
+
+def tallyCount (x : (Text, Text, Int)) : Int :=
+  match x with
+  | (_, _, n) => n
+
+def tallyJson (x : (Text, Text, Int)) : Json :=
+  match x with
+  | (typeName, column, n) => Json.obj [("type", Json.str typeName), ("column", Json.str column), ("count", Json.num n)]
+
+/-- One hash's entry in `events.json`: its names now, its total and the counts per event type and column. -/
+def definitionJson (index : Map Text (List Text)) (h : Text) (tallies : List (Text, Text, Int)) : Json :=
+  Json.obj [("names", Json.arr (List.map Json.str (Option.getOr (Map.lookup h index) []))),
+    ("count", Json.num (List.sum (List.map tallyCount tallies))), ("events", Json.arr (List.map tallyJson tallies))]
+
+/--
+  The explorer's `events.json` (D96): every event type with its columns, counts and latest rows
+  (at most `limit`), and the counts per definition hash.
+-/
+def siteJson (dir : Text) (project : Text) (ns : Map Text Entry) (limit : Int) : {IO, Throw Text} Json :=
+  let ts := types dir ns
+  let index := Codebase.namesByHash ns
+  let tallies := Map.toList (byDefinition dir project ns ts)
+  Json.obj [("project", Json.str project), ("types", Json.arr (List.map (typeJson dir limit) ts)),
+    ("byDefinition", Json.obj (List.map (fun pair => (fst pair, definitionJson index (fst pair) (snd pair))) tallies))]
+
+--
+-- Recording from the toolchain. Analytics never fails the command that records.
+--
+
+/-- Records an event of the type whose name ends in `.short`, if this codebase defines one; errors are dropped. -/
+def recordIf (dir : Text) (ts : List EventType) (short : Text) (who : Text) (values : List (Text, Cell)) : {IO} Unit :=
+  if IO.getEnv "DEUS_EVENTS" == some "0" then () else
+    match List.find (fun t => Text.endsWith ("." ++ short) t.typeName || t.typeName == short) ts with
+    | none => ()
+    | some t =>
+      match try (fun _ => record dir t who values) with
+      | Result.ok _ => ()
+      | Result.err _ => ()
+
+/-- The event types of the current branch, or none when it cannot be read. -/
+def typesNow (dir : Text) : {IO} List EventType :=
+  match try (fun _ => types dir (Codebase.current dir)) with
+  | Result.ok ts => ts
+  | Result.err _ => []
+
+def projectOf (dir : Text) : {IO} Text :=
+  match Project.read dir with
+  | some p => p.projectIri
+  | none => ""
+
+/-- Who records: `$DEUS_AGENT`, else `$USER`, else `unknown`. -/
+def recorder (u : Unit) : {IO} Text :=
+  Option.getOr (Option.orElse (IO.getEnv "DEUS_AGENT") (fun _ => IO.getEnv "USER")) "unknown"
+
+/-- A `TestRun` for one test or theorem `deus test` or `deus check` ran or found cached. -/
+def recordRun (dir : Text) (ts : List EventType) (ns : Map Text Entry) (name : Text) (kind : Text) (passed : Bool) (cached : Bool) (deterministic : Bool) (evidence : Text) (cases : Int) (failure : Text) (ms : Int) : {IO} Unit :=
+  recordIf dir ts "TestRun" (recorder ()) [("subject", Cell.text (refTo (projectOf dir) ns name)), ("runKind", Cell.text kind), ("passed", Cell.bool passed),
+    ("cached", Cell.bool cached), ("deterministic", Cell.bool deterministic), ("evidence", Cell.text evidence), ("cases", Cell.int cases),
+    ("failure", Cell.text failure), ("ms", Cell.int ms)]
+
+/-- `AgentWrote` events for the names an `add` or `update --by <agent>` wrote. -/
+def recordWrites (dir : Text) (ns : Map Text Entry) (agent : Text) (via : Text) (names : List Text) : {IO} Unit :=
+  let ts := typesNow dir
+  let project := projectOf dir
+  List.forEach names (fun name => recordIf dir ts "AgentWrote" agent [("definition", Cell.text (refTo project ns name)), ("agent", Cell.text agent), ("via", Cell.text via)])
+
+--
+-- Backfills from the codebase's own records.
+--
+
+/-- `AgentChange` events from an exported history (`history.sexp`): one per change. -/
+def backfillHistory (dir : Text) (t : EventType) (path : Text) : {IO, Throw Text} Int :=
+  let text := match IO.readFile path with
+    | some x => x
+    | none => throw ("cannot read " ++ path)
+  let entries := List.filterMap (fun form =>
+    match form with
+    | Sexp.list [Sexp.sym "entry", Sexp.str causal, Sexp.str message, Sexp.str agent] => some (causal, message, agent)
+    | _ => none) (Sexp.readAll text)
+  List.forEach entries (fun e =>
+    match e with
+    | (causal, message, agent) =>
+      let who := if Text.isEmpty agent then "unknown" else agent
+      let action := match Text.split message " " with
+        | word :: _ => if Text.endsWith ":" word then Text.take (Text.length word - 1) word else word
+        | [] => ""
+      record dir t who [("change", Cell.text ("#" ++ causal)), ("agent", Cell.text who), ("action", Cell.text action), ("changeMessage", Cell.text message)]
+      ())
+  List.length entries
+
+/-- Seconds in a wall time such as `1h 2m 03s`, `14m 46s` or `35m 00s`. -/
+def seconds (wall : Text) : Int :=
+  List.foldl (fun total word =>
+    let n := Option.getOr (Int.fromText (Text.take (Text.length word - 1) word)) 0
+    if Text.endsWith "h" word then total + 3600 * n
+    else if Text.endsWith "m" word then total + 60 * n
+    else if Text.endsWith "s" word then total + n
+    else total) 0 (Text.split (Text.trim wall) " ")
+
+/-- `AgentStage` events from the work log's table (docs/TIMELINE.md): one per stage. -/
+def backfillTimeline (dir : Text) (t : EventType) (path : Text) : {IO, Throw Text} Int :=
+  let text := match IO.readFile path with
+    | some x => x
+    | none => throw ("cannot read " ++ path)
+  let stages := List.filterMap (fun line =>
+    match List.map Text.trim (Text.split line "|") with
+    | [_, stage, _, wall, commit, summary, _] =>
+      match Int.fromText stage with
+      | some n => some (n, Text.replace "`" "" commit, seconds wall, summary)
+      | none => none
+    | _ => none) (Text.lines text)
+  List.forEach stages (fun s =>
+    match s with
+    | (n, commit, secs, summary) =>
+      record dir t "unknown" [("stage", Cell.int n), ("commit", Cell.text commit), ("seconds", Cell.int secs), ("summary", Cell.text summary)]
+      ())
+  List.length stages
+
+--
+-- The `deus event` command.
+--
+
+/-- A command-line value as a cell of the column's type; a ref that is a plain name is pinned. -/
+def parseCell (project : Text) (ns : Map Text Entry) (c : Column) (value : Text) : {Throw Text} Cell :=
+  if c.columnType == "int" then
+    match Int.fromText value with
+    | some n => Cell.int n
+    | none => throw (c.columnName ++ " must be an integer, not " ++ value)
+  else if c.columnType == "bool" then
+    if value == "true" then Cell.bool true else if value == "false" then Cell.bool false else throw (c.columnName ++ " must be true or false")
+  else if c.columnType == "ref" && not (Text.contains "#" value) && not (Text.contains "/" value) then Cell.text (refTo project ns value)
+  else Cell.text value
+
+/-- Imports `(event "Type" (by "who") (field value)…)` forms; returns how many. -/
+def importFile (dir : Text) (project : Text) (ns : Map Text Entry) (ts : List EventType) (path : Text) : {IO, Throw Text} Int :=
+  let text := match IO.readFile path with
+    | some x => x
+    | none => throw ("cannot read " ++ path)
+  let forms := List.filter (fun f => Sexp.head f == "event") (Sexp.readAll text)
+  List.forEach forms (fun form =>
+    match Sexp.args form with
+    | typeForm :: fields =>
+      let typeName := Sexp.asText typeForm
+      let t := match List.find (fun x => x.typeName == typeName || Text.endsWith ("." ++ typeName) x.typeName) ts with
+        | some x => x
+        | none => throw ("no event type " ++ typeName)
+      let who := Option.getOr (Option.map Sexp.asText (Codebase.metaField (some form) "by")) (recorder ())
+      let values := List.filterMap (fun f =>
+        match f with
+        | Sexp.list [Sexp.sym key, v] =>
+          if key == "by" then none else
+            match List.find (fun c => c.columnName == key) t.columns with
+            | some c => some (key, (match v with
+              | Sexp.str s => parseCell project ns c s
+              | other => cellOf other))
+            | none => throw ("event " ++ t.typeName ++ " has no field " ++ key)
+        | _ => none) fields
+      record dir t who values
+      ()
+    | [] => ())
+  List.length forms
+
+def typeLine (entry : (EventType, Int, Int)) : Text :=
+  match entry with
+  | (t, pending, pushed) =>
+    t.typeName ++ "  #" ++ Text.take 10 t.typeHash ++ "  " ++ Int.toText (pending + pushed) ++ " events (" ++ Int.toText pending ++ " pending)\n    " ++
+      Text.join ", " (List.map (fun c => c.columnName ++ " : " ++ c.columnType) t.columns)
+
+def rowLine (t : EventType) (r : Row) : Text :=
+  r.eventId ++ "  " ++ r.recordedBy ++ "  " ++ Text.join "  " (List.map (fun pair => (fst pair).columnName ++ "=" ++ (match snd pair with
+    | Cell.int v => Int.toText v
+    | Cell.bool v => if v then "true" else "false"
+    | Cell.text x => x)) (List.zip t.columns r.cells))
+
+def usage : Text := "usage: deus event types | record <Type> field=value… | import <file> | list [Type] [--about name] [--limit n] | stats | push [remote] | backfill history|timeline <file>"
+
+/-- `deus event …`: event types, recording, listing, counts and the push-only sync. -/
+def command (args : Args) : {IO, Throw Text} Unit :=
+  let dir := Cli.openCodebase args
+  let ns := Codebase.current dir
+  let project := projectOf dir
+  let ts := types dir ns
+  match args.positional with
+  | ["types"] =>
+    let rows := counts dir ts
+    Cli.output args (fun _ => Json.arr (List.map (fun e => match e with
+      | (t, pending, pushed) => Json.obj [("name", Json.str t.typeName), ("hash", Json.str t.typeHash), ("columns", columnsJson t.columns),
+        ("count", Json.num (pending + pushed)), ("pending", Json.num pending)]) rows))
+      (fun _ => if List.isEmpty rows then "No event types; mark a structure with @[event]." else Text.join "\n" (List.map typeLine rows))
+  | "record" :: typeName :: pairs =>
+    let t := find dir ns typeName
+    let values := List.map (fun pair =>
+      let eq := Text.indexOf pair "=" 0
+      if eq < 0 then throw ("expected field=value, not " ++ pair) else
+        let key := Text.take eq pair
+        match List.find (fun c => c.columnName == key) t.columns with
+        | some c => (key, parseCell project ns c (Text.drop (eq + 1) pair))
+        | none => throw ("event " ++ t.typeName ++ " has no field " ++ key)) pairs
+    let id := record dir t (Option.getOr (Cli.option args "by") (recorder ())) values
+    Cli.output args (fun _ => Json.obj [("event", Json.str id), ("type", Json.str t.typeName)]) (fun _ => "Recorded " ++ t.typeName ++ " " ++ id ++ ".")
+  | ["import", path] =>
+    let n := importFile dir project ns ts path
+    Cli.output args (fun _ => Json.obj [("imported", Json.num n)]) (fun _ => "Recorded " ++ Int.toText n ++ " events.")
+  | ["backfill", source, path] =>
+    let n := if source == "history" then backfillHistory dir (find dir ns "AgentChange") path
+      else if source == "timeline" then backfillTimeline dir (find dir ns "AgentStage") path
+      else throw usage
+    Cli.output args (fun _ => Json.obj [("recorded", Json.num n)]) (fun _ => "Recorded " ++ Int.toText n ++ " events from " ++ path ++ ".")
+  | "list" :: rest =>
+    let selected := match rest with
+      | [name] => [find dir ns name]
+      | _ => ts
+    let limit := Option.getOr (Option.bind (Cli.option args "limit") Int.fromText) 20
+    let about := Option.map (fun name => match Map.lookup name ns with
+      | some e => Entry.hash e
+      | none => throw ("unknown name " ++ name)) (Cli.option args "about")
+    let mentions := fun (t : EventType) (r : Row) => match about with
+      | none => true
+      | some h => List.any (fun pair => (fst pair).columnType == "ref" && (match snd pair with
+        | Cell.text ref => refHash project ns ref == h
+        | _ => false)) (List.zip t.columns r.cells)
+    let picked := List.map (fun t =>
+      match rows dir t with
+      | (pending, pushed) => (t, List.take limit (List.filter (mentions t) (List.reverse (pushed ++ pending))))) selected
+    Cli.output args (fun _ => Json.arr (List.concatMap (fun pair => List.map (rowJson (fst pair)) (snd pair)) picked))
+      (fun _ => Text.join "\n" (List.concatMap (fun pair => if List.isEmpty (snd pair) then [] else ("-- " ++ (fst pair).typeName) :: List.map (rowLine (fst pair)) (snd pair)) picked))
+  | ["stats"] =>
+    let limit := Option.getOr (Option.bind (Cli.option args "limit") Int.fromText) 20
+    let site := if Cli.flag args "json" then siteJson dir project ns limit else Json.null
+    Cli.output args (fun _ => site)
+      (fun _ =>
+        let byHash := Map.toList (byDefinition dir project ns ts)
+        let index := Codebase.nameIndex ns
+        Text.join "\n" (List.map typeLine (counts dir ts) ++ ["", Int.toText (List.length byHash) ++ " definitions have events"] ++
+          List.map (fun pair => "  " ++ Option.getOr (Map.lookup (fst pair) index) ("#" ++ Text.take 10 (fst pair)) ++ "  " ++ Int.toText (List.sum (List.map tallyCount (snd pair)))) (List.take limit byHash)))
+  | "push" :: rest =>
+    let name := Option.getOr (List.head? rest) "origin"
+    let pushed := Cli.withRemote dir name (fun _ => push dir ts)
+    Cli.output args (fun _ => Json.arr (List.map (fun p => match p with
+      | (typeName, n, key) => Json.obj [("type", Json.str typeName), ("rows", Json.num n), ("key", Json.str key)]) pushed))
+      (fun _ => if List.isEmpty pushed then "Nothing to push." else Text.join "\n" (List.map (fun p => match p with
+        | (typeName, n, key) => "  " ++ typeName ++ "  " ++ Int.toText n ++ " rows  " ++ key) pushed))
+  | _ => throw usage
+
+end Analytics

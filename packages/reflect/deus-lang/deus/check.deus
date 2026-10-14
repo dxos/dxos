@@ -303,23 +303,35 @@ def run (args : Args) (wantTheorems : Bool) : {IO, Throw Text} Unit :=
       | Entry.test _ => not wantTheorems
       | Entry.theorem _ => wantTheorems
       | _ => false)) (Map.toList ns)
+  let eventTypes := Analytics.typesNow dir
   let results := List.map (fun pair =>
     match pair with
     | (name, e) =>
       let h := Entry.hash e
       let integration := not wantTheorems && hasAttr dir h "integration"
+      let started := IO.time ()
       -- An integration test talks to the real world, so its result is never reused.
-      match (if integration then none else cached dir h) with
-      | some v => (name, v, true)
-      | none =>
-        Image.load (Cli.fetcher dir) [h]
-        let v := if wantTheorems then
-            match Codebase.readObject dir h with
-            | some obj => checkTheorem dir ns h obj
-            | none => Verdict.fail "missing object"
-          else checkTest h integration
-        if integration then () else remember dir h v
-        (name, v, false)) selected
+      let outcome := match (if integration then none else cached dir h) with
+        | some v => (name, v, true)
+        | none =>
+          Image.load (Cli.fetcher dir) [h]
+          let v := if wantTheorems then
+              match Codebase.readObject dir h with
+              | some obj => checkTheorem dir ns h obj
+              | none => Verdict.fail "missing object"
+            else checkTest h integration
+          if integration then () else remember dir h v
+          (name, v, false)
+      match outcome with
+      | (_, v, wasCached) =>
+        let fields := match v with
+          | Verdict.pass evidence cases => (true, evidence, cases, "")
+          | Verdict.fail reason => (false, "", 0, reason)
+          | Verdict.unchecked => (false, "sorry", 0, "unchecked")
+        match fields with
+        | (passed, evidence, cases, failure) =>
+          Analytics.recordRun dir eventTypes ns name (if wantTheorems then "theorem" else "test") passed wasCached (not integration) evidence cases failure (IO.time () - started)
+      outcome) selected
   let failed := List.filter (fun r =>
     match r with
     | (_, Verdict.fail _, _) => true

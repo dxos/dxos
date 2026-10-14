@@ -270,6 +270,11 @@ def addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
     let message := Option.getOr (option args "message") ((if isUpdate then "update " else "add ") ++ Text.join " " args.positional)
     let causal := Codebase.commit dir ns3 message
     recordProvenance dir args causal (List.map fst batch.objects ++ List.map (fun pair => Entry.hash (snd pair)) (List.filter (fun pair => Entry.kind (snd pair) == "spec") entries))
+    match option args "by" with
+    | some agent => Analytics.recordWrites dir ns3 agent (if isUpdate then "update" else "add") (List.map fst added ++ List.map (fun c =>
+      match c with
+      | (name, _, _) => name) replaced)
+    | none => ()
     match option args "closes" with
     | some id =>
       let t := Tasks.find (Tasks.current dir) id
@@ -1379,6 +1384,15 @@ def usage : Text :=
     "  layers                               objects per layer (code, tests, proofs, history, results, …)",
     "  migrate                              rewrite history with namespace-tree snapshots",
     "",
+    "analytics (events about the codebase, in @[event] structures; push-only, D96)",
+    "  event types                          event types with their columns and counts",
+    "  event record <Type> field=value…     record an event (a ref field takes a name, an IRI or #hash)",
+    "  event import <file>                  record (event \"Type\" (field value)…) forms",
+    "  event backfill history|timeline <f>  AgentChange events from history.sexp, AgentStage from TIMELINE.md",
+    "  event list [Type] [--about name]     the latest events, of a type or about a definition",
+    "  event stats                          counts per type and per definition (--json: the explorer's events.json)",
+    "  event push [remote]                  write pending events to the remote as Parquet; never pulls",
+    "",
     "projects",
     "  project [init <iri>]                 the project's IRI, libraries and owned subgraph",
     "  lib install <name> <codebase>        mount that project's head under lib.<name> (--branch b)",
@@ -1477,6 +1491,7 @@ def dispatch (argv : List Text) : {IO, Throw Text} Unit :=
     else if command == "inbox" then inbox args
     else if command == "export" then export args
     else if command == "history" then history args
+    else if command == "event" then Analytics.command args
     else if command == "help" then IO.print usage
     else die ("unknown command " ++ command ++ "\n" ++ usage)
 
