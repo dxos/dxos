@@ -373,3 +373,11 @@ dont forget to improve devex perf as you go, focusing on where agents waste the 
 ---
 
 is this correct? nothing lost
+
+---
+
+about mdl-first approach --- I want agents to record specs in codebase, not in github. and overall, most development at this point should be happening via-codebase
+
+---
+
+we need feature-maps in codebase in addition to tasks

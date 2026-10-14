@@ -579,7 +579,7 @@ describe('deus CLI', () => {
       deus('add', join(root, 'examples/bench.deus'), join(root, 'examples/sorting.deus'), ...c);
       deus('add', join(root, 'examples/closures.deus'), join(root, 'examples/texts.deus'), ...c);
       // Definitions that differ only in their annotations share a hash: its stored scheme fits both
-      // (D114), and their comparisons are decided at run time.
+      // (D116), and their comparisons are decided at run time.
       deus(
         'add',
         file(
@@ -617,7 +617,7 @@ describe('deus CLI', () => {
         // Closures, partial application and lambda-lifted prelude letrecs (D111).
         ['Closures.closureLoop', [20, 0]],
         ['Closures.hofLoop', [5, 200, 0]],
-        // Text, `++` on lists, and a Text result printed as the interpreter shows it (D113).
+        // Text, `++` on lists, and a Text result printed as the interpreter shows it (D115).
         ['Texts.all', [30]],
         ['Texts.shown', [5]],
       ] as const) {

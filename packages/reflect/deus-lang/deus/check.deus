@@ -199,8 +199,10 @@ def checkTheorem (dir : Text) (ns : Map Text Entry) (h : Text) (obj : Sexp) : {I
       match x with
       | Sexp.list [Sexp.sym "ref", Sexp.str l] => "#" ++ l
       | _ => Sexp.asText x) (Sexp.args proof)
-    let printer := Print.printer ns []
-    let describe := fun (args : List Sexp) => Text.join ", " (List.map (fun a => Print.expr printer a [] 0 100) args)
+    -- Only a failure is described, so the printer's name tables are not built for a theorem that passes.
+    let describe := fun (args : List Sexp) =>
+      let printer := Print.printer ns []
+      Text.join ", " (List.map (fun a => Print.expr printer a [] 0 100) args)
     let typeDecls := typesByIri dir ns
     match tactic with
     | ["sorry"] => Verdict.unchecked

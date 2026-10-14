@@ -1,5 +1,5 @@
 /-
-  Text in the C back end (D113): literals, `++`, `Text.join`, `Text.split`, `Text.indexOf`,
+  Text in the C back end (D115): literals, `++`, `Text.join`, `Text.split`, `Text.indexOf`,
   `Int.toText` and `Int.fromText`, and ordering texts. Every loop is first-order and specialised
   to `Text`, so the same definitions run on the interpreter and compile to C and to wasm.
 

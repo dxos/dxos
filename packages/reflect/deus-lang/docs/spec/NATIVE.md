@@ -14,7 +14,7 @@ integer and comparison primitives, `Array` and `Ref`, and calls of other such de
 that it compiles higher-order code ([D111](../DECISIONS.md)): lambdas, partial and over-application,
 definitions used as values, calls of unknown functions, and `letrec`, so the prelude's `List.map`,
 `List.filter`, `List.foldl`, `List.zip`, `Option.map` and the like compile. A C runtime adds `Text`
-([D113](../DECISIONS.md)): literals, `++` on texts and on lists, `Text.length`, `code`, `slice`,
+([D115](../DECISIONS.md)): literals, `++` on texts and on lists, `Text.length`, `code`, `slice`,
 `fromCode`, `concat`, `join`, `split`, `indexOf`, `trim`, `Int.toText`, `Int.fromText`, text
 patterns, and `==`, `<`, `compare` on texts. Maps, `show`, `Text.sha256`, `Text.utf8`,
 `Text.fromCodes` and structural equality of data are still refused. Error messages for refused forms
@@ -190,7 +190,7 @@ took 514 ms natively.
 Core has no types, so two definitions that differ only in their annotations share a hash
 (`Sorting.checkGo` on `Int`, `Texts.orderedGo` on `Text`). The store keeps one scheme per hash, and
 it was the last one added, so the C back end compiled the other's comparisons wrongly. Now the stored
-scheme fits both (`a -> Int -> List a -> Int`, [D114](../DECISIONS.md)), and comparisons on a type
+scheme fits both (`a -> Int -> List a -> Int`, [D116](../DECISIONS.md)), and comparisons on a type
 variable are decided at run time.
 
 ## Benchmarks
@@ -252,7 +252,7 @@ it now. The rest of the language needs these, in order of how much code they unl
 2. **Closures and partial application:** done (D111). Lambdas are flat closures, known calls
    stay direct C calls, and `letrec` is lambda-lifted, so recursion never builds a closure that
    holds itself.
-3. **Text and the other primitives:** `Text` done (D113), with the kernels' UTF-16 semantics,
+3. **Text and the other primitives:** `Text` done (D115), with the kernels' UTF-16 semantics,
    ported from the Rust kernel's `text.rs`. Insertion-ordered maps (`Dict`, `MutMap`), `show` and
    structural equality of data remain.
 4. **Effects.** Types carry effect rows, so the compiler knows which functions can perform an

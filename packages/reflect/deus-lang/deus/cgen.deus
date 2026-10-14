@@ -22,7 +22,7 @@
 
   `Int.div` and `Int.mod` by zero trap, as in wasm.
 
-  `Text` is a block of UTF-16 units with a C runtime ported from the Rust kernel (D113); a unique
+  `Text` is a block of UTF-16 units with a C runtime ported from the Rust kernel (D115); a unique
   text that is appended to grows in place.
 -/
 
@@ -118,7 +118,7 @@ def prelude (nullary : Int) : Text :=
     "#define AT(a, i) ({ V *a_ = UNBOX(a); V i_ = (i); if ((uint32_t)i_ >= (uint32_t)a_[0]) __builtin_trap(); &a_[i_ + 1]; })",
     "static V deus_nullary[" ++ Int.toText (larger nullary 1) ++ "] = {"
       ++ Text.join ", " (List.map Int.toText (List.range 0 (larger nullary 1))) ++ "};",
-    "/* Text is a block [length, capacity, UTF-16 units…] (D113). These borrow their arguments. */",
+    "/* Text is a block [length, capacity, UTF-16 units…] (D115). These borrow their arguments. */",
     "#define TLEN(v) (UNBOX(v)[0])",
     "#define TCAP(v) (UNBOX(v)[1])",
     "#define TU(v) ((uint16_t *)(UNBOX(v) + 2))",
@@ -153,7 +153,7 @@ def prelude (nullary : Int) : Text :=
     "static V deus_eq_any(V a, V b) { if (IS_TEXT(a) && IS_TEXT(b)) return deus_text_eq(a, b); if (IS_PTR(a) || IS_PTR(b)) __builtin_trap(); return a == b; }",
     "static V deus_text_concat(V xs) { static struct { V h, n, cap; } empty = {0, 0, 0}; return deus_text_join(STATIC(&empty.n), xs); }",
     "static inline V deus_int_cmp(V x, V y) { return (x > y) - (x < y); }",
-    "/* `++` on lists: the unique prefix of the first list is relinked in place, the rest copied (D113). Consumes both. */",
+    "/* `++` on lists: the unique prefix of the first list is relinked in place, the rest copied (D115). Consumes both. */",
     "static V deus_list_append(V a, V b) { V r, *slot = &r, c = a; int mine = 1; while (UNBOX(c)[0]) { V *p = UNBOX(c); if (mine && UNIQUE(c)) { *slot = c; slot = &p[2]; } else { if (mine) HDR(c) -= 256; mine = 0; V n = deus_cons(deus_dup(p[1]), 0); *slot = n; slot = &UNBOX(n)[2]; } c = p[2]; } *slot = b; return r; }",
     "static V deus_append_any(V a, V b) { if (IS_TEXT(a)) { V r = deus_text_extend(a, b); deus_drop(b); return r; } return deus_list_append(a, b); }",
     ""]
@@ -588,7 +588,7 @@ def form (ctx : FnCtx) (env : List Int) (tail : Bool) (owned : List Int) (token 
       | _ => throw "an application without arguments"
   | other => throw ("outside the C subset: " ++ Text.take 120 (Sexp.print other))
 
-/-- A Text literal (D113): made on first use and kept, so it is a heap block like any other text. -/
+/-- A Text literal (D115): made on first use and kept, so it is a heap block like any other text. -/
 def textLiteral (t : Text) : Text :=
   let n := Text.length t
   let units := if n == 0 then "0" else Text.join ", " (List.map (fun i => Int.toText (Text.code t i)) (List.range 0 n))
@@ -599,7 +599,7 @@ def lending (ctx : FnCtx) (env : List Int) (owned : List Int) (token : Option To
   match sequence ctx env owned token borrows xs with
   | (decls, values, after) => "({ " ++ decls ++ "V r = " ++ call values ++ "; " ++ after ++ "r; })"
 
-/-- The runtime function of a primitive on `Text` (D113). -/
+/-- The runtime function of a primitive on `Text` (D115). -/
 def textFunction (p : Text) : Option Text :=
   List.lookup p [
     ("Text.length", "TLEN"), ("Text.code", "deus_text_code"), ("Text.slice", "deus_text_slice"),
@@ -615,14 +615,14 @@ def primArity (p : Text) : Int :=
   else 0
 
 /--
-  A primitive the C runtime implements (D113): those on `Text`, `++` on texts and on lists, and
+  A primitive the C runtime implements (D115): those on `Text`, `++` on texts and on lists, and
   comparisons of texts by their UTF-16 units, as JavaScript orders strings. None for the others.
 -/
 def runtime (ctx : FnCtx) (env : List Int) (owned : List Int) (token : Option Token) (p : Text) (xs : List Sexp) : {Throw Text} Option Text :=
   let types := List.map (Wasm.typeOf ctx.cScope env) xs
   let isText := List.any (fun t => t == Wasm.tref "#Text") types
   let isList := List.any (fun t => Wasm.headName t == some "#List") types
-  -- Unknown (a lifted function's parameter) or a type variable (a hash whose names differ in type, D114).
+  -- Unknown (a lifted function's parameter) or a type variable (a hash whose names differ in type, D116).
   let isDynamic := not (List.isEmpty types) && List.all (fun t => t == Wasm.unknown || Sexp.head t == "tvar") types
   let lend := fun (call : List Text -> Text) => some (lending ctx env owned token (List.map (fun _ => true) xs) call xs)
   match textFunction p with

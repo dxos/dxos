@@ -29,6 +29,13 @@ From Dmytro: threads MUST use the codebase as primary VCS, and git as backup. D1
 
 From Dmytro: an artifact is a constant whose value is cached, e.g. deusCli := Deus.toBinary Cli.main; evaluating it once caches the result in the artifacts layer by the hash of the expression.
 
+## Feature maps in the codebase alongside tasks: a tree of features with status, linking specs, requirements, definitions and tasks; CLI, a backfilled map of the toolchain, shown in the explorer (`8a24ab99`)
+
+- state: todo
+- priority: high
+- assignee: claude
+- labels: features, codebase
+
 ## Publish pushed events to Basin Catalog on the R2 bucket and query them with Basin SQL (needs Dmytro's go-ahead to create Cloudflare resources) (`c5955f97`)
 
 - state: todo
@@ -69,14 +76,6 @@ From Dmytro. Measure it against share.unison-lang.org: search, navigation, depen
 
 > claude: The Codebase explorer UI thread built a Unison-style UI (finder, namespace pages, definition and change cards, keyboard), verified with Playwright; merging into #13952 from PR #13975. It also fixes the builtin page 404 and the content types.
 
-## Type checker hangs on a type error in a large recursive group or a closed-row callback instead of reporting it (`1854b55d`)
-
-- state: todo
-- priority: high
-- labels: checker, bug
-
-Bisected while writing jsgen.deus: (1) closed-row {IO} callbacks passed where {Throw Text | r} is expected; (2) a let-bound function used at two rows; (3) a ++/:: precedence type error in a big recursive group. Each made deus compile deus run for minutes instead of reporting; deus add into a scratch codebase reports the same errors fast.
-
 ## Wasm back end: Perceus reference counting with reuse, sharing one ownership analysis with the C back end's task 62d1bdda; pure sorts allocate 470 MiB for 10^6 numbers today (D83) (`cf0e3937`)
 
 - state: todo
@@ -92,13 +91,6 @@ Bisected while writing jsgen.deus: (1) closed-row {IO} callbacks passed where {T
 - labels: dogfood
 
 From Dmytro. Depends on P8 (b09507db): files must be regenerable from the codebase.
-
-## deus compile runs for minutes instead of reporting a type error (Array.set's result passed to List.forEach; siteJson's nested tuple matches) (`a99bf01d`)
-
-- state: todo
-- priority: high
-- assignee: claude
-- labels: bug, devex, perf
 
 ## deus eval with a Codebase ability: a snippet the model sends can read and change the codebase (`10b95384`)
 
@@ -116,14 +108,6 @@ From Dmytro. A Codebase ability (find, view, add, update, mv, task ops) handled 
 - labels: devex, perf
 
 Install the wasm32 target and tsc in the repo's cloud setup script or a SessionStart hook, and add a test preflight that names exactly what is missing.
-
-## devex: deus mdl over all specs takes 34 s (`7f677d04`)
-
-- state: todo
-- priority: high
-- labels: devex, perf
-
-Every agent runs it before each commit; cache unchanged specs by hash.
 
 ## devex: merges into #13952 race and D-numbers collide (`602f4557`)
 
@@ -156,14 +140,6 @@ Restore once into a shared codebase, or reuse the dogfood codebase.
 - labels: devex, perf
 
 Compile s2 with the s1 image only when sources changed since the last fixpoint, or check the fixpoint in CI only.
-
-## devex: update of printed (deus view) source is 9x slower than the same code as source (82 s vs 9 s); typecheck re-checks group members ~50x (`44892ca0`)
-
-- state: todo
-- priority: high
-- labels: devex, perf
-
-Compile.typecheck checks members 82745 times for 1616 members on printed source vs 1625 on cat.deus. Found while measuring agent wall time.
 
 ## A req can name TypeScript tests as evidence (vitest file and test name), so the toolchain-wide view round trip stops being a gap (`a2da28e2`)
 
@@ -245,6 +221,8 @@ Known gaps R-10 and R-12 in docs/spec/CODEBASE-STORE.mdl.
 
 > claude: Text done in D113: literals, ++ on texts and lists (in place when unique), slice, split, join, indexOf, trim, Int.toText/fromText, text patterns, ordering; 4-6x faster than the JIT. Remaining: Dict and MutMap, show, Text.sha256, Text.utf8, Text.fromCodes, structural equality of data.
 
+> claude: The Text work above landed as D115 (renumbered from D113 after a concurrent decision).
+
 ## Native: effect handlers in the C back end by evidence passing, with stack switching for general resumptions (`e1cf2c6c`)
 
 - state: todo
@@ -259,13 +237,13 @@ Known gaps R-10 and R-12 in docs/spec/CODEBASE-STORE.mdl.
 
 eq, compare and < on constructed values are refused in C (and wasm compares only some data types); the runtime can walk blocks by kind as the kernels' equal and compare do.
 
-## Replication keeps the first scheme of a shared hash; merge schemes as the store does since D114 (`4c9147ce`)
+## Replication keeps the first scheme of a shared hash; merge schemes as the store does since D116 (`4c9147ce`)
 
 - state: todo
 - priority: medium
 - labels: codebase, bug
 
-Replicate.import writes metadata only when none exists (D91), so a pulled codebase can hold a narrower scheme for a hash two names share than the pusher's store does after D114. Merge the scheme with Codebase.mergeMeta on import.
+Replicate.import writes metadata only when none exists (D91), so a pulled codebase can hold a narrower scheme for a hash two names share than the pusher's store does after D116. Merge the scheme with Codebase.mergeMeta on import.
 
 ## Run the DEUS skill through the Composer assistant with a live model (`91b838f4`)
 
@@ -294,6 +272,14 @@ The tools searchDefinitions and viewDefinition were checked with composer.invoke
 - priority: medium
 - labels: prover
 - links `Check.generate` (#ba17124ee9)
+
+## Type checker: a test comparing a partial application with == passes the checker and returns false (Compile.Spec.apiReportsDeclarationsAsGaps after withHost gained a parameter); updates should reject it (`84ec6ef7`)
+
+- state: todo
+- priority: medium
+- labels: types, devex
+
+Found when D114 added a printer parameter to Cli.withHost: the spec failed at run time, not at update.
 
 ## TypeScript bindings: export polymorphic functions with codec parameters (`b6907aeb`)
 
@@ -841,6 +827,16 @@ In a codebase pulled from origin.main #102beac5d7, deus add of 'def tt (h : Text
 
 > claude: Cause: bundles never carried the builtin objects (#List, #Option…), so a pulled store had none and the checker typed every constructor pattern as unknown, binding no subpattern and shifting later variables onto earlier slots. Fixed in D112: closureOf adds the builtins, import accepts one only as a declaration of its own identity where none is held, and unknown constructors bind every subpattern. The R2 remote now holds the builtins.
 
+## Type checker hangs on a type error in a large recursive group or a closed-row callback instead of reporting it (`1854b55d`)
+
+- state: done
+- priority: high
+- labels: checker, bug
+
+Bisected while writing jsgen.deus: (1) closed-row {IO} callbacks passed where {Throw Text | r} is expected; (2) a let-bound function used at two rows; (3) a ++/:: precedence type error in a big recursive group. Each made deus compile deus run for minutes instead of reporting; deus add into a scratch codebase reports the same errors fast.
+
+> claude: Cause: JIT replays (D113). A type error throws from deep inside the checker's List.forEach callback, so each group's forEach replayed. Fixed in the kernel: with a type error in Print.printer, deus compile deus reports it in 6 s instead of 78 s.
+
 ## TypeScript interop: generate typed TypeScript bindings for DEUS namespaces (`17d50ae5`)
 
 - state: done
@@ -888,6 +884,15 @@ Reported by the explorer thread on #13952's branch (code/Cli.deus line 45). The 
 
 > claude: The explorer thread repaired the committed export (62a3bad2, its task b2166fc8). The exporter now names unnamed callees Unnamed.h<hash> (D77), with a round-trip test, so it cannot write #hash references again.
 
+## deus compile runs for minutes instead of reporting a type error (Array.set's result passed to List.forEach; siteJson's nested tuple matches) (`a99bf01d`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: bug, devex, perf
+
+> claude: Cause: JIT replays (D113). A type error throws from deep inside the checker's List.forEach callback, so each group's forEach replayed. Fixed in the kernel: with a type error in Print.printer, deus compile deus reports it in 6 s instead of 78 s.
+
 ## deus export drops attributes, .mdl specs, the project file and some doc comments (`5fe4c8b1`)
 
 - state: done
@@ -918,6 +923,27 @@ Viewing about 1000 definitions into a pipe stopped after about 1150 lines; into 
 - links `Print.definition` (#44b701111a)
 
 > claude: Binder names now follow Resolve.strip's order; colours on a terminal (D61). Long lines are not yet broken.
+
+## devex: deus mdl over all specs takes 34 s (`7f677d04`)
+
+- state: done
+- priority: high
+- labels: devex, perf
+- links change #93f3e01096
+
+Every agent runs it before each commit; cache unchanged specs by hash.
+
+> claude: deus mdl 36 s to 7 s (D114): one printer per run instead of two per described name, and checkTheorem builds its printer only to describe a failure. Output byte-identical (mdl --json).
+
+## devex: update of printed (deus view) source is 9x slower than the same code as source (82 s vs 9 s); typecheck re-checks group members ~50x (`44892ca0`)
+
+- state: done
+- priority: high
+- labels: devex, perf
+
+Compile.typecheck checks members 82745 times for 1616 members on printed source vs 1625 on cat.deus. Found while measuring agent wall time.
+
+> claude: Cause: JIT replays. Each group's List.forEach ran compiled, a callback's nested callee performed an operation near the end, and the whole forEach replayed (360 replays, 75 s). Fixed in the kernel (D113): calls passing a callback that deoptimized twice run on the machine. 85 s to 10.5 s.
 
 ## view escapes control characters as decimal, so an update rehashes (\u{1b} prints \u{27}) (`11b93dc9`)
 

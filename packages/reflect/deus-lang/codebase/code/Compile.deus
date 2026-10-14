@@ -14,7 +14,11 @@ def Compile.Spec.addSource (source : Text) (isUpdate : Bool) : {IO, Throw Text} 
 test Compile.Spec.apiReportsDeclarationsAsGaps := inStore (fun _ =>
   addSource "def parse (t : Text) : Int\ndef twice (t : Text) : Int := parse t * 2\n" false
   let ns := Codebase.current "cb"
-  let api := fun line => withHost "cb" ns (fun _ => checkApi (Block.mk "api" "A-1" "t" [("signatures", line)] 0))
+  let api := fun line => withHost
+    "cb"
+    ns
+    (printer ns [])
+    (fun _ => checkApi (Block.mk "api" "A-1" "t" [("signatures", line)] 0))
   api "parse : Text -> Int" == ["gap: parse is declared but not implemented"] && api "twice : Text -> Int" == [] && api "parse : Text -> Text" == ["parse has type Text -> Int, the spec says Text -> Text"])
 
 test Compile.Spec.batchShadowsBase :=

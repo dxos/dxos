@@ -565,7 +565,7 @@ def generalize (a : Sexp) (b : Sexp) (pairs : Ref (List ((Sexp, Sexp), Sexp))) :
 
 /--
   Metadata for a hash that already has some: names with different annotations can share a hash,
-  since Core has no types, so the stored scheme becomes one that fits every name (D114).
+  since Core has no types, so the stored scheme becomes one that fits every name (D116).
 -/
 def mergeMeta (old : Option Sexp) (new : Sexp) : Sexp :=
   match (metaField old "scheme", metaField (some new) "scheme") with

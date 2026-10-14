@@ -1,5 +1,12 @@
 # History of main
 
+- `9db52bfe04` task: comment on 72a1f2fb (by claude)
+- `f86efb6645` task: set 4c9147ce details
+- `07d08fc81a` task: set 4c9147ce title
+- `729219806d` renumber the Text runtime to D115 and the shared-hash scheme to D116, after a concurrent D113/D114 (by claude)
+- `d6226b3530` history: import 694 changes
+- `8d312f787b` task: import from codebase/tasks.sexp
+- `f5755843fa` catch up with #13952's export: JIT callbacks and one printer per mdl run (cfe0e8e4) (by claude)
 - `30b9cf5cac` Text programs renamed so no name or hash is shared with Sorting or the toolchain (D113) (by claude)
 - `bfb444796f` delete Texts.all Texts.appended Texts.insert Texts.keys Texts.keysGo Texts.kind Texts.kinds Texts.lengths Texts.numbers Texts.occurrences Texts.orderedGo Texts.parseLoop Texts.parsed Texts.phrase Texts.searched Texts.shown Texts.sortTexts Texts.sorted Texts.step Texts.sumParsed Texts.textsSmall
 - `32c632dc0b` task: open f9cd5624 Native: structural equality and ordering of data in the C back end
@@ -7,6 +14,20 @@
 - `77b64e330d` task: comment on 72a1f2fb (by claude)
 - `702d8b68ad` Text programs for the C back end (D113) (by claude)
 - `06b414aaec` C back end compiles Text with a runtime ported from the Rust kernel (D113); a hash keeps a scheme that fits every name (D114) (by claude)
+- `536bd782ef` history: import 668 changes
+- `58480b86c8` export: merge 5 changes from codebase
+- `8f9856ca45` task: set a99bf01d state
+- `28273fc62b` task: comment on a99bf01d (by claude)
+- `a1c034c828` task: set 1854b55d state
+- `8f2b9ee56e` task: comment on 1854b55d (by claude)
+- `607b0ae966` task: open 8a24ab99 Feature maps in the codebase alongside tasks: a tree of features with status, linking specs, requirements, definitions and tasks; CLI, a backfilled map of the toolchain, shown in the explorer
+- `b8773f11e9` task: open 84ec6ef7 Type checker: a test comparing a partial application with == passes the checker and returns false (Compile.Spec.apiReportsDeclarationsAsGaps after withHost gained a parameter); updates should reject it
+- `328f1ddb76` update /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/edit-api.deus (by claude)
+- `cee7a31873` task: comment on 7f677d04 (by claude)
+- `e598ded948` task: comment on 44892ca0 (by claude)
+- `638043f48f` task: set 44892ca0 state
+- `95fa9e2cc1` close 7f677d04 by #93f3e01096 (by claude)
+- `93f3e01096` update deus (by claude)
 - `f84f1e8092` history: import 702 changes
 - `2b352668f1` task: import from tasks.sexp
 - `753edf4687` history: import 646 changes

@@ -427,7 +427,7 @@ def Codebase.mergeBase (dir : Text) (a : Text) (b : Text) : {IO, Throw Text} Opt
   go [b] Map.empty
 
 /-- Metadata for a hash that already has some: names with different annotations can share a hash,
-  since Core has no types, so the stored scheme becomes one that fits every name (D114). -/
+  since Core has no types, so the stored scheme becomes one that fits every name (D116). -/
 def Codebase.mergeMeta (old : Option Sexp) (new : Sexp) : Sexp :=
   match (metaField old "scheme", metaField (Option.some new) "scheme") with
   | (Option.some a, Option.some b) => if a == b then new else

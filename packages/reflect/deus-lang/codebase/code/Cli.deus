@@ -257,13 +257,13 @@ def Cli.changes (ns : Map Text Entry) (entries : List (Text, Entry)) : List (Tex
       | Option.none => Option.none) entries
 
 /-- Runs one block through the extension `uri` names in the codebase; unchecked when there is none. -/
-def Cli.checkBlock (dir : Text) (ns : Map Text Entry) (byUri : Map Text Text) (place : Text) (uri : Option Text) (b : Block) : {IO, Throw Text} Outcome :=
+def Cli.checkBlock (dir : Text) (ns : Map Text Entry) (printer : Printer) (byUri : Map Text Text) (place : Text) (uri : Option Text) (b : Block) : {IO, Throw Text} Outcome :=
   match Option.bind uri (fun u => Map.lookup u byUri) with
   | Option.none => Outcome.mk place "unchecked" []
   | Option.some h =>
       Image.load (fetcher dir) [h]
       let check := Code.run h
-      match withHost dir ns (fun _ => guardDefect (fun _ => check b)) with
+      match withHost dir ns printer (fun _ => guardDefect (fun _ => check b)) with
       | Result.ok [] => Outcome.mk place "ok" []
       | Result.ok problems =>
           -- A known gap (each problem starting `gap: `) is reported but does not fail the document.
@@ -274,13 +274,14 @@ def Cli.checkBlock (dir : Text) (ns : Map Text Entry) (byUri : Map Text Text) (p
       | Result.err message => Outcome.mk place "fail" ["defect: " ++ message]
 
 /-- Checks one document: the core rules, then each block through its extension. -/
-def Cli.checkDoc (dir : Text) (ns : Map Text Entry) (byUri : Map Text Text) (path : Text) : {IO, Throw Text} List Outcome :=
+def Cli.checkDoc (dir : Text) (ns : Map Text Entry) (printer : Printer) (byUri : Map Text Text) (path : Text) : {IO, Throw Text} List Outcome :=
   let doc := Mdl.parse (readSource path)
   let core := validate doc
   let declared := declared doc
   let outcomes := List.map (fun b => checkBlock
     dir
     ns
+    printer
     byUri
     (path ++ ":" ++ toText b.lineNo ++ " " ++ Mdl.describe b)
     (List.lookup b.blockType declared)
@@ -288,7 +289,7 @@ def Cli.checkDoc (dir : Text) (ns : Map Text Entry) (byUri : Map Text Text) (pat
   if List.isEmpty core then outcomes else Outcome.mk path "fail" core :: outcomes
 
 /-- Checks the spec objects the codebase names: all of them, or those of the named documents in document order. -/
-def Cli.checkSpecs (dir : Text) (ns : Map Text Entry) (byUri : Map Text Text) (documents : List Text) : {IO, Throw Text} List Outcome :=
+def Cli.checkSpecs (dir : Text) (ns : Map Text Entry) (printer : Printer) (byUri : Map Text Text) (documents : List Text) : {IO, Throw Text} List Outcome :=
   let wanted := if List.isEmpty documents then specDocuments ns else documents
   let orderOf := fun h =>
     match metaField (readMeta dir h) "order" with
@@ -306,6 +307,7 @@ def Cli.checkSpecs (dir : Text) (ns : Map Text Entry) (byUri : Map Text Text) (d
           | (uri, b) => checkBlock
               dir
               ns
+              printer
               byUri
               name
               (if Text.isEmpty uri then Option.none else Option.some uri)
@@ -460,7 +462,7 @@ def Cli.deps (args : Args) (reverse : Bool) : {IO, Throw Text} Unit :=
 
 /-- What `MdlHost.describe` reports about a name: its kind, hash, displayed type, declaration as
   source, and for a test or a theorem its verdict (checked now unless a result is cached). -/
-def Cli.describeName (dir : Text) (ns : Map Text Entry) (name : Text) : {IO, Throw Text} List (Text, Text) :=
+def Cli.describeName (dir : Text) (ns : Map Text Entry) (printer : Printer) (name : Text) : {IO, Throw Text} List (Text, Text) :=
   match Map.lookup name ns with
   | Option.none => Throw.throw (name ++ " is not in the codebase")
   | Option.some e =>
@@ -480,7 +482,7 @@ def Cli.describeName (dir : Text) (ns : Map Text Entry) (name : Text) : {IO, Thr
       let statement :=
         match readObject dir h with
         | Option.some (Sexp.list (Sexp.sym "theorem" :: Sexp.list (Sexp.sym "binders" :: types) :: prop :: proof :: _)) =>
-            let base := printer ns (List.map asText (metaList meta "locals"))
+            let base := withLocals printer (List.map asText (metaList meta "locals"))
             let full := Printer.mk base.fullNames base.fullNames (Map.fromList (filterMap (fun pair =>
               match pair with
               | (n, Entry.type _ iri _) => Option.some (iri, n)
@@ -493,7 +495,7 @@ def Cli.describeName (dir : Text) (ns : Map Text Entry) (name : Text) : {IO, Thr
               (if stop < 0 then decl else Text.take stop decl)))]
         | Option.some (Sexp.list (Sexp.sym "term" :: core :: [])) => if isStub core then [("implemented", "false")] else []
         | _ => []
-      [("kind", Entry.kind e), ("hash", h), ("view", snd (viewParts (printer ns []) dir ns name e "deus"))] ++
+      [("kind", Entry.kind e), ("hash", h), ("view", snd (viewParts (withLocals printer []) dir ns name e "deus"))] ++
         typed ++
         statement ++
         verdict
@@ -901,12 +903,13 @@ def Cli.mdl (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let ns := Codebase.current dir
   let byUri := extensions dir ns
+  let printer := printer ns []
   let stored := specDocuments ns
   let documents := List.filter (fun a => List.contains a stored && not (IO.exists a)) args.positional
   let files := List.filter (fun a => not (List.contains a documents)) args.positional
   let paths := List.filter (fun p => endsWith ".mdl" p) (expandPaths files)
-  let fromCodebase := if List.isEmpty args.positional || not (List.isEmpty documents) then checkSpecs dir ns byUri documents else []
-  let outcomes := fromCodebase ++ concatMap (fun path => checkDoc dir ns byUri path) paths
+  let fromCodebase := if List.isEmpty args.positional || not (List.isEmpty documents) then checkSpecs dir ns printer byUri documents else []
+  let outcomes := fromCodebase ++ concatMap (fun path => checkDoc dir ns printer byUri path) paths
   let count := fun v => List.length (List.filter (fun o => o.verdict == v) outcomes)
   Cli.output args (fun _ => Json.arr (List.map
     (fun o => Json.obj [("block", Json.str o.place), ("status", Json.str o.verdict), ("problems", Json.arr (List.map Json.str o.problems))])
@@ -1568,8 +1571,9 @@ def Cli.viewParts (base : Printer) (dir : Text) (ns : Map Text Entry) (name : Te
 
 def Cli.warn (b : Batch) : {IO} Unit := forEach b.warnings (fun w => eprintln ("warning: " ++ w))
 
-/-- Answers `MdlHost` against the codebase: expressions are compiled the way `eval` compiles them. -/
-def Cli.withHost (dir : Text) (ns : Map Text Entry) (body : Unit -> {MdlHost, IO} a) : {IO} a :=
+/-- Answers `MdlHost` against the codebase: expressions are compiled the way `eval` compiles them.
+  `printer` is `ns`'s, built once per run: its name tables cost more than describing a name. -/
+def Cli.withHost (dir : Text) (ns : Map Text Entry) (printer : Printer) (body : Unit -> {MdlHost, IO} a) : {IO} a :=
   let compiled := fun source => try (fun _ => compileExpr dir ns source)
   handle body () with
   | MdlHost.cost source -> k => k (match compiled ("fun (u : Unit) => " ++ source) with
@@ -1582,7 +1586,7 @@ def Cli.withHost (dir : Text) (ns : Map Text Entry) (body : Unit -> {MdlHost, IO
     | Result.ok h => guardDefect (fun _ => Code.run h)
     | Result.err message => Result.err message)
   | MdlHost.js source -> k => k (jsCompare dir ns source)
-  | MdlHost.describe name -> k => k (match guardDefect (fun _ => try (fun _ => describeName dir ns name)) with
+  | MdlHost.describe name -> k => k (match guardDefect (fun _ => try (fun _ => describeName dir ns printer name)) with
     | Result.ok r => r
     | Result.err message => Result.err message)
 
