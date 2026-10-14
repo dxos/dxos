@@ -1,0 +1,25 @@
+name: Deploy Docs Daily
+
+# Publishes blog posts whose `date` has arrived (docs/src/utils/blog.ts), so posts can merge ahead of their
+# publish date. Dispatches Deploy Apps with inputs rather than adding a cron there: a scheduled run carries no
+# inputs, so the deploy would have to special-case the cron string, while a dispatch runs exactly like a
+# manual one (same inputs, same production concurrency group, same per-app tags).
+
+on:
+  schedule:
+    # 12:00 UTC = 08:00 EDT / 07:00 EST.
+    - cron: '0 12 * * *'
+
+permissions:
+  actions: write # `gh workflow run`; a dispatch is the one event a GITHUB_TOKEN may start a run with.
+
+jobs:
+  dispatch:
+    if: github.repository == 'dxos/dxos'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Dispatch Deploy Apps (production, docs)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run deploy-apps.yml --repo "$GITHUB_REPOSITORY" --ref main -f environment=production -f app=docs

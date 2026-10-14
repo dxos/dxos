@@ -603,8 +603,9 @@ node .agents/skills/autocue/scripts/trim-static.mjs --in /tmp/demo/session.webm 
 The finished video (the narrated MP4 when there is one) is uploaded to the Composer media bucket as
 `demos/<yyyy-mm-dd>-<name>.<ext>` and served from `https://assets.composer.space` (the bucket's dev URL is
 `https://pub-343732155ecd4a85bba38961213b0515.r2.dev`). `<name>` is the package the flow lives in, e.g.
-`plugin-markdown`, taken from the flow path the driver writes to `timeline.json`; `--name` overrides it and
-`--upload off` skips the upload. The bucket is `composer` (`AUTOCUE_R2_BUCKET` to change it). It uses
+`plugin-markdown`, taken from the flow path the driver writes to `timeline.json`; `--name` overrides it,
+`--folder` replaces `demos` (blog post videos use `--folder blog --name <post-slug>`), and `--upload off` skips
+the upload. The bucket is `composer` (`AUTOCUE_R2_BUCKET` to change it). It uses
 `hosting-artifacts`' `upload-artifact.mjs`, so it needs R2 keys. Generate a gitignored `.env` once with
 `op inject -i .env.tpl -o .env` (never commit it): the upload and the HeyGen voice-over both read their keys
 from it, in the worktree or the primary checkout. `.secrets/r2.env` also works. The URL it prints has been verified

@@ -422,6 +422,20 @@ export const NavigationTargetResolver = Capability$.make<NavigationTargetResolve
 );
 
 /**
+ * Changes that exist only in this page, which leaving it would lose: consulted before the page or the
+ * app goes away.
+ * @category Capability
+ */
+export type UnsavedChanges = {
+  /** Synchronous, so a `beforeunload` handler can decide. */
+  has(): boolean;
+  /** Hands the changes on to where they are kept, resolving whether none is left. */
+  save(): Promise<boolean>;
+};
+
+export const UnsavedChanges = Capability$.make<UnsavedChanges>()('org.dxos.app-framework.capability.unsavedChanges');
+
+/**
  * What a {@link NavigationTargetLoader} was able to determine about a target.
  *
  * Three-valued because the caller's responses to a missing node are opposites: it waits for one that

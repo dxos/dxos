@@ -3,13 +3,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { getCollection } from 'astro:content';
-
 import BlogLayout from '../../layouts/BlogLayout.astro';
+import { getPublishedPosts } from '../../utils/blog.ts';
 
-const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
-  (a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime(),
-);
+const posts = await getPublishedPosts();
 
 const formatDate = (date: Date) =>
   date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });

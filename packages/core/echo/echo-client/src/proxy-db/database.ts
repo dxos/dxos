@@ -87,6 +87,9 @@ export interface EchoDatabase extends Database.Database {
    */
   readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
 
+  /** Whether a change exists only in this client, so losing the page would lose it. Synchronous, for `beforeunload`. */
+  hasUnsavedChanges(): boolean;
+
   /** @deprecated */
   readonly pendingBatch: ReadOnlyEvent<unknown>;
 
@@ -846,6 +849,14 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   async getBlobUrl(blob: Blob.Blob): Promise<string | undefined> {
     return this.graph.blobManager.getBlobUrl(this.spaceId, blob);
+  }
+
+  hasUnsavedChanges(): boolean {
+    return (
+      this._entityManager.hasUnsavedChanges() ||
+      this.#retiredFeeds.size > 0 ||
+      [...this.#feeds.values()].some((handle) => handle.hasPendingWrites())
+    );
   }
 
   async flush(opts?: Database.FlushOptions): Promise<void> {

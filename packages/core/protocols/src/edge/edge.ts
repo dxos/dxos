@@ -522,6 +522,19 @@ export const ErrorCodec = Object.freeze({
   },
 });
 
+const decodeHttpError = (response: Response, text: string): Error | undefined => {
+  if (response.headers.get('Content-Type') !== 'application/json') {
+    return new Error(text.slice(0, 256));
+  }
+
+  const body = JSON.parse(text);
+  if (!('error' in body)) {
+    return undefined;
+  }
+
+  return ErrorCodec.decode(body.error);
+};
+
 /**
  * Codec for serializing and deserializing Edge unhandled HTTP errors.
  */
@@ -534,19 +547,11 @@ export const EdgeHttpErrorCodec = Object.freeze({
       { status: 500 },
     ),
 
-  decode: async (response: Response): Promise<Error | undefined> => {
-    if (response.headers.get('Content-Type') !== 'application/json') {
-      const body = await response.clone().text();
-      return new Error(body.slice(0, 256));
-    }
+  /** Reads the response body. */
+  decode: async (response: Response): Promise<Error | undefined> => decodeHttpError(response, await response.text()),
 
-    const body = await response.clone().json();
-    if (!('error' in body)) {
-      return undefined;
-    }
-
-    return ErrorCodec.decode(body.error);
-  },
+  /** Decodes a body already read from `response`. */
+  decodeText: (response: Response, text: string): Error | undefined => decodeHttpError(response, text),
 });
 
 /** Authentication scheme naming a DXOS verifiable presentation. */
