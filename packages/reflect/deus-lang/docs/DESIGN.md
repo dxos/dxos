@@ -106,7 +106,7 @@ try          : (Unit -> {Throw e | r} a) -> {r} Result e a
 
 ### Identity
 
-Every definition is named by the SHA-256 of its [Core](./CORE.md) form, with dependencies by
+Every definition is named by the SHA-256 of its [Core](./spec/CORE.md) form, with dependencies by
 hash and locals as de Bruijn indices. Names are entries in a namespace, so renaming is free
 and two people can never mean different things by the same hash. Types and abilities are
 identified by IRI ([D6](./DECISIONS.md)); their hash also covers their constructor shapes, so an
