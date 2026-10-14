@@ -14,7 +14,7 @@ def contentType (path : Text) : Text :=
   if Text.endsWith ".html" path then "text/html; charset=utf-8"
   else if Text.endsWith ".json" path then "application/json"
   else if Text.endsWith ".css" path then "text/css"
-  else if Text.endsWith ".js" path then "text/javascript"
+  else if Text.endsWith ".js" path || Text.endsWith ".mjs" path then "text/javascript"
   else if Text.endsWith ".svg" path then "image/svg+xml"
   else "text/plain; charset=utf-8"
 

@@ -1,3 +1,7 @@
+(entry "c3fa452f17ed59a1b0205041f951de241ee2fb9899e65cc616b57248d1afdf80" "task: open 729ad2b4 Apply the explorer inbox every 15 minutes once the Worker is deployed with its GitHub secrets (D85)" "claude")
+(entry "44e512757f18aa52b52860c12cbfb9749685f265ff94e28ec9c06381c3b9d539" "close d2328509 by #0f3089d483" "claude")
+(entry "0f3089d48330f15504bc954c0d4db78df6dce370b7d957f1080128dba85e197c" "the explorer's live console, deus explore --console (D84)" "claude")
+(entry "78c160790ea0f6046a0c5b36f25520f7d5a51c931869a96156a417938300d82c" "history: import 209 changes" "")
 (entry "17d48b3b3ea4451b5618f5a881e4d521c7c97ffa46e1cc9255163b6b91769c2d" "history: import 206 changes" "claude")
 (entry "cad965875af9ca2a9682ac9c6f6df4bc4d84cd2d0b42fab1fb10632b637f2aa5" "task: import from tasks.sexp" "")
 (entry "3b25b5f78f5fec40fd2b5ad7d498fad7cdf645b25aa9f00a9e56af5562f2e800" "add code specs" "")

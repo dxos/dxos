@@ -72,6 +72,16 @@ From Dmytro. Depends on P8 (b09507db): files must be regenerable from the codeba
 
 From Dmytro. A Codebase ability (find, view, add, update, mv, task ops) handled by the CLI under eval, so an agent scripts edits in DEUS instead of chaining CLI calls.
 
+## Apply the explorer inbox every 15 minutes once the Worker is deployed with its GitHub secrets (D85) (`729ad2b4`)
+
+- state: todo
+- priority: medium
+- assignee: claude
+- labels: explorer, writing
+- parent: 861438d2
+
+Routine: deus inbox, then deus push, which refreshes the site. Waits on Dmytro's OAuth app and wrangler secrets; publishing to the public bucket needs his named approval.
+
 ## Character literals print as numbers ('"' becomes 34) (`0d21d8d5`)
 
 - state: todo
@@ -87,15 +97,6 @@ Lexer turns a character literal into an int token; keep the form as a note-like 
 - priority: medium
 - assignee: claude
 - labels: wasm, perf, embedding
-
-## Explorer: a live console that runs eval, view and test against the site's codebase in the page (wasm kernel + seed + codebase snapshot, about 900 KB gzipped) (`d2328509`)
-
-- state: todo
-- priority: medium
-- assignee: claude
-- labels: explorer, browser, wasm
-
-deus explore could ship deus_kernel.wasm, the seed and a JSON snapshot of the codebase directory; platform/browser/playground.mjs --codebase shows the shape. A definition card could get Run and Eval.
 
 ## Native: a C runtime for Text, maps and the other primitives, ported from the Rust kernel (`72a1f2fb`)
 
@@ -467,6 +468,16 @@ From docs/spec/README.md, Known divergences.
 - labels: kernel, embedding
 
 Dmytro asked whether builtins should be proper URIs. D68, eaafb41d.
+
+## Explorer: a live console that runs eval, view and test against the site's codebase in the page (wasm kernel + seed + codebase snapshot, about 900 KB gzipped) (`d2328509`)
+
+- state: done
+- priority: medium
+- assignee: claude
+- labels: explorer, browser, wasm
+- links change #0f3089d483
+
+deus explore could ship deus_kernel.wasm, the seed and a JSON snapshot of the codebase directory; platform/browser/playground.mjs --codebase shows the shape. A definition card could get Run and Eval.
 
 ## One specification per format under docs/spec (`1a316e76`)
 
