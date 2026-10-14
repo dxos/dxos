@@ -72,6 +72,15 @@ From Dmytro. Depends on P8 (b09507db): files must be regenerable from the codeba
 
 From Dmytro. A Codebase ability (find, view, add, update, mv, task ops) handled by the CLI under eval, so an agent scripts edits in DEUS instead of chaining CLI calls.
 
+## A req can name TypeScript tests as evidence (vitest file and test name), so the toolchain-wide view round trip stops being a gap (`a2da28e2`)
+
+- state: todo
+- priority: medium
+- assignee: claude
+- labels: mdl, spec
+
+Gap R-8 in docs/spec/COMPILE.mdl.
+
 ## Apply the explorer inbox every 15 minutes once the Worker is deployed with its GitHub secrets (D85) (`729ad2b4`)
 
 - state: todo
@@ -82,12 +91,44 @@ From Dmytro. A Codebase ability (find, view, add, update, mv, task ops) handled 
 
 Routine: deus inbox, then deus push, which refreshes the site. Waits on Dmytro's OAuth app and wrangler secrets; publishing to the public bucket needs his named approval.
 
+## Checked specs for the remaining subsystems: lexer and parser, types, prover and check, tasks, replicate, update, image, wasm and C back ends (`1ab6c044`)
+
+- state: todo
+- priority: medium
+- assignee: claude
+- labels: dogfood, spec
+
+## Custom generators for by test laws, declared next to the law, instead of hand-built inputs (Codebase.Spec.dotted, Bindings.Spec.crowded) (`1cbfdd30`)
+
+- state: todo
+- priority: medium
+- assignee: claude
+- labels: mdl, spec, prover
+
+Raised by the bindings thread too (D87): random Text almost never collides.
+
 ## Embedding kernel re-reads the whole image on every deus_start (about 60 ms for the seed): keep a loaded image and call entries on it (`d780de91`)
 
 - state: todo
 - priority: medium
 - assignee: claude
 - labels: wasm, perf, embedding
+
+## Laws for task, comment and history-record merges, and for add/update refusing layer crossings (`823f7b83`)
+
+- state: todo
+- priority: medium
+- assignee: claude
+- labels: spec, codebase
+
+Known gaps R-10 and R-12 in docs/spec/CODEBASE-STORE.mdl.
+
+## MDL extensions see the document's name, so tests can point back at requirements (@[req "Doc.R-1"]) and deus mdl can list tests no requirement names (`6a3b0ebe`)
+
+- state: todo
+- priority: medium
+- assignee: claude
+- labels: mdl, spec
 
 ## Native: 32-bit values with a tag bit in wasm built through C (halve block size) (`38603468`)
 
@@ -139,6 +180,15 @@ D90 widens values to 64 bits so blocks and integers can be told apart in wasm32;
 - priority: medium
 - labels: perf
 - links `Array.set` (#b3d7fa0dc1)
+
+## Theorem view prints P -> Q as prim "implies" (P) (Q) (`4f7f9e40`)
+
+- state: todo
+- priority: medium
+- assignee: claude
+- labels: bug, print
+
+Found writing law statements (D91): deus view Sort.insertSorted.
 
 ## Type ascriptions are erased before checking; a row on a definition without binders is not checked (`a03fdfb6`)
 
@@ -203,6 +253,13 @@ Follow-up of db71c327: a parameter or result of function type is skipped. A TS c
 
 Follow-up of 207cac21: a parameter or result of function type is skipped. A TS callback could cross as a handle the kernel calls back through an ability; a DEUS closure as a handle TS can apply. Needs an embedding-ABI extension (functions only leave the kernel today, as {"$fn":true}).
 
+## deus mdl --coverage: public definitions no api block names, and tests or theorems no req names (`908495a0`)
+
+- state: todo
+- priority: medium
+- assignee: claude
+- labels: mdl, spec
+
 ## wasm: structural equality on constructed values (`186feaf2`)
 
 - state: todo
@@ -211,6 +268,13 @@ Follow-up of 207cac21: a parameter or result of function type is skipped. A TS c
 - labels: wasm
 
 D69 refuses == on data; generate per-type compare functions from the type objects so it compiles.
+
+## BINDINGS.mdl: turn the requirements table into req blocks so deus mdl checks its evidence links (`b4d7a440`)
+
+- state: todo
+- priority: low
+- assignee: claude
+- labels: mdl, spec, interop
 
 ## Browser page: keep the in-memory file system in IndexedDB so a playground codebase survives a reload (`62be7dc4`)
 
@@ -242,6 +306,15 @@ From docs/spec/README.md, Known divergences.
 - links `Ts.definition` (#e5f668ab9e)
 
 > claude: Filed by the TS-like dialect thread (D70).
+
+## Type display names a type by its IRI's tail (task:Task) instead of its name (Task) (`f6a2c2ff`)
+
+- state: todo
+- priority: low
+- assignee: claude
+- labels: bug, types
+
+Found writing api blocks (D91): deus view Export.taskMarkdown shows task:Task -> Text.
 
 ## TypeScript bindings: run in-process on the TypeScript kernel too (`353444f7`)
 
@@ -276,6 +349,13 @@ Follow-up of db71c327: bindings run on the wasm kernel only. The TS kernel (src/
 - priority: low
 - assignee: claude
 - labels: browser, perf, kernel
+
+## law statement: compare compiled propositions instead of printed text, so any spelling of the claim is accepted (`0d7b0142`)
+
+- state: todo
+- priority: low
+- assignee: claude
+- labels: mdl, spec
 
 ## Back up the codebase to GitHub as text (`0c53d3bd`)
 
@@ -330,6 +410,16 @@ Dmytro: one of the most impactful things you can do rn is a really good codebase
 - links change #cf0f719d6e
 
 Dmytro: one of the most impactful things you can do rn is a really good codebase ui, take unison as gold standard, check your work yourself. Also fixes builtin pages (#Bool) returning 404 and bucket uploads sending .js/.css as text/plain.
+
+## Dogfood the spec process: .mdl spec, then APIs and laws, then code, proofs and tests; backfill the toolchain's subsystems (`6ffdc230`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: dogfood, spec, mdl
+- links change #10e77371ec
+
+From Dmytro: how much of .mdl are you dogfooding? the general process should be mdl spec > apis + theorems > impls and proofs and tests. maybe backfill this for existing code and keep using this process as you go, eval it. See docs/SPEC-PROCESS.md (D92).
 
 ## Embed DEUS in browser apps on the wasm kernel: deus build --browser, an in-memory IO host, the toolchain as a playground (`3b617154`)
 

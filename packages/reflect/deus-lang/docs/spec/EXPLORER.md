@@ -112,7 +112,7 @@ In `deps` and `users`, `name` is the hash's name in the namespace, or `#` and it
 it has none.
 
 `html` uses `<span class=K>` around each run of kind `K`: `kw` (keyword), `ty` (a capitalized name), `str`
-(a string literal) and `cm` (a comment). Plain text is unwrapped. `&`, `<`, `>` and `"` are escaped. A name
+(a string literal) and `cm` (a comment). Plain text is unwrapped. `&`, `<` and `>` are escaped; `"` is not, since it is safe in text and the app inserts the HTML as content. A name
 that refers to one of `deps` is wrapped in `<a class=ref data-open="d:<hash>">…</a>`.
 
 `verdict` is the text of `<codebase>/results/<hash>` with surrounding whitespace removed: an S-expression
@@ -275,7 +275,7 @@ secrets `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` (a GitHub OAuth app whose cal
 
 ## Report
 
-A signed-in member's Report button (or `r`) files a task about what they are looking at ([D92](../DECISIONS.md)).
+A signed-in member's Report button (or `r`) files a task about what they are looking at ([D93](../DECISIONS.md)).
 The app first draws the page as it is into a PNG with no permission prompt: it clones the DOM, keeps each
 scrolled element's offset and each field's typed text, pins the current theme's tokens, and renders the
 clone with `app.css` inside an SVG `foreignObject` onto a canvas (at most 2× device pixels). Where the

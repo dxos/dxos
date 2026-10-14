@@ -302,13 +302,16 @@ inductive Map k v where
   | node (height : Int) (left : Map k v) (key : k) (value : v) (right : Map k v)
 
 /-- What an extension may ask of the toolchain about the codebase the document is checked against.
-  All take DEUS source: `cost` is the machine steps an expression takes to evaluate, `holds`
-  whether a `Bool` expression is true, and `run` the value of a `Text` expression. A compile error
-  or a defect is an `err`. -/
+  `cost`, `holds` and `run` take DEUS source: `cost` is the machine steps an expression takes to
+  evaluate, `holds` whether a `Bool` expression is true, and `run` the value of a `Text`
+  expression. `describe` takes a name and returns what the codebase knows about it as properties
+  (`kind`, `type`, `view`, and for tests and theorems `verdict` and `evidence`). A compile error,
+  a missing name or a defect is an `err`. -/
 ability MdlHost @"urn:deus:mdl:Host" where
   cost : Text -> Result Text Int
   holds : Text -> Result Text Bool
   run : Text -> Result Text Text
+  describe : Text -> Result Text (List (Text, Text))
 
 /-- Metrics: a counter adds to its total; a gauge records a current value. -/
 ability Metrics where
