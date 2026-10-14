@@ -14,9 +14,9 @@ import { runServiceCall } from '@dxos/protocols';
  */
 export const createRpcBlobStore = (rpc: ClientServicesRpc, runtime: EffectContext.Context<never>): BlobStore => ({
   put: (key, data, options) =>
-    runServiceCall(runtime, rpc['BlobStoreService.put']({ key, data, contentType: options?.contentType })),
+    runServiceCall(runtime, rpc, 'BlobStoreService.put', { key, data, contentType: options?.contentType }),
 
-  get: async (key) => (await runServiceCall(runtime, rpc['BlobStoreService.get']({ key }))).blob,
+  get: async (key) => (await runServiceCall(runtime, rpc, 'BlobStoreService.get', { key })).blob,
 
-  has: async (key) => (await runServiceCall(runtime, rpc['BlobStoreService.has']({ key }))).exists,
+  has: async (key) => (await runServiceCall(runtime, rpc, 'BlobStoreService.has', { key })).exists,
 });
