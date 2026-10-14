@@ -15,9 +15,9 @@ const ACTORS = 'urn:deus:web:Actors';
 const ALARM = 'urn:deus:web:Alarm';
 const REQUEST = 'urn:deus:web:Request';
 const RESPONSE = 'urn:deus:web:Response';
-const IO = '#IO';
-const none = { $: '#Option', tag: 0, fields: [] };
-const some = (value) => ({ $: '#Option', tag: 1, fields: [value] });
+const IO = 'urn:deus:builtin:IO';
+const none = { $: 'urn:deus:builtin:Option', tag: 0, fields: [] };
+const some = (value) => ({ $: 'urn:deus:builtin:Option', tag: 1, fields: [value] });
 
 // Idle kernels. A run suspended on an operation keeps its kernel, and another run (this object's
 // or, on one isolate, another object's) may start meanwhile, so each run takes its own.

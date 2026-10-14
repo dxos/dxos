@@ -193,7 +193,8 @@ Mutable cells (`Ref`, `MutMap`) are not rolled back when a continuation is resum
 ## Builtin identities
 
 A type or ability whose IRI starts with `#` is a builtin. Its hash is its IRI, and the kernels construct and match
-these values themselves, so the tags below are fixed.
+these values themselves, so the tags below are fixed. Outside Core (embedding results, values as JSON)
+a builtin `#Name` is written `urn:deus:builtin:Name` ([D68](../DECISIONS.md)).
 
 | Identity                   | Kind    | Constructors or operations, by tag / index |
 | -------------------------- | ------- | ------------------------------------------ |

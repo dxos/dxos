@@ -228,3 +228,8 @@ perhaps add an alarm to remind you of that every 30 minutes
 ---
 
 - \* one of the most impactful things you can do rn is a really good codebase ui, take unison as gold standard, check your work yourself
+
+---
+
+- > defect trace holds definition hashes (or the #… names of builtins),
+  > sgould builtins also be proper uris?

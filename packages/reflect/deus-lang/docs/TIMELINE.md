@@ -75,6 +75,7 @@ stage. The table is regenerated from `git log` with every commit.
 | 67  | 10-14 18:11 | 5m 00s         | `b0a392d6`  | one specification per format under docs/spec (another thread)                                                                                                                           |
 | 68  | 10-14 18:14 | 3m 00s         | `06d2ecb3`  | merge the specs into the QA branch                                                                                                                                                      |
 | 69  | 10-14 18:20 | 6m 00s         | `ae7f678e`  | ordinary comments kept as metadata on Core, so view and export keep them (P8, D66)                                                                                                      |
-| 70  | 10-14 18:28 | 8m 00s         | this commit | string escapes round-trip; export keeps attributes, specs and the project; restores keep history (D67)                                                                                  |
+| 70  | 10-14 18:28 | 8m 00s         | `82bd7590`  | string escapes round-trip; export keeps attributes, specs and the project; restores keep history (D67)                                                                                  |
+| 71  | 10-14 18:32 | 4m 00s         | this commit | builtins are URIs at the embedding boundary: urn:deus:builtin:IO (D68, the user's question)                                                                                             |
 
-Total from stage 1 to stage 70: 8h 45m.
+Total from stage 1 to stage 71: 8h 49m.
