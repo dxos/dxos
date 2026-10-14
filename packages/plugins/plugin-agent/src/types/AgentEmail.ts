@@ -18,7 +18,7 @@ export const DEFAULT_ALLOWED_SENDERS: readonly string[] = ['braneframe.com', 'dx
 export const Properties = Schema.Struct({
   handle: Schema.String.annotate({
     title: 'Address',
-    description: 'The part before the @: `kai` receives mail for kai@dx.pub.',
+    description: 'The part before the @: `kai` receives mail for kai@dxos.ai.',
   }),
   displayName: Schema.optional(
     Schema.String.annotate({

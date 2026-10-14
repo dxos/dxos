@@ -26,7 +26,7 @@ class MockEdgeHttpClient extends EdgeHttpClient {
   }
 }
 
-const STATUS = { handle: 'kai', address: 'kai@dx.pub', threads: 0, pending: 0, received: 0, rejected: 0, sent: 0 };
+const STATUS = { handle: 'kai', address: 'kai@dxos.ai', threads: 0, pending: 0, received: 0, rejected: 0, sent: 0 };
 
 describe('EDGE agent mailbox', () => {
   it.effect('claims, reads and releases through the mailbox route', ({ expect }) =>

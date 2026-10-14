@@ -11,7 +11,7 @@ import * as Schema from 'effect/Schema';
 import { BaseError } from '@dxos/errors';
 
 /**
- * Agent mailboxes on EDGE: a handle (`kai` for `kai@dx.pub`) bound to the agent that answers its mail. The email
+ * Agent mailboxes on EDGE: a handle (`kai` for `kai@dxos.ai`) bound to the agent that answers its mail. The email
  * channel backend works through {@link AgentMailboxService}; where it reaches EDGE is the layer's business.
  */
 

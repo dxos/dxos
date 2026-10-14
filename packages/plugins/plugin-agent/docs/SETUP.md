@@ -140,13 +140,15 @@ Then, in Composer at `http://localhost:5282`:
 
 1. Open the agent → **Activity**, add a channel, and pick **Email**. Set the address (`kai`), a
    display name, and the allowed senders (empty means `braneframe.com` and `dxos.org`).
-2. Open the channel's properties and press **Connect**. The panel shows `kai@dx.pub` with its thread
-   and message counts; "taken" means another space holds the handle.
-3. Mail `kai@dx.pub` from an allowed address. The reply arrives in the same thread, and each new
+2. Open the channel's properties and press **Connect**. Against dev EDGE the panel shows
+   `kai@dev.dxos.ai` with its thread and message counts; "taken" means another space holds the handle.
+3. Mail `kai@dev.dxos.ai` from an allowed address. The reply arrives in the same thread, and each new
    email thread is its own chat under the agent.
 
-The `dx.pub` catch-all routes to the dev compute-service, so this works against dev EDGE. Mail
-handling lives in edge's `compute-service/src/email/`; its README covers the Cloudflare setup.
+Each EDGE env has its own domain: `dxos.ai` in production, `preview.dxos.ai`, and `dev.dxos.ai`.
+Cloudflare allows a catch-all only on the apex, so on dev and preview **Connect** also makes EDGE add
+a routing rule for that one address; mail sent before the handle is claimed bounces. Mail handling
+lives in edge's `compute-service/src/email/`; its README covers the Cloudflare setup.
 
 ## Without Discord or a model key
 
