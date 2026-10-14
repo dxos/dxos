@@ -1,0 +1,39 @@
+{
+  "name": "@dxos/deus-lang",
+  "version": "0.14.0",
+  "private": true,
+  "description": "DEUS — a content-addressed, effect-typed language with proofs and specs; the compiler, CLI and codebase manager are written in DEUS and run on a small TypeScript kernel.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "info@dxos.org",
+  "sideEffects": false,
+  "type": "module",
+  "bin": {
+    "deus": "./bin/deus.mjs"
+  },
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/lib/index.mjs"
+    }
+  },
+  "files": [
+    "bin",
+    "deus",
+    "dist",
+    "docs",
+    "seed",
+    "src"
+  ],
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}
