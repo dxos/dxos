@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-// The runtime of generated TypeScript bindings (`deus bindings`, D78). `deus bindings` copies this
+// The runtime of generated TypeScript bindings (`deus bindings`, D80). `deus bindings` copies this
 // file next to the module it writes, so the output needs nothing from this package: it drives the
 // embeddable wasm kernel (docs/spec/EMBEDDING.md) and converts values with the codecs below.
 

@@ -1,5 +1,5 @@
 /-
-  `deus bindings` (D78): a TypeScript module for a namespace, so TypeScript code can call DEUS
+  `deus bindings` (D80): a TypeScript module for a namespace, so TypeScript code can call DEUS
   functions with TypeScript values and answer the abilities they perform. The module embeds an
   image of the exported functions, types every value that crosses, and converts it to and from
   the embedding's JSON encoding (docs/spec/EMBEDDING.md) with generated codecs; it runs on the

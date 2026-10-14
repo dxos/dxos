@@ -517,7 +517,14 @@ def fullLog (dir : Text) (limit : Int) : {IO, Throw Text} List (Text, Text, Text
     match pair with
     | (h, c) => (h, c.message, Option.getOr (producedBy dir h) "")) live
   let imported := List.concatMap (fun pair => if Text.isEmpty (snd pair).prior then [] else Codebase.recordEntries dir (snd pair).prior) live
-  List.take limit (own ++ imported)
+  -- Records repeat the changes they share (D79), the root `init` included; the oldest position stays.
+  let rec unique entries seen acc :=
+    match entries with
+    | [] => List.reverse acc
+    | entry :: rest =>
+      match entry with
+      | (h, _, _) => if Set.contains h seen then unique rest seen acc else unique rest (Set.insert h seen) (entry :: acc)
+  List.take limit (List.reverse (unique (List.reverse (own ++ imported)) Set.empty []))
 
 def log (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
@@ -1012,7 +1019,7 @@ def build (args : Args) : {IO, Throw Text} Unit :=
   | _ => throw "usage: deus build <term> -o <file>"
 
 /--
-  `deus bindings <prefix|name…> -o <dir> [--name stem]` (D78): a TypeScript module for the
+  `deus bindings <prefix|name…> -o <dir> [--name stem]` (D80): a TypeScript module for the
   functions under the prefixes, `<dir>/<stem>.ts`, with the runtime and the wasm kernel it loads.
 -/
 def bindings (args : Args) : {IO, Throw Text} Unit :=

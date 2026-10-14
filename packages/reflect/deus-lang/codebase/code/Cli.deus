@@ -93,7 +93,7 @@ def Cli.baseName (path : Text) : Text :=
   let dot := indexOf file "." 0
   if dot > 0 then Text.take dot file else file
 
-/-- `deus bindings <prefix|name…> -o <dir> [--name stem]` (D78): a TypeScript module for the
+/-- `deus bindings <prefix|name…> -o <dir> [--name stem]` (D80): a TypeScript module for the
   functions under the prefixes, `<dir>/<stem>.ts`, with the runtime and the wasm kernel it loads. -/
 def Cli.bindings (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
@@ -434,7 +434,14 @@ def Cli.fullLog (dir : Text) (limit : Int) : {IO, Throw Text} List (Text, (Text,
   let imported := concatMap
     (fun pair => if Text.isEmpty (snd pair).prior then [] else recordEntries dir (snd pair).prior)
     live
-  List.take limit (own ++ imported)
+  -- Records repeat the changes they share (D79), the root `init` included; the oldest position stays.
+  let rec unique entries seen acc :=
+    match entries with
+    | [] => reverse acc
+    | entry :: rest =>
+        match entry with
+        | (h, _, _) => if Set.contains h seen then unique rest seen acc else unique rest (Set.insert h seen) (entry :: acc)
+  List.take limit (reverse (unique (reverse (own ++ imported)) Map.empty []))
 
 --
 -- Commands: documents.

@@ -1,46 +1,36 @@
 # History of main
 
-- `6bf2adb8ab` delete Geometry.Color Geometry.Log Geometry.Point Geometry.Point.x Geometry.Point.y Geometry.Shape Geometry.Tree Geometry.area Geometry.firstOf Geometry.greet Geometry.insert Geometry.lookup Geometry.mean Geometry.move Geometry.paint Geometry.ratio Geometry.sorted Geometry.stats Geometry.total
-- `45a408e0d4` task: open eea32f23 TypeScript bindings: run in-process on the TypeScript kernel too
-- `24083cded2` task: open de710f29 TypeScript bindings: pass functions across (callbacks and closures)
-- `17759b3b47` task: open 091e43c0 TypeScript bindings: export polymorphic functions with codec parameters
-- `e18c04f0fa` task: comment on db71c327 (by claude)
-- `e05dcb4087` close db71c327 by #c564461f42 (by claude)
-- `c564461f42` deus bindings: typed TypeScript modules for a namespace, on the wasm kernel (D79) (by claude)
-- `28ea0c91cd` task: set db71c327 state (by claude)
-- `5eab0fe7ba` task: open db71c327 TypeScript interop: generate typed TypeScript bindings for DEUS namespaces
-- `9ba4d92091` history: import 146 changes
-- `073671715e` task: import 47 tasks
-- `c648f7f874` add code specs
-- `67c7d5a614` init
-- `e2e0fc6622` task: open 62be7dc4 Browser page: keep the in-memory file system in IndexedDB so a playground codebase survives a reload (by claude)
-- `18416c6fa0` task: open 6e4360bd TypeScript kernel in the browser: its JIT runs eval about 1.4x faster than the wasm kernel; needs a synchronous sha256 and an injectable host (no node: imports) (by claude)
-- `4831107b4d` task: open d780de91 Embedding kernel re-reads the whole image on every deus_start (about 60 ms for the seed): keep a loaded image and call entries on it (by claude)
-- `e9736e3585` task: open d2328509 Explorer: a live console that runs eval, view and test against the site's codebase in the page (wasm kernel + seed + codebase snapshot, about 900 KB gzipped) (by claude)
-- `5ffb35ed9a` close 3b617154 by #96cf462d73 (by claude)
-- `96cf462d73` deus build --browser: a static page running an image on the wasm kernel with an in-memory file system (D78) (by claude)
-- `86f256e943` task: set 3b617154 state (by claude)
-- `a476baf0f1` task: open 3b617154 Embed DEUS in browser apps on the wasm kernel: deus build --browser, an in-memory IO host, the toolchain as a playground (by claude)
-- `24bf075943` history: import 134 changes
-- `a1aac3aaba` task: import 42 tasks
-- `a613239c2d` add code specs
-- `67c7d5a614` init
-- `3f2d90ae51` close b2166fc8 by #21fbd2e94f (by claude)
-- `21fbd2e94f` codebase: catch up with the toolchain sources, including the codebase UI (by claude)
-- `e11ebf252d` task: set b2166fc8 priority assignee labels details
-- `3f860ada05` task: open b2166fc8 Bring the codebase up to date with the toolchain sources; the export had raw hashes (by claude)
-- `3475042833` history: import 126 changes
-- `be0842c2ee` task: import 41 tasks
-- `2ab0189bcb` add /tmp/claude-0/-home-claude-dxos/9f10d708-cc29-559d-a814-8f86a4793dbc/scratchpad/code4 /home/claude/dxos/packages/reflect/deus-lang/codebase/specs
-- `67c7d5a614` init
-- `d2411251ec` task: set a7a44f7d details (by claude)
-- `aeb5c2cd43` delete Replicate.collect Replicate.recent Codebase.nsFromSexp Codebase.nsToSexp
-- `dccc4c2683` close a7a44f7d by #a37df20cc0 (by claude)
-- `a37df20cc0` codebase: namespace-tree snapshots, deus migrate, full history on the remote (D72-D74) (by claude)
-- `ae188264ee` history: import 118 changes
-- `aa8672c1cf` task: import 39 tasks
-- `a289e87b7a` add code specs
-- `67c7d5a614` init
+- `f55f8efcd0` task: open e69b5384 TypeScript bindings: run in-process on the TypeScript kernel too (by claude)
+- `ba9706cb05` task: open ef597118 TypeScript bindings: pass functions across (callbacks and closures)
+- `24786018c1` task: open e84ff062 TypeScript bindings: export polymorphic functions with codec parameters
+- `45a72f0783` task: comment on 207cac21 (by claude)
+- `312532e1eb` close 207cac21 by #e6755a8eeb (by claude)
+- `e6755a8eeb` deus bindings: typed TypeScript modules for a namespace, on the wasm kernel (D80) (by claude)
+- `8d944ac3a0` task: set 207cac21 state (by claude)
+- `6e72aa4658` task: open 207cac21 TypeScript interop: generate typed TypeScript bindings for DEUS namespaces
+- `ee0d3f4cf3` history: import 163 changes
+- `ec9395650d` task: import from tasks.sexp
+- `299d342e26` add code specs
+- `a70f6a17ad` export: a task missing from the file or at a past version is unchanged there (D79) (by claude)
+- `334f503cf8` task: link 2bbc3445 to #fa20112443 (by claude)
+- `f157773921` task: set 2bbc3445 state (by claude)
+- `a9a106ca2d` task: import from /tmp/claude-0/-home-claude-dxos/d20e2f05-5ad2-50ea-b41e-2bdf64f6c191/scratchpad/repair/tasks.sexp
+- `ae6d9689f5` export: merge 11 changes from codebase
+- `78780510c3` export: merge tasks from codebase
+- `0b6f989667` merge #13952's branch: deus build --browser (D78) with the export merge (D79) (by claude)
+- `e630b09568` log: a change shared by several records keeps its oldest position (D78) (by claude)
+- `1b03a289c4` task: set a7a44f7d state details (by claude)
+- `b8e5ff6f29` export: merge 14 changes from codebase
+- `c87fd4be9f` export: merge tasks from codebase
+- `4a55fae398` close a93aee73 by #8159bef4fa (by claude)
+- `8159bef4fa` export: merge tasks and history from other codebases (D78) (by claude)
+- `cac5611fdc` task: open a93aee73 Exports from several containers overwrite each other's history and tasks (by claude)
+- `8f8f989872` task: comment on b8b3aab7 (by claude)
+- `67fa289311` task: set b8b3aab7 state (by claude)
+- `cb694883a2` task: open b8b3aab7 codebase/ export has a raw #ebad142960 reference the parser rejects, so it cannot be restored (by claude)
+- `09d81923ca` export names unnamed callees (D77); Text.fromCodes surrogate pairs (D76) (by claude)
+- `bfe27e468c` close 2bbc3445 by #fa20112443 (by claude)
+- `fa20112443` Text.fromCodes encodes code points above U+FFFF as surrogate pairs (D72) (by claude)
 - `d5df8ec2b7` task: comment on be4c4645 (by claude)
 - `3153eb0b41` task: comment on 9428f054 (by claude)
 - `4c3293900d` task: comment on 861438d2 (by claude)
@@ -90,6 +80,31 @@
 - `7453b3a1b7` task: import 18 tasks
 - `bff1b8d98b` add code
 - `67c7d5a614` init
+- `e2e0fc6622` task: open 62be7dc4 Browser page: keep the in-memory file system in IndexedDB so a playground codebase survives a reload (by claude)
+- `18416c6fa0` task: open 6e4360bd TypeScript kernel in the browser: its JIT runs eval about 1.4x faster than the wasm kernel; needs a synchronous sha256 and an injectable host (no node: imports) (by claude)
+- `4831107b4d` task: open d780de91 Embedding kernel re-reads the whole image on every deus_start (about 60 ms for the seed): keep a loaded image and call entries on it (by claude)
+- `e9736e3585` task: open d2328509 Explorer: a live console that runs eval, view and test against the site's codebase in the page (wasm kernel + seed + codebase snapshot, about 900 KB gzipped) (by claude)
+- `5ffb35ed9a` close 3b617154 by #96cf462d73 (by claude)
+- `96cf462d73` deus build --browser: a static page running an image on the wasm kernel with an in-memory file system (D78) (by claude)
+- `86f256e943` task: set 3b617154 state (by claude)
+- `a476baf0f1` task: open 3b617154 Embed DEUS in browser apps on the wasm kernel: deus build --browser, an in-memory IO host, the toolchain as a playground (by claude)
+- `24bf075943` history: import 134 changes
+- `a1aac3aaba` task: import 42 tasks
+- `a613239c2d` add code specs
+- `3f2d90ae51` close b2166fc8 by #21fbd2e94f (by claude)
+- `21fbd2e94f` codebase: catch up with the toolchain sources, including the codebase UI (by claude)
+- `e11ebf252d` task: set b2166fc8 priority assignee labels details
+- `3f860ada05` task: open b2166fc8 Bring the codebase up to date with the toolchain sources; the export had raw hashes (by claude)
+- `3475042833` history: import 126 changes
+- `be0842c2ee` task: import 41 tasks
+- `2ab0189bcb` add /tmp/claude-0/-home-claude-dxos/9f10d708-cc29-559d-a814-8f86a4793dbc/scratchpad/code4 /home/claude/dxos/packages/reflect/deus-lang/codebase/specs
+- `d2411251ec` task: set a7a44f7d details (by claude)
+- `aeb5c2cd43` delete Replicate.collect Replicate.recent Codebase.nsFromSexp Codebase.nsToSexp
+- `dccc4c2683` close a7a44f7d by #a37df20cc0 (by claude)
+- `a37df20cc0` codebase: namespace-tree snapshots, deus migrate, full history on the remote (D72-D74) (by claude)
+- `ae188264ee` history: import 118 changes
+- `aa8672c1cf` task: import 39 tasks
+- `a289e87b7a` add code specs
 - `5ed10805c0` task: comment on b09507db (by claude)
 - `5764357299` json: escape copies unescaped runs whole; explorer reads each object once (by claude)
 - `461d3e955c` explorer: one walk for every task's history, metadata read once (by claude)

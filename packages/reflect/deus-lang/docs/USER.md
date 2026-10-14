@@ -271,3 +271,7 @@ as git, we should be able to keep entire code history without trimming, artifact
 - explore embedding deus into browser apps via wasm (like codenase viewer for example)
 - explore interop with ts and generating typescript binding types
 - explore native compilation (llvm?) -- whats the best perf we can get
+
+---
+
+- have thread chew through other open tasks

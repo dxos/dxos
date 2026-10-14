@@ -86,15 +86,6 @@ deus explore could ship deus_kernel.wasm, the seed and a JSON snapshot of the co
 
 From docs/spec/README.md, Known divergences.
 
-## Text.fromCodes loses the high bits of code points above U+FFFF in the TypeScript kernel (`2bbc3445`)
-
-- state: todo
-- priority: medium
-- assignee: claude
-- labels: bug, kernel, spec
-
-From docs/spec/README.md, Known divergences.
-
 ## Type ascriptions are erased before checking; a row on a definition without binders is not checked (`a03fdfb6`)
 
 - state: todo
@@ -104,23 +95,23 @@ From docs/spec/README.md, Known divergences.
 
 From docs/spec/README.md, Known divergences.
 
-## TypeScript bindings: export polymorphic functions with codec parameters (`091e43c0`)
+## TypeScript bindings: export polymorphic functions with codec parameters (`e84ff062`)
 
 - state: todo
 - priority: medium
 - assignee: claude
 - labels: interop, typescript
 
-Follow-up of db71c327: a function generic in a (firstOf : List a -> Option a) is skipped today. Export it as a generic TS function that takes the codec of each type variable, as generic types already do.
+Follow-up of 207cac21: a function generic in a (firstOf : List a -> Option a) is skipped today. Export it as a generic TS function that takes the codec of each type variable, as generic types already do.
 
-## TypeScript bindings: pass functions across (callbacks and closures) (`de710f29`)
+## TypeScript bindings: pass functions across (callbacks and closures) (`ef597118`)
 
 - state: todo
 - priority: medium
 - assignee: claude
 - labels: interop, typescript
 
-Follow-up of db71c327: a parameter or result of function type is skipped. A TS callback could cross as a handle the kernel calls back through an ability; a DEUS closure as a handle TS can apply. Needs an embedding-ABI extension (EMBEDDING.md has {"$fn":true} output only).
+Follow-up of 207cac21: a parameter or result of function type is skipped. A TS callback could cross as a handle the kernel calls back through an ability; a DEUS closure as a handle TS can apply. Needs an embedding-ABI extension (functions only leave the kernel today, as {"$fn":true}).
 
 ## wasm: structural equality on constructed values (`186feaf2`)
 
@@ -156,14 +147,14 @@ From docs/spec/README.md, Known divergences.
 
 > claude: Filed by the TS-like dialect thread (D70).
 
-## TypeScript bindings: run in-process on the TypeScript kernel too (`eea32f23`)
+## TypeScript bindings: run in-process on the TypeScript kernel too (`e69b5384`)
 
 - state: todo
 - priority: low
 - assignee: claude
 - labels: interop, typescript
 
-Follow-up of db71c327: bindings run on the wasm kernel only. The TS kernel (src/kernel) would give synchronous calls with no wasm, but its host handler cannot suspend a run for an async TS handler.
+Follow-up of 207cac21: bindings run on the wasm kernel only. The TS kernel (src/kernel) would give synchronous calls with no wasm, but its host handler cannot suspend a run for an async TS handler.
 
 ## TypeScript kernel in the browser: its JIT runs eval about 1.4x faster than the wasm kernel; needs a synchronous sha256 and an injectable host (no node: imports) (`6e4360bd`)
 
@@ -232,6 +223,16 @@ Dmytro: explore embedding deus into browser apps via wasm (like codebase viewer 
 - labels: review, explorer
 - links `Explorer.generate` (#c3e00dc212)
 
+## Exports from several containers overwrite each other's history and tasks (`a93aee73`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: dogfood, export, replication
+- links change #8159bef4fa
+
+Each thread exports codebase/ from its own ~/.deus, so the last export wins: history.sexp loses the other containers' entries, and tasks.sexp reverts tasks another container changed. Needed: fullLog dedup by causal hash plus importing codebase/history.sexp before export, and a field-wise task merge on import (Tasks.merge exists for branches).
+
 ## Keep ordinary comments, so the codebase can be the source of truth for the toolchain (`b09507db`)
 
 - state: done
@@ -294,17 +295,28 @@ A fresh container restored codebase/ (deus add code; task import) and got one ne
 
 From docs/spec/README.md, Known divergences.
 
-## TypeScript interop: generate typed TypeScript bindings for DEUS namespaces (`db71c327`)
+## TypeScript interop: generate typed TypeScript bindings for DEUS namespaces (`207cac21`)
 
 - state: done
 - priority: high
 - assignee: claude
 - labels: interop, typescript
-- links change #c564461f42
+- links change #e6755a8eeb
 
 From Dmytro: explore interop with ts and generating typescript binding types.
 
-> claude: Done (D79): deus bindings <prefix> -o <dir> writes <stem>.ts (types, codecs, handler types, an embedded image), deus-runtime.ts and deus_kernel.wasm. TypeScript calls DEUS functions; DEUS calls TypeScript by performing abilities the TS handlers answer. Tested by src/bindings/bindings.test.ts on examples/geometry.deus, strict tsc included.
+> claude: Done (D80): deus bindings <prefix> -o <dir> writes <stem>.ts (types, codecs, handler types, an embedded image), deus-runtime.ts and deus_kernel.wasm. TypeScript calls DEUS functions; DEUS calls TypeScript by performing abilities the TS handlers answer. Tested by src/bindings/bindings.test.ts on examples/geometry.deus, strict tsc included.
+
+## codebase/ export has a raw #ebad142960 reference the parser rejects, so it cannot be restored (`b8b3aab7`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: bug, dogfood, export
+
+Reported by the explorer thread on #13952's branch (code/Cli.deus line 45). The printer writes unnamed references as #hash.
+
+> claude: The explorer thread repaired the committed export (62a3bad2, its task b2166fc8). The exporter now names unnamed callees Unnamed.h<hash> (D77), with a round-trip test, so it cannot write #hash references again.
 
 ## deus export drops attributes, .mdl specs, the project file and some doc comments (`5fe4c8b1`)
 
@@ -394,6 +406,16 @@ Done by the Format spec docs thread in b0a392d6: CORE, CODEBASE-STORE, CODEBASE-
 view of 1061 definitions plus update of all of them; profile which half dominates.
 
 > claude: view built a printer per definition; sharing one took viewing 1061 definitions from 45 s to 2 s, output identical.
+
+## Text.fromCodes loses the high bits of code points above U+FFFF in the TypeScript kernel (`2bbc3445`)
+
+- state: done
+- priority: medium
+- assignee: claude
+- labels: bug, kernel, spec
+- links change #fa20112443
+
+From docs/spec/README.md, Known divergences.
 
 ## deus explore is quadratic in names: aliases scan the whole namespace per definition (`a75452c4`)
 

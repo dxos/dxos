@@ -138,11 +138,14 @@ def read (dir : Text) (h : Text) : {IO, Throw Text} Task :=
 --
 
 /-- The tasks snapshot of a history node: task id -> task hash. -/
-def snapshotOf (dir : Text) (c : Causal) : {IO, Throw Text} Map Text Text :=
-  if Text.isEmpty c.tasks then Map.empty
+def snapshotOf (dir : Text) (c : Causal) : {IO, Throw Text} Map Text Text := snapshotAt dir c.tasks
+
+/-- A tasks snapshot by its hash, as id -> task object hash; `""` is no tasks. -/
+def snapshotAt (dir : Text) (h : Text) : {IO, Throw Text} Map Text Text :=
+  if Text.isEmpty h then Map.empty
   else
-    match Codebase.readObject dir c.tasks with
-    | none => throw ("missing tasks snapshot #" ++ c.tasks)
+    match Codebase.readObject dir h with
+    | none => throw ("missing tasks snapshot #" ++ h)
     | some form =>
       Map.fromList (List.map (fun item =>
         match Sexp.args item with
@@ -277,6 +280,16 @@ def histories (dir : Text) (limit : Int) : {IO, Throw Text} Map Text (List (Text
   List.foldl (fun m change =>
     List.foldl (fun m2 id => Map.insert id (fst change :: Option.getOr (Map.lookup id m2) []) m2) m (snd change)) Map.empty
     (walk (Codebase.headOf dir (Codebase.currentBranch dir)) limit [])
+
+/-- Every task object the branch's first-parent history has held, the current ones included. -/
+def pastVersions (dir : Text) : {IO, Throw Text} Map Text Unit :=
+  let rec walk h seen acc :=
+    let node := Codebase.readCausal dir h
+    let acc2 := if Set.contains node.tasks seen then acc else List.foldl (fun a pair => Set.insert (snd pair) a) acc (Map.toList (snapshotOf dir node))
+    match Codebase.parentsOf dir h with
+    | [] => acc2
+    | p :: _ => walk p (Set.insert node.tasks seen) acc2
+  walk (Codebase.headOf dir (Codebase.currentBranch dir)) Set.empty Set.empty
 
 /-- Changes that rebound a name. -/
 def historyOfName (dir : Text) (name : Text) (limit : Int) : {IO, Throw Text} List (Text, Causal) :=
