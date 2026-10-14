@@ -2,6 +2,5 @@
 [toolchain]
 channel = "1.93.0"
 profile = "minimal"
-components = ["rustfmt", "clippy"]
 # The wasm kernels: WASI (scripts/wasm-seed.sh) and the embeddable one (embed/).
 targets = ["wasm32-wasip1", "wasm32-unknown-unknown"]

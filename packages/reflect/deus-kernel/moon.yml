@@ -3,8 +3,18 @@ layer: library
 language: rust
 
 tasks:
+  # Installs what rust-toolchain.toml adds to CI's toolchain (the wasm targets) once; the cargo
+  # tasks run in parallel, and concurrent rustup installs race on the same download.
+  toolchain:
+    command: bash -c 'rustup toolchain install --no-self-update || rustup show'
+    inputs:
+      - rust-toolchain.toml
+    options:
+      cache: false
   cargo-build:
     command: cargo build --release
+    deps:
+      - toolchain
     inputs:
       - src/**/*.rs
       - Cargo.toml
@@ -14,6 +24,8 @@ tasks:
       - target/release/deus-kernel
   cargo-test:
     command: cargo test
+    deps:
+      - toolchain
     inputs:
       - src/**/*.rs
       - tests/**/*.rs
@@ -24,6 +36,8 @@ tasks:
       - /packages/reflect/deus-lang/seed/deus.image
   wasm-test:
     command: bash scripts/wasm-seed.sh
+    deps:
+      - toolchain
     inputs:
       - src/**/*.rs
       - wasi/*.mjs
@@ -36,6 +50,8 @@ tasks:
       - /packages/reflect/deus-lang/seed/deus.image
   embed-test:
     command: bash -c 'cargo build --release --target wasm32-unknown-unknown --lib --quiet && node --test embed/kernel.test.mjs'
+    deps:
+      - toolchain
     inputs:
       - src/**/*.rs
       - embed/*.mjs
