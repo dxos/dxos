@@ -82,4 +82,16 @@ describe('formatRawFact', () => {
     expect(trig).not.toContain('@prefix');
     expect(TRIG_PREFIXES).toContain('@prefix dx: <https://dxos.org/ontology/>.');
   });
+
+  test('indents graph bodies, spaces terminators and separates blocks', ({ expect }) => {
+    const trig = formatRawFact(STORED_FACT);
+    const lines = trig.split('\n');
+    const body = lines.slice(1, lines.indexOf('}'));
+    expect(body.length).toBeGreaterThan(0);
+    expect(body.every((line) => line.startsWith('  '))).toBe(true);
+    expect(body.at(-1)).toMatch(/ \.$/);
+    expect(lines.filter((line) => line.endsWith(';')).every((line) => line.endsWith(' ;'))).toBe(true);
+    expect(trig).toMatch(/^}\n\n/m);
+    expect(new Parser({ format: 'application/trig' }).parse(`${TRIG_PREFIXES}\n${trig}`).length).toBeGreaterThan(0);
+  });
 });

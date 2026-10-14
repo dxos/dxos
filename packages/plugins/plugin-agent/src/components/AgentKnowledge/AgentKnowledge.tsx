@@ -23,6 +23,7 @@ import { type Goal, type Knowledge } from '#types';
 
 import { MEMORY_ICONS } from '../ProfileGraph/index.ts';
 import { TRIG_PREFIXES, formatRawFact } from './trig.ts';
+import { TurtleSnippet } from './TurtleSnippet.tsx';
 
 //
 // Root
@@ -280,16 +281,15 @@ const AgentKnowledgeFacts = ({ facts, now }: AgentKnowledgeFactsProps) => {
                       <Typography.Timestamp date={fact.saidAt} now={now} />
                     </Listbox.ItemDescription>
                     {raw && fact.fact && (
-                      <pre
+                      <TurtleSnippet
                         data-place='full'
                         data-testid='agent-knowledge-fact-raw'
-                        className='m-0 p-2 overflow-x-auto whitespace-pre text-xs font-mono text-fg-muted select-text cursor-text'
+                        className='p-2 overflow-x-auto text-xs select-text cursor-text'
                         // The row's own press handlers select the row and cancel the drag that selects text.
                         onMouseDown={(event) => event.stopPropagation()}
                         onClick={(event) => event.stopPropagation()}
-                      >
-                        {formatRawFact(fact.fact)}
-                      </pre>
+                        source={formatRawFact(fact.fact)}
+                      />
                     )}
                   </Listbox.Item>
                 ))}
