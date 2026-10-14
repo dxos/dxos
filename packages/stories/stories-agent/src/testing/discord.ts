@@ -66,7 +66,27 @@ export const setupAgent = async ({ db, invoker, remote = false }: SetupAgentProp
   if (remote && seeded) {
     void seedSupportFacts({ db, invoker, agent, remote });
   }
+  await attachChannels(db, agent, [await ensureEmailChannel(db)]);
   return agent;
+};
+
+/** Adds the channels the agent's channel list does not hold yet, creating the list if it has none. */
+const attachChannels = async (db: Database.Database, agent: Agent.Agent, channels: Channel.Channel[]) => {
+  const list = (await db.query(Filter.type(AgentChannels.AgentChannels)).run()).find(
+    (list) => Obj.getParent(list)?.id === agent.id,
+  );
+  if (!list) {
+    db.add(AgentChannels.make({ agent, channels }));
+  } else {
+    const held = new Set((await Promise.all(list.channels.map((ref) => ref.load()))).map(({ id }) => id));
+    const missing = channels.filter(({ id }) => !held.has(id));
+    if (missing.length > 0) {
+      Obj.update(list, (list) => {
+        list.channels = [...list.channels, ...missing.map((added) => Ref.make(added))];
+      });
+    }
+  }
+  await db.flush({ indexes: true });
 };
 
 /**
@@ -115,23 +135,7 @@ export const setupDiscordAgent = async ({
     });
   }
 
-  const email = await ensureEmailChannel(db);
-  const list = (await db.query(Filter.type(AgentChannels.AgentChannels)).run()).find(
-    (list) => Obj.getParent(list)?.id === agent.id,
-  );
-  if (!list) {
-    db.add(AgentChannels.make({ agent, channels: [channel, email] }));
-  } else {
-    const held = new Set((await Promise.all(list.channels.map((ref) => ref.load()))).map(({ id }) => id));
-    const missing = [channel, email].filter(({ id }) => !held.has(id));
-    if (missing.length > 0) {
-      Obj.update(list, (list) => {
-        list.channels = [...list.channels, ...missing.map((added) => Ref.make(added))];
-      });
-    }
-  }
-
-  await db.flush({ indexes: true });
+  await attachChannels(db, agent, [channel]);
   return { agent, channel };
 };
 
