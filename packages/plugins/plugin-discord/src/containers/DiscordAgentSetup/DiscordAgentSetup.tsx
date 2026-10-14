@@ -13,6 +13,7 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { EID } from '@dxos/keys';
 import { Connection } from '@dxos/link';
 import * as ConnectorCoordination from '@dxos/plugin-connector/ConnectorCoordination';
+import { useConfig } from '@dxos/react-client';
 import * as Button from '@dxos/react-ui/Button';
 import * as Fieldset from '@dxos/react-ui/Fieldset';
 import * as UiHooks from '@dxos/react-ui/Hooks';
@@ -22,7 +23,7 @@ import { DiscordChannelForm, DiscordSetup } from '#components';
 import { meta } from '#meta';
 import { DiscordAdminOperation, DiscordChannel } from '#types';
 
-import { DISCORD_USER_PROVIDER_ID } from '../../constants.ts';
+import { DISCORD_USER_PROVIDER_ID, edgeConsoleUrl } from '../../constants.ts';
 
 /**
  * The permissions Kai asks for when installed: view, send, read history, create public threads, send in threads, and
@@ -197,6 +198,9 @@ export const DiscordAgentSetup = ({ role, agent, attendableId }: DiscordAgentSet
     [managed, installed],
   );
 
+  const config = useConfig();
+  const consoleUrl = edgeConsoleUrl(config.values.runtime?.services?.edge?.url);
+
   return (
     <DiscordSetup.Root
       role={role}
@@ -209,6 +213,7 @@ export const DiscordAgentSetup = ({ role, agent, attendableId }: DiscordAgentSet
           onConnect={handleConnect}
           onSignOut={handleSignOut}
           onRefresh={handleRefresh}
+          consoleUrl={consoleUrl}
         />
       }
     >

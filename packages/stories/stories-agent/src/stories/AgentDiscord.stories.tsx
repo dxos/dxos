@@ -42,13 +42,13 @@ const meta: Meta<StoryArgs> = {
 
 export default meta;
 
-type Story = StoryObj<StoryArgs>;
-
 const companion = (variant: string) => ({
   type: StoryRole.AgentCompanion,
   data: { variant },
   id: `companion-${variant}`,
 });
+
+type Story = StoryObj<StoryArgs>;
 
 /**
  * Installing the DXOS Discord app (Kai) and routing a Discord channel to the agent, in a durable test space on a
