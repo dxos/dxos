@@ -8,6 +8,7 @@ import * as Chat from '@dxos/assistant/Chat';
 import { type Database, Filter, Obj, Ref } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';
 import * as AgentChannels from '@dxos/plugin-agent/AgentChannels';
+import * as AgentEmail from '@dxos/plugin-agent/AgentEmail';
 import * as AgentOperation from '@dxos/plugin-agent/AgentOperation';
 import * as ModeOperation from '@dxos/plugin-agent/ModeOperation';
 import * as DiscordChannel from '@dxos/plugin-discord/DiscordChannel';
@@ -36,6 +37,9 @@ export type DiscordBotArgs = {
 };
 
 export const DISCORD_CHANNEL_NAME = 'Discord';
+
+/** The agent's email address on EDGE's agent domain: `kai@dx.pub` on dev. */
+export const EMAIL_HANDLE = 'kai';
 
 /** The mode the agent works in on the community channel; each Discord thread's chat inherits its skills. */
 export const SUPPORT_MODE = 'Support';
@@ -111,15 +115,20 @@ export const setupDiscordAgent = async ({
     });
   }
 
+  const email = await ensureEmailChannel(db);
   const list = (await db.query(Filter.type(AgentChannels.AgentChannels)).run()).find(
     (list) => Obj.getParent(list)?.id === agent.id,
   );
   if (!list) {
-    db.add(AgentChannels.make({ agent, channels: [channel] }));
-  } else if (!(await Promise.all(list.channels.map((ref) => ref.load()))).some(({ id }) => id === channel.id)) {
-    Obj.update(list, (list) => {
-      list.channels = [...list.channels, Ref.make(channel)];
-    });
+    db.add(AgentChannels.make({ agent, channels: [channel, email] }));
+  } else {
+    const held = new Set((await Promise.all(list.channels.map((ref) => ref.load()))).map(({ id }) => id));
+    const missing = [channel, email].filter(({ id }) => !held.has(id));
+    if (missing.length > 0) {
+      Obj.update(list, (list) => {
+        list.channels = [...list.channels, ...missing.map((added) => Ref.make(added))];
+      });
+    }
   }
 
   await db.flush({ indexes: true });
@@ -191,6 +200,28 @@ const ensureChannel = async (db: Database.Database) => {
         config: DiscordChannel.make({ accessToken: Ref.make(accessToken), applicationId: '', channels: [] }),
       },
     }),
+  );
+};
+
+/**
+ * The agent's email channel, unconnected: its properties' Connect claims the address on EDGE, which the story leaves
+ * to the user since a handle is held by one space at a time.
+ */
+const ensureEmailChannel = async (db: Database.Database): Promise<Channel.Channel> => {
+  const existing = (await db.query(Filter.type(Channel.Channel)).run()).find(
+    (channel) => channel.backend.kind === AgentEmail.BACKEND_KIND,
+  );
+  return (
+    existing ??
+    db.add(
+      Channel.make({
+        name: 'Email',
+        backend: {
+          kind: AgentEmail.BACKEND_KIND,
+          config: AgentEmail.make({ handle: EMAIL_HANDLE, displayName: AGENT_NAME }),
+        },
+      }),
+    )
   );
 };
 
