@@ -69,14 +69,6 @@ From Dmytro. Measure it against share.unison-lang.org: search, navigation, depen
 
 > claude: The Codebase explorer UI thread built a Unison-style UI (finder, namespace pages, definition and change cards, keyboard), verified with Playwright; merging into #13952 from PR #13975. It also fixes the builtin page 404 and the content types.
 
-## Toolchain R2 codebase mistypes pattern variables: deus update of a match on some g fails there (`c62198a1`)
-
-- state: todo
-- priority: high
-- labels: codebase, bug
-
-In a codebase pulled from origin.main #102beac5d7, deus add of 'def tt (h : Text) (xs : List Int) : Int := match List.head? xs with | some g => g + 1 | none => 0' fails with 'type mismatch: Int vs List Int'; it adds cleanly to a fresh init and to a restore of the git export. Updating deus/cgen.deus fails the same way at CGen.binders. Until fixed, threads update from the git export and cannot push to R2.
-
 ## Type checker hangs on a type error in a large recursive group or a closed-row callback instead of reporting it (`1854b55d`)
 
 - state: todo
@@ -779,6 +771,17 @@ After a restore, History showed only init, add code specs, task import and histo
 - links change #e7f95e998b
 
 From docs/spec/README.md, Known divergences.
+
+## Toolchain R2 codebase mistypes pattern variables: deus update of a match on some g fails there (`c62198a1`)
+
+- state: done
+- priority: high
+- labels: codebase, bug
+- links change #1883dc98b6
+
+In a codebase pulled from origin.main #102beac5d7, deus add of 'def tt (h : Text) (xs : List Int) : Int := match List.head? xs with | some g => g + 1 | none => 0' fails with 'type mismatch: Int vs List Int'; it adds cleanly to a fresh init and to a restore of the git export. Updating deus/cgen.deus fails the same way at CGen.binders. Until fixed, threads update from the git export and cannot push to R2.
+
+> claude: Cause: bundles never carried the builtin objects (#List, #Option…), so a pulled store had none and the checker typed every constructor pattern as unknown, binding no subpattern and shifting later variables onto earlier slots. Fixed in D112: closureOf adds the builtins, import accepts one only as a declaration of its own identity where none is held, and unknown constructors bind every subpattern. The R2 remote now holds the builtins.
 
 ## TypeScript interop: generate typed TypeScript bindings for DEUS namespaces (`17d50ae5`)
 

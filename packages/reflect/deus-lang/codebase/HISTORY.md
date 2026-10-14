@@ -1,5 +1,12 @@
 # History of main
 
+- `00911c2f8b` task: comment on c62198a1 (by claude)
+- `ef3d1009b4` task: set c62198a1 state (by claude)
+- `c2c2882e4b` task: link c62198a1 to #1883dc98b6
+- `1883dc98b6` builtin objects travel in bundles; unknown constructors still bind every pattern variable (D112) (by claude)
+- `08d609da41` history: import 632 changes
+- `4f330f0e82` task: import from tasks.sexp
+- `64516ee1c5` merge #13952's branch: explorer events (D110), C closures (D111) (by claude)
 - `e5816f8806` task: open c62198a1 Toolchain R2 codebase mistypes pattern variables: deus update of a match on some g fails there (by claude)
 - `d4da286202` close 610b2785 by #0ab73f8ca1 (by claude)
 - `0ab73f8ca1` C back end: closures, partial application and lambda-lifted letrec (D111) (by claude)
