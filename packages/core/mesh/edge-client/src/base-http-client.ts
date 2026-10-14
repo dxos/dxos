@@ -172,7 +172,6 @@ export abstract class BaseHttpClient {
           ) {
             return undefined as T;
           }
-          // Never cloned: WebKit never frees a cloned body whose other branch goes unread.
           const body = await response.json();
           if (typeof body !== 'object' || body === null) {
             return body;

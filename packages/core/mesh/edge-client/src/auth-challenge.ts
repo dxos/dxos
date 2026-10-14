@@ -4,13 +4,15 @@
 
 import { toBinary } from '@bufbuild/protobuf';
 import { base64Decode } from '@bufbuild/protobuf/wire';
+import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { EdgeClientTooOldError } from '@dxos/protocols';
 import { PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { assertClientSupported, clientVersionHeaders } from './client-version.ts';
+import { assertClientSupported, clientVersionHeaders, readJsonBody } from './client-version.ts';
 import { type EdgeIdentity } from './edge-identity.ts';
 
 /**
@@ -131,28 +133,8 @@ const splitOutsideQuotes = (header: string): string[] => {
  * - `401` with `WWW-Authenticate` — every protected resource, plus older servers whose `/auth`
  *   could only issue a challenge by failing.
  */
-export const readAuthChallenge = async (response: Response): Promise<string | undefined> => {
-  const headerChallenge = parseChallengeHeader(response.headers.get('WWW-Authenticate'));
-  return headerChallenge ?? (response.ok ? bodyChallenge(await readJson(response.clone())) : undefined);
-};
-
-/** `value[key]` when `value` is an object; a JSON body's shape is not known until it is read. */
-const field = (value: unknown, key: string): unknown =>
-  typeof value === 'object' && value !== null ? Reflect.get(value, key) : undefined;
-
-const bodyChallenge = (body: unknown): string | undefined => {
-  const challenge = field(field(body, 'data'), 'challenge') ?? field(body, 'challenge');
-  return typeof challenge === 'string' && challenge.length > 0 ? challenge : undefined;
-};
-
-const readJson = async (response: Response): Promise<unknown> => {
-  try {
-    return await response.json();
-  } catch (error) {
-    log.verbose('auth challenge response was not JSON', { error });
-    return undefined;
-  }
-};
+export const readAuthChallenge = async (response: Response): Promise<string | undefined> =>
+  challengeInfoOf(response, response.ok ? await readJsonBody(response.clone()) : undefined)?.challenge;
 
 export type AuthChallengeInfo = {
   /** Base64 challenge nonce. */
@@ -162,6 +144,29 @@ export type AuthChallengeInfo = {
    * only refresh signal is the eventual 401.
    */
   expiresInMs?: number;
+};
+
+const decodeChallengeBody = Schema.decodeUnknownOption(
+  Schema.Struct({
+    data: Schema.optional(
+      Schema.Struct({ challenge: Schema.optional(Schema.String), expiresInMs: Schema.optional(Schema.Number) }),
+    ),
+    challenge: Schema.optional(Schema.String),
+  }),
+);
+
+const challengeInfoOf = (response: Response, body: unknown): AuthChallengeInfo | undefined => {
+  const decoded = Option.getOrUndefined(decodeChallengeBody(body));
+  const challenge =
+    parseChallengeHeader(response.headers.get('WWW-Authenticate')) ?? (decoded?.data?.challenge || decoded?.challenge);
+  if (!challenge) {
+    return undefined;
+  }
+  const advertised = decoded?.data?.expiresInMs;
+  // Finite-positive only: `1e400` parses to `Infinity`, which would schedule a refresh at never.
+  const expiresInMs =
+    advertised !== undefined && Number.isFinite(advertised) && advertised > 0 ? advertised : undefined;
+  return { challenge, expiresInMs };
 };
 
 /**
@@ -178,19 +183,13 @@ export type AuthChallengeInfo = {
 export const fetchAuthChallengeInfo = async (baseHttpUrl: string | URL): Promise<AuthChallengeInfo | undefined> => {
   try {
     const response = await fetch(new URL('/auth', baseHttpUrl), { headers: clientVersionHeaders() });
-    await assertClientSupported(response);
-    // Read once for both the challenge and its TTL; a 401 fallback has no body to read a TTL from.
-    const body = response.ok ? await readJson(response) : undefined;
-    const challenge = parseChallengeHeader(response.headers.get('WWW-Authenticate')) ?? bodyChallenge(body);
-    if (!challenge) {
+    const body = await readJsonBody(response);
+    assertClientSupported(response, body);
+    const info = challengeInfoOf(response, response.ok ? body : undefined);
+    if (!info) {
       log.verbose('no challenge in /auth response', { status: response.status });
-      return undefined;
     }
-    const advertised = field(field(body, 'data'), 'expiresInMs');
-    // Finite-positive only: `1e400` parses to `Infinity`, which would schedule a refresh at never.
-    const expiresInMs =
-      typeof advertised === 'number' && Number.isFinite(advertised) && advertised > 0 ? advertised : undefined;
-    return { challenge, expiresInMs };
+    return info;
   } catch (error) {
     if (error instanceof EdgeClientTooOldError) {
       throw error;
