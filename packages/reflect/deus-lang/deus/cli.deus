@@ -491,6 +491,19 @@ def undo (args : Args) : {IO, Throw Text} Unit :=
     output args (fun _ => Json.obj [("causal", Json.str parent)]) (fun _ => "Undid " ++ short head ++ "; now at " ++ short parent ++ ".")
   | [] => throw "nothing to undo"
 
+/--
+  `deus migrate`: rewrites history so every snapshot is a namespace tree (D65). Causal hashes
+  change, so a remote that already holds the old history should be replaced by a new one.
+-/
+def migrate (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  match Codebase.migrate dir with
+  | (nodes, moved) =>
+    let remotes := if IO.isDir (dir ++ "/remotes") then IO.listDir (dir ++ "/remotes") else []
+    let note := if nodes == 0 || List.isEmpty remotes then "" else " Remotes still hold the old history (" ++ Text.join ", " remotes ++ "); push to a new remote to replace them."
+    output args (fun _ => Json.obj [("rewritten", Json.num nodes), ("branches", Json.num moved)])
+      (fun _ => "Rewrote " ++ Int.toText nodes ++ " history nodes; moved " ++ Int.toText moved ++ " branches." ++ note)
+
 /-- `deus layers`: each layer, where it lives, whether it is replicated, and its object count. -/
 def layers (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
@@ -641,7 +654,8 @@ def pull (args : Args) : {IO, Throw Text} Unit :=
 
 /--
   `deus compact [remote] [--level k]`: rewrites history into level-k strata and drops covered
-  bundles. With `--keep n`, collects garbage instead: only n generations from each head survive.
+  bundles. With `--keep n`, collects garbage instead: only n generations from each head survive,
+  as bedrock buckets, level-k strata and a tail (D66).
 -/
 def compact (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
@@ -649,10 +663,10 @@ def compact (args : Args) : {IO, Throw Text} Unit :=
   let level := Option.getOr (Option.bind (option args "level") Int.fromText) 1
   match Option.bind (option args "keep") Int.fromText with
   | some keep =>
-    match withRemote dir name (fun _ => Replicate.collect dir name keep) with
-    | (bundle, deleted, dropped) =>
-      output args (fun _ => Json.obj [("bundle", Json.str bundle), ("deleted", Json.arr (List.map Json.str deleted)), ("dropped", Json.num dropped)])
-        (fun _ => "Kept " ++ Int.toText keep ++ " generations in " ++ bundle ++ "; deleted " ++ Int.toText (List.length deleted) ++ " bundles and " ++ Int.toText dropped ++ " unreachable objects.")
+    match withRemote dir name (fun _ => Replicate.collect dir name keep level) with
+    | (bundles, written, deleted, dropped) =>
+      output args (fun _ => Json.obj [("bundles", Json.arr (List.map Json.str bundles)), ("written", Json.arr (List.map Json.str written)), ("deleted", Json.arr (List.map Json.str deleted)), ("dropped", Json.num dropped)])
+        (fun _ => "Kept " ++ Int.toText keep ++ " generations in " ++ Int.toText (List.length bundles) ++ " bundles (" ++ Int.toText (List.length written) ++ " written); deleted " ++ Int.toText (List.length deleted) ++ " bundles and " ++ Int.toText dropped ++ " unreachable objects.")
   | none =>
     match withRemote dir name (fun _ => Replicate.compact dir name level) with
     | (written, deleted) =>
@@ -1127,6 +1141,7 @@ def usage : Text :=
     "  merge <branch>                       three-way merge into the current branch",
     "  log [--n N] / undo                   history / step the branch back",
     "  layers                               objects per layer (code, tests, proofs, history, results, …)",
+    "  migrate                              rewrite history with namespace-tree snapshots",
     "",
     "projects",
     "  project [init <iri>]                 the project's IRI, libraries and owned subgraph",
@@ -1192,6 +1207,7 @@ def dispatch (argv : List Text) : {IO, Throw Text} Unit :=
     else if command == "merge" then merge args
     else if command == "log" then log args
     else if command == "layers" then layers args
+    else if command == "migrate" then migrate args
     else if command == "project" then project args
     else if command == "lib" then lib args
     else if command == "remote" then remote args

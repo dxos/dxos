@@ -103,13 +103,15 @@ def sync (dir : Text) (remote : Text) : {Remote, IO} List Seen :=
         IO.writeFile path (seenToText s)
         some s) names
 
+/-- The given causal nodes with their snapshots and everything those snapshots' entries reach. -/
+def closureOfNodes (dir : Text) (nodes : Map Text Unit) : {IO, Throw Text} Map Text Unit :=
+  let causals := List.map (fun c => Codebase.readCausal dir c) (Map.keys nodes)
+  let entryRoots := List.concatMap (fun c => Project.rootsOf (Map.toList (Codebase.readNamespace dir c.snapshot))) causals
+  union nodes (Project.reachable dir (List.concatMap Codebase.snapshotsOf causals ++ entryRoots))
+
 /-- Causal nodes, snapshots, and everything their entries reach, from the given heads. -/
 def closureOf (dir : Text) (heads : List Text) : {IO, Throw Text} Map Text Unit :=
-  let nodes := List.foldl (fun acc h => union acc (Codebase.ancestors dir h)) Map.empty heads
-  let causals := List.map (fun c => Codebase.readCausal dir c) (Map.keys nodes)
-  let snapshots := List.map (fun c => c.snapshot) causals
-  let entryRoots := List.concatMap (fun s => Project.rootsOf (Map.toList (Codebase.readNamespace dir s))) snapshots
-  union nodes (Project.reachable dir (List.concatMap Codebase.snapshotsOf causals ++ entryRoots))
+  closureOfNodes dir (List.foldl (fun acc h => union acc (Codebase.ancestors dir h)) Map.empty heads)
 
 /-- The claimed causal nodes for `branch` that no other claim descends from, sorted. -/
 def headsOf (dir : Text) (seen : List Seen) (branch : Text) : {IO, Throw Text} List Text :=
@@ -193,34 +195,83 @@ def recent (dir : Text) (heads : List Text) (depth : Int) : {IO, Throw Text} Lis
     else go (List.concatMap (fun h => Codebase.parentsOf dir h) fresh) (d + 1) seen2
   go heads 0 Map.empty
 
+/-- The ancestors of `heads` (themselves included) that lie inside `within`. -/
+def ancestorsWithin (dir : Text) (within : Map Text Unit) (heads : List Text) : {IO, Throw Text} Map Text Unit :=
+  let rec go work seen :=
+    match work with
+    | [] => seen
+    | x :: rest =>
+      if Set.contains x seen || not (Set.contains x within) then go rest seen
+      else go (Codebase.parentsOf dir x ++ rest) (Set.insert x seen)
+  go heads Set.empty
+
+/-- Objects per bedrock bucket before the bucket splits by one more hex digit. -/
+def bedrockBucket : Int := 2048
+
+/-- Hex digits of hash prefix that split `count` bedrock objects into buckets of at most `bedrockBucket`. -/
+def bedrockDigits (count : Int) : Int :=
+  let rec go digits size := if count <= size then digits else go (digits + 1) (size * 16)
+  go 0 bedrockBucket
+
 /--
-  Garbage collection under a retention policy (D54): keeps the history within `keep` generations
-  of every head, with everything its snapshots reach, as one bundle, and deletes every other
-  bundle. Older history becomes shallow. The result depends only on the heads and `keep`, so
-  clients collecting with the same policy write the same bundle. Returns (bundle, deleted,
-  objects dropped).
+  Garbage collection under a retention policy (D54, D66). It keeps the history within `keep`
+  generations of every head, with everything its snapshots reach, and sorts what it keeps by age:
+
+  - Bedrock (level 99): what the oldest kept snapshots already reach, i.e. definitions older than
+    the window that are still live. It is bucketed by hash prefix, so a definition dying or
+    settling rewrites one bucket, not the whole set.
+  - Strata (level `level`): what each boundary inside the window introduces, as in `compact`.
+  - The tail (level 0): what came after the last boundary, with the head claims.
+
+  It deletes every other bundle. Older history becomes shallow. The result depends only on the
+  heads, `keep` and `level`, so clients collecting with the same policy write the same bundles,
+  and a bundle whose objects did not change keeps its name and is not rewritten. Returns
+  (bundles kept, bundles written, bundles deleted, objects dropped).
 -/
-def collect (dir : Text) (remote : Text) (keep : Int) : {Remote, IO, Throw Text} (Text, List Text, Int) :=
+def collect (dir : Text) (remote : Text) (keep : Int) (level : Int) : {Remote, IO, Throw Text} (List Text, List Text, List Text, Int) :=
   let seen := sync dir remote
   let claims := List.concatMap (fun b => List.map (fun h => (b, h)) (headsOf dir seen b)) (branchesOf seen)
-  let kept := recent dir (List.map snd claims) keep
-  let causals := List.map (fun c => Codebase.readCausal dir c) kept
-  let snapshots := List.map (fun c => c.snapshot) causals
-  let entryRoots := List.concatMap (fun s => Project.rootsOf (Map.toList (Codebase.readNamespace dir s))) snapshots
-  let live := union (Set.fromList kept) (Project.reachable dir (List.concatMap Codebase.snapshotsOf causals ++ entryRoots))
-  let text := bundle dir claims (Map.keys live)
-  let name := nameOf 99 text
-  let existing := List.map (fun s => s.bundleName) seen
-  if List.any (fun n => n == name) existing then ()
-  else
-    Remote.put name text
-    IO.writeFile (seenDir dir remote ++ "/" ++ name) (seenToText (Seen.mk name claims (Map.keys live)))
-  let stale := List.filter (fun s => s.bundleName != name) seen
+  let kept := Set.fromList (recent dir (List.map snd claims) keep)
+  let live := closureOfNodes dir kept
+  -- The window's oldest nodes: some parent fell outside it. Reading the recorded parents, not the
+  -- ones the store has, gives a shallow clone the same frontier as a full one.
+  let frontier := List.filter (fun c => List.any (fun p => not (Set.contains p kept)) (Codebase.readCausal dir c).parents) (Map.keys kept)
+  let frontierNodes := Set.fromList frontier
+  let bedrock := Map.filter (fun h _ => not (Set.contains h kept)) (closureOfNodes dir frontierNodes)
+  let boundaries := List.filter (fun c => isBoundary level c) (Map.keys kept)
+  let strata := List.map (fun b =>
+    let mine := ancestorsWithin dir kept [b]
+    let earlier := List.filter (fun other => other != b && Map.contains other mine) boundaries
+    let before := if List.isEmpty earlier then Map.empty else closureOfNodes dir (ancestorsWithin dir kept earlier)
+    List.filter (fun h => not (Map.contains h before) && not (Map.contains h bedrock)) (Map.keys (closureOfNodes dir mine))) boundaries
+  let layered := union bedrock (Set.fromList (List.concat strata))
+  let tail := List.filter (fun h => not (Map.contains h layered)) (Map.keys live)
+  let digits := bedrockDigits (Map.size bedrock)
+  let buckets := Map.values (List.foldr (fun h m =>
+    let key := Text.take digits h
+    Map.insert key (h :: Option.getOr (Map.lookup key m) []) m) Map.empty (Map.keys bedrock))
+  let planned := List.map (fun hashes => (99, [], hashes)) buckets
+    ++ List.filterMap (fun hashes => if List.isEmpty hashes then none else some (level, [], hashes)) strata
+    ++ (if List.isEmpty claims && List.isEmpty tail then [] else [(0, claims, tail)])
+  let existing := Set.fromList (List.map (fun s => s.bundleName) seen)
+  let written := List.map (fun plan =>
+    match plan with
+    | (lvl, cs, hashes) =>
+      let text := bundle dir cs hashes
+      let name := nameOf lvl text
+      if Set.contains name existing then (name, false)
+      else
+        Remote.put name text
+        IO.writeFile (seenDir dir remote ++ "/" ++ name) (seenToText (Seen.mk name cs hashes))
+        (name, true)) planned
+  let names := Set.fromList (List.map fst written)
+  let stale := List.filter (fun s => not (Set.contains s.bundleName names)) seen
   List.forEach stale (fun s =>
     Remote.delete s.bundleName
     IO.remove (seenDir dir remote ++ "/" ++ s.bundleName))
   let before := Set.fromList (List.concatMap (fun s => s.hashes) seen)
-  (name, List.map (fun s => s.bundleName) stale, List.length (List.filter (fun h => not (Map.contains h live)) (Map.keys before)))
+  (List.sort (List.map fst written), List.filterMap (fun w => if snd w then some (fst w) else none) written,
+    List.map (fun s => s.bundleName) stale, List.length (List.filter (fun h => not (Map.contains h live)) (Map.keys before)))
 
 --
 -- Remotes.

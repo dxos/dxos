@@ -18,9 +18,10 @@
   documents); the derived layers have their own directories, so a
   policy (replicate, delete) is a directory. Code may depend only on code.
 
-  A namespace snapshot maps names to entries. A causal node records a snapshot, its
-  parents, a message and, once there are tasks, a tasks snapshot; a branch is a pointer to a causal node, so history is a DAG and
-  merging two branches is a three-way merge of their snapshots.
+  A namespace snapshot maps names to entries, stored as a tree split at the first dot of each
+  name (D65). A causal node records a snapshot, its parents, a message and, once there are tasks,
+  a tasks snapshot; a branch is a pointer to a causal node, so history is a DAG and merging two
+  branches is a three-way merge of their snapshots.
 -/
 
 namespace Codebase
@@ -107,14 +108,46 @@ def allObjects (dir : Text) : {IO} List Text :=
 -- Namespaces.
 --
 
-def nsToSexp (ns : Map Text Entry) : Sexp :=
-  Sexp.node "ns" (List.map (fun pair => Sexp.node "n" [Sexp.str (fst pair), Entry.toSexp (snd pair)]) (Map.toList ns))
+/-- `List.map` splits into ("List", "map"); a name without an inner dot has no namespace. -/
+def splitName (name : Text) : Option (Text, Text) :=
+  let i := Text.indexOf name "." 1
+  if i < 1 || i + 1 >= Text.length name then none
+  else some (Text.take i name, Text.drop (i + 1) name)
 
-def nsFromSexp (form : Sexp) : Map Text Entry :=
-  Map.fromList (List.map (fun item =>
-    match Sexp.args item with
-    | [name, entry] => (Sexp.asText name, Entry.fromSexp entry)
-    | _ => defect "bad namespace entry") (Sexp.args form))
+/-- Items a namespace node holds before it splits into parts. -/
+def nodeLimit : Int := 64
+
+/--
+  One namespace node over (key, item) pairs in key order. Past `nodeLimit` items it splits into
+  parts by the `depth`-th hex digit of each key's hash, so a wide node (the root, a big namespace)
+  rewrites one part per change, not all of it.
+-/
+def putNode (dir : Text) (items : List (Text, Sexp)) (depth : Int) : {IO} Text :=
+  if List.length items <= nodeLimit || depth >= 64 then put dir (Sexp.node "ns" (List.map snd items))
+  else
+    let buckets := List.foldr (fun item m =>
+      let digit := Text.slice (Text.sha256 (fst item)) depth (depth + 1)
+      Map.insert digit (item :: Option.getOr (Map.lookup digit m) []) m) Map.empty items
+    put dir (Sexp.node "ns" (List.map (fun bucket => Sexp.node "part" [Sexp.str (putNode dir (snd bucket) (depth + 1))]) (Map.toList buckets)))
+
+/--
+  Stores a namespace as a tree split at each name's first dot (D65): `List.map` is `map` in the
+  `List` node, which its parent names by hash, and wide nodes split into parts. Changing one
+  definition rewrites only the nodes on its path, so history grows by the change rather than by
+  the whole namespace. Returns the root hash.
+-/
+def putNamespace (dir : Text) (ns : Map Text Entry) : {IO} Text :=
+  let split := Map.foldr (fun name e acc =>
+    match acc with
+    | (leaves, groups) =>
+      match splitName name with
+      | some (seg, rest) => (leaves, Map.insert seg (Map.insert rest e (Option.getOr (Map.lookup seg groups) Map.empty)) groups)
+      | none => ((name, e) :: leaves, groups)) ([], Map.empty) ns
+  match split with
+  | (leaves, groups) =>
+    let entries := List.map (fun pair => (fst pair, Sexp.node "n" [Sexp.str (fst pair), Entry.toSexp (snd pair)])) leaves
+    let subs := List.map (fun pair => (fst pair, Sexp.node "sub" [Sexp.str (fst pair), Sexp.str (putNamespace dir (snd pair))])) (Map.toList groups)
+    putNode dir (entries ++ subs) 0
 
 /-- A history node: a namespace snapshot, its parents, why it was made, and its tasks snapshot (`""` for none). -/
 structure Causal where
@@ -141,10 +174,87 @@ def readCausal (dir : Text) (h : Text) : {IO, Throw Text} Causal :=
   | some form => causalFromSexp form
   | none => throw ("missing history node #" ++ h)
 
-def readNamespace (dir : Text) (h : Text) : {IO, Throw Text} Map Text Entry :=
+/-- A namespace node's items, with its parts expanded: `(n name entry)` and `(sub segment hash)` forms. -/
+def nodeItems (dir : Text) (h : Text) : {IO, Throw Text} List Sexp :=
   match readObject dir h with
-  | some form => nsFromSexp form
   | none => throw ("missing namespace #" ++ h)
+  | some form =>
+    List.concatMap (fun item =>
+      match item with
+      | Sexp.list [Sexp.sym "part", Sexp.str child] => nodeItems dir child
+      | _ => [item]) (Sexp.args form)
+
+/-- The names under a namespace node, flat (`List.map`); reads tree nodes and older flat snapshots alike. -/
+def readNamespace (dir : Text) (h : Text) : {IO, Throw Text} Map Text Entry :=
+  let rec go prefix node acc :=
+    List.foldl (fun m item =>
+      match item with
+      | Sexp.list [Sexp.sym "sub", Sexp.str seg, Sexp.str child] => go (prefix ++ seg ++ ".") child m
+      | Sexp.list [Sexp.sym "n", name, entry] => Map.insert (prefix ++ Sexp.asText name) (Entry.fromSexp entry) m
+      | _ => defect "bad namespace entry") acc (nodeItems dir node)
+  go "" h Map.empty
+
+/-- One name's entry in a snapshot, reading only the nodes on its path. -/
+def lookupName (dir : Text) (h : Text) (name : Text) : {IO, Throw Text} Option Entry :=
+  let items := nodeItems dir h
+  let entry := List.head? (List.filterMap (fun item =>
+    match item with
+    | Sexp.list [Sexp.sym "n", Sexp.str n, e] => if n == name then some (Entry.fromSexp e) else none
+    | _ => none) items)
+  match (entry, splitName name) with
+  | (some e, _) => some e
+  | (none, some (seg, rest)) =>
+    match List.head? (List.filterMap (fun item =>
+      match item with
+      | Sexp.list [Sexp.sym "sub", Sexp.str s, Sexp.str child] => if s == seg then some child else none
+      | _ => none) items) with
+    | some child => lookupName dir child rest
+    | none => none
+  | (none, none) => none
+
+/--
+  The names whose entries differ between two snapshots (`""` is the empty one), as (name,
+  before, after) in name order. Subtrees with equal hashes are skipped, so the cost follows the
+  change, not the namespace.
+-/
+def diffNamespaces (dir : Text) (a : Text) (b : Text) : {IO, Throw Text} List (Text, Option Entry, Option Entry) :=
+  let index := fun (h : Text) =>
+    if Text.isEmpty h then Map.empty
+    else Map.fromList (List.map (fun item =>
+      match item with
+      | Sexp.list [Sexp.sym "sub", Sexp.str seg, _] => ("s" ++ seg, item)
+      | Sexp.list [Sexp.sym "n", name, _] => ("n" ++ Sexp.asText name, item)
+      | _ => defect "bad namespace entry") (nodeItems dir h))
+  let childOf := fun (item : Option Sexp) =>
+    match item with
+    | some (Sexp.list [_, _, Sexp.str child]) => child
+    | _ => ""
+  let entryOf := fun (item : Sexp) =>
+    match item with
+    | Sexp.list [_, _, e] => Entry.fromSexp e
+    | _ => defect "bad namespace entry"
+  let rec go prefix x y :=
+    if x == y then []
+    else
+      let xs := index x
+      let ys := index y
+      List.concatMap (fun key =>
+        let before := Map.lookup key xs
+        let after := Map.lookup key ys
+        if before == after then []
+        else if Text.startsWith "s" key then go (prefix ++ Text.drop 1 key ++ ".") (childOf before) (childOf after)
+        else [(prefix ++ Text.drop 1 key, Option.map entryOf before, Option.map entryOf after)]) (Set.toList (Set.fromList (Map.keys xs ++ Map.keys ys)))
+  -- A flat snapshot names `List.map` directly and a tree one under `List`, so one name can come
+  -- back twice across the two forms; joining its sides leaves only real changes.
+  let joined := List.foldl (fun m change =>
+    match change with
+    | (name, before, after) =>
+      match Map.lookup name m with
+      | some (b0, a0) => Map.insert name (Option.orElse b0 (fun _ => before), Option.orElse a0 (fun _ => after)) m
+      | none => Map.insert name (before, after) m) Map.empty (go "" a b)
+  List.filterMap (fun pair =>
+    match pair with
+    | (name, (before, after)) => if before == after then none else some (name, before, after)) (Map.toList joined)
 
 --
 -- Branches.
@@ -178,7 +288,7 @@ def commit (dir : Text) (ns : Map Text Entry) (message : Text) : {IO, Throw Text
   let branch := currentBranch dir
   let parent := headOf dir branch
   let previous := readCausal dir parent
-  let snapshot := put dir (nsToSexp ns)
+  let snapshot := putNamespace dir ns
   if snapshot == previous.snapshot then parent
   else
     let c := put dir (causalToSexp (Causal.mk snapshot [parent] message previous.tasks))
@@ -205,7 +315,7 @@ def init (dir : Text) : {IO, Throw Text} Unit :=
     IO.mkdirp (dir ++ "/results")
     IO.mkdirp (dir ++ "/provenance")
     IO.mkdirp (dir ++ "/cache")
-    let snapshot := put dir (nsToSexp Map.empty)
+    let snapshot := putNamespace dir Map.empty
     let c := put dir (causalToSexp (Causal.mk snapshot [] "init" ""))
     setBranch dir "main" c
     IO.writeFile (dir ++ "/HEAD") "main\n"
@@ -301,11 +411,58 @@ def merge (dir : Text) (other : Text) : {IO, Throw Text} MergeResult :=
         else (ns, changed, name :: conflicts)
     match (List.foldl step (oursNs, [], []) names, tasks) with
     | ((ns, changed, []), (merged, [])) =>
-      let snapshot := put dir (nsToSexp ns)
+      let snapshot := putNamespace dir ns
       let c := put dir (causalToSexp (Causal.mk snapshot [ours, theirs] ("merge " ++ other ++ " into " ++ branch) (Tasks.putSnapshot dir merged)))
       setBranch dir branch c
       MergeResult.merged c (List.reverse changed)
     | ((_, _, conflicts), (_, taskConflicts)) => MergeResult.conflicts (List.reverse conflicts ++ taskConflicts)
+
+/-- The causal hashes a task links as changes. -/
+def changeLinks (form : Sexp) : List Text :=
+  match form with
+  | Sexp.list [Sexp.sym "change", Sexp.str h] => [h]
+  | Sexp.list items => List.concatMap changeLinks items
+  | _ => []
+
+/--
+  Rewrites history so every snapshot is a namespace tree (D65). Each causal node is rebuilt after
+  its parents and the changes its tasks link, so links follow the rewrite; branches and provenance
+  follow too. A node already in tree form keeps its hash, so a second run changes nothing. Parents
+  that shallow history lacks stay as they are. Returns (nodes rewritten, branches moved).
+-/
+def migrate (dir : Text) : {IO, Throw Text} (Int, Int) :=
+  let memo := MutMap.new ()
+  let rec node h :=
+    match MutMap.get memo h with
+    | some moved => moved
+    | none =>
+      if not (IO.exists (objectPath dir h)) then h
+      else
+        let c := readCausal dir h
+        let parents := List.map (fun p => node p) c.parents
+        let tasks := Tasks.putSnapshot dir (Map.mapValues (fun task =>
+          match readObject dir task with
+          | none => task
+          | some form =>
+            let links := changeLinks form
+            put dir (rewrite form (Map.fromList (List.map (fun l => (l, node l)) links)))) (Tasks.snapshotOf dir c))
+        let moved := put dir (causalToSexp (Causal.mk (putNamespace dir (readNamespace dir c.snapshot)) parents c.message tasks))
+        MutMap.set memo h moved
+        moved
+  let moves := List.filterMap (fun branch =>
+    let head := headOf dir branch
+    let moved := node head
+    if moved == head then none
+    else
+      setBranch dir branch moved
+      some branch) (branches dir)
+  let rewritten := List.filter (fun h => Option.getOr (MutMap.get memo h) h != h) (MutMap.keys memo)
+  List.forEach rewritten (fun h =>
+    let from := dir ++ "/provenance/" ++ h
+    match IO.readFile from with
+    | some text => IO.writeFile (dir ++ "/provenance/" ++ Option.getOr (MutMap.get memo h) h) text
+    | none => ())
+  (List.length rewritten, List.length moves)
 
 --
 -- Reading definitions.
@@ -337,11 +494,13 @@ def store (dir : Text) (b : Batch) : {IO} Unit :=
   List.forEach b.objects (fun pair => writeObject dir (fst pair) (snd pair))
   List.forEach b.metas (fun pair => writeMeta dir (fst pair) (snd pair))
 
-/-- Hashes the definitions that `form` references (terms and types alike). -/
+/-- Hashes that `form` references: definitions (terms and types alike) and namespace tree nodes. -/
 def dependencies (form : Sexp) : List Text :=
   let rec go x acc :=
     match x with
     | Sexp.list [Sexp.sym "ref", Sexp.str h] => h :: acc
+    | Sexp.list [Sexp.sym "sub", Sexp.str _, Sexp.str h] => h :: acc
+    | Sexp.list [Sexp.sym "part", Sexp.str h] => h :: acc
     | Sexp.list (Sexp.sym "con" :: Sexp.str h :: _) => if Text.startsWith "#" h then acc else h :: acc
     | Sexp.list (Sexp.sym "pcon" :: Sexp.str h :: rest) => List.foldl (fun a y => go y a) (if Text.startsWith "#" h then acc else h :: acc) rest
     | Sexp.list (Sexp.sym "op" :: Sexp.str h :: _) => if Text.startsWith "#" h then acc else h :: acc

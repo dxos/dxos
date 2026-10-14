@@ -60,15 +60,19 @@ def changePage (dir : Text) (causal : Text) : {IO, Throw Text} Json :=
   let before := match Codebase.parentsOf dir causal with
     | p :: _ => Codebase.readCausal dir p
     | [] => Causal.mk "" [] "" ""
-  let nsAfter := Codebase.readNamespace dir node.snapshot
-  let nsBefore := if Text.isEmpty before.snapshot then Map.empty else Codebase.readNamespace dir before.snapshot
-  let visibleNames := fun (ns : Map Text Entry) => List.filter visible (Map.toList ns)
-  let added := List.filter (fun pair => Option.isNone (Map.lookup (fst pair) nsBefore)) (visibleNames nsAfter)
-  let changed := List.filterMap (fun pair =>
-    match Map.lookup (fst pair) nsBefore with
-    | some old => if Entry.hash old == Entry.hash (snd pair) then none else some (fst pair, Entry.hash old, Entry.hash (snd pair))
-    | none => none) (visibleNames nsAfter)
-  let removed := List.filter (fun pair => Option.isNone (Map.lookup (fst pair) nsAfter)) (visibleNames nsBefore)
+  let diff := Codebase.diffNamespaces dir before.snapshot node.snapshot
+  let added := List.filterMap (fun change =>
+    match change with
+    | (name, none, some e) => if visible (name, e) then some (name, e) else none
+    | _ => none) diff
+  let changed := List.filterMap (fun change =>
+    match change with
+    | (name, some old, some new) => if Entry.hash old == Entry.hash new || not (visible (name, new)) then none else some (name, Entry.hash old, Entry.hash new)
+    | _ => none) diff
+  let removed := List.filterMap (fun change =>
+    match change with
+    | (name, some e, none) => if visible (name, e) then some (name, e) else none
+    | _ => none) diff
   let tasksAfter := Tasks.snapshotOf dir node
   let tasksBefore := Tasks.snapshotOf dir before
   let touched := List.filter (fun id => Map.lookup id tasksAfter != Map.lookup id tasksBefore) (Set.toList (Set.fromList (Map.keys tasksAfter ++ Map.keys tasksBefore)))
