@@ -22,6 +22,7 @@ export default defineConfig({
     AgentEmail: 'src/types/AgentEmail.ts',
     AgentMailbox: 'src/types/AgentMailbox.ts',
     AgentOperation: 'src/types/AgentOperation.ts',
+    EmailOperation: 'src/types/EmailOperation.ts',
     AgentCompanion: 'src/types/AgentCompanion.ts',
     BrainService: 'src/types/BrainService.ts',
     BrainSkill: 'src/skills/BrainSkill.ts',

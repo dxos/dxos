@@ -127,6 +127,12 @@
       "DiscordAdminOperation": [
         "dist/types/src/types/DiscordAdminOperation.d.ts"
       ],
+      "DiscordAgentOperation": [
+        "dist/types/src/types/DiscordAgentOperation.d.ts"
+      ],
+      "DiscordBot": [
+        "dist/types/src/types/DiscordBot.d.ts"
+      ],
       "DiscordChannel": [
         "dist/types/src/types/DiscordChannel.d.ts"
       ],

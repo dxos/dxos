@@ -293,6 +293,9 @@
       ],
       "SupportSkill": [
         "dist/types/src/skills/SupportSkill.d.ts"
+      ],
+      "EmailOperation": [
+        "dist/types/src/types/EmailOperation.d.ts"
       ]
     }
   },
