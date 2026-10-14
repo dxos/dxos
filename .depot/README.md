@@ -24,6 +24,16 @@ depot ci run --workflow .depot/workflows/check.yml --job check --ssh-after-step 
 
 `moon` steps in Check carry no `--affected` flag. [`actions/affected`](./actions/affected) works out the scope once per job from the trigger and exports it, and every `moon` step in that job inherits it. Its [README](./actions/affected/README.md) has the base per trigger, how to opt a step out, and how to run the resolver by hand.
 
+## What runs where
+
+On a pull request (ready, or a draft with the `ci` label) and in the merge queue, Check runs the same jobs, scoped by moon's affected set against the trigger's base: `pull_request.base.sha` for a PR, `merge_group.base_sha` for a queue group, so a batched group is scoped to every PR in it. `check` runs the static gates plus `:lint :build :test-types` on what changed, and knip, the production plugin set and the docs bundle unscoped; the node and browser vitest shards start only when an affected project has `test`/`test-workerd` or `test-browser`/`test-storybook` tasks; `memory` only when `echo-client-e2e` is affected; and e2e runs Chromium only, for the affected suites. A change to CI, `.moon`, `patches/` or a root file starts every cell, as does a failed `plan`. A PR run is cancelled by the next push; a merge-queue run never is.
+
+A push to `main` runs no vitest at all, because the merge queue already ran those targets on the same tree. It runs the unscoped `check` gates and build, `boot-budget` (which also trends the boot graph to PostHog), `cli`, and the full e2e suite on Firefox and WebKit, the two browsers the queue skipped. The weekday nightly (04:00 UTC) and a `workflow_dispatch` run everything unscoped on all three browsers; the nightly also files the `report`. So the merge queue is the last gate a unit test passes before `main`, and the only place a cross-PR break in vitest is caught.
+
+## Merge queue
+
+The queue's settings live in the `main` ruleset rather than in this repo, so [`scripts/merge-queue.mjs`](../scripts/merge-queue.mjs) holds them: run it to see the current values against the intended ones, and with `--apply` (admin token) to write them. It batches up to five PRs into one merge group and uses HEADGREEN grouping, so a batch merges when its last entry's run passes. That run is scoped to the whole batch (see above), so one Check run covers up to five PRs instead of one each.
+
 ## Parallel steps
 
 Depot CI runs [steps concurrently](https://depot.dev/docs/ci/how-to-guides/parallel-steps) inside one job with a `parallel:` block, and `sequential:` groups ordered steps inside that. GitHub's syntax has no equivalent. Used where steps are independent and the job is otherwise paying their sum:
@@ -49,9 +59,9 @@ Depot snapshots step outputs, env and `$GITHUB_PATH` per unit and merges them ba
 | `test` | Every vitest flavour: unit, browser, storybook and workerd (`:test`, `:test-browser`, `:test-storybook`, `:test-workerd` via uploader; same workflow triggers as the rest of Check), sharded over 4 runners with `moon exec --job <0-3> --job-total 4` so cells are sized by work rather than by flavour. | `test-results/**/results.xml` |
 | `boot-budget` | `composer-app:check-boot-budget`, the static boot-graph budget over the production bundle, on its own runner because it builds `bundle` and nothing else in the workflow does. On a same-repo PR it also measures the base commit, restoring its report from the remote cache since the task declares it as an output. A separate `boot-budget-comment` job posts the sticky `<!-- boot-budget -->` comment, holds the only `pull-requests: write` grant, and runs no PR-controlled code. Advisory, so only the budget itself gates. | none |
 | `boot-budget-comment` | Posts, updates or deletes the boot-graph sticky comment from `boot-budget`'s outputs. No checkout and no build. It exists so the write token is never in a job that runs branch code. | none |
-| `e2e` | Playwright e2e via uploader, 6 matrix cells: browser (`chromium` / `firefox` / `webkit` via `PLAYWRIGHT_BROWSER`) x shard (`composer` runs `composer-app:e2e` in a dedicated cell; `rest` runs an explicit target list computed by `moon query tasks "task=e2e && project!=composer-app"`, so a new suite joins the pool with no hand-maintained list). DESIGN.md explains why a glob or `moon exec --query` cannot express that list. The job runs only for `main` and `changeset-release/*` refs, or `workflow_dispatch` with `e2e` (see [`check.yml`](./workflows/check.yml)). | `test-results/playwright/report/*.xml` |
+| `e2e` | Playwright e2e via uploader, 6 matrix cells: browser (`chromium` / `firefox` / `webkit` via `PLAYWRIGHT_BROWSER`) x shard (`composer` runs `composer-app:e2e` in a dedicated cell; `rest` runs an explicit target list computed by `moon query tasks "task=e2e && project!=composer-app"`, so a new suite joins the pool with no hand-maintained list). DESIGN.md explains why a glob or `moon exec --query` cannot express that list. Which browsers and suites run per trigger is in [What runs where](#what-runs-where). | `test-results/playwright/report/*.xml` |
 
-The vitest flavours go through Trunk on typical PRs. e2e only does when the `e2e` job runs, which is not on ordinary topic-branch PRs. Exact `moon` commands and `env` are in [`check.yml`](./workflows/check.yml).
+The vitest flavours and the Chromium e2e suites go through Trunk on typical PRs. Exact `moon` commands and `env` are in [`check.yml`](./workflows/check.yml).
 
 Why the matrix is shaped this way, what it intermittently fails on, how to attribute a red cell, and which fixes are already refuted are in the CI project's [`DESIGN.md`](../.agents/projects/ci/DESIGN.md). Two other sharding strategies were measured against this one and rejected; that is recorded there too.
 
