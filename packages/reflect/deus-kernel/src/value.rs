@@ -60,7 +60,7 @@ impl Drop for Con {
     }
 }
 
-/// A version of a persistent array (D95), as in the TypeScript kernel: the newest version owns the
+/// A version of a persistent array (D96), as in the TypeScript kernel: the newest version owns the
 /// items and an older one records the write that separates it from a newer one (Baker's trick).
 /// Reading an old version reroots, reversing the diffs so that version owns the items.
 pub struct Version {
@@ -289,7 +289,7 @@ pub enum Value {
     Cont(Rc<Vec<Frame>>),
     Cell(Rc<RefCell<Value>>),
     Table(Rc<RefCell<Table>>),
-    /// A version of a persistent array (`Array.make`, D95).
+    /// A version of a persistent array (`Array.make`, D96).
     Array(Rc<Version>),
 }
 

@@ -77,7 +77,7 @@ def Cli.addOrUpdate (args : Args) (isUpdate : Bool) : {IO, Throw Text} Unit :=
 def Cli.applyFields (args : Args) (t : Task) : {Throw Text} Task := foldl (fun acc field =>
   match option args field with
   | Option.some value => setField acc field value
-  | Option.none => acc) t Tasks.fields
+  | Option.none => acc) t fields
 
 /-- `deus asset add <file>` (D82): stores a file in the asset store by its SHA-256. -/
 def Cli.asset (args : Args) : {IO, Throw Text} Unit :=
@@ -127,7 +127,7 @@ def Cli.bindings (args : Args) : {IO, Throw Text} Unit :=
           let path := out ++ "/" ++ stem ++ ".js"
           let types := out ++ "/" ++ stem ++ ".d.ts"
           let copied := try (fun _ =>
-            let home := Build.require "DEUS_HOME"
+            let home := require "DEUS_HOME"
             IO.mkdirp out
             IO.writeFile path js
             IO.writeFile types dts
@@ -1254,9 +1254,7 @@ def Cli.task (args : Args) : {IO, Throw Text} Unit :=
             section "Links" (concatMap snd links) ++ section "Subtasks" (List.map (fun c => "  " ++ taskLine c) children) ++ section "Comments" (List.map commentLine t.comments) ++ section "History" (List.map (changeLine dir) history)))
   | "set" :: id :: [] =>
       let t := applyFields args (Tasks.find tasks id)
-      saved
-        t
-        ("task: set " ++ t.id ++ " " ++ join " " (List.filter (fun f => flag args f) Tasks.fields))
+      saved t ("task: set " ++ t.id ++ " " ++ join " " (List.filter (fun f => flag args f) fields))
   | "comment" :: id :: words =>
       let t := Tasks.find tasks id
       saved

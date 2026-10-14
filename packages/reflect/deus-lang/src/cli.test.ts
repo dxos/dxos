@@ -60,7 +60,7 @@ describe('deus CLI', () => {
     expect(add.stderr).toBe('');
     expect(add.code).toBe(0);
     // The checked specs (D92): their laws compile next to the code, and `deus mdl` checks every block.
-    // ARRAY.mdl also cites the aliasing example and a `perf` block (D95).
+    // ARRAY.mdl also cites the aliasing example and a `perf` block (D96).
     const specs = deus(
       'add',
       join(root, 'platform/spec.deus'),
@@ -598,7 +598,7 @@ describe('deus CLI', () => {
     );
     expect(String(call('sortedSum', 300))).toBe(deus('eval', 'sortedSum 300', ...c).stdout.trim());
 
-    // The pure `Array` (D95): compiled code copies where an old array is still read, and writes in
+    // The pure `Array` (D96): compiled code copies where an old array is still read, and writes in
     // place where it is not, so every aliasing case gives the kernel's answer.
     deus('add', join(root, 'examples/aliasing.deus'), ...c);
     expect(String(call('Aliasing.all', 3))).toBe(deus('eval', 'Aliasing.all 3', ...c).stdout.trim());
@@ -645,7 +645,7 @@ describe('deus CLI', () => {
       }
       deus('add', join(root, 'examples/aliasing.deus'), ...c);
       expect(deus('build', 'Aliasing.all', '-o', join(scratch, 'aliasing'), '--c', ...c).code).toBe(0);
-      // Pure `Array.set` (D95) writes in place at a count of one and copies a shared array.
+      // Pure `Array.set` (D96) writes in place at a count of one and copies a shared array.
       const aliasing = spawnSync(join(scratch, 'aliasing'), ['3'], {
         encoding: 'utf8',
         env: { ...process.env, DEUS_HEAP_STATS: '1' },

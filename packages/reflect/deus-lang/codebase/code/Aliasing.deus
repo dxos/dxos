@@ -19,7 +19,7 @@ def Aliasing.earlierArgument (n : Int) : Int :=
 def Aliasing.fillGo (a : Array Int) (i : Int) (n : Int) : Array Int := if i >= n then a else Aliasing.fillGo (Array.set a i i) (i + 1) n
 
 /-
-  Aliasing cases for the pure `Array` (D95, docs/spec/ARRAY.mdl): each keeps an old array alive
+  Aliasing cases for the pure `Array` (D96, docs/spec/ARRAY.mdl): each keeps an old array alive
   while a new one is made from it, in a different way. Every function gives the same number on the
   kernels, in wasm and in C; compiled, `deus/unique.deus` must copy exactly where an old array is
   still read, or the number changes.

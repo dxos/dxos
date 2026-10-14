@@ -341,7 +341,7 @@ def primitive (scope : Scope) (env : List Int) (next : Ref Int) (e : Sexp) (p : 
   | _ => throw ("the primitive " ++ p ++ " is outside the wasm subset")
 
 /--
-  `Array` primitives (D83, D95) on a block `[length, item…]`, and `Ref` on a block `[value]`;
+  `Array` primitives (D83, D96) on a block `[length, item…]`, and `Ref` on a block `[value]`;
   `args` is the code for each argument. An index outside the array, or a negative length, traps.
   `Array.set` copies the block and writes into the copy; `Array.setInPlace` and `Array.copy` come
   from `Unique.rewriteAll`, which proved the array unique or needs a second one. `Ref.set` returns

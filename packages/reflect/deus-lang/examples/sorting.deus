@@ -1,5 +1,5 @@
 /-
-  Sorting with and without mutable memory: the case study behind D83 and D95
+  Sorting with and without mutable memory: the case study behind D83 and D96
   (docs/IMMUTABILITY.md).
 
   Every sort here is first-order and specialised to `Int`, so the same definitions run on the
@@ -134,7 +134,7 @@ def drainGo (acc : List Int) (h : Heap) : List Int :=
 def heapSort (xs : List Int) : List Int := drainGo [] (heapGo Heap.leaf xs)
 
 --
--- 4. Quicksort over the immutable `Array` (D95), threading each new version: written purely, it
+-- 4. Quicksort over the immutable `Array` (D96), threading each new version: written purely, it
 --    runs in place because no old version is used again.
 --
 

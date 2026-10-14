@@ -1,0 +1,162 @@
+---
+id: org.dxos.deus.spec.checking
+name: Checking.Spec
+version: 1.0
+---
+
+# Checked ascriptions and rows
+
+A type written inside a definition is a claim the checker holds the code to ([D95](../DECISIONS.md)). Before
+this, `(e : T)`, `let x : T := …` and a binder `(x : T)` were parsed and dropped, and a row written on a
+definition with no binders (`def x : {} Int := …`) was never attached to anything, so all of them were
+comments the compiler did not read.
+
+Written in the order of the process ([D92](../DECISIONS.md)): requirements, then the APIs and laws, then
+the implementation. The theorems below ran red on the old checker (4 of the first 10 failed) before any of
+it was written. `deus mdl docs/spec/CHECKING.mdl` checks the blocks; `deus check Checking.Spec` runs the
+theorems.
+
+## Extensions
+
+| Term  | URI                     |
+| ----- | ----------------------- |
+| `req` | `org.dxos.deus.req@1.0` |
+| `api` | `org.dxos.deus.api@1.0` |
+| `law` | `org.dxos.deus.law@1.0` |
+
+## APIs
+
+There is no new syntax and no new command. The parser keeps the type: `Expr.ann e T` for `(e : T)` and an
+annotated `let` value, `Pat.ann p T` for a binder. The resolver writes `(ann T e)`, `(ann T p)` in a pattern
+and `(annlocal T e)` under a `lam` whose binder is ascribed; `Resolve.unnote` removes them before hashing,
+as it removes comments (D66) and number spellings (D88), and `Resolve.unmark` keeps them for the checker.
+
+| Form             | Checker rule                                                                                             |
+| ---------------- | -------------------------------------------------------------------------------------------------------- |
+| `(ann T e)`      | `T` is read like a signature, with its own fresh type and row variables; `e` is checked against it, and the result is `T`. |
+| `(ann T p)`      | In a pattern: the scrutinee's type is unified with `T`, then `p` is matched.                             |
+| `(annlocal T e)` | Local 0 is unified with `T`, then `e` is inferred.                                                       |
+
+A definition with no binders whose signature is `(teff (eff …) T)` is checked against `T` in the row the
+braces write, closed unless it names a tail (`{IO | r}`). Without braces the row is fresh, as before.
+
+```mdl
+api A-1: the checker's view of Core
+  signatures:
+  - Resolve.unmark : Sexp -> Sexp
+  - Types.signatureRow : Unifier -> List Sexp -> Ref (Map Text TType) -> Ref (Map Text TRow) -> TRow
+```
+
+## Ascriptions
+
+```mdl
+req R-1: (e : T) is checked; e must have type T and the expression has type T
+  by: Checking.Spec.ascriptionHolds | Checking.Spec.ascriptionMismatch
+```
+
+```mdl
+req R-2: let x : T := v and let f p : T := v check v, for f its body, against T
+  by: Checking.Spec.letAnnotationHolds | Checking.Spec.letAnnotationMismatch | Checking.Spec.letFunctionResult
+```
+
+```mdl
+law L-1: ascriptions are not part of Core, so a definition hashes as it does without them
+  theorem: Checking.Spec.ascriptionKeepsHash
+  evidence: proof
+```
+
+```mdl
+req R-3: a type variable in an ascription is flexible; it names a type and declares nothing general
+  by: Checking.Spec.ascriptionVariableIsFlexible
+```
+
+```mdl
+req R-4: a binder written (x : T) in a lambda, a local function or a pattern has type T
+  by: Checking.Spec.lambdaBinderChecked | Checking.Spec.patternBinderChecked | Checking.Spec.binderKeepsHash
+```
+
+## Rows on definitions without binders
+
+```mdl
+req R-5: a row written on a definition with no binders bounds what its body may perform
+  by: Checking.Spec.bareRowRejects | Checking.Spec.bareRowAdmits
+```
+
+```mdl
+req R-6: a definition with no binders and no written row stays unconstrained
+  by: Checking.Spec.bareWithoutRow
+```
+
+## Theorems
+
+Each theorem compiles a small source with `Compile.batch` and states whether it type-checks. The sources
+declare what they use, so the oracle is the compiler alone. Without the prelude an operator such as `+` has
+no known type, so a mismatch is stated with a binder's type, which is known.
+
+```deus
+namespace Checking.Spec
+
+/-- The builtin types the sources use, declared by IRI as `deus/builtins.deus` does. -/
+def prelude : Text := "inductive Int @\"#Int\" where\ninductive Bool @\"#Bool\" where\n  | false\n  | true\n"
+
+/-- The entries of `source` compiled alone in strict mode, or none when it fails to compile or check. -/
+def compiled (source : Text) : Option (List (Text, Entry)) :=
+  match try (fun _ => Compile.batch Map.empty (fun _ => none) (fun _ => none) "strict" [Compile.parseFile "t.deus" (prelude ++ source)]) with
+  | Result.ok b => some b.entries
+  | Result.err _ => none
+
+def checks (source : Text) : Bool := Option.isSome (compiled source)
+
+def hashOf (source : Text) (name : Text) : Option Entry :=
+  match compiled source with
+  | some entries => List.lookup name entries
+  | none => none
+
+/-- An ability to perform, declared in each source that needs one. -/
+def failAbility : Text := "ability Fail where\n  fail : Int -> Int\n"
+
+/-- R-1: an ascription that holds compiles. -/
+theorem ascriptionHolds : checks "def f (x : Int) : Int := (x : Int) + 1\n" = true := by rfl
+
+/-- R-1: an ascription that does not hold is a type error. -/
+theorem ascriptionMismatch : checks "def f (x : Int) : Int := (x : Bool)\n" = false := by rfl
+
+/-- R-2: a `let` annotation that holds compiles. -/
+theorem letAnnotationHolds : checks "def f (x : Int) : Int :=\n  let y : Int := x * 2\n  y\n" = true := by rfl
+
+/-- R-2: a `let` annotation that does not hold is a type error. -/
+theorem letAnnotationMismatch : checks "def f (x : Int) : Int :=\n  let y : Bool := x\n  1\n" = false := by rfl
+
+/-- R-2: a local function's annotation is its result type. -/
+theorem letFunctionResult : checks "def f (x : Int) : Int :=\n  let g n : Bool := x\n  1\n" = false := by rfl
+
+/-- L-1: the ascription leaves the hash as it was. -/
+theorem ascriptionKeepsHash :
+    (Option.isSome (hashOf "def f (x : Int) : Int := (x : Int) + 1\n" "f") &&
+      hashOf "def f (x : Int) : Int := (x : Int) + 1\n" "f" == hashOf "def f (x : Int) : Int := x + 1\n" "f") = true := by rfl
+
+/-- R-3: `a` in an ascription may be `Int`. -/
+theorem ascriptionVariableIsFlexible : checks "def f (x : Int) : Int := (x : a)\n" = true := by rfl
+
+/-- R-5: `{}` admits no ability. -/
+theorem bareRowRejects : checks (failAbility ++ "def x : {} Int := Fail.fail 1\n") = false := by rfl
+
+/-- R-5: a row that names the ability admits it. -/
+theorem bareRowAdmits : checks (failAbility ++ "def x : {Fail} Int := Fail.fail 1\n") = true := by rfl
+
+/-- R-6: no braces, no constraint. -/
+theorem bareWithoutRow : checks (failAbility ++ "def x : Int := Fail.fail 1\n") = true := by rfl
+
+/-- R-4: a lambda binder's type is checked. -/
+theorem lambdaBinderChecked : checks "def f (x : Int) : Int := (fun (n : Bool) => 1) x\n" = false := by rfl
+
+/-- R-4: a pattern binder's type is checked. -/
+theorem patternBinderChecked : checks "def f (x : Int) : Int :=\n  match x with\n  | (n : Bool) => 1\n" = false := by rfl
+
+/-- R-4, L-1: a binder's ascription leaves the hash as it was. -/
+theorem binderKeepsHash :
+    (Option.isSome (hashOf "def f (x : Int) : Int := (fun (n : Int) => n) x\n" "f") &&
+      hashOf "def f (x : Int) : Int := (fun (n : Int) => n) x\n" "f" == hashOf "def f (x : Int) : Int := (fun n => n) x\n" "f") = true := by rfl
+
+end Checking.Spec
+```

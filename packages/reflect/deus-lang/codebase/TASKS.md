@@ -167,14 +167,14 @@ D90 widens values to 64 bits so blocks and integers can be told apart in wasm32;
 - priority: medium
 - labels: native, perf
 
-## TS kernel JIT: Ref.set journals a closure on every write; journal only when a deoptimisation can replay the entry (Array.set no longer journals, D95) (`a1b73fb8`)
+## TS kernel JIT: Ref.set journals a closure on every write; journal only when a deoptimisation can replay the entry (Array.set no longer journals, D96) (`a1b73fb8`)
 
 - state: todo
 - priority: medium
 - labels: perf
 - links `Array.set` (#b3d7fa0dc1)
 
-## Tested theorems: 'by test' evaluates the conclusion even when a hypothesis is false, because implies is strict; skip (and count) cases whose hypotheses fail, so 'by test' works on bounded statements like the Array laws (D95) (`649c69d1`)
+## Tested theorems: 'by test' evaluates the conclusion even when a hypothesis is false, because implies is strict; skip (and count) cases whose hypotheses fail, so 'by test' works on bounded statements like the Array laws (D96) (`7ef8bf45`)
 
 - state: todo
 - priority: medium
@@ -189,15 +189,6 @@ D90 widens values to 64 bits so blocks and integers can be told apart in wasm32;
 - labels: bug, print
 
 Found writing law statements (D91): deus view Sort.insertSorted.
-
-## Type ascriptions are erased before checking; a row on a definition without binders is not checked (`a03fdfb6`)
-
-- state: todo
-- priority: medium
-- assignee: claude
-- labels: bug, types, spec
-
-From docs/spec/README.md, Known divergences.
 
 ## TypeScript bindings: export polymorphic functions with codec parameters (`091e43c0`)
 
@@ -650,9 +641,7 @@ Done for the C back end (D86, docs/spec/NATIVE.md#memory). The wasm back end fol
 - priority: high
 - labels: perf
 - links `Array.set` (#b3d7fa0dc1)
-- links change #99b512f359
-- links change #41879b7d7e
-- links change #9bc9f93c4b
+- links change #034fda7dc8
 
 ## Restoring the git export loses history, so the next export rewrites HISTORY.md (`5a02d566`)
 
@@ -845,15 +834,6 @@ deus explore could ship deus_kernel.wasm, the seed and a JSON snapshot of the co
 
 Done by the Format spec docs thread in b0a392d6: CORE, CODEBASE-STORE, CODEBASE-BINARY, CODEBASE-TEXT, EMBEDDING, WASM, MDL, LANGUAGE and more, with the known divergences in docs/spec/README.md.
 
-## RC and the pure Array: once blocks carry reference counts (62d1bdda, cf0e3937), make the copying Array.set write in place at count 1 and Array.copy a share; the static pass in deus/unique.deus keeps removing the check where it proves uniqueness (D86) (`82d2d7a2`)
-
-- state: done
-- priority: medium
-- labels: perf, native
-- links `Unique.rewriteAll` (#9a8d82961a)
-
-Done in D95: the C back end's Array.set writes in place at a count of one (deus_array_unique) and copies a shared or borrowed array; --wasm keeps the static pass.
-
 ## Readers do not verify hashes of bundles and objects; a stray file under bundles/ fails a pull (`7afeaa0c`)
 
 - state: done
@@ -885,24 +865,6 @@ view of 1061 definitions plus update of all of them; profile which half dominate
 
 > claude: view built a printer per definition; sharing one took viewing 1061 definitions from 45 s to 2 s, output identical.
 
-## Tested theorems: 'by test' evaluates the conclusion even when a hypothesis is false, because implies is strict; skip (and count) cases whose hypotheses fail, so 'by test' works on bounded statements like the Array laws (D86) (`32bf2703`)
-
-- state: canceled
-- priority: medium
-- labels: prover
-- links `Check.generate` (#ba17124ee9)
-
-Duplicate of 649c69d1.
-
-## Tested theorems: 'by test' evaluates the conclusion even when a hypothesis is false, because implies is strict; skip (and count) cases whose hypotheses fail, so 'by test' works on bounded statements like the Array laws (D91) (`764249e0`)
-
-- state: canceled
-- priority: medium
-- labels: prover
-- links `Check.generate` (#ba17124ee9)
-
-Duplicate of 32bf2703.
-
 ## Text.fromCodes loses the high bits of code points above U+FFFF in the TypeScript kernel (`2bbc3445`)
 
 - state: done
@@ -910,6 +872,16 @@ Duplicate of 32bf2703.
 - assignee: claude
 - labels: bug, kernel, spec
 - links change #fa20112443
+
+From docs/spec/README.md, Known divergences.
+
+## Type ascriptions are erased before checking; a row on a definition without binders is not checked (`a03fdfb6`)
+
+- state: done
+- priority: medium
+- assignee: claude
+- labels: bug, types, spec
+- links change #a40db3f119
 
 From docs/spec/README.md, Known divergences.
 

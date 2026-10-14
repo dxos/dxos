@@ -6,7 +6,7 @@ version: 1.0
 
 # Arrays
 
-`Array a` is a fixed-length sequence of values of type `a`, indexed from 0 ([D95](../DECISIONS.md)).
+`Array a` is a fixed-length sequence of values of type `a`, indexed from 0 ([D96](../DECISIONS.md)).
 It is an immutable value like a list: `Array.set` returns a new array and leaves the old one as it
 was. What makes it an array rather than a list is the cost: every operation is O(1) when the program
 does not use an old version again, which is how array code is usually written.

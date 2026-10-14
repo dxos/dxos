@@ -9,7 +9,7 @@ def Build.appended (image : Text) (out : Text) (trailer : Text) : {IO, Throw Fai
   in-memory file system the page edits (`deus-kernel/embed/host.mjs`, `platform/browser/`).
   `deus.json` configures the page. -/
 def Build.browser (image : Text) (out : Text) : {IO, Throw Failure} Unit :=
-  let page := Build.require "DEUS_HOME" ++ "/platform/browser"
+  let page := require "DEUS_HOME" ++ "/platform/browser"
   let crate := embedded image out
   Build.tool
     "cp"
@@ -54,7 +54,7 @@ def Build.cExecutable (source : Text) (out : Text) : {IO, Throw Failure} Unit :=
 /-- Writes the image, the wasm kernel (built with cargo when it is missing) and its JavaScript
   driver to the directory `out`; returns the kernel crate's directory. -/
 def Build.embedded (image : Text) (out : Text) : {IO, Throw Failure} Text :=
-  let crate := Build.require "DEUS_HOME" ++ "/../deus-kernel"
+  let crate := require "DEUS_HOME" ++ "/../deus-kernel"
   let wasm := wasmKernel ()
   IO.mkdirp out
   IO.writeFile (out ++ "/app.image") image
@@ -77,8 +77,8 @@ def Build.esbuild : Text := "esbuild@0.28.2"
   result is kept in the artifacts layer under the hash of its inputs, so rebuilding unchanged code
   is a copy. -/
 def Build.executable (image : Text) (out : Text) (artifacts : Text) : {IO, Throw Failure} Unit :=
-  let home := Build.require "DEUS_HOME"
-  let node := Build.require "DEUS_NODE"
+  let home := require "DEUS_HOME"
+  let node := require "DEUS_NODE"
   let key := Text.sha256 (image ++ "\n" ++ executableInputs home node)
   let cached := artifacts ++ "/" ++ key
   if IO.exists cached then
@@ -105,7 +105,7 @@ def Build.fuse : Text := "NODE_SEA_FUSE_" ++ "fce680ab2cc467b6e072b8b5df1996b2"
 
 /-- The Rust kernel, built with cargo when it is missing; `$DEUS_KERNEL` names another one. -/
 def Build.kernel (u : Unit) : {IO, Throw Failure} Text :=
-  let crate := Build.require "DEUS_HOME" ++ "/../deus-kernel"
+  let crate := require "DEUS_HOME" ++ "/../deus-kernel"
   let path := getOr (IO.getEnv "DEUS_KERNEL") (crate ++ "/target/release/deus-kernel")
   if IO.exists path then "" else Failure.context
     "building the Rust kernel"
@@ -137,7 +137,7 @@ def Build.tool (program : Text) (arguments : List Text) : {IO, Throw Failure} Te
 
 /-- The embeddable wasm kernel (EMBEDDING.md), built with cargo when it is missing. -/
 def Build.wasmKernel (u : Unit) : {IO, Throw Failure} Text :=
-  let crate := Build.require "DEUS_HOME" ++ "/../deus-kernel"
+  let crate := require "DEUS_HOME" ++ "/../deus-kernel"
   let wasm := crate ++ "/target/wasm32-unknown-unknown/release/deus_kernel.wasm"
   if IO.exists wasm then "" else Failure.context "building the wasm kernel" [] (fun _ => Build.tool
     "cargo"
