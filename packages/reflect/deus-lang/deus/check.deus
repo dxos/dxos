@@ -259,9 +259,9 @@ def lemmaVerdict (dir : Text) (ns : Map Text Entry) (h : Text) : {IO} Verdict :=
 
 /-- A test, by default in a deterministic simulation seeded from its hash; integration tests run for real. -/
 def checkTest (h : Text) (integration : Bool) : {IO} Verdict :=
-  let outcome := if integration then guarded h
+  let outcome := if integration then fst (Observe.collect (fun _ => guarded h))
     else
-      match Sim.run (seedOf h) (fun _ => guarded h) with
+      match Sim.run (seedOf h) (fun _ => fst (Observe.collect (fun _ => guarded h))) with
       | (r, _) => r
   match outcome with
   | Result.ok true => Verdict.pass (if integration then "integration" else "test") 1

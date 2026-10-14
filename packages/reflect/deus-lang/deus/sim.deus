@@ -88,6 +88,13 @@ def run (seed : Int) (body : Unit -> {IO, Random | r} a) : {r} (a, Text) :=
       k ()
     | IO.getEnv _ -> k => k none
     | IO.isDir p -> k => k (Set.contains p (Ref.get w.dirs))
+    | IO.wallClock _ -> k =>
+      Ref.set w.clock (Ref.get w.clock + 1)
+      k (Int.toText (Ref.get w.clock))
+    | IO.appendFile p t -> k =>
+      mkdirs w (parent p)
+      Ref.set w.files (Map.insert p (Option.getOr (Map.lookup p (Ref.get w.files)) "" ++ t) (Ref.get w.files))
+      k ()
   (result, Text.concat (List.reverse (Ref.get w.output)))
 
 end Sim

@@ -366,15 +366,19 @@ def fetcher (dir : Text) : Text -> {IO} Option Sexp := fun h => Codebase.readObj
 def defectTrace (u : Unit) : Text :=
   Text.join "" (List.map (fun h => "\n    at " ++ h) (Code.defectTrace ()))
 
-/-- Replaces the hashes in `    at <hash>` lines with names from the codebase. -/
+/--
+  Replaces the hashes in `    at <hash>` lines with names from the codebase, and drops lines for
+  definitions the codebase does not name (the toolchain's own handlers).
+-/
 def nameTrace (index : Map Text Text) (text : Text) : Text :=
-  Text.join "\n" (List.map (fun l =>
-    if Text.startsWith "    at " l then
-      let h := Text.drop 7 l
-      "    at " ++ Option.getOr (Map.lookup h index) ("#" ++ Text.take 10 h)
-    else l) (Text.split text "\n"))
+  Text.join "\n" (List.filterMap (fun l =>
+    if Text.startsWith "    at " l then Option.map (fun name => "    at " ++ name) (Map.lookup (Text.drop 7 l) index)
+    else some l) (Text.split text "\n"))
 
-/-- `deus run <name> [args…]`: runs `name ()` with `IO.args` answering the remaining arguments. -/
+/--
+  `deus run <name> [args…]`: runs `name ()` with `IO.args` answering the remaining arguments.
+  Telemetry goes to stderr as JSON lines, or as OTLP/JSON files under `$DEUS_OTLP`.
+-/
 def run (args : Args) (rest : List Text) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let ns := Codebase.current dir
@@ -385,8 +389,14 @@ def run (args : Args) (rest : List Text) : {IO, Throw Text} Unit :=
     | (_, Entry.term h) =>
       Image.load (fetcher dir) [h]
       let f := Code.run h
-      handle f () with
-      | IO.args _ -> k => k programArgs
+      let program := fun (u : Unit) =>
+        handle f () with
+        | IO.args _ -> k => k programArgs
+      let observed := fun (u : Unit) =>
+        match IO.getEnv "DEUS_OTLP" with
+        | some out => Observe.otlp out name program
+        | none => Observe.ndjson program
+      handle observed () with
       | Defect.raise message -> _ =>
         IO.eprint ("defect: " ++ nameTrace (Codebase.nameIndex ns) (message ++ defectTrace ()) ++ "\n")
         IO.exit 70

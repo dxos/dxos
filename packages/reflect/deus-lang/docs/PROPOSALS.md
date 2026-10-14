@@ -140,3 +140,8 @@ carries enough context for an agent to find the bug.
   Effect-TS's `Cause` but as data.
 - **Traces from content addressing.** A span names the definition and its hash, so a trace
   points at exact code, not a file and line that may have changed since.
+
+**Status.** Implemented: kernel stack traces printed with names (`deus run`, `deus test`);
+`Log`, `Trace` and `Metrics` in `deus/observe.deus` with three handlers (`collect`, `ndjson`,
+`otlp`). OTLP goes to JSON-lines files rather than HTTP ([D35](./DECISIONS.md)). Not yet: the
+structured `Failure` type for `throw`, and spans tagged with definition hashes.

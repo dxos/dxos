@@ -2,7 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync, writeSync } from 'node:fs';
+import {
+  appendFileSync,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+  writeSync,
+} from 'node:fs';
 import { dirname } from 'node:path';
 
 import { DeusDefect, type HostHandler, NONE, UNIT, type Value, listFrom, listTo, show, some } from './machine.ts';
@@ -44,6 +54,8 @@ export const IO_OPS = [
   'writeBytes',
   'getEnv',
   'isDir',
+  'wallClock',
+  'appendFile',
 ] as const;
 
 export type HostOptions = {
@@ -119,6 +131,13 @@ export const createHost = ({ args, stdout, stderr }: HostOptions): HostHandler =
         } catch {
           return false;
         }
+      case 'wallClock':
+        // Nanoseconds since the Unix epoch overflow an Int, so they travel as decimal text.
+        return (BigInt(Math.round((performance.timeOrigin + performance.now()) * 1000)) * 1000n).toString();
+      case 'appendFile':
+        mkdirSync(dirname(text(a)), { recursive: true });
+        appendFileSync(text(a), text(b));
+        return UNIT;
       default:
         throw new DeusDefect(`unknown IO operation ${index}`);
     }

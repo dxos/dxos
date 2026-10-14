@@ -59,6 +59,11 @@ export DEUS_CODEBASE=$PWD/.deus     # or pass --codebase <dir>
 
    `DEUS_MAX_STEPS=<n>` turns a runaway program into a defect, so a hang shows a trace too.
 
+   Code that logs, traces or counts (`Log.info`, `Trace.span`, `Metrics.counter`) has those
+   abilities in its type. `deus run` prints them as JSON lines on stderr; with
+   `DEUS_OTLP=<dir>` it writes OpenTelemetry JSON there instead. A test can assert on them with
+   `Observe.collect`, which returns the events in order.
+
 5. **Undo** if the change was wrong: `deus undo` steps the branch back one change; the old
    definitions are still in the store.
 

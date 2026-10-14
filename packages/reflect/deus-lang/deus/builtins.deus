@@ -45,6 +45,8 @@ ability IO @"#IO" where
   writeBytes : Text -> List Int -> Unit
   getEnv : Text -> Option Text
   isDir : Text -> Bool
+  wallClock : Unit -> Text
+  appendFile : Text -> Text -> Unit
 
 /--
   Defects: the program is wrong. The kernel raises failed matches, division by zero and
