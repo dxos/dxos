@@ -7,7 +7,7 @@ import type * as Effect from 'effect/Effect';
 
 import { type SemanticIndexError } from '../errors.ts';
 import { type SemanticQuery } from '../internal/sparql/query-builder.ts';
-import { type Fact } from '../types/index.ts';
+import { type Fact, type Ontology } from '../types/index.ts';
 
 //
 // The FactStore service tag and API surface only. Implementations live in `fact-store-live.ts`
@@ -18,6 +18,11 @@ import { type Fact } from '../types/index.ts';
 export interface FactStoreApi {
   /** Persist facts as statements in their named graphs (idempotent appends; no write-time merge). */
   readonly putFacts: (facts: readonly Fact[]) => Effect.Effect<void, SemanticIndexError>;
+  /**
+   * The predicates the store's facts introduced, as described in its ontology graph (outside every statement's
+   * graph): label, definition, defining namespace, and when, by what and from which quote each was minted.
+   */
+  readonly predicates: () => Effect.Effect<Ontology.Entry[], SemanticIndexError>;
   /** Run a structured query over the stored statements and reassemble the matching Facts. */
   readonly query: (query: SemanticQuery) => Effect.Effect<Fact[], SemanticIndexError>;
   /** Execute a raw SPARQL `SELECT ?g` and reassemble every statement in the graphs it binds. */

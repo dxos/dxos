@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type RDF } from '@dxos/pipeline-rdf';
+import { RDF } from '@dxos/pipeline-rdf';
 import { formatTerm } from '@dxos/react-ui-rdf';
 
 export type EntityItem = {
@@ -55,3 +55,7 @@ export const predicatesFromFacts = (facts: RDF.Fact[]): PredicateItem[] => {
     .map(([predicate, count]) => ({ predicate, count }))
     .sort((a, b) => b.count - a.count || a.predicate.localeCompare(b.predicate));
 };
+
+/** The ontology a space's pipeline extracts with: the seed vocabulary, minting new predicates in the space's brain. */
+export const spaceOntology = (spaceId: string): RDF.Ontology.Ontology =>
+  RDF.Ontology.DEFAULT.withNamespace(RDF.Vocab.brainNamespace(spaceId));

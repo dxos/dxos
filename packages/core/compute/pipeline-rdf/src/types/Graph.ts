@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { Writer } from 'n3';
+import { type Quad, Writer } from 'n3';
 
 import { hashText } from '../internal/stages/reconcile.ts';
 import { type Fact } from './Fact.ts';
@@ -89,22 +89,26 @@ export const PREFIXES: Readonly<Record<string, string>> = {
   prov: Vocab.PROV,
   rdf: Vocab.RDF,
   rdfs: Vocab.RDFS,
+  owl: Vocab.OWL,
+  xsd: Vocab.XSD,
+  skos: Vocab.SKOS,
+  dcterms: Vocab.DCTERMS,
+  schema: Vocab.SCHEMA,
+  foaf: Vocab.FOAF,
+  org: Vocab.ORG,
   entity: Vocab.ENTITY,
   fact: Vocab.FACT,
   graph: Vocab.GRAPH,
 };
 
-/** The facts as TriG: each graph's statements, then its provenance. */
-export const toTriG = (facts: readonly Fact[], ontology: Ontology.Ontology = Ontology.DEFAULT): string => {
-  const writer = new Writer({ format: 'application/trig', prefixes: { ...PREFIXES } });
+const write = (quads: Iterable<Quad>, prefixes: Record<string, string>): string => {
+  const writer = new Writer({ format: 'application/trig', prefixes });
   const seen = new Set<string>();
-  for (const fact of facts) {
-    for (const quad of Mapping.factToTriples(fact, ontology)) {
-      const key = `${quad.subject.value} ${quad.predicate.value} ${quad.object.termType}:${quad.object.value} ${quad.graph.value}`;
-      if (!seen.has(key)) {
-        seen.add(key);
-        writer.addQuad(quad);
-      }
+  for (const quad of quads) {
+    const key = `${quad.subject.value} ${quad.predicate.value} ${quad.object.termType}:${quad.object.value} ${quad.graph.value}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      writer.addQuad(quad);
     }
   }
   let output = '';
@@ -115,4 +119,55 @@ export const toTriG = (facts: readonly Fact[], ontology: Ontology.Ontology = Ont
     output = result;
   });
   return output;
+};
+
+/**
+ * The facts as TriG: each graph's statements, then its provenance. The brain's namespace reads as `brain:`, and the
+ * entities local to each graph as `g1:`, `g2:`, … so a graph-local entity is visibly not a shared one.
+ */
+export const toTriG = (facts: readonly Fact[], ontology: Ontology.Ontology = Ontology.DEFAULT): string => {
+  const quads = facts.flatMap((fact) => Mapping.factToTriples(fact, ontology));
+  const graphs = [...new Set(quads.flatMap((quad) => (quad.graph.termType === 'NamedNode' ? [quad.graph.value] : [])))];
+  const locals = graphs.filter(
+    (graph) =>
+      graph !== Vocab.ONTOLOGY_GRAPH &&
+      quads.some((quad) => quad.subject.value.startsWith(`${graph}#`) || quad.object.value.startsWith(`${graph}#`)),
+  );
+  return write(quads, {
+    ...PREFIXES,
+    brain: ontology.namespace,
+    ...Object.fromEntries(locals.map((graph, index) => [`g${index + 1}`, `${graph}#`])),
+  });
+};
+
+/** The ontology's predicates as TriG: each an `rdf:Property` described in the ontology graph. */
+export const ontologyToTriG = (ontology: Ontology.Ontology): string =>
+  write(Ontology.ontologyQuads(ontology), { ...PREFIXES, brain: ontology.namespace });
+
+/**
+ * The predicates the facts use that the ontology does not define, as entries minted in its namespace, so the next
+ * extraction can reuse them; the first quote that used one is kept as its example.
+ */
+export const mintedPredicates = (
+  facts: readonly Fact[],
+  ontology: Ontology.Ontology = Ontology.DEFAULT,
+): Ontology.Entry[] => {
+  const minted = new Map<string, Ontology.Entry>();
+  for (const fact of facts) {
+    const iri = Mapping.predicateOf(fact, ontology);
+    if (ontology.get(iri) || minted.has(iri)) {
+      continue;
+    }
+    minted.set(iri, {
+      iri,
+      name: Ontology.key(fact.assertion.predicate),
+      label: fact.assertion.predicate,
+      ...(fact.assertion.predicateDescription ? { description: fact.assertion.predicateDescription } : {}),
+      ...(Vocab.brainNamespaceOf(iri) ? { definedBy: Vocab.brainNamespaceOf(iri) } : {}),
+      created: fact.recordedAt,
+      creator: `${fact.extractor.id}/${fact.extractor.model}`,
+      ...(fact.assertion.quote ? { example: fact.assertion.quote } : {}),
+    });
+  }
+  return [...minted.values()];
 };

@@ -14,6 +14,7 @@ import * as Util from '@dxos/react-ui/Util';
 
 import { type EchoObjectItem, EchoObjectsList } from '../EchoObjectsList/index.ts';
 import { FactPanel } from '../FactPanel/index.ts';
+import { OntologyPanel } from '../OntologyPanel/index.ts';
 
 /** A single named metric shown in the Stats tab. */
 export type StatItem = { label: string; value: string | number };
@@ -23,6 +24,8 @@ export type OutputDetail = { id: string; label: string; content: ReactNode };
 
 export type OutputPanelProps = Util.ThemedClassName<{
   facts: RDF.Fact[];
+  /** The predicates the brain knows (Predicates tab). */
+  ontology: RDF.Ontology.Ontology;
   objects: EchoObjectItem[];
   /** Common per-pipeline metrics (Stats tab). */
   stats?: StatItem[];
@@ -32,11 +35,15 @@ export type OutputPanelProps = Util.ThemedClassName<{
 
 /**
  * Output column: a toolbar of button tabs selecting the view — the {@link FactPanel} (facts +
- * entities + predicates), the {@link EchoObjectsList} of materialized ECHO objects, a Stats tab of
+ * entities + predicates), the {@link OntologyPanel} (every predicate the brain knows, its metadata, and the ontology
+ * and facts as Turtle/TriG), the {@link EchoObjectsList} of materialized ECHO objects, a Stats tab of
  * per-pipeline metrics, and any pipeline-specific detail views (messages / threads / transcript).
  */
-export const OutputPanel = ({ classNames, facts, objects, stats = [], details = [] }: OutputPanelProps) => {
-  const tabs = useMemo(() => ['facts', 'objects', 'stats', ...details.map((detail) => detail.id)], [details]);
+export const OutputPanel = ({ classNames, facts, ontology, objects, stats = [], details = [] }: OutputPanelProps) => {
+  const tabs = useMemo(
+    () => ['facts', 'predicates', 'objects', 'stats', ...details.map((detail) => detail.id)],
+    [details],
+  );
   const [tab, setTab] = useState<string>('facts');
   // Fall back to a valid tab when the active one disappears (pipeline switch drops its detail views).
   const active = tabs.includes(tab) ? tab : 'facts';
@@ -47,6 +54,9 @@ export const OutputPanel = ({ classNames, facts, objects, stats = [], details = 
         <Toolbar.Root>
           <Button.Root variant={active === 'facts' ? 'primary' : 'ghost'} onClick={() => setTab('facts')}>
             Facts
+          </Button.Root>
+          <Button.Root variant={active === 'predicates' ? 'primary' : 'ghost'} onClick={() => setTab('predicates')}>
+            Predicates
           </Button.Root>
           <Button.Root variant={active === 'objects' ? 'primary' : 'ghost'} onClick={() => setTab('objects')}>
             Objects
@@ -72,6 +82,7 @@ export const OutputPanel = ({ classNames, facts, objects, stats = [], details = 
           <FactPanel facts={facts} />
         </Panel.Body>
       )}
+      {active === 'predicates' && <OntologyPanel ontology={ontology} facts={facts} />}
       {active === 'objects' && (
         <Panel.Body>
           <EchoObjectsList objects={objects} />

@@ -27,7 +27,17 @@ export const querySqlite = (
 ): Effect.Effect<Fact[], SemanticIndexError> =>
   Effect.gen(function* () {
     // Rows that are statements, not provenance, predicate metadata, or an entity's label or kind.
-    const statement = sql`g <> '' AND g <> ${Vocab.ONTOLOGY_GRAPH} AND p <> ${Vocab.RDFS_LABEL} AND p <> ${Vocab.RDF_TYPE}`;
+    const statement = sql`g <> '' AND g <> ${Vocab.ONTOLOGY_GRAPH} AND p <> ${Vocab.RDFS_LABEL}
+      AND NOT (p = ${Vocab.RDF_TYPE} AND ${sql.in('o', [...Mapping.KIND_CLASSES])})`;
+    // An entity slug names the graph-local entity of that slug in every graph (and its pre-local `entity:` IRI).
+    const isEntity = (column: 's' | 'o', key: string) => {
+      const node = Vocab.entityNode(key).value;
+      if (Vocab.isIri(key)) {
+        return sql`${sql(column)} = ${node}`;
+      }
+      const suffix = Vocab.localEntitySuffix(key);
+      return sql`(${sql(column)} = ${node} OR substr(${sql(column)}, ${-suffix.length}) = ${suffix})`;
+    };
     const graphsWhere = (where: Statement.Fragment) =>
       sql<{ g: string }>`SELECT DISTINCT g FROM triples WHERE ${statement} AND ${where}`.pipe(
         Effect.map((rows) => new Set(rows.map((row) => row.g))),
@@ -39,7 +49,7 @@ export const querySqlite = (
     };
 
     if (query.subjectEntity) {
-      restrict(yield* graphsWhere(sql`s = ${Vocab.entityNode(query.subjectEntity).value}`));
+      restrict(yield* graphsWhere(isEntity('s', query.subjectEntity)));
     }
     let predicates: Set<string> | undefined;
     if (query.predicate) {
@@ -63,8 +73,9 @@ export const querySqlite = (
       restrict(new Set(rows.map((row) => row.s)));
     }
     if (query.entity) {
-      const node = Vocab.entityNode(query.entity).value;
-      restrict(yield* graphsWhere(sql`(s = ${node} OR (o = ${node} AND oType = 'iri'))`));
+      restrict(
+        yield* graphsWhere(sql`(${isEntity('s', query.entity)} OR (${isEntity('o', query.entity)} AND oType = 'iri'))`),
+      );
     }
 
     // No constraints → every stored graph.

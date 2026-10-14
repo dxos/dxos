@@ -17,7 +17,13 @@ const isStatement = (quad: Quad) =>
   quad.graph.termType === 'NamedNode' &&
   quad.graph.value !== Vocab.ONTOLOGY_GRAPH &&
   quad.predicate.value !== Vocab.RDFS_LABEL &&
-  quad.predicate.value !== Vocab.RDF_TYPE;
+  !Mapping.isKindQuad(quad.predicate.value, quad.object.value);
+
+/** Whether a node is the entity a key names: an IRI exactly, a slug as the graph-local entity of any graph. */
+const isEntity = (node: Quad['subject'] | Quad['object'], key: string): boolean =>
+  node.termType === 'NamedNode' &&
+  (node.value === Vocab.entityNode(key).value ||
+    (!Vocab.isIri(key) && node.value.endsWith(Vocab.localEntitySuffix(key))));
 
 /** Every stored quad of the given graphs: their statements, their provenance, and the ontology graph. */
 export const graphQuads = (store: Store, graphs: Iterable<string>): Quad[] =>
@@ -44,7 +50,8 @@ export const queryMemory = (
   };
 
   if (query.subjectEntity) {
-    restrict(graphsOf(store.getQuads(Vocab.entityNode(query.subjectEntity), null, null, null)));
+    const subject = query.subjectEntity;
+    restrict(graphsOf(store.getQuads(null, null, null, null).filter((quad) => isEntity(quad.subject, subject))));
   }
   let predicates: Set<string> | undefined;
   if (query.predicate) {
@@ -78,8 +85,14 @@ export const queryMemory = (
     );
   }
   if (query.entity) {
-    const node = Vocab.entityNode(query.entity);
-    restrict(graphsOf([...store.getQuads(node, null, null, null), ...store.getQuads(null, null, node, null)]));
+    const entity = query.entity;
+    restrict(
+      graphsOf(
+        store
+          .getQuads(null, null, null, null)
+          .filter((quad) => isEntity(quad.subject, entity) || isEntity(quad.object, entity)),
+      ),
+    );
   }
 
   // No constraints → every stored graph.

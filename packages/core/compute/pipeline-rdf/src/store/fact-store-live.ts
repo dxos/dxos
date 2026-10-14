@@ -14,7 +14,7 @@ import type * as Engine from '../internal/sparql/engine.ts';
 import { graphQuads, queryMemory } from '../internal/sparql/query-memory.ts';
 import { querySqlite } from '../internal/sparql/query-sqlite.ts';
 import { migrate } from '../internal/sqlite/schema.ts';
-import { type Fact } from '../types/index.ts';
+import { type Fact, Graph, Ontology } from '../types/index.ts';
 import * as Mapping from '../types/Mapping.ts';
 import * as Vocab from '../types/Vocab.ts';
 import { FactStore, type FactStoreApi } from './fact-store.ts';
@@ -24,6 +24,19 @@ import { FactStore, type FactStoreApi } from './fact-store.ts';
 // (which reference the tag in `services:`) never pull the SPARQL/SQLite machinery into their
 // import closure — see `@dxos/pipeline-rdf/fact-store`.
 //
+
+/**
+ * The quads persisting the facts, plus the provenance of each predicate they mint that the store has not described
+ * yet, so a predicate records when, by what and from which quote it was first minted rather than every use.
+ */
+const factQuads = (facts: readonly Fact[], described: (iris: string[]) => ReadonlySet<string>): Quad[] => {
+  const minted = Graph.mintedPredicates(facts);
+  const known = described(minted.map(({ iri }) => iri));
+  return [
+    ...facts.flatMap((fact) => Mapping.factToTriples(fact)),
+    ...minted.filter(({ iri }) => !known.has(iri)).flatMap(Ontology.toQuads),
+  ];
+};
 
 // triplesToFacts validates via Schema and can throw a ParseError on malformed stored data.
 const reassemble = (quads: Quad[]): Effect.Effect<Fact[], SemanticIndexError> =>
@@ -68,10 +81,26 @@ export const layer: Layer.Layer<FactStore, never, SqlClient.SqlClient> = Layer.e
     const source = makeSqliteSource(sql);
 
     const putFacts: FactStoreApi['putFacts'] = (facts) =>
-      insertQuads(
-        sql,
-        facts.flatMap((fact) => Mapping.factToTriples(fact)),
-      ).pipe(Effect.mapError((cause) => new SemanticIndexError({ message: 'Failed to persist facts', cause })));
+      Effect.gen(function* () {
+        const iris = Graph.mintedPredicates(facts).map(({ iri }) => iri);
+        const rows =
+          iris.length === 0
+            ? []
+            : yield* sql<{ s: string }>`
+                SELECT s FROM triples WHERE g = ${Vocab.ONTOLOGY_GRAPH} AND p = ${Vocab.RDF_TYPE}
+                  AND o = ${Vocab.RDF_PROPERTY} AND ${sql.in('s', iris)}`;
+        const described = new Set(rows.map(({ s }) => s));
+        yield* insertQuads(
+          sql,
+          factQuads(facts, () => described),
+        );
+      }).pipe(Effect.mapError((cause) => new SemanticIndexError({ message: 'Failed to persist facts', cause })));
+
+    const predicates: FactStoreApi['predicates'] = () =>
+      sql<Row>`SELECT s, p, o, oType, g FROM triples WHERE g = ${Vocab.ONTOLOGY_GRAPH}`.pipe(
+        Effect.map((rows) => Ontology.fromQuads(rows.map(rowToQuad))),
+        Effect.mapError((cause) => new SemanticIndexError({ message: 'Failed to read predicates', cause })),
+      );
 
     const cursor: FactStoreApi['cursor'] = (src) =>
       sql<{ hash: string }>`SELECT hash FROM cursors WHERE source = ${src}`.pipe(
@@ -111,7 +140,7 @@ export const layer: Layer.Layer<FactStore, never, SqlClient.SqlClient> = Layer.e
             Effect.mapError((cause) => new SemanticIndexError({ message: 'Failed to load graphs', cause })),
           );
 
-    return { putFacts, cursor, setCursor, query, select: makeSelect(source, load), clear };
+    return { putFacts, predicates, cursor, setCursor, query, select: makeSelect(source, load), clear };
   }),
 );
 
@@ -123,15 +152,33 @@ export const makeMemory = (): FactStoreApi => {
   const source = makeMemorySource();
   const cursors = new Map<string, string>();
 
+  const ontologyGraph = DataFactory.namedNode(Vocab.ONTOLOGY_GRAPH);
   const putFacts: FactStoreApi['putFacts'] = (facts) =>
     Effect.try({
       try: () =>
         insertQuadsMemory(
           source,
-          facts.flatMap((fact) => Mapping.factToTriples(fact)),
+          factQuads(
+            facts,
+            (iris) =>
+              new Set(
+                iris.filter(
+                  (iri) =>
+                    source.countQuads(
+                      DataFactory.namedNode(iri),
+                      DataFactory.namedNode(Vocab.RDF_TYPE),
+                      DataFactory.namedNode(Vocab.RDF_PROPERTY),
+                      ontologyGraph,
+                    ) > 0,
+                ),
+              ),
+          ),
         ),
       catch: (cause) => new SemanticIndexError({ message: 'Failed to persist facts', cause }),
     });
+
+  const predicates: FactStoreApi['predicates'] = () =>
+    Effect.sync(() => Ontology.fromQuads(source.getQuads(null, null, null, ontologyGraph)));
 
   const cursor: FactStoreApi['cursor'] = (src) => Effect.sync(() => cursors.get(src));
   const setCursor: FactStoreApi['setCursor'] = (src, hash) => Effect.sync(() => void cursors.set(src, hash));
@@ -154,7 +201,7 @@ export const makeMemory = (): FactStoreApi => {
       ...source.getQuads(null, null, null, DataFactory.namedNode(Vocab.ONTOLOGY_GRAPH)),
     ]);
 
-  return { putFacts, cursor, setCursor, query, select: makeSelect(source, load), clear };
+  return { putFacts, predicates, cursor, setCursor, query, select: makeSelect(source, load), clear };
 };
 
 /**

@@ -76,10 +76,12 @@ const STORED_FACT: RDF.Fact = {
 describe('formatRawFact', () => {
   test('writes the statement as a triple inside its graph, with an ontology predicate', ({ expect }) => {
     const trig = formatRawFact(STORED_FACT);
-    expect(trig).toMatch(/^fact:f1 \{/);
-    expect(trig).toContain('entity:rich-burdon dx:hasRole entity:founder');
+    expect(trig).toMatch(/^fact:f1 \{/m);
+    // Unresolved entities are local to the fact's graph, under a prefix of their own.
+    expect(trig).toContain('@prefix g1: <https://dxos.org/semantic/fact/f1#>.');
+    expect(trig).toContain('g1:rich-burdon schema:jobTitle g1:founder');
     expect(trig).toContain('prov:wasDerivedFrom "https://dxos.org/team"');
-    expect(trig).not.toContain('@prefix');
+    expect(trig).not.toContain('@prefix dx:');
     expect(TRIG_PREFIXES).toContain('@prefix dx: <https://dxos.org/ontology/>.');
   });
 });
