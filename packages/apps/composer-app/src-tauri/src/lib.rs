@@ -454,7 +454,7 @@ pub fn run() {
                     });
                 }
 
-                // Closing the window ends the page and then the app, so the page is asked first, as on Cmd+Q.
+                // Closing the window ends the page and then the app, so the page is asked first, as on the tray's Quit.
                 {
                     let window = main_window.clone();
                     main_window.on_window_event(move |event| {

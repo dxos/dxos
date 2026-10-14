@@ -1,11 +1,14 @@
 //! Holds an exit until the page has saved the changes only it holds.
 //!
 //! The page keeps edits in memory until the client worker writes them to disk, so an exit that does
-//! not ask first can lose them. On an exit request (Cmd+Q, tray Quit, closing the window) the shell
+//! not ask first can lose them. On an exit request (the tray's Quit, closing the window) the shell
 //! holds the exit and emits [`EXIT_REQUESTED_EVENT`]; the page answers with `confirm_exit`, or with
 //! `defer_exit` while it saves and then `confirm_exit` or `cancel_exit`. Every request has a
 //! deadline — [`GRACE_PERIOD`] to answer, [`DEFER_LIMIT`] to finish once deferred — after which the
 //! shell exits, so a page that died or hung can never make the app unquittable.
+//!
+//! Not covered: on macOS, Cmd+Q, the app menu's and Dock's Quit and logout go through
+//! `NSApp terminate:`, which tao ends without raising `ExitRequested`.
 
 use std::sync::{Mutex, MutexGuard};
 use std::time::Duration;
