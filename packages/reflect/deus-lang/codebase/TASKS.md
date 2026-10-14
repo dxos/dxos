@@ -1,14 +1,5 @@
 # Tasks
 
-## The R2 codebase remote (r2://agent-artifacts/deus/explorer-demo, main) and the git export are separate lineages: deus merge origin.main reports 373 conflicting names, so threads cannot pull, merge and push main as the primary VCS yet (`72207dc1`)
-
-- state: todo
-- priority: urgent
-- assignee: claude
-- labels: dogfood, codebase
-
-> claude: Also: from this container (claude/project-thread-abg4l3) the network policy refused uploads to the R2 host, so the analytics work went to git only; deus pull worked earlier in the same session.
-
 ## A Js.import binding's hash does not cover its type, so two bindings with the same body share one codec (`1e8dee8b`)
 
 - state: todo
@@ -231,13 +222,6 @@ D90 widens values to 64 bits so blocks and integers can be told apart in wasm32;
 - priority: medium
 - labels: native, perf
 
-## Parquet writer: min/max column statistics, so Basin SQL can prune files (pyiceberg warns they are missing) (`821dd13d`)
-
-- state: todo
-- priority: medium
-- assignee: claude
-- labels: analytics, perf
-
 ## Run the DEUS skill through the Composer assistant with a live model (`91b838f4`)
 
 - state: todo
@@ -379,6 +363,17 @@ Follow-up to 50e58574 (D96): deus view <Doc> renders a document from block metad
 - labels: cli, bug
 
 Found while closing cf5e187f: deus task set <id> --status done printed the task unchanged. It should name the known fields (title, state, priority, assignee, labels, parent, details).
+
+## The R2 codebase remote (r2://agent-artifacts/deus/explorer-demo, main) and the git export are separate lineages: deus merge origin.main reports 373 conflicting names, so threads cannot pull, merge and push main as the primary VCS yet (`72207dc1`)
+
+- state: canceled
+- priority: urgent
+- assignee: claude
+- labels: dogfood, codebase
+
+Wrong premise: explorer-demo is the explorer site's remote, not the codebase's. The shared codebase remote is r2://agent-artifacts/deus/toolchain (D101), seeded by the explorer-publish thread.
+
+> claude: Also: from this container (claude/project-thread-abg4l3) the network policy refused uploads to the R2 host, so the analytics work went to git only; deus pull worked earlier in the same session.
 
 ## Analytics store: event types defined in the codebase, flat event rows (scalars and pinned refs), push-only sync as Parquet beside the codebase, queryable with Basin SQL (`87707577`)
 
@@ -992,6 +987,14 @@ deus explore could ship deus_kernel.wasm, the seed and a JSON snapshot of the co
 - labels: docs, spec
 
 Done by the Format spec docs thread in b0a392d6: CORE, CODEBASE-STORE, CODEBASE-BINARY, CODEBASE-TEXT, EMBEDDING, WASM, MDL, LANGUAGE and more, with the known divergences in docs/spec/README.md.
+
+## Parquet writer: min/max column statistics, so Basin SQL can prune files (pyiceberg warns they are missing) (`821dd13d`)
+
+- state: done
+- priority: medium
+- assignee: claude
+- labels: analytics, perf
+- links change #f49a4c7913
 
 ## Readers do not verify hashes of bundles and objects; a stray file under bundles/ fails a pull (`7afeaa0c`)
 

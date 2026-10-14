@@ -1,5 +1,10 @@
 # History of main
 
+- `97932915fc` task: set 72207dc1 state details (by claude)
+- `85011af15d` close 821dd13d by #f49a4c7913 (by claude)
+- `f49a4c7913` Parquet writer: min/max statistics and column_orders on every column (by claude)
+- `5f3ee9bd61` history: import 580 changes
+- `bdbadcd847` task: import from tasks.sexp
 - `6e64e08bbb` task: comment on e76e36b0 (by claude)
 - `f06a7a09f3` history: import 577 changes
 - `8637e168f4` task: import from tasks.sexp

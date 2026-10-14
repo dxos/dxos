@@ -1,3 +1,8 @@
+(entry "97932915fcd3b88c129894808622e3a96fa34f222a8277c5abd4aaea25da37a0" "task: set 72207dc1 state details" "claude")
+(entry "85011af15d2ee5960c56297e8b3eddb32b3170909c0fab7fd9dea9ab59299c5f" "close 821dd13d by #f49a4c7913" "claude")
+(entry "f49a4c7913fc381803842895e53d94acc6bbd089f533c428a6a8d1b4c6eab536" "Parquet writer: min/max statistics and column_orders on every column" "claude")
+(entry "5f3ee9bd61d91f84f03bb81a800b54fa010bd818721659e4e5d1756d42c2f7ac" "history: import 580 changes" "")
+(entry "bdbadcd847932360fe1b4f64278a4c2dc5d00929e74d9ad380c9ea31a8be35c1" "task: import from tasks.sexp" "")
 (entry "6e64e08bbb07d12c76b91ead409f3238c727978e687f1689e3751feae4f762cc" "task: comment on e76e36b0" "claude")
 (entry "f06a7a09f3d9647ced7b9c60e7c2405f58b904f1e576893dc369959424e09b3c" "history: import 577 changes" "")
 (entry "8637e168f496c0dd5b303edcd1ef5d40b6a407276f037210535408658786131f" "task: import from tasks.sexp" "")

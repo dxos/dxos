@@ -118,5 +118,6 @@ stage. The table is regenerated from `git log` with every commit.
 | 110 | 10-14 22:12 | 3m 00s         | this commit | CI: lint warned on the control-character regex in scripts/analytics-ci.mjs, which is intended; it now carries the same suppression as the explorer worker                                                                                                                                                                 |
 
 | 111 | 10-14 22:20 | 15m 00s | this commit | the explorer's graph view: open definitions as code cards in a force-directed graph with their neighbours, toggled with the list (`v`); Explorer.Spec R-13 found recursive definitions listed as their own users (D107) |
+| 112 | 10-14 22:40 | 25m 00s | this commit | Parquet files carry min/max statistics and column orders for every column, so pyarrow and Iceberg see bounds on all 42 columns and Basin SQL can prune files (task 821dd13d); task 72207dc1 canceled, the codebase remote is deus/toolchain (D101) |
 
-Total from stage 1 to stage 111: 18h 44m.
+Total from stage 1 to stage 112: 19h 9m.
