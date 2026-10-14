@@ -1,0 +1,5 @@
+def Ref.get : Ref a -> a := prim "Ref.get"
+
+def Ref.new : a -> Ref a := prim "Ref.new"
+
+def Ref.set : Ref a -> a -> Unit := prim "Ref.set"

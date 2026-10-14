@@ -1,0 +1,45 @@
+structure Tour.Line where
+  item : Text
+  quantity : Int
+
+ability Tour.Prices where
+  priceOf : Text -> Int
+
+inductive Tour.Shape where
+  | circle Int
+  | rect Int Int
+
+/-- Pattern matching must cover every constructor. -/
+def Tour.area (shape : Shape) : Int :=
+  match shape with
+  | Shape.circle r => 3 * r * r
+  | Shape.rect w h => w * h
+
+test Tour.areas := List.map area [Shape.circle 2, Shape.rect 3 4] == [12, 12]
+
+test Tour.errors := try (fun _ => parseQuantity "-1") == Result.err "negative quantity -1"
+
+/-- A handler: prices from a table. Under it, `total` is pure. -/
+def Tour.fromTable (table : Map Text Int) (body : Unit -> {Prices | r} a) : {r} a :=
+  handle body () with
+  | Prices.priceOf item -> resume => resume (getOr (Map.lookup item table) 0)
+
+/-- `deus run Tour.main 12 -3 tea`: `try` turns each thrown error into a value. -/
+def Tour.main (u : Unit) : {IO} Unit := forEach (IO.args ()) (fun arg =>
+  match try (fun _ => parseQuantity arg) with
+  | Result.ok n => println (arg ++ " cups of tea cost " ++
+      toText (fromTable (Map.fromList [("tea", 3)]) (fun _ => total [Line.mk "tea" n])))
+  | Result.err message => println ("error: " ++ message))
+
+/-- A checked error: callers see `Throw Text` in the type until something handles it. -/
+def Tour.parseQuantity (t : Text) : {Throw Text} Int :=
+  match fromText t with
+  | Option.some n => if n >= 0 then n else Throw.throw ("negative quantity " ++ t)
+  | Option.none => Throw.throw ("not a number: " ++ t)
+
+/-- The total of an order. Its type says it needs `Prices`, and nothing else. -/
+def Tour.total (lines : List Line) : {Prices} Int := foldl (fun sum line => sum + Prices.priceOf line.item * line.quantity) 0 lines
+
+test Tour.totals :=
+  let order := [Line.mk "tea" 2, Line.mk "cake" 1]
+  fromTable (Map.fromList [("tea", 3), ("cake", 5)]) (fun _ => total order) == 11

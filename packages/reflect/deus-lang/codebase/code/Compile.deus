@@ -1,0 +1,449 @@
+structure Compile.Pending where
+  name : Text
+  wrap : Text
+  core : Sexp
+
+def Compile.accessorCore (hash : Text) (count : Int) (index : Int) : Sexp := Compile.node "lam" [Compile.node "match" [Compile.node "var" [i 0], Compile.node
+  "case"
+  [Compile.node "pcon" ([Sexp.s hash, i 0] ++ replicate count (Compile.node "pvar" [])), Compile.node "var" [i (count - 1 - index)]]]]
+
+/-- Compiles parsed files against a base namespace. Batch names shadow base names. -/
+def Compile.batch (base : Map Text Entry) (store : Text -> {Throw Text | r} Option Sexp) (storeMeta : Text -> {Throw Text | r} Option Sexp) (typeMode : Text) (files : List (Text, List Decl)) : {Throw Text | r} Batch :=
+  let items := Compile.collect files
+  let seen := Ref.new Map.empty
+  let claim := fun fqn => if Map.contains fqn (Ref.get seen) then Throw.throw ("duplicate definition " ++ fqn) else Ref.set seen (Map.insert fqn () (Ref.get seen))
+  let provisional := foldl (fun table item =>
+    match item.decl with
+    | Decl.data _ _ iri _ _ _ => Map.insert item.fqn (Entry.type "" (iriFor item.fqn iri) []) table
+    | Decl.record _ _ iri fields _ _ => Map.insert item.fqn (Entry.type "" (iriFor item.fqn iri) (List.map fst fields)) table
+    | Decl.effect _ _ iri _ _ _ => Map.insert item.fqn (Entry.ability "" (iriFor item.fqn iri)) table
+    | _ => table) base items
+  let typeNames := Names.build provisional
+  let typeObjects := Ref.new []
+  let metas := Ref.new []
+  let pending := Ref.new []
+  let addMetaWith := fun h doc sig locals attrs =>
+    match (doc, sig, locals, attrs) with
+    | (Option.none, Option.none, [], []) => ()
+    | _ => Ref.set metas ((h, metaForm doc sig locals attrs) :: Ref.get metas)
+  let addMeta := fun h doc sig locals => addMetaWith h doc sig locals []
+  let entries := concatMap (fun item =>
+    let fqn := item.fqn
+    match item.decl with
+    | Decl.data _ params iri ctors doc _ =>
+        claim fqn
+        let i := iriFor fqn iri
+        let form := typeForm typeNames item i params (List.map snd ctors)
+        let h := hashFor i form
+        Ref.set typeObjects ((h, form) :: Ref.get typeObjects)
+        addMeta h doc Option.none []
+        (fqn, Entry.type h i []) :: mapIndexed (fun tag ctor =>
+          match ctor with
+          | (name, fields) =>
+              claim (fqn ++ "." ++ name)
+              (fqn ++ "." ++ name, Entry.ctor h tag (List.length fields))) ctors
+    | Decl.record _ params iri fields doc _ =>
+        claim fqn
+        let i := iriFor fqn iri
+        let form := typeForm typeNames item i params [List.map snd fields]
+        let h := hashFor i form
+        Ref.set typeObjects ((h, form) :: Ref.get typeObjects)
+        addMeta h doc Option.none []
+        let count := List.length fields
+        claim (fqn ++ ".mk")
+        let accessors := mapIndexed (fun index field =>
+          let name := fqn ++ "." ++ fst field
+          claim name
+          Ref.set pending (Pending.mk name "term" (accessorCore h count index) :: Ref.get pending)
+          (name, Entry.term ("@" ++ name))) fields
+        (fqn, Entry.type h i (List.map fst fields)) :: (fqn ++ ".mk", Entry.ctor h 0 count) :: accessors
+    | Decl.effect _ params iri ops doc _ =>
+        claim fqn
+        let i := iriFor fqn iri
+        let scope := bodyScope item
+        let form := Compile.node "ability" ([Sexp.s i, Sexp.i (List.length params)] ++ List.map
+          (fun op => Compile.node "op" [Sexp.i (arrowCount (snd op)), tyCore typeNames scope params (snd op)])
+          ops)
+        let h := hashFor i form
+        Ref.set typeObjects ((h, form) :: Ref.get typeObjects)
+        addMeta h doc Option.none []
+        (fqn, Entry.ability h i) :: mapIndexed (fun index op =>
+          match op with
+          | (name, type) =>
+              let arity := arrowCount type
+              if arity == 0 then Throw.throw (item.path ++ ": ability operation " ++ fqn ++ "." ++ name ++
+                " needs an argument (use Unit)") else
+                claim (fqn ++ "." ++ name)
+                (fqn ++ "." ++ name, Entry.op h index arity)) ops
+    | Decl.defn _ _ _ _ _ _ _ _ =>
+        claim fqn
+        [(fqn, Entry.term ("@" ++ fqn))]
+    | Decl.check _ _ _ _ _ =>
+        claim fqn
+        [(fqn, Entry.test ("@" ++ fqn))]
+    | Decl.thm _ _ _ _ _ _ _ =>
+        claim fqn
+        [(fqn, Entry.theorem ("@" ++ fqn))]
+    | _ => []) items
+  let table := foldl (fun t pair => Map.insert (fst pair) (snd pair) t) base entries
+  let names := Names.build table
+  forEach items (fun item =>
+    let ctx := Ctx.mk names (bodyScope item) (item.path ++ ": " ++ item.fqn)
+    let fqn := item.fqn
+    match item.decl with
+    | Decl.defn _ binders type body arms doc attributes pos =>
+        let params := List.map (fun b => Pat.id b.binder [] pos) binders
+        let named := lambda ctx params (fun locals =>
+          match (body, arms) with
+          | (Option.some e, _) => Resolve.expr ctx e locals
+          | (_, Option.some list) => equations ctx list locals
+          | _ => Resolve.fail ctx "definition has no body") []
+        match strip named with
+        | (core, locals) =>
+            Ref.set pending (Pending.mk fqn "term" core :: Ref.get pending)
+            addMetaWith
+              ("@" ++ fqn)
+              doc
+              (Option.some (Compile.signature names (bodyScope item) binders type))
+              locals
+              attributes
+    | Decl.check _ body doc attributes _ =>
+        match strip (Resolve.expr ctx body []) with
+        | (core, locals) =>
+            Ref.set pending (Pending.mk fqn "test" core :: Ref.get pending)
+            addMetaWith ("@" ++ fqn) doc Option.none locals attributes
+    | Decl.thm _ binders prop proof doc _ pos =>
+        let params := List.map (fun b => Pat.id b.binder [] pos) binders
+        let types := List.map (fun b =>
+          match b.annot with
+          | Option.some t => tyCore names (bodyScope item) [] t
+          | Option.none => Compile.node "tvar" [Sexp.s "?"]) binders
+        match strip (lambda ctx params (fun locals => Resolve.expr ctx prop locals) []) with
+        | (core, locals) =>
+            let form := Compile.node
+              "theorem"
+              [Sexp.list (Sexp.sym "binders" :: types), core, Compile.node "proof" (proofTokens names (bodyScope item) proof)]
+            Ref.set pending (Pending.mk fqn "theorem" form :: Ref.get pending)
+            addMeta ("@" ++ fqn) doc Option.none locals
+    | _ => ())
+  let typeObjectMap := Map.fromList (Ref.get typeObjects)
+  let metaMap := Map.fromList (Ref.get metas)
+  let objectOf := fun h => orElse (Map.lookup h typeObjectMap) (fun _ => store h)
+  let metaOf := fun h => if startsWith "@" h then Map.lookup h metaMap else storeMeta h
+  let prims := primTypes (Ref.get pending) metaMap base storeMeta
+  let warnings := Ref.new []
+  let schemes := if typeMode == "off" then Map.empty else typecheck objectOf metaOf prims (Ref.get pending) (typeMode == "warn") warnings
+  Ref.set metas (List.map (fun pair =>
+    match Map.lookup (fst pair) schemes with
+    | Option.some scheme => (fst pair, Sexp.list (asList (snd pair) ++ [Compile.node "scheme" [scheme]]))
+    | Option.none => pair) (Ref.get metas) ++ filterMap
+    (fun pair => if Map.contains (fst pair) metaMap then Option.none else Option.some (fst pair, Compile.node "meta" [Compile.node "scheme" [snd pair]]))
+    (Map.toList schemes))
+  let baseHashes := Map.empty
+  match hashTerms (Ref.get pending) baseHashes with
+  | (hashes, termObjects) =>
+      let resolveHash := fun h => if startsWith "@" h then getOr (Map.lookup (Text.drop 1 h) hashes) h else h
+      let finalEntries := List.map (fun pair =>
+        match pair with
+        | (name, Entry.term h) => (name, Entry.term (resolveHash h))
+        | (name, Entry.test h) => (name, Entry.test (resolveHash h))
+        | (name, Entry.theorem h) => (name, Entry.theorem (resolveHash h))
+        | other => other) entries
+      let finalMetas := List.map (fun pair => (resolveHash (fst pair), snd pair)) (Ref.get metas)
+      Batch.mk
+        (reverse (Ref.get typeObjects) ++ termObjects)
+        finalEntries
+        finalMetas
+        (reverse (Ref.get warnings))
+
+/-- The namespace a definition's body resolves in: its own name's prefix (Lean's rule). -/
+def Compile.bodyScope (item : Item) : Scope :=
+  let segments := Text.split item.fqn "."
+  Scope.mk (List.take (List.length segments - 1) segments) (item.declScope).opens
+
+/-- Flattens files into items, tracking `namespace`/`end`/`open`. `Option` is always open (D16). -/
+def Compile.collect (files : List (Text, List Decl)) : List Item :=
+  let rec walk path decls ns opens acc :=
+    match decls with
+    | [] => acc
+    | d :: rest =>
+        match d with
+        | Decl.ns name => walk path rest (ns ++ Text.split name ".") ([] :: opens) acc
+        | Decl.endNs name =>
+            let count :=
+              match name with
+              | Option.some x => List.length (Text.split x ".")
+              | Option.none => 1
+            walk path rest (List.take (List.length ns - count) ns) (List.drop 1 opens) acc
+        | Decl.openNs names =>
+            match opens with
+            | top :: above => walk path rest ns ((top ++ names) :: above) acc
+            | [] => walk path rest ns [names] acc
+        | _ =>
+            let fqn := joinName ns (declName d)
+            walk
+              path
+              rest
+              ns
+              opens
+              (Item.mk d fqn (Scope.mk ns (List.concat (reverse opens))) path :: acc)
+  reverse (foldl (fun acc file =>
+    match file with
+    | (path, decls) => walk path decls [] [["Option"]] acc) [] files)
+
+/-- Tarjan's strongly connected components, emitted dependencies first. -/
+def Compile.components (nodes : List Text) (deps : Text -> List Text) : List (List Text) :=
+  let index := Ref.new Map.empty
+  let low := Ref.new Map.empty
+  let onStack := Ref.new Map.empty
+  let stack := Ref.new []
+  let counter := Ref.new 0
+  let out := Ref.new []
+  let rec visit v :=
+    let i := Ref.get counter
+    Ref.set counter (i + 1)
+    Ref.set index (Map.insert v i (Ref.get index))
+    Ref.set low (Map.insert v i (Ref.get low))
+    Ref.set stack (v :: Ref.get stack)
+    Ref.set onStack (Map.insert v () (Ref.get onStack))
+    forEach (deps v) (fun w =>
+      match Map.lookup w (Ref.get index) with
+      | Option.none =>
+          visit w
+          Ref.set low (Map.insert
+            v
+            (min (getOr (Map.lookup v (Ref.get low)) 0) (getOr (Map.lookup w (Ref.get low)) 0))
+            (Ref.get low))
+      | Option.some wi => if Map.contains w (Ref.get onStack) then Ref.set low (Map.insert v (min (getOr (Map.lookup v (Ref.get low)) 0) wi) (Ref.get low)) else ())
+    if Map.lookup v (Ref.get low) == Map.lookup v (Ref.get index) then
+      let rec pop acc :=
+        match Ref.get stack with
+        | w :: rest =>
+            Ref.set stack rest
+            Ref.set onStack (Map.remove w (Ref.get onStack))
+            if w == v then w :: acc else pop (w :: acc)
+        | [] => acc
+      Ref.set out (pop [] :: Ref.get out)
+    else ()
+  forEach nodes (fun v => if Map.contains v (Ref.get index) then () else visit v)
+  reverse (Ref.get out)
+
+/-- The form whose references are hashed: a theorem's whole form, so its proof's lemmas count. -/
+def Compile.coreOf (p : Pending) : Sexp := p.core
+
+def Compile.declName : Decl -> Text
+| Decl.defn name _ _ _ _ _ _ _ => name
+| Decl.thm name _ _ _ _ _ _ => name
+| Decl.check name _ _ _ _ => name
+| Decl.data name _ _ _ _ _ => name
+| Decl.record name _ _ _ _ _ => name
+| Decl.effect name _ _ _ _ _ => name
+| _ => ""
+
+/-- Each pending definition's references to others in the batch, sorted; computed once per batch. -/
+def Compile.dependencies (byName : Map Text Pending) : Map Text (List Text) := Map.fromList (List.map
+  (fun pair => (fst pair, dedup (sort (List.filter (fun d => Map.contains d byName) (placeholders (Compile.coreOf (snd pair)) [])))))
+  (Map.toList byName))
+
+/-- A recursive group: members are ordered by the hash of their shape with in-cycle references anonymized. -/
+def Compile.hashCycle (members : List Pending) (hashes : Map Text Text) (objects : List (Text, Sexp)) : (Map Text Text, List (Text, Sexp)) :=
+  let anonymousCycle := Map.fromList (List.map (fun p => (p.name, 0)) members)
+  let keyed := List.map
+    (fun p => (Text.sha256 (Sexp.print (objectOf p (Compile.substitute (Compile.coreOf p) hashes anonymousCycle true))), p))
+    members
+  let ordered := List.map snd (sortBy (fun a b => compare (fst a) (fst b)) keyed)
+  let cycle := Map.fromList (mapIndexed (fun i p => (p.name, i)) ordered)
+  let forms := List.map (fun p => objectOf p (Compile.substitute (Compile.coreOf p) hashes cycle false)) ordered
+  let cycleHash := Text.sha256 (Sexp.print (Compile.node "cycle" forms))
+  let count := List.length ordered
+  let memberHashes := mapIndexed (fun i _ => if count == 1 then cycleHash else cycleHash ++ "." ++ toText i) ordered
+  let named := foldl (fun m pair =>
+    match pair with
+    | (p, h) => Map.insert p.name h m) hashes (zip ordered memberHashes)
+  let objs := List.map (fun pair =>
+    match pair with
+    | (form, h) => (h, unself form memberHashes)) (zip forms memberHashes)
+  (named, reverse objs ++ objects)
+
+/-- Hashes term-like definitions in dependency order; returns name to hash and the objects. -/
+def Compile.hashTerms (pending : List Pending) (known : Map Text Text) : (Map Text Text, List (Text, Sexp)) :=
+  let byName := Map.fromList (List.map (fun p => (p.name, p)) pending)
+  let depMap := Compile.dependencies byName
+  let deps := fun name => getOr (Map.lookup name depMap) []
+  let groups := components (sort (Map.keys byName)) deps
+  foldl (fun state group =>
+    match state with
+    | (hashes, objects) =>
+        let members := filterMap (fun name => Map.lookup name byName) group
+        let selfRef := fun p => any (fun d => List.contains d group) (deps p.name)
+        match members with
+        | p :: [] => if not (selfRef p) then
+            let core := Compile.substitute (Compile.coreOf p) hashes Map.empty false
+            let obj := objectOf p core
+            let h := Text.sha256 (Sexp.print obj)
+            (Map.insert p.name h hashes, (h, obj) :: objects)
+          else hashCycle members hashes objects
+        | _ => hashCycle members hashes objects) (known, []) groups
+
+def Compile.metaForm (doc : Option Text) (sig : Option Sexp) (locals : List Text) (attrs : List Attr) : Sexp :=
+  let docPart :=
+    match doc with
+    | Option.some d => [Compile.node "doc" [Sexp.s d]]
+    | Option.none => []
+  let sigPart :=
+    match sig with
+    | Option.some t => [Compile.node "sig" [t]]
+    | Option.none => []
+  let localsPart := if List.isEmpty locals then [] else [Compile.node "locals" (List.map Sexp.s locals)]
+  let attrsPart := if List.isEmpty attrs then [] else [Compile.node
+    "attrs"
+    (List.map (fun a => Sexp.list (Sexp.s a.attr :: List.map Sexp.s a.values)) attrs)]
+  Compile.node "meta" (sigPart ++ docPart ++ localsPart ++ attrsPart)
+
+def Compile.n (k : Int) : Sexp := Sexp.int k
+
+def Compile.node (head : Text) (items : List Sexp) : Sexp := Sexp.node head items
+
+/-- Wraps Core in its object form: `(term c)`, `(test c)`, or a theorem's full form. -/
+def Compile.objectOf (p : Pending) (core : Sexp) : Sexp := if p.wrap == "theorem" then core else Compile.node p.wrap [core]
+
+/-- Parses sources (`.deus`, or the ```deus fences of an `.mdl` document). -/
+def Compile.parseFile (path : Text) (source : Text) : {Throw Text} (Text, List Decl) :=
+  let text := if endsWith ".mdl" path then deusSource source else source
+  match try (fun _ => Parser.parse text) with
+  | Result.ok decls => (path, decls)
+  | Result.err e => Throw.throw (path ++ ":" ++ e)
+
+/-- Placeholder references `(ref "@Name")` in a form. -/
+def Compile.placeholders (form : Sexp) (acc : List Text) : List Text :=
+  match form with
+  | Sexp.list (Sexp.sym "ref" :: Sexp.str h :: []) => if startsWith "@" h then Text.drop 1 h :: acc else acc
+  | Sexp.list items => foldl (fun a x => Compile.placeholders x a) acc items
+  | _ => acc
+
+/-- The type of a primitive: builtins name each primitive's definition after it (`Int.add` is
+  `prim "Int.add"`), so the definition's signature is found by name, in the batch or the base. -/
+def Compile.primTypes (pending : List Pending) (metaMap : Map Text Sexp) (base : Map Text Entry) (storeMeta : Text -> {Throw Text | r} Option Sexp) : Text -> {Throw Text | r} Option Sexp :=
+  let inBatch := Map.fromList (filterMap (fun p =>
+    match p.core with
+    | Sexp.list (Sexp.sym "prim" :: Sexp.str name :: []) => Option.map (fun sig => (name, sig)) (metaField (Map.lookup ("@" ++ p.name) metaMap) "sig")
+    | _ => Option.none) pending)
+  fun name =>
+    match Map.lookup name inBatch with
+    | Option.some sig => Option.some sig
+    | Option.none =>
+        match Map.lookup name base with
+        | Option.some (Entry.term h) => metaField (storeMeta h) "sig"
+        | _ => Option.none
+
+/-- Proof tokens; lemma names inside `[…]` become references, so a proof's hash covers its lemmas. -/
+def Compile.proofTokens (names : Names) (scope : Scope) (tokens : List Text) : {Throw Text} List Sexp :=
+  let isLemma := fun e =>
+    match e with
+    | Entry.theorem _ => true
+    | _ => false
+  let rec go rest inside acc :=
+    match rest with
+    | [] => reverse acc
+    | t :: more => if t == "[" then go more true (Sexp.s t :: acc) else if t == "]" then go more false (Sexp.s t :: acc) else if inside && t != "," then
+        match Names.lookup names t scope isLemma true with
+        | Option.some (_, e) => go more inside (Compile.node "ref" [Sexp.s (hash e)] :: acc)
+        | Option.none => Throw.throw ("unknown lemma " ++ t)
+      else go more inside (Sexp.s t :: acc)
+  go tokens false []
+
+def Compile.s (t : Text) : Sexp := Sexp.str t
+
+/-- Signature of a definition: binder types then the result type. -/
+def Compile.signature (names : Names) (scope : Scope) (binders : List Binder) (result : Option Ty) : {Throw Text} Sexp :=
+  let unknown := Compile.node "tvar" [Sexp.s "?"]
+  let resultCore :=
+    match result with
+    | Option.some t => tyCore names scope [] t
+    | Option.none => unknown
+  let attach := fun inner =>
+    match inner with
+    | Sexp.list (Sexp.sym "teff" :: effs :: t :: []) => (t, [effs])
+    | _ => (inner, [])
+  match attach resultCore with
+  | (resultPlain, row) =>
+      let count := List.length binders
+      List.foldr (fun pair acc =>
+        match pair with
+        | (i, b) =>
+            let a :=
+              match b.annot with
+              | Option.some t => tyCore names scope [] t
+              | Option.none => unknown
+            Compile.node "tfun" ([a, acc] ++ (if i == count - 1 then row else []))) (if count == 0 then resultCore else resultPlain) (mapIndexed (fun i b => (i, b)) binders)
+
+/-- Replaces placeholders: members of the current cycle by `self` (or `(self i)`), others by hash. -/
+def Compile.substitute (form : Sexp) (hashes : Map Text Text) (cycle : Map Text Int) (anonymous : Bool) : Sexp :=
+  match form with
+  | Sexp.list (Sexp.sym "ref" :: Sexp.str h :: []) => if startsWith "@" h then
+      let name := Text.drop 1 h
+      match Map.lookup name cycle with
+      | Option.some i => if anonymous then Compile.node "self" [] else Compile.node "self" [Sexp.i i]
+      | Option.none =>
+          match Map.lookup name hashes with
+          | Option.some hash => Compile.node "ref" [Sexp.s hash]
+          | Option.none => defect ("unhashed dependency " ++ name)
+    else form
+  | Sexp.list items => Sexp.list (List.map (fun x => Compile.substitute x hashes cycle anonymous) items)
+  | _ => form
+
+/-- The type form that is hashed: IRI, arity, and constructor shapes with field types by IRI. -/
+def Compile.typeForm (names : Names) (item : Item) (iri : Text) (params : List Text) (ctors : List (List Ty)) : {Throw Text} Sexp :=
+  let scope := bodyScope item
+  Compile.node "type" ([Sexp.s iri, i (List.length params)] ++ List.map (fun fields => Compile.node
+    "ctor"
+    (i (List.length fields) :: List.map (fun t => tyCore names scope params t) fields)) ctors)
+
+/-- Infers every pending definition's type, dependencies first; returns "@name" to scheme. -/
+def Compile.typecheck (objectOf : Text -> {Throw Text | r} Option Sexp) (metaOf : Text -> {Throw Text | r} Option Sexp) (prims : Text -> {Throw Text | r} Option Sexp) (pending : List Pending) (warnOnly : Bool) (warnings : Ref (List Text)) : {Throw Text | r} Map Text Sexp :=
+  let byName := Map.fromList (List.map (fun p => (p.name, p)) pending)
+  let depMap := Compile.dependencies byName
+  let deps := fun name => getOr (Map.lookup name depMap) []
+  let schemes := Ref.new Map.empty
+  forEach (components (sort (Map.keys byName)) deps) (fun group =>
+    let u := newUnifier ()
+    let members := filterMap (fun name => Map.lookup name byName) group
+    let vars := Map.fromList (List.map (fun p => ("@" ++ p.name, freshType u)) members)
+    let signed := filterMap
+      (fun p => Option.map (fun sig => ("@" ++ p.name, sig)) (metaField (metaOf ("@" ++ p.name)) "sig"))
+      members
+    let groupSchemes := Ref.new (foldl (fun m pair => Map.insert (fst pair) (snd pair) m) (Ref.get schemes) signed)
+    let unsigned := Map.filter (fun key _ => not (isSome (List.lookup key signed))) vars
+    let env := TypeEnv.mk objectOf metaOf (Ref.new unsigned) groupSchemes prims
+    forEach members (fun p =>
+      let key := "@" ++ p.name
+      catch (fun _ =>
+        let core :=
+          match p.core with
+          | Sexp.list (Sexp.sym "theorem" :: _ :: prop :: _) => prop
+          | c => c
+        let t := getOr (Map.lookup key vars) (freshType u)
+        match metaField (metaOf key) "sig" with
+        | Option.some sig =>
+            let sigVars := Ref.new Map.empty
+            let sigRows := Ref.new Map.empty
+            let declared := signatureType u sig sigVars sigRows
+            Types.unify u t declared
+            checkAgainst u env core declared [] (freshRow u)
+            checkRigid u sigVars sigRows
+        | Option.none =>
+            Types.unify u t (infer u env core [] (freshRow u))
+            if p.wrap == "test" then Types.unify u t Types.bool else ()) (fun e => if warnOnly then Ref.set warnings ((p.name ++ ": " ++ e) :: Ref.get warnings) else Throw.throw (p.name ++ ": " ++ e)))
+    forEach members (fun p =>
+      let key := "@" ++ p.name
+      match Map.lookup key vars with
+      | Option.some t => Ref.set schemes (Map.insert key (scheme u t) (Ref.get schemes))
+      | Option.none => ()))
+  Ref.get schemes
+
+/-- Replaces `(self i)` by references to the cycle's member hashes. -/
+def Compile.unself (form : Sexp) (members : List Text) : Sexp :=
+  match form with
+  | Sexp.list (Sexp.sym "self" :: Sexp.int i :: []) => Compile.node "ref" [Sexp.s (getOr (get? members i) "")]
+  | Sexp.list items => Sexp.list (List.map (fun x => Compile.unself x members) items)
+  | _ => form

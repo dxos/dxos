@@ -1,0 +1,396 @@
+structure Resolve.Ctx where
+  names : Names
+  scope : Scope
+  origin : Text
+
+def Resolve.app (f : Sexp) (args : List Sexp) : Sexp := Compile.node "app" (f :: args)
+
+def Resolve.arms (ctx : Ctx) (scrut : Sexp) (list : List Arm) (locals : List (Option Text)) : {Throw Text} Sexp := Compile.node "match" (scrut :: List.map (fun arm =>
+  let result :=
+    match arm.pats with
+    | single :: [] => pat ctx single []
+    | ps =>
+        match Resolve.pats ctx ps [] with
+        | (cores, b) => (patTuple cores, b)
+  match result with
+  | (core, binds) => Compile.node "case" [core, Resolve.expr ctx arm.body (binds ++ locals)]) list)
+
+def Resolve.arrowCount : Ty -> Int
+| Ty.arrow _ b _ => 1 + Resolve.arrowCount b
+| _ => 0
+
+def Resolve.binopPrim (op : Text) : Text := if op == "+" then "Int.add" else if op == "-" then "Int.sub" else if op == "*" then "Int.mul" else if op == "/" then "Int.div" else if op == "%" then "Int.mod" else if op == "==" || op == "=" then "eq" else if op == "!=" then "neq" else if op == "<" then "lt" else if op == "<=" then "le" else if op == ">" then "gt" else if op == ">=" then "ge" else if op == "++" then "append" else if op == "->" then "implies" else defect ("unknown operator " ++ op)
+
+def Resolve.consCon : Sexp := Compile.node "con" [Sexp.s "#List", i 1, i 2]
+
+def Resolve.coreOfEntry (ctx : Ctx) (pos : Pos) (fqn : Text) (e : Entry) : {Throw Text} Sexp :=
+  match e with
+  | Entry.term h => Compile.node "ref" [Sexp.s h]
+  | Entry.ctor t tag arity => Compile.node "con" [Sexp.s t, i tag, i arity]
+  | Entry.op a index arity => Compile.node "op" [Sexp.s a, i index, i arity]
+  | _ => failAt ctx pos (fqn ++ " is not a value")
+
+def Resolve.ctorOf (ctx : Ctx) (name : Text) (suffix : Bool) : {Throw Text} Option Entry :=
+  match Names.lookup ctx.names name ctx.scope isCtor suffix with
+  | Option.some (_, e) => Option.some e
+  | Option.none => Option.none
+
+def Resolve.ctorPat (ctx : Ctx) (name : Text) (args : List Pat) (pos : Pos) (qualified : Bool) (binds : List (Option Text)) : {Throw Text} (Sexp, List (Option Text)) :=
+  match ctorOf ctx name qualified with
+  | Option.none => if qualified then failAt ctx pos ("unknown constructor " ++ name) else (Compile.node "pvar" [Sexp.s name], Option.some name :: binds)
+  | Option.some (Entry.ctor t tag arity) => if arity != List.length args then failAt ctx pos ("constructor " ++ name ++ " takes " ++ toText arity ++ " arguments") else
+      match Resolve.pats ctx args binds with
+      | (cores, b2) => (Compile.node "pcon" ([Sexp.s t, i tag] ++ cores), b2)
+  | Option.some _ => failAt ctx pos ("not a constructor: " ++ name)
+
+/-- Equations `| p, q => …`: one lambda per pattern column, then a match on their tuple. -/
+def Resolve.equations (ctx : Ctx) (list : List Arm) (locals : List (Option Text)) : {Throw Text} Sexp :=
+  let count :=
+    match list with
+    | arm :: _ => List.length arm.pats
+    | [] => 0
+  let inner := replicate count Option.none ++ locals
+  let scrut := if count == 1 then Compile.node "var" [i 0] else Resolve.tuple (List.map (fun i => Compile.node "var" [Sexp.i (count - 1 - i)]) (range 0 count))
+  let rec wrap k body := if k == 0 then body else wrap (k - 1) (Compile.node "lam" [body])
+  wrap count (Resolve.arms ctx scrut list inner)
+
+def Resolve.expr (ctx : Ctx) (e : Expr) (locals : List (Option Text)) : {Throw Text} Sexp :=
+  let go := fun x => Resolve.expr ctx x locals
+  match e with
+  | Expr.var name pos => valueOf ctx name pos locals
+  | Expr.dot name pos =>
+      match ctorOf ctx name true with
+      | Option.some (Entry.ctor t tag arity) => Compile.node "con" [Sexp.s t, i tag, i arity]
+      | _ => failAt ctx pos ("unknown constructor ." ++ name)
+  | Expr.int v => Compile.node "int" [i v]
+  | Expr.text v => Compile.node "text" [Sexp.s v]
+  | Expr.bool v => if v then trueCore else falseCore
+  | Expr.unit => unitCore
+  | Expr.prim name => Compile.node "prim" [Sexp.s name]
+  | Expr.app f args => flattenApp (go f) (List.map go args)
+  | Expr.lam params body => lambda ctx params (fun inner => Resolve.expr ctx body inner) locals
+  | Expr.lamMatch list => equations ctx list locals
+  | Expr.letPat p value body =>
+      let v := go value
+      match p with
+      | Pat.wild => Compile.node "seq" [v, go body]
+      | _ =>
+          match simpleBinder ctx p with
+          | Option.some name => Compile.node "let" [Sexp.s (getOr name ""), v, Resolve.expr ctx body (name :: locals)]
+          | Option.none =>
+              match pat ctx p [] with
+              | (core, binds) => Compile.node
+                  "match"
+                  [v, Compile.node "case" [core, Resolve.expr ctx body (binds ++ locals)]]
+  | Expr.letFun name params value body isRec => if isRec then
+      let inner := Option.some name :: locals
+      Compile.node
+        "letrec"
+        [Compile.node "names" [Sexp.s name], Sexp.list [lambda ctx params (fun l => Resolve.expr ctx value l) inner], Resolve.expr ctx body inner]
+    else Compile.node
+      "let"
+      [Sexp.s name, lambda ctx params (fun l => Resolve.expr ctx value l) locals, Resolve.expr ctx body (Option.some name :: locals)]
+  | Expr.seq first rest => Compile.node "seq" [go first, go rest]
+  | Expr.ite c yes no => Compile.node "if" [go c, go yes, go no]
+  | Expr.matchOn scruts list =>
+      let count := List.length scruts
+      if any (fun arm => List.length arm.pats != count) list then Resolve.fail ctx "match arm has the wrong number of patterns" else
+        let scrut := if count == 1 then go (getOr (head? scruts) Expr.unit) else Resolve.tuple (List.map go scruts)
+        Resolve.arms ctx scrut list locals
+  | Expr.handleWith body ret ops =>
+      let retClause :=
+        match ret with
+        | Option.none => []
+        | Option.some (p, rbody) =>
+            match simpleBinder ctx p with
+            | Option.some name => [Compile.node "ret" [Sexp.s (getOr name ""), Resolve.expr ctx rbody (name :: locals)]]
+            | Option.none =>
+                match pat ctx p [] with
+                | (core, binds) => [Compile.node "ret" [Compile.node "match" [Compile.node "var" [i 0], Compile.node
+                    "case"
+                    [core, Resolve.expr ctx rbody (binds ++ Option.none :: locals)]]]]
+      Compile.node
+        "handle"
+        ([go body] ++ retClause ++ List.map (fun o => opClause ctx o locals) ops)
+  | Expr.binop op l r _ =>
+      let lc := go l
+      let rc := go r
+      if op == "&&" then Compile.node "if" [lc, rc, falseCore] else if op == "||" then Compile.node "if" [lc, trueCore, rc] else if op == "|>" then flattenApp rc [lc] else if op == "<|" then flattenApp lc [rc] else if op == "::" then Resolve.app consCon [lc, rc] else Resolve.app (Compile.node "prim" [Sexp.s (binopPrim op)]) [lc, rc]
+  | Expr.neg x => Resolve.app (Compile.node "prim" [Sexp.s "Int.neg"]) [go x]
+  | Expr.not x => Compile.node "if" [go x, falseCore, trueCore]
+  | Expr.tuple items => Resolve.tuple (List.map go items)
+  | Expr.list items => List.foldr (fun x acc => Resolve.app consCon [go x, acc]) nilCon items
+  | Expr.record base fields pos => Resolve.record ctx base fields pos locals
+  | Expr.ann x _ => go x
+  | Expr.proj x field pos => Resolve.app (fieldAccessor ctx pos field) [go x]
+
+def Resolve.fail (ctx : Ctx) (message : Text) : {Throw Text} a := Throw.throw (ctx.origin ++ ": " ++ message)
+
+def Resolve.failAt (ctx : Ctx) (pos : Pos) (message : Text) : {Throw Text} a := Throw.throw (ctx.origin ++ ":" ++ toText pos.atLine ++ ":" ++ toText pos.atCol ++ ": " ++ message)
+
+def Resolve.falseCore : Sexp := Compile.node "con" [Sexp.s "#Bool", i 0, i 0]
+
+def Resolve.fieldAccessor (ctx : Ctx) (pos : Pos) (field : Text) : {Throw Text} Sexp :=
+  match getOr (Dict.lookup field (ctx.names).fieldOwners) [] with
+  | owner :: [] =>
+      match Dict.lookup (owner ++ "." ++ field) (ctx.names).index with
+      | Option.some e => coreOfEntry ctx pos (owner ++ "." ++ field) e
+      | Option.none => failAt ctx pos ("missing accessor " ++ owner ++ "." ++ field)
+  | [] => failAt ctx pos ("unknown field " ++ field)
+  | owners => failAt ctx pos ("ambiguous field " ++ field ++ ": " ++ join ", " (sort owners))
+
+def Resolve.flattenApp (f : Sexp) (args : List Sexp) : Sexp :=
+  match f with
+  | Sexp.list (Sexp.sym "app" :: inner) => Sexp.list (Sexp.sym "app" :: inner ++ args)
+  | _ => Resolve.app f args
+
+/-- Builtin types (IRI `#…`) are their own hash; the kernel knows them by it. -/
+def Resolve.hashFor (iri : Text) (form : Sexp) : Text := if startsWith "#" iri then iri else Text.sha256 (Sexp.print form)
+
+/-- A type IRI: explicit, or derived from the fully qualified name. -/
+def Resolve.iriFor (fqn : Text) (iri : Option Text) : Text := getOr iri ("urn:deus:" ++ fqn)
+
+/-- `fun p1 p2 => body`: plain names bind directly; other patterns match on the argument. -/
+def Resolve.lambda (ctx : Ctx) (params : List Pat) (body : List (Option Text) -> {Throw Text} Sexp) (locals : List (Option Text)) : {Throw Text} Sexp :=
+  match params with
+  | [] => body locals
+  | first :: rest =>
+      match simpleBinder ctx first with
+      | Option.some name => Compile.node "lam" [Sexp.s (getOr name ""), Resolve.lambda ctx rest body (name :: locals)]
+      | Option.none =>
+          match pat ctx first [] with
+          | (core, binds) => Compile.node "lam" [Compile.node "match" [Compile.node "var" [i 0], Compile.node
+              "case"
+              [core, Resolve.lambda ctx rest body (binds ++ Option.none :: locals)]]]
+
+/-- De Bruijn index of a local (locals are innermost first), or -1. -/
+def Resolve.localIndex (locals : List (Option Text)) (name : Text) : Int := findIndex (fun l => l == Option.some name) locals
+
+def Resolve.n (k : Int) : Sexp := Sexp.int k
+
+def Resolve.nameOf (x : Sexp) : Text :=
+  match x with
+  | Sexp.str t => t
+  | _ => ""
+
+def Resolve.nilCon : Sexp := Compile.node "con" [Sexp.s "#List", i 0, i 0]
+
+def Resolve.node (head : Text) (items : List Sexp) : Sexp := Sexp.node head items
+
+/-- A handler clause: arguments in order, then the continuation, as Core's `on` expects. -/
+def Resolve.opClause (ctx : Ctx) (o : OpArm) (locals : List (Option Text)) : {Throw Text} Sexp :=
+  match Names.lookup ctx.names o.op ctx.scope isOp true with
+  | Option.some (_, Entry.op a index arity) => if arity != List.length o.args then failAt ctx o.at (o.op ++ " takes " ++ toText arity ++ " arguments") else
+      let argNames := List.map (fun p => getOr (simpleBinder ctx p) Option.none) o.args
+      let inner := o.resume :: reverse argNames ++ locals
+      let complex := List.filter
+        (fun pair => isNone (simpleBinder ctx (snd pair)))
+        (mapIndexed (fun i p => (i, p)) o.args)
+      let rec build rest l :=
+        match rest with
+        | [] => Resolve.expr ctx o.clause l
+        | (index1, p) :: more =>
+            match pat ctx p [] with
+            | (core, binds) =>
+                let depth := List.length l - (List.length locals + index1) - 1
+                Compile.node
+                  "match"
+                  [Compile.node "var" [i depth], Compile.node "case" [core, build more (binds ++ l)]]
+      let binderNames := List.map (fun o2 => Sexp.s (getOr o2 "")) (argNames ++ [o.resume])
+      Compile.node "on" [Sexp.s a, i index, i arity, Sexp.list binderNames, build complex inner]
+  | _ => failAt ctx o.at ("unknown ability operation " ++ o.op)
+
+def Resolve.pairCon : Sexp := Compile.node "con" [Sexp.s "#Pair", i 0, i 2]
+
+/-- Core pattern; `binds` collects bound names innermost first (the locals order). -/
+def Resolve.pat (ctx : Ctx) (p : Pat) (binds : List (Option Text)) : {Throw Text} (Sexp, List (Option Text)) :=
+  match p with
+  | Pat.wild => (Compile.node "pany" [], binds)
+  | Pat.int v => (Compile.node "pint" [i v], binds)
+  | Pat.text v => (Compile.node "ptext" [Sexp.s v], binds)
+  | Pat.bool v => (Compile.node "pcon" [Sexp.s "#Bool", i (if v then 1 else 0)], binds)
+  | Pat.unit => (Compile.node "pcon" [Sexp.s "#Unit", i 0], binds)
+  | Pat.as name inner =>
+      match Resolve.pat ctx inner (Option.some name :: binds) with
+      | (core, b2) => (Compile.node "pas" [Sexp.s name, core], b2)
+  | Pat.cons h t =>
+      match Resolve.pat ctx h binds with
+      | (hc, b1) =>
+          match Resolve.pat ctx t b1 with
+          | (tc, b2) => (Compile.node "pcon" [Sexp.s "#List", i 1, hc, tc], b2)
+  | Pat.list items =>
+      match Resolve.pats ctx items binds with
+      | (cores, b2) => (List.foldr
+          (fun x acc => Compile.node "pcon" [Sexp.s "#List", i 1, x, acc])
+          (Compile.node "pcon" [Sexp.s "#List", i 0])
+          cores, b2)
+  | Pat.tuple items =>
+      match Resolve.pats ctx items binds with
+      | (cores, b2) => (patTuple cores, b2)
+  | Pat.id name args pos => ctorPat ctx name args pos (Text.contains "." name || not (List.isEmpty args)) binds
+  | Pat.dot name args pos => ctorPat ctx name args pos true binds
+
+def Resolve.patTuple (items : List Sexp) : Sexp :=
+  match reverse items with
+  | [] => Compile.node "pcon" [Sexp.s "#Unit", i 0]
+  | last :: rest => foldl (fun acc x => Compile.node "pcon" [Sexp.s "#Pair", i 0, x, acc]) last rest
+
+def Resolve.pats (ctx : Ctx) (ps : List Pat) (binds : List (Option Text)) : {Throw Text} (List Sexp, List (Option Text)) :=
+  let rec go rest acc b :=
+    match rest with
+    | [] => (reverse acc, b)
+    | p :: more =>
+        match pat ctx p b with
+        | (core, b2) => go more (core :: acc) b2
+  go ps [] binds
+
+/-- `{ x := 1, y := 2 }` and `{ p with y := 3 }`: the structure is the unique one with these fields. -/
+def Resolve.record (ctx : Ctx) (base : Option Expr) (fields : List (Text, Expr)) (pos : Pos) (locals : List (Option Text)) : {Throw Text} Sexp :=
+  let given := List.map fst fields
+  let owners :=
+    match given with
+    | [] => []
+    | f :: _ => getOr (Dict.lookup f (ctx.names).fieldOwners) []
+  let fits := fun owner =>
+    let have := structFields ctx owner
+    all (fun g => List.contains g have) given && (isSome base || List.length have == List.length given)
+  match List.filter fits owners with
+  | owner :: [] =>
+      let have := structFields ctx owner
+      let count := List.length have
+      let mk := Compile.node "con" [Sexp.s (structHash ctx owner), i 0, i count]
+      match base with
+      | Option.none => Resolve.app
+          mk
+          (List.map (fun f => Resolve.expr ctx (getOr (List.lookup f fields) Expr.unit) locals) have)
+      | Option.some b =>
+          let inner := replicate count Option.none ++ locals
+          let values := mapIndexed (fun i f =>
+            match List.lookup f fields with
+            | Option.some e => Resolve.expr ctx e inner
+            | Option.none => Compile.node "var" [Sexp.i (count - 1 - i)]) have
+          Compile.node "match" [Resolve.expr ctx b locals, Compile.node "case" [Compile.node
+            "pcon"
+            ([Sexp.s (structHash ctx owner), i 0] ++ replicate count (Compile.node "pvar" [])), Resolve.app mk values]]
+  | [] => failAt ctx pos ("no structure has fields " ++ join ", " given)
+  | _ => failAt ctx pos ("ambiguous record " ++ join ", " given)
+
+def Resolve.s (t : Text) : Sexp := Sexp.str t
+
+/-- A pattern that only binds a name (or nothing): returns the bound name. -/
+def Resolve.simpleBinder (ctx : Ctx) (p : Pat) : {Throw Text} Option (Option Text) :=
+  match p with
+  | Pat.wild => Option.some Option.none
+  | Pat.unit => Option.some Option.none
+  | Pat.id name [] _ => if Text.contains "." name then Option.none else if isSome (ctorOf ctx name false) then Option.none else Option.some (Option.some name)
+  | _ => Option.none
+
+/-- Canonical Core and the binder names in pre-order; every binder contributes exactly one name. -/
+def Resolve.strip (form : Sexp) : (Sexp, List Text) :=
+  match stripAcc form [] with
+  | (core, names) => (core, reverse names)
+
+def Resolve.stripAcc (form : Sexp) (acc : List Text) : (Sexp, List Text) :=
+  let rebuild := fun head prefix children names =>
+    match stripList children (reverse names ++ acc) with
+    | (ys, a2) => (Sexp.list (Sexp.sym head :: prefix ++ ys), a2)
+  match form with
+  | Sexp.list (Sexp.sym "lam" :: Sexp.str x :: body :: []) => rebuild "lam" [] [body] [x]
+  | Sexp.list (Sexp.sym "lam" :: body :: []) => rebuild "lam" [] [body] [""]
+  | Sexp.list (Sexp.sym "let" :: Sexp.str x :: v :: body :: []) => rebuild "let" [] [v, body] [x]
+  | Sexp.list (Sexp.sym "let" :: v :: body :: []) => rebuild "let" [] [v, body] [""]
+  | Sexp.list (Sexp.sym "letrec" :: Sexp.list (Sexp.sym "names" :: xs) :: vs :: body :: []) =>
+      match Resolve.stripAcc vs (reverse (List.map Resolve.nameOf xs) ++ acc) with
+      | (vs2, a1) =>
+          match Resolve.stripAcc body a1 with
+          | (body2, a2) => (Sexp.list [Sexp.sym "letrec", vs2, body2], a2)
+  | Sexp.list (Sexp.sym "letrec" :: vs :: body :: []) =>
+      match Resolve.stripAcc vs (replicate (List.length (asList vs)) "" ++ acc) with
+      | (vs2, a1) =>
+          match Resolve.stripAcc body a1 with
+          | (body2, a2) => (Sexp.list [Sexp.sym "letrec", vs2, body2], a2)
+  | Sexp.list (Sexp.sym "pvar" :: Sexp.str x :: []) => (Sexp.list [Sexp.sym "pvar"], x :: acc)
+  | Sexp.list (Sexp.sym "pvar" :: []) => (form, "" :: acc)
+  | Sexp.list (Sexp.sym "pas" :: Sexp.str x :: p :: []) => rebuild "pas" [] [p] [x]
+  | Sexp.list (Sexp.sym "pas" :: p :: []) => rebuild "pas" [] [p] [""]
+  | Sexp.list (Sexp.sym "ret" :: Sexp.str x :: body :: []) => rebuild "ret" [] [body] [x]
+  | Sexp.list (Sexp.sym "ret" :: body :: []) => rebuild "ret" [] [body] [""]
+  | Sexp.list (Sexp.sym "on" :: a :: i :: k :: Sexp.list xs :: body :: []) => rebuild "on" [a, i, k] [body] (List.map Resolve.nameOf xs)
+  | Sexp.list (Sexp.sym "on" :: a :: i :: Sexp.int k :: body :: []) => rebuild "on" [a, i, Sexp.int k] [body] (replicate (k + 1) "")
+  | Sexp.list items =>
+      match stripList items acc with
+      | (ys, a2) => (Sexp.list ys, a2)
+  | _ => (form, acc)
+
+def Resolve.stripList (items : List Sexp) (acc : List Text) : (List Sexp, List Text) :=
+  let rec go rest out a :=
+    match rest with
+    | [] => (reverse out, a)
+    | x :: more =>
+        match stripAcc x a with
+        | (y, a2) => go more (y :: out) a2
+  go items [] acc
+
+def Resolve.structFields (ctx : Ctx) (fqn : Text) : List Text :=
+  match Dict.lookup fqn (ctx.names).index with
+  | Option.some (Entry.type _ _ fields) => fields
+  | _ => []
+
+def Resolve.structHash (ctx : Ctx) (fqn : Text) : Text :=
+  match Dict.lookup fqn (ctx.names).index with
+  | Option.some (Entry.type h _ _) => h
+  | _ => ""
+
+def Resolve.trueCore : Sexp := Compile.node "con" [Sexp.s "#Bool", i 1, i 0]
+
+/-- Right-nested pairs: `(a, b, c)` is `(a, (b, c))`, as in Unison. -/
+def Resolve.tuple (items : List Sexp) : Sexp :=
+  match reverse items with
+  | [] => unitCore
+  | last :: rest => foldl (fun acc x => Resolve.app pairCon [x, acc]) last rest
+
+/-- Resolves a type to its Core form; params become `(tvar i)`, other lower-case names `(tvar "a")`. -/
+def Resolve.tyCore (names : Names) (scope : Scope) (params : List Text) (t : Ty) : {Throw Text} Sexp :=
+  let go := fun x => Resolve.tyCore names scope params x
+  match t with
+  | Ty.unit => Compile.node "tref" [Sexp.s "#Unit"]
+  | Ty.effects row result => Compile.node "teff" [Compile.node "eff" (List.map go row), go result]
+  | Ty.row items => Compile.node "trow" (List.map go items)
+  | Ty.tuple items => foldl
+      (fun acc x => Compile.node "tapp" [Compile.node "tref" [Sexp.s "#Pair"], x, acc])
+      (go (getOr (last? items) Ty.unit))
+      (List.drop 1 (reverse (List.map go items)))
+  | Ty.arrow a b effects =>
+      let effs :=
+        match effects with
+        | Option.none => []
+        | Option.some es => [Compile.node "eff" (List.map go es)]
+      Compile.node "tfun" ([go a, go b] ++ effs)
+  | Ty.named name args =>
+      let index := findIndex (fun p => p == name) params
+      let head := if index >= 0 then Compile.node "tvar" [i index] else
+        match Names.lookup names name scope isTypeName true with
+        | Option.some (_, Entry.type _ iri _) => Compile.node "tref" [Sexp.s iri]
+        | Option.some (_, Entry.ability _ iri) => Compile.node "tref" [Sexp.s iri]
+        | _ =>
+            let c := code name 0
+            if c >= 97 && c <= 122 then Compile.node "tvar" [Sexp.s name] else Throw.throw ("unknown type " ++ name)
+      if List.isEmpty args then head else Compile.node "tapp" (head :: List.map go args)
+
+def Resolve.unitCore : Sexp := Compile.node "con" [Sexp.s "#Unit", i 0, i 0]
+
+def Resolve.valueOf (ctx : Ctx) (name : Text) (pos : Pos) (locals : List (Option Text)) : {Throw Text} Sexp :=
+  let index := localIndex locals name
+  if index >= 0 then Compile.node "var" [i index] else
+    let dot := indexOf name "." 0
+    let headIndex := if dot > 0 then localIndex locals (slice name 0 dot) else -1
+    if headIndex >= 0 then
+      let fields := Text.split (Text.drop (dot + 1) name) "."
+      foldl
+        (fun acc field => Resolve.app (fieldAccessor ctx pos field) [acc])
+        (Compile.node "var" [i headIndex])
+        fields
+    else
+      match Names.lookup ctx.names name ctx.scope isValue true with
+      | Option.some (fqn, e) => coreOfEntry ctx pos fqn e
+      | Option.none => failAt ctx pos ("unknown name " ++ name)

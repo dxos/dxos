@@ -1,0 +1,129 @@
+/-- The items after a list's head symbol, for `(head item…)` forms. -/
+def Sexp.args (s : Sexp) : List Sexp :=
+  match s with
+  | Sexp.list (_ :: rest) => rest
+  | _ => []
+
+def Sexp.asInt (s : Sexp) : Int :=
+  match s with
+  | Sexp.int value => value
+  | _ => defect ("sexp: expected int, got " ++ Sexp.print s)
+
+def Sexp.asList (s : Sexp) : List Sexp :=
+  match s with
+  | Sexp.list xs => xs
+  | _ => []
+
+def Sexp.asText (s : Sexp) : Text :=
+  match s with
+  | Sexp.str value => value
+  | Sexp.sym name => name
+  | _ => defect ("sexp: expected text, got " ++ Sexp.print s)
+
+/-- Appends the printed form to a reversed chunk list; `print` joins once at the end. -/
+def Sexp.emit (s : Sexp) (acc : List Text) : List Text :=
+  match s with
+  | Sexp.int n => toText n :: acc
+  | Sexp.sym name => name :: acc
+  | Sexp.str value => Sexp.quote value :: acc
+  | Sexp.list items =>
+      let rec go first rest acc2 :=
+        match rest with
+        | [] => ")" :: acc2
+        | x :: xs => go false xs (Sexp.emit x (if first then acc2 else " " :: acc2))
+      go true items ("(" :: acc)
+
+def Sexp.head (s : Sexp) : Text :=
+  match s with
+  | Sexp.list (Sexp.sym h :: _) => h
+  | _ => ""
+
+def Sexp.hex4 (c : Int) : Text := hexDigit (and (shr c 12) 15) ++ hexDigit (and (shr c 8) 15) ++ hexDigit (and (shr c 4) 15) ++
+  hexDigit (and c 15)
+
+def Sexp.hexDigit (n : Int) : Text := slice "0123456789abcdef" n (n + 1)
+
+def Sexp.hexValue (c : Int) : Int := if c >= 48 && c <= 57 then c - 48 else if c >= 97 && c <= 102 then c - 97 + 10 else c - 65 + 10
+
+def Sexp.i (k : Int) : Sexp := Sexp.int k
+
+def Sexp.isDelimiter (c : Int) : Bool := c == 32 || c == 10 || c == 9 || c == 13 || c == 40 || c == 41 || c == -1
+
+/-- Shorthand constructors used throughout the compiler. -/
+def Sexp.node (head : Text) (items : List Sexp) : Sexp := Sexp.list (Sexp.sym head :: items)
+
+/-- True when a string needs no escaping, which is the common case and skips the per-code loop. -/
+def Sexp.plain (t : Text) : Bool :=
+  let n := Text.length t
+  let rec go i := if i >= n then true else
+    let c := code t i
+    if c == 34 || c == 92 || c < 32 || c == 127 then false else go (i + 1)
+  go 0
+
+def Sexp.print (s : Sexp) : Text := Text.concat (reverse (Sexp.emit s []))
+
+/-- Adds a finished form to the innermost open list, or to the top-level forms. -/
+def Sexp.push (form : Sexp) (stack : List (List Sexp)) (done : List Sexp) : (List (List Sexp), List Sexp) :=
+  match stack with
+  | [] => (stack, form :: done)
+  | top :: rest => ((form :: top) :: rest, done)
+
+def Sexp.quote (t : Text) : Text := if plain t then "\"" ++ t ++ "\"" else
+  let n := Text.length t
+  let rec go i acc := if i >= n then acc else go (i + 1) (quoteCode (code t i) :: acc)
+  "\"" ++ Text.concat (reverse (go 0 [])) ++ "\""
+
+def Sexp.quoteCode (c : Int) : Text := if c == 34 then "\\\"" else if c == 92 then "\\\\" else if c == 10 then "\\n" else if c == 9 then "\\t" else if c == 13 then "\\r" else if c < 32 || c == 127 then "\\u" ++ hex4 c else fromCode c
+
+def Sexp.read (t : Text) : Sexp :=
+  match readAll t with
+  | form :: [] => form
+  | _ => defect "sexp: expected exactly one form"
+
+/-- Reads every form in a text. A reader written for speed: index loops, no tokens. -/
+def Sexp.readAll (t : Text) : List Sexp :=
+  let n := Text.length t
+  let rec readString i start acc :=
+    let c := code t i
+    if c == -1 then defect "sexp: unterminated string" else if c == 34 then (Text.concat (reverse (slice t start i :: acc)), i + 1) else if c == 92 then
+      let e := code t (i + 1)
+      let piece := slice t start i
+      if e == 110 then readString (i + 2) (i + 2) ("\n" :: piece :: acc) else if e == 116 then readString (i + 2) (i + 2) ("\t" :: piece :: acc) else if e == 114 then readString (i + 2) (i + 2) ("\r" :: piece :: acc) else if e == 117 then
+        let code := Sexp.hexValue (code t (i + 2)) * 4096 + Sexp.hexValue (code t (i + 3)) * 256 +
+          Sexp.hexValue (code t (i + 4)) * 16 + Sexp.hexValue (code t (i + 5))
+        readString (i + 6) (i + 6) (fromCode code :: piece :: acc)
+      else readString (i + 2) (i + 2) (fromCode e :: piece :: acc)
+    else readString (i + 1) start acc
+  let rec atomEnd i := if isDelimiter (code t i) then i else atomEnd (i + 1)
+  let rec go i stack done :=
+    let c := code t i
+    if i >= n then
+      match stack with
+      | [] => reverse done
+      | _ => defect "sexp: unbalanced ("
+    else if c == 32 || c == 10 || c == 9 || c == 13 then go (i + 1) stack done else if c == 59 then
+      let j := indexOf t "\n" i
+      go (if j < 0 then n else j) stack done
+    else if c == 40 then go (i + 1) ([] :: stack) done else if c == 41 then
+      match stack with
+      | [] => defect "sexp: unbalanced )"
+      | top :: rest =>
+          match Sexp.push (Sexp.list (reverse top)) rest done with
+          | (stack2, done2) => go (i + 1) stack2 done2
+    else if c == 34 then
+      match readString (i + 1) (i + 1) [] with
+      | (value, j) =>
+          match Sexp.push (Sexp.str value) stack done with
+          | (stack2, done2) => go j stack2 done2
+    else
+      let j := atomEnd i
+      let atom := slice t i j
+      let form :=
+        match fromText atom with
+        | Option.some value => Sexp.int value
+        | Option.none => Sexp.sym atom
+      match Sexp.push form stack done with
+      | (stack2, done2) => go j stack2 done2
+  go 0 [] []
+
+def Sexp.s (t : Text) : Sexp := Sexp.str t

@@ -1,0 +1,19 @@
+def Json.escape (t : Text) : Text :=
+  let n := Text.length t
+  let rec go i acc := if i >= n then Text.concat (reverse acc) else
+    let c := code t i
+    let piece := if c == 34 then "\\\"" else if c == 92 then "\\\\" else if c == 10 then "\\n" else if c == 9 then "\\t" else if c == 13 then "\\r" else if c < 32 then "\\u" ++ hex4 c else fromCode c
+    go (i + 1) (piece :: acc)
+  "\"" ++ go 0 [] ++ "\""
+
+def Json.render (j : Json) : Text :=
+  match j with
+  | Json.null => "null"
+  | Json.bool b => if b then "true" else "false"
+  | Json.num v => toText v
+  | Json.str v => Json.escape v
+  | Json.arr items => "[" ++ join "," (List.map Json.render items) ++ "]"
+  | Json.obj fields => "{" ++
+      join
+        ","
+        (List.map (fun pair => Json.escape (fst pair) ++ ":" ++ Json.render (snd pair)) fields) ++ "}"

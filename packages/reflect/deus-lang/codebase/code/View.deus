@@ -1,0 +1,93 @@
+def View.abilityDecl (p : Printer) (ns : Map Text Entry) (name : Text) (e : Entry) (obj : Sexp) : Text :=
+  match (e, Sexp.args obj) with
+  | (Entry.ability h iri, _ :: Sexp.int count :: rawOps) =>
+      let names := paramNames count (namedVars obj)
+      let ops := List.map (nameParams names) rawOps
+      let opNames := filterMap (fun pair =>
+        match pair with
+        | (n, Entry.op a index _) => if a == h then Option.some (index, lastSegment n) else Option.none
+        | _ => Option.none) (Map.toList ns)
+      let lines := mapIndexed (fun index op =>
+        let oname := getOr (List.lookup index opNames) ("op" ++ toText index)
+        match Sexp.args op with
+        | _ :: t :: [] => "  " ++ oname ++ " : " ++ Print.ty p t 0
+        | _ => "  " ++ oname) ops
+      "ability " ++ name ++ params names ++ iriClause iri name ++ " where\n" ++ join "\n" lines
+  | _ => Sexp.print obj
+
+def View.iriClause (iri : Text) (name : Text) : Text := if iri == "urn:deus:" ++ name then "" else " @" ++ quoteText iri
+
+/-- A type with its parameters (stored by index) under their chosen names. -/
+def View.nameParams (names : List Text) (t : Sexp) : Sexp :=
+  match t with
+  | Sexp.list (Sexp.sym "tvar" :: Sexp.int i :: []) =>
+      match get? names i with
+      | Option.some n => Sexp.node "tvar" [Sexp.str n]
+      | Option.none => t
+  | Sexp.list items => Sexp.list (List.map (View.nameParams names) items)
+  | _ => t
+
+/-- Type variables a declaration names itself, such as an operation's own `a` in `throw : e -> a`. -/
+def View.namedVars (t : Sexp) : List Text :=
+  match t with
+  | Sexp.list (Sexp.sym "tvar" :: Sexp.str n :: []) => [n]
+  | Sexp.list items => concatMap View.namedVars items
+  | _ => []
+
+/-- Names for a declaration's `count` parameters: letters in order, skipping the names already used in it. -/
+def View.paramNames (count : Int) (used : List Text) : List Text :=
+  let rec pick k acc := if List.length acc >= count then reverse acc else
+    let candidate := fromCode (97 + k)
+    if List.contains candidate used then pick (k + 1) acc else pick (k + 1) (candidate :: acc)
+  pick 0 []
+
+def View.params (names : List Text) : Text := Text.concat (List.map (fun n => " " ++ n) names)
+
+/-- `theorem t (x : T) : prop := by tactic`. -/
+def View.theoremDecl (p : Printer) (name : Text) (types : List Sexp) (prop : Sexp) (proof : Sexp) : Text :=
+  let rec params t env acc :=
+    match t with
+    | Sexp.list (Sexp.sym "lam" :: b :: []) =>
+        let x := Print.bind p env
+        params b (x :: env) (x :: acc)
+    | _ => (reverse acc, t, env)
+  match params prop [] [] with
+  | (names, b, env) =>
+      let binders := Text.concat (List.map (fun pair =>
+        match pair with
+        | (x, t) => " (" ++ x ++ " : " ++ Print.ty p t 0 ++ ")") (zip names types))
+      let tactic := List.map (fun x =>
+        match x with
+        | Sexp.list (Sexp.sym "ref" :: Sexp.str l :: []) => nameFor p l
+        | _ => asText x) (Sexp.args proof)
+      let proofText := if tactic == ["sorry"] then "sorry" else "by " ++ replace " ," "," (replace "[ " "[" (replace " ]" "]" (join " " tactic)))
+      "theorem " ++ name ++ binders ++ " : " ++ Print.expr p b env 2 0 ++ " := " ++ proofText
+
+def View.typeArgs (form : Sexp) : List Sexp := List.filter (fun x => head x == "ctor") (Sexp.args form)
+
+/-- `inductive T where | c (F) …` or `structure T where f : F …`. -/
+def View.typeDecl (p : Printer) (ns : Map Text Entry) (name : Text) (e : Entry) (obj : Sexp) : Text :=
+  match (e, Sexp.args obj) with
+  | (Entry.type h iri fields, _ :: Sexp.int count :: _) =>
+      let names := paramNames count (namedVars obj)
+      let ctors := List.map (nameParams names) (typeArgs obj)
+      let display := name
+      if not (List.isEmpty fields) then
+        let types := getOr (Option.map Sexp.args (head? ctors)) []
+        let lines := List.map (fun pair =>
+          match pair with
+          | (f, t) => "  " ++ f ++ " : " ++ Print.ty p t 0) (zip fields (List.drop 1 types))
+        "structure " ++ display ++ params names ++ iriClause iri name ++ " where\n" ++
+          join "\n" lines
+      else
+        let ctorNames := filterMap (fun pair =>
+          match pair with
+          | (n, Entry.ctor t tag _) => if t == h then Option.some (tag, lastSegment n) else Option.none
+          | _ => Option.none) (Map.toList ns)
+        let lines := mapIndexed (fun tag c =>
+          let cname := getOr (List.lookup tag ctorNames) ("ctor" ++ toText tag)
+          let fieldTypes := List.drop 1 (Sexp.args c)
+          "  | " ++ cname ++ Text.concat (List.map (fun t => " " ++ Print.ty p t 100) fieldTypes)) ctors
+        "inductive " ++ display ++ params names ++ iriClause iri name ++ " where" ++
+          (if List.isEmpty lines then "" else "\n" ++ join "\n" lines)
+  | _ => Sexp.print obj

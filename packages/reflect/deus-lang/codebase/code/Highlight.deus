@@ -1,0 +1,73 @@
+/-- ANSI colours: keywords magenta, strings green, comments dim, types cyan. -/
+def Highlight.ansi (source : Text) : Text :=
+  let paint := fun code t => esc ++ "[" ++ code ++ "m" ++ t ++ esc ++ "[0m"
+  Text.concat (List.map (fun run =>
+    match run with
+    | ("kw", t) => paint "35" t
+    | ("str", t) => paint "32" t
+    | ("cm", t) => paint "2" t
+    | ("ty", t) => paint "36" t
+    | (_, t) => t) (runs source))
+
+/-- Text dimmed on a terminal, as is. -/
+def Highlight.dim (t : Text) : {IO} Text := if enabled () then esc ++ "[2m" ++ t ++ esc ++ "[0m" else t
+
+/-- Whether output goes to a terminal that wants colour: the kernel sets `DEUS_TTY`, and `NO_COLOR` turns it off. -/
+def Highlight.enabled (u : Unit) : {IO} Bool := isSome (IO.getEnv "DEUS_TTY") && isNone (IO.getEnv "NO_COLOR")
+
+def Highlight.esc : Text := fromCode 27
+
+def Highlight.escape (t : Text) : Text := replace ">" "&gt;" (replace "<" "&lt;" (replace "&" "&amp;" t))
+
+/-- Colours `text` with ANSI codes when the terminal wants colour. -/
+def Highlight.forTerminal (source : Text) : {IO} Text := if enabled () then ansi source else source
+
+/-- HTML with a `span` class per kind. -/
+def Highlight.html (source : Text) : Text := Text.concat (List.map (fun run =>
+  match run with
+  | ("plain", t) => Highlight.escape t
+  | (kind, t) => "<span class=" ++ kind ++ ">" ++ Highlight.escape t ++ "</span>") (runs source))
+
+/-- HTML in which names found in `links` (display name -> hash) open that definition. -/
+def Highlight.htmlLinked (links : Map Text Text) (source : Text) : Text := Text.concat (List.map (fun run =>
+  match run with
+  | (kind, t) =>
+      let inner := if kind == "plain" then Highlight.escape t else "<span class=" ++ kind ++ ">" ++ Highlight.escape t ++ "</span>"
+      if kind == "plain" || kind == "ty" then
+        match Map.lookup t links with
+        | Option.some h => "<a class=ref data-open=\"d:" ++ h ++ "\">" ++ inner ++ "</a>"
+        | Option.none => inner
+      else inner) (runs source))
+
+def Highlight.isWordChar (c : Int) : Bool := isAlpha c || isDigit c || c == 95 || c == 46 || c == 63
+
+def Highlight.keywords : Map Text Unit := Set.fromList ["def", "theorem", "test", "inductive", "structure", "ability", "namespace", "end", "match", "with", "fun", "let", "rec", "if", "then", "else", "handle", "return", "by", "where", "prim", "sorry"]
+
+/-- The source as (kind, text) runs, in order. -/
+def Highlight.runs (source : Text) : List (Text, Text) :=
+  let n := Text.length source
+  let rec scan i acc := if i >= n then reverse acc else
+    let c := code source i
+    if c == 34 then
+      let rec close j := if j >= n then n else if code source j == 92 then close (j + 2) else if code source j == 34 then j + 1 else close (j + 1)
+      let j := close (i + 1)
+      scan j (("str", slice source i j) :: acc)
+    else if c == 47 && i + 1 < n && code source (i + 1) == 45 then
+      let stop := indexOf source "-/" (i + 2)
+      let j := if stop < 0 then n else stop + 2
+      scan j (("cm", slice source i j) :: acc)
+    else if c == 45 && i + 1 < n && code source (i + 1) == 45 then
+      let stop := indexOf source "\n" i
+      let j := if stop < 0 then n else stop
+      scan j (("cm", slice source i j) :: acc)
+    else if isAlpha c || c == 95 then
+      let rec word j := if j < n && isWordChar (code source j) then word (j + 1) else j
+      let j := word i
+      let w := slice source i j
+      let kind := if Map.contains w Highlight.keywords then "kw" else if c >= 65 && c <= 90 then "ty" else "plain"
+      scan j ((kind, w) :: acc)
+    else scan (i + 1) (("plain", fromCode c) :: acc)
+  scan 0 []
+
+test Highlight.spansKinds := Highlight.html "def x : Int := \"a<b\" -- note" ==
+  "<span class=kw>def</span> x : <span class=ty>Int</span> := <span class=str>\"a&lt;b\"</span> <span class=cm>-- note</span>"

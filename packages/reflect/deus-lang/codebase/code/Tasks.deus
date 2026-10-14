@@ -1,0 +1,287 @@
+/-- Tasks linking a definition, by name or by any hash it was linked at. -/
+def Tasks.about (tasks : Map Text Task) (name : Text) (h : Text) : List Task := List.filter (fun t => any (fun a =>
+  match a with
+  | Attachment.definition n linked => n == name || linked == h
+  | Attachment.change _ => false) t.links) (Map.values tasks)
+
+def Tasks.attachmentFromSexp (form : Sexp) : Attachment :=
+  match (head form, Sexp.args form) with
+  | ("def", name :: ref :: []) => Attachment.definition (asText name) (asText (getOr (head? (Sexp.args ref)) (Sexp.str "")))
+  | ("change", h :: []) => Attachment.change (asText h)
+  | _ => defect ("bad task link " ++ Sexp.print form)
+
+def Tasks.attachmentToSexp (a : Attachment) : Sexp :=
+  match a with
+  | Attachment.definition name h => Sexp.node "def" [Sexp.str name, Sexp.node "ref" [Sexp.str h]]
+  | Attachment.change h => Sexp.node "change" [Sexp.str h]
+
+/-- A new task with only an id and a title. -/
+def Tasks.blank (id : Text) (title : Text) : Task := Task.mk id title TaskState.todo 0 "" [] "" "" [] []
+
+/-- The changes on the current branch (first parents, newest first) where `changedAt parent node` holds. -/
+def Tasks.changesWhere (dir : Text) (limit : Int) (changedAt : Causal -> Causal -> {IO, Throw Text} Bool) : {IO, Throw Text} List (Text, Causal) :=
+  let rec walk h n acc := if n <= 0 then reverse acc else
+    let node := readCausal dir h
+    match parentsOf dir h with
+    | [] => reverse acc
+    | p :: _ =>
+        let parent := readCausal dir p
+        walk p (n - 1) (if changedAt parent node then (h, node) :: acc else acc)
+  walk (headOf dir (currentBranch dir)) limit []
+
+def Tasks.comment (t : Task) (c : Comment) : Task := Task.mk
+  t.id
+  t.title
+  t.state
+  t.priority
+  t.assignee
+  t.labels
+  t.parent
+  t.details
+  t.links
+  (t.comments ++ [c])
+
+/-- The current branch's tasks, by id. -/
+def Tasks.current (dir : Text) : {IO, Throw Text} Map Text Task :=
+  let snapshot := snapshotOf dir (readCausal dir (headOf dir (currentBranch dir)))
+  Map.fromList (List.map (fun pair => (fst pair, Tasks.read dir (snd pair))) (Map.toList snapshot))
+
+/-- Fields `deus task new` and `deus task set` take as options. -/
+def Tasks.fields : List Text := ["title", "state", "priority", "assignee", "labels", "parent", "details"]
+
+/-- A task by id or unique id prefix. -/
+def Tasks.find (tasks : Map Text Task) (id : Text) : {Throw Text} Task :=
+  match Map.lookup id tasks with
+  | Option.some t => t
+  | Option.none =>
+      match List.filter (fun key => startsWith id key) (Map.keys tasks) with
+      | key :: [] => getOr (Map.lookup key tasks) (blank key "")
+      | [] => Throw.throw ("no task " ++ id)
+      | _ => Throw.throw ("task id " ++ id ++ " is ambiguous")
+
+/-- A fresh id: the first 8 hex digits of what makes the task unique (title, author, time, branch head). -/
+def Tasks.freshId (dir : Text) (title : Text) (author : Text) : {IO, Throw Text} Text := Text.take
+  8
+  (Text.sha256 (title ++ "\n" ++ author ++ "\n" ++ IO.wallClock () ++ "\n" ++ headOf dir (currentBranch dir)))
+
+def Tasks.fromSexp (form : Sexp) : Task :=
+  let text := fun key => getOr (Option.map asText (metaField (Option.some form) key)) ""
+  let comment := fun c =>
+    match Sexp.args c with
+    | author :: note :: [] => Comment.mk (asText author) (asText note)
+    | _ => defect ("bad task comment " ++ Sexp.print c)
+  Task.mk
+    (text "id")
+    (text "title")
+    (getOr (List.lookup (text "state") states) TaskState.todo)
+    (getOr (Option.map asInt (metaField (Option.some form) "priority")) 0)
+    (text "assignee")
+    (List.map asText (metaList (Option.some form) "labels"))
+    (text "parent")
+    (text "details")
+    (List.map attachmentFromSexp (metaList (Option.some form) "links"))
+    (List.map comment (metaList (Option.some form) "comments"))
+
+/-- Changes that touched a task. -/
+def Tasks.historyOf (dir : Text) (id : Text) (limit : Int) : {IO, Throw Text} List (Text, Causal) := changesWhere
+  dir
+  limit
+  (fun parent node => parent.tasks != node.tasks && Map.lookup id (snapshotOf dir parent) != Map.lookup id (snapshotOf dir node))
+
+/-- Changes that rebound a name. -/
+def Tasks.historyOfName (dir : Text) (name : Text) (limit : Int) : {IO, Throw Text} List (Text, Causal) := changesWhere
+  dir
+  limit
+  (fun parent node => parent.snapshot != node.snapshot && Map.lookup name (readNamespace dir parent.snapshot) !=
+    Map.lookup name (readNamespace dir node.snapshot))
+
+def Tasks.isOpen (t : Task) : Bool := t.state == TaskState.todo || t.state == TaskState.doing
+
+def Tasks.link (t : Task) (a : Attachment) : Task := if any (fun b => b == a) t.links then t else Task.mk
+  t.id
+  t.title
+  t.state
+  t.priority
+  t.assignee
+  t.labels
+  t.parent
+  t.details
+  (t.links ++ [a])
+  t.comments
+
+/-- Three-way merge of tasks snapshots. Returns the merged snapshot and conflicts as `task:<id>.<field>`. -/
+def Tasks.merge (dir : Text) (base : Map Text Text) (ours : Map Text Text) (theirs : Map Text Text) : {IO, Throw Text} (Map Text Text, List Text) :=
+  let ids := Set.toList (Set.fromList (Map.keys base ++ Map.keys ours ++ Map.keys theirs))
+  foldl (fun state id =>
+    match state with
+    | (merged, conflicts) =>
+        let b := Map.lookup id base
+        let o := Map.lookup id ours
+        let t := Map.lookup id theirs
+        if o == t then state else if b == o then
+          match t with
+          | Option.some h => (Map.insert id h merged, conflicts)
+          | Option.none => (Map.remove id merged, conflicts)
+        else if b == t then state else
+          match (o, t) with
+          | (Option.some oh, Option.some th) =>
+              let baseTask :=
+                match b with
+                | Option.some bh => Tasks.read dir bh
+                | Option.none => blank id ""
+              match mergeTask baseTask (Tasks.read dir oh) (Tasks.read dir th) with
+              | Result.ok task => (Map.insert id (Codebase.put dir (Tasks.toSexp task)) merged, conflicts)
+              | Result.err fields => (merged, conflicts ++ List.map (fun f => "task:" ++ id ++ "." ++ f) fields)
+          | _ => (merged, conflicts ++ ["task:" ++ id])) (ours, []) ids
+
+/-- Merges one task changed on both sides, field by field. Returns the task or the conflicting fields. -/
+def Tasks.mergeTask (b : Task) (o : Task) (t : Task) : Result (List Text) Task :=
+  let title := three b.title o.title t.title
+  let state := three b.state o.state t.state
+  let priority := three b.priority o.priority t.priority
+  let assignee := three b.assignee o.assignee t.assignee
+  let parent := three b.parent o.parent t.parent
+  let details := three b.details o.details t.details
+  let conflicts := filterMap
+    (fun pair => if snd pair then Option.some (fst pair) else Option.none)
+    [("title", isNone title), ("state", isNone state), ("priority", isNone priority), ("assignee", isNone assignee), ("parent", isNone parent), ("details", isNone details)]
+  match (title, state, priority, assignee, parent, details) with
+  | (Option.some title2, Option.some state2, Option.some priority2, Option.some assignee2, Option.some parent2, Option.some details2) =>
+      let comments := o.comments ++ List.filter (fun c => not (any (fun d => d == c) o.comments)) t.comments
+      Result.ok (Task.mk
+        o.id
+        title2
+        state2
+        priority2
+        assignee2
+        (threeSet b.labels o.labels t.labels)
+        parent2
+        details2
+        (threeSet b.links o.links t.links)
+        comments)
+  | _ => Result.err conflicts
+
+/-- Open tasks first, then by priority (none last), then by title. -/
+def Tasks.order (a : Task) (b : Task) : Int :=
+  let rank := fun t => (if isOpen t then 0 else 1, if t.priority == 0 then 5 else t.priority)
+  let ra := rank a
+  let rb := rank b
+  if ra == rb then compare a.title b.title else compare ra rb
+
+def Tasks.parsePriority (t : Text) : {Throw Text} Int :=
+  match (fromText t, findIndex (fun p => p == t) priorities) with
+  | (Option.some n, _) => if n >= 0 && n <= 4 then n else Throw.throw ("priority " ++ t ++ " is not 0..4")
+  | (Option.none, i) => if i >= 0 then i else Throw.throw ("unknown priority " ++ t ++ " (none, urgent, high, medium, low or 0..4)")
+
+def Tasks.parseState (t : Text) : {Throw Text} TaskState :=
+  match List.lookup t states with
+  | Option.some s => s
+  | Option.none => Throw.throw ("unknown task state " ++ t ++ " (todo, doing, done, canceled)")
+
+def Tasks.priorities : List Text := ["none", "urgent", "high", "medium", "low"]
+
+def Tasks.priorityText (n : Int) : Text := getOr (head? (List.drop n priorities)) (toText n)
+
+/-- Stores a tasks snapshot; no tasks is `""`, so a history node without tasks keeps its old hash. -/
+def Tasks.putSnapshot (dir : Text) (tasks : Map Text Text) : {IO} Text := if Map.size tasks == 0 then "" else Codebase.put dir (Sexp.node "tasks" (List.map
+  (fun pair => Sexp.node "t" [Sexp.str (fst pair), Sexp.node "ref" [Sexp.str (snd pair)]])
+  (Map.toList tasks)))
+
+def Tasks.read (dir : Text) (h : Text) : {IO, Throw Text} Task :=
+  match readObject dir h with
+  | Option.some form => Tasks.fromSexp form
+  | Option.none => Throw.throw ("missing task #" ++ h)
+
+/-- Writes tasks on the current branch as one change. Returns the new causal hash. -/
+def Tasks.save (dir : Text) (changed : List Task) (message : Text) : {IO, Throw Text} Text :=
+  let head := readCausal dir (headOf dir (currentBranch dir))
+  let tasks := foldl
+    (fun m t => Map.insert t.id (Codebase.put dir (Tasks.toSexp t)) m)
+    (snapshotOf dir head)
+    changed
+  commitTasks dir (putSnapshot dir tasks) message
+
+/-- Sets one field from its text form, as `deus task set --<field> <value>` does. -/
+def Tasks.setField (t : Task) (field : Text) (value : Text) : {Throw Text} Task := if field == "title" then Task.mk t.id value t.state t.priority t.assignee t.labels t.parent t.details t.links t.comments else if field == "state" then Task.mk
+  t.id
+  t.title
+  (parseState value)
+  t.priority
+  t.assignee
+  t.labels
+  t.parent
+  t.details
+  t.links
+  t.comments else if field == "priority" then Task.mk
+  t.id
+  t.title
+  t.state
+  (parsePriority value)
+  t.assignee
+  t.labels
+  t.parent
+  t.details
+  t.links
+  t.comments else if field == "assignee" then Task.mk t.id t.title t.state t.priority value t.labels t.parent t.details t.links t.comments else if field == "labels" then Task.mk
+  t.id
+  t.title
+  t.state
+  t.priority
+  t.assignee
+  (List.filter (fun l => not (Text.isEmpty l)) (List.map trim (Text.split value ",")))
+  t.parent
+  t.details
+  t.links
+  t.comments else if field == "parent" then Task.mk t.id t.title t.state t.priority t.assignee t.labels value t.details t.links t.comments else if field == "details" then Task.mk t.id t.title t.state t.priority t.assignee t.labels t.parent value t.links t.comments else Throw.throw ("unknown task field " ++ field)
+
+/-- The tasks snapshot of a history node: task id -> task hash. -/
+def Tasks.snapshotOf (dir : Text) (c : Causal) : {IO, Throw Text} Map Text Text := if Text.isEmpty c.tasks then Map.empty else
+  match readObject dir c.tasks with
+  | Option.none => Throw.throw ("missing tasks snapshot #" ++ c.tasks)
+  | Option.some form => Map.fromList (List.map (fun item =>
+      match Sexp.args item with
+      | id :: ref :: [] => (asText id, asText (getOr (head? (Sexp.args ref)) (Sexp.str "")))
+      | _ => defect ("bad tasks entry " ++ Sexp.print item)) (Sexp.args form))
+
+def Tasks.stateText (s : TaskState) : Text :=
+  match s with
+  | TaskState.todo => "todo"
+  | TaskState.doing => "doing"
+  | TaskState.done => "done"
+  | TaskState.canceled => "canceled"
+
+def Tasks.states : List (Text, TaskState) := [("todo", TaskState.todo), ("doing", TaskState.doing), ("done", TaskState.done), ("canceled", TaskState.canceled)]
+
+/-- A three-way choice: one side's change wins, and changes on both sides must agree. -/
+def Tasks.three (b : a) (o : a) (t : a) : Option a := if o == t then Option.some o else if b == o then Option.some t else if b == t then Option.some o else Option.none
+
+/-- A three-way set merge: what either side added stays, and what either side removed goes. -/
+def Tasks.threeSet (b : List a) (o : List a) (t : List a) : List a :=
+  let has := fun xs x => any (fun y => y == x) xs
+  let keep := fun x => has o x && has t x || not (has b x)
+  List.filter keep o ++ List.filter (fun x => keep x && not (has o x)) t
+
+/-- A task as an object. A linked definition is a `(ref …)`, so replication keeps the version a task was about. -/
+def Tasks.toSexp (t : Task) : Sexp :=
+  let text := fun key value => Sexp.node key [Sexp.str value]
+  let comments := List.map (fun c => Sexp.node "comment" [Sexp.str c.author, Sexp.str c.note]) t.comments
+  Sexp.node
+    "task"
+    [text "id" t.id, text "title" t.title, text "state" (stateText t.state), Sexp.node "priority" [Sexp.int t.priority], text "assignee" t.assignee, Sexp.node "labels" (List.map Sexp.str t.labels), text "parent" t.parent, text "details" t.details, Sexp.node "links" (List.map attachmentToSexp t.links), Sexp.node "comments" comments]
+
+def Tasks.unlink (t : Task) (name : Text) : Task :=
+  let keep := fun a =>
+    match a with
+    | Attachment.definition n _ => n != name
+    | Attachment.change h => not (startsWith name h)
+  Task.mk
+    t.id
+    t.title
+    t.state
+    t.priority
+    t.assignee
+    t.labels
+    t.parent
+    t.details
+    (List.filter keep t.links)
+    t.comments

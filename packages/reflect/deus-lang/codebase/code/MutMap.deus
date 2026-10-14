@@ -1,0 +1,13 @@
+def MutMap.delete : MutMap k v -> k -> Unit := prim "MutMap.delete"
+
+def MutMap.get : MutMap k v -> k -> Option v := prim "MutMap.get"
+
+def MutMap.has : MutMap k v -> k -> Bool := prim "MutMap.has"
+
+def MutMap.keys : MutMap k v -> List k := prim "MutMap.keys"
+
+def MutMap.new : Unit -> MutMap k v := prim "MutMap.new"
+
+def MutMap.set : MutMap k v -> k -> v -> Unit := prim "MutMap.set"
+
+def MutMap.size : MutMap k v -> Int := prim "MutMap.size"

@@ -1,0 +1,41 @@
+test Notes.indexIsHtml :=
+  match simulate Notes.serve [Request.mk "PUT" "/notes/hello" "hi", Request.mk "GET" "/" ""] with
+  | (_ :: index :: [], _) => List.lookup "content-type" index.headers == Option.some "text/html; charset=utf-8" && Text.contains "<a href=\"/notes/hello\">hello</a>" index.content
+  | _ => false
+
+/-- The keys of the notebook, kept as one newline-separated entry. -/
+def Notes.keys (u : Unit) : {Storage} List Text := List.filter (fun k => not (Text.isEmpty k)) (lines (getOr (Storage.get "keys") ""))
+
+test Notes.notebooksAreSeparate :=
+  let put := fun key body => Request.mk "PUT" (prefix ++ key) body
+  let get := fun path => Request.mk "GET" path ""
+  match simulateMany
+    Notes.serve
+    [("a", put "x" "one"), ("a", put "b" "two"), ("b", put "x" "other"), ("a", get "/notes"), ("a", get "/notes/x"), ("b", get "/notes/x"), ("a", Request.mk "DELETE" "/notes/x" ""), ("a", get "/notes/x")] with
+  | (responses, _, _) => List.map (fun r => (r.status, r.content)) responses ==
+      [(201, "stored x"), (201, "stored b"), (201, "stored x"), (200, "b\nx"), (200, "one"), (200, "other"), (200, "deleted x"), (404, "no route /notes/x")]
+
+def Notes.page (u : Unit) : {Storage} Response :=
+  let items := Text.concat (List.map (fun k => "<li><a href=\"/notes/" ++ k ++ "\">" ++ k ++ "</a></li>") (Notes.keys ()))
+  Web.html ("<!doctype html><title>Notes</title><h1>Notes</h1><ul>" ++ items ++ "</ul>")
+
+def Notes.prefix : Text := "/notes/"
+
+def Notes.serve (request : Request) : {Storage} Response :=
+  let path := request.url
+  if path == "/" then page () else if path == "/notes" then Web.ok (join "\n" (Notes.keys ())) else if startsWith prefix path then
+    let key := Text.drop (Text.length prefix) path
+    if request.verb == "PUT" || request.verb == "POST" then
+      Storage.put ("note:" ++ key) request.payload
+      if any (fun k => k == key) (Notes.keys ()) then () else setKeys (sort (key :: Notes.keys ()))
+      reply 201 ("stored " ++ key)
+    else if request.verb == "DELETE" then if Storage.delete ("note:" ++ key) then
+      setKeys (List.filter (fun k => k != key) (Notes.keys ()))
+      Web.ok ("deleted " ++ key)
+    else notFound path else
+      match Storage.get ("note:" ++ key) with
+      | Option.some note => Web.ok note
+      | Option.none => notFound path
+  else notFound path
+
+def Notes.setKeys (ks : List Text) : {Storage} Unit := Storage.put "keys" (join "\n" ks)

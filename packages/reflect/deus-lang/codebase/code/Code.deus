@@ -1,0 +1,19 @@
+/-- Machine steps a pure computation takes; its operations must be handled inside it. -/
+def Code.cost : (Unit -> a) -> Int := prim "Code.cost"
+
+/-- Hashes of the definitions on the stack when the last defect was raised, innermost first. -/
+def Code.defectTrace : Unit -> List Text := prim "Code.defectTrace"
+
+def Code.has : Text -> Bool := prim "Code.has"
+
+/-- Loads `(def "hash" term)` forms into the running machine. -/
+def Code.load : Text -> Unit := prim "Code.load"
+
+/-- A data value as Core text, for printing it with names. -/
+def Code.quote : a -> Text := prim "Code.quote"
+
+/-- Evaluates a loaded definition in the caller's context (its effects reach the caller's handlers). -/
+def Code.run : Text -> a := prim "Code.run"
+
+/-- Machine steps so far: the deterministic cost model for performance requirements. -/
+def Code.steps : Unit -> Int := prim "Code.steps"

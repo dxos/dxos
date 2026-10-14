@@ -1,0 +1,10 @@
+def Site.contentType (path : Text) : Text := if endsWith ".html" path then "text/html; charset=utf-8" else if endsWith ".json" path then "application/json" else if endsWith ".css" path then "text/css" else if endsWith ".js" path then "text/javascript" else "text/plain; charset=utf-8"
+
+def Site.serve (request : Request) : {IO} Response :=
+  let root := getOr (IO.getEnv "DEUS_SITE") "site"
+  let path := getOr (head? (Text.split request.url "?")) "/"
+  let file := if path == "/" then "/index.html" else path
+  if Text.contains ".." file then notFound path else
+    match IO.readFile (root ++ file) with
+    | Option.some content => Response.mk 200 content [("content-type", contentType file)]
+    | Option.none => notFound path

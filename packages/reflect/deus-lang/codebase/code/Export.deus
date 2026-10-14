@@ -1,0 +1,68 @@
+/-- Kinds written as source; constructors, operations and accessors come with their declarations. -/
+def Export.exported (e : Entry) : Bool :=
+  match e with
+  | Entry.term _ => true
+  | Entry.test _ => true
+  | Entry.theorem _ => true
+  | Entry.type _ _ _ => true
+  | Entry.ability _ _ => true
+  | _ => false
+
+/-- Saves tasks from an export's `tasks.sexp` as one change; returns how many. -/
+def Export.importTasks (dir : Text) (path : Text) : {IO, Throw Text} Int :=
+  match IO.readFile path with
+  | Option.none => Throw.throw ("cannot read " ++ path)
+  | Option.some text =>
+      let tasks := List.map Tasks.fromSexp (readAll text)
+      save dir tasks ("task: import " ++ toText (List.length tasks) ++ " tasks")
+      List.length tasks
+
+/-- The task as Markdown: a heading, its fields, links, comments. -/
+def Export.taskMarkdown (t : Task) : Text :=
+  let field := fun label value => if Text.isEmpty value then "" else "- " ++ label ++ ": " ++ value ++ "\n"
+  let link := fun a =>
+    match a with
+    | Attachment.definition name h => "- links `" ++ name ++ "` (#" ++ Text.take 10 h ++ ")\n"
+    | Attachment.change h => "- links change #" ++ Text.take 10 h ++ "\n"
+  "## " ++ t.title ++ " (`" ++ t.id ++ "`)\n\n" ++ field "state" (stateText t.state) ++
+    field "priority" (priorityText t.priority) ++ field "assignee" t.assignee ++ field "labels" (join ", " t.labels) ++ field "parent" t.parent ++ Text.concat (List.map link t.links) ++ (if Text.isEmpty t.details then "" else "\n" ++ t.details ++ "\n") ++ Text.concat (List.map (fun c => "\n> " ++ c.author ++ ": " ++ c.note ++ "\n") t.comments) ++ "\n"
+
+def Export.topOf (name : Text) : Text :=
+  match Text.split name "." with
+  | _ :: [] => "_root"
+  | top :: _ => top
+  | [] => "_root"
+
+/-- Writes the export of the current branch to `out`; returns (source files, definitions, tasks). -/
+def Export.write (dir : Text) (out : Text) : {IO, Throw Text} (Int, (Int, Int)) :=
+  let ns := Codebase.current dir
+  let printer := printer ns []
+  let entries := List.filter (fun pair => exported (snd pair)) (Map.toList ns)
+  let sources := filterMap (fun pair =>
+    match pair with
+    | (name, e) =>
+        let text := viewEntryWith printer dir ns name e false
+        let body := join "\n" (List.filter (fun l => not (startsWith "-- " l)) (lines text))
+        if Text.isEmpty (trim body) then Option.none else Option.some (topOf name, body)) entries
+  let files := dedup (sort (List.map fst sources))
+  IO.mkdirp (out ++ "/code")
+  forEach files (fun f => IO.writeFile (out ++ "/code/" ++ f ++ ".deus") (join
+    "\n\n"
+    (filterMap (fun pair => if fst pair == f then Option.some (snd pair) else Option.none) sources) ++ "\n"))
+  let tasks := sortBy order (Map.values (Tasks.current dir))
+  IO.writeFile (out ++ "/tasks.sexp") (Text.concat (List.map
+    (fun t => Sexp.print (Tasks.toSexp t) ++ "\n")
+    (sortBy (fun a b => compare a.id b.id) tasks)))
+  IO.writeFile (out ++ "/TASKS.md") ("# Tasks\n\n" ++ Text.concat (List.map taskMarkdown tasks))
+  let project :=
+    match Project.read dir with
+    | Option.some p => p.projectIri
+    | Option.none => "a DEUS codebase"
+  IO.writeFile (out ++ "/README.md") (join
+    "\n"
+    ["# " ++ project, "", "A text export of a DEUS codebase (`deus export`, D64), kept in git as its backup. It is", "generated: change the codebase, then export again.", "", "- `code/` holds the source of every definition, one file per top-level namespace.", "- `tasks.sexp` holds the tasks, and `TASKS.md` lists them to read.", "- `HISTORY.md` lists the changes on the branch.", "", "To restore it into a fresh codebase:", "", "```bash", "deus init --empty", "deus add code", "deus task import tasks.sexp", "```", ""])
+  let history := history dir (currentBranch dir) 100000
+  IO.writeFile (out ++ "/HISTORY.md") ("# History of " ++ currentBranch dir ++ "\n\n" ++
+    Text.concat (List.map (fun pair => "- `" ++ Text.take 10 (fst pair) ++ "` " ++ (snd pair).message ++
+      getOr (Option.map (fun agent => " (by " ++ agent ++ ")") (producedBy dir (fst pair))) "" ++ "\n") history))
+  (List.length files, List.length sources, List.length tasks)

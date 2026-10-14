@@ -38,11 +38,18 @@ deus task new Sort is not stable --link List.sort            # issues attached t
 deus update fix.deus --closes 3f2a                           # …closed by the change that fixes them
 deus explore                                                 # browse the codebase on :8080
 deus explore --publish origin                                # …or host it beside the bundles
+deus export codebase                                         # the codebase as text, for git (D64)
 ```
 
 New here? [`docs/GETTING_STARTED.md`](./docs/GETTING_STARTED.md) installs the toolchain and walks through
 recipes for the language, proofs, HTTP and Cloudflare. `deus help` lists every command;
 [`docs/LLM.md`](./docs/LLM.md) is the agent's guide.
+
+## The toolchain's own codebase
+
+[`codebase/`](./codebase) is a text export (D64) of the codebase this toolchain is developed in.
+That codebase holds its tasks, history and source. It is pushed to R2, where the explorer shows it:
+<https://pub-39066a86073446d7b77b1c157b660bb5.r2.dev/deus/explorer-demo/site/index.html>.
 
 ## Examples
 

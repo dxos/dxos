@@ -1,0 +1,291 @@
+structure Codebase.Causal where
+  snapshot : Text
+  parents : List Text
+  message : Text
+  tasks : Text
+
+inductive Codebase.MergeResult where
+  | upToDate
+  | fastForward Text
+  | merged Text (List Text)
+  | conflicts (List Text)
+
+/-- Hashes of every object in the store. -/
+def Codebase.allObjects (dir : Text) : {IO} List Text := concatMap (fun shard => IO.listDir (dir ++ "/objects/" ++ shard)) (IO.listDir (dir ++ "/objects"))
+
+/-- All ancestors of a causal node (itself included). -/
+def Codebase.ancestors (dir : Text) (h : Text) : {IO, Throw Text} Map Text Unit :=
+  let rec go work seen :=
+    match work with
+    | [] => seen
+    | x :: rest => if Set.contains x seen then go rest seen else go (parentsOf dir x ++ rest) (Set.insert x seen)
+  go [h] Map.empty
+
+def Codebase.branchHead (dir : Text) (branch : Text) : {IO} Option Text := Option.map trim (IO.readFile (dir ++ "/branches/" ++ branch))
+
+def Codebase.branches (dir : Text) : {IO} List Text := IO.listDir (dir ++ "/branches")
+
+def Codebase.causalFromSexp (form : Sexp) : Causal :=
+  let field := fun key => getOr (List.find (fun x => head x == key) (Sexp.args form)) (Sexp.list [])
+  let first := fun key => asText (getOr (head? (Sexp.args (field key))) (Sexp.str ""))
+  Causal.mk
+    (first "ns")
+    (List.map asText (Sexp.args (field "parents")))
+    (first "msg")
+    (first "tasks")
+
+/-- A node without tasks prints as it did before tasks existed, so its hash is unchanged. -/
+def Codebase.causalToSexp (c : Causal) : Sexp :=
+  let tasks := if Text.isEmpty c.tasks then [] else [Sexp.node "tasks" [Sexp.str c.tasks]]
+  Sexp.node
+    "causal"
+    ([Sexp.node "ns" [Sexp.str c.snapshot], Sexp.node "parents" (List.map Sexp.str c.parents), Sexp.node "msg" [Sexp.str c.message]] ++
+      tasks)
+
+/-- Records a new snapshot on the current branch, keeping its tasks. Returns the new causal hash. -/
+def Codebase.commit (dir : Text) (ns : Map Text Entry) (message : Text) : {IO, Throw Text} Text :=
+  let branch := currentBranch dir
+  let parent := headOf dir branch
+  let previous := readCausal dir parent
+  let snapshot := Codebase.put dir (nsToSexp ns)
+  if snapshot == previous.snapshot then parent else
+    let c := Codebase.put dir (causalToSexp (Causal.mk snapshot [parent] message previous.tasks))
+    setBranch dir branch c
+    c
+
+/-- Records a new tasks snapshot on the current branch, keeping its namespace. -/
+def Codebase.commitTasks (dir : Text) (tasks : Text) (message : Text) : {IO, Throw Text} Text :=
+  let branch := currentBranch dir
+  let parent := headOf dir branch
+  let previous := readCausal dir parent
+  if tasks == previous.tasks then parent else
+    let c := Codebase.put dir (causalToSexp (Causal.mk previous.snapshot [parent] message tasks))
+    setBranch dir branch c
+    c
+
+/-- The current branch's namespace. -/
+def Codebase.current (dir : Text) : {IO, Throw Text} Map Text Entry := namespaceOf dir (currentBranch dir)
+
+def Codebase.currentBranch (dir : Text) : {IO} Text := trim (getOr (IO.readFile (dir ++ "/HEAD")) "main")
+
+/-- Hashes the definitions that `form` references (terms and types alike). -/
+def Codebase.dependencies (form : Sexp) : List Text :=
+  let rec go x acc :=
+    match x with
+    | Sexp.list (Sexp.sym "ref" :: Sexp.str h :: []) => h :: acc
+    | Sexp.list (Sexp.sym "con" :: Sexp.str h :: _) => if startsWith "#" h then acc else h :: acc
+    | Sexp.list (Sexp.sym "pcon" :: Sexp.str h :: rest) => foldl (fun a y => go y a) (if startsWith "#" h then acc else h :: acc) rest
+    | Sexp.list (Sexp.sym "op" :: Sexp.str h :: _) => if startsWith "#" h then acc else h :: acc
+    | Sexp.list (Sexp.sym "on" :: Sexp.str h :: rest) => foldl (fun a y => go y a) (if startsWith "#" h then acc else h :: acc) rest
+    | Sexp.list items => foldl (fun a y => go y a) acc items
+    | _ => acc
+  dedup (sort (go form []))
+
+def Codebase.headOf (dir : Text) (branch : Text) : {IO, Throw Text} Text :=
+  match branchHead dir branch with
+  | Option.some h => h
+  | Option.none => Throw.throw ("no branch " ++ branch)
+
+/-- First-parent history of a branch, newest first. -/
+def Codebase.history (dir : Text) (branch : Text) (limit : Int) : {IO, Throw Text} List (Text, Causal) :=
+  let rec go h k acc := if k <= 0 then reverse acc else
+    let c := readCausal dir h
+    match parentsOf dir h with
+    | [] => reverse ((h, c) :: acc)
+    | p :: _ => go p (k - 1) ((h, c) :: acc)
+  go (headOf dir branch) limit []
+
+def Codebase.init (dir : Text) : {IO, Throw Text} Unit := if isCodebase dir then Throw.throw ("a codebase already exists at " ++ dir) else
+  IO.mkdirp (dir ++ "/objects")
+  IO.mkdirp (dir ++ "/meta")
+  IO.mkdirp (dir ++ "/branches")
+  IO.mkdirp (dir ++ "/results")
+  IO.mkdirp (dir ++ "/provenance")
+  IO.mkdirp (dir ++ "/cache")
+  let snapshot := Codebase.put dir (nsToSexp Map.empty)
+  let c := Codebase.put dir (causalToSexp (Causal.mk snapshot [] "init" ""))
+  setBranch dir "main" c
+  IO.writeFile (dir ++ "/HEAD") "main\n"
+
+def Codebase.isCodebase (dir : Text) : {IO} Bool := IO.exists (dir ++ "/HEAD")
+
+/-- An object's layer, from its kind. -/
+def Codebase.layerOf (form : Sexp) : Text :=
+  let kind := head form
+  if kind == "spec" then "spec" else if kind == "test" then "tests" else if kind == "theorem" then "proofs" else if kind == "task" then "tasks" else if kind == "ns" || kind == "causal" || kind == "tasks" then "history" else "code"
+
+/-- Every layer with where it lives and whether it is replicated. -/
+def Codebase.layers : List (Text, (Text, Bool)) := [("spec", "objects/", true), ("code", "objects/", true), ("tests", "objects/", true), ("proofs", "objects/", true), ("history", "objects/", true), ("tasks", "objects/", true), ("results", "results/", true), ("provenance", "provenance/", true), ("artifacts", "artifacts/", false), ("cache", "cache/", false)]
+
+/-- Layers a layer may depend on; the rest are refused when adding. -/
+def Codebase.mayDependOn (layer : Text) : List Text := if layer == "spec" then ["spec"] else if layer == "code" then ["code"] else if layer == "tests" then ["code", "tests"] else if layer == "proofs" then ["code", "proofs"] else ["code", "tests", "proofs", "history"]
+
+/-- Merges `other` into the current branch. Names changed on one side only take that side;
+  names changed differently on both sides are conflicts, and nothing is written. Tasks merge
+  field by field (`Tasks.merge`); a field both sides changed differently is a conflict named
+  `task:<id>.<field>`. -/
+def Codebase.merge (dir : Text) (other : Text) : {IO, Throw Text} MergeResult :=
+  let branch := currentBranch dir
+  let ours := headOf dir branch
+  let theirs := headOf dir other
+  if ours == theirs || Set.contains theirs (ancestors dir ours) then MergeResult.upToDate else if Set.contains ours (ancestors dir theirs) then
+    setBranch dir branch theirs
+    MergeResult.fastForward theirs
+  else
+    let base := Option.map (fun b => readCausal dir b) (mergeBase dir ours theirs)
+    let baseNs :=
+      match base with
+      | Option.some b => readNamespace dir b.snapshot
+      | Option.none => Map.empty
+    let oursNode := readCausal dir ours
+    let theirsNode := readCausal dir theirs
+    let oursNs := readNamespace dir oursNode.snapshot
+    let theirsNs := readNamespace dir theirsNode.snapshot
+    let baseTasks :=
+      match base with
+      | Option.some b => snapshotOf dir b
+      | Option.none => Map.empty
+    let tasks := Tasks.merge dir baseTasks (snapshotOf dir oursNode) (snapshotOf dir theirsNode)
+    let names := Set.toList (Set.fromList (Map.keys baseNs ++ Map.keys oursNs ++ Map.keys theirsNs))
+    let step := fun state name =>
+      match state with
+      | (ns, changed, conflicts) =>
+          let b := Map.lookup name baseNs
+          let o := Map.lookup name oursNs
+          let t := Map.lookup name theirsNs
+          if o == t then state else if b == o then
+            let ns2 :=
+              match t with
+              | Option.some e => Map.insert name e ns
+              | Option.none => Map.remove name ns
+            (ns2, name :: changed, conflicts)
+          else if b == t then state else (ns, changed, name :: conflicts)
+    match (foldl step (oursNs, [], []) names, tasks) with
+    | ((ns, changed, []), merged, []) =>
+        let snapshot := Codebase.put dir (nsToSexp ns)
+        let c := Codebase.put dir (causalToSexp (Causal.mk
+          snapshot
+          [ours, theirs]
+          ("merge " ++ other ++ " into " ++ branch)
+          (putSnapshot dir merged)))
+        setBranch dir branch c
+        MergeResult.merged c (reverse changed)
+    | ((_, _, conflicts), _, taskConflicts) => MergeResult.conflicts (reverse conflicts ++ taskConflicts)
+
+/-- A common ancestor of two causal nodes: the first of `b`'s ancestors (breadth first) that `a` also has. -/
+def Codebase.mergeBase (dir : Text) (a : Text) (b : Text) : {IO, Throw Text} Option Text :=
+  let mine := ancestors dir a
+  let rec go work seen :=
+    match work with
+    | [] => Option.none
+    | x :: rest => if Set.contains x mine then Option.some x else if Set.contains x seen then go rest seen else go (rest ++ parentsOf dir x) (Set.insert x seen)
+  go [b] Map.empty
+
+/-- A metadata field, e.g. `metaField m "doc"`. -/
+def Codebase.metaField (form : Option Sexp) (key : Text) : Option Sexp :=
+  match form with
+  | Option.none => Option.none
+  | Option.some m => Option.bind (List.find (fun x => head x == key) (Sexp.args m)) (fun x => head? (Sexp.args x))
+
+def Codebase.metaList (form : Option Sexp) (key : Text) : List Sexp :=
+  match form with
+  | Option.none => []
+  | Option.some m =>
+      match List.find (fun x => head x == key) (Sexp.args m) with
+      | Option.some x => Sexp.args x
+      | Option.none => []
+
+/-- Hash → shortest unique display name, for printing. -/
+def Codebase.nameIndex (ns : Map Text Entry) : Map Text Text := foldl (fun m pair =>
+  match pair with
+  | (name, e) =>
+      let key :=
+        match e with
+        | Entry.ctor t tag _ => t ++ "#" ++ toText tag
+        | Entry.op a index _ => a ++ "!" ++ toText index
+        | _ => hash e
+      match Map.lookup key m with
+      | Option.some old => if Text.length name < Text.length old then Map.insert key name m else m
+      | Option.none => Map.insert key name m) Map.empty (Map.toList ns)
+
+/-- Names of every entry whose hash is `h` (aliases included). -/
+def Codebase.namesOf (ns : Map Text Entry) (h : Text) : List Text := List.map fst (List.filter (fun pair => hash (snd pair) == h) (Map.toList ns))
+
+def Codebase.namespaceOf (dir : Text) (branch : Text) : {IO, Throw Text} Map Text Entry := readNamespace dir (readCausal dir (headOf dir branch)).snapshot
+
+def Codebase.nsFromSexp (form : Sexp) : Map Text Entry := Map.fromList (List.map (fun item =>
+  match Sexp.args item with
+  | name :: entry :: [] => (asText name, Entry.fromSexp entry)
+  | _ => defect "bad namespace entry") (Sexp.args form))
+
+def Codebase.nsToSexp (ns : Map Text Entry) : Sexp := Sexp.node
+  "ns"
+  (List.map
+    (fun pair => Sexp.node "n" [Sexp.str (fst pair), Entry.toSexp (snd pair)])
+    (Map.toList ns))
+
+/-- Objects read so far, per process; objects are immutable so the cache never goes stale. -/
+def Codebase.objectCache : MutMap Text Sexp := MutMap.new ()
+
+def Codebase.objectPath (dir : Text) (h : Text) : Text := dir ++ "/objects/" ++ Text.take 2 h ++ "/" ++ h
+
+/-- The parents of a causal node that the store has. History pruned by replication's retention
+  (D54) is shallow: its oldest kept nodes have parents nobody keeps, and they act as roots. -/
+def Codebase.parentsOf (dir : Text) (h : Text) : {IO, Throw Text} List Text := List.filter (fun p => IO.exists (objectPath dir p)) (readCausal dir h).parents
+
+/-- Stores a form under the hash of its text and returns the hash. -/
+def Codebase.put (dir : Text) (form : Sexp) : {IO} Text :=
+  let h := Text.sha256 (Sexp.print form)
+  writeObject dir h form
+  h
+
+def Codebase.readCausal (dir : Text) (h : Text) : {IO, Throw Text} Causal :=
+  match readObject dir h with
+  | Option.some form => causalFromSexp form
+  | Option.none => Throw.throw ("missing history node #" ++ h)
+
+def Codebase.readMeta (dir : Text) (h : Text) : {IO} Option Sexp := Option.map Sexp.read (IO.readFile (dir ++ "/meta/" ++ h))
+
+def Codebase.readNamespace (dir : Text) (h : Text) : {IO, Throw Text} Map Text Entry :=
+  match readObject dir h with
+  | Option.some form => nsFromSexp form
+  | Option.none => Throw.throw ("missing namespace #" ++ h)
+
+def Codebase.readObject (dir : Text) (h : Text) : {IO} Option Sexp :=
+  match MutMap.get objectCache h with
+  | Option.some form => Option.some form
+  | Option.none =>
+      match IO.readFile (objectPath dir h) with
+      | Option.none => Option.none
+      | Option.some text =>
+          let form := Sexp.read text
+          MutMap.set objectCache h form
+          Option.some form
+
+/-- Replaces hashes throughout a form (used by update propagation). -/
+def Codebase.rewrite (form : Sexp) (subst : Map Text Text) : Sexp :=
+  match form with
+  | Sexp.str h =>
+      match Map.lookup h subst with
+      | Option.some h2 => Sexp.str h2
+      | Option.none => form
+  | Sexp.list items => Sexp.list (List.map (fun x => Codebase.rewrite x subst) items)
+  | _ => form
+
+def Codebase.setBranch (dir : Text) (branch : Text) (causal : Text) : {IO} Unit := IO.writeFile (dir ++ "/branches/" ++ branch) (causal ++ "\n")
+
+/-- The snapshots a history node points at: its namespace and its tasks. -/
+def Codebase.snapshotsOf (c : Causal) : List Text := if Text.isEmpty c.tasks then [c.snapshot] else [c.snapshot, c.tasks]
+
+/-- Writes a compiled batch's objects and metadata. -/
+def Codebase.store (dir : Text) (b : Batch) : {IO} Unit :=
+  forEach b.objects (fun pair => writeObject dir (fst pair) (snd pair))
+  forEach b.metas (fun pair => writeMeta dir (fst pair) (snd pair))
+
+def Codebase.validBranch (name : Text) : Bool := not (Text.isEmpty name) && all (fun c => isAlpha c || isDigit c || c == 45 || c == 95 || c == 46) (utf8 name)
+
+def Codebase.writeMeta (dir : Text) (h : Text) (form : Sexp) : {IO} Unit := IO.writeFile (dir ++ "/meta/" ++ h) (Sexp.print form ++ "\n")
+
+def Codebase.writeObject (dir : Text) (h : Text) (form : Sexp) : {IO} Unit :=
+  let path := objectPath dir h
+  if IO.exists path then () else IO.writeFile path (Sexp.print form ++ "\n")

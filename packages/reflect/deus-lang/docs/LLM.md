@@ -85,6 +85,14 @@ deus switch main && deus merge try-merge-sort --json
 A merge that changed the same name differently on both sides returns `"result":"conflicts"` with
 the names, and writes nothing.
 
+## Working through the codebase
+
+Make changes in the codebase, not only in files: `deus update <file> --by <agent>` records who
+made them, and the task they close goes in with `--closes <id>`. File what you notice while
+working as tasks (`deus task new … --labels dogfood`). `deus push origin` sends the change to the
+remote and refreshes its explorer. `deus export <dir>` writes the codebase as text for a git
+commit (D64).
+
 ## Tasks
 
 Issues live in the codebase beside the code (D59), so they branch and merge with it:

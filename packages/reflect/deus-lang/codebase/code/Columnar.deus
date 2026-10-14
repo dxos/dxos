@@ -1,0 +1,109 @@
+def Columnar.decode (t : Text) : List Sexp :=
+  match Text.split t "\n" with
+  | _ :: shape :: symbolLine :: stringLine :: hashes :: symbolLine2 :: stringLine2 :: hashLine :: intLine :: [] =>
+      let symbols := parseDictionary symbolLine
+      let strings := parseDictionary stringLine
+      let symbolRefs := Ref.new (parseNumbers symbolLine2)
+      let stringRefs := Ref.new (parseNumbers stringLine2)
+      let hashRefs := Ref.new (parseNumbers hashLine)
+      let ints := Ref.new (parseNumbers intLine)
+      let next := fun refs =>
+        match Ref.get refs with
+        | x :: rest =>
+            Ref.set refs rest
+            x
+        | [] => defect "columnar: a column ended early"
+      let entry := fun dict i =>
+        match Dict.lookup i dict with
+        | Option.some x => x
+        | Option.none => defect ("columnar: no entry " ++ toText i)
+      let n := Text.length shape
+      let rec go i stack done := if i >= n then
+        match stack with
+        | [] => reverse done
+        | _ => defect "columnar: unbalanced ("
+      else
+        let c := code shape i
+        if c == 40 then go (i + 1) ([] :: stack) done else if c == 41 then
+          match stack with
+          | [] => defect "columnar: unbalanced )"
+          | top :: rest =>
+              match Sexp.push (Sexp.list (reverse top)) rest done with
+              | (stack2, done2) => go (i + 1) stack2 done2
+        else
+          let form := if c == 115 then Sexp.sym (entry symbols (next symbolRefs)) else if c == 116 then Sexp.str (entry strings (next stringRefs)) else if c == 104 then
+            let h := next hashRefs
+            Sexp.str (slice hashes (h * 64) (h * 64 + 64))
+          else Sexp.int (next ints)
+          match Sexp.push form stack done with
+          | (stack2, done2) => go (i + 1) stack2 done2
+      go 0 [] []
+  | _ => defect "columnar: expected 9 lines"
+
+def Columnar.encode (forms : List Sexp) : Text :=
+  let shape := Ref.new []
+  let symbolIndex := MutMap.new ()
+  let symbols := Ref.new []
+  let stringIndex := MutMap.new ()
+  let strings := Ref.new []
+  let hashIndex := MutMap.new ()
+  let hashes := Ref.new []
+  let symbolRefs := Ref.new []
+  let stringRefs := Ref.new []
+  let hashRefs := Ref.new []
+  let ints := Ref.new []
+  let emit := fun kind refs n =>
+    Ref.set shape (kind :: Ref.get shape)
+    Ref.set refs (n :: Ref.get refs)
+  let rec walk x :=
+    match x with
+    | Sexp.list items =>
+        Ref.set shape ("(" :: Ref.get shape)
+        forEach items walk
+        Ref.set shape (")" :: Ref.get shape)
+    | Sexp.sym name => emit "s" symbolRefs (intern symbolIndex symbols name)
+    | Sexp.str value => if isHash value then emit "h" hashRefs (intern hashIndex hashes value) else emit "t" stringRefs (intern stringIndex strings value)
+    | Sexp.int n => emit "i" ints n
+  forEach forms walk
+  let dictionary := fun values => Sexp.print (Sexp.list (List.map Sexp.str (reverse (Ref.get values))))
+  join
+    "\n"
+    [Columnar.header, Text.concat (reverse (Ref.get shape)), dictionary symbols, dictionary strings, Text.concat (reverse (Ref.get hashes)), numbers symbolRefs, numbers stringRefs, numbers hashRefs, numbers ints]
+
+def Columnar.header : Text := "DEUSCOL1"
+
+/-- The index of `x` in a dictionary, adding it at the end when new. -/
+def Columnar.intern (index : MutMap Text Int) (values : Ref (List Text)) (x : Text) : Int :=
+  match MutMap.get index x with
+  | Option.some i => i
+  | Option.none =>
+      let i := MutMap.size index
+      MutMap.set index x i
+      Ref.set values (x :: Ref.get values)
+      i
+
+/-- Whether a string is a hash: 64 lowercase hex digits. -/
+def Columnar.isHash (t : Text) : Bool :=
+  let rec hex i := if i >= 64 then true else
+    let c := code t i
+    (c >= 48 && c <= 57 || c >= 97 && c <= 102) && hex (i + 1)
+  Text.length t == 64 && hex 0
+
+def Columnar.numbers (refs : Ref (List Int)) : Text := join " " (List.map toText (reverse (Ref.get refs)))
+
+def Columnar.parseDictionary (line : Text) : Dict Int Text :=
+  match Sexp.read line with
+  | Sexp.list items => Dict.fromList (mapIndexed (fun i x => (i, asText x)) items)
+  | _ => defect "columnar: bad dictionary"
+
+def Columnar.parseNumbers (line : Text) : List Int := filterMap (fun x => if Text.isEmpty x then Option.none else fromText x) (Text.split line " ")
+
+/-- Reads either encoding: columnar text, or plain s-expressions (bundles written before D60). -/
+def Columnar.read (t : Text) : List Sexp := if startsWith Columnar.header t then decode t else readAll t
+
+test Columnar.roundTrips :=
+  let bundle := Sexp.node "bundle" [Sexp.node
+    "obj"
+    [Sexp.str (Text.sha256 "a"), Sexp.node "term" [Sexp.node "lam" [Sexp.node "var" [Sexp.int 0]]]], Sexp.node "meta" [Sexp.str (Text.sha256 "a"), Sexp.node "doc" [Sexp.str "line one\nline \"two\""]], Sexp.node "n" [Sexp.int (0 - 3), Sexp.list []]]
+  let forms := [bundle, Sexp.str (Text.sha256 "a")]
+  Columnar.read (encode forms) == forms && Columnar.read (Sexp.print bundle) == [bundle]

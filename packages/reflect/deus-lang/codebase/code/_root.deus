@@ -1,0 +1,485 @@
+ability Actors @"urn:deus:web:Actors" where
+  call : Text -> Request -> Response
+
+ability Alarm @"urn:deus:web:Alarm" where
+  set : Int -> Unit
+
+structure Arm where
+  pats : List Pat
+  body : Expr
+
+inductive Attachment @"urn:deus:task:Attachment" where
+  | definition Text Text
+  | change Text
+
+structure Attr where
+  attr : Text
+  values : List Text
+
+structure Batch where
+  objects : List (Text, Sexp)
+  entries : List (Text, Entry)
+  metas : List (Text, Sexp)
+  warnings : List Text
+
+structure Binder where
+  binder : Text
+  annot : Option Ty
+
+structure Block @"urn:deus:mdl:Block" where
+  blockType : Text
+  blockId : Text
+  blockTitle : Text
+  props : List (Text, Text)
+  lineNo : Int
+
+inductive Bool @"#Bool" where
+  | false
+  | true
+
+structure Comment @"urn:deus:task:Comment" where
+  author : Text
+  note : Text
+
+structure Container @"urn:deus:external:Container" where
+  image : Text
+  command : List Text
+  env : List (Text, Text)
+  ports : List (Int, Int)
+
+ability Containers @"urn:deus:external:Containers" where
+  start : Container -> Result Text Text
+  stop : Text -> Unit
+
+inductive Decl where
+  | defn Text (List Binder) (Option Ty) (Option Expr) (Option (List Arm)) (Option Text) (List Attr) Pos
+  | thm Text (List Binder) Expr (List Text) (Option Text) (List Attr) Pos
+  | check Text Expr (Option Text) (List Attr) Pos
+  | data Text (List Text) (Option Text) (List (Text, List Ty)) (Option Text) Pos
+  | record Text (List Text) (Option Text) (List (Text, Ty)) (Option Text) Pos
+  | effect Text (List Text) (Option Text) (List (Text, Ty)) (Option Text) Pos
+  | ns Text
+  | endNs (Option Text)
+  | openNs (List Text)
+
+ability Defect @"#Defect" where
+  raise : Text -> a
+
+inductive Dict a b @"#Dict" where
+
+structure Doc @"urn:deus:mdl:Doc" where
+  front : List (Text, Text)
+  terms : List (Text, Text)
+  blocks : List Block
+
+inductive Entry where
+  | term Text
+  | ctor Text Int Int
+  | type Text Text (List Text)
+  | ability Text Text
+  | op Text Int Int
+  | test Text
+  | theorem Text
+  | spec Text
+
+inductive Event where
+  | log Text Text (List (Text, Text)) Int Text
+  | span Int Int Text (List (Text, Text)) Text Text
+  | metric Text Text Int Text
+
+inductive Expr where
+  | var Text Pos
+  | dot Text Pos
+  | int Int
+  | text Text
+  | bool Bool
+  | unit
+  | app Expr (List Expr)
+  | lam (List Pat) Expr
+  | lamMatch (List Arm)
+  | letPat Pat Expr Expr
+  | letFun Text (List Pat) Expr Expr Bool
+  | seq Expr Expr
+  | ite Expr Expr Expr
+  | matchOn (List Expr) (List Arm)
+  | handleWith Expr (Option (Pat, Expr)) (List OpArm)
+  | binop Text Expr Expr Pos
+  | neg Expr
+  | not Expr
+  | tuple (List Expr)
+  | list (List Expr)
+  | prim Text
+  | record (Option Expr) (List (Text, Expr)) Pos
+  | ann Expr Ty
+  | proj Expr Text Pos
+
+structure Failure where
+  reason : Text
+  facts : List (Text, Text)
+  cause : Option Failure
+
+ability Fetch @"urn:deus:external:Fetch" where
+  fetch : Requirement -> Result Text Text
+
+structure Goal where
+  hyps : List Sym
+  prop : Sym
+  vars : List (Text, Sexp)
+
+ability Http @"urn:deus:web:Http" where
+  fetch : Request -> Response
+
+ability IO @"#IO" where
+  print : Text -> Unit
+  eprint : Text -> Unit
+  readFile : Text -> Option Text
+  writeFile : Text -> Text -> Unit
+  exists : Text -> Bool
+  listDir : Text -> List Text
+  mkdirp : Text -> Unit
+  remove : Text -> Unit
+  args : Unit -> List Text
+  exit : Int -> a
+  time : Unit -> Int
+  readStdin : Unit -> Text
+  writeBytes : Text -> List Int -> Unit
+  getEnv : Text -> Option Text
+  isDir : Text -> Bool
+  wallClock : Unit -> Text
+  appendFile : Text -> Text -> Unit
+  exec : Text -> List Text -> (Int, (Text, Text))
+
+inductive Int @"#Int" where
+
+structure Item where
+  decl : Decl
+  fqn : Text
+  declScope : Scope
+  path : Text
+
+inductive Json where
+  | null
+  | bool Bool
+  | num Int
+  | str Text
+  | arr (List Json)
+  | obj (List (Text, Json))
+
+inductive Kind where
+  | ident
+  | dot
+  | proj
+  | int
+  | text
+  | sym
+  | kw
+  | doc
+  | eof
+
+structure Lib @"urn:deus:project:Lib" where
+  libName : Text
+  libIri : Text
+  release : Text
+
+inductive List a @"#List" where
+  | nil
+  | cons a (List a)
+
+ability Log where
+  emit : Text -> Text -> List (Text, Text) -> Unit
+
+inductive Map a b where
+  | tip
+  | node Int (Map a b) a b (Map a b)
+
+ability MdlHost @"urn:deus:mdl:Host" where
+  cost : Text -> Result Text Int
+  holds : Text -> Result Text Bool
+
+ability Metrics where
+  counter : Text -> Int -> Unit
+  gauge : Text -> Int -> Unit
+
+inductive MutMap a b @"#MutMap" where
+
+structure Names where
+  table : Map Text Entry
+  index : Dict Text Entry
+  bySegment : Dict Text (List Text)
+  fieldOwners : Dict Text (List Text)
+
+structure OpArm where
+  op : Text
+  args : List Pat
+  resume : Option Text
+  clause : Expr
+  at : Pos
+
+inductive Option a @"#Option" where
+  | none
+  | some a
+
+structure Pair a b @"#Pair" where
+  fst : a
+  snd : b
+
+structure Parser where
+  toks : Ref (List Token)
+  stop : Ref Int
+
+inductive Pat where
+  | wild
+  | id Text (List Pat) Pos
+  | dot Text (List Pat) Pos
+  | int Int
+  | text Text
+  | bool Bool
+  | cons Pat Pat
+  | tuple (List Pat)
+  | list (List Pat)
+  | unit
+  | as Text Pat
+
+structure Pos where
+  atLine : Int
+  atCol : Int
+
+structure Printer where
+  display : Map Text Text
+  fullNames : Map Text Text
+  typeNames : Map Text Text
+  fieldNames : Map Text Text
+  supply : Ref (List Text)
+  fresh : Ref Int
+
+structure Project @"urn:deus:project:Project" where
+  projectIri : Text
+  libs : List Lib
+
+structure Prover where
+  store : Text
+  nsMap : Map Text Entry
+  bodies : Ref (Map Text (Option (Int, Sexp)))
+  fuel : Ref Int
+  stuckOn : Ref (List Text)
+  counter : Ref Int
+  lemmaRules : Ref (List Rule)
+  assumptions : Ref (List Text)
+
+ability Random where
+  nextInt : Int -> Int
+
+inductive Ref a @"#Ref" where
+
+structure Registry @"urn:deus:external:Registry" where
+  registryName : Text
+  urlTemplate : Text
+
+ability Remote @"urn:deus:replicate:Remote" where
+  list : Unit -> List Text
+  get : Text -> Option Text
+  put : Text -> Text -> Unit
+  delete : Text -> Unit
+  writeAll : List (Text, Text) -> Unit
+
+structure Request @"urn:deus:web:Request" where
+  verb : Text
+  url : Text
+  payload : Text
+
+structure Requirement @"urn:deus:external:Requirement" where
+  registry : Registry
+  pkg : Text
+  version : Text
+  platform : Text
+  sha256 : Text
+  entry : Text
+
+structure Response @"urn:deus:web:Response" where
+  status : Int
+  content : Text
+  headers : List (Text, Text)
+
+inductive Result a b where
+  | ok b
+  | err a
+
+structure Rule where
+  lhs : Sym
+  rhs : Sym
+  conds : List Sym
+
+structure Scope where
+  ns : List Text
+  opens : List Text
+
+structure Seen @"urn:deus:replicate:Seen" where
+  bundleName : Text
+  claims : List (Text, Text)
+  hashes : List Text
+
+inductive Sexp where
+  | int Int
+  | sym Text
+  | str Text
+  | list (List Sexp)
+
+ability Storage @"urn:deus:web:Storage" where
+  get : Text -> Option Text
+  put : Text -> Text -> Unit
+  delete : Text -> Bool
+
+ability Stuck where
+  stuck : Text -> a
+
+inductive Sym where
+  | int Int
+  | text Text
+  | data Text Int (List Sym)
+  | fv Text
+  | pv Text
+  | call Text (List Sym)
+  | fn Text (List Sym)
+  | ctorFn Text Int Int (List Sym)
+  | primFn Text (List Sym)
+  | prim Text (List Sym)
+  | ite Sym Sym Sym
+  | clo (List Sym) Sexp
+  | app Sym (List Sym)
+
+inductive TRow where
+  | empty
+  | extend TType TRow
+  | var Int
+
+inductive TType where
+  | con Text (List TType)
+  | fn TType TRow TType
+  | var Int
+  | row TRow
+
+structure Task @"urn:deus:task:Task" where
+  id : Text
+  title : Text
+  state : TaskState
+  priority : Int
+  assignee : Text
+  labels : List Text
+  parent : Text
+  details : Text
+  links : List Attachment
+  comments : List Comment
+
+inductive TaskState @"urn:deus:task:State" where
+  | todo
+  | doing
+  | done
+  | canceled
+
+inductive Text @"#Text" where
+
+ability Throw b where
+  throw : b -> a
+
+structure Token where
+  kind : Kind
+  value : Text
+  line : Int
+  col : Int
+  bol : Bool
+
+ability Trace where
+  start : Text -> List (Text, Text) -> Int
+  finish : Int -> Unit
+
+inductive Ty where
+  | named Text (List Ty)
+  | arrow Ty Ty (Option (List Ty))
+  | tuple (List Ty)
+  | unit
+  | effects (List Ty) Ty
+  | row (List Ty)
+
+structure Unifier where
+  types : MutMap Int TType
+  rows : MutMap Int TRow
+  next : Ref Int
+
+inductive Unit @"#Unit" where
+  | unit
+
+inductive Verdict where
+  | pass Text Int
+  | fail Text
+  | unchecked
+
+structure World where
+  files : Ref (Map Text Text)
+  dirs : Ref (Map Text Unit)
+  output : Ref (List Text)
+  clock : Ref Int
+  rng : Ref Int
+
+/-- `++`: concatenates two texts or two lists. -/
+def append : a -> a -> a := prim "append"
+
+/-- Runs `body`, recovering from a `throw` with `onError`. -/
+def catch (body : Unit -> {Throw e | r} a) (onError : e -> {r} a) : {r} a :=
+  handle body () with
+  | Throw.throw e -> x0 => onError e
+
+/-- Structural order: -1, 0 or 1. -/
+def compare : a -> a -> Int := prim "compare"
+
+def const (x : a) (y : b) : a := x
+
+/-- Raises a defect: the program reached a state its author ruled out. -/
+def defect : Text -> a := prim "defect"
+
+def eprintln (t : Text) : {IO} Unit := IO.eprint (t ++ "\n")
+
+/-- Structural equality; functions are never equal. -/
+def eq : a -> a -> Bool := prim "eq"
+
+def fst (p : (a, b)) : a :=
+  match p with
+  | (x, _) => x
+
+def ge : a -> a -> Bool := prim "ge"
+
+def gt : a -> a -> Bool := prim "gt"
+
+def id (x : a) : a := x
+
+/-- `a -> b` in a theorem's statement. -/
+def implies : Bool -> Bool -> Bool := prim "implies"
+
+def le : a -> a -> Bool := prim "le"
+
+/-- Structural order (`<`, `<=`, `>`, `>=`), as `compare`. -/
+def lt : a -> a -> Bool := prim "lt"
+
+def max (a : Int) (b : Int) : Int := if a < b then b else a
+
+def min (a : Int) (b : Int) : Int := if a < b then a else b
+
+def neq : a -> a -> Bool := prim "neq"
+
+def not (b : Bool) : Bool := if b then false else true
+
+def println (t : Text) : {IO} Unit := IO.print (t ++ "\n")
+
+/-- Debug rendering of any value. -/
+def show : a -> Text := prim "show"
+
+def snd (p : (a, b)) : b :=
+  match p with
+  | (_, y) => y
+
+def trace : Text -> a -> a := prim "trace"
+
+/-- Runs `body`, turning a `throw` into `Result.err`. -/
+def try (body : Unit -> {Throw e | r} a) : {r} Result e a :=
+  handle body () with
+  | return x => Result.ok x
+  | Throw.throw e -> x0 => Result.err e

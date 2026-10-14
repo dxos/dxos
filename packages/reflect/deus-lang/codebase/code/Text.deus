@@ -1,0 +1,63 @@
+/-- UTF-16 code unit at an index, or -1 outside the text. -/
+def Text.code : Text -> Int -> Int := prim "Text.code"
+
+def Text.concat : List Text -> Text := prim "Text.concat"
+
+def Text.contains (part : Text) (t : Text) : Bool := indexOf t part 0 >= 0
+
+def Text.drop (n : Int) (t : Text) : Text := slice t n (Text.length t)
+
+def Text.endsWith (suffix : Text) (t : Text) : Bool :=
+  let n := Text.length t
+  let m := Text.length suffix
+  m <= n && slice t (n - m) n == suffix
+
+def Text.fromCode : Int -> Text := prim "Text.fromCode"
+
+def Text.fromCodes : List Int -> Text := prim "Text.fromCodes"
+
+/-- First index of a substring at or after a position, or -1. -/
+def Text.indexOf : Text -> Text -> Int -> Int := prim "Text.indexOf"
+
+def Text.isAlpha (c : Int) : Bool := c >= 97 && c <= 122 || c >= 65 && c <= 90
+
+def Text.isDigit (c : Int) : Bool := c >= 48 && c <= 57
+
+def Text.isEmpty (t : Text) : Bool := Text.length t == 0
+
+def Text.isSpace (c : Int) : Bool := c == 32 || c == 10 || c == 9 || c == 13
+
+def Text.join : Text -> List Text -> Text := prim "Text.join"
+
+def Text.length : Text -> Int := prim "Text.length"
+
+def Text.lines (t : Text) : List Text := Text.split t "\n"
+
+def Text.padLeft (n : Int) (t : Text) : Text := repeat (n - Text.length t) " " ++ t
+
+def Text.padRight (n : Int) (t : Text) : Text := t ++ repeat (n - Text.length t) " "
+
+def Text.repeat (n : Int) (t : Text) : Text := Text.concat (replicate n t)
+
+/-- Replaces every occurrence of `old` with `new`. -/
+def Text.replace (old : Text) (new : Text) (t : Text) : Text := join new (Text.split t old)
+
+def Text.sha256 : Text -> Text := prim "Text.sha256"
+
+def Text.slice : Text -> Int -> Int -> Text := prim "Text.slice"
+
+/-- `split t sep`: the text first, then the separator. -/
+def Text.split : Text -> Text -> List Text := prim "Text.split"
+
+def Text.startsWith (prefix : Text) (t : Text) : Bool := Text.length prefix <= Text.length t && slice t 0 (Text.length prefix) == prefix
+
+def Text.take (n : Int) (t : Text) : Text := slice t 0 n
+
+/-- ASCII letters to lower case; every other character is unchanged. -/
+def Text.toLower (t : Text) : Text := fromCodes (List.map (fun i =>
+  let c := code t i
+  if c >= 65 && c <= 90 then c + 32 else c) (range 0 (Text.length t)))
+
+def Text.trim : Text -> Text := prim "Text.trim"
+
+def Text.utf8 : Text -> List Int := prim "Text.utf8"

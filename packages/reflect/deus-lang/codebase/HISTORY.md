@@ -1,0 +1,43 @@
+# History of main
+
+- `9c4c7f8fc0` task: open 1ce541ac Explorer: show the source of a change, not only its message
+- `2119c92825` task: open 3d6508e4 Task changes do not record who made them as provenance
+- `1eecf8089b` toolchain: the export explains itself (README.md) (by claude)
+- `e5c28d74b9` task: comment on 0c53d3bd
+- `20d837376a` close 0c53d3bd by #7b79105804
+- `7b79105804` toolchain: deus export and task import (D64) (by claude)
+- `4caa1eed52` task: open 9caae4c1 deus run takes the codebase only from the environment
+- `782b470963` task: open 4bf3eed4 Inductive constructors lose their field names when printed
+- `9ebba1a94d` task: open 0c53d3bd Back up the codebase to GitHub as text
+- `fcf1e16472` task: open b09507db Keep ordinary comments, so the codebase can be the source of truth for the toolchain
+- `21385b6489` task: open 5d370204 Self-hosting test takes 74 s since the round trip covers everything
+- `c361ae81ed` task: open 4a833ce9 deus view output is cut off when piped
+- `66711bb3a0` toolchain: whole-codebase round trip (D63) (by claude)
+- `394c982dc5` task: comment on ad0006da
+- `376df582c8` task: set ad0006da state
+- `30a2360696` task: set 7c7b9ca0 state
+- `b4f8e21aae` close d7eba020 by #f7f6be3863
+- `f7f6be3863` toolchain: printer layout and round trip (D63)
+- `aa73fd29cc` task: open d7eba020 Break long lines in deus view output
+- `f261dfbbb8` task: set 7c7b9ca0 state
+- `e8d47fc82e` task: comment on 7c7b9ca0
+- `05b8d8f8d0` task: set ad0006da state assignee
+- `4c5ea04fd1` task: set 553faf09 state assignee
+- `4e18c4bc35` task: set 57a25668 state assignee
+- `5246d13134` task: set 84014a86 state assignee
+- `15319c869d` task: set 0f23f671 state assignee
+- `ece378b321` task: set 7c7b9ca0 state assignee
+- `cc81c503c0` task: set 4483b915 state assignee
+- `d016ca6d79` task: set 915c9c9e state assignee
+- `f60620e0a6` task: open 553faf09 Task viewer in the codebase explorer
+- `52d01b89e7` task: open 57a25668 Gitignore .deus and keep one codebase in the home directory
+- `1173a00b0a` task: open ad0006da Host the explorer on a Worker kept current from R2
+- `3a1e5b8c62` task: open 84014a86 Explorer as an SPA showing several definitions at once
+- `010941eed1` task: open 0f23f671 Native deus fails with DEUS_HOME is not set
+- `c87b8c13cf` task: open 7c7b9ca0 deus view output not formatted correctly, and no colours
+- `c4db00626c` task: open 4483b915 Explain how deus add deus resolves its path
+- `c73204318c` task: open 915c9c9e Builtins should come by default on init
+- `7fdf3497f0` platform and examples
+- `7f33145d2d` the toolchain
+- `42f6b2c6aa` standard library
+- `67c7d5a614` init

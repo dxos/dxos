@@ -1,0 +1,7 @@
+def Log.debug (message : Text) (fields : List (Text, Text)) : {Log} Unit := Log.emit "debug" message fields
+
+def Log.error (message : Text) (fields : List (Text, Text)) : {Log} Unit := Log.emit "error" message fields
+
+def Log.info (message : Text) (fields : List (Text, Text)) : {Log} Unit := Log.emit "info" message fields
+
+def Log.warn (message : Text) (fields : List (Text, Text)) : {Log} Unit := Log.emit "warn" message fields

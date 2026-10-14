@@ -1,0 +1,6 @@
+/-- Runs `body` inside a span; nested spans become its children. -/
+def Trace.span (name : Text) (attrs : List (Text, Text)) (body : Unit -> {Trace | r} a) : {Trace | r} a :=
+  let id := Trace.start name attrs
+  let result := body ()
+  Trace.finish id
+  result

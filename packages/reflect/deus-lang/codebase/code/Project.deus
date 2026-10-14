@@ -1,0 +1,91 @@
+/-- `https://dxos.org/deus/std` → `dxos.org`; an IRI without `//` is its own authority. -/
+def Project.authority (iri : Text) : Text :=
+  let start := indexOf iri "//" 0
+  if start < 0 then iri else
+    let rest := Text.drop (start + 2) iri
+    let slash := indexOf rest "/" 0
+    if slash < 0 then rest else Text.take slash rest
+
+/-- Copies an object and its metadata from another store unless already present. -/
+def Project.copy (from : Text) (dir : Text) (h : Text) : {IO} Unit :=
+  match readObject from h with
+  | Option.none => ()
+  | Option.some form =>
+      writeObject dir h form
+      match readMeta from h with
+      | Option.some meta => if IO.exists (dir ++ "/meta/" ++ h) then () else writeMeta dir h meta
+      | Option.none => ()
+
+def Project.file (dir : Text) : Text := dir ++ "/project"
+
+def Project.fromSexp (form : Sexp) : Project :=
+  let items := Sexp.args form
+  let iri := getOr (Option.map asText (metaField (Option.some form) "iri")) ""
+  let libs := filterMap (fun item =>
+    match item with
+    | Sexp.list (Sexp.sym "lib" :: Sexp.str name :: Sexp.str libIri :: Sexp.str causal :: []) => Option.some (Lib.mk name libIri causal)
+    | _ => Option.none) items
+  Project.mk iri libs
+
+/-- Mounts a release of the project at `from` (its branch's head) under `lib.<name>`: copies what
+  its names reach, and returns the library record and the namespace with the mount replaced. -/
+def Project.install (dir : Text) (ns : Map Text Entry) (name : Text) (from : Text) (branch : Text) : {IO, Throw Text} (Lib, Map Text Entry) :=
+  let release := headOf from branch
+  let theirs := readNamespace from (readCausal from release).snapshot
+  let iri :=
+    match Project.read from with
+    | Option.some p => p.projectIri
+    | Option.none => Throw.throw (from ++ " is not a project; run `deus project init <iri>` there")
+  let own := List.filter (fun pair => not (isLibName (fst pair))) (Map.toList theirs)
+  forEach (Map.keys (reachable from (rootsOf own))) (fun h => copy from dir h)
+  let mount := "lib." ++ name ++ "."
+  let kept := Map.fromList (List.filter (fun pair => not (startsWith mount (fst pair))) (Map.toList ns))
+  (Lib.mk name iri release, foldl (fun m pair => Map.insert (mount ++ fst pair) (snd pair) m) kept own)
+
+def Project.isLibName (name : Text) : Bool := startsWith "lib." name
+
+/-- Whether `iri` lies under a project's IRI (equal to it, or below it by path or fragment). -/
+def Project.owns (projectIri : Text) (iri : Text) : Bool := not (Text.isEmpty projectIri) && (iri == projectIri || startsWith (projectIri ++ "/") iri || startsWith (projectIri ++ "#") iri)
+
+/-- Every hash reachable from `roots` through object dependencies. -/
+def Project.reachable (dir : Text) (roots : List Text) : {IO} Map Text Unit :=
+  let rec go pending seen :=
+    match pending with
+    | [] => seen
+    | h :: rest => if Map.contains h seen then go rest seen else
+        let deps :=
+          match readObject dir h with
+          | Option.some form => Codebase.dependencies form
+          | Option.none => []
+        go (deps ++ rest) (Map.insert h () seen)
+  go roots Map.empty
+
+def Project.read (dir : Text) : {IO} Option Project := Option.map (fun text => Project.fromSexp (Sexp.read text)) (IO.readFile (Project.file dir))
+
+/-- Hashes of named definitions (constructors and operations name their type's or ability's). -/
+def Project.rootsOf (entries : List (Text, Entry)) : List Text := List.filter (fun h => not (startsWith "#" h)) (List.map (fun pair => hash (snd pair)) entries)
+
+/-- (owned, provided by libraries): the project's subgraph and the libraries' part of what it reaches. -/
+def Project.subgraph (dir : Text) (ns : Map Text Entry) : {IO} (List Text, List Text) :=
+  let entries := Map.toList ns
+  let fromLibs := reachable dir (rootsOf (List.filter (fun pair => isLibName (fst pair)) entries))
+  let fromOwn := reachable dir (rootsOf (List.filter (fun pair => not (isLibName (fst pair))) entries))
+  (List.filter (fun h => not (Map.contains h fromLibs)) (Map.keys fromOwn), Map.keys fromLibs)
+
+def Project.toSexp (p : Project) : Sexp := Sexp.node "project" (Sexp.node "iri" [Sexp.str p.projectIri] :: List.map
+  (fun l => Sexp.node "lib" [Sexp.str l.libName, Sexp.str l.libIri, Sexp.str l.release])
+  p.libs)
+
+/-- Type and ability IRIs in `entries` that lie under a library's IRI: only that library may mint them. -/
+def Project.trespasses (p : Project) (entries : List (Text, Entry)) : List Text := filterMap (fun pair =>
+  let iri :=
+    match snd pair with
+    | Entry.type _ i _ => i
+    | Entry.ability _ i => i
+    | _ => ""
+  match List.find (fun l => owns l.libIri iri) p.libs with
+  | Option.some l => if isLibName (fst pair) then Option.none else Option.some (fst pair ++ " has IRI " ++ iri ++ ", which belongs to lib." ++ l.libName ++ " (" ++ l.libIri ++
+      ")")
+  | Option.none => Option.none) entries
+
+def Project.write (dir : Text) (p : Project) : {IO} Unit := IO.writeFile (Project.file dir) (Sexp.print (Project.toSexp p) ++ "\n")

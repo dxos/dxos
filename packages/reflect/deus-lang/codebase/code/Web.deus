@@ -1,0 +1,68 @@
+/-- The request an alarm delivers. -/
+def Web.alarmRequest : Request := Request.mk "ALARM" "/alarm" ""
+
+/-- An HTML page. -/
+def Web.html (content : Text) : Response := Response.mk 200 content [("content-type", "text/html; charset=utf-8")]
+
+def Web.notFound (path : Text) : Response := Response.mk 404 ("no route " ++ path) []
+
+def Web.ok (content : Text) : Response := Response.mk 200 content []
+
+/-- A response with a status and no headers. -/
+def Web.reply (code : Int) (content : Text) : Response := Response.mk code content []
+
+/-- Runs an actor on a sequence of requests against one in-memory storage, as a Durable Object
+  would serve them; `Http` answers 503. Returns the responses and the final storage. -/
+def Web.simulate (actor : Request -> {Storage, Http | r} Response) (requests : List Request) : {r} (List Response, Map Text Text) :=
+  let store := Ref.new Map.empty
+  let serve := fun request =>
+    handle actor request with
+    | Storage.get key -> k => k (Map.lookup key (Ref.get store))
+    | Storage.put key value -> k =>
+        Ref.set store (Map.insert key value (Ref.get store))
+        k ()
+    | Storage.delete key -> k =>
+        let had := Map.contains key (Ref.get store)
+        Ref.set store (Map.remove key (Ref.get store))
+        k had
+    | Http.fetch x0 -> k => k (Response.mk 503 "no network in simulation" [])
+  let responses := List.map serve requests
+  (responses, Ref.get store)
+
+/-- Serves `(object, request)` pairs on named objects of one class, each with its own storage.
+  `Actors.call` is served at once on the named object; `Alarm.set` schedules on a logical clock,
+  and once the requests are served, due alarms run in time order (ties by name). Returns the
+  responses to `requests`, every object's storage, and the alarms that ran as (object, time). -/
+def Web.simulateMany (actor : Request -> {Storage, Http, Actors, Alarm | r} Response) (requests : List (Text, Request)) : {r} (List Response, (Map Text (Map Text Text), List (Text, Int))) :=
+  let stores := Ref.new Map.empty
+  let alarms := Ref.new Map.empty
+  let clock := Ref.new 0
+  let storeOf := fun name => getOr (Map.lookup name (Ref.get stores)) Map.empty
+  let update := fun name f => Ref.set stores (Map.insert name (f (storeOf name)) (Ref.get stores))
+  let rec serve name request :=
+    handle actor request with
+    | Storage.get key -> k => k (Map.lookup key (storeOf name))
+    | Storage.put key value -> k =>
+        update name (fun m => Map.insert key value m)
+        k ()
+    | Storage.delete key -> k =>
+        let had := Map.contains key (storeOf name)
+        update name (fun m => Map.remove key m)
+        k had
+    | Http.fetch x0 -> k => k (Response.mk 503 "no network in simulation" [])
+    | Actors.call other inner -> k => k (serve other inner)
+    | Alarm.set delay -> k =>
+        Ref.set alarms (Map.insert name (Ref.get clock + delay) (Ref.get alarms))
+        k ()
+  let responses := List.map (fun pair => serve (fst pair) (snd pair)) requests
+  let rec fire count acc :=
+    let due := sortBy (fun a b => compare (snd a, fst a) (snd b, fst b)) (Map.toList (Ref.get alarms))
+    match due with
+    | [] => reverse acc
+    | (name, at) :: _ => if count >= 1000 then defect "alarms kept rescheduling past 1000 runs" else
+        Ref.set alarms (Map.remove name (Ref.get alarms))
+        Ref.set clock at
+        serve name alarmRequest
+        fire (count + 1) ((name, at) :: acc)
+  let fired := fire 0 []
+  (responses, Ref.get stores, fired)

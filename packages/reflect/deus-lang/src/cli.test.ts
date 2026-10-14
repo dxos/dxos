@@ -603,6 +603,20 @@ describe('deus CLI', () => {
       expect(shownBug.links[0].current).not.toBe(shownBug.links[0].hash);
       expect(shownBug.history).toHaveLength(4);
       expect(JSON.parse(readFileSync(join(site, 'meta.json'), 'utf8'))).toMatchObject({ tasks: 2, open: 1 });
+
+      // An export restores the same names, hashes and tasks in an empty codebase.
+      const exported = join(scratch, 'tasks-export');
+      expect(JSON.parse(deus('export', exported, '--json', ...c).stdout)).toMatchObject({ tasks: 2 });
+      expect(readFileSync(join(exported, 'TASKS.md'), 'utf8')).toContain(`## Square overflows (\`${bug.id}\`)`);
+      const restored = ['--codebase', join(scratch, 'tasks-restored')];
+      deus('init', '--empty', ...restored);
+      expect(deus('add', join(exported, 'code'), ...restored).code).toBe(0);
+      expect(deus('task', 'import', join(exported, 'tasks.sexp'), ...restored).stdout).toBe('Imported 2 tasks.\n');
+      const listing = (args: string[]) => JSON.parse(deus('ls', '--json', ...args).stdout);
+      expect(listing(restored)).toEqual(listing(c));
+      expect(deus('task', 'list', '--all', '--json', ...restored).stdout).toBe(
+        deus('task', 'list', '--all', '--json', ...c).stdout,
+      );
     },
   );
 

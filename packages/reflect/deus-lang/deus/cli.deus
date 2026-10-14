@@ -1062,7 +1062,24 @@ def task (args : Args) : {IO, Throw Text} Unit :=
   | ["unlink", id, name] =>
     let t := Tasks.find tasks id
     saved (Tasks.unlink t name) ("task: unlink " ++ t.id ++ " from " ++ name)
+  | ["import", path] =>
+    let n := Export.importTasks dir path
+    output args (fun _ => Json.obj [("imported", Json.num n)]) (fun _ => "Imported " ++ Int.toText n ++ " tasks.")
   | _ => throw "usage: deus task [new <title…> | list | show <id> | set <id> --<field> v | comment <id> <text…> | link <id> <name> | unlink <id> <name>]"
+
+/--
+  `deus export <dir>` (D64): the codebase as text for a git repository: source per namespace,
+  tasks, and history. `deus add <dir>/code` and `deus task import <dir>/tasks.sexp` restore it.
+-/
+def export (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  match List.head? args.positional with
+  | none => throw "usage: deus export <dir>"
+  | some out =>
+    match Export.write dir out with
+    | (files, definitions, tasks) =>
+      output args (fun _ => Json.obj [("files", Json.num files), ("definitions", Json.num definitions), ("tasks", Json.num tasks)])
+        (fun _ => "Exported " ++ Int.toText definitions ++ " definitions in " ++ Int.toText files ++ " files and " ++ Int.toText tasks ++ " tasks to " ++ out ++ ".")
 
 def usage : Text :=
   Text.join "\n" [
@@ -1124,6 +1141,8 @@ def usage : Text :=
     "  task comment <id> <text…>            add a comment (--by <agent>)",
     "  task link <id> <name>|--change <h>   attach a definition or a change; unlink <id> <name> detaches",
     "  update <files…> --closes <id>        mark a task done, linked to the change that fixed it",
+    "  task import <tasks.sexp>             restore tasks from an export",
+    "  export <dir>                         the codebase as text for git: code/<Namespace>.deus, tasks, history",
     "  build <fn> -o <file.wasm> --wasm     compile a first-order Int/Bool function (and its callees) to wasm",
     "  compile <files|dirs…> --main <name>  compile files without a codebase",
     ""]
@@ -1168,6 +1187,7 @@ def dispatch (argv : List Text) : {IO, Throw Text} Unit :=
     else if command == "serve" then serve args
     else if command == "explore" then explore args
     else if command == "task" then task args
+    else if command == "export" then export args
     else if command == "help" then IO.print usage
     else die ("unknown command " ++ command ++ "\n" ++ usage)
 
