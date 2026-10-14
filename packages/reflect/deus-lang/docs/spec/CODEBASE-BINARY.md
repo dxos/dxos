@@ -7,8 +7,9 @@ reads this format can replicate a codebase without a server. The implementation 
 [`deus/replicate.deus`](../../deus/replicate.deus) (bundles, remotes, heads, compaction, GC),
 [`deus/columnar.deus`](../../deus/columnar.deus) (the DEUSCOL1 encoding) and
 [`deus/cli.deus`](../../deus/cli.deus) (`withRemote`, the commands). Decisions:
-[D50](../DECISIONS.md) (bundles, heads, sedimentree), [D54](../DECISIONS.md) (retention GC),
-[D60](../DECISIONS.md) (columnar text, gzip).
+[D50](../DECISIONS.md) (bundles, heads, sedimentree), [D73](../DECISIONS.md) (no history is
+trimmed), [D60](../DECISIONS.md) and [D74](../DECISIONS.md) (columnar
+text, gzip).
 
 Objects and their hashes are defined in [CODEBASE-STORE.md](CODEBASE-STORE.md). The canonical
 S-expression text that both hashes and dictionaries use is defined in [CORE.md](CORE.md).
@@ -17,7 +18,7 @@ S-expression text that both hashes and dictionaries use is defined in [CORE.md](
 
 ```text
 name   = level "-" sha256
-level  = decimal integer, no sign, no leading zeros   ; 0 push, k >= 1 compaction, 99 GC
+level  = decimal integer, no sign, no leading zeros   ; 0 push, k >= 1 compaction
 sha256 = 64 lowercase hex digits
 ```
 
@@ -306,16 +307,12 @@ bundles are canonical, so clients compacting the same history write byte-identic
 Observed: 30 level-0 bundles whose head `01786a06…` starts with one zero compact at level 1 into one
 `1-192de339…` bundle and a claims-only `0-013c20ea…` bundle holding `(branch "main" "01786a06…")`.
 
-## Retention GC (level 99)
+## History is never trimmed
 
-`deus compact [remote] --keep n` ([D54](../DECISIONS.md)):
+A remote keeps every causal node and everything it reaches, as git does ([D73](../DECISIONS.md)).
+The only deletion is step 6 of compaction, of bundles whose objects strata already hold. There is no
+retention GC: `deus compact --keep` exits with an error. Artifacts and the cache are local layers and
+are never uploaded, so deleting them never touches a remote.
 
-1. Collect the head claims of all branches.
-2. Keep the causal nodes at most `n` parent links from any head (breadth first, depth 0 is the
-   heads), plus their snapshots and everything their named entries reach.
-3. Write one bundle with those claims and objects, named `99-<sha256>`.
-4. Delete every other listed bundle.
-
-The result depends only on the heads and `n`, so clients with the same policy write the same
-bundle. Older causal nodes are gone from the remote, and their children's `parents` point at hashes
-no store has. Note: a later `compact --level k` with `k > 99` would treat the GC bundle as removable.
+Note: a remote collected by the GC that D54 described has shallow history. Readers treat parents that
+no store has as roots.

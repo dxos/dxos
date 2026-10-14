@@ -4,28 +4,89 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>DEUS codebase</title>
-    <link rel="icon" href="data:," />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='4' fill='%234c6ef5'/%3E%3Ctext x='8' y='12' font-size='11' text-anchor='middle' fill='white' font-family='sans-serif'%3E%CE%BB%3C/text%3E%3C/svg%3E"
+    />
     <link rel="stylesheet" href="app.css" />
   </head>
   <body>
-    <aside id="sidebar">
-      <a id="project" href="#"></a>
-      <input id="search" type="search" placeholder="Search names" autocomplete="off" />
+    <header id="topbar">
+      <button
+        id="menu"
+        class="icon-button"
+        title="Toggle the namespace tree (t)"
+        aria-label="Toggle the namespace tree"
+      >
+        ☰
+      </button>
+      <a id="project" data-home></a>
+      <span id="branch" class="chip"></span>
       <nav id="views">
-        <button data-view="code" class="active">Code</button>
-        <button data-view="tasks">Tasks <span id="open-count"></span></button>
+        <a data-view="code" class="active">Code</a>
+        <a data-view="tasks">Tasks <span id="open-count" class="count"></span></a>
+        <a data-view="history">History</a>
       </nav>
-      <nav id="dialects" title="Syntax definitions are shown in">
-        <button data-dialect="deus" class="active">DEUS</button>
+      <div id="dialects" class="segmented" title="The syntax definitions are shown in" hidden>
+        <button data-dialect="deus">DEUS</button>
         <button data-dialect="ts">TS</button>
-      </nav>
-      <div id="tree"></div>
-    </aside>
-    <main id="workspace">
-      <section id="board" hidden></section>
-      <section id="cards"></section>
-      <section id="overview"></section>
-    </main>
+      </div>
+      <button id="find" class="finder-trigger" title="Find a definition (/ or ⌘K)">
+        <span>Find definitions, types and tasks</span><kbd>/</kbd>
+      </button>
+      <button id="help" class="icon-button" title="Keyboard shortcuts (?)" aria-label="Keyboard shortcuts">?</button>
+    </header>
+    <div id="layout">
+      <aside id="sidebar">
+        <div class="sidebar-title">Namespaces</div>
+        <div id="tree" role="tree"></div>
+      </aside>
+      <main id="main">
+        <section id="workspace"></section>
+        <section id="tasks-view" hidden></section>
+        <section id="history-view" hidden></section>
+      </main>
+    </div>
+    <div id="finder" class="overlay" hidden>
+      <div class="modal finder" role="dialog" aria-label="Find">
+        <input
+          id="finder-input"
+          type="search"
+          placeholder="Name, part of a name, or a type such as Text -> Int"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <ol id="finder-results" role="listbox"></ol>
+        <footer class="finder-help">
+          <span><kbd>↑</kbd><kbd>↓</kbd> move</span><span><kbd>↵</kbd> open</span><span><kbd>esc</kbd> close</span
+          ><span>a query with <code>-&gt;</code> or starting with <code>:</code> searches signatures</span>
+        </footer>
+      </div>
+    </div>
+    <div id="shortcuts" class="overlay" hidden>
+      <div class="modal shortcuts" role="dialog" aria-label="Keyboard shortcuts">
+        <h2>Keyboard shortcuts</h2>
+        <dl>
+          <dt><kbd>/</kbd> or <kbd>⌘K</kbd></dt>
+          <dd>Find a definition, type or task</dd>
+          <dt><kbd>j</kbd> <kbd>k</kbd></dt>
+          <dd>Focus the next or previous card</dd>
+          <dt><kbd>x</kbd></dt>
+          <dd>Close the focused card</dd>
+          <dt><kbd>X</kbd></dt>
+          <dd>Close every card</dd>
+          <dt><kbd>c</kbd></dt>
+          <dd>Fold or unfold the focused card</dd>
+          <dt><kbd>t</kbd></dt>
+          <dd>Show or hide the namespace tree</dd>
+          <dt><kbd>g</kbd> then <kbd>c</kbd> / <kbd>t</kbd> / <kbd>h</kbd></dt>
+          <dd>Go to code, tasks or history</dd>
+          <dt><kbd>esc</kbd></dt>
+          <dd>Close this dialog or the finder</dd>
+        </dl>
+      </div>
+    </div>
+    <div id="tooltip" role="tooltip" hidden></div>
     <script type="module" src="app.js"></script>
   </body>
 </html>

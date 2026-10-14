@@ -31,9 +31,6 @@ is fixed, the spec describes what the code does.
 
 Bugs:
 
-- The explorer writes builtin definitions as `def/#Bool.json`, but the app requests `def/%23Bool.json`,
-  which the local server does not decode; the bucket upload puts a raw `#` in the URL. Bucket uploads also
-  send `.js` and `.css` as `text/plain` ([EXPLORER.md](./EXPLORER.md)).
 - Type ascriptions (`(e : T)`, `let x : T := …`) are erased before checking, and a row written on a
   definition with no binders is not checked ([LANGUAGE.md](./LANGUAGE.md#static-semantics)).
 - Readers do not verify hashes: a bundle's name against its content, or an object's hash against its form.

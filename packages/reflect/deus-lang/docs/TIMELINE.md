@@ -80,6 +80,10 @@ stage. The table is regenerated from `git log` with every commit.
 | 72  | 10-14 18:39 | 7m 00s         | `757d74c8`  | wasm compares by type and refuses address compares (D69); Dmytro: merge everything into #13952                                                                                          |
 | 73  | 10-14 18:26 | 14m 46s        | `a85a6973`  | dialects: the codebase rendered in a TypeScript-like dialect (D70, `deus view --dialect ts`, explorer DEUS/TS switch, D65)                                                              |
 | 74  | 10-14 18:45 | 6m 00s         | `6a834107`  | merge the TypeScript-like dialect into this branch, renumbered D70, and fold everything into #13952                                                                                     |
-| 75  | 10-14 18:51 | 6m 00s         | this commit | unknown tactic names fail the proof instead of being skipped (D71)                                                                                                                      |
+| 75  | 10-14 18:51 | 6m 00s         | `57793c59`  | unknown tactic names fail the proof instead of being skipped (D71)                                                                                                                      |
+| 76  | 10-14 19:05 | 20m 00s        | `34324b58`  | namespace-tree snapshots and `deus migrate` (D72), full history kept on the remote, `--keep` removed (D73), bundles stay text (D74)                                                     |
+| 77  | 10-14 19:20 | 9m 00s         | `e1990e1f`  | a Unison-style codebase UI: finder by name and type, namespace pages, hover previews, change diffs; builtin pages and bucket content types fixed (D75, task dfaad231)                   |
+| 78  | 10-14 19:35 | 12m 00s        | `62a3bad2`  | the codebase catches up with the toolchain sources: stale references that exported as raw hashes renamed, codebase UI added (task b2166fc8)                                             |
+| 79  | 10-14 19:10 | 19m 00s        | this commit | Text.fromCodes surrogate pairs (D76); export names unnamed callees so it always restores (D77)                                                                                          |
 
-Total from stage 1 to stage 75: 9h 23m.
+Total from stage 1 to stage 79: 10h 23m.

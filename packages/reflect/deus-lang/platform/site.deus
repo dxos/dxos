@@ -5,11 +5,17 @@
 
 namespace Site
 
+/--
+  The content type a site file is served with, by the bundled server (`Site.contentType`) and by a
+  bucket the explorer is uploaded to: a browser refuses a module script or a stylesheet sent as
+  `text/plain`.
+-/
 def contentType (path : Text) : Text :=
   if Text.endsWith ".html" path then "text/html; charset=utf-8"
   else if Text.endsWith ".json" path then "application/json"
   else if Text.endsWith ".css" path then "text/css"
   else if Text.endsWith ".js" path then "text/javascript"
+  else if Text.endsWith ".svg" path then "image/svg+xml"
   else "text/plain; charset=utf-8"
 
 def serve (request : Request) : {IO} Response :=

@@ -438,6 +438,7 @@ structure Registry @"urn:deus:external:Registry" where
     does. Boundaries come from hashes and bundles are canonical, so clients compacting the same
     history write byte-identical bundles. A smaller bundle is deleted once compacted bundles hold
     all its objects; claims that are still heads move to a claims-only bundle first.
+  - Nothing else is ever deleted: the whole history stays on the remote, as git keeps it (D73).
 
   Locally, `remotes/<name>/url` names the remote, and `remotes/<name>/seen/<bundle>` lists a seen
   bundle's claims and hashes, so a pull reads each bundle once.

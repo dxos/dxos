@@ -122,7 +122,7 @@ def Cli.branch (args : Args) : {IO, Throw Text} Unit :=
 def Cli.build (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let ns := Codebase.current dir
-  match (lookupName ns (getOr (head? args.positional) ""), option args "out") with
+  match (Cli.lookupName ns (getOr (head? args.positional) ""), option args "out") with
   | ((_, Entry.term h), Option.some out) =>
       let image := Image.build (fetcher dir) h
       let target := fun u => if flag args "wasm" then
@@ -208,26 +208,18 @@ def Cli.codebaseDir (args : Args) : {IO} Text :=
       | Option.none => getOr (IO.getEnv "HOME") "." ++ "/.deus"
 
 /-- `deus compact [remote] [--level k]`: rewrites history into level-k strata and drops covered
-  bundles. With `--keep n`, collects garbage instead: only n generations from each head survive. -/
+  bundles. It never drops history: a bundle goes only once strata hold all its objects (D73). -/
 def Cli.compact (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let name := remoteName args
   let level := getOr (Option.bind (option args "level") fromText) 1
-  match Option.bind (option args "keep") fromText with
-  | Option.some keep =>
-      match withRemote dir name (fun _ => Replicate.collect dir name keep) with
-      | (bundle, deleted, dropped) => Cli.output
-          args
-          (fun _ => Json.obj [("bundle", Json.str bundle), ("deleted", Json.arr (List.map Json.str deleted)), ("dropped", Json.num dropped)])
-          (fun _ => "Kept " ++ toText keep ++ " generations in " ++ bundle ++ "; deleted " ++
-            toText (List.length deleted) ++ " bundles and " ++ toText dropped ++ " unreachable objects.")
-  | Option.none =>
-      match withRemote dir name (fun _ => Replicate.compact dir name level) with
-      | (written, deleted) => Cli.output
-          args
-          (fun _ => Json.obj [("written", Json.arr (List.map Json.str written)), ("deleted", Json.arr (List.map Json.str deleted))])
-          (fun _ => "Wrote " ++ toText (List.length written) ++ " level-" ++ toText level ++
-            " bundles; deleted " ++ toText (List.length deleted) ++ ".")
+  if Map.contains "keep" args.options then Throw.throw "compact keeps the whole history (D73); there is no --keep" else
+    match withRemote dir name (fun _ => Replicate.compact dir name level) with
+    | (written, deleted) => Cli.output
+        args
+        (fun _ => Json.obj [("written", Json.arr (List.map Json.str written)), ("deleted", Json.arr (List.map Json.str deleted))])
+        (fun _ => "Wrote " ++ toText (List.length written) ++ " level-" ++ toText level ++
+          " bundles; deleted " ++ toText (List.length deleted) ++ ".")
 
 --
 -- Commands: compiling.
@@ -273,7 +265,7 @@ def Cli.defectTrace (u : Unit) : Text := join "" (List.map (fun h => "\n    at "
 def Cli.deps (args : Args) (reverse : Bool) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let ns := Codebase.current dir
-  match lookupName ns (getOr (head? args.positional) "") with
+  match Cli.lookupName ns (getOr (head? args.positional) "") with
   | (name, e) =>
       let h := hash e
       let index := nameIndex ns
@@ -296,7 +288,7 @@ def Cli.dispatch (argv : List Text) : {IO, Throw Text} Unit :=
   | [] => IO.print usage
   | command :: rest =>
       let args := parseArgs rest
-      if command == "compile" then Cli.compile args else if command == "init" then Cli.init args else if command == "add" then addOrUpdate args false else if command == "update" then addOrUpdate args true else if command == "ls" then ls args else if command == "find" then Cli.find args else if command == "view" then view args else if command == "names" then Cli.names args else if command == "deps" then deps args false else if command == "dependents" then deps args true else if command == "mv" then mv args false else if command == "alias" then mv args true else if command == "rm" then rm args else if command == "branch" then branch args else if command == "switch" then switch args else if command == "merge" then Cli.merge args else if command == "log" then Cli.log args else if command == "layers" then Cli.layers args else if command == "project" then project args else if command == "lib" then lib args else if command == "remote" then remote args else if command == "push" then Cli.push args else if command == "pull" then Cli.pull args else if command == "compact" then Cli.compact args else if command == "undo" then undo args else if command == "run" then
+      if command == "compile" then Cli.compile args else if command == "init" then Cli.init args else if command == "add" then addOrUpdate args false else if command == "update" then addOrUpdate args true else if command == "ls" then ls args else if command == "find" then Cli.find args else if command == "view" then view args else if command == "names" then Cli.names args else if command == "deps" then deps args false else if command == "dependents" then deps args true else if command == "mv" then mv args false else if command == "alias" then mv args true else if command == "rm" then rm args else if command == "branch" then branch args else if command == "switch" then switch args else if command == "merge" then Cli.merge args else if command == "log" then Cli.log args else if command == "layers" then Cli.layers args else if command == "migrate" then Cli.migrate args else if command == "project" then project args else if command == "lib" then lib args else if command == "remote" then remote args else if command == "push" then Cli.push args else if command == "pull" then Cli.pull args else if command == "compact" then Cli.compact args else if command == "undo" then undo args else if command == "run" then
         match leadingOptions rest with
         | (options, program) => Cli.run (parseArgs options) program
       else if command == "eval" then eval args else if command == "mdl" then mdl args else if command == "test" then tests args else if command == "check" then theorems args else if command == "image" then Cli.image args else if command == "build" then Cli.build args else if command == "serve" then Cli.serve args else if command == "explore" then explore args else if command == "task" then task args else if command == "export" then export args else if command == "history" then Cli.history args else if command == "help" then IO.print usage else die ("unknown command " ++ command ++ "\n" ++ usage)
@@ -436,7 +428,7 @@ def Cli.history (args : Args) : {IO, Throw Text} Unit :=
 def Cli.image (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let ns := Codebase.current dir
-  match lookupName ns (getOr (head? args.positional) "") with
+  match Cli.lookupName ns (getOr (head? args.positional) "") with
   | (_, Entry.term h) =>
       let text := Image.build (fetcher dir) h
       match option args "out" with
@@ -648,6 +640,21 @@ def Cli.merge (args : Args) : {IO, Throw Text} Unit :=
           IO.exit 1
   | _ => Throw.throw "usage: deus merge <branch>"
 
+/-- `deus migrate`: rewrites history so every snapshot is a namespace tree (D72). Causal hashes
+  change, so a remote that already holds the old history should be replaced by a new one. -/
+def Cli.migrate (args : Args) : {IO, Throw Text} Unit :=
+  let dir := openCodebase args
+  match Codebase.migrate dir with
+  | (nodes, moved) =>
+      let remotes := if IO.isDir (dir ++ "/remotes") then IO.listDir (dir ++ "/remotes") else []
+      let note := if nodes == 0 || List.isEmpty remotes then "" else " Remotes still hold the old history (" ++ join ", " remotes ++
+        "); push to a new remote to replace them."
+      Cli.output
+        args
+        (fun _ => Json.obj [("rewritten", Json.num nodes), ("branches", Json.num moved)])
+        (fun _ => "Rewrote " ++ toText nodes ++ " history nodes; moved " ++ toText moved ++ " branches." ++
+          note)
+
 --
 -- Commands: names.
 --
@@ -694,7 +701,7 @@ def Cli.nameTrace (index : Map Text Text) (text : Text) : Text := join "\n" (fil
 def Cli.names (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let ns := Codebase.current dir
-  match lookupName ns (getOr (head? args.positional) "") with
+  match Cli.lookupName ns (getOr (head? args.positional) "") with
   | (_, e) =>
       let all := namesOf ns (hash e)
       Cli.output
@@ -895,7 +902,7 @@ def Cli.run (args : Args) (rest : List Text) : {IO, Throw Text} Unit :=
   match rest with
   | [] => Throw.throw "usage: deus run <name> [args…]"
   | name :: programArgs =>
-      match lookupName ns name with
+      match Cli.lookupName ns name with
       | (_, Entry.term h) =>
           Image.load (fetcher dir) [h]
           let f := Code.run h
@@ -919,7 +926,7 @@ def Cli.run (args : Args) (rest : List Text) : {IO, Throw Text} Unit :=
 def Cli.serve (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let ns := Codebase.current dir
-  match lookupName ns (getOr (head? args.positional) "") with
+  match Cli.lookupName ns (getOr (head? args.positional) "") with
   | (_, Entry.term h) =>
       let image := Image.build (fetcher dir) h
       let out := dir ++ "/artifacts/server-" ++ Text.sha256 image
@@ -1001,14 +1008,14 @@ def Cli.task (args : Args) : {IO, Throw Text} Unit :=
         let linked :=
           match option args "link" with
           | Option.some name =>
-              match lookupName (Codebase.current dir) name with
+              match Cli.lookupName (Codebase.current dir) name with
               | (full, e) => link t (Attachment.definition full (hash e))
           | Option.none => t
         saved linked ("task: open " ++ t.id ++ " " ++ title)
   | [] => Cli.task (Args.mk ["list"] args.options)
   | "list" :: [] =>
       let about := Option.map (fun name =>
-        match lookupName (Codebase.current dir) name with
+        match Cli.lookupName (Codebase.current dir) name with
         | (full, e) => Set.fromList (List.map (fun t => t.id) (about tasks full (hash e)))) (option args "about")
       let keep := fun t =>
         let byState :=
@@ -1064,7 +1071,7 @@ def Cli.task (args : Args) : {IO, Throw Text} Unit :=
       | Option.none => Throw.throw "usage: deus task link <id> <name> | --change <causal>"
   | "link" :: id :: name :: [] =>
       let t := Tasks.find tasks id
-      match lookupName (Codebase.current dir) name with
+      match Cli.lookupName (Codebase.current dir) name with
       | (full, e) => saved
           (link t (Attachment.definition full (hash e)))
           ("task: link " ++ t.id ++ " to " ++ full)
@@ -1104,12 +1111,12 @@ def Cli.undo (args : Args) : {IO, Throw Text} Unit :=
 
 def Cli.usage : Text := join
   "\n"
-  ["usage: deus <command> [args] [--json] [--codebase <dir>]", "", "codebase", "  init [--empty]                       create a codebase with the builtins and prelude (~/.deus, $DEUS_CODEBASE or --codebase)", "  add <files|dirs…>                    add new definitions (.deus, or ```deus fences in .mdl)", "  update <files|dirs…>                 add or replace definitions; dependents are rehashed", "                                       (both take --message <why> for the history, and", "                                       --by <agent> [--prompt <file>] to record provenance)", "  ls [prefix]                          list names", "  find <text>                          names containing text", "  view <name|#hash…> [--core]          print definitions as source (or as Core)", "       [--dialect deus|ts]              … in DEUS (default) or TypeScript-like syntax", "  names <name|#hash>                   every name of a hash", "  deps <name> / dependents <name>      what a definition uses / what uses it", "  mv <from> <to> / alias <name> <new>  rename (with everything under it) / add a name", "  rm <names…>                          remove names", "", "history", "  branch [name]                        list branches, or create one and switch to it", "  switch <branch>                      change branch", "  merge <branch>                       three-way merge into the current branch", "  log [--n N] / undo                   history / step the branch back", "  history import <history.sexp>        keep an export's history under a restored codebase", "  layers                               objects per layer (code, tests, proofs, history, results, …)", "", "projects", "  project [init <iri>]                 the project's IRI, libraries and owned subgraph", "  lib install <name> <codebase>        mount that project's head under lib.<name> (--branch b)", "", "replication", "  remote add <name> <dir|r2://b/p>     a remote: a directory, or an R2 bucket and prefix", "  push [remote] [--branch b]           upload one immutable bundle of what the remote lacks", "  pull [remote]                        import new bundles; <remote>.<branch> tracks its heads", "  compact [remote] [--level k]         sedimentree compaction into level-k strata", "  compact [remote] --keep n            garbage-collect: keep n generations from each head", "", "running", "  run [--codebase c] <name> [args…]    run name () with IO.args = args (options go before the name)", "  eval <expr>                          evaluate an expression", "  mdl [files|dirs…]                    check .mdl documents (or the codebase's specs): each block runs through the", "                                       @[ext \"<uri>\"] term its Extensions table names", "  test [prefix] [--integration]        run tests in a deterministic simulation (cached by hash);", "                                       --integration also runs @[integration] tests for real", "  check [prefix]                       check theorems and report their evidence", "  image <name> -o <file>               write a kernel image", "  build <name> -o <file> [--native]    write a standalone executable that runs name ()", "                                       (--native: Rust kernel + image, ~1 MB; default: Node SEA)", "  build <actor> -o <dir> --worker      write a Cloudflare Worker serving the actor from a Durable Object", "  build <handler> -o <file> --server   write a standalone native web server for a handler", "  serve <handler> [--port n]           serve a web handler locally (storage in ./deus-data)", "  explore [--out d|--port n|--publish r]  the codebase explorer: write, serve, or host it on a remote", "", "tasks", "  task new <title…> [--priority p --labels a,b --assignee a --parent id --details d --link name]", "  task [list] [--all|--state s|--label l|--about name]   open tasks, most urgent first", "  task show <id>                       a task, what it links (and how that changed since), its history", "  task set <id> --state doing|done|canceled …   change fields (title, state, priority, assignee, labels, parent, details)", "  task comment <id> <text…>            add a comment (--by <agent>)", "  task link <id> <name>|--change <h>   attach a definition or a change; unlink <id> <name> detaches", "  update <files…> --closes <id>        mark a task done, linked to the change that fixed it", "  task import <tasks.sexp>             restore tasks from an export", "  export <dir>                         the codebase as text for git: code/<Namespace>.deus, tasks, history", "  build <fn> -o <file.wasm> --wasm     compile a first-order Int/Bool function (and its callees) to wasm", "  compile <files|dirs…> --main <name>  compile files without a codebase", ""]
+  ["usage: deus <command> [args] [--json] [--codebase <dir>]", "", "codebase", "  init [--empty]                       create a codebase with the builtins and prelude (~/.deus, $DEUS_CODEBASE or --codebase)", "  add <files|dirs…>                    add new definitions (.deus, or ```deus fences in .mdl)", "  update <files|dirs…>                 add or replace definitions; dependents are rehashed", "                                       (both take --message <why> for the history, and", "                                       --by <agent> [--prompt <file>] to record provenance)", "  ls [prefix]                          list names", "  find <text>                          names containing text", "  view <name|#hash…> [--core]          print definitions as source (or as Core)", "       [--dialect deus|ts]              … in DEUS (default) or TypeScript-like syntax", "  names <name|#hash>                   every name of a hash", "  deps <name> / dependents <name>      what a definition uses / what uses it", "  mv <from> <to> / alias <name> <new>  rename (with everything under it) / add a name", "  rm <names…>                          remove names", "", "history", "  branch [name]                        list branches, or create one and switch to it", "  switch <branch>                      change branch", "  merge <branch>                       three-way merge into the current branch", "  log [--n N] / undo                   history / step the branch back", "  history import <history.sexp>        keep an export's history under a restored codebase", "  layers                               objects per layer (code, tests, proofs, history, results, …)", "  migrate                              rewrite history with namespace-tree snapshots", "", "projects", "  project [init <iri>]                 the project's IRI, libraries and owned subgraph", "  lib install <name> <codebase>        mount that project's head under lib.<name> (--branch b)", "", "replication", "  remote add <name> <dir|r2://b/p>     a remote: a directory, or an R2 bucket and prefix", "  push [remote] [--branch b]           upload one immutable bundle of what the remote lacks", "  pull [remote]                        import new bundles; <remote>.<branch> tracks its heads", "  compact [remote] [--level k]         sedimentree compaction into level-k strata", "", "running", "  run [--codebase c] <name> [args…]    run name () with IO.args = args (options go before the name)", "  eval <expr>                          evaluate an expression", "  mdl [files|dirs…]                    check .mdl documents (or the codebase's specs): each block runs through the", "                                       @[ext \"<uri>\"] term its Extensions table names", "  test [prefix] [--integration]        run tests in a deterministic simulation (cached by hash);", "                                       --integration also runs @[integration] tests for real", "  check [prefix]                       check theorems and report their evidence", "  image <name> -o <file>               write a kernel image", "  build <name> -o <file> [--native]    write a standalone executable that runs name ()", "                                       (--native: Rust kernel + image, ~1 MB; default: Node SEA)", "  build <actor> -o <dir> --worker      write a Cloudflare Worker serving the actor from a Durable Object", "  build <handler> -o <file> --server   write a standalone native web server for a handler", "  serve <handler> [--port n]           serve a web handler locally (storage in ./deus-data)", "  explore [--out d|--port n|--publish r]  the codebase explorer: write, serve, or host it on a remote", "", "tasks", "  task new <title…> [--priority p --labels a,b --assignee a --parent id --details d --link name]", "  task [list] [--all|--state s|--label l|--about name]   open tasks, most urgent first", "  task show <id>                       a task, what it links (and how that changed since), its history", "  task set <id> --state doing|done|canceled …   change fields (title, state, priority, assignee, labels, parent, details)", "  task comment <id> <text…>            add a comment (--by <agent>)", "  task link <id> <name>|--change <h>   attach a definition or a change; unlink <id> <name> detaches", "  update <files…> --closes <id>        mark a task done, linked to the change that fixed it", "  task import <tasks.sexp>             restore tasks from an export", "  export <dir>                         the codebase as text for git: code/<Namespace>.deus, tasks, history", "  build <fn> -o <file.wasm> --wasm     compile a first-order Int/Bool function (and its callees) to wasm", "  compile <files|dirs…> --main <name>  compile files without a codebase", ""]
 
 def Cli.view (args : Args) : {IO, Throw Text} Unit :=
   let dir := openCodebase args
   let ns := Codebase.current dir
-  let entries := List.map (fun name => lookupName ns name) args.positional
+  let entries := List.map (fun name => Cli.lookupName ns name) args.positional
   -- One printer for all entries: its name tables cost more to build than printing one definition.
   let printer := printer ns []
   let dialect := if flag args "core" then "core" else getOr (option args "dialect") "deus"

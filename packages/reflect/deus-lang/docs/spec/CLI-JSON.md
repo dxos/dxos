@@ -127,14 +127,13 @@ sides. `layers` lists the layers in a fixed order: `spec`, `code`, `tests`, `pro
 
 ### Replication
 
-| Command                     | Document                                                     |
-| --------------------------- | ------------------------------------------------------------ |
-| `remote`                    | `[{"remote": name, "url": url}]`                             |
-| `remote add <name> <url>`   | `{"remote": name, "url": url}`                               |
-| `push [remote]`             | `{"bundle": name\|null, "site"?: number}`                    |
-| `pull [remote]`             | `[{"branch": name, "heads": hash[]}]`                        |
-| `compact [remote]`          | `{"written": bundle[], "deleted": bundle[]}`                 |
-| `compact [remote] --keep n` | `{"bundle": bundle, "deleted": bundle[], "dropped": number}` |
+| Command                   | Document                                     |
+| ------------------------- | -------------------------------------------- |
+| `remote`                  | `[{"remote": name, "url": url}]`             |
+| `remote add <name> <url>` | `{"remote": name, "url": url}`               |
+| `push [remote]`           | `{"bundle": name\|null, "site"?: number}`    |
+| `pull [remote]`           | `[{"branch": name, "heads": hash[]}]`        |
+| `compact [remote]`        | `{"written": bundle[], "deleted": bundle[]}` |
 
 `push` gives `bundle` `null` when the remote already had everything. `site` is present when the remote
 hosts the explorer and the current branch was pushed: the number of site files uploaded

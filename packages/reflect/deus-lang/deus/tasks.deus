@@ -280,7 +280,7 @@ def histories (dir : Text) (limit : Int) : {IO, Throw Text} Map Text (List (Text
 
 /-- Changes that rebound a name. -/
 def historyOfName (dir : Text) (name : Text) (limit : Int) : {IO, Throw Text} List (Text, Causal) :=
-  changesWhere dir limit (fun parent node => parent.snapshot != node.snapshot && Map.lookup name (Codebase.readNamespace dir parent.snapshot) != Map.lookup name (Codebase.readNamespace dir node.snapshot))
+  changesWhere dir limit (fun parent node => parent.snapshot != node.snapshot && Codebase.lookupName dir parent.snapshot name != Codebase.lookupName dir node.snapshot name)
 
 /-- Tasks linking a definition, by name or by any hash it was linked at. -/
 def about (tasks : Map Text Task) (name : Text) (h : Text) : List Task :=

@@ -119,8 +119,7 @@ def Tasks.historyOf (dir : Text) (id : Text) (limit : Int) : {IO, Throw Text} Li
 def Tasks.historyOfName (dir : Text) (name : Text) (limit : Int) : {IO, Throw Text} List (Text, Causal) := changesWhere
   dir
   limit
-  (fun parent node => parent.snapshot != node.snapshot && Map.lookup name (readNamespace dir parent.snapshot) !=
-    Map.lookup name (readNamespace dir node.snapshot))
+  (fun parent node => parent.snapshot != node.snapshot && Codebase.lookupName dir parent.snapshot name != Codebase.lookupName dir node.snapshot name)
 
 def Tasks.isOpen (t : Task) : Bool := t.state == TaskState.todo || t.state == TaskState.doing
 

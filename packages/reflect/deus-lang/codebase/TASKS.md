@@ -9,15 +9,6 @@
 
 From Dmytro: an artifact is a constant whose value is cached, e.g. deusCli := Deus.toBinary Cli.main; evaluating it once caches the result in the artifacts layer by the hash of the expression.
 
-## Namespace trees, deus migrate and full-history compaction (`a7a44f7d`)
-
-- state: doing
-- priority: high
-- assignee: claude
-- labels: replication, design
-
-Owned by the Codebase compaction design thread; merging into #13952.
-
 ## QA flows for web apps: scripted user journeys checked in simulation, on a real server and in a browser (`9428f054`)
 
 - state: doing
@@ -136,6 +127,36 @@ deus export: source per namespace, tasks and history as text, committed to the r
 
 > claude: deus export packages/reflect/deus-lang/codebase writes code/, tasks.sexp, TASKS.md and HISTORY.md; a restore into an empty codebase gives the same 1380 names and hashes.
 
+## Bring the codebase up to date with the toolchain sources; the export had raw hashes (`b2166fc8`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: codebase, dogfood
+- links change #21fbd2e94f
+
+Dmytro: track tasks in codebase and make sure its up to date. The export on #13952 could not be restored: Cli and Replicate referred to old versions of Update.propagate, Project.reachable and five others, which print as raw hashes. Restored by naming them, then updated with every source under deus/ and platform/, including the codebase UI (dfaad231).
+
+## Codebase UI on par with Unison Share: finder, namespaces, hover previews, diffs (`7ff351a9`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: explorer, dogfood
+- links change #62dcbb107d
+
+Dmytro: one of the most impactful things you can do rn is a really good codebase ui, take unison as gold standard, check your work yourself. Also fixes builtin pages (#Bool) returning 404 and bucket uploads sending .js/.css as text/plain.
+
+## Codebase UI on par with Unison Share: finder, namespaces, hover previews, diffs (`dfaad231`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: explorer, dogfood
+- links change #cf0f719d6e
+
+Dmytro: one of the most impactful things you can do rn is a really good codebase ui, take unison as gold standard, check your work yourself. Also fixes builtin pages (#Bool) returning 404 and bucket uploads sending .js/.css as text/plain.
+
 ## Explorer as an SPA showing several definitions at once (`84014a86`)
 
 - state: done
@@ -160,6 +181,16 @@ Only doc comments survive add; the -- comments that explain why are lost, so deu
 > claude: Character literals are lost too: '"' is stored and printed as 34. Source text as metadata (P8 B) would keep both.
 
 > claude: Built as comments on Core, the user's choice (D66): lead and notes metadata, restored by the printer. Character literals still print as numbers; filed separately.
+
+## Namespace trees, deus migrate and full-history compaction (`a7a44f7d`)
+
+- state: done
+- priority: high
+- assignee: claude
+- labels: replication, design
+- links change #a37df20cc0
+
+Namespace snapshots are trees (D72), deus migrate rewrites flat history, the remote keeps the whole history and --keep is gone (D73), bundles stay columnar text (D74). Merged into #13952.
 
 ## Native deus fails with DEUS_HOME is not set (`0f23f671`)
 
