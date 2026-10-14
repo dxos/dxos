@@ -1031,10 +1031,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     if (!this.#feedService) {
       return EMPTY_FEED_SYNC_STATE;
     }
-    const response = await runServiceCall(
-      this.#runtime,
-      this.#feedService['FeedService.getSyncState']({ spaceId: this.spaceId, namespaces: [] }),
-    );
+    const response = await runServiceCall(this.#runtime, this.#feedService, 'FeedService.getSyncState', {
+      spaceId: this.spaceId,
+      namespaces: [],
+    });
     return aggregateFeedSyncState(response);
   }
 

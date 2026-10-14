@@ -361,9 +361,8 @@ export class Client {
 
     {
       invariant(this._services, 'Client not initialized.');
-      await runServiceCall(this._effectRuntime, this._services.rpc['QueryService.reindex'](undefined), {
+      await runServiceCall(this._effectRuntime, this._services.rpc, 'QueryService.reindex', undefined, {
         timeout: 30_000,
-        label: 'QueryService.reindex',
       });
     }
 
@@ -725,13 +724,9 @@ export class Client {
    * (e.g., HALO when SharedWorker is unavailable).
    */
   async resumeHostServices(): Promise<void> {
-    await runServiceCall(
-      this._effectRuntime,
-      this.services.rpc['SystemService.updateStatus']({ status: SystemStatus.ACTIVE }),
-      {
-        label: 'SystemService.updateStatus',
-      },
-    );
+    await runServiceCall(this._effectRuntime, this.services.rpc, 'SystemService.updateStatus', {
+      status: SystemStatus.ACTIVE,
+    });
   }
 
   /**
@@ -748,9 +743,7 @@ export class Client {
     log('resetting...');
     this._resetting = true;
     invariant(this._services, 'Client not initialized.');
-    await runServiceCall(this._effectRuntime, this._services.rpc['SystemService.reset'](undefined), {
-      label: 'SystemService.reset',
-    }).catch((err) => {
+    await runServiceCall(this._effectRuntime, this._services.rpc, 'SystemService.reset', undefined).catch((err) => {
       if (!isHostShutDownByReset(err)) {
         throw err;
       }

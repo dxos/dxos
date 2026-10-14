@@ -45,7 +45,7 @@ import {
 import { assertState, invariant } from '@dxos/invariant';
 import { EID, type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
+import { RpcClosedError, runServiceCall, runServiceEffect, subscribeStream } from '@dxos/protocols';
 import type { DataService, QueryService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 import { ComplexSet, chunkArray, countWork, deepMapValues } from '@dxos/util';
@@ -1209,7 +1209,7 @@ export class EntityManager implements IDatabaseBinding {
     }
 
     if (indexes || secondaryIndexes) {
-      await runServiceCall(this._runtime, this._dataService['DataService.updateIndexes']({ secondaryIndexes }));
+      await runServiceCall(this._runtime, this._dataService, 'DataService.updateIndexes', { secondaryIndexes });
       // Only a flush that pushed local changes to the host knows they reached the index.
       if (disk) {
         for (const [id, sequence] of this.#unindexedWrites) {
@@ -1234,9 +1234,11 @@ export class EntityManager implements IDatabaseBinding {
 
     const headsStates = await runServiceCall(
       this._runtime,
-      this._dataService['DataService.getDocumentHeads']({
+      this._dataService,
+      'DataService.getDocumentHeads',
+      {
         documentIds: Object.values(doc.links ?? {}).map((link) => toDocumentId(link.toString() as AutomergeUrl)),
-      }),
+      },
       { timeout: RPC_TIMEOUT },
     );
 
@@ -1251,14 +1253,11 @@ export class EntityManager implements IDatabaseBinding {
   }
 
   async waitUntilHeadsReplicated(heads: SpaceDocumentHeads): Promise<void> {
-    await runServiceCall(
-      this._runtime,
-      this._dataService['DataService.waitUntilHeadsReplicated']({
-        heads: {
-          entries: Object.entries(heads.heads).map(([documentId, heads]) => ({ documentId, heads })),
-        },
-      }),
-    );
+    await runServiceCall(this._runtime, this._dataService, 'DataService.waitUntilHeadsReplicated', {
+      heads: {
+        entries: Object.entries(heads.heads).map(([documentId, heads]) => ({ documentId, heads })),
+      },
+    });
 
     await this._waitUntilRootDocHasHeads(heads);
   }
@@ -1298,27 +1297,28 @@ export class EntityManager implements IDatabaseBinding {
     invariant(doc);
     invariant(root.documentId, 'Space root document must have documentId');
 
-    await runServiceCall(
-      this._runtime,
-      this._dataService['DataService.reIndexHeads']({
-        documentIds: [
-          root.documentId,
-          ...Object.values(doc.links ?? {}).map((link) => toDocumentId(link as AutomergeUrl)),
-        ],
-      }),
-    );
+    await runServiceCall(this._runtime, this._dataService, 'DataService.reIndexHeads', {
+      documentIds: [
+        root.documentId,
+        ...Object.values(doc.links ?? {}).map((link) => toDocumentId(link as AutomergeUrl)),
+      ],
+    });
   }
 
   /** @deprecated Use `flush()`. */
   async updateIndexes(): Promise<void> {
-    await runServiceCall(this._runtime, this._dataService['DataService.updateIndexes']({}));
+    await runServiceCall(this._runtime, this._dataService, 'DataService.updateIndexes', {});
   }
 
   /** Host-side stats only; the client's own residency is added by {@link DatabaseImpl.stats}. */
   async stats(): Promise<DataService.DatabaseStats> {
-    return runServiceCall(this._runtime, this._dataService['DataService.stats']({ spaceId: this.spaceId }), {
-      timeout: RPC_TIMEOUT,
-    });
+    return runServiceCall(
+      this._runtime,
+      this._dataService,
+      'DataService.stats',
+      { spaceId: this.spaceId },
+      { timeout: RPC_TIMEOUT },
+    );
   }
 
   /** What this space holds in the client realm: proxied document handles and object cores. */
@@ -1332,23 +1332,25 @@ export class EntityManager implements IDatabaseBinding {
   async runGarbageCollection(options?: Database.GarbageCollectionOptions): Promise<Database.GarbageCollectionReport> {
     return runServiceCall(
       this._runtime,
-      this._dataService['DataService.runGarbageCollection']({
+      this._dataService,
+      'DataService.runGarbageCollection',
+      {
         spaceId: this.spaceId,
         index: options?.index,
         feeds: options?.feeds,
-      }),
+      },
       { timeout: RPC_TIMEOUT },
     );
   }
 
   async getSyncState(): Promise<DataService.SpaceSyncState> {
-    const value = await runServiceCall(
+    const value = await runServiceEffect(
       this._runtime,
       this._dataService['DataService.subscribeSpaceSyncState']({ spaceId: this.spaceId }).pipe(
         Stream.runHead,
         Effect.map(Option.getOrElse(() => raise(new EchoClientError({ message: 'Failed to get sync state.' })))),
       ),
-      { timeout: RPC_TIMEOUT },
+      { timeout: RPC_TIMEOUT, label: 'DataService.subscribeSpaceSyncState' },
     );
     return value;
   }
