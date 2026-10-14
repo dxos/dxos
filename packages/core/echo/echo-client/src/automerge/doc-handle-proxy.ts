@@ -395,10 +395,15 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   }
 
   /**
+   * Holds `passive` instead of a loaded document: replaces a passive handle's stored changes, or moves a
+   * loaded handle the host has taken every change of back to stored changes, dropping its document.
    * @internal
    */
   _setPassive(passive: PassiveDocument): void {
-    invariant(this.#body?.kind === 'passive', 'Only a passive handle takes other stored changes.');
+    invariant(
+      this.#body?.kind === 'passive' || (this.#depth === 0 && this._isAcknowledged()),
+      'A document with unsent changes cannot go passive.',
+    );
     this.#body = { kind: 'passive', chunks: [passive.bytes], size: passive.bytes.length, heads: passive.heads };
   }
 
