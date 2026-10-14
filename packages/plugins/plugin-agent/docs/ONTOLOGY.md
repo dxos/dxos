@@ -80,9 +80,14 @@ Fact {                          // pipeline-rdf
   once.
 - **Expiry is a query concern.** `validTo` bounds a status ("on the Discord bot this week"); expired
   facts are filtered at recall, never deleted.
-- **Predicates are open.** "commits", "owns", "is blocked by" — the RDF vocabulary grows freely.
-  Anything that must behave reliably (triggers, rules) matches on `illocution.force` and
-  `factuality.polarity`, which the extractor always fills, not on the predicate string.
+- **Predicates are seeded, and grow per brain.** The extractor is shown pipeline-rdf's seed vocabulary
+  (schema.org / FOAF / Dublin Core / RDF predicates, plus `dx:` for the agent's own relations) and reuses
+  one when it fits; a predicate it invents ("is blocked by") is minted in the agent's brain namespace
+  (`https://dxos.org/semantic/brain/<agent id>/`) with a definition, described in the brain's ontology
+  graph. Members, people and organizations are shown to it by name, so mentions resolve to their DIDs and
+  object URIs; any other mention is local to the graph that mentions it. The full declaration is EDGE's
+  `docs/ONTOLOGY.mdl`. Anything that must behave reliably (triggers, rules) matches on `illocution.force`
+  and `factuality.polarity`, which the extractor always fills, not on the predicate string.
 - **Recall** (v1, as built) reads the brain of every agent in the space (`BrainService.query`) and
   filters in JS: by subject (the entity's names as pipeline-rdf entity ids, matched against subject,
   object and speaker), by text, and dropping facts past `validTo`; facts come back beside memories

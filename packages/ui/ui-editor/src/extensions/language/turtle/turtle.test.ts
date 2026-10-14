@@ -5,7 +5,7 @@
 import { highlightTree, tagHighlighter, tags } from '@lezer/highlight';
 import { describe, test } from 'vitest';
 
-import { turtleLanguage } from './turtle.ts';
+import { highlightTurtle, turtleLanguage } from './turtle.ts';
 
 /** Class names per standard tag, so a token's colour is asserted by the tag the editor's theme would style. */
 const highlighter = tagHighlighter([
@@ -94,5 +94,13 @@ describe('turtle language', () => {
       ['two"""', 'string'],
       ['.', 'terminator'],
     ]);
+  });
+
+  test('highlightTurtle splits spans by line and keeps every character', ({ expect }) => {
+    const source = 'fact:f1 {\n  entity:a dx:b "c" .\n}';
+    const lines = highlightTurtle(source, highlighter);
+    expect(lines).toHaveLength(3);
+    expect(lines.map((spans) => spans.map((span) => span.text).join('')).join('\n')).toBe(source);
+    expect(lines[1]).toContainEqual({ text: '"c"', classes: 'string' });
   });
 });

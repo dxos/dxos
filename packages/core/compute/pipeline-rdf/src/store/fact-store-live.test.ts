@@ -158,10 +158,11 @@ describe('FactStoreLive', () => {
         }),
       ]);
       const bob = yield* store.query({ entity: 'bob' });
-      expect(bob.map((found) => found.assertion.predicate)).toEqual(['works at']);
+      // The seed vocabulary maps "works at" to schema:worksFor, which reads back under its label.
+      expect(bob.map((found) => found.assertion.predicate)).toEqual(['works for']);
       const working = yield* store.query({ predicate: 'is working at' });
       expect(working.map((found) => termOf(found))).toEqual(['bob']);
-      const selected = yield* store.select(buildSparql({ subjectEntity: 'bob' }));
+      const selected = yield* store.select(buildSparql({ source: 'dxn:q:m1' }));
       expect(selected.map((found) => termOf(found)).sort()).toEqual(['alice', 'bob']);
       expect(yield* store.select(buildSparql({ source: 'dxn:q:none' }))).toEqual([]);
     }),

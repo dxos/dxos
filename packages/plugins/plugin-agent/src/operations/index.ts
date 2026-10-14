@@ -37,5 +37,6 @@ export const AgentOperationHandlerSet = OperationHandlerSet.lazy([
   TriggerOperation.CancelTrigger.pipe(Operation.lazyHandler(() => import('./cancel-trigger.ts'))),
   TriggerOperation.RunDue.pipe(Operation.lazyHandler(() => import('./run-due.ts'))),
   TriggerOperation.InspectBrain.pipe(Operation.lazyHandler(() => import('./inspect-brain.ts'))),
+  TriggerOperation.ResetBrain.pipe(Operation.lazyHandler(() => import('./reset-brain.ts'))),
   BrainSkill.RunTriggers.pipe(Operation.lazyHandler(() => import('./run-triggers.ts'))),
 ]);

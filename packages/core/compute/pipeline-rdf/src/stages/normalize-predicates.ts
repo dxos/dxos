@@ -22,7 +22,8 @@ export type NormalizeOptions = {
 
 /**
  * Predicate-canonicalization stage: rewrites each fact's predicate to the synonym table's canonical form, then to
- * the ontology's predicate when it names one; a predicate neither knows keeps its surface form (and its minted IRI).
+ * the ontology's predicate when it names one; a predicate neither knows keeps its surface form and the IRI it was
+ * minted with.
  * The statements keep their graphs and get the ids their new predicates give them.
  */
 export const normalizeFactsStage = ({
@@ -30,17 +31,30 @@ export const normalizeFactsStage = ({
   synonyms = {},
 }: NormalizeOptions): Stage.Stage<DocumentFacts, DocumentFacts> => {
   const lookup = new Map(Object.entries(synonyms).map(([key, value]) => [Predicate.normalize(key), value]));
+  const vocabulary = ontology ?? Ontology.DEFAULT;
   const canonicalize = (fact: Fact): Fact => {
     const surface = lookup.get(Predicate.normalize(fact.assertion.predicate)) ?? fact.assertion.predicate;
     const entry = ontology?.find(surface);
-    const predicate = entry?.label ?? surface;
-    if (predicate === fact.assertion.predicate && entry?.iri === fact.assertion.predicateIri) {
+    if (!entry && surface === fact.assertion.predicate) {
+      // Neither table knows it: it keeps the IRI it was minted with, in its brain's namespace.
       return fact;
     }
-    const { predicateIri: _, ...assertion } = fact.assertion;
-    return { ...fact, assertion: { ...assertion, predicate, ...(entry ? { predicateIri: entry.iri } : {}) } };
+    const resolved = entry ?? vocabulary.resolve(surface);
+    if (resolved.label === fact.assertion.predicate && resolved.iri === fact.assertion.predicateIri) {
+      return fact;
+    }
+    const { predicateDescription, ...assertion } = fact.assertion;
+    return {
+      ...fact,
+      assertion: {
+        ...assertion,
+        predicate: entry?.label ?? surface,
+        predicateIri: resolved.iri,
+        ...(!entry && predicateDescription ? { predicateDescription } : {}),
+      },
+    };
   };
   return Stage.map('normalize-predicates', ({ doc, facts }: DocumentFacts) =>
-    Effect.succeed({ doc, facts: Graph.assign(facts.map(canonicalize), { ontology: ontology ?? Ontology.DEFAULT }) }),
+    Effect.succeed({ doc, facts: Graph.assign(facts.map(canonicalize), { ontology: vocabulary }) }),
   );
 };

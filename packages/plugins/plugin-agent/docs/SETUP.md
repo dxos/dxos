@@ -136,6 +136,18 @@ Then, in Composer at `http://localhost:5282`:
 | Bundle errors in operation-service | A package lacks `dist/` or the link mixes versions: rebuild `<dxos>` and re-link with `--all`.                                                                                                                                                                                                                                                                                                       |
 | Start/Stop do nothing in Composer  | Starting the bot needs the app's client; check plugin-discord and plugin-thread are enabled and the page is on the local EDGE (`DX_EDGE_BASE_URL`).                                                                                                                                                                                                                                                  |
 
+## Email
+
+1. Open the agent → **Activity**, add a channel, and pick **Email**. Set the address (`kai`), a
+   display name, and the allowed senders (empty means `braneframe.com` and `dxos.org`).
+2. Open the channel's properties and press **Connect**. The panel shows `kai@dx.pub` with its thread
+   and message counts; "taken" means another space holds the handle.
+3. Mail `kai@dx.pub` from an allowed address. The reply arrives in the same thread, and each new
+   email thread is its own chat under the agent.
+
+The `dx.pub` catch-all routes to the dev compute-service, so this works against dev EDGE. Mail
+handling lives in edge's `compute-service/src/email/`; its README covers the Cloudflare setup.
+
 ## Without Discord or a model key
 
 - **Interview, scripted:** the `stories-assistant` **Interview** story runs the interview skill against

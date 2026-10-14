@@ -40,6 +40,20 @@ describe('toEntityCards', () => {
     ]);
   });
 
+  test('takes a class the facts state for an entity when the caller names none, the caller winning', ({ expect }) => {
+    const typed = [
+      fact('1', { ...alice, type: 'person' }, 'works at', { ...acme, type: 'org' }),
+      fact('2', { ...bob, type: 'person' }, 'knows', alice),
+    ];
+    const cards = toEntityCards(typed, { types: { bob: 'Colleague' }, objects: true });
+    expect(cards.map(({ id, type }) => [id, type])).toEqual([
+      ['alice', 'Person'],
+      ['acme', 'Organization'],
+      ['bob', 'Colleague'],
+    ]);
+    expect(cards[0].properties[0].values[0]).toMatchObject({ id: 'acme', type: 'Organization' });
+  });
+
   test('lists what points at an entity under the inverse label, and gives objects no card of their own', ({
     expect,
   }) => {

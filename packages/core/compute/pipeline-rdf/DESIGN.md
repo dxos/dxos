@@ -121,13 +121,12 @@ independently without re-extracting. Three layers, by increasing cost and contex
    (`normalizeEntityId`: trim, lowercase, runs of non-alphanumerics → `-`), so `DXOS` / `dxos`
    collapse to one entity; the original surface is kept as `label` for display. Deterministic,
    per-mention.
-2. **Predicate / relation — planned.** Predicates are stored verbatim today, so paraphrases
-   don't match (`works at` ≠ `works for` ≠ `employed by`; a query for one misses the others).
-   Mirror the entity split: keep the surface predicate for display **and** a normalized
-   _relation key_ for matching, then query on the key. Start with deterministic
-   lemmatize/stem, with a controlled-vocabulary mapping as a later refinement. The LLM must
-   **not** be asked to invent a canonical predicate per call — independent calls would be
-   inconsistent.
+2. **Predicate / relation — done.** The extractor is shown the whole vocabulary (seed + what the
+   brain has minted) with each predicate's shorthand, forms, typing and definition, and reuses one when it
+   fits; only otherwise does it write a new verb phrase, which must come with a definition. Surface forms
+   resolve through the relation key (lemmatize/stem) and the synonym table, so `works at` / `employed by`
+   / `works for` are one predicate (`schema:worksFor`). A stage grows its ontology with what each document
+   mints, so the next document is shown it.
 3. **Entity resolution / coreference — deferred.** Canonicalize aliases (`dmaretskyi` = `Dima`
    = a Person) and link to ECHO objects by DXN. This needs corpus-wide context, so it runs as
    a separate resolution pass over the accumulated store — the pattern `AgentRegistry` already
@@ -168,14 +167,22 @@ that share their provenance (source, speaker, time, quote, factuality, extractio
 (`RDF.Graph.assign`); a statement that differs in any of it starts another. This is standard RDF 1.1
 (TriG, N-Quads, SPARQL `GRAPH`), needs no RDF-star, and is stored as-is in the engine's quads.
 
-- **Predicates** are IRIs from an extensible ontology (`RDF.Ontology`): a surface form the ontology
-  knows maps to its predicate (`is on the team as` → `dx:hasRole`); one it does not know mints a
-  `dx:` IRI from its relation key, with its label stored in the ontology graph.
-- **Entities** are IRIs: an absolute IRI where one is known (`echo://…`, `did:…`, `mailto:…`, a URL),
-  otherwise a slug under `entity:`. Labels and kinds are stated inside the graph that mentions them.
-  Facts extracted before this keep the keys they were stored with: an email or URL read earlier is
-  still a slug (`alice-enron-com`), and a source whose text is unchanged is not read again, so both
-  keys can name one entity until the source changes. Facts are append-only, so nothing rewrites them.
+- **Predicates** are IRIs from an extensible ontology (`RDF.Ontology`), seeded from established
+  vocabularies under their own IRIs (`is on the team as` → `schema:jobTitle`, `is a` → `rdf:type`,
+  `knows` → `foaf:knows`); `dx:` holds only what none of them names. A surface form the ontology does not
+  know is minted in the **brain's namespace** (`https://dxos.org/semantic/brain/<id>/`) from its relation
+  key. Every predicate is an `rdf:Property` described in the ontology graph (`graph:ontology`) — label,
+  shorthand, synonyms, definition, domain/range, defining vocabulary, and for a minted one when, by what
+  and from which quote — never inside a statement graph (`FactStore.predicates` reads them back).
+- **Merging** predicates is `owl:equivalentProperty` (`Ontology.merge`): the merged one stays readable,
+  deprecated, and a query for either matches both. Seed predicates list the `dx:` IRIs they were stored
+  under before moving to shared vocabularies as equivalents, so older facts still match.
+- **Entities** are IRIs: an absolute IRI where one is known (`echo://…`, `did:…`, `mailto:…`, a URL) is
+  the same node in every graph; any other mention is **local to the graph that mentions it**
+  (`<graph>#<slug>`), since a label alone does not say two graphs mean the same thing. Labels and kinds
+  (schema.org / SKOS classes) are stated inside the graph that mentions them. The extractor is shown the
+  known entities (`ExtractOptions.entities`) so mentions of them resolve. Facts stored before this keep the
+  global `entity:` slugs they were written with; both read back as slugs.
 - **Fact ids**: a stored `RDF.Fact` is one statement. A fact without a graph is the only statement of
   the graph named by its fact IRI, so its id is unchanged; a statement in a named graph is identified by
   the graph and the triple.

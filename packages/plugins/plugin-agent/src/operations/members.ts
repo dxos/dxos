@@ -66,7 +66,7 @@ export const labelOf =
     memberByDid(members, id)?.displayName ?? id;
 
 /** A person or organization in the space, as a fact about it names it. */
-export type KnownEntity = { readonly uri: string; readonly type: 'person' | 'org' };
+export type KnownEntity = { readonly uri: string; readonly type: 'person' | 'org'; readonly name: string };
 
 /** The space's people and organizations by each name they go by; a name two of them share is left out. */
 export type EntityIndex = ReadonlyMap<string, KnownEntity>;
@@ -76,10 +76,10 @@ export const loadEntities = Effect.gen(function* () {
   const people = yield* Database.query(Filter.type(Person.Person)).run;
   const organizations = yield* Database.query(Filter.type(Organization.Organization)).run;
   const byName = new Map<string, KnownEntity[]>();
-  const add = (names: readonly (string | undefined)[], entity: KnownEntity) => {
+  const add = (names: readonly (string | undefined)[], entity: Omit<KnownEntity, 'name'>) => {
     for (const name of names) {
       if (name && name.trim().length > 0) {
-        byName.set(nameKey(name), [...(byName.get(nameKey(name)) ?? []), entity]);
+        byName.set(nameKey(name), [...(byName.get(nameKey(name)) ?? []), { ...entity, name: name.trim() }]);
       }
     }
   };
@@ -113,6 +113,39 @@ const resolveTerm = (members: readonly Space.Member[], entities: EntityIndex, te
   }
   const known = entities.get(nameKey(name));
   return known ? { ...term, entity: known.uri, label: name, type: known.type } : term;
+};
+
+/**
+ * The members, people and organizations the extractor is shown by name, so a mention of one is stored under its DID
+ * or object URI rather than an IRI local to the graph mentioning it.
+ */
+export const knownEntities = (members: readonly Space.Member[], entities: EntityIndex): RDF.KnownEntity[] => {
+  const byIri = new Map<string, { label: string; aliases: string[]; type: RDF.EntityKind }>();
+  const add = (iri: string, name: string, type: RDF.EntityKind) => {
+    const known = byIri.get(iri);
+    if (!known) {
+      byIri.set(iri, { label: name, aliases: [], type });
+    } else if (
+      nameKey(known.label) !== nameKey(name) &&
+      !known.aliases.some((alias) => nameKey(alias) === nameKey(name))
+    ) {
+      known.aliases.push(name);
+    }
+  };
+  for (const { did, displayName } of members) {
+    if (did && displayName) {
+      add(did, displayName, 'person');
+    }
+  }
+  for (const { uri, name, type } of entities.values()) {
+    add(uri, name, type);
+  }
+  return [...byIri].map(([iri, { label, aliases, type }]) => ({
+    iri,
+    label,
+    type,
+    ...(aliases.length > 0 ? { aliases } : {}),
+  }));
 };
 
 /** Re-keys the fact's subject and object to the members, people and organizations they name. */

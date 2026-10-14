@@ -22,45 +22,77 @@ import { meta } from '#meta';
 import { type Goal, type Knowledge } from '#types';
 
 import { MEMORY_ICONS } from '../ProfileGraph/index.ts';
+import { EntityBrowser } from './EntityBrowser.tsx';
+import { type EntityCardProps } from './EntityCard.tsx';
+import { type EntityCardModel } from './subgraph.ts';
 import { TRIG_PREFIXES, formatRawFact } from './trig.ts';
+import { TurtleSnippet } from './TurtleSnippet.tsx';
 
 //
 // Root
 //
 
-const VIEWS = ['memories', 'facts', 'goals', 'graph'] as const;
+const VIEWS = ['memories', 'facts', 'entities', 'predicates', 'goals', 'graph'] as const;
 
 type AgentKnowledgeView = (typeof VIEWS)[number];
+
+const READY: AgentKnowledgeBrainStatus = { state: 'ready' };
 
 const isView = (value: string): value is AgentKnowledgeView => VIEWS.some((view) => view === value);
 
 type AgentKnowledgeContextValue = {
   view: AgentKnowledgeView;
-  /** Whether the Facts view shows each fact's triple and metadata under it. */
+  /** Whether the Facts view shows each fact's triple and metadata, and the Predicates view the ontology as TriG. */
   raw: boolean;
+  brain: AgentKnowledgeBrainStatus;
 };
 
-const AgentKnowledgeContext = createContext<AgentKnowledgeContextValue>({ view: 'memories', raw: false });
+/** Memories and facts are read from the agent's brain, so an empty list means nothing only once a read has returned. */
+type AgentKnowledgeBrainStatus =
+  | { state: 'loading' }
+  | { state: 'resetting' }
+  | { state: 'ready' }
+  | { state: 'error'; error: string };
+
+const AgentKnowledgeContext = createContext<AgentKnowledgeContextValue>({
+  view: 'memories',
+  raw: false,
+  brain: { state: 'ready' },
+});
 
 type AgentKnowledgeRootProps = PropsWithChildren<{
   role?: string;
   defaultView?: AgentKnowledgeView;
   /** Forgets everything the agent knows; the toolbar shows Reset only when given. */
   onReset?: () => void;
+  /** Whether the brain's memories and facts have been read; ready when omitted. */
+  brain?: AgentKnowledgeBrainStatus;
 }>;
 
-/** What the agent knows, one view at a time: its memories, the facts it read, the goals it serves and its knowledge graph. */
-const AgentKnowledgeRoot = ({ role, defaultView = 'memories', onReset, children }: AgentKnowledgeRootProps) => {
+/**
+ * What the agent knows, one view at a time: its memories, the facts it read, the predicates its brain states them
+ * with, the goals it serves and its knowledge graph.
+ */
+const AgentKnowledgeRoot = ({
+  role,
+  defaultView = 'memories',
+  onReset,
+  brain = READY,
+  children,
+}: AgentKnowledgeRootProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const [view, setView] = useState<AgentKnowledgeView>(defaultView);
   const [raw, setRaw] = useState(false);
   const menuActions = useMenuBuilder(() => {
     const builder = MenuBuilder.make().root({ label: ['agent-knowledge-actions.label', { ns: meta.profile.key }] });
-    if (view === 'facts') {
+    if (view === 'facts' || view === 'predicates') {
       builder.action(
         'raw',
         {
-          label: ['agent-knowledge-raw-facts.label', { ns: meta.profile.key }],
+          label: [
+            view === 'facts' ? 'agent-knowledge-raw-facts.label' : 'agent-knowledge-raw-predicates.label',
+            { ns: meta.profile.key },
+          ],
           icon: 'ph--brackets-curly--regular',
           iconOnly: true,
           checked: raw,
@@ -82,7 +114,7 @@ const AgentKnowledgeRoot = ({ role, defaultView = 'memories', onReset, children 
     }
     return builder.build();
   }, [view, raw, onReset]);
-  const context = useMemo(() => ({ view, raw }), [view, raw]);
+  const context = useMemo(() => ({ view, raw, brain }), [view, raw, brain]);
   return (
     <Tabs.Root asChild orientation='horizontal' value={view} onValueChange={(value) => isView(value) && setView(value)}>
       <Panel.Root role={role}>
@@ -99,6 +131,12 @@ const AgentKnowledgeRoot = ({ role, defaultView = 'memories', onReset, children 
                   </Tabs.Trigger>
                   <Tabs.Trigger value='facts' data-testid='agent-knowledge-tab-facts'>
                     {t('agent-knowledge-facts.label')}
+                  </Tabs.Trigger>
+                  <Tabs.Trigger value='entities' data-testid='agent-knowledge-tab-entities'>
+                    {t('agent-knowledge-entities.label')}
+                  </Tabs.Trigger>
+                  <Tabs.Trigger value='predicates' data-testid='agent-knowledge-tab-predicates'>
+                    {t('agent-knowledge-predicates.label')}
                   </Tabs.Trigger>
                   <Tabs.Trigger value='goals' data-testid='agent-knowledge-tab-goals'>
                     {t('agent-knowledge-goals.label')}
@@ -122,6 +160,30 @@ const AgentKnowledgeRoot = ({ role, defaultView = 'memories', onReset, children 
 
 AgentKnowledgeRoot.displayName = 'AgentKnowledge.Root';
 
+const Status = ({ children }: PropsWithChildren) => (
+  <Panel.Body>
+    <Layout.Flex center classNames='p-2 text-fg-muted' role='status'>
+      {children}
+    </Layout.Flex>
+  </Panel.Body>
+);
+
+/** The status that stands in for a brain-backed view while it is read or wiped, or failed to read; undefined once read. */
+const useBrainStatusMessage = (): string | undefined => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { brain } = useContext(AgentKnowledgeContext);
+  switch (brain.state) {
+    case 'loading':
+      return t('agent-knowledge-loading.message');
+    case 'resetting':
+      return t('agent-knowledge-resetting.message');
+    case 'error':
+      return t('agent-knowledge-error.message', { error: brain.error });
+    default:
+      return undefined;
+  }
+};
+
 //
 // Memories
 //
@@ -138,16 +200,13 @@ type AgentKnowledgeMemoriesProps = {
 /** The agent's active memories, newest first. */
 const AgentKnowledgeMemories = ({ memories, now }: AgentKnowledgeMemoriesProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
+  const status = useBrainStatusMessage();
   if (useContext(AgentKnowledgeContext).view !== 'memories') {
     return null;
   }
 
-  return memories.length === 0 ? (
-    <Panel.Body>
-      <Layout.Flex center classNames='p-2 text-fg-muted' role='status'>
-        {t('agent-knowledge-memories-empty.message')}
-      </Layout.Flex>
-    </Panel.Body>
+  return memories.length === 0 || status ? (
+    <Status>{status ?? t('agent-knowledge-memories-empty.message')}</Status>
   ) : (
     <Panel.Body asChild>
       <ScrollArea.Root orientation='vertical'>
@@ -210,16 +269,13 @@ type AgentKnowledgeFactsProps = {
 const AgentKnowledgeFacts = ({ facts, now }: AgentKnowledgeFactsProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const { view, raw } = useContext(AgentKnowledgeContext);
+  const status = useBrainStatusMessage();
   if (view !== 'facts') {
     return null;
   }
 
-  return facts.length === 0 ? (
-    <Panel.Body>
-      <Layout.Flex center classNames='p-2 text-fg-muted' role='status'>
-        {t('agent-knowledge-facts-empty.message')}
-      </Layout.Flex>
-    </Panel.Body>
+  return facts.length === 0 || status ? (
+    <Status>{status ?? t('agent-knowledge-facts-empty.message')}</Status>
   ) : (
     <Panel.Body asChild>
       <ScrollArea.Root orientation='vertical'>
@@ -246,16 +302,15 @@ const AgentKnowledgeFacts = ({ facts, now }: AgentKnowledgeFactsProps) => {
                       <Typography.Timestamp date={fact.saidAt} now={now} />
                     </Listbox.ItemDescription>
                     {raw && fact.fact && (
-                      <pre
+                      <TurtleSnippet
                         data-place='full'
                         data-testid='agent-knowledge-fact-raw'
-                        className='m-0 p-2 overflow-x-auto whitespace-pre text-xs font-mono text-fg-muted select-text cursor-text'
+                        className='p-2 overflow-x-auto text-xs select-text cursor-text'
                         // The row's own press handlers select the row and cancel the drag that selects text.
                         onMouseDown={(event) => event.stopPropagation()}
                         onClick={(event) => event.stopPropagation()}
-                      >
-                        {formatRawFact(fact.fact)}
-                      </pre>
+                        source={formatRawFact(fact.fact)}
+                      />
                     )}
                   </Listbox.Item>
                 ))}
@@ -269,6 +324,126 @@ const AgentKnowledgeFacts = ({ facts, now }: AgentKnowledgeFactsProps) => {
 };
 
 AgentKnowledgeFacts.displayName = 'AgentKnowledge.Facts';
+
+//
+// Entities
+//
+
+/** One hue per entity type the brain assigns, chosen rather than hashed so no two types share one. */
+const ENTITY_HUES: EntityCardProps['hues'] = {
+  Person: 'amber',
+  Organization: 'indigo',
+  Place: 'emerald',
+  Event: 'pink',
+  Concept: 'violet',
+  Thing: 'neutral',
+};
+
+type AgentKnowledgeEntitiesProps = {
+  /** One card per entity in the agent's brain (see `toEntityCards`). */
+  cards: readonly EntityCardModel[];
+};
+
+/** The agent's brain as entity cards in Finder-style columns: choosing a card or a chip opens what it relates to. */
+const AgentKnowledgeEntities = ({ cards }: AgentKnowledgeEntitiesProps) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const status = useBrainStatusMessage();
+  if (useContext(AgentKnowledgeContext).view !== 'entities') {
+    return null;
+  }
+
+  return cards.length === 0 || status ? (
+    <Status>{status ?? t('agent-knowledge-entities-empty.message')}</Status>
+  ) : (
+    <Panel.Body asChild>
+      <EntityBrowser cards={cards} hues={ENTITY_HUES} />
+    </Panel.Body>
+  );
+};
+
+AgentKnowledgeEntities.displayName = 'AgentKnowledge.Entities';
+
+//
+// Predicates
+//
+
+type AgentKnowledgePredicate = {
+  iri: string;
+  /** The IRI as a prefixed name (`schema:worksFor`, `brain:tutor`). */
+  curie: string;
+  label: string;
+  /** The vocabulary that defines it (`schema`, `foaf`, `dx`), or `brain` for one the agent's extractor minted. */
+  vocabulary?: string;
+  description?: string;
+  synonyms?: readonly string[];
+  /** How many facts state it. */
+  count: number;
+};
+
+type AgentKnowledgePredicatesProps = {
+  /** The brain's predicates: the seed vocabulary, then those its extractor minted. */
+  predicates: readonly AgentKnowledgePredicate[];
+  /** The ontology graph as TriG, shown in place of the list when the view asks for raw. */
+  trig?: string;
+};
+
+/** The predicates the agent's brain knows: the seed vocabulary every brain starts with, and those it minted. */
+const AgentKnowledgePredicates = ({ predicates, trig }: AgentKnowledgePredicatesProps) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { view, raw } = useContext(AgentKnowledgeContext);
+  if (view !== 'predicates') {
+    return null;
+  }
+
+  return (
+    <Panel.Body asChild>
+      <ScrollArea.Root orientation='vertical'>
+        <ScrollArea.Viewport asChild>
+          <Layout.Container>
+            {raw && trig ? (
+              <pre
+                data-testid='agent-knowledge-predicates-trig'
+                className='m-0 p-2 overflow-x-auto whitespace-pre text-xs font-mono text-fg-muted select-text'
+              >
+                {trig}
+              </pre>
+            ) : (
+              <Listbox.Root
+                items={predicates.map((predicate) => ({
+                  value: predicate.iri,
+                  label: predicate.label,
+                  icon: 'ph--arrow-right--regular',
+                }))}
+              >
+                <Listbox.Content>
+                  {predicates.map((predicate) => (
+                    <Listbox.Item key={predicate.iri} id={predicate.iri} data-testid='agent-knowledge-predicate'>
+                      <Listbox.ItemIcon />
+                      <Listbox.ItemText />
+                      <Listbox.ItemDescription>
+                        {[
+                          predicate.curie,
+                          predicate.vocabulary === 'brain' ? t('agent-knowledge-predicate-minted.label') : undefined,
+                          t('agent-knowledge-predicate-count.label', { count: predicate.count }),
+                          predicate.description,
+                          predicate.synonyms?.length ? predicate.synonyms.join(', ') : undefined,
+                        ]
+                          .filter(Boolean)
+                          .join(' · ')}
+                      </Listbox.ItemDescription>
+                    </Listbox.Item>
+                  ))}
+                </Listbox.Content>
+              </Listbox.Root>
+            )}
+          </Layout.Container>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
+    </Panel.Body>
+  );
+};
+
+AgentKnowledgePredicates.displayName = 'AgentKnowledge.Predicates';
 
 //
 // Goals
@@ -430,12 +605,16 @@ export const AgentKnowledge = {
   Root: AgentKnowledgeRoot,
   Memories: AgentKnowledgeMemories,
   Facts: AgentKnowledgeFacts,
+  Entities: AgentKnowledgeEntities,
+  Predicates: AgentKnowledgePredicates,
   Goals: AgentKnowledgeGoals,
   Graph: AgentKnowledgeGraph,
 };
 
 export type {
+  AgentKnowledgeBrainStatus,
   AgentKnowledgeEdge,
+  AgentKnowledgeEntitiesProps,
   AgentKnowledgeFact,
   AgentKnowledgeFactsProps,
   AgentKnowledgeGoal,
@@ -444,6 +623,8 @@ export type {
   AgentKnowledgeMemoriesProps,
   AgentKnowledgeMemory,
   AgentKnowledgeNode,
+  AgentKnowledgePredicate,
+  AgentKnowledgePredicatesProps,
   AgentKnowledgeRootProps,
   AgentKnowledgeView,
   AgentKnowledgeWatch,

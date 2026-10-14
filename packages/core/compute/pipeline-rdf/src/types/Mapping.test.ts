@@ -164,10 +164,12 @@ describe('fact ↔ quads mapping', () => {
     };
     const quads = Mapping.factToTriples(fact);
     expect(quads[0].subject.value).toBe('echo://SPACE/RICH');
-    expect(quads[0].predicate.value).toBe('https://dxos.org/ontology/hasRole');
-    expect(quads[0].object.value).toBe(`${Vocab.ENTITY}founder`);
+    expect(quads[0].predicate.value).toBe('https://schema.org/jobTitle');
+    // A slug is local to the graph that mentions it.
+    expect(quads[0].object.value).toBe(`${Vocab.factIri('fact-iri').value}#founder`);
     const [back] = Mapping.triplesToFacts(quads);
     expect(back.assertion.subject).toEqual(fact.assertion.subject);
+    expect(back.assertion.object).toEqual(fact.assertion.object);
     expect(back.attribution.agent).toBe('did:key:z6Mk');
     // A known predicate reads back as the ontology's label.
     expect(back.assertion.predicate).toBe('has role');

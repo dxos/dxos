@@ -12,7 +12,15 @@ import { type SemanticIndexError } from '../errors.ts';
 import { chunk } from '../internal/stages/chunk.ts';
 import { DEFAULT_MODEL, extractChunk } from '../internal/stages/extract.ts';
 import { hashText } from '../internal/stages/reconcile.ts';
-import { type ExtractDocument, type ExtractOptions, type Fact, Graph } from '../types/index.ts';
+import {
+  type EntityTerm,
+  type ExtractDocument,
+  type ExtractOptions,
+  type Fact,
+  Graph,
+  type KnownEntity,
+  Ontology,
+} from '../types/index.ts';
 
 const EMAIL = /^(?:mailto:)?([^\s@]+@[^\s@]+\.[^\s@]+)$/i;
 const URL_PATTERN = /^https?:\/\/\S+$/i;
@@ -48,6 +56,38 @@ const isGrounded = (label: string) => {
   return value.length > 0 && value !== 'unknown';
 };
 
+const nameKey = (name: string) => name.trim().toLowerCase().replace(/\s+/g, ' ');
+
+/** The known entities by every name they go by; a name two entities share names neither. */
+const indexEntities = (entities: ReadonlyArray<KnownEntity>): Map<string, KnownEntity> => {
+  const byName = new Map<string, KnownEntity[]>();
+  for (const entity of entities) {
+    for (const name of [entity.label, ...(entity.aliases ?? [])]) {
+      byName.set(nameKey(name), [...(byName.get(nameKey(name)) ?? []), entity]);
+    }
+  }
+  return new Map(
+    [...byName].flatMap(([name, matches]) =>
+      new Set(matches.map(({ iri }) => iri)).size === 1 ? [[name, matches[0]] as const] : [],
+    ),
+  );
+};
+
+/**
+ * The term for a mention: a known entity's stable IRI when the mention names one, else its slug, which the store keeps
+ * local to the mention's graph.
+ */
+const entityTerm = (surface: string, type: EntityTerm['type'], known: ReadonlyMap<string, KnownEntity>): EntityTerm => {
+  const entity = known.get(nameKey(surface));
+  const kind = type ?? entity?.type;
+  return {
+    kind: 'entity',
+    entity: entity?.iri ?? normalizeEntityId(surface),
+    label: surface.trim(),
+    ...(kind ? { type: kind } : {}),
+  };
+};
+
 /**
  * Extract → link (slug) facts for a single document. Pure derivation: chunk → LLM extract → map to
  * {@link Fact}; touches neither the {@link FactStore} nor any cursor, so it can generate facts
@@ -63,6 +103,8 @@ export const extractDocFacts = (
     const recordedAt = new Date(yield* Clock.currentTimeMillis).toISOString();
     const hash = hashText(doc.text);
     const chunks = chunk(doc.text);
+    const ontology = options?.ontology ?? Ontology.DEFAULT;
+    const known = indexEntities(options?.entities ?? []);
     const docFacts: Fact[] = [];
     // The graph label the model gave each statement; statements that also share provenance share a graph.
     const labels = new Map<Fact, string>();
@@ -83,23 +125,21 @@ export const extractDocFacts = (
               ? { force: 'directive' as const, mood: candidate.mood }
               : undefined;
 
+        // A listed predicate is stored under its IRI and label; any other is minted in the ontology's namespace and
+        // keeps the definition the extractor gave it.
+        const listed = ontology.find(candidate.predicate);
+        const predicate = listed ?? ontology.resolve(candidate.predicate);
         const fact: Fact = {
           // Replaced by the statement's id once the facts are placed in their graphs below.
           id: '',
           assertion: {
-            subject: {
-              kind: 'entity',
-              entity: normalizeEntityId(candidate.subject),
-              label: candidate.subject.trim(),
-              ...(candidate.subjectType ? { type: candidate.subjectType } : {}),
-            },
-            predicate: candidate.predicate,
-            object: {
-              kind: 'entity',
-              entity: normalizeEntityId(candidate.object),
-              label: candidate.object.trim(),
-              ...(candidate.objectType ? { type: candidate.objectType } : {}),
-            },
+            subject: entityTerm(candidate.subject, candidate.subjectType, known),
+            predicate: listed?.label ?? candidate.predicate.trim(),
+            predicateIri: predicate.iri,
+            ...(!listed && candidate.predicateDescription
+              ? { predicateDescription: candidate.predicateDescription }
+              : {}),
+            object: entityTerm(candidate.object, candidate.objectType, known),
             ...(candidate.validFrom ? { validFrom: candidate.validFrom } : {}),
             ...(candidate.validTo ? { validTo: candidate.validTo } : {}),
             ...(candidate.quote ? { quote: candidate.quote } : {}),
@@ -124,7 +164,7 @@ export const extractDocFacts = (
         labels.set(fact, candidate.graph ?? '');
       }
     }
-    return Graph.assign(docFacts, { name: (fact) => `${doc.source}#${hash}#${labels.get(fact) ?? ''}` });
+    return Graph.assign(docFacts, { name: (fact) => `${doc.source}#${hash}#${labels.get(fact) ?? ''}`, ontology });
   });
 
 /**
@@ -149,7 +189,26 @@ export type DocumentFacts = {
  */
 export const extractFactsStage = (
   options?: ExtractOptions,
-): Stage.Stage<ExtractDocument, DocumentFacts, SemanticIndexError, AiService.AiService> =>
-  Stage.map('extract-facts', (doc: ExtractDocument) =>
-    extractDocFacts(doc, options).pipe(Effect.map((facts) => ({ doc, facts }))),
+): Stage.Stage<ExtractDocument, DocumentFacts, SemanticIndexError, AiService.AiService> => {
+  const vocabulary = growingOntology(options?.ontology);
+  return Stage.map('extract-facts', (doc: ExtractDocument) =>
+    extractDocFacts(doc, { ...options, ontology: vocabulary.current() }).pipe(
+      Effect.tap((facts) => Effect.sync(() => vocabulary.learn(facts))),
+      Effect.map((facts) => ({ doc, facts })),
+    ),
   );
+};
+
+/**
+ * The ontology a stage extracts with, grown by the predicates each document mints, so the next document is shown
+ * them and reuses them instead of minting a variant. It lives as long as the stage.
+ */
+export const growingOntology = (initial: Ontology.Ontology = Ontology.DEFAULT) => {
+  let ontology = initial;
+  return {
+    current: () => ontology,
+    learn: (facts: readonly Fact[]) => {
+      ontology = ontology.include(Graph.mintedPredicates(facts, ontology));
+    },
+  };
+};

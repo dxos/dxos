@@ -4,23 +4,29 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import { type Quad as RdfQuad } from 'n3';
+import { DataFactory, type Quad as RdfQuad } from 'n3';
 
 import { type Quad, SqlSparqlEngine, type SqlStorage } from '@dxos/sparql-sqlite';
 import * as SqliteStorage from '@dxos/sql-sqlite/SqlStorage';
 
 import { SemanticIndexError } from '../errors.ts';
 import {
+  DESCRIBED_PREDICATES_SPARQL,
   ONTOLOGY_SPARQL,
+  SEED_MARKER_SPARQL,
   STORED_PREDICATES_SPARQL,
   candidateGraphs,
+  deleteSeedSparql,
   graphQuadsSparql,
   graphValues,
   predicateLabels,
 } from '../internal/sparql/fact-query.ts';
 import { matchingPredicates, statementMatches } from '../internal/sparql/match.ts';
 import { boundGraphs, rowsToQuads, toQuad } from '../internal/sparql/terms.ts';
+import { hashText } from '../internal/stages/reconcile.ts';
+import { type Fact, Graph, Ontology } from '../types/index.ts';
 import * as Mapping from '../types/Mapping.ts';
+import * as Vocab from '../types/Vocab.ts';
 import { FactStore, type FactStoreApi } from './fact-store.ts';
 
 //
@@ -45,6 +51,32 @@ const INSERT_BATCH = 5_000;
 /** Durable Objects cap statement text at 100 KB, and each graph a `select` binds is inlined as an IRI. */
 const LOAD_BATCH = 200;
 
+/**
+ * The seed vocabulary every store starts with (and starts with again once cleared): `Ontology.DEFAULT` described in
+ * the ontology graph, plus a marker naming its version, so a store written by an older seed is brought up to date.
+ */
+const SEED_QUADS = Ontology.ontologyQuads(Ontology.DEFAULT);
+const SEED_IRIS = [...new Set(SEED_QUADS.map((quad) => quad.subject.value))];
+const SEED_VERSION = hashText(
+  SEED_QUADS.map((quad) => `${quad.subject.value} ${quad.predicate.value} ${quad.object.value}`).join('\n'),
+);
+const SEED_MARKER = DataFactory.quad(
+  DataFactory.namedNode(Vocab.ONTOLOGY_GRAPH),
+  DataFactory.namedNode(Vocab.SX_SEED),
+  DataFactory.literal(SEED_VERSION),
+);
+
+/**
+ * The quads persisting the facts, plus the provenance of each predicate they mint that the store has not described
+ * yet, so a predicate records when, by what and from which quote it was first minted rather than every use.
+ */
+const factQuads = (facts: readonly Fact[], described: ReadonlySet<string>): RdfQuad[] => [
+  ...facts.flatMap((fact) => Mapping.factToTriples(fact)),
+  ...Graph.mintedPredicates(facts)
+    .filter(({ iri }) => !described.has(iri))
+    .flatMap(Ontology.toQuads),
+];
+
 const dropLegacyTables = (storage: SqlStorage): void => {
   const legacy = storage
     .exec(`SELECT 1 FROM sqlite_master WHERE type = 'table' AND name IN ('triples', 'rdf_migrations')`)
@@ -62,25 +94,48 @@ const attempt =
     Effect.try({ try: run, catch: (cause) => new SemanticIndexError({ message, cause }) });
 
 const open = (storage: SqlStorage, transactionSync: NonNullable<Options['transactionSync']>): FactStoreApi => {
-  const engine = transactionSync(() => {
+  const engine = new SqlSparqlEngine(storage);
+
+  const insert = (rdfQuads: readonly RdfQuad[]): void => {
+    const quads: Quad[] = rdfQuads.map(toQuad);
+    for (let start = 0; start < quads.length; start += INSERT_BATCH) {
+      engine.insert(quads.slice(start, start + INSERT_BATCH));
+    }
+  };
+
+  // A store whose seed is current holds the marker; one written by another seed has its seed predicates rewritten.
+  const seed = (): void => {
+    const [marker] = engine.query(SEED_MARKER_SPARQL);
+    if (marker?.v?.value === SEED_VERSION) {
+      return;
+    }
+    for (const update of deleteSeedSparql(SEED_IRIS)) {
+      engine.query(update);
+    }
+    insert([...SEED_QUADS, SEED_MARKER]);
+  };
+
+  transactionSync(() => {
     dropLegacyTables(storage);
-    const engine = new SqlSparqlEngine(storage);
     engine.init();
     storage.exec(`CREATE TABLE IF NOT EXISTS ${CURSORS_TABLE} (source TEXT PRIMARY KEY, hash TEXT NOT NULL)`);
-    return engine;
+    seed();
   });
 
   const putFacts: FactStoreApi['putFacts'] = (facts) =>
-    attempt('Failed to persist facts')(() => {
-      const quads: Quad[] = facts.flatMap((fact) => Mapping.factToTriples(fact)).map(toQuad);
+    attempt('Failed to persist facts')(() =>
       transactionSync(() => {
-        for (let start = 0; start < quads.length; start += INSERT_BATCH) {
-          engine.insert(quads.slice(start, start + INSERT_BATCH));
-        }
-      });
-    });
+        const described = new Set(
+          engine.query(DESCRIBED_PREDICATES_SPARQL).flatMap(({ s: subject }) => (subject ? [subject.value] : [])),
+        );
+        insert(factQuads(facts, described));
+      }),
+    );
 
   const ontologyQuads = () => rowsToQuads(engine.query(ONTOLOGY_SPARQL));
+
+  const predicates: FactStoreApi['predicates'] = () =>
+    attempt('Failed to read predicates')(() => Ontology.fromQuads(ontologyQuads()));
 
   // A graph found by one statement may hold others, so each reassembled statement is checked against the query
   // again; `triplesToFacts` validates via Schema, so malformed stored data fails here too.
@@ -134,13 +189,15 @@ const open = (storage: SqlStorage, transactionSync: NonNullable<Options['transac
 
   const clear: FactStoreApi['clear'] = () =>
     attempt('Failed to clear store')(() =>
+      // One transaction, so a store is never left without its seed vocabulary.
       transactionSync(() => {
         engine.reset();
         storage.exec(`DELETE FROM ${CURSORS_TABLE}`);
+        seed();
       }),
     );
 
-  return { putFacts, query, select, cursor, setCursor, clear };
+  return { putFacts, predicates, query, select, cursor, setCursor, clear };
 };
 
 /**
@@ -191,6 +248,7 @@ export const makeMemory = (): FactStoreApi => {
 
   return {
     putFacts: (facts) => get.pipe(Effect.flatMap((opened) => opened.putFacts(facts))),
+    predicates: () => get.pipe(Effect.flatMap((opened) => opened.predicates())),
     query: (semanticQuery) => get.pipe(Effect.flatMap((opened) => opened.query(semanticQuery))),
     select: (sparql) => get.pipe(Effect.flatMap((opened) => opened.select(sparql))),
     cursor: (source) => get.pipe(Effect.flatMap((opened) => opened.cursor(source))),

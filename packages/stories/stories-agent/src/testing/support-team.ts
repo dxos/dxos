@@ -100,16 +100,20 @@ export const seedSupportTeam = async ({
   invoker: Capabilities.OperationInvoker;
   agent: Agent.Agent;
   remote?: boolean;
-}): Promise<void> => {
-  const team =
-    (await db.query(Filter.type(Organization.Organization)).run()).find(({ name }) => name === SUPPORT_TEAM_NAME) ??
-    db.add(Organization.make({ name: SUPPORT_TEAM_NAME }));
+}): Promise<{ seeded: boolean }> => {
+  const existingTeam = (await db.query(Filter.type(Organization.Organization)).run()).find(
+    ({ name }) => name === SUPPORT_TEAM_NAME,
+  );
+  const team = existingTeam ?? db.add(Organization.make({ name: SUPPORT_TEAM_NAME }));
   await db.flush({ indexes: true });
+  // A persistent space that already holds the team had its brain seeded on an earlier load, and every brain call
+  // on EDGE takes seconds, so the brain is seeded only with a new team.
+  const seeded = !existingTeam;
   const brainOptions = { spaceId: db.spaceId, ...(remote ? { on: 'edge' as const } : {}) };
-  const { data: recalled } = await invoker.invokePromise(MemoryOperation.Recall, {}, brainOptions);
+  const recalled = seeded ? (await invoker.invokePromise(MemoryOperation.Recall, {}, brainOptions)).data : undefined;
   const existing = new Set((recalled?.memories ?? []).map(({ content }) => content));
   const remember = async (content: string, subjects: Ref.Ref<Obj.Unknown>[]) => {
-    if (existing.has(content)) {
+    if (!seeded || existing.has(content)) {
       return;
     }
     const { error } = await invoker.invokePromise(
@@ -151,6 +155,7 @@ export const seedSupportTeam = async ({
     }
   }
   await db.flush({ indexes: true });
+  return { seeded };
 };
 
 /** Where the roster the facts are read from claims to come from; facts are attributed to it. */
